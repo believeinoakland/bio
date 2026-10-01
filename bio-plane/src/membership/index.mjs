@@ -72,8 +72,8 @@ export function viewerPredicate(viewer) {
    read contract) naming every bundle R43's compiled gate does not pass: every bundle, for a viewer R43 refuses. It is
    the gate negated as a set, never a second rule, so a count taken through it and a read taken through
    `viewerPredicate` cannot disagree about who is hidden. A caller subtracts with `<key> NOT IN ${sql}` and binds `args`.
-   What an absent viewer means stays the caller's: asked, it is R43's refusal and hides everything; the legacy store's
-   internal call reads whole by not asking. Writes nothing and never throws. */
+   What an absent viewer means stays the caller's: asked, it is R43's refusal and hides everything; an internal
+   caller reads whole by not asking. Writes nothing and never throws. */
 export function hiddenBundles(viewer) {
   const gate = viewerPredicate(viewer);
   if (gate.scope === "member") return null;
@@ -180,7 +180,7 @@ export const MODULE_ORDER = Object.freeze([
           "filing-templates", "filings", "escalation", "action-plans",
   /* 10 */ "monitoring", "scheduler",
   /* 11 */ "affordances", "tasks", "queue-producers", "queue", "instance-setup", "op-declarations", "admission",
-           "control-plane", "plane", "legacy-ui", "installer", "legacy-tests",
+           "control-plane", "plane", "legacy-ui", "installer",
 ]);
 
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
@@ -579,7 +579,7 @@ export class Membership {
 
   /** REC-132 / D-422 — WHO IS ASKING, as distinct from WHAT THEY MAY SEE.
    *  `identity` is the POSITIONAL half of the control plane's one session resolver
-   *  (`resolveSession` in `src/index.mjs`): `member:<id>` for a signed-in session,
+   *  (admission's `resolveSession`, `src/admission/index.mjs`): `member:<id>` for a signed-in session,
    *  the founder's included (`member:admin`), and the same string as the viewer for
    *  every credential that is not a session. When it is absent — a caller that never
    *  stamps it, the store's own internal reads — the viewer is asked, which is exactly
@@ -708,7 +708,7 @@ export class Membership {
    * POSITIONAL half of the control plane's one session resolver (`resolveSession`, IC-149):
    * `member:<id>` for a signed-in session (the founder's is `member:admin`), a member-scoped
    * `ai` credential's principal, and `class:<cls>` for every instance credential. It is read
-   * through `#positionalMember`, the one place a viewer-shaped string becomes a member, so a
+   * through `positionalMember`, the one place a viewer-shaped string becomes a member, so a
    * `class:*` credential answers null and is NOT ASKED — machine credentials hold no roster
    * position, and their fences are their own and unchanged (DEC-63's reasoning at the run
    * verbs, and the brief's). An ABSENT identity is also not asked: that is every internal
@@ -766,7 +766,7 @@ export class Membership {
    *     ABSENT deliverer is every internal caller (a store-level committer, the legacy arms), not
    *     asked, as at every REC-134 act. A project-less subject is (2)'s to refuse, by name.
    * (2) THE AUTHORITY IS THE SIGNATURE, AND IT MUST BE AN OWNER'S (DEC-72 clause 5: publishing is the
-   *     project owner's act). Asked through `#isProjectOwner`, §7's one owner predicate. A subject
+   *     project owner's act). Asked through `isProjectOwner`, §7's one owner predicate. A subject
    *     naming no project has no owner to sign it and is refused by the same rule — DEC-72 removed the
    *     project-less case, so it is a legacy document, and an absent publisher is not a publisher of
    *     none.
@@ -805,7 +805,7 @@ export class Membership {
    * EDIT (C-56) and its own refusal became the signal; before it, the edit itself was.
    *
    * TWO PIECES, AND EACH IS THE ONLY ONE OF ITS KIND.
-   *   `#inSight(id, viewer)` asks `viewerPredicate` — never a second rule — whether this viewer may
+   *   `inSight(id, viewer)` asks `viewerPredicate` — never a second rule — whether this viewer may
    *   see this bundle. Only PROJECT rows are ever filtered, so for anything else it answers true to
    *   every recognised viewer; an absent or unrecognised viewer sees NOTHING (fail closed, the gate's
    *   own posture), which is why every act that calls it has its viewer stamped by the control plane.
@@ -814,8 +814,8 @@ export class Membership {
    *   caller by ONE condition (`!p || !this.inSight(...)`), so the two cannot drift: there is no
    *   second string to keep in step. IC-141's `#noCaseDocument` is the precedent, one object over.
    *
-   * THE ORDER IS THE RULE: SIGHT BEFORE POSITION. Every caller asks `#inSight` BEFORE
-   * `#projectAuthority` or its own owner test, so C-56 and NOT_THE_OWNER are only ever said to a
+   * THE ORDER IS THE RULE: SIGHT BEFORE POSITION. Every caller asks `inSight` BEFORE
+   * `projectAuthority` or its own owner test, so C-56 and NOT_THE_OWNER are only ever said to a
    * caller who can already see the project (an invited member, or an administrator, §7.3) — and
    * say nothing a caller did not already know. Asked the other way round, the positional refusal is
    * the oracle (R61; `test/m/membership/sight.test.mjs`'s R61 test holds that an outsider never learns ownership). */
@@ -830,7 +830,7 @@ export class Membership {
   /* ===== REC-149 — SIGHT HAS THREE LEVELS, AND IT IS STILL ONE PREDICATE (Membership v2 §7, item 7.14) =====
    *
    * Bob, 2026-09-18: *"The project's contents might be private, though the existence of the project may not
-   * be"*, and *"each project chooses"*. So a project is DISCOVERABLE or HIDDEN, and `#sight` answers:
+   * be"*, and *"each project chooses"*. So a project is DISCOVERABLE or HIDDEN, and `sight` answers:
    *   SIGHT_NONE      — nothing: an absent id, or a project the caller cannot see at all. §7.9 exactly.
    *   SIGHT_EXISTENCE — the project's id and name and the request to join, and nothing else: a DISCOVERABLE
    *                     project, asked by a member SESSION (a viewer naming a member) outside its participants.
@@ -841,8 +841,8 @@ export class Membership {
    * absent or unrecognised viewer stays NONE (fail closed), and a HIDDEN project stays NONE for everybody who
    * could not already see it. `viewerPredicate` IS NOT CHANGED: every record read, search, citation list,
    * reverse edge and run report still compiles only FULL sight, because those reads return CONTENTS.
-   * `#inSight` IS the FULL level, asked first and unchanged, so every existing caller keeps its meaning; the
-   * acts ask `#existenceAct` just BEFORE their REC-138 line, so NONE still reaches that line and its answer. */
+   * `inSight` IS the FULL level, asked first and unchanged, so every existing caller keeps its meaning; the
+   * acts ask `existenceAct` just BEFORE their REC-138 line, so NONE still reaches that line and its answer. */
   static SIGHT_NONE = "none";
 
   static SIGHT_EXISTENCE = "existence";
@@ -861,7 +861,7 @@ export class Membership {
      the setting, and its callers gate what they show by R44. Total: an id the index does not hold, or one that is not
      a string, reads `hidden`, and nothing it is handed makes it throw.
      The CURRENT setting, READ FROM THE SIGHT INDEX (D-497) rather than recomputed from the act log here.
-     `project_sight` holds one row per project carrying exactly what `#reindexProjectSight` derived, so this
+     `project_sight` holds one row per project carrying exactly what `reindexProjectSight` derived, so this
      predicate and the directory's SQL read THE SAME ROWS instead of two copies of one rule — which is the
      whole of D-497 and the reason the directory can bound its candidates in SQL at all.
      THE `hidden` BELOW IS NOT THE DEFAULT FOR AN OWNER WHO HAS NOT ACTED. That default is in the derivation's
@@ -876,7 +876,7 @@ export class Membership {
 
   /* ===== D-497 — THE DERIVATION, AND IT IS THE ONLY PLACE THE RULE IS STATED (Membership v2 §7, item 7.14).
    *
-   * WHAT THIS EXISTS FOR. `#sight` was a JS predicate with no row source, so `projectDirectory` established
+   * WHAT THIS EXISTS FOR. `sight` was a JS predicate with no row source, so `projectDirectory` established
    * "this caller sees none of them" by asking it about every project in the group one at a time: each statement
    * bounded, the NUMBER of statements growing with the record. D-479 bounded what the directory PUBLISHES and
    * reported this half as a row of its own, in these words — *"bounding that needs a row source the sight
@@ -885,7 +885,7 @@ export class Membership {
    * THE RULE, STATED ONCE: a project's setting is its OWNERS' LATEST ACT, and HIDDEN where they have never
    * acted — every project that existed before REC-149 (each created under §7.9's promise that the uninvited see
    * not its existence), every creation that carried no setting, and everything a machine created. It is the
-   * CASE below and nowhere else. `#visibilityOf` reads the answer; the directory joins the same table; nobody
+   * CASE below and nowhere else. `visibilityOf` reads the answer; the directory joins the same table; nobody
    * restates the default. REC-149's first build DID restate it — its directory took candidates from the
    * visibility table — and its own `default-discoverable` control arm caught that by flipping the default and
    * watching the directory not move.
@@ -940,13 +940,13 @@ export class Membership {
      caller's sight of this id is EXISTENCE, else null — and then the act's own REC-138 line runs unchanged, so
      NONE is still answered exactly as an id naming nothing (byte for byte) and FULL proceeds. Every act that
      names a project asks this immediately before its sight line. A viewer never SENT is not asked
-     (`#rosterInSight`'s precedent): it is an internal caller, and NONE's line decides for it as before. */
+     (`rosterInSight`'s precedent): it is an internal caller, and NONE's line decides for it as before. */
   existenceAct(projectId, viewer) {
     if (viewer === null || viewer === undefined) return null;
     return this.sight(projectId, viewer) === Membership.SIGHT_EXISTENCE ? this.#existenceOnly(projectId) : null;
   }
 
-  /* C-70.1, minted here and only here; every act RELAYS it through `#existenceAct`. The id and the name, which the
+  /* C-70.1, minted here and only here; every act RELAYS it through `existenceAct`. The id and the name, which the
      directory already showed this caller, and nothing else — no act, no state, no owner, no participant. */
   #existenceOnly(projectId) {
     const title = this.#titleOf(projectId);
@@ -965,9 +965,9 @@ export class Membership {
   /** REC-149 — THE SETTING, an OWNER'S recorded act (§7.14 "The setting"). Append-only: every act is a row with
    *  the owner, the date and an optional reason, and the current setting is the latest. Sight before position:
    *  a caller who cannot see the project is answered as for one that does not exist, a caller at EXISTENCE gets
-   *  C-70.1, and only then is ownership asked — through `#isProjectOwner`, §7's one owner predicate, so an
+   *  C-70.1, and only then is ownership asked — through `isProjectOwner`, §7's one owner predicate, so an
    *  administrator, the founder and every machine credential are refused (administrators direct nothing, §4.9,
-   *  and §7.13's rescue does not set it). A viewer never SENT is not asked, `#rosterInSight`'s precedent. */
+   *  and §7.13's rescue does not set it). A viewer never SENT is not asked, `rosterInSight`'s precedent. */
   projectVisibilitySet({ projectId, setting, reason = null, by, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
     const existence = b ? this.existenceAct(projectId, viewer) : null;
@@ -1047,7 +1047,7 @@ export class Membership {
   /** REC-149 — THE DIRECTORY (§7.14 "The directory"): for a member session, the DISCOVERABLE projects it does
    *  not participate in, each with its id and name and the state of the caller's OWN request to it. Nothing
    *  else. A hidden project is never in it, so its absence here is one answer for "hidden" and "does not
-   *  exist". Every row is asked through `#sight` — the one predicate — and listed only at EXISTENCE, so a
+   *  exist". Every row is asked through `sight` — the one predicate — and listed only at EXISTENCE, so a
    *  project this caller can see fully (it is in it, or it is an administrator) is not listed as one to join.
    *  REC-150 BUILT THE REQUEST (item 7.14's decomposition, step 2): `request` is the state of the caller's own
    *  latest request to that project, and null only where it has never asked — so null is now a fact about the
@@ -1079,18 +1079,18 @@ export class Membership {
 
        D-497 — ONE STATEMENT, AND THE BOUND IS NOW ON THE THING THAT GROWS. D-479 left this read a keyset WALK:
        sight was a JS predicate with no row source, so establishing "this caller sees none of them" meant asking
-       `#sight` about every project in the group, one bounded statement at a time, and the NUMBER of statements
+       `sight` about every project in the group, one bounded statement at a time, and the NUMBER of statements
        grew with the record. D-479 reported the remedy rather than taking it — *"a row source the sight
        predicate itself READS, not a second copy of its rule"* — and `project_sight` is it. The two halves of
        EXISTENCE are now both rows:
-         the DISCOVERABLE half joins `project_sight`, THE SAME TABLE `#visibilityOf` reads, so the rule about
-         what an owner's acts mean is stated once, in `#reindexProjectSight`, and read here rather than
+         the DISCOVERABLE half joins `project_sight`, THE SAME TABLE `visibilityOf` reads, so the rule about
+         what an owner's acts mean is stated once, in `reindexProjectSight`, and read here rather than
          recomputed. This is what REC-149's first build got wrong in the opposite direction: it read the ACT
          LOG here and so put "no act = hidden" in a second place, which its own `default-discoverable` control
          arm caught by flipping the default and watching the directory stand still;
          the NOT-FULL half is `viewerPredicate`'s own compiled predicate, NEGATED — not a hand copy of it.
-         `#inSight` is that predicate asked about one row (`… WHERE b.bundle_id=? AND (gate)`), so over rows
-         this statement has already fixed to existing PROJECT bundles, `NOT (gate)` is exactly `#sight` below
+         `inSight` is that predicate asked about one row (`… WHERE b.bundle_id=? AND (gate)`), so over rows
+         this statement has already fixed to existing PROJECT bundles, `NOT (gate)` is exactly `sight` below
          FULL. It is total over those rows and never NULL: `b.object_type <> 'project'` is FALSE for every one
          of them and the two remaining disjuncts are EXISTS, which has no third answer. The member refusal
          above is what guarantees the gate is never `0=1`; it is `1=1` only for the founder's `member:admin`
@@ -1164,7 +1164,7 @@ export class Membership {
      a machine credential stamps `class:<cls>` and names nobody, so it resolves to no member and is refused. */
   #activeMemberRow(memberId) {
     if (memberId === null || memberId === undefined || String(memberId).startsWith(MACHINE_CLASS_PREFIX)) return null;
-    /* The FOUNDER is a person with no roster row (`#isAdminMember`'s first line), so C-95.1's "no member behind this
+    /* The FOUNDER is a person with no roster row (`isAdministrator`'s first line), so C-95.1's "no member behind this
        credential" would be FALSE about them — found by this suite's §1f on its first run. They are answered as the
        person they are: at FULL sight, so the ask is C-95.2 like any administrator's. */
     if (memberId === Membership.ROOT_ADMIN) return { member_id: Membership.ROOT_ADMIN, handle: null, status: "active" };
@@ -1306,7 +1306,7 @@ export class Membership {
 
   /** REC-150 — AN OWNER ANSWERS (§7.14 "Who answers"). Sight before position, as every roster act: a member at
    *  EXISTENCE gets C-70.1, a caller who cannot see the project the absent answer, and only then is ownership
-   *  asked — through `#isProjectOwner`, §7's one owner predicate, so an administrator, the founder and every
+   *  asked — through `isProjectOwner`, §7's one owner predicate, so an administrator, the founder and every
    *  machine credential are refused by name. GRANT writes `invited`, with `invited_by` the granting owner — never
    *  `joined` (§7.4: joining is the member's own act). DECLINE is recorded with the owner's optional comment. */
   projectRequestAnswer({ projectId, handle, answer, comment = null, by, viewer = null } = {}) {
@@ -1430,9 +1430,9 @@ export class Membership {
   /* THE ROSTER ACTS' form of the same question, and the one difference is stated rather than hidden.
      Their positional half is `by`, and they have always been driven straight at the store by callers
      that are not requests (setup, fixtures, the store's own suites) — the same population
-     `#projectAuthority` answers "not asked" for an ABSENT identity. So an ABSENT viewer (the
+     `projectAuthority` answers "not asked" for an ABSENT identity. So an ABSENT viewer (the
      parameter not sent at all: null) is NOT ASKED here, on that precedent; ANY viewer that was sent,
-     including an empty one, is asked through `#inSight` and fails closed. The control plane stamps
+     including an empty one, is asked through `inSight` and fails closed. The control plane stamps
      every roster act (`PROJECT_ACTIONS`): without the stamp these acts would fall back to disclosing. */
   rosterInSight(projectId, viewer) {
     return viewer === null || viewer === undefined || this.inSight(projectId, viewer);
@@ -1445,7 +1445,7 @@ export class Membership {
    *  (`NOT_THE_PROJECT_OWNER`, DEC-72 clause 5); this is the weakest fact that
    *  makes the two unable to disagree, and nothing weaker would close it.
    *
-   *  THE RULE IS `#isProjectOwner`'s AND IS NOT RESTATED. This selects the
+   *  THE RULE IS `isProjectOwner`'s AND IS NOT RESTATED. This selects the
    *  member's own participations off the `pp_member` index and asks THAT
    *  predicate about each — the same one publishCase()'s fence runs — so a
    *  change to what "owner" means is made once. Writing `AND owner=1` here
@@ -1469,8 +1469,8 @@ export class Membership {
      Membership v2 §7.5: *"A joined member has the working rights their capabilities
      allow"*, and an invited member who has not joined has VIEW rights only; a member
      who has asked to leave (7.6) has asked to stop working. So: an OWNER (the rule
-     `#isProjectOwner` states, consumed rather than restated) or a participant whose
-     state is `joined`, read through `#participation`, the record's one membership
+     `isProjectOwner` states, consumed rather than restated) or a participant whose
+     state is `joined`, read through `participation`, the record's one membership
      predicate. The CAPABILITY half, `contribute` (*"create and revise bundles in the
      working corpus"*, §5), is a SESSION's and is enforced at the control plane's
      NEEDS table, where every other corpus write is gated. An administrator gains
@@ -1511,7 +1511,7 @@ export class Membership {
    *  requires such a comment corrected rather than left to disagree in silence. */
   projectInvite({ projectId, handle, by, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
-    /* REC-138 / D-426: sight BEFORE position (see `#inSight`). */
+    /* REC-138 / D-426: sight BEFORE position (see `inSight`). */
     { const existence = b ? this.existenceAct(projectId, viewer) : null; if (existence) return existence; }   /* REC-149 */
     if (!b || !this.rosterInSight(projectId, viewer)) return noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
@@ -1561,8 +1561,8 @@ export class Membership {
        OWNER DOES NOT ASK TO LEAVE. An owner's request can be honoured only by the 7.10 removal (7.7 refuses
        an owner, `OWNER`), and 7.10's floor refuses that removal at one owner, so a request from the last owner
        would record a departure the record can never carry out — an overclaim. The floor is asked through the
-       SAME arithmetic `projectOwnerRemove`'s LAST_OWNER runs (`Membership.ownerMath` over `#owners`), so the two
-       cannot disagree about who is last; a co-owner's request is recorded as before. Nothing is written. */
+       SAME arithmetic `projectOwnerRemove`'s LAST_OWNER ran; R35 (below) has since replaced that count with the
+       committed owners, which `projectOwnerRemove`'s LAST_COMMITTED_OWNER also reads. Nothing is written. */
     /* DEC-49 REGION is-leave-owner-floor — REC-186/C-33.48. */
     /* R35 (REC-224): an owner may ask to leave only while ANOTHER owner stays committed — an owner who has not
        asked to leave. Counting every owner (the old LAST_OWNER_CANNOT_LEAVE) let two owners both ask to leave and
@@ -1633,7 +1633,7 @@ export class Membership {
    *  removes the others, and closing that door is what makes removal safe. */
   projectOwnerAdd({ projectId, handle, by, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
-    /* REC-138 / D-426: sight BEFORE position (see `#inSight`). */
+    /* REC-138 / D-426: sight BEFORE position (see `inSight`). */
     { const existence = b ? this.existenceAct(projectId, viewer) : null; if (existence) return existence; }   /* REC-149 */
     if (!b || !this.rosterInSight(projectId, viewer)) return noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
@@ -1774,7 +1774,7 @@ export class Membership {
    *  target is one of them. The floor is one owner. */
   projectOwnerRemove({ projectId, handle, by, reason, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
-    /* REC-138 / D-426: sight BEFORE position (see `#inSight`). */
+    /* REC-138 / D-426: sight BEFORE position (see `inSight`). */
     { const existence = b ? this.existenceAct(projectId, viewer) : null; if (existence) return existence; }   /* REC-149 */
     if (!b || !this.rosterInSight(projectId, viewer)) return noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
@@ -2022,7 +2022,7 @@ export class Membership {
    *  a named project's owner count, and an owner count is existence: asking for
    *  a project nobody invited you to would have answered `owners: 3` where an
    *  invented id answers `owners: 0`, which is precisely the "not even that it
-   *  exists" 7.9 forbids. Gated through the ONE compilation point (`#viewerSees`,
+   *  exists" 7.9 forbids. Gated through the ONE compilation point (`inSight`,
    *  which is false for an absent bundle AND for an invisible one), so an
    *  invisible project now answers exactly what a nonexistent one answers —
    *  ownerMath(0) — rather than a refusal that would itself be a signal. */
@@ -2104,7 +2104,8 @@ export class Membership {
 
   /* REC-159 — THE ROSTER ANSWERS §4.9's CUSTODIAL ACTS, and it is asked BEFORE anything is looked up,
    * so a caller with no standing learns nothing about the member or key it named. `by` is the control
-   * plane's STAMP (`CUSTODIAL_ACTIONS` in index.mjs), relayed from the query and never from a body.
+   * plane's STAMP (op-declarations' `CUSTODIAL_ACTIONS`, applied by control-plane), relayed from the query and
+   * never from a body.
    * THREE SHAPES AND THREE ANSWERS, each true of the caller:
    *   - a member's id — a signed-in session: admitted only if they are an ACTIVE administrator, else
    *     NOT_AN_ADMIN, by name, answered through `notAnAdmin` (R84), as at `memberCaps`;
@@ -2143,7 +2144,7 @@ export class Membership {
    *  that line. */
   /*  D-136 ADDS `by`, AND IT IS READ RATHER THAN RECORDED. Section 4.9 makes
    *  setting capabilities a custodial act of an ADMINISTRATOR, and the control
-   *  plane now stamps `by` from the session (`GOVERNANCE_ACTIONS` in index.mjs).
+   *  plane now stamps `by` from the session (op-declarations' `GOVERNANCE_ACTIONS`, applied by control-plane).
    *  A stamp nothing consults is a mechanism believed on the strength of its
    *  EXISTENCE rather than its behaviour, so the check sits here beside
    *  `adminEndorse`'s and `adminRemove`'s, which asked the same question of the
@@ -2302,7 +2303,7 @@ export class Membership {
     /* REC-132 / D-422 / C-55.1: the founder's name is not an id anybody else may hold.
        The pattern above admits it and nothing else reserved it, so a member enrolled as
        `admin` would have been read as the founder by every name-keyed check
-       (`#isAdminMember`, `#activeAdmins`). Refused BEFORE the EXISTS test and before
+       (`isAdministrator`, `activeAdmins`). Refused BEFORE the EXISTS test and before
        anything is written, whoever asks and whatever role is asked for. */
     /* DEC-49 REGION is-member-id-reserved */
     if (memberId === Membership.ROOT_ADMIN)
@@ -2516,7 +2517,7 @@ export class Membership {
        exists to be compelled.
 
        FAIL CLOSED. `administer` is stamped by the CONTROL PLANE from the
-       credential that authenticated (index.mjs, beside the D-15 viewer stamp)
+       credential that authenticated (control-plane, beside the D-15 viewer stamp)
        and is never taken from the request, the same impostor rule `viewer`,
        `author`, `by` and `owner` follow. Anything that is not the affirmative
        stamp — absent, blank, a caller's invention, a direct-DO route that
@@ -2599,9 +2600,9 @@ export function membershipOf(ctx, { record = null } = {}) {
 }
 
 
-/* The ops this module answers, as entries of the legacy store's op map (its dispatcher spreads them in). `url` is
-   the request URL, whose query carries the control plane's stamps (`by`, `viewer`, `who`, `administer`); `body`
-   the parsed body; `env` the store's environment. Each stamp is read from the query AFTER the body is spread, so
+/* The ops this module answers, as entries of the plane's op map (the composition root, `plane`, spreads them in).
+   `url` is the request URL, whose query carries the control plane's stamps (`by`, `viewer`, `who`, `administer`);
+   `body` the parsed body; `env` the host's environment. Each stamp is read from the query AFTER the body is spread, so
    a caller's own copy never wins (D-136). */
 export function membershipOps(m, url, body, env) {
   return {
@@ -2612,7 +2613,7 @@ export function membershipOps(m, url, body, env) {
            THEN set `by`, exactly as D-136's three below and for their reason.
            `memberAdd` writes the proposer's `admin_votes` ('add') row from it, and a
            voter a caller can name is not a voter. The control plane stamps it (the
-           `by` stamp's `memberadd` disjunct in index.mjs); a call with no stamp gets
+           `by` stamp's custodial disjunct in control-plane); a call with no stamp gets
            `null`, which `memberAdd` reads as NO endorsement — never the body's. */
         memberadd: () => m.memberAdd({ ...(body || {}), by: url.searchParams.get("by") }),
         enroll: () => m.enroll(body || {}),
@@ -2652,7 +2653,7 @@ export function membershipOps(m, url, body, env) {
         adminremove: () => m.adminRemove({ ...(body || {}), by: url.searchParams.get("by") }),
         adminarith: () => m.adminArithmetic(),
         projectclaimowner: () => m.projectClaimOwner(body || {}),
-        /* REC-138: `viewer` is the control plane's stamp (sight before position, `#inSight`). */
+        /* REC-138: `viewer` is the control plane's stamp (sight before position, `inSight`). */
         projectowneradd: () => m.projectOwnerAdd({ projectId: url.searchParams.get("projectId"),
           handle: url.searchParams.get("handle"), by: url.searchParams.get("by"),
           viewer: url.searchParams.get("viewer") }),

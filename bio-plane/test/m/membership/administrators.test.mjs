@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world } from "./fixture.mjs";
+import { world, V } from "./fixture.mjs";
 import { Membership } from "../../../src/membership/index.mjs";
 import { CUSTODIAL_CHECKS } from "../../../src/membership/checks.mjs";
 
@@ -159,8 +159,23 @@ test("R57 a member row is never deleted: revocation keeps the handle and history
   const row = w.row(`SELECT * FROM members WHERE member_id='ann'`);
   assert.deepEqual([row.status, row.handle, row.cover], ["revoked", "ann", "cover of ann"]);
   assert.equal(w.m.expertiseList({ memberId: "ann" }).expertise.length, 1);
-  const services = Object.getOwnPropertyNames(Membership.prototype);
-  for (const name of services) assert.doesNotMatch(String(Membership.prototype[name]), /DELETE FROM members\b/, name);
+  /* Every act that ends or changes a member's standing keeps every row: a carried removal by vote, a reactivation,
+     a revocation, a resignation, and a removal from a project. */
+  const v = await threeAdmins();
+  await v.enrol("bob");
+  await v.enrol("cal");
+  const ids = () => v.rows(`SELECT member_id, handle FROM members ORDER BY member_id`);
+  const before = ids();
+  assert.equal(v.m.adminRemove({ memberId: "third", by: "admin", reason: "a" }).reason, "VOTES_SHORT");
+  assert.equal(v.m.adminRemove({ memberId: "third", by: "second", reason: "b" }).ok, true);
+  assert.equal(v.m.memberSet({ memberId: "third", status: "active", by: "admin" }).ok, true);
+  assert.equal(v.m.memberSet({ memberId: "bob", status: "revoked", by: "admin" }).ok, true);
+  assert.equal((await v.m.adminEndorse({ memberId: "cal", by: "admin" })).reason, "NOT_PROPOSED");
+  v.project("PROJ-P");
+  v.m.projectClaimOwner({ projectId: "PROJ-P", memberId: "cal" });
+  v.m.projectInvite({ projectId: "PROJ-P", handle: "third", by: "cal", viewer: V("cal") });
+  assert.equal(v.m.projectRemove({ projectId: "PROJ-P", handle: "third", by: "cal", viewer: V("cal") }).ok, true);
+  assert.deepEqual(ids(), before, "no act removed a member row or its handle");
 });
 
 test("R58 every status write records the actor whose act caused it; an unstamped row reads not recorded", async () => {
