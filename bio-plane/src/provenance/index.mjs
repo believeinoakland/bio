@@ -272,8 +272,9 @@ export function chainFromEvidence(doc, { instanceName = "unnamed", at = null } =
  * is itself a dated, attributed act. A marker is also what is actually TRUE —
  * the bytes may be exactly what was captured, and what cannot be shown is the
  * ROUTE, which is a statement about OUR EVIDENCE rather than about the
- * document. `STATES.information.edges` is untouched by this item and the suite
- * pins that it stays untouched.
+ * document. `STATES.information.edges` is untouched by this item (record-grammar's
+ * to hold; the legacy suite that pinned it, `provenance-marker.test.mjs`, was
+ * deleted at T20).
  *
  * ------------------------------------------------------------------------
  * THE PART THAT IS ACTUALLY HARD, AND IT IS A PUBLICATION QUESTION:
@@ -340,7 +341,7 @@ export const ROUTE_MARK_NOTE =
 export function routeFinding(objectType, mark) {
   if (objectType !== "information")
     return { applies: false, assessed: false, marked: false, finding: null, means: null,
-             note: "a route is a fact about a captured document, and this bundle is not one" };
+             note: "a route is a fact about a captured document, and this record is not one" };
   if (!mark)
     return { applies: true, assessed: false, marked: false,
              finding: "NEVER_LOOKED", means: FINDING_MEANS.NEVER_LOOKED,
@@ -621,7 +622,7 @@ export async function registerAuditReport(r, evidence) {
   const canProbe = !!(evidence && typeof evidence.head === "function");
   const captured = [], unbacked = [], mismatched = [], heldInParts = [], undetermined = [];
   for (const { named_parts: named, ...row } of r.unresolved || []) {
-    if (row.class === "orphan") { unbacked.push({ ...row, why: "the bundle itself is absent" }); continue; }
+    if (row.class === "orphan") { unbacked.push({ ...row, why: "the record itself is absent" }); continue; }
     if (!canProbe) { unbacked.push({ ...row, why: "no capture bucket is configured to check" }); continue; }
     const h = await evidence.head(row.capture_sha);
     if (h) {
@@ -656,7 +657,7 @@ export async function registerAuditReport(r, evidence) {
     captured: captured.length, held_in_parts: heldInParts.length,
     mismatched: mismatched.length, unbacked: unbacked.length, undetermined: undetermined.length,
     sound: unbacked.length === 0 && mismatched.length === 0, probed: canProbe,
-    detail: "captured means the bytes are not in the bundle image but ARE in the working bucket, which "
+    detail: "captured means the bytes are not in the record's image but ARE in the working bucket, which "
           + "is what the two-bucket design exists for. "
           + "held_in_parts is the same for a document the store keeps only in parts: every part the "
           + "record names is in the working bucket and each part's digest is verified (the reassembled "
@@ -728,7 +729,7 @@ export async function attest(body, { head, put, fetch: fetchFn, holds, now = () 
       return { ok: false, reason: "NO_SUCH_CAPTURE",
                detail: holdsAnswer
                  ? "no object is stored under that hash, the register holds no row for it under a "
-                   + "bundle that exists, and this plane holds no receipt of having acquired it"
+                   + "record that exists, and this plane holds no receipt of having acquired it"
                  : "no object is stored under that hash, and the store could not be asked whether "
                    + "its register or an acquisition receipt names it, so this is not a finding that "
                    + "the record lacks the bytes" };
@@ -1124,10 +1125,10 @@ class Provenance {
     const f = typeof bundleId === "string" && bundleId ? this.#record.readFile(bundleId, "data/provenance.json") : null;
     if (!f) return { state: "none" };
     if (typeof f.text !== "string")
-      return { state: "unreadable", why: "the bundle's data/provenance.json is held as a blob, which the store cannot read" };
+      return { state: "unreadable", why: "the record's data/provenance.json is held as a blob, which the store cannot read" };
     let reg;
     try { reg = JSON.parse(f.text); } catch {
-      return { state: "unreadable", why: "the bundle's data/provenance.json does not parse" };
+      return { state: "unreadable", why: "the record's data/provenance.json does not parse" };
     }
     const bare = (v) => typeof v === "string" ? v.trim().replace(/^sha256:/, "").toLowerCase() : null;
     const doc = (Array.isArray(reg?.documents) ? reg.documents : [])
@@ -1187,8 +1188,8 @@ class Provenance {
     return { ok: true, register: reg, files, history, shas: bySha.size, listed: [...bySha.values()].slice(0, cap),
              first_holder: "UNDETERMINED", rewritten: 0,
              note: "read-only: each listed sha is registered to `home` and ALSO carried by every `held_by` row, a "
-                 + "different bundle that still exists. Nothing is rewritten or repaired. `home` is the register's "
-                 + "current holder, never a finding about which bundle held the capture first — that is undetermined. "
+                 + "different record that still exists. Nothing is rewritten or repaired. `home` is the register's "
+                 + "current holder, never a finding about which record held the capture first — that is undetermined. "
                  + "The same content in different bytes is not reached." };
   }
 
@@ -1310,7 +1311,7 @@ class Provenance {
     const answer = (attestations, why) => ({ ok: true, sha256: s, registered: !!home, attestations,
                                              ...(why ? { undetermined: why } : {}), note });
     if (!home)
-      return answer([], "no register row names this capture under a bundle that exists, so the record states no "
+      return answer([], "no register row names this capture under a record that exists, so the record states no "
                       + "attestation for it; a capture registered only by its parts is named by their digests, not the whole's");
     const PATH = "data/provenance.json";
     const f = this.#record.readFile(home.bundleId, PATH);
@@ -1519,7 +1520,7 @@ class Provenance {
        The statement (C-103.4, C-103.5): only a document came from a system, and the system is named briefly. */
     if (String(info.type).toLowerCase() !== "information")
       return actRefusal("ORIGIN_NOT_A_DOCUMENT",
-        `this bundle is a ${String(info.type).slice(0, 40)}; only a document came from a system`, { bundleId });
+        `this record is a ${String(info.type).slice(0, 40)}; only a document came from a system`, { bundleId });
     const sys = String(system ?? "").replace(/[\p{Cc}]+/gu, " ").replace(/\s+/g, " ").trim();
     if (!sys || sys.length > 200)
       return actRefusal("ORIGIN_NO_SYSTEM", "name the system the document came from, in at most 200 characters");
@@ -1623,10 +1624,10 @@ class Provenance {
    *  already holds, and a second copy of a fact drifts from the first — D-164's
    *  solve-it-once, D-138's guard that guarded nothing. There is no new table,
    *  no new column, no new index and no new write: `recordReceipt` above
-   *  is untouched and remains the only writer. `test/versionchain.test.mjs`
-   *  asserts that STRUCTURALLY rather than trusting this comment, because a
-   *  comment promising an absence is exactly the kind of guard that has guarded
-   *  nothing here before.
+   *  is untouched and remains the only writer. (The legacy suite that pinned
+   *  that absence structurally, `test/versionchain.test.mjs`, was deleted at
+   *  T20, and no module test carries the pin: R41 and R15 state who writes the
+   *  tables, `test/m/provenance/receipts.test.mjs` R15 that no read writes one.)
    *
    *  ONE VERSION IS ONE `capture_sha`, WHICH IS WHY THIS GROUPS. The primary key
    *  carries `via` (D-96): an archive sighting of the same bytes is a different
@@ -1658,8 +1659,8 @@ class Provenance {
    *
    *  A CHAIN OF ONE IS A CHAIN. A single capture at an address answers with one
    *  version, `at_index` 0 and `predecessor: null` — that is the record saying
-   *  "these are the first bytes we held", not a degenerate failure, and the
-   *  suite pins it as its own arm.
+   *  "these are the first bytes we held", not a degenerate failure, and
+   *  `test/m/provenance/convert-versionchain.test.mjs` pins it as its own arm.
    *
    *  GATED at `register.bundle_id` through `#bundleGate`, the same predicate
    *  every other read in this file compiles, and `total` is counted through the
@@ -1811,7 +1812,7 @@ class Provenance {
     const raw = img["data/provenance.json"];
     if (typeof raw !== "string")
       return { ok: false, reason: "NO_REGISTER",
-               detail: "this bundle carries no readable data/provenance.json, so there is no capture record to derive from" };
+               detail: "this record carries no readable data/provenance.json, so there is no capture record to derive from" };
     let reg;
     try { reg = JSON.parse(raw); } catch {
       return { ok: false, reason: "UNPARSABLE_REGISTER", detail: "data/provenance.json is not valid JSON" };
@@ -1973,8 +1974,8 @@ class Provenance {
    *
    *  IT WRITES NOTHING INTO THE BUNDLE. No state moves, no file changes, no sha
    *  changes — the whole shape of DEC-56(b) is that the document stays where the
-   *  group put it. The suite asserts the bundle_sha and current_state are
-   *  byte-identical across a marking.
+   *  group put it. `test/m/provenance/chain-route.test.mjs` (R22) asserts the
+   *  head (bundle_sha, current_state) is identical across a marking.
    *
    *  A REPEAT THAT FOUND THE SAME THING APPENDS NOTHING. The record adds when
    *  something changed; a second identical row would be the record repeating
@@ -1983,7 +1984,7 @@ class Provenance {
   provenanceRouteAssess({ bundleId = "", author = null, viewer = null } = {}) {
     /* The helper sits ABOVE the region marker so its own variable-coded return is
        not inside the governed span — PL-15's and PL-14's convention, and the
-       reason arm C can COMPARE every code below rather than read past it. */
+       reason arm C of the DEC-49 guard (deleted at T20) could COMPARE every code below rather than read past it. */
     const refusal = rowRefusal(ROUTE_MARK_CHECKS);
     const who = String(author ?? "").trim();
     /* DEC-49 REGION is-route-mark
@@ -2014,11 +2015,11 @@ class Provenance {
     if (!seen)
       return refusal("ROUTE_MARK_NO_SUCH_BUNDLE",
         "no document of that name is in the record, or none this viewer may see — the two answer "
-        + "identically here, as they do on every read addressed to a bundle (REC-25/D-15).",
+        + "identically here, as they do on every read addressed to a record (REC-25/D-15).",
         { bundleId });
     if (seen.object_type !== "information")
       return refusal("ROUTE_MARK_NOT_A_DOCUMENT",
-        `this bundle is a ${String(seen.object_type).slice(0, 40)}, and only a captured document `
+        `this record is a ${String(seen.object_type).slice(0, 40)}, and only a captured document `
         + "travelled a route to get into the record. Marking one would put a doubt on every question in "
         + "the store, which says nothing about any of them.",
         { bundleId, objectType: seen.object_type });
@@ -2200,7 +2201,8 @@ class Provenance {
        INSTRUMENT SAID OTHERWISE. Holding it in `Store.ROUTE_MARKED_PAGE_SQL` read
        well and let the query-plan driver extract it — but `derivation-bounds`'
        D-365 arm grades every published `truncated` against the SQL OF THE ROW
-       SOURCE IT WAS MEASURED OVER, and it reads that SQL at the `#rows(` call.
+       SOURCE IT WAS MEASURED OVER, and it read that SQL at the `#rows(` call
+       (that legacy suite, `derivation-bounds.test.mjs`, was deleted at T20).
        With the statement behind a constant the arm reported
        `provenanceRoutesMarked:raw (no SQL LIMIT)` — a TRUE reading of what it
        could see, over a source that has carried `LIMIT ?` all along. The bound
@@ -2247,7 +2249,7 @@ class Provenance {
        THE KEYS ARE `limit` / `truncated` / `cursor` AND NOT A NEW SPELLING, AND
        THAT WAS A CORRECTION RATHER THAN A CHOICE. This op's first draft published
        `more` and `nextAfter`, which read perfectly well and are used nowhere else
-       in this plane. `meaning-bounds.test.mjs` judged the op BARE — *a collection
+       in this plane. `meaning-bounds.test.mjs` (a legacy suite, deleted at T20) judged the op BARE — *a collection
        off an unbounded row source with no bound published* — and it was RIGHT by
        its own vocabulary: `MORE_KEY` knows `truncated`, `cursor`, `hasMore` and
        five more, and knows neither of the two this method had invented. The
@@ -2348,8 +2350,8 @@ class Provenance {
   #testimonyFence(bundleId, files, register, testimony, viewing = {}) {
     const refusal = rowRefusal(TESTIMONY_CHECKS);
     const prov = Array.isArray(files) ? files.find((f) => f && f.path === "data/provenance.json") : null;
-    /* `safeJson`, the class's one remedy (provenance-marker.test.mjs's swallowed-
-       read ratchet admits it by name), and the null is SURFACED rather than
+    /* `safeJson`, the class's one remedy (the legacy `provenance-marker.test.mjs`'s swallowed-
+       read ratchet, deleted at T20, admitted it by name), and the null is SURFACED rather than
        smoothed: an unreadable provenance document on an authored bundle is
        refused below as C-53.9 with a sentence that says it could not be read. */
     let docs = [], unreadable = false;
@@ -2382,7 +2384,7 @@ class Provenance {
       if (elsewhere.has(c.sha256))
         return refusal("TESTIMONY_AUTHORED_UNEARNED",
           `this promotion registers capture ${c.sha256.slice(0, 16)}… under ${bundleId}, and those bytes are `
-          + `already registered as ANOTHER bundle's authored observation. Re-filing them here would move a `
+          + `already registered as ANOTHER record's authored observation. Re-filing them here would move a `
           + `member's word under a document that is not theirs`, { bundleId, capture_sha: c.sha256 });
     for (let i = 0; i < docs.length; i++) {
       const d = docs[i];
@@ -2444,8 +2446,8 @@ class Provenance {
       const named = !caller || this.#membership.inSight(h.bundle_id, viewing.viewer ?? null);
       return refusal("CAPTURE_HELD_BY_ANOTHER_BUNDLE",
         `this promotion registers capture ${h.capture_sha.slice(0, 16)}… under ${bundleId}, and those bytes are `
-        + `already registered under ${named ? h.bundle_id : "another bundle"}. One capture has one home, the `
-        + `original's; registering it here would move that bundle's register row`,
+        + `already registered under ${named ? h.bundle_id : "another record"}. One capture has one home, the `
+        + `original's; registering it here would move that record's register row`,
         { bundleId, capture_sha: h.capture_sha, holder: named ? h.bundle_id : null });
     }
     /* END DEC-49 REGION is-register-home */

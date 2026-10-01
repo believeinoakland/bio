@@ -94,8 +94,9 @@ export const VERSION_CHAIN_CHECKS = {
  * They share ONE region (is-route-mark) because they are one gate: the arm that
  * establishes there is a named member and a captured document to assess. Every
  * code is a STRING LITERAL at its site through the local refusal helper, which
- * is what lets the DEC-49 guard's arm C COMPARE them rather than read past them
- * (PL-3's convention, REC-71's measurement, REC-64's thirty).
+ * is what let the DEC-49 guard's arm C COMPARE them rather than read past them
+ * (PL-3's convention, REC-71's measurement, REC-64's thirty; that guard, the
+ * legacy `check-refusal-codes.mjs`, was deleted at T20).
  *
  * C-34 IS THIS FAMILY. Measured free before allocating: C-25 is PL-1/PL-2's,
  * C-26 PL-12's, C-27 PL-3's, C-28 PL-4's, C-29 PL-11's, C-30 PL-14's, C-31
@@ -360,9 +361,9 @@ export const TESTIMONY_CHECKS = {
   CAPTURE_HELD_BY_ANOTHER_BUNDLE: {
     check: 'C-53.13',
     where: 'src/provenance/index.mjs #testimonyFence > is-register-home',
-    translation: 'The record already holds this document, under another bundle. A document has one home '
-      + 'in the record — the first bundle that registered it — and registering it again here would move '
-      + 'it away from there. Nothing was written. Cite the bundle that holds it, or, if you found it at a '
+    translation: 'The record already holds this document, under another record. A document has one home '
+      + 'in the record — the first record that registered it — and registering it again here would move '
+      + 'it away from there. Nothing was written. Cite the record that holds it, or, if you found it at a '
       + 'new address, that sighting is already recorded as a corroboration of the one it holds.',
   },
 };

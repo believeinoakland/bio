@@ -66,11 +66,12 @@ test("R2: one capture, one home; the holder named only to a caller who may see i
   assert.equal(typeof r.translation, "string");
   assert.equal(r.holder, "INFO-2026-0001-a");
   assert.deepEqual(w.snapshot(), before, "refused before anything is written");
-  /* A stamped caller whose viewer may not see the holder is told "another bundle", holder null. */
+  /* A stamped caller whose viewer may not see the holder is told "another record", holder null. */
   const r2 = w.promoteInfo("INFO-2026-0003-c", { captures: [a], pkg: { actorIdentity: "nobody", actorViewer: "nobody" } });
   assert.equal(r2.reason, "CAPTURE_HELD_BY_ANOTHER_BUNDLE");
   assert.equal(r2.holder, null);
-  assert.match(r2.detail, /another bundle/);
+  assert.match(r2.detail, /already registered under another record\./);
+  assert.equal(r2.detail.includes("INFO-2026-0001-a"), false, "the holder is not named in the words");
   /* A stamped caller who may see it is told. */
   const r3 = w.promoteInfo("INFO-2026-0004-d", { captures: [a], pkg: { actorIdentity: V("x"), actorViewer: V("x") } });
   assert.equal(r3.holder, "INFO-2026-0001-a");
