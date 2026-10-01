@@ -189,7 +189,7 @@ export const NAMESPACE_CHECKS = {
 };
 
 /* C-29.6–.10 · AN AGENT CREDENTIAL'S REACH (PL-11 / IS-5, D-199): the gate on every call (.6, .7) and the declaration
-   judged at the mint (.8–.10). The mint's and the revocation's rows are membership's. */
+   judged at the mint (.8–.10). The mint's and the revocation's rows are credentials'. */
 export const AI_SCOPE_CHECKS = {
   /* ---- THE GATE. WHAT A DECLARED SCOPE ADMITS, ON EVERY CALL. ---- */
 

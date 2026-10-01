@@ -142,7 +142,8 @@ const SESSION_TOKEN_SHAPE = /^[0-9a-f]{64}$/;
 const bioStore = (env) => env.STORE.get(env.STORE.idFromName("bio"));
 
 /* R6 (D-199 (2), D-463) — THE PRESENTED `ai` CREDENTIAL, RESOLVED ONCE PER REQUEST against `bio`'s credential rows,
-   by its SHA-256 (the value never crosses to the store). Once, because the confinement (R2) needs the row before
+   through `credentials.aiCredentialLook` (its R15) by the store's route `aicredentiallook`, by its SHA-256 (the value
+   never crosses to the store). Once, because the confinement (R2) needs the row before
    anything else runs and two lookups could disagree across a revocation. The SHAPE is checked before the store is
    asked. `{ cred }` (null when none is presented or none is known) or `{ silent }` (REC-52: a store that did not
    answer is not "this credential is unknown"). */
@@ -154,8 +155,8 @@ export async function aiCredentialPresented(url, env, doAnswer) {
   return { cred: out.result?.found ? out.result.credential : null };
 }
 
-/* R6 — A SIGNED-IN SESSION, RESOLVED THROUGH `membership.session` against `bio` by the store's route. `{ sess }` (null
-   for none) or `{ silent }`. */
+/* R6 — A SIGNED-IN SESSION, RESOLVED THROUGH `credentials.session` (its R5, which owns sessions since T19, K637)
+   against `bio` by the store's route `session`. `{ sess }` (null for none) or `{ silent }`. */
 async function sessionPresented(t, env, doAnswer) {
   const out = await doAnswer(bioStore(env).fetch(`http://do/session?t=${t}`));
   if (!out.answered) return { silent: { op: "session", correlation: out.correlation } };
@@ -285,8 +286,8 @@ const hexOf = (raw) => [...raw].map((x) => x.toString(16).padStart(2, "0")).join
 /* R13 — THE MINT'S HALF THAT IS ADMISSION'S. The declaration and the confinement are judged BEFORE anything is written
    (a scope the gate would refuse must not enter the record at all), then the credential's value is generated HERE:
    `aik-` and 32 random bytes in hex. The door forwards `secretSha` and the normalised `writes` and `confinedTo` (never
-   the caller's spelling) to membership's mint and returns `secret` once, in the minting answer only; the store never
-   holds the value. `{ refusal }` (with `op` and `cls`) or `{ secret, secretSha, writes, confinedTo }`. */
+   the caller's spelling) to credentials' mint (its R12) and returns `secret` once, in the minting answer only; the
+   store never holds the value. `{ refusal }` (with `op` and `cls`) or `{ secret, secretSha, writes, confinedTo }`. */
 export async function aiCredentialMint(asked, cls) {
   const a = asked && typeof asked === "object" && !Array.isArray(asked) ? asked : {};
   const declared = aiScopeDeclaration(a.writes);
