@@ -23,3 +23,7 @@
 - `checks/ownership.mjs citation tranche/T19`: 5 files changed; legacy-store 0/0, legacy-checks 0/0; 0 failures.
 
 Size (session_01Jde3QCM77xBQXshNfBhmf8): test runs 2, module lines 1043
+
+## J1 · COMPLETE
+
+Applied B1 (rule 1, K801): citation imports normalizeType/OBJECT_TYPES/parseFrontmatter/createSha256 from record-grammar; invariants test reads STATES/OBJECT_TYPES from record-grammar, CONTENT_EXTENT_CHECKS from content (R48), and the ACT_SHAPE_CHECKS arms read every *_CHECKS table of citation's uses instead; no citation file imports bio-checks.mjs; comments at checks.mjs:3 and index.mjs:10 re-worded. Tests 55/55; format, architecture, coverage, ownership 0 failures. For BOB: citation's requirements Uses and modules.json uses still name legacy-checks (record-grammar now). Record: build/jobs/T19/citation.md.
