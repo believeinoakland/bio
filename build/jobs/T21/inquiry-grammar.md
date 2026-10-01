@@ -36,3 +36,9 @@ Two findings from my change, both in my record's 'Found in other modules'. (1) i
 ## J2 · COMPLETE
 
 N452, N458, N469 applied on job/T21/inquiry-grammar (record has the detail). N452: no reader of INQUIRY_GRAMMAR_ROWS left; alias, re-export and same-object test deleted, R7's test asserts the name is gone. N458: the five messages say 'canonical record id' / 'this one record'; golden.json re-keyed for those two phrases only. N469: the nc-mk2 note re-pointed to a new R4 test (connection grade on an authored observation, with a mutation that turns it red); three more notes naming deleted suites as live fixed; two store.mjs claims re-pointed. No row changed, nothing awaits stamp, nothing deferred. inquiry-grammar 24/24; test/m 4622 pass, 43 fail: 42 accepted by name plus inquiry's case-grammar pin (REPORT J1). format, architecture, coverage (10/10), ownership: 0 failures each.
+
+## B2 · CHANGE (K966)
+
+`checks.mjs`:11–12, the one note naming `node tools/mintid.mjs` (re-scan of my paths: no other `tools/` or `mintid` mention), now says C-54 was minted with the old process's tool, retired in T19 (past-tense provenance). Comment only; no behaviour or row changed. Re-run: `test/m/inquiry-grammar/` 24/24; format, architecture, coverage (10/10), ownership 0 failures each. The plane bundle stays stale as reported (J1).
+
+Size (session_01Cy3dA1Gy1X7veKwXKWiD8g): test runs 8, module lines 1439
