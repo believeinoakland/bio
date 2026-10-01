@@ -30,3 +30,7 @@
 - `node checks/ownership.mjs … conformance tranche/T19`: 6 files changed; 0 failures.
 
 Size (session_01CaezPCPqZa9SnQsXoxH3V1): test runs 22, module lines 1481
+
+## J1 · REPORT
+
+Another module: affordances (src/affordances.mjs:486 JUSTIFICATION_REFUSALS, comment :807-809) lacks CONFORMANCE_NO_REASON, so test/m/affordances 'R19: determine, graded reasoned (N310) ...' goes red with R23 (the supersession's no-reason refusal is not in the list). Fix is affordances' L11 job: add CONFORMANCE_NO_REASON, re-word the comment's NO_REASON. INTENT_NO_REASON (intent R30) is missing from that list too. Requirements text (BOB's): conformance.md Private Uses and R12 still name legacy-checks for isMachineIdentity/proposalLabel; they come from record-grammar now. Details in my record.
