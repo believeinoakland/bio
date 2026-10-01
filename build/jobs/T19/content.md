@@ -52,3 +52,7 @@
 - `format`: 87 modules, 0 failures. `architecture content`: 22 product files, 0 failures. `coverage content`: 51 of 51 live ids. `ownership content tranche/T19`: legacy-store 0/0, legacy-checks 0 added, 27 removed, 0 failures.
 
 Size (session_018xyRdoKhudz527RSyBF7oX): test runs 8, module lines 3457
+
+## J1 · COMPLETE
+
+Done; pushed to job/T19/content. Record: build/jobs/T19/content.md, Completion section. Met, with tests (seams.test.mjs): R48, R49, R50, R51, plus rule 1 (no content file imports bio-checks.mjs) and the catalogue's C-80 VERSION_NOTICE_CHECKS deleted (legacy-checks -27). The copied core matches the catalogue's answers in 219,071 of 219,071 comparisons, and the face's algebra matches in 205,920 of 205,920, so no content id moves. Content's tests are 113/113. The test/m failures are the base's 254, none added. All four checks pass. One decision: the copied C-45 rows' wheres name content's own sites. Three reports in the record: the spread of my ops map, the slot calls and the counts lines are legacy-store's (L10); for inquiry-grammar's L6 deletion, basis-versions/index.mjs:30 and citation's invariants test still read the catalogue's CONTENT_EXTENT_CHECKS; the plane bundle needs regenerating.
