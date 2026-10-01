@@ -1,0 +1,1653 @@
+/* action-plans — the action plan (requirements: `build/requirements/action-plans.md`; `BIO_Action_v0_1.md` §3, §4):
+ * a project's working material for deciding what to do about one or more matters, an inquiry still open (suspected)
+ * or a determination's outcomes (determined). It holds options the assistant suggests or a member adds, each bound to
+ * the matters it serves; the member's choice of which to pursue; up to three scenarios laying the chosen options out
+ * over time, with checkpoints a member judges; and the link from each started option to the Action it created.
+ *
+ * A new module (T18, layer 9, last): nothing moves from the legacy modules. Escalation's record-object pattern is the
+ * model (its index.mjs and doc.mjs).
+ *
+ * WHAT IT DECIDES, AND WHAT IT NEVER DOES. Every fact about a matter is read through the module that owns it (an
+ * inquiry's state and the projects drawing on it through `inquiry` and record-core, a determination through
+ * `conformance`, a standard through `standards`, an action through `actions`, an escalation through `escalation`, what
+ * is available through `filings`, the project's bar through `strength`); support, liveness, phase starts and the checks
+ * are derived when read, never stored (R8, R15, R19). A machine proposes (R11, R31) and nothing else (R24, R33): every
+ * other act is a named member's. A checkpoint is the group's own intention and never a finding about the government
+ * (R23). Nothing here holds a cost, budget, assignee, hours or significance score (R26), and no place is named in its
+ * behaviour or text (R28). A plan is never published (R25): it is read only through this module's reads, by a viewer
+ * who may see its project, and answered to anyone else as an id that names nothing (R22).
+ *
+ * THE RECORD OBJECT (R2, R27). A plan is a document of type `action_plan` under a `PLN-` id, promoted through
+ * `promotion` like any record object, so it has history, audit and export. Each act is one promotion that appends one
+ * entry to the document's Plan Log; the tables are that log's projections, written by the module's registered
+ * projection inside the promotion's transaction. The module's registered check refuses any other promotion of a plan
+ * document (only a replay restores one), so an act and a raw promotion cannot disagree about what happened. Proposals
+ * are stored apart (R11), since any credential may make one, and are never part of the plan's document.
+ *
+ * REACHED as `actionPlansOf(host, deps)` (K61): one instance per host, created on the first call with `deps`, returned
+ * to every later caller. At creation it migrates its tables (idempotent), declares them to purge (R27), registers its
+ * step with promotion (R21's check included), and registers its planning-run check and run listener with ai-runs (R30,
+ * R32).
+ * `deps` (each reached through its factory on the same host unless given; a test passes its own):
+ *   record, membership, promotion   layer 2: `allocId`, `transact`, `head`, `readFile`, `livePaths`, `declarePurge`;
+ *                                   `inSight`, `sight`, `existenceAct`, `projectAuthority`, `memberFacts`; `promote`,
+ *                                   `registerStep`.
+ *   inquiry        `projectsDrawingOn` (R1: the projects drawing on an inquiry).
+ *   strength       `projectBar` (Terms: `short` support).
+ *   conformance    `determinationRead`, `determinationsFor` (R1, R5, R8); its `noSuchDetermination`.
+ *   standards      `standardRead` (R12's `enforces`, R19).
+ *   actions        `actionCreate`, `actionRead` (R6, R15, R18); its `noSuchAction`'s row for `CONTACT_NOT_A_MEMBER`.
+ *   clocks         action-clocks' `reminderSet` (its R4; R18, R29).
+ *   escalation     `escalationsFor`, `escalationRead` (R6, R15).
+ *   filings        `availableActions` (shown beside legal options).
+ *   aiRuns         `registerOpenCheck`, `onRunOpened`, `runFor`, `read`, `boundOf`, `consumeBound` (R30–R32).
+ *   now            the instance clock, an ISO string (default: the wall clock, to the second). */
+
+import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
+import { membershipOf, noSuchProject } from "../membership/index.mjs";
+import { promotionOf } from "../promotion/index.mjs";
+import { inquiryOf } from "../inquiry/index.mjs";
+import { strengthOf } from "../strength/index.mjs";
+import { conformanceOf, noSuchDetermination } from "../conformance/index.mjs";
+import { standardsOf } from "../standards/index.mjs";
+import { actionsOf, ACTION_CATALOGUE_CHECKS } from "../actions/index.mjs";
+import { actionClocksOf, ACTION_CLOCK_CHECKS } from "../action-clocks/index.mjs";
+import { escalationOf } from "../escalation/index.mjs";
+import { filingsOf } from "../filings/index.mjs";
+import { aiRunsOf } from "../ai-runs/index.mjs";
+import { runPrincipalGate } from "../run-rules/index.mjs";
+import { isMachineIdentity, proposalLabel, normalizeType } from "../../checks/bio-checks.mjs";
+import { ACTION_PLAN, planId, planDoc, appendEntry, logOf, logSection, parseFm, q } from "./doc.mjs";
+import { ACTION_PLANS_TABLES, migrateActionPlans } from "./schema.mjs";
+import { ACTION_PLAN_CHECKS, refusal, relayed } from "./checks.mjs";
+import { CATEGORIES, DISPOSITIONS, NEEDS_REASON, WORK_KINDS, REFUSED_KEYS, TIERS, JUDGEMENTS, TITLE_MAX, REASON_MAX,
+         SUMMARY_MAX, DETAIL_MAX, WHY_MAX, NOTE_MAX, SUBJECTS_MAX, SCENARIOS_MAX, DATES_MAX, PLANS_PAGE_MAX, DUE_MAX,
+         TRAY_PAGE, SOURCES_MAX, isObj, str, isDay, isLine, isToken, normSubject, subjectKey, addresseeArm, addresseeOf,
+         checkPhases, phaseTimes, unbranched, dayOf } from "./values.mjs";
+
+export { ACTION_PLANS_SCHEMA, ACTION_PLANS_TABLES } from "./schema.mjs";
+export { ACTION_PLAN_CHECKS } from "./checks.mjs";
+export { CATEGORIES, DISPOSITIONS, WORK_KINDS, REFUSED_KEYS, TIERS, JUDGEMENTS, TRAY_PAGE } from "./values.mjs";
+
+/** R1, R8: an inquiry still open is live; these states are closed. (`published` is read, never entered.) */
+export const CLOSED_INQUIRY_STATES = Object.freeze(["concluded", "dismissed", "divided", "published"]);
+/** R32: the disclosure every machine proposal, and every option adopted from one, answers. */
+export const DISCLOSURE = (run, skill) => `Suggested by the assistant (machine work) in run ${run}, under skill version `
+  + `${skill ?? "undetermined"}. It is not the group's decision; it becomes an option only when a member adopts it.`;
+const PROPOSAL_SAYS = "this is a proposal, not an option: it is stored apart from the plan's options and becomes one only "
+  + "when a member adopts it, in their own words for any reason the plan asks.";
+const CHECK_SAYS = "a check informs; it never refuses or changes anything.";
+const DAY_MS = 86400000;
+const ACT = Symbol("action-plans act");
+const GRADE_RANK = Object.freeze({ A: 0, B: 1, C: 2, D: 3 });
+
+const isMachine = (who) => str(who) === "" || isMachineIdentity(str(who));
+const unjson = (s, d = null) => { try { return s ? JSON.parse(s) : d; } catch { return d; } };
+const hex8 = () => { const b = new Uint8Array(4); crypto.getRandomValues(b); return [...b].map((x) => x.toString(16).padStart(2, "0")).join(""); };
+const msOf = (v) => (typeof v !== "string" || !v ? NaN : /^\d{4}-\d{2}-\d{2}$/.test(v) ? Date.parse(`${v}T00:00:00Z`) : Date.parse(v));
+const iso = (ms) => stampInstant("second", ms);
+const ok = (r) => r && r.ok !== false;
+
+export class ActionPlans {
+  constructor(deps) {
+    this.record = deps.record;
+    this.membership = deps.membership;
+    this.promotion = deps.promotion;
+    this.sql = (deps.storage || {}).sql;
+    this.deps = deps;
+    this.now = deps.now || (() => stampInstant("second"));
+  }
+
+  /* The providers, reached when first needed (layers 6–9). */
+  get inquiry() { return this.#dep("inquiry"); }
+  get strength() { return this.#dep("strength"); }
+  get conformance() { return this.#dep("conformance"); }
+  get standards() { return this.#dep("standards"); }
+  get actions() { return this.#dep("actions"); }
+  get clocks() { return this.#dep("clocks"); }
+  get escalation() { return this.#dep("escalation"); }
+  get filings() { return this.#dep("filings"); }
+  get aiRuns() { return this.#dep("aiRuns"); }
+  #dep(name) {
+    const d = this.deps[name];
+    let v;
+    try { v = typeof d === "function" ? d() : d; } catch { v = null; }
+    if (!v) throw new ProviderAbsent(name);
+    return v;
+  }
+
+  /** R27: the module's tables; run at creation, and safe to run again. */
+  migrate() { migrateActionPlans(this.sql); }
+
+  #rows(qy, ...a) { return [...this.sql.exec(qy, ...a)]; }
+  #one(qy, ...a) { return this.#rows(qy, ...a)[0] || null; }
+  #text(id) { const f = this.record.readFile(id, "bundle.md"); return f && typeof f.text === "string" ? f.text : null; }
+  #nowMs() { return msOf(this.now()); }
+
+  /* ===================================================================== *
+   * READING THE PLAN'S ROWS (R6, R22: absent and unseen are one answer)
+   * ===================================================================== */
+
+  #sees(project, viewer) { return viewer === null || viewer === undefined || this.membership.inSight(project, viewer); }
+
+  #plan(id, viewer) {
+    if (typeof id !== "string" || !id) return null;
+    const r = this.#one(`SELECT * FROM plans WHERE plan_id=?`, id);
+    if (!r || !this.#sees(r.project_id, viewer)) return null;
+    return { id: r.plan_id, project: r.project_id, title: r.title, state: r.state, openedBy: r.opened_by,
+             openedAt: r.opened_at, closedBy: r.closed_by ?? null, closedAt: r.closed_at ?? null,
+             closeReason: r.close_reason ?? null };
+  }
+  #subjectsOf(planId, { all = false } = {}) {
+    return this.#rows(`SELECT * FROM plan_subjects WHERE plan_id=? ${all ? "" : "AND removed_seq IS NULL"} ORDER BY seq, ord`, planId)
+      .map((s) => ({ key: s.skey, subject: unjson(s.subject_json, {}), addedBy: s.added_by, addedAt: s.added_at,
+                     removedSeq: s.removed_seq ?? null }));
+  }
+  #options(planId) {
+    return this.#rows(`SELECT * FROM plan_options WHERE plan_id=? ORDER BY ord`, planId).map((o) => ({
+      id: o.option_id, ord: o.ord, fields: unjson(o.fields_json, {}), disposition: o.disposition,
+      reminders: unjson(o.reminders_json, null), chosenBy: o.chosen_by ?? null, proposal: o.proposal_id ?? null,
+      createdBy: o.created_by, createdAt: o.created_at, action: o.action_id ?? null, startedBy: o.started_by ?? null,
+      startedAt: o.started_at ?? null }));
+  }
+  #option(planId, optionId) {
+    return typeof optionId === "string" ? this.#options(planId).find((o) => o.id === optionId) || null : null;
+  }
+  #scenarios(planId) {
+    const rows = this.#rows(`SELECT * FROM plan_scenarios WHERE plan_id=? ORDER BY scenario, version`, planId);
+    const out = new Map();
+    for (const r of rows) out.set(r.scenario, { scenario: r.scenario, version: r.version, name: r.name,
+      phases: unjson(r.phases_json, []), author: r.author, at: r.at, versions: (out.get(r.scenario)?.versions ?? 0) + 1 });
+    return [...out.values()];
+  }
+  #judgements(planId, scenario, version) {
+    return new Map(this.#rows(`SELECT * FROM plan_checkpoints WHERE plan_id=? AND scenario=? AND version=?`,
+      planId, scenario, version).map((j) => [j.phase, { judged: j.judged, note: j.note ?? null, author: j.author, at: j.at }]));
+  }
+  #history(planId) {
+    return this.#rows(`SELECT * FROM plan_history WHERE plan_id=? ORDER BY seq`, planId)
+      .map((h) => ({ ...unjson(h.entry_json, {}), seq: h.seq, kind: h.kind, author: h.author, at: h.at, reason: h.reason ?? null }));
+  }
+
+  /* ===================================================================== *
+   * THE FACTS OF A SUBJECT (Terms, R1, R5, R8), read through their owners
+   * ===================================================================== */
+
+  /* An inquiry the viewer may see: its state; null when absent, unseen or not an inquiry. */
+  #inquiryFacts(id, viewer) {
+    const h = typeof id === "string" ? this.record.head(id) : null;
+    if (!h || normalizeType(h.type) !== "inquiry") return null;
+    if (viewer !== null && viewer !== undefined && !this.membership.inSight(id, viewer)) return null;
+    return { state: h.currentState };
+  }
+  #inquiryOfProject(id, project) {
+    const list = this.inquiry.projectsDrawingOn(id) || [];
+    return list.includes(project);
+  }
+  #determination(id, viewer) {
+    const d = typeof id === "string" && id ? this.conformance.determinationRead({ id, viewer }) : null;
+    return ok(d) ? d : null;
+  }
+
+  /** Terms: a subject's support, with why. `established` and `short` for a determined subject (each finding's frozen
+   *  pair against the project's bar, per declared axis); `hypothetical` for a suspected one. */
+  #support(s, project, viewer) {
+    if (s.kind === "inquiry") return { support: "hypothetical", why: "a suspected matter: an inquiry still open, not a determination" };
+    const d = this.#determination(s.determination, viewer);
+    if (!d) return { support: "undetermined", why: "the determination does not answer to this reader" };
+    const bar = this.strength.projectBar(project) || {};
+    const axes = ["capture", "connection"].filter((a) => typeof bar[a] === "string" && bar[a] in GRADE_RANK);
+    if (!axes.length) return { support: "established", why: "determined; the project declares no bar, so nothing is measured against one" };
+    const findings = Array.isArray(d.findings) ? d.findings : [];
+    for (const f of findings) {
+      for (const a of axes) {
+        const g = f && f.frozen && f.frozen[a] ? f.frozen[a].grade : null;
+        if (!(g in GRADE_RANK))
+          return { support: "short", why: `a finding's ${a} grade is not graded, so it is not shown to meet the project's bar (${a} ${bar[a]})` };
+        if (GRADE_RANK[g] > GRADE_RANK[bar[a]])
+          return { support: "short", why: `a finding's ${a} grade ${g} is short of the project's bar (${a} ${bar[a]})` };
+      }
+    }
+    return { support: "established", why: "determined; every finding it rests on meets the project's bar on each declared axis" };
+  }
+
+  /** R8: a subject's liveness, derived when read. */
+  #liveness(s, viewer) {
+    if (s.kind === "inquiry") {
+      const f = this.#inquiryFacts(s.inquiry, viewer);
+      if (!f) return { state: "undetermined", says: "an object you may not see" };
+      return CLOSED_INQUIRY_STATES.includes(f.state) ? { state: "closed", inquiry_state: f.state } : { state: "live" };
+    }
+    const d = this.#determination(s.determination, viewer);
+    if (!d) return { state: "undetermined", says: "an object you may not see" };
+    if (d.live === true) return { state: "live" };
+    const by = typeof d.superseded_by === "string" && this.#determination(d.superseded_by, viewer) ? d.superseded_by : null;
+    return { state: "superseded", successor: by };
+  }
+
+  /* ===================================================================== *
+   * THE SHARED REFUSALS OF AN ACT
+   * ===================================================================== */
+
+  /** R1, R4, R20, R24: the plan's own acts are a named member's. */
+  #member(author) {
+    /* DEC-49 REGION is-plan-member */
+    if (isMachine(author))
+      return refusal("MACHINE_CANNOT_PLAN", "an action plan is opened, changed and closed by a named member; a machine "
+        + "proposes and never acts. Nothing was written.");
+    /* END DEC-49 REGION is-plan-member */
+    return null;
+  }
+  /** R9, R11: an option is added, revised or adopted by a named member. */
+  #optionMember(author) {
+    /* DEC-49 REGION is-option-member */
+    if (isMachine(author))
+      return refusal("MACHINE_CANNOT_ADD_OPTION", "an option is added, revised or adopted by a named member; a machine "
+        + "proposes (op=optionpropose) and never adds. Nothing was written.");
+    /* END DEC-49 REGION is-option-member */
+    return null;
+  }
+  /* NO_SUCH_PLAN, PLAN_CLOSED and the joined fence, in that order; `{p}` or a refusal. */
+  #openPlan(id, author, viewer, act) {
+    const p = this.#plan(id, viewer);
+    if (!p) return { r: noSuchPlan(id) };
+    if (p.state !== "open") return { r: refusePlanClosed(p.id) };
+    const fence = this.membership.projectAuthority(p.project, author, "joined", act);
+    if (fence) return { r: fence };
+    return { p };
+  }
+
+  /** R1, R3, R4: the subjects named, judged stage by stage across the list (malformed, unseen, of the project, live,
+   *  free), so two faults at once answer the earlier code. `{items: [{subject, key}]}` or a refusal. */
+  #subjects(project, list, viewer, { plan = null } = {}) {
+    /* DEC-49 REGION is-plan-subjects */
+    if (!Array.isArray(list) || !list.length || list.length > SUBJECTS_MAX)
+      return refusal("PLAN_NO_SUBJECT", `a plan is about 1 to ${SUBJECTS_MAX} matters. Nothing was written.`,
+        { count: Array.isArray(list) ? list.length : null, max: SUBJECTS_MAX });
+    /* END DEC-49 REGION is-plan-subjects */
+    const items = [];
+    const keys = new Set();
+    for (let i = 0; i < list.length; i++) {
+      const s = normSubject(list[i]);
+      const key = s ? subjectKey(s) : null;
+      /* DEC-49 REGION is-subject-shaped */
+      if (!s || keys.has(key))
+        return refusal("SUBJECT_MALFORMED", s ? `matter ${i} is named twice. Nothing was written.`
+          : `matter ${i} is neither {kind: inquiry, inquiry} nor {kind: outcome, determination, standard}. Nothing was written.`,
+          { index: i });
+      /* END DEC-49 REGION is-subject-shaped */
+      keys.add(key);
+      items.push({ subject: s, key });
+    }
+    const facts = [];
+    for (let i = 0; i < items.length; i++) {
+      const s = items[i].subject;
+      if (s.kind === "inquiry") {
+        const f = this.#inquiryFacts(s.inquiry, viewer);
+        if (!f) return refuseNoSuchInquiry(s.inquiry, { index: i });
+        facts.push(f);
+      } else {
+        const d = this.#determination(s.determination, viewer);
+        if (!d) return noSuchDetermination(s.determination, { index: i });
+        if (!(Array.isArray(d.outcomes) ? d.outcomes : []).some((o) => o && o.standard === s.standard))
+          return refusal("SUBJECT_MALFORMED", `matter ${i} names a standard that determination does not measure. Nothing was written.`,
+            { index: i });
+        facts.push(d);
+      }
+    }
+    for (let i = 0; i < items.length; i++) {
+      const s = items[i].subject;
+      const mine = s.kind === "inquiry" ? this.#inquiryOfProject(s.inquiry, project) : facts[i].project === project;
+      /* DEC-49 REGION is-subject-of-project */
+      if (!mine)
+        return refusal("SUBJECT_NOT_OF_PROJECT", s.kind === "inquiry"
+          ? `matter ${i}: the project does not draw on that question. Nothing was written.`
+          : `matter ${i}: that determination was made by another project. Nothing was written.`, { index: i });
+      /* END DEC-49 REGION is-subject-of-project */
+    }
+    for (let i = 0; i < items.length; i++) {
+      const s = items[i].subject;
+      const live = s.kind === "inquiry" ? !CLOSED_INQUIRY_STATES.includes(facts[i].state) : facts[i].live === true;
+      /* DEC-49 REGION is-subject-live */
+      if (!live)
+        return refusal("SUBJECT_NOT_LIVE", s.kind === "inquiry"
+          ? `matter ${i}: the question is ${facts[i].state}, no longer open. Nothing was written.`
+          : `matter ${i}: the determination has been superseded. Nothing was written.`,
+          { index: i, ...(s.kind === "outcome" ? { superseded_by: this.#determination(facts[i].superseded_by, viewer) ? facts[i].superseded_by : null } : {}) });
+      /* END DEC-49 REGION is-subject-live */
+    }
+    for (let i = 0; i < items.length; i++) {
+      const held = this.#one(`SELECT s.plan_id FROM plan_subjects s JOIN plans p ON p.plan_id = s.plan_id
+                              WHERE s.skey=? AND s.removed_seq IS NULL AND p.project_id=? AND p.state='open'
+                              ORDER BY s.plan_id LIMIT 1`, items[i].key, project);
+      /* DEC-49 REGION is-subject-free */
+      if (held)
+        return refusal("SUBJECT_IN_ACTIVE_PLAN", `matter ${i} is already in the open plan ${held.plan_id} of this project. `
+          + "Nothing was written.", { index: i, plan: held.plan_id, ...(plan && held.plan_id === plan ? { this_plan: true } : {}) });
+      /* END DEC-49 REGION is-subject-free */
+    }
+    return { items };
+  }
+
+  /** R9, R10, R12: an option's fields, judged in R9's order after the act's own refusals. `{fields}` or a refusal. */
+  #optionFields(a, p, viewer) {
+    const summary = typeof a.summary === "string" ? a.summary.trim() : "";
+    /* DEC-49 REGION is-option-summary */
+    if (!summary || summary.length > SUMMARY_MAX)
+      return refusal("OPTION_NO_SUMMARY", `an option has a summary of 1 to ${SUMMARY_MAX} characters. Nothing was written.`,
+        { max: SUMMARY_MAX });
+    /* END DEC-49 REGION is-option-summary */
+    const detail = a.detail === undefined || a.detail === null ? null : String(a.detail);
+    /* DEC-49 REGION is-option-detail */
+    if (detail !== null && detail.length > DETAIL_MAX)
+      return refusal("OPTION_DETAIL_TOO_LONG", `an option's detail is at most ${DETAIL_MAX} characters; this is `
+        + `${detail.length}. Nothing was written.`, { max: DETAIL_MAX, length: detail.length });
+    /* END DEC-49 REGION is-option-detail */
+    /* DEC-49 REGION is-option-category */
+    if (!CATEGORIES.includes(a.category))
+      return refusal("CATEGORY_UNKNOWN", `a category is one of ${CATEGORIES.join(", ")}. Nothing was written.`,
+        { categories: CATEGORIES });
+    /* END DEC-49 REGION is-option-category */
+    const held = new Map(this.#subjectsOf(p.id).map((s) => [s.key, s.subject]));
+    const named = Array.isArray(a.subjects) ? a.subjects : [];
+    const subjects = [];
+    let foreign = null;
+    for (const x of named) {
+      const s = typeof x === "string" ? held.get(x) : normSubject(x);
+      if (!s || !held.has(subjectKey(s))) { foreign = x; break; }
+      if (!subjects.some((y) => subjectKey(y) === subjectKey(s))) subjects.push(s);
+    }
+    /* DEC-49 REGION is-option-subject */
+    if (!subjects.length || foreign !== null)
+      return refusal("OPTION_NO_SUBJECT", foreign !== null ? "the option names a matter the plan is not about. Nothing was written."
+        : "an option serves at least one of the plan's matters. Nothing was written.");
+    /* END DEC-49 REGION is-option-subject */
+    let addressee = null;
+    if (a.addressee !== undefined && a.addressee !== null) {
+      /* DEC-49 REGION is-option-addressee */
+      if (!addresseeArm(a.addressee))
+        return refusal("ADDRESSEE_REFUSED", "an addressee is {state: named, kind?: office, role, body}, {state: named, "
+          + "kind: press | organisation | group, role, organisation} or {state: audience, description}; never a private "
+          + "individual. Nothing was written.");
+      /* END DEC-49 REGION is-option-addressee */
+      addressee = addresseeOf(a.addressee);
+    }
+    const dates = [];
+    if (a.dates !== undefined && a.dates !== null) {
+      const list = Array.isArray(a.dates) ? a.dates : null;
+      const bad = !list || list.length > DATES_MAX
+        || list.some((d) => !isObj(d) || !isDay(d.date) || !isLine(d.basis, NOTE_MAX));
+      /* DEC-49 REGION is-option-date */
+      if (bad)
+        return refusal("DATE_REFUSED", `regulated dates are a list of at most ${DATES_MAX} {date: YYYY-MM-DD, basis}, each `
+          + "basis naming the statute, order or commitment that sets it. Nothing was written.");
+      /* END DEC-49 REGION is-option-date */
+      for (const d of list) dates.push({ date: d.date, basis: d.basis });
+    }
+    const t = a.tier;
+    const given = t !== undefined && t !== null;
+    const tier = !given ? undefined : /^[123]$/.test(String(t)) ? Number(t) : t;
+    /* DEC-49 REGION is-option-tier */
+    if ((given && a.category !== "legal") || (given && !TIERS.includes(tier)))
+      return refusal("TIER_REFUSED", a.category !== "legal" ? "a tier is stated only on a legal option. Nothing was written."
+        : "a tier is 1, 2, 3 or undetermined. Nothing was written.", { tiers: TIERS });
+    /* END DEC-49 REGION is-option-tier */
+    const lobbying = a.lobbying === true;
+    let enforces = null;
+    if (a.enforces !== undefined && a.enforces !== null) enforces = this.#enforces(a.enforces, held, viewer);
+    /* DEC-49 REGION is-lobbying-enforces */
+    if ((lobbying && !enforces) || (a.enforces !== undefined && a.enforces !== null && !enforces))
+      return refusal("LOBBYING_NO_REQUIREMENT", "an option marked lobbying names, in enforces, the standard you can read or "
+        + "the determined matter of the plan whose requirement it seeks enforced or restored. Nothing was written.");
+    /* END DEC-49 REGION is-lobbying-enforces */
+    const keys = refuseKeys(a);
+    if (keys) return keys;
+    return { fields: { summary, detail, category: a.category, subjects, addressee, dates,
+                       tier: a.category === "legal" ? (given ? tier : "undetermined") : null, lobbying, enforces } };
+  }
+  /* R12: `enforces` names a standard the reader can read, or a determined subject of the plan; null otherwise. */
+  #enforces(x, held, viewer) {
+    if (typeof x === "string" && held.has(x)) return held.get(x).kind === "outcome" ? { subject: held.get(x) } : null;
+    if (isObj(x)) {
+      const s = normSubject(x);
+      return s && s.kind === "outcome" && held.has(subjectKey(s)) ? { subject: s } : null;
+    }
+    if (typeof x !== "string" || !isToken(x)) return null;
+    const r = this.standards.standardRead({ id: x, viewer });
+    return ok(r) ? { standard: x } : null;
+  }
+
+  /* ===================================================================== *
+   * THE WRITE (R2, R27): every act is one promotion of the plan's document through `promotion`
+   * ===================================================================== */
+
+  #snap() { return `${this.now().replace(/[-:]/g, "").replace(/\.\d+/, "")}_${hex8()}`; }
+
+  #append(p, entry, { state, blurb }) {
+    const head = this.record.head(p.id);
+    const text = this.#text(p.id);
+    if (!head || text === null) return noSuchPlan(p.id);
+    const seq = logOf(text).length + 1;
+    const next = appendEntry(text, { entry, seq, state, fromState: head.currentState, blurb });
+    /* DEC-49 REGION is-plan-spliceable */
+    if (next === null)
+      return refusal("UNSPLICEABLE_PLAN", "the plan's document cannot be extended in place. Nothing was written.");
+    /* END DEC-49 REGION is-plan-spliceable */
+    const carried = (this.record.livePaths(p.id) || []).filter((x) => x !== "bundle.md").map((path) => {
+      const f = this.record.readFile(p.id, path);
+      return typeof f.text === "string" ? { path, text: f.text, sha256: f.sha256 }
+                                        : { path, blobSha: f.blobSha, sha256: f.sha256, bytes: f.bytes };
+    });
+    const fm = parseFm(next) || {};
+    const r = this.promotion.promote({ bundleId: p.id, base: head.bundleSha, snapKey: this.#snap(), author: entry.author,
+      files: [{ path: "bundle.md", text: next }, ...carried],
+      meta: { object_type: ACTION_PLAN, title: fm.title, current_state: fm.current_state, prior_state: fm.prior_state ?? null,
+              created: fm.created, last_updated: fm.last_updated },
+      [ACT]: true });
+    return r.ok ? { ok: true, seq } : r;
+  }
+
+  /* ---- the registered step (promotion R39) ---- */
+
+  /** R24, R27: a plan's document changes only through this module's acts, never by a machine, and its log only grows;
+   *  a replay restores one as it was. R21: a project's `work_kinds`. */
+  check(c) {
+    const type = normalizeType(c.promotedType);
+    const headType = c.head ? normalizeType(c.head.type) : null;
+    if (type === "project" || headType === "project") return this.#workKindsCheck(c);
+    if (type !== ACTION_PLAN && headType !== ACTION_PLAN) return null;
+    if (c.replay) return null;
+    /* DEC-49 REGION is-plan-doc-member */
+    if (isMachine(c.author))
+      return refusal("MACHINE_CANNOT_WRITE_PLAN", "an action plan is written only by a member's act; a machine proposes "
+        + "and never acts. Nothing was written.");
+    /* END DEC-49 REGION is-plan-doc-member */
+    /* DEC-49 REGION is-plan-doc-act */
+    if (!c.pkg || c.pkg[ACT] !== true)
+      return refusal("PLAN_BY_ACT_ONLY", "an action plan changes only through its acts, so its log and its tables never "
+        + "disagree. Nothing was written.");
+    /* END DEC-49 REGION is-plan-doc-act */
+    if (c.head) {
+      const held = logSection(this.#text(c.bundleId)) || "";
+      const now = logSection(c.bundleMd && c.bundleMd.text) || "";
+      /* DEC-49 REGION is-plan-append-only */
+      if (!now.startsWith(held))
+        return refusal("PLAN_HISTORY_REWRITTEN", "an action plan's log is append-only. Nothing was written.");
+      /* END DEC-49 REGION is-plan-append-only */
+    }
+    return null;
+  }
+
+  /** R21: a project document's `work_kinds`, from the vocabulary, set or changed by an owner only. A replay is not
+   *  asked; a project's creation is its creator's, who becomes its owner in the same act. */
+  #workKindsCheck(c) {
+    if (c.replay) return null;
+    const md = c.bundleMd && typeof c.bundleMd.text === "string" ? c.bundleMd.text
+      : ((c.files || []).find((f) => f && f.path === "bundle.md") || {}).text;
+    const next = (c.docFm && typeof c.docFm === "object" ? c.docFm : parseFm(md)) || {};
+    const heldFm = c.head ? parseFm(this.#text(c.bundleId)) || {} : {};
+    const norm = (v) => JSON.stringify(v === undefined || v === null ? null : v);
+    if (norm(next.work_kinds) === norm(heldFm.work_kinds)) return null;
+    /* DEC-49 REGION is-work-kind-member */
+    if (isMachine(c.author))
+      return refusal("MACHINE_CANNOT_SET_WORK_KIND", "a project's kinds of work are set by an owner of the project; a "
+        + "machine credential cannot set or change them. Nothing was written.");
+    /* END DEC-49 REGION is-work-kind-member */
+    const kinds = next.work_kinds;
+    const bad = kinds !== undefined && kinds !== null
+      && (!Array.isArray(kinds) || kinds.some((k) => !WORK_KINDS.includes(k)));
+    /* DEC-49 REGION is-work-kind-known */
+    if (bad)
+      return refusal("WORK_KIND_UNKNOWN", `work_kinds is a list drawn from ${WORK_KINDS.join(", ")}. Nothing was written.`,
+        { kinds: WORK_KINDS });
+    /* END DEC-49 REGION is-work-kind-known */
+    if (c.head) {
+      const fence = this.membership.projectAuthority(c.bundleId, c.author, "owner", "setting work_kinds");
+      if (fence) return fence;
+    }
+    return null;
+  }
+
+  /** R27: the tables, projected from the promoted document in the promotion's transaction. */
+  project(c) {
+    if (normalizeType(c.promotedType) !== ACTION_PLAN || !c.bundleMd || typeof c.bundleMd.text !== "string") return null;
+    const id = c.bundleId, text = c.bundleMd.text;
+    const log = logOf(text).filter((x) => !x.unreadable);
+    const heldRow = this.#one(`SELECT log_len FROM plans WHERE plan_id=?`, id);
+    const from = heldRow ? heldRow.log_len : 0;
+    for (const x of log.filter((y) => y.seq > from)) this.#apply(id, x);
+    const fm = parseFm(text) || {};
+    this.sql.exec(`UPDATE plans SET state=?, log_len=? WHERE plan_id=?`, String(fm.current_state ?? "open"), log.length, id);
+    return null;
+  }
+
+  #apply(id, x) {
+    const reason = typeof x.reason === "string" ? x.reason : null;
+    const { seq, ...body } = x;
+    this.sql.exec(`INSERT OR REPLACE INTO plan_history (plan_id, seq, kind, author, at, reason, entry_json) VALUES (?,?,?,?,?,?,?)`,
+      id, seq, String(x.kind), String(x.author ?? ""), String(x.at ?? ""), reason, JSON.stringify(body));
+    const addSubject = (s, ord) => this.sql.exec(`INSERT OR REPLACE INTO plan_subjects (plan_id, seq, ord, skey, subject_json,
+        added_by, added_at, removed_seq) VALUES (?,?,?,?,?,?,?,NULL)`, id, seq, ord, s.key, JSON.stringify(s.subject), x.author, x.at);
+    switch (x.kind) {
+      case "open":
+        this.sql.exec(`INSERT OR REPLACE INTO plans (plan_id, project_id, title, state, opened_by, opened_at, log_len)
+                       VALUES (?,?,?,?,?,?,0)`, id, String(x.project), String(x.title), "open", x.author, x.at);
+        (x.subjects || []).forEach((s, i) => addSubject(s, i));
+        break;
+      case "subject_add": addSubject({ key: x.key, subject: x.subject }, 0); break;
+      case "subject_remove":
+        this.sql.exec(`UPDATE plan_subjects SET removed_seq=? WHERE plan_id=? AND skey=? AND removed_seq IS NULL`, seq, id, x.key);
+        break;
+      case "option_add": {
+        const ord = (this.#one(`SELECT COUNT(*) AS n FROM plan_options WHERE plan_id=?`, id) || { n: 0 }).n;
+        this.sql.exec(`INSERT OR REPLACE INTO plan_options (plan_id, option_id, ord, fields_json, disposition, proposal_id,
+                       created_by, created_at) VALUES (?,?,?,?,'open',?,?,?)`,
+          id, x.option, ord, JSON.stringify(x.fields), x.proposal ?? null, x.author, x.at);
+        this.sql.exec(`INSERT OR REPLACE INTO plan_option_revisions (plan_id, option_id, rev, seq, fields_json, reason, author, at)
+                       VALUES (?,?,1,?,?,NULL,?,?)`, id, x.option, seq, JSON.stringify(x.fields), x.author, x.at);
+        if (x.proposal)
+          this.sql.exec(`UPDATE plan_option_proposals SET adopted_option=?, adopted_by=?, adopted_at=? WHERE proposal_id=?`,
+            x.option, x.author, x.at, x.proposal);
+        break;
+      }
+      case "option_revise": {
+        const rev = (this.#one(`SELECT MAX(rev) AS r FROM plan_option_revisions WHERE plan_id=? AND option_id=?`, id, x.option) || {}).r || 0;
+        this.sql.exec(`UPDATE plan_options SET fields_json=? WHERE plan_id=? AND option_id=?`, JSON.stringify(x.fields), id, x.option);
+        this.sql.exec(`INSERT OR REPLACE INTO plan_option_revisions (plan_id, option_id, rev, seq, fields_json, reason, author, at)
+                       VALUES (?,?,?,?,?,?,?,?)`, id, x.option, rev + 1, seq, JSON.stringify(x.fields), reason, x.author, x.at);
+        break;
+      }
+      case "dispose":
+        for (const o of x.options || []) {
+          const rem = x.disposition === "chosen" ? (x.reminders || {})[o] ?? [] : null;
+          this.sql.exec(`UPDATE plan_options SET disposition=?, reminders_json=?, chosen_by=? WHERE plan_id=? AND option_id=?`,
+            x.disposition, rem === null ? null : JSON.stringify(rem), x.disposition === "chosen" ? x.author : null, id, o);
+        }
+        break;
+      case "scenario_set": {
+        const v = (this.#one(`SELECT MAX(version) AS v FROM plan_scenarios WHERE plan_id=? AND scenario=?`, id, x.scenario) || {}).v || 0;
+        this.sql.exec(`INSERT OR REPLACE INTO plan_scenarios (plan_id, scenario, version, seq, name, phases_json, author, at)
+                       VALUES (?,?,?,?,?,?,?,?)`, id, x.scenario, v + 1, seq, x.name, JSON.stringify(x.phases), x.author, x.at);
+        break;
+      }
+      case "checkpoint":
+        this.sql.exec(`INSERT OR REPLACE INTO plan_checkpoints (plan_id, scenario, version, phase, seq, judged, note, author, at)
+                       VALUES (?,?,?,?,?,?,?,?,?)`, id, x.scenario, x.version, x.phase, seq, x.judged, x.note ?? null, x.author, x.at);
+        break;
+      case "start":
+        this.sql.exec(`UPDATE plan_options SET action_id=?, started_by=?, started_at=? WHERE plan_id=? AND option_id=?`,
+          x.action, x.author, x.at, id, x.option);
+        break;
+      case "close":
+        this.sql.exec(`UPDATE plans SET closed_by=?, closed_at=?, close_reason=? WHERE plan_id=?`, x.author, x.at, reason, id);
+        break;
+      default: break;
+    }
+  }
+
+  /* ===================================================================== *
+   * THE ACTS
+   * ===================================================================== */
+
+  /** R1–R3: open a plan in a project, about one or more matters. */
+  planOpen(args = {}) {
+    const { project, subjects, title, author, viewer } = args;
+    const m = this.#member(author);
+    if (m) return m;
+    /* DEC-49 REGION is-plan-titled */
+    if (!isLine(title, TITLE_MAX))
+      return refusal("PLAN_NO_TITLE", `a plan's title is 1 to ${TITLE_MAX} characters with no quotation mark, backslash `
+        + "or line break. Nothing was written.", { max: TITLE_MAX });
+    /* END DEC-49 REGION is-plan-titled */
+    const h = typeof project === "string" && project ? this.record.head(project) : null;
+    if (h && normalizeType(h.type) === "project") {
+      const seen = this.membership.existenceAct(project, viewer);
+      if (seen) return seen;
+    }
+    if (!h || normalizeType(h.type) !== "project" || !this.#sees(project, viewer))
+      return noSuchProject(typeof project === "string" && project ? project : null);
+    const fence = this.membership.projectAuthority(project, author, "joined", "planOpen");
+    if (fence) return fence;
+    const s = this.#subjects(project, subjects, viewer);
+    if (!s.items) return s;
+    const at = this.now();
+    const r = this.record.transact(() => {
+      const id = planId(this.record.allocId("PLN", at.slice(0, 4)).id);
+      const entry = { kind: "open", project, title: title.trim(), subjects: s.items, author, at };
+      const text = planDoc({ id, project, title: title.trim(), author, at, entry });
+      const fm = parseFm(text) || {};
+      const p = this.promotion.promote({ bundleId: id, base: null, snapKey: this.#snap(), author,
+        files: [{ path: "bundle.md", text }],
+        meta: { object_type: ACTION_PLAN, title: fm.title, current_state: fm.current_state, created: fm.created,
+                last_updated: fm.last_updated }, [ACT]: true });
+      return p.ok ? { ok: true, id } : p;
+    });
+    if (!r.ok) return r;
+    return { ok: true, id: r.id, project, title: title.trim(), state: "open", opened_by: author, at,
+             subjects: s.items.map((x) => ({ subject: x.subject, ...this.#support(x.subject, project, viewer) })) };
+  }
+
+  /** R4: add a matter to an open plan. */
+  planSubjectAdd(args = {}) { return this.#subjectAct("add", args); }
+  /** R4: remove a matter from an open plan; options serving it keep it and read `subject_removed` (R8). */
+  planSubjectRemove(args = {}) { return this.#subjectAct("remove", args); }
+  #subjectAct(kind, { plan, subject, reason, author, viewer } = {}) {
+    const m = this.#member(author);
+    if (m) return m;
+    const o = this.#openPlan(plan, author, viewer, kind === "add" ? "planSubjectAdd" : "planSubjectRemove");
+    if (o.r) return o.r;
+    const p = o.p;
+    const bad = refuseReason(reason, true);
+    if (bad) return bad;
+    let entry;
+    if (kind === "add") {
+      const s = this.#subjects(p.project, [subject], viewer, { plan: p.id });
+      if (!s.items) return s;
+      entry = { kind: "subject_add", subject: s.items[0].subject, key: s.items[0].key };
+    } else {
+      const s = normSubject(subject);
+      const held = this.#subjectsOf(p.id);
+      const key = s ? subjectKey(s) : typeof subject === "string" ? subject : null;
+      if (!key || !held.some((x) => x.key === key))
+        return refusal("SUBJECT_MALFORMED", "the plan is not about that matter, so it cannot be removed. Nothing was written.",
+          { index: 0 });
+      /* DEC-49 REGION is-plan-subjects */
+      if (held.length === 1)
+        return refusal("PLAN_NO_SUBJECT", "a plan is about at least one matter, and that is its last. Close the plan "
+          + "instead. Nothing was written.", { count: 0, max: SUBJECTS_MAX });
+      /* END DEC-49 REGION is-plan-subjects */
+      entry = { kind: "subject_remove", key, subject: held.find((x) => x.key === key).subject };
+    }
+    Object.assign(entry, { reason: reason.trim(), author, at: this.now() });
+    const w = this.#append(p, entry, { blurb: kind === "add" ? "Subject added" : "Subject removed" });
+    if (!w.ok) return w;
+    const served = kind === "remove" ? this.#options(p.id).filter((x) => (x.fields.subjects || []).some((y) => subjectKey(y) === entry.key))
+      .map((x) => x.id) : [];
+    return { ok: true, plan: p.id, [kind === "add" ? "added" : "removed"]: entry.subject, reason: entry.reason, author,
+             at: entry.at, ...(kind === "add" ? { support: this.#support(entry.subject, p.project, viewer) } : { options_marked: served }) };
+  }
+
+  /** R9: add an option. */
+  optionAdd(args = {}) {
+    const { plan, author, viewer } = args;
+    const m = this.#optionMember(author);
+    if (m) return m;
+    const o = this.#openPlan(plan, author, viewer, "optionAdd");
+    if (o.r) return o.r;
+    const f = this.#optionFields(args, o.p, viewer);
+    if (!f.fields) return f;
+    return this.#addOption(o.p, f.fields, { author });
+  }
+
+  #addOption(p, fields, { author, proposal = null }) {
+    const n = (this.#one(`SELECT COUNT(*) AS n FROM plan_options WHERE plan_id=?`, p.id) || { n: 0 }).n + 1;
+    const option = `opt-${n}`;
+    const entry = { kind: "option_add", option, fields, ...(proposal ? { proposal } : {}), author, at: this.now() };
+    const w = this.#append(p, entry, { blurb: proposal ? "Option adopted" : "Option added" });
+    if (!w.ok) return w;
+    return { ok: true, plan: p.id, option, fields, disposition: "open", ...(proposal ? { proposal } : {}), author, at: entry.at };
+  }
+
+  /** R9: revise an option, with a reason; earlier revisions stay readable. */
+  optionRevise(args = {}) {
+    const { plan, option, reason, author, viewer } = args;
+    const m = this.#optionMember(author);
+    if (m) return m;
+    const o = this.#openPlan(plan, author, viewer, "optionRevise");
+    if (o.r) return o.r;
+    const held = this.#option(o.p.id, option);
+    if (!held) return refuseNoSuchOption(option);
+    const bad = refuseReason(reason, true);
+    if (bad) return bad;
+    const cur = held.fields;
+    const pick = (k) => (Object.prototype.hasOwnProperty.call(args, k) ? args[k] : cur[k]);
+    const merged = { ...args, summary: pick("summary"), detail: pick("detail"), category: pick("category"),
+      subjects: Object.prototype.hasOwnProperty.call(args, "subjects") ? args.subjects : cur.subjects,
+      addressee: pick("addressee"), dates: pick("dates"),
+      tier: Object.prototype.hasOwnProperty.call(args, "tier") ? args.tier
+        : (pick("category") === "legal" && cur.tier !== "undetermined" ? cur.tier : undefined),
+      lobbying: pick("lobbying"),
+      enforces: Object.prototype.hasOwnProperty.call(args, "enforces") ? args.enforces
+        : cur.enforces ? (cur.enforces.standard ?? cur.enforces.subject) : undefined };
+    const f = this.#optionFields(merged, o.p, viewer);
+    if (!f.fields) return f;
+    const entry = { kind: "option_revise", option: held.id, fields: f.fields, reason: reason.trim(), author, at: this.now() };
+    const w = this.#append(o.p, entry, { blurb: "Option revised" });
+    if (!w.ok) return w;
+    return { ok: true, plan: o.p.id, option: held.id, fields: f.fields, reason: entry.reason, author, at: entry.at };
+  }
+
+  /** R11, R31: a proposal, by any credential, stored apart from the options. A machine's names its planning run. */
+  async optionPropose(args = {}) {
+    const { plan, why, run, sources, proposer, viewer } = args;
+    const who = str(proposer);
+    /* DEC-49 REGION is-proposer-stamped */
+    if (!who)
+      return refusal("PROPOSAL_NO_PROPOSER", "a proposal names who made it, and this one came with no stamped caller. "
+        + "Nothing was written.");
+    /* END DEC-49 REGION is-proposer-stamped */
+    const p = this.#plan(plan, viewer);
+    if (!p) return noSuchPlan(plan);
+    if (p.state !== "open") return refusePlanClosed(p.id);
+    const machine = isMachineIdentity(who);
+    let gate = null;
+    if (machine) {
+      gate = this.#runGate(run, p, who, viewer);
+      if (!gate.ok) return gate;
+    }
+    const f = this.#optionFields(args, p, viewer);
+    if (!f.fields) return f;
+    /* DEC-49 REGION is-proposal-why */
+    if (typeof why !== "string" || !why.trim() || why.length > WHY_MAX)
+      return refusal("PROPOSAL_WHY_REFUSED", `a proposal says why it is offered, in 1 to ${WHY_MAX} characters. Nothing was written.`,
+        { max: WHY_MAX });
+    /* END DEC-49 REGION is-proposal-why */
+    let srcs = null;
+    if (machine) {
+      const s = this.#sources(sources, viewer);
+      if (!s.ok) return s;
+      srcs = s.sources;
+    }
+    let skill = null;
+    if (machine) {
+      try { const r = await this.aiRuns.read({ run: gate.run.run, viewer }); skill = r && r.session && r.session.principal ? r.session.principal.skill ?? null : null; }
+      catch { skill = null; }
+    }
+    const at = this.now();
+    const r = this.record.transact(() => {
+      /* R31: the run is asked again inside the transaction, so a bound reached meanwhile is not passed. */
+      if (machine) { const again = this.#runGate(run, p, who, viewer); if (!again.ok) return again; }
+      const n = (this.#one(`SELECT COUNT(*) AS n FROM plan_option_proposals WHERE plan_id=?`, p.id) || { n: 0 }).n + 1;
+      const id = `${p.id}/proposal/${n}`;
+      const ord = machine ? (this.#one(`SELECT COUNT(*) AS n FROM plan_option_proposals WHERE run=?`, gate.run.run) || { n: 0 }).n + 1 : null;
+      this.sql.exec(`INSERT INTO plan_option_proposals (proposal_id, plan_id, n, fields_json, why, proposer, machine, run,
+                     skill_version, sources_json, run_ord, at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+        id, p.id, n, JSON.stringify(f.fields), why.trim(), who, machine ? 1 : 0, machine ? gate.run.run : null, skill,
+        srcs ? JSON.stringify(srcs) : null, ord, at);
+      if (machine) { const c = this.aiRuns.consumeBound(gate.run.run, "proposals", 1); if (c) return c; }
+      return { ok: true, id };
+    });
+    if (!r.ok) return r;
+    return { ok: true, plan: p.id, proposal: this.#proposalView(this.#proposalRow(r.id)), says: PROPOSAL_SAYS };
+  }
+
+  /* R31: the run a machine's proposal names, in R31's order; `{ok, run}` or a refusal. */
+  #runGate(run, p, caller, viewer) {
+    const r = typeof run === "string" && run.trim() ? this.aiRuns.runFor(run.trim(), viewer) : null;
+    /* DEC-49 REGION is-proposal-run */
+    if (!r)
+      return refusal("PROPOSAL_NO_RUN", "a machine's proposal names the planning run it was made under, one this caller "
+        + "can see. Nothing was written.", { run: typeof run === "string" ? run : null });
+    /* END DEC-49 REGION is-proposal-run */
+    /* DEC-49 REGION is-proposal-run-running */
+    if (r.status !== "running")
+      return refusal("PROPOSAL_RUN_NOT_RUNNING", `run ${r.run} is ${r.status}, not running. Nothing was written.`,
+        { run: r.run, status: r.status });
+    /* END DEC-49 REGION is-proposal-run-running */
+    if (r.mode !== "plan" || r.plan !== p.id) return refuseRunOtherPlan(r.run);
+    const np = runPrincipalGate({ caller, principal: r.principal_plane, act: "proposing an option under a planning run" });
+    if (np) return np;
+    const b = this.aiRuns.boundOf(r.run, "proposals");
+    /* DEC-49 REGION is-proposal-bound */
+    if (!b || b.consumed >= b.allowed)
+      return refusal("PROPOSAL_BOUND_REACHED", `run ${r.run} has made ${b ? b.consumed : 0} of the ${b ? b.allowed : 0} `
+        + "proposals it declared. Nothing was written.", { run: r.run, allowed: b ? b.allowed : 0, consumed: b ? b.consumed : 0 });
+    /* END DEC-49 REGION is-proposal-bound */
+    return { ok: true, run: r };
+  }
+
+  /* R31: what a machine's proposal rests on, each something the viewer can see. `{ok, sources}` or a refusal. */
+  #sources(list, viewer) {
+    const named = Array.isArray(list) ? list : [];
+    let hidden = null;
+    for (const s of named) {
+      if (!this.#sourceSeen(s, viewer)) { hidden = s; break; }
+    }
+    /* DEC-49 REGION is-proposal-sourced */
+    if (!named.length || named.length > SOURCES_MAX || hidden !== null)
+      return refusal("PROPOSAL_NO_SOURCE", !named.length || named.length > SOURCES_MAX
+        ? `a machine's proposal names 1 to ${SOURCES_MAX} sources it rests on. Nothing was written.`
+        : "a source named is not a finding, determination, standard, consequence, plan or option this caller can see. "
+          + "Nothing was written.", { max: SOURCES_MAX, ...(hidden !== null && typeof hidden === "string" ? { source: hidden.slice(0, 120) } : {}) });
+    /* END DEC-49 REGION is-proposal-sourced */
+    return { ok: true, sources: [...new Set(named)] };
+  }
+  #sourceSeen(s, viewer) {
+    if (typeof s !== "string" || !s) return false;
+    const m = /^(PLN-[^#]+)(?:#(opt-\d+))?$/.exec(s);
+    if (m) {
+      const p = this.#plan(m[1], viewer);
+      return !!p && (!m[2] || !!this.#option(p.id, m[2]));
+    }
+    if (/^CONF-/.test(s)) return !!this.#determination(s, viewer);
+    if (/^STD-/.test(s)) return ok(this.standards.standardRead({ id: s, viewer }));
+    const h = this.record.head(s);
+    if (!h || !["inquiry", "consequence"].includes(normalizeType(h.type))) return false;
+    return viewer === null || viewer === undefined || this.membership.inSight(s, viewer);
+  }
+
+  #proposalRow(id) { return typeof id === "string" ? this.#one(`SELECT * FROM plan_option_proposals WHERE proposal_id=?`, id) : null; }
+  /* R11, R32: a proposal as answered: labelled, with its why and sources; a machine's with its disclosure and the
+     project's work_kinds as they stood when its run opened; never a score. */
+  #proposalView(r) {
+    const machine = r.machine === 1;
+    const kinds = machine ? this.#runRow(r.run) : null;
+    return { id: r.proposal_id, plan: r.plan_id, ...unjson(r.fields_json, {}), why: r.why,
+             label: proposalLabel(r.proposer, "plan_option"),
+             ...(machine ? { run: r.run, skill_version: r.skill_version ?? null, sources: unjson(r.sources_json, []),
+                             disclosure: DISCLOSURE(r.run, r.skill_version),
+                             work_kinds: kinds && kinds.work_kinds_json !== null && kinds.work_kinds_json !== undefined
+                               ? { state: "stated", kinds: unjson(kinds.work_kinds_json, []) }
+                               : { state: "undetermined", says: "the project's work_kinds when this run opened were not recorded" } }
+                         : {}),
+             at: r.at, adopted: !!r.adopted_option,
+             ...(r.adopted_option ? { adopted_option: r.adopted_option, adopted_by: r.adopted_by, adopted_at: r.adopted_at } : {}) };
+  }
+  #runRow(run) { return typeof run === "string" ? this.#one(`SELECT * FROM plan_runs WHERE run=?`, run) : null; }
+
+  /** R11: a member adopts a proposal as an option, once. */
+  optionAdopt(args = {}) {
+    const { proposal, author, viewer } = args;
+    const m = this.#optionMember(author);
+    if (m) return m;
+    const row = this.#proposalRow(proposal);
+    const p = row ? this.#plan(row.plan_id, viewer) : null;
+    /* DEC-49 REGION is-proposal-seen */
+    if (!row || !p)
+      return refusal("NO_SUCH_PROPOSAL", "no proposal answers to that id in a plan this caller may see. Nothing was written.",
+        { proposal: typeof proposal === "string" ? proposal : null });
+    /* END DEC-49 REGION is-proposal-seen */
+    if (p.state !== "open") return refusePlanClosed(p.id);
+    const fence = this.membership.projectAuthority(p.project, author, "joined", "optionAdopt");
+    if (fence) return fence;
+    /* DEC-49 REGION is-proposal-once */
+    if (row.adopted_option)
+      return refusal("PROPOSAL_ADOPTED", `that proposal was adopted as ${row.adopted_option}. Nothing was written.`,
+        { option: row.adopted_option });
+    /* END DEC-49 REGION is-proposal-once */
+    const base = unjson(row.fields_json, {});
+    const merged = { ...base, enforces: base.enforces ? (base.enforces.standard ?? base.enforces.subject) : undefined,
+                     tier: base.category === "legal" && base.tier !== "undetermined" ? base.tier : undefined };
+    for (const k of Object.keys(args)) if (!["proposal", "author", "viewer", "plan"].includes(k)) merged[k] = args[k];
+    const f = this.#optionFields(merged, p, viewer);
+    if (!f.fields) return f;
+    const r = this.#addOption(p, f.fields, { author, proposal: row.proposal_id });
+    if (!r.ok) return r;
+    return { ...r, ...this.#origin(this.#proposalRow(row.proposal_id)) };
+  }
+  /* R32: an option adopted from a machine proposal answers its disclosure and origin, for as long as the plan is read. */
+  #origin(row) {
+    if (!row || row.machine !== 1) return {};
+    return { disclosure: DISCLOSURE(row.run, row.skill_version),
+             origin: { assistant: true, run: row.run, proposal: row.proposal_id, adopted_by: row.adopted_by, adopted_at: row.adopted_at } };
+  }
+
+  /** R13, R29: dispose of one or more options, all or none; choosing a dated option holds its reminders. */
+  optionDispose(args = {}) {
+    const { plan, options, disposition, reason, reminders, author, viewer } = args;
+    /* DEC-49 REGION is-dispose-member */
+    if (isMachine(author))
+      return refusal("MACHINE_CANNOT_DISPOSE", "an option is chosen, declined or marked by a named member; a machine "
+        + "proposes and never decides. Nothing was written.");
+    /* END DEC-49 REGION is-dispose-member */
+    const o = this.#openPlan(plan, author, viewer, "optionDispose");
+    if (o.r) return o.r;
+    /* DEC-49 REGION is-disposition-known */
+    if (!DISPOSITIONS.includes(disposition))
+      return refusal("DISPOSITION_UNKNOWN", `a disposition is one of ${DISPOSITIONS.join(", ")}. Nothing was written.`,
+        { dispositions: DISPOSITIONS });
+    /* END DEC-49 REGION is-disposition-known */
+    const ids = Array.isArray(options) ? options : typeof options === "string" ? [options] : [];
+    if (!ids.length) return refuseNoSuchOption(null);
+    const held = new Map(this.#options(o.p.id).map((x) => [x.id, x]));
+    const unknown = ids.find((x) => !held.has(x));
+    if (unknown !== undefined) return refuseNoSuchOption(unknown);
+    const bad = refuseReason(reason, NEEDS_REASON.includes(disposition));
+    if (bad) return bad;
+    const rem = this.#reminders(reminders, disposition, ids, held);
+    if (rem.r) return rem.r;
+    const keys = refuseKeys(args);
+    if (keys) return keys;
+    const unique = [...new Set(ids)];
+    const entry = { kind: "dispose", options: unique, disposition, reason: str(reason) || null,
+                    ...(disposition === "chosen" ? { reminders: rem.by } : {}), author, at: this.now() };
+    const w = this.#append(o.p, entry, { blurb: `Options ${disposition}` });
+    if (!w.ok) return w;
+    return { ok: true, plan: o.p.id, options: unique, disposition, reason: entry.reason, author, at: entry.at,
+             ...(disposition === "chosen" ? { reminders: rem.by } : {}) };
+  }
+  /* R29: the reminders the member asked for, held with the choice: `{date, on, option?}` each naming a date of its
+     option and a day; an option named once may omit `option`. `{by: {option: [{date, on}]}}` or `{r: refusal}`. */
+  #reminders(list, disposition, ids, held) {
+    const none = list === undefined || list === null || (Array.isArray(list) && !list.length);
+    const by = Object.fromEntries([...new Set(ids)].map((x) => [x, []]));
+    if (none) return { by };
+    const row = ACTION_CLOCK_CHECKS.REMINDER_REFUSED;
+    const refused = (detail) => ({ r: relayed("REMINDER_REFUSED", row, detail) });
+    if (disposition !== "chosen") return refused("reminders are set when an option is chosen. Nothing was written.");
+    if (!Array.isArray(list)) return refused("reminders is a list of {date, on}. Nothing was written.");
+    const one = new Set(ids).size === 1 ? ids[0] : null;
+    for (const r of list) {
+      const opt = isObj(r) ? (r.option ?? one) : null;
+      if (!isObj(r) || !opt || !by[opt])
+        return refused("each reminder names its option (one of those being chosen) and a date of it. Nothing was written.");
+      if (!(held.get(opt).fields.dates || []).some((d) => d.date === r.date))
+        return refused(`${String(r.date).slice(0, 20)} is not a regulated date of ${opt}. Nothing was written.`);
+      if (!isDay(r.on)) return refused(`on '${String(r.on).slice(0, 20)}' is not a day written YYYY-MM-DD. Nothing was written.`);
+      if (!by[opt].some((x) => x.date === r.date && x.on === r.on)) by[opt].push({ date: r.date, on: r.on });
+    }
+    return { by };
+  }
+
+  /** R14: set one scenario whole, keeping the earlier version in history. */
+  scenarioSet(args = {}) {
+    const { plan, scenario, name, phases, author, viewer } = args;
+    /* DEC-49 REGION is-scenario-member */
+    if (isMachine(author))
+      return refusal("MACHINE_CANNOT_SCHEDULE", "a scenario is set by a named member; a machine proposes options and "
+        + "never schedules. Nothing was written.");
+    /* END DEC-49 REGION is-scenario-member */
+    const o = this.#openPlan(plan, author, viewer, "scenarioSet");
+    if (o.r) return o.r;
+    const n = /^[0-9]+$/.test(String(scenario ?? "")) ? Number(scenario) : NaN;
+    /* DEC-49 REGION is-scenario-numbered */
+    if (!(Number.isInteger(n) && n >= 1 && n <= SCENARIOS_MAX))
+      return refusal("SCENARIO_OUT_OF_RANGE", `a scenario is numbered 1 to ${SCENARIOS_MAX}. Nothing was written.`,
+        { max: SCENARIOS_MAX });
+    /* END DEC-49 REGION is-scenario-numbered */
+    /* DEC-49 REGION is-scenario-named */
+    if (!isLine(name, TITLE_MAX))
+      return refusal("SCENARIO_NAME_REFUSED", `a scenario's name is 1 to ${TITLE_MAX} characters with no quotation mark, `
+        + "backslash or line break. Nothing was written.", { max: TITLE_MAX });
+    /* END DEC-49 REGION is-scenario-named */
+    const ph = this.#scenarioPhases(o.p, phases);
+    if (!ph.phases) return ph;
+    const keys = refuseKeys(args) || (Array.isArray(phases) ? phases.map((x) => refuseKeys(x)).find(Boolean) : null);
+    if (keys) return keys;
+    const entry = { kind: "scenario_set", scenario: n, name: name.trim(), phases: ph.phases, author, at: this.now() };
+    const w = this.#append(o.p, entry, { blurb: `Scenario ${n} set` });
+    if (!w.ok) return w;
+    const v = this.#scenarios(o.p.id).find((x) => x.scenario === n);
+    return { ok: true, plan: o.p.id, scenario: n, version: v ? v.version : 1, name: entry.name, phases: ph.phases,
+             author, at: entry.at };
+  }
+  #scenarioPhases(p, phases) {
+    const chosen = new Set(this.#options(p.id).filter((x) => x.disposition === "chosen").map((x) => x.id));
+    const subjects = new Map(this.#subjectsOf(p.id).map((s) => [s.key, s.subject]));
+    const r = checkPhases(phases, { chosen, subjects });
+    if (r.phases) return r;
+    const at = { index: r.index, ...(r.phase ? { phase: r.phase } : {}), ...(r.option ? { option: r.option } : {}) };
+    if (r.fault === "malformed") {
+      /* DEC-49 REGION is-phase-shaped */
+      return refusal("PHASE_MALFORMED", `phase ${r.index ?? "list"}: ${r.detail}. Nothing was written.`, at);
+      /* END DEC-49 REGION is-phase-shaped */
+    }
+    if (r.fault === "not_chosen") {
+      /* DEC-49 REGION is-phase-option-chosen */
+      return refusal("PHASE_OPTION_NOT_CHOSEN", `phase ${r.index}: ${r.detail}. Nothing was written.`, at);
+      /* END DEC-49 REGION is-phase-option-chosen */
+    }
+    if (r.fault === "branch") {
+      /* DEC-49 REGION is-branch-known */
+      return refusal("BRANCH_UNKNOWN", `phase ${r.index}: ${r.detail}. Nothing was written.`, at);
+      /* END DEC-49 REGION is-branch-known */
+    }
+    /* DEC-49 REGION is-phase-acyclic */
+    return refusal("PHASE_CYCLE", `${r.detail}: no phase can start after itself. Nothing was written.`, at);
+    /* END DEC-49 REGION is-phase-acyclic */
+  }
+
+  /* R14–R16: a scenario version's phases with when each starts and its checkpoint, read at `nowMs`. */
+  #timed(p, sc, viewer) {
+    const judged = this.#judgements(p.id, sc.scenario, sc.version);
+    const times = phaseTimes(sc.phases, { setAt: sc.at, judged, track: (s) => this.#track(p, s, viewer) });
+    return { judged, times };
+  }
+
+  /** R15: the instant another subject's track met its point (its escalation reached the stage, or the action started
+   *  from an option serving it was resolved), from R6's reads; null when it has not, or cannot be read. */
+  #track(p, s, viewer) {
+    const subj = s.when_subject;
+    try {
+      if (s.reaches === "stage") {
+        if (subj.kind !== "outcome") return null;
+        const l = this.escalation.escalationsFor({ determination: subj.determination, viewer });
+        if (!ok(l)) return null;
+        let first = null;
+        for (const e of l.items || []) {
+          const r = this.escalation.escalationRead({ id: e.id, viewer });
+          if (!ok(r)) continue;
+          for (const h of r.history || [])
+            if ((h.kind === "open" || h.kind === "advance") && h.to === s.stage && (!first || instantOrder(h.at, first) < 0)) first = h.at;
+        }
+        return first;
+      }
+      const key = subjectKey(subj);
+      let first = null;
+      for (const o of this.#options(p.id)) {
+        if (!o.action || !(o.fields.subjects || []).some((x) => subjectKey(x) === key)) continue;
+        const a = this.actions.actionRead({ id: o.action, viewer });
+        if (!ok(a) || a.current_state !== "resolved") continue;
+        const at = (a.state_history || []).filter((h) => h.state === "resolved").map((h) => h.at).at(-1) || null;
+        if (at && (!first || instantOrder(at, first) < 0)) first = at;
+      }
+      return first;
+    } catch (e) { if (e instanceof ProviderAbsent) throw e; return null; }
+  }
+
+  /** R16: a member's judgement of a due checkpoint. */
+  checkpointRecord(args = {}) {
+    const { plan, scenario, phase, judged, note, author, viewer } = args;
+    /* DEC-49 REGION is-judge-member */
+    if (isMachine(author))
+      return refusal("MACHINE_CANNOT_JUDGE", "a checkpoint is judged by a named member; the module never judges a "
+        + "condition and a machine never does. Nothing was written.");
+    /* END DEC-49 REGION is-judge-member */
+    const o = this.#openPlan(plan, author, viewer, "checkpointRecord");
+    if (o.r) return o.r;
+    const n = /^[0-9]+$/.test(String(scenario ?? "")) ? Number(scenario) : NaN;
+    const sc = this.#scenarios(o.p.id).find((x) => x.scenario === n) || null;
+    const ph = sc ? sc.phases.find((x) => x.id === phase) : null;
+    /* DEC-49 REGION is-checkpoint-named */
+    if (!sc || !ph || !ph.checkpoint || !JUDGEMENTS.includes(judged)
+        || (note !== undefined && note !== null && (typeof note !== "string" || note.length > NOTE_MAX)))
+      return refusal("CHECKPOINT_REFUSED", !sc ? "the plan holds no scenario of that number. Nothing was written."
+        : !ph ? "the scenario holds no phase of that id. Nothing was written."
+        : !ph.checkpoint ? "that phase has no checkpoint. Nothing was written."
+        : !JUDGEMENTS.includes(judged) ? "a judgement is met or not_met. Nothing was written."
+        : `a note is at most ${NOTE_MAX} characters. Nothing was written.`);
+    /* END DEC-49 REGION is-checkpoint-named */
+    const { judged: held, times } = this.#timed(o.p, sc, viewer);
+    const t = times.get(ph.id);
+    const nowMs = this.#nowMs();
+    /* DEC-49 REGION is-checkpoint-due */
+    if (!t.due || msOf(t.due) > nowMs)
+      return refusal("CHECKPOINT_NOT_DUE", t.started ? `the checkpoint is due ${t.due}. Nothing was written.`
+        : "the phase has not started, so its checkpoint is not due. Nothing was written.", { due: t.due });
+    /* END DEC-49 REGION is-checkpoint-due */
+    /* DEC-49 REGION is-checkpoint-once */
+    if (held.has(ph.id))
+      return refusal("CHECKPOINT_JUDGED", `that checkpoint was judged ${held.get(ph.id).judged} by ${held.get(ph.id).author}. `
+        + "Nothing was written.", { judged: held.get(ph.id).judged });
+    /* END DEC-49 REGION is-checkpoint-once */
+    const entry = { kind: "checkpoint", scenario: sc.scenario, version: sc.version, phase: ph.id, judged,
+                    note: typeof note === "string" && note.trim() ? note : null, author, at: this.now() };
+    const w = this.#append(o.p, entry, { blurb: "Checkpoint judged" });
+    if (!w.ok) return w;
+    const leads = this.#leadsTo(ph, sc.phases, judged);
+    return { ok: true, plan: o.p.id, scenario: sc.scenario, version: sc.version, phase: ph.id, judged, note: entry.note,
+             author, at: entry.at, leads_to: leads };
+  }
+  #leadsTo(ph, phases, judged) {
+    const out = new Set();
+    if (ph.branches && ph.branches[judged]) out.add(ph.branches[judged]);
+    for (const o of phases) if (o.starts && o.starts.branch_of === ph.id && o.starts.when === judged) out.add(o.id);
+    return [...out];
+  }
+
+  /** R18, R29: start a chosen option: compose its action, promote it, set the reminders asked with the choice, and link
+   *  them, in one act; a refusal of either leaves neither. */
+  optionStart(args = {}) {
+    const { plan, option, kind, contact, breach, premise_override: override, author, viewer } = args;
+    /* DEC-49 REGION is-start-member */
+    if (isMachine(author))
+      return refusal("MACHINE_CANNOT_START", "an option is started by a named member; a machine never creates an action "
+        + "from a plan. Nothing was written.");
+    /* END DEC-49 REGION is-start-member */
+    const o = this.#openPlan(plan, author, viewer, "optionStart");
+    if (o.r) return o.r;
+    const p = o.p;
+    const opt = this.#option(p.id, option);
+    if (!opt) return refuseNoSuchOption(option);
+    /* DEC-49 REGION is-start-chosen */
+    if (opt.disposition !== "chosen")
+      return refusal("OPTION_NOT_CHOSEN", `${opt.id} is ${opt.disposition}, not chosen. Nothing was written.`,
+        { disposition: opt.disposition });
+    /* END DEC-49 REGION is-start-chosen */
+    /* DEC-49 REGION is-start-once */
+    if (opt.action)
+      return refusal("OPTION_STARTED", `${opt.id} was started as ${opt.action}. Nothing was written.`, { action: opt.action });
+    /* END DEC-49 REGION is-start-once */
+    const contactId = contact === undefined || contact === null || contact === "" ? null : str(contact).replace(/^member:/, "");
+    if (contact !== undefined && contact !== null && contact !== "" && (!contactId || !this.membership.memberFacts(contactId)))
+      return relayed("CONTACT_NOT_A_MEMBER", ACTION_CATALOGUE_CHECKS.CONTACT_NOT_A_MEMBER, "contact names a member of this "
+        + "instance by member id, and this one names none. Nothing was written.");
+    const reason = override === undefined || override === null ? null : isObj(override) ? override.reason : override;
+    const at = this.now();
+    const doc = actionDocument({ fields: opt.fields, kind, plan: p.id, option: opt.id, contact: contactId,
+                                 breach: breach === true, override: reason, at });
+    const r = this.record.transact(() => {
+      const a = this.actions.actionCreate({ document: doc, author, viewer });
+      if (!ok(a)) return a;
+      const set = [];
+      for (const rem of opt.reminders || []) {
+        const entry = (opt.fields.dates || []).findIndex((d) => d.date === rem.date);
+        const s = this.clocks.reminderSet({ target: a.id, entry, on: rem.on, author: opt.chosenBy || author, viewer });
+        if (!ok(s)) return s;
+        set.push({ entry, date: rem.date, on: rem.on, set_by: opt.chosenBy || author });
+      }
+      const w = this.#append(p, { kind: "start", option: opt.id, action: a.id, author, at }, { blurb: "Option started" });
+      if (!w.ok) return w;
+      return { ok: true, action: a.id, reminders: set };
+    });
+    if (!ok(r)) return r;
+    return { ok: true, plan: p.id, option: opt.id, action: r.action, reminders: r.reminders, author, at };
+  }
+
+  /** R20: a member closes a plan, with a reason. */
+  planClose(args = {}) {
+    const { id, plan, reason, author, viewer } = args;
+    /* DEC-49 REGION is-close-member */
+    if (isMachine(author))
+      return refusal("MACHINE_CANNOT_CLOSE_PLAN", "a plan is closed by a named member with a reason; it never closes "
+        + "itself. Nothing was written.");
+    /* END DEC-49 REGION is-close-member */
+    const o = this.#openPlan(id ?? plan, author, viewer, "planClose");
+    if (o.r) return o.r;
+    const bad = refuseReason(reason, true);
+    if (bad) return bad;
+    const entry = { kind: "close", reason: reason.trim(), author, at: this.now() };
+    const w = this.#append(o.p, entry, { state: "closed", blurb: "Plan closed" });
+    if (!w.ok) return w;
+    return { ok: true, id: o.p.id, state: "closed", reason: entry.reason, closed_by: author, at: entry.at };
+  }
+
+  /* ===================================================================== *
+   * THE READS
+   * ===================================================================== */
+
+  /** R6, R8, R19, R32, R34: the plan as the record stands at `nowMs`. */
+  planRead({ id, nowMs, viewer } = {}) {
+    const p = this.#plan(id, viewer);
+    if (!p) return noSuchPlan(id);
+    const now = Number.isFinite(nowMs) ? nowMs : this.#nowMs();
+    const all = this.#subjectsOf(p.id, { all: true });
+    const current = all.filter((s) => s.removedSeq === null);
+    const inPlan = new Set(current.map((s) => s.key));
+    const live = new Map();
+    const subjects = current.map((s) => {
+      const lv = this.#liveness(s.subject, viewer);
+      live.set(s.key, lv);
+      const out = { subject: s.subject, key: s.key, ...this.#support(s.subject, p.project, viewer), liveness: lv,
+                    added_by: s.addedBy, added_at: s.addedAt };
+      if (s.subject.kind === "inquiry" && s.subject.act) {
+        const since = this.#determinedSince(s.subject, inPlan, viewer);
+        if (since.length) out.determined_since = since;
+      }
+      if (s.subject.kind === "outcome") out.escalation = this.#escalationOf(s.subject, viewer);
+      return out;
+    });
+    const options = this.#options(p.id).map((o) => this.#optionView(p, o, live, viewer));
+    const scenarios = this.#scenarios(p.id).map((sc) => this.#scenarioView(p, sc, viewer));
+    const proposals = this.#rows(`SELECT * FROM plan_option_proposals WHERE plan_id=? AND machine=0 ORDER BY n`, p.id)
+      .map((r) => this.#proposalView(r));
+    const runs = this.#planRuns(p.id).map((run) => {
+      const page = this.#trayPage(p.id, run, 0);
+      return { run, proposals: page.proposals, next: page.next };
+    });
+    return {
+      ok: true, id: p.id, project: p.project, title: p.title, state: p.state, opened_by: p.openedBy, opened_at: p.openedAt,
+      ...(p.state === "closed" ? { closed: { by: p.closedBy, at: p.closedAt, reason: p.closeReason } } : {}),
+      as_of: iso(now), work_kinds: this.#workKinds(p.project), subjects,
+      removed_subjects: all.filter((s) => s.removedSeq !== null && !inPlan.has(s.key)).map((s) => ({ subject: s.subject, key: s.key })),
+      options, proposals, planning_runs: runs, scenarios, checks: this.#checks(p, options, scenarios, live, now, viewer),
+      history: this.#history(p.id),
+    };
+  }
+
+  /** R21: the project's `work_kinds` as its document states them, or undetermined; it gates, filters and orders nothing. */
+  #workKinds(project) {
+    const fm = parseFm(this.#text(project)) || {};
+    return Array.isArray(fm.work_kinds) ? { state: "stated", kinds: fm.work_kinds }
+      : { state: "undetermined", says: "the project states no kinds of work" };
+  }
+
+  /* R5: the outcomes of determinations recorded on a suspected subject's act, beside it; nothing is added without a member. */
+  #determinedSince(s, inPlan, viewer) {
+    const out = [];
+    let after = null;
+    for (let page = 0; page < 10; page++) {
+      const r = this.conformance.determinationsFor({ act: s.act, live: true, after, viewer });
+      if (!ok(r)) break;
+      for (const d of r.items || [])
+        for (const o of Array.isArray(d.outcomes) ? d.outcomes : []) {
+          if (!o || typeof o.standard !== "string") continue;
+          if (s.standards && !s.standards.includes(o.standard)) continue;
+          const sub = { kind: "outcome", determination: d.id, standard: o.standard };
+          if (!inPlan.has(subjectKey(sub))) out.push({ ...sub, outcome: o.outcome ?? null });
+        }
+      if (!r.truncated) break;
+      after = r.cursor ?? (r.items || []).at(-1)?.id ?? null;
+      if (!after) break;
+    }
+    return out;
+  }
+
+  /* R6: a determined subject's escalation with its stage (escalation R22). */
+  #escalationOf(s, viewer) {
+    const l = this.escalation.escalationsFor({ determination: s.determination, viewer });
+    if (!ok(l)) return { state: "undetermined", says: "the escalations of that determination could not be read" };
+    const items = l.items || [];
+    const cur = items.filter((e) => e.state !== "ended").at(-1) || items.at(-1) || null;
+    return cur ? { id: cur.id, state: cur.state, stage: cur.stage, stage_name: cur.stage_name ?? null } : null;
+  }
+
+  #optionView(p, o, live, viewer) {
+    const f = o.fields;
+    const bound = (f.subjects || []).map((s) => ({ key: subjectKey(s), liveness: live.get(subjectKey(s)) || { state: "subject_removed" } }));
+    const anyLive = bound.some((b) => b.liveness.state === "live");
+    const revisions = this.#rows(`SELECT * FROM plan_option_revisions WHERE plan_id=? AND option_id=? ORDER BY rev`, p.id, o.id)
+      .map((r) => ({ rev: r.rev, fields: unjson(r.fields_json, {}), reason: r.reason ?? null, author: r.author, at: r.at }));
+    const dispositions = this.#rows(`SELECT * FROM plan_history WHERE plan_id=? AND kind='dispose' ORDER BY seq`, p.id)
+      .map((h) => ({ ...unjson(h.entry_json, {}), seq: h.seq })).filter((e) => (e.options || []).includes(o.id))
+      .map((e) => ({ disposition: e.disposition, reason: e.reason ?? null, author: e.author, at: e.at }));
+    const out = { id: o.id, ...f, disposition: o.disposition, dispositions, revisions, subjects_liveness: bound,
+                  ...(anyLive ? {} : { says: "every matter this option serves is no longer live" }),
+                  added_by: o.createdBy, added_at: o.createdAt, proposal: o.proposal,
+                  reminders: o.disposition === "chosen" ? o.reminders ?? [] : null };
+    Object.assign(out, this.#origin(o.proposal ? this.#proposalRow(o.proposal) : null));
+    if (o.action) {
+      const a = this.actions.actionRead({ id: o.action, viewer });
+      out.action = ok(a) ? { id: o.action, state: a.current_state ?? null, started_by: o.startedBy, started_at: o.startedAt }
+        : { id: null, says: "an object you may not see" };
+    } else out.action = null;
+    if (f.category === "legal") {
+      out.available = (f.subjects || []).filter((s) => s.kind === "outcome").map((s) => {
+        const av = this.filings.availableActions({ determination: s.determination, viewer });
+        return { determination: s.determination, ...(ok(av) ? { available: av } : { state: "undetermined", says: "the available actions could not be read" }) };
+      });
+    }
+    return out;
+  }
+
+  #scenarioView(p, sc, viewer) {
+    const { judged, times } = this.#timed(p, sc, viewer);
+    return { scenario: sc.scenario, version: sc.version, versions: sc.versions, name: sc.name, set_by: sc.author, set_at: sc.at,
+             phases: sc.phases.map((ph) => {
+               const t = times.get(ph.id), j = judged.get(ph.id) || null;
+               return { ...ph, started: t.started, started_at: t.at, earliest: t.earliest, checkpoint_due: t.due,
+                        judgement: j, ...(j ? { leads_to: this.#leadsTo(ph, sc.phases, j.judged) } : {}) };
+             }),
+             history: this.#rows(`SELECT version, name, author, at FROM plan_scenarios WHERE plan_id=? AND scenario=? ORDER BY version`,
+               p.id, sc.scenario).map((r) => ({ version: r.version, name: r.name, set_by: r.author, set_at: r.at })) };
+  }
+
+  /** R19: the checks, each with its reason; derived on read, they refuse and change nothing. */
+  #checks(p, options, scenarios, live, now, viewer) {
+    const out = [];
+    const today = dayOf(now);
+    const outward = (o) => !!o.addressee;
+    const pending = (o) => !["declined", "done"].includes(o.disposition) && !o.action;
+    for (const o of options) {
+      /* A declined option is set aside: no check is asked of it. */
+      if (o.disposition === "declined") continue;
+      if (pending(o)) for (const d of o.dates || [])
+        if (d.date < today) out.push({ check: "date_past", option: o.id, date: d.date, says: `${o.id}'s regulated date ${d.date} has passed (${d.basis})` });
+      const states = (o.subjects_liveness || []).map((b) => b.liveness.state);
+      if (states.length && !states.includes("live"))
+        out.push({ check: "subjects_not_live", option: o.id, says: `every matter ${o.id} serves is no longer live` });
+      const hypothetical = (o.subjects || []).every((s) => s.kind === "inquiry");
+      if (outward(o) && hypothetical)
+        out.push({ check: "outward_on_hypothesis", option: o.id, says: `${o.id} addresses someone outside the group and rests `
+          + "only on suspected matters: nothing it serves is determined yet" });
+      if (o.lobbying && o.enforces) {
+        let superseded = false;
+        if (o.enforces.standard) {
+          const s = this.standards.standardRead({ id: o.enforces.standard, viewer });
+          superseded = ok(s) && !!(s.superseded_by ?? s.supersededBy);
+        } else if (o.enforces.subject) {
+          const d = this.#determination(o.enforces.subject.determination, viewer);
+          superseded = !!d && d.live === false;
+        }
+        if (superseded) out.push({ check: "enforces_superseded", option: o.id, says: `the requirement ${o.id} seeks enforced has been superseded` });
+      }
+    }
+    const byId = new Map(options.map((o) => [o.id, o]));
+    for (const sc of scenarios) {
+      for (const ph of sc.phases) {
+        const start = ph.earliest ? dayOf(msOf(ph.earliest)) : null;
+        for (const oid of ph.options) {
+          const o = byId.get(oid);
+          if (o && start) for (const d of o.dates || [])
+            if (d.date < start) out.push({ check: "date_before_phase", scenario: sc.scenario, phase: ph.id, option: oid, date: d.date,
+              says: `${oid}'s regulated date ${d.date} falls before phase ${ph.id} can start (${start})` });
+        }
+        const miss = unbranched(ph, sc.phases);
+        if (miss.length) out.push({ check: "unbranched", scenario: sc.scenario, phase: ph.id, outcomes: miss,
+          says: `phase ${ph.id}'s checkpoint leads nowhere when judged ${miss.join(" or ")}` });
+        const hostile = ph.options.some((x) => byId.get(x) && outward(byId.get(x)));
+        if (hostile && !(ph.checkpoint && !unbranched(ph, sc.phases).includes("not_met")))
+          out.push({ check: "no_hostile_branch", scenario: sc.scenario, phase: ph.id,
+            says: `phase ${ph.id} addresses someone outside the group and has no branch for a hostile response (a refusal, `
+              + "obstruction or retaliation): give it a checkpoint whose not_met judgement leads somewhere" });
+      }
+    }
+    return out.map((c) => ({ ...c, informs: CHECK_SAYS }));
+  }
+
+  /** R7: the plans the viewer may see, in id order, at most 200 per page. */
+  plansFor({ project = null, subject = null, state = null, after = null, limit = null, viewer } = {}) {
+    const cap = Number.isInteger(Number(limit)) && Number(limit) > 0 ? Math.min(Number(limit), PLANS_PAGE_MAX) : PLANS_PAGE_MAX;
+    const s = subject === null || subject === undefined || subject === "" ? null
+      : typeof subject === "string" ? subject : (normSubject(subject) ? subjectKey(normSubject(subject)) : "\u0000");
+    const where = [], args = [];
+    if (project) { where.push("p.project_id=?"); args.push(String(project)); }
+    if (state) { where.push("p.state=?"); args.push(String(state)); }
+    if (s !== null) { where.push("EXISTS (SELECT 1 FROM plan_subjects x WHERE x.plan_id=p.plan_id AND x.skey=? AND x.removed_seq IS NULL)"); args.push(s); }
+    let cursor = after ? String(after) : "";
+    const items = [];
+    let truncated = false;
+    for (;;) {
+      const rows = this.#rows(`SELECT * FROM plans p WHERE p.plan_id > ? ${where.length ? `AND ${where.join(" AND ")}` : ""}
+                               ORDER BY p.plan_id LIMIT ?`, cursor, ...args, cap + 1);
+      for (const r of rows) {
+        cursor = r.plan_id;
+        if (!this.#sees(r.project_id, viewer)) continue;
+        if (items.length === cap) { truncated = true; break; }
+        items.push({ id: r.plan_id, project: r.project_id, title: r.title, state: r.state, opened_by: r.opened_by,
+                     opened_at: r.opened_at, subjects: this.#subjectsOf(r.plan_id).map((x) => x.subject) });
+      }
+      if (truncated || rows.length <= cap) break;
+    }
+    return { ok: true, items, truncated, cursor: truncated ? items.at(-1).id : null, limit: cap };
+  }
+
+  /** R17: for open plans, the checkpoints whose day has come and that no member has judged, oldest first. */
+  checkpointsDue({ nowMs, limit } = {}) {
+    const now = Number.isFinite(nowMs) ? nowMs : this.#nowMs();
+    const cap = Number.isInteger(limit) && limit > 0 ? Math.min(limit, DUE_MAX) : DUE_MAX;
+    const items = [];
+    for (const r of this.#rows(`SELECT plan_id FROM plans WHERE state='open' ORDER BY plan_id`)) {
+      const p = this.#plan(r.plan_id, null);
+      for (const sc of this.#scenarios(p.id)) {
+        const { judged, times } = this.#timed(p, sc, null);
+        for (const ph of sc.phases) {
+          const t = times.get(ph.id);
+          if (!t.due || msOf(t.due) > now || judged.has(ph.id)) continue;
+          items.push({ plan: p.id, project: p.project, scenario: sc.scenario, version: sc.version, phase: ph.id,
+                       set_by: sc.author, due: t.due, days_since_due: Math.floor((now - msOf(t.due)) / DAY_MS) });
+        }
+      }
+    }
+    items.sort((a, b) => instantOrder(a.due, b.due) || (a.plan < b.plan ? -1 : a.plan > b.plan ? 1 : 0)
+      || a.scenario - b.scenario || (a.phase < b.phase ? -1 : a.phase > b.phase ? 1 : 0));
+    return { ok: true, as_of: iso(now), items: items.slice(0, cap), truncated: items.length > cap, limit: cap };
+  }
+
+  /* R34: the plan's planning runs, oldest first: those recorded at their open, and any that proposed. */
+  #planRuns(planId) {
+    const runs = this.#rows(`SELECT run, opened_at FROM plan_runs WHERE plan_id=?`, planId).map((r) => ({ run: r.run, at: r.opened_at }));
+    for (const r of this.#rows(`SELECT run, MIN(at) AS at FROM plan_option_proposals WHERE plan_id=? AND run IS NOT NULL GROUP BY run`, planId))
+      if (!runs.some((x) => x.run === r.run)) runs.push({ run: r.run, at: r.at });
+    return runs.sort((a, b) => instantOrder(a.at, b.at) || (a.run < b.run ? -1 : 1)).map((r) => r.run);
+  }
+  #trayPage(planId, run, from) {
+    const rows = this.#rows(`SELECT * FROM plan_option_proposals WHERE plan_id=? AND run=? AND run_ord > ? ORDER BY run_ord LIMIT ?`,
+      planId, run, from, TRAY_PAGE + 1);
+    const page = rows.slice(0, TRAY_PAGE);
+    return { proposals: page.map((r) => this.#proposalView(r)),
+             next: rows.length > TRAY_PAGE ? `${run}#${page.at(-1).run_ord}` : null };
+  }
+
+  /** R34: the tray: five of a planning run's proposals at a time, in the run's order, strongest first. */
+  planProposals({ plan, run, after, viewer } = {}) {
+    const p = this.#plan(plan, viewer);
+    if (!p) return noSuchPlan(plan);
+    const runs = this.#planRuns(p.id);
+    const named = typeof run === "string" && run.trim() ? run.trim() : null;
+    if (named && !runs.includes(named)) return refuseRunOtherPlan(named);
+    const r = named ?? runs.at(-1) ?? null;
+    let from = 0;
+    if (after !== undefined && after !== null && after !== "") {
+      const m = r ? /^(.+)#(\d+)$/.exec(String(after)) : null;
+      const n = m ? Number(m[2]) : NaN;
+      const max = r ? (this.#one(`SELECT MAX(run_ord) AS n FROM plan_option_proposals WHERE plan_id=? AND run=?`, p.id, r) || {}).n || 0 : 0;
+      /* DEC-49 REGION is-cursor-given */
+      if (!m || m[1] !== r || !(n > 0 && n < max && n % TRAY_PAGE === 0))
+        return refusal("PROPOSALS_CURSOR_REFUSED", "after= is a page marker this list gave for this run, and this is not "
+          + "one. Ask for the first page again. Nothing was read.");
+      /* END DEC-49 REGION is-cursor-given */
+      from = n;
+    }
+    if (!r) return { ok: true, plan: p.id, run: null, proposals: [], next: null };
+    const page = this.#trayPage(p.id, r, from);
+    return { ok: true, plan: p.id, run: r, proposals: page.proposals, next: page.next,
+             says: "the assistant's proposals in its own order, strongest first; no score is recorded or answered" };
+  }
+
+  /** R30 (fills ai-runs R47): a planning run is opened over an open plan of its project, by a member who has joined it. */
+  planRunCheck({ contextType, contextId, plan, actor, viewer } = {}) {
+    const p = this.#plan(plan, viewer);
+    if (!p) return noSuchPlan(typeof plan === "string" ? plan : null);
+    /* DEC-49 REGION is-plan-of-context */
+    if (contextType !== "project" || contextId !== p.project)
+      return refusal("PLAN_NOT_OF_PROJECT", `plan ${p.id} belongs to ${p.project}, and the run is opened over `
+        + `${String(contextId ?? "").slice(0, 80) || "no project"}. Nothing was written.`, { plan: p.id });
+    /* END DEC-49 REGION is-plan-of-context */
+    if (p.state !== "open") return refusePlanClosed(p.id);
+    return this.membership.projectAuthority(p.project, actor, "joined", "opening a planning run") || null;
+  }
+
+  /** R32: a planning run's opening, recorded with the project's `work_kinds` as they stood then (ai-runs R43). */
+  runOpened({ run } = {}) {
+    try {
+      const r = this.aiRuns.runFor(run, null);
+      if (!r || r.mode !== "plan" || typeof r.plan !== "string") return;
+      const p = this.#plan(r.plan, null);
+      if (!p) return;
+      const wk = this.#workKinds(p.project);
+      this.sql.exec(`INSERT OR IGNORE INTO plan_runs (run, plan_id, project_id, work_kinds_json, opened_at) VALUES (?,?,?,?,?)`,
+        r.run, p.id, p.project, wk.state === "stated" ? JSON.stringify(wk.kinds) : null, this.now());
+    } catch { /* a listener never changes the run (ai-runs R43) */ }
+  }
+}
+
+/* ===================================================================== *
+ * THE ACTION AN OPTION STARTS (R18)
+ * ===================================================================== */
+
+/** R18: the action document composed from a chosen option: its kind, the option's addressee, its regulated dates as
+ *  pending clock entries with their bases, a `rests_on` leg to each subject's inquiry or determination, `plan` and
+ *  `option`, `contact`, `breach` and `premise_override` when given. A machine proposal's disclosure is not carried
+ *  (R32): the member's adoption made the option the group's. */
+export function actionDocument({ fields, kind, plan, option, contact, breach, override, at }) {
+  const legs = [...new Set((fields.subjects || []).map((s) => (s.kind === "inquiry" ? s.inquiry : s.determination)))];
+  const a = fields.addressee;
+  const cp = a ? ["counterparty:", ...Object.entries(a).map(([k, v]) => `  ${k}: ${q(v)}`)] : [];
+  const clock = (fields.dates || []).length
+    ? ["clock:", ...fields.dates.flatMap((d) => [`  - text: ${q(fields.summary)}`, `    description: ${q(`regulated date: ${d.basis}`)}`,
+        `    date: "${d.date}"`, `    basis: ${q(d.basis)}`, "    status: pending"])] : ["clock: []"];
+  const basis = legs.length ? ["action_basis:", ...legs.flatMap((t) => [`  - target: ${t}`, "    kind: rests_on"])] : ["action_basis: []"];
+  return ["---", "id: PENDING", "object_type: action", `title: ${q(fields.summary)}`, "current_state: planned",
+    `created: "${at}"`, `last_updated: "${at}"`, `action_kind: ${q(typeof kind === "string" ? kind : "")}`, ...cp, ...clock,
+    ...basis, `plan: ${plan}`, `option: ${option}`, ...(contact ? [`contact: ${contact}`] : []),
+    ...(breach ? ["breach: true"] : []),
+    ...(override !== null && override !== undefined ? ["premise_override:", `  reason: ${q(override)}`] : []),
+    "correspondence: []", "---", "", "## Action", "", fields.detail ? fields.detail.replace(/\r/g, "") : fields.summary, ""].join("\n");
+}
+
+/* ===================================================================== *
+ * THE CODES SEVERAL ACTS ANSWER, each minted once (DEC-49's one code, one site; K231)
+ * ===================================================================== */
+
+const NO_SUCH_PLAN_DETAIL = "no action plan answers to that id here. A plan in a project you may not see is answered "
+  + "exactly as one that does not exist, so this is not a hint either way.";
+const NO_SUCH_PLAN_FIXED = new Set(["ok", "reason", "code", "check", "translation", "plan", "detail"]);
+/** R22: the one answer to "no plan the caller may read answers to this id", in `standards` R17's form. Writes nothing
+ *  and never throws. */
+export function noSuchPlan(planIdAsked, extra = null) {
+  let own = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own = Object.entries(extra).filter(([k]) => !NO_SUCH_PLAN_FIXED.has(k));
+  } catch { own = []; }
+  let plan = null;
+  try { plan = planIdAsked === undefined || planIdAsked === null ? null : String(planIdAsked); } catch { plan = null; }
+  /* DEC-49 REGION is-plan-seen */
+  const row = ACTION_PLAN_CHECKS.NO_SUCH_PLAN;
+  return { ok: false, reason: "NO_SUCH_PLAN", code: "NO_SUCH_PLAN", check: row.check, translation: row.translation, plan,
+           ...Object.fromEntries(own), detail: NO_SUCH_PLAN_DETAIL };
+  /* END DEC-49 REGION is-plan-seen */
+}
+
+/** R1: an inquiry absent or unseen is one answer. */
+export function refuseNoSuchInquiry(inquiry, extra = null) {
+  /* DEC-49 REGION is-inquiry-seen */
+  return refusal("NO_SUCH_INQUIRY", "no question answers to that id here; one you may not see is answered exactly as one "
+    + "that does not exist. Nothing was written.", { inquiry: typeof inquiry === "string" ? inquiry : null, ...(extra || {}) });
+  /* END DEC-49 REGION is-inquiry-seen */
+}
+
+/** R4, R9, R13, R14, R16, R18, R20, R30: a closed plan takes no act. */
+export function refusePlanClosed(plan) {
+  /* DEC-49 REGION is-plan-open */
+  return refusal("PLAN_CLOSED", "this plan is closed; it stays readable and nothing is added to it. Nothing was written.",
+    { plan });
+  /* END DEC-49 REGION is-plan-open */
+}
+
+/** R4's text rule: a reason of 1 to 500 characters with no quote, backslash or line break; `needed` says whether one is
+ *  required (one given where it is not is still held to the rule). Null when it passes. */
+export function refuseReason(reason, needed) {
+  const given = reason !== undefined && reason !== null && reason !== "";
+  /* DEC-49 REGION is-reason-given */
+  if ((needed && !given) || (given && !isLine(reason, REASON_MAX)))
+    return refusal("PLAN_NO_REASON", `a reason of 1 to ${REASON_MAX} characters, with no quotation mark, backslash or `
+      + "line break, is required here. Nothing was written.", { max: REASON_MAX });
+  /* END DEC-49 REGION is-reason-given */
+  return null;
+}
+
+/** R26: an input carrying a cost, budget, assignee, hours or significance score is refused; null when it carries none. */
+export function refuseKeys(args) {
+  const found = isObj(args) ? REFUSED_KEYS.filter((k) => k in args) : [];
+  /* DEC-49 REGION is-no-cost-or-score */
+  if (found.length)
+    return refusal("OPTION_KEY_REFUSED", `a plan holds no ${found.join(", ")}: no cost, budget, money to be spent, `
+      + "assignee, hours or significance score. Nothing was written.", { keys: found });
+  /* END DEC-49 REGION is-no-cost-or-score */
+  return null;
+}
+
+/** R13, R9, R18: the first option the plan does not hold. */
+export function refuseNoSuchOption(option) {
+  /* DEC-49 REGION is-option-held */
+  return refusal("NO_SUCH_OPTION", `the plan holds no option ${option === null || option === undefined ? "(none named)"
+    : String(option).slice(0, 80)}. Nothing was written.`, { option: option ?? null });
+  /* END DEC-49 REGION is-option-held */
+}
+
+/** R31, R34: a run that is not a planning run of this plan. */
+export function refuseRunOtherPlan(run) {
+  /* DEC-49 REGION is-run-of-plan */
+  return refusal("PROPOSAL_RUN_OTHER_PLAN", `run ${String(run ?? "").slice(0, 80)} is not a planning run of this plan. `
+    + "Nothing was written.", { run: run ?? null });
+  /* END DEC-49 REGION is-run-of-plan */
+}
+
+/** K248: a provider this host has not been given. The act or read that needs it refuses, naming it, and never answers
+ *  as though its part were empty. */
+export function refuseProviderUnavailable(provider) {
+  /* DEC-49 REGION is-provider-present */
+  return refusal("PROVIDER_UNAVAILABLE", `this answer reads the ${provider} module, which this instance does not have `
+    + "yet; nothing is answered in its place.", { provider });
+  /* END DEC-49 REGION is-provider-present */
+}
+
+class ProviderAbsent extends Error {
+  constructor(provider) { super(`action-plans: ${provider} was not given`); this.provider = provider; }
+}
+
+/* Every service answers PROVIDER_UNAVAILABLE, rather than throwing or answering in part, when a provider it reads is
+   absent (K248). */
+for (const name of ["planOpen", "planSubjectAdd", "planSubjectRemove", "planRead", "plansFor", "optionAdd", "optionRevise",
+                    "optionAdopt", "optionDispose", "scenarioSet", "checkpointRecord", "optionStart", "planClose",
+                    "checkpointsDue", "planProposals", "planRunCheck"]) {
+  const f = ActionPlans.prototype[name];
+  Object.defineProperty(ActionPlans.prototype, name, { configurable: true, writable: true, value: function (...a) {
+    try { return f.apply(this, a); }
+    catch (e) { if (e instanceof ProviderAbsent) return refuseProviderUnavailable(e.provider); throw e; }
+  } });
+}
+{
+  const f = ActionPlans.prototype.optionPropose;
+  Object.defineProperty(ActionPlans.prototype, "optionPropose", { configurable: true, writable: true, value: async function (...a) {
+    try { return await f.apply(this, a); }
+    catch (e) { if (e instanceof ProviderAbsent) return refuseProviderUnavailable(e.provider); throw e; }
+  } });
+}
+
+const instances = new WeakMap();
+
+/** K61: the one instance per host, created on the first call with `deps`. It migrates its tables, declares them to
+ *  purge (R27), registers its check and projection with promotion (R21, R24, R27), and its planning-run check and run
+ *  listener with ai-runs (R30, R32). */
+export function actionPlansOf(host, deps) {
+  let i = instances.get(host);
+  if (!i) {
+    const d = deps || {};
+    const storage = d.storage || host.storage;
+    const record = d.record || recordOf(host);
+    const membership = d.membership || membershipOf(host, { record });
+    const promotion = d.promotion || promotionOf(host, { record, membership });
+    const base = { record, membership, promotion };
+    const lazy = (name, make) => (d[name] !== undefined ? d[name] : () => make());
+    i = new ActionPlans({ ...d, storage, record, membership, promotion,
+      inquiry: lazy("inquiry", () => inquiryOf(host, base)),
+      strength: lazy("strength", () => strengthOf(host, base)),
+      conformance: lazy("conformance", () => conformanceOf(host, base)),
+      standards: lazy("standards", () => standardsOf(host, base)),
+      actions: lazy("actions", () => actionsOf(host, base)),
+      clocks: lazy("clocks", () => actionClocksOf(host, base)),
+      escalation: lazy("escalation", () => escalationOf(host, base)),
+      filings: lazy("filings", () => filingsOf(host, base)),
+      aiRuns: lazy("aiRuns", () => aiRunsOf(host)) });
+    instances.set(host, i);
+    i.migrate();
+    record.declarePurge("action-plans", ACTION_PLANS_TABLES);
+    promotion.registerStep("action-plans", { check: (c) => i.check(c), project: (c) => i.project(c) });
+    let runs = null;
+    try { runs = i.aiRuns; } catch { runs = null; }
+    if (runs) {
+      runs.registerOpenCheck("action-plans", "plan", (a) => i.planRunCheck(a));
+      runs.onRunOpened("action-plans", (e) => i.runOpened(e));
+    }
+  }
+  return i;
+}
+
+/** Which purge declaration names one of this module's tables (record-core R21). */
+export function actionPlansOwns(t) {
+  const name = typeof t === "string" ? t : t && t.name;
+  return ACTION_PLANS_TABLES.some((x) => x.name === name);
+}
+
+/** The module's ops (K3, K671), as entries of the legacy store's op map; `legacy-store`'s own job adds the one spread
+ *  line to its dispatch. `viewer`, `author` and `proposer` are the control plane's stamps, read from the query and set
+ *  after the body, so a caller's own copy never wins. */
+export function actionPlansOps(m, url, body) {
+  const qp = (k) => url.searchParams.get(k);
+  const b = body && typeof body === "object" && !Array.isArray(body) ? body : {};
+  const pick = (k) => (url.searchParams.has(k) ? qp(k) : b[k] ?? null);
+  const stamped = (extra = {}) => ({ ...b, ...extra, author: qp("author"), viewer: qp("viewer") });
+  const now = () => { const n = Number(qp("now")); return Number.isFinite(n) && qp("now") !== null ? n : undefined; };
+  return {
+    planopen: () => m.planOpen(stamped({ project: pick("project"), title: pick("title") })),
+    plansubjectadd: () => m.planSubjectAdd(stamped({ plan: pick("plan"), reason: pick("reason") })),
+    plansubjectremove: () => m.planSubjectRemove(stamped({ plan: pick("plan"), reason: pick("reason") })),
+    plan: () => m.planRead({ id: pick("id") ?? pick("plan"), nowMs: now(), viewer: qp("viewer") }),
+    plans: () => m.plansFor({ project: pick("project"), subject: b.subject ?? qp("subject"), state: pick("state"),
+                              after: pick("after"), limit: pick("limit"), viewer: qp("viewer") }),
+    optionadd: () => m.optionAdd(stamped({ plan: pick("plan") })),
+    optionrevise: () => m.optionRevise(stamped({ plan: pick("plan"), option: pick("option") })),
+    optionpropose: () => m.optionPropose({ ...b, plan: pick("plan"), run: pick("run"), proposer: qp("proposer"), viewer: qp("viewer") }),
+    optionadopt: () => m.optionAdopt(stamped({ proposal: pick("proposal") })),
+    optiondispose: () => m.optionDispose(stamped({ plan: pick("plan"), disposition: pick("disposition") })),
+    scenarioset: () => m.scenarioSet(stamped({ plan: pick("plan"), scenario: pick("scenario") })),
+    checkpointrecord: () => m.checkpointRecord(stamped({ plan: pick("plan"), scenario: pick("scenario"), phase: pick("phase"),
+                                                         judged: pick("judged") })),
+    optionstart: () => m.optionStart(stamped({ plan: pick("plan"), option: pick("option"), kind: pick("kind") })),
+    planclose: () => m.planClose(stamped({ id: pick("id") ?? pick("plan"), reason: pick("reason") })),
+    planproposals: () => m.planProposals({ plan: pick("plan"), run: pick("run"), after: pick("after"), viewer: qp("viewer") }),
+  };
+}
