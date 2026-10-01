@@ -15,6 +15,6 @@
 
 **Tests and checks.**
 - `node --test test/m/citation/` (bio-plane): tests 55, pass 55, fail 0.
-- format: 86 modules, 84 requirements files; 0 failures. architecture: 11 product files, 43 relative imports; 0 failures. coverage: 11 of 11 live requirement ids named by a test; 0 failures. ownership: re-run after commit, below.
+- format: 86 modules, 84 requirements files; 0 failures. architecture: 11 product files, 43 relative imports; 0 failures. coverage: 11 of 11 live requirement ids named by a test; 0 failures. ownership: 4 files changed by citation between tranche/T21 and HEAD; 0 failures.
 
 Size (session_015Lw2eUqxdm1R3Ga3ikfBxs): test runs 2, module lines 1043
