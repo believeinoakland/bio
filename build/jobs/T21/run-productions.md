@@ -24,3 +24,7 @@
 - `node checks/ownership.mjs … run-productions tranche/T21`: 5 files changed; 0 failures
 
 Size (session_01FuWDwjxZ1hV1x1vsQyNDjp): test runs 1, module lines 1358
+
+## J1 · REPORT
+
+Generated artifacts staled by this change (not regenerated, B1): `bio-plane/dist/bio-plane.bundled.mjs` and `.bundle.json` (not_product): `src/run-productions/index.mjs` and `checks.mjs` changed, comments only.
