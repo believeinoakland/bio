@@ -1,6 +1,6 @@
 # filings (T21)
 
-**Status** · session_01TvVyWHR59YbbaUAFjxHb9M · depth 2 · WAITING ON BOB (J1) · handled B0
+**Status** · session_01TvVyWHR59YbbaUAFjxHb9M · depth 2 · WAITING ON BOB (J1) · handled B2
 
 ## J1 · QUESTION
 
