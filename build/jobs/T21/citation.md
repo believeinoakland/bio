@@ -1,6 +1,6 @@
 # citation (T21)
 
-**Status** · session_015Lw2eUqxdm1R3Ga3ikfBxs · depth 2 · WORKING · handled B0
+**Status** · session_015Lw2eUqxdm1R3Ga3ikfBxs · depth 2 · COMPLETE · handled B0
 
 ## Completion (CITATION #6)
 
