@@ -52,3 +52,7 @@ Merged B2–B4 (tranche/T18 @ fa31349f4b in my branch). Every entry is applied e
 Pre-existing, not mine: `test/m/conformance/` "R10: flagged basis_changed …" fails on tranche/T18 as on my branch.
 
 Rows for `awaiting stamp` (T19's promotion): C-115.28–C-115.40 (new: the R23 and R26 codes); C-115.3 `ACTION_CLOSED` and C-115.9 `ALREADY_APPROVED`, `where` only (now `#closed` › `is-action-closed`, `#alreadyApproved` › `is-already-approved`, each minted at one site for its two callers).
+
+## J3 · COMPLETE
+
+Every entry applied, B5 included: clockPropose read from action-clocks (its R2), and a packet deadline counted by its computeDeadline. Module tests 45 pass, 0 fail; format, architecture, coverage (26 of 26) and ownership pass. Ready to merge for escalation and action-plans. One test of another module stays red until its own job: affordances' layer-9 op census (J2). Completion, rows awaiting stamp and size in my record.
