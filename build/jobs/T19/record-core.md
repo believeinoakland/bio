@@ -33,3 +33,54 @@ For other modules; nothing here is mine to change.
    Then the store's `auditPass` and `MINT_LEDGER_LIVE` can go, and legacy-store spreads `recordCoreOps(record, url, body, {sight: viewerPredicate})` (K671).
 4. **Generated artifact staled:** `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`; inputs `src/record-core/*`, `src/store.mjs`, `src/schema.mjs`), for the layer close's regeneration.
 5. **DEC-49 guard:** record-core's five failing sites are fixed (N422). Still red and not mine: C-102.1–.3 are defined in both `RECORD_CORE_CHECKS` and the catalogue's `REGISTRATION_CHECKS`; they clear when the catalogue's copy goes (with `REGISTRATION_CHECKS`, promotion L2).
+
+## J3 · COMPLETE
+
+**Entries applied** (`build/plan/current.md` L2 record-core; draft-T19 and the refresh; B1, B2/K775), on `job/T19/record-core` @ 833e9b3334:
+- **R67 (K766, K775 (1)–(2)):**
+  - `registerGrammar` validates against record-grammar's `EXTENSION_ARMS`, re-pointed from the catalogue.
+  - A registration may claim several whole slots, and a slot may be claimed by several registrations. Part of a slot is `GRAMMAR_MALFORMED`. A held id outside a shared slot, or a module's second registration, is `GRAMMAR_DECLARED`.
+  - `grammars()` answers a list `checkBundle` accepts. A shared slot is one entry, whose claimants run in registration order with `{slot, rest}`. A lone claimant comes back as it was registered.
+  - **N422:** an acceptance is `{ok: true, module, ids}`, with `ok` first. The guard's :970 outcome is gone.
+- **Rule 2 (K775 (3)):** `registerLegacyGrammars(record)` registers `LEGACY_GRAMMARS` as `legacy-checks` over the unheld slots. `store.mjs` calls it as its constructor's last line. The audit (R18) calls record-grammar's `checkBundle` with `grammars()`, with findings identical to the catalogue wrapper's (tested).
+- **R68, R69:** `registerAuditFinding` and `registerAuditContext` go through `registerAuditCheck`'s one door, so each of C-102.1 and .2 is minted at one site. Findings come back under their keys. A finding, context or claimant that throws is `AUDIT_CHECK_FAILED` (C-102.3), built in `auditPass`' own region.
+- **R70, R40:** `registerMintSeed`, with new rows `MINT_SEED_DECLARED` C-102.19 and `MINT_SEED_MALFORMED` C-102.20. `seedMintLedger` also reads the registered sources.
+- **R71:** `migrate()` runs `RECORD_SCHEMA` itself, then the manifest columns (before and after), `project`, the `classification` drop and the alias normalisation (record-grammar's `LEGACY_TYPE_ALIASES`).
+  - `store.mjs`' `#migrate` calls it first.
+  - `schema.mjs` no longer interpolates `RECORD_SCHEMA`.
+  - The store's copies of those steps are removed: 3 lines added, 31 removed.
+- **R72, R73:** `recordCoreOps(record, url, body, {sight})` holds `allocid`, `lease`, `snapkeycensus`, `digestcensus`, `stats`, `audit` (sight-gated, `total`, no page ids, fail closed) and `purge` (one transact, the proof before and after, R72's 33 `removed` keys). The store keeps its arms until legacy-store spreads the map (K671).
+- **R46 (K775 (4)):** the `clears` declaration form, applied inside a bundle purge's transaction.
+- **R34, R37, R44 (N426), record-core's share:** `project` is recorded as given, answered by `bundleInfo` and fenced by in SQL. Promotion writes it (its job).
+- **Catalogue re-points:** `index.mjs` reads `checkBundle`, `createSha256`, `EXTENSION_ARMS` and `LEGACY_TYPE_ALIASES` from record-grammar. Only `LEGACY_GRAMMARS` stays, and it goes at rule 1. The test reads record-grammar; its one catalogue read is the rule-2 oracle, by dynamic import.
+- **DEC-49 guard (N422 / N242 share):** record-core's five failing sites are fixed. `refusedAs` became `rowRefusal`, so the guard's arm C sees it.
+
+**Rs met, with their tests, for BOB to strike** (`test/m/record-core/record-core.test.mjs`):
+- R18: "R67 R18 (rule 2) …" and "R18 R45: auditPass runs the check catalogue …"
+- R34, R37, R44: "R34 R37 R44 (N426) …"
+- R40: "R70 R40 …"
+- R45: "R69 R45 …"
+- R46 (`clears`): "R46 R22 R72 (K775) …"
+- R67: "R67 (K766, N422) …", "R67 R59 R18 …", "R67 R18 (rule 2) …"
+- R68: "R68: a registered finding …"
+- R69: "R69 R45 …"
+- R70: "R70 R40 …"
+- R71: "R71: migrate runs RECORD_SCHEMA …"
+- R72: "R72: recordCoreOps holds seven ops …" and "R72 R22 R24 R64: op=purge …"
+- R73: "R73 R19: op=audit is gated …"
+
+R64's own mark ("moved in record-core's next job") was met in T18 (K650) and can go too.
+
+**Deferred:** none of my own. For other modules (capture's two tests, capture-requests' `clears` declaration, the R68–R70 registrations, the stale plane bundle, the catalogue's C-102.1–.3 copies): J2.
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/record-core/`: 90 pass, 0 fail.
+- Whole `bio-plane/test/m/`, every module that uses record-core: 4,344 tests, 4,314 pass, 10 fail. 8 of the 10 fail identically on `tranche/T19` (measured in a worktree at origin/tranche/T19: 12 fail there, the 8 plus 4 of that worktree's own setup). The 2 new ones are capture's (J2 §1).
+- Layer tests: none (manifest).
+- `civicos-ui/check-refusal-codes.mjs`: no record-core failure. It is still red on other modules' rows, as on the base: 104 FAIL lines against the base's 109.
+- `node checks/format.mjs`: 0 failures.
+- `architecture.mjs bio record-core`: 0 failures.
+- `coverage.mjs bio record-core`: 73 of 73 live ids, 0 failures.
+- `ownership.mjs bio record-core tranche/T19`: 0 failures. legacy-store: 3 lines added (the import, `registerLegacyGrammars(recordOf(ctx));`, `recordOf(this.ctx).migrate();`), 31 removed.
+
+Size (session_01Q3pc45D9ZwWbRHBdgAZ8pf): test runs 12, module lines 1686
