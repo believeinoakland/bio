@@ -59,8 +59,10 @@ export function world(fakes = {}, { bare = false } = {}) {
   const tasks = tasksOf(host, { record, membership, start: false, now: () => w.now, capture: F.capture, provenance: F.provenance });
   if (!bare) tasks.migrate();
   const q = queueOf(host, { record, membership, start: false, now: () => w.now, tasks, ...F });
+  /* R36: queue makes its own tables (`migrate`), never through the legacy store's SCHEMA (K735). */
+  if (!bare) q.migrate();
   const w = {
-    db, sql, host, record, membership, q, tasks, fakes: F, statements, now: NOW, boot: () => { boot(); tasks.migrate(); },
+    db, sql, host, record, membership, q, tasks, fakes: F, statements, now: NOW, boot: () => { boot(); tasks.migrate(); q.migrate(); },
     run: (s, ...a) => db.prepare(s).run(...a.map(bind)),
     all: (s, ...a) => db.prepare(s).all(...a.map(bind)),
     bundle(id, type = "information", { title = id, state = null } = {}) {
