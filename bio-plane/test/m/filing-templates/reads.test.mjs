@@ -1,0 +1,230 @@
+/* filing-templates: the reads (R14, R15, R20, R24, R25), at the module's interface. */
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { seeded, world, draft, approved, V, MACHINE, TEST, HARBOUR, TEXT, sha, secret, twoProfiles } from "./fixture.mjs";
+import * as ft from "../../../src/filing-templates/index.mjs";
+import * as jurisdictions from "../../../../jurisdictions/index.mjs";
+
+const A = V("alice"), B = V("bob"), F = V("frank"), D = V("dave");
+const code = (r) => [r.ok, r.reason, r.code, r.check, r.translation];
+const row = (c) => ft.FILING_TEMPLATE_CHECKS[c];
+const refused = (r, c) => { assert.deepEqual(code(r), [false, c, c, row(c).check, row(c).translation], JSON.stringify(r).slice(0, 300)); return r; };
+const ids = (r) => r.templates.map((t) => t.id);
+const PROFILE_IDS = ["TPL-test-records-request", "TPL-test-bylaw-complaint", "TPL-test-commitment-brief"];
+
+test("R14 templatesFor lists every offered version (approved and updated, of templates not retired) with its metadata, the latest approved marked default; drafts, reviews and withdrawn versions never offered", () => {
+  const w = seeded();
+  const a = approved(w);
+  w.clock.now = "2026-10-02T00:00:00Z";
+  const two = w.ft.templateDraft({ template: a.template, text: "Two {{group}}", author: A, viewer: A });
+  w.ft.templateSubmit({ version: two.version, reviewers: ["frank"], author: A, viewer: A });
+  w.ft.templateApprove({ version: two.version, reason: "standing", by: B, viewer: B });
+  w.ft.templateDraft({ template: a.template, text: "Three {{group}}", author: A, viewer: A });
+  draft(w, { name: "Only a draft" });
+  const r = w.ft.templatesFor({ viewer: A });
+  assert.deepEqual([r.ok, r.state, r.truncated], [true, "offered", false]);
+  const t = r.templates.find((x) => x.id === a.template);
+  assert.deepEqual({ ...t, versions: undefined }, { id: a.template, kind: "records_request", use: "file", profiles: [TEST], name: "Records ask",
+                                                    scope: { project: w.P }, origin: "group", versions: undefined });
+  assert.deepEqual(t.versions.map((v) => [v.id, v.state, v.default ?? false]), [[two.version, "approved", true], [a.version, "updated", false]]);
+  const v = t.versions[1];
+  assert.deepEqual([v.author.id, v.contributors[0].member, v.reviews.professional, v.approved.by.id, v.created_at, v.updated_by],
+                   ["alice", "alice", 1, "bob", "2026-10-01T12:00:00Z", two.version]);
+  assert.equal(r.templates.some((x) => x.name === "Only a draft"), false);
+  /* newest first; the profile's templates are older (approved 2026-09-01) */
+  assert.deepEqual(ids(r).slice(-3).sort(), [...PROFILE_IDS].sort());
+  assert.equal(ids(r)[0], a.template);
+});
+
+test("R14 filters: kind, use, profile (templates naming it and the general ones, each saying whether written for it), and state lists drafts, in review, withdrawn, retired (with reason) or open proposals; at most 200 with truncated", () => {
+  const w = seeded({ profiles: [TEST, HARBOUR], jur: twoProfiles });
+  const gen = approved(w, { name: "General", profiles: "general" });
+  w.clock.now = "2026-10-02T00:00:00Z";
+  const har = draft(w, { name: "Harbour only", profiles: [HARBOUR] });
+  w.ft.templateSubmit({ version: har.version, reviewers: ["frank"], author: A, viewer: A });
+  w.ft.templateReview({ version: har.version, outcome: "no_concerns", scope: "s", author: F, viewer: F });
+  assert.equal(w.ft.templateApprove({ version: har.version, by: B, viewer: B }).ok, true, "Tier 1 under the harbour profile");
+  const under = (p) => w.ft.templatesFor({ profile: p, viewer: A }).templates.map((t) => [t.id, t.written_for]);
+  assert.deepEqual(under(TEST).filter(([id]) => !id.startsWith("TPL-test")), [[gen.template, false]]);
+  assert.deepEqual(under(TEST).filter(([id]) => id.startsWith("TPL-test")).map(([, f]) => f), [true, true, true]);
+  assert.deepEqual(under(HARBOUR), [[har.template, true], [gen.template, false]], "a general template under two profiles");
+  assert.deepEqual(ids(w.ft.templatesFor({ kind: "bylaw_complaint", viewer: A })), ["TPL-test-bylaw-complaint"]);
+  assert.deepEqual(ids(w.ft.templatesFor({ use: "brief", viewer: A })), ["TPL-test-commitment-brief"]);
+  /* the states */
+  const d = draft(w, { name: "D1" });
+  const e = draft(w, { name: "E1" });
+  w.ft.templateSubmit({ version: e.version, reviewers: ["frank"], author: A, viewer: A });
+  const x = draft(w, { name: "X1" });
+  w.ft.templateRetire({ template: x.template, version: x.version, reason: "dropped", by: A, viewer: A });
+  w.ft.templateRetire({ template: gen.template, reason: "too broad", by: A, viewer: A });
+  const st = (s) => w.ft.templatesFor({ state: s, viewer: A });
+  assert.deepEqual(ids(st("draft")), [d.template]);
+  assert.deepEqual(ids(st("in_review")), [e.template]);
+  assert.deepEqual(ids(st("withdrawn")), [x.template]);
+  const ret = st("retired");
+  assert.deepEqual([ids(ret), ret.templates[0].retired.reason, ret.templates[0].versions[0].ended.reason], [[gen.template], "too broad", "too broad"]);
+  assert.equal(ids(w.ft.templatesFor({ viewer: A })).includes(gen.template), false);
+  w.ft.templatePropose({ kind: "records_request", text: "p {{law}}", why: "w", proposer: MACHINE, viewer: MACHINE });
+  assert.equal(st("proposed").proposals.length, 1);
+  refused(st("everything"), "TEMPLATES_STATE_REFUSED");
+});
+
+test("R14 at most 200 templates, newest first, with truncated measured past the bound", () => {
+  const w = seeded({ profiles: [] });
+  for (let i = 0; i < 201; i++) {
+    w.clock.now = `2026-10-01T12:${String(Math.floor(i / 60)).padStart(2, "0")}:${String(i % 60).padStart(2, "0")}Z`;
+    draft(w, { name: `T${i}`, profiles: "general" });
+  }
+  const r = w.ft.templatesFor({ state: "draft", viewer: A });
+  assert.deepEqual([r.templates.length, r.truncated, r.templates[0].name, r.templates[199].name], [200, true, "T200", "T1"]);
+});
+
+test("R14 templateRead answers one version (the latest approved by default) with its whole attribution, its proposals adopted, its comments' count; a grant reads only its own version", () => {
+  const w = seeded();
+  const p = w.ft.templatePropose({ kind: "records_request", text: "P {{group}}", why: "w", proposer: MACHINE, viewer: MACHINE, run: "RUN-9" });
+  const a = approved(w, { text: undefined, from: p.proposal.id });
+  w.ft.templateComment({ template: a.template, version: a.version, text: "c", author: B, viewer: B });
+  const two = w.ft.templateDraft({ template: a.template, text: "Two {{group}}", author: A, viewer: A });
+  const r = w.ft.templateRead({ template: a.template, viewer: A });
+  assert.deepEqual([r.version.id, r.default, r.offered, r.comments], [a.version, true, true, 1]);
+  assert.deepEqual(r.version.proposals_adopted.map((x) => x.id), [p.proposal.id]);
+  assert.deepEqual(r.version.derived_from, { proposal: p.proposal.id });
+  for (const k of ["notes", "author", "contributors", "reviews", "approved", "revisions", "reviewers"]) assert.ok(k in r.version, k);
+  const named = w.ft.templateRead({ template: a.template, version: two.version, viewer: A });
+  assert.deepEqual([named.version.state, named.offered, named.default], ["draft", false, undefined]);
+  /* with no approved version, the latest */
+  const d = draft(w, { name: "Fresh" });
+  assert.equal(w.ft.templateRead({ template: d.template, viewer: A }).version.id, d.version);
+  refused(w.ft.templateRead({ template: a.template, version: 9, viewer: A }), "NO_SUCH_TEMPLATE");
+  w.ft.templateReviewGrant({ version: two.version, recipient: "R", organisation: "O", secretSha: secret("g"), by: A, viewer: A });
+  assert.equal(w.ft.templateRead({ secretSha: secret("g") }).version.id, two.version);
+  assert.equal(w.ft.templateRead({ version: a.version, secretSha: secret("g") }).reason, "NO_TEMPLATE_GRANT");
+});
+
+test("R15 the profile's templates are read as approved versions of origin profile, scope group, their profiles the profile they are in, with the attribution it carries; derivable and commentable, never revised, reviewed, approved or retired", () => {
+  const w = seeded();
+  const r = w.ft.templateRead({ template: "TPL-test-records-request", viewer: D });
+  const pt = jurisdictions.get(TEST).action_kinds.find((k) => k.kind === "records_request").template;
+  assert.deepEqual({ ...r.template }, { id: pt.id, kind: "records_request", use: "file", profiles: [TEST], name: "request under the records act",
+                                        scope: "group", origin: "profile" });
+  const v = r.version;
+  assert.deepEqual([v.state, v.text, v.sha, v.version, v.author.name, v.approved.by.name, v.approved.at, v.approved.basis, v.notes.text],
+                   ["approved", pt.text, sha(pt.text), 1, "Ada Example", "Cy Example", "2026-09-01", "TEST", "A made-up template for tests."]);
+  assert.deepEqual(v.contributors, [{ kind: "member", name: "Ben Example" }]);
+  assert.deepEqual(v.reviews[0].reviewer, { name: "Dee Example", organisation: "Marlow Commons Legal Society (test)",
+                                            credential: "solicitor (test)", credential_says: "as the profile states it; never verified" });
+  assert.equal(r.default, true);
+  /* R3 may take it as from; R13 may comment; R4, R7–R11 do not apply */
+  const ver = "TPL-test-records-request@1";
+  assert.equal(draft(w, { name: "From profile", text: undefined, from: ver }).ok, true);
+  assert.equal(w.ft.templateComment({ template: pt.id, version: 1, text: "fine", author: B, viewer: B }).ok, true);
+  assert.equal(w.ft.templateRevise({ version: ver, text: TEXT, author: A, viewer: A }).reason, "TEMPLATE_SCOPE_REFUSED");
+  assert.equal(w.ft.templateSubmit({ version: ver, reviewers: ["bob"], author: A, viewer: A }).reason, "TEMPLATE_SCOPE_REFUSED");
+  assert.equal(w.ft.templateReviewGrant({ version: ver, recipient: "R", organisation: "O", secretSha: secret("p"), by: A, viewer: A }).reason, "TEMPLATE_SCOPE_REFUSED");
+  assert.equal(w.ft.templateReview({ version: ver, outcome: "no_concerns", scope: "s", author: B, viewer: B }).reason, "NOT_IN_REVIEW");
+  assert.equal(w.ft.templateApprove({ version: ver, by: B, viewer: B }).reason, "NOT_IN_REVIEW");
+  assert.equal(w.ft.templateRetire({ template: pt.id, reason: "r", by: B, viewer: B }).reason, "NOT_AN_APPROVER");
+  assert.equal(w.ft.templateRetire({ template: pt.id, version: 1, reason: "r", by: B, viewer: B }).reason, "TEMPLATE_SCOPE_REFUSED");
+  /* a profile not active offers none of its templates */
+  const none = seeded({ profiles: [] });
+  assert.equal(none.ft.templatesFor({ viewer: A }).templates.length, 0);
+  assert.equal(none.ft.templateRead({ template: pt.id, viewer: A }).reason, "NO_SUCH_TEMPLATE");
+});
+
+test("R15 a profile template whose text names a blank outside FILING_BLANKS is not offered and reads TEMPLATE_BLANK_UNKNOWN", () => {
+  const bad = structuredClone(twoProfiles.get(HARBOUR));
+  const jur = { ...twoProfiles, get: (id) => (id === HARBOUR ? structuredClone(bad) : twoProfiles.get(id)) };
+  bad.action_kinds[0].template = { id: "TPL-test-bad-blank", version: 2, use: "file", text: "To {{mayor_name}}: {{group}}",
+    notes: "", authored_by: "Ada Example", contributors: [], reviews: [], approved_by: "Cy Example", approved_at: "2026-09-02", basis: "TEST" };
+  const w = seeded({ profiles: [HARBOUR], jur });
+  assert.equal(w.ft.templatesFor({ viewer: A }).templates.some((t) => t.id === "TPL-test-bad-blank"), false);
+  const o = refused(w.ft.offeredVersion({ template: "TPL-test-bad-blank", viewer: A }), "TEMPLATE_BLANK_UNKNOWN");
+  assert.equal(o.blank, "mayor_name");
+  const r = w.ft.templateRead({ template: "TPL-test-bad-blank", viewer: A });
+  assert.deepEqual([r.offered, r.blank_unknown.reason, r.blank_unknown.check], [false, "TEMPLATE_BLANK_UNKNOWN", row("TEMPLATE_BLANK_UNKNOWN").check]);
+});
+
+test("R20 reviewsRequested lists every (version, member) pair asked, in review, with no review of the present sha; in (version id, member) order, at most 500 per page, cursor and truncated; writes nothing", () => {
+  const w = seeded();
+  const a = draft(w, { name: "A" });
+  const b = draft(w, { name: "B" });
+  w.ft.templateSubmit({ version: a.version, reviewers: ["frank", "bob", "carol"], author: A, viewer: A });
+  w.ft.templateSubmit({ version: b.version, reviewers: ["frank"], author: A, viewer: A });
+  draft(w, { name: "Not submitted" });
+  w.ft.templateReview({ version: a.version, outcome: "concerns", scope: "s", author: B, viewer: B });
+  const before = w.snapshot();
+  const r = w.ft.reviewsRequested({ viewer: MACHINE });
+  assert.deepEqual(w.snapshot(), before, "writes nothing");
+  const want = [[a.version, "carol"], [a.version, "frank"], [b.version, "frank"]].sort((x, y) => (x[0] + "#" + x[1] < y[0] + "#" + y[1] ? -1 : 1));
+  assert.deepEqual(r.items.map((i) => [i.version, i.member]), want);
+  const i = r.items.find((x) => x.member === "carol");
+  assert.deepEqual([i.template, i.name, i.kind, i.member_name, i.asked_by, i.asked_at],
+                   [a.template, "A", "records_request", "h_carol", { id: "alice", name: "h_alice" }, "2026-10-01T12:00:00Z"]);
+  assert.deepEqual([r.truncated, r.cursor, r.limit], [false, null, 500]);
+  /* paging through cursor */
+  const p1 = w.ft.reviewsRequested({ limit: 2, viewer: MACHINE });
+  assert.deepEqual([p1.items.length, p1.truncated, p1.cursor], [2, true, `${want[1][0]}#${want[1][1]}`]);
+  const p2 = w.ft.reviewsRequested({ limit: 2, after: p1.cursor, viewer: MACHINE });
+  assert.deepEqual([p2.items.map((x) => [x.version, x.member]), p2.truncated, p2.cursor], [[want[2]], false, null]);
+  assert.deepEqual(w.ft.reviewsRequested({ after: want[0][0], viewer: MACHINE }).items.map((x) => x.version).every((v) => v > want[0][0]), true);
+  /* a viewer who may not see the template is not shown its pairs */
+  assert.equal(w.ft.reviewsRequested({ viewer: D }).items.length, 0);
+  /* approval and withdrawal end the requests */
+  w.ft.templateRetire({ template: b.template, version: b.version, reason: "r", by: A, viewer: A });
+  assert.deepEqual(w.ft.reviewsRequested({ viewer: MACHINE }).items.map((x) => x.version), [a.version, a.version]);
+});
+
+test("R24 a project's template is seen by whoever may see the project; group and profile templates by every member; one hidden is absent from every read and act, and no count names it", () => {
+  const w = seeded();
+  const a = approved(w);
+  w.ft.templatePropose({ template: a.template, text: "p {{group}}", why: "w", proposer: B, viewer: B });
+  /* dave sees neither P nor its template */
+  const asD = { viewer: D };
+  assert.equal(ids(w.ft.templatesFor(asD)).includes(a.template), false);
+  assert.deepEqual(ids(w.ft.templatesFor(asD)).sort(), [...PROFILE_IDS].sort());
+  assert.equal(w.ft.templatesFor({ state: "proposed", ...asD }).proposals.length, 0);
+  for (const r of [w.ft.templateRead({ template: a.template, ...asD }), w.ft.offeredVersion({ template: a.template, ...asD }),
+                   w.ft.templateComments({ template: a.template, ...asD }),
+                   w.ft.templateComment({ template: a.template, version: a.version, text: "x", author: D, ...asD }),
+                   w.ft.templatePropose({ template: a.template, text: "x {{group}}", why: "w", proposer: D, ...asD }),
+                   w.ft.templateDraft({ template: a.template, text: TEXT, author: D, ...asD })])
+    assert.deepEqual(code(r), code(w.ft.templateRead({ template: "TPL-2026-0000", ...asD })), "absent and hidden: one answer");
+  /* the founder-like machine viewer and the administrator see it; an unrecognised viewer sees nothing at all */
+  assert.equal(ids(w.ft.templatesFor({ viewer: MACHINE })).includes(a.template), true);
+  assert.equal(ids(w.ft.templatesFor({ viewer: V("erin") })).includes(a.template), true);
+  assert.equal(ids(w.ft.templatesFor({ viewer: V("carol") })).includes(a.template), true, "an invited participant sees the project");
+  assert.deepEqual(w.ft.templatesFor({ viewer: "nobody" }).templates, []);
+  assert.deepEqual(w.ft.templatesFor({ viewer: null }).templates, []);
+  /* once widened, every member */
+  w.ft.templateApprove({ version: a.version, widen: true, by: V("erin"), viewer: V("erin") });
+  assert.equal(ids(w.ft.templatesFor(asD)).includes(a.template), true);
+  assert.deepEqual(w.ft.templatesFor({ viewer: "nobody" }).templates, []);
+});
+
+test("R25 offeredVersion answers the version a filing may use with its metadata: absent, the latest approved (default); a named updated version with updated_by; refusals NO_SUCH_TEMPLATE, TEMPLATE_RETIRED, TEMPLATE_NOT_OFFERED; writes nothing", () => {
+  const w = seeded();
+  const d = draft(w, { name: "Never approved" });
+  refused(w.ft.offeredVersion({ template: d.template, viewer: A }), "TEMPLATE_NOT_OFFERED");
+  const a = approved(w);
+  const two = w.ft.templateDraft({ template: a.template, text: "Two {{group}}", author: A, viewer: A });
+  refused(w.ft.offeredVersion({ template: a.template, version: two.version, viewer: A }), "TEMPLATE_NOT_OFFERED");
+  w.ft.templateSubmit({ version: two.version, reviewers: ["frank"], author: A, viewer: A });
+  refused(w.ft.offeredVersion({ template: a.template, version: two.version, viewer: A }), "TEMPLATE_NOT_OFFERED");
+  w.ft.templateApprove({ version: two.version, reason: "r", by: B, viewer: B });
+  const before = w.snapshot();
+  const o = w.ft.offeredVersion({ template: a.template, viewer: A });
+  assert.deepEqual(w.snapshot(), before);
+  assert.deepEqual([o.ok, o.template, o.version, o.number, o.use, o.kind, o.profiles, o.origin, o.sha, o.text, o.state, o.default],
+                   [true, a.template, two.version, 2, "file", "records_request", [TEST], "group", sha("Two {{group}}"), "Two {{group}}", "approved", true]);
+  assert.equal(o.approved.by.id, "bob");
+  const old = w.ft.offeredVersion({ template: a.template, version: a.version, viewer: A });
+  assert.deepEqual([old.state, old.updated_by, old.default, old.sha], ["updated", two.version, undefined, sha(TEXT)]);
+  assert.equal(w.ft.offeredVersion({ template: a.template, version: 1, viewer: A }).version, a.version);
+  const p = w.ft.offeredVersion({ template: "TPL-test-commitment-brief", viewer: A });
+  assert.deepEqual([p.origin, p.use, p.state, p.default], ["profile", "brief", "approved", true]);
+  refused(w.ft.offeredVersion({ template: a.template, viewer: D }), "NO_SUCH_TEMPLATE");
+  refused(w.ft.offeredVersion({ template: "TPL-2026-0000", viewer: A }), "NO_SUCH_TEMPLATE");
+  w.ft.templateRetire({ template: a.template, reason: "retired now", by: A, viewer: A });
+  const ret = refused(w.ft.offeredVersion({ template: a.template, version: a.version, viewer: A }), "TEMPLATE_RETIRED");
+  assert.equal(ret.retired.reason, "retired now");
+});
