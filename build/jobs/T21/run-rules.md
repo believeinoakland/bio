@@ -23,3 +23,7 @@ Size (session_019rgbfwYubuJMAvZL9Yzmt9): test runs 1, module lines 1,701
 ## J1 · REPORT
 
 Generated artifacts staled by my comment-only change (bundle inputs): agent-worker/dist/agent-worker.bundled.mjs (+ .bundle.json) and bio-plane/dist/bio-plane.bundled.mjs (+ .bundle.json); not regenerated. Also found: civicos-ui/test/run.mjs:88 still runs ../check-refusal-codes.mjs, deleted in T20 (legacy-ui/legacy-tests).
+
+## J2 · COMPLETE
+
+N469 applied, comments only, in rules.mjs, checks.mjs and deployment.mjs (re-scan added rec169-consume ARM C and skillsequencing's 'the suite' claims). test/m/run-rules/ 16/16; format, architecture, coverage, ownership 0 failures. Record: build/jobs/T21/run-rules.md.
