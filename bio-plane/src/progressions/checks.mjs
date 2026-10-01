@@ -5,8 +5,9 @@
  * Three rows moved here from the check catalogue's `ACT_SHAPE_CHECKS` with their ids and translations unchanged (K6,
  * R28): C-33.26 `UNKNOWN_AFTER` (REC-64) and REC-211's C-33.42 `NO_DEFINITION_VERSION` and C-33.43 `DEFINITION_MOVED`.
  * The rest are this module's own family, C-100, minted at the extraction (K107 (3)'s rule: the job names a new code's
- * row). `NO_BASIS` (C-33.40) and `NO_CITATION` (C-33.41) are shared act rows and stay in the catalogue, where the other
- * acts reach them; this module answers them from there (`actRefusal`).
+ * row). `NO_BASIS` (C-33.40) and `NO_CITATION` (C-33.41) are shared act rows, held by `record-grammar`
+ * (`SHARED_ACT_CHECKS`, its R29; K765), where the other acts reach them; this module answers them from there
+ * (`refusal`).
  *
  * ONE CODE, ONE SITE (K231, N118, N242, T10; K275, N285, T12). Each row's `where` names one function and one marked
  * region that wraps the whole refusal; a code this module answers from several acts is minted in one private helper of
@@ -20,7 +21,7 @@
  * keeping its translation; `NOT_A_DISPOSITION` (C-100.20) is one condition several modules answer, so its one site is
  * `notADisposition` below (R35), which `inquiry` and `legacy-store` call too. */
 
-import { ACT_SHAPE_CHECKS } from "../../checks/bio-checks.mjs";
+import { SHARED_ACT_CHECKS } from "../record-grammar/index.mjs";
 import { DISPOSITIONS } from "../promotion/index.mjs";
 
 /** The two decisions a member may record about a derived question (D-79): `promotion`'s one list (its R51), the same
@@ -153,10 +154,10 @@ export const PROGRESSION_CHECKS = Object.freeze({
 export const GENERIC_CODES = Object.freeze(["NO_KEY"]);
 
 /** A refusal in DEC-49's shape: the code, its row and translation, then the site's own fields and sentence. `NO_BASIS`
- *  and `NO_CITATION` are the catalogue's shared act rows (C-33.40, C-33.41). Throws only when a code has no row with a
+ *  and `NO_CITATION` are record-grammar's shared act rows (C-33.40, C-33.41; `SHARED_ACT_CHECKS`). Throws only when a code has no row with a
  *  translation, which a test of every code rules out: a code with no sentence behind it must not reach a member. */
 export function refusal(code, detail, extra = {}) {
-  const row = PROGRESSION_CHECKS[code] || ((code === "NO_BASIS" || code === "NO_CITATION") ? ACT_SHAPE_CHECKS[code] : null);
+  const row = PROGRESSION_CHECKS[code] || ((code === "NO_BASIS" || code === "NO_CITATION") ? SHARED_ACT_CHECKS[code] : null);
   if (!row || typeof row.translation !== "string" || !row.translation)
     throw new Error(`progressions: ${code} has no row with a translation (DEC-49)`);
   return { ok: false, reason: code, code, check: row.check, translation: row.translation, ...extra, detail };
