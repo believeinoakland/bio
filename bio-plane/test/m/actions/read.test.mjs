@@ -1,8 +1,9 @@
-/* actions' reads and services at its interface (R12, R25, R26, R29–R31, R36–R41; R31's tests guard the copy of `pendingClocks` kept until monitoring re-points, K625). */
+/* actions' reads and services at its interface (R12, R25, R26, R29, R30, R36, R39, R41, R51; R31 retired to `action-clocks`, its held copy gone, N428). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, actionMd, CP, NOW_MS } from "./fixture.mjs";
 import * as actions from "../../../src/actions/index.mjs";
+import * as grammar from "../../../src/action-grammar/index.mjs";
 import { get as profile } from "../../../../jurisdictions/index.mjs";
 
 const A = "ACTN-2026-0001-a";
@@ -85,21 +86,7 @@ test("R30 actionsFor filters visible actions in id order, at most 200 a page, tr
   assert.equal(w.a.actionsFor({ viewer: "nobody" }).items.length, 0, "only visible actions");
 });
 
-test("R31 pendingClocks lists pending entries dated before `before` across visible actions, at most 500", () => {
-  const w = world();
-  w.action(A, ["clock:", ...CLK("2026-09-01"), ...CLK("2026-09-05", "met"), ...CLK("2026-12-01")]);
-  const r = w.a.pendingClocks({ before: "2026-10-01", viewer: M });
-  assert.deepEqual(r.items, [{ action: A, ord: 0, date: "2026-09-01", basis: "Act s.2", text: "t", past: true }]);
-  assert.equal(r.limit, 500); assert.equal(r.truncated, false);
-  assert.equal(w.a.pendingClocks({ before: "2026-10-01", viewer: "nobody" }).items.length, 0);
-  const bad = w.a.pendingClocks({ before: "soon", viewer: M });
-  assert.deepEqual([bad.reason, bad.check], ["PENDING_CLOCKS_BAD_BEFORE", "C-117.5"], "its own code, not C-33.6's");
-  const B = "ACTN-2026-0002-b";
-  w.action(B, ["clock:", ...CLK("2026-01-01"), ...CLK("2026-01-02")]);
-  assert.deepEqual([w.a.pendingClocks({ before: "2026-10-01", limit: 2, viewer: M }).truncated], [true]);
-});
-
-test("R37 R36 the audit reports C-2.10 and C-11.1 over an action, a missing counterparty and a past pending entry; tables purge with the action", () => {
+test("R51 R36 the audit reports C-2.10 and C-11.1 over an action, a missing counterparty and a past pending entry; tables purge with the action", () => {
   const w = world();
   const md = actionMd(A, ["action_kind: other", "clock:", ...CLK("2020-01-01")]);
   const f = w.a.audit({ files: new Map([["bundle.md", md]]) });
@@ -116,33 +103,15 @@ test("R37 R36 the audit reports C-2.10 and C-11.1 over an action, a missing coun
     assert.equal(w.rows(`SELECT COUNT(*) AS n FROM ${t} WHERE bundle_id=?`, A)[0].n, 0, t);
 });
 
-test("R38 every moved check is carried here with its id", () => {
-  const ids = new Set(Object.values({ ...actions.ACTION_FENCE_CHECKS, ...actions.ACTION_ACT_CHECKS, ...actions.GOVERNING_LAW_CHECKS,
-    ...actions.QUOTE_CHECKS, ...actions.LIFECYCLE_CHECKS, ...actions.RISK_TIER_REVISION_CHECKS, ...actions.RECORDS_LAW_FENCE_CHECKS,
-    ...actions.ACTION_CATALOGUE_CHECKS }).map((r) => r.check));
-  const want = ["C-32.3", "C-32.4", "C-32.18", "C-32.19", "C-32.20", ...[3, 4, 5, 6, 7, 8, 9].map((n) => `C-33.${n}`),
-    ...[1, 2, 3, 4, 5, 6, 7, 8].map((n) => `C-72.${n}`), ...[1, 2, 3, 4, 5, 6].map((n) => `C-73.${n}`),
-    ...[1, 2, 3, 4, 5, 6].map((n) => `C-90.${n}`), ...Array.from({ length: 12 }, (_, i) => `C-94.${i + 1}`),
-    ...[1, 2, 3, 4, 5].map((n) => `C-101.${n}`)];
-  for (const id of want) assert.ok(ids.has(id), id);
-  for (const r of Object.values(actions.ACTION_FENCE_CHECKS)) assert.match(r.where, /^src\/actions\/index\.mjs /);
-});
-
 test("R39 R41 no place is named in outward text; an old records-law kind names no law; tests run on the test profile", () => {
   const oak = profile("oakland-alameda");
   const places = ["Oakland", "Alameda", "California", "CPRA", ...oak.covers];
-  const outward = JSON.stringify([actions.ACTION_FENCE_CHECKS, actions.ACTION_ACT_CHECKS, actions.GOVERNING_LAW_CHECKS,
-    actions.QUOTE_CHECKS, actions.LIFECYCLE_CHECKS, actions.RISK_TIER_REVISION_CHECKS, actions.RECORDS_LAW_FENCE_CHECKS,
-    actions.ACTION_CATALOGUE_CHECKS, actions.governingLawsOf({ action_kind: "cpra_request" }), actions.DUE_UNDETERMINED_SAYS]);
+  const outward = JSON.stringify([grammar.ACTION_FENCE_CHECKS, grammar.ACTION_ACT_CHECKS, grammar.GOVERNING_LAW_CHECKS,
+    grammar.QUOTE_CHECKS, grammar.LIFECYCLE_CHECKS, grammar.RISK_TIER_REVISION_CHECKS, grammar.RECORDS_LAW_FENCE_CHECKS,
+    grammar.ACTION_CATALOGUE_CHECKS, grammar.governingLawsOf({ action_kind: "cpra_request" }), grammar.DUE_UNDETERMINED_SAYS]);
   for (const p of places) assert.ok(!outward.includes(p), p);
-  const g = actions.governingLawsOf({ action_kind: "cpra_request" });
+  const g = grammar.governingLawsOf({ action_kind: "cpra_request" });
   assert.equal(g.state, "undetermined"); assert.match(g.stated, /named the records law it was made under/);
   assert.equal(profile("test-port-ellery").test, true);
 });
 
-test("R40 the vocabulary and kinds are exported here", () => {
-  assert.deepEqual(Object.keys(actions.RISK_TIERS).sort(), ["1", "2", "3", "undetermined"]);
-  assert.equal(actions.riskTierState(undefined), "undetermined"); assert.equal(actions.riskTierState("2"), null);
-  const view = { action_kinds: [{ kind: "bylaw_complaint" }, { kind: "other" }] };
-  assert.deepEqual(actions.actionKinds(view), ["records_request", "request_for_comment", "other", "bylaw_complaint"]);
-});

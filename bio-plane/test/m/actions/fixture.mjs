@@ -1,8 +1,7 @@
 /* actions over the modules it uses, each the real one where it writes or reads the record (record-core, membership,
    promotion, provenance), on a real SQLite database (node:sqlite) standing in for a Durable Object's storage, answering
-   as workerd's does (a cursor, and its LIKE/GLOB cap; K313, K316). Retrieval's projection table is made by retrieval's
-   own `migrate()` (its R61, K354); what
-   actions registers with retrieval, the capture content presents for a document (R11), connections' `refs` projection
+   as workerd's does (a cursor, and its LIKE/GLOB cap; K313, K316). What actions registers with retrieval, the
+   capture content presents for a document (R11), connections' `refs` projection
    (R25's `responses`) are stand-ins the test controls; conformance is the real module (it brings reevaluation and
    inquiry, whose columns on `bundles` are added here), or a stand-in in its R9 shape where a test passes one (R8). Every test drives
    `actions` at its interface. */
@@ -15,8 +14,8 @@ import { actionsOf } from "../../../src/actions/index.mjs";
 import { inquiryOf } from "../../../src/inquiry/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { connectionsOf } from "../../../src/connections/index.mjs";
-import { Retrieval, PROJECTION_TABLE } from "../../../src/retrieval/index.mjs";
-import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { Retrieval } from "../../../src/retrieval/index.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { DatabaseSync } from "node:sqlite";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -95,8 +94,8 @@ export function world({ profiles = ["test-port-ellery"], retrieval = true, confo
   const membership = membershipOf(host, { record });
   membership.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => new Date(clock.ms).toISOString() });
-  /* retrieval's projection table, made by retrieval's own migrate (R31 seeks it; K354). Its registrations below are
-     the test's, so this instance joins no promotion. */
+  /* retrieval's projection table, made by retrieval's own migrate (K354), which the record's promotion writes. Its
+     registrations below are the test's, so this instance joins no promotion. */
   new Retrieval({ storage: st, record, membership, promotion, extraction: {}, observation: {} }).migrate();
   promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
   const prov = provenanceOf(host, { record, membership, promotion, now: () => new Date(clock.ms).toISOString() });
@@ -107,15 +106,6 @@ export function world({ profiles = ["test-port-ellery"], retrieval = true, confo
     registerActionFacts: (m, fn) => { reg.facts.push({ m, fn }); return { ok: true }; },
     registerProjectionDecoration: (m, fn) => { reg.decorations.push({ m, fn }); return { ok: true }; },
   } : null;
-  /* retrieval's projection as far as R31 reads it: the clock column of its row, written after each promotion from R12's
-     facts. */
-  promotion.registerStep("retrieval", { project: (c) => {
-    const md = (c.files || []).find((f) => f.path === "bundle.md");
-    const f = reg.facts[0] ? reg.facts[0].fn(md && md.text, clock.ms) : null;
-    st.sql.exec(`INSERT INTO ${PROJECTION_TABLE} (bundle_id, action_clock_next) VALUES (?, ?)
-      ON CONFLICT(bundle_id) DO UPDATE SET action_clock_next=excluded.action_clock_next`, c.bundleId, f ? f.clock_next : null);
-    return null;
-  } });
   const a = actionsOf(host, { record: recordAs ? recordAs(record) : record, membership, promotion, retrieval: retrievalStub, conformance,
                               content: { captureFor: (id) => captures.get(id) ?? null }, now: () => clock.ms });
   /* the real conformance (the default dep) brings inquiry onto this host through reevaluation: its tables, as the

@@ -1,14 +1,13 @@
-/* actions' T11 entries at its interface: R3's and R31's bounds (N237, N277; R31's entry cursor is N311's, `t12.test.mjs`), R8's viewer on `op=promote` (N271), R16's
+/* actions' T11 entries at its interface: R3's bounds (N237, N277), R8's viewer on `op=promote` (N271), R16's
    release through record-core (N261), R42 `kinds()` and its read op (N231), R43 `noSuchAction` (N217, K275). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, actionMd, CP } from "./fixture.mjs";
 import * as actions from "../../../src/actions/index.mjs";
+import * as grammar from "../../../src/action-grammar/index.mjs";
 
 const A = "ACTN-2026-0001-a";
 const M = V("alice");
-const CLK = (d) => ['  - text: "t"', '    description: "d"', `    date: ${d}`, "    basis: Act s.2", "    status: pending"];
-const id = (i) => `ACTN-2026-${String(i).padStart(4, "0")}-z`;
 
 test("R3 an action document holds at most 500 legs and 500 correspondence entries: more is refused ACTION_TOO_LARGE at the write; a replay over the limit is skipped whole", () => {
   const w = world();
@@ -44,25 +43,6 @@ test("R3 an action document holds at most 500 legs and 500 correspondence entrie
   assert.equal(rep.ok, true, JSON.stringify(rep).slice(0, 300));
   for (const t of ["action_basis", "correspondence", "action_quotes"])
     assert.equal(w.rows(`SELECT COUNT(*) AS n FROM ${t} WHERE bundle_id=?`, B)[0].n, 0, `${t}: skipped whole, never half-projected`);
-});
-
-test("R31 pendingClocks reads at most 500 actions a page in id order after `after`; `cursor` is the last entry answered when `truncated`, else null; no entry is lost across pages", () => {
-  const w = world();
-  for (let i = 1; i <= 501; i++) w.promote(id(i), actionMd(id(i), [...CP, "action_kind: other", "clock:", ...CLK("2026-01-01")]));
-  const p1 = w.a.pendingClocks({ before: "2026-10-01", viewer: M });
-  assert.deepEqual([p1.items.length, p1.truncated, p1.cursor, p1.actions_limit, p1.limit], [500, true, `${id(500)}#0`, 500, 500]);
-  const p2 = w.a.pendingClocks({ before: "2026-10-01", after: p1.cursor, viewer: M });
-  assert.deepEqual([p2.items.length, p2.items[0].action, p2.truncated, p2.cursor], [1, id(501), false, null]);
-  /* The seek is the projection's clock: an action whose next pending date is not before `before` is not among the 500
-     read, so a page of such actions does not hide one that has an entry. */
-  const x = world();
-  for (let i = 1; i <= 501; i++)
-    x.promote(id(i), actionMd(id(i), [...CP, "action_kind: other", "clock:", ...CLK(i === 501 ? "2026-01-01" : "2026-02-01")]));
-  const q1 = x.a.pendingClocks({ before: "2026-01-15", viewer: M });
-  assert.deepEqual([q1.items.map((e) => e.action), q1.truncated, q1.cursor], [[id(501)], false, null]);
-  /* and a page that reads no action says so: no cursor, nothing follows. */
-  assert.deepEqual([x.a.pendingClocks({ before: "2026-01-15", viewer: M, after: id(501) }).cursor,
-                    x.a.pendingClocks({ before: "2026-01-15", viewer: M, after: id(501) }).truncated], [null, false]);
 });
 
 test("R16 actionCorrespond releases its lease through record-core's releaseLease, never a zero-length lease, on every path after taking it", () => {
@@ -128,25 +108,25 @@ test("R8 a member's breach action written through op=promote reads the determina
 test("R42 kinds() answers the kinds the instance accepts now, over the active profiles' combined view; offered as the read op actionkinds; writes nothing and never throws", () => {
   const w = world();
   const k = w.a.kinds();
-  assert.deepEqual(k.slice(0, 3), [...actions.PRODUCT_KINDS]);
+  assert.deepEqual(k.slice(0, 3), [...grammar.PRODUCT_KINDS]);
   assert.ok(k.includes("bylaw_complaint"), "the test profile's kind");
   const before = w.rows(`SELECT COUNT(*) AS n FROM manifest`)[0].n;
   const op = actions.actionsOps(w.a, new URL("https://x/?viewer=member:alice"), null).actionkinds();
   assert.deepEqual(op, { ok: true, kinds: k });
   assert.equal(w.rows(`SELECT COUNT(*) AS n FROM manifest`)[0].n, before, "writes nothing");
-  assert.deepEqual(world({ profiles: null }).a.kinds(), [...actions.PRODUCT_KINDS], "no profile active: the product's kinds alone");
+  assert.deepEqual(world({ profiles: null }).a.kinds(), [...grammar.PRODUCT_KINDS], "no profile active: the product's kinds alone");
   const odd = world({ profiles: ["no-such-profile"] });
-  assert.deepEqual(odd.a.kinds(), [...actions.PRODUCT_KINDS], "a view that does not combine");
+  assert.deepEqual(odd.a.kinds(), [...grammar.PRODUCT_KINDS], "a view that does not combine");
   const broken = world({ recordAs: (r) => new Proxy(r, { get(t, key) {
     if (key === "getSetting") return () => { throw new Error("storage unavailable"); };
     const v = t[key]; return typeof v === "function" ? v.bind(t) : v;
   } }) });
-  assert.deepEqual(broken.a.kinds(), [...actions.PRODUCT_KINDS], "never throws");
+  assert.deepEqual(broken.a.kinds(), [...grammar.PRODUCT_KINDS], "never throws");
 });
 
 test("R43 noSuchAction answers the one refusal for an action the caller may not see: fixed fields, one sentence, its catalogue row; extra adds and never replaces; never throws", () => {
   const r = actions.noSuchAction("ACTN-2026-0001-a");
-  const row = actions.ACTION_CATALOGUE_CHECKS.NO_SUCH_ACTION;
+  const row = grammar.ACTION_CATALOGUE_CHECKS.NO_SUCH_ACTION;
   assert.deepEqual(Object.keys(r).sort(), ["action", "check", "code", "detail", "ok", "reason", "translation"]);
   assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.action], [false, "NO_SUCH_ACTION", "NO_SUCH_ACTION", "C-117.2", row.translation, "ACTN-2026-0001-a"]);
   assert.equal(row.where, "src/actions/index.mjs noSuchAction > is-no-such-action");

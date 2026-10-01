@@ -85,7 +85,7 @@ test("R3 legs, ledger and quotes are replaced whole from the document; no server
   assert.equal(w.rows(`SELECT * FROM action_basis WHERE bundle_id=?`, A).length, 0, "replaced whole");
 });
 
-test("R4 law rides a records_request only, a citation; an old kind reads as written; R6 at the write (C-73.6)", () => {
+test("R6 R41 law rides a records_request only, a citation (action-grammar R3), refused at the write (C-73.6); an old kind reads as written", () => {
   const w = world();
   assert.equal(w.promote(A, actionMd(A, [...CP, "action_kind: other", 'law: "Act 1"'])).reason, "RECORDS_LAW_REFUSED");
   const long = w.promote(A, md([`law: "${"x".repeat(201)}"`]));

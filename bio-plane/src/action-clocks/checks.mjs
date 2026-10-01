@@ -22,7 +22,7 @@ export const ACTION_CLOCK_CHECKS = {
   /* R4, R6: the request's own shape: the entry, the day, the reminder it changes, and the action's bound. */
   REMINDER_REFUSED: {
     check: 'C-123.2',
-    where: 'src/action-clocks/index.mjs #reminderRefused > is-reminder-refused',
+    where: 'src/action-clocks/index.mjs reminderRefused > is-reminder-refused',
     translation: 'A reminder is set on a deadline of the action that has a date, for a day written year-month-day; '
       + 'it changes or removes only a reminder of your own; it is not set twice on one day; and an action holds at '
       + 'most 50 reminders. This request did not meet one of those, so nothing was changed.',

@@ -241,3 +241,36 @@ test("R4 R6 the ops reminderset and reminderanswer read the control plane's stam
   assert.deepEqual(a, { ok: true, target: A, entry: 0, answered: ["2026-09-20"], next: "2026-10-01" });
   assert.deepEqual(Object.keys(clocks.actionClocksOps(w.c, new URL("https://x/"), null)).sort(), ["reminderanswer", "reminderset"]);
 });
+
+test("R4 (N427) reminderRefused(arm, detail, extra?) is exported, the one answer REMINDER_REFUSED is minted through: its row, its arm and detail, a caller's extra fields never replacing them; it writes nothing and never throws", () => {
+  const row = rowOf("REMINDER_REFUSED");
+  const fixed = (arm, detail) => ({ ok: false, reason: "REMINDER_REFUSED", code: "REMINDER_REFUSED", check: row.check,
+                                    translation: row.translation, detail, arm });
+  assert.equal(typeof clocks.reminderRefused, "function");
+  for (const arm of ["entry", "on", "from", "held", "bound"])
+    assert.deepEqual(clocks.reminderRefused(arm, `d ${arm}`), fixed(arm, `d ${arm}`), arm);
+  assert.deepEqual(clocks.reminderRefused("on", "d", { target: A, entry: 1 }), { ...fixed("on", "d"), target: A, entry: 1 });
+  assert.deepEqual(clocks.reminderRefused("on", "d", { ok: true, reason: "X", code: "X", check: "C-0", translation: "t",
+                                                      detail: "other", arm: "other", option: 2 }),
+    { ...fixed("on", "d"), option: 2 }, "extra adds, never replaces");
+  /* the acts answer through it: a refusal of reminderSet and reminderAnswer is exactly its answer. */
+  const w = setUp();
+  set(w, { entry: 0, on: "2026-09-20" });
+  const counts = () => w.rows(`SELECT COUNT(*) AS n FROM action_reminders`)[0].n;
+  const n = counts();
+  for (const r of [set(w, { entry: 9 }), set(w, { on: "soon" }), set(w, { from: "2026-01-01" }), set(w, { entry: 0, on: "2026-09-20" }),
+                   w.c.reminderAnswer({ target: A, entry: 0, on: "2026-01-01", author: M, viewer: M })]) {
+    const { ok, reason, code, check, translation, detail, arm, ...extra } = r;
+    assert.deepEqual(r, clocks.reminderRefused(arm, detail, extra), JSON.stringify(r));
+  }
+  /* never throws, on any input; writes nothing. */
+  const hostile = [undefined, null, 0, Symbol("s"), { toString() { throw new Error("x"); } },
+    new Proxy({}, { ownKeys() { throw new Error("x"); } }), { get a() { throw new Error("x"); } }, [1, 2], "str"];
+  for (const a of hostile) for (const e of hostile) {
+    const r = clocks.reminderRefused(a, a, e);
+    assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, "REMINDER_REFUSED", "REMINDER_REFUSED", row.check, row.translation]);
+  }
+  assert.deepEqual(clocks.reminderRefused(), fixed(null, null));
+  assert.equal(counts(), n, "nothing written");
+  assert.equal(row.where, "src/action-clocks/index.mjs reminderRefused > is-reminder-refused");
+});
