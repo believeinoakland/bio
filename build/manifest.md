@@ -42,6 +42,15 @@ Committed files built by `bundler` (`bio-plane/scripts/fleet-bundle.mjs`, `write
 
 **Verify, after regenerating:** `node --test bio-plane/test/system/fleetbundles.test.mjs` from the repository root (`verifyStatic` and `verifyFresh` over every member: input hashes, byte identity, externals). Also `node --test bio-plane/test/system/newgroup-bundle-fresh.test.mjs` for the installer's bundle. Each must print `0 fail` with no `SKIP`; a `SKIP` means a member's `node_modules` is missing (`npm ci` there first). Baseline on `tranche/T1` @ BOB #40's takeover: 96 pass, 0 fail, no skip.
 
+## Parallel work: the UX design stream (Bob, 2026-10-01; K945)
+
+Bob's UX design work runs under his **primary account**, outside this process and its sessions (today on branch `claude/gallant-brown-zg0wc1`, session `session_01EhPoUTrVCgAqw2ktRyKjCU`). It writes `docs/development/ux-substrate/`, mints **DEC** ids (DEC-96 onward) for Bob's UX rulings, and amends canon documents under `docs/architecture/`. Every record this process writes (rulings, plans, job records, handoffs, reports to Bob) recognises it:
+- Its DEC rulings are Bob's, made there; this process never mints a DEC id, cites them as that stream's, and folds a DEC into module requirements only once it is on `main` (or Bob names it), as a requirement change with its DEC cited.
+- Its files are its own: no session of this process edits, reverts or re-words `docs/development/ux-substrate/` or that stream's canon amendments, and a merge conflict with them is resolved by keeping its text.
+- Entries left out as "Bob's: UX" (K633; N470 and the legacy-ui shares in `plan/next.md`) wait on that stream's outcome, not on a question from this process.
+- `main` can move while a tranche runs when that stream lands: a tranche's close then merges `main` into the tranche branch (never a rebase or force) and runs the checks before the fast-forward.
+- A report to Bob says what this process did; it never presents that stream's decisions as this process's work.
+
 ## Starting a session
 
 - **ROOT** (mechanics §2, K156): started by Bob, the parent of every BOB; reads `roles/ROOT.md`. ROOT #1, `session_0183DmvWFhkpLgr7EBFwPZMr` (started by Bob 2026-09-27 ~14:17 UTC), archived 2026-09-30 ~23:22 by BOB #77 on Bob's direction (past 300k tokens; K693). **ROOT #2**, `session_015QfrQQAdENFCG68uwrnxni` (started by Bob 2026-09-30 ~23:27 UTC), recorded by BOB #78 at takeover. **ROOT #3**, `session_01CCdj4Cyw8SixkZAnTPSXVf` (started by Bob on his secondary account 2026-10-01 ~03:42 UTC), recorded by BOB #80 at takeover (K742). ROOT #2 and BOB #79 (`session_01DP5ySzhL1NUqbmUK7nxUNH`) belong to the first account and cannot be reached from this one: BOB #79 was not archived by its successor and has no `BOB-final` row (K742).

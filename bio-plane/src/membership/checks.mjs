@@ -2,8 +2,8 @@
  * answers carries its code, its row and the member's translation, so a surface shows the same sentence wherever the act
  * is reached.
  *
- * Its families C-55, C-56.1–.2, C-57, C-70.1–.4, C-95 and C-96.2–.12, and C-33.28 and C-33.48, are held here since
- * T19 layer 2 (below); C-29 and C-63 are `credentials`'. The row below is new with R78 (N208, N146, K275: `NO_SUCH_PROJECT` is one
+ * Its families C-55, C-56.1–.2, C-57, C-70.1–.4, C-95 and C-96.2–.12 (but C-96.8), and C-33.28 and C-33.48, are held here
+ * since T19 layer 2 (below); C-29, C-63 and C-96.8 are `credentials`'. The row below is new with R78 (N208, N146, K275: `NO_SUCH_PROJECT` is one
  * condition, a project absent or unseen, answered as absent, so it is minted at one site, `noSuchProject`, and every
  * module answering that condition calls it). It takes the next free number of C-70, the sight family it belongs to
  * (K107 (3)'s rule: the job names a new code's row; K174: a module holds its new rows). Intent's C-111.2 and
@@ -28,15 +28,9 @@
  * are their own conditions and codes (`TARGET_NOT_AN_ADMIN`'s precedent). They take the next free numbers of C-56, a
  * person's position in a project. NOT_PROPOSED (R6) takes the next free number of C-96.
  *
- * N364 (DEC-80 item 4, K509 (2)): SIGNER_KEY_HELD_BY_ANOTHER is R89's, a member registering a key another member holds,
- * minted at its one site in `signerRegisterOwn`; its row is C-96.15, as the requirement names it, worded there.
- * SIGNER_KEY_REVOKED is R89's too (K535): a member registering again a key of theirs that was revoked, which only an
- * administrator re-activates (R26); its row is C-96.16, beside it.
- *
- * N387 (K571; DEC-49): MACHINE_CANNOT_REGISTER_KEY is R89's first refusal, a machine credential, the operator's token
- * or an unstamped call asking to register a member's own key, minted at its one site in `signerRegisterOwn`. T16 left
- * it with no row; DEC-49 says every fence carries one, so it takes the next free number of C-96, this module's family
- * for its acts on a member's own row and keys, beside C-96.15 and C-96.16. */
+ * N453 (K875, K910; T21): C-96.15–.17 (SIGNER_KEY_HELD_BY_ANOTHER, SIGNER_KEY_REVOKED, MACHINE_CANNOT_REGISTER_KEY),
+ * C-96.8 BAD_KEY and C-63 left with the signer-key copies that answered them; `credentials` holds each as its own (its
+ * R6, R9, R10). */
 
 const at = (fn, region) => `src/membership/index.mjs ${fn} > ${region}`;
 
@@ -84,23 +78,6 @@ export const MEMBERSHIP_CHECKS = Object.freeze({
     translation: 'A part of this instance tried to register a listener it had already registered, or one that '
       + 'another part already holds, so the second registration was refused and the first still stands. This is a '
       + 'fault in how the instance was built, not in the record, and nothing in the record changed.',
-  }),
-  SIGNER_KEY_HELD_BY_ANOTHER: Object.freeze({
-    check: 'C-96.15', where: at("signerRegisterOwn", "is-signer-key-held"),
-    translation: 'This key is registered to another member, so it cannot be yours. Make a new key in this browser. '
-      + 'Nothing was changed.',
-  }),
-  SIGNER_KEY_REVOKED: Object.freeze({
-    check: 'C-96.16', where: at("signerRegisterOwn", "is-signer-key-revoked"),
-    translation: 'This key was revoked, so it cannot be registered again. Make a new key in this browser, or ask an '
-      + 'administrator. Nothing was changed.',
-  }),
-  MACHINE_CANNOT_REGISTER_KEY: Object.freeze({
-    check: 'C-96.17', where: at("signerRegisterOwn", "is-machine-register-key"),
-    translation: 'A member registers their own signing key, from their own signed-in session. The credential that '
-      + 'asked here has no member behind it: it is an automated one, the operator\'s token, or a call with nobody '
-      + 'signed in. Sign in as yourself to register your key, or ask an administrator to register one for you. '
-      + 'Nothing was changed.',
   }),
   /* R95 (K774): an enrolment whose password the registered setter could not record (or with no setter registered).
      The next free number of C-96, this module's family for the acts on a member's own row (K107 (3), K174). */
@@ -167,7 +144,8 @@ export const MEMBER_ID_CHECKS = {
  * canned translation rather than as a machine token. MEMBER_ID_RESERVED (C-55.1) and the two SIGNER_MEMBER
  * rows (C-63) already had one; these are the rest. C-96.1 NOT_AN_ADMIN, the caller who is not an administrator,
  * is membership's (`src/membership/checks.mjs` MEMBERSHIP_CHECKS, minted at one site, `notAnAdmin`; K408 (4)):
- * its copy here went in T14.
+ * its copy here went in T14. C-96.8 BAD_KEY, the signer acts' row, is `credentials`' (its R6); its copy here went in
+ * T21 (N453).
  *
  * A ROW TRANSLATES ITS CODE AT EVERY SITE THAT MINTS IT, NOT ONLY AT ITS `where`: the control plane's
  * `dec49Decorate` (index.mjs) attaches a family row's `check` and `translation` to ANY refusal carrying the
@@ -224,12 +202,6 @@ export const CUSTODIAL_CHECKS = {
     translation: 'An administrator cannot be deactivated by another administrator acting alone. Removing an '
       + 'administrator takes a majority of all administrators, in which the one facing removal is counted '
       + 'but does not vote. Nothing was changed.',
-  },
-  BAD_KEY: {
-    check: 'C-96.8',
-    where: 'src/membership/index.mjs signerAdd > is-signer-key-shape',
-    translation: 'That is not a public key this group can register. It takes the base64 part of an '
-      + 'ssh-ed25519 public key, the part that begins AAAA. Nothing was written.',
   },
   TARGET_NOT_AN_ADMIN: {
     check: 'C-96.9',
@@ -420,47 +392,5 @@ export const CASE_AUTHORITY_CHECKS = {
     translation: 'A case and each finding in it are published in the project\'s name, so each has to be '
       + 'signed by an owner of that project. This signature belongs to someone who is not one of its '
       + 'owners. Nothing was committed. Ask an owner of the project to review it and sign it.',
-  },
-};
-
-/* NAMED COPY (K784, N445): C-63, the rows the `signerRegisterOwn` copy's member bar answers, held here with the copy;
-   `credentials` holds the family as its own. Copied from the catalogue with its names, ids, `where`s and translations
-   unchanged. MEMBERSHIP #14 (T20, J1) found that copy's last caller, ratification's `preflight.test.mjs`, still on it,
-   so the copy, these rows, C-96.8 `BAD_KEY` and C-96.15–.17 wait for it to re-point (P4) and then go together. */
-/* D-158 / C-63 — A SIGNING KEY IS REGISTERED TO A MEMBER WHO CAN ATTEST
- * (Membership Architecture v2 §6, enrolment: *"At enrolment the member chooses a handle … and a
- * password"*; §10's `members`/`signers` sketch; §4's *"Approve signing keys"*).
- *
- * WHY A REFUSAL AND NOT A JOIN AT READ. `op=signerlist` read the `signers` table alone while
- * `op=ratify` weighed a signature against `s.status='active' AND m.status='active'`, so a key
- * registered for somebody who had never enrolled read `active` on the roster and came back
- * `SIG_UNKNOWN_KEY` at the gate — MEASURED 2026-08-02 over real ssh-keygen signatures. Making the
- * roster JOIN was the smaller change and would have left a row that means nothing; refusing at the
- * WRITE keeps the table honest, and it is the shape `signerAdd`'s existing `NO_SUCH_MEMBER` check
- * already reaches for. The other direction — the GATE accepting the key — was refused on doctrine
- * rather than on cost: it would widen an authority, letting a signature attest in the name of a
- * roster slot no person has taken up, which is the class D-136 closed for the §4.7 vote.
- *
- * TWO CODES FOR TWO FACTS. A member with no handle has never enrolled; a member who has one and is
- * not `active` has been revoked or is otherwise not standing. One canned sentence could not be true
- * of both, and a code that covered both would be the plane inventing a state to describe them.
- * Both are minted in ONE region, `#signerMemberBar`, which `signerAdd` and `signerSet`'s activation
- * branch both consume — the second door exists because `memberSet` cascades a revocation into this
- * table and `op=signerset` could otherwise undo the cascade one call later. */
-export const SIGNER_ENROLMENT_CHECKS = {
-  SIGNER_MEMBER_NOT_ENROLLED: {
-    check: 'C-63.1',
-    where: 'src/membership/index.mjs #signerMemberBar > is-signer-member-attesting',
-    translation: 'That person has not enrolled yet. A signing key belongs to a member who has taken up '
-      + 'their invitation and chosen a handle; until then this instance would refuse anything signed '
-      + 'with it, so registering it now would put a key on the roster that cannot sign. Nothing was '
-      + 'written. Send them their invitation link, and register the key once they have enrolled.',
-  },
-  SIGNER_MEMBER_NOT_ACTIVE: {
-    check: 'C-63.2',
-    where: 'src/membership/index.mjs #signerMemberBar > is-signer-member-attesting',
-    translation: 'That member’s membership is not active, so this instance would refuse anything '
-      + 'signed with their key. Nothing was written. Reinstate the member first if they should be '
-      + 'able to sign again.',
   },
 };
