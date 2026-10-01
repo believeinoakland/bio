@@ -11,6 +11,7 @@
    and a family name two sources share (a row held twice for a tranche, K529) is one family here. `dec49Row` (R22)
    and the published fences (R41, `skills.machineFences` over it) read this one object. */
 import * as CATALOGUE from "../../checks/bio-checks.mjs";
+import * as RECORD_GRAMMAR_ACTS from "../record-grammar/acts.mjs";
 import * as TEXT_CHAIN from "../textchain.mjs";
 import * as RECORD_CORE from "../record-core/checks.mjs";
 import * as MEMBERSHIP from "../membership/checks.mjs";
@@ -68,6 +69,7 @@ import * as OWN from "./checks.mjs";
 /* The sources, in the order a code is resolved: `[path under bio-plane/, namespace]`. */
 export const CHECK_FAMILY_FILES = Object.freeze([
   ["checks/bio-checks.mjs", CATALOGUE],
+  ["src/record-grammar/acts.mjs", RECORD_GRAMMAR_ACTS],
   ["src/textchain.mjs", TEXT_CHAIN],
   ["src/record-core/checks.mjs", RECORD_CORE],
   ["src/membership/checks.mjs", MEMBERSHIP],
@@ -89,7 +91,9 @@ export const CHECK_FAMILY_FILES = Object.freeze([
   ["src/bias/checks.mjs", BIAS],
   ["src/observation-log/checks.mjs", OBSERVATION_LOG],
   ["src/retrieval/checks.mjs", RETRIEVAL],
-  ["src/inquiry-grammar/checks.mjs", INQUIRY_GRAMMAR],
+  /* inquiry-grammar's R7 table of the inquiry's own rows (C-33.13, C-33.22, C-33.23, C-32.7, C-32.8) is named
+     `INQUIRY_GRAMMAR_ROWS`, not by the reserved suffix, so it is read here as the family `INQUIRY_GRAMMAR_CHECKS`. */
+  ["src/inquiry-grammar/checks.mjs", Object.freeze({ ...INQUIRY_GRAMMAR, INQUIRY_GRAMMAR_CHECKS: INQUIRY_GRAMMAR.INQUIRY_GRAMMAR_ROWS })],
   ["src/inquiry/index.mjs", INQUIRY],
   ["src/citation/checks.mjs", CITATION],
   ["src/basis-versions/checks.mjs", BASIS_VERSIONS],
