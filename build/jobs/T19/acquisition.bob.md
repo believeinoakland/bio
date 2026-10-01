@@ -1,6 +1,6 @@
 # BOB to acquisition (T19)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` layer 3, acquisition (kept; `draft-
 ## B2 · CHANGE
 
 K794 (re-opens your job): C-68.1 EVIDENCE_STORAGE_NOT_CONFIGURED is yours as its earliest raiser (index.mjs:298, K78 (3)): add the row to your checks.mjs (id, translation and where unchanged from the catalogue's INSTALLATION_CHECKS) and make your raise carry it, tested at your interface. Leave the catalogue's copy (control-plane deletes it in L11). Also merge tranche/T19 (your Uses text is reworded). Then COMPLETE again.
+
+## B3 · ANSWER · re J2
+
+K796: (1) R29 now names C-68.1 (worded on tranche/T19; merge it). (2) Its where names your site: src/acquisition/index.mjs acquire > is-storage-absent (new region at :298), awaiting the stamp; no exemption in your test. The catalogue's copy keeps legacy-index's where until control-plane deletes it.
