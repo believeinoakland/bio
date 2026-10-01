@@ -732,6 +732,40 @@ export class Inquiry {
     } catch { return null; }
   }
 
+  /** R52 (1) (K861, plane R10): this module's share of the instance's figures, exported for `plane` to register under
+   *  this module's name through `record-core` R63 (`registerCounts("inquiry", Inquiry.COUNT_KEYS, (hid) =>
+   *  k.counts(hid))`); the module registers nothing itself while plane holds its copy. */
+  static COUNT_KEYS = Object.freeze(["inquiryMigrationReplays"]);
+
+  /** R52 (1), D-464 (A COUNT IS TAKEN THROUGH THE CALLER'S OWN SIGHT): `record-core` R63's `counts(hid)` for this
+   *  module's share, moved from the plane's held copy with its reading kept. `inquiryMigrationReplays` is the rows of
+   *  `inquiry_migration_replays` (REC-173) less those whose `bundle_id` is in `hid`, membership's `hiddenBundles`
+   *  (`{sql, args}`), or null for a viewer that sees every bundle and for the direct internal call, which count whole.
+   *  `COALESCE(k, '')`: a NULL key names no bundle, and `NULL NOT IN (…)` is NULL, which would drop the row. A figure
+   *  whose table cannot be read is left out, and R63 answers it null, never zero. Synchronous; writes nothing; never
+   *  throws. */
+  counts(hid = null) {
+    const out = {};
+    try {
+      out.inquiryMigrationReplays = hid
+        ? this.#one(`SELECT count(*) AS c FROM inquiry_migration_replays WHERE COALESCE(bundle_id, '') NOT IN ${hid.sql}`,
+            ...hid.args).c
+        : this.#one(`SELECT count(*) AS c FROM inquiry_migration_replays`).c;
+    } catch { /* unread: R63 answers it null */ }
+    return out;
+  }
+
+  /** R52 (2) (K861, plane R10; retrieval R55): the leg grades `retrieval`'s `registerLegGrades` takes, for `plane` to
+   *  register as `inquiry` (through `inquiryLegGrades(host)`). For legs `{grade, target_id}`, R13's `earned` is asked
+   *  once, with no subject entity, over the list's distinct targets, and each leg, in order, answers R14's `legCapped`
+   *  of its grade against its target's earned capture ceiling (null for a target with none). An empty list, or anything
+   *  that is not a list, answers an empty list without asking. */
+  legGrades(legs) {
+    if (!Array.isArray(legs) || !legs.length) return [];
+    const cap = this.earned(null, [...new Set(legs.map((l) => l && l.target_id))])?.earned?.capture || {};
+    return legs.map((l) => (l && Object.hasOwn(cap, l.target_id) ? legCapped(l.grade, cap[l.target_id], l.target_id) : null));
+  }
+
   /** R17, R11 (`inquiry-grammar` R1, R2): the entry requirements over one document, judged by record-grammar's
    *  `checkBundle` with the type grammars later modules registered with record-core (its `grammars()`), as promotion's
    *  gate judges a bundle (its R27), so a grammar registered there judges an inquiry here as it does there. A slot of
@@ -2920,6 +2954,13 @@ export function inquiryOf(host, deps) {
       });
   }
   return k;
+}
+
+/** R52 (2) (K861, plane R10): the resolver `retrieval`'s `registerLegGrades` takes, `(legs) => grades`, over the one
+ *  instance for `host` (reached when the resolver is called, not when it is built). `plane` registers it as `inquiry`;
+ *  this module registers it nowhere itself while plane holds its copy. */
+export function inquiryLegGrades(host) {
+  return (legs) => inquiryOf(host).legGrades(legs);
 }
 
 /** Which purge declaration names one of this module's tables (record-core R21: each owner declares its own). */
