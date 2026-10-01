@@ -27,3 +27,7 @@ Size (session_01LM1aL8mzHwzwVq5QEyjNCR): test runs 1, module lines 124
 ## J1 · REPORT
 
 Generated artifact staled: bio-plane/dist/bio-plane.bundled.mjs (and .bundle.json), by comment-only changes to bio-plane/src/ai-runs/index.mjs (N469). Not regenerated.
+
+## J2 · COMPLETE
+
+B1 applied (N469, K931): every live note naming a T20-deleted file in src/ai-runs/ and test/m/ai-runs/ re-worded — re-pointed to the module test that proves it (R14/R31/R15, R16, R18, R19, R22, R23/R34, R24) or put in past tense as history; re-scan added :712 case-opened, :2315/:2320 rec113-identity, and converts.test.mjs' 'old suites are not deleted' header. Provenance (:322, :760, :2056) kept. Comments only. test/m/ai-runs/: 56 pass, 0 fail. format, architecture, coverage (38/38), ownership: 0 failures. Plane bundle staled (J2). Record has the details.
