@@ -28,10 +28,10 @@
  * `rung` IS THE INTERACTION-CONSTRUCTS WEIGHT LADDER, AND FW-14 HAS ASSIGNED IT.
  * The ladder is `RUNG_LADDER` below — reversible / reasoned / terminal /
  * attested / IRREVERSIBLE, top rung per DEC-19 as amended, with the correction
- * path published beside it. Every op the DISPATCH TABLE declares mutating either
+ * path published beside it. Every op the control plane declares mutating either
  * carries a rung in `RUNGS` or is named in `RUNG_ABSENT` with the ground on which
- * it has none, and `test/rung-ladder.test.mjs` asserts that TOTAL IN BOTH
- * DIRECTIONS over an op set derived from `OPS` in index.mjs.
+ * it has none, and `unaccounted(opTable)` (R12) answers that TOTAL IN BOTH
+ * DIRECTIONS over the control plane's table of ops.
  *
  * CORRECTED 2026-08-08 BY FW-14, and stated rather than quietly reworded. This
  * paragraph used to read *"CAPABILITIES.md measures 7 of 57 mutating ops with a
@@ -51,9 +51,8 @@
  * TOTALITY, AND THE DRIFT GUARD. Every op in the control plane's NEEDS table is
  * either an ACT here or named in NON_ACTS with the reason it is not
  * object-directed. `unaccounted(opTable)` below (R12) answers, NAMING the op,
- * any that is in neither set; a suite holding the control plane's tables
- * (`rung-ladder`, legacy-tests') calls it, so an op added to NEEDS cannot ship
- * unpublished and unexplained.
+ * any that is in neither set; a caller holding the control plane's tables asks
+ * it, so an op added to NEEDS cannot ship unpublished and unexplained.
  *
  * SCOPE. The acts published are the OBJECT-DIRECTED ones: the ops whose subject
  * is a bundle in a given state — the selection-backed set the S-10/S-11 ladder
@@ -115,6 +114,11 @@ import { VERSION_MACHINE, VERSION_REASON_REQUIRED } from "./basis-versions/index
    machine marked this citable" is called is the drift every import here closes,
    and this one lands on a field 14.4 requires be labelled. */
 import { CONTENT_MINT_STATES } from "./content/index.mjs";
+/* R30 (K921, K922 (3)): the template library's states, uses and review outcomes are `filing-templates'` (its R21), the
+   arrays its acts refuse against, and a local fact's acts and statuses `local-facts'` (its R7); each published as the
+   owner's own object (R4). */
+import { TEMPLATE_STATES, TEMPLATE_USES, REVIEW_OUTCOMES } from "./filing-templates/index.mjs";
+import { LOCAL_FACT_ACTS, LOCAL_FACT_STATUSES } from "./local-facts/index.mjs";
 /* R13–R16, R23 (T9, K225): the facts the derivation below reads, one object as it stands and one caller as they are,
    extracted from the legacy store with the three joined-project predicates, whose only caller they were; and (N13) the
    op map that answers `op=affordancefacts`. */
@@ -403,11 +407,10 @@ export const CONSENT_PROMPT = `${CONSENT_STATEMENT} ${WITHDRAWAL_STATEMENT}`;
  *
  * WHAT THIS BLOCK IS FOR, and it is not the ladder. The value here is that
  * EVERY mutating op is ACCOUNTED FOR and a NEW one cannot arrive unclassified.
- * `test/rung-ladder.test.mjs` derives the op set from the DISPATCH TABLE — the
- * `mutating: true` rows of `OPS` in index.mjs, read through the same
- * `readDispatch()` M0-12 reads — and asserts the classification TOTAL IN BOTH
+ * `unaccounted(opTable)` (R12) takes the control plane's table of ops — each
+ * `{op, mutating, gated}` — and answers the classification TOTAL IN BOTH
  * DIRECTIONS: no mutating op missing from RUNGS ∪ RUNG_ABSENT, and no key of
- * either naming something the dispatch table does not carry as mutating.
+ * either naming something the table does not carry as mutating.
  *
  * THE ABSENCE HALF IS HALF THE DELIVERABLE, not a get-out. An op with no rung
  * and no statement is indistinguishable from an op nobody classified; CLAUDE.md
@@ -450,8 +453,8 @@ export const CONSENT_PROMPT = `${CONSENT_STATEMENT} ${WITHDRAWAL_STATEMENT}`;
  * it, `terminal` is no longer claiming to be the top of anything — it is the
  * mid-ladder name for exactly what Constructs:161 called it, "internal, cannot
  * be walked back", which is what the code enforces. The rung is asserted against
- * that imported table in `rung-ladder.test.mjs`, so if an edge out of `retired`
- * is ever added this rung fails rather than lying.
+ * that imported table in this module's R19 test (`test/m/affordances/`), so if an
+ * edge out of `retired` is ever added this rung fails rather than lying.
  *
  * WHAT SEPARATES THE TOP TWO IS NOT ABSENCE OF CORRECTION but its weight and
  * visibility: an `attested` act cannot be undone SILENTLY (every correction is
@@ -525,6 +528,9 @@ export const JUSTIFICATION_REFUSALS = [
   /* K918 (T20): a litigation hold's statement without its reason (actions R52, C-117.21), refused absent as well as
      malformed, as RISK_TIER_REASON_REFUSED is. */
   "HOLD_REFUSED",
+  /* R30 (K921, T21): retiring a template, or withdrawing a version, says why (filing-templates R11), and a member's act
+     on a local fact says how they checked it (local-facts R1); each refused absent as well as malformed. */
+  "TEMPLATE_REASON_REFUSED", "FACT_HOW_REFUSED",
 ];
 
 /* THE GROUNDS ON WHICH A MUTATING OP HAS NO RUNG. Written ONCE here and pointed
@@ -724,6 +730,15 @@ export const VOCABULARIES = {
   resolution_kinds: RESOLUTION_KINDS,
   norm_canons: NORM_CANONS,
   dismissal_reasons: DISMISSAL_REASONS,
+  /* R30 (K921, T21): what a member offers when a template is drafted, filed under and reviewed, and when a local fact
+     is acted on and read — each the array its owner refuses against (TEMPLATE_USE_REFUSED, REVIEW_REFUSED,
+     FACT_ACT_REFUSED) or answers in (a version's state, a fact's status), so a surface offers a choice before a member
+     is refused it. */
+  template_states: TEMPLATE_STATES,
+  template_uses: TEMPLATE_USES,
+  template_review_outcomes: REVIEW_OUTCOMES,
+  local_fact_acts: LOCAL_FACT_ACTS,
+  local_fact_statuses: LOCAL_FACT_STATUSES,
 };
 
 /* R26 (N65 (3)): the vocabularies an instance publishes, with `action_kind` the kinds its `actions` accepts at the
@@ -738,8 +753,9 @@ export function vocabulariesFor(kinds) {
 
 
 /* THE ASSIGNMENT. Every entry carries the source or the enforcement that BACKS
- * it, and every backing is asserted in `rung-ladder.test.mjs` — a rung with no
- * backing is a promise to a member that nothing keeps. */
+ * it, and every backing is driven by this module's R19 tests (`test/m/affordances/`,
+ * each act called without its account at its own module's interface) — a rung with
+ * no backing is a promise to a member that nothing keeps. */
 export const RUNGS = {
   /* ---- irreversible. ONE op, and DEC-19 as amended names it. --------------
      Derived, not spelled: the suite finds it as the op whose DO route is the
@@ -846,6 +862,11 @@ export const RUNGS = {
   /* K918 (T20), on R27's rule: a litigation hold is stated with its reason and corrected forward by a further
      statement, the earlier kept (actions R52). */
   actionhold:            "reasoned", // HOLD_REFUSED (actions R52, C-117.21: a hold stated without its reason)
+  /* R30 (K921, T21), on R27's rule: a template's retirement (or a draft's withdrawal) asks its reason and stands, and an
+     approver's later act supersedes nothing; a member's confirmation, correction or dispute of a local fact asks how
+     they checked it, and a later act supersedes it on read, as `actionrisktier`'s revision does. */
+  templateretire:        "reasoned", // TEMPLATE_REASON_REFUSED (filing-templates R11)
+  factconfirm:           "reasoned", // FACT_HOW_REFUSED (local-facts R1)
   /* The version pair whose target state is in VERSION_REASON_REQUIRED. The
      OTHER FOUR version acts route through the SAME `#moveVersionState` and the
      SAME `VERSION_NO_REASON` refusal, and the branch DOES NOT FIRE for them —
@@ -853,7 +874,7 @@ export const RUNGS = {
      accepted, revert → suggested, current → null, hide → null, none of which is
      in the array. A classifier that graded these six by finding the code in the
      shared helper would have promoted four ops to a rung the store does not
-     enforce; the suite therefore reads the exported predicate, not the text. */
+     enforce; R19's drive therefore performs the acts, never reading the text. */
   versionreject:      "reasoned",   // VERSION_REASON_REQUIRED includes 'rejected'
   versionconsider:    "reasoned",   // VERSION_REASON_REQUIRED includes 'considering'
 
@@ -897,11 +918,11 @@ export const RUNGS = {
 
 
 /* EVERY MUTATING OP THAT CARRIES NO RUNG, WITH THE GROUND. Checked against the
- * dispatch table in both directions by `rung-ladder.test.mjs`: an op that is
- * neither here nor in RUNGS fails the suite BY NAME, and a name here that the
- * dispatch table does not carry as mutating fails it too. Adding an op to
- * index.mjs's OPS with `mutating: true` and neither classifying nor stating it
- * is what this table exists to make impossible.
+ * control plane's table in both directions by `unaccounted` (R12): an op that is
+ * neither here nor in RUNGS is answered `unranked` BY NAME, and a name here that the
+ * table does not carry as mutating is answered `stale`. Adding a mutating op to the
+ * control plane's table and neither classifying nor stating it is what this table
+ * exists to make impossible.
  *
  * The one-liners say what this op is; the WHY is on the ground above. */
 export const RUNG_ABSENT = {
@@ -1191,7 +1212,7 @@ export const RUNG_ABSENT = {
      account), and no published act takes any of them back. `actioncreate` is a member's chosen act, not `promote`'s
      substrate, though it rides the same write: `entitycreate`'s ground. */
   communicationprepare: { ground: "undetermined", is: "a machine or a member prepares a draft message, briefing or statement for an action, stored apart and labelled as its preparer's; never sent until a member approves it, `filingprepare`'s ground (filings R23)" },
-  templatesave:         { ground: "undetermined", is: "a member keeps an approved draft, or their derivative of it, as a named template of the group's; no machine writes one (filings R26)" },
+  templatesave:         { ground: "undetermined", is: "a member starts a template draft (or a draft of a new version of a named template) from an approved filing draft, handed to the template library's draft act; no machine writes one (filings R32)" },
   actioncreate:         { ground: "undetermined", is: "a member creates an action, the same write as promoting an action document (actions R47)" },
   actionpressure:       { ground: "undetermined", is: "a member marks a received correspondence entry as pressure directed at the group, appended to a table of its own and never rewritten; an entry is marked once (actions R48)" },
   /* K727 (T18), on R27's rule: action-plans' acts that ask no authored reason and that no published act takes back —
@@ -1210,6 +1231,19 @@ export const RUNG_ABSENT = {
   reminderanswer:       { ground: "caller-owned", is: "a member answers their own due reminder, with a further one or none (action-clocks R6)" },
   /* `export`'s ground: the bytes are already the record's; this hands them over and logs who took them. */
   counselpacketexport:  { ground: "substrate", is: "hands a member a counsel packet version's bytes and records who exported it, when and for which counsel (filings R11)" },
+  /* R30 (K921, T21): the template library's acts. The grant and its revocation are `reviewgrant`'s and `reviewrevoke`'s
+     ground: their subject is WHO MAY READ AND REVIEW one version. The other seven are R27's rule: none asks an authored
+     reason that the act revises what stands, and no published act takes one back — a later version updates, never
+     undoes, and a review or comment is answered by another. */
+  templatereviewgrant:  { ground: "credential", is: "a participant of the template's project gives a named non-member a revocable read-comment-and-review door to one draft or in-review version, by a per-grant secret (filing-templates R8)" },
+  templategrantrevoke:  { ground: "credential", is: "withdraws a template review grant; the secret then answers as one never issued (filing-templates R8)" },
+  templatedraft:        { ground: "undetermined", is: "a member creates a template and its first draft, or a draft of a new version of one, from their own words, a version they may see or a proposal; never offered until reviewed and approved (filing-templates R3)" },
+  templaterevise:       { ground: "undetermined", is: "a member revises a draft's text, every earlier revision kept with its author and time, or adopts a proposal's text (filing-templates R4)" },
+  templatepropose:      { ground: "undetermined", is: "a machine or a member PROPOSES wording for a template or a kind with its why, stored apart and labelled; a template's text only when a member takes it up (filing-templates R6)" },
+  templatesubmit:       { ground: "undetermined", is: "a member moves a draft to review, fixing its text, and names the members asked to review it (filing-templates R7)" },
+  templatereview:       { ground: "undetermined", is: "a member, or a professional through a live grant, records one review of a version's present text: no concerns, concerns, or changes requested; a later review of the same text stands in its place, the earlier kept (filing-templates R9)" },
+  templatecomment:      { ground: "undetermined", is: "a member, a grant's recipient or a labelled run comments on a version, or a member adds a note; attributed, never edited (filing-templates R12, R13)" },
+  templateapprove:      { ground: "undetermined", is: "an approver who is not the version's sole author approves a reviewed version, the earlier approved version marked updated and still offered; or an administrator widens an approved template to the group (filing-templates R10)" },
 };
 
 /* REC-38, UI-22's delegation: THE CAPTURE-DIRECTED ACTS' METADATA, and the
@@ -1849,8 +1883,8 @@ export const ACTS = [
    * all six route through the same `#moveVersionState` and the same
    * `VERSION_NO_REASON` refusal, so anything grading these ops by finding that
    * code in the shared helper would have promoted four of them to a rung the
-   * store does not enforce. `rung-ladder.test.mjs` therefore reads the exported
-   * predicate and `Store.VERSION_ACT_TO`, never the helper's text.
+   * store does not enforce. R19's drive therefore performs the acts (this
+   * module's tests), never reading the helper's text.
    * `versionrevert` and `versionhide` are `reversible` (revert's target state
    * reaches every state it runs from; hide is its own inverse — `hidden=false`).
    * `versionaccept` and `versioncurrent` are `reversible` since R27's ruling
@@ -2068,10 +2102,11 @@ export const ACTS = [
  * which fires whatever the object's state. `deriveActs` withholds these when the store states
  * `actor_is_machine === true`: before this, a `class:` credential was offered `publish` (and every
  * act below) and refused at the act, the pre-flight disagreeing with the act (DEC-8).
- * DECLARED HERE AND DRIVEN, `weight`'s precedent: `d311-roster-affordances.test.mjs` performs every
- * act in ACTS with a machine credential and holds this map to the codes that come back, BOTH
- * directions — an act refused by a MACHINE_* code and absent here fails by name, and so does an
- * entry the store no longer answers. `withdrawconclusion` enters `conclude()` after its machine
+ * DECLARED HERE AND DRIVEN, `weight`'s precedent: this module's R20 test (`test/m/affordances/`,
+ * in the running plane, with `sourceconsent` and `contradictionresolve` at their own modules'
+ * interfaces) performs every act in ACTS with a machine credential and holds this map to the codes
+ * that come back, BOTH directions — an act refused by a MACHINE_* code and absent here fails by
+ * name, and so does an entry the store no longer answers. `withdrawconclusion` enters `conclude()` after its machine
  * fence and answers conclude's code. NOT here, because the store refuses no machine at them:
  * `retire`, `dispose`, `cite`, `sever`, `reinstate`. */
 export const MACHINE_REFUSALS = {
@@ -2087,7 +2122,8 @@ export const MACHINE_REFUSALS = {
   /* D-149's act, added at integration by c19-unionfix (2026-09-24): the store refuses a machine BY NAME at it
      (C-32.18, `is-machine-set-laws`), and D-149 landed it in ACTS without this entry — so a machine credential
      was OFFERED "State governing laws" and refused at the act, the DEC-8 disagreement this map exists to
-     prevent. Found when `d311-roster-affordances.test.mjs` gained the drive its fixture guard demanded. */
+     prevent. Found when the old `d311-roster-affordances` suite gained the drive its fixture guard demanded;
+     R20's drive holds it now. */
   actionlaws:         "MACHINE_CANNOT_SET_LAWS",
   /* REC-214: the store refuses a machine at the member's revision act by C-32.19's own code, through the one
      helper `promote`'s action block also asks (`#machineRiskTierRefusal`). */
@@ -2375,9 +2411,9 @@ export const NON_ACTS = {
          viewer own SOME project", which is right for `publish` because the
          project is a PARAMETER of that act. Here the project IS the target, so
          the honest fact is the PAIR — `#isProjectOwner(target, viewer)` — and
-         `caseproduction.test.mjs` §3 measures the store refusing exactly the
+         this module's R18 roster test measures the store refusing exactly the
          mistake the loose fact would make: a member who owns one project,
-         acting on another she merely joined, is refused. Reusing D-310's fact
+         acting on another they merely joined, is refused. Reusing D-310's fact
          would offer `projectinvite` on EVERY project to anyone who owns any.
      (3) THEY ARE SEVEN POSITIONS, NOT ONE. `projectjoin` is the INVITEE's act
          and an invitee is by definition not an owner; `projectleave` is a joined
@@ -2536,9 +2572,8 @@ export const NON_ACTS = {
      accept/reject/consider/revert/current/hide, all published and all
      object-directed. `op=suggest` is not one of them and is not a seventh.
      WHY THIS ONE IS NOT AN ACT. An ACTS row is a thing this record OFFERS A
-     MEMBER beside an object: it appears in `op=affordances`, a surface hosts it,
-     and `civicos-ui/test/surface-registry.test.mjs` then owes that surface. No
-     member presses this. In the background mode a run calls it unattended; in
+     MEMBER beside an object: it appears in `op=affordances` and a surface hosts
+     it. No member presses this. In the background mode a run calls it unattended; in
      the interactive mode (§10) the member's act is "export", performed inside
      the session, and the plane call the session then makes is this one. Offering
      it beside an inquiry would tell a member they may compose a machine
@@ -2636,12 +2671,12 @@ export const NON_ACTS = {
   escalationsuspend: "escalation-directed: a member suspends an escalation with a reason, keyed by escalation id; appends to its log",
   escalationresume: "escalation-directed: a member resumes a suspended escalation at its stage, keyed by escalation id; appends to its log",
   actionriskpropose: "action-directed: a machine or a member proposes an action's risk tier with its basis, keyed by (action, proposer); writes an `action_risk_proposals` row, never the tier",
-  /* K705, K709 (T18 layer 11): filings' and actions' new writes. A draft communication and a template are rows keyed by
-     an action and a group, and a pressure mark is keyed by one correspondence entry; creating an action acts on no
-     existing bundle (`testify`'s reason). Their reads (`templates`, `action`, `actions`) carry no `NEEDS` row and are
-     not named here (R12). */
+  /* K705, K709 (T18 layer 11): filings' and actions' new writes. A draft communication is a row keyed by an action, and
+     a pressure mark is keyed by one correspondence entry; creating an action acts on no existing bundle (`testify`'s
+     reason). Their reads (`action`, `actions`) carry no `NEEDS` row and are not named here (R12). `templatesave` (filings
+     R32, T21) starts a draft in the template library from an approved filing draft. */
   communicationprepare: "action-directed: a machine or a member prepares a draft message, briefing or statement, keyed by action id; writes a draft row labelled as its preparer's, never sent until a member approves it",
-  templatesave: "draft-directed: a member keeps an approved draft as a named template of the group's, keyed by the draft; writes a template row and moves no bundle",
+  templatesave: "draft-directed: a member starts a template draft from an approved filing draft, keyed by the draft; writes the template library's rows and moves no bundle",
   actioncreate: "creation: a member creates an action from its document, the same write as its promotion; acts on no existing bundle",
   actionpressure: "entry-directed: a member marks one received correspondence entry as pressure, keyed by (action, entry ordinal); appends a mark and never rewrites the entry",
   /* K899 (7), K902 (T20): a litigation hold is stated on one `legal` pressure mark, `actionpressure`'s key; it is
@@ -2666,6 +2701,25 @@ export const NON_ACTS = {
      `queuesnooze`'s), so each is named: `queuesnooze`'s reason, the subject a member's own attention. */
   reminderset: "personal state, keyed (member, action, clock entry): a member's own request to be reminded of a dated entry, kept in action-clocks' table, never in the action's document",
   reminderanswer: "personal state, keyed (member, action, clock entry): a member answers their own due reminder, with a further one or none",
+  /* R30 (K921, T21): the template library's ops and the local facts'. A template and its versions are rows of
+     `filing-templates`' own, and a fact is a path into a jurisdiction profile: neither is a bundle in a state that
+     `affordanceFacts` describes. A review grant's door reaches four of them, one version at a time. */
+  templatedraft: "template-directed: keyed by a template or one of its versions, reached from the template library; writes this module's rows and moves no bundle",
+  templaterevise: "template-directed: keyed by a template or one of its versions, reached from the template library; writes this module's rows and moves no bundle",
+  templatepropose: "template-directed: keyed by a template or one of its versions, reached from the template library; writes this module's rows and moves no bundle",
+  templatesubmit: "template-directed: keyed by a template or one of its versions, reached from the template library; writes this module's rows and moves no bundle",
+  templatereviewgrant: "template-directed: keyed by a template or one of its versions, reached from the template library; writes this module's rows and moves no bundle",
+  templategrantrevoke: "template-directed: keyed by a template or one of its versions, reached from the template library; writes this module's rows and moves no bundle",
+  templatereview: "template-directed: keyed by a template or one of its versions, reached from the template library; writes this module's rows and moves no bundle; reached also through a review grant's door",
+  templatecomment: "template-directed: keyed by a template or one of its versions, reached from the template library; writes this module's rows and moves no bundle; reached also through a review grant's door",
+  templateapprove: "template-directed: keyed by a template or one of its versions, reached from the template library; writes this module's rows and moves no bundle",
+  templateretire: "template-directed: keyed by a template or one of its versions, reached from the template library; writes this module's rows and moves no bundle",
+  templates: "read: the templates the viewer may see, their offered versions by default, each with its state, attribution and reviews' summary; writes nothing",
+  templateread: "read: one template version with its whole attribution, reviews, approval and comments' count; writes nothing; reached also through a review grant's door",
+  templatecomments: "read: one template's or version's comments and notes, newest last; writes nothing; reached also through a review grant's door",
+  factconfirm: "fact-directed: keyed by a profile fact's path, reached from the calendar and offices; moves no bundle",
+  factstatus: "read: one local fact's status, the profile's value and the value that governs here, or every fact of the active profiles; writes nothing",
+  factsdue: "read: the local facts unconfirmed, lapsed, due or disputed, or those of the paths named; writes nothing",
 };
 
 /* D-126 — THE FOURTH WEIGHT, `per-item`, AND THE THREE ACTS THAT TAKE A SET.
