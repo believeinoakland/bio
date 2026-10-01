@@ -8,7 +8,7 @@
 
 **Proof** · A new arm of R32's test over the rendered page (`SIGN_HTML`): the markup outside comments, style and script holds no "bundle" but the asset's file name, and states the record id and hash labels; the strings the script writes (each answer of the ratify button, generate, load, forget, the key status lines) hold no "bundle". Negative control: with the page change stashed, the arm fails (0 pass, 1 fail).
 
-**Open** · J1 (QUESTION): whether R32 gains the "record, never a bundle" clause the test names. Built on my best reading; a different id is a re-title.
+**R32's new clause** · B2 (K934) adopted J1's reading: R32 now states "It calls the ratified thing a record, never a bundle; `bio-plane.bundled.mjs`, a file name, stays", marked *(not yet met: T21)*. Merged `tranche/T21` (e654bd030c); the R32 arm above tests the clause and passes, so the mark is met by this job.
 
 **Deferred** · none.
 
@@ -20,7 +20,7 @@
 - Layer tests: none named in `build/manifest.md`.
 - `format`: 86 modules, 84 requirements files; 0 failures. `architecture`: 8 product files, 7 relative imports; 0 failures. `coverage`: 36 of 36 live requirement ids named by a test; 0 failures. `ownership` against `tranche/T21`: 4 files changed; 0 failures.
 
-Size (session_01RVLyww2mbVhaNCnyJ1r3Vp): test runs 8, module lines 1158
+Size (session_01RVLyww2mbVhaNCnyJ1r3Vp): test runs 9, module lines 1158
 
 ## J1 · QUESTION
 
