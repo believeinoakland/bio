@@ -53,7 +53,7 @@ Terms. An **axis** is `capture`, `connection` or `testimony`. An axis answer is 
 
 ### Uses
 
-- `legacy-checks`: the C-30, C-71 and C-32.9 rows until they move (R24), `BASIS_GRADES`, `TESTIMONY_GRADE`, `normalizeType`, `OBJECT_TYPES`, `BUNDLE_ID_RE`.
+- `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K808, K820).
 - `record-core`: `recordOf(ctx)`, the `bundles` read contract.
 - `membership`: `viewerPredicate`, `inSight` (R80), `noSuchProject` (R78), and whether an author is an active administrator (R15). *(not declared)*
 - `promotion`: `registerStep` (R13); the fact `producingGroup`. *(not declared)*

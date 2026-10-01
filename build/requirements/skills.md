@@ -57,7 +57,7 @@ Terms. **published** is the plane's own answer to `op=affordances` with no targe
 ### Uses
 
 - `run-rules` (through `airun.mjs` until this module's T18 job re-points it; K649 (1)): `OBSERVATION_LEVELS`, `OBSERVATION_STATES`, `DEFINITIVE_STATES`, `RUN_BOUNDS`, `RUN_ENDINGS`, `AI_RUN_CHECKS`. The first three move to `observation-log` at its extraction (its map, §1), which adds `observation-log` to this module's `uses` *(not declared in `modules.json` today)*.
-- `legacy-checks`: `SUGGEST_LEVELS`, `SUGGEST_CHECKS`, `MACHINE_FENCE_CHECKS`, `EARNED_GRADE_SOURCES`, `VERSION_STRENGTH_INERT_SOURCES`, `BASIS_ROLES`, `VERSION_STRENGTH_CHECKS`, `BASIS_VERSION_CHECKS`, and the whole namespace as `renderPack`'s `catalogue`. As each family moves to its module (K6), this module imports it from there instead; those modules (`basis-versions`, `strength`, `inquiry`) are earlier in layer 6.
+- `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K808, K820).
 
 ### Invariants
 

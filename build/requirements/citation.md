@@ -29,7 +29,7 @@ Terms. The **citing object** is the bundle a citation is written into, named by 
 
 ### Uses
 
-- `legacy-checks`: rows C-33.15–C-33.19, C-33.39 and C-45.7–C-45.10 until they move (R11), `normalizeType`, `OBJECT_TYPES`, `parseFrontmatter`, `createSha256`.
+- `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K808, K820).
 - `record-core`: `recordOf(ctx)`, the `bundles` read contract and a bundle's live files (R37, R41–R43).
 - `membership`: the existence answer and sight (`existenceAct`, `inSight`; R44, R61), the one no-such-project answer (`noSuchProject`, R78), `projectAuthority` (R55).
 - `promotion`: `promote`, `INLINE_MAX`.

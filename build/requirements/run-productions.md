@@ -38,7 +38,7 @@ Terms. A **run** and its **bounds** are `ai-runs`'; `ai-runs.runFor` answers a r
 
 ### Uses
 
-- `legacy-checks`: the C-27 rows until they move (R16), `SUGGEST_KINDS` until `basis-versions` holds it, `isBoilerplate`, `isMachineIdentity`, `SUFFICIENCY_UNCLAIMED`, `canonicalJson`, `parseFrontmatter`, `normalizeType`, `OBJECT_TYPES`, `MACHINE_CLASS_PREFIX`.
+- `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K808, K820).
 - `text-chain`: `readingSource`, `readingSourceJson`, `readingSourceFromColumns`, `describeChain`.
 - `record-core`: `recordOf(ctx)`, `transact`, `declarePurge`, `bundles` and `files` by its read contract.
 - `membership`: `viewerPredicate`, `inSight`.

@@ -285,7 +285,7 @@ Terms. A **key** is one of `K1` (one inquiry, opposite roles: a `supports` and a
 ### Uses
 
 - `promotion` (N345): `promote` (R35, R36) and `registerStep` (R38).
-- `legacy-checks`: C-60 and C-93 until they move (R20); `sha256HexSync`, `canonicalJson`. *(not declared)*
+- `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K808, K820).
 - `record-core`: `recordOf(ctx)`, `transact`, `declarePurge`; `bundles` by its read contract (R37 there), including the inquiry's subject entity column, and its `title`, for a revealed party's name (R52).
 - `membership`: `membershipOf(ctx)`, `viewerPredicate` and the bundle gate (R10); `sight` (K5), `isJoinedParticipant` and `projectOwners` (R24's reach); the existence answer (R77), `noSuchProject` (R78), `notAParticipant` (R87) and `memberFacts` (R68, the responder's own cover) for R50–R54. *(not declared)*
 - `content`: `contentRow` and the rows of a capture (R8, R14), by service or a stated read contract on `content`.

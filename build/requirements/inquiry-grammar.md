@@ -38,7 +38,7 @@ Terms. A **finding** is `record-grammar`'s (its R11): `{check, severity, message
 ### Uses
 
 - `record-grammar`: `normalizeType`, `parseFrontmatter`, the finding shape, `BUNDLE_ID_RE`, `BASIS_ROLES`, `BASIS_GRADES`, `GRADE_AXES`, `GRADE_SOURCES`, `EARNED_CAPTURE_CEILING`, `TESTIMONY_GRADE`, `isMachineIdentity`, `ISO_TS_RE`, as T19's layer 1 moved them.
-- `legacy-checks`: what the moved code still reads from the catalogue until its owner moves it (rule 1).
+- `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K808, K820).
 - `text-chain`: the extent functions the leg's part is read through.
 - `content`: `checkContentExtent` and its document-only context (C-45).
 - `connections`: `themeLegFindings` (C-81.1), asked of each leg before any other complaint about it.

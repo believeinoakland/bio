@@ -87,9 +87,10 @@ Terms. A **run** is `{run, status, label, mode, context_type, context_id, princi
 ### Uses
 
 - `run-rules`: the vocabulary and pure rules (its R1–R8), `DEPLOYMENT_SEQUENCE` (its R9, for R40), `AI_RUN_STATE_MAX_BYTES` and `checkRunState` (its R10, for R45), the rows and `translationOf` (its R11, for R35).
-- `legacy-checks`: the rows of R35 until they move, `isMachineIdentity`, `canonicalJson`, `normalizeType`, `OBJECT_TYPES`.
+- `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K808, K820).
 - `record-core`: `recordOf(ctx)`, `transact`, `declarePurge`, `bundles` and `refs` by its read contract.
-- `membership`: `membershipOf(ctx)`, the bundle gate, `inSight`, `participation`, `existenceAct`, `aiCredentialLook` (R18), `viewerPredicate`; `listenerRefusal` (R81) and `MODULE_ORDER` (R83) (N202).
+- `credentials`: `aiCredentialLook` (its R15; K757) (R18).
+- `membership`: `membershipOf(ctx)`, the bundle gate, `inSight`, `participation`, `existenceAct`, `viewerPredicate`; `listenerRefusal` (R81) and `MODULE_ORDER` (R83) (N202).
 - `promotion`: `registerStep` for R25–R26.
 - `connections`: `citesInto` (R10's projects, R19's questions).
 - `bias`: `biasManifest` (R10, R20); the work-product registration (R30).
@@ -107,7 +108,7 @@ Terms. A **run** is `{run, status, label, mode, context_type, context_id, princi
 - **R35** Each check this module's acts mint is an invariant here with its test (K6): C-33.29–C-33.31, C-33.45–C-33.47, C-36.1–C-36.3, C-66.1–C-66.4, their rows held in `run-rules`' table and read by key (its R11). The rows the pure rules mint (C-22.5, C-22.7, C-22.8, C-22.11–C-22.16, C-22.18), with C-22.7's one minting site `checkSkillVersion`, moved to `run-rules` R11 (K617, K649 (1)).
 - **R36** Hidden runs: `ai-runs` registers with `retrieval` (and observation-log's `run` resolver) the predicate "runs over projects this viewer cannot see" and the `surfaced_in` decoration (K75 (2), K80).
 - **R37** The run gate `contradiction` offers (its R21) is filled here from R28 and `run-rules` R5.
-- **R38** `ai_runs`, `ai_run_bounds` and `inquiry_run_surfacings` are declared to record-core's purge (K23; `inquiry_run_surfacings` by bundle). Only this module writes them; a production spends a bound through R29.
+- **R38** `ai_runs`, `ai_run_bounds` and `inquiry_run_surfacings` are declared to record-core's purge (K23; `inquiry_run_surfacings` by bundle). Only this module writes them; a production spends a bound through R29. Their figures `aiRuns`, `aiRunBounds`, `inquiryRunSurfacings` and `aiRunLog` are registered with `record-core`'s counts (its R63), as `store.mjs` counted them, no meaning changed (K820), taken through the caller's sight: `aiRunBounds` and `aiRunLog` keep exactly the rows R42 keeps; `aiRuns` and `inquiryRunSurfacings` drop the rows naming a bundle in `hid`; a null `hid` counts whole.
 - **R39** No place is named in this module's behaviour or outward text.
 
 ### Satisfies
@@ -125,7 +126,7 @@ Terms. A **run** is `{run, status, label, mode, context_type, context_id, princi
 
 - **Factory.** `aiRunsOf(ctx, env)` answers the one instance per Durable Object storage (the resume needs the `AGENT_WORKER` binding, the instance credential's secret and the `STORE` namespace) and reaches its uses through their factories (K61). The op handlers move here (K3); `scheduler` calls R15 and R16.
 - **Registrations offered:** the wait source (R16; `capture-requests` fills it, K71); `onRunOpened` (R43); the open check (R47; `action-plans` fills it for mode `plan`, its R30). **Filled:** promotion's step (R25–R26), observation-log's `run` resolver, retrieval's hidden-run predicate and `surfaced_in` decoration (R36), contradiction's run gate (R37), bias's work products (R30).
-- **What stays out.** `op=suggest`, `op=extractpropose`, `op=extractproposals`, `proposed_readings`, `suggest_refusals` and C-27 are `run-productions`'. The bias debt and C-26.13–C-26.19 are `bias`'s (K82 (3)); its queue item (`#obligationsBiasDebt`) is `queue`'s. The migration replay's `surfaced_in` arm and C-66.5 are `inquiry`'s; C-66.6 (`REPLAY_UNVERIFIED`) is `control-plane`'s; `aiCredentialLook` and C-29 are `membership`'s; `searchedSection` is `case-authoring`'s (N138).
+- **What stays out.** `op=suggest`, `op=extractpropose`, `op=extractproposals`, `proposed_readings`, `suggest_refusals` and C-27 are `run-productions`'. The bias debt and C-26.13–C-26.19 are `bias`'s (K82 (3)); its queue item (`#obligationsBiasDebt`) is `queue`'s. The migration replay's `surfaced_in` arm and C-66.5 are `inquiry`'s; C-66.6 (`REPLAY_UNVERIFIED`) is `control-plane`'s; `aiCredentialLook` is `credentials`', C-29 `membership`'s; `searchedSection` is `case-authoring`'s (N138).
 - **For callers.** The control plane stamps `principal` (as `principalPlane` or `caller`), `actor` and `viewer`, deleting a body's.
 - **Tests.** Each refusal gets a negative control; R14 and R15 get the killed-run arm (a lapsed lease is reaped with its terminal entry); R18 the arm that counts calls at the binding; R23 the arm proving the search half has no lens field; R28 the arm proving an invisible run and an absent one answer alike. For K660: R46 each refusal in order with nothing written, `plan` stored and answered by `read` and `runFor`, and today an open in mode `plan` refused C-109.1 by R40 (control: an open in mode `check` with no `plan` still lands); R47 the registered check's refusal passed on unchanged, no check registered refused `AI_RUN_MODE_UNCHECKED`, a second registration `LISTENER_DECLARED` (control: a check answering null lets the open land).
 

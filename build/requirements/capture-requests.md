@@ -72,7 +72,7 @@ Terms. A **request** is one row: `request` id, `run`, `target` (the inquiry it w
 
 ### Uses
 
-- `legacy-checks`: `CAPTURE_REQUEST_CHECKS` (C-28), `RENDER_CAPTURE_CHECKS` (C-83), `CAPTURE_PURPOSES`, `CAPTURE_UA_MODES`, `userAgentIsLegible`, `civicosUserAgent`, `isPublicHttpsLocator`, `MACHINE_AUTHOR_PREFIX`.
+- `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K808, K820).
 - `record-core`: `recordOf(ctx)`, `transact`, `bundleInfo` (a target's type), `declarePurge`, the instance settings (version, instance name).
 - `membership`: `viewerPredicate` (R3, R23, R26); `listenerRefusal` (R81) and `MODULE_ORDER` (R83) (N202).
 - `capture`: the trusted in-process `acquire` arm (R15–R18).
