@@ -102,6 +102,13 @@ export const MEMBERSHIP_CHECKS = Object.freeze({
       + 'signed in. Sign in as yourself to register your key, or ask an administrator to register one for you. '
       + 'Nothing was changed.',
   }),
+  /* R95 (K774): an enrolment whose password the registered setter could not record (or with no setter registered).
+     The next free number of C-96, this module's family for the acts on a member's own row (K107 (3), K174). */
+  ENROL_NOT_RECORDED: Object.freeze({
+    check: 'C-96.18', where: at("#enrolNotRecorded", "is-enrol-password-set"),
+    translation: 'Your enrolment could not be completed, because your password could not be recorded. Nothing was '
+      + 'changed, and your invitation link still works: try again, or ask an administrator.',
+  }),
   EXPERTISE_NO_LABEL: Object.freeze({
     check: 'C-96.13', where: at("expertiseDeclare", "is-expertise-labelled"),
     translation: "An expertise is declared by a name a person can read, such as 'CPA', and this one has none. "

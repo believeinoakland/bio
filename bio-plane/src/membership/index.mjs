@@ -181,7 +181,7 @@ export const MODULE_ORDER = Object.freeze([
           "escalation", "action-plans",
   /* 10 */ "monitoring", "scheduler", "legacy-store",
   /* 11 */ "affordances", "tasks", "queue-producers", "queue", "instance-setup", "op-declarations", "admission",
-           "control-plane", "legacy-index", "legacy-ui", "installer", "legacy-tests",
+           "control-plane", "plane", "legacy-index", "legacy-ui", "installer", "legacy-tests",
 ]);
 
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
@@ -249,7 +249,9 @@ export class Membership {
   /* This module's tables, at every boot (R57–R59), idempotent: `members.name` renamed to `cover` (2026-07-24);
      every table and index created if absent; the additive columns an older store lacks added; the vestigial
      `members.expertise` column dropped (K57: `member_expertise` is the record, R21–R24); the tables declared to
-     record-core's purge (R59) when its `declarePurge` is present. Run by the host inside its boot. */
+     record-core's purge (R59) when its `declarePurge` is present; and the sight index recomputed whole from the owners'
+     acts (D-497: a derivation, so an index that disagreed with `project_visibility` cannot survive a restart; moved
+     here from the legacy store's boot, T19). Run by the host inside its boot, after record-core's schema. */
   migrate() {
     const cols = (t) => [...this.sql.exec(`PRAGMA table_info(${t})`)].map((r) => r.name);
     const memberCols = cols("members");
@@ -266,6 +268,8 @@ export class Membership {
     for (const st of bare.split(";")) { const t = st.trim(); if (t) this.sql.exec(t); }
     if (cols("members").includes("expertise")) this.sql.exec(`ALTER TABLE members DROP COLUMN expertise`);
     this.declareTables();
+    /* No `bundles` table yet means no project to index (a host whose record-core has not made its schema). */
+    if (cols("bundles").length) this.reindexProjectSight();
   }
 
   /* R59, through record-core's `declarePurge` (its R21) once record-core provides it. */
@@ -338,6 +342,33 @@ export class Membership {
     if (refused) return refused;
     this.#claimedSource = { module, fn };
     return { ok: true, module };
+  }
+
+  /* ===== R95 (K774) — THE PASSWORD AN ENROLMENT SETS, A WRITE `credentials` MAKES (its R20) =====
+   *
+   * Enrolment (R16) is one act: the member chooses a handle and a password, becomes active and spends the invitation.
+   * The password is `credentials`', so membership never stores one; one module registers, once, the setter `enroll`
+   * calls inside its act, `fn({role, password})`. Its refusals are R81's: a setter that is not a function is
+   * LISTENER_MALFORMED, a second registration LISTENER_DECLARED naming the holder (`module`, when the registrant names
+   * itself). */
+  #passwordSetter = null;   // {module, fn}
+
+  registerPasswordSetter(fn, module = "credentials") {
+    const refused = listenerRefusal(this.#passwordSetter, typeof module === "string" && module ? module : "credentials", fn);
+    if (refused) return refused;
+    this.#passwordSetter = { module, fn };
+    return { ok: true, module };
+  }
+
+  /* The enrolment's password write: the registered setter, answering true when it wrote. THE SEAM'S INTERIM, removed
+     by the split's deletion: with none registered, this module's own copy of the code `credentials` takes. */
+  async #setEnrolmentPassword(role, password) {
+    const setter = this.#passwordSetter;
+    if (!setter) { await this.setPassword({ role, password }); return true; }
+    try {
+      const r = await setter.fn({ role, password });
+      return !(r && typeof r === "object" && r.ok === false);
+    } catch { return false; }
   }
 
   #claimed() {
@@ -2695,7 +2726,9 @@ export class Membership {
       return { ok: false, reason: "HANDLE_TAKEN", handle: h };
     if (typeof password !== "string" || password.length < 12)
       return { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 };
-    await this.setPassword({ role: `member:${m.member_id}`, password });
+    /* R95 (K774): the password is set by the registered setter, inside this act and before anything here is
+       written, so a setter that did not write leaves the invitation live and the member as they were. */
+    if (!(await this.#setEnrolmentPassword(`member:${m.member_id}`, password))) return Membership.#enrolNotRecorded();
     /* Cover, capabilities and role are the administrator's and are NOT read from
        this call. An invitee who posts their own is ignored rather than refused,
        because the fields are not theirs to send and naming them in an error
@@ -2707,6 +2740,18 @@ export class Membership {
     this.sql.exec(`UPDATE members SET status='active', handle=?, invite_hash=NULL, status_by=?, updated=? WHERE member_id=?`,
       h, m.member_id, new Date().toISOString(), m.member_id);
     return { ok: true, memberId: m.member_id, handle: h };
+  }
+
+  /* R95: the enrolment whose password could not be set. Nothing was written, the invitation is still live, and the
+     answer says so; its row is this module's C-96.18. */
+  static #enrolNotRecorded() {
+    /* DEC-49 REGION is-enrol-password-set */
+    const row = MEMBERSHIP_CHECKS.ENROL_NOT_RECORDED;
+    return { ok: false, reason: "ENROL_NOT_RECORDED", code: "ENROL_NOT_RECORDED", check: row.check,
+             translation: row.translation,
+             detail: "the password could not be recorded, so the enrolment did not happen: the member is not active "
+                   + "and the invitation is still live. Nothing was written." };
+    /* END DEC-49 REGION is-enrol-password-set */
   }
 
   memberList({ administer } = {}) {
