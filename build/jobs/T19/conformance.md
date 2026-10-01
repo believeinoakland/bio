@@ -15,7 +15,7 @@
 
 **Deferred:** none.
 
-**Found in other modules (REPORT J2):**
+**Found in other modules (REPORT J1):**
 1. **affordances** (`src/affordances.mjs`:486 `JUSTIFICATION_REFUSALS`; comment :807–809): lacks `CONFORMANCE_NO_REASON`, so `test/m/affordances` "R19: determine, graded `reasoned` (N310) …" turns red with this change (it expects the supersession's no-reason refusal to be in that list). The fix is affordances' (L11): add `CONFORMANCE_NO_REASON` and re-word the comment's `NO_REASON` (conformance R7). `INTENT_NO_REASON` (intent R30, T19 L7) is not in that list either.
 2. **Requirements text (BOB's):** `conformance.md` Private Uses still names `legacy-checks` for `isMachineIdentity`, `proposalLabel`; they are read from `record-grammar` now (modules.json `uses` lists both). R12 also cites "`legacy-checks`' `proposalLabel`".
 3. Pre-existing reds, unchanged by this job (same set before and after, `git stash` comparison): consequences 7 tests (R5, R8, R9), affordances 4 others (R19 ×3, R8 R18 contradictionresolve), control-plane 1 (R22 CHECK_FAMILIES totality).
@@ -23,7 +23,7 @@
 
 **Tests and checks run:**
 - `node --test bio-plane/test/m/conformance/`: tests 49, pass 49, fail 0 (baseline before the change: 48/48).
-- Modules that use conformance (`uses`): consequences 17 pass / 7 fail (pre-existing), actions 61/0, action-clocks 20/0, filings 45/0, escalation 32/0, action-plans 38/0, affordances 118/5 (1 new, report 1; 4 pre-existing), control-plane 84/1 (pre-existing); plane has no tests directory. Layer tests: none named in `build/manifest.md`.
+- Modules that use conformance (`uses`): consequences 17 pass / 7 fail (pre-existing), actions 61/0, action-clocks 20/0, filings 45/0, escalation 32/0, action-plans 38/0, affordances 118/5 (1 new, REPORT J1; 4 pre-existing), control-plane 84/1 (pre-existing); plane has no tests directory. Layer tests: none named in `build/manifest.md`.
 - `node checks/format.mjs`: 87 modules, 82 requirements files; 0 failures.
 - `node checks/architecture.mjs … conformance`: 9 product files, 42 relative imports; 0 failures.
 - `node checks/coverage.mjs … conformance`: 23 of 23 live requirement ids named by a test; 0 failures.
