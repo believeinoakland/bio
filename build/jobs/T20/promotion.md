@@ -34,3 +34,7 @@ Ready for the stamp; waiting on membership's merge (rule 3). Done meanwhile, pus
 - K867: `test/m/promotion/write-path.test.mjs`:18 probes `src/plane/index.mjs`, not `src/index.mjs` (99/99 pass).
 - 1.49.0 reproduced at its stamp commit d93286c6ad (1051 rows, c7e4b82c…, `tools/` read as scripts as PROMOTION #20 did). Today's tree, before membership: 986 rows, dd61926a…. Every difference is one a T19 L3–11 record names: six re-keyed (intent C-111.4/.6/.13, conformance C-113.17/.22, escalation C-116.24); `where`s changed (basis-versions C-25.x and C-27.15, content C-45.1–.4/.11/.12, acquisition C-68.1, inquiry C-66.5, inquiry-grammar C-54.1, connections C-81.1, action-grammar C-73.6, actions C-117.11, action-clocks C-123.2); 61 rows held twice now held once (the catalogue's end). Membership's departures (its N445 copies) are added once it merges.
 Ring me when membership is on `tranche/T20`; the stamp then takes one census run.
+
+## J2 · COMPLETE
+
+Stamp done: CATALOG_VERSION 1.50.0, ROW_CENSUS 986 rows dd61926a… (module tables only), on job/T20/promotion @ the record commit. Six re-keyed, 29 where-changed, 65 held-twice now once (J1's 61 was wrong); T20 L1–2 moved no row. K867 and K882 (B3) done. Module 99/99; four checks 0 failures. REPORT: legacy-tests' row-census suite holds the pin; its NEGATIVE CONTROL arm fails as it did at 1.49.0 (no row-census-1.50.0.jsonl fixture). Stale: bio-plane/dist/bio-plane.bundled.mjs (1.49.0). Details in the record's Completion section.
