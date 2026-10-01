@@ -1,7 +1,8 @@
 /* calibration's tables (requirements: `build/requirements/calibration.md`): the calibrations, the engines this
  * instance probes, and the announcement signals. Moved from `schema.mjs` at the module's extraction (T5-1; Bob's
- * ruling 3, "each module owns its tables"). The module's own `migrate()` (R20) runs this text; `schema.mjs` no
- * longer names it (T19). Exempt from purge (R16): they are measurements of engines, not of the record. */
+ * ruling 3, "each module owns its tables"). The module's own `migrate()` (R20) runs this text, in place of the
+ * legacy `schema.mjs` pass, since deleted (T19). Exempt from purge (R16): they are measurements of engines, not of
+ * the record. */
 export const CALIBRATION_TABLES = Object.freeze(["calibrations", "calibration_subjects", "calibration_signals"]);
 
 export const CALIBRATION_SCHEMA = `-- CPDF-13 / D-183 / D-253: THE CALIBRATION -- a dated, identified fidelity
@@ -40,21 +41,21 @@ CREATE TABLE IF NOT EXISTS calibrations (
   -- WHICH CALIBRATION REPLACED THIS ONE. Set ONCE.
   --
   -- IT IS replaced_by AND NOT superseded_by, AND THAT IS A DELIBERATE
-  -- NAMING CONSTRAINT RATHER THAN A PREFERENCE. D-221's version-chain pin
-  -- (test/versionchain.test.mjs section 2) sweeps the WHOLE schema for any
-  -- stored pointer from one version to another -- supersede/superseded_by/
-  -- predecessor/previous_version and their family -- because the thesis of that
-  -- item is that a document's version history is DERIVED from captures and is
-  -- never an edge somebody wrote down. That pin is total on purpose and this
-  -- column set it off.
+  -- NAMING CONSTRAINT RATHER THAN A PREFERENCE. D-221's thesis is that a
+  -- document's version history is DERIVED from captures and is never an edge
+  -- somebody wrote down, so the record stores no pointer from one version to
+  -- another -- supersede/superseded_by/predecessor/previous_version and their
+  -- family. The legacy suite test/versionchain.test.mjs (section 2) once
+  -- pinned that with a sweep of the WHOLE schema, and this column, spelled
+  -- the usual way, set it off. That suite was deleted at T20 and its sweep
+  -- was not carried; the spelling stays, for the rule it was kept for.
   --
-  -- THE PIN IS RIGHT AND WAS NOT NARROWED. A calibration is a measurement of an
-  -- ENGINE, not a version of a DOCUMENT, so the two constructs have nothing to
-  -- do with each other -- but loosening a total sweep to admit a lookalike is
-  -- how a guard stops being total, and the next stored pointer would arrive
-  -- through the hole this one made. The word moves instead, and this comment is
-  -- here so a later reader knows the relationship is real and why it is spelled
-  -- this way rather than concluding the author did not know the usual word.
+  -- A calibration is a measurement of an ENGINE, not a version of a
+  -- DOCUMENT, so the two constructs have nothing to do with each other --
+  -- but a lookalike name is where the next stored version pointer would
+  -- hide. The word moved instead, and this comment is here so a later reader
+  -- knows the relationship is real and why it is spelled this way rather
+  -- than concluding the author did not know the usual word.
   replaced_by    TEXT,
   drift          TEXT,               -- the verdict AT SUPERSESSION: worse, better, same, incomparable
   note           TEXT
