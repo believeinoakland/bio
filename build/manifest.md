@@ -6,7 +6,7 @@
 
 | what | where |
 | --- | --- |
-| the process: principles, mechanics, role instructions, checks, metrics recorder | `believeinoakland/civicos-process` (attach it to the session) |
+| the process: principles, mechanics, role instructions, checks, the mail tool | `believeinoakland/civicos-process` (attach it to the session) |
 | the requirements canon (mission, product requirements, construct designs) | listed in `requirements/README.md`; the files are under `docs/architecture/` and `docs/development/` |
 | the layers, with their contracts and rulings | `build/layers.md` (rendered: `build/layers-view.html`) |
 | the modules in their total order, with paths, tests and uses | `build/modules.json` |
