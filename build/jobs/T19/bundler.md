@@ -47,3 +47,15 @@ My best reading (I test it so now): R18 states today's behaviour, so "reports su
 - `node checks/ownership.mjs … bundler tranche/T19`: 14 files changed; legacy-index: 0 line(s) added, 0 removed; 0 failures.
 
 Size (session_01F828m2QDyyWgtT23v7Rivx): test runs 14, module lines 2440
+
+## J3 · REPORT
+
+Found in other modules while doing bundler's T19 job (none edited by me):
+
+1. **legacy-tests**, `bio-plane/test/system/fleetbundles.test.mjs` arm (j) (N31): its two (j) checks now fail ("at least four DO name `node tools/bundles.mjs`" and "the corpus is non-empty"; the suite printed `fleet-bundle.mjs remedies: 0 name node tools/bundles.mjs, 0 name npm run build`). The arm reads `fleet-bundle.mjs`' source text for that literal spelling; the remedies now read `${REBUILD}`, one constant: "Run `node bio-plane/scripts/bundles.mjs` from the repository root, which rebuilds every bundle this change staled". The arm needs re-pointing at the behaviour (the findings `verifyStatic` produces name `node bio-plane/scripts/bundles.mjs`), not the source text. `bio-plane/test/fleetbundles.control.mjs` (:528, :537, :563) carries the same old spelling.
+2. Also red in that suite, and not mine: my scripts are inputs to no bundle: `ocr-worker` STALE (src/contract.mjs, index.mjs, member.mjs, tessengine.mjs changed since its bundle), `agent-worker`'s "153 inputs are all recorded" arm, and four `bio-plane` freshness arms (the plane's committed bundle is stale against `src`). These are the generated artifacts you regenerate at the layer close. Suite total on my head: 88 pass, 8 fail.
+3. **installer**: stale `tools/` paths in text: `newgroup/scripts/embed-release.mjs`:100 tells the operator to run "(tools/release-assemble.mjs --sign)", now `node bio-plane/scripts/release-assemble.mjs --sign`. Comments: `newgroup/src/index.mjs`:303 and `newgroup/test/wizard.test.mjs`:1314 name `tools/deploy-fleet.mjs`, now `bio-plane/scripts/deploy-fleet.mjs`.
+4. **signatures**: `bio-plane/src/sshsig.mjs`:229 (comment) names "the producer (`tools/release-assemble.mjs`)", now `bio-plane/scripts/release-assemble.mjs`.
+5. **legacy-index** (`bio-plane/package.json`): unchanged and still correct: `build` and `deploy` name `scripts/build-plane.mjs` and `scripts/deploy.mjs`, which did not move. `npm run deploy` no longer takes `--thread`.
+
+No generated artifact is staled by my change.
