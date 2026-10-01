@@ -53,16 +53,20 @@ import { queueOf } from "../queue/index.mjs";
 import { tasksOf } from "../tasks/index.mjs";
 import { instanceSetupOf, instanceSetupOps } from "../setup.mjs";
 import { dispatch, controlPlaneRoutes } from "../control-plane/dispatch.mjs";
-import { HELD, registerHeldStep } from "./held.mjs";
+import { promotionStep } from "../control-plane/step.mjs";
 import { registerOwnersCounts, registerStats } from "./stats.mjs";
 
-/* The order promotion ranks its steps by: the modules' total order (membership R83), with the held step (R10) at the
-   place `legacy-store`'s step held in it, after every module of layer 10 and before `tasks`', so every step's checks and
-   projections, and the order of refusals, are today's. Promotion ranks a name the order lacks last (its R39). */
+/* The name control-plane's promotion step (its R42) is registered under. */
+const STEP = "control-plane";
+
+/* The order promotion ranks its steps by: the modules' total order (membership R83), with control-plane's step (its R42;
+   R10) at the place `legacy-store`'s step held in it, after every module of layer 10 and before `affordances`' and
+   `tasks`', so every step's checks and projections, and the order of refusals, are today's. Promotion ranks a name the
+   order lacks last (its R39). */
 export const STEP_ORDER = Object.freeze((() => {
-  const o = MODULE_ORDER.filter((m) => m !== HELD);
+  const o = MODULE_ORDER.filter((m) => m !== STEP);
   const at = o.indexOf("affordances");
-  return at === -1 ? [...o, HELD] : [...o.slice(0, at), HELD, ...o.slice(at)];
+  return at === -1 ? [...o, STEP] : [...o.slice(0, at), STEP, ...o.slice(at)];
 })());
 
 /* D-432: the live rows the PROJ mint site's `taken` reads, as `[prefix, table, column]`, seeded at every boot (record-core
@@ -82,7 +86,7 @@ export class Store extends DurableObject {
     registerOwnersCounts(ctx);
     registerStats(ctx);
     /* promotion, built first with the order its steps rank by (membership, then promotion, as provenance's first call
-       built them), so the held step ranks where `legacy-store`'s did. */
+       built them), so control-plane's step ranks where `legacy-store`'s did. */
     const promotion = promotionOf(ctx, { order: STEP_ORDER });
     /* provenance declares its tables and joins every promotion first, so its register write runs before the
        projections that read it. observation-log registers its look on each receipt (its R5, provenance R47), and
@@ -130,7 +134,7 @@ export class Store extends DurableObject {
        first `airunopen` arrives; built lazily, that open is refused AI_RUN_MODE_UNCHECKED. */
     actionPlansOf(ctx);
     monitoringOf(ctx, { env });
-    registerHeldStep(ctx, promotion);   /* R10: provenance's testimony slot and the sight index */
+    promotion.registerStep(STEP, promotionStep(ctx));   /* R10 (K861): control-plane's step (its R42), the testimony slot and the sight index */
     const capture = captureOf(ctx, { env });
     /* capture-requests: its table, its `sweep` resolver and its drain; the run sight it reads is ai-runs' (its R28),
        and it registers its wait source with ai-runs (ai-runs R41). */
