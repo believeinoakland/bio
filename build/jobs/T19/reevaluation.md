@@ -13,7 +13,7 @@
 
 **Deferred:** none.
 
-**Found in other modules** (REPORT J2):
+**Found in other modules** (REPORT J1):
 - legacy-checks: the callers that hold the algebra (`checkContentExtent` with its `covers*` helpers, `extentRelation`, `basisVersionFindings`, `checkLegExtentGrammar`, `legExtent`) have no named importer in product source (only `*` namespace imports: control-plane's `families.mjs`, which composes the row tables; the C-45 rows' `where` still names `checks/bio-checks.mjs checkContentExtent > is-content-extent`). Their live copies are content's `extent-core.mjs`, basis-versions' and inquiry-grammar's. They go, and the algebra and `VERSION_NAME_RE` with them, when the catalogue is deleted whole (control-plane's last act, K786) or when their owners' rows are re-pointed; text-chain's `extent.test.mjs` parity arm (N446) reads the catalogue's copies until then. Old suites (`test/content-extent*.test.mjs`, `fw19-extent-arms`, `cpdf18-pdf-images`, `rec85-arm-digest`) import them too (K619).
 
 **Tests and checks:**
