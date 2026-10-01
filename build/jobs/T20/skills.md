@@ -1,6 +1,6 @@
 # skills (T20)
 
-**Status** · session_01GnYeqvTWL2RPqooQrRRMCS · depth 2 · WAITING ON BOB (J1) · handled B2
+**Status** · session_01GnYeqvTWL2RPqooQrRRMCS · depth 2 · WORKING · handled B2
 
 ## J1 · QUESTION
 
