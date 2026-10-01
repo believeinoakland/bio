@@ -12,6 +12,9 @@ test("R2 each refusal by its check, in order, writing nothing: C-22.6, C-22.9, C
   const all = entry({ bundle: "INFO-2026-0001", authority_kind: "member", state: "MAYBE", governed: true,
                       condition: "no-such-condition", result_ref: null });
   assert.deepEqual(refused(w.obs.observe(all)), ["AI_LOG_NOT_A_BUNDLE", "C-22.6"]);
+  // the detail a member reads says "record" and names the one offered (N458); the identifier `bundle.md` stays
+  assert.match(w.obs.observe(all).detail, /^this entry names record 'INFO-2026-0001'; /);
+  assert.doesNotMatch(w.obs.observe(all).detail.replace(/bundle\.md/g, ""), /bundle/i);
   assert.deepEqual(refused(w.obs.observe({ ...all, bundle: null })), ["OBS_AUTHORITY_UNNAMED", "C-22.9"]);
   assert.deepEqual(refused(w.obs.observe(entry({ authority_kind: null }))), ["OBS_AUTHORITY_UNNAMED", "C-22.9"]);
   assert.deepEqual(refused(w.obs.observe({ ...all, bundle: null, authority_kind: "acquire" })), ["AI_LOG_STATE_UNKNOWN", "C-22.1"]);

@@ -33,12 +33,12 @@ export const OBSERVATION_LOG_SCHEMA = `
 -- THE STATE COLUMN IS DELIBERATELY NOT A SQL ENUM, and no CHECK constraint
 -- appears anywhere below. The refusal lives in code, in this module's
 -- checkObservation (vocabulary.mjs), where it can NAME the legal values and say why -- ai_run_log
--- above made the same choice for the same reason, and DEC-49 is what it is for:
+-- made the same choice for the same reason, and DEC-49 is what it is for:
 -- a SQLite constraint error refuses with a sentence nobody can translate.
 --
 -- THE FOLD. ai_run_log IS THIS TABLE. Its rows are rows here with
--- authority_kind = run, and #migrate copies them across and drops the old table,
--- because two writers for one fact is what section 4.4 forbids. op=airunlog
+-- authority_kind = run, and ai-runs' migration (its R38) copies them across and
+-- drops the old table, because two writers for one fact is what section 4.4 forbids. op=airunlog
 -- reads through the (authority_kind, authority, seq) index and answers in its
 -- existing envelope, so I3 does not change shape.
 --
@@ -102,8 +102,9 @@ CREATE INDEX IF NOT EXISTS observation_log_tally ON observation_log(level, state
 -- lead is AUTHORED: nobody has looked yet, and NEVER_LOOKED is never stored.
 --
 -- NO bundle_id, BY THE DESIGN'S FIELD LIST. So a per-bundle purge leaves it and
--- the whole-store purge clears it (D-113). Visibility is the AUTHOR's (a
--- provisional, stated in store.mjs leadRead) because no bundle scopes it.
+-- the whole-store purge clears it (D-113). Visibility is the AUTHOR's and the
+-- projects the author shares it to (BOB #14's ruling, R15; leadReach in index.mjs)
+-- because no bundle scopes it.
 CREATE TABLE IF NOT EXISTS leads (
   lead_id   TEXT PRIMARY KEY,   -- LEAD-YYYY-MMDD-hex, minted by the plane
   author    TEXT NOT NULL,      -- a member id, server-stamped, never a machine (C-54.2)

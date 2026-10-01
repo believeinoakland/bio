@@ -459,7 +459,7 @@ export class ObservationLog {
   /** R8 — REC-95, THE RESOLUTION ATTEMPT (§4.3's second act), one row per reference the recogniser tried; the
    *  unresolved one is the point. THE SUBJECT IS THE REFERENCE AND THE AUTHORITY IS THE CAPTURE. Registered on
    *  `entities.onResolveAttempt` (its R13), whose payload is `{captureSha, bundleId, ref, matches, considered,
-   *  resolvedBy}`; the legacy store calls it until entities is extracted. */
+   *  resolvedBy}`, through `attachMeaning`. */
   observeResolutionAttempt({ captureSha = null, bundleId = null, ref = null, matches = null, considered = null,
                              resolvedBy = null } = {}) {
     const { actorClass, actor } = actorOf(resolvedBy);
@@ -479,7 +479,7 @@ export class ObservationLog {
    *  documents and whether it was truncated. `system` IS THE RECORD'S OWN WORD FOR AN UNATTRIBUTED DERIVATION and maps
    *  to the plane with no actor; running it through `contentMintState` would file the scheduler as a member called
    *  "system". Registered on `connections`' derivation notice (its R3), whose payload is `{entityId, count, documents,
-   *  truncated, entityKnown, assertedBy}`; the legacy store calls it until connections is extracted. */
+   *  truncated, entityKnown, assertedBy}`, through `attachMeaning`. */
   observeConnectionDerivation({ entityId = null, count = null, documents = null, truncated = false,
                                 entityKnown = null, assertedBy = null } = {}) {
     const asserted = String(assertedBy || "system");
@@ -580,16 +580,17 @@ export class ObservationLog {
     return { extraction: q("extract"), index: q("derive") };
   }
 
-  /** R32 (K861, plane R10): this module's share of the instance's figures, exported for `plane` to register under this
-   *  module's name through record-core R63 (`registerCounts("observation-log", ObservationLog.COUNT_KEYS, (hid) =>
-   *  o.counts(hid))`); the module registers nothing itself while plane holds its copy. Both are purge's proof only:
+  /** R32 (K861, plane R10): this module's share of the instance's figures, exported for `plane`, which registers it
+   *  under this module's name through record-core R63 (`src/plane/stats.mjs`: `["observation-log",
+   *  ObservationLog.COUNT_KEYS, (ctx, hid) => observationLogOf(ctx).counts(hid)]`); the module registers nothing
+   *  itself. Both are purge's proof only:
    *  record-core keeps them off `op=stats`' answer (its R64), and the wire's log count, `observationsNonLead`, is
    *  plane's, not this module's (K861 (2)). */
   static COUNT_KEYS = Object.freeze(["observations", "leads"]);
   static #COUNTED = Object.freeze({ observations: "observation_log", leads: "leads" });
 
   /** R32, D-113 (purge PROVES what it took, and §5: *the purge proof's own count stays whole*): R63's `counts(hid)` for
-   *  this module's share, moved from the plane's held copy with its reading kept. `observations` is every row of the log,
+   *  this module's share, which plane registers under this module's name. `observations` is every row of the log,
    *  lead looks and run rows included; `leads` every lead. NEITHER TABLE HAS A COLUMN NAMING A BUNDLE (R23), so there is
    *  nothing for `hid` to subtract and every `hid`, null included, counts whole: `hid` is taken to fit R63's shape and
    *  never read. A figure whose table cannot be read is left out, and R63 answers it null, never zero. Synchronous;
@@ -629,8 +630,8 @@ export class ObservationLog {
   registerAuthority(kind, resolve) {
     if (!RESOLVED_AUTHORITY_KINDS.includes(kind))
       return { ok: false, reason: "AUTHORITY_NOT_RESOLVABLE", code: "AUTHORITY_NOT_RESOLVABLE", kind: kind ?? null,
-               detail: `a resolver is registered for one of ${RESOLVED_AUTHORITY_KINDS.join(", ")}; every other `
-                     + `authority kind's bundles are fixed by the observation log` };
+               detail: `a resolver is registered for one of ${RESOLVED_AUTHORITY_KINDS.join(", ")}; the records every `
+                     + `other authority kind names are fixed by the observation log` };
     const holder = AUTHORITY_HOLDERS[kind];
     const refused = listenerRefusal(this.resolvers.has(kind) ? { module: holder } : null, holder, resolve, { kind });
     if (refused) return refused;

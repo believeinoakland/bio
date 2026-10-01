@@ -1,8 +1,8 @@
 /* T20 layer 5 (K861, plane R10): R32, this module's share of the instance's figures, a source shaped as record-core
    R63's `counts(hid)` with its key list, which `plane` registers under this module's name. Proved at the interface: the
    source alone, then registered through the REAL record-core's R63 and read as `op=stats` and purge's proof read it,
-   each answer held against plane's held copy's own statement (`src/plane/held.mjs`: `n("observation_log")` and
-   `n("leads")`, a `count(*)` with no key, so no row is ever subtracted by `hid`). */
+   each answer held against the pinned count: every row of `observation_log` and every row of `leads`, a `count(*)` with
+   no key, so no row is ever subtracted by `hid`. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, storage, entry, V, MACHINE } from "./fixture.mjs";
@@ -12,9 +12,9 @@ import { recordCoreOps } from "../../../src/record-core/index.mjs";
 
 const KEYS = ["observations", "leads"];
 
-/* Plane's held copy, statement for statement: what R32 must answer exactly. */
-const heldCopy = (w) => ({ observations: w.count("observation_log"), leads: w.count("leads") });
-/* `hid` as plane's held copy takes it: a viewer never sent is the direct internal call, counted whole. */
+/* The pinned count, statement for statement: what R32 must answer exactly. */
+const pinned = (w) => ({ observations: w.count("observation_log"), leads: w.count("leads") });
+/* `hid` as plane hands it to a registered source: a viewer never sent is the direct internal call, counted whole. */
 const hidOf = (viewer) => (viewer === undefined ? null : hiddenBundles(viewer));
 const pick = (o) => Object.fromEntries(KEYS.map((k) => [k, o[k]]));
 
@@ -51,11 +51,11 @@ const VIEWERS = [
   ["junk", "a viewer membership refuses: every bundle hidden"],
 ];
 
-test("R32 the figure source: its key list, and counts(hid) every row of observation_log (lead looks and run rows included) and every lead, whole for every hid, null included, as plane's held copy counts", () => {
+test("R32 the figure source: its key list, and counts(hid) every row of observation_log (lead looks and run rows included) and every lead, whole for every hid, null included, as the pinned count counts them", () => {
   assert.deepEqual([...ObservationLog.COUNT_KEYS], KEYS);
   assert.ok(Object.isFrozen(ObservationLog.COUNT_KEYS));
   const w = build();
-  assert.deepEqual(heldCopy(w), WHOLE);
+  assert.deepEqual(pinned(w), WHOLE);
   assert.equal(w.row(`SELECT count(*) AS n FROM observation_log WHERE authority_kind = 'lead'`).n, 2, "lead looks are in the log");
   assert.equal(w.row(`SELECT count(*) AS n FROM observation_log WHERE authority_kind = 'run'`).n, 2, "and run rows");
   assert.deepEqual(w.obs.counts(), WHOLE, "no hid: whole");
@@ -64,13 +64,13 @@ test("R32 the figure source: its key list, and counts(hid) every row of observat
     const got = w.obs.counts(hidOf(viewer));
     assert.deepEqual(Object.keys(got), KEYS, `${why}: every key, in the list's order`);
     assert.deepEqual(got, WHOLE, why);
-    assert.deepEqual(got, heldCopy(w), `${why}: exactly plane's copy`);
+    assert.deepEqual(got, pinned(w), `${why}: exactly the pinned count`);
   }
   /* the figures follow the record: a lead and a look move them at once, for every viewer */
   w.obs.lead({ words: "one more", author: "outer" });
   w.obs.observe(entry({ state: "LOOKED_INDETERMINATE" }));
   for (const [viewer, why] of VIEWERS) assert.deepEqual(w.obs.counts(hidOf(viewer)), { observations: 7, leads: 3 }, why);
-  assert.deepEqual(w.obs.counts(), heldCopy(w));
+  assert.deepEqual(w.obs.counts(), pinned(w));
 });
 
 test("R32 a table that cannot be read is left out, so R63 answers it null, never zero; it writes nothing", () => {
@@ -99,7 +99,7 @@ test("R32 registered through record-core R63 under observation-log's name, purge
     { ok: true, module: "observation-log", keys: KEYS });
   for (const [viewer, why] of VIEWERS) {
     assert.deepEqual(pick(rc.counts(hidOf(viewer))), WHOLE, `R63 ${why}`);
-    assert.deepEqual(pick(rc.counts(hidOf(viewer))), heldCopy(w), `R63 ${why}: plane's copy`);
+    assert.deepEqual(pick(rc.counts(hidOf(viewer))), pinned(w), `R63 ${why}: the pinned count`);
   }
   /* op=stats and purge's proof, read through a stats source composed as plane composes it (record-core R65: the
      registered figures, through the caller's sight, a viewer never sent counted whole) */
@@ -112,7 +112,7 @@ test("R32 registered through record-core R63 under observation-log's name, purge
   }
   const proof = rc.proofCounts();
   assert.deepEqual(pick(proof), WHOLE, "purge's proof is whole: every row of the log, lead looks included, and every lead");
-  assert.deepEqual(pick(proof), heldCopy(w));
+  assert.deepEqual(pick(proof), pinned(w));
   /* purge proves what it took: a per-bundle purge leaves both (neither table names a bundle, R23), the whole-store
      purge takes every row */
   const purge = (q) => recordCoreOps(rc, new URL(`http://x/?op=purge${q}`), null).purge();
@@ -122,7 +122,7 @@ test("R32 registered through record-core R63 under observation-log's name, purge
   const all = purge("");
   assert.equal(all.ok, true);
   assert.deepEqual([pick(all.before), pick(all.after), all.removed.leads], [WHOLE, { observations: 0, leads: 0 }, 2]);
-  assert.deepEqual(pick(all.after), heldCopy(w), "after: plane's copy");
+  assert.deepEqual(pick(all.after), pinned(w), "after: the pinned count");
   /* a second registration under its name is refused, naming the holder (R63) */
   const again = rc.registerCounts("observation-log", [...ObservationLog.COUNT_KEYS], (hid) => w.obs.counts(hid));
   assert.deepEqual([again.ok, again.reason, again.heldBy], [false, "COUNTS_DECLARED", "observation-log"]);
