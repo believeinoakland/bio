@@ -67,8 +67,8 @@ export const NOW = "2026-09-28T01:00:00Z";
 export const DAY = 86400000;
 
 /** `plane`: build as the plane does (N179): intent first, reaching progressions through the host, and progressions
- *  after it with the plane's `env` (legacy-store builds `intentOf(ctx)` before `progressionsOf(ctx, {env})`), each
- *  capture's reading dated `plane.readingAt`. */
+ *  after it with the plane's `env` (the plane's constructor builds `intentOf(ctx)` before the scheduler reaches
+ *  `progressionsOf(ctx, {env})`), each capture's reading dated `plane.readingAt`. */
 export function world({ now = NOW, plane = null } = {}) {
   const st = storage();
   const host = { storage: st };
@@ -84,7 +84,7 @@ export function world({ now = NOW, plane = null } = {}) {
   const credentials = credentialsOf(host, { record, membership });
   credentials.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => clock.now });
-  promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
+  promotion.registerFact("producingGroup", "instance-setup", () => "test-group");
   const entities = entitiesOf(host, { record, membership, provenance: {}, now: () => clock.now });
   entities.migrate();
   const buildProgressions = () => {
