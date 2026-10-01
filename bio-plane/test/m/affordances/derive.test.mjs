@@ -2,12 +2,13 @@
    declared type and every state its machine names (and one it does not). For each act, every combination of the
    facts R8–R10 name for that act is crossed with the machine fact, on three backgrounds for the facts the act does
    not name (all permissive, all restrictive, all absent); the act must be returned exactly when the oracle says so,
-   and never with a throw. The state machines are the catalogue's own (`STATES`, `VERSION_MACHINE`), read through
-   its vocabulary lookup, which is what R8's "an edge to X" is defined over. */
+   and never with a throw. The state machines are record-grammar's `STATES`, read through its vocabulary lookup, and
+   basis-versions' `VERSION_MACHINE`, which is what R8's "an edge to X" is defined over. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { deriveActs, ACTS, MACHINE_REFUSALS, REOPENABLE_FROM, DISPOSITIONS } from "../../../src/affordances.mjs";
-import { STATES, VERSION_MACHINE, normalizeType, vocabFor } from "../../../checks/bio-checks.mjs";
+import { STATES, normalizeType, vocabFor } from "../../../src/record-grammar/index.mjs";
+import { VERSION_MACHINE } from "../../../src/basis-versions/index.mjs";
 
 /* ---- the oracle, from R8–R10's text ---- */
 const edges = (f) => vocabFor(STATES, f.declared_type ?? f.object_type)?.edges?.[f.current_state] ?? [];

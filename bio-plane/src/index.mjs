@@ -16,17 +16,7 @@ import { MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../checks/bio-check
 import { bindPublishedPlane, assembleCaseContainer } from "./publication/worker.mjs";
 import { publicReadDoorOp } from "./public-read/door.mjs";
 import { publicationDoorOp } from "./publication/door.mjs";
-/* REC-19 / DEC-8: the act catalogue and derivation behind op=affordances. The
-   catalogue reads the legal-edge table from the check catalogue (exported,
-   never copied); `needs` and `mode` are composed HERE from NEEDS and
-   SESSION_OPS, the tables that actually gate the call, so the publication and
-   the gate cannot drift. */
-/* N177 (T8, affordances R11): the act decoration is affordances' `decorate(act, gate)`; this file supplies the gate
-   from the tables that actually gate the call (`ACT_GATE`, beside `NEEDS`). */
-/* N231 (affordances R26, actions R42): the vocabularies are `vocabulariesFor(kinds)`, `action_kind` the kinds this
-   instance's `actions` answers at the call (its `actionkinds` route, asked by op=affordances and op=queue below), never a
-   copy held here. */
-import { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, PER_ITEM_MAX, deriveActs, vocabulariesFor } from "./affordances.mjs";
+import { affordancesOp } from "./affordances.mjs";
 /* REC-48 / DEC-39: op=acquire's `note` is COMPOSED from the enforced capture
    ceiling rather than spelled here. It is not the attest fence and is not
    `ATTEST_FENCE` — a different act, a different reader — but it states the same
@@ -150,63 +140,7 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
 async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer, sessIdentity, sessRights, sessCaps,
                         aiCred, storeName, stub }) {
 
-    /* op=affordances (REC-19, DEC-8). THE plane-sourced act pre-flight: for
-       this object as it stands, which acts exist — each with the capability it
-       needs, how it is reached, its set-application weight and its declared
-       ladder rung — plus the object vocabularies, so a surface renders what it
-       received and keeps no copy of any of it.
-
-       Composed HERE, not in the store, deliberately: the store reports FACTS
-       (type, state, citation edges — through the same predicate retire's CITED
-       refusal runs), and the act metadata comes from NEEDS and SESSION_OPS in
-       this file plus the catalogue's exported state table. Nothing is asked of
-       the caller and nothing here mutates.
-
-       `rung` is DECLARED, never guessed, and since FW-14 it is also TOTAL: every
-       op the dispatch table declares mutating either carries a rung or is named
-       with the GROUND on which it has none, asserted in both directions by
-       `test/rung-ladder.test.mjs`. So `rung: null` is now always accompanied by
-       a non-null `rung_absence`, and the pair "no rung, no ground" is a shape
-       the suite refuses to let exist. The line this replaces carried the figure
-       "7 of 57 mutating ops have a source" — the 57 was never re-measured and
-       the table declares 84, which is why the count now lives in the suite's
-       printed corpus rather than in this comment.
-       An `action` bundle returns an empty act list because nothing operates one
-       until REC-24, and an empty list is the honest answer. */
     if (op === "affordances") {
-      /* REC-20: op=queue's options[] and this answer come from the SAME function (decorateAct, affordances'
-         `decorate` over this file's gate). */
-      const target = url.searchParams.get("target");
-      const st = env.STORE.get(env.STORE.idFromName(storeName));
-      /* N231 (affordances R26): `action_kind` is the kinds this instance's `actions` accepts at this call (actions
-         R42), asked of the store; a silence is stated as one, never answered with the product's kinds (REC-52). */
-      const kOut = await doAnswer(st.fetch("http://do/actionkinds"));
-      if (kOut.refused) return storeRefusal(kOut);
-      if (!kOut.answered) return storeSilent("affordances", kOut.correlation);
-      const vocabularies = vocabulariesFor(kOut.result?.kinds);
-      if (!target) {
-        /* No target: the whole catalogue and the vocabularies, the shape a
-           surface loads once — searchfields' precedent exactly. */
-        return json({ ok: true, result: {
-          target: null,
-          catalog: ACTS.map((a) => ({ ...decorateAct(a), appliesTo: a.types })),
-          vocabularies,
-          capture_acts: CAPTURE_ACTS.map(decorateAct),
-          /* D-126: the acts that take a SET under the `per-item` weight (affordances.mjs PER_ITEM_ACTS),
-             decorated from the same tables as every act, with the bound the store enforces. */
-          set_acts: PER_ITEM_ACTS.map((a) => ({ ...decorateAct(a), set_key: a.set_key, item_keys: a.item_keys,
-                                               shared_keys: a.shared_keys, max_items: PER_ITEM_MAX })),
-          detail: "pass target=<bundle id> for the acts available on that object right now; "
-                + "rung is the weight ladder (vocabularies.rung_ladder, low to high, IRREVERSIBLE "
-                + "at the top per DEC-19 with vocabularies.rung_correction_path beside it) and is "
-                + "null only where the act carries a STATED absence — read rung_absence for the "
-                + "ground, and vocabularies.rung_absence_grounds for what that ground means; "
-                + "capture_acts are keyed by a capture sha rather than by a bundle, so they are "
-                + "published with their metadata and never derived against an object's state; "
-                + "set_acts take a selection as `items` under the per-item weight: each item is "
-                + "applied or RETAINED with its own act's reason, and none stops the others",
-        }, store: storeName, tokenClass: cls }, 200);
-      }
       /* REC-25: the D-15 viewer stamp, server-side from the authenticated
          identity exactly as the passthrough reads take it below. An object the
          viewer may not see answers NO_SUCH_BUNDLE, identical to an absent one. */
@@ -221,12 +155,6 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
       const affIdentity = viaSession ? sessIdentity
         : cls === "ai" ? aiCred.principal
         : `${MACHINE_CLASS_PREFIX}${cls}`;
-      /* REC-52: `(facts || { reason: "NO_FACTS" })` is site (b)'s shape with a
-         different word — a store silence answering "there are no facts about
-         that object", which is a claim about the object. What the acts on an
-         object are is the whole of what this op is asked, so answering it out
-         of a failure to ask would put a wrong set of affordances in front of a
-         member. The store's own NO_SUCH_BUNDLE, and its 404, are untouched. */
       /* D-311: THE TWO ACT STAMPS, composed by the SAME expressions the acts receive them by —
          `author` as the object-directed acts' author stamp (a bearer is `token:<cls>`), `by` as the
          roster acts' `by` stamp (a bearer is `class:<cls>`, the `ai` class included, whose
@@ -236,33 +164,8 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
          to the stamp sites' own text. */
       const affAuthor = viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`;
       const affBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
-      const fOut = await doAnswer(st.fetch(
-        `http://do/affordancefacts?target=${encodeURIComponent(target)}&viewer=${encodeURIComponent(affViewer)}`
-        + `&identity=${encodeURIComponent(affIdentity)}`
-        + `&author=${encodeURIComponent(affAuthor ?? "")}&by=${encodeURIComponent(affBy ?? "")}`));
-      if (fOut.refused) return storeRefusal(fOut);
-      if (!fOut.answered) return storeSilent("affordances", fOut.correlation);
-      const facts = fOut.result;
-      if (!facts) return storeSilent("affordances");
-      if (facts.ok !== true)
-        return json({ ok: false, ...facts, store: storeName, tokenClass: cls },
-                    facts.reason === "NO_SUCH_BUNDLE" ? 404 : 400);
-      return json({ ok: true, result: {
-        target: facts.target, object_type: facts.object_type,
-        current_state: facts.current_state,
-        acts: deriveActs(facts).map(decorateAct),
-        vocabularies,
-        /* REC-38. The SAME block the no-target catalogue answers, and it is
-           deliberately NOT filtered by this target: a capture act's subject is
-           a capture sha, and whether one is attestable turns on the bytes being
-           in the store — a fact `affordanceFacts` does not carry and this
-           handler must not guess at. So this is metadata a surface RENDERS
-           beside a capture it already holds, never a derivation about this
-           object; deriving one here would be the publication disagreeing with
-           op=attest's own NO_SUCH_CAPTURE. The reasoning is on CAPTURE_ACTS,
-           where both consumers of the distinction read it. */
-        capture_acts: CAPTURE_ACTS.map(decorateAct),
-      }, store: storeName, tokenClass: cls }, 200);
+      return affordancesOp(url, env.STORE.get(env.STORE.idFromName(storeName)), { json, doAnswer, storeSilent, storeRefusal,
+        gate: ACT_GATE, viewer: affViewer, identity: affIdentity, author: affAuthor, by: affBy, storeName, cls });
     }
 
     /* op=queue (REC-20, ruled by DEC-16). The member's ONE feed: OBLIGATIONs

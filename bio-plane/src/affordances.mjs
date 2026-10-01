@@ -69,24 +69,25 @@
  * reads, and an action now publishes both.
  */
 
-import { STATES,
+/* The record's grammar (record-grammar R1–R3, its R24's pure face): the state machines, read through its vocabulary
+   lookup, and the type normaliser. */
+import { STATES, normalizeType, vocabFor,
          /* REC-43 / DEC-39. The two letters the co-attestation fence states are
-            the RULE's own, imported from where the refusal that enforces it is
-            computed, so the sentence a member reads and the grade the gate will
+            the RULE's own, imported from where the grade the refusal enforces is
+            defined, so the sentence a member reads and the grade the gate will
             accept cannot drift. See ATTEST_FENCE below. */
-         EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE,
-         /* PL-17 / DEC-65. The third `asserted_by` state and its texts, imported
-            from the one module that mints the value — a surface holding its own
-            copy of what "nobody claimed this" is called is the same drift every
-            import in this list exists to close. */
-         SUFFICIENCY_CLAIM_STATES,
-         normalizeType, vocabFor } from "../checks/bio-checks.mjs";
-/* N65 (3), R26: the action loop's vocabularies are `actions'`, the module whose acts refuse against them (its R40):
-   the kinds it offers with no profile active (`PRODUCT_KINDS`, R10), the risk tiers, the governing-law levels
-   (`jurisdictions'` array, which actions re-exports and `op=actionlaws` refuses against), a leg's kinds, the
-   correspondence directions, stages and outcomes (D-147, C-94), and how an action ended. No kind is held here. */
+         EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "./record-grammar/index.mjs";
+/* PL-17 / DEC-65. The third `asserted_by` state and its texts, imported from `basis-versions`, the module that mints the
+   value and classifies it (`sufficiencyClaimState`) — a surface holding its own copy of what "nobody claimed this" is
+   called is the same drift every import in this list exists to close. */
+import { SUFFICIENCY_CLAIM_STATES } from "./basis-versions/index.mjs";
+/* N65 (3), R26 (K768): the action loop's vocabularies are `action-grammar`'s (its R1, R2), the objects `actions`' acts
+   refuse against: the kinds offered with no profile active (`PRODUCT_KINDS`, actions R10), the risk tiers, the
+   governing-law levels (`jurisdictions'` array, which action-grammar re-exports and `op=actionlaws` refuses against), a
+   leg's kinds, the correspondence directions, stages and outcomes (D-147, C-94), and how an action ended. No kind is
+   held here. */
 import { PRODUCT_KINDS, RISK_TIERS, LAW_LEVELS, ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS,
-         CORRESPONDENCE_STAGES, CORRESPONDENCE_OUTCOMES, RESOLUTIONS } from "./actions/index.mjs";
+         CORRESPONDENCE_STAGES, CORRESPONDENCE_OUTCOMES, RESOLUTIONS } from "./action-grammar/index.mjs";
 /* REC-14 / DEC-13: the three subject positions are `ratification'`s, whose case-document check refuses against them
    (C-2.8, C-41). */
 import { SUBJECT_POSITIONS } from "./ratification/index.mjs";
@@ -118,6 +119,9 @@ import { CONTENT_MINT_STATES } from "./content/index.mjs";
    extracted from the legacy store with the three joined-project predicates, whose only caller they were; and (N13) the
    op map that answers `op=affordancefacts`. */
 export { affordancesOf, affordancesOps } from "./affordances/facts.mjs";
+/* R17 (T19): `op=affordances`, the composition and the door's arm, with the gate and the stamps handed in by the control
+   plane. */
+export { affordancesAnswer, affordancesOp } from "./affordances/door.mjs";
 
 /* The disposition set: the target states op=dispose may write. Every other
  * inquiry state is entered by its own act with its own entry requirements
@@ -194,9 +198,10 @@ import { REOPENABLE_FROM } from "./promotion/index.mjs";
  * bindings were still in the temporal dead zone and crash at load. The
  * enforcement site keeps the refusal; the vocabulary keeps one home. That is
  * exactly the arrangement REC-11 landed for DISPOSITIONS after the same
- * question, and `bio-checks.mjs` is the same shape read from the other side
- * (ACTION_KINDS, SUBJECT_POSITIONS, BASIS_ROLES live where their check runs and
- * are imported into the publication above).
+ * question, and the enforcing modules are the same shape read from the other
+ * side (the action vocabularies are `action-grammar`'s, SUBJECT_POSITIONS
+ * `ratification`'s, BASIS_ROLES `inquiry`'s: each lives where its check runs and
+ * is imported into the publication above).
  *
  * WHAT THEY GATE, and why publishing them is not a convenience. Until this
  * item, a surface offering a subject kind, a relation predicate or a stage's
@@ -343,9 +348,10 @@ export const GROUND_PROMPT =
  *
  * AND THE TWO GRADE LETTERS ARE COMPOSED FROM THE RULE, WHICH IS THE WHOLE
  * POINT OF THE ITEM. `Grade B` and `Grade A` are not typed here: the ceiling is
- * `EARNED_CAPTURE_CEILING`, imported from `checks/bio-checks.mjs` where
- * `checkEarnedLeg` refuses a leg claiming more than it, and the unreachable
- * letter is read out of `BASIS_GRADES` as the rank immediately above it. So the
+ * `EARNED_CAPTURE_CEILING`, imported from `record-grammar`, the one definition
+ * of the grades that the earned-leg check refuses a leg claiming more than it
+ * against, and the unreachable letter is `UNREACHABLE_CAPTURE_GRADE`, the rank
+ * of `BASIS_GRADES` immediately above it, defined beside it. So the
  * published sentence is a FUNCTION of the enforced rule rather than a copy that
  * happens to agree with it today — REC-35's finding restated on a sentence
  * instead of an array, and an identical copy would agree at zero cost, which is
@@ -511,6 +517,11 @@ export const JUSTIFICATION_REFUSALS = [
   /* K727 (T18): action-plans' one reason rule (its R4), the member's account in its word for it, at the plan's acts that
      revise what stands. */
   "PLAN_NO_REASON",
+  /* K823, K834, K835 (T19): three modules now answer an absent reason in their own word for it, where they answered
+     NO_REASON — intent's acts that close, depart from or set a proposal down (intent R30), a determination's
+     supersession (conformance's C-113.22) and escalation's reasoned acts (escalation R24). The family's requirement,
+     unchanged; `NO_REASON` stays for the acts that still answer it. */
+  "INTENT_NO_REASON", "CONFORMANCE_NO_REASON", "ESCALATION_NO_REASON",
 ];
 
 /* THE GROUNDS ON WHICH A MUTATING OP HAS NO RUNG. Written ONCE here and pointed
@@ -786,8 +797,8 @@ export const RUNGS = {
   filemembershipjudge: "reasoned",  // FILE_MEMBERSHIP_NO_REASON (connections R57)
   connectionassert:   "reasoned",   // CONNECTION_ASSERT_NO_BASIS (connections R31: the member's stated basis)
   /* INTENT #1 J4.3 (T7), on R27's rule: each refuses without the member's authored account. */
-  goalclose:          "reasoned",   // NO_REASON (C-110.13: a goal is closed with the reason it closed)
-  aspirationdepart:   "reasoned",   // NO_REASON (a departure from the group's aspiration records why)
+  goalclose:          "reasoned",   // INTENT_NO_REASON (C-110.13: a goal is closed with the reason it closed; intent R30)
+  aspirationdepart:   "reasoned",   // INTENT_NO_REASON (a departure from the group's aspiration records why; intent R30)
   aspirationretire:   "reasoned",   // NO_LESSON (C-110.17: what pursuing it taught)
   /* R27, ruled by BOB (K211): acts corrected forward that refuse without the member's account. */
   biasdebtresolve:    "reasoned",   // BIAS_DEBT_NO_REASON (REC-207: an authored settlement, append-only)
@@ -795,18 +806,19 @@ export const RUNGS = {
   narrow:             "reasoned",   // NARROW_NO_DESCRIPTION (C-50.11: what changed and why)
   /* K219 (T7). `triage` asks its reason where the act sets a proposal down (defer, dismiss), which is R19's "where
      the act revises what stands" (K212), `inquiryground`'s shape; adopting or opening a question asks none. */
-  triage:             "reasoned",   // NO_REASON (intent R16: a proposal is deferred or dismissed with a reason)
+  triage:             "reasoned",   // INTENT_NO_REASON (intent R16, R30: a proposal is deferred or dismissed with a reason)
   reevaluationrecord: "reasoned",   // REEVALUATION_NOTE_MALFORMED (reevaluation R16: the note is the account)
   /* Layer 9's acts that refuse without the member's authored reason, on R27's rule (K208 (2), K264; with N216). */
   consequencerevise:  "reasoned",   // NO_REASON (consequences R6: a part is revised with its reason)
   addressedrecord:    "reasoned",   // NO_REASON (consequences R9: addressed or not, with a reason)
-  escalationevaluate: "reasoned",   // NO_REASON (escalation R10: a response is read with a reason)
-  escalationadvance:  "reasoned",   // NO_REASON (escalation R13: an edge is taken with a reason)
-  escalationdecline:  "reasoned",   // NO_REASON (escalation R13: a proposed stage is declined with a reason)
-  escalationsuspend:  "reasoned",   // NO_REASON (escalation R15; escalationresume takes it back, and the higher rung is stated)
-  /* N310 (with conformance's N233): superseding a determination asks its reason and refuses an absent one NO_REASON
-     (conformance R7); a first determination replaces nothing and asks none, `inquiryground`'s shape (K212). */
-  determine:          "reasoned",   // NO_REASON (conformance R7: a supersession says why)
+  escalationevaluate: "reasoned",   // ESCALATION_NO_REASON (escalation R10, R24: a response is read with a reason)
+  escalationadvance:  "reasoned",   // ESCALATION_NO_REASON (escalation R13, R24: an edge is taken with a reason)
+  escalationdecline:  "reasoned",   // ESCALATION_NO_REASON (escalation R13, R24: a proposed stage is declined with a reason)
+  escalationsuspend:  "reasoned",   // ESCALATION_NO_REASON (escalation R15, R24; escalationresume takes it back, and the higher rung is stated)
+  /* N310 (with conformance's N233): superseding a determination asks its reason and refuses an absent one
+     CONFORMANCE_NO_REASON (conformance R7, C-113.22; K834); a first determination replaces nothing and asks none,
+     `inquiryground`'s shape (K212). */
+  determine:          "reasoned",   // CONFORMANCE_NO_REASON (conformance R7: a supersession says why)
   /* N345 (K447), on R27's rule: each member act on a contradiction asks the member's account — a reason, an
      explanation, a question or a conclusion — and is corrected forward by a further act, never by one moving back. */
   contradictiondismiss: "reasoned", // DISMISSAL_REASON_UNKNOWN (contradiction R31: a lead is set aside for a stated reason)
@@ -1152,8 +1164,8 @@ export const RUNG_ABSENT = {
      each is a member's act on the record, or a proposal stored apart that settles nothing, corrected forward, that asks
      no authored reason, or asks one only as a proposal's why (`actionlawspropose` and `contradictionpropose`'s
      precedent), and that no published act takes back. `determine` left this block for RUNGS (N310): since N233 its
-     supersession refuses an absent reason NO_REASON. actions R28's proposal beside them, on `actionlawspropose`'s
-     ground. */
+     supersession refuses an absent reason (CONFORMANCE_NO_REASON since K834). actions R28's proposal beside them, on
+     `actionlawspropose`'s ground. */
   standarddeclare:      { ground: "undetermined", is: "a member records a standard the record holds — citation, kind, issuer, its own words as captured and its period; never edited, corrected by a later standard that supersedes it (standards R1, R6)" },
   standardpropose:      { ground: "undetermined", is: "a member or a machine PROPOSES a standard with its why, stored apart and labelled; never a standard until a member adopts it (standards R9)" },
   standardadopt:        { ground: "undetermined", is: "a member adopts a proposal as a standard, the standard naming the proposal and the proposal its adoption, at most once (standards R10)" },
