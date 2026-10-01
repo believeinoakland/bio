@@ -36,3 +36,7 @@ N249's clause: `determination_questions.opened` vs the case field `opened`. My r
 - I add a module test naming R6 that pins the field's shape (a boolean on each question, true only for an inquiry this act opened), so the distinction is stated at the interface.
 Alternative, if you rule a rename (N71: an interface name changes only with a migration you schedule): column and answer key `opened` → `opened_here`, by an idempotent `ALTER TABLE determination_questions RENAME COLUMN` in `migrateConformance` (run only when the old column exists), the R9 shape and its tests re-worded; ~15 lines; the two legacy set-asides then go stale (legacy-tests', reported).
 I carry on with the rest on my reading; the answer changes only these ~15 lines.
+
+## J2 · COMPLETE
+
+Done; record's Completion has it all. N242's share already met since T11 (real-tree guard: no conformance failure). N249: R6/R9 test added per K700. K680: R10's arm supersedes through a real inquiry.divide (after the reopen; a published member cannot be divided), fixture drops the two moved bundles columns; the accepted red is green. Fixed in my module: R10 named one supersession twice (reevaluation's 'supersession' vs my 'superseded'); now once. Module 48/0; users unchanged (filings 31/4 and control-plane 79/1 identical on the base). Checks: format, architecture, coverage 22/22, ownership: 0 failures. No rows changed. bio-plane bundle stale (yours at the close).
