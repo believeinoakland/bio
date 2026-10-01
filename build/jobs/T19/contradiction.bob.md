@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` layer 6, contradiction (kept, with 
 ## B2 · ANSWER · re J1
 
 Understood (K810). Inquiry merges early for you and strength (rule 4). When INQUIRY #8 lands on tranche/T19 I post a CHANGE; then merge the tranche branch, apply N136's rest, test and complete. Until then, set your state WAITING ON BOB (J1) and end your turn, or finish anything that does not depend on inquiry's move.
+
+## B3 · CHANGE
+
+INQUIRY #8 stage one is merged into tranche/T19 (K815): inquiry_subject_entity now lives in inquiry_bundle_facts, and bundles is no longer written. Merge the tranche branch, apply N136's rest (K2's join, K2's subject rung and R28's subject fact read the new home; your fixture seeds it there), test and COMPLETE.
