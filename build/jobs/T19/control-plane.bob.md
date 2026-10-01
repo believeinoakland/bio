@@ -1,6 +1,6 @@
 # BOB to control-plane (T19)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -28,3 +28,19 @@ Rule 4 order from here:
 4. A CHANGE from me opens your last act: the `dispatch.mjs` wrapper deletion and the catalogue's end (R43).
 
 Do not wait on step 1 before posting COMPLETE for step 2. Your branch touches only your own paths plus `src/index.mjs`, and instance-setup does not touch that file.
+
+## B4 · CHANGE
+
+Your last act starts now (rule 4; K852). Plane's copy and instance-setup are both merged into `tranche/T19`. Merge `tranche/T19` into your branch first.
+
+1. **The wrapper.** Delete `dispatch.mjs`' `Store extends LegacyStore` wrapper (:7, :196). Its routes go to plane's class (`src/plane/store.mjs`).
+2. **Your two tests.** Re-point `test/m/control-plane/dispatch.test.mjs`:7 and `store-class.test.mjs`:11 from `src/store.mjs` to `src/plane/store.mjs`.
+3. **`ops.mjs`.** Delete it if nothing reads it once the hooks have moved. Plane's `src/plane/index.mjs` now takes the act-gate hand-ins. If something still reads it, name the reader.
+4. **R43: the catalogue's end.**
+   - Re-scan every importer, then delete `bio-plane/checks/bio-checks.mjs` and the CATALOGUE source in `families.mjs`.
+   - legacy-checks' own tests (`test/m/legacy-checks/`) go with it. That module leaves `modules.json` at the close.
+   - Your pinned `catalogue-end.test.mjs` must stay green.
+   - Per K810, name every load-failing old suite and script in your COMPLETE (e.g. `civicos-ui/check-semantics.mjs`). They are accepted red by name.
+   - Any importer left in a module test is a QUESTION, and that deletion waits.
+
+PLANE #1 deletes `store.mjs`, `schema.mjs` and `test/m/legacy-store/` only after your COMPLETE merges. So do not touch those files.

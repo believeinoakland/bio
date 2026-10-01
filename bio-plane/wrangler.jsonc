@@ -8,7 +8,7 @@
   // `wrangler dev` does, and a dev session against the wrong account is a
   // confusing way to lose an afternoon.
   "account_id": "20b533579290b9b93168345edd3b7f72",
-  "main": "src/index.mjs",
+  "main": "src/plane/index.mjs",
   "compatibility_date": "2026-07-01",
   "compatibility_flags": ["nodejs_compat"],
 

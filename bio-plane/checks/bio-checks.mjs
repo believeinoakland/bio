@@ -112,94 +112,11 @@ function f(check, severity, message, repairs, code) {
  * @typedef {{folderName: string, files: Map<string, Uint8Array|string>, sha256: (bytes: Uint8Array|string) => Promise<string>, nowMs?: number, maxPackageAgeDays?: number}} BundleInput
  */
 
-function asText(v) {
-  if (typeof v === 'string') return v;
-  return new TextDecoder().decode(v);
-}
-
 /* The structural arms (`checkIdentity`, `checkFrontmatterContract`, `checkHeadings`, `checkStateLegality`,
    `checkWriteCompleteness`, `checkFormatHygiene`, `checkQueueAndBase`, with `hasFile_`) stood here until T19. They are
    record-grammar's (`src/record-grammar/bundle.mjs`, R40), whose `checkBundle` runs them; this catalogue's
    `checkBundle` below is a wrapper over it (rule 2). `REL_VOCAB` and the history helpers
    moved with them (legacy-checks, T19). `CONTENT_HASH_RE` stays, for C-2.7 below and `correspondenceFindings` (C-2.10). */
-const CONTENT_HASH_RE = /^sha256:[0-9a-f]{64}$/;
-
-// ---------------------------------------------------------------------------
-// C-2.7, information@1's extension: a HELD copy (rule 1; T19 J2). Capture's grammar (`src/capture/grammar.mjs`, its
-// R37) is the C-2.7 code a caller registers; this copy fills record-grammar's C-2.7 slot through `LEGACY_GRAMMARS`
-// only for a caller whose grammars claim none, until the module tests that read the catalogue's own arm (promotion,
-// capture, instance-setup) re-point to capture's grammar. The last of those jobs deletes it. `MONITOR_FREQ` is no longer
-// exported: monitoring reads capture's.
-// ---------------------------------------------------------------------------
-
-const INFO_ENUMS = {
-  criticality: ['crucial', 'supporting'],
-  source_status: ['unchanged', 'modified', 'removed']
-};
-/* REC-26's cadence vocabulary; monitoring's interval table reads capture's export of it since T18. */
-const MONITOR_FREQ = ['hourly', 'daily', 'weekly', 'monthly', 'per_meeting', 'none'];
-
-async function checkInformationExtension(ctx, findings) {
-  if (ctx.fm?.object_type !== 'information') return;
-  const fm = ctx.fm;
-  for (const [field, legal] of Object.entries(INFO_ENUMS)) {
-    if (!legal.includes(fm[field])) {
-      findings.push(f('C-2.7', 'error', `${field} '${fm[field]}' is not one of: ${legal.join(', ')}`));
-    }
-  }
-  const src = fm.source;
-  if (!src || typeof src !== 'object') findings.push(f('C-2.7', 'error', 'source block is missing'));
-  else for (const k of ['locator', 'authority', 'retrieved']) {
-    if (!src[k]) findings.push(f('C-2.7', 'error', `source.${k} is missing`));
-  }
-  const mon = fm.monitoring;
-  if (!mon || typeof mon !== 'object') findings.push(f('C-2.7', 'error', 'monitoring block is missing'));
-  else {
-    if (typeof mon.enabled !== 'boolean') findings.push(f('C-2.7', 'error', `monitoring.enabled '${mon.enabled}' is not boolean`));
-    if (!MONITOR_FREQ.includes(mon.frequency)) findings.push(f('C-2.7', 'error', `monitoring.frequency '${mon.frequency}' is not one of: ${MONITOR_FREQ.join(', ')}`));
-  }
-  const ch = fm.content_hash;
-  const chOk = typeof ch === 'string' && CONTENT_HASH_RE.test(ch);
-  if (ch !== undefined && ch !== null && ch !== '' && !chOk) {
-    findings.push(f('C-2.7', 'error', `content_hash '${String(ch).slice(0, 24)}…' is not sha256:<64 hex>`));
-  }
-  // Recompute the hash from the canonical dataset when both exist.
-  const dsRaw = ctx.files.get('data/dataset.json');
-  if (dsRaw && chOk) {
-    try {
-      const canon = canonicalJson(JSON.parse(asText(dsRaw)));
-      const actual = 'sha256:' + await ctx.sha256(canon);
-      if (actual !== ch) {
-        findings.push(f('C-2.7', 'error', `content_hash does not match the canonicalized data/dataset.json (declared ${ch.slice(7, 19)}…, actual ${actual.slice(7, 19)}…)`,
-          ['refresh content_hash and append a change record', 'restore data/dataset.json from history']));
-      }
-    } catch { /* C-14.3 already reports unparsable JSON */ }
-  }
-  // verified-state entry requirements
-  if (fm.current_state === 'verified') {
-    if (!chOk) findings.push(f('C-2.7', 'error', 'verified state requires a well-formed content_hash'));
-    if (!dsRaw) findings.push(f('C-2.7', 'error', 'verified state requires data/dataset.json'));
-    const hasSnap = [...ctx.files.keys()].some(p => p.startsWith('snapshots/'))
-      || (ctx.elided && [...ctx.elided].some(p => p.startsWith('snapshots/')));
-    if (!hasSnap) findings.push(f('C-2.7', 'error', 'verified state requires at least one file in snapshots/'));
-  }
-  // change records, when present
-  const chRaw = ctx.files.get('data/changes.json');
-  if (chRaw) {
-    try {
-      const recs = JSON.parse(asText(chRaw));
-      const arr = recs && Array.isArray(recs.records) ? recs.records : null;
-      if (!arr) findings.push(f('C-2.7', 'error', 'data/changes.json must be {"records": [...]}'));
-      else for (let i = 0; i < arr.length; i++) {
-        const r = arr[i];
-        if (!r || !ISO_TS_RE.test(r.detected || '') || !['modified', 'removed', 'corrected'].includes(r.kind) || !r.summary) {
-          findings.push(f('C-2.7', 'error', `changes.json records[${i}] lacks detected/kind/summary in the required shape`));
-        }
-      }
-    } catch { /* C-14.3 reports */ }
-  }
-}
-
 // ---------------------------------------------------------------------------
 // C-6.1's supersession arm and C-15's recheck arm, inquiry's, filling record-grammar's `checkBundle` slots through
 // `LEGACY_GRAMMARS` below until inquiry-grammar takes them (layer 6). The references arm's core, C-5 and C-12 are
@@ -1551,7 +1468,6 @@ export const CHECK_RETIREMENTS = {
 export { EXTENSION_ARMS } from '../src/record-grammar/index.mjs';
 
 export const LEGACY_GRAMMARS = Object.freeze([
-  { module: 'legacy-checks', ids: ['C-2.7'], arm: checkInformationExtension },
 ].map((g) => Object.freeze({ ...g, ids: Object.freeze(g.ids) })));
 
 /**
