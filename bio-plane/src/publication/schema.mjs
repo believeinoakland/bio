@@ -522,8 +522,8 @@ CREATE INDEX IF NOT EXISTS case_exclusions_target ON case_exclusions(target_id);
 --
 -- DERIVED FROM NOTHING, so it is not rebuilt by a projection pass; it is a
 -- record of events. It carries a bundle_id, so it is cleared by BOTH arms of
--- op=purge -- the D-113 silent-leftover, asserted against this file by
--- hygiene.test.mjs.
+-- op=purge -- the D-113 silent-leftover; R31's test
+-- (test/m/publication/invariants.test.mjs) purges a bundle and finds its flags gone.
 CREATE TABLE IF NOT EXISTS case_revision_flags (
   case_id       TEXT NOT NULL,
   edition       INTEGER NOT NULL,  -- the CASE edition whose roster froze the pin
@@ -550,7 +550,7 @@ CREATE INDEX IF NOT EXISTS case_revision_flags_bundle ON case_revision_flags(bun
 -- while any observation it reaches is unchosen). A later edition INHERITS the latest earlier
 -- edition's row until the author acts again (section 4.3). chosen_by is the server-stamped author.
 -- There is deliberately NO column that could hold an off-the-record source's identity: that
--- anonymity is a structural absence (section 4), and hygiene would see a column added here.
+-- anonymity is a structural absence (section 4).
 -- bundle_id is the OBSERVATION, so the rows ride the purge TABLES list in both arms (D-113): an
 -- attribution outliving its observation would attach to whatever bundle was next allocated its id.
 CREATE TABLE IF NOT EXISTS observation_attributions (

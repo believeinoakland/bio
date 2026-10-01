@@ -1,5 +1,5 @@
 /* publication — converted from `test/ratify-envelope.test.mjs` (REC-53), publication's share: "R15 a
-   `recordcasemanifest` silence answering its op, never `MANIFEST_NOT_RECORDED`". The old suite is not deleted (K619).
+   `recordcasemanifest` silence answering its op, never `MANIFEST_NOT_RECORDED`". The old suite, kept by K619, was deleted in T20.
    R15 as now worded keeps only the store half here: `recordCaseManifest` records a case edition's manifest once
    (`MALFORMED`, `NO_SUCH_CASE_EDITION`, `MANIFEST_EXISTS`) and is reached through its op. The silence itself (a store
    that never answered read as `STORE_DID_NOT_ANSWER`, never `MANIFEST_NOT_RECORDED`) and "no put" (the published

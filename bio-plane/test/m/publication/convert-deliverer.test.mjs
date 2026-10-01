@@ -2,7 +2,7 @@
    standing on an unsigned case document (block 1b of the old suite, with vera, a member of no project, as its
    stranger); R28 a legacy case document with no deliverer reads undetermined, stated, beside its named signer (block
    6); and R14/R27 where they are this module's: the case document's deliverer is read from the stored column alone,
-   never from the signer (block 7's table, at the case document). The old suite is not deleted (K619); its op=ratify,
+   never from the signer (block 7's table, at the case document). The old suite, kept by K619, was deleted in T20; its op=ratify,
    container and public-read arms are ratification's and public-read's shares. Driven at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";

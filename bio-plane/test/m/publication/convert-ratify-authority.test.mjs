@@ -1,7 +1,7 @@
 /* Converted from `bio-plane/test/ratify-authority.test.mjs` (REC-140 / D-431, BIO_Publication_v0_1.md §3 rule 2), publication's
    share only: R38 "rests on" is the published graph's serve edges (a `relates_to` reference counts, a prepared case
    contributes nothing), and R7/R38 answer byte-identically whether a hidden project has prepared a case (§8c; C-58.3 is
-   ratification's refusal, built on these reads). The old suite is not deleted (K619); its authority, delivery, sight and
+   ratification's refusal, built on these reads). The old suite, kept by K619, was deleted in T20; its authority, delivery, sight and
    catalogue arms are other modules' shares, and its §8 structural arm (counting `publishedGraphEdges(` in the source) is a
    source-text arm and is not converted. Driven at publication's interface. */
 import { test } from "node:test";
