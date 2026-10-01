@@ -13,8 +13,8 @@ export const CAPTURE_REQUESTS_SCHEMA = `
 -- provenance, and nothing that writes it can fetch anything. The daemon drains
 -- it, and DEC-47's conduct rules are enforced at that drain and nowhere else.
 --
--- WHY A TABLE RATHER THAN A CONTROL-PLANE ENQUEUE. index.mjs deliberately omits
--- taskenqueue from the OPS table, with the reasoning written into the table
+-- WHY A TABLE RATHER THAN A CONTROL-PLANE ENQUEUE. The op declarations
+-- (op-declarations) deliberately omit taskenqueue from the OPS table, with the reasoning written into the table
 -- itself: no control-plane route may put an event in the queue on its own
 -- account. A scoped enqueue op would have crossed that. The table keeps the door
 -- the OPS comment closed still closed, keeps the daemon the sole fetcher, and

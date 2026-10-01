@@ -49,9 +49,10 @@
  * DOCUMENTS (BOB-3, RULED 2026-08-07, DEC-47's access-parity amendment —
  * *"members of this workflow should/must have rightful access to the same public
  * documents any manual user has access to"*). There is no robots row in this
- * family and the drain fetches no `robots.txt`. The suite drives a document
- * under a `Disallow` path and asserts it CAPTURES, because a rule that is absent
- * BY DECISION needs an arm proving the absence is real.
+ * family and the drain fetches no `robots.txt`. The module's R14 test
+ * (`test/m/capture-requests/drain.test.mjs`) drives a document under a
+ * `Disallow` path and asserts it CAPTURES, because a rule that is absent BY
+ * DECISION needs an arm proving the absence is real.
  * ========================================================================= */
 
 /** The UA `purpose` component this door may name. A CLOSED set: an unknown
@@ -71,8 +72,8 @@ export const CAPTURE_PURPOSES = Object.freeze(['investigate', 'acquire']);
 export const CAPTURE_UA_MODES = Object.freeze(['civicos', 'member-browser']);
 
 /** Is this user-agent LEGIBLE — does it name a contact a third party can reach?
- *  ONE predicate, used by the drain's conduct check and by the suite, so the
- *  rule and its test cannot disagree. It matches the `(+<url>)` component
+ *  ONE predicate, used by the drain's conduct check and by its R14 tests, so
+ *  the rule and its test cannot disagree. It matches the `(+<url>)` component
  *  D-94's ladder measured, and it is deliberately a SHAPE test rather than a
  *  reachability test: whether the URL resolves is SOURCE-ACCESS.md's own open
  *  item, and a conduct check that fetches would be a conduct check that can fail
@@ -259,7 +260,7 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
      Every other failure of a fire (not captured, not refused by the source, not a render op=acquire could
      not do) holds the row `requested` under this code, appends a LOOKED_INDETERMINATE look that is NOT
      governed, and answers the row in `held`. The code was written to the row and catalogued nowhere, so
-     `#renderHoldReason` answered it with no check and no sentence (it reads this family, so the row reaches the held row at once). It is the drain's condition, so it is
+     `renderHoldReason` answered it with no check and no sentence (it reads this family, so the row reaches the held row at once). It is the drain's condition, so it is
      this family's (R19: every code the module writes to a row is in C-28 or C-83). The `where` names a
      region, not the drain whole: the drain's other outcomes are other families' codes read from rows, and a
      whole-function `where` would conscript them. capture-requests marks it in its `drain` (T6; re-pointed T8,
@@ -275,8 +276,8 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
   /* K109 (3), capture-requests R42 (T6, legacy-checks) — THE RETRY'S ONE REFUSAL. `captureRequestRetry`
      (op=capturerequestretry) returns a request to the queue only when it was refused for the SOURCE's reason
      (R40) and its target is one the caller can see; every other request is refused by this code and nothing
-     is written. The code is minted nowhere yet: capture-requests builds R42 in T6 (T6-8), in its own module,
-     and the `where` names that site, as a region on this family's REC-71 rule (a region its job marks). The sentence claims
+     is written. `captureRequestRetry` mints it, and the `where` names that site, a region on this family's REC-71
+     rule. The sentence claims
      nothing about which state the request is in, because an invisible target answers alike. */
   CAPTURE_REQUEST_NOT_RETRYABLE: {
     check: 'C-28.18',
