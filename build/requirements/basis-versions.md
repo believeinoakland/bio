@@ -105,7 +105,7 @@ Terms. A **version** is a `basis_versions[]` row `{name, description, claim?, re
 
 - **Factory.** `basisVersionsOf(ctx)` (distinct from the pure `basisVersionsOf(fm)`, which may keep its name as `versionsIn(fm)`) answers the one instance per Durable Object storage, reaching `inquiry`, `content` and `promotion` through theirs (K61).
 - **Registrations it offers.** `onCandidates` for `run-productions`' extract proposals (R25); `run-productions` registers it (its R14).
-- **One implementation.** `test/versionstate.test.mjs` pins one `#moveVersionState`; keep the six acts on one implementation.
+- **One implementation.** Keep the six acts on one `#moveVersionState` (the old `test/versionstate.test.mjs` that pinned it was deleted in T20).
 - Tests: every refusal gets a negative control; R15 and R18 get arms proving the question's bytes and `bundle_sha` do not move.
 
 ## Open for Bob
