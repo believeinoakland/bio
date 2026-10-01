@@ -772,7 +772,7 @@ export class PublicRead {
                           strength: r.strength ? JSON.parse(r.strength) : null,
                           required: r.required ? JSON.parse(r.required) : null,
                           parts: r.parts ? JSON.parse(r.parts) : [] }],
-             detail: "this is a RATIFIED BUNDLE that is not a member of any published case: it was never "
+             detail: "this is a RATIFIED RECORD that is not a member of any published case: it was never "
                    + "published as a finding, so it carries no case identity, no scope statement, no "
                    + "completeness assertion and no bias acknowledgement — those are claims a CASE makes, "
                    + "and this is not one. Its bytes are verifiable by hash exactly as any other ratified "

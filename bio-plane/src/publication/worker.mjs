@@ -523,9 +523,9 @@ export async function publishedRoutes({ op, url, env, stub }) {
   const id = url.searchParams.get("id");
   if (!id && !/^[0-9a-f]{64}$/.test(shaParam))
     return P.json({ ok: false, ...P.requiredArgument("publishedcase", "id or sha256",
-      "id=<bundle id> (optional &edition=N) or sha256=<64 lowercase hex>",
-      "publishedcase requires id=<bundle id> (with an optional "
-                + "&edition=N, latest by default) or sha256=<the bundle sha of an edition>") }, 400);
+      "id=<record id> (optional &edition=N) or sha256=<64 lowercase hex>",
+      "publishedcase requires id=<record id> (with an optional "
+                + "&edition=N, latest by default) or sha256=<the record sha of an edition>") }, 400);
   const q = new URLSearchParams();
   if (id) q.set("id", id);
   if (url.searchParams.get("edition")) q.set("edition", url.searchParams.get("edition"));
@@ -711,6 +711,6 @@ export async function publishedRoutes({ op, url, env, stub }) {
                                        bytes: `op=publishedbytes&sha256=${f.bundle_sha}` })),
       detail: "tamper-EVIDENT, not tamper-proof: every part is named by sha256 in the manifest, the "
             + "manifest answers by its own sha256, and EACH FINDING's signature covers that finding's "
-            + "own bundle sha. Nothing here prevents a modified copy; everything here makes one "
+            + "own record sha. Nothing here prevents a modified copy; everything here makes one "
             + "detectable by anyone holding it, without this instance's cooperation.",
     } }, 200);}
