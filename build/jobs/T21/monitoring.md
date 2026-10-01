@@ -20,6 +20,6 @@
 - `node checks/format.mjs` → 86 modules, 84 requirements files; 0 failures.
 - `node checks/architecture.mjs … monitoring` → 14 product files, 68 relative imports; 0 failures.
 - `node checks/coverage.mjs … monitoring` → 50 of 50 live requirement ids named by a test; 0 failures.
-- `node checks/ownership.mjs … monitoring tranche/T21` → see the line below, run after the commit.
+- `node checks/ownership.mjs … monitoring tranche/T21` → 4 files changed by monitoring between tranche/T21 and HEAD; 0 failures.
 
 Size (session_017tQLk2aQAUDMSy5xnai7Pb): test runs 4, module lines 2543
