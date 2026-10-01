@@ -1,6 +1,6 @@
 # installer (T18)
 
-**Status** · session_019U1PuTa7xa7HZ5P3tFmS5D · depth 2 · WAITING ON BOB (J1) · handled B1
+**Status** · session_019U1PuTa7xa7HZ5P3tFmS5D · depth 2 · WAITING ON BOB (J1) · handled B2
 
 ## J1 · QUESTION
 
