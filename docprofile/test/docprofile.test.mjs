@@ -1,7 +1,8 @@
 /* docprofile — requirement-named tests (T2-11), at the module's interface only:
  * everything is reached through `docprofile/registry.mjs`, the entry the plane
- * imports. Every live id R1–R35 is named in at least one test title, and each test
- * checks the requirement whole over the inputs that decide it.
+ * imports. Every live id is named in at least one test title, and each test checks the
+ * requirement whole over the inputs that decide it. The ids that moved to `site-profiles`
+ * at the split (R1–R3, R7–R10, R26–R28, K746) are tested there, under their new ids.
  *
  * Every content type is exercised under a profile that is not Oakland's (R30): the
  * made-up Port Alder and Lakemont in ./fixtures.mjs.
@@ -11,14 +12,13 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import * as dp from "../registry.mjs";
 import {
-  PORT_ALDER, LAKEMONT, view, EMPTY, PA_AGENDA, PA_AGENDA_REVISED, PA_MINUTES, PA_REPORT, PA_BYLAW,
-  PA_DIRECTORY, calendarHtml, wordpressArticle, shellHtml,
+  PORT_ALDER, LAKEMONT, view, EMPTY, PA_AGENDA, PA_MINUTES, PA_REPORT, PA_BYLAW,
+  PA_DIRECTORY, calendarHtml, shellHtml,
 } from "./fixtures.mjs";
 
 const {
-  identify, doctypeFor, digests, assess, readText, flattenText, makeLocator, fidelity,
-  profileRecord, CONFIDENCE, CONTRACT, confidenceRank, EVENTS, event, worstSignificance,
-  doctypes, register, aspnetWebforms, wordpress, clientRendered, conservative,
+  identify, doctypeFor, assess, readText, flattenText, makeLocator,
+  profileRecord, CONFIDENCE, CONTRACT, EVENTS, event, worstSignificance, doctypes,
 } = dp;
 
 const PA = view(PORT_ALDER);
@@ -29,68 +29,6 @@ const LADDER = new Set(Object.values(CONFIDENCE));
 const typeOf = (key) => doctypes().find((t) => t.key === key);
 const keys = (r) => r.entities.map((e) => e.key);
 const NOW = "2026-03-20T12:00:00Z";
-
-/* A stack handler that no registered handler resembles, defining no `kind`: the only
-   way to show R2's "absent when it does not". Registered once, at the end, so it
-   cannot pre-empt any built-in handler. */
-const KINDLESS = register({
-  key: "test_kindless", label: "a test stack with no kind", version: 1, textual: true,
-  detect: (ctx) => /X-KINDLESS-STACK/.test(ctx.text || "")
-    ? { match: true, confidence: CONFIDENCE.CERTAIN, signals: ["kindless marker"] } : { match: false },
-  rules: () => [], renderCritical: () => false, ignorable: () => false,
-});
-
-/* ------------------------------------------------------------------ identify */
-
-test("R1 identify returns the first CERTAIN stack, else the highest match, else conservative at NONE with why", () => {
-  // first CERTAIN wins, in registration order: a shell that is ALSO WordPress is a shell
-  const both = shellHtml() + '<link href="/wp-content/a.css"><link href="/wp-includes/b.js">';
-  const a = identify({ text: both });
-  assert.equal(a.handler.key, "client_rendered");
-  assert.equal(a.confidence, CONFIDENCE.CERTAIN);
-  // nothing CERTAIN: the highest confidence wins (aspnet LIKELY from a header over a POSSIBLE shell hint)
-  const b = identify({ text: '<div id="app"></div><p>x</p>', headers: { "x-powered-by": "ASP.NET" } });
-  assert.equal(b.handler.key, "aspnet_webforms");
-  assert.equal(b.confidence, CONFIDENCE.LIKELY);
-  assert.ok(b.considered.some((c) => c.key === "client_rendered" && c.confidence === CONFIDENCE.POSSIBLE));
-  // equal confidence: the earlier-registered wins (aspnet before wordpress)
-  const c = identify({ text: '<a href="/wp-content/x.css">x</a>', headers: { "x-powered-by": "ASP.NET" } });
-  assert.equal(c.handler.key, "aspnet_webforms");
-  // nothing at all: conservative, NONE, and a stated why
-  const d = identify({ text: "<html><body><p>plain</p><a href='/'>home</a></body></html>" });
-  assert.equal(d.handler.key, "conservative");
-  assert.equal(d.confidence, CONFIDENCE.NONE);
-  assert.match(d.why, /no handler recognised/);
-  assert.deepEqual(d.signals, []);
-  for (const r of [a, b, c, d]) assert.ok(r.handler && typeof r.handler.key === "string");
-});
-
-test("R2 kind is the winning handler's own classification of the address, and absent when it defines none", () => {
-  const html = calendarHtml([["1", "Harbor Commission", "3/3/2026"]]);
-  assert.equal(identify({ text: html, locator: "https://x.test/MeetingDetail.aspx?ID=1" }).kind, "record");
-  assert.equal(identify({ text: html, locator: "https://x.test/Calendar.aspx" }).kind, "index");
-  assert.equal(identify({ text: wordpressArticle(), locator: "https://news.test/2026/03/harbor/" }).kind, "article");
-  assert.equal(identify({ text: wordpressArticle(), locator: "https://news.test/" }).kind, "index");
-  assert.equal(identify({ text: shellHtml() }).kind, "shell");
-  const k = identify({ text: "X-KINDLESS-STACK" });
-  assert.equal(k.handler, KINDLESS);
-  assert.ok(!("kind" in k), "a handler with no kind() gives a result with no kind");
-});
-
-test("R3 every confidence either axis returns is one of the ONE ladder's four values", () => {
-  const texts = [shellHtml(), wordpressArticle(), calendarHtml([["1", "B", "3/3/2026"]]), "plain",
-                 PA_AGENDA, PA_MINUTES, PA_REPORT, PA_BYLAW, PA_DIRECTORY, '<div id="app"></div>'];
-  for (const t of texts) {
-    const id = identify({ text: t, headers: { server: "Microsoft-IIS/10" } });
-    assert.ok(LADDER.has(id.confidence), `stack confidence ${id.confidence}`);
-    for (const c of id.considered) assert.ok(LADDER.has(c.confidence));
-    const dt = doctypeFor({ text: t, view: PA, handler: id.handler, kind: id.kind });
-    assert.ok(LADDER.has(dt.confidence), `type confidence ${dt.confidence}`);
-    for (const c of dt.considered) assert.ok(LADDER.has(c.confidence));
-    for (const c of dt.also) if (!c.error) assert.ok(LADDER.has(c.confidence));
-  }
-  assert.deepEqual(new Set(Object.keys(CONFIDENCE)), new Set(["CERTAIN", "LIKELY", "POSSIBLE", "NONE"]));
-});
 
 /* ----------------------------------------------------------------- doctypeFor */
 
@@ -119,6 +57,12 @@ test("R4 doctypeFor returns the first CERTAIN type, else the highest match, else
   assert.equal(g.type.key, "generic");
   assert.equal(g.confidence, CONFIDENCE.NONE);
   assert.match(g.why, /no registered content type/);
+  // every confidence the content-type axis answers is on site-profiles' one ladder (R4's "its R3, R4")
+  for (const t of [PA_AGENDA, PA_MINUTES, PA_REPORT, PA_BYLAW, PA_DIRECTORY, "plain", calendarHtml([["1", "B", "3/3/2026"]])]) {
+    const dt = doctypeFor({ text: t, view: PA });
+    assert.ok(LADDER.has(dt.confidence), `type confidence ${dt.confidence}`);
+    for (const c of [...dt.considered, ...dt.also.filter((x) => !x.error)]) assert.ok(LADDER.has(c.confidence));
+  }
 });
 
 test("R5 also names every other non-fallback type that matches, and a throwing detect as an error entry", () => {
@@ -214,76 +158,6 @@ test("R6 every content type takes its vocabulary from ctx.view and holds none of
   assert.equal(due(undefined), "2026-03-23", "the held profile's 21 days");
   const noView = readText(legacy, {});
   assert.deepEqual(keys(noView.parsed), ["26-0101", "26-0102", "26-0103"]);
-});
-
-/* -------------------------------------------------------------------- digests */
-
-test("R7 identity is always sha256 of the bytes", async () => {
-  for (const [bytes, h] of [[enc(calendarHtml([["1", "B", "3/3/2026"]])), aspnetWebforms],
-                            [enc("plain"), conservative], [new Uint8Array([0, 255, 1]), { textual: false }],
-                            [enc(shellHtml()), clientRendered]]) {
-    const d = await digests(bytes, h, { sha256 });
-    assert.equal(d.identity, await sha256(bytes));
-  }
-});
-
-test("R8 a non-textual handler gives rendition and evidentiary equal to identity and textual false", async () => {
-  const bytes = new Uint8Array([37, 80, 68, 70, 0, 1, 2]);
-  const d = await digests(bytes, { key: "binary", textual: false }, { sha256 });
-  assert.equal(d.rendition, d.identity);
-  assert.equal(d.evidentiary, d.identity);
-  assert.equal(d.textual, false);
-});
-
-test("R9 textual digests: rendition after mechanical rules, evidentiary after the boundary or presentational rules, three region labels", async () => {
-  // mechanical only moves: rendition and evidentiary both unmoved
-  const a = await digests(enc(calendarHtml([["1", "B", "3/3/2026"]], { state: "AAA" })), aspnetWebforms, { sha256 });
-  const b = await digests(enc(calendarHtml([["1", "B", "3/3/2026"]], { state: "BBB" })), aspnetWebforms, { sha256 });
-  assert.notEqual(a.identity, b.identity);
-  assert.equal(a.rendition, b.rendition);
-  assert.equal(a.evidentiary, b.evidentiary);
-  assert.equal(a.textual, true);
-  // outside the boundary is presentational: evidentiary unmoved, rendition moved
-  const h1 = calendarHtml([["1", "B", "3/3/2026"]]).replace("site header", "site header one");
-  const h2 = calendarHtml([["1", "B", "3/3/2026"]]).replace("site header", "site header two");
-  const c = await digests(enc(h1), aspnetWebforms, { sha256 });
-  const d = await digests(enc(h2), aspnetWebforms, { sha256 });
-  assert.notEqual(c.rendition, d.rendition);
-  assert.equal(c.evidentiary, d.evidentiary);
-  assert.ok(c.applied.some((x) => x.rule === "outside_the_document" && x.region === "presentational"));
-  // no boundary declared: the presentational rules decide (a handler with rules only)
-  const nb = { key: "nb", textual: true,
-    rules: () => [{ key: "chrome", region: "presentational", label: "chrome",
-                    patterns: [/(<nav>)([\s\S]*?)(<\/nav>)/g] }] };
-  const e = await digests(enc("<nav>one</nav><p>body</p>"), nb, { sha256 });
-  const f = await digests(enc("<nav>two</nav><p>body</p>"), nb, { sha256 });
-  assert.equal(e.evidentiary, f.evidentiary);
-  assert.ok(e.presentational_bytes > 0);
-  // every label reported is one of the three
-  for (const x of [...a.applied, ...c.applied, ...e.applied])
-    assert.ok(["mechanical", "presentational", "evidentiary"].includes(x.region));
-  const decoded = new TextEncoder().encode("<nav>one</nav><p>body</p>");
-  assert.equal(e.rendition, await sha256(decoded), "no mechanical rule: rendition is the decoded text");
-});
-
-test("R10 a declared boundary that misses normalises nothing beyond mechanical and says boundary_missed", async () => {
-  // WordPress declares <article> as the boundary of an article; this article has none
-  const noArticle = (nav) => `<html><head><meta name="generator" content="WordPress 6.5"></head>`
-    + `<body><nav>${nav}</nav><div>The harbor reopened.</div><footer>f</footer></body></html>`;
-  const ctx = { sha256, locator: "https://news.test/2026/03/harbor/" };
-  const a = await digests(enc(noArticle("Home")), wordpress, ctx);
-  const b = await digests(enc(noArticle("Home | Sports")), wordpress, ctx);
-  assert.equal(a.boundary_missed, true);
-  assert.equal(a.presentational_bytes, 0, "nothing presentational is normalised");
-  assert.notEqual(a.evidentiary, b.evidentiary, "a change outside the missed boundary is still substance");
-  assert.equal(a.evidentiary, a.rendition);
-  const hit = await digests(enc(wordpressArticle()), wordpress, ctx);
-  assert.equal(hit.boundary_missed, false);
-  // the precondition, and the one throw
-  await assert.rejects(() => digests(enc("x"), conservative, {}), TypeError);
-  // otherwise never throws: odd handlers and odd bytes
-  await digests(enc("x"), { textual: true }, { sha256 });
-  await digests(enc("x"), { textual: true, rules() { throw new Error("bad"); } }, { sha256 });
 });
 
 /* --------------------------------------------------------------------- assess */
@@ -548,52 +422,6 @@ test("R25 locate is total: a non-number, a negative, or an offset in no segment 
   for (const bad of [null, undefined, "x", {}]) assert.equal(makeLocator(bad)(0), null);
 });
 
-/* ------------------------------------------------------------------- fidelity */
-
-test("R26 fidelity is faithful, degraded or insufficient by what is missing and whether it is critical", () => {
-  const css = { ok: false, kind: "stylesheet", url: "/a.css" };
-  const icon = { ok: false, kind: "image", url: "/i.png" };
-  const ad = { ok: false, kind: "script", reason: "THIRD_PARTY" };
-  const held = { ok: true, kind: "stylesheet" };
-  assert.deepEqual(fidelity({ subresources: [held, ad] }, aspnetWebforms), { level: "faithful", missing: [], critical: [] });
-  const d = fidelity({ subresources: [held, icon] }, aspnetWebforms);
-  assert.equal(d.level, "degraded");
-  assert.deepEqual(d.missing, [icon]);
-  assert.deepEqual(d.critical, []);
-  const i = fidelity({ subresources: [css, icon] }, aspnetWebforms);
-  assert.equal(i.level, "insufficient");
-  assert.deepEqual(i.critical, [css]);
-  assert.deepEqual(i.missing, [css, icon]);
-  assert.equal(fidelity({ subresources: [icon] }, conservative).level, "insufficient", "in ignorance every part is critical");
-  // never throws, and a handler that cannot say is answered in the safe direction
-  assert.equal(fidelity(null, conservative).level, "faithful");
-  assert.equal(fidelity({ subresources: "x" }, null).level, "faithful");
-  assert.equal(fidelity({ subresources: [icon, null] }, {}).level, "insufficient");
-});
-
-/* -------------------------------------------------------------- profileRecord */
-
-test("R27 profileRecord names the handler, its version, the confidence, signals, kind, time and note", () => {
-  const id = identify({ text: calendarHtml([["1", "B", "3/3/2026"]]), locator: "https://r.test/Calendar.aspx" });
-  const r = profileRecord(id, { now: NOW });
-  assert.deepEqual(r, { handler: "aspnet_webforms", handler_label: aspnetWebforms.label, handler_version: 1,
-    confidence: "certain", signals: id.signals, document_kind: "index", considered: id.considered, at: NOW, note: null });
-  const none = profileRecord(identify({ text: "plain" }), {});
-  assert.equal(none.handler, "conservative");
-  assert.match(none.note, /no handler recognised/);
-  assert.match(none.at, /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/);
-  assert.equal(profileRecord(identify({ text: "X-KINDLESS-STACK" }), { now: NOW }).document_kind, "unknown");
-  assert.equal(profileRecord(null, { now: NOW }).handler, null, "never throws");
-});
-
-/* ------------------------------------------------------------ the two ladders */
-
-test("R28 CONFIDENCE is one ladder, ranked CERTAIN, LIKELY, POSSIBLE, NONE", () => {
-  const order = [CONFIDENCE.CERTAIN, CONFIDENCE.LIKELY, CONFIDENCE.POSSIBLE, CONFIDENCE.NONE];
-  for (let i = 1; i < order.length; i++) assert.ok(confidenceRank(order[i - 1]) > confidenceRank(order[i]));
-  assert.equal(Object.keys(CONFIDENCE).length, 4);
-});
-
 test("R29 CONTRACT declares substance, membership and unmonitorable, and every type declares one", () => {
   assert.deepEqual({ ...CONTRACT }, { SUBSTANCE: "substance", MEMBERSHIP: "membership", UNMONITORABLE: "unmonitorable" });
   const want = { meeting_calendar: "membership", meeting_agenda: "membership", meeting_minutes: "membership",
@@ -635,7 +463,6 @@ test("R31 the same bytes and the same ctx give the same answer", async () => {
   assert.deepEqual(await assess(a, b, ctx), await assess(a, b, ctx));
   for (const t of [PA_AGENDA, PA_MINUTES, PA_REPORT, PA_BYLAW, PA_DIRECTORY])
     assert.deepEqual(JSON.stringify(readText(t, { view: PA, at: NOW })), JSON.stringify(readText(t, { view: PA, at: NOW })));
-  assert.deepEqual(await digests(a, aspnetWebforms, { sha256 }), await digests(a, aspnetWebforms, { sha256 }));
 });
 
 test("R32 an unrecognised document is never assumed decorated, and a recogniser without CERTAIN never says unchanged", async () => {

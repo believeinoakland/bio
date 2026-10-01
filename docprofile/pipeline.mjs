@@ -37,9 +37,8 @@
  * which keeps the expensive parsing off the overwhelming majority of checks where
  * the bytes are identical or the difference is machinery.
  */
-import { identify, compare, profileRecord } from "./index.mjs";
+import { identify, compare, profileRecord, isMeaningful, worstSignificance } from "../site-profiles/index.mjs";
 import { doctypeFor } from "./doctypes/registry.mjs";
-import { isMeaningful, worstSignificance } from "./events.mjs";
 
 /* Decode bytes as the reader sees them; anything that is not bytes reads as no text. */
 const pipelineText = (bytes) => {
