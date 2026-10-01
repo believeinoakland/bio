@@ -29,10 +29,12 @@
  *   record, membership, promotion   layer 2: `allocId`, `transact`, `head`, `readFile`, `getSetting`, `declarePurge`;
  *                                   `inSight`, `projectAuthority`; `promote`, `registerStep`.
  *   conformance    `determinationRead` (its R9), `determinationsFor` (its R11); default `conformanceOf(host)` (K252).
- *                  Its `noSuchDetermination` and `determinationSuperseded` (R19, R20) answer R1's two conditions.
+ *                  Its `noSuchDetermination` and `determinationSuperseded` (R19, R20) answer R1's two conditions;
+ *                  `noSuchDetermination` also answers R22's unseen determination.
  *   consequences   `addressed` (its R9); default `consequencesModule(host)` (K250).
  *   actions        `actionRead` (its R29: the ledger, legs, `breach`, counterparty); default `actionsOf(host)` (K253).
- *                  Its `actionFacts` (R12, the one clock rule) is imported, a pure function.
+ *                  Its `actionFacts` (R12, the one clock rule) is imported, a pure function. An action's
+ *                  `premise_override` (its R8) is read from its document (R23).
  *   filings        `filingsFor` (its R13), `availableActions` (its R21); default `filingsOf(host)` (K248, B8).
  *   view           the active profiles' combined view (`jurisdictions.combine`, record-core R26), or null.
  *   now            the instance clock, an ISO string (default: the wall clock, to the second). */
@@ -104,6 +106,13 @@ const actOf = (d) => (isObj(d.act) ? d.act : {});
 const actIdOf = (d) => actOf(d).id ?? null;
 const projectOf = (d) => d.project ?? null;
 const recordedAtOf = (d) => d.at ?? null;
+
+/** actions R8 (K600 (a)): the `premise_override` an action's document states, or null when it states none. Read from
+ *  the document, where actions' rule says it is stated, after `actionRead` has answered the action to this viewer. */
+function overrideOf(text) {
+  const v = parseFm(text)?.premise_override;
+  return v === undefined || v === null || v === false || v === "null" || v === "" ? null : v;
+}
 
 /** actions R25/R29 (K253): an action's correspondence ledger, in order, `[{ord, direction, at, recorded_at}]`. */
 function ledgerOf(block) {
@@ -606,6 +615,13 @@ export class Escalation {
     const a = typeof action === "string" && action ? this.actions.actionRead({ id: action, viewer }) : null;
     /* actions R43 (N217, K275): the one answer to an action absent, unseen or not an action, minted there. */
     if (!a || a.ok === false) return noSuchAction(action);
+    const override = overrideOf(this.#text(action));
+    /* DEC-49 REGION is-premise-established */
+    if (override)
+      return refusal("ACTION_PREMISE_OVERRIDDEN", "that action states a premise_override: it was recorded without a "
+                     + "determined breach to rest on, and an escalation pursues a determined breach only. Nothing was written.",
+                     { action, premise_override: override });
+    /* END DEC-49 REGION is-premise-established */
     const legs = Array.isArray(a.legs) ? a.legs : [];
     /* DEC-49 REGION is-breach-action */
     if (a.breach !== true || !legs.some((l) => isObj(l) && l.kind === "rests_on" && l.target === e.determination))
@@ -871,11 +887,28 @@ export class Escalation {
       const { triggers } = this.#triggers(e, at, viewer);
       for (const p of this.#proposed(e, triggers, at))
         if (!p.declined_since_met)
-          items.push({ id: e.id, project: e.project, from: p.from, to: p.to, stage: p.stage, instant: p.instant,
+          items.push({ id: e.id, project: e.project, opened_by: e.openedBy, from: p.from, to: p.to, stage: p.stage, instant: p.instant,
                        age_ms: p.age_ms, ids: p.ids, by: "protocol" });
     }
     items.sort((a, b) => instantOrder(a.instant, b.instant) || (a.id < b.id ? -1 : a.id > b.id ? 1 : a.to - b.to));
     return { ok: true, as_of: iso(at), items: items.slice(0, cap), truncated: items.length > cap, limit: cap };
+  }
+
+  /** R22: every escalation of a determination the viewer may see, oldest first, each with its id, state and stage.
+   *  Writes nothing. */
+  escalationsFor({ determination, viewer } = {}) {
+    const asked = typeof determination === "string" && determination ? determination : null;
+    const d = asked ? this.conformance.determinationRead({ id: asked, viewer }) : null;
+    /* conformance R19: absent and unseen are one answer, the id as asked. */
+    if (!d || d.ok === false) return noSuchDetermination(asked);
+    const items = [];
+    for (const r of this.#rows(`SELECT escalation_id FROM escalations WHERE determination_id=?
+                                ORDER BY opened_at, escalation_id`, asked)) {
+      const e = this.#row(r.escalation_id, viewer);
+      if (e) items.push({ id: e.id, state: e.state, stage: e.stage, stage_name: STAGES[e.stage], opened_by: e.openedBy,
+                          opened_at: e.openedAt });
+    }
+    return { ok: true, determination: asked, items };
   }
 }
 
@@ -945,7 +978,8 @@ class ProviderAbsent extends Error {
 /* Every service answers PROVIDER_UNAVAILABLE, rather than throwing or answering in part, when a provider it reads is
    absent (K248). */
 for (const name of ["escalationOpen", "escalationRead", "escalationAttach", "escalationEvaluate", "escalationAdvance",
-                    "escalationDecline", "escalationEnd", "escalationSuspend", "escalationResume", "escalationsDue"]) {
+                    "escalationDecline", "escalationEnd", "escalationSuspend", "escalationResume", "escalationsDue",
+                    "escalationsFor"]) {
   const f = Escalation.prototype[name];
   Object.defineProperty(Escalation.prototype, name, { configurable: true, writable: true, value: function (...a) {
     try { return f.apply(this, a); }

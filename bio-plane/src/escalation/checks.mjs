@@ -56,6 +56,11 @@ export const ESCALATION_CHECKS = Object.freeze({
     translation: 'An escalation\'s acts are actions recorded for the breach: the action states that it is one and rests '
       + 'on the escalation\'s determination. Record it so, then attach it. Nothing was written.',
   },
+  ACTION_PREMISE_OVERRIDDEN: {
+    check: 'C-116.45', where: at("escalationAttach", "is-premise-established"),
+    translation: 'That action was recorded with its premise overridden: it does not rest on a determined breach. An '
+      + 'escalation pursues a determined breach only, so the action cannot be attached to one. Nothing was written.',
+  },
   STAGE_TAKES_NO_ACTION: {
     check: 'C-116.13', where: at("escalationAttach", "is-attaching-stage"),
     translation: 'Actions are attached at notification, legal tools and political accountability. The escalation\'s '

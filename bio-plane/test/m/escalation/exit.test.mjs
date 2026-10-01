@@ -1,7 +1,9 @@
-/* escalation: ending (R14), suspending and resuming (R15), and what monitoring reads (R16). */
+/* escalation: ending (R14), suspending and resuming (R15), what monitoring and queue-producers read (R16), and a
+   determination's escalations for action-plans (R22). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, opened, toStage, V, MACHINE, ms } from "./fixture.mjs";
+import { noSuchDetermination } from "../../../src/conformance/index.mjs";
 
 const end = (w, extra = {}) => w.esc.escalationEnd({ id: w.E, author: V("bob"), viewer: V("bob"), ...extra });
 const actOf = (w) => w.determinations.get(w.D).act.id;
@@ -105,7 +107,7 @@ test("R15 escalationSuspend (a member, with a reason) stops proposals being repo
   assert.equal(w.esc.escalationEnd({ id: w.E, author: V("bob"), viewer: V("bob") }).reason, "COMPLIANCE_NOT_RESTORED");
 });
 
-test("R16 escalationsDue lists every open escalation with a proposed edge not advanced or declined since its trigger was met, with the edge, instant and age, oldest first, at most 500 with truncated stated; suspended, ended and unseen ones are left out", () => {
+test("R16 escalationsDue lists every open escalation with a proposed edge not advanced or declined since its trigger was met, with the edge, instant and age, the escalation's project and the member who opened it, oldest first, at most 500 with truncated stated; suspended, ended and unseen ones are left out", () => {
   const w = seeded();
   const at = ms("2026-10-01T00:00:00Z");
   /* three escalations whose 1→2 triggers were first met at different times */
@@ -123,6 +125,13 @@ test("R16 escalationsDue lists every open escalation with a proposed edge not ad
   assert.equal(due.items[0].age_ms, at - ms("2026-09-05T00:00:00Z"));
   assert.equal(due.truncated, false);
   assert.equal(due.items[0].by, "protocol");
+  /* each item names the escalation's project and the member who opened it */
+  assert.deepEqual(due.items.map((x) => [x.project, x.opened_by]), [[w.P, V("bob")], [w.P, V("bob")], [w.P, V("bob")]]);
+  const Da = w.determine({ project: w.P, at: "2026-09-01T00:00:00Z", outcomes: [{ standard: "STD-2026-0009-c", outcome: "noncompliant" }] });
+  const byAlice = w.esc.escalationOpen({ determination: Da, author: V("alice"), viewer: V("alice") }).id;
+  const first = w.esc.escalationsDue({ nowMs: at, viewer: V("bob") }).items[0];
+  assert.deepEqual([first.id, first.project, first.opened_by], [byAlice, w.P, V("alice")]);
+  w.esc.escalationSuspend({ id: byAlice, reason: "Not ours to chase now.", author: V("alice"), viewer: V("alice") });
   /* a decline since met takes it off; a later trigger instant than the decline would bring it back (not here) */
   w.esc.escalationDecline({ id: ids[1], to: 2, reason: "Not yet.", author: V("bob"), viewer: V("bob") });
   /* an advance takes it off (its next edge is not met) */
@@ -178,4 +187,51 @@ test("R3 R14 consequences, merged (K250), is reached through consequencesModule 
   const r = end(w);
   assert.equal(r.reason, "CONSEQUENCES_UNDETERMINED");
   assert.equal(w.count("consequence_parts") >= 0, true, "the real module's tables exist on this host");
+});
+
+test("R22 escalationsFor answers every escalation of a determination the viewer may see, oldest first, each with its id, state and stage; an absent or invisible determination answers NO_SUCH_DETERMINATION (conformance.noSuchDetermination); one with none answers items []; it writes nothing", () => {
+  const w = seeded();
+  const forD = (extra = {}) => w.esc.escalationsFor({ determination: w.D, viewer: V("bob"), ...extra });
+  /* none yet */
+  let r = forD();
+  assert.deepEqual([r.ok, r.determination, r.items], [true, w.D, []]);
+  /* absent, invisible and unnamed are conformance's one answer, the id as asked */
+  assert.deepEqual(w.esc.escalationsFor({ determination: "CONF-2026-0999-none", viewer: V("bob") }), noSuchDetermination("CONF-2026-0999-none"));
+  assert.deepEqual(forD({ viewer: V("carol") }), noSuchDetermination(w.D));
+  assert.deepEqual(w.esc.escalationsFor({ viewer: V("bob") }), noSuchDetermination(null));
+  assert.equal(forD({ viewer: V("carol") }).reason, "NO_SUCH_DETERMINATION");
+  /* the first, driven to stage 4 and ended; then a second opened, at stage 1 */
+  w.clock.now = "2026-09-20T00:00:00Z";
+  toStage(w, 2);
+  const first = w.E;
+  w.esc.escalationSuspend({ id: first, reason: "Hold.", author: V("bob"), viewer: V("bob") });
+  r = forD();
+  assert.deepEqual(r.items.map((x) => [x.id, x.state, x.stage, x.stage_name]), [[first, "suspended", 2, "notification"]]);
+  assert.deepEqual([r.items[0].opened_by, r.items[0].opened_at], [V("bob"), "2026-09-20T00:00:00Z"]);
+  /* ended, by its two conditions */
+  w.esc.escalationResume({ id: first, author: V("bob"), viewer: V("bob") });
+  w.determine({ project: w.P, act: actOf(w), outcomes: bothCompliant, at: "2026-09-21T00:00:00Z" });
+  w.addressedBy.set(w.D, { state: "addressed", parts: [{ id: "CONS-2026-0001-p" }] });
+  w.clock.now = "2026-09-22T00:00:00Z";
+  assert.equal(end(w).ok, true);
+  w.clock.now = "2026-09-23T00:00:00Z";
+  const second = w.esc.escalationOpen({ determination: w.D, author: V("alice"), viewer: V("alice") }).id;
+  const before = w.snapshot();
+  r = forD();
+  assert.deepEqual(r.items.map((x) => [x.id, x.state, x.stage]), [[first, "ended", 2], [second, "open", 1]]);
+  assert.equal(r.items.filter((x) => x.state !== "ended").length, 1, "at most one open or suspended (R1's ALREADY_OPEN)");
+  /* a superseded determination still answers its escalations */
+  w.supersede(w.D);
+  assert.deepEqual(forD().items.map((x) => x.id), [first, second]);
+  /* another determination's escalations are not among them */
+  const D2 = w.determine({ project: w.P, outcomes: [{ standard: "STD-2026-0001-a", outcome: "noncompliant" }] });
+  const o2 = w.esc.escalationOpen({ determination: D2, author: V("bob"), viewer: V("bob") }).id;
+  assert.deepEqual(w.esc.escalationsFor({ determination: D2, viewer: V("bob") }).items.map((x) => x.id), [o2]);
+  /* no read writes anything (the open of D2 aside) */
+  const after = w.snapshot();
+  for (const t of ["escalations", "escalation_moves", "escalation_attachments", "escalation_evaluations", "escalation_declines"])
+    assert.equal(JSON.parse(after[t]).filter((x) => x.escalation_id !== o2).length, JSON.parse(before[t]).length, t);
+  /* a provider absent answers PROVIDER_UNAVAILABLE, never an empty list */
+  delete w.esc.deps.conformance;
+  assert.deepEqual([forD().reason, forD().provider], ["PROVIDER_UNAVAILABLE", "conformance"]);
 });

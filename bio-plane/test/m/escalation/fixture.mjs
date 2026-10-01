@@ -3,9 +3,9 @@
    Object's storage; and stand-ins, in the shape of their Provides, for the four layer-9 modules built beside it,
    which the test controls and records: conformance (`determinationRead` R9, `determinationsFor` R11), consequences
    (`addressed` R9), actions (`actionRead` R29 with its ledger, `actionFacts` R12's clock rule) and filings (`filingsFor`
-   R13, `availableActions` R21). An action is a real `ACTN-` bundle whose document carries `breach`, `action_basis` and
-   `counterparty` (actions' Terms), committed through record-core; its ledger is the stand-in's. Every test drives
-   `escalation` at its interface. */
+   R13, `availableActions` R21). An action is a real `ACTN-` bundle whose document carries `breach`, `action_basis`,
+   `counterparty` and, when asked, `premise_override` (actions' Terms and R8), committed through record-core; its
+   ledger is the stand-in's. Every test drives `escalation` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -132,6 +132,7 @@ export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [] } 
       const fm = parseFrontmatter(record.readFile(id, "bundle.md").text).data || {};
       const legs = (Array.isArray(fm.action_basis) ? fm.action_basis : []).map((l) => ({ target: l.target, kind: l.kind }));
       return { ok: true, id, kind: fm.action_kind ?? null, correspondence: structuredClone(ledgers.get(id) || []), legs,
+               premise_override: fm.premise_override ?? null,
                breach: fm.breach === true, counterparty: fm.counterparty ?? null, clock: Array.isArray(fm.clock) ? fm.clock : [] };
     },
     actionFacts(text, nowMs) {
@@ -196,9 +197,10 @@ export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [] } 
     },
     supersede(id, by = "CONF-2026-9999-determination") { determinations.get(id).superseded_by = by; },
     /** A real action bundle whose document states the breach, its legs and counterparty; its ledger the stand-in's. */
-    action({ project, breach = true, restsOn = [], counterparty = { state: "named", ...OFFICE.clerk }, clock: clk = [] } = {}) {
+    action({ project, breach = true, restsOn = [], counterparty = { state: "named", ...OFFICE.clerk }, clock: clk = [],
+             override = null } = {}) {
       const id = `ACTN-2026-${String(++na).padStart(4, "0")}-act`;
-      const text = actionMd({ id, project, breach, restsOn, counterparty, clock: clk, at: clock.now });
+      const text = actionMd({ id, project, breach, restsOn, counterparty, clock: clk, override, at: clock.now });
       const sha = createHash("sha256").update(text, "utf8").digest("hex");
       record.transact(() => record.commit({ bundleId: id, type: "action", title: id, project: null, snapKey: `a${na}`,
         kind: "promotion", base: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", author: V("alice"),
@@ -225,13 +227,15 @@ export function projMd(title) {
           "## Objective", "", "Find out.", ""].join("\n");
 }
 
-function actionMd({ id, project, breach, restsOn, counterparty, clock, at }) {
+function actionMd({ id, project, breach, restsOn, counterparty, clock, override, at }) {
   const legs = restsOn.length ? ["action_basis:", ...restsOn.flatMap((t) => [`  - target: ${t}`, "    kind: rests_on"])] : ["action_basis: []"];
   const cp = ["counterparty:", ...Object.entries(counterparty).map(([k, v]) => `  ${k}: "${v}"`)];
   const clk = clock.length ? ["clock:", ...clock.flatMap((c) => [`  - text: "${c.text ?? "reply due"}"`, `    date: "${c.date}"`,
     `    basis: "${c.basis ?? "the rule"}"`, `    status: ${c.status ?? "pending"}`])] : ["clock: []"];
   return ["---", `id: ${id}`, "object_type: action", `title: "${id}"`, "action_kind: request_for_comment", "current_state: active",
-    `project: ${project}`, `created: "${at}"`, `last_updated: "${at}"`, `breach: ${breach ? "true" : "false"}`, ...legs, ...cp,
+    `project: ${project}`, `created: "${at}"`, `last_updated: "${at}"`, `breach: ${breach ? "true" : "false"}`,
+    /* actions R8: a member's override of an unestablished premise, stamped with who and when */
+    ...(override ? ["premise_override:", `  reason: "${override}"`, `  by: ${V("alice")}`, `  at: "${at}"`] : []), ...legs, ...cp,
     ...clk, "correspondence: []", "---", "", "## Action", "", "An action.", ""].join("\n");
 }
 
