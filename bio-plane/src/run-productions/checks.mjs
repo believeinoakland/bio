@@ -16,8 +16,8 @@ import { SUGGEST_KINDS } from "../basis-versions/index.mjs";
 
 export { SUGGEST_KINDS };
 
-/* The four levels `level-empty` may report on (R6). CLAUDE.md's "NEVER ASSUME THE LOWER LEVELS ARE COMPLETE" names
-   exactly these four, and saying WHICH absence is a first-class obligation there. */
+/* The four levels `level-empty` may report on (R6): the four levels of layer 5's search (meaning, content, documents,
+   the internet), where absence at one level is never absence at the next, so saying WHICH absence is first-class. */
 export const SUGGEST_LEVELS = Object.freeze(['meaning', 'content', 'documents', 'internet']);
 
 /* ===========================================================================
@@ -64,7 +64,7 @@ const SUGGEST_ROWS = {
      run is what a version is read against, and a run that has ended stopped being the conditions anything is
      formed under. Asked AFTER sight (SUGGEST_NO_RUN for a run the caller cannot see) and position
      (AI_RUN_NOT_PRINCIPAL, C-22.12, relayed from `runPrincipalGate`), so it is said only to the run's principal.
-     C-27.18 is a dotted member of PL-3's family, the family owner's to allocate (`tools/mintid.mjs` C). */
+     C-27.18 is a dotted member of PL-3's family, the family owner's to allocate. */
   SUGGEST_RUN_NOT_RUNNING: {
     check: 'C-27.18',
     where: 'src/run-productions/index.mjs suggest > is-suggest-shape',
@@ -308,8 +308,8 @@ const EXTRACT_PROPOSE_ROWS = {
       + 'were filed. Nothing was proposed. Send fewer, or ask the member who opened the investigation.',
   },
   /* K163 (T6): op=extractproposals' unscoped read. run-productions mints this code of its own in place of the
-     store's `NO_SCOPE`, whose other site (a published case's authored scope) is a different condition. Minted
-     nowhere yet: run-productions writes it when it moves `extractProposals` (T6-7) and marks the region. */
+     store's `NO_SCOPE`, whose other site (a published case's authored scope) is a different condition. Minted by
+     `extractProposals` inside its `is-extract-scope` region. */
   EXTRACT_NO_SCOPE: {
     check: 'C-104.12',
     where: 'src/run-productions/index.mjs extractProposals > is-extract-scope',
