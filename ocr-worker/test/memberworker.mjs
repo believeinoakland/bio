@@ -1,8 +1,10 @@
 /* THE MEMBER, BOOTED FROM ITS COMMITTED BYTES, IN ONE PLACE.
  *
- * Deliberately NOT a `*.test.mjs`: the battery's discovery rule is readdir +
- * `endsWith(".test.mjs")`, and this is a helper two suites share — this member's
- * own suite and the plane's acceptance suite one tree over. Two copies of a
+ * Deliberately NOT a `*.test.mjs`: it is a helper, not a suite, so a runner
+ * handed the `*.test.mjs` files never runs it alone; the suites share it —
+ * this member's own and the plane's OCR suites one tree over
+ * (`bio-plane/test/d606-perpage-ocr.test.mjs`,
+ * `bio-plane/test/m/extraction/convert-ocr.test.mjs`). Two copies of a
  * boot recipe is how the two come to differ in the one detail that matters.
  *
  * WHAT IT KNOWS THAT A ONE-PART MEMBER'S BOOT DOES NOT: this member is THREE

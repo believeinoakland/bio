@@ -64,7 +64,7 @@ const WIRE = [];
 const SCAN = F("../../pdf-worker/test/fixtures/scan-ccitt-g4-page.pdf");
 const SCAN_SHA = hex(SCAN);
 const IND_UPRIGHT_SHA = "ac4eb57f0f966f5d5b07eca8c97b065ab56746f32cfe33f3ba8b31cd1579efbc";
-/* D-460's committed two-page fixture (a copy of the plane battery's `d460/agenda-p2.pdf`): two image-only pages. */
+/* D-460's committed two-page fixture (a copy of the plane's `bio-plane/test/fixtures/d460/agenda-p2.pdf`): two image-only pages. */
 const TWO_PAGE = F("./fixtures/agenda-two-scanned-pages.pdf");
 
 function pdf(objs) {
