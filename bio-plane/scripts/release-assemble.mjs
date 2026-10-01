@@ -114,9 +114,7 @@ import {
 import { NS_FLEET, fleetStatement } from "../src/sshsig.mjs";
 import { parseJsonc } from "./jsonc.mjs";
 import { resolveVersion } from "./resolve-version.mjs";
-/* signatures' release signer (its R33). Read through its `tools/` path, which
-   signatures keeps as a re-export while it moves the file in T19. */
-import { signSshsig } from "../../tools/sign-sshsig.mjs";
+import { signSshsig } from "./sign-sshsig.mjs";   /* signatures' release signer (its R33) */
 
 const argv = process.argv.slice(2);
 const flag = (n) => { const i = argv.indexOf(n); return i === -1 ? null : (argv[i + 1] ?? ""); };
@@ -356,7 +354,7 @@ const NS_RELEASE = "bio-release";
  *  2026-09-13, it fails with "Couldn't load public key … No such file or
  *  directory". The doctrine is unaffected: stock ssh-keygen remains the
  *  ACCEPTANCE authority and `verifyWith` below is run on everything signed here,
- *  including immediately after signing it. See signatures' sign-sshsig.mjs. */
+ *  including immediately after signing it. See ./sign-sshsig.mjs (signatures). */
 function signWith(seed, bytes, ns) {
   try { return signSshsig(seed, bytes, ns); }
   catch (e) {

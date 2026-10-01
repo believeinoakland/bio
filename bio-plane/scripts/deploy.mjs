@@ -255,9 +255,16 @@ async function settingsNow() {
 /* Pre-flight every derived service target (except the self-reference, which
    this very PUT creates) so the refusal names the missing worker. */
 for (const target of serviceTargets(meta.bindings, slug)) {
-  const r = await fetch(
-    `https://api.cloudflare.com/client/v4/accounts/${ACCT}/workers/scripts/${target}/settings`,
-    { headers: { authorization: `Bearer ${TOKEN}` } });
+  let r;
+  try {
+    r = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${ACCT}/workers/scripts/${target}/settings`,
+      { headers: { authorization: `Bearer ${TOKEN}` } });
+  } catch (e) {
+    /* A request that never answered establishes nothing either (R17). */
+    console.error(`REFUSED [PREFLIGHT_UNREADABLE]: could not establish whether service target "${target}" exists (${(e && e.message) || e}); an unverified target is not a verified one.`);
+    process.exit(1);
+  }
   if (r.status === 404) {
     console.error(`REFUSED [BINDING_TARGET_MISSING]: the derived bindings target worker "${target}",`);
     console.error(`which does not exist on this account. Deploy the fleet member first`);
@@ -271,7 +278,9 @@ for (const target of serviceTargets(meta.bindings, slug)) {
 }
 
 async function deployed() {
-  const r = await fetch(api, { headers: { authorization: `Bearer ${TOKEN}`, accept: "application/javascript+module" } });
+  let r;
+  try { r = await fetch(api, { headers: { authorization: `Bearer ${TOKEN}`, accept: "application/javascript+module" } }); }
+  catch { return null; }   /* unreadable is not a match */
   if (!r.ok) return null;
   const ct = r.headers.get("content-type") || "";
   const body = Buffer.from(await r.arrayBuffer());
@@ -318,11 +327,13 @@ for (let attempt = 1; attempt <= 4; attempt++) {
   const fd = new FormData();
   fd.append("metadata", new Blob([JSON.stringify(meta)], { type: "application/json" }));
   fd.append("index.mjs", new Blob([source], { type: "application/javascript+module" }), "index.mjs");
-  const r = await fetch(api, { method: "PUT", headers: { authorization: `Bearer ${TOKEN}` }, body: fd });
-  const ct = r.headers.get("content-type") || "";
-  const text = await r.text();
-  /* Reported, never believed. Both branches fall through to the same check. */
-  if (ct.includes("json")) {
+  let r = null, text = "";
+  try { r = await fetch(api, { method: "PUT", headers: { authorization: `Bearer ${TOKEN}` }, body: fd }); text = await r.text(); }
+  catch (e) { console.log(`attempt ${attempt}: the upload request failed (${(e && e.message) || e})`); }
+  const ct = r ? r.headers.get("content-type") || "" : "";
+  /* Reported, never believed. Every branch falls through to the same check. */
+  if (!r) { /* said above */ }
+  else if (ct.includes("json")) {
     let j = null; try { j = JSON.parse(text); } catch { /* claimed JSON, was not */ }
     console.log(`attempt ${attempt}: http ${r.status}, api says ${j ? j.success : "unparseable"}`
       + (j && !j.success ? " " + JSON.stringify(j.errors).slice(0, 200) : ""));

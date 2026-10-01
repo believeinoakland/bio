@@ -90,9 +90,7 @@ export async function makeRepo({ members = { "alpha-worker": {}, "beta-worker": 
   put(root, "bio-plane/scripts/embed-signpage.mjs", readFileSync(join(PLANE, "scripts/embed-signpage.mjs")));
   put(root, "bio-plane/src/sshsig.mjs", readFileSync(join(PLANE, "src/sshsig.mjs")));
   put(root, "bio-plane/src/sign-release.html", readFileSync(join(PLANE, "src/sign-release.html")));
-  put(root, "tools/sign-sshsig.mjs", readFileSync(join(REAL_ROOT, "tools/sign-sshsig.mjs")));
-  if (existsSync(join(PLANE, "scripts/sign-sshsig.mjs")))
-    put(root, "bio-plane/scripts/sign-sshsig.mjs", readFileSync(join(PLANE, "scripts/sign-sshsig.mjs")));
+  put(root, "bio-plane/scripts/sign-sshsig.mjs", readFileSync(join(PLANE, "scripts/sign-sshsig.mjs")));
   mkdirSync(join(root, "bio-plane/node_modules/.bin"), { recursive: true });
   symlinkSync(join(PLANE, "node_modules/esbuild"), join(root, "bio-plane/node_modules/esbuild"), "dir");
   put(root, "bio-plane/node_modules/.bin/wrangler", WRANGLER);
