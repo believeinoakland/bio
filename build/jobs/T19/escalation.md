@@ -32,3 +32,7 @@ B1 says "rule 5: remove the arms' moved code in your layer; BOB serialises `stor
 ## J2 · REPORT
 
 affordances (L11): `JUSTIFICATION_REFUSALS` (`src/affordances.mjs`:486) lacks `ESCALATION_NO_REASON` (R24), so `test/m/affordances/backing.test.mjs`' R19 escalation arm (escalationevaluate/advance/decline/suspend) goes red with this job; its L11 job adds the code beside `INTENT_NO_REASON` (whose omission already reds four affordances arms on tranche/T19), and re-words its comments at 803–806. Generated artifact staled: `bio-plane/dist/bio-plane.bundled.mjs` (C-116.24's code), regenerated at the layer close.
+
+## J3 · COMPLETE
+
+Done; record's Completion section. Rs met: R24 (codes-ops.test.mjs R24; stages R10, R13; exit R15), R10, R13 (stages.test.mjs), R25 (codes-ops.test.mjs, two tests). Rule 1 re-points done: no escalation file imports bio-checks.mjs. store.mjs untouched (B2). escalation 35/35; format, architecture, coverage (25/25), ownership: 0 failures. One new red in a user module: affordances, see the REPORT. Size: test runs 4, module lines 1489.
