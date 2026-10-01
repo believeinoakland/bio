@@ -26,3 +26,7 @@
 - format: 86 modules, 84 requirements files; 0 failures. architecture: 20 product files, 71 relative imports; 0 failures. coverage: 61 of 61 live requirement ids named by a test; 0 failures. ownership: 10 files changed by connections between tranche/T21 and HEAD; 0 failures.
 
 Size (session_01SjaX9oR1AMtsgg4jw4qwcL): test runs 6, module lines 2679
+
+## J1 · REPORT
+
+Stale generated artifact: bio-plane/dist/bio-plane.bundled.mjs (src/connections/index.mjs, themes.mjs, checks.mjs, pair.mjs, schema.mjs changed). Reader whose answer changes: no plane module reads backlinks; op=backlinks' wire answer gains out_of_view: true when a citer was withheld (additive; legacy-ui's mocks unchanged; showing it is the UX stream's). Pre-existing red, not mine: test/m 42 fails in filings, project-stage stage, intent grammar, control-plane catalogue-end, identical on the base without my commit (STATE_MOVE_UNDECLARED on project moves, a replace of undefined, CAPTURE_HELD_BY_ANOTHER_BUNDLE).
