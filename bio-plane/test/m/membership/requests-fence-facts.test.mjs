@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, realWorld, V } from "./fixture.mjs";
 import { Membership } from "../../../src/membership/index.mjs";
-import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
+import { MACHINE_CLASS_PREFIX } from "../../../checks/bio-checks.mjs";
 import { MEMBERSHIP_EXEMPT_TABLES, MEMBERSHIP_PROJECT_TABLES } from "../../../src/membership/index.mjs";
 
 /* D discoverable (owner ann, participant bob), H hidden (owner ann); cal, dee outside */
