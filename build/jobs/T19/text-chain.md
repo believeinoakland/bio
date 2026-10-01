@@ -22,3 +22,26 @@ Two things need R wording in `build/requirements/text-chain.md`; I am building a
 - **R102** `perPageTierWinner(p1, p2)` → `"tier1"` when `p2` is absent, `"tier2"` when `p1` is absent, else `"tier2"` exactly on R76's two conditions and `"tier1"` otherwise; `TIER_RULE` is a non-empty sentence stating that rule (fewer undetermined characters and more glyphs, else tier 1).
 - **R103** `READING_POSITION_KINDS` is a plain object whose keys are exactly R61's four arms; `READING_POSITION_UNPRODUCED` is `"dom"`, the IC-1 arm `readingSource` answers `null` for.
 - `EXTENT_KINDS`: **made internal** (no importer anywhere; only `nc-cpdf10.mjs`'s source-text mutation names it, and its line is unchanged).
+
+## J2 · COMPLETE
+
+Done at `job/T19/text-chain` @ 31d9ca7b92 (tranche/T19 @ 23f693d911 merged in after B3).
+
+**Entries applied**
+- The extent algebra copied into `bio-plane/src/textchain.mjs` (R92–R98, K747): `CONTENT_EXTENT_KINDS`, `CONTENT_EXTENT_A1_RE`, `CONTENT_EXTENT_RANGE_RE`, `a1ToRowCol`, `rangeCorners`, `canonicalRange`, `contentCitedAs`, `canonicalExtent`, `describeExtent` (and `a1Letters`, private); `canonicalJson` read from record-grammar. The catalogue's copy is untouched (ownership: legacy-checks 0 added, 0 removed). Two deliberate differences, both on inputs where the catalogue's copy does not answer a string: `a1ToRowCol`/`rangeCorners` never throw (R83; the catalogue's throw on a value with no string form, e.g. `Object.create(null)`), and `describeExtent` reads only own keys of `CONTENT_EXTENT_KINDS` (R98). `canonicalExtent` is byte-identical to the catalogue's over a 2,000+-input sweep of every kind, field and malformation (`extent.test.mjs`).
+- N416 (R99–R103, K747): `weaker`, `stepCovers`, `CONFIDENCE_BASES`, `perPageTierWinner`, `TIER_RULE`, `READING_POSITION_KINDS`, `READING_POSITION_UNPRODUCED` stay exported, now named and tested; `EXTENT_KINDS` made internal (its source line, which `nc-cpdf10.mjs` mutates, is unchanged).
+- Improvement in my own module: the sheet-range containment's private `a1Cell` now reads the algebra's cell (`CONTENT_EXTENT_A1_RE` + `a1ToRowCol`) instead of a third spelling of the A1 pattern; R72's behaviour unchanged.
+
+**Deferred:** nothing.
+
+**Found elsewhere (REPORT)**
+- Generated artifact staled: `bio-plane/dist/bio-plane.bundled.mjs` (owner `not_product`): `fleetbundles.test.mjs`' bio-plane arm reports STALE BUNDLE for `src/textchain.mjs`. Not regenerated (§14); BOB's layer-close regeneration covers it.
+- legacy-checks (catalogue copy, deleted by reevaluation in L7): `a1ToRowCol`/`rangeCorners` throw `TypeError` on a value with no string form, and `describeExtent({kind: "constructor"})` answers `undefined` rather than a sentence. Low priority given the deletion; importers re-pointing here get the total versions.
+- Red at baseline and unchanged by this job (legacy-tests' old suites): `test/textchain.test.mjs` and `test/transcribe.test.mjs` import `TEXT_CHAIN_CHECKS` from the catalogue (it moved to text-chain in T18), `test/extractrun.test.mjs` imports `AI_RUNS_CHECKS` from `ai-runs/index.mjs`, `test/reading-position-occurrences.test.mjs` imports `CONNECTION_CHOICE_CHECKS` from the catalogue; `test/system/bounds.test.mjs` (13 FAIL lines) and `test/system/ocr-member-e2e.test.mjs` fail identically with and without this change.
+
+**Tests and checks**
+- `node --test test/m/text-chain/`: tests 112, pass 112, fail 0, skipped 0.
+- Users' module suites (`test/m/` extraction, content, basis-versions, query-language, control-plane, connections, ocr-worker): tests 577, pass 577, fail 0.
+- `format`: 83 modules, 78 requirements files; 0 failures · `architecture`: 10 product files, 16 relative imports; 0 failures · `coverage`: 103 of 103 live requirement ids named by a test; 0 failures · `ownership` (civicos-process @ d52122e): 4 files changed by text-chain; legacy-checks: 0 line(s) added, 0 removed; 0 failures.
+
+Size (session_01JFaNkersyiBgEDxNLun4KD): test runs 11, module lines 2026
