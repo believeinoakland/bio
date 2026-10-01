@@ -36,3 +36,7 @@ My readings, which I am building now; say if any is otherwise.
 7. R48: a pressure mark, whether stated with `actionCorrespond` or later by `actionPressure`, is a row in this module's own table (`action_pressure`), never in the document's bytes (the catalogue's correspondence grammar is not touched). `actionPressure` also refuses a malformed mark (`PRESSURE_REFUSED`: kind outside the four, note empty, over 500 or unwritable) and an ord that names no entry (`PRESSURE_NO_ENTRY`); both new rows.
 
 New rows take C-117.7 onward; each is named `awaiting stamp`.
+
+## J2 · REPORT
+
+N-A4 is applied and pushed on job/T18/actions (readings as adopted, B2): R7 completed, R8 premise override, R9 addressee arms and ADDRESSEE_NOT_AN_OFFICE, R45 contact, R46 plan link, R47 actionCreate with op=actioncreate/action/actions, R48 pressure with op=actionpressure, R49; converts risk-tier and d526-refusal-order. Marks met: R7, R8, R9 (but the entity_id person arm, still deferred), R45-R49. Tests 61/61; users' tests 375/386, the 5 failing also fail on tranche/T18 without this change (filings R11, R15 x2, R21 per K651; control-plane R36, N419). Checks: format, architecture, coverage (46/46), ownership all clean. Rows awaiting stamp are listed in my record. The services filings and later jobs need are done; only the split's deletion remains, waiting for your CHANGE that action-clocks has merged. If you would rather merge me now for filings and take the deletion as a CHANGE afterwards, say so.
