@@ -1,6 +1,6 @@
 # basis-versions (T19)
 
-**Status** · session_01JEsrTU8WsdFTZH5jPHiT6F · depth 2 · WORKING · handled B3
+**Status** · session_01JEsrTU8WsdFTZH5jPHiT6F · depth 2 · COMPLETE · handled B3
 
 ## Completion (BASIS-VERSIONS #6)
 
