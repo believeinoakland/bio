@@ -32,3 +32,7 @@ Size (session_01Cy3dA1Gy1X7veKwXKWiD8g): test runs 7, module lines 1439
 ## J1 · REPORT
 
 Two findings from my change, both in my record's 'Found in other modules'. (1) inquiry: test/m/inquiry/case-grammar.test.mjs:223 ('R7 C-21.2 is checked PER FINDING') pins my old message /... is not a canonical bundle id/; with N458 it is red (11/11 on tranche/T21, 10/11 on my branch). INQUIRY #10's job needs to re-key it to 'canonical record id'; its branch still holds the old words. (2) Generated artifact: bio-plane/dist/bio-plane.bundled.mjs (.bundle.json) is stale, three files under bio-plane/src/inquiry-grammar/ changed; not regenerated.
+
+## J2 · COMPLETE
+
+N452, N458, N469 applied on job/T21/inquiry-grammar (record has the detail). N452: no reader of INQUIRY_GRAMMAR_ROWS left; alias, re-export and same-object test deleted, R7's test asserts the name is gone. N458: the five messages say 'canonical record id' / 'this one record'; golden.json re-keyed for those two phrases only. N469: the nc-mk2 note re-pointed to a new R4 test (connection grade on an authored observation, with a mutation that turns it red); three more notes naming deleted suites as live fixed; two store.mjs claims re-pointed. No row changed, nothing awaits stamp, nothing deferred. inquiry-grammar 24/24; test/m 4622 pass, 43 fail: 42 accepted by name plus inquiry's case-grammar pin (REPORT J1). format, architecture, coverage (10/10), ownership: 0 failures each.
