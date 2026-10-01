@@ -37,3 +37,7 @@ Size (session_01XnQkJQSGg5SKNNSMx7mZyS): test runs 14, module lines 1554
 ## J1 · REPORT
 
 Generated artifact staled: my change to bio-plane/src/escalation/index.mjs (N462, evaluation trigger ids) stales the plane's bundle bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (owned by not_product; regenerate at the layer close: bio-plane/, npm run build). I regenerated nothing. No other module pins the old id form.
+
+## J2 · COMPLETE
+
+escalation T21 complete (record: Completion section). N462 applied: evaluation trigger id <id>/evaluation#<n>; old form <id>/evaluation/<seq> read back as R7's id, left when it names no evaluation, document never edited. Not-yet-met marks met (strike at merge): R7, R8, R13, R26 (both). Tests: escalation 38 pass 0 fail; users (action-plans, monitoring, queue-producers, queue, affordances, plane) green. Checks: format, architecture, coverage (26/26), ownership: 0 failures each. Stale artifact reported in J1 (plane bundle). Nothing deferred.
