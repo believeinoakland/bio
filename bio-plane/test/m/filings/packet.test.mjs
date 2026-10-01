@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, STRANGER, F, CASE, PROFILE, DOC, sha } from "./fixture.mjs";
-import { counselMarking, deadlineDate, Filings } from "../../../src/filings/index.mjs";
+import { counselMarking, deadlineDate, Filings, INBAND_RULE } from "../../../src/filings/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 
 const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
@@ -25,7 +25,7 @@ const correspond = (x, id, e) => {
 const supersede = (x, id) => x.determine({ supersedes: id, reason: "corrected",
   act: { ...x.act, id: x.conformance.determinationRead({ id, viewer: MACHINE }).act.id } });
 
-test("R8 refusals in order: MACHINE_CANNOT_NAME_COUNSEL, NO_SUCH_ACTION, NOT_TIER3, NO_COUNSEL, NO_DETERMINATION; negative controls", () => {
+test("R8 refusals in order: MACHINE_CANNOT_NAME_COUNSEL, NO_SUCH_ACTION, NOT_TIER3, NO_COUNSEL, NO_DETERMINATION; negative controls", async () => {
   const x = tier3();
   assert.equal(pack(x, { author: MACHINE, action: "ACTION-NONE" }).reason, "MACHINE_CANNOT_NAME_COUNSEL");
   assert.equal(pack(x, { author: "" }).reason, "MACHINE_CANNOT_NAME_COUNSEL");
@@ -51,7 +51,7 @@ test("R8 refusals in order: MACHINE_CANNOT_NAME_COUNSEL, NO_SUCH_ACTION, NOT_TIE
   assert.equal(pack(y).reason, "NO_DETERMINATION", "a superseded determination is not live");
 });
 
-test("R9 the six sections, each item naming its record source: facts, chronology in date order (ties by source id), exhibits with provenance and attestations, standards with in-force, candidate theories, deadlines; consequences as recorded", () => {
+test("R9 the six sections, each item naming its record source: facts, chronology in date order (ties by source id), exhibits with provenance and attestations, standards with in-force, candidate theories, deadlines; consequences as recorded", async () => {
   const x = tier3();
   correspond(x, x.A, { direction: "sent", at: "2026-03-10", account: "letter" });
   correspond(x, x.A, { direction: "received", at: "2026-03-12", party: "the clerk", artifactSha: sha(`the text of ${DOC}`) });
@@ -108,7 +108,7 @@ test("R9 the six sections, each item naming its record source: facts, chronology
   assert.ok(rec.totals.every((t) => t.state === "assessed"), "totals kept within one state");
 });
 
-test("R9 a claim deadline's date only from a recorded start event and its count: calendar, business on the holiday calendar, undetermined past the calendar's years", () => {
+test("R9 a claim deadline's date only from a recorded start event and its count: calendar, business on the holiday calendar, undetermined past the calendar's years", async () => {
   const base = { rule: "claim_act", applies_to: "claim", days: 10, citation: "Test Stat. § 9.30", basis: "TEST" };
   const prof = (deadlines) => {
     const x0 = world();
@@ -139,14 +139,14 @@ test("R9 a claim deadline's date only from a recorded start event and its count:
   assert.equal(deadlineDate({ start: "2026-01-31", days: 3, count: null }).state, "undetermined");
 });
 
-test("R10 every section, the head and every export carry the marking; no caption, venue heading, signature, prayer or template; fileable is false", () => {
+test("R10 every section, the head and every export carry the marking; no caption, venue heading, signature, prayer or template; fileable is false", async () => {
   const x = tier3();
   const p = pack(x);
   assert.equal(p.marking, MARK);
   assert.equal(p.head.marking, MARK);
   for (const s of Object.values(p.sections)) assert.equal(s.marking, MARK, s.title);
   assert.equal(p.fileable, false);
-  const e = x.f.counselPacketExport({ id: p.id, version: 1, author: V("olive"), viewer: V("olive") });
+  const e = (await x.f.counselPacketExport({ id: p.id, version: 1, author: V("olive"), viewer: V("olive") }));
   assert.equal(e.fileable, false);
   const heads = e.bytes.split("\n").map((l, i, all) => (l.startsWith("#") ? all[i + 2] : null)).filter((l) => l !== null);
   assert.ok(heads.length >= 8);
@@ -160,7 +160,7 @@ test("R10 every section, the head and every export carry the marking; no caption
     assert.doesNotMatch(e.bytes, word);
 });
 
-test("R11 the packet is never published and has no path to publication; it is read only by a member who may see the action (NO_SUCH_PACKET otherwise); an export records who, which version, when and for which counsel; a machine is refused", () => {
+test("R11 the packet is never published and has no path to publication; it is read only by a member who may see the action (NO_SUCH_PACKET otherwise); an export records who, which version, when and for which counsel; a machine is refused", async () => {
   const x = tier3();
   const p = pack(x);
   assert.equal(x.f.counselPacketRead({ id: p.id, viewer: V("bo") }).ok, true);
@@ -168,9 +168,9 @@ test("R11 the packet is never published and has no path to publication; it is re
   const absent = x.f.counselPacketRead({ id: "CPK-NONE", viewer: V("bo") });
   assert.deepEqual([hidden.reason, hidden.detail], [absent.reason, absent.detail]);
   assert.equal(hidden.reason, "NO_SUCH_PACKET");
-  assert.equal(x.f.counselPacketExport({ id: p.id, author: V("bo"), viewer: STRANGER }).reason, "NO_SUCH_PACKET");
-  assert.equal(x.f.counselPacketExport({ id: p.id, author: MACHINE, viewer: MACHINE }).reason, "MACHINE_CANNOT_EXPORT");
-  const e = x.f.counselPacketExport({ id: p.id, version: 1, author: V("olive"), viewer: V("olive") });
+  assert.equal((await x.f.counselPacketExport({ id: p.id, author: V("bo"), viewer: STRANGER })).reason, "NO_SUCH_PACKET");
+  assert.equal((await x.f.counselPacketExport({ id: p.id, author: MACHINE, viewer: MACHINE })).reason, "MACHINE_CANNOT_EXPORT");
+  const e = (await x.f.counselPacketExport({ id: p.id, version: 1, author: V("olive"), viewer: V("olive") }));
   assert.deepEqual([e.ok, e.id, e.version, e.exported_by, e.at, e.counsel, e.format], [true, p.id, 1, V("olive"), "2026-09-28T01:00:00Z", COUNSEL, "text/markdown"]);
   assert.equal(e.sha, sha(e.bytes));
   assert.deepEqual(x.f.counselPacketRead({ id: p.id, viewer: V("olive") }).exports,
@@ -185,7 +185,7 @@ test("R11 the packet is never published and has no path to publication; it is re
   assert.equal(JSON.stringify(pub).includes(MARK), false);
 });
 
-test("R12 assembling again makes a new version and earlier versions stay readable; a version is flagged basis_changed, naming each cause, and nothing in it changes", () => {
+test("R12 assembling again makes a new version and earlier versions stay readable; a version is flagged basis_changed, naming each cause, and nothing in it changes", async () => {
   const x = tier3();
   const v1 = pack(x);
   const v2 = pack(x, { counsel: { name: "B. Counsel", organisation: "Other Chambers" } });
@@ -210,7 +210,7 @@ test("R12 assembling again makes a new version and earlier versions stay readabl
   assert.deepEqual(x.rows(`SELECT version FROM counsel_packets ORDER BY version`).map((r) => r.version), [1, 2]);
 });
 
-test("R14 any credential may propose a candidate theory and remedy against named standards, stored apart and labelled, why at most 1,000 characters; NO_STANDARDS (THEORY_NO_STANDARDS), NO_SUCH_STANDARD naming it; it enters the next packet version as a candidate", () => {
+test("R14 any credential may propose a candidate theory and remedy against named standards, stored apart and labelled, why at most 1,000 characters; NO_STANDARDS (THEORY_NO_STANDARDS), NO_SUCH_STANDARD naming it; it enters the next packet version as a candidate", async () => {
   const x = tier3();
   const v1 = pack(x);
   const prop = (over = {}) => x.f.theoryPropose({ packet: v1.id, theory: "The order breached the bylaw's vote requirement.",
@@ -241,9 +241,10 @@ test("R14 any credential may propose a candidate theory and remedy against named
   assert.match(v2.sections.theories.says, /never the group's position/);
 });
 
-test("R10 the export's bytes are the rendering of the version read, the marking under every heading", () => {
+test("R10 R22 the export's bytes are the rendering of the version read, the marking under every heading, then the in-band block", async () => {
   const x = tier3();
   const p = pack(x);
   const read = x.f.counselPacketRead({ id: p.id, viewer: V("olive") });
-  assert.equal(x.f.counselPacketExport({ id: p.id, author: V("olive"), viewer: V("olive") }).bytes, Filings.render(read));
+  const e = await x.f.counselPacketExport({ id: p.id, author: V("olive"), viewer: V("olive") });
+  assert.ok(e.bytes.startsWith(`${Filings.render(read)}\n${INBAND_RULE}\n`), "the rendering, then the in-band block (R22)");
 });

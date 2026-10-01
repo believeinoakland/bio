@@ -9,7 +9,7 @@ import { combine } from "../../../../jurisdictions/index.mjs";
 
 const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
 
-function busy() {
+async function busy() {
   const x = world();
   const A = x.action();
   const T3 = x.action({ kind: "commitment_claim" });
@@ -17,18 +17,18 @@ function busy() {
   x.clock.now = "2026-09-28T02:00:00Z";
   const d2 = x.f.filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") });
   const text = d2.text.replace("[UNFILLED: bylaw]", "P.E.B.L. § 12");
-  x.f.filingApprove({ filing: d2.id, text, author: V("bo"), viewer: V("bo") });
+  (await x.f.filingApprove({ filing: d2.id, text, author: V("bo"), viewer: V("bo") }));
   x.f.filingRecordSent({ filing: d2.id, at: "2026-09-29", account: "handed in", author: V("bo"), viewer: V("bo") });
   const p1 = x.f.counselPacket({ action: T3, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
-  x.f.counselPacketExport({ id: p1.id, version: 1, author: V("olive"), viewer: V("olive") });
+  (await x.f.counselPacketExport({ id: p1.id, version: 1, author: V("olive"), viewer: V("olive") }));
   x.clock.now = "2026-09-28T03:00:00Z";
   const p2 = x.f.counselPacket({ action: T3, counsel: { name: "B. Counsel", organisation: "Other Chambers" }, author: V("olive"), viewer: V("olive") });
   x.f.theoryPropose({ action: T3, theory: "A breach.", standards: [x.S1], why: "named", proposer: V("bo"), viewer: V("bo") });
   return { x, A, T3, d1, d2, p1, p2, text };
 }
 
-test("R13 filingsFor lists the action's drafts (tier, label, approval, sending) and its counsel packets (each version with counsel, basis_changed and exports), in creation order; NO_SUCH_ACTION for an absent or invisible action", () => {
-  const { x, A, T3, d1, d2, p1 } = busy();
+test("R13 filingsFor lists the action's drafts (tier, label, approval, sending) and its counsel packets (each version with counsel, basis_changed and exports), in creation order; NO_SUCH_ACTION for an absent or invisible action", async () => {
+  const { x, A, T3, d1, d2, p1 } = await busy();
   const r = x.f.filingsFor({ action: A, viewer: V("bo") });
   assert.deepEqual(r.drafts.map((d) => [d.filing, d.tier, d.label.state]), [[d1.id, 1, "machine_proposed"], [d2.id, 1, "member_proposed"]]);
   assert.equal(r.drafts[0].approval, null);
@@ -55,8 +55,8 @@ function block(x) {
   return c.evidence_package.blocks.available_actions;
 }
 
-test("R15 the available-actions block of a published case a live determination rests on: every kind against its offices with tier and words; for Tier 3 the standards, the factual basis, the counsel sentence and the profile's legal organisations; the risk classification in the metadata; never a template or packet content", () => {
-  const { x } = busy();
+test("R15 the available-actions block of a published case a live determination rests on: every kind against its offices with tier and words; for Tier 3 the standards, the factual basis, the counsel sentence and the profile's legal organisations; the risk classification in the metadata; never a template or packet content", async () => {
+  const { x } = (await busy());
   const b = block(x);
   const view = combine([PROFILE]).view;
   assert.deepEqual(b.kinds.map((k) => [k.kind, k.label, k.tier, k.words]),
@@ -91,8 +91,8 @@ test("R15 the available-actions block of a published case a live determination r
   assert.match(none.says, /no live determination/);
 });
 
-test("R15 the block is registered with publication once, at start, and computed at each read", () => {
-  const { x } = busy();
+test("R15 the block is registered with publication once, at start, and computed at each read", async () => {
+  const { x } = (await busy());
   const again = x.pr.registerEvidenceBlock("filings", "available_actions", () => 1);
   assert.equal(again.reason, "PROVIDER_DECLARED");
   assert.equal(filingsOf(x.host), x.f, "one instance per host");
@@ -103,8 +103,8 @@ test("R15 the block is registered with publication once, at start, and computed 
   assert.notDeepEqual(first, block(x));
 });
 
-test("R21 availableActions answers R15's block for a determination's offices, from the same composer; NO_SUCH_DETERMINATION for an absent or invisible one, one answer", () => {
-  const { x } = busy();
+test("R21 availableActions answers R15's block for a determination's offices, from the same composer; NO_SUCH_DETERMINATION for an absent or invisible one, one answer", async () => {
+  const { x } = (await busy());
   const r = x.f.availableActions({ determination: x.D, viewer: V("bo") });
   assert.deepEqual([r.ok, r.determination, r.live], [true, x.D, true]);
   const b = block(x);
@@ -120,8 +120,8 @@ test("R21 availableActions answers R15's block for a determination's offices, fr
   assert.equal(x.op("availableactions", { determination: x.D, viewer: V("olive") }).ok, true);
 });
 
-test("R18 every filled value, packet item and chronology event names the record source it was read from; an undetermined fact is stated as undetermined, never defaulted", () => {
-  const { x, A, d2, p2 } = busy();
+test("R18 every filled value, packet item and chronology event names the record source it was read from; an undetermined fact is stated as undetermined, never defaulted", async () => {
+  const { x, A, d2, p2 } = (await busy());
   const d = x.f.filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") });
   for (const b of d.blanks) assert.ok(typeof b.source === "string" && b.source, b.name);
   for (const u of d.unfilled) assert.ok(typeof u.why === "string" && u.why, u.name);
@@ -145,14 +145,14 @@ test("R18 every filled value, packet item and chronology event names the record 
   assert.equal(pp.sections.chronology.items.find((e) => e.source === Dp).date, "2026-03-01");
 });
 
-test("R19 drafts, approvals, sendings, packets, exports and proposals are append-only, keyed to the action and declared to purge; every read answers an action the viewer may not see as absent", () => {
-  const { x, A, T3, d1, d2, p1 } = busy();
+test("R19 drafts, approvals, sendings, packets, exports and proposals are append-only, keyed to the action and declared to purge; every read answers an action the viewer may not see as absent", async () => {
+  const { x, A, T3, d1, d2, p1 } = await busy();
   const tables = ["filing_drafts", "filing_approvals", "filing_sendings", "counsel_packets", "counsel_packet_exports", "theory_proposals"];
   const snap = x.snapshot(tables);
   /* further acts add rows and change none */
   x.f.filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") });
   x.f.counselPacket({ action: T3, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
-  x.f.filingApprove({ filing: d2.id, text: "again", author: V("cy"), viewer: V("cy") });
+  (await x.f.filingApprove({ filing: d2.id, text: "again", author: V("cy"), viewer: V("cy") }));
   const after = x.snapshot(tables);
   for (const t of tables) {
     const before = JSON.parse(snap[t]), now = JSON.parse(after[t]);
@@ -171,6 +171,6 @@ test("R19 drafts, approvals, sendings, packets, exports and proposals are append
                "NO_SUCH_ACTION");
   const B = x.action();
   const d = x.f.filingPrepare({ action: B, preparer: V("bo"), viewer: V("bo") });
-  assert.equal(x.f.filingApprove({ filing: d.id, text: "t", author: V("bo"), viewer: STRANGER }).reason, "NO_SUCH_FILING");
+  assert.equal((await x.f.filingApprove({ filing: d.id, text: "t", author: V("bo"), viewer: STRANGER })).reason, "NO_SUCH_FILING");
   assert.equal(d1.ok, true);
 });
