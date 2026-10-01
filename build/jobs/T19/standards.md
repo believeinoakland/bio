@@ -21,3 +21,7 @@
 - `ownership standards tranche/T19`: 4 files changed; 0 failures.
 
 Size (session_012Sj9LjeX3usEuvfF2Fjxjy): test runs 2, module lines 5
+
+## J1 · COMPLETE
+
+Re-points done: no standards file imports bio-checks.mjs (index.mjs → record-grammar actors/types/labels; fixture → frontmatter; proposals.test → labels). Tests 18/18; format, architecture, coverage, ownership 0 failures. For BOB: standards' uses can drop legacy-checks; requirements Uses/R9 still name legacy-checks for isMachineIdentity, proposalLabel, STD- registration (now record-grammar's). Record: build/jobs/T19/standards.md.
