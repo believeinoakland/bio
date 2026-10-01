@@ -34,6 +34,7 @@ test("R1 refusals, in order, each writing nothing; a store silence is named, nev
   w.monitored(off, LOC, "v1-off", { enabled: false });
   const nm = await tick(w, off);
   assert.deepEqual([nm.status, nm.body.reason], [409, "NOT_MONITORED"]);
+  assert.equal(nm.body.detail, "this record does not ask to be monitored", "member-read text says record (K899 (1))");
   const bad = "INFO-2026-0003-http";
   w.promote(bad, infoMd(bad, "http://records.example.org/x"));
   const nl = await tick(w, bad);
