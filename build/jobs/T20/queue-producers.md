@@ -30,3 +30,7 @@ Size (session_01RohbFEqsGMN7F4XD4dQZEP): test runs 4, module lines 2743
 ## J1 · REPORT
 
 queue's Queue.PRODUCER_DEPS (src/queue/index.mjs:96) lacks 'actions', so a caller's fake actions cannot reach queue-producers' R19 through queue (queue's 74 tests pass: the producers reach actionsOf(host) lazily). Natural in QUEUE's L11 job (K902 R1, R12). Generated artifact staled: the plane bundle. R19's 'not yet met' mark and the Status line's 'litigation-hold item ... is not folded' sentence are BOB's to update.
+
+## J2 · COMPLETE
+
+R19 litigation-hold OBLIGATION built from actions.holdsDue (administrators or the admin credential, and the marker; door actionhold; R11 re-checked here). K899 (1): export-performed summary says 'records'; re-scan found no other member-read 'bundle' in paths. queue-producers 47/47, queue 74/74; format, architecture, coverage (19/19), ownership: 0 failures. Record has the details.
