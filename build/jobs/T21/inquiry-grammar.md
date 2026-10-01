@@ -1,6 +1,6 @@
 # inquiry-grammar (T21)
 
-**Status** · session_01Cy3dA1Gy1X7veKwXKWiD8g · depth 2 · COMPLETE · handled B1
+**Status** · session_01Cy3dA1Gy1X7veKwXKWiD8g · depth 2 · COMPLETE · handled B2
 
 INQUIRY-GRAMMAR #3, module job for `inquiry-grammar` in T21 layer 6 (B1 START). Read whole: the requirements, the public parts of record-grammar, text-chain, record-core, content, connections and observation-log, layer 6's contract, the module's code and tests, the plan entry, `draft-T20-answers.md` A.1, A.3 and A.5, and `jobs/T20/legacy-tests.md` "For BOB".
 
