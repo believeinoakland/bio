@@ -9,8 +9,9 @@
  * transcription REC-87, the machine mint SK-7, the version notice's per-passage half D-394 / REC-221, and, by K73 (1),
  * the capture's text attestations CPDF-10 and the citation context `contentContextFor` with its readers),
  * `schema.mjs` (the four tables, now `./schema.mjs`) and `bio-checks.mjs` (the extent relation, the mint's
- * undetermined statement; the grammar's core stays there while the catalogue's own leg checks call it, see
- * `./extent.mjs`). The legacy code's comments moved with it, shortened where they only restated the code.
+ * undetermined statement; in T19 the grammar's core, copied into `./extent-core.mjs`, R48). The legacy code's comments
+ * moved with it, shortened where they only restated the code. Nothing in this module imports the catalogue: the
+ * record's grammar is `record-grammar`'s, the extent algebra `text-chain`'s (see `./extent.mjs`).
  *
  * REACHED as `contentOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
  * call with `deps`, returned to every later caller. At creation it declares its tables to record-core's purge (R39).
@@ -21,12 +22,16 @@
  *                `capturesReadFor` (R51) and `onReading` (R24), with which this module registers its stale mark.
  *                `noSha` (its R63), the one `NO_SHA` answer, is imported from the module itself, never from `deps`.
  *   now          the module's clock, an ISO instant (default: the wall clock); a mint or act with no `at` reads it.
+ * At creation it also registers its stale mark with extraction (R22), its check and mint on provenance's testimony
+ * slot (R49) and its figures with record-core (R51). Its route arms are `./ops.mjs`' `contentOps` (R50).
  *
- * Its refusal rows are `./checks.mjs`' (R38): C-52 moved there from the catalogue and C-80.3 copied (T18). */
+ * Its refusal rows are `./checks.mjs`' (R38): C-52 moved there from the catalogue and C-80.3 copied (T18), C-45 copied
+ * with the extent core (T19, R48). */
 
-import { isMachineIdentity, normalizeType, OBJECT_TYPES, CONTENT_MINTED_BY_PLANE, CONTENT_MINT_STATES,
-         contentMintState, sha256HexSync }
-  from "../../checks/bio-checks.mjs";
+import { isMachineIdentity } from "../record-grammar/actors.mjs";
+import { normalizeType, OBJECT_TYPES } from "../record-grammar/types.mjs";
+import { CONTENT_MINTED_BY_PLANE, CONTENT_MINT_STATES, contentMintState } from "../record-grammar/labels.mjs";
+import { sha256HexSync } from "../record-grammar/sha256.mjs";
 import { TRANSCRIBE_CHECKS, VERSION_NOTICE_CHECKS } from "./checks.mjs";
 import { checkChain, checkAttestation, derivationCap, gradeCeiling, extentCovers, describeChain }
   from "../textchain.mjs";
@@ -51,6 +56,7 @@ export { VERSION_NOTICE_ADDRESSES_MAX, VERSION_NOTICE_STATES, VERSION_NOTICE_GRA
   from "./notice.mjs";
 export { CONTENT_MINTED_BY_PLANE, CONTENT_MINT_STATES, contentMintState };
 export { TRANSCRIBE_CHECKS, VERSION_NOTICE_CHECKS } from "./checks.mjs";
+export { contentOps } from "./ops.mjs";
 
 /** The one bound on a typing (R23, C-52.7): the per-unit cap one passage of the text index is stored to
  *  (`CAPTURE_TEXT_UNIT_CAP`, M-20's 131,072 B). Refused over it, never truncated. */
@@ -66,6 +72,8 @@ export const CONTENT_EARNED_MAX = 200;
 /** R41 (N117): how many of the rows one re-read stales are read back and graded, in ONE read, inside the writer's
  *  transaction. The rest are marked by the same one UPDATE, counted by the same read, and told as ungraded. */
 export const STALE_GRADED_MAX = 200;
+/** R51: the figures this module reports for `op=stats` and purge's proof, through record-core's `registerCounts`. */
+export const CONTENT_COUNT_KEYS = Object.freeze(["content", "contentStale"]);
 
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
@@ -585,6 +593,48 @@ export class Content {
                             mintedBy: CONTENT_MINTED_BY_PLANE, at: cit.at || null });
     if (!out.ok) return { content_id: null, null_case: "REFUSED", why: out.detail || out.code, refusal: out };
     return { content_id: out.content_id, minted: out.minted, ...(out.undetermined ? { undetermined: out.undetermined } : {}) };
+  }
+
+  /* ===================================================================== *
+   * THE TESTIMONY PATH'S MINT (R49; provenance R28, R52). A member's firsthand observation (`op=testify`) is promoted
+   * with its words as the bundle's one capture; this module's share of that promotion runs in provenance's testimony
+   * slot, at the place the legacy store's promotion step ran it: the extent check before anything is written, so the
+   * mint after it cannot refuse, and the mint inside the same transaction, so an authored bundle never exists without
+   * the content row its readers expect.
+   * ===================================================================== */
+
+  /** R49, the check: the `document` extent over the path's capture, against the context the mint will see (R7, R42).
+   *  A refusal refuses the promotion as it came; nothing is written. */
+  testimonyCheck({ captureSha } = {}) {
+    return checkContentExtent({ kind: "document" }, this.contentContextFor(captureSha));
+  }
+
+  /** R49, the projection: the row at the `document` extent over the path's capture, under the same (null) chain as the
+   *  words' passage index, so a `passage:` hit and a citation address one passage under one id; minted by the path's
+   *  author at its recording instant (R12, R13). A refused mint throws, naming its code, so the whole promotion rolls
+   *  back rather than leave an authored bundle without its content row. */
+  testimonyProject({ bundleId, captureSha, author, recordedAt } = {}) {
+    const m = this.mint({ bundleId, captureSha, extent: { kind: "document" }, mintedBy: author, at: recordedAt });
+    if (!m.ok) throw new Error(`MK-1: the observation's content row was refused after the extent was checked: ${m.code || m.reason}`);
+    return { content_id: m.content_id };
+  }
+
+  /* ===================================================================== *
+   * ITS FIGURES (R51; record-core R63), for `op=stats` and purge's proof.
+   * ===================================================================== */
+
+  /** R51: `content` (every row) and `contentStale` (the rows marked stale), each keyed on `bundle_id`, as the legacy
+   *  store's `#counts` took them: with `hid` (`{sql, args}`, the bundles the caller may not see) a row whose bundle is
+   *  in it is left out, and a row naming no bundle is counted; with none, every row. Synchronous; writes nothing. */
+  counts(hid = null) {
+    const hidden = isObj(hid) && typeof hid.sql === "string";
+    const args = hidden && Array.isArray(hid.args) ? hid.args : [];
+    const n = (where) => {
+      const conds = [...(where ? [where] : []), ...(hidden ? [`COALESCE(bundle_id, '') NOT IN ${hid.sql}`] : [])];
+      return this.#one(`SELECT count(*) AS c FROM content${conds.length ? ` WHERE ${conds.join(" AND ")}` : ""}`,
+                       ...(hidden ? args : [])).c;
+    };
+    return { content: n(null), contentStale: n("stale=1") };
   }
 
   /* ===================================================================== *
@@ -1346,6 +1396,29 @@ export function contentOf(host, deps) {
     /* R41: the capture's units as they stood before the write (extraction R24's `unitsBefore`, K141) are graded against
        the units the write left, which the index holds at this call (the listener runs after the write). */
     c.extraction.onReading("content", (e) => ({ staled: c.markStale(e.captureSha, e.chainAfter, { unitsBefore: e.unitsBefore ?? null }) }));
+    joinTestimony(c);
+    registerFigures(c);
   }
   return c;
+}
+
+/** R49: the testimony path's check and mint, registered once on provenance's testimony slot (its R52), which the
+ *  composition root runs where the legacy store's promotion step runs them today. A provenance with no slot (a test's
+ *  stand-in) is left alone; a refusal (content registering twice) is a defect of the wiring and throws. */
+function joinTestimony(c) {
+  const p = c.provenance;
+  if (!p || typeof p.onTestimony !== "function") return;
+  const answer = p.onTestimony("content", { check: (t) => c.testimonyCheck(t), project: (t) => c.testimonyProject(t) });
+  if (answer && answer.ok === false) throw new Error(`content: provenance refused its testimony registration: ${answer.code || answer.reason}`);
+}
+
+/** R51: this module's figures, registered with record-core's `registerCounts` (its R63) once per storage, when the
+ *  instance is first made. A record with no seam (a test's stand-in) is left alone; a refusal (another module reporting
+ *  one of these figures, or content registering twice) is a defect of the wiring and throws. */
+function registerFigures(c) {
+  const record = c.record;
+  if (!record || typeof record.registerCounts !== "function") return;
+  const answer = record.registerCounts("content", [...CONTENT_COUNT_KEYS], (hid) => c.counts(hid));
+  if (answer && answer.ok === false)
+    throw new Error(`content: record-core refused its figures: ${answer.reason}${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
 }

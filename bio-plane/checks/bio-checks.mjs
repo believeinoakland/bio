@@ -5717,33 +5717,6 @@ export const SURFACE_CHECKS = {
   },
 };
 
-/* D-394 / C-80 — THE CROSS-VERSION NOTICE'S REFUSALS
- * (`BIO_Content_Framework_v0_10.md` §18.1, the cross-version relation).
- *
- * THE READ TAKES EXACTLY ONE SUBJECT, and every refusal here is about the subject
- * rather than about the answer. The answer itself is never refused: a citation whose
- * document's version chain cannot be read is ANSWERED, with `newer: null` and the
- * reason, because a refusal there would read as "nothing to report" to a surface
- * that renders refusals quietly — the record knowing less than it says it does.
- *
- * ABSENT AND INVISIBLE ARE ONE ANSWER on both lookups, as on every gated read in
- * this plane (`op=content`'s NO_SUCH_CONTENT, `op=narrowcandidates`'
- * NARROW_NO_INQUIRY): a question or a passage in a project the caller was never
- * invited to refuses byte-identically to one that does not exist. */
-export const VERSION_NOTICE_CHECKS = {
-  /* The passage named is not a content row this caller may read. Its `where` names content's `passageNotice`
-     (content R29–R31, T5; N97, T6): the passage arm is content's. The store's `versionNotice` still answers the
-     same condition inside `is-version-notice-subject`, one sentence true at both, until legacy-store's passage arm
-     delegates to content (reported by T6's legacy-checks job). */
-  VERSION_NOTICE_NO_CONTENT: {
-    check: 'C-80.3',
-    where: 'src/content/index.mjs passageNotice > is-passage-notice',
-    translation: 'There is no cited passage by that id that you can read here. A passage id exists once '
-      + 'somebody has cited that part of a document; one in a project you were not invited to answers '
-      + 'exactly as one that does not exist.',
-  },
-};
-
 /* D-436 / C-64 — THE INSTANCE'S PRODUCING GROUP (BIO_State_Rules_Consistency_v1_5.md §3.1: `group` is the
  * producing group's slug and travels with every distributed copy — so it is in the SIGNED bytes). The plane
  * used to write one literal slug there, true of one instance and false of every instance `newgroup` installs.

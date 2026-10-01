@@ -106,7 +106,7 @@ test("R26: transcriptionRead: C-52.8; the text, digest, chain, cap, ceiling and 
   assert.deepEqual(r.attestations.map((a) => [a.attestor, a.counts]).sort(), [[V("ty"), false], [V("zo"), true]]);
 });
 
-test("R38: C-52.1–C-52.9 are this module's own rows (moved from the catalogue, T18), each refused by its row; C-80.3 is copied, the catalogue's identical until T19", async () => {
+test("R38: C-52.1–C-52.9 are this module's own rows (moved from the catalogue, T18), each refused by its row; C-80.3 is this module's one row", () => {
   const keys = ["TRANSCRIBE_NOT_A_MEMBER", "TRANSCRIBE_NO_DOCUMENT", "TRANSCRIBE_NO_BYTES", "TRANSCRIBE_NO_PORTION",
                 "TRANSCRIBE_PORTION_UNREADABLE", "TRANSCRIBE_NO_TEXT", "TRANSCRIBE_TEXT_TOO_LONG", "TRANSCRIPTION_NOT_FOUND",
                 "TRANSCRIPTION_SELF_ATTEST"];
@@ -116,11 +116,8 @@ test("R38: C-52.1–C-52.9 are this module's own rows (moved from the catalogue,
     assert.match(TRANSCRIBE_CHECKS[k].where, /^src\/content\/index\.mjs \S+ > is-transcri\S+$/, k);
     assert.ok(TRANSCRIBE_CHECKS[k].translation.length > 40, k);
   }
-  const catalogue = await import("../../../checks/bio-checks.mjs");
-  assert.equal("TRANSCRIBE_CHECKS" in catalogue, false, "the catalogue's copy is deleted (one home)");
   assert.deepEqual(Object.keys(VERSION_NOTICE_CHECKS), ["VERSION_NOTICE_NO_CONTENT"]);
   assert.equal(VERSION_NOTICE_CHECKS.VERSION_NOTICE_NO_CONTENT.check, "C-80.3");
-  assert.deepEqual(VERSION_NOTICE_CHECKS, catalogue.VERSION_NOTICE_CHECKS, "the copy held twice is one row");
   /* each has a negative control above (R23, R25, R26); the positive control: an ordinary typing passes every one */
   const { tr } = setup();
   assert.equal(tr({}).ok, true);

@@ -6,12 +6,13 @@
  * K585 (3)), the catalogue's copy deleted in the same job (✱, K586): no product module but this one reads it. Rows,
  * codes, `where`s and translations unchanged.
  *
- * C-80.3, the passage notice's one refusal (R29), is COPIED here in T18 (`VERSION_NOTICE_CHECKS`): `reevaluation`'s tests
- * still read the catalogue's copy and re-point to this one in layer 7; T19's layer 1 deletes the catalogue's (K529).
- * The row is identical in both places until then.
+ * C-80.3, the passage notice's one refusal (R29), was COPIED here in T18 (`VERSION_NOTICE_CHECKS`); this module was the
+ * catalogue's last importer of its copy, which T19's content job deleted (K750 (1), K769). This is now the one row.
  *
- * C-45 (the extent grammar) stays in the catalogue by K585 (3): its leg grammar still reads it in the file (see
- * `./extent.mjs`); C-45.13, which the catalogue never carried, is `./extent.mjs`' `CONTENT_EXTENT_OWN_CHECKS`. */
+ * C-45 (the extent grammar's rows, `CONTENT_EXTENT_CHECKS`) is COPIED here in T19 (R48; K585 (5)) with the extent
+ * core (`./extent-core.mjs`): codes, numbers and translations unchanged, each `where` naming the site in this module
+ * that answers it. The catalogue keeps its own copy for its own leg grammar (C-2.8, C-25.10) until `inquiry-grammar`
+ * deletes it (layer 6). C-45.13, which the catalogue never carried, is `./extent.mjs`' `CONTENT_EXTENT_OWN_CHECKS`. */
 
 /* =====================================================================
  * REC-87 / IC-128 — TRANSCRIBE (Bob's 5.2): a member selects a portion of a
@@ -120,5 +121,114 @@ export const VERSION_NOTICE_CHECKS = {
     translation: 'There is no cited passage by that id that you can read here. A passage id exists once '
       + 'somebody has cited that part of a document; one in a project you were not invited to answers '
       + 'exactly as one that does not exist.',
+  },
+};
+
+/* =====================================================================
+ * REC-82 / IC-83 — C-45, THE EXTENT GRAMMAR'S ROWS (R48), copied from the catalogue unchanged but for each `where`.
+ * ===================================================================== */
+export const CONTENT_EXTENT_CHECKS = {
+  CONTENT_EXTENT_OUT_OF_RANGE: {
+    check: 'C-45.1',
+    where: 'src/content/extent-core.mjs checkContentExtent > is-content-extent',
+    /* WIDENED BY REC-85 AND NOT REPLACED, because the FACT did not change: this
+       code has always meant "the address falls outside the container's own
+       extent", and a page set is one container's extent. A spreadsheet's sheets
+       and their dimensions, a document's paragraph count and a deck's shape list
+       are the same fact about three more containers, so they are this code and
+       not a fifth one — minting a second code for a rule that already has one is
+       how a vocabulary comes to hold two answers, which is the argument this
+       family's own header makes about the machine-credential fence. */
+    translation: 'This citation points at a part of the document that is not there — a page, a '
+      + 'sheet or cell, a paragraph, or a slide or shape that falls outside what this record '
+      + 'holds of the document. A reference nobody can follow is worse than no reference: it '
+      + 'looks like evidence and resolves to nothing. Check the address against the document as '
+      + 'this record holds it — pages and paragraphs are counted from the start of the captured '
+      + 'file, which is not always the number printed on it, and a sheet or slide the file '
+      + 'renamed or removed is a real finding rather than a typo.',
+  },
+  CONTENT_EXTENT_NO_CHAIN: {
+    check: 'C-45.2',
+    where: 'src/content/extent-core.mjs checkContentExtent > is-content-extent',
+    translation: 'Nothing in this record says where the text of this part of the document came '
+      + 'from. Pointing at a passage means pointing at text somebody or something produced, and '
+      + 'until this document has been read there is no passage to point at — only bytes nobody '
+      + 'has opened. Capture or read the document first, then cite the part of it you mean.',
+  },
+  CONTENT_EXTENT_UNREADABLE: {
+    check: 'C-45.3',
+    where: 'src/content/extent-core.mjs checkContentExtent > is-content-extent',
+    translation: 'This record cannot tell what part of the document this citation means. An '
+      + 'address it cannot evaluate is treated as pointing at nothing rather than at everything — '
+      + 'the generous reading would quietly let one checked paragraph stand behind a whole report.',
+  },
+  CONTENT_EXTENT_NO_PRODUCER: {
+    check: 'C-45.4',
+    where: 'src/content/extent-core.mjs checkContentExtent > is-content-extent',
+    translation: 'Citing a region of a web page is not something this record can do yet. Nothing '
+      + 'in it produces the addresses that would make such a citation checkable, so accepting one '
+      + 'would record a pointer that resolves to nothing and looks exactly like one that works. '
+      + 'Cite the captured page as a whole for now.',
+  },
+  /* D-440 (EXTRACTION-BREADTH-DESIGN.md section 3.2; CLIENT-RENDERED.md
+     "DESIGNED 2026-09-21"). An image's `{part}` names a media member of a
+     CONTAINER's own bytes, and a web page, a PDF or a plain file has none. It
+     is a sub-number of this family on C-45.5's rule (the family's subject is the
+     ways the record could come to point at nothing), and it is NOT C-45.1: the
+     part is not outside a list this record holds, there is no list to be outside
+     of, because the document is not the kind that embeds one. Until D-440 this
+     minted, stating nothing, whenever the capture held no image list. */
+  CONTENT_EXTENT_NOT_A_CONTAINER: {
+    check: 'C-45.11',
+    where: 'src/content/extent-core.mjs checkContentExtent > is-content-extent',
+    translation: 'This citation points at an image embedded inside the document, and this document '
+      + 'is not the kind that embeds files inside itself: it is a web page, a PDF or another plain '
+      + 'file, not a Word, Excel, PowerPoint or OpenDocument file. An image shown beside a web page '
+      + 'is a separate file the page only points at, so it is not in what this record captured of '
+      + 'the page. If that image is your evidence, capture it at its own address as its own '
+      + 'document and cite that document whole. An image drawn on a PDF page is cited by its page '
+      + 'and position instead.',
+  },
+  /* REC-84 / IC-84 (1): a leg may NAME the part it rests on, instead of
+     describing it. The two refusals below are the two ways that name can be
+     wrong, and both are facts only the store can establish — hence a store
+     `where` and a REGION, on VERSION_FROZEN's and VERSION_LEG_UNRESOLVED's own
+     precedent a few thousand lines up. The region moved with content's
+     extraction (T5) to `#rowFor` in `src/content/index.mjs` (re-pointed T6, N97). */
+  CONTENT_ROW_UNKNOWN: {
+    check: 'C-45.5',
+    where: 'src/content/index.mjs #rowFor > is-content-row',
+    translation: 'This citation names a specific part of a document, and this record holds no '
+      + 'such part. That is not a typo the record can fix for you: the part is named by a code '
+      + 'taken over the document, the passage and how its text was produced, so a code nothing '
+      + 'answers to points at nothing at all. Cite the part by describing it — the page, the '
+      + 'cell, the paragraph — and the record will find or create the entry for it.',
+  },
+  CONTENT_ROW_NOT_THIS_TARGET: {
+    check: 'C-45.6',
+    where: 'src/content/index.mjs #rowFor > is-content-row',
+    translation: 'This citation rests on one document and names a part of a different one. A '
+      + 'reference that says "this document, that passage" is two claims that do not meet, and a '
+      + 'reader following it would be shown material the citation never meant.',
+  },
+  /* D-420 — AN IMAGE CITED BY PAGE AND RECTANGLE WHERE THE PAGE PAINTS NO
+     IMAGE. Not C-45.1: that code is "the address is outside the container" and
+     this address is INSIDE it — the page exists and the rectangle is on it. What
+     is wrong is the KIND the row would claim: an `image` row over a region the
+     record holds as painting no image is a text-or-nothing region wearing an
+     image's name. The figure comes from the record (the placements the
+     structure op reported at acquire, EXTRACTION-BREADTH §3.3 item 2), and with
+     no figure held the citation is admitted and the absence stated. C-45.12
+     because D-440 holds C-45.11 in the same family (a sub-number of an
+     allocated family, C-45.5's precedent — no `mintid C`). */
+  CONTENT_EXTENT_NO_IMAGE_PAINTED: {
+    check: 'C-45.12',
+    where: 'src/content/extent-core.mjs checkContentExtent > is-content-extent',
+    translation: 'This citation calls a region of the page an image, and the page paints no image '
+      + 'there. When this document was captured the record listed every image each page draws and '
+      + 'where, and none sits at this address — so a row saying "an image is here" would claim '
+      + 'something the file does not show. If you meant the words in that region, cite it as a '
+      + 'region of the page; if you meant a picture, pick it from the images the record lists for '
+      + 'this page, which are named beside this refusal.',
   },
 };
