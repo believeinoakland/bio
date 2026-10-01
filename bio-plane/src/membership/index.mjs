@@ -268,6 +268,7 @@ export class Membership {
     for (const st of bare.split(";")) { const t = st.trim(); if (t) this.sql.exec(t); }
     if (cols("members").includes("expertise")) this.sql.exec(`ALTER TABLE members DROP COLUMN expertise`);
     this.declareTables();
+    this.#registerReservedIdFinding();
     /* No `bundles` table yet means no project to index (a host whose record-core has not made its schema). */
     if (cols("bundles").length) this.reindexProjectSight();
   }
@@ -287,6 +288,35 @@ export class Membership {
     return true;
   }
   #declared = false;
+
+  /* REC-132 / D-422 / C-55: A MEMBER HOLDING THE RESERVED ID IS REPORTED BY THE AUDIT, NEVER RENAMED (moved from the
+     legacy store's `auditPass`, T19, through record-core's R68 seam). `memberAdd` refuses the id `admin` (R12), but an
+     instance that enrolled one before the reservation still holds it, and every name-keyed check reads it as the
+     founder. Renaming it would rewrite who the record says acted, so the audit SAYS it and an administrator decides.
+     Always answered under the key `membership`, so "none held" and "this build does not look" never read alike; a
+     stated finding, never a conformance error. It names only the reserved id, which is public, and that row's role
+     and status. Registered once; a host whose record-core does not offer the seam registers nothing. */
+  #registerReservedIdFinding() {
+    if (this.#findingRegistered || !this.core || typeof this.core.registerAuditFinding !== "function") return;
+    this.core.registerAuditFinding("membership", "membership", () => this.#reservedIdFinding());
+    this.#findingRegistered = true;
+  }
+  #findingRegistered = false;
+
+  #reservedIdFinding() {
+    const id = Membership.ROOT_ADMIN;
+    const m = this.#one(`SELECT role, status FROM members WHERE member_id = ?`, id);
+    return {
+      reservedId: id, held: !!m, role: m ? m.role : null, status: m ? m.status : null,
+      check: MEMBER_ID_CHECKS.MEMBER_ID_RESERVED.check,
+      says: m
+        ? `a member is enrolled under the reserved id '${id}' (role ${m.role}, status ${m.status}). `
+          + `Every check that asks whether someone administers by name reads it as the founding `
+          + `administrator. It was enrolled before the id was reserved and has NOT been renamed: an `
+          + `administrator should decide what it is and re-enrol the person under another id`
+        : `no member holds the reserved id '${id}'`,
+    };
+  }
 
   /* ===== R79 (N123, K159, K285) — THE REVOCATION NOTICE (K31's pattern) =====
    *
@@ -2233,7 +2263,7 @@ export class Membership {
    *
    * The arithmetic of section 4.7 lives in ONE place, `adminArithmetic`, and
    * every rule below reads it rather than restating it. The table in the
-   * architecture document is the specification and `test/membership.test.mjs`
+   * architecture document is the specification and R5's test (`test/m/membership/`)
    * asserts it row by row, because this is the part of the design that is cheap
    * to get subtly wrong and expensive to discover wrong.
    */

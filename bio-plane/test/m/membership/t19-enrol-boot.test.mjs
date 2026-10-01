@@ -111,3 +111,25 @@ test("R59 migrate on a host whose record-core has made no bundles table creates 
   assert.doesNotThrow(() => m.migrate());
   assert.deepEqual(sqlOver(db).exec(`SELECT * FROM project_sight`), []);
 });
+
+/* ---- the reserved-id finding, through record-core's R68 seam ---- */
+
+test("R12 R57 the audit reports a member held under the reserved id, never renames it, and registers once", async () => {
+  const w = world();
+  const found = [];
+  w.core.registerAuditFinding = (module, key, finding) => { found.push({ module, key, finding }); return { ok: true }; };
+  w.m.migrate();
+  w.m.migrate();
+  assert.deepEqual(found.map((f) => [f.module, f.key]), [["membership", "membership"]], "once, under `membership`");
+  const finding = found[0].finding;
+  assert.deepEqual(finding({ bundles: [] }), {
+    reservedId: "admin", held: false, role: null, status: null, check: "C-55.1",
+    says: "no member holds the reserved id 'admin'" });
+  /* an instance that enrolled `admin` before the reservation */
+  w.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, created, updated)
+              VALUES ('admin', 'old', 'oldadmin', 'member', 'active', 't', 't')`);
+  const held = finding({ bundles: [] });
+  assert.deepEqual([held.held, held.role, held.status, held.check], [true, "member", "active", "C-55.1"]);
+  assert.match(held.says, /has NOT been renamed/);
+  assert.equal(w.row(`SELECT member_id FROM members WHERE member_id='admin'`).member_id, "admin", "never renamed");
+});
