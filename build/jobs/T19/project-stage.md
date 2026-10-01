@@ -28,3 +28,7 @@ Size (session_0176SssFQ9f6sgcBWFaQfoad): test runs 2, module lines 382
 ## J1 · REPORT
 
 Two findings outside my files, neither blocking. (1) build/requirements/project-stage.md Uses still names legacy-checks for parseFrontmatter; since this job it is record-grammar (its R6–R11, same contract). (2) test/m/publication/fixture.mjs:18 (publication's test file, which my fixture builds on) still imports parseFrontmatter from checks/bio-checks.mjs.
+
+## J2 · COMPLETE
+
+B1 applied: parseFrontmatter re-pointed to record-grammar (one line); K819: my two fixtures writing a no-project concluded inquiry now carry a conclusion, a falsifier and a leg, no assertion weakened. Module tests 23/23 pass; format, architecture, coverage (9 of 9) and ownership checks 0 failures. Record: build/jobs/T19/project-stage.md on job/T19/project-stage.
