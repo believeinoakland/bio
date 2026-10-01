@@ -33,3 +33,25 @@ B2 (K794): what I'm building now, and the two places it rubs against my requirem
 2. **The `where` B2 says to keep.** R29 says each row's `where` names *this module's* site. The catalogue's C-68.1 `where` is `src/index.mjs storageAbsent > is-storage-absent`, which is legacy-index's helper. My best reading follows B2 literally: the line is unchanged, held twice (rule 1), and my R29 test exempts C-68.1 from the "names acquisition's site" check, by name. If you would rather it name my site (`src/acquisition/index.mjs acquire > is-storage-absent`, a new region at :298), say so; that would be a row change, awaiting the stamp.
 
 I'm carrying on with both readings. The answer only changes the `where` line and its test arm.
+
+## J3 · COMPLETE
+
+Complete again (B2, B3). Head: ef2c6dd844 on job/T19/acquisition (tranche/T19 merged in twice: for B2's reworded Uses and for B3's R29).
+
+**Entries applied**
+- **B2 (K794): C-68.1 is acquisition's.** `checks.mjs` holds `INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED`, frozen, with the catalogue's number and translation unchanged. It is in `ACQUISITION_CHECKS` and exported from `index.mjs` (capture's `pullKnock` can read it there). The raise at `acquire`'s start (no evidence store) now carries `check` and `translation` beside the `reason`, `op` and `error` it already carried. The catalogue's copy is untouched (ownership: legacy-checks 0 added, 0 removed).
+- **B3 (K796).** Its `where` is `src/acquisition/index.mjs acquire > is-storage-absent`, a new DEC-49 region round the raise, awaiting the stamp. The R29 test has no exemption.
+- **Tests at the interface.** The R29 table test now pins C-68.1 among exactly 17 rows and its row's text exactly. The every-refusal test drives it with a negative control. A new R29 (C-68.1) test covers the direct, archive, render and capture-request arms with no storage: each answers 503 with the row, with nothing fetched, filed or stored. Mutation check: with the row stripped from the raise, 2 tests go red.
+
+**Deferred.** Nothing.
+
+**For BOB**
+- The plane bundle stays stale (now also from this commit); your layer-close regeneration covers it.
+- capture (K794): `pullKnock` should read `INSTALLATION_CHECKS` from acquisition when its job runs; I did not touch it.
+
+**Tests and checks**
+- `node --test test/m/acquisition/`: tests 56, pass 56, fail 0.
+- Users of `acquire` (its refusal answer changed): extraction 145/0 fail, capture-requests 63/0. capture, ratification, monitoring, instance-setup and control-plane fail 5, 81, 1, 4, 1. I diffed the failing-test list with and without this change: identical, 92 lines each, so none is mine.
+- `format` 0 failures · `architecture` 9 product files, 37 relative imports, 0 failures · `coverage` 30 of 30, 0 failures · `ownership` 8 files changed; legacy-checks 0 added, 0 removed; 0 failures.
+
+Size (session_01RaLL3nDAnEmSKcyNi9iC9w): test runs 7, module lines 1267
