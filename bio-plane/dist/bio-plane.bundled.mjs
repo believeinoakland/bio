@@ -72857,9 +72857,10 @@ var Reevaluation = class {
       };
     const causes = [];
     const sup = this.inquiry.supersededBy(targetId) || [];
-    let supersededBy = null;
+    let supersededBy = null, withheld = false;
     if (sup.length) {
-      supersededBy = sup.map((id) => visible(id));
+      supersededBy = sup.filter((id) => visible(id) !== null);
+      withheld = supersededBy.length < sup.length;
       const when = this.#one(
         `SELECT MAX(last_updated) AS m FROM bundles WHERE bundle_id IN (SELECT value FROM json_each(?))`,
         JSON.stringify(sup)
@@ -72921,7 +72922,8 @@ var Reevaluation = class {
       object_type: row2.object_type,
       causes,
       edition,
-      ...supersededBy ? { superseded_by: supersededBy } : {}
+      withheld,
+      ...supersededBy && supersededBy.length ? { superseded_by: supersededBy } : {}
     };
   }
   /* R16: the recorded re-evaluations of the (dependent, target) pairs one answer lists, keyed (dependent, target,
@@ -73273,6 +73275,7 @@ var Reevaluation = class {
     const reg = this.#registry([...targets, ...dependents]);
     const obligations = [], closedOnly = [];
     const found = [];
+    let withheld = false;
     const place = (o, causes) => found.push({ o, causes });
     const onTargets = this.#rows(`SELECT bundle_id, ord, target_id, content_id FROM inquiry_basis
                    WHERE target_id IN (SELECT value FROM json_each(?)) ORDER BY bundle_id, ord`, JSON.stringify(targets));
@@ -73282,12 +73285,17 @@ var Reevaluation = class {
     for (const t of targets) {
       const moved = this.#moved(t, visible, reg);
       if (!moved && !correctedOn.has(t)) continue;
+      if (!t0 && !(moved && moved.held === false) && visible(t) === null) continue;
+      if (moved && moved.withheld) withheld = true;
       const own3 = moved ? { state: moved.state, object_type: moved.object_type } : this.#one(`SELECT current_state AS state, object_type FROM bundles WHERE bundle_id=?`, t) || { state: null, object_type: null };
       const rest = this.inquiry.restingOn(t);
       const legs = rest && rest.ok !== false && Array.isArray(rest.dependents) ? rest.dependents : [];
       const byBundle = /* @__PURE__ */ new Map();
       for (const l of legs) {
-        if (visible(l.bundle_id) === null) continue;
+        if (visible(l.bundle_id) === null) {
+          withheld = true;
+          continue;
+        }
         if (!byBundle.has(l.bundle_id)) byBundle.set(l.bundle_id, []);
         byBundle.get(l.bundle_id).push(l);
       }
@@ -73332,7 +73340,9 @@ var Reevaluation = class {
           })),
           stored: this.#storedTriple(fm),
           strength: this.#strengthOf(bundleId),
-          ...moved && moved.superseded_by ? { superseded_by: moved.superseded_by } : {}
+          ...moved && moved.superseded_by ? { superseded_by: moved.superseded_by } : {},
+          /* R20: its `superseded_by` withheld a superseder (stated on the obligation, in a listing too). */
+          ...moved && moved.withheld ? { out_of_view: true } : {}
         }, causes);
       }
     }
@@ -73374,6 +73384,7 @@ var Reevaluation = class {
       ...t0 ? { target: t0 } : {},
       obligations,
       count: obligations.length,
+      ...t0 && withheld ? { out_of_view: true } : {},
       closed: closedOnly,
       closed_count: closedOnly.length,
       editions_read: reg !== null,
@@ -73477,8 +73488,15 @@ var Reevaluation = class {
     } catch {
       live = null;
     }
-    const raised = (live && Array.isArray(live.all) ? live.all : []).filter((l) => visible(l.bundle_id) !== null).map((l) => ({ bundle_id: l.bundle_id, ord: l.ord, role: l.role ?? null, state: l.state ?? null }));
-    const out = { source, since, ...edition != null ? { edition } : {}, raised };
+    const all = live && Array.isArray(live.all) ? live.all : [];
+    const raised = all.filter((l) => visible(l.bundle_id) !== null).map((l) => ({ bundle_id: l.bundle_id, ord: l.ord, role: l.role ?? null, state: l.state ?? null }));
+    const out = {
+      source,
+      since,
+      ...edition != null ? { edition } : {},
+      raised,
+      ...raised.length < all.length ? { out_of_view: true } : {}
+    };
     if (t) this.#tellAfterCommit({
       kind: "finding",
       subject: t,
@@ -73522,7 +73540,8 @@ var Reevaluation = class {
         id,
         state: state ? state.current_state : null,
         causes,
-        ...moved && moved.superseded_by ? { superseded_by: moved.superseded_by } : {}
+        ...moved && moved.superseded_by ? { superseded_by: moved.superseded_by } : {},
+        ...moved && moved.withheld ? { out_of_view: true } : {}
       };
     });
     const outC = cl.map((cid) => {
@@ -99883,60 +99902,12 @@ function migrateIntent(sql) {
 }
 
 // src/intent/grammar.mjs
-var f16 = (check, severity, message2, repairs) => {
-  const out = { check, severity, message: message2 };
-  if (repairs) {
-    out.repairable = true;
-    out.repairs = repairs;
-  }
-  return out;
-};
-var WORKPRODUCT_STATES = Object.freeze(["draft", "internally_checked", "externally_compliant", "distributed"]);
+var f16 = (check, severity, message2) => ({ check, severity, message: message2 });
 var CLOSED_REASONS = Object.freeze(["resolved", "superseded", "abandoned"]);
 function checkProjectExtension(ctx, findings) {
   if (ctx.fm?.object_type !== "project") return;
-  const fm = ctx.fm;
-  const WS2 = WORKPRODUCT_STATES;
-  if (fm.workproduct_state !== void 0 && fm.workproduct_state !== null && !WS2.includes(fm.workproduct_state)) {
-    findings.push(f16("C-2.9", "error", `workproduct_state '${fm.workproduct_state}' is not one of: ${WS2.join(", ")}`));
-  }
-  const evals = Array.isArray(fm.evaluations) ? fm.evaluations : [];
-  for (let i = 0; i < evals.length; i++) {
-    const e = evals[i];
-    if (!e || !["compliance", "argument"].includes(e.kind) || !["internal", "external"].includes(e.strictness) || !["pass", "findings"].includes(e.result) || !ISO_TS_RE.test(e.timestamp || "")) {
-      findings.push(f16("C-2.9", "error", `evaluations[${i}] lacks the required kind/strictness/result/timestamp shape`));
-    } else if (e.result === "findings" && !e.findings_ref) {
-      findings.push(f16("C-2.9", "error", `evaluations[${i}] result is findings but findings_ref is empty`));
-    }
-  }
-  if (fm.current_state === "closed" && !CLOSED_REASONS.includes(fm.closed_reason)) {
+  if (ctx.fm.current_state === "closed" && !CLOSED_REASONS.includes(ctx.fm.closed_reason)) {
     findings.push(f16("C-2.9", "error", `closed state requires closed_reason in: ${CLOSED_REASONS.join(", ")}`));
-  }
-  const ws = fm.workproduct_state;
-  const passed = (kind, stricts) => evals.some((e) => e && e.kind === kind && e.result === "pass" && stricts.includes(e.strictness));
-  if (["internally_checked", "externally_compliant", "distributed"].includes(ws)) {
-    for (const kind of ["compliance", "argument"]) {
-      if (!passed(kind, ["internal", "external"])) {
-        findings.push(f16(
-          "C-9.1",
-          "error",
-          `workproduct_state '${ws}' requires a passing ${kind} evaluation (internal strictness or better)`,
-          ["run the missing evaluation", "demote workproduct_state to the highest earned rung"]
-        ));
-      }
-    }
-  }
-  if (["externally_compliant", "distributed"].includes(ws)) {
-    for (const kind of ["compliance", "argument"]) {
-      if (!passed(kind, ["external"])) {
-        findings.push(f16(
-          "C-9.1",
-          "error",
-          `workproduct_state '${ws}' requires a passing external-strictness ${kind} evaluation`,
-          ["run the missing evaluation", "demote workproduct_state to the highest earned rung"]
-        ));
-      }
-    }
   }
 }
 var PROJECT_GRAMMAR = Object.freeze({
@@ -100444,7 +100415,8 @@ var Intent = class {
       return refusal13("BAD_SHARE", "a share is a whole number from 1 to 100. Nothing was written.");
     return null;
   }
-  /** record-core R59: C-2.9's objective arm in the audit, beside the grammar's other arms (R29), over the same image (R22). */
+  /** record-core R59: C-2.9's objective arm in the audit, beside the grammar's `closed_reason` arm (R29), over the same image
+   *  (R22). */
   auditCheck(image) {
     const md = image && image.files ? image.files.get("bundle.md") : null;
     const fm = parseFm(typeof md === "string" ? md : null);
