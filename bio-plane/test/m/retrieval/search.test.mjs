@@ -81,7 +81,7 @@ test("R9: a conjunction of more than one atom that finds nothing counts the OR r
   const miss = w.retrieval.search({ q: "water library", viewer: V("vera") });
   assert.equal(miss.total, 0);
   assert.deepEqual(miss.widen, { interpretation: "OR", total: 3, q: "water library",
-    detail: "no bundle matches all of these terms; this many match any of them" });
+    detail: "no record matches all of these terms; this many match any of them" });
   assert.equal(w.retrieval.search({ q: "water library", viewer: V("vera"), widen: false }).widen, null);
   assert.equal(w.retrieval.search({ q: "zzqx yyqx", viewer: V("vera") }).widen, null, "the OR reading finds nothing");
   assert.equal(w.retrieval.search({ q: "zzqx", viewer: V("vera") }).widen, null, "one atom is not a conjunction");
@@ -157,6 +157,7 @@ test("R17: searchIndexCheck finds NO_FTS_ID, NO_INDEX_ROW and DIVERGED over visi
   assert.equal(bad.ok, false);
   assert.deepEqual(bad.findings.map((f) => [f.bundleId, f.finding]),
     [["INFO-1", "NO_FTS_ID"], ["INFO-2", "NO_INDEX_ROW"], ["INFO-3", "DIVERGED"]]);
+  assert.equal(bad.findings[0].detail, "the record has no text index key");
   const div = bad.findings[2];
   assert.deepEqual(div.columns, ["body"]);
   assert.deepEqual(div.chars.body[0], "tampered".length);

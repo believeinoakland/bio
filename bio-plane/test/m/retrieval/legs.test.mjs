@@ -170,14 +170,14 @@ test("R29: hidden answers as absent through a meaning arm — the project's reso
   assert.equal(w.retrieval.search({ q: "leg:hunch", viewer: V("vera") }).total, HUNCH.length);
 });
 
-test("R16: the syntax sentences name the meaning arms a member would type — leg:hunch as hunch debt, resolves: and concerns: — and say they answer at bundle grain; no arm is published as a projected field", () => {
+test("R16: the syntax sentences name the meaning arms a member would type — leg:hunch as hunch debt, resolves: and concerns: — and say they answer at record grain; no arm is published as a projected field", () => {
   const f = world().retrieval.searchFields();
   const s = f.syntax.find((x) => x.includes("leg:hunch"));
   assert.ok(s, "a sentence names leg:hunch");
   assert.match(s, /hunch debt/);
   assert.match(s, /resolves:/);
   assert.match(s, /concerns:/);
-  assert.match(s, /BUNDLE grain/);
+  assert.match(s, /RECORD grain/);
   assert.deepEqual(Object.keys(MEANING).filter((a) => a in f.fields), []);
 });
 

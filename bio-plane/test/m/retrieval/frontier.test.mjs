@@ -56,6 +56,8 @@ test("R36, R40: a built level answers found, built, level, limit, truncated, loo
   assert.deepEqual(f.looked.map((r) => r.result_purged), [null, true, null], "held, not held, no capture referent");
   assert.deepEqual(f.tally, { PRESENT: 2, LOOKED_INDETERMINATE: 1, LOOKED_ABSENT: 1 });
   assert.equal("NEVER_LOOKED" in f.tally, false);
+  assert.match(f.note, /every record it names/);
+  assert.doesNotMatch(f.note, /\bbundle\b/, "the note says record, not bundle (N458)");
   /* R40's held arm: a referent the record holds reads result_purged false. */
   docRow(w, "https://example.org/w", "PRESENT", { authority: "INFO-1", result_kind: "capture", result_ref: c.sha });
   assert.equal(w.retrieval.frontier({ level: "document", viewer: MACHINE }).looked[0].result_purged, false);
