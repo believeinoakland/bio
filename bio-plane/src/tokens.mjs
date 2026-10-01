@@ -59,9 +59,10 @@ export async function liveToken(v) {
  * a Worker secret binding placed by the operator through the deploy or install
  * path, and nothing an agent can call reaches it. An agent-initiated scope
  * widening is refused because there is nothing to widen: the surface does not
- * exist. `bio-plane/test/claudecascade.test.mjs` asserts that absence over the
- * plane's own source, so adding a setter later fails a suite instead of
- * quietly becoming possible.
+ * exist. `bio-plane/test/m/runtime-limits/runtime-limits.test.mjs` (R23) pins
+ * this module's export surface and that no service writes to the `env` it is
+ * given, so adding a setter here fails that test instead of quietly becoming
+ * possible.
  *
  * SHAPE IS DELIBERATELY NOT CHECKED. `AI_TOKEN_SHAPE` pins `aik-[0-9a-f]{64}`
  * because WE mint that and know its shape. This credential is Anthropic's, and
@@ -124,10 +125,9 @@ export async function instanceClaudeToken(env) {
  * RECORD's answer, asked by the one caller (`Store#aiRunResumer`) at the row.
  *
  * IT HAS NO WRITE PATH, for DS-3's reason above: the value arrives as a Worker secret an operator places through
- * install or update (DIST's half of D-260), and nothing an agent can call reaches it. The fence is asserted by
- * `bio-plane/test/d260-resume.test.mjs` exactly as `claudecascade.test.mjs` asserts the Claude binding's: this
- * module is the only one in `bio-plane/src` that names the binding. PUBLICATION IS REVOCATION, as for every
- * token here: a value on `PUBLISHED_TOKEN_HASHES` is NOT SET.
+ * install or update (DIST's half of D-260), and nothing an agent can call reaches it. The same R23 test that
+ * fences the Claude binding above fences this one. PUBLICATION IS REVOCATION, as for every token here: a value on
+ * `PUBLISHED_TOKEN_HASHES` is NOT SET.
  */
 export const INSTANCE_AI_BINDING = "INSTANCE_AI_TOKEN";
 
