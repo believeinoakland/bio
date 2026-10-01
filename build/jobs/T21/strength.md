@@ -27,3 +27,7 @@ None.
 - `format`: 86 modules, 84 requirements files, 0 failures. `architecture strength`: 13 product files, 45 relative imports, 0 failures. `coverage strength`: 28 of 28 live ids named by a test, 0 failures. `ownership strength tranche/T21` (after commit): 5 files changed, 0 failures.
 
 Size (session_016S9APVD77hDCq9MtoPtEwc): test runs 17, module lines 1553
+
+## J1 · REPORT
+
+Found in other modules (record, 'Found in other modules'): (1) stale generated artifact: bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (not_product) carry strength's old sentences; regenerate at the layer close. (2) 'node tools/mintid.mjs' (tools/ retired) is named as live in notes in bio-plane/src/{inquiry-grammar,content,connections,ratification,run-rules,basis-versions,observation-log,provenance}/checks.mjs, src/queuestate.mjs and src/textchain.mjs; outside N469's list, the same re-wording would suit. (3) Red in modules that use strength, identical on origin/tranche/T21 without my commit, so not this job's: filings 13/35 (L9 folds not yet made), control-plane 92/1 (catalogue-end.test.mjs, C-53.13's translation from provenance's N458, awaiting stamp T22).
