@@ -835,12 +835,6 @@ export class Store extends DurableObject {
 
 
 
-  /** N191 (K333, K335): ai-runs' R42 tail for the caller's sight — over `observation_log` without `column`, over a
-   *  column naming a run id with one. R42 fails CLOSED on an absent viewer, so it is not asked for a viewer never
-   *  sent: this store's own convention keeps a direct internal call WHOLE (the empty tail), as `#counts`' bundle subtraction does. */
-  #hiddenRunTail(viewer, column = undefined) {
-    return viewer === undefined ? { sql: "", args: [] } : hiddenRuns(viewer, column);
-  }
 
 
   /** The one body behind both answers, so the wire's counts and purge's proof cannot drift apart
@@ -876,10 +870,10 @@ export class Store extends DurableObject {
      * store-level suites read straight off the DO route (projects, search, selection, status) — a direct internal
      * call is not a caller. */
     /* D-464's bundle subtraction is membership's `hiddenBundles` (its R88, N352); D-486's run subtraction is ai-runs'
-       R42 through `#hiddenRunTail` (N191), for `aiRunBounds`, `aiRunLog` and `observationsNonLead`. Both keep D-464's
+       R42 (N191), for `observationsNonLead`. Both keep D-464's
        reading of the never-sent stamp: `undefined` is a direct internal call and stays WHOLE, so it is not asked. */
     const hid = viewer === undefined ? null : hiddenBundles(viewer);
-    const runTail = this.#hiddenRunTail(viewer), boundsTail = this.#hiddenRunTail(viewer, "run");
+    const runTail = viewer === undefined ? { sql: "", args: [] } : hiddenRuns(viewer);
     /* `COALESCE(k, '')`: a NULL key names no bundle, and `NULL NOT IN (…)` is NULL — the row would be dropped. */
     const nx = (t, where, keys = []) => {
       const conds = where ? [where] : [], args = [];
@@ -965,34 +959,8 @@ export class Store extends DurableObject {
          (`op=extractproposals`), and an instance-wide fraction would average
          across projects that have nothing to do with each other. */
       proposedReadings: prod.proposedReadings,
-      /* IS-6: the investigative runs, their budgets and their observation logs,
-         reported so a whole-store purge can PROVE it took them (D-113) and so an
-         operator can see how many runs are in flight without opening one. A
-         COUNT AND NOTHING ELSE — what a run is looking into is not an operator
-         surface, the same line queueState draws. */
-      aiRuns: n("ai_runs", "context_id"),
-      aiRunBounds: this.#one(`SELECT count(*) c FROM ai_run_bounds WHERE 1=1${boundsTail.sql}`, ...boundsTail.args).c,
-      /* D-85: the links from an assistant's questions to their runs, counted for IS-6's reason one line up — so a
-         purge can PROVE it took them (D-113). A COUNT AND NOTHING ELSE: which run opened which question is read
-         per question, under that question's gate (`op=projection`'s `surfaced_in`). */
-      inquiryRunSurfacings: n("inquiry_run_surfacings", "bundle_id"),
       /* REC-173: the questions whose creation was a verified migration replay, counted for D-85's reason one line up. */
       inquiryMigrationReplays: n("inquiry_migration_replays", "bundle_id"),
-      /* REC-93 / IC-92: `aiRunLog` was a count of `ai_run_log`, which no longer
-         exists — `OBSERVATION-LOG-DESIGN.md` §4.4 folded it into `observations`
-         and `#migrate` drops it. The key is KEPT AND RE-AIMED at the folded rows
-         rather than removed, because `op=purge` publishes these counters as its
-         proof that it took what it says it took (D-113) and a key that vanishes
-         from that proof reads as a table nobody is checking. `observations` is
-         counted WHOLE beside it: the log is the coverage record and its size is
-         an operator fact, while what any single row was looking for is not. */
-      /* D-486 / BOB #32 (2026-09-24): AND IT IS TAKEN THROUGH THE CALLER'S OWN SIGHT. This key is the
-         `authority_kind = 'run'` SLICE of the log, so every row it counts is a run saying it looked —
-         which for a project the caller cannot see is that project's THINKING, withheld by the ruling.
-         `runTail` is ai-runs' R42 (`hiddenRuns`, N191), the one predicate this key, `observationsNonLead` below and
-         retrieval's frontier tallies read. Unfiltered callers get the empty tail and the count they always got;
-         purge's `observations` below stays WHOLE. */
-      aiRunLog: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'${runTail.sql}`, ...runTail.args).c,
       /* REC-131 / IC-148 — `leads` IS NOT ON THE WIRE FOR ANY CLASS, AND THE WIRE'S LOG COUNT IS A
          DIFFERENT KEY FROM PURGE'S. BOB #15's CORRECTED ruling (`MEMBER-KNOWLEDGE-DESIGN.md` §5, *A
          COUNT IS A DISCLOSURE OF EXISTENCE*): a counter over rows a caller could not all read goes

@@ -39,10 +39,10 @@ test("R10, R12, R14, R16, R18, R26, R29 (N418): every write of the run's acts is
   await w.group("ann");
   w.bundle(INQ);
   w.ctx.id = { equals: (x) => x === "id:bio" };
-  const m = w.membership.aiCredentialMint({ who: "admin", tokenId: "tok-org", secretSha: sha(TOKEN), principalKind: "organisation",
+  const m = w.credentials.aiCredentialMint({ who: "admin", tokenId: "tok-org", secretSha: sha(TOKEN), principalKind: "organisation",
     taskScope: "investigative", writes: ["airuntick"], note: "the instance's key" });
   assert.equal(m.ok, true, JSON.stringify(m));
-  const cred = w.membership.aiCredentialLook({ secretSha: sha(TOKEN) }).credential;
+  const cred = w.credentials.aiCredentialLook({ secretSha: sha(TOKEN) }).credential;
   const stamp = `${cred.principal}/${cred.tokenId}`;
   const seen = watch(w);
 
