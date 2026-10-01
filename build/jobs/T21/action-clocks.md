@@ -44,7 +44,7 @@ Started from `job/T21/action-clocks` @ f8e0fea070 (the tranche head then).
 - **Tests:** `node --test test/m/action-clocks/` (in `bio-plane/`): 27 pass, 0 fail. `node --test test/m/queue-producers/`: 47 pass, 0 fail. `build/manifest.md` names no layer tests.
 - **Checks:** format: 86 modules, 84 requirements files; 0 failures. architecture action-clocks: 8 product files, 36 relative imports; 0 failures. coverage action-clocks: 11 of 11 live ids named by a test; 0 failures. ownership action-clocks tranche/T21: 3 files changed; 0 failures.
 
-Size (session_015pvHnYxQ54F92EcJ7ppwXw): test runs 3, module lines 7
+Size (session_015pvHnYxQ54F92EcJ7ppwXw): test runs 3, module lines 862
 
 ## J1 · QUESTION
 
