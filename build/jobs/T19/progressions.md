@@ -28,3 +28,7 @@
 - `format`: 87 modules, 0 failures. `architecture progressions`: 10 product files, 0 failures. `coverage progressions`: 36 of 36 live ids. `ownership progressions tranche/T19`: legacy-store 0/0, legacy-checks 0/0, 0 failures.
 
 Size (session_01XeKXwUVQ7NTKCEh2MZSm9w): test runs 4, module lines 1660
+
+## J1 · COMPLETE
+
+Done; pushed to job/T19/progressions. Record: build/jobs/T19/progressions.md, Completion section. Met, with tests: R36 (figures.test.mjs, two 'R36: …' tests; all seven figures R36 names, not B1's five, registered via registerCounts('progressions'), bundle-keyed ones with COALESCE as the store's #counts); rule 1 (checks.mjs and define/exceptions tests read NO_BASIS/NO_CITATION from record-grammar's SHARED_ACT_CHECKS; no progressions file imports bio-checks.mjs; index.mjs:11 re-worded); N433's four rows unchanged. Progressions tests 46 pass, 0 fail, 1 todo (R32). Neighbour modules' results identical with and without my change. All four checks pass (ownership: legacy 0/0). Three reports in the record: legacy-store deletes #counts' seven progression lines (store.mjs 1056-1080); the legacy-checks uses edge and the requirement's Private Uses line are stale (now record-grammar); the plane bundle needs regenerating.
