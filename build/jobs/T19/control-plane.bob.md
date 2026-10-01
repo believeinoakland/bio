@@ -12,3 +12,7 @@ Depth 2. Your entry: `build/plan/current.md` layer 11, control-plane (kept; ⚑L
  K831 (PUBLIC-READ #2 J1): `CHECK_FAMILY_FILES` (`control-plane/families.mjs`) gains `src/public-read/checks.mjs` (public-read R17's three families); `families.test.mjs`' totality arm names it until then.
 
  K837 (ACTIONS #6 J2): `families.mjs`:51, :103 read `src/action-grammar/checks.mjs` (the eight `*_CHECKS` families), not `src/actions/checks.mjs`, now a re-export only (K835; N447 drops it in T20).
+
+## B2 · ANSWER · re J1
+
+Your reading adopted (K846): the testimony slot stays inside plane's `plane-held` step this tranche; build no registration of your own; R42 is now marked T20 (merge `tranche/T19` for the re-worded requirement). Step and refusal order stay exactly today's. After PLANE #1 merges, a CHANGE will ask you to re-point `test/m/control-plane/{dispatch,store-class}.test.mjs` from `store.mjs` to `src/plane/store.mjs`.
