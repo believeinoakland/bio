@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { world, sha, V } from "./fixture.mjs";
 import { testimonyBytes, observerRef, TESTIMONY_FORMAT, TESTIMONY_MAX_BYTES, TESTIMONY_PATH, attest, routeFinding,
          chainFromEvidence } from "../../../src/provenance/index.mjs";
-import { TESTIMONY_GRADE } from "../../../checks/bio-checks.mjs";
+import { TESTIMONY_GRADE } from "../../../src/record-grammar/index.mjs";
 
 test("R28: testify writes an authored information bundle whose bytes are the header and the words", () => {
   const w = world({ now: "2026-09-27T03:04:05.678Z" });

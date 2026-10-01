@@ -1,4 +1,4 @@
-/* provenance over the modules it uses, each the real one (record-core, membership, promotion), on a real SQLite
+/* provenance over the modules it uses, each the real one (record-core, membership, credentials, promotion), on a real SQLite
    database (node:sqlite) standing in for a Durable Object's storage at its shape: `sql.exec`, answering a cursor as
    workerd does, and `transactionSync`, which rolls
    back what `fn` wrote when it throws and nests as savepoints. Every test drives provenance at its interface; the
@@ -7,6 +7,7 @@ import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
+import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 
@@ -77,8 +78,10 @@ export function evidence(objects = {}, { checksum = true } = {}) {
   };
 }
 
-/** A record: the four modules on one storage, the producing group registered as promotion's fact (as legacy-store
- *  does until instance-setup's extraction, K69), and a clock the test controls. */
+/** A record: the five modules on one storage, the producing group registered as promotion's fact (as legacy-store
+ *  does until instance-setup's extraction, K69), and a clock the test controls. Credentials is built after
+ *  membership, as the composition root builds it (K789): the founder's claim and a member's password are its (its R1,
+ *  R16, R17; membership R94, R95). */
 export function world({ group = "test-group", now = "2026-09-27T03:00:00.000Z", signingKey = null,
                         instanceName = "test-instance", order = null } = {}) {
   const st = storage();
@@ -90,6 +93,8 @@ export function world({ group = "test-group", now = "2026-09-27T03:00:00.000Z", 
   record.migrate();
   const membership = membershipOf(host, { record });
   membership.migrate();
+  const credentials = credentialsOf(host, { record, membership });
+  credentials.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => clock.now });
   const facts = { group };
   promotion.registerFact("producingGroup", "legacy-store", () => facts.group);
@@ -99,7 +104,7 @@ export function world({ group = "test-group", now = "2026-09-27T03:00:00.000Z", 
                                     ...(order ? { order } : {}) });
   prov.migrate();
   const w = {
-    st, host, record, membership, promotion, prov, clock, facts,
+    st, host, record, membership, credentials, promotion, prov, clock, facts,
     row: (q, ...a) => [...st.sql.exec(q, ...a)][0] ?? null,
     rows: (q, ...a) => [...st.sql.exec(q, ...a)],
     count: (t) => [...st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)][0].n,

@@ -10,7 +10,7 @@ import { createHash, webcrypto } from "node:crypto";
 import { world, sha, V, provDoc } from "./fixture.mjs";
 import { observerRef, registerChecks } from "../../../src/provenance/index.mjs";
 import { TESTIMONY_CHECKS, PROVENANCE_ACT_CHECKS } from "../../../src/provenance/checks.mjs";
-import { checkBundle, parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { checkBundle, parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 /* A refusal's code, catalogue id and translation, and what its row says they are. */
 const refused = (r) => [r && r.ok, r && r.reason, r && r.check, r && r.translation];
@@ -100,7 +100,7 @@ test("R3: a revision of an authored bundle that drops data/provenance.json, decl
   assert.equal(w.row(`SELECT authored FROM register WHERE capture_sha=?`, t.capture_sha).authored, 1);
 });
 
-test("R42: the whole catalogue (checkBundle and this module's registerChecks) finds no error in the bundle testify wrote", async () => {
+test("R42: the whole catalogue (record-grammar's checkBundle with every grammar the record registers, and this module's registerChecks) finds no error in the bundle testify wrote", async () => {
   const w = world();
   const runs = [w.prov.testify({ words: "The agenda was posted at 4:55 pm.", observedAt: "2026-09-10", title: "Agenda posted late",
                                  author: V("ruth") }),
@@ -112,7 +112,7 @@ test("R42: the whole catalogue (checkBundle and this module's registerChecks) fi
     const { findings: cat } = await checkBundle({ folderName: t.bundle_id, files,
       sha256: async (v) => createHash("sha256").update(typeof v === "string" ? Buffer.from(v, "utf8") : Buffer.from(v)).digest("hex"),
       sha512: async (b) => new Uint8Array(await webcrypto.subtle.digest("SHA-512", b)),
-      resolveTarget: () => true });
+      resolveTarget: () => true }, { grammars: w.record.grammars() });
     const reg = registerChecks({ files, fm: parseFrontmatter(files.get("bundle.md")).data });
     const errors = [...cat, ...reg].filter((x) => x && x.severity === "error").map((x) => `${x.check}: ${x.message}`);
     assert.deepEqual(errors, [], t.bundle_id);
@@ -125,7 +125,8 @@ test("R42: the whole catalogue (checkBundle and this module's registerChecks) fi
    hit on any of them in a file is theirs. */
 async function observerWorld() {
   const w = world();
-  assert.equal((await w.membership.claim({ password: "founder-passphrase-1", tokenFp: "fp-1" })).ok, true);
+  /* The founder's claim is credentials' (its R1, R17), which membership reads (its R94). */
+  assert.equal((await w.credentials.claim({ password: "founder-passphrase-1", tokenFp: "fp-1" })).ok, true);
   const second = await w.membership.memberAdd({ memberId: "second", cover: "c2", role: "admin", by: "admin" });
   await w.membership.enroll({ invite: second.invite, handle: "second", password: "second-passphrase-x" });
   const add = await w.membership.memberAdd({ memberId: "mk6memberid", cover: "the mk6coverword volunteer", role: "member", by: "admin" });

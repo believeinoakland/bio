@@ -17,7 +17,7 @@ import { actionPlansOf, actionPlansOps } from "./action-plans/index.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* K31: the one write path, extracted to `promotion`; this store registers its share of every promotion there. */
 import { promotionOf, stepContext, recordAudit } from "./promotion/index.mjs";
-import { provenanceOf, routeFinding, TESTIMONY_PATH } from "./provenance/index.mjs";
+import { provenanceOf, routeFinding, TESTIMONY_PATH, ROUTE_FINDING_KEY } from "./provenance/index.mjs";
 import { Membership, membershipOf, membershipOps, hiddenBundles } from "./membership/index.mjs";
 import { Credentials, credentialsOf, credentialsOps } from "./credentials/index.mjs";
 import { observationLogOf, observationLogOps, OBSERVATION_LOG_MODULE } from "./observation-log/index.mjs";
@@ -38,8 +38,6 @@ import { basisVersionsOf, basisVersionsOps, VERSION_ACT_TO, BASIS_VERSIONS_LIMIT
          BASIS_VERSION_LEGS_MAX } from "./basis-versions/index.mjs";
 /* The D-15 viewer gate, from query.mjs's ONE compilation point: this file builds no query of its own. */
 import { viewerPredicate } from "./query.mjs";
-/* `op=audit`'s route tally names its states in D-129's vocabulary: run-rules' (K682). */
-import { OBSERVATION_STATES } from "./run-rules/index.mjs";
 import { contradictionOf, contradictionOps } from "./contradiction/index.mjs";
 import { calibrationOf, calibrationOps } from "./calibration/index.mjs";
 import { schedulerOf } from "./scheduler/index.mjs";
@@ -542,13 +540,13 @@ export class Store extends DurableObject {
    * at write time by the capture op rather than re-proven here.
    */
   async auditPass({ after = "", limit = 200, viewer = null } = {}) {
-    // record-core R18-R20 runs the catalogue over the page; the viewer's gate, and the route, total and
+    // record-core R18-R20 runs the catalogue over the page; the viewer's gate, and the total and
     // membership findings the sweep publishes beside the page, stay here.
     const gate = viewerPredicate(viewer);
     const sighted = new Map();   /* N127: asked per id the page names, never a SELECT of every visible bundle */
     const visible = (id) => (sighted.has(id) ? sighted.get(id)
       : sighted.set(id, !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args)).get(id));
-    const { clean, withErrors, tally, tallyDetail = {}, offenders, limit: cap, page: ids } = await recordAudit(this.ctx, {
+    const { clean, withErrors, tally, tallyDetail = {}, offenders, limit: cap, page: ids, [ROUTE_FINDING_KEY]: route } = await recordAudit(this.ctx, {
       after, limit, visible,
       context: (id) => {
         const targets = this.#rows(`SELECT target_id FROM inquiry_basis WHERE bundle_id=?`, id).map((r) => r.target_id);
@@ -558,65 +556,9 @@ export class Store extends DurableObject {
     const page = ids.map((id) => this.#one(`SELECT bundle_id, object_type, current_state FROM bundles WHERE bundle_id=?`, id));
     const last = page.length ? page[page.length - 1].bundle_id : after;
 
-    /* ============ REC-63 / DEC-56 — THE MARKER, ON THE SWEEP =============== *
-     * DEC-56's acceptance is that a document sits at `verified` while the audit
-     * REPORTS it, and that the disagreement is LEGIBLE rather than reading as a
-     * bug. Three decisions make that true and each is here rather than in a doc:
-     *
-     *  1. `ok`, `clean`, `withErrors` and `tally` DO NOT MOVE. A marker is a
-     *     STATED DOUBT, not a conformance error. If it were an error, a store
-     *     that honestly recorded one could never be "audit clean" again — and
-     *     `CLAUDE.md`'s own ladder ends with `op=audit` clean before anything is
-     *     called done, so the honest act would have broken the gate that rewards
-     *     honesty. (A missing chain at `verified` is STILL a C-18.9 error and
-     *     still tallies; the marker explains that finding, it does not cancel it.)
-     *  2. THE TALLY IS OVER THE WHOLE PAGE AND IS ALWAYS PRESENT, including its
-     *     `NEVER_LOOKED` count. That count is the answer to "nobody looked", and
-     *     an operator who cannot see it cannot tell a clean corpus from an
-     *     unexamined one — which is this item's whole subject, in aggregate.
-     *  3. THE NAMED LIST IS BOUNDED at 20, like `offenders` beside it, and
-     *     `markedTotal` publishes how many there were. A bound applied and not
-     *     published is REC-57's defect and it is not being re-created here.
-     *
-     * The marks are read over the PAGE'S OWN ID RANGE and then filtered to the
-     * gated page, so an invisible bundle's marker cannot ride out on this answer
-     * and the read cannot become an unbounded scan of the marks table. */
-    const pageIds = new Set(page.map((r) => r.bundle_id));
-    const marks = new Map();
-    if (page.length)
-      for (const m of this.#rows(
-        `SELECT m.* FROM provenance_route_marks m
-          WHERE m.bundle_id > ? AND m.bundle_id <= ?
-            AND m.seq = (SELECT MAX(x.seq) FROM provenance_route_marks x WHERE x.bundle_id = m.bundle_id)`,
-        after, last))
-        if (pageIds.has(m.bundle_id)) marks.set(m.bundle_id, m);
-    const routeTally = { LOOKED_INDETERMINATE: 0, PRESENT: 0, NEVER_LOOKED: 0, notApplicable: 0 };
-    const routeMarked = [];
-    let markedTotal = 0;
-    for (const row of page) {
-      const found = routeFinding(row.object_type, marks.get(row.bundle_id) || null);
-      if (!found.applies) { routeTally.notApplicable++; continue; }
-      routeTally[found.finding] = (routeTally[found.finding] || 0) + 1;
-      if (!found.marked) continue;
-      markedTotal++;
-      if (routeMarked.length < 20)
-        routeMarked.push({ bundleId: row.bundle_id, state: row.current_state, ...found });
-    }
-
     return {
       ok: true, checked: page.length, clean, withErrors, tally,
-      /* ALWAYS PRESENT, unlike `tallyDetail` beside it, and the difference is the
-         item: an absent tally would say nothing, and "nothing to report" and
-         "this build does not report it" would read alike — which is the exact
-         conflation the marker exists to end, arriving one level up. */
-      route: {
-        tally: routeTally, marked: routeMarked, markedTotal, markedShown: routeMarked.length,
-        means: OBSERVATION_STATES,
-        note: "these are STATED DOUBTS, not conformance errors, and they are deliberately not counted in "
-            + "`tally` or `withErrors`: each names a document whose route cannot be shown, standing where "
-            + "the group put it (DEC-56/DEC-19). `NEVER_LOOKED` is a different fact again — it means no "
-            + "assessment has run, not that anything is wrong.",
-      },
+      [ROUTE_FINDING_KEY]: route,
       ...(Object.keys(tallyDetail).length ? { tallyDetail } : {}),
       offenders,
       /* REC-57: `cursor` and `total` were already here and are UNTOUCHED — between
