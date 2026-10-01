@@ -1,21 +1,20 @@
-/* publication — the tensions a published case disclosed (R10's `tensions`, with DEC-85's highlight) and those found
-   since (R50). Driven at the module's interface. The section is written as case-authoring writes it (its R14, R31);
+/* publication — the tensions found since a case was published (R50). Driven at the module's interface. The tensions a
+   published case disclosed are read by `public-read` (its R3) through `case-grammar`'s reader since K651, and tested
+   there. The section is written as case-authoring writes it (its R14, R31);
    `contradiction` R29's `unresolvedRecordOn` is a stand-in the test controls, answering exactly R29's shapes (a seen
    candidate with both sides; an unseen one with its seen side only; `undetermined`, `truncated`), so each arm of R50 is
    reached without an AI run minting candidates. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { planeWorld as world, V, SIG } from "./fixture.mjs";
-import { TENSION_STATE_WORDS, TENSION_HIGHLIGHT_SENTENCE, TENSIONS_PREDATE_SENTENCE, TENSIONS_UNREADABLE_SENTENCE,
-         TENSION_DEPTH_SENTENCE, CASE_TENSIONS_MAX, caseTensionsOf } from "../../../src/publication/index.mjs";
+import { CASE_TENSIONS_MAX } from "../../../src/publication/index.mjs";
 
 const F = "INQ-2026-0001", G = "INQ-2026-0002", DOC = "INFO-2026-0001-minutes";
 const roster = (roles) => roles.map((r) => ({ bundle_id: r.target, version_sha: r.version_sha, role: "load_bearing" }));
 
 const side = (p, x) => ({ [`${p}_kind`]: "claim", [`${p}_text`]: `${x} says so`, [`${p}_source`]: `SRC-${x}`,
                           [`${p}_date`]: "2026-09-01", [`${p}_doctype`]: "minutes", [`${p}_capture`]: null });
-/* Four disclosed tensions on F, one per state, and one highlighted on G. The highlighted row is written here with a
-   planted other side, explanation and kind, which R10 must never answer (DEC-85 held at the read too). */
+/* Four disclosed tensions on F, one per state, and one highlighted on G (DEC-85). */
 const SECRET = "THE-HIDDEN-RECORD";
 const ROWS = [
   { candidate: "c-open", finding: F, state: "open", kind: null, unseen_other_side: false, depth: 1,
@@ -69,90 +68,6 @@ function published({ tensions = { rows: ROWS, sentences: SENTENCES }, format = n
   assert.equal(w.signFinding(G, { sig: SIG(9) }).ok, true);
   return { w, proj, roles };
 }
-
-test("R10 a /5 document's tension section round-trips to `tensions`: each disclosed contradiction with its finding, both sides, its state in words, the explanation, who acknowledged it and when, depth 1 with its sentence", () => {
-  const { w } = published();
-  const c = w.op("publishedcase", { id: "CASE-2026-0001" });
-  assert.equal(c.ok, true);
-  const t = c.tensions;
-  assert.deepEqual(t.map((x) => x.candidate), ["c-open", "c-expl", "c-up", "c-irr", "c-hid"]);
-  assert.deepEqual(t.slice(0, 4).map((x) => x.state), [TENSION_STATE_WORDS.open, TENSION_STATE_WORDS.explained_not_shown,
-                                                       TENSION_STATE_WORDS.taken_up, TENSION_STATE_WORDS.irreconcilable]);
-  assert.deepEqual(Object.values(TENSION_STATE_WORDS), ["open", "explained, not yet shown", "taken up as a question",
-                                                        "held irreconcilable, to be reopened by new evidence"]);
-  const open = t[0];
-  assert.deepEqual([open.finding, open.depth, open.depth_stated, open.acknowledged_by, open.acknowledged_at, open.highlighted],
-                   [F, 1, TENSION_DEPTH_SENTENCE, V("olive"), "2026-09-29T00:00:00Z", false]);
-  assert.deepEqual(open.sides.a, { kind: "claim", text: "A1 says so", source: "SRC-A1", date: "2026-09-01", doctype: "minutes", capture: null });
-  assert.equal(open.sides.b.text, "B1 says so");
-  assert.deepEqual(open.owner_words, { text: "We know.", by: "the case's owner" });
-  assert.equal(t[1].explanation, "Different dates.");
-  assert.equal(t[3].kind, "irreconcilable");
-  /* beside each member, its attributed sentences */
-  const byMember = Object.fromEntries(c.findings.map((f) => [f.bundle_id, f.tensions]));
-  assert.deepEqual(byMember[F].map((s) => [s.candidate, s.template, s.highlighted]),
-                   [["c-open", "in_tension", false], ["c-expl", "explained", false]]);
-  assert.match(byMember[F][0].sentence, /^In tension, not yet resolved/);
-  assert.equal("strength" in c, false, "no case-level strength (R26)");
-});
-
-test("R10 DEC-85 a disclosed contradiction with a side the publisher could not see is highlighted, counted, and answers nothing of the unseen record", () => {
-  const { w } = published();
-  const c = w.op("publishedcase", { id: "CASE-2026-0001" });
-  const hid = c.tensions.find((x) => x.candidate === "c-hid");
-  assert.deepEqual([hid.unseen_other_side, hid.highlighted, hid.sentence, hid.state], [true, true, TENSION_HIGHLIGHT_SENTENCE, "open"]);
-  assert.equal(TENSION_HIGHLIGHT_SENTENCE, "This finding rests on a side in conflict with a record not shown here. The "
-    + "record and who holds it are not named.");
-  assert.deepEqual(hid.side, { kind: "claim", text: "S5 says so", source: "SRC-S5", date: "2026-09-01", doctype: "minutes", capture: null });
-  assert.equal(c.highlighted, 1);
-  for (const k of ["sides", "explanation", "kind", "b", "a"]) assert.equal(k in hid, false, `no ${k}`);
-  /* The signed bytes are served whole as `document` (here planted with the secret, which case-authoring R33 never
-     writes); every answer R10 builds from them carries none of it. */
-  const { document: _signed, ...built } = c;
-  assert.equal(JSON.stringify(built).includes(SECRET), false, "the unseen record's text, source and explanation never reach R10's answer");
-  const gBlock = c.findings.find((f) => f.bundle_id === G).tensions;
-  assert.deepEqual(gBlock.map((s) => [s.candidate, s.template, s.highlighted]), [["c-hid", "unseen", true]]);
-  /* the same through the reader other modules use */
-  assert.equal(caseTensionsOf(w.row(`SELECT text FROM case_documents`).text).highlighted, 1);
-});
-
-test("R10 R28 a document before /5 answers `tensions: null` with the sentence that its format predates the disclosure; a /5 document with no readable section is undetermined, never empty", () => {
-  const old = published({ tensions: null, format: "bio-case-document/4" }).w.op("publishedcase", { id: "CASE-2026-0001" });
-  assert.deepEqual([old.tensions, old.highlighted, old.tensions_detail], [null, null, TENSIONS_PREDATE_SENTENCE]);
-  assert.deepEqual(old.findings.map((f) => f.tensions), [null, null]);
-  const bare = published({ tensions: null, format: "bio-case-document/5" }).w.op("publishedcase", { id: "CASE-2026-0001" });
-  assert.deepEqual([bare.tensions, bare.highlighted, bare.tensions_detail], [null, null, TENSIONS_UNREADABLE_SENTENCE]);
-  const none = published({ tensions: { rows: [], sentences: [] } }).w.op("publishedcase", { id: "CASE-2026-0001" });
-  assert.deepEqual([none.tensions, none.highlighted, none.findings.map((f) => f.tensions)], [[], 0, [[], []]]);
-  assert.equal(caseTensionsOf(null).tensions, null);
-  assert.equal(caseTensionsOf("not a document").detail, TENSIONS_PREDATE_SENTENCE);
-  /* a ratified bundle in no case discloses nothing, and says so */
-  const { w } = published();
-  w.signFinding(DOC, { sig: SIG(7) });
-  const loose = w.op("publishedcase", { id: DOC });
-  assert.deepEqual([loose.caseId, loose.tensions], [null, null]);
-  assert.match(loose.tensions_detail, /not a case/);
-});
-
-test("R10 K499 the member legs the conflict read could not examine are carried as the document states them; none is an empty list, and a document silent about them states null", () => {
-  const unread = [{ target: F, legs: 2 }];
-  const c = published({ tensions: { rows: ROWS, sentences: SENTENCES, unread } }).w.op("publishedcase", { id: "CASE-2026-0001" });
-  assert.deepEqual(c.tensions_unread, [{ member: F, legs: 2 }]);
-  const none = published({ tensions: { rows: [], sentences: [], unread: [] } }).w.op("publishedcase", { id: "CASE-2026-0001" });
-  assert.deepEqual(none.tensions_unread, []);
-  const silent = published().w.op("publishedcase", { id: "CASE-2026-0001" });
-  assert.equal(silent.tensions_unread, null);
-  const old = published({ tensions: null, format: "bio-case-document/4" }).w.op("publishedcase", { id: "CASE-2026-0001" });
-  assert.equal(old.tensions_unread, null);
-});
-
-test("R10 the tensions are read from the signed document, never live: what contradiction answers now does not change them", () => {
-  const ctr = standIn({ [F]: { ok: true, candidates: [seen("c-new")], truncated: false } });
-  const { w } = published({ contradiction: ctr });
-  const c = w.op("publishedcase", { id: "CASE-2026-0001" });
-  assert.equal(c.tensions.some((x) => x.candidate === "c-new"), false);
-  assert.equal(ctr.calls.length, 0, "the public read asks contradiction nothing");
-});
 
 test("R50 a tension formed after ratification appears, with its case, edition, member, candidate and state; a disclosed one does not; a disclosed one no longer answered is resolved_since; the signed edition never changes", () => {
   const ctr = standIn({

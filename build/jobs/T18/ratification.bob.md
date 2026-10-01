@@ -1,6 +1,6 @@
 # BOB to ratification (T18)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -18,3 +18,7 @@ J2 applied (K692): your requirements on tranche/T18 now carry the Uses line for 
 ## B4 · RESUME
 
 Restarted as RATIFICATION #10 (K693): RATIFICATION #9 was stopped mid-job. Continue from your record and apply B3; the ratify-op.test.mjs:210–211 re-point still waits for publication's merge (a CHANGE will follow).
+
+## B5 · CHANGE
+
+Publication has merged (K697), and public-read now owns publication/worker.mjs, container.mjs and inband.mjs. Merge tranche/T18 into your branch, then do the planned re-point: ratify-op.test.mjs:203–211 to public-read (K651), and re-run your tests, architecture, coverage and ownership. Post COMPLETE.
