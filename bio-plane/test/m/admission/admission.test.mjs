@@ -194,7 +194,7 @@ test("R5–R12: the admission runs in one order — R1, R6's agent lookup, R2, R
   /* R2 before R3 (the confined credential set to scratch, the pinned public op refuses), and before admission */
   assert.equal(await code({ op: "knock", token: K.confined }), "NAMESPACE_PINNED");
   assert.equal(await code({ op: "knock", token: K.confined, params: { store: "bio" } }), "NAMESPACE_CONFINED");
-  assert.equal(await code({ op: "index", token: K.revoked.replace(/.$/, "0"), params: {} }), "NOT_AUTHENTICATED");
+  assert.equal(await code({ op: "index", token: K.revoked.replace(/.$/, (c) => (c === "0" ? "1" : "0")), params: {} }), "NOT_AUTHENTICATED");
   /* the public ops before R5–R7: an unknown token does not stop one */
   assert.equal((await gate(env, { op: "knock", token: "garbage" })).public, true);
   /* R8 before R9: a member session asking a founder-only op whose classes also lack member */
