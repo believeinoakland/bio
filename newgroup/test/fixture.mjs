@@ -6,7 +6,8 @@
  * `op=bootstrap` the way a plane does, derived from what was uploaded. A streamed progress page is parsed back into
  * the steps, the refusal and the final panel it emits.
  */
-import worker, { CFG, ARMED_SIGNERS } from "../src/index.mjs";
+import worker, { CFG, ARMED_SIGNERS, planeLimits } from "../src/index.mjs";
+import { RELEASE_VERSION, RELEASE_SOURCE } from "../src/release.mjs";
 /* The member binding names are instance-setup's (installer R30); the installer holds no table of its own. */
 import { FLEET_BINDINGS } from "../../bio-plane/src/setup-fleet.mjs";
 import { fleetStatement, NS_FLEET, NS_RELEASE } from "../../bio-plane/src/sshsig.mjs";
@@ -103,12 +104,24 @@ export const restoreSigners = () => armWith(...SHIPPED);
 export const sha = async (x) => Buffer.from(await crypto.subtle.digest("SHA-256",
   typeof x === "string" ? new TextEncoder().encode(x) : x)).toString("hex");
 export const bump = (v) => { const p = v.split(".").map(Number); p[2] += 1; return p.join("."); };
+/* The release the world serves when a test names none: newer than the built-in, signed by SIGNER, stating its limits,
+   naming no fleet. `run` arms SIGNER for that act only. `rel: null` is a repository that does not answer. */
+export const DEFAULT_VERSION = bump(RELEASE_VERSION);
 
 /* ---- a release the repository serves ---- */
 /* A plane that can report builds (its source carries both fields, so the installer reads it as capable) and one that
    cannot (the releases before D-116). */
-export const CAPABLE_SRC = "export default { fetch(){ return Response.json({ storeVersion: 'x', memberVersions: {} }); } }; export class Store {};";
-export const PRE116_SRC = "export default { fetch(){ return new Response('pre-D-116 plane'); } }; export class Store {};";
+/* Each states its limits as the plane does (R20): one string `bio-plane-limits/1 key=n …`, which survives bundling. */
+export const LIMITS = Object.freeze({ subrequests: 10000 });
+export const LIMITS_STATEMENT = "bio-plane-limits/1 subrequests=10000";
+export const CAPABLE_SRC = "export default { fetch(){ return Response.json({ storeVersion: 'x', memberVersions: {} }); } }; export class Store {}; export const PLANE_LIMITS_STATEMENT = \"" + LIMITS_STATEMENT + "\";";
+export const PRE116_SRC = "export default { fetch(){ return new Response('pre-D-116 plane'); } }; export class Store {}; export const PLANE_LIMITS_STATEMENT = '" + LIMITS_STATEMENT + "';";
+/* A plane from before R20: verified, and stating no limits. */
+export const UNSTATED_SRC = "export default { fetch(){ return Response.json({ storeVersion: 'x', memberVersions: {} }); } }; export class Store {};";
+/* Whether this tree's built-in release states its limits (R20). Until a release cut after control-plane's statement is
+   embedded it does not, and an act that falls back to it is refused; the arms that read the built-in assert whichever
+   holds, so they survive the cut. */
+export const BUILTIN_LIMITS = planeLimits(RELEASE_SOURCE);
 export const MEMBER_SRC = "export default { fetch(){ return new Response('member'); } };";
 export const WASM = new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]);
 
@@ -144,7 +157,9 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
   accounts = [{ id: "A1", name: "Group Account" }], tokenFail = false, accountsFail = false, settingsFail = false,
   plan = "paid", probeDelete = "ok", r2 = "ok", pre = {}, subdomain = "grp", taken = [], subdomainPut = "ok",
   enableFail = false, refuseSelf = false, refuseAllPlane = false, refuseRePut = false, refuseUpdate = false,
-  rel = null, copy = {} } = {}) {
+  rel, copy = {} } = {}) {
+  const signersBefore = [...ARMED_SIGNERS];
+  if (rel === undefined) { rel = await release({ version: DEFAULT_VERSION, fleet: false }); armWith(SIGNER.line); }
   const realTimeout = globalThis.setTimeout;
   globalThis.setTimeout = (fn) => realTimeout(fn, 0);
   const acct = new Map(Object.entries(pre));
@@ -251,7 +266,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
   if (!ck) ({ cookie: ck, state: st } = await begin(slug, mode, ai === undefined ? {} : { instanceAi: ai }));
   let out;
   try { out = await callback(`code=GOODCODE&state=${st}`, ck); }
-  finally { globalThis.setTimeout = realTimeout; globalThis.fetch = realFetch; }
+  finally { globalThis.setTimeout = realTimeout; globalThis.fetch = realFetch; armWith(...signersBefore); }
   return { ...out, calls, acct, buckets, refused, planePuts, enabled, prefix: () => prefix, membersOf };
 }
 
