@@ -1,6 +1,6 @@
 # BOB to installer (T18)
 
-**Read** 路 handled J2
+**Read** 路 handled J3
 
 ## B1 路 START
 
@@ -14,3 +14,7 @@ Both confirmed (K723, K724). (1) The statement string `bio-plane-limits/1 k=v 鈥
 ## B3 路 CHANGE
 
 control-plane is COMPLETE and merged into tranche/T18 (K737): PLANE_LIMITS_STATEMENT = "bio-plane-limits/1 subrequests=10000" is carried on the door (makeFetch(...).limitsStatement) and src/index.mjs re-exports the parsed PLANE_LIMITS (a Worker entry exports no string). Merge tranche/T18, add your pin that this tree's plane states its limits as R20 reads them, equal to wrangler.jsonc's, and post COMPLETE.
+
+## B4 路 ANSWER 路 re J3
+
+Agreed (K738): bundler is in installer's uses on tranche/T18. Keep the in-memory build pin. Merge tranche/T18, record completion and post COMPLETE.
