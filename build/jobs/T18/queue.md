@@ -12,6 +12,8 @@
 - Improvements in my module: `MUTE_REFUSAL_DETAIL`'s OBLIGATION sentence names `disposition.instead` beside `op=taskresolve`; a stale "four of the twelve have a producer" corrected.
 - `awaiting stamp`: none. No check row (C-) was moved or changed by this job.
 
+- B4 (CHANGE, K728, from QUEUE-PRODUCERS #2 J1): `Queue.PRODUCER_DEPS` gains `actionClocks`, `escalation` and `actionPlans`, so a caller's fakes reach queue-producers (R8, R15–R18); tested that each fake is asked by its producer (`overdueClocks`, `remindersDue`, `escalationsDue`, `checkpointsDue`), negative control run (the three removed: the test fails). B2 (answer to J2) and B3 (N410) were already applied.
+
 **Deferred:** none.
 
 **Proposed for BOB (d266scope's share, no requirement names them):** R12 publishes `keyed_on` (the act's identity fields) and a `detail` naming the boundary; R13 adds `case.disposed_by` entries `{id, reason: disposed_by_that_project, detail}` and `disposition.disposed_by` (the deciding projects). Tested under R12/R13 as built; a wording would make them contract.
@@ -24,11 +26,11 @@
 - Reading: step 2's public parts read whole for `tasks` (R6), `queue-producers` (R8, R15–R18), `action-clocks` (R6), `membership` (R44, R85); not the rest of the Uses modules, whose services this job did not change its use of. Of the old suites I read `d125-findingmute`, `d266scope`, `queue-conditions`' header whole and the rest by their assertions; `peritem`'s blocks 1, 9 and the queue reads, not its taskforward blocks 2–8 (tasks' share); `project-discoverable`'s header and its proposedispose rows.
 
 **Tests and checks** (on `job/T18/queue` after merging `tranche/T18` @ 586d4e730a):
-- `node --test bio-plane/test/m/queue/`: tests 68, pass 68, fail 0.
-- Users: `test/m/queue-producers/`, `tasks/`, `control-plane/`: tests 179, pass 177, fail 1 (above, pre-existing), todo 1 (queue-producers R9).
-- `format`: 82 modules, 77 requirements files; 0 failures. `architecture queue`: 15 product files, 45 relative imports; 0 failures. `coverage queue`: 37 of 37 live requirement ids named by a test; 0 failures. `ownership queue tranche/T18`: 3 files changed; legacy-store, legacy-checks, legacy-index 0 lines; 0 failures.
+- `node --test bio-plane/test/m/queue/`: tests 69, pass 69, fail 0 (after B4, on `tranche/T18` @ K728's merge).
+- With users `test/m/queue-producers/`, `tasks/`, `control-plane/`: tests 266, pass 265, fail 1 (above, pre-existing), todo 0.
+- `format`: 82 modules, 77 requirements files; 0 failures. `architecture queue`: 15 product files, 45 relative imports; 0 failures. `coverage queue`: 37 of 37 live requirement ids named by a test; 0 failures. `ownership queue tranche/T18` (after B4): 3 files changed; legacy-store, legacy-checks, legacy-index 0 lines; 0 failures.
 
-Size (session_017quvzjcQTLPGZEZJVP6Pco): test runs 12, module lines 2527
+Size (session_017quvzjcQTLPGZEZJVP6Pco): test runs 15, module lines 2529
 
 ## J1 · COMPLETE
 
