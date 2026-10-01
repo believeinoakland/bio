@@ -6,7 +6,7 @@
  * (`MACHINE_CANNOT_DECLARE`, from `MACHINE_FENCE_CHECKS`). R15's new refusal, `STRENGTH_BAR_NOT_ADMIN`, is this
  * module's own family, C-107, allocated at the extraction (K107 (3), K181), and so is R15's `BAD_GRADE` (N208, K275). */
 
-import { VERSION_STATES } from "../../checks/bio-checks.mjs";
+import { VERSION_STATES } from "../basis-versions/index.mjs";
 
 const at = (fn, region) => `src/strength/index.mjs ${fn} > ${region}`;
 

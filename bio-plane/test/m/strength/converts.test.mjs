@@ -7,7 +7,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, MACHINE } from "./fixture.mjs";
 import { strengthOps, STRENGTH_AXES, STRENGTH_STATES, PARTITION_INDEPENDENCE_CHECKS } from "../../../src/strength/index.mjs";
-import { STRENGTH_STATES as CATALOGUE_STRENGTH_STATES } from "../../../checks/bio-checks.mjs";
 
 const INQ = "INQ-2026-0001-a";
 const D = (n) => `INFO-2026-000${n}-a`;
@@ -162,10 +161,9 @@ test("R11, R12 (partitionindependence): the version arm's exact keys carry no st
   }
 });
 
-test("R3, R4: every axis and set answers one of STRENGTH_STATES, each of the three is reached, and the catalogue's copy agrees until it goes", () => {
+test("R3, R4: every axis and set answers one of STRENGTH_STATES, and each of the three is reached", () => {
   assert.deepEqual([...STRENGTH_STATES], ["graded", "unrated", "undetermined"]);
   assert.ok(Object.isFrozen(STRENGTH_STATES));
-  assert.deepEqual([...CATALOGUE_STRENGTH_STATES], [...STRENGTH_STATES], "one vocabulary while ratification still imports the catalogue's");
   const w = world();
   w.inquiry("INQ-2026-0008-a", [{ target: "INQ-2026-0009-a" }]);
   w.inquiry("INQ-2026-0009-a", [{ target: "INQ-2026-0008-a" }]);
