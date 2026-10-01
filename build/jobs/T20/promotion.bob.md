@@ -10,3 +10,7 @@ Depth 2. Your entry: `build/plan/current.md` (T20) layer 2, promotion: the stamp
 ## B2 · CHANGE
 
 Membership is merged on `tranche/T20` (K881); no rows left its table (its COMPLETE). Merge the tranche branch into yours and stamp now. Record-core is not merged yet; its change mints no row, so do not wait for it (if it moves one, that row is `awaiting stamp` for T21). Red by name you may see: bias R23, ai-runs R43 (`MODULE_ORDER`, K881), capture-sources R55/R57/R63 (K853).
+
+## B3 · CHANGE
+
+Also, with your stamp (K882; K820's share, P9): `bio-plane/src/gate.mjs`:293–294's stamp note gives C-22.7's `where` as `src/ai-runs/skill-version.mjs` (or `airun.mjs`); it is now `src/run-rules/skill-version.mjs`. Re-word that comment; re-scan your paths for any other live reference to `airun.mjs`.
