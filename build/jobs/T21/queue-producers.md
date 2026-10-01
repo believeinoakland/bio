@@ -44,3 +44,7 @@ Size (session_011U9suXK7S9HCghT354bnEM): test runs 3, module lines 2873
 ## J4 · REPORT
 
 B2 applied. I merged tranche/T21. R21 is now keyed `OBLIGATION::local-fact-due::<path>::<status>` (K1000), and its test now checks that a fact disputed after it was unconfirmed is raised again under its own key. R21 already applies R15's rule to each `{action, project, created_by}` and takes the union of recipients; a bare id is still read until ACTION-CLOCKS #4 merges. Tests: 49 pass, 0 fail. format, architecture, coverage (21/21) and ownership: 0 failures each. Pushed. Waiting for your CHANGE after ACTION-CLOCKS #4 merges; then I re-merge and run the tests against the real shape.
+
+## J5 · COMPLETE
+
+B3 applied. I merged tranche/T21 (K1001) and checked the real shape: `calendarFactsRead` answers each action as `{action, project, created_by}` (`action-clocks/index.mjs`:375). The bare-id reading is dropped: R21 reads only that object and applies R15's rule to each action, taking the union of recipients. The tests' fake now answers in that shape. R21 is met with creators and owners as recipients, so the not-yet-met marks met are R20 and R21. Everything else is as J3, with B2's key change (J4). Tests: queue-producers 49 pass, 0 fail; action-clocks 27 pass, 0 fail. format, architecture, coverage (21/21) and ownership: 0 failures each. Pushed. Size (session_011U9suXK7S9HCghT354bnEM): test runs 6, module lines 2872
