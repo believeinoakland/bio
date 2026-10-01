@@ -224,29 +224,47 @@ SIZE = {"quick": ("built", "Quick: a yes is enough"), "short": ("gaps", "A short
 def sizekey(sz):
     s = str(sz or "").lower()
     return "quick" if s.startswith("quick") else "session" if "session" in s else "short"
+def lst(v):
+    if not v: return ""
+    if isinstance(v, str): return f"<p>{linkify(v)}</p>"
+    return '<ul class="bl">' + "".join(f"<li>{linkify(t)}</li>" for t in v) + "</ul>"
 def brief_card(n, q):
     b = q.get("brief") or {}
     sk = sizekey(b.get("size")); k, lab = SIZE[sk]
     tag = f' <span class="pill {k}">{lab}</span>'
-    if q.get("ruled"): tag += ' <span class="pill gaps">Part already settled</span>'
-    head = f'<summary id="oq{n}"><span class="oqn">{n}</span><span><b>{e(b.get("title") or q.get("question"))}</b>{tag}</span><span class="cdef">{e(b.get("decision"))}</span></summary>'
-    body = ""
-    if q.get("ruled"): body += '<h4>Already settled</h4>' + ruling_box(q["ruled"])
-    body += f'<h4>The decision</h4><p class="ask">{linkify(b.get("decision"))}</p>'
-    if b.get("whyYours"): body += f'<h4>Why it is yours</h4>{paras(b["whyYours"])}'
-    if b.get("context"): body += f'<h4>Background</h4>{paras(b["context"])}'
-    if b.get("alreadySettled"): body += '<h4>What is already fixed</h4><ul class="bl">' + "".join(f"<li>{linkify(t)}</li>" for t in b["alreadySettled"]) + "</ul>"
+    if q.get("ruled") or b.get("alreadyDecidedPart"): tag += ' <span class="pill gaps">Part already settled</span>'
+    head = f'<summary id="oq{n}"><span class="oqn">{n}</span><span><b>{e(b.get("title") or q.get("question"))}</b>{tag}</span><span class="cdef">{e(b.get("inOneBreath") or b.get("decision"))}</span></summary>'
+    body = f'<h4>What you are asked to decide</h4><p class="ask">{linkify(b.get("decision"))}</p>'
+    if b.get("alreadyDecidedPart"): body += f'<p class="rec"><b>Already decided:</b> {linkify(b["alreadyDecidedPart"])}</p>'
+    elif q.get("ruled"): body += ruling_box(q["ruled"])
+    if b.get("basics"): body += f'<h3 class="bh">The basics</h3>{paras(b["basics"])}'
+    if b.get("today"): body += f'<h3 class="bh">How it works today</h3>{paras(b["today"])}'
+    if b.get("problem"): body += f'<h3 class="bh">The problem, and why it matters</h3>{paras(b["problem"])}'
+    st = b.get("story")
+    if st and st.get("steps"): body += f'<h3 class="bh">An example</h3><div class="story"><b>{e(st.get("title"))}</b><ol>' + "".join(f"<li>{linkify(t)}</li>" for t in st["steps"]) + "</ol></div>"
+    if b.get("fixed"):
+        body += '<h3 class="bh">What is already fixed</h3><ul class="bl">' + "".join(
+            f'<li><b>{linkify(f.get("point"))}</b> <span class="why">{linkify(f.get("why"))}</span> {src(f.get("src"))}</li>' if isinstance(f, dict) else f"<li>{linkify(f)}</li>" for f in b["fixed"]) + "</ul>"
     if b.get("options"):
-        body += '<h4>The choices</h4><div class="opts2">' + "".join(
-            f'<div class="opt"><b>{e(o.get("label"))}. {e(o.get("name"))}</b><p>{linkify(o.get("whatTheMemberSees"))}</p><dl><dt>Gains</dt><dd>{linkify(o.get("gains"))}</dd><dt>Costs</dt><dd>{linkify(o.get("costs"))}</dd></dl></div>' for o in b["options"]) + "</div>"
-    if b.get("recommendation"): body += f'<p class="rec"><b>Recommendation:</b> {linkify(b["recommendation"])}</p>'
+        body += '<h3 class="bh">The choices</h3>'
+        for o in b["options"]:
+            body += f'<div class="opt"><h4 class="oh">{e(o.get("label"))}. {e(o.get("name"))}</h4>{paras(o.get("howItWorks") or o.get("whatTheMemberSees"))}'
+            if o.get("inTheStory"): body += f'<p class="ins"><b>In the example:</b> {linkify(o["inTheStory"])}</p>'
+            body += f'<div class="gc"><div><b>Gains</b>{lst(o.get("gains"))}</div><div><b>Costs and risks</b>{lst(o.get("costs"))}</div></div>'
+            if o.get("commitsYouTo"): body += f'<p class="note"><b>Commits you to:</b> {linkify(o["commitsYouTo"])}</p>'
+            body += "</div>"
+    if b.get("tradeoff"): body += f'<p class="trade"><b>The trade-off:</b> {linkify(b["tradeoff"])}</p>'
+    r = b.get("recommendation")
+    if isinstance(r, dict):
+        body += f'<div class="rec"><b>Recommendation: {e(r.get("choice"))}</b>{paras(r.get("why"))}' + (f'<p><b>The risk, and how it is contained:</b> {linkify(r["risk"])}</p>' if r.get("risk") else "") + "</div>"
+    elif r: body += f'<p class="rec"><b>Recommendation:</b> {linkify(r)}</p>'
     if b.get("howToAnswer"): body += '<h4>How you might answer</h4><ul class="say">' + "".join(f"<li>{linkify(t)}</li>" for t in b["howToAnswer"]) + "</ul>"
     if b.get("ifLeftOpen"): body += f'<h4>Meanwhile</h4>{paras(b["ifLeftOpen"])}'
-    rel = ", ".join(b.get("relatedUseCases") or q.get("relatedUseCases") or [])
-    if rel: body += f'<p class="note">Use cases: {e(rel)}</p>'
-    if b.get("sources"): body += f'<p>{src("; ".join(b["sources"]))}</p>'
-    return f'<li><details class="oqd">{head}<div class="cbody">{body}</div></details></li>'
-need_rows = "".join(f'<tr><td><a href="#oq{n}">{n}</a></td><td><b>{e((q.get("brief") or {}).get("title") or q.get("question"))}</b><div class=note>{e((q.get("brief") or {}).get("decision"))}</div></td><td><span class="pill {SIZE[sizekey((q.get("brief") or {}).get("size"))][0]}">{SIZE[sizekey((q.get("brief") or {}).get("size"))][1]}</span></td></tr>' for n, q in need)
+    if b.get("related"): body += '<h4>Related questions</h4><ul class="bl">' + "".join(f'<li><a href="#oq{e(t.get("n"))}">{e(t.get("n"))}</a>: {linkify(t.get("how"))}</li>' if isinstance(t, dict) else f"<li>{e(t)}</li>" for t in b["related"]) + "</ul>"
+    if b.get("glossary"): body += '<details class="gl"><summary>Words used here</summary><dl>' + "".join(f'<dt>{e(g.get("term"))}</dt><dd>{linkify(g.get("plain"))}</dd>' for g in b["glossary"]) + "</dl></details>"
+    if b.get("sources"): body += f'<p>{src("Sources: " + "; ".join(b["sources"]))}</p>'
+    return f'<li><details class="oqd">{head}<div class="cbody brief">{body}</div></details></li>'
+need_rows = "".join(f'<tr><td><a href="#oq{n}">{n}</a></td><td><b>{e((q.get("brief") or {}).get("title") or q.get("question"))}</b><div class=note>{e((q.get("brief") or {}).get("inOneBreath") or (q.get("brief") or {}).get("decision"))}</div></td><td><span class="pill {SIZE[sizekey((q.get("brief") or {}).get("size"))][0]}">{SIZE[sizekey((q.get("brief") or {}).get("size"))][1]}</span></td></tr>' for n, q in need)
 need_cards = "".join(brief_card(n, q) for n, q in need)
 design_items = "".join(f'<li><b>{e((q.get("brief") or {}).get("title") or q.get("question"))}</b> (question {n}): {e((q.get("brief") or {}).get("designNote") or (q.get("brief") or {}).get("recommendation"))}</li>' for n, q in design_only)
 design_items += "".join(f'<li><b>{e(t.get("title"))}</b>: {e(t.get("note"))} {src(t.get("src"))}</li>' for t in x.get("designOpen", []))
@@ -375,6 +393,13 @@ ol.oq {{ display:grid; gap:8px; padding-left:0; list-style:none }} ol.oq div {{ 
 ul.say {{ list-style:none; padding-left:0; margin:4px 0 }} ul.say li {{ border-left:3px solid var(--bob); padding:4px 10px; margin:6px 0; background:var(--bob-bg); border-radius:0 3px 3px 0; font-style:italic }}
 details.oqd > summary {{ display:grid; grid-template-columns:auto 1fr; gap:4px 8px }} details.oqd .cdef {{ grid-column:2 }}
 table.need td:first-child {{ font:600 13px var(--f-mono) }}
+.brief p {{ max-width:78ch }} h3.bh {{ font-size:16px; margin:22px 0 6px; color:var(--accent) }}
+.story {{ background:var(--bg); border-left:3px solid var(--accent); padding:10px 14px; border-radius:0 4px 4px 0 }} .story ol {{ margin:6px 0 0; padding-left:20px; display:grid; gap:4px }}
+.opt {{ margin:10px 0 }} h4.oh {{ font:600 15px var(--f-body); text-transform:none; letter-spacing:0; color:var(--ink); margin:0 0 4px }}
+.ins {{ font-size:14px; background:var(--panel); border:1px dashed var(--rule); padding:8px 10px; border-radius:3px; max-width:none }}
+.gc {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr)); gap:10px; font-size:14px }}
+.why {{ color:var(--muted) }} .trade {{ border-left:3px solid var(--gaps); padding:6px 12px; max-width:none }}
+details.gl {{ margin:10px 0; border:1px solid var(--rule); border-radius:3px }} details.gl > summary {{ padding:6px 10px; font-weight:600; font-size:14px }} details.gl dl {{ padding:0 12px }}
 ul.bl {{ margin:2px 0; padding-left:18px }} ul.bl li {{ margin:2px 0 }}
 .cov {{ font-weight:600 }} .cov-no {{ color:var(--bob) }} .cov-partial {{ color:var(--gaps) }} .cov-yes {{ color:var(--built) }}
 @media (max-width:560px) {{ dl {{ grid-template-columns:1fr }} details.con > summary, details.surf > summary {{ grid-template-columns:1fr }} .bar label {{ margin-left:0 }} }}
