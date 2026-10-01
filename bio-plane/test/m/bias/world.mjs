@@ -1,11 +1,13 @@
-/* The bias module over the real modules it uses: record-core (its schema and `recordOf`), membership (its schema,
-   migrated) and promotion, over node:sqlite (SQLite, the engine a Durable Object runs), with this module's tables.
+/* The bias module over the real modules it uses: record-core (its schema and `recordOf`), membership and credentials
+   (each migrated, membership first, as the composition root boots them; K789: the founder's claim and a member's
+   password are credentials') and promotion, over node:sqlite (SQLite, the engine a Durable Object runs), with this module's tables.
    Each world is its own storage, so `biasOf` answers a fresh instance. Every test drives the module at its interface:
    the promotion it joins, its services and its ops. Also: documents in the catalogue's grammar. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
+import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { biasOf, biasOps, BIAS_SCHEMA } from "../../../src/bias/index.mjs";
 
@@ -89,6 +91,8 @@ export function world(opts = {}) {
   record.migrate();
   const membership = membershipOf(ctx, { record });
   membership.migrate();
+  const credentials = credentialsOf(ctx, { record, membership });
+  credentials.migrate();
   let clock = Date.parse("2026-07-02T00:00:00Z");
   const promotion = promotionOf(ctx, { record, membership, now: () => new Date(clock).toISOString() });
   promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
@@ -96,7 +100,7 @@ export function world(opts = {}) {
   promotion.registerFact("caseMember", "legacy-store", () => false);
   const bias = biasOf(ctx, { record, membership, promotion, entities, env });
   const w = {
-    db, sql, ctx, record, membership, promotion, bias,
+    db, sql, ctx, record, membership, credentials, promotion, bias,
     row: (q, ...a) => sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => sql.exec(q, ...a),
     count: (t) => sql.exec(`SELECT count(*) AS n FROM ${t}`)[0].n,
@@ -134,7 +138,7 @@ export function world(opts = {}) {
     ops(query = "", body = null) { return biasOps(bias, new URL(`http://x/?${query}`), body); },
     /* Members: the founder claims; an administrator; members enrolled all the way to active. */
     async group(...members) {
-      await membership.claim({ password: "founder-passphrase-1", tokenFp: "fp-1" });
+      await credentials.claim({ password: "founder-passphrase-1", tokenFp: "fp-1" });
       await w.enrol("second", "admin");
       for (const id of members) await w.enrol(id);
       return w;
