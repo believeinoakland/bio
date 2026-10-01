@@ -50,3 +50,7 @@ Folded: BIO_Publication_v0_1.md §7. On PR #6's branch. Owed (its owed: line): t
 ## U13 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-106 (Bob, question 24, as recommended): members are taught two spaces with distinct frames (working, published); review copies and outgoing drafts sit inside the working frame with a band saying what they are and who can see them; each document and case carries a small path-to-publication marker. Looks are Design's.
 Folded: BIO_Interaction_Constructs_v0_1.md §W (new). On PR #6's branch. Owed: nothing new beyond the redesign's screens.
+
+## U14 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
+DEC-107 (Bob, question 25, as recommended): the queue's OBLIGATION class is shown to members as "To do", internal code unchanged (as FINDING is "Noticed", K356); on members' and readers' screens "obligation" means only a public body's duty; each item's sentence names whose step it is.
+Folded: NOTIFICATIONS.md (RULED 2026-10-01). On PR #6's branch. Owed (its owed: line): member-facing "Obligation" for the to-do class re-worded to "To do", placed as K899 (1) placed "record".
