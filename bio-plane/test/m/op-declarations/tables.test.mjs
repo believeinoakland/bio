@@ -38,7 +38,7 @@ test("R2: OPS maps every op to a well-formed spec {classes, machineClasses?, mut
   assert.deepEqual(ops.filter((op) => OPS[op].classes === null).sort(),
     ["bootstrap", "casedocument", "caseflags", "claim", "enroll", "groupidentity", "instancegroup", "invitelook", "knock",
      "knockerconsent", "login", "publishedbytes", "publishedcase", "publishedmanifest", "reviewcomment", "reviewcopy",
-     "statementack", "verify"]);
+     "statementack", "templatecomment", "templatecomments", "templateread", "templatereview", "verify"]);
   /* Inherited names are no op. */
   for (const k of ["toString", "constructor", "__proto__", "hasOwnProperty"]) assert.ok(!Object.hasOwn(OPS, k), k);
 });
@@ -59,7 +59,8 @@ test("R3: SESSION_OPS is {member, admin}, two sets of op names each with a spec;
     assert.equal(typeof set.has, "function");
     assert.equal([...set].length, set.size);
     for (const op of set) assert.ok(Object.hasOwn(OPS, op), `${kind}: ${op} has no spec`);
-    for (const op of set) assert.ok(OPS[op].classes !== null && OPS[op].classes.includes(kind === "admin" ? "admin" : "member"),
+    /* A public op (`classes: null`) admits every caller, a session among them (R8's grant doors). */
+    for (const op of set) assert.ok(OPS[op].classes === null || OPS[op].classes.includes(kind === "admin" ? "admin" : "member"),
       `${kind}: ${op}'s classes do not admit a ${kind} session`);
   }
   /* The founder's set holds every member act and adds only the founder's own. */
@@ -126,10 +127,12 @@ test("R4: every act list is a list of distinct op names, each with a spec; the c
   }
   const eqSet = (a, b, what) => assert.deepEqual([...new Set(a)].sort(), [...new Set(b)].sort(), what);
   eqSet(O.QUERY_AUTHOR_ACTIONS, [...O.CONFORMANCE_ACTIONS, ...O.CONSEQUENCES_ACTIONS, ...O.FILINGS_ACTIONS, ...O.ESCALATION_ACTIONS,
-    ...O.ACTIONS_ACTIONS, ...O.ACTION_CLOCKS_ACTIONS, ...O.ACTION_PLANS_ACTIONS], "QUERY_AUTHOR_ACTIONS");
-  eqSet(O.ACTION_LAYER_ACTIONS, [...O.STANDARDS_ACTIONS, ...O.QUERY_AUTHOR_ACTIONS, ...O.PLAN_PROPOSAL_ACTIONS], "ACTION_LAYER_ACTIONS");
+    ...O.ACTIONS_ACTIONS, ...O.ACTION_CLOCKS_ACTIONS, ...O.ACTION_PLANS_ACTIONS, ...O.FILING_TEMPLATES_ACTIONS], "QUERY_AUTHOR_ACTIONS");
+  eqSet(O.ACTION_LAYER_ACTIONS, [...O.STANDARDS_ACTIONS, ...O.QUERY_AUTHOR_ACTIONS, ...O.PLAN_PROPOSAL_ACTIONS,
+    ...O.TEMPLATE_PROPOSAL_ACTIONS, ...O.LOCAL_FACTS_ACTIONS], "ACTION_LAYER_ACTIONS");
   eqSet(O.ACTION_LAYER_READS, [...O.STANDARDS_READS, ...O.CONFORMANCE_READS, ...O.CONSEQUENCES_READS, ...O.FILINGS_READS,
-    ...O.ESCALATION_READS, ...O.ACTIONS_READS, ...O.ACTION_PLANS_READS], "ACTION_LAYER_READS");
+    ...O.ESCALATION_READS, ...O.ACTIONS_READS, ...O.ACTION_PLANS_READS, ...O.FILING_TEMPLATES_READS, ...O.LOCAL_FACTS_READS],
+    "ACTION_LAYER_READS");
   /* A list named for acts holds mutating ops, one named for reads non-mutating ones. */
   for (const [name, list] of LISTS) {
     if (/_READS$/.test(name)) for (const op of list) assert.equal(OPS[op].mutating, false, `${name}: ${op}`);
@@ -160,7 +163,7 @@ test("R3, R4 (transcribe convert): transcribe and transcriptionattest are a pers
   assert.equal(NEEDS.transcription, null);
 });
 
-test("R4, R3 (N-A12, K704, K709, K711, K705): the action layer's new ops — action-plans' fifteen, actions' five, action-clocks' two, filings' three — each declared with its spec, its list, both session sets for an act and its capability", () => {
+test("R4, R3 (N-A12, K704, K709, K711, K705): the action layer's new ops — action-plans' fifteen, actions' five, action-clocks' two, filings' two and the template read — each declared with its spec, its list, both session sets for an act and its capability", () => {
   const acts = {
     ACTION_PLANS_ACTIONS: ["planopen", "plansubjectadd", "plansubjectremove", "optionadd", "optionrevise", "optionadopt",
                            "optiondispose", "scenarioset", "checkpointrecord", "optionstart", "planclose"],
@@ -173,7 +176,8 @@ test("R4, R3 (N-A12, K704, K709, K711, K705): the action layer's new ops — act
   /* action-plans' ops are exactly `actionPlansOps`' fifteen (action-plans R1–R34, K711). */
   assert.equal([...acts.ACTION_PLANS_ACTIONS, ...acts.PLAN_PROPOSAL_ACTIONS, ...reads.ACTION_PLANS_READS].length, 15);
   for (const op of ["communicationprepare", "templatesave"]) assert.ok(O.FILINGS_ACTIONS.includes(op), op);
-  assert.ok(O.FILINGS_READS.includes("templates"));
+  /* T21 (R8): the library's read moved to its owner's list, filing-templates R14. */
+  assert.ok(!O.FILINGS_READS.includes("templates") && O.FILING_TEMPLATES_READS.includes("templates"));
   const allActs = [...Object.values(acts).flat(), "communicationprepare", "templatesave"];
   for (const op of allActs) {
     /* A machine reaches each and its module refuses it by name or labels it (conclude's posture). */
@@ -191,7 +195,8 @@ test("R4, R3 (N-A12, K704, K709, K711, K705): the action layer's new ops — act
     assert.deepEqual([...OPS[op].classes], ["admin", "member", "probe"], op);
     assert.equal(OPS[op].mutating, false, op);
     assert.ok(O.ACTION_LAYER_READS.includes(op), op);
-    assert.ok(!Object.hasOwn(NEEDS, op), op);
+    /* `templates` carries a null row since R8 (affordances R30 names it in NON_ACTS); the T18 reads none. */
+    assert.ok(op === "templates" ? NEEDS[op] === null && Object.hasOwn(NEEDS, op) : !Object.hasOwn(NEEDS, op), op);
   }
 });
 
@@ -247,4 +252,85 @@ test("R2, R3, R4, R6 (K899 (7), K902; actions R52): actionhold is declared as ac
   assert.equal(O.ACT_GATE.needs("actionhold"), "contribute");
   assert.equal(O.ACT_GATE.mode("actionhold"), "session");
   assert.ok(!Object.hasOwn(UNATTENDED_BY_DECISION, "actionhold"));
+});
+
+/* R8: K921's ops, as R8 lists them. The doors (`classes: null`) and the reads take no capability and carry a null row
+   (affordances R30 names each in NON_ACTS; its R12 reads a key this table lacks as stale). */
+const R8 = {
+  memberActs: ["templatedraft", "templaterevise", "templatesubmit", "templatereviewgrant", "templategrantrevoke",
+               "templateapprove", "templateretire", "factconfirm"],
+  proposal: ["templatepropose"],
+  doorActs: ["templatereview", "templatecomment"],
+  doorReads: ["templateread", "templatecomments"],
+  reads: ["templates", "factstatus", "factsdue"],
+};
+const R8_ALL = Object.values(R8).flat();
+const listsHolding = (op) => LISTS.filter(([, list]) => list.includes(op)).map(([name]) => name).sort();
+const plain = (op) => ({ ...OPS[op], ...(Array.isArray(OPS[op].classes) ? { classes: [...OPS[op].classes] } : {}) });
+
+test("R8: OPS holds a spec for each op of filing-templates and local-facts — the eight member acts and the proposal mutating, admin, member and probe, no machineClasses; the four grant doors classes null as reviewcomment and reviewcopy, review and comment mutating, read and comments not; the three reads admin, member and probe, not mutating — and every one in both session sets", () => {
+  assert.equal(R8_ALL.length, 16);
+  assert.equal(new Set(R8_ALL).size, 16);
+  for (const op of [...R8.memberActs, ...R8.proposal]) assert.deepEqual(plain(op), { classes: ["admin", "member", "probe"], mutating: true }, op);
+  for (const op of R8.doorActs) assert.deepEqual(plain(op), plain("reviewcomment"), op);
+  for (const op of R8.doorReads) assert.deepEqual(plain(op), plain("reviewcopy"), op);
+  for (const op of R8.doorActs) assert.deepEqual(plain(op), { classes: null, mutating: true }, op);
+  for (const op of R8.doorReads) assert.deepEqual(plain(op), { classes: null, mutating: false }, op);
+  for (const op of R8.reads) assert.deepEqual(plain(op), { classes: ["admin", "member", "probe"], mutating: false }, op);
+  /* No spec of the sixteen names `ai`: the proposal reaches an agent credential by its scope alone (R2). */
+  for (const op of R8_ALL) assert.ok(!JSON.stringify(OPS[op]).includes('"ai"'), op);
+  for (const op of R8_ALL) {
+    assert.ok(both(op), `${op} is not in both session sets`);
+    assert.equal(O.ACT_GATE.mode(op), "session", op);
+    assert.ok(!Object.hasOwn(UNATTENDED_BY_DECISION, op), op);
+  }
+  /* The proposal is reachable by a plan-run-shaped agent credential: member admitted, no machineClasses, no bearer fence. */
+  assert.ok(OPS.templatepropose.classes.includes("member") && !("machineClasses" in OPS.templatepropose)
+            && !O.GOVERNANCE_ACTIONS.includes("templatepropose") && !O.IDENTITY_ACTIONS.includes("templatepropose"));
+});
+
+test("R8: NEEDS is contribute for every mutating op not reached by a secret — the eight member acts and the proposal — and null (a present row) for the two mutating doors a secret reaches and for the five reads", () => {
+  for (const op of [...R8.memberActs, ...R8.proposal]) {
+    assert.equal(NEEDS[op], "contribute", op);
+    assert.equal(O.ACT_GATE.needs(op), "contribute", op);
+  }
+  for (const op of [...R8.doorActs, ...R8.doorReads, ...R8.reads]) {
+    assert.ok(Object.hasOwn(NEEDS, op), `${op} has no NEEDS row`);
+    assert.equal(NEEDS[op], null, op);
+    assert.equal(O.ACT_GATE.needs(op), null, op);
+  }
+  /* Over the sixteen, contribute exactly where the op mutates and is not a grant door. */
+  for (const op of R8_ALL) assert.equal(NEEDS[op] === "contribute", OPS[op].mutating && OPS[op].classes !== null, op);
+});
+
+test("R8, R4: the stamps the act lists name — author (filing-templates' by) and viewer for the seven template acts, query-stamped; author or by for factconfirm with viewer; proposer and viewer for templatepropose; author or secretSha for the doors; secretSha issued for templatereviewgrant as for reviewgrant; viewer for the three reads; templates moved out of FILINGS_READS", () => {
+  const acts7 = R8.memberActs.filter((op) => op !== "factconfirm");
+  assert.deepEqual([...O.FILING_TEMPLATES_ACTIONS], acts7);
+  for (const op of acts7)
+    assert.deepEqual(listsHolding(op), ["ACTION_LAYER_ACTIONS", "FILING_TEMPLATES_ACTIONS", "QUERY_AUTHOR_ACTIONS",
+      ...(op === "templatereviewgrant" ? ["GRANT_SECRET_ACTIONS"] : [])].sort(), op);
+  assert.deepEqual(listsHolding("factconfirm"), ["ACTION_LAYER_ACTIONS", "LOCAL_FACTS_ACTIONS"]);
+  assert.deepEqual(listsHolding("templatepropose"), ["ACTION_LAYER_ACTIONS", "TEMPLATE_PROPOSAL_ACTIONS"]);
+  /* the proposal names its proposer, never an author: it is in no author-stamped list */
+  assert.ok(!O.QUERY_AUTHOR_ACTIONS.includes("templatepropose"));
+  for (const op of R8.doorActs) assert.deepEqual(listsHolding(op), ["TEMPLATE_DOOR_ACTIONS"], op);
+  for (const op of R8.doorReads) assert.deepEqual(listsHolding(op), ["TEMPLATE_DOOR_READS"], op);
+  assert.deepEqual([...O.GRANT_SECRET_ACTIONS], ["reviewgrant", "templatereviewgrant"]);
+  assert.deepEqual(listsHolding("templates"), ["ACTION_LAYER_READS", "FILING_TEMPLATES_READS"]);
+  for (const op of ["factstatus", "factsdue"]) assert.deepEqual(listsHolding(op), ["ACTION_LAYER_READS", "LOCAL_FACTS_READS"], op);
+  assert.ok(!O.FILINGS_READS.includes("templates"));
+  /* templatesave, filingprepare and counselpacket keep their specs and stamps (filings R28, R31, R32). */
+  for (const op of ["templatesave", "filingprepare", "counselpacket"]) {
+    assert.deepEqual(plain(op), { classes: ["admin", "member", "probe"], mutating: true }, op);
+    assert.deepEqual(listsHolding(op), ["ACTION_LAYER_ACTIONS", "FILINGS_ACTIONS", "QUERY_AUTHOR_ACTIONS"], op);
+    assert.equal(NEEDS[op], "contribute", op);
+  }
+});
+
+test("R8, R6: the sixteen ops filing-templates and local-facts serve (filing-templates R3, R4, R6–R14; local-facts R1, R2, R4) each have a spec, and the tables name each one: the session sets, NEEDS and an act list", () => {
+  for (const op of R8_ALL) {
+    assert.ok(Object.hasOwn(OPS, op), `${op} has no spec`);
+    assert.ok(Object.hasOwn(NEEDS, op), `${op} has no NEEDS row`);
+    assert.ok(listsHolding(op).length > 0, `${op} is in no act list`);
+  }
 });
