@@ -16,3 +16,23 @@ Found for other modules and for legacy-store (nothing here blocks this job):
 2. **legacy-store (L10).** `store.mjs`' `#testimonyWithin` still writes the testimony look itself (`#observe`, 874–878): when its step switches to `provenance.testimonySlot()`, that call, its comment block (856–867) and `#observe` go, since observation-log's projection (R30) is registered on the slot. Capture's listener is already rewired (one line, `observationLogOf(ctx).listenToCapture(capture)`, approved B2).
 3. **Generated artifact made stale (§14):** `bio-plane/dist/bio-plane.bundled.mjs` (inputs `src/observation-log/index.mjs`, `src/store.mjs`, `checks/bio-checks.mjs` changed); regenerate at the layer close. agent-worker's inputs from this module (`checks.mjs`, `vocabulary.mjs`) are unchanged.
 4. **Old suites (not run, K619, K779):** `test/observation-log.test.mjs`:381 imports the catalogue's `AI_RUN_CHECKS`, now deleted; it fails at load. Nothing else in the repository imports it (product code, module tests, bundles' inputs re-scanned; the legacy-ui guard and old suites hold no copy).
+
+## J3 · COMPLETE
+
+**Entries applied (B1, current.md layer 5, draft-T19 layer 5, requirements as folded K764):**
+- R30: `testimonyLook`, registered by the factory in provenance's testimony slot (its R52; provenance's module order runs it after content's, whatever order the modules are made in). One content-level `extract` row (member, the path's author, the bundle, the capture, PRESENT, no condition, referent content's `content_id` from `earlier`, the first-extraction detail); a refused row throws with `err.refusal`; answers null into the promotion's answer.
+- R31: `listenToCapture(capture)` registers on capture's `observation` event under this module's name and appends each row through `observe(row, at)`, answering what it answers; the factory calls it when handed `deps.capture`. `store.mjs`: the legacy-store registration and its comment line replaced by `observationLogOf(ctx).listenToCapture(capture);` (B2; ownership: 1 added, 2 removed).
+- Rule 1: `index.mjs` imports `contentMintState` from record-grammar `labels.mjs` and `isMachineIdentity` from `actors.mjs`; `vocabulary.test.mjs` drops the catalogue import, the C-22 parity arm and the `LEAD_CHECKS` arm (REPORT J2 hands it to inquiry-grammar); `lead.test.mjs` takes `BUNDLE_ID_RE` from record-grammar `ids.mjs` and drops the `leadLegFindings` arm (K787). No observation-log file imports the catalogue.
+- The catalogue's held C-22 `AI_RUN_CHECKS` and its header deleted (235 lines, pure removal) after a re-scan: no product or module-test importer left (only the old suite `test/observation-log.test.mjs`, not run, K619/K779).
+- Counts: none (B2, K804).
+
+**Rs met, with tests** (K775 (6)): R30 — `registrations.test.mjs` "R30 the testimony look…", "R30 so op=contentaxis finds an extract row…", "R30 a refused row throws…"; R31 — "R31 capture's observation rows…", "R31 the factory registers…". Every other R as before (coverage 31/31).
+
+**Deferred:** none. **Found elsewhere:** J2 (inquiry-grammar's arm, legacy-store's `#testimonyWithin`, the stale plane bundle, the old suite).
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/observation-log/`: tests 56, pass 56, fail 0 (negative control: R30/R31 arms fail 4 of 5 with the projection and the registration broken).
+- Users and neighbours (legacy-checks, record-core, promotion, provenance, capture, content, retrieval, inquiry, run-rules, ai-runs, capture-requests, skills, case-authoring, monitoring, queue, control-plane): tests 1272, pass 1190, fail 75 — the identical 75 failing tests with and without this change (ai-runs, queue, control-plane's R22, legacy-checks' rule 2 arm…; none new).
+- format: 0 failures · architecture: 0 failures · coverage: 31 of 31 live ids named, 0 failures · ownership: legacy-store 1 added 2 removed, legacy-checks 0 added 235 removed, 0 failures.
+
+Size (session_011739a9HGE4YavRmeCPffLH): test runs 6, module lines 3100
