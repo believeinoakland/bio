@@ -1,9 +1,7 @@
 /* action-clocks' tables (requirements: `build/requirements/action-clocks.md`, R2, R4–R6, R9; K4, K617, K624).
- * `action_clock_proposals` is copied from `actions`' schema with its comment (R2 was `actions` R32): until `actions`'
- * own job deletes its copy, both modules create it with this one shape (CREATE IF NOT EXISTS), and `actions` holds its
- * purge declaration (record-core R21 refuses a table declared twice; `actionClocksOf` declares it once that copy is
- * gone). `action_reminders` is new (R4–R6, K624 (3)). Each is keyed by the action's `bundle_id` and declared to
- * record-core's purge (K23). */
+ * `action_clock_proposals` is copied from `actions`' schema with its comment (R2 was `actions` R32); `actions`' copy is
+ * gone (K914), so this module alone creates it and declares it to purge. `action_reminders` is new (R4–R6, K624 (3)).
+ * Each is keyed by the action's `bundle_id` and declared to record-core's purge (K23). */
 
 export const ACTION_CLOCKS_SCHEMA = `
 -- R2: A CLOCK ENTRY COMPUTED FROM A PROFILE DEADLINE, STORED APART FROM

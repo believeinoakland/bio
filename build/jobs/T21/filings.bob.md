@@ -13,3 +13,7 @@ K986: all six readings adopted. (1) Keep the `filing_templates` CREATE and purge
 ## B3 · CHANGE
 
 K989: local-facts is merged into tranche/T21 (8158a9bd53). Merge tranche/T21 and align to its code: `localFactsOf(host, {record, membership})`, `factStatus({path, viewer})` (answer: status, the latest act, `profile` {value, status, basis}, `governs` with `says` 'corrected locally by <member>, <date>'), `factPath`/`parseFactPath`, exports `LOCAL_FACT_ACTS`, `LOCAL_FACT_STATUSES`, `LOCAL_FACT_HORIZONS`, `LOCAL_FACT_KINDS` (bio-plane/src/local-facts/). Then re-run and record completion.
+
+## B4 · CHANGE
+
+K990: action-clocks is merged into tranche/T21 (41f70c4b65); merge it. Its R10 now reads the all-offices holiday entries plus those naming the action's ONE office (the addressee when a named office, else the kind's venue, K986), through a `factOf` over local-facts' `factStatus`. Your `src/filings/dates.mjs`:34 (`deadlineDate`) still calls `computeDeadline` with `{holidays}` alone and no action, so on the first profile's 2026 (office entries only) its business count is undetermined and its calendar `not_read`. Pass the action's `counterparty` and `action_kind` and a `factOf` over `local-facts.factStatus`, as `clockPropose` does, and prove it in your deadline tests (R31's).
