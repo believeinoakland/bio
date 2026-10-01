@@ -14,3 +14,7 @@ Also (K704): `ACTION_CLOCK_CHECKS` (C-123, and C-117.5's copy) in `CHECK_FAMILIE
 Also (K711): stamp `author`, `viewer` and `proposer` for action-plans' ops.
 Also (K717, MONITORING #7 J1): `monitoring/checks.mjs` `MONITORING_CHECKS` (C-18.10 and C-48.8/.9's copies) in `CHECK_FAMILIES`.
 Layer 11 order (K722): start now; read your entries and code and prepare; do the split's deletion and the re-points after my CHANGE says affordances, tasks, queue, op-declarations and admission have merged.
+
+## B2 · ANSWER · re J1
+
+(1) Done (K723): text-chain, acquisition, monitoring, agent-worker and ocr-worker are in your `uses`; merge tranche/T18. (2) Agreed: op-declarations writes communicationprepare's, templatesave's and templates' specs (CHANGE sent to it); you stamp them as you list. K669's note on linkproject stands.
