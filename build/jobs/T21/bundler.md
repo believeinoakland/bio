@@ -28,3 +28,7 @@ Size (session_01Qn6hiZsQ1MvFCad8SnL9UK): test runs 2, module lines 2448
 ## J1 · REPORT
 
 Found in legacy-tests (no T21 job), same kind as N469: bio-plane/test/system/fleetbundles.test.mjs:28 says battery.mjs SKIPS a member's suites (a deleted runner, stated as live) and :587 names battery.mjs's census as live. Not mine to change; for whoever next holds legacy-tests.
+
+## J2 · COMPLETE
+
+N469 applied, comments only (b66d02e245): every note in my paths naming battery.mjs, hygiene.test.mjs or scripts/coverage.mjs as live is re-pointed to the test that proves it now (R1, R7, R9, R13-R15, fleetbundles.test.mjs) or dropped; provenance notes kept. Re-scan: build-plane.mjs:6, derive-bindings.mjs:7, deploy.mjs:213, release-assemble.mjs:163, bundles.mjs:136 re-worded; bundles.mjs:12 is history, kept. No generated artifact staled (no bundler file is a bundle input; manifest _comment unchanged). Tests: bundler 45/45 pass; fleet gate and newgroup-bundle-fresh 0 fail, no SKIP. Checks format, architecture, coverage (23/23), ownership: 0 failures. Nothing deferred. Record: build/jobs/T21/bundler.md.
