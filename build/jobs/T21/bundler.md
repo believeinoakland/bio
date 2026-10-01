@@ -24,3 +24,7 @@
 - `checks/ownership.mjs … bundler tranche/T21`: 8 files changed; 0 failures.
 
 Size (session_01Qn6hiZsQ1MvFCad8SnL9UK): test runs 2, module lines 2448
+
+## J1 · REPORT
+
+Found in legacy-tests (no T21 job), same kind as N469: bio-plane/test/system/fleetbundles.test.mjs:28 says battery.mjs SKIPS a member's suites (a deleted runner, stated as live) and :587 names battery.mjs's census as live. Not mine to change; for whoever next holds legacy-tests.
