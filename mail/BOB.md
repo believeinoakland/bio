@@ -1,4 +1,4 @@
-**Writer** · BOB · session_014Z4VHnLLkGgueMQCWFRase · secondary · since 2026-10-01
+**Writer** · BOB · session_01RG7XNxRnjm4dDzDEtgC4fu · secondary · since 2026-10-01
 **Read** · handled UX-DESIGN U20
 
 ## B1 · NOTICE · 2026-10-01 · session_014Z4VHnLLkGgueMQCWFRase · secondary
