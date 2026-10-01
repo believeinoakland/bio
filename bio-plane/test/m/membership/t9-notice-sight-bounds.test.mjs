@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
 import { Membership, listenerRefusal, MODULE_ORDER, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 import { readFile } from "node:fs/promises";
-import { MACHINE_CLASS_PREFIX } from "../../../checks/bio-checks.mjs";
+import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
 
 const snapshot = (w) => JSON.stringify(w.rows(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`)
   .map(({ name }) => [name, w.rows(`SELECT * FROM "${name}"`)]));
@@ -35,20 +35,17 @@ test("R79 a revocation (R20) notifies every listener once, inside the act, after
   const seen = [];
   w.m.onRevoked("capture-sources", (n) => {
     heard.push(["capture-sources", n]);
-    // after the act's writes: the member is revoked, sessions ended and keys revoked when the listener runs
-    seen.push([w.m.memberFacts(n.memberId).status, w.row(`SELECT COUNT(*) AS n FROM sessions WHERE role=?`, `member:${n.memberId}`).n,
-               w.row(`SELECT COUNT(*) AS n FROM signers WHERE member_id=? AND status='active'`, n.memberId).n]);
+    // after the act's writes: the member is revoked when the listener runs
+    seen.push([w.m.memberFacts(n.memberId).status, w.m.sessionRights(`member:${n.memberId}`).capabilities.length]);
   });
   w.m.onRevoked("second-module", (n) => { heard.push(["second-module", n]); });
-  await w.m.login({ role: "member:ann", password: "ann-passphrase-x" });
-  w.m.signerAdd({ keyB64: "AAAAannkey", memberId: "ann", by: "admin" });
   const r = w.m.memberSet({ memberId: "ann", status: "revoked", by: "second" });
   assert.equal(r.ok, true);
   assert.deepEqual(heard.map(([mod, n]) => [mod, n.memberId, n.by]), [["capture-sources", "ann", "second"], ["second-module", "ann", "second"]],
     "once per listener, in the order they registered");
   assert.match(heard[0][1].at, /^\d{4}-\d\d-\d\dT/);
   assert.deepEqual(Object.keys(heard[0][1]).sort(), ["at", "by", "memberId"]);
-  assert.deepEqual(seen, [["revoked", 0, 0]]);
+  assert.deepEqual(seen, [["revoked", 0]]);
   // no notice: a revoked member revoked again, a reactivation, a refused revocation, an unrelated act
   heard.length = 0;
   w.m.memberSet({ memberId: "ann", status: "revoked", by: "admin" });

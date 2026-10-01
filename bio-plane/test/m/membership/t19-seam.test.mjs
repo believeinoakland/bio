@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
 import { Membership, viewerPredicate, hiddenBundles, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
-import { MACHINE_CLASS_PREFIX } from "../../../checks/bio-checks.mjs";
+import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
 
 const ALL = [...Membership.CAPABILITIES].sort();
 const census = (w) => JSON.stringify(["members", "member_expertise", "admin_votes", "project_participants"]
@@ -76,7 +76,7 @@ test("R92 the capabilities answered are a copy: changing one answer changes no l
 /* ---- R94, with R64 and R86 ---- */
 
 test("R94 R64 R86 the founder is an administrator, first in the list, exactly when the registered fact answers true", async () => {
-  const w = world();
+  const w = world({ omit: ["claimed"] });
   await w.enrol("second", "admin", `${MACHINE_CLASS_PREFIX}admin`);
   let claimed = false;
   assert.deepEqual(w.m.registerClaimed("credentials", () => claimed), { ok: true, module: "credentials" });
@@ -94,7 +94,7 @@ test("R94 R64 R86 the founder is an administrator, first in the list, exactly wh
 });
 
 test("R94 a fact that throws reads as not claimed, and nothing it is handed makes membership throw", async () => {
-  const w = world();
+  const w = world({ omit: ["claimed"] });
   await w.enrol("second", "admin", `${MACHINE_CLASS_PREFIX}admin`);
   w.m.registerClaimed("credentials", () => { throw new Error("no store"); });
   assert.doesNotThrow(() => w.m.isAdministrator("admin"));
@@ -103,14 +103,14 @@ test("R94 a fact that throws reads as not claimed, and nothing it is handed make
 });
 
 test("R94 with nothing registered and no founder credential, the instance reads as not claimed", async () => {
-  const w = world();
+  const w = world({ omit: ["claimed"] });
   await w.enrol("second", "admin", `${MACHINE_CLASS_PREFIX}admin`);
   assert.equal(w.m.isAdministrator("admin"), false);
   assert.deepEqual(w.m.activeAdmins(), ["second"]);
 });
 
 test("R94 R81 one registration, whoever makes it: a second is LISTENER_DECLARED naming the holder, a malformed one LISTENER_MALFORMED", async () => {
-  const w = world();
+  const w = world({ omit: ["claimed"] });
   const bad = [[null, () => true], ["", () => true], ["credentials", null], ["credentials", "true"], [42, () => true]];
   for (const [mod, fn] of bad) {
     const r = w.m.registerClaimed(mod, fn);
@@ -131,7 +131,7 @@ test("R94 R81 one registration, whoever makes it: a second is LISTENER_DECLARED 
 });
 
 test("R94 it writes nothing", async () => {
-  const w = await world().group("ann");
+  const w = await world({ omit: ["claimed"] }).group("ann");
   const before = census(w);
   w.m.registerClaimed("credentials", () => true);
   w.m.registerClaimed("credentials", () => true);

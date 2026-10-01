@@ -1,40 +1,9 @@
 /* membership's tables (R57–R59): the DDL this module owns, moved from the legacy schema text and the legacy
- * store's constructor (T3-2), and the additive columns an older store gains at boot. `Membership#migrate` runs
- * it. SQL comments are `--` lines, dropped before the statements run. */
+ * store's constructor (T3-2; the credential tables left for `credentials` in T19, K637), and the additive columns
+ * an older store gains at boot. `Membership#migrate` runs it. SQL comments are `--` lines, dropped before the statements run. */
 export const MEMBERSHIP_SCHEMA = `
--- Credentials live here rather than in Worker secrets, because a Worker cannot
--- rewrite its own secret. ADMIN_TOKEN is a bootstrap credential used once; the
--- real password is chosen by the operator and only its hash is stored. Losing
--- it is recoverable by overwriting ADMIN_TOKEN in the dashboard, which returns
--- the instance to an unclaimed state.
-CREATE TABLE IF NOT EXISTS credentials (
-  role       TEXT PRIMARY KEY,
-  salt       TEXT NOT NULL,
-  hash       TEXT NOT NULL,
-  iterations INTEGER NOT NULL,
-  updated    TEXT NOT NULL
-);
-
--- Sessions are DO-backed so a password login can be exchanged for a bearer
--- token without the password travelling on every later request.
-CREATE TABLE IF NOT EXISTS sessions (
-  token   TEXT PRIMARY KEY,
-  role    TEXT NOT NULL,
-  expires INTEGER NOT NULL,
-  created TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS sessions_expires ON sessions(expires);
-
--- One row, id=1. Records that the bootstrap credential has been spent.
-CREATE TABLE IF NOT EXISTS bootstrap (
-  id          INTEGER PRIMARY KEY CHECK (id = 1),
-  consumed_at TEXT,
-  token_fp    TEXT
-);
-
--- Members. Each member signs in with their own password (stored in
--- credentials under role 'member:<member_id>', which is why sessions and
--- credentials needed no schema change). invite_hash is the SHA-256 of a
+-- Members. Each member signs in with their own password, which is the credentials module's
+-- (under role 'member:<member_id>'; T19, K637). invite_hash is the SHA-256 of a
 -- one-time enrollment code; it is cleared the moment the member enrolls, so
 -- a leaked invite cannot re-enroll an active member.
 CREATE TABLE IF NOT EXISTS members (
@@ -64,104 +33,6 @@ CREATE TABLE IF NOT EXISTS members (
   pairing_published INTEGER NOT NULL DEFAULT 0
 );
 CREATE UNIQUE INDEX IF NOT EXISTS members_handle ON members(handle) WHERE handle IS NOT NULL;
-
--- Registered signing keys, the plane's projection of the member key
--- registry. key_b64 is the bare base64 of the OpenSSH wire public key, the
--- exact bytes an SSHSIG embeds, so matching is byte equality.
-CREATE TABLE IF NOT EXISTS signers (
-  key_b64   TEXT PRIMARY KEY,
-  member_id TEXT NOT NULL,
-  comment   TEXT,
-  status    TEXT NOT NULL DEFAULT 'active',
-  added     TEXT NOT NULL,
-  -- REC-159: the administrator whose act last set the key's status; NULL reads 'not recorded'.
-  status_by TEXT,
-  -- R27 (N364, DEC-80 item 4): how the key was registered, 'admin' by an administrator (R25) or 'self' by its own
-  -- member from a signed-in session (R89), and who registered it. A row written before these columns was
-  -- registered by R25, the only door there was, so a NULL origin reads 'admin'; NULL registered_by reads
-  -- 'not recorded'. Neither is back-filled. attests never reads origin (R91).
-  origin    TEXT,
-  registered_by TEXT
-);
-
--- PL-11 / IS-5 / D-199: THE ai CREDENTIAL'S DECLARED TASK SCOPE, AND THE
--- WHOLE REASON IT IS A TABLE RATHER THAN A BINDING.
---
--- The four existing token classes -- admin, member, probe, daemon -- are ENV
--- BINDINGS. An operator sets a value in the hosting dashboard and the plane
--- compares against it. That is a settings row by another name, and D-199 (2)
--- rules it out for this one class, transplanting DEC-17's reasoning verbatim: a
--- settings row "would be a way to change the standard with nothing to read
--- afterwards", and what an AI credential may reach is exactly the thing that
--- must be amendable only as an authored, dated, on-the-record act.
---
--- So this class does not appear in classify()'s binding cascade at all. A
--- presented ai token resolves HERE, against a row a member wrote, and the row
--- says who minted it, when, for whom, and what it may do. Amending the reach
--- means writing another row with a name against it. There is nowhere to change
--- it quietly.
---
--- THE VALUE IS NEVER STORED. 'token_id' is the IDENTITY -- a short public name
--- the record can print, the act can cite and a member can revoke -- and
--- 'secret_sha' is the SHA-256 of the presented value, which is what a lookup
--- compares. Neither is the credential, and tokens.mjs's publication denylist is
--- therefore not the only thing standing between this table and a leak.
---
--- BOTH PRINCIPAL KINDS ARE LEGITIMATE AND THEY CARRY DIFFERENT ACCOUNTABILITY,
--- WHICH IS WHY 'principal_kind' IS NOT NULLABLE (D-199 (4), DEC-55 det 4). An
--- ORGANISATION-scoped key acts for the group with nobody individual behind it;
--- a MEMBER-scoped key is attributable to that member. An act must say which,
--- and the difference is not decorative: 'principal' IS THE VIEWER the plane
--- stamps on this credential's reads, so a member-scoped key sees exactly what
--- that member sees (viewerPredicate's participation filter applies to it) and
--- an organisation-scoped one sees what any instance-level credential sees. The
--- record's answer to "who is behind this" and the record's answer to "what may
--- it read" are the same string, so they cannot drift apart.
---
--- 'scope_writes' IS A JSON ARRAY OF OP NAMES AND IT IS NOT THE FENCE. The fence
--- is a SHAPE, checked at the gate on every call: an ai credential is admitted
--- only to an op a MEMBER can reach, which is a predicate over index.mjs's OPS
--- table rather than a list anybody maintains. op=capturerequestdrain carries no
--- member class by construction (PL-4: "a member reaching for it by hand would
--- be a person doing the daemon's job"), so it can never be authored into any
--- scope, and adding "ai" to its class list would not admit it either. The
--- declared writes NARROW that floor; they cannot widen it.
---
--- NOT PURGED. This is identity, in credentials' and members' family, and a
--- whole-store purge that cleared it would revoke every agent's authority as a
--- side effect of resetting the corpus -- the DIST-1 armed-alarm trap arriving
--- through the reaper. The exemption is stated in hygiene.test.mjs with that
--- reason, not merely allowed.
-CREATE TABLE IF NOT EXISTS ai_credentials (
-  token_id        TEXT PRIMARY KEY, -- the public IDENTITY of the credential. NEVER its value
-  secret_sha      TEXT NOT NULL,    -- SHA-256 of the presented value. NEVER its value
-  principal_kind  TEXT NOT NULL,    -- organisation | member. D-199 (4): an act says which
-  principal       TEXT NOT NULL,    -- the stamped viewer: class:ai for an org key, member:<id> for a member key
-  task_scope      TEXT NOT NULL,    -- the declared scope name, e.g. investigative
-  scope_writes    TEXT NOT NULL,    -- JSON array of op names this scope may MUTATE. reads are the floor
-  scope_note      TEXT NOT NULL,    -- what the authoring member said this credential is for
-  minted_by       TEXT NOT NULL,    -- the MEMBER who minted it. D-199 (3): never a machine
-  minted_at       TEXT NOT NULL,
-  revoked_at      TEXT,
-  revoked_by      TEXT,
-  -- D-463: THE NAMESPACE THIS CREDENTIAL IS CONFINED TO FOR ITS WHOLE LIFE, or NULL for
-  -- a credential that is not confined. The only value it may hold is 'scratch'. The name
-  -- bio is not a confinement but the default, and a row saying so would be a sentence in
-  -- the record that fences nothing -- D-199 (2)'s whole complaint about a settings row,
-  -- arriving one column over. The vocabulary is NOT restated here: index.mjs owns
-  -- NAMESPACES and judges the value at the mint edge (aiConfinementDeclaration), the way
-  -- scope_writes arrives already judged by aiScopeDeclaration, because a second copy
-  -- of the namespace set is the third unsynchronised answer REC-46 spent an item removing.
-  --
-  -- NULLABLE AND NEVER BACK-FILLED. A credential minted before this column existed was
-  -- minted unconfined, and NULL is that fact rather than an absence of one: the only other
-  -- value a backfill could reach for is 'scratch', which would silently narrow authorities
-  -- members already granted. What reads it is one gate at the front door
-  -- (confinedNamespaceGate), and an unconfined credential meets no gate at all.
-  confined_to     TEXT
-);
-CREATE INDEX IF NOT EXISTS ai_credentials_secret ON ai_credentials(secret_sha);
-CREATE INDEX IF NOT EXISTS ai_credentials_principal ON ai_credentials(principal_kind, principal);
 
 -- REC-149 (Membership Architecture v2 section 7, item 7.14, BOB #16 from Bob's
 -- ruling of 2026-09-18, "each project chooses"): DISCOVERABLE or HIDDEN, as an
@@ -347,15 +218,11 @@ export const MEMBERSHIP_ADDITIVE_COLUMNS = [
   ["members", "invited_by", "TEXT"],
   ["members", "pairing_published", "INTEGER NOT NULL DEFAULT 0"],
   ["project_participants", "owner_order", "INTEGER"],
-  ["signers", "status_by", "TEXT"],
-  ["signers", "origin", "TEXT"],
-  ["signers", "registered_by", "TEXT"],
-  ["ai_credentials", "confined_to", "TEXT"],
 ];
 
-/* R59: the tables purge never clears (identity, credentials, governance) and those keyed by project, cleared
-   with it. */
-export const MEMBERSHIP_EXEMPT_TABLES = ["credentials", "sessions", "bootstrap", "members", "signers", "ai_credentials",
-  "member_expertise", "admin_votes", "hosting_access"];
+/* R59: the tables purge never clears (identity and governance) and those keyed by project, cleared with it. The
+   credential tables (credentials, sessions, bootstrap, signers, ai_credentials) are `credentials`', exempt by its
+   R18. */
+export const MEMBERSHIP_EXEMPT_TABLES = ["members", "member_expertise", "admin_votes", "hosting_access"];
 export const MEMBERSHIP_PROJECT_TABLES = ["project_participants", "project_owner_votes", "project_owner_decisions",
   "project_removals", "project_visibility", "project_sight", "project_join_requests"];

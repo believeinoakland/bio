@@ -4,7 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, realWorld, V } from "./fixture.mjs";
 import { hiddenBundles, viewerPredicate, GATE_MARK } from "../../../src/membership/index.mjs";
-import { MACHINE_CLASS_PREFIX } from "../../../checks/bio-checks.mjs";
+import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
 
 /* INFO-I and CASE-C not projects; PROJ-H hidden (owner ann; bob invited, cal joined then leaving); PROJ-D discoverable
    (owner ann); PROJ-M a machine-made project with no participant; dee outside every project; second an administrator. */
@@ -102,7 +102,7 @@ test("R88 it is a subquery over the bundles as they stand when run, not a snapsh
 test("R88 over the real record-core's bundles table", async () => {
   const w = await realWorld();
   const { m } = w;
-  await m.claim({ password: "founder-passphrase-1", tokenFp: "fp" });
+  await w.claim();
   const s = await m.memberAdd({ memberId: "second", cover: "c", role: "admin", by: "admin" });
   await m.enroll({ invite: s.invite, handle: "second", password: "second-passphrase-x" });
   for (const id of ["ann", "bob"]) {

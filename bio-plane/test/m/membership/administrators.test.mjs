@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
 import { Membership } from "../../../src/membership/index.mjs";
-import { CUSTODIAL_CHECKS } from "../../../checks/bio-checks.mjs";
+import { CUSTODIAL_CHECKS } from "../../../src/membership/checks.mjs";
 
 /* founder + second + third (a proposed third needs both to endorse) */
 async function threeAdmins() {
@@ -57,18 +57,22 @@ test("R7 adminRemove: every refusal, in order, and VOTES_SHORT until a majority 
   assert.deepEqual(v2.deciders, ["admin", "second"]);
 });
 
-test("R8 a carried removal revokes, ends sessions and keys in one act, and keeps votes and reasons", async () => {
+test("R8 a carried removal revokes, tells R79's listeners in the act (credentials ends sessions and keys), and keeps votes and reasons", async () => {
   const w = await threeAdmins();
-  const tok = (await w.m.login({ role: "member:third", password: "third-passphrase-x" })).token;
-  w.m.signerAdd({ keyB64: "AAAAthirdkey", memberId: "third", by: "admin" });
   w.m.adminRemove({ memberId: "third", by: "admin", reason: "one" });
+  assert.deepEqual(w.creds.revoked, [], "a vote that does not carry tells nobody");
+  /* the listener reads the member's status inside the act: it is already revoked when it is told */
+  let seen = null;
+  w.m.onRevoked("capture-sources", ({ memberId }) => { seen = w.m.memberFacts(memberId).status; });
   const r = w.m.adminRemove({ memberId: "third", by: "second", reason: "two" });
   assert.deepEqual([r.ok, r.removed, r.reasons], [true, true, ["one", "two"]]);
   assert.match(r.alsoDo, /ADMIN_TOKEN|hosting/);
   assert.deepEqual(w.row(`SELECT status, status_by FROM members WHERE member_id='third'`),
     { status: "revoked", status_by: "second" });
-  assert.equal(w.m.session(tok), null);
-  assert.equal(w.row(`SELECT status FROM signers WHERE key_b64='AAAAthirdkey'`).status, "revoked");
+  assert.deepEqual(w.creds.revoked.map(({ memberId, by }) => [memberId, by]), [["third", "second"]],
+    "credentials' listener is told once, naming the completing voter");
+  assert.match(w.creds.revoked[0].at, /^\d{4}-\d\d-\d\dT/);
+  assert.equal(seen, "revoked", "told after the act's writes");
   assert.equal(w.rows(`SELECT * FROM admin_votes WHERE kind='remove' AND target='third'`).length, 2);
 });
 
@@ -126,19 +130,19 @@ test("R11 adding the second administrator asks who holds hosting access; the rec
   assert.deepEqual(h.history.map((x) => [x.holders, x.recorded_by]), [["admin and second", "second"], ["admin only", "admin"]]);
 });
 
-test("R20 memberSet: refusals in order; revocation ends sessions and keys; reactivating an admin demotes", async () => {
+test("R20 memberSet: refusals in order; revocation tells R79's listeners (credentials ends sessions and keys); reactivating an admin demotes", async () => {
   const w = await threeAdmins();
   await w.enrol("ann");
   assert.equal(w.m.memberSet({ memberId: "ann", status: "revoked", by: "ann" }).reason, "NOT_AN_ADMIN");
   assert.equal(w.m.memberSet({ memberId: "ann", status: "gone", by: "admin" }).reason, "BAD_STATUS");
   assert.equal(w.m.memberSet({ memberId: "nobody", status: "revoked", by: "admin" }).reason, "NO_SUCH_MEMBER");
   assert.equal(w.m.memberSet({ memberId: "third", status: "revoked", by: "admin" }).reason, "ADMIN_REQUIRES_VOTE");
-  const tok = (await w.m.login({ role: "member:ann", password: "ann-passphrase-x" })).token;
-  w.m.signerAdd({ keyB64: "AAAAannkey", memberId: "ann", by: "admin" });
+  assert.deepEqual(w.creds.revoked, [], "a refused act tells nobody");
   const r = w.m.memberSet({ memberId: "ann", status: "revoked", by: "second" });
   assert.deepEqual([r.ok, r.by], [true, "second"]);
-  assert.equal(w.m.session(tok), null);
-  assert.equal(w.row(`SELECT status, status_by FROM signers WHERE key_b64='AAAAannkey'`).status, "revoked");
+  assert.deepEqual(w.creds.revoked.map(({ memberId, by }) => [memberId, by]), [["ann", "second"]],
+    "credentials' listener is told once, naming the act's actor");
+  assert.equal(w.m.sessionRights("member:ann").capabilities.length, 0, "and the member holds no rights at once (R92)");
   assert.equal(w.row(`SELECT status_by FROM members WHERE member_id='ann'`).status_by, "second");
   // a revoked administrator (by vote) reactivated returns as an ordinary member
   w.m.adminRemove({ memberId: "third", by: "admin", reason: "a" });

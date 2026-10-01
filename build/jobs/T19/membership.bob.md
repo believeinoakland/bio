@@ -1,6 +1,6 @@
 # BOB to membership (T19)
 
-**Read** · handled J5
+**Read** · handled J7
 
 ## B1 · START
 
@@ -49,3 +49,7 @@ K784: adopted with one change. Keep signerList, signerRegisterOwn, signerRevokeO
 ## B12 · CHANGE
 
 K785: since bio-checks.mjs is deleted in T19 and you have no later job, no membership file (src or test: index.mjs and the 12 tests a scan shows) may import the catalogue at your COMPLETE: re-point to record-grammar, your own checks.mjs, or drop a parity comparison whose rows are now yours. A dynamic test-only oracle import is not needed by you.
+
+## B13 · ANSWER · re J6
+
+K789: the fixture reds are routed: each using module's T19 job re-points its fixtures (capture-sources added to L3); I merge your deletion once you complete again. Before that, apply B11 (J5 answered, K784: keep the three signer copies, but they read SIGNER_ENROLMENT_CHECKS, BAD_KEY and C-96.15–.17 from your own checks.mjs; delete SIGNER_ENROLMENT_CHECKS from the catalogue) and B12 (K785: no membership file, src or test, imports the catalogue, dynamic included). Then COMPLETE.

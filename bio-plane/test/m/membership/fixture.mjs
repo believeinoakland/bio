@@ -16,7 +16,8 @@ export function sqlOver(db) {
   };
 }
 
-export function world() {
+/* `omit` leaves named stand-ins ("claimed", "setter", "revoked") to the test, for a test of that registration itself. */
+export function world({ omit = [] } = {}) {
   const db = new DatabaseSync(":memory:");
   db.exec(`CREATE TABLE bundles (bundle_id TEXT PRIMARY KEY, object_type TEXT NOT NULL, title TEXT, project TEXT)`);
   const declared = [];
@@ -32,8 +33,15 @@ export function world() {
   const m = membershipOf(ctx, { record: core });
   if (membershipOf(ctx) !== m) throw new Error("membershipOf answers one instance per storage");
   m.migrate();
+  /* What `credentials` registers at its start (its R16, R17, R20), stood in for here, since a test of this module does
+     not import a later one: the claim fact, the password setter, and a revocation listener that records each notice. */
+  const creds = { claimed: false, passwords: new Map(), revoked: [] };
+  if (!omit.includes("claimed")) m.registerClaimed("credentials", () => creds.claimed);
+  if (!omit.includes("setter"))
+    m.registerPasswordSetter(({ role, password }) => { creds.passwords.set(role, password); return { ok: true, role }; });
+  if (!omit.includes("revoked")) m.onRevoked("credentials", (notice) => { creds.revoked.push(notice); });
   const w = {
-    db, sql, core, m, declared,
+    db, sql, core, m, declared, creds,
     /* `project` is record-core R34's: the project the bundle belongs to (N426). */
     bundle(id, type = "information", title = `title of ${id}`, project = null) {
       db.prepare(`INSERT INTO bundles (bundle_id, object_type, title, project) VALUES (?,?,?,?)`).run(id, type, title, project);
@@ -42,8 +50,8 @@ export function world() {
     project(id, title = `Project ${id}`) { w.bundle(id, "project", title); m.reindexProjectSight(id); return id; },
     row(q, ...a) { return sql.exec(q, ...a)[0] ?? null; },
     rows(q, ...a) { return sql.exec(q, ...a); },
-    /* The founder claims the instance. */
-    async claim() { return m.claim({ password: "founder-passphrase-1", tokenFp: "fp-1" }); },
+    /* The founder claims the instance: the fact `credentials` states (its R17). */
+    async claim() { creds.claimed = true; return { ok: true, role: "admin" }; },
     /* Invite and enrol a member all the way to active; returns the enrol answer. */
     async enrol(id, role = "member", by = "admin", caps = null) {
       const a = await m.memberAdd({ memberId: id, cover: `cover of ${id}`, role, capabilities: caps, by });
@@ -85,7 +93,12 @@ export async function realWorld() {
   if (typeof rc.migrate === "function") rc.migrate();
   const m = membershipOf(ctx);
   m.migrate();
-  return { db, sql, rc, m,
+  /* `credentials`' registrations, stood in for as `world`'s are. */
+  const creds = { claimed: false, passwords: new Map() };
+  m.registerClaimed("credentials", () => creds.claimed);
+  m.registerPasswordSetter(({ role, password }) => { creds.passwords.set(role, password); return { ok: true, role }; });
+  return { db, sql, rc, m, creds,
+    async claim() { creds.claimed = true; return { ok: true, role: "admin" }; },
     bundle(id, type = "project") { db.prepare(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated,
       bundle_sha) VALUES (?,?,'g',?,'forming','t','t','sha')`).run(id, type, id); m.reindexProjectSight(id); },
     row(q, ...a) { return sql.exec(q, ...a)[0] ?? null; } };

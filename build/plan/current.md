@@ -65,6 +65,7 @@ Opened by BOB #80, 2026-10-01 (PROCESS-MECHANICS §5), under Bob's secondary acc
 - **acquisition** · **kept** (refresh: `index.mjs`:15 and four tests to record-grammar).
 - **capture** · **kept.** N418 **done in T18** (K655).
 - **sources** · **kept** (`isMachineIdentity`, 1 line).
+- **capture-sources** · **added by K789** (§7): its test fixtures construct credentials and claim through it, after membership's split deletion.
 
 ## Layer 4
 

@@ -11,9 +11,6 @@
    reasoning the legacy comments carried is kept beside the code it explains. T19: the audit's seams (R68, R69), the
    mint seeds (R70), the schema run first (R71) and the ops map (R72, R73). */
 import { checkBundle, createSha256, EXTENSION_ARMS, LEGACY_TYPE_ALIASES } from "../record-grammar/index.mjs";
-/* Rule 2: the catalogue's type arms not yet registered by their owners, registered in its name by the composition root
-   (`registerLegacyGrammars`); this import goes with the catalogue (rule 1). */
-import { LEGACY_GRAMMARS } from "../../checks/bio-checks.mjs";
 import { RECORD_SCHEMA } from "./schema.mjs";
 import { RECORD_CORE_CHECKS, PER_ITEM_CHECKS } from "./checks.mjs";
 
@@ -1334,19 +1331,24 @@ export class RecordCore {
 
 /* ---- rule 2: the catalogue's type arms its owners have not taken yet ---- */
 
-/** Rule 2 (K653 BOB-6; `build/plan/current.md`): the catalogue's `LEGACY_GRAMMARS` (legacy-checks), registered with
- *  `record` in the catalogue's name by the composition root, LAST, once every module that takes a slot has registered
- *  its own: one registration, as `legacy-checks`, of the entries whose slots no registration holds yet, its arm running
- *  the entry of the slot it is called in (R67's `{slot}`). So record-grammar's `checkBundle` called with `grammars()`
- *  judges a bundle exactly as the catalogue's wrapper does, and no slot is filled twice (capture's C-2.7 is never
- *  doubled). An owner that registers its slot later takes it out of `LEGACY_GRAMMARS` in its own job (rule 2). Answers
- *  what `registerGrammar` answers, or `{ok: true, module: "legacy-checks", ids: []}` when every slot is held. Goes with
- *  the catalogue (rule 1). */
-export function registerLegacyGrammars(record) {
+/** Rule 2 (K653 BOB-6, K775 (3), K785): the type arms the catalogue still holds (its `LEGACY_GRAMMARS`, handed in as
+ *  `grammars` by the composition root, so this module imports no catalogue), registered with `record` in the
+ *  catalogue's name, LAST, once every module that takes a slot has registered its own: one registration, as
+ *  `legacy-checks`, of the entries whose slots no registration holds yet, its arm running the entry of the slot it is
+ *  called in (R67's `{slot}`). So record-grammar's `checkBundle` called with `grammars()` judges a bundle as the
+ *  catalogue's wrapper does, and no slot is filled twice (capture's C-2.7 is never doubled). Each entry is
+ *  `{module, ids, arm}` claiming one slot whole; one that is not, or a `grammars` that is not a list, registers nothing
+ *  of it. Answers what `registerGrammar` answers, or `{ok: true, module: "legacy-checks", ids: []}` when nothing is left
+ *  to register. Goes with the catalogue (rule 1). */
+export function registerLegacyGrammars(record, grammars) {
   const held = new Set(record.grammars().flatMap((g) => g.ids));
-  const legacy = LEGACY_GRAMMARS.filter((g) => !g.ids.some((id) => held.has(id)));
+  const slotOf = (g) => {
+    if (!g || typeof g.arm !== "function" || !Array.isArray(g.ids) || !g.ids.length) return null;
+    const slot = EXTENSION_ARMS.find((a) => a.ids.length === g.ids.length && a.ids.every((id) => g.ids.includes(id)));
+    return slot ? slot.name : null;
+  };
+  const legacy = (Array.isArray(grammars) ? grammars : []).filter((g) => slotOf(g) && !g.ids.some((id) => held.has(id)));
   if (!legacy.length) return { ok: true, module: "legacy-checks", ids: [] };
-  const slotOf = (g) => (EXTENSION_ARMS.find((a) => a.ids.includes(g.ids[0])) || {}).name;
   const bySlot = new Map(legacy.map((g) => [slotOf(g), g]));
   return record.registerGrammar("legacy-checks", {
     ids: legacy.flatMap((g) => g.ids),

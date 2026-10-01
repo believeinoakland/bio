@@ -24,6 +24,7 @@ import { observationLogOf, observationLogOps, OBSERVATION_LOG_MODULE } from "./o
 import { runProductionsOf, runProductionsOps } from "./run-productions/index.mjs";
 import { captureRequestsOf, captureRequestsOps } from "./capture-requests/index.mjs";
 import { recordOf, stampInstant, registerLegacyGrammars } from "./record-core/index.mjs";
+import { LEGACY_GRAMMARS } from "../checks/bio-checks.mjs";
 export { stampInstant, instantOrder } from "./record-core/index.mjs";
 import { governorOf, governorRoutes } from "./host-governor/index.mjs";
 import { captureOf, captureOps } from "./capture/index.mjs";
@@ -164,7 +165,7 @@ export class Store extends DurableObject {
       runs: aiRunsOf(ctx, env), aiRuns: aiRunsOf(ctx, env) });
     capture.on("observation", "legacy-store", ({ row, at }) => this.#observe(row, at));
     schedulerOf(ctx, env);
-    registerLegacyGrammars(recordOf(ctx));
+    registerLegacyGrammars(recordOf(ctx), LEGACY_GRAMMARS);
     ctx.blockConcurrencyWhile(async () => this.#migrate());
     ctx.blockConcurrencyWhile(async () => schedulerOf(ctx, env).start());
   }
@@ -256,17 +257,7 @@ export class Store extends DurableObject {
     addColumns();
     retrievalOf(this.ctx).migrate();   /* retrieval's projection columns, text index and selections, and its backfill (K4, R3) */
 
-    /* D-432: the opaque minter's ledger learns every gated id that already stands in a live row, and every one the
-       counter issued for an untailed gated prefix — LAST, because it reads tables the schema pass above creates.
-       Every boot, idempotently; `#seedMintLedger` says what it reads and what it cannot see. */
     recordOf(this.ctx).seedMintLedger(Store.#MINT_LEDGER_LIVE);
-
-    /* D-497: the SIGHT INDEX is recomputed from the owners' acts, every boot, AFTER the schema pass creates
-       both tables it reads. It is a derivation and never a record, so a full recompute is the honest shape:
-       an index that disagreed with `project_visibility` — because a landing changed the rule, or because a
-       row was written by a path that did not maintain it — cannot survive a restart. `#reindexProjectSight`
-       says what the statement costs. */
-    this.#reindexProjectSight();
   }
 
   /* retrieval (K3, K61): its services, reached by the store's own callers and the old battery through these. */

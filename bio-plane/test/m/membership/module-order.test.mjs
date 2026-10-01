@@ -33,7 +33,7 @@ test("R83 MODULE_ORDER is frozen: no write changes it", () => {
 });
 
 test("R83 R79 the revocation notice runs its listeners in MODULE_ORDER, whatever order they registered in, an unknown module last", async () => {
-  const w = await world().group("ann");
+  const w = await world({ omit: ["revoked"] }).group("ann");
   const heard = [];
   const registered = [...MODULE_ORDER].reverse();
   registered.splice(7, 0, "unknown-b");
