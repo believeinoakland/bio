@@ -152,7 +152,7 @@ Terms. A **key** is one of `K1` (one inquiry, opposite roles: a `supports` and a
   - no question is `TAKE_UP_NO_QUESTION` (C-93.23). The plane fills in none: R25's `default_question` is shown, and the surface sends what the member accepts;
   - a `frame` other than `a` or `b` (the side the question is framed around) is `TAKE_UP_NO_FRAME` (C-93.24).
 
-  **What it writes.** Otherwise, in one act, through `promotion.promote`: a new inquiry, `open`, `surfaced_by: human`, titled from the question (`inquiry` R10), carrying `contradiction: {candidate}` (`inquiry` R47) and both sides as legs, with no grade:
+  **What it writes.** Otherwise, in one act, through `promotion.promote`: a new inquiry, `open`, `surfaced_by: human`, titled from the question (`record-grammar` R30), carrying `contradiction: {candidate}` (`inquiry` R47) and both sides as legs, with no grade:
   - the framed side as `supports` and the other as `cuts_against` (K447 (8));
   - a claim or stance side as an inquiry leg on its inquiry;
   - a leg or extent side as a leg on its information bundle, naming its content row;
