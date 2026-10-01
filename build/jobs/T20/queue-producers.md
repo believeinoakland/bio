@@ -26,3 +26,7 @@
 - `checks/ownership.mjs queue-producers tranche/T20`: 6 files changed; 0 failures.
 
 Size (session_01RohbFEqsGMN7F4XD4dQZEP): test runs 4, module lines 2743
+
+## J1 · REPORT
+
+queue's Queue.PRODUCER_DEPS (src/queue/index.mjs:96) lacks 'actions', so a caller's fake actions cannot reach queue-producers' R19 through queue (queue's 74 tests pass: the producers reach actionsOf(host) lazily). Natural in QUEUE's L11 job (K902 R1, R12). Generated artifact staled: the plane bundle. R19's 'not yet met' mark and the Status line's 'litigation-hold item ... is not folded' sentence are BOB's to update.
