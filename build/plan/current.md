@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #84 · session_01RvNBNTyRvjKMwdJsTxUX2E · depth 1
 
-**Jobs** · signatures: SIGNATURES #3 session_01ML4Fo3S55aQzLtgsN7sP6F; pdf-worker: PDF-WORKER #4 session_01517coXM6VXW6mGeq6J943P; ocr-worker: OCR-WORKER #4 session_011c8rK8CoDV7XQj17vpk2hx; bundler: BUNDLER #3 session_01Bn7W4BUTLpR4VJ7vgYfCWR
+**Jobs** · signatures: SIGNATURES #3 session_01ML4Fo3S55aQzLtgsN7sP6F; pdf-worker: PDF-WORKER #4 session_01517coXM6VXW6mGeq6J943P; ocr-worker: OCR-WORKER #4 session_011c8rK8CoDV7XQj17vpk2hx; bundler: BUNDLER #3 session_01Bn7W4BUTLpR4VJ7vgYfCWR; record-grammar: RECORD-GRAMMAR #3 session_01Dr61eQgdPoB6sfPdCc6qXC
 
 Opened by BOB #84, 2026-10-01 ~12:40 UTC (PROCESS-MECHANICS §5), on `tranche/T20` from `main` @ c1a27e41a5, T19 closed (K859). The plan is `draft-T20.md` (K795) with its later additions, below unchanged in its entries; the folds before each layer (rule 1, ⚑BOB-7) are done on this branch before that layer's jobs start (K860).
 
