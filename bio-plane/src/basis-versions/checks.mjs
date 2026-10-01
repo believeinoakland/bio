@@ -863,7 +863,7 @@ export const CONCLUDE_ACT_CHECKS = {
   },
 };
 
-/* REC-86 / IC-123 — THE ACT'S REFUSALS, C-50 (minted with `node tools/mintid.mjs C`).
+/* REC-86 / IC-123 — THE ACT'S REFUSALS, C-50 (minted at REC-86 with the old process's `node tools/mintid.mjs C`, retired with `tools/` in T19).
  *
  * ITS OWN FAMILY AND NOT A SUB-NUMBER OF C-45, because the subject is its own.
  * C-45 is *the ways the record could come to point at nothing*; this family is

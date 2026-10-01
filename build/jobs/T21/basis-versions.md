@@ -38,3 +38,9 @@ Stale generated artifact: bio-plane/dist/bio-plane.bundled.mjs (src/basis-versio
 ## J2 · COMPLETE
 
 N458: grammar.mjs C-25.10 'canonical record id', index.mjs NO_CONCLUSION 'would produce a record'; pinned by new assertions in grammar R3 and conclude R16 (negative control: old words fail exactly those two). N468: index.mjs R47 comment names plane's registration via src/plane/stats.mjs, held.mjs gone; t20-figures header, helper, titles and messages worded as R47's own statement. N469: checks.mjs:665 re-pointed to control-plane R22; grammar.mjs:288 hygiene claim dropped, names sufficiency-state R3; also versions.test.mjs claim (grammar.mjs:352), sufficiency note 'nothing writes it' (checks.mjs:83-91, now where it is wired), 'suite pins the count', index.mjs:650, versionstate header's stale not-met claim, and store.mjs/catalogue placements corrected. Nothing deferred. test/m/basis-versions 118/118; test/m no new red (42 = base). format, architecture, coverage (44/44), ownership: 0 failures. Record: build/jobs/T21/basis-versions.md on job/T21/basis-versions.
+
+## Change B2 (K966)
+
+`checks.mjs`:866 named `node tools/mintid.mjs C` as how C-50 is minted. That note is now past-tense provenance: "minted at REC-86 with the old process's `node tools/mintid.mjs C`, retired with `tools/` in T19". No other `tools/` reference is in my paths. `node --test test/m/basis-versions/`: 118/118. format, architecture, coverage (44/44), ownership: 0 failures.
+
+Size (session_01PhpTLeguue11UqsuKUrqaP): test runs 7, module lines 3506
