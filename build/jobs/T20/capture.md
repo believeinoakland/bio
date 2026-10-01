@@ -24,3 +24,7 @@
 - `checks/ownership.mjs … capture tranche/T20`: 1 file changed; 0 failures.
 
 Size (session_015soMeRVHoEuTpMbyTVTmi8): test runs 2, module lines 1
+
+## J1 · COMPLETE
+
+B1 applied: bio-plane/test/m/capture/plane.test.mjs:13 SRC re-pointed to ../../../src/plane/index.mjs; re-scan of test/m/capture/ found no other read of src/index.mjs (evidence-absent.test.mjs:77 sweeps all of src/, unaffected). No product code; no artifact staled; nothing found elsewhere. plane.test.mjs 2/2 against src/plane/index.mjs; test/m/capture/ 94 pass 0 fail; format, architecture, coverage (48/48), ownership (1 file) all 0 failures. Branch job/T20/capture @ 04002bcd8a ready to merge before plane's L11 job. Record: build/jobs/T20/capture.md.
