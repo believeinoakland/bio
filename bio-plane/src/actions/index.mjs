@@ -205,7 +205,7 @@ export class Actions {
     return Date.now();
   }
 
-  /* R10, R32: the active profiles' combined view (record-core R26), or null with none active or none combinable. */
+  /* R10: the active profiles' combined view (record-core R26), or null with none active or none combinable. */
   #view() {
     let ids = null;
     try { ids = this.record.getSetting("jurisdiction_profiles"); } catch { ids = null; }
@@ -2142,7 +2142,7 @@ export class Actions {
     return { ok: true, before: day, items, limit: max, actions_limit: PENDING_CLOCKS_ACTIONS_MAX, truncated, cursor };
   }
 
-  /* ================================================================ proposals (R19, R28, R32) */
+  /* ================================================================ proposals (R19, R28) */
 
   /** R28 (REC-215): a proposed tier, stored apart, labelled; it never touches `risk_tier` or its history. */
   actionRiskPropose({ target, tier = null, basis = null, proposer = null, viewer = null } = {}) {
@@ -2188,41 +2188,6 @@ export class Actions {
                  + "about nothing else." };
   }
 
-  /** R32: a clock entry computed from a profile deadline that applies to the action's kind, stored apart and labelled;
-   *  never written into `clock[]`. */
-  clockPropose({ target, rule, proposer = null, viewer = null } = {}) {
-    const who = String(proposer ?? "").trim();
-    if (!who) return { ok: false, reason: "NO_AUTHOR", detail: "this call carries nobody: the proposer is stamped from the credential that asked." };
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
-    /* R32 (N246): an absent `rule` has no code of its own; it is answered `NO_SUCH_RULE` at that code's place. */
-    const b = this.#visibleAction(target, viewer);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action")
-      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
-    const fm = this.#heldFm(target) || {};
-    const view = this.#view();
-    const d = rule ? (view && Array.isArray(view.deadlines) ? view.deadlines : [])
-      .find((x) => x && x.rule === rule && x.applies_to === fm.action_kind) : null;
-    if (!d) return { ok: false, reason: "NO_SUCH_RULE", target, rule: rule || null,
-      detail: rule ? `no active profile states a deadline '${String(rule).slice(0, 60)}' for an action of kind '${fm.action_kind}'`
-                   : `no rule was named: name the profile deadline's rule (rule=<rule>) for an action of kind '${fm.action_kind}'` };
-    const computed = computeDeadline(d, fm, view);
-    const basis = `${d.citation}${d.basis ? ` (profile basis: ${d.basis}${d.profile ? `, ${d.profile}` : ""})` : ""}`;
-    const entry = { text: d.rule, description: `${d.days} ${d.count} day${d.days === 1 ? "" : "s"} from ${d.starts}`,
-                    date: computed.date, basis, status: "pending" };
-    const at = stampInstant("second", this.#nowMs(null));
-    this.sql.exec(`INSERT INTO action_clock_proposals (bundle_id, proposed_by, rule, date, basis, entry_json, why, proposed_at)
-      VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(bundle_id, proposed_by, rule) DO UPDATE SET date=excluded.date,
-      basis=excluded.basis, entry_json=excluded.entry_json, why=excluded.why, proposed_at=excluded.proposed_at`,
-      target, who, rule, computed.date, basis, JSON.stringify(entry), computed.why ?? null, at);
-    return { ok: true, target, weight: "single", evidence: false,
-             proposal: { ...proposalLabelFor(who, "clock"), rule, entry, at,
-                         ...(computed.start ? { start: computed.start, counted_from: `the day after ${computed.start}` } : {}),
-                         ...(computed.date ? {} : { undetermined: computed.why }) },
-             says: "this clock entry is proposed and is not on the action's clock: a member states a clock entry by a "
-                 + "revision of the action." };
-  }
-
   #lawProposalsFor(bundleId) {
     const cap = LAW_PROPOSALS_READ_MAX;
     const rowCap = (cap + 1) * GOVERNING_LAWS_MAX;
@@ -2259,8 +2224,8 @@ for (const m of ["actionMove", "actionCorrespond", "actionLaws", "actionLawsProp
   Actions.prototype[m] = function (...a) { return withRow(fn.apply(this, a)); };
 }
 
-/* R19, R28, R32: the label of a proposal stored apart. The governing-laws sentence is legacy-checks' (REC-195); the
-   tier's and the clock entry's say, in each state, what the proposal is not. */
+/* R19, R28: the label of a proposal stored apart. The governing-laws sentence is legacy-checks' (REC-195); the
+   tier's says, in each state, what the proposal is not. (The clock entry's moved to `action-clocks` with R32, K617.) */
 const PROPOSAL_SAYS = {
   risk_tier: {
     machine_proposed: "a machine credential proposed this risk tier. That is machine work, labelled as machine work: it "
@@ -2270,50 +2235,10 @@ const PROPOSAL_SAYS = {
       + "risk-tier act sets that, and the record holds who made the proposal",
     unstated: "the record does not say who proposed this risk tier",
   },
-  clock: {
-    machine_proposed: "a machine credential computed this clock entry from the jurisdiction profile. That is machine "
-      + "work, labelled as machine work: it is not on the action's clock, and nothing puts it there until a member "
-      + "revises the action to state it",
-    member_proposed: "a member asked for this clock entry to be computed from the jurisdiction profile. It is a proposal "
-      + "and not a clock entry: a member states one by revising the action",
-    unstated: "the record does not say who asked for this clock entry",
-  },
 };
 function proposalLabelFor(who, subject) {
   const base = lawProposalLabel(who);
   return { by: base.by, state: base.state, machine_work: base.machine_work, says: PROPOSAL_SAYS[subject][base.state] };
-}
-
-/* R32: a deadline's date from its rule, counted from the event the rule names in the action's ledger: `filed` the first
-   sent entry, `received` the first received entry; `act` and `known` are not ledger events, so they are undetermined.
-   A `business` count uses the profile's holiday calendar and is undetermined past the years it lists (jurisdictions
-   R33). Nothing is written. */
-function computeDeadline(d, fm, view) {
-  const ledger = Array.isArray(fm.correspondence) ? fm.correspondence : [];
-  const dir = d.starts === "filed" ? "sent" : d.starts === "received" ? "received" : null;
-  if (!dir) return { date: null, why: `the rule starts from '${d.starts}', an event the action's ledger does not record` };
-  const e = ledger.find((x) => x && x.direction === dir && typeof x.at === "string" && /^\d{4}-\d{2}-\d{2}/.test(x.at));
-  if (!e) return { date: null, why: `the action's ledger holds no ${dir} entry, the event this rule starts from` };
-  const start = e.at.slice(0, 10);
-  const days = Number(d.days);
-  if (!Number.isInteger(days) || days < 0) return { date: null, start, why: "the rule's number of days is not a whole number" };
-  const t0 = Date.parse(`${start}T00:00:00Z`);
-  const iso = (ms) => new Date(ms).toISOString().slice(0, 10);
-  if (d.count === "calendar") return { date: iso(t0 + days * 86400000), start };
-  if (d.count !== "business") return { date: null, start, why: `the rule's count '${d.count}' is neither calendar nor business` };
-  const years = new Map();
-  for (const h of (view && Array.isArray(view.holidays) ? view.holidays : []))
-    if (h && Number.isInteger(Number(h.year))) years.set(Number(h.year), new Set((h.days || []).map((x) => x && x.date)));
-  let t = t0, n = 0;
-  while (n < days) {
-    t += 86400000;
-    const y = new Date(t).getUTCFullYear();
-    if (!years.has(y)) return { date: null, start, why: `the count reaches ${y}, a year the profile's holiday calendar does not list` };
-    const wd = new Date(t).getUTCDay();
-    if (wd === 0 || wd === 6 || years.get(y).has(iso(t))) continue;
-    n++;
-  }
-  return { date: iso(t), start };
 }
 
 const instances = new WeakMap();
