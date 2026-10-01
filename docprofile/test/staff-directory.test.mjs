@@ -198,10 +198,13 @@ test("R19 R35 a real directory's reading: entries keyed by address, never a name
   for (const k of POS) {
     const ents = R[k].parsed.entities;
     assert.ok(ents.length >= 5, `${k}: at least the floor's entries`);
-    assert.ok(ents.every((e) => /^contact:[^@\s]+@[^@\s]+$/.test(e.key) && e.kind === "contact"), `${k}: keyed by address`);
+    /* N404: the key is the bare address, as every type's key is bare, so the reference a consumer writes as
+       `kind:key` is `contact:<address>` once, never `contact:contact:<address>`. */
+    assert.ok(ents.every((e) => e.key === e.facts.address && /^[^@\s:]+@[^@\s:]+$/.test(e.key) && e.kind === "contact"),
+      `${k}: keyed by the bare address`);
     assert.ok(ents.every((e) => typeof e.facts.organisation === "boolean"), `${k}: each says whether it is at the domain`);
   }
-  const moore = p.entities.find((e) => e.key === "contact:amoore@oaklandca.gov");
+  const moore = p.entities.find((e) => e.key === "amoore@oaklandca.gov");
   assert.match(moore.facts.line, /Angela Moore/, "an entry carries its own line verbatim");
   assert.equal(moore.facts.phone, "238-6822", "and the phone read on that line");
   assert.equal(p.title, "Neighborhood Services Staff Beat & Program Directory");
@@ -209,11 +212,11 @@ test("R19 R35 a real directory's reading: entries keyed by address, never a name
   assert.equal(R.directory_cro.parsed.title, null, "the CRO directory does not name itself");
   assert.match(R.directory_cro.parsed.title_why, /no line among the first five/, "and the reading says why");
   // the two-column page: the line an address was read on, both columns, never a guessed pairing
-  const nsd = R.directory_nsd.parsed.entities.find((e) => e.key === "contact:arichards@oaklandca.gov");
+  const nsd = R.directory_nsd.parsed.entities.find((e) => e.key === "arichards@oaklandca.gov");
   assert.equal(nsd.facts.line, "arichards@oaklandca.gov amoore@oaklandca.gov");
   // an address at another domain is an entry marked as such, not dropped
   const extra = directory().parse({ text: doc("directory_nss").text.document + "\nA. Person outside@example.org" });
-  assert.ok(extra.entities.some((e) => e.key === "contact:outside@example.org" && e.facts.organisation === false));
+  assert.ok(extra.entities.some((e) => e.key === "outside@example.org" && e.facts.organisation === false));
 });
 
 test("R20 R34 every real directory entry says where it was read, a page this document emitted, from the producer's own map", () => {
@@ -236,14 +239,14 @@ test("R14 R16 R33 assess on a real directory: gone, added and re-assigned entrie
   const t = directory();
   const a = R.directory_nss.parsed;
   const b = JSON.parse(JSON.stringify(a));
-  b.entities = b.entities.filter((e) => e.key !== "contact:ldieng@oaklandca.gov");
-  b.entities.find((e) => e.key === "contact:bivey@oaklandca.gov").facts.line = "Brenda Ivey 1X bivey@oaklandca.gov 238-3091";
-  b.entities.push({ key: "contact:someone@oaklandca.gov", kind: "contact", label: "someone", facts: { line: "x" } });
+  b.entities = b.entities.filter((e) => e.key !== "ldieng@oaklandca.gov");
+  b.entities.find((e) => e.key === "bivey@oaklandca.gov").facts.line = "Brenda Ivey 1X bivey@oaklandca.gov 238-3091";
+  b.entities.push({ key: "someone@oaklandca.gov", kind: "contact", label: "someone", facts: { line: "x" } });
   const r = t.assess(a, b);
   const has = (type, key) => r.events.some((e) => e.type === type && e.key === key);
-  assert.ok(has("item_pulled", "contact:ldieng@oaklandca.gov"), "an address no longer listed");
-  assert.ok(has("item_added", "contact:someone@oaklandca.gov"), "a new address");
-  assert.ok(has("item_changed", "contact:bivey@oaklandca.gov"), "a re-assigned entry");
+  assert.ok(has("item_pulled", "ldieng@oaklandca.gov"), "an address no longer listed");
+  assert.ok(has("item_added", "someone@oaklandca.gov"), "a new address");
+  assert.ok(has("item_changed", "bivey@oaklandca.gov"), "a re-assigned entry");
   for (const e of r.events) assert.equal(e.significance, EVENTS[e.type].significance, "graded by the catalogue");
   assert.equal(r.meaningful, true);
   assert.deepEqual(r.confirmed, { entries: b.entities.length, intact: a.entities.length - 2 });

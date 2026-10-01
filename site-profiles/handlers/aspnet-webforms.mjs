@@ -20,7 +20,8 @@
  * shows. That is a real change in the document and this handler must not hide it,
  * so nothing about calendar rows is normalised. Only the two hidden fields are.
  */
-import { REGION, CONFIDENCE } from "../index.mjs";
+import { CONFIDENCE } from "../recogniser.mjs";
+import { REGION } from "../region.mjs";
 
 const VIEWSTATE_FIELDS = "__VIEWSTATE|__VIEWSTATEGENERATOR|__VIEWSTATEENCRYPTED|__EVENTVALIDATION"
                        + "|__PREVIOUSPAGE|__SCROLLPOSITIONX|__SCROLLPOSITIONY|__LASTFOCUS";

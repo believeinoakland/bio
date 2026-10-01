@@ -14,8 +14,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import {
-  existsSync, mkdirSync, mkdtempSync, openSync, closeSync, readdirSync, readFileSync, statSync,
-  writeFileSync,
+  chmodSync, chownSync, existsSync, mkdirSync, mkdtempSync, openSync, closeSync, readdirSync, readFileSync,
+  statSync, writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, relative } from "node:path";
@@ -192,6 +192,117 @@ test("R2 the removal is synchronous: an exit listener registered after the impor
   });
   assert.equal(out.code, 0);
   assert.deepEqual(out.left, []);
+});
+
+/** Leaves a tree in the child's sandbox that a process not running as root
+ *  cannot remove as it stands: read-only and inaccessible directories at
+ *  several depths, a read-only file, and the sandbox directory itself
+ *  read-only. Reports, as `refused`, the code a plain removal of part of it
+ *  gets, so a test can show the condition is real rather than assumed. */
+const READ_ONLY = `
+  const { mkdirSync, writeFileSync, chmodSync, rmSync } = await import("node:fs");
+  const { join } = await import("node:path");
+  const ro = join(SANDBOX, "ro");
+  mkdirSync(join(ro, "a", "b", "c"), { recursive: true });
+  writeFileSync(join(ro, "a", "b", "c", "f"), "x");
+  chmodSync(join(ro, "a", "b", "c", "f"), 0o400);
+  writeFileSync(join(ro, "a", "g"), "y");
+  mkdirSync(join(ro, "none", "deep"), { recursive: true });
+  writeFileSync(join(ro, "none", "deep", "h"), "z");
+  chmodSync(join(ro, "a", "b", "c"), 0o500);
+  chmodSync(join(ro, "a", "b"), 0o555);
+  chmodSync(join(ro, "a"), 0o500);
+  chmodSync(join(ro, "none", "deep"), 0o500);
+  chmodSync(join(ro, "none"), 0o000);
+  chmodSync(ro, 0o555);
+  let refused = null;
+  try { rmSync(join(ro, "a"), { recursive: true, force: true }); } catch (e) { refused = e.code; }
+  chmodSync(SANDBOX, 0o500);
+`;
+
+const NOBODY = 65534;
+
+/** Runs `body` like child(), but as a user that is not root: this process's
+ *  own user when it is not root, else uid and gid 65534 through `setpriv`.
+ *  A dropped child cannot traverse this process's 0700 sandbox to reach its
+ *  host directory, so it is started IN the host directory (spawn changes
+ *  directory before `setpriv` drops privileges) and given
+ *  $TMPDIR=/proc/self/cwd, which reaches that directory without walking its
+ *  ancestors. */
+function childNotRoot(body, hostDir) {
+  const code = `const report = (o) => process.stdout.write(${JSON.stringify(MARK)} + JSON.stringify(o) + "\\n");\n${body}`;
+  const node = [process.execPath, "--input-type=module", "-e", code];
+  const asRoot = process.getuid() === 0;
+  if (asRoot) chownSync(hostDir, NOBODY, NOBODY);
+  const [cmd, ...args] = asRoot
+    ? ["setpriv", `--reuid=${NOBODY}`, `--regid=${NOBODY}`, "--clear-groups", ...node]
+    : node;
+  const r = spawnSync(cmd, args, {
+    env: { ...process.env, TMPDIR: asRoot ? "/proc/self/cwd" : hostDir }, cwd: hostDir, encoding: "utf8",
+    timeout: 60_000,
+  });
+  assert.equal(r.error, undefined, `the child started${asRoot ? " (setpriv must be on PATH when the tests run as root)" : ""}`);
+  const line = (r.stdout ?? "").split("\n").find((l) => l.startsWith(MARK));
+  return { ...r, result: line ? JSON.parse(line.slice(MARK.length)) : undefined };
+}
+
+test("R2 a tree a test left read-only is removed, also when the process does not run as root, by every ending", () => {
+  for (const [name, ending] of Object.entries(ENDINGS)) {
+    const H = host();
+    const r = childNotRoot(`
+      const { SANDBOX } = await import(${JSON.stringify(SANDBOX_URL)});
+      ${READ_ONLY}
+      report({ uid: process.getuid(), refused });
+      ${ending}
+    `, H);
+    assert.ok(r.result, `${name}: child reported (status ${r.status}): ${r.stderr}`);
+    assert.notEqual(r.result.uid, 0, `${name}: the child is not root`);
+    assert.equal(r.result.refused, "EACCES", `${name}: a plain removal of the tree is refused`);
+    assert.deepEqual(readdirSync(H), [], `${name}: nothing is left under the host temp directory`);
+    assert.equal(r.signal, null, name);
+  }
+});
+
+test("R2 a removal refused with EACCES makes that part of the tree writable and is retried (EACCES injected at the interface, every ending)", () => {
+  for (const [name, ending] of Object.entries(ENDINGS)) {
+    const H = host();
+    const out = join(host(), "result.json");
+    /* The child replaces fs.rmSync, as the module sees it, with one that
+       refuses as the kernel does for a user that is not root: EACCES while any
+       directory in the tree lacks owner access. It records each refusal, and
+       an exit listener added after the import (so it runs after the sweep)
+       writes the count outside the sandbox. */
+    const r = child(`
+      const { SANDBOX } = await import(${JSON.stringify(SANDBOX_URL)});
+      const fs = (await import("node:fs")).default;
+      const { syncBuiltinESMExports } = await import("node:module");
+      const { join: j } = await import("node:path");
+      const realRm = fs.rmSync;
+      const locked = (p) => {
+        const st = fs.lstatSync(p);
+        if (!st.isDirectory()) return false;
+        return (st.mode & 0o700) !== 0o700 || fs.readdirSync(p).some((n) => locked(j(p, n)));
+      };
+      let refusals = 0;
+      fs.rmSync = (p, o) => {
+        if (fs.existsSync(p) && locked(p)) {
+          refusals++;
+          throw Object.assign(new Error("EACCES: permission denied, rmdir '" + p + "'"), { code: "EACCES", errno: -13, syscall: "rmdir", path: p });
+        }
+        return realRm(p, o);
+      };
+      syncBuiltinESMExports();
+      ${READ_ONLY}
+      process.on("exit", () => fs.writeFileSync(${JSON.stringify(out)}, JSON.stringify({ refusals, gone: !fs.existsSync(SANDBOX) })));
+      report({ SANDBOX });
+      ${ending}
+    `, { hostDir: H });
+    assert.ok(r.result, `${name}: child reported (status ${r.status}): ${r.stderr}`);
+    const got = JSON.parse(readFileSync(out, "utf8"));
+    assert.ok(got.refusals >= 1, `${name}: the sweep met EACCES`);
+    assert.equal(got.gone, true, `${name}: and still removed the sandbox before the process ended`);
+    assert.deepEqual(readdirSync(H), [], `${name}: nothing is left under the host temp directory`);
+  }
 });
 
 /* ------------------------------------------------------------------ R3 */
@@ -446,4 +557,47 @@ test("R9 nothing outside the sandbox directory is created or removed, by the imp
     assert.deepEqual(snapshot(P), before, `${name}: afterwards everything outside the sandbox is exactly as it was`);
     assert.deepEqual(r.result.cwd, [], `${name}: nothing created in the working directory`);
   }
+});
+
+test("R9 making a refused tree writable never follows a link out of the sandbox: a linked outside directory keeps its mode and contents", () => {
+  const H = host();
+  const O = host();
+  mkdirSync(join(O, "kept"));
+  writeFileSync(join(O, "kept", "f"), "outside");
+  chmodSync(join(O, "kept"), 0o500);
+  chmodSync(O, 0o500);
+  const before = snapshot(O);
+  /* EACCES is injected as in R2's interface test, so the sweep walks a tree
+     whose read-only directories hold links to the outside directory. */
+  const r = child(`
+    const { SANDBOX } = await import(${JSON.stringify(SANDBOX_URL)});
+    const fs = (await import("node:fs")).default;
+    const { syncBuiltinESMExports } = await import("node:module");
+    const { join: j } = await import("node:path");
+    const realRm = fs.rmSync;
+    const locked = (p) => {
+      const st = fs.lstatSync(p);
+      if (!st.isDirectory()) return false;
+      return (st.mode & 0o700) !== 0o700 || fs.readdirSync(p).some((n) => locked(j(p, n)));
+    };
+    fs.rmSync = (p, o) => {
+      if (fs.existsSync(p) && locked(p)) throw Object.assign(new Error("EACCES"), { code: "EACCES", path: p });
+      return realRm(p, o);
+    };
+    syncBuiltinESMExports();
+    fs.mkdirSync(j(SANDBOX, "ro", "deep"), { recursive: true });
+    fs.symlinkSync(${JSON.stringify(O)}, j(SANDBOX, "ro", "out"));
+    fs.symlinkSync(${JSON.stringify(join(O, "kept"))}, j(SANDBOX, "ro", "deep", "kept"));
+    fs.chmodSync(j(SANDBOX, "ro", "deep"), 0o500);
+    fs.chmodSync(j(SANDBOX, "ro"), 0o500);
+    report({ SANDBOX });
+    process.exit(0);
+  `, { hostDir: H });
+  assert.equal(r.status, 0, r.stderr);
+  assert.deepEqual(readdirSync(H), [], "the sandbox was removed");
+  assert.equal(statSync(O).mode & 0o7777, 0o500, "the outside directory's mode is unchanged");
+  assert.equal(statSync(join(O, "kept")).mode & 0o7777, 0o500, "and so is the one inside it");
+  assert.deepEqual(snapshot(O), before, "and its contents");
+  chmodSync(join(O, "kept"), 0o700);
+  chmodSync(O, 0o700);
 });

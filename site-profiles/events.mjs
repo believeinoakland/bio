@@ -18,7 +18,7 @@
 export const SIGNIFICANCE = { EVENT: "event", NOTICE: "notice", ROUTINE: "routine" };
 const SIG_RANK = { routine: 0, notice: 1, event: 2 };
 /** Where a significance sits, for ordering and for deriving `meaningful`. */
-export function significanceRank(s) { return SIG_RANK[s] != null ? SIG_RANK[s] : -1; }
+export function significanceRank(s) { return typeof s === "string" && Object.hasOwn(SIG_RANK, s) ? SIG_RANK[s] : -1; }
 
 /* The catalogue. Each entry names the fixed significance of that kind of event.
    Document events come in agenda/ and minutes/ pairs because the two are the same
@@ -79,16 +79,24 @@ export const EVENTS = {
  *  is exactly the miscarriage the catalogue exists to prevent, and a new event type
  *  is a deliberate addition to the catalogue above, not an inline string. */
 export function event(type, detail) {
-  const spec = EVENTS[type];
-  if (!spec) throw new Error(`docprofile: unknown event type "${type}" — add it to the catalogue in events.mjs`);
-  return { type, significance: spec.significance, ...(detail || {}) };
+  const spec = typeof type === "string" && Object.hasOwn(EVENTS, type) ? EVENTS[type] : null;
+  if (!spec) throw new Error(`site-profiles: unknown event type "${type}" — add it to the catalogue in events.mjs`);
+  /* The detail never regrades: type and significance are the catalogue's, whatever
+     the detail carries, and keep their place first. */
+  const out = { type, significance: spec.significance, ...(detail && typeof detail === "object" ? detail : {}) };
+  out.type = type; out.significance = spec.significance;
+  return out;
 }
 
 /** The worst significance among a set of events, or null when there are none. */
 export function worstSignificance(events) {
+  /* A significance outside the catalogue ranks below routine and is never the worst:
+     only `event()` grades, so such an entry was not built from the catalogue. */
   let worst = null;
-  for (const e of events)
-    if (worst === null || SIG_RANK[e.significance] > SIG_RANK[worst]) worst = e.significance;
+  for (const e of events) {
+    const s = e && e.significance;
+    if (significanceRank(s) >= 0 && (worst === null || significanceRank(s) > significanceRank(worst))) worst = s;
+  }
   return worst;
 }
 
@@ -100,5 +108,5 @@ export function isMeaningful(events) {
 
 /** Sort events worst-first, in place, so a report leads with the heaviest thing. */
 export function bySeverity(events) {
-  return events.sort((a, b) => SIG_RANK[b.significance] - SIG_RANK[a.significance]);
+  return events.sort((a, b) => significanceRank(b && b.significance) - significanceRank(a && a.significance));
 }

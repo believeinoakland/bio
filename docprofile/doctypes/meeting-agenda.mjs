@@ -38,7 +38,7 @@
  */
 import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, selfNaming, FURNITURE_RECURS, alsoSatisfies,
          vocabPatterns, anyMatch, LINE_END } from "./index.mjs";
-import { event, worstSignificance, isMeaningful, bySeverity } from "../events.mjs";
+import { event, worstSignificance, isMeaningful, bySeverity } from "../../site-profiles/index.mjs";
 
 /* The legislative record's file number, alone on its line. Its SHAPE is the
    jurisdiction's (Legistar's two-digit-year–dash–serial in the measured instance)

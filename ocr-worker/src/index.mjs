@@ -15,8 +15,8 @@
  * no text layer, it reads the captured bytes FROM R2 ITSELF (the `CAPTURES` read
  * binding — never handed the bytes, I6's rule and the same reason), renders ONE
  * page to pixels through CPDF-12's renderer, runs the engine over that frame,
- * and answers with per-word regions each carrying the image region a reader can
- * check them against.
+ * and answers with line-grain regions each carrying the image region a reader
+ * can check them against.
  *
  * ===================================================================== *
  * WHAT IT MUST NOT DO — fleet rules 2/3, inherited from I6 and I8
@@ -44,19 +44,21 @@
  * and reads `env.VERSION` — the build that is RUNNING, never a constant compiled
  * in beside it. DS-2's authority (D-116) is what keeps that value honest across
  * the fleet: this member's `package.json` and `wrangler.jsonc` are its two
- * declaring sites and `resolveversion.test.mjs` refuses a tree where they and
- * the plane disagree, in BOTH directions.
+ * declaring sites and `bio-plane/test/system/resolveversion.test.mjs` refuses a
+ * tree where they and the plane disagree, in BOTH directions.
  */
 import { makeMember } from "./member.mjs";
 import { TESSERACT } from "./tessengine.mjs";
 
-/* The member's surface, declared for the fleet-coverage instrument to read the
- * same way it reads the plane's OPS table (scripts/coverage.mjs, D-117).
+/* The member's surface, declared: its two routes, and that neither mutates.
+ * `fleet-member.json` names this table as `surface`. The fleet-coverage
+ * instrument that read it (`scripts/coverage.mjs`, D-117) is retired (K739), so
+ * the declaration is held by this module's own suite, which drives both routes
+ * and refuses every other (R14).
  *
- * `mutating` is FALSE on every row and that is a `--strict` GATE rather than a
- * convention (fleet rule 2: a member ASSERTS nothing). Both rows could not be
- * anything else — `transcribe` reads bytes and returns text, `version` reads one
- * env var. */
+ * `mutating` is FALSE on every row (fleet rule 2: a member ASSERTS nothing).
+ * Both rows could not be anything else — `transcribe` reads bytes and returns
+ * text, `version` reads one env var. */
 export const SURFACE = {
   transcribe: { method: "POST", mutating: false },
   version:    { method: "GET",  mutating: false },

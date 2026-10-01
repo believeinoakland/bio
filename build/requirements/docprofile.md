@@ -1,6 +1,6 @@
 # docprofile — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code: `docprofile/` (index, pipeline, recogniser, registry, events, readtext, handlers, doctypes). R6 and R30 built in T2 (N3): every local fact comes from the jurisdiction view; the no-view fallback (K39) retires with N21. Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`). SPLIT on `tranche/T19`, 2026-10-01, by a worker for BOB #80 (K617, K653 BOB-2): the host-stack axis, the shared registry and ladder, the digests, fidelity, the profile record and the event catalogue moved to `site-profiles` (R1–R3, R7–R10, R26–R28 retired here, moved without change of meaning); `docprofile/registry.mjs` stays this module's facade and re-exports `site-profiles`' names, so its importers need no re-point; references to the moved services name `site-profiles`, no meaning changed.
+**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code: `docprofile/` (pipeline, registry, readtext, doctypes; index, recogniser, events and handlers moved to site-profiles in T19, K746). R6 and R30 built in T2 (N3): every local fact comes from the jurisdiction view; the no-view fallback (K39) retires with N21. Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`). SPLIT on `tranche/T19`, 2026-10-01, by a worker for BOB #80 (K617, K653 BOB-2): the host-stack axis, the shared registry and ladder, the digests, fidelity, the profile record and the event catalogue moved to `site-profiles` (R1–R3, R7–R10, R26–R28 retired here, moved without change of meaning); `docprofile/registry.mjs` stays this module's facade and re-exports `site-profiles`' names, so its importers need no re-point; references to the moved services name `site-profiles`, no meaning changed.
 
 ## Public
 
@@ -204,7 +204,7 @@ reported "unchanged") (**R29**).
   read.
 - **R34** An entity's position (`source`) is only ever what `ctx.locate` returned for the offset
   the reader actually read it at — never composed, never guessed — and is absent, not invented,
-  when the supplied text carried no structure to place it in.
+  when the supplied text carried no structure to place it in. A reference read more than once is one entity, `source` its first sighting's, carrying `occurrences`: every place it was read, in reading order, the first included, each what `ctx.locate` returned for that read (null where it could not say); a reference read once carries no `occurrences` (D-454; K754).
 - **R35** Every "no" (no match, no confidence, no position, no digest, no meaningful change) says
   which kind of no and why; absence is never reported as sameness and never as non-existence.
 
