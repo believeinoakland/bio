@@ -33,3 +33,7 @@ K785: REGISTRATION_CHECKS goes with connections L5, thanks. But no promotion fil
 ## B8 · CHANGE
 
 Correction to K785: no test-only catalogue import either, dynamic included: bio-checks.mjs is deleted in T19 (L11) and you have no later job, so an oracle import would go red then. Replace a parity oracle with assertions at your interface (your requirements' Rs), or drop it where the rows are now another module's.
+
+## B9 · CHANGE
+
+K791: membership's deletion is merged (record-core K788, credentials K782 earlier). Merge tranche/T19, re-point CUSTODIAL_CHECKS and PROJECT_VISIBILITY_CHECKS to membership, then stamp (rule 7: T18 L3–11 rows, T19 L1–2 including C-96.18 new, C-96.15–.17 and C-63 now credentials'/membership's, C-102.19/.20 new, C-28.13/C-32.1/C-33.10–.12 where's), and COMPLETE.
