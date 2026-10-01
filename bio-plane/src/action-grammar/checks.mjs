@@ -1,8 +1,8 @@
 /* action-grammar — the action document's arms, readers and rows (requirements: `build/requirements/action-grammar.md`,
  * R1, R3, R7–R10; K6, K64).
  *
- * Copied from `actions/checks.mjs` in T19 layer 9 with its comments (that file goes in `actions`' job, which re-points to
- * this module): the kinds this instance accepts (`actionKinds`, `kindReadsAsWritten`, `PRODUCT_KINDS`), the records law
+ * Copied from `actions/checks.mjs` in T19 layer 9 with its comments (that file is deleted since, K914; `actions` reads each
+ * of these from here): the kinds this instance accepts (`actionKinds`, `kindReadsAsWritten`, `PRODUCT_KINDS`), the records law
  * (`recordsLawRefusal`, `recordsLawFindings`, `recordsLawOf`), the counterparty and its readers, R33's mechanical clock
  * rule, the tier history's reader and arm, the governing-laws reader and arm, `respondsToEdgeFindings` (C-6.1's
  * `responds_to` arm), the records-request lifecycle's reader, `consequenceState` (DEC-14), `checkActionExtension`
@@ -38,7 +38,7 @@ function f(check, severity, message, repairs, code) {
   return out;
 }
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-/* The subject registry's key shape (legacy-checks keeps its own for C-2.8's subject arm; bias has a private one). */
+/* The subject registry's key shape (inquiry-grammar keeps its own for C-2.8's subject arm; bias has a private one). */
 const ENTITY_ID_RE = /^ENT-\d{4}-\d{4}$/;
 const UNWRITABLE = /["\\\r\n]/;
 
@@ -185,7 +185,7 @@ export const RISK_TIER_REASON_MAX = 500;
 export const RISK_TIER_HISTORY_MAX = 200;
 
 /** REC-214: THE ONE READER OF AN ACTION'S TIER HISTORY. The action's read (`op=projection`'s action block), the
- *  act's own answer and the suite read this, so what a surface is shown and what the bytes hold cannot come
+ *  act's own answer read this (R8, proved by `test/m/action-grammar/`), so what a surface is shown and what the bytes hold cannot come
  *  apart (UI-104 renders it; REC-215's labelled machine proposal is read BESIDE it and never inside it).
  *
  *  `revisions` is oldest first, exactly as the act appended them. `intake` is the tier the action held before its
@@ -273,7 +273,7 @@ export const GOVERNING_LAWS_MAX = 12;
 export const CITATION_MAX = 200;
 
 /** D-149: WHICH LAWS GOVERN THIS ACTION, AS THE RECORD CAN SUPPORT IT. The one reader: the action's own read
- *  (`op=projection`'s action block) and the suite read this function, so the sentence a reader is shown and
+ *  (`op=projection`'s action block) reads this function (R8, proved by `test/m/action-grammar/`), so the sentence a reader is shown and
  *  the state it describes cannot come apart.
  *
  *  TWO STATES, AND THE SECOND IS THE ITEM. `stated` — a member set the list, and it is returned exactly as
@@ -390,7 +390,7 @@ export const LAW_PROPOSAL_WHY_MAX = 240;
  *  `entity_id`: the catalog is a pure function over an injected filesystem and
  *  its only resolver seam is `resolveTarget`, which answers for BUNDLE ids.
  *  The shape is checked here; resolution would need a new seam threaded from
- *  the store's gateFacts, and no caller needs it yet. (b) It cannot detect
+ *  `actions`' write, and no caller needs it yet. (b) It cannot detect
  *  invention in general — a member who types "the relevant department" gets
  *  past every rule below. The check is a BOUNDARY, not a prose judge; the
  *  control that stops the invention is the surface's radio pair with no third
@@ -554,7 +554,7 @@ export function counterpartyFindings(fm, findings) {
   }
 }
 /** D-147: THE LIFECYCLE, READ BACK AS ONE DATED CHAIN — a pure function over one document and a day, so
- *  the store's read and any other reader agree by construction. Every entry answers with its stage (or
+ *  `actions`' read and any other reader agree by construction. Every entry answers with its stage (or
  *  that none was stated), the entry it follows, the days elapsed since that entry, what followed it, and
  *  its due date: STATED with its citation and whether that citation is on the action's list now, or
  *  UNDETERMINED with the sentence saying so. `due.status` is DERIVED against `today` and nothing else:
@@ -624,8 +624,8 @@ export function requestLifecycleOf(fm, today) {
 }
 
 /** DEC-14: what an action's recorded consequence CLAIMS, derived rather than
- *  asserted — a pure function over one document, so the store, the catalog and
- *  any read agree by construction instead of by convention.
+ *  asserted — a pure function over one document, so `actions`' write, the audit
+ *  and any read agree by construction instead of by convention.
  *
  *  THE LINE IS STRUCTURAL AND AT THE WRITE PATH, which is the ruling's own
  *  wording. An action's recorded consequence is an OUTCOME by default: a dated,
