@@ -27,3 +27,7 @@
 - `ownership`: 3 files changed by instance-setup between tranche/T21 and HEAD; 0 failures.
 
 Size (session_01WX3AVL5UiwgPqAyK78XvyZ): test runs 1, module lines 2948
+
+## J1 · REPORT
+
+Generated artifact staled: bio-plane/dist/bio-plane.bundled.mjs and .bundle.json. My comment edits are inside SETUP_HTML (setup.mjs:345-346, :965, :972-974), and livefire.mjs:195-196 and :219 changed too (commit c215950031). I regenerated nothing. Also: no test now pins the two intake surfaces (SETUP_HTML and legacy-ui's civicos-ui/app.html) together, since the deleted add-surface.test.mjs did that; legacy-ui's to judge.
