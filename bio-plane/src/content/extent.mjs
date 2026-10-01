@@ -1,13 +1,16 @@
-/* content — THE EXTENT GRAMMAR (requirements: `build/requirements/content.md` R1–R10, R14, R33). Pure; nothing here
+/* content — THE EXTENT GRAMMAR (requirements: `build/requirements/content.md` R1–R10, R14, R33, R48). Pure; nothing here
  * throws, reads the record or keeps state.
  *
- * WHERE THE GRAMMAR'S CORE LIVES, AND WHY IT IS STILL IMPORTED (T5-3, CONTENT #1's job record, "Decisions"). The
- * catalogue (`legacy-checks`, first in the order) still runs the leg grammar of C-2.8 and C-25.10
- * (`checkLegExtentGrammar`, inquiry's and basis-versions') and the connection-pair checks (C-49, connections') over
- * `checkContentExtent`, `legExtent`, `canonicalExtent` and `describeExtent`. An earlier module cannot import this
- * one, so those functions cannot leave the catalogue until their catalogue callers do; until then this module takes
- * them from there and is their ONE public face (R1–R8), and everything the grammar has gained since is written here,
- * over them, never beside them:
+ * WHERE THE GRAMMAR'S PARTS LIVE (R48; T19 layer 4, K585 (5)). This file is the grammar's ONE public face (R1–R10). Under
+ * it are two parts it does not restate:
+ *
+ *   - THE CORE, this module's own copy of the catalogue's (`./extent-core.mjs`, rows in `./checks.mjs`): C-45's rows,
+ *     `checkContentExtent`, `extentRelation`, `legExtent`, `legHasAuthoredExtent`, `imagePartUndetermined`,
+ *     `CONTENT_ID_RE`, `CONTENT_EXTENT_DOCUMENT_ONLY` and the kind refused by name, copied unchanged;
+ *   - THE ALGEBRA, `text-chain`'s (its R92–R98): the eight kinds, the A1 notation, `canonicalExtent`, `describeExtent`
+ *     and `contentCitedAs`, byte-identical to the catalogue's, so no content id minted before this move moves.
+ *
+ * Everything the grammar has gained since is written here, over them, never beside them:
  *
  *   - the ninth kind, `envelope` (R33, REC-204), with its own canonical form, human form and shape check;
  *   - a rect's coordinate space (R10, D-670): `user` is the one space addressed, and any other is refused C-45.13
@@ -15,24 +18,27 @@
  *   - a `pdf-page` rect bounded by its page's MediaBox (R9, D-374), refused C-45.1 naming the box, and admitted
  *     UNDETERMINED (`{level: "page_box"}`) where the record holds no box for the page.
  *
- * The content address (`contentIdFor`, R3) is taken over THIS module's canonical form, which is byte-identical to the
- * catalogue's for every kind the catalogue knows, so no id minted before this module moves. */
+ * The content address (`contentIdFor`, R3) is taken over THIS module's canonical form, which is text-chain's for every
+ * kind text-chain knows. */
 
 import {
-  CONTENT_EXTENT_KINDS as CATALOGUE_KINDS, CONTENT_EXTENT_CHECKS, CONTENT_EXTENT_KIND_NO_PRODUCER,
-  CONTENT_ID_RE, CONTENT_EXTENT_A1_RE, CONTENT_EXTENT_DOCUMENT_ONLY,
-  canonicalExtent as catalogueCanonical, describeExtent as catalogueDescribe,
-  checkContentExtent as catalogueCheck, contentCitedAs as catalogueCitedAs, legExtent, legHasAuthoredExtent,
-  extentRelation as catalogueRelation,
-  imagePartUndetermined, canonicalJson, sha256HexSync,
-} from "../../checks/bio-checks.mjs";
-import { chainKindFor, checkChain, STEP_KINDS, CHAIN_KIND_MIXED, rectSpace, RECT_USER_SPACE } from "../textchain.mjs";
+  CONTENT_EXTENT_KINDS as ALGEBRA_KINDS, CONTENT_EXTENT_A1_RE, canonicalExtent as algebraCanonical,
+  describeExtent as algebraDescribe, contentCitedAs as algebraCitedAs,
+  chainKindFor, checkChain, STEP_KINDS, CHAIN_KIND_MIXED, rectSpace, RECT_USER_SPACE,
+} from "../textchain.mjs";
+import {
+  CONTENT_EXTENT_KIND_NO_PRODUCER, CONTENT_ID_RE, CONTENT_EXTENT_DOCUMENT_ONLY, checkContentExtent as coreCheck,
+  legExtent, legHasAuthoredExtent, extentRelation as coreRelation, imagePartUndetermined,
+} from "./extent-core.mjs";
+import { CONTENT_EXTENT_CHECKS } from "./checks.mjs";
+import { canonicalJson } from "../record-grammar/json.mjs";
+import { sha256HexSync } from "../record-grammar/sha256.mjs";
 
 export { CONTENT_EXTENT_CHECKS, CONTENT_EXTENT_KIND_NO_PRODUCER, CONTENT_ID_RE, CONTENT_EXTENT_A1_RE,
          CONTENT_EXTENT_DOCUMENT_ONLY, imagePartUndetermined, legExtent, legHasAuthoredExtent, CHAIN_KIND_MIXED };
 
 /* ======================================================================= *
- * THE KINDS (R1). The catalogue's eight and `envelope` (R33, K102).
+ * THE KINDS (R1). text-chain's eight and `envelope` (R33, K102).
  * ======================================================================= */
 
 /** REC-204 — AN ITEM OF THE EVIDENTIARY ENVELOPE (DEC-5, OFFICE-FORMATS.md "THE ENVELOPE AS CONTENT"): a tracked
@@ -41,7 +47,7 @@ export { CONTENT_EXTENT_CHECKS, CONTENT_EXTENT_KIND_NO_PRODUCER, CONTENT_ID_RE, 
  *  the body's: a reviewer's comment and an editor's name are the document's own bytes, and still not what the
  *  document SAYS. `cited_as` keeps them apart on every row. */
 export const CONTENT_EXTENT_KINDS = Object.freeze({
-  ...CATALOGUE_KINDS,
+  ...ALGEBRA_KINDS,
   envelope: { landed: true, human: "an item of the document's envelope (a tracked change, comment, core property or speaker notes), not its body" },
 });
 
@@ -64,8 +70,8 @@ export const ENVELOPE_ANCHOR_KINDS = Object.freeze(["doc-para", "slide-shape"]);
    before D-670 was one), a non-empty string is that space, and anything else is `null`, a space nobody can read. Every
    space but user space is refused BY NAME (C-45.13) and is `unreadable` to `extentRelation`. */
 
-/** C-45.13 (D-670): a rect stated in a space other than user space. The row is this module's until the catalogue
- *  carries it (reported to legacy-checks); its shape is the catalogue's, so a surface reads it like any other. */
+/** C-45.13 (D-670): a rect stated in a space other than user space. The catalogue never carried it; its shape is C-45's
+ *  rows', so a surface reads it like any other. */
 export const CONTENT_EXTENT_OWN_CHECKS = Object.freeze({
   CONTENT_EXTENT_NOT_USER_SPACE: {
     check: "C-45.13",
@@ -83,7 +89,7 @@ const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 const isRect = (r) => Array.isArray(r) && r.length === 4 && r.every((n) => typeof n === "number" && Number.isFinite(n));
 const normRect = (r) => [Math.min(r[0], r[2]), Math.min(r[1], r[3]), Math.max(r[0], r[2]), Math.max(r[1], r[3])];
 
-/** A refusal in the catalogue's shape, from the catalogue's C-45 row or this module's own. */
+/** A refusal in C-45's shape, from this module's own C-45 rows (R48) or its C-45.13. */
 function refusal(code, detail) {
   const row = CONTENT_EXTENT_CHECKS[code] || CONTENT_EXTENT_OWN_CHECKS[code];
   return { ok: false, code, check: row.check, translation: row.translation, detail };
@@ -99,10 +105,10 @@ export function contentCitedAs(extent) {
   const e = isObj(extent) ? extent : {};
   const v = e.cited_as;
   if ((v === undefined || v === null || v === "") && e.kind === "envelope") return CONTENT_CITED_AS_ENVELOPE;
-  return catalogueCitedAs(e);
+  return algebraCitedAs(e);
 }
 
-/** R2: one form per extent. The catalogue's form for its eight kinds, byte for byte (so no content id moves); for an
+/** R2: one form per extent. text-chain's form for its eight kinds, byte for byte (so no content id moves); for an
  *  envelope item, `cited_as` IS in the address (an envelope item and a body passage never share one), `at` is the
  *  anchoring element's own canonical form, `name` the core property's name, `n` the item's ordinal among items of its
  *  kind sharing that part, anchor and name. A rect's `space` is not in the address: only user space is admitted
@@ -110,7 +116,7 @@ export function contentCitedAs(extent) {
 export function canonicalExtent(extent) {
   const e = isObj(extent) ? extent : {};
   if (e.kind === "envelope") {
-    const at = isObj(e.at) && ENVELOPE_ANCHOR_KINDS.includes(e.at.kind) ? JSON.parse(catalogueCanonical(e.at)) : null;
+    const at = isObj(e.at) && ENVELOPE_ANCHOR_KINDS.includes(e.at.kind) ? JSON.parse(algebraCanonical(e.at)) : null;
     return canonicalJson({ kind: "envelope", cited_as: contentCitedAs(e),
       item: typeof e.item === "string" ? e.item.trim() : null,
       part: typeof e.part === "string" && e.part.trim() ? e.part.trim() : null,
@@ -118,7 +124,7 @@ export function canonicalExtent(extent) {
       name: typeof e.name === "string" && e.name.trim() ? e.name.trim() : null,
       n: Number.isInteger(e.n) ? e.n : null });
   }
-  return catalogueCanonical(e);
+  return algebraCanonical(e);
 }
 
 /** R2: the human form (IC-1's required `ref`), a caller's non-empty `ref` kept. An envelope item's form LEADS with the
@@ -130,10 +136,10 @@ export function describeExtent(extent) {
     const what = ENVELOPE_ITEM_KINDS[typeof e.item === "string" ? e.item.trim() : ""] || "an item";
     const name = typeof e.name === "string" && e.name.trim() ? ` '${e.name.trim()}'` : "";
     const at = isObj(e.at) && ENVELOPE_ANCHOR_KINDS.includes(e.at.kind)
-      ? ` at ${catalogueDescribe({ ...e.at, ref: undefined })}` : "";
+      ? ` at ${algebraDescribe({ ...e.at, ref: undefined })}` : "";
     return `envelope: ${what}${name}${at}`;
   }
-  return catalogueDescribe(e);
+  return algebraDescribe(e);
 }
 
 /** R3: THE CONTENT ADDRESS, `hash(capture_sha, canonical extent, chain)`: SHA-256 over `{v: 1, capture_sha, canonical
@@ -152,8 +158,8 @@ export function contentIdFor(captureSha, extent, chain) {
  * ======================================================================= */
 
 /** R5: the extent a citation `{target, extent?, extent_kind…?, content_id?}` means. A structured `extent` object is
- *  taken as given; the flattened leg fields (`extent_kind`, `extent_page`, …) are read by the catalogue's one reader,
- *  plus D-670's `extent_space`, which that reader does not yet carry. A citation naming no part is `document` (there is
+ *  taken as given; the flattened leg fields (`extent_kind`, `extent_page`, …) are read by the core's one reader
+ *  (`legExtent`), plus D-670's `extent_space`, which that reader does not carry. A citation naming no part is `document` (there is
  *  no `unstated` extent, Bob's 5.3). */
 export function citationExtent(citation) {
   const c = isObj(citation) ? citation : {};
@@ -195,7 +201,7 @@ export function citationHasAuthoredExtent(citation) {
  * `extentRelation(outer, inner)` answers how two extents of ONE capture stand to each other: `same`, `narrower`
  * (inner lies strictly inside outer), `wider`, `disjoint`, or `unreadable` (either side names something that cannot
  * be evaluated, or a coarse field is missing). THE DEFAULT IS NOT-NARROWER, for `extentCovers`' reason. The
- * catalogue's relation answers the eight kinds it knows (the legacy store's narrow act still reads it there); this
+ * core's relation (the catalogue's, copied, R48) answers the eight kinds it knows; this
  * face adds what the grammar has gained: a rect outside user space is a place that cannot be evaluated (D-670), and
  * an envelope item is `same` only as itself, `narrower` than the whole document, and `disjoint` from everything else.
  * ======================================================================= */
@@ -212,7 +218,7 @@ export function extentRelation(outer, inner) {
     if (b.kind === "document") return "wider";
     return "disjoint";
   }
-  return catalogueRelation(a, b);
+  return coreRelation(a, b);
 }
 
 /* ======================================================================= *
@@ -364,13 +370,13 @@ export function imagePageUndetermined(extent, ctx = {}) {
 
 /** Refuses an extent this record cannot address, with the figure in `detail`, or answers null. `ctx` is a capture's
  *  context `{chain, pageCount, container, pageBoxes?}` (`contentContextFor`), or `CONTENT_EXTENT_DOCUMENT_ONLY`, whose
- *  record arms are skipped. Order: the catalogue's kind arms (`dom`, an unknown kind); then this module's space arm
- *  (C-45.13) before any number is read; then the envelope item's shape and its anchor; then every catalogue arm; then
+ *  record arms are skipped. Order: the core's kind arms (`dom`, an unknown kind); then this module's space arm
+ *  (C-45.13) before any number is read; then the envelope item's shape and its anchor; then every core arm; then
  *  the MediaBox bound (C-45.1). A bound the context does not hold is never a refusal (R8). */
 export function checkContentExtent(extent, ctx = {}) {
   const e = isObj(extent) ? extent : null;
   if (!e || e.kind === CONTENT_EXTENT_KIND_NO_PRODUCER || !Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS, e.kind))
-    return catalogueCheck(extent, ctx);
+    return coreCheck(extent, ctx);
   /* DEC-49 REGION is-content-extent-space */
   if ((e.kind === "pdf-page" || e.kind === "image") && rectSpace(e) !== RECT_USER_SPACE)
     return refusal("CONTENT_EXTENT_NOT_USER_SPACE",
@@ -387,7 +393,7 @@ export function checkContentExtent(extent, ctx = {}) {
         : `only an envelope item is cited as the envelope. A ${e.kind} extent addresses the document's body, and `
           + `reading it as an annotation would change what the citation claims`);
   if (e.kind === "envelope") return checkEnvelope(e, ctx);
-  const bad = catalogueCheck(e, ctx);
+  const bad = coreCheck(e, ctx);
   if (bad) return bad;
   if (e.kind === "pdf-page" && ctx && ctx.known !== false) {
     const off = rectOffPage(e, ctx.pageBoxes);
@@ -424,7 +430,7 @@ function checkEnvelope(e, ctx) {
       return refusal("CONTENT_EXTENT_UNREADABLE",
         `an envelope item is anchored at a paragraph or a slide (${ENVELOPE_ANCHOR_KINDS.join(", ")}) or at nothing. `
         + `This one is anchored at '${String(isObj(e.at) ? e.at.kind : e.at).slice(0, 40)}'`);
-    const anchor = catalogueCheck(e.at, ctx);
+    const anchor = coreCheck(e.at, ctx);
     if (anchor) return anchor;
   }
   if (ctx && ctx.known !== false && !(Array.isArray(ctx.chain) && ctx.chain.length))

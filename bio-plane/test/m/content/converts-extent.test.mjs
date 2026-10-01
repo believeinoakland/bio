@@ -13,7 +13,7 @@ import {
   CONTENT_EXTENT_CHECKS, CONTENT_EXTENT_OWN_CHECKS, CONTENT_EXTENT_A1_RE, canonicalExtent, describeExtent,
   contentIdFor, citationExtent, checkContentExtent,
 } from "../../../src/content/index.mjs";
-import { sha256HexSync, canonicalJson } from "../../../checks/bio-checks.mjs";
+import { sha256HexSync, canonicalJson } from "../../../src/record-grammar/index.mjs";
 import { getFormat } from "../../../src/formats.mjs";
 
 const BOOK = "INFO-2026-8500-workbook", TEXT = "INFO-2026-8500-document", DECK = "INFO-2026-8500-deck";

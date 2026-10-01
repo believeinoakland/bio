@@ -8,7 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, sha } from "./fixture.mjs";
 import { TRANSCRIBE_CHECKS } from "../../../src/content/index.mjs";
-import { EARNED_CAPTURE_CEILING } from "../../../checks/bio-checks.mjs";
+import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
 
 const DOC = "INFO-2026-0001-a";
 const OCR = [{ step: "pixels", extent: { kind: "pages", pages: [0, 1, 2] } },
