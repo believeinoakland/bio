@@ -17,6 +17,6 @@
 - `checks/format.mjs`: 86 modules, 84 requirements files; 0 failures.
 - `checks/architecture.mjs contradiction`: 22 product files, 56 relative imports; 0 failures.
 - `checks/coverage.mjs contradiction`: 57 of 57 live requirement ids named by a test; 0 failures.
-- `checks/ownership.mjs contradiction tranche/T21`: 0 failures (re-run after commit below).
+- `checks/ownership.mjs contradiction tranche/T21`: 5 files changed by contradiction; 0 failures.
 
 Size (session_016pynE6RnAHz677Ff5aA48x): test runs 2, module lines 12
