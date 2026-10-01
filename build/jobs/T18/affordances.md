@@ -23,3 +23,35 @@ Replaces J1. One correction: basis-versions' and skills' tests only mention `op=
    I am carrying on with the converts. The removal is one small commit whichever way you rule.
 
 (2) Unchanged from J1: the four K705/K709 writes are graded `undetermined` on R27's rule, each with a `NON_ACTS` reason, and `templates`, `action` and `actions` are in `LAYER9_READS`. That makes R27's "61" 65 (its wording is yours to amend). `catalogue.test.mjs` is green.
+
+## J3 · COMPLETE
+
+**Entries applied** (plan layer 11, affordances; START B1; answers B2/B3, K723):
+- **N13's share** (store map §4.1), reading A as ruled: `affordancesOps(a, url)` holds `affordancefacts` and answers `affordanceFacts` for the query's `target`, `viewer`, `identity`, `author` and `by` (an absent one reads null). It lives in `affordances/facts.mjs` and is exported from `affordances.mjs`. New `test/m/affordances/ops.test.mjs` tests it in-process (R13–R15, R22). The `store.mjs` arm stays, as ruled; control-plane removes it in the edit that spreads the map.
+- **K705, K709**: `communicationprepare`, `templatesave`, `actioncreate` and `actionpressure` are in `RUNG_ABSENT` (ground `undetermined`, on R27's rule) and in `NON_ACTS` with their reasons. `templates`, `action` and `actions` are in `LAYER9_READS`. `catalogue.test.mjs`'s layer-9 arm now covers 26 writes and 18 reads (actions' four checked present in `actionsOps`), and R27's count is 65. K705's accepted red arm is green.
+- **N70's N45**, by the `d311-roster-affordances` convert: `projectleave` is offered to an owner only while another owner is committed, driven for every caller and project with the act (below).
+- **Converts** (the T17 `legacy-tests.md` rows; no old suite deleted):
+  - `conclude-project-arm` (R14, R15, R23, R8, R18), in new `converts.test.mjs` over basis-versions' fixture: on a question concluded with no project, `conclude` is offered to the owner and to the joined non-owner of a citing project. It is withheld from the invited member, the owner of a severed or non-citing project, an administrator who joined nothing, and a machine. The fact is asked of the identity over the viewer's sight. On an open question it is offered to every person. Each offer and each withholding agrees with basis-versions' `conclude`.
+  - `caseproduction` §3a (R8, R10, R14, R15, R18; DEC-69 under R5, R21), over case-authoring's fixture: `publish` is offered exactly where `publishCase` does not refuse the caller NOT_THE_PROJECT_OWNER (owner, joined participant, administrator). A machine is withheld it by the machine rule (its position fact is null). A withheld caller's acts carry no narration, and the owner's entry carries only R28's prompt.
+  - `publish` (R14, R8, R18), over case-authoring's fixture: after a real publication and its commit, `case_member` is true, `publish` is withheld and refused ALREADY_A_CASE_MEMBER, and `reopen` is offered and accepted.
+  - `citeproject-inquiry` (R9, R17, R14, R18): `catalogue.test.mjs` checks the types of `cite`, `sever` and `reinstate` against R9's text (not circular). `plane.test.mjs` checks that on a question target `sever` and `reinstate` track `cited_by_case`: offered neither when only a question cites it, then through cite, sever, reinstate and sever, each agreeing with the act.
+  - `d311-roster-affordances` (R18, R9, R10, R20): a `plane.test.mjs` test drives join and leave, offer against act, for 8 callers and 4 projects. It applies REC-186's no-op join rule, keeps the leave pass at the offer-time roster, and checks that machines are offered and accepted neither. R20's test now also checks that a machine is offered `cite` and performs it.
+  - `skillpack` (R17): a `plane.test.mjs` test checks that every published catalogue act carries a mode and none is `machine`. The legacy row says no requirement states this. Proposed wording if you want one: "R17 … every act in `catalog` is a member's: its `mode` is `session` or `admin-session`, never `machine` (INVESTIGATIVE-SESSION §4)". The test is under R17 until then.
+
+**Deferred:** none. **Rows moved or changed:** none (no catalogue row; the store and `src/index.mjs` are untouched, so nothing is `awaiting stamp`).
+
+**Not-yet-met marks:** the Status line of `requirements/affordances.md` still says "R26 … not yet met" (met by AFFORDANCES #6, K441) and "N365 … not yet met" (met by AFFORDANCES #8, K560). Both are met, and their tests are green (`plane.test.mjs` R26; `derive.test.mjs` and `contradiction.test.mjs` for R8 and R14's `contradiction_sides_seen`). Please strike them.
+
+**Other modules:**
+- `unaccounted(table)` over control-plane's live `OPS` today reads `stale: [actioncreate, actionpressure, communicationprepare, templatesave]`, because those ops are not yet in the table as mutating and gated. op-declarations' N-A12 share and control-plane's three filings specs (K701) close it. No test runs it over the live table yet; control-plane's R12 test should once they land.
+- control-plane: spread `affordancesOps(affordancesOf(ctx), url)` in `controlPlaneRoutes`, and remove the store's `affordancefacts` arm and its `affordancesOf` import (K723).
+
+**Generated artifacts:** none made stale (my change to the catalogue adds table rows only; no bundle reads `affordances/facts.mjs`'s new export).
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/affordances/`: 121 pass, 0 fail (106 at start, 105 pass and K705's 1 fail).
+- Users of the catalogue: queue 68/0, tasks 71/0, skills 39/0; control-plane 79 pass, 1 fail (R36, K658's accepted red, untouched).
+- Mutation checks, each restored and verified with `cmp`: dropping `publish`'s position clause failed 2 tests; dropping `conclude`'s project arm 2; join narrowed to `invited` 1 (the join/leave test); `sever` keyed on `cites_in` 1 (the cite-inquiry test).
+- format: 0 failures. architecture affordances: 0 failures. coverage affordances: 29 of 29 live ids named, 0 failures. ownership affordances tranche/T18: 7 files, legacy-store 0 added / 0 removed, legacy-index 0 / 0, 0 failures.
+
+Size (session_01FgotLQ7FibdK7RNpDfo4m4): test runs 16, module lines 2944
