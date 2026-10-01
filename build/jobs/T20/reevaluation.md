@@ -1,6 +1,6 @@
 # reevaluation (T20)
 
-**Status** · session_01Nuxk65sLt1QcrUvkqs4VuT · depth 2 · COMPLETE · handled B1
+**Status** · session_01Nuxk65sLt1QcrUvkqs4VuT · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
