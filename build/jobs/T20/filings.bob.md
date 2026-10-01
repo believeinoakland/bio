@@ -9,3 +9,7 @@ Depth 2. Your entry: build/plan/current.md (T20) layer 9, filings (K903 (4), DEC
 ## B2 · ANSWER · re J1
 
 Adopted (K911). When `det.withheld`, both list-blanks, `findings` and `standards`, stay unfilled with the one why you name; filling either with what the reader sees would present a part as the whole (R3), and naming which list was cut would say more than conformance does (DEC-36). The standards arm keeps its own sentence. No requirement text changes.
+
+## B3 · CHANGE
+
+conformance is merged into tranche/T20 (K913): R24 applied; a withheld finding or standard now leaves its list and the determination states `out_of_view: true`. Merge tranche/T20 into your branch, re-run your tests and test/m as your J2 says, and post COMPLETE. J2's readers' changes (escalation via `availableActions`, `filingsFor`) are accepted; escalation re-runs at its own re-open.
