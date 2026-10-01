@@ -5872,29 +5872,6 @@ export const SURFACE_CHECKS = {
   },
 };
 
-/* REC-141 / C-59 — THE PLANE MINTS PROJECT IDS (Membership Architecture v2 §7, the bullet *"HOW the
- * plane mints a project id"*, BOB #15, 2026-09-18; §7.9 *"not its existence"*). A creation that NAMED
- * its project's id answered `EXISTS` at a hidden project's id and CREATED at a free one, so the answer
- * said whether a project the caller could not see existed (D-428's creation half). A caller-supplied id
- * for a NEW project — or any creation in the `PROJ-` namespace, or a fork's `newId` — is now refused
- * BEFORE any id is looked up, with one answer whether or not the id is taken, and the answer echoes no
- * id. The plane mints the id (`allocId`'s pattern) and writes it into the document's own `id:` before
- * the bytes are hashed and registered, so a document that already carries one is refused. */
-export const PROJECT_ID_CHECKS = {
-  /* REC-151 (Membership v2 §7, *"A MINTED ID CARRIES NO COUNT"*, BOB #16, 2026-09-19): an id of a GATED
-     object (PROJ, CASE, DRAFT, RVG, TASK) is minted opaque by the act that creates it, and no caller
-     allocates one — a counter read through op=allocid would say how many exist, hidden ones included. */
-  ALLOCID_PREFIX_GATED: {
-    check: 'C-59.5',
-    where: 'src/record-core/index.mjs allocIdOp > is-allocid-prefix-gated',
-    translation: 'Ids of this kind are given by the record when the thing itself is created, and are not '
-      + 'handed out in advance. Create the project, case, draft, grant or task through its own action and '
-      + 'the record will answer with its id. Nothing was allocated.',
-  },
-};
-
-
-
 /* D-394 / C-80 — THE CROSS-VERSION NOTICE'S REFUSALS
  * (`BIO_Content_Framework_v0_10.md` §18.1, the cross-version relation).
  *
@@ -6732,34 +6709,6 @@ function coversImagePlacement(e, container) {
  *            to be a published case member and does not carry what one must (ratification R9, C-2.8's arm).
  * ========================================================================= */
 export const REGISTRATION_CHECKS = {
-  AUDIT_CHECK_DECLARED: {
-    check: 'C-102.1',
-    where: 'src/record-core/index.mjs registerAuditCheck',
-    translation: 'A part of this instance tried to register its audit check a second time. Each part '
-      + 'registers once, when it starts, so the second was refused and the first still runs. This is a fault '
-      + 'in how the instance was built, not in the record, and nothing in the record changed.',
-  },
-  AUDIT_CHECK_MALFORMED: {
-    check: 'C-102.2',
-    where: 'src/record-core/index.mjs registerAuditCheck',
-    translation: 'A part of this instance tried to register an audit check without naming itself or without '
-      + 'a check to run, so nothing was registered. This is a fault in how the instance was built, not in the '
-      + 'record, and nothing in the record changed.',
-  },
-  AUDIT_CHECK_FAILED: {
-    check: 'C-102.3',
-    where: 'src/record-core/index.mjs auditPass',
-    translation: 'One of the checks the audit runs over this document stopped with an error instead of '
-      + 'answering, so the document is counted as having an error rather than as clean. The error is in the '
-      + 'check and says nothing yet about the document. The audit changes nothing in the record.',
-  },
-  CASE_MEMBER_REFUSED: {
-    check: 'C-102.10',
-    where: 'src/ratification/index.mjs check',
-    translation: 'This document claims to be part of a published case, and it does not carry what a part of '
-      + 'a published case must carry, so it was not written. Each problem is named beside this message. '
-      + 'Nothing in the record changed.',
-  },
 };
 
 /* =========================================================================
