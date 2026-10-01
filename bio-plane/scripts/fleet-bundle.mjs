@@ -4,9 +4,9 @@
  * `agent-worker/scripts/build.mjs` and `pdf-worker/scripts/build.mjs` are thin
  * callers of this, and `bio-plane/test/system/fleetbundles.test.mjs` is the only reader
  * of the verification. A second copy of a rule is how the next one goes stale in
- * silence — this estate has measured that five times (`coverage.mjs`'s own note
- * on the fleet `control` flag, where the arm written to prove a fix came back
- * GREEN because nothing read the flag any more).
+ * silence — this estate has measured that five times (the note in the retired
+ * `scripts/coverage.mjs` on the fleet `control` flag, where the arm written to
+ * prove a fix came back GREEN because nothing read the flag any more).
  *
  * ---- WHY THIS EXISTS AT ALL (BOB, 2026-09-10, answering DIST's DELEGATION) ---
  *
@@ -65,9 +65,10 @@
  * ---- WHAT THE MANIFEST IS FOR, AND WHY IT IS NOT DECORATION -----------------
  *
  * The byte-identity arm needs the member's dependencies INSTALLED (unpdf, for
- * `pdf-worker`), and a fresh checkout has none — `battery.mjs`'s fleet walk
- * already says so and skips such suites loudly. **A guard that skips is not a
- * guard**, so the manifest carries the sha256 of every INPUT, and the input
+ * `pdf-worker`), and a fresh checkout has none — there `verifyFresh` says it
+ * could not check (bundler R7) and `test/system/fleetbundles.test.mjs` reports a
+ * SKIP. **A guard that skips is not a guard**, so the manifest carries the sha256
+ * of every INPUT, and the input
  * check runs on any machine with no install at all. The two arms cover different
  * halves and say which half they are:
  *
@@ -95,10 +96,10 @@ import { createHash } from "node:crypto";
 import { readFileSync, readdirSync, writeFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
-/* THIS WALK IS GUARDED RATHER THAN NAMED, and `hygiene.test.mjs`'s census is what
-   asked the question — it went red on this file the first full battery after it
-   was written, before anyone read the diff, which is the sixth time that ratchet
-   has caught a new walk on the day it landed.
+/* THIS WALK IS GUARDED RATHER THAN NAMED. Found by the census in the old
+   `hygiene.test.mjs` (deleted in T20): it went red on this file the first full
+   run after it was written, before anyone read the diff, the sixth time that
+   ratchet caught a new walk on the day it landed.
    WHY GUARDED AND NOT NAMED: `discoverMembers` walks the REPOSITORY ROOT for
    `fleet-member.json`, which is the second discovery path M0-15 named — a
    manifest enrols a WHOLE DIRECTORY, so it is a larger hole than an untracked
@@ -106,9 +107,9 @@ import { dirname, join, resolve } from "node:path";
    `test/system/fleetbundles.test.mjs`. The named list's own rule says naming is
    defensible for a walk that only REPORTS and much weaker for one whose count
    feeds a ratchet, because a floor set while a phantom was present is
-   permanently too high and gets switched off. `battery.mjs` and `coverage.mjs`
-   guard the identical walk; this is the third caller of one mechanism, never a
-   fourth statement of the rule. */
+   permanently too high and gets switched off. `fleetProvenance` below is a
+   caller of `provenance.mjs`'s one mechanism (bundler R9), never a second
+   statement of the rule. */
 import { readGitProvenance, reportProvenance, repoPath } from "./provenance.mjs";
 
 export const REPO_ROOT = resolve(join(dirname(fileURLToPath(import.meta.url)), "..", ".."));
@@ -131,9 +132,8 @@ const REBUILD = "Run `node bio-plane/scripts/bundles.mjs` from the repository ro
 
 /* ---------------------------------------------------------------- discovery */
 /* Members are DISCOVERED by their own marker file (D-117), never hand-listed
-   here, for the same reason `battery.mjs` discovers suites from the directory
-   and `coverage.mjs` discovers members from the manifest: a list maintained by
-   hand is a list that silently falls behind the thing it lists.
+   here: a list maintained by hand is a list that silently falls behind the
+   thing it lists (bundler R1).
 
    A member opts INTO a bundle by carrying a `bundle` block. A member without one
    is not a defect and is not silently skipped either — the gate names it, so a
@@ -171,16 +171,16 @@ export function discoverMembers(repoRoot = REPO_ROOT) {
 /* ---- THE PLANE ITSELF, GUARDED BY THE SAME LIBRARY (FL-10, D-298) ----------
  *
  * DIST measured the MIRROR of FL-9's defect: `dist/bio-plane.bundled.mjs` was
- * 114 commits stale against `src` and the battery could not tell — the battery
- * proves the artifact WORKS, never that it MATCHES its source.
+ * 114 commits stale against `src` and the tests could not tell — a test of the
+ * artifact proves it WORKS, never that it MATCHES its source.
  *
  * The plane is DELIBERATELY NOT a `fleet-member.json` member: that marker
- * enrols a directory in `coverage.mjs`'s FLEET rules (a member holds no store
- * binding and no surface op may be `mutating`), which the plane necessarily
+ * makes a directory a fleet member, and a fleet member holds no store binding
+ * (each member's own tests hold it to that), which the plane necessarily
  * violates — it IS the store. So the plane arrives as an exported descriptor
  * with the same `bundle` shape, consumed by the gate and by
- * `scripts/build-plane.mjs`, and `discoverMembers`' walk, `FLEET_FLOOR`, and
- * `battery.mjs`'s member census all keep their meaning untouched.
+ * `scripts/build-plane.mjs`, and `discoverMembers`' walk and the fleet gate's
+ * `GUARDED_FLOOR` keep their meaning untouched.
  *
  * The plane's build has ONE pre-step no member has: `embed:sign` regenerates
  * `src/signpage.mjs` from `src/sign-release.html` (K33), deterministically. The

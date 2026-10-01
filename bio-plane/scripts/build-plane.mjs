@@ -3,8 +3,8 @@
  * FL-9 gate reads — the plane's thin caller on agent-worker's pattern (FL-10).
  *
  * D-298 is why this exists: the committed `dist/bio-plane.bundled.mjs` was 114
- * commits stale against `src` and nothing could tell, because the battery
- * proves the artifact WORKS, never that it MATCHES. The recipe lives in
+ * commits stale against `src` and nothing could tell, because a test of the
+ * artifact proves it WORKS, never that it MATCHES. The recipe lives in
  * `scripts/fleet-bundle.mjs` — ONE expression, shared with both fleet members
  * and with the gate that verifies all three.
  *
