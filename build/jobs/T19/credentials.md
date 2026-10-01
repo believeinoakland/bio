@@ -52,3 +52,7 @@ Size (session_01DykXv9jATJADcFBDEepSZh): test runs 9, module lines 918
 ## J4 · COMPLETE
 
 Complete: job/T19/credentials @ 4975c29b15, ready to merge early. R1–R20 built (R20 on my side; its real-membership arm runs once membership's R95 lands); 33/33 module tests; legacy-store 4/4; checks 0 failures (coverage 20/20, ownership legacy-store +16/−18). One red I cause elsewhere: control-plane families.test R22, CHECK_FAMILIES lacks credentials' three families (control-plane's, L11, or accept by name). Marks to strike, membership deletion notes and the ✱ deletion's K635 hold: see my record's Completion.
+
+## J5 · COMPLETE · re B4
+
+B4 done: tranche/T19 merged again (K774/K778 wording) at e1a919ac7f; unshimmed credentials 33/33, legacy-store 4/4; checks 0 failures (coverage 20/20, ownership legacy-store +16/-18). K779 noted: the catalogue deletions are membership's. Completion otherwise as J4.
