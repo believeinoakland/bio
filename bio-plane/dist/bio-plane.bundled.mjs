@@ -75923,8 +75923,8 @@ CREATE INDEX IF NOT EXISTS case_exclusions_target ON case_exclusions(target_id);
 --
 -- DERIVED FROM NOTHING, so it is not rebuilt by a projection pass; it is a
 -- record of events. It carries a bundle_id, so it is cleared by BOTH arms of
--- op=purge -- the D-113 silent-leftover, asserted against this file by
--- hygiene.test.mjs.
+-- op=purge -- the D-113 silent-leftover; R31's test
+-- (test/m/publication/invariants.test.mjs) purges a bundle and finds its flags gone.
 CREATE TABLE IF NOT EXISTS case_revision_flags (
   case_id       TEXT NOT NULL,
   edition       INTEGER NOT NULL,  -- the CASE edition whose roster froze the pin
@@ -75951,7 +75951,7 @@ CREATE INDEX IF NOT EXISTS case_revision_flags_bundle ON case_revision_flags(bun
 -- while any observation it reaches is unchosen). A later edition INHERITS the latest earlier
 -- edition's row until the author acts again (section 4.3). chosen_by is the server-stamped author.
 -- There is deliberately NO column that could hold an off-the-record source's identity: that
--- anonymity is a structural absence (section 4), and hygiene would see a column added here.
+-- anonymity is a structural absence (section 4).
 -- bundle_id is the OBSERVATION, so the rows ride the purge TABLES list in both arms (D-113): an
 -- attribution outliving its observation would attach to whatever bundle was next allocated its id.
 CREATE TABLE IF NOT EXISTS observation_attributions (
@@ -76480,7 +76480,8 @@ var Publication = class {
          per-case bars themselves — and `meaning-bounds.test.mjs` moved
          `op=publish` onto the OPAQUE roster: a collection off an
          unbounded row source, inside a conditional SPREAD, so the walk
-         could not even bucket it as bare. **An op the classifier cannot
+         could not even bucket it as bare (that suite was deleted in
+         T20). **An op the classifier cannot
          see is worse than one it grades badly** — that is the state
          `op=airunlog` was in while a ratchet read green over it — so the
          array came off rather than the roster growing a blind spot.
@@ -78149,12 +78150,11 @@ var Publication = class {
                       unconsumed PUBLICATION costs them a field they must reason
                       about — which is the distinction IC-22 acted on and this keeps.
       
-                      THE FENCE IS THE PART THAT MATTERS, and it is pinned rather than
-                      trusted: `test/case-opened.test.mjs` asserts that each of the
-                      three consumers NAMES its fields and that none spreads this
-                      state, and holds "computed here AND published nowhere" as ONE
-                      assertion — so deleting this key and publishing it both fail,
-                      and the decided state is the only one that passes. */
+                      THE FENCE IS THE PART THAT MATTERS: R53 names `opened` in this
+                      answer and its test (`test/m/publication/services.test.mjs`)
+                      holds the key, so deleting it fails; that each consumer NAMES
+                      its fields and none spreads this state is the consumer's to
+                      keep (`public-read` reads it, its R3, R6). */
       opened: c.opened,
       ratified_at: c.ratified_at ?? null,
       manifest_sha: c.manifest_sha ?? null,
@@ -78283,7 +78283,9 @@ var Publication = class {
      from the stored `delivered_by` column and from NOTHING ELSE: in particular
      never from `attestor_member`, so a row written before the column existed
      reads UNDETERMINED, stated, rather than back-filled from its signer.
-     `deliverer.control.mjs`'s `backfill` arm edits exactly this line. */
+     R14's, R27's and R28's tests (`test/m/publication/convert-deliverer.test.mjs`,
+     `published.test.mjs`) read every such answer against its stored column and
+     its signer, so a back-fill here fails them. */
   #deliveredBy(row2) {
     return delivererOf(row2 ? row2.delivered_by : null);
   }
@@ -78438,10 +78440,10 @@ var Publication = class {
        AND THE REASON IS A MEASUREMENT RATHER THAN TIDINESS — stated in full because
        a reader could otherwise take it for evasion, and it is the opposite.
   
-       `meaning-bounds.test.mjs` grades an op OPAQUE when its method contains a
-       `#rows(` call and publishes no collection: *"rows came out of the store and
-       this reader could not say what happened to them."* Correcting site 2 put the
-       first `#rows(` into `publish()`'s own body, and the walk moved `op=publish`
+       `meaning-bounds.test.mjs` (deleted in T20) graded an op OPAQUE when its method
+       contained a `#rows(` call and published no collection: *"rows came out of the
+       store and this reader could not say what happened to them."* Correcting site 2
+       put the first `#rows(` into `publish()`'s own body, and the walk moved `op=publish`
        out of NO-COLLECTION and into OPAQUE — a blind spot on the heaviest act in
        the system, which is the state `op=airunlog` was in while a ratchet read
        green over it.
@@ -78454,10 +78456,10 @@ var Publication = class {
        where the file's other which-case readers already live rather than the
        roster growing a member that would have been describing the wrong thing.
   
-       IT IS NOT HIDDEN FROM ANYTHING. This helper is in `store.mjs`, it is counted
-       by `multicase.test.mjs`'s census as a full member of CASE-6's class, and the
-       census asserts the class total has not shrunk — so a query moved out of sight
-       of one walk is still in sight of the one that exists to count it.
+       IT IS NOT HIDDEN FROM ANYTHING. This helper is a public method of this module,
+       R38's `pinnedCaseEditionsOf`, and its tests (`test/m/publication/
+       relation.test.mjs`, `convert-ratify-authority.test.mjs`) drive it at the
+       interface.
   
        WHAT IT ANSWERS: which case editions froze THESE EXACT BYTES, one entry per
        CASE at that case's newest edition holding them — the same collapse every
@@ -78780,9 +78782,9 @@ function checkPublishedExtension(fm, findings) {
          applies, for the same reason it always did: its gate is now "a
          disposition OR a case member", so a case member reopens and a concluded
          finding in no case is still refused NOT_SET_DOWN. REC-56's whole point is
-         that a repair string must name a route that EXISTS, and
-         `repair-reachability.test.mjs` is the instrument that catches it when one
-         stops existing — which is exactly how this line was found. */
+         that a repair string must name a route that EXISTS, and the old
+         `repair-reachability.test.mjs` was the instrument that caught one that
+         stopped existing — which is exactly how this line was found. */
       [
         "author completeness.statement and the exclusion list",
         "or reopen this case for a second edition (concluded -> open, op=reopen) and carry it back through conclude and publish: an edition is not edited back into concluded, and reopening does not unpublish edition 1 (DEC-12, DEC-72)"
@@ -80053,7 +80055,7 @@ var Ratification = class _Ratification {
    * no-project conclusion is visible as information and is never read as P's,
    * and read strictly that refuses publication to every project whose finding was
    * concluded before the project arm existed — which is EVERY published case in
-   * this record and every publishing caller in the battery, since op=conclude had
+   * this record and every publishing caller the old test battery had, since op=conclude had
    * no project arm before 2026-09-18. Item 5 rules the opposite way about the
    * same bytes: they are read as the conclusion of the relationship that
    * concluded them, or of the no-project relationship where none can be
@@ -109893,8 +109895,7 @@ var PublicRead = class {
        NOTHING else -- it never joins the working corpus, never reports a working
        state, and carries no title but the one frozen into the edition -- which is
        the whole of why this answers without a credential of any kind (REC-30's
-       classification, and schema.mjs:172 says these tables exist to guarantee
-       exactly that property).
+       classification, and this module's R10 states exactly that property).
   
        RESOLUTION, three ways and one rule (DEC-12): a bundle id alone answers with
        the LATEST edition; an id and an edition answer with that edition; a
@@ -109917,7 +109918,8 @@ var PublicRead = class {
        AND THERE IS NO `strength` AT THIS LEVEL. Every member finding carries its
        own frozen pair inside findings[]; a case-level letter would be R2's
        forbidden composition arriving at case altitude, and its ABSENCE from this
-       answer is asserted by the suite rather than left to review. */
+       answer is asserted by `published.test.mjs`' R3 and R11 arms rather than
+       left to review. */
   publishedCase({ id = null, edition = null, sha256: sha2562 = null, caseId = null } = {}) {
     let theCase = caseId ? String(caseId).trim() : null, ed = null, asked = null;
     let askedEdition = null;
@@ -110085,7 +110087,7 @@ var PublicRead = class {
                       re-measured across the whole repository rather than inherited
                       from the item that found it: zero reads in `civicos-ui`, in
                       `newgroup`, in `docprofile`, in `pdf-worker`, in `tools`, and not
-                      one assertion in this battery. The surface renders `ratified_at`,
+                      one assertion in the test battery of the day. The surface renders `ratified_at`,
                       which is the instant the record can actually stand behind.
                       Removed rather than blanked, on REC-41's precedent: there is no
                       key in the answer for a later refactor to re-expose and a caller
@@ -110115,8 +110117,8 @@ var PublicRead = class {
                       -> `Store.publishCase()`**. REC-58 was right about the field and
                       wrong about the op — REC-41's lesson for the FOURTH time, inside
                       the very correction written to close the third. The mechanical
-                      check is `scripts/op-claims.mjs`, driven by
-                      `test/op-claims.test.mjs`, and it found this line.
+                      check was `scripts/op-claims.mjs`, driven by
+                      `test/op-claims.test.mjs` (both since retired), and it found this line.
       
                       WHERE IT ACTUALLY GOES, measured: `caseEditionState` has TWO
                       callers. `publish()` — the ratification committer — returns the
@@ -110128,8 +110130,10 @@ var PublicRead = class {
                       op, and the risk it carries is not that it IS published but that
                       it BECOMES published — one `...state` spread in any of the three
                       and a field with zero measured demand is on the wire with nobody
-                      having decided it. `test/case-opened.test.mjs` pins all three
-                      picks and holds the pair as a RELATION. */
+                      having decided it. This read's pick is held by
+                      `convert-publishedcase.test.mjs` and the container's by
+                      `convert-multifinding.test.mjs`; `op=ratify`'s is the control
+                      plane's. */
       completeness: state.completeness,
       ratified_at: state.ratified_at,
       complete: state.complete,
@@ -110170,7 +110174,7 @@ var PublicRead = class {
      from the stored `delivered_by` column and from NOTHING ELSE: in particular
      never from `attestor_member`, so a row written before the column existed
      reads UNDETERMINED, stated, rather than back-filled from its signer.
-     `deliverer.control.mjs`'s `backfill` arm edits exactly this line. */
+     `published.test.mjs`' R12 and R13 arms hold that. */
   #deliveredBy(row2) {
     return delivererOf(row2 ? row2.delivered_by : null);
   }
@@ -110325,13 +110329,13 @@ var PublicRead = class {
        AND THE REASON IS A MEASUREMENT RATHER THAN TIDINESS — stated in full because
        a reader could otherwise take it for evasion, and it is the opposite.
   
-       `meaning-bounds.test.mjs` grades an op OPAQUE when its method contains a
-       `#rows(` call and publishes no collection: *"rows came out of the store and
-       this reader could not say what happened to them."* Correcting site 2 put the
-       first `#rows(` into `publish()`'s own body, and the walk moved `op=publish`
-       out of NO-COLLECTION and into OPAQUE — a blind spot on the heaviest act in
-       the system, which is the state `op=airunlog` was in while a ratchet read
-       green over it.
+       `meaning-bounds.test.mjs` (deleted in T20) graded an op OPAQUE when its
+       method contained a `#rows(` call and published no collection: *"rows came
+       out of the store and this reader could not say what happened to them."*
+       Correcting site 2 put the first `#rows(` into `publish()`'s own body, and the
+       walk moved `op=publish` out of NO-COLLECTION and into OPAQUE — a blind spot
+       on the heaviest act in the system, which is the state `op=airunlog` was in
+       while a ratchet read green over it.
   
        THE OLD CLASSIFICATION WAS AND REMAINS THE TRUE ONE. These rows do NOT reach
        the wire: they drive a divergence refusal, a per-case flag discharge, and a
@@ -110341,10 +110345,9 @@ var PublicRead = class {
        where the file's other which-case readers already live rather than the
        roster growing a member that would have been describing the wrong thing.
   
-       IT IS NOT HIDDEN FROM ANYTHING. This helper is in `store.mjs`, it is counted
-       by `multicase.test.mjs`'s census as a full member of CASE-6's class, and the
-       census asserts the class total has not shrunk — so a query moved out of sight
-       of one walk is still in sight of the one that exists to count it.
+       IT WAS NOT HIDDEN FROM ANYTHING: `multicase.test.mjs`'s census (deleted in
+       T20) counted it as a full member of CASE-6's class. Its callers' answers are
+       what `published.test.mjs`' R2 and R3 arms now hold.
   
        WHAT IT ANSWERS: which case editions froze THESE EXACT BYTES, one entry per
        CASE at that case's newest edition holding them — the same collapse every
@@ -121182,7 +121185,7 @@ async function assembleCaseContainer({ env, stub, storeName, cs, via }) {
          told a stranger to check a signature over a statement it printed
          as 47 numbered integers, and the one thing they had to have in
          ASCII was the one thing they had to decode. Nothing consumed it —
-         measured across `civicos-ui`, the battery and this file — so this
+         measured across `civicos-ui`, the test battery of the day and this file — so this
          is a correction and not a withdrawal, and it rides the /4 bump
          with the rest of what the flip adds. Decoded here rather than by
          changing `ratifyStatement`, whose Uint8Array return is exactly
@@ -130443,8 +130446,10 @@ async function ratifyOp(req, stub, ctx) {
        not among them, so it stops here. KEEP THIS A PICK: a
        `...pub.case` would put an unconsumed field (re-measured
        at zero consumers by REC-58) on a public answer with
-       nobody having decided to publish it. test/case-opened.test.mjs
-       asserts both the named fields and the absence of a spread. */
+       nobody having decided to publish it. R6's tests
+       (`test/m/ratification/converted-d.test.mjs`, REC-58;
+       `ratify-op.test.mjs`) assert the block's keys are exactly the
+       named fields and that `opened` is absent. */
     ...pub.caseId ? {
       caseId: pub.caseId,
       case: {
