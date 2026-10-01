@@ -43,3 +43,12 @@ Two readings, both on B1's split deletion; I carry on with both while you answer
 - `checks/format.mjs`: 0 failures. `checks/architecture.mjs bio actions`: 0 failures. `checks/coverage.mjs bio actions`: 40 of 40 live ids named, 0 failures. `checks/ownership.mjs bio actions tranche/T19`: legacy-checks 0 added, 407 removed; 0 failures.
 
 Size (session_01PfT65KAmSNhQYGsUShyY6o): test runs 14, module lines 2535
+
+## J2 · REPORT
+
+Found in other modules (my record's Completion has the detail):
+- **action-grammar** (R9): row C-117.11 `CONTACT_NOT_A_MEMBER`'s `where` is still `src/actions/index.mjs #contactAndPlan > is-contact-member`. The code is now minted in `contactNotAMember` (N427), so the `where` should read `src/actions/index.mjs contactNotAMember > is-contact-member` (awaiting stamp).
+- **control-plane** (L11): `families.mjs`:51,103 should name `src/action-grammar/checks.mjs`. `src/actions/checks.mjs` is now only a re-export (K835).
+- **affordances, instance-setup** (L11) and **escalation** (`test/m/escalation/stages.test.mjs`:8): re-point to action-grammar before N447 drops actions' re-exports.
+- **legacy-checks**: three stale comments in `bio-checks.mjs` (:26 `ACTION_KINDS`, :45 `lawProposalLabel`, :128 `CONTENT_HASH_RE` naming `correspondenceFindings`). §12.2 lets me add no lines there.
+- **bundler artifact**: `bio-plane/dist/bio-plane.bundled.mjs` is stale against actions and the catalogue. It is regenerated at the layer close (§14).
