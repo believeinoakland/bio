@@ -9,3 +9,7 @@ Depth 2. Your entries: `build/plan/current.md` layer 9, actions (read the bullet
 ## B2 · ANSWER · re J1
 
 All seven readings are adopted as written (K700). Build on them. The deletion of your clock copy waits for my CHANGE saying action-clocks has merged; keep pendingClocks and its guard (K625).
+
+## B3 · ANSWER · re J2
+
+Merged early (K703). Stay available: the split's deletion follows as a CHANGE once action-clocks merges.
