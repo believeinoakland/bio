@@ -21,7 +21,7 @@
 **Tests and checks.**
 - `node --test bio-plane/test/m/office-readers/`: tests 83, pass 83, fail 0 (75 before; 8 new). After merging tranche/T20 (B2, K865) and renaming the parameter to R29's `parts`: 83/83.
 - Users of the files: `node --test bio-plane/test/m/odf-reader/ bio-plane/test/m/format-registry/ bio-plane/test/m/extraction/ bio-plane/test/m/observation-log/`: tests 302, pass 302, fail 0. No layer tests are named in `build/manifest.md`.
-- `format: 84 modules, 82 requirements files; 0 failures` · `architecture: 11 product files, 36 relative imports (0 naming no tracked file, not judged); 0 failures` · `coverage: 1 modules, 29 of 29 live requirement ids named by a test; 0 failures` · `ownership: 4 files changed by office-readers between tranche/T20 and HEAD; 0 failures` (final run after the record commit below).
+- `format: 84 modules, 82 requirements files; 0 failures` · `architecture: 12 product files, 39 relative imports (0 naming no tracked file, not judged); 0 failures` · `coverage: 1 modules, 29 of 29 live requirement ids named by a test; 0 failures` · `ownership: 4 files changed by office-readers between tranche/T20 and HEAD; 0 failures` (final run after the record commit below).
 
 Size (session_01T9LFGqSu4UfTE1DhyznDUz): test runs 9, module lines 3520
 
