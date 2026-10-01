@@ -82,11 +82,10 @@
  * instrument the suites share, not a suite.
  */
 /* T19 (rule 1): each name from the module that owns it. The version grammar and its rows are basis-versions'
-   (its R1); the object types are record-grammar's. */
+   (its R1), and so is the placeholder predicate with its roster; the object types are record-grammar's. */
 import {
-  VERSION_NAME_RE, BASIS_VERSION_CHECKS, VERSION_STATES, basisVersionFindings,
+  VERSION_NAME_RE, BASIS_VERSION_CHECKS, VERSION_STATES, basisVersionFindings, BOILERPLATE_FORMS, isBoilerplate,
 } from "../../bio-plane/src/basis-versions/index.mjs";
-import { BOILERPLATE_FORMS, isBoilerplate } from "../../bio-plane/checks/bio-checks.mjs";
 import { OBJECT_TYPES } from "../../bio-plane/src/record-grammar/types.mjs";
 /* N155 (K674, K679): the suggestion's kinds, levels and checks are run-productions', the catalogue's copy going at T19. */
 import { SUGGEST_KINDS, SUGGEST_LEVELS, SUGGEST_CHECKS } from "../../bio-plane/src/run-productions/checks.mjs";
