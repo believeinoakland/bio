@@ -1,0 +1,7 @@
+# BOB to escalation (T18)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entries: `build/plan/current.md` layer 9, escalation (read the bullet whole, and the plan's numbered rules at the opening; `N` texts in `build/plan/next.md`, `N-A` texts in `build/plan/action-fold/t18-entries.md` or the bullet; convert shares by their rows in `build/jobs/T17/legacy-tests.md`; the extraction map `build/extraction/escalation.md` where it exists). Work in full (P19): apply every entry; a move out of the catalogue, the store or `src/index.mjs` deletes the legacy copy in this job where `from` allows (§12.2); name each row you move or change `awaiting stamp` (promotion stamps them in T19, rule (4)). Merge early (rule (7)): post COMPLETE the moment your provided services are done; BOB merges you before the jobs that need you go on. Layer 9 runs as a chain (rule (7)); BOB's CHANGE tells you when the module before you has merged. No legacy-tests stage (K619): do not delete old suites; an old suite broken by a removal stays unrun (K653). Post COMPLETE as soon as done.
