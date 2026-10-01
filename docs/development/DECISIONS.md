@@ -1756,3 +1756,17 @@ response: **Bob, 2026-10-01, in his words:**
 decided: 2026-10-01 · Bob
 reasoning recorded in: this entry; the UX substrate's brief for question 26; Intake Doctrine §2a.
 owed: the limits lowered to 5 and 10 with the published sentence; the knock page telling a would-be knocker when a limit holds; the inbox's highlighting and sorting; the optional gatekeeper (machine work) and the discard archive with its one-week clearing (capture, the doorbell's page, the inbox; BOB drafts for Bob's approval); the count-only tally as status on the inbox page and the refusal text's truthful sentence (with BOB's privacy check of the tally before it is built); how a litigation hold (question 31) affects the archive's clearing; the UX page's question 26 marked ruled.
+
+### DEC-109 · answered
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 27: what the founder is told about who really controls the group's copy)
+for: bob
+question: Does the claim page tell the founder the whole truth about the hosting account's power; does the explanation stay visible in administrator settings with who holds hosting access; and must anyone record that they read it? (Custody itself stays deferred, DEC-2.)
+why it is Bob's: doctrine (the root of trust, Membership v2 §4.6, §4.8) and UX.
+provisional: the claim page shows a reassurance-only card (the hosting account is a way back in); membership R11 records who holds hosting access when a second administrator joins.
+alternative: (A) the whole truth at claim only; (C) B plus a recorded acknowledgement; (D) the wording as it is.
+recommendation: (B) the whole truth at claim, plus a standing card for administrators.
+reversal cost: low; wording.
+response: **As recommended (Bob, 2026-10-01): B.** The claim page and the wizard's last screen replace the reassurance-only card with a short plain block, shown before the founder chooses a password: whoever can sign in to the hosting account controls the copy (can replace the one-time password, claim the copy again, read everything, lock everyone out, and no administrators' vote can stop them); use a group account, not a personal login; add at least one other trusted person; where possible let someone other than the administrators hold it; the same account is the way back in if the password is lost. Administrator settings carry a standing "Who controls this copy" card with the same explanation, who the group recorded as holding hosting access and when, and the date the copy was last claimed or re-claimed where the copy can show it. No acknowledgement act.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 27; Membership v2 §4.8.
+owed: the claim page's and wizard's wording (instance-setup), the administrator settings card (the redesign), and whether the copy can show its last claim date (BOB confirms); the UX page's question 27 marked ruled.

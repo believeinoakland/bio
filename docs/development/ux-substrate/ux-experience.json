@@ -15241,7 +15241,7 @@
    "recommendation": "Adopt the explainer at claim plus the standing custody card, and correct the claim page's one-sided reassurance; leave any acknowledgement act until DEC-2's trigger fires.",
    "whoDecides": "Bob for what the group is told about a policy he deferred (a doctrine-adjacent disclosure); Design for placement and wording once he agrees.",
    "brief": {
-    "stillOpen": true,
+    "stillOpen": false,
     "settledSince": "",
     "title": "What the founder is told about who really controls the group's copy",
     "inOneBreath": "When someone installs and claims a group's copy of CivicOS, what should they be told about the fact that whoever controls the hosting account can take over the whole copy, and should that stay visible to administrators afterwards?",
@@ -15458,6 +15458,17 @@
      "K628–K859 searched for root of trust, custody, hosting, claim: nothing on this question"
     ],
     "size": "quick"
+   },
+   "ruled": {
+    "date": "2026-10-01",
+    "by": "Bob",
+    "rulings": [
+     "DEC-2",
+     "DEC-109"
+    ],
+    "status": "ruled",
+    "title": "What the founder is told about who really controls the group's copy",
+    "decided": "Before the founder chooses a password, the claim page and the setup wizard's last screen tell the whole truth in a short plain block written as practical steps: whoever can sign in to the hosting account controls the copy (can replace the one-time password, claim the copy again, read everything, lock everyone out, and no administrators' vote can stop them); use a group account, not a personal login; add at least one other trusted person; where possible let someone other than the administrators hold it; and the same account is the way back in if the password is lost. Administrator settings carry a standing 'Who controls this copy' card with the same explanation, who the group recorded as holding hosting access and when, and when the copy was last claimed where it can show it. No acknowledgement is recorded; custody itself stays deferred."
    }
   },
   {
