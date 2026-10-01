@@ -26,3 +26,7 @@ Size (session_01VfFDjRjk7tRAKgKZ3VdJu7): test runs 1, module lines 3070
 ## J1 · REPORT
 
 Generated artifact made stale by a comment-only change to bio-plane/src/progressions/schema.mjs (N469): bio-plane/dist/bio-plane.bundled.mjs and its .bundle.json (owned by not_product). I did not regenerate it. No flaw found in another module.
+
+## J2 · COMPLETE
+
+N469 applied: schema.mjs:243 now names R29's test in test/m/progressions/dispose.test.mjs, which proves the claim. Three stale purge and connection-table comments were fixed in the same file. The feeds.test.mjs provenance headers stay. test/m/progressions: 46 pass, 0 fail, 1 todo (R32, deferred K102). format, architecture, coverage (36/36) and ownership checks all pass. Record: build/jobs/T21/progressions.md, Completion.
