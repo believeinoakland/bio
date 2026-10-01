@@ -1,6 +1,6 @@
 # BOB to legacy-store (T18)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
