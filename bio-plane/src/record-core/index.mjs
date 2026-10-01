@@ -1,7 +1,7 @@
 /* record-core — the record's storage (layer 2): id allocation, leases, the append-only history and
    manifest of every promotion, the instance's settings, the evidence store, and purge. It holds no
    member, capability or fence (membership's) and decides nothing about what may be committed
-   (promotion's). Requirements: build/requirements/record-core.md (R1–R73).
+   (promotion's). Requirements: build/requirements/record-core.md (R1–R74).
 
    REACHED THROUGH `recordOf(ctx)`: one instance per Durable Object storage, so every module in the
    object shares one transaction depth, one purge declaration list and one evidence binding. The
@@ -9,7 +9,8 @@
    the tables other modules declared to it (R21), and `seedMintLedger` reads the live rows its
    caller and the registered seeds name (R40, R70). Extracted from `legacy-store` (store.mjs, schema.mjs) in T3; the
    reasoning the legacy comments carried is kept beside the code it explains. T19: the audit's seams (R68, R69), the
-   mint seeds (R70), the schema run first (R71) and the ops map (R72, R73). */
+   mint seeds (R70), the schema run first (R71) and the ops map (R72, R73). T20: this module's own figures exported for
+   `plane` to register (R74). */
 import { checkBundle, createSha256, EXTENSION_ARMS, LEGACY_TYPE_ALIASES } from "../record-grammar/index.mjs";
 import { RECORD_SCHEMA } from "./schema.mjs";
 import { RECORD_CORE_CHECKS, PER_ITEM_CHECKS } from "./checks.mjs";
@@ -912,6 +913,30 @@ export class RecordCore {
     return Object.fromEntries(out);
   }
 
+  /** R74 (K861, plane R10): this module's share of the instance's figures, exported for `plane` to register under this
+   *  module's name through R63 (`registerCounts("record-core", RecordCore.COUNT_KEYS, (hid) => rc.ownCounts(hid))`); the
+   *  module registers nothing itself while plane holds its copy. Each figure is the table's rows less those naming a
+   *  bundle in `hid` by its `bundle_id`. `refs` is `connections`' table and not this module's figure (R31; K877). */
+  static COUNT_KEYS = Object.freeze(["bundles", "files", "history"]);
+  static #COUNTED = Object.freeze({ bundles: "bundles", files: "files", history: "history" });
+
+  /** R74, D-464 (A COUNT IS TAKEN THROUGH THE CALLER'S OWN SIGHT): R63's `counts(hid)` for this module's share, moved
+   *  from the plane's held copy with its reading kept. `hid` is membership's `hiddenBundles` (`{sql, args}`), or null for
+   *  a viewer that sees every bundle and for the direct internal call, which count whole. `COALESCE(k, '')`: a NULL key
+   *  names no bundle, and `NULL NOT IN (…)` is NULL, which would drop the row. A figure whose table cannot be read is
+   *  left out, and R63 answers it null. Synchronous; writes nothing; never throws. */
+  ownCounts(hid = null) {
+    const out = {};
+    for (const key of RecordCore.COUNT_KEYS) {
+      const table = RecordCore.#COUNTED[key];
+      try {
+        out[key] = hid ? this.#one(`SELECT count(*) AS c FROM ${table} WHERE COALESCE(bundle_id, '') NOT IN ${hid.sql}`, ...hid.args).c
+                       : this.#one(`SELECT count(*) AS c FROM ${table}`).c;
+      } catch { /* unread: R63 answers it null, never zero */ }
+    }
+    return out;
+  }
+
   /* ---- the instance's figures and what each caller is told of them (R64, R65; K621) ---- */
 
   /* REC-131 / IC-148 (BOB #15's corrected ruling, `MEMBER-KNOWLEDGE-DESIGN.md` §5, *A COUNT IS A DISCLOSURE OF
@@ -1327,33 +1352,6 @@ export class RecordCore {
       put: (digest, bytes) => bucket.put(key(digest), bytes, { sha256: String(digest) }),
     };
   }
-}
-
-/* ---- rule 2: the catalogue's type arms its owners have not taken yet ---- */
-
-/** Rule 2 (K653 BOB-6, K775 (3), K785): the type arms the catalogue still holds (its `LEGACY_GRAMMARS`, handed in as
- *  `grammars` by the composition root, so this module imports no catalogue), registered with `record` in the
- *  catalogue's name, LAST, once every module that takes a slot has registered its own: one registration, as
- *  `legacy-checks`, of the entries whose slots no registration holds yet, its arm running the entry of the slot it is
- *  called in (R67's `{slot}`). So record-grammar's `checkBundle` called with `grammars()` judges a bundle as the
- *  catalogue's wrapper does, and no slot is filled twice (capture's C-2.7 is never doubled). Each entry is
- *  `{module, ids, arm}` claiming one slot whole; one that is not, or a `grammars` that is not a list, registers nothing
- *  of it. Answers what `registerGrammar` answers, or `{ok: true, module: "legacy-checks", ids: []}` when nothing is left
- *  to register. Goes with the catalogue (rule 1). */
-export function registerLegacyGrammars(record, grammars) {
-  const held = new Set(record.grammars().flatMap((g) => g.ids));
-  const slotOf = (g) => {
-    if (!g || typeof g.arm !== "function" || !Array.isArray(g.ids) || !g.ids.length) return null;
-    const slot = EXTENSION_ARMS.find((a) => a.ids.length === g.ids.length && a.ids.every((id) => g.ids.includes(id)));
-    return slot ? slot.name : null;
-  };
-  const legacy = (Array.isArray(grammars) ? grammars : []).filter((g) => slotOf(g) && !g.ids.some((id) => held.has(id)));
-  if (!legacy.length) return { ok: true, module: "legacy-checks", ids: [] };
-  const bySlot = new Map(legacy.map((g) => [slotOf(g), g]));
-  return record.registerGrammar("legacy-checks", {
-    ids: legacy.flatMap((g) => g.ids),
-    arm: (ctx, findings, where) => (where && bySlot.has(where.slot) ? bySlot.get(where.slot) : legacy[0]).arm(ctx, findings),
-  });
 }
 
 /* ---- the routes (R72, R73) ---- */
