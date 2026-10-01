@@ -1503,8 +1503,8 @@
     },
     {
       "path": "src/textchain.mjs",
-      "bytes": 118471,
-      "sha256": "661f5f8e6eae802b23c67af225be6908e1f98b3d01aab1b9a3e821c5e9babc57"
+      "bytes": 119084,
+      "sha256": "8d92743049d2ec92607cc0225e3a52b8ac2c837568002424ed2a9fb1d2d88126"
     },
     {
       "path": "src/tokens.mjs",
