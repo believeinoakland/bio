@@ -76,7 +76,7 @@ test("R42: hiddenRuns(viewer) is the one tail over the run id that leaves out ex
 
 test("R42 (K333): hiddenRuns(viewer, column) is the same predicate over a column naming a run id — it keeps exactly the rows R19 answers found: true for, for every viewer kind; the column a plain identifier, anything else refused by the tail that keeps nothing and never interpolated", async () => {
   const w = await hiddenWorld();
-  /* ai_run_bounds, legacy-store's reader, with one row per run plus one naming no held run and one naming none */
+  /* ai_run_bounds, which this module's own counts read through the column form (R38), with one row per run plus one naming no held run and one naming none */
   for (const run of ["RI", "RP", "RH", "RX", "R-PURGED"])
     w.sql.exec(`INSERT OR IGNORE INTO ai_run_bounds (run, bound, allowed, consumed) VALUES (?, 'fetches', 3, 0)`, run);
   w.sql.exec(`CREATE TABLE side (run TEXT)`);
@@ -155,8 +155,8 @@ test("R43: onRunOpened — one registration per module, a malformed or second on
     const r = w.runs.onRunOpened(m, f);
     assert.deepEqual([r.ok, r.code, r.reason], [false, "LISTENER_MALFORMED", "LISTENER_MALFORMED"], String(m));
   }
-  /* registered out of order, heard in MODULE_ORDER: monitoring before scheduler before legacy-store */
-  assert.deepEqual(w.runs.onRunOpened("legacy-store", (e) => { heard.push(["legacy-store", e]); throw new Error("boom"); }), { ok: true, module: "legacy-store" });
+  /* registered out of order, heard in MODULE_ORDER: monitoring before scheduler before tasks */
+  assert.deepEqual(w.runs.onRunOpened("tasks", (e) => { heard.push(["tasks", e]); throw new Error("boom"); }), { ok: true, module: "tasks" });
   assert.deepEqual(w.runs.onRunOpened("scheduler", async (e) => {
     /* committed before the notice: the run is readable from inside the listener */
     heard.push(["scheduler", e, (await w.runs.read({ run: e.run, viewer: "admin" })).found]);
@@ -166,7 +166,7 @@ test("R43: onRunOpened — one registration per module, a malformed or second on
   const again = w.runs.onRunOpened("scheduler", () => {});
   assert.deepEqual([again.ok, again.code, again.module], [false, "LISTENER_DECLARED", "scheduler"]);
   assert.ok(MODULE_ORDER.indexOf("monitoring") < MODULE_ORDER.indexOf("scheduler")
-    && MODULE_ORDER.indexOf("scheduler") < MODULE_ORDER.indexOf("legacy-store"));
+    && MODULE_ORDER.indexOf("scheduler") < MODULE_ORDER.indexOf("tasks"));
   /* a refused open notifies nobody */
   assert.equal((await w.runs.open(OPEN({ skillVersion: "3" }))).started, false);
   assert.deepEqual(heard, []);
@@ -178,10 +178,10 @@ test("R43: onRunOpened — one registration per module, a malformed or second on
   const r = await w.runs.open(OPEN({ leaseMs: 60000 }));
   assert.deepEqual(r, plain, "the answer is the answer without listeners");
   const event = { run: "R1", contextType: "inquiry", contextId: INQ, expires: "2026-07-01T00:01:00Z" };
-  assert.deepEqual(heard, [["monitoring", event], ["scheduler", event, true], ["legacy-store", event]]);
+  assert.deepEqual(heard, [["monitoring", event], ["scheduler", event, true], ["tasks", event]]);
   assert.equal(r.expires, event.expires);
   assert.equal(w.row(`SELECT status FROM ai_runs WHERE run = 'R1'`).status, "running");
   /* the next open is heard again, once each */
   await w.runs.open(OPEN({ run: "R2" }));
-  assert.deepEqual(heard.slice(3).map(([m, e]) => [m, e.run]), [["monitoring", "R2"], ["scheduler", "R2"], ["legacy-store", "R2"]]);
+  assert.deepEqual(heard.slice(3).map(([m, e]) => [m, e.run]), [["monitoring", "R2"], ["scheduler", "R2"], ["tasks", "R2"]]);
 });
