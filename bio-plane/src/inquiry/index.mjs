@@ -120,7 +120,7 @@ export function legCapped(stated, earned, targetId) {
                ?? `what this document's capture can support is undetermined, so this leg claims nothing `
                 + `on the capture axis` };
   if (GRADE_RANK[stated] <= GRADE_RANK[earned.grade]) return null;
-  /* The letters are interpolated and never typed (hygiene detector (B)). */
+  /* The letters are interpolated and never typed: the grade vocabulary is their one home. */
   return { grade: earned.grade,
            why: `the record can support no more than ${earned.grade} for ${targetId}, so this leg `
               + `is read at ${earned.grade} here and not at the ${stated} it carries. `
@@ -734,11 +734,11 @@ export class Inquiry {
 
   /** R52 (1) (K861, plane R10): this module's share of the instance's figures, exported for `plane` to register under
    *  this module's name through `record-core` R63 (`registerCounts("inquiry", Inquiry.COUNT_KEYS, (hid) =>
-   *  k.counts(hid))`); the module registers nothing itself while plane holds its copy. */
+   *  k.counts(hid))`); plane registers it under this module's name, and the module registers nothing itself. */
   static COUNT_KEYS = Object.freeze(["inquiryMigrationReplays"]);
 
   /** R52 (1), D-464 (A COUNT IS TAKEN THROUGH THE CALLER'S OWN SIGHT): `record-core` R63's `counts(hid)` for this
-   *  module's share, moved from the plane's held copy with its reading kept. `inquiryMigrationReplays` is the rows of
+   *  module's share, registered by plane under this module's name. `inquiryMigrationReplays` is the rows of
    *  `inquiry_migration_replays` (REC-173) less those whose `bundle_id` is in `hid`, membership's `hiddenBundles`
    *  (`{sql, args}`), or null for a viewer that sees every bundle and for the direct internal call, which count whole.
    *  `COALESCE(k, '')`: a NULL key names no bundle, and `NULL NOT IN (…)` is NULL, which would drop the row. A figure
@@ -884,7 +884,7 @@ export class Inquiry {
     if (!why)
       return { ok: false, reason: "NO_REASON",
                detail: "C-2.8 requires a non-empty disposition_reason for deferred and dismissed, so a "
-                     + "disposition with no reason would produce a bundle the catalog rejects." };
+                     + "disposition with no reason would produce a record the catalog rejects." };
     if (why.length > EDGE_REASON_MAX || /["\\\r\n]/.test(why))
       return { ok: false, reason: "BAD_REASON",
                detail: `a reason is at most ${EDGE_REASON_MAX} characters and cannot contain a quote, `
@@ -1338,7 +1338,7 @@ export class Inquiry {
       const exists = this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, id);
       if (exists)
         return { ok: false, reason: "CHILD_EXISTS", target, child: id,
-                 detail: "this id already names a bundle. A division CREATES its children, so re-using an "
+                 detail: "this id already names a record. A division CREATES its children, so re-using an "
                        + "existing id would overwrite a question somebody else is working on." };
     }
     for (const c of kids) {
@@ -1976,8 +1976,9 @@ export class Inquiry {
                /* A caller's own `asserted_by`/`at` never appear in this object.
                   They are not overwritten from `row` — `row` is never read for
                   them at all, which is the same thing DELETE buys at the trust
-                  boundary and is why the suite asserts a caller's values are
-                  DISCARDED rather than merely losing. */
+                  boundary and is why R28's test (`test/m/inquiry/ground.test.mjs`)
+                  asserts a caller's values are DISCARDED rather than merely
+                  losing. */
                asserted_by: carry ? fmSafe(prior.asserted_by) : fmSafe(who),
                at: carry ? fmSafe(prior.at) : when,
                carried_forward: carry };
@@ -2191,14 +2192,9 @@ export class Inquiry {
    *  of reads per leg, so an unbounded backfill behind a member-callable read
    *  is REC-66's amplification arriving at a new door. It is capped, and a read
    *  that hit the cap says so and leaves the rest for the next read — safe
-   *  precisely because the id is a pure function of the leg.
-   *
-   *  WHAT THE INSTRUMENT CANNOT SEE, stated because it matters: the
-   *  derivation-bounds walk counts `this.sql.exec(` and `#rows(` INSIDE a
-   *  tainted loop, and `this.ensureLegContent(...)` is a method call it cannot
-   *  follow. This loop would NOT appear on that roster even unbounded. The
-   *  bound is here because the amplification is real, not because the walk
-   *  asked for it. */
+   *  precisely because the id is a pure function of the leg. R15's test
+   *  (`test/m/inquiry/content-legs.test.mjs`) drives the bound over 51 legs and
+   *  the next read's continuation. */
   #backfillLegContent(bundleId, legs) {
     const need = legs.filter((l) => !l.content_id);
     const run = need.slice(0, LEG_BACKFILL_MAX);
@@ -2253,7 +2249,7 @@ export class Inquiry {
      all at the declaration in `record-grammar` (`grades.mjs`), and `checkEarnedLeg`
      is the arm that refuses a leg claiming more than this. This class
      keeps no copy: a second literal "B" here is precisely the drift the move
-     exists to prevent, and the affordances suite pins its absence. */
+     exists to prevent. */
 
   /** The earned registry for one inquiry over one set of basis targets.
    *
@@ -2333,13 +2329,14 @@ export class Inquiry {
            is a doctrine question and no DEC is open in it. Deriving it (say, as
            "all but the weakest") would silently answer it.
            So it is held the way REC-50 held op=acquire's archive letter: OPEN BY
-           DECISION, NOT BY OVERSIGHT, and guarded by two assertions in
-           hygiene.test.mjs rather than by this comment — one naming it as the
-           single stated limit of detector (C), the other pinning that it stays a
-           contiguous STRONGEST-FIRST PREFIX of `BASIS_GRADES`. Pinning that
-           relation asserts no VALUE, so it is not a ruling; what it buys is that
-           a catalog change which reorders or renames the vocabulary FAILS here
-           by name instead of leaving this subset quietly meaning something new. */
+           DECISION, NOT BY OVERSIGHT, and guarded by R13's test
+           (`test/m/inquiry/earned.test.mjs`) rather than by this comment: it
+           drives a resolution at every letter of `BASIS_GRADES` and holds that
+           the letters earned are its STRONGEST-FIRST PREFIX short of the
+           testimony grade. Pinning that relation asserts no VALUE, so it is not a
+           ruling; what it buys is that a catalog change which reorders or renames
+           the vocabulary FAILS there by name instead of leaving this subset
+           quietly meaning something new. */
         if (!["A", "B", "C"].includes(c.grade)) continue;
         const cur = out.earned.connection[c.bundle_id];
         if (!cur || GRADE_RANK[c.grade] > GRADE_RANK[cur.grade])
@@ -2383,18 +2380,8 @@ export class Inquiry {
      * the corpus (CAP-9 measured 88 captured documents and 0 readings on this
      * project's own instance) — the fence-tighter-than-its-rule failure, and it
      * would have read as this item working. */
-    /* THE SCAN STAYS IN THE `for` HEADER, AND THAT IS NOT A STYLE CHOICE — IT
-       IS A MEASURED ONE. The first draft of this item hoisted it to a `const`
-       and read the rows out of that, which is the same query, the same rows and
-       the same work. `derivation-bounds.test.mjs`'s FLOOR then fired: its
-       classifier reads amplification off a loop whose iterable IS a row source,
-       so hoisting removed `earnedBasisRegistry` from the unbounded-scan roster
-       (33 -> 32) while the method's behaviour was identical. A roster that
-       shrinks because the READER lost sight of a method is exactly what that
-       floor exists to catch, and the correct response is to keep the shape the
-       instrument can see rather than to move its figure. The blind spot itself
-       — that the matcher is sensitive to this spelling — is recorded in
-       MEASUREMENTS.md with both rosters diffed. */
+    /* The scan sits in the `for` header for an instrument that read loops by their spelling (provenance: REC-88's
+       `derivation-bounds.test.mjs`, deleted in T20); hoisted to a `const`, the query, rows and work are the same. */
     const perBundle = new Map();
     for (const r of this.#rows(
       `SELECT u.bundle_id AS bundle_id, u.capture_sha AS capture_sha, ts.chain AS chain,
@@ -2619,14 +2606,10 @@ export class Inquiry {
         why: `${captureWord}, and the bytes as this instance fetched them would be worth `
            + `${EARNED_CAPTURE_CEILING} — but this document's TEXT was derived by a machine and that `
            + `derivation is measured at ${e.bound}. The capture axis is bounded by the weakest link of `
-           /* THE WORDING AVOIDS "grade a", and deliberately: `hygiene.test.mjs`
-              detector (B) refuses any module spelling the capture rule's own
-              letters beside the word "grade", in any case — so that the letters
-              have exactly one home and are composed from the constant rather
-              than typed. It cannot tell the ARTICLE "a" from the GRADE "A", and
-              a fence that is spelling-blind in the safe direction is the right
-              fence; this sentence moves rather than the rule. Caught by the
-              suite on this item's own first full run. */
+           /* THE WORDING AVOIDS "grade a": the capture rule's letters have one
+              home and are composed from the constant, never typed beside the
+              word "grade" (found by `hygiene.test.mjs` detector (B), deleted in
+              T20, which could not tell the article from the letter). */
            + `byte provenance and transcription fidelity, with no third scale (DEC-4), so the strongest `
            + `capture grade this document can earn is ${e.bound}. Transcription never RAISES a capture `
            + `grade, and it is not a separate measurement a member can cite instead.`,
@@ -2819,28 +2802,17 @@ export class Inquiry {
      * the inquiry and not about the caller's list — a surface filling in a new
      * leg still wants to see what the existing ones stand on.
      *
-     * THE READ IS NOT CAPPED, AND THAT IS A DECISION THE INSTRUMENT MADE ME
-     * MAKE RATHER THAN A DEFAULT. The first draft put `LIMIT ?` on it at
-     * `CONTENT_EARNED_MAX`. `test/bounds.test.mjs`'s walk then found a
-     * THIRTY-SECOND capped op and named `earnedbasis` as capped-but-undriven —
-     * which was the right answer to the wrong design. This read is over exactly
-     * the population the `asked` read three lines up already enumerates
-     * UNCAPPED: the same table, the same bundle, one row per leg. Capping one
-     * and not the other would publish two different populations in one answer
-     * and silently omit legs whose targets are listed — the drift this method's
-     * own comments warn about, installed by a bound nobody asked for. A basis is
-     * bounded by what a member authored in one document, and the answer says so
-     * by listing it whole. What IS bounded is the BACKFILL below, because it
-     * WRITES.
-     *
-     * WHAT THE OTHER INSTRUMENT SEES, stated because the two disagree about
-     * this line: `derivation-bounds.test.mjs` seeds its taint on an unbounded
-     * `#rows` and then looks for amplification INSIDE a loop over it — another
-     * loop, a `this.sql.exec(`, or another `#rows(`. There is none here (the
-     * backfill's writes are behind a method call the walk cannot follow, and
-     * they are bounded on their own terms), so this read does not put
-     * `earnedBasis` on that roster either. Both figures were re-measured after
-     * the cap came off and both are unmoved.
+     * THE READ IS NOT CAPPED, AND THAT IS A DECISION RATHER THAN A DEFAULT
+     * (found when a first draft capped it at `CONTENT_EARNED_MAX`). This read is
+     * over exactly the population the `asked` read three lines up already
+     * enumerates UNCAPPED: the same table, the same bundle, one row per leg.
+     * Capping one and not the other would publish two different populations in
+     * one answer and silently omit legs whose targets are listed — the drift
+     * this method's own comments warn about, installed by a bound nobody asked
+     * for. A basis is bounded by what a member authored in one document, and the
+     * answer says so by listing it whole. What IS bounded is the BACKFILL below,
+     * because it WRITES; nothing inside a loop over these rows reads or writes
+     * the store but through it.
      *
      * D-15, THE SAME POSTURE ONE OBJECT DOWN: a leg whose target the viewer may
      * not see is DROPPED, and the fact that something was dropped is stated with
@@ -2871,8 +2843,8 @@ export class Inquiry {
      * calls, an undeclared interface change on I3 wearing the costume of
      * caution. THE REVERSAL, if this reading is rejected, is one line — delete
      * this call and let `op=promote`'s projection mint the row at the leg's
-     * next promotion, which it already does and which
-     * `content-extent.test.mjs` already drives. */
+     * next promotion, which it already does and which R12's test
+     * (`test/m/inquiry/content-legs.test.mjs`) drives. */
     const backfill = this.#backfillLegContent(id, legs);
     const reg = this.earned(b.inquiry_subject_entity || null, visible,
       legs.map((l) => l.content_id).filter(Boolean));
@@ -2957,8 +2929,8 @@ export function inquiryOf(host, deps) {
 }
 
 /** R52 (2) (K861, plane R10): the resolver `retrieval`'s `registerLegGrades` takes, `(legs) => grades`, over the one
- *  instance for `host` (reached when the resolver is called, not when it is built). `plane` registers it as `inquiry`;
- *  this module registers it nowhere itself while plane holds its copy. */
+ *  instance for `host` (reached when the resolver is called, not when it is built). `plane` registers it under this
+ *  module's name, `inquiry`; this module registers it nowhere itself. */
 export function inquiryLegGrades(host) {
   return (legs) => inquiryOf(host).legGrades(legs);
 }

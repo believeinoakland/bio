@@ -5,7 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
 import { legCapped, LEG_BACKFILL_MAX, EARNED_TARGETS_MAX } from "../../../src/inquiry/index.mjs";
-import { EARNED_CAPTURE_CEILING, TESTIMONY_GRADE } from "../../../src/record-grammar/index.mjs";
+import { EARNED_CAPTURE_CEILING, TESTIMONY_GRADE, BASIS_GRADES } from "../../../src/record-grammar/index.mjs";
 
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b", C = "INFO-2026-0003-c", D = "INFO-2026-0004-d", E = "INFO-2026-0005-e";
 const LAYER = JSON.stringify([{ step: "layer", tier: 1, container: "pdf", cap: null, measured_by: null, calibration: null }]);
@@ -21,6 +21,21 @@ test("R13 connection: the strongest A–C resolution of the target's captures to
   assert.equal(r.earned.connection[A].captures, 2); assert.match(r.earned.connection[A].why, /ENT-2026-0001/);
   assert.equal(r.earned.connection[B], undefined, "a D resolution earns nothing");
   assert.deepEqual(w.k.earned(null, [A]).earned.connection, {}, "no subject, no connection grade");
+});
+
+test("R13 R32 a resolution at every letter of the grade vocabulary: the letters earned are its strongest-first prefix short of the testimony grade (A, B, C), each earning itself; the testimony grade earns nothing", () => {
+  const w = world(); w.entity("ENT-2026-0001");
+  const docs = BASIS_GRADES.map((g, i) => {
+    const id = `INFO-2026-01${String(i).padStart(2, "0")}-g${g.toLowerCase()}`;
+    const [cap] = w.doc(id, [`resolved at ${g}`]);
+    w.resolve(cap, id, `ref-${g}`, "ENT-2026-0001", g);
+    return [g, id];
+  });
+  const conn = w.k.earned("ENT-2026-0001", docs.map(([, id]) => id)).earned.connection;
+  const earning = docs.filter(([, id]) => conn[id]).map(([g]) => g);
+  assert.deepEqual(earning, ["A", "B", "C"]);
+  assert.deepEqual(earning, BASIS_GRADES.slice(0, BASIS_GRADES.indexOf(TESTIMONY_GRADE)), "a strongest-first prefix of the vocabulary");
+  for (const [g, id] of docs) assert.equal(conn[id] ? conn[id].grade : null, g === TESTIMONY_GRADE ? null : g, g);
 });
 
 test("R13 capture: the ceiling bounded by the capture's route (N82) and by text-chain's bound; undetermined stated, never absent", () => {

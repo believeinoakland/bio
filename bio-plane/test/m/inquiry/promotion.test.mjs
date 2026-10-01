@@ -4,8 +4,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
-import { world, inquiryMd, sha } from "./fixture.mjs";
-import { INQUIRY_TABLES, inquiryOwns } from "../../../src/inquiry/index.mjs";
+import { world, inquiryMd, sha, storage } from "./fixture.mjs";
+import { INQUIRY_TABLES, inquiryOwns, Inquiry } from "../../../src/inquiry/index.mjs";
 
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b";
 
@@ -134,6 +134,11 @@ test("R36 the module's tables carry bundle_id and are declared to record-core's 
   assert.equal(w.count("inquiry_contradiction_links"), 0, "R48's projection is purged with its inquiry");
   assert.equal(w.count("inquiry_bundle_facts"), 0, "the leg count and superseded-by index are purged with it (N136)");
   assert.ok(JSON.stringify(r).includes("inquiry_basis"), JSON.stringify(r).slice(0, 300));
+  /* the list is every table this module's migration creates, and only those: none is left undeclared to purge */
+  const bare = storage();
+  new Inquiry({ storage: bare }).migrate();
+  assert.deepEqual(bare.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`).map((t) => t.name),
+                   [...INQUIRY_TABLES].sort(), "the tables a bare store's migration creates are the tables declared");
 });
 
 test("R37 no place is named in this module's behaviour or outward text", () => {
