@@ -25,3 +25,7 @@ Size (session_01DWist3yzoyMvJgNepzPwD4): test runs 1, module lines 3468
 ## J1 · REPORT
 
 Generated artifact staled: bio-plane/dist/bio-plane.bundled.mjs (and .bundle.json), from my comment-only change to bio-plane/src/content/extent-core.mjs (N469; code unchanged). I regenerated nothing (build/manifest.md, Generated artifacts: regenerate in bio-plane/ with npm run build at the layer close). No flaw found in another module.
+
+## J2 · COMPLETE
+
+N469 applied: seven notes in bio-plane/src/content/extent-core.mjs that named T20-deleted checks or suites as live (the four listed, :31, :377, :590, :663, and three more my re-scan found, :85, :361, :537) re-pointed to the module tests that prove each claim (seams.test.mjs R48; converts-extent.test.mjs R7/R8 and R12/R27/R28; control-plane families.test.mjs R22) or kept as provenance. Comments only, code identical. test/m/content/ 113 pass 0 fail; format, architecture, coverage (51/51), ownership: 0 failures. Nothing deferred. REPORT J1: the plane bundle is stale. Record: build/jobs/T21/content.md on job/T21/content.
