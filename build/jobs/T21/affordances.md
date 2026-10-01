@@ -40,3 +40,11 @@ Found while applying B1. Details in my record, "Found in other modules".
 (3) No test anywhere runs `unaccounted` (R12) against the control plane's real op table. Only my tests call it, with constructed tables. The deleted `rung-ladder.test.mjs` used to do this, so DEC-8/FW-14's live totality is unmeasured today. A control-plane or plane test asserting `unaccounted(table)` empty would close it; affordances cannot, since control-plane comes later.
 (4) local-facts, possible flaw against its R1/R5: `localFactsOps.factconfirm` spreads the request body into `factConfirm`, so `by` is the caller's, not a stamp. Unless control-plane overwrites it, a machine naming a member passes MACHINE_CANNOT_CONFIRM. (filing-templates reads `author` from the query.)
 (5) control-plane fails 2 of 93 on tranche/T21 with and without my change (R43/R22 decorated codes; R22 CHECK_FAMILIES total). Not mine.
+
+## J2 · COMPLETE
+
+AFFORDANCES #12 complete on `job/T21/affordances` @ c148498b82. Record: `build/jobs/T21/affordances.md`.
+Applied: (1) R30: templateretire and factconfirm `reasoned`, their two codes in JUSTIFICATION_REFUSALS; the grant pair `credential`; K921's seven `undetermined` (R27 count 78); NON_ACTS reasons for all fifteen ops, reads included; five vocabularies, each the owner's object. templatesave's rows stay, re-worded to filings R32. K992: the layer-9 test is re-keyed (41 writes, 20 reads); a new R30 test is keyed to filing-templates' and local-facts' op maps. (2) N463: plane.test.mjs stands up from src/plane/index.mjs, green before and after. (3) N469: :2071, :2378, :2540 re-worded, and :2090 kept as provenance, now pointing to R20's drive. Eight more live mentions of the deleted rung-ladder.test.mjs re-worded to `unaccounted` (R12) and the R19 tests.
+Not yet met marks met: R30.
+Tests: affordances 138/0 (before 132/1, K992's red). Users: tasks 71/0, queue 76/0, op-declarations 17/0, plane 28/0, control-plane 91/2 (same without my change). format, architecture, coverage (30/30), ownership: 0 failures.
+Stale: bio-plane/dist/bio-plane.bundled.mjs. REPORT J1 has the findings in other modules.
