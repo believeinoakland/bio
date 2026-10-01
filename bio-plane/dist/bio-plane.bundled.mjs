@@ -1717,7 +1717,7 @@ var DRIVE_CAPTURE_CHECKS = Object.freeze({
 var INSTALLATION_CHECKS = Object.freeze({
   EVIDENCE_STORAGE_NOT_CONFIGURED: Object.freeze({
     check: "C-68.1",
-    where: at("is-storage-absent"),
+    where: "src/acquisition/index.mjs evidenceStorageAbsent > is-storage-absent",
     translation: "This copy was installed without the storage it keeps captured documents in, so it cannot keep or read the bytes of a captured document. That is a fact about how the copy was set up, not about this request: whoever installed it can connect that storage in the hosting account. Nothing was changed."
   })
 });
@@ -35668,22 +35668,24 @@ async function coAttest(cap, { sha, locator, via, ev }) {
     return notAsked(String(e && e.message || e).slice(0, 200));
   }
 }
+function evidenceStorageAbsent(op, error, { code = true } = {}) {
+  const row2 = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
+  return { status: 503, body: code ? {
+    ok: false,
+    reason: "EVIDENCE_STORAGE_NOT_CONFIGURED",
+    code: "EVIDENCE_STORAGE_NOT_CONFIGURED",
+    check: row2.check,
+    translation: row2.translation,
+    error,
+    op
+  } : { ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", check: row2.check, translation: row2.translation, op, error } };
+}
 async function acquire(cap, body0, { cls = null, member = false, sessMember = null, storeName = "bio", captureRequest = null } = {}) {
   const body = body0 && typeof body0 === "object" ? { ...body0 } : {};
   const answer = (status, b) => ({ status, body: b });
   const op = "acquire";
   const ev = cap.core && typeof cap.core.evidenceStore === "function" ? cap.core.evidenceStore() : null;
-  if (!ev) {
-    const row2 = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
-    return answer(503, {
-      ok: false,
-      reason: "EVIDENCE_STORAGE_NOT_CONFIGURED",
-      check: row2.check,
-      translation: row2.translation,
-      op,
-      error: "this instance has no evidence storage configured"
-    });
-  }
+  if (!ev) return evidenceStorageAbsent(op, "this instance has no evidence storage configured", { code: false });
   if (!captureRequest && body.via === "capture-request") {
     const row2 = CAPTURE_REQUEST_ARM_CHECKS.CAPTURE_NOT_DRAINING;
     return answer(403, {
