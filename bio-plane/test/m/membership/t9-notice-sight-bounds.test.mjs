@@ -188,10 +188,10 @@ test("R79 listeners are told in the modules' total order (build/modules.json's l
   assert.deepEqual([...MODULE_ORDER], byLayer.map((m) => m.id), "MODULE_ORDER is modules.json's order");
   const w = await world().group("ann");
   const heard = [];
-  for (const m of ["unknown-b", "queue", "capture-sources", "unknown-a", "promotion", "legacy-store"])
+  for (const m of ["unknown-b", "queue", "capture-sources", "unknown-a", "promotion", "monitoring"])
     assert.equal(w.m.onRevoked(m, () => heard.push(m)).ok, true);
   w.m.memberSet({ memberId: "ann", status: "revoked", by: "admin" });
-  assert.deepEqual(heard, ["promotion", "capture-sources", "legacy-store", "queue", "unknown-b", "unknown-a"]);
+  assert.deepEqual(heard, ["promotion", "capture-sources", "monitoring", "queue", "unknown-b", "unknown-a"]);
 });
 
 test("R81 listenerRefusal is the one site of LISTENER_MALFORMED and LISTENER_DECLARED, each carrying its row (C-102.11, C-102.12): malformed, declared in a list, declared in a one-registration slot naming its holder, else null; extra beside, never replacing; writes nothing, never throws", () => {

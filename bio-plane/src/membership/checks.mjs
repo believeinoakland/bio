@@ -423,9 +423,10 @@ export const CASE_AUTHORITY_CHECKS = {
   },
 };
 
-/* NAMED COPY (K784, N445): C-63, the rows the `signerRegisterOwn` copy's member bar answers, held here with the copy
-   until membership's T20 job deletes both; `credentials` holds the family as its own. Copied from the catalogue with
-   its names, ids, `where`s and translations unchanged. */
+/* NAMED COPY (K784, N445): C-63, the rows the `signerRegisterOwn` copy's member bar answers, held here with the copy;
+   `credentials` holds the family as its own. Copied from the catalogue with its names, ids, `where`s and translations
+   unchanged. MEMBERSHIP #14 (T20, J1) found that copy's last caller, ratification's `preflight.test.mjs`, still on it,
+   so the copy, these rows, C-96.8 `BAD_KEY` and C-96.15–.17 wait for it to re-point (P4) and then go together. */
 /* D-158 / C-63 — A SIGNING KEY IS REGISTERED TO A MEMBER WHO CAN ATTEST
  * (Membership Architecture v2 §6, enrolment: *"At enrolment the member chooses a handle … and a
  * password"*; §10's `members`/`signers` sketch; §4's *"Approve signing keys"*).
