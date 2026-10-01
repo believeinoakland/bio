@@ -1392,14 +1392,14 @@ export const CONDITION_KINDS = Object.freeze({
   "invitation-spent-or-expired":  "an invitation was spent, or expired unused",
   "governor-holding-host":        "the per-host governor is holding a host: the capture is PACED, not broken (D-103)",
   "runtime-ceiling-reached":      "a CPU or subrequest ceiling was reached (D-54, D-56)",
-  /* D-523, LIVE from its landing: store.mjs #conditionsRenderDeferred, derived on read from
+  /* D-523, LIVE from its landing: queue-producers' #conditionsRenderDeferred, derived on read from
      `capture_requests`. BOB #33 RULED 2026-09-24 19:54Z (CLIENT-RENDERED.md, "RULED 2026-09-24 by BOB #33"):
      a render held under a C-83 reason is SHOWN with that reason, and at its request's `expires` it is
      recorded UNDETERMINED and released. A CONDITION and not a FINDING: our own renderer, allowance or
      pacing is what holds it, a fact about our machinery and never about the page. */
   "render-deferred":              "a render this instance could not do is held under its C-83 reason until its "
                               + "request expires, and is then recorded undetermined (D-491, D-523) "
-                              + "— LIVE: store.mjs #conditionsRenderDeferred",
+                              + "— LIVE: queue-producers #conditionsRenderDeferred",
 });
 
 /* ------------------------------------------------------------------ refusals
@@ -1590,7 +1590,7 @@ export function checkObservation(entry, conditionKinds = CONDITION_KINDS, refere
      BOB #14 RULED THE ROLLUP (`OBSERVATION-LOG-DESIGN.md` §3, 2026-09-18): a
      rollup's PRESENT carries `result_kind = observation` pointing at the latest
      non-terminal PRESENT row of the same authority, COMPUTED BY THE PLANE in the
-     same read as the state (`store.mjs #aiRunSearchState`). The deadlock cannot
+     same read as the state (`ai-runs`' `#aiRunSearchState`). The deadlock cannot
      return because the reducer reads PRESENT IF AND ONLY IF such a row exists --
      re-verified on this tree before building, and asserted in section K of
      `observation-log.test.mjs`. So the carve-out is gone and one arm is added:

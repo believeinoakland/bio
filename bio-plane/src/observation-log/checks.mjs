@@ -7,13 +7,12 @@
  * C-22, `AI_RUN_CHECKS`, moved here WHOLE in T18 (K586 BOB-2, R26 as K587): the eight rows the catalogue's table still
  * held (C-22.1–C-22.4, C-22.6, C-22.9, C-22.10 and C-22.17), every one the log's own refusal and every `where` already
  * naming this module's site; the run's rows (C-22.5, C-22.7, C-22.8, C-22.11–C-22.16) are ai-runs' own. Each row's
- * code, number, translation and reasons are carried unchanged, `awaiting stamp` for promotion's next job (T19). The
- * catalogue keeps its copy until T19's layer 1 deletes it (K529): `airun.mjs` (ai-runs), and run-rules' copy of it,
- * still build their run refusals and `translationOf` from the catalogue's object, and run-rules re-points to this one
- * (K649). `OBSERVATION_CHECKS` is this same object under the name the append's refusals read it by.
+ * code, number, translation and reasons are carried unchanged. These are the only copy: the catalogue that held them
+ * before T18 is deleted (K858), and `run-rules` builds its one map and `translationOf` from this object (its R11).
+ * `OBSERVATION_CHECKS` is this same object under the name the append's refusals read it by.
  *
- * `LEAD_ID_RE`, a lead id's shape, is copied here too (K649): this module mints the ids it matches (R14); the catalogue
- * keeps its own for `leadLegFindings` until inquiry takes that (map §4.2). */
+ * `LEAD_ID_RE`, a lead id's shape, is held here (K649): this module mints the ids it matches (R14), and
+ * `inquiry-grammar`'s `leadLegFindings` (C-54.1) reads it from here. */
 
 /* C-22 — THE INVESTIGATIVE RUN'S FAMILY, AND SINCE REC-93 THE OBSERVATION LOG'S (IS-6, INVESTIGATIVE-SESSION.md §11 and
  * §14b.6). REC-93 (2026-09-14) folded `ai_run_log` into `observation_log` (`OBSERVATION-LOG-DESIGN.md` §4.4), so
