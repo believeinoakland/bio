@@ -8,12 +8,13 @@
  * Extracted from the legacy modules (T7-3; K3, K91, K102, N64, N67): `store.mjs` (PL-1's projection and freeze, PL-2's
  * six acts and CURRENT, PL-3's append, REC-13/REC-124/REC-136's conclusion and its record, REC-86's narrowing, D-235's
  * collections, REC-119's earned leg letters, MK-1's testimony reach, the shared-question producer's
- * `#projectsDrawingOn`), `schema.mjs` (the two tables, now `./schema.mjs`). The grammar and the check rows stay in the
- * catalogue, which calls them itself; `./grammar.mjs` is their face here. The legacy code's comments moved with it,
+ * `#projectsDrawingOn`), `schema.mjs` (the two tables, now `./schema.mjs`). The grammar (`./grammar.mjs`) and the check rows
+ * (`./checks.mjs`) moved from the check catalogue in T19 (K766, K787). The legacy code's comments moved with it,
  * shortened where they only restated it.
  *
  * REACHED as `basisVersionsOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the
- * first call with `deps`, returned to every later caller. At creation it declares its tables to purge (R34), joins
+ * first call with `deps`, returned to every later caller. At creation it declares its tables to purge (R34), registers
+ * its version grammar in record-core's C-2.8 slot after inquiry-grammar's (R43), joins
  * every promotion with its check (R6) and its projection (R7), and registers retrieval's `no_project_conclusion`
  * decoration (R42). `deps`:
  *   record, membership, promotion, content   the modules it uses, through their factories on the same host unless a
@@ -28,7 +29,7 @@
 
 import { parseFrontmatter, isMachineIdentity, normalizeType, LEGACY_TYPE_ALIASES, OBJECT_TYPES, STATES, vocabFor,
          createSha256 } from "../record-grammar/index.mjs";
-import { checkLegExtentGrammar } from "../../checks/bio-checks.mjs";
+import { checkLegExtentGrammar } from "../inquiry-grammar/index.mjs";
 import { readingSourceFromColumns } from "../textchain.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal } from "../membership/index.mjs";
@@ -39,7 +40,7 @@ import { inquiryOf, legCapped, actNoBasis } from "../inquiry/index.mjs";
    which the catalogue's copy does not. */
 import { contentOf, mintLabel, contentMintState, CONTENT_MINTED_BY_PLANE, legContentId, legExtent, canonicalExtent,
          describeExtent, extentRelation, CONTENT_EXTENT_CHECKS } from "../content/index.mjs";
-import { basisVersionFindings, versionsIn, compositionDiff, sameComposition } from "./grammar.mjs";
+import { basisVersionFindings, versionsIn, compositionDiff, sameComposition, registerBasisVersionGrammar } from "./grammar.mjs";
 import { BASIS_VERSION_CHECKS, VERSION_ACT_CHECKS, VERSION_KIND_CHECKS, CONCLUDE_ACT_CHECKS, NARROW_CHECKS, VERSION_MACHINE,
          versionNeedsReason, VERSION_NAME_RE, isBoilerplate } from "./checks.mjs";
 import { fmSafe, quoted, typedValue, randHex, setVersionField, setCurrentVersionRow, appendFmRows,
@@ -1632,6 +1633,7 @@ export function basisVersionsOf(host, deps) {
     bv = new BasisVersions({ ...d, inquiry, storage: d.storage || host.storage, record, membership, promotion, content });
     instances.set(host, bv);
     record.declarePurge("basis-versions", BASIS_VERSIONS_TABLES);
+    registerBasisVersionGrammar(record);   /* R43: the version grammar in the C-2.8 slot, after inquiry-grammar's */
     promotion.registerStep("basis-versions", { check: (c) => bv.check(c), project: (c) => bv.project(c) });
     if (d.retrieval) d.retrieval.registerProjectionDecoration("basis-versions", (row, o) => bv.projectionDecoration(row, o));
   }
