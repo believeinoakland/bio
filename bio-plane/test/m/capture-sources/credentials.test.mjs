@@ -2,9 +2,11 @@
  * tested at the module's interface (build/requirements/capture-sources.md R55–R63, the amended Purpose and
  * R47). Each test names the requirement id it checks in its title.
  *
- * THE WORLD IS REAL BELOW THIS MODULE: record-core and membership over one SQLite database (node:sqlite, the
- * engine a Durable Object runs), a storage whose `transactionSync` rolls back as a Durable Object's does. The
- * members, projects and inquiries below are this file's. */
+ * THE WORLD IS REAL BELOW THIS MODULE: record-core, membership and credentials over one SQLite database (node:sqlite,
+ * the engine a Durable Object runs), a storage whose `transactionSync` rolls back as a Durable Object's does. The
+ * founder claims through `credentials` (its R1), which registers the claim fact and the password setter with
+ * membership at its start (its R17; membership R94, R95), as the store boots it (K789). The members, projects and
+ * inquiries below are this file's. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
@@ -14,6 +16,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
+import { credentialsOf as signInCredentialsOf } from "../../../src/credentials/index.mjs";
 import {
   credentialsOf, CaptureCredentials, CAPTURE_CREDENTIAL_CHECKS, CREDENTIAL_KINDS, CREDENTIAL_SCOPES, REVOCATION,
   CREDENTIALS_TABLE, CREDENTIAL_LIST_LIMIT, hostNameOf, principalMember,
@@ -39,10 +42,12 @@ async function world({ key = KEY, clock = null } = {}) {
   rc.migrate();
   const m = membershipOf(ctx);
   m.migrate();
+  const signIn = signInCredentialsOf(ctx);
+  signIn.migrate();
   let t = Date.parse("2026-09-28T00:00:00Z");
   const now = clock || (() => (t += 1000));
   const c = credentialsOf(ctx, { key, now });
-  await m.claim({ password: "founder-passphrase-1", tokenFp: "fp-1" });
+  await signIn.claim({ password: "founder-passphrase-1", tokenFp: "fp-1" });
   const enrol = async (id, role = "member") => {
     const a = await m.memberAdd({ memberId: id, cover: `cover of ${id}`, role, by: "admin" });
     await m.enroll({ invite: a.invite, handle: id, password: `${id}-passphrase-x` });
