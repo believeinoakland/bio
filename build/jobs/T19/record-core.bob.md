@@ -13,3 +13,7 @@ K775: all seven readings adopted. (4) R46 now has the `clears` form (worded on t
 ## B3 · CHANGE
 
 K785 (re-opens your job, P10): no L2 file may import the catalogue at COMPLETE, since bio-checks.mjs is deleted in T19 and you have no later job. (1) registerLegacyGrammars(record, grammars): take the list as an argument; store.mjs' constructor line passes the catalogue's LEGACY_GRAMMARS (an import line there is §12.2 rewiring); drop index.mjs:16's catalogue import. (2) record-core.test.mjs:2058's pin now four legacy grammars (promotion R55 took C-18.6/.7); a dynamic test-only oracle import is fine. Merge tranche/T19 first, then COMPLETE again.
+
+## B4 · CHANGE
+
+Correction to K785: no test-only catalogue import either, dynamic included: bio-checks.mjs is deleted in T19 (L11) and you have no later job, so an oracle import would go red then. Replace a parity oracle with assertions at your interface (your requirements' Rs), or drop it where the rows are now another module's.
