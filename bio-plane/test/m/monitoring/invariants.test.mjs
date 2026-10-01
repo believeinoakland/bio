@@ -2,8 +2,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, serve, sha, DAEMON, NOW_MS, infoMd } from "./fixture.mjs";
-import { monitoringOps, MONITORING_TABLES } from "../../../src/monitoring/index.mjs";
-import { MECHANICAL_FIELD_SETS, DRIVE_CAPTURE_CHECKS, parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { monitoringOps, MONITORING_TABLES, MONITORING_CHECKS, DRIVE_TICK_CHECKS, GATHERING_CHECKS } from "../../../src/monitoring/index.mjs";
+import { MECHANICAL_FIELD_SETS } from "../../../src/promotion/index.mjs";
+import { ACQUISITION_CHECKS } from "../../../src/acquisition/index.mjs";
+import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
 
 const LOC = "https://records.example.org/inv.txt";
 const tick = (w, id) => w.m.monitor({ bundleId: id, viewer: DAEMON, actorClass: "machine", actor: DAEMON });
@@ -118,7 +120,26 @@ test("R41 the three tables are this module's, derived and declared to purge: mon
   assert.deepEqual([count("monitor_fired"), count("monitor_tick_epoch"), count("monitor_address_type")], [0, 0, 0]);
 });
 
-test("R42 each check moved here holds as an invariant: C-18.5 (gathering.test), C-48.8 and C-48.9 answered with their catalogue rows", async () => {
+test("R42 this module's own table holds C-48.8 and C-48.9, each with its code, number, translation and a where naming this module's site; the rest of C-48 is acquisition's; C-18.10 is the gathering refusal's row", () => {
+  assert.deepEqual(Object.keys(MONITORING_CHECKS).sort(),
+    ["DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL", "DRIVE_TICK_EXPORT_IS_THE_SHELL", "GATHERING_REFUSED"]);
+  assert.deepEqual(Object.fromEntries(Object.entries(MONITORING_CHECKS).map(([k, r]) => [k, [r.check, r.where]])), {
+    DRIVE_TICK_EXPORT_IS_THE_SHELL: ["C-48.8", "src/monitoring/index.mjs monitor > is-drive-tick-export"],
+    DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL: ["C-48.9", "src/monitoring/index.mjs monitor > is-drive-tick-bytes"],
+    GATHERING_REFUSED: ["C-18.10", "src/monitoring/index.mjs gatheringCheck > is-gathering-refused"],
+  });
+  for (const r of Object.values(MONITORING_CHECKS)) {
+    assert.equal(typeof r.translation, "string");
+    assert.ok(r.translation.length > 40, "a canned sentence (DEC-49)");
+    assert.ok(Object.isFrozen(r));
+  }
+  assert.deepEqual(MONITORING_CHECKS, { ...DRIVE_TICK_CHECKS, ...GATHERING_CHECKS });
+  /* no code is held twice: none of this module's rows is acquisition's, and no C-48 row of acquisition's is this module's */
+  for (const code of Object.keys(MONITORING_CHECKS)) assert.equal(code in ACQUISITION_CHECKS, false, code);
+  assert.deepEqual(Object.values(ACQUISITION_CHECKS).map((r) => r.check).filter((c) => c === "C-48.8" || c === "C-48.9"), []);
+});
+
+test("R42 each check moved here holds as an invariant: C-18.5 (gathering.test), C-48.8 and C-48.9 answered with this module's rows", async () => {
   const w = world();
   const DOC = "https://docs.google.com/document/d/1AbCdEfGhIjKlMnOpQrStUvWxYz0123456789abcd/edit";
   const EXPORT = "https://docs.google.com/document/d/1AbCdEfGhIjKlMnOpQrStUvWxYz0123456789abcd/export?format=odt";
@@ -126,11 +147,11 @@ test("R42 each check moved here holds as an invariant: C-18.5 (gathering.test), 
   w.net.routes[EXPORT] = serve("<html></html>", "application/xhtml+xml");
   const a = await tick(w, "INFO-2026-0860-drive");
   assert.deepEqual([a.body.reason, a.body.check, a.body.translation],
-    ["DRIVE_TICK_EXPORT_IS_THE_SHELL", "C-48.8", DRIVE_CAPTURE_CHECKS.DRIVE_TICK_EXPORT_IS_THE_SHELL.translation]);
+    ["DRIVE_TICK_EXPORT_IS_THE_SHELL", "C-48.8", DRIVE_TICK_CHECKS.DRIVE_TICK_EXPORT_IS_THE_SHELL.translation]);
   w.net.routes[EXPORT] = serve("<html><body>app</body></html>", "application/octet-stream");
   const b = await tick(w, "INFO-2026-0860-drive");
   assert.deepEqual([b.body.reason, b.body.check, b.body.translation],
-    ["DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL", "C-48.9", DRIVE_CAPTURE_CHECKS.DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL.translation]);
+    ["DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL", "C-48.9", DRIVE_TICK_CHECKS.DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL.translation]);
   /* negative control: the real export is compared, not refused */
   w.net.routes[EXPORT] = serve("odt-42", "application/vnd.oasis.opendocument.text");
   assert.equal((await tick(w, "INFO-2026-0860-drive")).body.ok, true);
