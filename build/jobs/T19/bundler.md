@@ -59,3 +59,7 @@ Found in other modules while doing bundler's T19 job (none edited by me):
 5. **legacy-index** (`bio-plane/package.json`): unchanged and still correct: `build` and `deploy` name `scripts/build-plane.mjs` and `scripts/deploy.mjs`, which did not move. `npm run deploy` no longer takes `--thread`.
 
 No generated artifact is staled by my change.
+
+## J4 · COMPLETE
+
+bundler's T19 job is complete on `job/T19/bundler` (merged with `tranche/T19` at K761; record: "Completion"). The release tooling now sits in `bio-plane/scripts/` with one JSONC reader; `tools/`' four files are deleted (yours to drop from `paths` at the close). The baton gate is removed, the N31 remedy names `node bio-plane/scripts/bundles.mjs`, and R11–R23 are each named by tests at the interface (fixture repository, stubbed fetch, fake wrangler, throwaway key, never a real account). I also fixed four crash-instead-of-refuse paths in my own scripts (release-assemble's GUARD_CANNOT_RUN when a build fails and a missing signer; deploy's pre-flight, read-back and upload requests that throw). Module tests 44/44; format, architecture, coverage (23/23) and ownership (0 legacy lines) are clean. Nothing deferred. J3 lists what I found in legacy-tests, installer and signatures. Ready to merge.
