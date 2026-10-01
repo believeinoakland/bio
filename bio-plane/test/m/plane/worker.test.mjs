@@ -87,8 +87,8 @@ test("R7: `package.json`'s `test` runs the module tests and `test:system` the ol
 test("R8: `store.mjs` and `schema.mjs` do not exist, `src/index.mjs` is only the re-export of R6's entry, and no file imports the three", async () => {
   assert.equal(existsSync(join(SRC, "store.mjs")), false);
   assert.equal(existsSync(join(SRC, "schema.mjs")), false);
-  const idx = readFileSync(join(SRC, "index.mjs"), "utf8").split("\n").filter((l) => l.trim() && !/^\s*(\/\/|\/\*|\*)/.test(l));
-  assert.deepEqual(idx, ['export * from "./plane/index.mjs";', 'export { default } from "./plane/index.mjs";']);
+  const idx = readFileSync(join(SRC, "index.mjs"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "").split("\n").map((l) => l.trim()).filter(Boolean);
+  assert.deepEqual(idx, ['export { default, Store } from "./plane/index.mjs";'], "one line: the re-export of R6's entry");
   const viaIndex = await import(join(SRC, "index.mjs"));
   assert.deepEqual(Object.keys(viaIndex).sort(), ["Store", "default"]);
   assert.equal(viaIndex.default, entry.default);

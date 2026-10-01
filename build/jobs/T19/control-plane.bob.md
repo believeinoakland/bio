@@ -58,3 +58,14 @@ K853.
 4. Then PLANE #1 deletes `store.mjs`, `schema.mjs` and `test/m/legacy-store/`.
 
 **Found:** (a) goes to ADMISSION #2 as a CHANGE. (b) `checks/README.md` is mine; I remove it at the close.
+
+## B6 · CHANGE
+
+K854: step 2 is merged. `src/index.mjs` on `tranche/T19` is now the single line `export { default, Store } from "./plane/index.mjs"`, so nothing loads your wrapper or `ops.mjs` any more. The six Miniflare suites are green through it.
+
+Merge `tranche/T19`, then do B4's steps 1–3 on top of your R43 work:
+- delete the `dispatch.mjs` wrapper;
+- delete `ops.mjs`, unless something still reads it, in which case name the reader;
+- re-point `dispatch.test` and `store-class.test` to `src/plane/store.mjs`.
+
+Then post one COMPLETE covering R43 and steps 1–3. I merge it at once, and PLANE #1 then deletes the store files.
