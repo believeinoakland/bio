@@ -1,7 +1,7 @@
 /* intent's goals (R8) and aspirations (R9–R14), and both as record documents (R26). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { checkBundle } from "../../../checks/bio-checks.mjs";
+import { checkBundle } from "../../../src/record-grammar/index.mjs";
 import { notAnAdmin, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 import { seeded, V, MACHINE } from "./fixture.mjs";
 
@@ -43,7 +43,7 @@ test("R8 declareGoal, linkObjective and closeGoal each refuse a machine; empty s
   /* a goal the author may not see answers as an absent one */
   const unseen = w.i.closeGoal({ goal: g.goal, reason: "r", author: V("bob"), viewer: "nobody" });
   assert.deepEqual(strip(unseen), strip(w.i.closeGoal({ goal: "GOAL-2026-0099", reason: "r", author: V("bob"), viewer: "nobody" })));
-  assert.equal(w.i.closeGoal({ goal: g.goal, reason: "  ", author: V("bob") }).reason, "NO_REASON");
+  assert.equal(w.i.closeGoal({ goal: g.goal, reason: "  ", author: V("bob") }).reason, "INTENT_NO_REASON");
   assert.deepEqual(w.snapshot(), snap, "no refusal wrote anything");
   for (const r of [unseen, w.i.declareGoal({ statement: "", bounds: "", author: V("bob") })]) assert.ok(r.check && r.translation);
 });
@@ -75,9 +75,10 @@ test("R8 linkObjective records the decomposition as the author's dated claim and
   assert.equal(w.i.readGoal({ goal: g, viewer: V("bob") }).goal.objectives[0].project, w.P);
 });
 
-test("R9 a machine is refused; a member aspiration only by that member (NOT_YOURS); a project one by a member joined in it; a group one only by an active administrator, the founder included, anyone else NOT_AN_ADMIN through membership's notAnAdmin (R84) with the next step as its remedy; every aspiration is readable by every member", () => {
+test("R9 a machine is refused; a member aspiration only by that member (NOT_YOURS); a project one by a member joined in it; a group one only by an active administrator, the founder included, anyone else NOT_AN_ADMIN through membership's notAnAdmin (R84) with the next step as its remedy; every aspiration is readable by every member", async () => {
   const w = seeded();
-  w.st.sql.exec(`INSERT INTO credentials (role, salt, hash, iterations, updated) VALUES ('admin', 's', 'h', 1, 't')`);
+  /* K789: the founder claims the instance through credentials (its R1), which states the fact membership reads (R94) */
+  assert.equal((await w.credentials.claim({ password: "a founder's long password" })).ok, true);
   for (const who of ["", MACHINE])
     assert.equal(w.i.declareAspiration({ scope: "group", statement: "s", author: who }).reason, "MACHINE_CANNOT_DECLARE_ASPIRATION");
   assert.equal(w.i.declareAspiration({ scope: "member", owner: "carol", statement: "s", author: V("bob") }).reason, "NOT_YOURS");
@@ -130,7 +131,7 @@ test("R10 a project holds every held group aspiration unless it records a depart
   const mineA = w.i.declareAspiration({ scope: "member", owner: "bob", statement: "Mine", author: V("bob") }).aspiration;
   let r = w.i.aspirationsFor({ project: w.P, viewer: V("bob") });
   assert.deepEqual(r.aspirations.map((a) => a.id).sort(), [a1, a2].sort());
-  assert.equal(w.i.departFrom({ project: w.P, aspiration: a1, reason: "", author: V("bob") }).reason, "NO_REASON");
+  assert.equal(w.i.departFrom({ project: w.P, aspiration: a1, reason: "", author: V("bob") }).reason, "INTENT_NO_REASON");
   assert.equal(w.i.departFrom({ project: w.P, aspiration: a1, reason: "r", author: MACHINE }).reason, "MACHINE_CANNOT_DECLARE_ASPIRATION");
   assert.equal(w.i.departFrom({ project: w.P, aspiration: a1, reason: "r", author: V("carol") }).reason, "PROJECT_ACT_NOT_A_PARTICIPANT");
   assert.equal(w.i.departFrom({ project: w.P, aspiration: mineA, reason: "r", author: V("bob") }).reason, "BAD_SCOPE");
@@ -199,7 +200,7 @@ test("R13 contacts lists each pair of held aspirations naming a common entity or
   const c = w.i.declareAspiration({ scope: "member", owner: "bob", statement: "C", progressions: ["proc", "meet"], author: V("bob") }).aspiration;
   w.i.declareAspiration({ scope: "member", owner: "carol", statement: "D", entities: ["ENT-2"], author: V("carol") });
   assert.equal(w.i.declareAspiration({ scope: "group", statement: "E", entities: ["ENT-9"], author: V("alice") }).reason, "NO_SUCH_ENTITY");
-  assert.equal(w.i.declareAspiration({ scope: "group", statement: "E", progressions: ["nope"], author: V("alice") }).reason, "NO_SUCH_PROGRESSION");
+  assert.equal(w.i.declareAspiration({ scope: "group", statement: "E", progressions: ["nope"], author: V("alice") }).reason, "INTENT_NO_SUCH_PROGRESSION");
   const r = w.i.contacts({ viewer: V("bob") });
   const pairs = r.contacts.map((x) => [x.a, x.b, x.shared]);
   assert.deepEqual(pairs.find((p) => p[0] === a && p[1] === b)[2], { entities: ["ENT-1"], progressions: [] });
@@ -263,7 +264,8 @@ test("R26 aspirations and goals are record documents of two new types with histo
   assert.match(a, /^ASP-2026-\d{4}-aspiration$/);
   assert.match(g, /^GOAL-2026-\d{4}-goal$/);
   for (const id of [a, g]) {
-    const cat = await checkBundle({ folderName: id, files: new Map([["bundle.md", w.text(id)]]), sha256: async () => "0" });
+    const cat = await checkBundle({ folderName: id, files: new Map([["bundle.md", w.text(id)]]), sha256: async () => "0" },
+                                  { grammars: w.record.grammars() });
     const core = cat.findings.filter((f) => f.check === "C-1.2" || f.check === "C-2.2");
     assert.deepEqual(core, [], `${id}: ${JSON.stringify(core)}`);
   }
@@ -284,7 +286,7 @@ test("R26 aspirations and goals are record documents of two new types with histo
   refusedMove(move(g, "open", "held", V("bob")), "open to held");
   assert.deepEqual(w.snapshot(), before, "a refused move writes nothing");
   assert.equal(move(a, "held", "retired", V("alice")).reason, "NO_LESSON", "retiring through the gate needs its lesson too");
-  assert.equal(move(g, "open", "closed", V("bob")).reason, "NO_REASON");
+  assert.equal(move(g, "open", "closed", V("bob")).reason, "INTENT_NO_REASON");
   const born = w.text(g).replace(g, "GOAL-2026-0777-goal").replace("current_state: open", "current_state: closed");
   refusedMove(w.create("GOAL-2026-0777-goal", born, V("bob")), "created closed");
   assert.equal(w.record.head("GOAL-2026-0777-goal"), null);
