@@ -131,6 +131,8 @@ export function defaultFakes() {
                   archiveEligible: () => ({ ok: true, eligible: [], limit: 50, truncated: false, paused: { paused: false } }) },
     contradiction: { candidatesFor: () => ({ ok: true, candidates: [], truncated: false, cursor: null }),
                      conflictNotices: () => ({ ok: true, notices: [], truncated: false, cursor: null }) },
+    /* actions R54 (queue-producers R19): no legal pressure mark awaits a hold until a test says otherwise. */
+    actions: { holdsDue: () => ({ ok: true, items: [], truncated: false, cursor: null }) },
     affordances: { affordanceFacts: () => ({ ok: false }) },
     scheduler: { arm: async () => null, register: () => ({ ok: true }) },
   };

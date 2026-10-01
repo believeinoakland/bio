@@ -84,8 +84,9 @@ export const QUEUE_OBLIGATION_KINDS = {
   /* CORRECTED 2026-08-05 (REC-47 / DEC-46 (d), D-188). This read "blocks a
      transition", which is the PRE-DEC-20 blanket rule and the opposite of the
      doctrine: ordinary bias debt is DISCLOSED and travels; only an uncleared
-     HUNCH disqualifies. DEC-20 narrowed the workproduct_state half to hunches
-     too, so nothing about this kind blocks anything. The producer is unbuilt
+     HUNCH disqualifies. DEC-20 narrowed the old state-transition gate to hunches
+     too (that gate is since retired, K899 (3)), so nothing about this kind blocks
+     anything. The producer is unbuilt
      (D-86's remaining half), which is why this is free to correct now — and
      exactly why it had to be, since the producer would have been built to the
      sentence. The identical wording in NOTIFICATIONS.md is corrected with it.
@@ -116,6 +117,12 @@ export const QUEUE_OBLIGATION_KINDS = {
                               + "— LIVE: queue-producers R17",
   "action-reminder":             "a reminder you asked for on one of the group's action deadlines; answer it with "
                               + "another reminder or none (op=reminderanswer, DEC-94) — LIVE: queue-producers R18",
+  /* K899 (7), DEC-61 (R1; actions R52): a reply the group marked as legal pressure asks the group whether to place a
+     litigation hold; a member answers by recording the hold in place or released, with a reason, and that act is the
+     item's door (R12). An OBLIGATION, never muted. Its producer is `queue-producers`' (its R19). */
+  "litigation-hold":             "a reply the group marked as legal pressure: consider whether to place a litigation "
+                              + "hold, and record it in place or released with a reason (op=actionhold, DEC-61) "
+                              + "— LIVE: queue-producers R19",
 };
 
 export const QUEUE_FINDING_KINDS = {

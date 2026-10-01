@@ -21,7 +21,8 @@
  *   record, membership, connections, progressions, bias, affordances, scheduler, tasks,
  *   producers   the providers (`producers` is `queue-producers`, handed whichever of its own providers were given
  *              here: governor, provenance, capture, captureRequests, basisVersions, aiRuns, publication, reevaluation,
- *              intent, monitoring, contradiction, actionClocks, escalation, actionPlans and the shared ones);
+ *              intent, monitoring, contradiction, actionClocks, escalation, actionPlans, actions and the shared
+ *              ones);
  *   env       the instance bindings: `BIO_NOW_MS` (the clock);
  *   now       a clock, `() => ms`, in place of `env`'s;
  *   start     false to skip the scheduler registration (a test that drives the consumer itself).
@@ -95,8 +96,8 @@ export class Queue {
   }
   static PRODUCER_DEPS = Object.freeze(["record", "membership", "governor", "provenance", "capture", "captureRequests",
     "basisVersions", "progressions", "aiRuns", "bias", "publication", "reevaluation", "intent", "monitoring", "contradiction",
-    /* queue-producers R15–R18 (K608, K728): the Action layer's providers. */
-    "actionClocks", "escalation", "actionPlans"]);
+    /* queue-producers R15–R19 (K608, K728; K899 (7)): the Action layer's providers, `actions` for R19's holds. */
+    "actionClocks", "escalation", "actionPlans", "actions"]);
   get #scheduler() { return this.#dep("scheduler", () => schedulerOf(this.#host, this.#env)); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -482,11 +483,12 @@ export class Queue {
   /** R8: the task statuses an OBLIGATION is live in (N373). */
   static TASK_LIVE_STATUSES = Object.freeze(["open", "forwarded"]);
   /** R12, R28 (K607, K608): the door an OBLIGATION not held in `tasks` leaves by, by kind; every other obligation is a
-   *  task (taskresolve). The Action layer's three: a checkpoint is judged (action-plans R16), a proposed stage advanced
-   *  or declined (escalation R13), a reminder answered (action-clocks R6). */
+   *  task (taskresolve). The Action layer's four: a checkpoint is judged (action-plans R16), a proposed stage advanced
+   *  or declined (escalation R13), a reminder answered (action-clocks R6), a litigation hold stated (actions R52;
+   *  K899 (7)). */
   static OBLIGATION_DOORS = Object.freeze({ "bias-debt": "biasdebtresolve", "signer-self-registered": "signerset",
     "plan-checkpoint-due": "checkpointrecord", "escalation-stage-proposed": "escalationadvance",
-    "action-reminder": "reminderanswer" });
+    "action-reminder": "reminderanswer", "litigation-hold": "actionhold" });
   /** R12: what each of those doors is, said on the item's disposition after the general sentence. */
   static OBLIGATION_DOOR_DETAIL = Object.freeze({
     "bias-debt": " This one is a bias debt, which is keyed by the RUN it is about rather than by "
@@ -505,6 +507,9 @@ export class Queue {
     "action-reminder": " This one is a reminder you asked for on one of the group's action deadlines, keyed by the "
       + "action, the entry and the day rather than by a task: you answer it with another reminder or with none "
       + "(op=reminderanswer), and it also leaves when the entry is no longer pending or the action is closed.",
+    "litigation-hold": " This one is a reply your group marked as legal pressure, keyed by the action and the entry "
+      + "rather than by a task: it leaves when a member records the hold in place or released, with a reason "
+      + "(op=actionhold).",
   });
 
   /** D-266 / IC-60 — THE SECOND IDENTITY, and the whole of what this item added.
@@ -1763,7 +1768,7 @@ export class Queue {
        class segment stripped carries the kind in the FIRST. Both are read here so the bridge does not
        depend on which spelling a page built, and the kind reported is the item's own either way. */
     /* R12, R26: an OBLIGATION not held in `tasks` is published as `OBLIGATION::<kind>::<rest>` (bias-debt, the
-       self-registered key, the Action layer's three), which R3 does not read; its second segment is read here as R26
+       self-registered key, the Action layer's four), which R3 does not read; its second segment is read here as R26
        reads it at the mute, so the bridge names its door rather than handing a progression arm the word OBLIGATION. */
     const oblId = !scoped && /^OBLIGATION::/.test(keyed) && classOfKind(keyed.split("::")[1]) === "OBLIGATION"
       ? "OBLIGATION" : null;
