@@ -545,7 +545,8 @@ export class Store extends DurableObject {
       after, limit, visible,
       context: (id) => {
         const targets = this.#rows(`SELECT target_id FROM inquiry_basis WHERE bundle_id=?`, id).map((r) => r.target_id);
-        return { publishedRegistry: this.publishedRegistryFor(id, targets) };
+        return { earnedRegistry: targets.length ? this.earnedBasisRegistry(this.#subjectEntityOf(id), targets) : null,
+                 publishedRegistry: this.publishedRegistryFor(id, targets) };
       } });
     const page = ids.map((id) => this.#one(`SELECT bundle_id, object_type, current_state FROM bundles WHERE bundle_id=?`, id));
     const last = page.length ? page[page.length - 1].bundle_id : after;
@@ -759,6 +760,7 @@ export class Store extends DurableObject {
   captureProgressions(...a) { return progressionsOf(this.ctx).captureProgressions(...a); }
 
   /* R13: the earned registry and the declared subject: inquiry's. */
+  #subjectEntityOf(...a) { return inquiryOf(this.ctx).subjectEntityOf(...a); }
   earnedBasisRegistry(...a) { return inquiryOf(this.ctx).earned(...a); }
   earnedRegistryForDoc(...a) { return inquiryOf(this.ctx).earnedForDoc(...a); }
 
