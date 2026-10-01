@@ -42,3 +42,7 @@ Folded: BIO_Declared_Bias_v0_1.md ("RULED 2026-10-01"). On PR #6's branch. Owed 
 ## U11 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-104 (Bob, question 21, as recommended): a hunch counts for nothing in any strength reading ("for now" lifted from strength R5), and strength says how many it left out; the hunch's letter stays on the link only, in the hunch style, beside "not counted"; a "Hunches to clear" list on question and project pages (status, never a notification), repeated by the check before publishing. Declared Bias's "composes normally" corrected.
 Folded: BIO_Declared_Bias_v0_1.md (hunch paragraph, corrected). On PR #6's branch. Owed (its owed: line): R5's "for now" lifted, the left-out count, the list.
+
+## U12 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
+DEC-105 (Bob, question 22, as recommended): the project's bar is set now as plain letters with their measures-map meanings, under an honest note that no audience guidance exists yet; when guidance comes it takes the venue form (sourced audience standards as jurisdiction-profile facts, "Undetermined" where unresearched, never a default); the research waits for its trigger (a group asks what bar suits an audience, or a case is challenged as below its audience's standard).
+Folded: BIO_Publication_v0_1.md §7. On PR #6's branch. Owed (its owed: line): the bar screen's note; later, audience standards as profile facts.
