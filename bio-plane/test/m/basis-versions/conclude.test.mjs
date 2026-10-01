@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, block, version, merge, inqMd, V, MACHINE } from "./fixture.mjs";
-import { ACT_SHAPE_CHECKS, MACHINE_FENCE_CHECKS } from "../../../checks/bio-checks.mjs";
+import { CONCLUDE_ACT_CHECKS } from "../../../src/basis-versions/index.mjs";
 import { actNoBasis } from "../../../src/inquiry/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q";
@@ -32,11 +32,11 @@ test("R16: refusals in order — a machine for either act; no conclusion without
   const w = setup();
   const p = standing(w);
   const m = conclude(w, { author: MACHINE });
-  assert.deepEqual([m.reason, MACHINE_FENCE_CHECKS.MACHINE_CANNOT_CONCLUDE.check], ["MACHINE_CANNOT_CONCLUDE", "C-32.2"]);
+  assert.deepEqual([m.reason, CONCLUDE_ACT_CHECKS.MACHINE_CANNOT_CONCLUDE.check], ["MACHINE_CANNOT_CONCLUDE", "C-32.2"]);
   assert.equal(conclude(w, { author: "" }).reason, "MACHINE_CANNOT_CONCLUDE");
   assert.equal(conclude(w, { author: MACHINE, withdraw: true }).reason, "MACHINE_CANNOT_CONCLUDE");
   assert.equal(conclude(w, { falsifier: "f" }).reason, "NO_CONCLUSION");
-  assert.equal(ACT_SHAPE_CHECKS.NO_CONCLUSION.check, "C-33.1");
+  assert.equal(CONCLUDE_ACT_CHECKS.NO_CONCLUSION.check, "C-33.1");
   assert.equal(conclude(w, { project: p, conclusion: "my words", falsifier: "f" }).reason, "CONCLUSION_IS_THE_CLAIM");
   assert.equal(conclude(w, { conclusion: "c" }).reason, "NO_FALSIFIER");
   assert.equal(conclude(w, { conclusion: "c", falsifier: "f", noFalsifier: "1" }).reason, "FALSIFIER_AND_NONE_STATED");
@@ -65,7 +65,7 @@ test("R17: NO_CLAIM when nothing can be adopted, and NO_BASIS when the adopted v
   const nc = (o) => conclude(w, { falsifier: "f", ...o });
   assert.equal(nc({ conclusion: "c", commentary: "more" }).reason, "NO_CLAIM", "commentary without a project");
   assert.equal(nc({ conclusion: "c" }).reason, "NO_CLAIM", "no version named without a project");
-  assert.equal(ACT_SHAPE_CHECKS.NO_CLAIM.check, "C-33.34");
+  assert.equal(CONCLUDE_ACT_CHECKS.NO_CLAIM.check, "C-33.34");
   const notDrawing = w.project("Elsewhere", "alice", []);
   assert.equal(nc({ project: notDrawing }).reason, "NO_CLAIM", "a project that does not draw on the question");
   const noCurrent = w.project("No stance", "alice", [Q]);
@@ -141,7 +141,7 @@ test("R20: withdrawConclusion refuses in order and appends a withdrawn row namin
   assert.equal(wd({ viewer: "class:admin", project: w.project("Bo", "bo", [Q]) }).reason, "PROJECT_ACT_NOT_A_PARTICIPANT");
   const nothing = wd({});
   assert.deepEqual([nothing.reason, nothing.stance], ["NOTHING_TO_WITHDRAW", "none"]);
-  assert.equal(ACT_SHAPE_CHECKS.NOTHING_TO_WITHDRAW.check, "C-33.37");
+  assert.equal(CONCLUDE_ACT_CHECKS.NOTHING_TO_WITHDRAW.check, "C-33.37");
   conclude(w, { project: p, falsifier: "the minutes" });
   const before = w.text(p);
   const r = wd({});
@@ -159,7 +159,7 @@ test("R21: UNSPLICEABLE_CONCLUSIONS when the project's block cannot be extended;
     `    at: "${T}"`, `    by: "${ALICE}"`, "conclusions: none"] });
   const sha = w.sha(p);
   const r = conclude(w, { project: p, falsifier: "f" });
-  assert.deepEqual([r.reason, ACT_SHAPE_CHECKS.UNSPLICEABLE_CONCLUSIONS.check], ["UNSPLICEABLE_CONCLUSIONS", "C-33.36"]);
+  assert.deepEqual([r.reason, CONCLUDE_ACT_CHECKS.UNSPLICEABLE_CONCLUSIONS.check], ["UNSPLICEABLE_CONCLUSIONS", "C-33.36"]);
   assert.equal(w.sha(p), sha);
 });
 

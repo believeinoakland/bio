@@ -1,7 +1,15 @@
 # BOB to strength (T19)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
 Depth 2. Your entry: `build/plan/current.md` layer 6, strength (amended as the refresh: legacy-store's share done in T18, K675 (2); left: re-points only, `VERSION_*` to basis-versions, `INSTANCE_GROUP_CHECKS` to promotion, the rest to record-grammar), plus: `test/m/strength/converts.test.mjs`:10's catalogue parity arm dropped, then the catalogue's held `STRENGTH_STATES` deleted (its last importer; ratification re-pointed, K691, K692; held under rule 1, K769; `legacy-checks` is in your `from`; confirm over the repository first). Rule 1: re-point `src/strength/arithmetic.mjs`:12 (`BASIS_GRADES`, record-grammar `grades.mjs`), `checks.mjs`:9 (`VERSION_STATES`, basis-versions) and `index.mjs`:49 (`BASIS_GRADES`, `TESTIMONY_GRADE`, `normalizeType`, `OBJECT_TYPES`, `BUNDLE_ID_RE`, `parseFrontmatter`, `isMachineIdentity` to record-grammar; `VERSION_MACHINE` to basis-versions; `INSTANCE_GROUP_CHECKS`, read for C-64.1 `GROUP_UNDETERMINED`, to promotion's copy, which PROMOTION #20 holds until you, inquiry and instance-setup re-point), so no strength file imports `bio-checks.mjs`; re-word the comments at `arithmetic.mjs`:20 and `index.mjs`:11. Start after basis-versions and inquiry merge early (rule 4). No requirement of yours is marked for T19. Do not delete old suites (K619).
+
+## B2 · ANSWER · re J1
+
+Your reading is right (K810): make every rule-1 re-point, drop converts.test.mjs:10's parity arm, and hold the catalogue's STRENGTH_STATES (rule 1: legacy-tests' civicos-ui/check-semantics.mjs still imports it). Your write is not widened. Control-plane's last act deletes the catalogue whole at L11 and accepts that legacy-tests file red by name with the old suites. Record it as found in another module and carry on.
+
+## B3 · CHANGE
+
+BASIS-VERSIONS #6 stage one is merged into tranche/T19 (K813). src/basis-versions/index.mjs now exports the names you read from the catalogue (SUGGEST_KINDS, isBoilerplate, SUFFICIENCY_UNCLAIMED, BASIS_VERSION_CHECKS, VERSION_STATES and the C-25 rows). Merge the tranche branch and re-point to them. Inquiry-grammar's merge comes later with its own CHANGE.
