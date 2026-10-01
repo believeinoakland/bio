@@ -112,7 +112,7 @@ export function world({ profiles = ["test-port-ellery"] } = {}) {
     return d && d.sees.includes(viewer) ? { ok: true, id, project: d.project } : { ok: false, reason: "NO_SUCH_DETERMINATION" };
   } };
   /* local-facts, the real one (R10, R11): a member's confirmations are recorded through its `factConfirm`. */
-  const localFacts = localFactsOf(host, { record, membership, now: () => clock.ms });
+  const localFacts = localFactsOf(host, { record, membership, now: () => new Date(clock.ms).toISOString() });
   const c = actionClocksOf(host, { record, membership, actions, conformance, localFacts, now: () => clock.ms });
   let n = 0;
   const w = {

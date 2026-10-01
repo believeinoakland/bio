@@ -100,19 +100,36 @@ test("R10 the count states each year's confirmation through local-facts: unconfi
   assert.deepEqual([p.calendar.status, p.calendar.says, p.entry.date], ["confirmed", [], "2026-08-20"]);
   assert.ok(p.calendar.years.every((y) => y.status === "confirmed"));
   /* corrected: the correction governs (the Clerk is open on 14 August), naming the member and the date. */
-  const c = act(clerk, "correct", { by: BOB, viewer: BOB, value: { year: 2026, offices: ["Town Clerk"], days: [], status: "ruled", basis: "TEST" },
+  const c = act(clerk, "correct", { by: BOB, viewer: BOB, value: [],
                                     source: "the clerk's notice of 2026-09-20" });
   p = propose();
   assert.deepEqual([p.calendar.status, p.entry.date], ["corrected", "2026-08-19"]);
   const y = p.calendar.years.find((x) => x.path === clerk);
-  assert.deepEqual([y.status, y.corrected_by, y.corrected_at], ["corrected", BOB, c.at]);
-  assert.equal(p.calendar.says.length, 1);
-  assert.ok(p.calendar.says[0].includes(BOB) && p.calendar.says[0].includes(c.at), p.calendar.says[0]);
+  assert.deepEqual([y.status, y.corrected_by, y.corrected_at], ["corrected", BOB, c.at.slice(0, 10)]);
+  assert.deepEqual(p.calendar.says, [`counted on a calendar corrected locally by ${BOB}, ${c.at.slice(0, 10)}`]);
+  /* a correction since confirmed: confirmed, and still counted on the correction that governs. */
+  act(clerk, "confirm");
+  p = propose();
+  assert.deepEqual([p.calendar.status, p.calendar.says, p.entry.date], ["confirmed", [], "2026-08-19"]);
   /* disputed: undetermined, with why; nothing is counted. */
   act(all26, "dispute", { by: BOB, viewer: BOB });
   p = propose();
   assert.equal(p.entry.date, null); assert.match(p.undetermined, /disputed/);
   assert.equal(w.rows(`SELECT date FROM action_clock_proposals WHERE bundle_id=?`, A)[0].date, null);
+  /* a confirmation lapsed at its horizon (a holiday year's, at that year's end): unconfirmed again, naming its source
+     and the date of the lapsed confirmation. */
+  const x = world();
+  x.action(B, ["clock:", ...CLK("2027-12-01"), ...CPL("Town Clerk", "City of Port Ellery")]);
+  x.actions.actionCorrespond({ target: B, direction: "received", at: "2026-12-30", account: "got it", viewer: M, author: M });
+  for (const path of [pathOf(TEST, 2026), pathOf(TEST, 2026, ["Town Clerk"]), pathOf(TEST, 2027)])
+    assert.equal(x.localFacts.factConfirm({ path, act: "confirm", how: "the calendar", by: M, viewer: M }).ok, true);
+  const q = () => x.c.clockPropose({ target: B, rule: "records_answer", proposer: M, viewer: M }).proposal;
+  assert.deepEqual([q().calendar.status, q().entry.date], ["confirmed", "2027-01-07"]);
+  x.clock.ms = Date.parse("2027-01-02T00:00:00Z");
+  const lapsed = q();
+  assert.deepEqual([lapsed.calendar.status, lapsed.entry.date], ["unconfirmed", "2027-01-07"]);
+  assert.deepEqual(lapsed.calendar.says, ["counted on an unconfirmed calendar (TEST, 2026-09-28)",
+                                          "counted on an unconfirmed calendar (TEST, 2026-09-28)"], "the two 2026 entries");
   /* a local-facts that cannot answer reads as absent: undetermined. */
   const absent = clocks.computeDeadline(R5, fm(CLERK, "records_request", "2026-08-12"), TEST, { factOf: () => ({ status: "absent", why: "x" }) });
   assert.equal(absent.date, null); assert.match(absent.why, /cannot be read/);
@@ -133,6 +150,7 @@ test("R11 calendarFactsRead lists, once each, the holiday entries and office hou
   const before = w.rows(`SELECT (SELECT COUNT(*) FROM manifest) AS m, (SELECT COUNT(*) FROM action_reminders) AS r`);
   const r = w.c.calendarFactsRead({ viewer: M });
   const hours = (o) => factPath({ profile: "test-port-ellery", fact: "hours", office: o });
+  assert.ok(hours({ venue: "records_request" }) && hours({ role: "Town Clerk", body: "City of Port Ellery" }), "both name a fact");
   const want = [
     [pathOf(TEST, 2026), [A, B]], [pathOf(TEST, 2026, ["Town Clerk"]), [A, B]], [pathOf(TEST, 2027), [A, B]],
     [hours({ role: "Town Clerk", body: "City of Port Ellery" }), [A, B]],
@@ -144,7 +162,7 @@ test("R11 calendarFactsRead lists, once each, the holiday entries and office hou
   assert.deepEqual(w.rows(`SELECT (SELECT COUNT(*) FROM manifest) AS m, (SELECT COUNT(*) FROM action_reminders) AS r`), before, "writes nothing");
   /* an action addressing no office reads its kind's venue's hours. */
   w.promote("ACTN-2026-0005-e", actionMd("ACTN-2026-0005-e", ["counterparty:", "  state: audience", "  description: residents", "action_kind: records_request"]));
-  assert.deepEqual(w.c.calendarFactsRead({ viewer: M }).paths.find((p) => p.path === hours({ kind: "records_request" })).actions, ["ACTN-2026-0005-e"]);
+  assert.deepEqual(w.c.calendarFactsRead({ viewer: M }).paths.find((p) => p.path === hours({ venue: "records_request" })).actions, ["ACTN-2026-0005-e"]);
   /* the horizon moves with the instance clock: from 2027, the 2026 entries are no longer read. */
   const later = w.c.calendarFactsRead({ viewer: M, now: Date.parse("2027-02-01T00:00:00Z") });
   assert.deepEqual(later.paths.map((p) => p.path).filter((x) => x.includes("2026")), []);

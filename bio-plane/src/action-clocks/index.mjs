@@ -614,7 +614,7 @@ function officeHours(view, offices) {
   for (const o of offices || []) {
     if (o.venue) {
       const k = (view && Array.isArray(view.action_kinds) ? view.action_kinds : []).find((x) => x && x.kind === o.venue);
-      if (k && k.venue && k.venue.hours) out.push({ profile: k.profile ?? null, fact: "hours", office: { kind: k.kind } });
+      if (k && k.venue && k.venue.hours) out.push({ profile: k.profile ?? null, fact: "hours", office: { venue: k.kind } });
     } else {
       const c = (view && Array.isArray(view.counterparties) ? view.counterparties : [])
         .find((x) => x && x.role === o.role && (o.body === null || x.body === o.body));
@@ -623,17 +623,22 @@ function officeHours(view, offices) {
   }
   return out;
 }
-/* R10: local-facts' answer for one path, as the count reads it: its status, and for a correction the value that governs
-   with its member and date; for an unconfirmed year the lapsed confirmation's date, when there was one. */
+/* R10: local-facts' answer for one path (its R2), as the count reads it: its status; the value that governs here
+   (`governs.value`: the latest correction's, else the profile's), which the count counts on whatever the status; for a
+   correction its member and date (the correcting act is the latest while the status is `corrected`) and its `says`; for
+   a lapsed confirmation the date it was made; for a dispute who disputed it and when. */
 function factAnswer(path, r) {
   if (!r || typeof r !== "object" || r.ok === false)
     return { path, status: "absent", why: (r && (r.reason || r.code)) || "local facts did not answer" };
-  const g = r.governing && typeof r.governing === "object" ? r.governing : {};
+  const g = r.governs && typeof r.governs === "object" ? r.governs : {};
   const last = r.latest && typeof r.latest === "object" ? r.latest : {};
-  return { path, status: typeof r.status === "string" ? r.status : "absent", value: g.value ?? null,
-           by: g.by ?? last.by ?? null, at: g.at ?? last.at ?? null, last_at: last.at ?? null };
+  const lapsed = r.lapsed && typeof r.lapsed === "object" ? r.lapsed : {};
+  const day = (v) => (typeof v === "string" ? v.slice(0, 10) : null);
+  return { path, status: typeof r.status === "string" ? r.status : "absent", why: r.why ?? null,
+           value: g.value ?? null, corrected: g.origin === "corrected", says: g.says ?? null,
+           by: last.by ?? null, at: day(last.at), last_at: day(lapsed.at) };
 }
-const daysOf = (v) => (Array.isArray(v) ? v : v && Array.isArray(v.days) ? v.days : null);
+const daysOf = (v) => (Array.isArray(v) ? v : null);
 
 /* R10: what a business count states of the calendar it read: each holiday entry read with its status, and the whole
    `confirmed` when every entry is, `corrected` (naming each correction's member and date) when one is and none is
@@ -647,7 +652,7 @@ function calendarStated(read, readable) {
   for (const r of read) {
     if (r.status === "unconfirmed")
       says.push(`counted on an unconfirmed calendar (${r.basis ?? "no source stated"}, ${r.last_at ?? "never confirmed here"})`);
-    else if (r.status === "corrected") says.push(`counted on a calendar corrected locally by ${r.by ?? "a member"}, ${r.at ?? "date unstated"}`);
+    else if (r.status === "corrected") says.push(`counted on a calendar ${r.says ?? `corrected locally by ${r.by}, ${r.at}`}`);
   }
   const status = read.some((r) => r.status === "unconfirmed") ? "unconfirmed"
     : read.some((r) => r.status === "corrected") ? "corrected" : "confirmed";
@@ -695,10 +700,10 @@ export function computeDeadline(d, fm, view, { factOf = null } = {}) {
         if (f.status === "disputed" || f.status === "absent") {
           out = `the holiday calendar for ${y}${Array.isArray(h.offices) ? ` (${h.offices.map((o) => officeWords(typeof o === "string" ? { role: o } : o)).join(", ")})` : ""} `
             + (f.status === "disputed" ? `is disputed on this instance${f.by ? ` by ${f.by}` : ""}${f.at ? `, ${f.at}` : ""}`
-              : `cannot be read on this instance (${f.why || "absent"})`);
+              : `cannot be read on this instance: ${f.why || "absent"}`);
           break;
         }
-        const ds = f.status === "corrected" ? daysOf(f.value) || h.days : h.days;
+        const ds = f.corrected ? daysOf(f.value) || h.days : h.days;
         for (const x of ds || []) if (x && typeof x.date === "string") set.add(x.date);
       }
       if (out === undefined) out = set;

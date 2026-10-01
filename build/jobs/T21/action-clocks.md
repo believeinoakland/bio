@@ -2,6 +2,36 @@
 
 **Status** · session_01VHoiWTjJjQQgWM9t7qUp3J · depth 2 · WORKING · handled B2
 
+ACTION-CLOCKS #3, T21 layer 9. Started from `tranche/T21` @ e6bec46fb1; merged `tranche/T21` @ 8158a9bd53 (local-facts, B3/K989) before aligning.
+
+## Entries applied
+
+- **R10 (K921, K927; K936; K986).** A `business` count (`computeDeadline(d, fm, view, {factOf})`) reads, for each year it reaches, the holiday entries for all offices and those naming the action's ONE office (`actionOffices`: its addressee when `counterparty` is a named office, else its kind's `venue`, K986; `yearEntries`). An office no entry names, with no entry for all offices, leaves the year undetermined, naming the office. Each entry read goes through `local-facts.factStatus` at its `factPath`. The count uses the value that governs (`governs.value`) and answers `calendar: {status, years, says}`: `confirmed`; `unconfirmed` with "counted on an unconfirmed calendar (<basis>, <the lapsed confirmation's date, or 'never confirmed here'>)"; `corrected` with local-facts' "corrected locally by <member>, <date>". It is undetermined, with why, when an entry it reads is `disputed` or `absent` (including a local-facts that cannot answer). A `calendar` count reads no holiday and states none. `clockPropose` passes the reader and answers `proposal.calendar`. A pure caller that passes no reader gets `calendar.status: "not_read"`.
+- **R11.** `calendarFactsRead({viewer, now?})` lists, once each and sorted, the `local-facts` paths a live deadline reads, each with the actions that read it. For every visible action not `resolved` or `abandoned` whose kind has a business-day profile deadline, it lists the holiday entries the profiles HOLD for its one office (as R10 reads them), for the UTC years from the instance clock's year to its latest pending entry's year (at least the next year), and that office's `hours`. It reads at most 500 actions (`CALENDAR_FACTS_ACTIONS_MAX`) and states `truncated`. A year the profiles do not list is not a path (J1 (3), adopted).
+- **K936.** `computeDeadline` no longer keys `view.holidays` by year only (the last entry won for every office).
+- **N465.** `checks.mjs`:3–:5 re-worded: the provenance stays; "`actions`' own job deletes that copy" is now "`actions`' copy is gone (K914)". The same stale note was in `schema.mjs`'s header and in `actionClocksOf`'s comment; both re-worded.
+- **N469.** I re-scanned my paths: no note names a file T20 deleted as live, and none names "the battery". The `clocks.test.mjs` header ("moved from `actions`' tests") is provenance and stays.
+- **Not yet met: T21 marks this job meets:** R10 and R11. Tests: `test/m/action-clocks/calendar.test.mjs`, five tests named "R10 …" (three) and "R11 …" (two), on the test profile. One R10 test also covers the first profile's office-specific 2026 entries (M-189 court venue, M-190 city offices, M-191 State Controller, and an office no entry names).
+- **Catalogue rows:** none added, moved, re-keyed or re-worded (`checks.mjs` changed only in its comment), so none is `awaiting stamp` from this job.
+
+## Deferred
+
+None.
+
+## Found in other modules (REPORT J4)
+
+1. **Generated artifact made stale:** `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`), from my change under `bio-plane/src/action-clocks/`.
+2. **filings** (`bio-plane/src/filings/dates.mjs`:34, `deadlineDate`). It still calls `computeDeadline` with only `{holidays}` and no action. Under R10 it now reads only the entries for all offices, so on a profile whose years list only office-specific entries (the first profile's 2026) its business count is undetermined. It passes no `factOf`, so its `calendar.status` is `not_read`. Filings R31 (calendar status from action-clocks R10) needs it to pass the action's `counterparty` and `action_kind` (or call `clockPropose`'s path) and a `factOf`. That is filings' own job.
+3. **filings' tests** fail 35 of 48 on `tranche/T21` itself (`KIND_NO_TEMPLATE` and similar), before and after my merge; not this module's.
+
+## Tests and checks
+
+- `node --test test/m/action-clocks/` (in `bio-plane/`): **26 pass, 0 fail** (21 before; R2's computeDeadline test now compares `{date, start}`, since R10 adds `calendar`).
+- Modules that use action-clocks: escalation 38/0, action-plans 43/0, monitoring 72/0, queue-producers 47/0, affordances 133/0; filings 13/35, identical on `tranche/T21` without my change. local-facts 22/0. `build/manifest.md` names no layer tests.
+- `format`: 86 modules, 84 requirements files, 0 failures. `architecture action-clocks`: 8 product files, 36 relative imports, 0 failures. `coverage action-clocks`: 11 of 11 live ids named by a test, 0 failures. `ownership action-clocks tranche/T21`: 7 files changed, 0 failures.
+
+Size (session_01VHoiWTjJjQQgWM9t7qUp3J): test runs 14, module lines 859
+
 ## J1 · QUESTION
 
 Three readings for R10/R11; I carry on with each as stated unless you answer otherwise.
