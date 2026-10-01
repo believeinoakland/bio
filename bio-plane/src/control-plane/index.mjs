@@ -1298,6 +1298,12 @@ async function publishAffordances(res, url) {
   return json({ ...body, result: { ...published, pack, ...(pack ? {} : { pack_absent: absent }) } }, res.status);
 }
 
+/* N336 (installer R20, K649 (6)): THE PLANE'S LIMITS, stated in its code so the bundle a release signs carries them, equal
+   to the `limits` of the plane's own configuration (`wrangler.jsonc`), which a test pins. The installer reads them from
+   the verified plane bundle and holds no value of its own; the door carries them as `limits` on the function it makes,
+   so a bundle of the door cannot leave them out. */
+const PLANE_LIMITS = Object.freeze({ subrequests: 10000 });
+
 /* R1–R25: the Worker entry. `hooks.publicOp(ctx)` answers a public op whose handler still lives in legacy-index;
    `hooks.gatedOp(ctx)` an admitted op's handler there, or undefined for the generic forward below. */
 /* R17: the stamps a caller may never supply, in the query and in a body. */
@@ -1306,9 +1312,11 @@ const BODY_STAMPS = Object.freeze(["actorIdentity", "actorViewer", "actorMemberI
                                    "migrationReplay"]);
 export function makeFetch(hooks = {}) {
   /* R25: the door's one outermost catch. */
-  return async function planeDoor(req, env) {
+  const planeDoor = async function planeDoor(req, env) {
     try { return await fetch(req, env); } catch (e) { return planeInternalError(e, req); }
   };
+  planeDoor.limits = PLANE_LIMITS;
+  return planeDoor;
   async function fetch(req, env) {
     const url = new URL(req.url);
     if (req.method === "OPTIONS")
@@ -3600,4 +3608,4 @@ export { json, doAnswer, storeSilent, storeRefusal, relayAnswer, StoreSilent, ST
          dec49Row, dec49Attach, CHECK_FAMILIES, CHECK_FAMILY_FILES, sessionOpGate, migrationReplayOf, DRIVE_PROVENANCE_PATH,
          namespaceGate, pinnedNamespaceGate, confinedNamespaceGate, aiReachesAsMember, aiScopeDeclaration,
          aiConfinementDeclaration, aiTaskScope, AI_TOKEN_SHAPE, SCRATCH_ADDRESSING_PUBLIC_OPS, publishAffordances,
-         requiredArgument };
+         requiredArgument, PLANE_LIMITS };
