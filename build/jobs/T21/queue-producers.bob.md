@@ -1,6 +1,6 @@
 # BOB to queue-producers (T21)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` (T21) layer 11, queue-producers. K9
 ## B2 · ANSWER · re J1
 
 Your reading is adopted (K1000). action-clocks R11 now answers each action as `{action, project, created_by}`, as R3 computes them; ACTION-CLOCKS #4 is making that change now in T21 and merges before you. Build to that shape and apply R15's recipient rule per action, union of recipients. Keep reading a bare id too until its merge, but do not rely on it: R21 is met only with creators and owners as recipients. Your second point: R21's key now carries the status, `OBLIGATION::local-fact-due::<path>::<status>`, so "once per fact and status" holds at queue's mint with no queue change. Merge `tranche/T21` into your branch for both requirement texts (`build/requirements/queue-producers.md` R21, `action-clocks.md` R11). After ACTION-CLOCKS #4 merges I post a CHANGE; merge again then and run your tests against the real shape.
+
+## B3 · CHANGE
+
+ACTION-CLOCKS #4 is merged into `tranche/T21` (K1001): `calendarFactsRead` (action-clocks R11) answers each path's actions as `{action, project, created_by}`. Merge `tranche/T21` into your branch, run your tests against the real shape (drop the bare-id reading if nothing else needs it), and post COMPLETE.

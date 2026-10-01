@@ -1,4 +1,4 @@
-/* op-declarations: WHAT EACH OP IS (R1–R7). Every op's spec, the act lists that drive the stamps and the fences, the
+/* op-declarations: WHAT EACH OP IS (R1–R8). Every op's spec, the act lists that drive the stamps and the fences, the
    session sets, the capability table, the recorded decisions that a verb is not a person's, and the act gate read
    from those tables. It declares; it judges no caller and routes nothing (`admission` and `control-plane` read it).
    Copied from `control-plane/ops.mjs` at the control-plane split (T18, K617, K624 (1), (2)), which control-plane's own
@@ -44,9 +44,9 @@ const frozenList = (a) => Object.freeze(a);
  * Secret discipline, which is a design constraint rather than a convention:
  *
  *   1. No module reads a credential at import time. Every secret arrives as a
- *      binding on env, so the whole tree loads and the whole battery runs with
- *      no secrets present at all. That is what makes the local suite
- *      credential-free by construction rather than by accident.
+ *      binding on env, so the whole tree loads and the module tests run with
+ *      no secrets present at all. That is what makes them credential-free by
+ *      construction rather than by accident.
  *   2. R2 credentials never leave the Worker. The Worker holds the bucket as a
  *      BINDING, not as an access key, so there is no key to leak, rotate, or
  *      hand to anyone. Nothing outside Cloudflare ever signs an R2 request.
@@ -590,12 +590,41 @@ const OPS = frozenTable({
   escalationresume:    { classes: ["admin", "member", "probe"],      mutating: true  },
   escalation:          { classes: ["admin", "member", "probe"],      mutating: false },
   escalationsdue:      { classes: ["admin", "member", "probe"],      mutating: false },
-  /* T18 (N-A12, K608; K705): filings' drafted communication (R23), its group templates (R26) and their read. Any
-     credential prepares a communication, labelled (`proposalLabel`); only a member saves a template, a machine refused
-     by name (MACHINE_CANNOT_SAVE_TEMPLATE); the read is viewer-stamped. */
+  /* T18 (N-A12, K608; K705): filings' drafted communication (R23). Any credential prepares a communication, labelled
+     (`proposalLabel`). T21 (K922 (1)): `templatesave` is filings R32's, a member starting a template draft from an
+     approved filing through `filing-templates.templateDraft` (a machine refused by that module, its R3); its spec and
+     stamps are unchanged. The library's read, `templates`, is `filing-templates`' (its R14), declared below. */
   communicationprepare: { classes: ["admin", "member", "probe"],     mutating: true  },
   templatesave:        { classes: ["admin", "member", "probe"],      mutating: true  },
+  /* T21 (K921, K927; filing-templates R3, R4, R7, R8, R10, R11): the template library's member acts. A machine reaches
+     each and the module refuses it by name (MACHINE_CANNOT_DRAFT_TEMPLATE, MACHINE_CANNOT_APPROVE_TEMPLATE), conclude's
+     posture; `author` (the module's `by` where its R says `by`) and `viewer` stamped. `templatereviewgrant` takes the
+     grant's `secretSha` from the door (control-plane R44), as `reviewgrant` does. */
+  templatedraft:       { classes: ["admin", "member", "probe"],      mutating: true  },
+  templaterevise:      { classes: ["admin", "member", "probe"],      mutating: true  },
+  templatesubmit:      { classes: ["admin", "member", "probe"],      mutating: true  },
+  templatereviewgrant: { classes: ["admin", "member", "probe"],      mutating: true  },
+  templategrantrevoke: { classes: ["admin", "member", "probe"],      mutating: true  },
+  templateapprove:     { classes: ["admin", "member", "probe"],      mutating: true  },
+  templateretire:      { classes: ["admin", "member", "probe"],      mutating: true  },
+  /* filing-templates R6: any credential proposes wording (an agent credential by its scope), labelled; `proposer` and
+     `viewer` stamped, `optionpropose`'s posture. */
+  templatepropose:     { classes: ["admin", "member", "probe"],      mutating: true  },
+  /* filing-templates R8, R9, R12–R14: the review grant's doors, `reviewcopy`'s and `reviewcomment`'s posture — public at
+     the class gate because each gates itself: a member by session (`author`), a recipient by the grant's secret
+     (`secretSha`), every other caller the one dead answer (NO_TEMPLATE_GRANT). */
+  templatereview:      { classes: null,                              mutating: true  },
+  templatecomment:     { classes: null,                              mutating: true  },
+  templateread:        { classes: null,                              mutating: false },
+  templatecomments:    { classes: null,                              mutating: false },
+  /* filing-templates R14 (moved from filings R26, K921): the library's list; viewer-stamped. */
   templates:           { classes: ["admin", "member", "probe"],      mutating: false },
+  /* T21 (K921; local-facts R1, R2, R4): a member's confirmation, correction or dispute of a profile fact (a machine
+     reaches it and the module refuses it by name, MACHINE_CANNOT_CONFIRM; `by` and `viewer` stamped), and the two reads,
+     viewer-stamped. */
+  factconfirm:         { classes: ["admin", "member", "probe"],      mutating: true  },
+  factstatus:          { classes: ["admin", "member", "probe"],      mutating: false },
+  factsdue:            { classes: ["admin", "member", "probe"],      mutating: false },
   /* T18 (N-A12; actions R47, R48, K709): an action's creation as a promotion and its pressure mark, a member's acts
      (the module refuses a machine by name, MACHINE_CANNOT_MARK_PRESSURE; a creation the promotion's own fences); the
      read and the list are viewer-stamped. */
@@ -669,7 +698,7 @@ const OPS = frozenTable({
   capturerequests:     { classes: ["admin", "member", "probe"],           mutating: false },
   /* T6-13 (capture-requests R42): retrying a request the source refused, a member's act on the group's queue. */
   capturerequestretry: { classes: ["admin", "member"],                    mutating: true  },
-  /* PL-11 / D-199: no row names `ai` (asserted); no probe (minting is a member act, C-29.1); the read is wider and
+  /* PL-11 / D-199: no row names `ai` (this module's R2 test); no probe (minting is a member act, C-29.1); the read is wider and
      carries no value. */
   aicredentialmint:    { classes: ["admin", "member"],                    mutating: true  },
   aicredentialrevoke:  { classes: ["admin", "member"],                    mutating: true  },
@@ -848,10 +877,11 @@ const STRUCTURE_ACTIONS = frozenList(["inquiryground"]);
      3. THE TRANSITION — the store refuses a machine identity BY SHAPE through
         REC-46's one predicate (MACHINE_CANNOT_MOVE_VERSION).
 
-   Each layer absorbs the others when it is whole, which is exactly why
-   VERIFICATION rule 3a requires the control to break EACH ONE with the other two
-   HELD OPEN; `test/versionstate.control.mjs` does that and nothing less would
-   prove any of the three is doing anything.
+   Each layer absorbs the others when it is whole, so each is proved where it
+   lives, on its own: layer 2 by this module's R3 test
+   (`test/m/op-declarations/tables.test.mjs`, the six acts riding `contribute`),
+   layer 3 by basis-versions' tests (`test/m/basis-versions/acts.test.mjs`,
+   MACHINE_CANNOT_MOVE_VERSION), layer 1 by the control plane's stamp.
 
    Machine classes REACH all six and are refused by the store rather than being
    absent from the table — conclude's posture, fail closed, so the refusal says
@@ -933,8 +963,8 @@ const CUSTODIAL_ACTIONS = frozenList(["memberadd", "memberset", "signeradd", "si
    `SESSION_OPS` sets, THE STAMP (`by` set by the server, read by the store from the query after the body), and THE
    ROSTER (the store refuses NOT_AN_ADMIN or PAIRING_NOT_YOURS). A SET OF ITS OWN rather than more names in
    `GOVERNANCE_ACTIONS` or `CUSTODIAL_ACTIONS`: the first carries the operator fence, whose C-32.17 sentence names
-   the §4.7 votes and would be false here (D-270's class), and the second's `by` condition is pinned as one
-   expression by the old battery. A bearer stamps `class:<cls>`, which is on no roster, so the store refuses it. */
+   the §4.7 votes and would be false here (D-270's class), and the second's `by` condition is one expression at the
+   stamp site. A bearer stamps `class:<cls>`, which is on no roster, so the store refuses it. */
 const ROSTER_SELF_ACTIONS = frozenList(["adminresign", "hostingaccessset", "memberpairingset"]);
 /* N364 (membership R89, R90): a member's own attesting key, registered and revoked from their own session. Its own set
    for ROSTER_SELF_ACTIONS' reason: REACH in both `SESSION_OPS` sets (every bearer is refused by the rows'
@@ -1004,8 +1034,8 @@ const TASK_ACTIONS = frozenList(["taskforward", "taskresolve"]);
    would be the first step toward one control. */
 const QUEUE_ACTIONS = frozenList(["queuemute", "queuesnooze"]);
 /* IS-6: the investigative run's three WRITES. Its two reads are not here, for
-   the reason stated on QUEUE_ACTIONS above and restated by capability.test.mjs:
-   SESSION_OPS gates MUTATING ops alone, so a read appears in it nowhere.
+   the reason stated on QUEUE_ACTIONS above: SESSION_OPS gates MUTATING ops alone
+   (admission's session gate passes every read), so a read needs no place in it.
    Named as one array rather than folded into an existing set because a run is
    neither a task act (it changes nothing for anyone else yet) nor a personal
    preference (it spends the group's Claude budget and will propose versions to
@@ -1123,7 +1153,29 @@ const CONSEQUENCES_READS = frozenList(["consequence", "consequencesof", "address
    acts do (the communication's preparer is that stamp), and the template read is viewer-stamped. */
 const FILINGS_ACTIONS = frozenList(["filingprepare", "filingapprove", "filingsent", "counselpacket", "counselpacketexport",
                          "theorypropose", "communicationprepare", "templatesave"]);
-const FILINGS_READS = frozenList(["counselpacketread", "filingsfor", "availableactions", "templates"]);
+const FILINGS_READS = frozenList(["counselpacketread", "filingsfor", "availableactions"]);
+/* T21 (K921, K927): the template library's member acts (filing-templates R3, R4, R7, R8, R10, R11), one array for the
+   reason every array here is one. filing-templates reads `author` from the QUERY for each (as its `by` where its R says
+   `by`), so the array joins `QUERY_AUTHOR_ACTIONS` below and takes that stamp's positional identity; `viewer` beside it.
+   The library's list moved here from `FILINGS_READS` with its owner (filing-templates R14). */
+const FILING_TEMPLATES_ACTIONS = frozenList(["templatedraft", "templaterevise", "templatesubmit", "templatereviewgrant",
+                                  "templategrantrevoke", "templateapprove", "templateretire"]);
+const FILING_TEMPLATES_READS = frozenList(["templates"]);
+/* filing-templates R6: a proposal is any credential's and names its PROPOSER, the label (`proposalLabel`), not an
+   author; its own array, `PLAN_PROPOSAL_ACTIONS`' reason. */
+const TEMPLATE_PROPOSAL_ACTIONS = frozenList(["templatepropose"]);
+/* filing-templates R8, R9, R12–R14: the review grant's doors (`classes: null`). A member arrives by session and is
+   stamped `author` and `viewer`; a recipient arrives by the grant's secret, which the door hashes into `secretSha`
+   (control-plane R44), as `reviewcopy` and `reviewcomment` do. */
+const TEMPLATE_DOOR_ACTIONS = frozenList(["templatereview", "templatecomment"]);
+const TEMPLATE_DOOR_READS = frozenList(["templateread", "templatecomments"]);
+/* control-plane R44: the acts that issue a revocable door to a named outsider. The door mints the secret, stamps only
+   its SHA-256 as `secretSha` (a caller's copy overwritten) and hands the secret back once. */
+const GRANT_SECRET_ACTIONS = frozenList(["reviewgrant", "templatereviewgrant"]);
+/* T21 (K921; local-facts R1, R2, R4): the member's act on a profile fact, stamped `by` (local-facts reads it from the
+   body, so the door overwrites a caller's copy there), and the two reads, viewer-stamped. */
+const LOCAL_FACTS_ACTIONS = frozenList(["factconfirm"]);
+const LOCAL_FACTS_READS = frozenList(["factstatus", "factsdue"]);
 const ESCALATION_ACTIONS = frozenList(["escalationopen", "escalationattach", "escalationevaluate", "escalationadvance",
                             "escalationdecline", "escalationend", "escalationsuspend", "escalationresume"]);
 const ESCALATION_READS = frozenList(["escalation", "escalationsdue"]);
@@ -1151,12 +1203,17 @@ const CONTRADICTION_ACTIONS = frozenList(["contradictiondismiss", "contradiction
                                "contradictionoptin", "contradictionrespond"]);
 const CONTRADICTION_READS = frozenList(["contradictioncandidates", "contradictiontensions", "contradictionfacts", "contradictionnotices",
                              "contradictionresponses"]);
-/* The modules whose acts read `author` from the query: the four of T8, and T18's three. */
+/* The modules whose acts read `author` from the query: the four of T8, T18's three, and T21's filing-templates. */
 const QUERY_AUTHOR_ACTIONS = frozenList([...CONFORMANCE_ACTIONS, ...CONSEQUENCES_ACTIONS, ...FILINGS_ACTIONS, ...ESCALATION_ACTIONS,
-                              ...ACTIONS_ACTIONS, ...ACTION_CLOCKS_ACTIONS, ...ACTION_PLANS_ACTIONS]);
-const ACTION_LAYER_ACTIONS = frozenList([...STANDARDS_ACTIONS, ...QUERY_AUTHOR_ACTIONS, ...PLAN_PROPOSAL_ACTIONS]);
+                              ...ACTIONS_ACTIONS, ...ACTION_CLOCKS_ACTIONS, ...ACTION_PLANS_ACTIONS, ...FILING_TEMPLATES_ACTIONS]);
+/* The action layer's acts and reads, each viewer-stamped (fail closed). T21 adds the template proposal and the fact
+   confirmation, whose stamps are their own (`proposer`, `by`), and the two modules' reads. The grant's doors are not
+   here: a recipient arrives with no session, so no viewer. */
+const ACTION_LAYER_ACTIONS = frozenList([...STANDARDS_ACTIONS, ...QUERY_AUTHOR_ACTIONS, ...PLAN_PROPOSAL_ACTIONS,
+                              ...TEMPLATE_PROPOSAL_ACTIONS, ...LOCAL_FACTS_ACTIONS]);
 const ACTION_LAYER_READS = frozenList([...STANDARDS_READS, ...CONFORMANCE_READS, ...CONSEQUENCES_READS, ...FILINGS_READS,
-                            ...ESCALATION_READS, ...ACTIONS_READS, ...ACTION_PLANS_READS]);
+                            ...ESCALATION_READS, ...ACTIONS_READS, ...ACTION_PLANS_READS, ...FILING_TEMPLATES_READS,
+                            ...LOCAL_FACTS_READS]);
 /* K660 (agent-worker R51, R53; K683): WHAT A PLAN-MODE RUN'S AGENT CREDENTIAL IS SCOPED TO. An agent credential is
    admitted by its task scope alone (R2): it reaches a non-mutating op a member reaches, and a mutating one only when its
    declared writes name it (`admission`). So a planning run's credential reads its plan, the project's earlier plans and,
@@ -1266,10 +1323,11 @@ const SESSION_OPS = Object.freeze({
                       `sess.role === "admin" ? "admin" : "member"`, so `SESSION_OPS.admin`
                       does NOT mean *an administrator's session*: it means THE FOUNDER'S
                       PASSWORD SESSION AND NOTHING ELSE. An enrolled administrator holds
-                      `member:<id>` however their roster row reads —
-                      `d270-refusal-truth.test.mjs` records two separate harnesses making
-                      exactly that mistake and measuring a split of zero over a plane that
-                      had one. So `...GOVERNANCE_ACTIONS` in the ADMIN SET ALONE would have
+                      `member:<id>` however their roster row reads — found by D-270, where
+                      two separate harnesses made exactly that mistake and measured a split
+                      of zero over a plane that had one; admission's tests
+                      (`test/m/admission/admission.test.mjs`) now prove the founder's set is
+                      the founder's session alone. So `...GOVERNANCE_ACTIONS` in the ADMIN SET ALONE would have
                       given the §4.7 vote to ONE person, the founder, while the operator
                       fence below took the bearer route away from everybody else — and §4.7
                       needs *the consensus of all existing administrators*. A group of three
@@ -1359,6 +1417,11 @@ const SESSION_OPS = Object.freeze({
                    ...ACTIONS_ACTIONS, ...ACTION_CLOCKS_ACTIONS, ...ACTION_PLANS_ACTIONS, ...PLAN_PROPOSAL_ACTIONS,
                    /* N345: contradiction's six acts on a candidate, a member's own acts in their own name, in BOTH sets. */
                    ...CONTRADICTION_ACTIONS,
+                   /* T21 (K921, K927; op-declarations R8): every op of filing-templates and local-facts — the member
+                      acts, the proposal, the grant's doors (public at the class gate; a member's session reaches them
+                      too) and the reads — in BOTH sets, because an administrator is a member too. */
+                   ...FILING_TEMPLATES_ACTIONS, ...FILING_TEMPLATES_READS, ...TEMPLATE_PROPOSAL_ACTIONS,
+                   ...TEMPLATE_DOOR_ACTIONS, ...TEMPLATE_DOOR_READS, ...LOCAL_FACTS_ACTIONS, ...LOCAL_FACTS_READS,
                    /* N314 (T12, monitoring R30): the daemon's pause, every member session's to ask; monitoring refuses a
                       non-administrator by name. */
                    "monitorpause",
@@ -1420,6 +1483,8 @@ const SESSION_OPS = Object.freeze({
                    ...ESCALATION_ACTIONS, "actionriskpropose",
                    ...ACTIONS_ACTIONS, ...ACTION_CLOCKS_ACTIONS, ...ACTION_PLANS_ACTIONS, ...PLAN_PROPOSAL_ACTIONS,
                    ...CONTRADICTION_ACTIONS,
+                   ...FILING_TEMPLATES_ACTIONS, ...FILING_TEMPLATES_READS, ...TEMPLATE_PROPOSAL_ACTIONS,
+                   ...TEMPLATE_DOOR_ACTIONS, ...TEMPLATE_DOOR_READS, ...LOCAL_FACTS_ACTIONS, ...LOCAL_FACTS_READS,
                    ...IDENTITY_ACTIONS,
                    ...GOVERNANCE_ACTIONS,
                    ...CUSTODIAL_ACTIONS,
@@ -1449,8 +1514,9 @@ const SESSION_OPS = Object.freeze({
  *
  * STRUCTURAL, not a hand list. Every mutating op a SESSION can reach appears
  * here, including the ones that need no capability, written as an explicit null
- * with the reason. test/capability.test.mjs reads SESSION_OPS and this table out
- * of the source and fails on any session-reachable mutating op that is missing,
+ * with the reason. This module's R3 test (test/m/op-declarations/tables.test.mjs)
+ * reads SESSION_OPS and this table as exported and fails on any session-reachable
+ * mutating op that is missing,
  * AND on anything named here that no session can reach, so the table cannot rot
  * in either direction. Standing lesson 2: a later addition must not pass by not
  * being mentioned.
@@ -1903,8 +1969,8 @@ const NEEDS = Object.freeze({
      section 4 process, and §5 says an administrator holds every working
      capability and their own field is not consulted at all — so a capability
      test here would be a test of a field the design says nobody reads.
-     PRESENT rather than absent because both totality guards must SEE them: the
-     capability suite fails on a session-reachable mutating op that is missing
+     PRESENT rather than absent because both totality guards must SEE them: this
+     module's R3 test fails on a session-reachable mutating op that is missing
      from this table, and `affordances.mjs` requires every NEEDS key to be an ACT
      or a NAMED non-act — all three are named there with their reasons. */
   membercaps:       null,
@@ -2175,6 +2241,31 @@ const NEEDS = Object.freeze({
      changes or answers it. Present, null, so the capability totality sees each. */
   reminderset:         null,
   reminderanswer:      null,
+  /* T21 (K921, K927; op-declarations R8): the template library's member acts and the proposal write its rows in a
+     member's name (or, for the proposal, a labelled machine's), `templatesave`'s capability and reason; confirming,
+     correcting or disputing a profile fact writes local-facts' row in the member's name, the same. NO fifth capability
+     token (CAPABILITIES.md §4): who may approve, retire or grant is the module's, asked of the stamped author. */
+  templatedraft:       "contribute",
+  templaterevise:      "contribute",
+  templatesubmit:      "contribute",
+  templatereviewgrant: "contribute",
+  templategrantrevoke: "contribute",
+  templateapprove:     "contribute",
+  templateretire:      "contribute",
+  templatepropose:     "contribute",
+  factconfirm:         "contribute",
+  /* NO CAPABILITY for the grant's two mutating doors: a recipient reaches them by the secret, with no session to hold a
+     capability (`reviewcomment`'s posture), and a member's review or comment is judged by the module, asked of who may
+     see the template. Nor for the five reads, on `contradictionpairs`' reasoning (asking the record is reading it).
+     PRESENT, null, because affordances names all seven in NON_ACTS (its R30) and its totality reads a NON_ACTS key this
+     table does not carry as stale (its R12), K516's precedent. */
+  templatereview:      null,
+  templatecomment:     null,
+  templateread:        null,
+  templatecomments:    null,
+  templates:           null,
+  factstatus:          null,
+  factsdue:            null,
 });
 
 /* REC-19's act decoration, shared by op=affordances and op=queue (REC-20) so a queue item's options[] and an
@@ -2248,4 +2339,4 @@ const UNATTENDED_BY_DECISION = Object.freeze({
            + "one' — a deploy's maintenance pass, addressed to the operator's credential.",
 });
 
-export { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, SOURCE_ACTIONS, SOURCE_READS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, ESCALATION_ACTIONS, ESCALATION_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, ACTIONS_ACTIONS, ACTIONS_READS, ACTION_CLOCKS_ACTIONS, ACTION_PLANS_ACTIONS, ACTION_PLANS_READS, PLAN_PROPOSAL_ACTIONS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, PLAN_RUN_SCOPE, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION };
+export { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, SOURCE_ACTIONS, SOURCE_READS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, FILING_TEMPLATES_ACTIONS, FILING_TEMPLATES_READS, TEMPLATE_PROPOSAL_ACTIONS, TEMPLATE_DOOR_ACTIONS, TEMPLATE_DOOR_READS, GRANT_SECRET_ACTIONS, LOCAL_FACTS_ACTIONS, LOCAL_FACTS_READS, ESCALATION_ACTIONS, ESCALATION_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, ACTIONS_ACTIONS, ACTIONS_READS, ACTION_CLOCKS_ACTIONS, ACTION_PLANS_ACTIONS, ACTION_PLANS_READS, PLAN_PROPOSAL_ACTIONS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, PLAN_RUN_SCOPE, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION };
