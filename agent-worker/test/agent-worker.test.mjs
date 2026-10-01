@@ -592,13 +592,13 @@ console.log("\n--- 7 · OVER-STRICTNESS: correct work in a spelling the guard di
  * nothing — the hand-copy-agrees-for-free class, and the reason `plane-meaning.mjs`
  * DERIVES the fixture from the plane's own registry instead of restating it.
  *
- * SO THIS SECTION STANDS UP `bio-plane/src/index.mjs` ITSELF in workerd, with a
+ * SO THIS SECTION STANDS UP `bio-plane/src/plane/index.mjs` ITSELF in workerd, with a
  * real Durable Object, and asks it. The plane is the authority on which arms
  * exist; a suite that asked the mock would be asking the thing that was wrong.
  * ============================================================================ */
 console.log("\n--- 8 · D-276: the meaning ARM, driven against the REAL plane in workerd ---");
 {
-  const PLANE_ENTRY = fileURLToPath(new URL("../../bio-plane/src/index.mjs", import.meta.url));
+  const PLANE_ENTRY = fileURLToPath(new URL("../../bio-plane/src/plane/index.mjs", import.meta.url));
   const plane = new Miniflare({
     modules: true, modulesRoot: "/", scriptPath: PLANE_ENTRY, script: readFileSync(PLANE_ENTRY, "utf8"),
     compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
