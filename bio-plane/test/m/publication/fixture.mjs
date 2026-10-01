@@ -1,5 +1,5 @@
-/* publication over the modules it uses, each the real one (record-core, membership, promotion, provenance, content,
-   connections, inquiry, basis-versions, reevaluation; content reached through connections), on a real SQLite database (node:sqlite) standing in for a Durable Object's
+/* publication over the modules it uses, each the real one (record-core, membership, credentials, promotion, provenance,
+   content, connections, inquiry, basis-versions, reevaluation; content reached through connections), on a real SQLite database (node:sqlite) standing in for a Durable Object's
    storage. What a later module registers (legacy-store's fact `producingGroup`, the review provider) is a stand-in the
    test controls. The ceremonies that write through this module (`ratification`, `case-authoring`) are played by the
    test through R21 and R22, exactly as those modules call them. Every test drives `publication` at its interface. */
@@ -7,6 +7,7 @@ import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
+import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { connectionsOf } from "../../../src/connections/index.mjs";
@@ -15,7 +16,7 @@ import { basisVersionsOf } from "../../../src/basis-versions/index.mjs";
 import { reevaluationOf } from "../../../src/reevaluation/index.mjs";
 import { sourcesOf } from "../../../src/sources/index.mjs";
 import { publicationOf, publicationOps, captureBlockLines, sourceBlockLines } from "../../../src/publication/index.mjs";
-import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -110,6 +111,9 @@ export function world({ group = "test-group", workerd = false, contradiction = n
   record.migrate();
   const membership = membershipOf(host, { record });
   membership.migrate();
+  /* credentials after membership, as the store builds them (K789): its tables, and its seam registered with membership. */
+  const credentials = credentialsOf(host, { record, membership });
+  credentials.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => clock.now });
   const groupRef = { value: group };
   promotion.registerFact("producingGroup", "legacy-store", () => groupRef.value);
@@ -138,11 +142,11 @@ export function world({ group = "test-group", workerd = false, contradiction = n
   /* reevaluation before publication, as legacy-store builds them: publication registers its cited parts with it (R41, R43). */
   const r = reevaluationOf(host, { record, membership, promotion, inquiry: k, content, connections, provenance: prov,
                                    basisVersions, now: () => clock.now });
-  const p = publicationOf(host, { record, membership, promotion, inquiry: k, basisVersions, reevaluation: r,
+  const p = publicationOf(host, { record, membership, credentials, promotion, inquiry: k, basisVersions, reevaluation: r,
                                   ...(contradiction ? { contradiction } : {}), sources: src, now: () => clock.now });
   let n = 0;
   const w = {
-    st, host, record, membership, promotion, prov, content, connections, k, basisVersions, r, p, clock, groupRef, src,
+    st, host, record, membership, credentials, promotion, prov, content, connections, k, basisVersions, r, p, clock, groupRef, src,
     /** A knock pulled into the capture `captureSha` (capture R65), and its source minted as `sources` R1 mints it. */
     knock(captureSha, { knockId = `KNOCK-${knocks.length + 1}`, pseudonym = null, received = NOW, viewer = V("olive") } = {}) {
       knocks.push({ knock_id: knockId, sha256: captureSha, bytes: 10, received, pseudonym, knocker_digest: pseudonym ? `d-${pseudonym}` : null });

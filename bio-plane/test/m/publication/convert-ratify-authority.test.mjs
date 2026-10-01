@@ -8,7 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { planeWorld as world, SIG } from "./fixture.mjs";
 import { publishedGraphEdges, RESTING_PINS_MAX } from "../../../src/publication/index.mjs";
-import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 const G = "INQ-2026-9470-lead", INFO = "INFO-2026-9470-memo";
 const G2a = "INFO-2026-9470-signer", G2b = "INFO-2026-9470-deliverer", G3 = "INFO-2026-9470-served";
