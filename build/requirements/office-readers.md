@@ -133,7 +133,7 @@ xlsx and csv), or `{ok:false, container, reason}` when `parts` failed.
   - `docx`: `document` is `<w:t>` text joined per paragraph, newline-joined across
     paragraphs; `w:delText` (deleted text) is NEVER in it — it lives only in the
     evidentiary `superseded` field; `w:ins` (inserted text) IS in it. `paragraphs` is
-    `[{para, ref, text}]`, one per `<w:p>` in document order (including inside tables).
+    `[{para, ref, text}]`, one per `<w:p>` read, in document order (including inside tables); in each `mc:AlternateContent` (ECMA-376 Part 3) only the first `mc:Choice` is read, or the `mc:Fallback` when there is no `mc:Choice`, nested ones alike, and a branch not selected is not read (no paragraph, run, text, hyperlink, tracked change, bookmark, comment reference or table of it; N26, K747).
     `tables` is `[{table, ref, rows, cols}]` for every `<w:tbl>` in document order
     (nested included), or `null` when the body was not read (never confused with the empty
     list, which means a body with no tables).
@@ -212,7 +212,7 @@ second copy that could drift.
   targeting a run (a hyperlink, a tracked change), never a default.
 - **R16** `docTableRef(table, cell=null) -> {kind:"doc-table", ref:"table <table+1>[, <cell>]",
   table[, cell]}`. `table` is the table's 0-based ordinal in document order (nested tables
-  included, counted as they open); `cell` is A1 notation over the table's own grid,
+  included, counted as they open; a table in an `mc:AlternateContent` branch not read, R11, is not counted); `cell` is A1 notation over the table's own grid,
   included only when given.
 - **R17** `sheetCellRef(sheet, cell) -> {kind:"sheet-cell", ref:"<sheet>!<cell>", sheet, cell}`.
 - **R18** `usedSheetRange(name, usedRows, usedCols) -> {kind:"sheet-range",
@@ -228,7 +228,9 @@ second copy that could drift.
 - **R26** `a1Corner(s) -> {col, row} | null`. One A1 corner, both 1-based: one to three letters (read without case; bijective base 26, `A`=1, `ZZZ`=18278), then a row 1–9,999,999 with no leading zero; either `$` marker allowed and ignored; surrounding whitespace trimmed. `null` for anything else: a non-string, a whole row or column, a range, a sheet-qualified reference, row 0. Never throws.
 - **R27** `rangeUnitFor(sheetName, a, b, sheets, grid = null) -> {unit} | {why}`. `a`, `b`: corners as R26 returns them, in any order; `sheets`: the workbook's sheet names; `grid`: the format's bound `{rows, cols}`, or `null` when the format fixes none. `unit` is the `sheet-range` reference (R18's shape and builder) of the rectangle, top-left corner first. The sheet matches exactly, else without case when exactly one sheet answers; the unit carries the workbook's spelling. `why`: `not_a_range_reference` (a corner is not `{col, row}` of positive integers), `no_such_sheet` (no sheet answers, two answer without case, or `sheetName`/`sheets` is not a string/array), `outside_grid` (either corner past `grid` on either axis). Never throws. R9's units are built through it.
 
-Errors: none of R1–R27 ever throws. A precondition this module cannot verify (bytes that
+- **R28** `docxRenumbering(documentXml) -> {paragraphs:[{old, new, outer}], runs:[{old, new, outer}], tables:[{old, new}]}`: for a stored docx reading made before N26, every `<w:p>`, `<w:r>` and `<w:tbl>` as the pre-N26 walk numbered it (`old`, 0-based, every branch of `mc:AlternateContent` counted), its index under R11 and R16 (`new`), `null` for one inside a branch not read, with `outer` the new index of the paragraph that holds that `mc:AlternateContent`. Used only by extraction's migration of stored ¶ and table references (N26, layer 4); retired once that migration has run (K747).
+
+Errors: none of R1–R28 ever throws. A precondition this module cannot verify (bytes that
 are not this format, a value `recognise`-style helpers were not asked to check) is answered
 as a stated `undetermined`/`ok:false`, never an exception and never a guess.
 
