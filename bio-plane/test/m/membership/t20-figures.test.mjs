@@ -1,8 +1,8 @@
 /* T20 layer 2 (K861, plane R10): R96, this module's share of the instance's figures, a source shaped as record-core
    R63's `counts(hid)` with its key list, which `plane` registers under this module's name. Proved at the interface: the
-   source alone, then registered through the REAL record-core's R63 and read as `op=stats` and purge's proof read it,
-   each answer held against plane's held copy's own statement (`src/plane/held.mjs`, `nx`: `count(*)` less the rows
-   whose key, read as `COALESCE(key, '')`, is in `hid`). */
+   source alone, then registered through the REAL record-core's R63 under this module's name, as `plane` registers it
+   (plane R10), and read as `op=stats` and purge's proof read it, each answer held against R96's statement of the
+   figure, pinned here: `count(*)` less the rows whose key, read as `COALESCE(key, '')`, is in `hid`. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
@@ -14,8 +14,8 @@ import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
 const KEYS = ["projectParticipants", "projectOwnerVotes"];
 const TABLES = { projectParticipants: "project_participants", projectOwnerVotes: "project_owner_votes" };
 
-/* Plane's held copy, statement for statement: what R96 must answer exactly. */
-function heldCopy(sql, hid) {
+/* R96's figure, stated on its own as the pinned value: what the source must answer exactly. */
+function pinned(sql, hid) {
   const n = (t) => {
     const conds = [], args = [];
     if (hid) { conds.push(`COALESCE(project_id, '') NOT IN ${hid.sql}`); args.push(...hid.args); }
@@ -23,7 +23,7 @@ function heldCopy(sql, hid) {
   };
   return Object.fromEntries(KEYS.map((k) => [k, n(TABLES[k])]));
 }
-/* `hid` as plane's held copy takes it: a viewer never sent is the direct internal call, counted whole. */
+/* `hid` as R63 takes it: a viewer never sent is the direct internal call, counted whole. */
 const hidOf = (viewer) => (viewer === undefined ? null : hiddenBundles(viewer));
 
 /* A held ann and bob as owners, cal joined, one pending owner vote (ann proposing cal); B held by dee and eve, one
@@ -61,7 +61,7 @@ const VIEWERS = [
   ["junk", { projectParticipants: 0, projectOwnerVotes: 0 }, "a viewer R43 refuses: every bundle hidden"],
 ];
 
-test("R96 the figure source: its key list, and counts(hid) each table less the rows whose project is in hid, whole for a null hid, as plane's held copy counts", async () => {
+test("R96 the figure source: its key list, and counts(hid) each table less the rows whose project is in hid, whole for a null hid", async () => {
   assert.deepEqual([...Membership.COUNT_KEYS], KEYS);
   assert.ok(Object.isFrozen(Membership.COUNT_KEYS));
   const w = await world().group();
@@ -73,12 +73,12 @@ test("R96 the figure source: its key list, and counts(hid) each table less the r
     const got = w.m.counts(hidOf(viewer));
     assert.deepEqual(Object.keys(got), KEYS, `${why}: every key, in the list's order`);
     assert.deepEqual(got, want, why);
-    assert.deepEqual(got, heldCopy(w.sql, hidOf(viewer)), `${why}: exactly plane's copy`);
+    assert.deepEqual(got, pinned(w.sql, hidOf(viewer)), `${why}: exactly the pinned figure`);
   }
   /* sight follows the record: inviting zed to A moves zed's count at once */
   w.m.projectInvite({ projectId: "PROJ-A", handle: "zed", by: "ann", viewer: V("ann") });
   assert.deepEqual(w.m.counts(hiddenBundles(V("zed"))), { projectParticipants: 4, projectOwnerVotes: 1 });
-  assert.deepEqual(w.m.counts(hiddenBundles(V("zed"))), heldCopy(w.sql, hiddenBundles(V("zed"))));
+  assert.deepEqual(w.m.counts(hiddenBundles(V("zed"))), pinned(w.sql, hiddenBundles(V("zed"))));
 });
 
 test("R96 a NULL key names no bundle, so hid never drops its row; it writes nothing", async () => {
@@ -105,12 +105,12 @@ test("R96 a NULL key names no bundle, so hid never drops its row; it writes noth
   const before = snapshot();
   const all = hiddenBundles("junk");   // every bundle hidden
   assert.deepEqual(m.counts(all), { projectParticipants: 1, projectOwnerVotes: 1 }, "the NULL-keyed row stays");
-  assert.deepEqual(m.counts(all), heldCopy(sql, all));
+  assert.deepEqual(m.counts(all), pinned(sql, all));
   assert.deepEqual(m.counts(null), { projectParticipants: 2, projectOwnerVotes: 2 });
   assert.equal(snapshot(), before, "writes nothing");
 });
 
-test("R96 registered through record-core R63 under membership's name, it answers op=stats through each viewer's sight and purge's proof whole, as plane's copy; membership registers nothing itself", async () => {
+test("R96 registered through record-core R63 under membership's name, it answers op=stats through each viewer's sight and purge's proof whole; membership registers nothing itself", async () => {
   const w = await realWorld();
   const { m, rc } = w;
   await w.claim();
@@ -129,7 +129,7 @@ test("R96 registered through record-core R63 under membership's name, it answers
   for (const [viewer, want, why] of VIEWERS) {
     const got = rc.counts(hidOf(viewer));
     assert.deepEqual(Object.fromEntries(KEYS.map((k) => [k, got[k]])), want, `R63 ${why}`);
-    assert.deepEqual(Object.fromEntries(KEYS.map((k) => [k, got[k]])), heldCopy(w.sql, hidOf(viewer)), `R63 ${why}: plane's copy`);
+    assert.deepEqual(Object.fromEntries(KEYS.map((k) => [k, got[k]])), pinned(w.sql, hidOf(viewer)), `R63 ${why}: the pinned figure`);
   }
   /* op=stats and purge's proof, read through a stats source composed as plane composes it (R65: the registered
      figures, through the caller's sight, a viewer never sent counted whole) */
@@ -145,7 +145,7 @@ test("R96 registered through record-core R63 under membership's name, it answers
   const p = ops.purge();
   assert.equal(p.ok, true);
   assert.deepEqual(KEYS.map((k) => [p.before[k], p.after[k], p.removed[k]]), [[5, 2, 3], [2, 1, 1]]);
-  assert.deepEqual(Object.fromEntries(KEYS.map((k) => [k, p.after[k]])), heldCopy(w.sql, null), "after: plane's copy, whole");
+  assert.deepEqual(Object.fromEntries(KEYS.map((k) => [k, p.after[k]])), pinned(w.sql, null), "after: the pinned figure, whole");
   /* a second registration under its name is refused, naming the holder (R63) */
   const again = rc.registerCounts("membership", [...Membership.COUNT_KEYS], (hid) => m.counts(hid));
   assert.deepEqual([again.ok, again.reason, again.heldBy], [false, "COUNTS_DECLARED", "membership"]);
