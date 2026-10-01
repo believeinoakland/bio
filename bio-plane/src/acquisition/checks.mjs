@@ -5,8 +5,8 @@
  * Copied from the check catalogue (`bio-plane/checks/bio-checks.mjs`) with the acquisition act (K617, K649 (1)): C-48.1–
  * C-48.7 (the Drive arm, R4), C-83.1–C-83.8 (the render arm, R5), C-28.13 (the capture-request arm, R1), and the user
  * agent with its contact address (R24). Each row's code, number, translation and reasons are unchanged; its `where` names
- * this module's site (R29), `awaiting stamp` for promotion's next job. The catalogue's copies stay until T19's layer 1
- * deletes them (K529: `gate.mjs` and `extraction/checks.mjs` still import them). C-48.8 and C-48.9 are `monitoring`'s;
+ * this module's site (R29), `awaiting stamp` for promotion's next job. These are the only copies: T19's layer 1 deleted
+ * the catalogue's (legacy-checks, K717, K769). C-48.8 and C-48.9 are `monitoring`'s;
  * the rest of C-28 is `capture-requests`'. The comments carried from the catalogue keep each row's reasoning beside it. */
 
 const at = (region) => `src/acquisition/index.mjs acquire > ${region}`;

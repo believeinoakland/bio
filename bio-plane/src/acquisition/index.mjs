@@ -12,7 +12,7 @@
  *
  * Every refusal is an answer `{status, body}`, never a throw. The comments carried from the legacy handler keep the
  * reasoning beside the code it explains. */
-import { isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../../checks/bio-checks.mjs";
+import { isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../record-grammar/index.mjs";
 import { civicosUserAgent, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS } from "./checks.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "../subresources.mjs";
 import { detectFormat } from "../formats.mjs";
@@ -549,7 +549,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   }
   await noteOutcome("success", res.status);
 
-  /* R10. Streamed in parts of 8 MiB, so peak residency is one part. The incremental hasher is the CATALOGUE'S, the
+  /* R10. Streamed in parts of 8 MiB, so peak residency is one part. The incremental hasher is RECORD-GRAMMAR'S, the
      one C-18.6 verifies parts with, so a disagreement between two implementations cannot look like tampering. */
   const PART = 8 * 1024 * 1024;
   const MAX = 256 * 1024 * 1024;
