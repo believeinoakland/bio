@@ -24,10 +24,11 @@ test("R1: drain takes queued events in order; unfiled waits, a live task folds, 
   const r = w.t.taskDrain({ limit: 10, actor: "alarm" });
   assert.equal(r.ok, true); assert.equal(r.drained, 3); assert.equal(r.limit, 10); assert.equal(r.remaining, 1);
   assert.deepEqual(r.waiting.map((x) => [x.captureSha, x.attempts]), [["zz", 1]]);
+  assert.equal(r.waiting[0].detail, "the capture is not yet filed in any record; the event is kept, not dropped");
   assert.deepEqual(w.log.filter(([k]) => k === "attempt"), [["attempt", "zz"]], "the unfiled event's attempt is counted, not removed");
   const route = Object.fromEntries(r.created.map((c) => [c.refers_to, [c.assignee, c.assignee_role, c.basis]]));
   assert.deepEqual(route[PRJ], ["olga", "project-manager", "owner of the referred project"], "an active owner of the project itself");
-  assert.deepEqual(route[DOC], ["olga", "project-manager", `owner of ${PRJ}, which cites this bundle`],
+  assert.deepEqual(route[DOC], ["olga", "project-manager", `owner of ${PRJ}, which cites this record`],
     "an active owner of the first project with a live cites edge");
   assert.deepEqual(route[DOC2], ["ada", "group-admin", "no project manager; the RULED fallback to a group admin"],
     "the earliest active administrator");
@@ -85,7 +86,7 @@ test("R1 (d280-strengthbar §5): with connections' own edgeSevered over real cit
   const made = w.t.taskDrain({ actor: "consumer", now: iso(NOW) }).created;
   assert.deepEqual(made.map((c) => [c.refers_to, c.assignee, c.assignee_role]), [[DOC, "dave", "project-manager"]],
     "not carol, whose project withdrew, though it sorts first");
-  assert.equal(made[0].basis, `owner of ${HERE}, which cites this bundle`, "the basis names the project used, never the withdrawn one");
+  assert.equal(made[0].basis, `owner of ${HERE}, which cites this record`, "the basis names the project used, never the withdrawn one");
   // with both withdrawn, no citer routes: the administrator fallback
   const w2 = box([ev("a1")]);
   const real2 = new Connections({ storage: w2.host.storage, record: w2.record, membership: w2.membership });
