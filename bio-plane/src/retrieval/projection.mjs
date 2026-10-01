@@ -1,5 +1,6 @@
 /* retrieval — the projection of one bundle.md (R2, R53), pure: no database, no clock of its own. */
-import { parseFrontmatter, normalizeType } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
+import { normalizeType } from "../record-grammar/types.mjs";
 
 /* IC-24 / REC-59: the bound `op=projection`'s CORPUS arms apply (R5), NAMED rather than buried in the statement, on
    the same reasoning REC-57 applied to `op=exportlog`'s literal `LIMIT 200` — a cap nothing names is a cap the roster
