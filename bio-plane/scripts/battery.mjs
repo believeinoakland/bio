@@ -752,9 +752,9 @@ for (const r of lied) console.log(`  EXIT/TALLY DISAGREE (D-425): ${r.file} prin
   + ` — counted RED whatever the exit said; the suite's exit path does not follow its own counter.`);
 
 /* VF-3: the fleet's own line, printed even when every member ran, so the figure
-   cannot hold still while a member goes dark. `coverage.mjs --strict` reads each
-   member's surface out of its suite's SOURCE; this says whether that source was
-   ever EXECUTED. Both halves are needed and neither implies the other. */
+   cannot hold still while a member goes dark: it says whether each member's suite
+   was ever EXECUTED. (`coverage.mjs`, which read reach out of the suites' SOURCE,
+   was retired by legacy-index in T18, K636 BOB-4.) */
 {
   const fleetRes = results.filter((r) => r.fleet);
   const byMember = [...new Set(fleetRes.map((r) => r.fleet))];
