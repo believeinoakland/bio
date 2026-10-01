@@ -17,8 +17,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, stubOf, bucket, sha, SIG, KEY } from "./fixture.mjs";
-import { publishedGraphEdges } from "../../../src/publication/index.mjs";
-import { rowOf } from "../../../src/publication/checks.mjs";
+import { publishedGraphEdges } from "../../../src/case-grammar/index.mjs";
+import { rowOf } from "../../../src/public-read/checks.mjs";
 import { bindPublishedPlane, publishedRoutes, assembleCaseContainer } from "../../../src/publication/worker.mjs";
 import { CONTAINER_MAX_BYTES } from "../../../src/container.mjs";
 import { readContainer, readPart } from "../../../src/ooxml.mjs";

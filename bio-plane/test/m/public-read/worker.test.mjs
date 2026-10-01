@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import { world, stubOf, bucket, V, SIG, NOW, sha } from "./fixture.mjs";
 import { bindPublishedPlane, publishedRoutes, assembleCaseContainer, publishedStoreAbsent, noPublishedPart,
          publishedObjectMissing } from "../../../src/publication/worker.mjs";
-import { rowOf } from "../../../src/publication/checks.mjs";
+import { rowOf } from "../../../src/public-read/checks.mjs";
 import { serialiseContainer, containerEntries, CONTAINER_MAX_BYTES, layoutOf } from "../../../src/container.mjs";
 import { inbandQuartet, canonicalBytes, floorsOf, INBAND_FORMAT } from "../../../src/inband.mjs";
 import { readContainer, readPart, crc32 } from "../../../src/ooxml.mjs";

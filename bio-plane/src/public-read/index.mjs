@@ -10,8 +10,9 @@
  * `#looseEditionState`, `#resolveOneCase` and `#casesOfSha`, with their comments; `publication`'s job, after this one
  * merges, deletes its copies and spreads `publicReadOps` in the legacy store's op map. The legacy code's comments
  * moved with it and keep their old ids (REC-, CASE-, D-); a `publication` R id in them is named as such. The Worker
- * half (`../publication/worker.mjs`, `../container.mjs`, `../inband.mjs`: R5–R7, R9) joins this module's paths at
- * `publication`'s merge; until then the door's routes reach it through `./door.mjs`.
+ * half (`../publication/worker.mjs`, `../container.mjs`, `../inband.mjs`: R5–R7, R9) is this module's by `paths` and
+ * stays at those paths (K697, K702); the door's routes reach it through `./door.mjs`. Its refusal rows are its own,
+ * in `./checks.mjs` (R17); the case document's tensions and blocks are read from `case-grammar`.
  *
  * REACHED as `publicReadOf(host, deps)` (K61): one instance per host, created on the first call with `deps`, returned
  * to every later caller. `deps`:
@@ -22,8 +23,9 @@
  * READ CONTRACT it reads in its own SQL, and never writes: `publication` R40's `published_bundles`, `published_cases`,
  * `published_case_members`, `cases`, `published_edges` and `published_shas`. */
 
-import { publicationOf, caseTensionsOf, caseDocumentBlocks } from "../publication/index.mjs";
-import { rowOf } from "../publication/checks.mjs";
+import { publicationOf } from "../publication/index.mjs";
+import { caseTensionsOf, caseDocumentBlocks } from "../case-grammar/index.mjs";
+import { rowOf } from "./checks.mjs";
 import { delivererOf } from "../deliverer.mjs";
 
 /* CPDF-10: a column `publication` WROTE as JSON, read back; null rather than a throw on a malformed value. */
@@ -499,7 +501,7 @@ export class PublicRead {
         if (st) { theCase = null; ed = r.edition; state = st; }
       }
     }
-    /* D-561 (C-98.8): THE CODE CARRIES ITS CANNED TRANSLATION, from its row in `publication`'s table (its R33): the control plane's `json()`
+    /* D-561 (C-98.8): THE CODE CARRIES ITS CANNED TRANSLATION, from its row in this module's table (R17): the control plane's `json()`
        decorates by code from the catalogue only, and the row moved with this read. */
     if (!state) {
       /* DEC-49 REGION is-not-published */
@@ -809,7 +811,7 @@ export class PublicRead {
     const cases = [...new Set(rows.map((x) => x.case_id))].sort();
     /* UI-81 / C-44.2: THE CODE NOW CARRIES ITS CANNED TRANSLATION (DEC-49). It reached the published
        case page raw — no `*_CHECKS` row named it, so the guard could not see the one refusal a stranger
-       meets on that page. Built from its row (`rowOf`, C-44.2 held in `publication`'s table, its R33), so `reason` and `code` are one literal and the wire only GAINS `code`, `check` and
+       meets on that page. Built from its row (`rowOf`, C-44.2 held in this module's table, R17), so `reason` and `code` are one literal and the wire only GAINS `code`, `check` and
        `translation`; every field it carried is unchanged (IC-185). */
     /* DEC-49 REGION is-finding-in-several-cases */
     return { ok: false, reason: "FINDING_IN_SEVERAL_CASES", ...rowOf("FINDING_IN_SEVERAL_CASES"), target: bundleId, cases,
