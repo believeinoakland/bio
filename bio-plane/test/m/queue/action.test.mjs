@@ -101,16 +101,24 @@ test("R14, R19, R20: a member mutes action-clock-overdue for themselves, by kind
   assert.ok(!refused.available.includes("litigation-hold"));
 });
 
-test("R8, R15–R18 (K728): a caller's fakes for the Action layer's providers reach queue-producers, each asked by its producer", () => {
+test("R8, R15–R18, R20, R21 (K728, K921): a caller's fakes for the Action layer's providers, filingTemplates and localFacts reach queue-producers, each asked by its producer", () => {
   const asked = [];
   const page = (name) => (a) => { asked.push([name, a.viewer]); return { ok: true, items: [], truncated: false, cursor: null }; };
-  const w = world({ actionClocks: { overdueClocks: page("overdueClocks"), remindersDue: page("remindersDue") },
+  const w = world({ actionClocks: { overdueClocks: page("overdueClocks"), remindersDue: page("remindersDue"),
+                                    /* action-clocks R11: one path a live deadline reads, so R21 asks local-facts of it */
+                                    calendarFactsRead: (a) => { asked.push(["calendarFactsRead", a.viewer]);
+                                      return { ok: true, paths: [{ path: "calendar.holidays.2026",
+                                        actions: [{ action: "ACT-1", project: null, created_by: "alice" }] }], truncated: false }; } },
                     escalation: { escalationsDue: page("escalationsDue") },
-                    actionPlans: { checkpointsDue: page("checkpointsDue") } });
+                    actionPlans: { checkpointsDue: page("checkpointsDue") },
+                    filingTemplates: { reviewsRequested: page("reviewsRequested") },
+                    localFacts: { factsDue: (a) => { asked.push(["factsDue", a.viewer, a.paths]); return { ok: true, due: [], unknown: [], absent: [] }; } } });
   w.member("alice");
   assert.equal(w.feed("alice").ok, true);
-  assert.deepEqual(asked.map(([n]) => n).sort(), ["checkpointsDue", "escalationsDue", "overdueClocks", "remindersDue"]);
+  assert.deepEqual(asked.map(([n]) => n).sort(), ["calendarFactsRead", "checkpointsDue", "escalationsDue", "factsDue", "overdueClocks",
+                                                  "remindersDue", "reviewsRequested"]);
   for (const [n, v] of asked) if (n !== "checkpointsDue") assert.equal(v, "member:alice", n);
+  assert.deepEqual(asked.find(([n]) => n === "factsDue")[2], ["calendar.holidays.2026"], "R21 asks local-facts of the paths action-clocks answered");
 });
 
 test("R12, R28 (K899 (7)): litigation-hold's door is actionhold on the item, and the bridge answers CLASS_NOT_DISPOSED with the same instead", () => {
