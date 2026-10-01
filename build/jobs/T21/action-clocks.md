@@ -40,7 +40,7 @@ Started from `job/T21/action-clocks` @ f8e0fea070 (the tranche head then).
 - **Not yet met: T21 marks met:** R11. Test: `calendar.test.mjs` "R11 each path's actions are answered as {action, project, created_by} …": two actions, one created by a member resting on a determination in PROJ-2026-0001, one created by a machine resting on another member's determination in PROJ-2026-0002; every path answers both with that project and creator; a later revision by another member leaves the creator unchanged; the answer equals R3's for the same actions; a determination the viewer cannot see answers the project null. The two existing R11 tests now read `.action` from each entry.
 - **Catalogue rows:** none added, moved, re-keyed or re-worded.
 - **Deferred:** none.
-- **Found in other modules (REPORT J7):** `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`) is stale from this change under `bio-plane/src/action-clocks/`; regenerate at the layer close.
+- **Found in other modules (REPORT J6):** `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`) is stale from this change under `bio-plane/src/action-clocks/`; regenerate at the layer close.
 - **Tests:** `node --test test/m/action-clocks/` (in `bio-plane/`): 27 pass, 0 fail. `node --test test/m/queue-producers/`: 47 pass, 0 fail. `build/manifest.md` names no layer tests.
 - **Checks:** format: 86 modules, 84 requirements files; 0 failures. architecture action-clocks: 8 product files, 36 relative imports; 0 failures. coverage action-clocks: 11 of 11 live ids named by a test; 0 failures. ownership action-clocks tranche/T21: 3 files changed; 0 failures.
 
