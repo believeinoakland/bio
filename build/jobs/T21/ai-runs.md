@@ -20,6 +20,6 @@
 - `checks/format.mjs`: format: 86 modules, 84 requirements files; 0 failures
 - `checks/architecture.mjs ai-runs`: architecture: 15 product files, 57 relative imports (0 naming no tracked file, not judged); 0 failures
 - `checks/coverage.mjs ai-runs`: coverage: 1 modules, 38 of 38 live requirement ids named by a test; 0 failures
-- `checks/ownership.mjs ai-runs tranche/T21`: see below (run after the commit).
+- `checks/ownership.mjs ai-runs tranche/T21`: ownership: 3 files changed by ai-runs between tranche/T21 and HEAD; 0 failures
 
 Size (session_01LM1aL8mzHwzwVq5QEyjNCR): test runs 1, module lines 124
