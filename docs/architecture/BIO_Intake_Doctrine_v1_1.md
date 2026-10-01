@@ -318,7 +318,10 @@ estimate and its published sentence work as described). A would-be knocker is ma
 believes they knocked when they did not. A group may enable a **gatekeeper** that identifies and dismisses obvious spam and
 denial-of-service submissions, labelled as machine work. Discarded knocks, whether dismissed by the gatekeeper or by a member, go to a
 **discard archive** in case a gem is buried in the flood, and the archive is cleared automatically on a tight schedule (Bob suggested
-one week after receipt).
+one week after receipt). The system keeps a **count-only tally** of knocks it turned away (a daily total for the whole doorbell, how
+often the whole-doorbell limit was reached, and when last; never addresses, fingerprints, individual times or content), shown to members
+as status on the inbox page and never as a notification, so the refusal's sentence can say truthfully that the group sees how often its
+doorbell turns people away.
 
 # 3. Capture grades (D3)
 

@@ -14984,7 +14984,7 @@
    "recommendation": "Review and adopt the existing translations now, with the public page showing the bound, and ask Bob whether members should see a count-only saturation signal; until he rules, drop the 'members can be told' sentence.",
    "whoDecides": "Design for the knocker's wording and page; Bob for whether refused knocks are recorded at all, which changes what the record holds.",
    "brief": {
-    "stillOpen": "partly",
+    "stillOpen": false,
     "settledSince": "",
     "title": "When the doorbell is full: what the sender and the group are told",
     "inOneBreath": "Now that the doorbell's inbox, limits, gatekeeper and discard archive are set, should the group be able to see how often its doorbell turned people away?",
@@ -15186,10 +15186,9 @@
      "DEC-78",
      "DEC-108"
     ],
-    "status": "partly ruled",
+    "status": "ruled",
     "title": "The doorbell: its inbox, limits, gatekeeper and discards",
-    "decided": "The doorbell's inbox reads like an email inbox: unhandled knocks highlighted, handled ones still visible, sortable by time, status, whether the knocker presented a secret, the project affected, and so on. The limits are at most 5 knocks from one source and 10 in total in any 10 minutes, and a would-be knocker is made aware whenever a limit is in effect, so nobody believes they knocked when they did not. A group may enable a gatekeeper (machine work) that identifies and dismisses obvious spam and denial-of-service submissions. Discarded knocks go to an archive, in case a gem is buried in the flood, cleared automatically a week after receipt.",
-    "stillOpen": "whether a count-only tally of refused knocks is kept, and where members see it"
+    "decided": "The doorbell's inbox reads like an email inbox: unhandled knocks highlighted, handled ones still visible, sortable by time, status, whether the knocker presented a secret, the project affected, and so on. The limits are at most 5 knocks from one source and 10 in total in any 10 minutes, and a would-be knocker is made aware whenever a limit is in effect, so nobody believes they knocked when they did not. A group may enable a gatekeeper (machine work) that identifies and dismisses obvious spam and denial-of-service submissions. Discarded knocks go to an archive, in case a gem is buried in the flood, cleared automatically a week after receipt. The system keeps a count-only tally of knocks it turned away (a daily total for the whole doorbell, how often the whole-doorbell limit was reached, and when last; no addresses, fingerprints or content), shown as status on the inbox page, never a notification; the refusal text says truthfully that the group can see how often its doorbell turns people away."
    }
   },
   {
