@@ -141,6 +141,7 @@ test("R28 R18 R20: the reads write nothing and never call rungOf; a dependent th
   assert.deepEqual(ann.obligations.map((o) => o.bundle_id), [D, W], "a member sees the same record facts");
   const none = w.r.reevaluations({ viewer: "nobody" });
   assert.deepEqual([none.count, Object.keys(none).filter((k) => /withheld|hidden/.test(k))], [0, []]);
+  assert.equal(none.out_of_view, undefined, "the untargeted listing states nothing");
 });
 
 test("R28: a capture no source stands behind, and a store where no move was ever heard, carry no source cause", () => {
