@@ -34,3 +34,7 @@ Size (session_01517coXM6VXW6mGeq6J943P): test runs 4, module lines 4,074
 2. `pdf-pixels` (not mine): `pdf-worker/test/pagepixels-corpus.probe.mjs`:5 and `test/agenda-scan-census.probe.mjs`:5 name the retired `coverage.mjs` as a runner the probes avoid (N437's kind).
 3. `build/requirements/pdf-worker.md` (yours): R35's lead-in names `bio-plane/scripts/coverage.mjs` as the reader of `SURFACE`/`fleet-member.json` (retired, K739); Suggestions name `bio-plane/test/fleetbundles.test.mjs`, now `bio-plane/test/system/`.
 4. Pre-existing red on `tranche/T20`, fixed in my own test: structure R4 read `NAMESPACES` from `bio-plane/src/index.mjs`; the control-plane split (804c1d026d) moved it to `bio-plane/src/admission/index.mjs` as `export const`. The test now reads that file; full-set check unchanged.
+
+## J2 · COMPLETE
+
+All N437 entries applied (comments only, net -1 line); R4 test repointed to admission. Tests: structure 83/0, pagepixels 178/0, imagecrop 54/0, jbig2 179/0, jpx 205/0. Checks format, architecture, coverage (17/17), ownership: 0 failures. Details in the record's Completion section.
