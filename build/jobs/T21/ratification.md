@@ -1,6 +1,6 @@
 # ratification (T21)
 
-**Status** · session_01WPpTMc1dBqF38iqe9fWMdR · depth 2 · WORKING · handled B1
+**Status** · session_01WPpTMc1dBqF38iqe9fWMdR · depth 2 · COMPLETE · handled B1
 
 RATIFICATION #13, T21 layer 8. Worked on `job/T21/ratification` as BOB created it from `tranche/T21`; no merge was needed (BOB changed no file I read). Comments only: no behaviour, test assertion or requirement changed.
 
