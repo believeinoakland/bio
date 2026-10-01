@@ -23,3 +23,7 @@
 - `checks/ownership.mjs ai-runs tranche/T21`: ownership: 3 files changed by ai-runs between tranche/T21 and HEAD; 0 failures
 
 Size (session_01LM1aL8mzHwzwVq5QEyjNCR): test runs 1, module lines 124
+
+## J1 · REPORT
+
+Generated artifact staled: bio-plane/dist/bio-plane.bundled.mjs (and .bundle.json), by comment-only changes to bio-plane/src/ai-runs/index.mjs (N469). Not regenerated.
