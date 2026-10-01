@@ -9,3 +9,7 @@ Depth 2. Your entry: build/plan/current.md (T20) layer 11, affordances (K899 (7)
 ## B2 · ANSWER · re J1
 
 Your reading of R27 is right (K918): `actionhold` is `reasoned`, not `undetermined`; the START was wrong. Merge tranche/T20: R2 now names `actionhold` among the reasoned ops. Put it in RUNGS as reasoned (not RUNG_ABSENT), add `HOLD_REFUSED` to JUSTIFICATION_REFUSALS, and back it as R19 says at actions' interface (a hold stated without its reason is refused HOLD_REFUSED). R3 and R27's count of 71 stay as they are. Keep NON_ACTS' entry and the K899 (1) wording as the START says. R12's totality and R19's drive must be green.
+
+## B3 · CHANGE
+
+op-declarations is merged into tranche/T20 (K919): `actionhold` is declared. Merge tranche/T20 (it also carries B2's R2 change), apply B2, and confirm R12's real-table totality is empty.
