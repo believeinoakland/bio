@@ -3,8 +3,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, AUTHORED } from "./fixture.mjs";
-import { MACHINE_FENCE_CHECKS, PROJECT_VISIBILITY_CHECKS } from "../../../checks/bio-checks.mjs";
-import { COMPLETENESS_MAX, MEMBER_ROLES } from "../../../src/case-authoring/index.mjs";
+import { PROJECT_VISIBILITY_CHECKS } from "../../../checks/bio-checks.mjs";
+import { COMPLETENESS_MAX, MEMBER_ROLES, PUBLISH_ACT_CHECKS } from "../../../src/case-authoring/index.mjs";
 import { noSuchProject } from "../../../src/membership/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
@@ -24,7 +24,7 @@ const reasons = (r) => [r.ok, r.reason];
 test("R1: an empty or machine author is MACHINE_CANNOT_PUBLISH (C-32.6, with its code and translation) before anything else, even with nothing else given", () => {
   const { w, P } = setup();
   const before = w.snapshot();
-  const row = MACHINE_FENCE_CHECKS.MACHINE_CANNOT_PUBLISH;
+  const row = PUBLISH_ACT_CHECKS.MACHINE_CANNOT_PUBLISH;
   for (const author of [null, "", "   ", MACHINE, "token:member", "class:ai"]) {
     const r = w.ca.publishCase({ author, viewer: V("alice") });
     assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, "MACHINE_CANNOT_PUBLISH",
@@ -77,6 +77,10 @@ test("R3: authored fields in order — NO_TARGET, DUPLICATE_MEMBER, NO_STATEMENT
   assert.deepEqual(reasons(act({ targets: null, target: null }, [])), [false, "NO_TARGET"]);
   const dup = act({}, [Q, Q]);
   assert.deepEqual([dup.reason, dup.target], ["DUPLICATE_MEMBER", Q]);
+  /* NO_STATEMENT carries its row, C-33.14, with its code and translation */
+  const silent = act({ statement: "" });
+  assert.deepEqual([silent.ok, silent.reason, silent.code, silent.check, silent.translation],
+    [false, "NO_STATEMENT", "NO_STATEMENT", "C-33.14", PUBLISH_ACT_CHECKS.NO_STATEMENT.translation]);
   /* each field missing, with every LATER field missing too, answers the earliest */
   const order = [["statement", "NO_STATEMENT"], ["subjectPosition", "NO_SUBJECT_POSITION"],
                  ["subjectJustification", "NO_SUBJECT_JUSTIFICATION"], ["excluded", "NO_EXCLUSION_FIELD"],
