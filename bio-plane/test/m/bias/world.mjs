@@ -95,9 +95,9 @@ export function world(opts = {}) {
   credentials.migrate();
   let clock = Date.parse("2026-07-02T00:00:00Z");
   const promotion = promotionOf(ctx, { record, membership, now: () => new Date(clock).toISOString() });
-  promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
-  promotion.registerFact("citedBy", "legacy-store", () => []);
-  promotion.registerFact("caseMember", "legacy-store", () => false);
+  promotion.registerFact("producingGroup", "instance-setup", () => "test-group");
+  promotion.registerFact("citedBy", "connections", () => []);
+  promotion.registerFact("caseMember", "publication", () => false);
   const bias = biasOf(ctx, { record, membership, promotion, entities, env });
   const w = {
     db, sql, ctx, record, membership, credentials, promotion, bias,
