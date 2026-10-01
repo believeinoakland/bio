@@ -40,3 +40,7 @@ Findings in other modules, and the artifact this job made stale:
 - format: 0 failures. architecture: 0 failures. coverage: 21 of 21 live ids named, 0 failures. ownership: 5 files, 0 failures.
 
 Size (session_011U9suXK7S9HCghT354bnEM): test runs 3, module lines 2873
+
+## J4 · REPORT
+
+B2 applied. I merged tranche/T21. R21 is now keyed `OBLIGATION::local-fact-due::<path>::<status>` (K1000), and its test now checks that a fact disputed after it was unconfirmed is raised again under its own key. R21 already applies R15's rule to each `{action, project, created_by}` and takes the union of recipients; a bare id is still read until ACTION-CLOCKS #4 merges. Tests: 49 pass, 0 fail. format, architecture, coverage (21/21) and ownership: 0 failures each. Pushed. Waiting for your CHANGE after ACTION-CLOCKS #4 merges; then I re-merge and run the tests against the real shape.
