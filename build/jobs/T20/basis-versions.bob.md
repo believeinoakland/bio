@@ -1,0 +1,7 @@
+# BOB to basis-versions (T20)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T20) layer 6, basis-versions (K842, K861; plane R10): export your share of plane's held stats figures and register nothing; you edit no file of plane's. The share is `basisVersions` and `basisVersionLegs` (`bio-plane/src/plane/held.mjs`:134–:135: `inquiry_basis_versions` less `hid` on `bundle_id`; `inquiry_basis_version_legs` less `hid` on both `bundle_id` and `target_id`; the `COALESCE(k, '')` reading of a NULL key, :66–:70, kept). Export a figure source shaped as record-core R63's `counts(hid)` with its key list (the `COUNT_KEYS` pattern, `ai-runs/index.mjs`:121, :131). Plane's T20 job (last in L11) registers it under your name and deletes its copy. A test of yours (`test/m/basis-versions/`), on your own fixture, proves the export registered through record-core R63 answers both as plane's copy counts them, whole for a viewer never sent, and through the caller's sight: a leg whose bundle or target is a project hidden from the viewer is not counted; and purge's proof carries both. Your export is R47 (folded before L6, K874), marked not yet met: list it and its test in your COMPLETE. Merge before plane's T20 job (L11). Merge early. Report the generated artifact your change stales. Do not delete old suites (K619).
