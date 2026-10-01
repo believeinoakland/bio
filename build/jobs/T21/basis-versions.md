@@ -44,3 +44,7 @@ N458: grammar.mjs C-25.10 'canonical record id', index.mjs NO_CONCLUSION 'would 
 `checks.mjs`:866 named `node tools/mintid.mjs C` as how C-50 is minted. That note is now past-tense provenance: "minted at REC-86 with the old process's `node tools/mintid.mjs C`, retired with `tools/` in T19". No other `tools/` reference is in my paths. `node --test test/m/basis-versions/`: 118/118. format, architecture, coverage (44/44), ownership: 0 failures.
 
 Size (session_01PhpTLeguue11UqsuKUrqaP): test runs 7, module lines 3506
+
+## J3 · COMPLETE
+
+B2 applied: checks.mjs:866's mintid note is now past-tense provenance (minted at REC-86 with the old process's node tools/mintid.mjs C, retired with tools/ in T19); no other tools/ reference in my paths. test/m/basis-versions 118/118; format, architecture, coverage 44/44, ownership: 0 failures. Record updated.
