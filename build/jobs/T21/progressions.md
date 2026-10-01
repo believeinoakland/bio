@@ -22,3 +22,7 @@
 - `node checks/ownership.mjs … progressions tranche/T21`: 1 file changed; 0 failures.
 
 Size (session_01VfFDjRjk7tRAKgKZ3VdJu7): test runs 1, module lines 3070
+
+## J1 · REPORT
+
+Generated artifact made stale by a comment-only change to bio-plane/src/progressions/schema.mjs (N469): bio-plane/dist/bio-plane.bundled.mjs and its .bundle.json (owned by not_product). I did not regenerate it. No flaw found in another module.
