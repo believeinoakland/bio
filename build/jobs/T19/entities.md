@@ -24,7 +24,7 @@
 **Found in other modules (REPORT):**
 1. **legacy-store (L10):**
    - R40's text says legacy-store's own job deletes the two explicit arms. B1 told me to remove them here, and I did, so that share is done. The spread it holds already answers both ops.
-   - It still has to delete `#counts`' lines for `entities`, `entityAliases`, `entityRelations` and `resolutions` (`store.mjs` ~1051–1053, and purge's `d(...)` at ~1261–1264 if those read the same figures), per R41. The registered figures give them identically.
+   - It still has to delete `#counts`' lines for `entities`, `entityAliases`, `entityRelations` and `resolutions` (`store.mjs` ~1051–1053, and purge's `d(...)` lines at ~1261–1264, which read the same figures through `proofCounts`), per R41. The registered figures give them identically.
 2. **Generated artifact made stale:** `bio-plane/dist/bio-plane.bundled.mjs` (inputs `src/entities/index.mjs`, `src/store.mjs`), for the layer close's regeneration.
 3. **Catalogue rows still imported:** the catalogue's `ACT_SHAPE_CHECKS` still has importers after this job: `src/progressions/checks.mjs`:23, `src/inquiry/grammar.mjs`:8, and the module tests of citation, inquiry, progressions and basis-versions. So its deletion is not entities' under rule 1.
 4. **Old suites already failing:** five old suites fail with the same failing tests on `tranche/T19` @ 362f39b46c without my change (compared by digest): `current`, `meaningquery`, `meaningread`, `project-sight`, `system/meaning-bounds`. One of them, meaning-bounds "RETURN-DELEGATE: `op=resolve` is on the BARE roster again", names `op=resolve`. It reads source text, not behaviour, and fails identically on the base.
