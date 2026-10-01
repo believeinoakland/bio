@@ -9,8 +9,8 @@
 import { BUNDLE_ID_RE, ANN_ID_RE, FILENAME_RE, ISO_TS_RE, OBJECT_TYPES, normalizeType, CORE_FIELDS, FORBIDDEN_ALIASES,
   parseFrontmatter, canonicalJson, MACHINE_AUTHOR_PREFIX, isMachineIdentity, BASIS_ROLES, BASIS_GRADES, GRADE_AXES,
   TESTIMONY_GRADE, GRADE_SOURCES, EARNED_GRADE_SOURCES, b64ToBytes, createSha256, sha256HexSync, HEADINGS, HEADINGS_WHEN,
-  isCaseMemberBytes, vocabFor, STATES, sectionText, proposalLabel, SHARED_ACT_CHECKS, contentMintState }
-  from '../src/record-grammar/index.mjs';
+  isCaseMemberBytes, vocabFor, STATES, sectionText, proposalLabel, SHARED_ACT_CHECKS, contentMintState,
+  checkBundle as checkBundleRG } from '../src/record-grammar/index.mjs';
 export { BUNDLE_ID_RE, ANN_ID_RE, FILENAME_RE, ISO_TS_RE, OBJECT_TYPES, LEGACY_TYPE_ALIASES, normalizeType, CORE_FIELDS,
   FORBIDDEN_ALIASES, parseFrontmatter, canonicalJson, NON_MEMBER_AUTHORS, ACTOR_CLASSES, MACHINE_AUTHOR_PREFIX,
   MACHINE_CLASS_PREFIX, MACHINE_STAMP_PREFIXES, isMachineStamp, isMachineIdentity, BASIS_ROLES, BASIS_GRADES, GRADE_AXES,
@@ -172,326 +172,27 @@ function asText(v) {
   return new TextDecoder().decode(v);
 }
 
-/** Presence semantics (1.13.0): a path exists if its bytes are in files OR
- *  it is declared elided (present in the store, deliberately not carried).
- *  Used ONLY by existence assertions; byte checks read ctx.files directly. */
-function hasFile_(ctx, path) {
-  return ctx.files.has(path) || (ctx.elided && ctx.elided.has(path));
-}
+/* The structural arms (`checkIdentity`, `checkFrontmatterContract`, `checkHeadings`, `checkStateLegality`,
+   `checkWriteCompleteness`, `checkFormatHygiene`, `checkQueueAndBase`, with `hasFile_`) stood here until T19. They are
+   record-grammar's (`src/record-grammar/bundle.mjs`, R40), whose `checkBundle` runs them; this catalogue's
+   `checkBundle` below is a wrapper over it (rule 2). `REL_VOCAB` and the history helpers
+   moved with them (legacy-checks, T19). `CONTENT_HASH_RE` stays, for C-2.7 below and `correspondenceFindings` (C-2.10). */
+const CONTENT_HASH_RE = /^sha256:[0-9a-f]{64}$/;
 
 // ---------------------------------------------------------------------------
-// Check families
-// ---------------------------------------------------------------------------
-
-function checkIdentity(ctx, findings) {
-  const id = ctx.fm?.id;
-  if (typeof id !== 'string' || !BUNDLE_ID_RE.test(id)) {
-    findings.push(f('C-1.2', 'error', `frontmatter id '${id}' does not match the canonical ID grammar`));
-  }
-  if (typeof id === 'string' && id !== ctx.folderName) {
-    findings.push(f('C-1.1', 'error', `folder name '${ctx.folderName}' does not equal frontmatter id '${id}'`,
-      ['restore folder name from frontmatter id', 'restore frontmatter id from folder name if history confirms it']));
-  }
-  // annotation records
-  const seen = new Set();
-  for (const path of ctx.files.keys()) {
-    if (!path.startsWith('annotations/')) continue;
-    const name = path.slice('annotations/'.length);
-    if (!name.endsWith('.json')) { findings.push(f('C-1.3', 'error', `annotation file '${name}' is not a .json record`)); continue; }
-    let rec;
-    try { rec = JSON.parse(asText(ctx.files.get(path))); }
-    catch { findings.push(f('C-1.3', 'error', `annotation record '${name}' does not parse`)); continue; }
-    const rid = rec.id;
-    if (typeof rid !== 'string' || !ANN_ID_RE.test(rid)) {
-      findings.push(f('C-1.3', 'error', `annotation id '${rid}' does not match the v1.1 timestamp-author grammar`));
-      continue;
-    }
-    if (!rid.startsWith(ctx.folderName + '.ann-')) {
-      findings.push(f('C-1.3', 'error', `annotation '${rid}' does not belong to parent '${ctx.folderName}'`));
-    }
-    const expectedFile = rid.slice(ctx.folderName.length + 1) + '.json'; // ann-<ts>-<author>.json
-    if (name !== expectedFile) {
-      findings.push(f('C-1.3', 'error', `annotation file '${name}' does not match its id (expected '${expectedFile}')`));
-    }
-    if (seen.has(rid)) {
-      findings.push(f('C-1.3', 'error', `duplicate annotation id '${rid}'`, ['adjust the later record timestamp suffix by one second, logged']));
-    }
-    seen.add(rid);
-  }
-  // annotations_open is a derived convenience, checker-verified (spec 3.1)
-  let pending = 0;
-  for (const path of ctx.files.keys()) {
-    if (!path.startsWith('annotations/') || !path.endsWith('.json')) continue;
-    try { if (JSON.parse(asText(ctx.files.get(path))).state === 'pending') pending++; } catch { /* reported above */ }
-  }
-  if (ctx.fm && typeof ctx.fm.annotations_open === 'number' && ctx.fm.annotations_open !== pending) {
-    findings.push(f('C-1.3', 'warn', `annotations_open is ${ctx.fm.annotations_open} but ${pending} annotation record(s) are pending`, ['refresh annotations_open on the next write']));
-  }
-}
-
-function checkFrontmatterContract(ctx, findings) {
-  const fm = ctx.fm;
-  if (!fm) return;
-  for (const key of CORE_FIELDS) {
-    if (!(key in fm)) findings.push(f('C-2.2', 'error', `required core field '${key}' is missing`));
-  }
-  for (const [alias, canonical] of Object.entries(FORBIDDEN_ALIASES)) {
-    if (alias in fm) findings.push(f('C-2.3', 'error', `forbidden alias '${alias}' present (canonical name is '${canonical}')`, [`rename '${alias}' to '${canonical}'`]));
-  }
-  const ot = fm.object_type;
-  if (!Object.values(OBJECT_TYPES).includes(normalizeType(ot))) {
-    findings.push(f('C-2.5', 'error', `object_type '${ot}' is not a known type`));
-  } else {
-    const prefix = fm.id && String(fm.id).split('-')[0];
-    const wantType = OBJECT_TYPES[prefix];
-    if (wantType && wantType !== normalizeType(ot)) findings.push(f('C-2.5', 'error', `id prefix '${prefix}' implies '${wantType}' but object_type is '${ot}'`));
-    const schema = fm.schema;
-    /* N-A1 (T18): a type name may hold `_` (`action_plan`, the first that does), so the stamp's type part does too. */
-    const sm = typeof schema === 'string' && /^([a-z][a-z_]*)@(\d+)$/.exec(schema);
-    if (!sm) findings.push(f('C-2.5', 'error', `schema stamp '${schema}' is not of the form <type>@<n>`));
-    else {
-      if (normalizeType(sm[1]) !== normalizeType(ot)) findings.push(f('C-2.5', 'error', `schema stamp '${schema}' does not match object_type '${ot}'`));
-      if (!ctx.knownSchemas.includes(schema)) findings.push(f('C-2.5', 'error', `schema version '${schema}' is not known to this check catalog`));
-    }
-  }
-  for (const key of ['created', 'last_updated']) {
-    if (typeof fm[key] === 'string' && !ISO_TS_RE.test(fm[key])) {
-      findings.push(f('C-2.6', 'error', `${key} '${fm[key]}' is not ISO 8601 UTC (YYYY-MM-DDTHH:MM:SSZ)`));
-    }
-  }
-  if (fm.produced_by && typeof fm.produced_by === 'object') {
-    if (!fm.produced_by.mode) findings.push(f('C-2.2', 'error', 'produced_by.mode is missing'));
-    if (!fm.produced_by.capability_tier) findings.push(f('C-2.2', 'error', 'produced_by.capability_tier is missing'));
-  }
-}
-
-function checkHeadings(ctx, findings) {
-  const ot = ctx.fm?.object_type;
-  /* Normalisation site 1 (REC-10): through the catalog's own alias
-     machinery, never a raw table lookup patched with duplicate keys. */
-  const required = vocabFor(HEADINGS, ot);
-  if (!required) return; // type invalid; C-2.5 already fired
-  /* REC-14: the state-conditional canon. Permitted in every state, required in
-     the states that name it — read through vocabFor like the base set, so a
-     legacy focus/problem document is judged by its own contract here too. */
-  const conditional = vocabFor(HEADINGS_WHEN, ot) || [];
-  const canonical = [...required, ...conditional.map(c => c.heading)];
-  const present = (ctx.body.match(/^## .*$/gm) || []).map(h => h.trimEnd());
-  for (const h of required) {
-    if (!present.includes(h)) findings.push(f('C-3.1', 'error', `required heading '${h}' is missing`, [`insert canonical heading '${h}' with empty body`]));
-  }
-  for (const c of conditional) {
-    /* CASE-4 / DEC-72: the condition is THE CASE RELATION, not a state word.
-       `states:` is gone from this shape because the state it named is gone from
-       the machine; the requirement is unchanged. */
-    const owed = c.whenCaseMember ? isCaseMemberBytes(ctx.fm)
-               : (c.states || []).includes(ctx.fm?.current_state);
-    if (owed && !present.includes(c.heading))
-      findings.push(f('C-3.1', 'error', `required heading '${c.heading}' is missing: a member of a published case carries it`, [`insert canonical heading '${c.heading}' with the assertion in it`]));
-  }
-  for (const h of present) {
-    if (!canonical.includes(h)) findings.push(f('C-3.1', 'error', `heading '${h}' is not in the canonical set for ${ot}`, ['rename to the canonical heading, preserving body']));
-  }
-}
-
-function checkStateLegality(ctx, findings) {
-  const ot = ctx.fm?.object_type;
-  /* Normalisation site 1 (REC-10), same as checkHeadings: the second rename
-     patched this lookup with STATES.problem = STATES.focus instead of
-     normalising, and DATA-MODEL.md §2.7 measured what that costs. */
-  const spec = vocabFor(STATES, ot);
-  if (!spec) return;
-  const cur = ctx.fm.current_state;
-  /* CASE-4 / DEC-72: `legacy` is READ HERE AND NOWHERE ELSE, which is the point
-     of it being a separate key. A word this machine no longer produces is still
-     a word its own signed history carries, and refusing bytes we ourselves
-     ratified would make the catalog reject the record. It is deliberately NOT
-     folded into `legal`: every OTHER reader of this table — the affordance
-     derivation, the transition guards, `edgesFrom` — asks what the machine can
-     DO, and must see the shorter list. */
-    const readable = [...spec.legal, ...(spec.legacy || [])];
-  if (!readable.includes(cur)) {
-    findings.push(f('C-4.1', 'error', `current_state '${cur}' is not legal for ${ot} (legal: ${spec.legal.join(', ')})`));
-  }
-  const hist = Array.isArray(ctx.fm.state_history) ? ctx.fm.state_history : [];
-  for (let i = 0; i < hist.length; i++) {
-    const e = hist[i];
-    if (typeof e !== 'object' || e === null) { findings.push(f('C-4.2', 'error', `state_history[${i}] is not an object`)); continue; }
-    if (typeof e.timestamp === 'string' && !ISO_TS_RE.test(e.timestamp)) {
-      findings.push(f('C-2.6', 'error', `state_history[${i}].timestamp '${e.timestamp}' is not ISO 8601 UTC`));
-    }
-  }
-}
-
-function checkWriteCompleteness(ctx, findings) {
-  const fm = ctx.fm;
-  if (!fm) return;
-  if (typeof fm.created === 'string' && typeof fm.last_updated === 'string' && fm.last_updated < fm.created) {
-    findings.push(f('C-13.1', 'error', `last_updated '${fm.last_updated}' precedes created '${fm.created}'`));
-  }
-  const hist = Array.isArray(fm.state_history) ? fm.state_history : [];
-  if (hist.length > 0) {
-    const newest = hist[hist.length - 1].timestamp;
-    if (typeof newest === 'string' && typeof fm.last_updated === 'string' && fm.last_updated < newest) {
-      findings.push(f('C-13.1', 'error', `last_updated precedes the newest state_history timestamp '${newest}'`));
-    }
-  }
-  if (typeof fm.created === 'string' && typeof fm.last_updated === 'string' && fm.last_updated > fm.created) {
-    const idx = ctx.body.indexOf('## Session Log');
-    const section = idx >= 0 ? ctx.body.slice(idx, ctx.body.indexOf('\n## ', idx + 1) === -1 ? undefined : ctx.body.indexOf('\n## ', idx + 1)) : '';
-    if (!/^### Session /m.test(section)) {
-      findings.push(f('C-13.2', 'error', 'bundle has been updated but carries no Session Log entry', ['append the missing Session Log entry naming the gap']));
-    }
-  }
-}
-
-function checkFormatHygiene(ctx, findings) {
-  const escapeRe = /\\[#*_\-\[\]!~&]/;
-  for (const [path, content] of ctx.files) {
-    const name = path.split('/').pop() || path;
-    if (!FILENAME_RE.test(name) || name.includes(' ') || !name.includes('.') || !/\.[a-z0-9]+$/.test(name)) {
-      findings.push(f('C-14.2', 'error', `filename '${path}' violates the naming rule`, ['rename file and update references']));
-    }
-    if (name.endsWith('.md')) {
-      const text = asText(content);
-      const m = escapeRe.exec(text);
-      if (m) findings.push(f('C-14.1', 'error', `escaped markdown character '${m[0]}' in ${path}`, ['normalize to clean markdown']));
-    }
-    if (name.endsWith('.json')) {
-      try { JSON.parse(asText(content)); }
-      catch { findings.push(f('C-14.3', 'error', `${path} does not parse as JSON`, ['restore from history'])); }
-    }
-  }
-  const visuals = Array.isArray(ctx.fm?.visuals) ? ctx.fm.visuals : [];
-  const svgOnDisk = [...ctx.files.keys()].filter(p => !p.includes('/') && p.endsWith('.svg'));
-  for (const v of visuals) {
-    if (typeof v !== 'object' || !v.file || !v.description) {
-      findings.push(f('C-14.4', 'error', `visuals entry ${JSON.stringify(v).slice(0, 50)} lacks file+description`));
-      continue;
-    }
-    if (!ctx.files.has(v.file)) findings.push(f('C-14.4', 'error', `visuals entry '${v.file}' has no file on disk`));
-  }
-  for (const svg of svgOnDisk) {
-    if (!visuals.some(v => v && v.file === svg)) {
-      findings.push(f('C-14.4', 'error', `svg '${svg}' on disk is absent from the visuals array`));
-    }
-  }
-}
-
-async function checkQueueAndBase(ctx, findings) {
-  // C-16.5: stale advisory artifacts (claims, presence markers, and, at
-  // 1.12.0, checkpointed-promotion gate verdicts) never lie around.
-  // PROMOTING/PRESENCE are execution-scoped: stale at 10 minutes.
-  // GATE_PASSED-<hash8> is a promotion checkpoint (KICKOFF-P2M6 4a item 2):
-  // it must survive retry cadences across executions, so its window is 48
-  // hours; it is hash-bound to one manifest, honored only fresh, and the
-  // promoter removes it on successful consumption, so a survivor here is a
-  // crashed or superseded promotion worth surfacing.
-  // LEASE-<actor> (1.14.0, P2M8 A2) is the edit lease's marker: it carries
-  // its OWN expiry ({acquired, expires}, ten-minute TTL renewed at five),
-  // so it is stale exactly when past its self-declared expires; the
-  // endpoint sweeps expired leases on sight and a survivor here is a
-  // crashed holder, the same failure class as a crashed promoter.
-  const staleMs = 10 * 60 * 1000;
-  const gateMarkerStaleMs = 48 * 60 * 60 * 1000;
-  for (const p of ctx.files.keys()) {
-    const gm = /^GATE_PASSED-[0-9a-f]{8}\.json$/.exec(p);
-    const lm = gm ? null : /^LEASE-[A-Za-z0-9][A-Za-z0-9-]{0,63}\.json$/.exec(p);
-    const m = (gm || lm) ? null : /^(PROMOTING|PRESENCE)-.+\.json$/.exec(p);
-    if (!gm && !lm && !m) continue;
-    let stale;
-    if (lm) {
-      let expires = null;
-      try { expires = Date.parse(JSON.parse(asText(ctx.files.get(p))).expires || ''); } catch { /* fallthrough */ }
-      stale = expires === null || Number.isNaN(expires) || (ctx.nowMs ?? Date.now()) > expires;
-    } else {
-      const windowMs = gm ? gateMarkerStaleMs : staleMs;
-      let ts = null;
-      try { const rec = JSON.parse(asText(ctx.files.get(p))); ts = Date.parse(rec.ts || rec['started-at'] || rec.started_at || ''); } catch { /* fallthrough */ }
-      stale = ts === null || Number.isNaN(ts) || (ctx.nowMs ?? Date.now()) - ts > windowMs;
-    }
-    if (stale) {
-      findings.push(f('C-16.5', 'info', `stale advisory artifact '${p}' (crashed or ended actor)`, ['delete the stale claim or presence marker']));
-    }
-  }
-  const manifestRaw = ctx.files.get('PENDING_PROMOTION.json');
-  const pendingFiles = [...ctx.files.keys()].filter(p => p.endsWith('.pending'));
-
-  if (!manifestRaw) {
-    for (const p of pendingFiles) {
-      findings.push(f('C-16.4', 'error', `orphaned pending file '${p}' with no manifest`, ['complete consumption: archive manifest, delete consumed files (idempotent)']));
-    }
-    return;
-  }
-  let man;
-  try { man = JSON.parse(asText(manifestRaw)); }
-  catch { findings.push(f('C-16.1', 'error', 'PENDING_PROMOTION.json does not parse')); return; }
-
-  for (const k of ['target', 'base', 'files', 'created', 'author', 'skill_version']) {
-    if (!(k in man)) findings.push(f('C-16.1', 'error', `manifest missing '${k}'`));
-  }
-  if (man.target && man.target !== ctx.folderName) {
-    findings.push(f('C-16.1', 'error', `manifest target '${man.target}' does not match bundle '${ctx.folderName}'`));
-  }
-  const listed = new Set();
-  if (Array.isArray(man.files)) {
-    for (const entry of man.files) {
-      if (!entry || !entry.name || !entry.sha256) {
-        findings.push(f('C-16.1', 'error', `manifest files entry ${JSON.stringify(entry)} lacks name+sha256`));
-        continue;
-      }
-      listed.add(entry.name + '.pending');
-      const pending = ctx.files.get(entry.name + '.pending');
-      if (!pending) {
-        findings.push(f('C-16.2', 'error', `package file '${entry.name}.pending' listed in manifest is missing`, ['discard the package with a finding to the producing author', 're-produce the package from the originating session outputs']));
-        continue;
-      }
-      const hash = await ctx.sha256(pending);
-      if (hash !== entry.sha256) {
-        findings.push(f('C-16.2', 'error', `hash mismatch on '${entry.name}.pending' (manifest ${String(entry.sha256).slice(0, 12)}…, actual ${hash.slice(0, 12)}…)`, ['discard the package (never promote)', 're-produce the package']));
-      }
-    }
-  }
-  for (const p of pendingFiles) {
-    if (!listed.has(p)) findings.push(f('C-16.4', 'error', `pending file '${p}' is not listed in the manifest`, ['complete consumption or discard with reason']));
-  }
-  // staleness
-  if (typeof man.created === 'string' && ISO_TS_RE.test(man.created)) {
-    const ageDays = ((ctx.nowMs ?? Date.now()) - Date.parse(man.created)) / 86400000;
-    if (ageDays > ctx.maxPackageAgeDays) {
-      findings.push(f('C-16.3', 'warn', `pending package is ${Math.floor(ageDays)} days old (policy ${ctx.maxPackageAgeDays})`, ['promote now', 'discard with reason if superseded, preserving the manifest as a record']));
-    }
-  } else {
-    findings.push(f('C-16.1', 'error', `manifest created '${man.created}' is not ISO 8601 UTC`));
-  }
-  // (base coherence follows below)
-  const live = ctx.files.get('bundle.md');
-  if (live && typeof man.base === 'string') {
-    const liveHash = await ctx.sha256(live);
-    if (liveHash === man.base) {
-      findings.push(f('C-17.1', 'info', 'pending package base matches live bundle.md: fast-forward eligible'));
-    } else {
-      findings.push(f('C-17.1', 'warn', `pending package base ${String(man.base).slice(0, 12)}… does not match live bundle.md ${liveHash.slice(0, 12)}…: divergence`, ['rebase via a reconciliation session', 'supersede: human selects one, the other preserved as a diverged branch in _history', 'apply-disjoint if file sets prove disjoint (requires history manifests)']));
-    }
-  }
-}
-
-
-// ---------------------------------------------------------------------------
-// Per-type extension checks (I-2 family). information@1: C-2.7.
+// C-2.7, information@1's extension: a HELD copy (rule 1; T19 J2). Capture's grammar (`src/capture/grammar.mjs`, its
+// R37) is the C-2.7 code a caller registers; this copy fills record-grammar's C-2.7 slot through `LEGACY_GRAMMARS`
+// only for a caller whose grammars claim none, until the module tests that read the catalogue's own arm (promotion,
+// capture, instance-setup) re-point to capture's grammar. The last of those jobs deletes it. `MONITOR_FREQ` is no longer
+// exported: monitoring reads capture's.
 // ---------------------------------------------------------------------------
 
 const INFO_ENUMS = {
   criticality: ['crucial', 'supporting'],
   source_status: ['unchanged', 'modified', 'removed']
 };
-/* EXPORTED for REC-26 (the `export` keyword is the whole change — sectionText's
-   precedent). The monitor-cadence consumer's interval table is keyed off THIS
-   array rather than a local copy of the words, so a frequency the catalog gains
-   cannot silently fall through to a default interval: the MAP RULE, applied to a
-   vocabulary the scheduler now reads. */
-export const MONITOR_FREQ = ['hourly', 'daily', 'weekly', 'monthly', 'per_meeting', 'none'];
-const CONTENT_HASH_RE = /^sha256:[0-9a-f]{64}$/;
+/* REC-26's cadence vocabulary; monitoring's interval table reads capture's export of it since T18. */
+const MONITOR_FREQ = ['hourly', 'daily', 'weekly', 'monthly', 'per_meeting', 'none'];
 
 async function checkInformationExtension(ctx, findings) {
   if (ctx.fm?.object_type !== 'information') return;
@@ -555,42 +256,10 @@ async function checkInformationExtension(ctx, findings) {
 }
 
 // ---------------------------------------------------------------------------
-// Step-4 families: C-5 append-only, C-6 references, C-12 history, C-15 recheck.
+// C-6.1's supersession arm and C-15's recheck arm, inquiry's, filling record-grammar's `checkBundle` slots through
+// `LEGACY_GRAMMARS` below until inquiry-grammar takes them (layer 6). The references arm's core, C-5 and C-12 are
+// record-grammar's (`REL_VOCAB` and the rest moved with them, T19).
 // ---------------------------------------------------------------------------
-
-/* `links_to` joined the vocabulary with 0.45.0, and it is the only value here
-   that is NOT a member's act. Every other relation is something a member
-   decided: this document cites that one, supersedes it, was elevated into it.
-   `links_to` is something the SOURCE asserted and BIO observed, and in a system
-   whose subject is who claimed what, "we say these are connected" and "the
-   City's page carried an anchor tag" cannot be the same edge.
-   *
-   * It also differs in what it claims about VERSION. A member citing declares
-   which thing they mean. An observed link declares nothing: the page's author
-   did not say which edition of the target they intended and usually did not
-   think about it. So a links_to edge carries a contemporaneity verdict, and
-   `undetermined` is its resting state.
-   *
-   * A member may PROMOTE an observed links_to into a cites, which is a member's
-   act and is recorded as one. That promotion is the point of holding it. */
-/* REC-24 (g) adds `responds_to`, and it arrives WITH A PRODUCER AND A CONSUMER
-   because REC-16 already paid for the alternative: `supersedes` sat in this
-   array for weeks with zero occurrences in store.mjs, and membership of the
-   vocabulary meant only that C-6.1 would not refuse the string. So the edge
-   arrives governed. It is written by op=actioncorrespond onto the CAPTURED
-   REPLY — the response document points back at the action, which is the
-   direction SB-OUTPUT's A10 row names — and it is read by op=projection's
-   derived action block, which answers "what responded to this action" as one
-   indexed lookup over refs_target. Its requirement (below) is that the target
-   is an ACTION: an edge saying "this is a response" that points at a question
-   or a document asserts a correspondence that never happened. */
-const REL_VOCAB = ['cites', 'relates_to', 'elevated_into', 'initiates', 'derived_from', 'supersedes', 'corroborates', 'links_to', 'responds_to'];
-/* Source-asserted relations. Not a member's claim, so surfaces that count what a
-   group has said about its material must exclude them, and a corroboration count
-   that included them would be counting the source agreeing with itself. */
-const SOURCE_ASSERTED_RELS = ['links_to'];
-const EDGE_STATUS = ['proposed', 'confirmed', 'severed'];
-
 
 // ---------------------------------------------------------------------------
 // C-18: the release-authority family (I-18 candidate, State Rules v1.5 draft;
@@ -643,8 +312,8 @@ const EDGE_STATUS = ['proposed', 'confirmed', 'severed'];
  *
  * WHY IT IS NOT A BACK DOOR TO DEC-32, which is the one thing this state could
  * have been. DEC-32's default is AND and *independent sufficiency is only ever
- * reached by an affirmative, attributed act.* `isSufficiencyClaimed` answers
- * TRUE for a named member and for NOTHING ELSE — not for this value, not for a
+ * reached by an affirmative, attributed act.* `sufficiencyClaimState` answers
+ * `claimed` for a named member and for NOTHING ELSE — not for this value, not for a
  * blank, not for a machine stamp — so a consumer that asks the one predicate
  * cannot take a maximum over a part nobody signed for however the field is
  * spelled. The state widens what the record can SAY; it widens nothing about
@@ -721,13 +390,8 @@ export function sufficiencyClaimState(assertedBy) {
   return 'claimed';
 }
 
-/** Did a NAMED MEMBER affirmatively claim independent sufficiency here? The one
- *  predicate every consumer asks, so that DEC-32's *only ever reached by an
- *  affirmative, attributed act* is enforced in ONE place rather than by four
- *  sites agreeing. TRUE for a named member and for nothing else. */
-export function isSufficiencyClaimed(assertedBy) {
-  return sufficiencyClaimState(assertedBy) === 'claimed';
-}
+/* `isSufficiencyClaimed` (`sufficiencyClaimState(x) === 'claimed'`) stood here until T19 (legacy-checks, K653
+   BOB-1): no reader asked it. The one predicate is `sufficiencyClaimState` above. */
 
 /** Is this the explicit no-claim state? Case-folded, because the value reaches
  *  a check hand-written in a document exactly as `token:member` does, and
@@ -737,121 +401,8 @@ export function isSufficiencyUnclaimed(assertedBy) {
 }
 
 
-/** Did a MACHINE CREDENTIAL mark this passage citable on its own? The one
- *  predicate every consumer asks, so that 5.7's *labelled as machine work* is
- *  answered in ONE place rather than by four sites agreeing on a prefix. */
-export function isMachineMinted(mintedBy) {
-  return contentMintState(mintedBy) === 'machine_marked';
-}
-
-function latestHistorySnapshot(ctx) {
-  const snaps = [...ctx.files.keys()].filter(p => /^_history\/bundle_.*\.md$/.test(p)).sort();
-  return snaps.length ? snaps[snaps.length - 1] : null;
-}
-
-/** C-5: append-only surfaces never mutated, verified against the latest history snapshot. */
-function checkAppendOnly(ctx, findings) {
-  const snapPath = latestHistorySnapshot(ctx);
-  if (!snapPath || !ctx.fm) return; // nothing to compare against yet
-  const snap = parseFrontmatter(asText(ctx.files.get(snapPath)));
-  if (!snap.data) return; // a malformed snapshot is C-12's problem
-  /* REC-136 / INVESTIGATIVE-SESSION.md §7.1 item 7: a project's `conclusions`
-     is the SAME kind of surface as `state_history` — every conclusion and
-     withdrawal a project made, readable forever (DEC-19) — so it is held by the
-     same rule, structurally rather than by the writer's convention. */
-  for (const key of ['state_history', 'conclusions']) {
-    const prior = Array.isArray(snap.data[key]) ? snap.data[key] : [];
-    const live = Array.isArray(ctx.fm[key]) ? ctx.fm[key] : [];
-    if (live.length < prior.length) {
-      findings.push(f('C-5.1', 'error', `${key} shrank from ${prior.length} to ${live.length} entries vs. the latest snapshot`, ['restore from _history and re-append new material']));
-    } else {
-      for (let i = 0; i < prior.length; i++) {
-        if (JSON.stringify(prior[i]) !== JSON.stringify(live[i])) {
-          findings.push(f('C-5.1', 'error', `${key}[${i}] was modified retroactively (append-only surface)`, ['restore from _history and re-append new material']));
-          break;
-        }
-      }
-    }
-  }
-  const rn = sectionText(snap.body, '## Review Notes');
-  if (rn && rn.trim() !== '## Review Notes' && !ctx.body.includes(rn.trimEnd())) {
-    findings.push(f('C-5.1', 'error', 'Review Notes content from the prior version is missing or altered (verbatim-immutable)', ['restore from _history and re-append new material', 'record a tamper finding if history lacks the original']));
-  }
-  const priorLog = sectionText(snap.body, '## Session Log') || '';
-  for (const header of priorLog.match(/^### Session .*$/gm) || []) {
-    if (!ctx.body.includes(header)) {
-      findings.push(f('C-5.1', 'error', `Session Log entry '${header.slice(0, 60)}' from the prior version is missing (append-only surface)`, ['restore from _history and re-append new material']));
-    }
-  }
-  // changes.json prefix, when a prior snapshot of it exists
-  const chSnaps = [...ctx.files.keys()].filter(p => /^_history\/data\/changes_.*\.json$/.test(p)).sort();
-  const liveCh = ctx.files.get('data/changes.json');
-  if (chSnaps.length && liveCh) {
-    try {
-      const priorRecs = JSON.parse(asText(ctx.files.get(chSnaps[chSnaps.length - 1]))).records || [];
-      const liveRecs = JSON.parse(asText(liveCh)).records || [];
-      if (liveRecs.length < priorRecs.length || JSON.stringify(liveRecs.slice(0, priorRecs.length)) !== JSON.stringify(priorRecs)) {
-        findings.push(f('C-5.1', 'error', 'data/changes.json records were mutated or removed (append-only surface)', ['restore from _history and re-append new material']));
-      }
-    } catch { /* parse findings elsewhere */ }
-  }
-}
-
-/** C-6: reference shape, substrate independence, required edges, and (when a resolver is injected) target resolution. */
-function checkReferences(ctx, findings) {
-  const refs = Array.isArray(ctx.fm?.references) ? ctx.fm.references : [];
-  for (let i = 0; i < refs.length; i++) {
-    const r = refs[i];
-    if (typeof r !== 'object' || r === null) { findings.push(f('C-6.1', 'error', `references[${i}] is not an object`)); continue; }
-    if (!REL_VOCAB.includes(r.rel)) findings.push(f('C-6.1', 'error', `references[${i}].rel '${r.rel}' is not in the closed vocabulary`, ['map to the nearest vocabulary value', 'sever with reason']));
-    /* A source-asserted edge has to say so on its face and carry the two things
-       that distinguish it from a member's citation: the address the source
-       actually wrote, and a verdict about which version it pointed at. Without
-       the address it is unattributable; without the verdict it reads as a
-       settled connection when the usual answer is that nothing established it. */
-    if (SOURCE_ASSERTED_RELS.includes(r.rel)) {
-      if (r.asserted_by !== 'source')
-        findings.push(f('C-6.1', 'error', `references[${i}].rel '${r.rel}' is source-asserted and must carry asserted_by: 'source', so it is never read as a member's claim`));
-      if (typeof r.address !== 'string' || !r.address)
-        findings.push(f('C-6.1', 'error', `references[${i}].rel '${r.rel}' must carry the address the source wrote, as a comment string beside the canonical target`));
-      if (!['contemporaneous', 'superseded', 'undetermined'].includes(r.verdict))
-        findings.push(f('C-6.1', 'error', `references[${i}].rel '${r.rel}' must carry a contemporaneity verdict of contemporaneous, superseded or undetermined; undetermined is the resting state and must be stated rather than omitted`));
-    } else if (r.asserted_by === 'source') {
-      findings.push(f('C-6.1', 'error', `references[${i}].rel '${r.rel}' is a member's relation and cannot be asserted_by 'source'`));
-    }
-    if (!EDGE_STATUS.includes(r.status)) findings.push(f('C-6.1', 'error', `references[${i}].status '${r.status}' is not one of: ${EDGE_STATUS.join(', ')}`));
-    const t = r.target;
-    if (typeof t !== 'string' || /:\/\/|[/\\]|drive\.google/i.test(t)) {
-      findings.push(f('C-6.1', 'error', `references[${i}].target '${String(t).slice(0, 40)}' looks like a substrate locator; targets are canonical IDs only`));
-    } else if (!BUNDLE_ID_RE.test(t)) {
-      findings.push(f('C-6.1', 'error', `references[${i}].target '${t}' does not match the canonical ID grammar`));
-    } else if (ctx.resolveTarget) {
-      if (!ctx.resolveTarget(t)) {
-        findings.push(f('C-6.2', 'error', `references[${i}].target '${t}' does not resolve in the store`, ['restore target from history', 're-point to the successor object (derived_from chain)', 'sever the edge with a reason note']));
-      }
-    }
-  }
-  /* C-6.3, REPLACED by REC-11 (QUEUE.md carries the ruling). The old arm
-     required an elevated Problem to carry an 'elevated_into' reference; it was
-     wrong to keep because elevation is not a state in the inquiry machine at
-     all (the REC-10 collapse removed it — only legacy history carries it, and
-     a legacy document is judged by its own contract, which never enforced the
-     edge at write). Its successor discipline is the basis arm: an inquiry
-     carrying a basis leg must carry the same target in references[], so refs
-     and inquiry_basis — both projections of this one document — cannot
-     disagree. That arm lives in checkInquiryBasis (C-2.8's family) so the
-     store's write path and this checker run the SAME rule. */
-  if (ctx.fm?.workproduct_state === 'distributed') {
-    const hasDist = [...ctx.files.keys()].some(p => p.startsWith('distributions/'));
-    if (!hasDist) findings.push(f('C-6.3', 'error', 'workproduct_state is distributed but distributions/ is empty'));
-  }
-  /* REC-16: `supersedes` gains requirements, the way `links_to` has them. Both
-     arms are consulted HERE and by the store's promote write path, the
-     checkInquiryBasis precedent, so a malformed supersession never lands and
-     cannot audit clean either. */
-  supersedesEdgeFindings(ctx.fm, findings);
-  divisionDisclosureFindings(ctx.fm, findings);
-}
+/* `isMachineMinted` stood here until T19 (legacy-checks, K653 BOB-1, K750): no reader asked it. The one reading
+   is record-grammar's `contentMintState` (R37). */
 
 /** REC-16: WHAT A `supersedes` EDGE MUST CARRY.
  *
@@ -869,7 +420,7 @@ function checkReferences(ctx, findings) {
  *  reason itself — the catalog already refuses moving an edge with no account.
  *
  *  A RESOLVABLE TARGET is the other half and is enforced in two places by
- *  construction rather than by agreement: C-6.2's resolver arm above catches it
+ *  construction rather than by agreement: C-6.2's resolver arm (record-grammar's references arm) catches it
  *  wherever a resolver is injected, and the store resolves it directly at the
  *  write. A supersedes edge to nothing points a reader at a question that does
  *  not exist, which is worse than no edge — it asserts a lineage. */
@@ -953,140 +504,6 @@ export function divisionDisclosureFindings(fm, findings) {
     if (!BUNDLE_ID_RE.test(s)) findings.push(f('C-6.1', 'error', `division_siblings names '${String(s).slice(0, 40)}', which is not a canonical bundle id`));
     if (s === parent) findings.push(f('C-6.1', 'error', `division_siblings names ${s}, which is this document's division_parent: the parent is disclosed as the parent, and listing it as a sibling would hide that one of the halves is missing`));
     if (typeof fm.id === 'string' && s === fm.id) findings.push(f('C-6.1', 'error', `division_siblings names this document itself: a sibling set that counts the child is a set that can look complete while a real sibling is absent`));
-  }
-}
-
-/** C-12: history manifest coherence and snapshot accounting. */
-function checkHistoryCoherence(ctx, findings) {
-  const histFiles = [...ctx.files.keys()].filter(p => p.startsWith('_history/'));
-  const manRaw = ctx.files.get('_history/manifest.json');
-  if (!manRaw) {
-    if (histFiles.length) findings.push(f('C-12.1', 'error', '_history contains files but no manifest.json', ['rebuild manifest entry from surviving files']));
-    return;
-  }
-  let man;
-  try { man = JSON.parse(asText(manRaw)); }
-  catch { findings.push(f('C-12.1', 'error', '_history/manifest.json does not parse', ['rebuild manifest entry from surviving files'])); return; }
-  const entries = Array.isArray(man.entries) ? man.entries : [];
-  const keys = new Set();
-  let prevKey = '';
-  const bundleMdCreated = [];
-  for (let i = 0; i < entries.length; i++) {
-    const e = entries[i];
-    for (const k of ['key', 'kind', 'created', 'files']) if (!(k in (e || {}))) findings.push(f('C-12.1', 'error', `manifest entry[${i}] missing '${k}'`));
-    if (e?.key) {
-      if (keys.has(e.key)) findings.push(f('C-12.1', 'error', `duplicate manifest key '${e.key}'`));
-      if (e.key < prevKey) findings.push(f('C-12.1', 'error', `manifest keys out of order at '${e.key}'`));
-      keys.add(e.key); prevKey = e.key;
-    }
-    // Collected, not maxed, because the newest bundle.md-changing entry has to
-    // be excluded below. See the C-12.1 note at the comparison.
-    if (typeof e?.created === 'string' && Array.isArray(e?.snapshotted) && e.snapshotted.includes('bundle.md')) {
-      bundleMdCreated.push(e.created);
-    }
-    if (e?.kind === 'promotion' && e.key && !ctx.files.has(`_history/promotion_${e.key}.json`)) {
-      findings.push(f('C-12.2', 'error', `promotion record for '${e.key}' is missing`, ['rebuild manifest entry from surviving files', 'record a history-loss finding and re-snapshot current state']));
-    }
-    if (Array.isArray(e?.snapshotted)) {
-      for (const name of e.snapshotted) {
-        const dot = name.lastIndexOf('.');
-        const snapPath = `_history/${name.slice(0, dot)}_${e.key}${name.slice(dot)}`;
-        // 1.16.5: hasFile_, not files.has. This is an EXISTENCE assertion, and
-        // the 1.13.0 presence rule above says existence assertions consult
-        // files UNION elided. Using files.has here made every tier-scoped read
-        // report its history snapshots as lost: 71 phantom findings across a
-        // 30-bundle store, and it forced a byte-complete image on any caller
-        // that wanted to gate, which for a bundle carrying a 39.6MB capture
-        // means pulling that capture and its history copies into memory to
-        // answer a question about whether a file exists. Byte checks below are
-        // unchanged and still read ctx.files directly.
-        if (!hasFile_(ctx, snapPath)) {
-          findings.push(f('C-12.2', 'error', `snapshot '${snapPath}' recorded in manifest entry '${e.key}' is missing`, ['record a history-loss finding and re-snapshot current state']));
-        }
-      }
-    }
-  }
-  // The REFUSAL class (accelerator 0.12.8) is accounted for on its own terms,
-  // not through the version manifest.
-  //
-  // A terminal refusal writes `_history/refused_<stamp>_<hash>.json` naming the
-  // outcome, plus the preserved payload under `_history/refused_<stamp>_<hash>/`.
-  // None of that is part of the version chain: it records material that never
-  // entered history, so the manifest, which indexes promotions and the snapshots
-  // they took, has nothing to say about it.
-  //
-  // Requiring a manifest entry anyway is what the first version of this check
-  // did, and the consequence was severe: every terminal refusal permanently
-  // froze the bundle it happened in, because the orphan finding is an error and
-  // the gate judges the post-promotion image, so no later package could ever
-  // pass. Observed live on INFO-2026-5460 on 2026-07-22, which is the bundle
-  // holding migration_instant, so a single refused fence edit made the fence
-  // itself unchangeable. Exactly the C-12.1 failure shape, by a second route.
-  //
-  // Accounting is not abandoned, only re-seated: a preserved payload must carry
-  // its sibling record, and the record must parse and name an outcome, so
-  // nothing sits in _history unexplained. The hash length is not constrained
-  // here, because records written before the twins agreed on slice(0, 8) carry
-  // the full digest and are honest history that must not go red retroactively.
-  const REFUSAL_RECORD = /^_history\/refused_(\d{8}T\d{6}Z_[0-9a-f]{8,64}|unknown_[0-9a-f]{8,64}|[^/]*nomanifest)\.json$/;
-  const REFUSAL_PAYLOAD = /^_history\/refused_(\d{8}T\d{6}Z_[0-9a-f]{8,64}|unknown_[0-9a-f]{8,64}|[^/]*nomanifest)\//;
-  for (const p of histFiles) {
-    if (p === '_history/manifest.json') continue;
-    const rec = REFUSAL_RECORD.exec(p);
-    if (rec) {
-      let parsed = null;
-      try { parsed = JSON.parse(asText(ctx.files.get(p))); } catch { /* reported below */ }
-      if (!parsed || !parsed.outcome) {
-        findings.push(f('C-12.2', 'error', `refusal record '${p}' does not parse or names no outcome`,
-          ['restore the refusal record from history', 'remove the unexplained refusal artifacts']));
-      }
-      continue;
-    }
-    const pay = REFUSAL_PAYLOAD.exec(p);
-    if (pay) {
-      const sibling = `_history/refused_${pay[1]}.json`;
-      if (!ctx.files.has(sibling)) {
-        findings.push(f('C-12.2', 'error', `preserved refusal payload '${p}' has no refusal record at '${sibling}'`,
-          ['restore the refusal record', 'remove the orphaned preserved payload']));
-      }
-      continue;
-    }
-    const m = /_((?:\d{8}T\d{6}Z)_[0-9a-f]{8})\./.exec(p) || /^_history\/promotion_(.+)\.json$/.exec(p);
-    const key = m ? m[1] : null;
-    if (!key || !keys.has(key)) {
-      findings.push(f('C-12.2', 'error', `history file '${p}' maps to no manifest entry`, ['rebuild manifest entry from surviving files']));
-    }
-  }
-  // C-12.1 staleness: live bundle.md must not predate history.
-  //
-  // Two narrowings, both learned the hard way on 2026-07-22.
-  //
-  // 1. Only entries that CHANGED bundle.md count. last_updated is a field in
-  //    bundle.md describing bundle.md; a promotion that touched only data/
-  //    files has no business advancing it.
-  //
-  // 2. The newest such entry is excluded, because it is the promotion that
-  //    WROTE the live bytes. Comparing a document against the moment its own
-  //    package was assembled is circular, and `created` is assembly time, not
-  //    content time. A document may legitimately carry an earlier semantic
-  //    timestamp: a signed ratification records the transition INSTANT, which
-  //    always precedes the packaging that delivers it.
-  //
-  // Without narrowing 2 a ratified bundle was permanently frozen. Its
-  // last_updated is pinned by the release signature, which binds bundle.md's
-  // bytes, so satisfying C-12.1 meant editing bundle.md and destroying the
-  // ratification, while not editing it meant no further promotion could ever
-  // gate. The registry bundle holds migration_instant, so that deadlock made
-  // the fence itself unchangeable.
-  //
-  // What survives: a genuine revert still fails, because live is still
-  // compared against every EARLIER bundle.md-changing promotion.
-  const sorted = bundleMdCreated.slice().sort();
-  sorted.pop();                                   // the promotion that wrote live
-  const newestPrior = sorted.length ? sorted[sorted.length - 1] : '';
-  if (typeof ctx.fm?.last_updated === 'string' && newestPrior && ctx.fm.last_updated < newestPrior) {
-    findings.push(f('C-12.1', 'error', `live last_updated '${ctx.fm.last_updated}' precedes an earlier history entry '${newestPrior}': the live bundle.md is older than a version already superseded`,
-      ['restore the newer bundle.md from history', 'correct last_updated to reflect the live content']));
   }
 }
 
@@ -1418,7 +835,7 @@ export const STRENGTH_STATES = ['graded', 'unrated', 'undetermined'];
  *  The prior edition arrives INJECTED (the releaseRegistry precedent), because
  *  the checker is a pure function over a filesystem and the published
  *  projection is not in the bundle. An absent registry means the caller cannot
- *  see the published record — the migrate tool and the cli — and this cannot
+ *  see the published record — the cli (and the migrate tool, retired in T18) — and this cannot
  *  fire; the gate and the store's write path both inject it, so on every path a
  *  real caller has, it does. */
 /* ===== CASE-5b / DEC-72, 2026-09-10: `checkCompletenessFreshness` IS REMOVED,
@@ -1477,7 +894,7 @@ export const GROUND_LABEL_RE = /^[a-z0-9][a-z0-9 _-]{0,47}$/i;
  * the checkGatheringGrammar precedent — so a malformed leg never lands and the
  * two views cannot drift. Shape findings are C-2.8 (the inquiry extension);
  * the references[] subset arm is C-6.3, the rule that REPLACED the
- * elevated_into requirement (see checkReferences).
+ * elevated_into requirement (see record-grammar's `checkReferences`).
  *
  * The leg: {target, role, grade, grade_axis, grade_source, note, author, date}.
  * target is an INFO- or an inquiry-prefixed id — the inquiry target IS basis
@@ -2320,14 +1737,14 @@ function checkProjectExtension(ctx, findings) {
  * enforces. RECORDED here rather than deleted, for the reason ORCHESTRATION's
  * supersession rule gives: an item that vanishes is indistinguishable from one
  * nobody did, and a check silently gone is exactly the limbo the retirement was
- * supposed to end. Two mechanisms depend on this being a TABLE and not a comment:
+ * supposed to end. Two mechanisms depended on this being a TABLE and not a comment:
  *
- *   - `scripts/coverage.mjs` derives the catalogue by reading C-numbers out of
- *     THIS FILE's text, so a retired id keeps being counted and keeps demanding
- *     an assertion that names it. That is the design, not a leak: the assertion
- *     that names a retired id is the one PROVING IT NO LONGER FIRES, and
- *     `--strict` therefore cannot forget the retirement.
- *   - `test/check-firing.test.mjs` reads this table and asserts, for every row,
+ *   - `scripts/coverage.mjs` derived the catalogue by reading C-numbers out of
+ *     THIS FILE's text, so a retired id kept being counted and kept demanding
+ *     an assertion that named it: the assertion that names a retired id is the
+ *     one PROVING IT NO LONGER FIRES. That script is retired (T18, K739);
+ *     requirement coverage is now the process's coverage check.
+ *   - `test/check-firing.test.mjs` (an old suite, run only at a release, K619) reads this table and asserts, for every row,
  *     that nothing in this file pushes a finding under that id and that the
  *     estate grew no producer for the shape it gated. Reintroducing either
  *     FAILS, by name.
@@ -2973,183 +2390,46 @@ export const MECHANICAL_FIELD_SETS = {
 };
 
 // ---------------------------------------------------------------------------
-// Runner
+// Runner: rule 2's wrapper (T19, legacy-checks; record-grammar R28, R40, R41)
 // ---------------------------------------------------------------------------
 
-/* §1b (T18, K585 (2)): THE GRAMMARS SEAM. A type grammar leaves this catalogue by registering with record-core
- * (`registerGrammar(module, {ids, arm})`), whose audit and promotion's gate pass the registrations here as
- * `opts.grammars`, a list `[{module, ids, arm(ctx, findings)}]` in module order. Each built-in type arm below is
- * claimed by its whole id list: a grammar whose `ids` hold all of one arm's ids runs IN THAT ARM'S PLACE, over the
- * same `ctx`, and the arm is skipped, so a moved arm never runs twice and the findings keep their order. (An arm's
- * ids are the grammar ids its own body raises; the helpers it calls go with it.) A grammar that claims no built-in
- * arm runs after the type arms, in list order. A claim covering part of an arm, or two arms, or an id another
- * grammar claims, is a caller's defect and throws before any arm runs, as a malformed entry does. */
-export const EXTENSION_ARMS = Object.freeze([
-  { name: 'checkInformationExtension', ids: ['C-2.7'] },
-  { name: 'checkInfo2Contract', ids: ['C-18.6', 'C-18.7'] },
-  { name: 'checkInquiryExtension', ids: ['C-2.8'] },
-  { name: 'checkProjectExtension', ids: ['C-2.9', 'C-9.1'] },
-].map((a) => Object.freeze({ name: a.name, ids: Object.freeze(a.ids) })));
-const GRAMMAR_ID_RE = /^C-\d+(\.\d+)?$/;
+/* `checkBundle` and its structural arms are record-grammar's (`src/record-grammar/bundle.mjs`, R39–R40), and so is
+ * `EXTENSION_ARMS` (R28), re-exported here. Record-grammar's `checkBundle` runs a type arm only in a slot a registered
+ * grammar claims (`opts.grammars`, record-core R67). The arms whose code is still this catalogue's fill their slots
+ * through `LEGACY_GRAMMARS`, one entry per slot, each claiming its slot's whole id list, until each owner registers its
+ * own and takes it out of this list (rule 2): C-18.6/.7 promotion (layer 2), C-6.1 and C-15.1 inquiry-grammar and
+ * C-2.8 inquiry-grammar (layer 6), C-2.9/C-9.1 intent (layer 7). C-2.7's slot is capture's grammar, which every
+ * product caller registers; the held C-2.7 copy above fills it only for a caller registering none (J2). */
+export { EXTENSION_ARMS } from '../src/record-grammar/index.mjs';
 
-/* The registered grammars, judged whole before any arm runs: `byArm` maps a built-in arm's name to the grammar that
-   replaces it, `rest` holds the others in list order. */
-function grammarsOf(list) {
-  if (list === undefined || list === null) return { byArm: new Map(), rest: [] };
-  if (!Array.isArray(list)) throw new TypeError('checkBundle: opts.grammars is a list of {module, ids, arm}');
-  const byArm = new Map(), rest = [], claimed = new Map();
-  list.forEach((g, i) => {
-    const at = `checkBundle: opts.grammars[${i}]`;
-    if (!g || typeof g !== 'object') throw new TypeError(`${at} is not a {module, ids, arm} entry`);
-    if (typeof g.module !== 'string' || g.module.trim() === '') throw new TypeError(`${at} names no module`);
-    if (!Array.isArray(g.ids) || g.ids.length === 0 || !g.ids.every((id) => typeof id === 'string' && GRAMMAR_ID_RE.test(id)))
-      throw new TypeError(`${at} (${g.module}): ids is a non-empty list of C-ids`);
-    if (typeof g.arm !== 'function') throw new TypeError(`${at} (${g.module}): arm is not a function`);
-    for (const id of g.ids) {
-      if (claimed.has(id)) throw new RangeError(`${at} (${g.module}): ${id} is already claimed by ${claimed.get(id)}`);
-      claimed.set(id, g.module);
-    }
-    const touched = EXTENSION_ARMS.filter((a) => a.ids.some((id) => g.ids.includes(id)));
-    if (touched.length > 1)
-      throw new RangeError(`${at} (${g.module}): claims ids of ${touched.map((a) => a.name).join(' and ')}; one grammar replaces one arm`);
-    const [arm] = touched;
-    if (arm && !arm.ids.every((id) => g.ids.includes(id)))
-      throw new RangeError(`${at} (${g.module}): claims part of ${arm.name}, whose ids are ${arm.ids.join(', ')}; an arm is claimed whole`);
-    if (arm) byArm.set(arm.name, g); else rest.push(g);
-  });
-  return { byArm, rest };
-}
+export const LEGACY_GRAMMARS = Object.freeze([
+  { module: 'legacy-checks', ids: ['C-2.7'], arm: checkInformationExtension },
+  { module: 'legacy-checks', ids: ['C-18.6', 'C-18.7'], arm: checkInfo2Contract },
+  { module: 'legacy-checks', ids: ['C-6.1'], arm: (ctx, findings) => {
+    supersedesEdgeFindings(ctx.fm, findings);
+    divisionDisclosureFindings(ctx.fm, findings);
+  } },
+  { module: 'legacy-checks', ids: ['C-15.1'], arm: checkRecheckCoverage },
+  { module: 'legacy-checks', ids: ['C-2.8'], arm: checkInquiryExtension },
+  { module: 'legacy-checks', ids: ['C-2.9', 'C-9.1'], arm: checkProjectExtension },
+].map((g) => Object.freeze({ ...g, ids: Object.freeze(g.ids) })));
 
 /**
- * Run all applicable checks over one bundle.
- * @param {BundleInput} input
+ * Run all applicable checks over one bundle: record-grammar's `checkBundle` with `LEGACY_GRAMMARS` filling the slots
+ * the caller's own grammars do not claim. A caller's grammar claiming any id of a legacy entry's slot replaces that
+ * entry, so an owner's registration takes its slot without a second claim. The caller's grammars come first, so a
+ * refusal names the position in the caller's own list. A malformed `opts.grammars` reaches record-grammar unchanged
+ * and throws there (R39).
+ * @param {object} input record-grammar R39's input
  * @param {{knownSchemas?: string[], grammars?: {module: string, ids: string[], arm: Function}[]}} [opts]
- * @returns {Promise<{pass: boolean, findings: Finding[]}>}
+ * @returns {Promise<{pass: boolean, findings: object[]}>}
  */
 export async function checkBundle(input, opts = {}) {
-  const grammars = grammarsOf(opts.grammars);
-  /** @type {Finding[]} */
-  const findings = [];
-  const bundleRaw = input.files.get('bundle.md');
-  const ctx = {
-    folderName: input.folderName,
-    files: input.files,
-    // 1.13.0 (three-tier read model): paths known to exist in the
-    // authoritative store but whose bytes the caller deliberately did not
-    // carry (a tier-scoped client mirror eliding snapshots/ and _history/).
-    // Presence assertions ("this registered path must exist") consult
-    // files UNION elided via hasFile_; byte checks (hashing, parsing,
-    // history audits) stay files-only and skip elided content exactly as
-    // they skip absent content, so nothing is ever verified against bytes
-    // the caller does not hold. The gate and cli pass nothing here and are
-    // byte-complete as before.
-    elided: input.elidedPaths instanceof Set ? input.elidedPaths
-      : new Set(Array.isArray(input.elidedPaths) ? input.elidedPaths : []),
-    sha256: input.sha256,
-    nowMs: input.nowMs,
-    maxPackageAgeDays: input.maxPackageAgeDays ?? 14,
-    maxReevalAgeDays: input.maxReevalAgeDays ?? 30,
-    /* inquiry@1 joins; focus@1 and problem@1 STAY KNOWN forever — schema
-       stamps are document truth in append-only history (REC-10). */
-    /* PL-12 / D-84: `bias@1`. A type whose schema stamp the catalog does not
-       know is refused by C-2.5 before any type-specific check runs, so the
-       stamp has to be admitted in the same turn as the type. */
-    /* K171 (1) and K198 (2) (T8): the six types admitted above, each at schema 1, on `bias@1`'s reason; N-A1 (T18)
-       `action_plan@1` likewise. */
-    knownSchemas: opts.knownSchemas ?? ['information@1', 'information@2', 'inquiry@1', 'focus@1', 'problem@1', 'project@1', 'action@1', 'bias@1',
-      'standard@1', 'determination@1', 'consequence@1', 'escalation@1', 'aspiration@1', 'goal@1', 'action_plan@1'],
-    resolveTarget: input.resolveTarget,
-    // D2.3: the key registry, injected exactly like resolveTarget. Absent
-    // is legal and means pre-migration behavior; absent WITH a
-    // post-migration release is an error, never a skip.
-    releaseRegistry: input.releaseRegistry || null,
-    /* REC-14: the published projection, injected exactly like releaseRegistry
-       and for the same reason — the checker is a pure function over a
-       filesystem, and what OTHER cases were published (and at which editions,
-       with which frozen pair) is not in this bundle. Shape:
-         { <bundleId>: { latest: n, editions: { "1": {edition, completeness,
-             capture: {state, grade}, connection: {state, grade}} } } }
-       Absent means the caller cannot see the published record (the cli, the
-       migrate tool) and C-21.1/C-21.2 cannot fire. Every path a real caller
-       has — the ratification gate and the store's own write path — injects it,
-       which is what keeps the absence from being a way through. */
-    publishedRegistry: input.publishedRegistry || null,
-    /* REC-44 / DEC-44: the CASE-altitude half of the same fact, injected on the
-       same terms and separated for the reason DEC-44 gives — a case is a
-       CONTAINER over one or more findings, so what the previous edition of THIS
-       CASE asserted about its limits is not a fact about any one finding.
-       Shape:
-         { <caseId>: { latest: n, editions: { "1": {edition, scope,
-             completeness, ratified_at} } } }
-       Absent means the caller cannot see the published record (the cli, the
-       migrate tool) and C-21.1 cannot fire; every path a real caller has
-       injects it. Kept SEPARATE from publishedRegistry deliberately: one
-       registry serving both altitudes is how the collapse this item corrects
-       happened in the first place. */
-    publishedCaseRegistry: input.publishedCaseRegistry || null,
-    /* REC-18: the second fact the catalog cannot get from the bundle, and it is
-       injected on exactly the same terms and for the same reason. What
-       `resolutions` holds about this bundle's basis targets, and what `register`
-       holds about their captures, is the record — not this document — so a
-       checker over a filesystem has no way to compute an earned grade and says
-       so rather than passing the leg (checkEarnedLeg). Shape:
-         { subject_entity, subject_label, earned: {
-             connection: { <target>: {grade, why, ...} },
-             capture:    { <target>: {grade, why, ceiling?} } } }
-       Absent means the caller cannot see the record (the cli, the migrate tool).
-       Every path a real caller has injects it. */
-    earnedRegistry: input.earnedRegistry || null,
-    sha512: input.sha512 || null,
-    fm: null,
-    body: ''
-  };
-
-  if (!bundleRaw) {
-    findings.push(f('C-13.1', 'error', 'bundle.md is missing'));
-  } else {
-    const parsed = parseFrontmatter(asText(bundleRaw));
-    findings.push(...parsed.findings);
-    ctx.fm = parsed.data;
-    ctx.body = parsed.body;
-    checkIdentity(ctx, findings);
-    checkFrontmatterContract(ctx, findings);
-    checkHeadings(ctx, findings);
-    checkStateLegality(ctx, findings);
-    checkWriteCompleteness(ctx, findings);
-    /* §1b: each type arm runs through `typeArm`, which runs the grammar that claims it in its place. */
-    const typeArm = async (name, builtIn) => {
-      const g = grammars.byArm.get(name);
-      await (g ? g.arm(ctx, findings) : builtIn(ctx, findings));
-    };
-    await typeArm('checkInformationExtension', checkInformationExtension);
-    await typeArm('checkInfo2Contract', checkInfo2Contract);
-    /* N325 (T14): `checkInboxGrammar(ctx, findings)` stood here. The inbox task grammar is queue's, a promotion check
-       and an audit check it registers, so the bundle check does not run it; the export went in T15. */
-    checkReferences(ctx, findings);
-    checkRecheckCoverage(ctx, findings);
-    await typeArm('checkInquiryExtension', checkInquiryExtension);
-    /* CASE-5b: `checkCompletenessFreshness(ctx, findings)` STOOD HERE and is
-       removed — C-21.1 at case altitude now runs over the CASE DOCUMENT, in ratification's
-       `checkCaseDocument`, which is the only place its four fields exist. The
-       call is deleted rather than left returning early: a check that can never
-       fire is a rule nobody is enforcing wearing the costume of one. The full
-       reasoning is at the removal site above. */
-    await typeArm('checkProjectExtension', checkProjectExtension);
-    for (const g of grammars.rest) await g.arm(ctx, findings);
-    /* checkCitationRegister ran here until FW-13 retired it (2026-08-08), and
-       checkDeletionRecords beside it until FW-15 retired that too the same day.
-       See CHECK_RETIREMENTS above for what each gated and why keeping it was
-       wrong. The line below is not a replacement for the second: `checkAppendOnly`
-       was ALREADY the enforcement, which is exactly why the ledger was a second
-       account of one fact. */
-    checkAppendOnly(ctx, findings);
-    checkHistoryCoherence(ctx, findings);
-  }
-  checkFormatHygiene(ctx, findings);
-  await checkQueueAndBase(ctx, findings);
-
-  const pass = !findings.some(x => x.severity === 'error');
-  return { pass, findings };
+  const given = opts.grammars;
+  if (given !== undefined && given !== null && !Array.isArray(given)) return checkBundleRG(input, opts);
+  const claimed = new Set((given || []).flatMap((g) => (g && Array.isArray(g.ids) ? g.ids : [])));
+  const legacy = LEGACY_GRAMMARS.filter((g) => !g.ids.some((id) => claimed.has(id)));
+  return checkBundleRG(input, { ...opts, grammars: [...(given || []), ...legacy] });
 }
 
 /* ===========================================================================
@@ -3951,7 +3231,7 @@ export const VERSION_ACT_CHECKS = {
      verification pass), which measured it free when it looked, and stepping over
      an id somebody holds is cheaper than the collision seven items paid for in one
      day. **Writing the numeral in this comment ALLOCATED IT AS A CHECK**:
-     `scripts/coverage.mjs` builds the catalogue with
+     the retired `scripts/coverage.mjs` (gone since T18, K739) built the catalogue with
      `checksSrc.matchAll(/C-\d+\.\d+/g)` over the RAW source of this file, comments
      included, so a number named in prose becomes a check `--strict` then demands
      an assertion for. Measured at this item: the catalogue read 225 where the
@@ -4437,10 +3717,8 @@ export const SUGGEST_KINDS = {
     + 'only act available is a new edition, and it is the member\'s',
 };
 
-/* The four levels `level-empty` may report on. CLAUDE.md's "NEVER ASSUME THE
-   LOWER LEVELS ARE COMPLETE" names exactly these four, and saying WHICH absence
-   is a first-class obligation there. */
-export const SUGGEST_LEVELS = ['meaning', 'content', 'documents', 'internet'];
+/* `SUGGEST_LEVELS` (the four levels `level-empty` may report on) stood here until T19 (legacy-checks, K679). It is
+   run-productions' (`src/run-productions/checks.mjs`), and agent-worker reads that one since T18. */
 
 /* THE BOILERPLATE ROSTER, AND WHAT IT IS NOT.
  *
@@ -4780,26 +4058,9 @@ export const BIAS_CHECKS = {
  * BY DECISION needs an arm proving the absence is real.
  * ========================================================================= */
 
-/** THE ONE COMPOSER FOR THE HONEST CIVICOS AGENT, and it is HERE rather than in
- *  `index.mjs` so that the Durable Object can read the string it is about to
- *  cause to be sent. `index.mjs`'s `userAgent(env, purpose)` now delegates to
- *  this and keeps its own name and every call site, so `subresources.test.mjs`'s
- *  pin — every outbound `"user-agent":` in the control plane goes through
- *  `userAgent(env, …)` — is untouched.
- *
- *  WHY THE MOVE RATHER THAN A SECOND COPY. SOURCE-ACCESS.md records that this
- *  string replaced *"two bare tokens spread across three call sites that did not
- *  agree with each other"*, and the 403 that cost three sessions of wrong
- *  reasoning was the consequence. A conduct check reading a copy would be that
- *  defect rebuilt one layer down: the drain would approve a string nobody sends.
- *
- *  The components are D-94's, and the contact URL is the LOAD-BEARING one:
- *  removing it flips admission 200 -> 403 uniformly (MEASURED 2026-07-30, nine
- *  rungs, second path confirmed). */
-export const CIVICOS_CONTACT_URL = 'https://github.com/believeinoakland/bio';
-export function civicosUserAgent(version, instance, purpose) {
-  return `CivicOS/${version || '0.0.0'} (+${CIVICOS_CONTACT_URL}; instance ${instance || 'unnamed'}; ${purpose})`;
-}
+/* `CIVICOS_CONTACT_URL` and `civicosUserAgent`, the one composer of the honest CivicOS agent (D-94), stood here
+   until T19 (legacy-checks, K717, K729). They are acquisition's (`src/acquisition/checks.mjs`), which monitoring,
+   capture-requests and instance-setup read. */
 
 export const CAPTURE_REQUEST_CHECKS = {
   /* ---- THE DOOR. Refused at the request, before any row exists. These are
@@ -4929,7 +4190,7 @@ export const CAPTURE_REQUEST_CHECKS = {
      hold for a credential class that does not exist yet (PL-11). */
   CAPTURE_NOT_DRAINING: {
     check: 'C-28.13',
-    where: 'src/capture/acquire.mjs acquire > is-capture-request-arm',
+    where: 'src/acquisition/index.mjs acquire > is-capture-request-arm',
     translation: 'Only this instance\'s own background worker fetches documents, and it does so from '
       + 'its own queue. Nothing else can ask it to fetch something right now — including the assistant '
       + 'that asked for the document in the first place.',
@@ -5154,7 +4415,7 @@ export const AI_CREDENTIAL_CHECKS = {
    AND THIS COMMENT PAID FOR ITS OWN LESSON, WHICH IS WHY IT NO LONGER SPELLS
    THE NUMBERS OUT. Its first draft wrote the warning as a worked example with
    real C-numbers in it, the integration's own sweep renumbered THE EXAMPLE
-   along with the code, and `scripts/coverage.mjs` — which harvests C-numbers
+   along with the code, and `scripts/coverage.mjs` (retired since T18, K739) — which harvested C-numbers
    out of this file by pattern, comments included — then reported a check in
    the catalog that no assertion names. Exit 1 on a family that was complete.
    The instrument was right: it cannot tell a number in a sentence from a
@@ -5216,7 +4477,7 @@ export const AI_CREDENTIAL_CHECKS = {
 export const MACHINE_FENCE_CHECKS = {
   MACHINE_CANNOT_RELEASE: {
     check: 'C-32.1',
-    where: 'src/store.mjs release > is-machine-release',
+    where: 'src/ratification/release.mjs release > is-machine-release',
     translation: 'Moving documents from collected to verified is a decision a named person makes '
       + 'and signs. The credential that asked here is an automated one, so it can gather the batch '
       + 'and lay out the review, and cannot be the one who says the batch is good. Sign in and '
@@ -5379,21 +4640,21 @@ export const ACT_SHAPE_CHECKS = {
   },
   NO_ACKNOWLEDGMENT: {
     check: 'C-33.10',
-    where: 'src/store.mjs release > is-release-account',
+    where: 'src/ratification/release.mjs release > is-release-account',
     translation: 'Releasing a batch at once records your explicit acknowledgment that the batch is '
       + 'of a piece and that you weighed the risk of doing them together. Without it the record '
       + 'shows only that a button was pressed.',
   },
   NO_MITIGATION: {
     check: 'C-33.11',
-    where: 'src/store.mjs release > is-release-account',
+    where: 'src/ratification/release.mjs release > is-release-account',
     translation: 'Releasing a batch at once records what you actually did to check it — what was '
       + 'sampled and what was verified. A concrete note can be audited by somebody later; silence '
       + 'cannot be audited at all.',
   },
   ENTRY_REQUIREMENTS: {
     check: 'C-33.12',
-    where: 'src/store.mjs release > is-release-entry',
+    where: 'src/ratification/release.mjs release > is-release-entry',
     translation: 'Some of these documents are missing something the verified state requires, and '
       + 'releasing them as they stand would produce records the catalog rejects the moment they '
       + 'exist. The offending documents are named so they can be fixed rather than guessed at.',
@@ -5551,253 +4812,11 @@ export const INSTALLATION_CHECKS = {
   },
 };
 
-/* ===========================================================================
-   D-64 (C-83) — THE RENDER ARM OF op=acquire: a client-rendered page captured
-   as the PAIR (CLIENT-RENDERED.md §"What must be recorded on a rendered
-   capture"; BOB #31 and BOB #32, 2026-09-23).
+/* C-83 `RENDER_CAPTURE_CHECKS` (D-64, the render arm of op=acquire) stood here until T19 (legacy-checks). The
+   family is acquisition's (`src/acquisition/checks.mjs`), where the render arm runs. */
 
-   EVERY ROW HERE EXISTS FOR ONE RULE: THE SHELL IS NEVER FILED AS THE CONTENT.
-   A caller who asked for a render and cannot have one is told so by name and
-   nothing is filed as a document — not the shell in its place, not a partial
-   render. Two rows are checked BEFORE the shell is fetched (no renderer; the
-   allowance spent), so nothing is fetched for a render that cannot happen.
-   =========================================================================== */
-export const RENDER_CAPTURE_CHECKS = {
-  /* `render` present and not `true`. Refused rather than read as absent: a
-     `render: "yes"` answered with the plain capture would file the shell as the
-     content, which is the outcome this family exists to prevent. */
-  RENDER_FLAG_MALFORMED: {
-    check: 'C-83.1',
-    where: 'src/capture/acquire.mjs acquire > is-render-admit',
-    translation: 'This request asked for a rendered capture in a form this instance does not recognise. '
-      + 'It answers render: true or nothing, so a request for the page as a visitor saw it is never '
-      + 'quietly answered with the page\'s empty frame. Nothing was fetched.',
-  },
-  /* A render combined with an arm whose bytes are not a live page: an archive
-     replay, a Drive export, or the continuation of a capture already filed. */
-  RENDER_ARM_CONFLICT: {
-    check: 'C-83.2',
-    where: 'src/capture/acquire.mjs acquire > is-render-admit',
-    translation: 'A rendered capture runs the live page in a browser, and this request combined that with '
-      + 'a way of capturing that does not load a live page (an archived copy, a Drive export, or the '
-      + 'continuation of an earlier capture). Ask for one or the other. Nothing was fetched.',
-  },
-  /* No renderer bound: no RENDERER service binding and no BROWSER binding — or a
-     BROWSER bound to something that is not a Fetcher, so there is no endpoint to
-     open a devtools session on. Named rather than falling back.
-     CORRECTED BY D-490: this comment read "the Browser Rendering binding is bound
-     and the in-plane driver over it is not built", which was the state D-64 shipped
-     and is the state D-490 ended (`src/browserrender.mjs`). The TRANSLATION below
-     did not move and did not need to — "no working page renderer" is true of every
-     case this code still names — but a comment describing a condition that no longer
-     exists is how the next reader is told the wrong thing by the record. */
-  RENDER_NO_RENDERER: {
-    check: 'C-83.3',
-    where: 'src/capture/acquire.mjs acquire > is-render-admit',
-    translation: 'This instance has no working page renderer, so it cannot capture the page as a visitor '
-      + 'saw it. Nothing was fetched, and the page\'s empty frame was not filed in its place.',
-  },
-  /* BOB #32 item 3: the daily render allowance is COMMITTED — spent, or reserved by
-     renders in flight (D-492). The render is DEFERRED and the deferral is recorded;
-     the shell is never the content. CORRECTED 2026-09-24 (D-492), and the old sentence
-     is why: it said the allowance had been USED, which was true only of the time
-     already reported. Since a render now reserves its maximum cost at admission, a
-     deferral can also mean the day's remaining time is held by renders still running,
-     and a member told "used" would have gone away for the day when the answer may be a
-     minute off. The sentence says which, without naming a mechanism. */
-  RENDER_DEFERRED: {
-    check: 'C-83.4',
-    where: 'src/capture/acquire.mjs acquire > is-render-admit',
-    translation: 'Today\'s allowance for rendering pages is fully committed — either already used, or '
-      + 'held by renders this instance is running right now — so this render is deferred, and that is '
-      + 'recorded. Nothing was fetched and nothing was filed in its place. Try again when the renders in '
-      + 'flight have finished, or after midnight UTC.',
-  },
-  /* The render loads the page again, which is a second document load to the
-     host, so it asks the per-host governor like any other (BOB #32 item 3:
-     "through the host governor"). Refused by name when the host is cooling off. */
-  RENDER_HOST_COOLING_OFF: {
-    check: 'C-83.5',
-    where: 'src/capture/acquire.mjs acquire > is-render-admit',
-    translation: 'This instance is giving that website a rest after it asked us to slow down, and a '
-      + 'rendered capture loads the page again, so it was not attempted. Nothing was fetched. Try again '
-      + 'after the wait shown beside this message.',
-  },
-  /* The shell is not an HTML page small enough to render (a PDF, an office
-     file, a multipart giant). A document that is not a page has nothing a
-     browser adds; capture it without `render`. */
-  RENDER_NOT_A_PAGE: {
-    check: 'C-83.6',
-    where: 'src/capture/acquire.mjs acquire > is-render-result',
-    translation: 'The address served something that is not a web page a browser can render, such as a '
-      + 'PDF or an office file, so there is nothing for a rendered capture to add. Nothing was filed. '
-      + 'Capture it the ordinary way.',
-  },
-  /* The renderer did not produce a rendered document. The shell's bytes are
-     held content-addressed and unregistered, exactly as TOO_LARGE's parts are;
-     no document names them. */
-  RENDER_FAILED: {
-    check: 'C-83.7',
-    where: 'src/capture/acquire.mjs acquire > is-render-result',
-    translation: 'The page was fetched but the renderer did not produce the page as a visitor would see '
-      + 'it, so nothing was filed: the page\'s empty frame is never filed as its content. The reason the '
-      + 'renderer gave is beside this message.',
-  },
-  /* D-520: the instance's CONCURRENCY CAP is full (BOB #33, 2026-09-24: a cap from the
-     vendor's stated limit, and a render over it WAITS, never dropped). Decided in the
-     admission span, before the shell is fetched, and distinct from C-83.4 on purpose: the
-     day's allowance is untouched and may have room, so the sentence must not say it is
-     used. The unattended drain holds the row under this code and asks again next tick. */
-  RENDER_AT_CAPACITY: {
-    check: 'C-83.8',
-    where: 'src/capture/acquire.mjs acquire > is-render-admit',
-    translation: 'This instance is already rendering as many pages at once as it allows, so this render '
-      + 'is waiting for one of them to finish. Nothing was fetched and nothing was filed in its place. '
-      + 'A scheduled capture asks again on its own; try again in a minute.',
-  },
-};
-
-/* ===========================================================================
-   CAP-8 — THE GOOGLE DRIVE HOST STACK (C-48), enacting Bob's ruling of
-   2026-09-14: a link to a Google Drive file KEEPS THE LINK, and the harvest is
-   the OpenDocument export the content is extracted from.
-
-   EVERY ROW HERE IS A NAMING, AND THAT IS THE FAMILY'S WHOLE SHAPE. The item's
-   rule is that folders and unknown shapes are NAMED as not harvestable and never
-   silently skipped, and that the application shell is REFUSED BY NAME and never
-   filed as the document. A silent skip and a named refusal produce the same
-   absence in the store and completely different knowledge in the operator: one
-   says "this instance looked at that link and can tell you exactly why it holds
-   no bytes for it", the other says nothing at all. Sparse is the normal condition
-   at every level, and saying WHICH kind of sparse is a first-class obligation
-   (CLAUDE.md).
-
-   The recogniser these rows sit over is `src/drive.mjs`, which is pure: the
-   REFUSALS are here, the SHAPES are there, and neither file restates the other.
-   =========================================================================== */
-export const DRIVE_CAPTURE_CHECKS = {
-  /* D-112, AND IT IS THE SPINE OF THE ITEM. The three facts this capture's hop
-     carries — the export address, the export format, the producer — are derived
-     by the plane from the file id and the kind in the address. A body carrying
-     one is a caller trying to author the record's own provenance, and it is
-     refused BY NAME rather than having the field quietly dropped: a caller told
-     nothing learns nothing, and a hop a caller can hand us is one a caller can
-     invent. */
-  DRIVE_HOP_FACT_SUPPLIED: {
-    check: 'C-48.1',
-    where: 'src/capture/acquire.mjs acquire > is-drive-capture',
-    translation: 'This request tried to tell the record where a document was exported from, in what '
-      + 'format, or by whom. Those are facts this instance establishes by doing the fetch itself, '
-      + 'never facts it accepts from whoever asked. Send the Drive link and nothing else.',
-  },
-  /* A FOLDER. There is nothing to export and no single set of bytes a capture
-     could honestly hold, so the honest answer is the shape's name and the reason. */
-  DRIVE_FOLDER_NOT_A_DOCUMENT: {
-    check: 'C-48.2',
-    where: 'src/capture/acquire.mjs acquire > is-drive-capture, and the SAME condition on a monitor tick '
-         + '(op=monitor, ungoverned span, D-472): a folder is not a document to capture and not '
-         + 'a document to watch, and one sentence is true of both',
-    translation: 'That address is a Drive FOLDER — a listing of files rather than a document. There '
-      + 'is nothing to export and no single set of bytes a capture of it would hold. Name the '
-      + 'document you want; harvesting everything a folder lists is a different act.',
-  },
-  /* A FILE ID WITH NO KIND. The kind decides the export format, so composing an
-     export address here would mean guessing which conversion to ask for, and
-     filing bytes whose format the record had invented. Undetermined is
-     first-class and must be STATED. */
-  DRIVE_KIND_UNDETERMINED: {
-    check: 'C-48.3',
-    where: 'src/capture/acquire.mjs acquire > is-drive-capture, and the SAME condition on a monitor tick '
-         + '(op=monitor, ungoverned span, D-472)',
-    translation: 'That Drive address names a file but not what KIND of file it is, and the kind is '
-      + 'what decides which export to ask for. Guessing would file bytes in a format nobody '
-      + 'established. Use the address that opens the document itself, which carries the kind.',
-  },
-  /* A DRIVE HOST WITH AN UNREAD PATH. Named rather than harvested, and named
-     rather than passed through: a Drive address whose shape is unread is not a
-     document this instance can promise to have captured. */
-  DRIVE_SHAPE_UNRECOGNISED: {
-    check: 'C-48.4',
-    where: 'src/capture/acquire.mjs acquire > is-drive-capture, and the SAME condition on a monitor tick '
-         + '(op=monitor, ungoverned span, D-472)',
-    translation: 'That is a Google Drive address in a form this instance does not recognise. Rather '
-      + 'than capture whatever bytes the address happens to serve and call it the document, it says '
-      + 'so. If this shape should be harvestable, that is a change worth making deliberately.',
-  },
-  /* THE APPLICATION SHELL, REFUSED BY NAME AND NEVER PARSED. Google answers the
-     export address with `text/html` when the file is not shared with anyone who
-     has the link: a sign-in page, an error page, the app. It is never the
-     document. Filing it would put a page of Google's furniture into the record
-     under a city document's address — the record claiming more than it can
-     support, which CLAUDE.md ranks worse than a missing feature. */
-  DRIVE_EXPORT_IS_THE_SHELL: {
-    check: 'C-48.5',
-    where: 'src/capture/acquire.mjs acquire > is-drive-export',
-    translation: 'Google answered the export address with a web page rather than a document — which '
-      + 'is what it does when a file is not shared with anyone who has the link. That page is the '
-      + 'application, not the document, and it is not filed as one. Check that the file is shared.',
-  },
-  /* THE SAME SHELL, CAUGHT ON THE BYTES, AND IT IS A SECOND CODE RATHER THAN THE
-     ROW ABOVE FIRING TWICE. PL-4 measured what one predicate at two points costs:
-     one of the two becomes unreachable and can never be driven. These are two
-     different predicates over two different pieces of evidence — the header, and
-     the first kibibyte — and they are two different findings. C-48.5 is "Google
-     told us it was a web page"; this is "Google told us it was a document and it
-     was a web page", which is the more serious fact and is why detection here is
-     bytes-first (COFF-1: a byte signature ALWAYS outranks a declared type). */
-  DRIVE_EXPORT_BYTES_ARE_THE_SHELL: {
-    check: 'C-48.7',
-    where: 'src/capture/acquire.mjs acquire > is-drive-bytes',
-    translation: 'The export address said it was sending a document and sent a web page instead. '
-      + 'This instance checks the bytes rather than taking the label, so the application page was '
-      + 'recognised and refused. Nothing was filed under that document address.',
-  },
-  /* THE EXPORT FETCH FAILING, AND THE HALF THAT MATTERS IS WHAT DOES *NOT*
-     HAPPEN. There is no fallback to the shell. A 403 or a 404 at the export
-     address ends the capture with the failure named; it never quietly becomes a
-     capture of the application page, which would look like a success and hold
-     nothing. */
-  /* D-472 — THE SHELL, ON A TICK, AND WHY IT IS ITS OWN CODE RATHER THAN C-48.5
-     FIRING FROM A SECOND PLACE. A capture that meets the shell has captured
-     nothing and the member's remedy is to share the file. A TICK that meets the
-     shell has not captured anything either — it never would — and what it has
-     lost is the CHECK: the record's last comparison still stands, undisturbed,
-     and nothing about the document changed. Those are two different facts about
-     the member's own situation, and DEC-49's canned translation is the sentence
-     they actually read, so one sentence cannot be true of both. PL-4's rule cuts
-     the same way it did for C-48.5/C-48.7: two predicates, two sites, both
-     drivable — `op=acquire` drives the pair above, `op=monitor` drives this pair,
-     and `test/monitor-assess.test.mjs` drives both of these by name. */
-  DRIVE_TICK_EXPORT_IS_THE_SHELL: {
-    check: 'C-48.8',
-    where: 'src/monitoring/index.mjs monitor > is-drive-tick-export',
-    translation: 'The check of that Google Drive document did not run: the export address answered '
-      + 'with a web page rather than a document, which is what Drive does when a file stops being '
-      + 'shared with anyone who has the link. Nothing was compared and nothing about the record '
-      + 'changed — what is known is that this instance could not see the document today.',
-  },
-  /* THE SAME TICK, CAUGHT ON THE BYTES. C-48.7's reasoning one op over: the
-     declared type and the first kibibyte are two different pieces of evidence,
-     and "Google told us it was a document and it was a web page" is the more
-     serious fact. On a tick the consequence is the same either way and it is
-     still worth two codes, because a tick that compared the shell would report
-     the document CHANGED on every visit — the cry-wolf this row exists to end. */
-  DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL: {
-    check: 'C-48.9',
-    where: 'src/monitoring/index.mjs monitor > is-drive-tick-bytes',
-    translation: 'The check of that Google Drive document did not run: the export address said it '
-      + 'was sending a document and sent a web page instead. This instance reads the bytes rather '
-      + 'than the label, so the application page was recognised and not compared against the '
-      + 'captured document — comparing it would report a change on every visit that nobody made.',
-  },
-  DRIVE_EXPORT_UNREACHABLE: {
-    check: 'C-48.6',
-    where: 'src/capture/acquire.mjs acquire > is-drive-export',
-    translation: 'The OpenDocument export of that Drive document could not be fetched, so nothing '
-      + 'was captured. The application page at the same address is NOT captured instead: a record '
-      + 'holding the app in place of the document would look like evidence and be none.',
-  },
-};
+/* `DRIVE_CAPTURE_CHECKS` (CAP-8, C-48) stood here until T19 (legacy-checks, K717). C-48.1–.7 are acquisition's
+   (`src/acquisition/checks.mjs`) and C-48.8/.9 monitoring's (`src/monitoring/checks.mjs`). */
 
 /* The case document's gate (C-41: `CASE_DOCUMENT_FORMAT` and its accepted set, the format predicates,
    `SEARCHED_SUBJECT_SOURCES`, `CASE_DOCUMENT_FAMILY`, `CASE_CITATION_VERSIONS` and `checkCaseDocument`) stood here
