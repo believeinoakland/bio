@@ -1,5 +1,5 @@
 /* CONVERTED (T18, the ratification job): ratification's share of four old suites, as module tests at this module's
-   interface. The old suites stay in place, not deleted (K619):
+   interface. The old suites were not deleted by this job (K619):
      - test/casesign.test.mjs
      - test/d442-publish-writes-nothing.test.mjs
      - test/ratify-authority.test.mjs

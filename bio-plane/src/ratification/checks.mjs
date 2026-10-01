@@ -94,7 +94,8 @@ function f(check, severity, message, repairs, code) {
  *     be keyed on something that is no longer here.
  *   - `op=reopen` clears it with the rest of the publication stamp, so the
  *     reopened-document hole the old pair was built to close stays closed. That
- *     is asserted rather than assumed — see the reopen arm in the suite.
+ *     was asserted rather than assumed, by the old suite's reopen arm (`op=reopen`
+ *     is not this module's, and no test of this module drives it).
  * The shape is checked, not merely the presence: an array of at least the two
  * axes R2 requires (three when a member's testimony is frozen, MK-2), which
  * checkPublishedExtension goes on to validate in detail, so a stray
@@ -140,9 +141,11 @@ export const SUBJECT_POSITIONS = ['sought_and_answered', 'sought_no_answer', 'no
  *  THE SPELLING IS THE SCHEMA'S. CASE-1 fixed it on
  *  `published_case_members.role` and said in the column's own comment that it
  *  was fixed there "so CASE-2 and CASE-6 do not each invent a third". This is
- *  that spelling consumed; `store.mjs`'s `Store.MEMBER_ROLES` is the same list,
- *  and the suite asserts all three agree by PARSING the schema rather than by
- *  restating it, because a vocabulary written three times is one that drifts. */
+ *  that spelling consumed; `case-authoring`'s `MEMBER_ROLES` (once `store.mjs`'s
+ *  `Store.MEMBER_ROLES`) is the same list. The old suite asserted all three agreed
+ *  by PARSING the schema rather than by restating it, because a vocabulary written
+ *  three times is one that drifts; this module's R8 and R9 tests pin the two terms
+ *  and that C-41.8 admits exactly them. */
 export const CASE_MEMBER_ROLES = ['load_bearing', 'supporting'];
 
 /** REC-14: the three ASSERTED fields of a completeness block, in one place so
@@ -204,9 +207,9 @@ export function checkPublishedExtension(fm, findings) {
          applies, for the same reason it always did: its gate is now "a
          disposition OR a case member", so a case member reopens and a concluded
          finding in no case is still refused NOT_SET_DOWN. REC-56's whole point is
-         that a repair string must name a route that EXISTS, and
-         `repair-reachability.test.mjs` is the instrument that catches it when one
-         stops existing — which is exactly how this line was found. */
+         that a repair string must name a route that EXISTS, and the old
+         `repair-reachability.test.mjs` was the instrument that caught one that
+         stopped existing — which is exactly how this line was found. */
       ['author completeness.statement and the exclusion list',
        'or reopen this case for a second edition (concluded -> open, op=reopen) and carry it back through conclude and publish: an edition is not edited back into concluded, and reopening does not unpublish edition 1 (DEC-12, DEC-72)']));
   } else {
@@ -281,8 +284,9 @@ export function checkPublishedExtension(fm, findings) {
      `checkCaseDocument` below, asked ONCE of the document a member actually
      signs for the case — same requirement, same refusal text where the text was
      already right, one altitude up. **Moving a check is the shape a lost check
-     wears**, so the suite asserts the arms by NAME on both sides of the move
-     rather than counting them.
+     wears**, so this module's R8 test (`test/m/ratification/checks.test.mjs`)
+     asserts each arm by its declared id, firing on its own mutation, and that the
+     arms cover the family exactly, rather than counting them.
 
      WHAT STAYED HERE IS WHAT IS GENUINELY THE FINDING'S: its completeness block,
      its exclusion list, its own frozen strength pair and its frozen grounds. A
@@ -448,22 +452,24 @@ export const SEARCHED_SUBJECT_SOURCES = {
 /* THE FAMILY, DECLARED — and it is a declaration rather than twelve string
    literals for two measured reasons rather than tidiness.
 
-   (1) `tools/mintid.mjs` READS THIS FILE FOR THE `C` NAMESPACE'S FLOOR, and its
-   allocation pattern is `check: 'C-n.m'`. A family that exists only as the first
-   positional argument to `f()` is INVISIBLE to that pattern, so its number reads
-   as a MENTION — and `mintid.test.mjs` then fails `no live floor is driven by
+   (1) Provenance: the old process's `tools/mintid.mjs` (retired with `tools/` in
+   T19) READ THIS FILE FOR THE `C` NAMESPACE'S FLOOR, and its allocation pattern
+   was `check: 'C-n.m'`. A family that existed only as the first positional
+   argument to `f()` was INVISIBLE to that pattern, so its number read as a
+   MENTION — and `mintid.test.mjs` then failed `no live floor is driven by
    prose`, correctly, because a floor taken off a sentence is a floor a stray
-   sentence can move. This is a blind spot this item TRIPPED rather than created:
-   every gate check in this catalog is spelled `f('C-2.8', …)` and none of them is
-   an allocation by that pattern either. What this item owes is that the family it
-   MINTS is visible to the allocator that minted it, and that is what this table
-   does; widening the pattern to see the other families is `tools/`' ground and is
-   not taken here.
+   sentence can move. This was a blind spot this item TRIPPED rather than
+   created: every gate check in this catalog is spelled `f('C-2.8', …)` and none
+   of them was an allocation by that pattern either. What this item owed was that
+   the family it MINTED be visible to the allocator that minted it, and that is
+   what this table did; widening the pattern to see the other families was
+   `tools/`' ground and was not taken here.
 
-   (2) The suite asserts the six rehomed arms BY NAME on both sides of the move
-   (checkPublishedExtension -> here), and a declared family is what it asserts
-   against. Moving a check is the shape a lost check wears, so the move is
-   checkable rather than described.
+   (2) This module's R8 tests (`test/m/ratification/checks.test.mjs`,
+   `converted-c.test.mjs`) assert every arm of the family by its declared id,
+   each firing on its own mutation, and that the arms cover the family exactly;
+   a declared family is what they assert against. Moving a check is the shape a
+   lost check wears, so the move is checkable rather than described.
 
    NOT NAMED `*_CHECKS`: that suffix is RESERVED — the DEC-49 guard harvests every
    `/_CHECKS$/` export as a REFUSAL family, and these are GATE findings with no
