@@ -1,6 +1,6 @@
 # T22 inventory: all remaining work (K1009)
 
-**Status** · Working file by a worker for BOB #89, 2026-10-01, on `prep/T22` @ d9a73f24f3, with `origin/main` @ 994fd3f9ff read for the UX stream's DEC-96–DEC-111 (K945; `prep/T22` does not yet contain them). One row per item, with its source. Disposition: **C** carried in T22 (where), **L** left out (one hard reason, P19). The plan is `next.md`; every row here appears there.
+**Status** · Working file by a worker for BOB #89, 2026-10-01, checked by a second, independent worker the same day (rows marked "(check)"; findings in `t22-check.md`); on `prep/T22` @ d9a73f24f3, with `origin/main` @ 994fd3f9ff read for the UX stream's DEC-96–DEC-111 (K945; `prep/T22` does not yet contain them). One row per item, with its source. Disposition: **C** carried in T22 (where), **L** left out (one hard reason, P19). The plan is `next.md`; every row here appears there.
 
 Method: `grep '(not yet met'` over `build/requirements/*.md`; `test.todo`/`{todo:}`/`{skip:}` over `bio-plane/test/m/**` (and `newgroup/test/`, which holds installer's todos); `next.md` whole; the "LEFT OUT" and "Table rows" of `archive/T21.md`, with T20's "Deferred beyond T20" and T17/T14's "Not in" lists checked against `next-applied.md` (every older item is either applied there or restated in T21's tables); rulings K929–K1013; `modules.json` (`legacy: true`); `row-census.test.mjs` `AWAITING_STAMP`; `build/jobs/T21/*.md` for Found/Deferred/"seen, not changed"; `docs/development/DECISIONS.md` on `origin/main`, each DEC's `owed:` line. For each marked requirement, the module's tests were searched for a non-todo test naming the id (counts below): a mark whose requirement has such a test is **stale** (built and tested, never struck) and goes to the opening's mark audit.
 
@@ -16,7 +16,7 @@ Method: `grep '(not yet met'` over `build/requirements/*.md`; `test.todo`/`{todo
 | A6 | R24 interaction listed | bias | `bias.md`:53; `adopt-manifest.test.mjs`:256 | C: mark audit |
 | A7 | R25 unregistered subject | bias | `bias.md`:54; `adopt-manifest.test.mjs`:277 | C: mark audit |
 | A8 | R26 override whatever it calls itself | bias | `bias.md`:55; todo `adopt-manifest.test.mjs`:310 | L: dependency not yet built |
-| A9 | R40 lens debt on question findings | bias | `bias.md`:65; `debt.test.mjs`:234 | C: mark audit |
+| A9 | R40 lens debt on question findings | bias | `bias.md`:65; `debt.test.mjs`:234 proves bias's half only: no module registers a question's findings (`registerWorkProducts("finding"` is called by nothing; only ai-runs registers, `ai-runs/index.mjs`:111) | C: inquiry L6 registers them (fold before L6); bias's mark struck at inquiry's merge (check) |
 | A10 | R37 Memento (K48) | capture-sources | `capture-sources.md`:95; todo `cdx.test.mjs`:162 | C: capture-sources L3 |
 | A11 | R24's K5 arm | contradiction | `contradiction.md`:56; todo `present.test.mjs`:111 | L: measurement |
 | A12 | R27's K5 arm | contradiction | `contradiction.md`:88; todo `present.test.mjs`:336 | L: measurement |
@@ -29,16 +29,16 @@ Method: `grep '(not yet met'` over `build/requirements/*.md`; `test.todo`/`{todo
 | A19 | Uses note "R25, R32, R33 not yet met there" | filings | `filings.md`:67; no mark on those ids | C: fold at the opening |
 | A20 | Uses note "R23, R31 not yet met there" | standards | `standards.md`:47; no mark on those ids | C: fold at the opening |
 | A21 | R31 opinion leg refused (MK-5) | inquiry | `inquiry.md`:134; todo `grammar.test.mjs`:187 ("no module defines an opinion element", K181) | L: dependency not yet built |
-| A22 | R13 members bound to `CAPTURES` | installer | `installer.md`:42; todo `newgroup/test/requirements.test.mjs`:361 | L: dependency not yet built |
-| A23 | R24 isolated installs | installer | `installer.md`:57; todo :702 | L: dependency not yet built |
+| A22 | R13 members bound to `CAPTURES` | installer | `installer.md`:42; todo `newgroup/test/requirements.test.mjs`:361 | L: dependency not yet built: the member surfaces (the new interface, not in the tree; only `legacy-ui`), which canon sequences first (`BIO_System_Design.md`:253) (check: reason named) |
+| A23 | R24 isolated installs | installer | `installer.md`:57; todo :702 | L: dependency not yet built: as A22 (check: reason named) |
 | A24 | R32 one copy per account, refused | installer | `installer.md`:58; todo :853 | C: installer L11 |
 | A25 | R33 read-back hash compare | installer | `installer.md`:59; todo :854 | C: installer L11 |
 | A26 | Status line lists R20, R21, R30 as not met (no marks) | installer | `installer.md`:13 | C: fold at the opening |
-| A27 | R17 an address's own frequency | monitoring | `monitoring.md`:38; todo `cadence.test.mjs`:123 (REC-191: no act exists) | L: Bob's |
+| A27 | R17 an address's own frequency | monitoring | `monitoring.md`:38; todo `cadence.test.mjs`:123 (REC-191: no act exists) | L: Bob's: who may set a frequency, by what member act, is a new act (requirements, UX; P17); question 5 in `t22-check.md` (check) |
 | A28 | R18 volatility lengthens a default | monitoring | `monitoring.md`:39; todo `cadence.test.mjs`:124 | C: monitoring L10 |
-| A29 | R25 tick outcome recorded | monitoring | `monitoring.md`:49; `ticks.test.mjs`:427 | C: mark audit |
+| A29 | R25 tick outcome recorded | monitoring | `monitoring.md`:49; `ticks.test.mjs`:427 asserts only the failure count, not the class recorded (`source_refused`, `fetch_failed`, `governed`, `monitoring/index.mjs`:632, :797) | C: monitoring L10, the test made whole (P7) (check) |
 | A30 | R28 gathering requests executed | monitoring | `monitoring.md`:62; todo `understanding.test.mjs`:11 | C: monitoring L10 |
-| A31 | R29 sweeps | monitoring | `monitoring.md`:63; todo :12 ("wait for a design of what a sweep's query is") | L: Bob's |
+| A31 | R29 sweeps | monitoring | `monitoring.md`:63; todo :12 ("wait for a design of what a sweep's query is") | L: Bob's: R29's own text, "Sweeps wait for a design of what a sweep's query is" (requirements; question 6 in `t22-check.md`) (check) |
 | A32 | R31 items published | monitoring | `monitoring.md`:67; todo :13; produced by queue-producers today (`queue-producers/index.mjs`:1653–1763, from monitoring R47/R48) | C: fold before L10, monitoring L10 |
 | A33 | R32 unscheduled visible | monitoring | `monitoring.md`:68; 3 tests | C: mark audit |
 | A34 | R33 sources proposed for monitoring | monitoring | `monitoring.md`:75; 2 tests | C: mark audit |
@@ -49,7 +49,7 @@ Method: `grep '(not yet met'` over `build/requirements/*.md`; `test.todo`/`{todo
 | A39 | R49 attestations read | provenance | `provenance.md`:123; 1 test | C: mark audit |
 | A40 | Suggestion "Tests: each (not yet met) id" | provenance | `provenance.md`:181 | C: fold at the opening |
 | A41 | R30 rendering verified by `pixels_sha256` (D-246) | publication | `publication.md`:116; todo `invariants.test.mjs`:115 | L: dependency not yet built |
-| A42 | R32 verifying import (K102) | publication | `publication.md`:118; todo `invariants.test.mjs`:117 | L: size before its split (P6) |
+| A42 | R32 verifying import (K102) | publication | `publication.md`:118; todo `invariants.test.mjs`:117 | C (conditional): with publication's split in L8 (J10); in whichever module BOB's seam map gives the export and import, which must end under 4,000 lines; if the seam map cannot, it waits (P6) (check) |
 | A43 | R18 set aside on an out-of-inquiry lead | queue | `queue.md`:39; 2 tests | C: mark audit |
 | A44 | R19 refusals, `taskExists` (N374) | queue | `queue.md`:42; `queue/index.mjs`:1498; 11 tests | C: mark audit |
 | A45 | R38 `evidenceStore()` | record-core | `record-core.md`:148; `record-core.test.mjs`:366 | C: mark audit |
@@ -123,7 +123,7 @@ Not rows (not remaining work): the conditional skips in `signatures/signatures.t
 | D7 | the plan checked by a second, independent pass | K1009 (3) | C: before the opening |
 | D8 | the confirmation reported to Bob, rendered, then T22 opened | K1009 (4) | C: at the opening |
 | D9 | `main` @ 994fd3f9ff (DEC-96–DEC-111, `build/channels.md`) merged into `prep/T22` before the opening | K945, K954 | C: before the opening |
-| D10 | the channel's first live exchange (D12 "live exchange PENDING", K957, K975) | K954 | C: at the opening |
+| D10 | the channel's first live exchange (D12 "live exchange PENDING", K957, K975) | K954 | C: met before the opening (K1014: B1, B2, U20, B3; D12 proven) (check) |
 | D11 | the format check's 11 legacy-tests path failures on `main` | K1007 (b), K1013 | C: cleared by D1 |
 
 ## E. The stamp and the census (6)
@@ -154,31 +154,54 @@ All `awaiting stamp` since 1.51.0 (K947), declared in `row-census.test.mjs` `AWA
 
 Examined, not work: capture-requests' "observed, not changed" (`jobs/T21/capture-requests.md`:14, no requirement forbids it); calibration's wide lines; every other "Found in other modules" item was routed (N470–N479, K1001, K1004).
 
-## H. The UX stream's DECs now on `main` (21) (`DECISIONS.md` on `origin/main`:1544–1810)
+## H. The UX stream's DECs now on `main` (25: 21, and 4 split off by the check) (`DECISIONS.md` on `origin/main`:1544–1810)
 
 | id | DEC, share | its `owed:` line | disposition |
 |---|---|---|---|
-| H1 | DEC-96 acceptance, flags | "as requirements for Bob's approval" | L: Bob's |
-| H2 | DEC-97 held captures, bulk acts | "for Bob's approval" | L: Bob's |
+| H1 | DEC-96 acceptance, flags | "as requirements for Bob's approval" | L: dependency not yet built: nothing brings another group's published edition into this copy (inquiry R7's `inherited` leg names "an edition the published registry holds", which is publication R7's own `published_cases`; no fetch or verification of another copy's case exists; publication R32's import is unbuilt) (check) |
+| H2 | DEC-97 held captures, bulk acts | "for Bob's approval" | C (conditional): BOB drafts the fold; Bob approves it before the layer starts (the DEC's own "for Bob's approval"; question 1 in `t22-check.md`); unapproved by then, it goes to T23 named. The contested arm: ratification R22 (L8; `uses` + contradiction); the held-captures read and the bulk set-aside and bulk link acts: BOB places them at the fold in modules under 4,000 lines (ratification is 3,770); a set-aside that needs a new record state is a record-grammar change folded at the opening or it waits (order, P4) (check) |
 | H3 | DEC-98 empty, loading, failed screens | the redesign's screens | L: Bob's (UX) |
-| H4 | DEC-99 WCAG 2.2 AA, words in one place | "for Bob's approval" | L: Bob's |
+| H4 | DEC-99 WCAG 2.2 AA, words in one place | "for Bob's approval" | L: Bob's (UX): the member screens are the new interface, not yet built; the published case's conformance is "checked as each screen is accepted" (DEC-99), an acceptance the UX stream performs (check: reason named) |
 | H5 | DEC-100 docket standing | "nothing to build yet … awaits Bob's ruling" | L: Bob's |
-| H6 | DEC-101 "What changed" statement, watching editions | "for Bob's approval" | L: Bob's |
+| H6 | DEC-101 (1) the "What changed" statement required at a new edition's signing, (2) the assistant's draft, labelled machine work, origin kept | "for Bob's approval" | C (conditional): BOB drafts the fold; Bob approves it before the layer starts (the DEC's own "for Bob's approval"; question 1 in `t22-check.md`); unapproved by then, it goes to T23 named. (1) case-grammar, case-authoring, ratification (R2/R18 refusal), publication's share with its split (L8); (2) skills (L6, a clause and the act read from the catalogue) and case-authoring (L8) (check) |
 | H7 | DEC-102: "for now" lifted from ratification R2/R18, publication R17 | wording | C: fold at the opening |
-| H8 | DEC-102: identity levels and testimony weight | "BOB drafts for Bob's approval" | L: Bob's |
-| H9 | DEC-103 the lens printed into the signed case | "BOB drafts for Bob's approval" | L: Bob's |
+| H8 | DEC-102: identity levels and testimony weight | "BOB drafts for Bob's approval" | L: Bob's: doctrine the DEC leaves open, its owed line: "how each identity level maps to the testimony grade … what counts as corroboration to journalistic and legal standards" (question 2 in `t22-check.md`) (check: quoted) |
+| H9 | DEC-103 the lens printed into the signed case: statements, justifications, evidence, withheld count; the public page's lens section and print form | "BOB drafts for Bob's approval" | C (conditional): BOB drafts the fold; Bob approves it before the layer starts (the DEC's own "for Bob's approval"; question 1 in `t22-check.md`); unapproved by then, it goes to T23 named. case-grammar, case-authoring (uses bias), publication's share with its split, public-read (L8) (check) |
 | H10 | DEC-104: "for now" lifted from strength R5; strength counts the hunches it left out | "BOB places them" | C: fold before L6, strength L6 |
 | H11 | DEC-104: "Hunches to clear" list on question and project pages | the pages | L: Bob's (UX) |
 | H12 | DEC-105: the bar's honest note | "strength, project settings; BOB places it" | C: fold before L6, strength L6 |
-| H13 | DEC-105: audience guidance, later, on a trigger | research on a trigger | L: measurement |
+| H13 | DEC-105: audience guidance, later, on a trigger | research on a trigger | L: Bob's: DEC-105 defers it, "the research waits for its trigger" (a group asks, or a case is challenged) (check: reason named) |
 | H14 | DEC-106 two spaces, path marker | "nothing new to build beyond the redesign's screens" | L: Bob's (UX) |
 | H15 | DEC-107 "Obligation" → "To do" in member-facing text | "queue, queue-producers …; BOB places it" (`queue/index.mjs`:56) | C: fold before L11, queue and queue-producers L11 |
-| H16 | DEC-108 doorbell limits, inbox, archive | "BOB drafts for Bob's approval" | L: Bob's |
+| H16 | DEC-108 (a) limits 5 per source and 10 in all per 10 minutes with the published sentence and the refusal telling the knocker; (b) the count-only tally as status, after BOB's privacy check; (c) the inbox read sortable by time, status, knocker secret, project | "BOB drafts for Bob's approval" | C (conditional): BOB drafts the fold; Bob approves it before the layer starts (the DEC's own "for Bob's approval"; question 1 in `t22-check.md`); unapproved by then, it goes to T23 named. capture R31, R54 and the inbox read (L3) (check) |
 | H17 | DEC-109 claim page and wizard's last screen wording | "instance-setup …; BOB confirms" (`setup.mjs`:204–214; wizard `newgroup/src/ui.mjs`) | C: fold before L11, instance-setup and installer L11 |
 | H18 | DEC-109 administrator settings card | the redesign | L: Bob's (UX) |
 | H19 | DEC-110 "Condition" → "Signal"; the queue read sorts by time added, time due, case, kind | "queue; BOB places it" | C: fold before L11, queue and queue-producers L11 |
 | H20 | DEC-110 the redesign's three item styles, folding | the redesign | L: Bob's (UX) |
-| H21 | DEC-111 'working on' notices | a new outward act, for Bob's approval | L: Bob's |
+| H21 | DEC-111 'working on' notices | a new outward act, for Bob's approval | L: Bob's (architecture, P4): it needs a home, publication (4,408 lines, P6) or a new product module (question 3 in `t22-check.md`) (check: reason named) |
+
+| H6b | DEC-101 (3): watching other groups' published cases for new editions (check) | its owed line | L: dependency not yet built: as H1, nothing brings another group's edition into this copy (check) |
+| H9b | DEC-103: the publisher's pre-signing preview (check) | its owed line | L: Bob's (UX): a screen of the new interface, not yet built (check) |
+| H16b | DEC-108: the optional gatekeeper (machine work) and the discard archive with its one-week clearing (check) | its owed line | L: Bob's: the DEC leaves open "how a litigation hold (question 31) affects the archive's clearing"; the gatekeeper's dismissals go to that archive (question 4 in `t22-check.md`) (check) |
+| H16c | DEC-108: the inbox page's highlighting (check) | its owed line | L: Bob's (UX): the redesign's inbox (check) |
+
+## J. Found by the check (11) (check)
+
+Owed work the first pass did not list: U6's DEC-88 and DEC-89 (K1014 names both as entering T22's replan), the earlier DECs whose owed work no requirement cites (`grep DEC-<n> build/requirements/` is empty for DEC-82, -86, -87, -88, -89, -90, -92, -95; DEC-76–81, -83–85, -94 are cited), K1014's owed channel answers, and K617's owed split.
+
+| id | item | source | disposition |
+|---|---|---|---|
+| J1 | DEC-88 (1) the 57 acts moved from `RUNG_ABSENT` (147 keys today) into `RUNGS` (71) by Bob's three bands, R27's count re-worded; (3) the consequence statement published for the six; (4) `inboxresolve` regraded `reasoned`, its condition met (DEC-78's pull is built: capture R65 `op=inboxpull`) | DEC-88 "owed (BOB's)"; `affordances.mjs`:928 | C: affordances L11; fold before L11 (BOB's) |
+| J2 | DEC-88 (2) a required reason on each of the 29 reasoned acts (and `inboxresolve`) whose requirement does not yet require one | DEC-88 "owed (BOB's)" | C: BOB's audit at the opening (with the mark audit); each module found joins its own layer with its fold; known now: capture `inboxResolve` (L3), escalation `escalationOpen` (L9, with J3) |
+| J3 | DEC-89 the required opening reason; the reasoned "decline to escalate" act on a live noncompliant determination and its read; a determination's escalated, declined or neither | DEC-89 owed; `escalation.md`:17 (`escalationOpen` takes no reason) | C (conditional, as H2): escalation L9 (the determination's status is answered by escalation, which uses conformance; conformance, earlier in the order, cannot read escalation, P4); affordances (rung `reasoned`), op-declarations, control-plane L11; the totality red on the new op from escalation's merge to L11's accepted by name (K902's precedent) |
+| J4 | DEC-92 the origin mark (Ours, Another group's, Accepted, Not yet evaluated, Flagged) and the acceptance act | DEC-92 owed | L: dependency not yet built: as H1 |
+| J5 | DEC-95 (1) the grade note attached to a capture completed unattended and to its queue item | DEC-95 owed | C (conditional, as H2): capture L3, queue-producers L11 |
+| J6 | DEC-95 (3) the suggestion that a held capture bears on a member's question | DEC-95 owed | L: Bob's (UX): it lives only as "one quiet line on a question's page" of the new interface, not yet designed or built (3 (a)), and its acceptance is measured (3 (f)) |
+| J7 | DEC-81's Grade A: "its three decisions (the Grade A rule text, a member-recorded WACZ's grade, whether an evidentiary capture observes `robots.txt`) are with Bob" | DEC-81 owed | L: Bob's (quoted); then a measurement on seven source types |
+| J8 | DEC-102 item 3: the member asked by a to-do in their own queue when a case draft uses their observation with no credit level chosen (the draft's display is the redesign's) | DEC-102 response 3 (ruled, not in the owed line's approval clause); no requirement carries it (`queue-producers.md` has no credit item) | C: queue-producers L11, reading `publication.caseDocumentFacts` (as ratification R2 does); fold before L11 (BOB's placement) |
+| J9 | Each DEC fold answered on the channel with its K | K1014 | C: BOB, at each fold |
+| J10 | publication's split: 4,408 lines, past K617's mark, "split before its next job" (K617: Bob, "it MUST be split", BOB's) | K617, K624 | C: L8, split by copy (T18's actions/action-clocks precedent): a new module before publication, its requirements carved from publication's with no change of meaning; BOB's seam map before L8 (P18); membership's `MODULE_ORDER` (R83) red by name from the `modules.json` edit to T23's L2 (P8) |
+| J11 | DEC-82, DEC-86, DEC-87 (the act surfaces), DEC-90: owed only to the redesign's screens | their owed lines | L: Bob's (UX): the new interface, not yet built |
 
 ## I. Legacy census (2) (`modules.json`: the only `"legacy": true` modules; no module names a `from`)
 
@@ -189,6 +212,8 @@ Examined, not work: capture-requests' "observed, not changed" (`jobs/T21/capture
 
 ## Count
 
-A 58 (C 41, L 17) · B 22 (C 6, L 16) · C 9 (L 9) · D 11 (C 10, L 1) · E 6 (C 6) · F 2 (C 2) · G 1 (C 1) · H 21 (C 6, L 15) · I 2 (C 1, L 1).
+First pass: A 58 (C 41, L 17) · B 22 (C 6, L 16) · C 9 (L 9) · D 11 (C 10, L 1) · E 6 (C 6) · F 2 (C 2) · G 1 (C 1) · H 21 (C 6, L 15) · I 2 (C 1, L 1): 132, carried 73, left out 59.
 
-**Inventory 132 rows: carried 73, left out 59.**
+After the check (`t22-check.md`): A 58 (C 42, L 16; A42 carried) · B 22 (C 6, L 16) · C 9 (L 9) · D 11 (C 10, L 1) · E 6 (C 6) · F 2 (C 2) · G 1 (C 1) · H 25 (C 10, L 15; H2, H6, H9, H16 carried; H6b, H9b, H16b, H16c added, left out) · I 2 (C 1, L 1) · J 11 (C 7, L 4). Carried conditional on Bob's approval of a drafted fold: H2, H6, H9, H16, J3, J5; on the seam map: A42.
+
+**Inventory 147 rows: carried 85, left out 62.** (check)
