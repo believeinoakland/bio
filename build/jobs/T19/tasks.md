@@ -20,6 +20,6 @@
 - `node checks/format.mjs`: `format: 87 modules, 82 requirements files; 0 failures`
 - `node checks/architecture.mjs … tasks`: `architecture: 8 product files, 31 relative imports (0 naming no tracked file, not judged); 0 failures`
 - `node checks/coverage.mjs … tasks`: `coverage: 1 modules, 11 of 11 live requirement ids named by a test; 0 failures`
-- `node checks/ownership.mjs … tasks tranche/T19`: `0 failures` (re-run after the commit, below)
+- `node checks/ownership.mjs … tasks tranche/T19`: `ownership: 5 files changed by tasks between tranche/T19 and HEAD; legacy-store: 0 line(s) added, 0 removed; 0 failures`
 
 Size (session_013NyWnRWTkvdb8cPBaL3ELW): test runs 3, module lines 955
