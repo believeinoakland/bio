@@ -22,3 +22,7 @@
 - `ownership: 1 files changed by host-governor between tranche/T20 and HEAD; 0 failures`
 
 Size (session_01E5goMGoeD1gWF6MCUYPYx4): test runs 3, module lines 1
+
+## J1 · COMPLETE
+
+B1 applied: ops.test.mjs:192 SRC now ../../../src/plane/index.mjs; :192 was the module's only read of src/index.mjs. host-governor suite 39/39 green; ops.test.mjs 9/9 green with src/index.mjs moved aside locally, so plane may delete the re-export as far as this module is concerned. format, architecture, coverage (27/27), ownership: 0 failures. No product code changed, no artifact staled, nothing deferred, nothing found elsewhere. Branch job/T20/host-governor ready to merge (merge early, before plane's L11 job).
