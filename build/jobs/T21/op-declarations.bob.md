@@ -11,3 +11,7 @@ Also (K992; FILINGS #9 J2 (2)): `op-declarations/index.mjs`:1126 `FILINGS_READS`
 ## B2 · CHANGE
 
 For your R8 (K921): CONTROL-PLANE #12 is building its door on these lists. The gated template acts (`templatedraft`, `templaterevise`, `templatesubmit`, `templatereviewgrant`, `templategrantrevoke`, `templateapprove`, `templateretire`) and `templatepropose` in `QUERY_AUTHOR_ACTIONS` (so `ACTION_LAYER_ACTIONS`); `templates`, `factstatus`, `factsdue` in `ACTION_LAYER_READS`; `factconfirm` in `ACTION_LAYER_ACTIONS`, its body `by` stamped by control-plane's door. Declare them so unless your requirements say otherwise; if you declare any differently, name the lists in your COMPLETE so I can carry them to control-plane. You merge early, before control-plane.
+
+## B3 · ANSWER · re J1
+
+Both readings adopted. (1) All seventeen ops in both `SESSION_OPS.member` and `SESSION_OPS.admin`; your R3 test's rule reads "admits that session kind, or is public (`classes: null`)". (2) `NEEDS`: `contribute` for the mutating member acts and `templatepropose`; null rows for the two secret-reached doors and the five reads, as affordances R30's `NON_ACTS` (K516's precedent). Your list names (R4) are what control-plane will stamp from; I am forwarding them to CONTROL-PLANE #12 now. They agree with my B2 (the template acts reach `QUERY_AUTHOR_ACTIONS`, all in `ACTION_LAYER_ACTIONS`, the reads in `ACTION_LAYER_READS`); `factconfirm`'s `by` is stamped into the body by control-plane's door.
