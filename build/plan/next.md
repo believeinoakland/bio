@@ -12,6 +12,9 @@
 - N483 · 2026-10-01 · **plane**, **conformance**, **queue-producers** (K1024, the split): after `corpus-export` lands, the plane's op map spreads `corpusExportOps` and publication's `export`/`exportlog` delegates and constant re-exports retire; conformance's `record.test.mjs`:165 and queue-producers (`EXPORT_LOG_LIMIT_DEFAULT`, `exportLog`) call `corpus-export` directly. **Hard reason:** the plane and conformance have no T22 job (P8); the delegates keep them green meanwhile.
 - N484 · 2026-10-01 · **record-core**, **provenance**, **corpus-export** (K1024): the export reads `bundles`' title and sha columns (beyond record-core R37), `register.bytes` (beyond provenance R48) and the `files`/`history`/`manifest` tables, which no requirement states; state each read contract in its owner's Provides. **Hard reason:** predates the split; a provider's requirement change is read by running jobs' users (P5), so it is written for T23.
 
+- N485 · 2026-10-01 · **record-grammar** (L1), then **escalation**, **case-authoring**, **skills** (K1025): record-grammar R43, R44 (the `edition_statement` and `escalation_reason` proposal subjects; `proposalLabel` throws on an unknown subject), then escalation R29 (the pre-assembled opening reason, Bob's DEC-89 addition), case-authoring R39 and R38's `draft` arm, skills R31. **Hard reason:** the order (P4, P10): they arose with K1019 after layer 1 closed, and each needs record-grammar's new subject.
+- N486 · 2026-10-01 · **network-notices** (new, L8; DEC-111, K1019) and **monitoring** R29 (the sweep): drafts `plan/draft-network-notices.md`, `plan/draft-monitoring-r29.md`, to Bob with their questions, each with a recommendation, then built in T23. **Hard reason:** Bob's (requirements and architecture, P17) and K1019 places the build in T23.
+
 ## Left out of T22, carried here (62 rows, one hard reason each) (check)
 
 | row | item | hard reason | note |
