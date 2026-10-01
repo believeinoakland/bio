@@ -98,20 +98,25 @@ async function selectRelease(emit) {
   /* The manifest travels with the selection (IC-82): the fleet half reads
      `fleet[]`/`fleetSig` from it. null means the repository was unreachable —
      a STATED absence the fleet step reports, never rounds to "no members". */
-  let man = null;
+  let man = null, said = "";
   try {
     man = await fetchRepoManifest();
     if (vcmp(man.version, RELEASE_VERSION) > 0) {
       const source = await fetchRepoAsset(man);
-      emit.ok("rel", "The repository has " + man.version + ", newer than the built-in "
-        + RELEASE_VERSION + ". "
-        + (ARMED_SIGNERS.length
-            ? "It carries a valid signature from a key this installer trusts, so that is what installs."
-            : "Its integrity checked out, so that is what installs."));
-      return { version: String(man.version), source, from: "repository", man };
-    }
-    emit.ok("rel", "The built-in release (" + RELEASE_VERSION + ") is current.");
-    return { version: RELEASE_VERSION, source: RELEASE_SOURCE, from: "built-in", man };
+      /* R20: verified bytes that state no readable limits are not used either; the built-in stands in, and the page says why. */
+      const lim = planeLimits(source);
+      if (lim.ok) {
+        emit.ok("rel", "The repository has " + man.version + ", newer than the built-in "
+          + RELEASE_VERSION + ". "
+          + (ARMED_SIGNERS.length
+              ? "It carries a valid signature from a key this installer trusts, so that is what installs."
+              : "Its integrity checked out, so that is what installs."));
+        return { version: String(man.version), source, from: "repository", man, limits: lim.limits };
+      }
+      said = "The repository has " + man.version + ", but it " + LIMITS_NOT_STATED[lim.why]
+        + (lim.detail ? " (" + lim.detail + ")" : "") + ", so it was NOT used. The installer's own built-in release ("
+        + RELEASE_VERSION + ") installs instead.";
+    } else said = "The built-in release (" + RELEASE_VERSION + ") is current.";
   } catch (e) {
     /* R11: a repository that answered, but whose plane failed verification, was REACHABLE: its manifest stays, so the
        fleet step names the true reason its members are left out (they are signed against a plane this act did not
@@ -119,7 +124,7 @@ async function selectRelease(emit) {
     if (!(e && (e.integrity || e.unsigned || e.signature))) man = null;
     const fallback = " The installer's own built-in release (" + RELEASE_VERSION
       + ") installs instead, which is safe. This is worth mentioning to the publisher of CivicOS releases.";
-    emit.ok("rel",
+    said = (
       e && e.integrity
         ? "The repository's copy did not pass its integrity check, so it was NOT used." + fallback
       : e && e.unsigned
@@ -131,7 +136,17 @@ async function selectRelease(emit) {
         : "The public repository was not reachable just now, so the built-in release ("
           + RELEASE_VERSION + ") is used. That is fine.");
   }
-  return { version: RELEASE_VERSION, source: RELEASE_SOURCE, from: "built-in", man };
+  /* R20: the built-in is held to the same rule. One that states no readable limits is refused by name, before any plane
+     upload; the caller stops the act (`refused`) and nothing installs. */
+  const lim = planeLimits(RELEASE_SOURCE);
+  if (!lim.ok) {
+    emit.no("rel", said);
+    return { refused: "This installer's built-in release (" + RELEASE_VERSION + ") " + LIMITS_NOT_STATED[lim.why]
+      + (lim.detail ? " (" + lim.detail + ")" : "") + ". The plane's limits are a decision the signed release states, and "
+      + "this installer holds no value of its own to send in their place." };
+  }
+  emit.ok("rel", said);
+  return { version: RELEASE_VERSION, source: RELEASE_SOURCE, from: "built-in", man, limits: lim.limits };
 }
 
 /* ------------------------------------------------------------------ utils */
@@ -330,17 +345,36 @@ const INSTANCE_AI_RE = /^[\x21-\x7e]{16,512}$/;
 export const instanceAiOk = (v) => typeof v === "string" && INSTANCE_AI_RE.test(v);
 const instanceAiBinding = (v) => instanceAiOk(v) ? [{ type: "secret_text", name: INSTANCE_AI_BINDING, text: v }] : [];
 
-/* DIST-7 (D-54's installer half) — THE PLANE'S LIMITS, AS THE RELEASE STATES THEM.
+/* R20 (DIST-15, N336) — THE PLANE'S LIMITS, AS THE SIGNED RELEASE STATES THEM.
  *
- * `bio-plane/wrangler.jsonc` states `limits.subrequests` with its reason, and `deploy.mjs` carries it to this project's
- * instance (read back live at 0.79.0: 10000). Until DIST-7 both upload paths here sent NO `limits`, so every group's
- * instance ran at whatever Cloudflare's default was that month. The value is carried the way the plane's
- * `compatibility_date` is: declared here and PINNED to the plane's config by the wizard suite, so an installer built from
- * a tree whose config states a different ceiling fails its own tests. Both paths send it — the update too, because an
- * instance installed before DIST-7 has no limit to keep. UNDETERMINED, NOT BUILT: carrying it at RUNTIME from the signed
- * release (an installer installing a later release with a different ceiling still sends this one); the signed manifest
- * has no plane-limits field, and adding one to the fleet statement would fail every older installer's verification. */
-export const PLANE_LIMITS = Object.freeze({ subrequests: 10000 });
+ * DIST-7 sent a constant pinned to the plane's config, so an installer installing a later release with another ceiling
+ * still sent its own. Now the plane's code states its limits (control-plane's statement, equal to `bio-plane/wrangler.jsonc`'s
+ * `limits`), so the bundle a release signs carries them, and this reads them from the bytes R8 chose and verified: the
+ * installer holds no value of its own. The statement is a string literal, `bio-plane-limits/1 key=n …`, because a bundler
+ * rewrites numbers, renames constants and changes quotes, and a string's text survives all three; the bundle cannot be
+ * executed here (a Worker imports no string), so it is read as text. Nothing is added to the fleet statement: the
+ * limits ride inside the plane bytes the release signature and the fleet statement's plane hash already cover, so an
+ * older installer still verifies the fleet signature of a release that carries them.
+ *
+ * `{ok: true, limits}`; or `{ok: false, why: "none"}` (no statement); or `{ok: false, why: "unreadable", detail}` (two
+ * different statements, or one not of the form). */
+const LIMITS_TAG = "bio-plane-limits/1";
+export function planeLimits(source) {
+  if (typeof source !== "string") return { ok: false, why: "none" };
+  const bodies = new Set();
+  for (const m of source.matchAll(/(["'`])bio-plane-limits\/1( [^"'`\\\n]*)\1/g)) bodies.add(m[2]);
+  if (bodies.size === 0) return { ok: false, why: "none" };
+  if (bodies.size > 1) return { ok: false, why: "unreadable", detail: "it states them " + bodies.size + " different ways" };
+  const [body] = bodies;
+  const limits = {};
+  for (const part of body.slice(1).split(" ")) {
+    const kv = /^([a-z][a-z0-9_]*)=([1-9][0-9]{0,8})$/.exec(part);
+    if (!kv || kv[1] in limits) return { ok: false, why: "unreadable", detail: `"${LIMITS_TAG}${body}" is not one key=number per limit` };
+    limits[kv[1]] = Number(kv[2]);
+  }
+  return { ok: true, limits: Object.freeze(limits) };
+}
+const LIMITS_NOT_STATED = { none: "states no limits for the plane", unreadable: "states the plane's limits unreadably" };
 
 /* R21 (N10): the jurisdiction profiles the operator chose, in the order chosen, bound for the copy to record at its first
    boot (instance-setup R13). None chosen binds nothing, and R13 then records nothing. An update never sends it: only
@@ -370,8 +404,8 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
     main_module: "index.mjs",
     compatibility_date: "2026-07-01",
     compatibility_flags: ["nodejs_compat"],
-    /* DIST-7 (D-54): the plane's subrequest ceiling, a decision the release states, never Cloudflare's default. */
-    limits: { ...PLANE_LIMITS },
+    /* R20: the plane's limits exactly as the release R8 chose states them (selectRelease), never a value of our own. */
+    limits: { ...release.limits },
     bindings: [
       { type: "durable_object_namespace", name: "STORE", class_name: "Store" },
       { type: "plain_text", name: "VERSION", text: release.version },
@@ -429,8 +463,8 @@ async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
     main_module: "index.mjs",
     compatibility_date: "2026-07-01",
     compatibility_flags: ["nodejs_compat"],
-    /* DIST-7 (D-54): the plane's subrequest ceiling, a decision the release states, never Cloudflare's default. */
-    limits: { ...PLANE_LIMITS },
+    /* R20: as on install; restated every update, because a copy installed before DIST-7 has no limit to keep. */
+    limits: { ...release.limits },
     bindings: [
       { type: "plain_text", name: "VERSION", text: release.version },
       /* D-102: bound on UPDATE as well as install, which is what retro-names
@@ -884,6 +918,15 @@ async function runInstall(emit, code, saved) {
       "Detail: " + e.message);
   }
 
+  /* R20 with R4: the release is chosen before the first thing this flow creates (the plan probe, then the buckets), so a
+     release that states no readable limits refuses the install while there is genuinely nothing to clean up. */
+  const release = await selectRelease(emit);
+  if (release.refused) {
+    return emit.fail("This installer cannot say which limits your copy runs under",
+      "Nothing was created, so there is nothing to clean up. " + release.refused,
+      "This is for the publisher of CivicOS releases to fix with a release that states them; try again after the next release.");
+  }
+
   /* DIST-3 / DEC-42: the plan check comes BEFORE the first thing this flow
      creates (the buckets, one step down), so a Free-plan account is refused
      while there is genuinely nothing to clean up. Refusing IS the fix: the
@@ -939,8 +982,6 @@ async function runInstall(emit, code, saved) {
       "To continue: sign in at dash.cloudflare.com with this same account, open Billing, add a card or "
       + "PayPal, then come back here and run the installer again. (Cloudflare said: " + e.message + ")");
   }
-
-  const release = await selectRelease(emit);
 
   emit.step("gen", "Generating your credentials");
   const secrets = { boot: rand(32), member: rand(32), probe: rand(32), daemon: rand(32),
@@ -1154,6 +1195,11 @@ async function runUpdate(emit, code, saved) {
   try { await ensureBuckets(token, acct.id); withR2 = true; } catch {}
 
   const release = await selectRelease(emit);
+  if (release.refused) {
+    return emit.fail("This update cannot say which limits your copy runs under",
+      "Your copy is still running the version it had before. Nothing about it changed. " + release.refused,
+      "This is for the publisher of CivicOS releases to fix with a release that states them; try again after the next release.");
+  }
 
   /* What is it running now? Asked before the upload, so an update that changes
      nothing can say so instead of reading as a success. A no-op reported as
