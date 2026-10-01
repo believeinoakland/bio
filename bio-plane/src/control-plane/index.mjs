@@ -11,6 +11,7 @@ import { ADMISSION_CHECKS, NAMESPACE_CHECKS, DISPATCH_CHECKS, BOOTSTRAP_CHECKS, 
 /* R22, R41 (K585 (1)): the composed catalogue — the check catalogue, every module's families, this module's own — and the
    one reader of a code's row (`families.mjs`). */
 import { CHECK_FAMILIES, CHECK_FAMILY_FILES, dec49Row } from "./families.mjs";
+import { machineFences, renderPack } from "../skillpack.mjs";
 import { liveToken } from "../tokens.mjs";
 import { SIGN_HTML } from "../signpage.mjs";
 import { setupPage } from "../setup.mjs";
@@ -1250,6 +1251,24 @@ async function knockerConsent(req, store) {
   if (rec.ok !== true)
     return json({ ok: false, ...rec }, rec.reason === "RATE_IP" || rec.reason === "RATE_GLOBAL" ? 429 : 403);
   return json({ ...rec, ok: true }, 200);
+}
+
+/* R41 (K585 (1), K674 (1); agent-worker R48, N157): THE PUBLISHED FENCES AND THE RENDERED PACK, the door's decoration of
+   the untargeted `op=affordances` answer (affordances R17's, whose handler answers it): `fences`, skills' `machineFences`
+   over `CHECK_FAMILIES`, and `pack`, `renderPack` over that same answer with its `fences`, whole with its `version`. A
+   member's agent reads both from here and imports no catalogue. A render that throws publishes `pack: null` and
+   `pack_absent` (its sentence), never a partial pack, so a reader refuses it. A targeted answer, and any answer that is
+   not `ok: true` with a result, passes unchanged. */
+async function publishAffordances(res, url) {
+  if (url.searchParams.get("target")) return res;
+  let body;
+  try { body = await res.clone().json(); } catch { return res; }
+  if (!body || body.ok !== true || !body.result || typeof body.result !== "object" || Array.isArray(body.result)) return res;
+  const published = { ...body.result, fences: machineFences(CHECK_FAMILIES) };
+  let pack = null, absent = null;
+  try { pack = renderPack(published); }
+  catch (e) { absent = String((e && e.message) || "the pack could not be rendered").slice(0, 500); }
+  return json({ ...body, result: { ...published, pack, ...(pack ? {} : { pack_absent: absent }) } }, res.status);
 }
 
 /* R1–R25: the Worker entry. `hooks.publicOp(ctx)` answers a public op whose handler still lives in legacy-index;
@@ -2640,7 +2659,7 @@ export function makeFetch(hooks = {}) {
        through to the forward. */
     const armed = hooks.gatedOp ? await hooks.gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer,
       sessIdentity, sessRights, sessCaps, aiCred, storeName, stub }) : undefined;
-    if (armed) return armed;
+    if (armed) return op === "affordances" ? publishAffordances(armed, url) : armed;
     /* Who is acting on a project's roster is decided by the SERVER. Set after
        the caller's parameters were copied, so a caller-supplied `by` is
        overwritten rather than honoured: "only an owner may remove" is worth
@@ -3540,4 +3559,4 @@ export { json, doAnswer, storeSilent, storeRefusal, relayAnswer, StoreSilent, ST
          installationRow, admissionRow, dispatchRow, namespaceRow, machineFenceRow, replayRow, identityFenceRow,
          dec49Row, dec49Attach, CHECK_FAMILIES, CHECK_FAMILY_FILES, sessionOpGate, migrationReplayOf, DRIVE_PROVENANCE_PATH,
          namespaceGate, pinnedNamespaceGate, confinedNamespaceGate, aiReachesAsMember, aiScopeDeclaration,
-         aiConfinementDeclaration, aiTaskScope, AI_TOKEN_SHAPE, SCRATCH_ADDRESSING_PUBLIC_OPS };
+         aiConfinementDeclaration, aiTaskScope, AI_TOKEN_SHAPE, SCRATCH_ADDRESSING_PUBLIC_OPS, publishAffordances };
