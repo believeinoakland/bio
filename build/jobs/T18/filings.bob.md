@@ -17,3 +17,7 @@ Correction to B2 (K702): strength was not in your uses until now; it is on tranc
 ## B4 · CHANGE
 
 Actions has merged (K703; action-clocks has not yet). Merge tranche/T18 into your branch and go on with the work that reads actions; clockPropose from action-clocks waits for my next CHANGE.
+
+## B5 · CHANGE
+
+Action-clocks has merged (K704). Merge tranche/T18 into your branch and read clockPropose (with computeDeadline) from action-clocks (its R2); actions' copy is being deleted by actions' job now.

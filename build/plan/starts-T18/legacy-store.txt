@@ -2,3 +2,4 @@ Depth 2. Your entries: `build/plan/current.md` layer 10, legacy-store (read the 
 Also (K671): the store dispatch lines for `publicReadOps`, `projectStageOps`, `actionClocksOps` and `actionPlansOps` (import and spread) are yours to add, since you own `store.mjs` and follow all four; run `test/m/` whole after, and test that each of their ops is reached through the store.
 Also (K674 (4)): convert the `retire` arm of the old `refuse-gate` suite (SET_MOVED over a constant-count swap; a fresh selection retires) at your interface.
 Also (K682, AI-RUNS #5): re-point `store.mjs`' `airun.mjs` imports to `run-rules` (ai-runs could not: an import from another module's path is not §12.2's; `airun.mjs` is a bare re-export until ai-runs' T19 job deletes it).
+Also (K704, ACTION-CLOCKS #1 J3): construct `actionClocksOf` and spread `actionClocksOps` in the store's dispatch (K671).
