@@ -128,6 +128,7 @@ K861 re-cut the held-code entries above (K842's "registers its own share and del
 - **L4** extraction
 - **L5** *connections* (K882: N454, `refs` exported), *bias* (K881: R23's order test off `legacy-store`), *observation-log* (K842, K861: `observations` and `leads` only)
 - **L6** *skills* (K882: N452's re-point), *run-rules* (K882: K820's comments), *ai-runs* (K881: R43's order test off `legacy-store`), *inquiry-grammar* (K850), *inquiry* (K842, K861; with K850's re-point), *basis-versions* (K842, K861), *run-productions* (K842, K861), *agent-worker* (K846, K861 (6))
+- **L7** *intent* (K901: N317, Bob K899 (3): `workproduct_state`, `evaluations` and C-9.1 retire)
 - **L8** *ratification* (K875: re-point `preflight.test.mjs` from membership's signer copies to credentials)
 - **L9** actions
 - **L11** *control-plane* (K846, K850, K861 (4): R42's step exported, the alias dropped, C-68.1 at one site), installer, *plane* (K842, K861), *legacy-tests* (K879: Bob ruled the old suites deleted; last)
