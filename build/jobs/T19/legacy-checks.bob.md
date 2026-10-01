@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` layer 1, legacy-checks (amended): t
 ## B2 · ANSWER · re J1
 
 K750: all three readings adopted. (1) `MECHANICAL_FIELD_SETS` and `VERSION_NOTICE_CHECKS` held under rule 1; promotion (L2) and content (L4) delete them. (2) record-grammar does not move `isMachineMinted` (I am telling it); you delete it after record-grammar merges. (3) C-2.7 and the wrapper after record-grammar merges; `CONTENT_HASH_RE` stays. I will post a CHANGE when record-grammar has merged.
+
+## B3 · CHANGE
+
+Text-chain has merged into tranche/T19 (K752), with the extent algebra copied (the catalogue's copy stays; reevaluation deletes it in L7). Record-grammar's Rs R28–R41 are worded (K751): your wrapper keeps `checkBundle` calling record-grammar's with LEGACY_GRAMMARS filling the C-6.1 and C-15.1 slots (and C-18.6/.7, C-2.8, C-2.9/C-9.1 as today), and re-exports EXTENSION_ARMS; you write it after record-grammar merges. Merge tranche/T19.
