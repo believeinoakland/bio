@@ -113,3 +113,62 @@ test("R6 R7 R19 a draft drawing on a determination in a project the viewer may n
   assert.equal((await x.f.filingApprove({ filing: d.id, text: "t", author: V("bo"), viewer: V("bo") })).reason, "FILING_STALE",
                "a member of the project reaches the draft");
 });
+
+/* conformance's R24 (DEC-36), answered by a proxy of the real conformance: the fixture's determination D read as resting
+   on two findings, F and F2, where F2 is withheld whole from `hiddenFrom` (left out, `out_of_view: true`). */
+const F2 = "INQ-2026-0042";
+function twoFindings(x, hiddenFrom) {
+  const real = x.conformance;
+  return {
+    determinationsFor: (a) => real.determinationsFor(a),
+    determinationRead(a) {
+      const d = real.determinationRead(a);
+      if (!d || d.ok === false || d.id !== x.D) return d;
+      return a.viewer === hiddenFrom ? { ...d, out_of_view: true }
+        : { ...d, findings: [...d.findings, { ...d.findings[0], finding: F2, version_sha: null }] };
+    },
+  };
+}
+/* The test profile with `bylaw_complaint`'s template naming the findings and standards blanks. */
+function listsProfile(x) {
+  const p = x.profile();
+  return { ...p, id: "test-filings-lists", action_kinds: p.action_kinds.map((k) => (k.kind === "bylaw_complaint"
+    ? { ...k, template: "Findings: {{findings}}. Standards: {{standards}}." } : k)) };
+}
+
+test("R27 R3 R9 R21 a finding conformance withholds from the reader is withheld whole: the draft's findings blank stays [UNFILLED] with why 'not one you may see', the packet's facts hold only what the reader sees, no null and no placeholder, with out_of_view: true; a reader who sees both gets the filled blank and no key", () => {
+  const x = world();
+  const f = x.filingsWith({ conformance: twoFindings(x, V("bo")), profiles: () => [listsProfile(x)] });
+  const A = x.action();
+  const T3 = x.action({ kind: "commitment_claim" });
+  /* the preparer from whom F2 is withheld */
+  const d = f.filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") });
+  assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));
+  const why = Object.fromEntries(d.unfilled.map((u) => [u.name, u.why]));
+  assert.match(why.findings, /not one you may see/);
+  assert.ok(d.text.includes("Findings: [UNFILLED: findings]."), d.text);
+  assert.equal(d.blanks.some((b) => b.name === "findings"), false);
+  const p = f.counselPacket({ action: T3, counsel: COUNSEL, author: V("bo"), viewer: V("bo") });
+  assert.equal(p.ok, true, JSON.stringify(p).slice(0, 300));
+  assert.deepEqual(p.sections.facts.items.map((i) => i.finding), ["INQ-2026-0001"], "one item, the one the reader sees");
+  assert.equal(p.sections.facts.out_of_view, true);
+  assert.equal(p.sections.standards.out_of_view, true, "conformance says only that something was withheld");
+  const avail = f.availableActions({ determination: x.D, viewer: V("bo") });
+  assert.equal(avail.determinations[0].out_of_view, true);
+  assert.equal(JSON.stringify(p).includes(F2), false);
+  for (const r of [d, { facts: p.sections.facts, standards: p.sections.standards }, avail]) {
+    const bytes = JSON.stringify(r);
+    assert.equal(bytes.includes(F2), false, "names nothing of it");
+    assert.equal(bytes.includes("an object you may not see"), false, "no placeholder");
+    assert.doesNotMatch(bytes, /"finding":null|"standard":null|"withheld"/);
+  }
+  /* negative control: the preparer who sees both */
+  const c = f.filingPrepare({ action: A, preparer: V("olive"), viewer: V("olive") });
+  const filled = c.blanks.find((b) => b.name === "findings");
+  assert.ok(filled && filled.value.includes(F2) && filled.value.includes("INQ-2026-0001"), JSON.stringify(c.blanks));
+  assert.equal(c.unfilled.length, 0);
+  const cp = f.counselPacket({ action: T3, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
+  assert.deepEqual(cp.sections.facts.items.map((i) => i.finding), ["INQ-2026-0001", F2]);
+  for (const s of Object.values(cp.sections)) assert.equal("out_of_view" in s, false, s.title);
+  assert.equal("out_of_view" in f.availableActions({ determination: x.D, viewer: V("olive") }).determinations[0], false);
+});
