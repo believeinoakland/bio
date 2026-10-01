@@ -48871,6 +48871,7 @@ var CONNECTIONS_COUNT_KEYS = Object.freeze([
   "themes",
   "themePlacements"
 ]);
+var REFS_COUNT_KEYS = Object.freeze(["refs"]);
 var ASSERTED_LIMIT_DEFAULT = 200;
 var ASSERTED_LIMIT_MAX = 2e3;
 var ASSERT_BASIS_MAX = 4e3;
@@ -48927,20 +48928,23 @@ var Connections = class _Connections {
   migrate() {
     migrateConnections(this.sql);
   }
+  /* The one count behind R60 and R61: `table`'s rows, less (with `hid`) the rows any of whose `keys` names a bundle in
+     `hid`. `COALESCE(k, '')`: a NULL key names no bundle, and `NULL NOT IN (…)` is NULL, which would drop the row. */
+  #count(hid, table2, ...keys) {
+    const hidden = !!hid && typeof hid === "object" && typeof hid.sql === "string";
+    const args = hidden && Array.isArray(hid.args) ? hid.args : [];
+    const conds = hidden ? keys.map((k) => `COALESCE(${k}, '') NOT IN ${hid.sql}`) : [];
+    return this.#one(
+      `SELECT count(*) AS c FROM ${table2}${conds.length ? ` WHERE ${conds.join(" AND ")}` : ""}`,
+      ...hidden ? keys.flatMap(() => args) : []
+    ).c;
+  }
   /** R60 (record-core R63): this module's figures, each counted as the legacy store's `#counts` took it. `hid` is the
    *  bundles the caller may not see (`{sql, args}`), or null for a whole count: a figure keyed on a bundle column
    *  leaves out the rows whose column names one in `hid` (a null column names none, and is counted); a figure with
    *  no such column counts every row. Synchronous; writes nothing. */
   counts(hid = null) {
-    const hidden = !!hid && typeof hid === "object" && typeof hid.sql === "string";
-    const args = hidden && Array.isArray(hid.args) ? hid.args : [];
-    const n = (table2, ...keys) => {
-      const conds = hidden ? keys.map((k) => `COALESCE(${k}, '') NOT IN ${hid.sql}`) : [];
-      return this.#one(
-        `SELECT count(*) AS c FROM ${table2}${conds.length ? ` WHERE ${conds.join(" AND ")}` : ""}`,
-        ...hidden ? keys.flatMap(() => args) : []
-      ).c;
-    };
+    const n = (table2, ...keys) => this.#count(hid, table2, ...keys);
     return {
       connections: n("connections", "a_bundle_id", "b_bundle_id"),
       connectionPairChoices: n("connection_pair_choices", "a_bundle_id", "b_bundle_id"),
@@ -48948,6 +48952,12 @@ var Connections = class _Connections {
       themes: n("themes"),
       themePlacements: n("theme_placements")
     };
+  }
+  /** R61 (K882, N454): the `refs` figure, `{refs}` for `REFS_COUNT_KEYS`, for plane's own stats sight: the rows of
+   *  `refs` less those whose `bundle_id` or `target_id` names a bundle in `hid` (a NULL key names none, and is
+   *  counted); a null `hid` counts whole. Registered nowhere; synchronous; writes nothing. */
+  refsCounts(hid = null) {
+    return { refs: this.#count(hid, "refs", "bundle_id", "target_id") };
   }
   /* ---- sight (R12, R33) ---- */
   /** One bundle id through the viewer: the id, or null for one the viewer may not see; a row naming no bundle is left
@@ -51273,12 +51283,12 @@ var CONDITION_KINDS = Object.freeze({
   "invitation-spent-or-expired": "an invitation was spent, or expired unused",
   "governor-holding-host": "the per-host governor is holding a host: the capture is PACED, not broken (D-103)",
   "runtime-ceiling-reached": "a CPU or subrequest ceiling was reached (D-54, D-56)",
-  /* D-523, LIVE from its landing: store.mjs #conditionsRenderDeferred, derived on read from
+  /* D-523, LIVE from its landing: queue-producers' #conditionsRenderDeferred, derived on read from
      `capture_requests`. BOB #33 RULED 2026-09-24 19:54Z (CLIENT-RENDERED.md, "RULED 2026-09-24 by BOB #33"):
      a render held under a C-83 reason is SHOWN with that reason, and at its request's `expires` it is
      recorded UNDETERMINED and released. A CONDITION and not a FINDING: our own renderer, allowance or
      pacing is what holds it, a fact about our machinery and never about the page. */
-  "render-deferred": "a render this instance could not do is held under its C-83 reason until its request expires, and is then recorded undetermined (D-491, D-523) \u2014 LIVE: store.mjs #conditionsRenderDeferred"
+  "render-deferred": "a render this instance could not do is held under its C-83 reason until its request expires, and is then recorded undetermined (D-491, D-523) \u2014 LIVE: queue-producers #conditionsRenderDeferred"
 });
 function refusal7(key, detail, extra = null) {
   const row2 = OBSERVATION_CHECKS[key];
@@ -51941,6 +51951,29 @@ var ObservationLog = class _ObservationLog {
       kind
     );
     return { extraction: q7("extract"), index: q7("derive") };
+  }
+  /** R32 (K861, plane R10): this module's share of the instance's figures, exported for `plane` to register under this
+   *  module's name through record-core R63 (`registerCounts("observation-log", ObservationLog.COUNT_KEYS, (hid) =>
+   *  o.counts(hid))`); the module registers nothing itself while plane holds its copy. Both are purge's proof only:
+   *  record-core keeps them off `op=stats`' answer (its R64), and the wire's log count, `observationsNonLead`, is
+   *  plane's, not this module's (K861 (2)). */
+  static COUNT_KEYS = Object.freeze(["observations", "leads"]);
+  static #COUNTED = Object.freeze({ observations: "observation_log", leads: "leads" });
+  /** R32, D-113 (purge PROVES what it took, and §5: *the purge proof's own count stays whole*): R63's `counts(hid)` for
+   *  this module's share, moved from the plane's held copy with its reading kept. `observations` is every row of the log,
+   *  lead looks and run rows included; `leads` every lead. NEITHER TABLE HAS A COLUMN NAMING A BUNDLE (R23), so there is
+   *  nothing for `hid` to subtract and every `hid`, null included, counts whole: `hid` is taken to fit R63's shape and
+   *  never read. A figure whose table cannot be read is left out, and R63 answers it null, never zero. Synchronous;
+   *  writes nothing; never throws. */
+  counts(hid = null) {
+    const out = {};
+    for (const key of _ObservationLog.COUNT_KEYS) {
+      try {
+        out[key] = this.#one(`SELECT count(*) AS c FROM ${_ObservationLog.#COUNTED[key]}`).c;
+      } catch {
+      }
+    }
+    return out;
   }
   /** connections' R5 provider: the derivation statement of one entity (D-241), from its latest meaning-level row, or
    *  §5.1's cause when there is none (`derivationStatement` says what each means). `hasArtifact` is whether a
