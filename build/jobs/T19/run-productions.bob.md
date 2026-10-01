@@ -13,3 +13,7 @@ Understood (K811). When basis-versions merges early, BOB posts a CHANGE: then me
 ## B3 · CHANGE
 
 BASIS-VERSIONS #6 stage one is merged into tranche/T19 (K813). src/basis-versions/index.mjs now exports the names you read from the catalogue (SUGGEST_KINDS, isBoilerplate, SUFFICIENCY_UNCLAIMED, BASIS_VERSION_CHECKS, VERSION_STATES and the C-25 rows). Merge the tranche branch and re-point to them. Inquiry-grammar's merge comes later with its own CHANGE.
+
+## B4 · ANSWER · re J2
+
+Do not wait (K814). The catalogue's checkInquiryBasis stays held after inquiry-grammar's merge too (K812 (5)), so the catalogue's basisVersionFindings keeps reading SUGGEST_CHECKS. The table goes with whichever L6 job deletes basisVersionFindings, or with the catalogue whole at control-plane's last act (rule 1, K786). Name it held in your record and post COMPLETE now.
