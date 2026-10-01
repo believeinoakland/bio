@@ -1,6 +1,6 @@
 # op-declarations — requirements
 
-**Status** · DRAFT by a worker for BOB #75, 2026-09-30, at T18's opening, for BOB's review; split from `control-plane` by K617 and K624 (1), (2) (a product module whose code passes about 4,000 lines is split before its next job, along seams BOB names, with no change to any requirement's meaning). R1 is `control-plane` R34 and R6 is `control-plane` R31, each moved with its meaning unchanged (only its cross-references re-pointed). R2–R5 state, with ids, the tables `control-plane`'s Terms already defined and its R10, R11, R13, R14 and R17 read (no new behaviour: each states what `ops.mjs` holds today). Layer 11, directly after `instance-setup`, before `admission` and `control-plane`. No `from` (`from` names a legacy module only; K624 (1)): this module's job builds its paths from `bio-plane/src/control-plane/ops.mjs` by copy and merges early; `control-plane`'s own job, after it, deletes its copy and re-points.
+**Status** · DRAFT by a worker for BOB #75, 2026-09-30, at T18's opening, for BOB's review; split from `control-plane` by K617 and K624 (1), (2) (a product module whose code passes about 4,000 lines is split before its next job, along seams BOB names, with no change to any requirement's meaning). R1 is `control-plane` R34 and R6 is `control-plane` R31, each moved with its meaning unchanged (only its cross-references re-pointed). R2–R5 state, with ids, the tables `control-plane`'s Terms already defined and its R10, R11, R13, R14 and R17 read (no new behaviour: each states what `ops.mjs` holds today). Layer 11, directly after `instance-setup`, before `admission` and `control-plane`. No `from` (`from` names a legacy module only; K624 (1)): this module's job builds its paths from `bio-plane/src/control-plane/ops.mjs` by copy and merges early; `control-plane`'s own job, after it, deletes its copy and re-points. Filing templates and local facts (K921, K922 (3)) folded for T21 by a worker for BOB #86, 2026-10-01, before layer 11, as `actionhold` was (K902, K919): R8 (the new ops' specs) added, not yet met; `templates` and `templatesave` keep their specs, now served by `filing-templates` and `filings` R32.
 
 **Size (P6).** About 2,110 lines move (`bio-plane/src/control-plane/ops.mjs` whole: `OPS`, the act lists, `SESSION_OPS`, `NEEDS`, `ACT_GATE`, `decorateAct`, `UNATTENDED_BY_DECISION`), most of it a table and its comments; about 150 written with the Action layer's specs (N-A12's share, N-A21). Well under the mark.
 
@@ -22,6 +22,15 @@ Terms. An **op** is a name the instance answers. An **op spec** is `{classes, ma
 
 **The act gate: `ACT_GATE`, `decorateAct(act)`** (read by `affordances.decorate`, its R11, for `op=affordances` and queue R17's `op=queue`)
 - **R1** (was `control-plane` R34) `ACT_GATE` is `{needs(id), mode(id)}`, read from the same tables that gate the ops: `needs(id)` answers `NEEDS[id]` (the capability a session needs for the op), or `null` when the op has no row; `mode(id)` answers `session` when the member session set (`SESSION_OPS.member`) holds the op, else `admin-session` when the founder's set (`SESSION_OPS.admin`) holds it, else `machine`. `decorateAct(act)` is `affordances.decorate(act, ACT_GATE)`, and it is the one decoration both `op=affordances` and `op=queue` apply, so an option in the feed equals the act `op=affordances` publishes for that subject. The gate is read only when a request is decorated, after both tables exist.
+
+**The specs of K921's ops**
+- **R8** (K921; `filing-templates`, `local-facts`) `OPS` holds a spec for each op the two modules serve, each in `SESSION_OPS.member` and `SESSION_OPS.admin`, with `NEEDS` `contribute` for every mutating op not reached by a secret, and the stamps the act lists name:
+  - member acts, mutating, classes `admin`, `member`, `probe`, `author` (or `by`) and `viewer` stamped: `templatedraft`, `templaterevise`, `templatesubmit`, `templatereviewgrant` (with `secretSha`, the grant's digest, as `reviewgrant`), `templategrantrevoke`, `templateapprove`, `templateretire` (`filing-templates` R3, R4, R7, R8, R10, R11) and `factconfirm` (`local-facts` R1);
+  - `templatepropose`, mutating, any credential (an `ai` credential by its scope), `proposer` and `viewer` stamped (`filing-templates` R6);
+  - the grant's doors, `classes: null` as `reviewcomment` and `reviewcopy` (a member by session, a recipient by the secret, `control-plane` R44): `templatereview` and `templatecomment` mutating, `templateread` and `templatecomments` reads;
+  - reads, not mutating, classes `admin`, `member`, `probe`, `viewer` stamped: `templates` (now `filing-templates` R14), `factstatus`, `factsdue` (`local-facts` R2, R4).
+
+  R6 holds over them. *(not yet met: T21)*
 
 ## Private
 

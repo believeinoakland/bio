@@ -1,6 +1,6 @@
 # record-grammar — requirements
 
-**Status** · WORDED by BOB #74, 2026-09-30 (K585, K589), from a worker's draft; placed at T18's opening by a worker for BOB #75, 2026-09-30, when `modules.json` named the module (K624): R1 and R3 amended for the Action fold's `PLN` prefix (N-A1, K608), marked not yet met. Layer 1, first in the order, before `legacy-checks` (`from: legacy-checks`, PROCESS-MECHANICS §12.2: the catalogue, later in the order, re-exports each moved name from this module's paths). Code today: inside the legacy catalogue `bio-plane/checks/bio-checks.mjs` (map: `build/extraction/legacy-checks.md`, rows `shared:record-grammar`). This file covers T18's stage only (`build/plan/draft-T18.md` §2, "T18's stage"); T19's parts (`STATES`, `HEADINGS`, the machine-work labels, …) and `checkBundle` are added when they move. Line numbers below are the catalogue's at this draft.
+**Status** · WORDED by BOB #74, 2026-09-30 (K585, K589), from a worker's draft; placed at T18's opening by a worker for BOB #75, 2026-09-30, when `modules.json` named the module (K624): R1 and R3 amended for the Action fold's `PLN` prefix (N-A1, K608), marked not yet met. Layer 1, first in the order, before `legacy-checks` (`from: legacy-checks`, PROCESS-MECHANICS §12.2: the catalogue, later in the order, re-exports each moved name from this module's paths). Code today: inside the legacy catalogue `bio-plane/checks/bio-checks.mjs` (map: `build/extraction/legacy-checks.md`, rows `shared:record-grammar`). This file covers T18's stage only (`build/plan/draft-T18.md` §2, "T18's stage"); T19's parts (`STATES`, `HEADINGS`, the machine-work labels, …) and `checkBundle` are added when they move. Filing templates (K921, K922 (4)) folded for T21 by a worker for BOB #86, 2026-10-01, before layer 1: R42 (the `template` proposal subject) added, not yet met; R38's map and its throw read with it. Line numbers below are the catalogue's at this draft.
 
 ## Public
 
@@ -74,6 +74,9 @@ The record's shared grammar, below every module that reads or writes a document:
 
 **The catalogue's re-exports** (retired with the catalogue, K855)
 - **R41** *(retired: the catalogue and its re-exports were deleted at T19's close, control-plane R43, K855; K863)*
+
+**T21 layer 1's addition** (K921; `filing-templates` R6, R13)
+- **R42** (amends R38) `PROPOSAL_STATES` gains, last, `template`: a frozen table of the three keys, each sentence saying, in its state, that the wording is proposed for a filing template and is not a template's text until a member adopts it into a draft, and for `machine_proposed` that it is machine work, labelled as machine work, which can propose wording and can never draft, review or approve a template. `proposalLabel(proposedBy, "template")` answers as R38 says; the `RangeError` for an unknown subject names the eight subjects. The other seven tables and their sentences are unchanged. *(not yet met: T21)*
 
 ## Private
 
