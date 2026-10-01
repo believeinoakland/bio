@@ -22,3 +22,7 @@ Size (session_015Lw2eUqxdm1R3Ga3ikfBxs): test runs 2, module lines 1043
 ## J1 · REPORT
 
 Stale generated artifact: bio-plane/dist/bio-plane.bundled.mjs (bio-plane/src/citation/index.mjs changed). No service changed: only two RETIRED_NOT_CITABLE detail strings, which no module reads.
+
+## J2 · COMPLETE
+
+N458: RETIRED_NOT_CITABLE's two details (index.mjs:241 reinstate, :440 cite) now say 'a new record'; no other member-read 'bundle' in my paths; R1/R4 retired tests now check the wording (negative control: 2 fail on the old text). N469: index.mjs:51 (test/cite-scale.mjs) kept as measurement provenance; re-scan found no other live claim on a deleted file and no 'the battery' prose; converted-from headers stay. Nothing deferred. test/m/citation 55/55; format, architecture, coverage (11/11), ownership: 0 failures. Record: build/jobs/T21/citation.md on job/T21/citation.
