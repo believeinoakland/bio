@@ -20,6 +20,6 @@
 - `node checks/format.mjs`: 84 modules, 82 requirements files; 0 failures.
 - `node checks/architecture.mjs … ratification`: 22 product files, 97 relative imports; 0 failures.
 - `node checks/coverage.mjs … ratification`: 33 of 33 live requirement ids named by a test; 0 failures.
-- `node checks/ownership.mjs … ratification tranche/T20`: see the line below (run after commit).
+- `node checks/ownership.mjs … ratification tranche/T20`: 6 files changed by ratification; 0 failures.
 
-Size (session_01A7m8vFb8rvrLPbS3Xo2b4s): test runs 1, module lines 5 files changed (about 30 lines)
+Size (session_01A7m8vFb8rvrLPbS3Xo2b4s): test runs 1, module lines 50 (5 files: +26 −24)
