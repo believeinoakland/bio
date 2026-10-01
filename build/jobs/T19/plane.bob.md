@@ -48,3 +48,7 @@ Then:
 (c) In your record, name the owner of each held block's line range in `held.mjs` (the T20 STARTs cite them).
 
 Then post COMPLETE: whole `test/m` at the three accepted reds less your R8, plus architecture, coverage and ownership. Wait for my ring before you start (a).
+
+## B6 · CHANGE
+
+Go (K857): CONTROL-PLANE #10's final work is merged on `tranche/T19`. Merge it, then do B5 (a)–(c): delete `store.mjs`, `schema.mjs`, `test/m/legacy-store/`; take `store-class.test.mjs` from `999220604b` into `test/m/plane/` under your R1/R5; name each held block's owner and line range in your record. Then COMPLETE.
