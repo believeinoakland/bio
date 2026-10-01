@@ -26,3 +26,7 @@
 - `node checks/ownership.mjs … capture-sources tranche/T21`: 4 files changed; 0 failures
 
 Size (session_01QDj4FCYp9ZVbcHpGngkfgW): test runs 4, module lines 2255
+
+## J1 · REPORT
+
+Generated artifact staled: bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (not_product): comments changed in src/drive.mjs, src/render.mjs, src/browserrender.mjs; not regenerated. monitoring: its tick finds the Drive baseline row with its own lookup (src/monitoring/index.mjs:578) beside driveBaselineRow (my R45), which its driveShells sweep uses; no test now proves the two choose the same row (the retired d525-driveshells.test.mjs did). monitoring could call driveBaselineRow, or test the agreement.
