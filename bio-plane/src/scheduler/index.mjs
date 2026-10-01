@@ -30,17 +30,18 @@ import { reevaluationOf } from "../reevaluation/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { captureOf } from "../capture/index.mjs";
 import { monitoringOf } from "../monitoring/index.mjs";
+import { entitiesOf } from "../entities/index.mjs";
 
 /** An alarm may fire a hair early: a consumer due within this window of the firing instant runs (R1). */
 export const SCHED_GRACE_MS = 250;
 
 /** R5: the registry's order. `capture-request-drain` before `ai-run-wake` is load-bearing: a request that completes
- *  on an alarm wakes its run on the same alarm. `intent-age` and `notice-sweep` (N164, N167, N178) are appended, so
- *  no earlier position moves. */
+ *  on an alarm wakes its run on the same alarm. `intent-age` and `notice-sweep` (N164, N167, N178), then
+ *  `deadline-recheck` (K608), are appended, so no earlier position moves. */
 export const SCHEDULER_ORDER = Object.freeze([
   "selection-sweep", "task-drain", "archive-monitor", "connection-derive", "overdue-scan", "queue-renotify",
   "monitor-cadence", "ai-run-reap", "capture-request-drain", "ai-run-wake", "calibration-reprobe",
-  "group-domain-recheck", "bias-debt", "intent-age", "notice-sweep",
+  "group-domain-recheck", "bias-debt", "intent-age", "notice-sweep", "deadline-recheck",
 ]);
 
 /** R2: each consumer's key in `onAlarm`'s answer. The task drain's counts are spread into the answer's own fields. */
@@ -49,7 +50,7 @@ export const SCHEDULER_KEYS = Object.freeze({
   "overdue-scan": "overduescan", "queue-renotify": "queuerenotify", "monitor-cadence": "monitorcadence",
   "ai-run-reap": "airunreap", "capture-request-drain": "capturerequests", "ai-run-wake": "airunwake",
   "calibration-reprobe": "calibration", "group-domain-recheck": "groupdomain", "bias-debt": "biasdebt",
-  "intent-age": "intentage", "notice-sweep": "noticesweep",
+  "intent-age": "intentage", "notice-sweep": "noticesweep", "deadline-recheck": "deadlinerecheck",
 });
 
 /** R6: due at every firing. Every other consumer is due only when its owner says so. */
@@ -63,6 +64,7 @@ const ANSWER_FIELDS = new Set(["swept", "drained", "created", "folded", "refused
                                "nextAt", "probes"]);
 const DRAIN_ZERO = Object.freeze({ drained: 0, created: [], folded: [], refused: [], waiting: [], remaining: 0 });
 const PROBE_KEY = "sched_probe";
+const DAY_MS = 86_400_000;
 const message = (e) => String((e && e.message) || e).slice(0, 500);
 
 /** R10: the rank. `items` are `{kind, id, waitingSince?, cadenceMs?}` (`kind` one of `address`, `bundle`, `request`,
@@ -93,6 +95,8 @@ export function rankBy(serves, items, now) {
 
 export class Scheduler {
   #storage; #env; #owners; #registered = new Map(); #registeredOrder = [];
+  /* deadline-recheck: the firing instant of its last tick that marked nothing, or null (see the consumer). */
+  #deadlineIdleAt = null;
 
   /** `storage` is the Durable Object's storage (its alarm, and the probe seam's one value); `owners` answers each
    *  consumer's owner (`retrieval`, `monitoring`, `connections`, `progressions`, `aiRuns`, `captureRequests`,
@@ -120,6 +124,24 @@ export class Scheduler {
       c["monitor-cadence"] = {   /* monitoring R19 */
         due: (now) => instant(o("monitoring").cadenceDue(now), now), wake: (now) => o("monitoring").cadenceWake(now),
         tick: async (now, rank) => ({ monitorcadence: await o("monitoring").cadenceTick(now, rank) }) };
+      /* monitoring R34, R35, its due and wake R50. An entry R34 cannot mark stays `pending`, so R50's wake stays in
+         the past and every reconcile would find it due again at once: the alarm would spin. So when a tick marks
+         nothing, a wake at or before that tick is held to the start of the next UTC day, R50's own granularity (the
+         first alarm of a day), never an interval of this module's (R7); a tick that marks something releases it. */
+      const held = (w) => {
+        if (w === null || w === undefined || !Number.isFinite(w)) return null;
+        const idle = this.#deadlineIdleAt;
+        return idle !== null && w <= idle ? Math.floor(idle / DAY_MS) * DAY_MS + DAY_MS : w;
+      };
+      c["deadline-recheck"] = {
+        due: (now) => { const d = held(instant(o("monitoring").deadlineRecheckDue(now), now)); return d !== null && d <= now ? d : null; },
+        wake: (now) => held(o("monitoring").deadlineRecheckWake(now)),
+        tick: async (now) => {
+          this.#deadlineIdleAt = now;
+          const r = await o("monitoring").deadlineRecheck(now);
+          if (r && r.ok !== false && Array.isArray(r.marked) && r.marked.length) this.#deadlineIdleAt = null;
+          return { deadlinerecheck: r };
+        } };
     }
     if (this.#owners.retrieval) c["selection-sweep"] = {   /* retrieval R22, its wake R51 */
       due: (now) => now, wake: (now) => o("retrieval").sweepWake(now),
@@ -315,19 +337,23 @@ export class Scheduler {
 
   /** Registers `arm` with each notice an earlier producer offers (K72 (9), K206). Each listener only schedules.
    *  Whether monitoring is configured is asked of the `monitoring` owner when a notice arrives. */
-  listenTo({ retrieval, bias, promotion, capture, progressions, calibration, aiRuns, captureRequests } = {}) {
+  listenTo({ retrieval, bias, promotion, capture, progressions, calibration, aiRuns, captureRequests, entities } = {}) {
     const arm = () => this.arm();
-    const configured = () => {
+    const monitoring = (ask) => {
       if (!this.#owners.monitoring) return false;
-      try { const m = this.#owner("monitoring"); return !!(m && m.configured()); } catch { return false; }
+      try { const m = this.#owner("monitoring"); return !!(m && ask(m)); } catch { return false; }
     };
+    const configured = () => monitoring((m) => m.configured());
+    /* monitoring R50: an action holding a `pending` clock entry wants the deadline re-check's wake. */
+    const clockPending = () => monitoring((m) => m.deadlineRecheckWake(Date.now()) != null);
     const out = {};
     if (retrieval) out.retrieval = retrieval.onSelectionCreated("scheduler", arm);                 /* retrieval R52 */
     if (bias) out.bias = bias.onLensChange("scheduler", () => (bias.biasDebtDue(Date.now()) === null ? null : arm()));   /* bias R23 */
-    /* promotion R45: a promotion may leave a bundle monitored or a lens moved; the reconcile weighs monitoring's and
-       the debt's own wakes, so the arm is asked whenever either could want one. */
+    /* promotion R45: a promotion may leave a bundle monitored, a lens moved or an action holding a `pending` clock
+       entry; the reconcile weighs monitoring's, the debt's and the re-check's own wakes, so the arm is asked whenever
+       any could want one. */
     if (promotion) out.promotion = promotion.onCommitted("scheduler", async () =>
-      (configured() || (bias && bias.biasDebtDue(Date.now()) !== null) ? await arm() : null));
+      (configured() || clockPending() || (bias && bias.biasDebtDue(Date.now()) !== null) ? await arm() : null));
     if (capture) out.capture = capture.on("source-outcome", "scheduler",   /* capture R44 */
       async (o) => (o && o.counted && o.outcome !== "success" && configured() ? await arm() : null));
     if (progressions) out.progressions = progressions.onThreaded("scheduler", () => arm());   /* progressions R33 */
@@ -339,6 +365,16 @@ export class Scheduler {
     }
     if (aiRuns) out.aiRuns = aiRuns.onRunOpened("scheduler", () => arm());                     /* ai-runs R43 */
     if (captureRequests) out.captureRequests = captureRequests.onRequestFiled("scheduler", () => arm());   /* capture-requests R44 */
+    /* entities R13: its listeners run inside the resolving transaction, where no storage call may be awaited, so the
+       arm is deferred until the transaction has returned, once however many resolutions it inserted or raised; the
+       reconcile then reads connections' wake over the entity it marked (connections R17, R18). */
+    if (entities) {
+      let queued = null;
+      out.entities = entities.onResolved("scheduler", () => {
+        queued ||= Promise.resolve().then(() => { queued = null; return arm(); }).catch(() => null);
+        return undefined;
+      });
+    }
     return out;
   }
 }
@@ -360,7 +396,7 @@ export function schedulerOf(ctx, env = null, deps = {}) {
     if (!deps.owners)
       s.listenTo({ retrieval: retrievalOf(ctx), bias: biasOf(ctx), promotion: promotionOf(ctx), capture: captureOf(ctx),
                    progressions: progressionsOf(ctx, { env: e }), calibration: calibrationOf(ctx), aiRuns: aiRunsOf(ctx, e),
-                   captureRequests: captureRequestsOf(ctx) });
+                   captureRequests: captureRequestsOf(ctx), entities: entitiesOf(ctx) });
   }
   return s;
 }

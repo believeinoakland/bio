@@ -41,6 +41,10 @@ export function owners(set = {}) {
       cadenceDue: (now) => rec("monitoring.cadenceDue", [now], v("monitor-cadence", "due", now)),
       cadenceWake: (now) => rec("monitoring.cadenceWake", [now], v("monitor-cadence", "wake", now)),
       cadenceTick: async (now, rank) => rec("monitoring.cadenceTick", [now, rank], v("monitor-cadence", "tick", now, { ticked: [] })),
+      deadlineRecheckDue: (now) => rec("monitoring.deadlineRecheckDue", [now], v("deadline-recheck", "due", now)),   /* R50 */
+      deadlineRecheckWake: (now) => rec("monitoring.deadlineRecheckWake", [now], v("deadline-recheck", "wake", now)),
+      deadlineRecheck: async (now) => rec("monitoring.deadlineRecheck", [now], v("deadline-recheck", "tick", now,
+        { ok: true, at: null, marked: [], failed: [], truncated: false, escalations: null })),   /* R34, R35 */
     },
     connections: { wake: (now) => rec("connections.wake", [now], v("connection-derive", "wake", now)),
                    sweep: () => rec("connections.sweep", [], v("connection-derive", "tick", null, { entities: 0, remaining: 0, swept: [] })) },

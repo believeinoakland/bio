@@ -6,10 +6,10 @@ import { world, consumer, writes, NOW } from "./fixture.mjs";
 
 const LATER = [["task-drain", "drain"], ["queue-renotify", "queuerenotify"], ["group-domain-recheck", "groupdomain"]];
 
-test("R5: the consumers, in order, each calling its owning module; the two new ones appended after bias-debt", async () => {
+test("R5: the consumers, in order, each calling its owning module; the three new ones appended after bias-debt", async () => {
   assert.deepEqual([...SCHEDULER_ORDER], ["selection-sweep", "task-drain", "archive-monitor", "connection-derive",
     "overdue-scan", "queue-renotify", "monitor-cadence", "ai-run-reap", "capture-request-drain", "ai-run-wake",
-    "calibration-reprobe", "group-domain-recheck", "bias-debt", "intent-age", "notice-sweep"]);
+    "calibration-reprobe", "group-domain-recheck", "bias-debt", "intent-age", "notice-sweep", "deadline-recheck"]);
   const { s } = world();
   /* registered by the later modules (legacy-store meanwhile), in an order other than R5's */
   for (const [n, key] of [...LATER].reverse()) assert.equal(s.register("legacy-store", consumer(n, { key })).ok, true);
@@ -20,7 +20,7 @@ test("R5: the consumers, in order, each calling its owning module; the two new o
 
 test("R5: each consumer calls exactly its owner's services: due, wake and tick", async () => {
   const all = Object.fromEntries(SCHEDULER_ORDER.map((n) => [n, { due: 1, wake: NOW + 1000 }]));
-  for (const n of ["bias-debt", "intent-age", "notice-sweep", "monitor-cadence"]) all[n].due = NOW;
+  for (const n of ["bias-debt", "intent-age", "notice-sweep", "monitor-cadence", "deadline-recheck"]) all[n].due = NOW;
   const { s, calls } = world(all);
   await s.onAlarm(NOW);
   const called = new Set(calls.map(([m]) => m));
@@ -35,7 +35,8 @@ test("R5: each consumer calls exactly its owner's services: due, wake and tick",
                    "calibration.calibrationDue", "calibration.calibrationWake", "calibration.calibrationTick",  /* R9 */
                    "bias.biasDebtDue", "bias.biasDebtWake", "bias.biasDebtSweep",                 /* bias R33, R41 */
                    "intent.ageDue", "intent.ageWake", "intent.ageSurfaced",                       /* intent R17, R27 */
-                   "reevaluation.noticeSweepDue", "reevaluation.noticeSweepWake", "reevaluation.noticeSweep"])  /* R25 */
+                   "reevaluation.noticeSweepDue", "reevaluation.noticeSweepWake", "reevaluation.noticeSweep",  /* R25 */
+                   "monitoring.deadlineRecheckDue", "monitoring.deadlineRecheckWake", "monitoring.deadlineRecheck"])  /* R34, R50 */
     assert.ok(called.has(m), m);
   const drain = calls.find(([m]) => m === "captureRequests.drain")[1];
   assert.deepEqual([drain.actor, drain.now], ["alarm", NOW], "the drain is told it is the alarm, and when");
@@ -49,6 +50,54 @@ test("R5: the capture-request drain's wake is its owner's interval past now whil
   set["capture-request-drain"].due = 0;
   await s.onAlarm(NOW);
   assert.equal(st.alarm, null);
+});
+
+test("R5: deadline-recheck runs monitoring's deadlineRecheck on the alarm its R50 wake sets, and no other; none pending holds no wake", async () => {
+  const DAY = Date.parse("2026-09-29T00:00:00Z");   /* the start of the UTC day after a pending entry's date */
+  const { s, st, calls, set } = world({ "deadline-recheck": { due: (now) => (DAY <= now ? DAY : null), wake: DAY,
+    tick: { ok: true, at: "2026-09-29T00:00:00Z", marked: [{ action: "ACT-1", ords: [0], revision: 2 }], failed: [],
+            truncated: false, escalations: null } } });
+  assert.equal(await s.arm(NOW), DAY, "armed at monitoring's wake");
+  const early = await s.onAlarm(NOW);
+  assert.equal("deadlinerecheck" in early, false, "not yet due: absent");
+  assert.equal(calls.some(([m]) => m === "monitoring.deadlineRecheck"), false);
+  const r = await s.onAlarm(DAY);
+  assert.deepEqual(r.deadlinerecheck.marked, [{ action: "ACT-1", ords: [0], revision: 2 }], "its answer under deadlinerecheck");
+  assert.deepEqual(calls.filter(([m]) => m === "monitoring.deadlineRecheck"), [["monitoring.deadlineRecheck", DAY]],
+    "called once, with the firing instant");
+  set["deadline-recheck"].wake = null; set["deadline-recheck"].due = null;
+  await s.onAlarm(DAY + 1000);
+  assert.equal(st.alarm, null, "no pending entry: no wake held for it (R15)");
+  assert.equal(s.consumers().at(-1), "deadline-recheck", "last of R5's consumers");
+});
+
+test("R5, R16: deadline-recheck never spins on an entry R34 cannot mark: a tick that marks nothing holds the past wake to the next UTC day; one that marks releases it", async () => {
+  const PAST = Date.parse("2026-09-20T00:00:00Z");   /* R50's wake for an entry dated 09-19, still pending */
+  const day = (t) => Math.floor(t / 86_400_000) * 86_400_000 + 86_400_000;
+  const answer = { ok: true, at: null, marked: [], failed: [{ action: "ACT-9", reason: "UNSPLICEABLE_CLOCK" }], truncated: false, escalations: null };
+  const { s, st, calls, set } = world({ "deadline-recheck": { due: (now) => (PAST <= now ? PAST : null), wake: PAST, tick: answer } });
+  assert.equal(await s.arm(NOW), PAST, "first armed at the owner's wake, due at once");
+  const r1 = await s.onAlarm(NOW);
+  assert.deepEqual(r1.deadlinerecheck.failed, answer.failed);
+  assert.equal(r1.nextAt, day(NOW), "held to the start of the next UTC day, not set in the past");
+  assert.ok(st.alarm > NOW);
+  const r2 = await s.onAlarm(NOW + 1000);
+  assert.equal("deadlinerecheck" in r2, false, "a firing before then does not run it again");
+  assert.equal(await s.arm(NOW + 2000), day(NOW), "nor does an arm pull the alarm back into the past");
+  const r3 = await s.onAlarm(day(NOW));
+  assert.equal("deadlinerecheck" in r3, true, "re-checked on the first alarm of the next day");
+  assert.equal(r3.nextAt, day(day(NOW)));
+  assert.equal(calls.filter(([m]) => m === "monitoring.deadlineRecheck").length, 2, "twice in two days, never in a loop");
+  /* a tick that marks something releases the hold: its owner's wake stands again, past or not */
+  set["deadline-recheck"].tick = { ok: true, marked: [{ action: "ACT-8", ords: [0] }], failed: [], truncated: true };
+  const r4 = await s.onAlarm(day(day(NOW)));
+  assert.equal(r4.nextAt, PAST, "progress made: the owner's wake again (more may remain)");
+  /* a tick that throws holds it as well */
+  set["deadline-recheck"].throws = "tick";
+  const T = day(day(NOW)) + 5;
+  const r5 = await s.onAlarm(T);
+  assert.match(r5.deadlinerecheck.error, /broke/);
+  assert.equal(r5.nextAt, day(T));
 });
 
 test("R8: a later module registers each consumer once; a name already registered, or one of this module's own, is refused CONSUMER_DECLARED", () => {
@@ -70,7 +119,7 @@ test("R8: a consumer that is not {name, key, due, wake, tick}, or whose key anot
   assert.equal(s.register("", consumer("a")).reason, "CONSUMER_MALFORMED");
   for (const key of ["swept", "nextAt", "probes", "drained", "biasdebt"])
     assert.equal(s.register("m", consumer(`c-${key}`, { key })).reason, "CONSUMER_MALFORMED", key);
-  assert.equal(s.consumers().length, 12, "only the module's own consumers");
+  assert.equal(s.consumers().length, 13, "only the module's own consumers");
 });
 
 test("R8: a consumer R5 does not name is appended in the order the modules register; it inherits R1–R4", async () => {
@@ -94,7 +143,7 @@ test("R13: with SCHED_PROBE unset or unparsable the registry is exactly R5's con
     const r = await s.onAlarm(NOW);
     await s.arm(NOW);
     assert.deepEqual(r.probes, []);
-    assert.equal(s.registry(await s.probeLog()).length, 12);
+    assert.equal(s.registry(await s.probeLog()).length, 13);
     assert.deepEqual(st.log.filter(([m, k]) => m === "put" || k === "sched_probe" && m !== "get"), [], JSON.stringify(env));
     assert.equal(st.kv.size, 0);
   }
