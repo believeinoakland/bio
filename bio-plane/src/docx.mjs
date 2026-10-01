@@ -171,6 +171,47 @@ const TOKEN_RE = /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<\/?([
 const localOf = (name) => (name.includes(":") ? name.split(":").pop() : name);
 
 /* ------------------------------------------------------------------ *
+ * Markup Compatibility (ECMA-376 Part 3; N26) — one branch read, never two
+ * ------------------------------------------------------------------ */
+
+/** A producer writes the same content twice inside `<mc:AlternateContent>`:
+ *  a modern form in `<mc:Choice>` (a DrawingML text box) and an older one in
+ *  `<mc:Fallback>` (its VML copy). A consumer reads ONE branch. This reader
+ *  understands no namespace better than another, so it takes the producer's
+ *  own preference: the FIRST `<mc:Choice>`; every later `<mc:Choice>` and the
+ *  `<mc:Fallback>` are not read; with no `<mc:Choice>` the `<mc:Fallback>`
+ *  is. Before N26 both branches were walked, so a text box's paragraphs,
+ *  text and tables appeared twice. Returns a per-token test: true while the
+ *  token lies in a branch not read (that branch's own tags included). */
+function mceSkipper() {
+  const taken = [];    // per open AlternateContent: has a branch been read
+  let skip = null;     // { name, depth } while inside a branch not read
+  return (name, closing, selfClosed) => {
+    if (skip) {
+      if (name === skip.name) {
+        if (closing) { if (--skip.depth === 0) skip = null; }
+        else if (!selfClosed) skip.depth++;
+      }
+      return true;
+    }
+    if (name === "AlternateContent") {
+      if (closing) taken.pop();
+      else if (!selfClosed) taken.push(false);
+      return false;
+    }
+    if ((name === "Choice" || name === "Fallback") && !closing && taken.length) {
+      const top = taken.length - 1;
+      if (taken[top]) {
+        if (!selfClosed) skip = { name, depth: 1 };
+        return true;
+      }
+      taken[top] = true;
+    }
+    return false;
+  };
+}
+
+/* ------------------------------------------------------------------ *
  * The body walk — ONE pass over word/document.xml collecting everything
  * structure(), text() and the evidentiary envelope need, in body order
  * ------------------------------------------------------------------ */
@@ -180,7 +221,8 @@ const localOf = (name) => (name.includes(":") ? name.split(":").pop() : name);
  *    bookmarks:Map(name -> para), changes:[{change,author,date,text,para,run}],
  *    commentRefs:Map(id -> {para,run}), ridUsage:Map(rid -> {para,run}) }.
  *
- *  Paragraph index: EVERY `<w:p>` in document order, numbered as it OPENS (a
+ *  Paragraph index: EVERY `<w:p>` read in document order (a branch of
+ *  `mc:AlternateContent` not read holds none: `mceSkipper`), numbered as it OPENS (a
  *  table cell's paragraphs are `<w:p>` elements too, and they count). A
  *  paragraph CAN hold another: a text box (`<w:txbxContent>`) sits inside a
  *  run of its anchoring paragraph. The inner paragraph takes the next number,
@@ -221,6 +263,8 @@ export function walkDocumentBody(xml) {
     for (const c of insStack) c.text += s;
   };
 
+  const skipped = mceSkipper();
+
   TOKEN_RE.lastIndex = 0;
   let m, prev = 0;
   while ((m = TOKEN_RE.exec(xml)) !== null) {
@@ -235,6 +279,15 @@ export function walkDocumentBody(xml) {
     const name = localOf(m[1]);
     const selfClosed = m[3] === "/";
     const closing = m[0][1] === "/";
+
+    /* N26: a branch of mc:AlternateContent not read adds no paragraph, run,
+     * text, link, change, bookmark or comment reference. A relationship it
+     * uses still locates its part, at the paragraph and run that hold the
+     * mc:AlternateContent — where the branch sits — never a guessed one. */
+    if (skipped(name, closing, selfClosed)) {
+      if (!closing && m[2] && m[2].includes("=")) noteRid(attrsOf(m[2]));
+      continue;
+    }
 
     if (closing) {
       if (name === "t" || name === "delText") textTarget = null;
@@ -477,6 +530,7 @@ export function walkDocumentTables(xml) {
   const done = [];
   const stack = [];
   let next = 0;
+  const skipped = mceSkipper(); // N26: a table in a branch not read is not a table of the reading
   TOKEN_RE.lastIndex = 0;
   let m;
   while ((m = TOKEN_RE.exec(xml)) !== null) {
@@ -484,6 +538,7 @@ export function walkDocumentTables(xml) {
     const name = localOf(m[1]);
     const closing = m[0][1] === "/";
     const selfClosed = m[3] === "/";
+    if (skipped(name, closing, selfClosed)) continue;
     const top = stack.length ? stack[stack.length - 1] : null;
     if (closing) {
       if (name === "tbl" && stack.length) {
@@ -511,6 +566,78 @@ export function walkDocumentTables(xml) {
       cols: t.gridCols > 0 ? t.gridCols : (t.maxTc > 0 ? t.maxTc : null) };
   }
   return done;
+}
+
+/** N26's MIGRATION MAP — how a reading made before N26 (every branch of
+ *  `mc:AlternateContent` walked) is numbered against one made now (one
+ *  branch). For extraction's migration of stored references, and for nothing
+ *  else; it goes when that migration has run.
+ *
+ *    { paragraphs: [{ old, new, outer }],      // one per <w:p> the OLD walk numbered
+ *      runs: [{ old, new, outer }],            // one per <w:r> the OLD walk numbered; old/new {para, run}
+ *      tables: [{ old, new }] }                // one per <w:tbl> the OLD walk numbered
+ *
+ *  A run is addressed as R15 addresses it, `{para, run}`. `new` is null for a
+ *  paragraph (run, table) inside a branch no longer read: its content was the
+ *  duplicate of the branch that is. Such a paragraph's `outer` is the NEW
+ *  index of the paragraph that holds the `mc:AlternateContent` (null when
+ *  none does), the narrowest place the reading still states; a dropped run's
+ *  `outer` is its paragraph's new index, or that paragraph's `outer`. `outer`
+ *  is null for what is kept. R28 (K747). Null when `xml` is not a string (R21). */
+export function docxRenumbering(xml) {
+  if (typeof xml !== "string") return null;
+  /* The paragraph/run numbering exactly as `walkDocumentBody` keeps it. */
+  const counter = () => {
+    const s = { para: -1, run: -1, inPara: false, last: -1, outer: [] };
+    return {
+      s,
+      openP(selfClosed) {
+        if (!selfClosed) {
+          if (s.inPara) s.outer.push({ para: s.para, run: s.run });
+          s.para = ++s.last; s.run = -1; s.inPara = true;
+          return s.para;
+        }
+        const n = ++s.last;
+        if (!s.inPara) { s.para = n; s.run = -1; }
+        return n;
+      },
+      closeP() { if (s.outer.length) ({ para: s.para, run: s.run } = s.outer.pop()); else s.inPara = false; },
+      openR() { return s.inPara ? ++s.run : null; },
+    };
+  };
+  const was = counter(), now = counter();
+  const skipped = mceSkipper();
+  const paragraphs = [], runs = [], tables = [];
+  let tablesNew = 0;
+  TOKEN_RE.lastIndex = 0;
+  let m;
+  while ((m = TOKEN_RE.exec(xml)) !== null) {
+    if (m[1] === undefined) continue;
+    const name = localOf(m[1]);
+    const closing = m[0][1] === "/";
+    const selfClosed = m[3] === "/";
+    const skip = skipped(name, closing, selfClosed);
+    if (closing) {
+      if (name === "p") { was.closeP(); if (!skip) now.closeP(); }
+      continue;
+    }
+    if (name === "p") {
+      const old = was.openP(selfClosed);
+      if (skip) paragraphs[old] = { old, new: null, outer: now.s.inPara ? now.s.para : null };
+      else paragraphs[old] = { old, new: now.openP(selfClosed), outer: null };
+    } else if (name === "r" && !selfClosed) {
+      const run = was.openR();
+      if (run == null) continue;
+      const para = was.s.para;
+      if (skip) {
+        const p = paragraphs[para];
+        runs.push({ old: { para, run }, new: null, outer: p ? (p.new ?? p.outer) : null });
+      } else runs.push({ old: { para, run }, new: { para: now.s.para, run: now.openR() }, outer: null });
+    } else if (name === "tbl") {
+      tables.push({ old: tables.length, new: skip ? null : tablesNew++ });
+    }
+  }
+  return { paragraphs, runs, tables };
 }
 
 async function docxStructure(parts) {

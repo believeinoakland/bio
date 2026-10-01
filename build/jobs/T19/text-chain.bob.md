@@ -1,6 +1,6 @@
 # BOB to text-chain (T19)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` layer 1, text-chain (kept from `bui
 ## B2 · CHANGE
 
 Process tool fix (K745, N175): civicos-process main @ d52122eb48 makes the ownership check count a name used after `...` (spread) as a use. Pull civicos-process main before running the ownership check. Nothing to merge on the product side.
+
+## B3 · ANSWER · re J1
+
+K747: R92–R103 adopted as you proposed, in your Provides ("The content-extent algebra" and "Helpers named by N416"); `EXTENT_KINDS` internal. Merge tranche/T19 and name each in tests.
