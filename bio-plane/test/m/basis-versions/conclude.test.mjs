@@ -35,7 +35,10 @@ test("R16: refusals in order — a machine for either act; no conclusion without
   assert.deepEqual([m.reason, CONCLUDE_ACT_CHECKS.MACHINE_CANNOT_CONCLUDE.check], ["MACHINE_CANNOT_CONCLUDE", "C-32.2"]);
   assert.equal(conclude(w, { author: "" }).reason, "MACHINE_CANNOT_CONCLUDE");
   assert.equal(conclude(w, { author: MACHINE, withdraw: true }).reason, "MACHINE_CANNOT_CONCLUDE");
-  assert.equal(conclude(w, { falsifier: "f" }).reason, "NO_CONCLUSION");
+  const empty = conclude(w, { falsifier: "f" });
+  assert.equal(empty.reason, "NO_CONCLUSION");
+  assert.match(empty.detail, /would produce a record the catalog rejects/, "N458: the detail says record");
+  assert.doesNotMatch(empty.detail, /bundle/);
   assert.equal(CONCLUDE_ACT_CHECKS.NO_CONCLUSION.check, "C-33.1");
   assert.equal(conclude(w, { project: p, conclusion: "my words", falsifier: "f" }).reason, "CONCLUSION_IS_THE_CLAIM");
   assert.equal(conclude(w, { conclusion: "c" }).reason, "NO_FALSIFIER");

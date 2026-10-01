@@ -70,6 +70,10 @@ test("R3: each version's legs obey the leg grammar (lead and theme first), the t
     "a leg naming this inquiry");
   assert.ok(codes(fm({ legs: [{ version: "first", target: "PROJ-2026-0001-p", role: "supports", ground: "main" }] }))
     .includes("VERSION_LEG_NOT_CITABLE"), "a project is not citable");
+  /* N458: the finding a member reads says "record", never "bundle" */
+  const notId = []; basisVersionFindings(fm({ legs: [{ version: "first", target: "not-an-id", role: "supports", ground: "main" }] }), notId);
+  assert.deepEqual(notId.filter((y) => y.code === "VERSION_LEG_NOT_CITABLE").map((y) => y.message),
+    ["basis_version_legs[0] (version 'first').target 'not-an-id' is not a canonical record id"]);
   assert.deepEqual(codes(fm({ legs: [{ version: "first", target: Q2, role: "supports", ground: "main" }] })), [],
     "another inquiry is");
   for (const [k, bad] of [["role", "maybe"], ["grade", "E"], ["grade_axis", "vibes"], ["grade_source", "rumour"]])

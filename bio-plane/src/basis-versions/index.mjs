@@ -611,10 +611,9 @@ export class BasisVersions {
    *
    * PL-1 / IS-1: the inquiry's alternative accounts of its evidence and their legs, reported so a purge can PROVE it
    * took them (D-113). A COUNT AND NOTHING ELSE: how many readings of the evidence exist is an operator fact, and what
-   * they say is not an operator surface. Shaped as record-core R63's `counts(hid)` with its key list, for `plane` to
-   * register under this module's name (`registerCounts("basis-versions", [...BasisVersions.COUNT_KEYS], (hid) =>
-   * bv.counts(hid))`). This module registers nothing itself while plane holds its copy (`src/plane/held.mjs`), so no
-   * figure is registered twice. `hid` is R63's: membership's `hiddenBundles(viewer)` (its R88), the bundles the caller
+   * they say is not an operator surface. Shaped as record-core R63's `counts(hid)` with its key list; `plane` registers
+   * it under this module's name through record-core's `registerCounts` (`src/plane/stats.mjs`), and this module
+   * registers nothing itself, so no figure is registered twice. `hid` is R63's: membership's `hiddenBundles(viewer)` (its R88), the bundles the caller
    * may not see, or null for a caller that sees every bundle and for the direct internal call (purge's proof among
    * them), which count whole. A version drops when its `bundle_id` is in `hid`, a leg when its `bundle_id` or its
    * `target_id` is (D-464: a count over rows the caller could not all read is a disclosure of existence).
@@ -647,8 +646,8 @@ export class BasisVersions {
   /** HIDE — the prune flag: hides and never deletes (D-214, DEC-29(b)). */
   versionHide(a)     { return this.#moveVersionState("hide", a); }
 
-  /* ONE implementation with six entry points: every guard is written once (test/versionstate.test.mjs pinned one
-     implementation, the reason IS-6's control was absorbed). The four beats: CHOOSE (inquiry and version named, never
+  /* ONE implementation with six entry points: every guard is written once (two implementations of one rule are what
+     absorbed IS-6's control). The four beats: CHOOSE (inquiry and version named, never
      defaulted), SEE WHAT WILL BE REFUSED (`preview` runs every guard and writes nothing), AUTHOR THE REASON (never
      prefilled), RECEIPT (the answer and a Session Log entry carry the same facts). A machine identity is refused on
      every act (§4: the AI holds no op that accepts). */
@@ -933,7 +932,7 @@ export class BasisVersions {
     if (!concl && !pid)
       return { ok: false, reason: "NO_CONCLUSION", ...concludeRow("NO_CONCLUSION"),
                detail: "concluding records WHAT was concluded. C-2.8 requires a non-empty conclusion in the "
-                     + "concluded state, so a conclusion with nothing in it would produce a bundle the "
+                     + "concluded state, so a conclusion with nothing in it would produce a record the "
                      + "catalog rejects. An undetermined answer is stated as undetermined, never left blank." };
     if (concl && pid)
       return { ok: false, reason: "CONCLUSION_IS_THE_CLAIM", ...concludeRow("CONCLUSION_IS_THE_CLAIM"),
