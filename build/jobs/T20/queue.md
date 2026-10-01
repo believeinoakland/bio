@@ -22,3 +22,7 @@
 - `checks/format.mjs`: 0 failures; `checks/architecture.mjs bio queue`: 0 failures; `checks/coverage.mjs bio queue`: 37 of 37 live ids named, 0 failures; `checks/ownership.mjs bio queue tranche/T20`: 5 files changed, 0 failures.
 
 Size (session_014ABrgP9q5aYLLQp7fqWZ5n): test runs 12, module lines 2602
+
+## J1 · COMPLETE
+
+QUEUE #9 complete on job/T20/queue. Applied B1: R1 catalogues litigation-hold (OBLIGATION, its sentence, LIVE: queue-producers R19); R12/R28 OBLIGATION_DOORS litigation-hold -> actionhold with its OBLIGATION_DOOR_DETAIL sentence, so the bridge answers CLASS_NOT_DISPOSED with instead actionhold; K907's comment re-worded (no workproduct_state). Tests: test/m/queue 75/75 (litigation-hold through the mint, door, bridge, mute fences); users control-plane 85/85, plane 28/28; readers queue-producers 46/46, affordances 131/131, tasks 71/71. Checks: format 0, architecture 0, coverage 37/37, ownership 0. Mark met: queue R1/R12's litigation-hold share (K902). REPORT: the plane bundle (bio-plane/dist, not_product) is staled by this change (fleetbundles' three bio-plane arms red until rebuilt at layer close; the other three reds are K917's accepted). civicos-ui's check-refusal-codes and test/queue.test.mjs are red identically on the base (deleted walkfloor.mjs, bio-checks.mjs), not this change. Deferred: none. Record: build/jobs/T20/queue.md.
