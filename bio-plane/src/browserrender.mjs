@@ -25,14 +25,15 @@
  *   dependency "@cloudflare/puppeteer": no matching module rules.
  *   If you're trying to import an npm package, you'll need to bundle your Worker first.
  *
- * The battery runs `src/index.mjs` RAW under miniflare (`modules: true,
- * modulesRoot: "/"`, `scriptPath` on the source), so workerd resolves the module
- * graph from disk and a BARE specifier matches no rule. That is not specific to a
- * static import: a dynamic `import("@cloudflare/puppeteer")` fails the same way,
- * because miniflare walks dynamic specifiers in the same pass (measured on a
- * throwaway worker, same `ERR_MODULE_RULE`). So the choice was not "puppeteer or
- * a hand-rolled client"; it was "a renderer, or a battery" — every miniflare suite
- * in the plane fails at construction, not at the render.
+ * The plane's miniflare suites run its source RAW (`modules: true, modulesRoot:
+ * "/"`, `scriptPath` on the source; then `src/index.mjs`, today the plane's entry
+ * `src/plane/index.mjs`, as in `test/m/host-governor/ops.test.mjs`), so workerd
+ * resolves the module graph from disk and a BARE specifier matches no rule. That
+ * is not specific to a static import: a dynamic `import("@cloudflare/puppeteer")`
+ * fails the same way, because miniflare walks dynamic specifiers in the same pass
+ * (measured on a throwaway worker, same `ERR_MODULE_RULE`). So the choice was not
+ * "puppeteer or a hand-rolled client"; it was "a renderer, or the miniflare
+ * suites": every one of them fails at construction, not at the render.
  *
  * The dependency is also not free where it does work: `@cloudflare/puppeteer@1.4.0`
  * is 80 packages and 32 MB installed, and bundles to 670,061 B for the plane's
@@ -66,9 +67,10 @@
  *
  * and then raw CDP JSON over that socket. It is THEIR claim that these are the
  * endpoints — it is their client — and it is UNVERIFIED AGAINST THE LIVE SERVICE
- * here, because no instance has the binding until DIST-11 deploys it. `test/
- * browser-render.test.mjs` drives this driver against a fake that speaks exactly
- * this protocol, which proves the DRIVER and proves nothing about the service.
+ * here, because no instance has the binding until DIST-11 deploys it.
+ * `test/m/capture-sources/browserrender.test.mjs` (R19–R26) drives this driver
+ * against a fake, in plain Node, that speaks exactly this protocol, which proves
+ * the DRIVER and proves nothing about the service.
  */
 
 import { SUBRESOURCE_CAP, SUBRESOURCE_MAX, SUBRESOURCE_BUDGET } from "./subresources.mjs";

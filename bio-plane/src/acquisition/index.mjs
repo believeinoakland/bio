@@ -664,7 +664,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
       existedUndetermined = reg
         ? `this document was captured in ${parts.length} parts, so the store holds no object under its `
           + `whole hash for the question a single-part capture asks, and the record's register - which `
-          + `does answer by the whole hash - holds no row for these bytes under a bundle that still `
+          + `does answer by the whole hash - holds no row for these bytes under a record that still `
           + `exists. That is NOT a finding that the bytes are new: a capture acquired earlier and never `
           + `promoted leaves its parts in the store and no register row, and part boundaries follow the `
           + `stream's chunking, so this fetch's parts need not be the parts an earlier one made. `

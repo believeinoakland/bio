@@ -1,7 +1,7 @@
 /* acquisition: converts the acquisition share of two legacy suites, `test/d57selflink.test.mjs` (D-57: a page that links
    to itself, captured through op=acquire) and `test/d522-unattended-render.test.mjs` (D-522: an unattended render through
-   the capture-request arm, within the day's allowance). What those suites assert about link resolution, tallies and
-   verdicts (capture R27, `resolveLinks`), the render allowance's ledger (capture R39), and the drain's rows and run log
+   the capture-request arm, within the day's allowance). What they asserted about link resolution, tallies and verdicts
+   (capture R27, `resolveLinks`), the render allowance's ledger (capture R39), and the drain's rows and run log
    (capture-requests) is not this module's and is not carried here. Each test names the requirement ids it checks. */
 import { test } from "node:test";
 import assert from "node:assert/strict";

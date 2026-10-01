@@ -8,8 +8,9 @@
  * It is a PURE recogniser: an address in, a shape and — for the three editor
  * kinds — a composed export address out. It performs no fetch, reads no store,
  * imports nothing from the format registry, and asserts nothing about meaning.
- * That is what lets `test/drive.test.mjs` and `src/index.mjs` read ONE definition
- * of what a Drive address is, rather than the suite re-deriving a copy that
+ * That is what lets this module's tests (`test/m/capture-sources/drive.test.mjs`)
+ * and its callers (`acquisition`, `monitoring`) read ONE definition of what a
+ * Drive address is, rather than a test re-deriving a copy that
  * agrees with the plane today at zero cost (WORKER.md: an equality that costs
  * nothing to produce is not evidence).
  *
@@ -38,9 +39,10 @@
  * D-112 IS THE SPINE. The three facts this hop carries — the export address, the
  * export format, the producer — are DERIVED HERE, from the file id and kind the
  * ADDRESS carries, and are never accepted from a caller. A provenance hop a
- * caller can hand us is one a caller can invent. `index.mjs`'s
- * `is-drive-capture` region refuses a body carrying any of them BY NAME rather
- * than dropping them quietly: a caller told nothing learns nothing.
+ * caller can hand us is one a caller can invent. `acquisition`'s
+ * `is-drive-capture` region (`src/acquisition/index.mjs`) refuses a body carrying
+ * any of them BY NAME rather than dropping them quietly: a caller told nothing
+ * learns nothing.
  */
 
 /** The four hosts the item names. An EXACT set, and that is the whole of the
@@ -60,10 +62,12 @@ export const DRIVE_HOSTS = ["docs.google.com", "drive.google.com",
  *
  *  `mimetype` is stated here rather than imported from `odf.mjs` ON PURPOSE and
  *  it is NOT a second copy of the registry's truth: this module must stay pure
- *  (it is read by a suite that also reads the registry, and an import would make
- *  the two agree for free). `test/drive.test.mjs` asserts these three strings
- *  EQUAL `ODT_CONTENT_TYPE` / `ODS_CONTENT_TYPE` / `ODP_CONTENT_TYPE` exported by
- *  `odf.mjs`, so a drift between the two is a named failure rather than a silence. */
+ *  (its tests also read the registry, and an import would make the two agree for
+ *  free). They EQUAL `ODT_CONTENT_TYPE` / `ODS_CONTENT_TYPE` / `ODP_CONTENT_TYPE`
+ *  exported by `odf.mjs` (R38) because each side's own tests pin the same exact
+ *  strings (`test/m/capture-sources/drive.test.mjs` R38, `test/m/odf-reader/
+ *  entries.test.mjs` R31), so a drift on either side is a named failure rather
+ *  than a silence. */
 export const DRIVE_KINDS = [
   { kind: "document",     segment: "document",     format: "odt",
     mimetype: "application/vnd.oasis.opendocument.text" },
@@ -334,9 +338,11 @@ export function driveConvertStep(drive) {
  *  WHAT THIS MATCHER CAN AND CANNOT SEE, stated because the sentence is
  *  load-bearing: it sees a TOP-LEVEL key on the request body with one of these
  *  names. It does not see a hop smuggled inside another field's value, and it
- *  does not need to — nothing in the acquire path READS a provenance field off a
- *  request body at all, and `hygiene.test.mjs` asserts that at SOURCE. This
- *  refusal is the loud half of a fence whose silent half already holds. */
+ *  does not need to: every hop is built here and in `cdx.mjs` from the address
+ *  and what this instance fetched, never from a request (R51, R35; proved in
+ *  `test/m/capture-sources/drive.test.mjs` and `cdx.test.mjs`), and reading no
+ *  provenance field off a request body is the acquire path's own to keep. This
+ *  refusal is the loud half of that fence. */
 export const DRIVE_HOP_FACT_KEYS = ["export_address", "export_format", "producer",
   "drive_file_id", "drive_kind", "drive", "document_address", "provenance_hop"];
 
@@ -359,14 +365,15 @@ export function callerSuppliedHopFacts(body) {
  * the sweep and its suite read ONE definition.
  *
  * WHICH ROW IS "THE BASELINE". The row `op=monitor` compares against, chosen by
- * the SAME rule (D-472, as it stands on 9f8b69e6): the row naming the export
+ * the SAME rule (D-472, as it stood on 9f8b69e6): the row naming the export
  * address first, else the row naming the bundle's own locator. The sweep does
- * NOT share code with the monitor's lookup, deliberately and for a stated
- * reason: D-524 is changing that lookup in the same hour, and one shared helper
- * would be a merge collision in the one place both must be right. What keeps the
- * two rules equal is BEHAVIOURAL — `test/d525-driveshells.test.mjs` asserts that
- * for every bundle the sweep names, `op=monitor`'s own `baseline` is the sha the
- * sweep named — so a drift in either fails that suite by name.
+ * NOT share code with the monitor's lookup (`monitoring`'s tick finds its row
+ * itself); they were kept apart when D-524 was changing that lookup in the same
+ * hour, so that one shared helper would not be a merge collision in the one place
+ * both must be right. The rule here is R45, proved in
+ * `test/m/capture-sources/drive.test.mjs`; that the monitor's tick chooses the
+ * same row is `monitoring`'s to prove (the retired `d525-driveshells.test.mjs`
+ * once checked the two agreed).
  *
  * WHAT TELLS A SHELL FROM A DOCUMENT, and it is NOT the handler key alone. The
  * register row's `profile.handler` is docprofile's STACK, and every stack
