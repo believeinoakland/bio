@@ -41,6 +41,7 @@ import { membershipOf } from "../membership/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { contentOf } from "../content/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
+import { publicReadOf } from "../public-read/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
 import { conformanceOf } from "../conformance/index.mjs";
@@ -125,12 +126,13 @@ const byDayThenSource = (a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : a.so
 export class Filings {
   #deps;
 
-  constructor({ storage, record, host = null, membership = null, publication = null, provenance = null, content = null,
+  constructor({ storage, record, host = null, membership = null, publication = null, publicRead = null, provenance = null,
+                content = null,
                 actions = null, conformance = null, standards = null, consequences = null, promotion = null,
                 producingGroup = null, profiles = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
-    this.#deps = { host, membership, publication, provenance, content, actions, conformance, standards, consequences, promotion };
+    this.#deps = { host, membership, publication, publicRead, provenance, content, actions, conformance, standards, consequences, promotion };
     /* R3 (N331): the producing group is promotion's fact `producingGroup` (its R40), read as `fact` answers it; a
        function handed in (legacy-store's, until layer 10) is kept and may answer a value, null, or the fact's answer.
        Absent, `#group` asks promotion itself, and says so when no promotion module is reachable (N355: no refusal code
@@ -144,6 +146,7 @@ export class Filings {
   /* The earlier modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
   get membership() { return this.#deps.membership ||= (this.#deps.host ? membershipOf(this.#deps.host, { record: this.record }) : null); }
   get publication() { return this.#deps.publication ||= publicationOf(this.#deps.host); }
+  get publicRead() { return this.#deps.publicRead ||= publicReadOf(this.#deps.host, { publication: this.publication }); }
   get provenance() { return this.#deps.provenance ||= provenanceOf(this.#deps.host); }
   get content() { return this.#deps.content ||= contentOf(this.#deps.host); }
   get promotion() { return this.#deps.promotion ||= (this.#deps.host ? promotionOf(this.#deps.host) : null); }
@@ -1084,7 +1087,7 @@ export function filingsOf(host, deps) {
     instances.set(host, f);
     f.migrate();
     record.declarePurge("filings", FILINGS_TABLES);
-    f.publication.registerEvidenceBlock("filings", "available_actions", (arg) => f.evidenceBlock(arg));
+    f.publicRead.registerEvidenceBlock("filings", "available_actions", (arg) => f.evidenceBlock(arg));
   }
   return f;
 }

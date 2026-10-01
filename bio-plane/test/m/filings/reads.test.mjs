@@ -51,7 +51,7 @@ const supersede = (x, id, over = {}) => x.determine({ supersedes: id, reason: "c
   act: { ...x.act, id: x.conformance.determinationRead({ id, viewer: MACHINE }).act.id }, ...over });
 
 function block(x) {
-  const c = x.p.publishedCase({ caseId: CASE });
+  const c = x.pr.publishedCase({ caseId: CASE });
   return c.evidence_package.blocks.available_actions;
 }
 
@@ -93,7 +93,7 @@ test("R15 the available-actions block of a published case a live determination r
 
 test("R15 the block is registered with publication once, at start, and computed at each read", () => {
   const { x } = busy();
-  const again = x.p.registerEvidenceBlock("filings", "available_actions", () => 1);
+  const again = x.pr.registerEvidenceBlock("filings", "available_actions", () => 1);
   assert.equal(again.reason, "PROVIDER_DECLARED");
   assert.equal(filingsOf(x.host), x.f, "one instance per host");
   const first = block(x);

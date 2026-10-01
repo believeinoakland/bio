@@ -12,6 +12,7 @@ import { consequencesModule } from "../../../src/consequences/index.mjs";
 import { standardsOf } from "../../../src/standards/index.mjs";
 import { conformanceOf } from "../../../src/conformance/index.mjs";
 import { actionsOf } from "../../../src/actions/index.mjs";
+import { publicReadOf } from "../../../src/public-read/index.mjs";
 import { get as profileOf } from "../../../../jurisdictions/index.mjs";
 
 export { V, NOW };
@@ -134,7 +135,7 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
   const D = determine();
   let n = 0;
   const x = {
-    ...w, w, f, proj, pin, actions, conformance, standards, consequences, groupRef, evidenceCid, S1, S2, D, declare,
+    ...w, w, f, pr: publicReadOf(w.host, { publication: w.p }), proj, pin, actions, conformance, standards, consequences, groupRef, evidenceCid, S1, S2, D, declare,
     determine, publishEdition, act,
     /* the world's own reads, over the cursor */
     row: (sq, ...a) => [...w.st.sql.exec(sq, ...a)][0] ?? null,

@@ -176,11 +176,11 @@ test("R11 the packet is never published and has no path to publication; it is re
   assert.deepEqual(x.f.counselPacketRead({ id: p.id, viewer: V("olive") }).exports,
                    [{ exported_by: V("olive"), at: "2026-09-28T01:00:00Z", counsel: COUNSEL, sha: e.sha }]);
   /* No path to publication: none of its public reads knows the packet, its bytes or its digest. */
-  assert.equal(x.p.verifySha(e.sha).published, false);
-  assert.equal(x.p.publishedCase({ id: p.id }).ok, false);
-  assert.equal(JSON.stringify(x.p.publishedManifest()).includes(p.id), false);
-  assert.equal(JSON.stringify(x.p.publishedList()).includes(p.id), false);
-  const pub = x.p.publishedCase({ caseId: CASE });
+  assert.equal(x.pr.verifySha(e.sha).published, false);
+  assert.equal(x.pr.publishedCase({ id: p.id }).ok, false);
+  assert.equal(JSON.stringify(x.pr.publishedManifest()).includes(p.id), false);
+  assert.equal(JSON.stringify(x.pr.publishedList()).includes(p.id), false);
+  const pub = x.pr.publishedCase({ caseId: CASE });
   assert.equal(JSON.stringify(pub).includes(p.id), false);
   assert.equal(JSON.stringify(pub).includes(MARK), false);
 });
