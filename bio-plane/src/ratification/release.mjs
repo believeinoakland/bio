@@ -146,7 +146,7 @@ export function release({ sql, promotion, retrieval },
              detail: "verified state has entry requirements: a well-formed content_hash, data/dataset.json, "
                    + "and at least one file in snapshots/ (C-2.7), and a provenance_chain naming the route "
                    + "for every document in the register (C-18.9). Releasing these as they stand would mint "
-                   + "bundles the catalog immediately rejects." };
+                   + "records the catalog immediately rejects." };
   /* END DEC-49 REGION is-release-entry */
 
   /* R24, R25: each member released in the selection's order, at one instant for the batch; the writes are per member. */

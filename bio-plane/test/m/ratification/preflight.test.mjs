@@ -2,7 +2,8 @@
    refusal of R2 and R3 that holds before a signature exists is listed, in R18's order, and each is the act's own
    refusal: the same object `op=caseratify` (the Worker half) or its commit (`ratifyCaseDocument`) answers, less only the
    act's envelope (`store`, `tokenClass` after the payload's refusals). It writes nothing and never throws. R19: a key
-   verifies by membership R27's predicate alone, whatever its `origin` (membership R89, R91). */
+   verifies by membership R27's predicate alone, whatever its `origin` (membership R91). A member's own key is
+   registered and revoked through credentials (its R9 and R10, were membership R89 and R90; K784, K791). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, plane, newKey, signCase, signBundle, cleanCase, cleanInfoMd, fmText, CASE_BODY, V } from "./fixture.mjs";
@@ -147,16 +148,16 @@ test("R18: the attribution facts are publication's real read over the bytes give
   assert.deepEqual(entry(preflight(), "TESTIMONY_CASE_UNPUBLISHABLE").observations, [OBS]);
 });
 
-test("R18, R19: NO_ATTESTING_KEY when the signer holds no attesting key, its remedy naming membership R89; a self-registered key counts as an administrator's does, a revoked one does not", async () => {
+test("R18, R19: NO_ATTESTING_KEY when the signer holds no attesting key, its remedy naming credentials R9 (was membership R89); a self-registered key counts as an administrator's does, a revoked one does not", async () => {
   const { w, preflight } = await setup();
   const bo = await newKey();
   const none = entry(preflight({ signer: "bo" }), "NO_ATTESTING_KEY");
   assert.deepEqual([none.ok, none.code, none.signer], [false, "NO_ATTESTING_KEY", "bo"]);
   assert.match(none.remedy, /op=signerregister/);
-  assert.match(none.remedy, /R89/);
-  assert.equal(w.membership.signerRegisterOwn({ keyB64: bo.keyB64, by: "bo" }).origin, "self");
+  assert.match(none.remedy, /credentials R9\b/);
+  assert.equal(w.credentials.signerRegisterOwn({ keyB64: bo.keyB64, by: "bo" }).origin, "self");
   assert.equal(entry(preflight({ signer: "bo" }), "NO_ATTESTING_KEY"), undefined, "a self-registered key attests");
-  assert.equal(w.membership.signerRevokeOwn({ keyB64: bo.keyB64, by: "bo" }).status, "revoked");
+  assert.equal(w.credentials.signerRevokeOwn({ keyB64: bo.keyB64, by: "bo" }).status, "revoked");
   assert.ok(entry(preflight({ signer: V("bo") }), "NO_ATTESTING_KEY"), "a revoked key does not");
   for (const signer of [null, "", "class:ai", "daemon"])
     assert.deepEqual(entry(preflight({ signer }), "NO_ATTESTING_KEY").signer, null, String(signer));
@@ -252,7 +253,7 @@ test("R18: it writes nothing and never throws", async () => {
 test("R19: a signature by a member's self-registered key verifies exactly as an administrator-registered key's, in both ceremonies; revoked, it does not", async () => {
   const s = await setup();
   const own = await newKey();
-  assert.equal(s.w.membership.signerRegisterOwn({ keyB64: own.keyB64, by: "alice" }).origin, "self");
+  assert.equal(s.w.credentials.signerRegisterOwn({ keyB64: own.keyB64, by: "alice" }).origin, "self");
   const sig = await signCase(own, CASE, 1, s.docSha);
   const r = await s.act({}, { caseId: CASE, edition: 1, expectedSha: s.docSha, sig });
   assert.deepEqual([r.status, r.body.attestor], [200, { member: "alice", key_b64: own.keyB64 }]);
@@ -265,11 +266,11 @@ test("R19: a signature by a member's self-registered key verifies exactly as an 
     return ratifyOp(p.request({ bundleId: DOC, expectedSha: s.w.sha(DOC), sig: await signBundle(key, DOC, s.w.sha(DOC)) }),
                     p.stub, p.ctx);
   };
-  s.w.membership.signerRevokeOwn({ keyB64: own.keyB64, by: "alice" });
+  s.w.credentials.signerRevokeOwn({ keyB64: own.keyB64, by: "alice" });
   const revoked = await run(own);
   assert.deepEqual([revoked.status, revoked.body.reason], [403, "SIG_UNKNOWN_KEY"], "a revoked self key attests nothing");
   const fresh = await newKey();
-  s.w.membership.signerRegisterOwn({ keyB64: fresh.keyB64, by: "alice" });
+  s.w.credentials.signerRegisterOwn({ keyB64: fresh.keyB64, by: "alice" });
   const ok = await run(fresh);
   assert.deepEqual([ok.status, ok.body.attestor], [200, "alice"], JSON.stringify(ok.body).slice(0, 300));
 });
