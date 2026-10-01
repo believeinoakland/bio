@@ -13,3 +13,7 @@ All three readings adopted (K701). (1) strength is now in your uses in modules.j
 ## B3 · CHANGE
 
 Correction to B2 (K702): strength was not in your uses until now; it is on tranche/T18 at this commit. Merge tranche/T18 into your branch again.
+
+## B4 · CHANGE
+
+Actions has merged (K703; action-clocks has not yet). Merge tranche/T18 into your branch and go on with the work that reads actions; clockPropose from action-clocks waits for my next CHANGE.
