@@ -5,7 +5,6 @@ import assert from "node:assert/strict";
 import { fresh, bucket, sha } from "./fixture.mjs";
 import { captureOps } from "../../../src/capture/index.mjs";
 import { knockOp, KNOCK } from "../../../src/capture/doorbell.mjs";
-import * as CATALOGUE from "../../../checks/bio-checks.mjs";
 import { CAPTURE_CHECKS, KNOCK_CHECKS } from "../../../src/capture/checks.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
@@ -175,7 +174,7 @@ test("R51: content that decodes to zero bytes is refused 400 KNOCK_EMPTY with it
   assert.deepEqual(st.calls, []);
 });
 
-test("R37 R47 R48 R49 R50 R51 (K649): C-85's five rows are in this module's own table, each with its check, its where naming the one site that mints it, and a translation; the catalogue no longer holds them", () => {
+test("R37 R47 R48 R49 R50 R51 (K649): C-85's five rows are in this module's own table, each with its check, its where naming the one site that mints it, and a translation", () => {
   const want = { RATE_IP: ["C-85.1", "src/capture/index.mjs #knockRateRefusal > is-knock-rate"],
                  RATE_GLOBAL: ["C-85.2", "src/capture/index.mjs #knockRateRefusal > is-knock-rate"],
                  KNOCK_ENVELOPE_TOO_LARGE: ["C-85.3", "src/capture/doorbell.mjs knockEnvelopeTooLarge > is-knock-envelope-too-large"],
@@ -186,7 +185,6 @@ test("R37 R47 R48 R49 R50 R51 (K649): C-85's five rows are in this module's own 
     assert.deepEqual([KNOCK_CHECKS[code].check, KNOCK_CHECKS[code].where], [check, where], code);
     assert.ok(typeof KNOCK_CHECKS[code].translation === "string" && KNOCK_CHECKS[code].translation.length > 40, code);
   }
-  assert.equal(CATALOGUE.KNOCK_CHECKS, undefined, "moved, not copied: the catalogue's copy is gone");
   const ids = Object.values(KNOCK_CHECKS).map((r) => r.check);
   assert.ok(!Object.values(CAPTURE_CHECKS).some((r) => ids.includes(r.check)), "no id held twice in this module's tables");
 });

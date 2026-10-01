@@ -3,27 +3,29 @@
  * allowance), the event queue an undetermined capture raises, the doorbell (`doorbell.mjs`) and the information
  * grammar (`grammar.mjs`, C-2.7). The acquisition act is `acquisition`'s since T18 (K617): `acquire` and
  * `archiveLookup` hand it this module's store (R73). It writes no bundle: no intake path writes live state.
- * Requirements: build/requirements/capture.md (R8, R15, R21–R32, R37–R40, R43–R59, R63–R74). Extracted from `legacy-store` and
+ * Requirements: build/requirements/capture.md (R8, R15, R21–R32, R37–R40, R43–R59, R63–R75). Extracted from `legacy-store` and
  * `legacy-index` in T4 (T4-4); the reasoning the legacy comments carried is kept beside the code it explains.
  *
  * SHAPE (K61). `captureOf(ctx, opts)` answers the one instance for a Durable Object's storage. It reaches
  * record-core by `recordOf(ctx)` on the same `ctx` (the evidence store, `transact`, `declarePurge`, settings) and
- * membership's `viewerPredicate` (R43) for what a viewer may see. It reads provenance's `register` and
- * `captured_locators` only on their stated read contract (provenance R48). It calls no later module: a later
- * module registers a listener (R44, R55; `on`). */
-import { isPublicHttpsLocator, createSha256 } from "../../checks/bio-checks.mjs";
+ * membership's `viewerPredicate` (R43) for what a viewer may see, and credentials' `attestingKeys` (its R11) for R69.
+ * It reads provenance's `register` and `captured_locators` only on their stated read contract (provenance R48). It
+ * calls no later module: a later module registers a listener (R44, R55; `on`). At its first construction for a
+ * storage it registers its grammar (R37) and its figures (R75) with record-core. */
+import { isPublicHttpsLocator, createSha256 } from "../record-grammar/index.mjs";
 import { KNOCK, isWeakKnockerSecret, knockerSecretWeak } from "./doorbell.mjs";
 import { CAPTURE_CHECKS, KNOCK_CHECKS } from "./checks.mjs";
 import { INFORMATION_GRAMMAR } from "./grammar.mjs";
 import { evidenceAbsent } from "./ops.mjs";
-import { acquire, archiveLookup, profileOf, profileView, governedFetch, governedCall } from "../acquisition/index.mjs";
+import { acquire, archiveLookup, profileOf, profileView, governedFetch, governedCall, INSTALLATION_CHECKS } from "../acquisition/index.mjs";
 import { verifySshsig, NS_RATIFY } from "../sshsig.mjs";
 import { ARCHIVE_SERVICE } from "../tsa.mjs";
 export { acquireGradeNote, ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
 import { provenanceOf, attest as provenanceAttest, DOORBELL_VIA } from "../provenance/index.mjs";
-import { viewerPredicate, GATE_MARK, listenerRefusal, membershipOf } from "../membership/index.mjs";
+import { viewerPredicate, GATE_MARK, listenerRefusal } from "../membership/index.mjs";
+import { credentialsOf } from "../credentials/index.mjs";
 import { CAPTURE_SCHEMA, CAPTURE_DERIVED_SCHEMA, CAPTURE_ADDITIVE_COLUMNS, CAPTURE_RESHAPE,
          CAPTURE_PURGED_TABLES, CAPTURE_EXEMPT_TABLES } from "./schema.mjs";
 export { CAPTURE_SCHEMA } from "./schema.mjs";
@@ -153,6 +155,7 @@ export function captureOf(ctx, opts = {}) {
     instances.set(storage, c);
     supplied.set(c, new Set(["env", "governor", "record", "provenance"].filter((k) => opts[k] != null)));
     registerGrammar(c.core);
+    registerFigures(c);
     return c;
   }
   const given = supplied.get(c);
@@ -171,9 +174,10 @@ export function captureOf(ctx, opts = {}) {
 }
 
 /** R37 (C-2.7; K585 (3)): the information grammar, registered with record-core's seam (its R67) once per storage, when
- *  the instance is first made, so the audit and the gate run it in the catalogue arm's place. A record with no seam (a
- *  test's stand-in) is left alone; a refusal is a defect of the wiring (another module holding C-2.7, or capture
- *  registering twice) and throws, as the purge declaration's does, rather than leave the grammar silently unrun. */
+ *  the instance is first made, so the audit and the gate run it in C-2.7's slot. Another module's grammar may claim the
+ *  same slot (record-core R67, K766: their arms then run there in module order), so that is no refusal. A record with
+ *  no seam (a test's stand-in) is left alone; a refusal is a defect of the wiring (capture registering twice, or a
+ *  malformed entry) and throws, as the purge declaration's does, rather than leave the grammar silently unrun. */
 function registerGrammar(record) {
   if (!record || typeof record.registerGrammar !== "function") return;
   const answer = record.registerGrammar("capture", INFORMATION_GRAMMAR);
@@ -181,23 +185,35 @@ function registerGrammar(record) {
     throw new Error(`capture: record-core refused the information grammar: ${answer.reason}${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
 }
 
+/** R75 (`build/extraction/legacy-store.md` §4.2 (2)): this module's figures for `op=stats` and purge's proof, registered
+ *  with record-core's `registerCounts` (its R63) once per storage, when the instance is first made. A record with no
+ *  seam (a test's stand-in) is left alone; a refusal (another module reporting one of these figures, or capture
+ *  registering twice) is a defect of the wiring and throws, as the grammar's does. */
+function registerFigures(c) {
+  const record = c.core;
+  if (!record || typeof record.registerCounts !== "function") return;
+  const answer = record.registerCounts("capture", [...Capture.COUNT_KEYS], (hid) => c.counts(hid));
+  if (answer && answer.ok === false)
+    throw new Error(`capture: record-core refused its figures: ${answer.reason}${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
+}
+
 export class Capture {
   #sql; #storage; #listeners = new Map(); #declared = false;
 
-  constructor(storage, { record, env = {}, governor = null, provenance = null, membership = null } = {}) {
+  constructor(storage, { record, env = {}, governor = null, provenance = null, credentials = null } = {}) {
     this.#storage = storage;
     this.#sql = storage.sql;
     this.core = record;
     this.env = env || {};
     this.governor = governor;
     this.provenance = provenance;
-    this.membership = membership;
+    this.credentials = credentials;
   }
 
-  /* membership's instance for this storage (R69's attesting keys), reached when first needed. */
-  #members() {
-    if (!this.membership) this.membership = membershipOf({ storage: this.#storage }, { record: this.core });
-    return this.membership;
+  /* credentials' instance for this storage (R69's attesting keys, its R11), reached when first needed. */
+  #credentials() {
+    if (!this.credentials) this.credentials = credentialsOf({ storage: this.#storage }, { record: this.core });
+    return this.credentials;
   }
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
@@ -586,8 +602,13 @@ export class Capture {
                pulled_by: row.pulled_by, pulled_at: row.pulled_at, ...(document ? { document } : {}) };
     }
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
-    if (!ev) return { ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", status: 503, knockId,
-                      detail: "this instance has no evidence storage configured, so the knock's bytes cannot be held under their own digest; nothing was written" };
+    if (!ev) {
+      /* C-68.1 (K794, K797): the installation's complaint carries its row, which acquisition holds as its earliest raiser. */
+      const row = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
+      return { ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", code: "EVIDENCE_STORAGE_NOT_CONFIGURED", check: row.check,
+               translation: row.translation, status: 503, knockId,
+               detail: "this instance has no evidence storage configured, so the knock's bytes cannot be held under their own digest; nothing was written" };
+    }
     /* The bytes as received: the evidence bucket's inbox object, else the inline copy. They must hash to the row's digest. */
     let bytes = null;
     try {
@@ -729,7 +750,7 @@ export class Capture {
    *  `NOT_THE_CAPTURING_ACTOR` (C-118.5) for anyone this module did not record as capturing it (and for a capture it
    *  recorded no actor for), `ACCOUNT_NO_TEXT` (C-118.6), and `SIG_<reason>` unless `signature` verifies
    *  (`signatures.verifySshsig`, `NS_RATIFY`) over `captureAccountStatement(captureSha, text)` against one of `by`'s
-   *  attesting keys (`membership.attestingKeys`). Append-only. */
+   *  attesting keys (`credentials.attestingKeys`, its R11). Append-only. */
   async recordCaptureAccount({ captureSha, text, signature, by, at = null } = {}) {
     const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
     const who = memberIdOf(by);
@@ -749,7 +770,7 @@ export class Capture {
     }
     /* END DEC-49 REGION is-account-worded */
     let keys = [];
-    try { keys = (this.#members().attestingKeys() || []).filter((k) => memberIdOf(k.member_id) === who).map((k) => k.key_b64); }
+    try { keys = (this.#credentials().attestingKeys() || []).filter((k) => memberIdOf(k.member_id) === who).map((k) => k.key_b64); }
     catch { keys = []; }
     const v = await verifySshsig(typeof signature === "string" ? signature : "", captureAccountStatement(sha, text), NS_RATIFY, keys);
     if (!v.ok) {
@@ -1836,6 +1857,25 @@ export class Capture {
               ? `not eligible: failing for ${Math.floor(staleDays)} days but on ONE failure that was never retried, which is a gap in our monitoring rather than evidence the source is unreachable; retry it`
               : "not eligible: the threshold is not met",
     };
+  }
+
+  /* ==================================================================== *
+   * Its figures (R75)
+   * ==================================================================== */
+
+  /** R75: the figures `registerCounts` (record-core R63) asks for, in this order. */
+  static COUNT_KEYS = Object.freeze(["taskQueue", "sourceReachability"]);
+
+  /** R75: `taskQueue` (the `task_queue` rows) and `sourceReachability` (the `source_reachability` rows), as the legacy
+   *  store's `#counts` took them. Neither table names a bundle, so `hid` (the bundles the caller may not see) leaves
+   *  no row out and each figure counts every row. A figure that cannot be read is null, never zero. Synchronous;
+   *  writes nothing; never throws. */
+  counts(hid = null) {
+    const n = (table) => {
+      try { const v = Number(this.#one(`SELECT count(*) AS c FROM ${table}`).c); return Number.isFinite(v) ? v : null; }
+      catch { return null; }
+    };
+    return { taskQueue: n("task_queue"), sourceReachability: n("source_reachability") };
   }
 }
 
