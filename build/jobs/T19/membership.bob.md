@@ -29,3 +29,7 @@ K779: in your split's deletion also delete SIGNER_ENROLMENT_CHECKS and AI_CREDEN
 ## B7 · CHANGE
 
 Correction to B6: credentials is later in the order, so your tests do not import it. In t16-own-keys.test.mjs and expertise-keys-ai.test.mjs drop the catalogue comparison (those rows are credentials', named by its own tests) or compare against your own copy until the deletion; then delete both families from the catalogue.
+
+## B8 · ANSWER · re J4
+
+K780: record-grammar is in your uses on tranche/T19; merge it and re-point isMachineIdentity and MACHINE_CLASS_PREFIX. Rest of J4 noted (the store's membership audit block goes with record-core's R73). Credentials is told to merge; I will tell you when it has.
