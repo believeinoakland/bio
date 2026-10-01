@@ -248,7 +248,7 @@ test("R23: a successful adoption notifies each registered module once, after the
   assert.deepEqual(seen, [1]);
   /* the op awaits the notice, so an arm lands inside the request */
   let armed = false;
-  w.bias.onLensChange("legacy-store", async () => { await new Promise((r) => setTimeout(r, 5)); armed = true; });
+  w.bias.onLensChange("queue", async () => { await new Promise((r) => setTimeout(r, 5)); armed = true; });
   await w.ops(`bundleId=${A}&author=admin&identity=member:admin&viewer=member:admin`).biasadopt();
   assert.equal(armed, true);
 });

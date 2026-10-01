@@ -1,0 +1,23 @@
+# bias (T20)
+
+**Status** · session_019fYYaznWEvSJmjoUKHDhz9 · depth 2 · COMPLETE · handled B1
+
+## Completion
+
+**Entry applied** (B1, K881): `test/m/bias/promotion.test.mjs`' R23 order test no longer registers a listener as the retired `legacy-store`: it registers `tasks` (layer 11, between `scheduler` and `queue` in membership's `MODULE_ORDER`) and expects `["ai-runs", "scheduler", "tasks", "queue"]`, the same proof of R23's order. Re-scan of `test/m/bias/` for retired ids (`legacy-checks`, `legacy-store`, `legacy-index`) found two more, both re-pointed to real modules with the same meaning: `adopt-manifest.test.mjs`' R23 op test registers its arming listener as `queue` (an unregistered module there; the test asserts only that the op awaits the notice); `world.mjs` registers promotion's three facts under the modules that provide them in the product (`producingGroup` instance-setup, `citedBy` connections, `caseMember` publication). Tests only; no product code changed; no requirement changed. No old suite deleted (K619).
+
+**Deferred:** none. **Found in other modules:** none. **Generated artifacts:** none moved.
+
+**Tests and checks**
+- `node --test test/m/bias/` (in `bio-plane/`): tests 56, pass 55, fail 0, todo 1 (R26, deferred by K102).
+- No layer tests are named in `build/manifest.md`.
+- `checks/format.mjs`: format: 84 modules, 82 requirements files; 0 failures
+- `checks/architecture.mjs bias`: architecture: 11 product files, 38 relative imports (0 naming no tracked file, not judged); 0 failures
+- `checks/coverage.mjs bias`: coverage: 1 modules, 46 of 46 live requirement ids named by a test; 0 failures
+- `checks/ownership.mjs bias tranche/T20`: ownership: 4 files changed by bias between tranche/T20 and HEAD; 0 failures
+
+Size (session_019fYYaznWEvSJmjoUKHDhz9): test runs 2, module lines 6
+
+## J1 · COMPLETE
+
+B1 applied (K881): R23's order test registers `tasks` in `legacy-store`'s place (scheduler < tasks < queue in MODULE_ORDER). Re-scan found two more retired ids, re-pointed: adopt-manifest R23 op test's listener -> `queue`; world.mjs's promotion facts -> their real providers (instance-setup, connections, publication). Tests only. test/m/bias/: 56 tests, 55 pass, 0 fail, 1 todo (R26). format, architecture, coverage (46/46), ownership: 0 failures. No artifact moved. Record has the details.
