@@ -1,6 +1,6 @@
 # capture-requests (T19)
 
-**Status** · session_01JdoMamVEfLHhKsS3sNXRZi · depth 2 · WORKING · handled B2
+**Status** · session_01JdoMamVEfLHhKsS3sNXRZi · depth 2 · WORKING · handled B3
 
 ## J1 · QUESTION
 
