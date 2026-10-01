@@ -101,3 +101,29 @@ test("R22: CHECK_FAMILIES holds each code once, the first source's translated ro
   /* the composition is frozen: a reader cannot change what the door decorates with */
   assert.ok(Object.isFrozen(M.CHECK_FAMILIES) && Object.values(M.CHECK_FAMILIES).every(Object.isFrozen));
 });
+
+test("R22 (K782, K813, K817, K831, K837): the list reads credentials' three families, basis-versions', inquiry-grammar's, public-read's and action-grammar's (not actions' re-export), and each of their translated rows decorates with its own check and words (negative control: the list without one of them misses its families)", async () => {
+  const files = [["src/credentials/checks.mjs", ["SIGNER_ENROLMENT_CHECKS", "AI_CREDENTIAL_CHECKS", "CREDENTIALS_CHECKS"]],
+                 ["src/basis-versions/checks.mjs", ["BASIS_VERSION_CHECKS", "VERSION_ACT_CHECKS", "VERSION_KIND_CHECKS", "CONCLUDE_ACT_CHECKS", "NARROW_CHECKS"]],
+                 ["src/inquiry-grammar/checks.mjs", ["LEAD_CHECKS"]],
+                 ["src/public-read/checks.mjs", ["CASE_RESOLUTION_CHECKS", "PUBLISHED_STORE_CHECKS", "PUBLISHED_READ_CHECKS"]],
+                 ["src/action-grammar/checks.mjs", ["ACTION_FENCE_CHECKS", "ACTION_ACT_CHECKS", "GOVERNING_LAW_CHECKS", "QUOTE_CHECKS",
+                                                    "LIFECYCLE_CHECKS", "RISK_TIER_REVISION_CHECKS", "RECORDS_LAW_FENCE_CHECKS", "ACTION_CATALOGUE_CHECKS"]]];
+  const listed = new Map(M.CHECK_FAMILY_FILES.map(([p, ns]) => [p, ns]));
+  assert.equal(listed.has("src/actions/checks.mjs"), false, "actions' re-export is not a source of its own");
+  let rows = 0;
+  for (const [path, fams] of files) {
+    assert.ok(listed.has(path), path);
+    for (const fam of fams) {
+      const table = listed.get(path)[fam];
+      assert.ok(table && Object.keys(table).length, `${path} ${fam}`);
+      for (const [code, row] of Object.entries(table)) if (row.translation) {
+        rows++;
+        assert.deepEqual(M.dec49Row(code), { check: row.check ?? null, translation: row.translation }, `${fam}.${code}`);
+      }
+    }
+    const missing = await unreached(M.CHECK_FAMILY_FILES.filter(([p]) => p !== path));
+    assert.ok(missing.some((m) => m.startsWith(`bio-plane/${path} `)), `without ${path}`);
+  }
+  assert.ok(rows > 40, String(rows));
+});

@@ -12,7 +12,7 @@ import { caseRatifyStatement, NS_RATIFY } from "./sshsig.mjs";
    are character-identical while the prefixes are `token:` and `class:`. */
 /* D-270 / C-61: the argument complaint's row, used AS A VALUE at the one governed site — the code is a STRING
    LITERAL there so the DEC-49 guard's arm C can COMPARE it rather than read past a variable. */
-import { MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../checks/bio-checks.mjs";
+import { MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "./control-plane/index.mjs";
 import { bindPublishedPlane, assembleCaseContainer } from "./publication/worker.mjs";
 import { publicReadDoorOp } from "./public-read/door.mjs";
 import { publicationDoorOp } from "./publication/door.mjs";
@@ -41,89 +41,18 @@ export { PLANE_LIMITS } from "./control-plane/index.mjs";
 
 // T12 (control-plane's extraction, K3, K93): the op declarations, the doors, the gates, the stamps and the envelope are
 // control-plane's. What stays here is the arms whose modules have not taken them yet; control-plane routes to them.
-import { makeFetch, json, doAnswer, storeSilent, storeRefusal, relayAnswer, STORE_SILENT_REASON, STORE_SILENT_DETAIL, PUBLISHED_STORE,
-         SCRATCH, sha256Hex, classify, scopeFor, caseReader, captureKey, installationRow, requiredArgument } from "./control-plane/index.mjs";
+import { makeFetch, json, doAnswer, storeSilent, storeRefusal, STORE_SILENT_REASON, STORE_SILENT_DETAIL, PUBLISHED_STORE,
+         SCRATCH, sha256Hex, caseReader, captureKey, requiredArgument, storageAbsent } from "./control-plane/index.mjs";
 import { decorateAct, ACT_GATE } from "./control-plane/ops.mjs";
 
 
-
-/* THE CAPABILITY COMPLAINT (C-68.1, D-278). A copy installed with no evidence
- * storage bound cannot serve `capture`, `pdfstructure`, `acquire` or `attest`.
- * ONE row for the four, the op named beside it, minted here rather than at four
- * sites inside `fetch` for the same reason `requiredArgument` is: a DEC-49 row
- * holds one `where`. `error` is passed in BYTE-IDENTICAL from each site — the
- * sites said two different sentences before this and still do. */
-function storageAbsent(op, error) {
-  /* DEC-49 REGION is-storage-absent */
-  return json({ ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED",
-                ...installationRow("EVIDENCE_STORAGE_NOT_CONFIGURED"), error, op }, 503);
-  /* END DEC-49 REGION is-storage-absent */
-}
 
 bindPublishedPlane({ json, doAnswer, storeSilent, storeRefusal, requiredArgument, STORE_SILENT_REASON,
                     STORE_SILENT_DETAIL, PUBLISHED_STORE });
 
 /* The public ops whose handlers are still here (control-plane R1, R2). */
 async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
-      if (op === "login") {
-        const body = await req.json().catch(() => ({}));
-        const r = await stub.fetch(new Request("http://do/login", {
-          method: "POST", body: JSON.stringify({ role: body.role || "admin", password: body.password }) }));
-        return relayAnswer(r, "login");   /* control-plane R24 (D-679) */
-      }
-      if (op === "invitelook") {
-        const body = await req.json().catch(() => ({}));
-        const r = await invStub.fetch(new Request("http://do/invitelook", {
-          method: "POST", body: JSON.stringify(body) }));
-        return relayAnswer(r, "invitelook");   /* control-plane R24 (D-679) */
-      }
-      if (op === "enroll") {
-        const body = await req.json().catch(() => ({}));
-        const r = await invStub.fetch(new Request("http://do/enroll", {
-          method: "POST", body: JSON.stringify(body) }));
-        return relayAnswer(r, "enroll");   /* control-plane R24 (D-679) */
-      }
       { const pr = await publicReadDoorOp(op, url, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer }); if (pr) return pr; }
-
-      /* ===== REC-163 / IC-174: op=instancegroup — THE PRODUCING GROUP, AND ITS SLUG IS PUBLIC ================
-         `BIO_Publication_v0_1.md` §7 point 1 (BOB #24, 2026-09-21). WHO ASKS DECIDES WHICH PROJECTION, NEVER
-         WHETHER:
-           - a caller holding a credential the admission gate would admit to this read — a machine class in its
-             own namespace, a session, an agent credential in scope — is answered the store's WHOLE ROW, provenance
-             included, exactly as before this item. `caseReader` decides it, the one resolver of "who is asking"
-             this branch already has, asked about the store this read addresses;
-           - anybody else is answered the PUBLIC projection — the slug, or the statement that none is recorded,
-             and nothing else — through `publicInstanceGroup`, the read the setup page makes too.
-         WHICH STORE: the namespace a machine credential is confined to or names (`scopeFor`'s rule, so a probe
-         naming nothing still reads `scratch`), and for every other caller `store=scratch` when named and `bio`
-         otherwise, the invitation ops' rule — the slug is the same public fact either way. The answer says which
-         store answered. A SILENCE IS A SILENCE (REC-52): never "no group is recorded", on either arm. */
-      if (op === "instancegroup") {
-        const held = url.searchParams.get("token");
-        const heldCls = held ? await classify(held, env) : null;
-        const heldScope = heldCls ? scopeFor(heldCls, url) : null;
-        const igStore = heldScope && !heldScope.error ? heldScope.name
-          : (url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio");
-        const igReader = await caseReader(url, env, igStore, presentedAi.cred);
-        if (igReader.silent) return storeSilent(igReader.silent, igReader.correlation);
-        return instanceGroupOp(env, igStore, igReader, { json, storeSilent, storeRefusal, doAnswer });
-      }
-
-      /* ===== REC-164: op=groupidentity — THE DISPLAY NAME AND THE VERIFIED DOMAIN, BESIDE THE PUBLIC SLUG =========
-         `BIO_Publication_v0_1.md` §7 points 2 and 3. op=instancegroup's rule for WHO and WHICH STORE, unchanged: a
-         caller the admission gate would admit is answered the claim, its latest verdict and both dated histories
-         (§7: "members see the claim and its state"); anybody else the public projection — the slug, the display
-         name only beside a slug, and a domain only while its latest verdict is `verified`. A silence is a silence. */
-      if (op === "groupidentity") {
-        const held = url.searchParams.get("token");
-        const heldCls = held ? await classify(held, env) : null;
-        const heldScope = heldCls ? scopeFor(heldCls, url) : null;
-        const giStore = heldScope && !heldScope.error ? heldScope.name
-          : (url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio");
-        const giReader = await caseReader(url, env, giStore, presentedAi.cred);
-        if (giReader.silent) return storeSilent(giReader.silent, giReader.correlation);
-        return groupIdentityOp(env, giStore, giReader, { json, storeSilent, storeRefusal, doAnswer });
-      }
 
       { const pd = await publicationDoorOp(op, url, stub, { json, storeSilent, storeRefusal, doAnswer, sha256Hex, NS_RATIFY, caseRatifyStatement, readerOf: () => caseReader(url, env, "bio", presentedAi.cred) }); if (pd) return pd; }
 

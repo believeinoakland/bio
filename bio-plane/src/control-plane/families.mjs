@@ -11,9 +11,11 @@
    and a family name two sources share (a row held twice for a tranche, K529) is one family here. `dec49Row` (R22)
    and the published fences (R41, `skills.machineFences` over it) read this one object. */
 import * as CATALOGUE from "../../checks/bio-checks.mjs";
+import * as RECORD_GRAMMAR_ACTS from "../record-grammar/acts.mjs";
 import * as TEXT_CHAIN from "../textchain.mjs";
 import * as RECORD_CORE from "../record-core/checks.mjs";
 import * as MEMBERSHIP from "../membership/checks.mjs";
+import * as CREDENTIALS from "../credentials/checks.mjs";
 import * as PROMOTION from "../promotion/checks.mjs";
 import * as PROVENANCE from "../provenance/checks.mjs";
 import * as CAPTURE_SOURCES from "../capture-sources/credentials.mjs";
@@ -31,8 +33,10 @@ import * as PROGRESSIONS from "../progressions/checks.mjs";
 import * as BIAS from "../bias/checks.mjs";
 import * as OBSERVATION_LOG from "../observation-log/checks.mjs";
 import * as RETRIEVAL from "../retrieval/checks.mjs";
+import * as INQUIRY_GRAMMAR from "../inquiry-grammar/checks.mjs";
 import * as INQUIRY from "../inquiry/index.mjs";
 import * as CITATION from "../citation/checks.mjs";
+import * as BASIS_VERSIONS from "../basis-versions/checks.mjs";
 import * as STRENGTH from "../strength/checks.mjs";
 import * as CONTRADICTION from "../contradiction/checks.mjs";
 import * as RUN_RULES from "../run-rules/checks.mjs";
@@ -42,13 +46,15 @@ import * as SKILLS from "../skilldoctrine.mjs";
 import * as INTENT from "../intent/checks.mjs";
 import * as REEVALUATION from "../reevaluation/checks.mjs";
 import * as PUBLICATION from "../publication/checks.mjs";
+import * as PUBLIC_READ from "../public-read/checks.mjs";
 import * as RATIFICATION from "../ratification/checks.mjs";
 import * as CASE_AUTHORING from "../case-authoring/checks.mjs";
 import * as REVIEW from "../review/checks.mjs";
 import * as STANDARDS from "../standards/checks.mjs";
 import * as CONFORMANCE from "../conformance/checks.mjs";
 import * as CONSEQUENCES from "../consequences/checks.mjs";
-import * as ACTIONS from "../actions/checks.mjs";
+/* K835, K837: the action layer's eight families are action-grammar's; `actions/checks.mjs` only re-exports them. */
+import * as ACTION_GRAMMAR from "../action-grammar/checks.mjs";
 import * as ACTION_CLOCKS from "../action-clocks/checks.mjs";
 import * as FILINGS from "../filings/checks.mjs";
 import * as ESCALATION from "../escalation/checks.mjs";
@@ -63,9 +69,11 @@ import * as OWN from "./checks.mjs";
 /* The sources, in the order a code is resolved: `[path under bio-plane/, namespace]`. */
 export const CHECK_FAMILY_FILES = Object.freeze([
   ["checks/bio-checks.mjs", CATALOGUE],
+  ["src/record-grammar/acts.mjs", RECORD_GRAMMAR_ACTS],
   ["src/textchain.mjs", TEXT_CHAIN],
   ["src/record-core/checks.mjs", RECORD_CORE],
   ["src/membership/checks.mjs", MEMBERSHIP],
+  ["src/credentials/checks.mjs", CREDENTIALS],
   ["src/promotion/checks.mjs", PROMOTION],
   ["src/provenance/checks.mjs", PROVENANCE],
   ["src/capture-sources/credentials.mjs", CAPTURE_SOURCES],
@@ -83,8 +91,12 @@ export const CHECK_FAMILY_FILES = Object.freeze([
   ["src/bias/checks.mjs", BIAS],
   ["src/observation-log/checks.mjs", OBSERVATION_LOG],
   ["src/retrieval/checks.mjs", RETRIEVAL],
+  /* inquiry-grammar's R7 table of the inquiry's own rows (C-33.13, C-33.22, C-33.23, C-32.7, C-32.8) is named
+     `INQUIRY_GRAMMAR_ROWS`, not by the reserved suffix, so it is read here as the family `INQUIRY_GRAMMAR_CHECKS`. */
+  ["src/inquiry-grammar/checks.mjs", Object.freeze({ ...INQUIRY_GRAMMAR, INQUIRY_GRAMMAR_CHECKS: INQUIRY_GRAMMAR.INQUIRY_GRAMMAR_ROWS })],
   ["src/inquiry/index.mjs", INQUIRY],
   ["src/citation/checks.mjs", CITATION],
+  ["src/basis-versions/checks.mjs", BASIS_VERSIONS],
   ["src/strength/checks.mjs", STRENGTH],
   ["src/contradiction/checks.mjs", CONTRADICTION],
   ["src/run-rules/checks.mjs", RUN_RULES],
@@ -94,13 +106,14 @@ export const CHECK_FAMILY_FILES = Object.freeze([
   ["src/intent/checks.mjs", INTENT],
   ["src/reevaluation/checks.mjs", REEVALUATION],
   ["src/publication/checks.mjs", PUBLICATION],
+  ["src/public-read/checks.mjs", PUBLIC_READ],
   ["src/ratification/checks.mjs", RATIFICATION],
   ["src/case-authoring/checks.mjs", CASE_AUTHORING],
   ["src/review/checks.mjs", REVIEW],
   ["src/standards/checks.mjs", STANDARDS],
   ["src/conformance/checks.mjs", CONFORMANCE],
   ["src/consequences/checks.mjs", CONSEQUENCES],
-  ["src/actions/checks.mjs", ACTIONS],
+  ["src/action-grammar/checks.mjs", ACTION_GRAMMAR],
   ["src/action-clocks/checks.mjs", ACTION_CLOCKS],
   ["src/filings/checks.mjs", FILINGS],
   ["src/escalation/checks.mjs", ESCALATION],

@@ -104,3 +104,9 @@ Plane's held code (plane R10): each owner registers its own share and deletes it
 - **bundler** (L1, now unconditional; K846) · `fleet-bundle.mjs`:196, :198 `planeMember`'s `entry` → `src/plane/index.mjs`; then plane's T20 job deletes the one-line `src/index.mjs`.
 - **control-plane** (L11, new to T20; K846) · R42: register provenance's testimony slot at the `plane-held` step's rank (after provenance's T20 job), and plane's held step drops it.
 - **host-governor** (L?), **capture** (L3), **agent-worker** (L6) (K846) · re-point any module test PLANE #1 names red at T19's close (`ops.test.mjs`:192, `plane.test.mjs`:13, agent-worker's `PLANE_ENTRY`/`PLANE_IDX_PATH`) to `src/plane/`.
+
+## Added during T19 layer 11 (BOB #84, K850)
+
+- **inquiry-grammar** (L6, new to T20) · rename `INQUIRY_GRAMMAR_ROWS` to the reserved `*_CHECKS` suffix (`INQUIRY_GRAMMAR_CHECKS`) so DEC-49 composition finds it without control-plane's alias (CONTROL-PLANE #10 J3 (1)); then control-plane's `families.mjs` drops the alias, with its T20 job.
+- **acquisition** (L3) and **control-plane** · C-68.1 is minted at two `is-storage-absent` regions (acquisition's site and the door's `storageAbsent`): the door raises through acquisition's export, so one site remains (CONTROL-PLANE #10 J3 (2)).
+- **legacy-tests** (with ⚑Bob-2) · LEGACY-INDEX #12 deleted `tools/` and the walk scripts (K787): the old suites and scripts it lists in `build/jobs/T19/legacy-index.md` (For BOB 1) now fail at load, accepted red by name with the old suites (K619).
