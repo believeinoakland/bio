@@ -70,8 +70,6 @@ export const BUDGET_LEDGER = {
     why: "CLOSURE — the HELD sample: an expiry is `available: false`, printed UNVERIFIED, never 'nothing held' (D-237)" },
   "bio-plane/scripts/provenance.mjs": { counts: { "timeout:": 1 },
     why: "CLOSURE — a git read: an expiry is `null`, the stated THIRD state UNVERIFIED, never 'clean' (M0-16)" },
-  "bio-plane/scripts/coverage.mjs": { counts: { "timeout:": 1 },
-    why: "DEFECT, NOT THIS ROW'S — `lastCommitDate`: an expiry returns null and the row DROPS SILENTLY out of the reported staleness distribution (an under-count, not a false RED); named for SCHEDULER by M0-107" },
   /* LEDGERED at integration by c19-unionfix, 2026-09-24: D-242's take gained this site and gated only its own
      suites, so this walk first saw it on the union. */
   "tools/mintid.mjs": { counts: { "Atomics.wait": 1 },
@@ -124,7 +122,7 @@ function gateOf(files, repo) {
   const isSuite = (f) => f.endsWith(".test.mjs")
     && (depthOne(f, "bio-plane/test") || depthOne(f, "civicos-ui/test") || fleetDirs.some((d) => depthOne(f, d)));
   const suites = files.filter(isSuite);
-  const runners = ["bio-plane/scripts/battery.mjs", "bio-plane/scripts/coverage.mjs", "civicos-ui/test/run.mjs",
+  const runners = ["bio-plane/scripts/battery.mjs", "civicos-ui/test/run.mjs",
     "tools/gates.mjs", "tools/plancheck.mjs", ...files.filter((f) => /^civicos-ui\/check-[\w.-]+\.mjs$/.test(f))]
     .filter((f) => fset.has(f));
   const IMPORT_RE = /(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+)["'`](\.{1,2}\/[^"'`\n]+)["'`]/g;

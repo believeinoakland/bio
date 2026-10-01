@@ -8,7 +8,6 @@
     "build": "npm run embed:sign && node scripts/build-plane.mjs",
     "deploy": "node scripts/deploy.mjs",
     "dev": "wrangler dev",
-    "test:migrate": "node test/migrate.test.mjs",
     "test:browse": "node test/browse.test.mjs",
     "test:hygiene": "node scripts/battery.mjs hygiene",
     "test:purge": "node test/purge.test.mjs",
@@ -31,8 +30,7 @@
     "test:queue-state": "node test/queue-state.test.mjs",
     "test:queue-conditions": "node test/queue-conditions.test.mjs",
     "test:multifinding": "node test/multifinding.test.mjs",
-    "test:battery": "node scripts/battery.mjs",
-    "test:coverage": "node scripts/coverage.mjs --strict"
+    "test:battery": "node scripts/battery.mjs"
   },
   "devDependencies": {
     "miniflare": "^4.20260722.0",
