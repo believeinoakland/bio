@@ -138,7 +138,7 @@ test("R22, R23: the route's sentences: never looked is not a finding, a mark say
   const never = routeFinding("information", null);
   assert.equal(never.note, "no assessment of this document's route has ever been recorded. This is NOT a finding "
     + "that the route cannot be shown; it is the absence of the question having been asked.");
-  assert.equal(routeFinding("inquiry", null).note, "a route is a fact about a captured document, and this bundle is not one");
+  assert.equal(routeFinding("inquiry", null).note, "a route is a fact about a captured document, and this record is not one");
   assert.match(ROUTE_MARK_NOTE, /this document stays where the group put it/);
   assert.match(ROUTE_MARK_NOTE, /corrects FORWARD rather than un-saying one \(DEC-19\)/);
   assert.match(ROUTE_MARK_NOTE, /The state and this finding disagree deliberately, and neither is a defect in the other/);

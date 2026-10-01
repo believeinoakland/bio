@@ -106,8 +106,8 @@ function checkAuthorityPublishable(ctx, findings) {
        live bundles D-200 names are ALL the first kind (measured 2026-08-05:
        every one has the key ABSENT, not empty), a fact the old message could
        not express. Nothing is weakened: every input that produced an error
-       before produces an error now, which `provenance-chain.test.mjs` asserts
-       arm by arm rather than leaving to inspection. */
+       before produces an error now, which `test/m/provenance/convert-chain-marker.test.mjs`
+       (R46) asserts arm by arm rather than leaving to inspection. */
     if (!('provenance_chain' in d)) {
       findings.push(f('C-18.9', 'error', `provenance documents[${i}] is at or past verified and records no provenance_chain at all: a published hash claims these bytes came from somewhere by some route, and this document names none`,
         ['record the chain of custody for this capture, one hop per party, from us back to the source',
@@ -141,12 +141,12 @@ function checkAuthorityPublishable(ctx, findings) {
     if (d.authority_state === 'undetermined') {
       const basis = d.authority_basis;
       if (typeof basis !== 'string' || basis.trim() === '') {
-        findings.push(f('C-18.9', 'error', `provenance documents[${i}] is content-authority undetermined and this bundle is at or past verified, but states no authority_basis: publishing an unanswered question is honest only when the record says it is unanswered and since when`,
+        findings.push(f('C-18.9', 'error', `provenance documents[${i}] is content-authority undetermined and this record is at or past verified, but states no authority_basis: publishing an unanswered question is honest only when the record says it is unanswered and since when`,
           ['record a dated authority_basis saying what was tried and what it established',
            'or determine the authority through the task list and record the determination']));
       }
     } else if (d.authority_state === 'determined' && (typeof d.authority !== 'string' || d.authority.trim() === '')) {
-      findings.push(f('C-18.9', 'error', `provenance documents[${i}] declares authority_state 'determined' with no authority named, and this bundle is at or past verified`,
+      findings.push(f('C-18.9', 'error', `provenance documents[${i}] declares authority_state 'determined' with no authority named, and this record is at or past verified`,
         ['name the issuing party', "or correct authority_state to 'undetermined' with a dated basis"]));
     }
   });
@@ -190,7 +190,7 @@ function checkReleaseAuthority(ctx, findings) {
       findings.push(f('C-18.1', 'error', `provenance documents[${i}] is authority-determined but names no authority_basis: how it was reached is recorded in BOTH cases`));
     }
     if (d.file && !hasFile_(ctx, String(d.file)) && !Array.isArray(d.parts)) {
-      findings.push(f('C-18.1', 'error', `provenance documents[${i}] names '${d.file}' which does not exist in the bundle`));
+      findings.push(f('C-18.1', 'error', `provenance documents[${i}] names '${d.file}' which does not exist in the record`));
     }
     const cap = d.capture;
     if (!cap || typeof cap !== 'object') findings.push(f('C-18.1', 'error', `provenance documents[${i}] missing capture block`));
@@ -264,9 +264,9 @@ function checkReleaseAuthority(ctx, findings) {
      destination — an operator who edits `current_state` by hand gets C-4.2
      whatever DEC-56 decides, because C-4.2 checks the transition against
      whatever the machine carries at the time. If Bob rules a retraction edge,
-     these strings do not become false; they become incomplete, and the
-     source-level walk in `test/repair-reachability.test.mjs` re-derives what is
-     reachable from `STATES` and `deriveActs` rather than from a list here. */
+     these strings do not become false; they become incomplete. (The legacy
+     `test/repair-reachability.test.mjs`, which re-derived what is reachable from
+     `STATES` and `deriveActs`, was deleted at T20; no module test re-derives it.) */
   const hist = Array.isArray(ctx.fm.state_history) ? ctx.fm.state_history : [];
   const releases = hist.filter(e => e && e.from_state === 'collected' && e.to_state === 'verified');
   for (const e of releases) {
@@ -275,7 +275,7 @@ function checkReleaseAuthority(ctx, findings) {
        question and knew nothing of the two spellings the control plane mints. */
     if (!a || isMachineIdentity(a)) {
       findings.push(f('C-18.1', 'error', `collected -> verified transition authored by '${e.author}': release is a named member's decision, never a surface or AI identity (intake doctrine 4a)`,
-        ['retire this bundle with the reason recorded (verified -> retired, op=retire), if the release cannot stand as it is',
+        ['retire this record with the reason recorded (verified -> retired, op=retire), if the release cannot stand as it is',
          'or record the defect against this release in Review Notes and raise it, so the record carries the doubt rather than a repair nobody can perform',
          'the state is not moved back by hand: C-4.2 refuses any transition that is not an edge in this machine, so hand-editing current_state or state_history produces a second error on top of this one']));
     }
@@ -290,8 +290,8 @@ function checkReleaseAuthority(ctx, findings) {
   const memberRelease = releases.some(e => { const a = String(e.author || '').toLowerCase(); return a && !isMachineIdentity(a); });
   if (sweepOrigin && everVerified && !memberRelease) {
     findings.push(f('C-18.1', 'error', 'sweep-origin intake lands at collected, never higher: verified requires per-document human ratification, a member-authored collected -> verified transition (intake doctrine Section 4)',
-      ['retire this bundle with the reason recorded (verified -> retired, op=retire), if this intake cannot be ratified as it stands',
-       'or record in Review Notes that it reached verified without the per-document ratification the doctrine requires, and raise it: op=release writes the collected -> verified edge and refuses a bundle already at verified, so the ratification cannot be re-made in place',
+      ['retire this record with the reason recorded (verified -> retired, op=retire), if this intake cannot be ratified as it stands',
+       'or record in Review Notes that it reached verified without the per-document ratification the doctrine requires, and raise it: op=release writes the collected -> verified edge and refuses a record already at verified, so the ratification cannot be re-made in place',
        'the state is not moved back by hand: C-4.2 refuses any transition that is not an edge in this machine']));
   }
 }
@@ -419,7 +419,7 @@ function checkInfo2Register(ctx, findings) {
           if (!p || typeof p !== 'object' || !p.file || !RAW_SHA_RE.test(p.sha256 || '') || !(Number.isInteger(p.bytes) && p.bytes > 0)) {
             findings.push(f('C-18.1', 'error', `provenance documents[${i}].parts[${j}] lacks the {file, sha256, bytes} shape (@2)`));
           } else if (!hasFile_(ctx, String(p.file))) {
-            findings.push(f('C-18.1', 'error', `provenance documents[${i}].parts[${j}] names '${p.file}' which does not exist in the bundle (@2)`));
+            findings.push(f('C-18.1', 'error', `provenance documents[${i}].parts[${j}] names '${p.file}' which does not exist in the record (@2)`));
           }
         });
       }
@@ -430,7 +430,7 @@ function checkInfo2Register(ctx, findings) {
       if (!shapeOk) {
         findings.push(f('C-18.1', 'error', `provenance documents[${i}].derived lacks the {transform, reason, from_file|from_ref} shape (doctrine 4a) (@2)`));
       } else if (dv.from_file && !hasFile_(ctx, String(dv.from_file))) {
-        findings.push(f('C-18.1', 'error', `provenance documents[${i}].derived.from_file '${dv.from_file}' does not exist in the bundle (@2)`));
+        findings.push(f('C-18.1', 'error', `provenance documents[${i}].derived.from_file '${dv.from_file}' does not exist in the record (@2)`));
       }
     }
     /* Renditions: artifacts derived FROM this document, which is the opposite
@@ -454,10 +454,10 @@ function checkInfo2Register(ctx, findings) {
             return;
           }
           if (!hasFile_(ctx, String(r.file))) {
-            findings.push(f('C-18.1', 'error', `provenance documents[${i}].renditions[${j}] names '${r.file}' which does not exist in the bundle (@2)`));
+            findings.push(f('C-18.1', 'error', `provenance documents[${i}].renditions[${j}] names '${r.file}' which does not exist in the record (@2)`));
           }
           if (!hasFile_(ctx, String(r.from_file)) && !Array.isArray(d.parts)) {
-            findings.push(f('C-18.1', 'error', `provenance documents[${i}].renditions[${j}].from_file '${r.from_file}' does not exist in the bundle (@2)`));
+            findings.push(f('C-18.1', 'error', `provenance documents[${i}].renditions[${j}].from_file '${r.from_file}' does not exist in the record (@2)`));
           }
           if (r.sha256 === cap?.sha256) {
             findings.push(f('C-18.1', 'error', `provenance documents[${i}].renditions[${j}] has the same hash as the capture it claims to be derived from, so one of the two is mislabelled (@2)`));
@@ -477,7 +477,7 @@ function checkInfo2Register(ctx, findings) {
         }
         if (r.signature_file) {
           if (!hasFile_(ctx, String(r.signature_file))) {
-            findings.push(f('C-18.1', 'error', `provenance releases[${i}].signature_file '${r.signature_file}' does not exist in the bundle (@2)`));
+            findings.push(f('C-18.1', 'error', `provenance releases[${i}].signature_file '${r.signature_file}' does not exist in the record (@2)`));
           }
           if (!r.signer) findings.push(f('C-18.1', 'error', `provenance releases[${i}] carries a signature_file but no signer (@2)`));
           if (r.namespace !== 'bio-release') {
