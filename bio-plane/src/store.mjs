@@ -1,6 +1,4 @@
 import { DurableObject } from "cloudflare:workers";
-/* REC-132 / C-55: the reserved member id's refusal row, and the audit's report of it. */
-import { MEMBER_ID_CHECKS } from "../checks/bio-checks.mjs";
 import { actionsOf, actionsOps } from "./actions/index.mjs";
 import { actionClocksOf, actionClocksOps } from "./action-clocks/index.mjs";
 /* N216 (K250): the layer-9 modules built with no `from`, constructed on this object's host and their ops dispatched here. */
@@ -8,39 +6,36 @@ import { standardsOf, standardsOps } from "./standards/index.mjs";
 import { conformanceOf, conformanceOps } from "./conformance/index.mjs";
 import { consequencesModule, consequencesOps } from "./consequences/index.mjs";
 import { filingsOf, filingsOps } from "./filings/index.mjs";
-import { escalationOf } from "./escalation/index.mjs";
+import { escalationOf, escalationOps } from "./escalation/index.mjs";
 import { actionPlansOf, actionPlansOps } from "./action-plans/index.mjs";
-import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* K31: the one write path, extracted to `promotion`; this store registers its share of every promotion there. */
-import { promotionOf, stepContext, recordAudit } from "./promotion/index.mjs";
-import { provenanceOf, TESTIMONY_PATH, ROUTE_FINDING_KEY } from "./provenance/index.mjs";
-import { Membership, membershipOf, membershipOps, hiddenBundles } from "./membership/index.mjs";
-import { Credentials, credentialsOf, credentialsOps } from "./credentials/index.mjs";
+import { promotionOf, promotionOps, stepContext } from "./promotion/index.mjs";
+import { provenanceOf } from "./provenance/index.mjs";
+import { provenanceOps } from "./provenance/ops.mjs";
+/* The D-15 viewer gate (membership R43), handed to record-core's audit as its sight; this file builds no query of its own. */
+import { membershipOf, membershipOps, hiddenBundles, viewerPredicate } from "./membership/index.mjs";
+import { credentialsOf, credentialsOps } from "./credentials/index.mjs";
 import { observationLogOf, observationLogOps, OBSERVATION_LOG_MODULE } from "./observation-log/index.mjs";
 import { runProductionsOf, runProductionsOps } from "./run-productions/index.mjs";
 import { captureRequestsOf, captureRequestsOps } from "./capture-requests/index.mjs";
-import { recordOf, stampInstant, registerLegacyGrammars } from "./record-core/index.mjs";
+import { recordOf, recordCoreOps } from "./record-core/index.mjs";
 import { registerInquiryGrammar } from "./inquiry-grammar/index.mjs";
-import { LEGACY_GRAMMARS } from "../checks/bio-checks.mjs";
 export { stampInstant, instantOrder } from "./record-core/index.mjs";
 import { governorOf, governorRoutes } from "./host-governor/index.mjs";
 import { captureOf, captureOps } from "./capture/index.mjs";
 import { monitoringOf, monitoringOps } from "./monitoring/index.mjs";
 import { connectionsOf, connectionsOps } from "./connections/index.mjs";
-import { inquiryOf, inquiryOps, legCapped, LEG_BACKFILL_MAX } from "./inquiry/index.mjs";
+import { inquiryOf, inquiryOps, legCapped } from "./inquiry/index.mjs";
 import { citationOf, citationOps } from "./citation/index.mjs";
 import { extractionOf, extractionOps } from "./extraction/index.mjs";
 import { entitiesOf, entitiesOps } from "./entities/index.mjs";
-import { basisVersionsOf, basisVersionsOps, VERSION_ACT_TO, BASIS_VERSIONS_LIMIT_DEFAULT, BASIS_VERSIONS_LIMIT_MAX,
-         BASIS_VERSION_LEGS_MAX } from "./basis-versions/index.mjs";
-/* The D-15 viewer gate, from query.mjs's ONE compilation point: this file builds no query of its own. */
-import { viewerPredicate } from "./query.mjs";
+import { basisVersionsOf, basisVersionsOps } from "./basis-versions/index.mjs";
 import { contradictionOf, contradictionOps } from "./contradiction/index.mjs";
 import { calibrationOf, calibrationOps } from "./calibration/index.mjs";
 import { schedulerOf } from "./scheduler/index.mjs";
 import { progressionsOf, progressionOps } from "./progressions/index.mjs";
 import { intentOf, intentOps } from "./intent/index.mjs";
-import { strengthOf as strengthModule, strengthOps, STRENGTH_AXES } from "./strength/index.mjs";
+import { strengthOf as strengthModule, strengthOps } from "./strength/index.mjs";
 import { reevaluationOf, reevaluationOps } from "./reevaluation/index.mjs";
 import { reviewOf, reviewOps } from "./review/index.mjs";
 import { caseAuthoringOf, caseAuthoringOps } from "./case-authoring/index.mjs";
@@ -50,10 +45,9 @@ import { publicReadOf, publicReadOps } from "./public-read/index.mjs";
 import { projectStageOf, projectStageOps } from "./project-stage/index.mjs";
 import { biasOf, biasOps } from "./bias/index.mjs";
 import { aiRunsOf, aiRunsOps, hiddenRuns } from "./ai-runs/index.mjs";
-/* REC-82 / IC-83: the content-extent checker (C-45) and the content module. */
-import { checkContentExtent, contentOf } from "./content/index.mjs";
+import { contentOf, contentOps } from "./content/index.mjs";
 /* retrieval (K61): the projection, the text index, search, selections, the content axis and the frontier are its. */
-import { retrievalOf, retrievalRoutes, SELECTION_ID_CHUNK } from "./retrieval/index.mjs";
+import { retrievalOf, retrievalRoutes } from "./retrieval/index.mjs";
 
 /* BIO store, plane layer, step 1.
  *
@@ -76,13 +70,6 @@ import { retrievalOf, retrievalRoutes, SELECTION_ID_CHUNK } from "./retrieval/in
  * root of trust, and the gate runs over a byte-complete image.
  */
 
-
-/* CPDF-10: a column this store WROTE as JSON, read back. Returns null rather
-   than throwing on a malformed value, for the reason every read in this file
-   tolerates one: a parse that throws inside a projection ends the read with no
-   answer at all, and a null that a caller can see is a better finding than a
-   500 nobody can attribute. */
-const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 
 export class Store extends DurableObject {
   constructor(ctx, env) {
@@ -110,7 +97,7 @@ export class Store extends DurableObject {
     observationLogOf(ctx).attachMeaning({ entities: entitiesOf(ctx) });
     /* retrieval (K31, K61): its projection and text index join every promotion before legacy-store's step. legacy-store
        registers with it what later modules own until each is extracted (K75 (2), K80, K96): the action facts (actions
-       R12, over the clock rule `#actionDerived` reads), the leg grades (strength's earned registry and `#capturedAt`),
+       R12, over the clock rule `#actionDerived` reads), the leg grades (inquiry's earned registry and `legCapped`),
        the single-bundle projection's decorations (actions, inquiry, ai-runs), the frontier's hidden-run tail (ai-runs,
        D-486) and the selection sweep's arming (scheduler). */
     const retrieval = retrievalOf(ctx, { now: () => this.#nowMs(null) });
@@ -125,8 +112,8 @@ export class Store extends DurableObject {
     publicationOf(ctx);
     actionsOf(ctx, { env });
     retrieval.registerLegGrades("legacy-store", (legs) => {
-      const cap = this.earnedBasisRegistry(null, [...new Set(legs.map((l) => l.target_id))])?.earned?.capture || {};
-      return legs.map((l) => Store.#capturedAt(l.grade, cap[l.target_id], l.target_id));
+      const cap = inquiryOf(ctx).earned(null, [...new Set(legs.map((l) => l.target_id))])?.earned?.capture || {};
+      return legs.map((l) => legCapped(l.grade, cap[l.target_id], l.target_id));
     });
     observationLogOf(ctx).attachMeaning({ connections: connectionsOf(ctx, { env }) });
     /* inquiry (K31, K61): its check and projection join promotion before legacy-store's step; strength R28 here. */
@@ -160,14 +147,12 @@ export class Store extends DurableObject {
       runs: aiRunsOf(ctx, env), aiRuns: aiRunsOf(ctx, env) });
     observationLogOf(ctx).listenToCapture(capture);
     schedulerOf(ctx, env);
-    registerLegacyGrammars(recordOf(ctx), LEGACY_GRAMMARS);
     ctx.blockConcurrencyWhile(async () => this.#migrate());
     ctx.blockConcurrencyWhile(async () => schedulerOf(ctx, env).start());
   }
 
   #migrate() {
     recordOf(this.ctx).migrate();
-    const bare = SCHEMA_TEXT.split("\n").filter(l => !l.trim().startsWith("--")).join("\n");
     /* CREATE TABLE IF NOT EXISTS does nothing to a table that already exists, so
        columns added after a store was first written need adding by hand. Done
        here rather than in a versioned migration ladder because these are
@@ -226,10 +211,9 @@ export class Store extends DurableObject {
     };
     addColumns();
 
-
-    for (const s of bare.split(";")) { const t = s.trim(); if (t) this.sql.exec(t); }
-    calibrationOf(this.ctx).migrate();   /* calibration's tables (R20), where the schema pass created them before */
-    membershipOf(this.ctx).migrate();   /* membership's tables (R57–R59), after the schema pass: nothing in the schema text names them */
+    /* Each owner runs its own tables (`schema.mjs` holds no fragment): record-core's first, above, then the rest. */
+    calibrationOf(this.ctx).migrate();   /* calibration's tables (R20) */
+    membershipOf(this.ctx).migrate();   /* membership's tables (R57–R59) */
     credentialsOf(this.ctx).migrate();   /* credentials' tables (R18), after membership's: its listener and claim fact registered */
     provenanceOf(this.ctx).migrate();   /* provenance's tables (R41), likewise: its schema is its own */
     contentOf(this.ctx).migrate();      /* content's tables (R39), likewise, with the chain_kind and cited_as migrations */
@@ -256,327 +240,50 @@ export class Store extends DurableObject {
     recordOf(this.ctx).seedMintLedger(Store.#MINT_LEDGER_LIVE);
   }
 
-  /* retrieval (K3, K61): its services, reached by the store's own callers and the old battery through these. */
-  reproject(a) { return retrievalOf(this.ctx).reproject(a); }
-  projection(a) { return retrievalOf(this.ctx).projection(a); }
-  projectionPlan() { return retrievalOf(this.ctx).projectionPlan(); }
-  projectionClear(a) { return retrievalOf(this.ctx).projectionClear(a); }
-  search(a) { return retrievalOf(this.ctx).search(a); }
-  meaningRows(a) { return retrievalOf(this.ctx).meaningRows(a); }
-  searchFields() { return retrievalOf(this.ctx).searchFields(); }
-  searchIndexCheck(a) { return retrievalOf(this.ctx).searchIndexCheck(a); }
-  selectionCreate(a) { return retrievalOf(this.ctx).selectionCreate(a); }
-  selectionResolve(a) { return retrievalOf(this.ctx).selectionResolve(a); }
-  selectionList(a) { return retrievalOf(this.ctx).selectionList(a); }
-  selectionRelease(a) { return retrievalOf(this.ctx).selectionRelease(a); }
-  contentAxis(a) { return retrievalOf(this.ctx).contentAxis(a); }
-  frontier(a) { return retrievalOf(this.ctx).frontier(a); }
-
-
-
-  static SELECTION_ID_CHUNK = SELECTION_ID_CHUNK;   /* retrieval's bound on an id list one statement binds */
-
   async alarm() { await schedulerOf(this.ctx, this.env).alarm(); }
   async onAlarm(now) { return await schedulerOf(this.ctx, this.env).onAlarm(now); }
-  async schedProbeArm(now) { return await schedulerOf(this.ctx, this.env).probeArm(now); }
-  async schedProbeLog() { return await schedulerOf(this.ctx, this.env).probeLog(); }
+  /* scheduler's alarm read, reached over the object's RPC by scheduler's plane test. */
   async schedAlarmAt() { return await schedulerOf(this.ctx, this.env).alarmAt(); }
 
-  /* R20–R22, R39: disposing a selection of inquiries: inquiry's. */
-  dispose(...a) { return inquiryOf(this.ctx).dispose(...a); }
-
-
-  /* publication (T8, K3): the published registries and the attribution reads are publication's; the store's callers not
-     yet extracted, and the old battery, reach them here. */
-  publishedRegistryFor(...a) { return publicationOf(this.ctx).publishedRegistryFor(...a); }
-  publishedCaseRegistryFor(...a) { return publicationOf(this.ctx).publishedCaseRegistryFor(...a); }
-  observationsNamingAuthor(...a) { return publicationOf(this.ctx).observationsNamingAuthor(...a); }
-  attributionStatedFor(...a) { return publicationOf(this.ctx).attributionStatedFor(...a); }
-
-  /* REC-13 / REC-124 / REC-136: the conclusion and a project's conclusion record are basis-versions' (R16–R23). */
-  conclude(a) { return basisVersionsOf(this.ctx).conclude(a); }
-
-  actionMove(a) { return actionsOf(this.ctx).actionMove(a); }
-  actionCorrespond(a) { return actionsOf(this.ctx).actionCorrespond(a); }
-  actionLaws(a) { return actionsOf(this.ctx).actionLaws(a); }
-  actionRiskTier(a) { return actionsOf(this.ctx).actionRiskTier(a); }
-  actionLawsPropose(a) { return actionsOf(this.ctx).actionLawsPropose(a); }
-  actionQuotes(a) { return actionsOf(this.ctx).actionQuotes(a); }
-
-
-  reopen({ target, reason = "", viewer = null, author = null } = {}) {
-    return promotionOf(this.ctx).reopen({ target, reason, viewer, author });
-  }
-
-
-  publishCase(...a) { return caseAuthoringOf(this.ctx).publishCase(...a); }
-
-
-
-
-  /* R23–R28: dividing a question and grouping its legs: inquiry's. */
-  divide(...a) { return inquiryOf(this.ctx).divide(...a); }
-  groundInquiry(...a) { return inquiryOf(this.ctx).ground(...a); }
-
-  /* REC-86 / IC-123: narrowing is basis-versions' (R24–R27). */
-  narrowCandidates(a) { return basisVersionsOf(this.ctx).narrowCandidates(a); }
-
-
-  narrow(a) { return basisVersionsOf(this.ctx).narrow(a); }
-
-
-  #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
-  #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
-
-
-  /* A whole-store conformance pass, run WHERE THE DATA IS.
-   *
-   * The benchmark that produced this: gating 20,000 bundles from outside costs
-   * about 2,060 seconds on the deployed plane and 63 locally, and roughly 97% of
-   * the difference is one network round trip per image. The store and the checks
-   * are not the constraint; fetching bundles one at a time is. The catalog is a
-   * pure function over an injected filesystem and the images are already here, so
-   * the pass belongs here too.
-   *
-   * Paginated rather than exhaustive, because a Durable Object has a CPU budget
-   * and 20,000 bundles is about 63 seconds of work. A page of a few hundred is
-   * well inside it, and a hundred calls instead of twenty thousand captures
-   * essentially all of the benefit. The cursor is the last bundle id seen, so a
-   * pass is resumable and does not depend on a snapshot of the store.
-   *
-   * Blob-backed files are declared elided, exactly as the gate does: existence
-   * assertions see them, byte checks skip them, and capture integrity was proven
-   * at write time by the capture op rather than re-proven here.
-   */
-  async auditPass({ after = "", limit = 200, viewer = null } = {}) {
-    // record-core R18-R20 runs the catalogue over the page; the viewer's gate, and the total and
-    // membership findings the sweep publishes beside the page, stay here.
-    const gate = viewerPredicate(viewer);
-    const sighted = new Map();   /* N127: asked per id the page names, never a SELECT of every visible bundle */
-    const visible = (id) => (sighted.has(id) ? sighted.get(id)
-      : sighted.set(id, !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args)).get(id));
-    const { clean, withErrors, tally, tallyDetail = {}, offenders, limit: cap, page: ids, [ROUTE_FINDING_KEY]: route } = await recordAudit(this.ctx, {
-      after, limit, visible,
-      context: (id) => {
-        const targets = this.#rows(`SELECT target_id FROM inquiry_basis WHERE bundle_id=?`, id).map((r) => r.target_id);
-        return { earnedRegistry: targets.length ? this.earnedBasisRegistry(this.#subjectEntityOf(id), targets) : null,
-                 publishedRegistry: this.publishedRegistryFor(id, targets) };
-      } });
-    const page = ids.map((id) => this.#one(`SELECT bundle_id, object_type, current_state FROM bundles WHERE bundle_id=?`, id));
-    const last = page.length ? page[page.length - 1].bundle_id : after;
-
-    return {
-      ok: true, checked: page.length, clean, withErrors, tally,
-      [ROUTE_FINDING_KEY]: route,
-      ...(Object.keys(tallyDetail).length ? { tallyDetail } : {}),
-      offenders,
-      /* REC-57: `cursor` and `total` were already here and are UNTOUCHED — between
-         them a caller can tell a full page from the whole corpus, so no second
-         spelling of that fact is minted. What was missing is the bound that
-         produced the page, and on THIS op it matters most: `checked` is the size
-         of one page and `ok` is a verdict over it, so "the audit is clean" and
-         "the first 200 are clean" published the same shape. */
-      limit: cap,
-      cursor: page.length === cap ? last : null,
-      total: this.#one(`SELECT COUNT(*) AS n FROM bundles b WHERE (${gate.sql})`, ...gate.args).n,
-      /* REC-132 / D-422 / C-55: A MEMBER HOLDING THE RESERVED ID IS REPORTED, NEVER
-         RENAMED. `memberAdd` now refuses the id `admin`, but an instance that enrolled
-         one before the reservation still holds it, and every name-keyed check reads it
-         as the founder. Renaming it here would rewrite who the record says acted, so the
-         audit SAYS it and an administrator decides. ALWAYS PRESENT, so "none held" and
-         "this build does not look" never read alike. A stated finding like `route`
-         above, not a conformance error: `ok`, `tally` and `withErrors` are about
-         bundles and do not move for it. It names only the reserved id, which is public,
-         and that row's role and status. */
-      membership: (() => {
-        const m = this.#one(`SELECT role, status FROM members WHERE member_id = ?`, Store.ROOT_ADMIN);
-        return {
-          reservedId: Store.ROOT_ADMIN, held: !!m, role: m ? m.role : null, status: m ? m.status : null,
-          check: MEMBER_ID_CHECKS.MEMBER_ID_RESERVED.check,
-          says: m
-            ? `a member is enrolled under the reserved id '${Store.ROOT_ADMIN}' (role ${m.role}, status ${m.status}). `
-              + `Every check that asks whether someone administers by name reads it as the founding `
-              + `administrator. It was enrolled before the id was reserved and has NOT been renamed: an `
-              + `administrator should decide what it is and re-enrol the person under another id`
-            : `no member holds the reserved id '${Store.ROOT_ADMIN}'`,
-        };
-      })(),
-    };
-  }
-
-  /* REC-54 / D-200: the provenance chain, derived from what the capture record holds, and its rebuild through the
-     plane's own write path: provenance's (R19–R21). */
-  provenanceChainRebuild(...a) { return provenanceOf(this.ctx).provenanceChainRebuild(...a); }
-
-  /* REC-63 / DEC-56 / D-204, REC-116: the standing route marker and its reads: provenance's (R22, R23). */
-  provenanceRouteAssess(...a) { return provenanceOf(this.ctx).provenanceRouteAssess(...a); }
-  provenanceRoutesMarked(...a) { return provenanceOf(this.ctx).provenanceRoutesMarked(...a); }
-
-  /* ---- writes: promotion is the sole writer of live state ---- */
-
-  /**
-   * One transaction. Either the whole bundle advances or nothing does.
-   *
-   * base is the CAS. It must equal the current bundle_sha, or null when
-   * creating. A stale base is refused, which is the lost-update floor that
-   * manifest base-sha CAS provided on Drive.
-   */
-  promote(pkg) {
-    return promotionOf(this.ctx).promote(pkg);
-  }
-
-  /* K31 (promotion R39): legacy-store's share of every promotion's checks, until each module that owns one is
-     extracted. Registered with `promotion` in the constructor; a refusal here refuses the whole promotion. */
+  /* K31 (promotion R39): legacy-store's share of every promotion's checks. Registered with `promotion` in the
+     constructor; a refusal here refuses the whole promotion. Provenance's testimony slot (its R52) runs its registered
+     checks (content's C-45 extent check, asked before anything is written) where that check stood. */
   #promoteChecks(c) {
-    const { pkg, bundleId, base, files } = stepContext(c);
-      // MK-1 / D-184: the authored flag's fence and one capture, one home are provenance's registered check (R2,
-      // R3), run before this one. What stays here is the content row's own refusal for the testimony path's words,
-      // asked before anything is written (C-45's checker under the context the mint will see), so the mint in the
-      // projection below cannot refuse.
-      const extentBad = pkg[TESTIMONY_PATH]
-        ? checkContentExtent({ kind: "document" }, this.contentContextFor(pkg[TESTIMONY_PATH].captureSha)) : null;
-      if (extentBad) return extentBad;
+    return provenanceOf(this.ctx).testimonySlot().check(c);
   }
 
   /* K31 (promotion R39): legacy-store's share of every promotion's projections, run after `record-core.commit`
      inside the same transaction. The answer's keys promotion does not already carry are added to its answer. */
   #promoteProjections(c) {
-    const { pkg, bundleId, meta, owner } = stepContext(c);
+    const { bundleId, meta, owner } = stepContext(c);
     const cur = c.head;
       /* D-497: the SIGHT INDEX follows the bundle row that decides whether this is a project at all. ONE call
          covers all three arrivals — a project created here gains a row carrying the derivation's default, a
          bundle promoted INTO a project gains one, and a bundle promoted OUT of `project` loses its row rather
          than leaving a sight row standing over something that is no longer a project. It is a derivation, so
          it is idempotent: a revision that changes neither recomputes the same row. */
-      this.#reindexProjectSight(bundleId);
+      membershipOf(this.ctx).reindexProjectSight(bundleId);
 
-      /* MK-1 / D-184: the testimony path's own writes — the words' passage index
-         and the content row over them — IN THIS TRANSACTION, so an authored
-         bundle never exists without the content its readers expect. It throws
-         to roll the whole promotion back rather than return a half. */
-      const testimonyWrote = pkg[TESTIMONY_PATH] ? this.#testimonyWithin(bundleId, pkg) : null;
+      /* MK-1 / D-184: the testimony path's own writes (extraction's index, content's row, observation-log's look),
+         provenance's testimony slot (its R52), IN THIS TRANSACTION, so an authored bundle never exists without the
+         content its readers expect. A refusal throws to roll the whole promotion back rather than return a half. */
+      const slot = provenanceOf(this.ctx).testimonySlot().project(c);
+      if (slot && slot.ok === false)
+        throw new Error(`MK-1: the observation's testimony work was refused: ${slot.code || slot.reason}`);
 
       const after = this.#one(`SELECT bundle_sha, row_version FROM bundles WHERE bundle_id=?`, bundleId);
       return { ok: true, bundleId, bundleSha: after.bundle_sha, rowVersion: after.row_version, owner,
         /* REC-197: present ONLY on a project's creation — the setting it was created with, READ BACK through
-           `#visibilityOf` (the one reader) rather than echoed from the request, so an absent field answers
-           `hidden` because the record says so. */
-        ...(!cur && meta.object_type === "project" ? { visibility: this.#visibilityOf(bundleId) } : {}),
-        /* MK-1: present ONLY on the testimony path, which is a method of this
-           class, so no existing caller's answer gains a key. */
-        ...(testimonyWrote ? { testimony: testimonyWrote } : {}),
+           membership's `visibilityOf` (the one reader) rather than echoed from the request, so an absent field
+           answers `hidden` because the record says so. */
+        ...(!cur && meta.object_type === "project" ? { visibility: membershipOf(this.ctx).visibilityOf(bundleId) } : {}),
+        /* MK-1: present ONLY on the testimony path, so no other caller's answer gains a key. */
+        ...(slot && slot.testimony ? { testimony: slot.testimony } : {}),
       };
   }
 
-
-
-  /* CPDF-10 / K73 (1): a member's attestation of a capture's text, and the attestations over a capture: content's. */
-  attestText(...a) { return contentOf(this.ctx).attestText(...a); }
-  attestationsFor(...a) { return contentOf(this.ctx).attestationsFor(...a); }
-
-  /** Everything the extent checker needs about a capture (K73 (1)): content's. */
-  contentContextFor(...a) { return contentOf(this.ctx).contentContextFor(...a); }
-
-  /** REC-82 / SK-7: mint or find a content row, and a credential marking a passage citable: content's (R12–R16). */
-  mintContent(...a) { return contentOf(this.ctx).mint(...a); }
-  contentMint(...a) { return contentOf(this.ctx).contentMint(...a); }
-
-  /** op=testify — A MEMBER RECORDS A FIRSTHAND OBSERVATION: provenance's (R28), with the authored flag's fence. */
-  testify(...a) { return provenanceOf(this.ctx).testify(...a); }
-
-  // MK-1 / D-184: the testimony path's later work, inside the promotion's transaction, read from the payload under
-  // provenance's TESTIMONY_PATH until `extraction`, `content` and `observation-log` register it as their projections
-  // (K31). ONE unit over the whole words, at the `document` extent: the content row is minted at that same extent
-  // under that same (null) chain, so a `passage:` hit and a citation address one passage under one id. The index
-  // observation reads PRESENT because it is: the words are the whole document.
-  // N265: NO READING IS WRITTEN, SO THIS PATH DOES NOT GO THROUGH EXTRACTION'S WRITER (`writeReading`, its R19). No
-  // reader ran over the words, so there is no reading to write, and inventing one would make the record claim acts
-  // nobody performed: the writer's listeners would record a reader run that found no references (observation-log R8)
-  // and tier outcomes judged from a chain that does not exist (its R6). N294: the words are indexed through
-  // extraction's `indexTestimony` (its R61), whose index notice (R62) observation-log turns into the index row (its
-  // R7), so this path writes no index row of its own. The extraction look below is not a formality: without it
-  // `op=contentaxis` finds no `extract` row for this capture and calls it NOBODY LOOKED, which is false, since the
-  // words ARE the text. It throws to roll the whole promotion back rather than return a half.
-  #testimonyWithin(bid, pkg) {
-    const indexed = extractionOf(this.ctx).indexTestimony({ bundleId: bid, captureSha: pkg[TESTIMONY_PATH].captureSha,
-      words: pkg[TESTIMONY_PATH].words, author: pkg[TESTIMONY_PATH].author });
-    const m = this.mintContent({ bundleId: bid, captureSha: pkg[TESTIMONY_PATH].captureSha, extent: { kind: "document" },
-                                 mintedBy: pkg[TESTIMONY_PATH].author, at: pkg[TESTIMONY_PATH].recordedAt });
-    if (!m.ok) throw new Error(`MK-1: the observation's content row was refused after the extent was checked: ${m.code || m.reason}`);
-    const bad = this.#observe({ actorClass: "member", actor: pkg[TESTIMONY_PATH].author, authorityKind: "extract", authority: bid,
-      level: "content", subjectKind: "capture", subject: pkg[TESTIMONY_PATH].captureSha, state: "PRESENT", condition: null,
-      resultKind: "content", resultRef: m.content_id, detail: "first extraction; a member's authored observation: "
-        + "its bytes ARE its text, as written, so the whole document is text and no extraction step stands between them" });
-    if (bad) throw new Error(`MK-1: the observation's extraction row was refused: ${JSON.stringify(bad).slice(0, 200)}`);
-    return { content_id: m.content_id, indexed: indexed.written };
-  }
-
-  /** REC-87: op=transcribe, op=transcriptionattest, op=transcription: content's (R23–R26). */
-  transcribe(...a) { return contentOf(this.ctx).transcribe(...a); }
-  transcriptionAttest(...a) { return contentOf(this.ctx).transcriptionAttest(...a); }
-  transcriptionRead(...a) { return contentOf(this.ctx).transcriptionRead(...a); }
-
-  /* MK-4 / IC-135 / IC-136 / D-681 — THE LEAD (D-194, `MEMBER-KNOWLEDGE-DESIGN.md` §5): observation-log's (R14–R21).
-     These delegate, so the object's RPC callers and the frontier's internet arm reach the one instance on this ctx. */
-  lead(...a) { return observationLogOf(this.ctx).lead(...a); }
-  leadShare(...a) { return observationLogOf(this.ctx).leadShare(...a); }
-  leadLook(...a) { return observationLogOf(this.ctx).leadLook(...a); }
-  leadRead(...a) { return observationLogOf(this.ctx).leadRead(...a); }
-  leadList(...a) { return observationLogOf(this.ctx).leadList(...a); }
-  /** R15: a leg's content row, backfilled on first read: inquiry's. */
-  ensureLegContent(...a) { return inquiryOf(this.ctx).ensureLegContent(...a); }
-
-  /** The content row behind an id, labelled (R16): content's. */
-  contentRow(...a) { return contentOf(this.ctx).contentRow(...a); }
-
-  /** op=content, the fixed-key read (R17–R19), and the crop of a cited PDF image (R32, D-419): content's. */
-  contentRead(...a) { return contentOf(this.ctx).contentRead(...a); }
-  cropOf(...a) { return contentOf(this.ctx).cropOf(...a); }
-
-  /* REC-36: the bounded backfill for the name index on a store that already
-     holds readings. The terms derive from columns `reading_refs` already
-     persists, so no document has to be re-read -- unlike the projection
-     backfill, which needs the bundle's files. Bounded per pass for the same
-     reason #backfillProjection is: a Durable Object has a CPU budget and a large
-     store finishes over successive constructions.
-
-     REC-40 CHANGED THE STALENESS TEST, and the old one would now be WRONG rather
-     than merely narrow. It read `rr.label IS NOT NULL AND rr.label <> ''`,
-     because the label was the only source and a reference with no label could
-     never produce a row. The index now also carries the REFERENCE and its KEY,
-     which every row has by construction, so a reference with no label at all is
-     exactly the row the A and B tiers are about and skipping it would leave the
-     identifier tier unreachable on every store migrated forward -- the same
-     silently-wrong empty answer this backfill exists to prevent. The test is now
-     "no term row of any source", and a reference whose every string normalises
-     to nothing (all punctuation) is re-examined on each pass rather than
-     excluded: that is a bounded cost the `examined` count reports, and it is the
-     conservative direction now that being skipped means being invisible. */
-  readingTermsClear(...a) { return extractionOf(this.ctx).readingTermsClear(...a); }
-  readingHistoryClear(...a) { return extractionOf(this.ctx).readingHistoryClear(...a); }
-  reindexNames(...a) { return extractionOf(this.ctx).reindexNames(...a); }
-  readingFor(...a) { return extractionOf(this.ctx).readingFor(...a); }
-  transcribedDocuments(...a) { return extractionOf(this.ctx).transcribedDocuments(...a); }
-
-  /* The reverse index Step 4 builds on: every captured document whose reading
-     carries this entity reference. The reference is matched AS IT APPEARS — the
-     raw kind:key — and is NOT resolved to a canonical entity, so two documents
-     that name the same source id land together without any identity model. */
-  documentsByReference(...a) { return extractionOf(this.ctx).documentsByReference(...a); }
-
-  defineProgression(...a) { return progressionsOf(this.ctx).defineProgression(...a); }
-  readProgression(...a) { return progressionsOf(this.ctx).readProgression(...a); }
-  threadInstance(...a) { return progressionsOf(this.ctx).threadInstance(...a); }
-  readInstance(...a) { return progressionsOf(this.ctx).readInstance(...a); }
-  dischargeStage(...a) { return progressionsOf(this.ctx).dischargeStage(...a); }
-  readExceptions(...a) { return progressionsOf(this.ctx).readExceptions(...a); }
-  proposalsFeed(...a) { return progressionsOf(this.ctx).proposalsFeed(...a); }
-  captureProgressions(...a) { return progressionsOf(this.ctx).captureProgressions(...a); }
-
-  /* R13: the earned registry and the declared subject: inquiry's. */
-  #subjectEntityOf(...a) { return inquiryOf(this.ctx).subjectEntityOf(...a); }
-  earnedBasisRegistry(...a) { return inquiryOf(this.ctx).earned(...a); }
-  earnedRegistryForDoc(...a) { return inquiryOf(this.ctx).earnedForDoc(...a); }
+  #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
+  #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
 
   /* The injectable clock. Env-overridable exactly as REC-5 made its cadence/batch env-overridable
      (BIO_NOW_MS), so a suite pins "now" and the overdue computation is deterministic; a caller may
@@ -596,19 +303,9 @@ export class Store extends DurableObject {
 
 
 
-  /* D-432: THE LIVE ROWS EACH MINT SITE'S `taken` READS, per prefix, as `[prefix, table, column]` — the seed's half of
-     two readers of one fact. `mint-ledger.test.mjs` reads every `this.#mintOpaqueId(` call and holds this list against
-     the tables and columns its `taken` asks, so a site that learns a table and a seed that does not fail there rather
-     than going quietly blind. */
-  static #MINT_LEDGER_LIVE = Object.freeze([
-    ["PROJ", "bundles", "bundle_id"],
-    ["CASE", "cases", "case_id"], ["CASE", "published_cases", "case_id"],
-    ["CASE", "case_documents", "case_id"], ["CASE", "published_case_members", "case_id"],
-  ]);
-
-
-
-
+  /* D-432: the live rows the PROJ mint site's `taken` reads, as `[prefix, table, column]`, seeded at every boot (record-core
+     R40). The CASE rows are ratification's and publication's registered seeds (record-core R70). */
+  static #MINT_LEDGER_LIVE = Object.freeze([["PROJ", "bundles", "bundle_id"]]);
 
   /** The one body behind both answers, so the wire's counts and purge's proof cannot drift apart
    *  on any key but the ones the ruling names. `proof` is PRIVATE: only `purge` passes it, because
@@ -654,74 +351,20 @@ export class Store extends DurableObject {
       return this.#one(`SELECT count(*) c FROM ${t}${conds.length ? ` WHERE ${conds.join(" AND ")}` : ""}`, ...args).c;
     };
     const n = (t, ...keys) => nx(t, null, keys);
-    const mon = monitoringOf(this.ctx).counts();
-    /* Each provider's counts asked once per answer, not once per key. */
-    const ret = retrievalOf(this.ctx).counts(hid), prod = runProductionsOf(this.ctx).counts(hid);
+    /* Each provider's counts asked once per answer, not once per key. The figures a module registers with record-core
+       (its R63) are its own, spread after these: provenance, extraction, capture, content, entities, connections,
+       progressions, bias, retrieval, ai-runs, capture-requests and monitoring take none here. */
+    const prod = runProductionsOf(this.ctx).counts(hid);
     return {
       bundles: n("bundles", "bundle_id"), files: n("files", "bundle_id"), history: n("history", "bundle_id"),
-      refs: n("refs", "bundle_id", "target_id"), register: n("register", "bundle_id"), indexed: ret.indexed,
+      refs: n("refs", "bundle_id", "target_id"),
       textIndexOk: extractionOf(this.ctx).textIndexOk(),
-      selections: ret.selections,
-      selectionItems: ret.selectionItems,
-      /* Reported so a purge can prove it took them, and so an operator can see
-         reachability depth without a second call. */
-      taskQueue: n("task_queue"), sourceReachability: n("source_reachability"),
-      /* REC-26: the monitoring consumers' idempotence state, reported so a purge
-         can PROVE it took them (D-113) and so an operator can see a tick that is
-         still open — a non-zero monitorTickEpoch means the last tick failed on
-         something and the next one will be its retry. */
-      /* REC-191: and the address types. The three are monitoring's tables, counted whole-store by its R46 (N266). */
-      monitorFired: mon.monitorFired, monitorTickEpoch: mon.monitorTickEpoch, monitorAddressType: mon.monitorAddressType,
-      /* FW-6: the subject registry's depth, reported so a whole-store purge can
-         PROVE it cleared the registry rather than assert it (D-113). */
-      entities: n("entities"), entityAliases: n("entity_aliases"), entityRelations: n("entity_relations"),
-      /* FW-7: the recogniser's resolutions, reported so a purge can PROVE it took them. */
-      resolutions: n("resolutions", "bundle_id"),
-      /* FW-8: the derived connections and the member-declared progression definitions,
-         reported so a whole-store purge can PROVE it cleared them (D-113). */
-      connections: n("connections", "a_bundle_id", "b_bundle_id"), progressionDefs: n("progression_defs"),
-      /* REC-122: the member on-point choices, so a purge can PROVE it took them (D-113). Keyed by both ends'
-         bundles, as `connections` is (D-464's subtraction, keyed at c19-batch10's merge of D-464). */
-      connectionPairChoices: n("connection_pair_choices", "a_bundle_id", "b_bundle_id"),
-      progressionStages: n("progression_stages"),
-      /* REC-184: D-128's version history, counted APART from the current-version tables above —
-         a revision adds a version row and replaces the current one, so the current count alone
-         cannot tell one definition revised five times from one never revised — and so a whole-store
-         purge can PROVE it took the history (D-113). */
-      progressionDefVersions: n("progression_def_versions"),
-      progressionStageVersions: n("progression_stage_versions"),
-      /* FW-9: the threaded progression instances, reported so a purge can PROVE it cleared
-         them (D-113). */
-      progressionInstances: n("progression_instances", "bundle_id"),
-      /* FW-10: the exception documents that discharge a lawful skip, reported so a purge can
-         PROVE it cleared them (D-113). */
-      progressionExceptions: n("progression_exceptions", "bundle_id"),
-      /* REC-5 / D-122: the connection-derive dirty-set's depth, reported so a whole-store
-         purge can PROVE it cleared the pending work-queue (D-113) and so an operator can
-         see how many entities are awaiting a sweep. */
-      connectionDirty: n("connection_dirty"),
-      /* REC-7 / D-79: the recorded proposal dispositions, reported so a whole-store purge can
-         PROVE it cleared the aged decisions (D-113) and an operator can see how many of the
-         record's own questions a member has deferred or dismissed. */
-      proposalDispositions: n("proposal_dispositions"),
       /* REC-27 / D-137: the participation graph and the pending owner-governance
          votes, reported so a purge can PROVE it took them (both are keyed on
          project_id, a bundle id, and were the silent-leftover the D-113 check
          could not see). */
       projectParticipants: n("project_participants", "project_id"),
       projectOwnerVotes: n("project_owner_votes", "project_id"),
-      /* REC-82 / IC-83: the content rows — the parts of documents this record's
-         edges point at — reported so a purge can PROVE it took them (D-113)
-         rather than assert it, and so an operator can see the content axis's
-         depth beside the document count it has always been able to see. */
-      content: n("content", "bundle_id"),
-      /* REC-82: and how many of them were minted against a transcription that
-         has since MOVED. Counted apart from the total and never folded into it:
-         a re-extraction marks rows stale and DELETES NONE, so the total alone
-         cannot distinguish "nothing was re-read" from "everything was" — which
-         is the one fact an operator needs before believing a content-grain
-         answer, and the one this count exists to make visible. */
-      contentStale: nx("content", "stale=1", ["bundle_id"]),
       /* SK-8: the EXTRACT role's proposed readings, reported so a purge can
          PROVE it took them (D-113) and — the part that is not housekeeping — so
          an operator can see the assistant's production volume beside the content
@@ -764,9 +407,6 @@ export class Store extends DurableObject {
          PROVE it took them (D-113). What any lead says is not an operator fact —
          and since REC-131, neither is how many there are: purge's proof only. */
       ...(proof ? { leads: n("leads") } : {}),
-      /* D-162: the themes and their placements, a purge's PROOF only (D-113). Not on op=stats:
-         a count of members' lenses is not an operator fact this item was asked to publish. */
-      ...(proof ? { themes: n("themes"), themePlacements: n("theme_placements") } : {}),
       /* PL-1 / IS-1: the inquiry's alternative accounts of its evidence and
          their legs, reported so a purge can PROVE it took them (D-113). A COUNT
          AND NOTHING ELSE, the same line queueState and aiRuns draw: how many
@@ -779,398 +419,11 @@ export class Store extends DurableObject {
          against a refusal without opening one. A COUNT AND NOTHING ELSE — the
          same line queueState, aiRuns and basisVersions draw. */
       suggestRefusals: prod.suggestRefusals,
-
-      /* PL-12 / D-84: the declared-bias statements and the adoptions that put
-         them in force, reported so a whole-store purge can PROVE it took them
-         (D-113) and so an operator can see that a lens IS in force without
-         opening one. A COUNT AND NOTHING ELSE — what a group's declared bias
-         SAYS is the group's business and travels with their published work,
-         not an operator surface, the same line queueState and aiRuns draw. */
-      /* N328: bias's own `counts(hid)` (its R42), the same subtraction by its statement's bundle and its adoption's
-         bundle or project. */
-      ...biasOf(this.ctx).counts(hid),
-      /* REC-63 / DEC-56: the standing route markers, reported so a whole-store
-         purge can PROVE it took them (D-113) and so an operator can see that the
-         record is carrying doubts at all without having to sweep for them. */
-      routeMarks: n("provenance_route_marks", "bundle_id"),
       /* N342 (K445): every module's registered figures (record-core R63), after the literal keys: queue's `tasks`,
          `findingDispositions`, `queueState` and `queueItemMutes` (its R42) among them. */
       ...recordOf(this.ctx).counts(hid),
     };
   }
-
-  /* R11, R16: the basis cycle guard and the basis reads: inquiry's. */
-  basisFor(...a) { return inquiryOf(this.ctx).basisFor(...a); }
-  restingOn(...a) { return inquiryOf(this.ctx).restingOn(...a); }
-
-  /* REC-12: the strength pair is `strength`'s (its R1–R5); this delegate serves the callers still here. The axes
-     are its `STRENGTH_AXES`, re-exported where this file's callers name them. */
-  static STRENGTH_AXES = STRENGTH_AXES;
-  strengthOf(bundleId) { return strengthModule(this.ctx).strengthOf(bundleId); }
-
-  /* R14: one leg's capture letter against what its target earns: inquiry's `legCapped`. */
-  static #capturedAt(...a) { return legCapped(...a); }
-
-
-  /* Eviction. The store is append-only by doctrine, so removal is deliberate,
-     never implicit, and admin-only at the control plane. Two modes: one bundle
-     with its whole lineage, or everything.
-
-     seq is deliberately NOT reset. allocid must never reissue an identifier
-     that has already existed, so a purged store keeps counting from where it
-     stopped. A purge that reset the counter would make identifiers ambiguous
-     across the purge boundary, which is worse than a gap.
-
-     D-432: minted_ids is NOT cleared either, in EITHER arm, and for exactly
-     seq's reason — it is the opaque minter's memory, as seq is the counter's.
-     The gated prefixes (PROJ, CASE, DRAFT, RVG, TASK) have no counter: their ids
-     are drawn at random and asked against that ledger AND the live rows of their
-     kind, and this method deletes the live rows. Clearing the ledger with them
-     would let a new object be minted at a purged object's id, and a citation of
-     the old one would then resolve to the new one without a word. CLAUDE.md's
-     rule that a DERIVED table must be named here does not reach it: nothing in
-     it is derived from the corpus, and clearing it is the defect it closes.
-     hygiene.test.mjs names it among the purge exemptions, beside seq, and
-     mint-ledger.test.mjs pins that no statement anywhere deletes from it.
-
-     R2 is untouched. Registered captures are immutable and content-addressed,
-     so orphaning them costs storage but cannot corrupt anything. Reclaiming
-     them is a separate sweep against the register, not part of this. */
-  purge({ bundleId = null } = {}) {
-    const before = recordOf(this.ctx).proofCounts();
-    // record-core R22: every declared table (legacy-store's are declared in the constructor), in one transaction.
-    recordOf(this.ctx).transact(() => {
-      recordOf(this.ctx).purge({ bundleId });
-    });
-    const after = recordOf(this.ctx).proofCounts();
-    const d = (k) => before[k] - after[k];
-    return {
-      ok: true, scope: bundleId || "ALL", before, after,
-      removed: { bundles: d("bundles"), files: d("files"), history: d("history"),
-                 refs: d("refs"), register: d("register"),
-                 tasks: d("tasks"), taskQueue: d("taskQueue"),
-                 sourceReachability: d("sourceReachability"),
-                 /* FW-6: the registry rows a whole-store purge took (D-113). */
-                 entities: d("entities"), entityAliases: d("entityAliases"),
-                 entityRelations: d("entityRelations"),
-                 /* FW-7: the recogniser's resolutions a purge took (D-113). */
-                 resolutions: d("resolutions"),
-                 /* FW-8: the derived connections and member-declared progression
-                    definitions a whole-store purge took (D-113). */
-                 connections: d("connections"), progressionDefs: d("progressionDefs"),
-                 /* REC-122: the on-point choices a purge took (D-113). */
-                 connectionPairChoices: d("connectionPairChoices"),
-                 progressionStages: d("progressionStages"),
-                 /* REC-184: D-128's version history a whole-store purge took (D-113). */
-                 progressionDefVersions: d("progressionDefVersions"),
-                 progressionStageVersions: d("progressionStageVersions"),
-                 /* FW-9: the threaded progression instances a purge took (D-113). */
-                 progressionInstances: d("progressionInstances"),
-                 /* FW-10: the exception documents a purge took (D-113). */
-                 progressionExceptions: d("progressionExceptions"),
-                 /* REC-5 / D-122: the pending connection-derive dirt a whole-store purge took (D-113). */
-                 connectionDirty: d("connectionDirty"),
-                 /* REC-7 / D-79: the aged proposal dispositions a whole-store purge took (D-113). */
-                 proposalDispositions: d("proposalDispositions"),
-                 /* REC-21: the mutes and snoozes a purge took (D-113) — per-bundle
-                    for a case bundle, everything for scope ALL. */
-                 queueState: d("queueState"),
-                 /* REC-27 / D-137: the participation graph and pending owner votes a purge
-                    took — per-bundle for a project bundle, everything for scope ALL. */
-                 projectParticipants: d("projectParticipants"),
-                 projectOwnerVotes: d("projectOwnerVotes"),
-                 /* IS-6 / D-113: the runs, their budgets and their observation
-                    logs a whole-store purge took. */
-                 aiRuns: d("aiRuns"), aiRunBounds: d("aiRunBounds"), aiRunLog: d("aiRunLog"),
-                 /* MK-4 / D-113: the leads a whole-store purge took. */
-                 leads: d("leads"),
-                 /* D-162 / D-113: the themes and placements a purge took. */
-                 themes: d("themes"), themePlacements: d("themePlacements"),
-                 /* PL-3 / IS-4 / D-113: the stored refusals a purge took, proved
-                    by consequence rather than asserted. */
-                 suggestRefusals: d("suggestRefusals"),
-                 /* PL-4 / IS-4 / D-113: the outbound request queue a purge took,
-                    proved by consequence rather than asserted. */
-                 captureRequests: d("captureRequests") },
-    };
-  }
-
-
-  bootstrapState(...a) { return credentialsOf(this.ctx).bootstrapState(...a); }
-
-  claim(...a) { return credentialsOf(this.ctx).claim(...a); }
-
-  setPassword(...a) { return credentialsOf(this.ctx).setPassword(...a); }
-
-  static LOGIN_REFUSAL_DETAIL = Credentials.LOGIN_REFUSAL_DETAIL;
-
-  login(...a) { return credentialsOf(this.ctx).login(...a); }
-
-  session(...a) { return credentialsOf(this.ctx).session(...a); }
-
-  /* D-9, D-533: the register's rows classified, and the parts a holding bundle's record names: provenance's (R6, R8). */
-  registerAudit() { return provenanceOf(this.ctx).registerRows(); }
-
-  static SIGHT_NONE = Membership.SIGHT_NONE;
-  static SIGHT_EXISTENCE = Membership.SIGHT_EXISTENCE;
-  static SIGHT_FULL = Membership.SIGHT_FULL;
-  #visibilityOf(...a) { return membershipOf(this.ctx).visibilityOf(...a); }
-  #reindexProjectSight(...a) { return membershipOf(this.ctx).reindexProjectSight(...a); }
-  projectVisibilitySet(...a) { return membershipOf(this.ctx).projectVisibilitySet(...a); }
-
-  projectVisibility(...a) { return membershipOf(this.ctx).projectVisibility(...a); }
-
-  projectDirectory(...a) { return membershipOf(this.ctx).projectDirectory(...a); }
-  static PROJECT_DIRECTORY_LIMIT = Membership.PROJECT_DIRECTORY_LIMIT;
-
-  static JOIN_REQUEST_ANSWERS = Membership.JOIN_REQUEST_ANSWERS;
-
-  projectRequest(...a) { return membershipOf(this.ctx).projectRequest(...a); }
-
-  projectRequestWithdraw(...a) { return membershipOf(this.ctx).projectRequestWithdraw(...a); }
-
-  projectRequestAnswer(...a) { return membershipOf(this.ctx).projectRequestAnswer(...a); }
-
-  projectRequests(...a) { return membershipOf(this.ctx).projectRequests(...a); }
-  static PROJECT_REQUESTS_LIMIT = Membership.PROJECT_REQUESTS_LIMIT;
-  /* `promote`'s not-found is the BUNDLE-level one (it revises any bundle, not only projects), so a
-     hidden project's revision answers with it rather than with membership's `noSuchProject` — the rule is
-     "the same answer the absent id gets", and for this act that answer is ABSENT. */
-  /* REC-190, D-476, D-530, D-556: the census of displaced homes and whether the register holds a capture:
-     provenance's (R5, R10). */
-  homeCensus(...a) { return provenanceOf(this.ctx).homeCensus(...a); }
-  registerHolds(...a) { return provenanceOf(this.ctx).registerHolds(...a); }
-  projectClaimOwner(...a) { return membershipOf(this.ctx).projectClaimOwner(...a); }
-
-  projectInvite(...a) { return membershipOf(this.ctx).projectInvite(...a); }
-
-  projectJoin(...a) { return membershipOf(this.ctx).projectJoin(...a); }
-
-  projectLeave(...a) { return membershipOf(this.ctx).projectLeave(...a); }
-
-  projectRemove(...a) { return membershipOf(this.ctx).projectRemove(...a); }
-
-  projectOwnerAdd(...a) { return membershipOf(this.ctx).projectOwnerAdd(...a); }
-
-  projectOwnerRescue(...a) { return membershipOf(this.ctx).projectOwnerRescue(...a); }
-
-  projectOwnerRemove(...a) { return membershipOf(this.ctx).projectOwnerRemove(...a); }
-
-  /** 7.12: any JOINED participant may fork a project, creating a clone.
-   *
-   *  JOINED and not merely invited. An invited participant sees the SKELETON
-   *  only (7.9): the Problems, the Information and the Actions, and none of the
-   *  project's content, analysis record, work product or evaluations. A fork by
-   *  such a member would either copy material they cannot read, which leaks it,
-   *  or copy only what they can see, which is a different and lesser operation
-   *  wearing the same name. Restricting it makes the leak impossible rather than
-   *  managed.
-   *
-   *  THE FORKER MUST HOLD create_projects. A fork creates a project, and without
-   *  this any participant creates projects they were not trusted to create,
-   *  which is the capability defeated by a button. The capability is checked at
-   *  the control plane, where the session is, and passed in here as a settled
-   *  fact rather than re-derived.
-   *
-   *  THE CLONE CARRIES NO OTHER PARTICIPANTS. Copying the roster would let a
-   *  forker manufacture visibility for people the original's owners chose, which
-   *  is 7.3 defeated the same way.
-   *
-   *  Origin is recorded as `derived_from`, already in the closed relationship
-   *  vocabulary of State Rules 5.1, so nothing is added to it. */
-  forkProject({ projectId, newId, title, by, viewer = null, visibility = null } = {}) {
-    return promotionOf(this.ctx).forkProject({ projectId, newId, title, by, viewer, visibility });
-  }
-
-
-
-  expertiseDeclare(...a) { return membershipOf(this.ctx).expertiseDeclare(...a); }
-
-  expertiseConfirm(...a) { return membershipOf(this.ctx).expertiseConfirm(...a); }
-
-  expertiseList(...a) { return membershipOf(this.ctx).expertiseList(...a); }
-
-  projectParticipants(...a) { return membershipOf(this.ctx).projectParticipants(...a); }
-
-  static CAPABILITIES = Membership.CAPABILITIES;
-
-  static adminMath = Membership.adminMath;
-
-  projectOwnerArithmetic(...a) { return membershipOf(this.ctx).projectOwnerArithmetic(...a); }
-
-  adminArithmetic(...a) { return membershipOf(this.ctx).adminArithmetic(...a); }
-
-  static ROOT_ADMIN = Membership.ROOT_ADMIN;
-
-
-
-
-
-  memberCaps(...a) { return membershipOf(this.ctx).memberCaps(...a); }
-
-  adminEndorse(...a) { return membershipOf(this.ctx).adminEndorse(...a); }
-
-  adminRemove(...a) { return membershipOf(this.ctx).adminRemove(...a); }
-
-  memberAdd(...a) { return membershipOf(this.ctx).memberAdd(...a); }
-
-
-
-  inviteLook(...a) { return membershipOf(this.ctx).inviteLook(...a); }
-
-  enroll(...a) { return membershipOf(this.ctx).enroll(...a); }
-
-  memberList(...a) { return membershipOf(this.ctx).memberList(...a); }
-
-  memberSet(...a) { return membershipOf(this.ctx).memberSet(...a); }
-
-  static SIGNER_ATTESTS = Membership.SIGNER_ATTESTS;
-
-
-  signerAdd(...a) { return credentialsOf(this.ctx).signerAdd(...a); }
-
-  signerList(...a) { return credentialsOf(this.ctx).signerList(...a); }
-
-  signerSet(...a) { return credentialsOf(this.ctx).signerSet(...a); }
-
-  /** REC-18: op=earnedbasis — WHAT THE RECORD EARNS for each candidate leg,
-   *  BEFORE the leg is written.
-   *
-   *  THIS OP IS PART OF THE RULE, not a convenience beside it. The write path
-   *  refuses a leg whose earned grade is not the one the record holds; a member
-   *  with no way to LEARN that value is a member the refusal pressures into
-   *  guessing, and "a gate that pressures someone into inventing one is a bug in
-   *  the gate" is CLAUDE.md's own sentence about exactly this shape. So the
-   *  enforcement and the answer come from ONE function (`earnedBasisRegistry`)
-   *  and cannot disagree: what this read reports is what the write will accept.
-   *
-   *  Answers for the inquiry's OWN subject entity, over the targets asked about
-   *  — the caller's list, or the basis the inquiry already carries. It states
-   *  what is NOT earned as plainly as what is: a target absent from
-   *  `earned.connection` earns no A/B/C, and the honest leg for it is testimony
-   *  (grade D, with an author and a date) or no grade at all.
-   *
-   *  D-15: viewer-gated like every other read that can name a bundle, and it
-   *  fails closed on an absent viewer. TWO POSTURES, REC-30's: the OWNING
-   *  inquiry invisible -> the whole answer withheld as an absent one; a TARGET
-   *  the viewer may not see -> dropped from the registry, with the fact that
-   *  something was dropped stated and NO id and NO count leaked. */
-  /** R15: what each leg earns, with its content row and the capture it rests on: inquiry's. */
-  earnedBasis(...a) { return inquiryOf(this.ctx).earnedBasis(...a); }
-
-  /* capture (T4-4): the doorbell, the render allowance, links and the host's chrome, capture sessions, site assets,
-     reuse verdicts, the platform's ceiling, the event queue and source reachability are capture's (src/capture/).
-     The public methods stay as one-line delegations so every caller answers as before. */
-  knock(...a) { return captureOf(this.ctx).knock(...a); }
-  inboxList(...a) { return captureOf(this.ctx).inboxList(...a); }
-  inboxGet(...a) { return captureOf(this.ctx).inboxGet(...a); }
-  inboxResolve(...a) { return captureOf(this.ctx).inboxResolve(...a); }
-  renderAdmit(...a) { return captureOf(this.ctx).renderAdmit(...a); }
-  renderSpend(...a) { return captureOf(this.ctx).renderSpend(...a); }
-  recordLinks(...a) { return captureOf(this.ctx).recordLinks(...a); }
-  linksTo(...a) { return captureOf(this.ctx).linksTo(...a); }
-  resolveLinks(...a) { return captureOf(this.ctx).resolveLinks(...a); }
-  recordLinkVerdict(...a) { return captureOf(this.ctx).recordLinkVerdict(...a); }
-  saveCaptureSession(...a) { return captureOf(this.ctx).saveCaptureSession(...a); }
-  loadCaptureSession(...a) { return captureOf(this.ctx).loadCaptureSession(...a); }
-  dropCaptureSession(...a) { return captureOf(this.ctx).dropCaptureSession(...a); }
-  siteAssets(...a) { return captureOf(this.ctx).siteAssets(...a); }
-  recordSiteAssets(...a) { return captureOf(this.ctx).recordSiteAssets(...a); }
-  reusedParts(...a) { return captureOf(this.ctx).reusedParts(...a); }
-  recordReuseVerdicts(...a) { return captureOf(this.ctx).recordReuseVerdicts(...a); }
-  reuseVerdicts(...a) { return captureOf(this.ctx).reuseVerdicts(...a); }
-  siteChrome(...a) { return captureOf(this.ctx).siteChrome(...a); }
-  captureLimit(...a) { return captureOf(this.ctx).captureLimit(...a); }
-  recordCaptureLimit(...a) { return captureOf(this.ctx).recordCaptureLimit(...a); }
-  taskEnqueue(...a) { return captureOf(this.ctx).taskEnqueue(...a); }
-  recordSourceOutcome(...a) { return captureOf(this.ctx).recordSourceOutcome(...a); }
-  sourceReachability(...a) { return captureOf(this.ctx).sourceReachability(...a); }
-
-  /* D-95, the per-host request governor: `host-governor`'s (T4-1). These delegate, so the object's RPC callers and
-     this file's own callers reach the one instance on this ctx (K61, K63). */
-  governorAdmit(...a) { return governorOf(this.ctx).governorAdmit(...a); }
-  governorReport(...a) { return governorOf(this.ctx).governorReport(...a); }
-  governorConfig(...a) { return governorOf(this.ctx).governorConfig(...a); }
-  governorState(...a) { return governorOf(this.ctx).governorState(...a); }
-
-  /* ------------------------------------------------------------------ *
-   * Links: what a document pointed at, and whether we hold that version.
-   * The plane's own acquisition receipts and the version chain are provenance's (R13–R18, R47); the receipt's
-   * document-level observation (REC-93, OBSERVATION-LOG-DESIGN.md §4.1) is observation-log's (R5), its receipt
-   * listener.
-   * ------------------------------------------------------------------ */
-  recordCapturedLocator({ authorityKind = null, authority = null, actorClass = "plane", actor = null, observe = true,
-                          ...receipt } = {}) {
-    const r = provenanceOf(this.ctx).recordReceipt({ ...receipt,
-      context: { authorityKind, authority, actorClass, actor, observe } });
-    if (!r.recorded) return r;
-    const look = (r.listeners || []).find((l) => l.module === OBSERVATION_LOG_MODULE);
-    return { recorded: true, address_norm: r.address_norm, via: r.via, observation: r.observation,
-             observation_written: !!(look && look.answer && look.answer.written === true),
-             observation_refused: look && look.outcome === "refused" ? look.answer : null };
-  }
-  capturedLocators(...a) { return provenanceOf(this.ctx).receipts(...a); }
-  versionChain(...a) { return provenanceOf(this.ctx).versionChain(...a); }
-
-  static BASIS_VERSIONS_LIMIT_DEFAULT = BASIS_VERSIONS_LIMIT_DEFAULT;
-  static BASIS_VERSIONS_LIMIT_MAX = BASIS_VERSIONS_LIMIT_MAX;
-  static BASIS_VERSION_LEGS_MAX = BASIS_VERSION_LEGS_MAX;
-
-  basisVersions(a) { return basisVersionsOf(this.ctx).basisVersions(a); }
-
-  /* PL-2 / IS-2: the six version acts are basis-versions' (R12–R15). */
-  static VERSION_ACT_TO = VERSION_ACT_TO;
-  versionAccept(a)   { return basisVersionsOf(this.ctx).versionAccept(a); }
-  versionReject(a)   { return basisVersionsOf(this.ctx).versionReject(a); }
-  versionConsider(a) { return basisVersionsOf(this.ctx).versionConsider(a); }
-  versionRevert(a)   { return basisVersionsOf(this.ctx).versionRevert(a); }
-  versionCurrent(a)  { return basisVersionsOf(this.ctx).versionCurrent(a); }
-  versionHide(a)     { return basisVersionsOf(this.ctx).versionHide(a); }
-
-  /* The capture requests (the door, the drain, the reads): `capture-requests`' (K58; its R1–R42). The drain stays
-     reachable as a Durable Object method for the scheduler's consumer and the suites that drive it. */
-  captureRequestDrain(o) { return captureRequestsOf(this.ctx).drain(o); }
-
-  aiCredentialMint(...a) { return credentialsOf(this.ctx).aiCredentialMint(...a); }
-
-  aiCredentialRevoke(...a) { return credentialsOf(this.ctx).aiCredentialRevoke(...a); }
-
-  aiCredentialLook(...a) { return credentialsOf(this.ctx).aiCredentialLook(...a); }
-
-  aiCredentials(...a) { return credentialsOf(this.ctx).aiCredentials(...a); }
-
-  /* REC-83 / IC-84 — THE CONTENT-GRAIN READS' THREE BOUNDS.
-   *
-   * `CONTENT_READ_PARAMS` is not a bound at all but the op's whole grammar, and
-   * it is here beside the bounds because it is the same kind of statement: what
-   * this surface will and will not accept, in ONE place a reader can check.
-   * `op=content` is FIXED-KEY (D-222 stage C is where the query arm lives), so
-   * it understands exactly its key and the viewer the control plane stamps —
-   * and refuses every other parameter BY NAME. Declared as the ACCEPTED set
-   * rather than as a list of predicate spellings on WORKER.md's rule: a
-   * denylist of `q`/`where`/`limit`/`cursor` is complete only until a fifth
-   * spelling is invented, and would read as a complete sweep while it went
-   * stale. Adding a parameter to this op means adding it HERE, which is
-   * exactly the review the fixed-key rule wants.
-   *
-   * `CONTENT_EARNED_MAX` bounds how many content rows one `op=earnedbasis`
-   * answer resolves standings for. 200 is `op=earnedbasis`'s OWN target slice,
-   * reused rather than minted: a basis with more than 200 legs is not a shape
-   * this record has, and the two numbers being one number is what keeps the
-   * targets asked about and the rows answered for from drifting apart.
-   *
-   * `LEG_BACKFILL_MAX` bounds how many legacy legs one read backfills. It is
-   * SMALLER than the other two on purpose: the backfill WRITES, a write behind
-   * a member-callable read is the amplification REC-66 / D-227 bounds, and the
-   * work is safely resumable because `ensureLegContent` is a pure function of
-   * the leg — a read that stops at the cap says so and the next read continues
-   * from where it stopped, with no cursor to mint and no state to keep. */
-  static LEG_BACKFILL_MAX = LEG_BACKFILL_MAX;   /* inquiry R15's bound, read by the old battery */
-
-  /* REC-93 / IC-92 — THE OBSERVATION LOG: ONE APPEND SITE, ONE TABLE. observation-log's (R2–R4): every look this
-   * file records is appended through its `observe`, which judges and writes it; `#observe` delegates. */
-
-  #observe(...a) { return observationLogOf(this.ctx).observe(...a); }
 
   /** The namespace this Durable Object IS, asked of the runtime rather than remembered: `index.mjs`'s
    *  `scopeFor` routes every call to `idFromName("bio")` or `idFromName("scratch")`, and a DO's id equals the one
@@ -1184,18 +437,6 @@ export class Store extends DurableObject {
     for (const name of ["bio", "scratch"]) if (this.ctx.id.equals(ns.idFromName(name))) return name;
     return null;
   }
-
-
-
-
-  /* bias (K61): the three acts and the two debt reads are `bias`'s; these delegate to it for this store's callers. */
-  biasAdopt(a) { return biasOf(this.ctx).biasAdopt(a); }
-  biasManifest(a) { return biasOf(this.ctx).biasManifest(a); }
-  biasInhale(a) { return biasOf(this.ctx).biasInhale(a); }
-  biasDebtResolve(a) { return biasOf(this.ctx).biasDebtResolve(a); }
-  biasDebtRead(a) { return biasOf(this.ctx).biasDebt(a); }
-
-  static #numberParam(url, k) { const v = url.searchParams.get(k); return v === null || v === "" ? undefined : Number(v); }
 
   routes(url, body) {
       const map = {
@@ -1225,212 +466,35 @@ export class Store extends DurableObject {
         /* public-read and project-stage (K651, K671): their unstamped published reads and `op=projectstage`. */
         ...publicReadOps(publicReadOf(this.ctx), url),
         ...projectStageOps(projectStageOf(this.ctx), url),
-        promote: () => promotionOf(this.ctx).promote(body),
-        allocid: () => recordOf(this.ctx).allocIdOp(url.searchParams.get("prefix"), url.searchParams.get("year")),
-        lease: () => recordOf(this.ctx).acquireLease(url.searchParams.get("id"), url.searchParams.get("actor"), 300000),
-        /* REC-176: the census of manifest rows a repeated snap key overwrote, read-only (see `snapKeyCensus`). */
-        snapkeycensus: () => recordOf(this.ctx).snapKeyCensus({ limit: url.searchParams.get("limit") }),
-        /* REC-190: the census of displaced homes, read-only (see `homeCensus`). */
-        homecensus: () => this.homeCensus({ limit: url.searchParams.get("limit") }),
-        /* D-476: does the register hold these whole-document bytes, read-only and naming no
-           bundle (see `registerHolds`). op=acquire asks it of a MULTI-PART capture, whose whole
-           is never stored under its own hash for R2 to be asked about. */
-        registerholds: () => this.registerHolds({ sha: url.searchParams.get("sha256"),
-                                                  bundle: url.searchParams.get("bundle") }),
-        /* REC-83 / IC-84 (4): THE FIXED-KEY CONTENT READ. One key, one row —
-           `extras` hands the store EVERY parameter name that arrived so the op
-           can refuse a predicate or a page by name rather than ignoring it. The
-           control plane strips `op` and `token` and forwards the rest, so what
-           this list holds is exactly what the caller sent plus the viewer the
-           control plane stamped; `Store.CONTENT_READ_PARAMS` is the accepted
-           set and everything else is refused. GATED like every read that names
-           a bundle: the store fails closed on an absent `viewer` and answers an
-           invisible row exactly as an absent one. */
-        contentcrop: () => contentOf(this.ctx).cropOf({ contentId: url.searchParams.get("id"), viewer: url.searchParams.get("viewer") }),
-        content: () => this.contentRead({ id: url.searchParams.get("id"),
-                                          viewer: url.searchParams.get("viewer"),
-                                          extras: [...url.searchParams.keys()] }),
-        /* SK-7 / framework Part II 14.4 (Bob's 5.7): MARKING A PASSAGE CITABLE.
-           `mintedBy` is taken from the QUERY STRING and never from the body,
-           and that is the whole fence at this door: the control plane stamps it
-           there from the credential that authenticated and a caller-supplied
-           one in the body is not read at all, so a machine credential cannot
-           post a member's name into the field that says who did this. GATED on
-           `viewer` like every write that names a bundle. */
-        contentmint: () => this.contentMint({ bundleId: (body || {}).bundleId,
-                                              extent: (body || {}).extent,
-                                              at: (body || {}).at || null,
-                                              mintedBy: url.searchParams.get("mintedBy"),
-                                              viewer: url.searchParams.get("viewer") }),
-        /* CPDF-10. Three arms, and the split is the item's own doctrine.
-           `textprovenance` READS which documents' text a machine produced — the
-           index half of "distinguishable in the projection, the index and an
-           export". `textattest` READS the attestations over one capture and
-           what a leg citing a given region may claim. `attesttext` is the WRITE,
-           and it is the only one of the three a machine credential cannot
-           reach — the control plane refuses it before it gets here (MEMBER_ONLY
-           in the OPS table), and `checkAttestation` refuses it again at the
-           store, because an act refusable at one door only is an act with one
-           door left open. */
-        textattest: () => this.attestationsFor(url.searchParams.get("sha256"),
-          url.searchParams.get("page") == null ? null
-            : { page: Number(url.searchParams.get("page")),
-                rect: safeJson(url.searchParams.get("rect")) },
-          url.searchParams.get("viewer"), url.searchParams.get("limit")),
-        /* SK-7: THE ATTESTOR COMES FROM THE QUERY STRING, WHERE THE CONTROL
-           PLANE STAMPED IT, AND THE BODY'S `member` IS NOT READ AT ALL. Before
-           this the attestor was taken from the body, so C-35.10 refused only a
-           caller that volunteered a machine-shaped name — measured through a
-           real minted `ai` credential, which attested in a member's name and had
-           the act LAND. `contentmint` beside it takes its minter the same way
-           and for the same reason. An absent stamp reaches `checkAttestation`
-           as an absent member and is refused there (*unattributed is not
-           attested*), so a route that skipped the stamp fails closed. */
-        attesttext: () => contentOf(this.ctx).attestText({ ...(body || {}), member: url.searchParams.get("attestor"),
-                                                           viewer: url.searchParams.get("viewer") }),
-        recordcapturedlocator: () => this.recordCapturedLocator(body || {}),
-        /* PL-10 / D-220: the version chain. `address` arrives ALREADY NORMALISED
-           — the control plane runs it through `normalizeAddress`, the same
-           function the capture wrote the row with, because `normalizeAddress`
-           lives in subresources.mjs and this file does not import it. That is
-           the seam op=links already uses for the same reason. `viewer` is
-           stamped by the control plane and an absent one compiles to the deny
-           predicate, so this fails closed like every other gated read. */
-        versionchain: () => this.versionChain({
-          addressNorm: url.searchParams.get("address"),
-          at: url.searchParams.get("at"),
-          limit: url.searchParams.get("limit"),
-          offset: url.searchParams.get("offset"),
-          viewer: url.searchParams.get("viewer"),
-        }),
-        /* REC-87 / IC-128: TRANSCRIBE. The TYPIST and the ATTESTOR come from the
-           QUERY STRING, where the control plane stamped them, and never from the
-           body — `attesttext`'s correction, taken from the start rather than
-           re-learned: a body field a caller can fill is a name a machine can post. */
-        /* MK-1 / IC-133: TESTIFY. The AUTHOR comes from the QUERY STRING, where the
-           control plane stamped it over anything the caller put there. The body's
-           own author field is read ONLY to be REFUSED (C-53.2): every spelling a
-           caller could use to name the person is collected, so naming it under a
-           synonym is not a way round the refusal. */
-        testify: () => this.testify({
-          words: body ? body.words : null,
-          observedAt: body ? body.observedAt : null,
-          title: body ? body.title : null,
-          author: url.searchParams.get("author"),
-          claimedAuthor: body
-            ? (["author", "observer", "authoredBy", "authored_by", "by", "member", "memberId"]
-                 .map((k) => body[k]).find((v) => v !== undefined && v !== null) ?? null)
-            : null,
-        }),
-        transcribe: () => this.transcribe({
-          bundleId: (body && body.bundleId) || null,
-          extent: body && body.extent !== undefined ? body.extent : null,
-          text: body ? body.text : null,
-          at: (body && body.at) || null,
-          transcriber: url.searchParams.get("transcriber"),
-          viewer: url.searchParams.get("viewer"),
-        }),
-        transcriptionattest: () => this.transcriptionAttest({
-          contentId: (body && body.contentId) || url.searchParams.get("contentId"),
-          at: (body && body.at) || null,
-          note: body ? body.note : null,
-          attestor: url.searchParams.get("attestor"),
-          viewer: url.searchParams.get("viewer"),
-        }),
-        transcription: () => this.transcriptionRead({ id: url.searchParams.get("id"),
-                                                      viewer: url.searchParams.get("viewer") }),
+        /* promotion's `promote`, `reopen`, `projectfork` (its R54). */
+        ...promotionOps(promotionOf(this.ctx), url, body),
+        /* record-core's `allocid`, `lease`, `snapkeycensus`, `digestcensus`, `stats`, `audit`, `purge` (its R72), the audit
+           gated by membership's sight (R73). */
+        ...recordCoreOps(recordOf(this.ctx), url, body, { sight: viewerPredicate }),
+        /* provenance's nine (its R53); `recordcapturedlocator` reports observation-log's receipt listener. */
+        ...provenanceOps(provenanceOf(this.ctx), url, body, { observer: OBSERVATION_LOG_MODULE }),
+        /* content's eight (its R50). */
+        ...contentOps(contentOf(this.ctx), url, body),
         ...captureRequestsOps(captureRequestsOf(this.ctx), url, body),
         ...governorRoutes(governorOf(this.ctx), url, body),
         ...aiRunsOps(aiRunsOf(this.ctx, this.env), url, body),
         /* retrieval's ops (K3): frontier, contentaxis, projection, search, meaningrows, searchfields, select, selection,
-           selectionlist, selectionrelease, searchindexcheck, projectionplan, projectionclear, reproject. */
+           selectionlist, selectionrelease, searchindexcheck, projectionplan, projectionclear, reproject, list, index,
+           image, file. */
         ...retrievalRoutes(retrievalOf(this.ctx), url, body),
         ...actionsOps(actionsOf(this.ctx), url, body),
         ...actionClocksOps(actionClocksOf(this.ctx), url, body),   /* K704: op=reminderset, op=reminderanswer */
-        /* N216 (K250, K263): layer 9's ops. escalation publishes no op map, so its ten are named here (LEGACY-INDEX #5's
-           table, K262); `author` and `viewer` are the control plane's stamps, read from the query after the body, and
-           `now` and `limit` are numbers or absent. */
+        /* N216 (K250, K263): layer 9's ops. */
         ...standardsOps(standardsOf(this.ctx), url, body),
         ...conformanceOps(conformanceOf(this.ctx), url, body),
         ...consequencesOps(consequencesModule(this.ctx), url, body),
         ...filingsOps(filingsOf(this.ctx), url, body),
         /* action-plans (K671, K711): its ops; `optionpropose` answers a promise, which the frame awaits as `airun`'s. */
         ...actionPlansOps(actionPlansOf(this.ctx), url, body),
-        escalationopen: () => escalationOf(this.ctx).escalationOpen({ ...(body || {}), author: url.searchParams.get("author"),
-                                                                       viewer: url.searchParams.get("viewer") }),
-        escalation: () => escalationOf(this.ctx).escalationRead({ id: url.searchParams.get("id"),
-                                                                  nowMs: Store.#numberParam(url, "now"),
-                                                                  viewer: url.searchParams.get("viewer") }),
-        escalationattach: () => escalationOf(this.ctx).escalationAttach({ ...(body || {}), author: url.searchParams.get("author"),
-                                                                           viewer: url.searchParams.get("viewer") }),
-        escalationevaluate: () => escalationOf(this.ctx).escalationEvaluate({ ...(body || {}),
-                                                                               author: url.searchParams.get("author"),
-                                                                               viewer: url.searchParams.get("viewer") }),
-        escalationadvance: () => escalationOf(this.ctx).escalationAdvance({ ...(body || {}), author: url.searchParams.get("author"),
-                                                                             viewer: url.searchParams.get("viewer") }),
-        escalationdecline: () => escalationOf(this.ctx).escalationDecline({ ...(body || {}), author: url.searchParams.get("author"),
-                                                                             viewer: url.searchParams.get("viewer") }),
-        escalationend: () => escalationOf(this.ctx).escalationEnd({ ...(body || {}), author: url.searchParams.get("author"),
-                                                                     viewer: url.searchParams.get("viewer") }),
-        escalationsuspend: () => escalationOf(this.ctx).escalationSuspend({ ...(body || {}), author: url.searchParams.get("author"),
-                                                                             viewer: url.searchParams.get("viewer") }),
-        escalationresume: () => escalationOf(this.ctx).escalationResume({ ...(body || {}), author: url.searchParams.get("author"),
-                                                                           viewer: url.searchParams.get("viewer") }),
-        escalationsdue: () => escalationOf(this.ctx).escalationsDue({ nowMs: Store.#numberParam(url, "now"),
-                                                                      limit: Store.#numberParam(url, "limit"),
-                                                                      viewer: url.searchParams.get("viewer") }),
+        ...escalationOps(escalationOf(this.ctx), url, body),   /* its ten (its R25) */
         ...monitoringOps(monitoringOf(this.ctx), url, body),
-        stats: () => recordOf(this.ctx).stats({ capacity: url.searchParams.get("capacity") === "1",
-                                   viewer: url.searchParams.has("viewer") ? url.searchParams.get("viewer") : undefined }),
-        /* REC-54 / D-200. ONE bundle, no handle and no owner: this is a
-           correction to a named document's register, not a set application, so
-           it takes the target and the viewer/author stamps the control plane
-           sets. `apply` is opt-in — the default is a REPORT, because every use
-           of this is a decision about the real record. */
-        provenancechain: () => this.provenanceChainRebuild({
-          bundleId: url.searchParams.get("bundleId"),
-          apply: url.searchParams.get("apply") === "1",
-          viewer: url.searchParams.get("viewer"),
-          author: url.searchParams.get("author") }),
-        /* REC-63 / DEC-56 / D-204. The other half of the op above: where that
-           one REFUSES to invent a chain, this one RECORDS that the route cannot
-           be shown. One bundle, the viewer/author stamps the control plane sets,
-           and NO `apply` flag — there is nothing to opt into, because the act
-           moves no state and touches no byte of the document. */
-        provenanceroute: () => this.provenanceRouteAssess({
-          bundleId: url.searchParams.get("bundleId"),
-          viewer: url.searchParams.get("viewer"),
-          author: url.searchParams.get("author") }),
-        /* REC-116 / IC-120. The READ beside the two writes above — the `airun`
-           / `airuns` shape one construct over: the singular acts on one bundle,
-           the plural answers about the instance. No `author`, because reading
-           who was doubted is not itself a named act; `viewer` is the control
-           plane's server-side stamp exactly as it is for its two siblings. */
-        provenanceroutes: () => this.provenanceRoutesMarked({
-          after: url.searchParams.get("after"),
-          limit: url.searchParams.get("limit"),
-          viewer: url.searchParams.get("viewer") }),
-        /* REC-31, conclude's shape exactly: ONE target, no handle and no
-           owner, with the viewer and author stamps the control plane sets. */
-        reopen: () => this.reopen({ target: url.searchParams.get("target"),
-          reason: url.searchParams.get("reason"),
-          viewer: url.searchParams.get("viewer"),
-          author: url.searchParams.get("author") }),
-        projectfork: () => this.forkProject({ projectId: url.searchParams.get("projectId"),
-          newId: url.searchParams.get("newId"), title: url.searchParams.get("title"),
-          visibility: url.searchParams.get("visibility"),   /* REC-197: absent is null, which is HIDDEN */
-          by: url.searchParams.get("by"), viewer: url.searchParams.get("viewer") }),   /* REC-138 */
-        registeraudit: () => this.registerAudit(),
-        /* REC-175: the digest census, read-only (see `digestCensus`). */
-        digestcensus: () => recordOf(this.ctx).digestCensus({ limit: url.searchParams.get("limit") }),
-        /* CASE-5b: the case ceremony's three hops, beside `gatefacts` and
-           `publish` because they are the same three acts one altitude up —
-           hand out the facts, read the document, commit from the signed bytes. */
+        /* CASE-5b: the case ceremony's three hops. */
         ...reviewOps(reviewOf(this.ctx), url, body),
-        audit: () => this.auditPass({ after: url.searchParams.get("after") || "",
-                                      limit: url.searchParams.get("limit"),
-                                      viewer: url.searchParams.get("viewer") }),
-        purge: () => this.purge({ bundleId: url.searchParams.get("bundleId") }),
       };
       return map;
   }
