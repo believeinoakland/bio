@@ -318,6 +318,7 @@ function withheldWorld(hide) {
   const R = w.correspond(H, "received", "2026-09-10");
   go(4);
   assert.equal(w.esc.escalationEvaluate({ id: w.E, response: { action: H, ord: R }, reading: "denied", reason: "Refused.", ...by("alice") }).ok, true);
+  assert.equal(w.esc.escalationDecline({ id: w.E, to: 7, reason: "Legal tools first.", ...by("alice") }).ok, true);
   read(4);
   return reads;
 }
@@ -337,8 +338,12 @@ test("R26 an attached action the viewer may not see is withheld whole from the r
     assert.ok(!("out_of_view" in a), `stage ${s}: alice sees everything`);
     /* the escalation's own stage, acts and proposals stand */
     assert.equal(b.stage, a.stage);
-    assert.deepEqual(b.history.filter((h) => h.kind !== "attach").map((h) => [h.seq, h.kind, h.to ?? null]),
-                     a.history.filter((h) => h.kind !== "attach").map((h) => [h.seq, h.kind, h.to ?? null]));
+    assert.deepEqual(b.history.filter((h) => h.kind !== "attach").map((h) => [h.kind, h.to ?? null, h.at]),
+                     a.history.filter((h) => h.kind !== "attach").map((h) => [h.kind, h.to ?? null, h.at]));
+    /* K913: no gap in a sequence number counts it: with something withheld, no entry carries the log's seq */
+    for (const x of [...b.history, ...b.actions, ...b.evaluations, ...b.proposed.flatMap((p) => p.declines)])
+      assert.ok(!("seq" in x), `stage ${s}: ${JSON.stringify(x).slice(0, 80)}`);
+    assert.deepEqual(a.history.map((h) => h.seq), a.history.map((_, i) => i + 1), "alice's history keeps its seq");
     assert.deepEqual(b.history.filter((h) => h.kind === "attach").map((h) => h.action), [N], "its attachment leaves the history");
     for (const t of b.triggers) assert.ok(!t.ids.some((i) => i === H || i.startsWith(`${H}#`)), `stage ${s} trigger ids`);
   }
@@ -357,9 +362,14 @@ test("R26 an attached action the viewer may not see is withheld whole from the r
   /* an evaluation of H's reply stands, without the response naming H */
   const ev = (x) => x.evaluations.at(-1);
   assert.deepEqual(ev(r.alice4).response, { action: H, ord: 1 });
-  const { response: _, ...rest } = ev(r.alice4);
+  const { response: _, seq: __, ...rest } = ev(r.alice4);
   assert.deepEqual(ev(r.bob4), rest);
   assert.deepEqual(r.bob4.history.find((h) => h.kind === "evaluate").reading, "denied");
+  /* the decline stands in the proposal, without its seq */
+  const dec = (x) => x.proposed.find((p) => p.to === 7).declines;
+  assert.equal(dec(r.bob4).length, 1);
+  const { seq: ___, ...declined } = dec(r.alice4)[0];
+  assert.deepEqual(dec(r.bob4)[0], declined);
   /* negative control: with nothing withheld, bob's answer is alice's byte for byte, and alice's is unchanged by H being
      withheld from someone else */
   const open = withheldWorld(false);

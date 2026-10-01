@@ -34,3 +34,13 @@ Size (session_016zWfTj7fxHZsZ1dcv73Mom): test runs 6, module lines 1532
 ## J1 · COMPLETE
 
 R26 applied and pushed on job/T20/escalation; completion in the record. test/m/escalation 36/36; whole test/m 4615 pass, 0 fail (20 todo); format, architecture, coverage (26/26), ownership: 0 failures. #ledger confirmed null for an unseen action; the stage-3 clock arm was not gated (read the document directly) and now is. Two readings for you in the record: an unseen action's attach entry leaves the history whole, leaving a seq gap; an unseen action drives none of that viewer's triggers (as the ledger path already did). No reader of actions[].action outside the module. Stales the plane bundle. Nothing awaits stamp.
+
+**Re-opened by B2 (K913), applied.** Merged `tranche/T20` (R26 re-worded; conformance's R24). With any action withheld, `#withhold` now answers every entry numbered from the log's one `seq` in its order without `seq`: the history (open, advance, attach, evaluate, decline, …), the `evaluations` and each proposal's `declines`, since all three carry the same counter and a gap in any would count the withheld attachment. `actions` items never carried `seq`. A viewer with nothing withheld keeps `seq` everywhere. The R26 test is extended: no `seq` on any of bob's history, actions, evaluations or declines entries at stages 2–4 (a decline of 4→7 added to the world); alice's history numbered 1…n; alice's answer and the nothing-withheld control unchanged byte for byte. The extended test fails on my first version (7 pass, 1 fail).
+
+**One residual for BOB (not changed):** R7's and R8's evaluation trigger id is `<ESC id>/evaluation/<seq>` (`#triggers`' `byEvaluation`), so at stages 4 and 5 a proposal's and an advance's `ids` still carry a log `seq`, which can count a withheld attachment. It is an id naming the escalation's own act, recorded in an advance's trigger ids (R13, R18), so I left it standing (R26: "proposals stand"). If K913 reaches it, the fix is in this module: either answer the id with the evaluation's `at` in place of its seq, or drop it from a withholding viewer's ids.
+
+- `node --test test/m/escalation/` (bio-plane): tests 36, pass 36, fail 0.
+- `node --test test/m/` (bio-plane): tests 4642, pass 4622, fail 0, todo 20.
+- `format`: 84 modules, 82 requirements files; 0 failures. `architecture escalation`: 12 product files, 45 relative imports; 0 failures. `coverage escalation`: 26 of 26; 0 failures. `ownership escalation tranche/T20`: 3 files changed; 0 failures.
+
+Size (session_016zWfTj7fxHZsZ1dcv73Mom): test runs 10, module lines 1538

@@ -433,7 +433,7 @@ export class Escalation {
   /** R26 (K903 (4), DEC-36): the read with every attached action the viewer may not see withheld whole, in the history
    *  and the evaluations as in `actions` and `notes` (withheld at their source): its attachment entry leaves the
    *  history, an id naming it or one of its ledger entries (`<id>`, `<id>#<ord>`) leaves an advance's trigger ids, and
-   *  a response naming it loses the key. The escalation's own acts stand. `out_of_view: true` says only that something
+   *  a response naming it loses the key. With one withheld, no entry carries the log's `seq` (K913). The escalation's own acts stand. `out_of_view: true` says only that something
    *  was withheld; with nothing withheld the answer is as before, with no such key. */
   #withhold(answer, attached, seen) {
     const hidden = new Set(attached.filter((a) => !seen.get(a.action)).map((a) => a.action));
@@ -444,12 +444,17 @@ export class Escalation {
       const { response: _, ...rest } = v;
       return rest;
     };
+    /* K913: the log's `seq` numbers every act, a withheld attachment among them, so a gap would count it. Every entry
+       numbered from that one sequence (the history, the evaluations, the declines) is answered in its order without it. */
+    const unnumbered = (v) => { const { seq: _, ...rest } = v; return rest; };
     const history = answer.history.filter((h) => !(h.kind === "attach" && hidden.has(h.action))).map((h) => {
-      const x = response(h);
+      const x = unnumbered(response(h));
       return isObj(x.trigger) && Array.isArray(x.trigger.ids)
         ? { ...x, trigger: { ...x.trigger, ids: x.trigger.ids.filter((i) => !names(i)) } } : x;
     });
-    return { ...answer, history, evaluations: answer.evaluations.map(response), out_of_view: true };
+    const proposed = answer.proposed.map((p) => ({ ...p, declines: p.declines.map(unnumbered) }));
+    return { ...answer, history, evaluations: answer.evaluations.map((v) => unnumbered(response(v))), proposed,
+             out_of_view: true };
   }
 
   /** R2: the escalation as the record stands at `nowMs`. */
