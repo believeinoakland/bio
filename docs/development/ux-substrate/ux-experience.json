@@ -12304,7 +12304,7 @@
    "recommendation": "Option 1 as a requirement now, with option 2's translated rendering taken up as a separate publication decision.",
    "whoDecides": "Bob: a conformance level and supported languages are requirements, and a translated publication is doctrine; the implementation is Design's.",
    "brief": {
-    "stillOpen": true,
+    "stillOpen": false,
     "settledSince": "",
     "title": "Accessibility standard and languages",
     "inOneBreath": "What accessibility standard must CivicOS's member screens and public case pages meet, and should anything in CivicOS appear in languages other than English?",
@@ -12503,6 +12503,17 @@
      "External background (not project canon): WCAG 2.2 (W3C, 2023); US DOJ ADA Title II web rule (2024) referencing WCAG 2.1 AA"
     ],
     "size": "short"
+   },
+   "ruled": {
+    "date": "2026-10-01",
+    "by": "Bob",
+    "rulings": [
+     "DEC-99"
+    ],
+    "status": "ruled",
+    "title": "Accessibility standard and languages",
+    "decided": "Every member screen of the redesign, and the published case page, print and file, is built to WCAG 2.2 at level AA, and each new screen is checked against it before it is accepted; the rules already set (colour never the only signal, focus and tap equivalents to hover, a docked assistant panel) are part of meeting it. The interface is in English for now, built so its words live in one place and another language can be added without rebuilding screens; a published case appears in the language its group wrote it in. A translation of a published case is never presented as the signed case: it is marked as an unofficial translation and names the signed original. Whether and how a group issues translations, and the interface in a place's languages, are decided later.",
+    "trigger": "A group asks to publish a translated case, or to use CivicOS in another language."
    }
   },
   {

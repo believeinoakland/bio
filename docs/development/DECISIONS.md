@@ -1594,3 +1594,20 @@ response: **Bob, 2026-10-01: C, as recommended.**
 decided: 2026-10-01 · Bob
 reasoning recorded in: this entry; the UX substrate's brief for question 15; Interaction Constructs §U.
 owed: each screen's reads distinguish empty, still loading and could-not-read (a check in each screen's build, BOB's to place); the redesign's patterns; the UX page's open question 15 marked ruled.
+
+### DEC-99 · answered
+raised: 2026-10-01 · the same design session with Bob (the UX canon's open question 16)
+for: bob
+question: What accessibility standard must the member screens and the published case meet, which languages, and may a group issue a translated version of a published case?
+why it is Bob's: requirements and UX (a standing requirement every screen is built to; who signs a translation is doctrine).
+provisional: no standard named anywhere; DEC-79, DEC-82 and DEC-90 already require colour never to be the only signal, focus and tap equivalents to hover, and a docked assistant panel; product code names no place (K1); jurisdictions R37 (locale is the language of the jurisdiction's publications).
+alternative: (B) A plus the interface in a profile's local languages and translated cases now; (C) defer both.
+recommendation: (A) WCAG 2.2 AA now for everything; English first, built for translation; a translated case's principle recorded now, its design later.
+reversal cost: low now; high once screens are built without it.
+response: **As recommended (Bob, 2026-10-01): A.**
+  1. THE STANDARD: WCAG 2.2 at level AA for every member screen of the redesign and for the published case page, print and file; each new screen is checked against it before it is accepted.
+  2. LANGUAGE: English for now, the interface built so its words live in one place and another language can be added without rebuilding screens; a published case appears in the language its group wrote it in. The interface in a place's languages is a later decision.
+  3. TRANSLATED CASES: principle now, design later. A translation is never presented as the signed case: it is marked as an unofficial translation and names the signed original. Whether and how a group issues one through CivicOS is decided when a group asks to publish one.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 16; Interaction Constructs §L.
+owed: the standard as a requirement every member screen and the published case meets, with its acceptance check, and the interface's words held in one place (BOB places them, for Bob's approval); the UX page's open question 16 marked ruled.
