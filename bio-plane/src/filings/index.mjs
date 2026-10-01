@@ -102,9 +102,11 @@ export const THEORY_TEXT_MAX = 2000;
 export const COUNSEL_FIELD_MAX = 200;
 /** R13: the drafts and the packet versions one `filingsFor` read lists, each. */
 export const FILINGS_FOR_MAX = 200;
-/** R10: the marking every section, the packet's head and every export carry. */
-export const counselMarking = (counsel) =>
-  `Prepared for review by ${counsel.name}, ${counsel.organisation}. Not legal advice. Not for filing.`;
+/** R10: the marking every section, the packet's head and every export carry; with no counsel named (Tier 1 or 2, K924),
+ *  the group's own. */
+export const counselMarking = (counsel) => (counsel && counsel.name
+  ? `Prepared for review by ${counsel.name}, ${counsel.organisation}. Not legal advice. Not for filing.`
+  : "Prepared for the group's own review. Not legal advice. Not for filing.");
 /** R24: the words a draft, packet or communication prepared from an action carrying a premise override opens with. */
 export const OVERRIDE_HEAD = "Rests on an unestablished premise:";
 /** R24: the disclosure line, from the override as the action's read answers it (actions R8, R25). */
@@ -1042,14 +1044,15 @@ export class Filings {
                            : "no member is named as the one naming counsel" };
     const a = this.#action(action, viewer);
     if (!a) return this.#noAction(action);
+    /* R8 (K924): a packet at every governing tier; counsel is required at Tier 3 or an undetermined tier (never read as
+       1, D-182), optional below it, and one given is named by both a name and an organisation. */
     const gov = this.governingTier(a);
-    if (gov.tier !== 3)
-      return { ok: false, reason: "NOT_TIER3", action: a.id, governing: gov,
-               detail: "a counsel packet is assembled only for a governing tier of 3" };
-    const c = this.#counsel(counsel);
-    if (!c) return { ok: false, reason: "NO_COUNSEL", max: COUNSEL_FIELD_MAX,
-                     detail: "counsel is named by a name and an organisation (contact optional), each one line of at most "
-                           + `${COUNSEL_FIELD_MAX} characters` };
+    const needed = gov.tier === 3 || gov.tier === "undetermined";
+    const c = counsel == null && !needed ? null : this.#counsel(counsel);
+    if (counsel == null ? needed : !c)
+      return { ok: false, reason: "NO_COUNSEL", max: COUNSEL_FIELD_MAX, action: a.id, governing: gov,
+               detail: `${needed ? `at a governing tier of ${gov.tier === 3 ? "3" : "undetermined"} counsel is named` : "counsel, when named,"} `
+                     + `by a name and an organisation (contact optional), each one line of at most ${COUNSEL_FIELD_MAX} characters` };
     const { det } = this.#restsOn(a, viewer);
     if (!det && !a.premise_override)
       return { ok: false, reason: "NO_DETERMINATION", action: a.id,
@@ -1074,8 +1077,10 @@ export class Filings {
   }
 
   #head(id, version, action, counsel, author, at, marking, disclosure = null) {
-    return { packet: id, version, action, counsel, assembled_by: author, at, ...(disclosure ? { disclosure } : {}), marking, fileable: false,
-             says: "prepared for counsel's review from the record; it is never published and is not in a form that can be filed" };
+    return { packet: id, version, action, counsel: counsel && counsel.name ? counsel : null, assembled_by: author, at,
+             ...(disclosure ? { disclosure } : {}), marking, fileable: false,
+             says: `prepared ${counsel && counsel.name ? "for counsel's review" : "for the group's own review, no counsel named"} `
+                 + "from the record; it is never published and is not in a form that can be filed" };
   }
 
   /* A packet's versions the viewer may see, through its action and the project each version draws on (R11, R19;
@@ -1089,7 +1094,7 @@ export class Filings {
   }
 
   #version(r, rows, viewer) {
-    const counsel = parse(r.counsel) || {};
+    const counsel = parse(r.counsel);
     const marking = counselMarking(counsel);
     const causes = this.#basisChanged(parse(r.basis) || {}, viewer);
     return { ok: true, id: r.packet_id, version: Number(r.version), action: r.action_id,
