@@ -574,6 +574,13 @@ test("R20 the plane's limits are read from the signed release R8 chose and sent 
       assert.equal(u.planePuts.length, 0);
     }
   }
+  /* The plane this tree builds states its limits as this reads them (control-plane's statement, K737), equal to
+     `bio-plane/wrangler.jsonc`'s `limits`: built here by the bundler's own recipe, the bytes a release would sign. */
+  const { buildMember, planeMember } = await import("../../bio-plane/scripts/fleet-bundle.mjs");
+  const built = await buildMember(planeMember(), { write: false });
+  const cfgText = readFileSync(new URL("../../bio-plane/wrangler.jsonc", import.meta.url), "utf8");
+  const cfgLimits = JSON.parse(cfgText.match(/"limits":\s*(\{[^}]*\})/)[1]);
+  assert.deepEqual(planeLimits(new TextDecoder().decode(built.bytes)), { ok: true, limits: cfgLimits });
   /* Nothing is added to the fleet statement: the limits ride in the plane bytes, so the /2 statement an older installer
      rebuilds from the manifest is the one signed, and the fleet installs. */
   const rel = await release({ version: NEXT });
