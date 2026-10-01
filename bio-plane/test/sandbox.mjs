@@ -15,11 +15,13 @@
  *
  * The exit hook is miniflare's own `process.on("exit")` handler, and it removes
  * the sandbox SYNCHRONOUSLY. `dispose()` unregisters it and then starts the
- * removal without awaiting it. Every suite here ends
- * `await mf.dispose(); process.exit(fail ? 1 : 0)` — as `hygiene.test.mjs`
- * REQUIRES, so a lingering handle can never turn a green run into a hang — and
+ * removal without awaiting it. The suites of the time ended
+ * `await mf.dispose(); process.exit(fail ? 1 : 0)`, so a lingering handle could
+ * never turn a green run into a hang (the old `hygiene.test.mjs` required it; it
+ * was deleted at T20, and no test enforces that ending now), and
  * `process.exit()` on the next line kills the process before the unawaited
- * removal lands, with the safety net already taken down.
+ * removal lands, with the safety net already taken down. Any suite that still
+ * ends that way has the same race, which is why this module stays.
  *
  * So the leak is on the SUCCESS path, which inverts the intuition this fix was
  * commissioned on: a suite that THROWS mid-run cleans up perfectly, because it
@@ -41,18 +43,25 @@
  * reason: `ratify-`, `sshsig-`, `signpage-`, `attest-`, `reuse-ratify-`,
  * `publish-`, `publishedcase-` and `reeval-` all `mkdtempSync(join(tmpdir(),…))`
  * and so land inside the owned directory too. Nothing else changes for a suite;
- * the import is the whole contract, and `hygiene.test.mjs` requires it of every
- * suite that builds a Miniflare or mkdtemps, so the list maintains itself
- * rather than falling behind the directory the way the old `npm test` chain did
- * (D-93).
+ * the import is the whole contract. Every suite that builds a Miniflare or
+ * mkdtemps should import it. The old `hygiene.test.mjs` required that of every
+ * suite; it was deleted at T20, and no test enforces the rule now.
  *
- * WHAT THIS DOES NOT COVER, and why `scripts/battery.mjs` sweeps orphans: a
- * process killed with SIGKILL runs no handler at all. Its directory carries the
- * pid in its name so the sweep can tell a dead owner from a live one.
+ * WHO RUNS THE SUITES NOW: `node --test` (bio-plane's `npm test` runs
+ * `test/m/**`), each package's own `npm test`, and the `regression` workflow,
+ * which runs every package's `npm test` and the kept suites under `node --test`.
+ * The old runner, `scripts/battery.mjs`, was deleted at T20.
  *
- * NOT imported by the probes (`*-probe.mjs`, `*-scale.mjs`). They are not
- * battery, they are bounded separately, and `tier1-coverage-probe.mjs` keeps a
- * deliberately PERSISTENT PDF cache in `$TMPDIR` that this module would delete.
+ * WHAT THIS DOES NOT COVER: a process killed with SIGKILL runs no handler at
+ * all, and its directory stays. Its name carries the pid, so whoever cleans the
+ * host's temp directory can tell a dead owner's directory from a live one. The
+ * old runner swept such orphans; nothing sweeps them now.
+ *
+ * A probe (`*.probe.mjs`, `*-probe.mjs`) is run by hand, never by a test
+ * command, and imports this module or not as it needs. One that keeps a
+ * deliberately PERSISTENT cache in `$TMPDIR` must not import it, because this
+ * module would delete the cache (as the since-deleted
+ * `tier1-coverage-probe.mjs`'s PDF cache would have been).
  *
  * D-282, 2026-08-10: THIS MODULE NOW TAKES A SECOND SIDE EFFECT, and it is stated
  * here rather than left to be discovered. `./stdio.mjs` makes stdout and stderr
@@ -60,7 +69,8 @@
  * line this module's whole header is about — cannot discard the suite's own tally
  * when a reader hands it a pipe. It is imported here as well as by every suite so
  * that the CONTROL and PROBE harnesses which already take this module's side
- * effect take that one too; D-282 was found by a control arm, not by the battery.
+ * effect take that one too; D-282 was found by a control arm, not by the old
+ * battery runner.
  */
 import "./stdio.mjs";
 import { chmodSync, existsSync, lstatSync, mkdtempSync, readdirSync, renameSync, rmSync } from "node:fs";
@@ -68,12 +78,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 /* Read the host's temp directory BEFORE redirecting, so a suite spawned by a
-   battery that has already redirected still nests rather than escaping. */
+   process that has already redirected (a test, or a runner that imports this
+   module) still nests rather than escaping. */
 const HOST_TMP = tmpdir();
 
 /* The pid is in the NAME because it is the only thing a surviving directory can
-   tell a later sweep about its owner: a directory whose pid is gone is garbage,
-   and one whose pid is alive may be a concurrent worker's battery in flight.
+   tell a later cleanup about its owner: a directory whose pid is gone is garbage,
+   and one whose pid is alive may be a concurrent test run in flight.
    Deleting that second kind is the failure this whole item exists to avoid — a
    live sandbox WAS in flight during the manual cleanup that found D-186, and
    removing it would have broken a verification in progress. */
@@ -108,8 +119,8 @@ export const sweepSandbox = () => {
      ENOENT harmlessly, and at most the few syscalls already inside the kernel can
      still touch the moved tree — so the removal is repeated until the tree is
      verified GONE, never read as gone from the absence of a throw. The moved name
-     keeps the `bio-battery-<pid>-` prefix, so the battery's orphan sweep still
-     attributes it if even this fails. Same driver, this sweep: 0 of 300. */
+     keeps the `bio-battery-<pid>-` prefix, so a cleanup can still attribute it
+     to its owner if even this fails. Same driver, this sweep: 0 of 300. */
   let target = SANDBOX;
   try { renameSync(SANDBOX, `${SANDBOX}-swept`); target = `${SANDBOX}-swept`; } catch { /* gone already, or unmovable: sweep in place */ }
   for (let i = 0; i < 5 && existsSync(target); i++) {
