@@ -1,9 +1,9 @@
-/* queue-producers — the feed's producers (requirements: `build/requirements/queue-producers.md`, R1–R19).
+/* queue-producers — the feed's producers (requirements: `build/requirements/queue-producers.md`, R1–R21).
  * Split out of `queue` by N363 (Bob's K507; seams ruled K531, `build/plan/draft-N363-queue-split.md` §1, §3.2): each
  * producer derives, on read and writing nothing, the items one provider's facts earn for a viewer, naming each item's
  * subjects and home subjects, for `queue` to home, offer, mint and publish.
  *
- *   feedItems      queue's one read of this module (R8): every item R1–R7, R9, R14 and R15–R19 derive for a member and viewer, each
+ *   feedItems      queue's one read of this module (R8): every item R1–R7, R9, R14 and R15–R21 derive for a member and viewer, each
  *                  homed through queue's walk and carrying queue's options (both passed in), with the facts the answer
  *                  publishes beside them. No item carries `disposition` (queue's mint gives it) or `catalogue_id`
  *                  (queue stamps it from its R2).
@@ -14,7 +14,8 @@
  * check row: it refuses nothing (draft §3.3).
  * `deps` (each defaults to its module's instance on the same `ctx`, reached lazily when first asked):
  *   record, membership, credentials, governor, provenance, capture, captureRequests, basisVersions, progressions, aiRuns, bias,
- *   publication, reevaluation, intent, monitoring, contradiction, actionClocks, escalation, actionPlans, actions   the providers.
+ *   publication, reevaluation, intent, monitoring, contradiction, actionClocks, escalation, actionPlans, actions,
+ *   filingTemplates, localFacts   the providers.
  *
  * R7 (queue's homes walk) and R12 (queue's options) stay in queue, one walk and one derivation: `feedItems` takes them
  * as `homesOf(subjectIds)` and `optionsOf(subjectIds)`, closed over the read's viewer and identity by queue, and holds
@@ -45,6 +46,8 @@ import { actionClocksOf } from "../action-clocks/index.mjs";
 import { escalationOf } from "../escalation/index.mjs";
 import { actionPlansOf } from "../action-plans/index.mjs";
 import { actionsOf } from "../actions/index.mjs";
+import { filingTemplatesOf } from "../filing-templates/index.mjs";
+import { localFactsOf } from "../local-facts/index.mjs";
 import { proposalFindingItems } from "./proposals.mjs";
 
 export { proposalFindingItems, CARDINALITY_EXCEEDED } from "./proposals.mjs";
@@ -87,6 +90,8 @@ export class QueueProducers {
   get #escalation() { return this.#dep("escalation", () => escalationOf(this.#host)); }
   get #actionPlans() { return this.#dep("actionPlans", () => actionPlansOf(this.#host)); }
   get #actions() { return this.#dep("actions", () => actionsOf(this.#host)); }
+  get #filingTemplates() { return this.#dep("filingTemplates", () => filingTemplatesOf(this.#host)); }
+  get #localFacts() { return this.#dep("localFacts", () => localFactsOf(this.#host)); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
@@ -208,6 +213,9 @@ export class QueueProducers {
       items.push(...this.#obligationsEscalationStageProposed(me, viewer, at));
       items.push(...this.#obligationsActionReminder(me, viewer, at));
       items.push(...this.#obligationsLitigationHold(me, viewer, at));
+      /* R20, R21 (K921): a template version a member was asked to review; a local fact a live deadline reads, due. */
+      items.push(...this.#obligationsTemplateReview(me, viewer, at));
+      items.push(...this.#obligationsLocalFactDue(me, viewer, at));
       return {
         items,
         facts: {
@@ -914,12 +922,12 @@ export class QueueProducers {
     return out;
   }
 
-  /** THE TWO BOUNDS THESE PRODUCERS WALK UNDER, AND THEY EXIST BECAUSE THE
-   *  BATTERY REFUSED THE UNBOUNDED VERSION RATHER THAN BECAUSE ANYONE PREDICTED
-   *  IT. `derivation-bounds.test.mjs` holds a CEILING on how many methods derive
-   *  over an unbounded scan — a class of defect this record has paid for (D-227,
-   *  REC-66) — and the first draft of both producers walked straight into it:
-   *  an unbounded read of `refs` with per-row work inside the loop.
+  /** THE BOUNDS THESE PRODUCERS WALK UNDER. A derivation over an unbounded scan
+   *  is a class of defect this record has paid for (D-227, REC-66), and the
+   *  first draft of these producers walked straight into it, found by the old
+   *  suites' ceiling on unbounded derivations: an unbounded read of `refs` with
+   *  per-row work inside the loop. `shared.test.mjs`'s R11 (D-480) test drives
+   *  the shared-question page to exactly its bound and one past it.
    *
    *  PUBLIC so a suite can read them and so the bound a member is told about is
    *  the bound that was applied, never a second copy of the number.
@@ -1119,7 +1127,7 @@ export class QueueProducers {
    *  from another team" about a version whose team is undetermined — is the
    *  record claiming more than it can support, which this project ranks as
    *  worse than a missing feature. The gap is stated here, asserted in
-   *  `test/current.test.mjs` (a run-less version produces NO item, driven), and
+   *  `shared.test.mjs` (R2: a run-less version produces NO item, driven), and
    *  raised as **D-266** so it is a known hole with a name rather than a
    *  surprise for whoever next reads this feed.
    *
@@ -1185,9 +1193,9 @@ export class QueueProducers {
         const n = heldVersions.filter((v) => !(typeof v.run === "string" && v.run)).length;
         if (n > 0) { unattributed += n; if (!unattributedIn.includes(inq)) unattributedIn.push(inq); }
       }
-      /* BOUNDED, for the reason the two bounds above are: a per-question read
-         with per-row work inside it is the amplification class the battery's
-         ceiling refuses. One more than may be used, so the truncation is a fact
+      /* BOUNDED, for the reason the bounds above are: a per-question read with
+         per-row work inside it is the amplification class D-227 and REC-66
+         paid for. One more than may be used, so the truncation is a fact
          rather than an inference. */
       const vcap = QueueProducers.QUEUE_SHARED_VERSIONS_MAX;
       const vrows = heldVersions.filter((v) => typeof v.run === "string" && v.run)
@@ -1195,18 +1203,12 @@ export class QueueProducers {
                        author: v.author ?? null, at: v.at ?? null, run: v.run }));
       const vtrunc = vrows.length > vcap || held.truncated === true;
       for (const v of vrows.slice(0, vcap)) {
-        /* A MEMBERSHIP TEST, NOT A PROJECTION — and `run-conditions.test.mjs`'s
-           sweep is why it is written this way rather than as the obvious
-           `SELECT context_type, context_id`.
-
-           REC-74 holds every reader of `ai_runs` to a declared ROLE, and a
-           reader that PROJECTS a stored column of that table owes a disposition
-           for all twenty of them. This producer does not want a run's facts: it
-           wants to know WHICH OF THE PROJECTS IT HAS ALREADY NAMED the reading
-           came from. So the match happens IN THE PREDICATE and the projection is
-           the row's own primary key and nothing else — `from_project` below is
-           `p.id`, which came from `refs` and from the project's own frontmatter,
-           never a value read off this table.
+        /* A MEMBERSHIP TEST AGAINST THE PROJECTS ALREADY NAMED. This producer does
+           not want a run's facts: it wants to know WHICH OF THE PROJECTS IT HAS
+           ALREADY NAMED the reading came from, so the run's context is matched
+           against the drawing set and `from_project` below is `p.id`, which came
+           from `refs` and from the project's own frontmatter (REC-74 holds every
+           reader of `ai_runs` to a declared role; ai-runs answers this read).
 
            IT IS ALSO THE STRICTER GATE. Iterating the DRAWING set means a run
            whose context is a project this viewer cannot see can never be
@@ -2581,6 +2583,134 @@ export class QueueProducers {
         assignee_role: null,
         recipients,
         options: [QueueProducers.HOLD_STATE, ...this.#optionsOf([m.action])],
+      });
+    }
+    return out;
+  }
+
+  /* ======================================================================
+   * K921 · R20, R21 — FILING TEMPLATES AND LOCAL FACTS (filing-templates R7, R20; local-facts R1, R4; action-clocks R11).
+   * Each reads the one fact its owning module offers, derived on read and writing nothing, so an item leaves when that
+   * module stops answering it; raised once and never repeated unless the member asks (DEC-69, DEC-94).
+   * ====================================================================== */
+
+  /** R20, R21: the acts that answer the items, each the op of the fact's own module. */
+  static TEMPLATE_REVIEW = Object.freeze({ id: "templatereview", label: "Review this template version", weight: "single" });
+  static FACT_CONFIRM = Object.freeze({ id: "factconfirm", label: "Confirm, correct or dispute this local fact", weight: "single" });
+
+  /** `template-review-requested` (R20; K921; filing-templates R7, R20): one OBLIGATION per (version, member)
+   *  `filing-templates.reviewsRequested` answers the viewer, to that member and to nobody else, naming the version's
+   *  name and kind and the member who asked, aged from the instant asked. It leaves when the member reviews the
+   *  version's present text or the version leaves `in_review` (the read no longer answers it). A template is not a
+   *  record of the case, so the item is homed under no case (as export-performed's). */
+  #obligationsTemplateReview(me, viewer, now) {
+    if (!me) return [];
+    const page = this.#actionPages((after) => this.#filingTemplates.reviewsRequested({ after, viewer }));
+    const out = [];
+    for (const x of page.items) {
+      if (!x || typeof x.version !== "string" || !x.version || typeof x.member !== "string" || x.member !== me) continue;
+      const askedMs = Date.parse(x.asked_at ?? "");
+      const asker = x.asked_by && typeof x.asked_by === "object" ? { id: x.asked_by.id ?? null, name: x.asked_by.name ?? null } : null;
+      const askerName = asker && (asker.name || asker.id) ? asker.name || asker.id : "a member";
+      out.push({
+        id: `OBLIGATION::template-review-requested::${x.version}::${x.member}`,
+        class: "OBLIGATION",
+        kind: "template-review-requested",
+        case: this.#homesOf([]),
+        subject: { kind: "template_version", id: x.version, template: x.template ?? null, name: x.name ?? null,
+                   template_kind: x.kind ?? null, asked_by: asker },
+        summary: `${askerName} asked you to review the template ${x.name ? `"${x.name}"` : x.version} (${x.version})`,
+        detail: "a draft of this filing template was sent for review and you are one of the members asked. Review its "
+              + "present text; this is told once, and it leaves when you have reviewed that text or the version leaves "
+              + "review.",
+        basis: { source: "filing-templates.reviewsRequested", template: x.template ?? null, version: x.version,
+                 name: x.name ?? null, template_kind: x.kind ?? null, member: x.member, asked_by: asker,
+                 asked_at: x.asked_at ?? null, recipients_rule: "asked_member",
+                 bound: { pages_bound: QueueProducers.QUEUE_ACTION_PAGES, truncated: page.truncated },
+                 detail: "a review asked for is filing-templates' fact (its R7, R20): a member named a reviewer of a "
+                       + "version in review who has not reviewed its present text. It goes to that member and to nobody "
+                       + "else, and is raised once (DEC-69, DEC-94)." },
+        age: Number.isFinite(askedMs)
+          ? { state: "determined", since: x.asked_at, ms: Math.max(0, now - askedMs) }
+          : { state: "undetermined", reason: "no_asked_instant",
+              detail: "the request carries no instant this producer can read" },
+        assignee: null,
+        assignee_role: null,
+        recipients: [me],
+        options: [QueueProducers.TEMPLATE_REVIEW],
+      });
+    }
+    return out;
+  }
+
+  /** `local-fact-due` (R21; K921; local-facts R4, action-clocks R11): one OBLIGATION per fact
+   *  `local-facts.factsDue({paths})` answers due, `paths` those `action-clocks.calendarFactsRead` answers the viewer, to
+   *  R15's recipients of each action that reads it, taken together; its subject the first such action, naming the fact,
+   *  its status and why it is due. It leaves when a member confirms or corrects the fact or no live action reads it
+   *  (either read no longer answers it). An action answered as a bare id names no creator and no project. */
+  #obligationsLocalFactDue(me, viewer, now) {
+    if (!me) return [];
+    const read = this.#actionClocks.calendarFactsRead({ viewer, now });
+    const listed = read && read.ok !== false && Array.isArray(read.paths) ? read.paths : [];
+    const readers = new Map();
+    for (const p of listed) {
+      if (!p || typeof p.path !== "string" || !p.path) continue;
+      const acts = (Array.isArray(p.actions) ? p.actions : [])
+        .map((a) => (typeof a === "string" ? { action: a, project: null, created_by: null } : a))
+        .filter((a) => a && typeof a.action === "string" && a.action);
+      if (acts.length) readers.set(p.path, acts);
+    }
+    if (readers.size === 0) return [];
+    const due = this.#localFacts.factsDue({ paths: [...readers.keys()], viewer });
+    const list = due && due.ok !== false && Array.isArray(due.due) ? due.due : [];
+    const out = [];
+    for (const f of list) {
+      const acts = f && typeof f.path === "string" ? readers.get(f.path) : null;
+      if (!acts) continue;
+      const rules = new Set(), members = new Set();
+      for (const a of acts) {
+        const to = this.#actionRecipients(a.created_by, a.project);
+        rules.add(to.rule);
+        for (const m of to.members) members.add(m);
+      }
+      if (!members.has(me)) continue;
+      const first = acts[0];
+      const status = typeof f.status === "string" ? f.status : null;
+      /* aged from the dispute, else from the day the confirmation lapsed, else from the day the fact fell due */
+      const latestAt = f.latest && typeof f.latest === "object" && typeof f.latest.at === "string" ? f.latest.at : null;
+      const since = status === "disputed" ? latestAt : (f.lapsed && f.lapses_on ? f.lapses_on : f.due_from ?? null);
+      const sinceMs = typeof since === "string" ? Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(since) ? `${since}T00:00:00Z` : since) : NaN;
+      out.push({
+        id: `OBLIGATION::local-fact-due::${f.path}`,
+        class: "OBLIGATION",
+        kind: "local-fact-due",
+        case: this.#actionHomes(first.action, first.project, viewer),
+        subject: { kind: "action", id: first.action, project: first.project ?? null, path: f.path, fact: f.fact ?? null,
+                   status, why: f.why ?? null },
+        summary: `a local fact a deadline on ${first.action} is counted on is ${status === "disputed" ? "disputed" : "unconfirmed"}`
+               + (f.why ? `: ${f.why}` : ""),
+        detail: "a deadline on this action is counted in business days over a local calendar or office's hours that no "
+              + "member here has confirmed as current, or that a member disputed. Confirm it, correct it with its source, "
+              + "or dispute it. This is told once for each status the fact takes; it leaves when a member confirms or "
+              + "corrects the fact, or no live action reads it.",
+        basis: { source: "local-facts.factsDue + action-clocks.calendarFactsRead", path: f.path, fact: f.fact ?? null,
+                 status, due: f.due ?? null, why: f.why ?? null, latest: f.latest ?? null,
+                 ...(f.lapsed ? { lapsed: f.lapsed } : {}), ...(f.due_from ? { due_from: f.due_from } : {}),
+                 ...(f.lapses_on ? { lapses_on: f.lapses_on } : {}),
+                 actions: acts.map((a) => a.action), recipients: [...members].sort(),
+                 recipients_rule: [...rules].sort().join("+"),
+                 bound: { actions_limit: read.actions_limit ?? null, truncated: read.truncated === true },
+                 detail: "a fact due is local-facts' (its R4), asked of the paths a live deadline reads, which are "
+                       + "action-clocks' (its R11). It goes to the members who created those actions, else their "
+                       + "projects' owners, else the administrators (as R15's), and is raised once per fact and status." },
+        age: Number.isFinite(sinceMs)
+          ? { state: "determined", since, ms: Math.max(0, now - sinceMs) }
+          : { state: "undetermined", reason: "no_due_instant",
+              detail: "the fact carries no day it fell due this producer can read" },
+        assignee: null,
+        assignee_role: null,
+        recipients: [...members].sort(),
+        options: [QueueProducers.FACT_CONFIRM, ...this.#optionsOf([first.action])],
       });
     }
     return out;
