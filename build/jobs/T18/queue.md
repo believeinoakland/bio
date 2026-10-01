@@ -47,3 +47,7 @@ Complete, re B1 (and K723's answer to J2). Since J1: N410's share (the feed read
 ## J4 · COMPLETE
 
 Complete again, re B4 (B2 and B3 were already applied before J3). Queue.PRODUCER_DEPS gains actionClocks, escalation, actionPlans; a test shows a fake for each reaches its producer (overdueClocks, remindersDue, escalationsDue, checkpointsDue), negative control run. Queue 69/69; with queue-producers, tasks, control-plane 265 pass, 1 fail pre-existing (control-plane R36, capture R65). Four checks 0 failures.
+
+## J5 · COMPLETE
+
+Complete again, re B5. test/m/queue/world.mjs now calls q.migrate() after queueOf (and in w.boot for a bare world); no other queue test relies on SCHEMA for queue's tables. Proved with ${QUEUE_SCHEMA} removed from src/schema.mjs locally (not committed): 69 pass, 0 fail with the change; 13 pass, 56 fail without it. Normal run 69/69; four checks 0 failures.
