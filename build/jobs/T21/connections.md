@@ -30,3 +30,7 @@ Size (session_01SjaX9oR1AMtsgg4jw4qwcL): test runs 6, module lines 2679
 ## J1 · REPORT
 
 Stale generated artifact: bio-plane/dist/bio-plane.bundled.mjs (src/connections/index.mjs, themes.mjs, checks.mjs, pair.mjs, schema.mjs changed). Reader whose answer changes: no plane module reads backlinks; op=backlinks' wire answer gains out_of_view: true when a citer was withheld (additive; legacy-ui's mocks unchanged; showing it is the UX stream's). Pre-existing red, not mine: test/m 42 fails in filings, project-stage stage, intent grammar, control-plane catalogue-end, identical on the base without my commit (STATE_MOVE_UNDECLARED on project moves, a replace of undefined, CAPTURE_HELD_BY_ANOTHER_BUNDLE).
+
+## J2 · COMPLETE
+
+N459: backlinks answers out_of_view: true when a hidden citer was withheld (one ungated EXISTS, the gated read's exact complement), nothing else of it; R20's test extended (hidden arm, two-hidden-as-one, machine, owner, uncited-target controls). Mark met: R20 (not yet met: T21). N464/N458: the seven lines re-worded to 'record' (index.mjs 899/955/983/984/996, themes.mjs 98/100); two tests re-keyed. N469: pair.mjs:10, schema.mjs:170 re-pointed to module tests; also checks.mjs:322, converts-position header, and the retired-catalogue notes (checks.mjs, index.mjs, themes.test.mjs). Nothing deferred. test/m/connections 107/107; test/m no new red (42 = base). format, architecture, coverage (61/61), ownership: 0 failures. Record: build/jobs/T21/connections.md on job/T21/connections.
