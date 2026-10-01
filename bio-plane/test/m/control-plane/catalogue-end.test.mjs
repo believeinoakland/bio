@@ -22,6 +22,17 @@ test("R43, R22: every code decorated before the catalogue's end reads the same c
   }
   const fences = machineFences(M.CHECK_FAMILIES).map((f) => f.code);
   for (const code of SNAP.fences) assert.ok(fences.includes(code), `fence ${code} is no longer published`);
+  /* the changes since, each its owner's under a Bob-approved requirement (`changed.note`): a retired code has no row and
+     its number is held by no code; a re-keyed code has no row and its successor holds its number */
+  const held = new Set(Object.values(M.CHECK_FAMILIES).flatMap((rows) => Object.values(rows)).map((r) => r.check));
+  for (const [code, check] of Object.entries(SNAP.changed.retired)) {
+    assert.equal(M.dec49Row(code), null, code);
+    assert.equal(held.has(check), false, `${check} is reused`);
+  }
+  for (const [was, now] of Object.entries(SNAP.changed.rekeyed)) {
+    assert.equal(M.dec49Row(was), null, was);
+    assert.ok(SNAP.rows[now] && M.dec49Row(now).check === SNAP.rows[now][0], now);
+  }
   /* negative controls: the comparison would see a changed sentence, and a code no source holds has no row */
   const [one] = codes;
   assert.notDeepEqual([M.dec49Row(one).check, digest(M.dec49Row(one).translation + " ")], SNAP.rows[one]);

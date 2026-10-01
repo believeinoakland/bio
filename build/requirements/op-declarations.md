@@ -30,7 +30,7 @@ Terms. An **op** is a name the instance answers. An **op spec** is `{classes, ma
   - the grant's doors, `classes: null` as `reviewcomment` and `reviewcopy` (a member by session, a recipient by the secret, `control-plane` R44): `templatereview` and `templatecomment` mutating, `templateread` and `templatecomments` reads;
   - reads, not mutating, classes `admin`, `member`, `probe`, `viewer` stamped: `templates` (now `filing-templates` R14), `factstatus`, `factsdue` (`local-facts` R2, R4).
 
-  R6 holds over them. *(not yet met: T21)*
+  R6 holds over them.
 
 ## Private
 

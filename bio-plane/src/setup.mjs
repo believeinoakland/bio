@@ -343,8 +343,7 @@ ${GROUP_LINE_UNREAD}
        written here draws zero findings; one written with nothing authored still
        draws exactly C-2.10, because this page will not invent an addressee to
        get past its own gate. BOTH INTAKE SURFACES OR NEITHER: app.html carries
-       the same option and the same pair, and add-surface.test.mjs asserts the
-       two together so one cannot be changed without the other. -->
+       the same option and the same pair. -->
   <select id="n-type">
     <option value="information">Information</option>
     <option value="inquiry">Question</option>
@@ -963,15 +962,16 @@ const mdFor = (id, type, state, title, body, now, hasDoc, src, act)=>{
   if (type === "project") fm.push("objective: "+JSON.stringify(title));
   /* D-130 / REC-23 / UI-19, 2026-08-05. The counterparty placeholder used to be
      pushed here too - D-130 named only civicos-ui/app.html, this was the SECOND
-     emission site and the one conformance.test.mjs exercises - and REC-23 took
-     it out, leaving the field ABSENT and the gate naming the gap. UI-19 gives
+     emission site - and REC-23 took it out, leaving the field ABSENT and the
+     gate naming the gap. UI-19 gives
      this page the radio pair, so the value arrives FROM THE MEMBER through
      act.counterparty and nothing here invents one.
 
      CALLED WITHOUT act THIS ARM STILL WRITES NO COUNTERPARTY, permanently and
      on purpose: a bundle written by a caller that collected no answer draws
-     exactly C-2.10, which is the honest one error, and conformance.test.mjs
-     asserts BOTH directions so a future default cannot pass by inventing one.
+     exactly C-2.10, which is the honest one error, and the R24 test in
+     test/m/instance-setup/page.test.mjs asserts BOTH directions so a future
+     default cannot pass by inventing one.
 
      action_kind is "other" HERE ONLY, and it is not a chooser this page hides:
      "other" is the catalog's own token for an ask that is not one of the named

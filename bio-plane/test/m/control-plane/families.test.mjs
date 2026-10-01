@@ -135,3 +135,23 @@ test("R22 (K782, K813, K817, K831, K837): the list reads credentials' three fami
     assert.deepEqual(M.dec49Row(code), { check: IG.INQUIRY_GRAMMAR_CHECKS[code].check ?? null,
                                          translation: IG.INQUIRY_GRAMMAR_CHECKS[code].translation }, code);
 });
+
+test("R22, R43 (K921): the list reads local-facts' C-126 and filing-templates' C-125, each in its module's place (local-facts before standards, filing-templates after action-clocks and before filings), and every one of their rows decorates with its own check and words (negative control: the list without either misses its family)", async () => {
+  const paths = M.CHECK_FAMILY_FILES.map(([p]) => p);
+  const at = (p) => paths.indexOf(p);
+  for (const [path, fam, prefix] of [["src/local-facts/checks.mjs", "LOCAL_FACTS_CHECKS", "C-126."],
+                                     ["src/filing-templates/checks.mjs", "FILING_TEMPLATE_CHECKS", "C-125."]]) {
+    assert.ok(at(path) >= 0, path);
+    const table = (await import(`../../../${path}`))[fam];
+    assert.ok(Object.values(table).some((r) => r.check.startsWith(prefix)), `${fam} holds ${prefix}`);
+    for (const [code, row] of Object.entries(table))
+      assert.deepEqual(M.dec49Row(code), { check: row.check, translation: row.translation }, `${fam}.${code}`);
+    const missing = await unreached(M.CHECK_FAMILY_FILES.filter(([p]) => p !== path));
+    assert.ok(missing.some((m) => m.startsWith(`bio-plane/${path} `)), `without ${path}`);
+  }
+  assert.ok(at("src/review/checks.mjs") < at("src/local-facts/checks.mjs") && at("src/local-facts/checks.mjs") < at("src/standards/checks.mjs"));
+  assert.ok(at("src/action-clocks/checks.mjs") < at("src/filing-templates/checks.mjs") && at("src/filing-templates/checks.mjs") < at("src/filings/checks.mjs"));
+  /* the moved rows C-115.31–.33, .35–.38 are decorated from filing-templates', whichever source holds them too */
+  for (const code of ["MACHINE_CANNOT_DRAFT_TEMPLATE", "TEMPLATE_TIER3_FILE", "NO_SUCH_TEMPLATE", "NO_TEMPLATE_GRANT"])
+    assert.ok(M.dec49Row(code), code);
+});

@@ -154,3 +154,21 @@ test("R21, R17 (textchain convert): op=image's forwarded answer carries the text
     assert.equal(opCalls(w.env)[0].params.viewer, viewer);
   }
 });
+
+test("R20 (K982; public-read R7): op=reviewcopy's in-band hash is inbandQuartet's over the same bytes — the answer as served without its `inband` key — on the recipient's door and the member's, with the floors from the store's required_strength (negative control: a byte changed in the answer changes the hash)", async () => {
+  const { inbandQuartet } = await import("../../../src/inband.mjs");
+  const copy = { ok: true, draft: "D1", updated_by: "iris", required_strength: "B", text: "the draft's words",
+                 last_change: { kind: "comment", at: "2026-08-01T12:00:00.123Z", by: "ann" }, comments: [{ by: "ann", text: "ok" }] };
+  const w = world({ answer: (c) => (c.route === "reviewcopy" ? reply({ ok: true, result: copy }) : null) });
+  for (const req of [{ params: { secret: "s3cret" } }, { token: w.S.ann, params: { draft: "D1" } }]) {
+    const r = await call(w.env, { op: "reviewcopy", ...req });
+    assert.equal(r.status, 200, r.text.slice(0, 200));
+    const { inband, ...rest } = r.json;
+    const { quartet } = await inbandQuartet({ subject: rest, over: inband.hash.over, date: copy.last_change.at,
+                                              author: copy.updated_by, bar: copy.required_strength });
+    assert.deepEqual(inband, quartet, JSON.stringify(req));
+    assert.equal(Object.hasOwn(rest, "required_strength"), false, "the store's bar is read into the floors, not served twice");
+    const { quartet: other } = await inbandQuartet({ subject: { ...rest, text: rest.text + "." }, over: inband.hash.over });
+    assert.notEqual(other.hash.sha256, inband.hash.sha256);
+  }
+});
