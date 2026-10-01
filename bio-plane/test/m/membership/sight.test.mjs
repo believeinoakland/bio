@@ -209,3 +209,30 @@ test("R77 existenceAct: C-70.1 (id and name only) at EXISTENCE; null at FULL, at
   assert.deepEqual(w.m.projectJoin({ projectId: "PROJ-H", by: "cal", viewer: V("cal") }), ex);
   assert.deepEqual(w.m.projectOwnerAdd({ projectId: "PROJ-H", handle: "cal", by: "cal", viewer: V("cal") }), ex);
 });
+
+test("R43 R44 R80 R76 N357: the founder's member:admin is at FULL sight of every project, as the bare admin is, and names the member admin", async () => {
+  const w = await world().group("ann", "cal");
+  w.project("PROJ-H", "Hidden H");
+  w.project("PROJ-D", "Discoverable D");
+  w.project("PROJ-M", "Machine M");
+  for (const p of ["PROJ-H", "PROJ-D"]) w.m.projectClaimOwner({ projectId: p, memberId: "ann" });
+  w.m.projectVisibilitySet({ projectId: "PROJ-D", setting: "discoverable", by: "ann", viewer: V("ann") });
+  for (const v of ["admin", V("admin")])
+    for (const p of ["PROJ-H", "PROJ-D", "PROJ-M"]) {
+      assert.equal(w.m.sight(p, v), Membership.SIGHT_FULL, `${v} ${p}`);
+      assert.equal(w.m.inSight(p, v), true, `${v} ${p}`);
+      assert.equal(w.m.existenceAct(p, v), null, `${v} ${p}`);
+    }
+  assert.deepEqual([viewerPredicate("admin").member, viewerPredicate(V("admin")).member], [null, "admin"]);
+  assert.deepEqual([viewerPredicate("admin").scope, viewerPredicate(V("admin")).scope], ["member", "member"]);
+  assert.equal(w.m.positionalMember(V("admin")), "admin");
+  assert.equal(w.m.positionalMember("admin"), null);
+  /* the directory lists what a member sees below FULL: for the founder, nothing; the bare spelling names no member (R48) */
+  assert.deepEqual(w.m.projectDirectory({ viewer: V("admin") }).projects, []);
+  assert.equal(w.m.projectDirectory({ viewer: "admin" }).reason, "PROJECT_DIRECTORY_NEEDS_A_MEMBER");
+  /* sight is not authority: the founder's spellings hold no position in a project (R55, R60) */
+  assert.equal(w.m.projectAuthority("PROJ-H", V("admin"), "joined", "an act").code, "PROJECT_ACT_NOT_A_PARTICIPANT");
+  /* no other member id is widened: a member named like no roster row still sees no project */
+  assert.equal(w.m.inSight("PROJ-H", V("admin2")), false);
+  assert.equal(w.m.inSight("PROJ-H", V("Admin")), false);
+});

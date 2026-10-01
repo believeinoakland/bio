@@ -84,7 +84,7 @@ test("R16 enroll: refusals in order; success activates, stamps the member, spend
   assert.deepEqual([row.status, row.status_by, row.handle, row.cover, row.role, row.invite_hash, row.capabilities],
     ["active", "ann", "ann-h", "c", "member", null, JSON.stringify(["publish"])]);
   assert.equal((await w.m.enroll({ invite: a.invite, handle: "again", password: "x".repeat(12) })).reason, "NO_SUCH_INVITATION");
-  assert.equal((await w.m.login({ role: "member:ann", password: "x".repeat(12) })).ok, true);
+  assert.equal(w.creds.passwords.get("member:ann"), "x".repeat(12), "the password was set through R95's setter");
 });
 
 test("R17 memberList: every stamp, expertise as R24; cover only under the administer stamp", async () => {

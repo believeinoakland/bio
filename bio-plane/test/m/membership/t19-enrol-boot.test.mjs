@@ -9,12 +9,14 @@ import { Membership, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs
 
 /* An invitation for `ann`, issued in a group with two administrators. */
 async function invited(setter = undefined) {
-  const w = await world().group();
+  const w = world({ omit: ["setter"] });
   const calls = [];
   let behave = async (a) => ({ ok: true, role: a.role });
   if (setter !== undefined) setter(w);
   else assert.deepEqual(w.m.registerPasswordSetter(async (a) => { calls.push(a); return behave(a); }),
     { ok: true, module: "credentials" });
+  await w.group();
+  calls.length = 0;
   const add = await w.m.memberAdd({ memberId: "ann", cover: "cover of ann", by: "admin" });
   assert.equal(add.ok, true);
   return { w, invite: add.invite, calls, set: (fn) => { behave = fn; } };
@@ -25,7 +27,10 @@ test("R95 R16 enroll sets the password through the registered setter, inside its
   const r = await w.m.enroll({ invite, handle: "ann", password: "ann-passphrase-x" });
   assert.deepEqual(r, { ok: true, memberId: "ann", handle: "ann" });
   assert.deepEqual(calls, [{ role: "member:ann", password: "ann-passphrase-x" }], "called once, with the member's role");
-  assert.equal(w.row(`SELECT role FROM credentials WHERE role='member:ann'`), null, "no password stored by membership");
+  assert.deepEqual(w.rows(`SELECT name FROM sqlite_master WHERE name IN ('credentials','sessions','signers')`), [],
+    "membership holds no credential table");
+  assert.deepEqual(w.rows(`SELECT * FROM members WHERE member_id='ann'`).map((r) => Object.values(r).includes("ann-passphrase-x")),
+    [false], "and no password in its own rows");
   assert.equal(w.m.memberFacts("ann").status, "active");
 });
 
@@ -49,6 +54,17 @@ test("R95 a setter that throws or answers ok:false is ENROL_NOT_RECORDED, C-96.1
   }
 });
 
+test("R95 with no setter registered, enroll is ENROL_NOT_RECORDED before any write, and the invitation stays live", async () => {
+  const w = world({ omit: ["setter"] });
+  const a = await w.m.memberAdd({ memberId: "ann", cover: "cover of ann", role: "admin", by: "class:admin" });
+  assert.equal(a.ok, true);
+  const before = JSON.stringify(w.rows(`SELECT * FROM members`));
+  const r = await w.m.enroll({ invite: a.invite, handle: "ann", password: "ann-passphrase-x" });
+  assert.deepEqual([r.ok, r.reason, r.check], [false, "ENROL_NOT_RECORDED", "C-96.18"]);
+  assert.equal(JSON.stringify(w.rows(`SELECT * FROM members`)), before);
+  assert.equal((await w.m.inviteLook({ invite: a.invite })).ok, true);
+});
+
 test("R95 R16 every refusal enroll answers before the write calls no setter", async () => {
   const { w, invite, calls } = await invited();
   await w.enrol("bob");
@@ -64,7 +80,7 @@ test("R95 R16 every refusal enroll answers before the write calls no setter", as
 });
 
 test("R95 R81 one registration: a non-function is LISTENER_MALFORMED, a second LISTENER_DECLARED naming the holder", async () => {
-  const w = world();
+  const w = world({ omit: ["setter"] });
   for (const bad of [null, undefined, "setPassword", 42, {}]) {
     const r = w.m.registerPasswordSetter(bad);
     assert.equal(r.ok, false);

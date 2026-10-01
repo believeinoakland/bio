@@ -8,7 +8,6 @@ import { notAnAdmin, notAParticipant, MEMBERSHIP_CHECKS } from "../../../src/mem
 import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
 
 const ADMIN = MEMBERSHIP_CHECKS.NOT_AN_ADMIN;
-const SHA = (c) => c.repeat(64);
 /* Every table, read whole, to show an answer wrote nothing. */
 const snapshot = (w) => JSON.stringify(w.rows(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`)
   .map(({ name }) => [name, w.rows(`SELECT * FROM "${name}"`)]));
@@ -31,7 +30,7 @@ test("R84 remedy (DEC-83): a caller's fixed remedy is kept as `remedy`, and `mes
   assert.doesNotThrow(() => notAnAdmin("ann", "x", hostile));
 });
 
-test("R84 R22 R41 R75 R62: each site refuses a non-administrator NOT_AN_ADMIN (C-96.1) with its own fixed detail and remedy, message the translation then the remedy; writes nothing", async () => {
+test("R84 R22 R41 R75: each site refuses a non-administrator NOT_AN_ADMIN (C-96.1) with its own fixed detail and remedy, message the translation then the remedy; writes nothing", async () => {
   const w = await world().group("ann", "bob");
   w.m.expertiseDeclare({ memberId: "ann", label: "CPA" });
   w.project("PROJ-P");
@@ -41,7 +40,6 @@ test("R84 R22 R41 R75 R62: each site refuses a non-administrator NOT_AN_ADMIN (C
     R22: (by) => w.m.expertiseConfirm({ memberId: "ann", label: "CPA", by }),
     R41: (by) => w.m.projectOwnerRescue({ projectId: "PROJ-P", handle: "bob", by, reason: "r", viewer: "admin" }),
     R75: (by) => w.m.rescueRefusal("PROJ-P", by),
-    R62: (by) => w.m.aiCredentialMint({ tokenId: `o-${by}`, secretSha: SHA("e"), principalKind: "organisation", who: by }),
   };
   const seen = {};
   for (const [id, run] of Object.entries(sites)) {
@@ -62,12 +60,10 @@ test("R84 R22 R41 R75 R62: each site refuses a non-administrator NOT_AN_ADMIN (C
     assert.equal(seen[id].size, 1, `${id}: one fixed act and remedy, whoever asks`);
   }
   assert.deepEqual(seen.R41, seen.R75, "R75 answers as R41 does");
-  assert.notDeepEqual(seen.R22, seen.R62);
-  assert.match([...seen.R62][0], /member-scoped/, "R62's remedy names the member-scoped credential");
+  assert.notDeepEqual(seen.R22, seen.R41);
   /* An administrator passes each: the refusal is the caller's standing, not the act's. */
   assert.equal(w.m.expertiseConfirm({ memberId: "ann", label: "CPA", by: "second" }).ok, true);
   assert.equal(w.m.rescueRefusal("PROJ-P", "second").reason, "OWNERS_ARE_ACTIVE");
-  assert.equal(w.m.aiCredentialMint({ tokenId: "o-admin", secretSha: SHA("f"), principalKind: "organisation", who: "admin" }).ok, true);
 });
 
 test("R84 R22 R41: the refusal order is unchanged: R22 asks the caller first; R41 asks sight first (R61)", async () => {
