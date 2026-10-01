@@ -129,6 +129,7 @@ K861 re-cut the held-code entries above (K842's "registers its own share and del
 - **L4** extraction
 - **L5** *observation-log* (K842, K861: `observations` and `leads` only)
 - **L6** *inquiry-grammar* (K850), *inquiry* (K842, K861; with K850's re-point), *basis-versions* (K842, K861), *run-productions* (K842, K861), *agent-worker* (K846, K861 (6))
+- **L8** *ratification* (K875: re-point `preflight.test.mjs` from membership's signer copies to credentials)
 - **L9** actions
 - **L11** *control-plane* (K846, K850, K861 (4): R42's step exported, the alias dropped, C-68.1 at one site), installer, *plane* (K842, K861; last)
 
