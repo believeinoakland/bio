@@ -1,4 +1,4 @@
-/* filings' refusal rows (requirements: `build/requirements/filings.md`, R1, R6–R8, R11, R13, R14, R21). DEC-49: every
+/* filings' refusal rows (requirements: `build/requirements/filings.md`, R1, R6–R8, R11, R13, R14, R21, R23, R26). DEC-49: every
  * refusal this module answers carries its code, its catalogue row and the member's translation. The family is C-115
  * (K248). A refusal another module answers passes through as it came: `actions.actionCorrespond`'s (R7), standards'
  * `NO_SUCH_STANDARD` (R14) and conformance's `NO_SUCH_DETERMINATION` (R21), each its owner's row. `NO_SUCH_ACTION` (R1,
@@ -15,7 +15,7 @@ export const FILINGS_CHECKS = Object.freeze({
     translation: "Nobody is named as the one preparing this draft. Every draft names who prepared it.",
   },
   ACTION_CLOSED: {
-    check: "C-115.3", where: at("filingPrepare", "is-filing-prepare"),
+    check: "C-115.3", where: at("#closed", "is-action-closed"),
     translation: "The action is resolved or abandoned, so nothing is prepared for it.",
   },
   FILING_TIER_UNDETERMINED: {
@@ -43,7 +43,7 @@ export const FILINGS_CHECKS = Object.freeze({
       + "exactly as one that does not exist.",
   },
   ALREADY_APPROVED: {
-    check: "C-115.9", where: at("filingApprove", "is-filing-approve"),
+    check: "C-115.9", where: at("#alreadyApproved", "is-already-approved"),
     translation: "This draft has already been approved, and an approval stands as recorded. Prepare a new draft to "
       + "approve another text.",
   },
@@ -122,6 +122,63 @@ export const FILINGS_CHECKS = Object.freeze({
   THEORY_NO_PROPOSER: {
     check: "C-115.27", where: at("theoryPropose", "is-theory-propose"),
     translation: "Nobody is named as the one proposing this theory. Every proposal names who made it.",
+  },
+  /* T18 (K608, K613 (3)): R23's communications and R26's template library. */
+  COMMUNICATION_NO_PREPARER: {
+    check: "C-115.28", where: at("communicationPrepare", "is-communication-prepare"),
+    translation: "Nobody is named as the one preparing this communication. Every draft names who prepared it.",
+  },
+  COMMUNICATION_TEXT_REFUSED: {
+    check: "C-115.29", where: at("communicationPrepare", "is-communication-prepare"),
+    translation: "The communication's words are empty, too long, or not readable as text.",
+  },
+  COMMUNICATION_PURPOSE_REFUSED: {
+    check: "C-115.30", where: at("communicationPrepare", "is-communication-prepare"),
+    translation: "Say what the communication is for, in at most 500 characters.",
+  },
+  MACHINE_CANNOT_SAVE_TEMPLATE: {
+    check: "C-115.31", where: at("templateSave", "is-template-save"),
+    translation: "Only a named member can add a template to the group's library. A machine may draft words; it never "
+      + "makes them the group's boilerplate.",
+  },
+  TEMPLATE_NAME_REFUSED: {
+    check: "C-115.32", where: at("templateSave", "is-template-save"),
+    translation: "Name the template in one line of at most 200 characters.",
+  },
+  TEMPLATE_KIND_REFUSED: {
+    check: "C-115.33", where: at("templateSave", "is-template-save"),
+    translation: "A template's kind is written as a kind is: lower-case letters, digits and underscores. Leave it out for "
+      + "a template of no kind.",
+  },
+  TEMPLATE_FROM_UNAPPROVED: {
+    check: "C-115.34", where: at("templateSave", "is-template-save"),
+    translation: "A template is kept from a draft a member has approved. Approve the draft first.",
+  },
+  TEMPLATE_TEXT_REFUSED: {
+    check: "C-115.35", where: at("templateSave", "is-template-save"),
+    translation: "The template's words are empty, too long, or not readable as text.",
+  },
+  TEMPLATE_KIND_TIER3: {
+    check: "C-115.36", where: at("templateSave", "is-template-save"),
+    translation: "This kind's tier is 3: it requires competent counsel, and no template is kept for it.",
+  },
+  TEMPLATE_NAME_TAKEN: {
+    check: "C-115.37", where: at("templateSave", "is-template-save"),
+    translation: "The group's library already holds a template by this name. Choose another name.",
+  },
+  NO_SUCH_TEMPLATE: {
+    check: "C-115.38", where: at("filingPrepare", "is-filing-prepare"),
+    translation: "There is no template by that id in the group's library that you can read here. One you may not see "
+      + "answers exactly as one that does not exist.",
+  },
+  TEMPLATE_KIND_MISMATCH: {
+    check: "C-115.39", where: at("filingPrepare", "is-filing-prepare"),
+    translation: "The template named was kept for another kind of action. Name one kept for this kind, or for none.",
+  },
+  TEMPLATE_NOT_NAMED: {
+    check: "C-115.40", where: at("filingPrepare", "is-filing-prepare"),
+    translation: "The jurisdiction profile holds no template for this kind, but the group's library does: name the "
+      + "one to fill.",
   },
 });
 

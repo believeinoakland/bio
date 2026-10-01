@@ -44,7 +44,7 @@ Terms. An **action**, its document and its **clock entry** (`{text, description,
 
 - **R7** Every deadline carries the statute, order or commitment it comes from; no date is computed into the record; overdue is derived at read time, and a stored `overdue` status (I-11's mark, `actions` R33) is reported beside the derivation, never in place of it (Functional Architecture Layer 3 Function 5; Operational Principle 3).
 - **R8** Nothing reminds that no member asked for (DEC-69): a nearing deadline changes an item's position, colour or wording only, which is display and mints nothing here (DEC-94 (2)); "due within N days" is not new unless the member asked for it; no outside channel (email, push) is used (DEC-94 (3)). A machine never sets, changes or answers a reminder, and this module never adds, removes or re-dates a clock entry (`actions` R33).
-- **R9** Every read answers an invisible action as an absent one. `action_clock_proposals` and the reminders' table are this module's, keyed by `bundle_id` and declared to purge (K4, K23). No place is named in this module's behaviour or outward text; its tests include the test profile (`build/layers.md`, rule 3). *(not yet met: `action_clock_proposals` is declared in `actions`' `ACTIONS_TABLES` until the split's job moves it)*
+- **R9** Every read answers an invisible action as an absent one. `action_clock_proposals` and the reminders' table are this module's, keyed by `bundle_id` and declared to purge (K4, K23). No place is named in this module's behaviour or outward text; its tests include the test profile (`build/layers.md`, rule 3).
 
 ### Satisfies
 

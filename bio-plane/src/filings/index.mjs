@@ -1,24 +1,30 @@
 /* filings — what the group sends, prepared from the record (requirements: `build/requirements/filings.md`; Design
- * Requirement 8 as amended 2026-09-26, K13, K102). For an action whose governing tier is 1 or 2, a draft pre-filled
- * from the record into the profile's template for its kind, every filled blank naming its source (R1–R5); a member
- * approves it and records that it was sent (R6, R7). For Tier 3, a counsel packet for counsel the group names, marked
- * as prepared for counsel's review, never published and never fileable (R8–R12). Candidate theories are proposals,
- * stored apart and labelled (R14). The evidence package's available-actions block is registered with `publication`
- * (R15) and answered on its own for `escalation` (R21). The AI prepares; a member approves, files and records it.
+ * Requirement 8 as amended 2026-09-26, K13, K102; the Action layer, K608, K613 (3)). For an action whose governing tier
+ * is 1 or 2, a draft pre-filled from the record into the profile's template for its kind, or into a template of the
+ * group's library a member kept (R26), every filled blank naming its source (R1–R5); a member approves it and records
+ * that it was sent (R6, R7). For Tier 3, a counsel packet for counsel the group names, marked as prepared for counsel's
+ * review, never published and never fileable (R8–R12). A communication to anyone is drafted without a template and goes
+ * the same way (R23). Approved bytes and exports carry the in-band quartet (R22); whatever is prepared from an action
+ * resting on a premise override says so first (R24); exhibits show their grades beside the venue's standard (R25).
+ * Candidate theories are proposals, stored apart and labelled (R14). The evidence package's available-actions block is
+ * registered with `public-read` (R15) and answered on its own for `escalation` (R21). The AI prepares; a member
+ * approves, files and records it.
  *
  * A NEW MODULE (T8, layer 9): nothing moved into it and it writes no legacy file. Its tables are `./schema.mjs`; a
- * deadline's date is `./dates.mjs`.
+ * deadline's date is `./dates.mjs`, counted by `action-clocks`' rule.
  *
  * REACHED as `filingsOf(host, deps)` (K61): one instance per host, created on the first call with `deps`. At creation it
  * creates its tables, declares them to record-core's purge (K23, R19) and registers the available-actions block with
- * `publication` (its R36; R15 here). `deps` (the layer-2 to layer-8 modules are reached through their factories on the
- * same host unless given; the layer-9 modules are given, never imported):
+ * `public-read` (its R8; R15 here). `deps` (each module is reached through its factory on the same host unless given):
  *   record, publication, provenance, content   `getSetting`, `allocId`, `transact`, `textAtSha`, `declarePurge`;
- *                                   `registerEvidenceBlock`, `publishedEditionsOf`; `attestationsOf`; `contentRow`,
+ *                                   `publishedEditionsOf`; `attestationsOf`, `captureGrade` (R25); `contentRow`,
  *                                   `captureFor`.
- *   membership     `inSight` (its R80): the sight of the project a draft or packet draws on (R11, R13, K316).
- *   actions        `actionRead` (its R29), `actionCorrespond` (R15, R16), `clockPropose` (R32), from `actionsOf` (K253);
- *                  and its module-level `noSuchAction` (R43), through which every missing action is answered (N217).
+ *   publicRead     `registerEvidenceBlock` (its R8; R15), from `publicReadOf` (K651).
+ *   strength       `projectBar` (its R14): the floors of R22's quartet.
+ *   membership     `inSight` (its R80): the sight of the project a draft, packet or template draws on (R11, R13, K316).
+ *   actions        `actionRead` (its R29), `actionCorrespond` (R15, R16), from `actionsOf` (K253); and its module-level
+ *                  `noSuchAction` (R43), through which every missing action is answered (N217).
+ *   actionClocks   `clockPropose` (its R2, was actions R32; K617), from `actionClocksOf`.
  *   conformance    `determinationRead` (its R9), `determinationsFor` (R11), from `conformanceOf` (K252).
  *   standards      `standardRead` (its R5), `inForce` (R7), from `standardsOf(host, deps)` (K251).
  *   consequences   `consequencesOf` (its R7), from `consequencesModule(host, deps)` (K171 (17), K250).
@@ -34,20 +40,25 @@
  * `project_id`, `ratified_at`, its R40); provenance's `register` and `captured_locators` (its R48).
  *
  * No place, law, venue, template or legal organisation is named here (R20): every one comes from the active
- * jurisdiction profiles' combined view (`jurisdictions.combine` over record-core's `jurisdiction_profiles`). */
+ * jurisdiction profiles' combined view (`jurisdictions.combine` over record-core's `jurisdiction_profiles`), or from
+ * the group's own library (R26). */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf } from "../membership/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { contentOf } from "../content/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
+import { publicReadOf } from "../public-read/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
+import { strengthOf } from "../strength/index.mjs";
+import { inbandQuartet } from "../inband.mjs";
 import { standardsOf } from "../standards/index.mjs";
 import { conformanceOf } from "../conformance/index.mjs";
 import { consequencesModule } from "../consequences/index.mjs";
 import { actionsOf, noSuchAction } from "../actions/index.mjs";
+import { actionClocksOf } from "../action-clocks/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
-import { isMachineIdentity, proposalLabel, parseFrontmatter, MACHINE_CLASS_PREFIX,
+import { isMachineIdentity, proposalLabel, parseFrontmatter, MACHINE_CLASS_PREFIX, BASIS_GRADES,
          sha256HexSync } from "../../checks/bio-checks.mjs";
 import { FILINGS_TABLES, migrateFilings } from "./schema.mjs";
 import { rowOf } from "./checks.mjs";
@@ -60,7 +71,9 @@ export { deadlineDate, COUNTED_FROM } from "./dates.mjs";
 /** R3: the blanks this module fills, a closed set; a template's `{{name}}` outside it is left unfilled and says so. */
 export const FILING_BLANKS = Object.freeze({
   counterparty_role: "the official role of the office the action is addressed to (the action's counterparty)",
-  counterparty_body: "the body of that office",
+  counterparty_body: "the body of that office (an office's arm only)",
+  counterparty_organisation: "the organisation of a reporter, an organisation or another group the action is addressed to",
+  counterparty_description: "the audience the action is addressed to, as the action describes it",
   act: "what the government did, as the action's determination states it",
   act_date: "when it did it (a date, or a period from and to)",
   standards: "the citations of the standards the determination names",
@@ -89,6 +102,28 @@ export const FILINGS_FOR_MAX = 200;
 /** R10: the marking every section, the packet's head and every export carry. */
 export const counselMarking = (counsel) =>
   `Prepared for review by ${counsel.name}, ${counsel.organisation}. Not legal advice. Not for filing.`;
+/** R24: the words a draft, packet or communication prepared from an action carrying a premise override opens with. */
+export const OVERRIDE_HEAD = "Rests on an unestablished premise:";
+/** R24: the disclosure line, from the override as the action's read answers it (actions R8, R25). */
+export const overrideDisclosure = (o) =>
+  `${OVERRIDE_HEAD} ${o.reason} (stated by ${o.by ?? "an author the record does not name"} at ${o.at ?? "a time the record does not state"})`;
+/** R23: the longest purpose, in characters. */
+export const COMMUNICATION_PURPOSE_MAX = 500;
+/** R26: the longest template name, in characters; and the templates one `templatesFor` read lists. */
+export const TEMPLATE_NAME_MAX = 200;
+export const TEMPLATES_FOR_MAX = 200;
+/** R22: the line that opens the in-band block below the text of approved or exported bytes. */
+export const INBAND_RULE = "---- in-band ----";
+/** R22: the in-band block appended to bytes leaving the instance: the quartet's hash, date, author and both floors,
+ *  in words and as JSON, so a reader holding only the bytes can re-hash the text above the rule. */
+export function inbandBlock(q) {
+  const f = q.floors || {};
+  return [INBAND_RULE, `Format: ${q.format}.`,
+          `Hash: sha256 ${q.hash.sha256} over ${q.hash.over} (${q.hash.bytes} bytes; ${q.hash.canonical}).`,
+          `Date: ${q.date ?? "undetermined"}. Author: ${q.author ?? "undetermined"}.`,
+          `Floors: capture ${f.capture ?? "none"}, connection ${f.connection ?? "none"}. ${f.detail ?? ""}`.trimEnd(),
+          JSON.stringify(q), ""].join("\n");
+}
 /** R15: the sentence a Tier 3 kind carries in the evidence package. */
 export const COUNSEL_SENTENCE = "Such an action requires competent counsel: no template is offered for it, and the "
   + "group names counsel to evaluate it.";
@@ -113,24 +148,30 @@ const utf8 = (s) => new TextEncoder().encode(s).length;
 const WELL_FORMED = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
 /* DEC-49: a refusal of this module's own carries its code, its C-115 row and the member's translation; one another
    module answered (actions' correspondence refusals, R7) passes through as it came. */
-const withRow = (r) => {
+const withRowNow = (r) => {
   const row = r && r.ok === false && !r.check ? rowOf(r.reason) : null;
   return row ? { ...r, code: r.reason, check: row.check, translation: row.translation } : r;
 };
+/* R22: an approval and an export answer a promise (the in-band quartet's hash is crypto.subtle's); the row is added
+   when it settles. */
+const withRow = (r) => (r && typeof r.then === "function" ? r.then(withRowNow) : withRowNow(r));
 /** The services answered with DEC-49's rows. */
 const SERVICES = Object.freeze(["filingPrepare", "filingApprove", "filingRecordSent", "counselPacket", "counselPacketRead",
-                                "counselPacketExport", "filingsFor", "theoryPropose", "availableActions"]);
+                                "counselPacketExport", "filingsFor", "theoryPropose", "availableActions",
+                                "communicationPrepare", "templateSave", "templatesFor"]);
+const KIND_RE = /^[a-z][a-z0-9_]*$/;
 const byDayThenSource = (a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : a.source < b.source ? -1 : a.source > b.source ? 1 : 0);
 
 export class Filings {
   #deps;
 
-  constructor({ storage, record, host = null, membership = null, publication = null, provenance = null, content = null,
-                actions = null, conformance = null, standards = null, consequences = null, promotion = null,
+  constructor({ storage, record, host = null, membership = null, publication = null, publicRead = null, provenance = null,
+                content = null,
+                actions = null, conformance = null, standards = null, consequences = null, promotion = null, strength = null, actionClocks = null,
                 producingGroup = null, profiles = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
-    this.#deps = { host, membership, publication, provenance, content, actions, conformance, standards, consequences, promotion };
+    this.#deps = { host, membership, publication, publicRead, provenance, content, actions, conformance, standards, consequences, promotion, strength, actionClocks };
     /* R3 (N331): the producing group is promotion's fact `producingGroup` (its R40), read as `fact` answers it; a
        function handed in (legacy-store's, until layer 10) is kept and may answer a value, null, or the fact's answer.
        Absent, `#group` asks promotion itself, and says so when no promotion module is reachable (N355: no refusal code
@@ -144,15 +185,18 @@ export class Filings {
   /* The earlier modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
   get membership() { return this.#deps.membership ||= (this.#deps.host ? membershipOf(this.#deps.host, { record: this.record }) : null); }
   get publication() { return this.#deps.publication ||= publicationOf(this.#deps.host); }
+  get publicRead() { return this.#deps.publicRead ||= publicReadOf(this.#deps.host, { publication: this.publication }); }
   get provenance() { return this.#deps.provenance ||= provenanceOf(this.#deps.host); }
   get content() { return this.#deps.content ||= contentOf(this.#deps.host); }
   get promotion() { return this.#deps.promotion ||= (this.#deps.host ? promotionOf(this.#deps.host) : null); }
+  get strength() { return this.#deps.strength ||= (this.#deps.host ? strengthOf(this.#deps.host) : null); }
   /* The layer-9 modules, each its own factory on the same host unless given (K253); with no host, absent, and every
      service that needs one refuses (K248). */
   get standards() { return this.#deps.standards ||= (this.#deps.host ? standardsOf(this.#deps.host) : null); }
   get conformance() { return this.#deps.conformance ||= (this.#deps.host ? conformanceOf(this.#deps.host) : null); }
   get consequences() { return this.#deps.consequences ||= (this.#deps.host ? consequencesModule(this.#deps.host) : null); }
   get actions() { return this.#deps.actions ||= (this.#deps.host ? actionsOf(this.#deps.host) : null); }
+  get actionClocks() { return this.#deps.actionClocks ||= (this.#deps.host ? actionClocksOf(this.#deps.host) : null); }
 
   migrate() { migrateFilings(this.sql); }
 
@@ -191,7 +235,15 @@ export class Filings {
       state_history: Array.isArray(a.state_history) ? a.state_history.filter(isObj) : null,
       governing_laws: isObj(a.governing_laws) ? a.governing_laws : null,
       law: str(a.law),
+      premise_override: Filings.#override(a.premise_override),
     };
+  }
+
+  /* R24: the premise override an action carries (actions R8, shown in its read, R25: `{reason, by, at}`); null when it
+     carries none. */
+  static #override(o) {
+    if (!isObj(o) || !str(o.reason)) return null;
+    return { reason: str(o.reason), by: str(o.by), at: str(o.at) };
   }
 
   /* R1, R8, R13, R14: the one answer for an action that is absent, invisible, not an action, or unreadable because no
@@ -309,13 +361,24 @@ export class Filings {
   #values(action, det, hidden, entry, viewer, when) {
     const out = {};
     const none = (why) => ({ why });
+    /* actions R9: the addressee's arm decides which blanks it holds: an office its role and body, a reporter, an
+       organisation or another group its role and organisation, an audience its description. A blank its arm does not
+       hold is left unfilled, saying which arm the addressee is. */
     const cp = action.counterparty;
-    const cpNamed = cp && cp.state === "named";
-    const role = cpNamed ? str(cp.role) || str(cp.name) : null;
+    const arm = !cp ? null : cp.state === "named" ? (str(cp.kind) || "office") : str(cp.state);
     const cpWhy = !cp ? "the action states no counterparty" : cp.state === "undetermined"
       ? "the action's counterparty is undetermined" : "the action's counterparty names no such part";
-    out.counterparty_role = role ? { value: role, source: action.id } : none(cpWhy);
-    out.counterparty_body = cpNamed && str(cp.body) ? { value: str(cp.body), source: action.id } : none(cpWhy);
+    const notHeld = (part) => none(arm === "audience" ? `the action is addressed to an audience, which holds no ${part}`
+      : arm === "office" ? `the action is addressed to an office, which holds no ${part}`
+      : cp && cp.state === "named" ? `the action is addressed to a ${arm}, whose arm holds no ${part}` : cpWhy);
+    const held = (v, part) => (str(v) ? { value: str(v), source: action.id } : none(`the action's addressee states no ${part}`));
+    const named = cp && cp.state === "named";
+    out.counterparty_role = named ? held(str(cp.role) || str(cp.name), "role") : arm === "audience" ? notHeld("role") : none(cpWhy);
+    out.counterparty_body = arm === "office" ? held(cp.body, "body") : named || arm === "audience" ? notHeld("body") : none(cpWhy);
+    out.counterparty_organisation = named && arm !== "office" ? held(cp.organisation, "organisation")
+      : named || arm === "audience" ? notHeld("organisation") : none(cpWhy);
+    out.counterparty_description = arm === "audience" ? held(cp.description, "description")
+      : named ? notHeld("description") : none(cpWhy);
     const detWhy = hidden ? "the determination the action rests on is not one you may see"
       : !this.conformance ? "no module answers determinations here, so the record's value cannot be read"
       : "the action rests on no live determination, so the record holds no value for it";
@@ -384,16 +447,26 @@ export class Filings {
     return v ? { value: v, source: SOURCE } : { why: "no producing group is recorded for this instance" };
   }
 
-  /** R1–R5: a draft pre-filled from the record into the profile's template for the action's kind. */
-  filingPrepare({ action = null, preparer = null, viewer = null } = {}) {
+  /* R1, R8, R23: the one answer for an action that is resolved or abandoned: nothing is prepared for it. */
+  #closed(a) {
+    /* DEC-49 REGION is-action-closed */
+    if (CLOSED.includes(a.current_state))
+      return { ok: false, reason: "ACTION_CLOSED", action: a.id, state: a.current_state,
+               detail: `the action is ${a.current_state}; nothing is prepared for a closed action` };
+    /* END DEC-49 REGION is-action-closed */
+    return null;
+  }
+
+  /** R1–R5, R24–R26: a draft pre-filled from the record into the profile's template for the action's kind, or into a
+   *  template of the group's library the preparer names (R26). */
+  filingPrepare({ action = null, template = null, preparer = null, viewer = null } = {}) {
     const who = str(preparer);
     /* DEC-49 REGION is-filing-prepare */
     if (!who) return { ok: false, reason: "FILING_NO_PREPARER", detail: "no stamped preparer: a draft names who prepared it" };
     const a = this.#action(action, viewer);
     if (!a) return this.#noAction(action);
-    if (CLOSED.includes(a.current_state))
-      return { ok: false, reason: "ACTION_CLOSED", action: a.id, state: a.current_state,
-               detail: `the action is ${a.current_state}; nothing is prepared for a closed action` };
+    const closed = this.#closed(a);
+    if (closed) return closed;
     const v = this.#view();
     const gov = this.governingTier(a, v);
     if (gov.tier === "undetermined")
@@ -402,17 +475,35 @@ export class Filings {
     if (gov.tier === 3)
       return { ok: false, reason: "TIER3_COUNSEL_PACKET", action: a.id, governing: gov,
                detail: "the governing tier is 3: no filing is prepared; a member names counsel and assembles a counsel packet" };
-    const entry = v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((k) => k.kind === a.kind) : null;
+    const entry = v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((k) => k.kind === a.kind) || null : null;
     const conflicted = v.conflicts.some((c) => c.at === `action_kinds[${a.kind}].template`);
-    if (!entry || typeof entry.template !== "string" || !entry.template.trim())
+    let source;
+    if (str(template)) {
+      const t = this.#templateRow(template, viewer);
+      if (!t) return { ok: false, reason: "NO_SUCH_TEMPLATE", template: str(template),
+                       detail: "no template by that id in the group's library is readable here; one you may not see answers the same" };
+      if (t.kind && t.kind !== a.kind)
+        return { ok: false, reason: "TEMPLATE_KIND_MISMATCH", template: t.template_id, template_kind: t.kind, kind: a.kind,
+                 detail: `the template was kept for ${t.kind}, and this action is ${a.kind}` };
+      source = { text: t.text, from: "group", template: t.template_id, name: t.name, source: `template:${t.template_id}` };
+    } else if (entry && typeof entry.template === "string" && entry.template.trim()) {
+      source = { text: entry.template, from: "profile", source: `profile:${entry.profile}/action_kinds/${entry.kind}/template` };
+    } else {
+      const held = this.#templatesSeen(a.kind, viewer, TEMPLATES_FOR_MAX);
+      if (held.length)
+        return { ok: false, reason: "TEMPLATE_NOT_NAMED", action: a.id, kind: a.kind,
+                 templates: held.map((t) => ({ template: t.template_id, name: t.name, kind: t.kind ?? null })),
+                 detail: "the profile holds no template for this kind, and the group's library holds the ones listed: name one" };
       return { ok: false, reason: "KIND_NO_TEMPLATE", action: a.id, kind: a.kind,
-               detail: conflicted ? "the active profiles give different templates for this kind, so none is given"
-                 : !v.view ? `${v.why}, so no template is held for this kind` : "the profile holds no template for this kind" };
+               detail: conflicted ? "the active profiles give different templates for this kind, so none is given, and the group's library holds none for it"
+                 : !v.view ? `${v.why}, so no template is held for this kind, and the group's library holds none for it`
+                 : "neither the profile nor the group's library holds a template for this kind" };
+    }
     /* END DEC-49 REGION is-filing-prepare */
     const when = this.#when();
     const { det, hidden } = this.#restsOn(a, viewer);
     const values = this.#values(a, det, hidden, entry, viewer, when);
-    const names = [...new Set([...entry.template.matchAll(BLANK_RE)].map((m) => m[1]))];
+    const names = [...new Set([...source.text.matchAll(BLANK_RE)].map((m) => m[1]))];
     const blanks = [], unfilled = [];
     for (const n of names) {
       const val = Object.prototype.hasOwnProperty.call(FILING_BLANKS, n) ? values[n]
@@ -421,10 +512,10 @@ export class Filings {
       else unfilled.push({ name: n, why: val.why });
     }
     const filled = new Map(blanks.map((b) => [b.name, b.value]));
-    let text = entry.template.replace(BLANK_RE, (_, n) => (filled.has(n) ? filled.get(n) : unfilledMarker(n)));
+    let text = source.text.replace(BLANK_RE, (_, n) => (filled.has(n) ? filled.get(n) : unfilledMarker(n)));
     let advisory = null;
     if (gov.tier === 2) {
-      advisory = str(entry.advisory);
+      advisory = entry ? str(entry.advisory) : null;
       if (advisory) text = `${advisory}\n\n${text}`;
       else {
         text = `${unfilledMarker("advisory")}\n\n${text}`;
@@ -432,19 +523,67 @@ export class Filings {
           + "disagree), so it is undetermined; a member writes one in before the draft can be approved" });
       }
     }
-    const venue = isObj(entry.venue) ? { name: entry.venue.name ?? null, how: entry.venue.how ?? null,
-                                         source: `profile:${entry.venue.profile || entry.profile}/action_kinds/${entry.kind}/venue` }
+    /* R24: the override's disclosure, first on the face. */
+    const disclosure = a.premise_override ? overrideDisclosure(a.premise_override) : null;
+    if (disclosure) text = `${disclosure}\n\n${text}`;
+    const venue = entry && isObj(entry.venue) ? { name: entry.venue.name ?? null, how: entry.venue.how ?? null,
+                                                  source: `profile:${entry.venue.profile || entry.profile}/action_kinds/${entry.kind}/venue` }
       : { state: "undetermined", why: "the profile gives this kind no venue" };
+    /* R25: the exhibits the draft rests on, each with its grade and co-attestation, read against the venue's standard. */
+    const standard = this.#venueStandard(v, a.kind);
+    const facts = det ? det.findings.map((f) => this.#fact(f, det)) : [];
+    const exhibits = this.#exhibits(this.#citesOf(a, det, facts), standard);
     const basis = this.#basisOf(a, det, gov);
+    const tpl = { from: source.from, source: source.source, ...(source.template ? { template: source.template, name: source.name } : {}) };
     const year = when.slice(0, 4);
     return this.record.transact(() => {
       const { id } = this.record.allocId("FIL", year);
       this.sql.exec(`INSERT INTO filing_drafts (filing_id, action_id, kind, tier, governing, text, blanks, unfilled,
-                       advisory, venue, preparer, prepared_at, basis) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-        id, a.id, a.kind, gov.tier, json(gov), text, json(blanks), json(unfilled), advisory, json(venue), who, when, json(basis));
+                       advisory, venue, preparer, prepared_at, basis, exhibits, venue_standard, disclosure, template)
+                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+        id, a.id, a.kind, gov.tier, json(gov), text, json(blanks), json(unfilled), advisory, json(venue), who, when, json(basis),
+        json(exhibits), json(standard), disclosure, json(tpl));
       return { ok: true, id, action: a.id, tier: gov.tier, governing: gov, text, blanks, unfilled,
-               ...(gov.tier === 2 ? { advisory } : {}), venue, label: proposalLabel(who, "filing_draft"),
+               ...(gov.tier === 2 ? { advisory } : {}), venue, template: tpl, disclosure,
+               exhibits, venue_standard: standard, label: proposalLabel(who, "filing_draft"),
                prepared_by: who, at: when, evidence: false, says: DRAFT_SAYS };
+    });
+  }
+
+  /* ---------------------------------------------------------------- R23: communicationPrepare */
+
+  /** R23, R24: a draft message, briefing or statement for an action whose addressee is anyone, from no template: the
+   *  words are the preparer's (a machine's from the published case and the plan). Stored apart, labelled as R5's
+   *  drafts are; R6's approval and R7's sending apply to it unchanged. */
+  communicationPrepare({ action = null, text = null, purpose = null, preparer = null, viewer = null } = {}) {
+    const who = str(preparer);
+    /* DEC-49 REGION is-communication-prepare */
+    if (!who) return { ok: false, reason: "COMMUNICATION_NO_PREPARER", detail: "no stamped preparer: a draft names who prepared it" };
+    const a = this.#action(action, viewer);
+    if (!a) return this.#noAction(action);
+    const closed = this.#closed(a);
+    if (closed) return closed;
+    if (typeof text !== "string" || !text.trim() || WELL_FORMED.test(text) || utf8(text) > FILING_TEXT_MAX)
+      return { ok: false, reason: "COMMUNICATION_TEXT_REFUSED", max_bytes: FILING_TEXT_MAX,
+               detail: `the communication's words must be non-empty UTF-8 text of at most ${FILING_TEXT_MAX} bytes` };
+    const why = typeof purpose === "string" ? purpose.trim() : "";
+    if (!why || why.length > COMMUNICATION_PURPOSE_MAX || WELL_FORMED.test(why))
+      return { ok: false, reason: "COMMUNICATION_PURPOSE_REFUSED", max: COMMUNICATION_PURPOSE_MAX,
+               detail: `say what the communication is for, in at most ${COMMUNICATION_PURPOSE_MAX} characters` };
+    /* END DEC-49 REGION is-communication-prepare */
+    const when = this.#when();
+    const { det } = this.#restsOn(a, viewer);
+    const basis = this.#basisOf(a, det, this.governingTier(a));
+    const disclosure = a.premise_override ? overrideDisclosure(a.premise_override) : null;
+    const body = disclosure ? `${disclosure}\n\n${text}` : text;
+    return this.record.transact(() => {
+      const { id } = this.record.allocId("FIL", when.slice(0, 4));
+      this.sql.exec(`INSERT INTO communication_drafts (filing_id, action_id, text, purpose, disclosure, preparer, prepared_at, basis)
+                     VALUES (?,?,?,?,?,?,?,?)`, id, a.id, body, why, disclosure, who, when, json(basis));
+      return { ok: true, id, action: a.id, form: "communication", text: body, purpose: why, disclosure,
+               addressee: a.counterparty ?? null, label: proposalLabel(who, "communication"), prepared_by: who, at: when,
+               evidence: false, says: "a draft communication: nobody has approved or sent it, and nothing is sent until a "
+                 + "member approves it and sends it by their own hand" };
     });
   }
 
@@ -452,7 +591,8 @@ export class Filings {
   #basisOf(a, det, gov) {
     return { tier: gov.tier, counterparty: a.counterparty ?? null, determination: det ? det.id : null,
              project: det ? det.project : null,
-             governing_laws: a.governing_laws && a.governing_laws.state === "stated" ? a.governing_laws.laws ?? [] : null };
+             governing_laws: a.governing_laws && a.governing_laws.state === "stated" ? a.governing_laws.laws ?? [] : null,
+             ...(a.premise_override ? { premise_override: a.premise_override } : {}) };
   }
 
   /* R6: what changed since the draft, by name; [] when nothing did. Read as the plane reads it, so a change the
@@ -475,17 +615,33 @@ export class Filings {
     return changed;
   }
 
-  /* A draft the viewer may see (through its action and the project it draws on), or null (R6, R7, R19; K316). */
+  /* A draft the viewer may see (through its action and the project it draws on), or null (R6, R7, R19; K316). A
+     communication (R23) is a draft of the same id space, `form` telling them apart. */
   #draft(id, viewer) {
     const f = str(id);
-    const d = f ? this.#one(`SELECT * FROM filing_drafts WHERE filing_id=?`, f) : null;
+    const filing = f ? this.#one(`SELECT * FROM filing_drafts WHERE filing_id=?`, f) : null;
+    const d = filing ? { ...filing, form: "filing" }
+      : f ? (((c) => (c ? { ...c, form: "communication" } : null))(this.#one(`SELECT * FROM communication_drafts WHERE filing_id=?`, f)))
+      : null;
     return d && this.#action(d.action_id, viewer) && this.#sees(parse(d.basis), viewer) ? d : null;
+  }
+
+  /* R6: a draft is approved at most once; asked before the approval and again as it is written, since computing the
+     in-band quartet yields (R22). */
+  #alreadyApproved(id) {
+    const held = this.#one(`SELECT approved_by, at FROM filing_approvals WHERE filing_id=?`, id);
+    /* DEC-49 REGION is-already-approved */
+    if (held) return { ok: false, reason: "ALREADY_APPROVED", filing: id, approved_by: held.approved_by, at: held.at,
+                       detail: "a draft is approved at most once; prepare a new draft to approve another text" };
+    /* END DEC-49 REGION is-already-approved */
+    return null;
   }
 
   /* ---------------------------------------------------------------- R6: filingApprove */
 
-  /** R6: a member approves the draft's text or an edited text, at most once; the approved text is the member's. */
-  filingApprove({ filing = null, text = undefined, author = null, viewer = null } = {}) {
+  /** R6, R22, R24: a member approves the draft's text or an edited text, at most once; the approved text is the
+   *  member's. The approved bytes carry R24's disclosure first where the draft did, and the in-band quartet (R22). */
+  async filingApprove({ filing = null, text = undefined, author = null, viewer = null } = {}) {
     const who = str(author);
     /* DEC-49 REGION is-filing-approve */
     if (!who || isMachineIdentity(who))
@@ -494,9 +650,8 @@ export class Filings {
                            : "no member is named as the one approving" };
     const d = this.#draft(filing, viewer);
     if (!d) return this.#noFiling(filing);
-    const held = this.#one(`SELECT approved_by, at FROM filing_approvals WHERE filing_id=?`, d.filing_id);
-    if (held) return { ok: false, reason: "ALREADY_APPROVED", filing: d.filing_id, approved_by: held.approved_by, at: held.at,
-                       detail: "a draft is approved at most once; prepare a new draft to approve another text" };
+    const held = this.#alreadyApproved(d.filing_id);
+    if (held) return held;
     const changed = this.#staleness(d);
     if (changed.length)
       return { ok: false, reason: "FILING_STALE", filing: d.filing_id, changed,
@@ -511,9 +666,16 @@ export class Filings {
     /* END DEC-49 REGION is-filing-approve */
     const at = this.#when();
     const sha = sha256HexSync(body);
-    this.sql.exec(`INSERT INTO filing_approvals (filing_id, action_id, text, sha, approved_by, at) VALUES (?,?,?,?,?,?)`,
-                  d.filing_id, d.action_id, body, sha, who, at);
-    return { ok: true, filing: d.filing_id, action: d.action_id, approved_by: who, at, sha, edited: body !== d.text,
+    const face = d.disclosure && !body.startsWith(d.disclosure) ? `${d.disclosure}\n\n${body}` : body;
+    const { bytes, inband } = await this.#stamped(face, {
+      what: `the approved ${d.form === "communication" ? "communication" : "filing"} ${d.filing_id}`, date: at, author: who,
+      project: (parse(d.basis) || {}).project ?? null });
+    const again = this.#alreadyApproved(d.filing_id);
+    if (again) return again;
+    this.sql.exec(`INSERT INTO filing_approvals (filing_id, action_id, text, sha, approved_by, at, inband) VALUES (?,?,?,?,?,?,?)`,
+                  d.filing_id, d.action_id, body, sha, who, at, json(inband));
+    return { ok: true, filing: d.filing_id, action: d.action_id, form: d.form, approved_by: who, at, sha, edited: body !== d.text,
+             bytes, inband, disclosure: d.disclosure ?? null,
              says: "approved by the member named: the text is theirs. The instance transmits nothing; a member files it "
                  + "by the venue's own means and records that it was sent" };
   }
@@ -560,8 +722,9 @@ export class Filings {
                  + "`proposed` is what a member may choose next" };
   }
 
-  /* R7: the next state a member may choose, and the clock entries actions offers for the kind's deadlines that start
-     at filing or receipt (its R32), each stored apart by actions, none written into the clock. */
+  /* R7: the next state a member may choose, and the clock entries action-clocks offers for the kind's deadlines that
+     start at filing or receipt (its R2, moved from actions R32 by K617), each stored apart there, none written into the
+     clock. */
   #proposed(d, who, viewer) {
     const a = this.#action(d.action_id, viewer);
     const state = a ? a.current_state : null;
@@ -570,8 +733,9 @@ export class Filings {
     const rules = v.view && Array.isArray(v.view.deadlines)
       ? v.view.deadlines.filter((r) => a && r.applies_to === a.kind && (r.starts === "filed" || r.starts === "received")) : [];
     const clocks = rules.map((r) => {
-      const p = this.actions && typeof this.actions.clockPropose === "function"
-        ? this.#call(() => this.actions.clockPropose({ target: d.action_id, rule: r.rule, proposer: who, viewer })) : null;
+      const c = this.actionClocks;
+      const p = c && typeof c.clockPropose === "function"
+        ? this.#call(() => c.clockPropose({ target: d.action_id, rule: r.rule, proposer: who, viewer })) : null;
       return { rule: r.rule, starts: r.starts, citation: r.citation ?? null,
                offered: p ?? { ok: false, reason: "UNAVAILABLE", detail: "no module offers a clock entry" } };
     });
@@ -608,8 +772,22 @@ export class Filings {
                                            ...(str(l.role) ? { role: str(l.role) } : {}), source })) };
   }
 
-  /* R9's exhibits: each capture a fact or event cites, with its digest, locator, capture time and attestations. */
-  #exhibits(cites) {
+  /* R9, R25: the captures a draft or packet rests on: each a fact's citation cites, each piece of evidence the act
+     names, and each artifact the action's correspondence holds, with the source that cites it. */
+  #citesOf(a, det, facts) {
+    const cites = [];
+    for (const f of facts) for (const c of f.citations || []) cites.push({ content_id: c.content_id, target: c.content_id ? null : c.target, source: f.source });
+    const act = det ? det.act || {} : {};
+    for (const cid of Array.isArray(act.evidence) ? act.evidence : []) cites.push({ content_id: str(cid), source: det.id });
+    for (const [i, e] of a.correspondence.entries())
+      if (str(e.artifact_sha)) cites.push({ capture_sha: str(e.artifact_sha), source: `${a.id}#${Number.isInteger(e.ord) ? e.ord : i}` });
+    return cites;
+  }
+
+  /* R9's exhibits: each capture a fact or event cites, with its digest, locator, capture time and attestations; R25:
+     its capture grade (provenance's `captureGrade`), whether it is co-attested, and how it reads against `standard`,
+     the venue's (`#venueStandard`). */
+  #exhibits(cites, standard) {
     const byCapture = new Map();
     for (const c of cites) {
       let sha = str(c.capture_sha);
@@ -624,15 +802,73 @@ export class Filings {
       const loc = this.#one(`SELECT address, retrieval_locator, first_retrieved FROM captured_locators WHERE capture_sha=?
                               ORDER BY first_retrieved LIMIT 1`, sha);
       const att = this.#call(() => this.provenance.attestationsOf(sha));
+      const attestations = att && att.ok ? { items: att.attestations, ...(att.undetermined ? { undetermined: att.undetermined } : {}), note: att.note }
+        : { items: [], undetermined: "the attestations could not be read" };
+      const grade = this.#grade(sha);
+      const co = Filings.#coattested(attestations);
       return { sha256: sha, cited_by: [...new Set(from)].sort(),
                locator: loc ? (loc.retrieval_locator || loc.address)
                  : reg ? `${reg.bundle_id}/${reg.path}` : null,
                ...(loc || reg ? {} : { locator_why: "the record holds no address or register row for this capture" }),
                captured_at: loc ? loc.first_retrieved : reg ? reg.registered : null,
                home: reg ? reg.bundle_id : null,
-               attestations: att && att.ok ? { items: att.attestations, ...(att.undetermined ? { undetermined: att.undetermined } : {}), note: att.note }
-                 : { items: [], undetermined: "the attestations could not be read" } };
+               attestations, grade, ...co, venue: Filings.#venueReading(grade, co.coattested, standard) };
     });
+  }
+
+  /* R25: the capture axis for one capture, as provenance answers it (its R24–R27, R51), never computed here. */
+  #grade(sha) {
+    const g = this.provenance && typeof this.provenance.captureGrade === "function" ? this.#call(() => this.provenance.captureGrade(sha)) : null;
+    if (!isObj(g)) return { grade: null, determined: false, why: "the capture grade could not be read, so it is undetermined" };
+    return { grade: g.grade ?? null, route: g.route ?? null, determined: g.determined === true, basis: g.basis ?? null,
+             ...(g.why ? { why: g.why } : {}) };
+  }
+
+  /* R25 (`jurisdictions` R39): a capture is co-attested when the record holds both its trusted timestamp (an RFC 3161
+     token, or the daemon era's `timestamp`) and its co-archive; undetermined when its attestations cannot be read. */
+  static #coattested(att) {
+    if (att.undetermined) return { coattested: null, coattested_why: `whether it is co-attested is undetermined: ${att.undetermined}` };
+    const kinds = new Set(att.items.map((x) => x && x.kind));
+    const stamp = kinds.has("rfc3161") || kinds.has("timestamp"), archive = kinds.has("co_archive");
+    return { coattested: stamp && archive,
+             ...(stamp && archive ? {} : { coattested_why: `the record holds ${stamp ? "a trusted timestamp but no co-archive"
+               : archive ? "a co-archive but no trusted timestamp" : "neither a trusted timestamp nor a co-archive"} for it` }) };
+  }
+
+  /* R25: the venue's standard of evidence for a kind (`jurisdictions` R39), or undetermined with why. */
+  #venueStandard(v, kind) {
+    const none = (why) => ({ state: "undetermined", why: `${why}, so the venue's standard is undetermined and the grades are shown alone` });
+    if (!v.view) return none(v.why);
+    if (v.conflicts.some((c) => c.at === `action_kinds[${kind}].evidence`)) return none("the active profiles give different evidence standards for this kind");
+    const entry = Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((k) => k.kind === kind) : null;
+    if (!entry || !isObj(entry.evidence)) return none("the profile states no standard of evidence for this kind's venue");
+    const ev = entry.evidence;
+    const list = (l) => (Array.isArray(l) ? l.filter(isObj).map((x) => ({ grade: x.grade, ...(x.coattested ? { coattested: true } : {}) })) : []);
+    return { state: "stated", standard: ev.standard, accepts: list(ev.accepts), contestable: list(ev.contestable),
+             source: `profile:${ev.profile || entry.profile}/action_kinds/${kind}/evidence` };
+  }
+
+  /* R25: how one exhibit reads against the venue's standard. Never a refusal: `flagged` marks an exhibit below every
+     grade the venue accepts, or at a grade the profile marks contestable, so counsel and members can prepare. */
+  static #venueReading(grade, coattested, standard) {
+    if (standard.state !== "stated") return { state: "undetermined", flagged: false, why: standard.why };
+    const letter = grade.grade;
+    if (!BASIS_GRADES.includes(letter))
+      return { state: "undetermined", flagged: false,
+               why: "the exhibit's capture grade is not measured, so it is not read against the venue's standard" };
+    const rank = (g) => BASIS_GRADES.indexOf(g);
+    const co = (e) => (!e.coattested ? true : coattested === true ? true : coattested === null ? null : false);
+    const contest = standard.contestable.find((e) => e.grade === letter && co(e) === true);
+    if (contest) return { state: "contestable", flagged: true, at: contest,
+                          says: `the venue admits grade ${letter}, and the profile marks it contestable: the opposition may contest it` };
+    const fits = standard.accepts.filter((e) => BASIS_GRADES.includes(e.grade) && rank(letter) <= rank(e.grade));
+    if (fits.some((e) => co(e) === true)) return { state: "accepted", flagged: false, says: "within the grades the venue accepts" };
+    if (fits.some((e) => co(e) === null))
+      return { state: "undetermined", flagged: false,
+               why: "the venue accepts this grade only co-attested, and whether the exhibit is co-attested is undetermined" };
+    return { state: "below", flagged: true,
+             says: fits.length ? "the venue accepts this grade only co-attested, and the exhibit is not co-attested"
+                               : "below every grade the venue accepts" };
   }
 
   /* R9's deadlines: every claim deadline of the view, its date from a recorded start event only. */
@@ -661,17 +897,20 @@ export class Filings {
     });
   }
 
-  /* R9: the six sections and the consequences, each item naming its source. */
+  /* R9: the six sections and the consequences, each item naming its source. R8, R24: for an action resting on a
+     premise override and no live determination, `det` is null: the facts section says in words that no determination
+     is held, and nothing is drawn from one. R25: each exhibit read against the venue's standard. */
   #assemble(a, det, viewer, marking) {
     const v = this.#view();
     const section = (title, items, extra = {}) => ({ title, marking, items, ...extra });
-    const facts = det.findings.map((f) => this.#fact(f, det));
+    const facts = det ? det.findings.map((f) => this.#fact(f, det)) : [];
     const events = [], undated = [];
-    const act = det.act || {};
+    const act = det ? det.act || {} : {};
     const actDay = realDate(act.at) || (isObj(act.period) ? realDate(act.period.from) : null);
     const push = (day, e) => (day ? events.push({ day, ...e }) : undated.push({ ...e, why: "the record states no date for it" }));
-    push(actDay, { event: `the act: ${str(act.description) || "undescribed"}`, source: det.id,
-                   ...(isObj(act.actor) ? { actor: { role: act.actor.role ?? null, body: act.actor.body ?? null } } : {}) });
+    if (det)
+      push(actDay, { event: `the act: ${str(act.description) || "undescribed"}`, source: det.id,
+                     ...(isObj(act.actor) ? { actor: { role: act.actor.role ?? null, body: act.actor.body ?? null } } : {}) });
     for (const f of facts) {
       if (!f.finding) continue;
       const r = f.case != null ? this.#one(`SELECT ratified_at FROM published_cases WHERE case_id=? AND edition=?`, f.case, Number(f.edition)) : null;
@@ -693,12 +932,8 @@ export class Filings {
       push(realDate(c.date), { event: `clock: ${str(c.text) || str(c.description) || "a deadline"} (${c.status ?? "undetermined"})`,
                                basis: c.basis ?? null, source: `${a.id}/clock[${i}]` });
     events.sort(byDayThenSource);
-    const cites = [];
-    for (const f of facts) for (const c of f.citations || []) cites.push({ content_id: c.content_id, target: c.content_id ? null : c.target, source: f.source });
-    for (const cid of Array.isArray(act.evidence) ? act.evidence : []) cites.push({ content_id: str(cid), source: det.id });
-    for (const [i, e] of a.correspondence.entries())
-      if (str(e.artifact_sha)) cites.push({ capture_sha: str(e.artifact_sha), source: `${a.id}#${Number.isInteger(e.ord) ? e.ord : i}` });
-    const standards = det.standards.map((s) => {
+    const standard = this.#venueStandard(v, a.kind);
+    const standards = (det ? det.standards : []).map((s) => {
       const sid = str(isObj(s) ? s.id : s);
       const r = sid ? this.#standard(sid, viewer) : null;
       if (!r) return { standard: null, withheld: "an object you may not see", source: det.id };
@@ -709,14 +944,19 @@ export class Filings {
     const theories = this.#rows(`SELECT * FROM theory_proposals WHERE action_id=? ORDER BY theory_id`, a.id).map((t) => ({
       theory_id: t.theory_id, candidate: true, theory: t.theory, remedy: t.remedy, standards: parse(t.standards) || [],
       why: t.why, label: proposalLabel(t.proposer, "theory"), at: t.at, source: t.theory_id }));
-    const cons = this.consequences && typeof this.consequences.consequencesOf === "function"
+    const cons = det && this.consequences && typeof this.consequences.consequencesOf === "function"
       ? this.#call(() => this.consequences.consequencesOf({ determination: det.id, viewer })) : null;
     return {
-      facts: section("Facts", facts),
+      facts: section("Facts", facts, det ? {} : { says: "no determination is held: the action rests on a premise a member "
+        + "overrode, so no finding is set out as a fact" }),
       chronology: section("Chronology", events.map(({ day, ...e }) => ({ date: day, ...e })),
                           { undated, order: "by date; events on the same day by source id" }),
-      exhibits: section("Exhibits", this.#exhibits(cites)),
-      standards: section("Standards", standards),
+      exhibits: section("Exhibits", this.#exhibits(this.#citesOf(a, det, facts), standard), {
+        venue_standard: standard,
+        says: standard.state === "stated" ? "each exhibit's capture grade and co-attestation, beside the venue's standard; "
+          + "an exhibit below it, or at a grade the profile marks contestable, is flagged, and nothing is refused for its grade"
+          : "each exhibit's capture grade and co-attestation, shown alone: the venue's standard is undetermined" }),
+      standards: section("Standards", standards, det ? {} : { says: "no determination is held, so no standard is set out" }),
       theories: section("Candidate theories and remedies", theories,
         { says: theories.length ? "each is a candidate for counsel to weigh, never the group's position or a conclusion"
                                 : "no candidate theory or remedy has been proposed for this action" }),
@@ -725,16 +965,19 @@ export class Filings {
                        : `${v.why}, so no claim deadline is known` }),
       consequences: section("Consequences of the breach",
         cons && cons.ok !== false ? [{ recorded: cons, source: det.id }] : [],
-        { says: cons && cons.ok !== false ? "as recorded, each part in its own state; nothing summed across states"
-                                          : "the consequences could not be read, so they are undetermined" }),
+        { says: !det ? "no determination is held, so no breach consequence is recorded against one"
+            : cons && cons.ok !== false ? "as recorded, each part in its own state; nothing summed across states"
+            : "the consequences could not be read, so they are undetermined" }),
     };
   }
 
   /* R12: what a version drew on. */
-  #packetBasis(det) {
+  #packetBasis(det, a) {
+    const over = a.premise_override ? { premise_override: a.premise_override } : {};
+    if (!det) return { determination: null, project: null, findings: [], standards: [], ...over };
     return { determination: det.id, project: det.project,
              findings: det.findings.filter((f) => isObj(f) && str(f.id)).map((f) => ({ id: f.id, case: f.case ?? null, edition: f.edition ?? null })),
-             standards: det.standards.map((s) => str(isObj(s) ? s.id : s)).filter(Boolean) };
+             standards: det.standards.map((s) => str(isObj(s) ? s.id : s)).filter(Boolean), ...over };
   }
 
   /** R12: each cause a version's basis changed since it was assembled, read now; nothing in the version changes. Asked
@@ -742,8 +985,9 @@ export class Filings {
    *  superseding standard it may not see is not named. */
   #basisChanged(basis, viewer) {
     const causes = [];
-    const d = this.#det(basis.determination, MACHINE_READER);
-    if (!d || !d.live) causes.push({ cause: "determination_superseded", determination: basis.determination,
+    const d = basis.determination ? this.#det(basis.determination, MACHINE_READER) : null;
+    if (!basis.determination) { /* R8: an overridden premise drew on no determination, so none can change */ }
+    else if (!d || !d.live) causes.push({ cause: "determination_superseded", determination: basis.determination,
                                      ...(d && d.superseded_by ? { by: d.superseded_by } : {}) });
     else if (d.basis_changed) causes.push({ cause: "determination_flagged", determination: basis.determination,
                                             causes: d.basis_changed.causes ?? [] });
@@ -789,28 +1033,30 @@ export class Filings {
                      detail: "counsel is named by a name and an organisation (contact optional), each one line of at most "
                            + `${COUNSEL_FIELD_MAX} characters` };
     const { det } = this.#restsOn(a, viewer);
-    if (!det) return { ok: false, reason: "NO_DETERMINATION", action: a.id,
-                       detail: this.conformance ? "the action rests on no live determination you may see, so there are no facts to assemble"
-                         : "no module answers determinations here, so no live determination can be read" };
+    if (!det && !a.premise_override)
+      return { ok: false, reason: "NO_DETERMINATION", action: a.id,
+               detail: this.conformance ? "the action rests on no live determination you may see, and states no premise override, so there are no facts to assemble"
+                 : "no module answers determinations here, so no live determination can be read" };
     /* END DEC-49 REGION is-counsel-packet */
     const marking = counselMarking(c);
     const sections = this.#assemble(a, det, viewer, marking);
-    const basis = this.#packetBasis(det);
+    const basis = this.#packetBasis(det, a);
+    const disclosure = a.premise_override ? overrideDisclosure(a.premise_override) : null;
     const at = this.#when();
     return this.record.transact(() => {
       const held = this.#one(`SELECT packet_id, MAX(version) AS v FROM counsel_packets WHERE action_id=? GROUP BY packet_id
                                ORDER BY packet_id LIMIT 1`, a.id);
       const id = held ? held.packet_id : this.record.allocId("CPK", at.slice(0, 4)).id;
       const version = held ? Number(held.v) + 1 : 1;
-      this.sql.exec(`INSERT INTO counsel_packets (packet_id, version, action_id, counsel, author, at, sections, basis)
-                     VALUES (?,?,?,?,?,?,?,?)`, id, version, a.id, json(c), who, at, json(sections), json(basis));
-      return { ok: true, id, version, action: a.id, head: this.#head(id, version, a.id, c, who, at, marking),
-               sections, marking, fileable: false, basis_changed: null };
+      this.sql.exec(`INSERT INTO counsel_packets (packet_id, version, action_id, counsel, author, at, sections, basis, disclosure)
+                     VALUES (?,?,?,?,?,?,?,?,?)`, id, version, a.id, json(c), who, at, json(sections), json(basis), disclosure);
+      return { ok: true, id, version, action: a.id, head: this.#head(id, version, a.id, c, who, at, marking, disclosure),
+               sections, marking, disclosure, fileable: false, basis_changed: null };
     });
   }
 
-  #head(id, version, action, counsel, author, at, marking) {
-    return { packet: id, version, action, counsel, assembled_by: author, at, marking, fileable: false,
+  #head(id, version, action, counsel, author, at, marking, disclosure = null) {
+    return { packet: id, version, action, counsel, assembled_by: author, at, ...(disclosure ? { disclosure } : {}), marking, fileable: false,
              says: "prepared for counsel's review from the record; it is never published and is not in a form that can be filed" };
   }
 
@@ -829,8 +1075,8 @@ export class Filings {
     const marking = counselMarking(counsel);
     const causes = this.#basisChanged(parse(r.basis) || {}, viewer);
     return { ok: true, id: r.packet_id, version: Number(r.version), action: r.action_id,
-             head: this.#head(r.packet_id, Number(r.version), r.action_id, counsel, r.author, r.at, marking),
-             sections: parse(r.sections), marking, fileable: false,
+             head: this.#head(r.packet_id, Number(r.version), r.action_id, counsel, r.author, r.at, marking, r.disclosure ?? null),
+             sections: parse(r.sections), marking, disclosure: r.disclosure ?? null, fileable: false,
              basis_changed: causes.length ? { causes } : null,
              versions: rows.map((x) => Number(x.version)) };
   }
@@ -849,7 +1095,8 @@ export class Filings {
 
   /** R10: the packet's bytes: one Markdown document, the marking on its head, every section and its manifest. */
   static render(v) {
-    const lines = [`# Counsel packet ${v.id}, version ${v.version}`, "", v.marking, "",
+    /* R24: the override's disclosure is the first line of the face. */
+    const lines = [...(v.disclosure ? [v.disclosure, ""] : []), `# Counsel packet ${v.id}, version ${v.version}`, "", v.marking, "",
                    `Action: ${v.action}. Assembled by ${v.head.assembled_by} at ${v.head.at}.`, ""];
     const item = (x) => `- ${JSON.stringify(x)}`;
     for (const s of Object.values(v.sections || {})) {
@@ -865,8 +1112,29 @@ export class Filings {
     return lines.join("\n");
   }
 
-  /** R11: hands a member the packet's bytes, and records who exported which version, when and for which counsel. */
-  counselPacketExport({ id = null, version = null, author = null, viewer = null } = {}) {
+  /* R22: the two floors the in-band quartet carries: the bar of the project a draft or packet draws on (`strength`
+     R14, as `review` and `case-authoring` read it); with no project (an overridden premise, no determination), or no
+     module answering, none is declared, and `floorsOf` says that is not a floor of zero. */
+  #bar(project) {
+    if (!str(project) || !this.strength || typeof this.strength.projectBar !== "function") return null;
+    const b = this.#call(() => this.strength.projectBar(str(project)));
+    return isObj(b) ? b : null;
+  }
+
+  /* R22: bytes leaving the instance: `face` (the text a member approved or the packet's rendering, R24's disclosure
+     first where it applies), then the in-band block, its hash over `face` by the one hasher (`inbandQuartet`). */
+  async #stamped(face, { what, date, author, project }) {
+    const { quartet } = await inbandQuartet({
+      subject: face,
+      over: `${what}: the text above the line "${INBAND_RULE}", without the line break before it, as a JSON string; `
+          + "hash JSON.stringify(text, null, 1) as UTF-8",
+      date, author, bar: this.#bar(project) });
+    return { bytes: `${face}\n${inbandBlock(quartet)}`, inband: quartet };
+  }
+
+  /** R11, R22: hands a member the packet's bytes, carrying the in-band quartet, and records who exported which version,
+   *  when and for which counsel, with the digest of the bytes handed over. */
+  async counselPacketExport({ id = null, version = null, author = null, viewer = null } = {}) {
     const who = str(author);
     /* DEC-49 REGION is-packet-export */
     if (!who || isMachineIdentity(who))
@@ -876,13 +1144,17 @@ export class Filings {
     const read = this.counselPacketRead({ id, version, viewer });
     if (!read.ok) return read;
     /* END DEC-49 REGION is-packet-export */
-    const bytes = Filings.render(read);
-    const sha = sha256HexSync(bytes);
     const at = this.#when();
-    this.sql.exec(`INSERT INTO counsel_packet_exports (packet_id, version, action_id, author, at, counsel, sha)
-                   VALUES (?,?,?,?,?,?,?)`, read.id, read.version, read.action, who, at, json(read.head.counsel), sha);
-    return { ok: true, id: read.id, version: read.version, action: read.action, format: "text/markdown", bytes, sha,
-             counsel: read.head.counsel, exported_by: who, at, marking: read.marking, fileable: false };
+    const row = this.#one(`SELECT basis FROM counsel_packets WHERE packet_id=? AND version=?`, read.id, read.version);
+    const project = (parse(row && row.basis) || {}).project ?? null;
+    const { bytes, inband } = await this.#stamped(Filings.render(read),
+      { what: `counsel packet ${read.id} version ${read.version}`, date: at, author: who, project });
+    const sha = sha256HexSync(bytes);
+    this.sql.exec(`INSERT INTO counsel_packet_exports (packet_id, version, action_id, author, at, counsel, sha, inband)
+                   VALUES (?,?,?,?,?,?,?,?)`, read.id, read.version, read.action, who, at, json(read.head.counsel), sha, json(inband));
+    return { ok: true, id: read.id, version: read.version, action: read.action, format: "text/markdown", bytes, sha, inband,
+             counsel: read.head.counsel, exported_by: who, at, marking: read.marking, disclosure: read.disclosure,
+             fileable: false };
   }
 
   /* ---------------------------------------------------------------- R13: filingsFor */
@@ -906,18 +1178,25 @@ export class Filings {
   filingsFor({ action = null, viewer = null } = {}) {
     const a = this.#action(action, viewer);
     if (!a) return this.#noAction(action);
+    /* R23: the action's communications are listed among its drafts, marked a communication. */
     const drafts = this.#seenRows(FILINGS_FOR_MAX + 1, viewer,
-      `SELECT d.filing_id, d.tier, d.preparer, d.prepared_at, d.basis, ap.approved_by, ap.at AS approved_at, ap.sha,
-              s.ord, s.sent_on, s.recorded_by, s.recorded_at
-         FROM filing_drafts d LEFT JOIN filing_approvals ap ON ap.filing_id=d.filing_id
+      `SELECT d.filing_id, d.tier, d.preparer, d.prepared_at, d.basis, d.form, d.purpose, ap.approved_by, ap.at AS approved_at,
+              ap.sha, s.ord, s.sent_on, s.recorded_by, s.recorded_at
+         FROM (SELECT filing_id, tier, preparer, prepared_at, basis, 'filing' AS form, NULL AS purpose
+                 FROM filing_drafts WHERE action_id=?
+               UNION ALL
+               SELECT filing_id, NULL AS tier, preparer, prepared_at, basis, 'communication' AS form, purpose
+                 FROM communication_drafts WHERE action_id=?) d
+         LEFT JOIN filing_approvals ap ON ap.filing_id=d.filing_id
          LEFT JOIN filing_sendings s ON s.filing_id=d.filing_id
-        WHERE d.action_id=? ORDER BY d.prepared_at, d.filing_id`, a.id);
+        ORDER BY d.prepared_at, d.filing_id`, a.id, a.id);
     const versions = this.#seenRows(FILINGS_FOR_MAX + 1, viewer,
       `SELECT * FROM counsel_packets WHERE action_id=? ORDER BY at, packet_id, version`, a.id);
     return {
       ok: true, action: a.id,
       drafts: drafts.slice(0, FILINGS_FOR_MAX).map((d) => ({
-        filing: d.filing_id, tier: d.tier, label: proposalLabel(d.preparer, "filing_draft"), at: d.prepared_at,
+        filing: d.filing_id, form: d.form, ...(d.form === "communication" ? { purpose: d.purpose } : { tier: d.tier }),
+        label: proposalLabel(d.preparer, d.form === "communication" ? "communication" : "filing_draft"), at: d.prepared_at,
         approval: d.approved_by ? { approved_by: d.approved_by, at: d.approved_at, sha: d.sha } : null,
         sending: d.recorded_by ? { ord: d.ord, sent_on: d.sent_on, recorded_by: d.recorded_by, at: d.recorded_at } : null })),
       drafts_truncated: drafts.length > FILINGS_FOR_MAX,
@@ -980,6 +1259,82 @@ export class Filings {
                says: "a candidate theory and remedy, stored apart: it is not the group's position, and it enters the next "
                    + "counsel packet version as a candidate" };
     });
+  }
+
+  /* ---------------------------------------------------------------- R26: the group's template library */
+
+  /** R26: a member keeps an approved draft (R6), or a derivative of its text, as a template of the group's, named, for
+   *  a kind or for none. No machine writes a template. */
+  templateSave({ from = null, text = undefined, name = null, kind = null, author = null, viewer = null } = {}) {
+    const who = str(author);
+    /* DEC-49 REGION is-template-save */
+    if (!who || isMachineIdentity(who))
+      return { ok: false, reason: "MACHINE_CANNOT_SAVE_TEMPLATE",
+               detail: who ? `'${who.slice(0, 60)}' is a machine identity: only a member adds to the group's library`
+                           : "no member is named as the one saving the template" };
+    const n = typeof name === "string" ? name.trim() : "";
+    if (!n || n.length > TEMPLATE_NAME_MAX || /[\n\r]/.test(n) || WELL_FORMED.test(n))
+      return { ok: false, reason: "TEMPLATE_NAME_REFUSED", max: TEMPLATE_NAME_MAX,
+               detail: `a template is named in one line of at most ${TEMPLATE_NAME_MAX} characters` };
+    const k = kind == null || kind === "" ? null : String(kind);
+    if (k !== null && !KIND_RE.test(k))
+      return { ok: false, reason: "TEMPLATE_KIND_REFUSED", kind: k.slice(0, 60),
+               detail: "a kind is lower-case letters, digits and underscores; leave it out for a template of no kind" };
+    const d = this.#draft(from, viewer);
+    if (!d) return this.#noFiling(from);
+    const approved = this.#one(`SELECT text FROM filing_approvals WHERE filing_id=?`, d.filing_id);
+    if (!approved) return { ok: false, reason: "TEMPLATE_FROM_UNAPPROVED", filing: d.filing_id,
+                            detail: "a template is kept from a draft a member has approved" };
+    const body = text === undefined || text === null ? approved.text : text;
+    if (typeof body !== "string" || !body.trim() || WELL_FORMED.test(body) || utf8(body) > FILING_TEXT_MAX)
+      return { ok: false, reason: "TEMPLATE_TEXT_REFUSED", max_bytes: FILING_TEXT_MAX,
+               detail: `a template's words must be non-empty UTF-8 text of at most ${FILING_TEXT_MAX} bytes` };
+    if (k !== null) {
+      const v = this.#view();
+      const entry = v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((e) => e.kind === k) : null;
+      if (entry && entry.tier === 3)
+        return { ok: false, reason: "TEMPLATE_KIND_TIER3", kind: k,
+                 detail: "the profile gives this kind tier 3: it requires competent counsel, and no template is kept for it" };
+    }
+    const taken = this.#one(`SELECT template_id FROM filing_templates WHERE name=?`, n);
+    if (taken) return { ok: false, reason: "TEMPLATE_NAME_TAKEN", name: n,
+                        detail: "the group's library already holds a template by this name" };
+    /* END DEC-49 REGION is-template-save */
+    const at = this.#when();
+    return this.record.transact(() => {
+      const { id } = this.record.allocId("TPL", at.slice(0, 4));
+      this.sql.exec(`INSERT INTO filing_templates (template_id, name, kind, text, from_filing, action_id, basis, author, at)
+                     VALUES (?,?,?,?,?,?,?,?,?)`, id, n, k, body, d.filing_id, d.action_id, d.basis, who, at);
+      return { ok: true, template: { id, name: n, kind: k, from: d.filing_id, derived: body !== approved.text, author: who, at,
+                                     blanks: [...new Set([...body.matchAll(BLANK_RE)].map((m) => m[1]))] },
+               says: "kept in the group's library: a member preparing a filing may name it; it is filled from the record as "
+                   + "the profile's template is, and nothing is filed until a member approves it" };
+    });
+  }
+
+  /* R26: a template the viewer may see (it is seen by whoever may see the project its approved draft drew on, K316), or
+     null: absent and unseen alike. */
+  #templateRow(id, viewer) {
+    const t = str(id) ? this.#one(`SELECT * FROM filing_templates WHERE template_id=?`, str(id)) : null;
+    return t && this.#sees(parse(t.basis), viewer) ? t : null;
+  }
+
+  /* R26: the templates of `kind` (or of none) the viewer may see, newest first, at most `n`. */
+  #templatesSeen(kind, viewer, n) {
+    return kind == null
+      ? this.#seenRows(n, viewer, `SELECT * FROM filing_templates ORDER BY at DESC, template_id DESC`)
+      : this.#seenRows(n, viewer, `SELECT * FROM filing_templates WHERE kind=? OR kind IS NULL ORDER BY at DESC, template_id DESC`, kind);
+  }
+
+  /** R26: the group's templates the viewer may see, for a kind (with those of no kind) or all, newest first. */
+  templatesFor({ kind = null, viewer = null } = {}) {
+    const k = kind == null || kind === "" ? null : String(kind);
+    const rows = this.#templatesSeen(k, viewer, TEMPLATES_FOR_MAX + 1);
+    return { ok: true, kind: k,
+             templates: rows.slice(0, TEMPLATES_FOR_MAX).map((t) => ({ template: t.template_id, name: t.name, kind: t.kind ?? null,
+               from: t.from_filing, author: t.author, at: t.at, text: t.text,
+               blanks: [...new Set([...t.text.matchAll(BLANK_RE)].map((m) => m[1]))] })),
+             truncated: rows.length > TEMPLATES_FOR_MAX };
   }
 
   /* ---------------------------------------------------------------- R15, R21: the available-actions block */
@@ -1084,7 +1439,7 @@ export function filingsOf(host, deps) {
     instances.set(host, f);
     f.migrate();
     record.declarePurge("filings", FILINGS_TABLES);
-    f.publication.registerEvidenceBlock("filings", "available_actions", (arg) => f.evidenceBlock(arg));
+    f.publicRead.registerEvidenceBlock("filings", "available_actions", (arg) => f.evidenceBlock(arg));
   }
   return f;
 }
@@ -1101,7 +1456,13 @@ export function filingsOps(f, url, body) {
   const q = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" ? body : {};
   return {
-    filingprepare: () => f.filingPrepare({ action: b.action ?? q("action"), preparer: q("author"), viewer: q("viewer") }),
+    filingprepare: () => f.filingPrepare({ action: b.action ?? q("action"), template: b.template ?? q("template"),
+                                           preparer: q("author"), viewer: q("viewer") }),
+    communicationprepare: () => f.communicationPrepare({ action: b.action ?? q("action"), text: b.text, purpose: b.purpose,
+                                                         preparer: q("author"), viewer: q("viewer") }),
+    templatesave: () => f.templateSave({ from: b.from ?? q("from"), text: b.text, name: b.name, kind: b.kind ?? null,
+                                         author: q("author"), viewer: q("viewer") }),
+    templates: () => f.templatesFor({ kind: q("kind"), viewer: q("viewer") }),
     filingapprove: () => f.filingApprove({ filing: b.filing ?? q("filing"), text: b.text, author: q("author"), viewer: q("viewer") }),
     filingsent: () => f.filingRecordSent({ filing: b.filing ?? q("filing"), at: b.at ?? q("at"), medium: b.medium ?? null,
                                            artifactSha: b.artifactSha ?? b.artifact_sha ?? null, account: b.account ?? null,

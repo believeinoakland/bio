@@ -12,6 +12,7 @@ import { consequencesModule } from "../../../src/consequences/index.mjs";
 import { standardsOf } from "../../../src/standards/index.mjs";
 import { conformanceOf } from "../../../src/conformance/index.mjs";
 import { actionsOf } from "../../../src/actions/index.mjs";
+import { publicReadOf } from "../../../src/public-read/index.mjs";
 import { get as profileOf } from "../../../../jurisdictions/index.mjs";
 
 export { V, NOW };
@@ -25,7 +26,7 @@ export const PROFILE = "test-port-ellery";
 
 const q = (v) => JSON.stringify(String(v));
 /** An action's bundle.md from `o` (`kind`, `risk_tier`, `state`, `resolution`, `counterparty`, `clock`, `legs`, `law`,
- *  `breach`, `state_history`). */
+ *  `breach`, `override` (a premise override's reason, actions R8), `state_history`). */
 export function actionMd(id, o) {
   const cp = o.counterparty;
   const lines = ["---", `id: ${id}`, "object_type: action", `title: ${id}`, `current_state: ${o.state ?? "active"}`,
@@ -38,6 +39,7 @@ export function actionMd(id, o) {
     ...(o.legs && o.legs.length ? ["action_basis:", ...o.legs.flatMap((l) => [`  - target: ${l.target}`, `    kind: ${l.kind}`])] : []),
     ...(o.law ? [`law: ${q(o.law)}`] : []),
     ...(o.breach ? ["breach: true"] : []),
+    ...(o.override ? ["premise_override:", `  reason: ${q(o.override)}`] : []),
     ...(o.state_history && o.state_history.length ? ["state_history:", ...o.state_history.flatMap((h) => [
         `  - timestamp: "${h.at}"`, `    from_state: ${h.from}`, `    to_state: ${h.to}`, `    blurb: ${q(h.reason ?? "moved")}`,
         `    author: ${h.by ?? V("olive")}`])] : []),
@@ -134,7 +136,7 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
   const D = determine();
   let n = 0;
   const x = {
-    ...w, w, f, proj, pin, actions, conformance, standards, consequences, groupRef, evidenceCid, S1, S2, D, declare,
+    ...w, w, f, pr: publicReadOf(w.host, { publication: w.p }), proj, pin, actions, conformance, standards, consequences, groupRef, evidenceCid, S1, S2, D, declare,
     determine, publishEdition, act,
     /* the world's own reads, over the cursor */
     row: (sq, ...a) => [...w.st.sql.exec(sq, ...a)][0] ?? null,
