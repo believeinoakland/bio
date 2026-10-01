@@ -1,6 +1,6 @@
 # provenance (T21)
 
-**Status** · session_01KT9cJX5DM9ZHLA7eKARs5v · depth 2 · WORKING · handled B2
+**Status** · session_01KT9cJX5DM9ZHLA7eKARs5v · depth 2 · COMPLETE · handled B2
 
 ## Completion (PROVENANCE #10)
 
