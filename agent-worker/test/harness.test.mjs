@@ -111,6 +111,9 @@ import { MEANING_ARM, REPORTING_LEVEL } from "../src/harness.mjs";
    why the member itself may not import the plane's module graph. */
 /* The run's vocabulary is run-rules' (the ai-runs split, K617, K649 (1)); the observation vocabulary it re-exports. */
 import { RUN_BOUNDS, RUN_ENDINGS, runStatusFor, OBSERVATION_LEVELS, OBSERVATION_STATES } from "../../bio-plane/src/run-rules/index.mjs";
+/* N421: the harness's exports, for the purity walk, and the member driven in this process for the op arms (A9). */
+import * as HARNESS from "../src/harness.mjs";
+import { driveMember, SUBSESSION_LIMIT } from "./inprocess.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -124,16 +127,9 @@ const PINNED_READS = ["affordances", "airun", "airunlog", "airunspawn", "availab
   "consequencesof", "determination", "meaningrows", "plan", "plans", "profiles", "publishededitions", "search",
   "standard", "versionchain", "whoami"];
 const PINNED_WRITES = ["airunclose", "airuntick", "capturerequest", "optionpropose", "suggest"];
-const HARNESS_SRC = readFileSync(fileURLToPath(new URL("../src/harness.mjs", import.meta.url)), "utf8");
 const WORKER_SRC_PATH = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const WORKER_SRC = readFileSync(WORKER_SRC_PATH, "utf8");
 const PLANE_INDEX = readFileSync(fileURLToPath(new URL("../../bio-plane/src/index.mjs", import.meta.url)), "utf8");
-
-/* The comment stripper FL-2 had to correct, reused rather than re-derived: a
-   naive "two slashes to end of line" DELETES a `http://` literal AND the rest of
-   its line, and an arm came back green over a source truncated by two thirds.
-   Requiring a non-`:` before the `//` keeps every real line comment. */
-const strip = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
 
 /* EVERY NESTED READ IN THIS FILE IS NULL-TOLERANT, AND THE CLASS WAS SWEPT
  * RATHER THAN THE TWO SITES THAT BIT.
@@ -147,8 +143,79 @@ const strip = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\
  * FL-2's A3 met the identical class one file over and its header says the same
  * thing: **the CLASS was swept, not the one site.** An assertion that throws
  * cannot NAME what it broke, and it takes every arm behind it with it. */
-const HARNESS_CODE = strip(HARNESS_SRC);
-const WORKER_CODE = strip(WORKER_SRC);
+
+/* N421 — THE HARNESS'S PURITY, MEASURED. Every function `src/harness.mjs` exports is called over a corpus of states
+   twice, with the network, the clock, randomness and the process environment TRAPPED (each access counted, none
+   answered from the outside world), and the two passes' answers compared byte for byte. Nothing is logged while the
+   traps are set. `uncalled` names any exported function the corpus does not reach, so a function added tomorrow
+   fails here until it is walked. */
+async function harnessPurity() {
+  const H = HARNESS;
+  const steps = [...Object.keys(H.CONTROL_FLOW), ...Object.keys(H.PLAN_FLOW), "nowhere"];
+  const budgets = [null, {}, { fetches: { allowed: 1, consumed: 1 } }, { proposals: { allowed: 2, consumed: 2 } },
+                   { wallclock: { allowed: 0, consumed: 9 } }];
+  const states = [];
+  for (const step of steps) for (const mode of ["check", "plan", "investigate", "", undefined])
+    for (const budget of budgets) for (const pass of [0, 1, 3]) for (const queue of [[], [{ name: "a" }]])
+      for (const refusal of [null, { code: "X" }]) for (const resumeAt of [null, "collect", "dedup"])
+        states.push({ step, mode, budget, pass, maxPasses: 3, queue, refusal, adjusted: refusal == null, resumeAt,
+                      reports: [{ level: "meaning", state: "LOOKED_ABSENT", observed_at: "log:1" }],
+                      candidates: [{ summary: "s", category: "c", subjects: [] }], observed: "PRESENT", level: "meaning" });
+  const plan = { project: "P", subjects: [{ subject: { kind: "outcome", determination: "D", standard: "S" } },
+                                          { kind: "inquiry", inquiry: "I", standards: ["S2"] }],
+                 options: [{ summary: "s", category: "c", subjects: [] }], proposals: [] };
+  const corpus = {
+    nextStep: () => states.map((x) => H.nextStep(x)),
+    nextPlanStep: () => states.map((x) => H.nextPlanStep(x)),
+    stopBecause: () => states.map((x) => H.stopBecause(x)),
+    planStopBecause: () => states.map((x) => H.planStopBecause(x)),
+    gateStep: () => states.map((x) => H.gateStep(x)),
+    advance: () => states.map((x) => H.advance(x, H.nextStep(x))),
+    planAdvance: () => states.map((x) => H.planAdvance(x, H.nextPlanStep(x))),
+    stepLog: () => states.map((x) => H.stepLog(x, H.nextStep(x))),
+    applyJudgement: () => states.map((x) => H.applyJudgement(x, { candidates: [], pass: x.pass ? 1 : undefined })),
+    applyPlanJudgement: () => states.map((x) => H.applyPlanJudgement(x, { candidates: [{ summary: "s", score: 1 }] })),
+    emptyLevelCandidates: () => states.map((x) => H.emptyLevelCandidates(x, "INQ-1")),
+    runContextTarget: () => [{ context: { type: "inquiry", id: "I" } }, { context: { type: "project", id: "P", questions: ["A"] } },
+                             { context: null }].map((x) => H.runContextTarget(x)),
+    resumableState: () => states.map((x) => H.resumableState(x)),
+    stateBytes: () => states.map((x) => H.stateBytes(x)),
+    publishableState: () => states.map((x) => H.publishableState(x, 300, x.mode === "plan" ? H.PLAN_FLOW : H.CONTROL_FLOW)),
+    resumeFrom: () => states.map((x) => H.resumeFrom(x, H.flowFor(x.mode))),
+    resumeTargets: () => [H.resumeTargets(H.CONTROL_FLOW), H.resumeTargets(H.PLAN_FLOW)],
+    flowFor: () => ["check", "plan", "x"].map((m) => Object.keys(H.flowFor(m))),
+    canonical: () => states.map((x) => H.canonical(x)),
+    adjustedFrom: () => states.map((x) => H.adjustedFrom(x.refusal, x.queue[0] ?? null)),
+    proposalKey: () => states.map((x) => H.proposalKey(x.candidates[0])),
+    planDedup: () => [H.planDedup(states[0].candidates, plan), H.planDedup([], null)],
+    planSubjectReads: () => [H.planSubjectReads(plan), H.planSubjectReads(null)],
+    earlierPlans: () => [H.earlierPlans({ plans: [{ id: "A", project: "P" }, { id: "B", project: "Q" }] }, "P", "B")],
+    whyWithUndetermined: () => [H.whyWithUndetermined("why", [{ op: "plan", id: "X", code: "C" }]),
+                                H.whyWithUndetermined("w".repeat(900), [])],
+  };
+  const exported = Object.entries(H).filter(([, v]) => typeof v === "function").map(([k]) => k);
+  const uncalled = exported.filter((k) => !corpus[k]);
+  const trapped = { fetch: 0, clock: 0, random: 0, process: 0 };
+  const saved = { fetch: globalThis.fetch, now: Date.now, Date: globalThis.Date, random: Math.random,
+                  process: globalThis.process };
+  const RealDate = Date;
+  let calls = 0;
+  const pass = () => JSON.stringify(Object.keys(corpus).map((k) => { const r = corpus[k](); calls += Array.isArray(r) ? r.length : 1; return r; }));
+  let first, second;
+  try {
+    globalThis.fetch = () => { trapped.fetch += 1; throw new Error("the harness may not fetch"); };
+    Date.now = () => { trapped.clock += 1; return 0; };
+    globalThis.Date = new Proxy(RealDate, { construct() { trapped.clock += 1; return new RealDate(0); } });
+    Math.random = () => { trapped.random += 1; return 0.5; };
+    globalThis.process = new Proxy(saved.process, { get(t, k) { trapped.process += 1; return t[k]; } });
+    first = pass();
+    second = pass();
+  } finally {
+    globalThis.fetch = saved.fetch; Date.now = saved.now; globalThis.Date = saved.Date; Math.random = saved.random;
+    globalThis.process = saved.process;
+  }
+  return { calls, uncalled, trapped, first, second };
+}
 
 /* ================================================================
  * PART A · THE TABLE, PURE AND EXHAUSTIVE
@@ -383,71 +450,33 @@ console.log("\n--- A6 · SK-4's gate is a ROW in this table, not a sentence in a
                budget: { fetches: { allowed: 1, consumed: 9 } } }).bound, "mode-not-deployed");
 }
 
-console.log("\n--- A6b · THE HEADER AND THE PLANE'S CATALOGUE AGREE, ASSERTED IN BOTH DIRECTIONS (FL-7) ---");
+console.log("\n--- A6b · THE GATE'S ENDING AND THE PLANE'S CATALOGUE AGREE, FOR EVERY MODE IT REFUSES (FL-7) ---");
 {
-  /* WHY THIS ARM EXISTS, and it is a receipt rather than a precaution. From FL-3
-     until FL-7 this file's header said a refused run "terminates on
-     `mode-not-deployed`" while the code closed on `cancelled`, and
-     `mode-not-deployed` was defined NOWHERE — it appeared exactly once in the
-     whole repository, in that comment. Two failures, and NEITHER was catchable:
-     a comment naming a value nothing defines, and a gate producing a value the
-     comment contradicts. **One direction of assertion would have caught one of
-     them.** Both directions are asserted here, and they fail independently.
-
-     THE EXPECTATION IS THE PLANE'S OWN SOURCE, NEVER A LITERAL RE-TYPED HERE.
-     A6's LEVELS pin (just above) is the precedent and the reason is the same:
-     an expected set derived from the thing under test moves with it and proves
-     nothing — three items shipped exactly that defect on 2026-08-10. So the
-     catalogue is PARSED out of `bio-plane/src/airun.mjs`, the header is READ as
-     text out of `../src/harness.mjs`, and the two are compared to each other. */
-  /* The catalogue is run-rules' EXPORT, read at the interface (P7), no longer parsed out of the plane's text. */
+  /* WHY THIS ARM EXISTS, and it is a receipt rather than a precaution. From FL-3 until FL-7 the gate closed a refused
+     run on `cancelled` (a member's word) while `mode-not-deployed` was defined nowhere in the repository. Two failures:
+     an ending nothing defines, and a gate producing the wrong one.
+     CONVERTED BY N421 (T19), NEVER EXEMPTED. This arm compared the gate with a sentence in `src/harness.mjs`' header
+     prose ("terminates on `…`"), read as TEXT. A comment is not the member's interface, and the agreement that matters
+     is between what the gate PRODUCES and what the plane's catalogue DEFINES, over every input the gate refuses — so
+     that is what is asserted, both ways: no refused input produces an ending the catalogue lacks, and the ending it
+     produces is the one ending the catalogue gives a launch nobody started. */
   t("the plane's RUN_ENDINGS was actually read — an empty import would pass everything",
     RUN_ENDINGS != null && typeof RUN_ENDINGS === "object", true);
   const planeEndings = Object.keys(RUN_ENDINGS || {});
-  t("REACH: the parse found a non-trivial catalogue (floor 3), so neither direction below is vacuous",
-    planeEndings.length >= 3, true);
-
-  /* THE HEADER'S CLAIM IS A SPECIFIC SENTENCE, SO IT IS READ AS ONE. The prose
-     says a refused run *"terminates on `X`"*, and that phrase is the whole
-     contract between this file's documentation and the record's vocabulary.
-     Parsing THAT rather than sweeping every backticked word in the file is what
-     keeps the arm from being answered by an unrelated token — and it is why the
-     header may still DISCUSS `cancelled` historically (it does, at length)
-     without confusing this measurement: only the terminates-on claim is a claim.
-
-     Read from the file's leading prose — everything ahead of its first `export`,
-     which is all comment — so no line of CODE can satisfy an assertion that is
-     about the DOCUMENTATION. A whole-file grep would have been answered by the
-     gate's own string literal and would have passed throughout the entire
-     period this arm exists to have caught. */
-  const firstExport = HARNESS_SRC.indexOf("\nexport ");
-  t("REACH: the file's leading prose was isolated ahead of its first export", firstExport > 0, true);
-  const HEADER_PROSE = HARNESS_SRC.slice(0, firstExport > 0 ? firstExport : HARNESS_SRC.length);
-  t("REACH: and that prose contains no executable export, so DIRECTION 1 below cannot be answered by code",
-    /^\s*export /m.test(HEADER_PROSE), false);
-  const claim = /terminates on `([\w-]+)`/.exec(HEADER_PROSE);
-  t("the header still makes its terminates-on claim at all — a deleted sentence must not read as agreement",
-    claim != null, true);
-
-  /* DIRECTION 1 — HEADER -> CATALOGUE. The word the header promises must EXIST
-     in the plane's catalogue. THIS IS THE HALF THAT WAS MISSING FOR THE WHOLE
-     PRE-FL-7 PERIOD: the header promised `mode-not-deployed` and nothing
-     anywhere defined it, and no arm could contradict a comment. */
-  t("DIRECTION 1 (header -> catalogue): the ending this header promises a refused run terminates on is DEFINED "
-    + "in the plane's RUN_ENDINGS. Pre-FL-7 it was defined nowhere in the repository and this direction is what "
-    + "now refuses that",
-    planeEndings.includes(claim?.[1] ?? "(no claim)"), true);
-
-  /* DIRECTION 2 — CODE -> HEADER. The ending the gate ACTUALLY closes on must be
-     the word the header promises. THIS HALF WAS ALSO MISSING: the code said
-     `cancelled`, the header said otherwise, and nothing compared them. */
-  const actual = nextStep({ step: "gate-mode", mode: "investigate", pass: 0, maxPasses: 3 }).bound;
-  t("DIRECTION 2 (code -> header): the ending the gate actually produces IS the one the header promises — "
-    + "the two halves are compared to each other, so either one drifting fails here",
-    actual, claim?.[1] ?? "(no claim)");
-  t("and the produced ending is the PLANE's, not one this member minted (DEC-8's drift class)",
-    planeEndings.includes(actual), true);
-
+  t("REACH: the catalogue is non-trivial (floor 3), so neither direction below is vacuous", planeEndings.length >= 3, true);
+  /* Every input the gate refuses: each held mode not deployed, a word the table does not hold, absent, empty, and a
+     deployed mode mis-spelled. */
+  const refusedModes = [...Object.keys(MODES).filter((m) => !MODES[m].deployed), "wat", undefined, "", "CHECK", "check "];
+  const endings = refusedModes.map((mode) => nextStep({ step: "gate-mode", mode, pass: 0, maxPasses: 3 }).bound);
+  t("REACH: the gate refused every one of those inputs (and there are several)",
+    [refusedModes.length >= 6, endings.every((b) => b != null)], [true, true]);
+  t("DIRECTION 1 (gate -> catalogue): every ending the gate produces for a refused launch is DEFINED in the plane's "
+    + "RUN_ENDINGS. Pre-FL-7 the word was defined nowhere, and this direction is what now refuses that",
+    endings.filter((b) => !planeEndings.includes(b)), []);
+  t("DIRECTION 2 (one ending): every refused input closes on the SAME ending, and it is the plane's mode-not-deployed",
+    [...new Set(endings)], ["mode-not-deployed"]);
+  t("and it is not the member's word: the gate's ending is never `cancelled`, for any input it refuses",
+    endings.filter((b) => b === "cancelled"), []);
 }
 
 console.log("\n--- A7 · §9's empty-level kind is DERIVED BY THE TABLE (VF-1's owed control 7) ---");
@@ -541,12 +570,16 @@ console.log("\n--- A9 · query-never-load: the ops are PINNED, and every one is 
      R53 (K660) adds mode `plan`'s: `plan`, `plans`, its reads (R51) and the write `optionpropose`. */
   t("R37, R53: the pinned op set is exactly the reads and the writes, nothing else",
     Object.keys(PLANE_OPS).sort(), [...PINNED_READS, ...PINNED_WRITES].sort());
-  t("every op the DRIVER actually names is in the pinned set",
-    [...new Set([...WORKER_CODE.matchAll(/call\(\s*"([a-z]+)"/g)].map((m) => m[1]),
-      )].filter((op) => !PLANE_OPS[op]), []);
-  t("and the round trip's own op is too",
-    [...new Set([...WORKER_CODE.matchAll(/askPlane\(\s*env\s*,\s*"([a-z]+)"/g)].map((m) => m[1]))]
-      .filter((op) => !PLANE_OPS[op]), []);
+  /* CONVERTED BY N421 (T19): these two arms read op names out of `src/index.mjs`' TEXT (`call("…")`, `askPlane(env,
+     "…")`). They are measured now at the interface: the member's own handler driven in this process through a supplied
+     run, a model run and a plan run (`test/inprocess.mjs`), and every op that reached its PLANE binding counted. */
+  const { drives: D, all: ALL } = await driveMember();
+  const reached = [...new Set(ALL.planeCalls.map((c) => c.op))].sort();
+  t("every op the DRIVER actually sent the plane, across a supplied, a model and a plan run, is in the pinned set",
+    [reached.length > 10, reached.filter((op) => !PLANE_OPS[op])], [true, []]);
+  t("and the round trip's own op is too, and it is the first thing every run asks",
+    [PLANE_OPS.whoami != null, [D.supplied, D.model, D.plan].map((d) => d.planeCalls[0]?.op)],
+    [true, ["whoami", "whoami", "whoami"]]);
   t("R37: and the writes are exactly the five the plane makes for it (control-plane pins them to AI_RUN_ACTIONS)",
     Object.keys(PLANE_OPS).filter((op) => PLANE_OPS[op].mutating === true).sort(), PINNED_WRITES);
 
@@ -554,17 +587,38 @@ console.log("\n--- A9 · query-never-load: the ops are PINNED, and every one is 
      CONSUMES it — there must be exactly one meaning reader named anywhere in
      this member, and no second one built beside it. */
   t("the meaning-grain read is PL-9's op", PLANE_OPS.meaningrows != null, true);
-  t("and it is named in exactly one place in the driver",
-    [...WORKER_CODE.matchAll(/"meaningrows"/g)].length, 1);
+  /* CONVERTED BY N421: this counted the literal "meaningrows" in the driver's TEXT (one occurrence = one reader). At the
+     interface, ONE READER means every meaning-grain read the run makes reaches the plane as PL-9's op: the parent's at
+     the one arm it declares, and a sub-session's through the same door — and no other op is asked for rows. */
+  const meaningReads = ALL.planeCalls.filter((c) => c.op === "meaningrows");
+  t("and every meaning read went through that one op: the parent's at MEANING_ARM, the sub-sessions' through the same door",
+    [D.supplied.planeCalls.filter((c) => c.op === "meaningrows").length > 0,
+     [...new Set(D.supplied.planeCalls.filter((c) => c.op === "meaningrows").map((c) => c.query.rows))],
+     D.model.planeCalls.filter((c) => c.op === "meaningrows" && c.query.limit === String(SUBSESSION_LIMIT)).length >= LEVELS.length,
+     ALL.planeCalls.filter((c) => c.op !== "meaningrows" && "rows" in (c.query || {})).length],
+    [true, [MEANING_ARM], true, 0]);
   t("no op in the pinned set serves document BYTES",
     Object.keys(PLANE_OPS).filter((op) => ["capture", "acquire", "image", "archivelookup", "publishedmanifest"].includes(op)), []);
 
   console.log("\n  -- and the harness holds NO scope, NO class and NO allow-list (D-199 (2)) --");
-  t("no token class is named in the harness", /\bclass\s*:\s*["']ai["']/.test(HARNESS_CODE), false);
-  t("no credential is compiled in", /["'`]aik-/.test(HARNESS_CODE), false);
-  t("the harness performs no I/O at all — it is pure", /\bfetch\s*\(/.test(HARNESS_CODE), false);
-  t("and reads no clock", /Date\s*\.\s*now|new\s+Date\b/.test(HARNESS_CODE), false);
-  t("and no global state", /globalThis|process\s*\./.test(HARNESS_CODE), false);
+  /* CONVERTED BY N421 (T19): these read `src/harness.mjs`' TEXT for `class: "ai"`, an `aik-` literal, `fetch(`,
+     `Date.now`, `globalThis` and `process.`. At the interface: what the harness EXPORTS carries no class, scope or
+     credential, and its functions, called over a broad corpus with the network, the clock, randomness and the
+     process environment trapped, touch none of them and answer the same twice — which is what "pure" means. */
+  const EXPORTED = JSON.stringify(Object.fromEntries(Object.entries(HARNESS).filter(([, v]) => typeof v !== "function")));
+  t("REACH: the harness's exported data was read (a declaration of every table and constant)", EXPORTED.length > 5000, true);
+  t("no token class is named in what the harness exports", /"class"\s*:\s*"ai"|class:ai/.test(EXPORTED), false);
+  t("no credential is compiled into it", /aik-/.test(EXPORTED), false);
+  t("PLANE_OPS grants nothing: each row is a flag and a reason, with no scope, class or allow-list beside them",
+    [...new Set(Object.values(PLANE_OPS).map((d) => Object.keys(d).sort().join(",")))], ["mutating,why"]);
+  const purity = await harnessPurity();
+  t("REACH: the purity walk called the harness's functions over a corpus (and every one of them was called)",
+    [purity.calls > 5000, purity.uncalled], [true, []]);
+  t("the harness performs no I/O at all — no fetch was made while it ran", purity.trapped.fetch, 0);
+  t("and reads no clock and no randomness", [purity.trapped.clock, purity.trapped.random], [0, 0]);
+  t("and no process state", purity.trapped.process, 0);
+  t("and it is deterministic: the same corpus twice gives the same answers, byte for byte",
+    purity.first === purity.second, true);
 }
 
 /* ================================================================
@@ -908,8 +962,12 @@ console.log("\n--- B3 · A BUDGET EXHAUSTION WRITES `runtime-ceiling-reached` --
      by concatenation, which a literal scan cannot see. */
   t("this member sent the word to the plane exactly ZERO times",
     st.log.filter((l) => /runtime-ceiling-reached/.test(JSON.stringify(l.body ?? null))).length, 0);
-  t("and it never assigns it as a condition anywhere in its source",
-    /condition\s*:\s*["'`]runtime-ceiling-reached/.test(WORKER_CODE + HARNESS_CODE), false);
+  /* CONVERTED BY N421: this read the member's TEXT for an assignment of the word. At the interface: the table's own
+     log entry, over every bound it can close on, carries no condition it was not handed by a judgement. */
+  t("and the table never produces it: stepLog's terminal entry, over every bound the table closes on, carries no condition",
+    [...Object.keys(RUN_BOUNDS), ...Object.keys(RUN_ENDINGS)]
+      .map((bound) => stepLog({ step: "next-pass", observed: "LOOKED_INDETERMINATE" }, { step: "close", why: "w", bound }))
+      .filter((e) => e && e.condition != null).length, 0);
   t("the word nevertheless reached the observation log — written by the PLANE",
     st.runlog.some((e) => e.condition === "runtime-ceiling-reached"), true);
   t("a run that ended is not ticked again after its exit — one tick per step taken, the last one the tick that ended it",

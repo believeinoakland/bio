@@ -6,7 +6,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, inquiryMd, V } from "./fixture.mjs";
 import { contradictionFindings } from "../../../src/inquiry/contradiction.mjs";
-import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { CONTRADICTION_COORDINATES, PLURALITY_DIFFERENCES, DISSOLVED_BY, NORM_CANONS, RESOLUTION_KINDS, resolutionFamily,
          resolutionLines, INQUIRY_CONTRADICTION_CHECKS, INQUIRY_TABLES, QUALIFIER_MAX, HYPOTHESIS_MAX }
   from "../../../src/inquiry/index.mjs";

@@ -5,7 +5,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, inquiryMd, V, LEGACY_BUNDLE_COLUMNS } from "./fixture.mjs";
-import { BUNDLE_FACTS, LEGS_RELATION, INQUIRY_TABLES, moveBundleFacts, checkInquiryEntry } from "../../../src/inquiry/index.mjs";
+import { BUNDLE_FACTS, LEGS_RELATION, INQUIRY_TABLES, SUBJECT_COLUMN, moveBundleFacts, moveSubjectEntity, checkInquiryEntry }
+  from "../../../src/inquiry/index.mjs";
 
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b";
 const Q = "INQ-2026-0001-q", R = "INQ-2026-0002-r", E = "INQ-2026-0003-e", P = "INQ-2026-0004-p";
@@ -68,6 +69,36 @@ test("R36 a store written before T18: its migration moves the leg count and the 
   const fresh = world(); fresh.inquiry(Q);
   assert.equal(moveBundleFacts(fresh.st.sql), 0);
   assert.deepEqual(LEGACY_BUNDLE_COLUMNS.map((c) => c.split(" ")[0]), ["inquiry_basis_count", "inquiry_superseded_by"]);
+});
+
+test("R36 R40 N136's rest: a store written before T19 has its subject entity moved off bundles once, on the boot that gives this module's table the column; a value a later revision cleared is never brought back", () => {
+  const w = world(); w.doc(A); w.entity("ENT-2026-0001"); w.entity("ENT-2026-0002");
+  w.inquiry(Q, { subject: "ENT-2026-0001", legs: [{ target: A }] });
+  w.inquiry(R, { subject: "ENT-2026-0002" });
+  w.inquiry(E);
+  const subj = (id) => w.row(`SELECT ${SUBJECT_COLUMN} AS s FROM ${BUNDLE_FACTS} WHERE bundle_id=?`, id)?.s ?? null;
+  assert.equal(SUBJECT_COLUMN, "inquiry_subject_entity", "the name it had on bundles");
+  assert.deepEqual([subj(Q), subj(R), subj(E)], ["ENT-2026-0001", "ENT-2026-0002", null]);
+  /* as a T18 store holds it: the subject on bundles, this module's table without the column */
+  w.st.sql.exec(`ALTER TABLE ${BUNDLE_FACTS} DROP COLUMN ${SUBJECT_COLUMN}`);
+  w.st.sql.exec(`UPDATE bundles SET ${SUBJECT_COLUMN}=? WHERE bundle_id=?`, "ENT-2026-0001", Q);
+  w.st.sql.exec(`UPDATE bundles SET ${SUBJECT_COLUMN}=? WHERE bundle_id=?`, "ENT-2026-0002", R);
+  w.st.sql.exec(`DELETE FROM ${BUNDLE_FACTS} WHERE bundle_id=?`, R);
+  w.k.migrate();
+  assert.deepEqual([subj(Q), subj(R), subj(E)], ["ENT-2026-0001", "ENT-2026-0002", null],
+    "copied onto the row a bundle holds and onto a new one; a bundle with no value copies nothing");
+  assert.deepEqual(facts(w, Q), { n: 1, by: null }, "a row's other facts are kept");
+  assert.equal(w.k.subjectEntityOf(R), "ENT-2026-0002", "R43 reads the moved value");
+  /* once: a revision that clears the subject is not undone by the inert copy left on bundles at the next boot */
+  assert.equal(w.promote(Q, inquiryMd(Q, { legs: [{ target: A }] })).ok, true);
+  w.k.migrate();
+  assert.equal(subj(Q), null);
+  assert.equal(w.row(`SELECT ${SUBJECT_COLUMN} AS s FROM bundles WHERE bundle_id=?`, Q).s, "ENT-2026-0001",
+    "the column left on bundles is inert: nothing writes it");
+  /* called again by hand it copies the same values onto the same rows; a store whose bundles never had the column copies nothing */
+  assert.equal(moveSubjectEntity(w.st.sql), 2);
+  const bare = world(); bare.st.sql.exec(`ALTER TABLE bundles DROP COLUMN ${SUBJECT_COLUMN}`);
+  assert.equal(moveSubjectEntity(bare.st.sql), 0);
 });
 
 test("R36 the leg count is registered with retrieval as the `legs` field's column (its R62), so `legs:` answers from this module's table", () => {

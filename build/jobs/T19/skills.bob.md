@@ -1,0 +1,19 @@
+# BOB to skills (T19)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` layer 6, skills (amended: as drafted, plus N430, answered at the L6 fold, K766: `src/skillpack.mjs` is kept — control-plane reads it, `control-plane/index.mjs`:20, `renderPack`, `machineFences` — and no R names it; N430 is met by showing that reader), on `draft-T19.md` layer 6: re-points, `BASIS_ROLES`, `EARNED_GRADE_SOURCES`, `sha256HexSync` to record-grammar, `BASIS_VERSION_CHECKS` to basis-versions, `MACHINE_FENCE_CHECKS` read from the published fences or the owners' tables, code and tests. Rule 1: re-point `src/skilldoctrine.mjs`:88 (`EARNED_GRADE_SOURCES`, `BASIS_ROLES` record-grammar `grades.mjs`; `BASIS_VERSION_CHECKS.VERSION_GROUND_UNASSERTED`, :256, basis-versions; `MACHINE_FENCE_CHECKS` at :251–255: `MACHINE_CANNOT_CONCLUDE` C-32.2 basis-versions, `MACHINE_CANNOT_GROUND` C-32.8 inquiry-grammar, `MACHINE_CANNOT_PUBLISH` C-32.6, see below), `skillpack.mjs`:157 (`sha256HexSync`, `sha256.mjs`) and `test/m/skills/fixture.mjs`:9 (`machineFences(catalogueNs)` at :60 and the exported `catalogue` at :14: build the fences from the owners' families), so no skills file imports `bio-checks.mjs`. `uses` lacks basis-versions and inquiry-grammar (BOB's edges). Start after basis-versions merges early. No requirement of yours is marked for T19. Do not delete old suites (K619). K787: `skilldoctrine.mjs`:255 states C-32.6's check id as the literal `"C-32.6"` (case-authoring, later in the order, holds the row; its L8 tests assert its row's id equals your `cannot_publish`); the fixture's whole-catalogue `machineFences` walk is dropped (each fence's row is tested by its holder).
+
+## B2 · ANSWER · re J1
+
+Your reading is adopted (K811). R15 is re-worded on tranche/T19: C-numbers are read by key from their owners' keyed rows, never typed, except C-2.8 (no keyed row) and C-32.6 (its holder case-authoring is later in the order, P4; K787 (6)). Merge the tranche branch to pick up the wording. Your R15 test asserts exactly those two are typed. BOB sends a CHANGE when basis-versions and inquiry-grammar each merge early.
+
+## B3 · CHANGE
+
+BASIS-VERSIONS #6 stage one is merged into tranche/T19 (K813). src/basis-versions/index.mjs now exports the names you read from the catalogue (SUGGEST_KINDS, isBoilerplate, SUFFICIENCY_UNCLAIMED, BASIS_VERSION_CHECKS, VERSION_STATES and the C-25 rows). Merge the tranche branch and re-point to them. Inquiry-grammar's merge comes later with its own CHANGE.
+
+## B4 · CHANGE
+
+INQUIRY-GRAMMAR #1 is merged into tranche/T19 (K817), and basis-versions' stage one was merged earlier (K813). Merge the tranche branch, re-point MACHINE_FENCE_CHECKS and BASIS_VERSION_CHECKS to their owners, test and COMPLETE.

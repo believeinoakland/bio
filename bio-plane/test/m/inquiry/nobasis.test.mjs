@@ -3,11 +3,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { actNoBasis } from "../../../src/inquiry/index.mjs";
-import { ACT_SHAPE_CHECKS } from "../../../checks/bio-checks.mjs";
+import { SHARED_ACT_CHECKS } from "../../../src/record-grammar/index.mjs";
 import { world, V } from "./fixture.mjs";
 
-test("R45 actNoBasis answers the refusal with the catalogue's row; extra adds fields and never replaces these; it never throws", () => {
-  const row = ACT_SHAPE_CHECKS.NO_BASIS;
+test("R45 actNoBasis answers the refusal with record-grammar's shared row; extra adds fields and never replaces these; it never throws", () => {
+  const row = SHARED_ACT_CHECKS.NO_BASIS;
   assert.equal(row.check, "C-33.40");
   assert.deepEqual(actNoBasis("nothing to rest on"),
     { ok: false, reason: "NO_BASIS", code: "NO_BASIS", check: row.check, translation: row.translation, detail: "nothing to rest on" });

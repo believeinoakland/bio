@@ -115,16 +115,15 @@
  * had already named, rather than by editing this sentence down to match the
  * defect — the disagreement was the symptom and the misattribution was the bug.
  *
- * **AND THE AGREEMENT IS NOW ASSERTED IN BOTH DIRECTIONS, which is the half
- * that stops it recurring.** `test/harness.test.mjs` A6b reads this file and
- * the plane's `airun.mjs` as TEXT and holds two claims that fail independently:
- * every ending named in this header must EXIST in the plane's catalogue, and
- * the ending the gate actually closes on must be the one this header names.
- * One direction alone is what allowed the original drift — a comment nobody
- * could contradict. **Neither side is the expectation for the other's test:**
- * the catalogue is read from the plane's own source, never from a literal
- * copied into the arm, because an expectation derived from the subject moves
- * with it and proves nothing (three items shipped exactly that on 2026-08-10).
+ * **AND THE AGREEMENT IS ASSERTED, which is the half that stops it
+ * recurring.** `test/harness.test.mjs` A6b drives the gate over every input it
+ * refuses and holds what it PRODUCES to the plane's catalogue, `run-rules`'
+ * exported RUN_ENDINGS: every ending it closes on must exist there, and every
+ * refused launch closes on the one ending, `mode-not-deployed` (N421 moved this
+ * from a comparison with this header's text to the gate's behaviour). The
+ * catalogue is the plane's export, never a literal copied into the arm, because
+ * an expectation derived from the subject moves with it and proves nothing
+ * (three items shipped exactly that on 2026-08-10).
  * ========================================================================= */
 
 /* THE FOUR LEVELS, IN FAN-OUT ORDER.
@@ -139,9 +138,9 @@
  * `../../bio-plane/src/airun.mjs` would drag the plane's module graph into this
  * Worker's bundle — the fleet's whole point is that a member ships alone — and
  * the plane publishes no op that names the levels, so there is nothing to read
- * at runtime. What closes the drift is a SOURCE PIN: `harness.test.mjs` reads
- * `OBSERVATION_LEVELS` out of the plane's own file and asserts this array is
- * exactly its key order. A fifth level added there fails this member's suite
+ * at runtime. What closes the drift is a PIN: the suites import run-rules'
+ * `OBSERVATION_LEVELS` and assert this array is exactly its key order (R44).
+ * A fifth level added there fails this member's suite
  * rather than silently going unsearched, which is the failure a hand-kept copy
  * normally has and the reason D-113's purge list is this project's stock
  * example. */
@@ -279,8 +278,9 @@ export const NOT_OUR_BOUNDS = {
  * working set, and reaches everything else by ASKING. The meaning-grain read is
  * PL-9's `op=meaningrows` and this item CONSUMES it — it builds no second
  * reader, which is D-15's one-compiler rule and D-222's option C as shipped.
- * **No op in this set returns document bytes**, and the suite asserts that
- * against the plane's own OPS table rather than against this comment. */
+ * **No op in this set returns document bytes**, and the suites assert that
+ * over the set itself rather than against this comment; control-plane pins
+ * the set, op by op, to the plane's own table (N402). */
 export const PLANE_OPS = {
   whoami:         { mutating: false, why: "who the plane says this credential is (FL-2's round trip, kept)" },
   airun:          { mutating: false, why: "the run object: its conditions, its live budget" },

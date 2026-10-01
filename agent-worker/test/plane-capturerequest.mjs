@@ -1,7 +1,7 @@
 /* FL-12 — THE PLANE MOCK'S `op=capturerequest` BRANCH, DERIVED FROM THE PLANE.
  *
  * WHY THIS FILE EXISTS. `agent-worker` filed every internet-level acquisition request with its locator
- * in a field named `url`. The plane reads ONE field for the locator, `address` (`store.mjs`
+ * in a field named `url`. The plane reads ONE field for the locator, `address` (capture-requests'
  * `captureRequest`: `String(args.address ?? "")`, then `isPublicHttpsLocator`), so every request a run
  * filed was refused `CAPTURE_REQUEST_NOT_PUBLIC` (C-28.2) naming "(none)" — measured by REC-168 at the
  * code. No fleet suite saw it, because both of this member's mocks answered
@@ -13,10 +13,11 @@
  *   (1) the run NAMED — `CAPTURE_REQUEST_NO_RUN` (C-28.1);
  *   (2) its PRINCIPAL the caller — `runPrincipalGate` (C-22.12), relayed field by field;
  *   (3) the run RUNNING — `CAPTURE_REQUEST_NO_RUN` again, as the plane answers it;
- *   (4) `address` a PUBLIC HTTPS locator — `CAPTURE_REQUEST_NOT_PUBLIC` (C-28.2), by the plane's own
- *       `isPublicHttpsLocator`, interpolated from its SOURCE TEXT rather than re-typed;
+ *   (4) `address` a PUBLIC HTTPS locator — `CAPTURE_REQUEST_NOT_PUBLIC` (C-28.2), by record-grammar's own
+ *       `isPublicHttpsLocator` (its R19), the exported function itself carried into the mock rather than re-typed;
  *   (5) `target` an inquiry — `CAPTURE_REQUEST_NOT_AN_INQUIRY`.
- * Every code, C-number and translation is read out of `CAPTURE_REQUEST_CHECKS` / `runPrincipalGate`.
+ * Every code, C-number and translation is read out of capture-requests' `CAPTURE_REQUEST_CHECKS` (C-28, its own
+ * since T18) and run-rules' `runPrincipalGate`.
  *
  * WHAT IT DOES NOT HOLD, stated: the viewer gate (a run or question the caller cannot see answering as
  * absent), the lead (PL-15), the queue's pacing, dedup of a repeated request, and whether the target is a
@@ -24,7 +25,9 @@
  *
  * NOT a `.test.mjs`: an instrument the suites share, not a suite.
  */
-import { CAPTURE_REQUEST_CHECKS, isPublicHttpsLocator } from "../../bio-plane/checks/bio-checks.mjs";
+/* T19 (rule 1): each name from its owner, never the check catalogue. */
+import { CAPTURE_REQUEST_CHECKS } from "../../bio-plane/src/capture-requests/checks.mjs";
+import { isPublicHttpsLocator } from "../../bio-plane/src/record-grammar/locator.mjs";
 import { runPrincipalGate } from "../../bio-plane/src/run-rules/index.mjs";
 import { INQUIRY_PREFIXES } from "./plane-suggest.mjs";
 
