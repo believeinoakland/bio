@@ -34,7 +34,7 @@
  *     node test/fleetbundles.control.mjs 2b       # one arm
  *
  * DELIBERATELY NOT A `.test.mjs`: it EDITS REAL SOURCES and RENAMES a real
- * `node_modules`, and a file the battery discovers must never be one that
+ * `node_modules`, and a file a `node --test` run discovers must never be one that
  * rewrites the tree underneath the suites running beside it (PL-3/PL-4/PL-11).
  *
  * THE THREE RULES THIS PROJECT PAID FOR, obeyed here:

@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: RE-RUN 2026-09-24 by D-559's worker, `node test/nc-rec129.mjs` whole, after re-anchoring the wire count
+/* NEGATIVE CONTROL: RE-RUN 2026-09-24 by D-559's worker, `node test/nc-rec129.mjs` (deleted in T20) whole, after re-anchoring the wire count
  * (D-486 split it across lines) and the op=stats route (now two lines, `viewer` forwarded only when present). Before:
  * statsleadrows, statsadminleads, statsdropall, routeproof and keyboth DID NOT ARM (5 arms; the driver printed
  * "10 finding(s)" because it counted each unarmed arm twice, corrected in the same landing). After: `nc-rec129: 19 of 19

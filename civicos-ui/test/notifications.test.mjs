@@ -74,7 +74,7 @@
  *     driven directly at the current address — the honest substitute, and it is
  *     labelled as one here the way UI-42's is in its own file.
  *
- * NEGATIVE CONTROL: `node civicos-ui/test/notifications.control.mjs` — NINETEEN
+ * NEGATIVE CONTROL: `node civicos-ui/test/notifications.control.mjs` (deleted in T20) — NINETEEN
  * arms, each armed ALONE on the real `civicos-ui/app.html` with every other
  * defence held open, including four OVER-STRICTNESS arms and a BASELINE row.
  * Declared expectations and measured results are in that file's header. UI-86,
@@ -88,7 +88,7 @@
  * sha256 and cmp; baseline 88 pass, 0 fail. ARM 17 (the row's control: read
  * `assignee` alone again) fails "§7 D-528 · THE NAMED RECIPIENT IS RENDERED" by
  * name, with "…NOT TOLD IT IS ADDRESSED TO NOBODY". The real-plane half is
- * `queue-recipients.control.mjs`.
+ * `queue-recipients.control.mjs` (deleted in T20).
  * UI-93, RUN 2026-09-24: 19 of 19 as declared, exit 0, every restore verified by
  * sha256 and cmp; baseline 85 pass, 0 fail. ARM 15 (the row's control: return ""
  * for a `run` subject again) fails "§7 THE RUN IS NAMED" by name and takes the
@@ -115,9 +115,10 @@
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
    discard the writer's own output. SHARED from the plane's test estate rather than copied into
-   this one — ONE implementation, so `bio-plane/test/tally-through-pipe.test.mjs` guards it for
-   both estates and a node release closing the private door goes red once instead of half. The
-   import is for its SIDE EFFECT and is idempotent. Census: `stdio-census.test.mjs`. */
+   this one — ONE implementation, so test-support's R6 test
+   (`bio-plane/test/m/test-support/test-support.test.mjs`) guards it for both estates and a
+   node release closing the private door goes red once instead of half.
+   The import is for its SIDE EFFECT and is idempotent. Census: `stdio-census.test.mjs`. */
 import fs from "fs"; import vm from "vm"; import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
 /* UI-53: the DEC-32 clause 1 ban family is DERIVED IN ONE PLACE and this suite

@@ -16,11 +16,12 @@
  * each suite, spelled out, driven through the control plane, so what a suite
  * asserts about publication is still visible in the suite that asserts it.
  *
- * `caseproduction.test.mjs` — CASE-2's own suite — deliberately does NOT use this
- * helper and builds its roster inline through `projectinvite` / `projectjoin` /
- * `projectowneradd`. That is not duplication: the ownership CEREMONY is part of
- * what that suite tests, and a fixture that short-circuits the fence would be
- * asserting DEC-72's fence against a state the plane's own rules cannot produce.
+ * `caseproduction.test.mjs` — CASE-2's own suite, deleted in T20 — deliberately did
+ * NOT use this helper and built its roster inline through `projectinvite` /
+ * `projectjoin` / `projectowneradd`. That was not duplication: the ownership CEREMONY
+ * was part of what that suite tested, and a fixture that short-circuits the fence
+ * would be asserting DEC-72's fence against a state the plane's own rules cannot
+ * produce. A suite testing that ceremony builds its roster inline the same way.
  *
  * OWNERSHIP IS TAKEN THROUGH `projectclaimowner`, WHICH REQUIRES THE PROJECT TO
  * HAVE NO OWNER YET — so the bundle is promoted with the MACHINE credential,
@@ -42,7 +43,7 @@
 export const projectFixtureMd = (id, { created, updated, bar = null, name = id, objective =
   "Decide whether to refer this to the auditor." } = {}) => ["---",
   ...(id === null ? [] : [`id: ${id}`]), "object_type: project", "schema: project@1",
-  `title: "Project ${name}"`, "current_state: investigating", "prior_state: null",
+  `title: "Project ${name}"`, "current_state: forming", "prior_state: null",
   `created: "${created}"`, `last_updated: "${updated}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high",
   "group: believe-in-oakland", "references: []", "state_history: []",
@@ -79,11 +80,13 @@ export async function makePublishingProject({ post, mf, sha, machineToken, owner
                                               id: chosen, name, created, updated, bar = null } = {}) {
   if (chosen !== undefined) throw new Error(`fixture: a project's id is minted by the plane (REC-141); pass name, not id (${chosen})`);
   const text = projectFixtureMd(null, { created, updated, bar, name });
+  /* Created at `forming` (LEGACY-TESTS #19, T21): project-stage refuses a new project at any other stage,
+     PROJECT_STAGE_COMPUTED (C-86.15); its stage after that is worked out from its record. */
   const r = await post(`op=promote&token=${machineToken}`, {
     base: null,
     snapKey: `${String(created).replace(/[-:]/g, "").slice(0, 15)}Z_${sha(String(name)).slice(0, 8)}`,
     meta: { object_type: "project", group: "believe-in-oakland", title: `Project ${name}`,
-            current_state: "investigating", created, last_updated: updated },
+            current_state: "forming", created, last_updated: updated },
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
     register: [],
   });

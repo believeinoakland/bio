@@ -1,6 +1,6 @@
 # queue (T21)
 
-**Status** · session_01WF7vUMo8WEARASdFVkSXE4 · depth 2 · COMPLETE · handled B1
+**Status** · session_01WF7vUMo8WEARASdFVkSXE4 · depth 2 · COMPLETE · handled B2
 
 ## Completion (QUEUE #10)
 
@@ -37,3 +37,16 @@ Generated artifact staled: my change to bio-plane/src/ (queuestate.mjs, queue/) 
 ## J2 · COMPLETE
 
 QUEUE #10 complete on job/T21/queue. Applied B1: R1 catalogues template-review-requested and local-fact-due (OBLIGATION, R1's sentences, LIVE: queue-producers R20/R21); R12/R28 OBLIGATION_DOORS templatereview and factconfirm with an OBLIGATION_DOOR_DETAIL sentence each, so the bridge answers CLASS_NOT_DISPOSED with the same instead; PRODUCER_DEPS gains filingTemplates and localFacts (queue calls neither), and the test world defaults both to answer nothing, so no queue test reaches the real modules once queue-producers R20/R21 merge. N469/K966: the notes naming hygiene.test.mjs, airuns.test.mjs, check-refusal-codes.mjs and current.test.mjs, and 'the guard'/'the suite(s)' as live, re-worded to the module tests that prove them or to past-tense provenance; mintid.mjs note already past tense. Marks met: R1's and R12's '(these two not yet met: T21)'. Tests: test/m/queue 80/80 (new templates.test.mjs: mint, doors, bridge, mute fences, deps passed and not called; negative control: a door removed turns it red); plane 28/28, basis-versions 118/118, queue-producers 47/47, tasks 71/71; control-plane 91/93 and affordances 132/133 fail identically on the base (REPORT J2). Checks: format 0, architecture 0, coverage 37/37, ownership 8 files 0 failures. Deferred: none. Record: build/jobs/T21/queue.md.
+
+## Re-opened by B2 (CHANGE; K1004)
+
+**Applied:** merged `tranche/T21` (queue-producers R20, R21 merged, K1000). `action.test.mjs`' K728 test, red on the tranche (`calendarFactsRead is not a function`), now gives the `actionClocks` fake `calendarFactsRead` answering one path a live deadline reads, and fakes `filingTemplates.reviewsRequested` and `localFacts.factsDue` recording their calls: it proves R20's and R21's deps reach queue-producers (each asked with the viewer; `factsDue` asked of the path `calendarFactsRead` answered). Negative control: with `localFacts` removed from `PRODUCER_DEPS`, the test fails.
+
+**Tests:** `test/m/queue/` 80/80; `test/m/queue-producers/` 49/49; `test/m/plane/` 28/28. Checks: format 0, architecture 0, coverage 37 of 37, ownership below.
+- `checks/ownership.mjs bio queue tranche/T21`: 2 files changed, 0 failures.
+
+Size (session_01WF7vUMo8WEARASdFVkSXE4): test runs 18, module lines 2620
+
+## J3 · COMPLETE · re B2
+
+B2 applied: merged tranche/T21; action.test.mjs' K728 test gives the actionClocks fake calendarFactsRead (one path a live deadline reads) and fakes filingTemplates.reviewsRequested and localFacts.factsDue, proving R20's and R21's deps reach queue-producers (each asked with the viewer; factsDue asked of the path calendarFactsRead answered). Negative control: localFacts removed from PRODUCER_DEPS turns it red. Tests: queue 80/80, queue-producers 49/49, plane 28/28. Checks: format 0, architecture 0, coverage 37/37, ownership 2 files 0 failures. Record updated.

@@ -110,16 +110,16 @@
  * ============================================================================
  * WHAT IS DELIBERATELY NOT FOLDED IN — a different question, kept and named.
  * ============================================================================
- *  · `civicos-ui/test/capture-honesty.test.mjs`'s `JARGON` asks a DIFFERENT
- *    QUESTION and is NOT a rival to this family: it holds capture prose to Bob's
+ *  · `civicos-ui/test/capture-honesty.test.mjs`'s `JARGON` (deleted in T20) asked a
+ *    DIFFERENT QUESTION and was NOT a rival to this family: it held capture prose to Bob's
  *    plain-language ruling (`subrequest`, `runtime`, `manifest`, `sha256`,
  *    `Durable`, `op=`, `content_hash`). None of those is DEC-32 vocabulary and
  *    none of DEC-32's vocabulary is jargon in that sense. Folding it in for
  *    tidiness would have made one instrument answer two questions and neither
  *    well.
  *  · `bio-plane/test/sufficiency-state.test.mjs`'s `BANNED_OPERATOR`/`BANNED_TERM`
- *    ask THIS question but on the PLANE's ground, over published state text. It
- *    is not this item's to edit; it is the source of the case-sensitivity rule
+ *    (deleted in T20) asked THIS question but on the PLANE's ground, over published
+ *    state text. It was not this item's to edit; it was the source of the case-sensitivity rule
  *    above and is named in UI-53's delegation.
  */
 import { readFileSync } from "node:fs";

@@ -15,7 +15,8 @@
  *           limit is gone) — not to exempt this arm.
  *
  * WHAT THIS CANNOT SEE: ARM B is STRUCTURAL over `app.html`'s text (function bodies located by
- * name), not a drive of the screen — `queue.test.mjs` drives the all-clear's behaviour. A
+ * name), not a drive of the screen; nothing drives the all-clear's behaviour since
+ * `queue.test.mjs`, which did, was deleted in T20. A
  * `QUEUE_SEEN` emptied by some spelling other than `.delete(`, `.clear(` or reassignment would
  * pass ARM B unseen.
  *

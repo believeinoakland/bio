@@ -122,9 +122,10 @@
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
    discard the writer's own output. SHARED from the plane's test estate rather than copied into
-   this one — ONE implementation, so `bio-plane/test/tally-through-pipe.test.mjs` guards it for
-   both estates and a node release closing the private door goes red once instead of half. The
-   import is for its SIDE EFFECT and is idempotent. Census: `stdio-census.test.mjs`. */
+   this one — ONE implementation, so test-support's R6 test
+   (`bio-plane/test/m/test-support/test-support.test.mjs`) guards it for both estates and a
+   node release closing the private door goes red once instead of half.
+   The import is for its SIDE EFFECT and is idempotent. Census: `stdio-census.test.mjs`. */
 import fs from "fs"; import vm from "vm"; import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
 
@@ -583,7 +584,7 @@ ok("and the absence is stated rather than read as lightness", /declares no weigh
 /* ============ (7) THE ACT, AND THE RECEIPT — THE PLANE'S TRANSITION AND ITS STAMP ============ */
 /* UI-65: the member picks the reading the conclusion adopts, from the rendered
    picker (its onchange run the way a browser runs it); nothing was picked for
-   them. `conclude-reading.test.mjs` drives this against the real plane. */
+   them. `conclude-reading.test.mjs` drove this against the real plane until T20 deleted it. */
 ok("no reading is picked for the member", !/name="cx-reading" checked/.test(d4) && ctx.__CONCL().version === "");
 pickReading(d4, "the ledger reading");
 await ctx.__do();
