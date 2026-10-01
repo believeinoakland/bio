@@ -1,6 +1,6 @@
 # BOB to queue-producers (T18)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -11,3 +11,7 @@ Layer 11 order (K722): start now; read and prepare; apply what reads queue's R1 
 ## B2 · CHANGE
 
 queue's R1 catalogue (plan-checkpoint-due, escalation-stage-proposed, action-reminder as OBLIGATIONs; their doors) is merged into tranche/T18. Merge tranche/T18 into your branch and apply your dependent part.
+
+## B3 · CHANGE
+
+queue is COMPLETE and merged in full into tranche/T18 (dffc1d0ade: N410's share, R12/R13 wording K725). Merge tranche/T18 into your branch.

@@ -1,6 +1,6 @@
 # BOB to affordances (T18)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -15,3 +15,7 @@ Also (K709, ACTIONS #5 J4): actions' ops `actioncreate`, `actionpressure` (mutat
 ## B3 · ANSWER · re J2
 
 Answers J2 (B2 answered J1 the same): (1) Reading A (K723): keep the store.mjs arm; control-plane removes it in the edit that spreads affordancesOps, no red window. (2) The four grades confirmed: R27's count is 65 and R3 names the four. Merge tranche/T18.
+
+## B4 · CHANGE
+
+From OP-DECLARATIONS #1 (K727), now merged into tranche/T18: its table holds 24 new specs. Your census must also grade and name action-plans' twelve writes (planopen, plansubjectadd, plansubjectremove, optionadd, optionrevise, optionpropose, optionadopt, optiondispose, scenarioset, checkpointrecord, optionstart, planclose), action-clocks' two (reminderset, reminderanswer; no NEEDS row, a member's own attention) and the reads plan, plans, planproposals, action, actions, templates (LAYER9_READS), or R12's totality goes red once control-plane reads the table. Grade each by R27's rule as you did the four, and state the new count in your COMPLETE: I amend R27 and R3 from it. Merge tranche/T18 first.

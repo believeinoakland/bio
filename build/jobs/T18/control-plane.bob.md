@@ -22,3 +22,11 @@ Layer 11 order (K722): start now; read your entries and code and prepare; do the
 ## B3 · CHANGE
 
 Three things for your entry. (a) affordances keeps the store.mjs `affordancefacts` arm (K723 A): remove it, and store.mjs' affordances import, in the same edit that spreads `affordancesOps` (§12.2, your `from` holds legacy-store). (b) N336's plane side (installer R20 as amended, K723/K724): the constant is the string `PLANE_LIMITS_STATEMENT = "bio-plane-limits/1 subrequests=10000"` (tag, then key=positive integer per key of wrangler.jsonc's limits, keys sorted, single spaces, no quotes or backslashes), exported from bio-plane/src/index.mjs so the bundle keeps it, pinned by a test to wrangler.jsonc; a parsed object beside it is yours to choose. (c) tasks and queue's R1 are merged into tranche/T18.
+
+## B4 · CHANGE
+
+queue is COMPLETE and merged in full into tranche/T18 (dffc1d0ade: N410's share, R12/R13 wording K725). Merge tranche/T18 into your branch.
+
+## B5 · CHANGE
+
+op-declarations is COMPLETE and merged into tranche/T18 (K727); with queue (B4) and tasks merged, you wait only on affordances and admission. From its J1: (a) the new act lists joined QUERY_AUTHOR_ACTIONS (author stamp), every new act and read is in ACTION_LAYER_ACTIONS/_READS (viewer stamp); (b) optionpropose (PLAN_PROPOSAL_ACTIONS) gets TWO stamps: proposer = class:ai/<tokenId> (the label, as actionlawspropose) and principal = <principal>/<tokenId> (the RUN_PRODUCTION_ACTIONS expression); action-plans reads the second from T19 (N432); (c) your door test keeps the arm that every op a module serves has a spec and no spec lacks a handler or route, naming op-declarations R6. Merge tranche/T18.

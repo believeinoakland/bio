@@ -111,6 +111,23 @@ test("R8: many recently resolved tasks never hide an open one: the read asks for
   }
 });
 
+test("R8: other members' live tasks never crowd a member's own out: the read asks for the member's and the unassigned only (N410)", () => {
+  const w = world();
+  w.member("alice"); w.member("bob");
+  // alice's one task is the OLDEST; more of bob's live tasks are newer than the feed's cap twice over
+  w.bundle("INF-MINE"); w.task("TASK-2026-0000-mine", "INF-MINE", { assignee: "alice", role: "member", created: iso(NOW - 10 * 86400000) });
+  w.bundle("INF-FREE"); w.task("TASK-2026-0000-free", "INF-FREE", { created: iso(NOW - 9 * 86400000) });
+  for (let i = 1; i <= 12; i++) {
+    w.bundle(`INF-${i}`);
+    w.task(`TASK-2026-${String(i).padStart(4, "0")}-bobs`, `INF-${i}`, { assignee: "bob", role: "member", created: iso(NOW - i * 1000) });
+  }
+  const f = w.q.queueFeed({ member: "alice", viewer: "member:alice", limit: 2 });
+  assert.deepEqual(f.items.map((i) => i.id), ["TASK-2026-0000-free", "TASK-2026-0000-mine"]);
+  assert.equal(f.truncated, false);
+  // a machine credential still reads every assignee's live task
+  assert.equal(w.q.queueFeed({ member: null, viewer: "class:admin", limit: 500 }).counts.obligation, 14);
+});
+
 test("R11: the mint refuses the whole feed for an uncatalogued or misclassed kind, with the check and translation, before any mute", () => {
   const w = world();
   w.member("alice"); w.bundle("INQ-1", "inquiry");
