@@ -22,3 +22,7 @@ No rule needed a new test: none of the unenforced rules is a test-support requir
 - `ownership: 3 files changed by test-support between tranche/T21 and HEAD; 0 failures`
 
 Size (session_01Khzr9qLc3B6CdyeggE5ntx): test runs 1, module lines 76
+
+## J1 · REPORT
+
+Found outside my module (N469 scan). (1) `build/requirements/test-support.md` Satisfies and `build/layers.md` "Helper modules" (:126) say the sandbox is shared by "the old battery"; the battery runner was deleted at T20, so the users are the workers' tests and the kept suites. (2) Two rules lost their only guard with `hygiene.test.mjs` and no module owns them: every suite that builds a Miniflare or mkdtemps imports the sandbox, and suites end with `process.exit` (31 suites still do). My notes now state both without a guard. No generated artifact staled.
