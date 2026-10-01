@@ -28,3 +28,7 @@
 - `node checks/ownership.mjs … installer tranche/T20`: 6 files changed; 0 failures.
 
 Size (session_01JjqFAqJmRa9wbiPMbEa9Rk): test runs 5, module lines 16
+
+## J1 · COMPLETE
+
+N443's installer share applied: embed-release.mjs's refusal names node bio-plane/scripts/release-assemble.mjs --sign; index.mjs:303 and wizard.test.mjs:1314 cite bio-plane/scripts/deploy-fleet.mjs. Also fixed DEPLOY.md's stale rebuild paragraph, and R26's test now asserts the named command (negative control run). newgroup/dist/newgroup.bundled.mjs is NOT stale: the index.mjs change is a comment esbuild drops, and embed-release.mjs is not bundled; newgroup-bundle-fresh 4 passed, 0 failed. Tests: embed 23/0, wizard 207/0, requirements 29 pass 0 fail 4 todo. format, architecture, coverage (33 of 33), ownership: 0 failures. Nothing deferred; nothing found in another module. Record: build/jobs/T20/installer.md.
