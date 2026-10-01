@@ -47,3 +47,7 @@
 - `format`: 87 modules, 0 failures. `architecture connections`: 18 product files, 0 failures. `coverage connections`: 60 of 60 live ids. `ownership connections tranche/T19`: legacy-store 1 added, 4 removed; legacy-checks 0 added, 38 removed; 0 failures.
 
 Size (session_01VkAjFUNEhmF9vLV9YVG7uK): test runs 7, module lines 2658
+
+## J1 · COMPLETE
+
+Done; pushed to job/T19/connections. Record: build/jobs/T19/connections.md, Completion section. Met, with tests (figures.test.mjs): R60 (four tests) and R35/R46's T19 share (C-49, C-81, THEME_ID_RE, THEME_REF_RE, THEME_LEG_KEYS and themeLegFindings copied into src/connections/checks.mjs, 205 of 205 legs identical to the catalogue's). Rule 1: no connections file imports bio-checks.mjs. K785: REGISTRATION_CHECKS deleted (legacy-checks -38). Store: #citesInto deleted (legacy-store +1/-4). Connections tests 102/102; the users' tests show the same 206 failures as the base, none mine. All four checks are clean. REPORT items in the record: three old suites still import the catalogue's C-49/C-81 copy (for inquiry-grammar L6); the legacy DEC-49 guard shows transient duplicate rows (as content's C-45 did); legacy-store's five count lines; the plane bundle is stale. Merge early (rule 4, L5).
