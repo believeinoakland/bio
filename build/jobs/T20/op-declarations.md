@@ -13,3 +13,7 @@
 - **Tests run:** `node --test bio-plane/test/m/op-declarations/`: tests 17, pass 17, fail 0. Users and readers of the tables: affordances 131/0, admission 19/0, control-plane 85/0, actions 62/0, queue 74/0. Full `test/m`: tests 4662, pass 4642, fail 0, todo 20. `fleetbundles.test.mjs`: the plane bundle stale (this change) plus the 3 accepted reds (legacy-tests' L11 job). No layer tests named in `build/manifest.md`.
 - **Checks:** format: 84 modules, 82 requirements files; 0 failures. architecture: 4 product files, 7 relative imports; 0 failures. coverage: 7 of 7 live requirement ids named by a test; 0 failures. ownership: 3 files changed by op-declarations between tranche/T20 and HEAD; 0 failures.
 - Size (session_01R8izBGeMMKg6JzLqkqLuGN): test runs 5, module lines 2251
+
+## J1 · COMPLETE
+
+Complete (B1). actionhold declared as actionpressure: OPS {admin, member, probe; mutating}, in ACTIONS_ACTIONS (so QUERY_AUTHOR_ACTIONS: author query-stamped; ACTION_LAYER_ACTIONS; both session sets), NEEDS contribute. test/m/op-declarations 17/17 (totality green with the op; new R2/R3/R4/R6 test for actionhold; ACTIONS_ACTIONS expectation updated). Users green: affordances 131, admission 19, control-plane 85, actions 62, queue 74; full test/m 4642 pass, 0 fail, 20 todo. format, architecture, coverage (7/7), ownership (3 files) 0 failures. Stale: the plane bundle (and what embeds it: release/bio-plane.bundled.mjs, newgroup/src/release.mjs, newgroup dist). Details in the record's Completion section.
