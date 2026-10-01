@@ -2,6 +2,21 @@
 
 **Status** · session_01GDJca1oCWXbx9GUtgd2bh9 · depth 2 · WORKING · handled B2
 
+## Progress
+
+**N-A4 applied** (on the readings BOB adopted, B2, K700), commit "actions (T18 N-A4)" on `job/T18/actions`:
+- R7 `completed`: `RESOLUTIONS` moved from the catalogue into `src/actions/checks.mjs` with `completed`; the catalogue's copy and its comment deleted (`bio-checks.mjs`, 27 lines removed, none added); C-33.3's and C-101.4's translations name it. *Meets R7's mark.*
+- R8 the premise override: `premise_override: {reason}` stands in for the determination on the write that first sets `breach: true`, by a member (`MACHINE_CANNOT_OVERRIDE`); edited, removed or added later, `PREMISE_OVERRIDE_REWRITTEN`; malformed, `PREMISE_OVERRIDE_REFUSED`; stamped who and when once in `action_overrides`; read as `{reason, by, at, says}`. *Meets R8's mark.*
+- R9 the addressee's arms (office, press, organisation, group, audience, undetermined), each finding naming its arm; `counterpartyName` "role, organisation" for the named non-office arms, none for an audience; `ADDRESSEE_NOT_AN_OFFICE` for a breach action. *Meets R9's "arms beyond an office"; the person arm of `entity_id` stays deferred (needs the entities registry, not in this module's uses).*
+- R45 `contact` (`MACHINE_CANNOT_SET_CONTACT`, `CONTACT_NOT_A_MEMBER` through membership R68); R46 `plan`/`option` (`PLAN_LINK_REWRITTEN`, `PLAN_LINK_REFUSED`); R47 `actionCreate` and the ops `actioncreate`, `action`, `actions`; R48 pressure (`actionCorrespond`'s `pressure`, `actionPressure`, `op=actionpressure`, `action_pressure`, the read's `pressure`, `actionsFor({pressure: true})`); R49 met by the absence of any grade check, tested. *Meets R45–R49's marks.*
+- Converts: `risk-tier` (R40's full table; R37/R7 the tier arm for 9 and `unknown`; R25/R12 a stated undetermined tier; the D-505 union arms) and `d526-refusal-order` (R2 with no envelope type), in `test/m/actions/t18.test.mjs`.
+
+**Rows `awaiting stamp` (T19's promotion job):** C-33.3, C-101.3, C-101.4 (translations changed); C-117.7 `ADDRESSEE_NOT_AN_OFFICE`, C-117.8 `MACHINE_CANNOT_OVERRIDE`, C-117.9 `PREMISE_OVERRIDE_REWRITTEN`, C-117.10 `MACHINE_CANNOT_SET_CONTACT`, C-117.11 `CONTACT_NOT_A_MEMBER`, C-117.12 `PLAN_LINK_REWRITTEN`, C-117.13 `PLAN_LINK_REFUSED`, C-117.14 `MACHINE_CANNOT_MARK_PRESSURE`, C-117.15 `PRESSURE_REFUSED`, C-117.16 `PRESSURE_NOT_RECEIVED`, C-117.17 `PRESSURE_MARKED`, C-117.18 `PRESSURE_NO_ENTRY`, C-117.19 `PREMISE_OVERRIDE_REFUSED` (new).
+
+**Not yet done:** the split's deletion (J1 item 1), waiting for BOB's CHANGE saying action-clocks has merged.
+
+**Tests and checks so far:** `node --test test/m/actions/` 61 pass, 0 fail. Users' tests (`affordances`, `escalation`, `filings`, `instance-setup`, `monitoring`, `control-plane`): 386, 375 pass, 5 fail, the same 5 failing on `tranche/T18` without this change (filings R11, R15 ×2, R21: the publication split's re-points accepted red by K651; control-plane R36: N419). Checks: format 0 failures; architecture 0 failures; coverage 46 of 46 live ids named; ownership 0 failures (legacy-checks 0 added, 27 removed).
+
 ## J1 · QUESTION
 
 My readings, which I am building now; say if any is otherwise.
