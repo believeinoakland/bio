@@ -11682,18 +11682,18 @@
    "recommendation": "Option 1 plus option 3 for unattended captures; ask Bob only if Design wants option 2's collapsed form.",
    "whoDecides": "Design: DEC-51, DEC-39 and DEC-81 settle the substance; only presentation remains. Bob only if the note is to be shortened or collapsed.",
    "ruled": {
-    "date": "2026-09-29",
+    "date": "2026-10-01",
     "by": "Bob",
     "rulings": [
-     "DEC-95"
+     "DEC-95",
+     "DEC-97"
     ],
     "status": "ruled",
-    "decided": "The whole grade note is shown once, when a capture completes; a capture that completes later and unattended carries the note on the completed capture and on its queue item. The system may suggest that a capture not yet released bears on a member's work, under six guards: it appears where the member already works, never as a notification; it is labelled machine work with its reason; a dismissal is remembered; it never appears during a heavy act; a member may switch it off; and its acceptance rate is measured.",
-    "title": "Telling a member a capture's grade",
-    "stillOpen": "the held-captures list with bulk triage"
+    "decided": "The whole grade note is shown once, when a capture completes; a capture that completes later and unattended carries the note on the completed capture and on its queue item. Captures still held (collected, not yet released or set aside) are listed in a 'Held captures' view, per member and per project, showing only what the viewer may see, sortable by age, source and project, each row with its age, and never notified. A member ticks several (nothing pre-ticked) and may vouch for them together as one batch release (each document its own entry, with the member's recorded statement of how uniform the batch is and what was sampled), set them aside together with one reason (each stays held, never deleted), or link them to a question. Crucial documents, and documents caught in an unresolved contradiction, are shown as not eligible, with the reason, before the member acts. The system may also suggest that a held capture bears on a member's work, under six guards: it appears where the member already works, never as a notification; it is labelled machine work with its reason; a dismissal is remembered; it never appears during a heavy act; a member may switch it off; and its acceptance rate is measured.",
+    "title": "Telling a member a capture's grade"
    },
    "brief": {
-    "stillOpen": true,
+    "stillOpen": false,
     "settledSince": "",
     "title": "A list of held captures, and dealing with several at once",
     "inOneBreath": "Should members get one place that lists every document the group has collected but nobody has yet vouched for or set aside, and be allowed to vouch for many of them in one act?",

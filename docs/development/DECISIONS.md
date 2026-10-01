@@ -1559,3 +1559,20 @@ response: **As recommended (Bob, 2026-10-01): option A.**
 decided: 2026-10-01 · Bob
 reasoning recorded in: this entry; the UX substrate's brief for question 12.
 owed: the accept, withdraw, flag and clear acts (reasoned), the case's statement of acceptance, and the publication check that open flags on relied-on work are disclosed, as requirements for Bob's approval (BOB places them); the UX page's open question 12 marked ruled.
+
+### DEC-97 · answered
+raised: 2026-10-01 · the same design session with Bob (the UX canon's open question 13: DEC-95 item 2, not ruled then)
+for: bob
+question: Is there a list of held captures (collected, not yet released or set aside), and may a member act on several at once from it; and is anything beyond crucial material barred from a batch?
+why it is Bob's: UX, and doctrine (Intake Doctrine §4's batch rule and what "contested" means).
+provisional: batch release is allowed for large, uniform collections, each document with its own entry and the member's recorded acknowledgement; crucial or contested material is never batched (Intake Doctrine §4, 2026-07-27); the bulk release act is built, all or nothing (ratification R20-R27, K583).
+alternative: (B) the list for seeing, every act one document at a time; (C) no list, held captures shown only in search and through DEC-95's guarded suggestions.
+recommendation: (A) the held list with bulk handling.
+reversal cost: low; no screen is built.
+response: **Bob, 2026-10-01: A.**
+  1. THE LIST: a "Held captures" view, per member and per project, showing only what the viewer may see; sortable by age, source and project; each row shows its age; nothing about held captures is notified (DEC-69, DEC-94).
+  2. ACTING ON SEVERAL: the member ticks several (nothing pre-ticked) and chooses one of three acts: vouch for them together as one batch release (Intake Doctrine §4: each document its own release entry, the member's recorded acknowledgement of homogeneity and of what was sampled and checked); set them aside together with one reason (each stays held with that reason, never deleted); or link them to a question.
+  3. WHAT IS NOT ELIGIBLE: crucial documents, and documents caught in an unresolved contradiction (which fills the doctrine's word "contested"), are shown as not eligible, with the reason, before the member acts, so the all-or-nothing batch act never refuses unseen.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 13; Intake Doctrine §4.
+owed: the held-captures list and the bulk set-aside and bulk link acts (no set-aside act exists today), and the batch eligibility check's "contested" arm (a document in an unresolved contradiction), as requirements for Bob's approval (BOB places them); the UX page's open question 13 marked ruled.
