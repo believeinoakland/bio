@@ -47,3 +47,11 @@ Four readings I am building on now; answer only where you rule otherwise.
 4. **A plan is a record object** (`PLN-` document through `promotion`, escalation's pattern: an append-only Plan Log, projected into my tables; R27's history). Note for R6/R25: `membership.viewerPredicate` admits every member to any non-project bundle, so the plan's document, like an escalation's, is readable by record-wide bundle reads to a member outside the project. This module's own reads answer `NO_SUCH_PLAN` by project sight (R6, R22), and no public viewer is admitted (R25 holds). If you want plans held in tables only (no bundle), say so before my first checkpoint.
 
 Also, as decided (reported, not asked): `CONTACT_NOT_A_MEMBER` (R18) is relayed with `actions`' own row (its R45), not minted here; option ids are `opt-<n>` within a plan, proposal ids `<plan>/proposal/<n>`; a source naming an option is `<plan>#opt-<n>`.
+
+## J2 · REPORT
+
+Found in other modules (details in my record's Completion):
+1. membership R43 / next.md N426: a plan document, like an escalation's, is readable by record-wide bundle reads to a member outside its project (bundles carry no project). Already raised for T19 by K710.
+2. actions R45 and action-clocks R4 export no governed helper for CONTACT_NOT_A_MEMBER or REMINDER_REFUSED. action-plans answers each condition in R18's and R29's order by asking the owning module's own act on a probe action, in a transaction that always rolls back, so each code keeps its one minting site (the DEC-49 guard's arm G). An exported `contactNotAMember` / `reminderRefused` (as `noSuchAction` is) would let action-plans route through it and drop the probes: a small item for each module's next job.
+3. Wiring for later jobs: legacy-store's dispatch spread of `actionPlansOps` (`optionpropose` answers a promise: it awaits ai-runs `read`, K710); op-declarations: 15 op specs, not 14 (`planproposals`, K660); control-plane stamps `author`, `viewer`, `proposer`; the host must build `actionPlansOf` before any plan-mode `airunopen` (else ai-runs refuses `AI_RUN_MODE_UNCHECKED`, fail closed); queue-producers R16 reads `checkpointsDue({nowMs, limit})`.
+4. No generated artifact is stale.
