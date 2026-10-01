@@ -1,6 +1,6 @@
 # actions (T18)
 
-**Status** · session_01GDJca1oCWXbx9GUtgd2bh9 · depth 2 · COMPLETE · handled B4
+**Status** · session_01GDJca1oCWXbx9GUtgd2bh9 · depth 2 · COMPLETE · handled B5
 
 ## Progress
 
@@ -17,11 +17,13 @@
 
 **Found in another module (REPORTED in COMPLETE):** `filings` R7 (`test/m/filings/` "R7 the sending is one `sent` correspondence entry …") now fails: `src/filings/index.mjs`:573 offers clock entries through `actions.clockPropose`, which left with the split. Its re-point to `action-clocks` is filings' own entry this layer ("The split's share: `clockPropose` read from action-clocks"). Nothing else in another module.
 
-**Deferred:** R9's `entity_id` naming a person (needs the entities registry, not in this module's uses; ACTIONS #1's deferral). Nothing else.
+**B5 (K707) re-open done:** R9's `entity_id` naming a person, through `entities`' `readEntity` (its R5), now in the uses: refused `COUNTERPARTY_REFUSED` with a finding naming `arm: person`, on every named arm; an office in the registry and an id the registry does not hold land. *Meets R9's last remainder.* Deferred: nothing.
+
+**After B5:** actions 61/61. Users (`affordances`, `escalation`, `filings`, `instance-setup`, `monitoring`, `control-plane`, `action-clocks`, `actions`) 477: 469 pass, 2 fail: control-plane R36 (N419, red on the tranche before) and control-plane "R3 R7 R12: layer 9's 22 mutating ops … the op maps hold exactly those 37 ops", which pins layer 9's op set: this job's R47/R48 ops (`actioncreate`, `action`, `actions`, `actionpressure`), already on `tranche/T18` since the early merge, are N-A12's op specs for `op-declarations`/`control-plane` (layer 11). Checks: format, architecture, coverage 46/46, ownership all 0 failures.
 
 **Tests and checks (final):** `node --test test/m/actions/` 60 pass, 0 fail. Users' tests (`affordances`, `escalation`, `filings`, `instance-setup`, `monitoring`, `control-plane`, `action-clocks`): 406, 394 pass, 6 fail: filings R7 (above, filings' re-point), and the 5 that fail on `tranche/T18` without this job (filings R11, R15 ×2, R21: K651; control-plane R36: N419). Checks: format 0 failures; architecture 0 failures; coverage 46 of 46 live ids named; ownership 0 failures (legacy-checks: the first commit removed 27 lines, `RESOLUTIONS`, and added none).
 
-Size (session_01GDJca1oCWXbx9GUtgd2bh9): test runs 11, module lines 3829
+Size (session_01GDJca1oCWXbx9GUtgd2bh9): test runs 14, module lines 3846
 
 ## J1 · QUESTION
 
@@ -50,3 +52,7 @@ N-A4 is applied and pushed on job/T18/actions (readings as adopted, B2): R7 comp
 ## J3 · COMPLETE
 
 B4 done and pushed: tranche/T18 merged; the split's deletion as K700/K704 (clockPropose, computeDeadline, the clock proposal label, action_clock_proposals and its ACTIONS_TABLES name, the R32 arm; R35's label off the projection test); pendingClocks, its bounds, PENDING_CLOCKS_BAD_BEFORE's row and R31's tests kept (K625). Tests: actions 60/60. Users (affordances, escalation, filings, instance-setup, monitoring, control-plane, action-clocks) 394/406: the 5 red on tranche/T18 already (filings R11, R15 x2, R21 per K651; control-plane R36, N419) and one new, filings R7, because src/filings/index.mjs:573 offers clock entries through actions.clockPropose: its re-point to action-clocks is filings' own entry this layer. Checks: format, architecture, coverage 46/46, ownership all 0 failures. Deferred: R9's entity_id person arm only. Rows awaiting stamp and marks met are in my record.
+
+## J4 · COMPLETE
+
+B5 done and pushed: tranche/T18 merged; R9's entity_id naming a person met through entities' readEntity (R5): COUNTERPARTY_REFUSED with a finding naming arm: person, on every named arm; an office in the registry and an unregistered id land; tested. Nothing deferred now. actions 61/61. Users (affordances, escalation, filings, instance-setup, monitoring, control-plane, action-clocks, actions) 469/477 pass... correction: 469 pass, 2 fail: control-plane R36 (N419, already red) and control-plane 'R3 R7 R12: layer 9's 22 mutating ops ... the op maps hold exactly those 37 ops', which my R47/R48 ops (actioncreate, action, actions, actionpressure), on the tranche since the early merge, widen; their op specs are N-A12's (op-declarations/control-plane, layer 11). Checks: format, architecture, coverage 46/46, ownership all 0 failures.
