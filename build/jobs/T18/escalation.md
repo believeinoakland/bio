@@ -26,3 +26,7 @@
 - `node checks/ownership.mjs /home/user/bio escalation tranche/T18`: 6 files changed by escalation between tranche/T18 and HEAD; 0 failures.
 
 Size (session_01Sa2gjuhjzD2CRUGeynitk9): test runs 3, module lines 42
+
+## J1 · COMPLETE
+
+ESCALATION #6 complete on job/T18/escalation. N-A6 applied: R16 escalationsDue items carry project and opened_by; R22 escalationsFor({determination, viewer}) new (oldest first, id/state/stage; conformance.noSuchDetermination for absent/invisible; items [] for none; writes nothing); R23 escalationAttach refuses an action whose document states premise_override ACTION_PREMISE_OVERRIDDEN after NO_SUCH_ACTION and before NOT_A_BREACH_ACTION, new row C-116.45 awaiting stamp (T19). N242's share already met since T11 (N297), confirmed with the DEC-49 guard on this tree: no FAIL names escalation; only release-pinned floors move by one. Marks met (rule 5): R22's and R23's 'not yet met', and the Status line's. R23 reads the override from the action's document, so it does not depend on actions' R25 field name; a real-actions arm can be added after actions and filings merge if you want it. Tests 31/31; format, architecture, coverage (23/23), ownership: 0 failures. Nothing in other modules. Ready to merge early for action-plans.
