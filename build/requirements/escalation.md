@@ -74,6 +74,12 @@ Terms. The **stages**, in order: `1 documentation` (discovery and documentation)
 - **R19** No input or answer carries a significance, severity, priority, urgency or score (K12); no stage act has a purpose outside enforcing a standard the escalation pursues (Operational Principle 1, K14).
 - **R20** Every read answers an escalation in a project the viewer may not see as absent. Tables are declared to purge (K23). No place, office or law is named in this module's behaviour or outward text.
 - **R21** An escalation is a record object of its own type: promoted through `promotion`, with history, audit and export like a determination; R18's rule holds.
+- **R26** (K903 (4), DEC-36) An attached action the viewer may not see (`actions.actionRead` refuses it) is withheld whole from every read of the escalation (R2):
+  - it leaves `actions`, with its stage, attacher, time, purpose, standards and filings;
+  - R6's note naming it leaves `notes`;
+  - an id naming it or one of its ledger entries leaves a trigger's `ids` and a history entry's trigger ids.
+
+  No id, state, placeholder or count. The escalation states `out_of_view: true`, which says only that something was withheld. The escalation's own stage, history acts, evaluations and proposals stand. A viewer who may see everything is answered as before, with no `out_of_view` key. *(not yet met: T20 layer 9)*
 
 ### Satisfies
 
