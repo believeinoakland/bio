@@ -30,3 +30,17 @@ B3 applied: tranche merged; the pin is pushed. It builds this tree's plane in me
 The architecture check now reports 1 failure: the test imports `bundler`, which installer does not declare in `uses`. (format, coverage 33/33, ownership: 0 failures.)
 
 Best reading: add `bundler` (layer 1, earlier in the order) to installer's `uses` in `modules.json` — a test-only use, and the installer's own bundle is already built by it (manifest §14). I need that edit merged to pass the check; then I record completion and post COMPLETE. If you prefer the pin read the committed `bio-plane/dist/bio-plane.bundled.mjs` instead (no import, but red until you regenerate it at the close), or read control-plane's source text, say so and I change it.
+
+## J4 · COMPLETE
+
+**Entries applied.** N336 (DIST-15), installer R20 as amended (K649 (6), K723, K724): `planeLimits` reads the plane's one `bio-plane-limits/1 k=v …` statement (keys sorted, positive integers, any quote style) from the bytes R8 chose and verified; the install and the update send exactly those (`PLANE_LIMITS`, the installer's own constant, is gone); a release stating none or unreadably is passed over and named as R8 names a failed one, the built-in used; a built-in stating none refuses the act by name before any upload, and on the install before anything is created (the release is now chosen before `plan` and `r2`). The fleet statement is unchanged. R20's `not yet met` mark (DIST-15; `PLANE_LIMITS` a pinned constant) is met: please strike it (rule (5)).
+
+**Tests.** R20's test replaces its todo: limits sent exactly on install and update in three quote styles; none, two statements, unsorted, zero, non-numeric and duplicate keys each passed over by name; with this tree's built-in (0.79.0, stating none) the install refused with nothing created and the update refused with the copy unchanged; manifest keys unchanged and the fleet installs; and the pin (B3, K738): this tree's plane built in memory by the bundler's recipe states exactly `wrangler.jsonc`'s `limits`. R4 gains the `rel` refusal case. The fixture and the wizard suite serve releases that state limits; the arms about the built-in fallback assert whichever holds, so they survive the cut that embeds a release stating limits. Negative controls: a constant restored in the install upload → 28/1 (R20 alone); control-plane's statement changed to 999 → 28/1 (R20 alone); both restored byte-identically.
+`npm test` (newgroup): embed 23 passed, 0 failed; wizard 207 passed, 0 failed; requirements 33 tests, 29 pass, 0 fail, 4 todo (R13, R24, R32, R33, not in this tranche). No layer tests are named in the manifest.
+Checks: format 0 failures; architecture 0 failures (after K738's `bundler` use); coverage 33 of 33 live ids named, 0 failures; ownership 5 files, 0 failures.
+
+**Deferred.** None.
+
+**Other modules / artifacts.** `newgroup/dist/newgroup.bundled.mjs` (installer's, §14) is stale against `src/index.mjs`; regenerated at the close by you, and per K724 not to be deployed before a release stating limits is embedded (built from this tree it refuses every act, by name). Nothing found in another module.
+
+Size (session_019U1PuTa7xa7HZ5P3tFmS5D): test runs 14, module lines 1797
