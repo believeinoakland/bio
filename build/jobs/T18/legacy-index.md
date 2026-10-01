@@ -23,6 +23,6 @@
 
 Size (session_01LkPKEan57umKVtgyg8qesS): test runs 3, module lines ~3,960 deleted, 3 written.
 
-## J1 · COMPLETE
+## J1 · BLOCKED
 
-Entry applied whole, nothing deferred: Bob approved the deletions in this session. migrate/, coverage.mjs, declared-source.mjs and the four probes deleted; package.json drops test:migrate, test:coverage and 61 scripts naming absent files; budgetsweep and battery comments updated. src/index.mjs untouched; nothing awaiting stamp. For you: drop migrate/ from paths and migrate/README.md from not_product. Reports in the record: old suites broken by the removals (unrun, K619), comments in other modules naming the retired files, and a pre-existing fleetbundles failure (agent-worker's 153-input pin) identical on tranche/T18. Checks: format, architecture, coverage, ownership 0 failures.
+Cause: needs Bob. NEEDS BOB: approve, in LEGACY-INDEX #11 (session_01LkPKEan57umKVtgyg8qesS), the git rm of bio-plane/migrate/ (migrate.mjs, local-plane.mjs, README.md), bio-plane/scripts/coverage.mjs, scripts/declared-source.mjs and the four dead probes (d460-fixture.mjs, d460-perpage-ocr.mjs, fw20-decode-census.mjs, ua-probe.mjs). Why: the entry is these deletions (N401/K582, K636 BOB-4, K649 (8)); the permission check refused them as irreversible local destruction. Done meanwhile and pushed: package.json drops the 61 scripts naming absent files. The rest (test:migrate, test:coverage, budgetsweep's coverage row, battery.mjs comments) waits on the approval. Nothing else in the entry is independent of it.
