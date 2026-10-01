@@ -5,7 +5,8 @@
  * (rule (4) of T18's plan). Refusals minted by the modules this one uses are relayed with their own rows:
  * `NO_SUCH_PROJECT` (membership R78), `PROJECT_SEEN_NOT_A_PARTICIPANT` (membership R44), the project-authority
  * refusals (membership R55), `NO_SUCH_DETERMINATION` (conformance R19), `NO_SUCH_STANDARD` (standards R17),
- * `CONTACT_NOT_A_MEMBER` (actions R45) and `REMINDER_REFUSED` (action-clocks R4), each answered by its own module's act, `AI_RUN_NOT_PRINCIPAL`
+ * `CONTACT_NOT_A_MEMBER` (actions R45) and `REMINDER_REFUSED` (action-clocks R4), each answered through its module's
+ * exported site (`contactNotAMember`, `reminderRefused`; N427), `AI_RUN_NOT_PRINCIPAL`
  * (run-rules R5) and every refusal of the action's write (actions, action-clocks). */
 
 const at = (fn, region) => `src/action-plans/index.mjs ${fn} > ${region}`;

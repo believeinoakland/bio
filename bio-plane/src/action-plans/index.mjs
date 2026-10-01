@@ -36,8 +36,8 @@
  *   strength       `projectBar` (Terms: `short` support).
  *   conformance    `determinationRead`, `determinationsFor` (R1, R5, R8); its `noSuchDetermination`.
  *   standards      `standardRead` (R12's `enforces`, R19).
- *   actions        `actionCreate`, `actionRead` (R6, R15, R18); its `noSuchAction`'s row for `CONTACT_NOT_A_MEMBER`.
- *   clocks         action-clocks' `reminderSet` (its R4; R18, R29).
+ *   actions        `actionCreate`, `actionRead` (R6, R15, R18); its `contactNotAMember` and `contactId` (its R45; R18).
+ *   clocks         action-clocks' `reminderSet` and `reminderRefused` (its R4; R18, R29).
  *   escalation     `escalationsFor`, `escalationRead` (R6, R15).
  *   filings        `availableActions` (shown beside legal options).
  *   aiRuns         `registerOpenCheck`, `onRunOpened`, `runFor`, `read`, `boundOf`, `consumeBound` (R30–R32).
@@ -50,8 +50,8 @@ import { inquiryOf } from "../inquiry/index.mjs";
 import { strengthOf } from "../strength/index.mjs";
 import { conformanceOf, noSuchDetermination } from "../conformance/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
-import { actionsOf } from "../actions/index.mjs";
-import { actionClocksOf } from "../action-clocks/index.mjs";
+import { actionsOf, contactNotAMember, contactId } from "../actions/index.mjs";
+import { actionClocksOf, reminderRefused } from "../action-clocks/index.mjs";
 import { escalationOf } from "../escalation/index.mjs";
 import { filingsOf } from "../filings/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
@@ -898,7 +898,7 @@ export class ActionPlans {
     if (unknown !== undefined) return refuseNoSuchOption(unknown);
     const bad = refuseReason(reason, NEEDS_REASON.includes(disposition));
     if (bad) return bad;
-    const rem = this.#reminders(reminders, disposition, ids, held, o.p, author, viewer);
+    const rem = this.#reminders(reminders, disposition, ids, held);
     if (rem.r) return rem.r;
     const keys = refuseKeys(args);
     if (keys) return keys;
@@ -911,39 +911,33 @@ export class ActionPlans {
              ...(disposition === "chosen" ? { reminders: rem.by } : {}) };
   }
   /* R29: the reminders the member asked for, held with the choice: `{date, on, option?}` each naming a date of its
-     option and a day; an option named once may omit `option`. `{by: {option: [{date, on}]}}` or `{r: refusal}`. */
-  #reminders(list, disposition, ids, held, p, author, viewer) {
+     option and a day; an option named once may omit `option`. `{by: {option: [{date, on}]}}` or `{r: refusal}`, the
+     refusal action-clocks' own, through its one site (`reminderRefused`, its R4; N427), judged before any action exists
+     and never by a write. */
+  #reminders(list, disposition, ids, held) {
     const none = list === undefined || list === null || (Array.isArray(list) && !list.length);
     const by = Object.fromEntries([...new Set(ids)].map((x) => [x, []]));
     if (none) return { by };
-    const refused = (opt, entry, on) => ({ r: this.#reminderRefusal(p, opt ? held.get(opt) : held.get(ids[0]), entry, on, author, viewer) });
-    if (disposition !== "chosen" || !Array.isArray(list)) return refused(null, -1, null);
+    const refused = (arm, detail, extra) => ({ r: reminderRefused(arm, `${detail} Nothing was written.`, extra) });
+    if (disposition !== "chosen")
+      return refused("entry", "reminders are set when an option is chosen, and this act does not choose one.", { disposition });
+    if (!Array.isArray(list))
+      return refused("entry", "reminders are a list of {date, on}, each naming a regulated date of the option and a day.");
     const one = new Set(ids).size === 1 ? ids[0] : null;
-    for (const r of list) {
+    for (const [i, r] of list.entries()) {
       const opt = isObj(r) ? (r.option ?? one) : null;
-      if (!isObj(r) || !opt || !by[opt]) return refused(null, -1, null);
+      if (!isObj(r) || !opt || !by[opt])
+        return refused("entry", `reminder ${i} names no option of this act; with several options, each names its option.`,
+          { index: i });
       const entry = (held.get(opt).fields.dates || []).findIndex((d) => d.date === r.date);
-      if (entry === -1 || !isDay(r.on)) return refused(opt, entry, r.on);
+      if (entry === -1)
+        return refused("entry", `reminder ${i} names no regulated date of ${opt}.`, { index: i, option: opt });
+      if (!isDay(r.on))
+        return refused("on", `reminder ${i}'s on is the day to be reminded, written YYYY-MM-DD.`, { index: i, option: opt });
       if (!by[opt].some((x) => x.date === r.date && x.on === r.on)) by[opt].push({ date: r.date, on: r.on });
     }
     return { by };
   }
-  /* R29: `REMINDER_REFUSED` is action-clocks' own (its R4), minted at its `reminderSet` and nowhere else. A reminder
-     asked with a choice is judged before any action exists, so it is asked of action-clocks on an action carrying the
-     option's dates, created in a transaction that always rolls back; its refusal is relayed unchanged. */
-  #reminderRefusal(p, opt, entry, on, author, viewer) {
-    let answer = null;
-    this.record.transact(() => {
-      const doc = actionDocument({ fields: { summary: opt.fields.summary, subjects: [], dates: opt.fields.dates || [] },
-                                   kind: "other", plan: p.id, option: opt.id, contact: null, breach: false, override: null,
-                                   at: this.now() });
-      const a = this.actions.actionCreate({ document: doc, author, viewer });
-      answer = ok(a) ? this.clocks.reminderSet({ target: a.id, entry, on: on ?? null, author, viewer }) : a;
-      return { ok: false };
-    });
-    return ok(answer) ? null : answer;
-  }
-
   /** R14: set one scenario whole, keeping the earlier version in history. */
   scenarioSet(args = {}) {
     const { plan, scenario, name, phases, author, viewer } = args;
@@ -1092,20 +1086,6 @@ export class ActionPlans {
     return [...out];
   }
 
-  /* R18: `CONTACT_NOT_A_MEMBER` is actions' own (its R45), minted at its write and nowhere else. It is asked here, in
-     R18's order (before any other refusal of the action's write), by offering actions a document whose only fault is
-     the contact, in a transaction that always rolls back; its answer is relayed unchanged. */
-  #contactRefusal(contact, p, opt, author, viewer) {
-    let answer = null;
-    this.record.transact(() => {
-      const doc = actionDocument({ fields: { summary: opt.fields.summary, subjects: [], dates: [] }, kind: "other",
-                                   plan: p.id, option: opt.id, contact, breach: false, override: null, at: this.now() });
-      answer = this.actions.actionCreate({ document: doc, author, viewer });
-      return { ok: false };
-    });
-    return ok(answer) ? null : answer;
-  }
-
   /** R18, R29: start a chosen option: compose its action, promote it, set the reminders asked with the choice, and link
    *  them, in one act; a refusal of either leaves neither. */
   optionStart(args = {}) {
@@ -1129,14 +1109,16 @@ export class ActionPlans {
     if (opt.action)
       return refusal("OPTION_STARTED", `${opt.id} was started as ${opt.action}. Nothing was written.`, { action: opt.action });
     /* END DEC-49 REGION is-start-once */
-    const contactId = contact === undefined || contact === null || contact === "" ? null : str(contact).replace(/^member:/, "");
-    if (contact !== undefined && contact !== null && contact !== "" && (!contactId || !this.membership.memberFacts(contactId))) {
-      const refused = this.#contactRefusal(contactId ?? String(contact), p, opt, author, viewer);
-      if (refused) return refused;
+    /* R18: asked before any write, as actions' write asks it (its R45), and answered through its one site. */
+    const member = contactId(contact);
+    if (contact !== undefined && contact !== null) {
+      let facts = null;
+      if (member) { try { facts = this.membership.memberFacts(member); } catch { facts = null; } }
+      if (!facts) return contactNotAMember();
     }
     const reason = override === undefined || override === null ? null : isObj(override) ? override.reason : override;
     const at = this.now();
-    const doc = actionDocument({ fields: opt.fields, kind, plan: p.id, option: opt.id, contact: contactId,
+    const doc = actionDocument({ fields: opt.fields, kind, plan: p.id, option: opt.id, contact: member,
                                  breach: breach === true, override: reason, at });
     const r = this.record.transact(() => {
       const a = this.actions.actionCreate({ document: doc, author, viewer });
