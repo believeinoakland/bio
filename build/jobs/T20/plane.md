@@ -1,6 +1,6 @@
 # plane (T20)
 
-**Status** · session_01MArhjhBE3JJDCvHTPZ55xo · depth 2 · WORKING · handled B2
+**Status** · session_01MArhjhBE3JJDCvHTPZ55xo · depth 2 · WAITING ON BOB (J1) · handled B2
 
 ## Work
 
