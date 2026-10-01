@@ -72,6 +72,9 @@ export const PAIR_RULE = "strongest-graded/first-reference-by-sort";
  *  purge's only, record-core R65 removing them from the wire). */
 export const CONNECTIONS_COUNT_KEYS = Object.freeze(["connections", "connectionPairChoices", "connectionDirty", "themes",
                                                      "themePlacements"]);
+/** R61 (K882, N454): the key list of the `refs` figure source (`refsCounts`), shaped as record-core R63's
+ *  `counts(hid)` and never registered with it: plane's own stats sight reads it (R60's registration keeps its keys). */
+export const REFS_COUNT_KEYS = Object.freeze(["refs"]);
 /** R31, R49: the reads of rows asserted apart, bounded like every read here. */
 export const ASSERTED_LIMIT_DEFAULT = 200;
 export const ASSERTED_LIMIT_MAX = 2000;
@@ -131,21 +134,32 @@ export class Connections {
 
   migrate() { migrateConnections(this.sql); }
 
+  /* The one count behind R60 and R61: `table`'s rows, less (with `hid`) the rows any of whose `keys` names a bundle in
+     `hid`. `COALESCE(k, '')`: a NULL key names no bundle, and `NULL NOT IN (…)` is NULL, which would drop the row. */
+  #count(hid, table, ...keys) {
+    const hidden = !!hid && typeof hid === "object" && typeof hid.sql === "string";
+    const args = hidden && Array.isArray(hid.args) ? hid.args : [];
+    const conds = hidden ? keys.map((k) => `COALESCE(${k}, '') NOT IN ${hid.sql}`) : [];
+    return this.#one(`SELECT count(*) AS c FROM ${table}${conds.length ? ` WHERE ${conds.join(" AND ")}` : ""}`,
+                     ...(hidden ? keys.flatMap(() => args) : [])).c;
+  }
+
   /** R60 (record-core R63): this module's figures, each counted as the legacy store's `#counts` took it. `hid` is the
    *  bundles the caller may not see (`{sql, args}`), or null for a whole count: a figure keyed on a bundle column
    *  leaves out the rows whose column names one in `hid` (a null column names none, and is counted); a figure with
    *  no such column counts every row. Synchronous; writes nothing. */
   counts(hid = null) {
-    const hidden = !!hid && typeof hid === "object" && typeof hid.sql === "string";
-    const args = hidden && Array.isArray(hid.args) ? hid.args : [];
-    const n = (table, ...keys) => {
-      const conds = hidden ? keys.map((k) => `COALESCE(${k}, '') NOT IN ${hid.sql}`) : [];
-      return this.#one(`SELECT count(*) AS c FROM ${table}${conds.length ? ` WHERE ${conds.join(" AND ")}` : ""}`,
-                       ...(hidden ? keys.flatMap(() => args) : [])).c;
-    };
+    const n = (table, ...keys) => this.#count(hid, table, ...keys);
     return { connections: n("connections", "a_bundle_id", "b_bundle_id"),
              connectionPairChoices: n("connection_pair_choices", "a_bundle_id", "b_bundle_id"),
              connectionDirty: n("connection_dirty"), themes: n("themes"), themePlacements: n("theme_placements") };
+  }
+
+  /** R61 (K882, N454): the `refs` figure, `{refs}` for `REFS_COUNT_KEYS`, for plane's own stats sight: the rows of
+   *  `refs` less those whose `bundle_id` or `target_id` names a bundle in `hid` (a NULL key names none, and is
+   *  counted); a null `hid` counts whole. Registered nowhere; synchronous; writes nothing. */
+  refsCounts(hid = null) {
+    return { refs: this.#count(hid, "refs", "bundle_id", "target_id") };
   }
 
   /* ---- sight (R12, R33) ---- */
