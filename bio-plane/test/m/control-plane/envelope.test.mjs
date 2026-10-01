@@ -428,7 +428,7 @@ test("R30: no credential, session token, secret or stack appears in any answer �
   assert.equal(later.text.includes(minted), false);
 });
 
-test("R32: each check the module raises carries its C-number on the wire — C-38.1–.8, C-69.1–.4, C-78.1–.3, C-29.6–.10, C-32.17, C-64.4, C-68.2–.4, C-66.6", async () => {
+test("R32, R39: each check the module raises carries its C-number on the wire — C-38.1–.8, C-69.1–.4, C-78.1–.3, C-29.6–.10, C-32.17, C-64.4, C-68.2–.4, C-66.6, and R39's C-61.1", async () => {
   const w = world({ answer: (c) => (c.route === "casedrafts" ? new Response("x") : null) });
   const { env, S, A } = w;
   const got = {};
@@ -447,6 +447,7 @@ test("R32: each check the module raises carries its C-number on the wire — C-3
   delete UNATTENDED_BY_DECISION.purge;
   try { await d({ op: "purge", token: S.ann }); } finally { UNATTENDED_BY_DECISION.purge = saved; }   /* C-38.8 */
   await d({ op: "nosuchop" });                                                  /* C-69.1 */
+  await d({ op: "purge", token: env.ADMIN_TOKEN });                             /* C-61.1 (R39) */
   await d({ op: "casedrafts", token: S.ann });                                  /* C-69.2 */
   await d({ op: "index", params: { store: "nope" } });                          /* C-78.1 */
   await d({ op: "knock", params: { store: "scratch" } });                       /* C-78.2 */
@@ -481,7 +482,7 @@ test("R32: each check the module raises carries its C-number on the wire — C-3
     AI_SCOPE_BEYOND_MEMBER_REACH: "C-29.9", AI_CONFINEMENT_NOT_SCRATCH: "C-29.10",
     OPERATOR_TOKEN_CANNOT_GOVERN: "C-32.17", GROUP_IDENTITY_NEEDS_SESSION: "C-64.4",
     BOOTSTRAP_CREDENTIAL_UNSET: "C-68.2", BOOTSTRAP_CREDENTIAL_PUBLISHED: "C-68.3", BOOTSTRAP_CREDENTIAL_MISMATCH: "C-68.4",
-    REPLAY_UNVERIFIED: "C-66.6",
+    REPLAY_UNVERIFIED: "C-66.6", REQUIRED_ARGUMENT_MISSING: "C-61.1",
   });
   /* the rows are the module's own (K6): its check families hold exactly these, and the wire carries each row's words */
   const own = {};

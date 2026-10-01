@@ -13,7 +13,7 @@ import { caseRatifyStatement, NS_RATIFY } from "./sshsig.mjs";
    are character-identical while the prefixes are `token:` and `class:`. */
 /* D-270 / C-61: the argument complaint's row, used AS A VALUE at the one governed site — the code is a STRING
    LITERAL there so the DEC-49 guard's arm C can COMPARE it rather than read past a variable. */
-import { REQUIRED_ARGUMENT_CHECKS, MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../checks/bio-checks.mjs";
+import { MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../checks/bio-checks.mjs";
 import { bindPublishedPlane, assembleCaseContainer } from "./publication/worker.mjs";
 import { publicReadDoorOp } from "./public-read/door.mjs";
 import { publicationDoorOp } from "./publication/door.mjs";
@@ -52,44 +52,10 @@ export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
 // T12 (control-plane's extraction, K3, K93): the op declarations, the doors, the gates, the stamps and the envelope are
 // control-plane's. What stays here is the arms whose modules have not taken them yet; control-plane routes to them.
 import { makeFetch, json, doAnswer, storeSilent, storeRefusal, relayAnswer, STORE_SILENT_REASON, STORE_SILENT_DETAIL, PUBLISHED_STORE,
-         SCRATCH, sha256Hex, classify, scopeFor, caseReader, captureKey, installationRow } from "./control-plane/index.mjs";
+         SCRATCH, sha256Hex, classify, scopeFor, caseReader, captureKey, installationRow, requiredArgument } from "./control-plane/index.mjs";
 import { decorateAct, ACT_GATE } from "./control-plane/ops.mjs";
 
 
-
-/* D-270 / C-61: the argument complaint's row reader, `admissionRow`'s shape and
-   its refusal to invent — a code with no sentence behind it throws here rather
-   than reaching a member. */
-const requiredArgumentRow = (code) => {
-  const row = REQUIRED_ARGUMENT_CHECKS[code];
-  if (!row || typeof row.translation !== "string" || !row.translation)
-    throw new Error(`requiredArgumentRow: ${code} has no REQUIRED_ARGUMENT_CHECKS row with a canned `
-                  + `translation (DEC-49). A code with no sentence behind it must not reach a member.`);
-  return { code, check: row.check, translation: row.translation };
-};
-
-
-/* THE ARGUMENT COMPLAINT (C-61). ONE code for the whole condition with the
- * argument in `argument` and the shape in `shape`, rather than a row per op —
- * `AI_BEYOND_TASK_SCOPE` is the standing precedent for one code whose producers
- * are told apart by a field.
- *
- * A HELPER RATHER THAN THREE EDITED SITES, for the `where` field's sake: a
- * DEC-49 row holds ONE `where` naming the SMALLEST SPAN, so a code minted at
- * three sites inside `fetch` could not name one honestly. */
-function requiredArgument(op, argument, shape, error) {
-  /* DEC-49 REGION is-required-argument
-   * THE SPAN `REQUIRED_ARGUMENT_MISSING` names. Code a STRING LITERAL at its
-   * site. `error` is passed in BYTE-IDENTICAL from the call site rather than
-   * rebuilt from a template here, so all three legacy sentences survive this
-   * change unaltered and no consumer reading `error` moves at all. */
-  return { ok: false, reason: "REQUIRED_ARGUMENT_MISSING",
-           ...requiredArgumentRow("REQUIRED_ARGUMENT_MISSING"),
-           error, op, argument, shape,
-           detail: `op=${op} needs '${argument}' in the shape ${shape}, and this request carried `
-                 + `none the operation could use. Nothing was changed.` };
-  /* END DEC-49 REGION is-required-argument */
-}
 
 /* THE CAPABILITY COMPLAINT (C-68.1, D-278). A copy installed with no evidence
  * storage bound cannot serve `capture`, `pdfstructure`, `acquire` or `attest`.
@@ -363,27 +329,6 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
        the store answers, and it never returns a secret. */
     if (op === "selftest") return selftest(env, storeName, { cls, scratch: SCRATCH,
       viewer: viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}` }, { json, doAnswer });
-
-    /* purge is the only destructive op. It refuses unless the caller names the
-       store it resolved to, so a purge can never land somewhere the caller did
-       not mean. Probe class reaches it, but scopeFor has already confined probe
-       to scratch, so probe can only ever confirm "scratch". */
-    if (op === "purge") {
-      const confirm = url.searchParams.get("confirm");
-      if (confirm !== storeName)
-        /* REC-185 / D-278's class: C-61.1 through the ONE governed helper, so this site adds no row
-           and the row's `where` keeps naming one span. The condition IS the argument complaint —
-           `confirm` is missing or in a shape the op cannot use — and the shape it must take is the
-           store name this request resolved to, which is why `expected` is kept beside it.
-           `error` is passed in BYTE-IDENTICAL (D-270's pattern), so `purge.test.mjs`'s two arms and
-           any script reading `error` move not at all. The helper's `detail` says NOTHING WAS CHANGED,
-           which on the plane's one destructive op is the sentence a caller most needs. */
-        return json({ ok: false,
-                      ...requiredArgument("purge", "confirm", "<store name>",
-                                          "purge requires confirm=<store>"),
-                      expected: storeName,
-                      got: confirm, tokenClass: cls, store: storeName }, 400);
-    }
 
     if (op === "livefire") {
       const out = await livefire(env, storeName, { capacity: cls === "admin",

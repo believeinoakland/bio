@@ -7,7 +7,7 @@ import { parseFrontmatter, createSha256, normalizeType, INSTALLATION_CHECKS,
          MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../../checks/bio-checks.mjs";
 /* R32: the doors' own rows (`checks.mjs`). */
 import { ADMISSION_CHECKS, NAMESPACE_CHECKS, DISPATCH_CHECKS, BOOTSTRAP_CHECKS, AI_SCOPE_CHECKS, OPERATOR_FENCE_CHECKS,
-         GROUP_IDENTITY_FENCE_CHECKS, REPLAY_CHECKS } from "./checks.mjs";
+         GROUP_IDENTITY_FENCE_CHECKS, REPLAY_CHECKS, REQUIRED_ARGUMENT_CHECKS } from "./checks.mjs";
 /* R22, R41 (K585 (1)): the composed catalogue — the check catalogue, every module's families, this module's own — and the
    one reader of a code's row (`families.mjs`). */
 import { CHECK_FAMILIES, CHECK_FAMILY_FILES, dec49Row } from "./families.mjs";
@@ -957,6 +957,33 @@ const namespaceRow = (code) => {
                   + `(DEC-49). A code with no sentence behind it must not reach a member.`);
   return { code, check: row.check, translation: row.translation };
 };
+
+/* D-270 / C-61 (R39; moved from legacy-index with the row, K621, K636): the argument complaint's row reader,
+   `admissionRow`'s shape and its refusal to invent — a code with no sentence behind it throws here rather than
+   reaching a member. */
+const requiredArgumentRow = (code) => {
+  const row = REQUIRED_ARGUMENT_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`requiredArgumentRow: ${code} has no REQUIRED_ARGUMENT_CHECKS row with a canned `
+                  + `translation (DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
+
+/* THE ARGUMENT COMPLAINT (C-61). ONE code for the whole condition with the argument in `argument` and the shape in
+ * `shape`, rather than a row per op — `AI_BEYOND_TASK_SCOPE` is the standing precedent for one code whose producers
+ * are told apart by a field. A HELPER and not edited sites, for the `where` field's sake: a DEC-49 row holds ONE
+ * `where` naming the SMALLEST SPAN. Every module that answers this complaint is handed this one function. */
+function requiredArgument(op, argument, shape, error) {
+  /* DEC-49 REGION is-required-argument
+   * THE SPAN `REQUIRED_ARGUMENT_MISSING` names. Code a STRING LITERAL at its site. `error` is passed in BYTE-IDENTICAL
+   * from the call site, so every legacy sentence survives unaltered and no consumer reading `error` moves. */
+  return { ok: false, reason: "REQUIRED_ARGUMENT_MISSING",
+           ...requiredArgumentRow("REQUIRED_ARGUMENT_MISSING"),
+           error, op, argument, shape,
+           detail: `op=${op} needs '${argument}' in the shape ${shape}, and this request carried `
+                 + `none the operation could use. Nothing was changed.` };
+  /* END DEC-49 REGION is-required-argument */
+}
 
 /* D-278 / C-68 and C-69: the same reader again, one per family, and the same
    refusal to invent. */
@@ -2655,6 +2682,19 @@ export function makeFetch(hooks = {}) {
               + `promotion records name this bundle and list this revision's bundle.md SHA-256. One of those did not `
               + `hold. Nothing was written.` }, 403);
     /* END DEC-49 REGION is-promote-replay-verified */
+    /* R39 (N408, K621): purge is the only destructive op. It refuses unless the caller names the namespace the request
+       resolved to, before the store is called, so a purge never lands somewhere its caller did not name; a probe,
+       confined to `scratch`, can confirm only `scratch`. C-61.1 through the one governed helper; `error` byte-identical
+       (D-270's pattern), and the helper's `detail` says nothing was changed. */
+    if (op === "purge") {
+      const confirm = url.searchParams.get("confirm");
+      if (confirm !== storeName)
+        return json({ ok: false,
+                      ...requiredArgument("purge", "confirm", "<store name>",
+                                          "purge requires confirm=<store>"),
+                      expected: storeName,
+                      got: confirm, tokenClass: cls, store: storeName }, 400);
+    }
     /* R28: an op whose handler still lives in legacy-index answers here, after the R14 fences and R16; undefined falls
        through to the forward. */
     const armed = hooks.gatedOp ? await hooks.gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer,
@@ -3559,4 +3599,5 @@ export { json, doAnswer, storeSilent, storeRefusal, relayAnswer, StoreSilent, ST
          installationRow, admissionRow, dispatchRow, namespaceRow, machineFenceRow, replayRow, identityFenceRow,
          dec49Row, dec49Attach, CHECK_FAMILIES, CHECK_FAMILY_FILES, sessionOpGate, migrationReplayOf, DRIVE_PROVENANCE_PATH,
          namespaceGate, pinnedNamespaceGate, confinedNamespaceGate, aiReachesAsMember, aiScopeDeclaration,
-         aiConfinementDeclaration, aiTaskScope, AI_TOKEN_SHAPE, SCRATCH_ADDRESSING_PUBLIC_OPS, publishAffordances };
+         aiConfinementDeclaration, aiTaskScope, AI_TOKEN_SHAPE, SCRATCH_ADDRESSING_PUBLIC_OPS, publishAffordances,
+         requiredArgument };
