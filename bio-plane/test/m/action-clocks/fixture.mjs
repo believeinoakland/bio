@@ -4,12 +4,13 @@
    split (K624 (1)), the share the moved tests need: retrieval's projection table is made by retrieval's own `migrate()`
    (its R61, K354) and its clock column written after each promotion from `actions`' registered facts (its R12), as
    retrieval's step would; conformance is a stand-in answering `determinationRead` (its R9 shape) from `w.determinations`
-   (id → {project, sees: [viewers]}), and content a stand-in presenting no capture. Every test drives `action-clocks` at its interface. */
+   (id → {project, sees: [viewers]}), and content a stand-in presenting no capture; local-facts is the real one (R10, R11). Every test drives `action-clocks` at its interface. */
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { actionsOf } from "../../../src/actions/index.mjs";
 import { actionClocksOf } from "../../../src/action-clocks/index.mjs";
+import { localFactsOf } from "../../../src/local-facts/index.mjs";
 import { Retrieval, PROJECTION_TABLE } from "../../../src/retrieval/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/frontmatter.mjs";
 import { DatabaseSync } from "node:sqlite";
@@ -110,10 +111,12 @@ export function world({ profiles = ["test-port-ellery"] } = {}) {
     const d = determinations.get(id);
     return d && d.sees.includes(viewer) ? { ok: true, id, project: d.project } : { ok: false, reason: "NO_SUCH_DETERMINATION" };
   } };
-  const c = actionClocksOf(host, { record, membership, actions, conformance, now: () => clock.ms });
+  /* local-facts, the real one (R10, R11): a member's confirmations are recorded through its `factConfirm`. */
+  const localFacts = localFactsOf(host, { record, membership, now: () => clock.ms });
+  const c = actionClocksOf(host, { record, membership, actions, conformance, localFacts, now: () => clock.ms });
   let n = 0;
   const w = {
-    st, host, record, membership, promotion, actions, c, clock, determinations,
+    st, host, record, membership, promotion, actions, localFacts, c, clock, determinations,
     rows: (q, ...x) => st.sql.exec(q, ...x).toArray(),
     text: (id) => record.readFile(id, "bundle.md")?.text ?? null,
     fm: (id) => { const t = w.text(id); return t ? parseFrontmatter(t).data : null; },

@@ -166,9 +166,10 @@ test("R2 a business-day count runs on the profile's holiday calendar, and is und
   const view = { holidays: profile("test-port-ellery").holidays };
   const fm = (at, dir = "received") => ({ correspondence: [{ direction: "sent", at: "2026-06-01" }, { direction: dir, at }] });
   /* Wednesday 2026-07-01: Thursday, (Friday 3 July a holiday), Monday to Thursday. */
-  assert.deepEqual(clocks.computeDeadline(d, fm("2026-07-01"), view), { date: "2026-07-09", start: "2026-07-01" });
+  const ds = ({ date, start }) => ({ date, start });   /* R10's `calendar` statement is its own test's (calendar.test.mjs) */
+  assert.deepEqual(ds(clocks.computeDeadline(d, fm("2026-07-01"), view)), { date: "2026-07-09", start: "2026-07-01" });
   /* across the weekend with no holiday. */
-  assert.deepEqual(clocks.computeDeadline(d, fm("2026-09-04"), view), { date: "2026-09-11", start: "2026-09-04" });
+  assert.deepEqual(ds(clocks.computeDeadline(d, fm("2026-09-04"), view)), { date: "2026-09-11", start: "2026-09-04" });
   /* past the calendar's last year (2027): undetermined, naming the year. */
   const far = clocks.computeDeadline(d, fm("2027-12-28"), view);
   assert.deepEqual([far.date, far.start], [null, "2027-12-28"]); assert.match(far.why, /2028/);
