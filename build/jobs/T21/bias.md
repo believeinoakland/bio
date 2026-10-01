@@ -22,3 +22,7 @@
 - `node checks/ownership.mjs … bias tranche/T21`: 4 files changed by bias; 0 failures.
 
 Size (session_01KciRDbs7ix9Xrdx5bdg4Yp): test runs 1, module lines 1814
+
+## J1 · REPORT
+
+Generated artifacts staled by my change under bio-plane/src/bias/ (regenerated nothing, per B1): the plane's bundle bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (not_product). The old N458 strings also sit in the embedded release copies release/bio-plane.bundled.mjs, newgroup/src/release.mjs and newgroup/dist/newgroup.bundled.mjs. No flaw found in another module.
