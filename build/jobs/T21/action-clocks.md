@@ -83,3 +83,7 @@ B1-B3 applied. R10 (K921, K936, K986): a business count reads the all-offices en
 ## J6 · REPORT
 
 Stale generated artifact: bio-plane/dist/bio-plane.bundled.mjs (not_product), from my R11 change under bio-plane/src/action-clocks/index.mjs; regenerate at the layer close. Nothing else found in other modules.
+
+## J7 · COMPLETE
+
+B4 (K1000) applied. R11: calendarFactsRead answers each path's actions as {action, project, created_by}, computed by the same #projectOf and #createdBy R3 uses (not copied). Not-yet-met mark met: R11 (calendar.test.mjs 'R11 each path's actions are answered as {action, project, created_by} ...': a member-created action in one project and a machine-created action in another member's project, each answered with its project and creator, equal to R3's answer; an unseen determination answers project null). No catalogue rows touched. Tests: action-clocks 27/27; queue-producers 47/47. format, architecture, coverage, ownership: 0 failures. Deferred: none. Stale: the plane's bundle (REPORT). Record: build/jobs/T21/action-clocks.md, section 'Re-opening: ACTION-CLOCKS #4'.
