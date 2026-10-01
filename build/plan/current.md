@@ -2,6 +2,8 @@
 
 **Status** · OPEN · BOB #89 · session_014Z4VHnLLkGgueMQCWFRase · depth 1
 
+**Jobs** · text-chain: TEXT-CHAIN #6 session_017vtxc1g46pax3uvWUKZx2s
+
 **The second pass (check), 2026-10-01** (K1009 (3); `plan/t22-check.md`, every finding with its evidence). It read the DECs on `main` and the design session's U1–U20, which the first pass had not: DEC-88 and DEC-89 (U6, K1014) and the owed work of DEC-81, -82, -86, -87, -90, -92 and -95 were missing (rows J1–J11); four DEC rows the first pass left out as "Bob's" are BOB's folds of rulings Bob has made and are carried, conditional on Bob approving the drafted fold before their layer, as each DEC's own owed line asks (H2, H6, H9, H16, with J3, J5); publication's split (K617, BOB's) is carried in L8 with R32 (A42, J10); the mark audit was run: 25 of the 27 marks are proved and struck at the opening, two join jobs (A9 inquiry L6, A29 monitoring L10). 35 jobs. Every change below is marked (check).
 
 **What changed versus `draft-T22.md`.** The draft carried 11 jobs from the queued entries. Written from what remains, T22 also carries: the legacy-tests retirement (K1006, N478) and its census; N476 (its order reason ended with T21's L9); scheduler R10's todo (N479); 33 stale or wrongly worded `not yet met` marks and notes, audited at the opening (A rows); four requirements with no test yet (capture-sources R37, monitoring R18 and R28, installer R32 and R33); monitoring R31/R34's todos; the shares of DEC-102, -104, -105, -107, -109 and -110 whose `owed:` line says BOB places them (now on `main`, so foldable, manifest "Parallel work"); and notes naming the deleted `src/index.mjs` as live (G1, proposed N480). 25 jobs.
