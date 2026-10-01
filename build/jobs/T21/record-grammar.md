@@ -14,14 +14,14 @@
 
 **Deferred:** none.
 
-**Found in other modules (REPORT J2):** nine tests of other modules go red with this change, each because it encodes the slot or the project ladder N456 removes; none is fixed here (P7).
+**Found in other modules (REPORT J1):** nine tests of other modules go red with this change, each because it encodes the slot or the project ladder N456 removes; none is fixed here (P7).
 - intent `test/m/intent/grammar.test.mjs`:47 (R29): expects the slot's ids `C-2.9, C-9.1`. Intent's L7 share (drops C-9.1).
-- record-core `test/m/record-core/record-core.test.mjs`:1717 (R67): expects `ids: ['C-9.1']` alone to be GRAMMAR_MALFORMED (part of a slot); C-9.1 is in no slot now, so it registers. And :2012 or near (R67, K766, "a slot several registrations"): `a` and `b` both claim `C-2.9, C-9.1`; C-9.1 is now an ordinary id, so `b` is GRAMMAR_DECLARED. Record-core's code is right under R67; its tests need re-keying to C-2.9 alone.
+- record-core `test/m/record-core/record-core.test.mjs`:1717 (R67): expects `ids: ['C-9.1']` alone to be GRAMMAR_MALFORMED (part of a slot); C-9.1 is in no slot now, so it registers. And :1984 (R67, K766, "a slot several registrations"): `a` and `b` both claim `C-2.9, C-9.1`; C-9.1 is now an ordinary id, so `b` is GRAMMAR_DECLARED. Record-core's code is right under R67; its tests need re-keying to C-2.9 alone.
 - promotion `test/m/promotion/promote.test.mjs`:340 (R19): revises a project `forming` → `investigating`, now STATE_MOVE_UNDECLARED (C-86.6) through promotion's R15 fence.
 - project-stage `test/m/project-stage/stage.test.mjs`:62, :100, :293, :385, :467 (R1, R2, R4): each writes a project's `investigating`/`matured` move, now STATE_MOVE_UNDECLARED. Rule 3 names only C-4.2 as accepted red; these are not named.
 - Already red on `tranche/T21` before this change (not mine): membership `module-order.test.mjs`:12 (R83), `t9-notice-sight-bounds.test.mjs`:185 (R79), promotion `registry.test.mjs`:58 (R39, R45, R46), all on `build/modules.json`'s order after the fold.
 
-**Generated artifacts staled (REPORT J2):** `bio-plane/dist/bio-plane.bundled.mjs` and `.bundle.json` (`not_product`; six record-grammar files changed, `fleetbundles.test.mjs` names them); `newgroup/dist/newgroup.bundled.mjs` (`installer`; `newgroup-bundle-fresh.test.mjs` (C) fails with my change, passes on the tranche). Not regenerated (B1).
+**Generated artifacts staled (REPORT J1):** `bio-plane/dist/bio-plane.bundled.mjs` and `.bundle.json` (`not_product`; six record-grammar files changed, `fleetbundles.test.mjs` names them); `newgroup/dist/newgroup.bundled.mjs` (`installer`; `newgroup-bundle-fresh.test.mjs` (C) fails with my change, passes on the tranche). Not regenerated (B1).
 
 **Process note:** a mistyped re-run (an empty file list, so `node --test` ran the repository's whole default suite) was stopped mid-run; its control tests had mutated `agent-worker/src/harness.mjs`, `index.mjs`, `agent-worker/dist/*` and `bio-plane/dist/*`. None had local changes before; all were restored to HEAD and nothing of it was committed.
 
