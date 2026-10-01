@@ -105,6 +105,42 @@ test("R9: a resolution that marks an entity leaves the alarm armed at the connec
   assert.deepEqual([fired.connderive?.entities, fired.connderive?.remaining], [1, 0], "the sweep derives the marked entity");
 });
 
+test("R5, R9: a promotion that leaves an action holding a past-dated pending clock entry arms the deadline re-check, and the real alarm marks it overdue (monitoring R34, R50)", async () => {
+  const obj = await store();
+  const DAY = 86_400_000;
+  /* yesterday, UTC: R50's wake is the start of today, already passed, so the arm sets the real alarm and workerd fires
+     it; the plane's own clock judges the mark (actions R33), so the date must truly have passed */
+  const date = new Date(Math.floor(Date.now() / DAY) * DAY - DAY).toISOString().slice(0, 10);
+  const ACT = "ACTN-2026-0900-sched";
+  const C = "2026-09-01T00:00:00Z";
+  const md = ["---", `id: ${ACT}`, "object_type: action", `title: ${ACT}`, "current_state: planned", `created: "${C}"`,
+    `last_updated: "${C}"`, "action_kind: records_request", "risk_tier: 1", "counterparty:", "  state: named",
+    "  role: Town Clerk", "  body: Town of Port Ellery", "clock:", "  - text: reply", "    description: reply window",
+    `    date: ${date}`, "    basis: statute", "    status: pending", "---", "", "An action.", ""].join("\n");
+  /* a risk tier is set only by a member's authored act (actions R40), so the action is promoted by an enrolled member */
+  const add = await POST("op=memberadd&token=adm-sch",
+    { memberId: "sam", cover: "cover for sam", role: "admin", capabilities: ["contribute", "publish"] });
+  assert.equal((await POST("op=enroll", { invite: add.invite, handle: "sam", password: "sam-passphrase-1" })).ok, true);
+  const SAM = (await POST("op=login", { role: "member:sam", password: "sam-passphrase-1" })).token;
+  const first = await obj.onAlarm(Date.now());
+  assert.equal("deadlinerecheck" in first, false, "nothing pending: it does not tick");
+  const pr = await POST(`op=promote&token=${SAM}`, { bundleId: ACT, base: null, snapKey: "20260920T000000Z_0900", author: "sch",
+    register: [], files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
+    meta: { object_type: "action", group: "a-group", title: ACT, current_state: "planned", created: C, last_updated: C } });
+  assert.equal(pr.ok, true, JSON.stringify(pr).slice(0, 300));
+  /* the real alarm fires and ticks the consumer: the entry leaves `pending`, so a later firing finds nothing due */
+  let r = null;
+  for (let i = 0; i < 100; i++) {
+    r = await GET(`op=image&token=${SAM}&id=${ACT}`);
+    const st = JSON.stringify(r);
+    if (/overdue/.test(st)) break;
+    await new Promise((ok) => setTimeout(ok, 50));
+  }
+  assert.match(JSON.stringify(r), /status: overdue/, JSON.stringify(r).slice(0, 400));
+  const after = await obj.onAlarm(Date.now());
+  assert.equal("deadlinerecheck" in after, false, "marked, it holds no wake (R15), so it is not due again");
+});
+
 test("R12: a run waiting on a request that reaches expired is woken on the alarm that expires it, exactly once", async () => {
   const obj = await store();
   const add = await POST("op=memberadd&token=adm-sch",

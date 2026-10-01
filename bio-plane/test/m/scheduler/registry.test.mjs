@@ -71,6 +71,35 @@ test("R5: deadline-recheck runs monitoring's deadlineRecheck on the alarm its R5
   assert.equal(s.consumers().at(-1), "deadline-recheck", "last of R5's consumers");
 });
 
+test("R5, R16: deadline-recheck never spins on an entry R34 cannot mark: a tick that marks nothing holds the past wake to the next UTC day; one that marks releases it", async () => {
+  const PAST = Date.parse("2026-09-20T00:00:00Z");   /* R50's wake for an entry dated 09-19, still pending */
+  const day = (t) => Math.floor(t / 86_400_000) * 86_400_000 + 86_400_000;
+  const answer = { ok: true, at: null, marked: [], failed: [{ action: "ACT-9", reason: "UNSPLICEABLE_CLOCK" }], truncated: false, escalations: null };
+  const { s, st, calls, set } = world({ "deadline-recheck": { due: (now) => (PAST <= now ? PAST : null), wake: PAST, tick: answer } });
+  assert.equal(await s.arm(NOW), PAST, "first armed at the owner's wake, due at once");
+  const r1 = await s.onAlarm(NOW);
+  assert.deepEqual(r1.deadlinerecheck.failed, answer.failed);
+  assert.equal(r1.nextAt, day(NOW), "held to the start of the next UTC day, not set in the past");
+  assert.ok(st.alarm > NOW);
+  const r2 = await s.onAlarm(NOW + 1000);
+  assert.equal("deadlinerecheck" in r2, false, "a firing before then does not run it again");
+  assert.equal(await s.arm(NOW + 2000), day(NOW), "nor does an arm pull the alarm back into the past");
+  const r3 = await s.onAlarm(day(NOW));
+  assert.equal("deadlinerecheck" in r3, true, "re-checked on the first alarm of the next day");
+  assert.equal(r3.nextAt, day(day(NOW)));
+  assert.equal(calls.filter(([m]) => m === "monitoring.deadlineRecheck").length, 2, "twice in two days, never in a loop");
+  /* a tick that marks something releases the hold: its owner's wake stands again, past or not */
+  set["deadline-recheck"].tick = { ok: true, marked: [{ action: "ACT-8", ords: [0] }], failed: [], truncated: true };
+  const r4 = await s.onAlarm(day(day(NOW)));
+  assert.equal(r4.nextAt, PAST, "progress made: the owner's wake again (more may remain)");
+  /* a tick that throws holds it as well */
+  set["deadline-recheck"].throws = "tick";
+  const T = day(day(NOW)) + 5;
+  const r5 = await s.onAlarm(T);
+  assert.match(r5.deadlinerecheck.error, /broke/);
+  assert.equal(r5.nextAt, day(T));
+});
+
 test("R8: a later module registers each consumer once; a name already registered, or one of this module's own, is refused CONSUMER_DECLARED", () => {
   const { s } = world();
   const a = s.register("queue", consumer("task-drain", { key: "drain" }));

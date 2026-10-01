@@ -64,6 +64,7 @@ const ANSWER_FIELDS = new Set(["swept", "drained", "created", "folded", "refused
                                "nextAt", "probes"]);
 const DRAIN_ZERO = Object.freeze({ drained: 0, created: [], folded: [], refused: [], waiting: [], remaining: 0 });
 const PROBE_KEY = "sched_probe";
+const DAY_MS = 86_400_000;
 const message = (e) => String((e && e.message) || e).slice(0, 500);
 
 /** R10: the rank. `items` are `{kind, id, waitingSince?, cadenceMs?}` (`kind` one of `address`, `bundle`, `request`,
@@ -94,6 +95,8 @@ export function rankBy(serves, items, now) {
 
 export class Scheduler {
   #storage; #env; #owners; #registered = new Map(); #registeredOrder = [];
+  /* deadline-recheck: the firing instant of its last tick that marked nothing, or null (see the consumer). */
+  #deadlineIdleAt = null;
 
   /** `storage` is the Durable Object's storage (its alarm, and the probe seam's one value); `owners` answers each
    *  consumer's owner (`retrieval`, `monitoring`, `connections`, `progressions`, `aiRuns`, `captureRequests`,
@@ -121,10 +124,24 @@ export class Scheduler {
       c["monitor-cadence"] = {   /* monitoring R19 */
         due: (now) => instant(o("monitoring").cadenceDue(now), now), wake: (now) => o("monitoring").cadenceWake(now),
         tick: async (now, rank) => ({ monitorcadence: await o("monitoring").cadenceTick(now, rank) }) };
-      c["deadline-recheck"] = {   /* monitoring R34, R35, its due and wake R50 */
-        due: (now) => instant(o("monitoring").deadlineRecheckDue(now), now),
-        wake: (now) => o("monitoring").deadlineRecheckWake(now),
-        tick: async (now) => ({ deadlinerecheck: await o("monitoring").deadlineRecheck(now) }) };
+      /* monitoring R34, R35, its due and wake R50. An entry R34 cannot mark stays `pending`, so R50's wake stays in
+         the past and every reconcile would find it due again at once: the alarm would spin. So when a tick marks
+         nothing, a wake at or before that tick is held to the start of the next UTC day, R50's own granularity (the
+         first alarm of a day), never an interval of this module's (R7); a tick that marks something releases it. */
+      const held = (w) => {
+        if (w === null || w === undefined || !Number.isFinite(w)) return null;
+        const idle = this.#deadlineIdleAt;
+        return idle !== null && w <= idle ? Math.floor(idle / DAY_MS) * DAY_MS + DAY_MS : w;
+      };
+      c["deadline-recheck"] = {
+        due: (now) => { const d = held(instant(o("monitoring").deadlineRecheckDue(now), now)); return d !== null && d <= now ? d : null; },
+        wake: (now) => held(o("monitoring").deadlineRecheckWake(now)),
+        tick: async (now) => {
+          this.#deadlineIdleAt = now;
+          const r = await o("monitoring").deadlineRecheck(now);
+          if (r && r.ok !== false && Array.isArray(r.marked) && r.marked.length) this.#deadlineIdleAt = null;
+          return { deadlinerecheck: r };
+        } };
     }
     if (this.#owners.retrieval) c["selection-sweep"] = {   /* retrieval R22, its wake R51 */
       due: (now) => now, wake: (now) => o("retrieval").sweepWake(now),
