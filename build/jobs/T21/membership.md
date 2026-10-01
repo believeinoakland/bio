@@ -24,3 +24,7 @@ MEMBERSHIP #15, T21 layer 2. Entries from BOB's B1 START (`build/plan/current.md
 - `checks/format.mjs`: 0 failures. `checks/architecture.mjs bio membership`: 0 failures. `checks/coverage.mjs bio membership`: 79 of 79 live ids named, 0 failures. `checks/ownership.mjs bio membership tranche/T21`: 0 failures.
 
 Size (session_01UPfhtBfCMAXM1TSrfENr6o): test runs 8, module lines 3341
+
+## J1 · REPORT
+
+Generated artifact made stale by this job: the plane's bundle, bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (inputs src/membership/index.mjs, checks.mjs, schema.mjs changed). No other bundle manifest names a membership file. Not regenerated (mechanics §14).
