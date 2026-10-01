@@ -1,4 +1,4 @@
-/* observation-log — the record of looking (requirements: `build/requirements/observation-log.md`, R1–R31; map:
+/* observation-log — the record of looking (requirements: `build/requirements/observation-log.md`, R1–R32; map:
  * `build/extraction/observation-log.md`). Extracted from the legacy store (the append site `#observe` and
  * `#observationReferent`, the writers `#observeExtraction`, `#observeIndexed`, `#observeReaderRun`,
  * `#observeResolutionAttempt`, `#observeConnectionDerivation` and the receipt's look, the missing-row rule, the
@@ -11,7 +11,8 @@
  * index notice, R7) on the same `ctx` (K31). `listenToCapture` registers the row writer on `capture`'s `observation`
  * event (R31), which the composition root calls once capture exists. `attachMeaning` registers the meaning-level writers with `entities.onResolveAttempt` and `connections`'
  * derivation notice, and this module's derivation statement as connections' provider (its R5, R51), each under this
- * module's own name. */
+ * module's own name. Its share of the instance's figures (R32) is exported for `plane` to register; it registers none
+ * itself. */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/index.mjs";
@@ -577,6 +578,29 @@ export class ObservationLog {
         WHERE level = 'content' AND subject_kind = 'capture' AND subject = ? AND authority_kind = ?
         ORDER BY seq DESC LIMIT 1`, captureSha, kind);
     return { extraction: q("extract"), index: q("derive") };
+  }
+
+  /** R32 (K861, plane R10): this module's share of the instance's figures, exported for `plane` to register under this
+   *  module's name through record-core R63 (`registerCounts("observation-log", ObservationLog.COUNT_KEYS, (hid) =>
+   *  o.counts(hid))`); the module registers nothing itself while plane holds its copy. Both are purge's proof only:
+   *  record-core keeps them off `op=stats`' answer (its R64), and the wire's log count, `observationsNonLead`, is
+   *  plane's, not this module's (K861 (2)). */
+  static COUNT_KEYS = Object.freeze(["observations", "leads"]);
+  static #COUNTED = Object.freeze({ observations: "observation_log", leads: "leads" });
+
+  /** R32, D-113 (purge PROVES what it took, and §5: *the purge proof's own count stays whole*): R63's `counts(hid)` for
+   *  this module's share, moved from the plane's held copy with its reading kept. `observations` is every row of the log,
+   *  lead looks and run rows included; `leads` every lead. NEITHER TABLE HAS A COLUMN NAMING A BUNDLE (R23), so there is
+   *  nothing for `hid` to subtract and every `hid`, null included, counts whole: `hid` is taken to fit R63's shape and
+   *  never read. A figure whose table cannot be read is left out, and R63 answers it null, never zero. Synchronous;
+   *  writes nothing; never throws. */
+  counts(hid = null) {
+    const out = {};
+    for (const key of ObservationLog.COUNT_KEYS) {
+      try { out[key] = this.#one(`SELECT count(*) AS c FROM ${ObservationLog.#COUNTED[key]}`).c; }
+      catch { /* unread: R63 answers it null, never zero */ }
+    }
+    return out;
   }
 
   /** connections' R5 provider: the derivation statement of one entity (D-241), from its latest meaning-level row, or

@@ -1,68 +1,26 @@
-/* intent — the project grammar, C-2.9's other arms and C-9.1 (R29; K653 BOB-4; rule 2, T19 layer 7). The type arm
- * record-grammar's `checkBundle` runs over a `project` bundle in its `checkProjectExtension` slot (record-grammar R28):
- * `workproduct_state`'s four rungs, each `evaluations[]` entry's shape, a `closed_reason` at `closed`, and the readiness
- * ladder (C-9.1), which advances only on recorded evaluations. It leaves the catalogue by REGISTERING with record-core's
- * grammar seam (`registerGrammar`, its R67) once per record, in `intentOf`: record-core's audit and promotion's gate
- * pass the registrations to `checkBundle` as `opts.grammars`, and a grammar claiming the slot's whole id list runs IN
- * THAT SLOT'S PLACE over the same context, so the findings, their ids, severities, messages and order are the
- * catalogue's own. Moved whole from the catalogue's `checkProjectExtension` (`checks/bio-checks.mjs`, legacy-checks),
- * which is deleted with its `LEGACY_GRAMMARS` entry. C-2.9's objective arm is not here: it is R1, this module's
- * promotion check and audit check (`./index.mjs`). Whether these arms retire (N317) is Bob's and untouched. Its shared
- * grammar (`ISO_TS_RE`) is record-grammar's. Pure: no store, no network, no clock. */
-import { ISO_TS_RE } from "../record-grammar/index.mjs";
+/* intent — the project grammar: C-2.9's `closed_reason` arm (R29; K653 BOB-4; rule 2, T19 layer 7; K899 (3), N317).
+ * The type arm record-grammar's `checkBundle` runs over a `project` bundle in its `checkProjectExtension` slot
+ * (record-grammar R28): a `closed_reason` at `closed`. It leaves the catalogue by REGISTERING with record-core's grammar
+ * seam (`registerGrammar`, its R67) once per record, in `intentOf`: record-core's audit and promotion's gate pass the
+ * registrations to `checkBundle` as `opts.grammars`, and a grammar claiming the slot's whole id list runs IN THAT SLOT'S
+ * PLACE over the same context. Bob retired the project fields `workproduct_state` and `evaluations`, and C-2.9's arms
+ * and the C-9.1 readiness ladder over them (K899 (3)): a project's stage and its work products' readiness are computed
+ * (`project-stage` R2–R4), so this arm reads neither, and a document carrying them is neither refused nor corrected
+ * for them. The slot keeps the id `C-9.1` until record-grammar's slot drops it. C-2.9's objective arm is not here: it is
+ * R1, this module's promotion check and audit check (`./index.mjs`). Pure: no store, no network, no clock. */
 
-/* The catalogue's finding shape (`f`), so a finding from this arm is the one the catalogue's arm made. */
-const f = (check, severity, message, repairs) => {
-  const out = { check, severity, message };
-  if (repairs) { out.repairable = true; out.repairs = repairs; }
-  return out;
-};
+/* The catalogue's finding shape, so a finding from this arm is the one the catalogue's arm made. */
+const f = (check, severity, message) => ({ check, severity, message });
 
-/** C-2.9: a project's work-product rungs, in the ladder's order (the UI draws them in it). */
-export const WORKPRODUCT_STATES = Object.freeze(['draft', 'internally_checked', 'externally_compliant', 'distributed']);
 /** C-2.9: the reasons a project closes for. */
 export const CLOSED_REASONS = Object.freeze(['resolved', 'superseded', 'abandoned']);
 
-/** R29: C-2.9's other arms and C-9.1, `arm(ctx, findings)` over `checkBundle`'s context; a document of any other type
+/** R29: C-2.9's `closed_reason` arm, `arm(ctx, findings)` over `checkBundle`'s context; a document of any other type
  *  gets nothing. */
 export function checkProjectExtension(ctx, findings) {
   if (ctx.fm?.object_type !== 'project') return;
-  const fm = ctx.fm;
-  const WS = WORKPRODUCT_STATES;
-  if (fm.workproduct_state !== undefined && fm.workproduct_state !== null && !WS.includes(fm.workproduct_state)) {
-    findings.push(f('C-2.9', 'error', `workproduct_state '${fm.workproduct_state}' is not one of: ${WS.join(', ')}`));
-  }
-  const evals = Array.isArray(fm.evaluations) ? fm.evaluations : [];
-  for (let i = 0; i < evals.length; i++) {
-    const e = evals[i];
-    if (!e || !['compliance', 'argument'].includes(e.kind) || !['internal', 'external'].includes(e.strictness)
-        || !['pass', 'findings'].includes(e.result) || !ISO_TS_RE.test(e.timestamp || '')) {
-      findings.push(f('C-2.9', 'error', `evaluations[${i}] lacks the required kind/strictness/result/timestamp shape`));
-    } else if (e.result === 'findings' && !e.findings_ref) {
-      findings.push(f('C-2.9', 'error', `evaluations[${i}] result is findings but findings_ref is empty`));
-    }
-  }
-  if (fm.current_state === 'closed' && !CLOSED_REASONS.includes(fm.closed_reason)) {
+  if (ctx.fm.current_state === 'closed' && !CLOSED_REASONS.includes(ctx.fm.closed_reason)) {
     findings.push(f('C-2.9', 'error', `closed state requires closed_reason in: ${CLOSED_REASONS.join(', ')}`));
-  }
-  // C-9: the readiness ladder advances only on recorded evaluations
-  const ws = fm.workproduct_state;
-  const passed = (kind, stricts) => evals.some(e => e && e.kind === kind && e.result === 'pass' && stricts.includes(e.strictness));
-  if (['internally_checked', 'externally_compliant', 'distributed'].includes(ws)) {
-    for (const kind of ['compliance', 'argument']) {
-      if (!passed(kind, ['internal', 'external'])) {
-        findings.push(f('C-9.1', 'error', `workproduct_state '${ws}' requires a passing ${kind} evaluation (internal strictness or better)`,
-          ['run the missing evaluation', 'demote workproduct_state to the highest earned rung']));
-      }
-    }
-  }
-  if (['externally_compliant', 'distributed'].includes(ws)) {
-    for (const kind of ['compliance', 'argument']) {
-      if (!passed(kind, ['external'])) {
-        findings.push(f('C-9.1', 'error', `workproduct_state '${ws}' requires a passing external-strictness ${kind} evaluation`,
-          ['run the missing evaluation', 'demote workproduct_state to the highest earned rung']));
-      }
-    }
   }
 }
 

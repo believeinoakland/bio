@@ -1,7 +1,6 @@
 // @ts-check
 /* record-grammar: the inquiry title rule (C-16). Moved from the check catalogue at T19 with its comment (draft-T19,
-   BOB-4): promotion calls it at the write (layer 2), so it sits below promotion; the catalogue re-exports each name until
-   its importers re-point (PROCESS-MECHANICS §12.2). */
+   BOB-4): promotion calls it at the write (layer 2), so it sits below promotion. */
 
 /* C-16 (RECONCILED §2.2): an inquiry has ONE authored field, the question;
    a title is a RENDERING of it and is never separately authored. THE

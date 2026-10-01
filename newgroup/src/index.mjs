@@ -300,7 +300,7 @@ export const BROWSER_BINDING = Object.freeze({ type: "browser", name: "BROWSER" 
  * call) is uploaded and not bound.
  *
  * THE ORDER, and the evidence it rests on. Cloudflare REFUSES an upload whose service binding names a worker that does
- * not exist — measured here, not read in a vendor page: `tools/deploy-fleet.mjs` records the refusal
+ * not exist — measured here, not read in a vendor page: `bio-plane/scripts/deploy-fleet.mjs` records the refusal
  * ("Service binding 'PLANE' references Worker 'bio-plane' which was not found [code: 10143]"), measured 2026-08-10
  * and re-measured 2026-09-10. And agent-worker's own manifest binds PLANE -> the plane's slug. So the fleet and the
  * plane bind EACH OTHER, and neither can be uploaded first holding a binding to the other on a fresh account: members

@@ -7,8 +7,8 @@
 /* The shared grammar this door reads (the front matter, the digest, a type's canonical spelling, the two machine-stamp
    prefixes) is record-grammar's. */
 import { parseFrontmatter, createSha256, normalizeType, MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
-/* C-68.1 (K794, K796): the capability complaint's row is acquisition's, its earliest raiser (K78 (3)). */
-import { INSTALLATION_CHECKS } from "../acquisition/checks.mjs";
+/* C-68.1 (K794, K796, K850): the capability complaint is acquisition's, minted at its one region (`evidenceStorageAbsent`). */
+import { evidenceStorageAbsent } from "../acquisition/index.mjs";
 /* R32: the doors' own rows (`checks.mjs`). */
 import { DISPATCH_CHECKS, BOOTSTRAP_CHECKS, REPLAY_CHECKS, REQUIRED_ARGUMENT_CHECKS } from "./checks.mjs";
 /* K617, K624 (2): who may call an op is `admission`'s — the namespace gates, the credential's resolution, the admission
@@ -375,12 +375,11 @@ function requiredArgument(op, argument, shape, error) {
 
 /* D-278 / C-68 and C-69: the same reader again, one per family, and the same
    refusal to invent. */
-/* C-68.2–.4 are this module's (R15); C-68.1, `storageAbsent`'s, is acquisition's row (K794), read here for the raiser this
-   door hands the arms it routes to. */
+/* C-68.2–.4 are this module's (R15). */
 const installationRow = (code) => {
-  const row = BOOTSTRAP_CHECKS[code] ?? INSTALLATION_CHECKS[code];
+  const row = BOOTSTRAP_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
-    throw new Error(`installationRow: ${code} has no INSTALLATION_CHECKS row with a canned translation `
+    throw new Error(`installationRow: ${code} has no BOOTSTRAP_CHECKS row with a canned translation `
                   + `(DEC-49). A code with no sentence behind it must not reach a member.`);
   return { code, check: row.check, translation: row.translation };
 };
@@ -409,16 +408,15 @@ const captureKey = (storeName, sha) => `${storeName}/captures/${sha}`;
 
 /* THE CAPABILITY COMPLAINT (C-68.1, D-278). A copy installed with no evidence
  * storage bound cannot serve `capture`, `pdfstructure`, `acquire` or `attest`.
- * ONE row for the four, the op named beside it, minted here rather than at four
- * sites for the same reason `requiredArgument` is: a DEC-49 row holds one
- * `where`. `error` is passed in BYTE-IDENTICAL from each site — the sites said
- * two different sentences before this and still do. Handed to every arm this
- * door routes those ops to (moved from legacy-index at T19, its door share). */
+ * ONE row for the four, the op named beside it, minted at acquisition's one
+ * region (`evidenceStorageAbsent`, K850) for the same reason `requiredArgument`
+ * is minted once: a DEC-49 row holds one `where`. `error` is passed in
+ * BYTE-IDENTICAL from each site — the sites said two different sentences before
+ * this and still do. Handed to every arm this door routes those ops to (moved
+ * from legacy-index at T19, its door share). */
 function storageAbsent(op, error) {
-  /* DEC-49 REGION is-storage-absent */
-  return json({ ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED",
-                ...installationRow("EVIDENCE_STORAGE_NOT_CONFIGURED"), error, op }, 503);
-  /* END DEC-49 REGION is-storage-absent */
+  const { status, body } = evidenceStorageAbsent(op, error);
+  return json(body, status);
 }
 
 /* REC-163 / IC-174 and REC-164: WHICH STORE `op=instancegroup` and `op=groupidentity` read, and WHO ASKS — the
@@ -1753,7 +1751,7 @@ export function makeFetch(hooks = {}) {
         detail: `this promotion says it is a replay of the record's own past, and a replay is honoured only when the `
               + `plane can check it: it must name a drive-provenance capture (\`provenanceCapture\`) that this `
               + `promotion registers at ${DRIVE_PROVENANCE_PATH}, whose bytes the record holds, and whose preserved `
-              + `promotion records name this bundle and list this revision's bundle.md SHA-256. One of those did not `
+              + `promotion records name this record and list this revision's bundle.md SHA-256. One of those did not `
               + `hold. Nothing was written.` }, 403);
     /* END DEC-49 REGION is-promote-replay-verified */
     /* R39 (N408, K621): purge is the only destructive op. It refuses unless the caller names the namespace the request
@@ -2041,8 +2039,8 @@ export function makeFetch(hooks = {}) {
            nobody assessed, and `op=projection` published it. A provenance hop a caller can hand us is one a caller
            can invent, which is the reasoning `migrationReplay` below already answers one field over.
            THE CONDITION IS THE ADMIN CLASS WITH NO SESSION, AND BOTH HALVES ARE LOAD-BEARING. Admin is the only class
-           `migrate.mjs` uses (it narrowed to admin at REC-173, and refuses to run under any other), so the migration
-           is untouched. `!viaSession` is there because the session block above sets `cls = kind` from
+           the migration tool used (`migrate.mjs`, narrowed to admin at REC-173 and retired in K739), so an honest
+           replay is untouched. `!viaSession` is there because the session block above sets `cls = kind` from
            `sess.role === "admin"`, and the FOUNDER'S OWN SESSION — the one whose stored role is the literal `admin`
            (`Store.ROOT_ADMIN`, `rootOfTrust: true`), minted by `op=claim` and `op=login` — therefore arrives as
            `cls === "admin"` exactly as the deploy token does. A person signed in at a browser is not the root of
@@ -2072,10 +2070,10 @@ export function makeFetch(hooks = {}) {
            is KEPT as the SECOND condition, as BOB #33 ruled: a non-admin caller's flag was already removed, so it is
            judged by the fences it tried to skip exactly as D-511 made it (no new refusal reaches that class).
            AN ADMIN THAT ASSERTS A REPLAY IT CANNOT SHOW IS REFUSED BY NAME (C-66.6), NOT DOWNGRADED. Deleting the
-           flag and letting the promotion land as an ordinary one would be D-511's answer, and it is wrong for the
-           one caller that sends the flag honestly: `migrate.mjs` carries the Drive era VERBATIM, and an ordinary
-           creation is rewritten on the way in (D-436's group stamp; D-78's restamp) — the migration would report
-           success over bytes the Drive record does not list. So the root of trust hears which claim failed and
+           flag and letting the promotion land as an ordinary one would be D-511's answer, and it is wrong for an
+           honest replay, which carries the record's past VERBATIM (as the Drive-era migration did, through its tool
+           `migrate.mjs`, retired in K739), while an ordinary creation is rewritten on the way in (D-436's group stamp;
+           D-78's restamp) — the replay would report success over bytes the Drive record does not list. So the root of trust hears which claim failed and
            nothing is written. An inquiry CREATION that asserts nothing is still asked, as REC-173 built it: verified,
            it is a migration replay; unverified, it is an ordinary creation and rule 2 and D-78 apply unchanged.
            RESIDUE, STATED: the provenance capture is itself uploaded by the root of trust, whose honesty the record

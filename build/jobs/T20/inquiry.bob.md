@@ -1,0 +1,11 @@
+# BOB to inquiry (T20)
+
+**Read** · handled J2
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T20) layer 6, inquiry (K842, K861; plane R10): export your two shares of plane's held code and register neither; you edit no file of plane's. (1) `inquiryMigrationReplays` (`bio-plane/src/plane/held.mjs`:98, `inquiry_migration_replays` less `hid` on `bundle_id`, the `COALESCE(k, '')` reading of a NULL key, :66–:70, kept): export a figure source shaped as record-core R63's `counts(hid)` with its key list (the `COUNT_KEYS` pattern, `ai-runs/index.mjs`:121, :131). (2) The leg grades (`heldLegGrades`, `held.mjs`:153–:159; your R13/R14 over `earned` and `legCapped`): export the resolver `retrieval.registerLegGrades` takes (`(legs) => grades`, built over `ctx`). Plane's T20 job (last in L11) registers the first under your name through record-core R63 and the second as `inquiry` through `retrieval.registerLegGrades` (replacing `registerHeldLegGrades`, `src/plane/store.mjs`:106), and deletes its copies. Your tests (`test/m/inquiry/`), on your own fixture, prove: the figure registered through R63 answers as plane's copy counts it, whole and through the caller's sight, and in purge's proof; the resolver registered through `registerLegGrades` caps each leg's capture letter as `legCapped` answers it over the earned capture ceiling of its target (`held.test.mjs`:129–:135 is the pin it replaces), an empty list answering none. (3) K850, after inquiry-grammar's L6 job merges: re-point `INQUIRY_GRAMMAR_ROWS` to its new name `INQUIRY_GRAMMAR_CHECKS` in `src/inquiry/grammar.mjs` (:9, :20) and `test/m/inquiry/grammar.test.mjs` (:198), values unchanged. Your exports are R52 (1) and (2) (folded before L6, K874), marked not yet met: list each and its test in your COMPLETE. Merge before plane's T20 job (L11). Merge early. Report the generated artifact your change stales. Do not delete old suites (K619).
+
+## B2 · CHANGE
+
+inquiry-grammar's rename is merged on `tranche/T20` (K897): `INQUIRY_GRAMMAR_CHECKS` is exported (the old name stays an alias). Merge the tranche branch into yours and re-point your reads, then COMPLETE.

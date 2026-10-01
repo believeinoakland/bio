@@ -115,12 +115,12 @@ export function conclusionMovedRefusal(caseId, edition, project, moved) {
 
 /* R18 (N364; DEC-80 items 3 and 4): the pre-flight's one refusal of its own. The act has no such answer, because a
    signature from a key nobody registered fails as `SIG_UNKNOWN_KEY` only once it is made; before it is made, the
-   member is told they hold no key the ceremony will accept, and how to get one (membership R89). Like `NO_SIGNERS`, it
+   member is told they hold no key the ceremony will accept, and how to get one (credentials R9, was membership R89). Like `NO_SIGNERS`, it
    has no catalogue row. */
 export function noAttestingKeyRefusal(signer) {
   return { ok: false, reason: "NO_ATTESTING_KEY", code: "NO_ATTESTING_KEY", signer: signer ?? null,
     detail: "you hold no registered, active signing key, so a signature you make now would not be accepted "
           + "by the ceremony. Nothing was written.",
-    remedy: "Register a key of your own from your signed-in session (op=signerregister, membership R89), or ask "
+    remedy: "Register a key of your own from your signed-in session (op=signerregister, credentials R9), or ask "
           + "an administrator to register one for you; then sign." };
 }

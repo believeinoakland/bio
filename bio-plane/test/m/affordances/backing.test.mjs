@@ -173,3 +173,26 @@ test("R2: scenarioset, graded `reversible` (K727), asks no reason and is taken b
   assert.deepEqual([sc.name, sc.version], ["Second line", 2]);
   assert.ok(sc.history.some((h) => h.name === "First line"), "the earlier version is kept");
 });
+
+/* K918 (T20): actions R52's hold statement, graded `reasoned`, driven at actions' interface over its fixture: on a
+   `legal` pressure mark, a hold stated well-formed but without its reason is refused HOLD_REFUSED, in the justification
+   family, and with one it is accepted; a later statement corrects it forward, the earlier kept. */
+import { world as aWorld, V as AV } from "../actions/fixture.mjs";
+test("R19 R2: actionhold, graded `reasoned` (K918), is refused without its reason on a legal pressure mark, with a code "
+   + "in JUSTIFICATION_REFUSALS, and accepted with one", () => {
+  const w = aWorld(), A = "ACTN-2026-0001-a", M = AV("alice");
+  w.action(A, ["correspondence:", "  - direction: received", "    at: 2026-09-03", '    account: "a letter"',
+               "    author: member:alice"]);
+  assert.equal(w.a.actionPressure({ target: A, ord: 0, pressure: { kind: "legal", note: "a threatened suit" },
+                                    viewer: M, author: M }).ok, true);
+  assert.equal(RUNGS.actionhold, "reasoned");
+  for (const hold of ["in_place", "released"])
+    for (const reason of [undefined, null, "", "   "]) {
+      const r = w.a.actionHold({ target: A, ord: 0, hold, reason, viewer: M, author: M });
+      assert.equal(r.reason, "HOLD_REFUSED", `${hold} ${JSON.stringify(reason)}`);
+      assert.ok(JUSTIFICATION_REFUSALS.includes(r.reason));
+    }
+  assert.equal(w.a.actionHold({ target: A, ord: 0, hold: "in_place", reason: "preserving the emails", viewer: M, author: M }).ok, true);
+  assert.equal(w.a.actionHold({ target: A, ord: 0, hold: "released", reason: "the claim was withdrawn", viewer: M, author: M }).ok, true);
+  assert.deepEqual(w.a.actionRead({ id: A, viewer: M }).pressure[0].holds.map((h) => h.hold), ["in_place", "released"]);
+});

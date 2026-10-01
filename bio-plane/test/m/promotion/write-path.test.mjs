@@ -13,9 +13,10 @@ import * as P from "../../../src/promotion/index.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../../../src/" + f, import.meta.url));
 const sha = (s) => createHash("sha256").update(s).digest("hex");
-/* The plane's exported Store (`src/index.mjs`), which starts instance-setup's registrations (the fact `producingGroup`,
-   K414); a probe beside it relays each request to that Store, as `store.mjs`'s own default fetch does. */
-const PROBE = 'export { Store } from "./index.mjs";\n'
+/* The plane's exported Store (`src/plane/index.mjs`, the composition root; K867: not the `src/index.mjs` re-export, which
+   plane's T20 job deletes), which starts instance-setup's registrations (the fact `producingGroup`, K414); a probe beside
+   it relays each request to that Store, as `store.mjs`'s own default fetch does. */
+const PROBE = 'export { Store } from "./plane/index.mjs";\n'
   + 'export default { fetch: (req, env) => env.STORE.get(env.STORE.idFromName("bio")).fetch(req) };\n';
 const mf = new Miniflare({ modules: true, script: PROBE, modulesRoot: "/",
   scriptPath: SRC("write-path-probe.mjs"), compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
@@ -150,10 +151,10 @@ test("R18: every refusal sited at the promote write is enforced there — each r
      grammar's document findings (C-25, C-27.15) are relayed whole (RELAYED, below). */
   const LATER = [["SELF_BASIS", "C-33.22", "inquiry"], ["BASIS_CYCLE", "C-33.23", "inquiry"],
                  ["VERSION_FROZEN", "C-25.11", "basis-versions"], ["VERSION_LEG_UNRESOLVED", "C-25.16", "basis-versions"],
-                 ["SURFACED_BY_REWRITTEN", "C-66.5", "legacy-store"]];
+                 ["SURFACED_BY_REWRITTEN", "C-66.5", "inquiry"]];
   for (const [code, check, family] of LATER) rows.push({ family, code, check, where: "" });
   assert.equal(rows.length, 21, `the rows sited at the promote write: ${rows.length}`);
-  /* A row held twice (C-26.12 and C-64.1, until their other readers re-point) is one code: probed once. */
+  /* A code is probed once, should two of these tables ever hold it (C-26.12 and C-64.1 were held twice in T19). */
   const probed = new Set();
   for (const row of rows) {
     if (probed.has(row.code)) continue;

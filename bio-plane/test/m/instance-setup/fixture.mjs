@@ -240,6 +240,6 @@ export function pageOver({ html, hash = "", session = null, fetch }) {
   const ui = new Function(...Object.keys(sandbox), script + `
 ;return { mdFor, historyOrder, FIRST_STATE, HEADINGS, RISK_TIERS, riskTierState, SETTABLE_TIERS, deriveInquiryTitle,
           profilesWarning, openProfiles, panel, chosenRiskTier, openBundle, signerAddBody, describeKey, acquireWhy,
-          PREFIX, SCHEMA_OF, splitFm, mdRender };`)(...Object.values(sandbox));
+          PREFIX, SCHEMA_OF, splitFm, mdRender, ratifyWhy, openBrowse };`)(...Object.values(sandbox));
   return { ui, el, sandbox, replaced: () => replaced, picks };
 }

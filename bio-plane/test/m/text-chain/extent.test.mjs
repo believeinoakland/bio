@@ -1,13 +1,13 @@
-/* text-chain: requirement-named tests for the content-extent algebra (build/requirements/text-chain.md R92-R98),
- * copied here from the check catalogue in T19 (draft-T19 line 28). While the catalogue keeps its copy the two must
- * answer alike: every content id is taken over `canonicalExtent`, so the parity sweep below is part of R97. */
+/* text-chain: requirement-named tests for the content-extent algebra (build/requirements/text-chain.md R92-R98).
+ * This module holds the only copy (the catalogue's was deleted at T19's close, K855; N446). Every content id is taken
+ * over `canonicalExtent`, so R97 and R98 are each swept over every kind, field and malformation against the
+ * requirement's own statement, spelled again below rather than imported. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   CONTENT_EXTENT_KINDS, CONTENT_EXTENT_A1_RE, CONTENT_EXTENT_RANGE_RE, a1ToRowCol, rangeCorners, canonicalRange,
   contentCitedAs, canonicalExtent, describeExtent,
 } from "../../../src/textchain.mjs";
-import * as catalogue from "../../../checks/bio-checks.mjs";
 import { canonicalJson } from "../../../src/record-grammar/index.mjs";
 
 const KINDS = ["document", "pdf-page", "sheet-cell", "slide-shape", "doc-para", "sheet-range", "doc-table", "image"];
@@ -15,8 +15,6 @@ const JUNK = [undefined, null, 0, 1, -1, 1.5, NaN, "", " ", "x", true, [], {}, [
   Object.create(null)];
 /* A message for any input, a prototype-less object and a symbol included. */
 const label = (x) => { try { return typeof x === "symbol" ? "symbol" : JSON.stringify(x) ?? String(x); } catch { return "(no string form)"; } };
-/* The catalogue's answer, or the exception it throws instead (its copy is not total; this one is, R83). */
-const theirs = (fn, ...a) => { try { return { value: fn(...a) }; } catch (e) { return { threw: e }; } };
 
 test("R92: CONTENT_EXTENT_KINDS is the eight landed kinds, in order, each with its human phrase; dom is not one", () => {
   assert.equal(Object.getPrototypeOf(CONTENT_EXTENT_KINDS), Object.prototype);
@@ -113,7 +111,7 @@ test("R97: canonicalExtent is canonicalJson of each arm's fixed fields, absent a
   for (const kind of KINDS) assert.equal(canonicalExtent({ kind, page: 0, ref: "one" }), canonicalExtent({ kind, page: 0, ref: "two" }));
 });
 
-/* The inputs the parity sweep and R98 drive: every kind with each of its fields valid, missing and malformed. */
+/* The inputs the R97 and R98 sweeps drive: every kind with each of its fields valid, missing and malformed. */
 function* extents() {
   const vals = {
     page: [undefined, 0, 3, -1, 1.5, "2"], rect: [undefined, [0, 0, 10, 10], [10, 10, 0, 0], [1, 2, 3], [1, 2, 3, NaN]],
@@ -137,25 +135,44 @@ function* extents() {
   yield { kind: 3, fields: "f" };
 }
 
-test("R97: canonicalExtent answers byte for byte as the catalogue's copy over every kind, field and malformation", () => {
+/* R97, spelled from the requirement: each arm's fixed fields, absent ones null, `ref` never among them. */
+const isObj = (x) => x !== null && typeof x === "object";
+const int = (n) => (Number.isInteger(n) ? n : null);
+const rect4 = (r) => (Array.isArray(r) && r.length === 4 && r.every((n) => typeof n === "number" && Number.isFinite(n))
+  ? [Math.min(r[0], r[2]), Math.min(r[1], r[3]), Math.max(r[0], r[2]), Math.max(r[1], r[3])] : null);
+const sheetOf = (s) => (typeof s === "string" && s.trim() !== "" ? s.trim() : null);
+const cellOf = (c) => (typeof c === "string" && /^\$?[A-Za-z]{1,3}\$?[1-9][0-9]{0,6}$/.test(c.trim())
+  ? c.trim().split("$").join("").toUpperCase() : null);
+function r97(x) {
+  const e = isObj(x) ? x : {};
+  switch (e.kind) {
+    case "document": return { kind: "document" };
+    case "pdf-page": return { kind: "pdf-page", page: int(e.page), rect: rect4(e.rect) };
+    case "sheet-cell": return { kind: "sheet-cell", sheet: sheetOf(e.sheet), cell: cellOf(e.cell) };
+    case "slide-shape": return { kind: "slide-shape", slide: int(e.slide), shape: int(e.shape) };
+    case "doc-para": return { kind: "doc-para", para: int(e.para), run: int(e.run) };
+    case "sheet-range": return { kind: "sheet-range", sheet: sheetOf(e.sheet), range: canonicalRange(e.range) };
+    case "doc-table": return { kind: "doc-table", table: int(e.table), cell: cellOf(e.cell) };
+    case "image": return { kind: "image", cited_as: contentCitedAs(e),
+      part: typeof e.part === "string" ? e.part.trim().toLowerCase() : null, page: int(e.page), rect: rect4(e.rect) };
+    default: return { kind: e.kind ?? null, fields: e.fields ?? null };
+  }
+}
+
+test("R97: canonicalExtent answers R97's form over every kind, field and malformation, ref never taking part", () => {
   let n = 0;
   for (const e of extents()) {
-    const t = theirs(catalogue.canonicalExtent, e);
-    if (!t.threw) { assert.equal(canonicalExtent(e), t.value, label(e)); n++; }
+    assert.equal(canonicalExtent(e), canonicalJson(r97(e)), label(e));
+    if (isObj(e) && Object.hasOwn(e, "ref")) {
+      const { ref, ...bare } = e;
+      assert.equal(canonicalExtent(e), canonicalExtent(bare), label(e));
+    }
+    n++;
   }
   assert.ok(n > 2000, `${n} inputs`);
-  /* The pieces it is built from answer as the catalogue's too. */
-  for (const x of [...JUNK, "A1", "$z$9", "AAA1", "B3:A1", " c10:a1 ", "A:C", "A0"]) {
-    for (const [mine, fn] of [[a1ToRowCol, catalogue.a1ToRowCol], [rangeCorners, catalogue.rangeCorners],
-      [canonicalRange, catalogue.canonicalRange], [contentCitedAs, catalogue.contentCitedAs]]) {
-      const t = theirs(fn, x);
-      if (t.threw) assert.equal(mine(x) === null || mine(x) === "text", true, `${mine.name}(${label(x)})`);
-      else assert.deepEqual(mine(x), t.value, `${mine.name}(${label(x)})`);
-    }
-  }
-  assert.deepEqual(CONTENT_EXTENT_KINDS, catalogue.CONTENT_EXTENT_KINDS);
-  assert.equal(CONTENT_EXTENT_A1_RE.source, catalogue.CONTENT_EXTENT_A1_RE.source);
-  assert.equal(CONTENT_EXTENT_RANGE_RE.source, catalogue.CONTENT_EXTENT_RANGE_RE.source);
+  /* The address never depends on the order a caller wrote its fields in. */
+  for (const e of extents()) if (isObj(e) && !Array.isArray(e) && typeof e !== "function")
+    assert.equal(canonicalExtent(Object.fromEntries(Object.entries(e).reverse())), canonicalExtent(e), label(e));
 });
 
 test("R98: describeExtent is the authored ref, else the derived form per arm, else the kind's phrase or the unnamed sentence", () => {
@@ -186,11 +203,43 @@ test("R98: describeExtent is the authored ref, else the derived form per arm, el
   ];
   for (const [e, want] of cases) assert.equal(describeExtent(e), want, JSON.stringify(e));
   for (const x of JUNK) assert.equal(describeExtent(x), "a part of this document the record cannot name");
-  /* Always a non-empty string, and the catalogue's own sentence wherever the catalogue answers a string. */
+  /* Over every kind, field and malformation: R98's sentence, spelled again here, and always a non-empty string. */
+  let n = 0;
   for (const e of extents()) {
-    const mine = describeExtent(e);
-    assert.ok(typeof mine === "string" && mine.length > 0);
-    const t = theirs(catalogue.describeExtent, e);
-    if (typeof t.value === "string") assert.equal(mine, t.value, label(e));
+    const said = describeExtent(e);
+    assert.ok(typeof said === "string" && said.length > 0, label(e));
+    assert.equal(said, r98(e), label(e));
+    n++;
   }
+  assert.ok(n > 2000, `${n} inputs`);
 });
+
+/* R98, spelled from the requirement: the authored ref, else each arm's derived form or fallback phrase, else the
+   kind's own phrase (own keys only), else the unnamed sentence. Pages, paragraphs and tables shown 1-based. */
+function r98(x) {
+  const e = isObj(x) ? x : {};
+  if (typeof e.ref === "string" && e.ref.trim() !== "") return e.ref.trim();
+  const sheet = sheetOf(e.sheet);
+  switch (e.kind) {
+    case "document": return "the whole document";
+    case "pdf-page": return !Number.isInteger(e.page) ? "a page of this document"
+      : `page ${e.page + 1}${Array.isArray(e.rect) && e.rect.length === 4 ? ", a region of it" : ""}`;
+    case "sheet-cell": return sheet && sheetOf(e.cell) ? `${sheet}!${sheetOf(e.cell)}` : "a cell of this spreadsheet";
+    case "doc-para": return Number.isInteger(e.para) ? `¶${e.para + 1}` : "a paragraph of this document";
+    case "slide-shape": return Number.isInteger(e.slide) ? `slide ${e.slide}` : "a shape in this deck";
+    case "sheet-range": {
+      const range = typeof e.range === "string" ? canonicalRange(e.range) : null;
+      return sheet && range ? `${sheet}!${range}` : "a range of cells in this spreadsheet";
+    }
+    case "doc-table": {
+      if (!Number.isInteger(e.table)) return "a table in this document";
+      const cell = sheetOf(e.cell);
+      return `table ${e.table + 1}${cell ? `, ${cell.split("$").join("").toUpperCase()}` : ""}`;
+    }
+    case "image":
+      if (sheetOf(e.part)) return `image ${e.part.trim().toLowerCase().slice(0, 12)}`;
+      return Number.isInteger(e.page) ? `an image on page ${e.page + 1}` : "an image in this document";
+    default: return typeof e.kind === "string" && Object.hasOwn(CONTENT_EXTENT_KINDS, e.kind)
+      ? CONTENT_EXTENT_KINDS[e.kind].human : "a part of this document the record cannot name";
+  }
+}

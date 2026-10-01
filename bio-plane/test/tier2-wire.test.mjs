@@ -68,7 +68,7 @@ import { createHash } from "node:crypto";
 import { extractPdfStructure } from "../src/pdfstructure.mjs";
 import { mergeTier2Text, perPageTierWinner } from "../src/textchain.mjs";
 
-const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
+const SRC = fileURLToPath(new URL("../src/plane/index.mjs", import.meta.url));
 const BUNDLE = fileURLToPath(new URL("../../pdf-worker/dist/pdf-worker.bundled.mjs", import.meta.url));
 const FIX = fileURLToPath(new URL("./fixtures/cpdf20/", import.meta.url));
 

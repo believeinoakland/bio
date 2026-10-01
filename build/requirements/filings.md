@@ -78,6 +78,12 @@ Terms. The **governing tier** of an action is the stricter (higher) of its kind'
 - **R18** Every filled value, packet item and chronology event names the record source it was read from; nothing is invented or defaulted, and an undetermined fact is stated as undetermined.
 - **R19** Drafts, approvals, sendings, packets, exports and proposals are append-only, keyed to the action, declared to purge (K23); every read answers an action the viewer may not see as absent.
 - **R20** No place, law, venue, template or legal organisation is named in this module's behaviour or outward text; all come from the profile, and the tests include the test profile.
+- **R27** (K903 (4), DEC-36) What the reader may not see is withheld whole, as `conformance` R24 answers it, in a draft's blanks (R3), a counsel packet's sections (R9) and its `basis_changed` (R12):
+  - a finding or standard conformance leaves out is left out of the facts and standards sections, never stood in by a null, and the section states `out_of_view: true`;
+  - a superseded standard whose successor the reader may not see is named superseded without `by`, and the cause states `out_of_view: true`;
+  - a flagged determination's causes are those conformance answers the reader, never read as the machine.
+
+  R3's blank whose source conformance withheld stays `[UNFILLED: <name>]` with why "… is not one you may see", read from conformance's `out_of_view`, naming nothing of it. Versions already assembled keep their bytes (R12).
 
 ### Satisfies
 

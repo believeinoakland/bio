@@ -200,6 +200,18 @@ export class Escalation {
     return r && r.ok !== false ? ledgerOf(r) : null;
   }
 
+  /* R26 (K903 (4), DEC-36): each attached action as `actions` answers it to this viewer, read once per attachment and
+     shared by the triggers and the actions; null where `actionRead` refuses it, which withholds it whole. */
+  #sight(attached, viewer) {
+    const seen = new Map();
+    for (const a of attached) {
+      if (seen.has(a.action)) continue;
+      const r = this.actions.actionRead({ id: a.action, viewer });
+      seen.set(a.action, r && r.ok !== false ? r : null);
+    }
+    return seen;
+  }
+
 
   /* ===================================================================== *
    * THE TRIGGERS (R2, R4–R12): each edge out of the current stage, met or not, from the record at `nowMs`.
@@ -213,9 +225,12 @@ export class Escalation {
     return ok.reduce((m, a) => (a.ms < m.ms ? a : m));
   }
 
-  #triggers(e, nowMs, viewer) {
+  #triggers(e, nowMs, viewer, sight = null) {
     const edges = STAGE_TABLE[e.stage] || [];
-    const attached = this.#attachments(e.id);
+    const all = this.#attachments(e.id);
+    const seen = sight || this.#sight(all, viewer);
+    /* R26: an action the viewer may not see drives none of their triggers and is named in none of their notes. */
+    const attached = all.filter((a) => seen.get(a.action));
     const evaluations = this.#evaluations(e.id);
     const notes = [];
     const out = [];
@@ -225,8 +240,9 @@ export class Escalation {
                  : { from: e.stage, to, met: false, ids: [], missing, ...extra });
     };
     const stageActs = (s) => attached.filter((a) => a.stage === s);
+    const ledger = (action) => { const r = seen.get(action); return r ? ledgerOf(r) : null; };
     const firstSent = (action) => {
-      const l = this.#ledger(action, viewer);
+      const l = ledger(action);
       if (!l) return null;
       const i = l.findIndex((x) => x.direction === "sent");
       return i === -1 ? null : { ledger: l, index: i, entry: l[i] };
@@ -301,7 +317,7 @@ export class Escalation {
       /* R11, R12: a received entry on an attached action recorded after the latest evaluation. */
       const alts = [];
       for (const a of attached) {
-        const l = this.#ledger(a.action, viewer) || [];
+        const l = ledger(a.action) || [];
         for (const x of l) {
           if (x.direction !== "received") continue;
           if (latest && !(instantOrder(x.recorded_at, latest.at) > 0)) continue;
@@ -375,12 +391,14 @@ export class Escalation {
 
   /* The escalation's attached actions as the reader sees them, with stage 7's statements and R12's undetermined
      election or oversight. */
-  #actionsOf(e, viewer) {
+  #actionsOf(e, viewer, seen) {
     const view = this.#view();
-    return this.#attachments(e.id).map((a) => {
-      const visible = this.actions.actionRead({ id: a.action, viewer });
+    /* R26: one the viewer may not see is withheld whole, with its stage, attacher, time, purpose, standards and
+       filings: no id, no placeholder, no count. */
+    return this.#attachments(e.id).flatMap((a) => {
+      const visible = seen.get(a.action);
+      if (!visible) return [];
       const item = { action: a.action, stage: a.stage, attached_by: a.author, at: a.at };
-      if (!visible || visible.ok === false) return { ...item, action: null, says: "an object you may not see" };
       if (a.stage === 7) {
         item.purpose = a.purpose;
         item.standards = a.standards;
@@ -394,7 +412,7 @@ export class Escalation {
         const f = this.filings.filingsFor({ action: a.action, viewer });
         item.filings = f && f.ok !== false ? { drafts: f.drafts ?? [], packets: f.packets ?? [] } : null;
       }
-      return item;
+      return [item];
     });
   }
 
@@ -412,19 +430,49 @@ export class Escalation {
     return logOf(this.#text(id));
   }
 
+  /** R26 (K903 (4), DEC-36): the read with every attached action the viewer may not see withheld whole, in the history
+   *  and the evaluations as in `actions` and `notes` (withheld at their source): its attachment entry leaves the
+   *  history, an id naming it or one of its ledger entries (`<id>`, `<id>#<ord>`) leaves an advance's trigger ids, and
+   *  a response naming it loses the key. With one withheld, no entry carries the log's `seq` (K913). The escalation's own acts stand. `out_of_view: true` says only that something
+   *  was withheld; with nothing withheld the answer is as before, with no such key. */
+  #withhold(answer, attached, seen) {
+    const hidden = new Set(attached.filter((a) => !seen.get(a.action)).map((a) => a.action));
+    if (!hidden.size) return answer;
+    const names = (x) => typeof x === "string" && (hidden.has(x) || hidden.has(x.replace(/#\d+$/, "")));
+    const response = (v) => {
+      if (!isObj(v.response) || !hidden.has(v.response.action)) return v;
+      const { response: _, ...rest } = v;
+      return rest;
+    };
+    /* K913: the log's `seq` numbers every act, a withheld attachment among them, so a gap would count it. Every entry
+       numbered from that one sequence (the history, the evaluations, the declines) is answered in its order without it. */
+    const unnumbered = (v) => { const { seq: _, ...rest } = v; return rest; };
+    const history = answer.history.filter((h) => !(h.kind === "attach" && hidden.has(h.action))).map((h) => {
+      const x = unnumbered(response(h));
+      return isObj(x.trigger) && Array.isArray(x.trigger.ids)
+        ? { ...x, trigger: { ...x.trigger, ids: x.trigger.ids.filter((i) => !names(i)) } } : x;
+    });
+    const proposed = answer.proposed.map((p) => ({ ...p, declines: p.declines.map(unnumbered) }));
+    return { ...answer, history, evaluations: answer.evaluations.map((v) => unnumbered(response(v))), proposed,
+             out_of_view: true };
+  }
+
   /** R2: the escalation as the record stands at `nowMs`. */
   escalationRead({ id, nowMs, viewer } = {}) {
     const e = this.#row(id, viewer);
     if (!e) return refuseNoSuchEscalation();
     const at = Number.isFinite(nowMs) ? nowMs : instantMs(this.now());
-    const { triggers, notes } = this.#triggers(e, at, viewer);
+    const attached = this.#attachments(e.id);
+    const seen = this.#sight(attached, viewer);
+    const { triggers, notes } = this.#triggers(e, at, viewer, seen);
     const proposed = this.#proposed(e, triggers, at);
-    const answer = {
+    let answer = {
       ok: true, id: e.id, project: e.project, determination: e.determination, act: e.act, state: e.state,
       stage: e.stage, stage_name: STAGES[e.stage], stage_since: e.stageSince, opened_by: e.openedBy, opened_at: e.openedAt,
-      as_of: iso(at), history: this.#history(e.id), standards: e.standards, actions: this.#actionsOf(e, viewer),
+      as_of: iso(at), history: this.#history(e.id), standards: e.standards, actions: this.#actionsOf(e, viewer, seen),
       evaluations: this.#evaluations(e.id), triggers, notes, proposed, exit: this.#exit(e, viewer),
     };
+    answer = this.#withhold(answer, attached, seen);
     if (e.state === "suspended")
       answer.suspended = { since: e.stateSince, says: "suspended: its proposals are not reported as due, its clocks keep "
                            + "running in the actions, and it is not ended" };

@@ -51,8 +51,15 @@ Terms. **Affected** is `{kind, description, role?}`, `kind` one of `class`, `fun
 - **R10** People are counted as a class or named in their official role, never singled out: no part names an individual; `affected.kind` has no person value, and a `role` is an office `{role, body}`.
 - **R11** No answer composes computed, assessed and undetermined parts into one figure, and none carries a significance, severity, priority or score (K12).
 - **R12** No harm is assumed from the act: every part answers its causation, `established` (naming the inquiry) or `unproven`, or `not_applicable` for a zero measure, which claims no harm (N257, K283).
-- **R13** Parts, revisions and addressed records are append-only and declared to `record-core`'s purge (K23). No place is named in this module's behaviour or outward text. Every read answers a part in a project the viewer may not see as absent.
+- **R13** Parts, revisions and addressed records are append-only and declared to `record-core`'s purge (K23). No place is named in this module's behaviour or outward text. Every read answers a part in a project the viewer may not see as absent; inside a part the viewer may see, R15.
 - **R14** A consequence part is a record object of its own type: promoted through `promotion`, with history, audit and export like a finding; R6's rule holds, a revision being a successor (`standards` R15).
+- **R15** (K903 (4), DEC-36) A part's answer (R6, R7 and every read that answers parts) withholds whole what the viewer may not see:
+  - an operand whose content lies in a bundle the viewer may not see leaves `computation.operands`;
+  - a causation inquiry the viewer may not see is not named: `causation` keeps the `state` the part recorded, and its `inquiry`, `why` and `strength` keys are left out;
+  - an id in an assessment's `rests_on` or an addressed record's `evidence` the viewer may not see leaves its list;
+  - an R8 cause about a withheld operand or the withheld causation is left out.
+
+  No id, title, state, placeholder or count: never a null in its place. The part states `out_of_view: true`, which says only that something was withheld. The computed value and grade, and every other fact the part records, stand. A viewer who may see everything is answered as before, with no `out_of_view` key.
 
 ### Satisfies
 

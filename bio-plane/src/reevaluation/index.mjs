@@ -261,12 +261,14 @@ export class Reevaluation {
                                 + `resting on it names something the record cannot show, and when it went is not `
                                 + `recorded here, so no instant is stated.` }] };
     const causes = [];
-    /* SUPERSESSION, from inquiry's reverse index and not from a walk. The superseding ids are BACK-REFERENCES: an
-       invisible one is redacted to null and the fact that this bundle was superseded still stands (REC-30). */
+    /* SUPERSESSION, from inquiry's reverse index and not from a walk. The superseding ids are BACK-REFERENCES: one the
+       viewer may not see is withheld whole, never a null in its place, the key is left out when none is left, and the
+       fact that this bundle was superseded still stands (REC-30; R2, R20, DEC-36). `withheld` says one was. */
     const sup = this.inquiry.supersededBy(targetId) || [];
-    let supersededBy = null;
+    let supersededBy = null, withheld = false;
     if (sup.length) {
-      supersededBy = sup.map((id) => visible(id));
+      supersededBy = sup.filter((id) => visible(id) !== null);
+      withheld = supersededBy.length < sup.length;
       /* D-443: ONE json_each value — a question's successors are bounded by no cap (D-36). */
       const when = this.#one(
         `SELECT MAX(last_updated) AS m FROM bundles WHERE bundle_id IN (SELECT value FROM json_each(?))`,
@@ -325,8 +327,8 @@ export class Reevaluation {
     const latest = Math.max(latestRatified, authored);
     const edition = latest > 1 ? { latest, latest_ratified: latestRatified, since: row.last_updated } : null;
     if (!causes.length && !edition) return null;
-    return { held: true, state: row.current_state, object_type: row.object_type, causes, edition,
-             ...(supersededBy ? { superseded_by: supersededBy } : {}) };
+    return { held: true, state: row.current_state, object_type: row.object_type, causes, edition, withheld,
+             ...(supersededBy && supersededBy.length ? { superseded_by: supersededBy } : {}) };
   }
 
   /* R16: the recorded re-evaluations of the (dependent, target) pairs one answer lists, keyed (dependent, target,
@@ -645,6 +647,8 @@ export class Reevaluation {
     /* Each obligation found is held with its causes, and the recorded re-evaluations of exactly those pairs are read
        once after the walk (R16), so that read is bounded by the answer. */
     const found = [];
+    /* R20: whether this answer withheld a dependent or a superseder; stated only of one target. */
+    let withheld = false;
     const place = (o, causes) => found.push({ o, causes });
     /* R27, R28: the corrected and source causes, over the legs resting on these targets, read once for the answer. */
     const onTargets = this.#rows(`SELECT bundle_id, ord, target_id, content_id FROM inquiry_basis
@@ -655,6 +659,11 @@ export class Reevaluation {
     for (const t of targets) {
       const moved = this.#moved(t, visible, reg);
       if (!moved && !correctedOn.has(t)) continue;
+      /* R20: in the listing, an obligation whose target the viewer may not see is withheld whole, as strength R6
+         withholds an unseen leg's member. A target the record no longer holds is no one's to see: its deletion cause
+         is a fact about the leg naming it, and stands (§5.4). */
+      if (!t0 && !(moved && moved.held === false) && visible(t) === null) continue;
+      if (moved && moved.withheld) withheld = true;
       /* A target whose only causes are R27's or R28's is read for its own state and type here, as `#moved` reads one. */
       const own = moved ? { state: moved.state, object_type: moved.object_type }
         : this.#one(`SELECT current_state AS state, object_type FROM bundles WHERE bundle_id=?`, t)
@@ -665,7 +674,7 @@ export class Reevaluation {
       for (const l of legs) {
         /* The row IS about this dependent, so an invisible one is withheld whole and no count of the withheld is
            reported, because that count is the leak (R3). */
-        if (visible(l.bundle_id) === null) continue;
+        if (visible(l.bundle_id) === null) { withheld = true; continue; }
         if (!byBundle.has(l.bundle_id)) byBundle.set(l.bundle_id, []);
         byBundle.get(l.bundle_id).push(l);
       }
@@ -720,6 +729,8 @@ export class Reevaluation {
           stored: this.#storedTriple(fm),
           strength: this.#strengthOf(bundleId),
           ...(moved && moved.superseded_by ? { superseded_by: moved.superseded_by } : {}),
+          /* R20: its `superseded_by` withheld a superseder (stated on the obligation, in a listing too). */
+          ...(moved && moved.withheld ? { out_of_view: true } : {}),
         }, causes);
       }
     }
@@ -747,6 +758,7 @@ export class Reevaluation {
     closedOnly.sort(order);
     this.#legsEarned(obligations);
     return { ok: true, ...(t0 ? { target: t0 } : {}), obligations, count: obligations.length,
+             ...(t0 && withheld ? { out_of_view: true } : {}),
              closed: closedOnly, closed_count: closedOnly.length,
              editions_read: reg !== null,
              ...(reg === null ? { editions_why: "no module provides the published registry, so no edition was read "
@@ -844,10 +856,12 @@ export class Reevaluation {
     const visible = this.#redactor(viewer);
     let live = null;
     try { live = t ? this.inquiry.restsOnLive(t) : null; } catch { live = null; }
-    const raised = (live && Array.isArray(live.all) ? live.all : [])
-      .filter((l) => visible(l.bundle_id) !== null)
+    const all = live && Array.isArray(live.all) ? live.all : [];
+    const raised = all.filter((l) => visible(l.bundle_id) !== null)
       .map((l) => ({ bundle_id: l.bundle_id, ord: l.ord, role: l.role ?? null, state: l.state ?? null }));
-    const out = { source, since, ...(edition != null ? { edition } : {}), raised };
+    /* R20: `out_of_view` states only that a dependent was withheld; the listener's detail is the plane's own. */
+    const out = { source, since, ...(edition != null ? { edition } : {}), raised,
+                  ...(raised.length < all.length ? { out_of_view: true } : {}) };
     if (t) this.#tellAfterCommit({ kind: "finding", subject: t, source, since, ...(edition != null ? { edition } : {}),
                                    detail: `${t} moved (${source}); ${raised.length ? "what rests on it is named" : "nothing visible here rests on it"}`,
                                    dependents: raised }, out);
@@ -881,7 +895,8 @@ export class Reevaluation {
       causes.push(...(corr.byDependent.get(id) || []));
       const state = this.#one(`SELECT current_state FROM bundles WHERE bundle_id=?`, id);
       return { id, state: state ? state.current_state : null, causes,
-               ...(moved && moved.superseded_by ? { superseded_by: moved.superseded_by } : {}) };
+               ...(moved && moved.superseded_by ? { superseded_by: moved.superseded_by } : {}),
+               ...(moved && moved.withheld ? { out_of_view: true } : {}) };
     });
     const outC = cl.map((cid) => {
       let n = null;

@@ -184,7 +184,7 @@ of a document with its own provenance, each `chain` already built by `appendStep
 - Errors: never throws.
 
 **`checkAttestation(att) → refusal | null`** A member's claim to have checked text against the image.
-- **R49** `.member` identified as a machine credential (`isMachineIdentity`, from `legacy-checks`)
+- **R49** `.member` identified as a machine credential (`isMachineIdentity`, from `record-grammar`)
   refuses `TEXT_ATTEST_MACHINE` (C-35.10), checked BEFORE anything about the extent. A non-string or
   empty `.member` refuses the same code.
 - **R50** A missing/empty `.at` refuses `TEXT_ATTEST_EXTENT` (C-35.11).
@@ -344,8 +344,8 @@ new refusal condition in this module mints the next one in the family and is add
 - **R90** (N102, D-665, D-697) `mergeTier2Text`: when tier 2 wins a page, each of the base page's `image_unread` markers is carried onto the merged page after tier 2's own, unless tier 2 states one with the same `reason` and `rect`; it counts 0 undetermined characters, so no award moves (R77's family).
 - **R91** (N104, K143) Each `STEP_KINDS` entry that is a machine reading declares `machine: true` (`ocr`, `ai`), and no other does; `MACHINE_READ_KINDS` is the frozen array of those keys in `STEP_KINDS` order (`["ocr", "ai"]`), which `query-language` re-exports.
 
-**The content-extent algebra** (copied from the catalogue in T19, which keeps its own copy until reevaluation deletes it, rule 1; K747).
-- **R92** `CONTENT_EXTENT_KINDS` is a plain object whose keys are exactly `document`, `pdf-page`, `sheet-cell`, `slide-shape`, `doc-para`, `sheet-range`, `doc-table`, `image`, in that order, each `{landed: true, human: <its phrase>}` with the catalogue's phrases; `dom` is not a key.
+**The content-extent algebra** (copied from the catalogue in T19, K747; the catalogue's copy was deleted at T19's close, K855, so this module's is the only one).
+- **R92** `CONTENT_EXTENT_KINDS` is a plain object whose keys are exactly `document`, `pdf-page`, `sheet-cell`, `slide-shape`, `doc-para`, `sheet-range`, `doc-table`, `image`, in that order, each `{landed: true, human: <its phrase>}`, the phrases unchanged from the catalogue's as this module copied them (K747); `dom` is not a key.
 - **R93** `CONTENT_EXTENT_A1_RE` matches exactly a cell in A1 notation (an optional `$`, 1–3 letters of either case, an optional `$`, a row 1–9999999 with no leading zero); `CONTENT_EXTENT_RANGE_RE` matches such a cell or two joined by `:`.
 - **R94** `a1ToRowCol(cell)` → `{col, row}`, both 1-based, the column bijective base 26 (A=1, Z=26, AA=27, ZZ=702, AAA=703), `$` dropped and case folded; `null` for anything else.
 - **R95** `rangeCorners(range)` → `{r0, c0, r1, c1}` with each pair ordered (min, max), a single cell being a one-cell range, `null` unless the trimmed input matches `CONTENT_EXTENT_RANGE_RE`; `canonicalRange(range)` → `"<col0><r0>:<col1><r1>"`, upper case, no `$`, always two corners, `null` when `rangeCorners` is.
@@ -380,7 +380,7 @@ new refusal condition in this module mints the next one in the family and is add
   shape a caller supplies, not a fact this module holds.
 - **R85** Rule 2 (derivation only weakens) is enforced by `appendStep` and `convertedChain` alone, by
   computing `derivationCap` and comparing ranks — never by trusting a caller's claim.
-- **R86** A "no" always says which kind of no (`legacy-checks`' translations): outside a floor,
+- **R86** A "no" always says which kind of no (the translations each owner's `checks.mjs` holds): outside a floor,
   undetermined, unjoined, a different value, one system — never plain absence.
 
 ### Satisfies

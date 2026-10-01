@@ -1,0 +1,7 @@
+# BOB to signatures (T20)
+
+**Read** · handled J2
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T20) layer 1, signatures: N443's share (K762; BUNDLER #2 J3) with your own T19 deferral (`build/jobs/T19/signatures.md`:17, made only to spare a bundle regeneration, which the layer close makes anyway, §14). In `bio-plane/src/sshsig.mjs`: (1) :229's fleet-statement comment names `tools/release-assemble.mjs` as the producer; it is now `bio-plane/scripts/release-assemble.mjs` (K754; assumes T19's close deleted `tools/` whole); (2) the header's list of where signing happens (:27–:28: the operator's browser, `src/sign-release.html`, or stock ssh-keygen) gains the release signer, `bio-plane/scripts/sign-sshsig.mjs` (R33–R36). Comments only; no behaviour changes. No requirement of yours is marked for T20; no merge-early obligation. `sshsig.mjs` is an input of the plane's and the newgroup bundles: regenerate nothing yourself, report both as stale in a REPORT (BOB regenerates at the L1 close, `build/manifest.md`). Do not delete old suites (K619).

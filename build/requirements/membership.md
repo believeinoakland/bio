@@ -141,13 +141,13 @@ Terms. *Administrators* are the founder (the root of trust's session, id `admin`
 
 - **R94** (K637) `registerClaimed(module, fn)`: once, at start, one later module (`credentials`, its R17) registers `fn()`, answering whether the instance is claimed (the founder's credential held). R64 and R86 read the founder through it: the founder is an administrator, and first in R86's list, exactly when `fn()` answers true; with none registered, or when `fn` throws or answers anything but true, the instance reads as not claimed. A second registration, whoever makes it, is refused `LISTENER_DECLARED` naming the holder, and a malformed one `LISTENER_MALFORMED`, both through R81. It writes nothing and never throws.
 - **R95** `registerPasswordSetter(fn)`: one module (credentials) registers, once, the setter `enroll` (R16) calls inside its own act to set the new member's password; with none registered, or when the setter throws or answers `ok: false`, `enroll` refuses `ENROL_NOT_RECORDED` (row C-96.18: the enrolment could not be completed, nothing changed, the invitation link still works) before any membership write, so the member stays `invited`. A second registration is refused, and a non-function is `LISTENER_MALFORMED` (R81). No password is stored by membership (K774).
+- **R96** (K861, plane R10) The module exports a figure source shaped as `record-core` R63's `counts(hid)`, with its key list, for `plane` to register under this module's name: `projectParticipants` and `projectOwnerVotes`, the rows of `project_participants` and `project_owner_votes`, each less the rows whose `project_id` is in `hid`, a NULL key naming no bundle (so never dropped by `hid`); a null `hid` counts whole. It answers exactly what plane's held copy answers today, and the module registers nothing itself while plane holds that copy.
 
 ## Private
 
 ### Uses
 
 - `record-core`: a bundle's existence, type and title by id, and the project bundles (record-core R34, R35); `declarePurge` (R59).
-- `legacy-checks`: the translations of this module's refusals (C-55, C-56, C-57, C-70, C-95, C-96; C-96.1 held here since N324; C-102.11, C-102.12 held here since N128), until T19's layer-2 job copies its families into `membership/checks.mjs` (✱ `MEMBER_ID_CHECKS`, `PROJECT_AUTHORITY_CHECKS`, `CASE_AUTHORITY_CHECKS`, `PROJECT_JOIN_REQUEST_CHECKS`, `CUSTODIAL_CHECKS`, `PROJECT_VISIBILITY_CHECKS`, and C-33.28 and C-33.48; family names kept). C-29 and C-63 go to `credentials`.
 - `record-grammar`: `isMachineIdentity` and `MACHINE_CLASS_PREFIX`.
 - `signatures` is a permitted dependency; nothing in this module's share calls it.
 

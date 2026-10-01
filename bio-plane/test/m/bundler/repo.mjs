@@ -72,7 +72,7 @@ export function addMember(root, name, { version = VERSION, services = [{ binding
 /** The plane's configuration, as a parsed object, for a fixture or a function test. */
 export function planeConfig({ version = VERSION, services = [{ binding: "SELF", service: "bio-plane" }] } = {}) {
   return {
-    name: "bio-plane", account_id: ACCOUNT, main: "src/index.mjs",
+    name: "bio-plane", account_id: ACCOUNT, main: "src/plane/index.mjs",
     compatibility_date: "2026-07-01", compatibility_flags: ["nodejs_compat"],
     vars: { VERSION: version, MODE: "fixture" },
     durable_objects: { bindings: [{ name: "STORE", class_name: "Store" }] },
@@ -97,7 +97,7 @@ export async function makeRepo({ members = { "alpha-worker": {}, "beta-worker": 
   chmodSync(join(root, "bio-plane/node_modules/.bin/wrangler"), 0o755);
 
   const version = plane.version ?? VERSION;
-  put(root, "bio-plane/src/index.mjs", `import { tag } from "./tag.mjs";\nexport default { fetch() { return new Response(tag); } };\n`);
+  put(root, "bio-plane/src/plane/index.mjs", `import { tag } from "../tag.mjs";\nexport default { fetch() { return new Response(tag); } };\n`);
   put(root, "bio-plane/src/tag.mjs", `export const tag = "plane";\n`);
   put(root, "bio-plane/wrangler.jsonc", jsonc(planeConfig({ version, ...plane.config })));
   if (realPackageJson) {

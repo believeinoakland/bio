@@ -26,7 +26,7 @@ Terms. A **subject** is `{kind: "inquiry", inquiry, act?, standards?}` (suspecte
 **planRead({id, nowMs?, viewer})** (`op=plan`); **plansFor({project?, subject?, state?, after?, limit?, viewer})** (`op=plans`)
 - **R6** `planRead` answers the plan's title, state, the project's `work_kinds` (R21), subjects with their support and liveness, options (R9) with their dispositions, proposals apart (R11), scenarios (R14), each started option's action with its lifecycle state (`actions.actionRead`) and each determined subject's escalation with its stage (`escalation.escalationsFor`, its R22, then `escalationRead`), the checks (R19), and its history (every act, oldest first, with who, when and why). `NO_SUCH_PLAN` for an absent id or one the viewer may not see, one answer (R22).
 - **R7** `plansFor` lists plans the viewer may see, in id order, at most 200 per page, `truncated` measured by reading one past; `subject` finds the plans holding it.
-- **R8** Liveness is derived when read, never stored: a subject is `live`, `superseded` (naming its successor), `closed` (an inquiry), or `subject_removed`; an option bound only to subjects no longer live says so.
+- **R8** Liveness is derived when read, never stored: a subject is `live`, `superseded` (naming its successor when the viewer may see it (R35)), `closed` (an inquiry), or `subject_removed`; an option bound only to subjects no longer live says so.
 
 **optionAdd({plan, summary, detail, category, subjects, addressee?, dates?, tier?, enforces?, lobbying?, author, viewer})** (`op=optionadd`); **optionRevise({plan, option, reason, ...fields, author, viewer})** (`op=optionrevise`)
 - **R9** Refusals in order: `MACHINE_CANNOT_ADD_OPTION`; `NO_SUCH_PLAN`; `PLAN_CLOSED`; `projectAuthority(..., "joined")`; `OPTION_NO_SUMMARY` (empty or over 200 characters); `OPTION_DETAIL_TOO_LONG` (over 5,000); `CATEGORY_UNKNOWN`; `OPTION_NO_SUBJECT` (none, or one not in the plan); `ADDRESSEE_REFUSED` (R10); `DATE_REFUSED` (not `YYYY-MM-DD`, or no basis); `TIER_REFUSED` (a tier on a non-legal option, or not 1, 2, 3 or `undetermined`); `LOBBYING_NO_REQUIREMENT` (R12); `OPTION_KEY_REFUSED` (R26). A legal option with no tier stated reads `undetermined`, never a default. `optionRevise` records the new fields as a revision with its reason (R4's rule); earlier revisions stay readable.
@@ -95,6 +95,12 @@ Terms. A **subject** is `{kind: "inquiry", inquiry, act?, standards?}` (suspecte
 - **R27** Every act is append-only history; each table is declared to `record-core`'s purge.
 - **R28** A fact not supplied is answered undetermined, never a default; no place is named in this module's behaviour or outward text, and its tests run against the test profile.
 - **R33** (§4 rules 1, 2; K660 (3)) A planning run's proposals never become options, dispositions, scenarios, checkpoint judgements, actions, filings or communications by themselves: every act but `optionPropose` refuses a machine credential by its existing code (R1, R9, R11's `optionAdopt`, R13, R14, R16, R18, R20; R24), and nothing here starts an action, prepares a filing or drafts a communication from a proposal. Each code R30, R31 and R34 mint is a row of this module's own table, as R22's is.
+- **R35** (K903 (4), DEC-36) In `planRead` (R6), what the viewer may not see is withheld whole:
+  - a subject, from `subjects`, from each option's `subjects` and `subjects_liveness`, and from `available`;
+  - a superseded subject's successor (R8 names it only when seen; else no `successor` key);
+  - a started option's action (no `action` key).
+
+  No id, state, placeholder or count. The plan states `out_of_view: true`. A determined subject's support is `short` when conformance withheld a finding it rests on (its R24's `out_of_view`), never computed over the visible findings alone.
 
 ### Satisfies
 

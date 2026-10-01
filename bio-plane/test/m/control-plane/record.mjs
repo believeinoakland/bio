@@ -3,15 +3,20 @@
    record store's door routes to here, and the modules a promotion's registered steps reach, composed from earlier modules
    only (all in this module's `uses`), each built and migrated in the order the composition root uses, with
    instance-setup started, and an in-memory evidence bucket. The door is this module's `dispatch` over a route map of capture's own routes and
-   `controlPlaneRoutes`, so no suite here constructs plane's class (P4). */
+   `controlPlaneRoutes`, so no suite here constructs plane's class (P4). `record({step: true})` also registers this
+   module's promotion step (R42) at the rank the composition root gives it, with `probes` (`{module: {check, project}}`)
+   registered beside it, and routes provenance's ops (`op=testify`). */
 import { DatabaseSync } from "node:sqlite";
 import "./harness.mjs";
 import { dispatch, controlPlaneRoutes } from "../../../src/control-plane/dispatch.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
-import { membershipOf } from "../../../src/membership/index.mjs";
+import { membershipOf, MODULE_ORDER } from "../../../src/membership/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
+import { provenanceOps } from "../../../src/provenance/ops.mjs";
+import { OBSERVATION_LOG_MODULE } from "../../../src/observation-log/index.mjs";
+import { promotionStep } from "../../../src/control-plane/step.mjs";
 import { calibrationOf } from "../../../src/calibration/index.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
@@ -44,8 +49,16 @@ function cursor(rows) {
   return c;
 }
 
+/* R42: the order promotion ranks its steps by, as the composition root gives it: the modules' total order with this
+   module's step where the held step stood, after every module of layer 10 and before `affordances`. */
+export const STEP_ORDER = Object.freeze((() => {
+  const o = MODULE_ORDER.filter((m) => m !== "control-plane");
+  const at = o.indexOf("affordances");
+  return [...o.slice(0, at), "control-plane", ...o.slice(at)];
+})());
+
 /** A record and its door. `go(path, method, body)` asks the door; `ctx` and `db` are the object's. */
-export async function record() {
+export async function record({ step = false, probes = {} } = {}) {
   const db = new DatabaseSync(":memory:");
   const sql = { exec(q, ...a) { const st = db.prepare(q); return cursor(st.columns().length ? st.all(...a.map(bind)).map((r) => ({ ...r })) : (st.run(...a.map(bind)), [])); },
                 get databaseSize() { return 0; } };
@@ -67,7 +80,7 @@ export async function record() {
   const env = { STORE: { idFromName: (x) => x }, CAPTURES: bucket, INSTANCE_NAME: "test" };
   /* built in the composition root's order, each module the promotion's steps reach registering at start */
   const record = recordOf(ctx, { evidence: bucket, evidencePrefix: () => "bio/captures/" });
-  const promotion = promotionOf(ctx);
+  const promotion = step ? promotionOf(ctx, { order: STEP_ORDER }) : promotionOf(ctx);
   observationLogOf(ctx, { extraction: null, provenance: provenanceOf(ctx, { signingKey: null, instanceName: "test" }) });
   observationLogOf(ctx).listenTo(contentOf(ctx, { extraction: extractionOf(ctx, { env, promotion, calibration: calibrationOf(ctx) }) }).extraction);
   observationLogOf(ctx).attachMeaning({ entities: entitiesOf(ctx) });
@@ -79,6 +92,11 @@ export async function record() {
   biasOf(ctx, { env });
   runProductionsOf(ctx, { aiRuns: aiRunsOf(ctx, env) });
   intentOf(ctx);
+  /* R42: where the composition root registers the step, after layer 10's modules are built and before capture */
+  if (step) {
+    for (const [module, p] of Object.entries(probes)) promotion.registerStep(module, p);
+    promotion.registerStep("control-plane", typeof step === "object" ? step : promotionStep(ctx));
+  }
   const capture = captureOf(ctx, { env });
   captureRequestsOf(ctx, { env, storeName: () => "bio", now: () => Date.now(), runs: aiRunsOf(ctx, env), aiRuns: aiRunsOf(ctx, env) });
   observationLogOf(ctx).listenToCapture(capture);
@@ -91,11 +109,13 @@ export async function record() {
                    intentOf(ctx), retrievalOf(ctx)]) m.migrate();
   /* instance-setup started, as the composition root starts it: it provides the producing group a promotion reads */
   await instanceSetupOf(ctx, env).start();
-  const store = { routes: (url, body) => ({ ...captureOps(captureOf(ctx), url, body, env), ...controlPlaneRoutes(ctx, url, body) }),
+  const store = { routes: (url, body) => ({ ...captureOps(captureOf(ctx), url, body, env),
+                                            ...(step ? provenanceOps(provenanceOf(ctx), url, body, { observer: OBSERVATION_LOG_MODULE }) : {}),
+                                            ...controlPlaneRoutes(ctx, url, body) }),
                   membership: () => membershipOf(ctx) };
   const go = async (path, method = "GET", body) => {
     const r = await dispatch(new Request(`http://do/${path}`, body === undefined ? { method } : { method, body: JSON.stringify(body) }), store);
     return { status: r.status, json: await r.json() };
   };
-  return { ctx, db, env, go, objects };
+  return { ctx, db, env, go, objects, promotion };
 }

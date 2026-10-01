@@ -11,13 +11,13 @@ The record's shared grammar, below every module that reads or writes a document:
 ### Provides
 
 **Id grammar: `BUNDLE_ID_RE`, `ANN_ID_RE`, `FILENAME_RE`, `ISO_TS_RE`** (catalogue 28–31)
-- **R1** `BUNDLE_ID_RE` matches exactly `<PREFIX>-<4 digits>-<4 digits>-<slug>`, PREFIX one of `INFO PROB FOCUS INQ PROJ ACTN BIAS STD CONF CONS ESC ASP GOAL PLN`, slug one or more `-`-joined runs of `[a-z0-9]`. `ANN_ID_RE` matches exactly such an id followed by `.ann-<8 digits>T<6 digits>Z-<slug>`. Both carry the same prefix set. *(not yet met: `PLN`, the Action fold's action plan, N-A1, K608)*
+- **R1** `BUNDLE_ID_RE` matches exactly `<PREFIX>-<4 digits>-<4 digits>-<slug>`, PREFIX one of `INFO PROB FOCUS INQ PROJ ACTN BIAS STD CONF CONS ESC ASP GOAL PLN`, slug one or more `-`-joined runs of `[a-z0-9]`. `ANN_ID_RE` matches exactly such an id followed by `.ann-<8 digits>T<6 digits>Z-<slug>`. Both carry the same prefix set.
 - **R2** `FILENAME_RE` matches a non-empty string of `[A-Za-z0-9._-]` only. `ISO_TS_RE` matches exactly `YYYY-MM-DDTHH:MM:SSZ` (no fraction, no offset).
 
 **Type vocabulary: `OBJECT_TYPES`, `LEGACY_TYPE_ALIASES`, `normalizeType(t)`** (catalogue 48–51)
-- **R3** `OBJECT_TYPES` maps each id prefix of R1 to its canonical type: `PROB`, `FOCUS` and `INQ` to `inquiry`; the others one each (`information`, `project`, `action`, `bias`, `standard`, `determination`, `consequence`, `escalation`, `aspiration`, `goal`), and `PLN` to `action_plan` (`action-plans`' record). Its keys are exactly R1's prefix set. *(not yet met: `PLN` → `action_plan`, N-A1, K608)*
+- **R3** `OBJECT_TYPES` maps each id prefix of R1 to its canonical type: `PROB`, `FOCUS` and `INQ` to `inquiry`; the others one each (`information`, `project`, `action`, `bias`, `standard`, `determination`, `consequence`, `escalation`, `aspiration`, `goal`), and `PLN` to `action_plan` (`action-plans`' record). Its keys are exactly R1's prefix set.
 - **R4** `LEGACY_TYPE_ALIASES` is `{problem: 'inquiry', focus: 'inquiry'}`, flat (no alias points at another alias).
-- **R5** `normalizeType(t)` returns the alias's target for an own key of `LEGACY_TYPE_ALIASES` and `t` unchanged for anything else, including `undefined` and a name of an `Object.prototype` member. Never throws. *(not yet met: `normalizeType('constructor')` answers `Object`, an inherited key.)*
+- **R5** `normalizeType(t)` returns the alias's target for an own key of `LEGACY_TYPE_ALIASES` and `t` unchanged for anything else, including `undefined` and a name of an `Object.prototype` member. Never throws.
 
 **`parseFrontmatter(text) → {data, findings, body}`** (catalogue 842–974, with `f`, `stripComment`, `parseScalar`)
 - **R6** A `text` whose first line is not `---`, or whose opening fence is never closed by a later `---` line, answers `data: null`, one finding `C-2.1` (`severity: 'error'`), and `body` the whole text. Lines split on `\n` or `\r\n`.
@@ -28,7 +28,7 @@ The record's shared grammar, below every module that reads or writes a document:
 - **R11** Each finding is `{check, severity, message}`, with `repairable` and `repairs` only when a repair is named. Throws only when `text` is not a string.
 
 **`canonicalJson(v) → string`** (catalogue 1298–1305)
-- **R12** Returns compact JSON with every object's keys sorted (default string order), recursively, array order kept; scalars as `JSON.stringify` gives them. Equal values give byte-identical strings. An object member whose value is `undefined` is omitted, as `JSON.stringify` omits it, so the answer is always JSON. *(not yet met: `{a: undefined}` answers `{"a":undefined}`.)*
+- **R12** Returns compact JSON with every object's keys sorted (default string order), recursively, array order kept; scalars as `JSON.stringify` gives them. Equal values give byte-identical strings. An object member whose value is `undefined` is omitted, as `JSON.stringify` omits it, so the answer is always JSON.
 
 **Actor identity** (catalogue 1439–1518)
 - **R13** `NON_MEMBER_AUTHORS` (1442) is the closed list of surface and AI identities; `ACTOR_CLASSES` is `['daemon', 'session', 'member']`; `MACHINE_AUTHOR_PREFIX` is `'token:'`, `MACHINE_CLASS_PREFIX` is `'class:'`, and `MACHINE_STAMP_PREFIXES` is those two, in that order.
@@ -41,10 +41,10 @@ The record's shared grammar, below every module that reads or writes a document:
 - **R18** `EARNED_CAPTURE_CEILING` is `'B'`. `UNREACHABLE_CAPTURE_GRADE` is the letter one rank stronger than the ceiling in `BASIS_GRADES` (`'A'` today), or `null` when the ceiling is the strongest; it is derived, never typed.
 
 **`isPublicHttpsLocator(url) → boolean`** (catalogue 3990–4001)
-- **R19** `true` only for a string whose scheme is `https` (any case) and whose authority has no `@` and whose host (port dropped, lower-cased, one trailing dot dropped) is not `localhost`, does not end in `.local` or `.localhost`, not a bracketed IPv6 literal, not a dotted-quad IPv4 address, and contains a dot. Everything else, a non-string included, is `false`. Never throws. It judges the text only; what a name resolves to is the fetcher's to check (Intake Doctrine §4). *(not yet met: an upper-case scheme, `localhost.` and `.local` hosts.)*
+- **R19** `true` only for a string whose scheme is `https` (any case) and whose authority has no `@` and whose host (port dropped, lower-cased, one trailing dot dropped) is not `localhost`, does not end in `.local` or `.localhost`, not a bracketed IPv6 literal, not a dotted-quad IPv4 address, and contains a dot. Everything else, a non-string included, is `false`. Never throws. It judges the text only; what a name resolves to is the fetcher's to check (Intake Doctrine §4).
 
 **Digests: `createSha256()`, `sha256HexSync(str)`, `b64ToBytes(s)`** (catalogue 4018–4129, 10548–10634)
-- **R20** `createSha256()` returns a stream `{update(chunk), hex()}`: `update` takes a `Uint8Array` or a byte array-like (values taken mod 256) and returns the stream, and throws a `TypeError` for a string or any other input; *(not yet met: a string is hashed as zero bytes)* `hex()` returns the lowercase 64-character FIPS 180-4 SHA-256 of every byte fed, in order, however it was chunked. `update` or `hex` after `hex` throws `sha256 stream already finalized`.
+- **R20** `createSha256()` returns a stream `{update(chunk), hex()}`: `update` takes a `Uint8Array` or a byte array-like (values taken mod 256) and returns the stream, and throws a `TypeError` for a string or any other input; `hex()` returns the lowercase 64-character FIPS 180-4 SHA-256 of every byte fed, in order, however it was chunked. `update` or `hex` after `hex` throws `sha256 stream already finalized`.
 - **R21** `sha256HexSync(str)` returns synchronously the lowercase hex SHA-256 of the UTF-8 encoding of `String(str)`, equal to `createSha256().update(utf8(str)).hex()` for every input.
 - **R22** Both agree with `crypto.subtle.digest('SHA-256')` over known vectors, including the empty input, `abc`, and lengths 55, 56, 63, 64 and 65 bytes (the padding boundaries).
 - **R23** `b64ToBytes(s)` decodes standard base64 (`A–Z a–z 0–9 + /`), ignoring whitespace and `=`, to a `Uint8Array`, with no platform decoder; a character outside the alphabet throws `invalid base64 at position <i>`.
@@ -72,8 +72,8 @@ The record's shared grammar, below every module that reads or writes a document:
 - **R39** `input` is `{folderName, files, sha256}` (`files` a `Map` of bundle-relative path to `Uint8Array` or string; `sha256(bytes)` a promise of lowercase hex), with optional `nowMs` (default the clock), `maxPackageAgeDays` (default 14), `maxReevalAgeDays` (default 30), `elidedPaths` (a `Set` or array of paths held but not carried, counted as present by presence checks only), `resolveTarget(id) → boolean`, `releaseRegistry`, `publishedRegistry`, `publishedCaseRegistry`, `earnedRegistry` and `sha512`, each handed to the arms unchanged. `opts` is `{knownSchemas, grammars}`, `knownSchemas` by default the fifteen stamps `information@1`, `information@2`, `inquiry@1`, `focus@1`, `problem@1`, `project@1`, `action@1`, `bias@1`, `standard@1`, `determination@1`, `consequence@1`, `escalation@1`, `aspiration@1`, `goal@1`, `action_plan@1`. Each finding has R11's shape, with `code` only when one is named; `pass` is `true` exactly when no finding has severity `error`. `opts.grammars` (record-core R67's registrations, `[{module, ids, arm(ctx, findings)}]`) is judged whole before any arm runs, and throws (`TypeError` or `RangeError`, naming the entry) when it is not a list or an entry breaks R67's rules: a blank module, `ids` not a non-empty list of C-ids, an `arm` not a function, an id claimed twice, part of one `EXTENSION_ARMS` entry (R28) or two of them claimed. A grammar claiming an `EXTENSION_ARMS` slot runs in that slot over the same context; a slot no grammar claims runs nothing (no built-in type arm moves here); a grammar claiming no slot runs after the last type-arm slot, in list order.
 - **R40** The structural arms move here whole and run in today's order, with R28's slots at today's places: with no `bundle.md`, one `C-13.1` error and no document arm; otherwise the parser's findings (R6–R11), `checkIdentity` (C-1), `checkFrontmatterContract` (C-2.2–.6), `checkHeadings` (C-3.1, through `vocabFor`, `HEADINGS_WHEN` and `isCaseMemberBytes`), `checkStateLegality` (C-4, C-2.6; a `legacy` state read as legal), `checkWriteCompleteness` (C-13), the C-2.7 and C-18.6/.7 slots, `checkReferences`' core (C-6.1's vocabulary, source-assertion, status and target findings over `REL_VOCAB`, C-6.2, C-6.3) ending with the C-6.1 supersession slot, the C-15.1, C-2.8 and C-2.9/C-9.1 slots, the grammars claiming no slot, `checkAppendOnly` (C-5), `checkHistoryCoherence` (C-12); then, always, `checkFormatHygiene` (C-14) and `checkQueueAndBase` (C-16, C-17.1). Called with capture's C-2.7 grammar and the catalogue's `LEGACY_GRAMMARS` as `opts.grammars`, `checkBundle`'s findings over the catalogue's fixtures are identical in content and order to the catalogue's `checkBundle` before the move (P1).
 
-**The catalogue's re-exports**
-- **R41** Until control-plane deletes the catalogue (rule 1), `legacy-checks` re-exports every name R28, R30–R38 and R40 move, each the same binding (`===`, R26), except `checkBundle`: the catalogue keeps its own `checkBundle`, a wrapper calling this module's with `LEGACY_GRAMMARS` (written by legacy-checks' job, rule 2), whose findings are R40's.
+**The catalogue's re-exports** (retired with the catalogue, K855)
+- **R41** *(retired: the catalogue and its re-exports were deleted at T19's close, control-plane R43, K855; K863)*
 
 ## Private
 
@@ -85,7 +85,7 @@ None. It is first in the order.
 
 - **R24** Pure: no I/O, no store, no network, no clock, no randomness; the same input always gives the same answer, in Node, a Worker and the browser alike. One exception: `checkBundle`'s `nowMs` defaults to the clock when a caller passes none, as today (R39; K765).
 - **R25** One SHA-256 implementation: `createSha256` and `sha256HexSync` are two names over one compression function and one round-constant table (map §4.4, K6).
-- **R26** Parity until the re-export goes: every name above that `legacy-checks` re-exports is the same binding (`===`), so a reader of either path gets identical answers.
+- **R26** *(retired: no re-export remains once the catalogue is deleted, K855; K863)*
 - **R27** No place is named (`layers.md`, "No jurisdiction in the product").
 
 ### Satisfies

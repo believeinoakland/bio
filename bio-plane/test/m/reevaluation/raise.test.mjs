@@ -31,7 +31,8 @@ test("R7: a deferral raises through inquiry's registration: the live legs restin
   assert.deepEqual(e, { source: "edition", since: "2026-09-28T00:00:00Z", edition: 2,
                         raised: [{ bundle_id: DEP, ord: 0, role: "supports", state: "open" }] });
   /* a dependent the viewer may not see is withheld, not counted */
-  assert.deepEqual(w.r.raise({ target: T, source: "edition", since: "x", viewer: "nobody" }).raised, []);
+  const nobody = w.r.raise({ target: T, source: "edition", since: "x", viewer: "nobody" });
+  assert.deepEqual([nobody.raised, nobody.out_of_view], [[], true], "R20: out_of_view states only that one was");
   /* a second registration by this module is refused by inquiry and promotion */
   assert.equal(w.k.onRaised("reevaluation", () => []).reason, "LISTENER_DECLARED");
   assert.equal(w.promotion.onReopened("reevaluation", () => null).reason, "LISTENER_DECLARED");

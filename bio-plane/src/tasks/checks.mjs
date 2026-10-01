@@ -146,10 +146,10 @@ export function checkInboxGrammar(ctx, findings) {
     /* The task points AT a bundle, so this is the canonical ID grammar and not
        a locator. A substrate path here would be the C-6.1 mistake. */
     if (!BUNDLE_ID_RE.test(tk.refers_to || '')) {
-      findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].refers_to '${String(tk.refers_to).slice(0, 40)}' is not a canonical bundle ID`));
+      findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].refers_to '${String(tk.refers_to).slice(0, 40)}' is not a canonical record ID`));
     } else if (ctx.resolveTarget && !ctx.resolveTarget(tk.refers_to)) {
       findings.push(f('C-19.1', 'error', `inbox.json tasks[${i}].refers_to '${tk.refers_to}' does not resolve in the store`,
-        ['re-point the task at the successor bundle', 'resolve the task with a reason if its subject is gone']));
+        ['re-point the task at the successor record', 'resolve the task with a reason if its subject is gone']));
     }
 
     if (tk.locators !== undefined) {

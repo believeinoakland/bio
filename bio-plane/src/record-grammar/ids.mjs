@@ -1,6 +1,6 @@
 // @ts-check
 /* record-grammar: the id grammar (R1, R2). Moved from the check catalogue (`checks/bio-checks.mjs`) at T18 with its
-   comments (K585 (4), K589); the catalogue re-exports each name until its importers re-point (PROCESS-MECHANICS §12.2). */
+   comments (K585 (4), K589); the catalogue and its re-exports were deleted at T19's close (K855). */
 
 /* PL-12 / D-84 adds BIAS to both alternations. A bias SET is a bundle
    (`BIO_Declared_Bias_v0_1.md`, "Bias bundles and adoption") precisely so it

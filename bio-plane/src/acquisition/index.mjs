@@ -286,6 +286,23 @@ async function coAttest(cap, { sha, locator, via, ev }) {
   }
 }
 
+/** R29, C-68.1 (D-278, K794, K850): THE CAPABILITY COMPLAINT, minted at this one region for every raiser: `acquire` on a
+ *  copy installed with no evidence storage bound, and control-plane's door (`storageAbsent`), which hands it to the arms
+ *  it routes `capture`, `pdfstructure`, `acquire` and `attest` to. Answers `{status: 503, body}`; `op` and `error` are
+ *  the caller's, passed in byte-identical from each site. Each caller's body is the one it has always answered: the
+ *  door's carries `code` (`{ok, reason, code, check, translation, error, op}`), and `acquire`'s, asked with
+ *  `{code: false}`, does not (`{ok, reason, check, translation, op, error}`). The row is read from `INSTALLATION_CHECKS`,
+ *  never copied. Pure; never throws. */
+export function evidenceStorageAbsent(op, error, { code = true } = {}) {
+  const row = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
+  /* DEC-49 REGION is-storage-absent */
+  return { status: 503, body: code
+    ? { ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", code: "EVIDENCE_STORAGE_NOT_CONFIGURED", check: row.check,
+        translation: row.translation, error, op }
+    : { ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", check: row.check, translation: row.translation, op, error } };
+  /* END DEC-49 REGION is-storage-absent */
+}
+
 /** R1–R23. The one act that fetches and files. `opts`: `cls` (the control plane's caller class), `member` (whether the
  *  caller is a member session), `sessMember` (that member), `storeName`, and — only from the in-process drain, never
  *  from a request — `captureRequest` (the draining row's address, purpose, agent and render flag, K58). Answers
@@ -295,14 +312,8 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   const answer = (status, b) => ({ status, body: b });
   const op = "acquire";
   const ev = cap.core && typeof cap.core.evidenceStore === "function" ? cap.core.evidenceStore() : null;
-  /* C-68.1 (K794): this module is the earliest raiser, so the row is its own (R29). */
-  if (!ev) {
-    /* DEC-49 REGION is-storage-absent */
-    const row = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
-    return answer(503, { ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", check: row.check, translation: row.translation, op,
-                         error: "this instance has no evidence storage configured" });
-    /* END DEC-49 REGION is-storage-absent */
-  }
+  /* C-68.1 (K794, K850): raised through this module's one raiser, its body as it has always been (no `code`). */
+  if (!ev) return evidenceStorageAbsent(op, "this instance has no evidence storage configured", { code: false });
   /* R1, K58: THE CAPTURE-REQUEST ARM IS IN PROCESS ONLY. From outside, `via: "capture-request"` is refused
      C-28.13 whatever the caller: the AI does not capture, it REQUESTS, and the daemon captures. */
   if (!captureRequest && body.via === "capture-request") {

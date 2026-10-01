@@ -72,7 +72,7 @@ import { join } from "node:path";
 import { createHash } from "node:crypto";
 
 const SRC_DIR = process.env.REC129_SRC || fileURLToPath(new URL("../src", import.meta.url));
-const IDX = join(SRC_DIR, "index.mjs");
+const IDX = join(SRC_DIR, "plane", "index.mjs");   /* the plane's entry since T20 (plane R6) */
 const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],

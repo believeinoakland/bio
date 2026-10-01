@@ -308,7 +308,7 @@ export function checkPublishedExtension(fm, findings) {
          member to invent a referent or to say nothing. */
       if (!named && !prose) {
         findings.push(f('C-2.8', 'error', `completeness_excluded[${i}] names neither a target nor a description: every exclusion row carries a target id OR prose, never neither`,
-          ['name the excluded bundle by id', 'or describe what was excluded in prose']));
+          ['name the excluded record by id', 'or describe what was excluded in prose']));
       }
       if (typeof r.reason !== 'string' || r.reason.trim() === '') {
         findings.push(f('C-2.8', 'error', `completeness_excluded[${i}] carries no reason: WHAT was left out and WHY are two statements and one does not stand in for the other`));
@@ -431,12 +431,13 @@ export function checkPublishedExtension(fm, findings) {
    is refused by C-41.10, so the fence stands over bytes a stranger hands us and
    not only over the path that wrote them.
 
-   IT LIVES HERE AND NOT IN `airun.mjs` FOR TWO REASONS, ONE STRUCTURAL: that file
-   imports THIS one, so a gate check there would be a cycle — and this is the case
-   document's vocabulary rather than the observation log's, qualifying a
+   IT LIVES HERE AND NOT BESIDE THE OBSERVATION LOG'S VOCABULARIES: this is the
+   case document's vocabulary rather than the observation log's, qualifying a
    provenance claim in a signed artifact, beside `CASE_DOCUMENT_FORMAT` and
-   `SUBJECT_POSITIONS`. `airun.mjs` re-exports it so a reader of the
-   observation-log vocabularies meets it beside the states it qualifies. */
+   `SUBJECT_POSITIONS`. (Provenance: it was first kept here because the legacy
+   `airun.mjs`, since deleted with its re-export of it, imported this file, so a
+   gate check there would have been a cycle.) `case-authoring`'s `searched.mjs`
+   imports it from this module, the one place it is spelled. */
 export const SEARCHED_SUBJECT_SOURCES = {
   case_basis: "the subjects were taken from the CASE -- its members' basis legs and the content "
             + "rows those legs name -- and the observation log was consulted only to ask what "
@@ -519,7 +520,7 @@ export function checkCaseDocument(fm, ctx = {}) {
   if (!Number.isInteger(fm?.case_edition) || fm.case_edition < 1) {
     findings.push(f(C41.EDITION, 'error', `a case document requires an integer case_edition of 1 or more (got '${fm?.case_edition}'): an edition is a SEPARATE DOCUMENT and answers forever, so a signature that did not cover the number would stand for every edition of this case at once`));
   } else if (Number.isInteger(edition) && fm.case_edition !== edition) {
-    findings.push(f(C41.EDITION, 'error', `this case document names edition ${fm.case_edition} and is being ratified as edition ${edition}: the edition is inside the hash the member signed, exactly as DEC-12 already requires of a bundle`));
+    findings.push(f(C41.EDITION, 'error', `this case document names edition ${fm.case_edition} and is being ratified as edition ${edition}: the edition is inside the hash the member signed, exactly as DEC-12 already requires of a record`));
   }
   /* CASE-2 / DEC-72 clause 2 — WHOSE PRODUCTION. Text preserved from the arm
      this replaces, with 'a case member' corrected to 'a case document': the
@@ -683,14 +684,14 @@ export function checkCaseDocument(fm, ctx = {}) {
       findings.push(f(C41.DISCLOSURES, 'error', `a ${CASE_DOCUMENT_FORMAT} case document requires a bias_manifest map with a boolean in_force (got ${JSON.stringify(bm ?? null)}): a published case CARRIES the bias it was produced under (DEC-20), and the manifest is the lens itself — computed and stamped by the plane beside the acknowledgement the publisher authors (DEC-46). A document silent about the lens cannot be told from one produced under none`,
         ['re-publish through op=publish, which stamps the manifest in force for the case\'s project into the case document']));
     } else if (bm.in_force === true && !(typeof bm.statements_sha === 'string' && /^[0-9a-f]{64}$/.test(bm.statements_sha))) {
-      findings.push(f(C41.DISCLOSURES, 'error', `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest says a lens was in force and names no 64-hex statements_sha (got '${bm.statements_sha}'): the manifest is the (bundle, revision) pairs PLUS a hash of the effective statement set, and a lens named without its hash cannot be checked against op=biasmanifest by anyone`,
+      findings.push(f(C41.DISCLOSURES, 'error', `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest says a lens was in force and names no 64-hex statements_sha (got '${bm.statements_sha}'): the manifest is the (record, revision) pairs PLUS a hash of the effective statement set, and a lens named without its hash cannot be checked against op=biasmanifest by anyone`,
         ['re-publish through op=publish']));
     } else if (bm.in_force === false && !(typeof bm.stated === 'string' && bm.stated.trim())) {
       findings.push(f(C41.DISCLOSURES, 'error', `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest says no lens was in force and does not SAY so (stated is empty): "no manifest was in force" is a statement, and a blank is not one`,
         ['re-publish through op=publish']));
     }
     if (bm && typeof bm === 'object' && !Array.isArray(fm?.bias_manifest_bundles)) {
-      findings.push(f(C41.DISCLOSURES, 'error', `a ${CASE_DOCUMENT_FORMAT} case document requires bias_manifest_bundles beside bias_manifest: an EMPTY list is a claim (no bias bundle was in force) and is legal — an ABSENT field is silence about which revisions the lens was`,
+      findings.push(f(C41.DISCLOSURES, 'error', `a ${CASE_DOCUMENT_FORMAT} case document requires bias_manifest_bundles beside bias_manifest: an EMPTY list is a claim (no bias record was in force) and is legal — an ABSENT field is silence about which revisions the lens was`,
         ['re-publish through op=publish']));
     }
     if (!c || !Number.isInteger(c.acknowledged) || c.acknowledged < 0) {

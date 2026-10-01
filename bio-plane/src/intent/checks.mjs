@@ -3,8 +3,9 @@
  * reached.
  *
  * One row moved here from the check catalogue: C-2.9's objective arm (R1, R22), its id unchanged, as C-45 and C-80 were
- * split (map §3.3). C-2.9's other arms and C-9.1 followed in T19 as this module's grammar (R29, `./grammar.mjs`); they
- * raise findings, not refusals, and carry no row. The rest are this module's own family, C-111 (N180: C-110 is
+ * split (map §3.3). C-2.9's `closed_reason` arm followed in T19 as this module's grammar (R29, `./grammar.mjs`); it
+ * raises findings, not refusals, and carries no row (its `workproduct_state` and `evaluations` arms and C-9.1 retired,
+ * K899 (3)). The rest are this module's own family, C-111 (N180: C-110 is
  * reevaluation's, K199), minted at the extraction (K107 (3)'s rule: the job names a new code's row; K174: a module holds
  * its new family). A code another module mints for another condition is not borrowed here: a goal or aspiration with
  * no statement is `PURSUIT_UNSTATED` (the catalogue's `NO_STATEMENT` is `publishCase`'s), and a condition's grade

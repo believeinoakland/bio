@@ -121,6 +121,98 @@ test("R3 R20: a dependent the viewer may not see is withheld whole and uncounted
   assert.deepEqual(asMember.obligations.map((o) => o.bundle_id), all.obligations.map((o) => o.bundle_id).filter(Boolean));
   const none = w.r.reevaluations({ viewer: "nobody" });
   assert.deepEqual([none.count, Object.keys(none).filter((k) => /withheld|hidden/.test(k))], [0, []]);
+  assert.equal(none.out_of_view, undefined, "the untargeted listing states nothing");
+});
+
+/* R20: a bundle filed in a project `owen` owns, which a member outside it (`ann`) may not see (membership R43, through
+   its viewerPredicate). This module gates through that function, never a membership instance, so the record fact a
+   real hiding rests on is laid down: the bundle's `project` column (record-core R37). */
+const outOfView = new WeakMap();
+function hide(w, ...ids) {
+  if (!outOfView.has(w)) outOfView.set(w, w.project("Out of view", "owen"));
+  const P = outOfView.get(w);
+  for (const id of ids) w.st.sql.exec(`UPDATE bundles SET project=? WHERE bundle_id=?`, P, id);
+}
+
+/** A division of T into C1 and C2, with DEP (published) resting on T: DEP's obligation names both superseders. */
+function divided() {
+  const w = world({ caseMembers: new Set([DEP]) });
+  const DOC2 = "INFO-2026-0002-doc";
+  w.doc(DOC); w.doc(DOC2);
+  w.inquiry(T, { legs: [{ target: DOC }, { target: DOC2 }] });
+  w.inquiry(DEP, { legs: [{ target: T }] });
+  const d = w.k.divide({ target: T, reason: "two questions", viewer: "admin", author: V("alice"),
+    children: [{ id: C1, question: "First half?", legs: [0] }, { id: C2, question: "Second half?", legs: [1] }] });
+  assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));
+  return w;
+}
+
+test("R2 R9 R20: a superseder the viewer may not see is withheld from superseded_by, never a null; none left, the key is absent; the cause stands and out_of_view says so", () => {
+  const w = divided();
+  const asAdmin = () => JSON.stringify([w.r.reevaluations({ viewer: ADMIN }), w.r.reevaluations({ target: T, viewer: ADMIN }),
+                                        w.r.changesOf({ findings: [T], viewer: ADMIN })]);
+  const before = asAdmin();
+  /* one hidden */
+  hide(w, C1);
+  for (const r of [w.r.reevaluations({ viewer: V("ann") }), w.r.reevaluations({ target: T, viewer: V("ann") })]) {
+    const [o] = r.obligations;
+    assert.deepEqual([o.bundle_id, o.causes[0].source, o.superseded_by, o.out_of_view], [DEP, "supersession", [C2], true]);
+    assert.ok(!JSON.stringify(r).includes(C1), "no id of the hidden superseder, anywhere");
+  }
+  assert.equal(w.r.reevaluations({ viewer: V("ann") }).out_of_view, undefined, "a listing states nothing at its top");
+  assert.equal(w.r.reevaluations({ target: T, viewer: V("ann") }).out_of_view, true, "a read about one target states it");
+  const f = w.r.changesOf({ findings: [T], viewer: V("ann") }).findings[0];
+  assert.deepEqual([f.superseded_by, f.out_of_view, f.causes.map((c) => c.source)], [[C2], true, ["supersession"]]);
+  /* both hidden: the key is left out, never [] or [null], and the cause and its since stand */
+  hide(w, C2);
+  const t = w.r.reevaluations({ target: T, viewer: V("ann") });
+  const [o] = t.obligations;
+  assert.deepEqual(["superseded_by" in o, o.out_of_view, t.out_of_view, o.causes[0].source, typeof o.causes[0].since],
+    [false, true, true, "supersession", "string"]);
+  const g = w.r.changesOf({ findings: [T], viewer: V("ann") }).findings[0];
+  assert.deepEqual(["superseded_by" in g, g.out_of_view, g.causes.map((c) => c.source)], [false, true, ["supersession"]]);
+  assert.ok(![C1, C2].some((id) => JSON.stringify([t, g]).includes(id)));
+  /* negative control: an administrator's answers are byte for byte what they were, with no out_of_view key */
+  assert.equal(asAdmin(), before);
+  assert.ok(!before.includes("out_of_view"));
+  /* and the owner, who sees both, is given both, with no key */
+  const owen = w.r.reevaluations({ target: T, viewer: V("owen") });
+  assert.deepEqual([[...owen.obligations[0].superseded_by].sort(), owen.out_of_view, owen.obligations[0].out_of_view],
+    [[C1, C2], undefined, undefined]);
+});
+
+test("R3 R20: a targeted read by a viewer who sees the target and not a dependent: the dependent is absent and uncounted, and out_of_view says only that", () => {
+  const w = base();
+  w.inquiry(DEP2, { legs: [{ target: T }] });
+  move(w, T, { state: "deferred", disposition: '"set down"' });
+  const seeing = w.r.reevaluations({ target: T, viewer: V("ann") });
+  assert.deepEqual([seeing.obligations.map((o) => o.bundle_id), seeing.out_of_view], [[DEP, DEP2], undefined],
+    "negative control: a viewer who sees both is given no key");
+  hide(w, DEP);
+  const r = w.r.reevaluations({ target: T, viewer: V("ann") });
+  assert.deepEqual([r.obligations.map((o) => o.bundle_id), r.count, r.out_of_view], [[DEP2], 1, true]);
+  assert.ok(!JSON.stringify(r).includes(DEP + '"') && !JSON.stringify(r).includes("withheld_count"), "no id, no count");
+  assert.deepEqual(Object.keys(r).filter((k) => /withheld|hidden/.test(k)), []);
+  const owen = w.r.reevaluations({ target: T, viewer: V("owen") });
+  assert.deepEqual([owen.obligations.map((o) => o.bundle_id), owen.out_of_view], [[DEP, DEP2], undefined]);
+});
+
+test("R20 (K905): the untargeted sweep withholds whole an obligation whose target the viewer may not see; a target the record no longer holds is no one's to see, and its deletion cause stands", () => {
+  const w = base();
+  move(w, T, { state: "deferred", disposition: '"set down"' });
+  /* negative control: before the target is hidden, ann is given the obligation */
+  assert.deepEqual(w.r.reevaluations({ viewer: V("ann") }).obligations.map((o) => [o.bundle_id, o.target]), [[DEP, T]]);
+  hide(w, T);
+  const r = w.r.reevaluations({ viewer: V("ann") });
+  assert.deepEqual([r.obligations, r.count, r.out_of_view], [[], 0, undefined], "withheld whole, uncounted, unstated");
+  assert.ok(!JSON.stringify(r).includes(T));
+  assert.equal(w.r.reevaluations({ target: T, viewer: V("ann") }).reason, "NO_SUCH_BUNDLE");
+  for (const viewer of [ADMIN, V("owen")])
+    assert.deepEqual(w.r.reevaluations({ viewer }).obligations.map((o) => [o.bundle_id, o.target]), [[DEP, T]]);
+  /* deletion: the leg naming a document the record no longer holds is still owed, to ann too */
+  w.st.sql.exec(`DELETE FROM bundles WHERE bundle_id=?`, DOC);
+  assert.deepEqual(w.r.reevaluations({ viewer: V("ann") }).obligations.map((o) => [o.target, o.causes[0].source]),
+    [[DOC, "deletion"]]);
 });
 
 test("R4: reeval from the first cause; the dependent's stored triple beside it, never merged; its strength pair unaltered", () => {

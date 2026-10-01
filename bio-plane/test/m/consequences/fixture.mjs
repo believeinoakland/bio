@@ -16,7 +16,7 @@ import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { inquiryOf, legCapped } from "../../../src/inquiry/index.mjs";
 import { strengthOf } from "../../../src/strength/index.mjs";
-import { consequencesModule } from "../../../src/consequences/index.mjs";
+import { consequencesModule, Consequences } from "../../../src/consequences/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(Buffer.from(s, "utf8")).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -77,8 +77,8 @@ const EXTRACTION_JOINED = [
      steps INTEGER NOT NULL DEFAULT 0, chain TEXT, calibrations TEXT)`,
 ];
 
-/** The world: `alice` owns and has joined project P; `bob` is a member who has not; `carol` is an administrator
- *  outside P (who sees it). `passages: false` leaves the passage-text read out (R4's "a form not read"). */
+/** The world: `alice` owns and has joined project P, and `pat` has joined it; `bob` is a member who has not; `carol`
+ *  is an administrator outside P (who sees it). `passages: false` leaves the passage-text read out (R4's "a form not read"). */
 export function world({ passages = true, group = "test-group", superseded = null } = {}) {
   const st = storage();
   const host = { storage: st };
@@ -133,12 +133,23 @@ export function world({ passages = true, group = "test-group", superseded = null
   /* inquiry as this module reads it; a test may state which inquiries are superseded (inquiry R16's index). */
   const inq = new Proxy(inquiry, { get: (t, p) => (p === "supersededBy" && superseded
     ? (id) => superseded.get(id) || [] : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });
-  const c = consequencesModule(host, { record, membership, promotion, conformance, content, provenance: prov, inquiry: inq,
-    strength, now: () => clock.now, ...(passages ? { passageText: (id) => texts.get(id) ?? null } : {}) });
+  const deps = { record, membership, promotion, conformance, content, provenance: prov, inquiry: inq, strength,
+    now: () => clock.now, ...(passages ? { passageText: (id) => texts.get(id) ?? null } : {}) };
+  const c = consequencesModule(host, deps);
 
   let n = 0;
   const w = {
     st, host, record, membership, promotion, prov, content, inquiry, strength, c, clock, ex, texts, determinations,
+    /** R15: this module over the same record, with a sight rule that withholds the bundles in `hidden` from `pat`
+     *  (and from no one else). membership's rule shows every bundle outside a project to a member (its R43), so a
+     *  document or an inquiry is withheld from a reader of a part only through such a rule, as conformance's suite
+     *  reaches its R9 (test/m/conformance/reads.test.mjs). */
+    sighted(hidden) {
+      const sight = new Proxy(membership, { get: (t, p) => (p === "inSight"
+        ? (id, viewer) => (viewer === V("pat") && hidden.has(id) ? false : t.inSight(id, viewer))
+        : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });
+      return new Consequences({ ...deps, storage: st, host, membership: sight });
+    },
     rows: (q, ...a) => [...st.sql.exec(q, ...a)],
     count: (t) => [...st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)][0].n,
     snapshot() {
@@ -204,8 +215,12 @@ export function world({ passages = true, group = "test-group", superseded = null
   w.member("alice");
   w.member("bob");
   w.member("carol", { role: "admin" });
+  w.member("pat");
   w.P = w.project("Budget watch", "alice");
   w.Q = w.project("Other group", "bob");
+  /* pat has joined P, so sees it whole (membership R44): only `sighted`'s rule withholds anything from pat. */
+  membership.projectInvite({ projectId: w.P, handle: "h_pat", by: "alice" });
+  membership.projectJoin({ projectId: w.P, by: "pat" });
   return w;
 }
 

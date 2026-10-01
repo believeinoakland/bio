@@ -87,7 +87,7 @@ import { VERSION_STRENGTH_CHECKS, VERSION_STRENGTH_INERT_SOURCES } from "./stren
 import { SUGGEST_LEVELS, SUGGEST_CHECKS } from "./run-productions/index.mjs";
 import { BASIS_ROLES, EARNED_GRADE_SOURCES } from "./record-grammar/index.mjs";
 import { BASIS_VERSION_CHECKS, CONCLUDE_ACT_CHECKS } from "./basis-versions/index.mjs";
-import { INQUIRY_GRAMMAR_ROWS } from "./inquiry-grammar/index.mjs";
+import { INQUIRY_GRAMMAR_CHECKS } from "./inquiry-grammar/index.mjs";
 /* The run's rows and the one deployment order are run-rules' (its R8, R9, R11;
    N156, K617): read from it, never copied. */
 import { AI_RUN_CHECKS, DEPLOYMENT_SEQUENCE, GATE_ADDRESS, SEQUENCING_SOURCE,
@@ -250,7 +250,7 @@ const C = {
   empty_level_unstated: SUGGEST_CHECKS.SUGGEST_EMPTY_LEVEL_UNSTATED.check,
   leg_unreachable:      SUGGEST_CHECKS.SUGGEST_LEG_UNREACHABLE.check,
   cannot_conclude:      CONCLUDE_ACT_CHECKS.MACHINE_CANNOT_CONCLUDE.check,
-  cannot_ground:        INQUIRY_GRAMMAR_ROWS.MACHINE_CANNOT_GROUND.check,
+  cannot_ground:        INQUIRY_GRAMMAR_CHECKS.MACHINE_CANNOT_GROUND.check,
   skill_version:        SKILL_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED.check,
   /* SK-3's additions, read by KEY exactly as SK-2's are. */
   cannot_publish:       "C-32.6",           /* case-authoring's row, typed — see below */

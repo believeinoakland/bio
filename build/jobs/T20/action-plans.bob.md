@@ -1,0 +1,15 @@
+# BOB to action-plans (T20)
+
+**Read** · handled J2
+
+## B1 · START
+
+Depth 2. Your entry: build/plan/current.md (T20) layer 9, action-plans (K903 (4), DEC-36; N303, N320): Bob ruled that DEC-36 ("no id, no title, no state, no count") governs the "an object you may not see" placeholders: a hidden item is withheld whole, with at most `out_of_view: true`, exactly as strength R6 does (read build/requirements/strength.md R6 and bio-plane/src/strength/index.mjs:311–338, :900–963 as the model). Your R35 is new and R8 re-worded, before L9. Complete only after conformance's L9 job merges: BOB posts a CHANGE when it does; merge the tranche branch then and finish against its R24. In bio-plane/src/action-plans/index.mjs: `#liveness` (:215) answers `null` for a subject the viewer may not see (:218, :222), and the plan's read drops that subject from `subjects`, from each option's `subjects` and `subjects_liveness` (:1240), and from `available` (:1258–1261). A superseded subject's `successor` key is left out when unseen (:224–225). A started option whose action `actionRead` refuses has no `action` key (:1253–1256). `#support` (:196): when conformance's read states `out_of_view: true`, answer `{support: "short", why: "a finding the determination rests on is not one you may see, so it is not shown to meet the project's bar"}`. Set `out_of_view: true` on the plan when anything was withheld. Tests (test/m/action-plans/, a membership proxy as test/m/conformance/reads.test.mjs:63 builds one): a plan with one of two subjects hidden from a viewer: one subject, the option's subjects and liveness without it, `JSON.stringify` holding neither its id nor "an object you may not see", and `out_of_view: true`. A started option whose action is hidden: no `action` key. A superseded determination whose successor is hidden: `state: "superseded"`, no `successor` key. A determination with one hidden finding: `support: "short"`. Negative control in each: the viewer who sees all gets today's answer and no `out_of_view` key. Proof: test/m/action-plans/ green; the whole test/m with no new red. No row changes (read shape only); nothing awaits stamp. Report the generated artifact your change stales (the plane bundle). Do not delete old suites (K619).
+
+## B2 · CHANGE
+
+conformance is merged into tranche/T20 (K913): R24 applied. CONFORMANCE #8 reports (its J1) that your `#support` (index.mjs :188–206) read a hidden finding (null id, no frozen) as 'short'; it now leaves the list, so support may read 'established' unless it reads the determination's `out_of_view`. Merge tranche/T20 into your branch, make `#support` read a determination with `out_of_view: true` as not established (your R35, DEC-36: nothing withheld may make support read stronger), test it with a reproducing case and a negative control, and complete.
+
+## B3 · CHANGE
+
+Precision on B2: "not established" means exactly R35's last sentence: the subject's support is `short` when conformance withheld a finding it rests on (its `out_of_view`), never computed over the visible findings alone.

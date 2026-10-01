@@ -67,6 +67,8 @@ export const UNDETERMINED_WHY = Object.freeze({
   not_assessed: "nobody has assessed it",
   not_computable: "the record holds the figures, and the computation named cannot be carried out over them",
 });
+/* R4: why a computation with no measure stated is undetermined (it names no operand, so R15 keeps it). */
+const NO_UNIT = "no measure is stated, so the computation has no unit";
 /** R3: the longest rationale an assessment carries. */
 export const RATIONALE_MAX = 2000;
 /** R6, R9: the longest reason a revision or an addressed record carries (conformance R7's bound). */
@@ -504,7 +506,7 @@ export class Consequences {
     const stored = operands.map(({ decimals, ...o }) => o);
     const docOps = stored.map((o) => ({ content: o.content, figure: o.figure }));
     if (!lacking && !measure)
-      lacking = { code: "not_assessed", why: "no measure is stated, so the computation has no unit" };
+      lacking = { code: "not_assessed", why: NO_UNIT };
     let result = null;
     if (!lacking) {
       result = compute(op, operands);
@@ -546,71 +548,101 @@ export class Consequences {
    * THE ANSWER FOR ONE PART (R2–R5, R7, R8, R12)
    * ===================================================================== */
 
+  /* R15 (K903 (4), DEC-36): what the part's answer holds is withheld whole where the viewer may not see it, as strength
+     R6 withholds a member: an operand whose content lies in a bundle the viewer may not see leaves the operands, a
+     causation inquiry the viewer may not see is not named (its state stands, its `inquiry`, `why` and `strength` keys
+     go), an id of `rests_on` or of an addressed record's `evidence` the viewer may not see leaves its list, and R8's
+     causes about either go with it. No id, title, state, placeholder or count is left in their place: a sentence the
+     part recorded that names an operand by its place is renumbered among the operands answered, and one about an
+     operand withheld, or one that counts or orders the operands, keeps only its first clause. `out_of_view: true`
+     says only that something was withheld; a viewer who may see everything is answered as before, with no such key.
+     An id that names nothing is answered as one the viewer may not see (R13's one answer). The computed value and
+     grade, and every other fact the part records, stand. */
   #answer(r, viewer) {
     const who = viewer ?? INTERNAL;
+    let withheld = false;
     const out = { id: r.bundle_id, determination: r.determination, standard: r.standard, project: r.project,
       affected: parse(r.affected), measure: parse(r.measure), period: parse(r.period), state: r.state,
       author: r.author || null, at: r.at, supersedes: r.supersedes, reason: r.reason,
       superseded_by: this.#successor(r.bundle_id) };
+    /* Each operand's place among the operands answered, by its recorded place; a withheld one has none. */
+    const place = new Map();
     if (r.state === "computed" || r.op) {
-      const ops = this.#operands(r.bundle_id).map((o) => {
+      const ops = this.#operands(r.bundle_id).flatMap((o) => {
         const row = this.content.contentRow(o.content_id);
-        const seen = row && this.membership.inSight(row.bundle_id, who);
-        return seen ? { content: o.content_id, figure: o.figure, number: o.number, capture: o.capture_sha,
-                        grade: o.grade, route: o.route, determined: !!o.determined }
-                    : { content: null, says: "an object you may not see" };
+        if (!row || !this.membership.inSight(row.bundle_id, who)) { withheld = true; return []; }
+        place.set(o.ord, place.size);
+        return [{ content: o.content_id, figure: o.figure, number: o.number, capture: o.capture_sha,
+                  grade: o.grade, route: o.route, determined: !!o.determined }];
       });
       out.computation = { op: r.op, operands: ops };
     }
     if (r.state === "computed") {
-      out.grade = { grade: r.grade, determined: r.grade !== null, why: r.grade_why };
+      out.grade = { grade: r.grade, determined: r.grade !== null, why: gradeWhyFor(r, place) };
       out.label = r.machine
         ? { machine_work: true, says: `machine work: computed by ${r.author || "a machine"} from the operands shown` }
         : { machine_work: false, says: `computed from the operands shown; recorded by ${r.author}` };
     } else if (r.state === "assessed") {
-      out.assessment = { by: r.author, at: r.at, rationale: r.rationale, rests_on: parse(r.rests_on) || [],
-        says: (parse(r.rests_on) || []).length ? "a member's assessment, resting on the ids listed"
+      const recorded = parse(r.rests_on) || [];
+      const rests = recorded.filter((x) => this.#resolvesEvidence(x, who));
+      if (rests.length < recorded.length) withheld = true;
+      out.assessment = { by: r.author, at: r.at, rationale: r.rationale, rests_on: rests,
+        says: rests.length ? "a member's assessment, resting on the ids listed"
           : "a member's assessment, resting on nothing in the record (stated as none)" };
       out.label = { machine_work: false, says: "a member's assessment: never presented, summed or graded as computed" };
     } else {
-      out.undetermined = { code: r.undetermined_code, why: r.undetermined_why,
+      out.undetermined = { code: r.undetermined_code, why: undeterminedWhyFor(r, place, withheld),
                            says: "undetermined: not known, and never read as zero" };
     }
-    out.causation = { state: r.causation_state, inquiry: r.causation, why: r.causation_why };
-    const seen = !r.causation || this.membership.inSight(r.causation, who);
-    if (r.causation_state === "established" && r.causation) {
-      let s = null;
-      try { s = seen ? this.strength.inquiryStrength({ id: r.causation, viewer: who }) : null; } catch { s = null; }
-      out.causation.strength = s && s.ok
-        ? { capture: s.capture ?? null, connection: s.connection ?? null, testimony: s.testimony ?? null,
-            says: "per axis, never composed (DEC-44)" }
-        : { capture: null, connection: null, testimony: null, says: "the inquiry's strength could not be read for you" };
+    const causationSeen = !r.causation || this.membership.inSight(r.causation, who);
+    if (!causationSeen) {
+      withheld = true;
+      out.causation = { state: r.causation_state };
+    } else {
+      out.causation = { state: r.causation_state, inquiry: r.causation, why: r.causation_why };
+      if (r.causation_state === "established" && r.causation) {
+        let s = null;
+        try { s = this.strength.inquiryStrength({ id: r.causation, viewer: who }); } catch { s = null; }
+        out.causation.strength = s && s.ok
+          ? { capture: s.capture ?? null, connection: s.connection ?? null, testimony: s.testimony ?? null,
+              says: "per axis, never composed (DEC-44)" }
+          : { capture: null, connection: null, testimony: null, says: "the inquiry's strength could not be read for you" };
+        /* strength R6 withheld a member of the pair inside the answer: something of the part's answer was withheld. */
+        if (s && s.ok && s.out_of_view === true) withheld = true;
+      }
     }
-    /* R13: an inquiry the reader may not see is not named, whatever the causation's state. */
-    if (!seen) { out.causation.inquiry = null; out.causation.why = "an object you may not see"; }
     const a = this.#addressedOf(r.bundle_id);
-    out.addressed = a
-      ? { state: a.state, evidence: parse(a.evidence) || [], reason: a.reason, by: a.author, at: a.at }
-      : { state: "never_assessed", says: "no member has recorded whether this consequence has been addressed" };
-    const changed = this.#basisChanged(r, who);
+    if (a) {
+      const recorded = parse(a.evidence) || [];
+      const evidence = recorded.filter((x) => this.#resolvesEvidence(x, who));
+      if (evidence.length < recorded.length) withheld = true;
+      out.addressed = { state: a.state, evidence, reason: a.reason, by: a.author, at: a.at };
+    } else {
+      out.addressed = { state: "never_assessed", says: "no member has recorded whether this consequence has been addressed" };
+    }
+    const changed = this.#basisChanged(r, who, place, causationSeen);
     if (changed.length) out.basis_changed = changed;
+    if (withheld) out.out_of_view = true;
     return out;
   }
 
   /* R8: a notice, never a recomputation: an operand passage whose document has a newer capture that does not carry it,
-     or a causation inquiry reopened or superseded since the part was recorded. */
-  #basisChanged(r, who) {
+     or a causation inquiry reopened or superseded since the part was recorded. R15: a withheld operand (no `place`)
+     or a withheld causation raises no cause, and an operand is named by its place among the operands answered. */
+  #basisChanged(r, who, place, causationSeen) {
     const causes = [];
     if (r.op) {
       for (const o of this.#operands(r.bundle_id)) {
+        if (!place.has(o.ord)) continue;
         let n = null;
         try { n = this.content.passageNotice({ contentId: o.content_id, viewer: who }); } catch { n = null; }
+        const at = place.get(o.ord);
         if (n && n.affects === "affected")
-          causes.push({ cause: "newer_capture", operand: o.ord, why: `a newer capture of operand ${o.ord}'s document `
+          causes.push({ cause: "newer_capture", operand: at, why: `a newer capture of operand ${at}'s document `
             + "does not carry its passage; nothing is recomputed until a member revises this part" });
       }
     }
-    if (r.causation && r.causation_state !== "not_applicable") {
+    if (r.causation && causationSeen && r.causation_state !== "not_applicable") {
       const sup = this.#supersededBy(r.causation);
       if (sup.length) causes.push({ cause: "causation_superseded", why: "the causation inquiry has been superseded" });
       else if (r.causation_state === "established") {
@@ -731,6 +763,43 @@ export class Consequences {
 }
 
 /* ===================================================================== *
+ * R15: THE SENTENCES A PART RECORDED ABOUT ITS OPERANDS, AS ONE VIEWER READS THEM
+ * ===================================================================== */
+
+/* A sentence naming operands by their recorded places (`operand 1`, `operand is 1`), each renumbered to its place among
+   the operands answered (`place`); null when it names one withheld. With nothing withheld every place is its own. */
+function renumbered(text, place) {
+  let gone = false;
+  const t = String(text).replace(/\b(operand (?:is )?)(\d+)/g, (m, w, n) => {
+    if (!place.has(Number(n))) { gone = true; return m; }
+    return `${w}${place.get(Number(n))}`;
+  });
+  return gone ? null : t;
+}
+
+/* R2's grade sentence: renumbered, or, when the operand it names was withheld, the same finding with no place or id. */
+function gradeWhyFor(r, place) {
+  if (r.grade_why == null) return r.grade_why;
+  const t = renumbered(r.grade_why, place);
+  if (t !== null) return t;
+  return r.grade === null
+    ? "an operand's capture grade is undetermined, so the weakest link is not known"
+    : `the weakest operand's capture grade is ${r.grade}; a computation is as strong as its weakest figure (DEC-21)`;
+}
+
+/* R4's sentence: `<why the part is undetermined>: <what the computation lacked>`. With an operand withheld, the second
+   clause stays only when it names an answered operand (renumbered) or no operand at all; one about a withheld
+   operand, or one that counts or orders the operands (the arithmetic's own sentences), goes, and R4's why stands. */
+function undeterminedWhyFor(r, place, withheld) {
+  const head = UNDETERMINED_WHY[r.undetermined_code];
+  const why = r.undetermined_why;
+  if (!withheld || !head || typeof why !== "string" || !why.startsWith(`${head}: `)) return why;
+  const detail = why.slice(head.length + 2);
+  if (/^operand \d+/.test(detail)) { const t = renumbered(detail, place); return t === null ? head : `${head}: ${t}`; }
+  return detail === NO_UNIT ? why : head;
+}
+
+/* ===================================================================== *
  * THE PART'S DOCUMENT (R14): a `CONS-` record object, one state `recorded`.
  * ===================================================================== */
 
@@ -743,6 +812,8 @@ function partDoc(id, p) {
   const body = { ...rest, causation: { state: causation.state, inquiry: causation.inquiry } };
   return ["---", `id: ${id}`, "object_type: consequence", "schema: consequence@1", `title: ${q(titleOf(p))}`,
     "current_state: recorded", "prior_state: null", `created: ${q(p.at)}`, `last_updated: ${q(p.at)}`,
+    /* R13, promotion R53: the part belongs to its determination's project, so membership R43 fences the object too. */
+    ...(p.project ? [`project: ${q(p.project)}`] : []),
     `determination: ${q(p.determination)}`, `standard: ${q(p.standard)}`, `part_state: ${p.state}`,
     `causation: ${q(causation.inquiry)}`, `supersedes: ${q(p.supersedes)}`, `author: ${q(p.author)}`,
     `machine_work: ${p.machine ? "true" : "false"}`, "produced_by:", `  mode: ${p.machine ? "agent" : "human"}`,

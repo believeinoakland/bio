@@ -136,7 +136,7 @@ test("R23: registrations are refused through membership's listenerRefusal (LISTE
   const w = world();
   const order = [];
   const f = (m) => () => order.push(m);
-  for (const m of ["queue", "scheduler", "legacy-store", "ai-runs"]) assert.deepEqual(w.bias.onLensChange(m, f(m)), { ok: true, module: m });
+  for (const m of ["queue", "scheduler", "tasks", "ai-runs"]) assert.deepEqual(w.bias.onLensChange(m, f(m)), { ok: true, module: m });
   assert.deepEqual(w.bias.onLensChange("scheduler", () => {}), listenerRefusal([{ module: "scheduler" }], "scheduler", () => {}));
   assert.equal(w.bias.onLensChange("scheduler", () => {}).reason, "LISTENER_DECLARED");
   for (const [m, fn] of [["", () => {}], [null, () => {}], ["x", "not a function"]]) {
@@ -147,6 +147,6 @@ test("R23: registrations are refused through membership's listenerRefusal (LISTE
   w.promote(A, FM(A));
   await w.bias.noticesDelivered();
   const at = (m) => MODULE_ORDER.indexOf(m);
-  assert.deepEqual(order, ["ai-runs", "scheduler", "legacy-store", "queue"]);
+  assert.deepEqual(order, ["ai-runs", "scheduler", "tasks", "queue"]);
   assert.ok(order.every((m, i) => i === 0 || at(order[i - 1]) < at(m)));
 });

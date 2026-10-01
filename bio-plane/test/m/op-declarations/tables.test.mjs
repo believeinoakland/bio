@@ -160,12 +160,12 @@ test("R3, R4 (transcribe convert): transcribe and transcriptionattest are a pers
   assert.equal(NEEDS.transcription, null);
 });
 
-test("R4, R3 (N-A12, K704, K709, K711, K705): the action layer's new ops — action-plans' fifteen, actions' four, action-clocks' two, filings' three — each declared with its spec, its list, both session sets for an act and its capability", () => {
+test("R4, R3 (N-A12, K704, K709, K711, K705): the action layer's new ops — action-plans' fifteen, actions' five, action-clocks' two, filings' three — each declared with its spec, its list, both session sets for an act and its capability", () => {
   const acts = {
     ACTION_PLANS_ACTIONS: ["planopen", "plansubjectadd", "plansubjectremove", "optionadd", "optionrevise", "optionadopt",
                            "optiondispose", "scenarioset", "checkpointrecord", "optionstart", "planclose"],
     PLAN_PROPOSAL_ACTIONS: ["optionpropose"],
-    ACTIONS_ACTIONS: ["actioncreate", "actionpressure"],
+    ACTIONS_ACTIONS: ["actioncreate", "actionpressure", "actionhold"],
     ACTION_CLOCKS_ACTIONS: ["reminderset", "reminderanswer"],
   };
   const reads = { ACTION_PLANS_READS: ["plan", "plans", "planproposals"], ACTIONS_READS: ["action", "actions"] };
@@ -229,4 +229,22 @@ test("R6: an op spec for every op the tables name — the session sets, NEEDS, t
                     "planclose", "planproposals", "actioncreate", "action", "actions", "actionpressure", "reminderset",
                     "reminderanswer", "communicationprepare", "templatesave", "templates"])
     assert.ok(Object.hasOwn(OPS, op), op);
+});
+
+test("R2, R3, R4, R6 (K899 (7), K902; actions R52): actionhold is declared as actionpressure is — admin, member and probe, mutating, no machineClasses; in ACTIONS_ACTIONS, so its author is query-stamped; in both session sets; contribute", () => {
+  assert.ok(Object.hasOwn(OPS, "actionhold"));
+  assert.deepEqual({ ...OPS.actionhold, classes: [...OPS.actionhold.classes] },
+                   { ...OPS.actionpressure, classes: [...OPS.actionpressure.classes] });
+  assert.deepEqual([...OPS.actionhold.classes], ["admin", "member", "probe"]);
+  assert.equal(OPS.actionhold.mutating, true);
+  assert.ok(!("machineClasses" in OPS.actionhold));
+  /* Every list that names actionpressure names actionhold, and no other. */
+  const holding = (op) => LISTS.filter(([, list]) => list.includes(op)).map(([name]) => name).sort();
+  assert.deepEqual(holding("actionhold"), holding("actionpressure"));
+  assert.deepEqual(holding("actionhold"), ["ACTIONS_ACTIONS", "ACTION_LAYER_ACTIONS", "QUERY_AUTHOR_ACTIONS"]);
+  assert.ok(both("actionhold"));
+  assert.equal(NEEDS.actionhold, "contribute");
+  assert.equal(O.ACT_GATE.needs("actionhold"), "contribute");
+  assert.equal(O.ACT_GATE.mode("actionhold"), "session");
+  assert.ok(!Object.hasOwn(UNATTENDED_BY_DECISION, "actionhold"));
 });

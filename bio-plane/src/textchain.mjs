@@ -1519,12 +1519,10 @@ function a1Range(s) {
  * ===================================================================== *
  *
  * An ADDRESS into a document: IC-1's arms, unified with attestation's document|page|region, plus
- * EXTRACTION-BREADTH §3.2's `sheet-range`, `doc-table` and `image` (REC-82, REC-85, FW-19 / IC-125). It is
- * COPIED here from the check catalogue (`legacy-checks`), whose inquiry grammar still calls its own copy and
- * cannot import this module; its other importers re-point here in their own layers, and `reevaluation`
- * deletes the catalogue's copy (rule 1). Until then the two copies must answer alike, byte for byte:
- * `canonicalExtent` is what every content id is taken over (`contentIdFor`), and an id minted by one copy
- * must be the id the other would mint. The suite compares them over the same inputs.
+ * EXTRACTION-BREADTH §3.2's `sheet-range`, `doc-table` and `image` (REC-82, REC-85, FW-19 / IC-125). It was
+ * copied here from the check catalogue in T19 (K747), and the catalogue's copy was deleted at T19's close (K855),
+ * so this is the only one. `canonicalExtent` is what every content id is taken over (`contentIdFor`): its bytes
+ * for an address already minted must never change, and the suite sweeps it against R97 over every arm.
  *
  * The refusals (C-45) and the extent checks are not here: they are content's. What is here is pure
  * geometry and spelling — which kinds exist, how a cell or range is read, the one canonical form of an
@@ -1557,9 +1555,8 @@ export const CONTENT_EXTENT_A1_RE = /^\$?[A-Za-z]{1,3}\$?[1-9][0-9]{0,6}$/;
 export const CONTENT_EXTENT_RANGE_RE =
   /^\$?[A-Za-z]{1,3}\$?[1-9][0-9]{0,6}(:\$?[A-Za-z]{1,3}\$?[1-9][0-9]{0,6})?$/;
 
-/* The catalogue's `String(x == null ? "" : x)`, made total (R83): a value with no string form (an object with
-   no prototype, a throwing `toString`) reads as "", which no pattern here matches. Every other input reads
-   exactly as the catalogue's copy reads it. */
+/* `String(x == null ? "" : x)`, made total (R83): a value with no string form (an object with no prototype, a
+   throwing `toString`) reads as "", which no pattern here matches. */
 function asString(x) {
   if (x == null) return "";
   try { return String(x); } catch { return ""; }

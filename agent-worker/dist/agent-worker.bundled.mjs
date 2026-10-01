@@ -1035,9 +1035,11 @@ var AI_RUN_ACT_SHAPE_CHECKS = {
        REC-64 first put this row in `AI_RUN_CHECKS`, where the run's other three
        open-time conditions live. `airun.test.mjs` ARM D3 failed it: **every C-22
        allocation must name its enforcement site in a PURE CHECK MODULE**
-       (`src/airun.mjs` or `src/skillpack.mjs`), so the catalogue can be walked to a
-       pure function. This condition is enforced in `store.mjs` at the run-open
-       door, so it does not satisfy that invariant and does not belong in C-22. The
+       (then `src/airun.mjs` or `src/skillpack.mjs`; today this module's
+       `rules.mjs` and `skill-version.mjs`), so the catalogue can be walked to a
+       pure function. This condition is enforced at the run-open door (then
+       `store.mjs`, today `ai-runs`' open), so it does not satisfy that invariant
+       and does not belong in C-22. The
        ARM WAS NOT WIDENED: an invariant relaxed to fit a new row is not an
        invariant, and this one is load-bearing — it is what lets `op=audit` reach
        every C-22 condition without opening the store.
@@ -1328,12 +1330,12 @@ var CONDITION_KINDS = Object.freeze({
   "invitation-spent-or-expired": "an invitation was spent, or expired unused",
   "governor-holding-host": "the per-host governor is holding a host: the capture is PACED, not broken (D-103)",
   "runtime-ceiling-reached": "a CPU or subrequest ceiling was reached (D-54, D-56)",
-  /* D-523, LIVE from its landing: store.mjs #conditionsRenderDeferred, derived on read from
+  /* D-523, LIVE from its landing: queue-producers' #conditionsRenderDeferred, derived on read from
      `capture_requests`. BOB #33 RULED 2026-09-24 19:54Z (CLIENT-RENDERED.md, "RULED 2026-09-24 by BOB #33"):
      a render held under a C-83 reason is SHOWN with that reason, and at its request's `expires` it is
      recorded UNDETERMINED and released. A CONDITION and not a FINDING: our own renderer, allowance or
      pacing is what holds it, a fact about our machinery and never about the page. */
-  "render-deferred": "a render this instance could not do is held under its C-83 reason until its request expires, and is then recorded undetermined (D-491, D-523) \u2014 LIVE: store.mjs #conditionsRenderDeferred"
+  "render-deferred": "a render this instance could not do is held under its C-83 reason until its request expires, and is then recorded undetermined (D-491, D-523) \u2014 LIVE: queue-producers #conditionsRenderDeferred"
 });
 
 // ../bio-plane/src/run-rules/rules.mjs

@@ -41,7 +41,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { normalizeAddress } from "../src/subresources.mjs";
 
-const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
+const SRC = fileURLToPath(new URL("../src/plane/index.mjs", import.meta.url));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {

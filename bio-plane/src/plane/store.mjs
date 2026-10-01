@@ -1,7 +1,7 @@
 /* plane R1–R5: the instance's Durable Object class, the composition root. It builds every module on the object's storage
    in the order below (R2), runs their migrations before any request (R3), hands the alarm to `scheduler` (R4), and answers
    every store request through `control-plane`'s `dispatch` over the one route map (R5). It holds no construct of its own:
-   no table, no row, no refusal, no op (R9); what it holds for owners not yet extracted is `held.mjs`' (R10). Moved from
+   no table, no row, no refusal, no op (R9); its own stats sight is `stats.mjs`' (R10). Moved from
    `store.mjs`' constructor, `#migrate`, `alarm`, `onAlarm`, `#nowMs`, `#ownNamespace` and `routes`, and from
    `control-plane/dispatch.mjs`' `Store` (control-plane R35, now this module's R1), with their behaviour unchanged. */
 import { DurableObject } from "cloudflare:workers";
@@ -27,7 +27,7 @@ import { governorOf, governorRoutes } from "../host-governor/index.mjs";
 import { captureOf, captureOps } from "../capture/index.mjs";
 import { monitoringOf, monitoringOps } from "../monitoring/index.mjs";
 import { connectionsOf, connectionsOps } from "../connections/index.mjs";
-import { inquiryOf, inquiryOps } from "../inquiry/index.mjs";
+import { inquiryOf, inquiryOps, inquiryLegGrades } from "../inquiry/index.mjs";
 import { citationOf, citationOps } from "../citation/index.mjs";
 import { extractionOf, extractionOps } from "../extraction/index.mjs";
 import { entitiesOf, entitiesOps } from "../entities/index.mjs";
@@ -53,15 +53,20 @@ import { queueOf } from "../queue/index.mjs";
 import { tasksOf } from "../tasks/index.mjs";
 import { instanceSetupOf, instanceSetupOps } from "../setup.mjs";
 import { dispatch, controlPlaneRoutes } from "../control-plane/dispatch.mjs";
-import { HELD, registerHeldCounts, registerHeldLegGrades, registerHeldStep } from "./held.mjs";
+import { promotionStep } from "../control-plane/step.mjs";
+import { registerOwnersCounts, registerStats } from "./stats.mjs";
 
-/* The order promotion ranks its steps by: the modules' total order (membership R83), with the held step (R10) at the
-   place `legacy-store`'s step held in it, after every module of layer 10 and before `tasks`', so every step's checks and
-   projections, and the order of refusals, are today's. Promotion ranks a name the order lacks last (its R39). */
+/* The name control-plane's promotion step (its R42) is registered under. */
+const STEP = "control-plane";
+
+/* The order promotion ranks its steps by: the modules' total order (membership R83), with control-plane's step (its R42;
+   R10) at the place `legacy-store`'s step held in it, after every module of layer 10 and before `affordances`' and
+   `tasks`', so every step's checks and projections, and the order of refusals, are today's. Promotion ranks a name the
+   order lacks last (its R39). */
 export const STEP_ORDER = Object.freeze((() => {
-  const o = MODULE_ORDER.filter((m) => m !== HELD);
+  const o = MODULE_ORDER.filter((m) => m !== STEP);
   const at = o.indexOf("affordances");
-  return at === -1 ? [...o, HELD] : [...o.slice(0, at), HELD, ...o.slice(at)];
+  return at === -1 ? [...o, STEP] : [...o.slice(0, at), STEP, ...o.slice(at)];
 })());
 
 /* D-432: the live rows the PROJ mint site's `taken` reads, as `[prefix, table, column]`, seeded at every boot (record-core
@@ -76,9 +81,12 @@ export class Store extends DurableObject {
     this.sql = ctx.storage.sql;
     /* R2. record-core: the evidence bucket and its key prefix, handed over at its first construction. */
     recordOf(ctx, { evidence: env.CAPTURES ?? null, evidencePrefix: () => `${this.#ownNamespace() || "bio"}/captures/` });
-    registerHeldCounts(ctx);   /* R10: the held stats figures */
+    /* R10 (K861): the stats figures, each owner's registered under its own name (record-core R63), and the plane's own
+       stats sight (record-core R65). */
+    registerOwnersCounts(ctx);
+    registerStats(ctx);
     /* promotion, built first with the order its steps rank by (membership, then promotion, as provenance's first call
-       built them), so the held step ranks where `legacy-store`'s did. */
+       built them), so control-plane's step ranks where `legacy-store`'s did. */
     const promotion = promotionOf(ctx, { order: STEP_ORDER });
     /* provenance declares its tables and joins every promotion first, so its register write runs before the
        projections that read it. observation-log registers its look on each receipt (its R5, provenance R47), and
@@ -103,7 +111,7 @@ export class Store extends DurableObject {
        R43; reevaluation R26) before anything runs. Built lazily, a sweep an alarm reached before any op found none. */
     publicationOf(ctx);
     actionsOf(ctx, { env });
-    registerHeldLegGrades(ctx, retrieval);   /* R10: inquiry's leg grades */
+    retrieval.registerLegGrades("inquiry", inquiryLegGrades(ctx));   /* R10 (K861): inquiry's leg grades (its R52, retrieval R55) */
     observationLogOf(ctx).attachMeaning({ connections: connectionsOf(ctx, { env }) });
     ratificationOf(ctx);   /* ratification: its case catalogue and C-2.8's case-member arm, registered at start (R8, R9) */
     strengthOf(ctx, { retrieval });   /* strength: registers its pair (R17), its cache projection (R13) and, with retrieval, the cache's fields (R23) */
@@ -126,7 +134,7 @@ export class Store extends DurableObject {
        first `airunopen` arrives; built lazily, that open is refused AI_RUN_MODE_UNCHECKED. */
     actionPlansOf(ctx);
     monitoringOf(ctx, { env });
-    registerHeldStep(ctx, promotion);   /* R10: provenance's testimony slot and the sight index */
+    promotion.registerStep(STEP, promotionStep(ctx));   /* R10 (K861): control-plane's step (its R42), the testimony slot and the sight index */
     const capture = captureOf(ctx, { env });
     /* capture-requests: its table, its `sweep` resolver and its drain; the run sight it reads is ai-runs' (its R28),
        and it registers its wait source with ai-runs (ai-runs R41). */

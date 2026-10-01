@@ -9,16 +9,14 @@ import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
 import { STRENGTH_BAR_CHECKS } from "../../../src/strength/index.mjs";
 import { CONCLUDE_ACT_CHECKS } from "../../../src/basis-versions/index.mjs";
-import { INQUIRY_GRAMMAR_ROWS } from "../../../src/inquiry-grammar/index.mjs";
+import { INQUIRY_GRAMMAR_CHECKS } from "../../../src/inquiry-grammar/index.mjs";
 import { machineFences } from "../../../src/skillpack.mjs";
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 export const SRC = ["bio-plane/src/skillpack.mjs", "bio-plane/src/skilldoctrine.mjs"];
 /* The owners' fence families earlier in the order than skills, each the owner's own export: a namespace of
-   `*_CHECKS` families, `machineFences`' argument (strength's C-32.9, basis-versions' C-32.2, inquiry-grammar's C-32.8;
-   inquiry-grammar's table is exported as `INQUIRY_GRAMMAR_ROWS` and named here as a family). */
-export const owners = Object.freeze({ STRENGTH_BAR_CHECKS, CONCLUDE_ACT_CHECKS,
-                                      INQUIRY_GRAMMAR_CHECKS: INQUIRY_GRAMMAR_ROWS });
+   `*_CHECKS` families, `machineFences`' argument (strength's C-32.9, basis-versions' C-32.2, inquiry-grammar's C-32.8). */
+export const owners = Object.freeze({ STRENGTH_BAR_CHECKS, CONCLUDE_ACT_CHECKS, INQUIRY_GRAMMAR_CHECKS });
 
 export const read = (rel) => readFileSync(join(ROOT, rel), "utf8");
 

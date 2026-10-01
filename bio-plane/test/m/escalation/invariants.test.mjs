@@ -292,3 +292,92 @@ test("R17 R20 every refusal this module mints carries its code, its C-116 row an
     assert.deepEqual([a.code, a.check, a.translation], [a.reason, row.check, row.translation], a.reason);
   }
 });
+
+/* R26's world: two notification actions attached at stage 2 by alice, H withheld from every viewer but alice when
+   `hide` (the actions stand-in refuses it, as `actionRead` does an action the viewer may not see), N seen by all.
+   H is sent first, so alice's advances record H's trigger ids; neither has a clock entry; alice evaluates H's reply.
+   Answers the read at stages 2, 3 and 4, as alice and as bob, at one fixed instant. */
+function withheldWorld(hide) {
+  const w = seeded();
+  opened(w);
+  const by = (who) => ({ author: V(who), viewer: V(who) });
+  const go = (to) => assert.equal(w.esc.escalationAdvance({ id: w.E, to, reason: `to ${to}`, ...by("alice") }).ok, true, `to ${to}`);
+  go(2);
+  const H = w.action({ project: w.P, restsOn: [w.D] });
+  const N = w.action({ project: w.P, restsOn: [w.D] });
+  if (hide) w.actionHidden.add(H);
+  for (const a of [H, N]) assert.equal(w.esc.escalationAttach({ id: w.E, action: a, ...by("alice") }).ok, true);
+  const nowMs = ms("2026-09-28T01:00:00Z");
+  const reads = { H, N, P: w.P };
+  const read = (stage) => { for (const v of ["alice", "bob"]) reads[`${v}${stage}`] = w.esc.escalationRead({ id: w.E, nowMs, viewer: V(v) }); };
+  w.correspond(H, "sent", "2026-09-01");
+  w.correspond(N, "sent", "2026-09-02");
+  read(2);
+  go(3);
+  read(3);
+  const R = w.correspond(H, "received", "2026-09-10");
+  go(4);
+  assert.equal(w.esc.escalationEvaluate({ id: w.E, response: { action: H, ord: R }, reading: "denied", reason: "Refused.", ...by("alice") }).ok, true);
+  assert.equal(w.esc.escalationDecline({ id: w.E, to: 7, reason: "Legal tools first.", ...by("alice") }).ok, true);
+  read(4);
+  return reads;
+}
+
+test("R26 an attached action the viewer may not see is withheld whole from the read: it leaves actions, R6's note, a trigger's ids and a history entry's trigger ids, with no id, placeholder or count, and out_of_view: true; a viewer who sees everything is answered as before", () => {
+  const r = withheldWorld(true);
+  const { H, N } = r;
+  for (const s of [2, 3, 4]) {
+    const b = r[`bob${s}`], a = r[`alice${s}`];
+    /* one fewer action, and no null or placeholder in its place */
+    assert.deepEqual(b.actions.map((x) => x.action), [N], `stage ${s}`);
+    assert.deepEqual(a.actions.map((x) => x.action), [H, N], `stage ${s}`);
+    const text = JSON.stringify(b);
+    assert.ok(!text.includes(H), `stage ${s}: the withheld action's id is nowhere in the answer`);
+    assert.ok(!text.includes("an object you may not see"), `stage ${s}: no placeholder`);
+    assert.equal(b.out_of_view, true, `stage ${s}`);
+    assert.ok(!("out_of_view" in a), `stage ${s}: alice sees everything`);
+    /* the escalation's own stage, acts and proposals stand */
+    assert.equal(b.stage, a.stage);
+    assert.deepEqual(b.history.filter((h) => h.kind !== "attach").map((h) => [h.kind, h.to ?? null, h.at]),
+                     a.history.filter((h) => h.kind !== "attach").map((h) => [h.kind, h.to ?? null, h.at]));
+    /* K913: no gap in a sequence number counts it: with something withheld, no entry carries the log's seq */
+    for (const x of [...b.history, ...b.actions, ...b.evaluations, ...b.proposed.flatMap((p) => p.declines)])
+      assert.ok(!("seq" in x), `stage ${s}: ${JSON.stringify(x).slice(0, 80)}`);
+    assert.deepEqual(a.history.map((h) => h.seq), a.history.map((_, i) => i + 1), "alice's history keeps its seq");
+    assert.deepEqual(b.history.filter((h) => h.kind === "attach").map((h) => h.action), [N], "its attachment leaves the history");
+    for (const t of b.triggers) assert.ok(!t.ids.some((i) => i === H || i.startsWith(`${H}#`)), `stage ${s} trigger ids`);
+  }
+  /* stage 2: bob's trigger to 3 is met by N's sent entry; alice's by H's, the earlier */
+  assert.deepEqual(r.bob2.triggers[0].ids, [N, `${N}#0`]);
+  assert.deepEqual(r.alice2.triggers[0].ids, [H, `${H}#0`]);
+  /* stage 3: neither has a clock entry; bob's notes name N only, alice's both */
+  assert.deepEqual(r.bob3.notes.map((n) => n.action), [N]);
+  assert.deepEqual(r.alice3.notes.map((n) => n.action), [H, N]);
+  /* the advance alice recorded on H's trigger ids shows bob the entry without them */
+  const adv = (x, to) => x.history.find((h) => h.kind === "advance" && h.to === to);
+  assert.deepEqual(adv(r.alice3, 3).trigger.ids, [H, `${H}#0`]);
+  assert.deepEqual(adv(r.bob3, 3).trigger, { ...adv(r.alice3, 3).trigger, ids: [] });
+  assert.deepEqual(adv(r.bob4, 4).trigger.ids, []);
+  assert.deepEqual(adv(r.alice4, 4).trigger.ids, [H, `${H}#0`, `${H}#1`]);
+  /* an evaluation of H's reply stands, without the response naming H */
+  const ev = (x) => x.evaluations.at(-1);
+  assert.deepEqual(ev(r.alice4).response, { action: H, ord: 1 });
+  const { response: _, seq: __, ...rest } = ev(r.alice4);
+  assert.deepEqual(ev(r.bob4), rest);
+  assert.deepEqual(r.bob4.history.find((h) => h.kind === "evaluate").reading, "denied");
+  /* the decline stands in the proposal, without its seq */
+  const dec = (x) => x.proposed.find((p) => p.to === 7).declines;
+  assert.equal(dec(r.bob4).length, 1);
+  const { seq: ___, ...declined } = dec(r.alice4)[0];
+  assert.deepEqual(dec(r.bob4)[0], declined);
+  /* negative control: with nothing withheld, bob's answer is alice's byte for byte, and alice's is unchanged by H being
+     withheld from someone else */
+  const open = withheldWorld(false);
+  /* the two worlds differ only in their project's allocated id */
+  const bytes = (w, x) => JSON.stringify(x).replaceAll(w.P, "PROJ");
+  for (const s of [2, 3, 4]) {
+    assert.equal(JSON.stringify(open[`bob${s}`]), JSON.stringify(open[`alice${s}`]), `stage ${s}`);
+    assert.equal(bytes(r, r[`alice${s}`]), bytes(open, open[`alice${s}`]), `stage ${s}`);
+    assert.ok(!("out_of_view" in open[`bob${s}`]));
+  }
+});

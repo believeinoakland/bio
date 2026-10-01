@@ -1,0 +1,7 @@
+# BOB to capture-sources (T20)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T20) layer 3, capture-sources (K853; CONTROL-PLANE #10 J4 (Q1)): `bio-plane/test/m/capture-sources/credentials.test.mjs`:557–:567 ("R55, R57, R63: the DEC-49 guard resolves every C-105 region…") runs legacy-tests' `civicos-ui/check-refusal-codes.mjs`, which reads the deleted catalogue, so it is accepted red by name from T19's close until your job. Re-state its proof at your module's interface, with no guard script and no file outside your paths: (arm A, the family's home) the `*_CHECKS` exports of `src/capture-sources/credentials.mjs`, found by the reserved suffix as control-plane's composition finds a family (`families.mjs`:133), are exactly `CAPTURE_CREDENTIAL_CHECKS` (:44); (arm C, the governed sites) every `CAPTURE_CREDENTIAL_*` reason your refusal paths answer is a key of it, answered with its own `check` and `translation`, and no C-105 number is held twice. The tests at :82–:147 and :527–:555 (each row's `where` naming one region inside its function that mints its code) stay as they are; do not repeat them. Drop the `spawnSync` import (:15) once unused. No product code changes; R55, R57 and R63 are unchanged. Proof: `credentials.test.mjs` green whole; name the red met in your COMPLETE. No requirement of yours is marked for T20; no merge-early obligation. Tests only: no generated artifact moves. Do not delete old suites (K619).

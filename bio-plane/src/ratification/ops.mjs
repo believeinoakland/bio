@@ -372,7 +372,7 @@ export async function ratifyOp(req, stub, ctx) {
     /* END DEC-49 REGION is-attribution-ratify */
     if (facts.row.bundle_sha !== body.expectedSha)
       return json({ ok: false, reason: "RATIFY_STALE",
-                    detail: "the bundle has changed since it was reviewed; read it again and re-sign",
+                    detail: "the record has changed since it was reviewed; read it again and re-sign",
                     expected: facts.row.bundle_sha, got: body.expectedSha, store: storeName, tokenClass: cls }, 409);
 
     if (!facts.signers.length)
@@ -771,9 +771,9 @@ export async function ratifyOp(req, stub, ctx) {
     if (!reusedOut.answered) {
       reuseReport = { ok: false, reason: STORE_SILENT_REASON, op: "ratify/reusedparts",
                       detail: STORE_SILENT_DETAIL,
-                      note: "whether this bundle reused any part from the record is UNDETERMINED for this "
+                      note: "whether this record reused any part from the record is UNDETERMINED for this "
                           + "ratification, and that is NOT the same as no part having been reused. The "
-                          + "bundle is ratified -- the signature, the gate and the published rows are all "
+                          + "record is ratified -- the signature, the gate and the published rows are all "
                           + "unaffected by this read -- and the reuse re-check (CAP-4 item 6b) did not "
                           + "happen. Re-ratifying converges it." };
     } else if (reused && Array.isArray(reused.parts) && reused.parts.length) {
@@ -823,7 +823,7 @@ export async function ratifyOp(req, stub, ctx) {
         if (!r || !r.ok) {
           verdicts.push({ ...base, verdict: "unavailable", observed_sha: null,
             basis: `a plain GET returned ${r ? r.status : "a network error"}; the source no longer answers, `
-                 + `and the bundle is ratified with the bytes captured on the day` });
+                 + `and the record is ratified with the bytes captured on the day` });
           continue;
         }
         const got = rhex(await crypto.subtle.digest("SHA-256", new Uint8Array(await r.arrayBuffer())));

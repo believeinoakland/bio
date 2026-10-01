@@ -36,7 +36,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
+const SRC = fileURLToPath(new URL("../src/plane/index.mjs", import.meta.url));
 
 const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),

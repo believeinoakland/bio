@@ -143,11 +143,11 @@ console.log("\n--- R4: store is exactly bio or scratch ---");
     const [st, out] = await answer(await post(mf, { capture_sha: SHA, store: name }));
     t(`R4 store ${name} is accepted`, [st, out.ok], [200, true]);
   }
-  /* R4: the set equals the plane's own. The plane is a later module and cannot be
-     imported here, so its declaration is read from its source. */
-  const plane = readFileSync(here("../../bio-plane/src/index.mjs"), "utf8");
-  const scratch = (plane.match(/^const SCRATCH = "([^"]+)";$/m) || [])[1];
-  const planeSet = ((plane.match(/^const NAMESPACES = Object\.freeze\(\[([^\]]*)\]\);$/m) || [])[1] || "")
+  /* R4: the set equals the plane's own (its `admission` module's). A later module cannot
+     be imported here, so its declaration is read from its source. */
+  const plane = readFileSync(here("../../bio-plane/src/admission/index.mjs"), "utf8");
+  const scratch = (plane.match(/^(?:export )?const SCRATCH = "([^"]+)";$/m) || [])[1];
+  const planeSet = ((plane.match(/^(?:export )?const NAMESPACES = Object\.freeze\(\[([^\]]*)\]\);$/m) || [])[1] || "")
     .split(",").map((x) => x.trim()).filter(Boolean).map((x) => (x === "SCRATCH" ? scratch : JSON.parse(x)));
   t("R4 the namespaces this member answers with equal the plane's own set", planeSet, ["bio", "scratch"]);
   /* ...and R2 is never read for an unknown name (R4 is checked before R5). */

@@ -63,7 +63,7 @@ Terms. An **op spec** is `{classes, machineClasses?, mutating}`, with the op's s
 
 **The Durable Object class** (K93; N348)
 - **R35** *(retired: moved to `plane` R1, K653 BOB-2; T19's layer-11 fold)*
-- **R42** (K764; provenance R52) Once `legacy-store`'s promotion step goes, this module holds `provenance`'s `testimonySlot()` among the registered promotion steps (promotion R39) at the rank that step holds today, whatever this module's own place in the order: its `check` runs after the checks of every module before `legacy-store` in the order (`monitoring`'s included) and before `tasks`', and its `project` after those modules' projections and before any later module's; so every step's checks and projections, and the order of refusals, are those of today. *(not yet met: T20, K846: the slot stays inside plane's `plane-held` step until provenance's and control-plane's T20 jobs)*
+- **R42** (K764, K861; provenance R52) This module holds the promotion step `legacy-store` registered and `plane` holds as `plane-held` (plane R10). It exports the step whole for `plane` to register under this module's name, and registers nothing itself and edits no file of `plane`'s. The step is `provenance`'s `testimonySlot()` (its `check`; its `project`, whose refusal rolls the promotion back and whose `testimony` joins the answer on the testimony path only) and `membership`'s sight index (`reindexProjectSight` on every promotion, D-497), which `membership` cannot register because it does not use `promotion`. It runs at the rank the held step has today, whatever this module's own place in the order: its `check` after the checks of every module before `legacy-store`'s old place in the order (`monitoring`'s included) and before `tasks`', and its `project` after those modules' projections and before any later module's. So every step's checks and projections, every answer's keys and values, and the order of refusals are those of today.
 
 **The doorbell's pull** (N364; DEC-78 item 1)
 - **R36** `op=inboxpull` routes to capture's `pullKnock` (capture R65) stamping `by` from the session, and in the same act promotes the pulled document as a new information bundle at `collected`, the puller its author; the pull and its promotion are one act, through capture R65's `within` (K559, K580): a refusal or a fault of either leaves neither written, and a fault answers a fixed sentence, never store text. A knock already pulled whose capture no bundle holds (pulled through capture's own route) is promoted by the door's next pull of it (K609).
@@ -82,18 +82,16 @@ Terms. An **op spec** is `{classes, machineClasses?, mutating}`, with the op's s
 
 ### Uses
 
-- `op-declarations` (K624): `OPS`, `SESSION_OPS`, `NEEDS`, the act lists (R2, R17, R26, R29), `decorateAct` and `ACT_GATE` (for `op=affordances`; `ops.mjs`, the re-export for `legacy-index`'s `op=affordances` and `op=queue` arms, is deleted once those arms leave `src/index.mjs` for `affordances` and `queue`, T19 layer 11).
+- `op-declarations` (K624): `OPS`, `SESSION_OPS`, `NEEDS`, the act lists (R2, R17, R26, R29), `decorateAct` and `ACT_GATE` (for `op=affordances`; `ops.mjs`, the re-export for `legacy-index`'s `op=affordances` and `op=queue` arms, deleted at T19's layer 11).
 - `admission` (K624): its gates, called in R28's order, and the caller it admits (class, session, member, viewer, identity, `ai` credential), from which R17 stamps.
 - `membership`: `claim` (R15), `existenceAct` (R27), `isAdministrator`.
 - `runtime-limits`: `liveToken` (R15).
 - `signatures`: the signing page (R1).
 - `public-read`: `inbandQuartet` (its R7, was `publication` R16; K651), for the review copy's answer (R20).
-- `instance-setup`: `setupPage`, its public group read (R1), the reports' handlers; `instanceSetupOf` and its `start`, `instanceSetupOps` (N348; `plane` R1 since T19's layer-11 fold, while `dispatch.mjs`' `Store` still wraps `legacy-store`'s class).
+- `instance-setup`: `setupPage`, its public group read (R1), the reports' handlers; `instanceSetupOf` and its `start`, `instanceSetupOps` (N348; `plane` R1 since T19's layer-11 fold).
 - `skills`: `renderPack`, `machineFences` (R41).
 - `affordances`: `ACTS`, `CAPTURE_ACTS`, `PER_ITEM_ACTS`, `VOCABULARIES` for `op=affordances`' answer while its arm is here.
-- `legacy-checks`: the rows of R32 until they move, and C-61.1 (R39) until it moves here; `CHECK_CATALOGUE` (R22) until R43; none after T19's layer 11.
 - `record-grammar`: `parseFrontmatter`, `createSha256`, `normalizeType`, `MACHINE_AUTHOR_PREFIX`, `MACHINE_CLASS_PREFIX` (`index.mjs`:7–8 and `pull.mjs`:13 import them from the catalogue today; re-pointed in T19's layer 11).
-- `legacy-store`: its store routes and class until each module takes its own; then `plane` holds the class (its R1) and this module's `dispatch` and `controlPlaneRoutes` are what `plane` calls (R26).
 - `capture`: `CAPTURE_CHECKS` (R22; N347); `pullKnock` (its R65), for R36 (N364).
 - `promotion`: `promote`, for R36's promotion of the pulled document (N364).
 - `sources` (N364): its op handlers (`sourcedisclose`, `sourcelink`, `sourceconsent`, `sourceconsentwithdraw`) and the no-account door `knockerconsent` (its R11), which this module routes and stamps.

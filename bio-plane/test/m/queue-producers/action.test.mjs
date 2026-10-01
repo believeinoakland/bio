@@ -1,6 +1,6 @@
-/* The Action layer's producers (R15–R18; K608, K611, K613–K615) and the self-registered signing key (R14; N375) at
+/* The Action layer's producers (R15–R19; K608, K611, K613–K615, K899 (7)) and the self-registered signing key (R14; N375) at
    feedItems' interface. Each provider is a fake answering in the shape its requirements publish (action-clocks R3, R5;
-   action-plans R17; escalation R16), filled per test; membership is real, so the recipients (the author, else the
+   action-plans R17; escalation R16; actions R54), filled per test; membership is real, so the recipients (the author, else the
    project's owners, else the administrators: membership R65, R86) and the signing keys (its R27) are its own. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -183,4 +183,52 @@ test("R14: OBLIGATIONs signer-self-registered, one per active self-registered ke
   assert.deepEqual(it.basis.raised_to, ["ada"]);
   w.run(`UPDATE signers SET status='revoked' WHERE key_b64='KEY-A'`);
   assert.deepEqual(ids(w.read("ada")), [], "it leaves when the key is no longer active");
+});
+
+test("R19: one OBLIGATION litigation-hold per legal mark actions.holdsDue answers the viewer, keyed OBLIGATION::litigation-hold::<action>::<position>, to every administrator and the marker and nobody else, until a hold is stated", () => {
+  const asked = [];
+  const marks = [
+    { action: "ACT-1", ord: 2, note: "a letter threatening suit", marked_by: "alice", marked_at: iso(NOW - 3 * DAY), project: "PRJ-1" },
+    { action: "ACT-1", ord: 4, note: "a second letter", marked_by: "bob", marked_at: iso(NOW - DAY), project: "PRJ-1" },
+    { action: "ACT-2", ord: 0, note: "a subpoena", marked_by: "alice", marked_at: "not an instant", project: null },
+    { action: "ACT-H", ord: 1, note: "on a hidden action", marked_by: "alice", marked_at: iso(NOW), project: "PRJ-1" }];
+  const held = new Set();      // the marks on which some member has stated a hold (actions R52)
+  const w = people({ actions: { holdsDue: (a) => { asked.push(a);
+    const due = marks.filter((m) => !held.has(`${m.action}#${m.ord}`));
+    /* two pages: the first truncated with a cursor, the second the rest */
+    return a.after ? page(due.slice(2)) : page(due.slice(0, 2), { truncated: due.length > 2, cursor: due.length > 2 ? "ACT-1#4" : null }); } } });
+  /* ACT-H is an action alice may not see: a mark on it is no item (R11), whatever the provider answered */
+  w.bundle("ACT-H", "action"); w.run(`UPDATE bundles SET project='PRJ-H' WHERE bundle_id='ACT-H'`);
+  const ids = (r) => ofKind(r, "litigation-hold").map((i) => i.id).sort();
+  const alice = w.read("alice");
+  assert.deepEqual(asked.slice(0, 2).map((a) => [a.after, a.viewer]), [[null, "member:alice"], ["ACT-1#4", "member:alice"]],
+    "the viewer is actions' to read by, and its cursor is followed");
+  const all = ["OBLIGATION::litigation-hold::ACT-1::2", "OBLIGATION::litigation-hold::ACT-1::4", "OBLIGATION::litigation-hold::ACT-2::0",
+    "OBLIGATION::litigation-hold::ACT-H::1"];
+  assert.deepEqual(ids(w.read("ada")), all, "every administrator: one item per unanswered legal mark");
+  assert.deepEqual(ids(w.read(null, "class:admin")), all, "and the admin machine credential, as R14's");
+  assert.deepEqual(ids(alice), ["OBLIGATION::litigation-hold::ACT-1::2", "OBLIGATION::litigation-hold::ACT-2::0"],
+    "the member who marked it, her own marks only, and never one on an action she may not see");
+  assert.ok(!JSON.stringify(alice).includes("ACT-H"), "R11: the invisible action is named nowhere");
+  assert.deepEqual(ids(w.read("bob")), ["OBLIGATION::litigation-hold::ACT-1::4"]);
+  assert.deepEqual(ids(w.read("olga")), [], "never to a member who is neither an administrator nor the marker, though she owns the project");
+  assert.deepEqual(ids(w.read(null, "class:member")), [], "nor another machine credential");
+  const it = byId(alice)["OBLIGATION::litigation-hold::ACT-1::2"];
+  assert.deepEqual([it.class, it.kind], ["OBLIGATION", "litigation-hold"]);
+  assert.deepEqual(it.subject, { kind: "action", id: "ACT-1", entry: 2, note: "a letter threatening suit", project: "PRJ-1" },
+    "its subject the action, naming the entry's position and the mark's note");
+  assert.deepEqual(it.age, { state: "determined", since: iso(NOW - 3 * DAY), ms: 3 * DAY }, "aged from the mark's instant");
+  assert.equal(byId(alice)["OBLIGATION::litigation-hold::ACT-2::0"].age.state, "undetermined");
+  assert.deepEqual(it.recipients, ["ada", "alice"], "every administrator and the marker");
+  assert.deepEqual(it.options, [{ id: "actionhold", label: "Record whether a litigation hold is in place", weight: "single" },
+    { id: "opt", on: ["ACT-1"] }], "its door, the hold statement, beside the acts on the action");
+  assert.deepEqual(it.case.ancestors.map((a) => [a.id, a.depth]), [["PRJ-1", 0]], "homed under the action's project");
+  assert.equal(it.basis.source, "actions.holdsDue"); assert.equal(it.basis.bound.truncated, false);
+  assert.ok(!/bundle/i.test(`${it.summary} ${it.detail} ${it.basis.detail}`), "K899 (1): the text says record, never bundle");
+  // raised once: the same read twice is the same items
+  assert.deepEqual(ids(w.read("alice")), ids(alice));
+  // gone once any hold is stated on the mark, in place or released
+  held.add("ACT-1#2"); held.add("ACT-2#0");
+  assert.deepEqual(ids(w.read("ada")), ["OBLIGATION::litigation-hold::ACT-1::4", "OBLIGATION::litigation-hold::ACT-H::1"]);
+  assert.deepEqual(ids(w.read("alice")), []);
 });
