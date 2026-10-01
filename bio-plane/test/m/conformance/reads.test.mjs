@@ -55,25 +55,119 @@ test("R9 R19: determinationRead answers R1's fields, the per-standard outcomes, 
   assert.equal(w.c.determinationRead({ id: d.id, viewer: V("ron") }).ok, true);
 });
 
-test("R9: a finding or standard the viewer may not see is replaced by null and \"an object you may not see\"", () => {
+/* A Conformance over the scene's modules whose sight withholds what `hidden(id, viewer)` names (membership R43 shows every
+   non-project bundle to a member, so these arms are reached through a sight rule given as this module's membership). */
+const withholding = (w, hidden) => new Conformance({ storage: w.st, record: w.record, promotion: w.promotion, host: w.host,
+  membership: new Proxy(w.membership, { get: (t, p) => (p === "inSight"
+    ? (id, viewer) => (hidden(id, viewer) ? false : t.inSight(id, viewer))
+    : typeof t[p] === "function" ? t[p].bind(t) : t[p]) }),
+  content: w.content, inquiry: w.k, strength: w.strength, reevaluation: w.reevaluation, publication: w.publication,
+  standards: w.standards, now: () => w.clock.now });
+
+test("R9 R11 R24: a finding or standard the viewer may not see is withheld whole, with its outcome, rows and disagreement, and the read and each R11 item state out_of_view: true (no id, no placeholder, no count); a viewer who sees all is answered as before", () => {
   const { w, std, input } = scene();
   const d = w.c.determine(input());
-  /* membership's rule shows every non-project bundle to a member (its R43), so this arm is reached through a sight rule
-     that withholds the finding and the standard, given as this module's membership */
-  const membership = new Proxy(w.membership, { get: (t, p) => (p === "inSight"
-    ? (id, viewer) => (id === F || id === std ? false : t.inSight(id, viewer))
-    : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });
-  const c = new Conformance({ storage: w.st, record: w.record, membership, promotion: w.promotion, host: w.host,
-    content: w.content, inquiry: w.k, strength: w.strength, reevaluation: w.reevaluation, publication: w.publication,
-    standards: w.standards });
+  const c = withholding(w, (id, viewer) => (id === F || id === std) && viewer === V("pat"));
   const r = c.determinationRead({ id: d.id, viewer: V("pat") });
-  assert.deepEqual(r.findings, [{ finding: null, says: "an object you may not see" }]);
-  assert.deepEqual(c.determinationsFor({ viewer: V("pat") }).items[0].findings, [{ finding: null, says: "an object you may not see" }]);
-  assert.deepEqual(r.outcomes, [{ standard: null, outcome: "noncompliant" }]);
-  assert.equal(r.standards[0].standard, null);
-  assert.equal(r.standards[0].says, "an object you may not see");
-  assert.equal(r.standards[0].outcome, "noncompliant");
-  assert.deepEqual(c.determinationsFor({ viewer: V("pat") }).items[0].outcomes, [{ standard: null, outcome: "noncompliant" }]);
+  const item = c.determinationsFor({ viewer: V("pat") }).items[0];
+  assert.deepEqual([r.findings, r.outcomes, r.standards, r.out_of_view], [[], [], [], true]);
+  assert.deepEqual([item.findings, item.outcomes, item.out_of_view], [[], [], true]);
+  for (const a of [r, item]) {
+    const s = JSON.stringify(a);
+    for (const gone of [F, std, "an object you may not see"]) assert.equal(s.includes(gone), false, gone);
+  }
+  /* what is authored on the determination stands: the act, author, time, links, live and outcomes_differ */
+  const full = w.c.determinationRead({ id: d.id, viewer: V("olive") });
+  for (const k of ["act", "author", "at", "supersedes", "superseded_by", "live", "outcomes_differ", "cause_says"])
+    assert.deepEqual(r[k], full[k], k);
+  /* the negative control: olive sees all, gets no out_of_view key and today's answer */
+  for (const a of [c.determinationRead({ id: d.id, viewer: V("olive") }), full]) {
+    assert.equal("out_of_view" in a, false);
+    assert.deepEqual(a.outcomes, [{ standard: std, outcome: "noncompliant" }]);
+    assert.deepEqual(a.findings.map((f) => f.finding), [F]);
+  }
+  assert.deepEqual(c.determinationRead({ id: d.id, viewer: V("olive") }), full);
+  assert.equal("out_of_view" in c.determinationsFor({ viewer: V("olive") }).items[0], false);
+});
+
+test("R11 R24: determinationsFor states out_of_view on the item that withheld something, never on the page", () => {
+  const { w, std, input } = scene();
+  const second = w.standard("Parks Code 12.08.040", { period: { from: "2020-01-01", to: "2030-12-31" } });
+  const a = w.c.determine(input());
+  const b = w.c.determine(input({ standards: [{ standard: second, outcome: "compliant" }],
+    rows: [{ standard: second, requires: "a sign", did: "a sign", reading: "aligns" }] }));
+  const c = withholding(w, (id, viewer) => id === std && viewer === V("pat"));
+  const page = c.determinationsFor({ viewer: V("pat") });
+  assert.deepEqual(Object.keys(page).sort(), ["cursor", "items", "limit", "ok", "truncated"]);
+  assert.deepEqual(page.items.map((i) => [i.id, i.out_of_view, i.outcomes.length]), [[a.id, true, 0], [b.id, undefined, 1]]);
+  assert.equal("out_of_view" in page.items[1], false);
+  /* each item is still a subset of determinationRead's shape */
+  const read = c.determinationRead({ id: a.id, viewer: V("pat") });
+  assert.deepEqual([read.out_of_view, read.outcomes, read.outcomes_differ], [true, [], false]);
+});
+
+test("R6 R9 R24: a question whose inquiry the viewer may not see keeps its question and opened, and loses its inquiry key; the read states out_of_view: true", () => {
+  const { w, std, input } = scene();
+  const d = w.c.determine(input({ standards: [{ standard: std, outcome: "unclear" }],
+                                  questions: [{ question: "Was a sign posted?" }] }));
+  const opened = d.questions[0].inquiry;
+  assert.ok(opened);
+  const c = withholding(w, (id, viewer) => id === opened && viewer === V("pat"));
+  const r = c.determinationRead({ id: d.id, viewer: V("pat") });
+  assert.deepEqual([r.questions, r.out_of_view], [[{ question: "Was a sign posted?", opened: true }], true]);
+  assert.equal(JSON.stringify(r).includes(opened), false);
+  const o = c.determinationRead({ id: d.id, viewer: V("olive") });
+  assert.deepEqual([o.questions, "out_of_view" in o], [[{ question: "Was a sign posted?", inquiry: opened, opened: true }], false]);
+});
+
+test("R10 R24: a pinned finding hidden from the viewer and reopened: its cause is withheld with it, the read holds no trace of it and states out_of_view: true; basis_changed stands while another cause is left", () => {
+  const { w, proj, input } = scene();
+  const G = "INQ-2026-0300-deferred";
+  w.inquiry(G, { state: "deferred", disposition: '"waiting on the minutes"', legs: [{ target: DOC }] });
+  w.publish(G, proj, { caseId: "CASE-2026-0004" });
+  const d = w.c.determine(input({ findings: [F, G] }));
+  assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));
+  const re = w.promotion.reopen({ target: G, reason: "the minutes arrived", viewer: V("olive"), author: V("olive") });
+  assert.equal(re.ok, true, JSON.stringify(re).slice(0, 300));
+  const c = withholding(w, (id, viewer) => id === G && viewer === V("pat"));
+  const pat = c.determinationRead({ id: d.id, viewer: V("pat") });
+  const olive = c.determinationRead({ id: d.id, viewer: V("olive") });
+  assert.deepEqual(olive.basis_changed.causes.map((x) => `${x.kind}:${x.subject}:${x.source}`), [`finding:${G}:reopened`]);
+  assert.equal("out_of_view" in olive, false);
+  assert.deepEqual([pat.basis_changed, pat.findings.map((f) => f.finding), pat.out_of_view], [null, [F], true]);
+  assert.equal(JSON.stringify(pat).includes(G), false);
+  /* a cause pat may see stands beside the withheld one: basis_changed stands, naming only it */
+  w.inquiry(F, { legs: [{ target: DOC }], question: "Revised?" });
+  w.publish(F, proj, { edition: 2 });
+  const later = c.determinationRead({ id: d.id, viewer: V("pat") });
+  assert.deepEqual(later.basis_changed.causes.map((x) => `${x.kind}:${x.subject}:${x.source}`), [`finding:${F}:edition`]);
+  assert.equal(later.out_of_view, true);
+  assert.equal(JSON.stringify(later).includes(G), false);
+  assert.deepEqual(c.determinationRead({ id: d.id, viewer: V("olive") }).basis_changed.causes
+    .map((x) => `${x.kind}:${x.subject}:${x.source}`).sort(), [`finding:${F}:edition`, `finding:${G}:reopened`]);
+});
+
+test("R10 R24: a standard superseded by one the viewer may not see keeps its cause without the detail naming it; a passage cause the viewer may not see is withheld; each states out_of_view: true", () => {
+  const { w, std, ev, input } = scene();
+  w.at(ev.cap.sha, "ex.org/notice", "2026-09-01T00:00:00Z");
+  const d = w.c.determine(input());
+  const next = w.standard("Parks Code 12.08.030 (amended)", { period: { from: "2026-06-01", to: "2030-12-31" }, supersedes: std });
+  const [b] = w.doc("INFO-2026-0500-notice2", [w.cap("INFO-2026-0500-notice2-0", "newer bytes")]);
+  w.read(b.sha, [U(0, "page one"), U(1, "something else entirely")]);
+  w.at(b.sha, "ex.org/notice", "2026-09-20T00:00:00Z");
+  const full = w.c.determinationRead({ id: d.id, viewer: V("pat") });
+  assert.deepEqual(full.basis_changed.causes.map((x) => `${x.kind}:${x.subject}`).sort(),
+                   [`passage:${ev.content}`, `standard:${std}`].sort());
+  assert.match(full.basis_changed.causes.find((x) => x.kind === "standard").detail, new RegExp(next));
+  const c = withholding(w, (id, viewer) => (id === next || id === DOC) && viewer === V("pat"));
+  const r = c.determinationRead({ id: d.id, viewer: V("pat") });
+  const [only] = r.basis_changed.causes;
+  assert.deepEqual([r.basis_changed.causes.length, only.kind, only.subject, "detail" in only, r.out_of_view],
+                   [1, "standard", std, false, true]);
+  /* the act's and the row's evidence, a passage of the hidden document, leave their lists */
+  assert.deepEqual([r.act.evidence, r.standards[0].rows[0].content], [[], []]);
+  for (const gone of [next, ev.content, DOC]) assert.equal(JSON.stringify(r).includes(gone), false, gone);
+  assert.deepEqual(c.determinationRead({ id: d.id, viewer: V("olive") }), w.c.determinationRead({ id: d.id, viewer: V("olive") }));
 });
 
 test("R10: flagged basis_changed, naming each cause (a finding reopened, superseded or published in a later edition; a standard superseded; a newer capture of a text or evidence passage that does not carry it); the determination and its outcome do not change", () => {
@@ -253,4 +347,23 @@ test("R1 R9 R11 R12 R18 R21: the ops route to the services, and the author, prop
   refused(w.op("comparisonfacts", { viewer: "nobody" }, { contradiction: x.inquiry, standardSide: "b", viewer: V("pat") }),
           "NO_SUCH_CONTRADICTION_INQUIRY");
   assert.equal(w.op("comparisonfacts", { viewer: V("pat"), contradiction: x.inquiry, standardSide: "a" }).standard_side, "a");
+});
+
+test("R12 R24: comparisonRead withholds whole a standard the viewer may not see, with its rows, and an evidence id or question inquiry the same, stating out_of_view: true; a viewer who sees all is answered as before", () => {
+  const { w, proj, std, ev, input } = scene();
+  const second = w.standard("Parks Code 12.08.040", { period: { from: "2020-01-01", to: "2030-12-31" } });
+  const q = "INQ-2026-0610-asked";
+  w.inquiry(q);
+  const p = w.c.comparisonPropose({ project: proj, act: input().act, standards: [std, second],
+    rows: [input().rows[0], { standard: second, requires: "a sign", did: "a sign", reading: "aligns", content: [ev.content] }],
+    questions: [{ question: "Was a sign posted?", inquiry: q }], proposer: V("olive"), viewer: V("olive") });
+  assert.equal(p.ok, true, JSON.stringify(p).slice(0, 300));
+  const c = withholding(w, (id, viewer) => [std, DOC, q].includes(id) && viewer === V("pat"));
+  const r = c.comparisonRead({ id: p.proposal.id, viewer: V("pat") }).proposal;
+  assert.deepEqual([r.standards, r.rows.map((x) => [x.standard, x.content]), r.act.evidence, r.questions, r.out_of_view],
+    [[second], [[second, []]], [], [{ question: "Was a sign posted?" }], true]);
+  for (const gone of [std, ev.content, q]) assert.equal(JSON.stringify(r).includes(gone), false, gone);
+  const full = w.c.comparisonRead({ id: p.proposal.id, viewer: V("pat") }).proposal;
+  assert.deepEqual([full.standards, "out_of_view" in full, full.contradiction], [[std, second], false, null]);
+  assert.deepEqual(c.comparisonRead({ id: p.proposal.id, viewer: V("olive") }).proposal, full);
 });

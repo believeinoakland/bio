@@ -123,7 +123,7 @@ test("R22: a determination carrying recommendation or policy, at any depth and i
     for (const k of RECOMMENDATION_KEYS) assert.equal(keysOf(a).has(k), false, k);
 });
 
-test("R9 R22: determinationRead answers the cause with its evidence, or cause null with \"cause not established\"; the document states it; evidence the viewer may not see is null", () => {
+test("R9 R22 R24: determinationRead answers the cause with its evidence, or cause null with \"cause not established\"; the document states it; evidence the viewer may not see is withheld whole, with out_of_view: true", () => {
   const { w, ev, input } = scene();
   const second = w.evidence("INFO-2026-0710-memo");
   const cause = { statement: "The department's closure checklist omits the notice rule.", evidence: [ev.content, second.content] };
@@ -137,11 +137,14 @@ test("R9 R22: determinationRead answers the cause with its evidence, or cause nu
   assert.deepEqual([n.cause, n.cause_says], [null, CAUSE_NOT_ESTABLISHED]);
   assert.equal(CAUSE_NOT_ESTABLISHED, "cause not established");
   assert.match(w.text(none.id), /## Cause\n\nCause not established\./);
-  /* evidence a viewer may not see is null in their read; the statement stays */
+  /* evidence a viewer may not see leaves the list whole (R24); the statement stays, and the read says something was
+     withheld */
   const c = over(w, { membership: withholding(w, (id, viewer) => id === second.doc && viewer === V("pat")) });
-  assert.deepEqual(c.determinationRead({ id: d.id, viewer: V("pat") }).cause,
-                   { statement: cause.statement, evidence: [ev.content, null] });
+  const hid = c.determinationRead({ id: d.id, viewer: V("pat") });
+  assert.deepEqual([hid.cause, hid.out_of_view], [{ statement: cause.statement, evidence: [ev.content] }, true]);
+  assert.equal(JSON.stringify(hid).includes(second.content), false);
   assert.deepEqual(c.determinationRead({ id: d.id, viewer: V("olive") }).cause, cause);
+  assert.equal("out_of_view" in c.determinationRead({ id: d.id, viewer: V("olive") }), false);
   /* R5: the cause is read the same for a compliant determination */
   const comp = w.c.determine(input({ standards: [{ standard: input().standards[0].standard, outcome: "compliant" }],
                                      rows: [{ ...input().rows[0], reading: "aligns" }], cause }));
@@ -167,7 +170,7 @@ test("R9 R4: outcomes_differ is true, with its statement and no duty, when the p
   assert.equal(w.c.determine(input()).outcomes_differ, false, "one standard");
 });
 
-test("R12: a comparison may name the contradiction inquiry it came from; the proposal records the link and still carries no outcome; an absent, invisible or plain inquiry is NO_SUCH_CONTRADICTION_INQUIRY, one answer", () => {
+test("R12 R24: a comparison may name the contradiction inquiry it came from; the proposal records the link and still carries no outcome; an absent, invisible or plain inquiry is NO_SUCH_CONTRADICTION_INQUIRY, one answer; a link the viewer may not see is withheld whole", () => {
   const { w, proj, std, input } = scene();
   const x = w.contradicted();
   const base = { project: proj, standards: [std], rows: input().rows, proposer: MACHINE, viewer: MACHINE };
@@ -176,7 +179,8 @@ test("R12: a comparison may name the contradiction inquiry it came from; the pro
   assert.equal(p.proposal.contradiction, x.inquiry);
   assert.equal(w.c.comparisonRead({ id: p.proposal.id, viewer: V("pat") }).proposal.contradiction, x.inquiry);
   assert.equal(keysOf(p).has("outcome") || keysOf(p).has("outcomes"), false);
-  assert.equal(w.c.comparisonPropose(base).proposal.contradiction, null, "one naming none links none");
+  const none = w.c.comparisonPropose(base).proposal;
+  assert.deepEqual([none.contradiction, "out_of_view" in none], [null, false], "one naming none links none");
   const hidden = over(w, { membership: withholding(w, (id, viewer) => id === x.inquiry && viewer === V("pat")) });
   const answers = [];
   for (const [c, contradiction, viewer] of [[w.c, "INQ-2026-0999-none", V("pat")], [w.c, F, V("pat")], [w.c, DOC, V("pat")],
@@ -186,8 +190,12 @@ test("R12: a comparison may name the contradiction inquiry it came from; the pro
     answers.push({ ...r, contradiction: null });
   }
   for (const a of answers) assert.deepEqual(a, answers[0], "absent, invisible and plain alike");
-  /* the proposal's link reads null to a viewer who may not see the inquiry */
-  assert.equal(hidden.comparisonRead({ id: p.proposal.id, viewer: V("pat") }).proposal.contradiction, null);
+  /* the proposal's link is left out (not null) for a viewer who may not see the inquiry, and it says so (R24) */
+  const unseen = hidden.comparisonRead({ id: p.proposal.id, viewer: V("pat") }).proposal;
+  assert.deepEqual(["contradiction" in unseen, unseen.out_of_view], [false, true]);
+  assert.equal(JSON.stringify(unseen).includes(x.inquiry), false);
+  const seenBy = hidden.comparisonRead({ id: p.proposal.id, viewer: V("olive") }).proposal;
+  assert.deepEqual([seenBy.contradiction, "out_of_view" in seenBy], [x.inquiry, false]);
   /* an outcome is refused first, the link notwithstanding (R12's order) */
   refused(w.c.comparisonPropose({ ...base, contradiction: x.inquiry, outcome: "noncompliant" }), "PROPOSAL_CANNOT_DETERMINE");
   /* a determination drawing on it records that, as any proposal (R18) */
