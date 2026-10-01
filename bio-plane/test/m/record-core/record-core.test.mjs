@@ -2045,34 +2045,51 @@ test("R67 R59 R18: in the audit each claimant of a shared slot is wrapped on its
   assert.deepEqual([r.clean, r.withErrors], [0, ids.length]);
 });
 
-test("R67 R18 (rule 2): registerLegacyGrammars fills, as legacy-checks, only the slots no registration holds, and the audit then judges as the catalogue's checkBundle does", async () => {
-  /* the oracle is the catalogue's own wrapper, read here only while the legacy registration exists (both go at rule 1) */
-  const { checkBundle: catalogueCheckBundle, LEGACY_GRAMMARS } = await import("../../../checks/bio-checks.mjs");
+test("R67 R18 (rule 2, K785): registerLegacyGrammars registers the handed-in grammars, as legacy-checks, only in the slots no registration holds, each run in its own slot; the audit runs them there", async () => {
+  /* a stand-in for the catalogue's LEGACY_GRAMMARS: one entry per slot, each claiming its slot whole and naming its slot */
+  const ran = [];
+  const legacyOf = (names) => EXTENSION_ARMS.filter((a) => names.includes(a.name)).map((a) => ({ module: "legacy-checks", ids: [...a.ids],
+    arm: (ctx, f) => { ran.push([a.name, ctx.folderName]); f.push({ check: a.ids[0], code: "LEGACY", severity: "error", message: a.name }); } }));
+  const all = legacyOf(EXTENSION_ARMS.map((a) => a.name));
   const { rc } = fresh();
-  const capture = { module: "capture", ids: ["C-2.7"], arm: (ctx, f) => f.push({ check: "C-2.7", severity: "warning", message: "capture's" }) };
-  assert.equal(rc.registerGrammar(capture.module, capture).ok, true);
-  const legacy = registerLegacyGrammars(rc);
-  const want = LEGACY_GRAMMARS.filter((x) => !x.ids.includes("C-2.7")).flatMap((x) => x.ids);
-  assert.deepEqual(legacy, { ok: true, module: "legacy-checks", ids: want }, "every slot but capture's, which is never doubled");
-  assert.deepEqual(registerLegacyGrammars(rc), { ok: true, module: "legacy-checks", ids: [] }, "a second call finds every slot held");
-  assert.equal(rc.grammars().filter((x) => x.module === "legacy-checks").length, want.length === 0 ? 0 : 5, "and registers nothing more");
-  const bodies = [["INFO-2026-0001-a", "information", "source_type: web\n"], ["INQ-2026-0001-b", "inquiry", "question: why?\nbasis: []\n"],
-                  ["PROJ-2026-0001-c", "project", "participants: []\n"], ["INFO-2026-0002-d", "information", ""]];
-  for (const [id, type, extra] of bodies) rc.commit({ bundleId: id, type, snapKey: "K1", files: [file("bundle.md", doc(id, type, extra))] });
+  const capture = { ids: ["C-2.7"], arm: (ctx, f) => f.push({ check: "C-2.7", severity: "warning", message: "capture's" }) };
+  assert.equal(rc.registerGrammar("capture", capture).ok, true);
+  const want = all.filter((g) => !g.ids.includes("C-2.7")).flatMap((g) => g.ids);
+  assert.deepEqual(registerLegacyGrammars(rc, all), { ok: true, module: "legacy-checks", ids: want }, "every slot but capture's, which is never doubled");
+  assert.deepEqual(registerLegacyGrammars(rc, all), { ok: true, module: "legacy-checks", ids: [] }, "a second call finds every slot held");
+  assert.deepEqual(rc.grammars().map((x) => x.module), ["capture", ...Array(EXTENSION_ARMS.length - 1).fill("legacy-checks")],
+                   "one entry per slot it claims, after capture's");
+  /* each legacy arm runs in its own slot, in record-grammar's order, on every bundle the audit pages */
+  const bodies = [["INFO-2026-0001-a", "information"], ["INQ-2026-0001-b", "inquiry"]];
+  for (const [id, type] of bodies) rc.commit({ bundleId: id, type, snapKey: "K1", files: [file("bundle.md", doc(id, type))] });
   const r = await rc.auditPass({ limit: 10 });
-  const tally = {};
+  const order = EXTENSION_ARMS.map((a) => a.name).filter((n) => n !== "checkInformationExtension");
+  assert.deepEqual(ran, bodies.flatMap(([id]) => order.map((n) => [n, id])));
+  for (const g of all.filter((x) => !x.ids.includes("C-2.7"))) assert.equal(r.tallyDetail[`${g.ids[0]}/LEGACY`], bodies.length, g.ids[0]);
+  assert.ok(!("C-2.7/LEGACY" in r.tallyDetail), "the held slot's legacy arm never runs");
+  /* the same findings as checkBundle given grammars() over the same image */
   for (const [id] of bodies) {
     const own = await checkBundle(imageOf(rc, id), { grammars: rc.grammars() });
-    const theirs = await catalogueCheckBundle(imageOf(rc, id), { grammars: [capture] });
-    assert.deepEqual(own.findings, theirs.findings, `${id}: the same findings, in the same order`);
-    for (const e of theirs.findings.filter((f) => f.severity === "error")) tally[e.check] = (tally[e.check] || 0) + 1;
+    assert.deepEqual(own.findings.filter((f) => f.code === "LEGACY").map((f) => f.message), order);
   }
-  assert.deepEqual(r.tally, tally, "the audit's tally is the catalogue's");
-  /* with every slot held, nothing is registered */
+  /* a lone legacy entry is its own registration, run as it is */
+  const { rc: one } = fresh();
+  const only = legacyOf(["checkProjectExtension"]);
+  assert.deepEqual(registerLegacyGrammars(one, only), { ok: true, module: "legacy-checks", ids: ["C-2.9", "C-9.1"] });
+  ran.length = 0;
+  await checkBundle({ folderName: "x", files: new Map([["bundle.md", doc("x", "project")]]), sha256: async () => "", sha512: async () => new Uint8Array() },
+                    { grammars: one.grammars() });
+  assert.deepEqual(ran, [["checkProjectExtension", "x"]]);
+  /* with every slot held, or nothing handed in, nothing is registered; an entry that does not claim one slot whole is left out */
   const { rc: full } = fresh();
   for (const a of EXTENSION_ARMS) full.registerGrammar(`m-${a.name}`, { ids: [...a.ids], arm: () => {} });
-  assert.deepEqual(registerLegacyGrammars(full), { ok: true, module: "legacy-checks", ids: [] });
+  assert.deepEqual(registerLegacyGrammars(full, all), { ok: true, module: "legacy-checks", ids: [] });
   assert.ok(!full.grammars().some((x) => x.module === "legacy-checks"));
+  for (const bad of [undefined, null, "x", [], [{ ids: ["C-18.6"], arm: () => {} }], [{ ids: ["C-2.8"] }], [null]]) {
+    const { rc: b } = fresh();
+    assert.deepEqual(registerLegacyGrammars(b, bad), { ok: true, module: "legacy-checks", ids: [] }, JSON.stringify(bad));
+    assert.deepEqual(b.grammars(), []);
+  }
 });
 
 test("R68: a registered finding answers once per page under its key, beside the page's figures, which it never moves; one that throws is AUDIT_CHECK_FAILED under its key", async () => {

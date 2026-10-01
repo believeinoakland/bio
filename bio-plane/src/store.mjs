@@ -24,6 +24,7 @@ import { observationLogOf, observationLogOps, OBSERVATION_LOG_MODULE } from "./o
 import { runProductionsOf, runProductionsOps } from "./run-productions/index.mjs";
 import { captureRequestsOf, captureRequestsOps } from "./capture-requests/index.mjs";
 import { recordOf, stampInstant, registerLegacyGrammars } from "./record-core/index.mjs";
+import { LEGACY_GRAMMARS } from "../checks/bio-checks.mjs";
 export { stampInstant, instantOrder } from "./record-core/index.mjs";
 import { governorOf, governorRoutes } from "./host-governor/index.mjs";
 import { captureOf, captureOps } from "./capture/index.mjs";
@@ -164,7 +165,7 @@ export class Store extends DurableObject {
       runs: aiRunsOf(ctx, env), aiRuns: aiRunsOf(ctx, env) });
     capture.on("observation", "legacy-store", ({ row, at }) => this.#observe(row, at));
     schedulerOf(ctx, env);
-    registerLegacyGrammars(recordOf(ctx));
+    registerLegacyGrammars(recordOf(ctx), LEGACY_GRAMMARS);
     ctx.blockConcurrencyWhile(async () => this.#migrate());
     ctx.blockConcurrencyWhile(async () => schedulerOf(ctx, env).start());
   }
