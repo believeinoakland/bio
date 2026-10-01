@@ -1,413 +1,65 @@
 import { DurableObject } from "cloudflare:workers";
-/* The catalog's own frontmatter parser. References are read from the document
-   with the same code that later checks them, so the store's projection and the
-   checker's view cannot disagree about what the document says. */
-import { parseFrontmatter,
-         checkBundle, createSha256,
-         /* REC-10: the type mapping and the inquiry state machine come from
-            the catalog, so the store's view and the checker's view cannot
-            disagree (the same reason this file already imports the catalog's
-            parser); the title derivation is C-16's ONE rule, stated once. */
-         /* REC-13: vocabFor is the catalog's OWN vocabulary lookup — declared
-            spelling first, normalized type as the fallback. op=conclude asks a
-            VOCABULARY question ("which state machine governs this document"),
-            so it goes through the map like every other consulting site rather
-            than reaching into STATES by a raw key. REC-20: the MAP RULE applies
-            to op=queue's ancestor walk too — a case's type and state read
-            through the same machinery, so a legacy spelling groups identically. */
-         normalizeType, LEGACY_TYPE_ALIASES, STATES, OBJECT_TYPES,
-         /* REC-11: the basis leg grammar is the catalog's ONE function, run
-            here at the write (the checkGatheringGrammar precedent) and by the
-            checker, so a malformed leg never lands and the two views cannot
-            drift. */
-         deriveInquiryTitle, inquiryQuestionOf, checkInquiryBasis,
-         /* REC-16: the id grammar the division's CHILDREN are named under, and
-            the two supersession rules — run here at the write (the
-            checkInquiryBasis precedent) and by the checker, so a malformed
-            supersession never lands and cannot audit clean either. Before this
-            item `supersedes` had no producer and no requirements at all. */
-         BUNDLE_ID_RE, supersedesEdgeFindings,
-         /* REC-51 (2026-08-04): the basis GRADE vocabulary, for the same reason
-            BASIS_ROLES is imported one line up, and it arrives one level BELOW
-            the doctrine sentences REC-43/REC-48/REC-50 composed. Those three
-            items closed statements ABOUT the vocabulary; this file held four
-            copies OF it — `["A","B","C","D"]` three times and a rank map
-            restating the same letters AND their order — while importing this
-            very catalog. They agreed with it at zero cost and would have
-            disagreed with it silently the day it changed. The RANK is now
-            DERIVED from this array's own order rather than restated, so the
-            two cannot disagree at all: see `#GRADE_RANK`. */
-         BASIS_GRADES,
-         divisionDisclosureFindings,
-         /* REC-43 / DEC-39: the capture-axis ceiling, which used to be a static
-            field on this class and now lives beside `checkEarnedLeg` — the arm
-            that REFUSES a leg claiming more than it — so that the published
-            co-attestation fence can be composed from the same value without
-            closing an import cycle through affordances.mjs. The reasoning is
-            at the declaration, where all three readers can see it.
-
-            REC-48 (2026-08-04) adds UNREACHABLE_CAPTURE_GRADE beside it for the
-            same reason one layer on: op=earnedbasis's `ceiling` sentence spelled
-            the unreachable letter in its own letters — a FOURTH copy of the
-            doctrine, which REC-48's scope had not counted — while the `why:`
-            line directly above it already interpolated the ceiling. */
-         EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE,
-         /* REC-46 (2026-08-04): the ONE machine-identity predicate, and the ONE
-            spelling of the stamp `index.mjs` writes. This file used to answer
-            "is this a machine" for itself, ELEVEN times, in two hand-typed
-            shapes — `!who || who === "member" || /^token:/.test(who)` at nine
-            act guards and `/^token:/.test(actor)` at two more — while the
-            catalog answered the same question a third way with a word list that
-            knew nothing of the prefix. That is D-164's "solve it once" with
-            three unsynchronised answers, and REC-45 measured what it cost: the
-            gate accepted `asserted_by: token:member`.
-            `isMachineStamp` is the NARROW question (did the control plane mint
-            this identity) and `isMachineIdentity` the whole one; the two task
-            acts take the narrow one deliberately, and the reason is at those
-            sites. `MACHINE_AUTHOR_PREFIX` replaces this class's own copy of the
-            literal, which a suite used to prove-by-parsing agreed with
-            index.mjs — it is now the same string rather than a proven-equal
-            one. */
-         isMachineIdentity,
-         /* PL-9 / DEC-49: the C-number, the wire code and the canned translation
-            for the meaning-grain read's two refusals, as ONE row read from the
-            catalog rather than restated here. */
-         /* PL-1 / IS-1: the BASIS-VERSION grammar, imported rather than
-            reimplemented, so the version rules run at BOTH gates through ONE
-            function — a version that cannot land cannot audit clean either,
-            which is REC-11's precedent for `checkInquiryBasis` itself.
-            BASIS_VERSION_CHECKS supplies DEC-49's row for the ONE refusal a
-            pure document check cannot reach: the FREEZE, which needs to see
-            what the record already holds under that name. */
-         basisVersionFindings, BASIS_VERSION_CHECKS,
-         /* PL-2 / IS-2: the SIXTH state machine, its refusals and the ONE
-            predicate that says which states carry an authored reason — all
-            three IMPORTED. A hand-typed vocabulary in this repository was two
-            members short of its catalogue for months after a ruling changed it,
-            which is why nothing below re-types a state name. */
-         VERSION_MACHINE, VERSION_ACT_CHECKS, versionNeedsReason,
-         /* PL-3 / IS-4: §9's five kinds, the four levels the empty-level kind may
-            report on, the suggest endpoint's DEC-49 rows, and the ONE
-            boilerplate predicate. All four IMPORTED for the reason the block
-            above gives — nothing here re-types a vocabulary, because a
-            hand-typed one agrees with its author at zero cost. */
-         SUGGEST_CHECKS, isBoilerplate,
-         /* And the catalog's OWN canonical serializer, used for F10's
-            idempotence key rather than a second one written here. */
-         canonicalJson,
-         /* PL-11 / IS-5 / D-199: the ai credential's DEC-49 rows. The MINT's
-            three and the REVOKE's two live here; the gate's four live in
-            index.mjs, because what a scope may REACH is a question only the OPS
-            table can answer and this file must not keep a copy of it. */
-         AI_CREDENTIAL_CHECKS,
-         /* REC-64 / UI-38's §14a rider: the run-open door's capability sentence,
-            plus the 28 single-homed act-shape refusals this file already made and
-            could not explain. Imported rather than re-typed for the reason every
-            other line in this import block gives — the catalogue is the ONE place
-            a code, its C-number and its canned translation live together. */
-         ACT_SHAPE_CHECKS,
-         /* MERGED AT INTEGRATION 2026-08-08: PL-11 and PL-14 each appended to
-            this import and each ended its own list with `MACHINE_AUTHOR_PREFIX`,
-            so the two tails collided textually while agreeing perfectly about
-            what is imported. PL-11's list is the longer one — it also needs
-            `MACHINE_CLASS_PREFIX` for REC-46's one machine-identity predicate —
-            and it is kept whole. Nothing is dropped from either side. */
-         MACHINE_AUTHOR_PREFIX,
-         lawProposalLabel } from "../checks/bio-checks.mjs";
+/* The catalog's own frontmatter parser, its type map (REC-10, the MAP RULE) and its digest. */
+import { parseFrontmatter, createSha256, normalizeType, LEGACY_TYPE_ALIASES } from "../checks/bio-checks.mjs";
+/* REC-132 / C-55: the reserved member id's refusal row, and the audit's report of it. */
+import { MEMBER_ID_CHECKS } from "../checks/bio-checks.mjs";
+/* D-85 / C-66: an assistant opens a question only inside a run it holds (INVESTIGATIVE-SESSION.md §11 item 5, rule 2). */
+import { SURFACE_CHECKS } from "../checks/bio-checks.mjs";
 import { actionsOf, actionsOps } from "./actions/index.mjs";
+import { actionClocksOf, actionClocksOps } from "./action-clocks/index.mjs";
 /* N216 (K250): the layer-9 modules built with no `from`, constructed on this object's host and their ops dispatched here. */
 import { standardsOf, standardsOps } from "./standards/index.mjs";
 import { conformanceOf, conformanceOps } from "./conformance/index.mjs";
 import { consequencesModule, consequencesOps } from "./consequences/index.mjs";
 import { filingsOf, filingsOps } from "./filings/index.mjs";
 import { escalationOf } from "./escalation/index.mjs";
+import { actionPlansOf, actionPlansOps } from "./action-plans/index.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* K31: the one write path, extracted to `promotion`; this store registers its share of every promotion there. */
 import { promotionOf, stepContext, recordAudit } from "./promotion/index.mjs";
-import { provenanceOf, routeFinding, observerRef, TESTIMONY_PATH, PROVENANCE_TABLES } from "./provenance/index.mjs";
+import { provenanceOf, routeFinding, TESTIMONY_PATH } from "./provenance/index.mjs";
 import { Membership, membershipOf, membershipOps, hiddenBundles } from "./membership/index.mjs";
-import { observationLogOf, observationLogOps, observationLogOwns, OBSERVATION_LOG_MODULE } from "./observation-log/index.mjs";
-import { runProductionsOf, runProductionsOps, runProductionsOwns, posFields } from "./run-productions/index.mjs";
+import { observationLogOf, observationLogOps, OBSERVATION_LOG_MODULE } from "./observation-log/index.mjs";
+import { runProductionsOf, runProductionsOps } from "./run-productions/index.mjs";
 import { captureRequestsOf, captureRequestsOps } from "./capture-requests/index.mjs";
-import { recordOf, stampInstant, instantOrder } from "./record-core/index.mjs";
+import { recordOf, stampInstant } from "./record-core/index.mjs";
 export { stampInstant, instantOrder } from "./record-core/index.mjs";
 import { governorOf, governorRoutes } from "./host-governor/index.mjs";
-import { captureOf, captureOps, captureOwns } from "./capture/index.mjs";
-import { monitoringOf, monitoringOps, monitoringOwns } from "./monitoring/index.mjs";
-import { connectionsOf, connectionsOps, connectionsOwns, refsReplacedOf } from "./connections/index.mjs";
-import { inquiryOf, inquiryOps, inquiryOwns, legCapped, supersededByOf, LEG_BACKFILL_MAX } from "./inquiry/index.mjs";
+import { captureOf, captureOps } from "./capture/index.mjs";
+import { monitoringOf, monitoringOps } from "./monitoring/index.mjs";
+import { connectionsOf, connectionsOps } from "./connections/index.mjs";
+import { inquiryOf, inquiryOps, legCapped, LEG_BACKFILL_MAX } from "./inquiry/index.mjs";
 import { citationOf, citationOps } from "./citation/index.mjs";
-import { extractionOf, extractionOps, extractionOwns, labelTerms, normAlias, refTermSources, CAPTURE_TEXT_UNIT_CAP,
-         CAPTURE_TEXT_CAPTURE_BOUND, CAPTURE_TEXT_CAPTURE_UNIT_BOUND } from "./extraction/index.mjs";
-import { entitiesOf, entitiesOps, ENTITIES_TABLES } from "./entities/index.mjs";
-import { basisVersionsOf, basisVersionsOps, versionsIn, VERSION_ACT_TO, BASIS_VERSIONS_LIMIT_DEFAULT, BASIS_VERSIONS_LIMIT_MAX,
+import { extractionOf, extractionOps } from "./extraction/index.mjs";
+import { entitiesOf, entitiesOps } from "./entities/index.mjs";
+import { basisVersionsOf, basisVersionsOps, VERSION_ACT_TO, BASIS_VERSIONS_LIMIT_DEFAULT, BASIS_VERSIONS_LIMIT_MAX,
          BASIS_VERSION_LEGS_MAX } from "./basis-versions/index.mjs";
-/* D-440: the FORMAT registry's own answer to "does this format walk parts",
-   which is what makes a capture an office container (`#containerKindOf`). */
-import { getFormat } from "./formats.mjs";
-import { sha256hex, instanceAiCredential, instanceClaudeToken } from "./tokens.mjs";
-/* REC-35: the intent layer's three closed vocabularies — the refusals below are written here, the array is
-   written once there, and op=affordances publishes that same array. A kind this file
-   admits and the catalogue does not publish (or the reverse) is not reachable
-   by editing one place, which is the whole of the guarantee. */
 import { affordancesOf } from "./affordances.mjs";
-/* The retrieval surface is compiled, never assembled here. This file executes
-   statements and maintains the index; it builds no query. That is what makes the
-   D-15 viewer gate a SINGLE compilation point rather than a convention: there is
-   no second place in the plane where a query could come from. */
-import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MAX, viewerPredicate,
-         meaningVocabulary, MEANING, cachedNotes, MEANING_AXIS_CAP } from "./query.mjs";
-/* IS-6: the investigative run's vocabulary and its refusals. Pure, for the same
-   reason queuestate.mjs is: a rule reachable only through a Durable Object is a
-   rule that gets exercised less. `finishedBound` is imported rather than
-   re-derived here because the ordinary close and the reaper must compute the
-   bound through ONE function — two paths that agree is the failure this
-   repository has measured five times. */
-import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDARD_BASIS,
-         /* REC-69: the two kinds of thing a run can be in the context of, as a
-            TEXT vocabulary read from `airun.mjs` rather than typed at the one
-            site that judges it. `op=airuns` names them back to a caller who got
-            it wrong, and a hand copy of two words agrees with itself for free —
-            which is the failure this repository has now measured six times. */
-         RUN_CONTEXTS,
-         checkObservation, checkCondition, checkBound, finishedBound,
-         /* REC-93 / IC-92: the observation log's three remaining vocabularies.
-            Imported for the reason RUN_CONTEXTS two lines up is imported — a hand
-            copy of a word list agrees with itself for free, which this repository
-            has now measured six times. `OBSERVATION_AUTHORITY_KINDS` in
-            particular is where §4.6's provisional is enforced: there is no value
-            in it a member's ad hoc search could take. */
-         OBSERVATION_ACTOR_CLASSES, OBSERVATION_AUTHORITY_KINDS, OBSERVATION_SUBJECT_KINDS,
-         /* REC-94 / IC-95: the content axis. ONE CONSTANT, and importing it is
-            the whole of the mechanism CONDUCT ruled on 2026-09-14 -- REC-92 and
-            CPDF-19 import this same object, so a fourth spelling of
-            a fourth spelling of any member cannot be written without failing the
-            build -- the arm is ABSOLUTE and counts comments too, so this sentence
-            names no member either.
-            `contentAxisFor` and `contentObservationsFor` are pure and hold the
-            whole judgement, exactly as `checkObservation` does for the append
-            site: this file puts judged rows in and holds no second opinion about
-            what a reading means. */
-         CONTENT_AXIS_STATES, CONTENT_AXIS_UNDETERMINED,
-         /* REC-113 / IC-116: the coverage claim `op=airunlog` now STATES per row.
-            The rule is imported rather than re-spelled here for the same reason
-            the content axis is -- `aiRunLog` puts judged rows out and holds no
-            second opinion about what an absent referent means. */
-         OBSERVATION_COVERAGE, OBSERVATION_COVERAGE_UNDETERMINED, observationCoverage,
-         /* BOB #11's correction of 2026-09-15 (`9954a9c`, design section 5.1): a subject
-            with no row has THREE causes and they are different facts. The
-            vocabulary lives beside the states it qualifies. */
-         MISSING_ROW_CAUSES,
-         contentAxisFor, contentObservationsFor,
-         /* REC-94: the set C-22.2 and C-22.3 already turn on. The content-level
-            frontier asks "is this capture below what the fleet can now do" and
-            the answer is "its latest state is not definitive" — the SAME
-            property, so it is imported rather than re-typed as a list of two
-            state names that a sixth state would silently escape. */
-         DEFINITIVE_STATES,
-         /* REC-95: THE MEANING LEVEL. The three acts of design section 4.3, each
-            as a PURE function that decides what one act's outcome IS, so this
-            file puts judged rows in and holds no second opinion about what a
-            reader run, a resolution attempt or a derivation means —
-            `contentObservationsFor`'s arrangement one level up, and
-            `checkObservation`'s at the append site.
-            `MEANING_MISSING_ROW_CAUSES` is section 5.1's three causes AT THIS
-            LEVEL and is keyed identically to `MISSING_ROW_CAUSES` above, so a
-            fourth spelling of one of the three fails the suite rather than
-            passing review. `MEANING_EVIDENCE_IS_ONE_SIDED` is this level's own
-            finding: at two of its three subject kinds the pre-log evidence exists
-            only where the answer was YES. */
-         MEANING_MISSING_ROW_CAUSES, MEANING_EVIDENCE_IS_ONE_SIDED,
-         /* REC-107: the CONTENT level's sidedness in the same shape as the meaning
-            level's, and the ONE function both frontier arms widen their cause set
-            through. It is imported rather than open-coded at either site for the
-            reason every other constant in this list is: `OBSERVATION-LOG-DESIGN.md`
-            §8's fourth item is being built as this lands, and a second level
-            spelling this rule a second way is the drift. */
-         CONTENT_EVIDENCE_IS_ONE_SIDED, causesNotRuledOut,
-         /* REC-129 / IC-143: the internet level's sidedness and its empty-answer ladder. */
-         INTERNET_EVIDENCE_IS_ONE_SIDED, INTERNET_FRONTIER_EMPTY_CAUSES,
-         readerRunObservation, resolutionObservation, derivationObservation, derivationStatement,
-         /* FL-8 / IC-67: WHAT BECAME OF THE RUN, decided in `airun.mjs` beside the
-            three vocabularies it reads rather than as a ternary here. Imported for
-            `finishedBound`'s reason exactly, one field over: this rule had two
-            copies inside `#aiRunTerminate` and a THIRD by hand in the fleet
-            member's plane mock, and the third had been wrong since FL-7 minted a
-            third ending. */
-         runStatusFor,
-         /* PL-18: the project-membership gate, decided ONCE in `airun.mjs` for all
-            three run verbs rather than three times here — DEC-63's ruling that the
-            gate is participation and not a capability tier. */
-         projectGate,
-         /* REC-145: which run contexts the gate consults a project for — one answer, shared. */
-         runConsultsProjects,
-         /* REC-153: the run's context is the kind it says it is — decided in `airun.mjs`, the facts from here. */
-         checkRunContextKind } from "./airun.mjs";
-/* REC-152: tick and close are the run's PRINCIPAL's acts — the positional half, decided once in `airun.mjs`.
-   Its own import line, so REC-153's edit of the list above and this one cannot collide at integration. */
-import { runPrincipalGate } from "./airun.mjs";
+/* The D-15 viewer gate, from query.mjs's ONE compilation point: this file builds no query of its own. */
+import { viewerPredicate } from "./query.mjs";
+/* `op=audit`'s route tally names its states in D-129's vocabulary: run-rules' (K682). */
+import { OBSERVATION_STATES } from "./run-rules/index.mjs";
 import { contradictionOf, contradictionOps } from "./contradiction/index.mjs";
-/* D-516 / BOB #33: that rule now answers THREE ways, so the two readers below map an ANSWER to a cause
-   word instead of reading a boolean. The words and the band's cause key are imported rather than spelled
-   at either site, for the reason the line above gives: the point of D-500 was one rule in one place, and a
-   literal `"within_band"` typed at two readers is that rule growing two spellings again. Its own import
-   line, for the reason REC-152's gives. */
-import { WATERMARK_AFTER, WATERMARK_WITHIN_BAND, WATERMARK_BAND_CAUSE } from "./airun.mjs";
-/* REC-169: a figure written into a run's bound is a non-negative integer and never a plane-counted bound's — decided
-   once in `airun.mjs`, asked by the tick and by the open's seed. Its own line, for the reason REC-152's gives.
-   REC-172: the tick hands it its `consume` whole (`map: true` — a MAP of named bounds) and the open its `bounds`
-   whole (`list: true` — a LIST of named bounds, each allowance a whole number): still the one rule, in one place. */
-import { checkConsume } from "./airun.mjs";
-/* CPDF-10: the transcription provenance chain, IMPORTED and never restated.
-   This file projects a chain into columns and records attestations against it;
-   it holds no copy of what a chain may claim, which engine weakens what, or who
-   may attest — the eleven-copies-of-one-predicate failure REC-46 measured is
-   the reason nothing below re-derives any of it. */
-import { checkChain, checkAttestation, extentCovers, derivationCap, isTranscribed,
-         calibrationsOf,
-         /* REC-94: WHICH TIERS A CHAIN EVIDENCES, read off the step kinds' own
-            declared tier. It lives in `textchain.mjs` because it is a question
-            about a chain and a chain has ONE home -- the same boundary the
-            header above draws for `cap` and for `calibrationsOf`. */
-         tiersEvidenced,
-         /* REC-88 / D-349: DEC-4's own rule, and this is its FIRST CALLER. It
-            stood exported and uncalled from CPDF-10 until now, which is what
-            made IC-83's *"the leg's capture grade <= captureBound as today"* a
-            sentence about a bound nothing computed. Imported rather than
-            reimplemented for the reason every other name on this list is: the
-            weakest-link arithmetic, the never-raises direction and the
-            undetermined-is-null direction have ONE home, and a second copy in
-            this file is exactly the drift `textchain.mjs`'s header forbids. */
-         captureBound,
-         /* FW-17 / IC-86 + D-161: reading POSITION and whether a position falls
-            inside a content row's extent. Imported for the reason everything
-            above it is — the extent vocabulary is ONE construct and a second
-            copy here is the drift D-164 names. */
-         readingSourceFromColumns, readingOccurrenceKey,
-         readingPositionInExtent,
-         /* D-531: whether a unit carries text is a GLYPH question (D-514's
-            rule), asked here where the index decides what to write. */
-         glyphCount } from "./textchain.mjs";
-/* CPDF-13 / D-183 / D-253: THE CALIBRATION CONSTRUCT, imported for exactly the
-   reason `textchain.mjs` is imported above — the rules about what a measurement
-   must carry, how two measurements compare and what each direction may cause
-   have ONE implementation, and this file holds no copy of any of them. The
-   asymmetry in particular (a WORSE calibration raises an obligation and
-   re-grades nothing; a BETTER one raises nothing) is `drifted`'s and is asked
-   rather than restated, because a rule restated at its call site is a rule that
-   can come to disagree with itself. */
 import { calibrationOf, calibrationOps } from "./calibration/index.mjs";
 import { schedulerOf } from "./scheduler/index.mjs";
-import { queueOf, queueOps, queueOwns } from "./queue/index.mjs";
+import { queueOf, queueOps } from "./queue/index.mjs";
 import { tasksOf, tasksOps } from "./tasks/index.mjs";
-import { progressionsOf, progressionOps, PROGRESSIONS_TABLES } from "./progressions/index.mjs";
+import { progressionsOf, progressionOps } from "./progressions/index.mjs";
 import { intentOf, intentOps } from "./intent/index.mjs";
-import { strengthOf as strengthModule, strengthOps, STRENGTH_AXES, barAxisWords } from "./strength/index.mjs";
+import { strengthOf as strengthModule, strengthOps, STRENGTH_AXES } from "./strength/index.mjs";
 import { reevaluationOf, reevaluationOps } from "./reevaluation/index.mjs";
 import { reviewOf, reviewOps } from "./review/index.mjs";
-import { caseAuthoringOf, caseAuthoringOps, caseAuthoringOwns, withheldWriterStated } from "./case-authoring/index.mjs";
-import { ratificationOf, ratificationOps, caseConclusionRowLines, completenessFields } from "./ratification/index.mjs";
-import { publicationOf, publicationOps, publicationOwns } from "./publication/index.mjs";
-/* SK-1: the doctrine pack's own refusal, imported for the reason every check in
-   this file is — the rule has ONE implementation and this file holds no copy of
-   it. `skillpack.mjs` is pure; nothing but the check crosses into the store. */
-import { checkSkillVersion } from "./skillpack.mjs";
+import { caseAuthoringOf, caseAuthoringOps } from "./case-authoring/index.mjs";
+import { ratificationOf, ratificationOps } from "./ratification/index.mjs";
+import { publicationOf, publicationOps } from "./publication/index.mjs";
+import { publicReadOf, publicReadOps } from "./public-read/index.mjs";
+import { projectStageOf, projectStageOps } from "./project-stage/index.mjs";
 import { biasOf, biasOps } from "./bias/index.mjs";
 import { aiRunsOf, aiRunsOps, hiddenRuns } from "./ai-runs/index.mjs";
-/* SK-7 / framework Part II 14.4 (Bob's 5.7): WHO MINTED A CONTENT ROW, read in
-   one place. The classifier and the sentences live in the catalogue beside
-   `SUFFICIENCY_CLAIM_STATES`, whose shape they take, for the reason every
-   vocabulary above is imported rather than copied — the label a member reads
-   and the predicate a consumer asks must be one row. `CONTENT_MINTED_BY_PLANE`
-   is the literal `mintContent` defaults to, taken from there so the stamp and
-   the reading of it cannot disagree. */
-import { CONTENT_MINT_STATES, CONTENT_MINTED_BY_PLANE,
-         contentMintState } from "../checks/bio-checks.mjs";
-
-/* REC-82 / IC-83 / DEC-23 / D-164: THE CONTENT-EXTENT CONSTRUCT, imported for
-   the reason `textchain.mjs` above is imported — the extent grammar, the
-   canonical form the content address is taken over and the four refusals have
-   ONE implementation, in the layer both the CHECKER and this file already
-   import, and this file holds no copy of any of them. A second reading of
-   "what part of a document does this leg mean" is D-164's own lesson arriving
-   inside the construct that exists to close it. */
-import { CONTENT_EXTENT_CHECKS, checkContentExtent, legExtent, canonicalExtent,
-         describeExtent, contentIdFor, legContentId, contentCitedAs, mintUndetermined,
-         contentOf, mintLabel, VERSION_NOTICE_STATES, VERSION_NOTICE_GRADES, CONTENT_TABLES } from "./content/index.mjs";
-/* retrieval (K61): the projection, the text index, search, selections, the content axis and the frontier are its; the
- * store delegates to it, registers the later modules' parts with it, and passes it observation-log's services until that
- * module is extracted. */
-import { retrievalOf, retrievalRoutes, SELECTION_ID_CHUNK, RETRIEVAL_TABLES } from "./retrieval/index.mjs";
-/* REC-97 / IC-90: THE LEG GRAMMAR ITSELF, imported so `op=cite` can route the
-   leg it is about to write through the SAME function `checkInquiryBasis` runs
-   at C-2.8 and `basisVersionFindings` runs at C-25.10 — REC-84's ONE checker.
-   The act composes a leg and asks the catalogue whether it is one; it holds no
-   grammar of its own, because a second answer to "is this a legal extent" is
-   D-164's own lesson arriving inside the construct built to close it. */
-import { checkLegExtentGrammar } from "../checks/bio-checks.mjs";
-/* REC-86 / IC-123: NARROW's refusals, its one predicate over two extents, and
-   the version-name grammar its new reading must meet (C-25.2's own regex, so a
-   name this act accepts is one op=promote accepts). */
-import { NARROW_CHECKS, extentRelation, VERSION_NAME_RE } from "../checks/bio-checks.mjs";
-/* D-536: a re-read of a capture is COMPARED with the reading before it, and the difference ATTRIBUTED
-   to a tier and a member (`readingprov.mjs`, Part II §16 "Reading provenance"). */
-import { compareProvenance, PROVENANCE_SCHEME } from "./readingprov.mjs";
-/* REC-132 / C-55: the reserved member id's refusal row, and the audit's report of it. */
-import { MEMBER_ID_CHECKS, SIGNER_ENROLMENT_CHECKS, CUSTODIAL_CHECKS } from "../checks/bio-checks.mjs";
-/* REC-134 / C-56: an act on a project asks the actor's own position in it (SIGHT IS NOT AUTHORITY). */
-import { PROJECT_AUTHORITY_CHECKS } from "../checks/bio-checks.mjs";
-/* REC-149 / C-70: a DISCOVERABLE project's existence is seen; its doors are not (Membership v2 §7.14). */
-import { PROJECT_VISIBILITY_CHECKS, PROJECT_JOIN_REQUEST_CHECKS } from "../checks/bio-checks.mjs";
-/* REC-137 / C-57: a case ratification is signed by an OWNER of the publishing project (DEC-72 cl. 5). */
-import { CASE_AUTHORITY_CHECKS } from "../checks/bio-checks.mjs";
-/* D-85 / C-66: an assistant opens a question only inside a run it holds (INVESTIGATIVE-SESSION.md §11 item 5, rule 2). */
-import { SURFACE_CHECKS } from "../checks/bio-checks.mjs";
-/* REC-141 / C-59: the plane mints project ids; a caller-supplied one is refused with one answer. */
-import { PROJECT_ID_CHECKS } from "../checks/bio-checks.mjs";
-/* MK-2 / IC-142: the one letter a testimony is worth, composed from the
-   catalogue so this file holds no grade-letter literal for it. */
-import { TESTIMONY_GRADE } from "../checks/bio-checks.mjs";
-/* MK-1 / D-184 / IC-134: THE TESTIMONY PATH'S KEY is provenance's `TESTIMONY_PATH` (a Symbol; imported above). */
-/* D-484 / DEC-49 (`BIO_Assistant_and_AI_Roles_v0_1.md` rule 10) — THE TWO
-   MULTI-SITE ACT-SHAPE CODES, CONSOLIDATED SO THERE IS ONE SITE.
- *
- * WHY A HELPER RATHER THAN A TRANSLATION AT EACH SITE, and ACT_SHAPE_CHECKS's
- * own header is the argument. A row holds ONE `where`, a `where` names THE
- * SMALLEST SPAN IN WHICH THE ROW'S REFUSAL IS ENFORCED, and one code may not
- * hold two rows — so a code minted at four sites could not be given a row at
- * all, and that header named the honest fix as *"the refusals consolidated
- * behind one helper so there IS one site"* and routed it rather than attempting
- * it. This is that fix for the two codes D-484 names: `NO_BASIS` was minted at
- * four sites and `NO_CITATION` at three, and each now has exactly one. `NO_BASIS`'s is inquiry's `actNoBasis` (N186).
- *
- * THE CODE IS A STRING LITERAL HERE, which is DEC-49's rule and the reason the
- * consolidation works at all: the guard's arm C COMPARES a literal and reads
- * past a variable, and a code held in a variable once shipped
- * `translation: undefined` to a member. Each helper THROWS on a missing row for
- * `admissionRow`'s reason — a throw is a 500 in a test, which is loud, where a
- * missing sentence is silent and reaches a person.
- *
- * ADDITIVE ON THE WIRE (I3). `reason` and every per-site key the callers passed
- * before — `target`, `progression_key`, `version` — are unchanged and still
- * first; `detail` is still the site's own sentence, because the canned
- * translation is the MEMBER's answer and the detail is the caller's. What is new
- * is `code`, `check` and `translation` beside them. No existing reader loses a
- * key it read. */
-
-function actNoCitation(detail, extra = {}) {
-  /* DEC-49 REGION is-act-no-citation — D-484 / C-33.41. The ONE site at which the
-     plane says a written thing names no source anybody else could go and read: a
-     declared entity relation, a revision of a declared flow, an exception
-     document discharging a skipped stage. */
-  const row = ACT_SHAPE_CHECKS.NO_CITATION;
-  if (!row || typeof row.translation !== "string" || !row.translation)
-    throw new Error("actNoCitation: NO_CITATION has no ACT_SHAPE_CHECKS row with a canned translation "
-                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
-  return { ok: false, reason: "NO_CITATION", code: "NO_CITATION", check: row.check,
-           translation: row.translation, detail, ...extra };
-  /* END DEC-49 REGION is-act-no-citation */
-}
-
+/* REC-82 / IC-83: the content-extent checker (C-45) and the content module. */
+import { checkContentExtent, contentOf } from "./content/index.mjs";
+/* retrieval (K61): the projection, the text index, search, selections, the content axis and the frontier are its. */
+import { retrievalOf, retrievalRoutes, SELECTION_ID_CHUNK } from "./retrieval/index.mjs";
 
 /* BIO store, plane layer, step 1.
  *
@@ -430,8 +82,6 @@ function actNoCitation(detail, extra = {}) {
  * root of trust, and the gate runs over a byte-complete image.
  */
 
-const INLINE_MAX = 1024 * 1024; // spill to R2 above 1MB; measured hard limit ~2MiB
-
 
 /* CPDF-10: a column this store WROTE as JSON, read back. Returns null rather
    than throwing on a malformed value, for the reason every read in this file
@@ -446,55 +96,17 @@ export class Store extends DurableObject {
     this.ctx = ctx;
     this.env = env;
     this.sql = ctx.storage.sql;
-    // record-core (R21, R46): the tables legacy-store still owns, declared to purge in the order its purge cleared
-    // them. A name is keyed to a bundle by bundle_id; `keys` names the others' (none: only the whole-store purge
-    // clears it); `whole` limits what the whole-store purge clears. Each owner declares its own when extracted (K23).
-    recordOf(ctx, { evidence: env.CAPTURES ?? null, evidencePrefix: () => `${this.#ownNamespace() || "bio"}/captures/` })
-      .declarePurge("legacy-store", [
-      "refs", "register", "readings", "reading_refs", "reading_ref_terms", "reading_text_source",
-      "text_attestations", "resolutions", "progression_instances", "reading_history", "progression_exceptions", "inquiry_basis",
-      "inquiry_exclusions",
-      "provenance_route_marks", "case_revision_flags", "content", "transcriptions",
-      "transcription_attestations", "lead_shares", "observation_attributions", "theme_placements", "proposed_readings",
-      "inquiry_migration_replays", "capture_text",
-      { name: "bundles_fts", keys: [] },
-      { name: "connections", keys: ["a_bundle_id", "b_bundle_id"] },
-      { name: "connection_pair_choices", keys: ["a_bundle_id", "b_bundle_id"] },
-      { name: "queue_state", keys: ["case_id"] },
-      { name: "published_edges", keys: ["from_bundle", "to_bundle"] },
-      { name: "suggest_refusals", keys: ["target"] },
-      { name: "case_documents", keys: [], whole: "ratified_at IS NULL" },
-      { name: "case_exclusions", keys: [], whole: "NOT EXISTS (SELECT 1 FROM case_documents d WHERE d.case_id = case_exclusions.case_id AND d.edition = case_exclusions.edition)" },
-      { name: "capture_text_fts", keys: [] }, { name: "selection_items", keys: [] }, { name: "selections", keys: [] }, { name: "statement_acknowledgements", keys: [] },
-      { name: "task_queue", keys: [] }, { name: "source_reachability", keys: [] }, { name: "monitor_tick_epoch", keys: [] }, { name: "monitor_address_type", keys: [] },
-      { name: "link_verdicts", keys: [] }, { name: "links", keys: [] }, { name: "captured_locators", keys: [] }, { name: "site_asset_refs", keys: [] }, { name: "site_assets", keys: [] }, { name: "reuse_verdicts", keys: [] },
-      { name: "capture_sessions", keys: [] }, { name: "entity_relations", keys: [] }, { name: "entity_aliases", keys: [] }, { name: "entities", keys: [] }, { name: "progression_stages", keys: [] }, { name: "progression_defs", keys: [] },
-      { name: "progression_stage_versions", keys: [] }, { name: "progression_def_versions", keys: [] }, { name: "connection_dirty", keys: [] }, { name: "proposal_dispositions", keys: [] }, { name: "finding_dispositions", keys: [] }, { name: "queue_item_mutes", keys: [] },
-      { name: "observation_log", keys: [] }, { name: "leads", keys: [] }, { name: "themes", keys: [] },
-    ].filter((t) => !captureOwns(t) && !extractionOwns(t) && !PROVENANCE_TABLES.includes(typeof t === "string" ? t : t.name))
-      .filter((t) => !PROGRESSIONS_TABLES.some((x) => (x.name || x) === (typeof t === "string" ? t : t.name)))
-      .filter((t) => !CONTENT_TABLES.includes(typeof t === "string" ? t : t.name))
-      .filter((t) => !ENTITIES_TABLES.includes(typeof t === "string" ? t : t.name))
-      .filter((t) => !RETRIEVAL_TABLES.includes(typeof t === "string" ? t : t.name))
-      .filter((t) => !observationLogOwns(t))
-      .filter((t) => !monitoringOwns(t))
-      .filter((t) => !runProductionsOwns(t))
-      .filter((t) => !connectionsOwns(t))
-      .filter((t) => !caseAuthoringOwns(t))
-      .filter((t) => !publicationOwns(t))
-      .filter((t) => !queueOwns(t))
-      .filter((t) => !inquiryOwns(t)));   /* each extracted owner declares its own (K23) */
+    // record-core: the evidence bucket and its key prefix, handed over at its first construction. legacy-store
+    // declares no table to purge: each owner declares its own (K23).
+    recordOf(ctx, { evidence: env.CAPTURES ?? null, evidencePrefix: () => `${this.#ownNamespace() || "bio"}/captures/` });
     recordOf(ctx).registerStatsSource("legacy-store", ({ viewer, proof }) => this.#counts({ proof, viewer }));
     /* K31: promotion, which reaches record-core and membership through their factories on this ctx; legacy-store
        registers its share of every promotion (later modules' checks, projections and facts) until each is extracted. */
     /* provenance (K61): declares its tables and joins every promotion before legacy-store does, so its register write
        runs before the store's projections that read it. observation-log registers its look on each receipt (its R5,
        provenance R47), and listens to extraction's reading notice once extraction exists (below). */
-    const observations = observationLogOf(ctx, { extraction: null,
+    observationLogOf(ctx, { extraction: null,
       provenance: provenanceOf(ctx, { signingKey: env.RECEIPT_SIGNING_KEY ?? null, instanceName: env.INSTANCE_NAME || "unnamed" }) });
-    /* N39 (K71): the two authorities observation-log's fence delegates (its R13), answered by legacy-store until
-       capture-requests (a request's target and lead inquiry) and ai-runs (whether the viewer may read the run) are
-       extracted and register their own. */
     const promotion = promotionOf(ctx);
     /* extraction (K31, K61): its projection joins every promotion before legacy-store's (R20). */
     /* content (K61): created on extraction's instance here, so its stale mark (REC-82, its R22) is registered before
@@ -538,8 +150,12 @@ export class Store extends DurableObject {
        projections, purge, filings' evidence block). standards creates its own tables at construction (N267). */
     const conformance = conformanceOf(ctx);
     const consequences = consequencesModule(ctx, { conformance });
+    actionClocksOf(ctx);   /* action-clocks (K704): after actions, which it reads and which joins the host first (its R9) */
     filingsOf(ctx, { actions: actionsOf(ctx), conformance, standards: standardsOf(ctx), consequences });
     escalationOf(ctx);   /* on this host, it reaches conformance, consequences, actions and filings through their factories */
+    /* action-plans (K711): built after layer 9, before any route can run, so ai-runs holds its plan-mode open check
+       (its R30) when the first `airunopen` arrives; built lazily, that open is refused AI_RUN_MODE_UNCHECKED. */
+    actionPlansOf(ctx);
     monitoringOf(ctx, { env });
     promotion.registerStep("legacy-store", { check: (c) => this.#promoteChecks(c), project: (c) => this.#promoteProjections(c) });
     /* capture R55 (K99): legacy-store registers with capture the observation log's rows until observation-log does. */
@@ -549,48 +165,14 @@ export class Store extends DurableObject {
     captureRequestsOf(ctx, { env, storeName: () => this.#ownNamespace() || "bio", now: () => this.#nowMs(null),
       runs: aiRunsOf(ctx, env), aiRuns: aiRunsOf(ctx, env) });
     capture.on("observation", "legacy-store", ({ row, at }) => this.#observe(row, at));
-    const scheduler = schedulerOf(ctx, env);
+    schedulerOf(ctx, env);
     queueOf(ctx, { env }); tasksOf(ctx, { env }).migrate();   /* queue, then tasks (K61, N363); tasks' table (R8), as standards' (N267) */
     ctx.blockConcurrencyWhile(async () => this.#migrate());
     ctx.blockConcurrencyWhile(async () => schedulerOf(ctx, env).start());
   }
 
   #migrate() {
-    const bare = (this.env.SCHEMA || SCHEMA_TEXT || "").split("\n").filter(l => !l.trim().startsWith("--")).join("\n");
-    /* Some tables are DERIVED: regenerable by scan, never authoritative, holding
-       nothing a member wrote. When one of those changes shape, recreating it is
-       correct and an additive ALTER would be the wrong answer, because the new
-       column's meaning is part of the KEY and old rows keyed the old way are not
-       merely missing a field, they are wrong.
-       *
-       * links gained citation_norm and fragment when element references became
-       * part of a citation rather than a comment on one. A link to #findings and
-       * a link to #methodology in one report are two citations, and rows keyed
-       * without the fragment had already collapsed them. Those rows cannot be
-       * repaired by adding a column; they can only be re-derived from the
-       * captures, which is exactly what a derived table is for.
-       *
-       * This list must never grow to include a table holding first-party
-       * material. The test suite asserts the distinction. */
-    // captured_locators' own reshape (D-96's `via`) is provenance's, in its migration (PROVENANCE_TABLES).
-    /* reading_ref_terms gained `src` (REC-40) when the term's SOURCE became part
-     * of the key: a name satisfied by one word of a document's title and one
-     * word of its reference string is a correspondence NEITHER string made, so
-     * rows keyed without src had already merged two groups that must never be
-     * one. Like the two above it is derived -- re-derivable from reading_refs,
-     * which persists every string it projects, and holding nothing a member
-     * wrote. The backfill below repopulates it with no document re-read. */
-    for (const [table, needed] of [["links", "citation_norm"], ["captured_locators", "via"],
-                                   ["reading_ref_terms", "src"]].filter(([t]) => !PROVENANCE_TABLES.includes(t))) {
-      const cols = [...this.sql.exec(`PRAGMA table_info(${table})`)].map((r) => r.name);
-      /* Dropped BEFORE the schema runs, so the CREATE TABLE and CREATE INDEX
-         statements below rebuild it in one pass. Dropping afterwards meant the
-         schema's CREATE INDEX on the new column hit the OLD table and threw
-         inside blockConcurrencyWhile, which does not fail a test, it bricks the
-         Durable Object. */
-      if (cols.length && !cols.includes(needed)) this.sql.exec(`DROP TABLE ${table}`);
-    }
-
+    const bare = SCHEMA_TEXT.split("\n").filter(l => !l.trim().startsWith("--")).join("\n");
     /* CREATE TABLE IF NOT EXISTS does nothing to a table that already exists, so
        columns added after a store was first written need adding by hand. Done
        here rather than in a versioned migration ladder because these are
@@ -602,8 +184,7 @@ export class Store extends DurableObject {
        this list is what adds `content_id` to an `inquiry_basis` written before REC-82, and this
        list used to run AFTER the schema — so on every pre-REC-82 store the index hit the OLD
        table, threw `no such column: content_id` inside blockConcurrencyWhile, and the Durable
-       Object answered nothing. It is the failure the DROP loop's note above and the `chain_kind` block
-       below both record, arriving through the one list neither of them covered.
+       Object answered nothing.
        *
        * ONE MECHANISM, NOT A SPECIAL CASE PER COLUMN. The sweep (MEASUREMENTS.md, REC-143) found
        * three schema indexes on a column only this list adds — `inquiry_basis(content_id)`,
@@ -616,11 +197,7 @@ export class Store extends DurableObject {
        * boot does not exist during the first pass, and many columns below live ONLY here and not
        * in their table's CREATE (every `bundles` projection column, `members.handle`) — so a
        * fresh store, or an old store gaining a table, gets them from the second pass. Both passes
-       * are guarded on PRAGMA and are therefore idempotent on every boot.
-       *
-       * ORDER WITHIN THIS FUNCTION: after the DROP loop and the published_bundles rename, so a
-       * table about to be rebuilt or renamed out of the way is never altered first — a renamed
-       * `published_bundles` reads as absent here and gets `delivered_by` from its new CREATE. */
+       * are guarded on PRAGMA and are therefore idempotent on every boot. */
     const ADDITIVE_COLUMNS = [
       ["manifest", "writer", "TEXT"],
       ["manifest", "operation", "TEXT"],
@@ -717,9 +294,6 @@ export class Store extends DurableObject {
     this.#reindexProjectSight();
   }
 
-  /* R16: the superseded-by column read back: inquiry's one parser. */
-  static supersededByOf(row) { return supersededByOf(row); }
-
   /* retrieval (K3, K61): its services, reached by the store's own callers and the old battery through these. */
   reproject(a) { return retrievalOf(this.ctx).reproject(a); }
   projection(a) { return retrievalOf(this.ctx).projection(a); }
@@ -738,17 +312,10 @@ export class Store extends DurableObject {
 
 
 
-  /* The producer-side arm for the connection-derive consumer: a resolve that
-     dirtied an entity reconciles the alarm to include the sweep's wake. Mirrors
-     #armSweep / #armDrain — it only SCHEDULES, it never derives, so the
-     producer/consumer split holds (the sweep is the sole writer of connections on
-     this path). */
-  async #armConnectionDerive() { return await this.#armScheduler(); }
   static SELECTION_ID_CHUNK = SELECTION_ID_CHUNK;   /* retrieval's bound on an id list one statement binds */
 
   async alarm() { await schedulerOf(this.ctx, this.env).alarm(); }
   async onAlarm(now) { return await schedulerOf(this.ctx, this.env).onAlarm(now); }
-  async #armScheduler(now) { return await schedulerOf(this.ctx, this.env).arm(now); }
   async schedProbeArm(now) { return await schedulerOf(this.ctx, this.env).probeArm(now); }
   async schedProbeLog() { return await schedulerOf(this.ctx, this.env).probeLog(); }
   async schedAlarmAt() { return await schedulerOf(this.ctx, this.env).alarmAt(); }
@@ -756,7 +323,6 @@ export class Store extends DurableObject {
   static EDGE_REASON_MAX = 160;
   /* R20–R22, R39: disposing a selection of inquiries: inquiry's. */
   dispose(...a) { return inquiryOf(this.ctx).dispose(...a); }
-  #refEdgeSevered(...a) { return connectionsOf(this.ctx).edgeSevered(...a); }
 
 
   #citesInto(id) { return connectionsOf(this.ctx).citesInto(id); }
@@ -1266,104 +832,6 @@ export class Store extends DurableObject {
 
   #viewerSees(...a) { return membershipOf(this.ctx).inSight(...a); }
 
-  /* ======================= REC-30 · the posture sweep ===============   *
-   * REC-25 stamped the D-15 gate onto every read that is ADDRESSED to a bundle.
-   * What was left were the reads addressed to something ELSE — a capture, an
-   * entity, a task, a reference, a dangling edge — that name a bundle on the way
-   * past. `op=dangling` was the measured one (a project citing a nonexistent
-   * target put the PROJECT's id in an uninvited member's hands), and the same
-   * shape runs through the task inbox, the queue's subjects, the recogniser and
-   * progression reads, and the two paging integrity sweeps.
-   *
-   * ONE COMPILATION POINT, still. Both helpers below take their predicate from
-   * query.mjs's `viewerPredicate` and neither restates it — including its two
-   * arms that are easy to get wrong by hand: the MACHINE CARVE-OUT (a machine
-   * credential has no person behind it and is deliberately not filtered) and the
-   * FAIL-CLOSED deny (an absent or unrecognised viewer sees nothing, so a
-   * missing control-plane stamp is an outage and never a leak).
-   *
-   * TWO SHAPES, because the reads are two shapes:
-   *
-   *   the row IS ABOUT the bundle  ->  the ROW is withheld (`#bundleGate`, in
-   *     SQL). A dangling edge, a task, a queue obligation: withhold the row and
-   *     report no count of what was withheld, because that count is the leak.
-   *     This is op=backlinks' own posture, landed by REC-25.
-   *
-   *   the row is about a CAPTURE or an ENTITY and merely POINTS BACK at the
-   *     bundle the document lives in  ->  the REFERENCE alone is withheld
-   *     (`#bundleRedactor`, in JS). The row stands, and so do its capture sha,
-   *     its grade and every derivation over it: those are the RECORD's facts and
-   *     they must not change with the reader. A grade that got stronger because
-   *     someone was not invited to a project would be the record claiming more
-   *     than it can support, which is worse than the leak we are closing.
-   *
-   * WHAT IS DELIBERATELY UNGATED is listed, with its reason, in
-   * `test/gate-reads.test.mjs`. It is a shorter list than it looks: the
-   * published projection is credential-free BY DESIGN, an op fenced to the admin
-   * and probe classes has no member session to filter, and a COUNT THAT NAMES
-   * NOTHING is not identity. */
-
-  /** The D-15 predicate over a column that HOLDS a bundle id, as a WHERE term.
-   *
-   *  `FROM bundles b` and not `FROM bundles`: viewerPredicate compiles over the
-   *  alias `b`, which is REC-25's landed lesson and the reason this subquery
-   *  binds the alias rather than the table name.
-   *
-   *  A NULL column names no bundle and so discloses nothing: it passes. A column
-   *  naming a bundle that is GONE does not, and that is the fail-closed arm — a
-   *  row pointing at something the store cannot show is withheld rather than
-   *  answered for.
-   *
-   *  THE COLUMN MUST BE QUALIFIED, and this refuses an unqualified one rather
-   *  than trusting a caller to remember. Found by the suite: inside the EXISTS
-   *  subquery a bare `bundle_id` resolves against `bundles` — the INNER table —
-   *  so `b.bundle_id = bundle_id` is `b.bundle_id = b.bundle_id`, a gate that
-   *  passes every row while looking exactly like a gate. The failure is silent
-   *  and it is the whole class this sweep exists to close, so it is a throw. */
-  #bundleGate(col, viewer) {
-    if (typeof col !== "string" || !/^[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$/.test(col))
-      throw new Error(`REFUSED: the D-15 bundle gate needs a QUALIFIED column (got ${col}). `
-        + "An unqualified name binds to `bundles` inside the gate's own subquery and passes everything.");
-    const gate = viewerPredicate(viewer);
-    if (gate.scope === "member") return { sql: `${GATE_MARK} 1=1`, args: [] };
-    if (gate.scope === "DENY") return { sql: gate.sql, args: [] };
-    return {
-      sql: `${GATE_MARK} (${col} IS NULL OR EXISTS (SELECT 1 FROM bundles b
-              WHERE b.bundle_id = ${col} AND (${gate.sql})))`,
-      args: gate.args,
-    };
-  }
-
-  /** The same question asked of ONE id, for the answers this store assembles in
-   *  JavaScript rather than in SQL. Returns a function that passes a visible id
-   *  through and answers `null` for one the viewer may not see; a row that names
-   *  NO bundle is left alone, because it discloses nothing to begin with.
-   *  Memoised per call site: a progression instance asks about the same handful
-   *  of bundles many times over. */
-  #bundleRedactor(viewer) {
-    const gate = viewerPredicate(viewer);
-    if (gate.scope === "member") return (id) => id ?? null;        // machine: not filtered
-    if (gate.scope === "DENY") return (id) => (id ? null : id ?? null);   // fail closed
-    const memo = new Map();
-    return (id) => {
-      if (!id) return id ?? null;
-      if (!memo.has(id))
-        memo.set(id, !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
-                                 id, ...gate.args));
-      return memo.get(id) ? id : null;
-    };
-  }
-
-  /** Streaming whole-store pass. Peak memory is one image, measured at 37KB,
-   *  against 558MB if every image is materialised at once. */
-  *eachImage() {
-    for (const r of this.#rows(`SELECT bundle_id FROM bundles ORDER BY bundle_id`))
-      yield [r.bundle_id, recordOf(this.ctx).readImage(r.bundle_id)];
-  }
-
-  /* PL-1 / IS-1: the one assembler of a version's composition is basis-versions' (R5). */
-  static basisVersionsOf(fm) { return versionsIn(fm); }
-
   /* ---- writes: promotion is the sole writer of live state ---- */
 
   /**
@@ -1380,7 +848,7 @@ export class Store extends DurableObject {
   /* K31 (promotion R39): legacy-store's share of every promotion's checks, until each module that owns one is
      extracted. Registered with `promotion` in the constructor; a refusal here refuses the whole promotion. */
   #promoteChecks(c) {
-    const { pkg, bundleId, base, meta, author, register, files, promotedType } = stepContext(c);
+    const { pkg, bundleId, base, files } = stepContext(c);
     const cur = this.#one(`SELECT bundle_sha, row_version, object_type, current_state, group_id FROM bundles WHERE bundle_id=?`, bundleId);
       /* REC-179 / C-66.5 (INVESTIGATIVE-SESSION.md §11 item 5, rule 2's reach): A REVISION CARRIES `surfaced_by`
          FORWARD. The field records the SURFACING ACT, decided once at the trust boundary on the creation (D-78's
@@ -1427,32 +895,13 @@ export class Store extends DurableObject {
       const extentBad = pkg[TESTIMONY_PATH]
         ? checkContentExtent({ kind: "document" }, this.contentContextFor(pkg[TESTIMONY_PATH].captureSha)) : null;
       if (extentBad) return extentBad;
-
-      const basisMd = files.find((f) => f.path === "bundle.md");
-      /* Parsed ONCE for both arms below. REC-16's supersession check is NOT
-         inquiry-scoped — `supersedes` is in the vocabulary for every type and
-         an ungoverned edge is ungoverned wherever it sits — while the basis
-         grammar is, so the inquiry-only view is derived from this rather than
-         re-parsed. */
-      const docFmW = basisMd && typeof basisMd.text === "string"
-        ? parseFrontmatter(basisMd.text).data : null;
-      /* `promotedType` (D-526, derived at the top of `promote`) is the one value every projection below reads. The
-         envelope is the FALLBACK and not the authority: a bundle.md held as a blob, or one stating no type, leaves
-         the record nothing else to go on, and that case is byte-identical to what this line did before D-510. */
-      const isInquiry = promotedType === "inquiry";
-      /* REC-11, REC-18, REC-42: the basis grammar and the subject entity are inquiry's check (its R11). */
-      /* REC-16: the supersession edge and the division disclosure are inquiry's check (its R11). */
-      /* R3: the basis DAG (C-33.22, C-33.23) is inquiry's check (its R11). */
   }
 
   /* K31 (promotion R39): legacy-store's share of every promotion's projections, run after `record-core.commit`
      inside the same transaction. The answer's keys promotion does not already carry are added to its answer. */
   #promoteProjections(c) {
-    const { pkg, bundleId, base, meta, author, register, files, promotedType, promotedState, owner } = stepContext(c);
-    const cur = c.head, newSha = c.bundleSha, docFmW = c.docFm, isInquiry = promotedType === "inquiry";
-    const testimony = pkg[TESTIMONY_PATH] || null;
-    const surfacing = !cur && promotedType === "inquiry" && typeof pkg.assistantPrincipal === "string" && pkg.assistantPrincipal.trim()
-      ? { run: String(pkg.run).trim(), principal: pkg.assistantPrincipal.trim() } : null;
+    const { pkg, bundleId, meta, owner } = stepContext(c);
+    const cur = c.head;
       /* D-497: the SIGHT INDEX follows the bundle row that decides whether this is a project at all. ONE call
          covers all three arrivals — a project created here gains a row carrying the derivation's default, a
          bundle promoted INTO a project gains one, and a bundle promoted OUT of `project` loses its row rather
@@ -1460,19 +909,11 @@ export class Store extends DurableObject {
          it is idempotent: a revision that changes neither recomputes the same row. */
       this.#reindexProjectSight(bundleId);
 
-      /* REC-11, REC-17, REC-82: the superseded-by index and inquiry_basis with its content rows are inquiry's (its R12). */
-      /* REC-14 / C-9: inquiry_exclusions is inquiry's projection (its R12). */
-      /* REC-12: the per-axis strength cache is strength's projection (its R13). */
-
-      /* MK-1 / IC-134: the register row is provenance's projection (R1), written before this one. */
-
       /* MK-1 / D-184: the testimony path's own writes — the words' passage index
          and the content row over them — IN THIS TRANSACTION, so an authored
          bundle never exists without the content its readers expect. It throws
          to roll the whole promotion back rather than return a half. */
       const testimonyWrote = pkg[TESTIMONY_PATH] ? this.#testimonyWithin(bundleId, pkg) : null;
-
-      /* REC-173: the migration replay's row is inquiry's projection (its R12). */
 
       const after = this.#one(`SELECT bundle_sha, row_version FROM bundles WHERE bundle_id=?`, bundleId);
       return { ok: true, bundleId, bundleSha: after.bundle_sha, rowVersion: after.row_version, owner,
@@ -1498,11 +939,6 @@ export class Store extends DurableObject {
   /** REC-82 / SK-7: mint or find a content row, and a credential marking a passage citable: content's (R12–R16). */
   mintContent(...a) { return contentOf(this.ctx).mint(...a); }
   contentMint(...a) { return contentOf(this.ctx).contentMint(...a); }
-
-  /* MK-1 / D-184 / IC-133 / IC-134: the authored bundle, its bytes and its observer reference: provenance's (R28). */
-  static observerRef(...a) { return observerRef(...a); }
-
-  testimonyReach(ids) { return basisVersionsOf(this.ctx).testimonyReach(ids); }
 
   /** op=testify — A MEMBER RECORDS A FIRSTHAND OBSERVATION: provenance's (R28), with the authored flag's fence. */
   testify(...a) { return provenanceOf(this.ctx).testify(...a); }
@@ -1546,11 +982,6 @@ export class Store extends DurableObject {
   leadLook(...a) { return observationLogOf(this.ctx).leadLook(...a); }
   leadRead(...a) { return observationLogOf(this.ctx).leadRead(...a); }
   leadList(...a) { return observationLogOf(this.ctx).leadList(...a); }
-  #leadReach(...a) { return observationLogOf(this.ctx).leadReach(...a); }
-  #leadReferentVisible(...a) { return observationLogOf(this.ctx).referentVisible(...a); }
-
-  #positionalMember(...a) { return membershipOf(this.ctx).positionalMember(...a); }
-
   /** R15: a leg's content row, backfilled on first read: inquiry's. */
   ensureLegContent(...a) { return inquiryOf(this.ctx).ensureLegContent(...a); }
 
@@ -1592,73 +1023,6 @@ export class Store extends DurableObject {
      that name the same source id land together without any identity model. */
   documentsByReference(...a) { return extractionOf(this.ctx).documentsByReference(...a); }
 
-  /* REC-36 onward: the name lookup (entities R17–R19), the subject registry (FW-6, R1–R8) and the recogniser
-     (FW-7, R9–R16) are entities' (`entitiesOf`), their ops in `entitiesOps`. The grade rank, the meaning-layer
-     bound and the occurrence bound below stay until connections and progressions take them. */
-
-  /* REC-51: DERIVED from the catalog's own order, never restated. This was
-     `{ A: 4, B: 3, C: 2, D: 1 }` — the vocabulary AND its ordering typed out a
-     second time, in a file that already imports the array both come from. It
-     agreed with `BASIS_GRADES` at zero cost and would have disagreed with it
-     silently the day the catalog gained or lost a letter, which is the MAP RULE
-     and D-164's "solve it once" one level below the doctrine SENTENCES REC-43,
-     REC-48 and REC-50 composed.
-     `BASIS_GRADES` is strongest-first, so a HIGHER number is a STRONGER grade
-     and every `>`/`<` comparison below keeps the sense it has always had. While
-     the catalog reads A,B,C,D this evaluates to exactly the map it replaces —
-     nothing moves today, and it is a function of the catalog from now on. */
-  static #GRADE_RANK = Object.fromEntries(
-    BASIS_GRADES.map((g, i) => [g, BASIS_GRADES.length - i]));
-  /* established is a PROPERTY OF THE GRADE, computed here and stored, so a Grade C can
-     never be read back as established (an equality that costs nothing is not evidence,
-     CLAUDE.md): A and B rest on a captured identifier at both ends; C is correspondence
-     awaiting a member's confirmation; D is bare testimony. */
-  static #isEstablished(grade) { return grade === "A" || grade === "B"; }
-
-  /* ===================== REC-60 / D-225 · THE MEANING-LAYER BOUND ===================   *
-   * THE THREE READS BELOW WERE UNBOUNDED, and the reason nothing caught it is worth more
-   * than the fix. REC-57 swept the CAPPED ops and made every one of them publish the bound
-   * it applied — but its roster was built by finding methods that CARRY A CAP, so a method
-   * with no cap at all was invisible to the instrument that would have flagged it. A walk
-   * that enumerates the ops with envelopes cannot see the op with no envelope. That is why
-   * `test/meaning-bounds.test.mjs` starts from RETURN SHAPES instead: it asks what a method
-   * PUBLISHES, not what it clamps, and an unbounded collection is exactly what it looks for.
-   *
-   * THE GROWTH HAS TEETH, and it is not linear on the worst one. `connections` for one
-   * entity is one row per PAIR of captures concerning it — D-224's k(k-1)/2 — so a hundred
-   * documents about one subject is 4,950 rows in a single answer, and THE MOST IMPORTANT
-   * ENTITY PRODUCES THE LARGEST RESPONSE. `concerns` and `resolutions` grow linearly, but
-   * they grow with the record and nothing stopped them.
-   *
-   * NEITHER NUMBER IS NEW, deliberately. 500 is `op=readingname`'s ceiling and `query.mjs`'s
-   * `LIMIT_MAX`; 5000 is `op=list`'s ceiling, which `op=projection` reused at REC-59 rather
-   * than inventing a second one. A twelfth figure would be a twelfth thing to remember.
-   *
-   * AND NO CURSOR IS MINTED. REC-55's declined-second-copy rule: `op=readingname` — the
-   * closest sibling, a keyed read over the same meaning layer — answers with `limit` and
-   * `truncated` and no cursor, and a caller that is cut raises `limit` toward the published
-   * ceiling. WHAT THAT DOES NOT GIVE, said plainly rather than left to be discovered: a
-   * caller cut at the CEILING has no way past it. On the quadratic read that is reachable
-   * with about a hundred documents on one subject. It is the honest bound rather than the
-   * complete answer, and the complete answer needs the query surface D-222/REC-62 is for. */
-  static #MEANING_LIMIT_DEFAULT = 500;
-  static #MEANING_LIMIT_MAX = 5000;
-
-  /* op=resolve and op=resolvetestify (entities R11, R12): entities' services; the store arms the connection-derive
-     sweep when an inserted or raised resolution dirtied an entity (REC-5 / D-122; R13's listener stamps it). */
-  async resolveReferences(body = {}) {
-    const r = entitiesOf(this.ctx).resolve(body);
-    const moved = (x) => !!x && x.ok && (x.resolved || []).some((m) => !m.kept);
-    if (moved(r) || (r.items || []).some((o) => o.outcome === "applied" && (o.resolved || []).some((m) => !m.kept)))
-      await this.#armConnectionDerive();
-    return r;
-  }
-  async testifyResolution(body = {}) {
-    const r = entitiesOf(this.ctx).testify(body);
-    if (r.ok && !r.kept) await this.#armConnectionDerive();
-    return r;
-  }
-
   defineProgression(...a) { return progressionsOf(this.ctx).defineProgression(...a); }
   readProgression(...a) { return progressionsOf(this.ctx).readProgression(...a); }
   threadInstance(...a) { return progressionsOf(this.ctx).threadInstance(...a); }
@@ -1667,14 +1031,6 @@ export class Store extends DurableObject {
   readExceptions(...a) { return progressionsOf(this.ctx).readExceptions(...a); }
   proposalsFeed(...a) { return progressionsOf(this.ctx).proposalsFeed(...a); }
   captureProgressions(...a) { return progressionsOf(this.ctx).captureProgressions(...a); }
-
-  /* The strongest 8.1 grade each captured document resolved to this entity at, with its
-     bundle -- the SAME collapse op=concerns and op=connect make, so a placement's end-grade
-     is exactly the grade that document appears at in the reverse index. Reuses the resolution
-     grade rank so the instance axis cannot drift from the connection axis. */
-  #strongestResolutionsFor(entityId) {
-    return entitiesOf(this.ctx).strongestByCapture(entityId);
-  }
 
   /* R13: the earned registry and the declared subject: inquiry's. */
   #subjectEntityOf(...a) { return inquiryOf(this.ctx).subjectEntityOf(...a); }
@@ -1969,7 +1325,6 @@ export class Store extends DurableObject {
   }
 
   /* R11, R16: the basis cycle guard and the basis reads: inquiry's. */
-  #basisCyclePath(...a) { return inquiryOf(this.ctx).cyclePath(...a); }
   basisFor(...a) { return inquiryOf(this.ctx).basisFor(...a); }
   restingOn(...a) { return inquiryOf(this.ctx).restingOn(...a); }
 
@@ -2066,18 +1421,6 @@ export class Store extends DurableObject {
     };
   }
 
-  /* ---- credentials ----
-
-     A Worker cannot rewrite its own secret, so ADMIN_TOKEN is a bootstrap
-     credential rather than the credential. It is spent once, exchanging itself
-     for an operator-chosen password whose hash lives here. Recovery is to
-     overwrite ADMIN_TOKEN in the dashboard, which clears the consumed marker
-     and returns the instance to unclaimed. That makes the group's Cloudflare
-     login the root of trust, which is the only thing they reliably still have
-     when a password is lost. */
-
-  static #enc = new TextEncoder();
-
 
   static #rand(n = 32) {
     return [...crypto.getRandomValues(new Uint8Array(n))]
@@ -2101,20 +1444,8 @@ export class Store extends DurableObject {
 
   session(...a) { return membershipOf(this.ctx).session(...a); }
 
-
-  /* ---- members: each person their own credential, admin-invited ----
-
-     The invite is spent exactly like the bootstrap credential is spent: its
-     hash is cleared on enrollment, so possession of an old invite buys
-     nothing against an enrolled member. Passwords live only as PBKDF2
-     hashes under credentials role 'member:<id>'. */
-
   /* D-9, D-533: the register's rows classified, and the parts a holding bundle's record names: provenance's (R6, R8). */
   registerAudit() { return provenanceOf(this.ctx).registerRows(); }
-
-  #projectAuthority(...a) { return membershipOf(this.ctx).projectAuthority(...a); }
-
-  #caseAuthority(...a) { return membershipOf(this.ctx).caseAuthority(...a); }
 
   static SIGHT_NONE = Membership.SIGHT_NONE;
   static SIGHT_EXISTENCE = Membership.SIGHT_EXISTENCE;
@@ -2122,8 +1453,6 @@ export class Store extends DurableObject {
   #visibilityOf(...a) { return membershipOf(this.ctx).visibilityOf(...a); }
   #reindexProjectSight(...a) { return membershipOf(this.ctx).reindexProjectSight(...a); }
   projectVisibilitySet(...a) { return membershipOf(this.ctx).projectVisibilitySet(...a); }
-
-  #visibilitySettingRefusal(...a) { return membershipOf(this.ctx).visibilitySettingRefusal(...a); }
 
   projectVisibility(...a) { return membershipOf(this.ctx).projectVisibility(...a); }
 
@@ -2140,7 +1469,6 @@ export class Store extends DurableObject {
 
   projectRequests(...a) { return membershipOf(this.ctx).projectRequests(...a); }
   static PROJECT_REQUESTS_LIMIT = Membership.PROJECT_REQUESTS_LIMIT;
-  #rosterInSight(...a) { return membershipOf(this.ctx).rosterInSight(...a); }
   /* `promote`'s not-found is the BUNDLE-level one (it revises any bundle, not only projects), so a
      hidden project's revision answers with it rather than with membership's `noSuchProject` — the rule is
      "the same answer the absent id gets", and for this act that answer is ABSENT. */
@@ -2148,10 +1476,6 @@ export class Store extends DurableObject {
      provenance's (R5, R10). */
   homeCensus(...a) { return provenanceOf(this.ctx).homeCensus(...a); }
   registerHolds(...a) { return provenanceOf(this.ctx).registerHolds(...a); }
-  #isProjectEditor(...a) { return membershipOf(this.ctx).isProjectEditor(...a); }
-
-  #isAdminMember(...a) { return membershipOf(this.ctx).isAdministrator(...a); }
-
   projectClaimOwner(...a) { return membershipOf(this.ctx).projectClaimOwner(...a); }
 
   projectInvite(...a) { return membershipOf(this.ctx).projectInvite(...a); }
@@ -2213,8 +1537,6 @@ export class Store extends DurableObject {
   adminArithmetic(...a) { return membershipOf(this.ctx).adminArithmetic(...a); }
 
   static ROOT_ADMIN = Membership.ROOT_ADMIN;
-
-  #activeAdmins(...a) { return membershipOf(this.ctx).activeAdmins(...a); }
 
 
 
@@ -2329,10 +1651,8 @@ export class Store extends DurableObject {
   static BASIS_VERSIONS_LIMIT_DEFAULT = BASIS_VERSIONS_LIMIT_DEFAULT;
   static BASIS_VERSIONS_LIMIT_MAX = BASIS_VERSIONS_LIMIT_MAX;
   static BASIS_VERSION_LEGS_MAX = BASIS_VERSION_LEGS_MAX;
-  #versionCollections(...a) { return basisVersionsOf(this.ctx).versionCollections(...a); }
 
   basisVersions(a) { return basisVersionsOf(this.ctx).basisVersions(a); }
-  #currentVersionOf(...a) { return basisVersionsOf(this.ctx).currentOf(...a); }
 
   /* PL-2 / IS-2: the six version acts are basis-versions' (R12–R15). */
   static VERSION_ACT_TO = VERSION_ACT_TO;
@@ -2354,20 +1674,6 @@ export class Store extends DurableObject {
   aiCredentialLook(...a) { return membershipOf(this.ctx).aiCredentialLook(...a); }
 
   aiCredentials(...a) { return membershipOf(this.ctx).aiCredentials(...a); }
-
-
-
-  /* IS-6 — THE AI RUN is `ai-runs`' (`src/ai-runs/`, its R9–R29; T7). The store keeps the private
-   * names its remaining readers call, each delegating to the module, until those readers are extracted. */
-  #aiRuns() { return aiRunsOf(this.ctx, this.env); }
-
-  /* CPDF-10: the transcription reads' page bound. ONE pair for BOTH reads
-     deliberately -- they are one surface asked at two grains, and two constants
-     would be two places a bound could drift. Sized against `AI_RUN_LOG`'s pair
-     rather than picked: a document's attestations and a store's transcribed
-     documents are both "enough to work with on a screen, far short of a dump". */
-  static TEXT_SOURCE_LIMIT_DEFAULT = 200;
-  static TEXT_SOURCE_LIMIT_MAX = 5000;
 
   /* REC-83 / IC-84 — THE CONTENT-GRAIN READS' THREE BOUNDS.
    *
@@ -2396,8 +1702,6 @@ export class Store extends DurableObject {
    * the leg — a read that stops at the cap says so and the next read continues
    * from where it stopped, with no cursor to mint and no state to keep. */
   static LEG_BACKFILL_MAX = LEG_BACKFILL_MAX;   /* inquiry R15's bound, read by the old battery */
-
-  static #aiIso(ms) { return stampInstant("second", ms); }
 
   /* REC-93 / IC-92 — THE OBSERVATION LOG: ONE APPEND SITE, ONE TABLE. observation-log's (R2–R4): every look this
    * file records is appended through its `observe`, which judges and writes it; `#observe` delegates. */
@@ -2453,6 +1757,9 @@ export class Store extends DurableObject {
         ...caseAuthoringOps(caseAuthoringOf(this.ctx), url, body),
         ...ratificationOps(ratificationOf(this.ctx), url, body),
         ...publicationOps(publicationOf(this.ctx), url, body),
+        /* public-read and project-stage (K651, K671): their unstamped published reads and `op=projectstage`. */
+        ...publicReadOps(publicReadOf(this.ctx), url),
+        ...projectStageOps(projectStageOf(this.ctx), url),
         promote: () => promotionOf(this.ctx).promote(body),
         allocid: () => recordOf(this.ctx).allocIdOp(url.searchParams.get("prefix"), url.searchParams.get("year")),
         lease: () => recordOf(this.ctx).acquireLease(url.searchParams.get("id"), url.searchParams.get("actor"), 300000),
@@ -2482,10 +1789,6 @@ export class Store extends DurableObject {
                                        limit: url.searchParams.get("limit"),
                                        viewer: url.searchParams.get("viewer") }),
         index: () => this.buildIndex({ viewer: url.searchParams.get("viewer") }),
-        /* CAP-4: reuse verification. `reusedparts` enumerates a bundle's reused
-           parts so ratification can re-fetch them; `recordreuseverdicts` commits
-           the outcomes the control plane produced; `reuseverdicts` reads them
-           (also surfacing the free posthoc verdicts by source_capture). */
         /* REC-83 / IC-84 (4): THE FIXED-KEY CONTENT READ. One key, one row —
            `extras` hands the store EVERY parameter name that arrived so the op
            can refuse a predicate or a page by name rather than ignoring it. The
@@ -2511,11 +1814,6 @@ export class Store extends DurableObject {
                                               at: (body || {}).at || null,
                                               mintedBy: url.searchParams.get("mintedBy"),
                                               viewer: url.searchParams.get("viewer") }),
-        /* CONSTRUCTS Step 3 (FW-5): read a captured document's reading by capture
-           sha, and the reverse index by raw entity reference. */
-        /* REC-30: `viewer` is stamped by the control plane, never read from a
-           caller's own parameters there, and an absent one fails closed — the
-           bundle back-reference is withheld rather than the answer refused. */
         /* CPDF-10. Three arms, and the split is the item's own doctrine.
            `textprovenance` READS which documents' text a machine produced — the
            index half of "distinguishable in the projection, the index and an
@@ -2548,18 +1846,11 @@ export class Store extends DurableObject {
            resolvetestify is the member's grade-D testimony path; resolutions reads a
            document's resolutions; concerns is the REVERSE INDEX, every document that
            concerns an entity, by joining on entity_id (never through a relation). */
-        resolve: () => this.resolveReferences(body || {}),
-        resolvetestify: () => this.testifyResolution(body || {}),
-        /* CONSTRUCTS Step 5, SLICE A (FW-8): CONNECTIONS AS DATA carrying a GRADE (the
-           two-node base case of a progression), and the PROGRESSION DEFINITION as data.
-           connect DERIVES the connections among the documents that concern one entity,
-           each graded the WEAKER of its two ends (D-67 storage + D-72 grade); connections
-           reads them by entity or by capture; progressiondefine authors an ordered stage
-           set (both example progressions expressible as rows); progression reads one. */
+        /* entities R11, R12; the connection sweep is armed on entities' `onResolved` notice by scheduler (its R9, K714). */
+        resolve: () => entitiesOf(this.ctx).resolve(body || {}),
+        resolvetestify: () => entitiesOf(this.ctx).testify(body || {}),
         ...queueOps(queueOf(this.ctx), url, body),
         ...tasksOps(tasksOf(this.ctx), url, body),
-        /* D-64: the daily render allowance. `renderadmit` takes a render or records
-           a DEFERRAL; `renderspend` adds the browser time a render reported. */
         recordcapturedlocator: () => this.recordCapturedLocator(body || {}),
         /* PL-10 / D-220: the version chain. `address` arrives ALREADY NORMALISED
            — the control plane runs it through `normalizeAddress`, the same
@@ -2618,6 +1909,7 @@ export class Store extends DurableObject {
            selectionlist, selectionrelease, searchindexcheck, projectionplan, projectionclear, reproject. */
         ...retrievalRoutes(retrievalOf(this.ctx), url, body),
         ...actionsOps(actionsOf(this.ctx), url, body),
+        ...actionClocksOps(actionClocksOf(this.ctx), url, body),   /* K704: op=reminderset, op=reminderanswer */
         /* N216 (K250, K263): layer 9's ops. escalation publishes no op map, so its ten are named here (LEGACY-INDEX #5's
            table, K262); `author` and `viewer` are the control plane's stamps, read from the query after the body, and
            `now` and `limit` are numbers or absent. */
@@ -2625,6 +1917,8 @@ export class Store extends DurableObject {
         ...conformanceOps(conformanceOf(this.ctx), url, body),
         ...consequencesOps(consequencesModule(this.ctx), url, body),
         ...filingsOps(filingsOf(this.ctx), url, body),
+        /* action-plans (K671, K711): its ops; `optionpropose` answers a promise, which the frame awaits as `airun`'s. */
+        ...actionPlansOps(actionPlansOf(this.ctx), url, body),
         escalationopen: () => escalationOf(this.ctx).escalationOpen({ ...(body || {}), author: url.searchParams.get("author"),
                                                                        viewer: url.searchParams.get("viewer") }),
         escalation: () => escalationOf(this.ctx).escalationRead({ id: url.searchParams.get("id"),
@@ -2717,9 +2011,3 @@ export class Store extends DurableObject {
       return map;
   }
 }
-
-export default {
-  fetch(req, env) {
-    return env.STORE.get(env.STORE.idFromName("bio")).fetch(req);
-  },
-};
