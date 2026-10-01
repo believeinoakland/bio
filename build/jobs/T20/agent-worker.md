@@ -25,3 +25,7 @@ Size (session_01LCAbc33dhaBdU5szJg3Mky): test runs 12, module lines 25
 ## J1 · REPORT
 
 Found in bundler (bio-plane/test/system/fleetbundles.test.mjs), red on tranche/T20 before my change too: the arm "agent-worker's 153 inputs are all recorded — … R48's pack check with everything it imports" expects the pre-K683 input set; the member now has 13 first-party inputs. On the unchanged tree the two (j) arms (name `node tools/bundles.mjs`; corpus non-empty) also fail; on my branch they pass. Details in my record.
+
+## J2 · COMPLETE
+
+B1 applied: four real-plane suites re-pointed to bio-plane/src/plane/index.mjs (green: requirements 272/0, harness 261/0, agent-worker 140/0, versions 20/0; all eight suites 0 fail); airun.mjs citations re-worded to run-rules (B1's list, plus fanout.test.mjs:360 and harness.control.mjs:232/765/767/789; :249 and harness.test.mjs:392 left as history); fleet-member.json note re-worded (does not stale the manifest: not a bundle input). The comment edits staled my manifest's two input hashes; regenerated it (bundle bytes unchanged, e6afb19e…). format/architecture/coverage/ownership 0 failures. Merge early, before plane's T20 job.
