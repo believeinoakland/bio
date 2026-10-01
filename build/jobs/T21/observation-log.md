@@ -21,3 +21,7 @@
 - format: 86 modules, 84 requirements files; 0 failures. architecture: 14 product files, 49 relative imports; 0 failures. coverage: 32 of 32 live requirement ids named by a test; 0 failures. ownership: 9 files changed by observation-log between tranche/T21 and HEAD; 0 failures.
 
 Size (session_013cUgWrip5dZGALsDxc2eyV): test runs 8, module lines 3134
+
+## J1 · REPORT
+
+Stale generated artifacts: agent-worker/dist/agent-worker.bundled.mjs (observation-log/checks.mjs and vocabulary.mjs changed; fleetbundles.test.mjs reports STALE BUNDLE for both) and bio-plane/dist/bio-plane.bundled.mjs (index.mjs, checks.mjs, vocabulary.mjs, schema.mjs changed). release/bio-plane.bundled.mjs holds the old strings too (distribution's). Not a module: build/layers.md's legacy-store row still names src/plane/held.mjs. Nothing found in another module's code.
