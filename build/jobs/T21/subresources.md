@@ -22,3 +22,7 @@
 - `ownership subresources tranche/T21`: 1 file changed; 0 failures.
 
 Size (session_013wub6dXNauK3Eb12UzKxmu): test runs 1, module lines 1426
+
+## J1 · REPORT
+
+Generated artifacts staled by N458 (`manifest.link_note` is product output): `pdf-worker/dist/pdf-worker.bundled.mjs` (+ `.bundle.json`) and `ocr-worker/dist/ocr-worker.bundled.mjs` (+ `.bundle.json`), which take `subresources.mjs`; also the plane bundle `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`). Regenerated none.
