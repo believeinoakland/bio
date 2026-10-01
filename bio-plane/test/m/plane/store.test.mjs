@@ -81,7 +81,7 @@ test("R2: before the first request every module's start registrations are held, 
   for (const t of ["tasks", "queue_state"]) assert.ok(names.includes(t), `table ${t}`);
 });
 
-test("R2, R10: control-plane's step runs at `legacy-store`'s place in the step order, after layer 10 and before `affordances` and `tasks`, so checks and refusals keep their order", async () => {
+test("R2, R10: control-plane's step runs after layer 10 in the step order (the rank `legacy-store`'s step held) and before `affordances` and `tasks`, so checks and refusals keep their order", async () => {
   assert.ok(STEP_ORDER.indexOf(STEP) > STEP_ORDER.indexOf("monitoring"));
   assert.ok(STEP_ORDER.indexOf(STEP) > STEP_ORDER.indexOf("scheduler"));
   assert.equal(STEP_ORDER.indexOf(STEP) + 1, STEP_ORDER.indexOf("affordances"));
