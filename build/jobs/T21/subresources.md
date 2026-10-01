@@ -11,7 +11,7 @@
 
 **Deferred:** nothing.
 
-**Found in other modules / generated artifacts (REPORT J2):** `manifest.link_note` is product output, so the change stales the fleet bundles that take `subresources.mjs`: `pdf-worker/dist/pdf-worker.bundled.mjs` (+ `.bundle.json`) and `ocr-worker/dist/ocr-worker.bundled.mjs` (+ `.bundle.json`) (`build/manifest.md`, Generated artifacts), and the plane bundle `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`, the plane's source). Regenerated none.
+**Found in other modules / generated artifacts (REPORT J1):** `manifest.link_note` is product output, so the change stales the fleet bundles that take `subresources.mjs`: `pdf-worker/dist/pdf-worker.bundled.mjs` (+ `.bundle.json`) and `ocr-worker/dist/ocr-worker.bundled.mjs` (+ `.bundle.json`) (`build/manifest.md`, Generated artifacts), and the plane bundle `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`, the plane's source). Regenerated none.
 
 **Tests and checks**
 - `node --test test/m/subresources/` (in `bio-plane/`): tests 35, pass 35, fail 0.
