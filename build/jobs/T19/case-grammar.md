@@ -19,3 +19,7 @@
 - `ownership case-grammar tranche/T19`: 4 files changed; 0 failures
 
 Size (session_01SFb3VjexGhNKSoudckNBDW): test runs 1, module lines 446
+
+## J1 · COMPLETE
+
+case-grammar complete: the three parseFrontmatter imports re-pointed to record-grammar (index.mjs); no case-grammar file imports bio-checks.mjs; tests 20/20; format, architecture, coverage, ownership 0 failures. For BOB: modules.json uses and the requirements' Uses line can drop legacy-checks (see record).
