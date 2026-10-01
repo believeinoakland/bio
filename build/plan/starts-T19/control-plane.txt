@@ -2,3 +2,5 @@ Depth 2. Your entry: `build/plan/current.md` layer 11, control-plane (kept; ⚑L
  K810: your re-scan before deleting `bio-checks.mjs` will find legacy-tests' `civicos-ui/check-semantics.mjs`:77 (eleven names, `STRENGTH_STATES` among them) and the `civicos-ui/test/*` suites that run it; legacy-tests has no T19 job (K635), so they fail at load once the catalogue goes and are accepted red by name with the old suites (K619, K786), never a reason to keep the file. Name each in your COMPLETE.
  K813 (BASIS-VERSIONS #6 J1): `src/control-plane/families.mjs`' `CHECK_FAMILY_FILES` lacks `src/basis-versions/checks.mjs`; its C-25, C-27.15, C-32.2/C-33 and C-50 rows reach `dec49Row` and `CHECK_FAMILIES` only through the catalogue's copies. Add it, and re-scan every owner's `checks.mjs` against the list, before the catalogue goes.
  K817 (INQUIRY-GRAMMAR #1): `MODULE_CHECK_FILES`/`CHECK_FAMILY_FILES` also need `src/inquiry-grammar/checks.mjs`.
+
+ K831 (PUBLIC-READ #2 J1): `CHECK_FAMILY_FILES` (`control-plane/families.mjs`) gains `src/public-read/checks.mjs` (public-read R17's three families); `families.test.mjs`' totality arm names it until then.

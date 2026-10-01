@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, SIG } from "./fixture.mjs";
 import { TENSION_STATE_WORDS, TENSION_HIGHLIGHT_SENTENCE, TENSIONS_PREDATE_SENTENCE, TENSIONS_UNREADABLE_SENTENCE,
-         TENSION_DEPTH_SENTENCE, caseTensionsOf } from "../../../src/publication/index.mjs";
+         TENSION_DEPTH_SENTENCE, caseTensionsOf } from "../../../src/case-grammar/index.mjs";
 const F = "INQ-2026-0001", G = "INQ-2026-0002", DOC = "INFO-2026-0001-minutes";
 const roster = (roles) => roles.map((r) => ({ bundle_id: r.target, version_sha: r.version_sha, role: "load_bearing" }));
 

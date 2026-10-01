@@ -1,29 +1,34 @@
-/* publication's Worker half (requirements: `build/requirements/publication.md` R10, R13, R15; K3): the public read
- * path's control-plane side (`op=publishedcase`, `op=publishedbytes`), its governed refusals (C-68.5, C-98), and the
- * case container's assembly the moment a case edition completes. Moved from `index.mjs` with their comments; the
- * store side is `./index.mjs`.
+/* public-read's Worker half (requirements: `build/requirements/public-read.md` R3, R5, R6, R9; K3): the public read
+ * path's control-plane side (`op=publishedcase`, `op=publishedbytes`), its governed refusals (C-68.5, C-98, rows held
+ * in `../public-read/checks.mjs`, R17), and the case container's assembly the moment a case edition completes. Moved
+ * from `index.mjs` with their comments; it is this module's by `paths` and stays at this path (K697, K702). The store
+ * side is `../public-read/index.mjs`.
  *
  * THE PLANE'S HELPERS ARE BOUND, NOT IMPORTED: the control plane (`legacy-index`, later in the order) owns `json()`
  * (its DEC-49 decoration), the Durable Object envelope reader (`doAnswer`), the silence refusal (`storeSilent`), the
  * required-argument refusal and the published store's namespace. It binds them once at load (`bindPublishedPlane`),
  * so this file reads every answer the way the rest of the plane does and restates none of it.
  *
- * R48 (N339, N349; K421, K444): every relay here answers the store's own refusal (`control-plane` R23: `ok: false`
- * below 500, which `doAnswer` answers `refused`) with the store's status, code and sentence, through the plane's
- * `storeRefusal` when it binds one; only a reply that is no answer is `STORE_DID_NOT_ANSWER`, carrying the correlation
- * id `doAnswer` read from the store's internal error when it gave one (`control-plane` R25). The post-commit report in
- * `assembleCaseContainer` states an exchange inside an act that has committed, and is no relay. */
+ * R9 (was `publication` R48; N339, N349; K421, K444): every relay here answers the store's own refusal
+ * (`control-plane` R23: `ok: false` below 500, which `doAnswer` answers `refused`) with the store's status, code and
+ * sentence, through the plane's `storeRefusal` when it binds one; only a reply that is no answer is
+ * `STORE_DID_NOT_ANSWER`, carrying the correlation id `doAnswer` read from the store's internal error when it gave one
+ * (`control-plane` R25). The post-commit report in `assembleCaseContainer` states an exchange inside an act that has
+ * committed, and is no relay. */
 
-import { parseFrontmatter, normalizeType, sectionText } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
+import { normalizeType } from "../record-grammar/types.mjs";
+import { sectionText } from "../record-grammar/document.mjs";
 import { NS_RATIFY, ratifyStatement, caseRatifyStatement } from "../sshsig.mjs";
 import { serialiseContainer, containerEntries } from "../container.mjs";
 import { inbandQuartet } from "../inband.mjs";
-import { rowOf, caseDocumentStatesMemberBlocks } from "./checks.mjs";
+import { caseDocumentStatesMemberBlocks } from "../case-grammar/index.mjs";
+import { rowOf } from "../public-read/checks.mjs";
 
 let PLANE = null;
 const PLANE_KEYS = ["json", "doAnswer", "storeSilent", "requiredArgument", "STORE_SILENT_REASON", "STORE_SILENT_DETAIL",
                     "PUBLISHED_STORE"];
-/* R48: bound when the plane hands it; absent, a refusal is answered as it answers one (below). */
+/* R9: bound when the plane hands it; absent, a refusal is answered as it answers one (below). */
 const PLANE_OPTIONAL = ["storeRefusal"];
 
 /** Binds the control plane's helpers, once, at the control plane's load. A second binding replaces the first (a test
@@ -40,7 +45,7 @@ function plane() {
   return PLANE;
 }
 
-/* R48: the answer to a store reply that was not an answer. The store's own refusal is relayed with its status, code
+/* R9: the answer to a store reply that was not an answer. The store's own refusal is relayed with its status, code
    and sentence, through the plane's `storeRefusal` when bound, else as the same answer composed here
    (`json(reply.body, reply.status)`, which is what `storeRefusal` answers); anything else is the silence, carrying the
    store's correlation id when `doAnswer` read one. */
@@ -51,7 +56,7 @@ function relayUnanswered(out, op) {
   return P.storeSilent(op, out ? out.correlation : undefined);
 }
 
-/* R48: a relay inside the per-finding renderer, thrown so the whole read answers it (a case rendered from a registry
+/* R9: a relay inside the per-finding renderer, thrown so the whole read answers it (a case rendered from a registry
    never consulted asserts what nobody checked). Carries the unanswered reply, refusal or silence. */
 class Unanswered extends Error {
   constructor(op, out) { super(`the store did not answer ${op}`); this.op = op; this.out = out; }
@@ -376,7 +381,7 @@ export async function assembleCaseContainer({ env, stub, storeName, cs, via }) {
             : { ok: false, ...(rec || { reason: "MANIFEST_NOT_RECORDED" }) };
 }
 
-/* REC-22 / DEC-34 / R10, R13: the public read path's control-plane side, `op=publishedcase` and `op=publishedbytes`,
+/* REC-22 / DEC-34 / R3, R5: the public read path's control-plane side, `op=publishedcase` and `op=publishedbytes`,
    for a caller holding no credential. `stub` is the published store's Durable Object (PUBLISHED_STORE). Answers the
    Response. */
 export async function publishedRoutes({ op, url, env, stub }) {
