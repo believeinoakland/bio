@@ -5,7 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, opened, toStage, V, MACHINE, OFFICE, DAY, ms } from "./fixture.mjs";
 import { noSuchAction } from "../../../src/actions/index.mjs";
-import { ACTION_CATALOGUE_CHECKS } from "../../../src/actions/checks.mjs";
+import { ACTION_CATALOGUE_CHECKS } from "../../../src/action-grammar/checks.mjs";
 import { ESCALATION_CHECKS } from "../../../src/escalation/index.mjs";
 
 const read = (w, nowMs) => w.esc.escalationRead({ id: w.E, viewer: V("bob"), ...(nowMs ? { nowMs } : {}) });
