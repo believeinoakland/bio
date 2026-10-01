@@ -607,6 +607,31 @@ export class BasisVersions {
              via: rows.filter((r) => r.depth > 0).map((r) => ({ finding: r.root, observation: r.observation })) };
   }
 
+  /* ===== R47 (K861; plane R10) — THIS MODULE'S SHARE OF THE INSTANCE'S FIGURES =====
+   *
+   * PL-1 / IS-1: the inquiry's alternative accounts of its evidence and their legs, reported so a purge can PROVE it
+   * took them (D-113). A COUNT AND NOTHING ELSE: how many readings of the evidence exist is an operator fact, and what
+   * they say is not an operator surface. Shaped as record-core R63's `counts(hid)` with its key list, for `plane` to
+   * register under this module's name (`registerCounts("basis-versions", [...BasisVersions.COUNT_KEYS], (hid) =>
+   * bv.counts(hid))`). This module registers nothing itself while plane holds its copy (`src/plane/held.mjs`), so no
+   * figure is registered twice. `hid` is R63's: membership's `hiddenBundles(viewer)` (its R88), the bundles the caller
+   * may not see, or null for a caller that sees every bundle and for the direct internal call (purge's proof among
+   * them), which count whole. A version drops when its `bundle_id` is in `hid`, a leg when its `bundle_id` or its
+   * `target_id` is (D-464: a count over rows the caller could not all read is a disclosure of existence).
+   * `COALESCE(k, '')`: a NULL key names no bundle, and `NULL NOT IN (…)` is NULL, so without it the row would be
+   * dropped. Synchronous; writes nothing. */
+  static COUNT_KEYS = Object.freeze(["basisVersions", "basisVersionLegs"]);
+
+  counts(hid = null) {
+    const n = (table, keys) => {
+      const conds = [], args = [];
+      if (hid) for (const k of keys) { conds.push(`COALESCE(${k}, '') NOT IN ${hid.sql}`); args.push(...hid.args); }
+      return this.#one(`SELECT count(*) c FROM ${table}${conds.length ? ` WHERE ${conds.join(" AND ")}` : ""}`, ...args).c;
+    };
+    return { basisVersions: n("inquiry_basis_versions", ["bundle_id"]),
+             basisVersionLegs: n("inquiry_basis_version_legs", ["bundle_id", "target_id"]) };
+  }
+
   /* ================================================================ the six acts (R12–R15; PL-2) */
 
   /** ACCEPT — adopt this reading of the evidence (§6 rule 4's ADOPT). */
