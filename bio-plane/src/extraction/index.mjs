@@ -863,7 +863,7 @@ export class Extraction {
     if (typeof bundleId !== "string" || !bundleId || typeof captureSha !== "string" || !captureSha)
       return { offered: 0, written: 0, bytes: 0, truncated: 0, over_bound: 0, wire_over_bound: 0, unaddressable: 0,
                unaddressed: [], chain_kind: "undetermined", skipped: [], skipped_named: 0, state: null,
-               why: "an authored observation is indexed under its bundle and its capture digest, and one was not named" };
+               why: "an authored observation is indexed under its record and its capture digest, and one was not named" };
     return this.core.transact(() => {
       const indexed = this.indexUnits(bundleId, captureSha, [{ extent: { kind: "document" }, text: words, seq: 0 }], null);
       for (const l of this.#indexListeners)
@@ -1280,7 +1280,7 @@ export class Extraction {
         return { status: 409, body: { ok: false, reason: "REEXTRACT_NOT_READ", ...reextractRow("REEXTRACT_NOT_READ"),
           op, sha256: sha,
           detail: `this record holds no reading of that capture that you can see, so there is nothing `
-                + `for a re-read to replace. A capture is read when a bundle carrying it is promoted; `
+                + `for a re-read to replace. A capture is read when a record carrying it is promoted; `
                 + `a capture in a project you are not part of answers exactly as one never filed.` } };
     }
     /* END DEC-49 REGION is-reextract */

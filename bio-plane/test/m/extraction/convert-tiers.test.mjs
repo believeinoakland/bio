@@ -1,6 +1,6 @@
 /* extraction: the tier-2 wire and the two merges' chain, converted from `test/tier2-wire.test.mjs` (REC-98) and
    `test/tier3-layer-parts.test.mjs` (REC-102, D-372, D-514, D-607), extraction's share of `build/jobs/T17/legacy-tests.md`'s
-   two rows. The old suites are kept (K619 (3)). `Extraction#read` and `Extraction#pdfStructure` run over stored bytes with
+   two rows. `tier3-layer-parts` was deleted in T20 (K931). `Extraction#read` and `Extraction#pdfStructure` run over stored bytes with
    the real tier-1 `pdf` entry: the committed CPDF-20 PDFs with the real `pdf-worker` member bound to its own `fetch` (as
    staffdirectory.test.mjs binds it), and synthesised PDFs in the page shapes the class needs with scripted members.
    Each test names the requirement ids it checks in its title. */
@@ -176,7 +176,7 @@ test("R4 (tier2-wire): in the merge's wholesale branch (an encrypted document, n
   assert.deepEqual(e2.text.producer, own);
 });
 
-/* ---------------------------------------------------------------- tier3-layer-parts.test.mjs (REC-102) */
+/* ---------------------------------------------------------------- converted from tier3-layer-parts.test.mjs (REC-102) */
 
 /* Synthesised PDFs in the page shapes the class needs: an unmappable page (a font with no /ToUnicode, one marker per
    run, no glyph), a scan (no font, one full-page image: `no_text_layer`), and a text page through an identity CMap. */
