@@ -136,7 +136,7 @@ and every other module that stores anything, write through and read from.
 
 **bundleInfo(bundleId) → `{id, type, title, project}` or null; listBundles({project, after, limit}) → `{ids, cursor}`**
 - **R34** `bundleInfo` answers a held bundle's type, title and project from this module's tables, or
-  `null` when it is not held. `project` is the project id the last `commit` of the bundle named (R44), `null` for a bundle that belongs to no project. *(not yet met: T19 layer 2, N426: `promotion` commits `project: null` for every bundle)*
+  `null` when it is not held. `project` is the project id the last `commit` of the bundle named (R44), `null` for a bundle that belongs to no project.
 - **R35** `listBundles` lists held bundle ids in id order after `after`, limited to `project` when
   given, at most `limit`; `cursor` is the last id listed.
 - Errors: never throws.
