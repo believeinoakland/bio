@@ -19,7 +19,7 @@
  * renders ONE page to pixels through CPDF-12's renderer, runs the engine over
  * that frame, and answers line-grain regions, each carrying the image region a
  * reader can check it against. The contract is the consumer's
- * (`ocrTextFromMember`, `bio-plane/src/index.mjs`): every field below is a field
+ * (`ocrTextFromMember`, `bio-plane/src/extraction/pipeline.mjs`): every field below is a field
  * the plane already refuses on.
  *
  * ---- ONE PAGE PER INVOCATION, AND IT IS MEMORY THAT SAYS SO ----------------
