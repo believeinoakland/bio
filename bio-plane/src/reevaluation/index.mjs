@@ -7,9 +7,10 @@
  *
  * Extracted from the legacy modules (T7, layer 7; K3, K102): `store.mjs` (`#reevalRaisedBy`, now `raise`; the REC-17
  * obligation, `reevaluations`, with `#reevalLegsEarned` and `#reevalMoved`; D-256's `changedFromAudit`; D-394's
- * `versionNotice`, its question arm, calling content's passage notice) and `bio-checks.mjs` (C-10.1, C-80.1, C-80.2, now
- * `./checks.mjs`). Its tables are `./schema.mjs`. The legacy code's comments moved with it, shortened where they only
- * restated the code.
+ * `versionNotice`, its question arm, calling content's passage notice) and the check catalogue (C-10.1, C-80.1, C-80.2,
+ * now `./checks.mjs`). Its tables are `./schema.mjs`. The legacy code's comments moved with it, shortened where they
+ * only restated the code. The grammar it reads is record-grammar's, `basis-versions`' (a version name),
+ * `inquiry-grammar`'s (a ground label) and `text-chain`'s (`canonicalExtent`); no file of it imports the catalogue (T19).
  *
  * NOTHING IS STORED FOR THE OBLIGATION (R18, P-64), for two reasons that are the item's title rather than an
  * implementation preference: a stored verdict goes stale in both directions (still set after the member looked, still
@@ -53,8 +54,11 @@ import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { strengthOf, GRADE_RANK } from "../strength/index.mjs";
 import { contradictionOf, TENSIONS_REFERENTS_MAX } from "../contradiction/index.mjs";
 import { sourcesOf } from "../sources/index.mjs";
-import { normalizeType, parseFrontmatter, isMachineIdentity, MACHINE_CLASS_PREFIX, sha256HexSync,
-         VERSION_NAME_RE, GROUND_LABEL_RE, canonicalExtent } from "../../checks/bio-checks.mjs";
+import { normalizeType, parseFrontmatter, isMachineIdentity, MACHINE_CLASS_PREFIX, sha256HexSync }
+  from "../record-grammar/index.mjs";
+import { VERSION_NAME_RE } from "../basis-versions/index.mjs";
+import { GROUND_LABEL_RE } from "../inquiry-grammar/index.mjs";
+import { canonicalExtent } from "../textchain.mjs";
 import { checkReevalPending, REEVAL_SOURCES, VERSION_NOTICE_SUBJECT_CHECKS, REEVALUATION_ACT_CHECKS,
          rowOf } from "./checks.mjs";
 import { REEVALUATION_TABLES, migrateReevaluation } from "./schema.mjs";
