@@ -27,6 +27,10 @@ test("R17: with no target, the catalogue — every act decorated through the gat
   assert.deepEqual(r.vocabularies.action_kind, KINDS);
   for (const k of Object.keys(VOCABULARIES)) if (k !== "action_kind") assert.equal(r.vocabularies[k], VOCABULARIES[k], k);
   assert.ok(typeof r.detail === "string" && /rung_absence/.test(r.detail) && /set_acts/.test(r.detail));
+  /* K899 (1): the text a member reads says "record" where it said "bundle"; the target names a record id */
+  assert.match(r.detail, /^pass target=<record id> for /);
+  assert.match(r.detail, /keyed by a capture sha rather than by a record/);
+  assert.doesNotMatch(r.detail, /bundle/i);
   /* a kind answer that is not a kind list publishes the product's kinds (R26) */
   assert.equal(affordancesAnswer({ kinds: undefined, gate: GATE }).vocabularies.action_kind, PRODUCT_KINDS);
 });
