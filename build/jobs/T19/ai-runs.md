@@ -37,3 +37,48 @@ Findings outside my paths. None blocks my job.
 - `civicos-ui/test/`: `ai-session-context`, `ai-session-wire`, `passage-surface`, `subject-view`.
 
 **6. `op=stats` key order.** The four ai-runs keys now come after the literal keys, in registration order. Other modules' R63 registrations did the same. No value changed: `test/m` shows nothing newly failing.
+
+## J2 · COMPLETE
+
+**Entries applied** (layer 6, ai-runs; B1 START):
+
+- **The four re-exports are deleted:** `src/airun.mjs`, `ai-runs/checks.mjs`, `ai-runs/deployment.mjs`, `ai-runs/skill-version.mjs`.
+  - No product importer remains: none in `src/`, none in `test/m/`, none in agent-worker's suite.
+  - Old suites (K619) still import them: listed in J1 §5.
+  - No row's `where` names a deleted file. The `index.mjs`:919 comment is re-worded to point at run-rules' rows header. Stale comments in other modules are in J1 §2.
+- **N242's arm G:** confirmed with the DEC-49 guard. No code is minted in both ai-runs and run-rules (J1 §4).
+  - Improvement in my own module: every refusal `open` mints now goes through one `refusal(code, more)` helper. Each code is written once, at its refusal, with answers byte-for-byte as before.
+  - Result: the guard's 8 arm G findings and 1 arm C finding (`is-airun-open-plan` judged nothing) on ai-runs are gone, 166 → 157.
+- **Legacy-store's share (rule 5):** `#hiddenRunTail` and the four ai-runs counts (`aiRuns`, `aiRunBounds`, `inquiryRunSurfacings`, `aiRunLog`) are removed from `store.mjs`.
+  - ai-runs registers them with record-core's counts (R63) and takes them through `hid` with the same subtraction as before. `aiRunBounds` and `aiRunLog` keep exactly R42's rows; the test asserts equality with R42's tail for every viewer kind.
+  - `observationsNonLead` now calls the already-imported `hiddenRuns` directly.
+  - Ownership: legacy-store +1/−34. The one added line is that call.
+  - Proposed R38 wording: J1 §1.
+- **`aiCredentialLook` re-pointed to credentials** (`credentialsOf(ctx)`, its R15; K757). `uses` already lists credentials.
+- **Rule 1 re-points:**
+  - `index.mjs`:22 (`normalizeType`, `OBJECT_TYPES`, `isMachineIdentity`) and `hidden-notices.test.mjs` (`MACHINE_CLASS_PREFIX`) now read record-grammar.
+  - `rows.test.mjs`' catalogue arm is dropped.
+  - No ai-runs file imports `bio-checks.mjs`.
+- **K789:** the test world constructs credentials (`credentialsOf(ctx, {record, membership}).migrate()`) and claims through it. Mints, revokes and looks up AI credentials through credentials. The 54 accepted reds are green.
+- **Old suites:** none deleted (K619).
+
+**Deferred:** none.
+
+**Found in other modules:** J1 (REPORT).
+- `modules.json` path and `uses`; requirement wordings.
+- Stale comments in run-rules, observation-log, promotion, ratification, agent-worker's control driver.
+- The plane bundle is stale, and `fleetbundles.test.mjs`:201–203 pins the deleted inputs.
+- run-rules' three multi-site codes, and the guard's own stale entries.
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/ai-runs/`: tests 56, pass 56, fail 0. Was 1 pass, 54 fail on tranche/T19. One new test: "R38, R42", the counts.
+- Users and neighbours, each 0 fail: legacy-store 4/4, record-core 90/90, run-productions 36/36, capture-requests 63/63, contradiction 101/101, run-rules 16/16, credentials 33/33, membership 136/136.
+- `node --test bio-plane/test/m/`: 4468 tests, 4288 pass, 160 fail, 20 todo. Against the same tree without my change (4467 / 4233 / 214), nothing newly fails and 54 are fixed (all ai-runs').
+- agent-worker `test/`: 7 pass, 1 fail, identical before and after.
+- No layer tests named in the manifest.
+- `format`: 87 modules, 82 requirements files; 0 failures.
+- `architecture ai-runs`: 15 product files, 57 relative imports; 0 failures.
+- `coverage ai-runs`: 38 of 38 live requirement ids named by a test; 0 failures.
+- `ownership ai-runs tranche/T19`: 13 files; legacy-store 1 added, 34 removed; legacy-checks 0/0; 0 failures.
+
+Size (session_01PtMaesRvgrZDSjJDZU62p8): test runs 9, module lines 2714
