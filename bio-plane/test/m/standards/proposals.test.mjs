@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, V, MACHINE, BYLAW } from "./fixture.mjs";
 import { STANDARDS_CHECKS, WHY_MAX } from "../../../src/standards/index.mjs";
-import { proposalLabel } from "../../../checks/bio-checks.mjs";
+import { proposalLabel } from "../../../src/record-grammar/labels.mjs";
 
 test("R9 a proposal is stored apart from standards, labelled by proposalLabel(proposer, \"standard\") with who proposed it and whether it is machine work, with a why of at most 240 characters; it is never a standard, never listed by standardsIn, and is answered with a sentence saying so", () => {
   const w = seeded();
