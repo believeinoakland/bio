@@ -1,6 +1,6 @@
 # BOB to membership (T19)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
