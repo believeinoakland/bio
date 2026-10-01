@@ -14,3 +14,7 @@
 - **Tests:** `node --test bio-plane/test/m/tasks/`: tests 71, pass 71, fail 0. No layer tests named in `build/manifest.md`. No provided service's contract changed (only the wording of R1's `basis` and `waiting.detail`); as a safeguard the users' suites were run: queue 74/74, control-plane 85/85, plane 28/28, 0 fail each.
 - **Checks:** format: 84 modules, 82 requirements files; 0 failures. architecture: 8 product files, 31 relative imports; 0 failures. coverage: 11 of 11 live requirement ids named by a test; 0 failures. ownership: 5 files changed by tasks between tranche/T20 and HEAD; 0 failures.
 - Size (session_01CAA1BBC2Xet1Puxq6SDRCp): test runs 4, module lines 955
+
+## J1 · COMPLETE
+
+Complete (B1). K899 (1) applied at checks.mjs:149, :152 and index.mjs:178, :304; re-scan of my paths found no other member-read string holding the word (the #bundleGate Error at index.mjs:103 is a programming guard no member reaches; it stays). grammar.test.mjs and inbox.test.mjs re-keyed; the waiting detail now pinned too (inbox R1). test/m/tasks 71/71; users as safeguard: queue 74/74, control-plane 85/85, plane 28/28. format, architecture, coverage (11/11), ownership (5 files) all 0 failures. Stale generated artifacts: the plane bundle, and release/bio-plane.bundled.mjs and newgroup/src/release.mjs (with newgroup dist) which embed it. Also for BOB: docs/development/INBOX-GRAMMAR.md:76 still says "canonical bundle ID". Details in the record Completion section.
