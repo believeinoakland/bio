@@ -15,7 +15,7 @@ Code changes are comments and one note's text only: no row change, nothing await
 **Deferred:** none.
 
 **Found in other modules:**
-- The plane's bundle `bio-plane/dist/bio-plane.bundled.mjs` (`.bundle.json`, owner `not_product`) is stale, because two files under `bio-plane/src/record-core/` changed (REPORT J2). Nothing was regenerated.
+- The plane's bundle `bio-plane/dist/bio-plane.bundled.mjs` (`.bundle.json`, owner `not_product`) is stale, because two files under `bio-plane/src/record-core/` changed (REPORT J1). Nothing was regenerated.
 - `test/m` holds 45 failures, all red on `tranche/T21` before this job, in modules later in the order: filings (35: approve-send 6, outward 5, packet 1, premise 2, prepare 9, reads 6, refusals 2, sight 4), project-stage `stage` 5, intent `grammar` 1, membership `module-order` 1 and `t9-notice-sight-bounds` 1, promotion `promote` 1 and `registry` 1. A clean `origin/tranche/T21` checkout at b6bba07ff7 ran 50 failures. That figure is those 45, plus my two R67 tests, plus three that passed in this checkout and failed in the side worktree (the test sandbox's read-only removal R2, `extraction/convert-tiers`, `extraction/staffdirectory`). None of these is new red.
 
 **Tests and checks:**
@@ -27,3 +27,7 @@ Code changes are comments and one note's text only: no row change, nothing await
 - `checks/ownership.mjs record-core tranche/T21`: 5 files changed; 0 failures.
 
 Size (session_015o5zPpvnxZMQdCfaHQg4En): test runs 5, module lines 1686
+
+## J1 · REPORT
+
+A generated artifact my change made stale (mechanics §14): `bio-plane/dist/bio-plane.bundled.mjs` and `.bundle.json` (owner `not_product`). Its inputs `bio-plane/src/record-core/index.mjs` and `schema.mjs` changed (comments and the census note's text only). I regenerated nothing. Also for the record: the 45 failures in `test/m` were already red on `tranche/T21` before this job, all in later modules (filings 35, project-stage 5, intent 1, membership 2, promotion 2). They are listed in my record.
