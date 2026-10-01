@@ -25,3 +25,7 @@
 **Tests and checks.** `node test/ocr-worker.test.mjs`: `198 passed, 1 failed`, the one being R19's "the committed manifest's input and asset hashes match the tree" (the stale manifest above; with the trial rebuild, `199 passed, 0 failed`). No layer tests (`build/manifest.md`). `format: 83 modules, 78 requirements files; 0 failures` · `architecture: 20 product files, 20 relative imports …; 0 failures` · `coverage: 1 modules, 22 of 22 live requirement ids named by a test; 0 failures` · `ownership: 10 files changed by ocr-worker between tranche/T19 and HEAD; 0 failures`.
 
 Size (session_01QM4dYxqMfWzRifHkXnvCj7): test runs 3, module lines 959
+
+## J3 · COMPLETE
+
+Both entries applied (BASIS_GRADES from record-grammar; N437's comments) plus stale paths fixed; record has the details. Checks 0 failures each after merging tranche/T19 (K747). Suite 198/1: the one is R19's stale dist manifest, which your layer-close regeneration clears (trial rebuild: 199/0). See J2.
