@@ -30,3 +30,7 @@
 - format: 86 modules, 84 requirements files; 0 failures. architecture: 23 product files, 79 relative imports; 0 failures. coverage: 44 of 44 live requirement ids named by a test; 0 failures. ownership: 8 files changed by basis-versions between tranche/T21 and HEAD; 0 failures.
 
 Size (session_01PhpTLeguue11UqsuKUrqaP): test runs 6, module lines 3506
+
+## J1 · REPORT
+
+Stale generated artifact: bio-plane/dist/bio-plane.bundled.mjs (src/basis-versions/grammar.mjs, index.mjs, checks.mjs changed). For BOB's file: build/requirements/basis-versions.md Suggestions 'One implementation' names test/versionstate.test.mjs as pinning one #moveVersionState; that file was deleted in T20 and no module test pins source text (the suggestion binds nothing; the note is stale). Pre-existing red, not mine: test/m 42 fails in filings, project-stage stage, intent grammar, control-plane catalogue-end (the set CONNECTIONS #9 measured on the base).
