@@ -1,6 +1,5 @@
 import { PROVENANCE_SCHEMA } from "./provenance/schema.mjs";
 import { HOST_GOVERNOR_SCHEMA } from "./host-governor/schema.mjs";
-import { CALIBRATION_SCHEMA } from "./calibration/schema.mjs";
 import { BIAS_SCHEMA } from "./bias/schema.mjs";
 import { AI_RUNS_SCHEMA } from "./ai-runs/schema.mjs";
 export const SCHEMA = `-- BIO store schema, draft 1, derived from the real bundle.md frontmatter and
@@ -14,8 +13,6 @@ ${PROVENANCE_SCHEMA}
 ${AI_RUNS_SCHEMA}
 
 ${BIAS_SCHEMA}
-
-${CALIBRATION_SCHEMA}
 
 ${HOST_GOVERNOR_SCHEMA}
 `;

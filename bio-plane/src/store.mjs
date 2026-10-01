@@ -231,6 +231,7 @@ export class Store extends DurableObject {
 
 
     for (const s of bare.split(";")) { const t = s.trim(); if (t) this.sql.exec(t); }
+    calibrationOf(this.ctx).migrate();   /* calibration's tables (R20), where the schema pass created them before */
     membershipOf(this.ctx).migrate();   /* membership's tables (R57–R59), after the schema pass: nothing in the schema text names them */
     credentialsOf(this.ctx).migrate();   /* credentials' tables (R18), after membership's: its listener and claim fact registered */
     provenanceOf(this.ctx).migrate();   /* provenance's tables (R41), likewise: its schema is its own */
