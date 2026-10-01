@@ -23,6 +23,6 @@
 - `node checks/format.mjs /home/user/bio`: 82 modules, 77 requirements files; 0 failures.
 - `node checks/architecture.mjs /home/user/bio escalation`: 10 product files, 41 relative imports; 0 failures.
 - `node checks/coverage.mjs /home/user/bio escalation`: 23 of 23 live requirement ids named by a test; 0 failures.
-- `node checks/ownership.mjs /home/user/bio escalation tranche/T18`: see the line below, run after the commit.
+- `node checks/ownership.mjs /home/user/bio escalation tranche/T18`: 6 files changed by escalation between tranche/T18 and HEAD; 0 failures.
 
 Size (session_01Sa2gjuhjzD2CRUGeynitk9): test runs 3, module lines 42
