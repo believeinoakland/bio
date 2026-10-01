@@ -7,7 +7,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
-import { MACHINE_AUTHOR_PREFIX } from "../../../checks/bio-checks.mjs";
+import { MACHINE_AUTHOR_PREFIX } from "../../../src/record-grammar/actors.mjs";
 
 const HOST = "www.example.gov";
 const AGENDA = `https://${HOST}/documents/agenda.pdf`;

@@ -13,7 +13,7 @@
  * REACHED as `queueProducersOf(ctx, deps)`: one instance per Durable Object storage. It registers nothing and holds no
  * check row: it refuses nothing (draft §3.3).
  * `deps` (each defaults to its module's instance on the same `ctx`, reached lazily when first asked):
- *   record, membership, governor, provenance, capture, captureRequests, basisVersions, progressions, aiRuns, bias,
+ *   record, membership, credentials, governor, provenance, capture, captureRequests, basisVersions, progressions, aiRuns, bias,
  *   publication, reevaluation, intent, monitoring, contradiction, actionClocks, escalation, actionPlans   the providers.
  *
  * R7 (queue's homes walk) and R12 (queue's options) stay in queue, one walk and one derivation: `feedItems` takes them
@@ -22,9 +22,12 @@
  * depth 0) are built over `homesOf`.
  */
 
-import { normalizeType, STATES, vocabFor, MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../../checks/bio-checks.mjs";
+import { normalizeType } from "../record-grammar/types.mjs";
+import { STATES, vocabFor } from "../record-grammar/document.mjs";
+import { MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, hiddenBundles, GATE_MARK } from "../membership/index.mjs";
+import { credentialsOf } from "../credentials/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { captureOf } from "../capture/index.mjs";
@@ -65,6 +68,7 @@ export class QueueProducers {
   }
   get #record() { return this.#dep("record", () => recordOf(this.#host)); }
   get #membership() { return this.#dep("membership", () => membershipOf(this.#host)); }
+  get #credentials() { return this.#dep("credentials", () => credentialsOf(this.#host)); }
   get #governor() { return this.#dep("governor", () => governorOf(this.#host)); }
   get #provenance() { return this.#dep("provenance", () => provenanceOf(this.#host)); }
   get #capture() { return this.#dep("capture", () => captureOf(this.#host)); }
@@ -136,8 +140,8 @@ export class QueueProducers {
   /** R3: how many SUBJECT documents one CONDITION may gather before the gathering is reported `subject_bound`.
    *  Sixteen: twice the option bound, because a home set is cheaper than an affordances derivation. */
   static QUEUE_CONDITION_SUBJECTS_MAX = 16;
-  /** The prefix the control plane stamps on a MACHINE credential's `author`, `token:<class>`, imported from the
-   *  catalogue so the stamp and the read are the same string (REC-46); what `capture-completed-unattended` reads. */
+  /** The prefix the control plane stamps on a MACHINE credential's `author`, `token:<class>`, imported from
+   *  record-grammar so the stamp and the read are the same string (REC-46); what `capture-completed-unattended` reads. */
   static QUEUE_MACHINE_AUTHOR_PREFIX = MACHINE_AUTHOR_PREFIX;
   /** R9: the lead's inquiry-grain act, take it up (cite into that inquiry); queue decorates it (its R17) and adds the
    *  set-aside at its mint, where the disposition is known (its R18). */
@@ -2242,21 +2246,21 @@ export class QueueProducers {
   }
 
   /* ======================================================================
-   * N375 · R14 — A MEMBER'S OWN SIGNING KEY, TOLD TO EVERY ADMINISTRATOR (membership R89).
+   * N375 · R14 — A MEMBER'S OWN SIGNING KEY, TOLD TO EVERY ADMINISTRATOR (credentials R9, was membership R89).
    * ====================================================================== */
 
-  /** R14: the act an administrator takes on a self-registered key, membership R26's revoke (`op=signerset`). */
+  /** R14: the act an administrator takes on a self-registered key, credentials R7's revoke (`op=signerset`). */
   static SIGNER_REVOKE = Object.freeze({ id: "signerset", label: "Revoke this signing key", weight: "single" });
 
-  /** `signer-self-registered` (R14; membership R27, R89; N375): for an administrator member (membership R64), or the
-   *  `admin` machine credential as export-performed's reader is, one OBLIGATION per key `membership.signerList`
+  /** `signer-self-registered` (R14; credentials R8, R9; N375): for an administrator member (membership R64), or the
+   *  `admin` machine credential as export-performed's reader is, one OBLIGATION per key `credentials.signerList`
    *  answers `active` with `origin: "self"`, naming the key's comment and its member, aged from its `added` instant, and
-   *  offering R26's revoke. Every other reader gets none, and not a count. It leaves when the key is no longer
+   *  offering credentials R7's revoke. Every other reader gets none, and not a count. It leaves when the key is no longer
    *  `active`: the list is read at every read, so nothing is stored to clear. */
   #obligationsSignerSelfRegistered(me, viewer, now) {
     const admin = me ? this.#isAdminMember(me) : viewer === `${MACHINE_CLASS_PREFIX}admin`;
     if (!admin) return [];
-    const list = this.#membership.signerList();
+    const list = this.#credentials.signerList();
     const keys = (list && Array.isArray(list.signers) ? list.signers : [])
       .filter((k) => k && k.status === "active" && k.origin === "self" && typeof k.key_b64 === "string" && k.key_b64);
     if (keys.length === 0) return [];
@@ -2275,12 +2279,12 @@ export class QueueProducers {
         summary: `${member || "a member"} registered a signing key for themselves${k.comment ? `: ${k.comment}` : ""}`,
         detail: "a member registered their own browser-held signing key from a signed-in session, and it is active. "
               + "Every administrator is told; an administrator may revoke it. Nothing here changes the key.",
-        basis: { source: "membership.signerList", key: k.key_b64, member: k.member_id ?? null, comment: k.comment ?? null,
+        basis: { source: "credentials.signerList", key: k.key_b64, member: k.member_id ?? null, comment: k.comment ?? null,
                  registered_by: member ?? null, origin: "self", status: k.status, added: k.added ?? null,
                  attests: k.attests === true, raised_to: raisedTo,
-                 detail: "the key is membership's own row (its R27), registered by its member (its R89) and read here at "
+                 detail: "the key is credentials' own row (its R8), registered by its member (its R9) and read here at "
                        + "every read: it is told to every administrator and to nobody else, and it leaves when the key is "
-                       + "no longer active, by an administrator's revoke (its R26) or otherwise." },
+                       + "no longer active, by an administrator's revoke (its R7) or otherwise." },
         age: Number.isFinite(addedMs)
           ? { state: "determined", since: k.added, ms: Math.max(0, now - addedMs) }
           : { state: "undetermined", reason: "unparseable_added",
