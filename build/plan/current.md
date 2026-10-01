@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #85 · session_01YQtb9XDsYeg4ihVV7VEGfP · depth 1
 
-**Jobs** · signatures: SIGNATURES #3 session_01ML4Fo3S55aQzLtgsN7sP6F; pdf-worker: PDF-WORKER #4 session_01517coXM6VXW6mGeq6J943P; ocr-worker: OCR-WORKER #4 session_011c8rK8CoDV7XQj17vpk2hx; bundler: BUNDLER #3 session_01Bn7W4BUTLpR4VJ7vgYfCWR; record-grammar: RECORD-GRAMMAR #3 session_01Dr61eQgdPoB6sfPdCc6qXC; text-chain: TEXT-CHAIN #5 session_01DmBUmF4hco6t1MeYZwfZeR; office-readers: OFFICE-READERS #4 session_01T9LFGqSu4UfTE1DhyznDUz
+**Jobs** · signatures: SIGNATURES #3 session_01ML4Fo3S55aQzLtgsN7sP6F; pdf-worker: PDF-WORKER #4 session_01517coXM6VXW6mGeq6J943P; ocr-worker: OCR-WORKER #4 session_011c8rK8CoDV7XQj17vpk2hx; bundler: BUNDLER #3 session_01Bn7W4BUTLpR4VJ7vgYfCWR; record-grammar: RECORD-GRAMMAR #3 session_01Dr61eQgdPoB6sfPdCc6qXC; text-chain: TEXT-CHAIN #5 session_01DmBUmF4hco6t1MeYZwfZeR; office-readers: OFFICE-READERS #4 session_01T9LFGqSu4UfTE1DhyznDUz; record-core: RECORD-CORE #12 session_01NEdggWzA6wen9mWzAPWE6z; membership: MEMBERSHIP #14 session_01Hm4zb2v2byBSPbjJcCmpoE; promotion: PROMOTION #21 session_01R5CtkLhV9ed4MorNzoqonq
 
 Opened by BOB #84, 2026-10-01 ~12:40 UTC (PROCESS-MECHANICS §5), on `tranche/T20` from `main` @ c1a27e41a5, T19 closed (K859). The plan is `draft-T20.md` (K795) with its later additions, below unchanged in its entries; the folds before each layer (rule 1, ⚑BOB-7) are done on this branch before that layer's jobs start (K860).
 
@@ -129,10 +129,11 @@ K861 re-cut the held-code entries above (K842's "registers its own share and del
 - **L4** extraction
 - **L5** *observation-log* (K842, K861: `observations` and `leads` only)
 - **L6** *inquiry-grammar* (K850), *inquiry* (K842, K861; with K850's re-point), *basis-versions* (K842, K861), *run-productions* (K842, K861), *agent-worker* (K846, K861 (6))
+- **L8** *ratification* (K875: re-point `preflight.test.mjs` from membership's signer copies to credentials)
 - **L9** actions
-- **L11** *control-plane* (K846, K850, K861 (4): R42's step exported, the alias dropped, C-68.1 at one site), installer, *plane* (K842, K861; last)
+- **L11** *control-plane* (K846, K850, K861 (4): R42's step exported, the alias dropped, C-68.1 at one site), installer, *plane* (K842, K861), *legacy-tests* (K879: Bob ruled the old suites deleted; last)
 
-Still conditional and not counted: docprofile, monitoring (⚑Bob-3), legacy-tests (⚑Bob-2).
+Still conditional and not counted: docprofile, monitoring (⚑Bob-3). legacy-tests joined L11 (K879, ⚑Bob-2 answered).
 
 **Found at the re-cut, for BOB.** (1) Besides host-governor, capture and agent-worker (K861 (6)), four instance-setup tests (`test/m/instance-setup/{worker-page,profiles,reports,worker-reports}.test.mjs`:19, :158, :132, :17) and promotion's write-path probe (`test/m/promotion/write-path.test.mjs`:18, `./index.mjs`) read `bio-plane/src/index.mjs`; neither module has a START that re-points them, so plane's deletion of the re-export waits on them (plane's START names them). (2) `INQUIRY_GRAMMAR_ROWS` is read by skills (`src/skilldoctrine.mjs`:90, :253; `test/m/skills/fixture.mjs`:12, :21), which has no T20 job: inquiry-grammar keeps the old name as a one-line alias until its last reader re-points.
 
