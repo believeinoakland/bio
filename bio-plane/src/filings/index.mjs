@@ -291,18 +291,22 @@ export class Filings {
     return !!str(id) && !!m && typeof m.inSight === "function" && this.#call(() => m.inSight(id, viewer)) === true;
   }
 
-  /* A determination as conformance's read answers it (its R9), or null. */
+  /* A determination as conformance's read answers it (its R9), or null. R27 (DEC-36): what conformance withholds from
+     `viewer` (its R24: left out, `out_of_view: true`) is carried as `withheld`, and nothing stands in for it; an item
+     answered without an id (a placeholder) is read the same way, left out. */
   #det(id, viewer) {
     if (!str(id) || !this.conformance || typeof this.conformance.determinationRead !== "function") return null;
     const d = this.#call(() => this.conformance.determinationRead({ id: str(id), viewer }));
     if (!d || d.ok === false) return null;
+    /* K252: conformance names a finding `finding` and a standard `standard`; each is read here under `id`. */
+    const named = (key) => (Array.isArray(d[key]) ? d[key] : [])
+      .map((x) => (isObj(x) ? { ...x, id: str(key === "findings" ? x.finding : x.standard) || str(x.id) } : null));
+    const findings = named("findings"), standards = named("standards");
+    const seen = (x) => !!(x && x.id);
     return {
       id: str(d.id) || str(id), project: str(d.project), act: isObj(d.act) ? d.act : {},
-      /* K252: conformance names a finding `finding` and a standard `standard`; each is read here under `id`. */
-      findings: (Array.isArray(d.findings) ? d.findings : [])
-        .map((f) => (isObj(f) ? { ...f, id: str(f.finding) || str(f.id) } : f)),
-      standards: (Array.isArray(d.standards) ? d.standards : [])
-        .map((x) => (isObj(x) ? { ...x, id: str(x.standard) || str(x.id) } : x)),
+      findings: findings.filter(seen), standards: standards.filter(seen),
+      withheld: d.out_of_view === true || !findings.every(seen) || !standards.every(seen),
       live: d.live !== false && !str(d.superseded_by), superseded_by: str(d.superseded_by),
       basis_changed: isObj(d.basis_changed) ? d.basis_changed : d.basis_changed === true ? { causes: [] } : null,
     };
@@ -393,18 +397,21 @@ export class Filings {
         : period && (str(period.from) || str(period.to))
           ? { value: `${str(period.from) || "undetermined"} to ${str(period.to) || "undetermined"}`, source: det.id }
           : none("the determination states no date for the act, so it is undetermined");
+      /* R27: conformance states only that something was withheld (`det.withheld`), never which list it left, so neither
+         list is given as though whole; the why names nothing of what was withheld. */
+      const cut = "a finding or standard the determination rests on is not one you may see, so this list would not be whole";
       const cites = [], srcs = [];
       let withheld = false;
       for (const s of det.standards) {
-        const sid = str(isObj(s) ? s.id : s);
-        const r = sid ? this.#standard(sid, viewer) : null;
+        const r = this.#standard(s.id, viewer);
         if (!r || !str(r.cite)) { withheld = true; continue; }
-        cites.push(str(r.cite)); srcs.push(sid);
+        cites.push(str(r.cite)); srcs.push(s.id);
       }
       out.standards = withheld ? none("a standard the determination names is not one you may see")
+        : det.withheld ? none(cut)
         : cites.length ? { value: cites.join("; "), source: srcs.join(", ") } : none("the determination names no standard");
-      const fs = det.findings.filter((f) => isObj(f) && str(f.id));
-      out.findings = fs.length !== det.findings.length ? none("a finding the determination rests on is not one you may see")
+      const fs = det.findings;
+      out.findings = det.withheld ? none(cut)
         : fs.length ? { value: fs.map((f) => `${f.id} (case ${f.case ?? "undetermined"}, edition ${f.edition ?? "undetermined"})`).join("; "),
                         source: fs.map((f) => `${f.id}@${f.case ?? "?"}/${f.edition ?? "?"}`).join(", ") }
           : none("the determination names no finding");
@@ -534,7 +541,7 @@ export class Filings {
       : { state: "undetermined", why: "the profile gives this kind no venue" };
     /* R25: the exhibits the draft rests on, each with its grade and co-attestation, read against the venue's standard. */
     const standard = this.#venueStandard(v, a.kind);
-    const facts = det ? det.findings.map((f) => this.#fact(f, det)) : [];
+    const facts = det ? det.findings.map((f) => this.#fact(f)) : [];
     const exhibits = this.#exhibits(this.#citesOf(a, det, facts), standard);
     const basis = this.#basisOf(a, det, gov);
     const tpl = { from: source.from, source: source.source, ...(source.template ? { template: source.template, name: source.name } : {}) };
@@ -754,10 +761,9 @@ export class Filings {
 
   /* ---------------------------------------------------------------- R8–R12: the counsel packet */
 
-  /* R9's facts: the finding at its pinned bytes (record-core R60): its question, its conclusion and its citations. */
-  #fact(f, det) {
-    if (!isObj(f) || !str(f.id))
-      return { finding: null, withheld: "an object you may not see", source: det.id };
+  /* R9's facts: the finding at its pinned bytes (record-core R60): its question, its conclusion and its citations. Only
+     a finding `#det` kept is asked (R27: one withheld is no item). */
+  #fact(f) {
     const source = `${f.id}@${f.case ?? "?"}/${f.edition ?? "?"}`;
     const text = f.version_sha ? this.#call(() => this.record.textAtSha(f.id, f.version_sha)) : null;
     const base = { finding: f.id, case: f.case ?? null, edition: f.edition ?? null, version_sha: f.version_sha ?? null, source };
@@ -906,7 +912,7 @@ export class Filings {
   #assemble(a, det, viewer, marking) {
     const v = this.#view();
     const section = (title, items, extra = {}) => ({ title, marking, items, ...extra });
-    const facts = det ? det.findings.map((f) => this.#fact(f, det)) : [];
+    const facts = det ? det.findings.map((f) => this.#fact(f)) : [];
     const events = [], undated = [];
     const act = det ? det.act || {} : {};
     const actDay = realDate(act.at) || (isObj(act.period) ? realDate(act.period.from) : null);
@@ -915,7 +921,6 @@ export class Filings {
       push(actDay, { event: `the act: ${str(act.description) || "undescribed"}`, source: det.id,
                      ...(isObj(act.actor) ? { actor: { role: act.actor.role ?? null, body: act.actor.body ?? null } } : {}) });
     for (const f of facts) {
-      if (!f.finding) continue;
       const r = f.case != null ? this.#one(`SELECT ratified_at FROM published_cases WHERE case_id=? AND edition=?`, f.case, Number(f.edition)) : null;
       push(r ? realDate(String(r.ratified_at).slice(0, 10)) : null,
            { event: `${f.finding} published in case ${f.case} edition ${f.edition}`, source: f.source });
@@ -936,22 +941,25 @@ export class Filings {
                                basis: c.basis ?? null, source: `${a.id}/clock[${i}]` });
     events.sort(byDayThenSource);
     const standard = this.#venueStandard(v, a.kind);
-    const standards = (det ? det.standards : []).map((s) => {
-      const sid = str(isObj(s) ? s.id : s);
-      const r = sid ? this.#standard(sid, viewer) : null;
-      if (!r) return { standard: null, withheld: "an object you may not see", source: det.id };
-      return { standard: sid, cite: r.cite ?? null, kind: r.kind ?? null, issuer: r.issuer ?? null,
-               text: Array.isArray(r.text) ? r.text : [], outcome: isObj(s) ? s.outcome ?? null : null,
-               in_force: this.#inForce(sid, realDate(act.at)), source: sid };
+    /* R27 (DEC-36): a standard conformance withheld, or one standards' read refuses here, is no item; the section
+       states only that something was withheld. */
+    let refused = false;
+    const standards = (det ? det.standards : []).flatMap((s) => {
+      const r = this.#standard(s.id, viewer);
+      if (!r) { refused = true; return []; }
+      return [{ standard: s.id, cite: r.cite ?? null, kind: r.kind ?? null, issuer: r.issuer ?? null,
+                text: Array.isArray(r.text) ? r.text : [], outcome: s.outcome ?? null,
+                in_force: this.#inForce(s.id, realDate(act.at)), source: s.id }];
     });
+    const unseen = { out_of_view: true };
     const theories = this.#rows(`SELECT * FROM theory_proposals WHERE action_id=? ORDER BY theory_id`, a.id).map((t) => ({
       theory_id: t.theory_id, candidate: true, theory: t.theory, remedy: t.remedy, standards: parse(t.standards) || [],
       why: t.why, label: proposalLabel(t.proposer, "theory"), at: t.at, source: t.theory_id }));
     const cons = det && this.consequences && typeof this.consequences.consequencesOf === "function"
       ? this.#call(() => this.consequences.consequencesOf({ determination: det.id, viewer })) : null;
     return {
-      facts: section("Facts", facts, det ? {} : { says: "no determination is held: the action rests on a premise a member "
-        + "overrode, so no finding is set out as a fact" }),
+      facts: section("Facts", facts, det ? (det.withheld ? unseen : {}) : { says: "no determination is held: the action rests "
+        + "on a premise a member overrode, so no finding is set out as a fact" }),
       chronology: section("Chronology", events.map(({ day, ...e }) => ({ date: day, ...e })),
                           { undated, order: "by date; events on the same day by source id" }),
       exhibits: section("Exhibits", this.#exhibits(this.#citesOf(a, det, facts), standard), {
@@ -959,7 +967,8 @@ export class Filings {
         says: standard.state === "stated" ? "each exhibit's capture grade and co-attestation, beside the venue's standard; "
           + "an exhibit below it, or at a grade the profile marks contestable, is flagged, and nothing is refused for its grade"
           : "each exhibit's capture grade and co-attestation, shown alone: the venue's standard is undetermined" }),
-      standards: section("Standards", standards, det ? {} : { says: "no determination is held, so no standard is set out" }),
+      standards: section("Standards", standards, det ? (det.withheld || refused ? unseen : {})
+        : { says: "no determination is held, so no standard is set out" }),
       theories: section("Candidate theories and remedies", theories,
         { says: theories.length ? "each is a candidate for counsel to weigh, never the group's position or a conclusion"
                                 : "no candidate theory or remedy has been proposed for this action" }),
@@ -979,21 +988,28 @@ export class Filings {
     const over = a.premise_override ? { premise_override: a.premise_override } : {};
     if (!det) return { determination: null, project: null, findings: [], standards: [], ...over };
     return { determination: det.id, project: det.project,
-             findings: det.findings.filter((f) => isObj(f) && str(f.id)).map((f) => ({ id: f.id, case: f.case ?? null, edition: f.edition ?? null })),
-             standards: det.standards.map((s) => str(isObj(s) ? s.id : s)).filter(Boolean), ...over };
+             findings: det.findings.map((f) => ({ id: f.id, case: f.case ?? null, edition: f.edition ?? null })),
+             standards: det.standards.map((s) => s.id), ...over };
   }
 
   /** R12: each cause a version's basis changed since it was assembled, read now; nothing in the version changes. Asked
-   *  only for a version `viewer` may see (R11, R13), so the determination's causes are in a project it sees; a
-   *  superseding standard it may not see is not named. */
+   *  only for a version `viewer` may see (R11, R13). R27 (DEC-36): whether the determination was superseded is read as
+   *  the plane reads it, so a superseded one is named, and its successor only when `viewer` may read it; its flag's
+   *  causes are the ones conformance answers `viewer` (its R24), never read as the machine; a superseding standard
+   *  `viewer` may not see is left out of its cause, which states `out_of_view: true`. */
   #basisChanged(basis, viewer) {
     const causes = [];
     const d = basis.determination ? this.#det(basis.determination, MACHINE_READER) : null;
     if (!basis.determination) { /* R8: an overridden premise drew on no determination, so none can change */ }
-    else if (!d || !d.live) causes.push({ cause: "determination_superseded", determination: basis.determination,
-                                     ...(d && d.superseded_by ? { by: d.superseded_by } : {}) });
-    else if (d.basis_changed) causes.push({ cause: "determination_flagged", determination: basis.determination,
-                                            causes: d.basis_changed.causes ?? [] });
+    else if (!d || !d.live) {
+      const by = d && d.superseded_by;
+      causes.push({ cause: "determination_superseded", determination: basis.determination,
+                    ...(!by ? {} : this.#det(by, viewer) ? { by } : { out_of_view: true }) });
+    } else {
+      const seen = this.#det(basis.determination, viewer);
+      if (seen && seen.basis_changed)
+        causes.push({ cause: "determination_flagged", determination: basis.determination, causes: seen.basis_changed.causes ?? [] });
+    }
     for (const f of basis.findings || []) {
       const e = this.#call(() => this.publication.publishedEditionsOf({ finding: f.id, project: basis.project || null }));
       const later = e && e.ok ? e.items.filter((i) => i.case === f.case && Number(i.edition) > Number(f.edition)) : [];
@@ -1002,9 +1018,8 @@ export class Filings {
     }
     for (const s of basis.standards || []) {
       const r = this.#standard(s, MACHINE_READER);
-      if (r && str(r.superseded_by))
-        causes.push({ cause: "standard_superseded", standard: s,
-                      ...(this.#inSight(str(r.superseded_by), viewer) ? { by: str(r.superseded_by) } : { by: null, why: "an object you may not see" }) });
+      const by = r && str(r.superseded_by);
+      if (by) causes.push({ cause: "standard_superseded", standard: s, ...(this.#inSight(by, viewer) ? { by } : { out_of_view: true }) });
     }
     return causes;
   }
@@ -1373,9 +1388,11 @@ export class Filings {
                     in_profile: !!match, ...(match ? { level: match.level ?? null, elected: match.elected ?? null } : {}),
                     says: match ? "an office of the active profile" : "not an office the active profile lists; the kinds are the profile's all the same" },
           ...(tier3 ? { tier3: {
-            standards: d.standards.filter((s) => isObj(s) && s.outcome === "noncompliant").map((s) => s.id),
-            factual_basis: d.findings.filter((f) => isObj(f) && str(f.id)).map((f) => ({ finding: f.id, case: f.case ?? null, edition: f.edition ?? null })),
+            standards: d.standards.filter((s) => s.outcome === "noncompliant").map((s) => s.id),
+            factual_basis: d.findings.map((f) => ({ finding: f.id, case: f.case ?? null, edition: f.edition ?? null })),
             counsel: COUNSEL_SENTENCE } } : {}),
+          /* R27 (DEC-36): what conformance withheld from the viewer is left out; this states only that it was. */
+          ...(d.withheld ? { out_of_view: true } : {}),
         };
       }),
       says: !v.view ? `${v.why}, so no kind is listed`
@@ -1414,7 +1431,7 @@ export class Filings {
           const d = this.#det(id, MACHINE_READER);
           if (!d || !d.live) continue;
           if (owner && d.project && d.project !== owner.project_id) continue;
-          if (!d.findings.some((x) => isObj(x) && x.case === caseId)) continue;
+          if (!d.findings.some((x) => x.case === caseId)) continue;
           seen.set(id, d);
         }
       }

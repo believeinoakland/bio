@@ -7,7 +7,7 @@
    only through the acts of the modules that own it. */
 import { createHash } from "node:crypto";
 import { world as publicationWorld, V, NOW } from "../publication/fixture.mjs";
-import { filingsOf, filingsOps } from "../../../src/filings/index.mjs";
+import { filingsOf, filingsOps, Filings } from "../../../src/filings/index.mjs";
 import { consequencesModule } from "../../../src/consequences/index.mjs";
 import { standardsOf } from "../../../src/standards/index.mjs";
 import { conformanceOf } from "../../../src/conformance/index.mjs";
@@ -188,6 +188,13 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
       return sha(text);
     },
     profile: (id = PROFILE) => profileOf(id),
+    /** A second filings over the same record and modules, `over` replacing any of them (a proxy of conformance or
+     *  membership answering as that module's contract does, say). */
+    filingsWith(over = {}) {
+      return new Filings({ storage: w.st, record: w.record, host: w.host, membership: w.membership, publication: w.p,
+                           provenance: w.prov, content: w.content, promotion: w.promotion, actions, conformance, standards,
+                           consequences, now, ...over });
+    },
   };
   return x;
 }

@@ -248,3 +248,49 @@ test("R10 R22 the export's bytes are the rendering of the version read, the mark
   const e = await x.f.counselPacketExport({ id: p.id, author: V("olive"), viewer: V("olive") });
   assert.ok(e.bytes.startsWith(`${Filings.render(read)}\n${INBAND_RULE}\n`), "the rendering, then the in-band block (R22)");
 });
+
+test("R27 R12 a superseded standard whose successor the reader may not see is named superseded without by, its cause stating out_of_view: true; a successor the reader sees is named by, with no key", async () => {
+  const x = tier3();
+  const v1 = pack(x);
+  const S2b = x.declare({ cite: "MCBC 2025-3A", kind: "commitment", issuer: "Marlow County Commission", supersedes: x.S2 });
+  /* membership's sight, as the real one answers it, except that bo may not see the successor */
+  const real = x.membership;
+  const membership = new Proxy(real, { get: (t, k) => (k === "inSight"
+    ? (id, viewer) => (id === S2b && viewer === V("bo") ? false : t.inSight(id, viewer)) : typeof t[k] === "function" ? t[k].bind(t) : t[k]) });
+  const f = x.filingsWith({ membership });
+  const cause = (viewer) => f.counselPacketRead({ id: v1.id, viewer }).basis_changed.causes.find((c) => c.cause === "standard_superseded");
+  const hidden = cause(V("bo"));
+  assert.deepEqual(hidden, { cause: "standard_superseded", standard: x.S2, out_of_view: true });
+  const listed = f.filingsFor({ action: x.A, viewer: V("bo") }).packets[0].basis_changed.causes.find((c) => c.cause === "standard_superseded");
+  assert.deepEqual(listed, hidden, "filingsFor answers the same");
+  /* negative control: a reader who sees the successor */
+  assert.deepEqual(cause(V("olive")), { cause: "standard_superseded", standard: x.S2, by: S2b });
+});
+
+test("R27 R12 a flagged determination's causes are those conformance answers the reader, never read as the machine: a cause naming a finding the reader may not see gives the reader no cause naming it", async () => {
+  const x = tier3();
+  const v1 = pack(x);
+  const HIDDEN = "INQ-2026-0077";
+  /* conformance's R24, by a proxy of the real one: D's flag carries a cause about HIDDEN, withheld from bo whole */
+  const real = x.conformance;
+  const conformance = {
+    determinationsFor: (a) => real.determinationsFor(a),
+    determinationRead(a) {
+      const d = real.determinationRead(a);
+      if (!d || d.ok === false || d.id !== x.D) return d;
+      const mine = { kind: "finding_superseded", subject: HIDDEN, source: HIDDEN, since: "2026-09-28", detail: `${HIDDEN} was superseded` };
+      return a.viewer === V("bo") ? { ...d, basis_changed: { causes: [], says: "withheld" }, out_of_view: true }
+        : { ...d, basis_changed: { causes: [mine], says: "flagged" } };
+    },
+  };
+  const f = x.filingsWith({ conformance });
+  for (const r of [f.counselPacketRead({ id: v1.id, viewer: V("bo") }), f.filingsFor({ action: x.A, viewer: V("bo") })]) {
+    assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+    assert.equal(JSON.stringify(r).includes(HIDDEN), false, "no cause naming it");
+  }
+  const bo = f.counselPacketRead({ id: v1.id, viewer: V("bo") }).basis_changed.causes;
+  assert.deepEqual(bo, [{ cause: "determination_flagged", determination: x.D, causes: [] }], "the flag stands, its cause left out");
+  /* negative control: a reader conformance answers the cause */
+  const olive = f.counselPacketRead({ id: v1.id, viewer: V("olive") }).basis_changed.causes;
+  assert.deepEqual(olive.map((c) => [c.cause, c.causes.map((k) => k.subject)]), [["determination_flagged", [HIDDEN]]]);
+});
