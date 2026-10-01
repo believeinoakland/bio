@@ -24,7 +24,8 @@
  *
  * REACHED as `escalationOf(host, deps)` (K61): one instance per host, created on the first call with `deps`, returned
  * to every later caller. At creation it migrates its tables (idempotent), declares them to purge (R20, K23) and
- * registers its step with promotion.
+ * registers its step with promotion. Its route arms are `escalationOps` (`ops.mjs`, R25), which the composition root
+ * spreads into its route map.
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership, promotion   layer 2: `allocId`, `transact`, `head`, `readFile`, `getSetting`, `declarePurge`;
  *                                   `inSight`, `projectAuthority`; `promote`, `registerStep`.
@@ -47,13 +48,14 @@ import { consequencesModule } from "../consequences/index.mjs";
 import { Actions, actionsOf, actionFacts, noSuchAction } from "../actions/index.mjs";
 import { filingsOf } from "../filings/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
-import { isMachineIdentity } from "../../checks/bio-checks.mjs";
+import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { ESCALATION, escalationId, escalationDoc, appendEntry, logOf, logSection, parseFm } from "./doc.mjs";
 import { ESCALATION_TABLES, migrateEscalation } from "./schema.mjs";
 import { ESCALATION_CHECKS, refusal } from "./checks.mjs";
 
 export { ESCALATION_SCHEMA, ESCALATION_TABLES } from "./schema.mjs";
 export { ESCALATION_CHECKS } from "./checks.mjs";
+export { escalationOps } from "./ops.mjs";
 
 /** The stages, in order (Terms). */
 export const STAGES = Object.freeze({ 1: "documentation", 2: "notification", 3: "clock", 4: "response_evaluation",
@@ -942,7 +944,7 @@ export function refuseReason(reason) {
   const r = str(reason);
   /* DEC-49 REGION is-reason-given */
   if (!r || r.length > REASON_MAX)
-    return refusal("NO_REASON", `a reason of 1 to ${REASON_MAX} characters is required. Nothing was written.`);
+    return refusal("ESCALATION_NO_REASON", `a reason of 1 to ${REASON_MAX} characters is required. Nothing was written.`);
   /* END DEC-49 REGION is-reason-given */
   return null;
 }

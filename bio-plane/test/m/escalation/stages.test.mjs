@@ -249,7 +249,7 @@ test("R23 escalationAttach refuses an action carrying a premise_override (action
   }
 });
 
-test("R10 escalationEvaluate refuses in order MACHINE_CANNOT_EVALUATE, NO_SUCH_ESCALATION, NOT_IN_EVALUATION, READING_UNKNOWN, NO_SUCH_RESPONSE, RESPONSE_FOR_NONE, NO_REASON (1-2,000 characters); evaluations are append-only and the latest is in force", () => {
+test("R10 escalationEvaluate refuses in order MACHINE_CANNOT_EVALUATE, NO_SUCH_ESCALATION, NOT_IN_EVALUATION, READING_UNKNOWN, NO_SUCH_RESPONSE, RESPONSE_FOR_NONE, ESCALATION_NO_REASON (R24: 1-2,000 characters); evaluations are append-only and the latest is in force", () => {
   const w = seeded();
   const n = toStage(w, 3);
   const resp = { action: n, ord: 1 };
@@ -270,8 +270,8 @@ test("R10 escalationEvaluate refuses in order MACHINE_CANNOT_EVALUATE, NO_SUCH_E
   assert.equal(evaluate(w, { ...ok, response: undefined }).reason, "NO_SUCH_RESPONSE", "denied names its response");
   assert.equal(evaluate(w, { ...ok, reading: "none", response: { action: n, ord: 9 } }).reason, "NO_SUCH_RESPONSE");
   assert.equal(evaluate(w, { ...ok, reading: "none" }).reason, "RESPONSE_FOR_NONE");
-  assert.equal(evaluate(w, { ...ok, reason: "  " }).reason, "NO_REASON");
-  assert.equal(evaluate(w, { ...ok, reason: "x".repeat(2001) }).reason, "NO_REASON");
+  assert.equal(evaluate(w, { ...ok, reason: "  " }).reason, "ESCALATION_NO_REASON");
+  assert.equal(evaluate(w, { ...ok, reason: "x".repeat(2001) }).reason, "ESCALATION_NO_REASON");
   assert.equal(w.count("escalation_evaluations"), 0);
   const a = evaluate(w, { ...ok, reason: "x".repeat(2000) });
   assert.deepEqual([a.ok, a.reading, a.response], [true, "denied", resp]);
@@ -370,7 +370,7 @@ test("R12 stage 7, entered from 4 or 5: each attachment states one accountabilit
   assert.equal(x.esc.escalationAdvance({ id: x.E, to: 7, reason: "Go.", author: V("bob"), viewer: V("bob") }).ok, true);
 });
 
-test("R13 escalationAdvance refuses MACHINE_CANNOT_ADVANCE, NO_SUCH_ESCALATION, NOT_OPEN, NO_REASON, ILLEGAL_STAGE (with the legal ones), TRIGGER_NOT_MET (naming what is missing), else appends {from, to, reason, author, at, trigger ids}; escalationDecline records a member's choice not to advance with the same refusals and EDGE_NOT_PROPOSED in place of TRIGGER_NOT_MET, and the proposal stays with its age and the declines", () => {
+test("R13 escalationAdvance refuses MACHINE_CANNOT_ADVANCE, NO_SUCH_ESCALATION, NOT_OPEN, ESCALATION_NO_REASON (R24), ILLEGAL_STAGE (with the legal ones), TRIGGER_NOT_MET (naming what is missing), else appends {from, to, reason, author, at, trigger ids}; escalationDecline records a member's choice not to advance with the same refusals and EDGE_NOT_PROPOSED in place of TRIGGER_NOT_MET, and the proposal stays with its age and the declines", () => {
   const w = seeded();
   opened(w);
   const ok = { to: 2, reason: "The office is named." };
@@ -381,8 +381,8 @@ test("R13 escalationAdvance refuses MACHINE_CANNOT_ADVANCE, NO_SUCH_ESCALATION, 
   const no = adv(w, 9, { reason: "" });
   assert.deepEqual([no.reason, no.state], ["NOT_OPEN", "suspended"]);
   w.esc.escalationResume({ id: w.E, author: V("bob"), viewer: V("bob") });
-  assert.equal(adv(w, 9, { reason: " " }).reason, "NO_REASON");
-  assert.equal(adv(w, 9, { reason: "x".repeat(2001) }).reason, "NO_REASON");
+  assert.equal(adv(w, 9, { reason: " " }).reason, "ESCALATION_NO_REASON");
+  assert.equal(adv(w, 9, { reason: "x".repeat(2001) }).reason, "ESCALATION_NO_REASON");
   for (const to of [3, 7, 1, 9, "clock", null]) {
     const r = adv(w, to, { reason: "Why." });
     assert.deepEqual([r.reason, r.legal], ["ILLEGAL_STAGE", [2]], String(to));
@@ -399,7 +399,7 @@ test("R13 escalationAdvance refuses MACHINE_CANNOT_ADVANCE, NO_SUCH_ESCALATION, 
   const dec = (extra) => w.esc.escalationDecline({ id: w.E, to: 2, reason: "Not yet.", author: V("alice"), viewer: V("alice"), ...extra });
   assert.equal(dec({ author: MACHINE, id: "ESC-none" }).reason, "MACHINE_CANNOT_DECLINE");
   assert.equal(dec({ id: "ESC-2026-0999-escalation" }).reason, "NO_SUCH_ESCALATION");
-  assert.equal(dec({ reason: "" }).reason, "NO_REASON");
+  assert.equal(dec({ reason: "" }).reason, "ESCALATION_NO_REASON");
   assert.equal(dec({ to: 4 }).reason, "ILLEGAL_STAGE");
   /* a decline, twice, by different members: the proposal stays, with its age and the declines */
   w.clock.now = "2026-09-28T04:00:00Z";

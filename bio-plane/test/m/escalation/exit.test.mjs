@@ -79,8 +79,8 @@ test("R15 escalationSuspend (a member, with a reason) stops proposals being repo
   const s = (extra) => w.esc.escalationSuspend({ id: w.E, reason: "Waiting on counsel.", author: V("bob"), viewer: V("bob"), ...extra });
   assert.equal(s({ author: MACHINE }).reason, "MACHINE_CANNOT_SUSPEND");
   assert.equal(s({ id: "ESC-2026-0999-escalation" }).reason, "NO_SUCH_ESCALATION");
-  assert.equal(s({ reason: "" }).reason, "NO_REASON");
-  assert.equal(s({ reason: "x".repeat(2001) }).reason, "NO_REASON");
+  assert.equal(s({ reason: "" }).reason, "ESCALATION_NO_REASON");
+  assert.equal(s({ reason: "x".repeat(2001) }).reason, "ESCALATION_NO_REASON");
   w.clock.now = "2026-09-28T09:00:00Z";
   const r = s({});
   assert.deepEqual([r.ok, r.state, r.stage], [true, "suspended", 3]);
