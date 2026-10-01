@@ -95,9 +95,9 @@ export class Themes {
     /* DEC-49 REGION is-theme-target */
     if (!sees)
       return refusal("THEME_TARGET_NOT_FOUND",
-        t ? `nothing you can see answers to ${t.slice(0, 80)}: name a document by its bundle id or a passage by `
+        t ? `nothing you can see answers to ${t.slice(0, 80)}: name a document by its record id or a passage by `
             + `its content id`
-          : `pass target=<a document's bundle id, or a passage's content id>`, { target: t || null });
+          : `pass target=<a document's record id, or a passage's content id>`, { target: t || null });
     if (words && bytes(words) > CAPTURE_TEXT_UNIT_CAP)
       return refusal("THEME_REASON_TOO_LONG",
         `${bytes(words)} B of note, over the ${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to. Refused `

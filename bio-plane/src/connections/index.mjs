@@ -13,7 +13,7 @@
  * predicate, D-267's severance, REC-25's backlinks, C-6.2's dangling read, REC-52's link projection, D-162's themes),
  * `schema.mjs` (the tables, now `./schema.mjs`) and `bio-checks.mjs` (the two pair predicates, now `./pair.mjs`; the
  * C-74 rows, now `./checks.mjs` (T18); the C-49 and C-81 rows and `themeLegFindings`, copied to `./checks.mjs` (T19),
- * the catalogue keeping its copy for its own grammars until `inquiry-grammar` deletes it). The built work on `land/worker/D-575`, `D-625`, `D-706` and `D-722`
+ * the catalogue's copy deleted with it at T19's close, K855). The built work on `land/worker/D-575`, `D-625`, `D-706` and `D-722`
  * is taken in (R6, R15, R26, R27). The legacy code's comments moved with it, shortened where they only restated it.
  *
  * REACHED as `connectionsOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the
@@ -894,9 +894,11 @@ export class Connections {
 
   /** R20 (REC-25, `op=backlinks`): every edge INTO a target, the citing bundles filtered by the viewer (Membership v2
    *  §7.9), each with the edge's status read from the citing document. A target the viewer cannot see answers as an
-   *  absent one; nothing counts what was withheld. */
+   *  absent one. A citer the viewer may not see is withheld whole, and the answer says only that one was:
+   *  `out_of_view: true` (DEC-36, K903 (4)), asked by one ungated `EXISTS` beside the gated read, so nothing of the
+   *  withheld citer (its id, title, type, state, relation, or how many) reaches the answer. */
   backlinks({ target = null, viewer = null } = {}) {
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "backlinks are asked of an object: pass target=<bundle id>" };
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: "backlinks are asked of an object: pass target=<record id>" };
     if (!this.sees(target, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
     const gate = viewerPredicate(viewer);
     const rows = this.#rows(
@@ -917,7 +919,12 @@ export class Connections {
       out.push({ from: r.from_id, from_type: r.from_type, from_title: r.from_title, from_state: r.from_state,
                  rel: r.rel, status: status ?? "confirmed", note });
     }
-    return { ok: true, target, backlinks: out };
+    /* Whether any edge into the target comes from a citer the gate did not pass: the same join, with exactly the rows
+       the gated read leaves out (`IS NOT 1`: a gate that answers NULL withholds as surely as one that answers 0). */
+    const withheld = gate.scope === "member" ? null : this.#one(
+      `SELECT 1 AS x FROM refs r JOIN bundles b ON b.bundle_id = r.bundle_id
+        WHERE r.target_id = ? AND ((${gate.sql}) IS NOT 1) LIMIT 1`, target, ...gate.args);
+    return { ok: true, target, backlinks: out, ...(withheld ? { out_of_view: true } : {}) };
   }
 
   /** R21 (C-6.2, `op=dangling`): every edge whose target no bundle holds; a hidden citing bundle's edge withheld whole.
@@ -952,7 +959,7 @@ export class Connections {
       bundle = reg ? reg.bundle_id : null;
     }
     if (!bundle) return { projected: 0, edges: [],
-      note: "this capture is not registered to a bundle, so there is no canonical source to hang an edge on" };
+      note: "this capture is not registered to a record, so there is no canonical source to hang an edge on" };
     const src = this.record.bundleInfo(bundle);
     if (src && src.type === "project") {
       const denied = this.membership.projectAuthority(bundle, identity, "joined", "linkproject");
@@ -980,8 +987,8 @@ export class Connections {
       skipped_self: self, skipped_unregistered: unregistered, unresolved: seen.tally ? seen.tally.offsite : 0,
       references_written: written.added ?? 0, promoted: !!written.promoted,
       ...(written.bundleSha ? { bundleSha: written.bundleSha } : {}),
-      note: "only resolved links project, and only to a target some bundle has registered. "
-          + "skipped_unregistered counts targets whose BYTES the record holds while no bundle claims "
+      note: "only resolved links project, and only to a target some record has registered. "
+          + "skipped_unregistered counts targets whose BYTES the record holds while no record claims "
           + "them: those become edges when the target is promoted. Each edge is written into the source "
           + "document's references as links_to and never cites, because the source asserted it and not the "
           + "group; a member promoting it to cites is a member's act." };
@@ -993,7 +1000,7 @@ export class Connections {
     const md = this.record.readFile(bundle, "bundle.md");
     const head = this.record.head(bundle);
     if (!md || typeof md.text !== "string" || !head)
-      return { ok: false, reason: "NO_DOCUMENT", detail: "the source bundle's document is not held as text, so its links cannot be written into it" };
+      return { ok: false, reason: "NO_DOCUMENT", detail: "the source record's document is not held as text, so its links cannot be written into it" };
     const parsed = parseFrontmatter(md.text);
     const held = new Set((Array.isArray(parsed.data?.references) ? parsed.data.references : [])
       .filter((x) => x && x.rel === "links_to").map((x) => x.target));
