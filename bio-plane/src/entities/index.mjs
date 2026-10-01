@@ -3,16 +3,20 @@
    reads (R14–R16), the name lookup (R17–R19), the identifier-space judgement (R20–R25) and the defect report (R38),
    each collection keyed on one entity bounded (R39), reached through
    `entitiesOf(ctx)` (K61); the grade order (R33–R34) and the one `NO_SUCH_ENTITY` answer (R36, `noSuchEntity`) are
-   module-level, as is the one `NO_ENTITY` answer (R37, `noEntity`). R35's read contract is the `entities` and `resolutions` columns `schema.mjs` names. Moved from `store.mjs` (the registry, the recogniser, the name lookup, `idMatch`, their
-   dispatch), `bio-checks.mjs` (C-91, now `checks.mjs`) and `schema.mjs` (the four tables, now `schema.mjs` here),
-   with the rows this job applied named at their sites. It derives no connection: that is `connections`'. */
+   module-level, as is the one `NO_ENTITY` answer (R37, `noEntity`). R35's read contract is the `entities` and
+   `resolutions` columns `schema.mjs` names; the ops map (R40, `entitiesOps`) and the count figures (R41) close it.
+   Moved from `store.mjs` (the registry, the recogniser, the name lookup, `idMatch`, their dispatch), the check
+   catalogue (C-91, now `checks.mjs`; the shared act rows and the grade list are `record-grammar`'s, read from there)
+   and `schema.mjs` (the four tables, now `schema.mjs` here), with the rows this job applied named at their sites.
+   It derives no connection: that is `connections`'. */
 import { recordOf, perItem } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { normAlias, labelTerms, noSha } from "../extraction/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { spaces as idSpaces, recognise as recogniseId, parcelStanding, systemOf, judgePair } from "../idspaces.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
-import { ACT_SHAPE_CHECKS, BASIS_GRADES } from "../../checks/bio-checks.mjs";
+import { SHARED_ACT_CHECKS } from "../record-grammar/acts.mjs";
+import { BASIS_GRADES } from "../record-grammar/grades.mjs";
 import { ENTITIES_SCHEMA, WITHDRAWAL_COLUMNS, BASIS_NORM_COLUMN, BASIS_NORM_INDEX } from "./schema.mjs";
 import { IDSPACE_CHECKS, ENTITY_CHECKS, idspaceRefusal } from "./checks.mjs";
 
@@ -103,12 +107,13 @@ export function noEntity(detail = null) {
 /* The label as kept (R1): trimmed, whitespace collapsed, at most 200 characters. */
 const cleanLabel = (s) => String(s ?? "").trim().replace(/\s+/g, " ").slice(0, 200);
 
-/* D-484: the governed site for an act that rests on nothing (C-33.40) or names no source (C-33.41): the catalogue's
-   shared act-shape rows, never a second sentence. C-33.25 (no alias) is this module's own row (`ENTITY_CHECKS`). */
+/* D-484: the governed site for an act that rests on nothing (C-33.40) or names no source (C-33.41): record-grammar's
+   shared act rows (`SHARED_ACT_CHECKS`, K765), never a second sentence. C-33.25 (no alias) is this module's own row
+   (`ENTITY_CHECKS`). */
 function actShapeRefusal(code, detail, extra = {}) {
-  const row = ACT_SHAPE_CHECKS[code];
+  const row = SHARED_ACT_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
-    throw new Error(`entities: ${code} has no ACT_SHAPE_CHECKS row with a canned translation (DEC-49)`);
+    throw new Error(`entities: ${code} has no SHARED_ACT_CHECKS row with a canned translation (DEC-49)`);
   return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...extra };
 }
 
@@ -167,8 +172,20 @@ export function entitiesOf(ctx, opts = {}) {
     e = new Entities(storage, { ...opts, record, membership: opts.membership ?? membershipOf(ctx, { record }),
                                 provenance: opts.provenance ?? (() => provenanceOf(ctx)) });
     instances.set(storage, e);
+    registerFigures(e, record);
   }
   return e;
+}
+
+/** R41: this module's figures for `op=stats` and purge's proof, registered with record-core's `registerCounts` (its
+ *  R63) once per storage, when the instance is first made. A record with no seam (a test's stand-in) is left alone; a
+ *  refusal (another module reporting one of these figures, or entities registering twice) is a defect of the wiring
+ *  and throws. */
+function registerFigures(e, record) {
+  if (!record || typeof record.registerCounts !== "function") return;
+  const answer = record.registerCounts("entities", [...Entities.COUNT_KEYS], (hid) => e.counts(hid));
+  if (answer && answer.ok === false)
+    throw new Error(`entities: record-core refused its figures: ${answer.reason}${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
 }
 
 export class Entities {
@@ -218,6 +235,30 @@ export class Entities {
       { name: "entity_relations", keys: [] }, { name: "entity_aliases", keys: [] }, { name: "entities", keys: [] }]);
     if (r && r.ok) this.#declared = true;
     return r;
+  }
+
+  /* ---- the figures (R41; record-core R63) ---- */
+
+  /** R41: the figures `registerCounts` asks for, in this order. */
+  static COUNT_KEYS = Object.freeze(["entities", "entityAliases", "entityRelations", "resolutions"]);
+
+  /** R41: `entities`, `entityAliases` and `entityRelations` (the registry's rows, none keyed on a bundle, so `hid`
+   *  leaves none out) and `resolutions` (keyed on `bundle_id`: with `hid`, `{sql, args}` naming the bundles the caller
+   *  may not see, a row whose bundle is in it is left out and a row naming none is counted), as the legacy store's
+   *  `#counts` took them. A figure that cannot be read is null, never zero. Synchronous; writes nothing; never throws. */
+  counts(hid = null) {
+    let gate = null;
+    try { if (hid && typeof hid === "object" && typeof hid.sql === "string") gate = { sql: hid.sql, args: Array.isArray(hid.args) ? hid.args : [] }; }
+    catch { gate = null; }
+    const n = (table, key = null) => {
+      try {
+        const cond = key && gate ? ` WHERE COALESCE(${key}, '') NOT IN ${gate.sql}` : "";
+        const v = Number(this.#one(`SELECT count(*) AS c FROM ${table}${cond}`, ...(cond ? gate.args : [])).c);
+        return Number.isFinite(v) ? v : null;
+      } catch { return null; }
+    };
+    return { entities: n("entities"), entityAliases: n("entity_aliases"), entityRelations: n("entity_relations"),
+             resolutions: n("resolutions", "bundle_id") };
   }
 
   /* ---- sight (membership R43; R18, R22, R32) ---- */
@@ -1034,9 +1075,10 @@ export class Entities {
   }
 }
 
-/* The Durable Object routes this module answers, as entries of the legacy store's op map (its dispatcher spreads
-   them in, K3). `url` carries the control plane's stamps (`viewer`); `body` the parsed body, whose `declaredBy`,
-   `resolvedBy`, `withdrawnBy` and `by` (R38) the control plane stamps (R4). */
+/* R40 (K3, K718): the Durable Object routes this module answers, as entries of the legacy store's op map (its
+   dispatcher spreads them in). `url` carries the control plane's stamps (`viewer`); `body` the parsed body, whose
+   `declaredBy`, `resolvedBy`, `withdrawnBy` and `by` (R38) the control plane stamps (R4). The connection sweep is armed
+   on R13's `onResolved` by `scheduler` (its R9, K714), not here. */
 export function entitiesOps(e, url, body) {
   const q = (k) => url.searchParams.get(k);
   return {
@@ -1048,6 +1090,9 @@ export function entitiesOps(e, url, body) {
     aliaswithdraw: () => e.withdrawAlias(body || {}),
     relationwithdraw: () => e.withdrawRelation(body || {}),
     resolutiondefect: () => e.reportResolutionDefect(body || {}),
+    /* R11, R12: the recogniser and the member's grade-D testimony, the request's body as given. */
+    resolve: () => e.resolve(body || {}),
+    resolvetestify: () => e.testify(body || {}),
     entity: () => e.readEntity({ entityId: q("id"), viewer: q("viewer") }),
     entitybyalias: () => e.entitiesByAlias({ alias: q("alias"), viewer: q("viewer") }),
     relation: () => e.readRelation({ relationId: q("id") }),
