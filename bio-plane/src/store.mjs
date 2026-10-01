@@ -22,6 +22,7 @@ import { observationLogOf, observationLogOps, OBSERVATION_LOG_MODULE } from "./o
 import { runProductionsOf, runProductionsOps } from "./run-productions/index.mjs";
 import { captureRequestsOf, captureRequestsOps } from "./capture-requests/index.mjs";
 import { recordOf, stampInstant, registerLegacyGrammars } from "./record-core/index.mjs";
+import { registerInquiryGrammar } from "./inquiry-grammar/index.mjs";
 import { LEGACY_GRAMMARS } from "../checks/bio-checks.mjs";
 export { stampInstant, instantOrder } from "./record-core/index.mjs";
 import { governorOf, governorRoutes } from "./host-governor/index.mjs";
@@ -115,6 +116,7 @@ export class Store extends DurableObject {
        the single-bundle projection's decorations (actions, inquiry, ai-runs), the frontier's hidden-run tail (ai-runs,
        D-486) and the selection sweep's arming (scheduler). */
     const retrieval = retrievalOf(ctx, { now: () => this.#nowMs(null) });
+    registerInquiryGrammar(recordOf(ctx));   /* inquiry-grammar R6 (K812): before basis-versions, whose R43 runs at its sub-slot */
     basisVersionsOf(ctx, { retrieval });   /* basis-versions registers its projection decoration (its R42) */
     aiRunsOf(ctx, env);   /* ai-runs (K61) registers with retrieval before legacy-store does, in the modules' order */
     /* reevaluation before actions: actions reaches conformance, which reaches reevaluation, and a factory reads its
