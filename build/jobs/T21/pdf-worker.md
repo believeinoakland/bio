@@ -34,3 +34,7 @@ Size (session_01B6vMjCUja1qXTcpkSqYzuB): test runs 3, module lines 13 (comments 
 ## J1 · REPORT
 
 **pdf-worker/dist/ staled (comment-only).** Re-wording the 'hygiene source scan' claim in `src/index.mjs` (:24–25, now R37 in test/structure.test.mjs) changes that input's hash, so `dist/pdf-worker.bundle.json` is stale. `dist/pdf-worker.bundled.mjs` is not: a trial `npm run build` changed only the manifest, then I restored `dist/`. Until your L1-close regeneration, fleetbundles.test.mjs fails pdf-worker's STALE BUNDLE arm (97 pass, 1 fail); with the trial rebuild, 98/0. The fleet-member.json note is not a bundle input. Nothing found in another module.
+
+## J2 · COMPLETE
+
+N469 applied: fleet-member.json:13 names fleet-bundle.mjs and the package's npm test instead of battery.mjs. The re-scan found four more live claims, re-worded the same way: build.mjs:3, wrangler.jsonc:12 and :22–23, index.mjs:24–25 (the deleted hygiene scan, now R37), and table-recognition.probe.mjs:3. structure 83/0. Checks: 0 failures each (ownership: 6 files). The only failing test is fleetbundles' stale pdf-worker manifest (J1), which your L1 regeneration clears. See the record.
