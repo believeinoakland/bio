@@ -214,7 +214,8 @@ oqs = x.get("openQuestions", [])
 def _st(q):
     if q.get("brief") and q["brief"].get("stillOpen") in (True, "partly"): return "partly ruled" if q.get("ruled") else "open"
     return (q.get("ruled") or {}).get("status", "ruled") if q.get("ruled") else "open"
-need = [(i + 1, q) for i, q in enumerate(oqs) if _st(q) in ("open", "partly ruled") and not (q.get("brief") or {}).get("designOnly")]
+absorbed = {int(a): i + 1 for i, q in enumerate(oqs) for a in ((q.get("brief") or {}).get("absorbs") or [])}
+need = [(i + 1, q) for i, q in enumerate(oqs) if _st(q) in ("open", "partly ruled") and not (q.get("brief") or {}).get("designOnly") and (i + 1) not in absorbed]
 design_only = [(i + 1, q) for i, q in enumerate(oqs) if (q.get("brief") or {}).get("designOnly") and _st(q) in ("open", "partly ruled")]
 settled = [(i + 1, q) for i, q in enumerate(oqs) if q.get("ruled") and _st(q) != "open"]
 oq_full = [n for n, q in settled if _st(q) == "ruled"]
@@ -234,7 +235,9 @@ def brief_card(n, q):
     tag = f' <span class="pill {k}">{lab}</span>'
     if q.get("ruled") or b.get("alreadyDecidedPart"): tag += ' <span class="pill gaps">Part already settled</span>'
     head = f'<summary id="oq{n}"><span class="oqn">{n}</span><span><b>{e(b.get("title") or q.get("question"))}</b>{tag}</span><span class="cdef">{e(b.get("inOneBreath") or b.get("decision"))}</span></summary>'
-    body = f'<h4>What you are asked to decide</h4><p class="ask">{linkify(b.get("decision"))}</p>'
+    body = ""
+    if b.get("absorbs"): body += f'<p class="rec"><b>This brief takes in questions {", ".join(str(a) for a in b["absorbs"])}.</b> {linkify(b.get("absorbNote"))}</p>'
+    body += f'<h4>What you are asked to decide</h4><p class="ask">{linkify(b.get("decision"))}</p>'
     if b.get("alreadyDecidedPart"): body += f'<p class="rec"><b>Already decided:</b> {linkify(b["alreadyDecidedPart"])}</p>'
     elif q.get("ruled"): body += ruling_box(q["ruled"])
     if b.get("basics"): body += f'<h3 class="bh">The basics</h3>{paras(b["basics"])}'
@@ -432,6 +435,7 @@ ul.bl {{ margin:2px 0; padding-left:18px }} ul.bl li {{ margin:2px 0 }}
 {"".join("<p>" + t + "</p>" for t in x["meta"].get("neededIntro", []))}
 <div class="tw"><table class="need"><thead><tr><th>#</th><th>The decision</th><th>Size of the ask</th></tr></thead><tbody>{need_rows}</tbody></table></div>
 <ol class="oq">{need_cards}</ol>
+{('<p class="note">Folded into another question: ' + "; ".join(f'{a} ({e((oqs[a-1].get("brief") or {}).get("title") or oqs[a-1].get("question"))}) into <a href="#oq{t}">{t}</a>' for a, t in sorted(absorbed.items())) + '.</p>') if absorbed else ""}
 {('<h3 style="margin-top:22px">Left to the design</h3><p>These are open, but they are detail within rules already set, so the designer settles them without you. Say so if you want any of them brought to you.</p><ul class="bl">' + design_items + '</ul>') if design_items else ""}
 
 <h2 id="settled">What is settled</h2>

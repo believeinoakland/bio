@@ -16141,63 +16141,72 @@
    }
   },
   {
-   "question": "When a group is threatened with legal action, what should placing a 'litigation hold' in CivicOS stop deleting, across how much of the group's work, who may place and lift it, and what should members see while it is on?",
+   "question": "Now that a member can record 'hold in place' on a reply marked as a legal threat, should that record actually stop the scheduled deletion of assistant transcripts on members' devices, for which projects, with what shown to members, and should it block the operator's wipe of the group's record?",
    "basis": "open",
    "relatedUseCases": [
     "UC-129"
    ],
    "brief": {
-    "stillOpen": true,
-    "settledSince": "",
-    "title": "The litigation hold: what it stops, for which work, and who controls it",
-    "inOneBreath": "When a group is threatened with legal action, what should placing a 'litigation hold' in CivicOS stop deleting, across how much of the group's work, who may place and lift it, and what should members see while it is on?",
-    "decision": "(1) What a hold suspends: the two scheduled deletions of assistant transcripts (after a set time, and at publication), and whether it also blocks a deliberate wipe of the group's record. (2) How far it reaches: the threatened project, with others added by choice, or the whole group. (3) Who places it and who lifts it, and how heavy each act is. (4) What members see while it is on, and how the administrators' 'Consider a litigation hold' reminder is answered.",
-    "alreadyDecidedPart": "",
+    "stillOpen": "partly",
+    "settledSince": "Your answer of 1 October settled the act: 'hold in place' or 'hold released', with a reason, recorded by a member, clears the reminder. It is built. What the hold stops, how far it reaches, what members see and whether it blocks the wipe remain open.",
+    "title": "The litigation hold: what placing it stops, how far it reaches, and what it blocks",
+    "inOneBreath": "Now that a member can record 'hold in place' on a reply marked as a legal threat, should that record actually stop the scheduled deletion of assistant transcripts on members' devices, for which projects, with what shown to members, and should it block the operator's wipe of the group's record?",
+    "decision": "(1) Whether recording 'hold in place' itself stops both scheduled deletions of assistant transcripts on members' devices (at the time limit and at publication), once those deletions are built. (2) How far it reaches: the threatened action's project, with other projects named by the member who places it, or the whole group. (3) Who may place and release it (today any member who can see the action), and whether releasing, which would restart deletion, is heavier than placing. (4) What members see while a hold is in place. (5) Whether the operator's wipe of the real record is refused while any hold is in place.",
+    "alreadyDecidedPart": "You ruled on 1 October that the litigation-hold reminder is cleared by a member's own, named act on the reply marked as a legal threat: 'hold in place' or 'hold released', always with a written reason. That act is the reminder's only way out. Each statement is kept, never rewritten, and the latest one stands; no machine can make it. BOB read your 'a member's act' as any member who can see the action, with the reminder going to the administrators and to the member who marked the threat.",
     "basics": [
-     "A group (for example a neighbourhood budget watchdog) runs its own copy of CivicOS. Its members work in projects; a project investigates questions and may publish a case, the group's public account of what it found. A few members are administrators, who look after membership and settings.",
-     "The Action layer is where a group decides what to do with what it has learned. A project's action plan lists options (a records request, a demand letter, a press briefing). Starting a chosen option creates an action: one outward engagement with an addressee such as the City Clerk's office. CivicOS sends nothing itself; the member sends by the venue's own means and records what was sent. Replies are recorded on the action as correspondence.",
-     "On 30 September you ruled that CivicOS hopes for good faith but is fully prepared for opposition. So a member can mark a recorded reply as pressure, of one of four kinds: legal (a threat to sue, a subpoena, a demand to preserve records), retaliation, discrediting, or other. The mark is kept as evidence. Only a member can make it.",
-     "A member's session with the AI assistant produces a transcript: the assistant's working notes and the conversation. On 6 August you ruled that transcripts are internal notes, like a reporter's notebook: kept only on the member's own device, never in the shared record; deleted after a set time; and deleted when the work is published. The reason was subpoena protection. The group's hosting company can be served directly, sometimes without the group knowing; a member's device can only be reached through the member, who can contest it.",
-     "The same ruling explained why scheduled deletion is safe only until a lawsuit is in view. Deleting on a schedule fixed in advance, whatever the content, is defensible. Deleting once litigation is reasonably expected is spoliation (destruction of evidence), treated far worse than whatever the material showed. So once the group is on notice, both deletions must stop for relevant material. That suspension is a litigation hold: the same duty a utility has to switch off its email auto-delete once a complaint is in view."
+     "A group (say, a neighbourhood budget watchdog) runs its own copy of CivicOS. Members work in projects, some hidden from outsiders; a project may publish a case, the group's public account of what it found. A few members are administrators, who look after membership and settings.",
+     "An action is one outward engagement with an addressee, such as a records request to a city department; members record what was sent and what came back. Since your ruling of 30 September that CivicOS is prepared for opposition, a member can mark a received reply as pressure: legal (a threat to sue, a subpoena, a demand to preserve records), retaliation, discrediting or other. The mark is kept as evidence.",
+     "A member's session with the AI assistant produces a transcript: the assistant's working notes and the conversation. On 6 August you ruled that transcripts are internal notes, like a reporter's notebook: kept only on the member's own device, never in the shared record; deleted after a set time; and deleted when the work is published. The reason was subpoena protection: the group's hosting company can be served directly, sometimes without the group knowing, while a member's device can only be reached through the member, who can contest the demand.",
+     "The same ruling said why that deletion is safe only until a lawsuit is in view. Deleting on a schedule fixed in advance is defensible; deleting once litigation is reasonably expected is spoliation (destruction of evidence), treated far worse than whatever the material showed. So once the group is on notice, both deletions must stop for relevant material: a litigation hold, the duty a utility has to switch off its email auto-delete once a complaint is in view."
     ],
     "today": [
-     "Built: the pressure mark. A member can mark a received reply as pressure of the legal kind, and it is listed apart on the action.",
-     "Decided, not built: the reminder. The Action design says a legal-kind mark puts one item in the administrators' queue (the list of things waiting for attention): 'Consider a litigation hold · a reply marked as a legal threat on 29 Sep · for an administrator · deciding nothing by itself.' On 30 September you ruled that it is not repeated unless asked, that answering it may clear it, and that otherwise it stays open. It was held out of the last two build rounds because no hold exists, so the item could never be answered.",
-     "Transcripts on devices: the old interface has a place on the device where it would read a transcript, and never fetches one from the group's server. But nothing yet writes transcripts to devices or deletes them, and the time limit is not set. So nothing is being destroyed today, and the scheduled deletion should not be switched on before a hold exists.",
-     "As far as I can find, those two transcript deletions are the only deletions in CivicOS that run on a schedule. Other removals are deliberate acts, such as the operator's full wipe of the group's record (used to reset it). And since you ruled on 29 September that CivicOS has no email or push, a device learns of a hold only when its member next opens CivicOS."
+     "Built in the engine on 1 October (the old interface shows none of it): a reply marked as a legal threat sends one reminder to every administrator and to the member who marked it: 'a legal threat was recorded on [the action] and no litigation hold is stated for it', with one button, 'Record whether a litigation hold is in place'. It is shown once and leaves only when a member records 'hold in place' or 'hold released' with a reason, even if the action has closed.",
+     "Any member who can see the action may record either statement, not only an administrator. 'Released' covers both 'we have stopped preserving' and 'no hold was needed'. Each letter marked as a legal threat needs its own statement. The statements are listed on the action; nothing else shows them.",
+     "The statement suspends nothing; the requirement says so plainly, leaving the transcript deletion as a separate matter on the devices. That matter does not exist yet: nothing writes transcripts to devices or deletes them, and no time limit is set, so nothing is being destroyed today. As far as I can find, those two transcript deletions are the only scheduled deletions in CivicOS.",
+     "The operator's wipe of the group's whole record (used to reset it) still runs while a hold is in place, and erases the hold statements too. With no email or push, a device learns of anything only when its member next opens CivicOS."
     ],
     "problem": [
-     "Nothing about the hold itself is designed: what it covers, who controls it, what members are told. The canon warns that getting it wrong 'inverts the protection into liability'.",
-     "Too narrow, and related notes elsewhere keep being deleted after notice: spoliation exposure, which a court may sanction or answer by telling a jury to assume the notes were damaging. Too broad, and unrelated internal notes pile up for months, reachable by exactly the demand the device-only rule was meant to resist.",
-     "Devices add a gap. A device learns of a hold only when next opened, so it must check for a hold before deleting anything, and delete nothing if it cannot check (a build detail BOB can settle). A member can still clear their browser by hand; the hold can ask them not to, but cannot prevent it.",
-     "Why now: the reminder and the transcript store both wait on this, and the next build round can do them together only if the doctrine is set. Nothing here is legal advice; whether California's shield law reaches a civic group is a question for counsel."
+     "Your August ruling requires deletion to stop once the group is on notice. Your October ruling created the moment of notice: a named member saying 'hold in place', for a reason, on a dated threat. The link between the two is missing. Left separate, the group can record 'hold in place' while devices go on deleting: a written admission of notice followed by destruction, the worst position in a dispute.",
+     "Reach is the second tension. The statement sits on one reply in one project. Too narrow, and related notes in another project keep being deleted after notice, which a court may sanction. Too broad, and unrelated notes pile up for months, reachable by exactly the demand the device-only rule resists, and a group-wide notice may reveal a hidden project's trouble.",
+     "Who may release now matters more than who may place. Placing only keeps things. Releasing would restart deletions that cannot be undone, and today it is as light as placing and anyone may do it. The wipe is the third gap: it would erase both the record and the proof that a hold was placed.",
+     "Why now: the device transcript store is not yet planned, and this decides what it must do. Nothing here is legal advice; whether California's shield law reaches a civic group is for counsel."
     ],
     "story": {
      "title": "Sam, the towing letter and Paula's laptop",
      "steps": [
-      "Eastlake Budget Watch's project 'Towing contracts' sent the Oakland Department of Transportation a records request for tow-contract invoices.",
-      "On 2 October the City Attorney's office writes, disputing the group's draft findings, asking it to 'preserve all documents, notes and communications concerning the towing contract', and hinting at a defamation claim. Paula records the letter on the action and marks it as pressure, kind 'legal'.",
-      "Sam, an administrator, sees one item: 'Consider a litigation hold · a reply marked as a legal threat on 2 Oct · on \"Records request: tow-contract invoices\" · this decides nothing by itself.'",
-      "Paula's laptop holds three towing transcripts from September; the oldest reaches the time limit next week. Dev, in the separate project 'Parking citation revenue', has transcripts discussing the same tow operator.",
-      "The group plans to publish its towing case on 15 October, which under the rule deletes the towing transcripts on each device when next opened.",
-      "The decision bites here: what Sam's button does, whether it reaches Dev's laptop as well as Paula's, what Paula is told, whether publication deletes anything, and who ends the hold when the city drops the matter in March."
+      "Eastlake Budget Watch's project 'Towing contracts' has an action: a records request to the Oakland Department of Transportation for tow-contract invoices.",
+      "On 2 October the City Attorney's office writes, disputing the group's draft findings, asking it to 'preserve all documents, notes and communications concerning the towing contract', and hinting at a defamation claim. Paula records the letter on the action and marks it as a legal threat.",
+      "Sam, an administrator, and Paula each see the reminder. Paula presses 'Record whether a litigation hold is in place', chooses 'Hold in place' and writes 'City Attorney letter of 2 Oct demands preservation.' The reminder leaves both their lists. This much is settled and built.",
+      "Paula's laptop holds three towing transcripts; the oldest reaches the time limit next week. Dev, in the separate project 'Parking citation revenue', has transcripts about the same tow operator. The towing case is due to be published on 15 October, which would delete the towing transcripts on each device.",
+      "In March the city drops the matter. Any member could record 'Hold released'. In April, Ray, who runs the group's server, plans to wipe and reload the record after a hosting move.",
+      "The decision bites at each step: whether Paula's statement keeps her transcripts, whether it reaches Dev's laptop, what Paula and Dev are told, what the release in March restarts, and whether Ray's wipe may run while the hold stands."
      ]
     },
     "fixed": [
      {
-      "point": "Transcripts stay on the member's device, never in the shared record; they are deleted after a set time and at publication; and that deletion must be suspendable once the group is on notice, for relevant material.",
-      "why": "Your ruling of 6 August on transcript retention: internal notes protected from subpoenas, with spoliation named as the reason the deletion must be stoppable.",
+      "point": "A hold is a member's recorded statement, 'in place' or 'released', with a reason, on a reply marked as a legal threat; each is kept, the latest stands, it clears the reminder, and no machine can make it.",
+      "why": "Your answer of 1 October, built that day.",
+      "src": "K899 (7); actions R52, R54; queue-producers R19; queue R1, R12; C-117.20-.22"
+     },
+     {
+      "point": "Any member who can see the action may make it; the reminder goes to administrators and the member who marked the threat.",
+      "why": "BOB's reading of your words 'a member's act', which you may narrow.",
+      "src": "K901; op-declarations (actionhold: capability contribute); draft-T20-answers.md §C.6 (1)"
+     },
+     {
+      "point": "Recording the hold is a reasoned act: a reason field in place. Friction rises with the act's consequence in the world.",
+      "why": "Your rulings of 29 September on how an act's weight is felt.",
+      "src": "DEC-87; DEC-88 (4); K918"
+     },
+     {
+      "point": "Transcripts stay on the member's device, are deleted after a set time and at publication, and that deletion must be suspendable for relevant material.",
+      "why": "Your ruling of 6 August on transcript retention.",
       "src": "DEC-61; INVESTIGATIVE-SESSION.md 'TRANSCRIPT RETENTION'; BIO_Assistant_and_AI_Roles_v0_1.md item 6"
      },
      {
-      "point": "Only a member marks a reply as pressure, and 'legal' is one of four kinds.",
-      "why": "Your ruling of 30 September that the system is prepared for opposition and records pressure as evidence.",
-      "src": "actions R48; K597 (1); BIO_Action_v0_1.md §4 rule 12"
-     },
-     {
-      "point": "The hold reminder is shown once, is not repeated unless asked, may be cleared when answered, and otherwise stays open until cleared.",
+      "point": "The reminder is told once, not repeated unless asked, and stays until answered.",
       "why": "Your ruling of 30 September on the Action layer's notices.",
-      "src": "K613 (2); K614"
+      "src": "K613 (2); K614; DEC-69; DEC-70"
      },
      {
       "point": "No email or push: a member hears of anything only inside CivicOS.",
@@ -16205,103 +16214,98 @@
       "src": "DEC-94 (3)"
      },
      {
-      "point": "A heavier act gets more friction: a reason field in place for a reasoned act, a full dialog stating what ends for an act whose effect cannot be undone.",
-      "why": "Your rulings of 29 September on how an act's weight is felt.",
-      "src": "DEC-87; DEC-88"
-     },
-     {
-      "point": "The reminder was held back from the build until the hold is designed.",
-      "why": "BOB's cut of the last two build rounds, naming this as your doctrine.",
-      "src": "K624 (5); build/plan/archive/T19.md (N-A19 kept)"
+      "point": "Something a member may not see is withheld whole: no title, no count, no hint.",
+      "why": "Your ruling of 1 October on hidden items.",
+      "src": "DEC-36; K903 (4)"
      }
     ],
     "options": [
      {
       "label": "A",
-      "name": "A hold on the threatened project's transcripts, other projects addable",
-      "howItWorks": "An administrator places the hold from the reminder or a project's page, with a written reason. The threatened action's project is filled in; others may be added. While it is on, every member's device stops both scheduled deletions for transcripts of assistant sessions in those projects, including sessions on questions they draw on. Placing takes a reason in place. Lifting is an administrator's act with a reason, through a full dialog stating what will then be deleted. A band shows on each held project. The reminder is answered by placing a hold or by recording 'No hold, because ...'.",
-      "inTheStory": "Sam presses 'Place a litigation hold…'. 'Towing contracts' is filled in; he adds 'Parking citation revenue' because it names the same operator, and writes 'City Attorney letter of 2 Oct demands preservation.' Both projects show: 'Litigation hold since 2 Oct 2026, placed by an administrator. Assistant transcripts for this project stay on your device: they are not deleted after the usual time or at publication. Please do not clear them yourself.' On 15 October the publication steps say: 'Transcripts for this project are not deleted at this publication: a litigation hold is on.' In March Sam lifts it, and the dialog reads: 'Lifting the hold: transcripts for 2 projects that are past the time limit will be deleted on each member's device when it is next opened. This cannot be undone.'",
+      "name": "'Hold in place' stops deletion for the threatened project, others named by choice",
+      "howItWorks": "Once devices store transcripts, 'hold in place' stops both scheduled deletions, on every member's device, for assistant sessions in the threatened action's project and any other projects the member names (kept with the statement). A device checks for a hold before deleting, and deletes nothing if it cannot check. 'Hold released' restarts deletion, so its form states what will be deleted, and the administrators and whoever placed the hold are told once. While any hold is in place, the operator's wipe of the real record is refused.",
+      "inTheStory": "Paula's form shows 'Towing contracts' already filled in; she adds 'Parking citation revenue'. Both projects show a strip to their members: 'Litigation hold in place since 2 Oct 2026, recorded by Paula Reyes. Assistant transcripts for this project stay on your device: they are not deleted after the usual time or at publication. Please do not clear them yourself.' Publication on 15 October deletes nothing. In March the release form reads: 'Releasing this hold: transcripts for 2 projects past the time limit will be deleted on each member's device when it is next opened. This cannot be undone.' In April Ray's wipe is refused while the hold stands.",
       "gains": [
-       "Matches the ruling's 'relevant material' exactly.",
+       "Matches the August ruling's 'relevant material' exactly.",
        "Unrelated work keeps its subpoena protection.",
-       "A dated, attributed record of who placed and lifted the hold, and why."
+       "The statement and the preservation can no longer disagree."
       ],
       "costs": [
-       "Relies on an administrator judging which projects are related; a missed one is exposure.",
-       "More to design than a single switch."
+       "A member must judge which other projects are related; a missed one is exposure.",
+       "More to build: a list on the statement and a check on every device."
       ],
-      "commitsYouTo": "A recorded hold per project; every device checks for a hold before deleting; a band on held projects; lifting as a deliberate act with a stated effect."
+      "commitsYouTo": "A list of projects on each statement; a device check before any deletion; a heavier release; a wipe that waits for every hold to be released."
      },
      {
       "label": "B",
-      "name": "A group-wide hold",
-      "howItWorks": "One administrator act stops every scheduled transcript deletion across the group, for every member, until lifted; same reasons, record and band, everywhere.",
-      "inTheStory": "Sam presses one button. Every page in the group reads: 'Litigation hold since 2 Oct 2026: no assistant transcript in this group is deleted on schedule or at publication.' Transcripts of a member working on library hours are kept too.",
+      "name": "Any hold stops all scheduled deletion in the group",
+      "howItWorks": "While any hold is in place anywhere, no assistant transcript in the group is deleted on schedule or at publication, for any member. Release and the wipe are treated as in A.",
+      "inTheStory": "Every member's assistant panel says: 'A litigation hold is in place in this group: no assistant transcript is deleted on schedule or at publication.' A member's notes on library hours are kept for months too.",
       "gains": [
-       "The simplest to explain and to build.",
+       "Simplest to explain and build.",
        "The strongest answer to any later claim of destroyed evidence."
       ],
       "costs": [
-       "Unrelated internal notes accumulate for as long as the hold lasts, often months, reachable by the very demand the device-only rule guards against.",
-       "The band tells members outside the towing project that a legal threat exists, which may reveal a hidden project's trouble."
+       "Unrelated internal notes accumulate for as long as any hold lasts.",
+       "Tells members outside the towing project that a legal threat exists, which may reveal a hidden project's trouble."
       ],
-      "commitsYouTo": "One group switch, and accepting that a single threat suspends the group's protection everywhere."
+      "commitsYouTo": "Accepting that one threat suspends the protection everywhere."
      },
      {
       "label": "C",
-      "name": "Record the decision; members preserve by hand",
-      "howItWorks": "The reminder is answered by a reasoned record, 'Hold placed' or 'Not placed, because ...', with a checklist asking members to save their own transcripts. Devices keep deleting on schedule unless each member acts.",
-      "inTheStory": "Sam records 'Hold placed'. Paula must remember to export her transcripts before next week. Dev never opens the checklist, and his transcripts go at the time limit.",
+      "name": "Keep the hold a statement only",
+      "howItWorks": "As built today: 'hold in place' records the group's position and nothing else. When devices store transcripts, they delete on schedule regardless; preserving is each member's own discipline, perhaps prompted by a note on the action.",
+      "inTheStory": "Paula must save her own transcripts before next week. Dev never hears of it; his go at the time limit. Ray's wipe erases the hold statement too.",
       "gains": [
        "No new machinery."
       ],
       "costs": [
-       "The scheduled deletions keep running after notice, which is exactly what your August ruling says must stop.",
-       "Depends on every member acting in time."
+       "Contradicts the August ruling that deletion must stop once the group is on notice.",
+       "The group's own record proves notice, then shows destruction."
       ],
-      "commitsYouTo": "Reading the ruling's 'suspendable' as a matter for members' discipline rather than for the product."
+      "commitsYouTo": "Reading 'suspendable' as members' discipline rather than the product's."
      },
      {
       "label": "D",
-      "name": "Defer for counsel, and keep scheduled deletion switched off meanwhile",
-      "howItWorks": "Nothing about the hold is decided or built yet. To respect the August ruling, scheduled deletion is not switched on until it is.",
-      "inTheStory": "Sam sees no reminder. Paula's transcripts are kept anyway, because no deletion runs; so is everyone's, indefinitely.",
+      "name": "Defer, and keep device deletion unbuilt meanwhile",
+      "howItWorks": "Decide after counsel. Until then, device transcript deletion is not built.",
+      "inTheStory": "Nothing is deleted, because no deletion exists, for anyone, ever.",
       "gains": [
-       "Room to take counsel's view first.",
-       "No wrong design gets built."
+       "Room for counsel's view first.",
+       "Nothing wrong gets built."
       ],
       "costs": [
-       "Once transcripts are written to devices, they pile up with no deletion: the subpoena exposure the August ruling meant to remove.",
-       "The legal-pressure mark leads nowhere."
+       "Once transcripts are written to devices they pile up with no deletion: the exposure the August ruling meant to remove.",
+       "The wipe stays unblocked."
       ],
       "commitsYouTo": "Holding back part of the assistant's design until this is ruled."
      }
     ],
-    "tradeoff": "Keep enough to answer any accusation of destroyed evidence, without keeping so much that the group's internal notes lose the protection they were designed to have.",
+    "tradeoff": "Make the recorded hold do what it says, for enough material to answer any accusation of destroyed evidence, without keeping so much that the group's unrelated internal notes lose the protection they were designed to have.",
     "recommendation": {
      "choice": "A",
      "why": [
-      "Your August ruling says deletion must stop 'for relevant material', not for everything. A hold on the threatened project, with related projects added by an administrator, does exactly that, keeps protection for unrelated work, and records who placed and lifted it and why.",
-      "Placing should be quick: any one administrator, with a reason. Lifting should be heavy, because it restarts deletion that cannot be undone. The reminder clears by placing a hold or recording a reasoned 'No hold', which gives your 'stays open until cleared' ruling a real way to close.",
-      "My judgement, where the sources are silent: while any hold is on, the operator's full wipe of the group's record should refuse to run on the real record."
+      "Your August ruling says deletion must stop 'for relevant material'. Your October ruling already gives the group a dated, named, reasoned moment of notice. Option A makes that one act do the stopping, for the threatened project plus any the member names, so the record and the devices can never disagree.",
+      "Placing stays light and open to any member who can see the action, as built: a hold kept too long costs little, one placed too late costs a great deal. Releasing should be heavier, under your ruling that friction follows consequence. The strip shows only to members who can see the held project, so a hidden project's trouble stays hidden.",
+      "My judgement, where the sources are silent: while any hold is in place, the operator's wipe should refuse to run on the real record (the test store is unaffected), because it would erase both the material and the proof of the hold."
      ],
-     "risk": "An administrator may miss a related project. This is contained by filling in the threatened project automatically, by letting projects be added at any time, and by the record of the decision. Counsel's review of the defaults before the first group relies on them would be worth having."
+     "risk": "A member may miss a related project. This is contained by filling in the threatened project automatically, letting projects be added by a further statement at any time, and keeping the record of who decided what. A member can still clear their browser by hand; the strip asks them not to. Counsel's review of the defaults before a group relies on them would be worth having."
     },
     "howToAnswer": [
      "31: as recommended.",
-     "31: A, but lifting needs two administrators.",
+     "31: A, but only an administrator may release a hold.",
      "31: B. Group-wide, always; simplicity wins.",
      "31: before I decide, what would counsel need to see?"
     ],
-    "ifLeftOpen": "The legal-pressure mark works, but no reminder follows it and no hold exists. No transcript is written to or deleted from devices yet, so nothing is lost today. But scheduled deletion must not be switched on until this is ruled, and the reminder keeps waiting.",
+    "ifLeftOpen": "The reminder and the 'hold in place / released' statement work in the engine, and the redesigned interface will show them. They stop nothing. No transcript is written to or deleted from devices yet, so nothing is lost today, but the device deletion must not be built or switched on until this is ruled, and the operator's wipe stays unblocked.",
     "related": [
      {
       "n": 35,
-      "how": "The queue sketch includes the 'Consider a litigation hold' item; whether that sketch binds the redesign depends partly on this ruling."
+      "how": "The queue sketch still shows the old wording 'Consider a litigation hold · for an administrator'; the built reminder now goes to administrators and the member who marked the threat."
      },
      {
       "n": 28,
-      "how": "The reminder is a to-do in the administrators' queue; the member-facing name for that kind of item is question 28."
+      "how": "The reminder is an item in the members' list of things waiting; the plain name for that kind of item is question 28."
      }
     ],
     "glossary": [
@@ -16318,43 +16322,41 @@
       "plain": "The record of a member's session with the AI assistant, kept only on the member's device."
      },
      {
-      "term": "Project, case, administrator",
-      "plain": "A line of investigation; what a project publishes; a member who looks after membership and settings."
-     },
-     {
-      "term": "Action, correspondence",
-      "plain": "One outward engagement started from a plan's option; what was sent and received on it."
+      "term": "Action",
+      "plain": "One outward engagement with an addressee, with what was sent and received on it."
      },
      {
       "term": "Pressure mark",
       "plain": "A member's label on a received reply: legal, retaliation, discrediting or other."
      },
      {
-      "term": "Queue",
-      "plain": "The list of things waiting for a member's attention inside CivicOS."
+      "term": "Reminder",
+      "plain": "An item in a member's list of things waiting for attention inside CivicOS."
      },
      {
-      "term": "Full dialog, band",
-      "plain": "A stop that states what cannot be undone; a strip across a page stating a standing condition."
+      "term": "Reasoned act",
+      "plain": "An act that needs a written reason, corrected only by a later statement."
+     },
+     {
+      "term": "Strip",
+      "plain": "A line across the top of a page stating a standing condition."
      },
      {
       "term": "Operator's wipe",
-      "plain": "A deliberate act that clears the group's whole record."
+      "plain": "A deliberate act by the group's server operator that clears its whole record."
      }
     ],
     "sources": [
-     "docs/development/INVESTIGATIVE-SESSION.md 'TRANSCRIPT RETENTION' (DEC-61, Bob 2026-08-06)",
-     "docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md item 6",
-     "docs/architecture/BIO_Action_v0_1.md §4 rules 1, 7, 12",
-     "build/requirements/actions.md R48 (pressure; K597 (1))",
-     "build/plan/action-design/deltas.md §4 (the fifth queue kind); tests.md (litigation-hold reminder)",
-     "build/plan/action-design/surfaces.html (the queue item wording)",
-     "build/rulings.md K611, K613 (2), K614, K624 (5)",
-     "build/plan/action-fold/t18-entries.md 'Not in T18'; build/plan/archive/T19.md (N-A19 kept, Bob's doctrine)",
-     "docs/development/DECISIONS.md DEC-87, DEC-88, DEC-94 (3)",
-     "civicos-ui/app.html aiSessionTranscript (reads a device transcript; nothing writes or deletes one)",
-     "build/requirements/record-core.md R21-R23 and control-plane.md R39 (the store purge, a deliberate operator act)",
-     "Checked K628-K859: none settles or changes this question."
+     "build/rulings.md K899 (7), K901 (Q7: any member; reminder to administrators and the marker), K902 (Q7 fold), K916, K918 (actionhold graded reasoned), K919, K920, K923 (T20 layer 11 closed)",
+     "build/requirements/actions.md R48, R52 ('Nothing here suspends a purge'), R54 (holdsDue; the action's state not asked)",
+     "build/requirements/queue-producers.md R19 (litigation-hold OBLIGATION to administrators and the marker); build/requirements/queue.md R1, R12",
+     "build/plan/draft-T20-answers.md §C (C.1-C.6)",
+     "bio-plane/src/queue-producers/index.mjs (HOLD_STATE label; #obligationsLitigationHold summary and detail); bio-plane/src/queue/index.mjs OBLIGATION_DOOR_DETAIL; op-declarations actionhold (classes admin, member, probe; capability contribute); affordances actionhold 'reasoned'",
+     "bio-plane/src/actions/schema.mjs: action_holds among the tables the purge clears; record-core R21-R23; control-plane R39 (purge, confirmed by namespace; classes admin, probe)",
+     "docs/development/INVESTIGATIVE-SESSION.md 'TRANSCRIPT RETENTION' (DEC-61); docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md item 6",
+     "civicos-ui/app.html aiSessionTranscript (reads a device transcript; nothing writes or deletes one); no pressure or hold screen in the old interface",
+     "build/plan/action-design/surfaces.html (old queue wording); K613 (2), K614; DEC-36, K903 (4); DEC-69, DEC-70; DEC-87, DEC-88 (4); DEC-94 (3)",
+     "Checked build/plan/next.md and draft-T21.md: the device transcript store is not planned."
     ],
     "size": "session"
    }
