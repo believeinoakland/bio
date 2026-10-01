@@ -35,3 +35,7 @@ Size (session_01CwJSXamDinAWCKtAtRctev): test runs 15, module lines 2926
 ## J1 · REPORT
 
 Found outside my module (details in my record): (1) build/requirements/instance-setup.md Uses still names civicosUserAgent under legacy-checks, and RISK_TIERS/riskTierState 'until actions holds them'; both now come from acquisition and actions (BOB's wording). (2) bio-plane/dist/bio-plane.bundled.mjs (not_product) is stale from this job's src/index.mjs and src/setup.mjs changes; regenerate at the layer close. (3) Red on tranche/T18 before this job, measured on a clean checkout: test/m/control-plane R36 (N419, control-plane's entry this layer) and test/system/fleetbundles 'agent-worker's 153 inputs are all recorded' (agent-worker or bundler). Neither moves with this job.
+
+## J2 · COMPLETE
+
+instance-setup T18 done and pushed (job/T18/instance-setup @ e5e143a78f). User agent from acquisition; the selftest, livefire, runtime, cpuprobe and bootstrap dispatch moved out of src/index.mjs into setup.mjs (INSTANCE_SETUP_OPS, instanceSetupOp, bootstrapOp; legacy-index +5/-44, the added lines listed by the ownership check); the eight converts carried in two new Worker suites. Nothing awaiting stamp, nothing deferred. Module tests 84/84; format, architecture, coverage (46/46) and ownership 0 failures. Ready to merge early for op-declarations.
