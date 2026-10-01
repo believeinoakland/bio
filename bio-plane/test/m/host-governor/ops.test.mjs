@@ -189,7 +189,7 @@ test("R18, R19: the Worker's arm answers exactly the two ops, and null for any o
 });
 
 /* ---- through the whole plane ---- */
-const SRC = fileURLToPath(new URL("../../../src/index.mjs", import.meta.url));
+const SRC = fileURLToPath(new URL("../../../src/plane/index.mjs", import.meta.url));   // plane R6's entry (K846)
 let mf;
 const T = { admin: "hg-adm", member: "hg-mem", probe: "hg-prb" };
 const call = async (q, body) => {
