@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { world as retrievalWorld, V, sha, infoMd } from "../retrieval/fixture.mjs";
 import { Ratification, ratificationOf, ratificationOps, RELEASE_ACK_MAX,
          RELEASE_CHECKS } from "../../../src/ratification/index.mjs";
-import { parseFrontmatter, canonicalJson } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter, canonicalJson } from "../../../src/record-grammar/index.mjs";
 
 const OWNER = "o";
 const WHO = V("ann");
@@ -197,7 +197,12 @@ test("R22, R27: a member is crucial when the record's criticality or the documen
   w.info("INFO-2026-0525-declared", { fields: { criticality: "crucial" }, criticality: "supporting" });
   w.info("INFO-2026-0526-column", { fields: { criticality: "supporting" }, criticality: "crucial" });
   w.info("INFO-2026-0527-plain");
-  assert.equal(w.row(`SELECT criticality FROM bundles WHERE bundle_id=?`, "INFO-2026-0525-declared").criticality, "supporting");
+  /* K781 (4): since N425 (promotion R39) a document stating `criticality: crucial` is recorded crucial whatever its
+     envelope said, so the record and the document disagree only for a row written before N425. That row is set here as
+     such a promotion left it, the column `supporting` under a document that says crucial; the verdict is unchanged. */
+  assert.equal(w.row(`SELECT criticality FROM bundles WHERE bundle_id=?`, "INFO-2026-0525-declared").criticality, "crucial",
+    "N425: the document's own criticality is recorded");
+  w.st.sql.exec(`UPDATE bundles SET criticality='supporting' WHERE bundle_id=?`, "INFO-2026-0525-declared");
   const r = w.release(await w.select(["INFO-2026-0527-plain", "INFO-2026-0526-column", "INFO-2026-0525-declared"]));
   assert.deepEqual([r.reason, r.offenders], ["CRUCIAL_IN_BATCH", ["INFO-2026-0525-declared", "INFO-2026-0526-column"]]);
   assert.equal(w.state("INFO-2026-0527-plain"), "collected");

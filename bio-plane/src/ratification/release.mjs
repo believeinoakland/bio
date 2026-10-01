@@ -1,8 +1,9 @@
 /* ratification — the bulk release (R20–R27; N400, K583, K636): the collected-to-verified transition of many Information
  * documents at once, over a selection (Intake Doctrine §4, "What verification asserts, and batch ratification").
  * Extracted from `legacy-store` in T18 (`Store.release`, `RELEASE_ACK_MAX` and the two front-matter helpers it calls,
- * `#appendStateHistory` and `#setScalar`, which `retire` still calls, so the store keeps its own until `retire` moves);
- * the store's op map reaches it through `ratificationOps` (§12.2). The legacy code's comments moved with it.
+ * `#appendStateHistory` and `#setScalar`); the store's op map reaches it through `ratificationOps` (§12.2). The legacy
+ * code's comments moved with it. Since T19 layer 8 the bulk retirement (`./retire.mjs`, R28–R31) writes each member
+ * through the same `moveMember` below, so the two transitions splice a document one way.
  *
  * S-11 step 5, the last rung of the ladder: bulk RELEASE of Information, collected -> verified over a selection, weight
  * `refuse`, whole set or nothing. Decided by Bob 2026-07-27 and specified in Intake Doctrine v1.2: what legitimizes a
@@ -24,10 +25,10 @@
  *    member BEFORE any state moves, offenders named, set refused whole (R27).
  *
  * It reads record-core's `bundles` and `files` (its R37 read contract) and writes only through `promotion`'s `promote`
- * (R24). `deps` is `{sql, promotion, retrieval}`. A refusal with a catalogue row (C-32.1, C-33.10–C-33.12, copied into
+ * (R24, and R30 for the retirement). `deps` is `{sql, promotion, retrieval}`. A refusal with a catalogue row (C-32.1, C-33.10–C-33.12, copied into
  * `./checks.mjs`' `RELEASE_CHECKS`) carries its `code`, `check` and `translation` (DEC-49). */
 
-import { parseFrontmatter, isMachineIdentity, createSha256 } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter, isMachineIdentity, createSha256 } from "../record-grammar/index.mjs";
 import { stampInstant } from "../record-core/index.mjs";
 import { rowOf } from "./checks.mjs";
 
@@ -152,61 +153,73 @@ export function release({ sql, promotion, retrieval },
   const when = stampInstant("second");
   const released = [];
   for (const id of sel.members) {
-    const liveMd = one(sql, `SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
-    const cur = one(sql, `SELECT bundle_sha, current_state FROM bundles WHERE bundle_id=?`, id);
-    if (!liveMd || liveMd.content === null)
-      return { ok: false, reason: "NO_DOCUMENT", bundleId: id, releasedSoFar: released };
-    let text = liveMd.content;
-    const withHistory = appendStateHistory(text, {
-      timestamp: when, from_state: cur.current_state, to_state: "verified",
+    const moved = moveMember({ sql, promotion }, {
+      id, when, author: who, to: "verified",
       blurb: `batch release via selection ${handle}; acknowledgment and mitigation in Session Log`,
-      author: who });
-    if (!withHistory)
+      sessionEntry: (from) => `### Session ${when} | Released (batch) | ${who}\n`
+                            + `Trigger: selection ${handle}\n`
+                            + `Changes: state ${from} to verified.\n`
+                            + `Acknowledgment: ${ack}\n`
+                            + `Mitigation: ${mit}\n` });
+    if (moved.stop === "NO_DOCUMENT")
+      return { ok: false, reason: "NO_DOCUMENT", bundleId: id, releasedSoFar: released };
+    if (moved.stop === "UNSPLICEABLE_STATE_HISTORY")
       return { ok: false, reason: "UNSPLICEABLE_STATE_HISTORY", bundleId: id, releasedSoFar: released,
                detail: "this document's state_history block cannot be extended in place, and a release "
                      + "recording no transition would leave prior_state pointing at a history the "
                      + "document does not carry (C-4.2)" };
-    text = withHistory;
-    text = setScalar(text, "prior_state", cur.current_state);
-    text = setScalar(text, "current_state", "verified");
-    text = setScalar(text, "last_updated", `"${when}"`);
-    const entryLog = `### Session ${when} | Released (batch) | ${who}\n`
-                   + `Trigger: selection ${handle}\n`
-                   + `Changes: state ${cur.current_state} to verified.\n`
-                   + `Acknowledgment: ${ack}\n`
-                   + `Mitigation: ${mit}\n`;
-    const at = text.indexOf("## Session Log");
-    if (at < 0) text += "\n## Session Log\n\n" + entryLog;
-    else {
-      const nxt = text.indexOf("\n## ", at + 1);
-      const cutAt = nxt === -1 ? text.length : nxt + 1;
-      text = text.slice(0, cutAt) + entryLog + "\n" + text.slice(cutAt);
-    }
-
-    const carried = [];
-    for (const r of rows(sql,
-      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, id))
-      carried.push(r.content !== null
-        ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
-        : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
-
-    const bytes = new TextEncoder().encode(text);
-    const fm = parseFrontmatter(text).data || {};
-    const promoted = promotion.promote({
-      bundleId: id, base: cur.bundle_sha, snapKey: `${when.replace(/[-:]/g, "")}_${rand(4)}`,
-      author: who,
-      files: [{ path: "bundle.md", text, bytes: bytes.length,
-                sha256: createSha256().update(bytes).hex() }, ...carried],
-      meta: { object_type: "information", title: fm.title,
-              current_state: "verified", prior_state: cur.current_state,
-              created: fm.created, last_updated: when,
-              criticality: fm.criticality ?? null },
-    });
-    if (!promoted.ok) return { ...promoted, bundleId: id, releasedSoFar: released };
+    if (!moved.promoted.ok) return { ...moved.promoted, bundleId: id, releasedSoFar: released };
     released.push(id);
   }
   return { ok: true, handle, released: released.sort(), acknowledgment: ack, mitigation: mit,
            weight: "refuse", drift: sel.drift };
+}
+
+/** R24, R30: one member's transition, written as a new version through `promotion`'s `promote` on its held
+ *  `bundle_sha`: its `state_history` gains `{timestamp: when, from_state: <its state>, to_state: to, blurb, author}`;
+ *  `prior_state` is its former state, `current_state` `to`, `last_updated` the instant; `sessionEntry(from)`'s lines
+ *  are placed at the end of the Session Log section (the section is added at the document's end when absent); every
+ *  other file is carried unchanged, and the new version's `criticality` is the document's. Answers `{stop}` when
+ *  the member's `bundle.md` is gone (`NO_DOCUMENT`) or its `state_history` cannot be extended in place
+ *  (`UNSPLICEABLE_STATE_HISTORY`), each for its caller to word; else `{promoted}`, `promote`'s answer as it gave it. */
+export function moveMember({ sql, promotion }, { id, when, author, to, blurb, sessionEntry }) {
+  const liveMd = one(sql, `SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
+  const cur = one(sql, `SELECT bundle_sha, current_state FROM bundles WHERE bundle_id=?`, id);
+  if (!liveMd || liveMd.content === null) return { stop: "NO_DOCUMENT" };
+  let text = appendStateHistory(liveMd.content, {
+    timestamp: when, from_state: cur.current_state, to_state: to, blurb, author });
+  if (!text) return { stop: "UNSPLICEABLE_STATE_HISTORY" };
+  text = setScalar(text, "prior_state", cur.current_state);
+  text = setScalar(text, "current_state", to);
+  text = setScalar(text, "last_updated", `"${when}"`);
+  const entryLog = sessionEntry(cur.current_state);
+  const at = text.indexOf("## Session Log");
+  if (at < 0) text += "\n## Session Log\n\n" + entryLog;
+  else {
+    const nxt = text.indexOf("\n## ", at + 1);
+    const cutAt = nxt === -1 ? text.length : nxt + 1;
+    text = text.slice(0, cutAt) + entryLog + "\n" + text.slice(cutAt);
+  }
+
+  const carried = [];
+  for (const r of rows(sql,
+    `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, id))
+    carried.push(r.content !== null
+      ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
+      : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+
+  const bytes = new TextEncoder().encode(text);
+  const fm = parseFrontmatter(text).data || {};
+  return { promoted: promotion.promote({
+    bundleId: id, base: cur.bundle_sha, snapKey: `${when.replace(/[-:]/g, "")}_${rand(4)}`,
+    author,
+    files: [{ path: "bundle.md", text, bytes: bytes.length,
+              sha256: createSha256().update(bytes).hex() }, ...carried],
+    meta: { object_type: "information", title: fm.title,
+            current_state: to, prior_state: cur.current_state,
+            created: fm.created, last_updated: when,
+            criticality: fm.criticality ?? null },
+  }) };
 }
 
 /* Append one entry to the `state_history` block, handling the inline-empty and populated shapes the corpus actually

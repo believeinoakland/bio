@@ -11,7 +11,7 @@
  * row's `where` names the region in this module that mints it. The case-document formats and their three predicates
  * are `publication`'s (its R20). The legacy code's comments moved with it. */
 
-import { ISO_TS_RE, BUNDLE_ID_RE, BASIS_GRADES, GRADE_AXES } from "../../checks/bio-checks.mjs";
+import { ISO_TS_RE, BUNDLE_ID_RE, BASIS_GRADES, GRADE_AXES } from "../record-grammar/index.mjs";
 import { STRENGTH_STATES } from "../strength/index.mjs";
 import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED,
          caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures,

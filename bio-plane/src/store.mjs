@@ -1,6 +1,4 @@
 import { DurableObject } from "cloudflare:workers";
-/* The catalog's own frontmatter parser, its type map (REC-10, the MAP RULE) and its digest. */
-import { parseFrontmatter, createSha256, normalizeType } from "../checks/bio-checks.mjs";
 /* REC-132 / C-55: the reserved member id's refusal row, and the audit's report of it. */
 import { MEMBER_ID_CHECKS } from "../checks/bio-checks.mjs";
 import { actionsOf, actionsOps } from "./actions/index.mjs";
@@ -284,7 +282,6 @@ export class Store extends DurableObject {
   async schedProbeLog() { return await schedulerOf(this.ctx, this.env).probeLog(); }
   async schedAlarmAt() { return await schedulerOf(this.ctx, this.env).alarmAt(); }
 
-  static EDGE_REASON_MAX = 160;
   /* R20–R22, R39: disposing a selection of inquiries: inquiry's. */
   dispose(...a) { return inquiryOf(this.ctx).dispose(...a); }
 
@@ -295,148 +292,6 @@ export class Store extends DurableObject {
   publishedCaseRegistryFor(...a) { return publicationOf(this.ctx).publishedCaseRegistryFor(...a); }
   observationsNamingAuthor(...a) { return publicationOf(this.ctx).observationsNamingAuthor(...a); }
   attributionStatedFor(...a) { return publicationOf(this.ctx).attributionStatedFor(...a); }
-
-  /* REC-181: RETIREMENT'S ONE CITATION PREDICATE, shared by `retire` and by
-   * `promote`'s transition into `retired`. §4.1 of State Rules v1.5 (BOB #30):
-   * a retired item is not citable, and the terminal transition refuses while a
-   * live edge cites it (`CITED`). `retire` asked it; `promote` — the ONE write
-   * path, which `retire` itself calls — did not, so a caller holding
-   * `contribute` could walk verified -> retired by `op=promote` with live legs
-   * still resting on the item, the state retire exists to refuse. Both doors
-   * now ask THIS, so they cannot answer differently. */
-  static RETIRE_CITED_DETAIL = "these are still cited by live edges. Retiring them would leave those Projects "
-    + "pointing at retired material, which C-6.2 treats as an error whose remedy is to "
-    + "sever the edge with a reason. Sever first, then retire.";
-  #retirementCitedBy(id) {
-    return connectionsOf(this.ctx).citesInto(id).confirmed;
-  }
-
-  /* S-11 step 4: bulk RETIREMENT of Information, weight `refuse`.
-   *
-   * Heavier than step 3's disposition for one structural reason: `retired` is
-   * TERMINAL in the catalog's table (collected -> verified -> retired, and
-   * retired -> nothing), where every Problem disposition is reversible. A wrong
-   * disposition is corrected by disposing again. A wrong retirement cannot be
-   * undone through the state machine at all, so every refusal here is worth more
-   * than the equivalent refusal there.
-   *
-   * TWO GUARDS, and the second is the doctrinal one.
-   *
-   * First, only `verified` -> `retired`, because that is the only legal edge.
-   * Retiring something merely `collected` would skip the step where a human
-   * looked at it, which is precisely what the intake doctrine exists to
-   * protect.
-   *
-   * Second, INFORMATION A PROJECT STILL CITES IS REFUSED. Nothing in the catalog
-   * stops this, and that is why it matters: C-6.2 treats an unresolvable
-   * reference target as an ERROR whose remediations are "restore target from
-   * history", "re-point to the successor", or "sever the edge with a reason
-   * note". A bulk retirement that silently stranded live citations would
-   * manufacture exactly that error condition at whatever scale the operator
-   * happened to select. The citing Projects are NAMED, because an operator told
-   * only "refused" cannot act, and severing is C-6.2's own remedy.
-   *
-   * A SEVERED edge does not count as a citation. Severing is the recorded
-   * decision to stop relying on something, so treating a severed edge as a live
-   * dependency would make the refusal unclearable by the very act doctrine
-   * prescribes for clearing it. */
-  retire({ handle, reason = "", viewer = null, owner = null, author = null } = {}) {
-    const why = String(reason ?? "").trim();
-    if (!why)
-      return { ok: false, reason: "NO_REASON",
-               detail: "retirement is terminal in the state machine, so it records WHY. There is no move "
-                     + "back out of retired, and an unexplained one-way change is not a record." };
-    if (why.length > Store.EDGE_REASON_MAX || /["\\\r\n]/.test(why))
-      return { ok: false, reason: "BAD_REASON",
-               detail: `a reason is at most ${Store.EDGE_REASON_MAX} characters and cannot contain a quote, `
-                     + `a backslash, or a newline` };
-
-    const sel = this.selectionResolve({ handle, viewer, owner, weight: "refuse" });
-    if (!sel.ok) return sel;
-    if (!sel.members.length)
-      return { ok: false, reason: "EMPTY_SELECTION", handle, drift: sel.drift,
-               detail: "this selection resolves to no members, so there is nothing to retire" };
-
-    const notInfo = [], illegal = [], cited = [];
-    for (const id of sel.members) {
-      const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
-      if (!b || b.object_type !== "information") { notInfo.push(id); continue; }
-      if (b.current_state !== "verified") { illegal.push({ id, from: b.current_state }); continue; }
-      /* Live citations only, through the ONE #citesInto predicate (shared with
-         op=affordances, which publishes retire's availability from it): a
-         severed edge is a recorded decision to stop relying and does not block. */
-      const citedBy = this.#retirementCitedBy(id);
-      if (citedBy.length) cited.push({ id, citedBy });
-    }
-    if (notInfo.length)
-      return { ok: false, reason: "NOT_INFORMATION", offenders: notInfo.sort(),
-               detail: "retirement moves an Information state, and this selection carries something else. "
-                     + "The set is refused whole rather than narrowed." };
-    if (illegal.length)
-      return { ok: false, reason: "ILLEGAL_TRANSITION", to: "retired",
-               offenders: illegal.sort((a, b) => a.id < b.id ? -1 : 1),
-               detail: "only verified Information may be retired. Something still collected has not been "
-                     + "verified by anyone, and retiring it would skip that step; something already "
-                     + "retired has nowhere further to go, because retired is terminal." };
-    if (cited.length)
-      return { ok: false, reason: "CITED", offenders: cited.sort((a, b) => a.id < b.id ? -1 : 1),
-               detail: Store.RETIRE_CITED_DETAIL };
-
-    const when = stampInstant("second");
-    const retired = [];
-    for (const id of sel.members) {
-      const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
-      const cur = this.#one(`SELECT bundle_sha, current_state FROM bundles WHERE bundle_id=?`, id);
-      if (!liveMd || liveMd.content === null)
-        return { ok: false, reason: "NO_DOCUMENT", bundleId: id, retiredSoFar: retired };
-      let text = liveMd.content;
-      const withHistory = Store.#appendStateHistory(text, {
-        timestamp: when, from_state: cur.current_state, to_state: "retired",
-        blurb: why, author: author || "member" });
-      if (!withHistory)
-        return { ok: false, reason: "UNSPLICEABLE_STATE_HISTORY", bundleId: id, retiredSoFar: retired,
-                 detail: "this document's state_history block cannot be extended in place, and a "
-                       + "retirement recording no transition would leave prior_state pointing at a "
-                       + "history the document does not carry (C-4.2)" };
-      text = withHistory;
-      text = Store.#setScalar(text, "prior_state", cur.current_state);
-      text = Store.#setScalar(text, "current_state", "retired");
-      text = Store.#setScalar(text, "last_updated", `"${when}"`);
-      const entry = `### Session ${when} | Retired | ${author || "member"}\n`
-                  + `Trigger: selection ${handle}\n`
-                  + `Changes: state ${cur.current_state} to retired. Reason: ${why}.\n`;
-      const at = text.indexOf("## Session Log");
-      if (at < 0) text += "\n## Session Log\n\n" + entry;
-      else {
-        const nxt = text.indexOf("\n## ", at + 1);
-        const cutAt = nxt === -1 ? text.length : nxt + 1;
-        text = text.slice(0, cutAt) + entry + "\n" + text.slice(cutAt);
-      }
-
-      const carried = [];
-      for (const r of this.sql.exec(
-        `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, id))
-        carried.push(r.content !== null
-          ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
-          : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
-
-      const bytes = new TextEncoder().encode(text);
-      const fm = parseFrontmatter(text).data || {};
-      const promoted = this.promote({
-        bundleId: id, base: cur.bundle_sha, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
-        author: author || "member",
-        files: [{ path: "bundle.md", text, bytes: bytes.length,
-                  sha256: createSha256().update(bytes).hex() }, ...carried],
-        meta: { object_type: "information", title: fm.title,
-                current_state: "retired", prior_state: cur.current_state,
-                created: fm.created, last_updated: when,
-                criticality: fm.criticality ?? null },
-      });
-      if (!promoted.ok) return { ...promoted, bundleId: id, retiredSoFar: retired };
-      retired.push(id);
-    }
-    return { ok: true, reason: why, handle, retired: retired.sort(), weight: "refuse", drift: sel.drift };
-  }
 
   /* REC-13 / REC-124 / REC-136: the conclusion and a project's conclusion record are basis-versions' (R16–R23). */
   conclude(a) { return basisVersionsOf(this.ctx).conclude(a); }
@@ -468,49 +323,6 @@ export class Store extends DurableObject {
 
 
   narrow(a) { return basisVersionsOf(this.ctx).narrow(a); }
-
-  /* Rewrite ONE column-0 scalar inside the frontmatter, leaving every other
-     byte alone. Line-oriented on purpose: the same approach the monitor takes,
-     and the reason is that this repo has no frontmatter SERIALIZER, only a
-     parser. Re-emitting a parsed document would reorder keys, drop comments and
-     renormalise quoting across the whole file to change one field. */
-  /* Append one entry to the `state_history` block, handling the inline-empty and
-     populated shapes the corpus actually contains, exactly as #spliceReferences
-     does for references. Returns null if the block is in a shape this restricted
-     grammar cannot extend, so the caller refuses rather than guesses. */
-  static #appendStateHistory(text, e) {
-    const lines = text.split("\n");
-    if (lines[0] !== "---") return null;
-    const end = lines.indexOf("---", 1);
-    if (end === -1) return null;
-    const block = [`  - timestamp: "${e.timestamp}"`,
-                   `    from_state: ${e.from_state}`,
-                   `    to_state: ${e.to_state}`,
-                   `    blurb: "${e.blurb}"`,
-                   `    author: ${e.author}`];
-    let at = -1;
-    for (let i = 1; i < end; i++) if (/^state_history:/.test(lines[i])) { at = i; break; }
-    if (at === -1) return [...lines.slice(0, end), "state_history:", ...block, ...lines.slice(end)].join("\n");
-    const rest = lines[at].slice("state_history:".length).trim();
-    if (rest === "[]") return [...lines.slice(0, at), "state_history:", ...block, ...lines.slice(at + 1)].join("\n");
-    if (rest !== "") return null;
-    /* Populated block: find its end and append, so entries stay chronological. */
-    let last = at;
-    for (let i = at + 1; i < end; i++) {
-      if (/^\s/.test(lines[i]) && lines[i].trim() !== "") last = i;
-      else break;
-    }
-    return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
-  }
-
-  static #setScalar(text, key, value) {
-    const lines = text.split("\n");
-    const end = lines.indexOf("---", 1);
-    for (let i = 1; i < (end === -1 ? lines.length : end); i++) {
-      if (lines[i].startsWith(key + ":")) { lines[i] = `${key}: ${value}`; return lines.join("\n"); }
-    }
-    return text;
-  }
 
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -1084,11 +896,6 @@ export class Store extends DurableObject {
   }
 
 
-  static #rand(n = 32) {
-    return [...crypto.getRandomValues(new Uint8Array(n))]
-      .map((b) => b.toString(16).padStart(2, "0")).join("");
-  }
-
   bootstrapState(...a) { return credentialsOf(this.ctx).bootstrapState(...a); }
 
   claim(...a) { return credentialsOf(this.ctx).claim(...a); }
@@ -1575,10 +1382,6 @@ export class Store extends DurableObject {
         ...monitoringOps(monitoringOf(this.ctx), url, body),
         stats: () => recordOf(this.ctx).stats({ capacity: url.searchParams.get("capacity") === "1",
                                    viewer: url.searchParams.has("viewer") ? url.searchParams.get("viewer") : undefined }),
-        retire: () => this.retire({ handle: url.searchParams.get("handle"),
-          reason: url.searchParams.get("reason"),
-          viewer: url.searchParams.get("viewer"), owner: url.searchParams.get("owner"),
-          author: url.searchParams.get("author") }),
         /* REC-54 / D-200. ONE bundle, no handle and no owner: this is a
            correction to a named document's register, not a set application, so
            it takes the target and the viewer/author stamps the control plane

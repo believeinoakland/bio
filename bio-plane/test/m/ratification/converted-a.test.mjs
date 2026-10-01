@@ -17,7 +17,7 @@ import { world, plane, newKey, signCase, signBundle, cleanCase, cleanInfoMd, fmT
   from "./fixture.mjs";
 import { caseRatifyOp, ratifyOp } from "../../../src/ratification/ops.mjs";
 import { caseConclusionRowLines, checkCaseDocument, CASE_MEMBER_ROLES } from "../../../src/ratification/index.mjs";
-import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 const Q1 = "INQ-2026-0001-first", Q2 = "INQ-2026-0002-second", CASE = "CASE-2026-0001";
 const OWN = { version: "first", claim: "the council approved it", falsifier: "f", falsifier_override: null,
@@ -41,7 +41,7 @@ async function caseWorld({ mutate = (d) => d, body = CASE_BODY } = {}) {
   const docSha = w.caseDoc(CASE, 1, text);
   w.pub.facts.set(`${CASE}#1`, { ok: true, doc: { case_id: CASE, edition: 1, doc_sha: docSha, text },
                                  attribution: { reached: [], legacy: [], stated: [], current: [] },
-                                 signers: w.membership.attestingKeys(), memberBasis: null, priorCase: null });
+                                 signers: w.credentials.attestingKeys(), memberBasis: null, priorCase: null });
   const sig = await signCase(key, CASE, 1, docSha);
   const run = async (o = {}) => {
     const p = plane(w, o);
@@ -279,7 +279,7 @@ test("R6 (mk6 §2): op=ratify copies to the published store only the bundle's pu
 
 /* ============================================================ signer-enrolment.test.mjs (§4) */
 
-test("R4, R7 (signer-enrolment §4): the gate's signers are membership's attesting keys; a revoked member's key, an invited member's key and an unregistered key are SIG_UNKNOWN_KEY naming the key; an active non-owner's key is weighed and refused on standing; the owner's crosses", async () => {
+test("R4, R7 (signer-enrolment §4): the gate's signers are credentials' attesting keys (K757); a revoked member's key, an invited member's key and an unregistered key are SIG_UNKNOWN_KEY naming the key; an active non-owner's key is weighed and refused on standing; the owner's crosses", async () => {
   const w = world();
   const K = { alice: await newKey(), bo: await newKey(), jonah: await newKey(), kestrel: await newKey(),
               stranger: await newKey() };
@@ -291,10 +291,10 @@ test("R4, R7 (signer-enrolment §4): the gate's signers are membership's attesti
   w.promote(DOC, cleanInfoMd(DOC), "information");
   w.pub.resting.set(DOC, [{ case_id: CASE, finding: FIND, project: P }]);
   const sha = w.sha(DOC);
-  const attesting = w.membership.attestingKeys().map((k) => k.key_b64).sort();
+  const attesting = w.credentials.attestingKeys().map((k) => k.key_b64).sort();
   assert.deepEqual(attesting, [K.alice.keyB64, K.bo.keyB64].sort(), "fixture: two of the four registered keys attest");
   const facts = w.op("gatefacts", { id: DOC, viewer: V("alice") });
-  assert.deepEqual(facts.signers.map((s) => s.key_b64).sort(), attesting, "R7: the gate reads membership's one predicate");
+  assert.deepEqual(facts.signers.map((s) => s.key_b64).sort(), attesting, "R7: the gate reads credentials' one predicate (its R11)");
   const weigh = async (who) => {
     const p = plane(w);
     return ratifyOp(p.request({ bundleId: DOC, expectedSha: sha, sig: await signBundle(K[who], DOC, sha) }), p.stub, p.ctx);
@@ -308,5 +308,5 @@ test("R4, R7 (signer-enrolment §4): the gate's signers are membership's attesti
   out.alice = await weigh("alice");
   assert.deepEqual([out.alice.status, out.alice.body.ok, out.alice.body.attestor], [200, true, "alice"]);
   const accepted = Object.entries(out).filter(([, r]) => r.body.reason !== "SIG_UNKNOWN_KEY").map(([k]) => K[k].keyB64).sort();
-  assert.deepEqual(accepted, attesting, "the gate accepts a signature exactly from the keys membership says attest");
+  assert.deepEqual(accepted, attesting, "the gate accepts a signature exactly from the keys credentials says attest");
 });

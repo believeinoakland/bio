@@ -23,7 +23,7 @@ import { assembleCaseContainer as assembleContainer } from "../publication/worke
 import { partsHeld, withRegisterChecks } from "../provenance/index.mjs";
 import { userAgent } from "../acquisition/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, isPublicHttpsLocator,
-         MACHINE_CLASS_PREFIX } from "../../checks/bio-checks.mjs";
+         MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 import { rowOf, isCaseMemberBytes, completenessFields, withCaseMemberChecks } from "./checks.mjs";
 import { machineCaseRefusal, operatorCaseRefusal, testimonyCaseRefusal, attributionUnchosenRefusal,
          attributionStaleRefusal } from "./refusals.mjs";

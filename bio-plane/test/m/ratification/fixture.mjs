@@ -1,7 +1,9 @@
-/* ratification over the modules it uses. record-core, membership, promotion and publication are the real ones, on a
-   real SQLite database (node:sqlite) standing in for a Durable Object's storage: the head, the transaction, the
-   authority and sight questions, the registrations (R8, R9), publication's tables and its two commits (R22, with R35)
-   are theirs. What basis-versions, provenance and inquiry provide is a provider the test controls, as
+/* ratification over the modules it uses. record-core, membership, credentials, promotion and publication are the real
+   ones, on a real SQLite database (node:sqlite) standing in for a Durable Object's storage: the head, the transaction,
+   the authority and sight questions, the attesting keys (credentials R11, K757), the registrations (R8, R9), the mint
+   seed (record-core R70), publication's tables and its two commits (R22, with R35) are theirs. The record carries
+   inquiry-grammar's grammar (its R6, record-core R67), registered as the store's composition root registers it, so
+   C-2.8's inquiry arm runs in op=ratify's gate as it does on the store's host (K790). What basis-versions, provenance and inquiry provide is a provider the test controls, as
    `ratificationOf`'s deps take them (the conclusion reads of R1, the gate facts of R7); so are the publication reads a
    test steers (the case document facts, the pins, what rests on a bundle). Every call to publication is recorded, so a
    test can say what this module handed it. Every test drives `ratification` at its interface: the store half
@@ -11,6 +13,8 @@ import { DatabaseSync } from "node:sqlite";
 import { createHash, webcrypto } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
+import { credentialsOf } from "../../../src/credentials/index.mjs";
+import { registerInquiryGrammar } from "../../../src/inquiry-grammar/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { publicationOf } from "../../../src/publication/index.mjs";
 import { ratificationOf, ratificationOps } from "../../../src/ratification/index.mjs";
@@ -94,6 +98,11 @@ export function world() {
   record.migrate();
   const membership = membershipOf(host, { record });
   membership.migrate();
+  /* credentials after membership, as the composition root migrates them (K789): its tables (signers among them), its
+     listener and its claim fact registered with membership (its R16, R17, R20) */
+  const credentials = credentialsOf(host, { record, membership });
+  credentials.migrate();
+  registerInquiryGrammar(record);
   const promotion = promotionOf(host, { record, membership, now: () => NOW });
   promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
   /* the columns of inquiry's `inquiry_basis` and connections' `refs` that R7's facts join, as their writers fill them */
@@ -163,16 +172,17 @@ export function world() {
       return typeof fn === "function" ? (...a) => { calls.push([k, ...a]); return fn(...a); } : fn;
     },
   });
-  const r = ratificationOf(host, { storage: st, record, membership, promotion, provenance, inquiry, basisVersions,
-                                   publication });
+  const r = ratificationOf(host, { storage: st, record, membership, credentials, promotion, provenance, inquiry,
+                                   basisVersions, publication });
   let n = 0;
   const w = {
-    st, host, record, membership, promotion, r, bv, key, registers, holds, evidence, pub, publication, calls,
+    st, host, record, membership, credentials, promotion, r, bv, key, registers, holds, evidence, pub, publication, calls,
     ops: {},   /* stand-ins for other modules' Durable Object ops, by name (the Worker half's tests) */
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
     sha: (id) => record.head(id)?.bundleSha ?? null,
-    /** An active member, and optionally a registered active signing key. */
+    /** An active member, and optionally a registered active signing key (a credentials `signers` row, as R6 leaves
+     *  one). */
     member(id, { role = "member", signer = null } = {}) {
       st.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
                    VALUES (?, ?, ?, ?, 'active', '["contribute"]', 't', 't')`, id, `Cover ${id}`, `h_${id}`, role);

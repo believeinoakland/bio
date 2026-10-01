@@ -33,7 +33,7 @@ async function setup({ mutate = (d) => d, edition = 1, conclusions = true } = {}
   const docSha = w.caseDoc(CASE, edition, text);
   const facts = () => ({ ok: true, doc: { case_id: CASE, edition, doc_sha: docSha, text },
                          attribution: w.publication.attributionFacts({ text, case_id: CASE, edition }),
-                         signers: w.membership.attestingKeys(), memberBasis: {},
+                         signers: w.credentials.attestingKeys(), memberBasis: {},
                          priorCase: w.row(`SELECT edition, completeness, bias_acknowledgement FROM published_cases
                                             WHERE case_id=? AND edition<? AND ratified_at IS NOT NULL
                                             ORDER BY edition DESC LIMIT 1`, CASE, edition) });
