@@ -1,6 +1,6 @@
 # legacy-checks (T19)
 
-**Status** · session_01BjfEuoaa6XVXhVaMbV2YC9 · depth 2 · WAITING ON BOB (J1) · handled B3
+**Status** · session_01BjfEuoaa6XVXhVaMbV2YC9 · depth 2 · WAITING ON BOB (record-grammar's merge) · handled B3
 
 ## J1 · QUESTION
 
