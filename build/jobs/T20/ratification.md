@@ -23,3 +23,7 @@
 - `node checks/ownership.mjs … ratification tranche/T20`: 6 files changed by ratification; 0 failures.
 
 Size (session_01A7m8vFb8rvrLPbS3Xo2b4s): test runs 1, module lines 50 (5 files: +26 −24)
+
+## J1 · REPORT
+
+Beyond B1: R18 says NO_ATTESTING_KEY's remedy names credentials R9 (was membership R89); refusals.mjs still said 'membership R89'. I changed the remedy to '(op=signerregister, credentials R9)' and re-keyed the R18 test from /R89/ to /credentials R9\b/. It is member-read product text, outside B1's 'no product code changes', done because the requirement is the contract (JOB.md step 4); say if you want it reverted. Stale generated artifact: the plane bundle (bio-plane/dist/bio-plane.bundled.mjs, .bundle.json; not_product) carries the re-worded strings and the remedy.
