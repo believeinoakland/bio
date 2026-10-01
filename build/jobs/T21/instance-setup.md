@@ -31,3 +31,7 @@ Size (session_01WX3AVL5UiwgPqAyK78XvyZ): test runs 1, module lines 2948
 ## J1 · REPORT
 
 Generated artifact staled: bio-plane/dist/bio-plane.bundled.mjs and .bundle.json. My comment edits are inside SETUP_HTML (setup.mjs:345-346, :965, :972-974), and livefire.mjs:195-196 and :219 changed too (commit c215950031). I regenerated nothing. Also: no test now pins the two intake surfaces (SETUP_HTML and legacy-ui's civicos-ui/app.html) together, since the deleted add-surface.test.mjs did that; legacy-ui's to judge.
+
+## J2 · COMPLETE
+
+N469 applied, comments only. setup.mjs: the add-surface.test.mjs claim is dropped, the conformance.test.mjs claims are dropped or now point to page.test.mjs's R24 test, and provenance notes stay. livefire.mjs's index.mjs notes now point to instanceSetupOp. test/m/instance-setup/: 86 pass, 0 fail. format, architecture, coverage (46/46) and ownership: 0 failures. Record: build/jobs/T21/instance-setup.md.
