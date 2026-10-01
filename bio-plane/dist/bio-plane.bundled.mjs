@@ -5951,6 +5951,28 @@ var RecordCore = class _RecordCore {
     }
     return Object.fromEntries(out);
   }
+  /** R74 (K861, plane R10): this module's share of the instance's figures, exported for `plane` to register under this
+   *  module's name through R63 (`registerCounts("record-core", RecordCore.COUNT_KEYS, (hid) => rc.ownCounts(hid))`); the
+   *  module registers nothing itself while plane holds its copy. Each figure is the table's rows less those naming a
+   *  bundle in `hid` by its `bundle_id`. `refs` is `connections`' table and not this module's figure (R31; K877). */
+  static COUNT_KEYS = Object.freeze(["bundles", "files", "history"]);
+  static #COUNTED = Object.freeze({ bundles: "bundles", files: "files", history: "history" });
+  /** R74, D-464 (A COUNT IS TAKEN THROUGH THE CALLER'S OWN SIGHT): R63's `counts(hid)` for this module's share, moved
+   *  from the plane's held copy with its reading kept. `hid` is membership's `hiddenBundles` (`{sql, args}`), or null for
+   *  a viewer that sees every bundle and for the direct internal call, which count whole. `COALESCE(k, '')`: a NULL key
+   *  names no bundle, and `NULL NOT IN (…)` is NULL, which would drop the row. A figure whose table cannot be read is
+   *  left out, and R63 answers it null. Synchronous; writes nothing; never throws. */
+  ownCounts(hid = null) {
+    const out = {};
+    for (const key of _RecordCore.COUNT_KEYS) {
+      const table2 = _RecordCore.#COUNTED[key];
+      try {
+        out[key] = hid ? this.#one(`SELECT count(*) AS c FROM ${table2} WHERE COALESCE(bundle_id, '') NOT IN ${hid.sql}`, ...hid.args).c : this.#one(`SELECT count(*) AS c FROM ${table2}`).c;
+      } catch {
+      }
+    }
+    return out;
+  }
   /* ---- the instance's figures and what each caller is told of them (R64, R65; K621) ---- */
   /* REC-131 / IC-148 (BOB #15's corrected ruling, `MEMBER-KNOWLEDGE-DESIGN.md` §5, *A COUNT IS A DISCLOSURE OF
      EXISTENCE*): a count over rows a caller could not all read goes only to a caller who could read them all, and for
@@ -7144,7 +7166,6 @@ function notAParticipant(projectId, by, extra = null) {
 var MODULE_ORDER = Object.freeze([
   /* 1 */
   "record-grammar",
-  "legacy-checks",
   "jurisdictions",
   "test-support",
   "runtime-limits",
@@ -7225,7 +7246,6 @@ var MODULE_ORDER = Object.freeze([
   /* 10 */
   "monitoring",
   "scheduler",
-  "legacy-store",
   /* 11 */
   "affordances",
   "tasks",
@@ -7236,7 +7256,6 @@ var MODULE_ORDER = Object.freeze([
   "admission",
   "control-plane",
   "plane",
-  "legacy-index",
   "legacy-ui",
   "installer",
   "legacy-tests"
@@ -7332,6 +7351,22 @@ var Membership = class _Membership {
     return true;
   }
   #declared = false;
+  /* ===== R96 (K861; plane R10) — THIS MODULE'S SHARE OF THE INSTANCE'S FIGURES =====
+   *
+   * The figures `op=stats` and purge's proof report of this module's project-keyed tables (REC-27, D-137: the
+   * participation graph and the pending owner votes, so a purge can PROVE it took them), shaped as record-core R63's
+   * `counts(hid)` with its key list, for `plane` to register under this module's name (`registerCounts("membership",
+   * [...Membership.COUNT_KEYS], (hid) => m.counts(hid))`). This module registers nothing itself while plane holds its
+   * copy (`src/plane/held.mjs`), so no figure is registered twice. `hid` is R63's: R88's `hiddenBundles(viewer)`, the
+   * bundles the caller may not see, or null for a caller that sees every bundle and for the direct internal call (purge's
+   * proof among them), which count whole. Each table drops the rows whose `project_id` is in `hid` (D-464: a count over
+   * rows the caller could not all read is a disclosure of existence). `COALESCE(project_id, '')`: a NULL key names no
+   * bundle, and `NULL NOT IN (…)` is NULL, so without it the row would be dropped. Synchronous; writes nothing. */
+  static COUNT_KEYS = Object.freeze(["projectParticipants", "projectOwnerVotes"]);
+  counts(hid = null) {
+    const n = (table2) => (hid ? this.#one(`SELECT count(*) c FROM ${table2} WHERE COALESCE(project_id, '') NOT IN ${hid.sql}`, ...hid.args) : this.#one(`SELECT count(*) c FROM ${table2}`)).c;
+    return { projectParticipants: n("project_participants"), projectOwnerVotes: n("project_owner_votes") };
+  }
   /* REC-132 / D-422 / C-55: A MEMBER HOLDING THE RESERVED ID IS REPORTED BY THE AUDIT, NEVER RENAMED (moved from the
      legacy store's `auditPass`, T19, through record-core's R68 seam). `memberAdd` refuses the id `admin` (R12), but an
      instance that enrolled one before the reservation still holds it, and every name-keyed check reads it as the
@@ -7461,15 +7496,6 @@ var Membership = class _Membership {
                         WHERE p.project_id=? AND p.state='joined' AND m.status='active' ORDER BY p.member_id`,
       projectId
     ).map((r) => r.member_id);
-  }
-  /* NAMED COPY (K636 BOB-1): `credentials` R11 is the one `attestingKeys` now; this copy stays until its callers
-     (capture L3, ratification and publication L8) re-point in T19, and membership's T20 job deletes it. */
-  attestingKeys() {
-    return this.#rows(
-      `SELECT s.key_b64, s.member_id FROM signers s
-       JOIN members m ON m.member_id=s.member_id
-       WHERE ${_Membership.SIGNER_ATTESTS}`
-    );
   }
   /* R71: what `promotion` calls when a promotion creates a project, inside the caller's transaction: `ownerId`
      (a member; a machine-created project has no owner, §7.1) becomes the sole initial owner as R31 makes one,
@@ -9793,28 +9819,12 @@ var Membership = class _Membership {
       detail: "reactivated as an ordinary member. Administrator status is not restored by reactivation: the group voted them out under 4.7, and putting them back is an appointment, which needs the consensus of all existing administrators like any other."
     } : {} };
   }
-  /* ---- signers: the registered-key projection ---- */
-  /* D-158 — ONE PREDICATE, AND IT IS WHAT KEEPS THE ROSTER AND THE GATE FROM
-   * DISAGREEING AGAIN.
+  /* ---- the signer-key copies that wait (K636 BOB-1, N445; T20) ----
    *
-   * WHAT WENT WRONG, measured 2026-08-02 (session BOB, `MEASUREMENTS.md`, over
-   * real `ssh-keygen` signatures through the real ratify path) and re-measured at
-   * this code on 2026-09-20: `signerList` read the `signers` table ALONE while
-   * `gateFacts` and `caseDocumentFacts` each carried THEIR OWN COPY of the
-   * question below. Two copies of a rule and a third reader that never asked it
-   * is the shape that let `op=signerlist` report `active` for a key `op=ratify`
-   * answers `SIG_UNKNOWN_KEY` — the roster claiming more than the gate grants,
-   * which is the defect class this project ranks above a missing feature.
-   *
-   * IT IS A CONSTANT RATHER THAN A HELPER because the two gate readers need it as
-   * a WHERE clause and the roster needs it as a projected column, and a helper
-   * returning rows could not serve both without one of them re-deriving it.
-   * `signer-enrolment.test.mjs` PINS THE READER COUNT EXACTLY at three and the
-   * occurrences of its text at one: no behavioural assertion anywhere can see a
-   * faithful inline copy of a rule (D-280's `#refEdgeSevered` lesson, arriving at
-   * a SQL fragment), so if you add a fourth reader that pin fails and you are
-   * meant to come and say which site you added and why. Do not relax it. */
-  static SIGNER_ATTESTS = `s.status='active' AND m.status='active'`;
+   * `credentials` holds each of these (its R6, R9, R10, with C-63, C-96.8 and C-96.15–.17). MEMBERSHIP #14's re-scan
+   * (T20, J1) found one caller still on two copies, ratification's `preflight.test.mjs` (`w.membership.signerRegisterOwn`
+   * and `signerRevokeOwn`), so those two, and the member bar, key shape and rows only they answer through, wait for
+   * it to re-point (P4); every other copy is deleted. */
   /* D-158 — THE WRITE HALF, and WHICH WAY the two were made to agree is the
    * decision, not a detail.
    *
@@ -9876,8 +9886,8 @@ var Membership = class _Membership {
    *
    * The key is made in the member's own browser, never by another, and each use is confirmed on the device (that is
    * the interface's to keep; the plane cannot test it). From a signed-in session the member registers its public
-   * half here, and it attests exactly as an administrator-registered key does (R91: `SIGNER_ATTESTS` never reads
-   * `origin`). Registration is no longer a custodial act, so what keeps it accountable is that every administrator
+   * half here, and it attests exactly as an administrator-registered key does (R91: `credentials`' attesting
+   * predicate never reads `origin`). Registration is no longer a custodial act, so what keeps it accountable is that every administrator
    * is told (`notified`, R86's list at this instant, and the key's row, which the feed's notice reads: N375, K535)
    * and any of them can revoke the key (R26).
    *
@@ -9888,8 +9898,8 @@ var Membership = class _Membership {
    * to learn. A key `by` already holds and that is active answers `existed: true` and is not rewritten: its origin
    * and who registered it stay as first recorded. One `by` holds that was revoked is refused and stays revoked
    * (K535): only an administrator re-activates a key (R26), so an administrator's revocation sticks. */
-  /* NAMED COPY (K636 BOB-1; J5): `credentials` R9 is the one; this copy stays until control-plane (`dispatch.mjs`) re-points in T19's layer 11, and
-     membership's T20 job deletes it. */
+  /* NAMED COPY (K636 BOB-1; J5): `credentials` R9 is the one. Its last caller, ratification's `preflight.test.mjs`,
+     re-points to it, and then this copy is deleted (T20, J1). */
   signerRegisterOwn({ keyB64, comment = null, by = null } = {}) {
     if (by === null || by === void 0 || by === "" || isMachineIdentity(by)) {
       const row2 = MEMBERSHIP_CHECKS.MACHINE_CANNOT_REGISTER_KEY;
@@ -9958,142 +9968,14 @@ var Membership = class _Membership {
      or theirs (revoking narrows a claim, D-158). A key they do not hold answers NO_SUCH_KEY exactly as `signerSet`
      answers a key no one holds, whoever holds it, so the answer never says whether a key is registered to somebody
      else. A replacement is a new R89; an administrator revokes any key by R26. */
-  /* NAMED COPY (K636 BOB-1; J5): `credentials` R10 is the one; this copy stays until control-plane (`dispatch.mjs`) re-points in T19's layer 11, and
-     membership's T20 job deletes it. */
+  /* NAMED COPY (K636 BOB-1; J5): `credentials` R10 is the one. Its last caller, ratification's `preflight.test.mjs`,
+     re-points to it, and then this copy is deleted (T20, J1). */
   signerRevokeOwn({ keyB64, by = null } = {}) {
     const row2 = typeof keyB64 === "string" && typeof by === "string" && by !== "" ? this.#one(`SELECT status FROM signers WHERE key_b64=? AND member_id=?`, keyB64, by) : null;
     if (!row2) return { ok: false, reason: "NO_SUCH_KEY" };
     const already = row2.status === "revoked";
     if (!already) this.sql.exec(`UPDATE signers SET status='revoked', status_by=? WHERE key_b64=?`, by, keyB64);
     return { ok: true, keyB64, status: "revoked", by, already };
-  }
-  /* D-158 — THE ROSTER SAYS WHICH STATE EACH KEY IS ACTUALLY IN.
-   *
-   * `status` is UNTOUCHED and still means exactly what it has always meant: the
-   * administrator's own revocation switch on this key. What was missing is that
-   * the gate asks a SECOND question the roster never asked, and both were being
-   * answered in the one word `active`.
-   *
-   * So the row gains two things and HIDES NOTHING. `member_status` is the stored
-   * fact underneath — `op=memberlist` already serves it to this op's own three
-   * classes, so nothing is disclosed here that a caller could not already read.
-   * `attests` is whether `op=ratify` would accept a signature from this key right
-   * now, computed from the SAME constant the two gate readers use. Hiding the
-   * disagreeing rows instead would have made the two views agree by saying LESS
-   * than the record supports, which is a different defect and not a fix;
-   * `signer-enrolment.control.mjs`'s `roster-blind` arm drives exactly that cheat
-   * and shows the invariant assertion stays green under it.
-   *
-   * THE JOIN IS LEFT so a key whose member row is missing is REPORTED rather than
-   * dropped, and `attests_why` names a STORED fact in every branch. Its last
-   * branch is the literal `undetermined`: it is unreachable while the constant
-   * above is what it is, and it is kept because a derived reason that quietly
-   * guessed when the predicate moved would be this row's own defect one altitude
-   * up. Undetermined is first-class and gets said. */
-  /* NAMED COPY (K636 BOB-1; J5): `credentials` R8 is the one; this copy stays until queue-producers re-points in T19's layer 11, and
-     membership's T20 job deletes it. */
-  signerList() {
-    return { signers: this.#rows(
-      `SELECT s.key_b64, s.member_id, s.comment, s.status, s.added, s.status_by, s.origin, s.registered_by,
-              m.status AS member_status,
-              CASE WHEN ${_Membership.SIGNER_ATTESTS} THEN 1 ELSE 0 END AS attests
-         FROM signers s LEFT JOIN members m ON m.member_id = s.member_id
-        ORDER BY s.added`
-    ).map((r) => ({
-      key_b64: r.key_b64,
-      member_id: r.member_id,
-      comment: r.comment,
-      status: r.status,
-      added: r.added,
-      status_by: _Membership.#statusBy(r.status_by),
-      /* REC-159 */
-      /* R27 (N364): R25 was the only door before R89, so a row with no recorded origin is an administrator's. */
-      origin: r.origin === "self" ? "self" : "admin",
-      registered_by: _Membership.#statusBy(r.registered_by),
-      member_status: r.member_status ?? null,
-      attests: r.attests === 1,
-      attests_why: r.attests === 1 ? null : r.status !== "active" ? "key_revoked" : r.member_status === null || r.member_status === void 0 ? "member_absent" : r.member_status !== "active" ? `member_${r.member_status}` : "undetermined"
-    })) };
-  }
-  /* =====================================================================
-   * PL-11 / IS-5 / D-199 — THE `ai` CREDENTIAL, AND WHY ITS SCOPE IS A ROW.
-   *
-   * D-199 (2) is the determination that decides the shape of everything below,
-   * and it is DEC-17's reasoning transplanted word for word: a settings row
-   * *"would be a way to change the standard with nothing to read afterwards"*,
-   * and what an AI credential may reach is exactly the thing that must be
-   * amendable only as an authored, dated, on-the-record act.
-   *
-   * SO THIS CLASS IS THE FIRST ONE THAT IS NOT A BINDING. `classify()` resolves
-   * admin, member, probe and daemon by comparing against `env.<X>_TOKEN` — an
-   * operator changes one in the hosting dashboard and nothing anywhere records
-   * that they did. An `ai` credential resolves HERE instead, against a row that
-   * names the member who minted it and the date they did. Widening it is
-   * another row with another name against it.
-   *
-   * THE VALUE NEVER ARRIVES IN THIS FILE. index.mjs generates the secret,
-   * hashes it, hands this method the HASH, and returns the value to the minting
-   * member exactly once. Nothing here can print a credential because nothing
-   * here has ever held one, which is a stronger statement than a rule about not
-   * logging it, and the suite asserts it over this file's own source.
-   * ===================================================================== */
-  /** Resolve a PRESENTED credential to its record row. Takes the SHA of the
-   *  value and never the value, so the thing that would be worth stealing from
-   *  a log is not in one.
-   *
-   *  A REVOKED ROW IS RETURNED RATHER THAN HIDDEN, and that is the fail-closed
-   *  direction here rather than the loose one: the gate must be able to tell a
-   *  withdrawn credential from an unknown string, because those are different
-   *  answers and only one of them is worth a member's attention. */
-  /* NAMED COPY (K636 BOB-1; J5): `credentials` R15 is the one; this copy stays until ai-runs (L6), admission and control-plane (L11) re-point in T19, and
-     membership's T20 job deletes it. */
-  aiCredentialLook({ secretSha = null } = {}) {
-    const sha = String(secretSha ?? "").trim().toLowerCase();
-    if (!/^[0-9a-f]{64}$/.test(sha)) return { found: false, credential: null };
-    const row2 = this.#one(`SELECT * FROM ai_credentials WHERE secret_sha=?`, sha);
-    if (!row2) return { found: false, credential: null };
-    return { found: true, credential: {
-      ...this.#aiCredentialPublic(row2),
-      /* The gate needs these two as VALUES rather than as display strings: the
-         viewer it stamps, and the ops the record declared. Neither is a secret
-         and both are already on the public projection above. */
-      principal: row2.principal,
-      writes: this.#aiCredentialWrites(row2)
-    } };
-  }
-  #aiCredentialWrites(row2) {
-    try {
-      const w = JSON.parse(row2.scope_writes || "[]");
-      return Array.isArray(w) ? w.map(String) : [];
-    } catch {
-      return [];
-    }
-  }
-  /** ONE projection, used by the mint, the revoke, the list and the gate's
-   *  lookup, so no surface can be shown a shape the others do not agree with —
-   *  and so there is ONE place that decides `secret_sha` is not in it. */
-  #aiCredentialPublic(row2) {
-    if (!row2) return null;
-    return {
-      tokenId: row2.token_id,
-      principalKind: row2.principal_kind,
-      principal: row2.principal,
-      taskScope: row2.task_scope,
-      writes: this.#aiCredentialWrites(row2),
-      note: row2.scope_note || null,
-      mintedBy: row2.minted_by,
-      mintedAt: row2.minted_at,
-      revokedAt: row2.revoked_at || null,
-      revokedBy: row2.revoked_by || null,
-      revoked: !!row2.revoked_at,
-      /* D-463: WHICH NAMESPACE THIS CREDENTIAL CAN EVER ADDRESS. `null` is "not confined" and is
-         stated as a value rather than left off the object, because an absent key reads the same as a
-         key nobody thought about — and this is the one property of a credential a member has to be
-         able to read back to know whether an agent can touch the record at all. The gate reads the
-         same field through `aiCredentialLook`, which spreads this projection, so what a member sees
-         and what the plane enforces are one string and cannot disagree. */
-      confinedTo: row2.confined_to || null
-    };
   }
 };
 var OF = /* @__PURE__ */ new WeakMap();
@@ -11371,12 +11253,12 @@ function withProducingGroup(text5, slug) {
 }
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.49.0";
+var CATALOG_VERSION = "1.50.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var ROW_CENSUS = Object.freeze({
   version: CATALOG_VERSION,
-  rows: 1051,
-  digest: "c7e4b82cbbbc2578aba38f221cde45e25f83bce54f5e2707dec982ed7ded38e3"
+  rows: 986,
+  digest: "dd61926a033ecd289e1fa7446cae09aa976470daf13bc46d8bd379b072ff43a5"
 });
 var hex2 = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te3 = new TextEncoder();
