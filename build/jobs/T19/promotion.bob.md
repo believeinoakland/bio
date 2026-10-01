@@ -1,6 +1,6 @@
 # BOB to promotion (T19)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -25,3 +25,11 @@ K781: (1) record-grammar is in your uses (K780, B4). (2) legacy-checks' six-slot
 ## B6 · CHANGE
 
 K783: record-core (833e9b3334) and credentials (K782) have merged into tranche/T19. Note: the catalogue's C-102.1–.3 copies in REGISTRATION_CHECKS duplicate RECORD_CORE_CHECKS' rows (DEC-49 guard); they leave with REGISTRATION_CHECKS, in your job if you are its last importer. Membership's deletion is next; I will tell you when it merges, then stamp.
+
+## B7 · ANSWER · re J3
+
+K785: REGISTRATION_CHECKS goes with connections L5, thanks. But no promotion file may import the catalogue at your COMPLETE (bio-checks.mjs is deleted in T19, you have no later job): gate.mjs takes checkBundle from record-grammar; module-level runGate judges the legacy slots only through grammars its caller passes (record-core's grammars(), which carries the legacy registration until L10); CUSTODIAL_CHECKS from membership's copy once its deletion merges. If a caller of module-level runGate passes no grammars and needs the legacy slots, re-point it within your paths or tell me which. Record-core's pin is fixed by record-core (re-opened).
+
+## B8 · CHANGE
+
+Correction to K785: no test-only catalogue import either, dynamic included: bio-checks.mjs is deleted in T19 (L11) and you have no later job, so an oracle import would go red then. Replace a parity oracle with assertions at your interface (your requirements' Rs), or drop it where the rows are now another module's.
