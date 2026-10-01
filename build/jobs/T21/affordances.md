@@ -31,3 +31,12 @@ None.
 - `format`: 86 modules, 84 requirements files, 0 failures. `architecture affordances`: 13 product files, 99 relative imports, 0 failures. `coverage affordances`: 30 of 30 live ids named by a test, 0 failures. `ownership affordances tranche/T21`: 5 files changed, 0 failures.
 
 Size (session_01LvzWGqxgNTP61BdSTnZm48): test runs 8, module lines 3158
+
+## J1 · REPORT
+
+Found while applying B1. Details in my record, "Found in other modules".
+(1) Stale artifact: `bio-plane/dist/bio-plane.bundled.mjs` (not_product), from my change under `bio-plane/src/`.
+(2) op-declarations / control-plane (rule 3): R30 gives `templates`, `templateread`, `templatecomments`, `factstatus` and `factsdue` NON_ACTS reasons, so each needs a NEEDS row (gated) or it reads `stale`; `templates` had none under filings. The ten template writes and `factconfirm` need mutating, gated rows.
+(3) No test anywhere runs `unaccounted` (R12) against the control plane's real op table. Only my tests call it, with constructed tables. The deleted `rung-ladder.test.mjs` used to do this, so DEC-8/FW-14's live totality is unmeasured today. A control-plane or plane test asserting `unaccounted(table)` empty would close it; affordances cannot, since control-plane comes later.
+(4) local-facts, possible flaw against its R1/R5: `localFactsOps.factconfirm` spreads the request body into `factConfirm`, so `by` is the caller's, not a stamp. Unless control-plane overwrites it, a machine naming a member passes MACHINE_CANNOT_CONFIRM. (filing-templates reads `author` from the query.)
+(5) control-plane fails 2 of 93 on tranche/T21 with and without my change (R43/R22 decorated codes; R22 CHECK_FAMILIES total). Not mine.
