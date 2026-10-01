@@ -82,8 +82,8 @@ export const BIAS_STATEMENT_KINDS = ['scrutiny', 'inference', 'pattern'];
    binds the machine exactly as it binds a member" — so the predicate that
    refuses a member's statement and the predicate that keeps a machine's
    candidate out of a proposal must be ONE predicate. A second copy would agree
-   at zero cost and then drift, which this project has measured five times; the
-   suite pins the store's use as an IMPORT rather than a literal. */
+   at zero cost and then drift, which this project has measured five times. R31's
+   test (`test/m/bias/checks.test.mjs`) holds the checks and the inhale to them. */
 export const BIAS_VERDICT_WHOLESALE =
   /\b(everything|anything|all|every|each|nothing|none)\b[^.]{0,60}?\b(is|are)\b[^.]{0,30}?\b(false|untrue|lies|a lie|fabricated|fabrications?|invented|made up|propaganda|disinformation)\b/i;
 export const BIAS_VERDICT_SPEAKER = [
@@ -99,8 +99,8 @@ export const BIAS_VERDICT_SPEAKER = [
    refusing". These patterns require a THRESHOLD — a count of sources, or a
    named grade floor — so a statement that merely talks about sources without
    setting one is untouched. Reuters' "weigh the source's track record, position
-   and motive" contains no threshold and is a clean kind=scrutiny statement; it
-   is pinned as an over-strictness arm in test/bias.test.mjs. */
+   and motive" contains no threshold and is a clean kind=scrutiny statement; R6's
+   test (`test/m/bias/checks.test.mjs`) holds it as an over-strictness arm. */
 export const BIAS_BAR_PHRASING = [
   /\b(more than one|at least (one|two|three|\d+)|two or more|\d+\s+or\s+more)\s+(independent\s+)?sources?\b/i,
   /\b(requires?|must (reach|be at|meet)|no (lower|less) than)\b[^.]{0,30}\bgrade\s*[A-D]\b/i,
@@ -108,7 +108,7 @@ export const BIAS_BAR_PHRASING = [
 ];
 
 /** PL-12 / D-84: the bias bundle's own checks. C-26.1 to C-26.7 fire here;
- *  C-26.8 fires in the store, where the inhale is. */
+ *  C-26.8 fires in `biasInhale` (`./index.mjs`), where the inhale is. */
 function checkBiasExtension(ctx, findings) {
   if (normalizeType(ctx.fm?.object_type) !== 'bias') return;
   const fm = ctx.fm;
@@ -117,7 +117,7 @@ function checkBiasExtension(ctx, findings) {
 
   if (statements === null) {
     findings.push(f('C-26.1', 'error',
-      'a bias bundle carries its statements in frontmatter as statements[], and this one has none',
+      'a bias record carries its statements in frontmatter as statements[], and this one has none',
       ['add statements[] to bundle.md frontmatter, each with id, kind, subject, text and justification']));
     return;
   }
@@ -139,7 +139,7 @@ function checkBiasExtension(ctx, findings) {
        missing or duplicated id makes safeguard 1 unenforceable rather than
        merely untidy. */
     if (!id) findings.push(f('C-26.1', 'error', `${at} has no id, and an id is what an override names`));
-    else if (seen.has(id)) findings.push(f('C-26.1', 'error', `${at} repeats the statement id '${id}'; ids are stable and unique within a bundle`));
+    else if (seen.has(id)) findings.push(f('C-26.1', 'error', `${at} repeats the statement id '${id}'; ids are stable and unique within a record`));
     else seen.add(id);
 
     /* THE CLOSED SET OF THREE. "Declared bias is a CLOSED SET: scrutiny,
@@ -199,8 +199,8 @@ function checkBiasExtension(ctx, findings) {
     if (kind === 'pattern' && citations.length === 0 && state !== 'draft') {
       findings.push(f('C-26.4', 'error',
         `${at} is a pattern statement with no citation, and a pattern statement cannot leave draft without one`,
-        /* CORRECTED TWICE ON FIRST RUN, and `repair-reachability.test.mjs` is
-           what corrected it, which is the instrument working. The first version
+        /* CORRECTED TWICE ON FIRST RUN, found by `repair-reachability.test.mjs`
+           (a legacy suite, since deleted), which was the instrument working. The first version
            said "or return the bundle to draft" — a MOVE DIRECTIVE naming no
            edge (A2). The second named the edge as `proposed -> draft,
            op=promote` — legal, but A3 then measured that the plane offers NO
@@ -466,9 +466,9 @@ export const BIAS_CHECKS = {
 
   /* ---------------------------------------------------------------------------
      REC-207 — SETTLING A BIAS DEBT (BOB #32, 2026-09-23 23:42Z). Seven rows, in
-     the EXISTING family rather than a new one, on SK-1's rule: a new `*_CHECKS`
-     family is a floor in `civicos-ui/check-refusal-codes.mjs` that buys slack for
-     everybody else's walk, and these refusals are bias's in the plainest sense —
+     the EXISTING family rather than a new one, on SK-1's rule (made when the
+     legacy `civicos-ui/check-refusal-codes.mjs`, since deleted, walked every
+     `*_CHECKS` family), because these refusals are bias's in the plainest sense —
      they are the conditions under which the record declines to record that a
      member has settled the obligation a lens change raised.
 

@@ -25,7 +25,7 @@
  *               own; `null` is no registry, and R25 then answers undetermined.
  *   env         the instance bindings: `BIAS_DEBT_DELAY_MS` (R41) and `BIAS_DEBT_BATCH` (R33).
  * The ops (`biasmanifest`, `biasadopt`, `biasinhale`, `biasdebtresolve`, `biasdebt`) are `biasOps`' entries, which the
- * legacy store's dispatcher spreads in.
+ * plane's op map spreads in (`src/plane/store.mjs`).
  */
 
 import { normalizeType } from "../record-grammar/types.mjs";
@@ -299,7 +299,7 @@ class Bias {
         + "session and never from the request, so there is no name here to record.");
     if (!bundleId)
       return this.#refuse("BIAS_ADOPTION_NOT_PROPOSED",
-        "op=biasadopt names the bias bundle being adopted: pass bundleId=<BIAS-...>.");
+        "op=biasadopt names the bias record being adopted: pass bundleId=<BIAS-...>.");
     const h = this.#record.head(String(bundleId));
     if (!h || normalizeType(h.type) !== "bias" || !["proposed", "adopted"].includes(h.currentState))
       return this.#refuse("BIAS_ADOPTION_NOT_PROPOSED",
@@ -559,7 +559,7 @@ class Bias {
     if (adopt)
       return this.#refuse("BIAS_INHALE_CANNOT_ADOPT",
         "op=biasinhale reads a policy and returns a PROPOSAL. Adopting is op=biasadopt, signed by a "
-        + "member — and only after the proposed set has been written into a bias bundle and offered.");
+        + "member — and only after the proposed set has been written into a bias record and offered.");
 
     const text = String(policy || "");
     const allSentences = text
@@ -614,7 +614,7 @@ class Bias {
     return {
       ok: true,
       installed: false, adopted: false, writes: 0,
-      proposes: "a member writes these into a bias bundle, justifies each one, points each subject at "
+      proposes: "a member writes these into a bias record, justifies each one, points each subject at "
               + "the registry, offers the set as 'proposed', and adopts it with their name on it. "
               + "Nothing here is in force and nothing here has been written.",
       bars: bars.slice(0, cap), bars_count: bars.length,
@@ -1101,7 +1101,7 @@ export function biasOf(ctx, deps = {}) {
   return b;
 }
 
-/* The ops this module answers, as entries of the legacy store's op map (its dispatcher spreads them in). `url` is the
+/* The ops this module answers, as entries of the plane's op map (`src/plane/store.mjs` spreads them in). `url` is the
    request URL, whose query carries the control plane's stamps (`author`, `identity`, `viewer`), each read after the
    body so a caller's own copy never wins; `body` the parsed body. The policy arrives in the BODY: a policy in a query
    string would be cut by the first proxy with an opinion about URL length, and a cut policy silently produces a
