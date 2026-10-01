@@ -62,7 +62,7 @@ const WRANGLER = readFileSync(fileURLToPath(new URL("../wrangler.jsonc", import.
   .replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
 const WRANGLER_CFG = JSON.parse(WRANGLER);
 const MANIFEST = JSON.parse(readFileSync(fileURLToPath(new URL("../fleet-member.json", import.meta.url)), "utf8"));
-const PLANE_ENTRY = fileURLToPath(new URL("../../bio-plane/src/index.mjs", import.meta.url));
+const PLANE_ENTRY = fileURLToPath(new URL("../../bio-plane/src/plane/index.mjs", import.meta.url));
 
 const AIK = "aik-" + "a".repeat(64);
 const REVOKED = "aik-" + "c".repeat(64);

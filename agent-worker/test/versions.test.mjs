@@ -21,7 +21,7 @@
  *     (chained, unchained, undetermined, truncated), driven without a plane.
  *
  *   PART B · THROUGH `POST /run`, INSIDE WORKERD, and the two reads D-220 adds go
- *     to the REAL plane (`bio-plane/src/index.mjs` with its Durable Object), whose
+ *     to the REAL plane (`bio-plane/src/plane/index.mjs` with its Durable Object), whose
  *     record holds the fixture written through `op=promote` and the capture
  *     path's own locator writer. Everything else goes to a small mock, because
  *     what is under test is the `collect` row and not the rest of the table. A
@@ -114,7 +114,7 @@ const { Miniflare } = await (async () => {
 
 const WORKER_SRC_PATH = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const WORKER_SRC = readFileSync(WORKER_SRC_PATH, "utf8");
-const PLANE_IDX_PATH = fileURLToPath(new URL("../../bio-plane/src/index.mjs", import.meta.url));
+const PLANE_IDX_PATH = fileURLToPath(new URL("../../bio-plane/src/plane/index.mjs", import.meta.url));
 const PLANE_INDEX = readFileSync(PLANE_IDX_PATH, "utf8"); /* the real plane's entry, run under workerd below */
 
 console.log("\n--- B0 · the two reads are ones an `ai` credential can reach, by the plane's own shape ---");

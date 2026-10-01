@@ -63,8 +63,8 @@
     },
     {
       "path": "src/harness.mjs",
-      "bytes": 77321,
-      "sha256": "e0194770c0aeb603befdd17c34e3788ef138c72e57fa0e4ec19984b1cc232990"
+      "bytes": 77299,
+      "sha256": "eb3206bf1179667004487e127eec07973a04cf26166da8b67aaab43976b3cdf0"
     },
     {
       "path": "src/index.mjs",
@@ -78,8 +78,8 @@
     },
     {
       "path": "src/subsession.mjs",
-      "bytes": 33847,
-      "sha256": "128316fbf866ab20857667ca2a7324ac36ed8fc285b264e061fc339ddf18cd5c"
+      "bytes": 33838,
+      "sha256": "59213dc8a6a1c7720e63c83ab450f0c4446cca83be0cb697d12855eddeeaf380"
     }
   ],
   "vendoredInputs": [],

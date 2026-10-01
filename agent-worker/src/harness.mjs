@@ -135,7 +135,7 @@
  *
  * THIS IS A COPY OF THE PLANE'S `OBSERVATION_LEVELS` AND IT IS PINNED RATHER
  * THAN IMPORTED, which is a decision and not laziness. Importing
- * `../../bio-plane/src/airun.mjs` would drag the plane's module graph into this
+ * `../../bio-plane/src/run-rules/index.mjs` would drag the plane's module graph into this
  * Worker's bundle — the fleet's whole point is that a member ships alone — and
  * the plane publishes no op that names the levels, so there is nothing to read
  * at runtime. What closes the drift is a PIN: the suites import run-rules'
@@ -220,7 +220,7 @@ export const MODES = {
                      + "starts, prepares and sends nothing (BIO_Action_v0_1.md §4); not yet deployed" },
 };
 
-/* §14b.6's budget, in the plane's OWN bound names (`bio-plane/src/airun.mjs`
+/* §14b.6's budget, in the plane's OWN bound names (run-rules'
    RUN_BOUNDS). Three of the five are the run harness's to SPEND — the design's
    own enumeration, "fetches requested, sub-sessions spawned, wall time across
    resumptions". `lease` is the plane's heartbeat and `runtime` is the ceiling
@@ -242,7 +242,7 @@ export const MODES = {
    (`queuestate.mjs:82`) — IS-9(d) builds that producer rather than minting a new
    kind."* THIS ITEM IS IS-9(d) AND THIS IS WHERE IT DISCHARGES THAT: PL-5 wired
    the condition at `store.mjs #aiRunTerminate` (`condition: hit === "runtime" ?
-   "runtime-ceiling-reached" : null`) and recorded in `airun.mjs` that the
+   "runtime-ceiling-reached" : null`) and recorded in run-rules that the
    PRODUCER — the thing that actually consumes the bound — was not its own. The
    producer is the driver's per-call spend through `op=airuntick`.
 
@@ -643,7 +643,7 @@ export function gateStep(state) {
        `cancelled` as "a member stopped it", which is FALSE of every run that
        reaches this line: the gate refused a launch, nobody asked, and nothing
        had been spent. The ending now names the machine that actually acted.
-       The word is the plane's (`bio-plane/src/airun.mjs` RUN_ENDINGS) and is
+       The word is the plane's (run-rules' RUN_ENDINGS) and is
        NOT minted here — a fleet member inventing an ending would be the
        drift class DEC-8 closed.
 

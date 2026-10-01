@@ -102,7 +102,7 @@ import { LEVELS } from "./harness.mjs";
    AND THE SPELLING IS NOT WHAT THIS FILE VALIDATES. `checkCondition` (C-22.4) is
    the plane's and stays the plane's: a report's `condition` travels through this
    member UNREAD, because a second copy of the record's condition vocabulary here
-   would be a rule with two implementations, which `airun.mjs` already recorded as
+   would be a rule with two implementations, which run-rules already records as
    a control that proves nothing about either. */
 export const REPORT_STATES = {
   NEVER_LOOKED:         "nobody looked at this level for this subject",
@@ -114,7 +114,7 @@ export const REPORT_STATES = {
 
 /* THE TWO STATES THAT CLAIM SOMETHING IS THERE, and therefore the two that owe a
    citation. Named as a set rather than tested at each site, so a sixth state
-   added above inherits the rule or fails loudly — `airun.mjs`'s DEFINITIVE_STATES
+   added above inherits the rule or fails loudly — run-rules' DEFINITIVE_STATES
    reasoning, one contract over. Note this set is NOT that one: `LOOKED_ABSENT` is
    definitive about the world and cites nothing, because there is nothing to
    cite. */
@@ -316,7 +316,7 @@ const size = (v) => JSON.stringify(v ?? null).length;
  *  architecture.
  *
  *  Returns `null` when the report honours the contract, or a refusal naming what
- *  broke. NULL-TOLERANT THROUGHOUT, on `airun.mjs`'s recorded reason: a check
+ *  broke. NULL-TOLERANT THROUGHOUT, on run-rules' recorded reason: a check
  *  that throws cannot NAME what it broke and takes every arm behind it with it. */
 export function checkReport(report) {
   if (report == null || typeof report !== "object" || Array.isArray(report))

@@ -8,7 +8,9 @@ import { supersedesEdgeFindings, divisionDisclosureFindings, checkRecheckCoverag
 
 export { checkInquiryExtension, checkRecheckCoverage, checkInquiryBasis, checkLegExtentGrammar, supersedesEdgeFindings,
          divisionDisclosureFindings, leadLegFindings, GROUND_LABEL_RE, EARNED_SOURCE_AXIS } from "./grammar.mjs";
-export { LEAD_CHECKS, INQUIRY_GRAMMAR_ROWS } from "./checks.mjs";
+export { LEAD_CHECKS, INQUIRY_GRAMMAR_CHECKS } from "./checks.mjs";
+/* The old name, kept for its readers outside this module until the last re-points (K850): the same frozen object. */
+export { INQUIRY_GRAMMAR_ROWS } from "./checks.mjs";
 
 /** R6 (C-6.1): the supersession and division arm, record-grammar R28's `checkSupersession` slot: for every document, at
  *  the end of the references arm, the edge findings and then the disclosure findings over `ctx.fm`. */

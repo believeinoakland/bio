@@ -1,5 +1,6 @@
-/* run-rules (R1–R8, R10, R11, R13; the ai-runs split, K617, K649 (1)): copied from `src/airun.mjs`, which `ai-runs`'
- * job reduces to a re-export of this module. What follows is that file's account, kept.
+/* run-rules (R1–R8, R10, R11, R13; the ai-runs split, K617, K649 (1)): copied from `src/airun.mjs` at the split;
+ * `ai-runs`' T19 job deleted that file once its readers had re-pointed here, so this module is the one home of these
+ * rules. What follows is that file's account, kept as provenance: "this file" in it is the account's own, now this one.
  *
  * IS-6 — THE INVESTIGATIVE RUN'S VOCABULARY AND ITS REFUSALS, kept PURE.
  *
@@ -56,7 +57,7 @@
  * one case that matters: a run that is killed does not run its own exit path.
  * So the terminal entry is NOT the run's to write. Two properties carry it:
  *
- *   (a) ONE TERMINATION FUNCTION. `store.mjs #aiRunTerminate` is the only thing
+ *   (a) ONE TERMINATION FUNCTION. `#aiRunTerminate` (`ai-runs`, once `store.mjs`'s) is the only thing
  *       that can move a run out of `running`, and it appends the terminal log
  *       entry in the SAME transaction as the status change. There is no state
  *       in which a run is finished and its log is silent, because the two are
@@ -103,9 +104,9 @@ const AI_RUN_CHECKS = Object.freeze({ ...OBSERVATION_LOG_AI_RUN_CHECKS, ...AI_RU
 /* N49 (K78 (3)): THE OBSERVATION LOG'S VOCABULARY AND ITS CHECKS ARE observation-log's. They stood here (the four
    levels, D-129's states, coverage, the content axis, the missing-row causes and sidedness, the watermark, the three
    meaning-level writers' judgements, the derivation statement, the referent faults, `checkObservation` and
-   `checkCondition`); observation-log wrote its copy at its extraction and this file now re-exports it, so every
-   reader of `airun.mjs` keeps its names and there is one copy to drift (run-rules' Uses: re-exported until those
-   readers re-point). */
+   `checkCondition`); observation-log wrote its copy at its extraction, and this file re-exports it so there is one
+   copy to drift. `airun.mjs`, whose readers this kept whole, is deleted (ai-runs T19); the re-export stays for the
+   readers that still take these names here (run-rules' Uses), `agent-worker`'s harness suite among them. */
 export {
   ALL_MISSING_ROW_CAUSES,
   CONTENT_AXIS_STATES,

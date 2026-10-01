@@ -42,8 +42,9 @@ export const LEAD_CHECKS = {
 };
 
 
-/** R7: the rows `inquiry`'s acts mint for the inquiry's own refusals, and the lead row (R5), by code. */
-export const INQUIRY_GRAMMAR_ROWS = Object.freeze({
+/** R7: the rows `inquiry`'s acts mint for the inquiry's own refusals, and the lead row (R5), by code. Named with the
+ *  reserved `_CHECKS` suffix, so DEC-49 composition (control-plane's `families.mjs`) finds it as a family (K850). */
+export const INQUIRY_GRAMMAR_CHECKS = Object.freeze({
   LEAD_NOT_EVIDENCE: LEAD_CHECKS.LEAD_NOT_EVIDENCE,
   NOT_INQUIRIES: {
     check: 'C-33.13',
@@ -82,3 +83,7 @@ export const INQUIRY_GRAMMAR_ROWS = Object.freeze({
       + 'automated one. Sign in to ground it.',
   },
 });
+
+/* The old name, kept for its readers outside this module (control-plane's `families.mjs`, `inquiry/grammar.mjs` and its
+   test, `skilldoctrine.mjs` and the skills fixture) until the last of them re-points (K850); the same frozen object. */
+export const INQUIRY_GRAMMAR_ROWS = INQUIRY_GRAMMAR_CHECKS;

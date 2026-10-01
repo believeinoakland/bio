@@ -102,7 +102,7 @@ test("R36: the hidden-run predicate and the run resolver — retrieval's tail (R
   await w.runs.tick({ run: "R1", viewer: "admin", caller: ORG, log: [look] });
   await w.runs.tick({ run: "RH", viewer: "member:ann", actor: "ann", caller: "member:ann", log: [look] });
   const retrieval = retrievalOf(w.ctx);
-  const tail = retrieval.registerHiddenRunTail("legacy-store", () => ({ sql: "", args: [] }));
+  const tail = retrieval.registerHiddenRunTail("queue", () => ({ sql: "", args: [] }));
   assert.deepEqual([tail.reason, tail.declaredBy], ["TAIL_DECLARED", "ai-runs"]);
   assert.equal(retrieval.registerProjectionDecoration("ai-runs", () => ({})).reason, "DECORATION_DECLARED");
   /* through retrieval's own door: the tail it answers is the one this module registered */
@@ -122,7 +122,7 @@ test("R36: the hidden-run predicate and the run resolver — retrieval's tail (R
 test("R37: the run gate contradiction offers is filled here from R28 and R5 — found false for blank, absent and invisible alike, running, and R5's refusal naming the act", async () => {
   const w = await prodWorld();
   const c = contradictionOf(w.ctx);
-  const again = c.registerRunGate("legacy-store", () => ({ found: false, running: false, refusal: null }));
+  const again = c.registerRunGate("run-productions", () => ({ found: false, running: false, refusal: null }));
   assert.deepEqual([again.ok, again.module], [false, "ai-runs"], "one gate, held by this module");
   const g = (run, viewer, caller) => w.runs.runGate(run, viewer, caller, "proposing contradictions under a run");
   assert.deepEqual(g("R1", "admin", ORG), { found: true, running: true, refusal: null, run: w.runs.runFor("R1", "admin") });
