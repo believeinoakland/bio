@@ -10,7 +10,7 @@
  * `publication/index.mjs`, with their comments. `publication`'s job deletes its copies and re-exports this module, so
  * `ratification`, `case-authoring` and `control-plane` import what they import today. */
 
-import { parseFrontmatter } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../record-grammar/index.mjs";
 import { caseDocumentRequiresV4Disclosures } from "./formats.mjs";
 import { fmSafe } from "./blocks.mjs";
 

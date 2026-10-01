@@ -19,7 +19,7 @@
  * READ, NEVER LIVE: everything here comes from the signed bytes. A highlighted row answers its seen side, the fixed
  * sentence and nothing else, whatever else the bytes hold, so nothing names the unseen record (DEC-85). */
 
-import { parseFrontmatter } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../record-grammar/index.mjs";
 import { caseDocumentRequiresTensionSection } from "./formats.mjs";
 
 /** R10: the four states a disclosed contradiction is read as, by the row's `state` (and `kind`). */

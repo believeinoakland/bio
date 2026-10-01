@@ -20,7 +20,7 @@
  * captures, or two cases, to one person, which `publishableAt` never answered. So the commit re-derives the sources
  * behind each capture and compares spellings (`sourceRowsStanding`). Pure; nothing here throws. */
 
-import { parseFrontmatter } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../record-grammar/index.mjs";
 import { caseDocumentRequiresTensionSection } from "./formats.mjs";
 
 /** R20: the fields of a `captures:` row, in the order they are written. */
