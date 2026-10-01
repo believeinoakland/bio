@@ -198,11 +198,9 @@ export const PROJECT_CREATION_VISIBILITY_CHECKS = {
  * `PROJECT_ID_CHECKS` C-59.1–C-59.4 (record-core holds C-59.5); from `REGISTRATION_CHECKS` C-102.4–C-102.9 (record-core
  * holds C-102.1–C-102.3, ratification C-102.10). Their notes travel with them.
  *
- * Two rows are copies, held twice until their last other reader re-points (rule 1): C-26.12 BIAS_ILLEGAL_TRANSITION,
- * which bias (layer 5) still reads from the catalogue's `BIAS_CHECKS`, and C-64.1 GROUP_UNDETERMINED, which inquiry and
- * strength (layer 6) and instance-setup (layer 11) still read from the catalogue's `INSTANCE_GROUP_CHECKS`. C-64.1's
- * copy names the region of `#promote` that mints it here (R13); the catalogue's names inquiry's site, which mints it
- * too. */
+ * Two rows were copies in T19, held twice until their other readers re-pointed (rule 1): C-26.12 BIAS_ILLEGAL_TRANSITION
+ * (the catalogue's `BIAS_CHECKS`) and C-64.1 GROUP_UNDETERMINED (its `INSTANCE_GROUP_CHECKS`). The catalogue left at
+ * T19's close, so each is held once, here (1.50.0). C-64.1 names the region of `#promote` that mints it (R13). */
 export const PROMOTION_ROW_CHECKS = {
   CAS_STALE: {
     check: 'C-33.21',
