@@ -115,8 +115,9 @@ import { VERSION_MACHINE, VERSION_REASON_REQUIRED } from "./basis-versions/index
    and this one lands on a field 14.4 requires be labelled. */
 import { CONTENT_MINT_STATES } from "./content/index.mjs";
 /* R13–R16, R23 (T9, K225): the facts the derivation below reads, one object as it stands and one caller as they are,
-   extracted from the legacy store with the three joined-project predicates, whose only caller they were. */
-export { affordancesOf } from "./affordances/facts.mjs";
+   extracted from the legacy store with the three joined-project predicates, whose only caller they were; and (N13) the
+   op map that answers `op=affordancefacts`. */
+export { affordancesOf, affordancesOps } from "./affordances/facts.mjs";
 
 /* The disposition set: the target states op=dispose may write. Every other
  * inquiry state is entered by its own act with its own entry requirements
@@ -507,6 +508,9 @@ export const JUSTIFICATION_REFUSALS = [
   "DISMISSAL_REASON_UNKNOWN", "CLARIFY_NO_EXPLANATION", "WRONG_SIDE_NO_REASON", "TAKE_UP_NO_QUESTION",
   /* N364 (R2): the source acts' account is their evidence (sources R2, R6, R7), refused absent as C-121.3. */
   "NO_EVIDENCE",
+  /* K727 (T18): action-plans' one reason rule (its R4), the member's account in its word for it, at the plan's acts that
+     revise what stands. */
+  "PLAN_NO_REASON",
 ];
 
 /* THE GROUNDS ON WHICH A MUTATING OP HAS NO RUNG. Written ONCE here and pointed
@@ -816,6 +820,14 @@ export const RUNGS = {
   sourcedisclose:        "reasoned", // NO_EVIDENCE (sources R2: a disclosure names its evidence)
   sourcelink:            "reasoned", // NO_EVIDENCE (sources R6: a claim that two sources are one person, with evidence)
   sourceconsent:         "reasoned", // NO_EVIDENCE (sources R7: a member's evidenced record of the source's consent)
+  /* K727 (T18), on R27's rule: action-plans' acts that refuse without the member's reason (its R4), each corrected
+     forward and kept in the plan's history. `optiondispose` asks it where the act sets an option down (declined,
+     blocked), `triage`'s shape (K212). */
+  plansubjectadd:        "reasoned", // PLAN_NO_REASON (action-plans R4)
+  plansubjectremove:     "reasoned", // PLAN_NO_REASON (action-plans R4)
+  optionrevise:          "reasoned", // PLAN_NO_REASON (action-plans R9: a revision with its reason)
+  optiondispose:         "reasoned", // PLAN_NO_REASON (action-plans R13: declined and blocked need a reason)
+  planclose:             "reasoned", // PLAN_NO_REASON (action-plans R20: a member closes a plan with a reason)
   /* The version pair whose target state is in VERSION_REASON_REQUIRED. The
      OTHER FOUR version acts route through the SAME `#moveVersionState` and the
      SAME `VERSION_NO_REASON` refusal, and the branch DOES NOT FIRE for them —
@@ -860,6 +872,9 @@ export const RUNGS = {
   /* N364 (K558), on R27's rule: a withdrawal of consent asks no reason — it is never made to justify itself — and a
      published act takes it back: a further `sourceconsent` raises the standing it lowered (sources R7). */
   sourceconsentwithdraw: "reversible", // sourceconsent takes it back
+  /* K727 (T18), on R27's rule (`actionlaws`' precedent): a scenario is replaced whole by a further scenarioset, the
+     earlier version kept in history, and no reason is asked (action-plans R14). */
+  scenarioset:           "reversible", // a further scenarioset replaces it
 };
 
 
@@ -1153,6 +1168,28 @@ export const RUNG_ABSENT = {
   escalationattach:     { ground: "undetermined", is: "a member attaches a breach action to an escalation's current stage, 2, 5 or 7, a stage-7 act stating its accountability purpose; never detached (escalation R9, R12)" },
   escalationend:        { ground: "undetermined", is: "a member ends an escalation, only when compliance is restored for every standard pursued and the consequences are addressed; never reopened (escalation R14)" },
   actionriskpropose:    { ground: "undetermined", is: "a machine's or a member's PROPOSAL of an action's risk tier with its basis, stored apart and labelled; restated by the same proposer, and it never sets the tier (actions R28)" },
+  /* K705, K709 (T18 layer 11), on R27's rule: filings' two new writes and actions' two. None asks an authored reason
+     (a pressure mark's note describes what was received, and `PRESSURE_REFUSED` is a malformed mark, not a missing
+     account), and no published act takes any of them back. `actioncreate` is a member's chosen act, not `promote`'s
+     substrate, though it rides the same write: `entitycreate`'s ground. */
+  communicationprepare: { ground: "undetermined", is: "a machine or a member prepares a draft message, briefing or statement for an action, stored apart and labelled as its preparer's; never sent until a member approves it, `filingprepare`'s ground (filings R23)" },
+  templatesave:         { ground: "undetermined", is: "a member keeps an approved draft, or their derivative of it, as a named template of the group's; no machine writes one (filings R26)" },
+  actioncreate:         { ground: "undetermined", is: "a member creates an action, the same write as promoting an action document (actions R47)" },
+  actionpressure:       { ground: "undetermined", is: "a member marks a received correspondence entry as pressure directed at the group, appended to a table of its own and never rewritten; an entry is marked once (actions R48)" },
+  /* K727 (T18), on R27's rule: action-plans' acts that ask no authored reason and that no published act takes back —
+     opening a plan, adding, proposing and adopting an option (`goaldeclare`'s, `standardpropose`'s and `standardadopt`'s
+     grounds), a checkpoint's judgement (its note optional, never re-judged) and starting an option as an action
+     (`actioncreate`'s). */
+  planopen:             { ground: "undetermined", is: "a member opens a plan for a project over named subjects, a suspected inquiry or a determined outcome (action-plans R1)" },
+  optionadd:            { ground: "undetermined", is: "a member adds an option to a plan — what could be done, its category, the subjects it serves (action-plans R9); revised forward with a reason, never deleted" },
+  optionpropose:        { ground: "undetermined", is: "a machine or a member PROPOSES an option with its why, stored apart and labelled; never an option until a member adopts it (action-plans R11)" },
+  optionadopt:          { ground: "undetermined", is: "a member adopts a proposal as an option, the option naming the proposal, at most once (action-plans R11)" },
+  checkpointrecord:     { ground: "undetermined", is: "a member records whether a phase's condition was met at its checkpoint, with an optional note; judged once, never re-judged (action-plans R16)" },
+  optionstart:          { ground: "undetermined", is: "a member starts a chosen option as an action composed from it and promoted, `actioncreate`'s ground (action-plans R18)" },
+  /* K727 (T18): action-clocks' reminders (its R4, R6), `queuesnooze`'s ground — a member's own request about their own
+     attention, kept in that module's table and never in the action's document. */
+  reminderset:          { ground: "caller-owned", is: "a member asks to be reminded of a dated clock entry on a day, or changes or removes their own reminder (action-clocks R4)" },
+  reminderanswer:       { ground: "caller-owned", is: "a member answers their own due reminder, with a further one or none (action-clocks R6)" },
   /* `export`'s ground: the bytes are already the record's; this hands them over and logs who took them. */
   counselpacketexport:  { ground: "substrate", is: "hands a member a counsel packet version's bytes and records who exported it, when and for which counsel (filings R11)" },
 };
@@ -2581,6 +2618,33 @@ export const NON_ACTS = {
   escalationsuspend: "escalation-directed: a member suspends an escalation with a reason, keyed by escalation id; appends to its log",
   escalationresume: "escalation-directed: a member resumes a suspended escalation at its stage, keyed by escalation id; appends to its log",
   actionriskpropose: "action-directed: a machine or a member proposes an action's risk tier with its basis, keyed by (action, proposer); writes an `action_risk_proposals` row, never the tier",
+  /* K705, K709 (T18 layer 11): filings' and actions' new writes. A draft communication and a template are rows keyed by
+     an action and a group, and a pressure mark is keyed by one correspondence entry; creating an action acts on no
+     existing bundle (`testify`'s reason). Their reads (`templates`, `action`, `actions`) carry no `NEEDS` row and are
+     not named here (R12). */
+  communicationprepare: "action-directed: a machine or a member prepares a draft message, briefing or statement, keyed by action id; writes a draft row labelled as its preparer's, never sent until a member approves it",
+  templatesave: "draft-directed: a member keeps an approved draft as a named template of the group's, keyed by the draft; writes a template row and moves no bundle",
+  actioncreate: "creation: a member creates an action from its document, the same write as its promotion; acts on no existing bundle",
+  actionpressure: "entry-directed: a member marks one received correspondence entry as pressure, keyed by (action, entry ordinal); appends a mark and never rewrites the entry",
+  /* K727 (T18): action-plans' twelve acts. A plan is a `PLN-` record object whose options, scenarios and checkpoints are
+     rows of its own, none a bundle state `affordanceFacts` describes; they are reached in the plan's view. Its reads
+     (`plan`, `plans`, `planproposals`) carry no `NEEDS` row and are not named here (R12). */
+  planopen: "project-directed: a member opens a plan for one project over named subjects, keyed by project; writes a PLN- record object",
+  plansubjectadd: "plan-directed: a member adds a subject to a plan with a reason, keyed by (plan, subject); kept in the plan's history",
+  plansubjectremove: "plan-directed: a member removes a subject from a plan with a reason, keyed by (plan, subject); options serving it keep it, marked",
+  optionadd: "plan-directed: a member adds an option to a plan, keyed by plan; writes an option row",
+  optionrevise: "option-directed: a member revises an option with a reason, keyed by (plan, option); earlier revisions stay readable",
+  optionpropose: "plan-directed: a machine or a member proposes an option with its why, keyed by plan; writes a proposal row, never an option",
+  optionadopt: "proposal-directed: a member adopts a proposal as an option, keyed by proposal; at most once",
+  optiondispose: "option-directed: a member disposes of one or more options (open, chosen, declined, done, blocked), keyed by (plan, options); every change kept in the option's history",
+  scenarioset: "plan-directed: a member sets one of a plan's scenarios whole, keyed by (plan, scenario); the earlier version kept in history",
+  checkpointrecord: "scenario-directed: a member judges a phase's checkpoint met or not met, keyed by (plan, scenario, phase); judged once",
+  optionstart: "option-directed: a member starts a chosen option as an action, keyed by (plan, option); composes and promotes the action",
+  planclose: "plan-directed: a member closes a plan with a reason, keyed by plan id; the plan stays readable",
+  /* K727 (T18): action-clocks' reminders carry a `NEEDS` row with no capability (the control plane's `null`, as
+     `queuesnooze`'s), so each is named: `queuesnooze`'s reason, the subject a member's own attention. */
+  reminderset: "personal state, keyed (member, action, clock entry): a member's own request to be reminded of a dated entry, kept in action-clocks' table, never in the action's document",
+  reminderanswer: "personal state, keyed (member, action, clock entry): a member answers their own due reminder, with a further one or none",
 };
 
 /* D-126 — THE FOURTH WEIGHT, `per-item`, AND THE THREE ACTS THAT TAKE A SET.

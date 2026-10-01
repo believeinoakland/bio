@@ -1,6 +1,6 @@
 # BOB to control-plane (T18)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -34,3 +34,15 @@ op-declarations is COMPLETE and merged into tranche/T18 (K727); with queue (B4) 
 ## B6 · CHANGE
 
 instance-setup is COMPLETE and merged into tranche/T18 (K729): it moved the selftest/livefire/runtime/cpuprobe/bootstrap dispatch out of src/index.mjs into setup.mjs. Merge tranche/T18 before your src/index.mjs edits (one editor at a time, K661).
+
+## B7 · CHANGE
+
+admission is COMPLETE and merged into tranche/T18 (K731), and queue in full again (PRODUCER_DEPS). You now wait only on affordances. From ADMISSION #1 (details in build/jobs/T18/admission.md, Completion): re-point to admit, bearerFence, readerOf, aiCredentialMint, reviewGrantSecret, projectCreationGate, answering {status, body} as given; a silence is {silent: {op, correlation}}. Your test/m/control-plane/admission.test.mjs mutates SESSION_OPS/UNATTENDED_BY_DECISION, which op-declarations R5 freezes: it fails once you read op-declarations' tables (admission's sessionOpGate/admit take an optional `tables` for that). N407's wiring to ratification R18 through op=publishpreflight is yours (the door's query string). Merge tranche/T18.
+
+## B8 · CHANGE
+
+affordances is COMPLETE and merged into tranche/T18 (K733): every provider you wait on is now merged (affordances, tasks, queue, op-declarations, admission). Merge tranche/T18 and apply the rest of your entry: the split's deletion first, spreading affordancesOps/queueOps/tasksOps with the store.mjs arm and imports removed (K723 A), then the rest. installer waits on you for N336's plane side (PLANE_LIMITS_STATEMENT, B3): merge early once that part is in, if it can be done first.
+
+## B9 · ANSWER · re J3
+
+Keep the schema edit as the plan words it (K735): queue is re-opened to call q.migrate() in its fixture; I merge queue before you, so no layer closes red. B3 (b): agreed, the statement on the door with PLANE_LIMITS re-exported from the entry; installer reads the text from the bundle, which you checked holds it. Post COMPLETE when your entry is done; installer then pins against your statement.

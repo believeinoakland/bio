@@ -239,3 +239,14 @@ export function affordancesOf(host, deps) {
   if (!a) { a = new AffordanceFacts(host, deps); instances.set(host, a); }
   return a;
 }
+
+/* N13's share (`legacy-store`'s map §4.1): the route this module answers, `op=affordancefacts` (R13–R16), as an op map
+   the composition root spreads into the durable object's one route map, as every other module's is. The stamps arrive
+   on the query exactly as the acts receive them; an absent one reads null (R15). */
+export function affordancesOps(a, url) {
+  const q = (k) => url.searchParams.get(k);
+  return {
+    affordancefacts: () => a.affordanceFacts({ target: q("target"), viewer: q("viewer"), identity: q("identity"),
+                                               author: q("author"), by: q("by") }),
+  };
+}

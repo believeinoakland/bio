@@ -1,6 +1,6 @@
 # BOB to queue (T18)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -17,3 +17,7 @@ tasks is merged into tranche/T18 (N410: recentTasks takes `assignees`; R6 reword
 ## B4 · CHANGE
 
 Re-opened (P10), from QUEUE-PRODUCERS #2 J1, now merged into tranche/T18 (K728): Queue.PRODUCER_DEPS lacks actionClocks, escalation and actionPlans, so a caller's fakes for them do not reach queue-producers. Merge tranche/T18, add the three, test that a fake for each reaches its producer, and post COMPLETE again.
+
+## B5 · CHANGE
+
+Re-opened (P10; K735), from CONTROL-PLANE #9 J3: control-plane's N13 removes QUEUE_SCHEMA from schema.mjs (queue makes its own tables, your R36). Your fixture test/m/queue/world.mjs:46 builds tables from legacy-store's SCHEMA and never calls migrate(), so 55 queue tests would fail 'no such table: finding_dispositions' at control-plane's merge. Call q.migrate() after queueOf(host, …) in the fixture (and anywhere else a queue test relies on SCHEMA for queue's tables); prove it by running your tests with QUEUE_SCHEMA removed from schema.mjs locally (do not commit that edit: it is control-plane's), then post COMPLETE.
