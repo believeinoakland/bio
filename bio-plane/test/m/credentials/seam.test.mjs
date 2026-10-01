@@ -151,3 +151,38 @@ test("R16 R17 credentialsOf over a ctx reaches membership's own instance on that
   assert.equal(credentialsOf(w.ctx), w.c);
   assert.equal(w.m.isAdministrator("admin"), false);
 });
+
+test("R20 start registers setPassword as membership's password setter (its R95): the setter sets the member's password as R3 does, once; a second registration is membership's refusal", async () => {
+  /* membership's R95 as worded: one registration, held; a second refused by R81 */
+  const held = [];
+  const m = world().m;
+  const membership = {
+    onRevoked: (mod, fn) => m.onRevoked(mod, fn), registerClaimed: (mod, fn) => ({ ok: true, module: mod }),
+    memberFacts: (id) => m.memberFacts(id),
+    registerPasswordSetter(fn) {
+      if (typeof fn !== "function") return { ok: false, reason: "LISTENER_MALFORMED" };
+      if (held.length) return { ok: false, reason: "LISTENER_DECLARED" };
+      held.push(fn); return { ok: true };
+    },
+  };
+  const w = world();
+  const c = credentialsOf({ storage: { sql: w.sql } }, { record: { declarePurge() { return { ok: true }; } }, membership });
+  assert.equal(held.length, 1, "registered once, at start");
+  assert.deepEqual(c.start().password, { ok: false, reason: "LISTENER_DECLARED" }, "a second start is membership's refusal");
+  /* the setter is R3's: a salted derived hash for the role, the password never stored, the answer {ok, role} */
+  const r = await held[0]({ role: "member:ann", password: "ann-passphrase-x" });
+  assert.deepEqual(r, { ok: true, role: "member:ann" });
+  const row = w.row(`SELECT * FROM credentials WHERE role='member:ann'`);
+  assert.match(row.hash, /^[0-9a-f]{64}$/);
+  assert.doesNotMatch(JSON.stringify(row), /ann-passphrase-x/);
+  await held[0]({ role: "member:ann", password: "ann-passphrase-y" });
+  assert.equal(w.rows(`SELECT role FROM credentials WHERE role='member:ann'`).length, 1, "replaced, never a second row");
+  /* through the real membership, once its R95 exists: enrol sets the password in the one act, and the member signs in */
+  const real = world();
+  if (typeof real.m.registerPasswordSetter === "function") {
+    await real.claim();
+    const a = await real.m.memberAdd({ memberId: "second", cover: "c", role: "admin", by: "admin" });
+    assert.equal((await real.m.enroll({ invite: a.invite, handle: "second", password: "second-passphrase-z" })).ok, true);
+    assert.equal((await real.c.login({ role: "member:second", password: "second-passphrase-z" })).ok, true);
+  }
+});

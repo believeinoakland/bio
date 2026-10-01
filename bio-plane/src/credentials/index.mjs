@@ -1,7 +1,7 @@
 /* credentials — the credentials a member or the instance acts by: the founder's password and claim, members' passwords
  * and sessions, the signer keys whose signatures the record accepts, and the credentials AI work runs under.
  *
- * Requirements: build/requirements/credentials.md (R1–R19). Split from `membership` (K617, K636 BOB-1, K637; T19 layer
+ * Requirements: build/requirements/credentials.md (R1–R20). Split from `membership` (K617, K636 BOB-1, K637; T19 layer
  * 2, CREDENTIALS #1): the code is copied from `membership/index.mjs` and `schema.mjs`, without change of meaning, and
  * reads `members` only through membership's services (`memberFacts`, `sessionRights`, `isAdministrator`,
  * `activeAdmins`, `notAnAdmin`), never by SQL. Who the members are, and what each may do, is membership's; this module
@@ -47,11 +47,19 @@ export class Credentials {
    * by a failure here holds no capability (membership R92 resolves a revoked member to none at every read) and a key
    * left `active` does not attest (R8 asks the member's status), so a failure is never a credential kept.
    * R17: the one fact `claimed()`, read by membership's R64 and R86 through its R94. Registered once; each answer is
-   * membership's R81 (a second registration is refused, so `start` is idempotent through `credentialsOf`). */
+   * membership's R81 (a second registration is refused, so `start` is idempotent through `credentialsOf`).
+   * R20 (K774): `setPassword` registered as the setter membership's `enroll` calls inside its own act (its R95), so a
+   * member's password is set in the one act that enrols them, as before the split, and membership stores none. The
+   * setter is asked `{role, password}` and answers R3's `{ok, role}` (a promise: the derivation is asynchronous). Until
+   * membership offers R95 (its later work in this layer, K774) there is nothing to register with, and `password` reads
+   * null. */
   start() {
     const revoked = this.membership.onRevoked("credentials", (notice) => this.#memberRevoked(notice));
     const claimed = this.membership.registerClaimed("credentials", () => this.claimed());
-    return { revoked, claimed };
+    const password = typeof this.membership.registerPasswordSetter === "function"
+      ? this.membership.registerPasswordSetter(({ role, password } = {}) => this.setPassword({ role, password }))
+      : null;
+    return { revoked, claimed, password };
   }
 
   #memberRevoked({ memberId, by = null } = {}) {
