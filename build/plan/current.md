@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #80 · session_01UN385C1zhxo91Tf9CFHVYH · depth 1
 
-**Jobs** · office-readers: OFFICE-READERS #3 session_0158jNMUufRDREVsYavJs1om; text-chain: TEXT-CHAIN #4 session_01JFaNkersyiBgEDxNLun4KD
+**Jobs** · office-readers: OFFICE-READERS #3 session_0158jNMUufRDREVsYavJs1om; text-chain: TEXT-CHAIN #4 session_01JFaNkersyiBgEDxNLun4KD; ocr-worker: OCR-WORKER #3 session_01QM4dYxqMfWzRifHkXnvCj7
 
 Opened by BOB #80, 2026-10-01 (PROCESS-MECHANICS §5), under Bob's secondary account, at `main` @ 2a646f2587, T18 closed (K740, K741). The plan is `draft-T19-final.md` (adopted K734; its text below, unchanged), its Status as drafted: DRAFT by a worker for BOB #79, read on `tranche/T18` @ 33f1276bce and updated @ ac5ef075a0. ⚑L11 resolved at T18's close: LEGACY-INDEX #11's `git rm` was approved by Bob and merged (K739), so N401 is met and legacy-index's T19 job is `tools/` and its remaining paths only. The fold (rule 6's wordings before each layer, rule 8, BOB-5, N175) is on this branch before each layer's jobs read it. Bob's weekly meter at the opening: asked (K743).
 
