@@ -4,7 +4,7 @@
 
 | layer | name | constructs (System Design §3) | contract | modules |
 | --- | --- | --- | --- | --- |
-| 1 | Foundations | 5, and shared libraries | No access to the record. Pure libraries, or standalone workers that take bytes and return results. | record-grammar, legacy-checks, jurisdictions, test-support, runtime-limits, signatures, bundler, id-spaces, subresources, ooxml, office-readers, odf-reader, pdf-reader, format-registry, text-chain, site-profiles, docprofile, image-codecs, pdf-pixels, pdf-worker, ocr-worker |
+| 1 | Foundations | 5, and shared libraries | No access to the record. Pure libraries, or standalone workers that take bytes and return results. | record-grammar, jurisdictions, test-support, runtime-limits, signatures, bundler, id-spaces, subresources, ooxml, office-readers, odf-reader, pdf-reader, format-registry, text-chain, site-profiles, docprofile, image-codecs, pdf-pixels, pdf-worker, ocr-worker |
 | 2 | Record and authority | 3, 1 | Owns storage, id allocation, leases, audit and purge; the member, the capability and the fence; the one write path that promotes and checks a bundle. | record-core, membership, credentials, promotion |
 | 3 | Intake and provenance | 2 | Material enters only with provenance; a hop attests bytes, URL and time, no more. | host-governor, provenance, capture-sources, acquisition, capture, sources |
 | 4 | Content | 4, 5 | Readings are made from captured bytes; content is the reference to a part of a document, minted over them. | calibration, extraction, content |
@@ -13,8 +13,8 @@
 | 7 | Understanding | Content Framework §12, and 8 | What the investigation below has established: the group's intent, with progress computed against the record, and which findings still stand when their basis changes. | intent, reevaluation |
 | 8 | Publication | 13 | What the group stands behind leaves one way. | case-grammar, publication, public-read, project-stage, ratification, case-authoring, review |
 | 9 | Action | 16 (`BIO_Action_v0_1.md`); Functional Architecture "Layer 3: Action"; Design Requirements §7–§8 | An action rests on the record, and one asserting a breach rests on a published finding and a standard held in the record; the group plans and decides every act, the AI proposes and prepares and never files or sends; compliance is recorded as carefully as noncompliance; every deadline names its basis. | standards, conformance, consequences, action-grammar, actions, action-clocks, filings, escalation, action-plans |
-| 10 | Operations | 10, 14 | The instance keeps itself current unattended, and watches the actions' clocks and the government's response. | monitoring, scheduler, legacy-store |
-| 11 | Interface and distribution | 12, 15 | The ops, the member surfaces and the installer. Nothing below depends on them. | affordances, tasks, queue-producers, queue, instance-setup, op-declarations, admission, control-plane, plane, legacy-index, legacy-ui, installer, legacy-tests |
+| 10 | Operations | 10, 14 | The instance keeps itself current unattended, and watches the actions' clocks and the government's response. | monitoring, scheduler |
+| 11 | Interface and distribution | 12, 15 | The ops, the member surfaces and the installer. Nothing below depends on them. | affordances, tasks, queue-producers, queue, instance-setup, op-declarations, admission, control-plane, plane, legacy-ui, installer, legacy-tests |
 
 ## No jurisdiction in the product (Bob's concern, 2026-09-25; ruled by BOB #37)
 
@@ -33,9 +33,9 @@ The work this makes is in `plan/next.md`. The UI is worked on elsewhere and carr
 
 | legacy module | file | lines | why it sits where it does |
 | --- | --- | --- | --- |
-| legacy-checks | `bio-plane/checks/bio-checks.mjs` | 16,591 | It is the whole check catalogue, one set per construct, and it imports nothing. It was first in the order because modules in every layer use it; since T18 it is second, after `record-grammar`, the shared grammar it re-exports while importers re-point (K585 (4)). Each extracted module takes its own checks, which are its invariants. |
-| legacy-store | `store.mjs`, `schema.mjs` | 54,618 and 4,287 | It is last among the store-backed modules, so extraction runs bottom-up: an extracted module never calls back into it, and it calls the extracted modules. |
-| legacy-index | `index.mjs` | 13,438 | It is after legacy-store, because it imports it. |
+| legacy-checks | *(retired at T19's close, 2026-10-01, K858: emptied and deleted by control-plane R43)* `bio-plane/checks/bio-checks.mjs` | 16,591 | It is the whole check catalogue, one set per construct, and it imports nothing. It was first in the order because modules in every layer use it; since T18 it is second, after `record-grammar`, the shared grammar it re-exports while importers re-point (K585 (4)). Each extracted module takes its own checks, which are its invariants. |
+| legacy-store | *(retired at T19's close, 2026-10-01, K858: emptied and deleted by plane R8; its residue held in `src/plane/held.mjs` (plane R10, K842))* `store.mjs`, `schema.mjs` | 54,618 and 4,287 | It is last among the store-backed modules, so extraction runs bottom-up: an extracted module never calls back into it, and it calls the extracted modules. |
+| legacy-index | *(retired at T19's close, 2026-10-01, K858: emptied by its extractions; `tools/` deleted by LEGACY-INDEX #12; `src/index.mjs` left as plane's one-line re-export until bundler's T20 job (K846))* `index.mjs` | 13,438 | It is after legacy-store, because it imports it. |
 | legacy-ui | `civicos-ui/` | 26,489 in `app.html` | It talks to the plane over HTTP only. |
 | legacy-tests | `bio-plane/test/`, `civicos-ui/test/` and the UI's two check scripts | the old battery | Added 2026-09-26 by BOB #38 (P17). The old battery tests every layer, so it is last in the order and may use anything earlier. The extracted modules' own tests live in `bio-plane/test/m/<module>/`, which the most specific path assigns to each module. It shrinks as extraction replaces it (C5) and is retired when empty. |
 
