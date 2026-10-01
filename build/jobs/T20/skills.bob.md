@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` (T20) layer 6, skills (K882; N452, 
 ## B2 · ANSWER · re J1
 
 Yes, your reading. I will post a CHANGE when inquiry-grammar's rename is merged on tranche/T20.
+
+## B3 · CHANGE
+
+inquiry-grammar's rename is merged on `tranche/T20` (K897): `INQUIRY_GRAMMAR_CHECKS` is exported (the old name stays an alias). Merge the tranche branch into yours and re-point your reads, then COMPLETE.
