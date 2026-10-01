@@ -24,3 +24,7 @@
 - `ownership: 3 files changed by project-stage between tranche/T19 and HEAD; 0 failures`
 
 Size (session_0176SssFQ9f6sgcBWFaQfoad): test runs 2, module lines 382
+
+## J1 · REPORT
+
+Two findings outside my files, neither blocking. (1) build/requirements/project-stage.md Uses still names legacy-checks for parseFrontmatter; since this job it is record-grammar (its R6–R11, same contract). (2) test/m/publication/fixture.mjs:18 (publication's test file, which my fixture builds on) still imports parseFrontmatter from checks/bio-checks.mjs.
