@@ -1,6 +1,6 @@
 # instance-setup (T19)
 
-**Status** · session_017NLdnYUv8CHPKYpWgiwsHE · depth 2 · WAITING ON BOB (J1) · handled B1
+**Status** · session_017NLdnYUv8CHPKYpWgiwsHE · depth 2 · COMPLETE · handled B1
 
 ## J1 · COMPLETE
 
