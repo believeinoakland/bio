@@ -21,3 +21,7 @@ OP-DECLARATIONS #3's lists (its J1, adopted; not yet merged; I post again at its
 ## B4 · CHANGE
 
 Three items for your job (K1001, K1002). (1) `templatepropose`: filing-templates' ops map reads the proposer from the query's `author` (`filing-templates/index.mjs`:1271). Your door stamps the query `author` for `TEMPLATE_PROPOSAL_ACTIONS` with the proposal expression (`PLAN_PROPOSAL_ACTIONS`', an `ai` credential by its scope), overwriting any caller's; op-declarations declares it `proposer`, which is that stamp's meaning. (2) `stamps-action.test.mjs`:34 asserts `FILINGS_READS.includes("templates")`; `templates` is now in `FILING_TEMPLATES_READS` (op-declarations' merge): re-point it. (3) P9, from AFFORDANCES #12 J1 (3): since `rung-ladder.test.mjs` went, no test runs affordances' `unaccounted` (its R12) against the control plane's real op table, so DEC-8/FW-14's live totality is unmeasured. Add a test at your interface asserting `unaccounted(<your op table>)` is empty, under the requirement of yours that states the door's totality (name it). Affordances is merged in `tranche/T21`: merge it now.
+
+## B5 · CHANGE
+
+OP-DECLARATIONS #3 is merged into `tranche/T21` (K1003): merge it now. Its lists are as my B3, with `templatepropose` alone in `TEMPLATE_PROPOSAL_ACTIONS` (not in `QUERY_AUTHOR_ACTIONS`); per K1002 (my B4 (1)) your door stamps the query `author` for that list with the proposal expression. Sixteen ops in all (its J1 said seventeen).
