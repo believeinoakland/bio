@@ -22,3 +22,7 @@ Size (session_01QZhPT74LXukUHVTDZ8C1qw): test runs 1, module lines 306
 ## J1 · REPORT
 
 Generated artifacts staled by this job (comment-only change to bio-plane/src/tokens.mjs, N469): bio-plane/dist/bio-plane.bundled.mjs (+ .bundle.json, owner not_product) and agent-worker/dist/agent-worker.bundled.mjs (+ .bundle.json, owner agent-worker). pdf-worker and ocr-worker bundles do not take tokens.mjs; cpu.mjs is unchanged. Regenerated nothing.
+
+## J2 · COMPLETE
+
+N469 applied: both live notes in tokens.mjs naming deleted suites (:62 claudecascade.test.mjs, found on re-scan; :128 d260-resume.test.mjs) now point to the R23 test in runtime-limits.test.mjs (export surface, no write to env); the cross-module claim "only module naming the binding" is not a requirement here and is dropped. 26/26 tests pass; format, architecture, coverage, ownership 0 failures. Stale bundles in J1. Record has the details.
