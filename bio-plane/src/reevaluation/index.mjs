@@ -24,8 +24,9 @@
  * listens to provenance's receipts (its R47), each of which makes the notice sweep pending again (R25).
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership, promotion   layer 2: `readFile`, `head`, `livePaths`, `transact`, `declarePurge`,
- *                                   `registerAuditCheck`; `viewerPredicate`; `registerStep`, `onReopened`, the fact
- *                                   `publishedRegistry` (R2's ratified edition, R17's frozen pair).
+ *                                   `registerAuditCheck`; `viewerPredicate`; `registerStep`, `onReopened`, the facts
+ *                                   `publishedRegistry` (R2's ratified edition, R17's frozen pair) and
+ *                                   `publishedCaseRegistry` (R16's case editions, N457).
  *   inquiry        `restingOn`, `restsOnLive`, `supersededBy`, `earned`, `onRaised` (its R13, R16, R17, R42).
  *   content        `noticeForRow`, `passageNotice` (its R29–R31).
  *   connections    `edgeSevered` (its R22), read through inquiry's `restingOn`.
@@ -97,6 +98,14 @@ export const CAUSE_SOURCES = Object.freeze(["supersession", "edition", "deferred
 /** R21, R27: what an answer says when a tensions read could not be made. */
 const CORRECTIONS_UNREAD = "the contradiction module's tensions read could not be made, so whether a side this rests on "
   + "was named wrong was not read and no corrected cause could be derived; that is not the same as none";
+/** R16, R21 (N457): what an answer says when no module registered a case edition's parts (R26), or a read of the work
+ *  products a project owns could not be made. */
+const CASE_PARTS_ABSENT = "no module has registered the cited parts of a case edition, so which cases a project owns "
+  + "was not read and no wp_retraction cause could be derived; that is not the same as none";
+const WORK_PRODUCTS_UNREAD = "the cases a project owns, or their ratified editions, could not be read, so a wp_retraction "
+  + "cause may be missing; that is not the same as none";
+/** R16 (N457): the cases one page of R26's `cases` is asked for, while the work products a project owns are read. */
+export const WORK_PRODUCT_CASES_PAGE = 200;
 /** R27: the (dependent, candidate) entries one `correctedDependents` read lists (default and most). */
 export const CORRECTED_LIMIT_DEFAULT = 200;
 export const CORRECTED_LIMIT_MAX = 200;
@@ -250,8 +259,9 @@ export class Reevaluation {
   }
 
   /** R2, R16: one target's own row, answered as "has anything moved under a leg naming it?". `null` when nothing has,
-   *  which is the common case and what keeps the untargeted sweep cheap. `reg` is the published registry (null unread). */
-  #moved(targetId, visible, reg) {
+   *  which is the common case and what keeps the untargeted sweep cheap. `reg` is the published registry (null unread);
+   *  `wp` the answer's work-product reader (`#workProducts`). */
+  #moved(targetId, visible, reg, wp = this.#workProducts()) {
     const row = this.#targetRow(targetId);
     /* §5.4's gated deletion: a leg naming what the record no longer holds. When it went is not recorded here. */
     if (!row)
@@ -296,10 +306,10 @@ export class Reevaluation {
       causes.push({ source: "reopened", since: row.last_updated,
                     detail: `${targetId} was picked back up from ${row.prior_state}. What it concluded is `
                           + `being worked again, which is a reason to look at what rests on it.` });
-    /* R16: §5.4's cascade events, each a fact the target's own record states (the obligation is derived on read, never
-       a flag a cascade sets). */
+    /* R16: §5.4's cascade events, each a fact the record states about the target (the obligation is derived on read,
+       never a flag a cascade sets). */
     const type = normalizeType(row.object_type);
-    const fm = type === "information" || type === "project" || (reg && reg[targetId] && reg[targetId].latest > 0)
+    const fm = type === "information" || (reg && reg[targetId] && reg[targetId].latest > 0)
       ? this.#frontmatterOf(targetId) : null;
     if (type === "information" && fm && (fm.source_status === "modified" || fm.source_status === "removed"))
       causes.push({ source: "source_status", since: row.last_updated,
@@ -308,11 +318,9 @@ export class Reevaluation {
                         + `from it can no longer be checked against the source.`
                       : `the source of ${targetId} has changed since it was captured (source_status: modified); both `
                         + `versions are kept, and a claim resting on it rests on the earlier one.` });
-    if (type === "project" && fm && (fm.workproduct_state === "retracted" || fm.workproduct_state === "redistributed"))
-      causes.push({ source: "wp_retraction", since: row.last_updated,
-                    detail: `the work product ${targetId} was ${fm.workproduct_state === "retracted"
-                      ? "retracted" : "re-distributed"}, so what a claim took from it may no longer be what its `
-                          + `authors stand behind.` });
+    /* N457: a project's work product is its case editions (DEC-72), read through R26's registration and promotion's
+       fact; no document field is read for it (`workproduct_state` is retired, K899 (3)). */
+    if (type === "project") causes.push(...wp.of(targetId));
     const ann = this.#addressedAnnotation(targetId);
     if (ann)
       causes.push({ source: "annotation", since: ann.at,
@@ -329,6 +337,76 @@ export class Reevaluation {
     if (!causes.length && !edition) return null;
     return { held: true, state: row.current_state, object_type: row.object_type, causes, edition, withheld,
              ...(supersededBy && supersededBy.length ? { superseded_by: supersededBy } : {}) };
+  }
+
+  /** R16 (N457, K901): the `wp_retraction` causes, read once per answer. A project's work product is a case it owns
+   *  (DEC-72); the cause stands on the project when such a case has a ratified edition superseded by a later ratified
+   *  one (a correction is a new edition, publication R24), one cause per case, `since` the latest edition's
+   *  ratification. The cases and their owning project come through R26's registration (`cases`, `parts`' `project`),
+   *  their editions through promotion's fact `publishedCaseRegistry`, never a later module's service (P4). A withdrawn
+   *  edition has no record form, so nothing raises the cause for one. Answers `{of(project), flags()}`: `of` the causes
+   *  on one project, the cases paged through on its first call; `flags` what the answer states when the read could not
+   *  be made (R21): `case_parts_absent` with none registered, `work_products_read: false` when a read failed. */
+  #workProducts() {
+    const state = { asked: false, absent: false, read: true, owned: null, causes: new Map() };
+    const owned = (reg) => {
+      const byProject = new Map();
+      let after = "";
+      for (;;) {
+        let page = null;
+        try { page = reg.cases({ after, limit: WORK_PRODUCT_CASES_PAGE }); } catch { page = null; }
+        if (!page || !Array.isArray(page.cases)) { state.read = false; break; }
+        const ids = page.cases.filter((c) => typeof c === "string" && c);
+        for (const id of ids) {
+          let a = null;
+          try { a = reg.parts({ case: id }); } catch { a = null; }
+          if (!a) { state.read = false; continue; }
+          /* a case with no ratified edition answers a refusal: it owns no edition yet, so it is no work product */
+          const project = a.ok === false ? null : str(a.project);
+          if (!project) continue;
+          if (!byProject.has(project)) byProject.set(project, []);
+          if (!byProject.get(project).includes(id)) byProject.get(project).push(id);
+        }
+        const next = typeof page.cursor === "string" ? page.cursor : null;
+        if (!ids.length || next === null || next <= after) break;
+        after = next;
+      }
+      return byProject;
+    };
+    const of = (project) => {
+      state.asked = true;
+      if (state.causes.has(project)) return state.causes.get(project);
+      const reg = this.#caseParts;
+      if (!reg) { state.absent = true; return []; }
+      if (!state.owned) state.owned = owned(reg);
+      const ids = [...(state.owned.get(project) || [])].sort();
+      const out = [];
+      if (ids.length) {
+        const f = this.promotion.fact("publishedCaseRegistry", ids);
+        const value = f && f.ok && f.value && typeof f.value === "object" ? f.value : null;
+        if (!value) state.read = false;
+        for (const id of value ? ids : []) {
+          const e = value[id];
+          const eds = (e && e.editions && typeof e.editions === "object" ? Object.values(e.editions) : [])
+            .filter((x) => x && Number.isInteger(Number(x.edition)) && typeof x.ratified_at === "string" && x.ratified_at)
+            .sort((x, y) => Number(x.edition) - Number(y.edition));
+          if (eds.length < 2) continue;
+          const latest = eds[eds.length - 1], prior = eds[eds.length - 2];
+          out.push({ source: "wp_retraction", since: latest.ratified_at, case: id, edition: Number(latest.edition),
+                     superseded_edition: Number(prior.edition),
+                     detail: `case ${id}, a work product of ${project}, was corrected: its ratified edition `
+                       + `${Number(prior.edition)} is superseded by edition ${Number(latest.edition)}, ratified at `
+                       + `${latest.ratified_at}. Edition ${Number(prior.edition)} keeps answering as it was signed, and what `
+                       + `a claim took from the work product may no longer be what its authors stand behind.` });
+        }
+      }
+      state.causes.set(project, out);
+      return out;
+    };
+    const flags = () => !state.asked ? {} : {
+      ...(state.absent ? { case_parts_absent: true, case_parts_why: CASE_PARTS_ABSENT } : {}),
+      ...(state.read ? {} : { work_products_read: false, work_products_why: WORK_PRODUCTS_UNREAD }) };
+    return { of, flags };
   }
 
   /* R16: the recorded re-evaluations of the (dependent, target) pairs one answer lists, keyed (dependent, target,
@@ -643,6 +721,7 @@ export class Reevaluation {
       : this.#rows(`SELECT DISTINCT bundle_id FROM inquiry_basis ORDER BY bundle_id`).map((r) => r.bundle_id);
     const visible = this.#redactor(viewer);
     const reg = this.#registry([...targets, ...dependents]);
+    const wp = this.#workProducts();
     const obligations = [], closedOnly = [];
     /* Each obligation found is held with its causes, and the recorded re-evaluations of exactly those pairs are read
        once after the walk (R16), so that read is bounded by the answer. */
@@ -657,7 +736,7 @@ export class Reevaluation {
     const srcm = this.#sourceMoves(onTargets, visible);
     const correctedOn = new Set([...corr.byPair.keys(), ...srcm.byPair.keys()].map((k) => k.slice(k.indexOf("\u0000") + 1)));
     for (const t of targets) {
-      const moved = this.#moved(t, visible, reg);
+      const moved = this.#moved(t, visible, reg, wp);
       if (!moved && !correctedOn.has(t)) continue;
       /* R20: in the listing, an obligation whose target the viewer may not see is withheld whole, as strength R6
          withholds an unseen leg's member. A target the record no longer holds is no one's to see: its deletion cause
@@ -764,7 +843,7 @@ export class Reevaluation {
              ...(reg === null ? { editions_why: "no module provides the published registry, so no edition was read "
                                   + "and no edition cause could be derived; that is not the same as none" } : {}),
              corrections_read: corr.read,
-             ...(corr.read ? {} : { corrections_why: CORRECTIONS_UNREAD }) };
+             ...(corr.read ? {} : { corrections_why: CORRECTIONS_UNREAD }), ...wp.flags() };
   }
 
   /** R5 (REC-118 / D-410): an obligation's leg letters, resolved against what the record can earn, so the two halves of
@@ -880,10 +959,11 @@ export class Reevaluation {
     const visible = this.#redactor(viewer);
     const seen = fl.filter((id) => this.#visible(id, viewer));
     const reg = this.#registry(seen);
+    const wp = this.#workProducts();
     const corr = this.#standingCorrected(seen, viewer, visible, { withSource: true });
     const outF = fl.map((id) => {
       if (!seen.includes(id)) return { id, absent: true };
-      const moved = this.#moved(id, visible, reg);
+      const moved = this.#moved(id, visible, reg, wp);
       const causes = moved ? [...moved.causes] : [];
       if (moved && moved.edition)
         causes.push({ source: "edition", since: moved.edition.since, latest_edition: moved.edition.latest,
@@ -910,7 +990,7 @@ export class Reevaluation {
              findings_truncated: F.length > fl.length, contents_truncated: C.length > cl.length,
              limit: CHANGES_OF_MAX, wrote: false,
              ...(reg === null ? { editions_read: false } : { editions_read: true }),
-             corrections_read: corr.read, ...(corr.read ? {} : { corrections_why: CORRECTIONS_UNREAD }) };
+             corrections_read: corr.read, ...(corr.read ? {} : { corrections_why: CORRECTIONS_UNREAD }), ...wp.flags() };
   }
 
   /* R9, R27 (and R28 `withSource`): the corrected (and source) causes the named dependents carry on their own legs,

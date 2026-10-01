@@ -81,6 +81,9 @@ test("R15: taskEnqueue accepts only a known kind and a 64-hex digest, bounds sub
   assert.equal((await c.taskEnqueue({ kind: "other", captureSha: A })).reason, "BAD_KIND");
   assert.equal((await c.taskEnqueue({ captureSha: "abc" })).reason, "BAD_CAPTURE_SHA");
   assert.equal((await c.taskEnqueue({ captureSha: A.toUpperCase() })).reason, "BAD_CAPTURE_SHA");
+  /* N458: the refusal's sentence says "record", the member's word, never the developer's "bundle" */
+  const bad = await c.taskEnqueue({ captureSha: "abc" });
+  assert.match(bad.detail, /a record does not exist yet at capture time/); assert.ok(!/bundle/i.test(bad.detail));
   const r = await c.taskEnqueue({ captureSha: A, subject: "line one\nline two\u0007 " + "x".repeat(3000), locator: "y".repeat(2001), at: "2026-02-02T00:00:00Z" });
   assert.equal(r.ok, true); assert.equal(r.queued, true); assert.equal(r.deduped, false); assert.equal(r.enqueued, "2026-02-02T00:00:00Z");
   const row = rows(`SELECT * FROM task_queue`)[0];

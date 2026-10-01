@@ -18,12 +18,12 @@
  * one act that is new, so what a suite asserts about publication and about
  * ratification is still spelled out in the suite that asserts it.
  *
- * `casesign.test.mjs` — CASE-5b's own suite — deliberately does NOT use this
- * helper and signs inline, for `caseproduction.test.mjs`'s reason one item
- * earlier: the CEREMONY is what that suite tests, and a fixture that performs
- * the ceremony would have the suite asserting against its own helper. It also
- * means the helper and the subject share no code path, so a defect in the helper
- * cannot make CASE-5b's own suite pass.
+ * `casesign.test.mjs` — CASE-5b's own suite, deleted in T20 — deliberately did NOT
+ * use this helper and signed inline, for `caseproduction.test.mjs`'s reason one item
+ * earlier: the CEREMONY is what that suite tested, and a fixture that performs
+ * the ceremony would have the suite asserting against its own helper. A suite that
+ * tests the signing ceremony itself still signs inline, so the helper and its
+ * subject share no code path.
  *
  * THE STATEMENT IS WRITTEN OUT HERE IN ASCII rather than imported from
  * `src/sshsig.mjs`. That is the D4 discipline this estate already applies to

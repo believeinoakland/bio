@@ -1,4 +1,4 @@
-/* control-plane: THE INSTANCE'S DOOR (R1–R41). The Worker's HTTP entry — routing, the stamps, the answer's decoration
+/* control-plane: THE INSTANCE'S DOOR (R1–R44). The Worker's HTTP entry — routing, the stamps, the answer's decoration
    and envelope — moved from legacy-index (`index.mjs`) at control-plane's extraction (T12, K3, K93). Who may call an op is
    `admission`'s and what each op is `op-declarations'` (the split, K617, K624 (2)): this door calls admission's gates in
    R28's order and reads op-declarations' tables. An op's own handler is its module's: `makeFetch(hooks)` takes the
@@ -25,6 +25,8 @@ import { liveToken } from "../tokens.mjs";
 import { SIGN_HTML } from "../signpage.mjs";
 import { setupPage, instanceGroupOp, groupIdentityOp } from "../setup.mjs";
 import { inbandQuartet } from "../inband.mjs";   /* REC-148: DEC-31's in-band quartet, one function */
+/* R44 (K921): the template grant's one dead answer is filing-templates' (its R8), built from no argument. */
+import { noTemplateGrant } from "../filing-templates/index.mjs";
 import { normalizeAddress } from "../subresources.mjs";
 /* R18: the capability vocabulary `op=whoami` publishes is membership's (N13: no longer read through legacy-store). */
 import { Membership } from "../membership/index.mjs";
@@ -34,7 +36,8 @@ import { OPS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, 
          OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, SOURCE_ACTIONS, SOURCE_READS, QUEUE_ACTIONS, RUN_VERB_ACTIONS,
          RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS,
          STANDARDS_ACTIONS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS,
-         ACTION_LAYER_READS, PLAN_PROPOSAL_ACTIONS } from "../op-declarations/index.mjs";
+         ACTION_LAYER_READS, PLAN_PROPOSAL_ACTIONS, TEMPLATE_PROPOSAL_ACTIONS, LOCAL_FACTS_ACTIONS, TEMPLATE_DOOR_ACTIONS,
+         TEMPLATE_DOOR_READS } from "../op-declarations/index.mjs";
 
 /* REC-22: the ONE namespace the public read path answers from. An instance has
    one published record, so op=publishedcase and op=publishedbytes are pinned
@@ -92,6 +95,53 @@ async function reviewAnswer(out, op) {
   return json({ ok: true, ...r }, 200);
 }
 
+/* R44 (K921; filing-templates R8, R9, R13, R14) — THE TEMPLATE GRANT'S FOUR DOORS, on the review copy's (R20) for its
+   reason: the reader a grant exists for holds no credential of this instance. `templateread`, `templatecomments`,
+   `templatereview` and `templatecomment` admit two callers and no third:
+     - `secret=` — a RECIPIENT. Any presented value takes this door, an empty or malformed one included, so a malformed
+       secret travels the path a revoked one does. The value is HASHED HERE and only its digest crosses, stamped
+       `secretSha` and `bySecret` as `reviewcopy`'s are; filing-templates asks whether a live grant holds it.
+     - otherwise a MEMBER'S SESSION, admitted by `admission`'s `admit` held to a session (no binding class, no agent
+       credential), stamped `viewer` and `author` (its positional identity, the form filing-templates asks membership
+       of) as every act of the action layer is.
+   Every caller the grant does not admit (no secret and no session; a secret no live grant holds, of any kind) receives
+   filing-templates' ONE dead answer, `NO_TEMPLATE_GRANT`, at 404 and in the same bytes whoever built it, so a revoked,
+   never-issued or malformed secret and a stranger cannot be told apart. A store that did not answer is a silence. The
+   inner request carries the caller's own arguments with every stamp and credential removed. */
+const TEMPLATE_GRANT_DOORS = Object.freeze([...TEMPLATE_DOOR_ACTIONS, ...TEMPLATE_DOOR_READS]);   /* op-declarations R8 */
+const deadTemplateGrant = () => json({ ok: false, ...noTemplateGrant() }, 404);
+async function templateGrantDoor({ req, url, env, op, spec, presentedAi, stub }) {
+  const inner = new URL(`http://do/${op}`);
+  for (const [k, v] of url.searchParams) inner.searchParams.set(k, v);
+  for (const k of ["token", "op", "store", "secret", "secretSha", "bySecret", ...QUERY_STAMPS]) inner.searchParams.delete(k);
+  if (url.searchParams.has("secret")) {
+    inner.searchParams.set("bySecret", "1");
+    inner.searchParams.set("secretSha", await sha256Hex(url.searchParams.get("secret") || ""));
+  } else {
+    const admitted = await admit({ url, env, op, spec: { ...spec, classes: ["admin", "member"], machineClasses: [] },
+                                   method: req.method, presented: presentedAi, doAnswer });
+    if (admitted.silent) return storeSilent(admitted.silent.op, admitted.silent.correlation);
+    if (admitted.refusal || !admitted.caller.viaSession) return deadTemplateGrant();
+    inner.searchParams.set("viewer", admitted.caller.viewer);
+    inner.searchParams.set("author", admitted.caller.identity);
+  }
+  let body;
+  if (req.method === "POST") {
+    let b = {};
+    try { b = JSON.parse((await req.text()) || "{}"); } catch { b = {}; }
+    if (!b || typeof b !== "object" || Array.isArray(b)) b = {};
+    for (const k of [...BODY_STAMPS, ...QUERY_STAMPS, "secretSha", "bySecret"]) delete b[k];
+    body = JSON.stringify(b);
+  }
+  const out = await doAnswer(stub.fetch(new Request(inner, body === undefined ? { method: "GET" } : { method: "POST", body })));
+  if (out.refused) return storeRefusal(out);   /* R23: the store's own refusal, at its status */
+  if (!out.answered) return storeSilent(op, out.correlation);
+  const r = out.result;
+  if (r?.reason === "NO_TEMPLATE_GRANT") return deadTemplateGrant();
+  if (!r?.ok) return json({ ok: false, ...r }, r?.reason === "NO_SUCH_TEMPLATE" ? 404 : 400);
+  return json({ ok: true, ...r }, 200);
+}
+
 /* WHO IS ASKING, FOR A PUBLIC OP THAT ANSWERS WORKING MATERIAL ONLY TO SOME: `admission`'s `readerOf` (its R16), in the
    shape the arms behind plane's hooks read (`{viewer, cls}`, or `{silent: <op>, correlation}`). */
 async function caseReader(url, env, storeName, presentedAi) {
@@ -144,10 +194,11 @@ const json = (o, status = 200) =>
  *
  *   - **IT NEVER OVERWRITES.** A field already present is left exactly as the
  *     site wrote it. So a site that says something DIFFERENT from the catalogue
- *     is not silently corrected into agreement — `test/refusal-wire.test.mjs`
- *     compares what the caller RECEIVED against the row and fails on a
- *     divergence. A decoration that overwrote would make that check unable to
- *     fail, which is the "equality that costs nothing" this project refuses.
+ *     is not silently corrected into agreement — R22's tests
+ *     (`test/m/control-plane/envelope.test.mjs`) drive a field already present
+ *     and see it kept. A decoration that overwrote would make a comparison of
+ *     what the caller RECEIVED against the row unable to fail, which is the
+ *     "equality that costs nothing" this project refuses.
  *   - **IT NEVER INVENTS.** A code with no catalogue row is left bare and is
  *     reported by the instrument as census. Untranslated codes are REC-64's
  *     remaining sweep; making one up here would hide that work rather than do
@@ -233,8 +284,9 @@ function dec49Attach(o) {
    THE FIX IS A CHOKEPOINT, not twenty-four remembered checks, because a rule
    that must be remembered at every site is a rule that will be forgotten at
    the twenty-fifth. `doAnswer` is the ONLY place in this file that opens a
-   Durable Object envelope, and `test/plane-envelope.test.mjs` asserts that
-   structurally over the source rather than by convention.
+   Durable Object envelope, and R23's tests (`test/m/control-plane/envelope.test.mjs`)
+   drive every relay with a store that answers nothing, a non-JSON body, a stack and
+   its own refusal.
 
    `answered` is `ok === true` AND NOTHING ELSE. It is deliberately NOT
    "result is present and non-empty": a store method may legitimately answer
@@ -655,8 +707,8 @@ export function makeFetch(hooks = {}) {
     /* DEC-49 REGION is-unknown-op
        D-278 (C-69.1). `error` stays "unknown op" BYTE-IDENTICAL and stays the
        FIRST key after `ok`: civicos-ui's `queueAbsent` reads the sentence to tell
-       an older plane from a refusal (I3), and `preauth-vocabulary.test.mjs` reads
-       it out of this line textually. */
+       an older plane from a refusal (I3), and R2's test (`test/m/control-plane/
+       doors.test.mjs`) holds both at the interface. */
     if (!spec) return json({ ok: false, error: "unknown op", reason: "UNKNOWN_OP", ...dispatchRow("UNKNOWN_OP"),
                              op }, 400);
     /* END DEC-49 REGION is-unknown-op */
@@ -768,6 +820,8 @@ export function makeFetch(hooks = {}) {
         return relayAnswer(invStub.fetch(new Request(`http://do/${op}`, {
           method: "POST", body: JSON.stringify(body) })), op);
       }
+      /* R44 (K921): the template grant's four doors, a recipient's secret or a member's session (above). */
+      if (TEMPLATE_GRANT_DOORS.includes(op)) return templateGrantDoor({ req, url, env, op, spec, presentedAi, stub });
       if (op === "instancegroup" || op === "groupidentity") return groupRead(op, url, env, presentedAi);
       if (op === "knockerconsent") return knockerConsent(req, stub);
       /* The public ops whose handlers are their modules' (publication, public-read, instance-setup, capture). */
@@ -854,6 +908,9 @@ export function makeFetch(hooks = {}) {
     inner.searchParams.delete("identity");
     /* R17, R29: EVERY stamp the caller sent is deleted, whether this op declares it or not; the op's own are set below. */
     for (const k of QUERY_STAMPS) inner.searchParams.delete(k);
+    /* R44: a grant's digest and the secret door's mark are the door's alone (the mints below, the four grant doors), so a
+       caller's copy reaches no admitted op. */
+    for (const k of ["secretSha", "bySecret"]) inner.searchParams.delete(k);
     /* Who holds a lease is stamped by the server, never taken from the request,
        for BOTH a session and a machine credential — the same impostor rule
        `author`, `by` and `viewer` follow below. A session stamps the member; a
@@ -1385,12 +1442,13 @@ export function makeFetch(hooks = {}) {
        * machine credential did the same. Only `class:ai` was refused, which is
        * the one spelling every suite drove.
        *
-       * `content-extent.test.mjs` recorded the belief that an op-level arm was
-       * impossible here — *"driving it through op=attesttext with a machine
+       * The old `content-extent.test.mjs` recorded the belief that an op-level arm
+       * was impossible here — *"driving it through op=attesttext with a machine
        * token answers NOT_AUTHENTICATED before checkAttestation is ever
        * reached"*. That was measured with a token that was not a credential at
        * all. With a real one the op IS reached, and the fence was not there.
-       * The assertion is corrected at its site rather than exempted.
+       * R29's test (`test/m/control-plane/stamps.test.mjs`) now drives this
+       * stamp for every kind of caller.
        *
        * SO IT IS STAMPED, exactly as the queue's `member` above is, and for the
        * identical reason written there: the thing being written is not a claim
@@ -1425,11 +1483,8 @@ export function makeFetch(hooks = {}) {
       inner.searchParams.set("transcriber", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* The ATTESTOR of a typing, stamped on `attesttext`'s rule exactly and in its
        shape. Its machine fence is C-35.10 inside `checkAttestation` — the SAME
-       function `attesttext` reaches, imported from textchain.mjs, which
-       `scripts/identity-claims.mjs` states it cannot follow (it reads the store
-       method and one private helper). Driven, not assumed: transcribe.test.mjs
-       section 3 refuses the MEMBER_TOKEN machine credential here as
-       TEXT_ATTEST_MACHINE, including when its body names a person. */
+       function `attesttext` reaches, imported from textchain.mjs; the fence is
+       content's and text-chain's to prove, and this door's stamp R29's. */
     if (op === "transcriptionattest")
       inner.searchParams.set("attestor", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* MK-1 / D-184 / IC-133 — WHO OBSERVED IT, stamped by the server on the rule
@@ -1490,11 +1545,10 @@ export function makeFetch(hooks = {}) {
        proposed it. Never the principal a key was minted for, which would put a machine's citations under
        somebody else's id. A caller-supplied `proposer` is overwritten rather than honoured: the label is the
        whole product and a label a caller can write is not one.
-       THE PROSE HERE DELIBERATELY CLAIMS NO PERSON-ONLY CONSTRAINT, and that is not style:
-       `identity-claims.mjs` reads a stamp site's own comment for a claim that only a signed-in person may
-       write the field, and grades it a DEFECT where nothing refuses a machine identity. Nothing refuses one
-       here BY DESIGN — D-149 says the machine MAY propose — so a comment claiming otherwise would be the
-       instrument reading this site correctly. The fence is one op up, at the act that SETS the list. */
+       THE PROSE HERE DELIBERATELY CLAIMS NO PERSON-ONLY CONSTRAINT, and that is not style: nothing refuses a
+       machine identity here BY DESIGN — D-149 says the machine MAY propose — so a comment claiming otherwise
+       would be a fence that reads as present and is not. The fence is one op up, at the act that SETS the
+       list. */
     if (op === "actionlawspropose")
       inner.searchParams.set("proposer",
         viaSession ? sessMember
@@ -1521,6 +1575,17 @@ export function makeFetch(hooks = {}) {
         viaSession ? sessIdentity
         : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}`
         : `${MACHINE_CLASS_PREFIX}${cls}`);
+    }
+    /* K921 (filing-templates R6; op-declarations R8): WHO PROPOSED A TEMPLATE'S WORDING. Any credential may propose, so
+       the stamp is the label, by `actionlawspropose`'s expression (a session its member, a machine `class:<cls>`, an
+       `ai` credential `class:ai/<tokenId>`). It is set as `proposer`, the stamp op-declarations names, and as `author`,
+       the key filing-templates' ops map reads its proposer from; a caller's copy of either is overwritten. */
+    if (TEMPLATE_PROPOSAL_ACTIONS.includes(op)) {
+      const proposer = viaSession ? sessMember
+        : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
+        : `${MACHINE_CLASS_PREFIX}${cls}`;
+      inner.searchParams.set("proposer", proposer);
+      inner.searchParams.set("author", proposer);
     }
     /* T8 (layer 9): WHO DETERMINED, COMPARED, RECORDED A CONSEQUENCE OR ITS ADDRESSING, PREPARED, APPROVED OR SENT A
        FILING, NAMED COUNSEL, EXPORTED A PACKET, PROPOSED A THEORY, OR MOVED AN ESCALATION — conformance, consequences,
@@ -1644,10 +1709,8 @@ export function makeFetch(hooks = {}) {
        `provenanceChainRebuild` carries no identity fence of any kind. DEC-52 ruled on
        three verbs and this is not one of them, so REC-65 neither fenced it nor extended
        the ruling to cover it; a worker doing either would be deciding doctrine nobody
-       asked for. It is LEFT for Bob and PINNED as a known-open finding in
-       `test/identity-claims.test.mjs`, which fails if a fence appears OR if this
-       sentence stops making the claim — so the gap cannot close silently in either
-       direction. What is NOT open: the stamp itself. A machine arrives named
+       asked for. It is LEFT for Bob as a known-open finding (REC-65's report).
+       What is NOT open: the stamp itself. A machine arrives named
        `token:<class>`, so whatever is ruled later can be enforced on an honest
        identity rather than a guessed one. */
     /* PL-2 / IS-2 joins them, and this is FENCE LAYER 1 (see VERSION_ACTIONS
@@ -1722,7 +1785,7 @@ export function makeFetch(hooks = {}) {
        sight, applied to acts); every instance credential stamps `class:<cls>`, which holds no
        roster position and is not asked — machine fences are their own and unchanged. The caller's
        `identity` was DELETED for every op above, so nothing here can be named by a caller.
-       A new act on a project joins POSITIONAL_ACTS; the suite's arms read it through the ops. */
+       A new act on a project joins POSITIONAL_ACTS (op-declarations); R29's test drives every op that declares the stamp. */
     if (POSITIONAL_ACTS.includes(op))
       inner.searchParams.set("identity",
         viaSession ? sessIdentity
@@ -1804,8 +1867,8 @@ export function makeFetch(hooks = {}) {
        `class:<cls>`, which is on no roster: it opens a proposal and endorses nothing.
        **PROVISIONAL, AND BOB'S TO RULE: a bearer reaching `memberadd` is NOT
        refused** the way C-32.17 refuses one at the three ops above. MEASURED
-       before choosing (M-84): 99 battery suites, five probes and a live
-       verification run create their members through a bearer `memberadd`;
+       before choosing (M-84): 99 suites of the old battery, five probes and a live
+       verification run created their members through a bearer `memberadd`;
        `setup.mjs`, the one non-test caller, posts with the founder's SESSION.
        With this stamp a bearer's `by` names nobody, and what the op still does for
        one — an invitation, §4.2's second administrator, a proposal awaiting every
@@ -1927,10 +1990,11 @@ export function makeFetch(hooks = {}) {
        `actor` since REC-21's neighbourhood, forty lines above this. PL-18's
        first draft deleted the key UNCONDITIONALLY, on the `ownerMemberId`
        precedent — and `ownerMemberId` is a name only `promote` uses, which is
-       what makes that precedent safe and this copy of it wrong. The battery
-       caught it: `members.test.mjs`, *"session lease is stamped with the
+       what makes that precedent safe and this copy of it wrong. Found by the
+       old battery's `members.test.mjs`, *"session lease is stamped with the
        member, not the claimed actor"*, one assertion, a lease arriving at the
-       store with its actor wiped. **A server-side stamp that clears a key it
+       store with its actor wiped; R38's tests (`test/m/control-plane/
+       lease.test.mjs`) hold the lease's actor now. **A server-side stamp that clears a key it
        does not own reaches every op that shares the name**, and the blast
        radius of this class is the whole parameter namespace, not the op being
        edited. Both halves now sit inside the guard, so nothing outside these
@@ -2034,7 +2098,7 @@ export function makeFetch(hooks = {}) {
            creation-time group stamp, and C-32.19's rule that no machine writes a member's `risk_tier`. The exemption
            is right for what it is FOR: a replay re-states the record's own past verbatim, and that past predates the
            fences. But the flag ARRIVED IN THE REQUEST BODY and nothing removed it, so any caller could hand itself
-           the exemption. MEASURED by D-505 through op=promote (`risk-tier.test.mjs` §7 arm (ix), now INVERTED): a
+           the exemption. MEASURED by D-505 through op=promote (the old `risk-tier.test.mjs` §7 arm (ix)): a
            MEMBER-class deploy token sending `replay: true` landed `risk_tier: 1` — "file freely" — on an action
            nobody assessed, and `op=projection` published it. A provenance hop a caller can hand us is one a caller
            can invent, which is the reasoning `migrationReplay` below already answers one field over.
@@ -2047,8 +2111,9 @@ export function makeFetch(hooks = {}) {
            trust, which is the distinction `op=export` draws in this file in the same words. MEASURED, because the
            first draft of this comment said an ADMIN-ROLE MEMBER's session arrives that way too and that is FALSE:
            a member login stores `member:<id>`, so her class is `member` and `m.role === "admin"` decides only her
-           capabilities (`Store#sessionRights`). `risk-tier.test.mjs` §8's REACH arm asks `op=whoami` for all four
-           callers rather than asserting any of it, and this section's control caught the error. Everything else
+           capabilities (`Store#sessionRights`). The old `risk-tier.test.mjs` §8's REACH arm asked `op=whoami` for all
+           four callers rather than asserting any of it, and its control caught the error; R16's tests
+           (`test/m/control-plane/gates.test.mjs`) hold the class test now. Everything else
            — a member session, a member, probe or `ai` token, and any class added later — has the flag removed BEFORE
            the store sees it, so every fence applies to it. It is a DELETE and not a refusal: the caller asked for an
            exemption it may not have, and the honest answer is the promotion judged as what it IS, which then refuses
@@ -2426,10 +2491,7 @@ export function makeFetch(hooks = {}) {
        worker deciding a doctrine question Bob has not been asked, and blessing it would
        be worse — it would extend a ruling by analogy, which is exactly how a ruling
        drifts. It is LEFT for Bob (REC-65's report) as the question DEC-52's
-       reasoning raises without answering, and it is PINNED as a known-open finding in
-       `test/identity-claims.test.mjs` so it cannot quietly become normal. **The pin
-       fails when either half moves** — when a fence appears, or when this comment stops
-       claiming it is a member's decision — a pin that expires mechanically. */
+       reasoning raises without answering. */
     if (op === "proposedispose" && passBody) {
       try {
         const b = JSON.parse(passBody);
@@ -2482,6 +2544,24 @@ export function makeFetch(hooks = {}) {
           delete b.author;
           delete b.proposer;
           if (op === "standardpropose") b.proposer = who; else b.author = who;
+          passBody = JSON.stringify(b);
+        }
+      } catch { /* the DO will refuse the malformed body with its own words */ }
+    }
+    /* K921 (local-facts R1): WHO CONFIRMED, CORRECTED OR DISPUTED A LOCAL FACT. local-facts reads `by` from the BODY,
+       so it is stamped into the body here and a caller's is overwritten: the positional identity (`member:<id>`, the
+       founder's `member:admin`), the action layer's expression, a machine `class:<cls>` and an agent `class:ai/<tokenId>`,
+       each a machine identity local-facts refuses BY NAME (MACHINE_CANNOT_CONFIRM). An empty POST body is stamped too,
+       so the refusal is the module's own and never an unattributed row. */
+    if (LOCAL_FACTS_ACTIONS.includes(op) && req.method === "POST") {
+      try {
+        const b = passBody ? JSON.parse(passBody) : {};
+        if (b && typeof b === "object" && !Array.isArray(b)) {
+          /* local-facts' ops map spreads the whole body into the act, so no stamp of the caller's may ride in it */
+          for (const k of QUERY_STAMPS) delete b[k];
+          b.by = viaSession ? sessIdentity
+            : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
+            : `${MACHINE_CLASS_PREFIX}${cls}`;
           passBody = JSON.stringify(b);
         }
       } catch { /* the DO will refuse the malformed body with its own words */ }
@@ -2547,8 +2627,9 @@ export function makeFetch(hooks = {}) {
      *
      * The Durable Object receives the SHA and never the value, so no method in
      * `store.mjs` can print a credential because none has ever held one — a
-     * stronger statement than a rule about not logging it, and asserted over
-     * that file's source in test/aicredential.test.mjs. What is stored is an
+     * stronger statement than a rule about not logging it; R30's test
+     * (`test/m/control-plane/envelope.test.mjs`) drives the mint and finds the
+     * value in its one answer and nowhere else. What is stored is an
      * identity a member chose and a hash that verifies a presentation, and
      * D-199 (4) is explicit that the record names the identity and the
      * principal, NEVER the token's value.
@@ -2610,6 +2691,29 @@ export function makeFetch(hooks = {}) {
           + "fingerprint and cannot be recovered. Give it to the recipient: it lets them READ this one draft and "
           + "COMMENT on it, and nothing else. If it is lost, withdraw this grant and issue another.",
         read: "op=reviewcopy&secret=<the value above>",
+      }, store: storeName, tokenClass: cls }, 200);
+    }
+
+    /* R44 (K921; filing-templates R8): THE TEMPLATE GRANT'S SECRET, answered as `reviewgrant` is, one block up and for
+       its reason: generated here by admission's `reviewGrantSecret` (its R13), its SHA-256 alone stamped `secretSha` for
+       filing-templates, and the value returned once, in this answer. It opens the four grant doors (R44) to one version
+       while the grant is live, and nothing else. */
+    if (op === "templatereviewgrant") {
+      const { secret, secretSha } = await reviewGrantSecret();   /* admission R13 */
+      inner.searchParams.set("secretSha", secretSha);
+      const issued = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
+      if (issued.refused) return storeRefusal(issued, { op, store: storeName, tokenClass: cls });
+      if (!issued.answered) return storeSilent("templatereviewgrant", issued.correlation);
+      if (!issued.result || issued.result.ok !== true)
+        return json({ ok: false, ...(issued.result || {}), op, store: storeName, tokenClass: cls }, 403);
+      return json({ ok: true, result: {
+        ...issued.result,
+        secret,
+        secretIsShownOnce: "This is the only time this instance will show this value. It is stored only as a "
+          + "fingerprint and cannot be recovered. Give it to the reviewer: it lets them READ this one template version, "
+          + "COMMENT on it and REVIEW it while it is a draft or in review, and nothing else. If it is lost, withdraw "
+          + "this grant and open another.",
+        read: "op=templateread&secret=<the value above>",
       }, store: storeName, tokenClass: cls }, 200);
     }
 

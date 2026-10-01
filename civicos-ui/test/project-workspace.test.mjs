@@ -96,9 +96,10 @@
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
    discard the writer's own output. SHARED from the plane's test estate rather than copied into
-   this one — ONE implementation, so `bio-plane/test/tally-through-pipe.test.mjs` guards it for
-   both estates and a node release closing the private door goes red once instead of half. The
-   import is for its SIDE EFFECT and is idempotent. Census: `stdio-census.test.mjs`. */
+   this one — ONE implementation, so test-support's R6 test
+   (`bio-plane/test/m/test-support/test-support.test.mjs`) guards it for both estates and a
+   node release closing the private door goes red once instead of half.
+   The import is for its SIDE EFFECT and is idempotent. Census: `stdio-census.test.mjs`. */
 import fs from "fs"; import vm from "vm"; import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
 
@@ -415,13 +416,14 @@ const ROSTER_OP = { projectinvite:"projectinvite", projectjoin:"projectjoin", pr
   /* CORRECTED 2026-09-19 (UI-66, on REC-141 / IC-158): this drove a member-TYPED `newId` and asserted it was
      sent. That was the defect, not the behaviour: a fork's id is MINTED by the plane (Membership v2 §7), which
      now refuses a named `newId` (C-59.3). The form carries no id field, so the fork is reached with the NAME
-     alone and no `newId` key at all. The real-plane arm — the id shown is the id in the registered bytes — is
-     `project-id-surface.test.mjs`; this mock cannot say anything about a minted id and does not pretend to. */
+     alone and no `newId` key at all. The real-plane arm — the id shown is the id in the registered bytes — was
+     `project-id-surface.test.mjs` (deleted in T20); this mock cannot say anything about a minted id and does not pretend to. */
   /* CORRECTED 2026-09-25 (UI-70, on REC-197; Membership v2 §7.14): this drove the fork with the NAME alone.
      A fork is a creation and its forker now CHOOSES discoverable or hidden, with neither preselected, and the
      form sends nothing until they have — so a fork with the name alone is refused at the form, correctly, and
      this arm now ticks the choice a member makes. The forced choice itself (nothing preselected, no submit
-     without it, the value reaching the plane) is `project-visibility-surface.test.mjs`'s, against the real plane. */
+     without it, the value reaching the plane) was `project-visibility-surface.test.mjs`'s, against the real plane
+     (deleted in T20). */
   d = await drive("projectfork", { title:"The marina money, harbour half" }, ["vis-hidden"]);
   ok("op=projectfork is reached with the name and NO id (the plane mints the fork's id — UI-66)",
      !!d.call && !("newId" in d.call.params) && /harbour half/.test(d.call.params.title));

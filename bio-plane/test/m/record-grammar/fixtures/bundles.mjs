@@ -1,7 +1,9 @@
 /* record-grammar's bundle fixtures: one bundle per arm of `checkBundle`'s structural checks, and the clean bundle each is
    a change of. `expected.json` beside this file holds, for every fixture, the findings the check catalogue's own
    `checkBundle` gave before the move (T19), generated once with every type arm claimed by `STUBS` below, so the two
-   are compared over the structural arms and the places of the type arms alone. */
+   are compared over the structural arms and the places of the type arms alone. T21 (N456, N458) changed it by name:
+   C-6.3's `workproduct_state` arm and its findings went, the project stub re-keyed to C-2.9, C-13.2's and C-16.1's
+   messages say "record", and the project machine's fixtures (R35) were added. */
 import { createSha256 } from "../../../../src/record-grammar/index.mjs";
 
 export const NOW = Date.parse("2026-06-01T00:00:00Z");
@@ -10,13 +12,14 @@ export const sha256 = async (v) => createSha256().update(typeof v === "string" ?
 const hex = (s) => createSha256().update(utf8(s)).hex();
 
 /* The type arms, claimed by grammars that each leave one marker finding, so their places in the order are seen. C-2.7's
-   grammar leaves none: its place is capture's grammar's to keep or lose (job record, J2), not the structural arms'. */
+   grammar leaves none: its place is capture's grammar's to keep or lose (job record, J2), not the structural arms'.
+   Re-keyed at T21 (N456, K904): the project slot is C-2.9 alone, so its stub claims and marks C-2.9. */
 const marker = (check) => (ctx, findings) => { findings.push({ check, severity: "info", message: `${check} arm ran` }); };
 export const STUBS = [
   { module: "stub-information", ids: ["C-2.7"], arm: () => {} },
   { module: "stub-info2", ids: ["C-18.6", "C-18.7"], arm: marker("C-18.6") },
   { module: "stub-inquiry", ids: ["C-2.8"], arm: marker("C-2.8") },
-  { module: "stub-project", ids: ["C-2.9", "C-9.1"], arm: marker("C-9.1") },
+  { module: "stub-project", ids: ["C-2.9"], arm: marker("C-2.9") },
 ];
 
 const CORE = (o) => ({
@@ -153,8 +156,12 @@ export function fixtures() {
       address: "https://example.org/x", verdict: "undetermined" }), ref({ asserted_by: "source" }), ref({ status: "maybe" }),
       ref({ target: "https://example.org/doc" }), ref({ target: "folder/INFO-2026-0002-b" }), ref({ target: "INFO-2026-2-b" }), "plain",
       ref({ target: "INFO-2026-0003-c" })] }, {}, { resolveTarget: (t) => t !== "INFO-2026-0003-c" }),
-    "C-6.3 distributed with no distributions": typed("PROJ", "project", { current_state: "forming", workproduct_state: "distributed" }),
-    "C-6.3 distributed with distributions": typed("PROJ", "project", { current_state: "forming", workproduct_state: "distributed" }, { "distributions/a.md": "x" }),
+    "C-6.3 retired: a distributed project with no distributions is no finding": typed("PROJ", "project", { current_state: "forming",
+      workproduct_state: "distributed" }),
+    "C-4.1 project legacy states are readable": typed("PROJ", "project", { current_state: "investigating" }),
+    "C-4.1 project matured is readable": typed("PROJ", "project", { current_state: "matured" }),
+    "clean closed project": typed("PROJ", "project", { current_state: "closed" }),
+    "C-4.1 project state outside its machine": typed("PROJ", "project", { current_state: "published" }),
     "C-12.1 history with no manifest": info({}, { "_history/bundle_20260101T000000Z_aaaaaaaa.md": live }),
     "C-12.1 manifest does not parse": info({}, { "_history/manifest.json": "{" }),
     "C-12 manifest accounting": info({ last_updated: "2026-01-01T00:00:00Z" }, {

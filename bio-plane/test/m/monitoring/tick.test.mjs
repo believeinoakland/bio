@@ -197,6 +197,56 @@ test("R3 the baseline: the Drive export row, else the locator's row, else the ar
   assert.equal(ur.body.note, "no captured baseline to compare against; recorded the check only");
 });
 
+test("R3 the tick's Drive export row, else locator row, is the row capture-sources R45 chooses, the one the Drive shell sweep (R26) judges; the archive hop is only the tick's fallback after it", async () => {
+  const w = world();
+  const docOf = (n) => `https://docs.google.com/document/d/1AbCdEfGhIjKlMnOpQrStUvWxYz0123456789ab${n}/edit`;
+  const exportOf = (n) => `https://docs.google.com/document/d/1AbCdEfGhIjKlMnOpQrStUvWxYz0123456789ab${n}/export?format=odt`;
+  const row = (locator, cap, extra = {}) => ({ file: `snapshots/${cap.slice(0, 8)}`, locator, retrieved: "2026-09-20T00:00:00Z",
+    authority: "Town Clerk", origin: { kind: "named_request" }, attestation_attempts: [],
+    capture: { sha256: cap, method: "direct", grade: "B", actor_class: "daemon", encoding: "binary", bytes: 9, content_type: "text/plain" },
+    ...extra });
+  /* Each case: a Drive document whose register holds `rows` (built over fresh captures), and the row R3 names. */
+  const make = (n, rowsOf) => {
+    const id = `INFO-2026-002${n}-r45`;
+    const caps = [0, 1, 2].map((k) => w.hold(`r45 case ${n} capture ${k}`));
+    const rows = rowsOf(caps, docOf(n), exportOf(n));
+    const held = [...new Set(rows.map((r) => r.capture.sha256))];
+    assert.equal(w.promote(id, infoMd(id, docOf(n)), { reg: rows,
+      files: held.map((c) => ({ path: `snapshots/${c.slice(0, 8)}`, blobSha: c, sha256: c, bytes: 9 })),
+      register: held.map((c) => ({ sha256: c, path: `snapshots/${c.slice(0, 8)}`, encoding: "binary", bytes: 9 })) }).ok, true, id);
+    w.net.routes[exportOf(n)] = serve("odt", "application/vnd.oasis.opendocument.text");
+    return { id, caps };
+  };
+  const archived = (doc) => ({ provenance_chain: [{ via: "archive.org", document_address: doc }] });
+  const cases = [
+    /* the export row, though the document-address row is listed first */
+    [make(1, ([a, b], doc, exp) => [row(doc, a), row(exp, b)]), 1],
+    /* the export row alone */
+    [make(2, ([a], doc, exp) => [row(exp, a)]), 0],
+    /* the document-address row, with no export row */
+    [make(3, ([a], doc) => [row(doc, a)]), 0],
+    /* the document-address row over an archive hop naming the document, listed before it */
+    [make(4, ([a, b], doc) => [row(`https://web.archive.org/web/2026id_/${doc}`, a, archived(doc)), row(doc, b)]), 1],
+    /* a row at another address chooses nothing */
+    [make(5, ([a]) => [row("https://records.example.org/elsewhere", a)]), null],
+  ];
+  const sweep = w.m.driveShells({ viewer: DAEMON });
+  const judged = new Map([...sweep.shells, ...sweep.export, ...sweep.undetermined, ...sweep.no_baseline].map((e) => [e.bundle, e]));
+  for (const [{ id, caps }, at] of cases) {
+    const want = at === null ? null : caps[at];
+    const tick = (await w.m.monitor({ bundleId: id, viewer: DAEMON, actorClass: "machine", actor: DAEMON })).body;
+    assert.equal(tick.baseline, want, `${id}: the tick's baseline`);
+    const e = judged.get(id);
+    assert.ok(e, `${id} is swept`);
+    assert.equal(e.baseline ? e.baseline.sha256 : null, want, `${id}: the sweep judges the same row`);
+  }
+  /* with no export or locator row, the archive hop naming the document is the tick's baseline (the sweep has none) */
+  const { id, caps } = make(6, ([a], doc) => [row(`https://web.archive.org/web/2026id_/${doc}`, a, archived(doc))]);
+  assert.equal((await w.m.monitor({ bundleId: id, viewer: DAEMON, actorClass: "machine", actor: DAEMON })).body.baseline, caps[0]);
+  const late = w.m.driveShells({ viewer: DAEMON }).no_baseline.find((e) => e.bundle === id);
+  assert.deepEqual([late && late.verdict, late && late.baseline], ["no_baseline", null]);
+});
+
 test("R4 removed, unreachable, and the Drive shell refusals (C-48.8, C-48.9), each shell writing an unreachable look and leaving the document untouched", async () => {
   const w = world();
   for (const [n, st] of [[1, 404], [2, 410]]) {

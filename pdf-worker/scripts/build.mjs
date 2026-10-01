@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /* Build the pdf-worker into ONE self-contained module. The output is committed
- * so a fresh worktree's battery can load it under miniflare without installing
- * `unpdf` — exactly as the plane commits dist/bio-plane.bundled.mjs.
+ * so a fresh worktree's suite (`test/structure.test.mjs`) can load it under
+ * miniflare without installing `unpdf` — exactly as the plane commits
+ * dist/bio-plane.bundled.mjs.
  *
  * `unpdf` (pdf.js) is INLINED here and never enters the plane's module graph:
  * that separation is the whole point of the fleet (adding unpdf to the plane

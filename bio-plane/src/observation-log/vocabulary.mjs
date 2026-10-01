@@ -54,9 +54,10 @@ export const OBSERVATION_STATE_WORDS = Object.freeze(Object.fromEntries(
   Object.entries(OBSERVATION_STATES).map(([k, v]) => [k, v.replace(/\s*\([^()]*\)\s*$/, "")])));
 
 /* The states a look can STORE: `NEVER_LOOKED` is never one (§3, R3). NAMED `_OUTCOMES`
-   AND NOT `_STATES` ON PURPOSE: `civicos-ui/check-semantics.mjs` reads every array
-   constant whose name ends in _STATES as BUNDLE lifecycle states, and these are
-   observation states (D-129). */
+   AND NOT `_STATES` ON PURPOSE: these are observation states (D-129), not a record's
+   lifecycle states, which is what a `_STATES` name holds (record-grammar's `STATES`).
+   The name was chosen when `civicos-ui/check-semantics.mjs`, deleted in T20, read every
+   array constant whose name ends in _STATES as lifecycle states. */
 export const LEAD_LOOK_OUTCOMES = Object.freeze(["LOOKED_ABSENT", "LOOKED_INDETERMINATE", "partial", "PRESENT"]);
 
 /* D-682: the vocabulary `leadRead` and the internet frontier publish — the five states
@@ -226,11 +227,12 @@ export const OBSERVATION_SUBJECT_KINDS = {
      are the record claiming more than it can support, in the one direction this
      whole table exists to refuse.
 
-     `observation-log.test.mjs`'s arm B9 pins this key set EXACTLY, and that pin
-     is what brought this item here to say so instead of letting a seventh member
-     arrive unremarked. It worked as designed; the arm is CORRECTED with its date
-     and its reason, never exempted. Reported as a DESIGN GAP against sections 3
-     and 4.3 rather than resolved silently. */
+     The old suite's arm B9 (`observation-log.test.mjs`, deleted in T20) pinned
+     this key set EXACTLY, and that pin is what brought this item here to say so
+     instead of letting a seventh member arrive unremarked; the arm was CORRECTED
+     with its date and its reason, never exempted. R1's test in
+     `test/m/observation-log/vocabulary.test.mjs` pins the seven now. Reported as a
+     DESIGN GAP against sections 3 and 4.3 rather than resolved silently. */
   reference:   "a reference as a document's reading carries it — the raw, source-assigned "
              + "kind:key, before any resolution to a canonical entity (D-83). The subject of a "
              + "RESOLUTION attempt, whose whole point is that it may match no entity at all",
@@ -927,9 +929,11 @@ export function causesNotRuledOut(missingCause, { evidenceOneSided = undefined }
  *  `String(v).slice(0, 19)`, and a plain `Date.parse` comparison disagree on NOTHING —
  *  because the stored watermark is already a whole second, truncating the finer side
  *  changes no answer. Re-spelling the comparison in epoch milliseconds is therefore a
- *  NO-OP that would have fixed no flip and passed review looking like the fix. Driven
- *  over the whole corpus by `observation-log.test.mjs` arm M4b, and planted as that
- *  section's `noop` control arm, which fails three arms by name.
+ *  NO-OP that would have fixed no flip and passed review looking like the fix. It was
+ *  driven over the whole corpus by the old suite's arm M4b (`observation-log.test.mjs`,
+ *  deleted in T20), and planted as that section's `noop` control arm, which failed three
+ *  arms by name. R11's test in `test/m/observation-log/vocabulary.test.mjs` drives the
+ *  rule's edges now.
  *
  *  **WHERE THE INDETERMINACY ACTUALLY SITS, AND THE ONE THING A READER CAN CHOOSE.**
  *  Every rule of the form `entered >= first + c` carries a ONE-SECOND-WIDE band of
@@ -999,7 +1003,7 @@ export function watermarkUncertaintyMs(firstAt) {
  *
  *  D-500 left this rule with TWO answers and a residue it NAMED: *a subject
  *  entering 1–2 s before a level's first row can still classify either way
- *  depending on where the second fell* (`observation-log.test.mjs` arm M3). Two
+ *  depending on where the second fell* (the old suite's arm M3, deleted in T20). Two
  *  answers over a value that admits three means the record was choosing between
  *  two claims it cannot tell apart, which is the one thing `CLAUDE.md` §2 refuses
  *  ahead of a missing feature. **Bob ruled that the reader STATES undetermined
@@ -1051,8 +1055,9 @@ export function watermarkUncertaintyMs(firstAt) {
  *  and `within_band` on the rest. That is a weakening, never a wrong claim, and
  *  closing it needs the watermark stored WITH MILLISECONDS — which BOB #33 ruled
  *  against for the reason the column's convention gives (`ISO_TS_RE`, ~30 gate
- *  checks) and which is an interface question, not this rule's. Driven as a NAMED
- *  ceiling, arm M3b, rather than left to be discovered.
+ *  checks) and which is an interface question, not this rule's. It is stated here as a
+ *  NAMED ceiling rather than left to be discovered (the old suite drove it as arm M3b,
+ *  deleted in T20); R11's test holds the band's two edges and the tie.
  *
  *  A FRACTIONAL WATERMARK STILL COLLAPSES TO TWO ANSWERS WITH NO EDIT HERE: `u` is
  *  0, the interval is a point, and `within_band` becomes unreachable — the same
@@ -1089,17 +1094,17 @@ export function enteredAfterFirstRow(enteredAt, firstAt) {
  *  type* is a fact about the DOCTYPE REGISTRY: the fallback type declares
  *  `fallback: true` and its `parse()` emits `{ entities: [], facts: {} }`, which
  *  is byte-for-byte what a registered reader that found nobody emits. The only
- *  thing reaching the store is `readings.content_type`, which is the doctype's
- *  KEY (`index.mjs` composes it as `docType.type.key`) — a SPELLING the registry
- *  may rename, not the property. And the Durable Object does not import
- *  `docprofile`: every `store.mjs` import is from `bio-plane/src` or
- *  `bio-plane/checks`, measured on this tree, so reaching the registry from the
- *  writer would be a new cross-package dependency for the DO and a larger
- *  decision than this row.
+ *  thing reaching this writer is the reading's `content_type`, which is the doctype's
+ *  KEY (extraction composes it as `docType.type.key`) — a SPELLING the registry
+ *  may rename, not the property. Whether the doctype was the fallback is not on the
+ *  reading extraction's notice hands this module, and reaching the registry from
+ *  here would make this module a reader of `docprofile`, which it does not use: a
+ *  larger decision than this row.
  *
  *  SO THE SEAM IS PINNED AND THE FACT IS NOT INVENTED. `readerRegistered` takes
  *  `true`, `false` or `null`; this function holds the rule about what each
- *  LICENSES; the store passes `null` today and says why at the site. When one
+ *  LICENSES; this module's reading-notice writer passes `null` today and says why at
+ *  its site (`observeReaderRun`). When one
  *  field carries the fact — beside `content_type`, where `index.mjs` already
  *  composes it, exactly as CAP-9 persisted `page_count` — the third outcome
  *  arrives with no change here. `contentAxisFor`'s `unitIndex` seam is the
@@ -1110,8 +1115,9 @@ export function enteredAfterFirstRow(enteredAt, firstAt) {
  *  one that matters. It means the reader ran and found no entities, which IS
  *  this level's `LOOKED_ABSENT` and is a different fact from nobody having a
  *  reader; collapsing them would file every document about nobody as a document
- *  nothing could read. REC-94's arm B8 pins the mirror image at the content
- *  level — `found: false` must not be read as *no text* — and the two refusals
+ *  nothing could read. R6's tests in `test/m/observation-log/writers.test.mjs` pin
+ *  the mirror image at the content level — `found: false` must not be read as *no
+ *  text* — and the two refusals
  *  point in opposite directions on purpose. */
 export function readerRunObservation(reading, captureSha, { readerRegistered = null } = {}) {
   if (!reading || typeof reading !== "object")
@@ -1436,8 +1442,8 @@ function refusal(key, detail, extra = null) {
  * and ONE C-number (C-22.10) on purpose: the ruling says C-22.10 GAINS AN ARM,
  * not that a new condition exists — every one of the four is *"a PRESENT whose
  * referent does not back it"*, which is exactly the condition C-22.10 refuses —
- * and `civicos-ui/check-refusal-codes.mjs` refuses two codes behind one
- * C-number. The fault is the NAME within the condition.
+ * and DEC-49 refuses two codes behind one C-number (R26's test holds C-22's numbers
+ * each to one code). The fault is the NAME within the condition.
  *
  * THE ORDER IS A JUDGEMENT AND IS STATED. `not_earlier` is tested before
  * `unresolved` because `seq` is SQLite's rowid and nothing deletes a row but the
@@ -1501,7 +1507,7 @@ export function checkObservation(entry, conditionKinds = CONDITION_KINDS, refere
      contents are judged at all. */
   if (e.bundle != null && String(e.bundle) !== "")
     return refusal("AI_LOG_NOT_A_BUNDLE",
-      `this entry names bundle '${String(e.bundle)}'; the observation log is its own object `
+      `this entry names record '${String(e.bundle)}'; the observation log is its own object `
       + `(INVESTIGATIVE-SESSION.md §11) and bundle.md is written only on success`);
 
   /* C-22.9 — REC-93. THE COLUMN THAT MAY NEVER BE ABSENT, and it is the one
@@ -1592,8 +1598,9 @@ export function checkObservation(entry, conditionKinds = CONDITION_KINDS, refere
      non-terminal PRESENT row of the same authority, COMPUTED BY THE PLANE in the
      same read as the state (`ai-runs`' `#aiRunSearchState`). The deadlock cannot
      return because the reducer reads PRESENT IF AND ONLY IF such a row exists --
-     re-verified on this tree before building, and asserted in section K of
-     `observation-log.test.mjs`. So the carve-out is gone and one arm is added:
+     re-verified on this tree before building, and asserted by ai-runs' R14 test
+     (`test/m/ai-runs/converts.test.mjs`: the rollup points at the latest PRESENT).
+     So the carve-out is gone and one arm is added:
      an `observation` referent must RESOLVE to an EARLIER PRESENT row of the SAME
      authority, and each way it can fail is NAMED (`OBSERVATION_REFERENT_FAULTS`).
 

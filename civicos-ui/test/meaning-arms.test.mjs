@@ -64,11 +64,10 @@
  * ================= THE FENCE THIS ITEM WORKED INSIDE =================
  * UI-62 routed `passage:` and left these three exactly where they were ON
  * PURPOSE, and wrote an over-strictness arm to prove the walks it did not mean
- * to change did not change. That arm lives in `passage-surface.test.mjs` and
- * this item NEVER EDITED IT — a fence you may move is not a fence. It is RUN,
- * and the byte-identical measurement is `meaning-arms.walks.mjs`:
- *
- *     node civicos-ui/test/meaning-arms.walks.mjs
+ * to change did not change. That arm lived in `passage-surface.test.mjs` and
+ * this item NEVER EDITED IT — a fence you may move is not a fence. It was RUN,
+ * and the byte-identical measurement was `meaning-arms.walks.mjs` (both deleted
+ * in T20; the walks this item was not allowed to move are re-asserted below).
  *
  * MEASURED 2026-09-17, before and after the one-predicate change, against the
  * real plane: PINNED (22 walks — both not-asked panels by exact string, the
@@ -82,11 +81,11 @@
  * Both halves are reported because a run where PINNED holds and ARMS ALSO
  * holds is a change that did nothing, which is the other way this could be
  * wrong. The composer walks UI-62 also pins go through `citePaint`, which this
- * item cannot reach from `finderPlan`; they are covered by running the fence
+ * item cannot reach from `finderPlan`; they were covered by running the fence
  * suite itself.
  *
  * ================= NEGATIVE CONTROL =================
- * NEGATIVE CONTROL: node civicos-ui/test/meaning-arms.control.mjs
+ * NEGATIVE CONTROL: node civicos-ui/test/meaning-arms.control.mjs (deleted in T20; its arms are recorded here)
  *   Four arms, each ONE anchored edit to `civicos-ui/app.html`, armed alone and
  *   restored from a per-arm pristine copy verified by sha256 AND `cmp`. NEVER
  *   `git checkout --`, which restores to HEAD and has twice in this repository
@@ -376,10 +375,10 @@ console.log("\n--- 3. over-strictness: this row narrows a FALSE negative and mus
 }
 
 {
-  /* THE WALKS UI-62 PINNED. `passage-surface.test.mjs` is the fence and is never
-     edited by this item; these are re-asserted here so a reader of THIS file can
-     see what it was not allowed to move, and `meaning-arms.walks.mjs` is the
-     byte-identical measurement (see the header). */
+  /* THE WALKS UI-62 PINNED. `passage-surface.test.mjs` was the fence and was never
+     edited by this item (it and `meaning-arms.walks.mjs`, the byte-identical
+     measurement, were deleted in T20; see the header); these are re-asserted here
+     so a reader of THIS file can see what it was not allowed to move. */
   eq("UI-62's walk: the text panel's not-asked render is unchanged",
     U.finderTextPanelHtml({ asked: false }, new Set()),
     `<h2 class="sec">Text and fields</h2><p class="subj-note">Not asked: nothing you typed is a term this route can answer.</p>`);
@@ -414,12 +413,10 @@ if (fail) process.exit(1);
  * NEGATIVE CONTROL — RUN 2026-09-17 (ui63 worker). SIX ARMS, EACH ONE ANCHORED
  * EDIT TO `civicos-ui/app.html`, armed alone and restored from a per-arm
  * pristine copy verified by sha256 AND `cmp` (`1352873 bytes`, every arm EQUAL
- * and identical). Re-run in one step:
- *
- *     node civicos-ui/test/meaning-arms.control.mjs
- *
- * Both this suite AND `passage-surface.test.mjs` are run for every arm, the
- * second as UI-62's FENCE. Measured:
+ * and identical), by `node civicos-ui/test/meaning-arms.control.mjs` (deleted in
+ * T20 with `passage-surface.test.mjs`; this is the record of its run). Both this
+ * suite AND `passage-surface.test.mjs` were run for every arm, the second as
+ * UI-62's FENCE. Measured:
  *
  *   baseline      meaning-arms 55/0 · passage-surface 100/0   (nothing armed — MUST be green)
  *   reverted      meaning-arms 46/9 · passage-surface 100/0

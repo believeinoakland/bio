@@ -81,11 +81,12 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    reason the census exists. ADDITIVE on the same precedent: five checks arrive,
    none moves and none leaves.
 
-   WHAT KEEPS IT TRUE: `test/d470-catalog-census.test.mjs` pins this string to a
-   census of the catalog's C-numbers. Add a check and that suite goes red naming
-   the figures, and it stays red until this version moves and the new census is
-   recorded beside it. DO NOT edit this constant without reading that suite's
-   header — the two are one mechanism.
+   WHAT KEEPS IT TRUE (re-worded at 1.51.0, N469: the d470 suite this note named was
+   deleted in T20): `ROW_CENSUS` below pins this string to a census of every refusal
+   row (R50), and `bio-plane/test/system/row-census.test.mjs` holds that pin against
+   the tree. Add, remove or change a row and that suite goes red naming it, and it
+   stays red until this version moves and the census is re-pinned beside it. DO NOT
+   edit this constant without reading that suite's header — the two are one mechanism.
 
    1.20.0 (REC-23/D-130): C-2.10's counterparty becomes a three-valued block.
    A MINOR bump on REC-14's precedent (1.18.0 -> 1.19.0 also made the catalog
@@ -128,8 +129,9 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    arrival, no departures. THE FIGURE IS THE MERGED TREE'S: this item took 1.26.0 over origin/main 1a7f0bcc0 and
    then MERGED a main already at 1.28.0 (whose own 1.26.0 row is a different catalogue), so the stamp moves once
    more from the catalogue that actually runs and the census is RE-READ from d470-catalog-census.test.mjs's own
-   print — never either base's figure plus one. THREE PLACES MOVE WITH THIS CONSTANT and the gate names each if
-   one is missed: the census row in d470, that suite's (A5) literal, and ratify.test.mjs's gateVersion literal. */
+   print — never either base's figure plus one. THREE PLACES MOVED WITH THIS CONSTANT then, and the gate named each if
+   one was missed: the census row in d470, that suite's (A5) literal, and ratify.test.mjs's gateVersion literal (both
+   suites deleted in T20; since 1.43.0 it is `ROW_CENSUS` that moves with it, R50). */
 /* 1.29.0 (REC-214, 2026-09-24, branch land/worker/REC-214): the new `RISK_TIER_REVISION_CHECKS` family (C-90.1..5) —
    `op=actionrisktier`'s four conditions and `promote`'s refusal of a revision that moves a tier or its history
    without the act — so the catalogue moved 461 -> 466 and the stamp moves with it, MINOR and additive on this
@@ -486,7 +488,30 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    MINOR, rule 17 moving the stamp for re-keyed and changed rows and a changed composition. ROW_CENSUS (R50) is re-pinned
    to this tree, module tables only, the catalogue being gone: 986 rows. Rows T20's layers 3–11 change are T21's stamp
    (`awaiting stamp`). */
-export const CATALOG_VERSION = "1.50.0";
+/* 1.51.0 (PROMOTION #22, T21 layer 2, 2026-10-01; K792, K904, K942, K944, K946): EVERY ROW CHANGE SINCE 1.50.0, counted
+   wherever the rows live (R34, R47), read by diffing R50's census lines of `tranche/T21` after record-core and membership
+   merged (3e16dc612d) against 1.50.0's own (`test/fixtures/row-census-1.50.0.jsonl`: 986 rows, dd61926a…): four arrivals,
+   one changed, six rows held twice now held once, no other departure. Each is one a job record names (T20's layers 3–11
+   `awaiting stamp`; T21's layers 1–2).
+   ARRIVED: C-117.20 MACHINE_CANNOT_SET_HOLD, C-117.21 HOLD_REFUSED, C-117.22 HOLD_NO_LEGAL_MARK (action-grammar, K899 (7),
+   K912); C-86.15 PROJECT_STAGE_COMPUTED (this module, R56, N456 in Bob's form (b), K904).
+   CHANGED, `where` only, code, condition and translation unmoved: C-68.1 (acquisition's `evidenceStorageAbsent`, K887;
+   control-plane's door now answers through it, its own region gone, K920).
+   HELD ONCE AGAIN, each line unchanged where it stays: C-63.1, C-63.2, C-96.8, C-96.15, C-96.16, C-96.17, membership's
+   copies deleted (N453, K946); credentials' rows, naming its sites, are the only ones.
+   CHANGED IN WHAT THE GATES RUN, no row moving: the project's state machine (record-grammar R35, K930): legal `forming`
+   `closed`, `investigating` and `matured` legacy (read, never a destination), edges to `closed` only and `closed` ->
+   `forming`, so C-4.1 and the promote fence (R15) refuse the hand-written stage moves; C-6.3's `workproduct_state` arm
+   retired and the `checkProjectExtension` slot's ids `['C-2.9']` (record-grammar, K930); intent's C-2.9 arms over
+   `workproduct_state` and `evaluations` and C-9.1 retired (K907); C-13.2's and C-16.1's messages say "record"
+   (record-grammar, N458); promote refuses a project created at another stage than `forming` or `closed`, replay included
+   (R56, K942), and C-4.2 reads the retired project moves recorded at or before 2026-10-01 as made under earlier rules
+   (`STATE_MOVE_FENCED_SINCE.project`). The promote step moved from plane's held copy to control-plane's `promotionStep`,
+   the same check and projection (K920). Jurisdictions' codes are not rows. Record-core's T21 job changed no row.
+   MINOR, rule 17 moving the stamp for arrivals, a changed row, departures of duplicates and a changed composition.
+   ROW_CENSUS (R50) is re-pinned to this tree, module tables only: 984 rows. Rows T21's layers 3–11 change are T22's
+   stamp (`awaiting stamp`). */
+export const CATALOG_VERSION = "1.51.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -575,10 +600,10 @@ export const CATALOG_VERSION = "1.50.0";
    the next number at the union and re-reads the print on the merged tree. */
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 /* R50 (N319, K431): the census of every refusal row as this stamp read it, pinned here and held against the tree by
-   legacy-tests' census suite (this module cannot read a later module's table, P4). The stamp that moves CATALOG_VERSION
-   re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 986,
-  digest: "dd61926a033ecd289e1fa7446cae09aa976470daf13bc46d8bd379b072ff43a5" });
+   legacy-tests' census suite, `bio-plane/test/system/row-census.test.mjs` (this module cannot read a later module's
+   table, P4). The stamp that moves CATALOG_VERSION re-pins it. */
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 984,
+  digest: "b7c43a32428e85c549fc98c3d1f74408f7a958cb47b9a4f9bc2b7f751cfd1d53" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
@@ -740,7 +765,7 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
       errors.push({ check: "PLANE_HELD_IN_PARTS",
                     detail: `registered capture is held only in parts: this plane's acquisition receipt names `
                           + `the whole hash, and the working bucket stores the document as its parts, each under `
-                          + `its own hash, but the bundle's data/provenance.json names no parts for it. `
+                          + `its own hash, but the record's data/provenance.json names no parts for it. `
                           + `Publication copies the parts the record names, so name them there, or register `
                           + `the parts rather than the whole`,
                     where: { path: r.path, sha256: r.capture_sha } });

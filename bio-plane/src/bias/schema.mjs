@@ -1,7 +1,7 @@
 /* bias's tables (requirements: `build/requirements/bias.md`, R30): the statements projected from each bias set, the
  * adoptions that put a set in force, and the bias debt (the debts, the sweep's place, the settlements). Moved from
- * `schema.mjs` at the module's extraction (T5-7; Bob's ruling 3, "each module owns its tables"); `schema.mjs`
- * interpolates this text where the first of them stood, so the store's schema pass creates them as before. */
+ * `schema.mjs` at the module's extraction (T5-7; Bob's ruling 3, "each module owns its tables"). The plane's boot
+ * creates them through this module's `migrate()` (R45), which runs this text. */
 export const BIAS_TABLES = Object.freeze(["bias_statements", "bias_adoptions", "bias_debts", "bias_debt_sweeps",
                                           "bias_debt_settlements"]);
 
@@ -30,8 +30,9 @@ export const BIAS_SCHEMA = `-- PL-12 / D-84: THE BIAS SET'S STATEMENTS, a PROJEC
 -- instance may amend or retire its own locked statements through its documented
 -- adoption process.
 --
--- Carries bundle_id, so it clears in BOTH purge arms via the TABLES list
--- (D-113); hygiene.test.mjs holds that list against this file.
+-- Carries bundle_id, so it clears in BOTH purge arms (D-113): this module
+-- declares it to record-core's purge, and R30's test
+-- (test/m/bias/adopt-manifest.test.mjs) holds both arms.
 CREATE TABLE IF NOT EXISTS bias_statements (
   bundle_id     TEXT NOT NULL,   -- the bias bundle
   ord           INTEGER NOT NULL,-- position in statements[], the addressable slot

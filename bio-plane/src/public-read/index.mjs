@@ -371,8 +371,7 @@ export class PublicRead {
      NOTHING else -- it never joins the working corpus, never reports a working
      state, and carries no title but the one frozen into the edition -- which is
      the whole of why this answers without a credential of any kind (REC-30's
-     classification, and schema.mjs:172 says these tables exist to guarantee
-     exactly that property).
+     classification, and this module's R10 states exactly that property).
 
      RESOLUTION, three ways and one rule (DEC-12): a bundle id alone answers with
      the LATEST edition; an id and an edition answer with that edition; a
@@ -395,7 +394,8 @@ export class PublicRead {
      AND THERE IS NO `strength` AT THIS LEVEL. Every member finding carries its
      own frozen pair inside findings[]; a case-level letter would be R2's
      forbidden composition arriving at case altitude, and its ABSENCE from this
-     answer is asserted by the suite rather than left to review. */
+     answer is asserted by `published.test.mjs`' R3 and R11 arms rather than
+     left to review. */
   publishedCase({ id = null, edition = null, sha256 = null, caseId = null } = {}) {
     let theCase = caseId ? String(caseId).trim() : null, ed = null, asked = null;
     /* CASE-5: the FINDING's own edition, kept apart from `ed` (the CASE's) from
@@ -446,9 +446,10 @@ export class PublicRead {
         /* THE TERNARY IS OUTSIDE THE CALL, not inside its argument list, and that
            is this item's own census correcting this item's own code. Written as
            `this.#rows(want != null ? \`…\` : \`…\`)` the receiving call sits behind
-           the ternary CONDITION, and `multicase.test.mjs`'s walk — which finds a
-           query's kind by looking back from the literal to the call — could not
-           see it and reported it UNCLASSIFIED. **That is the matcher being right
+           the ternary CONDITION, and the walk `multicase.test.mjs` then ran
+           (deleted in T20) — which found a query's kind by looking back from the
+           literal to the call — could not see it and reported it UNCLASSIFIED.
+           **That was the matcher being right
            rather than blunt**, so the code moved to the spelling every other
            member of the class uses instead of the matcher being widened to
            tolerate one. A census nobody can read the same way twice is not one. */
@@ -545,8 +546,8 @@ export class PublicRead {
            every row of this table comes from that finding's OWN ratified bundle.md,
            which any caller can fetch by hash, so the id is already public in the
            bytes the group signed. The honest cause is a target published and later
-           purged; the dishonest one is the restriction having been broken, and the
-           suite's negative control is exactly that. */
+           purged; the dishonest one is the restriction having been broken, and
+           `published.test.mjs`' R3 arm on an unresolved edge is exactly that. */
         if (!t) { unresolved.push({ to: e.to_bundle, kind: e.kind }); continue; }
         /* CASE-5: BY THE HASH. `t.edition` is the TARGET FINDING's own edition
            and this line asked `published_cases` for a container at that number —
@@ -634,7 +635,7 @@ export class PublicRead {
                 re-measured across the whole repository rather than inherited
                 from the item that found it: zero reads in `civicos-ui`, in
                 `newgroup`, in `docprofile`, in `pdf-worker`, in `tools`, and not
-                one assertion in this battery. The surface renders `ratified_at`,
+                one assertion in the test battery of the day. The surface renders `ratified_at`,
                 which is the instant the record can actually stand behind.
                 Removed rather than blanked, on REC-41's precedent: there is no
                 key in the answer for a later refactor to re-expose and a caller
@@ -664,8 +665,8 @@ export class PublicRead {
                 -> `Store.publishCase()`**. REC-58 was right about the field and
                 wrong about the op — REC-41's lesson for the FOURTH time, inside
                 the very correction written to close the third. The mechanical
-                check is `scripts/op-claims.mjs`, driven by
-                `test/op-claims.test.mjs`, and it found this line.
+                check was `scripts/op-claims.mjs`, driven by
+                `test/op-claims.test.mjs` (both since retired), and it found this line.
 
                 WHERE IT ACTUALLY GOES, measured: `caseEditionState` has TWO
                 callers. `publish()` — the ratification committer — returns the
@@ -677,8 +678,10 @@ export class PublicRead {
                 op, and the risk it carries is not that it IS published but that
                 it BECOMES published — one `...state` spread in any of the three
                 and a field with zero measured demand is on the wire with nobody
-                having decided it. `test/case-opened.test.mjs` pins all three
-                picks and holds the pair as a RELATION. */
+                having decided it. This read's pick is held by
+                `convert-publishedcase.test.mjs` and the container's by
+                `convert-multifinding.test.mjs`; `op=ratify`'s is the control
+                plane's. */
              completeness: state.completeness, ratified_at: state.ratified_at,
              complete: state.complete, awaiting: state.awaiting,
              ...(asked ? { asked } : {}),
@@ -723,7 +726,7 @@ export class PublicRead {
      from the stored `delivered_by` column and from NOTHING ELSE: in particular
      never from `attestor_member`, so a row written before the column existed
      reads UNDETERMINED, stated, rather than back-filled from its signer.
-     `deliverer.control.mjs`'s `backfill` arm edits exactly this line. */
+     `published.test.mjs`' R12 and R13 arms hold that. */
   #deliveredBy(row) { return delivererOf(row ? row.delivered_by : null); }
 
   /* A ratified bundle that belongs to NO case, in the same shape as a case
@@ -871,13 +874,13 @@ export class PublicRead {
      AND THE REASON IS A MEASUREMENT RATHER THAN TIDINESS — stated in full because
      a reader could otherwise take it for evasion, and it is the opposite.
 
-     `meaning-bounds.test.mjs` grades an op OPAQUE when its method contains a
-     `#rows(` call and publishes no collection: *"rows came out of the store and
-     this reader could not say what happened to them."* Correcting site 2 put the
-     first `#rows(` into `publish()`'s own body, and the walk moved `op=publish`
-     out of NO-COLLECTION and into OPAQUE — a blind spot on the heaviest act in
-     the system, which is the state `op=airunlog` was in while a ratchet read
-     green over it.
+     `meaning-bounds.test.mjs` (deleted in T20) graded an op OPAQUE when its
+     method contained a `#rows(` call and published no collection: *"rows came
+     out of the store and this reader could not say what happened to them."*
+     Correcting site 2 put the first `#rows(` into `publish()`'s own body, and the
+     walk moved `op=publish` out of NO-COLLECTION and into OPAQUE — a blind spot
+     on the heaviest act in the system, which is the state `op=airunlog` was in
+     while a ratchet read green over it.
 
      THE OLD CLASSIFICATION WAS AND REMAINS THE TRUE ONE. These rows do NOT reach
      the wire: they drive a divergence refusal, a per-case flag discharge, and a
@@ -887,10 +890,9 @@ export class PublicRead {
      where the file's other which-case readers already live rather than the
      roster growing a member that would have been describing the wrong thing.
 
-     IT IS NOT HIDDEN FROM ANYTHING. This helper is in `store.mjs`, it is counted
-     by `multicase.test.mjs`'s census as a full member of CASE-6's class, and the
-     census asserts the class total has not shrunk — so a query moved out of sight
-     of one walk is still in sight of the one that exists to count it.
+     IT WAS NOT HIDDEN FROM ANYTHING: `multicase.test.mjs`'s census (deleted in
+     T20) counted it as a full member of CASE-6's class. Its callers' answers are
+     what `published.test.mjs`' R2 and R3 arms now hold.
 
      WHAT IT ANSWERS: which case editions froze THESE EXACT BYTES, one entry per
      CASE at that case's newest edition holding them — the same collapse every

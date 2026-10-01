@@ -22,10 +22,10 @@ export const SHARED_ACT_CHECKS = Object.freeze({
      inside the region named below, and every former site returns through it.
 
      So the `where` is not a narrowing of a claim this family could not support
-     — it is now literally true, and `store.mjs` holds one `reason: "NO_BASIS"`
-     and one `reason: "NO_CITATION"` literal to prove it (a structural pin in
-     `test/d484-refusal-translation.test.mjs` asserts exactly that, because a
-     second site added later would silently make this `where` a lie again).
+     — it was then literally true, `store.mjs` holding one `reason: "NO_BASIS"`
+     and one `reason: "NO_CITATION"` literal (the old battery's d484 suite pinned
+     that; both are deleted). Each `where` now names the module whose one
+     refusal helper mints the code (R29).
 
      EACH TRANSLATION IS TRUE AT EVERY SITE IT NOW SERVES, which is the price of
      consolidation and is where a careless one would do harm. `NO_BASIS` covers

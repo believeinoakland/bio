@@ -771,6 +771,43 @@ test("R32 the page's visible text names CivicOS, never BIO, and its wire formats
   assert.equal(page.created.find((e) => e.tag === "a").download, "bio-signing-keys.txt");
 });
 
+test("R32 the page calls what a member ratifies a record, never a bundle (K899 (1)); the release asset's file name stays", async () => {
+  /* The markup a person reads: the page without its comments, style and script. */
+  const markup = SIGN_HTML.replace(/<!--[\s\S]*?-->/g, "").replace(/<style>[\s\S]*?<\/style>/g, "")
+    .replace(/<script>[\s\S]*?<\/script>/g, "");
+  assert.deepEqual(markup.match(/bundle\w*/gi), ["bundled"], "only the asset's file name");
+  assert.match(markup, /<code>bio-plane\.bundled\.mjs<\/code>/);
+  assert.match(markup, /Copy the record id and its current hash/);
+  assert.match(markup, /<label for="rat-id">Record id<\/label>/);
+  assert.match(markup, /<label for="rat-sha">Record hash<\/label>/);
+  /* The strings the script writes into the page, for each answer the ratify button gives. */
+  const page = loadPage(SIGN_HTML);
+  await page.generateAll();
+  const said = [];
+  for (const [id, sha] of [["", ""], ["REC-1", "not hex"], ["REC-1", "ab".repeat(32)]]) {
+    page.el("rat-id").value = id;
+    page.el("rat-sha").value = sha;
+    await page.el("rat-sign").onclick();
+    said.push(page.el("rat-out").innerHTML);
+  }
+  assert.match(said[0], /Paste the record id\./);
+  assert.match(said[1], /The record hash is 64 hex characters\./);
+  assert.match(said[2], /If the record changes before/);
+  for (const s of said) assert.doesNotMatch(s, /bundle/i);
+  /* The rest of what the script writes: generate, load, forget, and the key status lines. */
+  await page.el("gen").onclick();
+  const generated = page.el("gen-out").innerHTML;
+  page.el("load-blob").value = "not a key";
+  await page.el("load").onclick();
+  const loadErr = page.el("load-out").innerHTML;
+  page.el("forget").onclick();
+  for (const s of [generated, loadErr, page.el("load-out").innerHTML,
+    page.el("rel-key").innerHTML, page.el("rat-key").innerHTML]) {
+    assert.ok(s.length > 0);
+    assert.doesNotMatch(s, /bundle/i);
+  }
+});
+
 /* ===================================================================== R26 */
 
 test("R26 pure and offline: no service fetches or reads a clock, and the endpoints are not the caller's", () => {

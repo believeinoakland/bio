@@ -4,8 +4,9 @@
  * `ai-runs/deployment.mjs` at the ai-runs split (K617, K624 (1)); `skills` and `agent-worker` re-export it from here
  * and hold no copy. */
 
-/** WHERE THE GATE ACTUALLY LIVES. An address, dereferenced by the suite — never
- *  an import, never a copy, and never a flag this file holds. */
+/** WHERE THE GATE ACTUALLY LIVES. An address, dereferenced by
+ *  `test/m/run-rules/deployment.test.mjs` R9 (the file exists) — never an import,
+ *  never a copy, and never a flag this file holds. */
 export const GATE_ADDRESS = {
   file: "agent-worker/src/harness.mjs",
   owned_by: "FL-3 (IS-9, the run harness) — landed, and outside this area's paths",
@@ -19,8 +20,8 @@ export const GATE_ADDRESS = {
     + "cannot be reached around by exhausting something else first",
 };
 
-/** Where §2's ruling was written, and where the sweep restates it. Both are
- *  looked up by the suite; neither is quoted from memory. */
+/** Where §2's ruling was written, and where the sweep restates it. Both were
+ *  looked up when this record was written (SK-4); neither is quoted from memory. */
 export const SEQUENCING_SOURCE = "docs/development/INVESTIGATIVE-SESSION.md";
 export const SEQUENCING_ALSO_NAMED_IN = "docs/archive/IS-SWEEP-2026-08-07.md";
 
@@ -30,8 +31,9 @@ export const SEQUENCING_ALSO_NAMED_IN = "docs/archive/IS-SWEEP-2026-08-07.md";
  *  `order` IS THE DELIVERABLE. Everything else on this object is either a span
  *  of a document (checked by lookup) or an address (checked by dereference), so
  *  the only thing here a reader has to take on trust is the order itself — and
- *  the suite pins that to the landed table in BOTH directions, so a mode added,
- *  dropped or enabled moves it. */
+ *  `agent-worker/test/requirements.test.mjs` (its R44, R53) pins that to the
+ *  landed table, `MODES`' keys equal to `order` and its deployed modes equal to
+ *  `DEPLOYED_MODES`, so a mode added, dropped or enabled moves it. */
 export const DEPLOYMENT_SEQUENCE = {
   id: "check-deploys-first",
 
@@ -40,10 +42,11 @@ export const DEPLOYMENT_SEQUENCE = {
      after the one before it has been verified live. */
   /* `extract` APPENDED 2026-09-14 by FLEET on SK-8's delegation, IN THE SAME
      COMMIT as the row entered `agent-worker/src/harness.mjs`'s `MODES` — which
-     is ARM B3's whole demand (the two rosters are ONE set, held in both
+     was ARM B3's whole demand (the two rosters are ONE set, held in both
      directions) and ARM B4's (index 0 stays the only deployed mode; every later
-     index, `extract` included, is not). The pack's digest moves with this line
-     by construction and nothing needs bumping by hand. */
+     index, `extract` included, is not), arms of `skillsequencing.test.mjs`,
+     deleted in T20; `agent-worker`'s R44, R53 test holds both today. The pack's
+     digest moves with this line by construction and nothing needs bumping by hand. */
   /* `plan` APPENDED (K660 (5), BIO_Action_v0_1.md §4 rule 1): the planning run, which proposes options for an
      action plan from what the record already holds. It is last in the order and it does NOT wait on the chain above
      it: it deploys as soon as `agent-worker` runs model turns (its R40 and R48 met), whether or not `investigate` or
@@ -52,8 +55,9 @@ export const DEPLOYMENT_SEQUENCE = {
   order: ["check", "investigate", "extract", "plan"],
   first_deployed_mode: "check",
 
-  /* §2, VERBATIM. Looked up in the design document through SK-1's normaliser,
-     because a session cannot verify its own copying by re-reading it. */
+  /* §2, VERBATIM. Looked up in the design document through SK-1's normaliser
+     when written (SK-4), because a session cannot verify its own copying by
+     re-reading it. */
   text: "CHECK IS THE FIRST DEPLOYED MODE",
   role:
     "this session, run with this objective against an EXISTING conclusion, IS DEC-24's CHECK role "
@@ -68,8 +72,8 @@ export const DEPLOYMENT_SEQUENCE = {
 
   /* AND PINNED A SECOND TIME, TO A DOCUMENT THAT PHRASES IT DIFFERENTLY. SK-3's
      standard: one pin proves the sentence was copied; two prove the RULING is
-     the one both surfaces carry, so a sequencing quietly reversed on either
-     fails here rather than in a review nobody re-runs. */
+     the one both surfaces carry. (`skillsequencing.test.mjs`, deleted in T20,
+     looked both up; no module test reads the documents today.) */
   also_named_in:
     "DEC-55's enacted CHECK-first instruction and DEC-60 are satisfied by one build: the session "
     + "run with §2's objective against an existing conclusion IS the CHECK role; deploy that mode "
@@ -84,10 +88,11 @@ export const DEPLOYMENT_SEQUENCE = {
   enabling_condition_owned_by: "VF-4, which waits on DS-4 (DIST's gated deploy)",
 
   /* THE HONEST STATE OF THAT CONDITION AT THIS COMMIT, AS DATA RATHER THAN AS A
-     SENTENCE IN A COMMENT — so the suite can assert it and so a later session
+     SENTENCE IN A COMMENT — so a test can assert it and so a later session
      cannot leave it stale by editing prose around it. `null` is not "unknown":
-     it is "no live run has been verified", and the suite holds it against the
-     landed flag, which is still `false`. */
+     it is "no live run has been verified"; `test/m/run-rules/deployment.test.mjs`
+     R9 asserts it, and `agent-worker`'s R44, R53 test holds the landed flags to
+     `DEPLOYED_MODES`, which it decides. */
   verification_recorded: null,
 
   /* HOW THE SECOND MODE ACTUALLY ENABLES, and it is deliberately not a switch. */
@@ -115,8 +120,8 @@ export const DEPLOYMENT_SEQUENCE = {
   enforced_by: ["C-109.1"],
   enforced_by_row: `${GATE_ADDRESS.file}:${GATE_ADDRESS.table_export}["${GATE_ADDRESS.row}"]`,
 
-  /* REQUIRED, AND MEASURED. Every clause is re-measured by the suite against the
-     landed sources rather than believed. */
+  /* REQUIRED, AND MEASURED: each clause was measured against the landed sources
+     when written, rather than believed. */
   does_not_reach:
     "a DEPLOYMENT. The gate refuses a RUN whose mode is not deployed; nothing refuses shipping a "
     + "build with the flag already flipped, and no instrument reads a release note. The plane's "

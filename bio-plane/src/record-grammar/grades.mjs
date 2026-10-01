@@ -24,11 +24,10 @@ export const BASIS_GRADES = ['A', 'B', 'C', 'D'];
    grade on THIS axis, and only at TESTIMONY_GRADE, and its capture axis is not
    applicable and says so (checkTestimonyLeg below refuses the rest by name).
    APPENDED, so `connection` keeps index 1 for every reader that addressed it
-   positionally (skilldoctrine.test.mjs does). */
+   positionally. */
 export const GRADE_AXES = ['capture', 'connection', 'testimony'];
-/* MK-2: THE ONE LETTER A TESTIMONY IS WORTH, declared once so the catalogue's
-   two arms and the store's registry compose it rather than type it (the store
-   holds no grade-letter literal — hygiene.test.mjs detector (C)). The ruling
+/* MK-2: THE ONE LETTER A TESTIMONY IS WORTH, declared once so its readers
+   compose it rather than type it. The ruling
    is Bob's, 2026-09-14 (MEMBER-KNOWLEDGE-DESIGN.md §1: "graded as testimony
    (D)") and DEC-15's ("a hunch is the only authored grade permitted above D");
    it is a VALUE and not a rank derivation, because "the weakest letter" and
@@ -82,8 +81,8 @@ export const EARNED_GRADE_SOURCES = ['resolution', 'capture'];
  * SO THE CONSTANT MOVES TO THE LOWEST LAYER BOTH SIDES ALREADY IMPORT, which is
  * this file — and this is not a demotion of the store's authority but a
  * promotion to where the REFUSAL is actually computed. `checkEarnedLeg` below
- * is the arm that refuses a leg claiming MORE than the ceiling, and
- * earnedbasis.test.mjs arm (c) measured that it is the ONLY thing in the battery
+ * is the arm that refuses a leg claiming MORE than the ceiling, and the old
+ * battery's earnedbasis.test.mjs arm (c) measured (deleted at T20) that it was the ONLY thing
  * standing between the record and a capture grade the record cannot support.
  * `Store.earnedBasisRegistry` now IMPORTS this value to build the registry that
  * arm reads. One value, three readers (the registry, the refusal, the published

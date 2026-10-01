@@ -2,6 +2,8 @@
    plane's route map spreads them (today's order: `store.mjs`' `routes`, then instance-setup's, then control-plane's). */
 import { actionsOf, actionsOps } from "../../../src/actions/index.mjs";
 import { actionClocksOf, actionClocksOps } from "../../../src/action-clocks/index.mjs";
+import { localFactsOf, localFactsOps } from "../../../src/local-facts/index.mjs";
+import { filingTemplatesOf, filingTemplatesOps } from "../../../src/filing-templates/index.mjs";
 import { standardsOf, standardsOps } from "../../../src/standards/index.mjs";
 import { conformanceOf, conformanceOps } from "../../../src/conformance/index.mjs";
 import { consequencesModule, consequencesOps } from "../../../src/consequences/index.mjs";
@@ -79,10 +81,12 @@ export const MODULE_MAPS = [
   ["retrieval", (c, u, b) => retrievalRoutes(retrievalOf(c), u, b)],
   ["actions", (c, u, b) => actionsOps(actionsOf(c), u, b)],
   ["action-clocks", (c, u, b) => actionClocksOps(actionClocksOf(c), u, b)],
+  ["local-facts", (c, u, b) => localFactsOps(localFactsOf(c), u, b)],
   ["standards", (c, u, b) => standardsOps(standardsOf(c), u, b)],
   ["conformance", (c, u, b) => conformanceOps(conformanceOf(c), u, b)],
   ["consequences", (c, u, b) => consequencesOps(consequencesModule(c), u, b)],
   ["filings", (c, u, b) => filingsOps(filingsOf(c), u, b)],
+  ["filing-templates", (c, u, b) => filingTemplatesOps(filingTemplatesOf(c), u, b)],
   ["action-plans", (c, u, b) => actionPlansOps(actionPlansOf(c), u, b)],
   ["escalation", (c, u, b) => escalationOps(escalationOf(c), u, b)],
   ["monitoring", (c, u, b) => monitoringOps(monitoringOf(c), u, b)],

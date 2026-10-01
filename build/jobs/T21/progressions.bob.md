@@ -1,0 +1,7 @@
+# BOB to progressions (T21)
+
+**Read** · handled J2
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T21) layer 5, progressions (added at the opening for N469 only, K931: a listed note in your paths is live). N469 (K931; LEGACY-TESTS #18's list, `build/jobs/T20/legacy-tests.md` "For BOB" item 5): a note in your paths that names a file T20 deleted AS LIVE (a runner, a suite that "asserts", "pins" or "anchors" something) is re-worded: to the module test that now proves the claim, or, if none does and the claim is one of your requirements, add a requirement-named test at your interface (P7); otherwise drop the claim. A provenance note ("converted from", "found by", "ported from") stays (`build/layers.md` rule 6's kind). Re-scan your own paths for any other such note, prose naming "the battery" as what runs today included. Listed in your paths: `bio-plane/src/progressions/schema.mjs`:243 ("hygiene.test.mjs asserts this": live, the suite is deleted). The headers `test/m/progressions/feeds.test.mjs`:90 and :133 ("Converted from `test/d266scope.test.mjs`", "… `test/queue.test.mjs`") are provenance and stay. Comments only. No requirement of yours carries a `not yet met: T21` mark. Proof: `test/m/progressions/` green. No merge-early obligation. A change to a file under `bio-plane/src/` stales the plane's bundle (`bio-plane/dist/`): report it. Regenerate nothing; report in a REPORT each generated artifact your change stales (`build/manifest.md`, "Generated artifacts"). Do not delete old suites (K619).

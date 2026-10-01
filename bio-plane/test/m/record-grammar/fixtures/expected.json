@@ -13,9 +13,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -33,9 +33,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -53,9 +53,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -73,9 +73,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -93,9 +93,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -113,9 +113,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -178,9 +178,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -198,9 +198,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -238,9 +238,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -286,9 +286,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -316,9 +316,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -341,9 +341,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -395,9 +395,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    },
    {
     "check": "C-14.3",
@@ -444,9 +444,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -482,9 +482,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -507,9 +507,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -524,7 +524,7 @@
    {
     "check": "C-4.1",
     "severity": "error",
-    "message": "current_state 'collected' is not legal for project (legal: forming, investigating, matured, closed)"
+    "message": "current_state 'collected' is not legal for project (legal: forming, closed)"
    },
    {
     "check": "C-18.6",
@@ -537,9 +537,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -562,9 +562,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -587,9 +587,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -612,9 +612,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -637,9 +637,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -669,7 +669,7 @@
    {
     "check": "C-13.2",
     "severity": "error",
-    "message": "bundle has been updated but carries no Session Log entry",
+    "message": "record has been updated but carries no Session Log entry",
     "repairable": true,
     "repairs": [
      "append the missing Session Log entry naming the gap"
@@ -686,9 +686,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -733,9 +733,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -762,9 +762,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -782,9 +782,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -802,9 +802,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -827,9 +827,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -847,9 +847,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -917,9 +917,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -942,9 +942,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -972,9 +972,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -984,7 +984,7 @@
    {
     "check": "C-13.2",
     "severity": "error",
-    "message": "bundle has been updated but carries no Session Log entry",
+    "message": "record has been updated but carries no Session Log entry",
     "repairable": true,
     "repairs": [
      "append the missing Session Log entry naming the gap"
@@ -1001,9 +1001,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -1021,9 +1021,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -1041,9 +1041,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    },
    {
     "check": "C-14.2",
@@ -1121,9 +1121,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    },
    {
     "check": "C-14.3",
@@ -1186,9 +1186,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    },
    {
     "check": "C-16.4",
@@ -1215,9 +1215,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    },
    {
     "check": "C-14.3",
@@ -1249,9 +1249,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    },
    {
     "check": "C-16.1",
@@ -1261,7 +1261,7 @@
    {
     "check": "C-16.1",
     "severity": "error",
-    "message": "manifest target 'INFO-2026-0003-c' does not match bundle 'INFO-2026-0001-a'"
+    "message": "manifest target 'INFO-2026-0003-c' does not match record 'INFO-2026-0001-a'"
    },
    {
     "check": "C-16.2",
@@ -1309,9 +1309,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    },
    {
     "check": "C-16.1",
@@ -1355,9 +1355,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    },
    {
     "check": "C-16.3",
@@ -1396,9 +1396,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    },
    {
     "check": "C-16.1",
@@ -1432,9 +1432,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    },
    {
     "check": "C-17.1",
@@ -1457,9 +1457,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    },
    {
     "check": "C-17.1",
@@ -1488,9 +1488,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    },
    {
     "check": "C-5.1",
@@ -1563,9 +1563,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    },
    {
     "check": "C-12.1",
@@ -1658,38 +1658,13 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
- "C-6.3 distributed with no distributions": {
-  "pass": false,
-  "findings": [
-   {
-    "check": "C-18.6",
-    "severity": "info",
-    "message": "C-18.6 arm ran"
-   },
-   {
-    "check": "C-6.3",
-    "severity": "error",
-    "message": "workproduct_state is distributed but distributions/ is empty"
-   },
-   {
-    "check": "C-2.8",
-    "severity": "info",
-    "message": "C-2.8 arm ran"
-   },
-   {
-    "check": "C-9.1",
-    "severity": "info",
-    "message": "C-9.1 arm ran"
-   }
-  ]
- },
- "C-6.3 distributed with distributions": {
+ "C-6.3 retired: a distributed project with no distributions is no finding": {
   "pass": true,
   "findings": [
    {
@@ -1703,9 +1678,94 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
+   }
+  ]
+ },
+ "C-4.1 project legacy states are readable": {
+  "pass": true,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-2.9",
+    "severity": "info",
+    "message": "C-2.9 arm ran"
+   }
+  ]
+ },
+ "C-4.1 project matured is readable": {
+  "pass": true,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-2.9",
+    "severity": "info",
+    "message": "C-2.9 arm ran"
+   }
+  ]
+ },
+ "clean closed project": {
+  "pass": true,
+  "findings": [
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-2.9",
+    "severity": "info",
+    "message": "C-2.9 arm ran"
+   }
+  ]
+ },
+ "C-4.1 project state outside its machine": {
+  "pass": false,
+  "findings": [
+   {
+    "check": "C-4.1",
+    "severity": "error",
+    "message": "current_state 'published' is not legal for project (legal: forming, closed)"
+   },
+   {
+    "check": "C-18.6",
+    "severity": "info",
+    "message": "C-18.6 arm ran"
+   },
+   {
+    "check": "C-2.8",
+    "severity": "info",
+    "message": "C-2.8 arm ran"
+   },
+   {
+    "check": "C-2.9",
+    "severity": "info",
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -1723,9 +1783,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    },
    {
     "check": "C-12.1",
@@ -1752,9 +1812,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    },
    {
     "check": "C-12.1",
@@ -1790,9 +1850,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    },
    {
     "check": "C-12.1",
@@ -1930,9 +1990,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  },
@@ -1960,9 +2020,9 @@
     "message": "C-2.8 arm ran"
    },
    {
-    "check": "C-9.1",
+    "check": "C-2.9",
     "severity": "info",
-    "message": "C-9.1 arm ran"
+    "message": "C-2.9 arm ran"
    }
   ]
  }

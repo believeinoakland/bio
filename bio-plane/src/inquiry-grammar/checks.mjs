@@ -8,8 +8,8 @@
 
 /* =====================================================================
  * MK-4 / IC-135 / IC-136 — THE LEAD (D-194, `MEMBER-KNOWLEDGE-DESIGN.md` §5):
- * the same member knowledge BEFORE the search. C-54, minted with
- * `node tools/mintid.mjs C`.
+ * the same member knowledge BEFORE the search. C-54, minted with the old
+ * process's `node tools/mintid.mjs C` (that tool was retired in T19).
  *
  * ITS OWN FAMILY because its subject is its own: the ways a member's LEAD could
  * come to claim more than it is. §5 rules a lead is an authored row and NEVER
@@ -26,7 +26,7 @@
  * evidence. The first fence is STRUCTURAL: a lead lives in `leads` under a
  * `LEAD-` id that no leg grammar accepts as a target or a content id. The second
  * is this family's C-54.1, which names the lead instead of answering "not a
- * canonical bundle id" — a member told their lead is malformed would re-author
+ * canonical record id" — a member told their lead is malformed would re-author
  * it as a document, which is exactly the liar arriving by the front door.
  * ===================================================================== */
 
@@ -83,7 +83,3 @@ export const INQUIRY_GRAMMAR_CHECKS = Object.freeze({
       + 'automated one. Sign in to ground it.',
   },
 });
-
-/* The old name, kept for its readers outside this module (control-plane's `families.mjs`, `inquiry/grammar.mjs` and its
-   test, `skilldoctrine.mjs` and the skills fixture) until the last of them re-points (K850); the same frozen object. */
-export const INQUIRY_GRAMMAR_ROWS = INQUIRY_GRAMMAR_CHECKS;

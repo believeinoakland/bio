@@ -574,10 +574,9 @@ export class Monitoring {
       const namesThis = (d) => Array.isArray(d.provenance_chain) && d.provenance_chain.some((h) =>
         h && h.via === "archive.org" && typeof h.document_address === "string"
           && normalizeAddress(h.document_address) === addressNorm);
-      const match = (driveTick && driveTick.harvestable
-          ? rows.find((d) => d.locator === driveTick.exportAddress) : null)
-        || rows.find((d) => d.locator === locator)
-        || rows.find(namesThis);
+      /* R3's first two arms are capture-sources R45's (`driveBaselineRow`), the rule the Drive shell sweep (R26)
+         classifies by, so the tick and the sweep choose one row (K949); the archive hop is this module's fallback. */
+      const match = driveBaselineRow(rows, driveTick, locator) || rows.find(namesThis);
       /* D-567 — A RENDERED CAPTURE IS WATCHED BY ITS SHELL, NEVER BY ITS RENDERED PRIMARY
        * (CLIENT-RENDERED.md, "RULED 2026-09-25 by BOB #34"). This tick fetches the
        * SERVED document and cannot render, so on a render:true capture what it holds is
@@ -655,9 +654,8 @@ export class Monitoring {
        * own `source_status` and `last_checked` are left exactly as they were,
        * and the refusal says which address answered and how. */
       if (driveTick && driveTick.harvestable && res.ok) {
-        /* THE PREDICATE IS NAMED HERE RATHER THAN SPELLED AS `op=acquire`'s TWIN: a control driver
-           arms acquire's declared-type check by quoting its line verbatim (`test/drive.control.mjs`
-           arm 4a), and a byte-identical copy would make that exactly-once patch ambiguous. */
+        /* The predicate is this tick's own, named here rather than copied from `op=acquire`'s check
+           (acquisition's C-48 arm); R4's test drives it (`tick.test.mjs`). */
         const declaredType = (res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
         const servedAsPage = declaredType === "text/html" || declaredType === "application/xhtml+xml";
         if (servedAsPage) {
@@ -694,7 +692,6 @@ export class Monitoring {
          * are drivable — the declared-type one from the header, this one from the
          * first kibibyte — which is the whole of PL-4's rule. */
         if (driveTick && driveTick.harvestable) {
-          /* `sniffed`, not `sniff`, for the reason named at the declared-type arm above. */
           const sniffed = detectFormat(bytes.subarray(0, Math.min(bytes.length, 1024)), null);
           const servedType = (res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
           if (sniffed.format === "html") {

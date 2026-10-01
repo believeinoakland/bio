@@ -115,6 +115,8 @@ test("R4, R5, R11: reinstating a member R5 answers true is RETIRED_NOT_CITABLE (
   const r = w.cit.reinstate({ project: p, handle: h2, ...ANN, reason: "back" });
   assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.offenders],
     [false, "RETIRED_NOT_CITABLE", "RETIRED_NOT_CITABLE", "C-33.39", CITE_CHECKS.RETIRED_NOT_CITABLE.translation, ["INFO-2026-0002"]]);
+  assert.match(r.detail, /re-collect the source as a new record and cite that/, "the member reads record (N458)");
+  assert.doesNotMatch(r.detail, /\bbundle\b(?!\.md)/);
   assert.equal(edge(w, p, "INFO-2026-0001").status, "severed", "the whole call refused");
   /* Withdrawing reliance on a retired item is the direction the rule wants: a confirmed edge to it is severed. */
   const p2 = w.project("Older case");

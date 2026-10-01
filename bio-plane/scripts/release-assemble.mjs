@@ -160,8 +160,9 @@ for (const m of all) {
   const runnable = freshBuildRunnable(m, manifest);
   if (!runnable.runnable) {
     /* A GUARD THAT SKIPS IS NOT A GUARD — FL-9's own words, and a release is the
-       last place to accept one. The battery may legitimately skip this arm; an
-       assembler may not, because the artifact is about to be SIGNED. */
+       last place to accept one. The fleet gate (`test/system/fleetbundles.test.mjs`)
+       may legitimately skip this arm; an assembler may not, because the artifact
+       is about to be SIGNED. */
     die("GUARD_CANNOT_RUN",
       `${m.name}: the byte-identity arm cannot run here, and a release will not be assembled on a skipped guard.`,
       runnable.reason);

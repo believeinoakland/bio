@@ -1,7 +1,7 @@
-/* filings' tables (requirements: `build/requirements/filings.md`, R5–R7, R8–R14, R19, R22–R26). Every row is an act or a
- * proposal, written once and never edited (append-only, R19): a new draft, a new packet version, a new export, a new
- * proposal. Each is keyed to the action it is about and declared to record-core's purge (K23), so a purge of that
- * action clears its rows. */
+/* filings' tables (requirements: `build/requirements/filings.md`, R5–R7, R8–R14, R19, R22–R25, R29, R31; R26's
+ * retired). Every row is an act or a proposal, written once and never edited (append-only, R19): a new draft, a new
+ * packet version, a new export, a new proposal. Each is keyed to the action it is about and declared to record-core's
+ * purge (K23), so a purge of that action clears its rows. */
 
 export const FILINGS_SCHEMA = `
 -- R5: A DRAFT, prepared from the record and stored apart from the action. One
@@ -108,7 +108,9 @@ CREATE TABLE IF NOT EXISTS communication_drafts (
   basis         TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS communication_drafts_action ON communication_drafts (action_id, filing_id);
--- R26: THE GROUP'S TEMPLATE LIBRARY. One row per template a member saved
+-- R26 (retired, K921): THE GROUP'S TEMPLATE LIBRARY, as it was until T21. Written
+-- by nothing now: kept as the read contract of filing-templates' migration
+-- (K986), which takes each row as a draft of its own. One row per template a member saved
 -- from an approved draft (from_filing), or a member's derivative of its text;
 -- for a kind or for none. basis what the draft drew on (its project), so a
 -- template is seen only by whoever may see that project (K316). Keyed to the
@@ -133,10 +135,11 @@ export const FILINGS_COLUMNS = Object.freeze([
   ["filing_drafts", "exhibits", "TEXT"],     // R25: each exhibit with its grade, co-attestation and the venue's reading
   ["filing_drafts", "venue_standard", "TEXT"], // R25: the kind's evidence standard, or undetermined with why
   ["filing_drafts", "disclosure", "TEXT"],   // R24: the premise override's disclosure, first on the face
-  ["filing_drafts", "template", "TEXT"],     // R26: which template the text was filled from
+  ["filing_drafts", "template", "TEXT"],     // R29: {id, version, sha, origin} of the template, or null for the member's words
   ["filing_approvals", "inband", "TEXT"],    // R22: the in-band quartet the approved bytes carry
   ["counsel_packets", "disclosure", "TEXT"], // R24
   ["counsel_packet_exports", "inband", "TEXT"], // R22
+  ["counsel_packets", "template", "TEXT"],   // R31: the brief template a version's briefing was filled from, as R29 records it
 ]);
 
 /** K23, R19: each table keyed to the action it is about, so a single-bundle purge of that action clears its rows. */

@@ -288,13 +288,18 @@ export const STATES = {
       elevated: []
     }
   },
+  /* K904 (form (b); N456, T21): A PROJECT'S STAGE IS COMPUTED, NOT WRITTEN. `project-stage` derives it at the read,
+     so the machine writes only whether the project is open or closed: `forming` (legal[0]) and `closed`, each to the
+     other. `investigating` and `matured` were the hand-written ladder; bytes that carry them stay valid (`legacy`),
+     and they may only close. */
   project: {
-    legal: ['forming', 'investigating', 'matured', 'closed'],
+    legal: ['forming', 'closed'],
+    legacy: ['investigating', 'matured'],
     edges: {
-      forming: ['investigating', 'closed'],
-      investigating: ['matured', 'closed'],
+      forming: ['closed'],
+      investigating: ['closed'],
       matured: ['closed'],
-      closed: ['investigating']
+      closed: ['forming']
     }
   },
   action: {

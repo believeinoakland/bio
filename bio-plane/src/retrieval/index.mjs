@@ -527,7 +527,7 @@ export class Retrieval {
       const or = compile({ ...input, implicitOp: "or" }, this.#via);
       const n = this.runQuery(or.statements.count(), tally)[0]?.n ?? 0;
       if (n > 0) out.widen = { interpretation: "OR", total: n, q: String(input.q ?? ""),
-                               detail: "no bundle matches all of these terms; this many match any of them" };
+                               detail: "no record matches all of these terms; this many match any of them" };
     }
     out.gate.applied = tally.applied;
     return out;
@@ -713,7 +713,7 @@ export class Retrieval {
         "has:field asks whether the field carries any value",
         "fm:path and fm:path=value reach frontmatter no column projects",
         "leg:, resolves: and concerns: reach the MEANING layer -- leg:hunch is outstanding hunch debt, "
-        + "resolves:C the flagged resolutions, concerns:ENT-1 the reverse index; they answer at BUNDLE grain",
+        + "resolves:C the flagged resolutions, concerns:ENT-1 the reverse index; they answer at RECORD grain",
         /* REC-90: `content:` searches WHAT HAS BEEN CITED OR MARKED CITABLE, never the text of the documents
            themselves — `passage:` is that question. */
         "content: reaches the CONTENT layer -- the passages somebody has cited or marked citable: "
@@ -734,7 +734,7 @@ export class Retrieval {
         + "does not match them",
         "a meaning arm takes a bare word (leg:cuts_against), a sub-field (leg:ground=*) or a comparison "
         + "(resolves:>=B on the bare field, leg:grade>=B or content:cap<C on a named one)",
-        "has:leg asks whether the bundle carries any row in the meaning table at all",
+        "has:leg asks whether the record carries any row in the meaning table at all",
         "sort:field and sort:-field order the result",
       ],
     };
@@ -756,7 +756,7 @@ export class Retrieval {
     const findings = [];
     for (const r of rows) {
       if (r.fts_id === null || r.fts_id === undefined) {
-        findings.push({ bundleId: r.bundle_id, finding: "NO_FTS_ID", detail: "the bundle has no text index key" });
+        findings.push({ bundleId: r.bundle_id, finding: "NO_FTS_ID", detail: "the record has no text index key" });
         continue;
       }
       const have = this.#one(`SELECT ${FTS_COLUMNS.join(", ")} FROM bundles_fts WHERE rowid=?`, r.fts_id);
@@ -846,7 +846,7 @@ export class Retrieval {
    *  ONE LEFT JOIN against the highest `seq` (provenance R48), never a read per row: the arm with no limit is unbounded
    *  by contract. REC-60 / D-225 kept that arm: a bound applied must be published, and this arm applies none, so a bare
    *  array that is COMPLETE tells no lie; its named consumers (the browser, the audit, the migration verifier) need it
-   *  whole, and `meaning-bounds.test.mjs` pins it complete. Paging is opt-in: a positive `limit` answers the envelope
+   *  whole, and `roster.test.mjs` (R63) holds it complete. Paging is opt-in: a positive `limit` answers the envelope
    *  `{bundles, limit, cursor, total}`, `limit` the bound applied after the 5,000 ceiling (REC-57) and `total` what the
    *  VIEWER may see (a total over rows the caller cannot read would say "something is hidden"). */
   listBundles({ type = null, state = null, after = null, limit = null, viewer = null } = {}) {

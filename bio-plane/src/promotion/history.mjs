@@ -92,7 +92,7 @@ export async function checkMechanicalConformance({ files, sha256 }, findings) {
   const { order, entries } = historyWriteOrder(man.value.entries);
   if (order !== "write" && entries.length > 1)
     findings.push(f("C-20.1", "info", "the history manifest carries no write order (a seq on every entry), so mechanical promotions were audited in snap-key order, which is not a clock: \"prior\" may not be the snapshot written before (I-20)",
-      ["re-export the bundle from a plane that writes seq into _history/manifest.json"]));
+      ["re-export the record from a plane that writes seq into _history/manifest.json"]));
   for (let i = 0; i < entries.length; i++) {
     const e = entries[i];
     if (!e || e.kind !== "promotion" || !e.key) continue;
@@ -200,7 +200,7 @@ export async function checkDivergence({ files, sha256 }, findings) {
   const cls = classifyDivergence(man, files);
   if (cls.order === "key" && cls.walked > 1)
     findings.push(f("C-17.2", "info", "the history manifest carries no write order (a seq on every entry), so the divergence was classified in snap-key order, which is not a clock: its anchor and intervening set may not be the ones written (I-20)",
-      ["re-export the bundle from a plane that writes seq into _history/manifest.json"]));
+      ["re-export the record from a plane that writes seq into _history/manifest.json"]));
   const names = Array.isArray(man.files) ? man.files.map((e) => e && e.name) : [];
   if (cls.rung === "disjoint-auto")
     findings.push(f("C-17.2", "info", `divergence classified disjoint-auto: base found in history at ${cls.baseKey}; intervening promotion(s) [${cls.intervening.join(", ")}] touched {${[...cls.interveningFiles].join(", ")}}, package touches {${names.join(", ")}}, sets disjoint; apply in sequence recording both bases`,
@@ -213,8 +213,10 @@ export async function checkDivergence({ files, sha256 }, findings) {
 /* ------------------------------------------------------------------------------------------------ C-4.2 */
 
 /** The date each type's state-edge fence took effect (R15): bias sets' on 2026-09-24 (D-468), every other type's
- *  with this module's R15, 2026-09-26. A move "under earlier rules" is one dated at or before its type's fence. */
-export const STATE_MOVE_FENCED_SINCE = { bias: "2026-09-24", "*": "2026-09-26" };
+ *  with this module's R15, 2026-09-26, and projects' again on 2026-10-01 (R56, N456), when the hand-written stage left
+ *  the table and `forming -> investigating`, `investigating -> matured` and `closed -> investigating` stopped being
+ *  edges. A move "under earlier rules" is one dated at or before its type's fence. */
+export const STATE_MOVE_FENCED_SINCE = { bias: "2026-09-24", project: "2026-10-01", "*": "2026-09-26" };
 const fenceOf = (t) => STATE_MOVE_FENCED_SINCE[t] ?? STATE_MOVE_FENCED_SINCE["*"];
 
 /** The record's own state moves for a bundle, from its image: consecutive recorded versions of bundle.md, in write

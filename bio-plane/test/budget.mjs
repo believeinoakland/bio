@@ -12,29 +12,25 @@
  * node v26: an expiry sets `error.code === "ETIMEDOUT"` with `signal: "SIGTERM"`; a child that SIGTERMs itself
  * has the same `signal` and NO error), so M0-103's "or the signal is set" is not taken.
  *
- * THE CONTRACT WITH THE BATTERY. On expiry `budgetAssert` does two things and both are load-bearing:
+ * WHAT AN EXPIRY DOES. On expiry `budgetAssert` does two things:
  *   1. it prints ONE marker line, `TIMEOUT (M0-107) [pid <this suite's pid>]: …`, naming the site, the
- *      budget and what was NOT MEASURED — the pid is what lets `scripts/battery.mjs` tell THIS suite's
- *      marker from a marker a child echoed (a suite driving a scratch battery prints its children's output);
+ *      budget and what was NOT MEASURED, so a reader of the suite's output sees an expiry, not a finding
+ *      (the pid tells this suite's marker from one a child echoed);
  *   2. it records ONE FAILING assertion through the suite's own `t`, so the suite's tally counts it and
- *      its exit is non-zero exactly as before — the battery, not the suite, decides what a failure MEANS.
- * The caller then SKIPS every assertion that would read the expired result. `scripts/battery.mjs` reads a
- * suite whose failures are ALL accounted for by its own markers as NOT MEASURED; one failure more than its
- * markers is RED. So the only honest way to use this is to skip what the expiry did not measure.
+ *      its exit is non-zero exactly as before.
+ * The caller then SKIPS every assertion that would read the expired result, so the one failure the expiry
+ * leaves is the budget assertion, named. (The old battery, `scripts/battery.mjs`, deleted in T20, also read a
+ * suite whose failures were all its own markers as NOT MEASURED; no runner reads the marker today.)
  *
  * HOW A LIAR PASSES M0-107, stated before anything else here: raise every budget until none expires. That
  * hides a REAL hang behind a longer wait, and the hang is then read as nothing at all. So nothing here
  * scales, raises or ignores a budget: the number the caller passes is the number the child gets, and
- * `battery-verdict.test.mjs` plants a hang and asserts it is still NAMED, within its budget.
- *
- * NEGATIVE CONTROL: DECLARED IN THE SUITES THAT USE THIS, and driven by `test/m0107-budget.control.mjs`
- * (a 1 ms budget on `owed-controls`'s `--strict` spawn fails its budget assertion by name and no finding).
+ * a hang is still NAMED, within its budget.
  */
 
 export const TIMEOUT_TAG = "TIMEOUT (M0-107)";
 
-/* The marker the battery reads. `scripts/battery.mjs` RESTATES it (scratch estates copy the runner without
-   `test/`), and `budget-sweep.test.mjs` pins the two sources equal, so they cannot drift apart in silence. */
+/* The marker line's shape, for a reader of a suite's output. */
 export const TIMEOUT_MARKER_RE = /^TIMEOUT \(M0-107\) \[pid (\d+)\]: (.*)$/gm;
 
 /* THE ONLY TEST (BOB #28). A spawn result, an `execFileSync` error, or an `until()` result. */

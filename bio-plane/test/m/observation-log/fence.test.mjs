@@ -106,6 +106,9 @@ test("R13 registerAuthority: one resolver for `sweep` and one for `run`; any oth
   for (const k of [...Object.keys(OBSERVATION_AUTHORITY_KINDS).filter((k) => !RESOLVED_AUTHORITY_KINDS.includes(k)), "gremlin", null]) {
     const r = w.obs.registerAuthority(k, () => []);
     assert.deepEqual([r.ok, r.reason], [false, "AUTHORITY_NOT_RESOLVABLE"], String(k));
+    // its detail names the two kinds and says "record", never "bundle" (N458)
+    assert.match(r.detail, /^a resolver is registered for one of sweep, run; the records every other authority kind names are fixed/);
+    assert.doesNotMatch(r.detail, /bundle/i);
   }
   // no function: membership R81's malformed refusal, the kind beside it, and nothing registered
   const bad = w.obs.registerAuthority("sweep", null);

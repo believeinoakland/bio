@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /* THE NEGATIVE CONTROL DRIVER for FL-3 (the run harness, IS-9) — NINETEEN ARMS
  * IN THREE FAMILIES, no baseline row. Deliberately NOT a `.test.mjs`: it EDITS
- * REAL SOURCES while it runs, and neither `scripts/battery.mjs` nor the fleet
- * walk must discover it (FL-2/PL-3/PL-4's precedent).
+ * REAL SOURCES while it runs, and no runner may discover it — the package's
+ * `npm test` and `node --test` take only `*.test.mjs` (FL-2/PL-3/PL-4's precedent).
  *
  * THE FAMILIES, so a reader can hold the count against the run without reading
  * to the foot: **H1-H10** are FL-3's own arms (H10 is the over-strictness arm);
@@ -12,6 +12,11 @@
  * questions; **D1-D2** are D-452's (2026-09-24), on a dropped candidate
  * dropping ONE candidate and not the pass. 26 announcements, driven — MEASURED 2026-09-25 by D-451 (25 `arm()`
  * calls and H10; 25 before T3; the 21 this line carried before D-452 did not count SK-8's E1/E2).
+ * T21 (AGENT-WORKER #8, N467, N469): the E, F and G arms that ran the plane's deleted `airun.test.mjs` and
+ * `skillsequencing.test.mjs` are re-pointed to the module tests that took their shares (run-rules R1 and R9, ai-runs
+ * R14, and this member's `requirements.test.mjs` R14, R42, R44), each said at its arm; G2 is retired (its subject was
+ * a source-text arm no test holds now), as F3 was by N421; and **S1-S2** carry REC-100's two arms from its deleted
+ * driver, `nc-rec100.mjs`. 28 announcements: 25 armed, F3 and G2 retired, H10 run.
  *
  * TALLY DECLARED HERE 2026-09-14 (M0-29, D-343), AND THE OLD SENTENCE IS KEPT
  * RATHER THAN CORRECTED, BECAUSE IT WAS NEVER WRONG. The only arm count this
@@ -227,25 +232,37 @@ function runNamed(file, label) {
 const runHarness = () => runNamed("harness.test.mjs", "harness");
 const runMember = () => runNamed("agent-worker.test.mjs", "agent-worker");
 
+const runReq = () => runNamed("requirements.test.mjs", "requirements");
+
 /* FL-7's arms reach ACROSS THE TREE, and they have to. This item's defect had
    one half in `agent-worker/src/harness.mjs` (the gate's ending) and the other
    in run-rules (`bio-plane/src/run-rules/rules.mjs`, the catalogue that defines it), and the whole
    point of the fix is that the two are now asserted against EACH OTHER. An arm
    that could only run the member's suites could not measure that at all.
-   The plane's suites print `<label>: N pass, M fail` — a DIFFERENT tail from the
-   member's `N passed, M failed` — so the shape is matched explicitly rather than
-   loosened into one regex that would quietly match neither on a rename. A suite
-   that DIED still reports `fail: -1`, the same rule as above. */
-function runPlane(file, label) {
-  const r = spawnSync(process.execPath, [join(PLANE, "test", file)], { cwd: PLANE, encoding: "utf8" });
+   RE-POINTED BY AGENT-WORKER #8 (T21, N467). These arms ran the plane's `airun.test.mjs` and
+   `skillsequencing.test.mjs`, which failed at load before T20 and were deleted by it (LEGACY-TESTS #18); the
+   properties they held are now the module tests of their owners, run here one file at a time under `node --test`:
+   run-rules' R1 (`m/run-rules/rules.test.mjs`: the bounds, endings and statuses, `runStatusFor`, `cancelled`'s
+   sentence), its R9 (`m/run-rules/deployment.test.mjs`) and ai-runs' R14 (`m/ai-runs/tick-close.test.mjs`: the one
+   exit, read back from the run's row), and, for the deployment order's pins on this member, `requirements.test.mjs`
+   (R14, R42, R44). A module test is named by its test's title; a file that did not report a tally (it died, or
+   never ran) reads `fail: -1`, the same rule as above. */
+function runModule(rel) {
+  const r = spawnSync(process.execPath, ["--test", "--test-reporter=spec", join(PLANE, "test", "m", rel)],
+    { cwd: REPO, encoding: "utf8" });
   const out = (r.stdout || "") + (r.stderr || "");
-  const m = out.match(new RegExp(`${label}:\\s*(\\d+) pass,\\s*(\\d+) fail`));
-  const failed = [...out.matchAll(/^\s*FAIL\s+(.+)$/gm)].map((x) => x[1].trim());
-  return m ? { ran: true, pass: +m[1], fail: +m[2], failed, out }
-           : { ran: false, pass: 0, fail: -1, failed, out };
+  const p = out.match(/^ℹ pass (\d+)$/m), f = out.match(/^ℹ fail (\d+)$/m);
+  const failed = [...new Set([...out.matchAll(/^\s*✖ (.+?) \([\d.]+m?s\)$/gm)].map((x) => x[1].trim())
+    .filter((name) => !name.endsWith(".mjs")))];
+  return p && f ? { ran: true, pass: +p[1], fail: +f[1], failed, out }
+                : { ran: false, pass: 0, fail: -1, failed, out };
 }
-const runAirun = () => runPlane("airun.test.mjs", "airun");
-const runSeq = () => runPlane("skillsequencing.test.mjs", "skillsequencing");
+const runRules = () => runModule("run-rules/rules.test.mjs");
+const runDeployment = () => runModule("run-rules/deployment.test.mjs");
+const runTickClose = () => runModule("ai-runs/tick-close.test.mjs");
+const RULES_R1 = /^R1: the bounds and endings/;
+const DEPLOY_R9 = /^R9: DEPLOYMENT_SEQUENCE/;
+const CLOSE_R14 = /^R14: the one exit/;
 /* The run vocabulary moved from `airun.mjs` to run-rules (the ai-runs split, K617); the arms that edit it follow it
    (found by AGENT-WORKER #6 in T19: F2 had stopped arming). */
 const AIRUN = join(PLANE, "src", "run-rules", "rules.mjs");
@@ -383,8 +400,12 @@ arm({
   mustFail: "the F10 routing arms AND the through-the-op arm that PL-3's `repeats` counter stayed at zero",
   mustNot: "the dedup arms, the gate arm, or the empty-run arm",
   file: HARNESS,
-  find: `      if (s.refusal) return { step: "adjust", why:`,
-  replace: `      if (s.refusal) return { step: "submit", why:`,
+  /* RE-ANCHORED T21 (AGENT-WORKER #8): the line occurs twice since `nextPlanStep` (K660) took the same F10 edge, so
+     this arm had NOT ARMED; the anchor now includes the CONTROL_FLOW line's own continuation. */
+  find: "      if (s.refusal) return { step: \"adjust\", why: `the plane refused '${String(s.refusal.code || s.refusal.reason || \"?\")}'; `\n"
+      + "                                                 + `F10 routes",
+  replace: "      if (s.refusal) return { step: \"submit\", why: `the plane refused '${String(s.refusal.code || s.refusal.reason || \"?\")}'; `\n"
+      + "                                                 + `F10 routes",
   run: () => {
     const r = runHarness();
     const routing = anyFailed(r, /refused submit goes to `adjust`|does NOT go back to `submit`|routed to ADJUST/);
@@ -472,20 +493,23 @@ arm({
 arm({
   id: "E1", subject: "THE EXTRACT ROW FLIPPED WITHOUT THE RECORD MOVING",
   what: "`MODES.extract.deployed` is set to true — the EXTRACT role becomes drivable before §7.3(7)'s open question was ever answered",
-  mustFail: "this suite's NOT-deployed and closed-at-the-gate extract arms, AND skillsequencing ARM B4 across the tree (index 0 is no longer the only deployed mode)",
-  mustNot: "the CHECK arms, the investigate arms, skillsequencing ARM B3 (the SET is unchanged — only a flag moved)",
+  /* RE-POINTED T21 (N467): skillsequencing ARM B4 (only index 0 deployed) is this member's own R44 pin now, in
+     `requirements.test.mjs`, against run-rules' DEPLOYED_MODES; ARM B3 (the set) is its R14 pin. */
+  mustFail: "this suite's NOT-deployed and closed-at-the-gate extract arms, AND requirements.test's R44 pin (MODES' deployed modes are run-rules' DEPLOYED_MODES, the order's first member only)",
+  mustNot: "the CHECK arms, the investigate arms, requirements.test's R14 set pin (the SET is unchanged — only a flag moved)",
   file: HARNESS,
   find: `  extract:     { deployed: false,`,
   replace: `  extract:     { deployed: true,`,
   run: () => {
     const r = runHarness();
-    const seq = runSeq();
+    const q = runReq();
     const gate = anyFailed(r, /it is NOT deployed — §7\.3|extract run is CLOSED at the gate|NOT DEPLOYED YET/);
-    const seqB4 = anyFailed(seq, /ARM B4/);
-    const held = !anyFailed(r, /CHECK is deployed|investigate-fresh is NOT deployed|investigate run is CLOSED/) && !anyFailed(seq, /ARM B3/);
+    const pin = anyFailed(q, /^R44, R53: MODES' keys are DEPLOYMENT_SEQUENCE\.order/);
+    const held = !anyFailed(r, /CHECK is deployed|investigate-fresh is NOT deployed|investigate run is CLOSED/)
+      && !anyFailed(q, /^R14 \(skillsequencing\): MODES is exactly the recorded set/);
     return {
-      observed: `harness ${r.pass}/${r.fail} · skillsequencing ${seq.pass}/${seq.fail} · extract gate arms ${gate ? "FAILED" : "did NOT fail"} · seq B4 ${seqB4 ? "FAILED" : "did NOT fail"} · check/investigate/B3 ${held ? "held" : "ALSO failed"}`,
-      asDeclared: r.ran && gate && seqB4 && held,
+      observed: `harness ${r.pass}/${r.fail} · requirements ${q.pass}/${q.fail} · extract gate arms ${gate ? "FAILED" : "did NOT fail"} · R44 deployed-set pin ${pin ? "FAILED" : "did NOT fail"} · check/investigate/R14 set ${held ? "held" : "ALSO failed"}`,
+      asDeclared: r.ran && q.ran && gate && pin && held,
     };
   },
 });
@@ -493,20 +517,22 @@ arm({
 arm({
   id: "E2", subject: "THE EXTRACT ROW REMOVED WHILE THE RECORD STILL NAMES IT — the other direction of the pairing",
   what: "the `extract` row is deleted from `MODES` with `DEPLOYMENT_SEQUENCE.order` untouched",
-  mustFail: "this suite's row-EXISTS and NOT-DEPLOYED-YET arms (an unknown word again), AND skillsequencing ARM B3 (recorded, not in the table) and ARM B4 (the partition lost a member)",
+  /* RE-POINTED T21 (N467): skillsequencing ARM B3 (recorded, not in the table) is requirements.test's R14 set pin. */
+  mustFail: "this suite's row-EXISTS and NOT-DEPLOYED-YET arms (an unknown word again), AND requirements.test's R14 set pin (MODES is exactly the recorded order's members) and its R44 keys pin",
   mustNot: "the CHECK and investigate arms; the unknown-word arm must still hold, because that is exactly what extract has become",
   file: HARNESS,
   find: `  extract:     { deployed: false,`,
   replace: `  extract_gone: { deployed: false,`,
   run: () => {
     const r = runHarness();
-    const seq = runSeq();
+    const q = runReq();
     const gone = anyFailed(r, /an `extract` row EXISTS|NOT DEPLOYED YET/);
-    const seqB3 = anyFailed(seq, /ARM B3/);
+    const setPin = anyFailed(q, /^R14 \(skillsequencing\): MODES is exactly the recorded set/)
+      && anyFailed(q, /^R44, R53: MODES' keys are DEPLOYMENT_SEQUENCE\.order/);
     const held = !anyFailed(r, /CHECK is deployed|investigate-fresh is NOT deployed|unknown word's refusal/);
     return {
-      observed: `harness ${r.pass}/${r.fail} · skillsequencing ${seq.pass}/${seq.fail} · extract-row arms ${gone ? "FAILED" : "did NOT fail"} · seq B3 ${seqB3 ? "FAILED" : "did NOT fail"} · check/investigate/unknown ${held ? "held" : "ALSO failed"}`,
-      asDeclared: r.ran && gone && seqB3 && held,
+      observed: `harness ${r.pass}/${r.fail} · requirements ${q.pass}/${q.fail} · extract-row arms ${gone ? "FAILED" : "did NOT fail"} · R14/R44 set pins ${setPin ? "FAILED" : "did NOT fail"} · check/investigate/unknown ${held ? "held" : "ALSO failed"}`,
+      asDeclared: r.ran && q.ran && gone && setPin && held,
     };
   },
 });
@@ -647,24 +673,23 @@ arm({
 arm({
   id: "F1", subject: "THE MISATTRIBUTION ITSELF — the gate regresses to the member's word",
   what: "`gate-mode` closes a refused launch on `cancelled` again, exactly as it did before FL-7. The plane's catalogue is untouched and still defines `mode-not-deployed`",
-  mustFail: "the harness gate arms, A6b's DIRECTION 2 (code -> header), the through-the-op B7 arms INCLUDING the named misattribution arm, and — across the tree — skillsequencing ARM D1/D3/D4/D5 and D5b, which must NAME the misattribution rather than report an unequal string",
-  mustNot: "A6b's DIRECTION 1 (the header still names a word the catalogue still defines, so that half is genuinely undisturbed) — and `airun.test.mjs`, whose subject is the catalogue and not the gate, must stay GREEN",
+  /* RE-POINTED T21 (N467): skillsequencing's D-arms named the misattribution across the tree; this suite's own B7
+     arm names it ("MISATTRIBUTED: …"), and the catalogue's side is run-rules' R1 test, which must stay green. */
+  mustFail: "the harness gate arms, A6b's DIRECTION 2 (one ending, the plane's mode-not-deployed) and the through-the-op B7 arms, INCLUDING the member-attribution arm, which must NAME the misattribution rather than report an unequal string",
+  mustNot: "A6b's DIRECTION 1 (the gate's ending is still a word the catalogue defines, so that half is genuinely undisturbed) — and run-rules' R1 test, whose subject is the catalogue and not the gate, must stay GREEN",
   file: HARNESS,
   find: `return { step: "close", bound: "mode-not-deployed",`,
   replace: `return { step: "close", bound: "cancelled",`,
   run() {
     const rh = runHarness();
-    const seq = runSeq();
-    const air = runAirun();
-    const namedIt = seq.failed.some((l) => /D5b|misattribution/i.test(l))
-                 || rh.failed.some((l) => /misattribution/i.test(l));
+    const rules = runRules();
+    const namedIt = /MISATTRIBUTED: a gate refusal recorded as a member cancellation/.test(rh.out);
     const dir2 = anyFailed(rh, /DIRECTION 2/);
     const dir1Held = !anyFailed(rh, /DIRECTION 1/);
     return {
-      observed: `harness ${rh.pass}/${rh.fail} FAIL · skillsequencing ${seq.pass}/${seq.fail} FAIL · airun ${air.pass}/${air.fail} FAIL`
-        + ` · DIRECTION 2 failed: ${dir2} · DIRECTION 1 held: ${dir1Held} · a misattribution arm NAMED it: ${namedIt}`,
-      asDeclared: rh.ran && seq.ran && air.ran && rh.fail > 0 && seq.fail > 0
-                  && air.fail === 0 && dir2 && dir1Held && namedIt,
+      observed: `harness ${rh.pass}/${rh.fail} FAIL · run-rules R1 file ${rules.pass}/${rules.fail} FAIL`
+        + ` · DIRECTION 2 failed: ${dir2} · DIRECTION 1 held: ${dir1Held} · the member-attribution arm NAMED it: ${namedIt}`,
+      asDeclared: rh.ran && rules.ran && rh.fail > 0 && rules.fail === 0 && dir2 && dir1Held && namedIt,
     };
   },
 });
@@ -672,21 +697,24 @@ arm({
 arm({
   id: "F2", subject: "THE CATALOGUE LOSES THE WORD — the header promises what nothing defines",
   what: "`mode-not-deployed` is removed from the plane's RUN_ENDINGS, restoring the exact pre-FL-7 condition on the catalogue side while the gate still tries to close on it",
-  mustFail: "A6b's DIRECTION 1 (header -> catalogue) BY NAME; airun ARM V6/V6b; and the through-the-op arms G1/G2 — C-22.5 must refuse a bound the vocabulary no longer holds, which is the proof the op path is real and not a store-level assertion",
+  /* RE-POINTED T21 (N467): airun's V6 (the vocabulary) is run-rules' R1 and R9 tests; its G1/G2 (the close refused
+     through the op) is ai-runs' R14 test, which closes a run on mode-not-deployed and reads the row back. */
+  mustFail: "A6b's DIRECTION 1 (gate -> catalogue) BY NAME; run-rules' R1 test (the endings are exactly the named ones) and its R9 test (mode-not-deployed is the ending the gate closes on); and ai-runs' R14 test, whose close on mode-not-deployed the plane must now refuse (C-22.5), which is the proof the plane's own exit path is real",
   mustNot: "nothing in this section is exempt — but the failure must be about the VOCABULARY, so `harness.test.mjs`'s A6 gate-step arms (which read `nextStep`'s return, not the plane) keep passing on step and why",
   file: AIRUN,
   find: `  "mode-not-deployed":`,
   replace: `  "mode-not-deployed-REMOVED-BY-CONTROL-ARM-F2":`,
   run() {
     const rh = runHarness();
-    const air = runAirun();
+    const rules = runRules(), dep = runDeployment(), close = runTickClose();
     const dir1 = anyFailed(rh, /DIRECTION 1/);
-    const opArm = anyFailed(air, /ARM G1|ARM G2/);
-    const v6 = anyFailed(air, /ARM V6/);
+    const vocab = anyFailed(rules, RULES_R1) && anyFailed(dep, DEPLOY_R9);
+    const opArm = anyFailed(close, CLOSE_R14);
+    const stepHeld = !anyFailed(rh, /a CHECK run passes the gate|an investigate run is CLOSED at the gate/);
     return {
-      observed: `harness ${rh.pass}/${rh.fail} FAIL · airun ${air.pass}/${air.fail} FAIL`
-        + ` · DIRECTION 1 failed: ${dir1} · through-the-op G1/G2 failed: ${opArm} · V6 failed: ${v6}`,
-      asDeclared: rh.ran && air.ran && rh.fail > 0 && air.fail > 0 && dir1 && opArm && v6,
+      observed: `harness ${rh.pass}/${rh.fail} FAIL · run-rules R1/R9 failed: ${vocab} · ai-runs R14 failed: ${opArm}`
+        + ` · DIRECTION 1 failed: ${dir1} · A6 gate-step arms ${stepHeld ? "held" : "ALSO failed"}`,
+      asDeclared: rh.ran && rules.ran && dep.ran && close.ran && dir1 && vocab && opArm && stepHeld,
     };
   },
 });
@@ -716,21 +744,21 @@ arm({
 arm({
   id: "F4", subject: "OVER-STRICTNESS, ARMED — a GENUINE member cancellation must still read as `cancelled`",
   what: "NOTHING about the member's ending is touched; instead the plane's `cancelled` TEXT is rewritten to a different sentence. The correction must not have made the member's ending vestigial: arms that assert a member cancellation is recorded as a member act must still be LIVE and must notice",
-  mustFail: "airun ARM V6b and skillsequencing ARM D5 — both read `cancelled`'s sentence and both must object, which is what shows the member's ending is still genuinely asserted rather than left as a word nobody checks",
+  /* RE-POINTED T21 (N467): airun's V6b and skillsequencing's D5 read `cancelled`'s sentence; run-rules' R1 test does. */
+  mustFail: "run-rules' R1 test, which reads `cancelled`'s sentence (`a member stopped it`) and must object, which is what shows the member's ending is still genuinely asserted rather than left as a word nobody checks",
   mustNot: "the gate arms, DIRECTION 1 or DIRECTION 2 — none of them is about the member's ending, and a fix that made `cancelled` and `mode-not-deployed` interchangeable would show up as those failing too",
   file: AIRUN,
   find: `  cancelled:  "a member stopped it",`,
   replace: `  cancelled:  "the run came to an end somehow",`,
   run() {
-    const air = runAirun();
-    const seq = runSeq();
+    const rules = runRules();
     const rh = runHarness();
-    const memberArms = anyFailed(air, /ARM V6b/) || anyFailed(seq, /ARM D5/);
+    const memberArms = anyFailed(rules, RULES_R1);
     const gateHeld = !anyFailed(rh, /DIRECTION 1|DIRECTION 2/) && rh.fail === 0;
     return {
-      observed: `airun ${air.pass}/${air.fail} FAIL · skillsequencing ${seq.pass}/${seq.fail} FAIL · harness ${rh.pass}/${rh.fail} FAIL`
-        + ` · a member-ending arm objected: ${memberArms} · the gate/two-way arms held: ${gateHeld}`,
-      asDeclared: air.ran && seq.ran && rh.ran && memberArms && gateHeld,
+      observed: `run-rules R1 file ${rules.pass}/${rules.fail} FAIL · harness ${rh.pass}/${rh.fail} FAIL`
+        + ` · the member-ending arm objected: ${memberArms} · the gate/two-way arms held: ${gateHeld}`,
+      asDeclared: rules.ran && rh.ran && memberArms && gateHeld,
     };
   },
 });
@@ -763,62 +791,61 @@ const AI_RUNS = join(PLANE, "src", "ai-runs", "index.mjs");
 arm({
   id: "G1", subject: "THE DEFECT ITSELF RESTORED — a gate-refused run recorded as one that FINISHED",
   what: "`RUN_NEVER_STARTED` is emptied in run-rules, so `runStatusFor` falls through exactly as the pre-FL-8 ternary did and a launch the deployment gate refused is recorded `finished` again",
-  mustFail: "airun ARM H1 (the status through three ops) and ARM H2, which must NAME the misdescription rather than report an unequal string; ARM W3, because `never-started` becomes a published term with no producer; ARM W5, which joins the ending and the status on one run; and the member suite's own FL-8 arm",
-  mustNot: "ARM H3 (the over-strictness partition — nothing about a completed, cancelled or bound-stopped run moves), ARM V9 (the vocabulary is untouched), ARM W1 (the store still asks run-rules), W2 or W4",
+  /* RE-POINTED T21 (N467): airun's H1/H2/W3/W5 are run-rules' R1 test (runStatusFor and RUN_NEVER_STARTED) and
+     ai-runs' R14 test (the gate-refused close read back from the run's row as `never-started`). */
+  mustFail: "run-rules' R1 test (runStatusFor answers never-started for mode-not-deployed), ai-runs' R14 test (a close on mode-not-deployed recorded never-started, read back from the run's row), and this suite's own FL-8 arm (B7: the status the member's refused launch is recorded under, from the mock's table built by runStatusFor)",
+  mustNot: "this suite's A6b DIRECTION 1 and 2 and A6c (the table still equals runStatusFor, whatever it answers): the ending is untouched, only the status it is keyed to moved",
   file: AIRUN,
   find: `export const RUN_NEVER_STARTED = { "mode-not-deployed": 1 };`,
   replace: `export const RUN_NEVER_STARTED = {};`,
   run() {
-    const air = runAirun();
+    const rules = runRules(), close = runTickClose();
     const rh = runHarness();
-    const named = anyFailed(air, /ARM H1|ARM H2/);
-    const namesIt = /MISDESCRIBED: a launch the gate refused is on record as a run that FINISHED/.test(air.out);
-    const heldOpen = !anyFailed(air, /ARM H3|ARM V9|ARM W1|ARM W2|ARM W4/);
+    const named = anyFailed(rules, RULES_R1) && anyFailed(close, CLOSE_R14);
+    const fl8 = anyFailed(rh, /NEVER STARTED/);
+    const heldOpen = !anyFailed(rh, /DIRECTION 1|DIRECTION 2|^A6c \(FL-8\)/);
     return {
-      observed: `airun ${air.pass}/${air.fail} FAIL · harness ${rh.pass}/${rh.fail} FAIL`
-        + ` · the status arms failed: ${named} · the failure NAMES the misdescription: ${namesIt}`
-        + ` · the over-strictness, vocabulary and source arms held: ${heldOpen}`,
-      asDeclared: air.ran && rh.ran && named && namesIt && heldOpen
-                  && anyFailed(air, /ARM W3/) && rh.fail > 0,
+      observed: `run-rules R1 file ${rules.pass}/${rules.fail} · ai-runs tick-close ${close.pass}/${close.fail} · harness ${rh.pass}/${rh.fail} FAIL`
+        + ` · run-rules R1 and ai-runs R14 failed: ${named} · the member's FL-8 arm failed: ${fl8}`
+        + ` · the two-way and table arms held: ${heldOpen}`,
+      asDeclared: rules.ran && close.ran && rh.ran && named && fl8 && heldOpen,
     };
   },
 });
 
 arm({
   id: "G2", subject: "A SECOND COPY OF THE RULE THAT AGREES — the arm that earns the two-way claim",
+  retired: "RETIRED T21 (N467). Its one subject was airun ARM W1, an assertion over ai-runs' SOURCE TEXT (the store "
+         + "asks run-rules rather than deciding the status itself); `airun.test.mjs` was deleted in T20, and no module "
+         + "test reads source text now (N421: tests check behaviour at the interface). This arm changes no behaviour by "
+         + "construction, so no remaining test can fail under it, and an arm that cannot fail proves nothing.",
   what: "the store stops ASKING run-rules and decides the status itself, with a copy that returns IDENTICAL answers for every bound and every ending. Nothing a caller can observe changes; only where the rule lives does",
   mustFail: "airun ARM W1, and EXACTLY THAT ONE. It is the whole point of this arm: a source-agreement assertion that failed here together with the behavioural arms would be the same comparison written twice, which is what FL-7's F3 measured one item ago",
   mustNot: "every other assertion in the suite — H1, H2, H3, H4, V9, W2, W3, W4, W5 — because the record a caller reads is byte-for-byte what it was",
   file: AI_RUNS,
   find: `      const status = runStatusFor(bound);`,
   replace: `      const status = bound === "mode-not-deployed" ? "never-started"\n                   : (stoppedByBound ? "stopped" : "finished");`,
-  run() {
-    const air = runAirun();
-    const w1 = anyFailed(air, /ARM W1/);
-    return {
-      observed: `airun ${air.pass}/${air.fail} FAIL · W1 failed: ${w1} · failing arms: `
-        + `${air.failed.length ? air.failed.map((l) => (l.match(/ARM \w+/) || ["?"])[0]).join(", ") : "none"}`,
-      asDeclared: air.ran && w1 && air.fail === 1,
-    };
-  },
 });
 
 arm({
   id: "G3", subject: "THE VOCABULARY POINTED ELSEWHERE — a status term with no producer",
   what: "a FIFTH status term (`abandoned`) is added to `RUN_STATUS` with nothing anywhere able to produce it — the shape of every vocabulary drift this repository has recorded: a published word nothing writes",
-  mustFail: "airun ARM V9 (the vocabulary is asserted as an exact SET, the guard `RUN_ENDINGS` has had since FL-7 and the status vocabulary had NEVER had) and ARM W3 (vocabulary -> keying: every terminal term must be REACHABLE). Two assertions, and they are two claims rather than one — V9 is about what the set IS, W3 about whether anything can write it",
-  mustNot: "ARM W2 (keying -> vocabulary is unaffected: producing a subset is still producing terms the vocabulary holds), ARM W1, ARM W4, or any behavioural arm — nothing a run does changes",
+  /* RE-POINTED T21 (N467): airun's V9 (the exact SET) is run-rules' R1 test; W3 (every term reachable) has no
+     successor, so this arm now proves the set's pin alone. */
+  mustFail: "run-rules' R1 test, which asserts RUN_STATUS as an exact SET (running, finished, stopped, never-started) — and nothing else in that file",
+  mustNot: "ai-runs' R14 test and this suite: nothing a run does changes, only a word with no producer was published",
   file: AIRUN,
   find: `export const RUN_STATUS = { running: 1, finished: 1, stopped: 1, "never-started": 1 };`,
   replace: `export const RUN_STATUS = { running: 1, finished: 1, stopped: 1, "never-started": 1, abandoned: 1 };`,
   run() {
-    const air = runAirun();
-    const both = anyFailed(air, /ARM V9/) && anyFailed(air, /ARM W3/);
-    const held = !anyFailed(air, /ARM W1|ARM W2|ARM W4|ARM H1|ARM H2|ARM H3|ARM H4/);
+    const rules = runRules(), close = runTickClose();
+    const rh = runHarness();
+    const set = anyFailed(rules, RULES_R1) && rules.fail === 1;
+    const held = close.ran && close.fail === 0 && rh.fail === 0;
     return {
-      observed: `airun ${air.pass}/${air.fail} FAIL · V9 and W3 both failed: ${both}`
-        + ` · the keying and behavioural arms held: ${held}`,
-      asDeclared: air.ran && both && held && air.fail === 2,
+      observed: `run-rules R1 file ${rules.pass}/${rules.fail} FAIL · ai-runs tick-close ${close.pass}/${close.fail} · harness ${rh.pass}/${rh.fail}`
+        + ` · R1 (the set) failed, alone: ${set} · ai-runs and this suite held: ${held}`,
+      asDeclared: rules.ran && rh.ran && set && held,
     };
   },
 });
@@ -826,19 +853,23 @@ arm({
 arm({
   id: "G4", subject: "OVER-STRICTNESS, ARMED — the fix must not sweep every ending into `never-started`",
   what: "`RUN_NEVER_STARTED` gains `cancelled` and `completed`, so a run that genuinely RAN to its end and one a member stopped are ALSO recorded as never having started. This is the over-reach the queue row's second control exists to catch, and it is the shape a careless fix would actually take",
-  mustFail: "airun ARM H3 (the whole partition in one assertion, naming which one moved), ARM C4 (the member cancellation's own status, which has read `finished` since IS-6 and is deliberately left standing by FL-8), and ARM W3 — because with every ending swept up, `finished` becomes the term with no producer",
-  mustNot: "ARM H1 or H2 — the gate refusal still reads `never-started`, which is what shows this arm measures OVER-reach and not the fix itself; nor ARM V9, W1, W2 or W4",
+  /* RE-POINTED T21 (N467): airun's H3 (the partition) and C4 (a member cancellation reads `finished`) are run-rules'
+     R1 test (exactly mode-not-deployed never-started, finished otherwise) and ai-runs' R14 test (a completed and a
+     cancelled close read back `finished`). */
+  mustFail: "run-rules' R1 test (RUN_NEVER_STARTED is exactly mode-not-deployed) and ai-runs' R14 test (a completed run and a member's cancellation recorded `finished`)",
+  mustNot: "this suite's FL-8 arm (B7: the gate refusal still reads `never-started`), which is what shows this arm measures OVER-reach and not the fix itself; nor A6b's two directions",
   file: AIRUN,
   find: `export const RUN_NEVER_STARTED = { "mode-not-deployed": 1 };`,
   replace: `export const RUN_NEVER_STARTED = { "mode-not-deployed": 1, cancelled: 1, completed: 1 };`,
   run() {
-    const air = runAirun();
-    const overreach = anyFailed(air, /ARM H3/) && anyFailed(air, /ARM C4/) && anyFailed(air, /ARM W3/);
-    const gateHeld = !anyFailed(air, /ARM H1|ARM H2|ARM V9|ARM W1|ARM W2|ARM W4/);
+    const rules = runRules(), close = runTickClose();
+    const rh = runHarness();
+    const overreach = anyFailed(rules, RULES_R1) && anyFailed(close, CLOSE_R14);
+    const gateHeld = !anyFailed(rh, /NEVER STARTED|DIRECTION 1|DIRECTION 2/);
     return {
-      observed: `airun ${air.pass}/${air.fail} FAIL · the over-strictness arms objected: ${overreach}`
-        + ` · the gate's own arms held: ${gateHeld}`,
-      asDeclared: air.ran && overreach && gateHeld,
+      observed: `run-rules R1 file ${rules.pass}/${rules.fail} · ai-runs tick-close ${close.pass}/${close.fail} · harness ${rh.pass}/${rh.fail}`
+        + ` · the over-reach arms objected: ${overreach} · the gate's own arms held: ${gateHeld}`,
+      asDeclared: rules.ran && close.ran && rh.ran && overreach && gateHeld,
     };
   },
 });
@@ -847,17 +878,19 @@ arm({
   id: "G5", subject: "THE MOCK DECIDES AGAIN — the instrument defect FL-8 found, put back",
   what: "the plane mock's `airunclose` branch stops looking the status up and reproduces the plane's keying by hand, in the exact spelling it carried from FL-3 until FL-8 (`bound === \"completed\" || bound === \"cancelled\" ? \"finished\" : \"stopped\"`). This is not a hypothetical: it is what the file actually said, and it had been answering `stopped` for `mode-not-deployed` while the plane answered `finished`, with nothing comparing the two",
   mustFail: "harness A6c2 (the source assertion that the hand-written keying is GONE and the table arrived as data) and B7's FL-8 arm, which reads the status the member's refused launch is recorded under",
-  mustNot: "A6c itself — the interpolated table is still correct, which is exactly why a table alone was never the fix; nor A6b's two directions, nor any airun arm, because the plane is untouched",
+  /* RE-POINTED T21 (N467): the plane's half is run-rules' R1 test and ai-runs' R14 test, both untouched. */
+  mustNot: "A6c itself — the interpolated table is still correct, which is exactly why a table alone was never the fix; nor A6b's two directions, nor run-rules' R1 or ai-runs' R14 test, because the plane is untouched",
   file: join(MEMBER, "test", "harness.test.mjs"),
   find: `      S.status = STATUS_BY_BOUND[bound] || "finished";`,
   replace: `      S.status = bound === "completed" || bound === "cancelled" ? "finished" : "stopped";`,
   run() {
     const rh = runHarness();
-    const air = runAirun();
+    const rules = runRules(), close = runTickClose();
     const objected = anyFailed(rh, /A6c2/) && anyFailed(rh, /NEVER STARTED/);
-    const held = !anyFailed(rh, /A6c \(FL-8\)|DIRECTION 1|DIRECTION 2/) && air.ran && air.fail === 0;
+    const held = !anyFailed(rh, /A6c \(FL-8\)|DIRECTION 1|DIRECTION 2/) && rules.ran && rules.fail === 0
+      && close.ran && close.fail === 0;
     return {
-      observed: `harness ${rh.pass}/${rh.fail} FAIL · airun ${air.pass}/${air.fail} FAIL`
+      observed: `harness ${rh.pass}/${rh.fail} FAIL · run-rules R1 file ${rules.pass}/${rules.fail} · ai-runs tick-close ${close.pass}/${close.fail}`
         + ` · the mock's own arms objected: ${objected} · the table arm and the plane held: ${held}`,
       asDeclared: rh.ran && objected && held,
     };
@@ -1006,8 +1039,10 @@ arm({
     + "the liar, and the sent-once/never-landed arm exists — and B4's adjusted landing, B6's four level-empty "
     + "suggestions, FT0*, FT1/FT1b/FT1c",
   file: DRIVER,
-  find: `      if (changed) queue.unshift(state.submission);`,
-  replace: `      if (changed) queue.unshift(state.submission); else queue.push(state.refusedSubmission);`,
+  /* RE-ANCHORED T21 (AGENT-WORKER #8): the line occurs twice since mode plan's `adjust` (K660), so this arm had NOT
+     ARMED; the anchor now includes the check-mode row's own note. */
+  find: `      if (changed) queue.unshift(state.submission);\n      out.note = changed\n        ? "the submission was changed`,
+  replace: `      if (changed) queue.unshift(state.submission); else queue.push(state.refusedSubmission);\n      out.note = changed\n        ? "the submission was changed`,
   run() {
     const r = runHarness();
     const failedAsDeclared = [/^D-452: the DROPPED candidate was sent ONCE/, /^D-452: nothing was resent verbatim/,
@@ -1016,6 +1051,50 @@ arm({
     return {
       observed: `harness ${r.pass}/${r.fail} FAIL · the declared arms failed by name: ${failedAsDeclared} · the MUST-NOT arms held: ${held}`,
       asDeclared: r.ran && failedAsDeclared && held,
+    };
+  },
+});
+
+/* ============================================================================
+ * SECTION S — REC-100 / IC-130: THE STEP LOG AGAINST THE REAL PLANE'S REFUSAL (harness.test.mjs section R).
+ * CARRIED T21 by AGENT-WORKER #8 (N469): these are the two arms REC-100 declared and ran on 2026-09-18 through its
+ * own driver, `bio-plane/test/nc-rec100.mjs` (`aw-steplog`, `aw-refused`), which T20 deleted with the old battery.
+ * ========================================================================== */
+
+arm({
+  id: "S1", subject: "REC-100 aw-steplog — a model-judged PRESENT written verbatim",
+  what: "`stepLog` writes the model's PRESENT as PRESENT again, an entry that names nothing found",
+  mustFail: "A8 (REC-100) and section R's REC100-1 and REC100-1b — the REAL plane refuses a PRESENT that names nothing (C-22.10), so the entries are refused and the run's `logged` no longer equals what the record holds",
+  mustNot: "REC100-2 and REC100-2b, which are about surfacing a refused entry, not about which state is written",
+  file: HARNESS,
+  find: `    state:   judgedPresent ? "LOOKED_INDETERMINATE" : s.observed,`,
+  replace: `    state:   s.observed,`,
+  run() {
+    const r = runHarness();
+    const failed = [/^A8 \(REC-100\)/, /^REC100-1:/, /^REC100-1b:/].every((re) => anyFailed(r, re));
+    const held = !anyFailed(r, /^REC100-2:|^REC100-2b:/);
+    return {
+      observed: `harness ${r.pass}/${r.fail} FAIL · A8, REC100-1 and REC100-1b failed by name: ${failed} · REC100-2/2b held: ${held}`,
+      asDeclared: r.ran && failed && held,
+    };
+  },
+});
+
+arm({
+  id: "S2", subject: "REC-100 aw-refused — the tick's per-entry refusals left unread",
+  what: "the driver stops reading the tick's `refused[]`, so an entry the plane refused vanishes from the run's output",
+  mustFail: "REC100-2, REC100-2b and REC100-2c by name — an entry the REAL plane refused is no longer named in `log_refused` or `refusals`, so what was SENT is neither held nor named",
+  mustNot: "REC100-1 and REC100-1b — the entries this run sends are still the ones the plane accepts, and `logged` still counts what landed",
+  file: DRIVER,
+  find: `      const refusedEntries = Array.isArray(t?.refused) ? t.refused : [];`,
+  replace: `      const refusedEntries = [];`,
+  run() {
+    const r = runHarness();
+    const failed = [/^REC100-2:/, /^REC100-2b:/, /^REC100-2c:/].every((re) => anyFailed(r, re));
+    const held = !anyFailed(r, /^REC100-1:|^REC100-1b:/);
+    return {
+      observed: `harness ${r.pass}/${r.fail} FAIL · REC100-2, 2b and 2c failed by name: ${failed} · REC100-1/1b held: ${held}`,
+      asDeclared: r.ran && failed && held,
     };
   },
 });

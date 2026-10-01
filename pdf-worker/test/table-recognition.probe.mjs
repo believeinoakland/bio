@@ -1,6 +1,7 @@
 /* CPDF-18 — THE GO/NO-GO MEASUREMENT OF A TABLE-RECOGNITION STEP ON THE RUNTIME.
- * EXTRACTION-BREADTH §3.3 item 3 / §7 row 4. A PROBE: not a `.test.mjs`, so the
- * battery never discovers it, and it commits no product code.
+ * EXTRACTION-BREADTH §3.3 item 3 / §7 row 4. A PROBE: not a `.test.mjs`, so no
+ * suite runs it (not `npm test`, not the regression workflow's `node --test`
+ * globs), and it commits no product code.
  *
  *     node test/table-recognition.probe.mjs [--runs N]      (from pdf-worker/)
  *

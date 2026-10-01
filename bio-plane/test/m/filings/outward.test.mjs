@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { world, V, MACHINE, STRANGER, PROFILE, DOC, EVID, sha } from "./fixture.mjs";
+import { world, V, MACHINE, STRANGER, PROFILE, DOC, EVID, sha, WORDS, LAW } from "./fixture.mjs";
 import { Filings, INBAND_RULE, inbandBlock } from "../../../src/filings/index.mjs";
 import { inbandQuartet } from "../../../src/inband.mjs";
 import { validate } from "../../../../jurisdictions/index.mjs";
@@ -14,12 +14,12 @@ const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
 const OUTSIDER = V("quinn");
 const rehash = (text) => createHash("sha256").update(JSON.stringify(text, null, 1), "utf8").digest("hex");
 const prep = (x, action, over = {}) => x.f.filingPrepare({ action, preparer: V("bo"), viewer: V("bo"), ...over });
-/* A Tier 1 draft on a fresh action, its one unfillable blank written in. */
+/* A Tier 1 draft in the member's words on a fresh action, its one unfillable blank written in. */
 function drafted(x, o = {}) {
   const A = x.action(o);
-  const d = prep(x, A);
+  const d = prep(x, A, { text: WORDS });
   assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));
-  return { A, d, text: d.text.replace("[UNFILLED: bylaw]", "P.E.B.L. § 12") };
+  return { A, d, text: d.text.replace("[UNFILLED: law]", LAW) };
 }
 /* The project's bundle.md revised by its owner to declare `required_strength` (strength R14). */
 function declareBar(x, lines) {
@@ -198,58 +198,14 @@ test("R25 the venue's standard flags an exhibit below every grade it accepts, on
   assert.match(u.venue_standard.why, /different evidence standards/);
 });
 
-test("R26 a member keeps an approved draft, or a derivative of its text, as a template of the group's, named, for a kind or none; filingPrepare fills a named one from the record as the profile's is; KIND_NO_TEMPLATE only when neither exists; no machine saves one", async () => {
-  const x = world();
-  const { d, text } = drafted(x);
-  const ts = (o) => x.f.templateSave({ from: d.id, name: "notice of breach", kind: "other", author: V("bo"), viewer: V("bo"), ...o });
-  assert.equal(ts({}).reason, "TEMPLATE_FROM_UNAPPROVED", "an unapproved draft is no template");
-  await x.f.filingApprove({ filing: d.id, text, author: V("bo"), viewer: V("bo") });
-  assert.equal(ts({ author: MACHINE, viewer: MACHINE }).reason, "MACHINE_CANNOT_SAVE_TEMPLATE");
-  assert.equal(ts({ author: "" }).reason, "MACHINE_CANNOT_SAVE_TEMPLATE");
-  assert.equal(ts({ viewer: STRANGER }).reason, "NO_SUCH_FILING", "a draft the saver may not see answers as absent");
-  /* an approved draft kept whole, for no kind */
-  const whole = ts({ name: "the approved notice", kind: null });
-  assert.deepEqual([whole.ok, whole.template.kind, whole.template.derived, whole.template.blanks], [true, null, false, []]);
-  /* a member's derivative, its case-specific parts made blanks again */
-  const derived = ts({ text: "To the {{counterparty_role}} ({{counterparty_body}}): {{act}} on {{act_date}}; ref {{case_ref}}." });
-  assert.deepEqual([derived.ok, derived.template.kind, derived.template.derived], [true, "other", true]);
-  assert.deepEqual(derived.template.blanks, ["counterparty_role", "counterparty_body", "act", "act_date", "case_ref"]);
-  assert.equal(ts({ name: "notice of breach" }).reason, "TEMPLATE_NAME_TAKEN");
-  /* the profile holds no template for `other`: neither named → the group's are listed; named → filled from the record */
-  const O = x.action({ kind: "other" });
-  const none = prep(x, O);
-  assert.equal(none.reason, "TEMPLATE_NOT_NAMED");
-  assert.deepEqual(none.templates.map((t) => t.name).sort(), ["notice of breach", "the approved notice"]);
-  const r = prep(x, O, { template: derived.template.id, preparer: MACHINE, viewer: MACHINE });
-  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
-  assert.equal(r.text, "To the Selectboard (Port Ellery Selectboard): the works order let on 2026-03-02 on 2026-03-02; ref [UNFILLED: case_ref].");
-  assert.deepEqual(r.template, { from: "group", source: `template:${derived.template.id}`, template: derived.template.id, name: "notice of breach" });
-  assert.equal(r.label.machine_work, true, "any credential prepares from it; nothing is filed until a member approves");
-  /* a template of no kind fits any kind, even where the profile holds one; one of another kind does not */
-  const B = x.action();
-  assert.equal(prep(x, B, { template: whole.template.id }).text, text);
-  assert.equal(prep(x, B, { template: derived.template.id }).reason, "TEMPLATE_KIND_MISMATCH");
-  assert.equal(prep(x, B).template.from, "profile", "unnamed, the profile's template");
-  /* sight (K316): a template is seen by whoever may see the project its draft drew on */
-  assert.deepEqual(x.f.templatesFor({ viewer: OUTSIDER }).templates, []);
-  assert.equal(prep(x, O, { template: derived.template.id, preparer: OUTSIDER, viewer: OUTSIDER }).reason, "NO_SUCH_TEMPLATE");
-  const listed = x.op("templates", { kind: "other", viewer: V("cy") });
-  assert.deepEqual(listed.templates.map((t) => [t.template, t.kind]), [[derived.template.id, "other"], [whole.template.id, null]]);
-  assert.equal(listed.truncated, false);
-  /* with neither held, KIND_NO_TEMPLATE */
-  const y = world();
-  assert.equal(prep(y, y.action({ kind: "other" })).reason, "KIND_NO_TEMPLATE");
-  /* R17: no template is kept for a Tier 3 kind */
-  assert.equal(ts({ name: "a claim", kind: "commitment_claim" }).reason, "TEMPLATE_KIND_TIER3");
-});
-
-test("R26 R19 templates and communications are keyed to their action and purged with it", async () => {
+test("R19 communications are keyed to their action and purged with it; the retired R26 library's table is written by nothing", async () => {
   const x = world();
   const { A, d, text } = drafted(x);
   await x.f.filingApprove({ filing: d.id, text, author: V("bo"), viewer: V("bo") });
-  assert.equal(x.f.templateSave({ from: d.id, name: "kept", author: V("bo"), viewer: V("bo") }).ok, true);
+  assert.equal(x.f.templateSave({ filing: d.id, name: "kept", author: V("bo"), viewer: V("bo") }).ok, true);
+  assert.equal(x.count("filing_templates"), 0, "R32 hands the draft to filing-templates; filings keeps no library (K921, K986)");
   assert.equal(x.f.communicationPrepare({ action: A, text: "t", purpose: "p", preparer: V("bo"), viewer: V("bo") }).ok, true);
   const report = x.record.purge({ bundleId: A });
   for (const t of ["communication_drafts", "filing_templates"]) assert.ok(t in report.removed, `${t} is declared`);
-  assert.deepEqual([x.count("communication_drafts"), x.count("filing_templates")], [0, 0]);
+  assert.equal(x.count("communication_drafts"), 0);
 });

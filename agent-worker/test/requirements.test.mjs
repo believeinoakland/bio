@@ -589,7 +589,8 @@ section("R14 · gate-mode is first; an undeployed mode closes mode-not-deployed 
     t(`R14: …and the close was written (${mode})`, st.ended?.bound, "mode-not-deployed");
   }
   t("R14: the first step is gate-mode, and check is deployed while investigate, extract and plan are not",
-    [FIRST_STEP, MODES.check.deployed, MODES.investigate.deployed, MODES.extract.deployed, MODES.plan.deployed],
+    /* read with `?.`: a deleted row FAILS this arm instead of killing the suite (found by harness.control E2, T21) */
+    [FIRST_STEP, MODES.check?.deployed, MODES.investigate?.deployed, MODES.extract?.deployed, MODES.plan?.deployed],
     ["gate-mode", true, false, false, false]);
   t("R14 (skillsequencing): MODES is exactly the recorded set, the one deployment order's members",
     Object.keys(MODES), DEPLOYMENT_SEQUENCE.order);
@@ -760,6 +761,14 @@ section("R21 · collect, holdings: each citation resolved to its document by add
     [st.log.filter((l) => l.op === "search").map((l) => l.query.q), st.log.filter((l) => l.op === "versionchain").map((l) => l.query.address)],
     [['id:"https://example.org/cal"', 'id:"bundle:x"'], ["https://example.org/cal", "bundle:x"]]);
   t("R21: an item with no chain counts as itself", [r.out.holdings?.documents, r.out.holdings?.unchained], [0, 2]);
+  /* N458 (K899 (1)): the reason a member reads for a cited record that names no source address says "record". */
+  await reset(mf, { refuse_op: { search: { body: { ok: true, result: { hits: [{ bundle_id: "bundle:x" }] } } } } });
+  const noSource = await runOp(mf, { ...base, judgements: J([{ level: "document", state: "PRESENT", observed_at: "log:1",
+    citations: [{ address: "bundle:x" }] }]) });
+  t("R21: a cited record that names no source address is read through no chain, counted as itself, and its reason says so",
+    [(await planeState(mf)).log.filter((l) => l.op === "versionchain").length, noSource.out.holdings?.unchained,
+     noSource.out.holdings?.unchained_items?.[0]?.reason],
+    [0, 1, "the cited record names no source address, so no version chain can hold it"]);
   const h = documentHoldings([
     { citation: "b1", bundle: "b1", address: "https://x/cal", chain: { address_norm: "x/cal", total: 3, versions: [{ bundle_id: "b1" }, { bundle_id: "b2" }] } },
     { citation: "b2", bundle: "b2", address: "https://x/cal", chain: { address_norm: "x/cal", total: 3, versions: [{ bundle_id: "b1" }, { bundle_id: "b2" }] } },
@@ -1302,7 +1311,7 @@ section("R44 · its copies equal their sources, both ways");
     [Object.keys(MODES), Object.keys(MODES).filter((k) => MODES[k].deployed), [...DEPLOYED_MODES]],
     [DEPLOYMENT_SEQUENCE.order, [DEPLOYMENT_SEQUENCE.order[0]], [DEPLOYMENT_SEQUENCE.order[0]]]);
   t("R44, R53: plan is the order's last member and deploys apart, not deployed with MODES.plan",
-    [DEPLOYMENT_SEQUENCE.order.at(-1), DEPLOYMENT_SEQUENCE.deploys_apart?.plan?.deployed, MODES.plan.deployed], ["plan", false, false]);
+    [DEPLOYMENT_SEQUENCE.order.at(-1), DEPLOYMENT_SEQUENCE.deploys_apart?.plan?.deployed, MODES.plan?.deployed], ["plan", false, false]);
   t("R44: the mode-not-deployed ending is one of the plane's RUN_ENDINGS", Object.keys(RUN_ENDINGS).includes("mode-not-deployed"), true);
 }
 

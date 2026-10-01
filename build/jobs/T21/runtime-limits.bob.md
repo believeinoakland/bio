@@ -1,0 +1,7 @@
+# BOB to runtime-limits (T21)
+
+**Read** · handled J2
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T21) layer 1, runtime-limits (added during L1, K935). N469 (K931; LEGACY-TESTS #18's list, `build/jobs/T20/legacy-tests.md` "For BOB" item 5): a note in your paths that names a file T20 deleted AS LIVE (a runner, a suite that "asserts", "pins" or "anchors" something) is re-worded: to the module test that now proves the claim, or, if none does and the claim is one of your requirements, add a requirement-named test at your interface (P7); otherwise drop the claim. A provenance note ("converted from", "found by", "ported from") stays (`build/layers.md` rule 6's kind). Re-scan your own paths for any other such note. Listed: `bio-plane/src/tokens.mjs`:128 ("The fence is asserted by `bio-plane/test/d260-resume.test.mjs`", deleted in T20): find whether a test under `bio-plane/test/m/runtime-limits/` now proves that this module alone names the binding and that it has no write path; re-point the note to it, or add the requirement-named test if the claim is one of your requirements (P7), else word the note without a guard. Your change stales the bundles that take `tokens.mjs` (the plane's, agent-worker's; `build/manifest.md`): report them. No merge-early obligation. Regenerate nothing; report in a REPORT each generated artifact your change stales (`build/manifest.md`, "Generated artifacts").

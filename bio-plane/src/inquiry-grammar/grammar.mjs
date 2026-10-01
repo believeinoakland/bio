@@ -39,7 +39,7 @@ function f(check, severity, message, repairs, code) {
   return out;
 }
 
-/* The subject registry's own key shape: `allocId("ENT", year)` in store.mjs
+/* The subject registry's own key shape: record-core's `allocId("ENT", year)`
    yields ENT-<4-digit year>-<4-digit sequence>, with no slug (unlike a bundle
    id). Shape only — see (a) above. */
 const ENTITY_ID_RE = /^ENT-\d{4}-\d{4}$/;
@@ -73,7 +73,7 @@ export function supersedesEdgeFindings(fm, findings) {
         ['author the reason this supersedes its target', 'or use relates_to, which claims nothing about replacement']));
     }
     if (typeof r.target !== 'string' || !BUNDLE_ID_RE.test(r.target)) {
-      findings.push(f('C-6.1', 'error', `references[${i}] is a supersedes edge whose target '${String(r.target).slice(0, 40)}' is not a canonical bundle id: an edge that asserts a lineage must name the thing it came from`));
+      findings.push(f('C-6.1', 'error', `references[${i}] is a supersedes edge whose target '${String(r.target).slice(0, 40)}' is not a canonical record id: an edge that asserts a lineage must name the thing it came from`));
     }
   });
 }
@@ -141,7 +141,7 @@ export function divisionDisclosureFindings(fm, findings) {
     return;
   }
   for (const s of sibs) {
-    if (!BUNDLE_ID_RE.test(s)) findings.push(f('C-6.1', 'error', `division_siblings names '${String(s).slice(0, 40)}', which is not a canonical bundle id`));
+    if (!BUNDLE_ID_RE.test(s)) findings.push(f('C-6.1', 'error', `division_siblings names '${String(s).slice(0, 40)}', which is not a canonical record id`));
     if (s === parent) findings.push(f('C-6.1', 'error', `division_siblings names ${s}, which is this document's division_parent: the parent is disclosed as the parent, and listing it as a sibling would hide that one of the halves is missing`));
     if (typeof fm.id === 'string' && s === fm.id) findings.push(f('C-6.1', 'error', `division_siblings names this document itself: a sibling set that counts the child is a set that can look complete while a real sibling is absent`));
   }
@@ -225,8 +225,7 @@ export function checkInquiryExtension(ctx, findings, where) {
          is the state machine lying.* This is that sentence read backwards — a
          repair the catalog advises that no caller can perform.
          The replacement names no destination, so it cannot go stale if the FROM
-         set changes; the source-level walk re-derives reachability from
-         `deriveActs` rather than from anything written here. */
+         set changes. */
       findings.push(f('C-2.8', 'error', 'concluded state requires a non-empty conclusion',
         ['author the conclusion where the document stands: reopening does not pick a concluded inquiry back up (op=reopen answers NOT_SET_DOWN), so there is no act that undoes the conclusion and the repair is made in place']));
     }
@@ -234,8 +233,8 @@ export function checkInquiryExtension(ctx, findings, where) {
        TO ACCOUNT FOR THE FALSIFIER, which is not the same as dropping it.
        Bob ruled NO_FALSIFIER overridable "either temporarily or in the
        published record", and the store's conclude() opens the door; this arm is
-       the OTHER half, and the two must move together. conclude.test.mjs's own
-       header records why: the requirement is enforced twice on purpose, so
+       the OTHER half, and the two must move together. The requirement is
+       enforced twice on purpose (the old conclude suite's header recorded why), so
        breaking the store alone leaves the catalog refusing the bundle
        op=conclude just wrote, and breaking the catalog alone leaves op=conclude
        refusing the call.
@@ -394,7 +393,7 @@ function checkDividedExtension(fm, findings) {
       ['name every child the question was divided into']));
   }
   for (const id of into) {
-    if (!BUNDLE_ID_RE.test(id)) findings.push(f('C-2.8', 'error', `division.into names '${String(id).slice(0, 40)}', which is not a canonical bundle id`));
+    if (!BUNDLE_ID_RE.test(id)) findings.push(f('C-2.8', 'error', `division.into names '${String(id).slice(0, 40)}', which is not a canonical record id`));
   }
   if (new Set(into).size !== into.length) {
     findings.push(f('C-2.8', 'error', 'division.into names the same child twice: a leg apportioned to a child named twice has one home, not two'));
@@ -591,7 +590,7 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
       continue;
     }
     /* MK-4 / C-54.1: a LEAD is refused BY NAME before the generic target grammar
-       can answer "not a canonical bundle id" about it — see `leadLegFindings`. */
+       can answer "not a canonical record id" about it — see `leadLegFindings`. */
     if (leadLegFindings(`basis[${i}]`, leg, findings)) continue;
     /* D-162 / C-81.1: a THEME, or membership in one, is refused BY NAME at the same door (§8.4 fence 4). */
     if (themeLegFindings(`basis[${i}]`, leg, findings)) continue;
@@ -603,7 +602,7 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
        silent rather than adding a second complaint about one broken leg. */
     let targetType = null;
     if (typeof t !== 'string' || !BUNDLE_ID_RE.test(t)) {
-      findings.push(f('C-2.8', 'error', `basis[${i}].target '${String(t).slice(0, 40)}' is not a canonical bundle id`));
+      findings.push(f('C-2.8', 'error', `basis[${i}].target '${String(t).slice(0, 40)}' is not a canonical record id`));
     } else {
       const tt = targetType = normalizeType(OBJECT_TYPES[t.split('-')[0]]);
       if (tt !== 'information' && tt !== 'inquiry') {
@@ -861,8 +860,8 @@ function checkGrounds(fm, legs, findings) {
        rows — now accepts PL-17's explicit no-claim value on a version declaring
        exactly one part, because a MACHINE composes versions and would otherwise
        have to sign a member's name to one. THIS block governs the INQUIRY's own
-       `grounds[]`, and it has NO machine writer to protect: `store.mjs`'s
-       `groundInquiry` is the only op that writes these rows and it refuses a
+       `grounds[]`, and it has NO machine writer to protect: `inquiry`'s
+       `#ground` is the only act that writes these rows and it refuses a
        machine credential OUTRIGHT, before anything else, inside its own DEC-49
        region (`MACHINE_CANNOT_GROUND`, REC-64 / C-32.8). MEASURED at that op,
        not assumed from this file.
@@ -870,9 +869,7 @@ function checkGrounds(fm, legs, findings) {
        it would widen what the record may hold for a population that cannot
        produce it — which is the quiet widening DEC-65's own licence and PL-17's
        delegation both warn against. If a machine writer ever reaches these rows,
-       THAT is when this arm earns the same treatment, and the sweep in
-       `test/dec65-single-part.test.mjs` finds this site by shape so the question
-       is put again rather than forgotten. */
+       THAT is when this arm earns the same treatment. */
     if (typeof r.asserted_by !== 'string' || r.asserted_by.trim() === ''
         || isMachineIdentity(r.asserted_by)) {
       findings.push(f('C-2.8', 'error', `grounds[${i}].asserted_by '${r.asserted_by}' is not a named member: "these legs are enough on their own" is an authored judgment that makes the finding STRONGER, so it carries the name of the member making it — never a machine's`,
@@ -995,7 +992,8 @@ function checkGrounds(fm, legs, findings) {
  *  connection grade graded exactly as any leg's, neither refused nor exempt —
  *  testimony says WHOSE WORD, connection says HOW DIRECTLY it bears, and with
  *  capture not applicable a refused connection grade would leave the leg
- *  invisible to the bar. nc-mk2.mjs's `overconn` arm pins it. */
+ *  invisible to the bar. This module's R4 test of a connection grade on an
+ *  observation (`test/m/inquiry-grammar/grammar.test.mjs`) proves it. */
 function checkTestimonyLeg(leg, i, graded, targetType, registry, findings) {
   if (!graded) return;
   const target = typeof leg.target === 'string' ? leg.target : null;
@@ -1057,7 +1055,7 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
      second complaint about one broken leg helps nobody. */
   if (!graded) return;
   if (!registry) {
-    findings.push(f('C-2.8', 'error', `basis[${i}] states grade_source '${src}' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this bundle`,
+    findings.push(f('C-2.8', 'error', `basis[${i}] states grade_source '${src}' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this one record`,
       ['run this through the ratification gate or op=promote, which read the record',
        'or state the grade as testimony (grade D, with an author and a date) if it is a member\'s account']));
     return;

@@ -210,7 +210,7 @@ const api = `https://api.cloudflare.com/client/v4/accounts/${ACCT}/workers/scrip
    with the slug substituted (D-292), instead of living as a second hand-carried
    copy in this file — the two had no mechanism keeping them equal and measured
    unequal for a month (biosmoke7: zero service bindings against four declared).
-   The derivation is `derive-bindings.mjs`, pure and battery-driven; it refuses
+   The derivation is `derive-bindings.mjs`, pure and test-driven (bundler R13–R15); it refuses
    any config binding class it does not carry, so the deletion-through-omission
    this file was bitten by cannot recur silently.
    BEHAVIOURAL CHANGE, MADE DELIBERATELY AND WITH THE OWNERS TOLD (delegations

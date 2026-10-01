@@ -1,7 +1,7 @@
 /* publication — converted from `bio-plane/test/casesign.test.mjs` (layer 8, publication's share): R1/R29 standing on an
    unsigned case document, byte for byte, for an administrator, the instance MEMBER binding, invited and joined
-   non-owners and agent credentials (block 1b of the old suite), with its strangers. The old suite is not deleted
-   (K619); its ceremony, gate, container and signature arms are other modules' shares. Driven at the module's
+   non-owners and agent credentials (block 1b of the old suite), with its strangers. The old suite, kept by K619, was
+   deleted in T20; its ceremony, gate, container and signature arms are other modules' shares. Driven at the module's
    interface: `caseDocument`, `caseDocumentFacts`, `hasCaseStanding` and `op=casedocument`, with each viewer spelled as
    the control plane stamps it (membership R43's `viewerPredicate`; an `ai` credential stamps the principal membership
    records for it, read back through credentials' `aiCredentialLook`). */

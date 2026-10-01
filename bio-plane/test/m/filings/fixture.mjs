@@ -13,7 +13,9 @@ import { standardsOf } from "../../../src/standards/index.mjs";
 import { conformanceOf } from "../../../src/conformance/index.mjs";
 import { actionsOf } from "../../../src/actions/index.mjs";
 import { publicReadOf } from "../../../src/public-read/index.mjs";
-import { get as profileOf } from "../../../../jurisdictions/index.mjs";
+import { LocalFacts } from "../../../src/local-facts/index.mjs";
+import { FilingTemplates, filingTemplatesOf } from "../../../src/filing-templates/index.mjs";
+import { get as profileOf, combine } from "../../../../jurisdictions/index.mjs";
 
 export { V, NOW };
 export const MACHINE = "class:daemon";
@@ -23,6 +25,10 @@ export const sha = (s) => createHash("sha256").update(s, "utf8").digest("hex");
 export const F = "INQ-2026-0001", DOC = "INFO-2026-0001-minutes", EVID = "INFO-2026-0002-ledger";
 export const CASE = "CASE-2026-0001";
 export const PROFILE = "test-port-ellery";
+/** A member's own words for a bylaw complaint (R28): every blank but `law` is filled from the fixture's record, and a
+ *  bylaw complaint states no law, so `law` is left `[UNFILLED: law]` for the approving member to write in. */
+export const WORDS = "To the {{counterparty_role}}: {{act}} does not conform to {{standards}}, under {{law}}.";
+export const LAW = "P.E.B.L. § 12";
 
 const q = (v) => JSON.stringify(String(v));
 /** An action's bundle.md from `o` (`kind`, `risk_tier`, `state`, `resolution`, `counterparty`, `clock`, `legs`, `law`,
@@ -111,7 +117,13 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
   const actions = actionsOf(w.host, { ...deps, retrieval: null, conformance, now: () => Date.parse(w.clock.now) });
   /* the value promotion's fact `producingGroup` answers (publication's world registers its provider) */
   const groupRef = w.groupRef;
-  const f = filingsOf(w.host, { record: w.record, publication: w.p, provenance: w.prov, content: w.content, now, ...(profiles !== undefined ? { profiles: () => profiles } : {}) });
+  /* R28–R32: filing-templates, and R30: local-facts, over the same profiles filings reads: the real modules, their
+     active profiles (and any a test wrote) answered as filings is handed them, so a profile's template and a holiday
+     entry's path name what they hold. */
+  const filingTemplates = templatesOver(w, profiles);
+  const localFacts = profiles === undefined ? undefined : localFactsOver(w, profiles, now);
+  const f = filingsOf(w.host, { record: w.record, publication: w.p, provenance: w.prov, content: w.content, now, filingTemplates,
+                                ...(profiles !== undefined ? { profiles: () => profiles, localFacts } : {}) });
   const evidenceCid = w.content.mint({ bundleId: EVID, captureSha: sha(`the text of ${EVID}`), extent: { kind: "document" },
                                        mintedBy: V("bo") }).content_id;
   const declare = (over) => {
@@ -136,7 +148,7 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
   const D = determine();
   let n = 0;
   const x = {
-    ...w, w, f, pr: publicReadOf(w.host, { publication: w.p }), proj, pin, actions, conformance, standards, consequences, groupRef, evidenceCid, S1, S2, D, declare,
+    ...w, w, f, localFacts: f.localFacts, pr: publicReadOf(w.host, { publication: w.p }), proj, pin, actions, conformance, standards, consequences, groupRef, evidenceCid, S1, S2, D, declare,
     determine, publishEdition, act,
     /* the world's own reads, over the cursor */
     row: (sq, ...a) => [...w.st.sql.exec(sq, ...a)][0] ?? null,
@@ -191,13 +203,50 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
     /** A second filings over the same record and modules, `over` replacing any of them (a proxy of conformance or
      *  membership answering as that module's contract does, say). */
     filingsWith(over = {}) {
+      const ps = typeof over.profiles === "function" ? over.profiles() : profiles;
       return new Filings({ storage: w.st, record: w.record, host: w.host, membership: w.membership, publication: w.p,
                            provenance: w.prov, content: w.content, promotion: w.promotion, actions, conformance, standards,
-                           consequences, now, ...over });
+                           consequences, now, filingTemplates: templatesOver(w, ps),
+                           ...(ps !== undefined ? { localFacts: localFactsOver(w, ps, now) } : {}), ...over });
     },
   };
   return x;
 }
+
+/** The real local-facts on the world's storage, its active profiles `profiles` (ids or profile objects, as filings is
+ *  handed them) in place of record-core's setting. */
+export function localFactsOver(w, profiles, now = () => w.clock.now) {
+  const { record, get, own } = over(w, profiles);
+  return new LocalFacts({ storage: w.st, record, membership: w.membership, get,
+                          combine: (list) => combine(list.map((id) => own.get(id) || id)), now });
+}
+
+/** The real filing-templates on the world's storage (its tables and opaque-id seed made by its factory on the host),
+ *  its active profiles `profiles` when given. */
+export function templatesOver(w, profiles) {
+  const made = filingTemplatesOf(w.host, { record: w.record, membership: w.membership });
+  if (profiles === undefined) return made;
+  const { record, get } = over(w, profiles);
+  return new FilingTemplates({ storage: w.st, record, membership: w.membership, jurisdictions: { get },
+                               now: () => Date.parse(w.clock.now) });
+}
+
+/* record-core with `profiles` as its active jurisdiction profiles, and the profiles' reader. */
+function over(w, profiles) {
+  const own = new Map(profiles.filter((p) => p && typeof p === "object").map((p) => [p.id, p]));
+  const ids = profiles.map((p) => (typeof p === "string" ? p : p.id));
+  const get = (id) => own.get(id) || profileOf(id);
+  const record = new Proxy(w.record, { get: (t, k) => (k === "getSetting"
+    ? (key) => (key === "jurisdiction_profiles" ? ids : t.getSetting(key))
+    : typeof t[k] === "function" ? t[k].bind(t) : t[k]) });
+  return { record, get, own };
+}
+
+/** A profile template as `jurisdictions` R40 holds it: attributed, approved by another than its author. */
+export const attributed = (id, use, text, over = {}) => ({
+  id, version: 1, use, text, notes: "A test template.", authored_by: "Ada Example", contributors: [],
+  reviews: [{ reviewer: "Dee Example", kind: "member", scope: "the whole text", outcome: "no_concerns", at: "2026-08-21" }],
+  approved_by: "Cy Example", approved_at: "2026-09-01", basis: "TEST", ...over });
 
 /* A document whose capture carries an RFC 3161 attestation and a co-archive locator, as `op=attest` records them. */
 function attestedDoc(w, id) {

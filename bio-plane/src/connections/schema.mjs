@@ -167,7 +167,7 @@ CREATE INDEX IF NOT EXISTS connection_pair_choices_end ON connection_pair_choice
 --
 -- DERIVED from the corpus (an entity is dirty only because a captured document
 -- resolved to it), so a whole-store purge clears it -- op=purge deletes it in the
--- whole-store arm (D-113; hygiene.test.mjs holds the list). It has no bundle_id
+-- whole-store arm (D-113; derive.test.mjs's R36 test holds it). It has no bundle_id
 -- and is a transient queue, so a per-bundle purge leaves it: at worst a stale
 -- entity_id triggers one harmless idempotent re-derivation on the next tick.
 CREATE TABLE IF NOT EXISTS connection_dirty (

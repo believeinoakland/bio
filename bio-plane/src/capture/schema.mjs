@@ -488,7 +488,9 @@ export const CAPTURE_ADDITIVE_COLUMNS = [
 export const CAPTURE_RESHAPE = [["links", "citation_norm"]];
 
 /* record-core R21/R46: what purge clears (whole-store only: none is keyed to a bundle) and what it never clears.
-   The exempt tables are operational facts (the inbox, the doorbell's rate and its two keys among them) about this instance, not corpus-derived (hygiene's census). */
+   The exempt tables are operational facts (the inbox, the doorbell's rate and its two keys among them) about this
+   instance, not corpus-derived; that the inbox and both keys outlive a whole-store purge is R56's and R66's test
+   (`test/m/capture/figures.test.mjs`). */
 export const CAPTURE_PURGED_TABLES = ["task_queue", "source_reachability", "link_verdicts", "links", "site_asset_refs",
   "site_assets", "reuse_verdicts", "capture_sessions", "site_chrome_refs", "site_chrome", "link_chrome", "capture_validators",
   "capture_actors", "capture_accounts", "late_attestations"];

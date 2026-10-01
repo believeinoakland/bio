@@ -6,8 +6,9 @@
  * PLACE over the same context. Bob retired the project fields `workproduct_state` and `evaluations`, and C-2.9's arms
  * and the C-9.1 readiness ladder over them (K899 (3)): a project's stage and its work products' readiness are computed
  * (`project-stage` R2–R4), so this arm reads neither, and a document carrying them is neither refused nor corrected
- * for them. The slot keeps the id `C-9.1` until record-grammar's slot drops it. C-2.9's objective arm is not here: it is
- * R1, this module's promotion check and audit check (`./index.mjs`). Pure: no store, no network, no clock. */
+ * for them. The slot holds `C-2.9` alone (record-grammar R28; `C-9.1` left it with the project stage's computation,
+ * K904, K930), and this grammar claims it so (K935). C-2.9's objective arm is not here: it is R1, this module's
+ * promotion check and audit check (`./index.mjs`). Pure: no store, no network, no clock. */
 
 /* The catalogue's finding shape, so a finding from this arm is the one the catalogue's arm made. */
 const f = (check, severity, message) => ({ check, severity, message });
@@ -27,7 +28,7 @@ export function checkProjectExtension(ctx, findings) {
 /** R29: this module's grammar as record-core's grammar seam takes it (`registerGrammar`, its R67) and as
  *  record-grammar's `checkBundle` takes it from a caller passing grammars itself (its R39): it claims the
  *  `checkProjectExtension` slot (record-grammar R28) whole. */
-export const PROJECT_GRAMMAR = Object.freeze({ module: "intent", ids: Object.freeze(["C-2.9", "C-9.1"]),
+export const PROJECT_GRAMMAR = Object.freeze({ module: "intent", ids: Object.freeze(["C-2.9"]),
                                                arm: checkProjectExtension });
 
 const registered = new WeakSet();

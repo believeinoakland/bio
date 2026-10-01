@@ -724,10 +724,10 @@ var AI_RUN_CHECKS = {
   },
   /* DEC-8 as amended by DEC-49: a surface may render a translation keyed on a
      code the plane SENT, which only holds if the plane never sends a condition
-     nobody has translated. The condition vocabulary is `queuestate.mjs`'s, read
-     LIVE rather than copied, and a run naming a kind outside it is a loud
-     refusal instead of a silent new vocabulary — queuestate.mjs's own words for
-     the same fence one surface over. */
+     nobody has translated. The condition vocabulary is this module's
+     `CONDITION_KINDS` (moved here from `queuestate.mjs`, N174, which re-exports
+     it), read LIVE rather than copied, and a run naming a kind outside it is a
+     loud refusal instead of a silent new vocabulary. */
   AI_RUN_CONDITION_UNKNOWN: {
     check: "C-22.4",
     where: "src/observation-log/vocabulary.mjs checkCondition, called from src/ai-runs/index.mjs #aiRunTerminate",
@@ -827,8 +827,10 @@ var AI_RUN_CHECKS = {
        ways it failed (`OBSERVATION_REFERENT_FAULTS` in `src/observation-log/vocabulary.mjs`). One code,
        because every fault is this row's condition — a PRESENT whose referent does
        not back it — and a second code behind C-22.10 would be two conditions
-       behind one C-number, which `civicos-ui/check-refusal-codes.mjs` refuses.
-       Section K of `test/observation-log.test.mjs` drives all of it. */
+       behind one C-number, which DEC-49 refuses (R26's test in
+       `test/m/observation-log/vocabulary.test.mjs` holds each C-22 number to its one
+       code). R2's C-22.10 arm in `test/m/observation-log/append.test.mjs` drives the
+       four faults. */
   OBS_PRESENT_NO_REFERENT: {
     check: "C-22.10",
     where: "src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe",
@@ -1042,7 +1044,9 @@ var AI_RUN_ACT_SHAPE_CHECKS = {
        and does not belong in C-22. The
        ARM WAS NOT WIDENED: an invariant relaxed to fit a new row is not an
        invariant, and this one is load-bearing — it is what lets `op=audit` reach
-       every C-22 condition without opening the store.
+       every C-22 condition without opening the store. (Since T20 deleted that
+       suite, `test/m/run-rules/table.test.mjs` R11 holds it: each C-22 row this
+       table mints names this module's pure site.)
   
        WHAT IT IS. §14a promises the running-session surface SAYS SO when the
        capability is unavailable, and IS-BUILD-PLAN's FL-6 row names the failure it
@@ -1060,7 +1064,9 @@ var AI_RUN_ACT_SHAPE_CHECKS = {
        failing", arriving at the run door.
   
        ITS `where` IS A WHOLE FUNCTION AND NOT A REGION, which is the only one in
-       REC-64's work — and the reason WAS a defect in the guard rather than a
+       REC-64's work — and the reason WAS a defect in the guard (arm C of
+       `civicos-ui/check-refusal-codes.mjs`, deleted in T20; this paragraph and the
+       two below are its history) rather than a
        judgement about the span. `aiRunOpen` refuses with `started: false`, and arm
        C's matcher was `ok: false`, so a REGION here would have judged zero refusals
        and FAILED as a drifted marker. The whole-function form is honest at this site
@@ -1068,7 +1074,7 @@ var AI_RUN_ACT_SHAPE_CHECKS = {
        blindness was measured and delegated at the guard's own `codesChecked` floor.
   
        **REC-76 CLOSED THAT DELEGATION (D-236), AND THE WHOLE-FUNCTION `where` IS
-       WHAT MADE IT PAY.** Arm C now grades an outcome by whether it DECLARES ITSELF
+       WHAT MADE IT PAY.** Arm C then graded an outcome by whether it DECLARES ITSELF
        A SUCCESS rather than by one literal, so this site went from `92L (0 judged,
        0 code(s) checked)` to four refusals judged — and TWO of them were CODELESS,
        at a governed site, for as long as the row has existed. They are the two rows
@@ -1082,8 +1088,8 @@ var AI_RUN_ACT_SHAPE_CHECKS = {
        the guard failed them by name, because the region was judged once by its own
        rows and again by this whole-function site, where their codes are not rows.
        So each of these three rows now names the region around its one refusal
-       (`is-airun-open-context`, `-capability`, `-already`), and arm C no longer
-       judges a claimed region a second time from an enclosing whole-function
+       (`is-airun-open-context`, `-capability`, `-already`), and arm C stopped
+       judging a claimed region a second time from an enclosing whole-function
        `where` (the guard's `nestedRegionsIn`). What the narrowing costs, stated:
        the five RELAYED refusals in `aiRunOpen` (existence, kind, gate, skill,
        seed — each minted and governed at its own site) are not read at this
@@ -1364,10 +1370,11 @@ var DEPLOYMENT_SEQUENCE = {
      after the one before it has been verified live. */
   /* `extract` APPENDED 2026-09-14 by FLEET on SK-8's delegation, IN THE SAME
      COMMIT as the row entered `agent-worker/src/harness.mjs`'s `MODES` — which
-     is ARM B3's whole demand (the two rosters are ONE set, held in both
+     was ARM B3's whole demand (the two rosters are ONE set, held in both
      directions) and ARM B4's (index 0 stays the only deployed mode; every later
-     index, `extract` included, is not). The pack's digest moves with this line
-     by construction and nothing needs bumping by hand. */
+     index, `extract` included, is not), arms of `skillsequencing.test.mjs`,
+     deleted in T20; `agent-worker`'s R44, R53 test holds both today. The pack's
+     digest moves with this line by construction and nothing needs bumping by hand. */
   /* `plan` APPENDED (K660 (5), BIO_Action_v0_1.md §4 rule 1): the planning run, which proposes options for an
      action plan from what the record already holds. It is last in the order and it does NOT wait on the chain above
      it: it deploys as soon as `agent-worker` runs model turns (its R40 and R48 met), whether or not `investigate` or
@@ -1375,8 +1382,9 @@ var DEPLOYMENT_SEQUENCE = {
      `agent-worker`'s `MODES.plan` together (its R42, R53). No separate act. */
   order: ["check", "investigate", "extract", "plan"],
   first_deployed_mode: "check",
-  /* §2, VERBATIM. Looked up in the design document through SK-1's normaliser,
-     because a session cannot verify its own copying by re-reading it. */
+  /* §2, VERBATIM. Looked up in the design document through SK-1's normaliser
+     when written (SK-4), because a session cannot verify its own copying by
+     re-reading it. */
   text: "CHECK IS THE FIRST DEPLOYED MODE",
   role: "this session, run with this objective against an EXISTING conclusion, IS DEC-24's CHECK role \u2014 the record read adversarially, by the machine aimed at self-directed overclaiming, the threat model the doctrine names",
   because: "also the safest first deployment, because a run over a concluded inquiry has the smallest authorisation surface and the clearest ground truth to be measured against",
@@ -1384,8 +1392,8 @@ var DEPLOYMENT_SEQUENCE = {
   source: SEQUENCING_SOURCE,
   /* AND PINNED A SECOND TIME, TO A DOCUMENT THAT PHRASES IT DIFFERENTLY. SK-3's
      standard: one pin proves the sentence was copied; two prove the RULING is
-     the one both surfaces carry, so a sequencing quietly reversed on either
-     fails here rather than in a review nobody re-runs. */
+     the one both surfaces carry. (`skillsequencing.test.mjs`, deleted in T20,
+     looked both up; no module test reads the documents today.) */
   also_named_in: "DEC-55's enacted CHECK-first instruction and DEC-60 are satisfied by one build: the session run with \xA72's objective against an existing conclusion IS the CHECK role; deploy that mode first. No second architecture.",
   also_named_in_source: SEQUENCING_ALSO_NAMED_IN,
   /* WHAT MUST HAPPEN BEFORE THE SECOND MODE ENABLES, AND WHO OWNS IT. Neither
@@ -1393,10 +1401,11 @@ var DEPLOYMENT_SEQUENCE = {
   enabling_condition: "CHECK's FIRST LIVE RUN, verified in the instance's own scratch namespace against a CONCLUDED inquiry, swept after, with `op=audit` clean.",
   enabling_condition_owned_by: "VF-4, which waits on DS-4 (DIST's gated deploy)",
   /* THE HONEST STATE OF THAT CONDITION AT THIS COMMIT, AS DATA RATHER THAN AS A
-     SENTENCE IN A COMMENT — so the suite can assert it and so a later session
+     SENTENCE IN A COMMENT — so a test can assert it and so a later session
      cannot leave it stale by editing prose around it. `null` is not "unknown":
-     it is "no live run has been verified", and the suite holds it against the
-     landed flag, which is still `false`. */
+     it is "no live run has been verified"; `test/m/run-rules/deployment.test.mjs`
+     R9 asserts it, and `agent-worker`'s R44, R53 test holds the landed flags to
+     `DEPLOYED_MODES`, which it decides. */
   verification_recorded: null,
   /* HOW THE SECOND MODE ACTUALLY ENABLES, and it is deliberately not a switch. */
   enables_how: "by an EDIT to the landed table under review \u2014 `MODES.investigate.deployed`. A mode that could be enabled by a request parameter would be a gate the caller holds, which is no gate at all.",
@@ -1416,8 +1425,8 @@ var DEPLOYMENT_SEQUENCE = {
      first row still refuses first inside the harness (agent-worker R14), and the two are tallied apart. */
   enforced_by: ["C-109.1"],
   enforced_by_row: `${GATE_ADDRESS.file}:${GATE_ADDRESS.table_export}["${GATE_ADDRESS.row}"]`,
-  /* REQUIRED, AND MEASURED. Every clause is re-measured by the suite against the
-     landed sources rather than believed. */
+  /* REQUIRED, AND MEASURED: each clause was measured against the landed sources
+     when written, rather than believed. */
   does_not_reach: "a DEPLOYMENT. The gate refuses a RUN whose mode is not deployed; nothing refuses shipping a build with the flag already flipped, and no instrument reads a release note. The plane's open refuses a mode not deployed (C-109.1, ai-runs R40), so the RECORD holds no run in one; what neither gate reaches is a run's own work outside the plane's ops. And it cannot verify its own enabling condition: `deployed: true` is an edit, and the REVIEW of that edit \u2014 not this text and not that flag \u2014 is what holds CHECK's live verification in front of it.",
   /* THE ONE SENTENCE THIS RECORD EXISTS TO MAKE UNAMBIGUOUS. */
   holds_no_gate: "This record is INSTRUCTION about an order. It refuses nothing. A model ignoring every word of it gets past nothing, because the row at `gate-mode` runs before anything it could ignore."
@@ -2525,7 +2534,7 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
             bundle: address,
             address: null,
             chain: null,
-            reason: "the cited bundle names no source address, so no version chain can hold it"
+            reason: "the cited record names no source address, so no version chain can hold it"
           });
           continue;
         }

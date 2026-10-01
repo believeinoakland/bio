@@ -25,21 +25,32 @@ const correspond = (x, id, e) => {
 const supersede = (x, id) => x.determine({ supersedes: id, reason: "corrected",
   act: { ...x.act, id: x.conformance.determinationRead({ id, viewer: MACHINE }).act.id } });
 
-test("R8 refusals in order: MACHINE_CANNOT_NAME_COUNSEL, NO_SUCH_ACTION, NOT_TIER3, NO_COUNSEL, NO_DETERMINATION; negative controls", async () => {
+test("R8 refusals in order: MACHINE_CANNOT_NAME_COUNSEL, NO_SUCH_ACTION, NO_COUNSEL (at Tier 3 or an undetermined tier; a counsel given at any tier without both name and organisation), NO_DETERMINATION; a packet at every governing tier, NOT_TIER3 retired; negative controls", async () => {
   const x = tier3();
   assert.equal(pack(x, { author: MACHINE, action: "ACTION-NONE" }).reason, "MACHINE_CANNOT_NAME_COUNSEL");
   assert.equal(pack(x, { author: "" }).reason, "MACHINE_CANNOT_NAME_COUNSEL");
   assert.equal(pack(x, { action: "ACTION-NONE", counsel: null }).reason, "NO_SUCH_ACTION");
   assert.equal(pack(x, { viewer: STRANGER }).reason, "NO_SUCH_ACTION", "an invisible action answers as absent");
-  assert.equal(pack(x, { action: x.action({ kind: "bylaw_complaint", risk_tier: 1 }), counsel: null }).reason, "NOT_TIER3",
-               "asked before counsel");
-  assert.equal(pack(x, { action: x.action({ risk_tier: undefined }) }).reason, "NOT_TIER3",
-               "an undetermined governing tier is not 3");
+  /* every governing tier gets a packet (K924): Tier 1 and 2 with counsel optional */
+  for (const o of [{ kind: "bylaw_complaint", risk_tier: 1 }, { kind: "records_request", risk_tier: 2, law: "Test Stat. § 1.100" }]) {
+    const A = x.action(o);
+    const bare = pack(x, { action: A, counsel: null });
+    assert.deepEqual([bare.ok, bare.fileable, bare.head.counsel], [true, false, null], `tier ${o.risk_tier}, no counsel`);
+    assert.equal(pack(x, { action: A }).ok, true, `tier ${o.risk_tier}, counsel named`);
+    for (const c of [{ name: "A. Counsel" }, { organisation: "Test Chambers" }, { name: " ", organisation: "x" }, {}])
+      assert.equal(pack(x, { action: A, counsel: c }).reason, "NO_COUNSEL", `tier ${o.risk_tier}: a counsel given needs both: ${JSON.stringify(c)}`);
+  }
+  assert.equal(x.count("counsel_packets") >= 4, true);
+  /* an undetermined governing tier is never read as 1: counsel is required, as at Tier 3 */
+  const U = x.action({ risk_tier: undefined });
+  assert.equal(pack(x, { action: U, counsel: null }).reason, "NO_COUNSEL", "undetermined: counsel required");
+  assert.equal(pack(x, { action: U }).ok, true, "negative control: undetermined with counsel");
   x.A = x.action({ kind: "commitment_claim", legs: [] });
   for (const c of [null, { name: "A. Counsel" }, { organisation: "Test Chambers" }, { name: " ", organisation: "x" },
                    { name: "A", organisation: "B", contact: "x".repeat(201) }])
     assert.equal(pack(x, { counsel: c }).reason, "NO_COUNSEL", JSON.stringify(c));
   assert.equal(pack(x).reason, "NO_DETERMINATION", "contact is optional; the action rests on nothing");
+  assert.equal(pack(x, { action: x.action({ legs: [] }), counsel: null }).reason, "NO_DETERMINATION", "at Tier 1 too, after counsel");
   assert.equal(pack(x, { action: x.action({ kind: "commitment_claim" }), viewer: V("quinn"), author: V("quinn") }).reason,
                "NO_DETERMINATION", "a determination the author may not see is none");
   const ok = pack(x, { action: x.action({ kind: "bylaw_complaint", risk_tier: 3 }),
@@ -121,6 +132,7 @@ test("R9 a claim deadline's date only from a recorded start event and its count:
      18th. */
   assert.deepEqual([d.claim_act.start.date, d.claim_act.start.source, d.claim_act.date.state, d.claim_act.date.date],
                    ["2026-03-02", x.D, "determined", "2026-03-18"]);
+  assert.equal(d.claim_act.date.calendar.status, "unconfirmed", "R30: no member has confirmed the year here");
   assert.equal(d.claim_act.source, "profile:test-filings-deadlines/deadlines/claim_act");
   assert.equal(d.claim_filed.date.state, "undetermined", "no sent entry is recorded");
   correspond(x, x.A, { direction: "sent", at: "2026-05-01", account: "letter" });
@@ -139,6 +151,51 @@ test("R9 a claim deadline's date only from a recorded start event and its count:
   assert.equal(deadlineDate({ start: "2026-01-31", days: 3, count: null }).state, "undetermined");
 });
 
+test("R30 a packet's business-day deadline states the calendar's status as action-clocks R10 states it, read through local-facts' factStatus: unconfirmed, confirmed, corrected (naming who and when, counted on the corrected days), undetermined when disputed; the office's own entries read for that office alone; a calendar count states none", async () => {
+  const x0 = world();
+  const PID = "test-filings-r30";
+  const p = { ...x0.profile(PROFILE), id: PID,
+              deadlines: [{ rule: "claim_act", applies_to: "claim", days: 2, count: "business", starts: "act", citation: "Test Stat. § 9.30", basis: "TEST" },
+                          { rule: "claim_cal", applies_to: "claim", days: 2, count: "calendar", starts: "act", citation: "Test Stat. § 9.31", basis: "TEST" }] };
+  const x = world({ profiles: [p] });
+  /* the act on Wednesday 12 August 2026; the Town Clerk's office alone keeps Friday the 14th */
+  const D = x.determine({ act: { ...x.act, at: "2026-08-12" } });
+  const clerk = { state: "named", role: "Town Clerk", body: "City of Port Ellery", level: "city" };
+  const A = x.action({ kind: "commitment_claim", legs: [{ target: D, kind: "rests_on" }], counterparty: clerk });
+  const B = x.action({ kind: "commitment_claim", legs: [{ target: D, kind: "rests_on" }] });
+  const dl = (id) => Object.fromEntries(x.f.counselPacket({ action: id, counsel: COUNSEL, author: V("olive"), viewer: V("olive") })
+    .sections.deadlines.items.map((i) => [i.rule, i]));
+  const all = `${PID}/holidays/2026`, office = `${PID}/holidays/2026/role=Town%20Clerk`;
+  /* unconfirmed: counted, and said so */
+  let a = dl(A).claim_act, b = dl(B).claim_act;
+  assert.deepEqual([a.date.state, a.date.date, b.date.date], ["determined", "2026-08-17", "2026-08-14"],
+                   "the clerk's day is counted for the clerk's office alone");
+  assert.equal(a.date.calendar.status, "unconfirmed");
+  assert.deepEqual(a.date.calendar.years.map((y) => y.path).sort(), [all, office].sort(), "the entries for all offices and the office's own");
+  assert.deepEqual(b.date.calendar.years.map((y) => y.path), [all]);
+  assert.ok(a.date.calendar.says.every((s) => /^counted on an unconfirmed calendar \(/.test(s)));
+  assert.equal(dl(A).claim_cal.date.calendar, undefined, "a calendar count reads no holiday and states none");
+  /* confirmed: counted as today */
+  const act = (path, o) => assert.equal(x.localFacts.factConfirm({ path, how: "the clerk's published calendar", by: V("olive"),
+                                                                   viewer: V("olive"), ...o }).ok, true);
+  act(all, { act: "confirm" });
+  act(office, { act: "confirm" });
+  a = dl(A).claim_act;
+  assert.deepEqual([a.date.date, a.date.calendar.status, a.date.calendar.says], ["2026-08-17", "confirmed", []]);
+  /* corrected: counted on the corrected days, naming the member and the date */
+  act(office, { act: "correct", value: [{ date: "2026-08-13", name: "Clerk's records day (moved)" }], source: "the clerk's notice" });
+  a = dl(A).claim_act;
+  assert.deepEqual([a.date.date, a.date.calendar.status], ["2026-08-17", "corrected"], "13th closed instead: 14th, then Monday 17th");
+  assert.match(a.date.calendar.says.join(" "), /corrected locally by .*2026-09-28/);
+  /* disputed: undetermined, with why */
+  act(all, { act: "dispute" });
+  a = dl(A).claim_act;
+  assert.equal(a.date.state, "undetermined");
+  assert.match(a.date.why, /disputed/);
+  /* a reader with no local facts: counted, the calendar `not_read` */
+  assert.equal(deadlineDate({ start: "2026-08-12", days: 2, count: "business", view: combine([PROFILE]).view }).calendar.status, "not_read");
+});
+
 test("R10 every section, the head and every export carry the marking; no caption, venue heading, signature, prayer or template; fileable is false", async () => {
   const x = tier3();
   const p = pack(x);
@@ -153,11 +210,31 @@ test("R10 every section, the head and every export carry the marking; no caption
   for (const h of heads) assert.equal(h, MARK, "the line under every heading is the marking");
   const view = combine([PROFILE]).view;
   for (const k of view.action_kinds) {
-    if (k.template) assert.equal(e.bytes.includes(k.template.split("{{")[0].trim()), false, `no template of ${k.kind}`);
+    if (k.template) assert.equal(e.bytes.includes(k.template.text.split("{{")[0].trim()), false, `no template of ${k.kind}`);
     if (k.venue) assert.equal(e.bytes.includes(k.venue.name), false, `no venue of ${k.kind}`);
   }
   for (const word of [/\bplaintiff\b/i, /\bdefendant\b/i, /\bprayer\b/i, /\bsigned\b/i, /\bcomes now\b/i, /\bv\.\s/])
     assert.doesNotMatch(e.bytes, word);
+});
+
+test("R10 with no counsel named (Tier 1 or 2) every section, the head and every export carry the group's own marking, and the packet names no counsel", async () => {
+  const x = world();
+  const A = x.action();
+  const p = x.f.counselPacket({ action: A, author: V("olive"), viewer: V("olive") });
+  const OWN = "Prepared for the group's own review. Not legal advice. Not for filing.";
+  assert.deepEqual([p.ok, p.marking, p.head.marking, p.head.counsel, p.fileable], [true, OWN, OWN, null, false]);
+  assert.equal(counselMarking(null), OWN);
+  for (const s of Object.values(p.sections)) assert.equal(s.marking, OWN, s.title);
+  const e = await x.f.counselPacketExport({ id: p.id, author: V("olive"), viewer: V("olive") });
+  assert.equal(e.counsel, null);
+  const heads = e.bytes.split("\n").map((l, i, all) => (l.startsWith("#") ? all[i + 2] : null)).filter((l) => l !== null);
+  assert.ok(heads.length >= 8);
+  for (const h of heads) assert.equal(h, OWN, "the line under every heading is the group's marking");
+  assert.equal(e.bytes.includes("Prepared for review by"), false);
+  assert.equal(x.f.counselPacketRead({ id: p.id, viewer: V("bo") }).marking, OWN, "read back the same");
+  assert.equal(x.f.filingsFor({ action: A, viewer: V("bo") }).packets[0].counsel, null);
+  /* negative control: counsel named at Tier 1 carries counsel's marking */
+  assert.equal(x.f.counselPacket({ action: A, counsel: COUNSEL, author: V("olive"), viewer: V("olive") }).marking, MARK);
 });
 
 test("R11 the packet is never published and has no path to publication; it is read only by a member who may see the action (NO_SUCH_PACKET otherwise); an export records who, which version, when and for which counsel; a machine is refused", async () => {

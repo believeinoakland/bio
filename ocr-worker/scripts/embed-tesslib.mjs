@@ -19,10 +19,11 @@
  *
  * ---- WHY THE OUTPUT IS COMMITTED RATHER THAN BUILT FROM node_modules --------
  *
- * Because a fleet member must be buildable and TESTABLE in a checkout with no
- * install of its own — `battery.mjs` skips a member whose suite cannot resolve
- * its imports, and "a guard that skips is not a guard" is FL-9's whole sentence.
- * So `tesseract-wasm` is a devDependency, the patched glue is a COMMITTED
+ * Because a fleet member's bundle guard must run in a checkout with no install
+ * of its own — the input-hash arm (`verifyStatic`, bio-plane/scripts/
+ * fleet-bundle.mjs) reads committed files only, and "a guard that skips is not
+ * a guard" is FL-9's whole sentence. So `tesseract-wasm` is a devDependency,
+ * the patched glue is a COMMITTED
  * first-party source hashed by the bundle manifest like any other, and the
  * member vendors NOTHING at runtime.
  *

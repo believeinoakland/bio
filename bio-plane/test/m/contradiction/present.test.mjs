@@ -116,6 +116,8 @@ test("R25: exactly one subject, else C-60.2; each of the six subjects answers th
   const k2 = cand(w, "K2", "record"), k4 = cand(w, "K4", "world");
   for (const on of [null, undefined, {}, { inquiry: "" }, { inquiry: IQ.a, content: CID.a }, "INQ", [IQ.a]])
     refusedWith(assert, ROWS, w.c.candidatesFor({ on, viewer: M1 }), "CANDIDATES_NO_SUBJECT");
+  /* N458: the member reads "record", and the argument keeps its name `bundle` (N71). */
+  assert.match(w.c.candidatesFor({ on: {}, viewer: M1 }).detail, /a record \(bundle\)/);
   const ids = (on) => w.c.candidatesFor({ on, viewer: M1 }).candidates.map((c) => c.candidate).sort();
   assert.deepEqual(ids({ candidate: k2 }), [k2]);
   assert.deepEqual(ids({ inquiry: IQ.a }), [k2]);

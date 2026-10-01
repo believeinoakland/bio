@@ -1,6 +1,6 @@
 /* Converted from `bio-plane/test/d442-publish-writes-nothing.test.mjs` (D-442, BIO_Publication_v0_1.md §3 rule 12), publication's
    share only: R12, `excludedBy`'s edition and once per case ("publication R12 excludedby edition and once per case").
-   The old suite is not deleted (K619); its other arms are other modules' shares. Driven at publication's interface: three
+   The old suite, kept by K619, was deleted in T20; its other arms are other modules' shares. Driven at publication's interface: three
    cases over ONE shared finding at ONE pin (project A's case, project B's case, A's second case), each excluding the same
    document in its case document only; the finding's own bytes carry no exclusion. */
 import { test } from "node:test";

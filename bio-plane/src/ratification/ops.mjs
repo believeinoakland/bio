@@ -61,7 +61,8 @@ export async function caseRatifyOp(req, stub, ctx) {
        refusal and its region; R18's pre-flight answers the same one). THE GUARD'S SHAPE IS REC-46's AND NOT STYLE:
        `aiCred` is resolved only for a minted agent credential (it is what makes the caller the `ai` class), and
        WHETHER the identity it acts under is a machine is asked of the ONE predicate over the stamp the plane writes
-       for it — never decided here by a string comparison (`hygiene.test.mjs` D1). The `ai` class only HERE; the
+       for it — never decided here by a string comparison (the rule the old `hygiene.test.mjs` D1 held over the
+       source; R2's and R18's tests drive the fence at this module's interface). The `ai` class only HERE; the
        operator's env-binding classes are refused by the fence directly below (REC-125, D-421). */
     if (aiCred && isMachineIdentity(`${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`))
       return json(machineCaseRefusal(cls), 403);
@@ -842,8 +843,9 @@ export async function ratifyOp(req, stub, ctx) {
          outcomes and the sentence "every reused part carries an outcome" —
          true of the response, false of the record it names. Being unread, it
          was invisible even to REC-52's detector C, which only sees a body that
-         is CONSUMED; the block-level assertion in `plane-envelope.test.mjs` is
-         what covers it now. */
+         is CONSUMED; the block-level assertion in the old `plane-envelope.test.mjs`
+         covered it then, and R6's test of this silence (`test/m/ratification/
+         converted-c.test.mjs`, ratify-envelope site 8) covers it now. */
       const vOut = await doAnswer(stub.fetch(new Request("http://do/recordreuseverdicts", {
         method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({ bundleId: body.bundleId, at, verdicts }) })));
@@ -893,8 +895,10 @@ export async function ratifyOp(req, stub, ctx) {
                      not among them, so it stops here. KEEP THIS A PICK: a
                      `...pub.case` would put an unconsumed field (re-measured
                      at zero consumers by REC-58) on a public answer with
-                     nobody having decided to publish it. test/case-opened.test.mjs
-                     asserts both the named fields and the absence of a spread. */
+                     nobody having decided to publish it. R6's tests
+                     (`test/m/ratification/converted-d.test.mjs`, REC-58;
+                     `ratify-op.test.mjs`) assert the block's keys are exactly the
+                     named fields and that `opened` is absent. */
                   ...(pub.caseId ? { caseId: pub.caseId,
                                      case: { edition: pub.case?.edition ?? null,
                                              complete: !!pub.case?.complete,

@@ -14,8 +14,8 @@ const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "src
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 const SEEN = [], AGENTS = new Map();
 const mf = new Miniflare({
-  modules: true, modulesRoot: "/", scriptPath: join(SRC, "index.mjs"),
-  script: readFileSync(join(SRC, "index.mjs"), "utf8"), modulesRules: [{ type: "ESModule", include: ["**/*.mjs"] }],
+  modules: true, modulesRoot: "/", scriptPath: join(SRC, "plane", "index.mjs"),
+  script: readFileSync(join(SRC, "plane", "index.mjs"), "utf8"), modulesRules: [{ type: "ESModule", include: ["**/*.mjs"] }],
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } }, r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "adm-cr", MEMBER_TOKEN: "mem-cr", PROBE_TOKEN: "prb-cr", DAEMON_TOKEN: "dmn-cr",

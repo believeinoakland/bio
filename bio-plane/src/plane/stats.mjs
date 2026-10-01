@@ -16,7 +16,8 @@ import { observationLogOf, ObservationLog } from "../observation-log/index.mjs";
 /* The name the stats source is registered under. */
 export const PLANE = "plane";
 
-/* R10 (K861 (1)): each owner's exported figure source, in the order the held copy answered its keys. Each is asked of
+/* R10 (K861 (1)): each owner's exported figure source, registered by plane under its owner's name, in the order
+   `op=stats` has answered its keys since plane held them (K923). Each is asked of
    its owner's instance when the figures are read, never at registration, so no factory is built here before its turn
    in the composition root (R2). */
 const OWNERS = Object.freeze([

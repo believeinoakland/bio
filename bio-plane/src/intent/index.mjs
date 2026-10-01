@@ -1416,7 +1416,7 @@ function questionOf(p) {
 }
 
 /** The ops whose handlers are this module's (K3): the control plane routes, authenticates and stamps them (`author`
- *  in the body; `viewer` in the URL, read after the body so a body cannot set it). Legacy-index routes them (REPORT). */
+ *  in the body; `viewer` in the URL, read after the body so a body cannot set it). The plane's route map spreads them. */
 export function intentOps(i, url, body) {
   const qp = (k) => url.searchParams.get(k);
   const b = body || {};

@@ -80,15 +80,13 @@ const GRAMMAR_WHERE = "src/basis-versions/grammar.mjs basisVersionFindings, reac
  * findings, which is the identical distinction the block above draws when it
  * refuses to call an ABSENT identity a machine one.
  *
- * WHAT IS NOT WIRED YET, STATED PLAINLY RATHER THAN LEFT TO BE DISCOVERED.
- * NOTHING WRITES THIS VALUE AND NO GATE CONSUMES IT. `C-25.6`, `C-2.8` and
- * PL-3's `SUGGEST_UNWRITABLE_STATE` endpoint guard are UNCHANGED, per DEC-65's
- * own sequencing (mint first, then the check and the guard together in the item
- * that owns those files, then PL-14 re-measures). Until that item lands, a
- * document hand-written with this value in the field is judged by C-25.6's
- * member arm exactly as any other non-blank, non-machine string is — which is
- * MEASURED in `test/sufficiency-state.test.mjs` and pinned there, so the next
- * item corrects the pin rather than finding it stale.
+ * WHERE IT IS WIRED (PL-19). C-25.6 (`basisVersionFindings`, `./grammar.mjs`)
+ * admits this value on a version of exactly one part and refuses it on a
+ * version of two or more, one finding per part; `versionAsWritten` writes it as
+ * the asserter of every ground a machine author submits. Proven at this
+ * module's interface by `test/m/basis-versions/sufficiency-state.test.mjs` (R3,
+ * R6) and `grammar.test.mjs` (R5). It was minted first and wired after, per
+ * DEC-65's own sequencing.
  * ===================================================================== */
 
 /** The explicit "no independent-sufficiency claim was made" value for a
@@ -294,16 +292,17 @@ export const BASIS_VERSION_CHECKS = {
   },
   /* §6 rule 3, AND IT IS THE ONE REFUSAL THIS FILE CANNOT REACH ON ITS OWN. A
      pure check over one document cannot see what the record already holds under
-     that name, so the comparison is the store's — `store.mjs`'s promote path
-     computes the composition digest of every offered version and compares it to
+     that name, so the comparison is this module's promotion check (`./index.mjs`
+     `check`, R6), which compares the composition of every offered version to
      the stored one BEFORE anything lands. The row lives here so the C-number,
      the code and the translation stay in one place with its siblings; the
      enforcement site says where it actually fires, which is not this file. */
   VERSION_FROZEN: {
     check: 'C-25.11',
-    /* A REGION `where`, NOT a function `where` — see this file's "WHAT A `where`
-       MEANS" block above. `promote` is 870 lines and refuses ~34 things; this row
-       governs the freeze arm and nothing else. The prose `(the basis-version
+    /* A REGION `where`, NOT a function `where`, as the check catalogue's "WHAT
+       A `where` MEANS" block (`legacy-checks`, retired) defined it. `promote`
+       was 870 lines and refused ~34 things; this row governs the freeze arm and
+       nothing else. The prose `(the basis-version
        freeze arm)` said exactly this before REC-71 and no instrument could read
        it, so the guard widened the claim to the whole function and conscripted 32
        unrelated refusals. The span is now DECLARED at the site. */
@@ -363,8 +362,7 @@ export const BASIS_VERSION_CHECKS = {
      told the wrong one is worse off than one told nothing. */
   VERSION_LEG_UNRESOLVED: {
     check: 'C-25.16',
-    /* A REGION `where` — see VERSION_FROZEN above and the "WHAT A `where` MEANS"
-       block at the head of this file. */
+    /* A REGION `where` — see VERSION_FROZEN above. */
     where: 'src/basis-versions/index.mjs check > basis-version-resolve, reached from op=promote through the step basis-versions registers with promotion (K31), NOT reachable from a pure document check',
     translation: 'One part of that version rests on something this record does not hold. '
       + 'A reading of the evidence that points at a document nobody can open is a reading nobody can check.',
@@ -403,7 +401,7 @@ export const BASIS_VERSION_CHECKS = {
      BOTH LAYERS CALL `versionNeedsReason` AND NEITHER RE-TYPES THE SET. Two
      enforcement layers are what the rule requires; two IMPLEMENTATIONS of the
      membership test are what IS-6's C-22.4 control was absorbed by, so there is
-     one predicate and the suite pins the count. */
+     one predicate. */
   VERSION_DISPOSITION_UNATTRIBUTED: {
     check: 'C-25.19',
     where: GRAMMAR_WHERE,
@@ -593,7 +591,7 @@ export const VERSION_ACT_CHECKS = {
      naming an inquiry that TRANSITIVELY rests on this one is a fact about the
      stored graph, and it becomes a defect at exactly one moment: when a member
      accepts the version and its legs become what the answer rests on. Wired to
-     `#basisCyclePath`, the walk `promote` already runs — never a second one. */
+     `inquiry`'s one cycle walk (`cyclePath`) — never a second one. */
   VERSION_BASIS_CYCLE: {
     check: 'C-25.27',
     where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
@@ -661,10 +659,9 @@ export const VERSION_ACT_CHECKS = {
      the changed version becoming a new version." A published case pins each
      member by the hash its members signed, so the claims underneath that hash
      cannot move without the case becoming a statement about the present.
-     NO NEW FAMILY, DELIBERATELY: C-22's own header charges a new `*_CHECKS`
-     family as a floor in `civicos-ui/check-refusal-codes.mjs` that buys slack
-     for everybody else's walk, and this refusal belongs to the six version acts
-     whose family already exists. C-25.32's row records the same choice.
+     NO NEW FAMILY, DELIBERATELY: this refusal belongs to the six version acts,
+     whose family already exists (every family is reached by control-plane's
+     CHECK_FAMILIES, its R22). C-25.32's row records the same choice.
      REACHED BY FOUR OF THE SIX ACTS and not all six — `hide` and `current` are
      the two `VERSION_ACT_TO` maps to null, and the reasoning for leaving them
      outside is at the refusal site rather than restated here.
@@ -866,7 +863,7 @@ export const CONCLUDE_ACT_CHECKS = {
   },
 };
 
-/* REC-86 / IC-123 — THE ACT'S REFUSALS, C-50 (minted with `node tools/mintid.mjs C`).
+/* REC-86 / IC-123 — THE ACT'S REFUSALS, C-50 (minted at REC-86 with the old process's `node tools/mintid.mjs C`, retired with `tools/` in T19).
  *
  * ITS OWN FAMILY AND NOT A SUB-NUMBER OF C-45, because the subject is its own.
  * C-45 is *the ways the record could come to point at nothing*; this family is

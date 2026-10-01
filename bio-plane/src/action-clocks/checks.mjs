@@ -1,8 +1,8 @@
 /* action-clocks — its catalogue rows (requirements: `build/requirements/action-clocks.md`, R1, R4–R6; K617, K624).
  *
  * `PENDING_CLOCKS_BAD_BEFORE` (C-117.5) is copied from `actions/checks.mjs` with its comment (R1 was `actions` R31),
- * its `where` re-pointed here; `actions`' own job deletes that copy (K624 (1)). New here (R4, R6): C-123.1–C-123.3, the
- * reminders' three refusals. `NO_SUCH_ACTION` is `actions`' row (its R43), answered through `actions.noSuchAction`. */
+ * its `where` re-pointed here; `actions`' copy is gone (K914), so this row is the only one. New here (R4, R6):
+ * C-123.1–C-123.3, the reminders' three refusals. `NO_SUCH_ACTION` is `actions`' row (its R43), answered through `actions.noSuchAction`. */
 
 export const ACTION_CLOCK_CHECKS = {
   /* R1: the date the pending-clock read looks before is a date; the condition is this read's own. */

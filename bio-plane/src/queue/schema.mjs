@@ -37,8 +37,8 @@ export const QUEUE_SCHEMA = `-- REC-21: the PERSONAL half of the queue, and it i
 -- re-notify clock reads.
 --
 -- case_id IS a bundle id (an inquiry or a project), so this table clears in
--- BOTH purge arms via a DELETE keyed on it (D-113); hygiene.test.mjs holds that
--- against this file.
+-- BOTH purge arms via a DELETE keyed on it (D-113); test/m/queue/invariants.test.mjs'
+-- R36 test holds that.
 CREATE TABLE IF NOT EXISTS queue_state (
   member_id     TEXT NOT NULL,
   case_id       TEXT NOT NULL,
@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS queue_item_mutes (
 --
 -- Member-authored state, like proposal_dispositions above, and cleared by the
 -- WHOLE-STORE arm of op=purge only (it has no bundle_id) -- the D-113
--- silent-leftover, asserted against this file by hygiene.test.mjs.
+-- silent-leftover, held by test/m/queue/invariants.test.mjs' R36 test.
 CREATE TABLE IF NOT EXISTS finding_dispositions (
   project_id TEXT NOT NULL,
   finding_id TEXT NOT NULL,
@@ -110,9 +110,9 @@ CREATE TABLE IF NOT EXISTS finding_dispositions (
 );
 -- NO SECONDARY INDEX, AND THAT IS A MEASUREMENT RATHER THAN AN OVERSIGHT. Two were
 -- written here first -- on finding_id and on at, mirroring proposal_dispositions --
--- and airuns.test.mjs's index-reader ratchet FAILED THE BUILD naming them, because
--- nothing filters on either leading column: op=queue reads this table WHOLE, exactly
--- as proposalsFeed reads the other one, and the upsert seeks the primary key. An index
--- with no statement behind it is an access path built for a question no op asks, which
--- is the finding that ratchet exists to hold. Add one WITH the statement that reads it.
+-- and the old airuns.test.mjs's index-reader ratchet (deleted in T20) FAILED THE BUILD
+-- naming them, because nothing filters on either leading column: op=queue reads this
+-- table WHOLE, exactly as proposalsFeed reads the other one, and the upsert seeks the
+-- primary key. An index with no statement behind it is an access path built for a
+-- question no op asks. Add one WITH the statement that reads it.
 `;

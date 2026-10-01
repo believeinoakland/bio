@@ -325,7 +325,7 @@ class Promotion {
       try { await g.arm(ctx, found); }
       catch (e) {
         found.push({ check: g.module, severity: "error",
-                     message: `${g.module}'s grammar threw on ${ctx && ctx.folderName}, so it judged nothing and the bundle is `
+                     message: `${g.module}'s grammar threw on ${ctx && ctx.folderName}, so it judged nothing and the record is `
                             + `not passed: ${cut(e && e.message ? e.message : e, 200)}` });
       }
     } }));
@@ -559,7 +559,7 @@ class Promotion {
         const seen = head && sight === "EXISTENCE" ? membership.existenceAct(bundleId, pkg.actorViewer ?? "") : null;
         if (seen) return seen;
         if (!head || sight !== "FULL")
-          return refusal("ABSENT", "update attempted against a bundle that does not exist");
+          return refusal("ABSENT", "update attempted against a record that does not exist");
       }
       /* END DEC-49 REGION is-promote-absent */
 
@@ -576,7 +576,7 @@ class Promotion {
                  detail: "the record already holds this promotion under this snap key, byte for byte; nothing was written" };
       }
       /* R1 */
-      if (head && base === null) return refusal("EXISTS", "creation attempted against an existing bundle");
+      if (head && base === null) return refusal("EXISTS", "creation attempted against an existing record");
 
       /* R11: a revision carries forward what it states nowhere, and says so; a creation stating none is refused. */
       if (head && (promotedTitle === undefined || promotedTitle === null || promotedTitle === "") && head.title)
@@ -607,6 +607,16 @@ class Promotion {
         /* END DEC-49 REGION is-promoted-field-unstated */
       }
 
+      /* R56 (N456, form (b)): a project's stage is computed, never written; a creation is written at `forming` or
+         `closed` only. A revision's move is R15's, below, over the declared table. */
+      /* DEC-49 REGION is-project-stage-computed */
+      if (!head && promotedType === "project" && promotedState !== "forming" && promotedState !== "closed")
+        return refusal("PROJECT_STAGE_COMPUTED",
+          `this new project states current_state '${cut(promotedState, 40)}'. A project is created forming (or closed); `
+          + `its stage after that is worked out from its record, never written. Send it again at forming. Nothing was `
+          + `written.`, { current_state: cut(promotedState, 40), legal: ["forming", "closed"] });
+      /* END DEC-49 REGION is-project-stage-computed */
+
       /* R19: a project's title is unique across the instance, deactivated projects included. */
       if (promotedType === "project") {
         const key = projectNameKey(promotedTitle);
@@ -619,7 +629,8 @@ class Promotion {
       if (head && normalizeType(head.type) === "project") {
         const to = promotedState, from = head.currentState;
         const deactivating = from !== "closed" && to === "closed" && promotedClosedReason === "abandoned";
-        const reactivating = from === "closed" && to === "investigating";
+        /* R56: reopening a closed project is its one move out of `closed` (`forming`, the declared table's). */
+        const reactivating = from === "closed" && to !== "closed";
         if (deactivating || reactivating) {
           const actor = typeof pkg.actorMemberId === "string" && pkg.actorMemberId ? pkg.actorMemberId : null;
           if (!actor || !membership.isProjectOwner(bundleId, actor))
@@ -637,7 +648,7 @@ class Promotion {
       /* DEC-49 REGION is-promote-cas */
       if (head && head.bundleSha !== base)
         return refusal("CAS_STALE",
-          "the base this revision names is not the bundle's current version: someone else changed it since it was read. "
+          "the base this revision names is not the record's current version: someone else changed it since it was read. "
           + "Nothing was written.", { expected: head.bundleSha, got: base });
       /* END DEC-49 REGION is-promote-cas */
 

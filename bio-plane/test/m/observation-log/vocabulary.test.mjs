@@ -41,6 +41,17 @@ test("R1 the content-axis states, the undetermined answer apart from them, the m
   assert.equal(ol.observationCoverage({ state: "partial", resultRef: "x" }), "backed");
 });
 
+test("R1 R2 the coverage of a row and C-22.10 turn on one condition: over every state and referent, a row reads undetermined exactly where the append refuses it C-22.10", () => {
+  for (const state of Object.keys(ol.OBSERVATION_STATES).filter((s) => s !== "NEVER_LOOKED"))
+    for (const resultRef of [null, "", "c"]) {
+      const r = ol.checkObservation({ authority_kind: "acquire", state, result_kind: resultRef ? "capture" : null, result_ref: resultRef });
+      const refusedNoReferent = !!r && r.check === "C-22.10";
+      assert.equal(ol.observationCoverage({ state, resultRef }) === ol.OBSERVATION_COVERAGE_UNDETERMINED, refusedNoReferent,
+        `${state} with ${JSON.stringify(resultRef)}`);
+      if (!refusedNoReferent) assert.equal(r, null, `${state} with ${JSON.stringify(resultRef)} is otherwise accepted`);
+    }
+});
+
 test("R11 missingCause: pre_log on the artifact; purged with no row at the level, no registration instant, or entry before the first row; watermark_band inside the one second before; never_looked only at or after", () => {
   const first = "2026-09-27T03:00:15Z";
   assert.equal(ol.missingCause({ hasArtifact: true, registeredAt: null, firstRowAt: null }), "pre_log");

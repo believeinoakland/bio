@@ -6,9 +6,9 @@
  * 500-character reason landing; the per-part affirmation missing both parts, under preview, and cleared on reject; an
  * accept whose inquiry leg closes no cycle; VERSION_NOT_ACCEPTED's `from`; C-25.31 (VERSION_ACT_UNWRITABLE) driven;
  * every refusal driven and equal to the catalogue; and the family's translation rules.
- * Three tests assert the requirement where the module (2026-09-30) does not meet it: a preview of an act the writer
- * cannot carry out, a preview of a one-to-seven-character reason the write then refuses, and C-25.31's place in R12's
- * order — reported as findings, never weakened.
+ * Three tests asserted the requirement where the module (2026-09-30) did not then meet it: a preview of an act the
+ * writer cannot carry out, a preview of a one-to-seven-character reason the write then refuses, and C-25.31's place in
+ * R12's order — reported as findings, never weakened, and met since.
  *
  * NOT CARRIED, and why:
  * - the old suite's source-text arms (the "sixth machine" comment, the one-implementation / call-site count pins over

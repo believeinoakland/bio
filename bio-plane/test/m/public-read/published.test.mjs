@@ -118,6 +118,17 @@ test("R3 publishedCase resolves by case, by finding and by hash, and answers the
   assert.deepEqual(served.map((s) => [s.to, s.kind, s.edition, s.case_id, s.cases]), [[DOC, "cites", 1, null, []]]);
 });
 
+test("R3 a serve edge with no published edition behind it is reported in `unresolved`, never dropped and never served", () => {
+  const { w } = published();
+  w.signFinding(DOC, { sig: SIG(7) });
+  assert.deepEqual(w.pr.publishedCase({ id: "CASE-2026-0001" }).findings[0].serves.map((s) => s.to), [DOC]);
+  /* the target published and later purged: the edge stays, nothing stands behind it */
+  w.st.sql.exec(`DELETE FROM published_bundles WHERE bundle_id=?`, DOC);
+  const f = w.pr.publishedCase({ id: "CASE-2026-0001" }).findings[0];
+  assert.deepEqual([f.serves, f.unresolved], [[], [{ to: DOC, kind: "cites" }]]);
+  assert.match(w.pr.publishedCase({ id: "CASE-2026-0001" }).graph_detail, /unresolved\[\] is an edge/);
+});
+
 test("R4 publishedManifest serves the whole projection; where ratified documents pinning one sha freeze different pairs the row says CASES_DISAGREE", () => {
   const { w, proj, pin } = published();
   const agreeing = w.read("publishedmanifest");

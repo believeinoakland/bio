@@ -1,5 +1,5 @@
 /* intent's project grammar (R29: C-2.9's `closed_reason` arm, registered in record-grammar's `checkProjectExtension`
-   slot, which it claims whole with C-9.1, through record-core's grammar seam) and its own codes (R30, with R2, R8, R10
+   slot, which it claims whole, `C-2.9` alone, through record-core's grammar seam) and its own codes (R30, with R2, R8, R10
    and R22 answering them). The arm is checked over every reason and state the requirement names, and the retired
    fields (`workproduct_state`, `evaluations`, the C-9.1 ladder; K899 (3)) over every rung, shape and value the retired
    arms judged, each drawing nothing; through record-grammar's `checkBundle` called with the grammars the record
@@ -44,14 +44,17 @@ const EVALS = {
   ref: [ev("argument", "internal", "findings"), ev("argument", "internal", "findings", { findings_ref: "" })],
 };
 
-test("R29 the project grammar is registered once at start through record-core's grammar seam, as intent, claiming record-grammar's checkProjectExtension slot (C-2.9, C-9.1) whole, its only claimant", () => {
+test("R29 the project grammar is registered once at start through record-core's grammar seam, as intent, claiming record-grammar's checkProjectExtension slot (C-2.9) whole and nothing else, its only claimant", async () => {
   const w = world();
   const slot = EXTENSION_ARMS.find((a) => a.name === "checkProjectExtension");
-  assert.deepEqual([...slot.ids].sort(), ["C-2.9", "C-9.1"]);
-  assert.deepEqual([PROJECT_GRAMMAR.module, [...PROJECT_GRAMMAR.ids]], ["intent", ["C-2.9", "C-9.1"]]);
+  assert.deepEqual([...slot.ids], ["C-2.9"]);
+  assert.deepEqual([PROJECT_GRAMMAR.module, [...PROJECT_GRAMMAR.ids]], ["intent", ["C-2.9"]]);
   assert.equal(PROJECT_GRAMMAR.arm, checkProjectExtension);
-  const held = w.record.grammars().filter((g) => g.ids.some((id) => slot.ids.includes(id)));
-  assert.deepEqual(held.map((g) => [g.module, [...g.ids]]), [["intent", ["C-2.9", "C-9.1"]]], "intent alone claims the slot, whole");
+  const held = w.record.grammars().filter((g) => g.ids.some((id) => slot.ids.includes(id) || id === "C-9.1"));
+  assert.deepEqual(held.map((g) => [g.module, [...g.ids]]), [["intent", ["C-2.9"]]], "intent alone claims the slot, whole, and no one C-9.1");
+  /* the registration checkBundle takes (record-grammar R39 judges it whole, before any arm runs) */
+  await assert.doesNotReject(checkBundle({ folderName: "PROJ-2026-0001-p", files: new Map(), sha256: async () => "0" },
+                                         { grammars: w.record.grammars() }));
   /* once: a second construction on the host, or a second registration on the record, adds nothing */
   assert.equal(intentOf(w.host), w.i);
   assert.equal(registerProjectGrammar(w.record), null);
@@ -122,7 +125,7 @@ test("R29 at closed, a closed_reason not one of resolved, superseded, abandoned 
     assert.deepEqual(ours(await judge(w, projectDoc({ current_state: state, closed_reason: "whatever" }))), [], state);
 });
 
-test("R29 C-9.1, the retired readiness ladder: no C-9.1 finding at any rung, over every rung and every combination of passes, and none from a value outside the rungs; the slot keeps the id C-9.1", async () => {
+test("R29 C-9.1, the retired readiness ladder: no C-9.1 finding at any rung, over every rung and every combination of passes, and none from a value outside the rungs; neither the slot nor this grammar holds the id C-9.1", async () => {
   const w = world();
   /* each kind may hold: nothing, a findings result, an internal pass, an external pass (the combinations the ladder judged) */
   const options = (kind) => [[], [ev(kind, "external", "findings", { findings_ref: "R" })], [ev(kind, "internal", "pass")],
@@ -140,8 +143,9 @@ test("R29 C-9.1, the retired readiness ladder: no C-9.1 finding at any rung, ove
   assert.equal(checked, 80);
   /* the rungs with no evaluation at all, which the ladder answered 0, 2, 4, 4 */
   for (const ws of RUNGS) assert.deepEqual(ours(await judge(w, projectDoc({ workproduct_state: ws }))), [], ws);
-  /* the id stays claimed: record-grammar's slot still lists it (closed L1), so the grammar claims the slot whole */
-  assert.ok(PROJECT_GRAMMAR.ids.includes("C-9.1"));
+  /* the id is claimed by no one: record-grammar's slot dropped it (K930), and this grammar claims the slot as it stands */
+  assert.ok(!PROJECT_GRAMMAR.ids.includes("C-9.1"));
+  assert.ok(!w.record.grammars().some((g) => g.ids.includes("C-9.1")));
 });
 
 test("R29 the closed_reason finding is this grammar's only finding: a project at closed with no reason, carrying every retired field, draws it alone, once, at the slot's place", async () => {
@@ -157,6 +161,13 @@ test("R29 the closed_reason finding is this grammar's only finding: a project at
   const direct = [];
   checkProjectExtension({ fm: { object_type: "project", current_state: "closed", workproduct_state: "distributed", evaluations: evals } }, direct);
   assert.deepEqual(direct, mine);
+  /* at the slot's place: after the C-2.8 slot before it, before every grammar claiming no slot (record-grammar R39, R40) */
+  const marker = (check) => (ctx, out) => { if (ctx.fm?.object_type === "project") out.push({ check, severity: "warning", message: "probe" }); };
+  const probed = await checkBundle({ folderName: "PROJ-2026-0001-p", files: new Map([["bundle.md", text]]), sha256: async () => "0" },
+    { grammars: [{ module: "probe-after", ids: ["C-800.1"], arm: marker("C-800.1") }, ...w.record.grammars(),
+                 { module: "probe-before", ids: ["C-2.8"], arm: marker("C-2.8") }] });
+  const order = probed.findings.map((f) => f.check).filter((c) => ["C-2.8", "C-2.9", "C-800.1"].includes(c));
+  assert.deepEqual(order, ["C-2.8", "C-2.9", "C-800.1"], "run in the slot's place, whatever the list's order");
   /* with no grammar for the slot, the bundle grammar runs nothing there */
   const bare = await checkBundle({ folderName: "PROJ-2026-0001-p", files: new Map([["bundle.md", text]]), sha256: async () => "0" },
                                  { grammars: w.record.grammars().filter((g) => g.module !== "intent") });

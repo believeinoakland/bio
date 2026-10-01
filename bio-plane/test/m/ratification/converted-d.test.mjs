@@ -1,6 +1,6 @@
 /* CONVERTED (T18, K619): ratification's share of four old suites, restated as module tests at this module's interface —
    `test/ratify.test.mjs`, `test/deliverer.test.mjs`, `test/grounds.test.mjs` and `test/multifinding.test.mjs`. The old
-   suites stay where they are, not deleted (K619); this file converts ONLY the behaviour they assert that is
+   suites were not deleted by this job (K619); this file converts ONLY the behaviour they assert that is
    ratification's (T17's `legacy-tests.md` rows, read against `build/requirements/ratification.md`). What they assert of
    publication, public-read, case-authoring, strength, inquiry or membership is those modules' share and is not here.
 

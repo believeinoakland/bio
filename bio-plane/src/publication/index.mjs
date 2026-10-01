@@ -654,9 +654,10 @@ export class Publication {
        JOB RATHER THAN A COMPROMISE. The first draft returned the memberships as
        a `cases` ARRAY here, and `meaning-bounds.test.mjs` went red: that put
        `op=publish` onto the BARE roster — a collection published off an
-       unbounded row source — taking the ceiling 40 -> 41. The ceiling may only
-       FALL, and moving it up to accommodate a new read is precisely what it
-       exists to prevent, so the answer changed rather than the figure.
+       unbounded row source — taking the ceiling 40 -> 41. The ceiling could only
+       FALL, and moving it up to accommodate a new read was precisely what it
+       existed to prevent, so the answer changed rather than the figure (that
+       suite was deleted in T20; the decision stands on its own reason below).
 
        THE OBVIOUS FIX IS THE WRONG ONE AND IS REJECTED EXPLICITLY: bounding the
        list with `limit`/`truncated`, the spelling the bounded roster uses,
@@ -683,7 +684,8 @@ export class Publication {
                 per-case bars themselves — and `meaning-bounds.test.mjs` moved
                 `op=publish` onto the OPAQUE roster: a collection off an
                 unbounded row source, inside a conditional SPREAD, so the walk
-                could not even bucket it as bare. **An op the classifier cannot
+                could not even bucket it as bare (that suite was deleted in
+                T20). **An op the classifier cannot
                 see is worse than one it grades badly** — that is the state
                 `op=airunlog` was in while a ratchet read green over it — so the
                 array came off rather than the roster growing a blind spot.
@@ -1404,15 +1406,16 @@ export class Publication {
     /* REC-60 / REC-66 / D-225: THE SCAN IS BOUNDED AND THE BOUND IS PUBLISHED,
        in the spelling the plane already uses — `limit` beside `truncated`. This
        table grows with every revision of every published member and has no
-       natural ceiling, so an unbounded read here would be exactly the class
-       `meaning-bounds.test.mjs` holds a ratchet over: a collection published off
-       a row source nothing bounds. ONE MORE ROW IS ASKED FOR THAN MAY BE USED,
+       natural ceiling, so an unbounded read here would be a collection published
+       off a row source nothing bounds. R6's test (`test/m/publication/
+       relation.test.mjs`) holds the bound, the clamp and `truncated` at the
+       interface. ONE MORE ROW IS ASKED FOR THAN MAY BE USED,
        which is `deriveConnections`' own discipline: it is the only way the
        answer can say that more existed without a second count, and a `truncated`
        derived from a full page would be a guess.
        THE CAP IS THE CALLER'S TO LOWER AND NOT TO RAISE, in `op=readingname`'s
-       own shape — which `bounds.test.mjs` names as the model every capped op was
-       brought into line with, and which is the reason this read takes a `limit`
+       own shape — the model every capped op was brought into line with, and
+       which is the reason this read takes a `limit`
        at all: a ceiling no caller can address is a bound nothing can drive, and
        an undriven bound is one that grows silently. An over-ask is answered AT
        THE CEILING and the ceiling is what is published, so a caller is never told
@@ -2216,12 +2219,11 @@ export class Publication {
                 unconsumed PUBLICATION costs them a field they must reason
                 about — which is the distinction IC-22 acted on and this keeps.
 
-                THE FENCE IS THE PART THAT MATTERS, and it is pinned rather than
-                trusted: `test/case-opened.test.mjs` asserts that each of the
-                three consumers NAMES its fields and that none spreads this
-                state, and holds "computed here AND published nowhere" as ONE
-                assertion — so deleting this key and publishing it both fail,
-                and the decided state is the only one that passes. */
+                THE FENCE IS THE PART THAT MATTERS: R53 names `opened` in this
+                answer and its test (`test/m/publication/services.test.mjs`)
+                holds the key, so deleting it fails; that each consumer NAMES
+                its fields and none spreads this state is the consumer's to
+                keep (`public-read` reads it, its R3, R6). */
              opened: c.opened, ratified_at: c.ratified_at ?? null,
              manifest_sha: c.manifest_sha ?? null,
              complete, awaiting, findings,
@@ -2333,7 +2335,9 @@ export class Publication {
      from the stored `delivered_by` column and from NOTHING ELSE: in particular
      never from `attestor_member`, so a row written before the column existed
      reads UNDETERMINED, stated, rather than back-filled from its signer.
-     `deliverer.control.mjs`'s `backfill` arm edits exactly this line. */
+     R14's, R27's and R28's tests (`test/m/publication/convert-deliverer.test.mjs`,
+     `published.test.mjs`) read every such answer against its stored column and
+     its signer, so a back-fill here fails them. */
   #deliveredBy(row) { return delivererOf(row ? row.delivered_by : null); }
 
   /* Which case a published finding belongs to, at a given edition or at its
@@ -2484,10 +2488,10 @@ export class Publication {
      AND THE REASON IS A MEASUREMENT RATHER THAN TIDINESS — stated in full because
      a reader could otherwise take it for evasion, and it is the opposite.
 
-     `meaning-bounds.test.mjs` grades an op OPAQUE when its method contains a
-     `#rows(` call and publishes no collection: *"rows came out of the store and
-     this reader could not say what happened to them."* Correcting site 2 put the
-     first `#rows(` into `publish()`'s own body, and the walk moved `op=publish`
+     `meaning-bounds.test.mjs` (deleted in T20) graded an op OPAQUE when its method
+     contained a `#rows(` call and published no collection: *"rows came out of the
+     store and this reader could not say what happened to them."* Correcting site 2
+     put the first `#rows(` into `publish()`'s own body, and the walk moved `op=publish`
      out of NO-COLLECTION and into OPAQUE — a blind spot on the heaviest act in
      the system, which is the state `op=airunlog` was in while a ratchet read
      green over it.
@@ -2500,10 +2504,10 @@ export class Publication {
      where the file's other which-case readers already live rather than the
      roster growing a member that would have been describing the wrong thing.
 
-     IT IS NOT HIDDEN FROM ANYTHING. This helper is in `store.mjs`, it is counted
-     by `multicase.test.mjs`'s census as a full member of CASE-6's class, and the
-     census asserts the class total has not shrunk — so a query moved out of sight
-     of one walk is still in sight of the one that exists to count it.
+     IT IS NOT HIDDEN FROM ANYTHING. This helper is a public method of this module,
+     R38's `pinnedCaseEditionsOf`, and its tests (`test/m/publication/
+     relation.test.mjs`, `convert-ratify-authority.test.mjs`) drive it at the
+     interface.
 
      WHAT IT ANSWERS: which case editions froze THESE EXACT BYTES, one entry per
      CASE at that case's newest edition holding them — the same collapse every
@@ -2598,8 +2602,8 @@ export class Publication {
        hands this a list cut at 200 and a finding's basis is unbounded, and one statement binding more than
        ~100 variables is refused by workerd (D-36) — reproduced through `/publishedtargets` by
        `test/frontier-chunk.test.mjs`. `json_each(?)` is this file's own precedent (the authored-capture read)
-       and binds ONE variable whatever the list's length. Not chunked, because a loop around the read hides
-       its row source from `derivation-bounds.test.mjs`'s reader while the per-row work is unchanged. */
+       and binds ONE variable whatever the list's length. Not chunked: one statement reads the whole bounded
+       list, and a loop around it would add statements while the per-row work is unchanged. */
     /* D-598 (BOB #34, 2026-09-25 03:00Z; BIO_Publication_v0_1.md §3 rule 5): EACH ENTRY IS KEYED ON ITS
        OBJECT TYPE, because C-21.2's inheritance rule applies to published INQUIRIES only. A document or an
        observation published as a case's EVIDENCE (D-431(b)) sits in `published_bundles` beside the findings

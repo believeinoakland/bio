@@ -129,7 +129,10 @@ CREATE TABLE IF NOT EXISTS provenance_route_marks (
   PRIMARY KEY (bundle_id, seq)
 );
 -- =========================================================================
--- REC-112, 2026-09-17 -- THIS INDEX HAS NO READER, AND IT IS KEPT ON PURPOSE.
+-- REC-112, 2026-09-17 -- THIS INDEX HAD NO READER, AND IT WAS KEPT ON PURPOSE.
+-- Its reader has since landed (REC-116 / IC-120): provenanceRoutesMarked
+-- (op=provenanceroutes, R23) pages on (finding, bundle_id). What follows is
+-- the record of why it was kept, as written then.
 --
 -- WHAT IT WAITS FOR: a READ op answering the question no op asks --
 -- "which documents in this instance carry a standing LOOKED_INDETERMINATE
@@ -168,12 +171,12 @@ CREATE TABLE IF NOT EXISTS provenance_route_marks (
 -- THE INTENT SURVIVES IN THREE PLACES AND THIS IS THE THIRD, so the index is
 -- NOT the only evidence of it: CLAIMS.md carries REC-69's DELEGATION of
 -- 2026-08-09 naming the question verbatim and re-affirmed open by M0-37 on
--- 2026-09-16, airuns.test.mjs carries it on the unread roster AND pins it BY
--- NAME, and the declaration is here.
+-- 2026-09-16, the legacy airuns.test.mjs carried it on the unread roster AND
+-- pinned it BY NAME (that suite was deleted at T20), and the declaration is here.
 --
--- DO NOT REFLOW THE TWO LINES BELOW. test/nc-rec69-selects.mjs patches them as
--- EXACT STRING LITERALS to arm two negative controls, so a whitespace change
--- makes those arms match zero times and PASS while testing nothing.
+-- The legacy test/nc-rec69-selects.mjs patched the two lines below as exact
+-- string literals to arm two negative controls; it was deleted at T20, and no
+-- test reads these lines as text now.
 -- =========================================================================
 CREATE INDEX IF NOT EXISTS provenance_route_marks_finding
   ON provenance_route_marks(finding, bundle_id);

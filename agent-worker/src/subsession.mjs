@@ -83,11 +83,12 @@
  * ---------------------------------------------------------------------------
  *
  * DEC-49's reach is "every code a SURFACE can receive". No member receives these:
- * this Worker has no member-facing surface and its only caller is the plane, and
- * `civicos-ui/check-refusal-codes.mjs` walks `bio-plane/src` and `checks` rather
- * than the fleet. The convention — a code as a STRING LITERAL at its site through
- * a helper named `refusal` — is followed anyway, because it costs nothing and it
- * is what gives the guard teeth the day it is pointed here.
+ * this Worker has no member-facing surface and its only caller is the plane (the
+ * DEC-49 guard that walked the plane's codes, `civicos-ui/check-refusal-codes.mjs`,
+ * never walked the fleet, and was deleted with the old battery in T20). The
+ * convention — a code as a STRING LITERAL at its site through a helper named
+ * `refusal` — is followed anyway, because it costs nothing and it is what a check
+ * that reads these codes would need the day one is owed.
  * ========================================================================= */
 
 import { LEVELS } from "./harness.mjs";

@@ -1,5 +1,5 @@
-/* R42: the held promotion step, exported whole (`promotionStep`), registered here as the composition root registers it,
-   under this module's name at the rank the held step had (after layer 10, before `affordances` and `tasks`): the
+/* R42: this module's promotion step, exported whole (`promotionStep`), registered here as `plane` registers it, under
+   this module's name at the rank `legacy-store`'s step had (after layer 10, before `affordances` and `tasks`): the
    testimony slot's check and projection (provenance R52) and the sight index (D-497), each answer's keys and values as
    they were, and every step's checks and projections in their old order. */
 import { test } from "node:test";

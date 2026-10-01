@@ -48,8 +48,9 @@ export const INQUIRY_SCHEMA = `
 --
 -- inquiry_basis_target is the reverse index: "which inquiries rest on this
 -- document" (E2, and REC-17's re-evaluation obligation) is ONE indexed lookup.
--- Cleared in BOTH purge arms via the TABLES list (D-113); hygiene.test.mjs
--- holds that list against this file.
+-- Cleared in BOTH purge arms via the TABLES list (D-113); R36's test
+-- (test/m/inquiry/promotion.test.mjs) holds that list against the tables this
+-- schema creates.
 --
 -- REC-42 / DEC-32: the ground column IS THE RELATIONSHIP BETWEEN LEGS, one
 -- nullable column rather than a table because a leg belongs to exactly ONE
@@ -84,13 +85,10 @@ CREATE TABLE IF NOT EXISTS inquiry_basis (
   grade_axis   TEXT,            -- 'capture' | 'connection' | 'testimony': the axis the grade is on
                                 -- GRADE_AXES in record-grammar (grades.mjs) is the authority (MK-2 / IC-142)
                                 -- this line named only the first two until 2026-09-23, D-423
-                                -- hygiene.test.mjs DRIVES it against the export, as REC-68 did for grade_source
   grade_source TEXT,            -- 'resolution' | 'testimony' | 'hunch' | 'inherited' | 'capture'
                                 -- GRADE_SOURCES in record-grammar (grades.mjs) is the authority (DEC-15)
                                 -- this line named only the first three until 2026-08-08, REC-68
                                 -- the last two arrived with REC-31/DEC-21 and were never added here
-                                -- hygiene.test.mjs now DRIVES this list against the export, because
-                                -- hand-typing a vocabulary is how it went stale in the first place
   note         TEXT,
   at           TEXT,
   ground       TEXT,            -- REC-42: the OR branch this leg belongs to. NULL = the implicit single ground (AND)

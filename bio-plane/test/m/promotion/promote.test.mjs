@@ -289,10 +289,18 @@ test("R15: a state move along an undeclared edge is refused (BIAS_ILLEGAL_TRANSI
       assert.ok(prefix, `an id prefix for ${type}`);
       const proj = type === "project";
       const d = (s, id) => doc({ id, object_type: type, title: "Same name", current_state: s, created: T0, last_updated: T0, group: "test-group" });
-      const a = proj ? env.p.promote({ ...create(undefined, d(from)), replay: true, ownerMemberId: "ann" })
+      /* A project is created forming or closed only (R56); a stored legacy stage (`investigating`, `matured`) is a
+         project written before the stage was computed, so the double's row and file are set to it after a creation. */
+      const legacy = proj && from !== "forming" && from !== "closed";
+      const a = proj ? env.p.promote({ ...create(undefined, d(legacy ? "forming" : from)), replay: true, ownerMemberId: "ann" })
                      : env.p.promote({ ...create(`${prefix}-2026-0001`, d(from, `${prefix}-2026-0001`)), replay: true });
       assert.equal(a.ok, true, JSON.stringify(a));
       const id = a.bundleId;
+      if (legacy) {
+        env.record.db.prepare("UPDATE bundles SET current_state=? WHERE bundle_id=?").run(from, id);
+        env.record.db.prepare("UPDATE files SET content=replace(content, 'current_state: forming', ?) WHERE bundle_id=? AND path='bundle.md'")
+          .run(`current_state: ${from}`, id);
+      }
       const d2 = (s) => env.record.readFile(id, "bundle.md").text.replace(`current_state: ${from}`, `current_state: ${s}`);
       const r = env.p.promote({ ...revise(id, a.bundleSha, d2(to)), replay: true, actorMemberId: "ann" });
       const legal = edges[from].includes(to);
@@ -370,12 +378,23 @@ test("R19: projects — the plane mints the id, titles are unique ignoring case 
     author: who ? `member:${who}` : "token:x", actorIdentity: who ? `member:${who}` : null, actorViewer: who ? `member:${who}` : null,
     actorMemberId: who, files: [{ path: "bundle.md", text: t }], meta: {}, ...extra });
   membership.joined.set(r.bundleId, ["bob"]);
+  /* The declared project moves are to `closed` and, from `closed`, to `forming` (record-grammar R35, K904): deactivating
+     (closing as abandoned) and reactivating (closed -> forming) are an owner's; any other revision a joined actor's. */
+  const edited = cur.replace("## Session Log", "## Session Log\n\nA joined participant's edit.");
   assert.equal(rv("bob", withReason).reason, "NOT_THE_OWNER");
-  assert.equal(rv("carl", cur.replace("forming", "investigating")).reason, "PROJECT_ACT_NOT_A_PARTICIPANT");
-  assert.equal(rv("bob", cur.replace("forming", "investigating")).ok, true);
-  assert.equal(rv("ann", withReason.replace("current_state: forming", "current_state: closed").replace("current_state: investigating", "current_state: closed")).ok, true);
-  assert.equal(rv("bob", withReason.replace("current_state: closed", "current_state: investigating")).reason, "NOT_THE_OWNER");
-  assert.equal(rv("ann", withReason.replace("current_state: closed", "current_state: investigating")).ok, true);
+  assert.equal(rv("carl", edited).reason, "PROJECT_ACT_NOT_A_PARTICIPANT");
+  assert.equal(rv("bob", edited).ok, true);
+  /* The hand-written stage is no move (R56): a joined participant writing `investigating` is refused, owner or not. */
+  for (const who of ["bob", "ann"]) {
+    const up = rv(who, cur.replace("current_state: forming", "current_state: investigating"));
+    assert.deepEqual([up.reason, up.from, up.to, up.legal_from], ["STATE_MOVE_UNDECLARED", "forming", "investigating", ["closed"]], who);
+  }
+  assert.equal(rv("ann", withReason).ok, true);
+  assert.equal(rv("bob", withReason.replace("current_state: closed", "current_state: forming")).reason, "NOT_THE_OWNER");
+  const back = rv("ann", withReason.replace("current_state: closed", "current_state: investigating"));
+  assert.deepEqual([back.reason, back.legal_from], ["STATE_MOVE_UNDECLARED", ["forming"]]);
+  assert.equal(rv("ann", withReason.replace("current_state: closed", "current_state: forming")).ok, true);
+  assert.equal(record.head(r.bundleId).currentState, "forming");
   const machine = makePromotion();
   const m = machine.p.promote({ ...mk("Machine made"), ownerMemberId: undefined, author: "token:ai" });
   assert.deepEqual([m.ok, m.owner, m.visibility], [true, null, "hidden"]);
@@ -403,6 +422,65 @@ test("R19: when no free project id can be drawn, the creation is refused MINT_EX
   record.mintOpaqueId = () => null;
   const f = p.forkProject({ projectId: o.bundleId, title: "Fork", by: "ann" });
   assert.deepEqual(f, mintExhausted("PROJ"));
+});
+
+test("R56: a project's stage is computed — a creation stating any current_state but forming or closed is PROJECT_STAGE_COMPUTED (C-86.15), replay included, nothing written; a stored investigating or matured left where it stands is accepted", () => {
+  const { p, record, membership } = makePromotion();
+  const pd = (title, state, extra = {}) => doc({ object_type: "project", title, current_state: state, created: T0, last_updated: T0, ...extra });
+  const mk = (title, text, extra = {}) => ({ base: null, snapKey: `c-${title}`, author: "member:ann", ownerMemberId: "ann", meta: {},
+    files: [{ path: "bundle.md", text }], ...extra });
+  const row = PROMOTION_CHECKS.PROJECT_STAGE_COMPUTED;
+  assert.deepEqual([row.check, row.where], ["C-86.15", "src/promotion/index.mjs #promote > is-project-stage-computed"]);
+  const before = record.dump();
+  /* Every other state, stated by the document or (the document stating none) by the envelope, replay or not. */
+  const refused = [];
+  for (const state of ["investigating", "matured", "open", "nonsense"]) {
+    refused.push([state, p.promote(mk(`By doc ${state}`, pd(`By doc ${state}`, state)))]);
+    refused.push([state, p.promote(mk(`Replayed ${state}`, pd(`Replayed ${state}`, state), { replay: true }))]);
+    refused.push([state, p.promote(mk(`By meta ${state}`, pd(`By meta ${state}`, undefined), { meta: { current_state: state } }))]);
+  }
+  for (const [state, r] of refused) {
+    assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.current_state, r.legal],
+                     [false, "PROJECT_STAGE_COMPUTED", "PROJECT_STAGE_COMPUTED", row.check, row.translation, state, ["forming", "closed"]], state);
+    assert.doesNotMatch(JSON.stringify(r), /PROJ-/, "no id is minted or echoed");
+  }
+  assert.equal(record.dump(), before, "nothing written, no id spent");
+  assert.deepEqual(membership.created, []);
+  /* forming and closed are created, the document's word or the envelope's. */
+  const f = p.promote(mk("Formed", pd("Formed", "forming")));
+  const c = p.promote(mk("Closed", pd("Closed", "closed", { closed_reason: "abandoned" })));
+  const m = p.promote(mk("Meta formed", pd("Meta formed", undefined), { meta: { current_state: "forming" } }));
+  assert.deepEqual([f.ok, c.ok, m.ok], [true, true, true], JSON.stringify([f, c, m]));
+  assert.deepEqual([f, c, m].map((x) => record.head(x.bundleId).currentState), ["forming", "closed", "forming"]);
+  /* Only a project's creation is asked: another type's states are its own table's. */
+  assert.equal(p.promote(create(ID, infoDoc(ID, { current_state: "verified" }))).ok, true);
+  /* A project stored at a legacy stage (written before the stage was computed): a revision that leaves it there is no
+     move, and is accepted, stated or carried; its moves are the table's, to closed only. */
+  for (const legacy of ["investigating", "matured"]) {
+    const env = makePromotion();
+    const made = env.p.promote(mk("Old", pd("Old", "forming")));
+    const id = made.bundleId;
+    const text = env.record.readFile(id, "bundle.md").text.replace("current_state: forming", `current_state: ${legacy}`);
+    env.record.db.prepare("UPDATE bundles SET current_state=? WHERE bundle_id=?").run(legacy, id);
+    const at = () => env.record.head(id).bundleSha;
+    const rv = (t, k) => env.p.promote({ bundleId: id, base: at(), snapKey: k, author: "member:ann", actorMemberId: "ann", meta: {},
+                                         files: [{ path: "bundle.md", text: t }] });
+    const stays = rv(text.replace("## Session Log", "## Session Log\n\nedited"), "e1");
+    assert.equal(stays.ok, true, JSON.stringify(stays));
+    assert.equal(env.record.head(id).currentState, legacy);
+    const carried = rv(text.replace(`current_state: ${legacy}\n`, ""), "e2");
+    assert.deepEqual([carried.ok, carried.fields_carried?.fields?.current_state], [true, legacy], JSON.stringify(carried));
+    const other = legacy === "investigating" ? "matured" : "investigating";
+    const moved = rv(text.replace(`current_state: ${legacy}`, `current_state: ${other}`), "e3");
+    assert.deepEqual([moved.reason, moved.from, moved.legal_from], ["STATE_MOVE_UNDECLARED", legacy, ["closed"]]);
+    assert.equal(rv(text.replace(`current_state: ${legacy}`, "current_state: forming"), "e4").reason, "STATE_MOVE_UNDECLARED");
+    assert.equal(rv(text.replace(`current_state: ${legacy}`, "current_state: closed"), "e5").ok, true);
+    /* A fork of it starts forming, a creation like any other. */
+    env.membership.joined.set(id, ["bob"]);
+    const fk = env.p.forkProject({ projectId: id, title: "Old, forked", by: "bob" });
+    assert.equal(fk.ok, true, JSON.stringify(fk));
+    assert.equal(env.record.head(fk.newId).currentState, "forming");
+  }
 });
 
 test("R20: a revision of a bundle the stamped actor may not see answers exactly as ABSENT, before anything that reads the head", () => {
@@ -474,7 +552,7 @@ test("R20: every refusal names a reason, carrying its catalogue row where one ex
 
 test("R20: every row of this module's own refusals carries its check, translation and the `where` naming the region of promote that mints it (N118)", () => {
   const rows = Object.entries(PROMOTION_CHECKS);
-  assert.equal(rows.length, 12);
+  assert.equal(rows.length, 13);
   const checks = new Set();
   for (const [code, row] of rows) {
     assert.match(code, /^[A-Z_]+$/);
@@ -499,6 +577,8 @@ test("R20: every row of this module's own refusals carries its check, translatio
     BUNDLE_ID_DISAGREES: p.promote(create("INFO-2026-0009", infoDoc("INFO-2026-0010"))),
     ENVELOPE_DATES_DISAGREE: p.promote(create("INFO-2026-0009", infoDoc("INFO-2026-0009"), { meta: { last_updated: T1 } })),
     STATE_MOVE_UNDECLARED: p.promote(revise(ID, head.bundleSha, infoDoc(ID, { current_state: "nonsense" }))),
+    PROJECT_STAGE_COMPUTED: p.promote({ base: null, snapKey: "s", author: "member:ann", meta: {},
+      files: [{ path: "bundle.md", text: doc({ object_type: "project", title: "Staged", current_state: "matured", created: T0, last_updated: T0 }) }] }),
   };
   assert.deepEqual(Object.keys(got).sort(), rows.map(([c]) => c).sort());
   for (const [code, r] of Object.entries(got))

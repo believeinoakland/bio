@@ -1,0 +1,7 @@
+# BOB to scheduler (T21)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T21) layer 10, scheduler. N463 (K918; PLANE #11 J1 (2)): `bio-plane/test/m/scheduler/plane.test.mjs`:17–:18 stand the plane up from `join(SRC, "index.mjs")` (`SRC`, :13), the one-line re-export plane deletes in L11 (plane R8): re-point both to `src/plane/index.mjs` (plane R6's entry, which the re-export names, so the suite is green before and after). Test only; no product code changes. N469 (K931; LEGACY-TESTS #18's list, `build/jobs/T20/legacy-tests.md` "For BOB" item 5): a note in your paths that names a file T20 deleted AS LIVE (a runner, a suite that "asserts", "pins" or "anchors" something) is re-worded: to the module test that now proves the claim, or, if none does and the claim is one of your requirements, add a requirement-named test at your interface (P7); otherwise drop the claim. A provenance note ("converted from", "found by", "ported from") stays (`build/layers.md` rule 6's kind). Re-scan your own paths for any other such note, prose naming "the battery" as what runs today included. None is listed in your paths. No requirement of yours carries a `not yet met: T21` mark. Proof: `test/m/scheduler/` green against `src/plane/index.mjs`. Merge before plane's L11 job (rule 2). A test-only change stales no generated artifact; say so. Regenerate nothing; report in a REPORT each generated artifact your change stales (`build/manifest.md`, "Generated artifacts"). Do not delete old suites (K619).

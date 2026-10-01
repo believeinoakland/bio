@@ -17,6 +17,9 @@
  *   legal_organisations            the two Bob named (K283 (2), K303, R36); unmeasured
  *   locale                         the render locale every capture has asked for (R37); unmeasured
  *   systems[].links                REC-206's gateway shapes, measured on M-120's agenda (R38)
+ *   time_zone, hours, holidays     the T20 calendar research (`build/plan/research-oakland-calendar.md`), filed
+ *                                  as M-187–M-196 and read by K925; each `researched`, or absent where no source
+ *                                  publishes the fact (R41–R45). No template: none is approved (K921 Q1, R45).
  *
  * Plain data: patterns are `{re, flags?}` with a JavaScript regular-expression source. */
 const R = String.raw;
@@ -177,6 +180,8 @@ export default {
     minutes_due_days: { value: 21, basis: "UNMEASURED" },
   },
   locale: { value: "en-US", basis: "UNMEASURED" },
+  /* California's statutory time (Gov. Code § 6808), by its IANA name. */
+  time_zone: { value: "America/Los_Angeles", status: "researched", basis: "M-187" },
   search_terms: [
     { term: "oakland", basis: "UNMEASURED" },
     { term: "police", basis: "UNMEASURED" },
@@ -196,12 +201,18 @@ export default {
       cite: { re: R`\b(?:Cal(?:ifornia|\.)?\s+)?Gov(?:ernment|\.|t\.?)?\s+Code\s+(?:§+\s*|Section\s+)?\d+(?:\.\d+)?`, flags: "i" },
       basis: "UNMEASURED" },
   ],
+  /* Hours only where the office publishes them (M-192). The Controller's Bureau (M-195), the City Council (M-196)
+     and the Civil Grand Jury (M-194) publish none, and the State Controller's Office could not be read: their hours
+     are absent, undetermined (R27, K925). */
   counterparties: [
     { role: "Controller", body: "City of Oakland Finance Department", level: "city", elected: false, basis: "UNMEASURED" },
     { role: "City Council", body: "Oakland City Council", level: "city", elected: true, basis: "UNMEASURED" },
     { role: "Civil Grand Jury", body: "Alameda County Civil Grand Jury", level: "county", elected: false, oversight: true, basis: "UNMEASURED" },
     /* Design Requirement 8's "City Auditor whistleblower complaints"; its system is oakland.auditor. */
-    { role: "City Auditor", body: "Office of the City Auditor, City of Oakland", level: "city", elected: true, oversight: true, basis: "UNMEASURED" },
+    { role: "City Auditor", body: "Office of the City Auditor, City of Oakland", level: "city", elected: true, oversight: true,
+      hours: { weekly: ["mon", "tue", "wed", "thu", "fri"].map((day) => ({ day, open: "08:30", close: "17:00" })),
+        status: "researched", basis: "M-192" },
+      basis: "UNMEASURED" },
     { role: "State Controller", body: "California State Controller's Office", level: "state", elected: true, basis: "UNMEASURED" },
   ],
   action_kinds: [
@@ -219,7 +230,11 @@ export default {
        template. The Roadmap names the court a records petition is filed in. */
     { kind: "records_petition", label: "court petition to enforce a public records request", tier: 2,
       laws: ["California Public Records Act"],
-      venue: { name: "Alameda County Superior Court", how: "court", basis: "UNMEASURED" },
+      /* The hours are the civil clerk's office at the René C. Davidson Courthouse, in person, where writ matters
+         are filed (M-193); its drop box and e-filing hours are not office hours. */
+      venue: { name: "Alameda County Superior Court", how: "court", basis: "UNMEASURED",
+        hours: { weekly: [...["mon", "tue", "wed", "thu"].map((day) => ({ day, open: "08:30", close: "15:00" })),
+          { day: "fri", open: "08:30", close: "14:00" }], status: "researched", basis: "M-193" } },
       advisory: "File with caution: a procedural error can have the petition dismissed, usually without "
         + "prejudice, so refiling is possible but costs time and money. Legal review before filing is recommended.",
       basis: "D-182" },
@@ -241,6 +256,36 @@ export default {
     { name: "First Amendment Coalition", evaluates: ["constitutional_claim"],
       contacts: [{ how: "web", value: "https://firstamendmentcoalition.org" }], basis: "UNMEASURED" },
   ],
-  /* holidays: absent. No measurement names the offices' closure days, and the profile's one deadline
-     counts calendar days; a business-day count here is undetermined (R27, R33). */
+  /* Each office's published closure days for 2026, by the list that governs it (K925). The City's and the
+     State's are employers' paid-holiday lists, read as closure days (K925 (2)); the City's 09-09 and 11-11,
+     marked "(HVA) If applicable", are left out until a member confirms (K925 (3)). The county's own list
+     (M-188) governs no office the profile names, and none names the Civil Grand Jury's: a business-day count
+     for it, for the records portal, and into 2027 (no list published) is undetermined (R27, R33). */
+  holidays: [
+    { year: 2026, offices: [{ venue: "records_petition" }], days: [
+      { date: "2026-01-01", name: "New Year's Day" }, { date: "2026-01-19", name: "Martin Luther King Jr.'s Birthday" },
+      { date: "2026-02-12", name: "Lincoln's Birthday" }, { date: "2026-02-16", name: "Washington's Birthday" },
+      { date: "2026-03-31", name: "Pursuant to Code of Civil Procedure Section 135" }, { date: "2026-05-25", name: "Memorial Day" },
+      { date: "2026-06-19", name: "Juneteenth" }, { date: "2026-07-03", name: "Independence Day" },
+      { date: "2026-09-07", name: "Labor Day" }, { date: "2026-09-25", name: "Native American Day" },
+      { date: "2026-11-11", name: "Veteran's Day" }, { date: "2026-11-26", name: "Thanksgiving Day" },
+      { date: "2026-11-27", name: "Day after Thanksgiving" }, { date: "2026-12-25", name: "Christmas Day" }],
+      status: "researched", basis: "M-189" },
+    { year: 2026, offices: ["Controller", "City Council", "City Auditor"], days: [
+      { date: "2026-01-01", name: "New Year's Day" }, { date: "2026-01-19", name: "Dr. Martin Luther King, Jr. Day" },
+      { date: "2026-02-16", name: "President's Day" }, { date: "2026-03-31", name: "Cesar Chavez Day" },
+      { date: "2026-05-25", name: "Memorial Day" }, { date: "2026-06-19", name: "Juneteenth National Independence Day" },
+      { date: "2026-07-04", name: "Independence Day" }, { date: "2026-09-07", name: "Labor Day" },
+      { date: "2026-11-26", name: "Thanksgiving Day" }, { date: "2026-11-27", name: "Day After Thanksgiving" },
+      { date: "2026-12-25", name: "Christmas Day" }],
+      status: "researched", basis: "M-190" },
+    { year: 2026, offices: ["State Controller"], days: [
+      { date: "2026-01-01", name: "New Year's Day" }, { date: "2026-01-19", name: "Martin Luther King Jr. Day" },
+      { date: "2026-02-16", name: "Presidents' Day" }, { date: "2026-03-31", name: "Cesar Chavez Day" },
+      { date: "2026-05-25", name: "Memorial Day" }, { date: "2026-07-04", name: "Independence Day" },
+      { date: "2026-09-07", name: "Labor Day" }, { date: "2026-11-11", name: "Veteran's Day" },
+      { date: "2026-11-26", name: "Thanksgiving Day" }, { date: "2026-11-27", name: "Day after Thanksgiving" },
+      { date: "2026-12-25", name: "Christmas Day" }],
+      status: "researched", basis: "M-191" },
+  ],
 };

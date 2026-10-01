@@ -227,16 +227,18 @@ const json = (obj, status = 200) =>
    OMISSION. DEC-49's reach is "every code a SURFACE can receive", which the
    guard's own header records as SMALLER than every refusal code in the plane. No
    member ever receives these codes: this Worker has no member-facing surface and
-   its only caller is the plane. `civicos-ui/check-refusal-codes.mjs` walks
-   `bio-plane/src` and `bio-plane/checks` and does not walk the fleet — correct
-   for the same reason, and why `pdf-worker`'s BAD_SHA/NOT_FOUND carry no rows.
+   its only caller is the plane. The DEC-49 guard that walked the plane's codes
+   (`civicos-ui/check-refusal-codes.mjs`, deleted with the old battery in T20)
+   never walked the fleet — correct for the same reason, and why `pdf-worker`'s
+   BAD_SHA/NOT_FOUND carry no rows.
 
    The convention is followed anyway because it costs nothing and it is what gives
    the guard teeth the day it is pointed here: a local helper taking the code in a
-   VARIABLE is invisible to arm C's walk, which is how seven of thirteen governed
-   sites once read 776 lines and compared zero codes. The day any surface renders
-   one of these verbatim to a member — which FL-3/FL-4 could do while composing a
-   run's failure — a family is owed AND the guard must be taught to walk here. */
+   VARIABLE is invisible to a walk over literals, which is how seven of thirteen
+   governed sites once read 776 lines and compared zero codes. The day any surface
+   renders one of these verbatim to a member — which FL-3/FL-4 could do while
+   composing a run's failure — a family is owed, and so is a check that reads
+   these codes. */
 const refusal = (code, detail, status, extra) =>
   json({ ok: false, reason: code, code, detail, worker: "agent-worker", ...(extra || {}) }, status);
 
@@ -947,7 +949,7 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
           .find((h) => h && h.bundle_id === address) || null;
         if (hit && !(typeof hit.source_locator === "string" && hit.source_locator.trim())) {
           resolved.push({ citation: address, bundle: address, address: null, chain: null,
-                          reason: "the cited bundle names no source address, so no version chain can hold it" });
+                          reason: "the cited record names no source address, so no version chain can hold it" });
           continue;
         }
         const target = hit ? hit.source_locator.trim() : address;

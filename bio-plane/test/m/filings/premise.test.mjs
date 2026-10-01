@@ -4,7 +4,7 @@
    module's interface, over the real modules: each action is written through actions' own write (its R8, R9). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, PROFILE } from "./fixture.mjs";
+import { world, V, PROFILE, attributed } from "./fixture.mjs";
 import { FILING_BLANKS, OVERRIDE_HEAD, INBAND_RULE, unfilledMarker } from "../../../src/filings/index.mjs";
 
 const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
@@ -14,7 +14,8 @@ const prep = (x, action, over = {}) => x.f.filingPrepare({ action, preparer: V("
 function everyBlank(x) {
   const p = x.profile(PROFILE);
   return { ...p, id: "test-filings-blanks", action_kinds: p.action_kinds.map((k) => (k.kind === "bylaw_complaint"
-    ? { ...k, template: Object.keys(FILING_BLANKS).map((n) => `${n}={{${n}}}`).join(" | ") } : k)) };
+    ? { ...k, template: attributed("TPL-test-every-blank", "file", Object.keys(FILING_BLANKS).map((n) => `${n}={{${n}}}`).join(" | ")) }
+    : k)) };
 }
 
 test("R3 the addressee's blanks follow its arm (actions R9): an office fills role and body, a reporter, organisation or group role and organisation, an audience its description; a blank its arm does not hold is left unfilled, saying which arm", () => {

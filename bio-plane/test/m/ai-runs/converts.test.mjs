@@ -1,5 +1,5 @@
-/* ai-runs' shares of the old suites converted in T18 (build/jobs/T17/legacy-tests.md's rows; the old suites are not
-   deleted, K619): `airuns` (R22), `d260-resume` (R16, R18), `run-conditions` (R20, R21, R23, R24), `airun` (R14, R19),
+/* ai-runs' shares of the old suites converted in T18 (build/jobs/T17/legacy-tests.md's rows; the old suites were
+   deleted in T20): `airuns` (R22), `d260-resume` (R16, R18), `run-conditions` (R20, R21, R23, R24), `airun` (R14, R19),
    `observation-log` (R12, R14, R15, R24), `project-disclosure` (R10–R12), `extractrun` and `skillpack` (R9, R40), and
    `rec173-migration-replay` (R25, R26). The shares proving the moved rules (R1–R8, R44, R45's figure) are run-rules'. */
 import test from "node:test";

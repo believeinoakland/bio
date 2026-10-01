@@ -2,7 +2,7 @@
    `test/reading-position-occurrences.test.mjs`, `test/reading-position.test.mjs`, `test/observation-content.test.mjs`
    and `test/testify.test.mjs`), at the module's interface: the promotion step this module registers (R20) standing for
    `op=promote`, `writeReading`'s projection (R19), `op=readingref` (R28) through `extractionOps`, the R24 and R62
-   notices, `unitsOf` (R36) and `indexTestimony` (R61). The old suites are kept (K619 (3)); their other modules' shares
+   notices, `unitsOf` (R36) and `indexTestimony` (R61). The old suites were deleted in T20 (K931); their other modules' shares
    are those modules'. Each test names the requirement ids it checks in its title. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -23,7 +23,7 @@ const promote = (w, bundleId, docs, author = "member:ines") => { bundle(w.s, bun
 const readingDoc = (captureSha, reading) => ({ capture: { sha256: captureSha, encoding: "binary", bytes: 10 }, reading });
 const op = (w, name, qs) => extractionOps(w.x, new URL(`http://x/${name}?${qs}`), {}, {})[name]();
 
-/* ---- reading-position-occurrences.test.mjs §1 and §4 (D-454) ---- */
+/* ---- converted from reading-position-occurrences.test.mjs §1 and §4 (D-454) ---- */
 test("R19 R20 R28 (reading-position-occurrences §1, §4): one row per distinct place; a place read twice is one row and every unplaced read one unplaced row; op=readingref lists every place in reading order, a document read once in the old shape; a re-read replaces the places", () => {
   const w = fresh();
   const SA = sha("d454-A"), SB = sha("d454-B"), SD = sha("d454-D");
@@ -51,7 +51,7 @@ test("R19 R20 R28 (reading-position-occurrences §1, §4): one row per distinct 
   assert.deepEqual(op(w, "readingref", `ref=${encodeURIComponent(ORD.ref)}&viewer=class:member`).documents[0].occurrences, [pg(3), pg(14)]);
 });
 
-/* ---- reading-position-occurrences.test.mjs §5 (M-155): no numbered requirement; carried under R58's columns ---- */
+/* ---- converted from reading-position-occurrences.test.mjs §5 (M-155): no numbered requirement; carried under R58's columns ---- */
 test("R58 R28 (reading-position-occurrences §5, M-155): a reading_refs table in the pre-occurrence shape is copied forward by migrate, every row kept byte for byte at seq 0 with its occurrence from its own position, keyed (capture_sha, ref, occurrence), both lookup indexes on the new table, no interim table; the pre-position shape too, every row unplaced", () => {
   const w = fresh();
   const SA = sha("m155-A"), SB = sha("m155-B"), SC = sha("m155-C");
@@ -98,7 +98,7 @@ test("R58 R28 (reading-position-occurrences §5, M-155): a reading_refs table in
   assert.deepEqual(shape(), { pk: ["capture_sha", "ref", "occurrence"], idx: ["reading_refs_bundle", "reading_refs_ref"], interim: 0 });
 });
 
-/* ---- reading-position.test.mjs §8 (FW-17) ---- */
+/* ---- converted from reading-position.test.mjs §8 (FW-17) ---- */
 test("R28 R19 R27 (reading-position §8): the reading keeps the position the reader emitted and a reading with none still writes; op=readingref projects the placed position and, for the unplaced one, a null position beside a reference that is fully there", () => {
   const w = fresh();
   const P2 = { kind: "pdf-page", ref: "p.2", page: 1, rect: null }, P8 = { kind: "pdf-page", ref: "p.8", page: 7, rect: null };
@@ -122,7 +122,7 @@ test("R28 R19 R27 (reading-position §8): the reading keeps the position the rea
                             label: "Ordinance 13579", content_type: "meeting_agenda", position: null });
 });
 
-/* ---- observation-content.test.mjs §C, §D, §F (REC-94): the reading written at promote and what a listener is handed ---- */
+/* ---- converted from observation-content.test.mjs §C, §D, §F (REC-94): the reading written at promote and what a listener is handed ---- */
 test("R20 R19 R24 R36 R23 R21 (observation-content §C, §D, §F): each promoted reading is written and handed to the observer with its bundle, capture, reading, both chains, units before, index outcome and author; a promote with no reading hands nothing; a moved chain is handed before and after and the earlier reading is kept; unitsOf answers none for a capture read without units and null for one never read", () => {
   const w = fresh();
   const heard = [];
@@ -174,7 +174,7 @@ test("R20 R19 R24 R36 R23 R21 (observation-content §C, §D, §F): each promoted
   assert.deepEqual(w.rows(`SELECT reading FROM reading_history WHERE capture_sha=? ORDER BY seq`, S.short).map((r) => JSON.parse(r.reading)), [R.short, moved]);
 });
 
-/* ---- testify.test.mjs §1, §3 (MK-1): the observation's words as its capture's own text ---- */
+/* ---- converted from testify.test.mjs §1, §3 (MK-1): the observation's words as its capture's own text ---- */
 test("R61 R62 R36 (testify §1, §3): an authored observation's words are its capture's one whole unit, found by the text index; two members' identical words under two captures are two indexed captures, the second moving nothing of the first; no reading, reference or reader stands behind either", () => {
   const w = fresh();
   const WORDS = "On 10 September at the Clerk's counter I watched the deputy clerk stamp the amended "

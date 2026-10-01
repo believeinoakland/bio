@@ -5,7 +5,7 @@
    its ops, over the real modules on storage shaped as workerd's (a cursor-answering `sql.exec`, the fixture's). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, MACHINE } from "./fixture.mjs";
+import { world, V, MACHINE, attributed } from "./fixture.mjs";
 
 const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
 /* quinn is a member outside the project (the fixture's); bo and cy are joined in it. */
@@ -133,7 +133,7 @@ function twoFindings(x, hiddenFrom) {
 function listsProfile(x) {
   const p = x.profile();
   return { ...p, id: "test-filings-lists", action_kinds: p.action_kinds.map((k) => (k.kind === "bylaw_complaint"
-    ? { ...k, template: "Findings: {{findings}}. Standards: {{standards}}." } : k)) };
+    ? { ...k, template: attributed("TPL-test-lists", "file", "Findings: {{findings}}. Standards: {{standards}}.") } : k)) };
 }
 
 test("R27 R3 R9 R21 a finding conformance withholds from the reader is withheld whole: the draft's findings blank stays [UNFILLED] with why 'not one you may see', the packet's facts hold only what the reader sees, no null and no placeholder, with out_of_view: true; a reader who sees both gets the filled blank and no key", () => {

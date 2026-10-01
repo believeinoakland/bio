@@ -1,5 +1,5 @@
 /* plane: the Worker's entry (R6), driven in the runtime the product deploys to (Miniflare, workerd), the deployment
-   config that names it (R7), and the legacy files it replaces (R8). */
+   config that names it (R7), and the legacy files it replaced, gone (R8). */
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
@@ -84,28 +84,29 @@ test("R7: `package.json`'s `test` runs the module tests and `test:system` the ol
   for (const k of ["build", "deploy", "dev", "embed:sign"]) assert.equal(typeof pkg.scripts[k], "string", `${k} kept`);
 });
 
-test("R8: `store.mjs` and `schema.mjs` do not exist, `src/index.mjs` is only the re-export of R6's entry, and no file imports the three", async () => {
-  assert.equal(existsSync(join(SRC, "store.mjs")), false);
-  assert.equal(existsSync(join(SRC, "schema.mjs")), false);
-  const idx = readFileSync(join(SRC, "index.mjs"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "").split("\n").map((l) => l.trim()).filter(Boolean);
-  assert.deepEqual(idx, ['export { default, Store } from "./plane/index.mjs";'], "one line: the re-export of R6's entry");
-  const viaIndex = await import(join(SRC, "index.mjs"));
-  assert.deepEqual(Object.keys(viaIndex).sort(), ["Store", "default"]);
-  assert.equal(viaIndex.default, entry.default);
-  /* No module and no module test imports them. */
-  const LEGACY = /^src\/(?:store|schema|index)\.mjs$/;   /* the plane's own, relative to `bio-plane/` */
+test("R8: `store.mjs`, `schema.mjs` and `src/index.mjs` do not exist (bundler's `planeMember` re-pointed, K846; N463), and no file imports the three", async () => {
+  for (const f of ["store.mjs", "schema.mjs", "index.mjs"]) assert.equal(existsSync(join(SRC, f)), false, `src/${f}`);
+  /* No module, no test (the module tests and the old suites kept for the release, K619) and no script imports them. */
   const offenders = [];
-  for (const root of [SRC, join(PLANE, "test", "m"), join(PLANE, "scripts")])
-    for (const f of files(root)) {
-      const text = readFileSync(f, "utf8");
-      for (const m of text.matchAll(/(?:\bfrom\s*|\bimport\s*\(\s*)["']([^"']+\.mjs)["']/g)) {
-        if (!m[1].startsWith(".")) continue;
-        const target = relative(PLANE, join(dirname(f), m[1]));
-        if (LEGACY.test(target) && f !== join(SRC, "index.mjs")) offenders.push(`${relative(PLANE, f)} → ${target}`);
-      }
-    }
+  for (const root of [SRC, join(PLANE, "test"), join(PLANE, "scripts")])
+    for (const f of files(root)) offenders.push(...legacyImports(f, readFileSync(f, "utf8")));
   assert.deepEqual(offenders, []);
+  /* Negative control: the scan names each of the three when a file imports it, statically or dynamically. */
+  const probe = join(PLANE, "test", "probe.mjs");
+  assert.deepEqual(legacyImports(probe, `import { Store } from "../src/store.mjs";\nconst s = await import("../src/schema.mjs");\nexport { default } from '../src/index.mjs';`),
+    ["test/probe.mjs → src/store.mjs", "test/probe.mjs → src/schema.mjs", "test/probe.mjs → src/index.mjs"]);
 });
+
+/* The relative imports in `text` (file `f`) of the three legacy files, the plane's own, relative to `bio-plane/`. */
+function legacyImports(f, text) {
+  const out = [];
+  for (const m of text.matchAll(/(?:\bfrom\s*|\bimport\s*\(\s*)["']([^"']+\.mjs)["']/g)) {
+    if (!m[1].startsWith(".")) continue;
+    const target = relative(PLANE, join(dirname(f), m[1]));
+    if (/^src\/(?:store|schema|index)\.mjs$/.test(target)) out.push(`${relative(PLANE, f)} → ${target}`);
+  }
+  return out;
+}
 
 function files(dir) {
   const out = [];

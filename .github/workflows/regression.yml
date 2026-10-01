@@ -41,5 +41,11 @@ jobs:
             if (cd "$pkg" && npm test); then echo "$pkg: passed"; else failed="$failed $pkg"; fi
             echo "::endgroup::"
           done
+          # The suites outside test/m that T20 kept (N466, K932; LEGACY-TESTS #18): run from the root.
+          # several-cases-choice needs ssh-keygen (openssh-client, on the runner image).
+          echo "::group::kept suites"
+          if node --test bio-plane/test/*.test.mjs bio-plane/test/system/*.test.mjs civicos-ui/test/*.test.mjs; then
+            echo "kept suites: passed"; else failed="$failed kept-suites"; fi
+          echo "::endgroup::"
           if [ -n "$failed" ]; then echo "regression: FAILED in$failed" | tee -a "$GITHUB_STEP_SUMMARY"; exit 1; fi
           echo "regression: every package passed" | tee -a "$GITHUB_STEP_SUMMARY"

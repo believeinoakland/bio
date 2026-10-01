@@ -1,10 +1,10 @@
 /* extraction: the transcription chain a reading carries and what the record reads back of it, at the module's
-   interface. Converts extraction's share of three `build/jobs/T17/legacy-tests.md` rows (the old suites are kept,
-   K619 (3)):
+   interface. Converts extraction's share of three `build/jobs/T17/legacy-tests.md` rows (the old suites were deleted
+   in T20, K931):
    - `test/drive-convert.test.mjs` (CONVERT | extraction, capture, capture-sources, text-chain): R11's Drive
      conversion over the real odt/ods/odp entries, R12's determined reading, R19/R29's text-source row, and the
-     over-strictness arms (a city ODT, an archive replay and a city PDF gain no conversion), pinned by the old suite's
-     measured digests;
+     over-strictness arms (a city ODT, an archive replay and a city PDF gain no conversion), pinned by the digests the
+     old suite measured (PRISTINE below);
    - `test/producer-provenance.test.mjs` (CONVERT | extraction, pdf-reader): R11/R12's `layer -> ocr(<product>)` over
      the real pdf entry, and R29's `step=ocr` set;
    - `test/reading-wire.test.mjs` (CONVERT | extraction, docprofile): the real Legistar packet through the real pdf
@@ -24,7 +24,7 @@ const ODT_CONTENT_TYPE = "application/vnd.oasis.opendocument.text";
 const ODS_CONTENT_TYPE = "application/vnd.oasis.opendocument.spreadsheet";
 const ODP_CONTENT_TYPE = "application/vnd.oasis.opendocument.presentation";
 
-/* ---- a zip assembler and ODF packages (drive-convert.test.mjs's) ---- */
+/* ---- a zip assembler and ODF packages (converted from drive-convert.test.mjs) ---- */
 function crc32(buf) {
   let c = 0xffffffff;
   for (let i = 0; i < buf.length; i++) { c ^= buf[i]; for (let k = 0; k < 8; k++) c = c & 1 ? (c >>> 1) ^ 0xedb88320 : c >>> 1; }
@@ -151,7 +151,7 @@ const digest = (c) => sha(JSON.stringify(c ?? null));
 /* The layer step as the old suites' op-level answers carried it (drive-convert's pins were measured there, D-535). */
 const LAYER_MEASURED_BY = "unmeasured: a text layer is itself an unverified transcription (CPDF-9, the MEASUREMENTS ledger 2026-08-03)";
 const layerStep = (container) => ({ step: "layer", tier: 1, container, cap: null, measured_by: LAYER_MEASURED_BY, calibration: null });
-/* drive-convert.test.mjs's PRISTINE pins, measured on the tree before the conversion existed (and re-measured by
+/* The PRISTINE pins, converted from drive-convert.test.mjs, measured on the tree before the conversion existed (and re-measured by
    D-535): every non-Drive chain, and the Drive chain behind its conversion, is byte-identical to them. */
 const PRISTINE = {
   cityOdt:     "7aa7a9a9804fcfb7134eb8fb0b0991787e9be5895a6f9c3d0d76ad196ec29665",

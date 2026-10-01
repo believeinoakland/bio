@@ -6,15 +6,19 @@
  *
  * ---- D-282, AND WHAT WAS ACTUALLY MEASURED -----------------------------------
  *
- * Every suite here ends `process.exit(fail ? 1 : 0)`, because `hygiene.test.mjs`
- * REQUIRES it — a lingering workerd handle must never turn a green run into a
- * hang. `scripts/battery.mjs` spawns every suite with default stdio, which is a
- * PIPE. On darwin, node's writes to a pipe are ASYNCHRONOUS (node's own
+ * The suites of the time ended `process.exit(fail ? 1 : 0)`, so a lingering
+ * workerd handle could never turn a green run into a hang (the old
+ * `hygiene.test.mjs` required it; it was deleted at T20, and no test enforces
+ * that ending now; many suites, and pdf-worker's `runner()`, still end so). The
+ * old runner, `scripts/battery.mjs` (deleted at T20), spawned every suite with
+ * default stdio, which is a PIPE; `node --test` today also runs each test file
+ * as a child and reads its output through a pipe. On darwin, node's writes to a pipe are ASYNCHRONOUS (node's own
  * documentation: pipes are synchronous on Linux and Windows, ASYNCHRONOUS on
  * macOS; files and POSIX TTYs are synchronous). So a suite that writes more than
  * the kernel pipe buffer can absorb leaves bytes QUEUED IN THE PROCESS, and
  * `process.exit` returns to the OS without them. The tail is discarded, and the
- * TALLY — `name: N pass, M fail`, the one line `battery.mjs` reads a count from —
+ * TALLY — `name: N pass, M fail`, the one line the old runner read a count from,
+ * and still what a suite run directly by its package's `npm test` prints —
  * is the last thing a suite prints. D-93 exists precisely because a suite that
  * reports no tally reads as a suite that was never run.
  *
@@ -57,7 +61,7 @@
  *     closure rather than smuggled in beside the fix.
  *
  * THE READER SIDE WAS ALSO REJECTED, AND ON A COUNT. Handing children a file
- * descriptor instead of a pipe would fix `battery.mjs` in one line — but three
+ * descriptor instead of a pipe would have fixed the old runner in one line — but three
  * scripts and some sixty control and probe harnesses in this estate spawn a child
  * and read its stdout, a new one is written for nearly every debt item, and
  * D-282 WAS FOUND BY A CONTROL ARM RATHER THAN BY THE BATTERY. Fixing readers
@@ -69,10 +73,11 @@
  * `uv_stream_set_blocking` is what node itself uses to make a stdio stream
  * synchronous, and it is reached through `_handle.setBlocking`, which is PRIVATE.
  * That is stated rather than hidden: a node release could remove it and this
- * module would silently stop working. It is not left to trust —
- * `test/tally-through-pipe.test.mjs` drives a deliberately flooding child through
- * a real pipe and asserts the tally arrives, so the day the private door closes
- * the battery goes red instead of going quiet. `synchronousStdio()` also reports
+ * module would silently stop working. It is not left to trust — the module's own
+ * tests of R6 and R8 (`test/m/test-support/test-support.test.mjs`) drive a
+ * deliberately flooding child through a real pipe and assert every byte and the
+ * tally arrive, so the day the private door closes those tests go red instead of
+ * going quiet. `synchronousStdio()` also reports
  * what it managed, so a caller can assert on it rather than assume.
  *
  * A blocking write can BLOCK if a reader stops reading, where a non-blocking one

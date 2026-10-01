@@ -1,13 +1,14 @@
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
    discard the writer's own output. SHARED from the plane's test estate rather than copied into
-   this one — ONE implementation, so `bio-plane/test/tally-through-pipe.test.mjs` guards it for
-   both estates and a node release closing the private door goes red once instead of half. The
-   import is for its SIDE EFFECT and is idempotent. Census: `stdio-census.test.mjs`. */
+   this one — ONE implementation, so test-support's R6 test
+   (`bio-plane/test/m/test-support/test-support.test.mjs`) guards it for both estates and a
+   node release closing the private door goes red once instead of half.
+   The import is for its SIDE EFFECT and is idempotent. Census: `stdio-census.test.mjs`. */
 import { execFileSync } from "child_process";
 import fs from "fs";
 import { fileURLToPath } from "url";
-/* D-257 / M0-16 — THIS RUNNER IS `battery.mjs` ONE ESTATE OVER, AND ITS TOTAL IS
- * A BASELINE. It DISCOVERS `.test.mjs` in a directory it does not control and
+/* D-257 / M0-16 — THIS RUNNER'S TOTAL IS A BASELINE (it was the old battery,
+ * `battery.mjs`, deleted in T20, one estate over). It DISCOVERS `.test.mjs` in a directory it does not control and
  * prints the number a session quotes as "the UI harness is N green". `refs/stash`
  * is repository-wide across all sixty worktrees of this repository and `git stash
  * push -u` carries UNTRACKED files, so a `pop` deposits another worker's suite
@@ -37,9 +38,9 @@ let fail = 0;
  * SO THE TWO DEFECTS LOOK IDENTICAL FROM THE READER'S SEAT — a FAIL line with no count
  * after it — and have different causes and different fixes. D-282 is the WRITER
  * discarding queued bytes at `process.exit`; this is the READER refusing to accept them
- * at all. D-282's row states "IT IS NOT `maxBuffer`", and that was measured and is true
- * of `bio-plane/scripts/battery.mjs`, which sets its own. It was never a statement about
- * THIS runner, which sets none — the agreement-of-documents trap, where a true sentence
+ * at all. D-282's row states "IT IS NOT `maxBuffer`", and that was measured and was true
+ * of `bio-plane/scripts/battery.mjs` (deleted in T20), which set its own. It was never a
+ * statement about THIS runner, which set none — the agreement-of-documents trap, where a true sentence
  * about one instrument reads as a claim about its sibling.
  *
  * 256 MB rather than unlimited: a ceiling that exists and is never reached still reports
@@ -69,24 +70,11 @@ for(const t of tests){
       : [{ label: "suites run", contaminated: tests.length, reproducible: repro, source: "suites" }],
   });
 }
-/* CORRECTED 2026-08-07 (VF-2), never exempted: this call was NOT in a try/catch
-   while both guards below are. `execFileSync` throws on a non-zero exit, so a
-   failing check-semantics ABORTED this runner — and the two guards after it
-   never ran, on the one path where that matters most. That is D-93's class
-   exactly (`npm test` chaining suites with `&&` and stopping at the first
-   failure), one directory over. It still fails the run; it no longer hides what
-   is behind it. */
-try{ execFileSync("node", [new URL("../check-semantics.mjs", import.meta.url).pathname], {stdio:"inherit"}); }
-catch(_){ fail++; }
-/* THE DEC-49 GUARD (VF-2). Bob ruled 2026-08-06 that surfaces MAY render an
-   authored translation keyed on a code the plane sent, and the guard is what
-   makes that safe: every code a surface can receive has a translation, and an
-   UNTRANSLATED CODE FAILS THE HARNESS rather than reaching a member. It runs
-   here, in the loop the reader actually runs, because a guard that is documented
-   and not in the loop is not a mechanism (CLAUDE.md). Its own suite is
-   test/refusal-codes.test.mjs, which runs it over fixture trees. */
-try{ execFileSync("node", [new URL("../check-refusal-codes.mjs", import.meta.url).pathname], {stdio:"inherit"}); }
-catch(_){ fail++; }
+/* REMOVED 2026-10-01 (LEGACY-TESTS #19, T21; N469): this runner also ran `../check-semantics.mjs` (the UI's copy of
+   the catalogue, against `app.html`) and `../check-refusal-codes.mjs` (the DEC-49 guard: every code a surface can
+   receive has a translation). Both were deleted in T20 with the old suites, so each run counted a failure for a file
+   that is gone. Every DEC-49 row a module of the plane exports, with its translation, is now reached by control-plane's
+   R22 test (`bio-plane/test/m/control-plane/families.test.mjs`); the UI copy's check has no successor here. */
 /* THE D-173 GUARD (UI-23). It re-runs every suite above with an envelope probe
    preloaded, so it costs a second pass; that is deliberate and it is the only
    way to see what shape a mock ANSWERED rather than what its source looks like.

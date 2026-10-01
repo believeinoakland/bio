@@ -1,17 +1,21 @@
 /* filings — what the group sends, prepared from the record (requirements: `build/requirements/filings.md`; Design
- * Requirement 8 as amended 2026-09-26, K13, K102; the Action layer, K608, K613 (3)). For an action whose governing tier
- * is 1 or 2, a draft pre-filled from the record into the profile's template for its kind, or into a template of the
- * group's library a member kept (R26), every filled blank naming its source (R1–R5); a member approves it and records
- * that it was sent (R6, R7). For Tier 3, a counsel packet for counsel the group names, marked as prepared for counsel's
- * review, never published and never fileable (R8–R12). A communication to anyone is drafted without a template and goes
- * the same way (R23). Approved bytes and exports carry the in-band quartet (R22); whatever is prepared from an action
- * resting on a premise override says so first (R24); exhibits show their grades beside the venue's standard (R25).
- * Candidate theories are proposals, stored apart and labelled (R14). The evidence package's available-actions block is
- * registered with `public-read` (R15) and answered on its own for `escalation` (R21). The AI prepares; a member
- * approves, files and records it.
+ * Requirement 8 as amended 2026-09-26, K13, K102; the Action layer, K608; filing templates, K921, K922, K924). For an
+ * action whose governing tier is 1 or 2, a draft pre-filled from the record into an offered version of a template
+ * (`filing-templates`; the profile's `file` template for the kind by default) or into the member's own words, every
+ * filled blank naming its source, the template and version recorded (R1–R5, R28, R29); a member approves it and records
+ * that it was sent (R6, R7), and may start a template draft from it (R32). At any tier, a counsel packet (a briefing) for
+ * counsel the group names (required at Tier 3) or for the group's own review, marked as prepared for review, never
+ * published and never fileable, with a `briefing` section filled from a `brief` template when one is named (R8–R12,
+ * R31). A communication to anyone is drafted without a template and goes the same way (R23). Approved bytes and
+ * exports carry the in-band quartet (R22); whatever is prepared from an action resting on a premise override says so
+ * first (R24); exhibits show their grades beside the venue's standard (R25); deadlines state the calendar's
+ * confirmation (R30). Candidate theories are proposals, stored apart and labelled (R14). The evidence package's
+ * available-actions block is registered with `public-read` (R15) and answered on its own for `escalation` (R21). The AI
+ * prepares; a member approves, files and records it.
  *
  * A NEW MODULE (T8, layer 9): nothing moved into it and it writes no legacy file. Its tables are `./schema.mjs`; a
- * deadline's date is `./dates.mjs`, counted by `action-clocks`' rule.
+ * deadline's date is `./dates.mjs`, counted by `action-clocks`' rule. Its R26 library moved to `filing-templates` (T21,
+ * K921, K922); its table `filing_templates` stays, written by nothing, as that module's migration's read contract (K986).
  *
  * REACHED as `filingsOf(host, deps)` (K61): one instance per host, created on the first call with `deps`. At creation it
  * creates its tables, declares them to record-core's purge (K23, R19) and registers the available-actions block with
@@ -25,6 +29,10 @@
  *   actions        `actionRead` (its R29), `actionCorrespond` (R15, R16), from `actionsOf` (K253); and its module-level
  *                  `noSuchAction` (R43), through which every missing action is answered (N217).
  *   actionClocks   `clockPropose` (its R2, was actions R32; K617), from `actionClocksOf`.
+ *   filingTemplates  `offeredVersion` (its R25; R28, R31), `templatesFor`, `templateRead` (its R14; R28, R29),
+ *                  `templateDraft` (its R3; R32), from `filingTemplatesOf` (K921, K922).
+ *   localFacts     `factStatus` (its R2; R30): each holiday year a packet's business-day deadline reads, as action-clocks
+ *                  R10 reads it, from `localFactsOf`.
  *   conformance    `determinationRead` (its R9), `determinationsFor` (R11), from `conformanceOf` (K252).
  *   standards      `standardRead` (its R5), `inForce` (R7), from `standardsOf(host, deps)` (K251).
  *   consequences   `consequencesOf` (its R7), from `consequencesModule(host, deps)` (K171 (17), K250).
@@ -41,7 +49,7 @@
  *
  * No place, law, venue, template or legal organisation is named here (R20): every one comes from the active
  * jurisdiction profiles' combined view (`jurisdictions.combine` over record-core's `jurisdiction_profiles`), or from
- * the group's own library (R26). */
+ * the group's own templates (`filing-templates`). */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf } from "../membership/index.mjs";
@@ -57,6 +65,9 @@ import { conformanceOf } from "../conformance/index.mjs";
 import { consequencesModule } from "../consequences/index.mjs";
 import { actionsOf, noSuchAction } from "../actions/index.mjs";
 import { actionClocksOf } from "../action-clocks/index.mjs";
+import { localFactsOf } from "../local-facts/index.mjs";
+import { filingTemplatesOf, FILING_BLANKS, FILING_TEXT_MAX, blanksOf, withRow as templatesRow }
+  from "../filing-templates/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { isMachineIdentity, MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
 import { proposalLabel } from "../record-grammar/labels.mjs";
@@ -65,36 +76,19 @@ import { BASIS_GRADES } from "../record-grammar/grades.mjs";
 import { sha256HexSync } from "../record-grammar/sha256.mjs";
 import { FILINGS_TABLES, migrateFilings } from "./schema.mjs";
 import { rowOf } from "./checks.mjs";
-import { deadlineDate, realDate, COUNTED_FROM } from "./dates.mjs";
+import { deadlineDate, factReader, realDate, COUNTED_FROM } from "./dates.mjs";
 
 export { FILINGS_SCHEMA, FILINGS_TABLES } from "./schema.mjs";
 export { FILINGS_CHECKS } from "./checks.mjs";
-export { deadlineDate, COUNTED_FROM } from "./dates.mjs";
+export { deadlineDate, factReader, COUNTED_FROM } from "./dates.mjs";
 
-/** R3: the blanks this module fills, a closed set; a template's `{{name}}` outside it is left unfilled and says so. */
-export const FILING_BLANKS = Object.freeze({
-  counterparty_role: "the official role of the office the action is addressed to (the action's counterparty)",
-  counterparty_body: "the body of that office (an office's arm only)",
-  counterparty_organisation: "the organisation of a reporter, an organisation or another group the action is addressed to",
-  counterparty_description: "the audience the action is addressed to, as the action describes it",
-  act: "what the government did, as the action's determination states it",
-  act_date: "when it did it (a date, or a period from and to)",
-  standards: "the citations of the standards the determination names",
-  findings: "each finding the determination rests on, with its published case edition",
-  governing_laws: "the governing laws a member stated for the action",
-  law: "the law a records request is made under, as the action states it",
-  clock: "the action's clock entries, each with its basis",
-  venue: "where the kind is filed (the profile's venue name)",
-  venue_how: "by what means it is filed (the profile's venue means)",
-  group: "the producing group",
-  date: "the date the draft was prepared",
-});
+/* R3, R28 (K922 (1)): the blanks, the longest text and `blanksOf` are `filing-templates`' (its R19), read there; this
+   module holds no copy. */
+export { FILING_BLANKS, FILING_TEXT_MAX } from "../filing-templates/index.mjs";
 /** R3: the marker a blank the record cannot fill leaves in the text. */
 export const unfilledMarker = (name) => `[UNFILLED: ${name}]`;
 export const UNFILLED_RE = /\[UNFILLED: [^\]\n]*\]/;
 const BLANK_RE = /\{\{\s*([a-z][a-z0-9_]*)\s*\}\}/g;
-/** R6: the longest approved text, in UTF-8 bytes. */
-export const FILING_TEXT_MAX = 65536;
 /** R14: the longest `why`; and the longest theory and remedy, in characters. */
 export const THEORY_WHY_MAX = 1000;
 export const THEORY_TEXT_MAX = 2000;
@@ -102,9 +96,11 @@ export const THEORY_TEXT_MAX = 2000;
 export const COUNSEL_FIELD_MAX = 200;
 /** R13: the drafts and the packet versions one `filingsFor` read lists, each. */
 export const FILINGS_FOR_MAX = 200;
-/** R10: the marking every section, the packet's head and every export carry. */
-export const counselMarking = (counsel) =>
-  `Prepared for review by ${counsel.name}, ${counsel.organisation}. Not legal advice. Not for filing.`;
+/** R10: the marking every section, the packet's head and every export carry; with no counsel named (Tier 1 or 2, K924),
+ *  the group's own. */
+export const counselMarking = (counsel) => (counsel && counsel.name
+  ? `Prepared for review by ${counsel.name}, ${counsel.organisation}. Not legal advice. Not for filing.`
+  : "Prepared for the group's own review. Not legal advice. Not for filing.");
 /** R24: the words a draft, packet or communication prepared from an action carrying a premise override opens with. */
 export const OVERRIDE_HEAD = "Rests on an unestablished premise:";
 /** R24: the disclosure line, from the override as the action's read answers it (actions R8, R25). */
@@ -112,9 +108,8 @@ export const overrideDisclosure = (o) =>
   `${OVERRIDE_HEAD} ${o.reason} (stated by ${o.by ?? "an author the record does not name"} at ${o.at ?? "a time the record does not state"})`;
 /** R23: the longest purpose, in characters. */
 export const COMMUNICATION_PURPOSE_MAX = 500;
-/** R26: the longest template name, in characters; and the templates one `templatesFor` read lists. */
-export const TEMPLATE_NAME_MAX = 200;
-export const TEMPLATES_FOR_MAX = 200;
+/** R28: the most offered `file` templates `TEMPLATE_NOT_NAMED` lists. */
+export const TEMPLATES_NAMED_MAX = 20;
 /** R22: the line that opens the in-band block below the text of approved or exported bytes. */
 export const INBAND_RULE = "---- in-band ----";
 /** R22: the in-band block appended to bytes leaving the instance: the quartet's hash, date, author and both floors,
@@ -161,8 +156,7 @@ const withRow = (r) => (r && typeof r.then === "function" ? r.then(withRowNow) :
 /** The services answered with DEC-49's rows. */
 const SERVICES = Object.freeze(["filingPrepare", "filingApprove", "filingRecordSent", "counselPacket", "counselPacketRead",
                                 "counselPacketExport", "filingsFor", "theoryPropose", "availableActions",
-                                "communicationPrepare", "templateSave", "templatesFor"]);
-const KIND_RE = /^[a-z][a-z0-9_]*$/;
+                                "communicationPrepare", "templateSave"]);
 const byDayThenSource = (a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : a.source < b.source ? -1 : a.source > b.source ? 1 : 0);
 
 export class Filings {
@@ -171,10 +165,11 @@ export class Filings {
   constructor({ storage, record, host = null, membership = null, publication = null, publicRead = null, provenance = null,
                 content = null,
                 actions = null, conformance = null, standards = null, consequences = null, promotion = null, strength = null, actionClocks = null,
+                localFacts = null, filingTemplates = null,
                 producingGroup = null, profiles = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
-    this.#deps = { host, membership, publication, publicRead, provenance, content, actions, conformance, standards, consequences, promotion, strength, actionClocks };
+    this.#deps = { host, membership, publication, publicRead, provenance, content, actions, conformance, standards, consequences, promotion, strength, actionClocks, localFacts, filingTemplates };
     /* R3 (N331): the producing group is promotion's fact `producingGroup` (its R40), read as `fact` answers it; a
        function handed in (legacy-store's, until layer 10) is kept and may answer a value, null, or the fact's answer.
        Absent, `#group` asks promotion itself, and says so when no promotion module is reachable (N355: no refusal code
@@ -200,6 +195,9 @@ export class Filings {
   get consequences() { return this.#deps.consequences ||= (this.#deps.host ? consequencesModule(this.#deps.host) : null); }
   get actions() { return this.#deps.actions ||= (this.#deps.host ? actionsOf(this.#deps.host) : null); }
   get actionClocks() { return this.#deps.actionClocks ||= (this.#deps.host ? actionClocksOf(this.#deps.host) : null); }
+  /* R30: local-facts' `factStatus` (its R2), the confirmation of each holiday year a business count reads; with no host
+     and none given, absent, and a business count states its calendar `not_read`. */
+  get localFacts() { return this.#deps.localFacts ||= (this.#deps.host ? localFactsOf(this.#deps.host) : null); }
 
   migrate() { migrateFilings(this.sql); }
 
@@ -467,9 +465,75 @@ export class Filings {
     return null;
   }
 
-  /** R1–R5, R24–R26: a draft pre-filled from the record into the profile's template for the action's kind, or into a
-   *  template of the group's library the preparer names (R26). */
-  filingPrepare({ action = null, template = null, preparer = null, viewer = null } = {}) {
+  /* R3, R31: `text`'s blanks filled from the record, each naming its source, or left as a visible marker listed with
+     why. A name outside `FILING_BLANKS` (a profile's text `filing-templates` would not offer) is left unfilled too. */
+  #fill(text, values) {
+    const names = blanksOf(text).blanks;
+    const blanks = [], unfilled = [];
+    for (const n of names) {
+      const val = Object.prototype.hasOwnProperty.call(FILING_BLANKS, n) ? values[n]
+        : { why: "filings fills no blank by this name, so the record holds no value for it" };
+      if (val && "value" in val) blanks.push({ name: n, value: val.value, source: val.source });
+      else unfilled.push({ name: n, why: val.why });
+    }
+    const filled = new Map(blanks.map((b) => [b.name, b.value]));
+    return { text: text.replace(BLANK_RE, (_, n) => (filled.has(n) ? filled.get(n) : unfilledMarker(n))), blanks, unfilled };
+  }
+
+  /* The module that holds the group's templates (`filing-templates`), on the same host unless given; null with none. */
+  get filingTemplates() { return this.#deps.filingTemplates ||= (this.#deps.host ? filingTemplatesOf(this.#deps.host) : null); }
+
+  /* R28, R31: the version of a named template a filing or briefing may use (`filing-templates.offeredVersion`, its R25),
+     its refusals passed through as that module's; `asked` is `{id, version?}` or a bare id. */
+  #offered(asked, viewer) {
+    const t = this.filingTemplates;
+    const id = isObj(asked) ? str(asked.id) : str(asked);
+    const version = isObj(asked) && asked.version != null && asked.version !== "" ? asked.version : null;
+    if (!t || typeof t.offeredVersion !== "function")
+      return templatesRow({ ok: false, reason: "NO_SUCH_TEMPLATE", template: id,
+                            detail: "no module answers the group's templates here, so none is readable" });
+    return t.offeredVersion({ template: id, version, viewer });
+  }
+
+  /* R28, R31: a template of another kind than the action's. */
+  static #kindMismatch(v, a) {
+    /* DEC-49 REGION is-template-kind-mismatch */
+    if (v.kind && v.kind !== a.kind)
+      return { ok: false, reason: "TEMPLATE_KIND_MISMATCH", template: v.template, template_kind: v.kind, kind: a.kind,
+               detail: `the template is written for ${v.kind}, and this action is ${a.kind}` };
+    /* END DEC-49 REGION is-template-kind-mismatch */
+    return null;
+  }
+
+  /* R6, R28: a text that is empty, over `FILING_TEXT_MAX` or not UTF-8 text. */
+  static #unwritable(body, extra = {}) {
+    /* DEC-49 REGION is-text-unwritable */
+    if (typeof body !== "string" || !body.trim() || WELL_FORMED.test(body) || utf8(body) > FILING_TEXT_MAX)
+      return { ok: false, reason: "TEXT_UNWRITABLE", ...extra, max_bytes: FILING_TEXT_MAX,
+               detail: `the text must be non-empty UTF-8 text of at most ${FILING_TEXT_MAX} bytes` };
+    /* END DEC-49 REGION is-text-unwritable */
+    return null;
+  }
+
+  /* R29: what a draft or packet records of the template it was filled from: `{id, version, sha, origin}`. */
+  static #templateOf(v) { return { id: v.template, version: v.number, sha: v.sha, origin: v.origin }; }
+
+  /* R29: the statement a draft or packet carries first (after any advisory) when its template names profiles none of
+     which gave the action's kind (its `profile` tag, jurisdictions R13); null for a `general` template or one written
+     for the kind's profile. */
+  static #notWrittenFor(v, entry) {
+    if (!Array.isArray(v.profiles)) return null;
+    const givers = entry ? [entry.profile, ...(Array.isArray(entry.bases) ? entry.bases.map((b) => b.profile) : [])].filter(Boolean) : [];
+    if (givers.some((p) => v.profiles.includes(p))) return null;
+    return givers.length
+      ? `This template was not written for ${givers[0]}, the jurisdiction this action's kind comes from: it was written for ${v.profiles.join(", ")}.`
+      : `This template was not written for this action's jurisdiction (no active profile gives its kind): it was written for ${v.profiles.join(", ")}.`;
+  }
+
+  /** R1–R5, R24, R25, R28, R29: a draft pre-filled from the record into an offered version of a template the preparer
+   *  names (`filing-templates`, the latest approved by default), into the member's own words (`text`), or, naming
+   *  neither, into the latest approved version of the profile's `file` template for the action's kind. */
+  filingPrepare({ action = null, template = null, text = undefined, preparer = null, viewer = null } = {}) {
     const who = str(preparer);
     /* DEC-49 REGION is-filing-prepare */
     if (!who) return { ok: false, reason: "FILING_NO_PREPARER", detail: "no stamped preparer: a draft names who prepared it" };
@@ -485,57 +549,70 @@ export class Filings {
     if (gov.tier === 3)
       return { ok: false, reason: "TIER3_COUNSEL_PACKET", action: a.id, governing: gov,
                detail: "the governing tier is 3: no filing is prepared; a member names counsel and assembles a counsel packet" };
-    const entry = v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((k) => k.kind === a.kind) || null : null;
-    const conflicted = v.conflicts.some((c) => c.at === `action_kinds[${a.kind}].template`);
-    let source;
-    if (str(template)) {
-      const t = this.#templateRow(template, viewer);
-      if (!t) return { ok: false, reason: "NO_SUCH_TEMPLATE", template: str(template),
-                       detail: "no template by that id in the group's library is readable here; one you may not see answers the same" };
-      if (t.kind && t.kind !== a.kind)
-        return { ok: false, reason: "TEMPLATE_KIND_MISMATCH", template: t.template_id, template_kind: t.kind, kind: a.kind,
-                 detail: `the template was kept for ${t.kind}, and this action is ${a.kind}` };
-      source = { text: t.text, from: "group", template: t.template_id, name: t.name, source: `template:${t.template_id}` };
-    } else if (entry && typeof entry.template === "string" && entry.template.trim()) {
-      source = { text: entry.template, from: "profile", source: `profile:${entry.profile}/action_kinds/${entry.kind}/template` };
-    } else {
-      const held = this.#templatesSeen(a.kind, viewer, TEMPLATES_FOR_MAX);
-      if (held.length)
-        return { ok: false, reason: "TEMPLATE_NOT_NAMED", action: a.id, kind: a.kind,
-                 templates: held.map((t) => ({ template: t.template_id, name: t.name, kind: t.kind ?? null })),
-                 detail: "the profile holds no template for this kind, and the group's library holds the ones listed: name one" };
-      return { ok: false, reason: "KIND_NO_TEMPLATE", action: a.id, kind: a.kind,
-               detail: conflicted ? "the active profiles give different templates for this kind, so none is given, and the group's library holds none for it"
-                 : !v.view ? `${v.why}, so no template is held for this kind, and the group's library holds none for it`
-                 : "neither the profile nor the group's library holds a template for this kind" };
-    }
+    const named = isObj(template) ? !!str(template.id) || Object.keys(template).length > 0 : template != null && template !== "";
+    const own = text !== undefined && text !== null;
+    if (named && own)
+      return { ok: false, reason: "TEMPLATE_AND_TEXT", action: a.id,
+               detail: "name a template or write the words, not both" };
     /* END DEC-49 REGION is-filing-prepare */
+    const entry = v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((k) => k.kind === a.kind) || null : null;
+    let used = null;
+    if (own) {
+      const bad = Filings.#unwritable(text, { action: a.id });
+      if (bad) return bad;
+      const { unknown } = blanksOf(text);
+      if (unknown) return templatesRow({ ok: false, reason: "TEMPLATE_BLANK_UNKNOWN", blank: unknown, blanks: Object.keys(FILING_BLANKS),
+                                         detail: `{{${unknown}}} is not a blank filings fill` });
+    } else {
+      const profileTpl = entry && isObj(entry.template) && entry.template.use === "file" && str(entry.template.id) ? entry.template : null;
+      if (!named && !profileTpl) {
+        const t = this.filingTemplates;
+        const list = t && typeof t.templatesFor === "function" ? this.#call(() => t.templatesFor({ kind: a.kind, use: "file", viewer })) : null;
+        const offered = list && list.ok ? list.templates.slice(0, TEMPLATES_NAMED_MAX).map((x) => {
+          const d = (x.versions || []).find((y) => y.default) || (x.versions || [])[0] || {};
+          return { template: x.id, name: x.name, origin: x.origin, profiles: x.profiles, version: d.version ?? null };
+        }) : [];
+        const conflicted = v.conflicts.some((c) => c.at === `action_kinds[${a.kind}].template`);
+        /* DEC-49 REGION is-template-not-named */
+        return { ok: false, reason: "TEMPLATE_NOT_NAMED", action: a.id, kind: a.kind, templates: offered,
+                 ...(list && list.ok && list.templates.length > TEMPLATES_NAMED_MAX ? { truncated: true } : {}),
+                 detail: `${conflicted ? "the active profiles give different templates for this kind, so none is given"
+                   : !v.view ? v.why : "the profile holds no file template for this kind"}: name a template${offered.length
+                   ? " (the offered ones are listed)" : ""} or write the words` };
+        /* END DEC-49 REGION is-template-not-named */
+      }
+      used = this.#offered(named ? template : { id: profileTpl.id }, viewer);
+      if (!used || used.ok === false) return used;
+      /* DEC-49 REGION is-template-use-brief */
+      if (used.use === "brief")
+        return { ok: false, reason: "TEMPLATE_USE_BRIEF", template: used.template, version: used.version,
+                 detail: "this template is a briefing to counsel: it serves a counsel packet (op=counselpacket), never a filing" };
+      /* END DEC-49 REGION is-template-use-brief */
+      const mismatch = Filings.#kindMismatch(used, a);
+      if (mismatch) return mismatch;
+    }
     const when = this.#when();
     const { det, hidden } = this.#restsOn(a, viewer);
     const values = this.#values(a, det, hidden, entry, viewer, when);
-    const names = [...new Set([...source.text.matchAll(BLANK_RE)].map((m) => m[1]))];
-    const blanks = [], unfilled = [];
-    for (const n of names) {
-      const val = Object.prototype.hasOwnProperty.call(FILING_BLANKS, n) ? values[n]
-        : { why: "filings fills no blank by this name, so the record holds no value for it" };
-      if (val && "value" in val) blanks.push({ name: n, value: val.value, source: val.source });
-      else unfilled.push({ name: n, why: val.why });
-    }
-    const filled = new Map(blanks.map((b) => [b.name, b.value]));
-    let text = source.text.replace(BLANK_RE, (_, n) => (filled.has(n) ? filled.get(n) : unfilledMarker(n)));
+    const filled = this.#fill(own ? text : used.text, values);
+    const { blanks, unfilled } = filled;
+    let body = filled.text;
+    /* R29: a template not written for the kind's jurisdiction says so first, after any advisory */
+    const notFor = used ? Filings.#notWrittenFor(used, entry) : null;
+    if (notFor) body = `${notFor}\n\n${body}`;
     let advisory = null;
     if (gov.tier === 2) {
       advisory = entry ? str(entry.advisory) : null;
-      if (advisory) text = `${advisory}\n\n${text}`;
+      if (advisory) body = `${advisory}\n\n${body}`;
       else {
-        text = `${unfilledMarker("advisory")}\n\n${text}`;
+        body = `${unfilledMarker("advisory")}\n\n${body}`;
         unfilled.unshift({ name: "advisory", why: "the profile gives no advisory note for this kind (or its profiles "
           + "disagree), so it is undetermined; a member writes one in before the draft can be approved" });
       }
     }
     /* R24: the override's disclosure, first on the face. */
     const disclosure = a.premise_override ? overrideDisclosure(a.premise_override) : null;
-    if (disclosure) text = `${disclosure}\n\n${text}`;
+    if (disclosure) body = `${disclosure}\n\n${body}`;
     const venue = entry && isObj(entry.venue) ? { name: entry.venue.name ?? null, how: entry.venue.how ?? null,
                                                   source: `profile:${entry.venue.profile || entry.profile}/action_kinds/${entry.kind}/venue` }
       : { state: "undetermined", why: "the profile gives this kind no venue" };
@@ -544,17 +621,23 @@ export class Filings {
     const facts = det ? det.findings.map((f) => this.#fact(f)) : [];
     const exhibits = this.#exhibits(this.#citesOf(a, det, facts), standard);
     const basis = this.#basisOf(a, det, gov);
-    const tpl = { from: source.from, source: source.source, ...(source.template ? { template: source.template, name: source.name } : {}) };
+    /* R29: the template and version, or null for the member's own words */
+    const tpl = used ? Filings.#templateOf(used) : null;
     const year = when.slice(0, 4);
     return this.record.transact(() => {
       const { id } = this.record.allocId("FIL", year);
       this.sql.exec(`INSERT INTO filing_drafts (filing_id, action_id, kind, tier, governing, text, blanks, unfilled,
                        advisory, venue, preparer, prepared_at, basis, exhibits, venue_standard, disclosure, template)
                      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-        id, a.id, a.kind, gov.tier, json(gov), text, json(blanks), json(unfilled), advisory, json(venue), who, when, json(basis),
+        id, a.id, a.kind, gov.tier, json(gov), body, json(blanks), json(unfilled), advisory, json(venue), who, when, json(basis),
         json(exhibits), json(standard), disclosure, json(tpl));
-      return { ok: true, id, action: a.id, tier: gov.tier, governing: gov, text, blanks, unfilled,
-               ...(gov.tier === 2 ? { advisory } : {}), venue, template: tpl, disclosure,
+      return { ok: true, id, action: a.id, tier: gov.tier, governing: gov, text: body, blanks, unfilled,
+               ...(gov.tier === 2 ? { advisory } : {}), venue, template: tpl,
+               ...(used ? { template_version: { name: used.name, state: used.state, profiles: used.profiles,
+                                                  ...(used.default ? { default: true } : {}),
+                                                  ...(used.updated_by ? { updated_by: used.updated_by,
+                                                    says: `version ${used.number} is updated by ${used.updated_by}` } : {}) } } : {}),
+               ...(notFor ? { not_written_for: notFor } : {}), disclosure,
                exhibits, venue_standard: standard, label: proposalLabel(who, "filing_draft"),
                prepared_by: who, at: when, evidence: false, says: DRAFT_SAYS };
     });
@@ -670,9 +753,8 @@ export class Filings {
     if (typeof body === "string" && UNFILLED_RE.test(body))
       return { ok: false, reason: "STILL_UNFILLED", filing: d.filing_id, unfilled: [...body.matchAll(/\[UNFILLED: ([^\]\n]*)\]/g)].map((m) => m[1]),
                detail: "the text still holds a blank the record could not fill; a member writes it in first" };
-    if (typeof body !== "string" || !body.trim() || WELL_FORMED.test(body) || utf8(body) > FILING_TEXT_MAX)
-      return { ok: false, reason: "TEXT_UNWRITABLE", filing: d.filing_id, max_bytes: FILING_TEXT_MAX,
-               detail: `the approved text must be non-empty UTF-8 text of at most ${FILING_TEXT_MAX} bytes` };
+    const unwritable = Filings.#unwritable(body, { filing: d.filing_id });
+    if (unwritable) return unwritable;
     /* END DEC-49 REGION is-filing-approve */
     const at = this.#when();
     const sha = sha256HexSync(body);
@@ -881,7 +963,7 @@ export class Filings {
   }
 
   /* R9's deadlines: every claim deadline of the view, its date from a recorded start event only. */
-  #deadlines(v, a, det) {
+  #deadlines(v, a, det, viewer) {
     const rules = v.view && Array.isArray(v.view.deadlines) ? v.view.deadlines.filter((r) => r.applies_to === "claim") : [];
     const entries = a.correspondence.map((e, i) => ({ ...e, ord: Number.isInteger(e.ord) ? e.ord : i }));
     const first = (dir) => entries.filter((e) => e.direction === dir && realDate(String(e.at ?? "").slice(0, 10)))
@@ -898,7 +980,9 @@ export class Filings {
           : { event: r.starts, state: "undetermined", why: `the action's correspondence holds no ${r.starts === "received" ? "received" : "sent"} entry` };
       } else start = { event: r.starts ?? null, state: "undetermined",
                        why: r.starts === "known" ? "the record holds no date on which the group knew of the act" : "the rule names no start event this record holds" };
-      const date = deadlineDate({ start: start.date ?? null, days: r.days, count: r.count, holidays: v.view.holidays });
+      /* R30: counted as action-clocks R10 counts, on the entries for the action's office, each read through local-facts */
+      const date = deadlineDate({ start: start.date ?? null, days: r.days, count: r.count, view: v.view,
+                                  counterparty: a.counterparty, kind: a.kind, factOf: factReader(this.localFacts, viewer) });
       return { rule: r.rule, days: r.days ?? null, count: r.count ?? null, starts: r.starts ?? null,
                ...(r.extension ? { extension: r.extension } : {}), citation: r.citation ?? null,
                basis: r.basis ?? null, profile: r.profile ?? null, source: `profile:${r.profile}/deadlines/${r.rule}`,
@@ -972,7 +1056,7 @@ export class Filings {
       theories: section("Candidate theories and remedies", theories,
         { says: theories.length ? "each is a candidate for counsel to weigh, never the group's position or a conclusion"
                                 : "no candidate theory or remedy has been proposed for this action" }),
-      deadlines: section("Deadlines", this.#deadlines(v, a, det),
+      deadlines: section("Deadlines", this.#deadlines(v, a, det, viewer),
         { says: v.view ? `each date is computed only from a recorded start event (${COUNTED_FROM}), else undetermined with why`
                        : `${v.why}, so no claim deadline is known` }),
       consequences: section("Consequences of the breach",
@@ -1032,8 +1116,9 @@ export class Filings {
     return { name: c.name.trim(), organisation: c.organisation.trim(), ...(c.contact != null ? { contact: c.contact.trim() } : {}) };
   }
 
-  /** R8–R10, R12: a counsel packet for the counsel a member names; assembling again makes a new version. */
-  counselPacket({ action = null, counsel = null, author = null, viewer = null } = {}) {
+  /** R8–R10, R12, R31: a counsel packet, for the counsel a member names or (below Tier 3) for the group's own review,
+   *  with a `briefing` section filled from a `brief` template when one is named; assembling again makes a new version. */
+  counselPacket({ action = null, counsel = null, template = null, author = null, viewer = null } = {}) {
     const who = str(author);
     /* DEC-49 REGION is-counsel-packet */
     if (!who || isMachineIdentity(who))
@@ -1042,40 +1127,76 @@ export class Filings {
                            : "no member is named as the one naming counsel" };
     const a = this.#action(action, viewer);
     if (!a) return this.#noAction(action);
+    /* R8 (K924): a packet at every governing tier; counsel is required at Tier 3 or an undetermined tier (never read as
+       1, D-182), optional below it, and one given is named by both a name and an organisation. */
     const gov = this.governingTier(a);
-    if (gov.tier !== 3)
-      return { ok: false, reason: "NOT_TIER3", action: a.id, governing: gov,
-               detail: "a counsel packet is assembled only for a governing tier of 3" };
-    const c = this.#counsel(counsel);
-    if (!c) return { ok: false, reason: "NO_COUNSEL", max: COUNSEL_FIELD_MAX,
-                     detail: "counsel is named by a name and an organisation (contact optional), each one line of at most "
-                           + `${COUNSEL_FIELD_MAX} characters` };
-    const { det } = this.#restsOn(a, viewer);
+    const needed = gov.tier === 3 || gov.tier === "undetermined";
+    const c = counsel == null && !needed ? null : this.#counsel(counsel);
+    if (counsel == null ? needed : !c)
+      return { ok: false, reason: "NO_COUNSEL", max: COUNSEL_FIELD_MAX, action: a.id, governing: gov,
+               detail: `${needed ? `at a governing tier of ${gov.tier === 3 ? "3" : "undetermined"} counsel is named` : "counsel, when named,"} `
+                     + `by a name and an organisation (contact optional), each one line of at most ${COUNSEL_FIELD_MAX} characters` };
+    /* END DEC-49 REGION is-counsel-packet */
+    /* R31: a `brief` template, its version and refusals as R28's */
+    let used = null;
+    if (template != null && template !== "") {
+      used = this.#offered(template, viewer);
+      if (!used || used.ok === false) return used;
+      /* DEC-49 REGION is-template-use-file */
+      if (used.use !== "brief")
+        return { ok: false, reason: "TEMPLATE_USE_FILE", template: used.template, version: used.version,
+                 detail: "this template is wording the group files in its own name: a briefing takes a brief template" };
+      /* END DEC-49 REGION is-template-use-file */
+      const mismatch = Filings.#kindMismatch(used, a);
+      if (mismatch) return mismatch;
+    }
+    const { det, hidden } = this.#restsOn(a, viewer);
+    /* DEC-49 REGION is-counsel-packet-basis */
     if (!det && !a.premise_override)
       return { ok: false, reason: "NO_DETERMINATION", action: a.id,
                detail: this.conformance ? "the action rests on no live determination you may see, and states no premise override, so there are no facts to assemble"
                  : "no module answers determinations here, so no live determination can be read" };
-    /* END DEC-49 REGION is-counsel-packet */
+    /* END DEC-49 REGION is-counsel-packet-basis */
     const marking = counselMarking(c);
     const sections = this.#assemble(a, det, viewer, marking);
+    const at = this.#when();
+    if (used) sections.briefing = this.#briefing(used, a, det, hidden, viewer, at, marking);
+    const tpl = used ? Filings.#templateOf(used) : null;
     const basis = this.#packetBasis(det, a);
     const disclosure = a.premise_override ? overrideDisclosure(a.premise_override) : null;
-    const at = this.#when();
     return this.record.transact(() => {
       const held = this.#one(`SELECT packet_id, MAX(version) AS v FROM counsel_packets WHERE action_id=? GROUP BY packet_id
                                ORDER BY packet_id LIMIT 1`, a.id);
       const id = held ? held.packet_id : this.record.allocId("CPK", at.slice(0, 4)).id;
       const version = held ? Number(held.v) + 1 : 1;
-      this.sql.exec(`INSERT INTO counsel_packets (packet_id, version, action_id, counsel, author, at, sections, basis, disclosure)
-                     VALUES (?,?,?,?,?,?,?,?,?)`, id, version, a.id, json(c), who, at, json(sections), json(basis), disclosure);
+      this.sql.exec(`INSERT INTO counsel_packets (packet_id, version, action_id, counsel, author, at, sections, basis, disclosure,
+                       template) VALUES (?,?,?,?,?,?,?,?,?,?)`,
+                    id, version, a.id, json(c), who, at, json(sections), json(basis), disclosure, json(tpl));
       return { ok: true, id, version, action: a.id, head: this.#head(id, version, a.id, c, who, at, marking, disclosure),
-               sections, marking, disclosure, fileable: false, basis_changed: null };
+               sections, marking, disclosure, fileable: false, template: tpl, basis_changed: null };
     });
   }
 
+  /* R31: the packet's seventh section: a `brief` template's text filled from the record as R3 fills a filing, each filled
+     blank naming its source, carrying R10's marking and, as R29's draft does, the statement that the template was not
+     written for the kind's jurisdiction. */
+  #briefing(used, a, det, hidden, viewer, at, marking) {
+    const v = this.#view();
+    const entry = v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((k) => k.kind === a.kind) || null : null;
+    const filled = this.#fill(used.text, this.#values(a, det, hidden, entry, viewer, at));
+    const notFor = Filings.#notWrittenFor(used, entry);
+    return { title: "Briefing", marking, text: notFor ? `${notFor}\n\n${filled.text}` : filled.text,
+             items: filled.blanks, unfilled: filled.unfilled, template: Filings.#templateOf(used),
+             ...(notFor ? { not_written_for: notFor } : {}),
+             says: "the group's briefing to counsel, filled from the record from a brief template; it is not a filing and "
+                 + "cannot be filed as it stands" };
+  }
+
   #head(id, version, action, counsel, author, at, marking, disclosure = null) {
-    return { packet: id, version, action, counsel, assembled_by: author, at, ...(disclosure ? { disclosure } : {}), marking, fileable: false,
-             says: "prepared for counsel's review from the record; it is never published and is not in a form that can be filed" };
+    return { packet: id, version, action, counsel: counsel && counsel.name ? counsel : null, assembled_by: author, at,
+             ...(disclosure ? { disclosure } : {}), marking, fileable: false,
+             says: `prepared ${counsel && counsel.name ? "for counsel's review" : "for the group's own review, no counsel named"} `
+                 + "from the record; it is never published and is not in a form that can be filed" };
   }
 
   /* A packet's versions the viewer may see, through its action and the project each version draws on (R11, R19;
@@ -1088,13 +1209,37 @@ export class Filings {
     return seen.length ? seen : null;
   }
 
+  /* R29, R31: the template a draft or packet version recorded, shown with the version's state, approver and reviews as
+     `filing-templates` reads it now (`templateRead`, its R14), and flagged when that version was since updated or its
+     template retired. Nothing in the draft or packet changes, and no approval is refused for it. A draft filled from
+     the member's own words recorded `template: null`; one stored before T21 recorded no version, and is shown as stored. */
+  #templateShown(stored, viewer) {
+    if (!isObj(stored) || !str(stored.id) || stored.version == null) return stored ?? null;
+    const t = this.filingTemplates;
+    const r = t && typeof t.templateRead === "function"
+      ? this.#call(() => t.templateRead({ template: stored.id, version: stored.version, viewer })) : null;
+    if (!r || r.ok === false) return { ...stored, read: false, says: "the template is not readable here now" };
+    const ver = r.version || {};
+    const retired = r.template && r.template.retired ? r.template.retired : null;
+    const flags = [
+      ...(ver.updated_by ? [{ flag: "updated", by: ver.updated_by,
+                              says: `prepared from version ${stored.version}, since updated by version ${String(ver.updated_by).split("@").pop()}` }] : []),
+      ...(retired ? [{ flag: "retired", reason: retired.reason ?? null, at: retired.at ?? null,
+                       says: `prepared from a template since retired: ${retired.reason ?? "no reason stated"}` }] : []),
+    ];
+    return { ...stored, name: r.template ? r.template.name : null, state: ver.state ?? null,
+             approved: ver.approved ? { by: ver.approved.by, at: ver.approved.at } : null,
+             reviews: ver.reviews_summary ?? null, ...(flags.length ? { flags } : {}) };
+  }
+
   #version(r, rows, viewer) {
-    const counsel = parse(r.counsel) || {};
+    const counsel = parse(r.counsel);
     const marking = counselMarking(counsel);
     const causes = this.#basisChanged(parse(r.basis) || {}, viewer);
     return { ok: true, id: r.packet_id, version: Number(r.version), action: r.action_id,
              head: this.#head(r.packet_id, Number(r.version), r.action_id, counsel, r.author, r.at, marking, r.disclosure ?? null),
              sections: parse(r.sections), marking, disclosure: r.disclosure ?? null, fileable: false,
+             template: this.#templateShown(parse(r.template), viewer),
              basis_changed: causes.length ? { causes } : null,
              versions: rows.map((x) => Number(x.version)) };
   }
@@ -1120,6 +1265,7 @@ export class Filings {
     for (const s of Object.values(v.sections || {})) {
       lines.push(`## ${s.title}`, "", s.marking, "");
       if (s.says) lines.push(s.says, "");
+      if (typeof s.text === "string") lines.push(s.text, "");
       for (const x of s.items || []) lines.push(item(x));
       for (const x of s.undated || []) lines.push(item({ undated: true, ...x }));
       lines.push("");
@@ -1198,12 +1344,12 @@ export class Filings {
     if (!a) return this.#noAction(action);
     /* R23: the action's communications are listed among its drafts, marked a communication. */
     const drafts = this.#seenRows(FILINGS_FOR_MAX + 1, viewer,
-      `SELECT d.filing_id, d.tier, d.preparer, d.prepared_at, d.basis, d.form, d.purpose, ap.approved_by, ap.at AS approved_at,
-              ap.sha, s.ord, s.sent_on, s.recorded_by, s.recorded_at
-         FROM (SELECT filing_id, tier, preparer, prepared_at, basis, 'filing' AS form, NULL AS purpose
+      `SELECT d.filing_id, d.tier, d.preparer, d.prepared_at, d.basis, d.form, d.purpose, d.template, ap.approved_by,
+              ap.at AS approved_at, ap.sha, s.ord, s.sent_on, s.recorded_by, s.recorded_at
+         FROM (SELECT filing_id, tier, preparer, prepared_at, basis, 'filing' AS form, NULL AS purpose, template
                  FROM filing_drafts WHERE action_id=?
                UNION ALL
-               SELECT filing_id, NULL AS tier, preparer, prepared_at, basis, 'communication' AS form, purpose
+               SELECT filing_id, NULL AS tier, preparer, prepared_at, basis, 'communication' AS form, purpose, NULL AS template
                  FROM communication_drafts WHERE action_id=?) d
          LEFT JOIN filing_approvals ap ON ap.filing_id=d.filing_id
          LEFT JOIN filing_sendings s ON s.filing_id=d.filing_id
@@ -1213,7 +1359,8 @@ export class Filings {
     return {
       ok: true, action: a.id,
       drafts: drafts.slice(0, FILINGS_FOR_MAX).map((d) => ({
-        filing: d.filing_id, form: d.form, ...(d.form === "communication" ? { purpose: d.purpose } : { tier: d.tier }),
+        filing: d.filing_id, form: d.form,
+        ...(d.form === "communication" ? { purpose: d.purpose } : { tier: d.tier, template: this.#templateShown(parse(d.template), viewer) }),
         label: proposalLabel(d.preparer, d.form === "communication" ? "communication" : "filing_draft"), at: d.prepared_at,
         approval: d.approved_by ? { approved_by: d.approved_by, at: d.approved_at, sha: d.sha } : null,
         sending: d.recorded_by ? { ord: d.ord, sent_on: d.sent_on, recorded_by: d.recorded_by, at: d.recorded_at } : null })),
@@ -1221,6 +1368,7 @@ export class Filings {
       packets: versions.slice(0, FILINGS_FOR_MAX).map((r) => {
         const causes = this.#basisChanged(parse(r.basis) || {}, viewer);
         return { packet: r.packet_id, version: Number(r.version), counsel: parse(r.counsel), assembled_by: r.author, at: r.at,
+                 template: this.#templateShown(parse(r.template), viewer),
                  basis_changed: causes.length ? { causes } : null,
                  exports: this.#rows(`SELECT author, at, counsel, sha FROM counsel_packet_exports WHERE packet_id=? AND version=?
                                        ORDER BY export_id`, r.packet_id, r.version)
@@ -1279,80 +1427,41 @@ export class Filings {
     });
   }
 
-  /* ---------------------------------------------------------------- R26: the group's template library */
+  /* ---------------------------------------------------------------- R32: a template from an approved draft */
 
-  /** R26: a member keeps an approved draft (R6), or a derivative of its text, as a template of the group's, named, for
-   *  a kind or for none. No machine writes a template. */
-  templateSave({ from = null, text = undefined, name = null, kind = null, author = null, viewer = null } = {}) {
-    const who = str(author);
+  /** R32 (K922 (1)): a member starts a template draft from an approved filing draft (R6), or a draft of a new version of a
+   *  named template, by handing the approved text and `from: {filing, sha}` to `filing-templates.templateDraft` (its R3)
+   *  and answering its answer. A new template's `project` defaults to the project the draft drew on, its `kind` to the
+   *  action's, its `use` to `file` and its `profiles` to those that give the action's kind (else `general`); the R26
+   *  library is gone (K921), and its rows are `filing-templates`' to migrate (K927). */
+  templateSave({ filing = null, template = null, project = null, name = null, kind = null, use = null, profiles = null,
+                 notes = null, author = null, viewer = null } = {}) {
+    const d = this.#draft(filing, viewer);
+    if (!d) return this.#noFiling(filing);
+    const approved = this.#one(`SELECT text, sha FROM filing_approvals WHERE filing_id=?`, d.filing_id);
     /* DEC-49 REGION is-template-save */
-    if (!who || isMachineIdentity(who))
-      return { ok: false, reason: "MACHINE_CANNOT_SAVE_TEMPLATE",
-               detail: who ? `'${who.slice(0, 60)}' is a machine identity: only a member adds to the group's library`
-                           : "no member is named as the one saving the template" };
-    const n = typeof name === "string" ? name.trim() : "";
-    if (!n || n.length > TEMPLATE_NAME_MAX || /[\n\r]/.test(n) || WELL_FORMED.test(n))
-      return { ok: false, reason: "TEMPLATE_NAME_REFUSED", max: TEMPLATE_NAME_MAX,
-               detail: `a template is named in one line of at most ${TEMPLATE_NAME_MAX} characters` };
-    const k = kind == null || kind === "" ? null : String(kind);
-    if (k !== null && !KIND_RE.test(k))
-      return { ok: false, reason: "TEMPLATE_KIND_REFUSED", kind: k.slice(0, 60),
-               detail: "a kind is lower-case letters, digits and underscores; leave it out for a template of no kind" };
-    const d = this.#draft(from, viewer);
-    if (!d) return this.#noFiling(from);
-    const approved = this.#one(`SELECT text FROM filing_approvals WHERE filing_id=?`, d.filing_id);
     if (!approved) return { ok: false, reason: "TEMPLATE_FROM_UNAPPROVED", filing: d.filing_id,
-                            detail: "a template is kept from a draft a member has approved" };
-    const body = text === undefined || text === null ? approved.text : text;
-    if (typeof body !== "string" || !body.trim() || WELL_FORMED.test(body) || utf8(body) > FILING_TEXT_MAX)
-      return { ok: false, reason: "TEMPLATE_TEXT_REFUSED", max_bytes: FILING_TEXT_MAX,
-               detail: `a template's words must be non-empty UTF-8 text of at most ${FILING_TEXT_MAX} bytes` };
-    if (k !== null) {
-      const v = this.#view();
-      const entry = v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((e) => e.kind === k) : null;
-      if (entry && entry.tier === 3)
-        return { ok: false, reason: "TEMPLATE_KIND_TIER3", kind: k,
-                 detail: "the profile gives this kind tier 3: it requires competent counsel, and no template is kept for it" };
-    }
-    const taken = this.#one(`SELECT template_id FROM filing_templates WHERE name=?`, n);
-    if (taken) return { ok: false, reason: "TEMPLATE_NAME_TAKEN", name: n,
-                        detail: "the group's library already holds a template by this name" };
+                            detail: "a template is drafted from a draft a member has approved" };
     /* END DEC-49 REGION is-template-save */
-    const at = this.#when();
-    return this.record.transact(() => {
-      const { id } = this.record.allocId("TPL", at.slice(0, 4));
-      this.sql.exec(`INSERT INTO filing_templates (template_id, name, kind, text, from_filing, action_id, basis, author, at)
-                     VALUES (?,?,?,?,?,?,?,?,?)`, id, n, k, body, d.filing_id, d.action_id, d.basis, who, at);
-      return { ok: true, template: { id, name: n, kind: k, from: d.filing_id, derived: body !== approved.text, author: who, at,
-                                     blanks: [...new Set([...body.matchAll(BLANK_RE)].map((m) => m[1]))] },
-               says: "kept in the group's library: a member preparing a filing may name it; it is filled from the record as "
-                   + "the profile's template is, and nothing is filed until a member approves it" };
-    });
-  }
-
-  /* R26: a template the viewer may see (it is seen by whoever may see the project its approved draft drew on, K316), or
-     null: absent and unseen alike. */
-  #templateRow(id, viewer) {
-    const t = str(id) ? this.#one(`SELECT * FROM filing_templates WHERE template_id=?`, str(id)) : null;
-    return t && this.#sees(parse(t.basis), viewer) ? t : null;
-  }
-
-  /* R26: the templates of `kind` (or of none) the viewer may see, newest first, at most `n`. */
-  #templatesSeen(kind, viewer, n) {
-    return kind == null
-      ? this.#seenRows(n, viewer, `SELECT * FROM filing_templates ORDER BY at DESC, template_id DESC`)
-      : this.#seenRows(n, viewer, `SELECT * FROM filing_templates WHERE kind=? OR kind IS NULL ORDER BY at DESC, template_id DESC`, kind);
-  }
-
-  /** R26: the group's templates the viewer may see, for a kind (with those of no kind) or all, newest first. */
-  templatesFor({ kind = null, viewer = null } = {}) {
-    const k = kind == null || kind === "" ? null : String(kind);
-    const rows = this.#templatesSeen(k, viewer, TEMPLATES_FOR_MAX + 1);
-    return { ok: true, kind: k,
-             templates: rows.slice(0, TEMPLATES_FOR_MAX).map((t) => ({ template: t.template_id, name: t.name, kind: t.kind ?? null,
-               from: t.from_filing, author: t.author, at: t.at, text: t.text,
-               blanks: [...new Set([...t.text.matchAll(BLANK_RE)].map((m) => m[1]))] })),
-             truncated: rows.length > TEMPLATES_FOR_MAX };
+    const t = this.filingTemplates;
+    if (!t || typeof t.templateDraft !== "function")
+      return templatesRow({ ok: false, reason: "NO_SUCH_TEMPLATE", template: str(template),
+                            detail: "no module answers the group's templates here, so no template can be drafted" });
+    const named = template != null && template !== "";
+    const defaults = {};
+    if (!named) {
+      const v = this.#view();
+      const actionKind = d.kind || (this.#action(d.action_id, viewer) || {}).kind || null;
+      const entry = v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((k) => k.kind === (kind ?? actionKind)) : null;
+      const givers = entry ? [entry.profile, ...(Array.isArray(entry.bases) ? entry.bases.map((b) => b.profile) : [])].filter(Boolean) : [];
+      defaults.project = project ?? (parse(d.basis) || {}).project ?? null;
+      defaults.kind = kind ?? actionKind;
+      defaults.use = use ?? "file";
+      defaults.profiles = profiles ?? (givers.length ? [...new Set(givers)] : "general");
+      defaults.name = name;
+    }
+    return t.templateDraft({ ...(named ? { template } : defaults), text: approved.text, notes,
+                             from: { filing: d.filing_id, sha: approved.sha }, author, viewer });
   }
 
   /* ---------------------------------------------------------------- R15, R21: the available-actions block */
@@ -1477,18 +1586,18 @@ export function filingsOps(f, url, body) {
   const b = body && typeof body === "object" ? body : {};
   return {
     filingprepare: () => f.filingPrepare({ action: b.action ?? q("action"), template: b.template ?? q("template"),
-                                           preparer: q("author"), viewer: q("viewer") }),
+                                           text: b.text ?? null, preparer: q("author"), viewer: q("viewer") }),
     communicationprepare: () => f.communicationPrepare({ action: b.action ?? q("action"), text: b.text, purpose: b.purpose,
                                                          preparer: q("author"), viewer: q("viewer") }),
-    templatesave: () => f.templateSave({ from: b.from ?? q("from"), text: b.text, name: b.name, kind: b.kind ?? null,
-                                         author: q("author"), viewer: q("viewer") }),
-    templates: () => f.templatesFor({ kind: q("kind"), viewer: q("viewer") }),
+    templatesave: () => f.templateSave({ filing: b.filing ?? q("filing"), template: b.template ?? q("template"),
+                                         project: b.project ?? null, name: b.name ?? null, kind: b.kind ?? null, use: b.use ?? null,
+                                         profiles: b.profiles ?? null, notes: b.notes ?? null, author: q("author"), viewer: q("viewer") }),
     filingapprove: () => f.filingApprove({ filing: b.filing ?? q("filing"), text: b.text, author: q("author"), viewer: q("viewer") }),
     filingsent: () => f.filingRecordSent({ filing: b.filing ?? q("filing"), at: b.at ?? q("at"), medium: b.medium ?? null,
                                            artifactSha: b.artifactSha ?? b.artifact_sha ?? null, account: b.account ?? null,
                                            author: q("author"), viewer: q("viewer") }),
-    counselpacket: () => f.counselPacket({ action: b.action ?? q("action"), counsel: b.counsel ?? null, author: q("author"),
-                                           viewer: q("viewer") }),
+    counselpacket: () => f.counselPacket({ action: b.action ?? q("action"), counsel: b.counsel ?? null,
+                                           template: b.template ?? q("template"), author: q("author"), viewer: q("viewer") }),
     counselpacketread: () => f.counselPacketRead({ id: q("id"), version: q("version"), viewer: q("viewer") }),
     counselpacketexport: () => f.counselPacketExport({ id: b.id ?? q("id"), version: b.version ?? q("version"),
                                                        author: q("author"), viewer: q("viewer") }),

@@ -46,9 +46,10 @@ const isByteArrayLike = (c) => c !== null && typeof c === 'object' && !(c instan
  *  coerced mod 256, so Apps Script signed bytes agree); hex() finalizes.
  *  A string, or anything else that is not bytes, is a TypeError (R20): it
  *  used to be hashed as ZERO bytes, which is a digest of nothing that reads
- *  like a digest of the input. Battery-cross-validated against WebCrypto on
- *  multiple sizes and chunk boundary offsets: a wrong hash here would silently
- *  corrupt every gate verdict, so the battery is load-bearing, not decorative. */
+ *  like a digest of the input. The module's tests (digests.test.mjs, R20–R22)
+ *  cross-validate it against WebCrypto over many sizes and chunk boundary
+ *  offsets: a wrong hash here would silently corrupt every gate verdict, so
+ *  those tests are load-bearing, not decorative. */
 export function createSha256() {
   let h0 = 0x6a09e667 | 0, h1 = 0xbb67ae85 | 0, h2 = 0x3c6ef372 | 0, h3 = 0xa54ff53a | 0;
   let h4 = 0x510e527f | 0, h5 = 0x9b05688c | 0, h6 = 0x1f83d9ab | 0, h7 = 0x5be0cd19 | 0;
