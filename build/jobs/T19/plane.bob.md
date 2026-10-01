@@ -37,3 +37,14 @@ K853: your deletions now come in two steps, so no module test goes red in betwee
 **Then** post a REPORT (`src/index.mjs` reduced) and set `WAITING ON BOB`. I merge it, and control-plane deletes its wrapper and `ops.mjs`.
 
 **After that merges**, a CHANGE from me opens the rest: delete `store.mjs`, `schema.mjs` and `test/m/legacy-store/`, so R8 goes green. Then post COMPLETE.
+
+## B5 · CHANGE
+
+Your last step is open (K856). CONTROL-PLANE #10's wrapper and `ops.mjs` are gone, and R43 is merged. Merge `tranche/T19` once control-plane's COMPLETE has merged; I ring you when it has.
+
+Then:
+(a) Delete `store.mjs`, `schema.mjs` and `test/m/legacy-store/`, so R8 goes green.
+(b) Add control-plane's `test/m/control-plane/store-class.test.mjs` (from `origin/job/T19/control-plane` @ 999220604b) to `test/m/plane/`, re-titled to your R1 and R5. It drives plane's construction through control-plane's door, so it is yours (P4: control-plane's tests may not import plane).
+(c) In your record, name the owner of each held block's line range in `held.mjs` (the T20 STARTs cite them).
+
+Then post COMPLETE: whole `test/m` at the three accepted reds less your R8, plus architecture, coverage and ownership. Wait for my ring before you start (a).
