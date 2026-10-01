@@ -15521,7 +15521,7 @@
    "recommendation": "Use distinct labels, icons and act rows with a link to each class's home, and have BOB rename the condition disposition 'noticed' so K356's 'Noticed' is unambiguous.",
    "whoDecides": "Design for the presentation; BOB for the vocabulary fix, recorded as a ruling; Bob only if the obligation class itself is to be renamed.",
    "brief": {
-    "stillOpen": "partly",
+    "stillOpen": false,
     "settledSince": "Nothing since 30 September settles the rest. Earlier rulings settle parts (below); the names and the overall treatment are still open.",
     "title": "The queue's three kinds of item: names, look and where each leads",
     "inOneBreath": "Should the queue's three kinds of item each get a plain name, its own look and its own buttons, and a link to where that kind of work lives, while staying one list?",
@@ -15733,6 +15733,18 @@
      "K628–K859 searched for queue labels and class treatment: nothing settles it"
     ],
     "size": "short"
+   },
+   "ruled": {
+    "date": "2026-10-01",
+    "by": "Bob",
+    "rulings": [
+     "K356",
+     "DEC-107",
+     "DEC-110"
+    ],
+    "status": "ruled",
+    "title": "The queue's three kinds of item: names, treatment, sorting",
+    "decided": "The queue is one list. Members see its three kinds as 'To do', 'Noticed' and 'Signal', each with its own icon, wording, buttons and an 'Open…' link to its home (until the flow model and the signal history exist, the link goes to the thing the item concerns). The default order is grouped by case, with to-dos, then noticed items, then signals; a member may re-sort by time added, time due, case or kind, and when sorted by case or kind the list folds into collapsible groups so a member can focus on one. The detailed look is Design's."
    }
   },
   {

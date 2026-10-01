@@ -1770,3 +1770,20 @@ response: **As recommended (Bob, 2026-10-01): B.** The claim page and the wizard
 decided: 2026-10-01 · Bob
 reasoning recorded in: this entry; the UX substrate's brief for question 27; Membership v2 §4.8.
 owed: the claim page's and wizard's wording (instance-setup), the administrator settings card (the redesign), and whether the copy can show its last claim date (BOB confirms); the UX page's question 27 marked ruled.
+
+### DEC-110 · answered
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 28: the queue's three kinds of item, their names and treatment)
+for: bob
+question: The three names members see ("To do", "Noticed", and "Signal" or "Status" for the third, replacing "Condition"), and whether each kind is shown differently, with its own icon, wording, buttons and a link to its home, while the queue stays one list in its present order.
+why it is Bob's: member vocabulary and UX (Bob's 1 August ruling: one queue, three kinds treated differently).
+provisional: NOTIFICATIONS.md "Presented and treated differently — decided"; queue R6's order (to-dos, noticed, signals), R12, R16, R19; "To do" (DEC-107) and "Noticed" (K356).
+alternative: (B) rename the chips only; (C) three separate sections or tabs.
+recommendation: (A) three plain names, three treatments, links home, "Signal" for the third.
+reversal cost: low.
+response: **Bob, 2026-10-01: as recommended (A, "Signal"), with re-sorting and folding:**
+  1. "It's my sense that the queue should be re-sortable based on time added, time due, case, type."
+  2. "When sorted by case or type, the queue should be collapsable (by case or type) so that a member can focus."
+  3. "otherwise, as recommended": members see "To do", "Noticed" and "Signal"; each kind has its own icon, wording, buttons and an "Open…" link to its home (until the flow model and signal history exist, the link goes to the thing the item concerns); the queue stays one list, its default order grouped by case with to-dos, then noticed items, then signals. The internal "noticed" disposition clash is the architecture session's to rename.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 28; NOTIFICATIONS.md (RULED 2026-10-01).
+owed: "Condition" re-worded to "Signal" in member-facing text; the queue read able to sort by time added, time due, case and kind (queue; BOB places it); the redesign's three item styles, sorting and collapsible groups; the UX page's question 28 marked ruled.

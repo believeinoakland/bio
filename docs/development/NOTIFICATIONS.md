@@ -138,6 +138,14 @@ TASK-is-the-attention-layer:
 So: one thing to learn, three places the work actually lives. The v0.2 collapse holds;
 what this adds is that the three classes are not three item types in one list but three
 DOMAINS the one list reaches into.
+**RULED 2026-10-01 by Bob (DEC-110): three member names, three treatments, and a queue members can re-sort and fold.**
+Members see the three kinds as **"To do"**, **"Noticed"** and **"Signal"** (the last replacing "Condition", which the
+auditor's findings use for "what happened"). Each kind has its own icon, wording and row of buttons, and an "Open…" link to its
+home; until the flow model and the signal history exist, the link goes to the thing the item is about. The queue stays one list.
+Its default order is as above (grouped by case; to-dos, then noticed items, then signals), and a member may re-sort it by **time
+added**, **time due**, **case** or **kind**. Sorted by case or by kind, the list folds into groups that can be collapsed, so a
+member can focus on one. The detailed look is Design's.
+
 
 ## The classes: three, not four severities
 
