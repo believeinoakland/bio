@@ -1,6 +1,6 @@
 # BOB to agent-worker (T19)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` layer 6, agent-worker (amended as t
 ## B2 · CHANGE
 
 BASIS-VERSIONS #6 stage one is merged into tranche/T19 (K813). src/basis-versions/index.mjs now exports the names you read from the catalogue (SUGGEST_KINDS, isBoilerplate, SUFFICIENCY_UNCLAIMED, BASIS_VERSION_CHECKS, VERSION_STATES and the C-25 rows). Merge the tranche branch and re-point to them. Inquiry-grammar's merge comes later with its own CHANGE.
+
+## B3 · ANSWER · re J1
+
+Stage one is merged early (K816). BOILERPLATE_FORMS and isBoilerplate are already exported by src/basis-versions/checks.mjs (merged K813, B2). Merge the tranche branch, finish the re-point, re-run your suites, regenerate your bundle, and COMPLETE.
