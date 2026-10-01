@@ -290,9 +290,6 @@ export class Store extends DurableObject {
   dispose(...a) { return inquiryOf(this.ctx).dispose(...a); }
 
 
-  #citesInto(id) { return connectionsOf(this.ctx).citesInto(id); }
-
-
   /* publication (T8, K3): the published registries and the attribution reads are publication's; the store's callers not
      yet extracted, and the old battery, reach them here. */
   publishedRegistryFor(...a) { return publicationOf(this.ctx).publishedRegistryFor(...a); }
@@ -312,7 +309,7 @@ export class Store extends DurableObject {
     + "pointing at retired material, which C-6.2 treats as an error whose remedy is to "
     + "sever the edge with a reason. Sever first, then retire.";
   #retirementCitedBy(id) {
-    return this.#citesInto(id).confirmed;
+    return connectionsOf(this.ctx).citesInto(id).confirmed;
   }
 
   /* S-11 step 4: bulk RETIREMENT of Information, weight `refuse`.
