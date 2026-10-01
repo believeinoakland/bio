@@ -13,9 +13,15 @@
 
 **Rows `awaiting stamp` (T19's promotion job):** C-33.3, C-101.3, C-101.4 (translations changed); C-117.7 `ADDRESSEE_NOT_AN_OFFICE`, C-117.8 `MACHINE_CANNOT_OVERRIDE`, C-117.9 `PREMISE_OVERRIDE_REWRITTEN`, C-117.10 `MACHINE_CANNOT_SET_CONTACT`, C-117.11 `CONTACT_NOT_A_MEMBER`, C-117.12 `PLAN_LINK_REWRITTEN`, C-117.13 `PLAN_LINK_REFUSED`, C-117.14 `MACHINE_CANNOT_MARK_PRESSURE`, C-117.15 `PRESSURE_REFUSED`, C-117.16 `PRESSURE_NOT_RECEIVED`, C-117.17 `PRESSURE_MARKED`, C-117.18 `PRESSURE_NO_ENTRY`, C-117.19 `PREMISE_OVERRIDE_REFUSED` (new).
 
-**Not yet done:** the split's deletion (J1 item 1), waiting for BOB's CHANGE saying action-clocks has merged.
+**The split's deletion done** (B4 CHANGE, K704, after action-clocks merged): `clockPropose`, `computeDeadline`, the `clock` subject of `PROPOSAL_SAYS`/`proposalLabelFor`, the `action_clock_proposals` table and its name in `ACTIONS_TABLES`, and the R32 test arm deleted (131 lines out, 12 in); R35's label removed from the projection test (its assertions are R25's own clause). Kept by K625 until monitoring re-points (layer 10): `pendingClocks`, its bounds, `PENDING_CLOCKS_BAD_BEFORE`'s row and the R31 tests.
 
-**Tests and checks so far:** `node --test test/m/actions/` 61 pass, 0 fail. Users' tests (`affordances`, `escalation`, `filings`, `instance-setup`, `monitoring`, `control-plane`): 386, 375 pass, 5 fail, the same 5 failing on `tranche/T18` without this change (filings R11, R15 ×2, R21: the publication split's re-points accepted red by K651; control-plane R36: N419). Checks: format 0 failures; architecture 0 failures; coverage 46 of 46 live ids named; ownership 0 failures (legacy-checks 0 added, 27 removed).
+**Found in another module (REPORTED in COMPLETE):** `filings` R7 (`test/m/filings/` "R7 the sending is one `sent` correspondence entry …") now fails: `src/filings/index.mjs`:573 offers clock entries through `actions.clockPropose`, which left with the split. Its re-point to `action-clocks` is filings' own entry this layer ("The split's share: `clockPropose` read from action-clocks"). Nothing else in another module.
+
+**Deferred:** R9's `entity_id` naming a person (needs the entities registry, not in this module's uses; ACTIONS #1's deferral). Nothing else.
+
+**Tests and checks (final):** `node --test test/m/actions/` 60 pass, 0 fail. Users' tests (`affordances`, `escalation`, `filings`, `instance-setup`, `monitoring`, `control-plane`, `action-clocks`): 406, 394 pass, 6 fail: filings R7 (above, filings' re-point), and the 5 that fail on `tranche/T18` without this job (filings R11, R15 ×2, R21: K651; control-plane R36: N419). Checks: format 0 failures; architecture 0 failures; coverage 46 of 46 live ids named; ownership 0 failures (legacy-checks: the first commit removed 27 lines, `RESOLUTIONS`, and added none).
+
+Size (session_01GDJca1oCWXbx9GUtgd2bh9): test runs 11, module lines 3829
 
 ## J1 · QUESTION
 
