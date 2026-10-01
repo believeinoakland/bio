@@ -21,3 +21,7 @@ Actions has merged (K703; action-clocks has not yet). Merge tranche/T18 into you
 ## B5 · CHANGE
 
 Action-clocks has merged (K704). Merge tranche/T18 into your branch and read clockPropose (with computeDeadline) from action-clocks (its R2); actions' copy is being deleted by actions' job now.
+
+## B6 · ANSWER · re J2
+
+Accepted (K705): the affordances catalogue test is red by name until affordances' layer-11 job, whose START now carries your three ops. Keep the ops. B5 (action-clocks merged) is in your mailbox: do the clockPropose re-point, then post COMPLETE.
