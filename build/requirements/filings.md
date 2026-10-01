@@ -75,7 +75,7 @@ Terms. The **governing tier** of an action is the stricter (higher) of its kind'
 - `conformance`: `determinationRead` (R3, R8, R9, R12).
 - `actions`: `actionRead`, `actionCorrespond`; `noSuchAction` (its R43), through which R1's, R8's and R13's `NO_SUCH_ACTION` is answered, in place of C-115.2 (N217, K275).
 - `action-clocks`: `clockPropose` (its R2; R7, R9), moved from `actions` R32 by K617's split.
-- `filing-templates` (K921, K922): `FILING_BLANKS`, `FILING_TEXT_MAX`, `blanksOf` (its R19; R3, R28), `offeredVersion` (its R25; R28, R31), `templateDraft` (its R3; R32), `templateRead` (its R14; R13, R29), `TEMPLATE_USES`.
+- `filing-templates` (K921, K922): `FILING_BLANKS`, `FILING_TEXT_MAX`, `blanksOf` (its R19; R3, R28), `offeredVersion` (its R25; R28, R31), `templateDraft` (its R3; R32), `templateRead` (its R14; R13, R29), `templatesFor` (its R14; R28's `TEMPLATE_NOT_NAMED` list), `TEMPLATE_USES`.
 - `local-facts` (K921): `factStatus`, `factPath` (its R2, R6; R30).
 - `consequences`: `consequencesOf` (R9).
 - `promotion`: `fact("producingGroup")` (R3; N331).
