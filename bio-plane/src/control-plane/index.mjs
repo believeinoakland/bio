@@ -1,8 +1,9 @@
-/* control-plane: THE INSTANCE'S DOORS (R1–R33). The Worker's HTTP entry — routing, the namespace gates,
-   authentication, admission, the stamps and the envelope — moved from legacy-index (`index.mjs`) at control-plane's
-   extraction (T12, K3, K93). An op's own handler is its module's: `makeFetch(hooks)` takes the arms that still live in
-   legacy-index (`publicOp` for the unauthenticated ops, `gatedOp` for the admitted ones) and routes to them, so
-   routing is one place while the arms still live there (the map's §3). */
+/* control-plane: THE INSTANCE'S DOOR (R1–R41). The Worker's HTTP entry — routing, the stamps, the answer's decoration
+   and envelope — moved from legacy-index (`index.mjs`) at control-plane's extraction (T12, K3, K93). Who may call an op is
+   `admission`'s and what each op is `op-declarations'` (the split, K617, K624 (2)): this door calls admission's gates in
+   R28's order and reads op-declarations' tables. An op's own handler is its module's: `makeFetch(hooks)` takes the arms
+   that still live in legacy-index (`publicOp` for the unauthenticated ops, `gatedOp` for the admitted ones) and routes
+   to them, so routing is one place while the arms still live there (the map's §3). */
 import { parseFrontmatter, createSha256, normalizeType, INSTALLATION_CHECKS,
          MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../../checks/bio-checks.mjs";
 /* R32: the doors' own rows (`checks.mjs`). */
@@ -536,7 +537,7 @@ const PLANE_LIMITS_STATEMENT = "bio-plane-limits/1 subrequests=10000";
 /* R1–R25: the Worker entry. `hooks.publicOp(ctx)` answers a public op whose handler still lives in legacy-index;
    `hooks.gatedOp(ctx)` an admitted op's handler there, or undefined for the generic forward below. */
 /* R17: the stamps a caller may never supply, in the query and in a body. */
-const QUERY_STAMPS = Object.freeze(["viewer", "identity", "author", "by", "actor", "who", "origin", "administer"]);
+const QUERY_STAMPS = Object.freeze(["viewer", "identity", "author", "by", "actor", "who", "origin", "administer", "aiCred"]);
 const BODY_STAMPS = Object.freeze(["actorIdentity", "actorViewer", "actorMemberId", "ownerMemberId", "assistantPrincipal",
                                    "migrationReplay"]);
 export function makeFetch(hooks = {}) {
@@ -1649,6 +1650,12 @@ export function makeFetch(hooks = {}) {
        span pinned above is not lengthened; a caller's `author` is overwritten. */
     /* N364 (case-authoring R34): the pre-flight asks what op=publish asks, of the same `author`, so it takes publish's
        stamp by publish's expression, in the same statement of its own. */
+    /* N407 (K649 (4); ratification R18, admission's `callerViewer`): the ceremony's pre-flight holds a minted agent
+       credential to the machine fences whatever its viewer stamp, and a member-scoped agent's stamp is its member's, so
+       the door names the credential beside the viewer, `aiCred` (its token id and principal, never its value), for an
+       agent caller alone; every other caller's is deleted with the stamps above. */
+    if (op === "publishpreflight" && cls === "ai")
+      inner.searchParams.set("aiCred", JSON.stringify({ tokenId: aiCred.tokenId, principal: aiCred.principal }));
     if (op === "publishtensions" || op === "publishpreflight")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     /* T6-13 (reevaluation R15, R16): the member who adopts a newer version, keeps the earlier one, or records a

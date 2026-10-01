@@ -74,3 +74,23 @@ test("R17, R29 (K727; action-plans R11, R31): optionpropose is stamped proposer 
   const plain = opCalls(v.env).find((x) => x.route === "planopen").params;
   assert.equal("proposer" in plain || "principal" in plain, false);
 });
+
+test("R17, R29 (N407; ratification R18): op=publishpreflight carries the agent caller's credential beside its viewer as aiCred (token id and principal, never the value), for an agent alone; a caller's own aiCred never reaches the store, on this op or any other", async () => {
+  const { w, list } = callers();
+  for (const c of list) {
+    w.env.calls.length = 0;
+    await call(w.env, { op: "publishpreflight", token: c.token, params: { ...c.params, aiCred: FORGED, project: "PROJ-1" }, method: "POST", body: {} });
+    const inner = opCalls(w.env).find((x) => x.route === "publishpreflight");
+    if (!inner) continue;
+    if (c.name === "agent") {
+      assert.deepEqual(JSON.parse(inner.params.aiCred), { tokenId: "agent-ann", principal: "member:ann" });
+      assert.equal(inner.params.viewer, "member:ann");
+      assert.equal(JSON.stringify(inner).includes(c.token), false, "the credential's value never travels");
+    } else assert.equal("aiCred" in inner.params, false, c.name);
+  }
+  /* negative control: another op never carries one, the agent's included */
+  const agent = list.find((c) => c.name === "agent");
+  w.env.calls.length = 0;
+  await call(w.env, { op: "index", token: agent.token, params: { aiCred: FORGED } });
+  assert.equal("aiCred" in opCalls(w.env)[0].params, false);
+});
