@@ -1708,3 +1708,17 @@ response: **As recommended (Bob, 2026-10-01): A.** The owner sets a letter per a
 decided: 2026-10-01 · Bob
 reasoning recorded in: this entry; the UX substrate's brief for question 22; Publication §7.
 owed: the bar screen's honest note (strength, project settings; BOB places it); later, on the trigger, audience standards as profile facts (jurisdictions); the UX page's question 22 marked ruled.
+
+### DEC-106 · answered
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 24: always knowing which side of the privacy fence you are on)
+for: bob
+question: Are members taught two spaces (working and published, with review copies and outgoing drafts as marked items on the working side) or three (with "shared for review" its own); and does each document and case carry a path-to-publication marker?
+why it is Bob's: UX principle (UI-KICKOFF's law that working and published material never share an ambiguous screen).
+provisional: a review copy never leaves the group's copy and is marked as what it is (Publication §6A); publishing is the only irreversible act, through the ceremony (DEC-19, DEC-80); the steps toward it are the path to publication (K356).
+alternative: (A) two spaces with banded in-between items; (B) three named spaces; (D) leave it to Design.
+recommendation: (C) two spaces plus a path marker on each item.
+reversal cost: low; nothing is built.
+response: **As recommended (Bob, 2026-10-01): C.** Two spaces with distinct frames, the working record and the published record; review copies and outgoing drafts appear inside the working frame with a band saying what they are and who can see them; each document and case carries a small path-to-publication marker. Frames, colours, bands and the marker's look are Design's.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 24; Interaction Constructs §W.
+owed: nothing new to build beyond the redesign's screens (the plainer definition of a review copy, "never shown to anyone outside the group except through a review link you issue", in the redesign's words); the UX page's question 24 marked ruled.

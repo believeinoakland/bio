@@ -14443,7 +14443,7 @@
    "recommendation": "Use two spaces with distinct frames plus a per-object path-to-publication marker, and treat the review copy as a working-side object with its own band; correct the semantics table's 'never served without a credential' wording.",
    "whoDecides": "Design, within Bob's stated principle; Bob only if the designer proposes a third space, since that changes how members are taught the fence.",
    "brief": {
-    "stillOpen": "partly",
+    "stillOpen": false,
     "settledSince": "",
     "title": "Always knowing which side of the privacy fence you are on",
     "inOneBreath": "How many 'spaces' should members be taught (private working and public published, or a third 'shared for review'), so that they always know whether what they are looking at is private or public?",
@@ -14654,6 +14654,18 @@
      "build/rulings.md K628–K859 checked: none bears on this question"
     ],
     "size": "quick"
+   },
+   "ruled": {
+    "date": "2026-10-01",
+    "by": "Bob",
+    "rulings": [
+     "DEC-19",
+     "DEC-80",
+     "DEC-106"
+    ],
+    "status": "ruled",
+    "title": "Always knowing which side of the privacy fence you are on",
+    "decided": "Members are taught two spaces, each with its own distinct frame: the group's private working record and the public published record. Review copies and outgoing drafts appear inside the working frame with a band saying what they are and who can see them (for example 'Shared for review: 2 people outside the group can read this'). Each document and case carries a small path-to-publication marker showing where it stands ('working → shared for review → published'). Publishing, through the ceremony, is the only crossing. Frames, colours, bands and the marker's look are Design's."
    }
   },
   {
