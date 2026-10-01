@@ -18,3 +18,7 @@
 - `ownership runtime-limits tranche/T21`: 1 files changed; 0 failures.
 
 Size (session_01QZhPT74LXukUHVTDZ8C1qw): test runs 1, module lines 306
+
+## J1 · REPORT
+
+Generated artifacts staled by this job (comment-only change to bio-plane/src/tokens.mjs, N469): bio-plane/dist/bio-plane.bundled.mjs (+ .bundle.json, owner not_product) and agent-worker/dist/agent-worker.bundled.mjs (+ .bundle.json, owner agent-worker). pdf-worker and ocr-worker bundles do not take tokens.mjs; cpu.mjs is unchanged. Regenerated nothing.
