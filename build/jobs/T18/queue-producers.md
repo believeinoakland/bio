@@ -35,3 +35,7 @@ Size (session_01NvidLD1YV6LuKzED8YRk5f): test runs 16, module lines 2,682
 ## J1 · REPORT
 
 Found in other modules (also in my record): (1) queue: Queue.PRODUCER_DEPS lacks actionClocks, escalation and actionPlans, so a caller's fakes for them do not reach queue-producers (queue's tests stub feedItems for the Action kinds, so nothing fails today). (2) action-plans R17: checkpointsDue takes no viewer; queue-producers gates R16 by the plan's project's sight itself (R11). (3) Generated artifact stale: bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (src/queue-producers/index.mjs changed).
+
+## J2 · COMPLETE
+
+queue-producers T18 done on job/T18/queue-producers (tranche/T18 merged, B2 applied). N-A11 (R8 widened; R15 action-clock-overdue as a CONDITION; R16 plan-checkpoint-due via checkpointsDue({nowMs}), K711; R17 escalation-stage-proposed) and N-A17 (R18 action-reminder) applied; R14 signer-self-registered built; R9 tested; the five converts (current, conclude-project, project-sight §10, leadslug, queue-conditions) are module tests. Not-yet-met marks met, to strike: R9, R14, R15, R16, R17, R18. Module tests 46/46, queue's 53/53; format, architecture, coverage (18/18), ownership: 0 failures. Nothing deferred; no catalogue row moved. Details in the record.
