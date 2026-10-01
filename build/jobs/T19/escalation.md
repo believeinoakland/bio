@@ -25,6 +25,10 @@
 
 Size (session_0131QaMvPWgDmvXkW5QZXTfK): test runs 4, module lines 1489
 
+**Re-opened by B3 (K837), answered by B4 (K838):** `tranche/T19` merged twice; `stages.test.mjs`:8 imports `ACTION_CATALOGUE_CHECKS` from `src/action-grammar/checks.mjs` (no longer `actions/checks.mjs`' re-export, which N447 drops); escalation uses action-grammar (K838). Re-run: `node --test test/m/escalation/` tests 35, pass 35, fail 0; `format` 0 failures; `architecture escalation` 12 product files, 45 relative imports, 0 failures; `coverage escalation` 25 of 25, 0 failures; `ownership escalation tranche/T19` 0 failures.
+
+Size (session_0131QaMvPWgDmvXkW5QZXTfK): test runs 6, module lines 1489
+
 ## J1 · QUESTION
 
 B1 says "rule 5: remove the arms' moved code in your layer; BOB serialises `store.mjs` edits". escalation has no `from`, so the ownership check gives me no write to `store.mjs` (§12.2), and K671 / R25 put the spread there with legacy-store's L10 job. **My reading (proceeding on it):** I publish `escalationOps(escalation, url, body)` from `src/escalation/ops.mjs` (re-exported by `index.mjs`), with its own number parser (the arms' use of `Store.#numberParam` moves into the map), tested at its interface; I leave `store.mjs` untouched, and its ten arms, `#numberParam` (still used by other arms) and the N216 comment go when legacy-store spreads the map. If you meant me to edit `store.mjs` (adding `escalation` to `from` as K812 did for inquiry-grammar), say so and I will remove the ten arms and add the import and the spread.
