@@ -1,6 +1,6 @@
 # agent-worker (T19)
 
-**Status** · session_016iPtbmv6EzkgnPETAiejP6 · depth 2 · COMPLETE · handled B2
+**Status** · session_016iPtbmv6EzkgnPETAiejP6 · depth 2 · COMPLETE · handled B3
 
 ## J1 · REPORT
 
@@ -9,3 +9,25 @@ Stage one pushed on `job/T19/agent-worker` at c77cd1b309 and ready to merge earl
 Still open, waiting on basis-versions' merge: `BOILERPLATE_FORMS` and `isBoilerplate` (plane-suggest.mjs, wire-vocabulary.test.mjs) are still read from the catalogue, because basis-versions does not export them yet. I finish the re-point when it merges.
 
 Found: (1) requirements' R48 "no pack at all" arm failed at tranche/T19 before my change: the real plane now publishes `pack` (control-plane R41), so the fixture carried one. Fixed in my test (the key is removed). (2) `bio-plane/test/airun.test.mjs` (an old suite) fails 4 at HEAD unarmed (V5, D1, D3, S1); my control F1 reads it and so reports NOT AS DECLARED for that reason only. No action asked (K619).
+
+## J2 · COMPLETE
+
+Complete at 3b4c3290f4 on `job/T19/agent-worker` (tranche/T19 merged after B2).
+
+**Entries applied.** (1) Rule 1 re-points: no agent-worker file imports or reads `bio-checks.mjs` (R48's assertion that no bundle input is the catalogue stays). `plane-capturerequest.mjs`: `CAPTURE_REQUEST_CHECKS` from capture-requests' `checks.mjs`, `isPublicHttpsLocator` from record-grammar's `locator.mjs`. `plane-suggest.mjs`: `VERSION_NAME_RE`, `BASIS_VERSION_CHECKS`, `BOILERPLATE_FORMS`, `isBoilerplate` from basis-versions' `index.mjs`, `OBJECT_TYPES` from record-grammar's `types.mjs`. `wire-vocabulary.test.mjs`: `VERSION_NAME_RE`, `isBoilerplate` from basis-versions. (2) N421: `plane-suggest.mjs` measures C-25.1's floor at basis-versions' `basisVersionFindings` (the shortest description it takes without a C-25.1 finding; it throws if the rule stops being a single floor), so no source text is read. The older suites' source-text arms are now interface arms through `test/inprocess.mjs`, a new instrument that runs the member's own handler in-process through a supplied run, a model run and a plan run. It records every env key read (with tripwires under STORE, CAPTURES, PUBLISHED, KV, D1 and a queue), every property touched on PLANE, every plane request and every global fetch. Converted: agent-worker.test §6 (bindings, routes, the op set floor and ceiling, the credential, SURFACE as an export), harness.test A6b (the gate's ending over every refused input against RUN_ENDINGS, no longer the header prose), A9 (ops reached; one meaning reader; the purity of every harness export under trapped fetch, clock, randomness and process, run twice for determinism) and B3, and fanout.test's two scans (payload spread; condition vocabulary). (3) N437: in my own comments, `coverage.mjs`, `CLAIMS.md`, `tools/deploy-fleet.mjs`, DIST delegations and old fleetbundles paths are re-worded in index.mjs, fleet-member.json, wrangler.jsonc and build.mjs, as are stale "source pin" comments in harness.mjs and subsession.mjs. `principal_source` no longer points at the missing CLAIMS.md (R29 unchanged).
+
+**Also fixed in my module.** R48's "no pack at all" arm was red at tranche/T19 because the real plane now publishes a pack; its fixture now removes the key. The control drivers follow the converted arms: A1–A4 and H8 matchers, F3 retired with its reason, and F2 re-anchored to `run-rules/rules.mjs`, where RUN_ENDINGS moved (it had stopped arming).
+
+**Deferred:** none.
+
+**Found elsewhere:** `bio-plane/test/airun.test.mjs` (an old suite) fails 4 at HEAD unarmed (V5, D1, D3, S1), so control F1 reads NOT AS DECLARED for that reason alone. No action asked (K619).
+
+**Generated artifact:** my own bundle was regenerated with `npm run build` (13 inputs, no catalogue); R45 is fresh at this commit.
+
+**Tests and checks.** agent-worker 140/0, cascade 29/0, fanout 184/0, harness 261/0, plan 55/0, requirements 272/0, versions 20/0, wire-vocabulary 83/0. Controls: agent-worker A1–A4 4/4 as declared; harness H8 and F2 as declared, F3 retired, F1 as above. Checks: format 0 failures; architecture 31 files, 83 imports, 0 failures; coverage 53 of 53 ids, 0 failures; ownership 19 files, 0 failures.
+
+Size (session_016iPtbmv6EzkgnPETAiejP6): test runs 40, module lines 3763
+
+## J3 · COMPLETE
+
+Re B3: already done in J2 (3b4c3290f4: isBoilerplate and BOILERPLATE_FORMS from basis-versions' index.mjs, which re-exports checks.mjs). tranche/T19 merged again at 1503124cea; bundle rebuilt, byte-identical (no diff); all eight suites green as in J2 (140, 29, 184, 261, 55, 272, 20, 83; 0 fail). J2's record stands. Size (session_016iPtbmv6EzkgnPETAiejP6): test runs 48, module lines 3763
