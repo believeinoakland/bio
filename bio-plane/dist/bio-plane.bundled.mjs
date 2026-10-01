@@ -72931,6 +72931,9 @@ var CAUSE_SOURCES = Object.freeze([
   "weakened"
 ]);
 var CORRECTIONS_UNREAD = "the contradiction module's tensions read could not be made, so whether a side this rests on was named wrong was not read and no corrected cause could be derived; that is not the same as none";
+var CASE_PARTS_ABSENT = "no module has registered the cited parts of a case edition, so which cases a project owns was not read and no wp_retraction cause could be derived; that is not the same as none";
+var WORK_PRODUCTS_UNREAD = "the cases a project owns, or their ratified editions, could not be read, so a wp_retraction cause may be missing; that is not the same as none";
+var WORK_PRODUCT_CASES_PAGE = 200;
 var CORRECTED_LIMIT_DEFAULT = 200;
 var CORRECTED_LIMIT_MAX = 200;
 var RAISED_ON = Object.freeze(["affected", "undetermined"]);
@@ -73120,8 +73123,9 @@ var Reevaluation = class {
     return latest;
   }
   /** R2, R16: one target's own row, answered as "has anything moved under a leg naming it?". `null` when nothing has,
-   *  which is the common case and what keeps the untargeted sweep cheap. `reg` is the published registry (null unread). */
-  #moved(targetId, visible, reg) {
+   *  which is the common case and what keeps the untargeted sweep cheap. `reg` is the published registry (null unread);
+   *  `wp` the answer's work-product reader (`#workProducts`). */
+  #moved(targetId, visible, reg, wp = this.#workProducts()) {
     const row2 = this.#targetRow(targetId);
     if (!row2)
       return {
@@ -73170,19 +73174,14 @@ var Reevaluation = class {
         detail: `${targetId} was picked back up from ${row2.prior_state}. What it concluded is being worked again, which is a reason to look at what rests on it.`
       });
     const type = normalizeType(row2.object_type);
-    const fm = type === "information" || type === "project" || reg && reg[targetId] && reg[targetId].latest > 0 ? this.#frontmatterOf(targetId) : null;
+    const fm = type === "information" || reg && reg[targetId] && reg[targetId].latest > 0 ? this.#frontmatterOf(targetId) : null;
     if (type === "information" && fm && (fm.source_status === "modified" || fm.source_status === "removed"))
       causes.push({
         source: "source_status",
         since: row2.last_updated,
         detail: fm.source_status === "removed" ? `the source of ${targetId} no longer serves it (source_status: removed). What a claim quotes from it can no longer be checked against the source.` : `the source of ${targetId} has changed since it was captured (source_status: modified); both versions are kept, and a claim resting on it rests on the earlier one.`
       });
-    if (type === "project" && fm && (fm.workproduct_state === "retracted" || fm.workproduct_state === "redistributed"))
-      causes.push({
-        source: "wp_retraction",
-        since: row2.last_updated,
-        detail: `the work product ${targetId} was ${fm.workproduct_state === "retracted" ? "retracted" : "re-distributed"}, so what a claim took from it may no longer be what its authors stand behind.`
-      });
+    if (type === "project") causes.push(...wp.of(targetId));
     const ann = this.#addressedAnnotation(targetId);
     if (ann)
       causes.push({
@@ -73205,6 +73204,92 @@ var Reevaluation = class {
       withheld,
       ...supersededBy && supersededBy.length ? { superseded_by: supersededBy } : {}
     };
+  }
+  /** R16 (N457, K901): the `wp_retraction` causes, read once per answer. A project's work product is a case it owns
+   *  (DEC-72); the cause stands on the project when such a case has a ratified edition superseded by a later ratified
+   *  one (a correction is a new edition, publication R24), one cause per case, `since` the latest edition's
+   *  ratification. The cases and their owning project come through R26's registration (`cases`, `parts`' `project`),
+   *  their editions through promotion's fact `publishedCaseRegistry`, never a later module's service (P4). A withdrawn
+   *  edition has no record form, so nothing raises the cause for one. Answers `{of(project), flags()}`: `of` the causes
+   *  on one project, the cases paged through on its first call; `flags` what the answer states when the read could not
+   *  be made (R21): `case_parts_absent` with none registered, `work_products_read: false` when a read failed. */
+  #workProducts() {
+    const state = { asked: false, absent: false, read: true, owned: null, causes: /* @__PURE__ */ new Map() };
+    const owned = (reg) => {
+      const byProject = /* @__PURE__ */ new Map();
+      let after = "";
+      for (; ; ) {
+        let page = null;
+        try {
+          page = reg.cases({ after, limit: WORK_PRODUCT_CASES_PAGE });
+        } catch {
+          page = null;
+        }
+        if (!page || !Array.isArray(page.cases)) {
+          state.read = false;
+          break;
+        }
+        const ids = page.cases.filter((c) => typeof c === "string" && c);
+        for (const id of ids) {
+          let a = null;
+          try {
+            a = reg.parts({ case: id });
+          } catch {
+            a = null;
+          }
+          if (!a) {
+            state.read = false;
+            continue;
+          }
+          const project = a.ok === false ? null : str5(a.project);
+          if (!project) continue;
+          if (!byProject.has(project)) byProject.set(project, []);
+          if (!byProject.get(project).includes(id)) byProject.get(project).push(id);
+        }
+        const next = typeof page.cursor === "string" ? page.cursor : null;
+        if (!ids.length || next === null || next <= after) break;
+        after = next;
+      }
+      return byProject;
+    };
+    const of = (project) => {
+      state.asked = true;
+      if (state.causes.has(project)) return state.causes.get(project);
+      const reg = this.#caseParts;
+      if (!reg) {
+        state.absent = true;
+        return [];
+      }
+      if (!state.owned) state.owned = owned(reg);
+      const ids = [...state.owned.get(project) || []].sort();
+      const out = [];
+      if (ids.length) {
+        const f17 = this.promotion.fact("publishedCaseRegistry", ids);
+        const value = f17 && f17.ok && f17.value && typeof f17.value === "object" ? f17.value : null;
+        if (!value) state.read = false;
+        for (const id of value ? ids : []) {
+          const e = value[id];
+          const eds = (e && e.editions && typeof e.editions === "object" ? Object.values(e.editions) : []).filter((x) => x && Number.isInteger(Number(x.edition)) && typeof x.ratified_at === "string" && x.ratified_at).sort((x, y) => Number(x.edition) - Number(y.edition));
+          if (eds.length < 2) continue;
+          const latest = eds[eds.length - 1], prior = eds[eds.length - 2];
+          out.push({
+            source: "wp_retraction",
+            since: latest.ratified_at,
+            case: id,
+            edition: Number(latest.edition),
+            superseded_edition: Number(prior.edition),
+            detail: `case ${id}, a work product of ${project}, was corrected: its ratified edition ${Number(prior.edition)} is superseded by edition ${Number(latest.edition)}, ratified at ${latest.ratified_at}. Edition ${Number(prior.edition)} keeps answering as it was signed, and what a claim took from the work product may no longer be what its authors stand behind.`
+          });
+        }
+      }
+      state.causes.set(project, out);
+      return out;
+    };
+    const flags = () => !state.asked ? {} : {
+      ...state.absent ? { case_parts_absent: true, case_parts_why: CASE_PARTS_ABSENT } : {},
+      ...state.read ? {} : { work_products_read: false, work_products_why: WORK_PRODUCTS_UNREAD }
+    };
+    return { of, flags };
   }
   /* R16: the recorded re-evaluations of the (dependent, target) pairs one answer lists, keyed (dependent, target,
      source): the LATEST record of each key, which is the one with the latest `since`, because a record is only written
@@ -73553,6 +73638,7 @@ var Reevaluation = class {
     const dependents = t0 ? [t0] : this.#rows(`SELECT DISTINCT bundle_id FROM inquiry_basis ORDER BY bundle_id`).map((r) => r.bundle_id);
     const visible = this.#redactor(viewer);
     const reg = this.#registry([...targets, ...dependents]);
+    const wp = this.#workProducts();
     const obligations = [], closedOnly = [];
     const found = [];
     let withheld = false;
@@ -73563,7 +73649,7 @@ var Reevaluation = class {
     const srcm = this.#sourceMoves(onTargets, visible);
     const correctedOn = new Set([...corr.byPair.keys(), ...srcm.byPair.keys()].map((k) => k.slice(k.indexOf("\0") + 1)));
     for (const t of targets) {
-      const moved = this.#moved(t, visible, reg);
+      const moved = this.#moved(t, visible, reg, wp);
       if (!moved && !correctedOn.has(t)) continue;
       if (!t0 && !(moved && moved.held === false) && visible(t) === null) continue;
       if (moved && moved.withheld) withheld = true;
@@ -73670,7 +73756,8 @@ var Reevaluation = class {
       editions_read: reg !== null,
       ...reg === null ? { editions_why: "no module provides the published registry, so no edition was read and no edition cause could be derived; that is not the same as none" } : {},
       corrections_read: corr.read,
-      ...corr.read ? {} : { corrections_why: CORRECTIONS_UNREAD }
+      ...corr.read ? {} : { corrections_why: CORRECTIONS_UNREAD },
+      ...wp.flags()
     };
   }
   /** R5 (REC-118 / D-410): an obligation's leg letters, resolved against what the record can earn, so the two halves of
@@ -73799,10 +73886,11 @@ var Reevaluation = class {
     const visible = this.#redactor(viewer);
     const seen = fl.filter((id) => this.#visible(id, viewer));
     const reg = this.#registry(seen);
+    const wp = this.#workProducts();
     const corr = this.#standingCorrected(seen, viewer, visible, { withSource: true });
     const outF = fl.map((id) => {
       if (!seen.includes(id)) return { id, absent: true };
-      const moved = this.#moved(id, visible, reg);
+      const moved = this.#moved(id, visible, reg, wp);
       const causes = moved ? [...moved.causes] : [];
       if (moved && moved.edition)
         causes.push({
@@ -73854,7 +73942,8 @@ var Reevaluation = class {
       wrote: false,
       ...reg === null ? { editions_read: false } : { editions_read: true },
       corrections_read: corr.read,
-      ...corr.read ? {} : { corrections_why: CORRECTIONS_UNREAD }
+      ...corr.read ? {} : { corrections_why: CORRECTIONS_UNREAD },
+      ...wp.flags()
     };
   }
   /* R9, R27 (and R28 `withSource`): the corrected (and source) causes the named dependents carry on their own legs,
@@ -100282,7 +100371,7 @@ function checkProjectExtension(ctx, findings) {
 }
 var PROJECT_GRAMMAR = Object.freeze({
   module: "intent",
-  ids: Object.freeze(["C-2.9", "C-9.1"]),
+  ids: Object.freeze(["C-2.9"]),
   arm: checkProjectExtension
 });
 var registered2 = /* @__PURE__ */ new WeakSet();
