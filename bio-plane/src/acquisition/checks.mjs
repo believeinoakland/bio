@@ -4,7 +4,7 @@
  *
  * Copied from the check catalogue (`bio-plane/checks/bio-checks.mjs`) with the acquisition act (K617, K649 (1)): C-48.1–
  * C-48.7 (the Drive arm, R4), C-83.1–C-83.8 (the render arm, R5), C-28.13 (the capture-request arm, R1), and the user
- * agent with its contact address (R24); and C-68.1 (no evidence storage, K794), below. Each row's code, number, translation and reasons are unchanged; its `where` names
+ * agent with its contact address (R24); and C-68.1 (no evidence storage, K794, K850), below. Each row's code, number, translation and reasons are unchanged; its `where` names
  * this module's site (R29), `awaiting stamp` for promotion's next job. These are the only copies: T19's layer 1 deleted
  * the catalogue's (legacy-checks, K717, K769). C-48.8 and C-48.9 are `monitoring`'s;
  * the rest of C-28 is `capture-requests`'. The comments carried from the catalogue keep each row's reasoning beside it. */
@@ -204,15 +204,16 @@ export const DRIVE_CAPTURE_CHECKS = Object.freeze({
   }),
 });
 
-/* C-68.1 (D-278), THE CAPABILITY COMPLAINT, held here as its earliest raiser (K78 (3), K794): `acquire` on a copy installed
-   with no evidence storage bound. Copied from the catalogue's `INSTALLATION_CHECKS` with its number and translation
-   unchanged and its `where` naming this module's site (K796), `awaiting stamp`; the catalogue's copy keeps legacy-index's
-   `where` until control-plane re-points `installationRow` here and deletes it (layer 11). Its
-   sentence is addressed to WHOEVER INSTALLED THE COPY, the only person who can act on it. */
+/* C-68.1 (D-278), THE CAPABILITY COMPLAINT, held here as its earliest raiser (K78 (3), K794): an acquire, or a
+   control-plane door, on a copy installed with no evidence storage bound. Its number and translation are the catalogue's,
+   unchanged (the catalogue is deleted, K855). It is minted at ONE region, inside the raiser this module exports,
+   `evidenceStorageAbsent`, which `acquire` and the door both call (K850); its `where` names that region (T20 layer 3,
+   `awaiting stamp` for T21, current.md rule 4). Its sentence is addressed to WHOEVER INSTALLED THE COPY, the only person
+   who can act on it. */
 export const INSTALLATION_CHECKS = Object.freeze({
   EVIDENCE_STORAGE_NOT_CONFIGURED: Object.freeze({
     check: 'C-68.1',
-    where: at('is-storage-absent'),
+    where: 'src/acquisition/index.mjs evidenceStorageAbsent > is-storage-absent',
     translation: 'This copy was installed without the storage it keeps captured documents in, so it cannot '
       + 'keep or read the bytes of a captured document. That is a fact about how the copy was set up, not '
       + 'about this request: whoever installed it can connect that storage in the hosting account. Nothing '
