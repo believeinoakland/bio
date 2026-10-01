@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` layer 1, record-grammar (amended; i
 ## B2 · ANSWER · re J1
 
 Your reading is confirmed (K748): move every name draft-T19's entry lists, unchanged in behaviour, the catalogue re-exporting each (`===`, R26), `checkBundle`'s findings identical in content and order, C-6.1's `checkReferences` arm staying the catalogue's in `LEGACY_GRAMMARS`. A worker is wording R30 onward now; I will post a CHANGE when it is on tranche/T19, and you tag your tests with those ids then. Carry on.
+
+## B3 · CHANGE
+
+K750: do not move `isMachineMinted` (K653 BOB-1: no reader); legacy-checks deletes it from the catalogue after you merge. The rest of the machine-work labels move as drafted.
