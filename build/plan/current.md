@@ -67,6 +67,8 @@ T21's rules hold: merge early; one file, one editor; a job names each `not yet m
 
 **Generated artifacts.** Each layer close regenerates what its jobs staled (§5.6): the plane bundle at L2 (F1) and after any layer whose plane modules change; `newgroup/dist/newgroup.bundled.mjs` at L11 after installer (F2). The census fixture: BOB adds promotion's new `row-census-<version>.jsonl` to its `tests` before its ownership check, and drops the 1.51.0 path if the job deletes it.
 
+**After K1019–K1025.** Bob approved the six folds and answered the five questions (K1019); all are folded (K1023, K1025) except record-grammar R43/R44 and what needs them, to T23 by the order (N485), and ratification R35, pending Bob. DEC-88's audit adds six modules (K1025). The italic rows below are carried unconditionally. publication is 3,690 lines (K1024); its split stands, the new module `corpus-export`.
+
 ## Roster by layer (35 jobs: 2, 2, 3, 2, 2, 5, 0, 6, 4, 2, 7) (check)
 
 *Italic*: carried only if Bob approves its fold before the layer (folds item 6). A module whose every entry is italic drops out if none is approved.
@@ -74,16 +76,16 @@ T21's rules hold: merge early; one file, one editor; a job names each `not yet m
 - **L1** text-chain (N471; N480) · bundler (D5)
 - **L2** membership (N478; N480) · promotion (E1–E6, the stamp and census; N471; D3)
 - **L3** provenance (N471; N480) · capture-sources (A10) · **capture** (J1 (4), J2; *H16, J5*) (check)
-- **L4** content (N471) · extraction (N478)
-- **L5** connections (N471) · observation-log (N471)
+- **L4** content (N471; DEC-88 R25, R43) · extraction (N478)
+- **L5** connections (N471) · observation-log (N471; DEC-88 R16, R17) · **entities** (DEC-88 R1) · **progressions** (DEC-88 R2) · **bias** (DEC-88 R11) (K1025)
 - **L6** run-rules (N471) · strength (A57, H10, H12) · inquiry (N480; **A9**) · ai-runs (N480) · **skills** (*H6 (2)*) (check)
-- **L7** none (the mark audit added none)
+- **L7** **reevaluation** (DEC-102 R18, R29; DEC-88 R15) · **intent** (DEC-88 R2, R18; R9, R11 worded as met) (K1025)
 - **L8** **the split's new module** (J10, A42 if homed there) · **publication** (J10; A42 if homed there; *H6 (1), H9* shares) · **case-grammar** (*H6 (1), H9*) · public-read (N480; *H9*) · **ratification** (*H2, H6 (1)*) · case-authoring (N472; *H6, H9*) (check)
-- **L9** action-clocks (N474, D6) · filings (N474) · filing-templates (N476) · **escalation** (J2; *J3*) (check)
+- **L9** action-clocks (N474, D6) · filings (N474) · filing-templates (N476) · **escalation** (J2; *J3*) (check) · **standards** (DEC-88 R1) · **actions** (the litigation-hold reader for capture R32, K1023) · filings also DEC-88 R8 · escalation also DEC-88 R9 (K1025)
 - **L10** monitoring (A28, A30, A32, A35; **A29**) · scheduler (N479)
 - **L11** **affordances** (J1; *J3*) · **op-declarations** (*J3*) · **control-plane** (*J3*) · queue-producers (N476, H15, H19; **J8**; *J5*) · queue (H15, H19) · instance-setup (H17) · installer (A24, A25, H17) (check)
 
-J2's audit may add a module to any layer. Sizes (K617, the 4,000-line mark): provenance 3,938 and extraction 3,997 take comments or fixture deletions only; ratification (3,770) takes only H2's contested arm and H6's refusal and stops and reports if its job would pass the mark; publication (4,408) is split first in its own L8 job and ends under the mark; inquiry (3,783) adds A9's registration only; docprofile (4,950) has no entry and no job. (check)
+J2's audit may add a module to any layer. Sizes (K617, the 4,000-line mark): provenance 3,938 and extraction 3,997 take comments or fixture deletions only; ratification (3,770) takes only H2's contested arm and H6's refusal and stops and reports if its job would pass the mark; publication (3,690; K1024) is split first in its own L8 job and ends under the mark; inquiry (3,783) adds A9's registration only; docprofile (4,950) has no entry and no job. (check)
 
 ## STARTs, sketched (BOB writes the final ones)
 

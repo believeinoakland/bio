@@ -14,7 +14,7 @@
    Restored -> 93/93. */
 /* Member credentials and the session write powers.
  *
- * Runs the full Worker (index.mjs) under miniflare with the DO bound, so
+ * Runs the full Worker (the plane's `src/plane/index.mjs`) under miniflare with the DO bound, so
  * every assertion crosses the real surface: op registry, classification,
  * session rules, author stamping. No R2 here; intake without evidence
  * storage must work, per the installer doctrine that R2 is optional.
@@ -23,8 +23,8 @@
  *
  * D-157 (2026-08-03) added the section-3 block at the end: only administrators
  * see cover and handle TOGETHER. It is asserted HERE and not in
- * membership.test.mjs deliberately — membership.test.mjs drives the Durable
- * Object directly, and the whole rule turns on which credential authenticated,
+ * `test/m/membership/` deliberately — those suites drive the module directly,
+ * and the whole rule turns on which credential authenticated,
  * which only the control plane knows. Its two negative controls are recorded
  * above: one restores the pre-fix projection and names the callers that leaked;
  * the other deletes the server stamp and proves the projection fails closed and
@@ -87,8 +87,8 @@ t("member logs in", lg.result.ok, true);
 const S = "token=" + lg.result.token;
 /* CORRECTED 2026-08-05 (REC-41): both were pinned to their own code —
    BAD_PASSWORD and NO_SUCH_ROLE. The codes are collapsed into one, so the pins
-   assert the ONE code from both callers; the reason is at
-   store.mjs LOGIN_REFUSAL_DETAIL and the inverted distinguishability assertion
+   assert the ONE code from both callers; the reason is at credentials'
+   `Credentials.LOGIN_REFUSAL_DETAIL` and the inverted distinguishability assertion
    is below. */
 t("wrong password refused", (await POST("op=login", { role: "member:ruth", password: "wrong-passphrase-x" })).result.reason, "SIGN_IN_REFUSED");
 t("unknown member refused", (await POST("op=login", { role: "member:nobody", password: "whatever-whatever" })).result.reason, "SIGN_IN_REFUSED");
@@ -149,14 +149,14 @@ for (const [who, r] of [["the wrong-password caller", badPw], ["the unknown-role
  * distinguishable, and its ONLY ground was that `op=bootstrap` already answered
  * `roles` — every role holding a credential — to any stranger, so collapsing
  * them would defend nothing. The comment here and the one at
- * `store.mjs LOGIN_REFUSAL_DETAIL` both said, in writing, that closing that
+ * `LOGIN_REFUSAL_DETAIL` (then in `store.mjs`) both said, in writing, that closing that
  * roster is what reopens this. REC-41 closed it in the same turn as this edit.
  * With the wholesale disclosure gone, a distinguishable refusal IS the retail
  * one — `op=login` is `classes: null` and carries no rate limit, so it answers
  * "does this role hold a credential" once per request, forever. So the two are
  * now ONE code and ONE sentence, and this assertion is inverted. The reasoning,
  * the evidence and what it does NOT claim are recorded at the constant. */
-t("REC-41: the two refusals are now IDENTICAL — one code, one sentence (see the reasoning at store.mjs LOGIN_REFUSAL_DETAIL)",
+t("REC-41: the two refusals are now IDENTICAL — one code, one sentence (see the reasoning at credentials' Credentials.LOGIN_REFUSAL_DETAIL)",
   [badPw.reason, noRole.reason, det(badPw) === det(noRole), det(badPw) === ""],
   ["SIGN_IN_REFUSED", "SIGN_IN_REFUSED", true, false]);
 /* AND NEITHER OLD CODE MAY COME BACK BY THE SIDE DOOR. A caller that still
@@ -501,7 +501,7 @@ console.log("\n--- REC-41: and the refusals COST the same, or a stopwatch undoes
  * row, and the DO dispatch wrapper's absent-or-inactive member — used to return
  * straight away. So before REC-41 a stranger could enumerate the live roster
  * with any password at all and a timer, recovering exactly what closing
- * op=bootstrap's roster had just taken away. `Store.#payLoginCost` makes those
+ * op=bootstrap's roster had just taken away. credentials' `Credentials.#payLoginCost` makes those
  * arms pay what an acceptance pays.
  *
  * PINNED AS A RATIO, NOT A DURATION, and measured from the MEDIAN of several

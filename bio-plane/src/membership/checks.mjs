@@ -119,8 +119,8 @@ export const MEMBERSHIP_CHECKS = Object.freeze({
  * "THE FOUNDER IS AN ADMINISTRATOR HERE TOO", BOB #15, 2026-09-18).
  *
  * WHY A REFUSAL AND NOT A CONVENTION. The founding administrator is named `admin`
- * (`Store.ROOT_ADMIN`) and has no `members` row, and every check that asks whether
- * someone administers BY NAME (`#isAdminMember`, `#activeAdmins`) answers yes for that
+ * (`Membership.ROOT_ADMIN`) and has no `members` row, and every check that asks whether
+ * someone administers BY NAME (`isAdministrator`, `activeAdmins`) answers yes for that
  * string. So a member ENROLLED with the id `admin` would be read as the founder by every
  * one of them — votes counted, participant lists opened — without anybody having granted
  * it anything. `memberAdd` refuses the id, by name, before anything is written; an
@@ -148,7 +148,7 @@ export const MEMBER_ID_CHECKS = {
  * T21 (N453).
  *
  * A ROW TRANSLATES ITS CODE AT EVERY SITE THAT MINTS IT, NOT ONLY AT ITS `where`: the control plane's
- * `dec49Decorate` (index.mjs) attaches a family row's `check` and `translation` to ANY refusal carrying the
+ * `dec49Decorate` (control-plane) attaches a family row's `check` and `translation` to ANY refusal carrying the
  * row's code on its way out. So each sentence below was checked against every site that mints its code,
  * and is written to be true at all of them:
  *   TARGET_NOT_AN_ADMIN `adminRemove`, a member named for removal who is not an administrator: split from
@@ -210,11 +210,10 @@ export const CUSTODIAL_CHECKS = {
       + 'ordinary member is deactivated instead, which one administrator can do. Nothing was changed.',
   },
   /* ---- T4 (legacy-checks, N44), 2026-09-27: MEMBERSHIP'S NEW ACTS (N18), SAID IN WORDS. ----
-     Each code is minted at ONE site in `src/membership/index.mjs`. Those sites carry no DEC-49 region yet, and a
-     whole-function `where` cannot serve: each function also refuses with codes held elsewhere (NOT_AN_ADMIN,
-     NO_SUCH_MEMBER), which a whole-function site would judge as not this family's. So each `where` names the region
-     membership is to mark around its one refusal; until it does, the guard reports the region missing, and the
-     control plane's `dec49Decorate` already attaches the row at the wire. */
+     Each code is minted at ONE site in `src/membership/index.mjs`. A whole-function `where` could not serve: each
+     function also refuses with codes held elsewhere (NOT_AN_ADMIN, NO_SUCH_MEMBER), which a whole-function site
+     would judge as not this family's. So each `where` names the DEC-49 region membership marks around its one
+     refusal, and the control plane's `dec49Decorate` attaches the row at the wire. */
   /* Membership R10 (§4.5, §4.2): an administrator resigns only while more than two exist. */
   RESIGN_AT_TWO: {
     check: 'C-96.10',
@@ -311,7 +310,7 @@ export const PROJECT_VISIBILITY_CHECKS = {
  * project, an optional comment) and may withdraw; an OWNER grants — which writes the requester `invited`, never
  * `joined`, because joining is the member's own act (§7.4) — or declines; administrators and the founder see
  * requests and answer none; setting the project HIDDEN lapses every open request. Every refusal here is said
- * only where it discloses nothing: a request to a project the caller cannot see is `#noSuchProject` byte for
+ * only where it discloses nothing: a request to a project the caller cannot see is `noSuchProject` byte for
  * byte and never a C-95 code, and a withdrawal with no open request is ONE answer whatever the id names. */
 export const PROJECT_JOIN_REQUEST_CHECKS = {
   PROJECT_REQUEST_NEEDS_A_MEMBER: {
@@ -379,11 +378,11 @@ export const PROJECT_JOIN_REQUEST_CHECKS = {
  * under a non-owner's signature, and the record then named that non-owner as the one who stood
  * behind the project's case. The DELIVERY half of the same bullet (an enrolled administrator with
  * no role in the project may not carry the signature in) is NOT in this family: it is REC-134's
- * one positional check, `#projectAuthority`, asked of the deliverer, and answers C-56.1. */
+ * one positional check, `projectAuthority`, asked of the deliverer, and answers C-56.1. */
 export const CASE_AUTHORITY_CHECKS = {
   CASE_SIGNER_NOT_AN_OWNER: {
     check: 'C-57.1',
-    /* REC-140 (2026-09-18): the region moved into `#caseAuthority`, the ONE helper both ratify
+    /* REC-140 (2026-09-18): the region moved into `caseAuthority`, the ONE helper both ratify
        paths call — `op=caseratify` for the case document and `op=ratify` for a finding a
        ratified case pins (Publication rule 2 as BOB #15 applied it to D-429). The TRANSLATION
        was corrected from "this case" to "a case, and each finding in it" at the same time,
