@@ -22,3 +22,7 @@
 - format: 86 modules, 84 requirements files; 0 failures. architecture: 9 product files, 23 relative imports; 0 failures. coverage: 20 of 20 live requirement ids named by a test; 0 failures. ownership: 3 files changed by calibration between tranche/T21 and HEAD; 0 failures.
 
 Size (session_01AhYpL2J9LWAd7Lz7PeLWAj): test runs 2, module lines 39 (20 added, 19 removed; comments only)
+
+## J1 · REPORT
+
+Stale generated artifact: the plane's bundle bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (not_product); my change touches bio-plane/src/calibration/schema.mjs (comment lines inside CALIBRATION_SCHEMA, which the bundle embeds) and bio-plane/src/calibration/index.mjs (comments). Regenerated nothing. Nothing found in another module.
