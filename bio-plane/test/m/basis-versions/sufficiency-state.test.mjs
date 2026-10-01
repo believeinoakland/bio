@@ -8,17 +8,19 @@
    and taken through a promotion (R6: BASIS_VERSION_REFUSED with each finding's code and translation, nothing written;
    the one-part licence lands).
 
-   NOT CARRIED: sections 1–5 (the `sufficiencyClaimState` classifier over its four states, `isSufficiencyClaimed`,
-   `isSufficiencyUnclaimed`, the collision pins against `isMachineIdentity` / `isMachineStamp` and the prefixes, the
-   published texts) are the catalogue's (`legacy-checks`), with no requirement here; section 6 (`op=affordances`) is
+   CARRIED SINCE T19 layer 6, when the sufficiency claim moved here from the catalogue: sections 1–5's classifier
+   (`sufficiencyClaimState` over its four states, `isSufficiencyUnclaimed`, the collision pin against
+   `isMachineIdentity`), the predicate C-25.6 asks (R3). NOT CARRIED: `isSufficiencyClaimed` (gone, no reader) and the
+   published texts' wording (affordances' `op=affordances` publishes them); section 6 (`op=affordances`) is
    `affordances`'; C-2.8 over `checkInquiryBasis` is `inquiry`'s; the sweep over `checks/bio-checks.mjs` reads source
    text. R5's `versionAsWritten` (a machine author's grounds asserted by SUFFICIENCY_UNCLAIMED) is already proven in
    `grammar.test.mjs`; the old suite did not exercise it. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, block, version } from "./fixture.mjs";
-import { basisVersionFindings, BASIS_VERSION_CHECKS } from "../../../src/basis-versions/index.mjs";
-import { SUFFICIENCY_UNCLAIMED, MACHINE_STAMP_PREFIXES, ACTOR_CLASSES, NON_MEMBER_AUTHORS } from "../../../checks/bio-checks.mjs";
+import { basisVersionFindings, BASIS_VERSION_CHECKS, SUFFICIENCY_UNCLAIMED, SUFFICIENCY_CLAIM_STATES, sufficiencyClaimState,
+         isSufficiencyUnclaimed } from "../../../src/basis-versions/index.mjs";
+import { MACHINE_STAMP_PREFIXES, ACTOR_CLASSES, NON_MEMBER_AUTHORS, isMachineIdentity } from "../../../src/record-grammar/index.mjs";
 
 const T = "2026-09-27T00:00:00Z";
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", Q = "INQ-2026-0001-q";
@@ -60,6 +62,24 @@ test("R3 (C-25.6, DEC-32): a ground's asserter is a named member — every machi
     assert.deepEqual(pairs(onePart(m)), [], `member '${m}' passes`);
   assert.deepEqual(pairs(twoPart("member:alice", "member:bo")), [], "members asserting both parts of two pass");
   for (const m of ["class:ai", ""]) assert.deepEqual(pairs(twoPart(m)), [UNASSERTED, UNASSERTED], `'${m}' on both of two parts: one finding each`);
+});
+
+test("R3 (C-25.6, DEC-65): the asserter's four states — blank is unstated, the no-claim value (case-folded) is unclaimed and never a machine's, every machine spelling is machine_stamped, any other name is claimed; the states are the published four", () => {
+  assert.deepEqual(Object.keys(SUFFICIENCY_CLAIM_STATES), ["claimed", "unclaimed", "unstated", "machine_stamped"]);
+  for (const t of Object.values(SUFFICIENCY_CLAIM_STATES)) assert.ok(typeof t === "string" && t.length > 40);
+  assert.equal(SUFFICIENCY_UNCLAIMED, "none:independent-sufficiency");
+  assert.equal(isMachineIdentity(SUFFICIENCY_UNCLAIMED), false, "the no-claim value never collides with a machine identity");
+  for (const b of BLANK_SPELLINGS) assert.equal(sufficiencyClaimState(b), "unstated", JSON.stringify(b));
+  for (const u of [SUFFICIENCY_UNCLAIMED, " None:Independent-Sufficiency ", SUFFICIENCY_UNCLAIMED.toUpperCase()]) {
+    assert.equal(sufficiencyClaimState(u), "unclaimed", u);
+    assert.equal(isSufficiencyUnclaimed(u), true, u);
+  }
+  for (const m of MACHINE_SPELLINGS) {
+    assert.equal(sufficiencyClaimState(m), isMachineIdentity(m) ? "machine_stamped" : "claimed", m);
+    assert.equal(isSufficiencyUnclaimed(m), false, m);
+  }
+  for (const s of ["class:ai", "token:member", "claude"]) assert.equal(sufficiencyClaimState(s), "machine_stamped", s);
+  for (const s of ["member:dave", "Ada Lovelace", "none", "unclaimed"]) assert.equal(sufficiencyClaimState(s), "claimed", s);
 });
 
 test("R3 (C-25.6, DEC-65): SUFFICIENCY_UNCLAIMED is admitted on a version of exactly one part and refused on a version of two, one finding per unclaimed part naming that nobody asserted it", () => {
