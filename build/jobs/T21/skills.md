@@ -1,6 +1,6 @@
 # skills (T21)
 
-**Status** · session_012nL6TyhBgmCzjj3jNz5SiT · depth 2 · WORKING · handled B2
+**Status** · session_012nL6TyhBgmCzjj3jNz5SiT · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
