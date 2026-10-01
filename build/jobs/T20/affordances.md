@@ -36,3 +36,7 @@ My best reading: apply the entry as written (`undetermined`, done), and you deci
 ## J2 · COMPLETE
 
 Complete (B1), on the entry's reading of actionhold's rung (J1 open). actionhold in RUNG_ABSENT (undetermined) and NON_ACTS with the entry's words; "record" at door.mjs:21, :26 and facts.mjs:148; no other member-read string in my paths holds the word. test/m/affordances 132/0; users op-declarations, control-plane, queue, tasks, skills, plane all green. format, architecture, coverage (29/29), ownership (7 files) 0 failures. Real-table totality is stale:[actionhold] until op-declarations adds its row, then empty. For BOB: R3/R27 amendment (count 72), connections:899 backlinks detail still says bundle id, and the plane bundle is stale. Details in the record's Completion.
+
+## J3 · COMPLETE
+
+Complete (B2, B3). Merged tranche/T20. actionhold is in RUNGS as reasoned (out of RUNG_ABSENT), HOLD_REFUSED in JUSTIFICATION_REFUSALS; NON_ACTS and the K899 (1) wording as before; R3/R27 untouched (71). R19 driven at actions' interface (backing.test.mjs): a hold without its reason is refused HOLD_REFUSED, accepted with one. R12 over op-declarations' real OPS/NEEDS: unpublished, unranked, stale all empty. test/m/affordances 133/0; actions, op-declarations, control-plane, queue, tasks, skills, plane green; format, architecture, coverage 29/29, ownership (9 files) 0 failures. Plane bundle stale.
