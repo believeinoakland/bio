@@ -1335,7 +1335,7 @@ export class Contradiction {
         const row = CONTRADICTION_PAIR_CHECKS.CANDIDATES_NO_SUBJECT;
         return { ok: false, reason: "CANDIDATES_NO_SUBJECT", code: "CANDIDATES_NO_SUBJECT", check: row.check,
                  translation: row.translation,
-                 detail: "name exactly one of inquiry, content, entity, bundle, project or candidate" };
+                 detail: "name exactly one of inquiry, content, entity, a record (bundle), project or candidate" };
       }
       /* END DEC-49 REGION is-candidates-no-subject */
       const n = Number(limit);

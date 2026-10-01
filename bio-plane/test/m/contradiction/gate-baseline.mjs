@@ -1,6 +1,7 @@
 /* gate-baseline.mjs — M0-71: the FIRST CANDIDATE JUDGEMENT the
- * Copied 2026-09-30 (CONTRADICTION #4, T17, N394) from `test/contradiction-judge-baseline.mjs` unchanged but for this header, so the gate
- * is this module's test (`gate.test.mjs`) and outlives the old suite's retirement.
+ * Copied 2026-09-30 (CONTRADICTION #4, T17, N394) from `test/contradiction-judge-baseline.mjs` unchanged but for this header
+ * and, since T21 (N469), the harness's name below, so the gate is this module's test (`gate.test.mjs`) and outlives the
+ * old suite's retirement.
  * over-strictness harness measures (CONTRADICTION-IDENTIFY-DESIGN.md §7, §9 item 2).
  *
  * WHAT THIS IS, AND WHAT IT IS NOT.
@@ -9,7 +10,7 @@
  *     threshold is set by a measurement (§7) rather than typed.
  *   - It is NOT §9 item 3's judgement. Item 3 is the machine's, inside a run, with
  *     a model and a prompt the build chooses (§5); it plugs into the SAME harness
- *     (`contradiction-gate.mjs` `measure(pairs, gold, judge)`) and must pass the
+ *     (`gate-measure.mjs` `measure(pairs, gold, judge)`) and must pass the
  *     SAME gate before anything reaches a member.
  *   - IT WAS WRITTEN BEFORE THE FIXTURE, and committed to in that order in the
  *     worktree, so that its rules are not a transcription of the fixture's labels.
