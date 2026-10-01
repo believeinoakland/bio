@@ -38,8 +38,9 @@ The instance's composition root. It builds every module on one Durable Object's 
 
 ### Invariants
 
-- **R8** Once this module's job closes, `bio-plane/src/store.mjs`, `bio-plane/src/schema.mjs` and `bio-plane/src/index.mjs` do not exist and no file imports them; no module's own requirement is answered here. *(not yet met: T19 layer 11)*
+- **R8** Once this module's job closes, `bio-plane/src/store.mjs`, `bio-plane/src/schema.mjs` and `bio-plane/src/index.mjs` do not exist and no file imports them; no module's own requirement is answered here, save the held code R10 names. *(not yet met: T19 layer 11)*
 - **R9** It writes no row, mints no refusal and answers no op itself: every answer is a module's, through `control-plane`'s door. No place is named in its behaviour or outward text. *(not yet met: T19 layer 11)*
+- **R10** (K842) Until each owner's T20 job takes its share, `src/plane/held.mjs` holds, moved whole from `store.mjs` with their behaviour unchanged and each headed with its owner: the stats figures `store.mjs` registered as `legacy-store` (membership, run-productions, inquiry, basis-versions, observation-log and the bundle, file, history, ref and text-index counts), the leg-grade registration (inquiry R13/R14), and the promotion step `legacy-store` registered (provenance's testimony slot; the sight index and the rest of its projections), registered as `plane-held`. Each owner's job registers its share under its own name (record-core R63, retrieval's `registerLegGrades`, promotion's `registerStep`) and deletes it here; the file is deleted with the last. *(not yet met: T19 layer 11)*
 
 ### Satisfies
 

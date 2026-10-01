@@ -89,3 +89,15 @@ Hard reasons only (P19): order (P4), size before a split (P6), a dependency not 
 - **⚑Bob-1 · T20's priorities.** Recommended: this plan whole (it finishes the legacy removal's leftovers in about a dozen small jobs), with the release (⚑Bob-2) as its main decision.
 - **⚑Bob-2 · The release (K619, K633, K635).** After T19 the old suites cannot load: what they import (`bio-checks.mjs`, `store.mjs`, `src/index.mjs`, `tools/`) is gone, so running the old battery "at the release" is no longer possible. Recommended: Bob rules that legacy-tests' old suites and instruments are deleted in T20 by a legacy-tests job (L11, last), keeping and re-pointing the `system` suites that still run against the new tree (fleetbundles, with N441 and N442); the entries in the table's release row are then met or moot with it. The release's deployment (a signed release, the installer with N336, `MODES.plan`) stays deferred (deploy). Without his ruling the row stays deferred.
 - **⚑Bob-3 · N21: what an instance with no jurisdiction profile does.** acquisition and monitoring pass no view when no profile is set, by their stated design, so docprofile's no-view fallback (R6, "until N21", K39) is that instance's behaviour (K758). Recommended: keep the fallback as permanent behaviour; BOB re-words R6 without "until N21" and N21 is struck. The alternative (every caller passes an empty or default view, the fallback dropped) changes three modules' behaviour for such an instance and adds docprofile, acquisition and monitoring jobs to T20.
+
+## Added at T19 layer 10's close (K842, BOB #83)
+
+Plane's held code (plane R10): each owner registers its own share and deletes it from `src/plane/held.mjs` (P19: order is the hard reason it is not T19's; the owners' layers closed before plane's).
+- **membership** (L2, already in T20) · registers `projectParticipants`, `projectOwnerVotes` through record-core R63; deletes plane's copy.
+- **run-productions** (L6, new to T20) · `proposedReadings`, `suggestRefusals` (called by name in `#counts`) through R63.
+- **inquiry** (L6, new to T20) · `inquiryMigrationReplays` through R63; the leg-grade registration (its R13/R14) under its own name through `retrieval.registerLegGrades`.
+- **basis-versions** (L6, new to T20) · `basisVersions`, `basisVersionLegs` through R63.
+- **observation-log** (L5, new to T20) · `observations`/`observationsNonLead`, `leads` through R63.
+- **provenance** (L3, new to T20) · registers `testimonySlot()`'s check in its own promotion step; the sight index's projection to its owner (membership or retrieval, as plane's job names it), with that owner's job.
+- **record-core** (L2, already in T20) · the bundle, file, history, ref and text-index counts through R63.
+- **plane** (L11, new to T20) · deletes `src/plane/held.mjs` once empty; R10 retired, R8's "save the held code" struck.
