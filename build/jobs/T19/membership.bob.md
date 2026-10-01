@@ -17,3 +17,7 @@ K774 (from CREDENTIALS #1): (1) your CUSTODIAL_CHECKS copy leaves out C-96.8 BAD
 ## B4 · ANSWER · re J1
 
 K776: J1 adopted. Your seam @ 131f3c2318 is merged into tranche/T19. Remember B2 (plane joins MODULE_ORDER) and B3 (K774: R95 registerPasswordSetter, CUSTODIAL_CHECKS without BAD_KEY, the exempt tables, memberSet/adminRemove statements). query-language's fixture is routed to its L5 job.
+
+## B5 · ANSWER · re J3
+
+K778: J3 adopted as built (signature, ENROL_NOT_RECORDED C-96.18 before any write, interim arm, BAD_KEY until the deletion). R95 is re-worded to say so on tranche/T19: merge it. Credentials has not merged yet; I will tell you when it has.
