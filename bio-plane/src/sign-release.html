@@ -135,13 +135,13 @@
   <div id="pane-ratify" class="hide">
     <section>
       <h2>Sign a ratification</h2>
-      <p>Copy the bundle id and its current hash from the instance page. The signature covers
+      <p>Copy the record id and its current hash from the instance page. The signature covers
          both, so it authorizes publishing that exact revision and no other.</p>
       <div class="stack">
         <div id="rat-key" class="status">No ratification key loaded.</div>
-        <div><label for="rat-id">Bundle id</label>
+        <div><label for="rat-id">Record id</label>
           <input id="rat-id" placeholder="INFO-2026-5460-sewer-fund-transfers" spellcheck="false"></div>
-        <div><label for="rat-sha">Bundle hash</label>
+        <div><label for="rat-sha">Record hash</label>
           <input id="rat-sha" placeholder="64 hex characters" spellcheck="false"></div>
         <button id="rat-sign" disabled>Sign this ratification</button>
       </div>
@@ -394,13 +394,13 @@ $("rel-sign").onclick = async () => {
 /* ----------------------------------------------------- sign a ratification */
 $("rat-sign").onclick = async () => {
   const id = $("rat-id").value.trim(), sha = $("rat-sha").value.trim().toLowerCase();
-  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the bundle id.</p>`);
-  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The bundle hash is 64 hex characters.</p>`);
+  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the record id.</p>`);
+  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The record hash is 64 hex characters.</p>`);
   const k = KEYS.ratify;
   const sig = await sshsig(k.priv, k.raw32, "bio-ratify", enc.encode(`bio-ratify ${id} ${sha}\n`));
   $("rat-out").innerHTML = copyBox(
     "Signature: paste this into the ratify box on the instance page", sig,
-    `Authorizes publishing <code>${id}</code> at exactly that hash. If the bundle changes before
+    `Authorizes publishing <code>${id}</code> at exactly that hash. If the record changes before
      you submit it, the instance refuses this signature and you sign the new hash.`);
 };
 
