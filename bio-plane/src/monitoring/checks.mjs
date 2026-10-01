@@ -36,7 +36,8 @@ const at = (fn, region) => `src/monitoring/index.mjs ${fn} > ${region}`;
    they actually read, so one sentence cannot be true of both. PL-4's rule cuts
    the same way it did for C-48.5/C-48.7: two predicates, two sites, both
    drivable — `op=acquire` drives the pair in `acquisition`, `op=monitor` drives
-   this pair, and `test/monitor-assess.test.mjs` drives both of these by name. */
+   this pair, and this module's tests drive both of these by name (`test/m/monitoring/tick.test.mjs` R4,
+   `invariants.test.mjs` R42). */
 export const DRIVE_TICK_CHECKS = Object.freeze({
   DRIVE_TICK_EXPORT_IS_THE_SHELL: Object.freeze({
     check: 'C-48.8',
