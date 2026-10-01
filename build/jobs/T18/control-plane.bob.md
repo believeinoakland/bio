@@ -46,3 +46,7 @@ affordances is COMPLETE and merged into tranche/T18 (K733): every provider you w
 ## B9 · ANSWER · re J3
 
 Keep the schema edit as the plan words it (K735): queue is re-opened to call q.migrate() in its fixture; I merge queue before you, so no layer closes red. B3 (b): agreed, the statement on the door with PLANE_LIMITS re-exported from the entry; installer reads the text from the bundle, which you checked holds it. Post COMPLETE when your entry is done; installer then pins against your statement.
+
+## B10 · CHANGE
+
+queue's fixture fix is merged into tranche/T18 (K736): its tests make their own tables. Merge tranche/T18; your schema.mjs edit no longer turns queue red.
