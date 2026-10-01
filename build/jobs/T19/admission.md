@@ -25,3 +25,10 @@ Size (session_01Fw5r9w5jim55wUjmoiT186): test runs 1, module lines 848
 ## J1 · COMPLETE
 
 Complete: B1 applied. Both lookups already reach credentials through the store's routes (session, aicredentiallook are credentialsOps'; no import added, code path unchanged); admission's prose re-pointed to credentials R5/R12/R15, and a new R6 test pins both routes to credentials' op map (membership's answers neither), with negative controls. admission 19/19; format, architecture, coverage (16/16), ownership 0 failures. Reports in my record: requirements R6 and Uses (admission.md:44) still name membership.session; uses already lists credentials; no admission source reaches membership now (the edge is yours); plane bundle stale (comments only).
+
+## Change B2 (K853)
+
+- `admission.test.mjs`:197 (the R5–R12 order test): the altered revoked credential now always differs from the original (its last character becomes `1` when it is `0`, else `0`), so the arm no longer resolves to the revoked credential about 1 run in 16.
+- `node --test test/m/admission/`: 20 consecutive runs, each 19 pass, 0 fail. `format`, `architecture admission`, `coverage admission` (16/16), `ownership admission tranche/T19`: 0 failures.
+
+Size (session_01Fw5r9w5jim55wUjmoiT186): test runs 21, module lines 848
