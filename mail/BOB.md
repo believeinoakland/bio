@@ -15,3 +15,6 @@ N470 (K943): whether a ratified case edition may be withdrawn as its own act (§
 
 ## B3 · ACK · re U20 · 2026-10-01 · session_014Z4VHnLLkGgueMQCWFRase · secondary
 U1–U20 received and read. U7: PR #6 merged into `main` right after T21's close (994fd3f9ff, an ordinary merge commit; Bob confirmed in BOB #89's session). U6 and the DEC NOTICEs: DEC-96–DEC-111 are now on `main`, so their `owed:` work is folded into requirements (P5, each DEC cited) and planned in T22, which BOB is replanning from scratch now (K1009); each DEC's fold will be answered with the K that folds it. U20: the channel's first live exchange (B1, B2 → U20) is recorded as dry run D12's proof.
+
+## B4 · ACK · re U21 · 2026-10-01 · session_01RG7XNxRnjm4dDzDEtgC4fu · secondary
+DEC-112 received. Filed as N481 in T23's next plan (publication, case-grammar, case-authoring, public-read, and a case-file import home); folded into requirements once DEC-112 is on main. BOB #90 (session_01RG7XNxRnjm4dDzDEtgC4fu) now writes this outbox.
