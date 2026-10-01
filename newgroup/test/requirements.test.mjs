@@ -10,7 +10,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 import worker, * as installer from "../src/index.mjs";
-import { CFG, PLANE_LIMITS } from "../src/index.mjs";
+import { CFG, planeLimits } from "../src/index.mjs";
 import { GROUP_SLUG_RE, FLEET_BINDINGS } from "../../bio-plane/src/setup-fleet.mjs";
 import { EXAMPLE_SLUG, PUBLISHER, PROFILE_CHOICES, PROFILES_NONE } from "../src/ui.mjs";
 import { RELEASE_VERSION, RELEASE_SOURCE } from "../src/release.mjs";
@@ -19,7 +19,7 @@ import { verifySshsig, NS_RELEASE } from "../../bio-plane/src/sshsig.mjs";
 import * as jurisdictions from "../../jurisdictions/index.mjs";
 import { TOK, ORIGIN, req, begin, callback, cookieOf, cookieValue, b64url, script, realFetch, jres, run, release,
   SIGNER, STRANGER, armWith, disarm, restoreSigners, sha, bump, CAPABLE_SRC, PRE116_SRC, MEMBER_SRC, bindingOf,
-  parsePage } from "./fixture.mjs";
+  parsePage, LIMITS, LIMITS_STATEMENT, UNSTATED_SRC, BUILTIN_LIMITS, DEFAULT_VERSION } from "./fixture.mjs";
 
 after(restoreSigners);
 const NEXT = bump(RELEASE_VERSION);
@@ -146,6 +146,14 @@ test("R4 a refusal at any step before `install` says nothing was created, and no
     assert.ok(!w.acct.has("bio-plan-probe"), "no probe left behind");
     assert.ok(!w.page.done, "no panel");
   }
+  /* R20 at `rel`, the first step after `fresh`: a built-in stating no limits with no usable repository release. */
+  if (!BUILTIN_LIMITS.ok) {
+    const w = seen(await run({ slug: "early-rel", rel: null }));
+    assert.equal(w.page.status("rel"), "no");
+    assert.match(w.page.failed.p, /Nothing was created/);
+    assert.deepEqual(created(w), { scripts: [], buckets: [] });
+    assert.ok(!w.acct.has("bio-plan-probe") && !w.calls.some((c) => c.u.includes("bio-plan-probe")), "refused before the probe");
+  }
   const left = seen(await run({ slug: "probe-left", probeDelete: "fail" }));
   assert.equal(left.page.status("plan"), "ok");
   assert.match(left.page.label("plan"), /"bio-plan-probe" could not be deleted/);
@@ -175,7 +183,9 @@ test("R6 `plan` is found by upload: a probe with limits.cpu_ms refused 100328 is
   const paid = seen(await run({ slug: "plan-paid" }));
   const probe = paid.calls.find((c) => c.method === "PUT" && c.u.endsWith("/scripts/bio-plan-probe"));
   assert.ok(JSON.parse(await probe.init.body.get("metadata").text()).limits.cpu_ms > 0);
-  const before = paid.calls.slice(0, paid.calls.indexOf(probe)).map((c) => `${c.method} ${c.u.replace(CFG.API, "")}`);
+  /* The release is chosen first (R20 with R4: before anything is created); it is read from the public repository, not the account. */
+  const before = paid.calls.slice(0, paid.calls.indexOf(probe)).filter((c) => !c.u.startsWith(CFG.RELEASE_LATEST))
+    .map((c) => `${c.method} ${c.u.replace(CFG.API, "")}`);
   assert.deepEqual(before, [`POST ${CFG.TOKEN}`, "GET /accounts", "GET /accounts/A1/workers/scripts/plan-paid/settings"],
     "no plan field is read before the probe");
   assert.equal(paid.page.label("plan"), "Workers Paid confirmed");
@@ -219,10 +229,12 @@ test("R8 `rel`: the repository's release installs only when newer, hashing to it
     let rel = null;
     if (opts) { rel = await release({ ...opts, fleet: false }); if (opts.tamperPlane) rel.assets["bio-plane.bundled.mjs"] = "tampered"; }
     const w = seen(await run({ slug: "rel-" + why.replace(/\W+/g, "-"), rel }));
+    assert.match(w.page.label("rel"), says, why);
     const put = w.planePuts[0];
+    /* The built-in installs in its place, unless it states no limits, when R20 refuses the act (asserted under R20). */
+    if (from === "built-in" && !BUILTIN_LIMITS.ok) { assert.equal(put, undefined, why); continue; }
     assert.equal(put.source, from === "repository" ? rel.src : RELEASE_SOURCE, why);
     assert.equal(bindingOf(put, "VERSION").text, from === "repository" ? NEXT : RELEASE_VERSION, why);
-    assert.match(w.page.label("rel"), says, why);
   }
   disarm();
   const rel = await release({ version: NEXT, sig: "none", fleet: false });
@@ -231,7 +243,7 @@ test("R8 `rel`: the repository's release installs only when newer, hashing to it
   assert.match(w.page.label("rel"), /Its integrity checked out/);
   const bad = await release({ version: NEXT, sig: "none", fleet: false });
   bad.assets["bio-plane.bundled.mjs"] = "tampered";
-  assert.equal((await run({ slug: "rel-unarmed-bad", rel: bad })).planePuts[0].source, RELEASE_SOURCE, "nothing that failed is installed");
+  assert.ok((await run({ slug: "rel-unarmed-bad", rel: bad })).planePuts.every((p) => p.source === RELEASE_SOURCE), "nothing that failed is installed");
   restoreSigners();
 });
 
@@ -257,10 +269,10 @@ test("R10 `install`: the plane uploaded with STORE (SQLite v1), VERSION, INSTANC
   const m = w.planePuts[0].meta;
   assert.deepEqual(m.migrations, { new_tag: "v1", new_sqlite_classes: ["Store"] });
   assert.deepEqual([m.main_module, m.compatibility_date, m.compatibility_flags], ["index.mjs", compatDate, compatFlags]);
-  assert.deepEqual(m.limits, { ...PLANE_LIMITS });
+  assert.deepEqual(m.limits, { ...LIMITS }, "the release's own statement (R20)");
   const by = Object.fromEntries(m.bindings.map((b) => [b.name, b]));
   assert.deepEqual(by.STORE, { type: "durable_object_namespace", name: "STORE", class_name: "Store" });
-  assert.equal(by.VERSION.text, RELEASE_VERSION);
+  assert.equal(by.VERSION.text, DEFAULT_VERSION);
   assert.deepEqual(by.INSTANCE_NAME, { type: "plain_text", name: "INSTANCE_NAME", text: "inst-shape" });
   assert.deepEqual([by.CAPTURES.bucket_name, by.PUBLISHED.bucket_name], ["bio-captures", "bio-published"]);
   assert.deepEqual(by.SELF, { type: "service", name: "SELF", service: "inst-shape" });
@@ -295,12 +307,13 @@ test("R11 `fleet`: members install only from a reachable repository whose signed
     assert.equal(w.page.status("install"), "ok", `${why}: the plane installed`);
     assert.ok(w.page.done, `${why}: the install finished`);
   };
-  await noneOf("unreachable", null, /was not reachable, so no capability workers were installed/);
+  /* The two arms that fall back to the built-in run only when it states its limits (else R20 refuses the act). */
+  if (BUILTIN_LIMITS.ok) await noneOf("unreachable", null, /was not reachable, so no capability workers were installed/);
   await noneOf("no-fleet", { fleet: false }, /names no capability workers/);
   await noneOf("no-fleetsig", { fleetSig: "none" }, /names no capability workers/);
   await noneOf("dropped", { signedMembers: ["agent-worker", "pdf-worker", "ocr-worker", "extra-worker"] }, /fleet signature did not verify/);
-  await noneOf("foreign-plane", { sig: "stranger" }, /signed against a different plane than the one just installed/);
-  await noneOf("not-newer", { version: RELEASE_VERSION }, /signed against a different plane than the one just installed/);
+  if (BUILTIN_LIMITS.ok) await noneOf("foreign-plane", { sig: "stranger" }, /signed against a different plane than the one just installed/);
+  if (BUILTIN_LIMITS.ok) await noneOf("not-newer", { version: RELEASE_VERSION }, /signed against a different plane than the one just installed/);
   disarm();
   await noneOf("unarmed", {}, /carries no signing key/);
   armWith(SIGNER.line);
@@ -446,11 +459,12 @@ test("R17 the update: no script refused unchanged; buckets where possible; the r
   assert.deepEqual(m.keep_bindings.slice().sort(), ["durable_object_namespace", "secret_text"]);
   const by = Object.fromEntries(m.bindings.map((b) => [b.name, b]));
   assert.deepEqual(Object.keys(by).sort(), ["BROWSER", "CAPTURES", "DAEMON_TOKEN", "INSTANCE_AI_TOKEN", "INSTANCE_NAME", "PUBLISHED", "SELF", "VERSION"]);
-  assert.deepEqual([by.VERSION.text, by.INSTANCE_NAME.text, by.SELF.service, by.INSTANCE_AI_TOKEN.text], [RELEASE_VERSION, "upd", "upd", AI]);
+  assert.deepEqual([by.VERSION.text, by.INSTANCE_NAME.text, by.SELF.service, by.INSTANCE_AI_TOKEN.text], [DEFAULT_VERSION, "upd", "upd", AI]);
+  assert.deepEqual(m.limits, { ...LIMITS }, "the release's limits restated (R20)");
   assert.equal(Buffer.from(by.DAEMON_TOKEN.text, "base64url").length, 32);
   const kept = Object.fromEntries(w.acct.get("upd").filter((b) => b.type === "secret_text").map((b) => [b.name, b.text]));
   assert.deepEqual([kept.ADMIN_TOKEN, kept.MEMBER_TOKEN, kept.PROBE_TOKEN], ["admin-kept", "member-kept", "probe-kept"]);
-  assert.match(w.page.done, new RegExp(`Updated from 0\\.1\\.0 to ${RELEASE_VERSION.replace(/\./g, "\\.")}`));
+  assert.match(w.page.done, new RegExp(`Updated from 0\\.1\\.0 to ${DEFAULT_VERSION.replace(/\./g, "\\.")}`));
   const noR2 = seen(await run({ slug: "upd-nor2", mode: "update", pre: { "upd-nor2": planeBase("upd-nor2") }, r2: "refused" }));
   const mm = noR2.planePuts[0].meta;
   assert.ok(mm.keep_bindings.includes("r2_bucket") && !mm.bindings.some((b) => b.type === "r2_bucket"), "buckets kept, not re-bound");
@@ -465,7 +479,7 @@ test("R17 the update: no script refused unchanged; buckets where possible; the r
   assert.equal(fl.page.status("verify"), "ok");
   assert.match(fl.page.done, /Every part of your copy answers/);
   restoreSigners();
-  const same = seen(await run({ slug: "upd-same", mode: "update", pre: { "upd-same": planeBase("upd-same", RELEASE_VERSION) } }));
+  const same = seen(await run({ slug: "upd-same", mode: "update", pre: { "upd-same": planeBase("upd-same", DEFAULT_VERSION) } }));
   assert.match(same.page.label("up") ?? same.page.events.find((e) => e.id === "up").label, /already runs/);
   assert.match(same.page.done, /Nothing changed: your copy was already running/);
   assert.ok(!/<b>Updated (from|to)/.test(same.page.done));
@@ -484,7 +498,7 @@ test("R18 an update crossing the first group-recording release (0.71.0) tells th
   assert.match(fog.page.done, /could not read which version your copy ran before this update, so it cannot tell whether this\napplies to you/);
   const past = seen(await run({ slug: "past", mode: "update", pre: { past: planeBase("past", "0.71.0") } }));
   assert.ok(!past.page.done.includes("op=instancegroupseed"));
-  const same = seen(await run({ slug: "same", mode: "update", pre: { same: planeBase("same", RELEASE_VERSION) } }));
+  const same = seen(await run({ slug: "same", mode: "update", pre: { same: planeBase("same", DEFAULT_VERSION) } }));
   assert.ok(!same.page.done.includes("op=instancegroupseed"), "a no-op tells nothing");
   for (const w of [cross, fog, past, same]) assert.deepEqual(groupCalls(w), [], "never seeded, never asked");
 });
@@ -518,7 +532,57 @@ test("R19 the Cloudflare token and every credential appear in no page, log or er
   assert.ok(!plain.includes("<script>alert(1)") && plain.includes("&lt;script&gt;"));
 });
 
-test.todo("R20 the plane's limits are carried from the signed release; a release stating none is refused by name, and an older installer still verifies its fleet signature (not yet met: DIST-15; PLANE_LIMITS is a constant pinned to the plane's config)");
+test("R20 the plane's limits are read from the signed release R8 chose and sent exactly, on install and update; a release stating none or unreadably is passed over by name, and with a built-in stating none the act is refused before anything is created; the fleet statement is unchanged", async () => {
+  const plane = (stmt, q = '"') => `export default { fetch(){ return Response.json({ storeVersion: 'x', memberVersions: {} }); } }; export class Store {}; export const S = ${q}${stmt}${q};`;
+  const limitsOf = (w) => w.planePuts.map((p) => p.meta.limits);
+  armWith(SIGNER.line);
+  /* Exactly the release's statement, whatever it says, in any quote style a bundler prints: the installer has no value of its own. */
+  for (const [stmt, q, want] of [[LIMITS_STATEMENT, '"', LIMITS], ["bio-plane-limits/1 cpu_ms=30000 subrequests=500", "'", { cpu_ms: 30000, subrequests: 500 }],
+      ["bio-plane-limits/1 subrequests=7", "`", { subrequests: 7 }]]) {
+    const rel = await release({ version: NEXT, src: plane(stmt, q) + ` const again = "${stmt}";` });
+    const i = seen(await run({ slug: "lim-install", rel }));
+    assert.equal(i.planePuts.length, 2, "the install PUT and its step-3 re-PUT");
+    assert.deepEqual(limitsOf(i), [want, want], stmt);
+    const u = seen(await run({ slug: "lim-update", mode: "update", pre: { "lim-update": planeBase("lim-update") }, rel }));
+    assert.ok(u.planePuts.length >= 1);
+    assert.ok(limitsOf(u).every((l) => JSON.stringify(l) === JSON.stringify(want)), stmt);
+  }
+  /* A verified release stating none, or stating them unreadably, is not used, and the page names why as R8 names a failed one. */
+  const bad = [[UNSTATED_SRC, /states no limits for the plane, so it was NOT used/],
+    [plane("bio-plane-limits/1 subrequests=10000") + ' const b = "bio-plane-limits/1 subrequests=500";', /states the plane's limits unreadably \(it states them 2 different ways\)/],
+    [plane("bio-plane-limits/1 subrequests=10000 cpu_ms=5"), /unreadably .*keys sorted/],
+    [plane("bio-plane-limits/1 subrequests=0"), /unreadably/], [plane("bio-plane-limits/1 subrequests=ten"), /unreadably/],
+    [plane("bio-plane-limits/1 subrequests=1 subrequests=2"), /unreadably/]];
+  for (const [src, says] of bad) {
+    const rel = await release({ version: NEXT, src });
+    const w = seen(await run({ slug: "lim-bad", rel }));
+    assert.match(w.page.label("rel"), says);
+    assert.ok(w.planePuts.every((p) => p.source !== src), "never installed");
+    if (BUILTIN_LIMITS.ok) {
+      assert.ok(w.planePuts.length > 0 && w.planePuts.every((p) => p.source === RELEASE_SOURCE), "the built-in stands in");
+      assert.deepEqual(limitsOf(w)[0], { ...BUILTIN_LIMITS.limits });
+    } else {
+      /* This tree's built-in states none either: the install is refused by name, and nothing exists afterwards. */
+      assert.equal(w.page.status("rel"), "no");
+      assert.match(w.page.failed.p, /Nothing was created/);
+      assert.match(w.page.failed.p, new RegExp(`built-in release \\(${RELEASE_VERSION.replace(/\./g, "\\.")}\\) states no limits for the plane`));
+      assert.deepEqual([[...w.acct.keys()], [...w.buckets]], [[], []], "no script, no bucket, no probe");
+      assert.ok(!w.page.done);
+      const u = seen(await run({ slug: "lim-upd", mode: "update", pre: { "lim-upd": planeBase("lim-upd") }, rel }));
+      assert.match(u.page.failed.p, /still running the version it had before. Nothing about it changed/);
+      assert.deepEqual(u.acct.get("lim-upd"), planeBase("lim-upd"), "the copy as it was");
+      assert.equal(u.planePuts.length, 0);
+    }
+  }
+  /* Nothing is added to the fleet statement: the limits ride in the plane bytes, so the /2 statement an older installer
+     rebuilds from the manifest is the one signed, and the fleet installs. */
+  const rel = await release({ version: NEXT });
+  const keys = Object.keys(rel.manifest).sort();
+  assert.deepEqual(keys, ["asset", "bytes", "fleet", "fleetSig", "sha256", "sig", "version"]);
+  const w = seen(await run({ slug: "lim-fleet", rel }));
+  assert.match(w.page.label("fleet"), /All 3 capability workers installed and verified/);
+  restoreSigners();
+});
 test("R21 the install offers the held non-test jurisdiction profiles by name and coverage, none preselected, and binds the chosen ids as JURISDICTION_PROFILES; choosing none is allowed and said; an update never changes them", async () => {
   /* The offer: every held profile but the test ones, each by name and coverage, none checked; and what none means. */
   const held = jurisdictions.list();
@@ -724,7 +788,7 @@ test("R29 one verifier: the installer accepts a release signature exactly when s
     const rel = await release({ version: NEXT, sig, fleet: false });
     const verdict = (await verifySshsig(rel.manifest.sig, new TextEncoder().encode(rel.src), NS_RELEASE, [SIGNER.line])).ok;
     const w = await run({ slug: "one-verifier", rel });
-    assert.equal(w.planePuts[0].source === rel.src, verdict, sig);
+    assert.equal(w.planePuts[0]?.source === rel.src, verdict, sig);
     const embed = await checkSignedAsset({ manifest: rel.manifest, bytes: new TextEncoder().encode(rel.src), version: NEXT, signers: [SIGNER.line] });
     assert.equal(embed === null, verdict, `embed ${sig}`);
   }

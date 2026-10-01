@@ -108,7 +108,7 @@
  * identical figures, N1 190/10 and N2 199/1, restored byte-identically.
  */
 import worker, { CFG, ARMED_SIGNERS, reportsBuilds } from "../src/index.mjs";
-/* The namespace, read for the exports a PIN names (BROWSER_BINDING, PLANE_LIMITS), so a tree without one fails that PIN
+/* The namespace, read for the exports a PIN names (BROWSER_BINDING, planeLimits), so a tree without one fails that PIN
    by name rather than refusing to link the whole suite. */
 import * as NG from "../src/index.mjs";
 /* R30 (N234): the member binding names are instance-setup's; the installer holds no table of its own. */
@@ -116,6 +116,7 @@ import { FLEET_BINDINGS } from "../../bio-plane/src/setup-fleet.mjs";
 import { readFileSync } from "node:fs";
 import { fleetStatement, NS_FLEET } from "../../bio-plane/src/sshsig.mjs";
 import { RELEASE_VERSION, RELEASE_SOURCE } from "../src/release.mjs";
+import { signer } from "./fixture.mjs";
 
 let pass = 0, fail = 0;
 const t = (l, g, w) => { const ok = JSON.stringify(g) === JSON.stringify(w);
@@ -205,6 +206,21 @@ const REL = (rules) => [
   { m: (u) => u.endsWith("/release/bio-plane.bundled.mjs"), f: rules.asset },
 ];
 
+/* R20 (DIST-15, N336), 2026-10-01: the plane's limits are read from the release's own plane bundle, and an act whose only
+   usable release states none is refused. Every release this suite serves states them (`LIM`). The arms below that ran on
+   the built-in release ran there only because the repository was unscripted; while the built-in states no limits
+   (`BUILTIN_OK` false: every release before control-plane's statement) they would be refused, so they now serve `NEWER()`,
+   the built-in's own bytes plus the statement, signed by a key the arm arms, one version on. The arms ABOUT the
+   built-in fallback assert whichever holds, so they survive the cut that embeds a release stating its limits. */
+const LIM = "bio-plane-limits/1 subrequests=10000";
+const BUILTIN_OK = NG.planeLimits(RELEASE_SOURCE).ok;
+const CUR = await signer("current-release");
+const CUR_VER = bump(RELEASE_VERSION);
+const curSrc = RELEASE_SOURCE + `\nexport const PLANE_LIMITS_STATEMENT = "${LIM}";\n`;
+const curMan = { version: CUR_VER, sha256: await shaHex(curSrc), bytes: curSrc.length, asset: "bio-plane.bundled.mjs",
+  sig: await CUR.sign(curSrc) };
+const NEWER = () => { armWith(CUR.line); return REL({ manifest: () => jres(curMan), asset: () => new Response(curSrc) }); };
+
 /* ---- the front page and /begin ---- */
 console.log("\n--- front page and begin ---");
 {
@@ -263,6 +279,7 @@ console.log("\n--- install: the whole conversation ---");
 {
   const { cookie, state } = await begin("oak-watch");
   const calls = script([
+    ...NEWER(),
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "A1", name: "Oak Watch" }]) },
     { m: (u) => u.includes("/workers/scripts/oak-watch/settings"), f: () => cferr("not found", 404) },
@@ -290,7 +307,8 @@ console.log("\n--- install: the whole conversation ---");
   t("install carries the SQLite migration", meta.migrations,
     { new_tag: "v1", new_sqlite_classes: ["Store"] });
   t("Durable Object bound", meta.bindings.some((b) => b.type === "durable_object_namespace" && b.class_name === "Store"), true);
-  t("VERSION is the embedded release", meta.bindings.find((b) => b.name === "VERSION").text, RELEASE_VERSION);
+  t("VERSION is the release chosen", meta.bindings.find((b) => b.name === "VERSION").text, CUR_VER);
+  t("R20: limits are the release's own statement", meta.limits, { subrequests: 10000 });
   /* D-102: the instance name IS the worker name, so the slug the group already
      chose is what the agent advertises. Bound here rather than asked for
      separately; a second name would be a second source of truth that drifts.
@@ -351,6 +369,7 @@ console.log("\n--- install: address asleep, credentials still handed over ---");
   const realTimeout = globalThis.setTimeout;
   globalThis.setTimeout = (fn) => realTimeout(fn, 0);
   const calls = script([
+    ...NEWER(),
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "A1", name: "Slow Town" }]) },
     { m: (u) => u.includes("/workers/scripts/slow-town/settings"), f: () => cferr("not found", 404) },
@@ -380,6 +399,7 @@ console.log("\n--- install: no card means a friendly stop, and nothing installed
 {
   const { cookie, state } = await begin("small-group");
   const calls = script([
+    ...NEWER(),
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "A2", name: "Small" }]) },
     { m: (u) => u.includes("/scripts/small-group/settings"), f: () => cferr("not found", 404) },
@@ -412,6 +432,7 @@ console.log("\n--- install: a refused SELF binding costs the monitoring, never t
      BEHAVIOUR under refusal rather than pretending to know the answer. */
   const { cookie, state } = await begin("shy-town");
   const calls = script([
+    ...NEWER(),
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "A4", name: "Shy" }]) },
     { m: (u) => u.includes("/scripts/shy-town/settings"), f: () => cferr("not found", 404) },
@@ -464,7 +485,7 @@ console.log("\n--- install: an existing name stops everything ---");
 /* ---- the repository is preferred when newer and verified ---- */
 console.log("\n--- release: a newer verified repository copy installs ---");
 {
-  const repoSrc = "export default { fetch(){ return new Response('repo release'); } }; export class Store {};";
+  const repoSrc = "export default { fetch(){ return new Response('repo release'); } }; export class Store {}; export const S = \"" + LIM + "\";";
   const repoVer = bump(RELEASE_VERSION);
   const repoSha = await shaHex(repoSrc);
   disarm();  /* an unarmed installer has only the hash to go on */
@@ -513,8 +534,13 @@ console.log("\n--- release: a copy that fails verification is never installed --
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   const put = calls.find((c) => c.method === "PUT" && c.u.endsWith("/scripts/wary-town"));
-  t("the built-in source installed instead", (await sourceOf(put)).includes("tampered"), false);
-  t("VERSION stays the built-in", (await metadataOf(put)).bindings.find((b) => b.name === "VERSION").text, RELEASE_VERSION);
+  if (BUILTIN_OK) {
+    t("the built-in source installed instead", (await sourceOf(put)).includes("tampered"), false);
+    t("VERSION stays the built-in", (await metadataOf(put)).bindings.find((b) => b.name === "VERSION").text, RELEASE_VERSION);
+  } else {
+    t("R20: the built-in states no limits, so nothing installs, and the page says why",
+      [put === undefined, body.includes("states no limits for the plane")], [true, true]);
+  }
   t("the page says the check failed and was not used", body.includes("did not pass its integrity check"), true);
   globalThis.fetch = realFetch;
 }
@@ -551,6 +577,7 @@ console.log("\n--- install: Workers Free is refused by name, nothing created ---
 {
   const { cookie, state } = await begin("free-town");
   const calls = script([
+    ...NEWER(),
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "F1", name: "Free Town" }]) },
     { m: (u) => u.includes("/scripts/free-town/settings"), f: () => cferr("not found", 404) },
@@ -577,6 +604,7 @@ console.log("\n--- install: unverifiable plan is an honest refusal, nothing crea
 {
   const { cookie, state } = await begin("hazy-town");
   const calls = script([
+    ...NEWER(),
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "H1", name: "Hazy Town" }]) },
     { m: (u) => u.includes("/scripts/hazy-town/settings"), f: () => cferr("not found", 404) },
@@ -600,6 +628,7 @@ console.log("\n--- update: keeps everything, carries no migration ---");
 {
   const { cookie, state } = await begin("oak-watch", "update");
   const calls = script([
+    ...NEWER(),
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "A1", name: "Oak Watch" }]) },
     { m: (u) => u.includes("/scripts/oak-watch/settings"), f: () => cfok({ existing: true }) },
@@ -607,7 +636,7 @@ console.log("\n--- update: keeps everything, carries no migration ---");
     { m: (u, mth) => u.endsWith("/scripts/oak-watch") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "oakwatch" }) },
     { m: (u) => u.includes("oak-watch.oakwatch.workers.dev/api/?op=bootstrap"),
-      f: midUpdate("0.1.0", RELEASE_VERSION) },
+      f: midUpdate("0.1.0", CUR_VER) },
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   const put = calls.find((c) => c.method === "PUT");
@@ -622,7 +651,7 @@ console.log("\n--- update: keeps everything, carries no migration ---");
   t("storage is bound explicitly, healing older copies",
     meta.bindings.filter((b) => b.type === "r2_bucket").map((b) => b.name).sort(), ["CAPTURES", "PUBLISHED"]);
   t("no migrations on update", "migrations" in meta, false);
-  t("VERSION supplied fresh", meta.bindings.find((b) => b.name === "VERSION").text, RELEASE_VERSION);
+  t("VERSION supplied fresh", meta.bindings.find((b) => b.name === "VERSION").text, CUR_VER);
   /* D-102: the update retro-names copies installed before INSTANCE_NAME
      existed, which are advertising "instance unnamed" right now. Same shape as
      the storage healing above: an update quietly completes what an older
@@ -659,7 +688,7 @@ console.log("\n--- update: keeps everything, carries no migration ---");
      update DELETES a working instance's binding. */
   t("keep_bindings does not inherit service bindings", meta.keep_bindings.includes("service"), false);
   t("the page says passwords and record are untouched", body.includes("exactly as they were"), true);
-  t("with the repository unreachable, the update says the built-in was used", body.includes("was not reachable"), true);
+  t("the update says which release it used and why", body.includes("newer than the built-in"), true);
   t("no token in output", body.includes(TOK), false);
   globalThis.fetch = realFetch;
 }
@@ -669,6 +698,7 @@ console.log("\n--- update: storage unavailable never blocks an update ---");
 {
   const { cookie, state } = await begin("old-copy", "update");
   const calls = script([
+    ...NEWER(),
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "A5", name: "Old" }]) },
     { m: (u) => u.includes("/scripts/old-copy/settings"), f: () => cfok({ existing: true }) },
@@ -676,7 +706,7 @@ console.log("\n--- update: storage unavailable never blocks an update ---");
     { m: (u, mth) => u.endsWith("/scripts/old-copy") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "old" }) },
     { m: (u) => u.includes("old-copy.old.workers.dev/api/?op=bootstrap"),
-      f: midUpdateBuilt("0.1.0", RELEASE_VERSION) },
+      f: midUpdateBuilt("0.1.0", CUR_VER) },
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   const meta = await metadataOf(calls.find((c) => c.method === "PUT"));
@@ -701,6 +731,7 @@ console.log("\n--- update: unconfirmed version is named, patiently, and not repo
   globalThis.setTimeout = (fn) => realTimeout(fn, 0);
   const { cookie, state } = await begin("slow-update", "update");
   script([
+    ...NEWER(),
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "A6", name: "Slow" }]) },
     { m: (u) => u.includes("/scripts/slow-update/settings"), f: () => cfok({ existing: true }) },
@@ -713,7 +744,7 @@ console.log("\n--- update: unconfirmed version is named, patiently, and not repo
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   globalThis.setTimeout = realTimeout;
   t("the outcome is NOT presented as an update done (D-116)", /<b>Updated (from|to)/.test(body), false);
-  t("it says the upload happened, over what", body.includes(`Uploaded ${RELEASE_VERSION} over 0.0.1`), true);
+  t("it says the upload happened, over what", body.includes(`Uploaded ${CUR_VER} over 0.0.1`), true);
   t("and NAMES the part that lags, with what it answers", body.includes("your copy&#39;s address answers 0.0.1"), true);
   t("the note is patient, not alarming", body.includes("can take a few minutes"), true);
   t("no failure framing anywhere", /failed|broken/i.test(body), false);
@@ -787,10 +818,10 @@ async function installWith(slug, sub, manifestExtra, src) {
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   const put = calls.find((c) => c.method === "PUT" && c.u.endsWith(`/scripts/${slug}`));
   globalThis.fetch = realFetch;
-  return { body, source: await sourceOf(put), meta: await metadataOf(put) };
+  return { body, source: put ? await sourceOf(put) : "", meta: put ? await metadataOf(put) : null };
 }
 
-const repoSrc2 = "export default { fetch(){ return new Response('signed repo release'); } }; export class Store {};";
+const repoSrc2 = "export default { fetch(){ return new Response('signed repo release'); } }; export class Store {}; export const S = \"" + LIM + "\";";
 const repoSha2 = await shaHex(repoSrc2);
 const goodSig = await signAsset(new TextEncoder().encode(repoSrc2));
 
@@ -815,7 +846,8 @@ console.log("\n--- release signing: armed, an unsigned copy is refused ---");
   armWith(relPubLine);
   const r = await installWith("bare-town", "bt", { sha256: repoSha2 }, repoSrc2);
   t("the built-in installed instead", r.source.includes("signed repo release"), false);
-  t("VERSION stays the built-in", r.meta.bindings.find((b) => b.name === "VERSION").text, RELEASE_VERSION);
+  t("VERSION stays the built-in (or, R20, nothing installs while the built-in states no limits)",
+    r.meta ? r.meta.bindings.find((b) => b.name === "VERSION").text : BUILTIN_OK, BUILTIN_OK ? RELEASE_VERSION : false);
   t("the page says why in plain words", r.body.includes("carries no signature"), true);
 }
 
@@ -1006,17 +1038,17 @@ console.log("\n--- update: replacing a version with itself is not a success ---"
   disarm();
   const { cookie, state } = await begin("same-town", "update");
   script([
-    ...REL({ manifest: () => jres({ version: RELEASE_VERSION, sha256: "x" }), asset: () => new Response("y") }),
+    ...NEWER(),
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "N1", name: "Same" }]) },
     { m: (u) => u.includes("/scripts/same-town/settings"),
-      f: () => cfok({ bindings: [{ type: "plain_text", name: "VERSION", text: RELEASE_VERSION }] }) },
+      f: () => cfok({ bindings: [{ type: "plain_text", name: "VERSION", text: CUR_VER }] }) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/same-town") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "sm" }) },
     /* The instance answers with the version it already runs. */
     { m: (u) => u.startsWith("https://same-town.sm.workers.dev/"),
-      f: () => jres({ ok: true, version: RELEASE_VERSION, bindings: { STORE: true } }) },
+      f: () => jres({ ok: true, version: CUR_VER, bindings: { STORE: true } }) },
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   t("the step names it as a re-upload of the same version", body.includes("already runs"), true);
@@ -1042,16 +1074,17 @@ t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES 
   disarm();
   const { cookie, state } = await begin("cross-town", "update");
   const calls = script([
+    ...NEWER(),
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "G1", name: "Cross" }]) },
     { m: (u) => u.includes("/scripts/cross-town/settings"), f: () => cfok({ existing: true }) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/cross-town") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "cx" }) },
-    { m: (u) => u.includes("cross-town.cx.workers.dev/api/?op=bootstrap"), f: midUpdateBuilt("0.70.0", RELEASE_VERSION) },
+    { m: (u) => u.includes("cross-town.cx.workers.dev/api/?op=bootstrap"), f: midUpdateBuilt("0.70.0", CUR_VER) },
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
-  t("CROSSING (0.70.0 -> this release): the update lands as an update", body.includes(`Updated from 0.70.0 to ${RELEASE_VERSION}`), true);
+  t("CROSSING (0.70.0 -> this release): the update lands as an update", body.includes(`Updated from 0.70.0 to ${CUR_VER}`), true);
   t("and it TELLS the one act left to the operator, saying why from the version it read",
     [body.includes("One thing this update does not do for you"), body.includes("Your copy ran 0.70.0 before this update")],
     [true, true]);
@@ -1099,6 +1132,7 @@ t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES 
   const { cookie, state } = await begin("fog-town", "update");
   let n = 0;
   const calls = script([
+    ...NEWER(),
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "G3", name: "Fog" }]) },
     { m: (u) => u.includes("/scripts/fog-town/settings"), f: () => cfok({ existing: true }) },
@@ -1108,10 +1142,10 @@ t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES 
     /* The copy does not answer BEFORE the upload (so its version is unknown), and answers the new one after. */
     { m: (u) => u.includes("fog-town.fg.workers.dev/api/?op=bootstrap"),
       f: () => n++ === 0 ? new Response("unavailable", { status: 503 })
-        : jres({ ok: true, version: RELEASE_VERSION, storeVersion: RELEASE_VERSION, memberVersions: {} }) },
+        : jres({ ok: true, version: CUR_VER, storeVersion: CUR_VER, memberVersions: {} }) },
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
-  t("VERSION BEFORE UNKNOWN: the update lands", body.includes(`Updated to ${RELEASE_VERSION}`), true);
+  t("VERSION BEFORE UNKNOWN: the update lands", body.includes(`Updated to ${CUR_VER}`), true);
   t("and the telling is CONDITIONAL, saying the installer could not read what ran before — undetermined, stated",
     [body.includes("could not read which version your copy ran"), body.includes("op=instancegroupseed")], [true, true]);
   t("and never seeds, nor asks op=instancegroup", groupCalls(calls), []);
@@ -1134,7 +1168,7 @@ console.log("\n--- D-116: the installer reads the store's and each member's OWN 
   t("PIN: a plane without the fields is read as unable to report them (the pre-D-116 releases)",
     reportsBuilds(repoSrc2), false);
 }
-const repoSrc3 = "export default { fetch(){ return Response.json({ storeVersion: 'x', memberVersions: {} }); } }; export class Store {};";
+const repoSrc3 = "export default { fetch(){ return Response.json({ storeVersion: 'x', memberVersions: {} }); } }; export class Store {}; export const S = \"" + LIM + "\";";
 const repoSha3 = await shaHex(repoSrc3);
 const sig3 = await signAsset(new TextEncoder().encode(repoSrc3));
 const agentEntry = { ...memberEntry, member: "agent-worker", asset: "agent-worker.bundled.mjs", parts: [] };
@@ -1217,19 +1251,20 @@ async function d116Update(slug, after) {
   disarm();
   const { cookie, state } = await begin("pre-town", "update");
   script([
+    ...NEWER(),
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "D2", name: "Pre" }]) },
     { m: (u) => u.includes("/scripts/pre-town/settings"), f: () => cfok({ existing: true }) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/pre-town") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "pr" }) },
-    { m: (u) => u.includes("pre-town.pr.workers.dev/api/?op=bootstrap"), f: midUpdate("0.1.0", RELEASE_VERSION) },
+    { m: (u) => u.includes("pre-town.pr.workers.dev/api/?op=bootstrap"), f: midUpdate("0.1.0", CUR_VER) },
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   globalThis.fetch = realFetch;
   if (!reportsBuilds(RELEASE_SOURCE)) {
     t("A RELEASE THAT CANNOT REPORT BUILDS: the address is confirmed and the rest is STATED undetermined, not claimed",
-      [body.includes(`Updated from 0.1.0 to ${RELEASE_VERSION}`), body.includes("cannot report which version your copy&#39;s record store")],
+      [body.includes(`Updated from 0.1.0 to ${CUR_VER}`), body.includes("cannot report which version your copy&#39;s record store")],
       [true, true]);
   } else {
     /* Once DIST cuts a release carrying D-116 and embeds it, the built-in release CAN report, and this fixture (which
@@ -1289,7 +1324,7 @@ t("PIN: instance-setup's FLEET_BINDINGS names three members (else this section t
   PLANE_FLEET.length, 3);
 t("PIN: the installer exports no member binding table of its own (R30: imported, never copied)",
   "MEMBER_BINDINGS" in NG, false);
-const repoSrc6 = "export default { fetch(){ return Response.json({ storeVersion: 'y', memberVersions: {} }); } }; export class Store {};";
+const repoSrc6 = "export default { fetch(){ return Response.json({ storeVersion: 'y', memberVersions: {} }); } }; export class Store {}; export const S = \"" + LIM + "\";";
 const repoSha6 = await shaHex(repoSrc6);
 const sig6 = await signAsset(new TextEncoder().encode(repoSrc6));
 const fleet6 = PLANE_FLEET.map(([member]) => ({ ...memberEntry, member, asset: `${member}.bundled.mjs`,
@@ -1509,8 +1544,10 @@ console.log("\n--- DIST-7: install and update send limits.subrequests ---");
 {
   const planeCfg = readFileSync(new URL("../../bio-plane/wrangler.jsonc", import.meta.url), "utf8");
   const cfgSub = Number((planeCfg.match(/"limits":\s*\{\s*"subrequests":\s*(\d+)/) || [])[1]);
-  t("DIST-7 PIN: the installer's PLANE_LIMITS.subrequests equals bio-plane/wrangler.jsonc's (the release's stated ceiling)",
-    NG.PLANE_LIMITS?.subrequests ?? null, Number.isFinite(cfgSub) ? cfgSub : "wrangler.jsonc states none");
+  /* R20 replaced DIST-7's pinned constant: the installer holds no value of its own; what it sends is the release's statement. */
+  t("R20 PIN: the installer exports no limits constant of its own", "PLANE_LIMITS" in NG, false);
+  t("PIN: this suite's releases state bio-plane/wrangler.jsonc's ceiling", NG.planeLimits(repoSrc6).limits?.subrequests ?? null,
+    Number.isFinite(cfgSub) ? cfgSub : "wrangler.jsonc states none");
   const limitsSent = async (calls, slug) => {
     const out = [];
     for (const c of calls.filter((c) => c.method === "PUT" && c.u.endsWith(`/workers/scripts/${slug}`)))

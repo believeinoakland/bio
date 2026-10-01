@@ -367,10 +367,12 @@ export function planeLimits(source) {
   if (bodies.size > 1) return { ok: false, why: "unreadable", detail: "it states them " + bodies.size + " different ways" };
   const [body] = bodies;
   const limits = {};
+  let last = "";
   for (const part of body.slice(1).split(" ")) {
     const kv = /^([a-z][a-z0-9_]*)=([1-9][0-9]{0,8})$/.exec(part);
-    if (!kv || kv[1] in limits) return { ok: false, why: "unreadable", detail: `"${LIMITS_TAG}${body}" is not one key=number per limit` };
-    limits[kv[1]] = Number(kv[2]);
+    if (!kv || kv[1] <= last) return { ok: false, why: "unreadable",
+      detail: `"${LIMITS_TAG}${body}" is not one key=number per limit, keys sorted` };
+    limits[(last = kv[1])] = Number(kv[2]);
   }
   return { ok: true, limits: Object.freeze(limits) };
 }
