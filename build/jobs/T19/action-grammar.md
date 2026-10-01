@@ -56,3 +56,18 @@
 - `ownership action-grammar tranche/T19`: 0 failures (legacy-checks +0/−0).
 
 Size (session_015rMVgJZQghuCsnEjWv73v9): test runs 6, module lines 1750
+
+## J1 · COMPLETE
+
+Done. Details are in the record's Completion section (job/T19/action-grammar).
+
+Met, each with its test in test/m/action-grammar/grammar.test.mjs (titles listed in the record): R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11. Module tests: 22 of 22 pass.
+
+Checks, all 0 failures: format, architecture, coverage (11 of 11) and ownership (legacy-checks +0/−0). The catalogue and actions/checks.mjs are untouched; their copies are for actions' job.
+
+Rows: C-73.6's where now names src/action-grammar/checks.mjs (awaiting stamp). C-117.5 is not here; it is action-clocks'.
+
+Reported in the record:
+- When actions deletes checks.mjs, these importers break: control-plane's families.mjs:51 and :103, setup.mjs:23, and nine tests. Either they re-point first, or actions keeps a re-exporting checks.mjs until they do.
+- ACTION_KINDS keeps cpra_request unchanged (R2). It is for your reading under R11.
+- No bundle is stale.
