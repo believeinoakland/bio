@@ -26,3 +26,7 @@ Size (session_01KT9cJX5DM9ZHLA7eKARs5v): test runs 9, module lines 129 (68 added
 ## J1 · QUESTION
 
 R2's text quotes the refusal's words: 'otherwise holder is null and the words say "another bundle"'. N458 has me re-word that very string (index.mjs:2447, C-53.13's detail) to 'another record'. My best reading, which I am building on: the detail says 'already registered under another record' and R2's quoted words are BOB's to amend to 'another record' (a wording change, no meaning change). If you want R2's words kept, say so and I will leave :2447 as it is and list it as not done.
+
+## J2 · REPORT
+
+Found outside my module (details in my record, Completion): (1) control-plane's test/m/control-plane/catalogue-end.test.mjs R43 test 1 is red: rows-before-r43.json pins C-53.13's translation digest (now 6611137f11985943, was 93c064a948ae1a7f); the only new red in test/m. (2) row-census (test/system) needs AWAITING_STAMP to declare C-53.13 CAPTURE_HELD_BY_ANOTHER_BUNDLE changed after 1.51.0 by provenance; my record names it 'awaiting stamp'. (3) Stale: bio-plane/dist/bio-plane.bundled.mjs (src/provenance changed); release/bio-plane.bundled.mjs also holds the old strings.
