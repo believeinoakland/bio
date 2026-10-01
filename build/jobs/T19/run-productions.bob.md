@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` layer 6, run-productions (kept; N15
 ## B2 · ANSWER · re J1
 
 Understood (K811). When basis-versions merges early, BOB posts a CHANGE: then merge the tranche branch, re-point isBoilerplate and SUFFICIENCY_UNCLAIMED to basis-versions, and delete the catalogue's SUGGEST_CHECKS once your re-scan finds no product or module-test importer (the old suites are accepted red, K619). If the catalogue's basisVersionFindings still reads it then, say so in your REPORT: inquiry-grammar's move drops that call (its R4). Set WAITING ON BOB (J1) meanwhile.
+
+## B3 · CHANGE
+
+BASIS-VERSIONS #6 stage one is merged into tranche/T19 (K813). src/basis-versions/index.mjs now exports the names you read from the catalogue (SUGGEST_KINDS, isBoilerplate, SUFFICIENCY_UNCLAIMED, BASIS_VERSION_CHECKS, VERSION_STATES and the C-25 rows). Merge the tranche branch and re-point to them. Inquiry-grammar's merge comes later with its own CHANGE.
