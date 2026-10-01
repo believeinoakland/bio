@@ -1,6 +1,6 @@
 # BIO Design Requirements
 
-**Status** · The fifteen design requirements in eight categories, each derived from the core values; "the system fails if any requirement is violated." Self-described as "Consolidated Version — April 2026 (v2, June 2026)"; the June revision was editorial ("No requirement was added, removed, or substantively changed"); no ratification is stated and none is needed — the Roadmap calls them "15, finalized" and every architecture document cites them by number. Complete at its level. One dated addendum (July 27, 2026, declared bias) follows the body and its middle clause is SUPERSEDED by DEC-20. as of 2026-09-26.
+**Status** · The fifteen design requirements in eight categories, each derived from the core values; "the system fails if any requirement is violated." Self-described as "Consolidated Version — April 2026 (v2, June 2026)"; the June revision was editorial ("No requirement was added, removed, or substantively changed"); no ratification is stated and none is needed — the Roadmap calls them "15, finalized" and every architecture document cites them by number. Complete at its level. One dated addendum (July 27, 2026, declared bias) follows the body and its middle clause is SUPERSEDED by DEC-20. **§10 GAINED DEC-111 (Bob, 2026-10-01): the directory moves to believeincities.org/<place> and carries signed "working on" notices.** as of 2026-10-01.
 
 **Place in the system** · The engineering baseline of the mission level (`BIO_System_Design.md` §2): "If any text in this roadmap conflicts with the Design Requirements document, the Design Requirements document governs", and the Technical Architecture Decisions defer to it likewise. Requirements 1, 2, 13 and 14 are cited by name across the corpus; Requirement 1's "at least two individuals" is realised as Membership v2's two-administrator floor; Requirement 6 fixes the naming policy the whole corpus follows.
 
@@ -277,6 +277,17 @@ encouraged to ensure their published work remains accessible. If a link
 in the directory becomes inactive, the entry is flagged as archived, and
 groups that previously accepted the work product are encouraged to make
 their copies available.
+
+**RULED 2026-10-01 by Bob (DEC-111), as holder of the network's domains.** The directory moves from believeinoakland.org to
+**believeincities.org/<place>**, with believein.city as the short form; believeinoakland.org redirects to
+believeincities.org/oakland. Entries are filed under the public body they examine and shown on every place page that body
+touches (the requirement's "indexed by area of government"). The directory also carries groups' "working on" notices
+(`BIO_Publication_v0_1.md` §5B): it reads them where each group publishes them, records when it first saw each notice and each
+signing key, and keeps every notice; notices show as **Stated** (typed by hand with no project behind it; lapses after 60
+days), **Reported** (signed by a group's copy) or **Proven** (its sealed proof opened at publication); each group's record is
+shown as facts, never a score; notices on the same matter are shown side by side, each saying other groups are welcome; public
+pages never use the word "claim"; impossible combinations are flagged automatically; community flags stay visible; and a group
+with no published work may have at most two open notices. This is the network site's policy; it binds no rival directory.
 
 # Onboarding
 

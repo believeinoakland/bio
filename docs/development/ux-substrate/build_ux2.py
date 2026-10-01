@@ -25,7 +25,7 @@ FRICTION = {"irreversible": "Only through the publication ceremony (DEC-80).",
 
 SUPP = [
  ("document","reading","is read into","extraction Purpose"),
- ("knock","document","is admitted as a capture when pulled (decided, not built)","capture R30-R32; DEC-78; Intake Doctrine §2a"),
+ ("knock","document","is filed as a capture when pulled","capture R30-R32; DEC-78; Intake Doctrine §2a"),
  ("lead","inquiry","points where a question could look","observation-log R14-R21; queue R18"),
  ("contradiction","passage","flags two that may conflict","contradiction Purpose, R1-R16"),
  ("bias-set","bias-debt","leaves, when its lens changes","bias R33-R43"),
@@ -91,8 +91,10 @@ GROUPS = [
   ["document", "knock", "source", "firsthand-observation", "capture-request", "reading", "passage", "entity", "connection", "progression", "observation", "lead", "leg", "inquiry"]),
  ("From a question to a published case", "A question rests on supports. A project accepts one account of that support and concludes the question; the concluded question is a finding. Strength and declared bias weigh it. Findings are published as a case, in editions.",
   ["inquiry", "leg", "basis-version", "strength", "bias-set", "bias-debt", "contradiction", "project", "case", "review-copy", "reevaluation"]),
- ("Acting on what was found, and watching", "Once published, a finding can be held against a standard. A determination can lead to an action or a filing with its deadline. Escalation and monitoring follow the government's response. The group's aspirations and objectives set direction.",
-  ["case", "standard", "determination", "consequence", "action", "filing", "escalation", "monitoring", "aspiration-goal", "objective"]),
+ ("Deciding what to do", "A project can open an action plan as soon as a question begins. The plan names the matters it is about, each suspected or determined; it holds options, suggested by the assistant or added by a member, each chosen or declined with a reason; and up to three scenarios lay the chosen options out in phases with checkpoints a member judges.",
+  ["inquiry", "determination", "action-plan", "plan-subject", "plan-option", "option-proposal", "scenario", "checkpoint", "action"]),
+ ("Acting, and watching the response", "A published finding can be held against a standard. A chosen option starts an action addressed to an office, an outlet or an organisation; what is sent is prepared as a filing or a communication draft, approved by a member and sent by their own hand. Deadlines, replies, pressure against the group and a breach's escalation are tracked; the group's aspirations and objectives set direction.",
+  ["case", "standard", "determination", "consequence", "action", "filing", "communication-draft", "pressure-entry", "deadline-reminder", "escalation", "monitoring", "aspiration-goal", "objective"]),
  ("People, permissions and the group's copy", "Each group runs its own copy. A founder claims it, administrators invite members, capabilities say what each may do, and projects decide who sees what.",
   ["group-instance", "member", "administrator", "invitation", "capability", "project", "credentials"]),
  ("What waits on a member, and the assistant", "The queue gathers everything waiting on someone. The assistant works inside a run with limits: it finds, pursues and checks, and never concludes.",
@@ -110,10 +112,11 @@ spine = """flowchart TB
   end
   subgraph P["3 · Publication and action"]
     direction LR
-    cs["Case, published"] --> det["Determination against a standard"] --> act["Action or filing"] --> mon["Watching the response"]
+    cs["Case, published"] --> det["Determination against a standard"] --> plan["Action plan: options and scenarios"] --> act["Action, sent by a member"] --> mon["Tracking replies, deadlines, escalation"]
   end
   leg --> q
   fnd --> cs
+  q -.->|a plan may open early| plan
   str["Strength and declared bias"] -.->|weigh| q
   ai["Assistant"] -.->|finds and checks; never concludes| leg
   qu["Queue"] -.->|what waits on each member| prj
@@ -129,7 +132,9 @@ def statechips(states):
     return '<ol class="states">' + "".join(out) + "</ol>"
 
 def actnotes(a):
-    return "".join("<div class=note>" + e(a[k]) + "</div>" for k in ("friction", "ruling") if a.get(k))
+    out = "".join("<div class=note>" + e(a[k]) + "</div>" for k in ("friction", "ruling") if a.get(k))
+    if a.get("rungRuled") is False: out += "<div class=note>Weight proposed, not yet ruled.</div>"
+    return out
 
 def rungpill(r):
     k = r or "undetermined"
@@ -190,60 +195,92 @@ for j in x.get("journeyExperience", []):
 <dl><dt>Knows</dt><dd>{bl(s.get("whatTheyKnow"))}</dd><dt>Decides</dt><dd>{bl(s.get("decisionTheyMake"))}</dd><dt>Can go wrong</dt><dd>{bl(s.get("whatCanGoWrong"))}</dd>
 {("<dt>Hands to</dt><dd>" + bl(s.get("handoffTo")) + "</dd>") if s.get("handoffTo") else ""}{("<dt>Trust risk</dt><dd>" + bl(s.get("feelingRisk")) + "</dd>") if s.get("feelingRisk") else ""}{("<dt>Open here</dt><dd>" + bl(s.get("openInThisStep")) + "</dd>") if s.get("openInThisStep") else ""}</dl><p>{basis(s.get("basis"))} {src(s.get("src"))}</p></li>''' for s in steps)
     jx += f'<details class="jx"><summary><b>{e(j.get("journey") or j.get("name"))}</b> · {len(steps)} steps</summary><ol class="steps">{li}</ol></details>'
-STATUS = {"ruled": ("built", "Ruled", "Ruled by"), "partly ruled": ("gaps", "Ruled in part", "Ruled in part by"),
+STATUS = {"ruled": ("built", "Settled", "Settled by"), "partly ruled": ("gaps", "Settled in part", "Settled in part by"),
           "deferred": ("spec", "Deferred", "Deferred by")}
-def ruling_box(rd):
+def linkify(t):
+    t = re.sub(r'(https://claude\.ai/artifact/[A-Za-z0-9]+)', r'<a href="\1">\1</a>', e(t))
+    return re.sub(r'\b(views/[a-z-]+\.html)', r'<a href="\1">\1</a>', t)
+def paras(t):
+    if not t: return ""
+    if isinstance(t, list): return "".join(f"<p>{linkify(p)}</p>" for p in t)
+    return "".join(f"<p>{linkify(p.strip())}</p>" for p in str(t).split("\n\n") if p.strip())
+def ruling_box(rd, n=None):
     k, _, verb = STATUS.get(rd.get("status", "ruled"), STATUS["ruled"])
     out = f'<p class="rec"><b>{verb} {e(rd.get("by", "Bob"))}, {e(rd.get("date"))} ({e(", ".join(rd.get("rulings", [])))}):</b> {linkify(rd.get("decided"))}</p>'
     if rd.get("trigger"): out += f'<p class="note"><b>Comes back when:</b> {e(rd["trigger"])}</p>'
-    so = rd.get("stillOpen")
-    if isinstance(so, str): out += f'<p class="rec"><b>Still open:</b> {linkify(so)}</p>'
-    elif so: out += '<p class="note"><b>Still to decide, later:</b></p><ul class="bl">' + "".join(f"<li>{e(t)}</li>" for t in so) + "</ul>"
+    if rd.get("stillOpen") and n: out += f'<p class="note"><b>Still open:</b> what remains is item <a href="#oq{n}">{n}</a> under <a href="#needed">What is still needed from you</a>.</p>'
     return out
-def oq_item(n, q):
-    who = str(q.get("whoDecides", ""))
-    tag = ""
-    if who:
-        k = "askb" if who.startswith("Bob") else "open"
-        tag = ' <span class="pill ' + k + '">' + ("Bob" if k == "askb" else "Design") + '</span>'
-    rd = q.get("ruled")
-    if rd:
-        k, lab, _ = STATUS.get(rd.get("status", "ruled"), STATUS["ruled"])
-        tag += f' <span class="pill {k}">{lab}</span>'
-    if q.get("elsewhere"): tag += ' <span class="pill open">Moved to its own session</span>'
-    if q.get("update") and not rd: tag += ' <span class="pill fixed">Changed by rulings</span>'
-    head = '<summary id="oq' + str(n) + '"><span class="oqn">' + str(n) + '</span> <b>' + e(q.get("question")) + '</b>' + tag + '</summary>'
-    body = ""
-    if rd: body += ruling_box(rd) + '<p class="note">What follows is the question as it stood before the ruling; the ruling wins wherever they differ.</p>'
-    if q.get("elsewhere"): body += f'<p class="rec"><b>Moved, {e(q["elsewhere"].get("date"))}:</b> {e(q["elsewhere"].get("note"))} {src(q["elsewhere"].get("src"))}</p>'
-    if q.get("update"):
-        up = q["update"]
-        body += f'<p class="rec"><b>Since this question was written ({e(", ".join(up.get("rulings", [])))}):</b> {e(up.get("note"))}</p>'
-    body += f'<div>{bl(q.get("whyItMatters"))}</div>'
-    if q.get("context"): body += f'<h4>Context</h4><p>{e(q["context"])}</p>'
-    if q.get("canonSays"): body += '<h4>What the canon says</h4><ul class="bl">' + "".join(f'<li><b>{e(c.get("source"))}</b>: {e(c.get("says"))}</li>' for c in q["canonSays"]) + '</ul>'
-    if q.get("whyOpen"): body += f'<h4>{"Why it was open" if rd else "Why it is open"}</h4><p>{e(q["whyOpen"])}</p>'
-    if q.get("todayInOldUI"): body += f'<h4>In the old interface today</h4><p>{e(q["todayInOldUI"])}</p>'
-    if q.get("options"): body += '<h4>Ways to close it</h4><ol class="opts">' + "".join(f'<li><b>{e(o.get("option"))}</b><div class=note>{e(o.get("tradeoffs"))}</div></li>' for o in q["options"]) + '</ol>'
-    if q.get("recommendation"): body += f'<p class="rec"><b>Recommendation:</b> {e(q["recommendation"])}</p>'
-    if q.get("whoDecides"): body += f'<p class="note"><b>Who decides:</b> {e(q["whoDecides"])}</p>'
-    rel = q.get("related") or []
-    body += f'<div class=note>Related: {e(", ".join(map(str, rel)))}{"; " if rel else ""}use cases {e(", ".join(q.get("relatedUseCases") or []))}</div>'
-    if q.get("whereTheCanonStops"): body += f'<div class=note>Where the canon stops: {bl(q.get("whereTheCanonStops"))}</div>'
-    return f'<li><details class="oqd">{head}<div class="cbody">{body}</div></details></li>'
-def linkify(t):
-    return re.sub(r'(https://claude\.ai/artifact/[A-Za-z0-9]+)', r'<a href="\1">\1</a>', e(t))
-oq = "".join(oq_item(i + 1, q) for i, q in enumerate(x.get("openQuestions", [])))
 oqs = x.get("openQuestions", [])
-oq_ruled = [(i + 1, q) for i, q in enumerate(oqs) if q.get("ruled")]
-def _st(q): return (q.get("ruled") or {}).get("status", "ruled") if q.get("ruled") else "open"
-oq_full = [n for n, q in oq_ruled if _st(q) == "ruled"]
-oq_part = [n for n, q in oq_ruled if _st(q) == "partly ruled"]
-oq_def = [n for n, q in oq_ruled if _st(q) == "deferred"]
-oq_open_n = len(oqs) - len(oq_full) - len(oq_def)  # a question ruled in part still counts as open
-ruledq = "".join(f'<article class="q bob"><h3><a href="#oq{n}">Open question {n}</a>: {e(q.get("question"))}</h3>{ruling_box(q["ruled"])}</article>' for n, q in oq_ruled)
-ruledq += "".join(f'<article class="q bob"><h3><a href="#oq{i + 1}">Open question {i + 1}</a>: {e(q.get("question"))}</h3><p class="rec"><b>Moved, {e(q["elsewhere"].get("date"))}:</b> {e(q["elsewhere"].get("note"))}</p></article>' for i, q in enumerate(oqs) if q.get("elsewhere"))
-other = "".join(f'<article class="q bob"><h3>{e(r["title"])}</h3><p class="rec"><b>Ruled by Bob, {e(r["date"])} ({e(r["id"])}):</b> {e(r["decided"])}</p>{src(r.get("src"))}</article>' for r in d.get("otherRulings", []))
+def _st(q):
+    if q.get("brief") and q["brief"].get("stillOpen") in (True, "partly"): return "partly ruled" if q.get("ruled") else "open"
+    return (q.get("ruled") or {}).get("status", "ruled") if q.get("ruled") else "open"
+absorbed = {int(a): i + 1 for i, q in enumerate(oqs) for a in ((q.get("brief") or {}).get("absorbs") or [])}
+def _anchor(n):
+    """A related question's anchor: its settled card once fully ruled, else its brief."""
+    try: q = oqs[int(n) - 1]
+    except (TypeError, ValueError, IndexError): return f"oq{n}"
+    if int(n) in absorbed: return _anchor(absorbed[int(n)])
+    return f"oq{n}s" if q.get("ruled") and _st(q) == "ruled" else f"oq{n}"
+need = [(i + 1, q) for i, q in enumerate(oqs) if _st(q) in ("open", "partly ruled") and not (q.get("brief") or {}).get("designOnly") and (i + 1) not in absorbed]
+design_only = [(i + 1, q) for i, q in enumerate(oqs) if (q.get("brief") or {}).get("designOnly") and _st(q) in ("open", "partly ruled")]
+settled = [(i + 1, q) for i, q in enumerate(oqs) if q.get("ruled") and _st(q) != "open"]
+oq_full = [n for n, q in settled if _st(q) == "ruled"]
+oq_part = [n for n, q in settled if _st(q) == "partly ruled"]
+oq_def = [n for n, q in settled if _st(q) == "deferred"]
+SIZE = {"quick": ("built", "Quick: a yes is enough"), "short": ("gaps", "A short discussion"), "session": ("askb", "Needs a working session")}
+def sizekey(sz):
+    s = str(sz or "").lower()
+    return "quick" if s.startswith("quick") else "session" if "session" in s else "short"
+def lst(v):
+    if not v: return ""
+    if isinstance(v, str): return f"<p>{linkify(v)}</p>"
+    return '<ul class="bl">' + "".join(f"<li>{linkify(t)}</li>" for t in v) + "</ul>"
+def brief_card(n, q):
+    b = q.get("brief") or {}
+    sk = sizekey(b.get("size")); k, lab = SIZE[sk]
+    tag = f' <span class="pill {k}">{lab}</span>'
+    if q.get("ruled") or b.get("alreadyDecidedPart"): tag += ' <span class="pill gaps">Part already settled</span>'
+    head = f'<summary id="oq{n}"><span class="oqn">{n}</span><span><b>{e(b.get("title") or q.get("question"))}</b>{tag}</span><span class="cdef">{e(b.get("inOneBreath") or b.get("decision"))}</span></summary>'
+    body = ""
+    if b.get("absorbs"): body += f'<p class="rec"><b>This brief takes in questions {", ".join(str(a) for a in b["absorbs"])}.</b> {linkify(b.get("absorbNote"))}</p>'
+    body += f'<h4>What you are asked to decide</h4><p class="ask">{linkify(b.get("decision"))}</p>'
+    if b.get("alreadyDecidedPart"): body += f'<p class="rec"><b>Already decided:</b> {linkify(b["alreadyDecidedPart"])}</p>'
+    elif q.get("ruled"): body += ruling_box(q["ruled"])
+    if b.get("basics"): body += f'<h3 class="bh">The basics</h3>{paras(b["basics"])}'
+    if b.get("today"): body += f'<h3 class="bh">How it works today</h3>{paras(b["today"])}'
+    if b.get("problem"): body += f'<h3 class="bh">The problem, and why it matters</h3>{paras(b["problem"])}'
+    st = b.get("story")
+    if st and st.get("steps"): body += f'<h3 class="bh">An example</h3><div class="story"><b>{e(st.get("title"))}</b><ol>' + "".join(f"<li>{linkify(t)}</li>" for t in st["steps"]) + "</ol></div>"
+    if b.get("fixed"):
+        body += '<h3 class="bh">What is already fixed</h3><ul class="bl">' + "".join(
+            f'<li><b>{linkify(f.get("point"))}</b> <span class="why">{linkify(f.get("why"))}</span> {src(f.get("src"))}</li>' if isinstance(f, dict) else f"<li>{linkify(f)}</li>" for f in b["fixed"]) + "</ul>"
+    if b.get("options"):
+        body += '<h3 class="bh">The choices</h3>'
+        for o in b["options"]:
+            body += f'<div class="opt"><h4 class="oh">{e(o.get("label"))}. {e(o.get("name"))}</h4>{paras(o.get("howItWorks") or o.get("whatTheMemberSees"))}'
+            if o.get("inTheStory"): body += f'<p class="ins"><b>In the example:</b> {linkify(o["inTheStory"])}</p>'
+            body += f'<div class="gc"><div><b>Gains</b>{lst(o.get("gains"))}</div><div><b>Costs and risks</b>{lst(o.get("costs"))}</div></div>'
+            if o.get("commitsYouTo"): body += f'<p class="note"><b>Commits you to:</b> {linkify(o["commitsYouTo"])}</p>'
+            body += "</div>"
+    if b.get("tradeoff"): body += f'<p class="trade"><b>The trade-off:</b> {linkify(b["tradeoff"])}</p>'
+    r = b.get("recommendation")
+    if isinstance(r, dict):
+        body += f'<div class="rec"><b>Recommendation: {e(r.get("choice"))}</b>{paras(r.get("why"))}' + (f'<p><b>The risk, and how it is contained:</b> {linkify(r["risk"])}</p>' if r.get("risk") else "") + "</div>"
+    elif r: body += f'<p class="rec"><b>Recommendation:</b> {linkify(r)}</p>'
+    if b.get("howToAnswer"): body += '<h4>How you might answer</h4><ul class="say">' + "".join(f"<li>{linkify(t)}</li>" for t in b["howToAnswer"]) + "</ul>"
+    if b.get("ifLeftOpen"): body += f'<h4>Meanwhile</h4>{paras(b["ifLeftOpen"])}'
+    if b.get("related"): body += '<h4>Related questions</h4><ul class="bl">' + "".join(f'<li><a href="#{_anchor(t.get("n"))}">{e(t.get("n"))}</a>: {linkify(t.get("how"))}</li>' if isinstance(t, dict) else f"<li>{e(t)}</li>" for t in b["related"]) + "</ul>"
+    if b.get("glossary"): body += '<details class="gl"><summary>Words used here</summary><dl>' + "".join(f'<dt>{e(g.get("term"))}</dt><dd>{linkify(g.get("plain"))}</dd>' for g in b["glossary"]) + "</dl></details>"
+    if b.get("sources"): body += f'<p>{src("Sources: " + "; ".join(b["sources"]))}</p>'
+    return f'<li><details class="oqd">{head}<div class="cbody brief">{body}</div></details></li>'
+need_rows = "".join(f'<tr><td><a href="#oq{n}">{n}</a></td><td><b>{e((q.get("brief") or {}).get("title") or q.get("question"))}</b><div class=note>{e((q.get("brief") or {}).get("inOneBreath") or (q.get("brief") or {}).get("decision"))}</div></td><td><span class="pill {SIZE[sizekey((q.get("brief") or {}).get("size"))][0]}">{SIZE[sizekey((q.get("brief") or {}).get("size"))][1]}</span></td></tr>' for n, q in need)
+need_cards = "".join(brief_card(n, q) for n, q in need)
+design_items = "".join(f'<li><b>{e((q.get("brief") or {}).get("title") or q.get("question"))}</b> (question {n}): {e((q.get("brief") or {}).get("designNote") or (q.get("brief") or {}).get("recommendation"))}</li>' for n, q in design_only)
+design_items += "".join(f'<li><b>{e(t.get("title"))}</b>: {e(t.get("note"))} {src(t.get("src"))}</li>' for t in x.get("designOpen", []))
+def settled_item(n, q):
+    return f'<article class="q bob" id="oq{n}s"><h3><span class="oqn">{n}</span> {e(q["ruled"].get("title") or q.get("question"))}</h3>{ruling_box(q["ruled"], n if _st(q) == "partly ruled" else None)}</article>'
+ruledq = "".join(settled_item(n, q) for n, q in settled)
+other = "".join(f'<article class="q bob"><h3>{e(r["title"])}</h3><p class="rec"><b>Settled by Bob, {e(r["date"])} ({e(r["id"])}):</b> {linkify(r["decided"])}</p>{src(r.get("src"))}</article>' for r in d.get("otherRulings", []))
 dis = "".join(f'<tr><td><b>{e(c["what"])}</b></td><td>{e(c.get("canon"))}</td><td>{e(c.get("requirements"))}</td><td><span class="pill {"built" if c.get("status") == "resolved" else "gaps"}">{e(c.get("status", "open"))}</span><div class=note>{e(c.get("resolution"))}</div></td><td>{src(c.get("src"))}</td></tr>' for c in d.get("contradictions", []))
 
 gl = "".join(f'<tr><th scope=row>{e(g["term"])}</th><td>{e(g["plain"])} {src(g.get("src"))}</td><td><code>{e(g.get("internalNames"))}</code></td><td>{e(g.get("avoidConfusionWith"))}</td></tr>' for g in d["glossary"])
@@ -252,14 +289,11 @@ roles = "".join(f'<tr><th scope=row>{e(r["name"])}</th><td><ul>{"".join("<li>"+e
 flux = "".join(f'<tr><td>{e(f["what"])}</td><td>{e(f.get("why"))}</td><td>{src(f.get("ids"))}</td></tr>' for f in d["inFlux"])
 
 BOBQ = [
- ("What does “rung” mean to a member?", "The design documents use “rung ladder” for the path to publication (release, stand behind, ground, conclude, accept, ratify, publish). The requirements use it for how heavy each act is (can be undone, needs a reason, ends something, signed, cannot be undone). A member sees the second on every button.",
-  "“Rung” means the weight of an act. The sequence is the <b>path to publication</b>. System Design and Publication are corrected to match."),
- ("What does “finding” mean to a member?", "In Case Making a finding is a concluded question. In the queue, “FINDING” is a class of item: something the record noticed that nobody has judged yet.",
-  "<b>Finding</b> means a concluded question. The queue class is shown to members as <b>Noticed</b>. Only the word a member sees changes."),
- ("Does a project show its stage?", "State Rules §4.3 gives a project four stages (forming, investigating, matured, closed) and a readiness for its work products. No requirement carries them, so no screen can show them today.",
-  "A project shows its stage. The four stages go into the project's requirements in T12, computed from the questions it holds and what it has published, never set by hand, and the redesign shows a project's stage on its home screen."),
+ ("What “rung” means to a member", "“Rung” is the weight of an act, shown on every button: can be undone, needs a reason, ends something, signed, cannot be undone. The sequence from releasing work to publishing it (release, stand behind, ground, conclude, accept, ratify, publish) is called the <b>path to publication</b>.", "K356"),
+ ("What “finding” means to a member", "<b>Finding</b> means a concluded question. The queue's class of items that the record noticed and nobody has judged yet is shown to members as <b>Noticed</b>.", "K356"),
+ ("A project shows its stage", "A project shows one of four stages (forming, investigating, matured, closed) on its home screen. Three are computed from the questions it holds and what it has published, never set by hand; closing is the owner's recorded act with a reason.", "K356, K362"),
 ]
-bobq = "".join(f'<article class="q bob"><h3>{t}</h3><p>{w}</p><p class="rec"><b>Ruled by Bob, 2026-09-29, as recommended (K356):</b> {r}</p></article>' for t, w, r in BOBQ)
+bobq = "".join(f'<article class="q bob"><h3>{t}</h3><p class="rec"><b>Settled by Bob, 2026-09-29 ({k}):</b> {r}</p></article>' for t, r, k in BOBQ)
 
 cnt = {k: sum(1 for c in d["constructs"] if c["maturity"] == k) for k in MAT}
 sx = {k: sum(1 for s in d["surfaces"] if s.get("existsInOldUI") == k) for k in ("yes", "partial", "no")}
@@ -283,10 +317,7 @@ if x:
 <h2 id="experience">The experience, step by step</h2>
 <p>The long paths through the work, as the person taking each step meets it: what they know at that moment, what they decide, what can go wrong, how long it takes, who they hand it to, and where trust is at risk.</p>
 {jx}
-<h2 id="open">Open questions for the design</h2>
-<p><b>{oq_open_n}</b> of {len(oqs)} still open ({len(oq_part)} of them, questions {", ".join(str(n) for n in oq_part)}, ruled in part and marked <span class="pill gaps">Ruled in part</span>); <b>{len(oq_full)}</b> ruled by Bob and <b>{len(oq_def)}</b> deferred, each marked with its ruling at the top (and listed under <a href="#bob">Bob's rulings</a>). Open questions a ruling has since settled in part or changed are marked <span class="pill fixed">Changed by rulings</span>, with what changed at the top; nothing there is a ruling Bob did not make.</p>
-<p>What the canon leaves open. Open each question for its context, what the canon says, why it is still open, what the old interface does, the ways to close it and a recommendation. Each is marked <span class=\"pill askb\">Bob</span> where closing it is a decision of policy, doctrine, requirements or UX principle, or <span class=\"pill open\">Design</span> where the designer settles it within the canon.</p>
-<ol class="oq">{oq}</ol>'''
+'''
 
 page = f'''<title>CivicOS UX Substrate</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -365,40 +396,61 @@ dl {{ display:grid; grid-template-columns:max-content 1fr; gap:3px 12px; margin:
 ol.steps {{ margin:0; padding:10px 14px 14px 40px; display:grid; gap:14px }} ol.steps li::marker {{ font:600 13px var(--f-mono); color:var(--accent) }}
 .who {{ font:600 12px var(--f-body); text-transform:uppercase; letter-spacing:.06em; color:var(--muted) }} .what {{ font-weight:600 }}
 ol.oq {{ display:grid; gap:8px; padding-left:0; list-style:none }} ol.oq div {{ font-size:14px }} details.oqd {{ background:var(--panel); border:1px solid var(--rule); border-radius:4px }} .oqn {{ font:600 13px var(--f-mono); color:var(--accent); margin-right:4px }} ol.opts {{ margin:4px 0; padding-left:22px; display:grid; gap:6px }}
+.ask {{ font-size:16px; font-weight:600; max-width:none }}
+.opts2 {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr)); gap:10px; margin:6px 0 }}
+.opt {{ background:var(--bg); border:1px solid var(--rule); border-radius:4px; padding:10px 12px; min-width:0 }} .opt p {{ margin:4px 0 }}
+ul.say {{ list-style:none; padding-left:0; margin:4px 0 }} ul.say li {{ border-left:3px solid var(--bob); padding:4px 10px; margin:6px 0; background:var(--bob-bg); border-radius:0 3px 3px 0; font-style:italic }}
+details.oqd > summary {{ display:grid; grid-template-columns:auto 1fr; gap:4px 8px }} details.oqd .cdef {{ grid-column:2 }}
+table.need td:first-child {{ font:600 13px var(--f-mono) }}
+.brief p {{ max-width:78ch }} h3.bh {{ font-size:16px; margin:22px 0 6px; color:var(--accent) }}
+.story {{ background:var(--bg); border-left:3px solid var(--accent); padding:10px 14px; border-radius:0 4px 4px 0 }} .story ol {{ margin:6px 0 0; padding-left:20px; display:grid; gap:4px }}
+.opt {{ margin:10px 0 }} h4.oh {{ font:600 15px var(--f-body); text-transform:none; letter-spacing:0; color:var(--ink); margin:0 0 4px }}
+.ins {{ font-size:14px; background:var(--panel); border:1px dashed var(--rule); padding:8px 10px; border-radius:3px; max-width:none }}
+.gc {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr)); gap:10px; font-size:14px }}
+.why {{ color:var(--muted) }} .trade {{ border-left:3px solid var(--gaps); padding:6px 12px; max-width:none }}
+details.gl {{ margin:10px 0; border:1px solid var(--rule); border-radius:3px }} details.gl > summary {{ padding:6px 10px; font-weight:600; font-size:14px }} details.gl dl {{ padding:0 12px }}
 ul.bl {{ margin:2px 0; padding-left:18px }} ul.bl li {{ margin:2px 0 }}
 .cov {{ font-weight:600 }} .cov-no {{ color:var(--bob) }} .cov-partial {{ color:var(--gaps) }} .cov-yes {{ color:var(--built) }}
 @media (max-width:560px) {{ dl {{ grid-template-columns:1fr }} details.con > summary, details.surf > summary {{ grid-template-columns:1fr }} .bar label {{ margin-left:0 }} }}
 </style>
 <div class="wrap">
 <header>
-<p class="src" style="display:block">CivicOS · {e(d["meta"].get("branch"))} @ {e(d["meta"].get("commit"))} · first written {e(d["meta"].get("written"))}{(" · updated " + e(d["meta"]["updated"])) if d["meta"].get("updated") else ""}</p>
+<p class="src" style="display:block">CivicOS · as of {e(d["meta"].get("asOf"))}</p>
 <h1>The UX substrate</h1>
-<p class="lede">What a CivicOS member sees and works with, as the approved requirements define it, and everything a designer needs to build its experience on: who uses it, for what, what they meet at each step, and what each screen must and must never do.</p>
+<p class="lede">What a CivicOS member sees and works with, as the approved requirements and Bob's rulings define it today, and everything a designer needs to build its experience on. It opens with the decisions that are still Bob's to make.</p>
 <div class="readme">
-<div><b>Part 1 · Overview</b>For Bob: what the product is to a member, in plain words and a few diagrams, your rulings on its words, on the design's open questions, and on what else changes what members see.</div>
+<div><b>Part 1 · For Bob</b>What the product is to a member, in plain words; <a href="#needed">what is still needed from you</a>, each with its background, the choices and a recommendation; and <a href="#settled">what is settled</a>.</div>
 <div><b>Part 2 · Design inputs</b>For the UX work: audiences, use cases, the experience step by step, screens and their rules, how heavy each act is, and the words. Each line is marked <span class="pill fixed">Fixed</span> by the canon or <span class="pill open">Open</span> for design.</div>
-<div><b>Part 3 · Reference</b>Every construct with its lifecycle and acts, who may act, what is still changing. Turn on “Show sources” to see the requirement behind each line.</div>
+<div><b>Part 3 · Reference</b>Every construct with its lifecycle and acts, who may act, what is decided but not yet built. Turn on “Show sources” to see the requirement behind each line.</div>
 </div>
-<div class="stats"><span class="pill built">{cnt["built"]} built</span><span class="pill gaps">{cnt["built, gaps"]} built, with gaps</span><span class="pill spec">{cnt["specified, not built"] + cnt["decided, not built"]} not built</span><span class="pill askb">{len(oq_full)} questions ruled, {len(oq_def)} deferred</span><span class="pill gaps">{len(oq_part)} ruled in part</span>{f'<span class="pill open">{oq_open_n} open questions</span>' if x else ""}{f'<span class="pill open">{fixed_open}</span>' if fixed_open else ""}</div>
+<div class="stats"><span class="pill askb">{len(need)} decisions still yours</span><span class="pill built">{len(oq_full)} questions settled</span><span class="pill gaps">{len(oq_part)} settled in part</span><span class="pill spec">{len(oq_def)} deferred</span><span class="pill built">{cnt["built"]} constructs built</span><span class="pill gaps">{cnt["built, gaps"]} built, with gaps</span><span class="pill spec">{cnt["specified, not built"] + cnt["decided, not built"]} not yet built</span></div>
 </header>
-<nav class="bar" aria-label="Sections"><a href="#overview">Overview</a><a href="#bob">Bob's rulings</a>{'<a href="#audiences">Audiences</a><a href="#usecases">Use cases</a><a href="#experience">Experience</a>' if x else ""}<a href="#screens">Screens</a><a href="#weights">Act weights</a><a href="#words">Words</a>{'<a href="#open">Open questions</a>' if x else ""}<a href="#constructs">Constructs</a><a href="#roles">Who may act</a><a href="#flux">In flux</a><a href="#disagree">Canon and requirements</a>
+<nav class="bar" aria-label="Sections"><a href="#overview">Overview</a><a href="#needed">Needed from you</a><a href="#settled">Settled</a><a href="#audiences">Audiences</a><a href="#usecases">Use cases</a><a href="#experience">Experience</a><a href="#screens">Screens</a><a href="#weights">Act weights</a><a href="#words">Words</a><a href="#constructs">Constructs</a><a href="#roles">Who may act</a><a href="#flux">Not yet built</a><a href="#disagree">Canon and requirements</a>
 <label for="srcToggle"><input type="checkbox" id="srcToggle"> Show sources</label></nav>
 
-<p class="part">Part 1 · Overview</p>
+<p class="part">Part 1 · For Bob</p>
 <h2 id="overview">What a member does with CivicOS</h2>
-<p>A group runs its own copy of CivicOS to investigate how a government is meeting its obligations. Members bring documents in with a record of where each came from. They ask questions and support each answer with passages from those documents. A project concludes a question on the support it accepts, and the concluded question becomes a finding. The group publishes findings as a case. It then holds them against the standards that apply and acts: a request, a complaint, a filing with its deadline. Afterwards it watches for the response.</p>
-<p>Three things run through all of it. The record always says what is not known and why. It keeps track of who looked where and what they found. And an assistant can help find and check, but a person always makes the judgement.</p>
+{"".join("<p>" + t + "</p>" for t in d["meta"].get("overview", []))}
 <div class="diagram"><pre class="mermaid">{e(spine)}</pre></div>
 <p class="legend">In the diagrams below, colour shows how far each thing is built: <span class="pill built">Built</span> <span class="pill gaps">Built, with gaps</span> <span class="pill spec">Not built</span></p>
 <div class="figs">{focus}</div>
 <h3 style="margin-top:28px">How much of it has a screen today</h3>
 <p>The requirements imply <b>{len(d["surfaces"])}</b> screens. In the old interface <b>{sx["yes"]}</b> exist, <b>{sx["partial"]}</b> exist in part, and <b>{sx["no"]}</b> were never built. Of the <b>{len(allacts)}</b> acts a member or administrator can take, <b>{n_none}</b> have no control in the old interface. The redesign starts from the requirements, not from the old screens.</p>
 
-<h2 id="bob">Bob's rulings</h2>
-<p>The design documents and the requirements disagreed on these three words, and each changes what members read. Bob ruled all three on 2026-09-29, as recommended. The other differences are listed under “Canon and requirements” and “In flux”.</p>
+<h2 id="needed">What is still needed from you</h2>
+{"".join("<p>" + t + "</p>" for t in x["meta"].get("neededIntro", []))}
+<div class="tw"><table class="need"><thead><tr><th>#</th><th>The decision</th><th>Size of the ask</th></tr></thead><tbody>{need_rows}</tbody></table></div>
+<ol class="oq">{need_cards}</ol>
+{('<p class="note">Folded into another question: ' + "; ".join(f'{a} ({e((oqs[a-1].get("brief") or {}).get("title") or oqs[a-1].get("question"))}) into <a href="#oq{t}">{t}</a>' for a, t in sorted(absorbed.items())) + '.</p>') if absorbed else ""}
+{('<h3 style="margin-top:22px">Left to the design</h3><p>These are open, but they are detail within rules already set, so the designer settles them without you. Say so if you want any of them brought to you.</p><ul class="bl">' + design_items + '</ul>') if design_items else ""}
+
+<h2 id="settled">What is settled</h2>
+<p>The design as Bob has ruled it, stated as it now stands. Where a ruling left part of a question open, the rest is under <a href="#needed">What is still needed from you</a>.</p>
+<h3 style="margin-top:22px">Words</h3>
 {bobq}
-{('<h3 style="margin-top:22px">The design’s open questions ruled</h3><p>On 2026-09-29 Bob ruled open questions ' + ", ".join(str(n) for n in oq_full) + (', ruled in part ' + ", ".join(str(n) for n in oq_part) if oq_part else "") + (' and deferred ' + ", ".join(str(n) for n in oq_def) if oq_def else "") + '. Each is kept, with its context, under <a href="#open">Open questions</a>.</p>' + ruledq) if oq_ruled else ""}
-{('<h3 style="margin-top:22px">Other rulings that change what members see</h3>' + other) if other else ""}
+<h3 style="margin-top:22px">The design's questions</h3>
+{ruledq}
+{('<h3 style="margin-top:22px">Other rulings that shape what members see</h3>' + other) if other else ""}
 
 <p class="part">Part 2 · Design inputs</p>
 {exp_block}
@@ -410,7 +462,7 @@ ul.bl {{ margin:2px 0; padding-left:18px }} ul.bl li {{ margin:2px 0 }}
 <h2 id="weights">How heavy each act is</h2>
 <p>Every act carries a weight, its rung, and the rung decides how much friction the act gets (Bob, 2026-09-29, DEC-87). Friction is kept as low as possible so the tool fades and the work stays in focus, yet a heavier act slows the member down, even for a moment, before it is taken.</p>
 <ul class="bl"><li>{rungpill("reversible")} happens inline.</li><li>{rungpill("reasoned")} opens a reason field in place.</li><li>{rungpill("terminal")} and {rungpill("attested")} open a full dialog stating what ends or cannot be silently undone, and who signs.</li><li>{rungpill("irreversible")} only through the publication ceremony (DEC-80).</li></ul>
-<p>Every act's button shows its rung's name and weight mark (DEC-82). Weights come from the affordances module. Bob gave the 57 acts that had none their rungs on 2026-09-29 (DEC-88: 26 reversible, 29 reasoned, 2 terminal), and they are shown here at those rungs; the module takes them up when BOB moves them, and each says so. <b>{n_undet}</b> acts here still show {rungpill("undetermined")}: some because no operation of their own has been located, others because they are decided but not yet built and their rung is not yet assigned; each is treated as needing a stated reason until BOB assigns it.</p>
+<p>Every act's button shows its rung's name and weight mark (DEC-82). Weights come from the affordances module and, for the 57 acts that had none, from Bob's grades (DEC-88: 26 reversible, 29 reasoned, 2 terminal), shown here at those rungs; the module takes them up when BOB moves them. Where an act's weight is proposed but not yet assigned in the code, it says so. <b>{n_undet}</b> acts here show {rungpill("undetermined")}: no operation of their own has been located, or they are decided but not yet built and not yet weighed; each is treated as needing a stated reason until BOB assigns it.</p>
 <p>Six acts are judgement calls that carry high friction whatever their rung, because friction follows the consequence in the world, and a heavy consequence is not a new rung (DEC-88):</p>
 <ul class="bl">{six}</ul>
 <p>An act that is decided but not yet built, such as “Decline to escalate” (DEC-89), is listed at its rung and marked as not yet built.</p>
@@ -428,8 +480,8 @@ ul.bl {{ margin:2px 0; padding-left:18px }} ul.bl li {{ margin:2px 0 }}
 {ref}
 <h2 id="roles">Who may act</h2>
 <div class="tw"><table><thead><tr><th>Role</th><th>Can</th><th>Cannot</th><th class=srccol>Source</th></tr></thead><tbody>{roles}</tbody></table></div>
-<h2 id="flux">In flux</h2>
-<p>What could still change what a member sees.</p>
+<h2 id="flux">Decided, not yet built</h2>
+<p>What is decided or specified but not yet built, and what could still change what a member sees.</p>
 <div class="tw"><table><thead><tr><th>What</th><th>Why</th><th class=srccol>Ids</th></tr></thead><tbody>{flux}</tbody></table></div>
 <h2 id="disagree">Where the canon and the requirements disagree</h2>
 <p>Places where a design document and the approved requirements said different things, and where each stands now. A ruling folded into the canon wins; until the requirements carry it, nothing is built on it.</p>
@@ -439,6 +491,11 @@ ul.bl {{ margin:2px 0; padding-left:18px }} ul.bl li {{ margin:2px 0 }}
 (function(){{ var t=document.getElementById("srcToggle"); function set(v){{ document.body.classList.toggle("show-src", v); t.checked=v; }}
 try {{ set(localStorage.getItem("ux-src")==="1"); }} catch(_ ) {{ set(false); }}
 t.addEventListener("change", function(){{ set(t.checked); try {{ localStorage.setItem("ux-src", t.checked?"1":"0"); }} catch(_ ) {{}} }}); }})();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.4.0/mermaid.min.js"></script>
+<script>
+try {{ var dk = document.documentElement.dataset.theme === "dark" || (document.documentElement.dataset.theme !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+mermaid.initialize({{ startOnLoad: true, theme: dk ? "dark" : "neutral", securityLevel: "strict", flowchart: {{ useMaxWidth: true }} }}); }} catch (_) {{}}
 </script>'''
 open(S + "ux-substrate.html", "w").write(page)
 print(len(page), "exp" if x else "no-exp")
