@@ -73,19 +73,33 @@ export function world({ profiles = ["test-port-ellery"], omit = [] } = {}) {
   /* connections' `refs` projection, as far as actions' read joins it (its R25). */
   st.db.exec(`CREATE TABLE refs (bundle_id TEXT, target_id TEXT, kind TEXT)`);
 
+  /* R35: objects withheld from one viewer (`w.hide(viewer, id)`), as a sight rule narrower than membership's would: a
+     membership proxy (conformance's reads.test.mjs builds one the same way) answers `inSight` false for them, and the
+     stand-ins and actions' read below refuse them as their modules refuse an unseen object. */
+  const hidden = new Set();
+  const hid = (viewer, id) => hidden.has(`${viewer}|${id}`);
+  const sight = new Proxy(membership, { get: (t, k) => (k === "inSight"
+    ? (id, viewer) => (hid(viewer, id) ? false : t.inSight(id, viewer))
+    : typeof t[k] === "function" ? t[k].bind(t) : t[k]) });
   const sees = (project, viewer) => viewer === null || viewer === undefined || membership.inSight(project, viewer);
-  /* conformance's stand-in: determinations as its R9 answers them, sight by the determination's project. */
+  /* conformance's stand-in: determinations as its R9 answers them, sight by the determination's project; a finding the
+     viewer may not see is withheld whole and the answer states `out_of_view: true` (its R24). */
   const determinations = new Map();
+  const shown = (d, viewer) => {
+    const findings = (d.findings || []).filter((f) => !hid(viewer, f && f.finding));
+    return { ...structuredClone(d), findings, live: !d.superseded_by,
+             ...(findings.length !== (d.findings || []).length ? { out_of_view: true } : {}) };
+  };
   const conformance = {
     determinationRead({ id, viewer }) {
       const d = determinations.get(id);
-      if (!d || !sees(d.project, viewer)) return { ok: false, reason: "NO_SUCH_DETERMINATION" };
-      return { ok: true, ...structuredClone(d), live: !d.superseded_by };
+      if (!d || !sees(d.project, viewer) || hid(viewer, id)) return { ok: false, reason: "NO_SUCH_DETERMINATION" };
+      return { ok: true, ...shown(d, viewer) };
     },
     determinationsFor({ act, live, after, viewer }) {
-      const items = [...determinations.values()].filter((d) => sees(d.project, viewer) && (!act || d.act.id === act)
+      const items = [...determinations.values()].filter((d) => sees(d.project, viewer) && !hid(viewer, d.id) && (!act || d.act.id === act)
         && (!live || !d.superseded_by) && (!after || d.id > after)).sort((a, b) => (a.id < b.id ? -1 : 1))
-        .map((d) => ({ ...structuredClone(d), live: !d.superseded_by }));
+        .map((d) => shown(d, viewer));
       return { ok: true, items, cursor: null, truncated: false };
     },
   };
@@ -102,7 +116,7 @@ export function world({ profiles = ["test-port-ellery"], omit = [] } = {}) {
   const escalation = {
     escalationsFor: ({ determination, viewer }) => {
       const d = determinations.get(determination);
-      if (!d || !sees(d.project, viewer)) return { ok: false, reason: "NO_SUCH_DETERMINATION" };
+      if (!d || !sees(d.project, viewer) || hid(viewer, determination)) return { ok: false, reason: "NO_SUCH_DETERMINATION" };
       return { ok: true, determination, items: (escalations.get(determination) || []).map((e) => ({ id: e.id, state: e.state, stage: e.stage })) };
     },
     escalationRead: ({ id }) => {
@@ -134,7 +148,10 @@ export function world({ profiles = ["test-port-ellery"], omit = [] } = {}) {
   const clocks = actionClocksOf(host, { record, membership, actions, conformance, now: nowMs });
   const given = Object.fromEntries(Object.entries(stand).filter(([k]) => !omit.includes(k)).map(([k, v]) => [k, v]));
   for (const k of omit) given[k] = null;
-  const ap = actionPlansOf(host, { record, membership, promotion, ...given, actions: omit.includes("actions") ? null : actions,
+  const seenActions = new Proxy(actions, { get: (t, k) => (k === "actionRead"
+    ? (a) => (hid(a && a.viewer, a && a.id) ? { ok: false, reason: "NO_SUCH_BUNDLE", target: a.id } : t.actionRead(a))
+    : typeof t[k] === "function" ? t[k].bind(t) : t[k]) });
+  const ap = actionPlansOf(host, { record, membership: sight, promotion, ...given, actions: omit.includes("actions") ? null : seenActions,
                                    clocks: omit.includes("clocks") ? null : clocks, now: () => clock.now });
 
   let n = 0, nd = 0, ni = 0, nr = 0;
@@ -148,6 +165,8 @@ export function world({ profiles = ["test-port-ellery"], omit = [] } = {}) {
   const w = {
     st, host, record, membership, promotion, ap, actions, clocks, clock, stand, determinations, drawing, bars, standardsHeld,
     escalations, runs, reg,
+    /** R35: withhold `id` from `viewer` (a member's stamp), as a narrower sight rule would. */
+    hide(viewer, id) { hidden.add(`${viewer}|${id}`); },
     rows: (q, ...a) => [...st.sql.exec(q, ...a)],
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,
     fm: (id) => { const t = record.readFile(id, "bundle.md")?.text; return t ? parseFrontmatter(t).data : null; },
