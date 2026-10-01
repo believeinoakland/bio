@@ -4,7 +4,7 @@ import { world } from "./fixture.mjs";
 import { compile, FIELDS, MEANING, MACHINE_READ_KINDS } from "../../../src/query.mjs";
 import { CONTENT_EXTENT_KINDS } from "../../../src/content/index.mjs";
 import { STEP_KINDS, CHAIN_KIND_MIXED, MACHINE_READ_KINDS as TEXT_CHAIN_MACHINE_READ_KINDS } from "../../../src/textchain.mjs";
-import { normalizeType } from "../../../checks/bio-checks.mjs";
+import { normalizeType } from "../../../src/record-grammar/types.mjs";
 
 const V = "class:member";
 const sorted = (a) => [...a].sort();
@@ -98,7 +98,7 @@ test("R3 FIELDS is the projection's vocabulary; free-text fields match, the rest
   assert.deepEqual(ids("authority:clerk"), ["A"]);
   assert.deepEqual(ids("criticality:HIGH"), ["A"], "lower-cased argument");
   assert.deepEqual(ids("group:G1"), ["A"]);
-  /* type: through the catalogue's type map: a legacy spelling finds the canonical type. */
+  /* type: through record-grammar's type map: a legacy spelling finds the canonical type. */
   assert.notEqual(normalizeType("problem"), "problem");
   assert.deepEqual(ids("type:problem"), ["A"]);
   assert.deepEqual(ids(`type:${normalizeType("problem")}`), ["A"]);
@@ -133,7 +133,7 @@ function legCorpus() {
   return w;
 }
 
-test("R5 meaning selectors: bare words from the catalogue, qualified sub-fields, comparisons; every bad spelling dropped with a warning", () => {
+test("R5 meaning selectors: bare words from record-grammar, qualified sub-fields, comparisons; every bad spelling dropped with a warning", () => {
   const w = legCorpus();
   const ids = (q) => sorted(w.ids({ q, viewer: V }));
   assert.deepEqual(ids("leg:hunch"), ["Q1"], "a bare vocabulary word finds its column");
@@ -158,7 +158,7 @@ test("R5 meaning selectors: bare words from the catalogue, qualified sub-fields,
     assert.deepEqual(sorted(w.ids({ q: `${q} leg:*`, viewer: V })), ["Q1", "Q2"], `${q} widens, never narrows`);
   }
   assert.deepEqual(compile({ q: "leg:hunch resolves:C", viewer: V }).meaningArms.map((a) => a.arm), ["leg", "resolves"]);
-  /* Bare words are the catalogue's own: every word of every sub-field's vocabulary is in the index. */
+  /* Bare words are record-grammar's own: every word of every sub-field's vocabulary is in the index. */
   for (const [arm, m] of Object.entries(MEANING))
     for (const [sub, s] of Object.entries(m.sub))
       for (const word of s.vocab || []) {
