@@ -258,13 +258,6 @@ export class Store extends DurableObject {
     retrievalOf(this.ctx).migrate();   /* retrieval's projection columns, text index and selections, and its backfill (K4, R3) */
 
     recordOf(this.ctx).seedMintLedger(Store.#MINT_LEDGER_LIVE);
-
-    /* D-497: the SIGHT INDEX is recomputed from the owners' acts, every boot, AFTER the schema pass creates
-       both tables it reads. It is a derivation and never a record, so a full recompute is the honest shape:
-       an index that disagreed with `project_visibility` — because a landing changed the rule, or because a
-       row was written by a path that did not maintain it — cannot survive a restart. `#reindexProjectSight`
-       says what the statement costs. */
-    this.#reindexProjectSight();
   }
 
   /* retrieval (K3, K61): its services, reached by the store's own callers and the old battery through these. */

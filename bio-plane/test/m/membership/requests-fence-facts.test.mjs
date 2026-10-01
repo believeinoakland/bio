@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, realWorld, V } from "./fixture.mjs";
 import { Membership } from "../../../src/membership/index.mjs";
-import { MACHINE_CLASS_PREFIX } from "../../../checks/bio-checks.mjs";
+import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
 import { MEMBERSHIP_EXEMPT_TABLES, MEMBERSHIP_PROJECT_TABLES } from "../../../src/membership/index.mjs";
 
 /* D discoverable (owner ann, participant bob), H hidden (owner ann); cal, dee outside */
@@ -184,7 +184,6 @@ test("R66 isProjectEditor: an owner or a joined participant, never one leaving o
 test("R68 memberFacts gives cover, handle, role and status or null, never a credential, key or expertise", async () => {
   const w = await world().group("ann");
   w.m.expertiseDeclare({ memberId: "ann", label: "CPA" });
-  w.m.signerAdd({ keyB64: "AAAAk", memberId: "ann", by: "admin" });
   assert.deepEqual(w.m.memberFacts("ann"), { cover: "cover of ann", handle: "ann", role: "member", status: "active" });
   assert.equal(w.m.memberFacts("nobody"), null);
 });
@@ -226,8 +225,7 @@ test("R59 members' tables are declared exempt from purge; project-keyed tables a
   assert.equal(w.declared.length, 1);
   const [d] = w.declared;
   assert.equal(d.module, "membership");
-  assert.deepEqual(new Set(d.opts.exempt), new Set(["credentials", "sessions", "bootstrap", "members", "signers",
-    "ai_credentials", "member_expertise", "admin_votes", "hosting_access"]));
+  assert.deepEqual(new Set(d.opts.exempt), new Set(["members", "member_expertise", "admin_votes", "hosting_access"]));
   assert.deepEqual(d.tables, MEMBERSHIP_PROJECT_TABLES.map((name) => ({ name, keys: ["project_id"] })),
     "each project-keyed table once, keyed by project (record-core R46)");
   for (const t of MEMBERSHIP_PROJECT_TABLES)
@@ -241,7 +239,7 @@ test("R59 members' tables are declared exempt from purge; project-keyed tables a
 test("R59 through the real record-core: a purge clears the project's rows and never a member's", async () => {
   const w = await realWorld();
   const { m, rc } = w;
-  await m.claim({ password: "founder-passphrase-1", tokenFp: "fp" });
+  await w.claim();
   const s = await m.memberAdd({ memberId: "second", cover: "c", role: "admin", by: "admin" });
   await m.enroll({ invite: s.invite, handle: "second", password: "second-passphrase-x" });
   const a = await m.memberAdd({ memberId: "ann", cover: "c", by: "admin" });
@@ -258,7 +256,7 @@ test("R59 through the real record-core: a purge clears the project's rows and ne
   assert.deepEqual(["project_participants", "project_visibility", "project_sight"].map((t) => count(t, "project_id='PROJ-B'")), [1, 1, 1]);
   rc.purge({});
   for (const t of MEMBERSHIP_PROJECT_TABLES) assert.equal(count(t), 0, t);
-  assert.deepEqual(["members", "credentials", "member_expertise"].map((t) => count(t)), [2, 3, 1], "identity survives");
+  assert.deepEqual(["members", "member_expertise"].map((t) => count(t)), [2, 1], "identity survives");
 });
 
 test("R76 positionalMember: who is asking, identity before viewer, R43's member id; null for a machine or an unadmitted one", async () => {
