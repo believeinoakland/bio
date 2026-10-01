@@ -17,9 +17,8 @@
 
 import { parseFrontmatter, normalizeType, vocabFor, STATES,
          deriveInquiryTitle, inquiryQuestionOf, isMachineIdentity } from "../record-grammar/index.mjs";
-import { CUSTODIAL_CHECKS } from "../../checks/bio-checks.mjs";
 import { recordOf, fileDigestOf, inlineBytesOf, EMPTY_STRING_SHA, mintExhausted } from "../record-core/index.mjs";
-import { membershipOf, noSuchProject, notAParticipant, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
+import { membershipOf, noSuchProject, notAParticipant, listenerRefusal, MODULE_ORDER, CUSTODIAL_CHECKS } from "../membership/index.mjs";
 import { PROMOTION_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS, PROMOTION_ROW_CHECKS,
          PROJECT_MINT_CHECKS, PROMOTION_REGISTRATION_CHECKS } from "./checks.mjs";
 import { recordChecks } from "./record-checks.mjs";

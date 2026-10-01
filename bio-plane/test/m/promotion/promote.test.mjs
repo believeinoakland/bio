@@ -7,8 +7,8 @@ import { makePromotion, doc, infoDoc, create, revise, sha, EMPTY, T0, T1 } from 
 import { INLINE_MAX, PROMOTION_CHECKS, projectNameKey } from "../../../src/promotion/index.mjs";
 import * as P from "../../../src/promotion/index.mjs";
 import { STATES, vocabFor, normalizeType, OBJECT_TYPES } from "../../../src/record-grammar/index.mjs";
-import { CUSTODIAL_CHECKS } from "../../../checks/bio-checks.mjs";
 import * as MEMBERSHIP from "../../../src/membership/index.mjs";
+const { CUSTODIAL_CHECKS } = MEMBERSHIP;
 import { mintExhausted } from "../../../src/record-core/index.mjs";
 
 const ID = "INFO-2026-0001";

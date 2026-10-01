@@ -4,7 +4,7 @@
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { promotionOf } from "../../../src/promotion/index.mjs";
-import { PROJECT_VISIBILITY_CHECKS } from "../../../checks/bio-checks.mjs";
+import { PROJECT_VISIBILITY_CHECKS } from "../../../src/membership/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(Buffer.from(s, "utf8")).digest("hex");
 export const EMPTY = sha("");
