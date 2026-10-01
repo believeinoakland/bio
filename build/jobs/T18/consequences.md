@@ -26,3 +26,7 @@ No row was moved or changed, so no row is `awaiting stamp`. No `not yet met` mar
 - `node checks/ownership.mjs … consequences tranche/T18`: 1 file changed (this record); 0 failures.
 
 Size (session_012fTbzdoxLLF8WyQKRAShoG): test runs 1, module lines 0
+
+## J1 · COMPLETE
+
+N242's share was already met by CONSEQUENCES #2 in T11 (N297, K371, K451). I checked it again on this tree: every C-114 code is minted at one site, inside the function its row's where names, and nowhere else in the plane (NO_REASON and BAD_REASON are the guard's declared MULTI_SITE_CLOSED codes). The DEC-49 guard governs all 13 of consequences' sites under arm C, green, and names no consequences failure. No code changed; no row awaiting stamp. Tests 24/24; format, architecture, coverage (14/14) and ownership all 0 failures. Record: build/jobs/T18/consequences.md § Completion.
