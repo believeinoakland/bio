@@ -80,3 +80,5 @@
 - **N450** (CAPTURE #11 J2) · legacy-tests, at the release (K619): `test/capturerequests.control.mjs`:49 and `test/system/fence-e2e.control.mjs`:54 anchor on the deleted `src/capture/acquire.mjs`; re-anchor at `src/acquisition/index.mjs` or go with the old suites (⚑Bob-2, K795).
 
 - **Stale comments naming the deleted `airun.mjs` (AI-RUNS #6 J1 §2; K820):** run-rules `rules.mjs`:104–108; observation-log `checks.mjs`:11; promotion `gate.mjs`:294 (C-22.7's `where` is now `run-rules/skill-version.mjs`); ratification `checks.mjs`:438; agent-worker `test/harness.control.mjs`:249. Wording only, each in its owner's next job.
+- N450 · 2026-10-01 · **pdf-pixels** (N437's kind; PDF-WORKER #4 J1 (2)): `pdf-worker/test/pagepixels-corpus.probe.mjs`:5 and `test/agenda-scan-census.probe.mjs`:5 name the retired `coverage.mjs` as a runner the probes avoid; re-word. Comments only.
+- N451 · 2026-10-01 · **bundler** (wording, BUNDLER #3 J1): the paragraph after R19's heading on an UNDETERMINED limits read-back (K761) describes `deploy.mjs` (R18); `deploy-fleet.mjs` reads no limits. BOB re-words at the next bundler job's fold.

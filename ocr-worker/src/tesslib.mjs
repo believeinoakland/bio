@@ -4,7 +4,7 @@
  * DO NOT EDIT. Two anchored substitutions are applied and no other line of the
  * vendor's code is touched; read the generator for why each one exists and
  * which measurement refused the alternative. The gate
- * bio-plane/test/fleetbundles.test.mjs re-renders this in memory and FAILS on a
+ * bio-plane/test/system/fleetbundles.test.mjs re-renders this in memory and FAILS on a
  * stale render, wherever the vendor is installed. */
 /**
  * @license

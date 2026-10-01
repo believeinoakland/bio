@@ -55,8 +55,8 @@ the build actually serving rather than the build that was meant to (D-108).
 **Any other request** (any path but `structure`/`""`/`version`, or the wrong method) — **R12** answers
 404 `{ok:false, reason:"UNKNOWN", detail:"POST /structure or GET /version only"}`.
 
-**`SURFACE`** (exported constant) **and `fleet-member.json`** — read by the fleet-coverage instrument
-(`bio-plane/scripts/coverage.mjs`, in `legacy-index`).
+**`SURFACE`** (exported constant) **and `fleet-member.json`** — the member's declared surface
+(the fleet-coverage instrument that read them, `bio-plane/scripts/coverage.mjs`, retired with `tools/`, K739).
 - **R35** `SURFACE` names exactly `structure` (`POST`) and `version` (`GET`), each `mutating:false` — this
   member asserts nothing (fleet rule 2).
 - **R36** `fleet-member.json` names `entry` (`src/index.mjs`), `surface` (`"SURFACE"`), `testDir`
@@ -88,7 +88,7 @@ the build actually serving rather than the build that was meant to (D-108).
 - `unpdf` (pdf.js) 1.8.0 is pinned; `Math.sumPrecise` is polyfilled only where the runtime lacks it
   (guards node, not workerd, where the native one runs — CPDF-5).
 - `scripts/build.mjs` inlines `unpdf` and commits `dist/pdf-worker.bundled.mjs` plus its manifest; the
-  guard that the two match source (FL-9) lives in `bio-plane/test/fleetbundles.test.mjs`, outside this
+  guard that the two match source (FL-9) lives in `bio-plane/test/system/fleetbundles.test.mjs`, outside this
   module's own `test/`.
 
 ---
