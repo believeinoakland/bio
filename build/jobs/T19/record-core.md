@@ -84,3 +84,32 @@ R64's own mark ("moved in record-core's next job") was met in T18 (K650) and can
 - `ownership.mjs bio record-core tranche/T19`: 0 failures. legacy-store: 3 lines added (the import, `registerLegacyGrammars(recordOf(ctx));`, `recordOf(this.ctx).migrate();`), 31 removed.
 
 Size (session_01Q3pc45D9ZwWbRHBdgAZ8pf): test runs 12, module lines 1686
+
+## J4 · COMPLETE
+
+B3 and B4 (K785) applied, on `job/T19/record-core` @ 7c0d04a66d, after merging `tranche/T19`.
+
+- **`registerLegacyGrammars(record, grammars)`** now takes the list as an argument, and `index.mjs` no longer imports the catalogue.
+  - An entry that does not claim exactly one whole slot is left out.
+  - A `grammars` value that is not a list registers nothing.
+  - `store.mjs`' constructor passes the catalogue's `LEGACY_GRAMMARS`.
+- **Tests:** record-core's tests import no catalogue, dynamic or otherwise. The parity oracle is replaced by assertions at my interface (R67, R18, rule 2), using a stand-in legacy list:
+  - only the unheld slots are filled; capture's C-2.7 is never doubled;
+  - the pin is now the slots left: 5 with capture alone holding one;
+  - each legacy arm runs in its own slot, in record-grammar's order;
+  - the audit tallies their findings;
+  - a lone entry runs as itself;
+  - all held, or a bad list, registers nothing.
+- **Net legacy change:** I dropped the store's stale D-432 comment, which named the `#seedMintLedger` that is now record-core's.
+
+**One named check failure, by your ruling, not worked around:** `ownership.mjs` refuses `store.mjs:27 import { LEGACY_GRAMMARS } from "../checks/bio-checks.mjs";`, an import from a path not record-core's. K785 calls this line §12.2 rewiring. The check reads §12.2 as imports from the job's own paths only. Every other part of the check passes: legacy-store 2 lines added, 4 removed, net a removal. The only alternative is the import we just removed from `index.mjs`. Please accept it by name at the merge, or rule otherwise.
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/record-core/`: 90 pass, 0 fail.
+- `registerLegacyGrammars` has no other caller.
+- `format.mjs`: 0 failures.
+- `architecture.mjs bio record-core`: 0 failures.
+- `coverage.mjs bio record-core`: 73 of 73, 0 failures.
+- `ownership.mjs bio record-core tranche/T19`: 1 failure, named above.
+
+Size (session_01Q3pc45D9ZwWbRHBdgAZ8pf): test runs 13, module lines 1690
