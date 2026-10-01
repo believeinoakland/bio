@@ -32,8 +32,11 @@ test("R50 a revision that rewrites surfaced_by is SURFACED_BY_REWRITTEN in eithe
   const w2 = world(); w2.promote("INQ-2026-0002-a", as(inquiryMd("INQ-2026-0002-a"), "agent"));
   const back = w2.promote("INQ-2026-0002-a", w2.text("INQ-2026-0002-a").replace("surfaced_by: agent", "surfaced_by: human"));
   assert.deepEqual([back.reason, back.current, back.revision], ["SURFACED_BY_REWRITTEN", '"agent"', '"human"']);
+  /* a dropped field: the entry arm refuses it first (R11, C-2.8); on a replay, exempt from that arm, R50 still refuses */
   const dropped = w.promote(Q, as(w.text(Q), null));
-  assert.deepEqual([dropped.reason, dropped.current, dropped.revision], ["SURFACED_BY_REWRITTEN", '"human"', "absent"]);
+  assert.deepEqual([dropped.reason, dropped.findings.map((x) => x.check)], ["BASIS_REFUSED", ["C-2.8"]]);
+  const droppedReplay = w.promote(Q, as(w.text(Q), null), undefined, { replay: true });
+  assert.deepEqual([droppedReplay.reason, droppedReplay.current, droppedReplay.revision], ["SURFACED_BY_REWRITTEN", '"human"', "absent"]);
 });
 
 test("R50 replay is no exemption; a respelling of the same value lands; an unchanged value lands", () => {

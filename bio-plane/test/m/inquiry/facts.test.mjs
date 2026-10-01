@@ -5,6 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, inquiryMd, V, LEGACY_BUNDLE_COLUMNS } from "./fixture.mjs";
+import { INQUIRY_GRAMMARS } from "../../../src/inquiry-grammar/index.mjs";
 import { BUNDLE_FACTS, LEGS_RELATION, INQUIRY_TABLES, SUBJECT_COLUMN, moveBundleFacts, moveSubjectEntity, checkInquiryEntry }
   from "../../../src/inquiry/index.mjs";
 
@@ -149,11 +150,11 @@ test("R49 R12 N405 the migrated arm of surfaced_in: a migration replay's creatio
   w.st.sql.exec = real;
 });
 
-test("R2 R3 R17 the entry grammar judged with the grammars registered with record-core, as promotion's gate judges it; one that throws is an error naming its module", async () => {
+test("R11 R17 the entry grammar judged with the grammars registered with record-core, as promotion's gate judges it; one that throws is an error naming its module", async () => {
   const w = world();
   const good = inquiryMd("INQ-2026-0009-z");
   const bad = good.replace("surfaced_by: human", "surfaced_by: robot");
-  /* with nothing registered, the catalogue's own inquiry arm (C-2.8) */
+  /* with nothing registered, inquiry-grammar's own arms (C-2.8, C-6.1, C-15.1) */
   assert.deepEqual(await w.k.checkEntry(good), await checkInquiryEntry(good));
   assert.ok((await w.k.checkEntry(bad)).some((x) => x.check === "C-2.8" && /surfaced_by/.test(x.message)));
   /* a grammar claiming C-2.8 runs in the catalogue's arm's place, over the same document */
@@ -164,10 +165,12 @@ test("R2 R3 R17 the entry grammar judged with the grammars registered with recor
   const f = await w.k.checkEntry(bad);
   assert.deepEqual(seen, ["INQ-2026-0009-z"]);
   assert.ok(f.some((x) => x.message === "judged by the registered grammar"));
-  assert.ok(!f.some((x) => /surfaced_by/.test(x.message)), "the catalogue's arm is not also run");
+  assert.ok(!f.some((x) => /surfaced_by/.test(x.message)), "inquiry-grammar's C-2.8 arm is not also run");
+  assert.ok(f.some((x) => x.check === "C-15.1"), "the slots no registration claims are still filled by inquiry-grammar's arms");
   assert.ok((await checkInquiryEntry(bad)).some((x) => /surfaced_by/.test(x.message)),
-    "the module-level face with no grammars named still runs the catalogue's arm");
-  assert.deepEqual(await checkInquiryEntry(bad, { grammars: w.record.grammars() }), f, "the face passes the grammars it is given");
+    "the module-level face with no grammars named runs inquiry-grammar's own");
+  assert.deepEqual(await checkInquiryEntry(bad, { grammars: [...w.record.grammars(), ...INQUIRY_GRAMMARS.filter((g) => !g.ids.includes("C-2.8"))] }),
+    f, "the face passes the grammars it is given");
   /* a grammar that throws is one error of its own, naming its module; the document is not passed */
   const w2 = world();
   assert.equal(w2.record.registerGrammar("thrower", { ids: ["C-2.99"], arm: () => { throw new Error("boom"); } }).ok, true);

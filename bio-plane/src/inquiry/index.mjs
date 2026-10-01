@@ -1,6 +1,6 @@
 /* inquiry — the one recursive object of case-making (requirements: `build/requirements/inquiry.md`). A question, which
  * gathers evidence and other inquiries as the legs of its basis, and may reach a conclusion. This module holds the
- * inquiry's lifecycle and its grammar (the public face of the catalogue's rules, `./grammar.mjs`), the basis legs and
+ * inquiry's lifecycle and its grammar (the public face of `inquiry-grammar`'s rules, `./grammar.mjs`), the basis legs and
  * what the record can earn for each (the earned registry, R13–R15), the ground partition (DEC-32), the exclusions a
  * completeness statement names, supersession and division. It holds no version of a basis, no conclusion and no
  * strength: those are `basis-versions`' and `strength`'s, which read what this module holds.
@@ -8,10 +8,10 @@
  * Extracted from the legacy modules (T7, layer 6; K3, K64, K83, K102, N55, N56): `store.mjs` (REC-11's basis projection
  * and cycle guard, REC-14's exclusions, REC-16's division, REC-17's live-leg predicate and superseded-by index, REC-18's
  * earned registry with REC-83/REC-88/MK-2's arms, REC-45's grounding, S-11's disposition, REC-82/REC-84's leg content,
- * REC-220's leg versions, REC-173's replay row), `schema.mjs` (the three tables, now `./schema.mjs`). The catalogue's
- * leg and entry grammar stays in `legacy-checks`, which its own `checkBundle`, basis-version and action grammars call and
- * which is earlier in the order (K138's pattern); `./grammar.mjs` is its one public face here. The legacy code's comments
- * moved with it, shortened where they only restated it.
+ * REC-220's leg versions, REC-173's replay row), `schema.mjs` (the three tables, now `./schema.mjs`). The leg and entry
+ * grammar is `inquiry-grammar`'s since T19 (moved from the catalogue, K766), judged at the write synchronously (R11);
+ * `./grammar.mjs` is its one public face here. The legacy code's comments moved with it, shortened where they only
+ * restated it.
  *
  * REACHED as `inquiryOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first call
  * with `deps`, returned to every later caller. At creation it declares its tables to purge (R36), joins every promotion
@@ -26,7 +26,9 @@
 import { parseFrontmatter, normalizeType, OBJECT_TYPES, STATES, vocabFor, deriveInquiryTitle, BUNDLE_ID_RE,
          isMachineIdentity, createSha256, BASIS_GRADES, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE, TESTIMONY_GRADE,
          SHARED_ACT_CHECKS } from "../record-grammar/index.mjs";
-import { checkInquiryBasis, supersedesEdgeFindings, divisionDisclosureFindings, INQUIRY_ROWS } from "./grammar.mjs";
+import { checkInquiryBasis, checkInquiryExtension, supersedesEdgeFindings, divisionDisclosureFindings, INQUIRY_ROWS }
+  from "./grammar.mjs";
+import { INQUIRY_GRAMMARS } from "../inquiry-grammar/index.mjs";
 import { captureBound, isTranscribed } from "../textchain.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/index.mjs";
@@ -321,16 +323,16 @@ export class Inquiry {
     const basisFm = isInquiry ? docFm : null;
     const basisLegs = basisFm && Array.isArray(basisFm.basis) ? basisFm.basis.filter((l) => l && typeof l === "object") : [];
     const replay = !!(pkg && pkg.replay);
-    /* REC-11 / REC-42: the leg grammar at the WRITE, by the catalogue's own function, with the published and earned
-       registries injected (C-21.2, REC-18). Shape refusals honour the replay exemption: the record's history must be
-       holdable verbatim. */
-    if (basisFm && !replay
-        && ((basisFm.basis !== undefined && basisFm.basis !== null)
-            || (basisFm.grounds !== undefined && basisFm.grounds !== null))) {
+    /* R11 (K681; `inquiry-grammar` R1, R2, R4): the entry arm at the WRITE, judged synchronously by inquiry-grammar's
+       own `checkInquiryExtension` over the document: the entry requirements, the division block, the subject's shape and
+       the leg grammar, with the published and earned registries injected (C-21.2, REC-18). The version block is
+       `basis-versions`' own check at the same write (its R6), not this arm's. Shape refusals honour the replay
+       exemption: the record's history must be holdable verbatim. */
+    if (basisFm && !replay) {
       const bf = [];
-      checkInquiryBasis(basisFm, bf, this.#publishedRegistry(bundleId,
-        basisLegs.map((l) => l.target).filter((t) => typeof t === "string")),
-        this.earnedForDoc(basisFm, basisLegs));
+      checkInquiryExtension({ fm: basisFm,
+        publishedRegistry: this.#publishedRegistry(bundleId, basisLegs.map((l) => l.target).filter((t) => typeof t === "string")),
+        earnedRegistry: this.earnedForDoc(basisFm, basisLegs) }, bf);
       const errs = bf.filter((x) => x.severity === "error");
       if (errs.length)
         return { ok: false, reason: "BASIS_REFUSED",
@@ -343,8 +345,10 @@ export class Inquiry {
                    ...(x.repairs ? { repairs: x.repairs } : {}) })) };
       /* REC-82 / REC-84: the content extent of each leg (content R27), after the grammar so a broken leg is told
          about the leg first. */
-      const cerrs = this.content.citationRefusals(basisLegs, (i) => `basis[${i}]`, this.content.citationPlan(basisLegs));
-      if (cerrs.length) return { ok: false, reason: "BASIS_REFUSED", findings: cerrs };
+      if (basisLegs.length) {
+        const cerrs = this.content.citationRefusals(basisLegs, (i) => `basis[${i}]`, this.content.citationPlan(basisLegs));
+        if (cerrs.length) return { ok: false, reason: "BASIS_REFUSED", findings: cerrs };
+      }
     }
     /* REC-18: a subject entity the registry does not hold. */
     if (isInquiry && docFm && !replay && typeof docFm.subject_entity === "string" && docFm.subject_entity.trim() !== "") {
@@ -728,11 +732,12 @@ export class Inquiry {
     } catch { return null; }
   }
 
-  /** R2, R3, R17 (T18): the entry requirements over one document, judged by the catalogue's `checkBundle` with the type
-   *  grammars later modules registered with record-core (its `grammars()`), as promotion's gate judges a bundle (its
-   *  R27), so a grammar that left the catalogue judges an inquiry here as it does there. A grammar whose arm throws is one
-   *  error of its own, naming its module; a record that cannot answer its registrations is an error, never read as none.
-   *  Never throws. */
+  /** R17, R11 (`inquiry-grammar` R1, R2): the entry requirements over one document, judged by record-grammar's
+   *  `checkBundle` with the type grammars later modules registered with record-core (its `grammars()`), as promotion's
+   *  gate judges a bundle (its R27), so a grammar registered there judges an inquiry here as it does there. A slot of
+   *  `inquiry-grammar`'s that no registration claims (a record nothing registered it with) is filled by its own arm
+   *  (`INQUIRY_GRAMMARS`), so the inquiry is never left unjudged. A grammar whose arm throws is one error of its own,
+   *  naming its module; a record that cannot answer its registrations is an error, never read as none. Never throws. */
   async checkEntry(bundleMd, opts = {}) {
     let grammars;
     try {
@@ -749,6 +754,8 @@ export class Inquiry {
                 message: `the registered grammars could not be read, so the entry requirements were not judged: `
                        + `${fmSafe(e && e.message ? e.message : e).slice(0, 200)}` }];
     }
+    const claimed = new Set(grammars.flatMap((g) => (Array.isArray(g.ids) ? g.ids : [])));
+    grammars = [...grammars, ...INQUIRY_GRAMMARS.filter((g) => !g.ids.some((id) => claimed.has(id)))];
     return checkInquiryEntry(bundleMd, { ...(opts && typeof opts === "object" ? opts : {}), grammars });
   }
 
@@ -1530,14 +1537,15 @@ export class Inquiry {
       const findings = [];
       supersedesEdgeFindings(cf, findings);
       divisionDisclosureFindings(cf, findings);
-      checkInquiryBasis(cf, findings, this.#publishedRegistry(pl.id,
+      /* R23 (`inquiry-grammar` R1–R2, R4): the entry arm, as the child's own promotion will judge it (R11). */
+      checkInquiryExtension({ fm: cf, publishedRegistry: this.#publishedRegistry(pl.id,
         pl.legs.map((l) => l.target).filter((t) => typeof t === "string")),
         /* REC-18: the earned registry for the CHILD, judged before the parent
            moves exactly as every other rule here is. A child inherits the
            parent's subject_entity through the copied frontmatter, so an
            apportioned earned leg is re-confirmed against the record rather than
            carried across on trust. */
-        this.earnedForDoc(cf, pl.legs));
+        earnedRegistry: this.earnedForDoc(cf, pl.legs) }, findings);
       /* R47: the contradiction arm, as the child's promotion will judge it */
       for (const x of contradictionFindings(cf)) findings.push({ check: x.check, severity: "error", message: x.detail });
       const errs = findings.filter((x) => x.severity === "error");

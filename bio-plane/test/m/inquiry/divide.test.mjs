@@ -63,6 +63,14 @@ test("R23 the producing group undetermined, and CHILD_REFUSED when a child's doc
   const cr = w3.k.divide({ target: P, reason: "two", children: kids(), viewer: "admin", author: V("alice") });
   assert.equal(cr.reason, "CHILD_REFUSED"); assert.ok(cr.findings.length);
   assert.equal(w3.record.head(C1), null);
+  /* an entry requirement the children would fail (inquiry-grammar R1): a surfacing the copied bytes cannot carry */
+  const w4 = world(); w4.doc(A); w4.doc(B);
+  assert.equal(w4.promote(P, inquiryMd(P, { legs: [{ target: A }, { target: B }] }).replace("surfaced_by: human", "surfaced_by: robot"),
+    null, { replay: true }).ok, true, "a replayed creation is held verbatim");
+  const er = w4.k.divide({ target: P, reason: "two", children: kids(), viewer: "admin", author: V("alice") });
+  assert.equal(er.reason, "CHILD_REFUSED", JSON.stringify(er).slice(0, 300));
+  assert.ok(er.findings.some((x) => x.check === "C-2.8" && /surfaced_by 'robot'/.test(x.detail)));
+  assert.deepEqual([w4.record.head(C1), w4.fm(P).current_state], [null, "open"], "nothing moved");
 });
 
 test("R24 R25 R34 the parent moves to divided with where every leg went; each child open, titled, carrying its legs, disclosing parent and siblings", () => {
