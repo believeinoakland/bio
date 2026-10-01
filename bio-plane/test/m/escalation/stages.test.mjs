@@ -92,7 +92,7 @@ test("R6 stage 3's trigger to 4: after the sent entry a received or no_response 
   }
 });
 
-test("R7 stage 4: its act is a member's evaluation; to 5 and to 7 when the latest evaluation since entering stage 4 reads denied, partial or none, first met at the evaluation; complied proposes no stage and points at R14; partial is recorded and neither stops the clock nor ends the escalation", () => {
+test("R7 stage 4: its act is a member's evaluation; to 5 and to 7 when the latest evaluation since entering stage 4 reads denied, partial or none, first met at the evaluation and named <id>/evaluation#<n>, n its place among the escalation's evaluations, counting no other entry; complied proposes no stage and points at R14; partial is recorded and neither stops the clock nor ends the escalation", () => {
   for (const reading of ["denied", "partial", "none"]) {
     const w = seeded();
     const n = toStage(w, 4);
@@ -103,6 +103,7 @@ test("R7 stage 4: its act is a member's evaluation; to 5 and to 7 when the lates
     assert.equal(ev.ok, true, reading);
     r = read(w);
     assert.deepEqual(r.proposed.map((p) => [p.from, p.to, p.instant]), [[4, 5, "2026-09-28T02:00:00Z"], [4, 7, "2026-09-28T02:00:00Z"]], reading);
+    assert.deepEqual(r.proposed.map((p) => p.ids), [[`${w.E}/evaluation#1`], [`${w.E}/evaluation#1`]], reading);
     if (reading === "partial") {
       assert.match(ev.says, /does not stop the clock or end the escalation/);
       assert.equal(r.state, "open");
@@ -117,13 +118,24 @@ test("R7 stage 4: its act is a member's evaluation; to 5 and to 7 when the lates
   assert.deepEqual(r.proposed, []);
   assert.match(edge(r, 5).missing, /complied/);
   assert.match(edge(r, 5).missing, /escalationEnd/);
-  /* the latest is in force: a later denial proposes again */
+  /* the latest is in force: a later denial proposes again, named as the second evaluation; a decline between them
+     takes a log number and no evaluation's place */
   w.clock.now = "2026-09-28T03:00:00Z";
-  evaluate(w, { reading: "denied", response: { action: n, ord: w.R } });
-  assert.deepEqual(read(w).proposed.map((p) => p.to), [5, 7]);
+  assert.equal(evaluate(w, { reading: "denied", response: { action: n, ord: w.R } }).ok, true);
+  assert.equal(w.esc.escalationDecline({ id: w.E, to: 7, reason: "Not yet.", author: V("bob"), viewer: V("bob") }).ok, true);
+  w.clock.now = "2026-09-28T04:00:00Z";
+  assert.equal(evaluate(w, { reading: "partial", response: { action: n, ord: w.R } }).ok, true);
+  const again = read(w);
+  assert.deepEqual(again.proposed.map((p) => [p.to, p.ids, p.instant]),
+    [[5, [`${w.E}/evaluation#3`], "2026-09-28T04:00:00Z"], [7, [`${w.E}/evaluation#3`], "2026-09-28T04:00:00Z"]]);
+  assert.deepEqual(again.history.filter((h) => h.kind === "evaluate").map((h) => h.seq), [6, 7, 9], "the log's numbers are not the ids");
+  /* the advance records the id, and the history answers it */
+  const a = adv(w, 5);
+  assert.deepEqual(a.trigger.ids, [`${w.E}/evaluation#3`]);
+  assert.deepEqual(read(w).history.at(-1).trigger.ids, [`${w.E}/evaluation#3`]);
 });
 
-test("R8 stage 5: breach actions attached here with their filings or counsel packets (filings.filingsFor); what is available listed through filings.availableActions for the determination; to 6 when an attached action's ledger holds a sent entry; to 7 from the evaluation in force", () => {
+test("R8 stage 5: breach actions attached here with their filings or counsel packets (filings.filingsFor); what is available listed through filings.availableActions for the determination; to 6 when an attached action's ledger holds a sent entry; to 7 from the evaluation in force, named by R7's id", () => {
   const w = seeded();
   toStage(w, 5);
   let r = read(w);
@@ -131,7 +143,10 @@ test("R8 stage 5: breach actions attached here with their filings or counsel pac
   assert.deepEqual(r.available.kinds.map((k) => [k.kind, k.tier]), [["complaint", 1], ["lawsuit", 3]]);
   assert.equal(edge(r, 6).met, false);
   assert.match(edge(r, 6).missing, /no breach action is attached at stage 5/);
-  assert.deepEqual([edge(r, 7).met, edge(r, 7).ids], [true, [`${w.E}/evaluation/6`]], "to 7 from the evaluation in force");
+  /* N462: the evaluation is named by its place among the evaluations (#1), not by the log's number, which counts the
+     open, the advances and the attachment before it */
+  assert.deepEqual([edge(r, 7).met, edge(r, 7).ids], [true, [`${w.E}/evaluation#1`]], "to 7 from the evaluation in force");
+  assert.equal(r.history.find((h) => h.kind === "evaluate").seq > 1, true);
   const a5 = w.action({ project: w.P, restsOn: [w.D] });
   assert.equal(attach(w, a5).stage, 5);
   r = read(w);
@@ -424,4 +439,53 @@ test("R13 escalationAdvance refuses MACHINE_CANNOT_ADVANCE, NO_SUCH_ESCALATION, 
   attach(w, n);
   w.correspond(n, "sent", "2026-09-02");
   assert.equal(adv(w, "clock").to, 3);
+});
+
+test("R13 compatibility (N462): an advance recorded before R7's id, naming its evaluation <id>/evaluation/<seq> by the log's number, is read back naming that evaluation <id>/evaluation#<n>; an old-form id naming no evaluation is left as recorded; the recorded entry is not edited (R18)", () => {
+  const w = seeded();
+  toStage(w, 7);
+  /* a second round: a reply on a stage-7 act re-enters evaluation, a second evaluation, and 4→5 */
+  const t = w.action({ project: w.P, restsOn: [w.D], counterparty: { state: "named", ...OFFICE.clerk } });
+  assert.equal(attach(w, t, { purpose: "testimony", standards: ["STD-2026-0001-a"] }).ok, true);
+  w.correspond(t, "received", "2026-10-02", "2026-10-02T12:00:00Z");
+  w.clock.now = "2026-10-03T00:00:00Z";
+  assert.equal(adv(w, 4).ok, true);
+  assert.equal(evaluate(w, { reading: "denied", response: { action: t, ord: 0 } }).ok, true);
+  assert.equal(adv(w, 5).ok, true);
+  const h = read(w).history;
+  const evs = h.filter((x) => x.kind === "evaluate").map((x) => x.seq);
+  const to = (x, stage) => x.history.find((y) => y.kind === "advance" && y.from === 4 && y.to === stage);
+  assert.deepEqual([to({ history: h }, 7).trigger.ids, h.at(-1).trigger.ids], [[`${w.E}/evaluation#1`], [`${w.E}/evaluation#2`]]);
+  /* the document as the code before N462 recorded it: each advance naming its evaluation by the log's number, and
+     ids in the old form that name no evaluation of this escalation (a log number that is an advance, one past the
+     log's end, another escalation's) */
+  const stray = [`${w.E}/evaluation/2`, `${w.E}/evaluation/999`, `ESC-2026-0999-escalation/evaluation/${evs[0]}`];
+  const q = (x) => JSON.stringify(x);
+  const now = w.text(w.E);
+  const text = now.replace(q(`${w.E}/evaluation#1`), [`${w.E}/evaluation/${evs[0]}`, ...stray].map(q).join(","))
+                  .replace(q(`${w.E}/evaluation#2`), q(`${w.E}/evaluation/${evs[1]}`));
+  assert.notEqual(text, now);
+  assert.ok(!text.includes("/evaluation#"), "no id in R7's form is left in the recorded log");
+  const head = w.record.head(w.E);
+  const rep = w.promotion.promote({ bundleId: w.E, base: head.bundleSha, snapKey: "20261003T010000Z_0000eeee", author: V("bob"),
+                                    replay: true, files: [{ path: "bundle.md", text }], meta: {} });
+  assert.equal(rep.ok, true, JSON.stringify(rep).slice(0, 300));
+  const back = read(w);
+  assert.deepEqual(to(back, 7).trigger.ids, [`${w.E}/evaluation#1`, ...stray], "the old form answered in R7's; the rest as recorded");
+  assert.deepEqual(back.history.at(-1).trigger.ids, [`${w.E}/evaluation#2`]);
+  /* every other field of the entries, and the evaluations, stand as recorded */
+  const bare = (x) => x.history.map(({ trigger, ...rest }) => rest);
+  assert.deepEqual(bare(back), bare({ history: h }));
+  /* the recorded entry is not edited: the document holds the old form still, and a read writes nothing */
+  const snap = w.snapshot();
+  read(w);
+  assert.equal(w.text(w.E), text);
+  assert.ok(w.text(w.E).includes(q(`${w.E}/evaluation/${evs[0]}`)));
+  assert.deepEqual(w.snapshot(), snap);
+  /* an act after it appends to the log as recorded (R18), and reads the old entries the same way */
+  w.clock.now = "2026-10-04T00:00:00Z";
+  assert.equal(w.esc.escalationSuspend({ id: w.E, reason: "Hold.", author: V("bob"), viewer: V("bob") }).ok, true);
+  const log = (x) => x.slice(x.indexOf("## Escalation Log"), x.indexOf("## Session Log")).trimEnd();
+  assert.ok(log(w.text(w.E)).startsWith(log(text)), "the log recorded in the old form is kept, byte for byte");
+  assert.deepEqual(to(read(w), 7).trigger.ids, [`${w.E}/evaluation#1`, ...stray]);
 });

@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` (T21) layer 9, filings. K921, K924,
 ## B2 · ANSWER · re J1
 
 K986: all six readings adopted. (1) Keep the `filing_templates` CREATE and purge declaration, written by nothing, as filing-templates' migration's read contract; dropping it is N473 in next.md, after a deployment. (3) Your Uses now names `filing-templates.templatesFor` (its R14) for R28's TEMPLATE_NOT_NAMED list (requirements/filings.md:78 on tranche/T21; merge it). (2), (4), (5), (6) as you state them.
+
+## B3 · CHANGE
+
+K989: local-facts is merged into tranche/T21 (8158a9bd53). Merge tranche/T21 and align to its code: `localFactsOf(host, {record, membership})`, `factStatus({path, viewer})` (answer: status, the latest act, `profile` {value, status, basis}, `governs` with `says` 'corrected locally by <member>, <date>'), `factPath`/`parseFactPath`, exports `LOCAL_FACT_ACTS`, `LOCAL_FACT_STATUSES`, `LOCAL_FACT_HORIZONS`, `LOCAL_FACT_KINDS` (bio-plane/src/local-facts/). Then re-run and record completion.
