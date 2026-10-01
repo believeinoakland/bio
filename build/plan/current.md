@@ -126,8 +126,8 @@ K861 re-cut the held-code entries above (K842's "registers its own share and del
 - **L2** record-core (with its K861 export), membership (with its K861 export), promotion
 - **L3** *host-governor* (K846, K861 (6)), *capture-sources* (K853), *acquisition* (K850), *capture* (K846, K861 (6)). **provenance removed** (K861 (3): its R52 already keeps the slot out of its own step; `provenance.txt` deleted).
 - **L4** extraction
-- **L5** *observation-log* (K842, K861: `observations` and `leads` only)
-- **L6** *inquiry-grammar* (K850), *inquiry* (K842, K861; with K850's re-point), *basis-versions* (K842, K861), *run-productions* (K842, K861), *agent-worker* (K846, K861 (6))
+- **L5** *bias* (K881: R23's order test off `legacy-store`), *observation-log* (K842, K861: `observations` and `leads` only)
+- **L6** *ai-runs* (K881: R43's order test off `legacy-store`), *inquiry-grammar* (K850), *inquiry* (K842, K861; with K850's re-point), *basis-versions* (K842, K861), *run-productions* (K842, K861), *agent-worker* (K846, K861 (6))
 - **L8** *ratification* (K875: re-point `preflight.test.mjs` from membership's signer copies to credentials)
 - **L9** actions
 - **L11** *control-plane* (K846, K850, K861 (4): R42's step exported, the alias dropped, C-68.1 at one site), installer, *plane* (K842, K861), *legacy-tests* (K879: Bob ruled the old suites deleted; last)
