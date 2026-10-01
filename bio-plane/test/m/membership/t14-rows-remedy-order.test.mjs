@@ -1,5 +1,5 @@
 /* T14 (N327, N329, N335; N128's rows are asserted with R81 in `t9-notice-sight-bounds.test.mjs`): R84's `remedy` and
-   `message` (DEC-83) at R22, R41 (and R75) and R62; R86 `activeAdmins` in its stated order; R87 `notAParticipant` and
+   `message` (DEC-83) at R22, R41 (and R75) (R62's went to `credentials` with its R13, T19); R86 `activeAdmins` in its stated order; R87 `notAParticipant` and
    R35 through it; the rows of R36, R39 and R6. At the interface only. */
 import { test } from "node:test";
 import assert from "node:assert/strict";

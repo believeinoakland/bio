@@ -1,5 +1,5 @@
-/* T15 (N352, K477): R88 `hiddenBundles(viewer)`, the one spelling of the complement of R43's rule, the set the legacy
-   store's counts, queue and retrieval subtract. At the interface only: the answer is run as its callers run it. */
+/* T15 (N352, K477): R88 `hiddenBundles(viewer)`, the one spelling of the complement of R43's rule, the set the figure
+   sources (record-core R63's `counts(hid)`), queue and retrieval subtract. At the interface only: the answer is run as its callers run it. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, realWorld, V } from "./fixture.mjs";
