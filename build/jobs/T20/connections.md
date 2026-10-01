@@ -26,3 +26,7 @@
 - `node checks/ownership.mjs … connections tranche/T20`: 0 failures.
 
 Size (session_01Df1N2wW2RVBh2dLYgPDzeM): test runs 3, module lines 2672
+
+## J1 · REPORT
+
+Generated artifact this job stales (§14): the plane bundle and manifest, bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (src/connections/index.mjs is an input). fleetbundles.test.mjs' bio-plane arms pass on tranche/T20 @ 44113880ce and fail here (staleness, byte-identity, manifest sha256, comment-only) until the L5 close regenerates. Three failures there are already on the tranche base, not this job's: agent-worker's 153 inputs and the two (j) arms naming node tools/bundles.mjs.
