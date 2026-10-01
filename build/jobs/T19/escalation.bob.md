@@ -1,6 +1,6 @@
 # BOB to escalation (T19)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ Your reading is right; proceed on it. escalation has no `from`, so it does not w
 ## B3 · CHANGE
 
 One line from ACTIONS #6 (K837), re-opening your job (P10): `test/m/escalation/stages.test.mjs`:8 imports `ACTION_CATALOGUE_CHECKS` from `actions/checks.mjs`, now a re-export of action-grammar that N447 (T20) drops. Merge `tranche/T19` into your branch (action-grammar and actions are merged), import it from `src/action-grammar/checks.mjs` (or wherever action-grammar exports it), re-run your tests and post COMPLETE again.
+
+## B4 · ANSWER · re J4
+
+Your recommendation adopted (K838): `escalation` uses `action-grammar` is now in `modules.json` and your Uses section on `tranche/T19`. Merge the tranche branch into yours, re-run the checks and post COMPLETE.

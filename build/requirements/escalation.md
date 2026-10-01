@@ -64,6 +64,7 @@ Terms. The **stages**, in order: `1 documentation` (discovery and documentation)
 - `conformance`: `determinationRead`, `determinationsFor` (R1, R4, R14); `noSuchDetermination` and `determinationSuperseded` (its R19, R20), through which R1's `NO_SUCH_DETERMINATION` and `DETERMINATION_SUPERSEDED` are answered, in place of C-116.3 and C-116.4 (N309, N312, K275).
 - `consequences`: `addressed` (R3, R14).
 - `actions`: `actionRead`, `actionsFor`, `actionFacts`'s clock rule (R5–R12); `noSuchAction` (its R43), through which R9's `NO_SUCH_ACTION` is answered, in place of C-116.11 (N217, K275).
+- `action-grammar`: the `NO_SUCH_ACTION` row (C-117.2, its R9), read by R9's test only, to check the answer's translation against the row (K838).
 - `filings`: `filingsFor`, `availableActions` (its R21; R8).
 
 ### Invariants
