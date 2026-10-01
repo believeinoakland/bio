@@ -1,7 +1,8 @@
 /* A Durable Object storage stand-in for calibration's tests: `sql.exec(query, ...bindings)` answering the rows,
    and `transactionSync(fn)`, which rolls back everything `fn` wrote when it throws and nests as savepoints, over
    node:sqlite (SQLite, the engine a Durable Object runs). It holds record-core's tables, this module's three, and
-   one table standing in for every other module's (`readings`), so a test can show what was never written. */
+   one table standing in for every other module's (`readings`), so a test can show what was never written.
+   `storage({ calibration: false })` holds none of this module's tables, for R20's `migrate()` to create. */
 import { DatabaseSync } from "node:sqlite";
 import { RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { CALIBRATION_SCHEMA } from "../../../src/calibration/index.mjs";
@@ -11,7 +12,7 @@ const run = (db, text) => {
   for (const t of bare.split(";")) if (t.trim()) db.exec(t);
 };
 
-export function storage() {
+export function storage({ calibration = true } = {}) {
   const db = new DatabaseSync(":memory:");
   let n = 0;
   const s = {
@@ -31,7 +32,7 @@ export function storage() {
     },
   };
   run(db, RECORD_SCHEMA);
-  run(db, CALIBRATION_SCHEMA);
+  if (calibration) run(db, CALIBRATION_SCHEMA);
   db.exec(`CREATE TABLE readings (bundle_id TEXT, capture_sha TEXT, grade TEXT, chain TEXT)`);
   db.exec(`INSERT INTO readings VALUES ('INFO-2026-0001', 'abc', 'B', '[{"calibration":"CAL-1"}]')`);
   return s;
