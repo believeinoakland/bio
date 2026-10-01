@@ -1,0 +1,7 @@
+# BOB to op-declarations (T20)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: build/plan/current.md (T20) layer 11, op-declarations (K899 (7)): declare actions' new op actionhold (actions R52) as actionpressure is declared: classes ["admin", "member", "probe"], mutating (src/op-declarations/index.mjs beside :603); in ACTIONS_ACTIONS (:1132), so its author is query-stamped; capability "contribute" (beside :2151). Proof: test/m/op-declarations/ totality green with the op present. Report the generated artifact your change stales (the plane bundle). Do not delete old suites (K619).
