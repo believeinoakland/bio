@@ -128,7 +128,7 @@ K861 re-cut the held-code entries above (K842's "registers its own share and del
 - **L4** extraction
 - **L5** *connections* (K882: N454, `refs` exported), *bias* (K881: R23's order test off `legacy-store`), *observation-log* (K842, K861: `observations` and `leads` only)
 - **L6** *skills* (K882: N452's re-point), *run-rules* (K882: K820's comments), *ai-runs* (K881: R43's order test off `legacy-store`), *inquiry-grammar* (K850), *inquiry* (K842, K861; with K850's re-point), *basis-versions* (K842, K861), *run-productions* (K842, K861), *agent-worker* (K846, K861 (6))
-- **L7** *intent* (K901: N317, Bob K899 (3): `workproduct_state`, `evaluations` and C-9.1 retire)
+- **L7** *reevaluation* (K905: DEC-36, R2, R3, R7, R20), *intent* (K901: N317, Bob K899 (3): `workproduct_state`, `evaluations` and C-9.1 retire)
 - **L8** *public-read*, *publication* (K902: Q1's "record"), *ratification* (K875: re-point `preflight.test.mjs` from membership's signer copies to credentials)
 - **L9** *action-grammar* (K902: C-117.20–.22, Q1; merge early), actions (with K902's R52, R54 and Q1)
 - **L10** *monitoring* (K902: Q1)
