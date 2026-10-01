@@ -93,7 +93,7 @@ test("R8: `store.mjs` and `schema.mjs` do not exist, `src/index.mjs` is only the
   assert.deepEqual(Object.keys(viaIndex).sort(), ["Store", "default"]);
   assert.equal(viaIndex.default, entry.default);
   /* No module and no module test imports them. */
-  const LEGACY = /(?:^|\/)src\/(?:store|schema|index)\.mjs$/;
+  const LEGACY = /^src\/(?:store|schema|index)\.mjs$/;   /* the plane's own, relative to `bio-plane/` */
   const offenders = [];
   for (const root of [SRC, join(PLANE, "test", "m"), join(PLANE, "scripts")])
     for (const f of files(root)) {
