@@ -13,3 +13,7 @@ Your reading is right (K804): rule 5 as amended in current.md (each owner remove
 ## B3 · CHANGE
 
 OBSERVATION-LOG #5 merged into tranche/T19 (K806): it changed store.mjs (capture's listener, one line) and deleted the catalogue's C-22. Merge the tranche branch into job/T19/retrieval before your COMPLETE, resolve any store.mjs overlap keeping both changes, and re-run your tests and the ownership check.
+
+## B4 · CHANGE
+
+CONNECTIONS #7 also merged into tranche/T19 (K807): it removed #citesInto from store.mjs (+1/-4) and deleted the catalogue's REGISTRATION_CHECKS. B3 stands: merge the tranche branch (now carrying observation-log and connections) into job/T19/retrieval before your COMPLETE, keep both sides of any store.mjs overlap, and re-run your tests and the ownership check.
