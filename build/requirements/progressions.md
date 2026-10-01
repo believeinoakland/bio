@@ -68,13 +68,13 @@ Terms. A **stage** is `{stage_key, stage_no, label, after_stage, cardinality, wi
 
 
 **Its figures** (`build/extraction/legacy-store.md` §4.2 (2))
-- **R36** This module's figures for `op=stats` and purge's proof, `progressionDefs`, `progressionStages`, `progressionDefVersions`, `progressionStageVersions` and `proposalDispositions` (the rows of `progression_defs`, `progression_stages`, `progression_def_versions`, `progression_stage_versions`, `proposal_dispositions`, none keyed on a bundle) and `progressionInstances` and `progressionExceptions` (the rows of `progression_instances` and `progression_exceptions`, keyed on `bundle_id`), registered once at start through `record-core`'s `registerCounts` (its R63), answering for `hid` (the bundles the caller may not see, or null for a whole count) each figure as `store.mjs`' `#counts` takes it today, no meaning changed: a figure keyed on a bundle column leaves out the rows whose column names a bundle in `hid`, a row whose column is null naming none and so counted; a figure with no such column counts every row. Synchronous, writes nothing. `legacy-store`'s own job deletes its lines for these figures (`build/extraction/legacy-store.md` §4.2 (2)). *(not yet met: T19 layer 5)*
+- **R36** This module's figures for `op=stats` and purge's proof, `progressionDefs`, `progressionStages`, `progressionDefVersions`, `progressionStageVersions` and `proposalDispositions` (the rows of `progression_defs`, `progression_stages`, `progression_def_versions`, `progression_stage_versions`, `proposal_dispositions`, none keyed on a bundle) and `progressionInstances` and `progressionExceptions` (the rows of `progression_instances` and `progression_exceptions`, keyed on `bundle_id`), registered once at start through `record-core`'s `registerCounts` (its R63), answering for `hid` (the bundles the caller may not see, or null for a whole count) each figure as `store.mjs`' `#counts` takes it today, no meaning changed: a figure keyed on a bundle column leaves out the rows whose column names a bundle in `hid`, a row whose column is null naming none and so counted; a figure with no such column counts every row. Synchronous, writes nothing. `legacy-store`'s own job deletes its lines for these figures (`build/extraction/legacy-store.md` §4.2 (2)).
 
 ## Private
 
 ### Uses
 
-- `legacy-checks`: the rows of R1, R14 and R21 until they move here (R28).
+- `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K804–K808).
 - `record-core`: `recordOf(ctx)`, `transact`, `declarePurge`.
 - `promotion`: `DISPOSITIONS` (its R51), which R35 re-exports (N340).
 - `membership`: the bundle redactor and the viewer's sight (R13, R15); `listenerRefusal` (R81) and `MODULE_ORDER` (R83) (N202). *(not declared in `modules.json`)*

@@ -101,7 +101,7 @@ Terms. A **theme** is `{theme_id, name, test, at}` and its declarer, `theme_id` 
 
 ### Uses
 
-- `legacy-checks`: C-49, C-74 and C-81 until they move here (R35), C-6.2's row, `isMachineIdentity`, `describeExtent`, `BUNDLE_ID_RE`.
+- `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K804–K808).
 - `record-core`: `recordOf(ctx)`, `transact`, `declarePurge` (R36), `bundleInfo`.
 - `entities`: `strongestByCapture`, `has`, `readEntity`, `gradeRank` (K149), `noEntity` (its R37, R1's refusal; N285), the read contract on `resolutions` (R1, R8, R14), and `onResolved` (R17).
 - `subresources`: `normalizeAddress` (R49's address matching, the one normalisation capture writes the locators with; Q7).

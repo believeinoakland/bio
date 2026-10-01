@@ -75,13 +75,13 @@ Terms. A **statement** is `{id, kind, subject, text, justification, citations?, 
 
 
 **Its figures registered** (`build/extraction/legacy-store.md` §4.2 (2))
-- **R46** This module registers R42's `counts(hid)` once at start through `record-core`'s `registerCounts` (its R63) under the figures `biasStatements` and `biasAdoptions`, so `op=stats` and purge's proof read them through record-core, as `store.mjs` spreads them today, no meaning changed; `legacy-store`'s own job deletes its call by name (`build/extraction/legacy-store.md` §4.2 (2)). *(not yet met: T19 layer 5)*
+- **R46** This module registers R42's `counts(hid)` once at start through `record-core`'s `registerCounts` (its R63) under the figures `biasStatements` and `biasAdoptions`, so `op=stats` and purge's proof read them through record-core, as `store.mjs` spreads them today, no meaning changed; `legacy-store`'s own job deletes its call by name (`build/extraction/legacy-store.md` §4.2 (2)).
 
 ## Private
 
 ### Uses
 
-- `legacy-checks`: the C-26 rows until they move here (R29), `normalizeType`, `STATES` (the bias machine R8 reads), `MACHINE_AUTHOR_PREFIX`, `ENTITY_ID_RE`, `parseFrontmatter`, `createSha256`.
+- `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K804–K808).
 - `record-core`: `recordOf(ctx)`, `transact`, `declarePurge`; a bundle's head (R41) and a revision's pinned text through `textAtSha` (R60), never its own copy of the lookup (N207).
 - `membership`: sight of a project and of each bias bundle; the existence refusal and project authority (R11); `listenerRefusal` (R81) and `MODULE_ORDER` (R83) (N202); `notAnAdmin` (R84; R11, N327).
 - `promotion`: `registerStep` for R8–R10. *(not declared in `modules.json`)*

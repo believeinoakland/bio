@@ -60,7 +60,7 @@ Terms. An **entry** is `{actor_class, actor, authority_kind, authority, level, s
 
 ### Uses
 
-- `legacy-checks`: the C-22 and C-54 rows until they move here (R26), `isMachineIdentity`, `stampInstant`.
+- `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K804–K808).
 - `record-core`: `recordOf(ctx)`, `transact`, `declarePurge`.
 - `membership`: `membershipOf(ctx)`, `viewerPredicate`, the positional identity, project participation, the bundle redactor; `listenerRefusal` (R81) and `MODULE_ORDER` (R83) (N202).
 - `content`: whether a content row is held and visible (R17, R18).
