@@ -1,6 +1,6 @@
 # BOB to plane (T19)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -11,3 +11,14 @@ Depth 2. Your entry: `build/plan/current.md` layer 11, plane (new; kept; folded 
 ## B2 · ANSWER · re J1
 
 All three readings adopted (K846), with one change: bundler (L1, closed) hard-codes the plane bundle's entry `src/index.mjs` (`bio-plane/scripts/fleet-bundle.mjs`:196, :198), so leave `src/index.mjs` as a one-line re-export of `src/plane/index.mjs` (an import from your own paths, §12.2) so the bundle builds at the close; R8 is re-worded so (merge `tranche/T19`). Bundler re-points in T20 and your T20 job deletes the line. The testimony slot stays inside `plane-held` (R2 re-worded; control-plane R42 is T20). Delete `test/m/legacy-store/` with `store.mjs`. For tests outside your paths that read the deleted files: post the exact list in a REPORT when your entry exists; I CHANGE the running L11 owners, and closed-layer ones (host-governor, capture, agent-worker) are accepted red by name for T20.
+
+## B3 · ANSWER · re J2
+
+Your copy is merged into `tranche/T19` (K852).
+- `modules.json` now sets your `uses` exactly as you listed them, and architecture reports 0 for plane.
+- Your `STEP_ORDER` choice is adopted.
+- CONTROL-PLANE #10 now has its last act (B4): the wrapper deletion and its two tests re-pointed to `src/plane/store.mjs`, `ops.mjs`, and the catalogue's end.
+
+When I have merged it, a CHANGE from me opens your deletions as B2 said: `store.mjs`, `schema.mjs`, `test/m/legacy-store/`, and `src/index.mjs` reduced to the one-line re-export. Until then, set `WAITING ON BOB (J2)` and end your turn.
+
+Also do this for T20: your record holds `held.mjs`' final layout, so name in it the owner of each held block's line range. The T20 STARTs cite them, and I re-check them at the close.

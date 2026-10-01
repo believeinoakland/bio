@@ -1,13 +1,15 @@
 /* R45 (N397, K573; D-62): the intake form's bundle writer states a captured document's digest as `content_hash`, and
    R46 (D-110): the form explains each capture refusal the plane makes, and none it no longer makes. Driven at the
    page's interface: the served page's script in the fixture's sandbox, its intake form filled and saved against
-   scripted `acquire`, `attest`, `allocid` and `promote` answers; what it sends to `promote` is checked by legacy-checks'
-   `checkBundle`, the catalogue's authority over C-2.7. Carries `bio-plane/test/setup-honesty.test.mjs`; that suite's
+   scripted `acquire`, `attest`, `allocid` and `promote` answers; what it sends to `promote` is checked by
+   record-grammar's `checkBundle` with capture's C-2.7 grammar in its slot (capture R37, K767), the one authority over
+   C-2.7 the record registers. Carries `bio-plane/test/setup-honesty.test.mjs`; that suite's
    source-text arms (the emission's spelling and guard, a token's absence from the served bytes) are dropped (P7). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { setupPage } from "../../../src/setup.mjs";
-import { checkBundle, createSha256 } from "../../../checks/bio-checks.mjs";
+import { checkBundle, createSha256 } from "../../../src/record-grammar/index.mjs";
+import { INFORMATION_GRAMMAR } from "../../../src/capture/index.mjs";
 import { pageOver } from "./fixture.mjs";
 
 const tick = () => new Promise((r) => setTimeout(r, 0));
@@ -45,12 +47,14 @@ async function intake({ acquire = null } = {}) {
   return { ...p, promoted, acquired, save };
 }
 
-/* The C-2.7 finding the D-62 defect raised, over a bundle as the release flow would hold it at `verified`. */
+/* The C-2.7 finding the D-62 defect raised, over a bundle as the release flow would hold it at `verified`: judged by
+   record-grammar's checkBundle with capture's grammar registered, as the record registers it (capture R37). */
 const C27_HASH = /requires a well-formed content_hash/;
+const GRAMMARS = [{ module: "capture", ...INFORMATION_GRAMMAR }];
 const verifiedFindings = async (md) => {
   const text = md.replace(/^current_state: .*$/m, "current_state: verified");
   const { findings } = await checkBundle({ files: new Map([["bundle.md", text]]), folderName: "INFO-2026-0001-doc",
-    sha256: shaHex, nowMs: Date.parse("2026-09-30T00:00:00Z") });
+    sha256: shaHex, nowMs: Date.parse("2026-09-30T00:00:00Z") }, { grammars: GRAMMARS });
   return findings.filter((x) => x.check === "C-2.7");
 };
 
