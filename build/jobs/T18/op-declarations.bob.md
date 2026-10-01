@@ -1,6 +1,6 @@
 # BOB to op-declarations (T18)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 

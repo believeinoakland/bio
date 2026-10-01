@@ -1,5 +1,6 @@
 /* feedItems (R8) at its interface: what it answers, what it takes from queue, what it never carries; the bias debts
-   (R1); the lead's take-up (R9); and the invariants over every producer (R10–R13). */
+   (R1); the lead's take-up (R9); and the invariants over every producer (R10–R13), the Action layer's (R15–R18) and the
+   signing key's (R14) among them. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
@@ -43,6 +44,15 @@ function busy(extra = {}) {
     governor: { governorHolding: () => [{ host: "h.example", cooloff_until: NOW + 5, refusals: 1 }] },
     capture: { liveCaptureSessions: () => [{ session: "S1", locator: "https://x.example/", primarySha: "p1", created: iso(NOW),
       updated: iso(NOW), expires: iso(NOW + 10), ticks: 1, state: { queue: [1] } }] },
+    actionClocks: {
+      overdueClocks: () => ({ ok: true, limit: 500, truncated: false, cursor: null, items: [{ action: "ACT-1", ord: 0,
+        date: "2026-08-20", basis: "b", text: "t", status: "pending", past: true, project: "PRJ-A", created_by: "alice" }] }),
+      remindersDue: () => ({ ok: true, limit: 500, truncated: false, cursor: null, items: [{ action: "ACT-1", ord: 0,
+        date: "2026-08-20", basis: "b", text: "t", on: "2026-08-15", set_by: "alice", project: "PRJ-A" }] }) },
+    escalation: { escalationsDue: () => ({ ok: true, limit: 500, truncated: false, items: [{ id: "ESC-1", project: "PRJ-A",
+      opened_by: "alice", from: 1, to: 2, stage: "notification", instant: iso(NOW - 5), ids: [] }] }) },
+    actionPlans: { checkpointsDue: () => ({ ok: true, limit: 500, truncated: false, items: [{ plan: "PLN-1", project: "PRJ-A",
+      scenario: 1, version: 1, phase: "p", set_by: "alice", due: "2026-08-30", days_since_due: 2 }] }) },
     ...extra,
   });
   w.member("alice", { role: "admin" });
@@ -51,6 +61,7 @@ function busy(extra = {}) {
   w.join("PRJ-A", "alice"); w.join("PRJ-B", "alice");
   w.cite("PRJ-A", "INQ-S"); w.cite("PRJ-B", "INQ-S"); w.leg("INQ-S", "INF-1");
   w.run(`INSERT INTO progression_instances VALUES ('p','E','s','c1','INF-1')`);
+  w.bundle("ACT-1", "action"); w.signer("KEY-1", "alice", { comment: "laptop" });
   return w;
 }
 
@@ -66,7 +77,8 @@ test("R8: every producer's items, homed through homesOf and offered optionsOf; n
                    "new-version-arrived-from-another-team", "shared-inquiry-concluded-by-another-project", "export-performed",
                    "newer-capture-affects-reference", "objective-gap", "source-modified", "governor-holding-host",
                    "partial-capture-outstanding", "capture-completed-unattended", "render-deferred",
-                   "archive-fallback-eligible", "monitoring-recheck-due"])
+                   "archive-fallback-eligible", "monitoring-recheck-due", "signer-self-registered", "action-clock-overdue",
+                   "plan-checkpoint-due", "escalation-stage-proposed", "action-reminder"])
     assert.ok(kinds.has(k), k);
   for (const it of r.items) {
     assert.ok(!("disposition" in it), `${it.id}: the mint's`);
@@ -76,10 +88,16 @@ test("R8: every producer's items, homed through homesOf and offered optionsOf; n
     assert.equal(typeof it.case.state, "string", it.id);
   }
   assert.ok(w.asked.homes.length > 0 && w.asked.options.length > 0);
-  // the options are exactly what optionsOf answered, except the two producers' own acts (R9's take-up, the export log)
+  // the options are exactly what optionsOf answered, except the producers' own acts (R9's take-up, the export log,
+  // R14's revoke, R16's judgement, R17's advance and decline, R18's answer)
   const m = byId(r);
   assert.deepEqual(m["FINDING::p::s"].options, [{ id: "opt", on: ["INF-1"] }]);
   assert.deepEqual(m["FINDING::export-performed::1"].options.map((o) => o.id), ["exportlog"]);
+  assert.deepEqual(m["OBLIGATION::signer-self-registered::KEY-1"].options.map((o) => o.id), ["signerset"]);
+  assert.deepEqual(m["CONDITION::action-clock-overdue::ACT-1::0"].options, [{ id: "opt", on: ["ACT-1"] }]);
+  assert.deepEqual(m["OBLIGATION::plan-checkpoint-due::PLN-1::1::p"].options.map((o) => o.id), ["checkpointrecord"]);
+  assert.deepEqual(m["OBLIGATION::escalation-stage-proposed::ESC-1::2"].options.map((o) => o.id), ["escalationadvance", "escalationdecline"]);
+  assert.deepEqual(m["OBLIGATION::action-reminder::ACT-1::0::2026-08-15"].options.map((o) => o.id), ["reminderanswer", "opt"]);
   // the homes are the walk's: the stance item is homed under both projects drawing on the question
   assert.deepEqual(m["FINDING::stance-changed-here-not-elsewhere::INQ-S::PRJ-A"].case.ancestors.map((a) => a.id), ["PRJ-A", "PRJ-B"]);
   // the facts, and one proposalsFeed read for both the findings and the dispositions
@@ -117,7 +135,17 @@ test("R1: each uncleared bias debt inside the gate whose recipients include the 
   assert.equal(d1.basis.source, "bias.uncleared");
 });
 
-test.todo("R9: an out-of-inquiry-lead offers, on the inquiry it bears on, the take-up act (cite into that inquiry) — not yet met: REC-202 (as queue R18 was; K533), not in T16");
+test("R9: an out-of-inquiry-lead offers, on the inquiry it bears on, the take-up act (cite into that inquiry)", () => {
+  const w = busy();
+  const lead = byId(w.read("alice"))["FINDING::out-of-inquiry-lead::CR-L"];
+  // the act is the take-up, cite, and nothing of optionsOf: the producer's own inquiry-grain act (queue adds the set-aside at its mint)
+  assert.deepEqual(lead.options, [{ id: "cite", label: "Take it up under this question", weight: "report" }]);
+  assert.ok(!w.asked.options.some((s) => s.includes("INQ-A")), "nothing is offered on the question the run was working");
+  // on the inquiry it bears on: the item is about that inquiry, filed under its homes, and its basis names it apart
+  assert.deepEqual([lead.subject.inquiry, lead.basis.bears_on, lead.basis.found_while_working], ["INQ-S", "INQ-S", "INQ-A"]);
+  assert.deepEqual(lead.case.ancestors.map((a) => a.id), ["PRJ-A", "PRJ-B"]);
+  assert.equal("options_grain" in lead, false, "no grain is declared missing: the inquiry-grain act is offered");
+});
 
 test("R10: every FINDING's basis names its source and its derivation", () => {
   const r = busy().read("alice");
@@ -179,7 +207,7 @@ test("R12: a CONDITION earns an item only where a member's act can change it: it
   const conds = r.items.filter((i) => i.class === "CONDITION");
   assert.ok(conds.length >= 6);
   for (const it of conds) {
-    const docs = it.subject.kind === "bundle" ? [it.subject.id] : it.subject.bundles
+    const docs = it.subject.kind === "bundle" || it.subject.kind === "action" ? [it.subject.id] : it.subject.bundles
       || (it.subject.kind === "capture_request" || it.subject.kind === "address" ? null : []);
     if (docs) assert.deepEqual(it.options, docs.length ? [{ id: "opt", on: docs }] : [], it.id);
     else assert.ok(Array.isArray(it.options), it.id);
