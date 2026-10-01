@@ -28,3 +28,7 @@ Size (session_017vtxc1g46pax3uvWUKZx2s): test runs 2, module lines 2032
 ## J1 · REPORT
 
 Generated artifact staled: bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (not_product): src/textchain.mjs changed (comments only). Not regenerated.
+
+## J2 · COMPLETE
+
+Done at 5e8905e729 on job/T22/text-chain. N471: :425 past-tense provenance (tools/mintid.mjs retired in T19). N480: :100, :1754-5, :1782-8, :1843-57 re-worded (needsTier2/mergeTier3Text are extraction's pipeline.mjs; the false 'NOT WIRED' note now says pipeline.mjs calls mergeTier2Text and tier2Note); :1869 tier-pagewise.test.mjs (deleted T17) re-worded, its measurement now extraction's tier-pagewise.probe.mjs. Re-scan found one more: :1315 'schema.mjs states' (deleted T19), now past tense. text-chain 112/112; test/m 4815 tests, 2 fail (the accepted membership R83, R79), no new red; format, architecture, coverage (103/103), ownership: 0 failures. Record: build/jobs/T22/text-chain.md.
