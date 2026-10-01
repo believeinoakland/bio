@@ -10,7 +10,7 @@ import { DatabaseSync } from "node:sqlite";
 import { O, M, world, call, opCalls, hex64, aik, cred, member, refused, FORGED, QUERY_STAMPS, BODY_STAMPS } from "./harness.mjs";
 const D = await import("../../../src/control-plane/dispatch.mjs");
 const P = await import("../../../src/control-plane/pull.mjs");
-const { captureOf } = await import("../../../src/capture/index.mjs");
+const { captureOf, PULL_WITHIN_FAILED_DETAIL } = await import("../../../src/capture/index.mjs");
 const { provenanceOf } = await import("../../../src/provenance/index.mjs");
 const { recordOf } = await import("../../../src/record-core/index.mjs");
 const { SOURCES_CHECKS } = await import("../../../src/sources/checks.mjs");
@@ -474,7 +474,8 @@ test("R36 (N380, K559; capture R65): the pull and its promotion are one act — 
     const first = await P.pullAndFile(deps, who);
     assert.deepEqual([first.ok, first.reason, first.status, first.knockId], [false, reason, status, k.knockId]);
     assert.equal(JSON.stringify(first).includes("a store fault"), false, "a fault's message is not carried");
-    if (fault === "throw") assert.match(first.detail, /the promotion did not complete/);
+    /* N419: a fault answers capture's fixed sentence (capture R65), never the thrown message */
+    if (fault === "throw") assert.equal(first.detail, PULL_WITHIN_FAILED_DETAIL);
     assert.deepEqual(heldOf(r, k.knockId, k.sha256), { status: "new", capture_sha: null, pulled_by: null, receipt: false, home: null },
                      "the pull was rolled back with its promotion");
     assert.deepEqual(standinWrites(r), [], "no bundle filed");

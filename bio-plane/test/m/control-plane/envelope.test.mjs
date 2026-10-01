@@ -91,9 +91,9 @@ test("R22: through the door — a forwarded store refusal under result, and the 
 
 test("R22: every row a module holds in the files the door reads resolves to a row of that code — record-core's MINT_EXHAUSTED (C-59.6) among them, decorating a forwarded refusal", async () => {
   const { RECORD_CORE_CHECKS } = await import("../../../src/record-core/checks.mjs");
-  assert.ok(M.MODULE_CHECK_FILES.some((f) => f.RECORD_CORE_CHECKS === RECORD_CORE_CHECKS), "record-core's checks.mjs is read");
+  assert.ok(M.CHECK_FAMILY_FILES.some(([, f]) => f.RECORD_CORE_CHECKS === RECORD_CORE_CHECKS), "record-core's checks.mjs is read");
   let rows = 0;
-  for (const source of M.MODULE_CHECK_FILES)
+  for (const [, source] of M.CHECK_FAMILY_FILES)
     for (const [fam, table] of Object.entries(source)) {
       if (!/_CHECKS$/.test(fam) || !table || typeof table !== "object") continue;
       for (const [code, row] of Object.entries(table)) {
@@ -388,7 +388,7 @@ test("R23, R25 (N349): every silence the door answers itself carries the correla
 
 test("R22 (N347): the door reads capture's table — EVIDENCE_NOT_HELD is C-118.1, NO_SUCH_KNOCK C-118.2, the old generic NOT_FOUND nothing; a forwarded NO_SUCH_KNOCK under result gains its row, and an answer already carrying it is unchanged", async () => {
   const { CAPTURE_CHECKS } = await import("../../../src/capture/checks.mjs");
-  assert.ok(M.MODULE_CHECK_FILES.some((f) => f.CAPTURE_CHECKS === CAPTURE_CHECKS), "capture's checks.mjs is read");
+  assert.ok(M.CHECK_FAMILY_FILES.some(([, f]) => f.CAPTURE_CHECKS === CAPTURE_CHECKS), "capture's checks.mjs is read");
   assert.deepEqual(M.dec49Row("EVIDENCE_NOT_HELD"), { check: "C-118.1", translation: CAPTURE_CHECKS.EVIDENCE_NOT_HELD.translation });
   assert.deepEqual(M.dec49Row("NO_SUCH_KNOCK"), { check: "C-118.2", translation: CAPTURE_CHECKS.NO_SUCH_KNOCK.translation });
   assert.equal(M.dec49Row("NOT_FOUND"), null);
@@ -505,7 +505,7 @@ test("R33: no place is named in this module's answers", async () => {
 
 test("R22 (N363, K562; N382, K606): the door reads tasks' table — INBOX_REFUSED (C-19.2), MACHINE_CANNOT_FORWARD (C-32.10), MACHINE_CANNOT_RESOLVE (C-32.11) and TASK_NOT_YOURS (C-76.1) each gain their row on a forwarded refusal, and an answer already carrying one is unchanged", async () => {
   const T = await import("../../../src/tasks/checks.mjs");
-  assert.ok(M.MODULE_CHECK_FILES.includes(T) || M.MODULE_CHECK_FILES.some((f) => f.TASK_ACTOR_CHECKS === T.TASK_ACTOR_CHECKS), "tasks' checks.mjs is read");
+  assert.ok(M.CHECK_FAMILY_FILES.some(([, f]) => f === T || f.TASK_ACTOR_CHECKS === T.TASK_ACTOR_CHECKS), "tasks' checks.mjs is read");
   const rows = Object.entries(T).filter(([f]) => /_CHECKS$/.test(f)).flatMap(([, t]) => Object.entries(t));
   assert.deepEqual(rows.map(([code, r]) => [code, r.check]).sort(),
                    [["INBOX_REFUSED", "C-19.2"], ["MACHINE_CANNOT_FORWARD", "C-32.10"], ["MACHINE_CANNOT_RESOLVE", "C-32.11"], ["TASK_NOT_YOURS", "C-76.1"]]);

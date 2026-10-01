@@ -8,61 +8,9 @@ import { parseFrontmatter, createSha256, normalizeType, INSTALLATION_CHECKS,
 /* R32: the doors' own rows (`checks.mjs`). */
 import { ADMISSION_CHECKS, NAMESPACE_CHECKS, DISPATCH_CHECKS, BOOTSTRAP_CHECKS, AI_SCOPE_CHECKS, OPERATOR_FENCE_CHECKS,
          GROUP_IDENTITY_FENCE_CHECKS, REPLAY_CHECKS } from "./checks.mjs";
-import * as M_CONTROL_PLANE from "./checks.mjs";
-/* D-262: THE WHOLE CATALOGUE, AS A NAMESPACE AND NOT A LIST. `dec49Attach`
-   below resolves a refusal code against every DEC-49 family the catalogue
-   exports, and it finds those families BY THE `_CHECKS` SUFFIX — the same rule
-   `civicos-ui/check-refusal-codes.mjs` harvests by, so a family minted tomorrow
-   is reachable here with no edit. A named-import list would be a hand-kept copy
-   of a set that grows every week, which is the staleness this project meets
-   most; the named imports above stay named because they are used AS VALUES. */
-import * as CHECK_CATALOGUE from "../../checks/bio-checks.mjs";
-/* N272 (K351): AND EVERY MODULE'S OWN FAMILIES. A row that left the catalogue for its module's `checks.mjs` (or the
-   one file a module keeps its families in) reached the wire with no `code`, `check` or `translation` unless its site
-   spread the row itself, because `dec49Row` read the catalogue alone. Each module file is read as a NAMESPACE, so a
-   family it mints tomorrow is found by the `_CHECKS` suffix with no edit here; a module that opens a NEW file of
-   families is not, and `MODULE_CHECK_FILES` gains it until N245's composed catalogue replaces this list (K351). */
-import * as M_ACTIONS from "../actions/checks.mjs";
-import * as M_AI_RUNS from "../ai-runs/checks.mjs";
-import * as M_BIAS from "../bias/checks.mjs";
-import * as M_CALIBRATION from "../calibration/checks.mjs";
-import * as M_CAPTURE_REQUESTS from "../capture-requests/checks.mjs";
-import * as M_CAPTURE_SOURCES_CREDENTIALS from "../capture-sources/credentials.mjs";
-/* N347 (K440): capture's rows (C-118), readable here since capture renamed its generic `NOT_FOUND` to `EVIDENCE_NOT_HELD`. */
-import * as M_CAPTURE from "../capture/checks.mjs";
-import * as M_CASE_AUTHORING from "../case-authoring/checks.mjs";
-import * as M_CITATION from "../citation/checks.mjs";
-import * as M_CONFORMANCE from "../conformance/checks.mjs";
-import * as M_CONNECTIONS_THEMES from "../connections/themes.mjs";
-import * as M_CONSEQUENCES from "../consequences/checks.mjs";
-import * as M_CONTENT_EXTENT from "../content/extent.mjs";
-import * as M_CONTRADICTION from "../contradiction/checks.mjs";
-import * as M_ENTITIES from "../entities/checks.mjs";
-import * as M_ESCALATION from "../escalation/checks.mjs";
-import * as M_EXTRACTION from "../extraction/checks.mjs";
-import * as M_FILINGS from "../filings/checks.mjs";
-import * as M_INQUIRY from "../inquiry/index.mjs";
-import * as M_INTENT from "../intent/checks.mjs";
-import * as M_MEMBERSHIP from "../membership/checks.mjs";
-import * as M_OBSERVATION_LOG from "../observation-log/checks.mjs";
-import * as M_PROGRESSIONS from "../progressions/checks.mjs";
-import * as M_PROMOTION from "../promotion/checks.mjs";
-import * as M_PROVENANCE from "../provenance/checks.mjs";
-import * as M_PUBLICATION from "../publication/checks.mjs";
-import * as M_QUEUE from "../queue/checks.mjs";
-import * as M_RATIFICATION from "../ratification/checks.mjs";
-import * as M_RECORD_CORE from "../record-core/checks.mjs";
-import * as M_REEVALUATION from "../reevaluation/checks.mjs";
-import * as M_RETRIEVAL from "../retrieval/checks.mjs";
-import * as M_REVIEW from "../review/checks.mjs";
-import * as M_RUN_PRODUCTIONS from "../run-productions/checks.mjs";
-import * as M_SKILLDOCTRINE from "../skilldoctrine.mjs";
-/* N364: sources' rows (C-121), so `op=knockerconsent`'s refusals and a forwarded one carry theirs. */
-import * as M_SOURCES from "../sources/checks.mjs";
-import * as M_STANDARDS from "../standards/checks.mjs";
-import * as M_STRENGTH from "../strength/checks.mjs";
-/* N363 (K562): tasks' rows (C-19.2, C-32.10, C-32.11, C-76.1), moved from queue's, so their DEC-49 row reaches the wire. */
-import * as M_TASKS from "../tasks/checks.mjs";
+/* R22, R41 (K585 (1)): the composed catalogue — the check catalogue, every module's families, this module's own — and the
+   one reader of a code's row (`families.mjs`). */
+import { CHECK_FAMILIES, CHECK_FAMILY_FILES, dec49Row } from "./families.mjs";
 import { liveToken } from "../tokens.mjs";
 import { SIGN_HTML } from "../signpage.mjs";
 import { setupPage } from "../setup.mjs";
@@ -778,42 +726,6 @@ const json = (o, status = 200) =>
  * a future one that IS would be outside this and is exactly what the
  * instrument's op sweep would find.
  * ========================================================================= */
-
-/* Built ONCE, LAZILY, and never at module load — a Worker pays module
-   initialisation on every cold start, and this is only needed by a response that
-   actually refuses. Families are found by the `_CHECKS` suffix (a RESERVED
-   SUFFIX in this repository: the DEC-49 guard harvests every one of them as a
-   refusal family), so this is a PROPERTY and not a list. */
-/* N272: the catalogue first, then each module file in path order, so a code the catalogue still holds resolves as it
-   always has; a code held in two places is the guard's arm A to refuse, not this reader's to choose. */
-const MODULE_CHECK_FILES = [
-  M_ACTIONS, M_AI_RUNS, M_BIAS, M_CALIBRATION, M_CAPTURE_REQUESTS, M_CAPTURE_SOURCES_CREDENTIALS, M_CAPTURE, M_CASE_AUTHORING,
-  M_CITATION, M_CONFORMANCE, M_CONNECTIONS_THEMES, M_CONSEQUENCES, M_CONTENT_EXTENT, M_CONTRADICTION, M_CONTROL_PLANE, M_ENTITIES,
-  M_ESCALATION, M_EXTRACTION, M_FILINGS, M_INQUIRY, M_INTENT, M_MEMBERSHIP, M_OBSERVATION_LOG, M_PROGRESSIONS,
-  M_PROMOTION, M_PROVENANCE, M_PUBLICATION, M_QUEUE, M_RATIFICATION, M_RECORD_CORE, M_REEVALUATION, M_RETRIEVAL, M_REVIEW, M_RUN_PRODUCTIONS,
-  M_SKILLDOCTRINE, M_SOURCES, M_STANDARDS, M_STRENGTH, M_TASKS];
-let DEC49_ROWS = null;
-function dec49Row(code) {
-  if (DEC49_ROWS === null) {
-    DEC49_ROWS = new Map();
-    for (const source of [CHECK_CATALOGUE, ...MODULE_CHECK_FILES]) {
-      /* Sorted so a duplicated code — which the guard's arm A already refuses —
-         resolves the same way on every isolate rather than by module order. */
-      for (const family of Object.keys(source).sort()) {
-        if (!/_CHECKS$/.test(family)) continue;
-        const rows = source[family];
-        if (!rows || typeof rows !== "object") continue;
-        for (const [key, row] of Object.entries(rows)) {
-          if (!row || typeof row !== "object") continue;
-          if (typeof row.translation !== "string" || row.translation === "") continue;
-          if (!DEC49_ROWS.has(key))
-            DEC49_ROWS.set(key, { check: row.check ?? null, translation: row.translation });
-        }
-      }
-    }
-  }
-  return DEC49_ROWS.get(code) ?? null;
-}
 
 /* A REFUSAL is `ok: false` carrying a code — and `ok: false` is required rather
    than inferred from the presence of a `reason`, because an ANSWER may carry a
@@ -3626,6 +3538,6 @@ export function makeFetch(hooks = {}) {
 export { json, doAnswer, storeSilent, storeRefusal, relayAnswer, StoreSilent, STORE_SILENT_REASON, STORE_SILENT_DETAIL, PUBLISHED_STORE, SCRATCH,
          NAMESPACES, sha256Hex, fingerprint, classify, scopeFor, caseReader, resolveSession, reviewAnswer, captureKey,
          installationRow, admissionRow, dispatchRow, namespaceRow, machineFenceRow, replayRow, identityFenceRow,
-         dec49Row, dec49Attach, MODULE_CHECK_FILES, sessionOpGate, migrationReplayOf, DRIVE_PROVENANCE_PATH,
+         dec49Row, dec49Attach, CHECK_FAMILIES, CHECK_FAMILY_FILES, sessionOpGate, migrationReplayOf, DRIVE_PROVENANCE_PATH,
          namespaceGate, pinnedNamespaceGate, confinedNamespaceGate, aiReachesAsMember, aiScopeDeclaration,
          aiConfinementDeclaration, aiTaskScope, AI_TOKEN_SHAPE, SCRATCH_ADDRESSING_PUBLIC_OPS };

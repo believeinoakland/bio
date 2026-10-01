@@ -77,9 +77,9 @@ const promoteIn = ({ record, promotion }, doc, who) =>
     return p && p.ok === true ? { ...p, bundleId: p.bundleId ?? pkg.bundleId } : (p || { ok: false, reason: "PROMOTE_FAILED" });
   });
 
-/* Inside the pull: a throw still rolls the pull back (capture answers `PULL_WITHIN_FAILED`), but it is thrown as a fault
-   with no message of the store's in it, since capture carries the message into its answer (R25's rule for a thrown
-   error: never its message). */
+/* Inside the pull: a throw still rolls the pull back, and capture answers `PULL_WITHIN_FAILED` with its own fixed
+   sentence (capture R65), never the thrown message (R25's rule for a thrown error); it is thrown here with no message of
+   the store's in it all the same, so nothing of the store's could reach an answer by any route. */
 function promoteOrFault(deps, doc, who) {
   try { return promoteIn(deps, doc, who); }
   catch { throw new Error("the promotion did not complete"); }
