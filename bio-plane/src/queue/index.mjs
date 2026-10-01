@@ -21,7 +21,8 @@
  *   record, membership, connections, progressions, bias, affordances, scheduler, tasks,
  *   producers   the providers (`producers` is `queue-producers`, handed whichever of its own providers were given
  *              here: governor, provenance, capture, captureRequests, basisVersions, aiRuns, publication, reevaluation,
- *              intent, monitoring, contradiction, actionClocks, escalation, actionPlans and the shared ones);
+ *              intent, monitoring, contradiction, actionClocks, escalation, actionPlans, actions and the shared
+ *              ones);
  *   env       the instance bindings: `BIO_NOW_MS` (the clock);
  *   now       a clock, `() => ms`, in place of `env`'s;
  *   start     false to skip the scheduler registration (a test that drives the consumer itself).
@@ -95,8 +96,8 @@ export class Queue {
   }
   static PRODUCER_DEPS = Object.freeze(["record", "membership", "governor", "provenance", "capture", "captureRequests",
     "basisVersions", "progressions", "aiRuns", "bias", "publication", "reevaluation", "intent", "monitoring", "contradiction",
-    /* queue-producers R15–R18 (K608, K728): the Action layer's providers. */
-    "actionClocks", "escalation", "actionPlans"]);
+    /* queue-producers R15–R19 (K608, K728; K899 (7)): the Action layer's providers, `actions` for R19's holds. */
+    "actionClocks", "escalation", "actionPlans", "actions"]);
   get #scheduler() { return this.#dep("scheduler", () => schedulerOf(this.#host, this.#env)); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }

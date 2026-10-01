@@ -124,3 +124,24 @@ test("R12, R28 (K899 (7)): litigation-hold's door is actionhold on the item, and
   }
   assert.equal(w.all(`SELECT count(*) c FROM finding_dispositions`)[0].c, 0, "nothing written");
 });
+
+test("R8, R12 (K899 (7)): a caller's fake actions reaches queue-producers R19, whose litigation-hold item mints with its door; answering no mark, none", () => {
+  const asked = [];
+  const marks = [{ action: "ACT-1", ord: 2, note: "a letter from counsel", marked_by: "bob", marked_at: iso(NOW - 5000), project: null }];
+  const holds = (answer) => ({ holdsDue: (a) => { asked.push(a.viewer); return { ok: true, items: answer, truncated: false, cursor: null }; } });
+  const w = world({ actions: holds(marks) });
+  w.member("alice", { role: "admin" }); w.member("bob"); w.bundle("ACT-1", "action");
+  const f = w.feed("alice");
+  assert.equal(f.ok, true, JSON.stringify(f).slice(0, 300));
+  const it = byId(f)["OBLIGATION::litigation-hold::ACT-1::2"];
+  assert.ok(it, "the fake's mark reached R19's mint");
+  assert.deepEqual([it.class, it.kind, it.disposition.available, it.disposition.instead], ["OBLIGATION", "litigation-hold", false, "actionhold"]);
+  assert.deepEqual(asked, ["member:alice"], "asked once, of this viewer");
+  // negative control: the same feed over a fake answering no mark mints no litigation-hold item
+  const none = world({ actions: holds([]) });
+  none.member("alice", { role: "admin" }); none.bundle("ACT-1", "action");
+  const g = none.feed("alice");
+  assert.equal(g.ok, true);
+  assert.equal(g.items.filter((i) => i.kind === "litigation-hold").length, 0);
+  assert.equal(asked.length, 2, "the fake was asked and answered none");
+});
