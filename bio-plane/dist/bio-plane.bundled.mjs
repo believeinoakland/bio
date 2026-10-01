@@ -3877,6 +3877,7 @@ var LEAD_CHECKS = {
 // src/inquiry-grammar/checks.mjs
 var checks_exports6 = {};
 __export(checks_exports6, {
+  INQUIRY_GRAMMAR_CHECKS: () => INQUIRY_GRAMMAR_CHECKS,
   INQUIRY_GRAMMAR_ROWS: () => INQUIRY_GRAMMAR_ROWS,
   LEAD_CHECKS: () => LEAD_CHECKS2
 });
@@ -3887,7 +3888,7 @@ var LEAD_CHECKS2 = {
     translation: "That leg points at a LEAD. A lead is somewhere to look \u2014 what a member was told or suspects \u2014 and it is never evidence, so nothing can rest on it. Follow the lead: if the look finds the document, capture it and cite THAT; if you saw the thing yourself, write it up as your own observation."
   }
 };
-var INQUIRY_GRAMMAR_ROWS = Object.freeze({
+var INQUIRY_GRAMMAR_CHECKS = Object.freeze({
   LEAD_NOT_EVIDENCE: LEAD_CHECKS2.LEAD_NOT_EVIDENCE,
   NOT_INQUIRIES: {
     check: "C-33.13",
@@ -3915,6 +3916,7 @@ var INQUIRY_GRAMMAR_ROWS = Object.freeze({
     translation: "Grounding says some of the reasons behind an answer are strong enough to carry it on their own, and it is the one act here that makes a finding stronger rather than weaker. That decision needs a person behind it, and the credential that asked is an automated one. Sign in to ground it."
   }
 });
+var INQUIRY_GRAMMAR_ROWS = INQUIRY_GRAMMAR_CHECKS;
 
 // src/inquiry-grammar/grammar.mjs
 function f4(check, severity, message2, repairs, code) {
@@ -12613,6 +12615,7 @@ __export(inquiry_exports, {
   checkLegExtentGrammar: () => checkLegExtentGrammar,
   deriveInquiryTitle: () => deriveInquiryTitle,
   divisionDisclosureFindings: () => divisionDisclosureFindings,
+  inquiryLegGrades: () => inquiryLegGrades,
   inquiryOf: () => inquiryOf,
   inquiryOps: () => inquiryOps,
   inquiryOwns: () => inquiryOwns,
@@ -12629,7 +12632,7 @@ __export(inquiry_exports, {
 
 // src/inquiry/grammar.mjs
 var INQUIRY_MACHINE = STATES.inquiry;
-var INQUIRY_ROWS = INQUIRY_GRAMMAR_ROWS;
+var INQUIRY_ROWS = INQUIRY_GRAMMAR_CHECKS;
 async function checkInquiryEntry(bundleMd, opts = {}) {
   try {
     const o = opts && typeof opts === "object" ? opts : {};
@@ -59908,6 +59911,38 @@ var Inquiry = class _Inquiry {
       return null;
     }
   }
+  /** R52 (1) (K861, plane R10): this module's share of the instance's figures, exported for `plane` to register under
+   *  this module's name through `record-core` R63 (`registerCounts("inquiry", Inquiry.COUNT_KEYS, (hid) =>
+   *  k.counts(hid))`); the module registers nothing itself while plane holds its copy. */
+  static COUNT_KEYS = Object.freeze(["inquiryMigrationReplays"]);
+  /** R52 (1), D-464 (A COUNT IS TAKEN THROUGH THE CALLER'S OWN SIGHT): `record-core` R63's `counts(hid)` for this
+   *  module's share, moved from the plane's held copy with its reading kept. `inquiryMigrationReplays` is the rows of
+   *  `inquiry_migration_replays` (REC-173) less those whose `bundle_id` is in `hid`, membership's `hiddenBundles`
+   *  (`{sql, args}`), or null for a viewer that sees every bundle and for the direct internal call, which count whole.
+   *  `COALESCE(k, '')`: a NULL key names no bundle, and `NULL NOT IN (…)` is NULL, which would drop the row. A figure
+   *  whose table cannot be read is left out, and R63 answers it null, never zero. Synchronous; writes nothing; never
+   *  throws. */
+  counts(hid = null) {
+    const out = {};
+    try {
+      out.inquiryMigrationReplays = hid ? this.#one(
+        `SELECT count(*) AS c FROM inquiry_migration_replays WHERE COALESCE(bundle_id, '') NOT IN ${hid.sql}`,
+        ...hid.args
+      ).c : this.#one(`SELECT count(*) AS c FROM inquiry_migration_replays`).c;
+    } catch {
+    }
+    return out;
+  }
+  /** R52 (2) (K861, plane R10; retrieval R55): the leg grades `retrieval`'s `registerLegGrades` takes, for `plane` to
+   *  register as `inquiry` (through `inquiryLegGrades(host)`). For legs `{grade, target_id}`, R13's `earned` is asked
+   *  once, with no subject entity, over the list's distinct targets, and each leg, in order, answers R14's `legCapped`
+   *  of its grade against its target's earned capture ceiling (null for a target with none). An empty list, or anything
+   *  that is not a list, answers an empty list without asking. */
+  legGrades(legs) {
+    if (!Array.isArray(legs) || !legs.length) return [];
+    const cap = this.earned(null, [...new Set(legs.map((l) => l && l.target_id))])?.earned?.capture || {};
+    return legs.map((l) => l && Object.hasOwn(cap, l.target_id) ? legCapped(l.grade, cap[l.target_id], l.target_id) : null);
+  }
   /** R17, R11 (`inquiry-grammar` R1, R2): the entry requirements over one document, judged by record-grammar's
    *  `checkBundle` with the type grammars later modules registered with record-core (its `grammars()`), as promotion's
    *  gate judges a bundle (its R27), so a grammar registered there judges an inquiry here as it does there. A slot of
@@ -61803,6 +61838,9 @@ function inquiryOf(host, deps) {
       });
   }
   return k;
+}
+function inquiryLegGrades(host) {
+  return (legs) => inquiryOf(host).legGrades(legs);
 }
 function inquiryOwns(t) {
   const name = typeof t === "string" ? t : t && t.name;
@@ -63736,6 +63774,34 @@ var BasisVersions = class _BasisVersions {
     return {
       self: rows3.filter((r) => r.depth === 0).map((r) => r.root),
       via: rows3.filter((r) => r.depth > 0).map((r) => ({ finding: r.root, observation: r.observation }))
+    };
+  }
+  /* ===== R47 (K861; plane R10) — THIS MODULE'S SHARE OF THE INSTANCE'S FIGURES =====
+   *
+   * PL-1 / IS-1: the inquiry's alternative accounts of its evidence and their legs, reported so a purge can PROVE it
+   * took them (D-113). A COUNT AND NOTHING ELSE: how many readings of the evidence exist is an operator fact, and what
+   * they say is not an operator surface. Shaped as record-core R63's `counts(hid)` with its key list, for `plane` to
+   * register under this module's name (`registerCounts("basis-versions", [...BasisVersions.COUNT_KEYS], (hid) =>
+   * bv.counts(hid))`). This module registers nothing itself while plane holds its copy (`src/plane/held.mjs`), so no
+   * figure is registered twice. `hid` is R63's: membership's `hiddenBundles(viewer)` (its R88), the bundles the caller
+   * may not see, or null for a caller that sees every bundle and for the direct internal call (purge's proof among
+   * them), which count whole. A version drops when its `bundle_id` is in `hid`, a leg when its `bundle_id` or its
+   * `target_id` is (D-464: a count over rows the caller could not all read is a disclosure of existence).
+   * `COALESCE(k, '')`: a NULL key names no bundle, and `NULL NOT IN (…)` is NULL, so without it the row would be
+   * dropped. Synchronous; writes nothing. */
+  static COUNT_KEYS = Object.freeze(["basisVersions", "basisVersionLegs"]);
+  counts(hid = null) {
+    const n = (table2, keys) => {
+      const conds = [], args = [];
+      if (hid) for (const k of keys) {
+        conds.push(`COALESCE(${k}, '') NOT IN ${hid.sql}`);
+        args.push(...hid.args);
+      }
+      return this.#one(`SELECT count(*) c FROM ${table2}${conds.length ? ` WHERE ${conds.join(" AND ")}` : ""}`, ...args).c;
+    };
+    return {
+      basisVersions: n("inquiry_basis_versions", ["bundle_id"]),
+      basisVersionLegs: n("inquiry_basis_version_legs", ["bundle_id", "target_id"])
     };
   }
   /* ================================================================ the six acts (R12–R15; PL-2) */
@@ -91326,9 +91392,11 @@ var AI_RUN_ACT_SHAPE_CHECKS = {
        REC-64 first put this row in `AI_RUN_CHECKS`, where the run's other three
        open-time conditions live. `airun.test.mjs` ARM D3 failed it: **every C-22
        allocation must name its enforcement site in a PURE CHECK MODULE**
-       (`src/airun.mjs` or `src/skillpack.mjs`), so the catalogue can be walked to a
-       pure function. This condition is enforced in `store.mjs` at the run-open
-       door, so it does not satisfy that invariant and does not belong in C-22. The
+       (then `src/airun.mjs` or `src/skillpack.mjs`; today this module's
+       `rules.mjs` and `skill-version.mjs`), so the catalogue can be walked to a
+       pure function. This condition is enforced at the run-open door (then
+       `store.mjs`, today `ai-runs`' open), so it does not satisfy that invariant
+       and does not belong in C-22. The
        ARM WAS NOT WIDENED: an invariant relaxed to fit a new row is not an
        invariant, and this one is load-bearing — it is what lets `op=audit` reach
        every C-22 condition without opening the store.
@@ -95155,7 +95223,7 @@ function suggestionFrontmatter(id, p) {
 function substanceOf(composition) {
   return String(composition).split("\n").filter((ln) => !/^name\t/.test(ln) && !/^derived_from\t/.test(ln)).map((ln) => ln.startsWith("ground	") ? ln.split("	").map((f17, i) => i === 3 ? "" : f17).join("	") : ln).join("\n");
 }
-var RunProductions = class {
+var RunProductions = class _RunProductions {
   constructor({
     storage,
     record,
@@ -95952,15 +96020,34 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       }))
     };
   }
-  /** The counts `op=stats` reports of this module's tables (map §3): each row names a bundle (a proposal its document,
-   *  a stored refusal its question), and `hid`, when given, is `{sql, args}` naming the bundles the caller may not
-   *  see, whose rows are left out. */
+  /** R20 (K861, plane R10): this module's figure source, exported with its key list for `plane` to register under this
+   *  module's name through record-core R63 (`registerCounts("run-productions", [...RunProductions.COUNT_KEYS],
+   *  (hid) => p.counts(hid))`); the module registers nothing itself while plane holds its copy. Each figure is the
+   *  table's rows less those naming a bundle in `hid` by the column named here: a proposal by its document, a stored
+   *  refusal by its question. */
+  static COUNT_KEYS = Object.freeze(["proposedReadings", "suggestRefusals"]);
+  static #COUNTED = Object.freeze({
+    proposedReadings: ["proposed_readings", "bundle_id"],
+    suggestRefusals: ["suggest_refusals", "target"]
+  });
+  /** R20, R17, D-464 (A COUNT IS TAKEN THROUGH THE CALLER'S OWN SIGHT): R63's `counts(hid)` for this module's tables,
+   *  answering exactly `COUNT_KEYS`. `hid` is membership's `hiddenBundles` (`{sql, args}`), or null for a viewer that
+   *  sees every bundle and for the direct internal call (purge's proof), which count whole. `COALESCE(k, '')`: a NULL
+   *  key names no bundle, and `NULL NOT IN (…)` is NULL, which would drop the row. A figure whose table cannot be read
+   *  is left out, and R63 answers it null, never zero. Synchronous; writes nothing; never throws. */
   counts(hid = null) {
-    const c = (t, k) => Number(this.#one(
-      `SELECT count(*) c FROM ${t}${hid ? ` WHERE COALESCE(${k}, '') NOT IN ${hid.sql}` : ""}`,
-      ...hid ? hid.args : []
-    )?.c ?? 0);
-    return { proposedReadings: c("proposed_readings", "bundle_id"), suggestRefusals: c("suggest_refusals", "target") };
+    const out = {};
+    for (const key of _RunProductions.COUNT_KEYS) {
+      const [table2, col] = _RunProductions.#COUNTED[key];
+      try {
+        out[key] = Number(this.#one(
+          `SELECT count(*) c FROM ${table2}${hid ? ` WHERE COALESCE(${col}, '') NOT IN ${hid.sql}` : ""}`,
+          ...hid ? hid.args : []
+        ).c);
+      } catch {
+      }
+    }
+    return out;
   }
 };
 var instances22 = /* @__PURE__ */ new WeakMap();
@@ -96102,7 +96189,7 @@ var C = {
   empty_level_unstated: SUGGEST_CHECKS.SUGGEST_EMPTY_LEVEL_UNSTATED.check,
   leg_unreachable: SUGGEST_CHECKS.SUGGEST_LEG_UNREACHABLE.check,
   cannot_conclude: CONCLUDE_ACT_CHECKS.MACHINE_CANNOT_CONCLUDE.check,
-  cannot_ground: INQUIRY_GRAMMAR_ROWS.MACHINE_CANNOT_GROUND.check,
+  cannot_ground: INQUIRY_GRAMMAR_CHECKS.MACHINE_CANNOT_GROUND.check,
   skill_version: SKILL_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED.check,
   /* SK-3's additions, read by KEY exactly as SK-2's are. */
   cannot_publish: "C-32.6",

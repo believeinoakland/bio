@@ -1035,9 +1035,11 @@ var AI_RUN_ACT_SHAPE_CHECKS = {
        REC-64 first put this row in `AI_RUN_CHECKS`, where the run's other three
        open-time conditions live. `airun.test.mjs` ARM D3 failed it: **every C-22
        allocation must name its enforcement site in a PURE CHECK MODULE**
-       (`src/airun.mjs` or `src/skillpack.mjs`), so the catalogue can be walked to a
-       pure function. This condition is enforced in `store.mjs` at the run-open
-       door, so it does not satisfy that invariant and does not belong in C-22. The
+       (then `src/airun.mjs` or `src/skillpack.mjs`; today this module's
+       `rules.mjs` and `skill-version.mjs`), so the catalogue can be walked to a
+       pure function. This condition is enforced at the run-open door (then
+       `store.mjs`, today `ai-runs`' open), so it does not satisfy that invariant
+       and does not belong in C-22. The
        ARM WAS NOT WIDENED: an invariant relaxed to fit a new row is not an
        invariant, and this one is load-bearing — it is what lets `op=audit` reach
        every C-22 condition without opening the store.

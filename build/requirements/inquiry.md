@@ -113,7 +113,7 @@ Terms. An **inquiry** is a bundle of type `inquiry` (a legacy `focus` or `proble
 
 ### Uses
 
-- `inquiry-grammar`: the grammar functions and `GROUND_LABEL_RE` (re-exported at the grammar face), `INQUIRY_GRAMMAR_ROWS` (C-54.1, C-33.13, C-33.22, C-33.23, C-32.7, C-32.8), its registration (its R6).
+- `inquiry-grammar`: the grammar functions and `GROUND_LABEL_RE` (re-exported at the grammar face), `INQUIRY_GRAMMAR_CHECKS` (C-54.1, C-33.13, C-33.22, C-33.23, C-32.7, C-32.8), its registration (its R6).
 - `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K808, K820).
 - `record-core`: `recordOf(ctx)`, `declarePurge`, the `bundles` read contract (R37; `group_id` for `divide`, N287).
 - `membership`: `viewerPredicate`, `inSight` (R80) (R43, R61); `listenerRefusal` (R81) and `MODULE_ORDER` (R83) (N202). (`inSight`, `existenceAct` and `projectAuthority` were cite's and sever's, now `citation`'s.)
