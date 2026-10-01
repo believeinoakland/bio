@@ -38,3 +38,7 @@
 - `format`: 0 failures. `architecture provenance`: 20 product files, 0 failures. `coverage provenance`: 55 of 55 live ids. `ownership provenance tranche/T19`: legacy-store 4 added, 62 removed, 0 failures.
 
 Size (session_01DzWtbMt3dfXnf1njsK3anH): test runs 9, module lines 3932
+
+## J1 · COMPLETE
+
+Done; pushed to job/T19/provenance. Record: build/jobs/T19/provenance.md, Completion section. Met, with tests: R28, R48 (widened), R52, R53, R54, R55, plus rule 1, K781 and K789. 113/113 provenance tests pass. The 26 test folders of the modules using provenance, plus legacy-store, show no failure beyond tranche/T19's. All four checks pass (legacy-store: 4 lines added, 62 removed). Three reports for you, in the record: legacy-store's two counts lines are now duplicated by my registration; the spread of my ops map and the slot calls are legacy-store's to make; the bundle needs regenerating.
