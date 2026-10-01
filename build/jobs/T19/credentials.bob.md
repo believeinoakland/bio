@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` layer 2, credentials (new; `build/p
 ## B2 · ANSWER · re J1
 
 K774: (1)(2)(3) adopted as you read them. J2: option (a): membership R95 registerPasswordSetter and your R20 (register setPassword at start) are worded on tranche/T19; merge it.
+
+## B3 · CHANGE
+
+MEMBERSHIP's seam has merged into tranche/T19 (K776): sessionRights (R92), registerClaimed (R94), onRevoked, memberFacts as it reported. Merge tranche/T19 and build on it; R95 registerPasswordSetter comes with membership's later work (K774).
