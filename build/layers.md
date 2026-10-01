@@ -123,7 +123,7 @@ Uses: `acquisition` uses jurisdictions, subresources, odf-reader, format-registr
 ## Helper modules (BOB #38, 2026-09-26, under P17)
 
 Found by the architecture check's first run: shared helpers that later modules used from the top of the order.
-- **test-support** (layer 1): the test sandbox and stdio guard (`bio-plane/test/sandbox.mjs`, `stdio.mjs`) that the workers' tests and the old battery share.
+- **test-support** (layer 1): the test sandbox and stdio guard (`bio-plane/test/sandbox.mjs`, `stdio.mjs`) that the workers' tests and the kept suites share.
 - **bundler** (layer 1): `bio-plane/scripts/fleet-bundle.mjs` and its `provenance.mjs`, which build the plane and the three workers.
 - **record-grammar** (layer 1, first in the order; K578, K585 (4), K589, formed at T18's opening): the record's shared grammar below every module that reads or writes a document (the id and type vocabulary, the restricted front-matter parser, canonical JSON, actor identity, the grade vocabulary, the public-locator test and the one SHA-256), moved out of `legacy-checks` in stages, each part whole, the catalogue re-exporting it until its importers re-point (PROCESS-MECHANICS §12.2). It holds no store, no network and no clock.
 

@@ -38,7 +38,7 @@ None.
 
 ### Satisfies
 
-- `build/layers.md`, "Helper modules": the shared test sandbox the workers' tests and the old battery use.
+- `build/layers.md`, "Helper modules": the shared test sandbox the workers' tests and the kept suites use.
 
 ### Suggestions
 

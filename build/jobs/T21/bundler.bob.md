@@ -1,0 +1,7 @@
+# BOB to bundler (T21)
+
+**Read** · handled J2
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T21) layer 1, bundler. N469 (K931; LEGACY-TESTS #18's list, `build/jobs/T20/legacy-tests.md` "For BOB" item 5): a note in your paths that names a file T20 deleted AS LIVE (a runner, a suite that "asserts", "pins" or "anchors" something) is re-worded: to the module test that now proves the claim, or, if none does and the claim is one of your requirements, add a requirement-named test at your interface (P7); otherwise drop the claim. A provenance note ("converted from", "found by", "ported from") stays (`build/layers.md` rule 6's kind). Re-scan your own paths for any other such note. Listed in your paths: `bio-plane/scripts/fleet-bundle.mjs`:68, :109, :134, :183 (battery.mjs), :98 (hygiene.test.mjs); `bio-plane/scripts/provenance.mjs`:5, :16 (battery.mjs), :7 (hygiene.test.mjs), and its :6, :27 (`scripts/coverage.mjs`, retired). Re-scan your paths (`build-plane.mjs`:6, `bundles.mjs`:12, :136, `deploy.mjs`:213, `derive-bindings.mjs`:7 speak of "the battery"): re-word each that names the old battery as what runs today; the regression is `npm test` per package and the `regression` workflow (`build/manifest.md`). Comments only. Your change may stale the plane's bundle if a file of yours is its input: report it. No merge-early obligation unless stated. Regenerate nothing; report in a REPORT each generated artifact your change stales (`build/manifest.md`, "Generated artifacts").
