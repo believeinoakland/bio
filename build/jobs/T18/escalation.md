@@ -35,7 +35,7 @@ ESCALATION #6 complete on job/T18/escalation. N-A6 applied: R16 escalationsDue i
 
 Merged `tranche/T18` (filings, actions and action-clocks merged, K706). Added the real-actions arm of R23 (`real.test.mjs` "R23 over the real actions": a member's breach action with `premise_override: {reason}` and no `rests_on` leg, written through actions' own check, read back with its override, refused `ACTION_PREMISE_OVERRIDDEN` C-116.45 at stage 2 with nothing written; the same kind of action resting on the determination attaches). The override is now read by actions' own rule, `Actions.overrideOf` (`{reason}` with a non-empty reason, else none), so the two modules cannot disagree about what an override is; my earlier "any non-null value" reading is replaced.
 
-Re-run after the merge: `node --test bio-plane/test/m/escalation/`: tests 32, pass 32, fail 0. DEC-49 guard: no FAIL names escalation, C-116 or the new code. format: 0 failures; architecture: 0 failures; coverage: 23 of 23; ownership: below.
+Re-run after the merge: `node --test bio-plane/test/m/escalation/`: tests 32, pass 32, fail 0. DEC-49 guard: no FAIL names escalation, C-116 or the new code. format: 0 failures; architecture: 0 failures; coverage: 23 of 23; ownership: 7 files changed by escalation between tranche/T18 and HEAD; 0 failures.
 
 Size (session_01Sa2gjuhjzD2CRUGeynitk9): test runs 6, module lines 40
 
