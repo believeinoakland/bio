@@ -27,3 +27,7 @@ Size (session_01Acv65uxLHFiE42yCXhKSYx): test runs 4, module lines 1281
 ## J1 · REPORT
 
 Generated artifact staled: bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (not_product): src/acquisition/index.mjs changed (N458's one sentence). Not regenerated. test/m reds not mine: 41 fail on tranche/T21 with and without this change (filings 35; project-stage stage.test.mjs 5, a document's own matured/investigating; intent grammar.test.mjs 1, R29's slot claim still names C-9.1, its L7 entry).
+
+## J2 · COMPLETE
+
+Done at 7976f314fc on job/T21/acquisition. N458: index.mjs:667's existed_undetermined now says 'under a record that still exists'; R11's test pins it. N469: the listed headers are provenance and stay; selflink-render.test.mjs:3 re-worded to the past tense (d522 deleted). acquisition 59/59; test/m 4683 tests, 41 fail, the same 41 without this change; format, architecture, coverage (30/30), ownership: 0 failures. Record: build/jobs/T21/acquisition.md.
