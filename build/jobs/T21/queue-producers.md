@@ -11,3 +11,11 @@ My best reading, which I am building now: action-clocks R11 answers each reading
 If you would rather keep action-clocks closed: the alternative is that Uses gains `conformance.determinationRead` and a record-core manifest read, so this module derives the creator and the project itself. That duplicates action-clocks' rule, which is why I do not recommend it.
 
 A second, smaller point, for queue: R21's key carries no status (`OBLIGATION::local-fact-due::<path>`), yet the item is "raised once per fact and status". I put the status on the subject and the basis (`subject.status`, `basis.status`). Whether a disposition taken while the fact was `unconfirmed` also covers it once `disputed` is for queue's mint to decide. No change is needed here unless you want the status in the key.
+
+## J2 · REPORT
+
+Findings in other modules, and the artifact this job made stale:
+1. **Plane bundle stale.** I changed `bio-plane/src/queue-producers/index.mjs`, so `bio-plane/dist/bio-plane.bundled.mjs` and `.bundle.json` (owner `not_product`) are stale. I regenerated nothing.
+2. **queue (its job after mine).** `Queue.PRODUCER_DEPS` (`bio-plane/src/queue/index.mjs`:97) needs `filingTemplates` and `localFacts`, the dep names this module now reaches lazily (`#filingTemplates`, `#localFacts`). It also needs the two kinds, `template-review-requested` and `local-fact-due`, both OBLIGATION, in its catalogue. The items' own acts are `templatereview` (filing-templates R9) and `factconfirm` (local-facts R1). For R21, see J1's second point (status and dispositions).
+3. **action-clocks R11** (J1): `calendarFactsRead` answers each reading action as a bare id. R21's recipients need `{action, project, created_by}`, as R3 answers them.
+4. **filing-templates R20** (an improvement, not a flaw): `reviewsRequested` does not answer the template's `scope` (its project). So a `template-review-requested` item is homed under no case, as `export-performed` is. If R20 also answered `project`, the item could be homed under the project the template was drafted in.
