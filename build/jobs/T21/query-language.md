@@ -20,3 +20,7 @@
 - `node checks/ownership.mjs … query-language tranche/T21`: 1 file changed; 0 failures.
 
 Size (session_01PXvHqUoNr5cngACTYbDozK): test runs 2, module lines 2736
+
+## J1 · COMPLETE
+
+B1 applied (f1d92567ca). N458: resolves/concerns grain now 'the record carrying a capture …'; :1864 names the table bundles and stays. N469: :1379, :1776, :2691–2697 kept as past-tense provenance (dead pin claim dropped); :1798, :589, :819, :1971, :699, :2070, :2455, :2534, :2636 re-pointed to the module's own R7/R6/R11/R12/R14/R15/R16 tests. Tests 38/38; format, architecture, coverage (26/26), ownership: 0 failures. REPORT: query.mjs change stales bio-plane/dist bundle, release/bio-plane.bundled.mjs and newgroup/src/release.mjs; regenerated nothing. Record: build/jobs/T21/query-language.md.
