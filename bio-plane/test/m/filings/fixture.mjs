@@ -26,7 +26,7 @@ export const PROFILE = "test-port-ellery";
 
 const q = (v) => JSON.stringify(String(v));
 /** An action's bundle.md from `o` (`kind`, `risk_tier`, `state`, `resolution`, `counterparty`, `clock`, `legs`, `law`,
- *  `breach`, `state_history`). */
+ *  `breach`, `override` (a premise override's reason, actions R8), `state_history`). */
 export function actionMd(id, o) {
   const cp = o.counterparty;
   const lines = ["---", `id: ${id}`, "object_type: action", `title: ${id}`, `current_state: ${o.state ?? "active"}`,
@@ -39,6 +39,7 @@ export function actionMd(id, o) {
     ...(o.legs && o.legs.length ? ["action_basis:", ...o.legs.flatMap((l) => [`  - target: ${l.target}`, `    kind: ${l.kind}`])] : []),
     ...(o.law ? [`law: ${q(o.law)}`] : []),
     ...(o.breach ? ["breach: true"] : []),
+    ...(o.override ? ["premise_override:", `  reason: ${q(o.override)}`] : []),
     ...(o.state_history && o.state_history.length ? ["state_history:", ...o.state_history.flatMap((h) => [
         `  - timestamp: "${h.at}"`, `    from_state: ${h.from}`, `    to_state: ${h.to}`, `    blurb: ${q(h.reason ?? "moved")}`,
         `    author: ${h.by ?? V("olive")}`])] : []),

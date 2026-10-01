@@ -230,11 +230,11 @@ export class Filings {
     };
   }
 
-  /* R24: the premise override an action carries (actions R8, shown in its read, R25), as `{reason, by, at}`; null when
-     it carries none. Who and when are read under the names the read gives them. */
+  /* R24: the premise override an action carries (actions R8, shown in its read, R25: `{reason, by, at}`); null when it
+     carries none. */
   static #override(o) {
     if (!isObj(o) || !str(o.reason)) return null;
-    return { reason: str(o.reason), by: str(o.by) || str(o.author) || null, at: str(o.at) || str(o.stamped_at) || null };
+    return { reason: str(o.reason), by: str(o.by), at: str(o.at) };
   }
 
   /* R1, R8, R13, R14: the one answer for an action that is absent, invisible, not an action, or unreadable because no
