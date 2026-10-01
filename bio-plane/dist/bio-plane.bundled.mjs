@@ -23762,7 +23762,10 @@ CREATE TABLE IF NOT EXISTS provenance_route_marks (
   PRIMARY KEY (bundle_id, seq)
 );
 -- =========================================================================
--- REC-112, 2026-09-17 -- THIS INDEX HAS NO READER, AND IT IS KEPT ON PURPOSE.
+-- REC-112, 2026-09-17 -- THIS INDEX HAD NO READER, AND IT WAS KEPT ON PURPOSE.
+-- Its reader has since landed (REC-116 / IC-120): provenanceRoutesMarked
+-- (op=provenanceroutes, R23) pages on (finding, bundle_id). What follows is
+-- the record of why it was kept, as written then.
 --
 -- WHAT IT WAITS FOR: a READ op answering the question no op asks --
 -- "which documents in this instance carry a standing LOOKED_INDETERMINATE
@@ -23801,12 +23804,12 @@ CREATE TABLE IF NOT EXISTS provenance_route_marks (
 -- THE INTENT SURVIVES IN THREE PLACES AND THIS IS THE THIRD, so the index is
 -- NOT the only evidence of it: CLAIMS.md carries REC-69's DELEGATION of
 -- 2026-08-09 naming the question verbatim and re-affirmed open by M0-37 on
--- 2026-09-16, airuns.test.mjs carries it on the unread roster AND pins it BY
--- NAME, and the declaration is here.
+-- 2026-09-16, the legacy airuns.test.mjs carried it on the unread roster AND
+-- pinned it BY NAME (that suite was deleted at T20), and the declaration is here.
 --
--- DO NOT REFLOW THE TWO LINES BELOW. test/nc-rec69-selects.mjs patches them as
--- EXACT STRING LITERALS to arm two negative controls, so a whitespace change
--- makes those arms match zero times and PASS while testing nothing.
+-- The legacy test/nc-rec69-selects.mjs patched the two lines below as exact
+-- string literals to arm two negative controls; it was deleted at T20, and no
+-- test reads these lines as text now.
 -- =========================================================================
 CREATE INDEX IF NOT EXISTS provenance_route_marks_finding
   ON provenance_route_marks(finding, bundle_id);
@@ -23964,7 +23967,7 @@ function checkAuthorityPublishable(ctx, findings) {
         findings.push(f5(
           "C-18.9",
           "error",
-          `provenance documents[${i}] is content-authority undetermined and this bundle is at or past verified, but states no authority_basis: publishing an unanswered question is honest only when the record says it is unanswered and since when`,
+          `provenance documents[${i}] is content-authority undetermined and this record is at or past verified, but states no authority_basis: publishing an unanswered question is honest only when the record says it is unanswered and since when`,
           [
             "record a dated authority_basis saying what was tried and what it established",
             "or determine the authority through the task list and record the determination"
@@ -23975,7 +23978,7 @@ function checkAuthorityPublishable(ctx, findings) {
       findings.push(f5(
         "C-18.9",
         "error",
-        `provenance documents[${i}] declares authority_state 'determined' with no authority named, and this bundle is at or past verified`,
+        `provenance documents[${i}] declares authority_state 'determined' with no authority named, and this record is at or past verified`,
         ["name the issuing party", "or correct authority_state to 'undetermined' with a dated basis"]
       ));
     }
@@ -24018,7 +24021,7 @@ function checkReleaseAuthority(ctx, findings) {
       findings.push(f5("C-18.1", "error", `provenance documents[${i}] is authority-determined but names no authority_basis: how it was reached is recorded in BOTH cases`));
     }
     if (d.file && !hasFile_2(ctx, String(d.file)) && !Array.isArray(d.parts)) {
-      findings.push(f5("C-18.1", "error", `provenance documents[${i}] names '${d.file}' which does not exist in the bundle`));
+      findings.push(f5("C-18.1", "error", `provenance documents[${i}] names '${d.file}' which does not exist in the record`));
     }
     const cap = d.capture;
     if (!cap || typeof cap !== "object") findings.push(f5("C-18.1", "error", `provenance documents[${i}] missing capture block`));
@@ -24055,7 +24058,7 @@ function checkReleaseAuthority(ctx, findings) {
         "error",
         `collected -> verified transition authored by '${e.author}': release is a named member's decision, never a surface or AI identity (intake doctrine 4a)`,
         [
-          "retire this bundle with the reason recorded (verified -> retired, op=retire), if the release cannot stand as it is",
+          "retire this record with the reason recorded (verified -> retired, op=retire), if the release cannot stand as it is",
           "or record the defect against this release in Review Notes and raise it, so the record carries the doubt rather than a repair nobody can perform",
           "the state is not moved back by hand: C-4.2 refuses any transition that is not an edge in this machine, so hand-editing current_state or state_history produces a second error on top of this one"
         ]
@@ -24073,8 +24076,8 @@ function checkReleaseAuthority(ctx, findings) {
       "error",
       "sweep-origin intake lands at collected, never higher: verified requires per-document human ratification, a member-authored collected -> verified transition (intake doctrine Section 4)",
       [
-        "retire this bundle with the reason recorded (verified -> retired, op=retire), if this intake cannot be ratified as it stands",
-        "or record in Review Notes that it reached verified without the per-document ratification the doctrine requires, and raise it: op=release writes the collected -> verified edge and refuses a bundle already at verified, so the ratification cannot be re-made in place",
+        "retire this record with the reason recorded (verified -> retired, op=retire), if this intake cannot be ratified as it stands",
+        "or record in Review Notes that it reached verified without the per-document ratification the doctrine requires, and raise it: op=release writes the collected -> verified edge and refuses a record already at verified, so the ratification cannot be re-made in place",
         "the state is not moved back by hand: C-4.2 refuses any transition that is not an edge in this machine"
       ]
     ));
@@ -24202,7 +24205,7 @@ function checkInfo2Register(ctx, findings) {
           if (!p || typeof p !== "object" || !p.file || !RAW_SHA_RE2.test(p.sha256 || "") || !(Number.isInteger(p.bytes) && p.bytes > 0)) {
             findings.push(f5("C-18.1", "error", `provenance documents[${i}].parts[${j}] lacks the {file, sha256, bytes} shape (@2)`));
           } else if (!hasFile_2(ctx, String(p.file))) {
-            findings.push(f5("C-18.1", "error", `provenance documents[${i}].parts[${j}] names '${p.file}' which does not exist in the bundle (@2)`));
+            findings.push(f5("C-18.1", "error", `provenance documents[${i}].parts[${j}] names '${p.file}' which does not exist in the record (@2)`));
           }
         });
       }
@@ -24213,7 +24216,7 @@ function checkInfo2Register(ctx, findings) {
       if (!shapeOk) {
         findings.push(f5("C-18.1", "error", `provenance documents[${i}].derived lacks the {transform, reason, from_file|from_ref} shape (doctrine 4a) (@2)`));
       } else if (dv.from_file && !hasFile_2(ctx, String(dv.from_file))) {
-        findings.push(f5("C-18.1", "error", `provenance documents[${i}].derived.from_file '${dv.from_file}' does not exist in the bundle (@2)`));
+        findings.push(f5("C-18.1", "error", `provenance documents[${i}].derived.from_file '${dv.from_file}' does not exist in the record (@2)`));
       }
     }
     if (d.renditions !== void 0) {
@@ -24226,10 +24229,10 @@ function checkInfo2Register(ctx, findings) {
             return;
           }
           if (!hasFile_2(ctx, String(r.file))) {
-            findings.push(f5("C-18.1", "error", `provenance documents[${i}].renditions[${j}] names '${r.file}' which does not exist in the bundle (@2)`));
+            findings.push(f5("C-18.1", "error", `provenance documents[${i}].renditions[${j}] names '${r.file}' which does not exist in the record (@2)`));
           }
           if (!hasFile_2(ctx, String(r.from_file)) && !Array.isArray(d.parts)) {
-            findings.push(f5("C-18.1", "error", `provenance documents[${i}].renditions[${j}].from_file '${r.from_file}' does not exist in the bundle (@2)`));
+            findings.push(f5("C-18.1", "error", `provenance documents[${i}].renditions[${j}].from_file '${r.from_file}' does not exist in the record (@2)`));
           }
           if (r.sha256 === cap?.sha256) {
             findings.push(f5("C-18.1", "error", `provenance documents[${i}].renditions[${j}] has the same hash as the capture it claims to be derived from, so one of the two is mislabelled (@2)`));
@@ -24249,7 +24252,7 @@ function checkInfo2Register(ctx, findings) {
         }
         if (r.signature_file) {
           if (!hasFile_2(ctx, String(r.signature_file))) {
-            findings.push(f5("C-18.1", "error", `provenance releases[${i}].signature_file '${r.signature_file}' does not exist in the bundle (@2)`));
+            findings.push(f5("C-18.1", "error", `provenance releases[${i}].signature_file '${r.signature_file}' does not exist in the record (@2)`));
           }
           if (!r.signer) findings.push(f5("C-18.1", "error", `provenance releases[${i}] carries a signature_file but no signer (@2)`));
           if (r.namespace !== "bio-release") {
@@ -24462,7 +24465,7 @@ var TESTIMONY_CHECKS = {
   CAPTURE_HELD_BY_ANOTHER_BUNDLE: {
     check: "C-53.13",
     where: "src/provenance/index.mjs #testimonyFence > is-register-home",
-    translation: "The record already holds this document, under another bundle. A document has one home in the record \u2014 the first bundle that registered it \u2014 and registering it again here would move it away from there. Nothing was written. Cite the bundle that holds it, or, if you found it at a new address, that sighting is already recorded as a corroboration of the one it holds."
+    translation: "The record already holds this document, under another record. A document has one home in the record \u2014 the first record that registered it \u2014 and registering it again here would move it away from there. Nothing was written. Cite the record that holds it, or, if you found it at a new address, that sighting is already recorded as a corroboration of the one it holds."
   }
 };
 var REGISTER_ENTRY_CHECKS = {
@@ -24593,7 +24596,7 @@ function routeFinding(objectType, mark) {
       marked: false,
       finding: null,
       means: null,
-      note: "a route is a fact about a captured document, and this bundle is not one"
+      note: "a route is a fact about a captured document, and this record is not one"
     };
   if (!mark)
     return {
@@ -24699,7 +24702,7 @@ async function registerAuditReport(r, evidence) {
   const captured = [], unbacked = [], mismatched = [], heldInParts = [], undetermined = [];
   for (const { named_parts: named, ...row2 } of r.unresolved || []) {
     if (row2.class === "orphan") {
-      unbacked.push({ ...row2, why: "the bundle itself is absent" });
+      unbacked.push({ ...row2, why: "the record itself is absent" });
       continue;
     }
     if (!canProbe) {
@@ -24748,7 +24751,7 @@ async function registerAuditReport(r, evidence) {
     undetermined: undetermined.length,
     sound: unbacked.length === 0 && mismatched.length === 0,
     probed: canProbe,
-    detail: "captured means the bytes are not in the bundle image but ARE in the working bucket, which is what the two-bucket design exists for. held_in_parts is the same for a document the store keeps only in parts: every part the record names is in the working bucket and each part's digest is verified (the reassembled whole's digest is C-18.6's check, not re-read here). unbacked is the only broken state, and names any missing part; mismatched means the register and the stored object disagree about size, or a part about its digest. undetermined rows resolved neither way and are counted OUTSIDE sound: sound speaks for the other rows only.",
+    detail: "captured means the bytes are not in the record's image but ARE in the working bucket, which is what the two-bucket design exists for. held_in_parts is the same for a document the store keeps only in parts: every part the record names is in the working bucket and each part's digest is verified (the reassembled whole's digest is C-18.6's check, not re-read here). unbacked is the only broken state, and names any missing part; mismatched means the register and the stored object disagree about size, or a part about its digest. undetermined rows resolved neither way and are counted OUTSIDE sound: sound speaks for the other rows only.",
     sample: [...unbacked, ...mismatched, ...undetermined].slice(0, 40)
   };
 }
@@ -24784,7 +24787,7 @@ async function attest(body, { head, put: put2, fetch: fetchFn, holds, now = () =
       return {
         ok: false,
         reason: "NO_SUCH_CAPTURE",
-        detail: holdsAnswer ? "no object is stored under that hash, the register holds no row for it under a bundle that exists, and this plane holds no receipt of having acquired it" : "no object is stored under that hash, and the store could not be asked whether its register or an acquisition receipt names it, so this is not a finding that the record lacks the bytes"
+        detail: holdsAnswer ? "no object is stored under that hash, the register holds no row for it under a record that exists, and this plane holds no receipt of having acquired it" : "no object is stored under that hash, and the store could not be asked whether its register or an acquisition receipt names it, so this is not a finding that the record lacks the bytes"
       };
     }
   }
@@ -25201,12 +25204,12 @@ var Provenance = class _Provenance {
     const f17 = typeof bundleId === "string" && bundleId ? this.#record.readFile(bundleId, "data/provenance.json") : null;
     if (!f17) return { state: "none" };
     if (typeof f17.text !== "string")
-      return { state: "unreadable", why: "the bundle's data/provenance.json is held as a blob, which the store cannot read" };
+      return { state: "unreadable", why: "the record's data/provenance.json is held as a blob, which the store cannot read" };
     let reg;
     try {
       reg = JSON.parse(f17.text);
     } catch {
-      return { state: "unreadable", why: "the bundle's data/provenance.json does not parse" };
+      return { state: "unreadable", why: "the record's data/provenance.json does not parse" };
     }
     const bare2 = (v) => typeof v === "string" ? v.trim().replace(/^sha256:/, "").toLowerCase() : null;
     const doc = (Array.isArray(reg?.documents) ? reg.documents : []).find((d) => d && bare2(d.capture?.sha256) === bareSha(sha) && d.parts !== void 0);
@@ -25278,7 +25281,7 @@ var Provenance = class _Provenance {
       listed: [...bySha.values()].slice(0, cap),
       first_holder: "UNDETERMINED",
       rewritten: 0,
-      note: "read-only: each listed sha is registered to `home` and ALSO carried by every `held_by` row, a different bundle that still exists. Nothing is rewritten or repaired. `home` is the register's current holder, never a finding about which bundle held the capture first \u2014 that is undetermined. The same content in different bytes is not reached."
+      note: "read-only: each listed sha is registered to `home` and ALSO carried by every `held_by` row, a different record that still exists. Nothing is rewritten or repaired. `home` is the register's current holder, never a finding about which record held the capture first \u2014 that is undetermined. The same content in different bytes is not reached."
     };
   }
   /** D-476 - IS THIS WHOLE DOCUMENT ALREADY IN THE REGISTER? ONE BOUNDED READ ON
@@ -25417,7 +25420,7 @@ var Provenance = class _Provenance {
       note
     });
     if (!home)
-      return answer([], "no register row names this capture under a bundle that exists, so the record states no attestation for it; a capture registered only by its parts is named by their digests, not the whole's");
+      return answer([], "no register row names this capture under a record that exists, so the record states no attestation for it; a capture registered only by its parts is named by their digests, not the whole's");
     const PATH = "data/provenance.json";
     const f17 = this.#record.readFile(home.bundleId, PATH);
     if (!f17) return answer([], `its home ${home.bundleId} carries no ${PATH}`);
@@ -25659,7 +25662,7 @@ var Provenance = class _Provenance {
     if (String(info.type).toLowerCase() !== "information")
       return actRefusal(
         "ORIGIN_NOT_A_DOCUMENT",
-        `this bundle is a ${String(info.type).slice(0, 40)}; only a document came from a system`,
+        `this record is a ${String(info.type).slice(0, 40)}; only a document came from a system`,
         { bundleId }
       );
     const sys = String(system ?? "").replace(/[\p{Cc}]+/gu, " ").replace(/\s+/g, " ").trim();
@@ -25785,10 +25788,10 @@ sha256: ${captureSha}
    *  already holds, and a second copy of a fact drifts from the first — D-164's
    *  solve-it-once, D-138's guard that guarded nothing. There is no new table,
    *  no new column, no new index and no new write: `recordReceipt` above
-   *  is untouched and remains the only writer. `test/versionchain.test.mjs`
-   *  asserts that STRUCTURALLY rather than trusting this comment, because a
-   *  comment promising an absence is exactly the kind of guard that has guarded
-   *  nothing here before.
+   *  is untouched and remains the only writer. (The legacy suite that pinned
+   *  that absence structurally, `test/versionchain.test.mjs`, was deleted at
+   *  T20, and no module test carries the pin: R41 and R15 state who writes the
+   *  tables, `test/m/provenance/receipts.test.mjs` R15 that no read writes one.)
    *
    *  ONE VERSION IS ONE `capture_sha`, WHICH IS WHY THIS GROUPS. The primary key
    *  carries `via` (D-96): an archive sighting of the same bytes is a different
@@ -25820,8 +25823,8 @@ sha256: ${captureSha}
    *
    *  A CHAIN OF ONE IS A CHAIN. A single capture at an address answers with one
    *  version, `at_index` 0 and `predecessor: null` — that is the record saying
-   *  "these are the first bytes we held", not a degenerate failure, and the
-   *  suite pins it as its own arm.
+   *  "these are the first bytes we held", not a degenerate failure, and
+   *  `test/m/provenance/convert-versionchain.test.mjs` pins it as its own arm.
    *
    *  GATED at `register.bundle_id` through `#bundleGate`, the same predicate
    *  every other read in this file compiles, and `total` is counted through the
@@ -25981,7 +25984,7 @@ sha256: ${captureSha}
       return {
         ok: false,
         reason: "NO_REGISTER",
-        detail: "this bundle carries no readable data/provenance.json, so there is no capture record to derive from"
+        detail: "this record carries no readable data/provenance.json, so there is no capture record to derive from"
       };
     let reg;
     try {
@@ -26160,8 +26163,8 @@ sha256: ${captureSha}
    *
    *  IT WRITES NOTHING INTO THE BUNDLE. No state moves, no file changes, no sha
    *  changes — the whole shape of DEC-56(b) is that the document stays where the
-   *  group put it. The suite asserts the bundle_sha and current_state are
-   *  byte-identical across a marking.
+   *  group put it. `test/m/provenance/chain-route.test.mjs` (R22) asserts the
+   *  head (bundle_sha, current_state) is identical across a marking.
    *
    *  A REPEAT THAT FOUND THE SAME THING APPENDS NOTHING. The record adds when
    *  something changed; a second identical row would be the record repeating
@@ -26186,13 +26189,13 @@ sha256: ${captureSha}
     if (!seen)
       return refusal20(
         "ROUTE_MARK_NO_SUCH_BUNDLE",
-        "no document of that name is in the record, or none this viewer may see \u2014 the two answer identically here, as they do on every read addressed to a bundle (REC-25/D-15).",
+        "no document of that name is in the record, or none this viewer may see \u2014 the two answer identically here, as they do on every read addressed to a record (REC-25/D-15).",
         { bundleId }
       );
     if (seen.object_type !== "information")
       return refusal20(
         "ROUTE_MARK_NOT_A_DOCUMENT",
-        `this bundle is a ${String(seen.object_type).slice(0, 40)}, and only a captured document travelled a route to get into the record. Marking one would put a doubt on every question in the store, which says nothing about any of them.`,
+        `this record is a ${String(seen.object_type).slice(0, 40)}, and only a captured document travelled a route to get into the record. Marking one would put a doubt on every question in the store, which says nothing about any of them.`,
         { bundleId, objectType: seen.object_type }
       );
     const img = this.#record.readImage(bundleId) || {};
@@ -26487,7 +26490,7 @@ sha256: ${captureSha}
       if (elsewhere.has(c.sha256))
         return refusal20(
           "TESTIMONY_AUTHORED_UNEARNED",
-          `this promotion registers capture ${c.sha256.slice(0, 16)}\u2026 under ${bundleId}, and those bytes are already registered as ANOTHER bundle's authored observation. Re-filing them here would move a member's word under a document that is not theirs`,
+          `this promotion registers capture ${c.sha256.slice(0, 16)}\u2026 under ${bundleId}, and those bytes are already registered as ANOTHER record's authored observation. Re-filing them here would move a member's word under a document that is not theirs`,
           { bundleId, capture_sha: c.sha256 }
         );
     for (let i = 0; i < docs.length; i++) {
@@ -26540,7 +26543,7 @@ sha256: ${captureSha}
       const named = !caller || this.#membership.inSight(h.bundle_id, viewing.viewer ?? null);
       return refusal20(
         "CAPTURE_HELD_BY_ANOTHER_BUNDLE",
-        `this promotion registers capture ${h.capture_sha.slice(0, 16)}\u2026 under ${bundleId}, and those bytes are already registered under ${named ? h.bundle_id : "another bundle"}. One capture has one home, the original's; registering it here would move that bundle's register row`,
+        `this promotion registers capture ${h.capture_sha.slice(0, 16)}\u2026 under ${bundleId}, and those bytes are already registered under ${named ? h.bundle_id : "another record"}. One capture has one home, the original's; registering it here would move that record's register row`,
         { bundleId, capture_sha: h.capture_sha, holder: named ? h.bundle_id : null }
       );
     }
@@ -27495,7 +27498,7 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
     if (reg && reg.registered === true) existed = true;
     else {
       existed = null;
-      existedUndetermined = reg ? `this document was captured in ${parts.length} parts, so the store holds no object under its whole hash for the question a single-part capture asks, and the record's register - which does answer by the whole hash - holds no row for these bytes under a bundle that still exists. That is NOT a finding that the bytes are new: a capture acquired earlier and never promoted leaves its parts in the store and no register row, and part boundaries follow the stream's chunking, so this fetch's parts need not be the parts an earlier one made. Observed, and not the answer: ${heldParts} of this fetch's ${parts.length} parts were already held before it wrote them.` : `this document was captured in ${parts.length} parts, so the store holds no object under its whole hash for the question a single-part capture asks, and the record's register could not be consulted. Nothing here is a statement about the record, and in particular it is not a claim that these bytes are new. Observed, and not the answer: ${heldParts} of this fetch's ${parts.length} parts were already held before it wrote them.`;
+      existedUndetermined = reg ? `this document was captured in ${parts.length} parts, so the store holds no object under its whole hash for the question a single-part capture asks, and the record's register - which does answer by the whole hash - holds no row for these bytes under a record that still exists. That is NOT a finding that the bytes are new: a capture acquired earlier and never promoted leaves its parts in the store and no register row, and part boundaries follow the stream's chunking, so this fetch's parts need not be the parts an earlier one made. Observed, and not the answer: ${heldParts} of this fetch's ${parts.length} parts were already held before it wrote them.` : `this document was captured in ${parts.length} parts, so the store holds no object under its whole hash for the question a single-part capture asks, and the record's register could not be consulted. Nothing here is a statement about the record, and in particular it is not a claim that these bytes are new. Observed, and not the answer: ${heldParts} of this fetch's ${parts.length} parts were already held before it wrote them.`;
     }
   }
   let ct = (res.headers.get("content-type") || "").split(";")[0].trim();
@@ -46111,7 +46114,7 @@ var Capture = class _Capture {
   async taskEnqueue({ kind = "authority-undetermined", captureSha = null, subject = "", locator = null, at: at23 = null } = {}) {
     if (!TASK_KINDS.includes(kind)) return { ok: false, reason: "BAD_KIND", detail: `kind must be one of: ${TASK_KINDS.join(", ")}` };
     if (typeof captureSha !== "string" || !HEX643.test(captureSha))
-      return { ok: false, reason: "BAD_CAPTURE_SHA", detail: "a capture sha256 identifies the event; a bundle does not exist yet at capture time" };
+      return { ok: false, reason: "BAD_CAPTURE_SHA", detail: "a capture sha256 identifies the event; a record does not exist yet at capture time" };
     const text5 = boundedSubject(subject) || "a capture whose authority could not be determined";
     const loc = typeof locator === "string" && locator.length <= 2e3 ? locator : null;
     const now = at23 && ISO_INSTANT.test(at23) ? at23 : stampSecond3();
