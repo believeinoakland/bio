@@ -252,7 +252,7 @@ test("R24, R25, R27 (converted, subresources.test \"a resolved link becomes an e
   w.links(loose, null, ["https://example.org/b"]);
   const orphan = await op(w, `capture=${loose}`, { viewer: MACHINE });
   assert.equal(orphan.body.ok, true); assert.equal(orphan.body.projected, 0);
-  assert.match(orphan.body.note, /not registered to a bundle/);
+  assert.match(orphan.body.note, /not registered to a record/);
   /* A held source whose two element-links resolve to bytes no bundle claims, one address the record does not hold. */
   const [s] = w.doc(A, ["source"]);
   await w.settle(); await w.settle();

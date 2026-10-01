@@ -1,4 +1,4 @@
-/* connections' shares of two legacy suites (T18's converts; the old suites stay unrun until the release deletes them),
+/* connections' shares of two legacy suites (T18's converts; the old suites were deleted in T20 by LEGACY-TESTS #18),
    proved at the module's interface: `reading-position` (FW-17: the connection carries its determining pair, a portion
    answers from where that pair was read; Terms, R1, R4, R7, R8, R10, R35) and `reading-position-occurrences` (D-454:
    one reference read at several places is several mentions, each choosable; R6, R8, R9, R14–R16). What those suites

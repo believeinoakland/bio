@@ -55,25 +55,51 @@ test("R58 (N213): refs is a stated read contract — bundle_id the citing bundle
     [{ bundle_id: "INFO-2026-0009-s", target_id: "INFO-2026-0010-t", kind: "links_to" }]);
 });
 
-test("R20: NO_TARGET; a target the viewer cannot see answers as an absent one; every visible citer with relation, type, title, state and the edge's status", () => {
+test("R20: NO_TARGET; a target the viewer cannot see answers as an absent one; every visible citer with relation, type, title, state and the edge's status; a withheld citer is withheld whole, stated only as out_of_view: true", () => {
   const w = world();
   w.member("alice"); w.member("bob");
   w.doc(A, ["a"]);
   w.doc(B, ["b"], { references: [{ rel: "cites", target: A, status: "severed", note: "withdrawn" }] });
   w.doc(C, ["c"], { references: [{ rel: "cites", target: A }] });
-  assert.equal(w.k.backlinks({ viewer: V("bob") }).reason, "NO_TARGET");
+  const none = w.k.backlinks({ viewer: V("bob") });
+  assert.equal(none.reason, "NO_TARGET");
+  assert.match(none.detail, /pass target=<record id>/);
   const r = w.k.backlinks({ target: A, viewer: V("bob") });
+  /* Every citer visible: no out_of_view key at all. */
+  assert.equal("out_of_view" in r, false);
   assert.deepEqual(r.backlinks.map((x) => [x.from, x.rel, x.status, x.note]),
     [[B, "cites", "severed", "withdrawn"], [C, "cites", "confirmed", ""]]);
   assert.equal(r.backlinks[0].from_type, "information"); assert.equal(r.backlinks[0].from_title, `Document ${B}`);
   assert.equal(r.backlinks[0].from_state, "collected");
-  /* A citer hidden from the viewer is not listed, and nothing counts it. */
+  /* A citer hidden from the viewer is not listed and nothing of it is given (id, title, type, state, relation, count);
+     the answer says only that one was withheld (DEC-36). */
   w.st.sql.exec(`UPDATE bundles SET object_type='project' WHERE bundle_id=?`, C);
   const hidden = w.k.backlinks({ target: A, viewer: V("bob") });
   assert.deepEqual(hidden.backlinks.map((x) => x.from), [B]);
   assert.equal(JSON.stringify(hidden).includes(C), false);
+  assert.equal(hidden.out_of_view, true);
+  assert.deepEqual(Object.keys(hidden).sort(), ["backlinks", "ok", "out_of_view", "target"], "no count, no other key");
+  assert.deepEqual(hidden.backlinks, r.backlinks.filter((x) => x.from !== C), "the visible citers exactly as before");
+  /* Two hidden citers answer exactly as one: nothing counts them. */
+  w.doc("INFO-2026-0004-d", ["d"], { references: [{ rel: "relates_to", target: A }] });
+  w.st.sql.exec(`UPDATE bundles SET object_type='project' WHERE bundle_id=?`, "INFO-2026-0004-d");
+  assert.deepEqual(w.k.backlinks({ target: A, viewer: V("bob") }), hidden);
+  /* A viewer who sees every citer (a machine) is told of none withheld. */
+  const all = w.k.backlinks({ target: A, viewer: MACHINE });
+  assert.equal("out_of_view" in all, false); assert.equal(all.backlinks.length, 3);
+  /* A project's owner sees its edge, and nothing is withheld from them; bob is still told only that one was. */
+  for (const id of [C, "INFO-2026-0004-d"]) w.st.sql.exec(`UPDATE bundles SET object_type='information' WHERE bundle_id=?`, id);
+  const p = w.project("Alice's work", "alice");
+  w.st.sql.exec(`INSERT INTO refs (bundle_id, target_id, kind) VALUES (?, ?, 'cites')`, p, A);
+  const alice = w.k.backlinks({ target: A, viewer: V("alice") });
+  assert.equal(alice.backlinks.some((x) => x.from === p), true); assert.equal("out_of_view" in alice, false);
+  const bob = w.k.backlinks({ target: A, viewer: V("bob") });
+  assert.equal(bob.out_of_view, true); assert.equal(JSON.stringify(bob).includes(p), false);
+  /* A target nobody cites: no backlinks and no out_of_view key. */
+  const lone = w.k.backlinks({ target: "INFO-2026-0004-d", viewer: V("bob") });
+  assert.deepEqual(lone, { ok: true, target: "INFO-2026-0004-d", backlinks: [] });
   const absent = w.k.backlinks({ target: "INFO-2026-0404-z", viewer: V("bob") });
-  const unseen = w.k.backlinks({ target: C, viewer: V("bob") });
+  const unseen = w.k.backlinks({ target: p, viewer: V("bob") });
   assert.deepEqual({ ...absent, target: null }, { ...unseen, target: null });
   assert.equal(absent.reason, "NO_SUCH_BUNDLE");
   /* An unreadable citing document, or an unrecorded entry, reads confirmed. */
@@ -157,7 +183,7 @@ test("R25: a capture not registered to a bundle writes nothing and says so", () 
   const before = w.snapshot(["refs", "asserted_connections", "bundles"]);
   const r = w.k.projectLinks({ sourceCapture: loose, viewer: MACHINE });
   assert.equal(r.projected, 0);
-  assert.match(r.note, /not registered to a bundle/);
+  assert.match(r.note, /not registered to a record/);
   assert.deepEqual(w.snapshot(["refs", "asserted_connections", "bundles"]), before);
 });
 

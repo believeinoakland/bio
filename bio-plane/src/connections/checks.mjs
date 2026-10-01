@@ -9,8 +9,8 @@
  * C-49 (`CONNECTION_PAIR_CHECKS`) and C-81 (`THEME_CHECKS`, with `THEME_ID_RE`, `THEME_REF_RE`, `THEME_LEG_KEYS` and
  * `themeLegFindings`, C-81.1's one site) are COPIED here in T19 (R35, R46; plan T19 layer 5, K585 (5)), below: codes,
  * numbers and translations unchanged, each `where` naming the site in this module that answers it (C-81.1's now this
- * file's `themeLegFindings`). The catalogue keeps its own copy for its own leg grammars until `inquiry-grammar` deletes
- * it (layer 6), reading `themeLegFindings` from here. This module reads only its own copy. */
+ * file's `themeLegFindings`). The catalogue's copy was deleted with the catalogue at T19's close (K855), so these rows
+ * are the only ones; the leg grammars read `themeLegFindings` from here. */
 
 /* The catalogue's finding shape (`f`, legacy-checks), copied for `themeLegFindings`: a finding is
    `{check, severity, message}`, with `repairable` and `repairs` when repairs are named and `code` when one is. */
@@ -278,10 +278,10 @@ export const THEME_CHECKS = {
     translation: 'A proposal must say who proposed it, and this one arrived carrying nobody. The record '
       + 'stamps the proposer from the credential that asked; nothing was written.',
   },  /* connections R43, R62 (K152; T6, legacy-checks): TAKING A PLACEMENT BACK, OR TURNING A PROPOSAL DOWN
-     (`op=themewithdraw`). CONNECTIONS #1 (T5) minted these four and held them in `src/connections/themes.mjs`
-     (`THEME_WITHDRAW_CHECKS`), in this family's shape, until the catalogue carried them; they are carried here
-     word for word, so connections' next job re-exports them from here and deletes its copy. The order at the
-     act: the actor (C-81.11), then C-81.6, C-81.8 and C-81.9, then no reason, nothing standing, not the placer. */
+     (`op=themewithdraw`). CONNECTIONS #1 (T5) minted these four in `src/connections/themes.mjs`, in this family's
+     shape; they are here word for word, and `THEME_WITHDRAW_CHECKS` there is a view of these four rows. The order
+     at the act: the actor (C-81.11), then C-81.6, C-81.8 and C-81.9, then no reason, nothing standing, not the
+     placer. */
   THEME_WITHDRAW_NOT_A_MEMBER: {
     check: 'C-81.11',
     where: 'src/connections/themes.mjs withdraw > is-theme-withdraw',
@@ -319,7 +319,7 @@ export const THEME_CHECKS = {
  *  target complaint about the same leg rather than answering with the wrong name. */
 export function themeLegFindings(label, leg, findings) {
   const l = leg && typeof leg === 'object' ? leg : {};
-  /* The family helper, by name: DEC-49's guard judges `refusal("CODE"` at the site. */
+  /* The family helper, by name: DEC-49's form, `refusal("CODE"` at the site. */
   const refusal = (code, message, repairs) => f(THEME_CHECKS[code].check, 'error', message, repairs, code);
   const REPAIRS = ['cite the document or the passage itself — the theme is how you found it, not what it shows',
                    'or leave the theme out of the leg: membership in a theme is never a reason a leg counts'];

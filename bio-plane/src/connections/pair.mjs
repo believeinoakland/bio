@@ -6,8 +6,8 @@
 import { CONNECTION_PAIR_CHECKS } from "./checks.mjs";
 import { describeExtent } from "../content/index.mjs";
 
-/** DEC-49's refusal helper for this family. The name is exactly `refusal` and every code a double-quoted literal at
- *  its call site, which is what `civicos-ui/check-refusal-codes.mjs` matches inside a region. */
+/** DEC-49's refusal helper for this family: every code a double-quoted literal at its call site, inside a region.
+ *  Each refusal carries its row's check and translation (R35; `test/m/connections/converts-position.test.mjs`). */
 function refusal(key, detail, extra = null) {
   const row = CONNECTION_PAIR_CHECKS[key];
   return { ok: false, code: key, check: row.check, translation: row.translation, detail,
