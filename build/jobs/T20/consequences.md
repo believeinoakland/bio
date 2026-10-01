@@ -54,3 +54,10 @@ All six fail on the code before this job and pass after it. The assertions that 
 **Deferred:** nothing.
 
 Size (session_0138Hw8jM1fkUe4naQwBMg5k): test runs 7, module lines 1105
+
+## J1 · REPORT
+
+Other modules and artifacts after R15 (record, For BOB):
+(1) Readers: nothing outside consequences reads operands, causation.inquiry, 'could not be read for you' or 'an object you may not see' from my answers. escalation reads only addressed() (unchanged shape). filings (src/filings/index.mjs:950-973) embeds consequencesOf whole in a counsel packet's consequences section as the assembling viewer reads it, so its parts now carry per-part out_of_view; re-reading a frozen version for a later viewer is filings' R27 to judge.
+(2) Generated artifact stale: the plane bundle (bio-plane/dist/bio-plane.bundled.mjs, .bundle.json), for src/consequences/index.mjs.
+(3) Three readings of mine are in the record for you to overturn: recorded prose renumbered or cut so no withheld operand's place, figure or count shows; an id naming nothing is withheld like an unseen one (the one change for an all-seeing viewer: a part whose causation names an absent inquiry now reads {state} with out_of_view); strength R6's own out_of_view propagates to the part.
