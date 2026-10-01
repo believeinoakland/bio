@@ -1,6 +1,6 @@
 # strength (T21)
 
-**Status** · session_016S9APVD77hDCq9MtoPtEwc · depth 2 · WORKING · handled B1
+**Status** · session_016S9APVD77hDCq9MtoPtEwc · depth 2 · COMPLETE · handled B1
 
 STRENGTH #7, T21 layer 6. Worked on `job/T21/strength` as BOB created it from `tranche/T21`; no merge was needed (BOB changed no file I read).
 
