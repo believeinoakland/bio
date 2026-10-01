@@ -20,3 +20,7 @@
 - `checks/ownership.mjs contradiction tranche/T21`: 5 files changed by contradiction; 0 failures.
 
 Size (session_016pynE6RnAHz677Ff5aA48x): test runs 2, module lines 12
+
+## J1 · COMPLETE
+
+Complete. N458: CANDIDATES_NO_SUBJECT's detail now says 'a record (bundle)'; no other member-read 'bundle' in my paths. N469: no T20-deleted file named; three live notes naming old suites/'the battery' in gate-recorded.mjs and gate-baseline.mjs re-pointed to gate.test.mjs / gate-measure.mjs. test/m/contradiction: 101 pass, 0 fail, 7 todo (K488, unchanged). format, architecture, coverage (57/57), ownership: 0 failures. Stales bio-plane/dist/bio-plane.bundled.mjs (+ .bundle.json). Details in my record.
