@@ -1,6 +1,6 @@
 # progressions (T19)
 
-**Status** · session_01XeKXwUVQ7NTKCEh2MZSm9w · depth 2 · WORKING · handled B1
+**Status** · session_01XeKXwUVQ7NTKCEh2MZSm9w · depth 2 · COMPLETE · handled B1
 
 ## Completion (PROGRESSIONS #6)
 
