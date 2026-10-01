@@ -80,14 +80,15 @@
 /* The levels, states and definitive subset are observation-log's (K78 (3),
    K81); C-30 and the inert sources are strength's (K181 (3)); the suggestion
    levels and C-27 are run-productions' (K182 (2)); the leg roles and the earned
-   grade sources are record-grammar's. The catalogue families below are imported
-   from the catalogue until each moves to its module (K6), when this import
-   re-points. */
+   grade sources are record-grammar's; C-25 and C-32.2 are basis-versions' (T19).
+   The catalogue family below is imported from the catalogue until it moves to its
+   module (K6), when this import re-points. */
 import { OBSERVATION_LEVELS, OBSERVATION_STATES, DEFINITIVE_STATES } from "./observation-log/index.mjs";
 import { VERSION_STRENGTH_CHECKS, VERSION_STRENGTH_INERT_SOURCES } from "./strength/index.mjs";
 import { SUGGEST_LEVELS, SUGGEST_CHECKS } from "./run-productions/index.mjs";
 import { BASIS_ROLES, EARNED_GRADE_SOURCES } from "./record-grammar/index.mjs";
-import { MACHINE_FENCE_CHECKS, BASIS_VERSION_CHECKS } from "../checks/bio-checks.mjs";
+import { BASIS_VERSION_CHECKS, CONCLUDE_ACT_CHECKS } from "./basis-versions/index.mjs";
+import { MACHINE_FENCE_CHECKS } from "../checks/bio-checks.mjs";
 /* The run's rows and the one deployment order are run-rules' (its R8, R9, R11;
    N156, K617): read from it, never copied. */
 import { AI_RUN_CHECKS, DEPLOYMENT_SEQUENCE, GATE_ADDRESS, SEQUENCING_SOURCE,
@@ -249,11 +250,11 @@ const C = {
   branches_not_independent: SUGGEST_CHECKS.SUGGEST_BRANCHES_NOT_INDEPENDENT.check,
   empty_level_unstated: SUGGEST_CHECKS.SUGGEST_EMPTY_LEVEL_UNSTATED.check,
   leg_unreachable:      SUGGEST_CHECKS.SUGGEST_LEG_UNREACHABLE.check,
-  cannot_conclude:      MACHINE_FENCE_CHECKS.MACHINE_CANNOT_CONCLUDE.check,
+  cannot_conclude:      CONCLUDE_ACT_CHECKS.MACHINE_CANNOT_CONCLUDE.check,
   cannot_ground:        MACHINE_FENCE_CHECKS.MACHINE_CANNOT_GROUND.check,
   skill_version:        SKILL_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED.check,
   /* SK-3's additions, read by KEY exactly as SK-2's are. */
-  cannot_publish:       MACHINE_FENCE_CHECKS.MACHINE_CANNOT_PUBLISH.check,
+  cannot_publish:       "C-32.6",           /* case-authoring's row, typed — see below */
   ground_unasserted:    BASIS_VERSION_CHECKS.VERSION_GROUND_UNASSERTED.check,
   strength_composed:    VERSION_STRENGTH_CHECKS.VERSION_STRENGTH_COMPOSED.check,
   strength_unfiltered:  VERSION_STRENGTH_CHECKS.VERSION_STRENGTH_UNFILTERED.check,
@@ -268,7 +269,13 @@ const C = {
    shape this project keeps measuring. It is instead NAMED as the exception and
    PINNED: the suite asserts the catalogue's source still pushes this number on
    a hunch with no author, so a renumbering fails here rather than leaving a
-   citation pointing nowhere. */
+   citation pointing nowhere.
+
+   AND ONE MORE, FOR A DIFFERENT REASON: C-32.6 (`MACHINE_CANNOT_PUBLISH`) has a
+   keyed row, but its holder, `case-authoring`, is LATER in the order than this
+   module (P4), so no import can carry it (R15; K787 (6), K811). It is typed
+   here, and the holder's own tests assert its row's id equals this
+   `cannot_publish`, so a renumbering fails there by name. */
 
 export const CLAUSES = [
   {

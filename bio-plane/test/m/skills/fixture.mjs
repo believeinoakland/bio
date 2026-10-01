@@ -8,13 +8,14 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
 import { STRENGTH_BAR_CHECKS } from "../../../src/strength/index.mjs";
+import { CONCLUDE_ACT_CHECKS } from "../../../src/basis-versions/index.mjs";
 import { machineFences } from "../../../src/skillpack.mjs";
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 export const SRC = ["bio-plane/src/skillpack.mjs", "bio-plane/src/skilldoctrine.mjs"];
 /* The owners' fence families earlier in the order than skills, each the owner's own export: a namespace of
    `*_CHECKS` families, `machineFences`' argument. */
-export const owners = Object.freeze({ STRENGTH_BAR_CHECKS });
+export const owners = Object.freeze({ STRENGTH_BAR_CHECKS, CONCLUDE_ACT_CHECKS });
 
 export const read = (rel) => readFileSync(join(ROOT, rel), "utf8");
 
