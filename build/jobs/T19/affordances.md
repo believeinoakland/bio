@@ -1,3 +1,14 @@
 # affordances (T19)
 
 **Status** · session_01AaEsUvTJpxjt1vZfqghxZb · depth 2 · WORKING · handled B1
+
+## J1 · REPORT
+
+What I found outside my module while doing this job. None of it blocks my job.
+
+1. **legacy-index / control-plane: an unused import.** `src/index.mjs`:56 still imports `decorateAct` from `control-plane/ops.mjs`. Since the `op=affordances` arm moved out, nothing in that file uses it (op=queue uses `ACT_GATE` only). I left the line alone, because editing it would add a line in a legacy file that is not an import from my own paths (§12.2). Whichever job next edits that file can drop `decorateAct` from it.
+2. **Generated artifact made stale (§14).** My change moves code that `src/index.mjs` bundles, so `bio-plane/dist/bio-plane.bundled.mjs` and `.bundle.json` (owner `not_product`) are stale. I did not regenerate them; that is yours at layer close.
+3. **My requirements and `modules.json` (your files).** No affordances file now imports `checks/bio-checks.mjs`, so `legacy-checks` can leave affordances' `uses` in `modules.json`. In `build/requirements/affordances.md`, the Uses line that starts "`legacy-checks`: `STATES`, …" can be re-worded to name record-grammar, action-grammar and basis-versions. The "*(not declared)*" notes on record-core, promotion, connections, basis-versions and the vocabulary providers are now stale too: each of those is declared. R26's "*(not yet met …)*" mark can be struck (see my COMPLETE).
+4. **The catalogue's copies (already known, B1).** `checks/bio-checks.mjs` still holds its own `SUFFICIENCY_CLAIM_STATES` (:309) and `VERSION_MACHINE` copies, which are different objects from basis-versions'. Before this job, `VOCABULARIES.sufficiency_claim_states` published the catalogue's copy and so did not meet R4 (same reference as the enforcing module). It now publishes basis-versions' object. The copies go with control-plane's last act, as B1 says.
+5. **Old root suites (legacy-tests' territory), for information.** Of the old suites that drive `op=affordances`, six were red before my change and are red identically after it, subtest for subtest: `d311-roster-affordances` (21/1), `founder-sight` (36/2), `project-discoverable` (1/2), `publish`, `skillpack` and `sufficiency-state`. The last three fail on load: missing `src/ai-runs/checks.mjs`, and `bio-checks.mjs` exports `SUBJECT_POSITIONS` and `isSufficiencyClaimed` that the suites expect. `rec132`/`rec149` also throw `ENOENT …/site-profiles/index.mjs` in their battery copies. `citeproject-inquiry`, `project-authority` and `conclude-project-arm` are green.
+6. **K819's contradiction arm: no REPORT needed.** contradiction's own take-up path writes a question with two basis legs, one for each side, so it does not conclude a question that has no leg. Only my fixture inquiry had no leg, and I gave it one.
