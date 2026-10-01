@@ -14,6 +14,11 @@ import * as ACTORS from "../../../src/record-grammar/actors.mjs";
 import * as GRADES from "../../../src/record-grammar/grades.mjs";
 import * as LOCATOR from "../../../src/record-grammar/locator.mjs";
 import * as SHA256 from "../../../src/record-grammar/sha256.mjs";
+import * as TITLES from "../../../src/record-grammar/titles.mjs";
+import * as DOCUMENT from "../../../src/record-grammar/document.mjs";
+import * as LABELS from "../../../src/record-grammar/labels.mjs";
+import * as ACTS from "../../../src/record-grammar/acts.mjs";
+import * as BUNDLE from "../../../src/record-grammar/bundle.mjs";
 
 const MODULE = new URL("../../../src/record-grammar/index.mjs", import.meta.url).href;
 
@@ -29,6 +34,13 @@ const BATTERY = `async (RG) => {
   out.push(RG.sha256HexSync("abc"), RG.createSha256().update(new Uint8Array(200).fill(7)).hex());
   out.push(Array.from(RG.b64ToBytes("AQID")));
   out.push(RG.BUNDLE_ID_RE.test("PLN-2026-0001-a"), RG.ANN_ID_RE.source, RG.UNREACHABLE_CAPTURE_GRADE);
+  out.push(RG.deriveInquiryTitle("  a   question\\nmore"), RG.inquiryQuestionOf("x\\n## Question\\nq\\n## B"), RG.vocabFor(RG.STATES, "problem"));
+  out.push(RG.sectionText("## A\\na\\n## B", "## A"), RG.isCaseMemberBytes({ published_strength: [{ axis: "a" }, { axis: "b" }] }));
+  for (const w of ["token:x", "alice", "", "plane"]) out.push(RG.proposalLabel(w, "standard"), RG.contentMintState(w), RG.isMachineMinted(w));
+  const sha = async (v) => RG.createSha256().update(typeof v === "string" ? new TextEncoder().encode(v) : v).hex();
+  const files = new Map([["bundle.md", "---\\nid: INFO-2026-0001-a\\nobject_type: information\\n---\\n## Summary\\n## Odd"],
+    ["PROMOTING-x.json", "{}"], ["PENDING_PROMOTION.json", JSON.stringify({ created: "2026-01-01T00:00:00Z" })]]);
+  out.push(await RG.checkBundle({ folderName: "INFO-2026-0001-a", files, sha256: sha, nowMs: 1780000000000 }));
   return JSON.stringify(out);
 }`;
 const battery = (0, eval)(BATTERY);
@@ -60,11 +72,16 @@ const MOVED = ["BUNDLE_ID_RE", "ANN_ID_RE", "FILENAME_RE", "ISO_TS_RE", "OBJECT_
   "ACTOR_CLASSES", "MACHINE_AUTHOR_PREFIX", "MACHINE_CLASS_PREFIX", "MACHINE_STAMP_PREFIXES", "isMachineStamp",
   "isMachineIdentity", "BASIS_ROLES", "BASIS_GRADES", "GRADE_AXES", "TESTIMONY_GRADE", "GRADE_SOURCES",
   "EARNED_GRADE_SOURCES", "EARNED_CAPTURE_CEILING", "UNREACHABLE_CAPTURE_GRADE", "isPublicHttpsLocator", "createSha256",
-  "sha256HexSync"];
+  "sha256HexSync", "INQUIRY_TITLE_MAX", "deriveInquiryTitle", "inquiryQuestionOf", "HEADINGS", "HEADINGS_WHEN",
+  "isCaseMemberBytes", "vocabFor", "STATES", "sectionText", "LAW_PROPOSAL_STATES", "lawProposalState", "PROPOSAL_STATES",
+  "proposalLabel", "CONTENT_MINTED_BY_PLANE", "CONTENT_MINT_STATES", "contentMintState", "isMachineMinted"];
+/* Provided here and not re-exported by the catalogue in this layer: legacy-checks' wrapper takes `checkBundle` and
+   `EXTENSION_ARMS` (rule 2), and the shared act rows reach the catalogue's readers through `ACT_SHAPE_CHECKS` (R29). */
+const OWN = ["b64ToBytes", "SHARED_ACT_CHECKS", "EXTENSION_ARMS", "checkBundle"];
 
 test("R26 one binding per name: the module's entry answers each provided name with the one binding its part holds", () => {
-  assert.deepEqual(Object.keys(RG).sort(), [...MOVED, "b64ToBytes"].sort());
-  const parts = [IDS, TYPES, FRONTMATTER, JSON_, ACTORS, GRADES, LOCATOR, SHA256];
+  assert.deepEqual(Object.keys(RG).sort(), [...MOVED, ...OWN].sort());
+  const parts = [IDS, TYPES, FRONTMATTER, JSON_, ACTORS, GRADES, LOCATOR, SHA256, TITLES, DOCUMENT, LABELS, ACTS, BUNDLE];
   for (const n of Object.keys(RG)) {
     const holders = parts.filter((p) => n in p);
     assert.equal(holders.length, 1, `${n} is held once`);
