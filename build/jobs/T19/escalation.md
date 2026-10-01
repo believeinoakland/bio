@@ -44,3 +44,7 @@ Done; record's Completion section. Rs met: R24 (codes-ops.test.mjs R24; stages R
 ## J4 · QUESTION · re B3
 
 B3 applied on my branch (tranche/T19 merged; `stages.test.mjs`:8 now imports `ACTION_CATALOGUE_CHECKS` from `src/action-grammar/checks.mjs`; escalation tests re-run below). But `architecture escalation` now fails: escalation's `uses` (modules.json) does not list action-grammar, and the `NO_SUCH_ACTION` row is exported nowhere else (actions' index does not re-export it). **My recommendation:** you add the edge `escalation uses action-grammar` (earlier in layer 9, so the order holds; test-only today), and I re-run the checks and post COMPLETE. The other way: I drop the row import and keep the R9 test's `deepEqual(r, noSuchAction(id))` and `check === "C-117.2"`, which no longer cross-checks the translation against action-grammar's row. I would rather not, as it weakens the test. I will wait for your answer.
+
+## J5 · COMPLETE · re B4
+
+B3 and B4 applied: tranche/T19 merged; stages.test.mjs imports ACTION_CATALOGUE_CHECKS from src/action-grammar/checks.mjs. escalation 35/35; format, architecture, coverage (25/25), ownership: 0 failures. Rs met unchanged from J3 (R24, R10, R13, R25). Size: test runs 6, module lines 1489.
