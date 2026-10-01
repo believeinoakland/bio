@@ -1,77 +1,38 @@
-/* control-plane: THE INSTANCE'S DOORS (R1–R33). The Worker's HTTP entry — routing, the namespace gates,
-   authentication, admission, the stamps and the envelope — moved from legacy-index (`index.mjs`) at control-plane's
-   extraction (T12, K3, K93). An op's own handler is its module's: `makeFetch(hooks)` takes the arms that still live in
-   legacy-index (`publicOp` for the unauthenticated ops, `gatedOp` for the admitted ones) and routes to them, so
-   routing is one place while the arms still live there (the map's §3). */
+/* control-plane: THE INSTANCE'S DOOR (R1–R41). The Worker's HTTP entry — routing, the stamps, the answer's decoration
+   and envelope — moved from legacy-index (`index.mjs`) at control-plane's extraction (T12, K3, K93). Who may call an op is
+   `admission`'s and what each op is `op-declarations'` (the split, K617, K624 (2)): this door calls admission's gates in
+   R28's order and reads op-declarations' tables. An op's own handler is its module's: `makeFetch(hooks)` takes the arms
+   that still live in legacy-index (`publicOp` for the unauthenticated ops, `gatedOp` for the admitted ones) and routes
+   to them, so routing is one place while the arms still live there (the map's §3). */
 import { parseFrontmatter, createSha256, normalizeType, INSTALLATION_CHECKS,
          MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../../checks/bio-checks.mjs";
 /* R32: the doors' own rows (`checks.mjs`). */
-import { ADMISSION_CHECKS, NAMESPACE_CHECKS, DISPATCH_CHECKS, BOOTSTRAP_CHECKS, AI_SCOPE_CHECKS, OPERATOR_FENCE_CHECKS,
-         GROUP_IDENTITY_FENCE_CHECKS, REPLAY_CHECKS } from "./checks.mjs";
-import * as M_CONTROL_PLANE from "./checks.mjs";
-/* D-262: THE WHOLE CATALOGUE, AS A NAMESPACE AND NOT A LIST. `dec49Attach`
-   below resolves a refusal code against every DEC-49 family the catalogue
-   exports, and it finds those families BY THE `_CHECKS` SUFFIX — the same rule
-   `civicos-ui/check-refusal-codes.mjs` harvests by, so a family minted tomorrow
-   is reachable here with no edit. A named-import list would be a hand-kept copy
-   of a set that grows every week, which is the staleness this project meets
-   most; the named imports above stay named because they are used AS VALUES. */
-import * as CHECK_CATALOGUE from "../../checks/bio-checks.mjs";
-/* N272 (K351): AND EVERY MODULE'S OWN FAMILIES. A row that left the catalogue for its module's `checks.mjs` (or the
-   one file a module keeps its families in) reached the wire with no `code`, `check` or `translation` unless its site
-   spread the row itself, because `dec49Row` read the catalogue alone. Each module file is read as a NAMESPACE, so a
-   family it mints tomorrow is found by the `_CHECKS` suffix with no edit here; a module that opens a NEW file of
-   families is not, and `MODULE_CHECK_FILES` gains it until N245's composed catalogue replaces this list (K351). */
-import * as M_ACTIONS from "../actions/checks.mjs";
-import * as M_AI_RUNS from "../ai-runs/checks.mjs";
-import * as M_BIAS from "../bias/checks.mjs";
-import * as M_CALIBRATION from "../calibration/checks.mjs";
-import * as M_CAPTURE_REQUESTS from "../capture-requests/checks.mjs";
-import * as M_CAPTURE_SOURCES_CREDENTIALS from "../capture-sources/credentials.mjs";
-/* N347 (K440): capture's rows (C-118), readable here since capture renamed its generic `NOT_FOUND` to `EVIDENCE_NOT_HELD`. */
-import * as M_CAPTURE from "../capture/checks.mjs";
-import * as M_CASE_AUTHORING from "../case-authoring/checks.mjs";
-import * as M_CITATION from "../citation/checks.mjs";
-import * as M_CONFORMANCE from "../conformance/checks.mjs";
-import * as M_CONNECTIONS_THEMES from "../connections/themes.mjs";
-import * as M_CONSEQUENCES from "../consequences/checks.mjs";
-import * as M_CONTENT_EXTENT from "../content/extent.mjs";
-import * as M_CONTRADICTION from "../contradiction/checks.mjs";
-import * as M_ENTITIES from "../entities/checks.mjs";
-import * as M_ESCALATION from "../escalation/checks.mjs";
-import * as M_EXTRACTION from "../extraction/checks.mjs";
-import * as M_FILINGS from "../filings/checks.mjs";
-import * as M_INQUIRY from "../inquiry/index.mjs";
-import * as M_INTENT from "../intent/checks.mjs";
-import * as M_MEMBERSHIP from "../membership/checks.mjs";
-import * as M_OBSERVATION_LOG from "../observation-log/checks.mjs";
-import * as M_PROGRESSIONS from "../progressions/checks.mjs";
-import * as M_PROMOTION from "../promotion/checks.mjs";
-import * as M_PROVENANCE from "../provenance/checks.mjs";
-import * as M_PUBLICATION from "../publication/checks.mjs";
-import * as M_QUEUE from "../queue/checks.mjs";
-import * as M_RATIFICATION from "../ratification/checks.mjs";
-import * as M_RECORD_CORE from "../record-core/checks.mjs";
-import * as M_REEVALUATION from "../reevaluation/checks.mjs";
-import * as M_RETRIEVAL from "../retrieval/checks.mjs";
-import * as M_REVIEW from "../review/checks.mjs";
-import * as M_RUN_PRODUCTIONS from "../run-productions/checks.mjs";
-import * as M_SKILLDOCTRINE from "../skilldoctrine.mjs";
-/* N364: sources' rows (C-121), so `op=knockerconsent`'s refusals and a forwarded one carry theirs. */
-import * as M_SOURCES from "../sources/checks.mjs";
-import * as M_STANDARDS from "../standards/checks.mjs";
-import * as M_STRENGTH from "../strength/checks.mjs";
-/* N363 (K562): tasks' rows (C-19.2, C-32.10, C-32.11, C-76.1), moved from queue's, so their DEC-49 row reaches the wire. */
-import * as M_TASKS from "../tasks/checks.mjs";
+import { DISPATCH_CHECKS, BOOTSTRAP_CHECKS, REPLAY_CHECKS, REQUIRED_ARGUMENT_CHECKS } from "./checks.mjs";
+/* K617, K624 (2): who may call an op is `admission`'s — the namespace gates, the credential's resolution, the admission
+   in its order, the bearer fences, the reader of a public op's caller and the mint's secrets — called here in R28's
+   order; each gate answers `null`, a refusal `{status, body}` this door answers as given, or a silence. */
+import { SCRATCH, namespaceGate, confinedNamespaceGate, pinnedNamespaceGate,
+         aiCredentialPresented, admit, bearerFence, readerOf, aiCredentialMint, reviewGrantSecret,
+         projectCreationGate } from "../admission/index.mjs";
+/* R22, R41 (K585 (1)): the composed catalogue — the check catalogue, every module's families, this module's own — and the
+   one reader of a code's row (`families.mjs`). */
+import { CHECK_FAMILIES, CHECK_FAMILY_FILES, dec49Row } from "./families.mjs";
+import { machineFences, renderPack } from "../skillpack.mjs";
 import { liveToken } from "../tokens.mjs";
 import { SIGN_HTML } from "../signpage.mjs";
 import { setupPage } from "../setup.mjs";
 import { inbandQuartet } from "../inband.mjs";   /* REC-148: DEC-31's in-band quartet, one function */
 import { normalizeAddress } from "../subresources.mjs";
-import { Store } from "../store.mjs";
-import { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, SOURCE_ACTIONS, SOURCE_READS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, ESCALATION_ACTIONS, ESCALATION_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION } from "./ops.mjs";
+/* R18: the capability vocabulary `op=whoami` publishes is membership's (N13: no longer read through legacy-store). */
+import { Membership } from "../membership/index.mjs";
+/* What each op is, and the act lists that drive the stamps (R17), are op-declarations'. */
+import { OPS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS,
+         PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS,
+         OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, SOURCE_ACTIONS, SOURCE_READS, QUEUE_ACTIONS, RUN_VERB_ACTIONS,
+         RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS,
+         STANDARDS_ACTIONS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS,
+         ACTION_LAYER_READS, PLAN_PROPOSAL_ACTIONS } from "../op-declarations/index.mjs";
 
-const SCRATCH = "scratch";
 /* REC-22: the ONE namespace the public read path answers from. An instance has
    one published record, so op=publishedcase and op=publishedbytes are pinned
    here exactly as op=verify and op=publishedmanifest are — and a probe's
@@ -94,556 +55,6 @@ async function sha256Hex(v) {
   return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 }
 
-/* REC-33 / DEC-37. THE FOURTH CLASS, and what it is a class OF.
- *
- * Bob, 2026-08-04: "Sounds like we need a daemon token" — and the NAME is the
- * ruling, not decoration. The entry that raised this proposed `MONITOR_TOKEN`;
- * it was renamed because this credential drives TWO verbs, op=monitor and the
- * archive arm of op=acquire, and naming it for one of its consumers would have
- * invited the next unattended consumer either to mis-scope itself under a
- * monitor name or to mint a FIFTH class. THE CLASS IS THE UNATTENDED PATH, NOT
- * THE MONITOR. A later unattended consumer belongs here.
- *
- * WHY IT EXISTS AT ALL. Every monitor tick and every archive fallback on every
- * installed instance authenticated as ADMIN_TOKEN — the root of trust §8.1
- * builds every membership rule on — to do two narrow things. That credential is
- * bound into an instance's configuration and sits there unattended
- * indefinitely: the place a credential lives longest and travels furthest.
- * Today a leak there is total instance compromise; scoped, it is a monitoring
- * nuisance.
- *
- * WIDEN BY DECISION, NOT BY DRIFT. It is admitted to EXACTLY the two verbs it
- * needs today (OPS.monitor, and op=acquire's archive arm only — the direct arm
- * refuses it below), and the totality of that reach is asserted structurally
- * over this table in test/daemon-token.test.mjs, so an op that admits `daemon`
- * later fails that suite until somebody answers for it.
- *
- * ADMIN_TOKEN REMAINS THE FALLBACK in Store's `#monitorToken()`, so an instance
- * installed before this class existed keeps monitoring rather than arming an
- * alarm that 401s forever — DIST-1's constraint, and the reason the plane
- * learns the class BEFORE any installer binds it.
- *
- * Ordered after admin deliberately: if an operator ever set both bindings to
- * the same value, the caller gets the WIDER class it already holds rather than
- * a silent, surprising narrowing. */
-async function classify(token, env) {
-  if (!token) return null;
-  if (token === env.ADMIN_TOKEN && (await liveToken(env.ADMIN_TOKEN))) return "admin";
-  if (token === env.MEMBER_TOKEN && (await liveToken(env.MEMBER_TOKEN))) return "member";
-  if (token === env.PROBE_TOKEN && (await liveToken(env.PROBE_TOKEN))) return "probe";
-  if (token === env.DAEMON_TOKEN && (await liveToken(env.DAEMON_TOKEN))) return "daemon";
-  return null;
-}
-
-/* A probe-class token may mutate, but only inside the scratch namespace. This
-   is what lets an automated caller exercise the real write path, including the
-   CAS, against the real deployment, without any ability to touch live state. */
-/* A probe-class caller is confined to the scratch namespace. Confinement is by
-   REFUSAL, not by silent redirection: a caller that believes it addressed the
-   live store must be told it did not, rather than quietly succeeding somewhere
-   else. Defaulting with no store parameter is scratch. */
-/* REC-33: THE DAEMON CLASS IS DELIBERATELY NOT CONFINED HERE, and the absence
-   is the decision rather than an omission. Confining it to scratch is precisely
-   what makes PROBE_TOKEN the wrong credential for this job: monitoring writes
-   the REAL record's reachability and the archive fallback files the REAL
-   record's bytes, and a rehearsal of that in a different Durable Object records
-   nothing anyone will ever read. So the daemon class falls through to the
-   default and addresses `bio` like an operator does. What bounds it is the op
-   table — two verbs — and not the namespace. */
-/* D-456 (IC-237): THERE IS NO FALL-THROUGH TO `bio` ANY MORE. This function answered `bio` for EVERY `store=` value
-   it did not recognise, so `op=stats&store=biosmoke-pdf` answered `store:"bio"` and a brief or a typo naming a
-   namespace that does not exist wrote the REAL record while the caller believed it was somewhere else. The named
-   refusal is `namespaceGate`'s, at the front door, before any class is resolved, so every caller meets it first; this
-   function no longer defaults an unrecognised value to anything, and if one ever reaches it (a caller that skipped
-   the gate) it REFUSES, which the admission site answers as SCOPE_REFUSED. ABSENT `store=` IS UNCHANGED: probe reads
-   `scratch`, every other class `bio`. */
-function scopeFor(cls, url) {
-  const named = url.searchParams.has("store");
-  const asked = url.searchParams.get("store");
-  if (named && !NAMESPACES.includes(asked))
-    return { error: `no namespace ${JSON.stringify(asked)} exists on this instance; the namespaces are ${NAMESPACES.join(" and ")}` };
-  if (cls === "probe") return named && asked !== SCRATCH ? { error: `probe class is confined to the ${SCRATCH} namespace, refused request for ${JSON.stringify(asked)}` } : { name: SCRATCH };
-  return { name: asked === SCRATCH ? SCRATCH : "bio" };
-}
-
-/* D-456 (C-78.1, IC-237) — A NAMESPACE THAT DOES NOT EXIST IS REFUSED BY NAME, FOR EVERY CALLER, AT THE FRONT DOOR.
- *
- * WHAT WAS WRONG, MEASURED. `scopeFor` confined only the probe class and answered `bio` for any other `store=` value;
- * the unauthenticated path (the invitation ops, op=instancegroup) did the same with `=== SCRATCH ? SCRATCH : "bio"`.
- * So `store=biosmoke-pdf`, `store=Scratch` and an empty `store=` all ADDRESSED THE REAL RECORD — and a live
- * verification whose whole no-write guarantee is naming its namespace (CLAUDE.md §5, D-325) wrote production while
- * believing it was elsewhere. Found by CPDF-3's worker, whose brief named a namespace that has never existed.
- *
- * WHY HERE AND NOT ONLY IN `scopeFor`: this runs once, before a credential is classified, so the admin, member, probe,
- * daemon and `ai` classes, a signed-in session and the no-credential path meet ONE refusal from ONE governed span
- * (a DEC-49 row holds one `where`). The set is exact and case-sensitive: `Scratch` is not `scratch`, because a Durable
- * Object name is an exact string and folding it here would be this function guessing what the caller meant.
- * `store=` ABSENT is not a refusal — every class keeps its default. Nothing was read or written when this answers. */
-const NAMESPACES = Object.freeze(["bio", SCRATCH]);
-function namespaceGate(url) {
-  if (!url.searchParams.has("store")) return null;
-  const asked = url.searchParams.get("store");
-  if (NAMESPACES.includes(asked)) return null;
-  /* DEC-49 REGION is-namespace-gate */
-  return json({ ok: false, reason: "NAMESPACE_UNKNOWN", ...namespaceRow("NAMESPACE_UNKNOWN"),
-                error: `no namespace ${JSON.stringify(asked.slice(0, 80))} exists on this instance`,
-                asked: asked.slice(0, 80), namespaces: [...NAMESPACES] }, 400);
-  /* END DEC-49 REGION is-namespace-gate */
-}
-
-/* D-461 (C-78.2, IC-250) — A PUBLIC OP THAT ALWAYS ANSWERS FROM `bio` REFUSES `store=scratch` BY NAME.
- *
- * WHAT WAS WRONG, MEASURED. The unauthenticated block opens ONE stub on `bio` and twelve of its fifteen ops answer
- * through it whatever `store=` says — three of them MUTATING (`knock`, `claim`, `reviewcomment`). So
- * `op=knock&store=scratch` passed D-456's gate (`scratch` is a namespace), filed a knock in the REAL record's inbox,
- * and answered `ok` without saying which store it wrote. A live verification whose no-write guarantee is naming
- * `store=scratch` on every call (CLAUDE.md §5, D-325) wrote production while believing it was in scratch.
- *
- * WHY REFUSE AND NOT REDIRECT. Claiming and logging in are pinned on purpose (an instance has ONE identity), and the
- * published reads are the record's public face; answering them from scratch would change what they MEAN. Refusal is
- * also D-456's rule for a namespace the op cannot serve: the caller is told, never silently answered elsewhere.
- *
- * THE SET IS INVERTED ON PURPOSE. It lists the public ops that DO address scratch — the invitation ops and
- * op=instancegroup, each of which reads `store=` itself — and every other `classes: null` op is pinned. A public op
- * added later is refused `store=scratch` until somebody makes it answer from scratch and lists it here, which is the
- * safe direction: the unlisted default is the refusal, never the real record. Gated ops take their namespace from
- * `scopeFor` and are not this function's. `store=bio` and an absent `store=` are unchanged. Nothing is read or
- * written when this answers.
- *
- * + `groupidentity` (CONDUCT #19, c19-batch11, 2026-09-24): REC-164's op reads `store=` itself, op=instancegroup's way
- * (a credential's store from `scopeFor`, else `store=scratch` honoured), and d456-namespace-scope drives it answering
- * from scratch; it met this list only at the union, where the pin refused it (400) and that suite went red. */
-const SCRATCH_ADDRESSING_PUBLIC_OPS = Object.freeze(["invitelook", "enroll", "instancegroup", "groupidentity"]);
-function pinnedNamespaceGate(url, op, spec) {
-  if (spec.classes !== null || SCRATCH_ADDRESSING_PUBLIC_OPS.includes(op)) return null;
-  if (url.searchParams.get("store") !== SCRATCH) return null;
-  /* DEC-49 REGION is-pinned-namespace-gate */
-  return json({ ok: false, reason: "NAMESPACE_PINNED", ...namespaceRow("NAMESPACE_PINNED"),
-                error: `op=${op} always answers from the bio namespace and has no ${SCRATCH} counterpart; nothing was read or written`,
-                op, asked: SCRATCH, pinned: "bio" }, 400);
-  /* END DEC-49 REGION is-pinned-namespace-gate */
-}
-
-/* D-463 (C-78.3) — A CREDENTIAL MINTED CONFINED TO `scratch` ADDRESSES `scratch` ON EVERY CALL IT MAKES.
- *
- * WHAT WAS WRONG, AND IT WAS NAMED IN THE RULES BEFORE IT WAS BUILT. `CLAUDE.md` §5's live-verify rule ends
- * *"RESIDUE: no credential binds to scratch for life"*, and `BIO_Distribution_v0_1.md` §6 rung 6 carried the same
- * sentence as a stated LIMITATION (D-325; BOB #17 ruled the per-call posture SUFFICIENT 2026-09-19, BOB #22 stated the
- * residue 2026-09-21) — so the whole no-write guarantee of a live verification was the DISCIPLINE of naming
- * `store=scratch` on every call, plus the witness afterwards. BOB #22 named the one condition on which a sticky
- * confinement would be raised: *"raised only if a live verification is measured writing the real record despite the
- * naming and the witness."* IT WAS MEASURED TWICE. D-456: `store=biosmoke-pdf` — a brief naming a namespace that has
- * never existed — answered from `bio`. D-461: `op=knock&store=scratch` filed a knock in the REAL record's inbox and
- * answered `ok`. Both were found by workers whose every call was disciplined; the discipline was not the thing that
- * failed. A property that has to be re-asserted on every call is one an instrument omits once, and this is the
- * credential property that makes a forgotten parameter unable to reach the record at all.
- *
- * WHY ONE GATE AT THE FRONT DOOR AND NOT A SECOND ANSWER IN `scopeFor`. `scopeFor` decides a namespace from a CLASS
- * (the probe class's confinement lives there, by class and not by credential); this decides it from the ROW a member
- * authored. Putting it in both places would be two answers to "which store does this call land in" ageing separately,
- * which is REC-46's measured defect and PL-4's duplicated-predicate one at once. So the rule lives here, ONCE, ahead of
- * everything: ahead of the unauthenticated block, ahead of `classify`, ahead of `scopeFor`'s call site — and the
- * SUITE PINS THAT ORDER STRUCTURALLY (`d463-confined-credential.test.mjs` §5), because a gate that can be reached
- * around is a mechanism believed on the strength of its existence.
- *
- * THE TWO ARMS ARE DIFFERENT ACTS AND BOTH ARE THE CONFINEMENT.
- *   - A `store=` NAMED as anything but `scratch` is REFUSED BY NAME, 403 `NAMESPACE_CONFINED`. D-456's rule: a caller
- *     who believes it addressed the record must be TOLD it did not, never quietly answered somewhere else. `bio` is
- *     refused like any other, and the sentence says the credential can go nowhere else.
- *   - A `store=` ABSENT is SET to `scratch` here, and that is a default rather than a redirection: every class already
- *     has one (probe's is `scratch`, everybody else's `bio`), and this credential's is the row's. Setting it on the URL
- *     rather than computing it later is what makes the confinement TOTAL for a caller that names nothing: the twenty-four
- *     sites that address a namespace read it from `scopeFor`'s answer, the invitation ops and `op=instancegroup` /
- *     `op=groupidentity` read `store=` themselves, and every one of them now reads `scratch`. THE ANSWER SAYS SO: the
- *     envelope's `store` is the namespace that answered, so nothing is silent about where the call went.
- *     A DELIBERATE CONSEQUENCE, STATED SO IT IS NOT READ AS AN OVERSIGHT: a confined credential calling one of the
- *     PUBLIC ops D-461 pins to `bio` now meets `NAMESPACE_PINNED` — `op=knock` included, the write that item measured.
- *     That is the right outcome and the reason the two gates are ordered this way: the confined caller cannot file a
- *     knock in the real record's inbox, and it is told which of the two fences stopped it.
- *
- * WHAT THIS DOES NOT CONFINE, MEASURED RATHER THAN ASSUMED. The credential's OWN ROW is read from `bio` (the
- * `ai_credentials` table lives in one store, and `aicredentiallook` has always been asked there): resolving who a
- * caller is is not addressing the record's content, and a confinement that could not look itself up would be one
- * nothing could enforce. Sessions are likewise resolved from `bio`, and a session is not a minted credential. The four
- * BINDING classes cannot be confined at all — they are values an operator sets in the hosting dashboard, with no row to
- * carry the property — so for ADMIN, MEMBER, DAEMON and PROBE the per-call rule and `scopeFor` are unchanged, and the
- * live-verify obligation in `CLAUDE.md` §5 still binds every caller holding one. */
-function confinedNamespaceGate(url, cred) {
-  if (!cred || cred.confinedTo !== SCRATCH) return null;
-  if (url.searchParams.has("store") && url.searchParams.get("store") !== SCRATCH) {
-    /* DEC-49 REGION is-confined-namespace-gate */
-    return json({ ok: false, reason: "NAMESPACE_CONFINED", ...namespaceRow("NAMESPACE_CONFINED"),
-                  error: `credential '${String(cred.tokenId).slice(0, 60)}' is confined to the ${SCRATCH} `
-                       + `namespace for its whole life and cannot address `
-                       + `${JSON.stringify(String(url.searchParams.get("store")).slice(0, 80))}; nothing was read or written`,
-                  tokenId: cred.tokenId, asked: String(url.searchParams.get("store")).slice(0, 80),
-                  confinedTo: SCRATCH }, 403);
-    /* END DEC-49 REGION is-confined-namespace-gate */
-  }
-  url.searchParams.set("store", SCRATCH);
-  return null;
-}
-
-/* D-463 (C-29.10) — WHAT MAY BE WRITTEN AS A CONFINEMENT, judged once when a member AUTHORS it.
- *
- * `aiScopeDeclaration`'s shape and its reason (PL-4: one predicate at two points leaves one of the two codes
- * unreachable, so the DECLARATION and the per-call GATE are different questions with different codes and both are
- * driven). Its own named function and its own region, because a DEC-49 `where` resolves a span BY FUNCTION NAME.
- *
- * `scratch` IS THE ONLY CONFINEMENT THERE IS, AND `bio` IS REFUSED WITH THE UNKNOWN NAMES. That is a decision: `bio` is
- * where every unconfined credential already lands, so a row reading "confined to bio" would look like a fence in the
- * record and hold nothing — the sentence-that-enforces-nothing D-199 (2) moved the scope out of a settings row to
- * avoid. Absent, null and empty are UNCONFINED and are not refusals: a member who says nothing is minting the
- * credential this instance has always minted. */
-/* D-463 — THE PRESENTED `ai` CREDENTIAL, RESOLVED ONCE PER REQUEST AND READ IN THREE PLACES.
- *
- * The gate above needs the credential's ROW before anything else happens, and the admission block and `caseReader`
- * needed it already. One resolution, passed along, for two reasons and neither is tidiness: (1) a second
- * `aicredentiallook` would be a second Durable Object round trip on every agent call, which is the cost D-199's own
- * comment accepts ONCE and no more; (2) two lookups can disagree — a credential revoked between them would be live at
- * one gate and withdrawn at the next, and which fence a caller met would depend on the order they ran in.
- *
- * THE SHAPE IS CHECKED BEFORE THE STORE IS ASKED, so a session token (64 hex) never reaches this lookup and an agent
- * credential never falls through into the session one: two different failures deserve two different answers. A STORE
- * SILENCE IS NOT "THIS CREDENTIAL IS UNKNOWN" (REC-52): it is returned as a silence and the caller is told the record
- * could not be consulted, never refused as though something were known about them. */
-async function aiCredentialPresented(url, env) {
-  const t = url.searchParams.get("token");
-  if (!t || !AI_TOKEN_SHAPE.test(t)) return { cred: null };
-  const st = env.STORE.get(env.STORE.idFromName("bio"));
-  const out = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex(t)}`));
-  /* N349 (R23, R25): the correlation `doAnswer` read from the store's internal error travels with the silence. */
-  if (!out.answered) return { silent: "aicredentiallook", correlation: out.correlation };
-  return { cred: out.result?.found ? out.result.credential : null };
-}
-
-function aiConfinementDeclaration(confinedTo) {
-  const refusal = (code, detail, extra) => {
-    const row = AI_SCOPE_CHECKS[code];
-    return { error: { reason: code, code, check: row.check, translation: row.translation,
-                      detail, ...(extra || {}) } };
-  };
-  /* THE VALUE IS JUDGED EXACTLY, AND NOTHING IS TRIMMED OR FOLDED — D-456's rule for the namespace set, one layer
-     in: a Durable Object name is an exact string, and normalising here would be this function guessing what the
-     member meant. So `Scratch`, `SCRATCH`, `"scratch\n"` and a lone space are each refused BY NAME, which is the
-     direction that cannot end in a credential believing it is fenced. ABSENT is the only silence: the field omitted,
-     `null`, or `undefined`. A PRESENT empty string is a value and is refused with the rest, because an empty
-     `store=` is exactly one of the values D-456 measured addressing the real record. */
-  if (confinedTo === null || confinedTo === undefined) return { confinedTo: null };
-  const asked = String(confinedTo);
-
-  /* DEC-49 REGION is-ai-confinement-declaration
-   *
-   * THE SPAN `AI_CONFINEMENT_NOT_SCRATCH` names. Helper `refusal`, the code a STRING LITERAL at its site so arm C of
-   * the DEC-49 guard COMPARES it rather than reading past a variable. */
-  if (asked !== SCRATCH)
-    return refusal("AI_CONFINEMENT_NOT_SCRATCH",
-      `'${asked.slice(0, 80)}' is not a confinement a credential can carry. The one namespace a credential `
-      + `may be bound to for its whole life is ${JSON.stringify(SCRATCH)}; ${JSON.stringify("bio")} is where `
-      + `every unconfined credential already lands, so recording it as a confinement would put a fence in the `
-      + `record that holds nothing (D-199 (2)). The name is matched exactly, so a capital letter or a stray space `
-      + `is a different name. Leave the field out altogether to mint an unconfined credential.`,
-      { asked: asked.slice(0, 80), confinements: [SCRATCH] });
-  /* END DEC-49 REGION is-ai-confinement-declaration */
-
-  return { confinedTo: SCRATCH };
-}
-
-/* =====================================================================
- * PL-11 / IS-5 / D-199 — THE FIFTH CLASS, AND THE FIRST ONE THAT IS NOT A
- * BINDING.
- *
- * WHY `classify()` ABOVE SAYS NOTHING ABOUT IT. The four classes it resolves
- * are ENV BINDINGS: an operator sets a value in the hosting dashboard and the
- * plane compares. D-199 (2) rules that out for this class, transplanting
- * DEC-17's reasoning verbatim — a settings row *"would be a way to change the
- * standard with nothing to read afterwards"*, and what an AI credential may
- * reach is exactly the thing that must be amendable only as an authored, dated,
- * on-the-record act. So an `ai` credential resolves against a ROW that names
- * the member who minted it and the day they did, and the resolution happens in
- * the fetch handler below, one step after `classify()` returns nothing, in the
- * same place and for the same reason a signed-in session resolves there.
- *
- * A DELIBERATE CONSEQUENCE, STATED SO NOBODY LATER READS IT AS AN OVERSIGHT:
- * this class costs a Durable Object round trip on every call, which the four
- * binding classes do not. A cached copy in the Worker would buy the round trip
- * back and would also be a second answer to "what may this credential do",
- * ageing separately from the row a member just amended. REC-46 is an entire
- * item spent removing three unsynchronised answers to a smaller question.
- *
- * D-199 (1) — ONE CLASS CARRYING A DECLARED TASK SCOPE, NOT A CLASS PER TASK.
- * The plane already had the two-dimensional answer and DEC-55 names it: class
- * plus scope, with the scope enforced at the gate BY REFUSING, which is what
- * `scopeFor` does to the probe class one function up. `aiTaskScope` is that
- * shape reused — same return shape, same enforcement point, same refusal
- * posture — and it gives per-function confinement at the cost of one class.
- *
- * THE SCOPE NAME IS FREE TEXT AND THE WRITES ARE THE ENFORCEABLE HALF. A closed
- * vocabulary of scope NAMES was considered and refused: it would grow one entry
- * per task and become D-199 (1)'s class-per-task arriving through a different
- * door, while buying nothing — what confines a credential is the op set, and a
- * name nobody enforces is a label. So `task_scope` records what the authoring
- * member called this piece of work, and `scope_writes` is what the gate reads.
- * ===================================================================== */
-
-/* The presented shape. Deliberately NOT the 64-hex a session token uses: the
-   handler must be able to tell "this is an agent credential that did not
-   resolve" from "this is a session token that did not resolve", because those
-   are different answers and only one of them is worth a member's attention. */
-const AI_TOKEN_SHAPE = /^aik-[0-9a-f]{64}$/;
-
-/* THE FLOOR, AND IT IS THE WHOLE FENCE: an `ai` credential may be admitted only
- * where a MEMBER class is admitted. ONE property of the OPS table, read live.
- *
- * THIS IS PL-4'S DELEGATED CONSTRAINT DISCHARGED — *the fence is a SHAPE, not a
- * class list.* op=capturerequestdrain carries no member class BY CONSTRUCTION,
- * because PL-4 ruled that a member reaching for the daemon's verb by hand would
- * be a person doing the daemon's job with the daemon's conduct rules applied to
- * them. It therefore falls outside every scope anybody can author, today and
- * after the next unattended op lands, and NOBODY HAD TO REMEMBER IT.
- *
- * IT HOLDS FROM THE OTHER SIDE TOO. No row of the OPS table names `ai` — that
- * is asserted structurally in test/aicredential.test.mjs — so adding the class
- * to a row would admit nothing, and this function is the only door. Two
- * independent proofs, both driven, because a fence with one proof is a fence
- * with one place to go wrong.
- *
- * `classes: null` ops (the unauthenticated surface) answer FALSE here rather
- * than throwing, and that is the fail-closed direction: they enforce their own
- * gates and an agent credential has no business inside a bootstrap claim. */
-function aiReachesAsMember(spec, op) {
-  /* D-586 (R19): an act R14 refuses to every bearer (the §4 governance acts, the group-identity acts) is a named
-     administrator's own session act, so no agent credential reaches it, at the mint or at the gate. */
-  if (GOVERNANCE_ACTIONS.includes(op) || IDENTITY_ACTIONS.includes(op)) return false;
-  /* REC-159: a row that bounds machine credentials by `machineClasses` hands an agent nothing —
-     no row names `ai` there either — so the four custodial ops stay beyond every scope, as they
-     were before `member` joined their `classes` for an enrolled administrator's session. */
-  return !!spec && Array.isArray(spec.classes) && spec.classes.includes("member")
-    && !Array.isArray(spec.machineClasses);
-}
-
-/* THE DECLARATION, judged once when a member AUTHORS it. Separate from the gate
- * below on purpose: this asks whether a sentence may be written into the record
- * at all, and the gate asks whether a call is within a sentence already there.
- * PL-4 measured what happens when one predicate sits at two points — one of the
- * two codes becomes unreachable and can never be driven — so these are
- * different questions with different codes and both are driven.
- *
- * IT IS ITS OWN NAMED FUNCTION rather than an inline block in the handler, and
- * that is REC-71's rule paid at allocation time: a DEC-49 `where` resolves a
- * span BY FUNCTION NAME, and PL-4 shipped one pointing at `acquire`, a name that
- * does not exist because the op lives inside the fetch handler — so nothing was
- * checking that site at all. */
-function aiScopeDeclaration(writes) {
-  const refusal = (code, detail, extra) => {
-    const row = AI_SCOPE_CHECKS[code];
-    return { error: { reason: code, code, check: row.check, translation: row.translation,
-                      detail, ...(extra || {}) } };
-  };
-  const asked = Array.isArray(writes) ? writes.map((w) => String(w ?? "").trim()).filter(Boolean) : [];
-
-  /* DEC-49 REGION is-ai-scope-declaration
-   *
-   * THE SPAN `AI_SCOPE_UNKNOWN_OP` and `AI_SCOPE_BEYOND_MEMBER_REACH` name
-   * (REC-71). A REGION and not the whole function, so the normalisation either
-   * side of it is not conscripted into this family. Helper `refusal`, and every
-   * code a STRING LITERAL at its site so arm C of the DEC-49 guard can COMPARE
-   * it rather than read past a variable. */
-  for (const op of asked) {
-    if (!Object.prototype.hasOwnProperty.call(OPS, op))
-      return refusal("AI_SCOPE_UNKNOWN_OP",
-        `'${op.slice(0, 60)}' is not an operation this instance performs. A scope naming something `
-        + `nothing recognises would sit in the record looking like a permission and meaning nothing, `
-        + `which is exactly what declaring the scope on the record rather than in a settings row is `
-        + `for (D-199 (2)).`, { op });
-    /* SCOPE-ADD to REC-162 (BOB #32, 2026-09-24): since REC-159 the four custodial acts carry
-       `member` for an enrolled administrator's OWN session and `machineClasses` for every
-       credential, so "not reachable by a member" was loosely false of them. The detail now says
-       which of the two properties refused the op, each read off its OPS row. */
-    if (!aiReachesAsMember(OPS[op], op))
-      return refusal("AI_SCOPE_BEYOND_MEMBER_REACH",
-        Array.isArray(OPS[op].machineClasses)
-          ? `'${op.slice(0, 60)}' is reached by a member only from that member's own signed-in `
-            + `session, and no agent credential is among the credentials it admits, so it cannot be `
-            + `handed to an agent. This is a property of the operation and not a list of forbidden `
-            + `ones: its OPS row names the credentials that reach it, and an agent's is not one.`
-          : `'${op.slice(0, 60)}' is not reachable by a member of this group, so it cannot be handed `
-            + `to an agent. This is a property of the operation and not a list of forbidden ones: the `
-            + `unattended worker's own verbs carry no member class by construction, so they are `
-            + `outside every scope anybody can author.`,
-        { op, classes: Array.isArray(OPS[op].classes) ? OPS[op].classes : null });
-  }
-  /* END DEC-49 REGION is-ai-scope-declaration */
-
-  return { writes: [...new Set(asked)].sort() };
-}
-
-/* THE GATE. `scopeFor`'s shape, one class over: `{ error }` or the admission.
- *
- * READS ARE THE FLOOR AND WRITES ARE THE DECLARATION. An `ai` credential reaches
- * every NON-MUTATING op a member reaches — that is IS-5's "reads across the
- * project", and what bounds WHAT it sees is not this function but the STATED
- * VIEWER stamped from the record's principal, so a member-scoped credential
- * sees exactly what that member sees and an organisation-scoped one sees what
- * any instance-level credential sees. A MUTATING op additionally has to be named
- * in the writes the record declares.
- *
- * THE FLOOR IS RE-EVALUATED HERE ON EVERY CALL even though the mint already
- * applied it, and that is not the duplicated-predicate mistake PL-4 measured: it
- * answers with the GATE's code, not the mint's, because a row can outlive the
- * rule that admitted it. An op that loses its member class tomorrow leaves every
- * credential naming it refused today, with nobody having to find the rows.
- *
- * THERE IS NO OP NAME IN THIS FUNCTION. Not one literal, and the suite asserts
- * it over this function's own source — the fence is a shape, and a shape with an
- * exception list in it is a list. */
-function aiTaskScope(cred, op, spec) {
-  const refusal = (code, detail, extra) => {
-    const row = AI_SCOPE_CHECKS[code];
-    return { error: { reason: code, code, check: row.check, translation: row.translation,
-                      detail, ...(extra || {}) } };
-  };
-
-  /* DEC-49 REGION is-ai-task-scope
-   *
-   * THE SPAN `AI_BEYOND_TASK_SCOPE` and `AI_CREDENTIAL_REVOKED` name (REC-71):
-   * a REGION, so the admission returned below is not read as a refusal site.
-   * Helper `refusal`, codes as STRING LITERALS. */
-  if (cred.revoked)
-    return refusal("AI_CREDENTIAL_REVOKED",
-      `credential '${String(cred.tokenId).slice(0, 60)}' was withdrawn on ${cred.revokedAt} by `
-      + `${cred.revokedBy}. The entry and the date are kept rather than deleted, so what it did while `
-      + `it was live stays readable.`,
-      { tokenId: cred.tokenId, revokedAt: cred.revokedAt });
-
-  if (!aiReachesAsMember(spec, op))
-    return refusal("AI_BEYOND_TASK_SCOPE",
-      `no member of this group reaches '${String(op).slice(0, 60)}', so no declared scope reaches it `
-      + `either. An agent is confined to what a member could do themselves, which is a property of the `
-      + `operation rather than a list kept anywhere.`,
-      { op, tokenId: cred.tokenId, taskScope: cred.taskScope, declared: cred.writes });
-
-  if (spec.mutating && !cred.writes.includes(op))
-    return refusal("AI_BEYOND_TASK_SCOPE",
-      `credential '${String(cred.tokenId).slice(0, 60)}' declares the task scope '${cred.taskScope}', `
-      + `whose writes are ${cred.writes.length ? cred.writes.join(", ") : "(none)"}. Widening it is an `
-      + `authored, dated act by a member on the record (D-199 (2)/(3)), not something the agent holding `
-      + `it can ask for.`,
-      { op, tokenId: cred.tokenId, taskScope: cred.taskScope, declared: cred.writes });
-  /* END DEC-49 REGION is-ai-task-scope */
-
-  return { ok: true, viewer: cred.principal };
-}
-
-/* REC-130 / IC-141 — WHO IS ASKING, FOR AN OP THAT ANSWERS ANYBODY BUT ANSWERS
- * WORKING MATERIAL ONLY TO SOME. `op=casedocument` stays UNGATED because a
- * RATIFIED case document is what a stranger verifies, and an unsigned one answers
- * only to standing in its owning project. So the op cannot demand a credential and
- * cannot ignore one: this resolves the caller the way the gated path does and
- * returns the VIEWER STRING the store's D-15 predicate reads — or "" for nobody.
- *
- * IT NEVER REFUSES. An absent, unknown, expired or out-of-scope credential is
- * resolved to "" and the caller is answered as a stranger, because a refusal
- * here would be a second shape of answer, and the whole property is that a
- * caller without standing cannot tell an unsigned case from no case. The ONLY
- * non-answer is a store silence during the lookup, which is a fact about the
- * instance and is the same whatever case was named.
- *
- * "OUTSIDE SCOPE" FOR A MACHINE CREDENTIAL, decided rather than left open: a
- * binding class stands only if the OPS table admits it to the working-corpus
- * listing (`index`, whose own comment is why a title is working material) AND
- * `scopeFor` addresses it to the store this op reads. So `daemon` (two verbs)
- * and `probe` (confined to scratch) are outside it and read as strangers; the
- * `admin` and `member` bindings are instance-level and read as they read every
- * other piece of working material. An `ai` credential stands as its declared
- * principal, through the same `aiTaskScope` the gated path runs. */
-/* REC-132 / D-422 / IC-149 — THIS IS NOW THE ONE RESOLVER OF A SESSION FOR EVERY
- * SESSION-STAMPED READ, and the history below is kept because it is the argument.
- * Membership Architecture v2 §7, *"THE FOUNDER IS AN ADMINISTRATOR HERE TOO"* (BOB
- * #15, 2026-09-18). `resolveSession(sess)` returns TWO things, kept apart:
- *
- *   viewer    WHAT THE SESSION MAY SEE — the D-15 viewer every visibility gate
- *             compiles. The FOUNDER's is the bare `admin`, `viewerPredicate`'s
- *             root-administrator spelling, so it sees every project and every
- *             participant list (§7.3, §7.8); every other session is `member:<id>`,
- *             exactly as before.
- *   identity  WHO THE SESSION IS — `member:<id>`, the founder's being
- *             `member:admin` — for authorship, ownership, votes and D-310's
- *             positional facts. It is stamped beside the viewer as `identity`, and a
- *             store site that asks WHO reads it and never the viewer.
- *   member    the folded id (`admin` for the founder), the string every author, by,
- *             actor and looker stamp in this file has always carried.
- *
- * THE WIDENING STOPS WHERE A RULING NAMES SOMEONE NARROWER THAN AN ADMINISTRATOR.
- * A LEAD is readable by its author and by participants it was shared to, never by
- * administrators (MEMBER-KNOWLEDGE-DESIGN.md §5), so the store's lead predicate
- * (`#leadReach`) asks the identity: the founder sees its own leads by position and
- * nobody else's. REC-132's IC-149 carries the per-site table of which arm governs.
- *
- * THE FOUNDER IS TOLD APART BY THE SESSION'S ROLE, never by the folded name, and the
- * id `admin` is now RESERVED (`memberAdd`, C-55.1), so the two cannot collide going
- * forward; an instance that already holds such a member is REPORTED by op=audit.
- *
- * REC-128 x REC-130 — THE ONE PLACE A SIGNED-IN SESSION BECOMES THE VIEWER AN
- * UNSIGNED CASE DOCUMENT ANSWERS TO. Both readers of one — `op=casedocument`
- * (through `caseReader` below) and `op=caseratify`'s facts read — call THIS,
- * so the two cannot disagree about who a session is.
- *
- * THE DEFECT IT CLOSES, measured on CONDUCT #5's merge of REC-128 onto REC-130:
- * both sites spelled the viewer as `member:` plus the FOLDED session role, and
- * the FOUNDER's session role is the bare `admin` (Store.ROOT_ADMIN), so the
- * founder read as `member:admin` — a member NAMED admin with no participation
- * and no members row — and was answered NO_CASE_DOCUMENT. That refused the
- * founder a case ratification BOB #14 ruled ALLOWED (D-421 as corrected: a
- * HUMAN's own authenticated session, a member's or the founder's), and hid every
- * unsigned case document from the instance's root administrator.
- *
- * THE RULING APPLIED, no new doctrine. IC-141 gives standing to a participant in
- * the owning project, an ACTIVE ADMINISTRATOR (Membership Architecture 7.3), or
- * an instance-level credential; 7.3 says administrators see ALL projects; 4.1
- * makes the solo founder THE administrator, and 4.6 puts the ADMIN_TOKEN holder
- * above every membership rule. The store already counts the founder as an active
- * administrator by that name (`#activeAdmins`, `#isAdminMember`). So the
- * founder has standing, as an administrator, in every project.
- *
- * WHY THE BARE `admin` VIEWER AND NOT `member:admin` OR `class:admin`.
- * `viewerPredicate` compiles bare `admin` UNFILTERED — its root-administrator
- * spelling — which is the founder's standing exactly. CORRECTED 2026-09-30 (T16,
- * N357; membership R43, MEMBERSHIP #9 J2 (2)): this read "`member:admin` cannot
- * carry it", because the predicate's administrator arm read a `members` row the
- * founder never has. Since N357 the predicate treats `member:admin` as the
- * founder's viewer too, seeing every bundle as bare `admin` does, so both
- * spellings now carry the founder's sight and the choice between them no longer
- * changes what the founder sees. The viewer stays bare `admin`: it is the
- * root-administrator spelling the predicate has always compiled unfiltered, and
- * `identity` beside it carries `member:admin` for the positional questions.
- * `class:admin` would stamp a MACHINE class on a human's session — the inner URL
- * lying about who is asking, which REC-29 closed. And the founder is told apart
- * by the session ROLE, never by the folded name: a member ENROLLED with the id
- * `admin` has role `member:admin`, which since N357 reads with the founder's
- * sight; `memberAdd` refuses that id (C-55.1), so only a store holding such a
- * member from before REC-132 reserved it is affected, and op=audit reports one.
- *
- * SCOPE, AS IT WAS (IC-147) AND AS IT IS (IC-149). IC-147 made this the viewer
- * for the two case-document reads only, and said why the rest waited: several
- * other session-stamped reads also ask POSITIONAL questions of the same id
- * (D-310), which a bare `admin` viewer cannot answer. REC-132 closed D-422 by
- * giving the resolver the SECOND half those questions need (`identity`), and every
- * session-stamped read in this file now takes its viewer from here. */
-function resolveSession(sess) {
-  const r = sess && typeof sess.role === "string" ? sess.role : "";
-  const member = r.startsWith("member:") ? r.slice(7) : r;
-  return {
-    viewer: r === "admin" ? "admin" : `member:${member}`,   /* the founder — Store.ROOT_ADMIN, an administrator (7.3) */
-    identity: `member:${member}`,
-    member,
-  };
-}
-
-/* REC-163 (IC-174): beside the viewer, `cls` — the class this caller would carry through the admission gate: the
-   machine class, `ai`, or a session's kind spelled exactly as the gate spells it (`sess.role === "admin"`). The
-   public op=instancegroup names it on a credentialed answer, as that answer did when it came through the gate. The
-   three callers before it read only `viewer` and `silent`. */
 /* REC-126 / REC-198 — THE REVIEW COPY'S ANSWER SHAPE, ONE FUNCTION FOR EVERY READ OF A DRAFT. The store's
    `#noReviewCopy` is carried at 404 with nothing added, so a caller outside the fence reads the same status and the
    same bytes from the single read (`reviewcopy`) and from the list (`casedrafts`); a store that did not answer is a
@@ -678,39 +89,12 @@ async function reviewAnswer(out, op) {
   return json({ ok: true, ...r }, 200);
 }
 
+/* WHO IS ASKING, FOR A PUBLIC OP THAT ANSWERS WORKING MATERIAL ONLY TO SOME: `admission`'s `readerOf` (its R16), in the
+   shape `legacy-index`' arms read until their modules take them (`{viewer, cls}`, or `{silent: <op>, correlation}`). */
 async function caseReader(url, env, storeName, presentedAi) {
-  const t = url.searchParams.get("token");
-  if (!t) return { viewer: "" };
-  const cls = await classify(t, env);
-  if (cls) {
-    const scope = scopeFor(cls, url);
-    const inScope = OPS.index.classes.includes(cls) && !scope.error && scope.name === storeName;
-    return { viewer: inScope ? `${MACHINE_CLASS_PREFIX}${cls}` : "", cls };
-  }
-  const st = env.STORE.get(env.STORE.idFromName("bio"));
-  if (AI_TOKEN_SHAPE.test(t)) {
-    /* D-463: the caller hands us the row the front door already read (`presentedAi`), so an agent calling one of these
-       four ops costs the lookup ONCE rather than twice and both fences judge the SAME row. `undefined` means nobody
-       resolved it — this function is reachable from paths that do not — and then it is looked up here as before. */
-    let cred = presentedAi === undefined ? undefined : presentedAi;
-    if (cred === undefined) {
-      const aOut = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex(t)}`));
-      if (!aOut.answered) return { silent: "aicredentiallook", correlation: aOut.correlation };   /* N349 */
-      cred = aOut.result?.found ? aOut.result.credential : null;
-    }
-    const scoped = cred ? aiTaskScope(cred, "index", OPS.index) : null;
-    return { viewer: scoped && !scoped.error ? scoped.viewer : "", cls: "ai" };
-  }
-  if (/^[0-9a-f]{64}$/.test(t)) {
-    const sOut = await doAnswer(st.fetch(`http://do/session?t=${t}`));
-    if (!sOut.answered) return { silent: "session", correlation: sOut.correlation };   /* N349 */
-    const sess = sOut.result?.session;
-    if (!sess) return { viewer: "" };
-    return { viewer: resolveSession(sess).viewer, cls: sess.role === "admin" ? "admin" : "member" };
-  }
-  return { viewer: "" };
+  const r = await readerOf(url, env, storeName, presentedAi, doAnswer);
+  return r.silent ? { silent: r.silent.op, correlation: r.silent.correlation } : r;
 }
-
 
 const json = (o, status = 200) =>
   new Response(JSON.stringify(dec49Attach(o), null, 1), {
@@ -778,42 +162,6 @@ const json = (o, status = 200) =>
  * a future one that IS would be outside this and is exactly what the
  * instrument's op sweep would find.
  * ========================================================================= */
-
-/* Built ONCE, LAZILY, and never at module load — a Worker pays module
-   initialisation on every cold start, and this is only needed by a response that
-   actually refuses. Families are found by the `_CHECKS` suffix (a RESERVED
-   SUFFIX in this repository: the DEC-49 guard harvests every one of them as a
-   refusal family), so this is a PROPERTY and not a list. */
-/* N272: the catalogue first, then each module file in path order, so a code the catalogue still holds resolves as it
-   always has; a code held in two places is the guard's arm A to refuse, not this reader's to choose. */
-const MODULE_CHECK_FILES = [
-  M_ACTIONS, M_AI_RUNS, M_BIAS, M_CALIBRATION, M_CAPTURE_REQUESTS, M_CAPTURE_SOURCES_CREDENTIALS, M_CAPTURE, M_CASE_AUTHORING,
-  M_CITATION, M_CONFORMANCE, M_CONNECTIONS_THEMES, M_CONSEQUENCES, M_CONTENT_EXTENT, M_CONTRADICTION, M_CONTROL_PLANE, M_ENTITIES,
-  M_ESCALATION, M_EXTRACTION, M_FILINGS, M_INQUIRY, M_INTENT, M_MEMBERSHIP, M_OBSERVATION_LOG, M_PROGRESSIONS,
-  M_PROMOTION, M_PROVENANCE, M_PUBLICATION, M_QUEUE, M_RATIFICATION, M_RECORD_CORE, M_REEVALUATION, M_RETRIEVAL, M_REVIEW, M_RUN_PRODUCTIONS,
-  M_SKILLDOCTRINE, M_SOURCES, M_STANDARDS, M_STRENGTH, M_TASKS];
-let DEC49_ROWS = null;
-function dec49Row(code) {
-  if (DEC49_ROWS === null) {
-    DEC49_ROWS = new Map();
-    for (const source of [CHECK_CATALOGUE, ...MODULE_CHECK_FILES]) {
-      /* Sorted so a duplicated code — which the guard's arm A already refuses —
-         resolves the same way on every isolate rather than by module order. */
-      for (const family of Object.keys(source).sort()) {
-        if (!/_CHECKS$/.test(family)) continue;
-        const rows = source[family];
-        if (!rows || typeof rows !== "object") continue;
-        for (const [key, row] of Object.entries(rows)) {
-          if (!row || typeof row !== "object") continue;
-          if (typeof row.translation !== "string" || row.translation === "") continue;
-          if (!DEC49_ROWS.has(key))
-            DEC49_ROWS.set(key, { check: row.check ?? null, translation: row.translation });
-        }
-      }
-    }
-  }
-  return DEC49_ROWS.get(code) ?? null;
-}
 
 /* A REFUSAL is `ok: false` carrying a code — and `ok: false` is required rather
    than inferred from the presence of a `reason`, because an ANSWER may carry a
@@ -986,29 +334,6 @@ function planeInternalAnswer(correlation) {
   /* END DEC-49 REGION is-plane-internal-error */
 }
 
-/* THE ADMISSION GATE'S DEC-49 FIELDS, read from the ONE row (REC-79 / C-38).
- *
- * Spread into the refusal beside a `reason` that is a STRING LITERAL at its
- * site, which is DEC-49's rule and is what lets arm C of the guard COMPARE the
- * code rather than read past a variable.
- *
- * IT THROWS RATHER THAN RETURNING A PARTIAL ROW, and that is the whole reason it
- * is a function. DEC-49 exists because a refusal once shipped
- * `translation: undefined` to a member — a machine word where a sentence was
- * promised — and it shipped that way because the code was in a variable and the
- * lookup silently missed. A throw here is a 500 in a test, which is loud; a
- * missing sentence is silent and reaches a person. `admission-gate.test.mjs`
- * drives this branch. */
-/* REC-123: the C-32 row for a machine fence that lives in THIS file (op=ratify,
-   op=caseratify). Same shape and same refusal-to-invent as `reextractRow`. */
-const machineFenceRow = (code) => {
-  const row = OPERATOR_FENCE_CHECKS[code];
-  if (!row || typeof row.translation !== "string" || !row.translation)
-    throw new Error(`machineFenceRow: ${code} has no OPERATOR_FENCE_CHECKS row with a canned translation `
-                  + `(DEC-49). A code with no sentence behind it must not reach a member.`);
-  return { code, check: row.check, translation: row.translation };
-};
-
 /* D-512: C-66.6's row — a replay the plane could not verify — on `identityFenceRow`'s shape and its refusal to invent. */
 const replayRow = (code) => {
   const row = REPLAY_CHECKS[code];
@@ -1018,32 +343,32 @@ const replayRow = (code) => {
   return { code, check: row.check, translation: row.translation };
 };
 
-/* REC-164: C-64.4's row, the fence's canned sentence taken from the one catalogue family that holds it. */
-const identityFenceRow = (code) => {
-  const row = GROUP_IDENTITY_FENCE_CHECKS[code];
+/* D-270 / C-61 (R39; moved from legacy-index with the row, K621, K636): the argument complaint's row reader,
+   `admissionRow`'s shape and its refusal to invent — a code with no sentence behind it throws here rather than
+   reaching a member. */
+const requiredArgumentRow = (code) => {
+  const row = REQUIRED_ARGUMENT_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
-    throw new Error(`identityFenceRow: ${code} has no GROUP_IDENTITY_FENCE_CHECKS row with a canned translation `
-                  + `(DEC-49). A code with no sentence behind it must not reach a member.`);
+    throw new Error(`requiredArgumentRow: ${code} has no REQUIRED_ARGUMENT_CHECKS row with a canned `
+                  + `translation (DEC-49). A code with no sentence behind it must not reach a member.`);
   return { code, check: row.check, translation: row.translation };
 };
 
-const admissionRow = (code) => {
-  const row = ADMISSION_CHECKS[code];
-  if (!row || typeof row.translation !== "string" || !row.translation)
-    throw new Error(`admissionRow: ${code} has no ADMISSION_CHECKS row with a canned translation `
-                  + `(DEC-49). A code with no sentence behind it must not reach a member.`);
-  return { code, check: row.check, translation: row.translation };
-};
-
-
-/* D-456 / C-78: the namespace refusal's row reader, the same shape and the same refusal to invent. */
-const namespaceRow = (code) => {
-  const row = NAMESPACE_CHECKS[code];
-  if (!row || typeof row.translation !== "string" || !row.translation)
-    throw new Error(`namespaceRow: ${code} has no NAMESPACE_CHECKS row with a canned translation `
-                  + `(DEC-49). A code with no sentence behind it must not reach a member.`);
-  return { code, check: row.check, translation: row.translation };
-};
+/* THE ARGUMENT COMPLAINT (C-61). ONE code for the whole condition with the argument in `argument` and the shape in
+ * `shape`, rather than a row per op — `AI_BEYOND_TASK_SCOPE` is the standing precedent for one code whose producers
+ * are told apart by a field. A HELPER and not edited sites, for the `where` field's sake: a DEC-49 row holds ONE
+ * `where` naming the SMALLEST SPAN. Every module that answers this complaint is handed this one function. */
+function requiredArgument(op, argument, shape, error) {
+  /* DEC-49 REGION is-required-argument
+   * THE SPAN `REQUIRED_ARGUMENT_MISSING` names. Code a STRING LITERAL at its site. `error` is passed in BYTE-IDENTICAL
+   * from the call site, so every legacy sentence survives unaltered and no consumer reading `error` moves. */
+  return { ok: false, reason: "REQUIRED_ARGUMENT_MISSING",
+           ...requiredArgumentRow("REQUIRED_ARGUMENT_MISSING"),
+           error, op, argument, shape,
+           detail: `op=${op} needs '${argument}' in the shape ${shape}, and this request carried `
+                 + `none the operation could use. Nothing was changed.` };
+  /* END DEC-49 REGION is-required-argument */
+}
 
 /* D-278 / C-68 and C-69: the same reader again, one per family, and the same
    refusal to invent. */
@@ -1063,165 +388,6 @@ const dispatchRow = (code) => {
                   + `(DEC-49). A code with no sentence behind it must not reach a member.`);
   return { code, check: row.check, translation: row.translation };
 };
-
-/* =========================================================================
- * D-270 — THE SESSION GATE ANSWERED THREE DIFFERENT FACTS WITH ONE SENTENCE,
- * AND THE SENTENCE WAS FALSE FOR TWO OF THEM.
- *
- * THE RULE IS BOB'S, 2026-09-19, and its home is CITED rather than restated
- * here: `docs/architecture/BIO_Membership_Architecture_v2.md` §4, the §4.7
- * block. The generating rule is one line — A REFUSAL MAY STATE ONLY WHAT THE
- * SYSTEM CAN SUPPORT — and it yields three sentences where this gate had one:
- *
- *   (a) "this verb is not for a person"  — a DESIGN CLAIM. Sayable ONLY where
- *       such a decision is RECORDED. `MACHINE_CREDENTIAL_REQUIRED`.
- *   (b) "your credential does not reach this verb" — ALWAYS sayable, because it
- *       is about the caller rather than about the design.
- *       `SESSION_ROLE_CANNOT_REACH_OP`.
- *   (c) for an OMISSION — NEITHER. State the fact and invent no rationale.
- *       `SESSION_ROUTE_NOT_RECORDED`.
- *
- * **WHY (c) HAD TO EXIST, AND IT IS THE ARGUMENT RATHER THAN A FOOTNOTE.** A
- * false rationale SUPPRESSES ITS OWN BUG REPORT. A member told that an absence
- * is a DECISION will not report it as a gap, so the sentence recruits the one
- * person who could have caught it into believing there is nothing to catch. The
- * measured case is D-136's: `adminendorse`, `adminremove` and `membercaps` WERE
- * reachable by NO session, and §4.7 assigns that very vote to a person. A
- * TWO-way split — which is what IC-55 proposed in 2026-08 — would have written
- * "this verb is not for a person" onto the three ops whose bug report it then
- * suppresses.
- *
- * **THAT CASE IS NOW DISCHARGED, AND THE TENSE IS THE POINT (D-136, 2026-09-19).**
- * The three ops hold reach in BOTH session sets and a server-stamped `by`, so no
- * session is refused at this gate and the ROSTER answers a non-administrator
- * `NOT_AN_ADMIN`. (CORRECTED 2026-09-25 by REC-162: this read "`SESSION_OPS.admin`
- * reach … a member's session gets (b), which names the administrator as the
- * route" — false of D-136's landing, which put them in both sets; and (b) now
- * names the SESSION that reaches the op, the founder's where the admin set alone
- * holds it, because an enrolled administrator holds a member's session.)
- * They are no longer examples of (c) and `d270-refusal-truth.test.mjs`' arm was
- * CORRECTED rather than exempted. **THE PARAGRAPH IS KEPT IN THE PAST TENSE
- * BECAUSE IT IS THE ARGUMENT FOR (c), NOT A LIST OF ITS MEMBERS**: the reason (c)
- * had to exist is that this absence WAS an omission and a false rationale would
- * have suppressed the report that fixed it. Rewriting the receipt out once the
- * bug is closed is how a rule loses the evidence that earned it — and (c)'s live
- * members are read from the gate rather than from this prose, so nothing here
- * decides who gets which sentence.
- *
- * **AND (a) IS NARROWER THAN IT LOOKS.** `op=provenancechain` and
- * `op=provenanceroute` were inside the old sentence's reach, and their own OPS
- * rows say the opposite of it in as many words: *"NOT open to `daemon`: deciding
- * that the evidence supports a route is a named member's judgement."* The plane
- * was telling a member that an op reserved to a named member's judgement is
- * performed by an unattended writer. Under (c) they got the fact and no
- * invented reason, which was the honest answer until somebody ruled — and BOB
- * #19 did (§4.10, 2026-09-21): REC-155 gave both SESSION reach, so a signed-in
- * member now performs them under their own name, as their OPS rows say.
- *
- * **WHAT THIS DOES NOT CHANGE, AND IT IS THE WHOLE SAFETY ARGUMENT: WHO REACHES
- * WHAT.** Not one op moves between `SESSION_OPS`' sets and no class list moves.
- * Exactly the same callers are refused exactly the same verbs; what changes is
- * what they are TOLD. A fix here that widened reach would be a different item
- * wearing this one's costume.
- * ======================================================================= */
-
-
-/* THE SESSION GATE. A browser signed in with a password holds a session token,
- * not a machine credential; `SESSION_OPS` is what says which MUTATING ops that
- * session may drive, per role.
- *
- * IT IS ITS OWN NAMED FUNCTION rather than a block inside `fetch`, and that is
- * REC-71's rule paid at allocation time: a DEC-49 `where` resolves a span BY
- * FUNCTION NAME, and PL-4 shipped one pointing at `acquire` — a name that does
- * not exist, because the op lives inside `fetch` — so nothing was checking that
- * site at all. A gate left inline in `fetch` is a gate no `where` can name.
- *
- * `error` IS KEPT BESIDE THE CODE, and that is deliberate rather than timidity:
- * every consumer of this refusal reads `reason || error` or `error || reason`,
- * so ADDING a code moves nobody while REMOVING the string would. For the
- * by-decision arm the sentence is the byte-identical legacy one. For the other
- * two it is NEW, because the legacy sentence was not merely coarse there — it
- * was WRONG, and a consumer switching on it was switching on a false statement.
- * IC-55 carries that half. */
-function sessionOpGate(kind, op, spec, method) {
-  /* **THIS GATE RETURNS THE RESPONSE ITSELF, NOT A REFUSAL OBJECT FOR `fetch` TO
-     SPREAD, AND THAT IS A MEASURED CHOICE RATHER THAN A STYLE.** The obvious
-     shape — return `{ error: {...} }` and write `return json({ ok: false,
-     ...gated.error }, 403)` at the call site — was built first and the DEC-49
-     guard REFUSED it: that call site is a return-position outcome whose CODE
-     comes from a spread, which the walk cannot resolve until run time, and
-     `inheritedVerdicts` is a CEILING THAT MAY ONLY FALL. It sat at 4 and the
-     shape would have made it 5 — a new place a refusal can pass through
-     ungraded, bought for nothing. Returning the Response keeps every code a
-     STRING LITERAL inside the governed region where the walk compares it against
-     the catalogue, and leaves `fetch` with no outcome literal to misread. */
-  const refusal = (code, error, detail, extra) =>
-    json({ ok: false, reason: code, ...admissionRow(code), error, detail, op, ...(extra || {}) }, 403);
-  /* `capture` is nominally mutating because of its PUT path; its GET is a read
-     and is treated as one. Computed and returned OUTSIDE the region on purpose,
-     so the admission is not conscripted into this family as a refusal site. */
-  if (!spec.mutating || (op === "capture" && method === "GET") || SESSION_OPS[kind].has(op))
-    return null;
-
-  /* DEC-49 REGION is-session-op-gate
-   *
-   * THE SPAN the three session codes name (REC-71). A REGION and not the whole
-   * function, so the admission above is not read as part of the family. Helper
-   * `refusal`, and every code a STRING LITERAL at its site so arm C of the
-   * DEC-49 guard can COMPARE it rather than read past a variable — one code in
-   * a variable shipped `translation: undefined` to a member.
-   *
-   * THE ORDER IS THE HONESTY, and it runs from what the system can support MOST
-   * to what it can support LEAST. Ask the session lists FIRST: if any role
-   * reaches this verb then the refusal is about THIS caller's role, and it is
-   * true without consulting any record. Only then ask whether a decision is
-   * recorded. And if none is, say so — do not fall back on the design claim,
-   * because the fallback IS the defect. */
-  /* REC-162 (Membership v2 §4.9, BOB #23): THE SENTENCE SAYS WHICH SESSION REACHES THE OP, DERIVED
-     FROM THE SET THAT HOLDS IT. Reaching here means exactly ONE set holds `op` and it is not this
-     session's. `SESSION_OPS.admin` is the FOUNDER'S password session and nothing else — an enrolled
-     administrator signs in as `member:<id>` — so an op the admin set alone holds is *reserved to the
-     founder's session*, and the old sentence (*"reserved to an administrator of this group"*, with
-     `role: 'member'`) was FALSE of every enrolled administrator it refused. `role` is gone for that
-     reason: `session` names the session's kind, which is true of anybody who holds it. */
-  if (SESSION_OPS.admin.has(op))
-    return refusal("SESSION_ROLE_CANNOT_REACH_OP",
-      "this operation is reserved to the founder's session",
-      `'${String(op).slice(0, 60)}' is reachable from a signed-in session, but only the founder's: `
-      + `the password session made when this instance was claimed with its root credential. This is `
-      + `a member's session, which is what every enrolled member signs in with, an administrator of `
-      + `this group included — so an administrator's session is refused this exactly as this one is, `
-      + `and nothing here says whether you are one. There is no machine credential to go and find: `
-      + `the founder performs this from their own browser.`,
-      { session: kind, reachedBy: "founder" });
-  if (SESSION_OPS.member.has(op))
-    return refusal("SESSION_ROLE_CANNOT_REACH_OP",
-      "this operation is reserved to a member's own session",
-      `'${String(op).slice(0, 60)}' is reachable from a signed-in session, but only a member's `
-      + `own, and this is the founder's session. There is no machine credential to go and find: `
-      + `a member performs this from their own browser.`,
-      { session: kind, reachedBy: "member" });
-  const recorded = UNATTENDED_BY_DECISION[op];
-  if (recorded)
-    return refusal("MACHINE_CREDENTIAL_REQUIRED",
-      /* THE LEGACY SENTENCE, BYTE-IDENTICAL. It is TRUE of these, and keeping
-         it is what makes the code purely additive for them. */
-      "this operation requires a machine credential, not a signed-in session",
-      `'${String(op).slice(0, 60)}' is on the unattended path. No signed-in session of any role `
-      + `reaches it, the founder's included; it answers to a credential held in the hosting `
-      + `account. This instance holds a decision on record saying so, cited in 'recorded' so you `
-      + `can check it. Nothing here says a machine is trusted more than a person (DEC-52 rules the `
-      + `opposite): it says which credential this verb is addressed to.`,
-      { recorded });
-  return refusal("SESSION_ROUTE_NOT_RECORDED",
-    "no signed-in session reaches this operation, and no decision on record says why",
-    `'${String(op).slice(0, 60)}' is reachable by no session of any role, and this instance holds `
-    + `no recorded decision that it is not meant for a person. The plane will not invent one: a `
-    + `member told an absence is a decision stops reporting it as the gap it may well be. If you `
-    + `expected to perform this, that expectation is worth filing rather than working around.`);
-  /* END DEC-49 REGION is-session-op-gate */
-}
-
 
 /* Some of these reads happen INSIDE a per-item renderer that returns a rendered
    object rather than a Response, so it has no way to refuse on its own behalf.
@@ -1340,17 +506,48 @@ async function knockerConsent(req, store) {
   return json({ ...rec, ok: true }, 200);
 }
 
+/* R41 (K585 (1), K674 (1); agent-worker R48, N157): THE PUBLISHED FENCES AND THE RENDERED PACK, the door's decoration of
+   the untargeted `op=affordances` answer (affordances R17's, whose handler answers it): `fences`, skills' `machineFences`
+   over `CHECK_FAMILIES`, and `pack`, `renderPack` over that same answer with its `fences`, whole with its `version`. A
+   member's agent reads both from here and imports no catalogue. A render that throws publishes `pack: null` and
+   `pack_absent` (its sentence), never a partial pack, so a reader refuses it. A targeted answer, and any answer that is
+   not `ok: true` with a result, passes unchanged. */
+async function publishAffordances(res, url) {
+  if (url.searchParams.get("target")) return res;
+  let body;
+  try { body = await res.clone().json(); } catch { return res; }
+  if (!body || body.ok !== true || !body.result || typeof body.result !== "object" || Array.isArray(body.result)) return res;
+  const published = { ...body.result, fences: machineFences(CHECK_FAMILIES) };
+  let pack = null, absent = null;
+  try { pack = renderPack(published); }
+  catch (e) { absent = String((e && e.message) || "the pack could not be rendered").slice(0, 500); }
+  return json({ ...body, result: { ...published, pack, ...(pack ? {} : { pack_absent: absent }) } }, res.status);
+}
+
+/* N336 (installer R20, K649 (6)): THE PLANE'S LIMITS, stated in its code so the bundle a release signs carries them, equal
+   to the `limits` of the plane's own configuration (`wrangler.jsonc`), which a test pins. The installer reads them from
+   the verified plane bundle and holds no value of its own; the door carries them as `limits` on the function it makes,
+   so a bundle of the door cannot leave them out. */
+const PLANE_LIMITS = Object.freeze({ subrequests: 10000 });
+/* The statement a release's verified bundle is read for (installer R20, K723, K724): the tag, then `key=<positive
+   integer>` for each key of the limits, keys sorted, single spaces, no quotes or backslashes, so a reader of the bundle's
+   text finds it whole. `PLANE_LIMITS` is its parsed form. */
+const PLANE_LIMITS_STATEMENT = "bio-plane-limits/1 subrequests=10000";
+
 /* R1–R25: the Worker entry. `hooks.publicOp(ctx)` answers a public op whose handler still lives in legacy-index;
    `hooks.gatedOp(ctx)` an admitted op's handler there, or undefined for the generic forward below. */
 /* R17: the stamps a caller may never supply, in the query and in a body. */
-const QUERY_STAMPS = Object.freeze(["viewer", "identity", "author", "by", "actor", "who", "origin", "administer"]);
+const QUERY_STAMPS = Object.freeze(["viewer", "identity", "author", "by", "actor", "who", "origin", "administer", "aiCred"]);
 const BODY_STAMPS = Object.freeze(["actorIdentity", "actorViewer", "actorMemberId", "ownerMemberId", "assistantPrincipal",
                                    "migrationReplay"]);
 export function makeFetch(hooks = {}) {
   /* R25: the door's one outermost catch. */
-  return async function planeDoor(req, env) {
+  const planeDoor = async function planeDoor(req, env) {
     try { return await fetch(req, env); } catch (e) { return planeInternalError(e, req); }
   };
+  planeDoor.limits = PLANE_LIMITS;
+  planeDoor.limitsStatement = PLANE_LIMITS_STATEMENT;
+  return planeDoor;
   async function fetch(req, env) {
     const url = new URL(req.url);
     if (req.method === "OPTIONS")
@@ -1402,8 +599,8 @@ export function makeFetch(hooks = {}) {
        address no namespace, and a gate on a route that reads no record would be a fence tighter than its rule. */
     if (req.method === "GET" && !url.pathname.startsWith("/api")
         && (url.pathname === "/" || url.pathname === "") && !url.searchParams.get("op")) {
-      const pageNamespace = namespaceGate(url);
-      if (pageNamespace) return pageNamespace;
+      const pageNamespace = namespaceGate(url);   /* admission R1 */
+      if (pageNamespace) return json(pageNamespace.body, pageNamespace.status);
       const pageStore = url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
       return new Response(setupPage(await hooks.publicInstanceGroup(env, pageStore, "groupidentitypublic")),
         { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
@@ -1429,22 +626,19 @@ export function makeFetch(hooks = {}) {
                              op }, 400);
     /* END DEC-49 REGION is-unknown-op */
 
-    /* D-456: a `store=` naming no namespace is refused here, before any credential is read (`namespaceGate`). */
+    /* R28: admission R1 (a `store=` naming no namespace), before any credential is read; then the presented agent
+       credential's row, read ONCE (admission R6) and reused by the admission and the readers below, because the
+       confinement is a property of the row; admission R2 (a confined credential held to `scratch`), before R3 (a public
+       op pinned to `bio`), so a confined caller reaching a bio-pinned public op is told which fence stopped it. */
+    const refused = (r) => json(r.body, r.status);
     const unknownNamespace = namespaceGate(url);
-    if (unknownNamespace) return unknownNamespace;
-    /* D-463: the presented `ai` credential's ROW, read ONCE here and reused by the admission block and `caseReader`
-       below, because the confinement is a property of the row and the gate needs it before anything else runs. A
-       request presenting no credential, or one that is not an agent credential, asks the store nothing. */
-    const presentedAi = await aiCredentialPresented(url, env);
-    if (presentedAi.silent) return storeSilent(presentedAi.silent, presentedAi.correlation);
-    /* D-463: a credential MINTED CONFINED to `scratch` is held to it here — a named `store=` refused by name, an absent
-       one set to `scratch` — BEFORE D-461's gate, so a confined caller reaching a bio-pinned public op is told which
-       fence stopped it and files nothing in the real record (`confinedNamespaceGate`). */
+    if (unknownNamespace) return refused(unknownNamespace);
+    const presentedAi = await aiCredentialPresented(url, env, doAnswer);
+    if (presentedAi.silent) return storeSilent(presentedAi.silent.op, presentedAi.silent.correlation);
     const confinedNamespace = confinedNamespaceGate(url, presentedAi.cred);
-    if (confinedNamespace) return confinedNamespace;
-    /* D-461: `store=scratch` on a public op that always answers from `bio` is refused here (`pinnedNamespaceGate`). */
+    if (confinedNamespace) return refused(confinedNamespace);
     const pinnedNamespace = pinnedNamespaceGate(url, op, spec);
-    if (pinnedNamespace) return pinnedNamespace;
+    if (pinnedNamespace) return refused(pinnedNamespace);
 
     /* Unauthenticated by design. Each one gates itself. */
     if (spec.classes === null) {
@@ -1512,7 +706,7 @@ export function makeFetch(hooks = {}) {
           q.set("bySecret", "1");
           q.set("secretSha", await sha256Hex(url.searchParams.get("secret") || ""));
         } else {
-          const reader = await caseReader(url, env, "bio", presentedAi.cred);
+          const reader = await caseReader(url, env, "bio", presentedAi.cred);   /* admission's `readerOf` */
           if (reader.silent) return storeSilent(reader.silent, reader.correlation);
           q.set("viewer", reader.viewer);
         }
@@ -1531,199 +725,17 @@ export function makeFetch(hooks = {}) {
       return hooks.publicOp({ req, url, env, op, stub, invStub, fp, presentedAi });
     }
 
-    let cls = await classify(url.searchParams.get("token"), env);
-    let viaSession = false;
-    let sessMember = null, sessRights = null, sessCaps = null;
-    /* REC-132: the two halves of `resolveSession`, set with `sessMember` and never
-       apart from it. `sessViewer` goes wherever a VISIBILITY gate is stamped;
-       `sessIdentity` wherever the question is WHO. */
-    let sessViewer = null, sessIdentity = null;
-    let aiCred = null;
-    /* PL-11 / IS-5 / D-199 (2) — THE `ai` CLASS RESOLVES AGAINST THE RECORD,
-       AND THAT IS THE DETERMINATION RATHER THAN AN IMPLEMENTATION DETAIL.
-       `classify()` above compared four env bindings and found nothing; this
-       block asks the store. A settings row "would be a way to change the
-       standard with nothing to read afterwards" (DEC-17, transplanted by
-       D-199 (2)), so what an agent may reach is a row a member wrote, with
-       their name and the date on it.
-
-       THE SHAPE IS CHECKED FIRST so a session token never reaches this lookup
-       and an agent credential never falls through into the session one. Two
-       different failures deserve two different answers.
-
-       REC-52: a store silence is NOT "this credential is unknown". Answering
-       401 on a store we could not consult would be the plane converting its own
-       failure into a statement about who somebody is — the exact class REC-52
-       closed, and the session block below already refuses to make it. */
-    /* D-463: THE LOOKUP THIS BLOCK USED TO MAKE HAS MOVED TO THE FRONT DOOR and its answer arrives here as
-       `presentedAi`. Nothing about the resolution changed — the shape is still checked before the store is asked, a
-       silence is still a silence and is converted there (REC-52), and a credential the store does not know still leaves
-       `cls` null so the session block below gets its turn. What changed is that the confinement gate needs the row
-       BEFORE the unauthenticated block runs, and resolving it twice would let a revocation land between the two. */
-    if (!cls && presentedAi.cred) { cls = "ai"; aiCred = presentedAi.cred; }
-    /* A browser signed in with a password holds a session token, not a
-       machine credential. The write arc opens INTAKE to sessions: promote,
-       lease, allocid, capture, ratify, and inbox review run through the
-       same gated paths as machine callers, with authorship stamped
-       server-side from the session identity so a browser can never claim
-       to be someone else. Everything outside SESSION_OPS, purge above all,
-       still requires a machine credential. capture is nominally mutating
-       because of its PUT path; its GET is a read and is treated as one. */
-
-    /* DEC-49 REGION is-admission
-     *
-     * THE ADMISSION GATE (REC-79 / C-38) — every refusal a caller meets BEFORE
-     * their op runs, and the first thing anybody, signed in or not, ever meets.
-     *
-     * FOUR OF THE SIX REFUSALS IN HERE CARRIED NO CODE AT ALL until this region
-     * was drawn. They answered with a bare `error:` sentence and nothing a
-     * surface could key on, which made them invisible to DEC-49's guard and
-     * absent from its 427-code census — a census of CODES cannot count a refusal
-     * that has none. They were found by GOVERNING the site rather than reading
-     * it: the guard's outcome reader could not see `return json({ … }, 403)` at
-     * all, so this region reported nothing to judge until that was widened.
-     *
-     * **CORRECTED 2026-09-19 BY D-270: THE SESSION GATE HAS LEFT THIS REGION.**
-     * The count above is the count as REC-79 drew it and is kept as the record
-     * of why the region exists; what this span holds TODAY is five refusals, not
-     * six. The sixth — `MACHINE_CREDENTIAL_REQUIRED` — moved out to its own
-     * named function `sessionOpGate` and its own region `is-session-op-gate`,
-     * because it turned out to be answering THREE different facts with one
-     * sentence and to be false for two of them. Its `where` moved with it. This
-     * paragraph is corrected rather than deleted for the reason the project
-     * keeps meeting from the other side: a comment describing a mechanism the
-     * tree does not carry is its most-repeated defect.
-     *
-     * Every code below is a STRING LITERAL at its site, and `admissionRow` reads
-     * the C-number and the canned translation from the ONE row, so the
-     * `translation: undefined` DEC-49 was written to prevent cannot be spelled
-     * here — the helper throws instead.
-     *
-     * THE SPAN, and why it starts where it does. It opens at the session-token
-     * lookup and closes after the scope refusal, because that is the whole of
-     * "may this caller act at all"; the op's own work begins below. Both markers
-     * sit at the SAME brace depth on purpose (REC-71's wrong-span failure).
-     *
-     * WHAT IS IN THE SPAN AND DELIBERATELY NOT GOVERNED, stated rather than left
-     * for the next reader to wonder about: `return storeSilent("session")`. It
-     * is not an admission refusal — it is the plane declining to make ANY claim
-     * about who somebody is when the store could not be reached (REC-52), which
-     * is a fact about the instance and not about the caller. It carries its own
-     * code, `STORE_DID_NOT_ANSWER`, held in a CONSTANT rather than written as a
-     * literal — so no source-text matcher sees it and it is not in the census at
-     * all. REC-79 names that rather than fixing it; it is D-236's class, one
-     * layer out, and it belongs to the partition arm's own residue. */
-    if (!cls) {
-      const t = url.searchParams.get("token");
-      if (t && /^[0-9a-f]{64}$/.test(t)) {
-        const st = env.STORE.get(env.STORE.idFromName("bio"));
-        /* REC-52, and this is the class arriving at the AUTHENTICATION path,
-           which is why it is converted rather than left as an internal read.
-           `r?.result?.session` swallowed a store silence into `undefined`, and
-           the code below then refuses the caller BY NAME — "this operation
-           requires a machine credential", or the generic session refusal. So a
-           store that could not be reached was reported to a signed-in member as
-           a fact about their credential. The record makes no claim about who
-           somebody is when it could not look. */
-        const sOut = await doAnswer(st.fetch(`http://do/session?t=${t}`));
-        if (!sOut.answered) return storeSilent("session", sOut.correlation);
-        const sess = sOut.result?.session;
-        if (sess) {
-          const kind = sess.role === "admin" ? "admin" : "member";
-          /* Section 8.1, checked BEFORE the generic session refusal so the
-             answer says the right thing. The generic message is "this operation
-             requires a machine credential", which is true and misleading: a
-             MEMBER_TOKEN machine credential cannot export either. What is
-             required is the ADMIN_TOKEN-class credential specifically, and for a
-             security-critical op the caller deserves the actual rule. */
-          if (op === "export")
-            return json({ ok: false, reason: "ROOT_OF_TRUST_REQUIRED", ...admissionRow("ROOT_OF_TRUST_REQUIRED"), op,
-              detail: "a full working-corpus export needs the ADMIN_TOKEN-class credential itself, not a "
-                    + "signed-in session, and not in-app administrator status. A session is derived from a "
-                    + "password; the root of trust is the token held in the hosting account. This refuses "
-                    + "the founder's own browser too, which is the one place in this system where being "
-                    + "the founder is not enough. The published record needs no credential at all: see "
-                    + "op=publishedmanifest." }, 403);
-          /* `error` IS KEPT BYTE-IDENTICAL and the code is added beside it
-             (REC-79). 28 suites assert on these sentences; a rule this project
-             adopted late has to be arrivable at without breaking what already
-             reads the old shape, so C-38 is ADDITIVE on the wire. IC-REC-79. */
-          /* D-270: the gate is a NAMED FUNCTION now, so a DEC-49 `where` can
-             point at it, and it answers THREE different conditions where this
-             line answered one — of which the one it answered was false for two.
-             It returns the REFUSAL RESPONSE or null, rather than an object for
-             this line to spread — see its own header: spreading it here would
-             add a fifth INHERITED VERDICT to a DEC-49 ceiling that may only
-             fall, and it buys nothing, because the codes are literals inside the
-             gate's own governed region where the walk can compare them. */
-          const gated = sessionOpGate(kind, op, spec, req.method);
-          if (gated) return gated;
-          cls = kind;
-          ({ member: sessMember, viewer: sessViewer, identity: sessIdentity } = resolveSession(sess));
-          sessRights = sess;
-          viaSession = true;
-        }
-      }
-    }
-    if (!cls) return json({ ok: false, reason: "NOT_AUTHENTICATED", ...admissionRow("NOT_AUTHENTICATED"),
-      error: "unauthenticated" }, 401);
-    /* PL-11 / D-199 (1): CLASS PLUS SCOPE, and for THIS class the scope is the
-       whole of it. The `ai` class is admitted by `aiTaskScope` and never by
-       appearing in a row of the OPS table — no row names it, which is asserted
-       structurally — so this branch is not an exemption from the class ACL. It
-       is the class ACL, in the shape `scopeFor` already uses one function over,
-       reading a declaration a member authored instead of a literal in a table.
-       Refusals here carry their C-number and canned translation like every other
-       refusal a member can receive (DEC-49). */
-    if (cls === "ai") {
-      const scoped = aiTaskScope(aiCred, op, spec);
-      if (scoped.error) return json({ ok: false, ...scoped.error, op, cls }, 403);
-    } else if (!(viaSession || !Array.isArray(spec.machineClasses) ? spec.classes : spec.machineClasses).includes(cls)) {
-      /* REC-159: a row carrying `machineClasses` judges a caller that did NOT arrive by a session
-         against THAT list, so granting `member` to an enrolled administrator's session admits no
-         MEMBER_TOKEN bearer (the four custodial ops' rows). One refusal, the same code and sentence. */
-      return json({ ok: false, reason: "CLASS_FORBIDDEN", ...admissionRow("CLASS_FORBIDDEN"),
-        error: "forbidden for token class", op, cls }, 403);
-    }
-
-    /* Section 8.1: the ROOT OF TRUST, and not in-app administrator status.
-     *
-     * A full working-corpus export is the group's entire unpublished position.
-     * If any administrator could take it, one captured administrator
-     * exfiltrates everything and the export becomes the most efficient attack
-     * in the system, which section 8 names as the whole difficulty.
-     *
-     * So the ADMIN_TOKEN-class credential itself, and NOT a session belonging to
-     * an administrator. A session is derived from a password; the root of trust
-     * is the token set in the hosting dashboard. This refuses a stolen admin
-     * password, and it refuses the founder's own signed-in browser, which is the
-     * one place in this system where being the founder is not enough. */
-    if (op === "export" && viaSession)
-      return json({ ok: false, reason: "ROOT_OF_TRUST_REQUIRED", ...admissionRow("ROOT_OF_TRUST_REQUIRED"), op,
-        detail: "a full working-corpus export needs the ADMIN_TOKEN-class credential itself, not a "
-              + "signed-in session, and not in-app administrator status. A session is derived from a "
-              + "password; the root of trust is the token held in the hosting account. The published "
-              + "record needs no credential at all and is available at op=publishedmanifest." }, 403);
-
-    /* Section 5 enforcement. Only a SESSION carries capabilities; a machine
-       credential has no member behind it and stays bounded by the class ACL
-       above. capture's GET is a read and is treated as one here for the same
-       reason the session ACL treats it as one directly above. */
-    if (viaSession) {
-      sessCaps = new Set(sessRights.capabilities || []);
-      const needs = NEEDS[op];
-      if (needs && !(op === "capture" && req.method === "GET") && !sessCaps.has(needs))
-        return json({ ok: false, reason: "NOT_CAPABLE", ...admissionRow("NOT_CAPABLE"),
-          op, needs, held: [...sessCaps].sort(),
-          detail: `this account does not hold the ${needs} capability. Capabilities are set by an `
-                + `administrator, so ask one to grant it rather than looking for another route.` }, 403);
-    }
-
-    const scope = scopeFor(cls, url);
-    if (scope.error) return json({ ok: false, reason: "SCOPE_REFUSED", ...admissionRow("SCOPE_REFUSED"),
-      error: scope.error, tokenClass: cls }, 403);
-    /* END DEC-49 REGION is-admission */
-    const storeName = scope.name;
+    /* R28: admission R5–R11 in their order (`admit`): the binding class, the agent credential, the session (its export
+       refusal and session gate), the class or the agent's task scope, the capability, the landing. A refusal is answered
+       as the gate gives it; a store that could not be asked is a silence, never a statement about the caller. */
+    const admitted = await admit({ url, env, op, spec, method: req.method, presented: presentedAi, doAnswer });
+    if (admitted.silent) return storeSilent(admitted.silent.op, admitted.silent.correlation);
+    if (admitted.refusal) return refused(admitted.refusal);
+    const caller = admitted.caller;
+    const { cls, viaSession, aiCred, storeName } = caller;
+    /* REC-132: the session's two halves, apart: `sessViewer` wherever a VISIBILITY gate is stamped, `sessIdentity`
+       wherever the question is WHO; `sessMember` the folded id every author, by and actor stamp carries. */
+    const { member: sessMember, viewer: sessViewer, identity: sessIdentity, rights: sessRights, caps: sessCaps } = caller;
 
     /* D-9. The register audit finishes HERE and not in the Durable Object,
        because classifying a register row needs R2, and the DO neither holds the
@@ -1756,7 +768,7 @@ export function makeFetch(hooks = {}) {
         administer: viaSession ? !!sessRights.administer : cls === "admin",   /* R18: the root of trust administers */
         rootOfTrust: viaSession ? !!sessRights.rootOfTrust : false,
         capabilities: viaSession ? [...sessCaps].sort() : null,
-        vocabulary: Store.CAPABILITIES,
+        vocabulary: Membership.CAPABILITIES,
         /* D-463: WHETHER THIS CREDENTIAL CAN EVER REACH THE RECORD, answered as a value rather than left for a
            caller to infer from the `store` beside it. The two are different facts and an instrument needs both:
            `store` is where THIS call landed, `confinedTo` is where every call it will ever make lands. `null` is
@@ -2446,6 +1458,21 @@ export function makeFetch(hooks = {}) {
         viaSession ? sessMember
         : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
         : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* T18 (action-plans R11, R31; K711, K727): WHO PROPOSED A PLAN OPTION. Any credential may propose, so the stamp is
+       the label, by `actionlawspropose`'s expression (a session its member, a machine `class:<cls>`, an `ai` credential
+       `class:ai/<tokenId>`); beside it the caller as a planning run's principal, by the run productions' expression
+       (`RUN_PRODUCTION_ACTIONS` below), which action-plans compares with the run's own. A caller's copy of either is
+       overwritten. */
+    if (PLAN_PROPOSAL_ACTIONS.includes(op)) {
+      inner.searchParams.set("proposer",
+        viaSession ? sessMember
+        : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
+        : `${MACHINE_CLASS_PREFIX}${cls}`);
+      inner.searchParams.set("principal",
+        viaSession ? sessIdentity
+        : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}`
+        : `${MACHINE_CLASS_PREFIX}${cls}`);
+    }
     /* T8 (layer 9): WHO DETERMINED, COMPARED, RECORDED A CONSEQUENCE OR ITS ADDRESSING, PREPARED, APPROVED OR SENT A
        FILING, NAMED COUNSEL, EXPORTED A PACKET, PROPOSED A THEORY, OR MOVED AN ESCALATION — conformance, consequences,
        filings and escalation read `author` from the QUERY after the body, so it is set here, after the caller's
@@ -2623,6 +1650,12 @@ export function makeFetch(hooks = {}) {
        span pinned above is not lengthened; a caller's `author` is overwritten. */
     /* N364 (case-authoring R34): the pre-flight asks what op=publish asks, of the same `author`, so it takes publish's
        stamp by publish's expression, in the same statement of its own. */
+    /* N407 (K649 (4); ratification R18, admission's `callerViewer`): the ceremony's pre-flight holds a minted agent
+       credential to the machine fences whatever its viewer stamp, and a member-scoped agent's stamp is its member's, so
+       the door names the credential beside the viewer, `aiCred` (its token id and principal, never its value), for an
+       agent caller alone; every other caller's is deleted with the stamps above. */
+    if (op === "publishpreflight" && cls === "ai")
+      inner.searchParams.set("aiCred", JSON.stringify({ tokenId: aiCred.tokenId, principal: aiCred.principal }));
     if (op === "publishtensions" || op === "publishpreflight")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     /* T6-13 (reevaluation R15, R16): the member who adopts a newer version, keeps the earlier one, or records a
@@ -2654,62 +1687,10 @@ export function makeFetch(hooks = {}) {
         viaSession ? sessIdentity
         : cls === "ai" ? aiCred.principal
         : `${MACHINE_CLASS_PREFIX}${cls}`);
-    /* DEC-49 REGION is-operator-governance-act — D-136, applying D-421's ruling
-       (BOB #14, C-32.14 / C-32.15) to the acts §4.7 and §4.9 assign to a named
-       administrator. *The signature proves who AUTHORISED; the credential that
-       delivers it decides WHEN the record changes, and the record names the
-       actor.* A §4.7 vote is the same shape with the signature replaced by a
-       roster position: a bearer token held in the hosting account is not the
-       administrator it would name.
-       WHY A FENCE AND NOT ONLY THE STAMP BELOW. The stamp alone already refuses
-       a bearer caller — its `by` becomes `class:<cls>`, which matches no roster
-       row, and the store answers NOT_AN_ADMIN. That refusal is CORRECT and its
-       SENTENCE IS FALSE: it tells the operator that some member is not an
-       administrator when the fact is that a token is not a person, and
-       `NOT_AN_ADMIN` carries no canned translation to say otherwise. DEC-49's
-       rule is that a refusable condition says what is true, so the honest answer
-       gets its own code and its own sentence here, in front.
-       THE TWO LAYERS ARE BOTH LOAD-BEARING AND THE CONTROL BREAKS EACH WITH THE
-       OTHER HELD OPEN (`adminvote.control.mjs` arms `fence-dropped` and
-       `stamp-dropped`): with the fence gone the stamp still refuses, with the
-       stamp gone the fence still refuses, and only removing BOTH lets a caller
-       name the voter. A single layer would be a fence nobody could prove was
-       doing anything.
-       THE PREDICATE IS HOW THE CALLER ARRIVED, NOT WHICH TOKEN IT HELD —
-       C-32.14's own shape. `viaSession` is set only by the session lookup in the
-       admission block, so this covers ADMIN, MEMBER and PROBE today and any
-       binding added tomorrow, and no token string or class list appears here to
-       go stale. The refusal NAMES the class, so an operator learns which of its
-       credentials was refused.
-       THE PRECONDITION WAS MEASURED BEFORE THIS LINE WAS WRITTEN: no surface,
-       script, tool, installer or DIST procedure submits any of the three with a
-       bearer token — `civicos-ui` sends no act op from the members screen at all
-       (D-134's surface is deliberately not built yet), and the only bearer
-       drives in the tree were two suites asserting the pre-item behaviour, both
-       corrected here with their reasons at the site. Capabilities are still set
-       at INVITATION time through `op=memberadd`, which is untouched, so nothing
-       in the bootstrap path depends on a bearer capability edit. */
-    if (GOVERNANCE_ACTIONS.includes(op) && !viaSession)
-      return json({ ok: false, reason: "OPERATOR_TOKEN_CANNOT_GOVERN",
-        ...machineFenceRow("OPERATOR_TOKEN_CANNOT_GOVERN"), op, tokenClass: cls,
-        detail: `section 4 governance is a named administrator's own act, delivered through that `
-              + `administrator's own signed-in session. The credential that asked is the operator's `
-              + `\`${cls}\`-class bearer token, which holds no position on the roster: it cannot be `
-              + `one of the administrators whose consensus §4.7 requires, and a vote it delivered `
-              + `would be attributed to whoever the caller named. Sign in as the administrator and `
-              + `do it there (D-136, applying D-421).` }, 403);
-    /* END DEC-49 REGION is-operator-governance-act */
-    /* REC-164 — THE SAME FENCE FOR THE GROUP'S PUBLIC IDENTITY (Publication §7 points 2 and 3), with its OWN code
-       and sentence, because C-32.17's names the §4 votes. The predicate is how the caller ARRIVED, never which token
-       it held, so every bearer class is refused and one added tomorrow is too. */
-    /* DEC-49 REGION is-group-identity-session */
-    if (IDENTITY_ACTIONS.includes(op) && !viaSession)
-      return json({ ok: false, reason: "GROUP_IDENTITY_NEEDS_SESSION",
-        ...identityFenceRow("GROUP_IDENTITY_NEEDS_SESSION"), op, tokenClass: cls,
-        detail: `the group's display name and its domain claim are set by a named administrator's own signed-in `
-              + `session, and the record names who set each one (Publication §7). The credential that asked is the `
-              + `operator's \`${cls}\`-class bearer token, which holds no place on the roster. Nothing was changed.` }, 403);
-    /* END DEC-49 REGION is-group-identity-session */
+    /* R28: admission R12 (`bearerFence`), the bearer fences on the §4 governance acts (C-32.17) and the group-identity
+       acts (C-64.4), before any handler: how the caller ARRIVED, never which token it held. */
+    const fenced = bearerFence(op, caller);
+    if (fenced) return refused(fenced);
     /* R16, R28: a promotion's replay is judged here, after the R14 fences and before any handler, from a copy of the
        body (the request's own body stays whole for whoever serves the op). The verdict is the promote block's below. */
     const replay = op === "promote" && req.method === "POST"
@@ -2724,11 +1705,24 @@ export function makeFetch(hooks = {}) {
               + `promotion records name this bundle and list this revision's bundle.md SHA-256. One of those did not `
               + `hold. Nothing was written.` }, 403);
     /* END DEC-49 REGION is-promote-replay-verified */
+    /* R39 (N408, K621): purge is the only destructive op. It refuses unless the caller names the namespace the request
+       resolved to, before the store is called, so a purge never lands somewhere its caller did not name; a probe,
+       confined to `scratch`, can confirm only `scratch`. C-61.1 through the one governed helper; `error` byte-identical
+       (D-270's pattern), and the helper's `detail` says nothing was changed. */
+    if (op === "purge") {
+      const confirm = url.searchParams.get("confirm");
+      if (confirm !== storeName)
+        return json({ ok: false,
+                      ...requiredArgument("purge", "confirm", "<store name>",
+                                          "purge requires confirm=<store>"),
+                      expected: storeName,
+                      got: confirm, tokenClass: cls, store: storeName }, 400);
+    }
     /* R28: an op whose handler still lives in legacy-index answers here, after the R14 fences and R16; undefined falls
        through to the forward. */
     const armed = hooks.gatedOp ? await hooks.gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer,
       sessIdentity, sessRights, sessCaps, aiCred, storeName, stub }) : undefined;
-    if (armed) return armed;
+    if (armed) return op === "affordances" ? publishAffordances(armed, url) : armed;
     /* Who is acting on a project's roster is decided by the SERVER. Set after
        the caller's parameters were copied, so a caller-supplied `by` is
        overwritten rather than honoured: "only an owner may remove" is worth
@@ -3063,28 +2057,10 @@ export function makeFetch(hooks = {}) {
            byte-for-byte for every other caller. */
         if (replayed) delete b.assistantPrincipal;
         if (b.base === null && b.meta && promotedType === "project" && viaSession) {
-          /* **THE SECOND SITE OF `NOT_CAPABLE`, AND REC-79 IS SAYING SO RATHER
-             THAN HIDING IT.** C-38.5's `where` names the admission region above;
-             this condition is the same refusal minted a second time, here,
-             because it depends on the PAYLOAD (is this bundle a project?) and
-             not on the op, so the op-level `NEEDS` table cannot express it.
-             A DEC-49 row holds ONE `where` and one code may not hold two rows,
-             so this `where` cannot name both spans — which is exactly the
-             MULTI-SITE class REC-79's partition arm measures at 96 codes and
-             deliberately does NOT close, because the fix is a set-valued `where`
-             or a consolidating helper and neither is a translation.
-             WHAT IS CLOSED HERE: the member gets the sentence either way. The
-             canned translation is read from the same one row, so the two sites
-             cannot drift into two wordings for one condition — and
-             `admission-gate.test.mjs` drives BOTH through the op and asserts
-             they carry the SAME translation, so this comment is not the only
-             thing holding it. */
-          if (!sessCaps.has("create_projects"))
-            return json({ ok: false, reason: "NOT_CAPABLE", ...admissionRow("NOT_CAPABLE"),
-              op, needs: "create_projects",
-              held: [...sessCaps].sort(),
-              detail: "creating a project needs the create-projects capability. This account may still "
-                    + "contribute to projects it has been invited to, if it holds contribute." }, 403);
+          /* admission R11 (K723): a session creating a project without `create_projects` is refused NOT_CAPABLE (C-38.5)
+             at admission's one site, `projectCreationGate`, from the payload, since no op names the shape. */
+          const creation = projectCreationGate(sessCaps);
+          if (creation) return refused(creation);
           b.ownerMemberId = sessMember;
         }
         /* D-78: surfaced_by is the ACTOR CLASS, decided by the SERVER and never
@@ -3537,24 +2513,15 @@ export function makeFetch(hooks = {}) {
     if (op === "aicredentialmint") {
       let asked = {};
       try { asked = passBody ? JSON.parse(passBody) : {}; } catch { asked = {}; }
-      const declared = aiScopeDeclaration(asked.writes);
-      if (declared.error) return json({ ok: false, ...declared.error, op, cls }, 403);
-      /* D-463: THE CONFINEMENT IS JUDGED HERE TOO, and before anything is written, for the declaration's own
-         reason one line up (C-29.8 / C-29.9): a confinement the gate could never honour is a sentence that must
-         not enter the record at all. It is judged in THIS file because this is where `NAMESPACES` lives, exactly
-         as `writes` is judged here because this is where the OPS table lives; the store records what it is told
-         and keeps no second copy of either vocabulary. The NORMALISED value crosses to the store below — never
-         the caller's own spelling, which is the same rule `who` and `secretSha` follow in this block. */
-      const confinement = aiConfinementDeclaration(asked.confinedTo);
-      if (confinement.error) return json({ ok: false, ...confinement.error, op, cls }, 403);
-      const raw = new Uint8Array(32);
-      crypto.getRandomValues(raw);
-      const secret = "aik-" + [...raw].map((x) => x.toString(16).padStart(2, "0")).join("");
+      /* admission R13: the declared writes and the confinement are judged before anything is written, and the value is
+         generated there; only its SHA-256 and the NORMALISED declaration cross to the store, never the caller's spelling. */
+      const mint = await aiCredentialMint(asked, cls);
+      if (mint.refusal) return refused(mint.refusal);
+      const secret = mint.secret;
       inner.searchParams.set("who", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
-      inner.searchParams.set("secretSha", await sha256Hex(secret));
+      inner.searchParams.set("secretSha", mint.secretSha);
       const minted = await doAnswer(stub.fetch(new Request(inner,
-        { method: req.method, body: JSON.stringify({ ...asked, writes: declared.writes,
-                                                     confinedTo: confinement.confinedTo }) })));
+        { method: req.method, body: JSON.stringify({ ...asked, writes: mint.writes, confinedTo: mint.confinedTo }) })));
       if (minted.refused) return storeRefusal(minted, { op, store: storeName, tokenClass: cls });
       if (!minted.answered) return storeSilent("aicredentialmint", minted.correlation);
       if (!minted.result || minted.result.ok !== true)
@@ -3581,10 +2548,8 @@ export function makeFetch(hooks = {}) {
      * unsigned half of `casedocument`. 32 random bytes, base64url, behind a version
      * prefix — not an id, and not derivable from one. */
     if (op === "reviewgrant") {
-      const raw = new Uint8Array(32);
-      crypto.getRandomValues(raw);
-      const secret = "rv1_" + btoa(String.fromCharCode(...raw)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-      inner.searchParams.set("secretSha", await sha256Hex(secret));
+      const { secret, secretSha } = await reviewGrantSecret();   /* admission R13 */
+      inner.searchParams.set("secretSha", secretSha);
       const issued = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
       if (issued.refused) return storeRefusal(issued, { op, store: storeName, tokenClass: cls });
       if (!issued.answered) return storeSilent("reviewgrant", issued.correlation);
@@ -3623,9 +2588,10 @@ export function makeFetch(hooks = {}) {
     return json({ ...body, store: storeName, tokenClass: cls }, status);
   }
 }
-export { json, doAnswer, storeSilent, storeRefusal, relayAnswer, StoreSilent, STORE_SILENT_REASON, STORE_SILENT_DETAIL, PUBLISHED_STORE, SCRATCH,
-         NAMESPACES, sha256Hex, fingerprint, classify, scopeFor, caseReader, resolveSession, reviewAnswer, captureKey,
-         installationRow, admissionRow, dispatchRow, namespaceRow, machineFenceRow, replayRow, identityFenceRow,
-         dec49Row, dec49Attach, MODULE_CHECK_FILES, sessionOpGate, migrationReplayOf, DRIVE_PROVENANCE_PATH,
-         namespaceGate, pinnedNamespaceGate, confinedNamespaceGate, aiReachesAsMember, aiScopeDeclaration,
-         aiConfinementDeclaration, aiTaskScope, AI_TOKEN_SHAPE, SCRATCH_ADDRESSING_PUBLIC_OPS };
+export { json, doAnswer, storeSilent, storeRefusal, relayAnswer, StoreSilent, STORE_SILENT_REASON, STORE_SILENT_DETAIL, PUBLISHED_STORE,
+         sha256Hex, fingerprint, caseReader, reviewAnswer, captureKey, installationRow, dispatchRow, replayRow,
+         dec49Row, dec49Attach, CHECK_FAMILIES, CHECK_FAMILY_FILES, migrationReplayOf, DRIVE_PROVENANCE_PATH,
+         publishAffordances, requiredArgument, PLANE_LIMITS, PLANE_LIMITS_STATEMENT };
+/* K624 (1), (2): `legacy-index`' arms (`src/index.mjs`) read these of admission through this module until their modules
+   take them; the door itself calls admission directly. */
+export { SCRATCH, NAMESPACES, classify, scopeFor } from "../admission/index.mjs";

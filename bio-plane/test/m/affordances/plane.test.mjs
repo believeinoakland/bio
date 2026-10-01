@@ -130,6 +130,7 @@ before(async () => {
   /* iris's project PA cites both documents; the second citation is then severed. */
   const sel = async (tok, ids) => must("select", await POST(`op=select&token=${tok}&kind=enumerated`, { ids })).handle;
   W.sel = sel;
+  Object.assign(W, { promote, infoMd, inquiryMd, reg });
   must("PA cites INFO", await GET(`op=cite&token=${W.IRIS}&project=${W.PA}&handle=${await sel(W.IRIS, [W.INFO])}&note=basis`));
   must("PA cites INFO2", await GET(`op=cite&token=${W.IRIS}&project=${W.PA}&handle=${await sel(W.IRIS, [W.INFO2])}&note=basis`));
   must("PA severs INFO2", await GET(`op=sever&token=${W.IRIS}&project=${W.PA}&handle=${await sel(W.IRIS, [W.INFO2])}&reason=${E("no longer relied on")}`));
@@ -269,11 +270,49 @@ test("R23: the joined-project predicates are asked only for the caller's own mem
   assert.equal((await facts(W.INQ, { viewer: "admin", identity: "member:olga" })).concludes_for_project, false);
 });
 
+/* citeproject-inquiry's share (T18 convert): sever and reinstate on a QUESTION, offered on the case citations the
+   facts count (`cited_by_case`), never on a citation by another question, and each offer agreeing with the act. */
+test("R14 R9 R18: on an inquiry target, sever and reinstate track the case citations counted in cited_by_case — a "
+   + "question cited only by another question is offered neither, and every offer and withholding agrees with the act", async () => {
+  const QX = "INQ-2026-9402-shared", QY = "INQ-2026-9403-citer";
+  await W.promote(QX, W.inquiryMd(QX, W.INFO, false), "inquiry", "open");
+  await W.promote(QY, W.inquiryMd(QY, QX, false), "inquiry", "open");   // a question resting on QX writes `rel: cites`
+  const at = async () => {
+    const f = await facts(QX, { viewer: "member:iris", identity: "member:iris", by: "iris" });
+    const acts = await offered(W.IRIS, QX);
+    return [f.cites_in, f.cited_by_case, acts.includes("sever"), acts.includes("reinstate")];
+  };
+  const act = async (op, project, reason) => codeOf(await GET(`op=${op}&token=${W.IRIS}&project=${E(project)}`
+    + `&handle=${await W.sel(W.IRIS, [QX])}${reason ? `&reason=${E(reason)}` : "&note=basis"}`));
+  /* cited by a question alone: neither offered, and sever through that citer is refused (not a project) */
+  assert.deepEqual(await at(), [{ confirmed: 1, severed: 0 }, { confirmed: 0, severed: 0 }, false, false]);
+  assert.notEqual(await act("sever", QY, "not a case"), "ok");
+  /* two cases take it up: sever offered, reinstate not */
+  assert.equal(await act("cite", W.PA), "ok");
+  assert.equal(await act("cite", W.PB), "ok");
+  assert.deepEqual(await at(), [{ confirmed: 3, severed: 0 }, { confirmed: 2, severed: 0 }, true, false]);
+  /* one withdrawn: both offered, because both facts are true */
+  assert.equal(await act("sever", W.PA, "the audit answered it"), "ok");
+  assert.deepEqual(await at(), [{ confirmed: 2, severed: 1 }, { confirmed: 1, severed: 1 }, true, true]);
+  assert.equal(await act("reinstate", W.PA, "the audit was superseded"), "ok");
+  assert.deepEqual((await at()).slice(1), [{ confirmed: 2, severed: 0 }, true, false]);
+  /* both withdrawn: reinstate alone, and a further sever, not offered, is refused */
+  assert.equal(await act("sever", W.PA, "put down"), "ok");
+  assert.equal(await act("sever", W.PB, "put down"), "ok");
+  assert.deepEqual((await at()).slice(1), [{ confirmed: 0, severed: 2 }, false, true]);
+  assert.notEqual(await act("sever", W.PA, "again"), "ok");
+  assert.equal(await act("reinstate", W.PB, "back"), "ok");
+});
+
 /* ============================================================ R17, R21: op=affordances */
 test("R17: with no target, the catalogue — each act decorated with appliesTo, the vocabularies, the capture acts and "
    + "the set acts with set_key, item_keys, shared_keys and max_items", async () => {
   const r = await GET(`op=affordances&token=${W.IRIS}`);
-  assert.deepEqual(Object.keys(r).sort(), ["capture_acts", "catalog", "detail", "set_acts", "target", "vocabularies"]);
+  /* R17's six keys, all present; the control plane's door may add its own decoration beside them (`fences`, `pack`:
+     control-plane R41, K585 (1), K730) and nothing else */
+  const SIX = ["capture_acts", "catalog", "detail", "set_acts", "target", "vocabularies"];
+  assert.deepEqual(SIX.filter((k) => !Object.hasOwn(r, k)), []);
+  assert.deepEqual(Object.keys(r).filter((k) => !SIX.includes(k) && !["fences", "pack"].includes(k)), []);
   assert.equal(r.target, null);
   assert.deepEqual(r.catalog.map((a) => a.id), ACTS.map((a) => a.id));
   for (const [i, a] of r.catalog.entries()) {
@@ -286,6 +325,17 @@ test("R17: with no target, the catalogue — each act decorated with appliesTo, 
   assert.deepEqual(r.set_acts.map((a) => [a.id, a.set_key, a.item_keys, a.shared_keys, a.max_items]),
     PER_ITEM_ACTS.map((a) => [a.id, a.set_key, a.item_keys, a.shared_keys, PER_ITEM_MAX]));
   assert.deepEqual(r.vocabularies, JSON.parse(JSON.stringify(VOCABULARIES)));
+});
+
+/* skillpack's share (T18 convert): what the doctrine pack reads as the machine/member boundary (INVESTIGATIVE-SESSION
+   §4: the AI holds no op that accepts), measured at the published catalogue. */
+test("R17: every act the catalogue publishes carries a mode, and none is the machine's — no published catalogue act is "
+   + "reachable by a machine credential", async () => {
+  const r = await GET(`op=affordances&token=${W.IRIS}`);
+  assert.ok(r.catalog.length > 0, "the catalogue is not empty");
+  assert.deepEqual(r.catalog.filter((a) => typeof a.mode !== "string" || !a.mode).map((a) => a.id), [], "every act carries a mode");
+  assert.deepEqual(r.catalog.filter((a) => a.mode === "machine").map((a) => a.id), []);
+  assert.ok(r.catalog.every((a) => ["session", "admin-session"].includes(a.mode)));
 });
 
 test("R17: with a target, R13's refusal as given, else the target's type, state, acts (R8–R10 decorated), the "
@@ -379,6 +429,59 @@ test("R18: each roster act is offered exactly where its act accepts the caller (
     }
   assert.deepEqual(bad, []);
   assert.deepEqual(Object.keys(seen).filter((a) => seen[a].size !== 2), [], "each act offered somewhere and withheld somewhere");
+});
+
+/* d311-roster-affordances' share (T18 convert): join and leave, offer against act, for every caller and project in the
+   fixture. Offers and roster states are read first; leave is performed before join, and a leave that landed on a caller
+   joined when the offers were read is withdrawn at once by that caller's own join, so every later probe answers on the
+   roster the offers saw (membership R35 makes one owner's leave move another's answer, N45). A join by a caller already
+   joined succeeds and changes nothing, so it is not an act the caller can take (REC-186): accepted means the act
+   answered ok and the caller was not joined. Machines are offered and accepted neither. */
+test("R18 R9 R10: projectjoin and projectleave are each offered exactly where the act accepts the caller, for every "
+   + "caller and project — join to a participant not yet joined, leave to the joined (an owner only while another owner "
+   + "is committed) — and a machine is offered and accepted neither", async () => {
+  const CALLERS = [["iris", W.IRIS], ["pam", W.PAM], ["olga", W.OLGA], ["zed", W.ZED], ["ruth", W.RUTH],
+    ["founder", W.FOUNDER], ["MEM", MEM], ["ADM", ADM]];
+  const PROJECTS = ["PA", "PB", "PC", "PR"];
+  const states = async () => {
+    const m = new Map();
+    for (const p of PROJECTS)
+      for (const row of must(`participants of ${p}`, await DO(`projectparticipants?projectId=${W[p]}&by=ruth`, {})).participants)
+        m.set(`${row.handle}|${p}`, row.state);
+    return m;
+  };
+  const offer = new Map();
+  for (const [, tok] of CALLERS) for (const p of PROJECTS) offer.set(`${tok}|${p}`, await offered(tok, W[p]));
+  const stateAt = await states();
+  const rows = [], withdrawn = [];
+  for (const act of ["projectleave", "projectjoin"])
+    for (const [who, tok] of CALLERS) for (const p of PROJECTS) {
+      const code = codeOf(await POST(`op=${act}&token=${tok}&projectId=${W[p]}`));
+      const was = stateAt.get(`${who}|${p}`);
+      if (act === "projectleave" && code === "ok" && was === "joined")
+        withdrawn.push(codeOf(await POST(`op=projectjoin&token=${tok}&projectId=${W[p]}`)));
+      if (act === "projectleave" && who === "ADM" && p === "PR") {
+        const after = await states();
+        assert.ok(withdrawn.length > 0 && withdrawn.every((c) => c === "ok"), `withdrawals: ${withdrawn}`);
+        assert.deepEqual([...stateAt].filter(([k, v]) => after.get(k) !== v), [], "the leave pass leaves the offer-time roster");
+      }
+      const accepted = code === "ok" && !(act === "projectjoin" && was === "joined");
+      rows.push({ act, who, p, offered: offer.get(`${tok}|${p}`).includes(act), accepted, code });
+    }
+  assert.deepEqual(rows.filter((r) => r.offered !== r.accepted).map((r) => `${r.act} ${r.who}@${r.p}: offered ${r.offered}, ${r.code}`), []);
+  for (const act of ["projectleave", "projectjoin"]) {
+    const mine = rows.filter((r) => r.act === act);
+    assert.ok(mine.some((r) => r.offered) && mine.some((r) => !r.offered), `${act} offered somewhere and withheld somewhere`);
+  }
+  assert.deepEqual(rows.filter((r) => ["MEM", "ADM"].includes(r.who) && (r.offered || r.accepted)).map((r) => `${r.act}@${r.p}`), []);
+  /* the positions, as measured: join for the invitee and the leaving, not the joined; leave for the joined, not the
+     only owner (iris@PA, refused LAST_COMMITTED_OWNER) */
+  const at = (act, who, p) => rows.find((r) => r.act === act && r.who === who && r.p === p);
+  assert.deepEqual([at("projectjoin", "olga", "PA").offered, at("projectjoin", "zed", "PA").offered,
+                    at("projectjoin", "pam", "PA").offered, at("projectleave", "pam", "PA").offered,
+                    at("projectleave", "iris", "PA").offered, at("projectleave", "iris", "PA").code,
+                    at("projectleave", "olga", "PA").offered],
+    [true, true, false, true, false, "LAST_COMMITTED_OWNER", false]);
 });
 
 test("R18: projectleave is offered to an owner only while another owner is committed (not leaving), which is when "
@@ -493,7 +596,9 @@ test("R19: together the two drives reach every op RUNGS grades `reasoned`", () =
     /* N345: at contradiction's and entities' interfaces over contradiction's fixture, contradiction.test.mjs */
     "contradictiondismiss", "contradictionclarify", "contradictiontakeup", "contradictionresolve", "resolutiondefect",
     /* N364: at sources' interface over its fixture, sources.test.mjs */
-    "sourcedisclose", "sourcelink", "sourceconsent"];
+    "sourcedisclose", "sourcelink", "sourceconsent",
+    /* K727: at action-plans' interface over its fixture, backing.test.mjs */
+    "plansubjectadd", "plansubjectremove", "optionrevise", "optiondispose", "planclose"];
   assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "reasoned" && !driven.includes(op)), []);
 });
 
@@ -556,8 +661,11 @@ test("R20: MACHINE_REFUSALS equals, both ways, the acts whose method answers a m
   for (const tok of [MEM, ADM]) for (const id of [INFO, INQ, ACTN, PA])
     for (const k of await offered(tok, id)) if (k in MACHINE_REFUSALS || ROSTER.includes(k)) leak.push(`${id}:${k}`);
   assert.deepEqual(leak, []);
+  /* the over-strictness arm (d311's share): an act the store does not refuse a machine is still offered to it */
+  const citeOffered = (await offered(MEM, INFO)).includes("cite");
   const answered = {};
   for (const k of objectActs) answered[k] = codeOf(await DRIVE[k]());
+  assert.deepEqual([citeOffered, answered.cite], [true, "ok"], "a machine is offered cite and performs it");
   const refused = Object.fromEntries(Object.entries(answered).filter(([, c]) => /^MACHINE_/.test(String(c))));
   assert.deepEqual(refused, Object.fromEntries(objectActs.filter((k) => k in MACHINE_REFUSALS).map((k) => [k, MACHINE_REFUSALS[k]])));
   assert.ok(Object.keys(refused).length > 0 && objectActs.some((k) => !(k in refused)));

@@ -47,7 +47,7 @@ const ROUTES = {
    them (each is set wherever a route reads it). */
 const STAMP_NAMES = [...new Set([...QUERY_STAMPS, "proposedBy", "principal", "owner", "member", "mintedBy", "proposer"])];
 
-test("R2, R31: each of N345's fifteen ops (and entity, entitybyalias) has its spec, and is forwarded to the store's route of its name in the namespace the caller lands in", async () => {
+test("R2 (op-declarations R6): each of N345's fifteen ops (and entity, entitybyalias) has its spec, and is forwarded to the store's route of its name in the namespace the caller lands in", async () => {
   assert.equal(Object.keys(ROUTES).length, 17);
   for (const [op, [spec]] of Object.entries(ROUTES)) assert.deepEqual(OPS[op], spec, op);
   const { w, list } = callers();
@@ -100,7 +100,7 @@ test("R17: resolutiondefect's `by` is stamped into an empty POST body too, and a
   assert.deepEqual([g.body, g.params.by], [null, undefined]);
 });
 
-test("R10, R11, R13, R12: the acts are in both session sets with `contribute`, the reads need nothing (six by a null row, K516); negative controls — the daemon class is refused CLASS_FORBIDDEN, a session without contribute NOT_CAPABLE, an agent credential not declaring the write AI_BEYOND_TASK_SCOPE, and nothing is forwarded", async () => {
+test("R28 (admission R8–R11): the acts are in both session sets with `contribute`, the reads need nothing (six by a null row, K516); negative controls — the daemon class is refused CLASS_FORBIDDEN, a session without contribute NOT_CAPABLE, an agent credential not declaring the write AI_BEYOND_TASK_SCOPE, and nothing is forwarded", async () => {
   const bare = hex64(), narrow = aik();
   const { env, S } = world({ sessions: { [bare]: member("bea", []) },
                              creds: { [narrow]: cred({ tokenId: "agent-narrow", writes: ["cite"] }) } });

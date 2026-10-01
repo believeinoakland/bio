@@ -34,7 +34,6 @@ import { extractionOf, extractionOps } from "./extraction/index.mjs";
 import { entitiesOf, entitiesOps } from "./entities/index.mjs";
 import { basisVersionsOf, basisVersionsOps, VERSION_ACT_TO, BASIS_VERSIONS_LIMIT_DEFAULT, BASIS_VERSIONS_LIMIT_MAX,
          BASIS_VERSION_LEGS_MAX } from "./basis-versions/index.mjs";
-import { affordancesOf } from "./affordances.mjs";
 /* The D-15 viewer gate, from query.mjs's ONE compilation point: this file builds no query of its own. */
 import { viewerPredicate } from "./query.mjs";
 /* `op=audit`'s route tally names its states in D-129's vocabulary: run-rules' (K682). */
@@ -42,8 +41,6 @@ import { OBSERVATION_STATES } from "./run-rules/index.mjs";
 import { contradictionOf, contradictionOps } from "./contradiction/index.mjs";
 import { calibrationOf, calibrationOps } from "./calibration/index.mjs";
 import { schedulerOf } from "./scheduler/index.mjs";
-import { queueOf, queueOps } from "./queue/index.mjs";
-import { tasksOf, tasksOps } from "./tasks/index.mjs";
 import { progressionsOf, progressionOps } from "./progressions/index.mjs";
 import { intentOf, intentOps } from "./intent/index.mjs";
 import { strengthOf as strengthModule, strengthOps, STRENGTH_AXES } from "./strength/index.mjs";
@@ -166,7 +163,6 @@ export class Store extends DurableObject {
       runs: aiRunsOf(ctx, env), aiRuns: aiRunsOf(ctx, env) });
     capture.on("observation", "legacy-store", ({ row, at }) => this.#observe(row, at));
     schedulerOf(ctx, env);
-    queueOf(ctx, { env }); tasksOf(ctx, { env }).migrate();   /* queue, then tasks (K61, N363); tasks' table (R8), as standards' (N267) */
     ctx.blockConcurrencyWhile(async () => this.#migrate());
     ctx.blockConcurrencyWhile(async () => schedulerOf(ctx, env).start());
   }
@@ -1849,8 +1845,6 @@ export class Store extends DurableObject {
         /* entities R11, R12; the connection sweep is armed on entities' `onResolved` notice by scheduler (its R9, K714). */
         resolve: () => entitiesOf(this.ctx).resolve(body || {}),
         resolvetestify: () => entitiesOf(this.ctx).testify(body || {}),
-        ...queueOps(queueOf(this.ctx), url, body),
-        ...tasksOps(tasksOf(this.ctx), url, body),
         recordcapturedlocator: () => this.recordCapturedLocator(body || {}),
         /* PL-10 / D-220: the version chain. `address` arrives ALREADY NORMALISED
            — the control plane runs it through `normalizeAddress`, the same
@@ -1943,15 +1937,6 @@ export class Store extends DurableObject {
                                                                       limit: Store.#numberParam(url, "limit"),
                                                                       viewer: url.searchParams.get("viewer") }),
         ...monitoringOps(monitoringOf(this.ctx), url, body),
-        /* REC-19: the facts behind op=affordances. The control plane derives
-           the act list from these; this endpoint only reports what the store
-           holds about the object. */
-        affordancefacts: () => affordancesOf(this.ctx).affordanceFacts({ target: url.searchParams.get("target"),
-                                                      viewer: url.searchParams.get("viewer"),
-                                                      identity: url.searchParams.get("identity"),
-                                                      /* D-311: the two act stamps, as the acts receive them */
-                                                      author: url.searchParams.get("author"),
-                                                      by: url.searchParams.get("by") }),
         stats: () => recordOf(this.ctx).stats({ capacity: url.searchParams.get("capacity") === "1",
                                    viewer: url.searchParams.has("viewer") ? url.searchParams.get("viewer") : undefined }),
         retire: () => this.retire({ handle: url.searchParams.get("handle"),

@@ -5,6 +5,8 @@ import assert from "node:assert/strict";
 import { M, O, world, call, opCalls, sha, hex64, aik, cred, refused, FORGED, QUERY_STAMPS } from "./harness.mjs";
 import * as REVIEW_CHECKS from "../../../src/review/checks.mjs";
 import * as CP_CHECKS from "../../../src/control-plane/checks.mjs";
+import * as ADMISSION_CHECKS from "../../../src/admission/checks.mjs";
+import { aiScopeDeclaration, aiConfinementDeclaration } from "../../../src/admission/index.mjs";
 const D = await import("../../../src/control-plane/dispatch.mjs");
 
 const { OPS, UNATTENDED_BY_DECISION } = O;
@@ -91,9 +93,9 @@ test("R22: through the door — a forwarded store refusal under result, and the 
 
 test("R22: every row a module holds in the files the door reads resolves to a row of that code — record-core's MINT_EXHAUSTED (C-59.6) among them, decorating a forwarded refusal", async () => {
   const { RECORD_CORE_CHECKS } = await import("../../../src/record-core/checks.mjs");
-  assert.ok(M.MODULE_CHECK_FILES.some((f) => f.RECORD_CORE_CHECKS === RECORD_CORE_CHECKS), "record-core's checks.mjs is read");
+  assert.ok(M.CHECK_FAMILY_FILES.some(([, f]) => f.RECORD_CORE_CHECKS === RECORD_CORE_CHECKS), "record-core's checks.mjs is read");
   let rows = 0;
-  for (const source of M.MODULE_CHECK_FILES)
+  for (const [, source] of M.CHECK_FAMILY_FILES)
     for (const [fam, table] of Object.entries(source)) {
       if (!/_CHECKS$/.test(fam) || !table || typeof table !== "object") continue;
       for (const [code, row] of Object.entries(table)) {
@@ -388,7 +390,7 @@ test("R23, R25 (N349): every silence the door answers itself carries the correla
 
 test("R22 (N347): the door reads capture's table — EVIDENCE_NOT_HELD is C-118.1, NO_SUCH_KNOCK C-118.2, the old generic NOT_FOUND nothing; a forwarded NO_SUCH_KNOCK under result gains its row, and an answer already carrying it is unchanged", async () => {
   const { CAPTURE_CHECKS } = await import("../../../src/capture/checks.mjs");
-  assert.ok(M.MODULE_CHECK_FILES.some((f) => f.CAPTURE_CHECKS === CAPTURE_CHECKS), "capture's checks.mjs is read");
+  assert.ok(M.CHECK_FAMILY_FILES.some(([, f]) => f.CAPTURE_CHECKS === CAPTURE_CHECKS), "capture's checks.mjs is read");
   assert.deepEqual(M.dec49Row("EVIDENCE_NOT_HELD"), { check: "C-118.1", translation: CAPTURE_CHECKS.EVIDENCE_NOT_HELD.translation });
   assert.deepEqual(M.dec49Row("NO_SUCH_KNOCK"), { check: "C-118.2", translation: CAPTURE_CHECKS.NO_SUCH_KNOCK.translation });
   assert.equal(M.dec49Row("NOT_FOUND"), null);
@@ -404,7 +406,7 @@ test("R22 (N347): the door reads capture's table — EVIDENCE_NOT_HELD is C-118.
   assert.deepEqual(M.dec49Attach({ ok: true, result: { ok: false, reason: "NOT_FOUND" } }), { ok: true, result: { ok: false, reason: "NOT_FOUND" } });
 });
 
-test("R30: no credential, session token, secret or stack appears in any answer — the one minting answer of R19 excepted — a store's stack included", async () => {
+test("R30: no credential, session token, secret or stack appears in any answer — the one minting answer of admission R13 excepted — a store's stack included", async () => {
   const w = world();
   const secrets = [w.env.ADMIN_TOKEN, w.env.MEMBER_TOKEN, w.env.PROBE_TOKEN, w.env.DAEMON_TOKEN, ...Object.values(w.S), ...Object.values(w.A)];
   for (const { op, r } of await sweep(w)) {
@@ -428,7 +430,7 @@ test("R30: no credential, session token, secret or stack appears in any answer �
   assert.equal(later.text.includes(minted), false);
 });
 
-test("R32: each check the module raises carries its C-number on the wire — C-38.1–.8, C-69.1–.4, C-78.1–.3, C-29.6–.10, C-32.17, C-64.4, C-68.2–.4, C-66.6", async () => {
+test("R32, R39: each check the door answers carries its C-number on the wire — its own C-69.1–.4, C-68.2–.4, C-66.6 and R39's C-61.1, and admission's C-38, C-78, C-29.6–.10, C-32.17 and C-64.4 from the gates it calls", async () => {
   const w = world({ answer: (c) => (c.route === "casedrafts" ? new Response("x") : null) });
   const { env, S, A } = w;
   const got = {};
@@ -443,10 +445,8 @@ test("R32: each check the module raises carries its C-number on the wire — C-3
   await d({ op: "promote", token: S.bare });                                    /* C-38.5 */
   await d({ op: "index", token: env.PROBE_TOKEN, params: { store: "bio" } });   /* C-38.6 */
   await d({ op: "governorconfig", token: S.ann });                              /* C-38.7 */
-  const saved = UNATTENDED_BY_DECISION.purge;
-  delete UNATTENDED_BY_DECISION.purge;
-  try { await d({ op: "purge", token: S.ann }); } finally { UNATTENDED_BY_DECISION.purge = saved; }   /* C-38.8 */
   await d({ op: "nosuchop" });                                                  /* C-69.1 */
+  await d({ op: "purge", token: env.ADMIN_TOKEN });                             /* C-61.1 (R39) */
   await d({ op: "casedrafts", token: S.ann });                                  /* C-69.2 */
   await d({ op: "index", params: { store: "nope" } });                          /* C-78.1 */
   await d({ op: "knock", params: { store: "scratch" } });                       /* C-78.2 */
@@ -474,24 +474,35 @@ test("R32: each check the module raises carries its C-number on the wire — C-3
   got[sj.code] = sj.check; sentences[sj.code] = sj.translation;                 /* C-69.4 */
   assert.deepEqual(got, {
     NOT_AUTHENTICATED: "C-38.1", CLASS_FORBIDDEN: "C-38.2", MACHINE_CREDENTIAL_REQUIRED: "C-38.3", ROOT_OF_TRUST_REQUIRED: "C-38.4",
-    NOT_CAPABLE: "C-38.5", SCOPE_REFUSED: "C-38.6", SESSION_ROLE_CANNOT_REACH_OP: "C-38.7", SESSION_ROUTE_NOT_RECORDED: "C-38.8",
+    NOT_CAPABLE: "C-38.5", SCOPE_REFUSED: "C-38.6", SESSION_ROLE_CANNOT_REACH_OP: "C-38.7",
     UNKNOWN_OP: "C-69.1", STORE_DID_NOT_ANSWER: "C-69.2", PLANE_INTERNAL_ERROR: "C-69.3", STORE_INTERNAL_ERROR: "C-69.4",
     NAMESPACE_UNKNOWN: "C-78.1", NAMESPACE_PINNED: "C-78.2", NAMESPACE_CONFINED: "C-78.3",
     AI_BEYOND_TASK_SCOPE: "C-29.6", AI_CREDENTIAL_REVOKED: "C-29.7", AI_SCOPE_UNKNOWN_OP: "C-29.8",
     AI_SCOPE_BEYOND_MEMBER_REACH: "C-29.9", AI_CONFINEMENT_NOT_SCRATCH: "C-29.10",
     OPERATOR_TOKEN_CANNOT_GOVERN: "C-32.17", GROUP_IDENTITY_NEEDS_SESSION: "C-64.4",
     BOOTSTRAP_CREDENTIAL_UNSET: "C-68.2", BOOTSTRAP_CREDENTIAL_PUBLISHED: "C-68.3", BOOTSTRAP_CREDENTIAL_MISMATCH: "C-68.4",
-    REPLAY_UNVERIFIED: "C-66.6",
+    REPLAY_UNVERIFIED: "C-66.6", REQUIRED_ARGUMENT_MISSING: "C-61.1",
   });
-  /* the rows are the module's own (K6): its check families hold exactly these, and the wire carries each row's words */
-  const own = {};
-  for (const [fam, rows] of Object.entries(CP_CHECKS)) if (/_CHECKS$/.test(fam))
-    for (const [code, row] of Object.entries(rows)) { assert.equal(own[code], undefined, code); own[code] = row; }
-  assert.deepEqual(Object.fromEntries(Object.entries(own).map(([c, r]) => [c, r.check])), got);
-  for (const [code, row] of Object.entries(own)) {
-    assert.equal(sentences[code], row.translation, code);
-    assert.match(row.where, /^src\/control-plane\/(index|dispatch)\.mjs \S+ > is-[a-z-]+$/, code);
+  /* the rows are the module's own (K6) or admission's, whose gates the door calls (K624 (2)): the two tables hold exactly
+     these codes between them, each once, and the wire carries each row's own words */
+  const rowsOf = (ns) => {
+    const out = {};
+    for (const [fam, rows] of Object.entries(ns)) if (/_CHECKS$/.test(fam))
+      for (const [code, row] of Object.entries(rows)) { assert.equal(out[code], undefined, code); out[code] = row; }
+    return out;
+  };
+  const own = rowsOf(CP_CHECKS), admission = rowsOf(ADMISSION_CHECKS);
+  for (const code of Object.keys(own)) assert.equal(admission[code], undefined, `${code} is held by both`);
+  const both = { ...own, ...admission };
+  assert.deepEqual(Object.fromEntries(Object.entries(got).filter(([c]) => c in own)),
+                   Object.fromEntries(Object.entries(own).map(([c, r]) => [c, r.check])), "every row of the module's own is raised");
+  for (const [code, check] of Object.entries(got)) {
+    assert.ok(both[code], `${code} is in neither table`);
+    assert.equal(both[code].check, check, code);
+    assert.equal(sentences[code], both[code].translation, code);
   }
+  for (const [code, row] of Object.entries(own))
+    assert.match(row.where, /^src\/control-plane\/(index|dispatch)\.mjs \S+ > is-[a-z-]+$/, code);
 });
 
 test("R33: no place is named in this module's answers", async () => {
@@ -499,13 +510,13 @@ test("R33: no place is named in this module's answers", async () => {
   const w = world();
   for (const { op, r } of await sweep(w)) assert.doesNotMatch(r.text, PLACES, op);
   for (const t of [M.STORE_SILENT_DETAIL, ...Object.values(UNATTENDED_BY_DECISION)]) assert.doesNotMatch(t, PLACES);
-  for (const d of [M.aiScopeDeclaration(["purge"]), M.aiScopeDeclaration(["nope"]), M.aiConfinementDeclaration("bio")])
+  for (const d of [aiScopeDeclaration(["purge"]), aiScopeDeclaration(["nope"]), aiConfinementDeclaration("bio")])
     assert.doesNotMatch(JSON.stringify(d), PLACES);
 });
 
 test("R22 (N363, K562; N382, K606): the door reads tasks' table — INBOX_REFUSED (C-19.2), MACHINE_CANNOT_FORWARD (C-32.10), MACHINE_CANNOT_RESOLVE (C-32.11) and TASK_NOT_YOURS (C-76.1) each gain their row on a forwarded refusal, and an answer already carrying one is unchanged", async () => {
   const T = await import("../../../src/tasks/checks.mjs");
-  assert.ok(M.MODULE_CHECK_FILES.includes(T) || M.MODULE_CHECK_FILES.some((f) => f.TASK_ACTOR_CHECKS === T.TASK_ACTOR_CHECKS), "tasks' checks.mjs is read");
+  assert.ok(M.CHECK_FAMILY_FILES.some(([, f]) => f === T || f.TASK_ACTOR_CHECKS === T.TASK_ACTOR_CHECKS), "tasks' checks.mjs is read");
   const rows = Object.entries(T).filter(([f]) => /_CHECKS$/.test(f)).flatMap(([, t]) => Object.entries(t));
   assert.deepEqual(rows.map(([code, r]) => [code, r.check]).sort(),
                    [["INBOX_REFUSED", "C-19.2"], ["MACHINE_CANNOT_FORWARD", "C-32.10"], ["MACHINE_CANNOT_RESOLVE", "C-32.11"], ["TASK_NOT_YOURS", "C-76.1"]]);

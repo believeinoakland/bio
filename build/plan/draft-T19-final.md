@@ -1,0 +1,179 @@
+# Plan: tranche T19 (final draft)
+
+**Status** · DRAFT by a worker for BOB #79, 2026-10-01, read on `tranche/T18` @ 33f1276bce (layers 1–10 closed, K721); adopted K734. **Updated @ ac5ef075a0** (K731–K737): affordances, admission and control-plane COMPLETE and merged, so their ⚑L11 marks are resolved; N435, N436 placed. Still running: legacy-index (BLOCKED on Bob's approval of its `git rm`), installer. Derived from `draft-T19-refresh.md` (BOB #78, read @ ba630ce2da), which is a delta over `draft-T19.md` (adopted K653): an entry marked **kept** or "as drafted" carries `draft-T19.md`'s text for that module unchanged. Not to be opened by this BOB (K716): T19 opens under Bob's secondary account once T18 has closed. Sources: the two drafts, rulings K686–K730, `next.md` (to N436), `build/jobs/T18/*.md` (layers 8–10 on the tranche; layer 11 on the tranche or `origin/job/T18/<module>`), `current.md`, `layers.md`, `modules.json`, and the tree (every catalogue and `store.mjs` importer grepped @ 33f1276bce, multi-line imports parsed). Marks: **kept** · **amended** (how) · **done in T18** (ruling or record) · **moot** · **new** · **⚑L11** (waits on a layer-11 job still running; re-read at T18's close, K424).
+
+## What changed versus draft-T19-refresh.md
+
+1. **Every ⚑L8–⚑L10 resolved** (each cited at its entry). Done in T18: ratification's `STRENGTH_STATES` re-point (K691 (4), K692); monitoring's `MECHANICAL_FIELD_SETS`, `DRIVE_CAPTURE_CHECKS`, C-48.8/.9, `MONITOR_FREQ` and user-agent re-points (MONITORING #7, K717); instance-setup's user agent (K729, read early); legacy-store's four spreads, `airun.mjs` re-point, dead lines and K714's removal (K720); publication's `caseflags`/`casedocument`, `SECTIONS`/`signedCitations` (K690, K697); filings' public-read re-points (K706); actions' `pendingClocks` caller gone (K717); conformance's K680 arm (K703); N242's layer 8–10 shares (records cited at N242 below).
+2. **Roster 67 (+2 conditional) → 68.** action-clocks and action-plans become unconditional (both import the catalogue: `action-clocks/index.mjs`:31, `action-plans/doc.mjs`:7, `index.mjs`:59). test-support joins L1 (N22, carried by the sweep). run-rules leaves (it imports no catalogue name at HEAD; its entry was only that re-point). op-declarations leaves (its T18 copy imports only `affordances`; N420's op is already declared: below).
+3. **N420 re-cut.** The plane read is instance-setup's existing `op=profiles` (op-declarations declares it and puts it in `PLAN_RUN_SCOPE`, K727); the answer gains `view` with the combine view's `deadlines`, `venues`, `legal_organisations`. agent-worker's share is **done in T18** (AGENT-WORKER #5: `PLAN_READS.profile` reads `op=profiles`, `test/plan.test.mjs`:222 reads `view`). No op-declarations or control-plane share. The refresh's deferral row is moot.
+4. **legacy-checks' L1 deletion list re-measured at HEAD.** Five held copies still have an importer in a later layer and are deleted by that importer's job (rule 1): C-22 (`observation-log/vocabulary.test.mjs`:5, L5), `STRENGTH_STATES` (`strength/converts.test.mjs`:10, L6), `contentIdFor` (`inquiry/content-legs.test.mjs`:18, L6), C-28 `CAPTURE_REQUEST_CHECKS` (`agent-worker/test/plane-capturerequest.mjs`, L6), and `MACHINE_FENCE_CHECKS`/`ACT_SHAPE_CHECKS` as drafted. `contentIdFor` is therefore not deleted in L1 (K653 BOB-1 holds; a module test, not an old suite, imports it).
+5. **next.md entries placed:** N426 (promotion L2), N427 (actions, action-clocks, action-plans L9), N428 (actions L9), N429 (monitoring L10), N430 (record-grammar L1, skills L6), N432 (action-plans L9), N433 (intent, reevaluation L7; progressions L5 if the rows are made one). N431 and N434 join the release row (not jobs). Every other open entry was checked (see "next.md: every entry").
+6. **entities L5:** `resolveReferences`/`testifyResolution` and the sweep arming are **done in T18** (K714, K719, K720); left: the `resolve`/`resolvetestify` route arms into entities' ops map (K718 kept them as store routes).
+7. **ratification L8:** refuse-gate's retire arm was converted at legacy-store's interface (`test/m/legacy-store/retire.test.mjs`, K720); it moves to ratification's tests with `op=retire`.
+8. **public-read L8:** the Worker files' physical move is dropped (recommended to BOB): they are already public-read's by `paths` (K697, K702), and moving them would leave a re-export for filings (L9) and control-plane (L11) held into T20.
+9. **The final sweep (Bob, 2026-10-01, P19)** applied to every deferral (table below): 15 kept, 3 carried (N22 to test-support L1; N175 to BOB's opening act; `contentIdFor` to inquiry L6), 4 struck as moot.
+10. **Sizes re-measured** (own code, `paths` less tests): catalogue 8,811; `store.mjs` 1,998; `schema.mjs` 25; `src/index.mjs` 371; `tools/` **76 files, 26,235 lines** (the refresh's 69/25,780 counted top-level files only); actions 3,846 (so action-grammar's split holds, P6); ratification 3,601; publication 3,833; docprofile 4,060; membership 3,890; provenance 3,714; inquiry 3,649; control-plane 3,268 after its T18 deletion (K737).
+
+## Priorities, finish report, rules
+
+- **Priorities (Bob, K632, K648):** removing every legacy construct T18 leaves (legacy-checks, legacy-store, legacy-index, the old process's tooling; not legacy-ui, K633; legacy-tests at the release, K635) and the Action layer in full; everything else safely doable beside them (P19). **kept.**
+- **Finish report:** (1) T19 empties and deletes `bio-checks.mjs`, `store.mjs`, `schema.mjs`, `src/index.mjs`; `legacy-checks`, `legacy-store`, `legacy-index` leave `modules.json` at its close; `tools/` goes except the release files an owner takes (K653 BOB-1 removes the conditional). (2) Every Action entry needing no Bob decision, source or measurement is finished; what stays is in the table below. **kept.**
+- **Rule 1 (catalogue empties):** **kept.** A held copy is deleted by the job of its last importer when that module has `legacy-checks` in its `from`, else by control-plane's last act. The importers found at HEAD are named at each entry.
+- **Rule 2 (`checkBundle` in L1, `LEGACY_GRAMMARS`):** **amended** as the refresh (K653 BOB-6; `EXTENSION_ARMS` moves with `checkBundle`; C-2.7 is capture's).
+- **Rule 3 (splits):** **kept** (site-profiles' list as the refresh).
+- **Rule 4 (merge early):** **amended.** L1 record-grammar, legacy-checks, text-chain, site-profiles, bundler · L2 record-core, membership (seam), credentials, membership's deletion, before promotion's stamp · L3 provenance · L4 content · L5 connections, observation-log · L6 basis-versions, then inquiry-grammar and agent-worker; inquiry early for strength and contradiction (N136); agent-worker's test re-point before capture-requests deletes C-28 · L8 public-read for publication · L9 action-grammar, then actions, then action-clocks, then action-plans (N427: action-plans drops its probes once both exports exist) · L10 monitoring for legacy-store · L11 affordances, tasks, queue, queue-producers, instance-setup, admission, then control-plane, plane's copy, control-plane's wrapper deletion, plane's file deletions, legacy-index last.
+- **Rule 5 (`store.mjs` edits):** **amended.** The four spreads (`publicReadOps`, `projectStageOps`, `actionClocksOps`, `actionPlansOps`) are **done in T18** (K720). Each owner removes its moved code in its own layer; legacy-store (L10) replaces the remaining explicit arms by spreads; plane (L11) deletes both files. BOB serialises two edits of `store.mjs` in one layer.
+- **Rule 6 (P18: BOB's wordings before each layer):** **amended.** As drafted (the five folds; public-read's rows; the seams' Rs; `op=retire`'s Rs; release tooling Rs; intent's C-2.9/C-9.1 R), plus: L1 test-support's R for N22; L2 promotion R39 (N425) and the project column (N426); L6 skills, any R naming `skillpack.mjs` (N430); L7 the four shared codes (N433); L9 actions R45 and action-clocks R4 exports (N427), action-plans R11/R31 (N432); L10 monitoring R50 (N429); L11 instance-setup R12/R16, `op=profiles`' `view` (N420).
+- **Rule 7 (stamp):** **amended.** Promotion (L2) stamps T18's layers 3–11 as the records name them (promotion's entry) and T19's layers 1–2.
+- **Rule 8 (K657):** the fold that adds site-profiles, credentials, inquiry-grammar, action-grammar and plane carries their `MODULE_ORDER` entries; failing that, membership's L2 job adds them and L1's close accepts the red by name. **kept.**
+
+**Roster (68 jobs; by layer 10, 4, 4, 3, 7, 11, 2, 7, 9, 2, 9):** L1 record-grammar, legacy-checks, test-support, bundler, signatures, office-readers, text-chain, site-profiles, docprofile, ocr-worker (10) · L2 record-core, membership, credentials, promotion (4) · L3 provenance, acquisition, capture, sources (4) · L4 calibration, extraction, content (3) · L5 entities, connections, progressions, bias, observation-log, query-language, retrieval (7) · L6 inquiry-grammar, inquiry, citation, basis-versions, strength, contradiction, ai-runs, run-productions, capture-requests, skills, agent-worker (11) · L7 intent, reevaluation (2) · L8 case-grammar, publication, public-read, project-stage, ratification, case-authoring, review (7) · L9 standards, conformance, consequences, action-grammar, actions, action-clocks, filings, escalation, action-plans (9) · L10 monitoring, legacy-store (2) · L11 affordances, tasks, queue-producers, queue, instance-setup, admission, control-plane, plane, legacy-index (9). New modules: site-profiles, credentials, inquiry-grammar, action-grammar, plane. signatures drops (67) if the P18 read finds `tools/`' signing files dead. ⚑L11: a layer-11 T18 entry that does not merge joins its module's T19 job (P8).
+
+## Layer 1
+
+- **record-grammar** · **amended.** As drafted, plus `EXTENSION_ARMS` with `checkBundle` (record-core re-points, L2). **N430** (K720): C-33.41's `where` (names `actNoCitation`, deleted by LEGACY-STORE #8) re-pointed to the entities and progressions sites that raise `NO_CITATION`, `awaiting stamp`.
+- **legacy-checks** · **amended.** The `SUGGEST_LEVELS` line (K679); rule 2's wrapper; N70's and N44's `where`s. Deleted here, no importer left at HEAD: C-2.7 (`checkInformationExtension`, `INFO_ENUMS`, `CONTENT_HASH_RE`, `MONITOR_FREQ`) and its arm in `checkBundle`'s list; `MECHANICAL_FIELD_SETS` (K717); C-80 `VERSION_NOTICE_CHECKS` (K685); C-83 `RENDER_CAPTURE_CHECKS`; `DRIVE_CAPTURE_CHECKS` whole (C-48.1–.7 acquisition's, C-48.8/.9 monitoring's, K717); `CIVICOS_CONTACT_URL` and `civicosUserAgent` (K717, K729); `isSufficiencyClaimed`, `isMachineMinted` (K653 BOB-1). Held for a later importer's job (rule 1): C-22 (observation-log L5), `STRENGTH_STATES` (strength L6; ratification re-pointed, K691), `contentIdFor` (inquiry L6), C-28 with C-28.13 (capture-requests L6, after agent-worker's re-point), `LEAD_ID_RE` (inquiry-grammar L6). Each deletion confirmed first over the repository and the bundles' inputs.
+- **test-support** · **new (sweep: N22).** The sweep's `rmSync` makes a read-only tree writable and retries on `EACCES`, so the sandbox never leaks (R2); tested by running the sweep as a non-root user (`setpriv`/`runuser` exist in the container) and at the interface with an injected `EACCES`. **Size:** ~20.
+- **bundler** · **kept** (BOB-5; N31). `tools/` is 76 files, 26,235 lines; the P18 read re-counts the release files.
+- **signatures** · **kept** (conditional on the P18 read).
+- **office-readers** · **kept** (N26).
+- **text-chain** · **kept** (the extent algebra; N416).
+- **site-profiles** (new) · **amended** as the refresh: copies `index.mjs`, `recogniser.mjs`, `events.mjs`, `handlers/`; not `registry.mjs` (docprofile's facade).
+- **docprofile** · **amended** as the refresh (N404, N21's share, N390's remainder, converts).
+- **ocr-worker** · **kept.** `test/ocr-worker.test.mjs`:36's `BASIS_GRADES` to record-grammar.
+
+## Layer 2
+
+- **record-core** · **amended** as the refresh: `op=stats`, `registerStatsSource`, purge's call **done in T18** (K650); kept the rest as drafted; `registerGrammar` reads `EXTENSION_ARMS` from record-grammar; **N422** (record-core share): `registerGrammar`'s answer (`index.mjs`:970) classified for the DEC-49 guard. Catalogue imports: `index.mjs`, `test/m/record-core/record-core.test.mjs`.
+- **membership** · **amended** as the refresh (seam, the split's deletion, families, N70 bounds, converts; `MODULE_ORDER` if the fold did not). Catalogue imports: `index.mjs` and 11 module tests.
+- **credentials** (new) · **kept.**
+- **promotion** · **amended.** As drafted, plus:
+  - **N425:** `bundles.criticality` derived from the document's own front matter as well as the envelope, named by a test (R39 worded before L2; matches ratification R22, K692).
+  - **N426** (new; K704, K710): every bundle is committed with `project: null` (`promotion/index.mjs`:800). Promotion writes the project a document states (escalations, plans and every project record), so record-core's `bundleInfo().project` (R34) holds it and membership's `viewerPredicate` fences their bundle reads by project sight; tested with a plan's and an escalation's bundle read record-wide by a member outside the project. Recommended over "R34 says the column is unused" (BOB's wording, P17; it restores the sight the modules' own reads already hold, so no change of doctrine).
+  - **N221:** confirm no per-member fallback remains in `gate.mjs`.
+  - **The stamp** covers T18's layers 3–11 as the records name them: C-24, C-34, C-53, C-89, C-103 (provenance); C-85, C-2.7 (capture); C-83, C-48.1–.7, C-28.13 (acquisition); C-52, C-80.3 (content); C-74 (connections); C-33.25 (entities); C-22 (observation-log); C-22.5–.18 `where`s, C-109.2–.7 (run-rules); C-104 (run-productions); C-28 copy (capture-requests); C-33.40 (basis-versions); C-44.2, C-98.8 `where`s (publication, K697); C-32.1, C-33.10–.12, C-102.10 (ratification, RATIFICATION #9); C-32.6, C-33.14 (case-authoring, K695); C-33.3, C-101.3, C-101.4, C-117.7–.19 (actions); C-117.5, C-123.1–.3 (action-clocks); C-115.3, C-115.9 `where`s, C-115.28–.40 (filings); C-116.45 (escalation); C-124.1–.57 (action-plans, K711); C-48.8/.9, C-18.10 (monitoring, K717); C-33.41's `where` (N430, record-grammar L1); control-plane's C-61, C-61.1 (K737); admission's copied rows (K731); plus T19's layers 1–2.
+
+## Layer 3
+
+- **provenance** · **kept.**
+- **acquisition** · **kept** (refresh: `index.mjs`:15 and four tests to record-grammar).
+- **capture** · **kept.** N418 **done in T18** (K655).
+- **sources** · **kept** (`isMachineIdentity`, 1 line).
+
+## Layer 4
+
+- **calibration**, **extraction** (K666), **content** · **kept.** content's `VERSION_NOTICE_CHECKS` is now the only copy (L1).
+
+## Layer 5
+
+- **entities** · **amended.** The legacy-store share (`resolveReferences`, `testifyResolution`, the sweep's arming) is **done in T18** (K714, K719, K720). Left: `op=resolve` and `op=resolvetestify` (store routes calling entities directly, K718) into entities' ops map for legacy-store's spread; C-33.40/.41 from record-grammar; counts; re-points (`index.mjs`, `resolve.test.mjs`).
+- **connections**, **bias**, **query-language**, **retrieval** · **kept.**
+- **progressions** · **kept.** N433: holds its four rows unchanged unless BOB makes the shared rows one (then this job holds the one row).
+- **observation-log** · **amended.** It deletes the catalogue's C-22 after re-pointing `vocabulary.test.mjs`:5's parity arm (with `LEAD_CHECKS`' arm, which reads inquiry-grammar's after L6: the arm goes to inquiry-grammar's test).
+
+## Layer 6
+
+- **inquiry-grammar** (new) · **kept.** Deletes the catalogue's `LEAD_ID_RE` (rule 1).
+- **inquiry** · **amended** as the refresh (R11's arm, C-66.5, the grammar face; **N422**: R42's `#raise` carries `raise`'s answer object for `staled`, `dispose`, `divide`; **N136's rest**). New: `test/m/inquiry/content-legs.test.mjs`:18's `contentIdFor` re-pointed or computed through content, then the catalogue's `contentIdFor` deleted. Merges early for strength and contradiction.
+- **citation**, **run-productions** (N155's last share), **contradiction** (with N136's rest) · **kept.**
+- **basis-versions** · **kept** (catalogue share; merges early).
+- **strength** · **amended** as the refresh, plus: `converts.test.mjs`:10's catalogue parity arm dropped, then the catalogue's `STRENGTH_STATES` deleted (its last importer; ratification re-pointed, K691, K692).
+- **ai-runs** · **kept** (⚑L11 resolved). The four re-exports go: legacy-store's `airun.mjs` import is **done in T18** (K720); control-plane's `M_AI_RUNS` import of `ai-runs/checks.mjs` is gone (K737; no `src/` importer of the four at ac5ef075a0). N242's arm G: confirm with the guard that no code is minted in both ai-runs and run-rules (CONSEQUENCES #4's reading).
+- **capture-requests** · **amended.** Its C-28 copy becomes the only one: the catalogue's `CAPTURE_REQUEST_CHECKS` deleted after agent-worker's test re-point merges (rule 4).
+- **skills** · **amended.** As drafted, plus **N430** (K720): `src/skillpack.mjs` has no product importer left; the job deletes it (and its `test/m/skills/` uses) or shows its reader.
+- **agent-worker** · **amended** as the refresh (tests `wire-vocabulary.test.mjs`:68, `plane-capturerequest.mjs`:27, `plane-suggest.mjs`:86; **N421**). N420's share is **done in T18** (`test/plan.test.mjs`:222). Merges early for capture-requests' C-28 deletion.
+
+## Layer 7
+
+- **intent** · **amended.** As drafted (C-2.9's rest, C-9.1), plus **N433** (K730): `NO_SUCH_PROGRESSION` (C-111.4) and `BAD_STAGE` (C-111.6) are held with rows that differ from progressions' C-100.11, C-100.14; intent mints codes of its own, or its rows are made progressions' (BOB's wording before L7; recommended: own codes, which keeps one row per code without touching progressions).
+- **reevaluation** · **amended.** As drafted, plus **N433:** `NO_REASON` (C-113.22) and `BAD_REASON` (C-113.17) against progressions' C-100.18, C-100.21, as for intent.
+
+## Layer 8
+
+- **case-grammar** · **new** (refresh): `parseFrontmatter` in `index.mjs`:13, `blocks.mjs`:23, `tensions.mjs`:22 to record-grammar.
+- **publication** · **amended.** ⚑L8–9 resolved: filings re-pointed (FILINGS #6, K706), so the 17-line `registerEvidenceBlock` copy is deleted; `SECTIONS` and `signedCitations` are **done in T18** (K690, PUBLICATION #8). Kept: the moved rows deleted after public-read copies them; `INSTALLATION_CHECKS` re-anchored; `attestingKeys` to credentials; mint-ledger seeds; catalogue re-points (`index.mjs`, `fixture.mjs`, `invariants.test.mjs`, `convert-ratify-authority.test.mjs`). After public-read merges.
+- **public-read** · **amended.** ⚑L8 resolved: `caseflags` and `casedocument` are **done in T18** (moved to `publication/door.mjs`, K697); the Worker files are public-read's by `paths` (K697, K702). Kept: rows C-44.2, C-68.5, C-98.1–.9 into its `checks.mjs` (K651). New: `caseTensionsOf`, `caseDocumentBlocks` from case-grammar (PUBLIC-READ #1's deferral); `publication/worker.mjs`'s catalogue imports (`parseFrontmatter`, `normalizeType`, `sectionText`) and `convert-d442…`:18 to record-grammar. **Moot:** the physical move into `src/public-read/` (change 8). Merges early for publication.
+- **project-stage** · **new** (refresh): `parseFrontmatter` (`index.mjs`:24). **Size:** 1 line.
+- **ratification** · **amended.** `op=retire` (BOB-3) with its requirements; refuse-gate's retire arm moves from `test/m/legacy-store/retire.test.mjs` (K720) to ratification's tests; mint-ledger seeds; `attestingKeys` to credentials; catalogue re-points (`checks.mjs`, `ops.mjs`, `release.mjs`, `index.mjs` and six tests). N400, N407, N417 **done in T18** (K691, K692). Its C-32.1, C-33.10–.12, C-102.10 copies are made (RATIFICATION #9); the catalogue's go with `REGISTRATION_CHECKS` (promotion, L2) and `MACHINE_FENCE_CHECKS`/`ACT_SHAPE_CHECKS` (L6).
+- **case-authoring** · **amended** as the refresh, plus **N424** (`uses` gains case-grammar, BOB's edge), and **N435** (K737; N407's other half): `publishpreflight` reads the door's `aiCred` stamp (`viewer: q("aiCred") ? {stamp: q("viewer"), aiCred: JSON.parse(q("aiCred"))} : q("viewer")`), so ratification R18's fences hold an agent; tested with an agent credential's stamp. Catalogue imports: `document.mjs`, `index.mjs`, four tests. Its C-32.6/C-33.14 copies are made (K695); the catalogue's go with the L6 table deletions.
+- **review** · **amended:** **N423** (`uses` gains record-grammar); `acts.test.mjs`' `PROJECT_VISIBILITY_CHECKS` to membership; R17 **done in T18** (K688).
+
+## Layer 9
+
+- **standards**, **conformance**, **consequences**, **filings** · **kept** (catalogue re-points, code and tests). ⚑L9 resolved: no N242 share remains (CONFORMANCE #6, CONSEQUENCES #4, ESCALATION #6 found theirs met; standards and filings had none); conformance's K680 arm **done in T18** (K703).
+- **action-grammar** (new) · **kept.** ⚑L9 resolved: actions is 3,846 lines after T18; with its 444-line share it would pass 4,000, so the split holds (P6). REC-201's outward share as drafted. Merges early for actions and action-clocks.
+- **actions** · **amended.** The split's deletion and the catalogue re-points as drafted, plus **N428** (K717): delete its `pendingClocks` copy, its two bounds, `PENDING_CLOCKS_BAD_BEFORE`'s row and R31's tests (monitoring reads action-clocks', MONITORING #7). **N427:** export the governed helper `contactNotAMember` (R45), as `noSuchAction` is. Merges early for action-clocks and action-plans.
+- **action-clocks** · **new** (⚑L9 resolved: imports the catalogue). `parseFrontmatter`, `normalizeType`, `isMachineIdentity` (`index.mjs`:31, `fixture.mjs`:14) to record-grammar; `lawProposalLabel` to action-grammar (`uses` gains it). **N427:** export `reminderRefused` (R4). Merges early for action-plans. **Size:** ~20.
+- **escalation** · **kept** (its ops map out of `store.mjs`, lines ~1913–1942 at HEAD; re-points).
+- **action-plans** · **new** (⚑L9 resolved). Catalogue re-points (`doc.mjs`:7, `index.mjs`:59, `fixture.mjs`:19). **N432** (K727): `optionPropose` reads a second stamp, `principal` (`<principal>/<tokenId>`), for the run gate (R31) and keeps `proposer` (`class:ai/<tokenId>`) for the label (R11); control-plane stamps both (K727, K737). **N427:** answer `CONTACT_NOT_A_MEMBER` and `REMINDER_REFUSED` through the two exports and drop the roll-back probes. ⚑L9's deferral row (unfinished Rs) is moot: ACTION-PLANS #1 deferred none (K711). Last in the layer.
+
+## Layer 10
+
+- **monitoring** · **amended.** ⚑L10 resolved: `MONITOR_FREQ`, C-48.8/.9, `DRIVE_CAPTURE_CHECKS`, the user agent and `MECHANICAL_FIELD_SETS` are **done in T18** (K717). Left: `counts()` registered; re-points (`checks.mjs`:15, `index.mjs`:59, four tests). **N429** (K719): R50's wake skips entries whose last mark failed (scheduler holds them to one re-check a day). Merges early for legacy-store.
+- **legacy-store** · **amended.** ⚑L10 resolved: dead lines, 151 import names, the four spreads, `airun.mjs`, K714's removal **done in T18** (K720; store 2,725 → 2,013, schema 83 → 28). Left: the explicit arms replaced by owners' ops maps (content, provenance, record-core, promotion, entities incl. `resolve`/`resolvetestify`, retrieval, ratification, escalation); the delegation lines; `#testimonyWithin`, `#observe`, `#capturedAt`, `#viewerSees`; strength's `isInquiry` (STRENGTH #5); `schema.mjs`' 12 duplicate fragments (deferred by LEGACY-STORE #8 for owner order: here every owner's `migrate` and record-core's `RECORD_SCHEMA`-first have merged); its `retire.test.mjs` once ratification holds the arm; the store's catalogue imports (`parseFrontmatter`, `createSha256`, `normalizeType`, `LEGACY_TYPE_ALIASES`, `MEMBER_ID_CHECKS`, `SURFACE_CHECKS`). Last in the layer.
+
+## Layer 11
+
+- **affordances** · **kept.** ⚑L11 resolved: `affordancesOps`, the store arm's removal by control-plane, the census of K727's 14 writes and 6 reads (R27 count 71), the door's two keys and `uses` gaining action-clocks and action-plans are **done in T18** (K723, K732, K733, K737). T19 as drafted: `src/index.mjs`' `op=affordances` arm (:176 at ac5ef075a0), re-points (`affordances.mjs`, `facts.mjs`, two tests).
+- **tasks** · **kept** (re-points). N410, N412 **done in T18** (K723).
+- **queue-producers** · **kept** (re-points). Its T18 job **done** (K728, K730).
+- **queue** · **kept.** `src/index.mjs`' `op=queue` arm (:290 at ac5ef075a0); re-points. N410's share and `PRODUCER_DEPS` **done in T18** (K725, K731); `schema.mjs`' queue fragment and the store's queue/tasks imports **done in T18** (N13, K735, K736).
+- **instance-setup** · **amended.** Re-points (`setup.mjs`:19: `STATES`, `HEADINGS`, `deriveInquiryTitle` to record-grammar; two tests); the user agent **done in T18** (K729). **N420** (plane side): `op=profiles` (R12, R16) also answers `view: {deadlines, venues, legal_organisations}` from `jurisdictions.combine` over the active profiles, which agent-worker R51 reads; tested with two profiles, one not Oakland's.
+- **admission** · **kept** (credentials re-points). ⚑L11 resolved: N-A22's copy, R16 `readerOf`, R11 `projectCreationGate`, N411, N407's `callerViewer` **done in T18** (K731); its rows `awaiting stamp` (promotion L2).
+- **control-plane** · **kept.** ⚑L11 resolved, **done in T18** (K735, K737; 3,268 lines): the split's deletion, `CHECK_FAMILIES` with totality (N245, N272, N337, N403, N414), R41, R39, C-61 ✱, N13, the N402/N413 pin, N419, N336's `PLANE_LIMITS_STATEMENT` on the door, the action layer's stamps, N407's door share. Left as drafted, plus: `ops.mjs`, now a 4-line act-gate re-export for legacy-index, deleted with legacy-index's need of it; `index.mjs`:8's catalogue imports. N420's serve side is moot (change 3). Its last act ends the catalogue (rule 1).
+- **plane** (new) · **kept.**
+- **legacy-index** · **kept** ⚑L11. LEGACY-INDEX #11 is BLOCKED: the permission check refused `git rm` of `migrate/`, `coverage.mjs`, `declared-source.mjs` and the four probes; Bob's approval in that session is the one act. If T18 closes without them, they join this job. `tools/`: 76 files, 26,235 lines.
+
+## The final sweep (Bob, 2026-10-01, P19)
+
+Hard reasons allowed: **order** (P4); **size** before a split (P6); **dependency** not yet built; **P8** one job per module; **Bob's** question (P17: policy, requirements meaning, architecture, UX); **deploy** (a deployment or a measurement). Anything else is struck and carried into its module's T19 job.
+
+| entry | reason named | verdict |
+|---|---|---|
+| rows changed at T19 L3–11, stamped | P8: promotion's one job is L2 and stamps last | kept (T20) |
+| membership's `attestingKeys`, `aiCredentialLook` copies | P8: membership's one job is L2; callers re-point L3–L11 | kept (T20) |
+| docprofile's `registry.mjs` re-export | none: the facade is design, not a copy | struck, moot |
+| old-suite-only exports (K635) | none: K653 BOB-1 | struck, moot; `isSufficiencyClaimed`, `isMachineMinted` deleted L1; `contentIdFor` **carried** to inquiry L6 (a module test imports it) |
+| old battery, nine instruments, the DEC-49 guard's floors, `system` suites, fleetbundles' agent-worker inputs arm (K641) | Bob's: run and deleted at the release he calls (K619, K633, K635) | kept |
+| N57, N248, N279, N68, N70's legacy-tests and legacy-index shares, N431, N434, N436 | Bob's: old suites, the release (K619) | kept |
+| legacy-ui, N70/N68 legacy-ui shares, N241, N371, N389, N-A13 | Bob's: UX (K633) | kept |
+| `cpra_request` identifier | Bob's: UX; an interface name changes with a migration his question sets (N71) | kept |
+| N-A14 | Bob's (legal text) and deploy (a source for holidays and offices) | kept |
+| N-A19 | Bob's: doctrine (K624 (5), DEC-61) | kept |
+| `MODES.plan` deployed | deploy (K660 (5), run-rules R14) | kept |
+| N420's agent-worker share | none: done in T18 (`plan.test.mjs`:222) | struck, moot |
+| `PLN-` affordances, the plan-page surface | Bob's: UX (K608 (4)) | kept |
+| joint action | Bob's (K600 (c)) | kept |
+| N345 | none: built T15–T16 (K656) | struck, moot |
+| N303's rest, N317, N320, N71, N144, N232 | Bob's: doctrine, requirement meaning, UX | kept |
+| N70's skills share | Bob's: skills question 1 | kept |
+| contradiction R41 and the K5 arms, DIST-14, N75, N34 | deploy (N75's code is done, T9, K281; its bound is measured on a deployed plane); N34 also size (pdf-worker 4,075) | kept |
+| the newgroup installer deployed with N336 (K723, K724) | deploy: a signed release whose plane states its limits, Bob's release act | kept |
+| N22 | none: the container has `setpriv`/`runuser`, so a non-root run is possible | struck, **carried** to test-support L1 |
+| N175 | none in the list: it is the process repository's fix (P3), no module of this build | struck, **carried** to BOB's own act at T19's opening (civicos-process), no job |
+| action-plans' unfinished Rs (⚑L9) | none: ACTION-PLANS #1 deferred none (K711) | struck, moot |
+
+**Totals:** 15 kept, 3 carried, 4 moot (the `contentIdFor` row is counted under carried). No deferral rests on the size of the tranche or of a job.
+
+## What T19 removes (re-measured @ 33f1276bce)
+
+| legacy | refresh's "today" | today | after T19 |
+|---|---|---|---|
+| `bio-checks.mjs` | 8,963 | 8,811 (T18 L8–11: ratification −80, actions −27, control-plane −45) | 0 |
+| `store.mjs` | 2,940 | 1,998 (K720, K737) | 0 |
+| `schema.mjs` | 83 | 25 (K720, K735) | 0 |
+| `src/index.mjs` | 539 | 371 (the §4.4 moves, T18 L8–11) | 0 |
+| `tools/` | "69 files, 25,780" (top level only) | 76 files, 26,235 | ~0 |
+
+## next.md: every entry
+
+- **Placed in T19 jobs:** N21, N26, N31, N404, N416 (L1); N22 (L1, sweep); N70's legacy-checks, promotion, membership and record-core shares, N221, N422, N425, N426 (L2); N136's rest, N155, N421, N422, N430 (L5–L6); N433 (L7; L5 if one row); N423, N424, N435 (L8); N427, N428, N432, REC-201's outward share (L9); N429 (L10); N420 (L11).
+- **Deferred (table):** N34, DIST-14, N57, N68, N70's skills, legacy-ui and legacy-tests shares, N71, N75, N144, N232, N241, N248, N279, N317, N320, N371, N431, N434, N436, REC-201's identifier, N175 (BOB's opening act).
+- **Met or moot by T18's close (to `archive/next-applied.md` at T19's opening):** N137 (K675), N157 (K683), N211 (RATIFICATION #10, K696: `SUBJECT_POSITIONS`, `caseEditionClaimed` deleted, no importer at HEAD), N242 (T18 shares: CONFORMANCE #6, CONSEQUENCES #4, ESCALATION #6, MONITORING #7's C-18.10, CASE-AUTHORING #8, PUBLIC-READ #1; record-core's is N422; the duplicate-row failures clear with T19's deletions, the floors at the release), N249 (K700, BASIS-VERSIONS #5), N362 (K604), N372 (K575), N400 (K692), N405 (INQUIRY #7), N406 (K650, K685), N409 (K655), N410 (K723, K725), N412 (K723), N415 (K657), N417 (K691), N418 (K655), N420-mail (K659), N13 (K735, K737), N245, N272, N337, N403, N414 (K737), N402, N413 (K737), N407 (K692, K731, K737; case-authoring's half is N435), N408 (K650, K737 R39), N411 (K731), N336 (K723, K737; the live installer waits on a signed release, table); ⚑L11: N401 (legacy-index, BLOCKED). 30 entries.
+
+## For BOB (P17) and for Bob
+
+- **BOB, before the fold or the layer (P18):** the wordings in rule 6; the `uses` edges for N423 (review → record-grammar), N424 (case-authoring → case-grammar), action-clocks → action-grammar; N426's choice (recommended: promotion writes the project); N433's choice (recommended: intent and reevaluation mint their own codes); public-read's physical move (recommended: none); N175 in civicos-process (P3).
+- **Bob, one act still in T18:** approve LEGACY-INDEX #11's `git rm` in that session, or its deletions join T19's legacy-index job.
+- **No new question for Bob.**

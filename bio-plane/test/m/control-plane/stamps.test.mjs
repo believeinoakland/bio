@@ -194,69 +194,6 @@ test("R18: memberlist's administer is 1 exactly for a session that administers a
   assert.equal(opCalls(env).length, 0);
 });
 
-test("R19: an agent credential's scope and confinement are judged at the mint — AI_SCOPE_UNKNOWN_OP (C-29.8), AI_SCOPE_BEYOND_MEMBER_REACH (C-29.9, the governance and identity acts included), AI_CONFINEMENT_NOT_SCRATCH (C-29.10) — and its value is returned once and passed on only as its SHA-256", async () => {
-  const code = (o, c, chk) => { assert.equal(o.error.reason, c); assert.equal(o.error.code, c); assert.equal(o.error.check, chk); assert.ok(o.error.translation); };
-  for (const bad of ["nosuchop", "INDEX", "__proto__x"]) code(M.aiScopeDeclaration([bad]), "AI_SCOPE_UNKNOWN_OP", "C-29.8");
-  const beyond = Object.keys(OPS).filter((k) => !M.aiReachesAsMember(OPS[k], k));
-  for (const op of [...GOVERNANCE_ACTIONS, ...IDENTITY_ACTIONS, "purge", "capturerequestdrain", "memberadd", "export", "claim", "knock"]) {
-    assert.ok(beyond.includes(op), op);
-    code(M.aiScopeDeclaration(["index", op]), "AI_SCOPE_BEYOND_MEMBER_REACH", "C-29.9");
-  }
-  for (const op of beyond) code(M.aiScopeDeclaration([op]), "AI_SCOPE_BEYOND_MEMBER_REACH", "C-29.9");
-  /* negative control: ops a member reaches are declarable, trimmed, de-duplicated and sorted */
-  assert.deepEqual(M.aiScopeDeclaration([" promote ", "cite", "promote", "", null]), { writes: ["cite", "promote"] });
-  assert.deepEqual(M.aiScopeDeclaration(undefined), { writes: [] });
-  for (const bad of ["bio", "Scratch", "SCRATCH", "scratch\n", " ", ""]) code(M.aiConfinementDeclaration(bad), "AI_CONFINEMENT_NOT_SCRATCH", "C-29.10");
-  for (const none of [null, undefined]) assert.deepEqual(M.aiConfinementDeclaration(none), { confinedTo: null });
-  assert.deepEqual(M.aiConfinementDeclaration("scratch"), { confinedTo: "scratch" });
-  /* through the door: a refused declaration writes nothing */
-  const { env, S } = world();
-  for (const [body, c, chk] of [[{ writes: ["adminendorse"] }, "AI_SCOPE_BEYOND_MEMBER_REACH", "C-29.9"],
-                                [{ writes: ["groupnameset"] }, "AI_SCOPE_BEYOND_MEMBER_REACH", "C-29.9"],
-                                [{ writes: ["nope"] }, "AI_SCOPE_UNKNOWN_OP", "C-29.8"],
-                                [{ writes: [], confinedTo: "bio" }, "AI_CONFINEMENT_NOT_SCRATCH", "C-29.10"]]) {
-    env.calls.length = 0;
-    refused(await call(env, { op: "aicredentialmint", token: S.ann, method: "POST", body }), 403, c, chk);
-    assert.equal(opCalls(env).length, 0);
-  }
-  /* the mint: the value once, the store only its digest, and the normalised declaration */
-  const tokens = [];
-  for (const confinedTo of ["scratch", undefined]) {
-    env.calls.length = 0;
-    const r = await call(env, { op: "aicredentialmint", token: S.ann, params: { who: FORGED, secretSha: "0".repeat(64) },
-                                method: "POST", body: { writes: ["promote", " cite"], confinedTo, principal: "member:ann" } });
-    assert.equal(r.status, 200);
-    const t = r.json.result.token;
-    assert.match(t, /^aik-[0-9a-f]{64}$/);
-    assert.ok(r.json.result.tokenIsShownOnce);
-    tokens.push(t);
-    const [inner] = opCalls(env);
-    assert.deepEqual([inner.route, inner.params.who, inner.params.secretSha], ["aicredentialmint", "ann", sha(t)]);
-    assert.deepEqual([inner.body.writes, inner.body.confinedTo], [["cite", "promote"], confinedTo ?? null]);
-    assert.equal(JSON.stringify(env.calls.map((c) => [c.url.href, c.body])).includes(t), false, "the value never reaches the store");
-  }
-  assert.notEqual(tokens[0], tokens[1]);
-  /* a review grant's secret: the same rule */
-  env.calls.length = 0;
-  const g = await call(env, { op: "reviewgrant", token: S.founder, params: { secretSha: "f".repeat(64) }, method: "POST", body: { draft: "D1" } });
-  assert.equal(g.status, 200);
-  const secret = g.json.result.secret;
-  assert.match(secret, /^rv1_[A-Za-z0-9_-]{43}$/);
-  const [gi] = opCalls(env);
-  assert.equal(gi.params.secretSha, sha(secret));
-  assert.equal(JSON.stringify(env.calls.map((c) => [c.url.href, c.body])).includes(secret), false);
-  /* a store that refuses the mint returns no value */
-  const no = world({ answer: (c) => (c.route === "aicredentialmint" || c.route === "reviewgrant"
-    ? new Response(JSON.stringify({ ok: true, result: { ok: false, reason: "AI_CREDENTIAL_IDENTITY_TAKEN" } })) : null) });
-  const nr = await call(no.env, { op: "aicredentialmint", token: no.S.ann, method: "POST", body: { writes: [] } });
-  assert.equal(nr.status, 403);
-  assert.equal("token" in nr.json, false);
-  assert.doesNotMatch(nr.text, /aik-[0-9a-f]{64}/);
-  const ng = await call(no.env, { op: "reviewgrant", token: no.S.founder, method: "POST", body: {} });
-  assert.equal(ng.status, 403);
-  assert.doesNotMatch(ng.text, /rv1_/);
-});
-
 test("R20: reviewcopy, reviewcomment and statementack admit a grant's secret, of which only its digest reaches the store; outside the fence the answer is 404 NO_REVIEW_COPY, the same bytes from reviewcopy and casedrafts", async () => {
   const { env } = world();
   for (const op of ["reviewcopy", "reviewcomment", "statementack"]) for (const secret of ["rv1_abc", "", "anything at all"]) {

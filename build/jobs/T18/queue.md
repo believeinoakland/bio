@@ -1,6 +1,6 @@
 # queue (T18)
 
-**Status** · session_017quvzjcQTLPGZEZJVP6Pco · depth 2 · COMPLETE · handled B1
+**Status** · session_017quvzjcQTLPGZEZJVP6Pco · depth 2 · COMPLETE · handled B5
 
 ## Record
 
@@ -11,6 +11,8 @@
 - The eight converts, in `test/m/queue/converts.test.mjs` (each test names its old suite): `severedhomes` (R7), `d125-findingmute` (R4, R14, R19, R20), `d266scope` (R12, R13, R15, R27), `peritem` (R27, R8 with `TASK_NOT_YOURS`), `project-discoverable` (R27, R33), `queue-conditions` (R5, R6, R14, R19, R31), `queue-state` (R4, R14, R21, R30, R40), `queue` (R6, R8). Old suites not deleted (K619 (3)).
 - Improvements in my module: `MUTE_REFUSAL_DETAIL`'s OBLIGATION sentence names `disposition.instead` beside `op=taskresolve`; a stale "four of the twelve have a producer" corrected.
 - `awaiting stamp`: none. No check row (C-) was moved or changed by this job.
+
+- B4 (CHANGE, K728, from QUEUE-PRODUCERS #2 J1): `Queue.PRODUCER_DEPS` gains `actionClocks`, `escalation` and `actionPlans`, so a caller's fakes reach queue-producers (R8, R15–R18); tested that each fake is asked by its producer (`overdueClocks`, `remindersDue`, `escalationsDue`, `checkpointsDue`), negative control run (the three removed: the test fails). B2 (answer to J2) and B3 (N410) were already applied. B5 (CHANGE, K735, from CONTROL-PLANE #9 J3): `test/m/queue/world.mjs` makes queue's tables by `q.migrate()` (R36) at boot, never through the legacy store's `SCHEMA`; proved with `${QUEUE_SCHEMA}` removed from `src/schema.mjs` locally (not committed; control-plane's edit): 69 pass, 0 fail with the change, 13 pass, 56 fail without it. No other queue test relies on `SCHEMA` for queue's tables.
 
 **Deferred:** none.
 
@@ -24,11 +26,11 @@
 - Reading: step 2's public parts read whole for `tasks` (R6), `queue-producers` (R8, R15–R18), `action-clocks` (R6), `membership` (R44, R85); not the rest of the Uses modules, whose services this job did not change its use of. Of the old suites I read `d125-findingmute`, `d266scope`, `queue-conditions`' header whole and the rest by their assertions; `peritem`'s blocks 1, 9 and the queue reads, not its taskforward blocks 2–8 (tasks' share); `project-discoverable`'s header and its proposedispose rows.
 
 **Tests and checks** (on `job/T18/queue` after merging `tranche/T18` @ 586d4e730a):
-- `node --test bio-plane/test/m/queue/`: tests 68, pass 68, fail 0.
-- Users: `test/m/queue-producers/`, `tasks/`, `control-plane/`: tests 179, pass 177, fail 1 (above, pre-existing), todo 1 (queue-producers R9).
-- `format`: 82 modules, 77 requirements files; 0 failures. `architecture queue`: 15 product files, 45 relative imports; 0 failures. `coverage queue`: 37 of 37 live requirement ids named by a test; 0 failures. `ownership queue tranche/T18`: 3 files changed; legacy-store, legacy-checks, legacy-index 0 lines; 0 failures.
+- `node --test bio-plane/test/m/queue/`: tests 69, pass 69, fail 0 (after B4, on `tranche/T18` @ K728's merge).
+- With users `test/m/queue-producers/`, `tasks/`, `control-plane/`: tests 266, pass 265, fail 1 (above, pre-existing), todo 0.
+- `format`: 82 modules, 77 requirements files; 0 failures. `architecture queue`: 15 product files, 45 relative imports; 0 failures. `coverage queue`: 37 of 37 live requirement ids named by a test; 0 failures. `ownership queue tranche/T18` (after B5): 2 files changed; legacy-store, legacy-checks, legacy-index 0 lines; 0 failures.
 
-Size (session_017quvzjcQTLPGZEZJVP6Pco): test runs 12, module lines 2527
+Size (session_017quvzjcQTLPGZEZJVP6Pco): test runs 19, module lines 2529
 
 ## J1 · COMPLETE
 
@@ -41,3 +43,11 @@ R28 and the published id of an OBLIGATION not held in tasks. R12 publishes bias-
 ## J3 · COMPLETE
 
 Complete, re B1 (and K723's answer to J2). Since J1: N410's share (the feed reads tasks R6's assignees [member, unassigned]; tested with another member's newer live tasks over the cap, negative control run) and the eight converts in test/m/queue/converts.test.mjs (severedhomes, d125-findingmute, d266scope, peritem, project-discoverable, queue-conditions, queue-state, queue). Queue 68/68; users 177 pass, 1 fail pre-existing (control-plane R36, capture R65, fails identically without my changes), 1 todo; the four checks 0 failures. Record: a proposed wording for R12/R13's published fields (d266scope's share), the stale plane bundle, the DEC-49 guard's vocabulary floors moving (QUEUE_CONDITION_KINDS now queue's own object), and observation-log.test.mjs:708's assertion made false by R5. awaiting stamp: none.
+
+## J4 · COMPLETE
+
+Complete again, re B4 (B2 and B3 were already applied before J3). Queue.PRODUCER_DEPS gains actionClocks, escalation, actionPlans; a test shows a fake for each reaches its producer (overdueClocks, remindersDue, escalationsDue, checkpointsDue), negative control run. Queue 69/69; with queue-producers, tasks, control-plane 265 pass, 1 fail pre-existing (control-plane R36, capture R65). Four checks 0 failures.
+
+## J5 · COMPLETE
+
+Complete again, re B5. test/m/queue/world.mjs now calls q.migrate() after queueOf (and in w.boot for a bare world); no other queue test relies on SCHEMA for queue's tables. Proved with ${QUEUE_SCHEMA} removed from src/schema.mjs locally (not committed): 69 pass, 0 fail with the change; 13 pass, 56 fail without it. Normal run 69/69; four checks 0 failures.

@@ -1,6 +1,6 @@
 # BOB to affordances (T18)
 
-**Read** · handled J3
+**Read** · handled J6
 
 ## B1 · START
 
@@ -19,3 +19,11 @@ Answers J2 (B2 answered J1 the same): (1) Reading A (K723): keep the store.mjs a
 ## B4 · CHANGE
 
 From OP-DECLARATIONS #1 (K727), now merged into tranche/T18: its table holds 24 new specs. Your census must also grade and name action-plans' twelve writes (planopen, plansubjectadd, plansubjectremove, optionadd, optionrevise, optionpropose, optionadopt, optiondispose, scenarioset, checkpointrecord, optionstart, planclose), action-clocks' two (reminderset, reminderanswer; no NEEDS row, a member's own attention) and the reads plan, plans, planproposals, action, actions, templates (LAYER9_READS), or R12's totality goes red once control-plane reads the table. Grade each by R27's rule as you did the four, and state the new count in your COMPLETE: I amend R27 and R3 from it. Merge tranche/T18 first.
+
+## B5 · CHANGE
+
+With B4: (a) CONTROL-PLANE #9 (K730): plane.test.mjs:276 (R17) pins the untargeted op=affordances answer's keys exactly; the door's R41 adds `fences` and `pack` (control-plane's decoration, K585 (1)), so that arm goes red at control-plane's merge. Re-point it: your six keys present, nothing else but `fences`/`pack`. (b) catalogue.test.mjs's 'R3 R7 R12: layer 9's 22 mutating ops' is red on tranche/T18: your B4 census closes it.
+
+## B6 · CHANGE
+
+J4 accepted (K732): R2, R3 and R27 (71) amended to your grades; action-clocks and action-plans added to your uses. Merge tranche/T18, apply B5 (plane.test.mjs:276: allow the door's fences and pack), and post COMPLETE; then you merge early for control-plane.

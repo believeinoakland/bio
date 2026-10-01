@@ -178,3 +178,35 @@ test("R35: this class alone is the frame — constructed without any wrapper it 
   assert.deepEqual([r.status, JSON.parse(text).reason], [500, "STORE_INTERNAL_ERROR"]);
   assert.equal(/secret-value|SQLITE/.test(text), false);
 });
+
+test("R26, R35 (N13): queue's, tasks' and affordances' maps are part of the route map, dispatched by this door — the construction makes their tables (queue, then tasks), each route answers through the door what its own map answers called directly, and legacy-store's own map no longer holds them", async () => {
+  const A = await import("../../../src/affordances.mjs");
+  const Q = await import("../../../src/queue/index.mjs");
+  const T = await import("../../../src/tasks/index.mjs");
+  const u = new URL("http://do/");
+  const qOps = Object.keys(Q.queueOps(null, u, null)), tOps = Object.keys(T.tasksOps(null, u, null));
+  assert.ok(qOps.includes("queue") && tOps.includes("tasks"));
+  const o = object();
+  const store = new D.Store(o.ctx, o.env);
+  await settle(o);
+  const tables = o.ctx.storage.sql.exec("SELECT name FROM sqlite_master WHERE type='table'").toArray().map((r) => r.name);
+  for (const t of Q.QUEUE_TABLES) assert.ok(tables.includes(t), `queue's ${t}`);
+  /* legacy-store's map alone holds none of them */
+  const legacy = Object.keys(LegacyStore.prototype.routes.call(store, u, null));
+  for (const op of [...qOps, ...tOps, "affordancefacts"]) assert.equal(legacy.includes(op), false, `legacy-store still routes ${op}`);
+  assert.deepEqual(Object.keys(A.affordancesOps(null, u)), ["affordancefacts"]);
+  /* through the door, each answers what its own map answers on a second object */
+  const twin = object();
+  new D.Store(twin.ctx, twin.env);
+  await settle(twin);
+  for (const [path, ops, of] of [["tasks?viewer=class:admin", T.tasksOps, T.tasksOf], ["queue?member=ann&viewer=member:ann", Q.queueOps, Q.queueOf],
+                                 ["affordancefacts?target=NOPE-1&viewer=class:admin&identity=class:admin&author=token:admin&by=class:admin", A.affordancesOps, A.affordancesOf]]) {
+    const r = await store.fetch(new Request(`http://do/${path}`));
+    const url = new URL(`http://do/${path}`);
+    const direct = await ops(of(twin.ctx), url, null)[url.pathname.slice(1)]();
+    assert.equal(r.status, 200, path);
+    assert.deepEqual(JSON.parse(mask(await r.text())), JSON.parse(mask(JSON.stringify({ ok: true, result: direct }))), path);
+  }
+  /* negative control: a route no module serves is still R26's refusal */
+  assert.equal((await store.fetch(new Request("http://do/queuenosuch"))).status, 400);
+});

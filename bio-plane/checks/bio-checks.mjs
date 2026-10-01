@@ -6225,51 +6225,6 @@ export const ACT_SHAPE_CHECKS = {
 
 
 /* ===========================================================================
-   D-270 — THE ARGUMENT COMPLAINT (C-61), the other half of the row.
-
-   THREE OPS REFUSED A MISSING OR MALFORMED ARGUMENT WITH A BARE `error` STRING
-   AND NO CODE OF ANY KIND: `op=capture` and `op=pdfstructure` (*"requires
-   sha256=<64 lowercase hex>"*) and `op=monitor` (*"needs a bundleId"*). A
-   refusal with no code is one layer further out than REC-64's sweep of codes
-   with no translation — there is nothing to translate, DEC-49's guard cannot
-   see it, and a census of CODES cannot count a refusal that has none.
-
-   ONE ROW AND NOT THREE, and the reason is that the CONDITION is one condition.
-   `AI_BEYOND_TASK_SCOPE` is the standing precedent for a single code whose
-   producers are told apart by a field, and `refusal-wire.test.mjs` already pins
-   that pair for exactly this reason. The site names the argument and the shape
-   it wanted, so a caller can tell `op=capture`'s complaint from `op=monitor`'s
-   without the catalogue growing a row per call site.
-
-   AND IT IS MINTED IN ONE GOVERNED FUNCTION rather than at three edited sites,
-   because a DEC-49 row holds ONE `where` naming the SMALLEST SPAN. A code minted
-   at three sites inside `fetch` could not name one honestly — the guard's own
-   arm-C note calls that the MULTI-SITE class. Minting it in `requiredArgument`
-   is what makes this row's `where` true.
-
-   CORRECTED 2026-09-23 BY D-278. This paragraph read *`op=verify` and
-   `op=publishedbytes` make the same sha256 complaint and keep their bare
-   strings … D-278's subject and a different determination.* BOB #26 made that
-   determination (INTERFACES.md I3, **Answers**, 2026-09-22): the PRE-
-   AUTHENTICATION argument complaints of `verify`, `publishedbytes`,
-   `publishedcase` and `knock` take THIS row, because the fact is the same fact
-   and the sentence below carries no member vocabulary. They are minted through
-   the same helper, so the row's one `where` stays true.
-   =========================================================================== */
-export const REQUIRED_ARGUMENT_CHECKS = {
-  /* NOTHING WAS CHANGED, and the sentence says so first. A caller who cannot
-     tell a refused request from a half-applied one has to go and look, and this
-     is the one refusal in the plane most likely to be met by a script. */
-  REQUIRED_ARGUMENT_MISSING: {
-    check: 'C-61.1',
-    where: 'src/index.mjs requiredArgument > is-required-argument',
-    translation: 'This request left out an argument the operation cannot run without, or sent one '
-      + 'in a shape it does not accept. Nothing was changed. The argument and the shape it must '
-      + 'take are named beside this message.',
-  },
-};
-
-/* ===========================================================================
    D-278 (C-68) — A FACT ABOUT THE INSTALLATION, NOT ABOUT THE REQUEST.
 
    BOB #26's per-group ruling, PROVISIONAL, 2026-09-22 (`INTERFACES.md` I3,

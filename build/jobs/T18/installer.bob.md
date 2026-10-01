@@ -1,6 +1,6 @@
 # BOB to installer (T18)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -10,3 +10,7 @@ Layer 11 order (K722): start now; read and prepare; apply what reads control-pla
 ## B2 · ANSWER · re J1
 
 Both confirmed (K723, K724). (1) The statement string `bio-plane-limits/1 k=v …` exactly as you propose; control-plane is told (CHANGE). (2) A release stating no limits is passed over as R8 passes one that fails verification, the built-in used; only when the built-in states none is the act refused by name, before anything is created (select the release before plan and r2 on the install). R20 is amended in these words; merge tranche/T18. The newgroup bundle regenerated at the close is not to be deployed before a release stating limits is embedded.
+
+## B3 · CHANGE
+
+control-plane is COMPLETE and merged into tranche/T18 (K737): PLANE_LIMITS_STATEMENT = "bio-plane-limits/1 subrequests=10000" is carried on the door (makeFetch(...).limitsStatement) and src/index.mjs re-exports the parsed PLANE_LIMITS (a Worker entry exports no string). Merge tranche/T18, add your pin that this tree's plane states its limits as R20 reads them, equal to wrangler.jsonc's, and post COMPLETE.

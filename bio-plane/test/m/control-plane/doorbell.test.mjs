@@ -10,10 +10,11 @@ import { DatabaseSync } from "node:sqlite";
 import { O, M, world, call, opCalls, hex64, aik, cred, member, refused, FORGED, QUERY_STAMPS, BODY_STAMPS } from "./harness.mjs";
 const D = await import("../../../src/control-plane/dispatch.mjs");
 const P = await import("../../../src/control-plane/pull.mjs");
-const { captureOf } = await import("../../../src/capture/index.mjs");
+const { captureOf, PULL_WITHIN_FAILED_DETAIL } = await import("../../../src/capture/index.mjs");
 const { provenanceOf } = await import("../../../src/provenance/index.mjs");
 const { recordOf } = await import("../../../src/record-core/index.mjs");
 const { SOURCES_CHECKS } = await import("../../../src/sources/checks.mjs");
+const { aiReachesAsMember } = await import("../../../src/admission/index.mjs");
 
 const { OPS, SESSION_OPS, NEEDS } = O;
 
@@ -68,7 +69,7 @@ const admits = (spec, c) => (c.session ? spec.classes.includes(c.session && c.na
 /* Every name a stamp could carry, so a stamp the op does not declare is seen to be absent. */
 const STAMP_NAMES = [...new Set([...QUERY_STAMPS, "proposedBy", "principal", "owner", "member", "mintedBy", "proposer"])];
 
-test("R2, R31 (N364): each new op has its spec — the table K558 names — and is forwarded to the store's route (the pull to its own), in the namespace the caller lands in, the caller's own parameters and body whole", async () => {
+test("R2 (N364; op-declarations R6): each new op has its spec — the table K558 names — and is forwarded to the store's route (the pull to its own), in the namespace the caller lands in, the caller's own parameters and body whole", async () => {
   assert.equal(Object.keys(ROUTES).length, 18);
   for (const [op, [spec, needs]] of Object.entries(ROUTES)) {
     assert.deepEqual(OPS[op], spec, op);
@@ -119,7 +120,7 @@ test("R17, R29 (N364): each new op's declared stamps are the server's value from
   assert.ok(checked > 60, String(checked));
 });
 
-test("R10, R11, R12, R13 (N364): the pull, the knock reads and a member's own key are a session's alone — every bearer CLASS_FORBIDDEN, an agent AI_BEYOND_TASK_SCOPE; the writes need contribute (NOT_CAPABLE), the reads and the own-key acts nothing; nothing is forwarded on a refusal, and each has its negative control", async () => {
+test("R28 (N364; admission R8–R11): the pull, the knock reads and a member's own key are a session's alone — every bearer CLASS_FORBIDDEN, an agent AI_BEYOND_TASK_SCOPE; the writes need contribute (NOT_CAPABLE), the reads and the own-key acts nothing; nothing is forwarded on a refusal, and each has its negative control", async () => {
   const bare = hex64(), narrow = aik();
   const { env, S, A } = world({ sessions: { [bare]: member("bea", []) },
                                 creds: { [narrow]: cred({ tokenId: "agent-narrow", writes: ["cite"] }) } });
@@ -141,7 +142,7 @@ test("R10, R11, R12, R13 (N364): the pull, the knock reads and a member's own ke
       w2.env.calls.length = 0;
       refused(await call(w2.env, { op, token: wide, method: "POST", body: {} }), 403, "AI_BEYOND_TASK_SCOPE", "C-29.6");
       assert.equal(opCalls(w2.env).length, 0);
-      assert.equal(M.aiReachesAsMember(OPS[op], op), false, op);
+      assert.equal(aiReachesAsMember(OPS[op], op), false, op);
     } else if (spec.mutating) {
       /* an agent not declaring the write is refused; negative control: the wide one is admitted */
       env.calls.length = 0;
@@ -474,7 +475,8 @@ test("R36 (N380, K559; capture R65): the pull and its promotion are one act — 
     const first = await P.pullAndFile(deps, who);
     assert.deepEqual([first.ok, first.reason, first.status, first.knockId], [false, reason, status, k.knockId]);
     assert.equal(JSON.stringify(first).includes("a store fault"), false, "a fault's message is not carried");
-    if (fault === "throw") assert.match(first.detail, /the promotion did not complete/);
+    /* N419: a fault answers capture's fixed sentence (capture R65), never the thrown message */
+    if (fault === "throw") assert.equal(first.detail, PULL_WITHIN_FAILED_DETAIL);
     assert.deepEqual(heldOf(r, k.knockId, k.sha256), { status: "new", capture_sha: null, pulled_by: null, receipt: false, home: null },
                      "the pull was rolled back with its promotion");
     assert.deepEqual(standinWrites(r), [], "no bundle filed");

@@ -12,6 +12,9 @@ import { promotionOf } from "../promotion/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { sourcesOf, sourcesOps } from "../sources/index.mjs";
+import { queueOf, queueOps } from "../queue/index.mjs";
+import { tasksOf, tasksOps } from "../tasks/index.mjs";
+import { affordancesOf, affordancesOps } from "../affordances.mjs";
 import { DISPATCH_CHECKS } from "./checks.mjs";
 import { pullAndFile } from "./pull.mjs";
 
@@ -194,6 +197,10 @@ export class Store extends LegacyStore {
   static PROJECT_NAMING_READS_NOT = PROJECT_NAMING_READS_NOT;
   constructor(ctx, env) {
     super(ctx, env);
+    /* N13 (K61, N363): queue, then tasks, each creating its own tables (queue R36, tasks R8), built here rather than by
+       legacy-store, which is earlier in the order than both. */
+    queueOf(ctx, { env }).migrate();
+    tasksOf(ctx, { env }).migrate();
     ctx.blockConcurrencyWhile(async () => instanceSetupOf(ctx, env).start());
   }
   async fetch(req) {
@@ -205,10 +212,11 @@ export class Store extends LegacyStore {
   }
 }
 
-/* N364: the routes this composition root adds to the one map, each passing R26's frame: `sources`' own map (N379, K566:
-   its acts, its reads and the no-account `knockerconsent`, which no other module dispatches), membership's two own-key
-   acts, which membership keeps out of its map (`by` spread, then overridden, as `signeradd`), and R36's pull, a route of
-   its own beside capture's `inboxpull`, which the Worker's `op=inboxpull` addresses. */
+/* N364, N13: the routes this composition root adds to the one map, each passing R26's frame: queue's, tasks' and
+   affordances' maps; `sources`' own map (N379, K566: its acts, its reads and the no-account `knockerconsent`, which no
+   other module dispatches); membership's two own-key acts, which membership keeps out of its map (`by` spread, then
+   overridden, as `signeradd`); and R36's pull, a route of its own beside capture's `inboxpull`, which the Worker's
+   `op=inboxpull` addresses. */
 export function controlPlaneRoutes(ctx, url, body) {
   const q = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" && !Array.isArray(body) ? body : {};
@@ -216,7 +224,15 @@ export function controlPlaneRoutes(ctx, url, body) {
      route builds it. */
   const sourceRoutes = Object.fromEntries(Object.keys(sourcesOps(null, url, body))
     .map((op) => [op, () => sourcesOps(sourcesOf(ctx), url, body)[op]()]));
+  /* N13: queue's, tasks' and affordances' own maps (the `membershipOps` pattern), dispatched here and no longer by
+     legacy-store, made
+     the same way: an instance is reached only when one of its routes runs. */
+  const lazily = (ops, of) => Object.fromEntries(Object.keys(ops(null, url, body)).map((op) => [op, () => ops(of(ctx), url, body)[op]()]));
   return {
+    ...lazily(queueOps, queueOf),
+    ...lazily(tasksOps, tasksOf),
+    /* N13 (K723 A): affordances' facts route (its R13–R16), the facts `op=affordances` derives an object's acts from. */
+    ...lazily(affordancesOps, affordancesOf),
     ...sourceRoutes,
     signerregister: () => membershipOf(ctx).signerRegisterOwn({ ...b, by: q("by") }),
     signerrevoke: () => membershipOf(ctx).signerRevokeOwn({ ...b, by: q("by") }),
