@@ -9,6 +9,9 @@
  * (C-2.10's action arms and C-11.1), `RESOLUTIONS`, and the rows `actions`' acts mint: C-32.3, C-32.4, C-32.18–C-32.20,
  * C-33.3–C-33.9, C-72, C-73, C-90, C-94, C-101 and C-117 (C-117.5, `PENDING_CLOCKS_BAD_BEFORE`, is `action-clocks`'; N428).
  * Every value, finding and sentence is the copy's, unchanged; only C-73.6's `where` names its new site (awaiting stamp).
+ * Since T20 layer 9: C-117.20–.22 (`actions` R52, K899 (7); awaiting stamp), and a member reads "record" where the
+ * copy said "bundle" (K899 (1): `respondsToEdgeFindings`' repair here, `actionBasisFindings`' target finding in
+ * `./grammar.mjs`); identifiers keep their names.
  *
  * The vocabularies and the leg, ledger, quote and lifecycle grammars are `./grammar.mjs`' (moved from the catalogue),
  * re-exported here so this file is the module's one face; `LAW_LEVELS` is `jurisdictions`' (its R31), re-exported, never
@@ -432,7 +435,7 @@ export function respondsToEdgeFindings(fm, findings) {
       findings.push(f('C-6.1', 'error',
         `references[${i}] is a responds_to edge whose target '${String(r.target).slice(0, 40)}' is not an ACTION: `
         + `this edge says "this is what came back when we asked", so it points at the ask`,
-        ['point the edge at the ACTN- bundle whose correspondence this answers',
+        ['point the edge at the ACTN- record whose correspondence this answers',
          'or use relates_to, which claims nothing about an exchange']));
     }
   });
@@ -1272,5 +1275,25 @@ export const ACTION_CATALOGUE_CHECKS = {
     where: 'src/actions/index.mjs actionPressure > is-pressure-entry',
     translation: 'The entry is named by its position in the action\'s correspondence, counted from zero, and no entry '
       + 'stands at the position given. Nothing was written.',
+  },
+  /* R52 (K899 (7), DEC-61; N-A19): a litigation hold stated on a `legal` pressure mark, in place or released, with a
+     reason. Minted by `actions`' `actionHold` (its regions `is-hold` and `is-hold-legal-mark`). */
+  MACHINE_CANNOT_SET_HOLD: {
+    check: 'C-117.20',
+    where: 'src/actions/index.mjs actionHold > is-hold',
+    translation: 'Saying whether a litigation hold is in place is a member\'s judgement, and somebody answers for it. '
+      + 'The credential that asked here is an automated one, so it cannot say. Sign in to record it yourself.',
+  },
+  HOLD_REFUSED: {
+    check: 'C-117.21',
+    where: 'src/actions/index.mjs actionHold > is-hold',
+    translation: 'A litigation hold is recorded as in place or released, with a reason of up to 500 characters and no '
+      + 'quotation mark, backslash or line break. This one was not, so nothing was written.',
+  },
+  HOLD_NO_LEGAL_MARK: {
+    check: 'C-117.22',
+    where: 'src/actions/index.mjs actionHold > is-hold-legal-mark',
+    translation: 'A litigation hold is recorded on something the group received and marked as legal pressure. The entry '
+      + 'named carries no such mark, so nothing was written.',
   },
 };

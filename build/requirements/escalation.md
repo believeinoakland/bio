@@ -79,7 +79,7 @@ Terms. The **stages**, in order: `1 documentation` (discovery and documentation)
   - R6's note naming it leaves `notes`;
   - an id naming it or one of its ledger entries leaves a trigger's `ids` and a history entry's trigger ids.
 
-  No id, state, placeholder or count. The escalation states `out_of_view: true`, which says only that something was withheld. The escalation's own stage, history acts, evaluations and proposals stand. A viewer who may see everything is answered as before, with no `out_of_view` key. *(not yet met: T20 layer 9)*
+  No id, state, placeholder or count, and no gap in a sequence number that would count one: where an entry was withheld from a list numbered by `seq` (`actions`, the history's `attach` entries), the entries left are answered in their order without `seq` (K913). The escalation states `out_of_view: true`, which says only that something was withheld. The escalation's own stage, history acts, evaluations and proposals stand. A viewer who may see everything is answered as before, with no `out_of_view` key. *(not yet met: T20 layer 9)*
 
 ### Satisfies
 
