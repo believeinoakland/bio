@@ -2,19 +2,20 @@
    the module's interface, over the real modules. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, MACHINE, STRANGER } from "./fixture.mjs";
+import { world, V, MACHINE, STRANGER, WORDS, LAW } from "./fixture.mjs";
 import { FILING_TEXT_MAX } from "../../../src/filings/index.mjs";
 import { createHash } from "node:crypto";
 
 const sha = (s) => createHash("sha256").update(s, "utf8").digest("hex");
 
-/* A Tier 1 draft, prepared by a machine, with its one unfillable blank written in by the approving member. */
+/* A Tier 1 draft in the member's own words (R28), prepared by a machine, with its one unfillable blank written in by
+   the approving member. */
 function drafted(o = {}) {
   const x = world();
   const A = x.action(o);
-  const d = x.f.filingPrepare({ action: A, preparer: MACHINE, viewer: MACHINE });
-  assert.equal(d.ok, true);
-  const text = d.text.replace("[UNFILLED: bylaw]", "P.E.B.L. § 12");
+  const d = x.f.filingPrepare({ action: A, text: WORDS, preparer: MACHINE, viewer: MACHINE });
+  assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));
+  const text = d.text.replace("[UNFILLED: law]", LAW);
   return { x, A, d, text };
 }
 const approve = (x, filing, over = {}) => x.f.filingApprove({ filing, author: V("bo"), viewer: V("bo"), ...over });
@@ -32,7 +33,7 @@ test("R6 refusals in order: MACHINE_CANNOT_APPROVE, NO_SUCH_FILING (absent and i
   assert.deepEqual([absent.reason, absent.detail], [hidden.reason, hidden.detail]);
   assert.equal(absent.reason, "NO_SUCH_FILING");
   assert.equal((await approve(x, d.id)).reason, "STILL_UNFILLED", "the draft's own text still holds a blank");
-  assert.deepEqual((await approve(x, d.id)).unfilled, ["bylaw"]);
+  assert.deepEqual((await approve(x, d.id)).unfilled, ["law"]);
   assert.equal((await approve(x, d.id, { text: `${"x".repeat(FILING_TEXT_MAX)}y` })).reason, "TEXT_UNWRITABLE");
   assert.equal((await approve(x, d.id, { text: "a lone \uD800 surrogate" })).reason, "TEXT_UNWRITABLE", "not UTF-8 text");
   assert.equal((await approve(x, d.id, { text: 42 })).reason, "TEXT_UNWRITABLE");
@@ -75,7 +76,7 @@ test("R6 a member approves the draft's text or an edited text; the approved text
   assert.deepEqual([again.reason, again.approved_by], ["ALREADY_APPROVED", V("bo")]);
   const B = x.action({ kind: "records_request", risk_tier: 2, law: "Test Stat. § 1.100" });
   const d2 = x.f.filingPrepare({ action: B, preparer: V("bo"), viewer: V("bo") });
-  const own = d2.text.replace("[UNFILLED: records]", "the minutes");
+  const own = `${d2.text}\n\nThe minutes of the meeting of 2 March.`;
   assert.equal((await approve(x, d2.id, { text: own })).ok, true);
   assert.equal(x.row(`SELECT text FROM filing_drafts WHERE filing_id=?`, d2.id).text, d2.text, "the draft is never edited");
 });
@@ -100,7 +101,7 @@ test("R7 refusals: MACHINE_CANNOT_FILE, NO_SUCH_FILING, NOT_APPROVED, ALREADY_SE
   assert.deepEqual([again.reason, again.ord], ["ALREADY_SENT", 0]);
 });
 
-test("R7 the sending is one `sent` correspondence entry on the action, held as the capture sent or the member's account, linked both ways; no state moves and no clock entry is written; `proposed` carries the next state and the clock entries action-clocks offers (its R2)", async () => {
+test("R7 R30 the sending is one `sent` correspondence entry on the action, held as the capture sent or the member's account, linked both ways; no state moves and no clock entry is written; `proposed` carries the next state and the clock entries action-clocks offers (its R2)", async () => {
   const { x, A, d, text } = drafted();
   (await approve(x, d.id, { text }));
   const bytes = x.capture("INFO-2026-0003-sent", text);
@@ -119,13 +120,22 @@ test("R7 the sending is one `sent` correspondence entry on the action, held as t
   /* A records request: its deadline starts at receipt, and action-clocks offers the clock entry (stored apart). */
   const B = x.action({ kind: "records_request", risk_tier: 2, state: "planned", law: "Test Stat. § 1.100" });
   const d2 = x.f.filingPrepare({ action: B, preparer: V("bo"), viewer: V("bo") });
-  (await approve(x, d2.id, { text: d2.text.replace("[UNFILLED: records]", "the minutes") }));
+  (await approve(x, d2.id, { text: `${d2.text}\n\nThe minutes.` }));
   const s = x.f.filingRecordSent({ filing: d2.id, at: "2026-09-29", account: "emailed", author: V("bo"), viewer: V("bo") });
   assert.equal(s.held_as, "testimony");
   assert.deepEqual([s.proposed.next_state.from, s.proposed.next_state.to], ["planned", "active"]);
   assert.deepEqual(s.proposed.clocks.map((c) => [c.rule, c.starts, c.offered.ok, c.offered.proposal.rule]),
                    [["records_answer", "received", true, "records_answer"]]);
   assert.equal(x.read(B).current_state, "planned");
+  /* R30: an offered entry counted in business days states the calendar's status as action-clocks R10 states it */
+  const C = x.action({ kind: "records_request", risk_tier: 2, law: "Test Stat. § 1.100" });
+  assert.equal(x.actions.actionCorrespond({ target: C, direction: "received", at: "2026-03-12", account: "the clerk wrote",
+                                            author: V("bo"), viewer: V("bo") }).ok, true);
+  const d3 = x.f.filingPrepare({ action: C, preparer: V("bo"), viewer: V("bo") });
+  await approve(x, d3.id);
+  const s3 = x.f.filingRecordSent({ filing: d3.id, at: "2026-09-29", account: "emailed", author: V("bo"), viewer: V("bo") });
+  const offered = s3.proposed.clocks[0].offered.proposal;
+  assert.deepEqual([offered.entry.date, offered.calendar.status], ["2026-03-20", "unconfirmed"], "17 March a holiday; no member confirmed 2026");
   assert.deepEqual(x.read(B).clock, x.read(B).clock.filter((c) => c.text !== "records_answer"), "the offer is not on the clock");
 });
 

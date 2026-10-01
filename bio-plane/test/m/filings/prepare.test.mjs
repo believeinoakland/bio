@@ -2,7 +2,7 @@
    Driven at the module's interface, over the real modules. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, MACHINE, STRANGER, PROFILE } from "./fixture.mjs";
+import { world, V, MACHINE, STRANGER, PROFILE, attributed, templatesOver } from "./fixture.mjs";
 import { FILING_BLANKS, unfilledMarker, Filings } from "../../../src/filings/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { validate } from "../../../../jurisdictions/index.mjs";
@@ -17,10 +17,13 @@ export function otherProfile(x, over = {}) {
     action_kinds: [
       { kind: "bylaw_complaint", label: "notice of breach", tier: 1,
         venue: { name: "the Borough Registry", how: "mail", basis: "TEST" },
-        template: `Notice. ${Object.keys(FILING_BLANKS).map((n) => `${n}={{${n}}}`).join(" | ")}`, basis: "TEST" },
+        template: attributed("TPL-other-notice", "file", `Notice. ${Object.keys(FILING_BLANKS).map((n) => `${n}={{${n}}}`).join(" | ")}`),
+        basis: "TEST" },
       { kind: "records_request", label: "records request", tier: 2,
-        venue: { name: "the Borough Registry", how: "email", basis: "TEST" }, template: "Please send {{records}}.", basis: "TEST" },
-      { kind: "commitment_claim", label: "claim", tier: 3, basis: "TEST" },
+        venue: { name: "the Borough Registry", how: "email", basis: "TEST" },
+        template: attributed("TPL-other-records", "file", "Please send the records named under {{law}}."), basis: "TEST" },
+      { kind: "commitment_claim", label: "claim", tier: 3, venue: { name: "the Borough Court", how: "court", basis: "TEST" },
+        basis: "TEST" },
     ], ...over };
 }
 
@@ -31,7 +34,7 @@ function rekind(x, id, patch) {
     ? Object.fromEntries(Object.entries({ ...k, ...patch }).filter(([, v]) => v !== undefined)) : k)) };
 }
 
-test("R1 refusals in order: NO_AUTHOR (FILING_NO_PREPARER), NO_SUCH_ACTION (absent and invisible one answer), ACTION_CLOSED, FILING_TIER_UNDETERMINED, TIER3_COUNSEL_PACKET, KIND_NO_TEMPLATE; each with a negative control", async () => {
+test("R1 refusals in order: NO_AUTHOR (FILING_NO_PREPARER), NO_SUCH_ACTION (absent and invisible one answer), ACTION_CLOSED, FILING_TIER_UNDETERMINED, TIER3_COUNSEL_PACKET, then R28's; KIND_NO_TEMPLATE retired (a kind with no template is TEMPLATE_NOT_NAMED, and the member's own words serve it); each with a negative control", async () => {
   const x = world();
   const A = x.action();
   assert.equal(prep(x, A, { preparer: "" }).reason, "FILING_NO_PREPARER");
@@ -51,21 +54,28 @@ test("R1 refusals in order: NO_AUTHOR (FILING_NO_PREPARER), NO_SUCH_ACTION (abse
                "asked before the Tier 3 route");
   assert.equal(prep(x, x.action({ kind: "commitment_claim" })).reason, "TIER3_COUNSEL_PACKET",
                "a Tier 3 kind has no template, and the Tier 3 answer comes first");
-  assert.equal(prep(x, x.action({ kind: "other" })).reason, "KIND_NO_TEMPLATE", "a kind the profile does not hold");
+  const O = x.action({ kind: "other" });
+  assert.equal(prep(x, O).reason, "TEMPLATE_NOT_NAMED", "a kind the profile does not hold: name a template or write the words");
+  assert.equal(prep(x, O, { text: "To the {{counterparty_role}}: {{act}}." }).ok, true, "the member's own words serve it");
+  assert.equal(prep(x, A, { text: "Words.", template: { id: "TPL-test-bylaw-complaint" } }).reason, "TEMPLATE_AND_TEXT",
+               "R28's refusal after R1's");
+  assert.equal(prep(x, x.action({ kind: "commitment_claim" }), { text: "Words.", template: { id: "x" } }).reason,
+               "TIER3_COUNSEL_PACKET", "R1's refusals come before R28's");
 });
 
-test("R1 KIND_NO_TEMPLATE also when no profile is active and when the active profiles disagree on the template (withheld as a conflict)", async () => {
+test("R1 R28 TEMPLATE_NOT_NAMED (never the retired KIND_NO_TEMPLATE) also when no profile is active and when the active profiles disagree on the template (withheld as a conflict)", async () => {
   const none = world({ profiles: [] });
   const r = prep(none, none.action());
-  assert.equal(r.reason, "KIND_NO_TEMPLATE");
+  assert.equal(r.reason, "TEMPLATE_NOT_NAMED");
   assert.match(r.detail, /no jurisdiction profile is active/);
   const x0 = world();
-  const clash = rekind(x0, "test-filings-clash", { template: "A different template {{act}}." });
-  assert.equal(validate(clash).ok, true);
+  const clash = rekind(x0, "test-filings-clash", { template: attributed("TPL-test-clash", "file", "A different template {{act}}.") });
+  assert.equal(validate(clash).ok, true, JSON.stringify(validate(clash).errors));
   const x = world({ profiles: [PROFILE, clash] });
   const c = prep(x, x.action());
-  assert.equal(c.reason, "KIND_NO_TEMPLATE");
+  assert.equal(c.reason, "TEMPLATE_NOT_NAMED");
   assert.match(c.detail, /different templates/);
+  assert.equal(prep(x, x.action(), { template: { id: "TPL-test-clash" } }).ok, true, "a named one is still filled");
 });
 
 test("R2 the stricter of the kind's tier and the action's governs; an undetermined action tier is refused, never read as 1; with no kind tier the action's alone governs, stated", async () => {
@@ -148,8 +158,8 @@ test("R3 every blank is filled from the record naming its source, or left as a v
   const y = world();
   const T = y.action();
   const t = prep(y, T);
-  assert.deepEqual(t.unfilled, [{ name: "bylaw", why: "filings fills no blank by this name, so the record holds no value for it" }]);
-  assert.equal(t.text, "To the Selectboard: the works order let on 2026-03-02 does not conform to [UNFILLED: bylaw].");
+  assert.deepEqual(t.unfilled, []);
+  assert.equal(t.text, "To the Selectboard: the works order let on 2026-03-02 does not conform to P.E.B.L. § 12; MCBC 2025-3.");
   assert.equal(prep(y, T, { preparer: MACHINE, viewer: MACHINE }).text, t.text);
 });
 
@@ -180,7 +190,8 @@ test("R3 the producing group is read through promotion's fact producingGroup (N3
   /* no provider at all: a real promotion on which no module registered the fact (FACT_UNAVAILABLE) */
   const bare = promotionOf({ storage: x.st }, { record: x.record, membership: x.membership });
   assert.equal(bare.fact("producingGroup").reason, "FACT_UNAVAILABLE");
-  const f2 = new Filings({ storage: x.st, record: x.record, host: x.host, promotion: bare, publication: x.p,
+  const filingTemplates = templatesOver(x.w, [other]);
+  const f2 = new Filings({ storage: x.st, record: x.record, host: x.host, promotion: bare, publication: x.p, filingTemplates,
                            provenance: x.prov, content: x.content, profiles: () => [other], now: () => x.clock.now });
   const un = f2.filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") });
   const ug = group(un);
@@ -193,7 +204,7 @@ test("R3 the producing group is read through promotion's fact producingGroup (N3
   /* no promotion module reachable (no host, none given; N355): undetermined, said so, with no refusal code of
      promotion's spelled by filings */
   const f3 = new Filings({ storage: x.st, record: x.record, actions: x.actions, publication: x.p, provenance: x.prov,
-                           content: x.content, profiles: () => [other], now: () => x.clock.now });
+                           content: x.content, profiles: () => [other], now: () => x.clock.now, filingTemplates });
   assert.equal(f3.promotion, null, "no promotion module is reachable");
   const np = f3.filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") });
   const npg = group(np);
@@ -205,7 +216,7 @@ test("R3 the producing group is read through promotion's fact producingGroup (N3
   assert.doesNotMatch(JSON.stringify(np), /FACT_UNAVAILABLE/);
   assert.ok(np.text.includes(unfilledMarker("group")));
   /* a reader handed in (legacy-store's, until layer 10) still works: a value, or the fact's own answer */
-  const handed = (fn) => group(new Filings({ storage: x.st, record: x.record, host: x.host, producingGroup: fn,
+  const handed = (fn) => group(new Filings({ storage: x.st, record: x.record, host: x.host, producingGroup: fn, filingTemplates,
     publication: x.p, provenance: x.prov, content: x.content, profiles: () => [other], now: () => x.clock.now })
     .filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") }));
   assert.deepEqual([handed(() => "handed-group").blank.value, handed(() => "handed-group").blank.source], ["handed-group", "fact:producingGroup"]);
@@ -261,10 +272,30 @@ test("R17 a Tier 3 governing tier never yields a template, a pre-filled filing o
   const p = x.f.counselPacket({ action: A, counsel: { name: "A. Counsel", organisation: "Test Chambers" }, author: V("olive"), viewer: V("olive") });
   assert.equal(p.fileable, false);
   const template = x.profile().action_kinds.find((k) => k.kind === "bylaw_complaint").template;
-  assert.equal(JSON.stringify(p).includes(template.slice(0, 18)), false, "no template text in the packet");
+  assert.equal(JSON.stringify(p).includes(template.text.slice(0, 18)), false, "no file template's text in the packet");
   const bad = { ...x.profile(), id: "test-tier3-template" };
-  bad.action_kinds = bad.action_kinds.map((k) => (k.tier === 3 ? { ...k, template: "{{act}}" } : k));
+  bad.action_kinds = bad.action_kinds.map((k) => (k.tier === 3 ? { ...k, template: attributed("TPL-tier3", "file", "{{act}}") } : k));
   assert.ok(validate(bad).errors.some((e) => e.code === "TEMPLATE_TIER3"));
+});
+
+test("R17 the brief arm: a brief template yields only a packet's briefing section, never a filing draft, at any tier; a Tier 3 kind's brief template is no filing even when named", async () => {
+  const x = world();
+  const BRIEF = { id: "TPL-test-commitment-brief" };
+  const brief = x.profile().action_kinds.find((k) => k.kind === "commitment_claim").template;
+  assert.equal(brief.use, "brief");
+  const T3 = x.action({ kind: "commitment_claim" });
+  assert.equal(prep(x, T3, { template: BRIEF }).reason, "TIER3_COUNSEL_PACKET", "Tier 3: no filing, whatever is named");
+  /* a member marks a commitment claim's action 1: the kind's tier 3 still governs */
+  assert.equal(prep(x, x.action({ kind: "commitment_claim", risk_tier: 1 }), { template: BRIEF }).reason, "TIER3_COUNSEL_PACKET");
+  assert.equal(x.count("filing_drafts"), 0);
+  /* in a packet, the brief's text enters only the briefing section */
+  const p = x.f.counselPacket({ action: T3, counsel: { name: "A. Counsel", organisation: "Test Chambers" }, template: BRIEF,
+                                author: V("olive"), viewer: V("olive") });
+  assert.equal(p.ok, true, JSON.stringify(p).slice(0, 300));
+  assert.equal(p.fileable, false);
+  const head = brief.text.split("{{")[0];
+  for (const [name, sec] of Object.entries(p.sections))
+    assert.equal(JSON.stringify(sec).includes(head), name === "briefing", `${name}: the brief's words only in the briefing`);
 });
 
 test("R20 no place, law, venue or template is named in behaviour or outward text: each comes from the active profiles, the test profile included; none active, none is named", async () => {
@@ -276,12 +307,12 @@ test("R20 no place, law, venue or template is named in behaviour or outward text
     const prof = typeof profiles[0] === "string" ? x.profile(profiles[0]) : profiles[0];
     const kind = prof.action_kinds.find((k) => k.kind === "bylaw_complaint");
     assert.equal(r.venue.name, kind.venue.name);
-    assert.ok(r.text.startsWith(kind.template.split("{{")[0]), "the text is the profile's template");
+    assert.ok(r.text.startsWith(kind.template.text.split("{{")[0]), "the text is the profile's template");
     outputs.push(r.text);
   }
   assert.notEqual(outputs[0], outputs[1]);
   const none = world({ profiles: [] });
-  assert.equal(prep(none, none.action()).reason, "KIND_NO_TEMPLATE");
+  assert.equal(prep(none, none.action()).reason, "TEMPLATE_NOT_NAMED");
   const block = none.f.availableActions({ determination: none.D, viewer: V("olive") });
   assert.deepEqual(block.kinds, []);
   assert.match(block.says, /no jurisdiction profile is active/);
