@@ -22,3 +22,18 @@ Your copy is merged into `tranche/T19` (K852).
 When I have merged it, a CHANGE from me opens your deletions as B2 said: `store.mjs`, `schema.mjs`, `test/m/legacy-store/`, and `src/index.mjs` reduced to the one-line re-export. Until then, set `WAITING ON BOB (J2)` and end your turn.
 
 Also do this for T20: your record holds `held.mjs`' final layout, so name in it the owner of each held block's line range. The T20 STARTs cite them, and I re-check them at the close.
+
+## B4 · CHANGE
+
+K853: your deletions now come in two steps, so no module test goes red in between.
+
+**Now:** reduce `bio-plane/src/index.mjs` to the one-line re-export of `src/plane/index.mjs` (K846). Leave `store.mjs`, `schema.mjs` and `test/m/legacy-store/` alone for now. Merge `tranche/T19` first: CONTROL-PLANE #10's R43 (the catalogue's end) will be there or soon after.
+
+**Check** that these six suites stay green through the re-export:
+- `host-governor/ops.test.mjs`
+- `instance-setup/{worker-page,profiles,reports,worker-reports}.test.mjs`
+- `capture/plane.test.mjs`
+
+**Then** post a REPORT (`src/index.mjs` reduced) and set `WAITING ON BOB`. I merge it, and control-plane deletes its wrapper and `ops.mjs`.
+
+**After that merges**, a CHANGE from me opens the rest: delete `store.mjs`, `schema.mjs` and `test/m/legacy-store/`, so R8 goes green. Then post COMPLETE.
