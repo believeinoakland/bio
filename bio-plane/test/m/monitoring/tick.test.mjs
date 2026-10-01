@@ -3,10 +3,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, serve, sha, DAEMON, V, infoMd } from "./fixture.mjs";
-import { monitorOp, monitoringOps, MONITOR_AUTHOR } from "../../../src/monitoring/index.mjs";
+import { monitorOp, monitoringOps, MONITOR_AUTHOR, DRIVE_TICK_CHECKS } from "../../../src/monitoring/index.mjs";
 import { identify } from "../../../../docprofile/registry.mjs";
-import { substanceDigests } from "../../../src/capture/acquire.mjs";
-import { DRIVE_CAPTURE_CHECKS, parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { substanceDigests, DRIVE_CAPTURE_CHECKS } from "../../../src/acquisition/index.mjs";
+import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
 
 const LOC = "https://records.example.org/minutes.txt";
 const DOC = "https://docs.google.com/document/d/1AbCdEfGhIjKlMnOpQrStUvWxYz0123456789abcd/edit";
@@ -75,10 +75,10 @@ test("R1 refusals, in order, each writing nothing; a store silence is named, nev
   /* and a store that answers is relayed with its status, the verdict the store's, declared first */
   const live = { fetch: async (r) => { const u = new URL(r.url); const body = await r.json();
     return new Response(JSON.stringify({ ok: true, result: await monitoringOps(w.m, u, body).monitor() })); } };
-  const relayed = await monitorOp(req(), live, { json, storeSilent: silent, requiredArgument: reqArg, doAnswer, viewer: "nobody", storeName: "s", cls: "daemon" });
+  const relayed = await monitorOp(req(), live, { json, storeSilent: silent, requiredArgument: reqArg, doAnswer, viaSession: true, sessViewer: "nobody", storeName: "s", cls: "daemon" });
   assert.deepEqual([relayed.s, relayed.b.ok, relayed.b.reason, relayed.b.store, relayed.b.tokenClass], [404, false, "ABSENT", "s", "daemon"]);
   assert.equal(Object.keys(relayed.b)[0], "ok", "the verdict is declared first");
-  const via = await monitorOp(req(), live, { json, storeSilent: silent, requiredArgument: reqArg, doAnswer, viewer: DAEMON, storeName: "s", cls: "daemon" });
+  const via = await monitorOp(req(), live, { json, storeSilent: silent, requiredArgument: reqArg, doAnswer, storeName: "s", cls: "daemon" });
   assert.deepEqual([opened.length, via.s, via.b.ok, via.b.store], [4, 200, true, "s"]);
   assert.equal(Object.keys(via.b)[0], "ok", "the verdict is declared first");
   /* N313: this module holds no reading of the envelope of its own: handed no `doAnswer`, it cannot read an answer, so
@@ -86,11 +86,35 @@ test("R1 refusals, in order, each writing nothing; a store silence is named, nev
   let asked = 0;
   const counted = { fetch: async (r) => { asked++; return live.fetch(r); } };
   const manifest = w.manifest(id).length;
-  assert.deepEqual(await monitorOp(req(), counted, { json, storeSilent: silent, requiredArgument: reqArg, viewer: DAEMON }), { silent: "monitor" });
+  assert.deepEqual(await monitorOp(req(), counted, { json, storeSilent: silent, requiredArgument: reqArg, cls: "daemon" }), { silent: "monitor" });
   assert.deepEqual([asked, w.manifest(id).length], [0, manifest], "the store was not asked and nothing was written");
   /* an envelope that answered with no status is no answer either */
   const bare = { fetch: async () => new Response(JSON.stringify({ ok: true, result: { body: {} } })) };
   assert.deepEqual(await monitorOp(req(), bare, { json, storeSilent: silent, requiredArgument: reqArg, doAnswer }), { silent: "monitor" });
+});
+
+test("R1 from the Worker, the stamps are composed from what the door decided, never read from the request: a session's member is the viewer and actor, of class member; a credential is class:<cls>, of class machine", async () => {
+  const w = world();
+  const id = "INFO-2026-0004-stamps";
+  w.monitored(id, LOC, "s1", { freq: "daily" });
+  w.net.routes[LOC] = serve("s1");
+  const json = (b, s = 200) => ({ b, s });
+  const doAnswer = async (res) => { let o = null; try { o = await (await res).json(); } catch { o = null; }
+    return o && o.ok === true ? { answered: true, result: o.result } : { answered: false, result: undefined }; };
+  const asked = [];
+  const live = { fetch: async (r) => { const u = new URL(r.url); asked.push(Object.fromEntries(u.searchParams));
+    return new Response(JSON.stringify({ ok: true, result: await monitoringOps(w.m, u, await r.json()).monitor() })); } };
+  /* the body's own viewer or actor never wins */
+  const req = () => new Request("https://x/api/?op=monitor&viewer=class:admin", { method: "POST",
+    body: JSON.stringify({ bundleId: id, viewer: "class:admin", actor: "forged", actorClass: "member" }) });
+  const H = { json, storeSilent: (op) => ({ silent: op }), requiredArgument: () => ({}), doAnswer, storeName: "s" };
+  const viaCred = await monitorOp(req(), live, { ...H, cls: "daemon" });
+  assert.deepEqual(asked.at(-1), { viewer: DAEMON, actorClass: "machine", actor: DAEMON });
+  assert.deepEqual([viaCred.s, viaCred.b.ok, viaCred.b.tokenClass], [200, true, "daemon"]);
+  assert.deepEqual([w.looks().at(-1).actor_class, w.looks().at(-1).actor], ["machine", DAEMON]);
+  const viaSession = await monitorOp(req(), live, { ...H, cls: "member", viaSession: true, sessViewer: "nobody" });
+  assert.deepEqual(asked.at(-1), { viewer: "nobody", actorClass: "member", actor: "nobody" });
+  assert.deepEqual([viaSession.s, viaSession.b.reason], [404, "ABSENT"], "a session reads at its member's sight");
 });
 
 test("R2 the tick fetches the Drive export or the locator, through the host governor; a governed refusal writes a governed look and nothing else", async () => {
@@ -203,7 +227,7 @@ test("R4 removed, unreachable, and the Drive shell refusals (C-48.8, C-48.9), ea
   const m0 = w.manifest(d).length, l0 = w.looks().length;
   const dr = await tick(w, d);
   assert.deepEqual([dr.status, dr.body.reason, dr.body.check], [502, "DRIVE_TICK_EXPORT_IS_THE_SHELL", "C-48.8"]);
-  assert.equal(dr.body.translation, DRIVE_CAPTURE_CHECKS.DRIVE_TICK_EXPORT_IS_THE_SHELL.translation);
+  assert.equal(dr.body.translation, DRIVE_TICK_CHECKS.DRIVE_TICK_EXPORT_IS_THE_SHELL.translation);
   assert.equal(w.manifest(d).length, m0);
   assert.equal(w.looks().length, l0 + 1);
   assert.equal(w.looks().at(-1).state, "LOOKED_INDETERMINATE");
@@ -212,6 +236,7 @@ test("R4 removed, unreachable, and the Drive shell refusals (C-48.8, C-48.9), ea
   w.net.routes[EXPORT] = serve("<!DOCTYPE html><html><head><title>x</title></head><body>app</body></html>", "application/vnd.oasis.opendocument.text");
   const br = await tick(w, d);
   assert.deepEqual([br.status, br.body.reason, br.body.check], [502, "DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL", "C-48.9"]);
+  assert.equal(br.body.translation, DRIVE_TICK_CHECKS.DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL.translation);
   assert.equal(w.manifest(d).length, m0);
   assert.equal(w.looks().at(-1).state, "LOOKED_INDETERMINATE");
   assert.equal(w.fm(d).monitoring.last_checked, null, "the document's last_checked is left as it was");
@@ -476,7 +501,7 @@ test("R10 the answer's fields, and a promotion that does not answer is named as 
   const doAnswer = async (res) => { let o = null; try { o = await (await res).json(); } catch { o = null; }
     return o && o.ok === true ? { answered: true, result: o.result } : { answered: false, result: undefined }; };
   const out = await monitorOp(new Request("https://x/", { method: "POST", body: JSON.stringify({ bundleId: vid }) }), failing,
-    { json, storeSilent: (op) => ({ silent: op }), requiredArgument: () => ({}), doAnswer, viewer: DAEMON });
+    { json, storeSilent: (op) => ({ silent: op }), requiredArgument: () => ({}), doAnswer, cls: "daemon" });
   assert.deepEqual(out, { silent: "monitor" });
   assert.ok(V);
 });

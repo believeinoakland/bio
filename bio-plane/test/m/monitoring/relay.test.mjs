@@ -27,7 +27,7 @@ const storeSilent = (op, correlation = undefined) =>
 const requiredArgument = (op, argument) => ({ reason: "REQUIRED_ARGUMENT_MISSING", op, argument });
 const req = () => new Request("https://x/?op=monitor", { method: "POST", body: JSON.stringify({ bundleId: "INFO-2026-0001-doc" }) });
 const store = (status, body) => ({ fetch: async () => new Response(JSON.stringify(body), { status }) });
-const H = (extra = {}) => ({ json, storeSilent, storeRefusal, requiredArgument, doAnswer, viewer: "class:daemon", storeName: "s", cls: "daemon", ...extra });
+const H = (extra = {}) => ({ json, storeSilent, storeRefusal, requiredArgument, doAnswer, storeName: "s", cls: "daemon", ...extra });
 const CORR = "0f1e2d3c-4b5a-4968-8776-a5b4c3d2e1f0";
 
 test("R49 a store refusal (ok false below 500) behind the monitor relay is answered with the store's status, code and sentence through storeRefusal", async () => {
