@@ -1205,8 +1205,8 @@ export function sectionText(body, heading) {
  *
  * WHY IT IS NOT A BACK DOOR TO DEC-32, which is the one thing this state could
  * have been. DEC-32's default is AND and *independent sufficiency is only ever
- * reached by an affirmative, attributed act.* `isSufficiencyClaimed` answers
- * TRUE for a named member and for NOTHING ELSE — not for this value, not for a
+ * reached by an affirmative, attributed act.* `sufficiencyClaimState` answers
+ * `claimed` for a named member and for NOTHING ELSE — not for this value, not for a
  * blank, not for a machine stamp — so a consumer that asks the one predicate
  * cannot take a maximum over a part nobody signed for however the field is
  * spelled. The state widens what the record can SAY; it widens nothing about
@@ -1283,13 +1283,8 @@ export function sufficiencyClaimState(assertedBy) {
   return 'claimed';
 }
 
-/** Did a NAMED MEMBER affirmatively claim independent sufficiency here? The one
- *  predicate every consumer asks, so that DEC-32's *only ever reached by an
- *  affirmative, attributed act* is enforced in ONE place rather than by four
- *  sites agreeing. TRUE for a named member and for nothing else. */
-export function isSufficiencyClaimed(assertedBy) {
-  return sufficiencyClaimState(assertedBy) === 'claimed';
-}
+/* `isSufficiencyClaimed` (`sufficiencyClaimState(x) === 'claimed'`) stood here until T19 (legacy-checks, K653
+   BOB-1): no reader asked it. The one predicate is `sufficiencyClaimState` above. */
 
 /** Is this the explicit no-claim state? Case-folded, because the value reaches
  *  a check hand-written in a document exactly as `token:member` does, and
@@ -2076,7 +2071,7 @@ export const STRENGTH_STATES = ['graded', 'unrated', 'undetermined'];
  *  The prior edition arrives INJECTED (the releaseRegistry precedent), because
  *  the checker is a pure function over a filesystem and the published
  *  projection is not in the bundle. An absent registry means the caller cannot
- *  see the published record — the migrate tool and the cli — and this cannot
+ *  see the published record — the cli (and the migrate tool, retired in T18) — and this cannot
  *  fire; the gate and the store's write path both inject it, so on every path a
  *  real caller has, it does. */
 /* ===== CASE-5b / DEC-72, 2026-09-10: `checkCompletenessFreshness` IS REMOVED,
@@ -2978,14 +2973,14 @@ function checkProjectExtension(ctx, findings) {
  * enforces. RECORDED here rather than deleted, for the reason ORCHESTRATION's
  * supersession rule gives: an item that vanishes is indistinguishable from one
  * nobody did, and a check silently gone is exactly the limbo the retirement was
- * supposed to end. Two mechanisms depend on this being a TABLE and not a comment:
+ * supposed to end. Two mechanisms depended on this being a TABLE and not a comment:
  *
- *   - `scripts/coverage.mjs` derives the catalogue by reading C-numbers out of
- *     THIS FILE's text, so a retired id keeps being counted and keeps demanding
- *     an assertion that names it. That is the design, not a leak: the assertion
- *     that names a retired id is the one PROVING IT NO LONGER FIRES, and
- *     `--strict` therefore cannot forget the retirement.
- *   - `test/check-firing.test.mjs` reads this table and asserts, for every row,
+ *   - `scripts/coverage.mjs` derived the catalogue by reading C-numbers out of
+ *     THIS FILE's text, so a retired id kept being counted and kept demanding
+ *     an assertion that named it: the assertion that names a retired id is the
+ *     one PROVING IT NO LONGER FIRES. That script is retired (T18, K739);
+ *     requirement coverage is now the process's coverage check.
+ *   - `test/check-firing.test.mjs` (an old suite, run only at a release, K619) reads this table and asserts, for every row,
  *     that nothing in this file pushes a finding under that id and that the
  *     estate grew no producer for the shape it gated. Reintroducing either
  *     FAILS, by name.
@@ -4609,7 +4604,7 @@ export const VERSION_ACT_CHECKS = {
      verification pass), which measured it free when it looked, and stepping over
      an id somebody holds is cheaper than the collision seven items paid for in one
      day. **Writing the numeral in this comment ALLOCATED IT AS A CHECK**:
-     `scripts/coverage.mjs` builds the catalogue with
+     the retired `scripts/coverage.mjs` (gone since T18, K739) built the catalogue with
      `checksSrc.matchAll(/C-\d+\.\d+/g)` over the RAW source of this file, comments
      included, so a number named in prose becomes a check `--strict` then demands
      an assertion for. Measured at this item: the catalogue read 225 where the
@@ -5095,10 +5090,8 @@ export const SUGGEST_KINDS = {
     + 'only act available is a new edition, and it is the member\'s',
 };
 
-/* The four levels `level-empty` may report on. CLAUDE.md's "NEVER ASSUME THE
-   LOWER LEVELS ARE COMPLETE" names exactly these four, and saying WHICH absence
-   is a first-class obligation there. */
-export const SUGGEST_LEVELS = ['meaning', 'content', 'documents', 'internet'];
+/* `SUGGEST_LEVELS` (the four levels `level-empty` may report on) stood here until T19 (legacy-checks, K679). It is
+   run-productions' (`src/run-productions/checks.mjs`), and agent-worker reads that one since T18. */
 
 /* THE BOILERPLATE ROSTER, AND WHAT IT IS NOT.
  *
@@ -5438,26 +5431,9 @@ export const BIAS_CHECKS = {
  * BY DECISION needs an arm proving the absence is real.
  * ========================================================================= */
 
-/** THE ONE COMPOSER FOR THE HONEST CIVICOS AGENT, and it is HERE rather than in
- *  `index.mjs` so that the Durable Object can read the string it is about to
- *  cause to be sent. `index.mjs`'s `userAgent(env, purpose)` now delegates to
- *  this and keeps its own name and every call site, so `subresources.test.mjs`'s
- *  pin — every outbound `"user-agent":` in the control plane goes through
- *  `userAgent(env, …)` — is untouched.
- *
- *  WHY THE MOVE RATHER THAN A SECOND COPY. SOURCE-ACCESS.md records that this
- *  string replaced *"two bare tokens spread across three call sites that did not
- *  agree with each other"*, and the 403 that cost three sessions of wrong
- *  reasoning was the consequence. A conduct check reading a copy would be that
- *  defect rebuilt one layer down: the drain would approve a string nobody sends.
- *
- *  The components are D-94's, and the contact URL is the LOAD-BEARING one:
- *  removing it flips admission 200 -> 403 uniformly (MEASURED 2026-07-30, nine
- *  rungs, second path confirmed). */
-export const CIVICOS_CONTACT_URL = 'https://github.com/believeinoakland/bio';
-export function civicosUserAgent(version, instance, purpose) {
-  return `CivicOS/${version || '0.0.0'} (+${CIVICOS_CONTACT_URL}; instance ${instance || 'unnamed'}; ${purpose})`;
-}
+/* `CIVICOS_CONTACT_URL` and `civicosUserAgent`, the one composer of the honest CivicOS agent (D-94), stood here
+   until T19 (legacy-checks, K717, K729). They are acquisition's (`src/acquisition/checks.mjs`), which monitoring,
+   capture-requests and instance-setup read. */
 
 export const CAPTURE_REQUEST_CHECKS = {
   /* ---- THE DOOR. Refused at the request, before any row exists. These are
@@ -5587,7 +5563,7 @@ export const CAPTURE_REQUEST_CHECKS = {
      hold for a credential class that does not exist yet (PL-11). */
   CAPTURE_NOT_DRAINING: {
     check: 'C-28.13',
-    where: 'src/capture/acquire.mjs acquire > is-capture-request-arm',
+    where: 'src/acquisition/index.mjs acquire > is-capture-request-arm',
     translation: 'Only this instance\'s own background worker fetches documents, and it does so from '
       + 'its own queue. Nothing else can ask it to fetch something right now — including the assistant '
       + 'that asked for the document in the first place.',
@@ -5812,7 +5788,7 @@ export const AI_CREDENTIAL_CHECKS = {
    AND THIS COMMENT PAID FOR ITS OWN LESSON, WHICH IS WHY IT NO LONGER SPELLS
    THE NUMBERS OUT. Its first draft wrote the warning as a worked example with
    real C-numbers in it, the integration's own sweep renumbered THE EXAMPLE
-   along with the code, and `scripts/coverage.mjs` — which harvests C-numbers
+   along with the code, and `scripts/coverage.mjs` (retired since T18, K739) — which harvested C-numbers
    out of this file by pattern, comments included — then reported a check in
    the catalog that no assertion names. Exit 1 on a family that was complete.
    The instrument was right: it cannot tell a number in a sentence from a
@@ -5874,7 +5850,7 @@ export const AI_CREDENTIAL_CHECKS = {
 export const MACHINE_FENCE_CHECKS = {
   MACHINE_CANNOT_RELEASE: {
     check: 'C-32.1',
-    where: 'src/store.mjs release > is-machine-release',
+    where: 'src/ratification/release.mjs release > is-machine-release',
     translation: 'Moving documents from collected to verified is a decision a named person makes '
       + 'and signs. The credential that asked here is an automated one, so it can gather the batch '
       + 'and lay out the review, and cannot be the one who says the batch is good. Sign in and '
@@ -6037,21 +6013,21 @@ export const ACT_SHAPE_CHECKS = {
   },
   NO_ACKNOWLEDGMENT: {
     check: 'C-33.10',
-    where: 'src/store.mjs release > is-release-account',
+    where: 'src/ratification/release.mjs release > is-release-account',
     translation: 'Releasing a batch at once records your explicit acknowledgment that the batch is '
       + 'of a piece and that you weighed the risk of doing them together. Without it the record '
       + 'shows only that a button was pressed.',
   },
   NO_MITIGATION: {
     check: 'C-33.11',
-    where: 'src/store.mjs release > is-release-account',
+    where: 'src/ratification/release.mjs release > is-release-account',
     translation: 'Releasing a batch at once records what you actually did to check it — what was '
       + 'sampled and what was verified. A concrete note can be audited by somebody later; silence '
       + 'cannot be audited at all.',
   },
   ENTRY_REQUIREMENTS: {
     check: 'C-33.12',
-    where: 'src/store.mjs release > is-release-entry',
+    where: 'src/ratification/release.mjs release > is-release-entry',
     translation: 'Some of these documents are missing something the verified state requires, and '
       + 'releasing them as they stand would produce records the catalog rejects the moment they '
       + 'exist. The offending documents are named so they can be fixed rather than guessed at.',
@@ -6257,253 +6233,11 @@ export const INSTALLATION_CHECKS = {
   },
 };
 
-/* ===========================================================================
-   D-64 (C-83) — THE RENDER ARM OF op=acquire: a client-rendered page captured
-   as the PAIR (CLIENT-RENDERED.md §"What must be recorded on a rendered
-   capture"; BOB #31 and BOB #32, 2026-09-23).
+/* C-83 `RENDER_CAPTURE_CHECKS` (D-64, the render arm of op=acquire) stood here until T19 (legacy-checks). The
+   family is acquisition's (`src/acquisition/checks.mjs`), where the render arm runs. */
 
-   EVERY ROW HERE EXISTS FOR ONE RULE: THE SHELL IS NEVER FILED AS THE CONTENT.
-   A caller who asked for a render and cannot have one is told so by name and
-   nothing is filed as a document — not the shell in its place, not a partial
-   render. Two rows are checked BEFORE the shell is fetched (no renderer; the
-   allowance spent), so nothing is fetched for a render that cannot happen.
-   =========================================================================== */
-export const RENDER_CAPTURE_CHECKS = {
-  /* `render` present and not `true`. Refused rather than read as absent: a
-     `render: "yes"` answered with the plain capture would file the shell as the
-     content, which is the outcome this family exists to prevent. */
-  RENDER_FLAG_MALFORMED: {
-    check: 'C-83.1',
-    where: 'src/capture/acquire.mjs acquire > is-render-admit',
-    translation: 'This request asked for a rendered capture in a form this instance does not recognise. '
-      + 'It answers render: true or nothing, so a request for the page as a visitor saw it is never '
-      + 'quietly answered with the page\'s empty frame. Nothing was fetched.',
-  },
-  /* A render combined with an arm whose bytes are not a live page: an archive
-     replay, a Drive export, or the continuation of a capture already filed. */
-  RENDER_ARM_CONFLICT: {
-    check: 'C-83.2',
-    where: 'src/capture/acquire.mjs acquire > is-render-admit',
-    translation: 'A rendered capture runs the live page in a browser, and this request combined that with '
-      + 'a way of capturing that does not load a live page (an archived copy, a Drive export, or the '
-      + 'continuation of an earlier capture). Ask for one or the other. Nothing was fetched.',
-  },
-  /* No renderer bound: no RENDERER service binding and no BROWSER binding — or a
-     BROWSER bound to something that is not a Fetcher, so there is no endpoint to
-     open a devtools session on. Named rather than falling back.
-     CORRECTED BY D-490: this comment read "the Browser Rendering binding is bound
-     and the in-plane driver over it is not built", which was the state D-64 shipped
-     and is the state D-490 ended (`src/browserrender.mjs`). The TRANSLATION below
-     did not move and did not need to — "no working page renderer" is true of every
-     case this code still names — but a comment describing a condition that no longer
-     exists is how the next reader is told the wrong thing by the record. */
-  RENDER_NO_RENDERER: {
-    check: 'C-83.3',
-    where: 'src/capture/acquire.mjs acquire > is-render-admit',
-    translation: 'This instance has no working page renderer, so it cannot capture the page as a visitor '
-      + 'saw it. Nothing was fetched, and the page\'s empty frame was not filed in its place.',
-  },
-  /* BOB #32 item 3: the daily render allowance is COMMITTED — spent, or reserved by
-     renders in flight (D-492). The render is DEFERRED and the deferral is recorded;
-     the shell is never the content. CORRECTED 2026-09-24 (D-492), and the old sentence
-     is why: it said the allowance had been USED, which was true only of the time
-     already reported. Since a render now reserves its maximum cost at admission, a
-     deferral can also mean the day's remaining time is held by renders still running,
-     and a member told "used" would have gone away for the day when the answer may be a
-     minute off. The sentence says which, without naming a mechanism. */
-  RENDER_DEFERRED: {
-    check: 'C-83.4',
-    where: 'src/capture/acquire.mjs acquire > is-render-admit',
-    translation: 'Today\'s allowance for rendering pages is fully committed — either already used, or '
-      + 'held by renders this instance is running right now — so this render is deferred, and that is '
-      + 'recorded. Nothing was fetched and nothing was filed in its place. Try again when the renders in '
-      + 'flight have finished, or after midnight UTC.',
-  },
-  /* The render loads the page again, which is a second document load to the
-     host, so it asks the per-host governor like any other (BOB #32 item 3:
-     "through the host governor"). Refused by name when the host is cooling off. */
-  RENDER_HOST_COOLING_OFF: {
-    check: 'C-83.5',
-    where: 'src/capture/acquire.mjs acquire > is-render-admit',
-    translation: 'This instance is giving that website a rest after it asked us to slow down, and a '
-      + 'rendered capture loads the page again, so it was not attempted. Nothing was fetched. Try again '
-      + 'after the wait shown beside this message.',
-  },
-  /* The shell is not an HTML page small enough to render (a PDF, an office
-     file, a multipart giant). A document that is not a page has nothing a
-     browser adds; capture it without `render`. */
-  RENDER_NOT_A_PAGE: {
-    check: 'C-83.6',
-    where: 'src/capture/acquire.mjs acquire > is-render-result',
-    translation: 'The address served something that is not a web page a browser can render, such as a '
-      + 'PDF or an office file, so there is nothing for a rendered capture to add. Nothing was filed. '
-      + 'Capture it the ordinary way.',
-  },
-  /* The renderer did not produce a rendered document. The shell's bytes are
-     held content-addressed and unregistered, exactly as TOO_LARGE's parts are;
-     no document names them. */
-  RENDER_FAILED: {
-    check: 'C-83.7',
-    where: 'src/capture/acquire.mjs acquire > is-render-result',
-    translation: 'The page was fetched but the renderer did not produce the page as a visitor would see '
-      + 'it, so nothing was filed: the page\'s empty frame is never filed as its content. The reason the '
-      + 'renderer gave is beside this message.',
-  },
-  /* D-520: the instance's CONCURRENCY CAP is full (BOB #33, 2026-09-24: a cap from the
-     vendor's stated limit, and a render over it WAITS, never dropped). Decided in the
-     admission span, before the shell is fetched, and distinct from C-83.4 on purpose: the
-     day's allowance is untouched and may have room, so the sentence must not say it is
-     used. The unattended drain holds the row under this code and asks again next tick. */
-  RENDER_AT_CAPACITY: {
-    check: 'C-83.8',
-    where: 'src/capture/acquire.mjs acquire > is-render-admit',
-    translation: 'This instance is already rendering as many pages at once as it allows, so this render '
-      + 'is waiting for one of them to finish. Nothing was fetched and nothing was filed in its place. '
-      + 'A scheduled capture asks again on its own; try again in a minute.',
-  },
-};
-
-/* ===========================================================================
-   CAP-8 — THE GOOGLE DRIVE HOST STACK (C-48), enacting Bob's ruling of
-   2026-09-14: a link to a Google Drive file KEEPS THE LINK, and the harvest is
-   the OpenDocument export the content is extracted from.
-
-   EVERY ROW HERE IS A NAMING, AND THAT IS THE FAMILY'S WHOLE SHAPE. The item's
-   rule is that folders and unknown shapes are NAMED as not harvestable and never
-   silently skipped, and that the application shell is REFUSED BY NAME and never
-   filed as the document. A silent skip and a named refusal produce the same
-   absence in the store and completely different knowledge in the operator: one
-   says "this instance looked at that link and can tell you exactly why it holds
-   no bytes for it", the other says nothing at all. Sparse is the normal condition
-   at every level, and saying WHICH kind of sparse is a first-class obligation
-   (CLAUDE.md).
-
-   The recogniser these rows sit over is `src/drive.mjs`, which is pure: the
-   REFUSALS are here, the SHAPES are there, and neither file restates the other.
-   =========================================================================== */
-export const DRIVE_CAPTURE_CHECKS = {
-  /* D-112, AND IT IS THE SPINE OF THE ITEM. The three facts this capture's hop
-     carries — the export address, the export format, the producer — are derived
-     by the plane from the file id and the kind in the address. A body carrying
-     one is a caller trying to author the record's own provenance, and it is
-     refused BY NAME rather than having the field quietly dropped: a caller told
-     nothing learns nothing, and a hop a caller can hand us is one a caller can
-     invent. */
-  DRIVE_HOP_FACT_SUPPLIED: {
-    check: 'C-48.1',
-    where: 'src/capture/acquire.mjs acquire > is-drive-capture',
-    translation: 'This request tried to tell the record where a document was exported from, in what '
-      + 'format, or by whom. Those are facts this instance establishes by doing the fetch itself, '
-      + 'never facts it accepts from whoever asked. Send the Drive link and nothing else.',
-  },
-  /* A FOLDER. There is nothing to export and no single set of bytes a capture
-     could honestly hold, so the honest answer is the shape's name and the reason. */
-  DRIVE_FOLDER_NOT_A_DOCUMENT: {
-    check: 'C-48.2',
-    where: 'src/capture/acquire.mjs acquire > is-drive-capture, and the SAME condition on a monitor tick '
-         + '(op=monitor, ungoverned span, D-472): a folder is not a document to capture and not '
-         + 'a document to watch, and one sentence is true of both',
-    translation: 'That address is a Drive FOLDER — a listing of files rather than a document. There '
-      + 'is nothing to export and no single set of bytes a capture of it would hold. Name the '
-      + 'document you want; harvesting everything a folder lists is a different act.',
-  },
-  /* A FILE ID WITH NO KIND. The kind decides the export format, so composing an
-     export address here would mean guessing which conversion to ask for, and
-     filing bytes whose format the record had invented. Undetermined is
-     first-class and must be STATED. */
-  DRIVE_KIND_UNDETERMINED: {
-    check: 'C-48.3',
-    where: 'src/capture/acquire.mjs acquire > is-drive-capture, and the SAME condition on a monitor tick '
-         + '(op=monitor, ungoverned span, D-472)',
-    translation: 'That Drive address names a file but not what KIND of file it is, and the kind is '
-      + 'what decides which export to ask for. Guessing would file bytes in a format nobody '
-      + 'established. Use the address that opens the document itself, which carries the kind.',
-  },
-  /* A DRIVE HOST WITH AN UNREAD PATH. Named rather than harvested, and named
-     rather than passed through: a Drive address whose shape is unread is not a
-     document this instance can promise to have captured. */
-  DRIVE_SHAPE_UNRECOGNISED: {
-    check: 'C-48.4',
-    where: 'src/capture/acquire.mjs acquire > is-drive-capture, and the SAME condition on a monitor tick '
-         + '(op=monitor, ungoverned span, D-472)',
-    translation: 'That is a Google Drive address in a form this instance does not recognise. Rather '
-      + 'than capture whatever bytes the address happens to serve and call it the document, it says '
-      + 'so. If this shape should be harvestable, that is a change worth making deliberately.',
-  },
-  /* THE APPLICATION SHELL, REFUSED BY NAME AND NEVER PARSED. Google answers the
-     export address with `text/html` when the file is not shared with anyone who
-     has the link: a sign-in page, an error page, the app. It is never the
-     document. Filing it would put a page of Google's furniture into the record
-     under a city document's address — the record claiming more than it can
-     support, which CLAUDE.md ranks worse than a missing feature. */
-  DRIVE_EXPORT_IS_THE_SHELL: {
-    check: 'C-48.5',
-    where: 'src/capture/acquire.mjs acquire > is-drive-export',
-    translation: 'Google answered the export address with a web page rather than a document — which '
-      + 'is what it does when a file is not shared with anyone who has the link. That page is the '
-      + 'application, not the document, and it is not filed as one. Check that the file is shared.',
-  },
-  /* THE SAME SHELL, CAUGHT ON THE BYTES, AND IT IS A SECOND CODE RATHER THAN THE
-     ROW ABOVE FIRING TWICE. PL-4 measured what one predicate at two points costs:
-     one of the two becomes unreachable and can never be driven. These are two
-     different predicates over two different pieces of evidence — the header, and
-     the first kibibyte — and they are two different findings. C-48.5 is "Google
-     told us it was a web page"; this is "Google told us it was a document and it
-     was a web page", which is the more serious fact and is why detection here is
-     bytes-first (COFF-1: a byte signature ALWAYS outranks a declared type). */
-  DRIVE_EXPORT_BYTES_ARE_THE_SHELL: {
-    check: 'C-48.7',
-    where: 'src/capture/acquire.mjs acquire > is-drive-bytes',
-    translation: 'The export address said it was sending a document and sent a web page instead. '
-      + 'This instance checks the bytes rather than taking the label, so the application page was '
-      + 'recognised and refused. Nothing was filed under that document address.',
-  },
-  /* THE EXPORT FETCH FAILING, AND THE HALF THAT MATTERS IS WHAT DOES *NOT*
-     HAPPEN. There is no fallback to the shell. A 403 or a 404 at the export
-     address ends the capture with the failure named; it never quietly becomes a
-     capture of the application page, which would look like a success and hold
-     nothing. */
-  /* D-472 — THE SHELL, ON A TICK, AND WHY IT IS ITS OWN CODE RATHER THAN C-48.5
-     FIRING FROM A SECOND PLACE. A capture that meets the shell has captured
-     nothing and the member's remedy is to share the file. A TICK that meets the
-     shell has not captured anything either — it never would — and what it has
-     lost is the CHECK: the record's last comparison still stands, undisturbed,
-     and nothing about the document changed. Those are two different facts about
-     the member's own situation, and DEC-49's canned translation is the sentence
-     they actually read, so one sentence cannot be true of both. PL-4's rule cuts
-     the same way it did for C-48.5/C-48.7: two predicates, two sites, both
-     drivable — `op=acquire` drives the pair above, `op=monitor` drives this pair,
-     and `test/monitor-assess.test.mjs` drives both of these by name. */
-  DRIVE_TICK_EXPORT_IS_THE_SHELL: {
-    check: 'C-48.8',
-    where: 'src/monitoring/index.mjs monitor > is-drive-tick-export',
-    translation: 'The check of that Google Drive document did not run: the export address answered '
-      + 'with a web page rather than a document, which is what Drive does when a file stops being '
-      + 'shared with anyone who has the link. Nothing was compared and nothing about the record '
-      + 'changed — what is known is that this instance could not see the document today.',
-  },
-  /* THE SAME TICK, CAUGHT ON THE BYTES. C-48.7's reasoning one op over: the
-     declared type and the first kibibyte are two different pieces of evidence,
-     and "Google told us it was a document and it was a web page" is the more
-     serious fact. On a tick the consequence is the same either way and it is
-     still worth two codes, because a tick that compared the shell would report
-     the document CHANGED on every visit — the cry-wolf this row exists to end. */
-  DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL: {
-    check: 'C-48.9',
-    where: 'src/monitoring/index.mjs monitor > is-drive-tick-bytes',
-    translation: 'The check of that Google Drive document did not run: the export address said it '
-      + 'was sending a document and sent a web page instead. This instance reads the bytes rather '
-      + 'than the label, so the application page was recognised and not compared against the '
-      + 'captured document — comparing it would report a change on every visit that nobody made.',
-  },
-  DRIVE_EXPORT_UNREACHABLE: {
-    check: 'C-48.6',
-    where: 'src/capture/acquire.mjs acquire > is-drive-export',
-    translation: 'The OpenDocument export of that Drive document could not be fetched, so nothing '
-      + 'was captured. The application page at the same address is NOT captured instead: a record '
-      + 'holding the app in place of the document would look like evidence and be none.',
-  },
-};
+/* `DRIVE_CAPTURE_CHECKS` (CAP-8, C-48) stood here until T19 (legacy-checks, K717). C-48.1–.7 are acquisition's
+   (`src/acquisition/checks.mjs`) and C-48.8/.9 monitoring's (`src/monitoring/checks.mjs`). */
 
 /* The case document's gate (C-41: `CASE_DOCUMENT_FORMAT` and its accepted set, the format predicates,
    `SEARCHED_SUBJECT_SOURCES`, `CASE_DOCUMENT_FAMILY`, `CASE_CITATION_VERSIONS` and `checkCaseDocument`) stood here

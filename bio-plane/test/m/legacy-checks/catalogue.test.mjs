@@ -178,6 +178,44 @@ test("deletions: LAW_LEVELS and CASE_MEMBER_ROLES are no longer the catalogue's 
   assert.equal("CASE_MEMBER_ROLES" in CAT, false);
 });
 
+/* T19 layer 1 (`build/plan/current.md`, legacy-checks): each name below has its one home in its owner, and the
+   catalogue no longer exports it. The owner's own copy is tested by that owner. */
+const T19_DELETED = {
+  SUGGEST_LEVELS: "run-productions", CIVICOS_CONTACT_URL: "acquisition", civicosUserAgent: "acquisition",
+  RENDER_CAPTURE_CHECKS: "acquisition", DRIVE_CAPTURE_CHECKS: "acquisition and monitoring",
+  isSufficiencyClaimed: "nobody (no reader; sufficiencyClaimState is the one predicate)",
+};
+
+test("T19 deletions: SUGGEST_LEVELS, the CivicOS user agent, C-83, C-48 and isSufficiencyClaimed are no longer the catalogue's", () => {
+  for (const [name, owner] of Object.entries(T19_DELETED)) assert.equal(name in CAT, false, `${name} (${owner})`);
+});
+
+test("T19 deletions: sufficiencyClaimState still answers 'claimed' for a named member and only for one", () => {
+  const { sufficiencyClaimState, SUFFICIENCY_UNCLAIMED } = CAT;
+  assert.equal(sufficiencyClaimState("ada"), "claimed");
+  assert.equal(sufficiencyClaimState(SUFFICIENCY_UNCLAIMED), "unclaimed");
+  assert.equal(sufficiencyClaimState(""), "unstated");
+  assert.equal(sufficiencyClaimState("token:ai"), "machine_stamped");
+});
+
+/* The `where`s re-pointed in T19 to the file their code lives in now: each names a function and a DEC-49 region that
+   exist there, and the region holds the row's code as a literal (the guard's own reading of a `where`). */
+test("T19 wheres: C-28.13 and the release rows name a live region that mints their code", async () => {
+  const { readFileSync } = await import("node:fs");
+  const rows = [CAT.CAPTURE_REQUEST_CHECKS.CAPTURE_NOT_DRAINING, CAT.MACHINE_FENCE_CHECKS.MACHINE_CANNOT_RELEASE,
+    CAT.ACT_SHAPE_CHECKS.NO_ACKNOWLEDGMENT, CAT.ACT_SHAPE_CHECKS.NO_MITIGATION, CAT.ACT_SHAPE_CHECKS.ENTRY_REQUIREMENTS];
+  const codes = ["CAPTURE_NOT_DRAINING", "MACHINE_CANNOT_RELEASE", "NO_ACKNOWLEDGMENT", "NO_MITIGATION", "ENTRY_REQUIREMENTS"];
+  rows.forEach((row, i) => {
+    const m = /^(\S+) (\S+) > ([\w-]+)$/.exec(row.where);
+    assert.ok(m, row.where);
+    const src = readFileSync(new URL(`../../../${m[1]}`, import.meta.url), "utf8");
+    assert.ok(src.includes(m[2]), `${m[1]} defines ${m[2]}`);
+    const a = src.indexOf(`DEC-49 REGION ${m[3]}`), b = src.indexOf(`END DEC-49 REGION ${m[3]}`);
+    assert.ok(a >= 0 && b > a, `${m[3]} is marked in ${m[1]}`);
+    assert.ok(src.slice(a, b).includes(`"${codes[i]}"`), `${m[3]} mints ${codes[i]}`);
+  });
+});
+
 /* ---- record-grammar R26's cross-module half (B3, K638) ---- */
 
 const REEXPORTED = ["BUNDLE_ID_RE", "ANN_ID_RE", "FILENAME_RE", "ISO_TS_RE", "OBJECT_TYPES", "LEGACY_TYPE_ALIASES",
