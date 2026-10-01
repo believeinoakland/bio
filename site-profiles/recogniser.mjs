@@ -32,7 +32,7 @@ export const CONFIDENCE = { CERTAIN: "certain", LIKELY: "likely", POSSIBLE: "pos
 
 const RANK = { none: 0, possible: 1, likely: 2, certain: 3 };
 /** Where a confidence sits on the single ladder, for comparing two detections. */
-export function confidenceRank(c) { return RANK[c] || 0; }
+export function confidenceRank(c) { return typeof c === "string" && Object.hasOwn(RANK, c) ? RANK[c] : 0; }
 
 /** Build a recogniser registry for one axis.
  *

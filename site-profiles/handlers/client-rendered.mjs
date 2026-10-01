@@ -18,7 +18,7 @@
  * browser-rendering path, and until a capture takes that path on this kind of
  * document, this handler's job is to report that what was captured is a shell.
  */
-import { REGION, CONFIDENCE } from "../index.mjs";
+import { CONFIDENCE } from "../recogniser.mjs";
 
 export default {
   key: "client_rendered",

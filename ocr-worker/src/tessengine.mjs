@@ -70,7 +70,7 @@ export function engineCheck() {
  *  otherwise have to guess at.
  *
  *  The plane composes a page's text from the member's regions by JOINING THEIR
- *  TEXT WITH A NEWLINE (`ocrTextFromMember` in `bio-plane/src/index.mjs`). So the
+ *  TEXT WITH A NEWLINE (`ocrTextFromMember`, `bio-plane/src/extraction/pipeline.mjs`). So the
  *  grain of a region IS the grain of a line in the record's text, and at `word`
  *  grain **every OCR'd document becomes one word per line** — which is not a
  *  cosmetic difference. MEASURED on the real Oakland page 2026-09-12: at `word`

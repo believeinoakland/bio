@@ -2,7 +2,7 @@
  *
  * Before CONSTRUCTS Step 0 this file carried its own ordered loop and its own rank
  * table, a near-duplicate of the stack registry's. Now both axes are `makeRegistry()`
- * instances of the one recogniser engine (recogniser.mjs), which is the whole claim
+ * instances of the one recogniser engine (site-profiles' recogniser.mjs), which is the whole claim
  * of framework §4: a third axis is a third `makeRegistry()`, not a third loop.
  *
  * SEVEN types are registered today -- `meeting_calendar`, `meeting_agenda`,
@@ -36,7 +36,7 @@
  * probably looks like is a type that reassures people about things it has not
  * understood. The generic type reports change without describing it, which is noisy and
  * honest, and the noise is the prompt to go and measure. */
-import { makeRegistry } from "../recogniser.mjs";
+import { makeRegistry } from "../../site-profiles/index.mjs";
 import meetingCalendar from "./meeting-calendar.mjs";
 import meetingAgenda from "./meeting-agenda.mjs";
 import meetingMinutes from "./meeting-minutes.mjs";
@@ -76,7 +76,8 @@ types.register(regulation);
    and read that as a tier-3 gap. FW-20 re-took the census through the plane with its
    fleet bound and the premise did not survive: the markers were `no_tounicode`, TIER 2's
    case, and with the tier-2 member bound 56 of 57 name-matched documents read from text
-   (`bio-plane/scripts/fw20-decode-census.mjs`; `docs/development/measurements/M-121.md`). So the type
+   (`docs/development/measurements/M-121.md`; the census script itself was retired in T18 and
+   is in git history). So the type
    is written from directories that were actually fetched AND read — see its own header.
    Registered AFTER the three substance types: `recognise` breaks on the first CERTAIN,
    and a report or an instrument that happens to carry a contact block is that document

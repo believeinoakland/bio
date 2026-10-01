@@ -6,7 +6,7 @@
   // wrangler otherwise deploys wherever the machine's OAuth session points, and
   // a fresh checkout was once found authenticated to the WRONG account with a
   // deploy that would have SUCCEEDED (CLAUDE.md). A new Worker config must carry
-  // this, and `coverage.mjs` fails --strict on a Worker directory that does not.
+  // this.
   "account_id": "20b533579290b9b93168345edd3b7f72",
 
   // Built by scripts/build.mjs through bio-plane/scripts/fleet-bundle.mjs. The
@@ -48,7 +48,7 @@
 
   // DS-2 / D-116: ONE version across the plane and every member. This site and
   // package.json's `version` are the member's two declaring sites and
-  // `bio-plane/test/resolveversion.test.mjs` refuses a tree where they and the
+  // `bio-plane/test/system/resolveversion.test.mjs` refuses a tree where they and the
   // authority disagree — in BOTH directions.
   "vars": { "VERSION": "0.79.0" },
 

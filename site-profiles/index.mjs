@@ -1,4 +1,7 @@
-/* docprofile — recognising what kind of document this is, and what follows.
+/* site-profiles — recognising which host stack served a document, and what follows.
+ * (Split from docprofile, K653 BOB-2: the host-stack axis, the shared recogniser
+ * registry and ladder, the three digests, fidelity, the profile record and the event
+ * catalogue. docprofile keeps the content-type axis, `assess` and `readText`.)
  *
  * WHY THIS PACKAGE EXISTS. Two requirements drive it, both of them Bob's and both
  * about credibility rather than tidiness.
@@ -65,20 +68,26 @@
  */
 
 import { makeRegistry, CONFIDENCE } from "./recogniser.mjs";
+import { REGION } from "./region.mjs";
+import aspnetWebforms from "./handlers/aspnet-webforms.mjs";
+import wordpress from "./handlers/wordpress.mjs";
+import clientRendered from "./handlers/client-rendered.mjs";
+import conservative from "./handlers/conservative.mjs";
 
-/* The confidence ladder is ONE ladder now, defined in recogniser.mjs and used by
-   every axis (CONSTRUCTS Step 0 #1). It is re-exported here so the many existing
-   importers of `CONFIDENCE` from this module keep working. */
-export { CONFIDENCE };
+/* The module's whole interface is reachable from this file: the ladder and the
+   registry (recogniser.mjs), the event catalogue (events.mjs), the regions and the
+   four built-in handlers. */
+export * from "./recogniser.mjs";
+export * from "./events.mjs";
+export { REGION, aspnetWebforms, wordpress, clientRendered, conservative };
 
 /** Entity-decode enough to make an href comparable. Deliberately minimal: this is
- *  used to READ keys out of markup, never to rewrite anything the record holds. */
+ *  used to READ keys out of markup, never to rewrite anything the record holds.
+ *  One pass, so an escaped entity stays escaped once: `&amp;lt;` reads `&lt;`. */
+const ENTITY = { amp: "&", "#39": "'", quot: '"', lt: "<", gt: ">", nbsp: " " };
 export function unescapeHtml(s) {
-  return String(s).replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/&quot;/g, '"')
-                  .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&nbsp;/g, " ");
+  return String(s).replace(/&(amp|#39|quot|lt|gt|nbsp);/g, (_, e) => ENTITY[e]);
 }
-
-export const REGION = { EVIDENTIARY: "evidentiary", PRESENTATIONAL: "presentational", MECHANICAL: "mechanical" };
 
 const PLACEHOLDER = "\u0000BIO-NORMALISED\u0000";
 
@@ -88,9 +97,11 @@ const PLACEHOLDER = "\u0000BIO-NORMALISED\u0000";
 export function applyRules(text, rules) {
   let out = String(text);
   const found = [];
-  for (const rule of rules || []) {
+  for (const rule of Array.isArray(rules) ? rules : []) {
+    if (!rule || !Array.isArray(rule.patterns)) continue;
     let count = 0, bytes = 0;
     for (const re of rule.patterns) {
+      if (!(re instanceof RegExp)) continue;
       out = out.replace(re, (whole, pre, mid, post) => {
         if (!mid || !mid.length) return whole;
         count++; bytes += mid.length;
@@ -121,7 +132,7 @@ export function applyRules(text, rules) {
  *  back to treating the whole document as substance, because a boundary that
  *  missed must never be read as a document with no content. */
 export function applyBoundary(text, boundary) {
-  if (!boundary) return { text, found: [], bytes: 0 };
+  if (!(boundary instanceof RegExp)) return { text, found: [], bytes: 0 };
   const m = boundary.exec(String(text));
   if (!m || !m[1]) return { text, found: [], bytes: 0, missed: true };
   const inner = m[1];
@@ -138,7 +149,7 @@ export async function digests(bytes, handler, ctx) {
   const sha256 = ctx && ctx.sha256;
   /* The one precondition, and the one throw: a digest with no hash function is a
      caller's mistake, not a document's property. */
-  if (typeof sha256 !== "function") throw new TypeError("docprofile: digests() needs ctx.sha256, a hash function");
+  if (typeof sha256 !== "function") throw new TypeError("site-profiles: digests() needs ctx.sha256, a hash function");
   const h = handler || {};
   const identity = await sha256(bytes);
   if (!h.textual) return { identity, rendition: identity, evidentiary: identity, applied: [], textual: false };
@@ -146,8 +157,9 @@ export async function digests(bytes, handler, ctx) {
   try { text = new TextDecoder("utf-8", { fatal: false }).decode(bytes); } catch { text = ""; }
   let rules = [];
   try { rules = (typeof h.rules === "function" ? h.rules(ctx) : null) || []; } catch { rules = []; }
-  const mech = rules.filter((r) => r.region === REGION.MECHANICAL);
-  const pres = rules.filter((r) => r.region === REGION.PRESENTATIONAL);
+  if (!Array.isArray(rules)) rules = [];
+  const mech = rules.filter((r) => r && r.region === REGION.MECHANICAL);
+  const pres = rules.filter((r) => r && r.region === REGION.PRESENTATIONAL);
   const r1 = applyRules(text, mech);
   /* Mechanical first, always: a security token can sit inside the document's own
      boundary as easily as outside it, and normalising the boundary first would
@@ -192,7 +204,8 @@ export async function digests(bytes, handler, ctx) {
 export async function compare(before, after, handler, ctx) {
   const a = await digests(before, handler, ctx);
   const b = await digests(after, handler, ctx);
-  const base = { handler: handler.key, confidence: ctx.confidence || CONFIDENCE.NONE,
+  const h = handler || {};
+  const base = { handler: h.key == null ? null : h.key, confidence: ctx.confidence || CONFIDENCE.NONE,
                  artifacts: [...new Set(a.applied.concat(b.applied).map((x) => x.label))],
                  applied: a.applied, digests: { before: a, after: b } };
   if (a.identity === b.identity)
@@ -201,7 +214,7 @@ export async function compare(before, after, handler, ctx) {
   /* Without a confident handler, the narrowing rules are not trusted and the
      honest answer is that the bytes differ and nobody can yet say what that
      means. Silence here is safer than a wrong "unchanged". */
-  if (base.confidence !== CONFIDENCE.CERTAIN && !handler.conservative)
+  if (base.confidence !== CONFIDENCE.CERTAIN && !h.conservative)
     return { ...base, verdict: "undetermined", evidentiary_change: null,
              why: "the document differs and this kind of document is not recognised well enough to say whether the difference matters" };
   if (a.evidentiary !== b.evidentiary)
@@ -249,14 +262,25 @@ export function fidelity(manifest, handler, ctx) {
 /* ---- the STACK axis: one registry of the shared shape ----
    The host-stack recognisers live on a `makeRegistry()` instance exactly like the
    content-type axis does, so there is no longer an `identify`-shaped loop written
-   twice. registry.mjs registers the handlers into this instance at import; the
-   handlers themselves are the recognisers. */
+   twice. The handlers themselves are the recognisers, registered below. */
 const stacks = makeRegistry();
 
 /** Add a handler to the stack registry. Ordered most specific first; the conservative
    handler carries `fallback: true` and is only ever reached by falling through. */
 export function register(handler) { return stacks.register(handler); }
 export function handlers() { return stacks.all(); }
+
+/* The built-in handlers, in priority order: most specific first, and the conservative
+   handler last because it never matches and is only ever reached by falling through.
+   Adding a stack means adding a file and a line here.
+
+   client_rendered goes FIRST. A shell can also be served by ASP.NET or WordPress,
+   and if either of those matched first the document would be profiled as a page
+   with content when it has none, which is the one failure that is silent. */
+register(clientRendered);
+register(aspnetWebforms);
+register(wordpress);
+register(conservative);
 
 /** Identify the document's host stack. `ctx` carries whatever the caller knows: the
  *  response headers, the locator, the content type, and the decoded text.
@@ -265,6 +289,8 @@ export function handlers() { return stacks.all(); }
  *  extra — the document `kind` its handler reads from the address. Always returns a
  *  handler: an unrecognised document gets the conservative one rather than an error. */
 export function identify(ctx) {
+  /* A caller that knows nothing still gets an answer: no context is an empty one. */
+  if (!ctx || typeof ctx !== "object") ctx = {};
   const r = stacks.recognise(ctx);
   const handler = r.member;
   if (!r.matched)

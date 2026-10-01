@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #80 · session_01UN385C1zhxo91Tf9CFHVYH · depth 1
 
-**Jobs** · office-readers: OFFICE-READERS #3 session_0158jNMUufRDREVsYavJs1om; text-chain: TEXT-CHAIN #4 session_01JFaNkersyiBgEDxNLun4KD; ocr-worker: OCR-WORKER #3 session_01QM4dYxqMfWzRifHkXnvCj7; record-grammar: RECORD-GRAMMAR #2 session_01JcZMYUrkQxoEUnoX3a9Ssz; legacy-checks: LEGACY-CHECKS #13 session_01BjfEuoaa6XVXhVaMbV2YC9; test-support: TEST-SUPPORT #2 session_01RpWW8ZkFD9dYQi6UAZ9QQ4; site-profiles: SITE-PROFILES #1 session_012Q6VzShdRmKdjhfmTkxiGp; docprofile: DOCPROFILE #3 session_01U8i8H62hWH4qZJaGVoo2uf
+**Jobs** · office-readers: OFFICE-READERS #3 session_0158jNMUufRDREVsYavJs1om; text-chain: TEXT-CHAIN #4 session_01JFaNkersyiBgEDxNLun4KD; ocr-worker: OCR-WORKER #3 session_01QM4dYxqMfWzRifHkXnvCj7; record-grammar: RECORD-GRAMMAR #2 session_01JcZMYUrkQxoEUnoX3a9Ssz; legacy-checks: LEGACY-CHECKS #13 session_01BjfEuoaa6XVXhVaMbV2YC9; test-support: TEST-SUPPORT #2 session_01RpWW8ZkFD9dYQi6UAZ9QQ4; site-profiles: SITE-PROFILES #1 session_012Q6VzShdRmKdjhfmTkxiGp; docprofile: DOCPROFILE #3 session_01U8i8H62hWH4qZJaGVoo2uf; bundler: BUNDLER #2 session_01F828m2QDyyWgtT23v7Rivx; signatures: SIGNATURES #2 session_01AsjoETVNZH59mnbGoNnFwS
 
 Opened by BOB #80, 2026-10-01 (PROCESS-MECHANICS §5), under Bob's secondary account, at `main` @ 2a646f2587, T18 closed (K740, K741). The plan is `draft-T19-final.md` (adopted K734; its text below, unchanged), its Status as drafted: DRAFT by a worker for BOB #79, read on `tranche/T18` @ 33f1276bce and updated @ ac5ef075a0. ⚑L11 resolved at T18's close: LEGACY-INDEX #11's `git rm` was approved by Bob and merged (K739), so N401 is met and legacy-index's T19 job is `tools/` and its remaining paths only. The fold (rule 6's wordings before each layer, rule 8, BOB-5, N175) is on this branch before each layer's jobs read it. Bob's weekly meter at the opening: 0% on the secondary account; the primary account read 83% when T18 closed (K744).
 
@@ -51,7 +51,7 @@ Opened by BOB #80, 2026-10-01 (PROCESS-MECHANICS §5), under Bob's secondary acc
 ## Layer 2
 
 - **record-core** · **amended** as the refresh: `op=stats`, `registerStatsSource`, purge's call **done in T18** (K650); kept the rest as drafted; `registerGrammar` reads `EXTENSION_ARMS` from record-grammar; **N422** (record-core share): `registerGrammar`'s answer (`index.mjs`:970) classified for the DEC-49 guard. Catalogue imports: `index.mjs`, `test/m/record-core/record-core.test.mjs`.
-- **membership** · **amended** as the refresh (seam, the split's deletion, families, N70 bounds, converts; `MODULE_ORDER` if the fold did not). Catalogue imports: `index.mjs` and 11 module tests.
+- **membership** · **amended** as the refresh (seam, the split's deletion, families, N70 bounds, converts; `MODULE_ORDER` if the fold did not). Catalogue imports: `index.mjs` and 11 module tests. **Rule 8, as the L2 fold found it:** `MODULE_ORDER` (R83) gains `site-profiles` (before docprofile) and `credentials` (after membership), the two ids `modules.json` holds that it lacks; inquiry-grammar, action-grammar and plane are not yet in `modules.json` (their folds come before L6, L9, L11).
 - **credentials** (new) · **kept.**
 - **promotion** · **amended.** As drafted, plus:
   - **N425:** `bundles.criticality` derived from the document's own front matter as well as the envelope, named by a test (R39 worded before L2; matches ratification R22, K692).

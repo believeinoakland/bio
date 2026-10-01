@@ -33,7 +33,7 @@ import { makeMember, NAMESPACES } from "../src/member.mjs";
 import { MEASURED_BY, MAX_FRAME_BYTES, NAMESPACES as CONTRACT_NAMESPACES, PLANE_OPS, REFUSALS } from "../src/contract.mjs";
 import { renderPageToPixels } from "../../pdf-worker/src/pagepixels.mjs";
 import { checkAnchor, checkConfidence } from "../../bio-plane/src/textchain.mjs";
-import { BASIS_GRADES } from "../../bio-plane/checks/bio-checks.mjs";
+import { BASIS_GRADES } from "../../bio-plane/src/record-grammar/index.mjs";
 import { discoverMembers, verifyStatic } from "../../bio-plane/scripts/fleet-bundle.mjs";
 
 const hex = (b) => createHash("sha256").update(b).digest("hex");

@@ -17,7 +17,8 @@
  * MECHANICAL. A teaser rail is not machinery: it is really on the page, it is
  * captured, it renders, and it is not the article's claim about its subject.
  */
-import { REGION, CONFIDENCE } from "../index.mjs";
+import { CONFIDENCE } from "../recogniser.mjs";
+import { REGION } from "../region.mjs";
 
 export default {
   key: "wordpress",

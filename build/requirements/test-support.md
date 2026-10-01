@@ -12,10 +12,10 @@ Gives any test process a temporary-file sandbox it owns and removes, and standar
 
 **Importing the sandbox (a side effect).**
 - **R1** On import, one directory is created under the host's temporary directory, named with the process id, and the process's temporary directory (`$TMPDIR`, and so `os.tmpdir()`) points inside it for the rest of the process.
-- **R2** When the process exits by any path that runs exit handlers (a normal end, `process.exit()`, an uncaught error), the directory and everything in it are removed synchronously before the process ends, including a subdirectory or file a test left read-only, also when the process does not run as root: a removal refused for permission (`EACCES`) makes that part of the tree writable and is retried, so the directory never outlives the process. *(not yet met: N22)*
+- **R2** When the process exits by any path that runs exit handlers (a normal end, `process.exit()`, an uncaught error), the directory and everything in it are removed synchronously before the process ends, including a subdirectory or file a test left read-only, also when the process does not run as root: a removal refused for permission (`EACCES`) makes that part of the tree writable and is retried, so the directory never outlives the process.
 - **R3** Importing it more than once in one process creates one directory and removes it once, and never throws.
 
-**`SANDBOX` → string.** 
+**`SANDBOX` → string.**
 - **R4** The absolute path of the directory R1 created.
 
 **`sweepSandbox()` → void.**

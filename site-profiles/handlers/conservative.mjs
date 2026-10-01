@@ -16,7 +16,8 @@
  * reports change constantly under this handler is a source that needs measuring
  * and a handler writing, and the pattern is visible rather than buried.
  */
-import { REGION, CONFIDENCE } from "../index.mjs";
+import { CONFIDENCE } from "../recogniser.mjs";
+import { REGION } from "../region.mjs";
 
 export default {
   key: "conservative",
