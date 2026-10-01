@@ -7,11 +7,11 @@ import {
 } from "../../../src/queuestate.mjs";
 import { CONDITION_KINDS } from "../../../src/observation-log/vocabulary.mjs";
 
-/* R1's twelve, N345's two duties among them (DEC-85's unseen one included), N375's self-registered key, and the Action
-   layer's three (K608, K614). */
+/* R1's thirteen, N345's two duties among them (DEC-85's unseen one included), N375's self-registered key, the Action
+   layer's three (K608, K614) and the litigation hold (K899 (7)). */
 const OBLIGATION = ["authority-undetermined", "bias-debt", "endorsement-owed", "expertise-confirmation-owed",
   "membership-request", "project-owners-inactive", "contradiction-duty", "contradiction-duty-unseen",
-  "signer-self-registered", "plan-checkpoint-due", "escalation-stage-proposed", "action-reminder"];
+  "signer-self-registered", "plan-checkpoint-due", "escalation-stage-proposed", "action-reminder", "litigation-hold"];
 /* R1's twenty-six, `cardinality_exceeded` (N107, K209), `newer-capture-affects-reference` (N172) and N345's five among
    them. */
 const FINDING = ["missing_predecessor", "overdue_successor", "temporal-expectation-due", "source-modified",
@@ -48,6 +48,8 @@ test("R1: every catalogued kind answers its class, anything else null, and every
   assert.match(QUEUE_OBLIGATION_KINDS["plan-checkpoint-due"], /checkpoint your group set in an action plan has come; a member judges whether its condition was met/);
   assert.match(QUEUE_OBLIGATION_KINDS["escalation-stage-proposed"], /next stage is proposed because its trigger was met; a member advances it or declines with a reason/);
   assert.match(QUEUE_OBLIGATION_KINDS["action-reminder"], /reminder you asked for on one of the group's action deadlines; answer it with another reminder or none/);
+  // K899 (7), DEC-61: the litigation hold says what was marked and what a member records
+  assert.match(QUEUE_OBLIGATION_KINDS["litigation-hold"], /a reply the group marked as legal pressure: consider whether to place a litigation hold, and record it in place or released with a reason/);
   assert.match(QUEUE_CONDITION_KINDS["action-clock-overdue"], /deadline on one of the group's actions passed while its entry is still pending/);
   // the cardinality finding is worded as what it is: never "required and absent"
   assert.doesNotMatch(QUEUE_FINDING_KINDS.cardinality_exceeded, /absent/);
