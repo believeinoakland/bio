@@ -34,3 +34,7 @@ QUEUE #9 complete on job/T20/queue. Applied B1: R1 catalogues litigation-hold (O
 **Tests:** on this branch `test/m/queue/` is 75/76: the new test is red until `queue-producers`' R19 merges (its producer is on `job/T20/queue-producers` only; START: queue merges after queue-producers). On a scratch merge of `origin/job/T20/queue-producers` into this branch: `test/m/queue/` 76/76, `test/m/queue-producers/` 47/47; with `"actions"` removed from `PRODUCER_DEPS` there, the new test fails (the defect's control). Users: `test/m/control-plane/` 85/85, `test/m/plane/` 28/28. Checks: format 0, architecture 0, coverage 37 of 37, ownership 6 files, 0 failures.
 
 Size (session_014ABrgP9q5aYLLQp7fqWZ5n): test runs 18, module lines 2603
+
+## J2 · COMPLETE · re B2
+
+B2 applied: Queue.PRODUCER_DEPS gains "actions" (queue-producers R8 now receives a caller's actions for R19); test world defaults an actions answering no mark; new action.test.mjs test (R8, R12): a fake actions reaches R19's mint (litigation-hold OBLIGATION, instead actionhold, asked once with the viewer), negative control a fake answering no mark mints none. On this branch test/m/queue is 75/76: the new test is red until queue-producers' R19 merges (merge queue after it, as START says). On a scratch merge with origin/job/T20/queue-producers: queue 76/76, queue-producers 47/47; removing "actions" from PRODUCER_DEPS there turns the new test red. control-plane 85/85, plane 28/28. Checks: format 0, architecture 0, coverage 37/37, ownership 0. Record updated.
