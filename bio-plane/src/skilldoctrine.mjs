@@ -50,8 +50,8 @@
  * `CLAUDE.md`: *"Undetermined is first-class and must be STATED."* Applied to
  * fences, that means a clause backed by no code may not read like a clause
  * backed by code. Every clause therefore carries either a non-empty
- * `enforced_by` (C-numbers, read from the catalogue by KEY so no number is
- * typed here) or a non-empty `unenforced_because`, and the suite PRINTS how many
+ * `enforced_by` (C-numbers, read from their owners' rows by KEY so no number
+ * is typed here but the two named below) or a non-empty `unenforced_because`, and the suite PRINTS how many
  * clauses are instruction-only. That number is the honest measure of how much of
  * this skill a careless model could ignore, and it is published rather than
  * implied.
@@ -63,8 +63,8 @@
  * `ASSISTANT-PILOT.md` §1, and SK-1's measured finding: a hand copy agrees at
  * zero cost until the day the rule moves. The levels, the absence states, the
  * definitive subset, the earned grade sources, the inert sources and the
- * reporting spellings are all IMPORTED; the C-numbers are read off catalogue
- * rows by key. What is AUTHORED is doctrine prose, and every authored sentence
+ * reporting spellings are all IMPORTED; the C-numbers are read off their
+ * owners' rows by key. What is AUTHORED is doctrine prose, and every authored sentence
  * that quotes a document is checked against that document by the suite, exactly
  * as SK-1's four resident sentences are.
  *
@@ -80,15 +80,14 @@
 /* The levels, states and definitive subset are observation-log's (K78 (3),
    K81); C-30 and the inert sources are strength's (K181 (3)); the suggestion
    levels and C-27 are run-productions' (K182 (2)); the leg roles and the earned
-   grade sources are record-grammar's; C-25 and C-32.2 are basis-versions' (T19).
-   The catalogue family below is imported from the catalogue until it moves to its
-   module (K6), when this import re-points. */
+   grade sources are record-grammar's; C-25 and C-32.2 are basis-versions' and
+   C-32.8 inquiry-grammar's (T19). Nothing is read from the check catalogue. */
 import { OBSERVATION_LEVELS, OBSERVATION_STATES, DEFINITIVE_STATES } from "./observation-log/index.mjs";
 import { VERSION_STRENGTH_CHECKS, VERSION_STRENGTH_INERT_SOURCES } from "./strength/index.mjs";
 import { SUGGEST_LEVELS, SUGGEST_CHECKS } from "./run-productions/index.mjs";
 import { BASIS_ROLES, EARNED_GRADE_SOURCES } from "./record-grammar/index.mjs";
 import { BASIS_VERSION_CHECKS, CONCLUDE_ACT_CHECKS } from "./basis-versions/index.mjs";
-import { MACHINE_FENCE_CHECKS } from "../checks/bio-checks.mjs";
+import { INQUIRY_GRAMMAR_ROWS } from "./inquiry-grammar/index.mjs";
 /* The run's rows and the one deployment order are run-rules' (its R8, R9, R11;
    N156, K617): read from it, never copied. */
 import { AI_RUN_CHECKS, DEPLOYMENT_SEQUENCE, GATE_ADDRESS, SEQUENCING_SOURCE,
@@ -232,14 +231,14 @@ export function controlFlowAuthority(text) {
  *                      JUDGED_ROWS in `judges` and carry no flow authority.
  *   judges             which right-column rows this clause exercises.
  *   defers             which LEFT-column rows it touches and does not decide.
- *   enforced_by        C-numbers, read off catalogue rows by KEY. None typed.
+ *   enforced_by        C-numbers, read off owners' rows by KEY. Two typed (below).
  *   unenforced_because required when `enforced_by` is empty — an instruction
  *                      with no code behind it says so rather than reading like
  *                      one that has.
  * ========================================================================= */
 
-/* Catalogue rows, resolved to their C-numbers by key so this file holds no
-   number of its own. A row renamed in the catalogue fails at import rather than
+/* Owners' rows, resolved to their C-numbers by key so this file holds no
+   number of its own. A row renamed by its owner fails at import rather than
    leaving a stale number that still looks like a citation. */
 const C = {
   hunch_needs_author:   "C-2.8",            /* checkEarnedLeg's hunch arms — see below */
@@ -251,7 +250,7 @@ const C = {
   empty_level_unstated: SUGGEST_CHECKS.SUGGEST_EMPTY_LEVEL_UNSTATED.check,
   leg_unreachable:      SUGGEST_CHECKS.SUGGEST_LEG_UNREACHABLE.check,
   cannot_conclude:      CONCLUDE_ACT_CHECKS.MACHINE_CANNOT_CONCLUDE.check,
-  cannot_ground:        MACHINE_FENCE_CHECKS.MACHINE_CANNOT_GROUND.check,
+  cannot_ground:        INQUIRY_GRAMMAR_ROWS.MACHINE_CANNOT_GROUND.check,
   skill_version:        SKILL_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED.check,
   /* SK-3's additions, read by KEY exactly as SK-2's are. */
   cannot_publish:       "C-32.6",           /* case-authoring's row, typed — see below */
@@ -263,13 +262,13 @@ const C = {
 /* THE ONE C-NUMBER WRITTEN OUT, AND IT IS WRITTEN OUT BECAUSE IT HAS NO ROW TO
    READ. `checkEarnedLeg`'s hunch arms — a hunch with no author, a hunch with no
    date — push `C-2.8` at the call site rather than through a keyed registry the
-   way the SUGGEST and MACHINE families do, so there is no `.check` here to
+   way the SUGGEST and fence families do, so there is no `.check` here to
    resolve. Hiding that behind a computed expression would make this file look
    uniformly driven when one member of it is not, which is the false-coverage
    shape this project keeps measuring. It is instead NAMED as the exception and
-   PINNED: the suite asserts the catalogue's source still pushes this number on
-   a hunch with no author, so a renumbering fails here rather than leaving a
-   citation pointing nowhere.
+   PINNED: the suite asserts it is read from no owner's keyed row and is one of
+   exactly two numbers typed in this module's source (R15); the hunch arms that
+   push it are inquiry-grammar's (its leg grammar), whose own tests hold them.
 
    AND ONE MORE, FOR A DIFFERENT REASON: C-32.6 (`MACHINE_CANNOT_PUBLISH`) has a
    keyed row, but its holder, `case-authoring`, is LATER in the order than this
@@ -542,7 +541,7 @@ export const CLAUSES = [
  * sentence saying "never do X" that a model can ignore refuses nothing, so every
  * field below is scanned by `controlFlowAuthority` — the SAME exported function
  * SK-2 built, never a second scanner — and each prohibition names the C-numbers
- * that actually refuse, read off catalogue rows BY KEY.
+ * that actually refuse, read off their owners' rows BY KEY.
  *
  * THE FIFTH PROHIBITION'S CODE HALF IS ALREADY LANDED AND THIS FILE ADDS NONE.
  * `PL-3` built `SUGGEST_BOILERPLATE` / `C-27.12` and the single `isBoilerplate`
