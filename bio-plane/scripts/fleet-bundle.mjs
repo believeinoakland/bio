@@ -1,9 +1,10 @@
 /* THE FLEET'S BUILD STEP, AND THE GUARD THAT MAKES A COMMITTED ARTIFACT SAFE.
  *
- * ONE implementation of the recipe and ONE implementation of the check. Both
- * `agent-worker/scripts/build.mjs` and `pdf-worker/scripts/build.mjs` are thin
- * callers of this, and `bio-plane/test/system/fleetbundles.test.mjs` is the only reader
- * of the verification. A second copy of a rule is how the next one goes stale in
+ * ONE implementation of the recipe and ONE implementation of the check. Every
+ * member's `scripts/build.mjs` and the plane's `scripts/build-plane.mjs` are thin
+ * callers of this, and its verification is read by the fleet gate
+ * (`bio-plane/test/system/fleetbundles.test.mjs`), `scripts/bundles.mjs` (R21) and
+ * `scripts/release-assemble.mjs` (R22), never re-implemented by any of them. A second copy of a rule is how the next one goes stale in
  * silence — this estate has measured that five times (the note in the retired
  * `scripts/coverage.mjs` on the fleet `control` flag, where the arm written to
  * prove a fix came back GREEN because nothing read the flag any more).
@@ -27,12 +28,13 @@
  * **A STALE ARTIFACT FAILS INSTEAD OF SHIPPING.** That is the whole product of
  * this file.
  *
- * ---- WHY IT LIVES IN `bio-plane/scripts/` AND NOT IN `tools/` ---------------
+ * ---- WHY IT LIVES IN `bio-plane/scripts/` ----------------------------------
  *
  * Because `esbuild` is here. `bio-plane/node_modules` is the only install in the
  * repository that carries it for every member, the repository ROOT has no
  * `node_modules` at all, and `agent-worker` deliberately has no dependencies of
- * its own. A library under `tools/` could not `import "esbuild"`. The precedent
+ * its own. A library outside `bio-plane/` could not `import "esbuild"` (the old
+ * process's `tools/`, retired in T19, could not, which is why this never lived there). The precedent
  * is `newgroup/scripts/embed-release.mjs`, which already expects "the sibling
  * ../bio-plane tree with its devDependencies installed".
  *

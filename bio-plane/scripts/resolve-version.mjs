@@ -42,10 +42,10 @@ import { join } from "node:path";
 import { REPO_ROOT, discoverMembers, planeMember } from "./fleet-bundle.mjs";
 import { parseJsonc } from "./jsonc.mjs";   /* N12: the product's own reader */
 
-/* fleet-bundle.mjs is FLEET's (FL-9/FL-10) and is CONSUMED here, never edited:
-   discovery must not be re-implemented, or the set this checks could drift from
-   the set that gets built and signed — which is the failure this file exists to
-   make impossible one level up. */
+/* Discovery is fleet-bundle.mjs's (bundler R1) and is CONSUMED here, never
+   re-implemented: a second walk could let the set this checks drift from the set
+   that gets built and signed — which is the failure this file exists to make
+   impossible one level up. */
 
 /** Every place a version is declared, as {file, key, version}. */
 export function versionSites(repoRoot = REPO_ROOT) {

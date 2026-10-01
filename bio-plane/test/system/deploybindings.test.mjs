@@ -41,7 +41,8 @@
  * reason arm anchors on the `"limits"` key, so it goes with it — declared the
  * first, observed both). (B) drop `limits: deriveLimits(wranglerCfg),` from
  * deploy.mjs's metadata -> 35/36, FAIL "deploy.mjs's upload metadata carries the
- * derived limits". (C) make limitsReadBack read ABSENT limits as MATCH -> 35/36,
+ * derived limits" (that source pin retired in T22; bundler R18's command-level
+ * tests in `test/m/bundler/release.test.mjs` now carry the arm). (C) make limitsReadBack read ABSENT limits as MATCH -> 35/36,
  * FAIL "read-back: settings stating no limits (biosmoke7's measured shape) are
  * UNDETERMINED, never a match". Restored, 36/36 green. Over-strictness arm:
  * cpu_ms beside subrequests is carried, not refused.
@@ -50,7 +51,7 @@ import "../stdio.mjs";
 import "../sandbox.mjs";
 import { readFileSync } from "node:fs";
 import { deriveBindings, serviceTargets, deriveLimits, limitsReadBack } from "../../scripts/derive-bindings.mjs";
-import { stripJsonc } from "../jsonc.mjs";   /* N14: taken from tools/ into test/ */
+import { stripJsonc } from "../../scripts/jsonc.mjs";   /* bundler R11: the module's one JSONC reader (T22, D5) */
 
 let pass = 0, fail = 0;
 const t = (name, got, want) => {
@@ -232,19 +233,13 @@ console.log("\n--- D-54: limits.subrequests is a decision, not the platform's de
   const subres = readFileSync(new URL("../../src/subresources.mjs", import.meta.url), "utf8");
   t("the sizing the site cites is the code's: SUBRESOURCE_CAP is 400 in subresources.mjs",
     /export const SUBRESOURCE_CAP = (\d+);/.exec(subres)?.[1], "400");
-  /* deploy.mjs acts on import, so its carriage is pinned at the source: the
-     upload metadata carries deriveLimits' value, and success is gated on the
-     read-back refusing a MISMATCH. */
-  const dep = readFileSync(new URL("../../scripts/deploy.mjs", import.meta.url), "utf8");
-  t("deploy.mjs's upload metadata carries the derived limits",
-    /\n  limits: deriveLimits\(wranglerCfg\),\n/.test(dep), true);
-  t("deploy.mjs reads the limits back after the upload and refuses success on a MISMATCH",
-    (() => { const v = dep.indexOf("verified: deployed bytes are hash-identical");
-             const r = dep.indexOf("limitsReadBack(await settingsNow(), meta.limits);", v);
-             const m = dep.indexOf('if (lim.verdict === "MISMATCH") {', r);
-             const x = dep.indexOf("process.exit(1);", m);
-             const ok = dep.indexOf("await confirmServing(version);", m);
-             return v > 0 && r > v && m > r && x > m && ok > x; })(), true);
+  /* RETIRED 2026-10-01 (BUNDLER #5, T22): two assertions here pinned deploy.mjs's SOURCE TEXT (the upload metadata
+     carrying `deriveLimits`, and the read-back refusing success on a MISMATCH), from when deploy.mjs could not be driven
+     without deploying. It is driven now, as the command an operator runs, against a stubbed account
+     (`test/m/bundler/release.test.mjs`): R18's tests assert the uploaded metadata's `limits` equal `deriveLimits` of
+     the config, that a read-back MISMATCH exits 1 with [LIMITS_MISMATCH] and no rollout wait, and that UNDETERMINED is
+     never stated as verified. Behaviour at the interface replaces the source pins (D-54 arm (B) below was run
+     against the pins). */
 }
 
 console.log(`\ndeploybindings: ${pass} passed, ${fail} failed`);

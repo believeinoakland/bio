@@ -171,8 +171,9 @@ const ARMS = {
     /* The count in this label is the SAME CLAIM as the head's tally and was stale the same way
        (`six` against a table of twelve); corrected 2026-09-14 by M0-29 with the head, because
        correcting one and leaving the other is the half-fix that makes the next reader believe
-       the wrong half. */
-    label: "nothing armed — what distinguishes eighteen-arms-working from eighteen-arms-broken",
+       the wrong half. Moved with the head again 2026-10-01 (BUNDLER #5, T22): T20 retired two
+       arms and the head read sixteen while this still read eighteen. */
+    label: "nothing armed — what distinguishes sixteen-arms-working from sixteen-arms-broken",
     run: () => {
       const r = runSuite();
       console.log(`  -> BASELINE ${r.pass} pass, ${r.fail} fail, exit ${r.status}`);
