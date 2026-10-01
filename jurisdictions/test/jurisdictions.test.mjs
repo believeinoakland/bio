@@ -12,6 +12,12 @@ const TEST = "test-port-ellery";
 const codes = (r) => r.errors.map((e) => e.code);
 const hasError = (r, code, path) => r.errors.some((e) => e.code === code && (path == null || e.path === path));
 const clone = (o) => JSON.parse(JSON.stringify(o));
+/* R40: a template with its whole attribution. */
+const tpl = (over = {}) => ({ id: "TPL-sample-request", version: 1, use: "file", text: "Please send the records under {{law}}.", notes: "",
+  authored_by: "A. Author", contributors: ["B. Helper"], approved_by: "C. Approver", approved_at: "2026-09-01",
+  reviews: [{ reviewer: "D. Reviewer", kind: "professional", organisation: "Law Centre", credential: "attorney", scope: "the whole text",
+    outcome: "no_concerns", at: "2026-08-30" }], basis: "K921", ...over });
+const weekdays = (open, close) => ["mon", "tue", "wed", "thu", "fri"].map((day) => ({ day, open, close }));
 
 /* A small valid profile carrying every section, the base the negative cases break one field of. */
 function sample() {
@@ -51,13 +57,17 @@ function sample() {
     },
     practice: { minutes_due_days: { value: 14, basis: "UNMEASURED" } },
     locale: { value: "en-CA", basis: "M-10" },
+    time_zone: { value: "America/Toronto", status: "researched", basis: "M-14" },
     search_terms: [{ term: "sample", basis: "UNMEASURED" }],
     records_laws: [{ level: "state", name: "Records Law", citation: "RL § 1", basis: "D-1" }],
     standard_sources: [{ source: "Sample Town Code", kind: "ordinance", issuer: "Council", level: "city", cite: { re: "STC § \\d+" }, code: "stc", basis: "K1" }],
-    counterparties: [{ role: "Clerk", body: "Sample Town", level: "city", elected: false, basis: "DEC-1" },
+    counterparties: [{ role: "Clerk", body: "Sample Town", level: "city", elected: false,
+      hours: { weekly: [...weekdays("09:00", "12:00"), ...weekdays("13:00", "17:00")], status: "researched", basis: "M-15" }, basis: "DEC-1" },
       { role: "Auditor", body: "Sample Town", level: "city", elected: true, oversight: true, basis: "DEC-2" }],
     action_kinds: [
-      { kind: "records_request", label: "records request", tier: 1, laws: ["Records Law"], venue: { name: "clerk", how: "email", basis: "M-8" }, template: "Please send {{records}}.", basis: "M-8" },
+      { kind: "records_request", label: "records request", tier: 1, laws: ["Records Law"],
+        venue: { name: "clerk", how: "email", basis: "M-8", hours: { weekly: weekdays("08:00", "16:00"), status: "ruled", basis: "K5" } },
+        template: tpl(), basis: "M-8" },
       { kind: "code_complaint", label: "complaint", tier: 3, laws: ["Sample Town Code"], venue: { name: "court", how: "court", basis: "M-8" },
         evidence: { standard: "Evidence Rule 902: self-authenticating records", accepts: [{ grade: "A", coattested: true }, { grade: "B" }],
           contestable: [{ grade: "C" }], basis: "M-13" }, basis: "M-8" },
@@ -67,8 +77,9 @@ function sample() {
       extension: { days: 5, count: "business", when: "busy" }, citation: "RL § 2", basis: "M-9" }],
     legal_organisations: [{ name: "Town Law Centre", evaluates: ["code_complaint"],
       contacts: [{ how: "email", value: "help@law.sample.example" }, { how: "mail", value: "1 Main St" }], basis: "M-11" }],
-    holidays: [{ year: 2026, days: [{ date: "2026-01-01", name: "New Year" }, { date: "2026-07-04", name: "Summer" }], basis: "M-12" },
-      { year: 2024, days: [{ date: "2024-02-29", name: "Leap" }], basis: "M-12" }],
+    holidays: [{ year: 2026, days: [{ date: "2026-01-01", name: "New Year" }, { date: "2026-07-04", name: "Summer" }], status: "researched", basis: "M-12" },
+      { year: 2024, days: [{ date: "2024-02-29", name: "Leap" }], status: "researched", basis: "M-12" },
+      { year: 2026, offices: ["Clerk", { venue: "code_complaint" }], days: [{ date: "2026-03-02", name: "Clerk's day" }], status: "ruled", basis: "K6" }],
   };
 }
 const breakIt = (fn) => { const p = sample(); fn(p); return validate(p); };
@@ -101,7 +112,8 @@ test("R2 patterns ({re, flags} from i and u) and bases (measurement, dated entry
   assert.ok(paths.length >= 25);
   for (const path of paths) {
     const r = breakIt((p) => { delete walkFacts.at(p, path).basis; });
-    assert.ok(hasError(r, "BASIS_MISSING", `${path}.basis`), path);
+    /* a template missing its basis is missing part of its attribution (R40) */
+    assert.ok(hasError(r, path.endsWith(".template") ? "TEMPLATE_UNATTRIBUTED" : "BASIS_MISSING", `${path}.basis`), path);
   }
   /* Patterns: a source that compiles, flags from i and u only, each once. */
   for (const flags of ["", "i", "u", "iu", "ui"]) assert.ok(breakIt((p) => { p.vocabulary.bodies[0].pattern = { re: "x", flags }; }).ok, flags);
@@ -272,7 +284,7 @@ test("R28 validate codes for the action sections", () => {
     KIND_INVALID: [(p) => { p.action_kinds[0].kind = "Records-Request"; }, "action_kinds[0].kind"],
     COUNT_UNKNOWN: [(p) => { p.deadlines[0].count = "working"; }, "deadlines[0].count"],
     TIER_INVALID: [(p) => { p.action_kinds[0].tier = 4; }, "action_kinds[0].tier"],
-    TEMPLATE_TIER3: [(p) => { p.action_kinds[1].template = "Sue {{them}}."; }, "action_kinds[1].template"],
+    TEMPLATE_TIER3: [(p) => { p.action_kinds[1].template = tpl({ id: "TPL-sample-sue" }); }, "action_kinds[1].template"],
     CODE_UNKNOWN: [(p) => { p.standard_sources[0].code = "xyz"; }, "standard_sources[0].code"],
     LAW_UNKNOWN: [(p) => { p.action_kinds[0].laws = ["Unknown Act"]; }, "action_kinds[0].laws[0]"],
     DEADLINE_KIND_UNKNOWN: [(p) => { p.deadlines[0].applies_to = "appeal"; }, "deadlines[0].applies_to"],
@@ -322,7 +334,7 @@ test("R24 counterparties: role and body, never a person; level; elected; oversig
   assert.ok(hasError(breakIt((p) => { p.counterparties[0].person = "A. Name"; }), "UNKNOWN_SECTION", "counterparties[0].person"));
 });
 
-test("R25 action_kinds: kind form, label, tier 1–3, laws, venue {name, how, basis}, template never on Tier 3, advisory only on Tier 2", () => {
+test("R25 action_kinds: kind form, label, tier 1–3, laws, venue {name, how, basis}, no file template on Tier 3, advisory only on Tier 2", () => {
   assert.ok(breakIt((p) => { delete p.action_kinds[2].advisory; }).ok, "advisory is optional");
   for (const tier of [1, 3]) assert.ok(hasError(breakIt((p) => { p.action_kinds[2].tier = tier; }), "ADVISORY_NOT_TIER2", "action_kinds[2].advisory"), String(tier));
   assert.ok(hasError(breakIt((p) => { delete p.action_kinds[2].tier; }), "ADVISORY_NOT_TIER2", "action_kinds[2].advisory"), "no tier, no advisory");
@@ -340,7 +352,7 @@ test("R25 action_kinds: kind form, label, tier 1–3, laws, venue {name, how, ba
     const prof = get(id);
     const placeWords = prof.covers.flatMap((c) => c.toLowerCase().split(/\W+/)).filter((w) => w.length > 3 && !["city", "county"].includes(w));
     for (const k of prof.action_kinds) for (const w of placeWords) assert.ok(!k.kind.includes(w), `${k.kind} names ${w}`);
-    for (const k of prof.action_kinds) if (k.tier === 3) assert.equal(k.template, undefined);
+    for (const k of prof.action_kinds) if (k.tier === 3) assert.notEqual(k.template && k.template.use, "file", k.kind);
   }
 });
 
@@ -506,7 +518,7 @@ test("R29 action facts with one value per key: a kind's tier, venue, template; a
   const b = sample(); b.id = "sample-two"; b.name = "Two"; b.covers = ["Two"];
   b.action_kinds[0].tier = 2;
   b.action_kinds[0].venue.how = "portal";
-  b.action_kinds[0].template = "Kindly send {{records}}.";
+  b.action_kinds[0].template = tpl({ text: "Kindly send the records under {{law}}." });
   b.deadlines[0].days = 20; b.deadlines[0].count = "business"; b.deadlines[0].starts = "filed";
   const c = combine([a, b]);
   assert.deepEqual(c.conflicts.map((x) => x.at).sort(), ["action_kinds[records_request].template", "action_kinds[records_request].tier",
@@ -524,7 +536,7 @@ test("R29 action facts with one value per key: a kind's tier, venue, template; a
   const e = combine([a, same]);
   assert.deepEqual(e.conflicts, []);
   const kk = e.view.action_kinds.find((x) => x.kind === "records_request");
-  assert.equal(kk.tier, 1); assert.equal(kk.venue.how, "email"); assert.equal(kk.template, "Please send {{records}}.");
+  assert.equal(kk.tier, 1); assert.equal(kk.venue.how, "email"); assert.equal(kk.template.text, "Please send the records under {{law}}.");
   assert.equal(e.view.deadlines[0].days, 10);
 });
 
@@ -670,7 +682,8 @@ test("R22 the test profile: test true, every basis TEST, every section and vocab
   for (const h of hosts(t)) assert.ok(!fh.has(h), h);
   for (const c of t.covers) assert.ok(!f.covers.includes(c));
   /* combining the two gives no conflict: they share nothing */
-  assert.deepEqual(combine([FIRST, TEST]).conflicts.filter((c) => !c.at.startsWith("practice") && c.at !== "locale" && !c.at.startsWith("action_kinds[records_request]")), []);
+  assert.deepEqual(combine([FIRST, TEST]).conflicts.filter((c) => !c.at.startsWith("practice") && c.at !== "locale" && c.at !== "time_zone"
+    && !c.at.startsWith("action_kinds[records_request]")), []);
 });
 
 test("R30 the first profile's action sections: the snapshot's action kinds renamed, §8 tiers, the records law's period and citation, the offices", () => {
@@ -699,7 +712,7 @@ test("R30 the first profile's action sections: the snapshot's action kinds renam
   const t = get(TEST);
   for (const s of ["standard_sources", "counterparties", "action_kinds", "deadlines"]) assert.ok(t[s] && t[s].length, s);
   assert.ok(t.deadlines.some((x) => x.applies_to === "claim"));
-  assert.ok(t.action_kinds.some((x) => x.tier === 3 && x.template === undefined));
+  assert.ok(t.action_kinds.some((x) => x.tier === 3 && !(x.template && x.template.use === "file")));
 });
 
 /* ============================================================================================== */
@@ -803,6 +816,7 @@ test("R33 holidays: a four-digit year, its closure days {date, name} within it, 
   assert.ok(validate(sample()).ok, "2024-02-29 is a date");
   for (const year of [26, 20260, "2026", 2026.5, null]) assert.ok(hasError(breakIt((p) => { p.holidays[0].year = year; }), "HOLIDAY_INVALID", "holidays[0].year"), String(year));
   assert.ok(hasError(breakIt((p) => { p.holidays[1].year = 2026; p.holidays[1].days[0].date = "2026-02-28"; }), "HOLIDAY_INVALID", "holidays[1].year"), "a year twice");
+  assert.ok(breakIt((p) => { p.holidays[2].offices = ["Auditor"]; }).ok, "a year again, for an office");
   for (const date of ["2026-02-29", "2026-13-01", "2026-04-31", "2026-1-01", "26-01-01", "2026/01/01", "", null])
     assert.ok(hasError(breakIt((p) => { p.holidays[0].days[0].date = date; }), "HOLIDAY_INVALID", "holidays[0].days[0].date"), String(date));
   assert.ok(hasError(breakIt((p) => { p.holidays[0].days[0].date = "2025-12-31"; }), "HOLIDAY_INVALID", "holidays[0].days[0].date"), "outside its year");
@@ -813,7 +827,7 @@ test("R33 holidays: a four-digit year, its closure days {date, name} within it, 
   const v = combine([TEST]).view;
   assert.deepEqual(v.holidays.map((h) => h.year), get(TEST).holidays.map((h) => h.year));
   assert.equal(v.holidays.find((h) => h.year === 2025), undefined);
-  assert.equal(combine([FIRST]).view.holidays, undefined, "the first profile lists no year");
+  assert.deepEqual([...new Set(combine([FIRST]).view.holidays.map((h) => h.year))], [2026], "the first profile lists only 2026, the year published");
 });
 
 test("R34 combine: legal organisations unioned; a year's holidays one value, withheld and reported when profiles disagree", () => {
@@ -828,13 +842,14 @@ test("R34 combine: legal organisations unioned; a year's holidays one value, wit
   assert.deepEqual(y.bases, [{ profile: "sample-town", basis: "M-12" }, { profile: "sample-two", basis: "M-40" }]);
   const b = two((x) => {
     x.holidays[0].days.push({ date: "2026-11-26", name: "Harvest" });
-    x.holidays.push({ year: 2027, days: [], basis: "M-1" });
+    x.holidays.push({ year: 2027, days: [], status: "researched", basis: "M-1" });
     x.legal_organisations.push({ name: "Other Centre", evaluates: ["code_complaint"], contacts: [{ how: "web", value: "https://o.example" }], basis: "M-1" });
   });
   const c = combine([a, b]);
   assert.deepEqual(c.conflicts.map((x) => x.at), ["holidays[2026]"]);
   assert.ok(c.conflicts[0].values.length === 2 && c.conflicts[0].values.every((v) => Array.isArray(v.value)));
-  assert.deepEqual(c.view.holidays.map((h) => h.year), [2024, 2027], "2026 withheld; the years only one profile lists are kept");
+  assert.deepEqual(c.view.holidays.map((h) => [h.year, !!h.offices]), [[2024, false], [2026, true], [2027, false]],
+    "2026 for all offices withheld; 2026 for the office, on which they agree, and the years only one profile lists are kept");
   assert.deepEqual(c.view.legal_organisations.map((o) => o.name), ["Town Law Centre", "Other Centre"]);
 });
 
@@ -914,8 +929,7 @@ test("R36 the test profile supplies R31's levels, oversight, a Tier 2 advisory, 
   /* the oversight and audit bodies the profile names; the others stay undetermined */
   assert.deepEqual(f.counterparties.filter((c) => c.oversight === true).map((c) => c.role).sort(), ["City Auditor", "Civil Grand Jury"]);
   assert.ok(f.counterparties.filter((c) => c.oversight !== true).every((c) => c.oversight === undefined));
-  /* no measurement names the closure days, nor any of its venues' evidence standards: absent, never guessed */
-  assert.equal(f.holidays, undefined);
+  /* no measurement names any of its venues' evidence standards: absent, never guessed (its calendar is R45's) */
   assert.ok(f.action_kinds.every((k) => k.evidence === undefined));
   for (const c of f.counterparties.filter((x) => x.oversight)) assert.equal(c.basis, "UNMEASURED", c.role);
 });
@@ -1047,4 +1061,308 @@ test("R29 R39 a kind's evidence is one value per key: withheld and reported when
   const one = combine([a, two((b) => { delete b.action_kinds[1].evidence; })]);
   assert.deepEqual(one.conflicts, []);
   assert.equal(one.view.action_kinds.find((y) => y.kind === "code_complaint").evidence.standard, a.action_kinds[1].evidence.standard);
+});
+
+/* ============================================================================================== */
+/* K921, K925: filing templates and the calendar (R40–R45; R28, R29, R34, R35 as amended).          */
+
+const tz = (p) => p.time_zone;
+const clerkHours = (p) => p.counterparties[0].hours;
+const venueHours = (p) => p.action_kinds[0].venue.hours;
+
+test("R40 a template carries its whole attribution: {id, version, use, text, notes, authored_by, contributors, reviews, approved_by, approved_at, basis}", () => {
+  assert.ok(validate(sample()).ok);
+  const T = "action_kinds[0].template";
+  /* bare text, or any value that is not an object, carries no attribution */
+  for (const bare of ["Please send {{law}}.", "", 3, ["x"]])
+    assert.ok(hasError(breakIt((p) => { p.action_kinds[0].template = bare; }), "TEMPLATE_UNATTRIBUTED", T), JSON.stringify(bare));
+  /* each field missing is named */
+  for (const f of ["id", "version", "use", "text", "notes", "authored_by", "contributors", "reviews", "approved_by", "approved_at", "basis"]) {
+    const r = breakIt((p) => { delete p.action_kinds[0].template[f]; });
+    assert.ok(hasError(r, "TEMPLATE_UNATTRIBUTED", `${T}.${f}`), f);
+    assert.ok(hasError(breakIt((p) => { p.action_kinds[0].template[f] = null; }), "TEMPLATE_UNATTRIBUTED", `${T}.${f}`), `${f} null`);
+  }
+  /* each value of the wrong form */
+  const wrong = {
+    id: ["tpl-x", "TPL-", "TPL-X", "TPL_x", "TPL--x".slice(0, 4), 7], version: [0, -1, 1.5, "1"], use: ["filing", "", "File"],
+    text: ["", "  ", 3], notes: [3, ["n"]], authored_by: ["", 3], approved_by: ["", 3], contributors: ["B", [""], [3]],
+    reviews: ["ok", {}], approved_at: ["2026-02-30", "2026/09/01", "", 20260901],
+  };
+  for (const [f, bads] of Object.entries(wrong)) for (const bad of bads)
+    assert.ok(hasError(breakIt((p) => { p.action_kinds[0].template[f] = bad; }), "VALUE_INVALID", `${T}.${f}`), `${f} ${JSON.stringify(bad)}`);
+  for (const good of [{ id: "TPL-a" }, { id: "TPL-0-x9" }, { version: 7 }, { use: "brief" }, { notes: "" }, { contributors: [] }, { reviews: [] }])
+    assert.ok(breakIt((p) => { Object.assign(p.action_kinds[0].template, good); }).ok, JSON.stringify(good));
+  /* the approver is never the author */
+  assert.ok(hasError(breakIt((p) => { p.action_kinds[0].template.approved_by = "A. Author"; }), "VALUE_INVALID", `${T}.approved_by`));
+  /* no id twice in the profile */
+  assert.ok(hasError(breakIt((p) => { p.action_kinds[2].template = tpl({ use: "brief" }); }), "VALUE_INVALID", "action_kinds[2].template.id"));
+  assert.ok(breakIt((p) => { p.action_kinds[2].template = tpl({ id: "TPL-other", use: "brief" }); }).ok);
+  /* a review: reviewer, kind, scope, outcome, at required; organisation and credential optional */
+  const R0 = `${T}.reviews[0]`;
+  for (const f of ["reviewer", "kind", "scope", "outcome", "at"])
+    assert.ok(hasError(breakIt((p) => { delete p.action_kinds[0].template.reviews[0][f]; }), "TEMPLATE_UNATTRIBUTED", `${R0}.${f}`), f);
+  for (const f of ["organisation", "credential"]) assert.ok(breakIt((p) => { delete p.action_kinds[0].template.reviews[0][f]; }).ok, f);
+  for (const kind of ["member", "professional"]) assert.ok(breakIt((p) => { p.action_kinds[0].template.reviews[0].kind = kind; }).ok, kind);
+  for (const outcome of ["no_concerns", "concerns", "changes_requested"]) assert.ok(breakIt((p) => { p.action_kinds[0].template.reviews[0].outcome = outcome; }).ok, outcome);
+  for (const [f, bad] of [["kind", "peer"], ["outcome", "approved"], ["at", "yesterday"], ["reviewer", ""], ["scope", ""], ["organisation", ""], ["credential", 3]])
+    assert.ok(hasError(breakIt((p) => { p.action_kinds[0].template.reviews[0][f] = bad; }), "VALUE_INVALID", `${R0}.${f}`), `${f} ${bad}`);
+  assert.ok(hasError(breakIt((p) => { p.action_kinds[0].template.reviews[0].grade = "A"; }), "UNKNOWN_SECTION", `${R0}.grade`));
+  assert.ok(hasError(breakIt((p) => { p.action_kinds[0].template.reviews = ["fine"]; }), "VALUE_INVALID", R0));
+  assert.ok(hasError(breakIt((p) => { p.action_kinds[0].template.state = "approved"; }), "UNKNOWN_SECTION", `${T}.state`));
+  /* its basis is a ruling, or TEST in a test profile */
+  for (const b of ["K921", "K921, K924", "K1; K2"]) assert.ok(breakIt((p) => { p.action_kinds[0].template.basis = b; }).ok, b);
+  for (const b of ["M-1", "D-149", "DEC-13", "UNMEASURED", "TEST", "2026-09-01", "K"])
+    assert.ok(hasError(breakIt((p) => { p.action_kinds[0].template.basis = b; }), "BASIS_INVALID", `${T}.basis`), b);
+  assert.ok(breakIt((p) => { p.test = true; p.action_kinds[0].template.basis = "TEST"; }).ok);
+  /* every fault is reported */
+  const all = breakIt((p) => { p.action_kinds[0].template = { id: "x", use: "fax" }; });
+  assert.ok(all.errors.filter((e) => e.code === "TEMPLATE_UNATTRIBUTED").length === 9);
+  assert.ok(hasError(all, "VALUE_INVALID", `${T}.id`) && hasError(all, "VALUE_INVALID", `${T}.use`));
+  /* the view carries the template whole, attribution included, tagged with its giver */
+  const k = combine([sample()]).view.action_kinds.find((x) => x.kind === "records_request");
+  assert.deepEqual({ ...k.template, profile: undefined, bases: undefined }, { ...tpl(), profile: undefined, bases: undefined });
+  assert.deepEqual([k.template.profile, k.template.bases], ["sample-town", [{ profile: "sample-town", basis: "K921" }]]);
+});
+
+test("R28 TEMPLATE_TIER3 refuses only a use: file template on a Tier 3 kind; a brief serves any tier", () => {
+  assert.ok(hasError(breakIt((p) => { p.action_kinds[1].template = tpl({ id: "TPL-sample-sue" }); }), "TEMPLATE_TIER3", "action_kinds[1].template"));
+  assert.ok(breakIt((p) => { p.action_kinds[1].template = tpl({ id: "TPL-sample-sue", use: "brief" }); }).ok, "a brief on Tier 3");
+  for (const tier of [1, 2]) for (const use of ["file", "brief"])
+    assert.ok(breakIt((p) => { delete p.action_kinds[2].advisory; p.action_kinds[2].tier = tier; p.action_kinds[2].template = tpl({ id: "TPL-sample-x", use }); }).ok, `${tier} ${use}`);
+  assert.ok(breakIt((p) => { delete p.action_kinds[0].tier; }).ok, "an undetermined tier takes a file template");
+  assert.ok(!hasError(breakIt((p) => { p.action_kinds[1].template = "bare"; }), "TEMPLATE_TIER3"), "bare text is unattributed, its use unknown");
+});
+
+test("R41 time_zone: {value, status, basis}, an IANA name (Area/Location or UTC); one value in combine", () => {
+  for (const v of ["America/Los_Angeles", "Europe/London", "America/Argentina/Buenos_Aires", "UTC", "Etc/GMT+5", "Pacific/Honolulu"])
+    assert.ok(breakIt((p) => { tz(p).value = v; }).ok, v);
+  for (const v of ["", "PST", "EST", "GMT", "utc", "America/Nowhere", "Los_Angeles", "America/", "/London", "+05:00", 5, null])
+    assert.ok(hasError(breakIt((p) => { tz(p).value = v; }), "VALUE_INVALID", "time_zone.value"), String(v));
+  for (const bad of ["America/Toronto", null, ["UTC"]]) assert.ok(hasError(breakIt((p) => { p.time_zone = bad; }), "VALUE_INVALID", "time_zone"), JSON.stringify(bad));
+  assert.ok(hasError(breakIt((p) => { tz(p).offset = -5; }), "UNKNOWN_SECTION", "time_zone.offset"));
+  assert.ok(hasError(breakIt((p) => { delete tz(p).basis; }), "BASIS_MISSING", "time_zone.basis"));
+  assert.ok(breakIt((p) => { delete p.time_zone; }).ok, "optional: absent, the time of day is undetermined");
+  assert.ok(!validate(sample()).errors.some((e) => e.code === "UNKNOWN_SECTION"), "a known section");
+  /* one value per key: agreeing profiles keep it with both bases; disagreeing ones have it withheld */
+  const same = combine([sample(), two((b) => { tz(b).basis = "M-99"; })]);
+  assert.deepEqual(same.conflicts, []);
+  assert.deepEqual([same.view.time_zone.value, same.view.time_zone.status, same.view.time_zone.profile], ["America/Toronto", "researched", "sample-town"]);
+  assert.deepEqual(same.view.time_zone.bases, [{ profile: "sample-town", basis: "M-14" }, { profile: "sample-two", basis: "M-99" }]);
+  for (const change of [(z) => { z.value = "America/Chicago"; }, (z) => { z.status = "ruled"; z.basis = "K1"; }]) {
+    const c = combine([sample(), two((b) => change(tz(b)))]);
+    assert.equal(c.view.time_zone, undefined);
+    assert.deepEqual(c.conflicts.map((x) => x.at), ["time_zone"]);
+    assert.ok(c.conflicts[0].values.length === 2 && /undetermined/.test(c.conflicts[0].says));
+  }
+  assert.equal(combine([sample(), two((b) => { delete b.time_zone; })]).view.time_zone.value, "America/Toronto", "one giver: kept");
+});
+
+test("R42 hours: {weekly: [{day, open, close}], status, basis} on a counterparty or a venue; split hours, never overlapping; a day not listed is closed", () => {
+  assert.ok(validate(sample()).ok, "split hours on one day are allowed");
+  for (const [at, get] of [["counterparties[0].hours", clerkHours], ["action_kinds[0].venue.hours", venueHours]]) {
+    for (const day of ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]) assert.ok(breakIt((p) => { get(p).weekly = [{ day, open: "00:00", close: "23:59" }]; }).ok, day);
+    assert.ok(breakIt((p) => { get(p).weekly = []; }).ok, "every day closed");
+    assert.ok(breakIt((p) => { get(p).weekly = [{ day: "mon", open: "09:00", close: "12:00" }, { day: "mon", open: "12:00", close: "13:00" }]; }).ok, "touching spans");
+    const bad = (fn, path, why) => assert.ok(hasError(breakIt((p) => fn(get(p))), "HOURS_INVALID", path), `${at} ${why}`);
+    for (const day of ["Mon", "monday", "", 1, null]) bad((h) => { h.weekly[0].day = day; }, `${at}.weekly[0].day`, `day ${day}`);
+    for (const t of ["9:00", "24:00", "09:60", "0900", "", 900, null]) {
+      bad((h) => { h.weekly[0].open = t; }, `${at}.weekly[0].open`, `open ${t}`);
+      bad((h) => { h.weekly[0].close = t; }, `${at}.weekly[0].close`, `close ${t}`);
+    }
+    bad((h) => { h.weekly[0].close = h.weekly[0].open; }, `${at}.weekly[0]`, "open equals close");
+    bad((h) => { h.weekly[0] = { day: "mon", open: "17:00", close: "09:00" }; }, `${at}.weekly[0]`, "open after close");
+    bad((h) => { h.weekly = [{ day: "tue", open: "09:00", close: "13:00" }, { day: "tue", open: "12:59", close: "15:00" }]; }, `${at}.weekly[1]`, "overlap");
+    bad((h) => { h.weekly = [{ day: "tue", open: "09:00", close: "17:00" }, { day: "tue", open: "10:00", close: "11:00" }]; }, `${at}.weekly[1]`, "inside");
+    bad((h) => { h.weekly = "Mon–Fri 9–5"; }, `${at}.weekly`, "weekly not a list");
+    bad((h) => { h.weekly = ["mon"]; }, `${at}.weekly[0]`, "span not an object");
+    assert.ok(hasError(breakIt((p) => { get(p).weekly[0].note = "x"; }), "UNKNOWN_SECTION", `${at}.weekly[0].note`));
+    assert.ok(hasError(breakIt((p) => { get(p).closed_note = "x"; }), "UNKNOWN_SECTION", `${at}.closed_note`));
+    assert.ok(hasError(breakIt((p) => { delete get(p).basis; }), "BASIS_MISSING", `${at}.basis`));
+    /* overlapping is per day: the same span on two days is no overlap */
+    assert.ok(breakIt((p) => { get(p).weekly = [{ day: "mon", open: "09:00", close: "17:00" }, { day: "tue", open: "09:00", close: "17:00" }]; }).ok);
+  }
+  for (const bad of ["9-5", null, []]) assert.ok(hasError(breakIt((p) => { p.counterparties[0].hours = bad; }), "HOURS_INVALID", "counterparties[0].hours"), JSON.stringify(bad));
+  assert.ok(breakIt((p) => { delete p.counterparties[0].hours; delete p.action_kinds[0].venue.hours; }).ok, "optional: absent, undetermined");
+  /* the view carries each office's and venue's hours, tagged; absent, none */
+  const v = combine([sample()]).view;
+  const clerk = v.counterparties.find((c) => c.role === "Clerk");
+  assert.deepEqual(clerk.hours.weekly, sample().counterparties[0].hours.weekly);
+  assert.deepEqual([clerk.hours.status, clerk.hours.basis, clerk.hours.profile], ["researched", "M-15", "sample-town"]);
+  assert.equal(v.counterparties.find((c) => c.role === "Auditor").hours, undefined);
+  const venue = v.action_kinds.find((k) => k.kind === "records_request").venue;
+  assert.deepEqual([venue.hours.status, venue.hours.basis, venue.hours.bases], ["ruled", "K5", [{ profile: "sample-town", basis: "K5" }]]);
+  assert.equal(v.action_kinds.find((k) => k.kind === "code_complaint").venue.hours, undefined);
+});
+
+test("R43 a holiday entry's offices: counterparty roles or {venue: <kind>}; a year once for all offices and once per distinct list", () => {
+  assert.ok(validate(sample()).ok);
+  const H = "holidays[2]";
+  for (const offices of [["Clerk"], ["Auditor", "Clerk"], [{ venue: "code_complaint" }], [{ venue: "records_request" }, "Auditor"]])
+    assert.ok(breakIt((p) => { p.holidays[2].offices = offices; }).ok, JSON.stringify(offices));
+  for (const offices of [[], "Clerk", null, {}]) assert.ok(hasError(breakIt((p) => { p.holidays[2].offices = offices; }), "HOLIDAY_INVALID", `${H}.offices`), JSON.stringify(offices));
+  for (const [o, why] of [["Mayor", "no such role"], ["clerk", "roles are exact"], [{ venue: "records_petition" }, "a kind with no venue"],
+    [{ venue: "appeal" }, "no such kind"], [{ role: "Clerk" }, "not an office form"], [{ venue: "code_complaint", extra: 1 }, "extra field"], [3, "a number"]])
+    assert.ok(hasError(breakIt((p) => { p.holidays[2].offices = [o]; }), "HOLIDAY_INVALID", `${H}.offices[0]`), why);
+  assert.ok(hasError(breakIt((p) => { p.holidays[2].offices = ["Clerk", "Clerk"]; }), "HOLIDAY_INVALID", `${H}.offices[1]`), "an office twice");
+  /* a year for all offices and for each distinct list, never twice for one list, whatever its order */
+  assert.ok(hasError(breakIt((p) => { p.holidays.push({ ...clone(p.holidays[2]), offices: [{ venue: "code_complaint" }, "Clerk"] }); }), "HOLIDAY_INVALID", "holidays[3].year"), "same list, other order");
+  assert.ok(breakIt((p) => { p.holidays.push({ ...clone(p.holidays[2]), offices: ["Clerk"] }); }).ok, "a different list");
+  assert.ok(hasError(breakIt((p) => { p.holidays.push({ ...clone(p.holidays[0]) }); }), "HOLIDAY_INVALID", "holidays[3].year"), "all offices twice");
+  /* the view keeps each entry under its year and offices, so a count for an office takes the all-offices entry and its own */
+  const v = combine([sample()]).view;
+  const y2026 = v.holidays.filter((h) => h.year === 2026);
+  assert.deepEqual(y2026.map((h) => h.offices || null), [null, ["Clerk", { venue: "code_complaint" }]]);
+  const forOffice = (role) => new Set(y2026.filter((h) => !h.offices || h.offices.includes(role)).flatMap((h) => h.days.map((d) => d.date)));
+  assert.deepEqual([...forOffice("Clerk")].sort(), ["2026-01-01", "2026-03-02", "2026-07-04"]);
+  assert.deepEqual([...forOffice("Auditor")].sort(), ["2026-01-01", "2026-07-04"]);
+});
+
+test("R34 R43 combine keys a year's holidays by year and offices: each is one value, withheld only where profiles disagree", () => {
+  const a = sample();
+  /* the same list in another order, and the same days in another order, agree */
+  const same = two((b) => { b.holidays[2].offices.reverse(); b.holidays[2].basis = "K7"; });
+  const e = combine([a, same]);
+  assert.deepEqual(e.conflicts, []);
+  const office = e.view.holidays.find((h) => h.offices);
+  assert.deepEqual(office.bases, [{ profile: "sample-town", basis: "K6" }, { profile: "sample-two", basis: "K7" }]);
+  assert.equal(office.status, "ruled");
+  /* a disagreement on the office entry withholds that entry only */
+  const c = combine([a, two((b) => { b.holidays[2].days.push({ date: "2026-03-03", name: "Second day" }); })]);
+  assert.equal(c.conflicts.length, 1);
+  assert.match(c.conflicts[0].at, /^holidays\[2026 offices=/);
+  assert.ok(c.conflicts[0].values.every((x) => Array.isArray(x.value) && x.status && x.basis));
+  assert.deepEqual(c.view.holidays.map((h) => [h.year, !!h.offices]), [[2026, false], [2024, false]]);
+  /* a status that differs is a disagreement too (R44) */
+  const s = combine([a, two((b) => { b.holidays[0].status = "ruled"; b.holidays[0].basis = "K8"; })]);
+  assert.deepEqual(s.conflicts.map((x) => x.at), ["holidays[2026]"]);
+  /* two profiles each naming their own offices do not meet */
+  const o = combine([a, two((b) => { b.holidays[2].offices = ["Auditor"]; })]);
+  assert.deepEqual(o.conflicts, []);
+  assert.equal(o.view.holidays.filter((h) => h.year === 2026 && h.offices).length, 2);
+});
+
+test("R44 status on every holiday entry, hours and time_zone: researched on a measurement, ruled on a ruling; UNMEASURED never", () => {
+  const facts = [["time_zone", tz], ["counterparties[0].hours", clerkHours], ["action_kinds[0].venue.hours", venueHours], ["holidays[0]", (p) => p.holidays[0]]];
+  for (const [at, get] of facts) {
+    for (const b of ["M-187", "2026-10-01", "M-1, M-2", "M-193 (2); 2026-10-01"])
+      assert.ok(breakIt((p) => { get(p).status = "researched"; get(p).basis = b; }).ok, `${at} researched ${b}`);
+    for (const b of ["K925", "D-1", "DEC-2", "K1, D-2"])
+      assert.ok(breakIt((p) => { get(p).status = "ruled"; get(p).basis = b; }).ok, `${at} ruled ${b}`);
+    for (const b of ["K925", "D-1", "M-1, K2"])
+      assert.ok(hasError(breakIt((p) => { get(p).status = "researched"; get(p).basis = b; }), "BASIS_INVALID", `${at}.basis`), `${at} researched ${b}`);
+    for (const b of ["M-187", "2026-10-01", "K1; M-2"])
+      assert.ok(hasError(breakIt((p) => { get(p).status = "ruled"; get(p).basis = b; }), "BASIS_INVALID", `${at}.basis`), `${at} ruled ${b}`);
+    for (const status of ["researched", "ruled"])
+      assert.ok(hasError(breakIt((p) => { get(p).status = status; get(p).basis = "UNMEASURED"; }), "BASIS_INVALID", `${at}.basis`), `${at} ${status} UNMEASURED`);
+    for (const status of ["confirmed", "measured", "", null, undefined, 1])
+      assert.ok(hasError(breakIt((p) => { get(p).status = status; }), "BASIS_INVALID", `${at}.status`), `${at} status ${status}`);
+    assert.ok(hasError(breakIt((p) => { delete get(p).status; }), "BASIS_INVALID", `${at}.status`), `${at} no status`);
+    /* TEST stands for either status in a test profile, and only there */
+    for (const status of ["researched", "ruled"]) {
+      assert.ok(breakIt((p) => { p.test = true; get(p).status = status; get(p).basis = "TEST"; }).ok, `${at} test ${status}`);
+      assert.ok(hasError(breakIt((p) => { get(p).status = status; get(p).basis = "TEST"; }), "BASIS_INVALID", `${at}.basis`), `${at} TEST outside`);
+    }
+  }
+  /* other facts keep R2's bases, UNMEASURED among them */
+  assert.ok(breakIt((p) => { p.counterparties[0].basis = "UNMEASURED"; p.action_kinds[0].venue.basis = "UNMEASURED"; }).ok);
+});
+
+test("R45 the test profile supplies R40–R44; the first holds the calendar only as researched, with its measurements, and no template", () => {
+  const t = get(TEST);
+  /* templates: a use: file template on a Tier 1 or 2 kind and a use: brief on a Tier 3 kind, each attributed */
+  const tpls = t.action_kinds.filter((k) => k.template);
+  assert.ok(tpls.some((k) => [1, 2].includes(k.tier) && k.template.use === "file"));
+  assert.ok(tpls.some((k) => k.tier === 3 && k.template.use === "brief"));
+  for (const k of tpls) {
+    assert.ok(validate({ ...t, action_kinds: [k] }).errors.every((e) => !e.path.includes("template")), k.kind);
+    assert.ok(k.template.reviews.length && k.template.authored_by !== k.template.approved_by, k.kind);
+  }
+  /* a time zone; hours on a counterparty and on a venue; a year for all offices and another entry of that year for one office; both statuses */
+  assert.ok(t.time_zone && t.time_zone.value);
+  assert.ok(t.counterparties.some((c) => c.hours && c.hours.weekly.length));
+  assert.ok(t.action_kinds.some((k) => k.venue && k.venue.hours && k.venue.hours.weekly.length));
+  const all = t.holidays.filter((h) => !h.offices).map((h) => h.year);
+  assert.ok(t.holidays.some((h) => h.offices && h.offices.length === 1 && all.includes(h.year)));
+  assert.ok(t.holidays.some((h) => h.offices && h.offices.some((o) => typeof o === "object" && o.venue)), "an entry for a venue too");
+  const statuses = new Set([t.time_zone, ...t.holidays, ...t.counterparties.map((c) => c.hours), ...t.action_kinds.map((k) => k.venue && k.venue.hours)]
+    .filter(Boolean).map((x) => x.status));
+  assert.deepEqual([...statuses].sort(), ["researched", "ruled"]);
+  /* each reads back through combine with its status and basis */
+  const tv = combine([TEST]).view;
+  assert.deepEqual([tv.time_zone.value, tv.time_zone.status, tv.time_zone.basis], [t.time_zone.value, "researched", "TEST"]);
+  assert.equal(tv.holidays.length, t.holidays.length);
+  for (const h of tv.holidays) assert.ok(h.status && h.basis === "TEST" && h.profile === TEST);
+
+  const f = get(FIRST);
+  /* no template until one is approved (K921 Q1) */
+  assert.ok(f.action_kinds.every((k) => k.template === undefined));
+  /* every calendar fact researched, on the measurement filed for it (K925, M-187–M-196) */
+  assert.deepEqual(f.time_zone, { value: "America/Los_Angeles", status: "researched", basis: "M-187" });
+  const auditor = f.counterparties.find((c) => c.role === "City Auditor");
+  assert.deepEqual(auditor.hours, { weekly: ["mon", "tue", "wed", "thu", "fri"].map((day) => ({ day, open: "08:30", close: "17:00" })),
+    status: "researched", basis: "M-192" });
+  for (const role of ["Controller", "City Council", "Civil Grand Jury", "State Controller"])
+    assert.equal(f.counterparties.find((c) => c.role === role).hours, undefined, `${role}: no published hours (M-194–M-196), absent`);
+  const court = f.action_kinds.find((k) => k.kind === "records_petition").venue;
+  assert.deepEqual(court.hours, { weekly: [...["mon", "tue", "wed", "thu"].map((day) => ({ day, open: "08:30", close: "15:00" })),
+    { day: "fri", open: "08:30", close: "14:00" }], status: "researched", basis: "M-193" });
+  assert.equal(f.action_kinds.find((k) => k.kind === "records_request").venue.hours, undefined, "the portal: none researched");
+  const dates = (h) => h.days.map((d) => d.date.slice(5));
+  const byBasis = Object.fromEntries(f.holidays.map((h) => [h.basis, h]));
+  assert.deepEqual(Object.keys(byBasis).sort(), ["M-189", "M-190", "M-191"], "M-188 (county) governs no profile office");
+  assert.ok(f.holidays.every((h) => h.year === 2026 && h.status === "researched"), "2026 only, researched; 2027 not published");
+  assert.deepEqual(byBasis["M-189"].offices, [{ venue: "records_petition" }]);
+  assert.deepEqual(dates(byBasis["M-189"]), ["01-01", "01-19", "02-12", "02-16", "03-31", "05-25", "06-19", "07-03", "09-07", "09-25", "11-11", "11-26", "11-27", "12-25"]);
+  assert.deepEqual(byBasis["M-190"].offices, ["Controller", "City Council", "City Auditor"]);
+  assert.deepEqual(dates(byBasis["M-190"]), ["01-01", "01-19", "02-16", "03-31", "05-25", "06-19", "07-04", "09-07", "11-26", "11-27", "12-25"],
+    "09-09 and 11-11 ((HVA) If applicable) left out, undetermined (K925 (3)); 07-04 with no weekday in its place");
+  assert.deepEqual(byBasis["M-191"].offices, ["State Controller"]);
+  assert.deepEqual(dates(byBasis["M-191"]), ["01-01", "01-19", "02-16", "03-31", "05-25", "07-04", "09-07", "11-11", "11-26", "11-27", "12-25"]);
+  assert.ok(!f.holidays.some((h) => !h.offices), "no entry closes every office");
+  assert.ok(!f.holidays.some((h) => h.offices.includes("Civil Grand Jury")), "the grand jury's list is undetermined");
+  /* each reads back through combine with its status and basis */
+  const fv = combine([FIRST]).view;
+  assert.deepEqual([fv.time_zone.status, fv.time_zone.basis, fv.time_zone.profile], ["researched", "M-187", FIRST]);
+  assert.deepEqual(fv.counterparties.find((c) => c.role === "City Auditor").hours.bases, [{ profile: FIRST, basis: "M-192" }]);
+  assert.deepEqual(fv.action_kinds.find((k) => k.kind === "records_petition").venue.hours.basis, "M-193");
+  assert.deepEqual(fv.holidays.map((h) => [h.basis, h.status, h.profile]), [["M-189", "researched", FIRST], ["M-190", "researched", FIRST], ["M-191", "researched", FIRST]]);
+});
+
+test("R29 R40 R42 a kind's template, an office's hours and a venue's hours are one value per key", () => {
+  const a = sample();
+  const changes = {
+    "action_kinds[records_request].template": (b) => { b.action_kinds[0].template.approved_at = "2026-09-02"; },
+    "counterparties[Clerk/Sample Town].hours": (b) => { b.counterparties[0].hours.weekly.pop(); },
+    "action_kinds[records_request].venue.hours": (b) => { b.action_kinds[0].venue.hours.status = "researched"; b.action_kinds[0].venue.hours.basis = "M-3"; },
+  };
+  for (const [at, fn] of Object.entries(changes)) {
+    const c = combine([a, two(fn)]);
+    assert.deepEqual(c.conflicts.map((x) => x.at), [at], at);
+    assert.ok(c.conflicts[0].values.length === 2 && c.conflicts[0].values.every((v) => v.profile && v.basis));
+  }
+  const c = combine([a, two(changes["counterparties[Clerk/Sample Town].hours"])]);
+  const clerk = c.view.counterparties.filter((x) => x.role === "Clerk");
+  assert.equal(clerk.length, 1, "the office is kept once; only its hours are withheld");
+  assert.equal(clerk[0].hours, undefined);
+  const k = combine([a, two(changes["action_kinds[records_request].venue.hours"])]).view.action_kinds.find((x) => x.kind === "records_request");
+  assert.equal(k.venue.how, "email", "the venue stands");
+  assert.equal(k.venue.hours, undefined, "its hours withheld");
+  assert.equal(combine([a, two(changes["action_kinds[records_request].template"])]).view.action_kinds[0].template, undefined);
+  /* agreement keeps each with every giver's basis; one giver's alone is kept */
+  const e = combine([a, two((b) => { b.action_kinds[0].template.basis = "K924"; b.counterparties[0].hours.basis = "M-77"; })]);
+  assert.deepEqual(e.conflicts, []);
+  assert.deepEqual(e.view.action_kinds[0].template.bases, [{ profile: "sample-town", basis: "K921" }, { profile: "sample-two", basis: "K924" }]);
+  assert.deepEqual(e.view.counterparties[0].hours.bases, [{ profile: "sample-town", basis: "M-15" }, { profile: "sample-two", basis: "M-77" }]);
+  const one = combine([a, two((b) => { delete b.counterparties[0].hours; delete b.action_kinds[0].venue.hours; delete b.action_kinds[0].template; })]);
+  assert.deepEqual(one.conflicts, []);
+  assert.equal(one.view.counterparties[0].hours.basis, "M-15");
+  assert.equal(one.view.action_kinds[0].venue.hours.basis, "K5");
+  assert.equal(one.view.action_kinds[0].template.id, "TPL-sample-request");
+});
+
+test("R35 TEMPLATE_UNATTRIBUTED and HOURS_INVALID; time_zone a known section", () => {
+  assert.ok(hasError(breakIt((p) => { p.action_kinds[0].template = "Please send it."; }), "TEMPLATE_UNATTRIBUTED", "action_kinds[0].template"));
+  assert.ok(hasError(breakIt((p) => { p.counterparties[0].hours.weekly[0].day = "funday"; }), "HOURS_INVALID", "counterparties[0].hours.weekly[0].day"));
+  assert.ok(hasError(breakIt((p) => { p.holidays[2].offices = ["Nobody"]; }), "HOLIDAY_INVALID", "holidays[2].offices[0]"));
+  assert.ok(!validate(sample()).errors.some((e) => e.path === "time_zone"));
 });

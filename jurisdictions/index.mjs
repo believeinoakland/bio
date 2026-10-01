@@ -12,11 +12,11 @@ import TEST from "./profiles/test-port-ellery.mjs";
 import { BASIS_GRADES } from "../bio-plane/src/record-grammar/index.mjs";
 
 /* ------------------------------------------------------------------------------------------------ */
-/* The profile's shape (R1–R7, R23–R26, R31–R33, R39; `locale` and `systems[].links`, N77 and N96). */
+/* The profile's shape (R1–R7, R23–R26, R31–R33, R39–R44; `locale` and `systems[].links`, N77 and N96). */
 
 export const SECTIONS = Object.freeze(["id", "name", "covers", "test", "spaces", "systems", "mixed_hosts",
   "crosswalks", "vocabulary", "practice", "search_terms", "records_laws", "standard_sources",
-  "counterparties", "action_kinds", "deadlines", "legal_organisations", "holidays", "locale"]);
+  "counterparties", "action_kinds", "deadlines", "legal_organisations", "holidays", "locale", "time_zone"]);
 export const SPACES = Object.freeze(["enactment", "project", "fund", "parcel"]);
 export const VOCABULARY = Object.freeze(["furniture", "bodies", "member_titles", "enactment_markers", "codes",
   "file_numbers", "report_titles", "report_sections", "recommendation_openers", "template_blanks"]);
@@ -33,15 +33,35 @@ export const CONTACT_HOW = Object.freeze(["web", "email", "phone", "mail"]);
 /* R39: a venue's evidence standard is named in at most this many characters; the grades it admits are
    letters of record-grammar's BASIS_GRADES (its R16; K624 (6)). */
 const EVIDENCE_STANDARD_MAX = 200;
+/* R40: a profile template's attribution, every field required; its use is filing-templates' (K921). */
+export const TEMPLATE_FIELDS = Object.freeze(["id", "version", "use", "text", "notes", "authored_by", "contributors",
+  "reviews", "approved_by", "approved_at", "basis"]);
+export const TEMPLATE_USES = Object.freeze(["file", "brief"]);
+export const REVIEW_KINDS = Object.freeze(["member", "professional"]);
+export const REVIEW_OUTCOMES = Object.freeze(["no_concerns", "concerns", "changes_requested"]);
+const REVIEW_REQUIRED = ["reviewer", "kind", "scope", "outcome", "at"];
+/* R42: an office's weekly hours; a day not listed is closed. */
+export const WEEKDAYS = Object.freeze(["mon", "tue", "wed", "thu", "fri", "sat", "sun"]);
+/* R44: what a calendar fact (a holiday entry, hours, the time zone) rests on: a measurement or a ruling. */
+export const FACT_STATUSES = Object.freeze(["researched", "ruled"]);
 
 const ID_RE = /^[a-z0-9][a-z0-9-]*$/;
 const KIND_RE = /^[a-z][a-z0-9_]*$/;
 const HEX64 = /^[0-9a-f]{64}$/i;
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
+const TEMPLATE_ID_RE = /^TPL-[a-z0-9][a-z0-9-]*$/;
+const HHMM_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
+/* R41: an IANA name, `Area/Location` (possibly deeper) or `UTC`. */
+const TZ_RE = /^(?:UTC|[A-Z][A-Za-z_-]*(?:\/[A-Za-z0-9_+-]+)+)$/;
 /* R2: a basis names a measurement (`M-157`, or a dated entry `2026-07-30`) or a ruling (`D-149`,
    `DEC-13`, `K4`); several are joined by ", " or "; ", each optionally followed by one word that
    says which part of it (`M-119 LEG`, `M-157 (4)`). `UNMEASURED` stands alone (K44). */
 const BASIS_REF = /^(?:M-\d+|\d{4}-\d{2}-\d{2}|D-\d+|DEC-\d+|K\d+)(?: [^\s,;]+)?$/;
+/* R44 and R40: the measurement and ruling forms of a basis part. */
+const MEASUREMENT_REF = /^(?:M-\d+|\d{4}-\d{2}-\d{2})(?: [^\s,;]+)?$/;
+const RULING_REF = /^(?:D-\d+|DEC-\d+|K\d+)(?: [^\s,;]+)?$/;
+const K_REF = /^K\d+(?: [^\s,;]+)?$/;
+const basisParts = (b) => b.split(/[,;]\s*/).map((x) => x.trim());
 
 const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 const isStr = (v) => typeof v === "string" && v.trim().length > 0;
@@ -57,6 +77,16 @@ function isDate(v) {
   const leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
   const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][mo - 1];
   return days !== undefined && d >= 1 && d <= days;
+}
+/** An IANA time-zone name the runtime's zone database knows (R41). `Intl` reads no clock, store or network. */
+function isTimeZone(v) {
+  if (typeof v !== "string" || !TZ_RE.test(v)) return false;
+  try { new Intl.DateTimeFormat("en", { timeZone: v }); return true; } catch { return false; }
+}
+/** Minutes since midnight of an `HH:MM`, or null (R42). */
+function minutes(v) {
+  const m = typeof v === "string" && HHMM_RE.exec(v);
+  return m ? Number(m[1]) * 60 + Number(m[2]) : null;
 }
 /** One well-formed BCP 47 language tag (N77). `Intl` reads no clock, store or network. */
 function isLocale(v) {
@@ -119,7 +149,7 @@ function applyForm(form, raw, prefixes = []) {
 /* ------------------------------------------------------------------------------------------------ */
 /* validate (R10, R11, R28, R35).                                                                   */
 
-/** Judge a profile against R1–R7, R23–R26, R31–R33 and R37–R39. `{ok, errors}`, every error found. Never throws. */
+/** Judge a profile against R1–R7, R23–R26, R31–R33 and R37–R44. `{ok, errors}`, every error found. Never throws. */
 export function validate(profile) {
   const errors = [];
   try { validateInto(profile, errors); }
@@ -139,12 +169,60 @@ function validateInto(p, errors) {
     err("covers", "COVERS_MISSING", "covers is a non-empty list of names");
   if (own(p, "test") && typeof p.test !== "boolean") err("test", "VALUE_INVALID", "test is true or false");
 
+  /* Returns whether the basis is present and of R2's form. */
   const basis = (path, o) => {
-    if (!own(o, "basis") || o.basis === undefined || o.basis === null || o.basis === "")
-      err(`${path}.basis`, "BASIS_MISSING", "every fact names its basis");
-    else if (!basisValid(o.basis, test))
+    if (!own(o, "basis") || o.basis === undefined || o.basis === null || o.basis === "") {
+      err(`${path}.basis`, "BASIS_MISSING", "every fact names its basis"); return false;
+    }
+    if (!basisValid(o.basis, test)) {
       err(`${path}.basis`, "BASIS_INVALID", o.basis === "TEST"
         ? "TEST is a basis only in a test profile" : `'${String(o.basis)}' names no measurement or ruling`);
+      return false;
+    }
+    return true;
+  };
+  /* R44: a calendar fact's status and the basis it rests on agree: `researched` on a measurement, `ruled` on a
+     ruling; `UNMEASURED` is no basis for one (a fact without a source is not written). In a test profile, `TEST`
+     stands for either. */
+  const statusBasis = (path, o) => {
+    const ok = basis(path, o);
+    if (!FACT_STATUSES.includes(o.status)) {
+      err(`${path}.status`, "BASIS_INVALID", `status is ${FACT_STATUSES.join(" or ")}, naming what the fact rests on`);
+      return;
+    }
+    if (!ok || (test && o.basis === "TEST")) return;
+    if (o.basis === "UNMEASURED")
+      err(`${path}.basis`, "BASIS_INVALID", "a calendar fact without a source is not written: UNMEASURED is no basis for it");
+    else if (!basisParts(o.basis).every((x) => (o.status === "researched" ? MEASUREMENT_REF : RULING_REF).test(x)))
+      err(`${path}.basis`, "BASIS_INVALID", o.status === "researched"
+        ? "a researched fact rests on a measurement (M-<n> or a dated entry)" : "a ruled fact rests on a ruling (D-<n>, DEC-<n> or K<n>)");
+  };
+  /* R42: an office's or venue's weekly hours. */
+  const hours = (path, h) => {
+    if (!isObj(h)) { err(path, "HOURS_INVALID", "hours is {weekly: [{day, open, close}], status, basis}"); return; }
+    fields(path, h, ["weekly", "status", "basis"]);
+    if (!Array.isArray(h.weekly)) err(`${path}.weekly`, "HOURS_INVALID", "weekly is a list of {day, open, close}");
+    else {
+      const spans = new Map();
+      h.weekly.forEach((s, i) => {
+        const at = `${path}.weekly[${i}]`;
+        if (!isObj(s)) { err(at, "HOURS_INVALID", "a span is {day, open, close}"); return; }
+        fields(at, s, ["day", "open", "close"]);
+        const day = WEEKDAYS.includes(s.day) ? s.day : null;
+        if (!day) err(`${at}.day`, "HOURS_INVALID", `day is one of ${WEEKDAYS.join(", ")}`);
+        const [o, c] = [minutes(s.open), minutes(s.close)];
+        if (o === null) err(`${at}.open`, "HOURS_INVALID", "open is HH:MM, 24-hour");
+        if (c === null) err(`${at}.close`, "HOURS_INVALID", "close is HH:MM, 24-hour");
+        if (o === null || c === null) return;
+        if (o >= c) { err(at, "HOURS_INVALID", "open is before close"); return; }
+        if (!day) return;
+        const prior = spans.get(day) || [];
+        const clash = prior.find((p) => o < p.c && p.o < c);
+        if (clash) err(at, "HOURS_INVALID", `${day} ${s.open}–${s.close} overlaps ${clash.at}`);
+        spans.set(day, [...prior, { o, c, at }]);
+      });
+    }
+    statusBasis(path, h);
   };
   const pattern = (path, v) => { if (!compile(v)) err(path, "PATTERN_INVALID", "a pattern is {re, flags?}: a regular expression that compiles, flags from i and u"); };
   const fields = (path, o, allowed) => {
@@ -350,8 +428,17 @@ function validateInto(p, errors) {
       basis("locale", l);
     }
   }
+  if (own(p, "time_zone")) {
+    const z = p.time_zone;
+    if (!isObj(z)) err("time_zone", "VALUE_INVALID", "time_zone is {value, status, basis}");
+    else {
+      fields("time_zone", z, ["value", "status", "basis"]);
+      if (!isTimeZone(z.value)) err("time_zone.value", "VALUE_INVALID", "the value is an IANA time-zone name (Area/Location, or UTC)");
+      statusBasis("time_zone", z);
+    }
+  }
 
-  /* The action sections (R23–R26, R28, R31–R33, R35, R39). */
+  /* The action sections (R23–R26, R28, R31–R33, R35, R39–R44). */
   const codeKeys = new Set(own(p, "vocabulary") && isObj(p.vocabulary) && Array.isArray(p.vocabulary.codes)
     ? p.vocabulary.codes.filter(isObj).map((c) => c.key) : []);
   if (own(p, "standard_sources")) list("standard_sources", p.standard_sources).forEach((s, i) => {
@@ -366,11 +453,14 @@ function validateInto(p, errors) {
     if (own(s, "code") && !codeKeys.has(s.code)) err(`${at}.code`, "CODE_UNKNOWN", `no vocabulary.codes entry has key '${String(s.code)}'`);
     basis(at, s);
   });
+  const roles = new Set();
   if (own(p, "counterparties")) list("counterparties", p.counterparties).forEach((c, i) => {
     const at = `counterparties[${i}]`;
     if (!entry(at, c)) return;
-    fields(at, c, ["role", "body", "level", "elected", "oversight", "basis"]);
+    fields(at, c, ["role", "body", "level", "elected", "oversight", "hours", "basis"]);
     str(`${at}.role`, c.role, "role"); str(`${at}.body`, c.body, "body");
+    if (isStr(c.role)) roles.add(c.role);
+    if (own(c, "hours")) hours(`${at}.hours`, c.hours);
     if (!COUNTERPARTY_LEVELS.includes(c.level)) err(`${at}.level`, "LEVEL_UNKNOWN", `level is one of ${COUNTERPARTY_LEVELS.join(", ")}`);
     if (typeof c.elected !== "boolean") err(`${at}.elected`, "VALUE_INVALID", "elected is true or false");
     if (own(c, "oversight") && typeof c.oversight !== "boolean") err(`${at}.oversight`, "VALUE_INVALID", "oversight is true or false");
@@ -378,6 +468,8 @@ function validateInto(p, errors) {
   });
   const kinds = new Set();
   const tier3 = new Set();
+  const venueKinds = new Set();
+  const templateIds = new Set();
   if (own(p, "action_kinds")) list("action_kinds", p.action_kinds).forEach((k, i) => {
     const at = `action_kinds[${i}]`;
     if (!entry(at, k)) return;
@@ -394,15 +486,61 @@ function validateInto(p, errors) {
       const v = k.venue;
       if (!isObj(v)) err(`${at}.venue`, "VALUE_INVALID", "a venue is {name, how, basis}");
       else {
-        fields(`${at}.venue`, v, ["name", "how", "basis"]);
+        fields(`${at}.venue`, v, ["name", "how", "hours", "basis"]);
         str(`${at}.venue.name`, v.name, "name");
         if (!VENUE_HOW.includes(v.how)) err(`${at}.venue.how`, "VALUE_INVALID", `how is one of ${VENUE_HOW.join(", ")}`);
+        if (own(v, "hours")) hours(`${at}.venue.hours`, v.hours);
         basis(`${at}.venue`, v);
+        if (typeof k.kind === "string") venueKinds.add(k.kind);
       }
     }
+    /* R40: a template carries its whole attribution; R28: a `file` template never on a Tier 3 kind (a `brief`
+       may serve any tier, K921). Its blanks are filing-templates' to judge (its R15). */
     if (own(k, "template")) {
-      if (!isStr(k.template)) err(`${at}.template`, "VALUE_INVALID", "a template is text");
-      if (k.tier === 3) err(`${at}.template`, "TEMPLATE_TIER3", "a Tier 3 kind has no template");
+      const t = k.template;
+      const ta = `${at}.template`;
+      if (!isObj(t)) err(ta, "TEMPLATE_UNATTRIBUTED", `a template is {${TEMPLATE_FIELDS.join(", ")}}, never bare text`);
+      else {
+        fields(ta, t, TEMPLATE_FIELDS);
+        for (const f of TEMPLATE_FIELDS)
+          if (!own(t, f) || t[f] === undefined || t[f] === null) err(`${ta}.${f}`, "TEMPLATE_UNATTRIBUTED", `the template's ${f} is missing`);
+        const bad = (f, why) => { if (own(t, f) && t[f] !== undefined && t[f] !== null) err(`${ta}.${f}`, "VALUE_INVALID", why); };
+        if (!(typeof t.id === "string" && TEMPLATE_ID_RE.test(t.id))) bad("id", "id matches ^TPL-[a-z0-9][a-z0-9-]*$");
+        else if (templateIds.has(t.id)) err(`${ta}.id`, "VALUE_INVALID", `'${t.id}' is given twice in the profile`);
+        else templateIds.add(t.id);
+        if (!isPosInt(t.version)) bad("version", "version is a positive integer");
+        if (!TEMPLATE_USES.includes(t.use)) bad("use", `use is ${TEMPLATE_USES.join(" or ")}`);
+        if (!isStr(t.text)) bad("text", "the text is non-empty");
+        if (typeof t.notes !== "string") bad("notes", "notes are text, possibly empty");
+        if (!isStr(t.authored_by)) bad("authored_by", "authored_by is a non-empty name");
+        if (!isStr(t.approved_by)) bad("approved_by", "approved_by is a non-empty name");
+        else if (isStr(t.authored_by) && t.approved_by.trim() === t.authored_by.trim())
+          err(`${ta}.approved_by`, "VALUE_INVALID", "the approver is not the template's author");
+        if (!Array.isArray(t.contributors) || !t.contributors.every(isStr)) bad("contributors", "contributors is a list of names");
+        if (!isDate(t.approved_at)) bad("approved_at", "approved_at is a real YYYY-MM-DD");
+        if (!Array.isArray(t.reviews)) bad("reviews", "reviews is a list of {reviewer, kind, organisation?, credential?, scope, outcome, at}");
+        else t.reviews.forEach((r, j) => {
+          const ra = `${ta}.reviews[${j}]`;
+          if (!isObj(r)) { err(ra, "VALUE_INVALID", "a review is {reviewer, kind, organisation?, credential?, scope, outcome, at}"); return; }
+          fields(ra, r, [...REVIEW_REQUIRED, "organisation", "credential"]);
+          for (const f of REVIEW_REQUIRED)
+            if (!own(r, f) || r[f] === undefined || r[f] === null) err(`${ra}.${f}`, "TEMPLATE_UNATTRIBUTED", `the review's ${f} is missing`);
+          const rbad = (f, ok, why) => { if (own(r, f) && r[f] !== undefined && r[f] !== null && !ok) err(`${ra}.${f}`, "VALUE_INVALID", why); };
+          rbad("reviewer", isStr(r.reviewer), "the reviewer is a non-empty name");
+          rbad("kind", REVIEW_KINDS.includes(r.kind), `kind is ${REVIEW_KINDS.join(" or ")}`);
+          rbad("scope", isStr(r.scope), "the scope is non-empty text");
+          rbad("outcome", REVIEW_OUTCOMES.includes(r.outcome), `outcome is one of ${REVIEW_OUTCOMES.join(", ")}`);
+          rbad("at", isDate(r.at), "at is a real YYYY-MM-DD");
+          rbad("organisation", isStr(r.organisation), "the organisation is a non-empty name");
+          rbad("credential", isStr(r.credential), "the credential is non-empty text");
+        });
+        if (own(t, "basis") && t.basis !== undefined && t.basis !== null) {
+          if (!(test && t.basis === "TEST") && !(typeof t.basis === "string" && t.basis !== "" && basisParts(t.basis).every((x) => K_REF.test(x))))
+            err(`${ta}.basis`, "BASIS_INVALID", t.basis === "TEST" ? "TEST is a basis only in a test profile"
+              : "a template rests on the ruling that approved it (K<n>)");
+        }
+        if (t.use === "file" && k.tier === 3) err(ta, "TEMPLATE_TIER3", "a Tier 3 kind has no use: file template; a brief may serve it");
+      }
     }
     if (own(k, "advisory")) {
       if (!isStr(k.advisory)) err(`${at}.advisory`, "VALUE_INVALID", "an advisory note is text");
@@ -480,15 +618,38 @@ function validateInto(p, errors) {
     basis(at, o);
   });
 
+  /* R33, R43: a year once for all offices and once for each distinct `offices` list. */
   if (own(p, "holidays")) {
     const years = new Set();
     list("holidays", p.holidays).forEach((h, i) => {
       const at = `holidays[${i}]`;
       if (!entry(at, h)) return;
-      fields(at, h, ["year", "days", "basis"]);
+      fields(at, h, ["year", "offices", "days", "status", "basis"]);
+      let key = "";
+      if (own(h, "offices")) {
+        if (!Array.isArray(h.offices) || !h.offices.length) {
+          err(`${at}.offices`, "HOLIDAY_INVALID", "offices is a non-empty list of roles or {venue: <kind>}");
+          key = `\u0002${i}`; /* no list to key by: judged on its own */
+        }
+        else {
+          const seenOffices = new Set();
+          h.offices.forEach((o, j) => {
+            const oa = `${at}.offices[${j}]`;
+            const k = officeKey(o);
+            if (typeof o === "string") { if (!roles.has(o)) err(oa, "HOLIDAY_INVALID", `no counterparty of this profile has role '${o}'`); }
+            else if (isObj(o) && Object.keys(o).length === 1 && typeof o.venue === "string") {
+              if (!venueKinds.has(o.venue)) err(oa, "HOLIDAY_INVALID", `no kind of this profile with a venue is '${o.venue}'`);
+            } else { err(oa, "HOLIDAY_INVALID", "an office is a counterparty role or {venue: <kind>}"); return; }
+            if (seenOffices.has(k)) err(oa, "HOLIDAY_INVALID", "an office is named twice in one entry");
+            seenOffices.add(k);
+          });
+          key = officesKey(h.offices);
+        }
+      }
       if (!isYear(h.year)) err(`${at}.year`, "HOLIDAY_INVALID", "year is a four-digit year");
-      else if (years.has(h.year)) err(`${at}.year`, "HOLIDAY_INVALID", `${h.year} is listed twice`);
-      else years.add(h.year);
+      else if (years.has(`${h.year}\u0000${key}`)) err(`${at}.year`, "HOLIDAY_INVALID",
+        `${h.year} is listed twice for ${key ? "the same offices" : "all offices"}`);
+      else years.add(`${h.year}\u0000${key}`);
       const dates = new Set();
       list(`${at}.days`, h.days).forEach((d, j) => {
         const da = `${at}.days[${j}]`;
@@ -500,10 +661,19 @@ function validateInto(p, errors) {
         else dates.add(d.date);
         str(`${da}.name`, d.name, "name");
       });
-      basis(at, h);
+      statusBasis(at, h);
     });
   }
 }
+
+/* An office a holiday entry names, as a key: a counterparty role or a kind's venue (R43). */
+function officeKey(o) {
+  if (typeof o === "string") return `role:${o}`;
+  if (isObj(o) && typeof o.venue === "string") return `venue:${o.venue}`;
+  return `?:${JSON.stringify(o)}`;
+}
+/* The key of an `offices` list: its offices, in no order ("" for every office). */
+const officesKey = (offices) => (Array.isArray(offices) ? [...new Set(offices.map(officeKey))].sort().join("\u0001") : "");
 
 /* ------------------------------------------------------------------------------------------------ */
 /* The held profiles (R8, R9, R19).                                                                  */
@@ -525,7 +695,7 @@ export function get(id) {
 }
 
 /* ------------------------------------------------------------------------------------------------ */
-/* combine (R12–R16, R29, R34).                                                                     */
+/* combine (R12–R16, R29, R34, R41–R44).                                                            */
 
 /* A stable key for "equal in everything but its basis and profile". Object keys are sorted so the
    order a profile writes its fields in never makes two equal entries differ. */
@@ -552,6 +722,10 @@ function union(into, entries, profile) {
   }
 }
 const strip = (arr) => arr.map((e) => { const { __k, ...rest } = e; return rest; });
+/* A one-value fact that carries its own basis (a venue, evidence, a template, hours, the time zone), kept as
+   the first giver wrote it, tagged with every giver's basis (R13, R14). `given` is `[{profile, value, basis}]`. */
+const keep = (given) => ({ ...clone(given[0].value), profile: given[0].profile,
+  bases: given.map((g) => ({ profile: g.profile, basis: g.basis })) });
 /** The one value a keyed fact holds, or a conflict (R15). `given` is `[{profile, value, basis}]`. */
 function agree(given) {
   const ks = [...new Set(given.map((g) => canon(g.value)))];
@@ -728,27 +902,42 @@ function merge(profiles) {
     else conflict("locale", given, "the active profiles name different locales, so none is given: a render asks for its fallback");
   }
 
+  /* time_zone: one value (R41), its status part of it (R44). */
+  if (has("time_zone")) {
+    const given = profiles.filter((p) => p.time_zone).map((p) => ({ profile: p.id, value: p.time_zone, basis: p.time_zone.basis }));
+    if (agree(given)) view.time_zone = keep(given);
+    else conflict("time_zone", given, "the active profiles name different time zones, so none is given: a time of day there is undetermined");
+  }
+
   for (const sec of ["search_terms", "records_laws", "standard_sources", "legal_organisations"])
     if (has(sec)) { const v = []; for (const p of profiles) union(v, p[sec], p.id); view[sec] = strip(v); }
 
-  /* counterparties are unioned; an office's oversight marker is one value per role and body (R29). */
+  /* counterparties are unioned; an office's oversight marker and its hours are one value per role and body (R29,
+     R42). */
   if (has("counterparties")) {
     const v = [];
     const marks = new Map();
+    const hoursOf = new Map();
+    const push = (m, k, g) => { if (!m.has(k)) m.set(k, []); m.get(k).push(g); };
     for (const p of profiles) for (const c of p.counterparties || []) {
-      const { oversight, ...rest } = c;
+      const { oversight, hours, ...rest } = c;
       union(v, [rest], p.id);
-      if (own(c, "oversight")) {
-        const k = `${c.role}\u0000${c.body}`;
-        if (!marks.has(k)) marks.set(k, []);
-        marks.get(k).push({ profile: p.id, value: oversight, basis: c.basis });
-      }
+      const k = `${c.role}\u0000${c.body}`;
+      if (own(c, "oversight")) push(marks, k, { profile: p.id, value: oversight, basis: c.basis });
+      if (own(c, "hours")) push(hoursOf, k, { profile: p.id, value: hours, basis: hours.basis });
     }
+    const each = (k, fn) => { const [role, body] = k.split("\u0000"); for (const c of v) if (c.role === role && c.body === body) fn(c); };
     for (const [k, given] of marks) {
+      if (agree(given)) { each(k, (c) => { c.oversight = given[0].value; }); continue; }
       const [role, body] = k.split("\u0000");
-      if (agree(given)) { for (const c of v) if (c.role === role && c.body === body) c.oversight = given[0].value; }
-      else conflict(`counterparties[${role}/${body}].oversight`, given,
+      conflict(`counterparties[${role}/${body}].oversight`, given,
         `the active profiles disagree on whether ${role} (${body}) is an oversight or audit body, so it is undetermined`);
+    }
+    for (const [k, given] of hoursOf) {
+      if (agree(given)) { each(k, (c) => { c.hours = keep(given); }); continue; }
+      const [role, body] = k.split("\u0000");
+      conflict(`counterparties[${role}/${body}].hours`, given,
+        `the active profiles give different hours for ${role} (${body}), so its hours are undetermined`);
     }
     view.counterparties = strip(v);
   }
@@ -765,16 +954,28 @@ function merge(profiles) {
       const e = { kind, label: [...new Set(given.map((g) => g.k.label))].join("; ") };
       const laws = [...new Set(given.flatMap((g) => g.k.laws || []))];
       if (given.some((g) => own(g.k, "laws"))) e.laws = laws;
-      /* venue and evidence carry their own basis: the fact kept names every giver's (R13, R14). */
+      /* venue, template and evidence carry their own basis: the fact kept names every giver's (R13, R14). A
+         venue's hours are one value of their own (R29, R42); a template is one value, its whole attribution
+         included (R40). */
       const WHAT = { tier: "risk tiers", venue: "venues", template: "templates", advisory: "advisory notes", evidence: "evidence standards" };
       for (const f of ["tier", "venue", "template", "advisory", "evidence"]) {
-        const carriesBasis = f === "venue" || f === "evidence";
-        const vals = given.filter((g) => own(g.k, f)).map((g) => ({ profile: g.profile, value: clone(g.k[f]), basis: carriesBasis ? g.k[f].basis : g.k.basis }));
+        const carriesBasis = f === "venue" || f === "evidence" || f === "template";
+        const vals = given.filter((g) => own(g.k, f)).map((g) => {
+          let value = clone(g.k[f]);
+          if (f === "venue" && isObj(value)) { const { hours, ...rest } = value; value = rest; }
+          return { profile: g.profile, value, basis: carriesBasis ? g.k[f].basis : g.k.basis };
+        });
         if (!vals.length) continue;
-        if (agree(vals)) e[f] = !carriesBasis ? vals[0].value
-          : { ...vals[0].value, profile: vals[0].profile, bases: vals.map((v) => ({ profile: v.profile, basis: v.basis })) };
+        if (agree(vals)) e[f] = !carriesBasis ? vals[0].value : keep(vals);
         else conflict(`action_kinds[${kind}].${f}`, vals, `the active profiles give different ${WHAT[f]} for ${kind}, so none is given`
           + (f === "evidence" ? ": the venue's standard is undetermined" : ""));
+      }
+      if (e.venue) {
+        const hrs = given.filter((g) => isObj(g.k.venue) && own(g.k.venue, "hours"))
+          .map((g) => ({ profile: g.profile, value: g.k.venue.hours, basis: g.k.venue.hours.basis }));
+        if (hrs.length && agree(hrs)) e.venue.hours = keep(hrs);
+        else if (hrs.length) conflict(`action_kinds[${kind}].venue.hours`, hrs,
+          `the active profiles give different hours for ${kind}'s venue, so its hours are undetermined`);
       }
       e.basis = given[0].k.basis;
       e.profile = given[0].profile;
@@ -809,22 +1010,28 @@ function merge(profiles) {
     }
   }
 
-  /* holidays: a year's days are one value (R34); the order a profile lists them in is no disagreement. */
+  /* holidays: a year's days, keyed by the year and its offices (R34, R43), are one value, their status part of
+     it (R44); the order a profile lists the days or the offices in is no disagreement. */
   if (has("holidays")) {
-    const byYear = new Map();
+    const byKey = new Map();
+    const byDate = (a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
     for (const p of profiles) for (const h of p.holidays || []) {
-      if (!byYear.has(h.year)) byYear.set(h.year, []);
-      byYear.get(h.year).push({ profile: p.id, value: h.days.slice().sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0)), basis: h.basis });
+      const k = `${h.year}\u0000${officesKey(h.offices)}`;
+      if (!byKey.has(k)) byKey.set(k, []);
+      byKey.get(k).push({ profile: p.id, h, value: h.days.slice().sort(byDate), status: h.status, basis: h.basis });
     }
     view.holidays = [];
-    for (const [year, given] of byYear) {
-      if (!agree(given)) {
-        conflict(`holidays[${year}]`, given,
-          `the active profiles list different closure days for ${year}, so the year is withheld: a business-day count reaching into it is undetermined`);
+    for (const given of byKey.values()) {
+      const { year, offices } = given[0].h;
+      if (!agree(given.map((g) => ({ value: { days: g.value, status: g.status } })))) {
+        const whose = offices ? ` for ${offices.map((o) => (typeof o === "string" ? o : `${o.venue}'s venue`)).join(", ")}` : "";
+        conflict(`holidays[${year}${offices ? ` offices=${officesKey(offices).replace(/\u0001/g, ",")}` : ""}]`,
+          given.map((g) => ({ profile: g.profile, value: g.value, status: g.status, basis: g.basis })),
+          `the active profiles list different closure days for ${year}${whose}, so the year is withheld there: a business-day count reaching into it is undetermined`);
         continue;
       }
-      view.holidays.push({ year, days: clone(given[0].value), basis: given[0].basis, profile: given[0].profile,
-        bases: given.map((g) => ({ profile: g.profile, basis: g.basis })) });
+      view.holidays.push({ year, ...(offices ? { offices: clone(offices) } : {}), days: clone(given[0].value), status: given[0].status,
+        basis: given[0].basis, profile: given[0].profile, bases: given.map((g) => ({ profile: g.profile, basis: g.basis })) });
     }
   }
 

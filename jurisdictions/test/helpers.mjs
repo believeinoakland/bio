@@ -76,11 +76,15 @@ export function walkFacts(p, fn) {
   for (const [key, entries] of Object.entries(p.vocabulary || {})) each(entries, `vocabulary.${key}`);
   if (p.practice && p.practice.minutes_due_days) fn(p.practice.minutes_due_days, "practice.minutes_due_days");
   if (p.locale) fn(p.locale, "locale");
+  if (p.time_zone) fn(p.time_zone, "time_zone");
   for (const s of ["search_terms", "records_laws", "standard_sources", "counterparties", "deadlines", "legal_organisations", "holidays"]) each(p[s], s);
+  (p.counterparties || []).forEach((c, i) => { if (c.hours) fn(c.hours, `counterparties[${i}].hours`); });
   (p.action_kinds || []).forEach((k, i) => {
     fn(k, `action_kinds[${i}]`);
     if (k.venue) fn(k.venue, `action_kinds[${i}].venue`);
+    if (k.venue && k.venue.hours) fn(k.venue.hours, `action_kinds[${i}].venue.hours`);
     if (k.evidence) fn(k.evidence, `action_kinds[${i}].evidence`);
+    if (k.template && typeof k.template === "object") fn(k.template, `action_kinds[${i}].template`);
   });
 }
 /** The object at a walkFacts path. */
