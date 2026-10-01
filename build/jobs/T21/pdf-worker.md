@@ -27,6 +27,6 @@
   - `format: 86 modules, 84 requirements files; 0 failures`
   - `architecture: 13 product files, 8 relative imports (0 naming no tracked file, not judged); 0 failures`
   - `coverage: 1 modules, 17 of 17 live requirement ids named by a test; 0 failures`
-  - ownership: see below
+  - `ownership: 6 files changed by pdf-worker between tranche/T21 and HEAD; 0 failures`
 
 Size (session_01B6vMjCUja1qXTcpkSqYzuB): test runs 3, module lines 13 (comments and one JSON note in five files)
