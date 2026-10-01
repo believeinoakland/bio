@@ -13,8 +13,8 @@ import { join, dirname } from "node:path";
 import { createHash } from "node:crypto";
 import { Miniflare } from "miniflare";
 import { pageOver } from "./fixture.mjs";
-import { checkBundle, deriveInquiryTitle } from "../../../checks/bio-checks.mjs";
-import { RISK_TIERS, riskTierState } from "../../../src/actions/checks.mjs";
+import { deriveInquiryTitle } from "../../../src/record-grammar/index.mjs";
+import { RISK_TIERS, riskTierState } from "../../../src/action-grammar/index.mjs";
 
 const SRC = fileURLToPath(new URL("../../../src/index.mjs", import.meta.url));
 const sha = (v) => createHash("sha256").update(v).digest("hex");
@@ -22,9 +22,15 @@ const ADM = "adm-instance-setup-page", MEM = "mem-instance-setup-page", PRB = "p
 const FIRST = "river-town", SECOND = "harbor-watch", LATE = "late-town";
 const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
 
-/* A store whose named Durable Object paths answer the store's own failure envelope, every other path the genuine
-   store: a subclass of the plane's Store, so a silence is a real one. */
+/* The plane's Store, subclassed: its named Durable Object paths answer the store's own failure envelope (so a silence is
+   a real one), and `__judge` runs record-grammar's checkBundle over a document with the grammars the record itself
+   answers (record-core R67's `grammars()`, the registrations the plane's modules made at start: what promotion's gate
+   and the audit pass), so a document is judged as the record judges it, never by the catalogue's wrapper. */
 const FAILING = `import worker, { Store as PlaneStore } from "./index.mjs";
+import { recordOf } from "./record-core/index.mjs";
+import { checkBundle } from "./record-grammar/index.mjs";
+const hex = async (v) => [...new Uint8Array(await crypto.subtle.digest("SHA-256",
+  typeof v === "string" ? new TextEncoder().encode(v) : v))].map((b) => b.toString(16).padStart(2, "0")).join("");
 export class FailingStore extends PlaneStore {
   async fetch(req) {
     const u = new URL(req.url);
@@ -32,6 +38,14 @@ export class FailingStore extends PlaneStore {
     if (path === "__failpaths") {
       this.__fail = (u.searchParams.get("paths") || "").split(",").filter(Boolean);
       return Response.json({ ok: true, result: { failing: this.__fail } });
+    }
+    if (path === "__judge") {
+      const { folderName, text } = await req.json();
+      const grammars = recordOf(this.ctx).grammars();
+      const { findings } = await checkBundle({ folderName, files: new Map([["bundle.md", text]]), sha256: hex,
+        sha512: async () => new Uint8Array(64), resolveTarget: () => true }, { grammars });
+      return Response.json({ ok: true, result: { grammars: grammars.map((g) => [g.module, [...g.ids]]),
+        findings: findings.map((f) => ({ check: f.check, severity: f.severity, message: f.message })) } });
     }
     if ((this.__fail || []).includes(path)) return Response.json({ ok: false, error: "injected failure" }, { status: 500 });
     return super.fetch(req);
@@ -42,6 +56,8 @@ export default {
     const u = new URL(req.url);
     if (u.pathname === "/__failpaths")
       return env.STORE.get(env.STORE.idFromName("bio")).fetch("http://ctl/__failpaths?paths=" + (u.searchParams.get("paths") || ""));
+    if (u.pathname === "/__judge")
+      return env.STORE.get(env.STORE.idFromName("bio")).fetch("http://ctl/__judge", { method: "POST", body: await req.text() });
     return worker.fetch(req, env, ctx);
   },
 };
@@ -241,8 +257,8 @@ test("R24 R32 driven through the form and the real plane: an action saved with t
 
 /* ================================================================== R24: the question's intake */
 
-test("R24 a Question through the form: no Title control, the catalogue's first state, the INQ prefix and inquiry@1; the question written under ## Question with no group line, the plane stamping its group, conformant, and projecting the title derived from the question", async () => {
-  const mf = await planeAt();
+test("R24 a Question through the form: no Title control, record-grammar's first state, the INQ prefix and inquiry@1; the question written under ## Question with no group line, the plane stamping its group, conformant as the record judges it, and projecting the title derived from the question", async () => {
+  const mf = await planeAt({ failing: true });
   const p = await founderPage(mf);
   assert.deepEqual([p.ui.FIRST_STATE.inquiry, p.ui.PREFIX.inquiry, p.ui.SCHEMA_OF.inquiry], ["open", "INQ", "inquiry@1"]);
   for (const q of ["Where does the transfer basis come from?", "  A   question\nwith noise  ", "x".repeat(200) + " tail"])
@@ -265,9 +281,16 @@ test("R24 a Question through the form: no Title control, the catalogue's first s
   assert.deepEqual([proj.object_type, proj.title, proj.current_state], ["inquiry", deriveInquiryTitle(QUESTION), "open"]);
   const stored = rP((await api(mf, `op=image&token=${p.token}&id=${encodeURIComponent(id)}`)).j)["bundle.md"];
   assert.equal(groupOf(stored), FIRST);
-  const { findings } = await checkBundle({ folderName: id, files: new Map([["bundle.md", stored]]),
-    sha256: async (v) => sha(v), sha512: async () => new Uint8Array(64), resolveTarget: () => true });
-  assert.deepEqual(findings.filter((f) => f.severity === "error").map((f) => `${f.check}: ${f.message}`), []);
+  /* judged by record-grammar's checkBundle with the grammars the record registered: the inquiry's own among them */
+  const judged = rP(await (await mf.dispatchFetch("https://copy.example/__judge", { method: "POST",
+    body: JSON.stringify({ folderName: id, text: stored }) })).json());
+  assert.ok(judged.grammars.some(([module, ids]) => module === "inquiry-grammar" && ids.includes("C-2.8")), JSON.stringify(judged.grammars));
+  assert.ok(judged.grammars.some(([module, ids]) => module === "capture" && ids.includes("C-2.7")), JSON.stringify(judged.grammars));
+  assert.deepEqual(judged.findings.filter((f) => f.severity === "error").map((f) => `${f.check}: ${f.message}`), []);
+  /* not vacuous: the same document with its ## Question heading taken out is refused by name */
+  const broken = rP(await (await mf.dispatchFetch("https://copy.example/__judge", { method: "POST",
+    body: JSON.stringify({ folderName: id, text: stored.replace("## Question\n", "") }) })).json());
+  assert.ok(broken.findings.some((f) => f.severity === "error"), JSON.stringify(broken.findings));
 });
 
 /* ================================================================== the record browser (K102, ruling 4) */

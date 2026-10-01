@@ -1,7 +1,8 @@
 /* R44 (N397, K573; D-605): the members and keys section's key form splits a pasted public-key line into the `keyB64`
    and `comment` membership R25 takes. Driven at the page's interface: the served page's script in the fixture's
-   sandbox, its key form filled and its register button clicked, and the body it sends handed to the REAL membership
-   module's `signerAdd` (membership R25, a module this one uses), whose roster is read back. The keys are real ed25519
+   sandbox, its key form filled and its register button clicked, and the body it sends handed to the REAL credentials
+   module's `signerAdd` (credentials R6, was membership R25; K789), over the REAL membership roster it reads, whose key
+   list is read back. The keys are real ed25519
    public keys in the OpenSSH line format the signing page emits. Carries `bio-plane/test/setup-signeradd.test.mjs`
    (K0–K7) at the module's interface; that suite's source-text arm (K0's pinned call) is driven here instead. */
 import test from "node:test";
@@ -9,6 +10,7 @@ import assert from "node:assert/strict";
 import { generateKeyPairSync } from "node:crypto";
 import { setupPage } from "../../../src/setup.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
+import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { pageOver, storage } from "./fixture.mjs";
 
 const tick = () => new Promise((r) => setTimeout(r, 0));
@@ -23,23 +25,30 @@ const sshLine = (label) => {
   return { b64, line: label ? `ssh-ed25519 ${b64} ${label}` : `ssh-ed25519 ${b64}` };
 };
 
-/* The real membership module on its own storage: the founder claims, a second administrator and ruth enrol. `by` is
-   the founder's stamp, as the control plane stamps an administrator's session. */
+/* The real membership and credentials modules on one storage, as the plane composes them (K789): credentials
+   registers its claim fact, password setter and revocation listener with membership at its start (credentials
+   R16, R17, R20). The founder claims (credentials R1), a second administrator and ruth enrol (membership R12, R16).
+   `by` is the founder's stamp, as the control plane stamps an administrator's session. Answers the credentials
+   module, whose keys the page registers and lists. */
 async function roster() {
-  const m = membershipOf({ storage: storage() }, { record: { bundleInfo: () => null, declarePurge() {} } });
+  const record = { bundleInfo: () => null, declarePurge() { return { ok: true }; } };
+  const ctx = { storage: storage() };
+  const m = membershipOf(ctx, { record });
   m.migrate();
-  await m.claim({ password: "founder-passphrase-1", tokenFp: "fp-1" });
+  const c = credentialsOf(ctx, { record, membership: m });
+  c.migrate();
+  assert.equal((await c.claim({ password: "founder-passphrase-1", tokenFp: "fp-1" })).ok, true);
   for (const [id, role] of [["second", "admin"], ["ruth", "member"]]) {
     const a = await m.memberAdd({ memberId: id, cover: `cover of ${id}`, role, by: "admin" });
     assert.equal(a.ok, true, JSON.stringify(a));
     const e = await m.enroll({ invite: a.invite, handle: id, password: `${id}-passphrase-x` });
     assert.equal(e.ok, true, JSON.stringify(e));
   }
-  return m;
+  return c;
 }
 
-/* The page as served, signed in as an administrator, its ops answered by the real membership module; `sent` records
-   each body the key form posted to op=signeradd. */
+/* The page as served, signed in as an administrator, its key ops answered by the real credentials module; `sent`
+   records each body the key form posted to op=signeradd. */
 async function adminPage(m) {
   const sent = [];
   const fetch = async (url, init) => {
@@ -76,7 +85,7 @@ test("R44 a whole public-key line pasted into the key form registers the key: th
   const A = sshLine("bio-ratify");
   assert.equal(A.b64.length, 68);
   assert.match(A.b64, /^AAAA[A-Za-z0-9+/=]+$/);
-  /* the premise: membership R25 refuses the whole line, which is what the page sent before D-605 */
+  /* the premise: credentials R6 (was membership R25) refuses the whole line, which is what the page sent before D-605 */
   const whole = m.signerAdd({ keyB64: A.line, memberId: "ruth", by: "admin" });
   assert.deepEqual([whole.ok, whole.reason, rowOf(m, A.line), rowOf(m, A.b64)], [false, "BAD_KEY", null, null]);
   const p = await adminPage(m);

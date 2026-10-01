@@ -3,8 +3,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { setupPage, groupLine, SETUP_HTML } from "../../../src/setup.mjs";
-import { STATES, HEADINGS, deriveInquiryTitle } from "../../../checks/bio-checks.mjs";
-import { RISK_TIERS, riskTierState } from "../../../src/actions/checks.mjs";
+import { STATES, HEADINGS, deriveInquiryTitle } from "../../../src/record-grammar/index.mjs";
+import { RISK_TIERS, riskTierState } from "../../../src/action-grammar/index.mjs";
 import { COUNTERPARTY_LEVELS } from "../../../../jurisdictions/index.mjs";
 import { pageOver } from "./fixture.mjs";
 
@@ -112,7 +112,7 @@ test("R23 after sign-in the page offers only the acts op=whoami reports the sess
   assert.deepEqual([failed.el("#go-new").hidden, failed.el("#go-members").hidden], [true, true]);   // fail closed
 });
 
-test("R24 the intake form offers the catalogue's own first states and headings, and writes a named counterparty as an office {state: named, role, body, level?} or 'not determined yet' with a basis, and an untouched tier as undetermined", async () => {
+test("R24 the intake form offers record-grammar's own first states and headings, and writes a named counterparty as an office {state: named, role, body, level?} or 'not determined yet' with a basis, and an untouched tier as undetermined", async () => {
   const p = load();
   await settle();
   assert.deepEqual(p.ui.FIRST_STATE, Object.fromEntries(Object.entries(STATES).map(([t, s]) => [t, s.legal[0]])));
@@ -175,7 +175,7 @@ test("R25 a bundle's history is listed in write order when every entry carries a
   assert.doesNotMatch(SETUP_HTML, /Every revision this bundle has ever had, oldest first/);
 });
 
-test("R32 the tiers the form offers and writes are actions' RISK_TIERS and riskTierState, never a copy; the page states action_kind: other and offers no other kind", async () => {
+test("R32 the tiers the form offers and writes are action-grammar's RISK_TIERS and riskTierState, never a copy; the page states action_kind: other and offers no other kind", async () => {
   const p = load();
   await settle();
   assert.deepEqual(p.ui.RISK_TIERS, RISK_TIERS);
