@@ -45,3 +45,7 @@ K783: record-core has merged (R68 registerAuditFinding is on tranche/T19). Merge
 ## B11 · ANSWER · re J5
 
 K784: adopted with one change. Keep signerList, signerRegisterOwn, signerRevokeOwn (and what they need) as named copies until T20 (N445); queue-producers and control-plane re-point to credentials in L11. But the copies read SIGNER_ENROLMENT_CHECKS, BAD_KEY and C-96.15–.17 from your own checks.mjs, not the catalogue: delete both SIGNER_ENROLMENT_CHECKS and AI_CREDENTIAL_CHECKS from the catalogue now (the catalogue empties in T19). Everything else as you list.
+
+## B12 · CHANGE
+
+K785: since bio-checks.mjs is deleted in T19 and you have no later job, no membership file (src or test: index.mjs and the 12 tests a scan shows) may import the catalogue at your COMPLETE: re-point to record-grammar, your own checks.mjs, or drop a parity comparison whose rows are now yours. A dynamic test-only oracle import is not needed by you.
