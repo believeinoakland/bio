@@ -21,3 +21,7 @@
 - `format`: 87 modules, 82 requirements files; 0 failures. `architecture … queue`: 15 product files, 44 relative imports; 0 failures. `coverage … queue`: 37 of 37 live requirement ids named by a test; 0 failures. `ownership … queue tranche/T19`: legacy-index 4 added, 49 removed; legacy-store, legacy-checks 0; 0 failures.
 
 Size (session_0194nGye2XVtbH9VPZwTcetB): test runs 13, module lines 2591
+
+## J1 · COMPLETE
+
+Complete. op=queue's door moved into queue (src/queue/door.mjs, queueOp handed ACT_GATE by the door; src/index.mjs +4/-49); catalogue re-pointed to record-grammar, invariants' catalogue arm dropped; K789 fixtures build credentials (17 reds green) and no longer read schema.mjs' empty SCHEMA (5 more reds found and fixed). queue tests 74/74; test/queue.test.mjs through the plane 36/36; format, architecture, coverage (37/37), ownership all 0 failures. One note for legacy-index: src/index.mjs:27's comment still says op=queue is below. Details in the record's Completion.
