@@ -10,7 +10,7 @@
    "'Finding' is overloaded: in case-making it is a concluded question; in the queue it is a class of item the record noticed and nobody has judged (inventory contradictions). This file says 'concluded finding' or 'queue finding' where it matters.",
    "Coverage (useCases) says whether approved module requirements (build/requirements/*.md) hold the use case, not whether it is built.",
    "Open questions carry a Bob-facing brief; settled ones carry a 'ruled' entry stating the design as it stands.",
-   "Where a line says 'decided' or 'decided, not built', Bob has ruled it but no approved requirement carries it yet; 'specified in T18' means the requirement is written and T18 builds it; 'built at the plane' means built with no member surface yet (the old interface, civicos-ui/app.html, is unchanged)."
+   "Where a line says 'decided' or 'decided, not built', Bob has ruled it but no approved requirement carries it yet; 'specified, not built' means the requirement is written and no tranche has built it; 'built at the plane' means built in the server with no member surface yet (the old interface, civicos-ui/app.html, is frozen by Bob's ruling K633 and gets no work)."
   ],
   "sources": [
    "requirements/README.md (canon index)",
@@ -41,25 +41,27 @@
    "docs/development/DECISIONS.md DEC-85 to DEC-95",
    "bio-plane/src/setup.mjs (tranche/T18)",
    "tranche/T18 @ c40e7e09d6: docs/architecture/BIO_Action_v0_1.md (canon whole); build/requirements/action-plans.md, action-clocks.md and the Action deltas; build/rulings.md K585-K627",
-   "build/plan/action-design/ (PATH.md, UX-ANSWERS.md, HANDOFF.md and the design views)"
+   "build/plan/action-design/ (PATH.md, UX-ANSWERS.md, HANDOFF.md and the design views)",
+   "main @ c1a27e41a5: build/plan/archive/T18.md and T19.md; build/requirements/*.md; build/modules.json; build/rulings.md K628–K859; build/plan/next.md; build/plan/draft-T20.md",
+   "main @ c1a27e41a5: bio-plane/src/affordances.mjs (RUNGS, RUNG_ABSENT); run-rules/deployment.mjs and agent-worker/src/harness.mjs (the plan mode, not deployed)"
   ],
   "counts": {
    "audiences": 20,
    "useCases": 172,
    "useCaseCoverage": {
-    "yes": 148,
-    "partial": 12,
+    "yes": 150,
+    "partial": 10,
     "no": 12
    },
    "journeys": 11,
    "journeySteps": 81,
    "surfaces": 21,
-   "openQuestions": 30,
-   "openQuestionsRuled": 9,
+   "openQuestions": 35,
+   "openQuestionsRuled": 12,
    "openQuestionsDeferred": 1,
-   "openQuestionsStillOpen": 20,
-   "openQuestionsRuledInPart": 2,
-   "openQuestionsWithNoRuling": 18
+   "openQuestionsStillOpen": 22,
+   "openQuestionsRuledInPart": 3,
+   "openQuestionsWithNoRuling": 19
   },
   "useCasesWithoutRequirementCoverage": [
    "UC-003 Assemble what is known about a focus area (Context skill)",
@@ -75,13 +77,13 @@
    "UC-148 Learn the principles and start from the starter kit",
    "UC-154 Decline to escalate, saying why not now"
   ],
-  "updated": "2026-09-30",
+  "updated": "2026-10-01",
   "commit": "c9a245767f",
   "snapshotDate": "2026-09-29",
-  "asOf": "main @ ef7f089d2c and tranche/T18 @ c40e7e09d6 (T11–T17 built; T18 open, building the Action layer); Bob's rulings DEC-1–DEC-95 and K-rulings to K627",
+  "asOf": "main @ c1a27e41a5 (T11–T19 built; the Action layer built at the plane, with no member screens yet); Bob's rulings DEC-1–DEC-95 and K-rulings to K859",
   "neededIntro": [
-   "These are the decisions about what members see and do that only you can make. Each one opens to the decision in a sentence, why it is yours, the background with an example, what is already fixed, the choices with what each gains and costs, a recommendation, and a few ways you might answer. Take them in any order; the table shows which are quick.",
-   "To answer, reply with the number and your ruling, for example “15: as recommended” or “19: option B, but pseudonymous work shows the same strength”. A question is welcome instead of a ruling. Each ruling is recorded, folded into the design documents, and this page is updated in the same change."
+   "These are the decisions about what members and readers see and do that only you can make. Each one opens to a full brief, written to stand on its own: what you are asked to decide; the basics you need, explained from scratch; how it works today; the problem and why it matters; a worked example with named people; what is already fixed and why; the choices, each traced through the same example with its gains, costs and what it commits you to; the trade-off in a sentence; a recommendation with its main risk; sample replies; and, at the end, the words used. Take them in any order; the table shows which are quick.",
+   "To answer, reply with the number and your ruling, for example “25: as recommended” or “34: Matters”. A question is just as welcome as a ruling. Each ruling is recorded, folded into the design documents, and this page is updated in the same change."
   ]
  },
  "audiences": [
@@ -1569,9 +1571,9 @@
      "src": "DEC-24, DEC-27; AI Roles sections 1-3"
     },
     {
-     "text": "Proposes plan options with why, and drafts communications, filings and theories as proposals; never adds, disposes, schedules, judges, starts or closes.",
+     "text": "Proposes plan options with why, and drafts communications, filings and theories as proposals; never adds, disposes, schedules, judges, starts or closes. In a planning run it proposes strongest first with no score, reads only that project's own plans, and drafts no letter.",
      "basis": "fixed",
-     "src": "action-plans R11, R24; filings R23; skills R28"
+     "src": "action-plans R11, R24, R31-R34; filings R23; skills R28-R29; agent-worker R50-R53; Bob, 2026-09-30 (K660 (2)-(4))"
     }
    ],
    "goals": [
@@ -2224,11 +2226,11 @@
     "document: Release (vouch for)"
    ],
    "outcome": "The document moves collected to verified with a signed release.",
-   "coveredByRequirements": "partial",
-   "requirementIds": "affordances R1-R2 (weight refuse, rung reasoned)",
+   "coveredByRequirements": "yes",
+   "requirementIds": "affordances R1-R2 (weight refuse, rung reasoned); ratification R20-R27 (op=release)",
    "src": "UI-KICKOFF 'Who this is for' item 2; Interaction Constructs section J; DEC-87 (friction follows the rung)",
    "basis": "fixed",
-   "coverageNote": "No approved module owns release's Provides (inventory; inFlux)."
+   "coverageNote": "Owned by ratification since T18 (R20-R27, the bulk release extracted from the store: K692); a crucial document is never in a batch, read from its own front matter too (N425, T19: K792). Built at the plane."
   },
   {
    "id": "UC-022",
@@ -2247,11 +2249,11 @@
     "document: Retire"
    ],
    "outcome": "A terminal state; refused while a live edge cites it.",
-   "coveredByRequirements": "partial",
-   "requirementIds": "affordances R1-R2; promotion R16",
+   "coveredByRequirements": "yes",
+   "requirementIds": "affordances R1-R2; promotion R16; ratification R28-R33 (op=retire)",
    "src": "Interaction Constructs section J (FW-14 note)",
    "basis": "fixed",
-   "coverageNote": "No approved module owns retire's Provides (inFlux)."
+   "coverageNote": "Owned by ratification since T19 (R28-R33, as built: a reason, only verified Information, never a document a live edge cites; K768, K830). Built at the plane."
   },
   {
    "id": "UC-023",
@@ -2653,7 +2655,7 @@
    "requirementIds": "queue R6-R17, R1, R5, R12; queue-producers R15-R18",
    "src": "Interaction Constructs revision 0.2 (QUEUE; DEC-10, DEC-16, DEC-36); queue R1; queue-producers R15-R18",
    "basis": "fixed",
-   "coverageNote": "The four Action kinds are specified in T18, not built."
+   "coverageNote": "The four Action kinds are built at the plane (T18: K725, K728, K731); no member surface for them yet."
   },
   {
    "id": "UC-041",
@@ -2767,7 +2769,7 @@
    "requirementIds": "queue R18; queue-producers R9",
    "src": "queue Purpose",
    "basis": "fixed",
-   "coverageNote": "Both halves are marked 'not yet met' (K533) although the queue offers the acts: unproven."
+   "coverageNote": "Taking it up is proven (queue-producers R9 met, K728); setting it aside is not: queue R18's mark (REC-202, K533) still stands."
   },
   {
    "id": "UC-046",
@@ -3278,7 +3280,7 @@
    "requirementIds": "action-plans R13 (a declined option's reason); escalation R13 (a proposed stage declined with a reason, built); conformance R8; escalation R19",
    "src": "Functional Architecture Layer 2 Function 4; DEC-89 (a required reason to open an escalation; 'decline to escalate', not yet built); build/plan/action-design/UX-ANSWERS.md (approved by Bob 2026-09-30, K608 (4)) (use cases table); docs/architecture/BIO_Action_v0_1.md (canon whole, K608 (1)) §4 rule 3",
    "basis": "fixed",
-   "coverageNote": "Covered by acts and their reasons: a declined option's reason (action-plans R13) and a declined proposed stage (escalation R13, built). DEC-89's required opening reason and 'decline to escalate' act are decided and in no T18 requirement; UC-154 stays uncovered."
+   "coverageNote": "Covered by acts and their reasons: a declined option's reason (action-plans R13) and a declined proposed stage (escalation R13, built). DEC-89's required opening reason and 'decline to escalate' act are decided and in no requirement yet; UC-154 stays uncovered."
   },
   {
    "id": "UC-068",
@@ -3995,7 +3997,7 @@
    ],
    "outcome": "A level in force per edition; unchosen blocks its own use.",
    "coveredByRequirements": "yes",
-   "requirementIds": "publication R17, R39 (not yet met: K240); ratification R2",
+   "requirementIds": "publication R17, R39 (met and tested, K832); ratification R2",
    "src": "Publication section 3 rule 7; MEMBER-KNOWLEDGE-DESIGN section 4",
    "basis": "fixed",
    "coverageNote": "Choosing attribution carries high friction: a full dialog stating that the name becomes permanent at publication (DEC-88)."
@@ -4291,7 +4293,7 @@
    "requirementIds": "escalation R1, R4, R17-R21, R23 (an overridden action refused)",
    "src": "Design Requirement 7; DEC-89 (opening requires a written reason); escalation R23",
    "basis": "fixed",
-   "coverageNote": "escalation R23 is specified in T18, not built; DEC-89's opening reason is still owed."
+   "coverageNote": "escalation R23 (an overridden action refused) is built (T18: K708); DEC-89's opening reason is still owed."
   },
   {
    "id": "UC-112",
@@ -4339,7 +4341,7 @@
    "requirementIds": "actions R1-R12, R18-R28, R33, R45-R47; escalation R9",
    "src": "Design Requirement 8; Publication section 8; actions R8, R45-R47; K600 (a)",
    "basis": "fixed",
-   "coverageNote": "Adds proceeding on an unestablished premise with a stated reason, disclosed (actions R8 as amended), a create op (R47) and the group's contact (R45); specified in T18, not built."
+   "coverageNote": "Proceeding on an unestablished premise with a stated reason, disclosed (actions R8 as amended), the create op (R47) and the group's contact (R45) are built at the plane (T18: K703, K709; K837); no member surface yet."
   },
   {
    "id": "UC-114",
@@ -4365,7 +4367,7 @@
    "requirementIds": "filings R1-R7, R16, R18, R22 (stamp), R24 (override disclosure), R25 (grades and the venue's standard), R26 (group templates)",
    "src": "Design Requirement 8; filings R22-R26",
    "basis": "fixed",
-   "coverageNote": "R22-R26 are specified in T18, not built; the real profile has no Tier 1-2 templates yet (N-A14, T19)."
+   "coverageNote": "R22-R26 are built at the plane (T18: K701, K706; marks struck K839), with the list of the group's templates (op=templates, K701); the real profile has no Tier 1-2 templates yet (N-A14: legal text Bob supplies or approves, and a source)."
   },
   {
    "id": "UC-115",
@@ -4389,7 +4391,7 @@
    "requirementIds": "filings R8-R13, R17, R22, R24, R25",
    "src": "Design Requirement 8 as amended; filings R8, R22-R25",
    "basis": "fixed",
-   "coverageNote": "R8 as amended (a packet for an overridden action), R22, R24 and R25 are specified in T18, not built."
+   "coverageNote": "R8 as amended (a packet for an overridden action), R22, R24 and R25 are built at the plane (T18: K706; K839); no member surface yet."
   },
   {
    "id": "UC-116",
@@ -4434,7 +4436,7 @@
    "requirementIds": "filings R15, R21; actions R40-R42 (R42 built T11, N231); jurisdictions R25-R27; affordances R26 (met T13)",
    "src": "Functional Architecture Function 3",
    "basis": "fixed",
-   "coverageNote": "Profile action kinds are not yet live in the affordance vocabularies (affordances R26; inFlux)."
+   "coverageNote": "Profile action kinds are live in the affordance vocabularies (affordances R26, met T13); its risk tiers are read from action-grammar since T19 (K768)."
   },
   {
    "id": "UC-118",
@@ -4480,7 +4482,7 @@
    "requirementIds": "actions R13-R17, R20-R22, R34, R48",
    "src": "Case Making section 2 (records-request lifecycle; fee quote is evidence); actions R48",
    "basis": "fixed",
-   "coverageNote": "Marking a received entry as pressure (R48) is specified in T18, not built."
+   "coverageNote": "Marking a received entry as pressure (R48) is built at the plane (T18; K700, mark struck K837); no member surface yet."
   },
   {
    "id": "UC-120",
@@ -4549,7 +4551,7 @@
    "requirementIds": "escalation R2, R13, R15-R16, R18; queue-producers R17; queue R12",
    "src": "Design Requirement 7 ('mechanical'); queue-producers R17",
    "basis": "fixed",
-   "coverageNote": "A proposed stage reaching the opener as a queue OBLIGATION is specified in T18, not built."
+   "coverageNote": "A proposed stage reaching the opener as a queue OBLIGATION is built at the plane (queue-producers R17, T18: K728); no member surface yet."
   },
   {
    "id": "UC-123",
@@ -4600,7 +4602,7 @@
    "requirementIds": "actions R9 (addressee beyond offices, D1); filings R22-R23 (communication drafts approved and sent by a member, with the in-band stamp); actions R7 ('completed')",
    "src": "Functional Architecture Function 4; Design Requirement 8; build/plan/action-design/UX-ANSWERS.md (approved by Bob 2026-09-30, K608 (4))",
    "basis": "fixed",
-   "coverageNote": "Specified in T18, not built."
+   "coverageNote": "Built at the plane (T18: K703, K706); no member surface yet."
   },
   {
    "id": "UC-125",
@@ -4643,10 +4645,10 @@
    "acts": [],
    "outcome": "A plan (S11) that holds candidate steps; hypothetical premises are hunch debt.",
    "coveredByRequirements": "yes",
-   "requirementIds": "action-plans R1-R29",
+   "requirementIds": "action-plans R1-R34",
    "src": "Case Making 'THE ACTION PLAN' sections 1-6b; DEC-25 (plan never published, provisional); Bob's action-plan rulings 1-10, 2026-09-29 (docs/development/action-design/ACTION-PLAN.md; the action-plans module awaits approval); build/plan/action-design/UX-ANSWERS.md (approved by Bob 2026-09-30, K608 (4)); build/plan/action-design/PATH.md",
    "basis": "fixed",
-   "coverageNote": "Specified in T18, not built. Dependencies are phases and branches; a plan holds no resources (Bob's ruling 3)."
+   "coverageNote": "Built at the plane (action-plans R1-R34, T18: K711); no member surface yet. Dependencies are phases and branches; a plan holds no resources (Bob's ruling 3)."
   },
   {
    "id": "UC-127",
@@ -4669,7 +4671,7 @@
    "requirementIds": "monitoring R34, R50; scheduler R5 (deadline-recheck); action-clocks R3; queue R1, R5, R12; queue-producers R15 (overdue CONDITION), R17 (stage-proposed OBLIGATION); escalation R2, R16",
    "src": "Functional Architecture Function 5 resolution note; build/plan/action-design/UX-ANSWERS.md (approved by Bob 2026-09-30, K608 (4)); K611; K624 (4)",
    "basis": "fixed",
-   "coverageNote": "Specified in T18, not built; the overdue clock is a CONDITION (K611)."
+   "coverageNote": "Built at the plane (T18: monitoring R50 K717, scheduler R5 K719, queue-producers R15 and R17 K728); the overdue clock is a CONDITION (K611); an entry whose last mark failed is re-checked once a day (monitoring R50, N429, T19: K841)."
   },
   {
    "id": "UC-128",
@@ -4718,7 +4720,7 @@
    "requirementIds": "actions R48 (pressure entries; UX-ANSWERS cites the draft id R47)",
    "src": "Operational Principle 8; Design Requirement 13; build/plan/action-design/UX-ANSWERS.md (approved by Bob 2026-09-30, K608 (4)); K603; K624 (5)",
    "basis": "fixed",
-   "coverageNote": "Specified in T18, not built. The litigation-hold reminder for a legal threat is T19 (K624 (5)), once the hold's act is designed."
+   "coverageNote": "Built at the plane (actions R48, T18: K700, K837); no member surface yet. The litigation-hold reminder for a legal threat is deferred until Bob designs the hold's act (N-A19; DEC-61)."
   },
   {
    "id": "UC-130",
@@ -5315,10 +5317,10 @@
    ],
    "outcome": "A reasoned, attributed, dated decline in the member's own words; a later escalation supersedes it and both stay readable.",
    "coveredByRequirements": "no",
-   "requirementIds": "none (DEC-89 decided; escalation, conformance and affordances requirements owed; not in T18)",
+   "requirementIds": "none (DEC-89 decided; escalation, conformance and affordances requirements owed; in no tranche's plan yet)",
    "src": "DEC-89; DEC-89; build/plan/action-design/UX-ANSWERS.md (approved by Bob 2026-09-30, K608 (4))",
    "basis": "fixed",
-   "coverageNote": "DEC-89 is decided and in no T18 requirement; a plan's declined option also records 'not pursuing' (UX-ANSWERS), without withdrawing DEC-89."
+   "coverageNote": "DEC-89 is decided and in no requirement yet; a plan's declined option also records 'not pursuing' (UX-ANSWERS), without withdrawing DEC-89."
   },
   {
    "id": "UC-155",
@@ -5490,7 +5492,7 @@
    "requirementIds": "membership R26, R89; queue R1, R12; queue-producers R14",
    "src": "K509 (2); membership R26, R89; K535, K607",
    "basis": "fixed",
-   "coverageNote": "The administrators' feed item is catalogued; its producer is not built (queue-producers R14, N375)."
+   "coverageNote": "Built at the plane: the feed item offers every administrator the revoke (queue-producers R14, T18: K728); no member surface yet."
   },
   {
    "id": "UC-162",
@@ -5515,7 +5517,7 @@
    "requirementIds": "action-plans R1-R3, R6, R8",
    "src": "Bob's ruling 10 (K590); PATH.md §2 steps 1-2",
    "basis": "fixed",
-   "coverageNote": "Specified in T18, not built."
+   "coverageNote": "Built at the plane (T18: K711); no member surface yet."
   },
   {
    "id": "UC-163",
@@ -5539,10 +5541,10 @@
    ],
    "outcome": "Suggestions held apart with why; adopted ones become undecided options.",
    "coveredByRequirements": "yes",
-   "requirementIds": "action-plans R11, R21, R24; skills R28 (the run mode is T19)",
+   "requirementIds": "action-plans R11, R21, R24, R30-R34; skills R28-R29; agent-worker R50-R53; run-rules R13-R14",
    "src": "PATH.md §2 step 3; D2, D4 (K590)",
    "basis": "fixed",
-   "coverageNote": "Specified in T18, not built."
+   "coverageNote": "Built at the plane and in the assistant (T18: K683, K711); the assistant's plan mode is not deployed until it runs model turns (run-rules R14; K660 (5)), so only members' own proposals reach the tray today. Suggestions come five at a time, strongest first, with no score, and the member asks for the next five (action-plans R34; Bob, K660 (2)). No member surface yet."
   },
   {
    "id": "UC-164",
@@ -5567,7 +5569,7 @@
    "requirementIds": "action-plans R13, R29; action-clocks R4",
    "src": "PATH.md §2 step 6; DEC-94; K613-K615",
    "basis": "fixed",
-   "coverageNote": "Specified in T18, not built."
+   "coverageNote": "Built at the plane (action-plans R29, action-clocks R4; T18: K704, K711); no member surface yet."
   },
   {
    "id": "UC-165",
@@ -5592,7 +5594,7 @@
    "requirementIds": "action-plans R14-R17, R19, R23; queue-producers R16",
    "src": "PATH.md §2 steps 7-8; Bob's ruling 8",
    "basis": "fixed",
-   "coverageNote": "Specified in T18, not built."
+   "coverageNote": "Built at the plane (T18: K711); no member surface yet."
   },
   {
    "id": "UC-166",
@@ -5617,7 +5619,7 @@
    "requirementIds": "action-plans R18; actions R8, R45-R47; filings R24",
    "src": "PATH.md §2 step 9; K600 (a)",
    "basis": "fixed",
-   "coverageNote": "Specified in T18, not built."
+   "coverageNote": "Built at the plane (T18: K709, K711); no member surface yet."
   },
   {
    "id": "UC-167",
@@ -5643,7 +5645,7 @@
    "requirementIds": "action-plans R1; actions R7-R8, R26; filings R23",
    "src": "docs/architecture/BIO_Action_v0_1.md (canon whole, K608 (1)) §4 rule 4; Bob's ruling 5",
    "basis": "fixed",
-   "coverageNote": "Specified in T18, not built."
+   "coverageNote": "Built at the plane (T18: K706, K711); no member surface yet."
   },
   {
    "id": "UC-168",
@@ -5667,7 +5669,7 @@
    "requirementIds": "filings R26",
    "src": "K613 (3)",
    "basis": "fixed",
-   "coverageNote": "Specified in T18, not built."
+   "coverageNote": "Built at the plane (filings R26, with the list of the group's templates, T18: K701, K706); no member surface yet."
   },
   {
    "id": "UC-169",
@@ -5689,7 +5691,7 @@
    "requirementIds": "filings R25; actions R49; jurisdictions R39",
    "src": "docs/architecture/BIO_Action_v0_1.md (canon whole, K608 (1)) §4 rule 13; K597 (3); K600 (b)",
    "basis": "fixed",
-   "coverageNote": "Specified in T18, not built."
+   "coverageNote": "Built at the plane (filings R25, T18: K706; K839); no member surface yet."
   },
   {
    "id": "UC-170",
@@ -5712,7 +5714,7 @@
    "requirementIds": "action-plans R21",
    "src": "D4 (K590); docs/architecture/BIO_Action_v0_1.md (canon whole, K608 (1)) §4 rule 10",
    "basis": "fixed",
-   "coverageNote": "Specified in T18, not built."
+   "coverageNote": "Built at the plane (T18: K711); no member surface yet."
   },
   {
    "id": "UC-171",
@@ -5735,7 +5737,7 @@
    "requirementIds": "action-plans R20",
    "src": "Bob, 2026-09-30 (K590)",
    "basis": "fixed",
-   "coverageNote": "Specified in T18, not built."
+   "coverageNote": "Built at the plane (T18: K711); no member surface yet."
   },
   {
    "id": "UC-172",
@@ -5758,7 +5760,7 @@
    "requirementIds": "actions R45; action-plans R18",
    "src": "D5 (K590)",
    "basis": "fixed",
-   "coverageNote": "Specified in T18, not built."
+   "coverageNote": "Built at the plane (actions R45, T18: K703; action-plans R18 answers CONTACT_NOT_A_MEMBER through actions' export, T19: K837); no member surface yet."
   }
  ],
  "journeyExperience": [
@@ -5875,12 +5877,13 @@
       "NO_SUCH_INVITATION (spent or never existed, one answer).",
       "HANDLE_TAKEN.",
       "BAD_HANDLE.",
-      "PASSWORD_TOO_SHORT."
+      "PASSWORD_TOO_SHORT.",
+      "ENROL_NOT_RECORDED: the enrolment could not be completed, nothing changed, and the invitation link still works (membership R95; T19: K778)."
      ],
      "howLong": "Minutes; the link is spent on use.",
      "handoffTo": "member (active)",
      "feelingRisk": "The handle is what the public sees; the member may not realise.",
-     "src": "membership R15-R16; Membership v2 section 3",
+     "src": "membership R15-R16; Membership v2 section 3; membership R95 (K778)",
      "basis": "fixed, with open points listed",
      "openInThisStep": [
       "What a newcomer learns first is deferred until the redesign is built and stable (DEC-91); meanwhile strength against the bar and 'Undetermined' come first (DEC-82)."
@@ -5964,16 +5967,17 @@
      "whatTheyKnow": "Must see the source material itself, never only an AI summary.",
      "decisionTheyMake": "Stand behind it, with acknowledgement and mitigation for a bulk release.",
      "whatCanGoWrong": [
-      "Refused with offenders named (weight refuse: all or nothing).",
+      "Refused whole, with offenders named (weight refuse: all or nothing): not Information, not collected, crucial (read from the document's own front matter too), or missing an entry requirement (ratification R22-R23; N425).",
+      "A machine, or an empty or over-long acknowledgment or mitigation, is refused before anything is read (MACHINE_CANNOT_RELEASE, NO_ACKNOWLEDGMENT, NO_MITIGATION; ratification R20).",
       "A second member released first: CAS_STALE (promotion R1)."
      ],
      "howLong": "Minutes per batch.",
      "handoffTo": "member",
      "feelingRisk": "Click-through bulk release would make the acknowledgement dishonest.",
-     "src": "UI-KICKOFF item 2; Interaction Constructs section J; affordances R1-R2",
+     "src": "UI-KICKOFF item 2; Interaction Constructs section J; affordances R1-R2; ratification R20-R27 (K692; N425, K792)",
      "basis": "fixed, with open points listed",
      "openInThisStep": [
-      "No owning module requirement holds release (inFlux)."
+      "A failure partway leaves the documents already released released, and names them (ratification R25): how the screen shows that is the redesign's."
      ]
     },
     {
@@ -6975,19 +6979,20 @@
     {
      "step": "Get suggestions",
      "whoIsActing": "member; the assistant proposes",
-     "whatTheyKnow": "The subjects, the standards' text, consequences, the project's kind of work, the profile's deadlines and legal organisations, the group's earlier plans.",
-     "decisionTheyMake": "Which suggestions to adopt.",
+     "whatTheyKnow": "The subjects, the standards' text, consequences, the project's kind of work, the profile's deadlines, venues and legal organisations, and the same project's earlier plans only.",
+     "decisionTheyMake": "Which suggestions to adopt; whether to ask for the next five.",
      "whatCanGoWrong": [
       "A suggestion read as the group's decision (the tray must never).",
-      "No suggestions at all in T18: the run mode that proposes options is T19."
+      "No assistant suggestions until its plan mode is deployed, as soon as the assistant runs model turns (run-rules R14; K660 (5)); a member may still propose or add options.",
+      "A cursor the tray did not give: PROPOSALS_CURSOR_REFUSED (action-plans R34)."
      ],
      "howLong": "Not stated in the sources.",
      "handoffTo": "member",
      "feelingRisk": "Suggestions shaped by the declared kind of work could narrow what the group considers; they shape suggestions and nothing else.",
-     "src": "PATH.md §2 step 3; action-plans R11, R21; skills R28; current.md 'Not in T18'",
+     "src": "PATH.md §2 step 3; action-plans R11, R21, R30-R34; skills R28-R29; agent-worker R50-R53; run-rules R14; Bob, 2026-09-30 (K660)",
      "basis": "fixed, with open points listed",
      "openInThisStep": [
-      "When the assistant's planning run is deployed (T19)."
+      "How the tray shows the five strongest first and offers the next five, with no score, rank figure or strength (action-plans R34; K660 (2)): the words and the control are the design's."
      ]
     },
     {
@@ -7359,9 +7364,9 @@
     },
     {
      "act": "checkpointrecord",
-     "rung": "undetermined (DEC-87)",
+     "rung": "undetermined (RUNG_ABSENT, K732), treated as reasoned (DEC-87)",
      "weight": "single",
-     "src": "queue R12",
+     "src": "queue R12; affordances R3; K732",
      "basis": "open"
     },
     {
@@ -7373,10 +7378,10 @@
     },
     {
      "act": "reminderanswer",
-     "rung": "reversible (derived)",
+     "rung": "off the ladder: a member's own request (RUNG_ABSENT, ground caller-owned, as queuesnooze; K732)",
      "weight": "single",
-     "src": "queue R12; action-clocks R6",
-     "basis": "open"
+     "src": "queue R12; action-clocks R6; affordances R3; K732",
+     "basis": "fixed"
     }
    ],
    "accessibilityAndLanguage": [
@@ -8975,17 +8980,17 @@
     },
     {
      "act": "actionpressure",
-     "rung": "undetermined, treated as reasoned (DEC-87)",
+     "rung": "undetermined (RUNG_ABSENT, K723), treated as reasoned (DEC-87)",
      "weight": "single",
-     "src": "actions R48",
+     "src": "actions R48; affordances R3; K723",
      "basis": "open"
     },
     {
      "act": "reminderset",
-     "rung": "reversible (derived)",
+     "rung": "off the ladder: a member's own request (RUNG_ABSENT, ground caller-owned, as queuesnooze; K732)",
      "weight": "single",
-     "src": "action-clocks R4",
-     "basis": "open"
+     "src": "action-clocks R4; affordances R3; K732",
+     "basis": "fixed"
     },
     {
      "act": "communicationprepare",
@@ -9437,9 +9442,9 @@
      "src": "DEC-83; membership R84"
     },
     {
-     "text": "Every administrator is told of a self-registered key and may revoke it (the feed item's producer is not built).",
+     "text": "Every administrator is told of a self-registered key and may revoke it, through the feed item each of them receives.",
      "basis": "fixed",
-     "src": "membership R89; queue-producers R14; K535"
+     "src": "membership R89; credentials R7-R9; queue-producers R14 (built T18, K728); K535"
     }
    ],
    "mustNeverShowOrDo": [
@@ -10293,38 +10298,38 @@
    "primaryActs": [
     {
      "act": "optiondispose (Choose / Decline)",
-     "rung": "chosen reversible, declined reasoned (derived by affordances R27; not yet ruled)",
+     "rung": "reasoned (affordances R2, K732: declining or blocking requires a reason, PLAN_NO_REASON; graded by that heavier arm)",
      "weight": "refuse (all or none, several in one act)",
-     "src": "action-plans R13; affordances R27",
-     "basis": "open"
+     "src": "action-plans R13; affordances R2; K732",
+     "basis": "fixed"
     },
     {
      "act": "optionstart (Start…)",
-     "rung": "undetermined, treated as reasoned (DEC-87); full dialog by DEC-88's consequence rule",
+     "rung": "undetermined (RUNG_ABSENT, K732), treated as reasoned (DEC-87); full dialog by DEC-88's consequence rule",
      "weight": "single",
      "src": "action-plans R18; PATH.md §2 step 9",
      "basis": "open"
     },
     {
      "act": "scenarioset",
-     "rung": "reversible (derived; not yet ruled)",
+     "rung": "reversible (affordances R2, K732: a further one replaces it, kept in history)",
      "weight": "single",
-     "src": "action-plans R14",
-     "basis": "open"
+     "src": "action-plans R14; affordances R2; K732",
+     "basis": "fixed"
     },
     {
      "act": "checkpointrecord",
-     "rung": "undetermined, treated as reasoned (DEC-87)",
+     "rung": "undetermined (RUNG_ABSENT, K732), treated as reasoned (DEC-87)",
      "weight": "single",
-     "src": "action-plans R16",
+     "src": "action-plans R16; affordances R3; K732",
      "basis": "open"
     },
     {
      "act": "planclose",
-     "rung": "reasoned (derived; not yet ruled)",
+     "rung": "reasoned (affordances R2, K732: it requires a reason, PLAN_NO_REASON)",
      "weight": "single",
-     "src": "action-plans R20",
-     "basis": "open"
+     "src": "action-plans R20; affordances R2; K732",
+     "basis": "fixed"
     }
    ],
    "accessibilityAndLanguage": [
@@ -10343,7 +10348,7 @@
      "basis": "open"
     }
    ],
-   "src": "PATH.md §1-§3; build/plan/action-design/plan-page.html (approved by Bob, K608 (4)); action-plans R1-R29"
+   "src": "PATH.md §1-§3; build/plan/action-design/plan-page.html (approved by Bob, K608 (4)); action-plans R1-R34"
   },
   {
    "surface": "Assistant tray (plan suggestions)",
@@ -10369,6 +10374,16 @@
      "text": "The one machine-work treatment.",
      "basis": "fixed",
      "src": "DEC-77; DEC-90; AI Roles §3 rule 3"
+    },
+    {
+     "text": "Five suggestions at a time, strongest first, in the assistant's order, and a way to ask for the next five until none remain.",
+     "basis": "fixed",
+     "src": "action-plans R34; Bob, 2026-09-30 (K660 (2))"
+    },
+    {
+     "text": "On each machine suggestion, and on each option adopted from one for as long as the plan is read, the fixed disclosure naming its run and skill version: 'Suggested by the assistant (machine work) in run RUN-…, under skill version …. It is not the group's decision; it becomes an option only when a member adopts it.'",
+     "basis": "fixed",
+     "src": "action-plans R32; K660 (6)"
     }
    ],
    "mustNeverShowOrDo": [
@@ -10383,9 +10398,19 @@
      "src": "action-plans R24"
     },
     {
-     "text": "A fixed catalogue: suggestions come from reasoning over the matter and the group's own earlier plans.",
+     "text": "A fixed catalogue: suggestions come from reasoning over the matter and the same project's own earlier plans.",
      "basis": "fixed",
-     "src": "docs/architecture/BIO_Action_v0_1.md (canon whole, K608 (1)) §4 rule 8"
+     "src": "docs/architecture/BIO_Action_v0_1.md (canon whole, K608 (1)) §4 rule 8; agent-worker R51; K660 (4)"
+    },
+    {
+     "text": "A score, rank figure or strength on any suggestion: the order is the only sign of strength.",
+     "basis": "fixed",
+     "src": "action-plans R34; agent-worker R52; Bob, 2026-09-30 (K660 (2))"
+    },
+    {
+     "text": "The disclosure on the action started from an adopted option, or on anything prepared or sent from it: it stops at adoption.",
+     "basis": "fixed",
+     "src": "action-plans R32; K660 (6)"
     }
    ],
    "statesToDesign": {
@@ -10422,10 +10447,17 @@
    "primaryActs": [
     {
      "act": "optionadopt (Adopt)",
-     "rung": "undetermined, treated as reasoned (DEC-87)",
+     "rung": "undetermined (RUNG_ABSENT, K732), treated as reasoned (DEC-87)",
      "weight": "single",
-     "src": "action-plans R11",
+     "src": "action-plans R11; affordances R3; K732",
      "basis": "open"
+    },
+    {
+     "act": "planproposals (the next five)",
+     "rung": "off the ladder: a read, writing nothing",
+     "weight": "single",
+     "src": "action-plans R34; Bob, 2026-09-30 (K660 (2))",
+     "basis": "fixed"
     }
    ],
    "accessibilityAndLanguage": [
@@ -10435,7 +10467,7 @@
      "src": "UI-KICKOFF refinements (devices)"
     }
    ],
-   "src": "PATH.md §2 step 3, §3; build/plan/action-design/plan-page.html (approved by Bob, K608 (4))"
+   "src": "PATH.md §2 step 3, §3; build/plan/action-design/plan-page.html (approved by Bob, K608 (4)); action-plans R30-R34; K660"
   },
   {
    "surface": "Start and send (starting an option; preparing and sending)",
@@ -10548,14 +10580,14 @@
    "primaryActs": [
     {
      "act": "optionstart",
-     "rung": "undetermined (DEC-87: treated as reasoned); full dialog",
+     "rung": "undetermined (RUNG_ABSENT, K732; DEC-87: treated as reasoned); full dialog",
      "weight": "single",
      "src": "action-plans R18",
      "basis": "open"
     },
     {
      "act": "premise override",
-     "rung": "reasoned (derived)",
+     "rung": "reasoned (derived: it requires a reason; no op of its own, it rides on optionstart or actioncreate, both undetermined in the code, K723, K732)",
      "weight": "single",
      "src": "actions R8",
      "basis": "open"

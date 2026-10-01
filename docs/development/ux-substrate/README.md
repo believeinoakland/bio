@@ -9,4 +9,4 @@ What a member sees and works with, as the approved requirements and Bob's ruling
 - `measures-map.html`: the approved measures map DEC-82 rests on (rendered at https://claude.ai/artifact/TfqcXNaJQ86SZzUA8Xn6Ni).
 - `ux-substrate.json`, `build_ux.py`: the first inventory and its renderer, kept for reference.
 
-**As of** `main` @ `ef7f089d2c` and `tranche/T18` @ `c40e7e09d6` (T11–T17 built; T18 open, building the Action layer, whose canon `BIO_Action_v0_1.md` and requirements are placed there); Bob's rulings DEC-1–DEC-95 and K-rulings to K627. The requirements (`build/requirements/`) win over this snapshot. When Bob closes a question the page lists, the page is updated in the same change that records the ruling (K438).
+**As of** `main` @ `c1a27e41a5` (T11–T19 built; the Action layer built at the plane, with no member screens yet); Bob's rulings DEC-1–DEC-95 and K-rulings to K859. The open-question briefs were checked against the same commit. The requirements (`build/requirements/`) win over this snapshot. When Bob closes a question the page lists, the page is updated in the same change that records the ruling (K438).

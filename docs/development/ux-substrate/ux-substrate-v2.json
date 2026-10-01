@@ -2,12 +2,12 @@
  "meta": {
   "branch": "claude/gallant-brown-zg0wc1",
   "commit": "see asOf",
-  "asOf": "main @ ef7f089d2c and tranche/T18 @ c40e7e09d6 (T11–T17 built; T18 open, building the Action layer); Bob's rulings DEC-1–DEC-95 and K-rulings to K627",
-  "updated": "2026-09-30",
-  "note": "Requirements win over canon. Maturity is read at the plane: 'built' means built in the plane, whether or not a member surface exists, and a line says 'no member surface yet' where none does. civicos-ui/app.html is the old interface, unchanged. The Action layer is not refreshed here.",
+  "asOf": "main @ c1a27e41a5 (T11–T19 built; the Action layer built at the plane, with no member screens yet); Bob's rulings DEC-1–DEC-95 and K-rulings to K859",
+  "updated": "2026-10-01",
+  "note": "Requirements win over canon. Maturity is read at the plane: 'built' means built in the plane, whether or not a member surface exists, and a line says 'no member surface yet' where none does. civicos-ui/app.html is the old interface: Bob froze it (K633), so it gets no work until the new interface replaces it, and no line here counts on it changing.",
   "enrichedV2": {
-   "rungs": "from RUNGS / RUNG_ABSENT in bio-plane/src/affordances.mjs (affordances R2, R3, R27) and Bob's DEC-88. The code grades 61 ops undetermined: DEC-88 grades 57 of them (26 reversible, 29 reasoned, 2 terminal) and each such act shows DEC-88's grade here, cited as ruled and not yet in the code; 4 newer ops (contradictionrecommend, contradictionoptin, contradictionrespond, inboxpull) are ungraded. 'off-ladder' = the op is not a record act (read, credential, substrate, caller-owned or observational ground; see rungGround). 'undetermined' = a record act with no rung ruled, or with no op located; DEC-87 treats it as reasoned until BOB assigns it.",
-   "surface": "whether civicos-ui/app.html offers the act today, from its SURFACES registry, ACT_FLOW, ROSTER_ACTS and op call sites",
+   "rungs": "from RUNGS / RUNG_ABSENT in bio-plane/src/affordances.mjs (affordances R2, R3, R27) and Bob's DEC-88. The code grades 71 ops undetermined (affordances R27, K732): DEC-88 grades 57 of them (26 reversible, 29 reasoned, 2 terminal) and each such act shows DEC-88's grade here, cited as ruled and not yet in the code; 14 newer ops are ungraded: contradictionrecommend, contradictionoptin, contradictionrespond, inboxpull, and ten of the Action layer (communicationprepare, templatesave, actioncreate, actionpressure, planopen, optionadd, optionpropose, optionadopt, checkpointrecord, optionstart; K723, K732). The Action layer's other writes are graded in the code (K732): plansubjectadd, plansubjectremove, optionrevise, optiondispose and planclose reasoned, scenarioset reversible, reminderset and reminderanswer off the ladder as a member's own request. 'off-ladder' = the op is not a record act (read, credential, substrate, caller-owned or observational ground; see rungGround). 'undetermined' = a record act with no rung ruled, or with no op located; DEC-87 treats it as reasoned until BOB assigns it.",
+   "surface": "whether civicos-ui/app.html offers the act today, from its SURFACES registry, ACT_FLOW, ROSTER_ACTS and op call sites; the old interface is frozen (K633), so 'none' stays none until the new interface",
    "frequency": "worker's judgement from the journeys, Interaction Constructs and Case Making",
    "memberWord": "memberWordSrc cites a design doc, requirement or the old UI; proposed: true means the worker's proposal"
   },
@@ -499,12 +499,13 @@
     {
      "name": "Enrol",
      "who": "invitee",
-     "src": "membership R16",
+     "src": "membership R16, R95",
      "rung": "off-ladder",
      "rungSrc": "RUNG_ABSENT.enroll (ground credential: not a record act) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "rungGround": "credential",
      "surface": "none (setup page)",
-     "frequency": "once"
+     "frequency": "once",
+     "note": "refused ENROL_NOT_RECORDED when the new member's password cannot be recorded: nothing changed, the member stays invited and the link still works (membership R95; credentials sets the password since T19: K778, K791)"
     }
    ],
    "shownAs": [
@@ -827,12 +828,12 @@
      "who": "owner (MACHINE_CANNOT_SET_WORK_KIND)",
      "src": "action-plans R21; D4",
      "rung": "reversible",
-     "rungSrc": "not in affordances; derived by affordances R27's rule (reasoned when it asks an authored reason; reversible when a published act takes it back; undetermined where neither holds): a further revision changes it",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "rungSrc": "no op of its own: a field of the project document, set by an owner through promotion (action-plans R21; built T18, K711); not in affordances RUNGS or RUNG_ABSENT; derived by affordances R27's rule (reversible when a published act takes it back): a further revision changes it",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "once",
      "frequencySrc": "worker's judgement from PATH.md §2 (basis open)",
      "rungRuled": false,
-     "note": "weight proposed from affordances R27 / DEC-88 analogy, not yet ruled"
+     "note": "weight proposed from affordances R27, not yet ruled; built at the plane (K711)"
     }
    ],
    "shownAs": [
@@ -840,7 +841,8 @@
     "ownership arithmetic and decision history readable by every participant (R38, R42, R63)",
     "stage as coloured bars stacking one per stage reached, each bar named; hover, focus or tap discloses more; a click opens when each was reached, what earned it and what the next needs, stated from the rule that computes it (DEC-79; publication R49; K448)",
     "each question listed with its capture and connection badges and one phrase against the project's bar (DEC-82)",
-    "owners receive tension-after-publication FINDINGs for their published cases (publication R50; queue-producers R6)"
+    "owners receive tension-after-publication FINDINGs for their published cases (publication R50; queue-producers R6)",
+    "a member outside a project cannot read its records, plans and escalations included, through any record-wide read either: every bundle carries the project its document states and is fenced by that project's sight (promotion R53; membership R43; N426, built T19: K757, K776, K792)"
    ],
    "maturity": "built, gaps",
    "src": "membership R31-R56, R63; promotion R19, R41-R44; intent R1-R2; strength R14; State Rules §4.3; publication R44-R49; DEC-79; K362; K364; publication R50; queue-producers R6; K469; action-plans R21; docs/architecture/BIO_Action_v0_1.md (canon whole, K608 (1)) §4 rule 10"
@@ -928,9 +930,9 @@
     {
      "name": "Release (vouch for)",
      "who": "member",
-     "src": "affordances R1; promotion R31",
+     "src": "affordances R1; promotion R31; ratification R20-R27 (op=release, the bulk release; N400, K692)",
      "op": "release",
-     "note": "no approved module holds this act's Provides",
+     "note": "ratification owns it (R20-R27, extracted from the store in T18: K692): all or nothing, with an acknowledgment and a mitigation; a crucial document is never in a batch, read from its own front matter too (N425, T19: K792); a partial failure leaves those already released released and names them (R25)",
      "rung": "reasoned",
      "rungSrc": "RUNGS.release = reasoned (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "yes (#review holding area; document page)",
@@ -939,12 +941,13 @@
     {
      "name": "Retire",
      "who": "member",
-     "src": "affordances R1-R2",
+     "src": "affordances R1-R2; ratification R28-R33 (op=retire; K653 BOB-3, K768, K830)",
      "op": "retire",
      "rung": "terminal",
      "rungSrc": "RUNGS.retire = terminal (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "yes (document page)",
-     "frequency": "occasional"
+     "frequency": "occasional",
+     "note": "ratification owns it (T19: K830): a reason is required (NO_REASON, BAD_REASON); only verified Information, never one a live edge cites; terminal, recorded in each document's own record (R28-R30, R33)"
     },
     {
      "name": "Get a trusted timestamp",
@@ -1089,7 +1092,7 @@
      "src": "capture R32, R65; control-plane R36; provenance R19, R42, R51; K559, K609; DEC-78 item 1; Intake Doctrine §2a",
      "rung": "undetermined",
      "rungSrc": "RUNG_ABSENT.inboxpull (ground undetermined; not graded by DEC-88, which predates it) (bio-plane/src/affordances.mjs; affordances R3, R27); treated as reasoned until BOB assigns it (DEC-87)",
-     "note": "in one act: the bytes held under their digest, a doorbell receipt written, the knock marked pulled and a new document promoted at 'collected'. Commits the member to nothing more; vouching stays with release. The member is the capturing actor, never the source",
+     "note": "in one act: the bytes held under their digest, a doorbell receipt written, the knock marked pulled and a new document promoted at 'collected'. Commits the member to nothing more; vouching stays with release. The member is the capturing actor, never the source; a fault inside the pull answers one fixed sentence, never the thrown message (PULL_WITHIN_FAILED; capture R65; N409, K655)",
      "surface": "partial (the setup page's 'Mark as taken up' performs it; not app.html)",
      "frequency": "weekly",
      "op": "inboxpull"
@@ -1488,7 +1491,8 @@
    ],
    "shownAs": [
     "content-axis state (indexed_full / partial / none / not_extracted / undetermined)",
-    "text-undetermined condition"
+    "text-undetermined condition",
+    "a Word reading made before N26 that read both branches of alternate content is read again once; the earlier reading is kept, references are moved to the new numbering, and an excerpt whose text moves is marked stale and its holders told (extraction R66; office-readers R28; content R22, R41; built T19: K763, K800)"
    ],
    "maturity": "built",
    "src": "extraction Purpose, R32; calibration Purpose; observation-log R1, R12"
@@ -2939,7 +2943,7 @@
    ],
    "maturity": "built, gaps",
    "src": "contradiction R1-R57, C-60.2-C-60.3, C-93.8-C-93.39; inquiry R46-R48; affordances R2, R3, R7, R8, R14; K488, K491, K516, K544; build/plan/archive/T15.md, T16.md, T17.md; DEC-76, DEC-77, DEC-84, DEC-85; docs/development/CONTRADICTION-PRESENT-RESOLVE-DESIGN.md (reviewed K447)",
-   "note": "Built at the plane (T15-T17); no member surface yet (the old interface, civicos-ui/app.html, is unchanged). Not met: two projects' different conclusions (K5) are not shown and no recommendation is produced live until the recommender prompt is measured (R41; K488, K491); R34."
+   "note": "Built at the plane (T15-T17); no member surface yet (the old interface, civicos-ui/app.html, is frozen, K633). Not met: two projects' different conclusions (K5) are not shown and no recommendation is produced live until the recommender prompt is measured (R41; K488, K491); R34."
   },
   {
    "id": "contradiction-notice",
@@ -3489,7 +3493,7 @@
      "rung": "off-ladder",
      "rungGround": "read",
      "rungSrc": "a read, never an act (NON_ACTS.publishpreflight, bio-plane/src/affordances.mjs)",
-     "note": "write-free: answers ready, first, blockers and the steps for the five screens, the uncleared hunch first; the ceremony screens are not built",
+     "note": "write-free: answers ready, first, blockers and the steps for the five screens, the uncleared hunch first; an assistant's key is held to the machine fences, the pre-flight reading the agent credential the door stamps (ratification R18; case-authoring R34; N407, N435: K692, K737, K832); the ceremony screens are not built",
      "surface": "none (built at the plane; no member surface yet)",
      "frequency": "occasional"
     },
@@ -3901,7 +3905,7 @@
      "op": "determine",
      "note": "no significance, rank or score allowed (R8); takes an optional cause (CAUSE_UNSTATED, CAUSE_NOT_EVIDENCED); a recommendation or policy key is refused RECOMMENDATION_IS_AN_ACTION (R22)",
      "rung": "reasoned",
-     "rungSrc": "RUNGS.determine = reasoned (K375, T11; affordances R2): a supersession asks its reason, NO_REASON (conformance R7); a first determination replaces nothing and asks none",
+     "rungSrc": "RUNGS.determine = reasoned (K375, T11; affordances R2): a supersession asks its reason, CONFORMANCE_NO_REASON (conformance R7, R23; its own code since T19, translation unchanged, K768); a first determination replaces nothing and asks none",
      "surface": "none",
      "frequency": "occasional"
     },
@@ -4180,14 +4184,14 @@
     {
      "name": "Propose a clock entry from a profile deadline",
      "who": "any credential",
-     "src": "actions R32; action-clocks R2",
+     "src": "action-clocks R2 (was actions R32, K617)",
      "rung": "undetermined",
-     "rungSrc": "clockPropose (actions R32) has no op in RUNGS or RUNG_ABSENT that could be located; no rung ruled, so treated as reasoned until BOB assigns it (DEC-87)",
+     "rungSrc": "clockPropose (action-clocks R2) has no op in RUNGS or RUNG_ABSENT that could be located; no rung ruled, so treated as reasoned until BOB assigns it (DEC-87)",
      "surface": "none",
      "frequency": "occasional",
      "urgency": "time-bound",
      "urgencySrc": "the entry is a profile deadline (actions R32; jurisdictions R26)",
-     "note": "held by action-clocks R2 (actions R32 retired, K617); rung still undetermined"
+     "note": "held by action-clocks R2 (actions R32 retired, K617)"
     },
     {
      "name": "Create an action (directly, or by starting an option)",
@@ -4195,8 +4199,8 @@
      "src": "actions R47; action-plans R18",
      "op": "actioncreate",
      "rung": "undetermined",
-     "rungSrc": "not in affordances; by affordances R27's rule (reasoned when it asks an authored reason; reversible when a published act takes it back; undetermined where neither holds) neither holds; treated as reasoned until BOB assigns it (DEC-87)",
-     "surface": "partial (the old interface's intake writes {state: named, name}, which actions R9 refuses: N-A13, joins N389)",
+     "rungSrc": "RUNG_ABSENT.actioncreate (ground undetermined; the same write as promoting an action document; K705, K723) (bio-plane/src/affordances.mjs; affordances R3, R27); treated as reasoned until BOB assigns it (DEC-87)",
+     "surface": "partial (the old interface's intake writes {state: named, name}, which actions R9 refuses: N-A13, joins N389; the old interface is frozen, K633)",
      "frequency": "occasional",
      "frequencySrc": "worker's judgement from PATH.md §2 (basis open)"
     },
@@ -4204,26 +4208,24 @@
      "name": "Name the group's contact",
      "who": "member (MACHINE_CANNOT_SET_CONTACT)",
      "src": "actions R45; D5",
-     "rung": "reversible",
-     "rungSrc": "not in affordances; derived by affordances R27's rule (reasoned when it asks an authored reason; reversible when a published act takes it back; undetermined where neither holds): a member changes it",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "rung": "undetermined",
+     "rungSrc": "no op of its own: the contact is a field set at creation through actioncreate or optionstart (both RUNG_ABSENT, ground undetermined; K723, K732) or changed by a revision of the action's document; treated as reasoned until BOB assigns it (DEC-87)",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "occasional",
-     "frequencySrc": "worker's judgement from PATH.md §2 (basis open)",
-     "rungRuled": false,
-     "note": "weight proposed from affordances R27 / DEC-88 analogy, not yet ruled"
+     "frequencySrc": "worker's judgement from PATH.md §2 (basis open)"
     },
     {
      "name": "Proceed on an unestablished premise (override, with a reason)",
      "who": "member",
      "src": "actions R8 as amended",
      "rung": "reasoned",
-     "rungSrc": "derived by affordances R27's rule (reasoned when it asks an authored reason; reversible when a published act takes it back; undetermined where neither holds): a reason is required",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "rungSrc": "no op of its own: the override is a field of actioncreate or optionstart, both graded undetermined in the code (RUNG_ABSENT; K723, K732); derived reasoned by affordances R27's rule because a reason is required (actions R8); not yet ruled",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "occasional",
      "frequencySrc": "worker's judgement from PATH.md §2 (basis open)",
      "rungRuled": false,
      "friction": "Full dialog (DEC-88 consequence-in-the-world rule)",
-     "note": "weight proposed from affordances R27 / DEC-88 analogy, not yet ruled"
+     "note": "built at the plane (K703, K837)"
     },
     {
      "name": "Mark a reply as pressure",
@@ -4231,8 +4233,8 @@
      "src": "actions R48",
      "op": "actionpressure",
      "rung": "undetermined",
-     "rungSrc": "not in affordances; undetermined by affordances R27's rule (reasoned when it asks an authored reason; reversible when a published act takes it back; undetermined where neither holds); treated as reasoned (DEC-87)",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "rungSrc": "RUNG_ABSENT.actionpressure (ground undetermined; a note describes it but no reason is asked, and no act removes a mark; K705, K723) (bio-plane/src/affordances.mjs; affordances R3, R27); treated as reasoned until BOB assigns it (DEC-87)",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "occasional",
      "frequencySrc": "worker's judgement from PATH.md §2 (basis open)"
     }
@@ -4245,9 +4247,9 @@
     "'Rests on an unestablished premise' with its reason, author and time when overridden (actions R8; filings R24)",
     "an overdue clock entry reaches the member who created it as a queue CONDITION, once (queue-producers R15)"
    ],
-   "maturity": "built, gaps",
-   "src": "actions Purpose, Terms, R1-R32; State Rules §4.4; actions R7-R9, R25, R44-R49 (tranche/T18 @ c40e7e09d6); action-clocks R1-R3; K590; K600; K603 (renumbering R44-R48 → R45-R49); K611; K617",
-   "note": "The Action fold's R7 'completed', R8 override, R9's new addressee arms and R45-R49 are specified in T18, not built. Requirement ids are T18's (actions R48 pressure, R49 grades; K603, K611)."
+   "maturity": "built",
+   "src": "actions Purpose, Terms, R1-R51; action-grammar R1-R11; State Rules §4.4; action-clocks R1-R3; K590; K600; K603 (renumbering R44-R48 → R45-R49); K611; K617; K700; K703; K709; K835; K837",
+   "note": "The Action fold is built at the plane (T18): R7 'completed', R8's premise override, R9's addressees beyond offices (a person named through entities refused, K709), R45 the group's contact, R46 the plan link (PLAN_LINK_REFUSED, K700), R47 the create op, R48 pressure and R49 no grade floor (K703, K707, K709; marks R45-R49 struck K837; R7-R9's marks still stand in the file). In T19 its grammar moved to action-grammar (K835, K837). No member surface for the new parts yet; the old interface is frozen (K633)."
   },
   {
    "id": "filing",
@@ -4383,8 +4385,8 @@
     "communication drafts are their own construct (communication-draft); a filing can be filled from the group's own template (group-template)"
    ],
    "maturity": "built, gaps",
-   "src": "filings Purpose, Terms, R1-R15, R21; filings R8, R22-R26 (tranche/T18 @ c40e7e09d6); K597 (3); K600; K613 (3)",
-   "note": "filings R22-R26 are specified in T18, not built."
+   "src": "filings Purpose, Terms, R1-R26; K597 (3); K600; K613 (3); K701; K706; K839",
+   "note": "filings R22-R26 are built at the plane (T18: the in-band stamp, communication drafts, override disclosure, exhibit grades beside the venue's standard, the group's templates; K701, K706; marks struck K839); no member surface yet. Gap: the first profile has no Tier 1-2 templates (N-A14: legal text Bob supplies or approves, and a source), so a real group prepares a filing only from a template of its own (KIND_NO_TEMPLATE otherwise)."
   },
   {
    "id": "escalation",
@@ -4489,7 +4491,7 @@
      "to": "refused",
      "act": "attach an action carrying a premise override",
      "who": "member",
-     "src": "escalation R23 (ACTION_PREMISE_OVERRIDDEN; not yet met)"
+     "src": "escalation R23 (ACTION_PREMISE_OVERRIDDEN; built T18, K708)"
     }
    ],
    "keyFields": [
@@ -4586,15 +4588,15 @@
     "the plan never opens, advances or ends an escalation (action-plans R18; canon §5 row 11)"
    ],
    "maturity": "built, gaps",
-   "src": "escalation Purpose, Terms, R1-R16; layers.md layer 9 ruling 3; DEC-89; escalation R16, R22-R23; queue-producers R17; docs/architecture/BIO_Action_v0_1.md (canon whole, K608 (1)) §5 rows 2-3, §6",
-   "note": "Canon says seven stages everywhere and that a member advances a stage (BIO_Action §6). R22-R23 and the queue wiring are specified in T18, not built. DEC-89's required opening reason and 'decline to escalate' act are decided and carried by no T18 requirement."
+   "src": "escalation Purpose, Terms, R1-R25; layers.md layer 9 ruling 3; DEC-89; queue-producers R17; docs/architecture/BIO_Action_v0_1.md (canon whole, K608 (1)) §5 rows 2-3, §6; K708; K728",
+   "note": "Canon says seven stages everywhere and that a member advances a stage (BIO_Action §6). The plan's reads (R16, R22), the refusal of an overridden action (R23) and the queue's stage-proposed OBLIGATION are built at the plane (T18: K708, K728); no member surface yet. DEC-89's required opening reason and 'decline to escalate' act are decided and carried by no requirement yet."
   },
   {
    "id": "action-plan",
    "name": "Action plan",
    "plainDefinition": "A project's working notes for deciding what to do about one or more matters, whether only suspected or already determined: the options it could take, which it chose or declined and why, up to three ways of laying the chosen ones out over time, and what each started option became. It holds no costs, budgets, assignees or hours, and it is never published.",
    "layer": 9,
-   "module": "action-plans (new; last in layer 9)",
+   "module": "action-plans (layer 9, last)",
    "states": [
     {
      "name": "open",
@@ -4644,8 +4646,8 @@
      "src": "action-plans R1-R2; PATH.md §2 step 1",
      "op": "planopen",
      "rung": "undetermined",
-     "rungSrc": "not in affordances RUNGS or RUNG_ABSENT: the affordances for PLN- subjects are not in T18 (current.md 'Not in T18': 'affordances for PLN- subjects and the plan-page surface'), so no rung is ruled; by affordances R27's rule (reasoned when it asks an authored reason; reversible when a published act takes it back; undetermined where neither holds) neither holds: it asks a title, not a reason, and closing a plan ends it without taking the opening back; treated as reasoned until BOB assigns it (DEC-87)",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "rungSrc": "RUNG_ABSENT.planopen (ground undetermined; no reason is asked, and closing a plan does not take the opening back; K732) (bio-plane/src/affordances.mjs; affordances R3, R27); treated as reasoned until BOB assigns it (DEC-87)",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "occasional",
      "frequencySrc": "worker's judgement from PATH.md §2 (basis open)",
      "memberLabel": "Plan what to do",
@@ -4657,12 +4659,10 @@
      "src": "action-plans R4",
      "op": "plansubjectadd",
      "rung": "reasoned",
-     "rungSrc": "not in affordances RUNGS or RUNG_ABSENT: the affordances for PLN- subjects are not in T18 (current.md 'Not in T18': 'affordances for PLN- subjects and the plan-page surface'), so no rung is ruled; derived by affordances R27's rule (reasoned when it asks an authored reason; reversible when a published act takes it back; undetermined where neither holds): it requires a reason (PLAN_NO_REASON)",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "rungSrc": "RUNGS.plansubjectadd = reasoned (K732; it requires a reason, PLAN_NO_REASON) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "occasional",
-     "frequencySrc": "worker's judgement from PATH.md §2 (basis open)",
-     "rungRuled": false,
-     "note": "weight proposed from affordances R27 / DEC-88 analogy, not yet ruled"
+     "frequencySrc": "worker's judgement from PATH.md §2 (basis open)"
     },
     {
      "name": "Remove a subject (with a reason)",
@@ -4670,12 +4670,11 @@
      "src": "action-plans R4",
      "op": "plansubjectremove",
      "rung": "reasoned",
-     "rungSrc": "not in affordances RUNGS or RUNG_ABSENT: the affordances for PLN- subjects are not in T18 (current.md 'Not in T18': 'affordances for PLN- subjects and the plan-page surface'), so no rung is ruled; derived by affordances R27's rule (reasoned when it asks an authored reason; reversible when a published act takes it back; undetermined where neither holds): it requires a reason",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "rungSrc": "RUNGS.plansubjectremove = reasoned (K732; it requires a reason, PLAN_NO_REASON) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "occasional",
      "frequencySrc": "worker's judgement from PATH.md §2 (basis open)",
-     "rungRuled": false,
-     "note": "options still serving it keep it and are marked subject_removed; weight proposed from affordances R27 / DEC-88 analogy, not yet ruled"
+     "note": "options still serving it keep it and are marked subject_removed"
     },
     {
      "name": "Read the plan",
@@ -4684,7 +4683,7 @@
      "op": "plan",
      "rung": "off-ladder",
      "rungSrc": "a read, not a record act",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "daily",
      "frequencySrc": "worker's judgement from PATH.md §2 (basis open)",
      "rungGround": "read"
@@ -4696,7 +4695,7 @@
      "op": "plans",
      "rung": "off-ladder",
      "rungSrc": "a read, not a record act",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "daily",
      "frequencySrc": "worker's judgement from PATH.md §2 (basis open)",
      "rungGround": "read"
@@ -4707,14 +4706,12 @@
      "src": "action-plans R20",
      "op": "planclose",
      "rung": "reasoned",
-     "rungSrc": "not in affordances RUNGS or RUNG_ABSENT: the affordances for PLN- subjects are not in T18 (current.md 'Not in T18': 'affordances for PLN- subjects and the plan-page surface'), so no rung is ruled; derived by affordances R27's rule (reasoned when it asks an authored reason; reversible when a published act takes it back; undetermined where neither holds): it requires a reason. No act reopens a plan, so BOB may weigh it terminal when assigning",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "rungSrc": "RUNGS.planclose = reasoned (K732; it requires a reason, PLAN_NO_REASON; no act reopens a plan) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "occasional",
      "frequencySrc": "worker's judgement from PATH.md §2 (basis open)",
-     "rungRuled": false,
      "memberLabel": "Close plan…",
-     "memberLabelSrc": "build/plan/action-design/plan-page.html (approved by Bob, K608 (4))",
-     "note": "weight proposed from affordances R27 / DEC-88 analogy, not yet ruled"
+     "memberLabelSrc": "build/plan/action-design/plan-page.html (approved by Bob, K608 (4))"
     }
    ],
    "shownAs": [
@@ -4722,9 +4719,9 @@
     "hunch debt at the top when the plan rests only on hypothetical subjects (PATH.md §2 step 2)",
     "never a cost, budget, assignee, score or priority (action-plans R26; PATH.md §3)"
    ],
-   "maturity": "specified, not built",
-   "note": "Specified in T18, not built (action-plans R1-R29, not yet met; K608, K614).",
-   "src": "action-plans Purpose, Terms, R1-R29 (tranche/T18 @ c40e7e09d6); docs/architecture/BIO_Action_v0_1.md (canon whole, K608 (1)) §3, §4 rules 3, 8; Bob's rulings 1-10 (K590); DEC-25",
+   "maturity": "built, gaps",
+   "note": "Built at the plane in T18 (action-plans R1-R34: 16 services, 15 ops, a PLN- record object; K711) and re-pointed in T19 (R11, R18, R29, R31; K839); no member surface yet. Not built: the acts a plan offers a member per subject (affordances for PLN- subjects) and the plan page itself, which wait on Bob's UX order (K608 (4); draft-T20.md deferrals). The old interface is frozen (K633).",
+   "src": "action-plans Purpose, Terms, R1-R34; build/plan/archive/T18.md layer 9 (K711), T19.md layer 9 (K839); docs/architecture/BIO_Action_v0_1.md (canon whole, K608 (1)) §3, §4 rules 3, 8; Bob's rulings 1-10 (K590); DEC-25",
    "basis": "fixed"
   },
   {
@@ -4802,9 +4799,9 @@
     "support in words, never colour alone (PATH.md §2 step 2)",
     "a subject is in at most one open plan per project; another project may hold it too (action-plans R3)"
    ],
-   "maturity": "specified, not built",
-   "note": "Specified in T18, not built.",
-   "src": "action-plans Terms, R1, R3-R5, R8; PATH.md §2 steps 1-2",
+   "maturity": "built",
+   "note": "Built at the plane in T18 (action-plans R1, R3-R5, R8; K711); no member surface yet.",
+   "src": "action-plans Terms, R1, R3-R5, R8; PATH.md §2 steps 1-2; K710 (an inquiry is the project's when the project cites it; live states open, surfaced, deferred; 'short' derived against the project's bar when read); K711",
    "basis": "fixed",
    "namingNote": "The glossary also uses 'Subject' for an entity (a person, office, place, law or thing the record knows by name); both are kept, each pointing at the other. The approved plan page heads this part 'Subjects', while the canon (§3) and the matter-page view say 'matters'. Which word members see is Bob's to decide."
   },
@@ -4897,8 +4894,8 @@
      "src": "action-plans R9; PATH.md §2 step 4",
      "op": "optionadd",
      "rung": "undetermined",
-     "rungSrc": "not in affordances RUNGS or RUNG_ABSENT: the affordances for PLN- subjects are not in T18 (current.md 'Not in T18': 'affordances for PLN- subjects and the plan-page surface'), so no rung is ruled; by affordances R27's rule (reasoned when it asks an authored reason; reversible when a published act takes it back; undetermined where neither holds) neither holds: no reason is asked and no act removes an option (it is revised or declined); treated as reasoned until BOB assigns it (DEC-87)",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "rungSrc": "RUNG_ABSENT.optionadd (ground undetermined; no reason is asked and no act removes an option: it is revised or declined; K732) (bio-plane/src/affordances.mjs; affordances R3, R27); treated as reasoned until BOB assigns it (DEC-87)",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "occasional",
      "frequencySrc": "worker's judgement from PATH.md §2 (basis open)",
      "memberLabel": "Add option",
@@ -4910,12 +4907,10 @@
      "src": "action-plans R9",
      "op": "optionrevise",
      "rung": "reasoned",
-     "rungSrc": "not in affordances RUNGS or RUNG_ABSENT: the affordances for PLN- subjects are not in T18 (current.md 'Not in T18': 'affordances for PLN- subjects and the plan-page surface'), so no rung is ruled; derived by affordances R27's rule (reasoned when it asks an authored reason; reversible when a published act takes it back; undetermined where neither holds): a revision records its reason",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "rungSrc": "RUNGS.optionrevise = reasoned (K732; it requires a reason, PLAN_NO_REASON) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "occasional",
-     "frequencySrc": "worker's judgement from PATH.md §2 (basis open)",
-     "rungRuled": false,
-     "note": "weight proposed from affordances R27 / DEC-88 analogy, not yet ruled"
+     "frequencySrc": "worker's judgement from PATH.md §2 (basis open)"
     },
     {
      "name": "Adopt a suggestion as an option",
@@ -4923,8 +4918,8 @@
      "src": "action-plans R11",
      "op": "optionadopt",
      "rung": "undetermined",
-     "rungSrc": "not in affordances RUNGS or RUNG_ABSENT: the affordances for PLN- subjects are not in T18 (current.md 'Not in T18': 'affordances for PLN- subjects and the plan-page surface'), so no rung is ruled; by affordances R27's rule (reasoned when it asks an authored reason; reversible when a published act takes it back; undetermined where neither holds) neither holds (no reason asked; a proposal is adopted at most once); treated as reasoned until BOB assigns it (DEC-87)",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "rungSrc": "RUNG_ABSENT.optionadopt (ground undetermined; a proposal is adopted at most once; K732) (bio-plane/src/affordances.mjs; affordances R3, R27); treated as reasoned until BOB assigns it (DEC-87)",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "occasional",
      "frequencySrc": "worker's judgement from PATH.md §2 (basis open)",
      "memberLabel": "Adopt",
@@ -4936,14 +4931,13 @@
      "src": "action-plans R13, R29; PATH.md §2 step 6",
      "op": "optiondispose",
      "rung": "reasoned",
-     "rungSrc": "mixed, graded here by its heavier arm: not in affordances RUNGS or RUNG_ABSENT: the affordances for PLN- subjects are not in T18 (current.md 'Not in T18': 'affordances for PLN- subjects and the plan-page surface'), so no rung is ruled; derived by affordances R27's rule (reasoned when it asks an authored reason; reversible when a published act takes it back; undetermined where neither holds): chosen, done and back to undecided are reversible (a further dispose takes them back); declined and blocked are reasoned (a reason is required, R13)",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "rungSrc": "RUNGS.optiondispose = reasoned (K732; declining or blocking requires a reason, PLAN_NO_REASON; choosing or undeciding asks none, graded by its heavier arm) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "occasional",
      "frequencySrc": "worker's judgement from PATH.md §2 (basis open)",
-     "rungRuled": false,
      "memberLabel": "Choose / Decline",
      "memberLabelSrc": "build/plan/action-design/plan-page.html (approved by Bob, K608 (4))",
-     "note": "Choosing an option that carries regulated dates asks when to be reminded of each, from defaults shown and changeable right there (R29; DEC-94 (1); DEC-77); weight proposed from affordances R27 / DEC-88 analogy, not yet ruled"
+     "note": "Choosing an option that carries regulated dates asks when to be reminded of each, from defaults shown and changeable right there (R29; DEC-94 (1); DEC-77)"
     },
     {
      "name": "Start a chosen option (creates the action)",
@@ -4951,8 +4945,8 @@
      "src": "action-plans R18; PATH.md §2 step 9",
      "op": "optionstart",
      "rung": "undetermined",
-     "rungSrc": "not in affordances RUNGS or RUNG_ABSENT: the affordances for PLN- subjects are not in T18 (current.md 'Not in T18': 'affordances for PLN- subjects and the plan-page surface'), so no rung is ruled; by affordances R27's rule (reasoned when it asks an authored reason; reversible when a published act takes it back; undetermined where neither holds) neither holds (no reason asked unless overriding); treated as reasoned until BOB assigns it (DEC-87)",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "rungSrc": "RUNG_ABSENT.optionstart (ground undetermined; actioncreate's ground: no reason asked unless overriding; K732) (bio-plane/src/affordances.mjs; affordances R3, R27); treated as reasoned until BOB assigns it (DEC-87)",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "occasional",
      "frequencySrc": "worker's judgement from PATH.md §2 (basis open)",
      "friction": "Full dialog (the ACT preview) whatever its rung: DEC-88's rule that an act that is a step toward something leaving the group opens the full dialog stating that effect; PATH.md §2 step 9 shows what the action will say, what it rests on and what it would refuse before anything runs",
@@ -4965,15 +4959,15 @@
      "src": "actions R8 as amended; action-plans R18; filings R24; docs/architecture/BIO_Action_v0_1.md (canon whole, K608 (1)) §4 rule 2; K600 (a)",
      "op": "optionstart / actioncreate (premise_override)",
      "rung": "reasoned",
-     "rungSrc": "derived by affordances R27's rule (reasoned when it asks an authored reason; reversible when a published act takes it back; undetermined where neither holds): the override requires a stated reason (actions R8); not yet in RUNGS",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "rungSrc": "no op of its own: the override is a field of optionstart or actioncreate, both graded undetermined in the code (RUNG_ABSENT; K723, K732); derived reasoned by affordances R27's rule because the override requires a stated reason (actions R8); not yet ruled",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "occasional",
      "frequencySrc": "worker's judgement from PATH.md §2 (basis open)",
      "rungRuled": false,
      "friction": "Full dialog: the disclosure 'Rests on an unestablished premise' travels with the action and everything prepared from it (filings R24) and is visible to every reader (canon §4 rule 2); DEC-88's consequence-in-the-world rule",
      "memberLabel": "Proceed with this reason",
      "memberLabelSrc": "build/plan/action-design/start-and-send.html (design view, not stated as approved)",
-     "note": "weight proposed from affordances R27 / DEC-88 analogy, not yet ruled"
+     "note": "built at the plane (actions R8 as amended; K703, K837)"
     }
    ],
    "shownAs": [
@@ -4983,9 +4977,9 @@
     "the profile's venues and legal organisations beside a legal option, labelled as facts, never recommendations (PATH.md §2 step 5; filings R21 availableActions; Bob's ruling 2)",
     "'adopted from a suggestion' tag on an option that came from the assistant (build/plan/action-design/plan-page.html (approved by Bob, K608 (4)))"
    ],
-   "maturity": "specified, not built",
-   "note": "Specified in T18, not built.",
-   "src": "action-plans R9-R13, R18, R26, R29; PATH.md §2 steps 4-6, 9",
+   "maturity": "built",
+   "note": "Built at the plane in T18 (action-plans R9-R13, R18, R26, R29; K711), its start answering CONTACT_NOT_A_MEMBER and REMINDER_REFUSED through actions' and action-clocks' exports (N427, T19: K836, K837); no member surface yet.",
+   "src": "action-plans R9-R13, R18, R26, R29; PATH.md §2 steps 4-6, 9; K711; K836; K837",
    "basis": "fixed"
   },
   {
@@ -4993,7 +4987,7 @@
    "name": "Suggested option (the assistant's proposal)",
    "plainDefinition": "An option the assistant (or anyone) suggests for a plan, with a short why. It is held apart and marked as a suggestion; it is not part of the plan until a member adopts it.",
    "layer": 9,
-   "module": "action-plans (the suggestions come from an action-planning run: skills R28)",
+   "module": "action-plans (the suggestions come from a planning run: skills R28-R29, agent-worker R50-R53)",
    "states": [
     {
      "name": "proposed",
@@ -5029,7 +5023,7 @@
    "keyFields": [
     "R9's fields",
     "why (at most 500 characters)",
-    "proposer and machine-work label (proposalLabel subject plan_option)",
+    "proposer and machine-work label (proposalLabel subject plan_option); for a machine's proposal its run, skill version and sources, and the fixed disclosure 'Suggested by the assistant (machine work) in run RUN-…, under skill version …. It is not the group's decision; it becomes an option only when a member adopts it.' (action-plans R31-R32)",
     "the project's kind of work it was suggested for"
    ],
    "acts": [
@@ -5038,24 +5032,38 @@
      "who": "assistant (an action-planning run) or any credential",
      "src": "action-plans R11; skills R28; PATH.md §2 step 3",
      "op": "optionpropose",
-     "rung": "reversible",
-     "rungSrc": "not ruled for this op; DEC-88 graded the analogous proposal acts theorypropose, actionlawspropose and filingprepare reversible",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "rung": "undetermined",
+     "rungSrc": "RUNG_ABSENT.optionpropose (ground undetermined; a proposal is machine work held apart; DEC-88 graded the analogous proposal acts theorypropose, actionlawspropose and filingprepare reversible; K732) (bio-plane/src/affordances.mjs; affordances R3, R27); treated as reasoned until BOB assigns it (DEC-87)",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "occasional",
      "frequencySrc": "worker's judgement from PATH.md §2 (basis open)",
-     "rungRuled": false,
      "memberLabel": "Suggest options",
      "memberLabelSrc": "build/plan/action-design/PATH.md §2 step 3",
-     "note": "The run mode that makes the assistant propose options is not in T18 (current.md 'Not in T18': 'running the planning skill'); the op exists in T18; weight proposed from affordances R27 / DEC-88 analogy, not yet ruled"
+     "note": "a machine's proposal names its planning run and is refused unless that run is running in mode plan for this plan (PROPOSAL_NO_RUN, PROPOSAL_RUN_NOT_RUNNING, PROPOSAL_RUN_OTHER_PLAN, PROPOSAL_BOUND_REACHED; action-plans R31); the plan mode is not deployed yet (run-rules R14; K660 (5))"
+    },
+    {
+     "name": "See the suggestions five at a time; ask for the next five",
+     "who": "any viewer who may see the plan",
+     "src": "action-plans R34; Bob, 2026-09-30 (K660 (2))",
+     "op": "planproposals",
+     "rung": "off-ladder",
+     "rungGround": "read",
+     "rungSrc": "a read, not a record act (action-plans R34 writes nothing)",
+     "note": "the run's five strongest first, in the assistant's order, with no score, rank figure or strength; 'next' gives the following five until none remain; a cursor this read did not give is PROPOSALS_CURSOR_REFUSED",
+     "surface": "none (built at the plane; no member surface yet)",
+     "frequency": "occasional",
+     "frequencySrc": "worker's judgement from PATH.md §2 step 3 (basis open)"
     }
    ],
    "shownAs": [
     "a separate tray marked as the assistant's, each with why; the project's kind of work named at the tray's head (PATH.md §2 step 3)",
-    "never inside the options before a member adopts it (PATH.md §3)"
+    "never inside the options before a member adopts it (PATH.md §3)",
+    "five at a time, strongest first, in the assistant's order; no score, rank figure or strength is kept or shown (action-plans R34; K660 (2))",
+    "the disclosure stops at adoption: an adopted option keeps it, with who adopted it, from which run and when; the action started from it and anything sent from that action do not carry it (action-plans R32; K660 (6))"
    ],
-   "maturity": "specified, not built",
-   "note": "Specified in T18, not built; the assistant's run mode that fills it is T19.",
-   "src": "action-plans R11, R21, R24; skills R28; PATH.md §2 step 3",
+   "maturity": "built, gaps",
+   "note": "Built at the plane in T18 (action-plans R11, R21, R24, R30-R34; K711), and the assistant's planning run is built (agent-worker R50-R53, skills R28-R29, run-rules R13-R15; K683). Not deployed: the plan mode is switched on as soon as the assistant runs model turns, with no separate act of Bob's (run-rules R14; K660 (5)); until then only a member's own proposal reaches the tray. No member surface yet.",
+   "src": "action-plans R11, R21, R24, R30-R34; skills R28-R29; agent-worker R50-R53; run-rules R13-R14; PATH.md §2 step 3; Bob, 2026-09-30 (K660); K683; K711",
    "basis": "fixed"
   },
   {
@@ -5094,20 +5102,18 @@
      "src": "action-plans R14-R15; PATH.md §2 step 7",
      "op": "scenarioset",
      "rung": "reversible",
-     "rungSrc": "not in affordances RUNGS or RUNG_ABSENT: the affordances for PLN- subjects are not in T18 (current.md 'Not in T18': 'affordances for PLN- subjects and the plan-page surface'), so no rung is ruled; derived by affordances R27's rule (reasoned when it asks an authored reason; reversible when a published act takes it back; undetermined where neither holds): a further scenarioset replaces it (earlier versions kept)",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "rungSrc": "RUNGS.scenarioset = reversible (K732; a further one replaces it, kept in history; action-plans R14) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "occasional",
-     "frequencySrc": "worker's judgement from PATH.md §2 (basis open)",
-     "rungRuled": false,
-     "note": "weight proposed from affordances R27 / DEC-88 analogy, not yet ruled"
+     "frequencySrc": "worker's judgement from PATH.md §2 (basis open)"
     }
    ],
    "shownAs": [
     "up to three, as phases in order with their start words ('at the start', 'after Mitigation', 'if not met') and checkpoints (PATH.md §2 step 7)",
     "a check flags a regulated date that falls before its phase can start, a judgement with no branch for one outcome, and a scenario whose outward options have no branch answering a hostile response (action-plans R19)"
    ],
-   "maturity": "specified, not built",
-   "note": "Specified in T18, not built.",
+   "maturity": "built",
+   "note": "Built at the plane in T18 (action-plans R14-R15, R19; K711); no member surface yet.",
    "src": "action-plans R14-R15, R19; Bob's ruling 8 (K590); PATH.md §2 step 7",
    "basis": "fixed"
   },
@@ -5174,8 +5180,8 @@
      "src": "action-plans R16; PATH.md §2 step 8",
      "op": "checkpointrecord",
      "rung": "undetermined",
-     "rungSrc": "not in affordances RUNGS or RUNG_ABSENT: the affordances for PLN- subjects are not in T18 (current.md 'Not in T18': 'affordances for PLN- subjects and the plan-page surface'), so no rung is ruled; by affordances R27's rule (reasoned when it asks an authored reason; reversible when a published act takes it back; undetermined where neither holds) neither holds: R16 takes a note but does not require it, and a judged checkpoint cannot be re-judged (CHECKPOINT_JUDGED); treated as reasoned until BOB assigns it (DEC-87)",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "rungSrc": "RUNG_ABSENT.checkpointrecord (ground undetermined; a note is optional and a judged checkpoint is never re-judged, CHECKPOINT_JUDGED; K732) (bio-plane/src/affordances.mjs; affordances R3, R27); treated as reasoned until BOB assigns it (DEC-87)",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "rare (once per checkpoint)",
      "frequencySrc": "worker's judgement from PATH.md §2 (basis open)",
      "urgency": "time-bound",
@@ -5188,8 +5194,8 @@
     "'judged by a member, never by the system' (build/plan/action-design/plan-page.html (approved by Bob, K608 (4)))",
     "the queue item marked as the group's own, never as a finding about the city (PATH.md §3)"
    ],
-   "maturity": "specified, not built",
-   "note": "Specified in T18, not built.",
+   "maturity": "built",
+   "note": "Built at the plane in T18 (action-plans R14, R16-R17, R23; the queue's plan-checkpoint-due OBLIGATION, queue-producers R16; K711, K728); no member surface yet.",
    "src": "action-plans R14, R16-R17, R23; queue-producers R16; queue R1, R12",
    "basis": "fixed"
   },
@@ -5259,15 +5265,13 @@
      "who": "any credential; the assistant drafts, a member edits",
      "src": "filings R23; PATH.md §2 step 10",
      "op": "communicationprepare",
-     "rung": "reversible",
-     "rungSrc": "not ruled for this op; DEC-88 grades filingprepare, its twin, reversible",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "rung": "undetermined",
+     "rungSrc": "RUNG_ABSENT.communicationprepare (ground undetermined; filingprepare's ground; DEC-88 grades its twin filingprepare reversible, not yet in the code; K705, K723) (bio-plane/src/affordances.mjs; affordances R3, R27); treated as reasoned until BOB assigns it (DEC-87)",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "occasional",
      "frequencySrc": "worker's judgement from PATH.md §2 (basis open)",
-     "rungRuled": false,
      "memberLabel": "Draft message",
-     "memberLabelSrc": "build/plan/action-design/PATH.md §2 step 10",
-     "note": "weight proposed from affordances R27 / DEC-88 analogy, not yet ruled"
+     "memberLabelSrc": "build/plan/action-design/PATH.md §2 step 10"
     },
     {
      "name": "Approve the text",
@@ -5276,7 +5280,7 @@
      "op": "filingapprove",
      "rung": "terminal",
      "rungSrc": "DEC-88 (Bob, 2026-09-29) grades filingapprove terminal; filings R23 applies the same act to a communication",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "occasional",
      "frequencySrc": "worker's judgement from PATH.md §2 (basis open)",
      "rungRuled": "DEC-88",
@@ -5291,7 +5295,7 @@
      "op": "filingsent",
      "rung": "reasoned",
      "rungSrc": "DEC-88 grades filingsent reasoned; the same act applies to a communication",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "occasional",
      "frequencySrc": "worker's judgement from PATH.md §2 (basis open)",
      "rungRuled": "DEC-88",
@@ -5305,9 +5309,9 @@
     "listed among the action's drafts, marked a communication (filings R23)",
     "the in-band stamp line on approved text (filings R22)"
    ],
-   "maturity": "specified, not built",
-   "note": "Specified in T18, not built (filings R22-R24 not yet met).",
-   "src": "filings R22-R24; D2 (K590); docs/architecture/BIO_Action_v0_1.md (canon whole, K608 (1)) §3, §4 rule 7; PATH.md §2 step 10",
+   "maturity": "built",
+   "note": "Built at the plane in T18 (filings R22-R24: the draft, the in-band stamp on approval, the override disclosure; K706; marks struck K839); no member surface yet.",
+   "src": "filings R22-R24; D2 (K590); docs/architecture/BIO_Action_v0_1.md (canon whole, K608 (1)) §3, §4 rule 7; PATH.md §2 step 10; K706; K839",
    "basis": "fixed"
   },
   {
@@ -5347,8 +5351,8 @@
      "src": "actions R48",
      "op": "actionpressure",
      "rung": "undetermined",
-     "rungSrc": "not in affordances; by affordances R27's rule (reasoned when it asks an authored reason; reversible when a published act takes it back; undetermined where neither holds) neither holds: a note describes it but no reason is asked, and no act removes a mark; treated as reasoned until BOB assigns it (DEC-87)",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "rungSrc": "RUNG_ABSENT.actionpressure (ground undetermined; a note describes it but no reason is asked, and no act removes a mark; K705, K723) (bio-plane/src/affordances.mjs; affordances R3, R27); treated as reasoned until BOB assigns it (DEC-87)",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "occasional",
      "frequencySrc": "worker's judgement from PATH.md §2 (basis open)",
      "memberLabel": "Mark a reply as pressure…",
@@ -5360,7 +5364,7 @@
      "src": "actions R48 ('may be cited by an inquiry'); docs/architecture/BIO_Action_v0_1.md (canon whole, K608 (1)) §4 rule 12",
      "rung": "off-ladder",
      "rungSrc": "the inquiry's own opening act carries its rung; this is a way in, not a new op",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "occasional",
      "frequencySrc": "worker's judgement from PATH.md §2 (basis open)",
      "memberLabel": "Open an inquiry",
@@ -5372,8 +5376,8 @@
     "listed apart on the action's read (actions R25, R48)",
     "'kept as evidence (Operational Principle 8); can open an inquiry of its own' (build/plan/action-design/matter-page.html (design view, not stated as approved))"
    ],
-   "maturity": "specified, not built",
-   "note": "Specified in T18, not built (actions R48 not yet met); the litigation-hold queue item a legal-kind mark raises is T19 (K624 (5)), once the hold's act is designed.",
+   "maturity": "built",
+   "note": "Built at the plane in T18 (actions R48, with PRESSURE_REFUSED and PRESSURE_NO_ENTRY as new rows, K700; mark struck K837); no member surface yet. The litigation-hold item a legal-kind mark would raise is deferred until Bob designs the hold's act (N-A19; DEC-61).",
    "src": "actions R48; K597 (1); Operational Principle 8; Design Requirement 13; docs/architecture/BIO_Action_v0_1.md (canon whole, K608 (1)) §4 rule 12",
    "basis": "fixed"
   },
@@ -5382,7 +5386,7 @@
    "name": "Deadline reminder (the member's own request)",
    "plainDefinition": "A member's own request to be reminded, on a day they pick, of a dated deadline on one of the group's actions. It is usually set when a dated option is chosen, from defaults the member sees and can change. It fires once, as asked, and answering it offers another reminder or none. Nothing reminds anyone who did not ask.",
    "layer": 9,
-   "module": "action-clocks (new; first in layer 9)",
+   "module": "action-clocks (layer 9, after actions)",
    "states": [
     {
      "name": "waiting",
@@ -5456,28 +5460,28 @@
      "who": "member (their own only)",
      "src": "action-clocks R4; action-plans R29; PATH.md §2 step 6",
      "op": "reminderset",
-     "rung": "reversible",
-     "rungSrc": "not in affordances; derived by affordances R27's rule (reasoned when it asks an authored reason; reversible when a published act takes it back; undetermined where neither holds): a member changes or removes it at any time (R4)",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "rung": "off-ladder",
+     "rungSrc": "RUNG_ABSENT.reminderset (ground caller-owned: a member's own request, as queuesnooze; K732) (bio-plane/src/affordances.mjs; affordances R3)",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "occasional",
      "frequencySrc": "worker's judgement from PATH.md §2 (basis open)",
-     "rungRuled": false,
-     "note": "weight proposed from affordances R27 / DEC-88 analogy, not yet ruled"
+     "rungGround": "caller-owned",
+     "note": "needs no capability: a member's own attention (K727)"
     },
     {
      "name": "Answer a reminder: another on a later day, or none",
      "who": "the member who set it",
      "src": "action-clocks R6; queue R12 (door reminderanswer)",
      "op": "reminderanswer",
-     "rung": "reversible",
-     "rungSrc": "not in affordances; derived by affordances R27's rule (reasoned when it asks an authored reason; reversible when a published act takes it back; undetermined where neither holds): a further reminderset takes an answer of 'none' back (R4)",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "rung": "off-ladder",
+     "rungSrc": "RUNG_ABSENT.reminderanswer (ground caller-owned: a member's own request, as queuesnooze; K732) (bio-plane/src/affordances.mjs; affordances R3)",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "occasional",
      "frequencySrc": "worker's judgement from PATH.md §2 (basis open)",
-     "rungRuled": false,
      "urgency": "time-bound",
      "urgencySrc": "it fires on the day the member chose",
-     "note": "weight proposed from affordances R27 / DEC-88 analogy, not yet ruled"
+     "rungGround": "caller-owned",
+     "note": "needs no capability: a member's own attention (K727)"
     }
    ],
    "shownAs": [
@@ -5485,8 +5489,8 @@
     "no outside channel: no email or push (DEC-94 (3))",
     "the action's reminders listed with entry, day, who set it and state (remindersFor, action-clocks R4)"
    ],
-   "maturity": "specified, not built",
-   "note": "Specified in T18, not built (action-clocks R4-R6, R8 not yet met; the module is a DRAFT for BOB's review and Bob's approval, split from actions by K617).",
+   "maturity": "built",
+   "note": "Built at the plane in T18 (action-clocks R4-R6, R8; K704) and fired through the queue's action-reminder OBLIGATION (queue-producers R18; K728); no member surface yet. action-clocks' requirements file still reads DRAFT, for Bob's approval.",
    "src": "action-clocks R4-R6, R8; action-plans R29; queue-producers R18; DEC-94; DEC-10; DEC-69; DEC-70; DEC-77; K613-K615; K624 (3)",
    "basis": "fixed"
   },
@@ -5525,20 +5529,33 @@
      "name": "Keep this as a group template",
      "who": "member",
      "src": "filings R26; K613 (3)",
-     "op": "templatesave (name the job's to confirm)",
+     "op": "templatesave",
      "rung": "undetermined",
-     "rungSrc": "not in affordances; by affordances R27's rule (reasoned when it asks an authored reason; reversible when a published act takes it back; undetermined where neither holds) neither holds; treated as reasoned until BOB assigns it (DEC-87)",
-     "surface": "none (new; not built; the old interface has no plan surface)",
+     "rungSrc": "RUNG_ABSENT.templatesave (ground undetermined; K705, K723) (bio-plane/src/affordances.mjs; affordances R3, R27); treated as reasoned until BOB assigns it (DEC-87)",
+     "surface": "none (built at the plane; no member surface yet)",
      "frequency": "occasional",
      "frequencySrc": "worker's judgement from PATH.md §2 (basis open)"
+    },
+    {
+     "name": "List the group's templates",
+     "who": "any viewer who may see the project the template's approved draft drew on",
+     "src": "filings R26; K701",
+     "op": "templates",
+     "rung": "off-ladder",
+     "rungGround": "read",
+     "rungSrc": "a read, not a record act (templatesFor writes nothing)",
+     "note": "newest first, at most 200, saying when cut (truncated); optionally for one kind",
+     "surface": "none (built at the plane; no member surface yet)",
+     "frequency": "occasional",
+     "frequencySrc": "worker's judgement from PATH.md §2 step 10 (basis open)"
     }
    ],
    "shownAs": [
     "filingPrepare fills the profile's template for the kind or a group template the preparer names; KIND_NO_TEMPLATE only when neither exists (filings R26)"
    ],
-   "maturity": "specified, not built",
-   "note": "Specified in T18, not built (filings R26 not yet met; its refusal codes beyond MACHINE_CANNOT_SAVE_TEMPLATE are the job's to name).",
-   "src": "filings R26; K613 (3); K614",
+   "maturity": "built",
+   "note": "Built at the plane in T18 (filings R26, with the list of the group's templates, op=templates; K701, K706; marks struck K839); no member surface yet. The first profile's own Tier 1-2 templates are not written (N-A14: legal text Bob supplies or approves, and a source).",
+   "src": "filings R26; K613 (3); K614; K701",
    "basis": "fixed"
   },
   {
@@ -5658,8 +5675,8 @@
     "documents whose last check flagged them, and what the next archive tick would find (monitoring R47-R48)"
    ],
    "maturity": "built, gaps",
-   "src": "monitoring Purpose, Terms, R1-R35, R45; scheduler Purpose; monitoring R34, R35, R44, R50; scheduler R5; K591; K608",
-   "note": "The deadline recheck is scheduled (scheduler R5's deadline-recheck consumer; monitoring R50), so an overdue clock reaches members (monitoring R34 via queue-producers R15) and a proposed stage is asked of escalation (R35): specified in T18, not built; the overdue mark itself is built."
+   "src": "monitoring Purpose, Terms, R1-R35, R45, R50-R51; scheduler Purpose, R5; K591; K608; K717; K719; K728; K841",
+   "note": "The overdue path is built (T18): the daily deadline recheck (scheduler R5's deadline-recheck consumer, monitoring R50; K717, K719) marks an overdue clock, which reaches the member who created the action as a queue CONDITION, once (queue-producers R15), and a proposed stage is asked of escalation (R35) and reaches its opener (queue-producers R17; K728). An entry whose last mark failed is re-checked once a day, not on every alarm (R50, N429; T19: K841). Not yet met: named gathering requests, ratified sweeps, watching a finding's sources, the list of every watched address (R28-R29, R31-R33). R34's mark still stands in the file, though the callers it waits for are built."
   },
   {
    "id": "queue-item",
@@ -5733,11 +5750,11 @@
     "disposition",
     "item kinds: a newer capture affects a reference (adopt or keep), an objective gap, source modified or removed, archive fallback eligible, recheck due (queue R12; queue-producers R2-R3)",
     "a record contradiction waits as a duty until resolved, never muted or dismissed; a world one as a lead (DEC-76 item 3; DEC-84 (1)-(2); queue R46)",
-    "OBLIGATION kinds: contradiction-duty (instead clarify or take up; resolve once taken up), contradiction-duty-unseen, signer-self-registered (instead signerset; producer not built); each obligation's 'instead' names its own door (queue R1, R12; K607)",
+    "OBLIGATION kinds: contradiction-duty (instead clarify or take up; resolve once taken up), contradiction-duty-unseen, signer-self-registered (to every administrator; instead signerset; produced since T18, queue-producers R14, K728); each obligation's 'instead' names its own door (queue R1, R12; K607)",
     "FINDING kinds: contradiction-lead (dismiss or take up), contradiction-plurality (clarify or take up; not set aside), contradiction-plurality-unseen, side-corrected (reevaluationrecord), tension-after-publication (to project owners; instead publish a new edition) (queue R1, R46; queue-producers R4-R7)",
-    "obligations come from the tasks module: a task on a subject the viewer may not see reads as no task; the feed reads only open and forwarded tasks (tasks R3, R6; K565, K566)",
-    "specified T18: plan-checkpoint-due (OBLIGATION, the group's own; door checkpointrecord), escalation-stage-proposed (OBLIGATION; door escalationadvance, or escalationdecline), action-reminder (OBLIGATION to the member who set it and nobody else; door reminderanswer), action-clock-overdue (CONDITION, raised once per entry, notifying once)",
-    "T19, not T18: the litigation-hold item for a legal-kind pressure mark (K624 (5); N-A19; the hold's act is Bob's doctrine)"
+    "obligations come from the tasks module: a task on a subject the viewer may not see reads as no task; the feed reads only open and forwarded tasks, and only the viewer's own and unassigned ones (tasks R3, R6; K565, K566; N410's assignees filter, built T18: K723)",
+    "Action kinds, built T18 (K725, K728, K731): plan-checkpoint-due (OBLIGATION, the group's own; door checkpointrecord), escalation-stage-proposed (OBLIGATION; door escalationadvance, or escalationdecline), action-reminder (OBLIGATION to the member who set it and nobody else; door reminderanswer), action-clock-overdue (CONDITION, raised once per entry, notifying once)",
+    "deferred: the litigation-hold item for a legal-kind pressure mark, until Bob designs the hold's act (N-A19; DEC-61; kept by T19's final sweep and draft-T20.md)"
    ],
    "acts": [
     {
@@ -5809,7 +5826,8 @@
     "a nearing deadline changes position, colour or wording only (DEC-94 (2))"
    ],
    "maturity": "built, gaps",
-   "src": "queue Purpose, Terms, R1-R29, R39-R40, R46; tasks R1-R9; queue-producers R1-R9, R14; Interaction Constructs §QUEUE, DEC-10, DEC-16, DEC-36; K356, K565, K566, K606, K607; DEC-76; DEC-85; queue R1, R5, R12, R28; queue-producers R15-R18; K607; K611; K614"
+   "src": "queue Purpose, Terms, R1-R29, R39-R40, R46; tasks R1-R9; queue-producers R1-R9, R14 (built T18, K728); Interaction Constructs §QUEUE, DEC-10, DEC-16, DEC-36; K356, K565, K566, K606, K607; DEC-76; DEC-85; queue R1, R5, R12, R28; queue-producers R15-R18; K607; K611; K614; K723; K725; K728; K731",
+   "note": "The Action kinds and the administrators' signer item are built at the plane (T18: K725, K728, K731); no member surface for them yet."
   },
   {
    "id": "ai-run",
@@ -5860,14 +5878,14 @@
     }
    ],
    "keyFields": [
-    "mode (check / investigate / extract; only check deployed)",
+    "mode (check / investigate / extract / plan; only check deployed; plan deploys as soon as the assistant runs model turns: run-rules R14, K660 (5))",
     "context",
     "principals (who authorised, who pays)",
     "budget and bounds",
     "lens at open",
     "log of where it looked",
     "suggestions and proposed readings",
-    "the action_planning layer's clauses (skills R28)"
+    "the action_planning layer's clauses (skills R28-R29); a planning run reads its plan and the same project's earlier plans only, proposes through optionpropose alone and drafts no letter (agent-worker R50-R53; K660 (3), (4))"
    ],
    "acts": [
     {
@@ -5940,8 +5958,8 @@
     "a panel docked beside the surface it serves, expandable by a divider, docked at the side on wide screens and the bottom on narrow ones, never floating; 'the assistant did this, at <member>'s request' in the one 'Machine work' treatment; a wizard step highlights the real control and never fills or presses it (DEC-90)"
    ],
    "maturity": "built, gaps",
-   "src": "ai-runs Purpose, Terms, R9-R44; run-productions Purpose; AI Roles §2-§3; DEC-90; skills R28; current.md 'Not in T18'",
-   "note": "A new skill layer, action_planning, lets a run propose plan options, standards, comparisons, candidate theories and communication drafts under BIO_Action §4's rules, never acting (skills R28, specified T18). The run mode that proposes options through optionpropose is T19."
+   "src": "ai-runs Purpose, Terms, R9-R47; run-productions Purpose; run-rules R13-R15; skills R28-R29; agent-worker R50-R53; AI Roles §2-§3; DEC-90; Bob, 2026-09-30 (K660); K683",
+   "note": "The action_planning skill layer is built (skills R28-R29; K674, K683): a run may propose plan options, standards, comparisons, candidate theories and communication drafts under BIO_Action §4's rules, never acting. The plan mode that proposes options through optionpropose is built in the assistant and the plane (agent-worker R50-R53; run-rules R13-R15; K683, K711) and not deployed: it is switched on as soon as the assistant runs model turns, with no separate act of Bob's (run-rules R14; K660 (5)). skills R28-R29's marks still stand in the file."
   },
   {
    "id": "capture-request",
@@ -6055,7 +6073,7 @@
    "name": "Keys and credentials (signing key, AI credential, source login)",
    "plainDefinition": "The secrets that let a member sign publications, let the assistant work on the group's or a member's behalf, or let a refused source be fetched.",
    "layer": 2,
-   "module": "membership, capture-sources",
+   "module": "credentials (split from membership in T19: K757, K791; with capture-sources)",
    "states": [
     {
      "name": "signing key: active / revoked",
@@ -6145,7 +6163,7 @@
      "rung": "off-ladder",
      "rungGround": "credential",
      "rungSrc": "RUNG_ABSENT.signerregister (ground credential: a member registers their own signing key; the key, not what is signed with it) (bio-plane/src/affordances.mjs; affordances R2-R3)",
-     "note": "every administrator is named in the answer's notified list; the feed item offering them the revoke is catalogued, its producer not built (queue-producers R14, N375). A key another member holds is refused (SIGNER_KEY_HELD_BY_ANOTHER); a revoked key stays revoked (SIGNER_KEY_REVOKED). The browser side (a key made on the member's own device, confirmed by passphrase or device unlock at each use) is the interface's and not built",
+     "note": "every administrator is named in the answer's notified list; the feed item offering each of them the revoke is produced (queue-producers R14, built T18: K728). A key another member holds is refused (SIGNER_KEY_HELD_BY_ANOTHER); a revoked key stays revoked (SIGNER_KEY_REVOKED). The browser side (a key made on the member's own device, confirmed by passphrase or device unlock at each use) is the interface's and not built",
      "surface": "none (built at the plane; no member surface yet)",
      "frequency": "once",
      "op": "signerregister"
@@ -6189,7 +6207,7 @@
     "attests_why: key_revoked / member_absent / member_<status>"
    ],
    "maturity": "built",
-   "src": "membership R25-R30, R62, R89-R91; capture-sources Terms, R63; ratification R19; K509, K535, K565"
+   "src": "credentials R1-R20 (was membership R1-R3's session half, R25-R30, R59, R62, R70, R72-R73, R89-R91; K757); capture-sources Terms, R63; ratification R19; K509, K535, K565; K757; K791"
   }
  ],
  "relationships": [
@@ -6700,8 +6718,8 @@
    "to": "option-proposal",
    "verb": "proposes",
    "cardinality": "1 to many",
-   "note": "machine work, labelled; the run mode is T19",
-   "src": "action-plans R11, R24; skills R28"
+   "note": "machine work, labelled; five at a time, strongest first, no score (action-plans R34; K660); the plan mode is built and not yet deployed (run-rules R14)",
+   "src": "action-plans R11, R24, R31-R34; skills R28-R29; agent-worker R50-R53"
   },
   {
    "from": "action-plan",
@@ -7443,8 +7461,8 @@
      "actor": "member (the assistant proposes)",
      "act": "ask the assistant to 'Suggest options'; adopt any",
      "construct": "option-proposal",
-     "result": "suggestions in a separate tray; adopted ones become undecided options",
-     "src": "PATH.md §2 step 3; action-plans R11",
+     "result": "suggestions in a separate tray, five at a time, strongest first, with no score; the member asks for the next five; adopted ones become undecided options (the assistant's plan mode is not yet deployed)",
+     "src": "PATH.md §2 step 3; action-plans R11, R34; run-rules R14; K660",
      "basis": "fixed"
     },
     {
@@ -7766,13 +7784,8 @@
   },
   {
    "what": "Monitoring: named requests, ratified sweeps, watching a finding's sources, every watched address listed",
-   "why": "not yet met; in-process ticks, the pause and the due slate are built; overdue clock marks reaching members and escalation prompts are specified in T18 (see the Action items)",
-   "ids": "monitoring R28-R29, R31-R35"
-  },
-  {
-   "what": "Attribution in force per case edition read for review copy",
-   "why": "not yet met",
-   "ids": "publication R39 (K240)"
+   "why": "not yet met; in-process ticks, the pause, the due slate and the overdue path (the daily deadline recheck, the overdue clock as a CONDITION, the proposed stage asked of escalation; built T18: K717, K719, K728) are built",
+   "ids": "monitoring R28-R29, R31-R33"
   },
   {
    "what": "'Weakened' re-evaluation cause when a published finding's live pair falls below its frozen pair",
@@ -7790,11 +7803,6 @@
    "ids": "observation-log R20-R21 (D-682's frontier half, retrieval's)"
   },
   {
-   "what": "Release and retire of a document have no owning module's requirements yet: bulk release belongs to ratification (K583) and its code is still in legacy-store",
-   "why": "requirements not yet written; not carried in T18 (N400)",
-   "ids": "affordances R1; K583; next.md N400; plan/current.md 'not carried'"
-  },
-  {
    "what": "Grade A capture and further co-witnesses",
    "why": "deferred, with their trigger; canon reads Grade A as a ceiling, not a minimum: the venue sets the standard of evidence",
    "ids": "DEC-81 item 4; Intake Doctrine §3; GRADE-A-CAPTURE.md"
@@ -7810,9 +7818,9 @@
    "ids": "DEC-91; DEC-82"
   },
   {
-   "what": "Member surfaces absent: publish and ratify (the ceremony's five screens and signing with a browser-held key), start a CHECK run, frontier, bias, transcription, AI readings, contradictions and conflict notices, sources and consent, self-registered keys, the case's captures and sources blocks, the project's stage bars",
-   "why": "the old interface (civicos-ui/app.html) is unchanged and is being replaced by the redesign",
-   "ids": "System Design §3 rows 4, 7, 9, 11, 12, 13; next.md N371, N389; DEC-79; DEC-80"
+   "what": "Member surfaces absent: publish and ratify (the ceremony's five screens and signing with a browser-held key), start a CHECK run, frontier, bias, transcription, AI readings, contradictions and conflict notices, sources and consent, self-registered keys, the case's captures and sources blocks, the project's stage bars, and every Action screen (the plan page, the assistant tray, start and send, the action page's reminders, pressure and communications, the matter page)",
+   "why": "the old interface (civicos-ui/app.html) is frozen until the new interface replaces it (Bob, K633); the new interface's surfaces wait on the redesign and Bob's UX order",
+   "ids": "System Design §3 rows 4, 7, 9, 11, 12, 13; next.md N371, N389; DEC-79; DEC-80; K608 (4); K633"
   },
   {
    "what": "Discovery: an assistant that searches for what is working and what is not",
@@ -7825,24 +7833,24 @@
    "ids": "System Design §3 rows 7, 13; DEC-92"
   },
   {
-   "what": "Assistant: only CHECK mode deployed; investigate and extract refused as not deployed; assistant pilot flow absent. Its look is decided, not yet built: a panel docked beside the surface it serves (side on wide screens, bottom on narrow ones), expandable, never floating; its text carries the one 'Machine work' treatment, and a wizard step highlights the real control",
-   "why": "deployment order; the panel is decided, not yet built (DEC-90)",
-   "ids": "ai-runs R40, R44; AI Roles §2, §8; DEC-90"
+   "what": "Assistant: only CHECK mode deployed; investigate and extract refused as not deployed; the plan mode, which proposes options for one plan five at a time, strongest first, with no score, is built in the assistant and the plane and not deployed, so the tray holds only members' own proposals; assistant pilot flow absent. Its look is decided, not yet built: a panel docked beside the surface it serves (side on wide screens, bottom on narrow ones), expandable, never floating; its text carries the one 'Machine work' treatment, and a wizard step highlights the real control",
+   "why": "deployment order: plan is switched on as soon as the assistant runs model turns, with no separate act of Bob's (K660 (5)); the panel is decided, not yet built (DEC-90)",
+   "ids": "ai-runs R40, R44; run-rules R14; agent-worker R50-R53; action-plans R30-R34; AI Roles §2, §8; DEC-90; K660; draft-T20.md deferrals ('MODES.plan deployed')"
   },
   {
    "what": "Why a breach is, or is not, escalated: decided, not yet built. Opening an escalation requires a written reason, and a new reasoned act, 'decline to escalate', records why a group does not pursue one; both prose only",
-   "why": "decided, not yet built: the escalation and conformance requirement changes (the opening reason, the decline act and its read, and whether a determination was escalated, declined or neither) are owed, for Bob's approval; no plan entry yet; meanwhile a plan's declined option (action-plans R13) and a declined proposed stage (escalation R13, built) already record, with a reason, why a group does not pursue something",
+   "why": "decided, not yet built: the escalation and conformance requirement changes (the opening reason, the decline act and its read, and whether a determination was escalated, declined or neither) are owed, for Bob's approval; in no tranche's plan yet (not in T18, T19 or draft-T20.md); meanwhile a plan's declined option (action-plans R13) and a declined proposed stage (escalation R13) already record, with a reason, why a group does not pursue something",
    "ids": "DEC-89; conformance R8; escalation R1, R19; DEC-88 (the act's rung); action-plans R13; build/plan/action-design/UX-ANSWERS.md"
   },
   {
    "what": "DEC-88's rungs for 57 ops are ruled and not yet in the plane: 26 reversible, 29 reasoned, 2 terminal; six judgement calls carry high friction; friction by rung is ruled",
-   "why": "the code grades 61 ops undetermined (affordances R27 counts 61): DEC-88's 57, which BOB moves into RUNGS with a required reason where a reasoned act lacks one and the consequence statement for the six, and four newer ops DEC-88 does not grade (a separate item). inboxresolve's regrade to reasoned is overtaken: pulling is its own op, inboxpull. Acts with no op located are treated as reasoned (DEC-87)",
-   "ids": "DEC-87; DEC-88; affordances R3, R27; bio-plane/src/affordances.mjs RUNG_ABSENT; K481, K520, K530"
+   "why": "the code still grades 71 ops undetermined (affordances R27, K732): DEC-88's 57, which BOB moves into RUNGS with a required reason where a reasoned act lacks one and the consequence statement for the six, and 14 newer ops DEC-88 does not grade (a separate item). Neither T18 nor T19 moved them. inboxresolve's regrade to reasoned is overtaken: pulling is its own op, inboxpull. Acts with no op located are treated as reasoned (DEC-87)",
+   "ids": "DEC-87; DEC-88; affordances R3, R27; bio-plane/src/affordances.mjs RUNG_ABSENT (main @ c1a27e41a5); K481, K520, K530, K732"
   },
   {
-   "what": "Four write ops have no rung: contradictionrecommend, contradictionoptin, contradictionrespond, inboxpull",
-   "why": "graded undetermined on R27's rule (no reason asked, nothing takes them back); DEC-88 does not grade them; BOB's to assign",
-   "ids": "affordances R3, R27; K481, K530"
+   "what": "Fourteen write ops have no rung: contradictionrecommend, contradictionoptin, contradictionrespond, inboxpull, and ten of the Action layer: planopen, optionadd, optionpropose, optionadopt, optionstart, checkpointrecord, actioncreate, actionpressure, communicationprepare, templatesave",
+   "why": "graded undetermined on R27's rule (no reason asked, nothing takes them back); DEC-88 does not grade them; BOB's to assign. The Action layer's other writes are graded in the code: five reasoned on PLAN_NO_REASON, scenarioset reversible, the two reminder acts a member's own request (K732)",
+   "ids": "affordances R2, R3, R27; K481, K530, K705, K723, K732"
   },
   {
    "what": "Two projects' different conclusions (K5, plurality) are not shown, and the machine recommends nothing live",
@@ -7850,24 +7858,9 @@
    "ids": "contradiction R24, R27, R32-R34, R41; skills R27; K488, K491"
   },
   {
-   "what": "Administrators are not yet told of a self-registered signing key in the feed",
-   "why": "the kind is catalogued (queue R1); its producer, queue-producers R14, is not built and not in T18",
-   "ids": "queue-producers R14; next.md N375; K535, K565"
-  },
-  {
-   "what": "Taking a lead up from the queue, or setting it aside there, is unproven: the requirements mark both halves 'not yet met'",
-   "why": "REC-202's mark stands on both halves; queue-producers R9 has no test (a test.todo)",
-   "ids": "queue R18; queue-producers R9; K533"
-  },
-  {
-   "what": "The ceremony's pre-flight cannot tell a member-scoped assistant key from its member",
-   "why": "how the pre-flight learns of an agent credential is not yet decided",
-   "ids": "ratification R18; next.md N407; K601"
-  },
-  {
-   "what": "Other members' open tasks can crowd a member's own out of the feed",
-   "why": "the feed reads at most twice its cap of tasks, whoever they belong to; an assignee filter is proposed",
-   "ids": "tasks R6; queue R8; next.md N410"
+   "what": "Setting a lead aside from the queue is unproven: queue R18 is still marked 'not yet met'",
+   "why": "REC-202's mark stands on queue R18; the take-up half is proven (queue-producers R9 met, K728)",
+   "ids": "queue R18; queue-producers R9; K533; K728"
   },
   {
    "what": "Hand-carried material (a source handing a document to a member)",
@@ -7875,59 +7868,19 @@
    "ids": "K509 (5); sources R12"
   },
   {
-   "what": "The action plan (plan page S11): specified, not built",
-   "why": "action-plans R1-R29 are in T18 (its largest job); affordances for PLN- subjects and the plan-page surface are T19",
-   "ids": "action-plans R1-R29; current.md layer 9 and 'Not in T18'; K608"
-  },
-  {
-   "what": "Addressees beyond offices, 'completed', the premise override, the group's contact, the plan link, a create op, pressure entries, no grade floor",
-   "why": "specified in T18, not built",
-   "ids": "actions R7, R8, R9, R45-R49"
-  },
-  {
-   "what": "Deadline reminders the member asks for; the overdue list",
-   "why": "specified in T18 in the new action-clocks module (a DRAFT for BOB's review and Bob's approval, split from actions by K617)",
-   "ids": "action-clocks R3-R6, R8; action-plans R29; DEC-94; K624 (3)"
-  },
-  {
-   "what": "Communication drafts, the in-band stamp on everything sent, override disclosure, exhibit grades beside the venue's standard, the group's template library",
-   "why": "specified in T18, not built; no filings code applies the in-band stamp yet (nothing under bio-plane/src/filings/ calls inbandQuartet)",
-   "ids": "filings R22-R26; jurisdictions R39"
-  },
-  {
-   "what": "Queue kinds: checkpoint due, stage proposed, reminder (OBLIGATIONs), overdue clock (CONDITION); the deadline recheck scheduled",
-   "why": "specified in T18, not built",
-   "ids": "queue R1, R5, R12; queue-producers R15-R18; monitoring R50; scheduler R5"
-  },
-  {
-   "what": "Escalation reads for the plan; an overridden action refused",
-   "why": "specified in T18, not built",
-   "ids": "escalation R16, R22, R23"
-  },
-  {
-   "what": "The assistant's action-planning layer",
-   "why": "the layer is specified in T18 (skills R28); running the planning skill (a run mode proposing options) is T19, so the tray stays empty until then",
-   "ids": "skills R28; current.md 'Not in T18'"
-  },
-  {
-   "what": "Rungs of the new plan, reminder, pressure, template and communication acts",
-   "why": "none ruled: not in affordances RUNGS or RUNG_ABSENT; affordances for PLN- subjects are T19; BOB assigns (DEC-87); until then an undetermined act is treated as reasoned",
-   "ids": "affordances R2, R3, R27; DEC-87; current.md 'Not in T18'"
-  },
-  {
-   "what": "The litigation-hold reminder for a legal-kind pressure mark (T19)",
-   "why": "T19 (K624 (5)); it waits for the hold's act, whose design (what a hold suspends, who lifts it) is Bob's doctrine",
-   "ids": "N-A19; K613 (2); DEC-61"
+   "what": "The litigation-hold reminder for a legal-kind pressure mark",
+   "why": "deferred: it waits for the hold's act, whose design (what a hold suspends, who lifts it) is Bob's doctrine; kept by T19's final sweep and draft-T20.md",
+   "ids": "N-A19; K613 (2); K624 (5); DEC-61; build/plan/archive/T19.md 'The final sweep'"
   },
   {
    "what": "The first profile's Tier 1-2 templates, holiday calendar and measured offices",
-   "why": "each needs a source before a job writes it; until then the real profile prepares no filing (KIND_NO_TEMPLATE) unless the group has its own template",
-   "ids": "N-A14; filings R26; K613 (3)"
+   "why": "each needs a source before a job writes it (templates are legal text Bob supplies or approves; holidays and offices need a source or measurement); until then the real profile prepares no filing (KIND_NO_TEMPLATE) unless the group has its own template, which it can now keep (filings R26, built T18)",
+   "ids": "N-A14; filings R26; K613 (3); build/plan/archive/T19.md 'The final sweep'"
   },
   {
    "what": "The old interface's action intake is refused by the plane",
-   "why": "it writes {state: named, name}, which actions R9 refuses; joins N389 (legacy-ui, Bob's, UX)",
-   "ids": "N-A13; N371; N389"
+   "why": "it writes {state: named, name}, which actions R9 refuses; the old interface is frozen and gets no work (K633), so the intake waits for the new interface (N-A13 joins N389, Bob's, UX)",
+   "ids": "N-A13; N371; N389; K633"
   },
   {
    "what": "Joint action with another group",
@@ -7938,6 +7891,16 @@
    "what": "Certification by a licensed professional",
    "why": "deferred until a group needs a licensed name on an output; meanwhile the attribution levels serve",
    "ids": "docs/architecture/BIO_Action_v0_1.md (canon whole, K608 (1)) §7.4; K597 (4)"
+  },
+  {
+   "what": "The acts a plan offers a member, per subject (affordances for PLN- subjects), and the plan page itself",
+   "why": "the plan's plane is built (action-plans R1-R34, T18: K711) and its page's view is approved; offering its acts per subject and building the page wait on Bob's UX order (K608 (4)); kept by T19's final sweep and draft-T20.md",
+   "ids": "action-plans R6; affordances R1-R3; build/plan/action-design/plan-page.html (approved by Bob, K608 (4)); build/plan/archive/T19.md 'The final sweep'; draft-T20.md deferrals"
+  },
+  {
+   "what": "A release: what T11-T19 built reaches a group's own copy only through a signed release, and none is cut until Bob says so",
+   "why": "Bob's word (K633 (2)); the installer bundle is not to be deployed before a signed release whose plane states its limits (K724, K739)",
+   "ids": "K633; K724; K739; installer R20; draft-T20.md ⚑Bob-2"
   }
  ],
  "contradictions": [
@@ -7984,10 +7947,10 @@
   {
    "what": "The acts with no rung",
    "canon": "Interaction Constructs §F (DEC-88): graded 26 reversible, 29 reasoned, 2 terminal",
-   "requirements": "affordances R27 counts 61 undetermined, as the code holds: DEC-88's 57 and 4 newer ops DEC-88 does not grade",
+   "requirements": "affordances R27 counts 71 undetermined, as the code holds: DEC-88's 57 and 14 newer ops DEC-88 does not grade (four from T15-T16, ten of the Action layer: K723, K732); the Action layer's other writes are graded in the code (K732)",
    "status": "decided; code owed",
-   "resolution": "BOB moves DEC-88's 57 into RUNGS (DEC-88 owed); the 4 newer ops have no rung ruled",
-   "src": "Interaction Constructs §F; affordances R27; DEC-88; affordances.mjs RUNG_ABSENT"
+   "resolution": "BOB moves DEC-88's 57 into RUNGS (DEC-88 owed; not done in T18 or T19); the 14 newer ops have no rung ruled",
+   "src": "Interaction Constructs §F; affordances R2, R3, R27; DEC-88; affordances.mjs RUNG_ABSENT (main @ c1a27e41a5); K732"
   },
   {
    "what": "Pulling a knock",
@@ -8075,7 +8038,9 @@
   "docs/development/DECISIONS.md DEC-85 to DEC-95",
   "bio-plane/src/affordances.mjs and bio-plane/src/setup.mjs (tranche/T18)",
   "tranche/T18 @ c40e7e09d6: docs/architecture/BIO_Action_v0_1.md (canon whole, K608 (1)); build/requirements/{action-plans,action-clocks,actions,filings,escalation,queue,queue-producers,monitoring,scheduler,skills,jurisdictions}.md",
-  "build/plan/action-design/ (PATH.md, UX-ANSWERS.md, HANDOFF.md, plan-page.html, start-and-send.html, matter-page.html, surfaces.html); build/plan/action-fold/"
+  "build/plan/action-design/ (PATH.md, UX-ANSWERS.md, HANDOFF.md, plan-page.html, start-and-send.html, matter-page.html, surfaces.html); build/plan/action-fold/",
+  "main @ c1a27e41a5: build/plan/archive/T18.md and T19.md (what each built, outcomes); build/requirements/*.md; build/modules.json; build/rulings.md K628–K859; build/plan/next.md; build/plan/draft-T20.md",
+  "main @ c1a27e41a5: bio-plane/src/affordances.mjs (RUNGS, RUNG_ABSENT), bio-plane/src/action-plans/, action-clocks/, actions/, filings/, queue/, queue-producers/, run-rules/deployment.mjs; agent-worker/src/harness.mjs (MODES)"
  ],
  "glossary": [
   {
@@ -8206,18 +8171,21 @@
    "internalNames": [
     "release",
     "verified",
-    "promotion R31"
+    "promotion R31",
+    "ratification R20-R27 (op=release)"
    ],
    "avoidConfusionWith": "publish: releasing keeps it inside the group"
   },
   {
    "term": "Retire",
-   "plain": "Take a document out of use; it is kept forever but can no longer be cited.",
+   "plain": "Take a document out of use, with a reason; it is kept forever but can no longer be cited, and one a live citation rests on cannot be retired.",
    "internalNames": [
     "retire",
-    "retired"
+    "retired",
+    "ratification R28-R33 (op=retire)"
    ],
-   "avoidConfusionWith": ""
+   "avoidConfusionWith": "",
+   "src": "ratification R28-R33; K830"
   },
   {
    "term": "Provenance",
@@ -8654,7 +8622,8 @@
     "airunopen",
     "run",
     "investigate",
-    "extract"
+    "extract",
+    "plan (mode)"
    ],
    "avoidConfusionWith": "",
    "src": "ai-runs Purpose; DEC-90"
@@ -8743,7 +8712,8 @@
    "internalNames": [
     "signeradd",
     "aicredentialmint",
-    "capturecredentialsupply"
+    "capturecredentialsupply",
+    "credentials (module, split from membership in T19)"
    ],
    "avoidConfusionWith": ""
   },
@@ -9245,7 +9215,7 @@
     "bio-inband/1"
    ],
    "avoidConfusionWith": "a signature (ratification)",
-   "src": "filings R22; publication R16; Publication §3 rule 9"
+   "src": "filings R22; public-read R7 (was publication R16, K651); Publication §3 rule 9"
   },
   {
    "term": "Communication draft",
@@ -9298,12 +9268,14 @@
   },
   {
    "term": "Group template",
-   "plain": "A filing text the group keeps for reuse.",
+   "plain": "A filing text the group keeps for reuse, saved by a member from an approved draft and listed newest first.",
    "internalNames": [
-    "templateSave"
+    "templateSave",
+    "templatesave",
+    "templatesFor (op=templates)"
    ],
    "avoidConfusionWith": "the profile's template (a jurisdiction's official form)",
-   "src": "filings R26; K613 (3)"
+   "src": "filings R26; K613 (3); K701"
   },
   {
    "term": "Venue's standard of evidence",
@@ -9323,6 +9295,17 @@
    ],
    "avoidConfusionWith": "policy advocacy (not an action)",
    "src": "action-plans R12; Bob's ruling 6"
+  },
+  {
+   "term": "Five at a time (the assistant's suggestions)",
+   "plain": "The assistant's suggested options are shown five at a time, strongest first; the member asks for the next five until none remain. No score or rank is ever shown or kept: the order is the only sign of strength.",
+   "internalNames": [
+    "planproposals",
+    "next",
+    "proposals (run bound)"
+   ],
+   "avoidConfusionWith": "a cap of five (there is none; five is the size of a page) or a ranking with scores",
+   "src": "action-plans R34; run-rules R13; Bob, 2026-09-30 (K660 (2))"
   }
  ],
  "surfaces": [
@@ -9367,7 +9350,7 @@
     "queuemute (the overdue CONDITION)"
    ],
    "existsInOldUI": "partial",
-   "src": "PATH.md §1, §3; build/plan/action-design/surfaces.html (design view, not stated as approved); queue R1, R5, R12; queue-producers R15-R18; queue R1-R27; Interaction Constructs §revised set; app.html #queue (no snooze, no lead options); queue R1, R12, R39, R46; queue-producers R4-R7, R14"
+   "src": "PATH.md §1, §3; build/plan/action-design/surfaces.html (design view, not stated as approved); queue R1, R5, R12; queue-producers R15-R18; queue R1-R27; Interaction Constructs §revised set; app.html #queue (no snooze, no lead options); queue R1, R12, R39, R46; queue-producers R4-R7, R14; the Action kinds and the signer item built at the plane in T18 (K725, K728, K731)"
   },
   {
    "name": "Question workspace (adds 'Plan what to do')",
@@ -9758,10 +9741,11 @@
     "reminderset",
     "contact",
     "communicationprepare",
-    "templatesave"
+    "templatesave",
+    "templates (the group's templates)"
    ],
    "existsInOldUI": "partial",
-   "src": "PATH.md §2 steps 9-12, §3; actions R7-R9, R25, R45-R49; action-clocks R4; filings R1-R26; app.html #action/ (no filings, no clock proposal); actions R8-R35; filings R1-R14; app.html #action/ (no filings, no clock proposal)"
+   "src": "PATH.md §2 steps 9-12, §3; actions R7-R9, R25, R45-R49; action-clocks R4; filings R1-R26; app.html #action/ (no filings, no clock proposal); actions R8-R35; filings R1-R14; app.html #action/ (no filings, no clock proposal); built at the plane in T18 (K701-K711), no member surface yet"
   },
   {
    "name": "Escalation",
@@ -9889,7 +9873,7 @@
     "signerset"
    ],
    "existsInOldUI": "partial",
-   "src": "membership R5-R29; app.html #members (add, revoke, signing keys only); membership R26, R89-R91; queue-producers R14 (the administrators' feed item is not built, N375); instance-setup R44 (the setup page's key form splits a pasted key line)"
+   "src": "membership R5-R29; app.html #members (add, revoke, signing keys only); membership R26, R89-R91; queue-producers R14 (the administrators' feed item, built T18: K728); credentials R1-R20 (split from membership in T19, K757); instance-setup R44 (the setup page's key form splits a pasted key line)"
   },
   {
    "name": "My account",
@@ -10034,21 +10018,22 @@
     "Suggest options (Assistant tag)"
    ],
    "existsInOldUI": "no",
-   "src": "PATH.md §1, §2; build/plan/action-design/plan-page.html (approved by Bob, K608 (4)); action-plans R6, R19 (status: view approved by Bob (K608 (4)); specified in T18, not built; affordances for PLN- subjects and the surface itself are T19 (current.md 'Not in T18'))"
+   "src": "PATH.md §1, §2; build/plan/action-design/plan-page.html (approved by Bob, K608 (4)); action-plans R6, R19 (status: view approved by Bob (K608 (4)); its plane built in T18 (action-plans R1-R34, K711); the acts it offers per subject (affordances for PLN- subjects) and the page itself wait on Bob's UX order (K608 (4); draft-T20.md deferrals))"
   },
   {
    "name": "Assistant tray (on the plan page)",
-   "purpose": "Where the assistant's suggested options wait, apart from the plan, each with why and the project's kind of work named at its head, until a member adopts one.",
+   "purpose": "Where suggested options wait, apart from the plan, each with why and the project's kind of work named at its head, until a member adopts one: five at a time, strongest first, with no score, and a way to ask for the next five.",
    "constructsShown": [
     "option-proposal",
     "ai-run"
    ],
    "actsOffered": [
     "Suggest options",
-    "optionadopt (Adopt)"
+    "optionadopt (Adopt)",
+    "planproposals (the next five)"
    ],
    "existsInOldUI": "no",
-   "src": "PATH.md §2 step 3, §3; build/plan/action-design/plan-page.html (approved by Bob, K608 (4)); action-plans R11; DEC-90 (the assistant panel) (status: specified in T18, not built; the run mode that fills it is T19)"
+   "src": "PATH.md §2 step 3, §3; build/plan/action-design/plan-page.html (approved by Bob, K608 (4)); action-plans R11, R30-R34; DEC-90 (the assistant panel); Bob, 2026-09-30 (K660) (status: its plane built in T18, K711; the assistant's plan mode built and not deployed until the assistant runs model turns, run-rules R14)"
   },
   {
    "name": "Start and send (the ACT preview for starting an option, then prepare and send)",
@@ -10068,7 +10053,7 @@
     "filingsent (I have sent it · record the sending)"
    ],
    "existsInOldUI": "no",
-   "src": "PATH.md §2 steps 9-10; build/plan/action-design/start-and-send.html (design view, not stated as approved); action-plans R18; actions R8; filings R6-R7, R22-R25 (status: design view (not stated as approved); specified in T18, not built)"
+   "src": "PATH.md §2 steps 9-10; build/plan/action-design/start-and-send.html (design view, not stated as approved); action-plans R18; actions R8; filings R6-R7, R22-R25 (status: design view (not stated as approved); built at the plane in T18 (K703-K711), no member surface yet)"
   },
   {
    "name": "Matter page (one government act: determination, consequences, escalation, actions, pressure)",
@@ -10182,6 +10167,20 @@
    "title": "Confidential referral",
    "decided": "A confidential referral is an action addressed to the oversight office, prepared as a filing or communication, sent by the member's own hand and recorded; nothing non-public leaves by a system path.",
    "src": "docs/architecture/BIO_Action_v0_1.md §7 point 5; build/rulings.md K597 (5), K608 (1); DEC-31"
+  },
+  {
+   "id": "K633",
+   "date": "2026-09-30",
+   "title": "The old interface, and when a release is cut",
+   "decided": "The old interface (civicos-ui/app.html) stays as it is, untested and unworked, until the new interface replaces it: in Bob's words, \"You can leave the old interface, as it's not currently being worked on or tested, and will be replaced by the new interface once its design has evolved sufficiently\". No release is cut until he says so (\"releases aren't being cut until I say that we're ready to do one\"), so what is built reaches a group's copy only then.",
+   "src": "build/rulings.md K633 (Bob, in BOB #75)"
+  },
+  {
+   "id": "K660",
+   "date": "2026-09-30",
+   "title": "The assistant's planning suggestions",
+   "decided": "Only a joined member starts a planning run, one plan at a time, never automatically. \"Rather than a hard limit of 5 suggestions, the feature should present the best first 5. But also provide a means for the member to ask to see the next 'tranche' of 5 options, and so on\": the tray shows the five strongest first and the member asks for the next five until none remain, with no score shown. The run drafts no letters, reads only the same project's earlier plans, and may plan for suspected matters, flagged by the plan's checks. The machine-work disclosure stops at adoption: the adopted option keeps it, the action and what is sent do not, and the record keeps who adopted it, from which run and when. It is switched on as soon as development can properly support it (\"No legit reason I can think of not to switch it on as soon as development can properly support it\").",
+   "src": "build/rulings.md K660 (Bob, in BOB #75); action-plans R30-R34; agent-worker R50-R53; run-rules R13-R14; skills R29"
   }
  ]
 }
