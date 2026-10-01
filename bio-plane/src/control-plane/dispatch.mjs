@@ -1,13 +1,10 @@
 /* control-plane: THE RECORD STORE'S DOOR (R25–R27). `dispatch(req, store)` is the one frame every Durable Object request
    passes: the body read, the route looked up in the modules' own maps (the `membershipOps` pattern; `store.routes(url,
-   body)`, legacy-store's method until each module takes its own), the existence answer of a read naming a
-   discoverable project (R27), the `{ok: true, result}` envelope, and the one catch (R25). Moved from legacy-store's
-   `Store.fetch` at control-plane's extraction (built T12, K93; held by K412, re-applied T13 by N333); `Store` here is the Durable Object class, legacy-store's
-   wrapped, so the frame is this module's and the routes stay where they are. */
-import { Store as LegacyStore } from "../store.mjs";
-import { membershipOf } from "../membership/index.mjs";
+   body)`, the union `plane` composes, its R5), the existence answer of a read naming a discoverable project (R27), the
+   `{ok: true, result}` envelope, and the one catch (R25). Moved from legacy-store's `Store.fetch` at control-plane's
+   extraction (built T12, K93; re-applied T13 by N333). The Durable Object class whose `fetch` this is is `plane`'s (its
+   R1, was this module's R35, moved at T19), which also spreads `controlPlaneRoutes` below into its map. */
 import { credentialsOf } from "../credentials/index.mjs";
-import { instanceSetupOf, instanceSetupOps } from "../setup.mjs";
 import { captureOf } from "../capture/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
@@ -187,33 +184,7 @@ export async function dispatch(req, store) {
   }
 }
 
-/* K93: the Durable Object class is this module's. Legacy-store's class keeps its construction and its routes; its
-   `fetch` is this module's `dispatch`. The two tables are carried as statics too, where their readers find them.
-   R35 (N348): this module is the composition root. At construction it starts `instance-setup` once per object (its
-   `start` is idempotent on one storage, so a second construction, or a wrapper that also starts it, starts nothing),
-   and instance-setup's routes join the one route map beside legacy-store's, so they pass R26's body read and envelope,
-   R27's existence read and R25's catch like every other route. */
-export class Store extends LegacyStore {
-  static PROJECT_NAMING_READS = PROJECT_NAMING_READS;
-  static PROJECT_NAMING_READS_NOT = PROJECT_NAMING_READS_NOT;
-  constructor(ctx, env) {
-    super(ctx, env);
-    /* N13 (K61, N363): queue, then tasks, each creating its own tables (queue R36, tasks R8), built here rather than by
-       legacy-store, which is earlier in the order than both. */
-    queueOf(ctx, { env }).migrate();
-    tasksOf(ctx, { env }).migrate();
-    ctx.blockConcurrencyWhile(async () => instanceSetupOf(ctx, env).start());
-  }
-  async fetch(req) {
-    return dispatch(req, {
-      routes: (url, body) => ({ ...this.routes(url, body), ...instanceSetupOps(instanceSetupOf(this.ctx, this.env), url, body),
-                                ...controlPlaneRoutes(this.ctx, url, body) }),
-      membership: () => membershipOf(this.ctx),
-    });
-  }
-}
-
-/* N364, N13: the routes this composition root adds to the one map, each passing R26's frame: queue's, tasks' and
+/* N364, N13: the routes this module adds to plane's one map (plane R5), each passing R26's frame: queue's, tasks' and
    affordances' maps; `sources`' own map (N379, K566: its acts, its reads and the no-account `knockerconsent`, which no
    other module dispatches); the two own-key acts, credentials' since layer 2 (K757, K784), which credentials keeps out of
    its map (`by` spread, then overridden, as `signeradd`); and R36's pull, a route of its own beside capture's `inboxpull`, which the Worker's
@@ -243,11 +214,3 @@ export function controlPlaneRoutes(ctx, url, body) {
                                        by: q("by"), identity: q("identity"), viewer: q("viewer") }),
   };
 }
-
-/* legacy-store's own default export, carried with the class: a bare forwarder to `bio`, so a harness that runs the record
-   store alone as a Worker names this file where it named `store.mjs`. The instance's Worker is legacy-index's. */
-export default {
-  fetch(req, env) {
-    return env.STORE.get(env.STORE.idFromName("bio")).fetch(req);
-  },
-};

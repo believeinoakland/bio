@@ -3,12 +3,13 @@
    `sourcelink`, `sourceconsent`, `sourceconsentwithdraw`, `sourceof`, `sourcerung`, `sourcereadlog`, `sourcepublishable`
    and the no-account `knockerconsent`; credentials' `signerregister`, `signerrevoke`; case-authoring's `publishpreflight`.
    Each op is driven through `makeFetch(hooks)` for every kind of caller with every stamp forged; the pull is driven at the
-   record store's door over a real record (node:sqlite behind the Durable Object's storage shape), with capture real. */
+   record store's door over a real record (`record.mjs`: node:sqlite behind the Durable Object's storage shape, composed from
+   earlier modules), with capture real. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { DatabaseSync } from "node:sqlite";
 import { O, M, world, call, opCalls, hex64, aik, cred, member, refused, FORGED, QUERY_STAMPS, BODY_STAMPS } from "./harness.mjs";
 const D = await import("../../../src/control-plane/dispatch.mjs");
+const { record: fixture } = await import("./record.mjs");
 const P = await import("../../../src/control-plane/pull.mjs");
 const { captureOf, PULL_WITHIN_FAILED_DETAIL } = await import("../../../src/capture/index.mjs");
 const { provenanceOf } = await import("../../../src/provenance/index.mjs");
@@ -290,51 +291,13 @@ test("R27 (N364, N379): the new reads that carry an id and reach a store route a
 
 /* ---- the record store's door, over a real record ---- */
 
-const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
-function cursor(rows) {
-  let i = 0;
-  const c = {
-    next() { return i < rows.length ? { done: false, value: rows[i++] } : { done: true, value: undefined }; },
-    [Symbol.iterator]() { return c; },
-    toArray() { const out = rows.slice(i); i = rows.length; return out; },
-    one() { const rest = c.toArray(); if (rest.length !== 1) throw new Error(`expected one row, got ${rest.length}`); return rest[0]; },
-  };
-  return c;
-}
-/** One Durable Object: node:sqlite behind `sql.exec`, `transactionSync` a savepoint that rolls back on a throw (as a
- *  Durable Object's does), and an in-memory evidence bucket. */
+/* The record is `record.mjs`' (K856): composed from earlier modules, the door this module's `dispatch`. */
 async function record() {
-  const db = new DatabaseSync(":memory:");
-  const sql = { exec(q, ...a) { const st = db.prepare(q); return cursor(st.columns().length ? st.all(...a.map(bind)).map((r) => ({ ...r })) : (st.run(...a.map(bind)), [])); },
-                get databaseSize() { return 0; } };
-  let n = 0;
-  const transactionSync = (fn) => {
-    const sp = `sp${n++}`;
-    db.exec(`SAVEPOINT ${sp}`);
-    try { const r = fn(); db.exec(`RELEASE ${sp}`); return r; }
-    catch (e) { db.exec(`ROLLBACK TO ${sp}`); db.exec(`RELEASE ${sp}`); throw e; }
-  };
-  const objects = new Map();
-  const bucket = {
-    async head(k) { return objects.has(k) ? { size: objects.get(k).length } : null; },
-    async get(k) { const b = objects.get(k); return b ? { arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) } : null; },
-    async put(k, b) { objects.set(k, new Uint8Array(b)); return {}; },
-  };
-  const blocked = [];
-  const ctx = { storage: { sql, transactionSync, getAlarm: async () => null, setAlarm: async () => {}, deleteAlarm: async () => {} },
-                id: { equals: () => false, toString: () => "do" }, blockConcurrencyWhile(fn) { const p = fn(); blocked.push(p); return p; },
-                waitUntil() {} };
-  const env = { STORE: { idFromName: (x) => x }, CAPTURES: bucket, INSTANCE_NAME: "test" };
-  const store = new D.Store(ctx, env);
-  for (const p of blocked) await p;
-  const go = async (path, method = "GET", body) => {
-    const r = await store.fetch(new Request(`http://do/${path}`, body === undefined ? { method } : { method, body: JSON.stringify(body) }));
-    return { status: r.status, json: await r.json() };
-  };
+  const r = await fixture();
   const knock = async (text = "material for the group", extra = {}) =>
-    (await go("knock?source=203.0.113.9", "POST", { content: text, note: "please look", contact: "knocker@example.org", now: Date.now(), ...extra })).json.result;
-  const state = (knockId) => captureOf(ctx).inboxGet(knockId).item;
-  return { ctx, db, store, go, knock, state, objects };
+    (await r.go("knock?source=203.0.113.9", "POST", { content: text, note: "please look", contact: "knocker@example.org", now: Date.now(), ...extra })).json.result;
+  const state = (knockId) => captureOf(r.ctx).inboxGet(knockId).item;
+  return { ...r, knock, state };
 }
 const SESSION = "by=ann&identity=member:ann&viewer=member:ann";
 /* What the record holds of a knock's pull: the knock's row, its receipt, and a bundle holding its capture. */
@@ -344,7 +307,7 @@ const heldOf = (r, knockId, sha) => {
            receipt: provenanceOf(r.ctx).registerHolds({ sha }).acquired, home: provenanceOf(r.ctx).homeOf(sha) };
 };
 
-test("R36, R35 (N364, N381): the pull is a route of the record store's door, beside capture's own — refused by capture (no puller, no such knock, a discarded knock), nothing is written; admitted, it files the knock end to end with the real capture, provenance and promotion: one new information bundle at collected, the puller its author, holding the capture, no contact in it", async () => {
+test("R36, R26 (N364, N381): the pull is a route of the record store's door, beside capture's own — refused by capture (no puller, no such knock, a discarded knock), nothing is written; admitted, it files the knock end to end with the real capture, provenance and promotion: one new information bundle at collected, the puller its author, holding the capture, no contact in it", async () => {
   const r = await record();
   const k = await r.knock();
   assert.equal(k.ok, true);
@@ -521,7 +484,7 @@ test("R36 (N364, K559): a pulled knock no bundle holds (pulled through capture's
   }
 });
 
-test("R35, R26 (N379, K566): the record store's door dispatches sources' own map — each of its routes, the no-account knockerconsent included, answers sources' own words through R26's envelope, never `unknown op`; the stamps it reads are the query's", async () => {
+test("R26 (N379, K566): the record store's door dispatches sources' own map — each of its routes, the no-account knockerconsent included, answers sources' own words through R26's envelope, never `unknown op`; the stamps it reads are the query's", async () => {
   const r = await record();
   const { sourcesOps } = await import("../../../src/sources/index.mjs");
   const routes = Object.keys(sourcesOps({}, new URL("http://do/"), null));

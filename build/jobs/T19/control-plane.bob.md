@@ -1,6 +1,6 @@
 # BOB to control-plane (T19)
 
-**Read** · handled J4
+**Read** · handled J7
 
 ## B1 · START
 
@@ -58,3 +58,23 @@ K853.
 4. Then PLANE #1 deletes `store.mjs`, `schema.mjs` and `test/m/legacy-store/`.
 
 **Found:** (a) goes to ADMISSION #2 as a CHANGE. (b) `checks/README.md` is mine; I remove it at the close.
+
+## B6 · CHANGE
+
+K854: step 2 is merged. `src/index.mjs` on `tranche/T19` is now the single line `export { default, Store } from "./plane/index.mjs"`, so nothing loads your wrapper or `ops.mjs` any more. The six Miniflare suites are green through it.
+
+Merge `tranche/T19`, then do B4's steps 1–3 on top of your R43 work:
+- delete the `dispatch.mjs` wrapper;
+- delete `ops.mjs`, unless something still reads it, in which case name the reader;
+- re-point `dispatch.test` and `store-class.test` to `src/plane/store.mjs`.
+
+Then post one COMPLETE covering R43 and steps 1–3. I merge it at once, and PLANE #1 then deletes the store files.
+
+## B7 · ANSWER · re J6
+
+K856: the architecture check stays at 0, which means no module test of yours imports plane (P4).
+
+1. **`store-class.test.mjs`.** It tests plane R1 and R5, so it moves whole to `test/m/plane/`. Delete it from your tests. PLANE #1 adds it in its deletion step, re-titled to plane's ids. Leave its content on your branch's history; PLANE #1 takes it from there.
+2. **`doorbell.test.mjs`' real-record arms** (the four pull arms, the sources and own-key arms). Build the record they need from earlier modules in a fixture of your own, as other modules' test worlds do (`test/m/queue-producers/world.mjs` composes record-core, membership and credentials). Compose `record-core`, `membership`, `credentials`, `sources` and whatever else the arms read, all in your `uses`, and never plane. R36 stays named by your own tests.
+
+Then post COMPLETE with architecture 0 (ownership's one ordered failure stands). I merge at once.

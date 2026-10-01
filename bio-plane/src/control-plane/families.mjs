@@ -1,16 +1,15 @@
-/* control-plane: THE COMPOSED CATALOGUE (R22, R41; K585 (1), N245, N272, N337, N403, N414). Every DEC-49 family a
-   refusal can be decorated from: the check catalogue, then every product module's own families in the module order,
-   then this module's own. Each source is read as a NAMESPACE and its families found by the reserved `_CHECKS` suffix,
-   so a family a module adds to a file listed here is found with no edit; a module that opens a NEW file of families is
-   not, and `CHECK_FAMILY_FILES` gains it. A module test walks every product module's files for an exported family and
-   fails on one this list does not reach, so the list cannot go stale silently.
+/* control-plane: THE COMPOSED CATALOGUE (R22, R41, R43; K585 (1), N245, N272, N337, N403, N414). Every DEC-49 family a
+   refusal can be decorated from: every product module's own families in the module order, then this module's own (the
+   check catalogue, which once came first, ended with R43 at T19). Each source is read as a NAMESPACE and its families
+   found by the reserved `_CHECKS` suffix, so a family a module adds to a file listed here is found with no edit; a
+   module that opens a NEW file of families is not, and `CHECK_FAMILY_FILES` gains it. A module test walks every product
+   module's files for an exported family and fails on one this list does not reach, so the list cannot go stale silently.
 
    `CHECK_FAMILIES` is `{FAMILY: {code: row}}` with each code ONCE: the first source that holds a row for it with a canned
-   translation keeps it (the catalogue first, so a code it still holds resolves as it always has), else the first that
-   holds it at all. A code held in two places is the DEC-49 guard's arm A to refuse, not this composition's to choose,
-   and a family name two sources share (a row held twice for a tranche, K529) is one family here. `dec49Row` (R22)
-   and the published fences (R41, `skills.machineFences` over it) read this one object. */
-import * as CATALOGUE from "../../checks/bio-checks.mjs";
+   translation keeps it, else the first that holds it at all. A code held in two places is the DEC-49 guard's arm A to
+   refuse, not this composition's to choose, and a family name two sources share (a row held twice for a tranche, K529)
+   is one family here. `dec49Row` (R22) and the published fences (R41, `skills.machineFences` over it) read this one
+   object. */
 import * as RECORD_GRAMMAR_ACTS from "../record-grammar/acts.mjs";
 import * as TEXT_CHAIN from "../textchain.mjs";
 import * as RECORD_CORE from "../record-core/checks.mjs";
@@ -68,7 +67,6 @@ import * as OWN from "./checks.mjs";
 
 /* The sources, in the order a code is resolved: `[path under bio-plane/, namespace]`. */
 export const CHECK_FAMILY_FILES = Object.freeze([
-  ["checks/bio-checks.mjs", CATALOGUE],
   ["src/record-grammar/acts.mjs", RECORD_GRAMMAR_ACTS],
   ["src/textchain.mjs", TEXT_CHAIN],
   ["src/record-core/checks.mjs", RECORD_CORE],

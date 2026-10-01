@@ -1,9 +1,9 @@
 /* control-plane: THE INSTANCE'S DOOR (R1–R41). The Worker's HTTP entry — routing, the stamps, the answer's decoration
    and envelope — moved from legacy-index (`index.mjs`) at control-plane's extraction (T12, K3, K93). Who may call an op is
    `admission`'s and what each op is `op-declarations'` (the split, K617, K624 (2)): this door calls admission's gates in
-   R28's order and reads op-declarations' tables. An op's own handler is its module's: `makeFetch(hooks)` takes the arms
-   that still live in legacy-index (`publicOp` for the unauthenticated ops, `gatedOp` for the admitted ones) and routes
-   to them, so routing is one place while the arms still live there (the map's §3). */
+   R28's order and reads op-declarations' tables. An op's own handler is its module's: `makeFetch(hooks)` takes the
+   hooks `plane` composes from the arms' owners (`publicOp` for the unauthenticated ops, `gatedOp` for the admitted ones,
+   plane R6) and routes to them, so routing is one place (the map's §3). */
 /* The shared grammar this door reads (the front matter, the digest, a type's canonical spelling, the two machine-stamp
    prefixes) is record-grammar's. */
 import { parseFrontmatter, createSha256, normalizeType, MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
@@ -93,7 +93,7 @@ async function reviewAnswer(out, op) {
 }
 
 /* WHO IS ASKING, FOR A PUBLIC OP THAT ANSWERS WORKING MATERIAL ONLY TO SOME: `admission`'s `readerOf` (its R16), in the
-   shape `legacy-index`' arms read until their modules take them (`{viewer, cls}`, or `{silent: <op>, correlation}`). */
+   shape the arms behind plane's hooks read (`{viewer, cls}`, or `{silent: <op>, correlation}`). */
 async function caseReader(url, env, storeName, presentedAi) {
   const r = await readerOf(url, env, storeName, presentedAi, doAnswer);
   return r.silent ? { silent: r.silent.op, correlation: r.silent.correlation } : r;
@@ -571,7 +571,7 @@ const PLANE_LIMITS = Object.freeze({ subrequests: 10000 });
    text finds it whole. `PLANE_LIMITS` is its parsed form. */
 const PLANE_LIMITS_STATEMENT = "bio-plane-limits/1 subrequests=10000";
 
-/* R1–R25: the Worker entry. `hooks.publicOp(ctx)` answers a public op whose handler still lives in legacy-index;
+/* R1–R25: the Worker entry. `hooks.publicOp(ctx)` answers a public op whose handler is a module's, through plane's hooks;
    `hooks.gatedOp(ctx)` an admitted op's handler there, or undefined for the generic forward below. */
 /* R17: the stamps a caller may never supply, in the query and in a body. */
 const QUERY_STAMPS = Object.freeze(["viewer", "identity", "author", "by", "actor", "who", "origin", "administer", "aiCred"]);
@@ -1769,8 +1769,8 @@ export function makeFetch(hooks = {}) {
                       expected: storeName,
                       got: confirm, tokenClass: cls, store: storeName }, 400);
     }
-    /* R28: an op whose handler still lives in legacy-index answers here, after the R14 fences and R16; undefined falls
-       through to the forward. */
+    /* R28: an op whose handler is a module's, reached through plane's hooks, answers here, after the R14 fences and R16;
+       undefined falls through to the forward. */
     const armed = hooks.gatedOp ? await hooks.gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer,
       sessIdentity, sessRights, sessCaps, aiCred, storeName, stub }) : undefined;
     if (armed) return op === "affordances" ? publishAffordances(armed, url) : armed;
@@ -2642,9 +2642,6 @@ export { json, doAnswer, storeSilent, storeRefusal, relayAnswer, StoreSilent, ST
          sha256Hex, fingerprint, caseReader, reviewAnswer, captureKey, installationRow, dispatchRow, replayRow,
          dec49Row, dec49Attach, CHECK_FAMILIES, CHECK_FAMILY_FILES, migrationReplayOf, DRIVE_PROVENANCE_PATH,
          publishAffordances, requiredArgument, storageAbsent, PLANE_LIMITS, PLANE_LIMITS_STATEMENT };
-/* Rule 1 (K648): `legacy-index`' arms stamp with record-grammar's two machine prefixes, read through this door until their
-   file goes (plane R8), so that no file imports the catalogue once R43 ends it. */
-export { MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX };
-/* K624 (1), (2): `legacy-index`' arms (`src/index.mjs`) read these of admission through this module until their modules
-   take them; the door itself calls admission directly. */
-export { SCRATCH, NAMESPACES, classify, scopeFor } from "../admission/index.mjs";
+/* K624 (1), (2): admission's namespace names, read through this door by plane's hooks and by the fleet members' pin
+   (`members-pin.test.mjs`); the door itself calls admission directly. */
+export { SCRATCH, NAMESPACES } from "../admission/index.mjs";
