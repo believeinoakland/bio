@@ -30,3 +30,7 @@ Size (session_01Df1N2wW2RVBh2dLYgPDzeM): test runs 3, module lines 2672
 ## J1 · REPORT
 
 Generated artifact this job stales (§14): the plane bundle and manifest, bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (src/connections/index.mjs is an input). fleetbundles.test.mjs' bio-plane arms pass on tranche/T20 @ 44113880ce and fail here (staleness, byte-identity, manifest sha256, comment-only) until the L5 close regenerates. Three failures there are already on the tranche base, not this job's: agent-worker's 153 inputs and the two (j) arms naming node tools/bundles.mjs.
+
+## J2 · COMPLETE
+
+R61 met (was not yet met, T20 L5): REFS_COUNT_KEYS ['refs'] and connectionsOf(ctx).refsCounts(hid), R63-shaped, the same SQL as plane's held.mjs:79 (COALESCE keys, null hid whole), sharing one private count with R60's figures; nothing new registered. Test: test/m/connections/refs-figure.test.mjs (5 tests naming R61). Note: refs' keys are NOT NULL in schema, so no stored row has a NULL key; the test proves that and that the '' key (COALESCE's reading) is never dropped. Tests 107/107; format, architecture, coverage (61/61), ownership: 0 failures. Plane bundle stale (J1). Record: build/jobs/T20/connections.md (Completion).
