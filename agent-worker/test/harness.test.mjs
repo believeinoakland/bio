@@ -129,7 +129,7 @@ const PINNED_READS = ["affordances", "airun", "airunlog", "airunspawn", "availab
 const PINNED_WRITES = ["airunclose", "airuntick", "capturerequest", "optionpropose", "suggest"];
 const WORKER_SRC_PATH = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const WORKER_SRC = readFileSync(WORKER_SRC_PATH, "utf8");
-const PLANE_INDEX = readFileSync(fileURLToPath(new URL("../../bio-plane/src/index.mjs", import.meta.url)), "utf8");
+const PLANE_INDEX = readFileSync(fileURLToPath(new URL("../../bio-plane/src/plane/index.mjs", import.meta.url)), "utf8");
 
 /* EVERY NESTED READ IN THIS FILE IS NULL-TOLERANT, AND THE CLASS WAS SWEPT
  * RATHER THAN THE TWO SITES THAT BIT.
@@ -1617,7 +1617,7 @@ console.log("\n--- FT4 · FL-12: an internet-level target files a request naming
  *
  *  SO THE TICK IS NOT MOCKED HERE. A `plane-front` worker forwards every op to
  *  the ordinary mock EXCEPT `airuntick`, which goes to the REAL plane
- *  (`bio-plane/src/index.mjs` under miniflare, its own Durable Object and
+ *  (`bio-plane/src/plane/index.mjs` under miniflare, its own Durable Object and
  *  SQLite), with a run opened there lazily on the first tick. The verdict on
  *  each entry — `appended`, `refused[]` and each refusal's shape — is therefore
  *  the plane's own `checkObservation` through its own `#aiRunAppend`, not a
@@ -1640,7 +1640,7 @@ console.log("\n--- FT4 · FL-12: an internet-level target files a request naming
  * ========================================================================= */
 console.log("\n--- R · REC-100: the step log meets the REAL plane's refusal (IC-130) ---");
 {
-  const PLANE_IDX_PATH = fileURLToPath(new URL("../../bio-plane/src/index.mjs", import.meta.url));
+  const PLANE_IDX_PATH = fileURLToPath(new URL("../../bio-plane/src/plane/index.mjs", import.meta.url));
   const MEM = "mem-rec100-aw";
   const RB = "INQ-2026-0918-rec100-aw";
   const PROMOTE = {

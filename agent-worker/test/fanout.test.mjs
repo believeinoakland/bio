@@ -357,7 +357,7 @@ console.log("\n--- A3 · THE RETURN CONTRACT: a REPORT with a citation, NEVER do
   t("the levels are the plane's too, through the harness's pinned copy", LEVELS.length, 4);
   /* AND THE CONDITION VOCABULARY IS NOT COPIED HERE. C-22.4 is the plane's rule
      and a second implementation of it would be a rule whose control proves
-     nothing about either — `airun.mjs` recorded that having paid for it. */
+     nothing about either — run-rules records that, having paid for it. */
   t("a condition this member has never heard of travels through UNJUDGED",
     checkReport({ level: "meaning", state: "LOOKED_INDETERMINATE", observed_at: "log:1",
                   condition: "some-condition-only-the-plane-knows" }), null);
