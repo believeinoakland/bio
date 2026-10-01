@@ -3,7 +3,7 @@
  * legacy store (PL-3/IS-4's suggest endpoint `suggestVersion` with `#suggestionPersisted` and `#suggestionFrontmatter`;
  * SK-8's `extractPropose` and `extractProposals` with `#posFields`; the dispatch of `op=suggest`, `op=extractpropose`
  * and `op=extractproposals`), from the legacy schema (`suggest_refusals`, `proposed_readings`) and from the check
- * catalogue (C-27 and C-104, `checks.mjs`).
+ * catalogue (C-27 and C-104, now this module's own rows in `checks.mjs`).
  *
  * `runProductionsOf(ctx, deps)` answers the one instance per Durable Object storage (K61). It reaches `record-core`,
  * `membership`, `content`, `connections`, `ai-runs`, `strength`, `citation` and `basis-versions` through their
@@ -22,13 +22,13 @@ import { contentOf, mintLabel } from "../content/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
 import { strengthOf, ORIGIN_LIMIT, STRENGTH_AXES } from "../strength/index.mjs";
 import { citationOf } from "../citation/index.mjs";
-import { basisVersionsOf, versionsIn, versionAsWritten } from "../basis-versions/index.mjs";
+import { basisVersionsOf, versionsIn, versionAsWritten, isBoilerplate } from "../basis-versions/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
 import { runPrincipalGate } from "../run-rules/index.mjs";
 import { EXTRACT_RUN_MODE, proposalChain, checkProposedRef, proposedReadingGrade, mintRatio } from "../extractrun.mjs";
 import { readingSource, readingSourceJson, readingSourceFromColumns, describeChain } from "../textchain.mjs";
-import { parseFrontmatter, normalizeType, OBJECT_TYPES, canonicalJson, isBoilerplate, isMachineIdentity,
-         SUFFICIENCY_UNCLAIMED, MACHINE_CLASS_PREFIX } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter, normalizeType, OBJECT_TYPES, canonicalJson, isMachineIdentity, MACHINE_CLASS_PREFIX }
+  from "../record-grammar/index.mjs";
 import { SUGGEST_CHECKS, EXTRACT_PROPOSE_CHECKS, SUGGEST_KINDS, SUGGEST_LEVELS } from "./checks.mjs";
 import { RUN_PRODUCTIONS_TABLES, migrateRunProductions } from "./schema.mjs";
 
@@ -346,7 +346,7 @@ export class RunProductions {
         + `nothing and asserts nothing.`,
         { target, name, legs: legsIn.length, branches: declared.length }));
 
-    /* C-27.12 — NO BOILERPLATE: the placeholder defect at machine scale, held to the catalogue's one predicate. */
+    /* C-27.12 — NO BOILERPLATE: the placeholder defect at machine scale, held to basis-versions' one predicate. */
     const filler = [];
     if (isBoilerplate(args.description)) filler.push("description");
     if (args.claim !== undefined && args.claim !== null && args.claim !== ""

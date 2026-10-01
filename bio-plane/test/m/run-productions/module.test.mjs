@@ -3,9 +3,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as RP from "../../../src/run-productions/index.mjs";
-import * as CATALOGUE from "../../../checks/bio-checks.mjs";
-
-const CATALOGUE_SUGGEST = CATALOGUE.SUGGEST_CHECKS;
 import { world, Q, Q2, DOC, DOC2, RUN, ALICE, BOB, MACHINE } from "./fixture.mjs";
 
 const AK = "class:ai/k1";
@@ -49,11 +46,27 @@ test("R14: the source is registered with basis-versions' onCandidates (its R40) 
   assert.deepEqual(fn({ captureSha: "0".repeat(64), max: 3 }), { truncated: false, rows: [] });
 });
 
-test("R16: every C-27 row but C-27.15 is this module's, read from the catalogue unchanged; C-104.1–C-104.12 and SUGGEST_LEVELS are defined here, and the catalogue holds no C-104 row; each row is minted by this module with its row", () => {
-  assert.deepEqual([...RP.SUGGEST_CHECK_KEYS].sort(), Object.keys(CATALOGUE_SUGGEST).filter((k) => k !== "VERSION_KIND_UNKNOWN").sort());
-  for (const k of RP.SUGGEST_CHECK_KEYS) assert.equal(RP.SUGGEST_CHECKS[k], CATALOGUE_SUGGEST[k]);
-  /* C-104 is this module's own family: exactly twelve rows, numbered C-104.1 to C-104.12, each with a translation and a
-     `where` naming the region of this module's op that mints it; the catalogue keeps no copy (N155). */
+test("R16: C-27.1–C-27.14, C-27.16–C-27.19 and C-104.1–C-104.12 are this module's own rows, each with a translation and a `where` naming the region of this module's op that mints it; C-27.15 is not among them; SUGGEST_LEVELS is defined here; each row is minted by this module with its row", () => {
+  /* C-27 less C-27.15 (basis-versions' document-gate row, VERSION_KIND_UNKNOWN): eighteen rows. */
+  const SUGGEST_REGIONS = { SUGGEST_NO_TARGET: ["C-27.1", "is-suggest-shape"], SUGGEST_NOT_AN_INQUIRY: ["C-27.2", "is-suggest-shape"],
+    SUGGEST_UNKNOWN_KIND: ["C-27.3", "is-suggest-shape"], SUGGEST_NO_RUN: ["C-27.4", "is-suggest-shape"],
+    SUGGEST_NAME_TAKEN: ["C-27.5", "is-suggest-shape"], SUGGEST_EMPTY_LEVEL_UNSTATED: ["C-27.6", "is-suggest-shape"],
+    SUGGEST_TOO_MANY_LEGS: ["C-27.7", "is-suggest-shape"], SUGGEST_LEG_UNREACHABLE: ["C-27.8", "is-suggest-checks"],
+    SUGGEST_PAIR_DOES_NOT_COMPUTE: ["C-27.9", "is-suggest-checks"], SUGGEST_NOT_DIFFERENT: ["C-27.10", "is-suggest-checks"],
+    SUGGEST_BRANCHES_NOT_INDEPENDENT: ["C-27.11", "is-suggest-checks"], SUGGEST_BOILERPLATE: ["C-27.12", "is-suggest-checks"],
+    SUGGEST_UNWRITABLE_STATE: ["C-27.13", "is-suggest-checks"], SUGGEST_UNWRITABLE_DOCUMENT: ["C-27.14", "is-suggest-write"],
+    SUGGEST_COMPARISON_INCOMPLETE: ["C-27.16", "is-suggest-checks"], SUGGEST_NO_DOCUMENT: ["C-27.17", "is-suggest-shape"],
+    SUGGEST_RUN_NOT_RUNNING: ["C-27.18", "is-suggest-shape"], SUGGEST_OUTSIDE_RUN_CONTEXT: ["C-27.19", "is-suggest-shape"] };
+  assert.deepEqual([...RP.SUGGEST_CHECK_KEYS].sort(), Object.keys(SUGGEST_REGIONS).sort());
+  assert.deepEqual(Object.keys(RP.SUGGEST_CHECKS).sort(), Object.keys(SUGGEST_REGIONS).sort());
+  for (const [k, [check, region]] of Object.entries(SUGGEST_REGIONS)) {
+    const r = RP.SUGGEST_CHECKS[k];
+    assert.deepEqual([r.check, r.where], [check, `src/run-productions/index.mjs suggest > ${region}`], k);
+    assert.ok(typeof r.translation === "string" && r.translation.length > 40, k);
+  }
+  assert.equal(Object.values(RP.SUGGEST_CHECKS).some((r) => r.check === "C-27.15"), false, "C-27.15 is basis-versions'");
+  assert.ok(Object.isFrozen(RP.SUGGEST_CHECKS) && Object.isFrozen(RP.EXTRACT_PROPOSE_CHECKS));
+  /* C-104 is this module's own family: exactly twelve rows, numbered C-104.1 to C-104.12. */
   assert.deepEqual(Object.keys(RP.EXTRACT_PROPOSE_CHECKS).map((k) => RP.EXTRACT_PROPOSE_CHECKS[k].check),
                    Array.from({ length: 12 }, (_, i) => `C-104.${i + 1}`));
   assert.deepEqual([...RP.EXTRACT_PROPOSE_CHECK_KEYS], Object.keys(RP.EXTRACT_PROPOSE_CHECKS));
@@ -69,9 +82,6 @@ test("R16: every C-27 row but C-27.15 is this module's, read from the catalogue 
     assert.equal(r.where, `src/run-productions/index.mjs ${fn} > ${region}`, k);
     assert.ok(typeof r.translation === "string" && r.translation.length > 40, k);
   }
-  assert.equal("EXTRACT_PROPOSE_CHECKS" in CATALOGUE, false, "the catalogue holds no C-104 copy");
-  assert.equal(Object.values(CATALOGUE).some((f) => f && typeof f === "object"
-    && Object.values(f).some((r) => r && typeof r === "object" && /^C-104\./.test(String(r.check)))), false, "nor any C-104 row");
   assert.ok(Object.isFrozen(RP.SUGGEST_LEVELS));
   /* Drive every code once, and collect what the module minted. */
   const driven = new Map();

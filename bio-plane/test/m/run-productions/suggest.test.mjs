@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { SUGGEST_CHECKS } from "../../../src/run-productions/index.mjs";
-import { SUFFICIENCY_UNCLAIMED } from "../../../checks/bio-checks.mjs";
+import { SUFFICIENCY_UNCLAIMED } from "../../../src/basis-versions/index.mjs";
 import { world, GRADED, Q, Q2, PROJ, HIDDEN_PROJ, DOC, DOC2, RUN, XRUN, ALICE, ALICE_TOKEN, BOB, MACHINE, sha } from "./fixture.mjs";
 
 const row = (code) => SUGGEST_CHECKS[code];
