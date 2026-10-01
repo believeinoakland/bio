@@ -308,7 +308,11 @@ test("R14 R9 R18: on an inquiry target, sever and reinstate track the case citat
 test("R17: with no target, the catalogue — each act decorated with appliesTo, the vocabularies, the capture acts and "
    + "the set acts with set_key, item_keys, shared_keys and max_items", async () => {
   const r = await GET(`op=affordances&token=${W.IRIS}`);
-  assert.deepEqual(Object.keys(r).sort(), ["capture_acts", "catalog", "detail", "set_acts", "target", "vocabularies"]);
+  /* R17's six keys, all present; the control plane's door may add its own decoration beside them (`fences`, `pack`:
+     control-plane R41, K585 (1), K730) and nothing else */
+  const SIX = ["capture_acts", "catalog", "detail", "set_acts", "target", "vocabularies"];
+  assert.deepEqual(SIX.filter((k) => !Object.hasOwn(r, k)), []);
+  assert.deepEqual(Object.keys(r).filter((k) => !SIX.includes(k) && !["fences", "pack"].includes(k)), []);
   assert.equal(r.target, null);
   assert.deepEqual(r.catalog.map((a) => a.id), ACTS.map((a) => a.id));
   for (const [i, a] of r.catalog.entries()) {
