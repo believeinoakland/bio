@@ -21,3 +21,7 @@
 - `ownership.mjs … consequences tranche/T19`: 3 files changed; 0 failures.
 
 Size (session_018tTPNKhSfvJEkAeSj4HgSp): test runs 4, module lines 2074
+
+## J1 · COMPLETE
+
+Entry applied (layer 9, consequences; B1). No consequences file imports bio-checks.mjs: index.mjs:44-46 re-pointed to record-grammar (actors.mjs isMachineIdentity, MACHINE_CLASS_PREFIX; types.mjs normalizeType; grades.mjs BASIS_GRADES); module tests import no catalogue name. K819 fixed: fixture.mjs inquiryMd gives a concluded inquiry its conclusion (4 tests were red on C-2.8, now green). Tests 24/24 pass; format, architecture, coverage (14/14), ownership: 0 failures. Nothing deferred. One note for BOB: requirements/consequences.md Uses still names legacy-checks for isMachineIdentity and the CONS- registration; both are record-grammar's now (types.mjs:21), so that line and the legacy-checks edge in modules.json are stale. Record: build/jobs/T19/consequences.md on job/T19/consequences.
