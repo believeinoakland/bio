@@ -176,10 +176,10 @@ export class Frontier {
                  + "of, or one it cannot place after the log's first row, is named in `missing_unexplained` with "
                  + "its cause and never counted as nobody-looked; every such row names the causes it could not "
                  + "rule out. The withholding fence applies ROW-WHOLE (REC-103, design section 6): a row is "
-                 + "published only when every bundle it names — through `result_ref`, through a "
+                 + "published only when every record it names — through `result_ref`, through a "
                  + "ratify or link authority, through a run's context or a sweep's capture request "
-                 + "— is one this viewer may see, and a referent this record cannot attribute to a "
-                 + "bundle at all withholds the row rather than being waved through. No count of "
+                 + "— is one this viewer may see, and a referent that cannot be attributed to any "
+                 + "record at all withholds the row rather than being waved through. No count of "
                  + "what was withheld is reported, because that count is the leak. The `tally` "
                  + "counts every row at this level rather than this page, names nothing, and is "
                  + "not gated" };
