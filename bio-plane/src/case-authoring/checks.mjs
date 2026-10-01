@@ -5,15 +5,15 @@
  * (the case-identity family, `CASE_DERIVATION_CHECKS`; C-44.2 is `publication`'s and stays in the catalogue's family of
  * that name until publication takes it, so the family is one across the two, as `BIAS_CHECKS` is) and C-82.2–C-82.7
  * (`STATEMENT_ACK_CHECKS`, whole; C-82.1 is retired, D-521, and its number is not reused). Each `where` names the
- * region of this module that enforces it. C-32.6 (`MACHINE_CANNOT_PUBLISH`) and C-33.14 (`NO_STATEMENT`) are copied
- * into `PUBLISH_ACT_CHECKS` (T18; R1, R3, R29), ids, codes, `where`s and translations unchanged: the catalogue keeps
- * its copies in `MACHINE_FENCE_CHECKS` (read by key by `skills`, an earlier module) and `ACT_SHAPE_CHECKS` for one
- * tranche, and the catalogue's next job deletes them (K529). */
+ * region of this module that enforces it. C-32.6 (`MACHINE_CANNOT_PUBLISH`) and C-33.14 (`NO_STATEMENT`) were copied
+ * into `PUBLISH_ACT_CHECKS` (T18; R1, R3, R29; K695), ids, codes, `where`s and translations unchanged, and stamped by
+ * promotion in T19; the catalogue's copies go with its own table deletions (K529). No file of this module reads the
+ * catalogue. */
 
 const at = (fn, region) => `src/case-authoring/index.mjs ${fn} > ${region}`;
 
 /* C-32.6, C-33.14 — op=publish's own two rows from the catalogue's machine-fence and act-shape families (R1, R3; K6,
-   K529), copied with their ids, codes, `where`s and translations unchanged. Awaiting promotion's stamp (T19). */
+   K529), copied with their ids, codes, `where`s and translations unchanged; stamped by promotion (T19 layer 2). */
 export const PUBLISH_ACT_CHECKS = Object.freeze({
   /* R1: the fence alone, before anything else is read. */
   MACHINE_CANNOT_PUBLISH: {

@@ -10,8 +10,10 @@
  * `#caseCitations`, `#caseDocumentText`, `#searchedForCase` with its two evidence probes, the acknowledgements
  * `STATEMENT_ACK_MAX` … `#statementWriter`, `#draftLinkOf`, `COMPLETENESS_MAX`, `MEMBER_ROLES`, `SEARCHED_SUBJECT_MAX`,
  * the dispatch entries `publishcase` and `statementack`), `airun.mjs` (`searchedSection`, `SEARCHED_LEVEL_OUTCOMES`,
- * now `./searched.mjs`; N138) and `bio-checks.mjs` (C-44.1, C-44.3–C-44.5, C-82.2–C-82.7, now `./checks.mjs`). Its
- * table is `./schema.mjs`. The legacy code's comments moved with it, shortened where they only restated the code.
+ * now `./searched.mjs`; N138) and the check catalogue (C-44.1, C-44.3–C-44.5, C-82.2–C-82.7, now `./checks.mjs`).
+ * Its table is `./schema.mjs`. The legacy code's comments moved with it, shortened where they only restated the code.
+ * The record's grammar (front matter, object types, grades, the machine predicate, the hash) is `record-grammar`'s;
+ * the acknowledgements' locator and the one front-matter spelling (`fmSafe`) are `case-grammar`'s (N424).
  *
  * WHAT IS AUTHORED AND WHAT IS STAMPED (R22, R25). Authored, caller-supplied and never prefilled: the scope, the
  * completeness statement, every exclusion row, the subject position with its justification (DEC-13), the bias
@@ -64,14 +66,15 @@ import { contradictionOf } from "../contradiction/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { captureOf } from "../capture/index.mjs";
 import { sourcesOf } from "../sources/index.mjs";
-import { parseFrontmatter, normalizeType, isMachineIdentity, createSha256, OBJECT_TYPES, BASIS_GRADES,
-         EARNED_CAPTURE_CEILING } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter, normalizeType, isMachineIdentity, OBJECT_TYPES, BASIS_GRADES,
+         EARNED_CAPTURE_CEILING } from "../record-grammar/index.mjs";
+import { SECTIONS } from "../case-grammar/index.mjs";
 import { PUBLISH_ACT_CHECKS, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS, CASE_DISCLOSURE_CHECKS } from "./checks.mjs";
 import { CASE_AUTHORING_TABLES, migrateCaseAuthoring } from "./schema.mjs";
 import { searchedSection } from "./searched.mjs";
 import { fmSafe, statementSha, caseDocumentText, ackFrontmatterLines, ackBodyLines, withheldWriterStated,
-         ACK_PROSE_HEAD, tensionSentence, HIGHLIGHT_SENTENCE, CEREMONY_HIGHLIGHT_SENTENCE, NOT_SHOWN_WORDS,
-         TENSIONS_DEPTH_STATED, tensionSide, SELF_ATTESTED_SENTENCE } from "./document.mjs";
+         CEREMONY_HIGHLIGHT_SENTENCE, NOT_SHOWN_WORDS, TENSIONS_DEPTH_STATED, tensionSide,
+         SELF_ATTESTED_SENTENCE } from "./document.mjs";
 
 export { PUBLISH_ACT_CHECKS, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS, CASE_DISCLOSURE_CHECKS } from "./checks.mjs";
 export { CASE_AUTHORING_SCHEMA, CASE_AUTHORING_TABLES } from "./schema.mjs";
@@ -1265,9 +1268,15 @@ export class CaseAuthoring {
    *  - `ready` is true only when there is neither and ratification's list was read;
    *  - `steps` is the five steps' content (DEC-80 item 2), read from the same run.
    *  The rolled-back run does not raise re-evaluation (R15): its listeners are told synchronously and must not hear of
-   *  an edition that was never made. It writes nothing. */
+   *  an edition that was never made. It writes nothing.
+   *
+   *  `viewer` is the control plane's stamp, or `{stamp, aiCred}` when it stamps the caller's minted agent credential
+   *  (N435, N407's other half): the act and every read here are asked as `stamp`, and ratification's pre-flight is
+   *  given the whole, so its machine fences (its R18) hold an agent whatever its viewer stamp. */
   publishPreflight(args = {}) {
-    const a = args && typeof args === "object" ? args : {};
+    const given = args && typeof args === "object" ? args : {};
+    const carried = given.viewer && typeof given.viewer === "object" ? given.viewer : null;
+    const a = carried ? { ...given, viewer: carried.stamp ?? null } : given;
     const seen = {};
     let answer = null, text = null;
     try {
@@ -1284,7 +1293,7 @@ export class CaseAuthoring {
     const ratify = text === null
       ? { reached: false, refusals: [],
           why: "ratification's pre-flight reads the document op=publish would store, and op=publish refuses first" }
-      : this.#ratifyPreflight(text, str(a.author), a.viewer ?? null);
+      : this.#ratifyPreflight(text, str(a.author), given.viewer ?? null);
     /* The independent reads, each over the same arguments, each stopping only where its own prerequisite refuses. */
     const found = [];
     const who = str(a.author);
@@ -1780,16 +1789,12 @@ export class CaseAuthoring {
      because the list must be inside the signature and `op=publish` cannot run twice over one prepared edition. Only
      the list's two runs change, through publication's one splice (its R21), and only while the document is unsigned
      and still at the hash read, so a signature over the old bytes is refused stale and the owner signs what names the
-     second reader. A document authored before this landing carries neither run and is left as it is, and says so. */
+     second reader. A document authored before this landing carries neither run and is left as it is, and says so. The
+     runs are located by case-grammar's one locator (its R3, N424), the one `reauthorSection` splices by. */
   #reauthorAcknowledgements(doc) {
     const fm = parseFrontmatter(doc.text).data || {};
     const c = fm.completeness && typeof fm.completeness === "object" ? fm.completeness : {};
-    const lines = doc.text.split("\n");
-    const f0 = lines.findIndex((l) => l.startsWith("  statement_sha: "));
-    const f1 = lines.indexOf("completeness_excluded:");
-    const b0 = lines.findIndex((l) => l.startsWith(ACK_PROSE_HEAD));
-    const b1 = lines.indexOf("## What Was Searched");
-    if (f0 < 0 || f1 < f0 || b0 < 0 || b1 < b0 + 1)
+    if (!SECTIONS.acknowledgements(doc.text.split("\n")))
       return { case_id: doc.case_id, edition: doc.edition, reauthored: false,
                why: "this case document was authored before acknowledgements were recorded, so it has no list "
                   + "to add to; it is left exactly as it was signed-for-review" };
@@ -2042,7 +2047,9 @@ export function caseAuthoringOps(c, url, body) {
       project: q("project") || b.project || null,
       viewer: q("viewer"),
       author: q("author") }),
-    /* R34 (N364): the ceremony's pre-flight, over op=publish's own arguments and stamps; it writes nothing. */
+    /* R34 (N364): the ceremony's pre-flight, over op=publish's own arguments and stamps; it writes nothing. The door
+       stamps `aiCred` (the minted agent credential's token id and principal) beside `viewer` for an agent (N435); one
+       that does not parse is still an agent's, so ratification's fences hold (fail closed). */
     publishpreflight: () => c.publishPreflight({ ...b,
       target: q("target") || b.target,
       targets: b.targets || q("targets") || null,
@@ -2053,7 +2060,9 @@ export function caseAuthoringOps(c, url, body) {
       })(),
       project: q("project") || b.project || null,
       draft: q("draft") || b.draft || null,
-      viewer: q("viewer"),
+      viewer: q("aiCred") ? { stamp: q("viewer"), aiCred: (() => {
+        try { const v = JSON.parse(q("aiCred")); return v && typeof v === "object" ? v : {}; } catch { return {}; }
+      })() } : q("viewer"),
       author: q("author") }),
     /* R19–R21: the review copy's two doors, and a member's third subject (an unsigned case document). */
     statementack: () => c.acknowledgeStatement({ draft: q("draft"), caseId: q("case"), edition: q("edition"),

@@ -2,7 +2,8 @@
  * `build/requirements/case-authoring.md`, R14, R16, R17, R20, R21, R22, R26). Pure: nothing here touches a table, so a
  * suite can render a document without a store and the gate can be run against bytes this file produced. Moved from
  * `store.mjs` (`#caseDocumentText`, `CASE_CITATION_WORDS`, the `#ack…Lines` family, `#withheldWriterStated`,
- * `#statementSha`, `#fmSafe`); the comments moved with them, shortened where they only restated the code.
+ * `#statementSha`; `#fmSafe` is case-grammar's since N424); the comments moved with them, shortened where they only
+ * restated the code.
  *
  * THE DOCUMENT IS A DOCUMENT RATHER THAN A SERIALISATION (CASE-5b / DEC-72). The frontmatter is what the gate and the
  * ratify committer read; the BODY is what a person reads, under canonical headings, because what is signed must be a
@@ -13,18 +14,18 @@
  * map holding an array. Hence `completeness` beside `completeness_excluded`, `searched` beside `searched_levels`,
  * `bias_manifest` beside `bias_manifest_bundles`. */
 
-import { createSha256, EARNED_CAPTURE_CEILING } from "../../checks/bio-checks.mjs";
+import { createSha256, EARNED_CAPTURE_CEILING } from "../record-grammar/index.mjs";
+import { fmSafe } from "../case-grammar/index.mjs";
 import { CASE_DOCUMENT_FORMAT, attributionFrontmatterLines, attributionBodyLines, captureBlockLines,
          sourceBlockLines } from "../publication/index.mjs";
 import { caseConclusionRowLines } from "../ratification/index.mjs";
 import { barAxisWords } from "../strength/index.mjs";
 
 /** Frontmatter-safe: the restricted grammar has no escapes, so a quote, a backslash or a line break in a DERIVED
- *  string (a strength detail, a bar's explanation) is sanitised here; an AUTHORED field is refused by name at
- *  `op=publish` instead (R3's `BAD_COMPLETENESS`), which is the difference that matters. Idempotent. */
-export function fmSafe(s) {
-  return String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'").trim();
-}
+ *  string (a strength detail, a bar's explanation) is sanitised; an AUTHORED field is refused by name at `op=publish`
+ *  instead (R3's `BAD_COMPLETENESS`), which is the difference that matters. Idempotent. It is case-grammar's one
+ *  spelling (N424), read rather than copied, and re-exported for this module's importers. */
+export { fmSafe };
 
 /** R20: the key an acknowledgement is recorded and matched by: the SHA-256 of the statement exactly as the case
  *  document prints it (`fmSafe`, so a draft's text, an unsigned document's and the act's hash alike). */

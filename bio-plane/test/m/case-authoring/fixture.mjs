@@ -1,5 +1,5 @@
-/* case-authoring over the modules it uses, each the real one (record-core, membership, promotion, provenance,
-   extraction's tables, content, entities, connections, inquiry, basis-versions, strength, bias, observation-log,
+/* case-authoring over the modules it uses, each the real one (record-core, membership, credentials, promotion,
+   provenance, extraction's tables, content, entities, connections, inquiry, basis-versions, strength, bias, observation-log,
    reevaluation, publication, ratification, contradiction), on a real SQLite database (node:sqlite) standing in for a Durable Object's
    storage. What a later module fills is a stand-in the test controls: the run gate `ai-runs` registers with
    contradiction (its R13; `runs` below), the review provider (publication R23, which
@@ -10,6 +10,7 @@ import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
+import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
@@ -25,7 +26,7 @@ import { contradictionOf } from "../../../src/contradiction/index.mjs";
 import { Capture } from "../../../src/capture/index.mjs";
 import { sourcesOf } from "../../../src/sources/index.mjs";
 import { caseAuthoringOf } from "../../../src/case-authoring/index.mjs";
-import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -125,6 +126,10 @@ export function world({ group = "test-group", provider = true, now = null, recor
   record.migrate();
   const membership = membershipOf(host, { record });
   membership.migrate();
+  /* credentials (layer 2, after membership): the signer keys and agent credentials ratification's pre-flight reads
+     (membership's `attestingKeys` copy reads its table), registered with membership at its start (its R16, R17, R20). */
+  const credentials = credentialsOf(host, { record, membership });
+  credentials.migrate();
   /* promotion (layer 2) is created by the first module that joins it, on this host (K61), and case-authoring does not
      use it itself: the fixture reaches the one instance through inquiry's (below). */
   const prov = provenanceOf(host, { record, membership, now: () => clock.now });
@@ -189,7 +194,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
   });
   st.db.exec(CASE_DRAFTS);
   const w = {
-    st, host, record, membership, promotion, prov, content, entities, connections, inquiry, basisVersions, strength,
+    st, host, record, membership, credentials, promotion, prov, content, entities, connections, inquiry, basisVersions, strength,
     bias, observations, reevaluation, publication, ratification, contradiction, runs, clock, readings, grants: new Map(),
     capture, sources,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,

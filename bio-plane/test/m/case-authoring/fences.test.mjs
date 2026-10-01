@@ -3,9 +3,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, AUTHORED } from "./fixture.mjs";
-import { PROJECT_VISIBILITY_CHECKS } from "../../../checks/bio-checks.mjs";
 import { COMPLETENESS_MAX, MEMBER_ROLES, PUBLISH_ACT_CHECKS } from "../../../src/case-authoring/index.mjs";
-import { noSuchProject } from "../../../src/membership/index.mjs";
+import { noSuchProject, PROJECT_VISIBILITY_CHECKS } from "../../../src/membership/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
 
