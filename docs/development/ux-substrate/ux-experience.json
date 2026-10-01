@@ -15807,7 +15807,7 @@
    "recommendation": "Bob should first decide whether these are in CivicOS's scope at all; the smallest honest step is option one, with a tell warning on any link that submits.",
    "whoDecides": "Bob: scope and requirements (whether CivicOS owns any of the network's shared functions) are his.",
    "brief": {
-    "stillOpen": true,
+    "stillOpen": false,
     "settledSince": "",
     "title": "Does CivicOS connect to the network's directory, forum and 'working on' signals?",
     "inOneBreath": "Should CivicOS itself talk to the Believe in Oakland network's shared directory, forum and 'working on' signals, or leave them to the network's own websites?",
@@ -16002,6 +16002,16 @@
      "build/rulings.md K628–K859 checked: none touch the directory, forum or signals"
     ],
     "size": "short"
+   },
+   "ruled": {
+    "date": "2026-10-01",
+    "by": "Bob",
+    "rulings": [
+     "DEC-111"
+    ],
+    "status": "ruled",
+    "title": "The network: believeincities.org, 'working on' notices, and keeping them honest",
+    "decided": "The network's directory and forum stay outside CivicOS: after publishing, a member gets links out and a prefilled directory submission, after the warning; nothing is sent automatically. Inside CivicOS, a project's owner may tell the network the group is working on something, but only from a project defined as working on the issue, after a warning that the public, including anyone being examined, will see it and that stopping later won't unsay it. The notice names the group by its slug (never its members; there are no anonymous notices) and carries the owner's own wording, optionally naming the public body and the matter; 'Working on this since', a date no earlier than the project's creation and no later than today; the date posted; an activity level in five steps (Very active, Active, Some work, Quiet, Dormant) counted from the weeks in the last 13 with real work by members, never the assistant's and never by volume, by a published method and re-signed monthly; 'Interested in collaborating' with a link to knock, only if the owner chooses; and links to any case the project published. Nothing else from the project's private work. Each counted week gets an independent timestamp on a sealed summary of its work, opened when the project publishes. An owner signs the notice as a case is signed, and it is published at the group's own public address, whose page lists its owners' public keys without names. Stopping says so, with an optional handoff note; a notice Dormant for a further month lapses. As holder of the domains, Bob set the network site's policy: the directory lives at believeincities.org/<place> (believein.city for short; believeinoakland.org redirects to /oakland), reads notices where groups publish them, records when it first saw each and keeps them all, and shows each as Stated (typed by hand; lapses after 60 days), Reported (signed by a group's copy) or Proven (its seals opened at publication). A group's record is facts, never a score; notices on the same matter sit side by side, each saying others are welcome; public pages never say 'claim'; impossible combinations are flagged; a group with no published work may have at most two open notices. The screens are Design's."
    }
   },
   {

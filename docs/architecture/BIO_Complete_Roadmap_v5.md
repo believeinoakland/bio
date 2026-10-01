@@ -1,6 +1,6 @@
 # Believe in Oakland
 
-**Status** · The mission of record: values, operational principles, the fifteen design requirements, the seven-category UX, the trust hierarchy and the original implementation roadmap. Self-described as "Working Document — April 2026 (v5, July 20, 2026: status annotation layer against the P2 development ladder; the plan text of v4 is unchanged)"; no approval or ratification is stated in the document — its authority is that every later document derives its constraints from it. Completeness is split by its own 2026-08-10 banner: **§§1–12 are current doctrine; §§13–15 are history**, and the v5 status annotation measures against the retired substrate. Read it first if you are new, and read the banner before the roadmap sections. **§11 GAINED DEC-92 (Bob, 2026-09-29): the five trust levels are shown as an origin mark, with more to decide later.** as of 2026-10-01.
+**Status** · The mission of record: values, operational principles, the fifteen design requirements, the seven-category UX, the trust hierarchy and the original implementation roadmap. Self-described as "Working Document — April 2026 (v5, July 20, 2026: status annotation layer against the P2 development ladder; the plan text of v4 is unchanged)"; no approval or ratification is stated in the document — its authority is that every later document derives its constraints from it. Completeness is split by its own 2026-08-10 banner: **§§1–12 are current doctrine; §§13–15 are history**, and the v5 status annotation measures against the retired substrate. Read it first if you are new, and read the banner before the roadmap sections. **§11 GAINED DEC-92 (Bob, 2026-09-29): the five trust levels are shown as an origin mark, with more to decide later.** **§11 "Inter-group awareness" GAINED DEC-111 (Bob, 2026-10-01): project-backed, signed "working on" signals; no anonymous signals.** as of 2026-10-01.
 
 **Place in the system** · The top of the mission level (`BIO_System_Design.md` §2): the Design Requirements govern it on conflict, the Technical Architecture Decisions govern it on technology, the State Rules govern it on the data store, and the Functional Architecture extends its §9. It owns no construct; it owns the values and the stance every construct serves.
 
@@ -722,6 +722,16 @@ opportunity for any group running the Context Skill on related topics.
 
 **No group owns an issue.** Multiple groups can work on the same topic
 independently.
+
+**Ruled 2026-10-01 by Bob (DEC-111).** A "working on" signal comes only from a project defined as working on the issue, posted
+by that project's owner from the group's own copy after the outward-act warning, signed as a published case is signed and
+published at the group's own address, where the directory reads it. It carries the owner's wording, a "working on this since"
+date no earlier than the project's creation, an activity level in five worded steps computed from members' own work (never the
+assistant's) and backed by sealed, independently timestamped weekly summaries opened when the project publishes, and, if the
+owner chooses, "Interested in collaborating". "Anonymous-compatible" now means members are never named: every signal names
+the group by its slug. Stopping says so, with an optional handoff note. Hand-typed signals show as "Stated" and weaker;
+signals kept by a copy as "Reported"; those whose proof was opened at publication as "Proven". The full rule is
+`BIO_Publication_v0_1.md` §5B; the directory moves to believeincities.org/<place> (Design Requirement 10).
 
 # 12. User experience and interface design
 

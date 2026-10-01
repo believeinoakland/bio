@@ -215,6 +215,12 @@ def _st(q):
     if q.get("brief") and q["brief"].get("stillOpen") in (True, "partly"): return "partly ruled" if q.get("ruled") else "open"
     return (q.get("ruled") or {}).get("status", "ruled") if q.get("ruled") else "open"
 absorbed = {int(a): i + 1 for i, q in enumerate(oqs) for a in ((q.get("brief") or {}).get("absorbs") or [])}
+def _anchor(n):
+    """A related question's anchor: its settled card once fully ruled, else its brief."""
+    try: q = oqs[int(n) - 1]
+    except (TypeError, ValueError, IndexError): return f"oq{n}"
+    if int(n) in absorbed: return _anchor(absorbed[int(n)])
+    return f"oq{n}s" if q.get("ruled") and _st(q) == "ruled" else f"oq{n}"
 need = [(i + 1, q) for i, q in enumerate(oqs) if _st(q) in ("open", "partly ruled") and not (q.get("brief") or {}).get("designOnly") and (i + 1) not in absorbed]
 design_only = [(i + 1, q) for i, q in enumerate(oqs) if (q.get("brief") or {}).get("designOnly") and _st(q) in ("open", "partly ruled")]
 settled = [(i + 1, q) for i, q in enumerate(oqs) if q.get("ruled") and _st(q) != "open"]
@@ -263,7 +269,7 @@ def brief_card(n, q):
     elif r: body += f'<p class="rec"><b>Recommendation:</b> {linkify(r)}</p>'
     if b.get("howToAnswer"): body += '<h4>How you might answer</h4><ul class="say">' + "".join(f"<li>{linkify(t)}</li>" for t in b["howToAnswer"]) + "</ul>"
     if b.get("ifLeftOpen"): body += f'<h4>Meanwhile</h4>{paras(b["ifLeftOpen"])}'
-    if b.get("related"): body += '<h4>Related questions</h4><ul class="bl">' + "".join(f'<li><a href="#oq{e(t.get("n"))}">{e(t.get("n"))}</a>: {linkify(t.get("how"))}</li>' if isinstance(t, dict) else f"<li>{e(t)}</li>" for t in b["related"]) + "</ul>"
+    if b.get("related"): body += '<h4>Related questions</h4><ul class="bl">' + "".join(f'<li><a href="#{_anchor(t.get("n"))}">{e(t.get("n"))}</a>: {linkify(t.get("how"))}</li>' if isinstance(t, dict) else f"<li>{e(t)}</li>" for t in b["related"]) + "</ul>"
     if b.get("glossary"): body += '<details class="gl"><summary>Words used here</summary><dl>' + "".join(f'<dt>{e(g.get("term"))}</dt><dd>{linkify(g.get("plain"))}</dd>' for g in b["glossary"]) + "</dl></details>"
     if b.get("sources"): body += f'<p>{src("Sources: " + "; ".join(b["sources"]))}</p>'
     return f'<li><details class="oqd">{head}<div class="cbody brief">{body}</div></details></li>'

@@ -1,6 +1,6 @@
 # UX design session: handoff
 
-Written 2026-10-01 by the UX design session `session_01EhPoUTrVCgAqw2ktRyKjCU` (Bob's primary account) for its successor. Read it whole, then `README.md` in this folder (especially "Working alongside the development process").
+Written 2026-10-01 by the UX design session `session_01EhPoUTrVCgAqw2ktRyKjCU` (Bob's primary account) for its successor; taken over the same day by `session_01TNeXM2Qvi7zMXT6BntbENE`, which ruled question 29 with Bob (DEC-111) and updated §3, §4 and §5. Read it whole, then `README.md` in this folder (especially "Working alongside the development process").
 
 ## 1. Who you are
 
@@ -23,12 +23,12 @@ You are the UX design session for CivicOS, working with Bob (the product owner) 
 ## 3. Recording a ruling: the checklist
 
 1. `git fetch origin main mail/UX-DESIGN tranche/T<n>` (the current tranche). Read `mail/BOB.md` past your Read cursor if it exists. Grep the new K-rulings in `build/rulings.md` on `main` and the tranche branch for anything that settles or changes the question. If the development process already ruled, cite it; never record a second, conflicting ruling.
-2. Append a DEC entry to `docs/development/DECISIONS.md` (copy DEC-110's shape: `raised:` with "the UX design session with Bob on his primary account (session_<yours>; the development process runs on his secondary account)", `for`, `question`, `why it is Bob's`, `provisional`, `alternative`, `recommendation`, `reversal cost`, `response` with his words, `decided`, `reasoning recorded in`, `owed`). **Next free number: DEC-111** (`main` has to DEC-95; the branch DEC-96 to DEC-110). Check both before using it.
+2. Append a DEC entry to `docs/development/DECISIONS.md` (copy DEC-110's shape: `raised:` with "the UX design session with Bob on his primary account (session_<yours>; the development process runs on his secondary account)", `for`, `question`, `why it is Bob's`, `provisional`, `alternative`, `recommendation`, `reversal cost`, `response` with his words, `decided`, `reasoning recorded in`, `owed`). **Next free number: DEC-112** (`main` has to DEC-95; the branch DEC-96 to DEC-111). Check both before using it.
 3. Fold the ruling into the canon document it changes (`docs/architecture/*.md` or `docs/development/*.md`): a "RULED <date> by Bob (DEC-n)" passage, the document's Contents list and Status/"as of" line updated by hand (`tools/corpuscheck.mjs` was deleted on `main` in T19; there is no automatic check).
 4. In `ux-experience.json`, give the question a `ruled` entry (the design as it now stands, plain words) and set `brief.stillOpen` to `false` (or `"partly"`, updating `alreadyDecidedPart`).
 5. Build: `python3 docs/development/ux-substrate/build_ux2.py` from the repository root. Check it: `node <civicos-process clone>/checks/run.mjs /home/user/bio` (the format check must show 0 failures).
 6. Commit (message `DEC-n: question N ruled (...)`) and push the branch. Update PR #6's description if its list of DECs changed.
-7. Append a NOTICE to the outbox: copy the latest entry's shape (`## U<n> · NOTICE · <date> · <session> · primary`, one paragraph stating the ruling, then `Folded: <doc §>. On PR #6's branch. Owed (its owed: line): ...`). **Last entry is U18.** Push it without touching any other branch, by plumbing:
+7. Append a NOTICE to the outbox: copy the latest entry's shape (`## U<n> · NOTICE · <date> · <session> · primary`, one paragraph stating the ruling, then `Folded: <doc §>. On PR #6's branch. Owed (its owed: line): ...`). **Last entry is U19.** Push it without touching any other branch, by plumbing:
    ```
    git fetch origin mail/UX-DESIGN
    git show origin/mail/UX-DESIGN:mail/UX-DESIGN.md > /tmp/ux.md   # append your entry to this copy
@@ -44,11 +44,13 @@ You are the UX design session for CivicOS, working with Bob (the product owner) 
 ## 4. Where things stand (2026-10-01)
 
 - `main` @ `615672a1a0` (T20 closing). T21 was in its last layer (layer 11) on `tranche/T21`; T22 is drafted. The page's inventory was refreshed to `main` @ `c1a27e41a5`.
-- **Ruled:** questions 1–16 and 18–28, 32 and 33 (the DECs on this branch are DEC-96 to DEC-110; K633, K899 (1), K899 (7), K903 (4) and K943 were ruled through the development process and are cited on the page).
-- **Still open:** 29 (under exploration, §5), 30 (partly), 31 (partly), 34, 35, and 36 (partly; it absorbs 17, the docket and withdrawal of a published case; retraction was deferred here from T21 on 1 October, K943).
+- **Ruled:** questions 1–16 and 18–29, 32 and 33 (the DECs on this branch are DEC-96 to DEC-111; K633, K899 (1), K899 (7), K903 (4) and K943 were ruled through the development process and are cited on the page).
+- **Still open:** 30 (partly), 31 (partly), 34, 35, and 36 (partly; it absorbs 17, the docket and withdrawal of a published case; retraction was deferred here from T21 on 1 October, K943).
 - The briefs follow the schema in §6. When you rewrite one, edit `ux-experience.json` directly; do not regenerate the file wholesale (that would undo `ruled` entries and `stillOpen` flags).
 
-## 5. Question 29: the exploration so far (nothing recorded)
+## 5. Question 29: how the exploration went (RULED 2026-10-01, DEC-111)
+
+Bob confirmed the final text on 2026-10-01; DEC-111 holds it whole, folded into Publication §5B, Roadmap §11 "Inter-group awareness" and Design Requirement 10. In the last rounds Bob added: a notice must come from a project defined as working on the issue, posted only by its owner; a "working on this since" date no earlier than the project's creation; an activity indicator computed and signed by the copy (five worded steps, over members' own work in the last 13 weeks); no anonymous notices (every group has its slug); "Interested in collaborating" as the only optional extra. Asked whether altered code could sign a fake, the answer recorded is: yes, and prevention would need a central host, so fakes are made attributable, impossible to backdate, and unable to rise past "Reported" without sealed weekly proof opened at publication. What follows is the history before those rounds.
 
 **The brief.** "Does CivicOS connect to the network's directory, forum and 'working on' signals?" Options: A (they stay outside CivicOS; links out and a prefilled submission form, with a warning; recommended), B (CivicOS submits and shows directory status), C (a 'working on' act in CivicOS, with a full warning, optionally anonymous), D (out of scope).
 
