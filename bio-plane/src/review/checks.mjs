@@ -10,7 +10,7 @@
 
 const at = (fn, region) => `src/review/index.mjs ${fn} > ${region}`;
 
-/* D-448 / C-87 (minted with `node tools/mintid.mjs C`, 2026-09-24) — THE REVIEW COPY'S ELEVEN REFUSALS (a twelfth, C-87.12, joined them in T12 and retired into record-core's C-59.6 in T13),
+/* D-448 / C-87 (its number minted 2026-09-24) — THE REVIEW COPY'S ELEVEN REFUSALS (a twelfth, C-87.12, joined them in T12 and retired into record-core's C-59.6 in T13),
  * which reached a member as machine words (`BIO_Publication_v0_1.md` §6A, §6A.4; DEC-49).
  *
  * WHAT WAS MEASURED, and by which instrument. UI-68 built §6A's surface on 2026-09-23 — an editor drafts,
