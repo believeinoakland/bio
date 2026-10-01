@@ -12,7 +12,7 @@
 - Improvements in my module: `MUTE_REFUSAL_DETAIL`'s OBLIGATION sentence names `disposition.instead` beside `op=taskresolve`; a stale "four of the twelve have a producer" corrected.
 - `awaiting stamp`: none. No check row (C-) was moved or changed by this job.
 
-- B4 (CHANGE, K728, from QUEUE-PRODUCERS #2 J1): `Queue.PRODUCER_DEPS` gains `actionClocks`, `escalation` and `actionPlans`, so a caller's fakes reach queue-producers (R8, R15–R18); tested that each fake is asked by its producer (`overdueClocks`, `remindersDue`, `escalationsDue`, `checkpointsDue`), negative control run (the three removed: the test fails). B2 (answer to J2) and B3 (N410) were already applied.
+- B4 (CHANGE, K728, from QUEUE-PRODUCERS #2 J1): `Queue.PRODUCER_DEPS` gains `actionClocks`, `escalation` and `actionPlans`, so a caller's fakes reach queue-producers (R8, R15–R18); tested that each fake is asked by its producer (`overdueClocks`, `remindersDue`, `escalationsDue`, `checkpointsDue`), negative control run (the three removed: the test fails). B2 (answer to J2) and B3 (N410) were already applied. B5 (CHANGE, K735, from CONTROL-PLANE #9 J3): `test/m/queue/world.mjs` makes queue's tables by `q.migrate()` (R36) at boot, never through the legacy store's `SCHEMA`; proved with `${QUEUE_SCHEMA}` removed from `src/schema.mjs` locally (not committed; control-plane's edit): 69 pass, 0 fail with the change, 13 pass, 56 fail without it. No other queue test relies on `SCHEMA` for queue's tables.
 
 **Deferred:** none.
 
@@ -28,9 +28,9 @@
 **Tests and checks** (on `job/T18/queue` after merging `tranche/T18` @ 586d4e730a):
 - `node --test bio-plane/test/m/queue/`: tests 69, pass 69, fail 0 (after B4, on `tranche/T18` @ K728's merge).
 - With users `test/m/queue-producers/`, `tasks/`, `control-plane/`: tests 266, pass 265, fail 1 (above, pre-existing), todo 0.
-- `format`: 82 modules, 77 requirements files; 0 failures. `architecture queue`: 15 product files, 45 relative imports; 0 failures. `coverage queue`: 37 of 37 live requirement ids named by a test; 0 failures. `ownership queue tranche/T18` (after B4): 3 files changed; legacy-store, legacy-checks, legacy-index 0 lines; 0 failures.
+- `format`: 82 modules, 77 requirements files; 0 failures. `architecture queue`: 15 product files, 45 relative imports; 0 failures. `coverage queue`: 37 of 37 live requirement ids named by a test; 0 failures. `ownership queue tranche/T18` (after B5): 2 files changed; legacy-store, legacy-checks, legacy-index 0 lines; 0 failures.
 
-Size (session_017quvzjcQTLPGZEZJVP6Pco): test runs 15, module lines 2529
+Size (session_017quvzjcQTLPGZEZJVP6Pco): test runs 19, module lines 2529
 
 ## J1 · COMPLETE
 
