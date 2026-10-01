@@ -670,3 +670,5 @@ From `draft-T18-sweep.md` §2, adopted by K649: these entries were carried by T1
   → applied: met or moot by T18's close (K655); moved at T19's opening by a worker for BOB #80 (`current.md`, "next.md: every entry"; K743).
 - N420 · 2026-09-30 · **civicos-process `tools/mail.mjs`** (ACQUISITION #1 J1; K659): `state` (and every command that commits) commits only the file it writes, never other staged files. *(fixed: civicos-process 7e51d7c, K659)*
   → applied: met or moot by T18's close (K659); moved at T19's opening by a worker for BOB #80 (`current.md`, "next.md: every entry"; K743).
+- N175 · 2026-09-28 · **process** (QUEUE #1 REPORT J2.5): `checks/ownership.mjs`' `usesOwn` does not see an imported name used through spread (`...name(…)`), because it excludes a name after `.`; allow `...` before it (with the C15 revision, P3).
+  → applied: civicos-process `main` @ d52122eb48 (K745, BOB #80's opening act).

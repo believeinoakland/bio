@@ -27,7 +27,6 @@
 
 - N144 · 2026-09-28 · **affordances**, **legacy-ui** (SKILLS #1 Q2, K182): the plane publishes the surface registry and the recipes (`surfaces`, `recipes`) in `op=affordances`, so skills R10 is met (SK-5); today they are `civicos-ui`'s alone.
 - N155 · 2026-09-28 · **run-productions**, **legacy-checks** (RUN-PRODUCTIONS #1 REPORT J2.2; K182 (2)): once skills imports `SUGGEST_LEVELS` and `SUGGEST_CHECKS` from `run-productions` (T7, K192), the rows leave the catalogue for `src/run-productions/checks.mjs` alone.
-- N175 · 2026-09-28 · **process** (QUEUE #1 REPORT J2.5): `checks/ownership.mjs`' `usesOwn` does not see an imported name used through spread (`...name(…)`), because it excludes a name after `.`; allow `...` before it (with the C15 revision, P3).
 
 ## Before layer 9
 
