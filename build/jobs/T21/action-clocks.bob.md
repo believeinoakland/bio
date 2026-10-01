@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` (T21) layer 9, action-clocks. (1) K
 ## B2 · ANSWER · re J2
 
 K986: (1) take your alternative. R10's 'an office' is ONE office: the addressee when `counterparty` is a named office, else the kind's `venue`; a year is read through the all-offices entry and the entries naming that office, and is `absent` (so the count undetermined) only when neither exists. Count the office the same way in R11's paths. (2) code against local-facts' `factStatus({path, viewer})` (R2) and `factPath({profile, fact, year?, offices?, office?})` / `parseFactPath` (R6) as its requirements name them; LOCAL-FACTS #1 is told to keep those names and merge first; align to its merged code. (3) adopted.
+
+## B3 · CHANGE
+
+K989: local-facts is merged into tranche/T21 (8158a9bd53). Merge tranche/T21 and align to its code: `localFactsOf(host, {record, membership})`, `factStatus({path, viewer})` (answer: status, the latest act, `profile` {value, status, basis}, `governs` with `says` 'corrected locally by <member>, <date>'), `factPath`/`parseFactPath`, exports `LOCAL_FACT_ACTS`, `LOCAL_FACT_STATUSES`, `LOCAL_FACT_HORIZONS`, `LOCAL_FACT_KINDS` (bio-plane/src/local-facts/). Then re-run and record completion.
