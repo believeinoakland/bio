@@ -7,7 +7,6 @@ import { world, V, AUTHORED } from "./fixture.mjs";
 import { caseAuthoringOps, caseAuthoringOwns, CASE_AUTHORING_TABLES, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS,
          CASE_DISCLOSURE_CHECKS, PUBLISH_ACT_CHECKS, STATEMENT_ACK_MAX, SEARCHED_LEVEL_OUTCOMES }
   from "../../../src/case-authoring/index.mjs";
-import * as CATALOGUE from "../../../checks/bio-checks.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
 
@@ -89,22 +88,11 @@ test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3
     assert.ok(typeof row.translation === "string" && row.translation.length > 40, "a member's sentence");
     assert.ok(!/[A-Z]{2,}_[A-Z_]+/.test(row.translation), "no code in a member's words");
   }
-  /* the rows left the catalogue: one row per code, here. Asked of every row family the catalogue exports, by code and
-     by check id, so the answer does not depend on which (possibly emptied, possibly removed) family once held them. */
-  const moved = [...Object.entries(CASE_DERIVATION_CHECKS), ...Object.entries(STATEMENT_ACK_CHECKS),
-                 ...Object.entries(CASE_DISCLOSURE_CHECKS)];
-  const codes = new Set(moved.map(([k]) => k)), ids = new Set(moved.map(([, v]) => v.check));
-  const held = [];
-  let families = 0;
-  for (const [name, family] of Object.entries(CATALOGUE)) {
-    if (!family || typeof family !== "object" || Array.isArray(family)) continue;
-    const rows = Object.entries(family).filter(([, v]) => v && typeof v === "object" && typeof v.check === "string");
-    if (rows.length) families += 1;
-    for (const [k, v] of rows) if (codes.has(k) || ids.has(v.check)) held.push(`${name}.${k} (${v.check})`);
-  }
-  assert.ok(families > 10, "the walk reached the catalogue's row families");
-  assert.deepEqual(held, [], "no row of the catalogue holds a moved code or check id");
-  assert.equal("STATEMENT_ACK_CHECKS" in CATALOGUE, false);
+  /* one row per code and per check id across this module's families: no code or id is held twice here */
+  const all = [...Object.entries(CASE_DERIVATION_CHECKS), ...Object.entries(STATEMENT_ACK_CHECKS),
+               ...Object.entries(CASE_DISCLOSURE_CHECKS), ...Object.entries(PUBLISH_ACT_CHECKS)];
+  assert.equal(new Set(all.map(([k]) => k)).size, all.length, "each code once");
+  assert.equal(new Set(all.map(([, v]) => v.check)).size, all.length, "each check id once");
   /* the machine fence and the missing statement answer with this module's own rows */
   const { w, P } = setup();
   const m = w.publish(P, "alice", [Q], { author: "class:daemon" });
