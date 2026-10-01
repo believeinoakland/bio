@@ -1,6 +1,6 @@
 # publication (T20)
 
-**Status** · session_0161AvGLr1d2yQEQQjgWcAz3 · depth 2 · WORKING · handled B1
+**Status** · session_0161AvGLr1d2yQEQQjgWcAz3 · depth 2 · COMPLETE · handled B1
 
 ## J1 · REPORT
 
