@@ -2,8 +2,8 @@
  * `build/requirements/promotion.md`). It holds the compare-and-swap, keeps history append-only, takes the document's
  * own bytes as the record's word on what it is, and refuses a whole promotion when any rule fails: the bundle advances
  * as one transaction (`record-core.transact`) or nothing is written. Later modules join a promotion by registering a
- * check and a projection (R39) and the facts it needs (R40); until a module is extracted, `legacy-store` registers its
- * share. It also runs the gate (`../gate.mjs`), and the case gate over the case-document catalogue a later module
+ * check and a projection (R39) and the facts it needs (R40); a share no owner registers yet is held by `plane` (its
+ * R10) until its owner's export is registered. It also runs the gate (`../gate.mjs`), and the case gate over the case-document catalogue a later module
  * registers with the instance (R33, R47), and reopens a set-down inquiry.
  *
  * REACHED as `promotionOf(host, deps)`: one instance per host (the Durable Object's `ctx`), created on the first call
@@ -34,7 +34,7 @@ export { PROMOTION_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHE
          PROJECT_MINT_CHECKS, PROMOTION_REGISTRATION_CHECKS } from "./checks.mjs";
 export { recordChecks } from "./record-checks.mjs";
 /* Moved here from the catalogue in T18 (K636): the name key and C-77 (R19, R38), the producing group's one writing
-   (R13), and the mechanical field sets R8 and C-20.1 read (a copy until T19 deletes the catalogue's). */
+   (R13), and the mechanical field sets R8 and C-20.1 read (the catalogue's copy deleted in T19, K750). */
 export { projectNameKey, checkProjectNameUniqueness } from "./names.mjs";
 export { withProducingGroup } from "./text.mjs";
 export { MECHANICAL_FIELD_SETS } from "./history.mjs";

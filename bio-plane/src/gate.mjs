@@ -290,8 +290,8 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    C-113.2 and intent's C-111.2 (NO_SUCH_PROJECT, answered through membership's C-70.5), filings' C-115.2 and
    escalation's C-116.11 (NO_SUCH_ACTION, answered through actions' C-117.2). CHANGED: C-113.17 BAD_REASON, which also
    answered an absent supersession reason until C-113.22 took it, now refuses one condition. MOVED, NOT CHANGED: C-22.7
-   AI_RUN_SKILL_VERSION_UNNAMED left the catalogue's `AI_RUN_CHECKS` (N299, K381) and is held once, in ai-runs' table,
-   its `where` now `src/ai-runs/skill-version.mjs checkSkillVersion`; code, condition and translation unmoved. Wording
+   AI_RUN_SKILL_VERSION_UNNAMED left the catalogue's `AI_RUN_CHECKS` (N299, K381) and is held once, its `where` naming
+   `checkSkillVersion` (in `src/run-rules/skill-version.mjs` since T19, K882); code, condition and translation unmoved. Wording
    only, what is refused or admitted unmoved: the `where`s of C-73.6, C-90.2, C-113.12, case-authoring's C-44.1 and
    C-44.3–C-44.5, and consequences' C-114.1, C-114.3 and C-114.12–C-114.17; the translations of C-73.3 (the levels named
    from `LAW_LEVELS`), C-113.17, C-114.3, C-114.10, C-114.12 and C-114.17. MINOR, rule 17 moving the stamp for
@@ -460,7 +460,33 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    to this tree: 1051 rows. The `tools/` files a module's `paths` hold since K771 run when imported and hold no row
    literal, so the census reads them as R50's scripts are read (text only): the figures are unmoved by it. Rows T19's
    layers 3–11 change are T20's stamp (`awaiting stamp`). */
-export const CATALOG_VERSION = "1.49.0";
+/* 1.50.0 (PROMOTION #21, T20 layer 2, 2026-10-01; K792, K871, K881): EVERY ROW CHANGE SINCE 1.49.0, counted wherever
+   the rows live (R34, R47), read by diffing R50's census lines of `tranche/T20` after membership merged (K881) against
+   1.49.0's own (reproduced at d93286c6ad: 1051 rows, c7e4b82c…): six re-keyed, twenty-nine changed, sixty-five rows held
+   twice now held once, no other arrival or departure. Each is one a job record names (T19's layers 3–11 `awaiting
+   stamp`; T20's layers 1–2, which changed no row: membership's deletion of its credential copies took no row object).
+   RE-KEYED, number, `where` and translation unmoved (the old code departed, the new arrived): C-111.4
+   INTENT_NO_SUCH_PROGRESSION, C-111.6 INTENT_BAD_STAGE, C-111.13 INTENT_NO_REASON (intent, K823); C-113.17
+   CONFORMANCE_BAD_REASON, C-113.22 CONFORMANCE_NO_REASON (conformance, N433); C-116.24 ESCALATION_NO_REASON (escalation,
+   N433).
+   CHANGED, `where` only, code, condition and translation unmoved: C-25.1–.10, .12–.15, .19 and C-27.15 (basis-versions'
+   grammar); C-45.1–.4, .11, .12 (content, K801); C-54.1 (inquiry-grammar); C-66.5 (inquiry, its own step); C-68.1
+   (acquisition, K794, K796); C-73.6 (action-grammar); C-81.1 (connections); C-117.11 (actions' `contactNotAMember`, K837);
+   C-123.2 (action-clocks' `reminderRefused`).
+   HELD ONCE AGAIN, each line unchanged, the catalogue's copies gone with the file (T19's close, K858): observation-log's
+   C-22.1–.4, .6, .9, .10, .17; capture-requests' C-28.1–.4, .6–.11, .14–.18 and acquisition's C-28.13; ratification's
+   C-32.1, C-33.10–.12 and case-authoring's C-32.6, C-33.14; entities' C-33.25; content's C-80.3; action-clocks' C-117.5;
+   membership's C-33.28, C-33.48, C-55.1, C-56.1, C-56.2, C-57.1, C-70.1–.4, C-95.1–.9, C-96.2–.12 (C-96.8 still held
+   twice, membership's and credentials'); this module's C-26.12 and C-64.1.
+   MOVED, NOT CHANGED, each line byte-identical where it now lives: public-read's C-44.2, C-68.5, C-98.1–.9; action-grammar's
+   rows from actions.
+   CHANGED IN WHAT THE GATES RUN, no row moving: the arms 1.49.0 named as reaching the gate and the audit through
+   record-core's legacy registration (C-6.1, C-15.1, C-2.8; C-2.9/C-9.1; C-2.7) are registered by their owners
+   (inquiry-grammar, intent, capture), each moved line for line, so what judges a bundle is unmoved.
+   MINOR, rule 17 moving the stamp for re-keyed and changed rows and a changed composition. ROW_CENSUS (R50) is re-pinned
+   to this tree, module tables only, the catalogue being gone: 986 rows. Rows T20's layers 3–11 change are T21's stamp
+   (`awaiting stamp`). */
+export const CATALOG_VERSION = "1.50.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -551,8 +577,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 /* R50 (N319, K431): the census of every refusal row as this stamp read it, pinned here and held against the tree by
    legacy-tests' census suite (this module cannot read a later module's table, P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1051,
-  digest: "c7e4b82cbbbc2578aba38f221cde45e25f83bce54f5e2707dec982ed7ded38e3" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 986,
+  digest: "dd61926a033ecd289e1fa7446cae09aa976470daf13bc46d8bd379b072ff43a5" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();

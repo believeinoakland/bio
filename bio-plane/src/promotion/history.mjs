@@ -31,8 +31,8 @@ export function historyWriteOrder(raw) {
 /** Per-operation closed field sets (daemon slate Section 0), the registry C-20.1 and R8 read: a mechanical promotion
  *  names one of these operations and changes only its fields. `last_updated` rides every mutating set: the
  *  write-completeness law (C-12.1, C-13.2) makes it inseparable from any update. Front-matter paths in dotted form;
- *  `clock[]` denotes clock entry fields. Copied here from the catalogue in T18 (K636): the catalogue's copy stays until
- *  monitoring's tests re-point here (layer 10) and T19's layer 1 deletes it; the two are held equal by R8's test. */
+ *  `clock[]` denotes clock entry fields. Moved here from the catalogue in T18 (K636); the catalogue's copy was deleted in
+ *  T19 (K750), so this is the one registry. */
 export const MECHANICAL_FIELD_SETS = Object.freeze({
   "monitor-tick": Object.freeze(["source_status", "monitoring.last_checked", "reeval_pending.flag", "reeval_pending.since",
                                  "reeval_pending.source", "last_updated"]),
