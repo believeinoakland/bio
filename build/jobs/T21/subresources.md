@@ -26,3 +26,7 @@ Size (session_013wub6dXNauK3Eb12UzKxmu): test runs 1, module lines 1426
 ## J1 · REPORT
 
 Generated artifacts staled by N458 (`manifest.link_note` is product output): `pdf-worker/dist/pdf-worker.bundled.mjs` (+ `.bundle.json`) and `ocr-worker/dist/ocr-worker.bundled.mjs` (+ `.bundle.json`), which take `subresources.mjs`; also the plane bundle `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`). Regenerated none.
+
+## J2 · COMPLETE
+
+N458 applied (link_note :1378, :1381 and comments :791, :793, :1285 now say "record"); N469: no note in my paths names a deleted file as live; one note re-pointed to this module's R16 test. No requirement states link_note's text, so no requirement-named test of it. test/m/subresources 35/35 pass; format, architecture, coverage (34/34), ownership: 0 failures. Stale bundles in J1. Record: build/jobs/T21/subresources.md on job/T21/subresources.
