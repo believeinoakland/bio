@@ -97,7 +97,7 @@ export async function checkSignedAsset({ manifest, bytes, version, signers = ARM
   if (manifest.version !== version) {
     return `REFUSING TO EMBED: release/RELEASE.json is ${JSON.stringify(manifest.version)} but bio-plane/package.json `
       + `is ${version}. Only a SIGNED release is embedded; cut and sign ${version} `
-      + "(tools/release-assemble.mjs --sign) before embedding it.";
+      + "(node bio-plane/scripts/release-assemble.mjs --sign) before embedding it.";
   }
   const got = createHash("sha256").update(bytes).digest("hex");
   if (got !== manifest.sha256) {
