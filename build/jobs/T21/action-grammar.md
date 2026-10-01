@@ -18,3 +18,7 @@
 - `format`: 86 modules, 84 requirements files; 0 failures. `architecture`: 7 product files, 13 relative imports; 0 failures. `coverage`: 11 of 11 live requirement ids named by a test; 0 failures. `ownership` (tranche/T21): 3 files changed by action-grammar; 0 failures.
 
 Size (session_01NSG7PWGRJhWFEa8NTAWrtN): test runs 2, module lines 1773
+
+## J1 · REPORT
+
+Generated artifact staled: `bio-plane/dist/bio-plane.bundled.mjs` (owner `not_product`). My comment-only change to `src/action-grammar/checks.mjs` and `grammar.mjs` makes `fleetbundles.test.mjs` report STALE BUNDLE for both sources. Regenerated nothing (BOB regenerates at the layer close).
