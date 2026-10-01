@@ -82,8 +82,8 @@ const sha = (v) => createHash("sha256").update(v).digest("hex");
 const S = (v) => (typeof v === "string" ? v : null);
 
 const mf = new Miniflare({
-  modules: true, modulesRoot: "/", scriptPath: SRC("index.mjs"),
-  script: readFileSync(SRC("index.mjs"), "utf8"),
+  modules: true, modulesRoot: "/", scriptPath: SRC("plane/index.mjs"),
+  script: readFileSync(SRC("plane/index.mjs"), "utf8"),
   modulesRules: [{ type: "ESModule", include: ["**/*.mjs"] }],
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
