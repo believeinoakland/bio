@@ -11,7 +11,7 @@ import { retrievalOf } from "../../../src/retrieval/index.mjs";
 import { schedulerOf } from "../../../src/scheduler/index.mjs";
 import { instanceSetupOf } from "../../../src/setup.mjs";
 import { MODULE_ORDER } from "../../../src/membership/index.mjs";
-import { HELD } from "../../../src/plane/held.mjs";
+const STEP = "control-plane";   /* control-plane's promotion step (its R42), registered under its name */
 const { MODULE_MAPS, ownMaps } = await import("./maps.mjs");   /* after the fixture: control-plane reaches `cloudflare:workers` */
 
 const tables = (sql) => [...sql.exec(`SELECT type, name, sql FROM sqlite_master ORDER BY type, name`)].map((r) => ({ ...r }));
@@ -64,38 +64,38 @@ test("R2: record-core is handed the evidence bucket and the prefix of the object
   assert.equal(recordOf(st.ctx).evidenceStore(), null, "no bucket bound, no evidence store");
 });
 
-test("R2: before the first request every module's start registrations are held, each slot in the modules' order, and the held shares under `plane-held`", async () => {
+test("R2: before the first request every module's start registrations are held, each slot in the modules' order, the stats sight as `plane`, the leg grades as `inquiry` and control-plane's step under its name", async () => {
   const x = await store();
-  /* The held stats figures and leg grades are the one registration of their slot. */
+  /* The stats sight and the leg grades are the one registration of their slot. */
   const second = recordOf(x.ctx).registerStatsSource("probe", () => ({}));
   assert.equal(second.code, "STATS_SOURCE_DECLARED");
-  assert.equal(second.heldBy, HELD);
-  assert.deepEqual(retrievalOf(x.ctx).registerLegGrades("probe", () => []), { ok: false, reason: "RESOLVER_DECLARED", module: "probe", declaredBy: HELD });
+  assert.equal(second.heldBy, "plane");
+  assert.deepEqual(retrievalOf(x.ctx).registerLegGrades("probe", () => []), { ok: false, reason: "RESOLVER_DECLARED", module: "probe", declaredBy: "inquiry" });
   /* Every step a module of the order registers at start is held: a second registration of each is refused. */
   for (const m of ["provenance", "extraction", "retrieval", "inquiry", "basis-versions", "strength", "bias", "ai-runs",
                    "intent", "reevaluation", "publication", "ratification", "standards", "conformance", "actions",
-                   "escalation", "action-plans", "monitoring", "tasks", HELD])
+                   "escalation", "action-plans", "monitoring", "tasks", STEP])
     assert.equal(promotionOf(x.ctx).registerStep(m, {}).ok, false, `${m}'s step is held`);
   /* queue and tasks have made their tables. */
   const names = tables(x.ctx.storage.sql).map((t) => t.name);
   for (const t of ["tasks", "queue_state"]) assert.ok(names.includes(t), `table ${t}`);
 });
 
-test("R2, R10: the held step runs at `legacy-store`'s place in the step order, after layer 10 and before `affordances` and `tasks`, so checks and refusals keep their order", async () => {
-  assert.ok(STEP_ORDER.indexOf(HELD) > STEP_ORDER.indexOf("monitoring"));
-  assert.ok(STEP_ORDER.indexOf(HELD) > STEP_ORDER.indexOf("scheduler"));
-  assert.equal(STEP_ORDER.indexOf(HELD) + 1, STEP_ORDER.indexOf("affordances"));
-  assert.ok(STEP_ORDER.indexOf(HELD) < STEP_ORDER.indexOf("tasks"));
-  assert.deepEqual(STEP_ORDER.filter((m) => m !== HELD), MODULE_ORDER.filter((m) => m !== HELD), "otherwise the modules' order");
-  /* Observed on a promotion: probes registered either side of it see the held testimony check run between them. */
+test("R2, R10: control-plane's step runs at `legacy-store`'s place in the step order, after layer 10 and before `affordances` and `tasks`, so checks and refusals keep their order", async () => {
+  assert.ok(STEP_ORDER.indexOf(STEP) > STEP_ORDER.indexOf("monitoring"));
+  assert.ok(STEP_ORDER.indexOf(STEP) > STEP_ORDER.indexOf("scheduler"));
+  assert.equal(STEP_ORDER.indexOf(STEP) + 1, STEP_ORDER.indexOf("affordances"));
+  assert.ok(STEP_ORDER.indexOf(STEP) < STEP_ORDER.indexOf("tasks"));
+  assert.deepEqual(STEP_ORDER.filter((m) => m !== STEP), MODULE_ORDER.filter((m) => m !== STEP), "otherwise the modules' order");
+  /* Observed on a promotion: probes registered either side of it see its testimony check run between them. */
   const x = await store();
   instanceSetupOf(x.ctx).instanceGroupSeed({ slug: "oak-watch", author: "admin" });
   const seen = [];
   for (const m of ["scheduler", "affordances"]) promotionOf(x.ctx).registerStep(m, { check: () => { seen.push(m); return null; } });
-  provenanceOf(x.ctx).onTestimony("zz-probe", { check: () => { seen.push(HELD); return null; } });
+  provenanceOf(x.ctx).onTestimony("zz-probe", { check: () => { seen.push(STEP); return null; } });
   const r = await x.call("/testify?author=member:m-riley", { words: "The gate was chained.", observedAt: "2026-09-01" });
   assert.equal(r.ok, true, JSON.stringify(r));
-  assert.deepEqual(seen, ["scheduler", HELD, "affordances"]);
+  assert.deepEqual(seen, ["scheduler", STEP, "affordances"]);
 });
 
 test("R3: the migration pass is idempotent: a second construction on one storage changes no table, and the PROJ ledger is seeded from the live bundles", async () => {

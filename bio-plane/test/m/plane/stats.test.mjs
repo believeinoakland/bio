@@ -1,6 +1,6 @@
-/* plane R10: the code held for owners not yet extracted (K842), registered as `plane-held`, each share answering as it
-   answered under `legacy-store`: the stats figures (op=stats and purge's proof), the leg-grade registration, and the
-   promotion step (provenance's testimony slot and the sight index, with the answer's keys). */
+/* plane R10 (K842, K861): the stats figures (op=stats and purge's proof) and the leg grades, registered under their
+   owners' names, and the plane's own stats sight (`src/plane/stats.mjs`), registered as `plane`, each answering as it
+   answered under `legacy-store`. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { store } from "./fixture.mjs";
@@ -10,10 +10,14 @@ import { retrievalOf } from "../../../src/retrieval/index.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
 import { runProductionsOf } from "../../../src/run-productions/index.mjs";
 import { instanceSetupOf } from "../../../src/setup.mjs";
-import { HELD, heldLegGrades } from "../../../src/plane/held.mjs";
-import { inquiryOf, legCapped } from "../../../src/inquiry/index.mjs";
+import { inquiryOf, legCapped, inquiryLegGrades, Inquiry } from "../../../src/inquiry/index.mjs";
+import { RecordCore } from "../../../src/record-core/index.mjs";
+import { Membership } from "../../../src/membership/index.mjs";
+import { RunProductions } from "../../../src/run-productions/index.mjs";
+import { BasisVersions } from "../../../src/basis-versions/index.mjs";
+import { ObservationLog } from "../../../src/observation-log/index.mjs";
 
-/* The held figures, in the order the answer gives them, before every module's registered figures (record-core R63). */
+/* The figures the held copy answered on the wire; their order is free (K861 (5)). */
 const WIRE = ["bundles", "files", "history", "refs", "textIndexOk", "projectParticipants", "projectOwnerVotes",
               "proposedReadings", "inquiryMigrationReplays", "observationsNonLead", "basisVersions", "basisVersionLegs",
               "suggestRefusals"];
@@ -36,10 +40,10 @@ async function world() {
 }
 const one = (x, q, ...a) => [...x.ctx.storage.sql.exec(q, ...a)][0];
 
-test("R10: op=stats answers the held figures first, in their order, through the caller's sight, each as its table counts it", async () => {
+test("R10: op=stats answers every figure the held copy answered, through the caller's sight, each as its table counts it", async () => {
   const x = await world();
   const whole = await x.call("/stats", null);   /* no viewer sent: a direct internal call, counted whole */
-  assert.deepEqual(Object.keys(whole).slice(0, WIRE.length), WIRE);
+  for (const k of WIRE) assert.equal(Object.hasOwn(whole, k), true, `op=stats carries ${k}`);
   assert.equal(whole.bundles, one(x, `SELECT count(*) c FROM bundles`).c);
   assert.equal(whole.bundles, 1);
   assert.equal(whole.files, one(x, `SELECT count(*) c FROM files`).c);
@@ -62,6 +66,7 @@ test("R10: op=stats answers the held figures first, in their order, through the 
   for (const v of ["member:bob", ""]) {
     const out = await x.call(`/stats?viewer=${encodeURIComponent(v)}`, null);
     for (const k of ["bundles", "files", "history", "projectParticipants"]) assert.equal(out[k], 0, `${v || "(empty)"} ${k}`);
+    assert.equal(out.refs, one(x, `SELECT count(*) c FROM refs WHERE COALESCE(bundle_id, '') <> ? AND COALESCE(target_id, '') <> ?`, x.P, x.P).c, `${v || "(empty)"} refs`);
   }
 });
 
@@ -85,51 +90,37 @@ test("R10: the log counts: the wire's `observationsNonLead` leaves out lead rows
   assert.equal(Object.hasOwn(proof, "observationsNonLead"), false);
 });
 
-test("R10: the held shares are registered as `plane-held`: the stats source, the leg grades and the promotion step", async () => {
+/* Each owner's exported figures, registered under the owner's name (record-core R63). */
+const OWNED = [["record-core", RecordCore.COUNT_KEYS], ["membership", Membership.COUNT_KEYS],
+               ["run-productions", RunProductions.COUNT_KEYS], ["inquiry", Inquiry.COUNT_KEYS],
+               ["observation-log", ObservationLog.COUNT_KEYS], ["basis-versions", BasisVersions.COUNT_KEYS]];
+
+test("R10: each owner's figures are registered under its own name, the stats sight as `plane`, the leg grades as `inquiry`, the promotion step as `control-plane`; nothing is registered twice", async () => {
   const x = await store();
-  assert.equal(recordOf(x.ctx).registerStatsSource("x", () => ({})).heldBy, HELD);
-  assert.equal(retrievalOf(x.ctx).registerLegGrades("x", () => []).declaredBy, HELD);
-  assert.equal(promotionOf(x.ctx).registerStep(HELD, {}).ok, false, "the step is held under its name");
+  const rc = recordOf(x.ctx);
+  for (const [owner, keys] of OWNED) {
+    assert.deepEqual(rc.registerCounts(owner, ["zz-probe"], () => ({})).heldBy, owner, `${owner} has registered its figures`);
+    for (const k of keys) {
+      const r = rc.registerCounts("zz-probe", [k], () => ({}));
+      assert.equal(r.code, "COUNTS_DECLARED", k);
+      assert.equal(r.heldBy, owner, `${k} is ${owner}'s`);
+    }
+  }
+  /* The plane's own figures are its sight's, registered by no module; record-core no longer reports refs (K877). */
+  for (const k of ["refs", "textIndexOk", "observationsNonLead"]) assert.equal(Object.hasOwn(rc.counts(null), k), false, k);
+  assert.deepEqual(OWNED.flatMap(([, keys]) => keys).sort(),
+    ["basisVersionLegs", "basisVersions", "bundles", "files", "history", "inquiryMigrationReplays", "leads", "observations",
+     "projectOwnerVotes", "projectParticipants", "proposedReadings", "suggestRefusals"]);
+  assert.equal(rc.registerStatsSource("x", () => ({})).heldBy, "plane");
+  assert.equal(retrievalOf(x.ctx).registerLegGrades("x", () => []).declaredBy, "inquiry");
+  assert.equal(promotionOf(x.ctx).registerStep("control-plane", {}).ok, false, "control-plane's step is held under its name");
+  assert.equal(promotionOf(x.ctx).registerStep("plane-held", {}).ok, true, "no step is held as `plane-held`");
 });
 
-test("R10: the held step's projection: a project's creation answers its visibility read back and gains its sight row; a revision answers no visibility", async () => {
-  const x = await world();
-  assert.deepEqual(Object.keys(x.created).sort(), ["bundleId", "bundleSha", "ok", "owner", "rowVersion", "visibility"]);
-  assert.equal(x.created.visibility, "hidden");
-  assert.equal(x.created.owner, "alice");
-  assert.equal(x.created.rowVersion, 1);
-  const row = one(x, `SELECT bundle_sha, row_version FROM bundles WHERE bundle_id = ?`, x.P);
-  assert.equal(x.created.bundleSha, row.bundle_sha);
-  assert.equal(one(x, `SELECT count(*) c FROM project_sight WHERE project_id = ?`, x.P).c, 1, "the sight index follows the bundle");
-  const text = recordOf(x.ctx).readFile(x.P, "bundle.md").text;
-  const idLine = text.split("\n").find((l) => l.startsWith("id:"));
-  const rev = promotionOf(x.ctx).promote({ bundleId: x.P, base: x.created.bundleSha, snapKey: "k2", author: "member:alice",
-    files: [{ path: "bundle.md", text: projMd("Budget watch, renamed").replace("---\n", `---\n${idLine}\n`) }],
-    meta: { object_type: "project" } });
-  assert.equal(rev.ok, true, JSON.stringify(rev));
-  assert.equal(rev.rowVersion, 2);
-  assert.equal(Object.hasOwn(rev, "visibility"), false);
-  assert.equal(Object.hasOwn(rev, "testimony"), false, "no other path's answer gains the testimony key");
-});
-
-test("R10: the held step's testimony slot: op=testify's later work runs inside its promotion and its answer carries it; a refused testimony writes nothing", async () => {
-  const x = await world();
-  const r = await x.call("/testify?author=member:alice", { words: "The gate on the north side was chained shut.", observedAt: "2026-09-01" });
-  assert.equal(r.ok, true, JSON.stringify(r));
-  assert.match(String(r.content_id), /^[0-9a-f]{64}$/, "the content row the slot minted");
-  const row = [...x.ctx.storage.sql.exec(`SELECT bundle_id, capture_sha FROM content WHERE content_id = ?`, r.content_id)].map((o) => ({ ...o }));
-  assert.deepEqual(row, [{ bundle_id: r.bundle_id, capture_sha: r.capture_sha }]);
-  const before = one(x, `SELECT count(*) c FROM content`).c, bundles = one(x, `SELECT count(*) c FROM bundles`).c;
-  const bad = await x.call("/testify?author=member:alice", { words: "", observedAt: "2026-09-01" });
-  assert.equal(bad.ok, false);
-  assert.equal(one(x, `SELECT count(*) c FROM content`).c, before);
-  assert.equal(one(x, `SELECT count(*) c FROM bundles`).c, bundles);
-});
-
-test("R10: the held leg grades cap each leg's capture letter by its target's earned capture ceiling, as inquiry answers them (its R13, R14)", async () => {
+test("R10: the leg grades registered as `inquiry` cap each leg's capture letter by its target's earned capture ceiling, as the held copy answered them (inquiry R13, R14)", async () => {
   const x = await world();
   const legs = [{ grade: "A", target_id: x.P }, { grade: "C", target_id: "INFO-none" }, { grade: "B", target_id: x.P }];
   const cap = inquiryOf(x.ctx).earned(null, [x.P, "INFO-none"])?.earned?.capture || {};
-  assert.deepEqual(heldLegGrades(x.ctx)(legs), legs.map((l) => legCapped(l.grade, cap[l.target_id], l.target_id)));
-  assert.equal(heldLegGrades(x.ctx)([]).length, 0);
+  assert.deepEqual(inquiryLegGrades(x.ctx)(legs), legs.map((l) => legCapped(l.grade, cap[l.target_id], l.target_id)));
+  assert.equal(inquiryLegGrades(x.ctx)([]).length, 0);
 });
