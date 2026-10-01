@@ -1722,3 +1722,17 @@ response: **As recommended (Bob, 2026-10-01): C.** Two spaces with distinct fram
 decided: 2026-10-01 · Bob
 reasoning recorded in: this entry; the UX substrate's brief for question 24; Interaction Constructs §W.
 owed: nothing new to build beyond the redesign's screens (the plainer definition of a review copy, "never shown to anyone outside the group except through a review link you issue", in the redesign's words); the UX page's question 24 marked ruled.
+
+### DEC-107 · answered
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 25: the word members see for the queue's to-do class, the part the Action answers left to Bob)
+for: bob
+question: What word do members see on the queue's to-do class (internal code OBLIGATION), given Bob's 1 August ruling that "obligation" means a public body's duty, and is "obligation" kept, in everything members and readers see, for a public body's duty only?
+why it is Bob's: member vocabulary, as "Noticed" was (K356).
+provisional: NOTIFICATIONS.md "What the three classes actually ARE" (2026-08-01): obligations are the civic system's own flows, a member's task is downstream of them; a plan's checkpoints are the group's own (action-plans R23, UX-ANSWERS, K608 (4)); FINDING is shown as "Noticed" (K356).
+alternative: (B) "Obligation" with the owner named ("Obligation · ours"); (C) "Obligation" as now.
+recommendation: (A) "To do" for members, the internal code unchanged.
+reversal cost: low.
+response: **As recommended (Bob, 2026-10-01): A.** Members see "To do" wherever they saw "Obligation"; the internal code is unchanged, as with "Noticed". "Obligation" is used on members' and readers' screens only for a public body's duty. Each item's sentence still names whose step it is where that matters ("our plan", "the city's deadline"); the mapping is recorded once and in the glossary members can open from the queue.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 25; NOTIFICATIONS.md (RULED 2026-10-01).
+owed: member-facing text that says "Obligation" for the to-do class re-worded to "To do" (queue, queue-producers, the redesign; BOB places it, as K899 (1) placed "record"); the UX page's question 25 marked ruled.

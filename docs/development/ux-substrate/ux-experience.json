@@ -14719,20 +14719,19 @@
    "recommendation": "Use the timeline with a summary table above it for the world, and a visibly different surface for our own plans. Ask Bob whether to relabel the queue's member-task class so it no longer carries the word 'obligation'.",
    "whoDecides": "Design for the drawing; Bob for any relabelling of the OBLIGATION class, since it is his ruled vocabulary.",
    "ruled": {
-    "date": "2026-09-30",
+    "date": "2026-10-01",
     "by": "Bob",
     "rulings": [
      "action-plans R23",
-     "UX-ANSWERS.md (answered for plans)",
-     "K611 (the overdue clock is a CONDITION)"
+     "K611",
+     "DEC-107"
     ],
-    "status": "partly ruled",
-    "title": "Our own missed deadlines are never findings",
-    "decided": "For plans: a plan's checkpoints are the group's own intentions. A missed or not-met checkpoint is never a finding, a condition of the record or a fact about the government; its reminder is an obligation of the group's own, shown as ours. The counterparty's deadline is a condition on the action, raised once when overdue. How declared flows and their deltas are drawn remains Design's.",
-    "stillOpen": "the word members see for the queue's to-do class"
+    "status": "ruled",
+    "title": "Our own missed deadlines are never findings, and the queue's 'To do'",
+    "decided": "A plan's checkpoints are the group's own intentions: a missed or not-met checkpoint is never a finding, a condition of the record or a fact about the government, and its reminder reaches the queue as the group's own item. The other side's missed deadline is a signal on the action, raised once when it passes. Members see the queue's to-do class as 'To do' (its internal code unchanged, as with 'Noticed'); on members' and readers' screens 'obligation' means only a public body's duty. Each item's sentence names whose step it is where that matters ('our plan', 'the city's deadline'). How declared flows and their deltas are drawn is Design's."
    },
    "brief": {
-    "stillOpen": "partly",
+    "stillOpen": false,
     "settledSince": "Nothing since 30 September changes this question. The part already decided (below) was settled on 30 September; only the word for the to-do class remains, and it is still yours.",
     "title": "What members call the queue's to-do items",
     "inOneBreath": "Should the queue's class of 'things a named member must do', now labelled 'Obligation', be shown to members as 'To do', so that the word 'obligation' in CivicOS means only a public body's duty?",
