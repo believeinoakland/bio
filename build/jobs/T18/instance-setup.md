@@ -1,6 +1,6 @@
 # instance-setup (T18)
 
-**Status** · session_01CwJSXamDinAWCKtAtRctev · depth 2 · WORKING · handled B1
+**Status** · session_01CwJSXamDinAWCKtAtRctev · depth 2 · COMPLETE · handled B1
 
 ## Completion (INSTANCE-SETUP #6)
 
