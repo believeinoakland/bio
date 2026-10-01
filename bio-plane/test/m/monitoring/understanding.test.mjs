@@ -1,10 +1,12 @@
-/* monitoring R28–R35 and R44: standing intent, what reaches members, and what the understanding and action layers
-   rest on. R34 and R44 run over the real actions module (its clock rule, `pendingClocks` and its R33 bound). */
+/* monitoring R28–R35, R44 and R50: standing intent, what reaches members, and what the understanding and action layers
+   rest on. R34, R44 and R50 run over the real actions module (its clock rule and its R33 bound) and the real
+   action-clocks module (`pendingClocks`, its R1). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, stubIntent, sha, V, NOW_MS } from "./fixture.mjs";
-import { markOverdue, MONITOR_AUTHOR, MONITOR_VIEWER } from "../../../src/monitoring/index.mjs";
-import { MECHANICAL_FIELD_SETS, parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { markOverdue, MONITOR_AUTHOR, MONITOR_VIEWER, DEADLINE_RECHECK_MAX } from "../../../src/monitoring/index.mjs";
+import { MECHANICAL_FIELD_SETS } from "../../../src/promotion/index.mjs";
+import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
 
 test.todo("R28 each open named request in data/gathering.json whose cadence is due is captured through capture.acquire from its locators in order, the request named as authority (not yet met: Intake Doctrine §4; nothing executes a gathering request, and T8 plans no build of it)");
 test.todo("R29 a ratified sweep runs within its scope and breadth budget and lands at collected (not yet met: K102; sweeps wait for a design of what a sweep's query is)");
@@ -123,21 +125,21 @@ test("R34 a pending clock entry whose date has passed is marked overdue by a mec
 });
 test.todo("R34 the action's members are told of an overdue mark (not yet met: needs R31's items, which this module does not yet publish)");
 
-test("R44 the mark reads actions.pendingClocks and moves an entry only from pending to overdue; met, waived and overdue entries are left; nothing is added, removed or re-dated", async () => {
+test("R44 the mark reads action-clocks.pendingClocks and moves an entry only from pending to overdue; met, waived and overdue entries are left; nothing is added, removed or re-dated", async () => {
   const w = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
   const id = "ACTN-2026-0720-mixed";
   createAction(w, id, [["a", "2026-08-01", "met"], ["b", "2026-08-02", "waived"], ["c", "2026-08-03", "overdue"], ["d", "2026-08-04", "pending"]]);
   let read = null;
-  const orig = w.act.pendingClocks.bind(w.act);
-  w.act.pendingClocks = (q) => { read = q; return orig(q); };
+  const orig = w.clocks.pendingClocks.bind(w.clocks);
+  w.clocks.pendingClocks = (q) => { read = q; return orig(q); };
   const r = await w.m.deadlineRecheck(NOW_MS);
-  assert.deepEqual(read, { before: "2026-09-28", limit: 500, viewer: MONITOR_VIEWER }, "through actions R31");
+  assert.deepEqual(read, { before: "2026-09-28", limit: 500, viewer: MONITOR_VIEWER }, "through action-clocks R1");
   assert.deepEqual(r.marked.map((m) => m.ords), [[3]]);
   const clock = w.fm(id).clock;
   assert.deepEqual(clock.map((e) => [e.text, e.date, e.status]),
     [["a", "2026-08-01", "met"], ["b", "2026-08-02", "waived"], ["c", "2026-08-03", "overdue"], ["d", "2026-08-04", "overdue"]]);
   /* an entry the read names that the document no longer holds pending is not moved */
-  w.act.pendingClocks = () => ({ ok: true, items: [{ action: id, ord: 0, date: "2026-08-01", past: true }], truncated: false });
+  w.clocks.pendingClocks = () => ({ ok: true, items: [{ action: id, ord: 0, date: "2026-08-01", past: true }], truncated: false });
   const stale = await w.m.deadlineRecheck(NOW_MS);
   assert.deepEqual([stale.marked, stale.failed.map((f) => f.reason)], [[], ["NOTHING_PENDING"]]);
   /* the rewrite itself touches only named pending status lines */
@@ -184,4 +186,66 @@ test("R35 when a clock is marked overdue or a response is recorded against an ac
   w.m.actionCommitted({ bundleId: "ACTN-2026-0730-esc", type: "action", replay: true });
   assert.equal(calls.length, 0);
   assert.ok(stubIntent);
+});
+
+const DAY = 86400000;
+const dayAfter = (d) => Date.parse(`${d}T00:00:00Z`) + DAY;
+
+test("R50 deadlineRecheckWake(now) answers the start of the UTC day after the earliest pending clock date of the actions this module sees, read through action-clocks.pendingClocks as its machine viewer; null when none is pending", async () => {
+  const w = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
+  assert.equal(w.m.deadlineRecheckWake(NOW_MS), null, "no action: no wake");
+  /* only met, waived and overdue entries: nothing pending, no wake */
+  createAction(w, "ACTN-2026-0750-settled", [["a", "2026-08-01", "met"], ["b", "2026-08-02", "waived"], ["c", "2026-08-03", "overdue"]]);
+  assert.equal(w.m.deadlineRecheckWake(NOW_MS), null, "no pending entry: no wake");
+  /* future and past pending entries across actions: the earliest date governs, past or not */
+  createAction(w, "ACTN-2026-0751-later", [["a", "2026-11-20", "pending"], ["b", "2026-10-05", "pending"]]);
+  createAction(w, "ACTN-2026-0752-soon", [["a", "2026-10-30", "pending"], ["done", "2026-09-02", "met"]]);
+  const reads = [];
+  const orig = w.clocks.pendingClocks.bind(w.clocks);
+  w.clocks.pendingClocks = (q) => { reads.push(q); return orig(q); };
+  assert.equal(w.m.deadlineRecheckWake(NOW_MS), dayAfter("2026-10-05"), "the day after the earliest pending date");
+  assert.ok(reads.length >= 1);
+  for (const q of reads) assert.deepEqual([q.viewer, q.limit], [MONITOR_VIEWER, DEADLINE_RECHECK_MAX], "as its machine viewer");
+  /* an entry whose date has already passed: its next day, which is in the past, so the wake is due now */
+  createAction(w, "ACTN-2026-0753-past", [["a", "2026-09-01", "pending"]]);
+  assert.equal(w.m.deadlineRecheckWake(NOW_MS), dayAfter("2026-09-01"));
+  /* marked overdue by R34, the entry no longer holds a wake: the next earliest does */
+  await w.m.deadlineRecheck(NOW_MS);
+  assert.equal(w.m.deadlineRecheckWake(NOW_MS), dayAfter("2026-10-05"));
+});
+
+test("R50 the wake follows pendingClocks' cursor to the end, so a pending entry on a later page still holds the wake; a read that fails holds none", () => {
+  const pages = [
+    { ok: true, items: [{ action: "ACTN-a", ord: 0, date: "2026-12-01" }], truncated: true, cursor: "ACTN-a#0" },
+    { ok: true, items: [{ action: "ACTN-b", ord: 2, date: "2026-10-09" }], truncated: true, cursor: "ACTN-b#2" },
+    { ok: true, items: [{ action: "ACTN-c", ord: 0, date: "2026-11-01" }], truncated: false, cursor: null },
+  ];
+  const seen = [];
+  const clocks = { pendingClocks(q) { seen.push(q.after); return pages[seen.length - 1]; } };
+  const w = world({ actionClocks: clocks });
+  assert.equal(w.m.deadlineRecheckWake(NOW_MS), dayAfter("2026-10-09"));
+  assert.deepEqual(seen, [null, "ACTN-a#0", "ACTN-b#2"], "every page, by its cursor");
+  for (const bad of [() => ({ ok: false, reason: "PENDING_CLOCKS_BAD_BEFORE" }), () => { throw new Error("gone"); }, () => null]) {
+    const x = world({ actionClocks: { pendingClocks: bad } });
+    assert.equal(x.m.deadlineRecheckWake(NOW_MS), null);
+    assert.equal(x.m.deadlineRecheckDue(NOW_MS), null);
+  }
+});
+
+test("R50 deadlineRecheckDue(now) answers the wake's instant when it is at or before now, else null; the scheduler's consumer then runs R34 on the first alarm of the day an entry passes", async () => {
+  const w = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
+  assert.equal(w.m.deadlineRecheckDue(NOW_MS), null, "nothing pending");
+  const id = "ACTN-2026-0760-due";
+  createAction(w, id, [["a", "2026-10-03", "pending"]]);
+  const wake = dayAfter("2026-10-03");
+  assert.equal(w.m.deadlineRecheckWake(NOW_MS), wake);
+  assert.equal(w.m.deadlineRecheckDue(NOW_MS), null, "not yet");
+  assert.equal(w.m.deadlineRecheckDue(wake - 1), null, "the last instant of the entry's own day: not yet past");
+  assert.equal(w.m.deadlineRecheckDue(wake), wake, "due at the start of the next day");
+  assert.equal(w.m.deadlineRecheckDue(wake + 5 * DAY), wake, "and while it stays pending");
+  /* on that first alarm R34 marks it, and then nothing is due */
+  w.clock.ms = wake;
+  const r = await w.m.deadlineRecheck(wake);
+  assert.deepEqual(r.marked.map((m) => [m.action, m.dates]), [[id, ["2026-10-03"]]]);
+  assert.deepEqual([w.m.deadlineRecheckWake(wake), w.m.deadlineRecheckDue(wake)], [null, null]);
 });

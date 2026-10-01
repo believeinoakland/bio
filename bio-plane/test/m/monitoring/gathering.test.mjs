@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, infoMd } from "./fixture.mjs";
-import { checkGatheringGrammar } from "../../../src/monitoring/index.mjs";
+import { checkGatheringGrammar, GATHERING_CHECKS } from "../../../src/monitoring/index.mjs";
 
 const REQ = { id: "GATH-2026-0001-minutes", target: { text: "the council minutes", description: "every meeting's minutes" },
               locators: ["https://records.example.org/minutes"], authority: "Town Clerk", criticality: "crucial",
@@ -59,6 +59,10 @@ test("R27 a non-replay promotion carrying a malformed gathering queue is refused
   const r = w.promote(id, md, { files: [gj(bad)] });
   assert.equal(r.ok, false);
   assert.equal(r.reason, "GATHERING_REFUSED");
+  /* DEC-49 (N242's share): the refusal carries its code, its row and the member's translation */
+  assert.deepEqual([r.code, r.check, r.translation],
+    ["GATHERING_REFUSED", "C-18.10", GATHERING_CHECKS.GATHERING_REFUSED.translation]);
+  assert.match(r.translation, /Nothing was changed\.$/);
   assert.deepEqual(r.findings, [{ check: "C-18.5", detail: "gathering.json requests[0].criticality must be one of: crucial, supporting" }]);
   assert.equal(w.record.head(id), null, "nothing was written");
   assert.equal(w.promote(id, md, { files: [gj(OK)] }).ok, true, "a well-formed queue lands");

@@ -453,8 +453,7 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
     if (op === "attest") return attestOp(req, env, env.STORE.get(env.STORE.idFromName(storeName)),
       { json, doAnswer, storageAbsent, captureKey, storeName, cls });
 
-    /* K372 (N278, N247): `doAnswer` is handed in, as it is to `knockOp`, so the one envelope reader opens monitoring's. */
-    if (op === "monitor") return monitorOp(req, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent, storeRefusal, requiredArgument, doAnswer, viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`, actorClass: viaSession ? "member" : "machine", actor: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`, storeName, cls });
+    if (op === "monitor") return monitorOp(req, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent, storeRefusal, requiredArgument, doAnswer, viaSession, sessViewer, storeName, cls });
 
 
     return ratificationOp(op, req, stub, { env, json, doAnswer, storeSilent, storeRefusal, storeName, cls, aiCred, viaSession, sessViewer, sessRights, withBiasChecks, STORE_SILENT_REASON, STORE_SILENT_DETAIL });

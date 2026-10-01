@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, serve, DAEMON, NOW_MS } from "./fixture.mjs";
 import { cadenceFor, monitorIntervalMs, CONTRACT_FREQUENCY, MONITOR_CADENCE_MS } from "../../../src/monitoring/index.mjs";
-import { MONITOR_FREQ } from "../../../checks/bio-checks.mjs";
+import { MONITOR_FREQ } from "../../../src/capture/index.mjs";
 
 const HOUR = 3600000, DAY = 24 * HOUR;
 /* A receipt at an address, through provenance's one writer (the version chain R15 groups by). */
