@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { world, inquiryMd, infoMd, V, MACHINE, U } from "./fixture.mjs";
 import { checkReevalPending, REEVAL_SOURCES, REEVAL_POLICY_AGE_DAYS, VERSION_NOTICE_SUBJECT_CHECKS,
          REEVALUATION_ACT_CHECKS } from "../../../src/reevaluation/index.mjs";
-import { checkBundle } from "../../../checks/bio-checks.mjs";
+import { checkBundle } from "../../../src/record-grammar/index.mjs";
 import { VERSION_NOTICE_CHECKS } from "../../../src/content/index.mjs";
 
 const NOW = Date.parse("2026-09-28T00:00:00Z");

@@ -19,7 +19,7 @@ import { strengthOf } from "../../../src/strength/index.mjs";
 import { contradictionOf, inquiryServices } from "../../../src/contradiction/index.mjs";
 import { sourcesOf } from "../../../src/sources/index.mjs";
 import { reevaluationOf } from "../../../src/reevaluation/index.mjs";
-import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -238,12 +238,14 @@ export function world({ caseMembers = new Set(), group = "test-group", earnedOve
       return res;
     },
     /** An accepted version of an inquiry carrying a claim, laid down with the columns basis-versions' read contract
-     *  names (its R38), and the inquiry's subject entity (inquiry R40's column). */
+     *  names (its R38), and the inquiry's subject entity (inquiry R40's `inquiry_bundle_facts` column, N136). */
     claim(inquiryId, name, claim, subject = null) {
       const ord = st.sql.exec(`SELECT COUNT(*) AS n FROM inquiry_basis_versions WHERE bundle_id=?`, inquiryId)[0].n;
       st.sql.exec(`INSERT INTO inquiry_basis_versions (bundle_id, name, ord, description, relationship, state, hidden, claim, composition)
                    VALUES (?, ?, ?, 'd', 'and', 'accepted', 0, ?, 'c')`, inquiryId, name, ord, claim);
-      if (subject) st.sql.exec(`UPDATE bundles SET inquiry_subject_entity=? WHERE bundle_id=?`, subject, inquiryId);
+      if (subject) st.sql.exec(`INSERT INTO inquiry_bundle_facts (bundle_id, inquiry_subject_entity) VALUES (?, ?)
+                                ON CONFLICT(bundle_id) DO UPDATE SET inquiry_subject_entity = excluded.inquiry_subject_entity`,
+                               inquiryId, subject);
     },
     /** A knock pulled into capture `capSha` (capture R65), and its source read by a member (sources R1): the source id. */
     knocked(capSha, { pseudonym = null, knockId = `K-${capSha.slice(0, 8)}-${++n}` } = {}) {
