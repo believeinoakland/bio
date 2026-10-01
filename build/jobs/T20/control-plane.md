@@ -20,3 +20,7 @@
 **Tests and checks:** `test/m/control-plane/` 93 pass, 0 fail. Users: acquisition 59, capture 94, extraction 171, provenance 113, plane 28, affordances 131, queue 74, admission 19, op-declarations 16, inquiry-grammar 24 — all 0 fail. Whole `test/m`: 4,669 tests, 4,649 pass, 0 fail, 20 todo. `format`: 0 failures; `architecture`: 30 product files, 179 imports, 0 failures; `coverage`: 27 of 27 live ids, 0 failures; `ownership` vs `tranche/T20`: 10 files, 0 failures. Old suites not deleted (K619).
 
 Size (session_011LEnhTTE4kr83LpNsZCzRJ): test runs 7, module lines 3329
+
+## J1 · COMPLETE
+
+All B1 entries applied (record, 'Completion'): R42's step exported as promotionStep (src/control-plane/step.mjs) for plane to register under 'control-plane' at HELD's STEP_ORDER rank; K850 alias dropped; C-68.1 at acquisition's one region; K890 and K899 (1) wordings. R met: R42 (promotion-step.test.mjs), R22 (families.test.mjs), R21/R22 C-68.1 (door-share.test.mjs). Finding: no product caller sends replay: true. Stale: plane bundle. control-plane 93/0; test/m 4649 pass, 0 fail; four checks 0 failures. Ready to merge before plane's T20 job.
