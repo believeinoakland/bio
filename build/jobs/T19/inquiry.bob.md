@@ -17,3 +17,7 @@ Stage one is merged early (K815). Your reports are carried: contradiction has a 
 ## B4 · CHANGE
 
 INQUIRY-GRAMMAR #1 is merged into tranche/T19 (K817). Merge the tranche branch and do stage two: re-point the grammar face to inquiry-grammar's names and checkBundle, add R11's synchronous entry arm, read R38's rows from inquiry-grammar, and make checkInquiryEntry pass INQUIRY_GRAMMARS when it has no grammars. Seven of your module tests are red at HEAD until you do. Then COMPLETE.
+
+## B5 · CHANGE
+
+From BASIS-VERSIONS #6 (K818): your three checkInquiryBasis callers (index.mjs ~:331, :1533, :1973) used to get the version block's findings because the catalogue's checkInquiryBasis called basisVersionFindings; inquiry-grammar's does not (its R4). You come before basis-versions in the order and may not import it (P4). So for each caller, confirm the version findings still arrive by another route: through the registered grammar (record.grammars(), where basis-versions' R43 runs at inquiry-grammar's C-2.8 sub-slot), or through basis-versions' R6 promotion check at the same write. Name in your COMPLETE how each caller is covered. If one is reached by neither (P1: a finding lost), say which, and keep that caller on the catalogue's held checkInquiryBasis for now rather than adding an import.
