@@ -9,7 +9,7 @@
  * view a caller passes as `ctx.view`. Patterns are written the way the held profiles
  * write them, anchors and groups included.
  */
-import { combine, validate } from "../../jurisdictions/index.mjs";
+import { combine, validate, list } from "../../jurisdictions/index.mjs";
 
 const p = (re, flags) => (flags ? { re, flags } : { re });
 const fact = (pattern, extra) => ({ pattern, basis: "TEST", ...(extra || {}) });
@@ -80,6 +80,17 @@ export function view(...profiles) {
 
 /** A view with no profile in it: nothing local is known. */
 export const EMPTY = combine([]).view;
+
+/** The view of every NON-TEST profile `jurisdictions` holds, PASSED EXPLICITLY: the real
+ *  documents the converted suites read were published where the held profile describes, and
+ *  this is the view an instance using that profile hands its readers. Where a document came
+ *  from is provenance, not a place in the product (layers.md, "No jurisdiction in the
+ *  product", rule 6); the test names no place, it asks `jurisdictions` for what it holds. */
+export const HELD = (() => {
+  const r = combine(list().filter((x) => !x.test).map((x) => x.id));
+  if (!r.ok) throw new Error(`the held profiles do not combine: ${JSON.stringify(r.errors)}`);
+  return r.view;
+})();
 
 /* ---- documents written in Port Alder's vocabulary ---- */
 
