@@ -32,12 +32,12 @@ import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { contentOf } from "../content/index.mjs";
-import { retrievalOf, PROJECTION_TABLE } from "../retrieval/index.mjs";
+import { retrievalOf } from "../retrieval/index.mjs";
 import { conformanceOf, determinationSuperseded } from "../conformance/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
-import { parseFrontmatter, normalizeType, vocabFor, STATES, OBJECT_TYPES, isMachineIdentity, createSha256,
-         BUNDLE_ID_RE } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter, normalizeType, vocabFor, STATES, OBJECT_TYPES, isMachineIdentity,
+         createSha256 } from "../record-grammar/index.mjs";
 import { RISK_TIERS, riskTierState, RESOLUTIONS, CORRESPONDENCE_DIRECTIONS, actionBasisFindings,
          correspondenceFindings, isQuoteEntry, quoteValue, quoteFindings, lifecycleFindings, lawProposalLabel,
          LAW_LEVELS, GOVERNING_LAWS_MAX, CITATION_MAX, RISK_TIER_REASON_MAX, RISK_TIER_HISTORY_MAX, riskTierHistoryOf,
@@ -63,10 +63,8 @@ export const LAW_PROPOSALS_READ_MAX = 12;
 export const RISK_PROPOSALS_READ_MAX = 12;
 /** R27: the most quotes one read answers. */
 export const QUOTES_MAX = 500;
-/** R30: the most actions one page lists; R31: the most pending clock entries, and the most actions one page reads. */
+/** R30: the most actions one page lists. */
 export const ACTIONS_PAGE_MAX = 200;
-export const PENDING_CLOCKS_MAX = 500;
-export const PENDING_CLOCKS_ACTIONS_MAX = 500;
 /** R3 (N237, K351): the most `action_basis` and `correspondence` entries one action's document holds. */
 export const ACTION_LEGS_MAX = 500;
 export const ACTION_LEDGER_MAX = 500;
@@ -117,6 +115,31 @@ export function noSuchAction(actionId, extra = null) {
   return { ok: false, reason: "NO_SUCH_ACTION", code: "NO_SUCH_ACTION", check: row.check,
            translation: row.translation, action, ...Object.fromEntries(own), detail: NO_SUCH_ACTION_DETAIL };
   /* END DEC-49 REGION is-no-such-action */
+}
+
+/* R45 (N427, K711). THE ONE ANSWER TO ONE CONDITION: an action's stated contact names no member of the instance. This
+   write answers it through here, and so does every later module asking it (`action-plans` R18), so
+   `CONTACT_NOT_A_MEMBER` is minted at one site with its one row (C-117.11). The detail is this write's own fixed
+   sentence; `extra` adds a caller's fields beside these and never replaces one. Writes nothing and never throws. */
+const CONTACT_NOT_A_MEMBER_DETAIL = "contact names a member of this instance by member id, and this one names none. "
+  + "Nothing was written.";
+const CONTACT_NOT_A_MEMBER_FIXED = new Set(["ok", "reason", "code", "check", "translation", "detail"]);
+export function contactNotAMember(extra = null) {
+  let own = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own = Object.entries(extra).filter(([k]) => !CONTACT_NOT_A_MEMBER_FIXED.has(k));
+  } catch { own = []; }
+  /* DEC-49 REGION is-contact-member */
+  const row = ACTION_CATALOGUE_CHECKS.CONTACT_NOT_A_MEMBER;
+  return { ok: false, reason: "CONTACT_NOT_A_MEMBER", code: "CONTACT_NOT_A_MEMBER", check: row.check,
+           translation: row.translation, ...Object.fromEntries(own), detail: CONTACT_NOT_A_MEMBER_DETAIL };
+  /* END DEC-49 REGION is-contact-member */
+}
+/** R45 (N427): a stated contact's member id, `member:<id>` or bare, or null. Never throws. */
+export function contactId(v) {
+  if (typeof v !== "string" || !v.trim()) return null;
+  return v.trim().replace(/^member:/, "");
 }
 const findingsOf = (list) => list.filter((x) => x.severity === "error")
   .map((x) => ({ check: x.check, detail: x.message, ...(x.code ? { code: x.code } : {}), ...(x.repairs ? { repairs: x.repairs } : {}) }));
@@ -571,12 +594,6 @@ export class Actions {
     return null;
   }
 
-  /** R45: a stated contact's member id, `member:<id>` or bare, or null. */
-  static contactId(v) {
-    if (typeof v !== "string" || !v.trim()) return null;
-    return v.trim().replace(/^member:/, "");
-  }
-
   /* R45 (D5), R46 (Bob's ruling 1 of 2026-09-29): the group's contact, set or changed by a member and naming one; the
      plan and option an action was started from, set on its creation and never changed or removed. */
   #contactAndPlan(c, heldFm, nextFm, who) {
@@ -588,14 +605,10 @@ export class Actions {
         return refuse("MACHINE_CANNOT_SET_CONTACT", "the group's contact for an action is a member's choice; a machine "
           + "credential may not set or change it. Nothing was written.");
       /* END DEC-49 REGION is-machine-contact */
-      const id = Actions.contactId(nextFm.contact);
+      const id = contactId(nextFm.contact);
       let facts = null;
       if (id) { try { facts = this.membership.memberFacts(id); } catch { facts = null; } }
-      /* DEC-49 REGION is-contact-member */
-      if ((nextFm.contact !== undefined && nextFm.contact !== null) && !facts)
-        return refuse("CONTACT_NOT_A_MEMBER", "contact names a member of this instance by member id, and this one names "
-          + "none. Nothing was written.");
-      /* END DEC-49 REGION is-contact-member */
+      if ((nextFm.contact !== undefined && nextFm.contact !== null) && !facts) return contactNotAMember();
     }
     const has = (fm, k) => fm && fm[k] !== undefined && fm[k] !== null && fm[k] !== "";
     /* DEC-49 REGION is-plan-link */
@@ -1975,7 +1988,7 @@ export class Actions {
     }
     return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
   }
-  /* ================================================================ the read (R25, R26, R29–R31) */
+  /* ================================================================ the read (R25, R26, R29, R30) */
 
   /** R25, REC-24 (f)/(g): everything about ONE action that is DERIVED rather than stored — the clock's verdict at a
    *  named instant, the action's own outcome (DEC-14), the ledger, the legs, and what responded. `row` is the
@@ -2109,54 +2122,6 @@ export class Actions {
     return { ok: true, items: out, limit: max, truncated, cursor,
              ...(determination && !this.conformance ? { determination_read: "undetermined",
                  says: "the legs are matched by the determination named; whether it is live is conformance's to say, and it is not provided on this instance" } : {}) };
-  }
-
-  /** R31 (N237, N311): every `pending` clock entry dated before `before` across visible actions, at most 500 per page,
-   *  in (action id, entry position) order after `after`: a previous page's `cursor` (`<action>#<position>`), or an
-   *  action id, read as after all that action's entries. A page reads at most 500 actions and may end inside one;
-   *  `cursor` is the last entry answered when `truncated`, else null, so paging from the start through each `cursor` to
-   *  null reaches every entry, an action holding more than a page among them. The seek is retrieval's projection
-   *  (`bundle_projection`, its R61), joined on `bundle_id`; the entries are read from the document, the authority. */
-  pendingClocks({ before, limit = null, after = null, viewer = null } = {}) {
-    const day = String(before ?? "").slice(0, 10);
-    /* DEC-49 REGION is-pending-before */
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(day))
-      return refuse("PENDING_CLOCKS_BAD_BEFORE", "before= is a date, YYYY-MM-DD", { before: before ?? null });
-    /* END DEC-49 REGION is-pending-before */
-    const max = clampLimit(limit, PENDING_CLOCKS_MAX, PENDING_CLOCKS_MAX);
-    /* `<action>#<position>` resumes inside that action, after the position; anything else is an action id. */
-    const from = after === null || after === undefined || after === "" ? null : String(after);
-    const at = from ? /^(.+)#(\d+)$/.exec(from) : null;
-    const seek = at ? { id: at[1], pos: Number(at[2]) } : from ? { id: from, pos: Infinity } : null;
-    const gate = viewerPredicate(viewer);
-    const rows = this.#rows(`SELECT b.bundle_id FROM bundles b JOIN ${PROJECTION_TABLE} bp ON bp.bundle_id = b.bundle_id
-      WHERE b.object_type='action' AND (${gate.sql}) ${seek ? "AND b.bundle_id>=?" : ""}
-        AND bp.action_clock_next IS NOT NULL AND bp.action_clock_next < ? ORDER BY b.bundle_id LIMIT ?`,
-      ...gate.args, ...(seek ? [seek.id] : []), day, PENDING_CLOCKS_ACTIONS_MAX + 1);
-    const items = [];
-    let truncated = rows.length > PENDING_CLOCKS_ACTIONS_MAX;
-    let full = false, lastRead = null;
-    read: for (const r of rows.slice(0, PENDING_CLOCKS_ACTIONS_MAX)) {
-      const fm = this.#heldFm(r.bundle_id) || {};
-      const clock = Array.isArray(fm.clock) ? fm.clock : [];
-      const skip = seek && r.bundle_id === seek.id ? seek.pos : -1;
-      for (let i = skip + 1; i < clock.length; i++) {
-        const e = clock[i];
-        if (!e || e.status !== "pending" || typeof e.date !== "string" || !(e.date < day)) continue;
-        /* The page is full and an entry remains: the next page resumes after the last one answered. */
-        if (items.length === max) { full = truncated = true; break read; }
-        items.push({ action: r.bundle_id, ord: i, date: e.date, basis: e.basis ?? null, text: e.text ?? null,
-                     past: e.date < day });
-      }
-      lastRead = { id: r.bundle_id, end: Math.max(clock.length - 1, Number.isFinite(skip) ? skip : 0, 0) };
-    }
-    /* The last entry answered; when the page ends on the action bound past an action whose document holds none (its
-       projection behind it), the end of that action instead, so the next page still moves on. */
-    const tail = items[items.length - 1];
-    const cursor = !truncated ? null
-      : tail && (full || !lastRead || tail.action === lastRead.id) ? `${tail.action}#${tail.ord}`
-        : lastRead ? `${lastRead.id}#${lastRead.end}` : null;
-    return { ok: true, before: day, items, limit: max, actions_limit: PENDING_CLOCKS_ACTIONS_MAX, truncated, cursor };
   }
 
   /* ================================================================ proposals (R19, R28) */

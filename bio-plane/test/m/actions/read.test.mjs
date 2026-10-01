@@ -1,4 +1,4 @@
-/* actions' reads and services at its interface (R12, R25, R26, R29–R31, R36–R41; R31's tests guard the copy of `pendingClocks` kept until monitoring re-points, K625). */
+/* actions' reads and services at its interface (R12, R25, R26, R29, R30, R36–R41; R31 retired to `action-clocks`, its held copy gone, N428). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, actionMd, CP, NOW_MS } from "./fixture.mjs";
@@ -83,20 +83,6 @@ test("R30 actionsFor filters visible actions in id order, at most 200 a page, tr
   assert.equal(w.a.actionsFor({ viewer: M, counterparty: "Town Clerk, Town of Port Ellery", limit: 5 }).items.length, 5);
   assert.equal(w.a.actionsFor({ viewer: M, state: "active" }).items.length, 0);
   assert.equal(w.a.actionsFor({ viewer: "nobody" }).items.length, 0, "only visible actions");
-});
-
-test("R31 pendingClocks lists pending entries dated before `before` across visible actions, at most 500", () => {
-  const w = world();
-  w.action(A, ["clock:", ...CLK("2026-09-01"), ...CLK("2026-09-05", "met"), ...CLK("2026-12-01")]);
-  const r = w.a.pendingClocks({ before: "2026-10-01", viewer: M });
-  assert.deepEqual(r.items, [{ action: A, ord: 0, date: "2026-09-01", basis: "Act s.2", text: "t", past: true }]);
-  assert.equal(r.limit, 500); assert.equal(r.truncated, false);
-  assert.equal(w.a.pendingClocks({ before: "2026-10-01", viewer: "nobody" }).items.length, 0);
-  const bad = w.a.pendingClocks({ before: "soon", viewer: M });
-  assert.deepEqual([bad.reason, bad.check], ["PENDING_CLOCKS_BAD_BEFORE", "C-117.5"], "its own code, not C-33.6's");
-  const B = "ACTN-2026-0002-b";
-  w.action(B, ["clock:", ...CLK("2026-01-01"), ...CLK("2026-01-02")]);
-  assert.deepEqual([w.a.pendingClocks({ before: "2026-10-01", limit: 2, viewer: M }).truncated], [true]);
 });
 
 test("R37 R36 the audit reports C-2.10 and C-11.1 over an action, a missing counterparty and a past pending entry; tables purge with the action", () => {

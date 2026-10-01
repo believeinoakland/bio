@@ -5,8 +5,8 @@
  * records-request lifecycle's reader, `consequenceState` (DEC-14), `checkActionExtension` (C-2.10's action arms and
  * C-11.1), and the catalogue rows C-32.3, C-32.4, C-32.18, C-32.19, C-33.3–C-33.9, C-72, C-73, C-90 and C-94. New
  * here: C-32.20 (R5), C-73.6 (R6), C-101 (R7), C-90.6 (R28), C-94.12 (R22) and R33's mechanical clock rule; in T11,
- * C-117.2–C-117.6 (N217, N237, K275: `NO_SUCH_ACTION`, `ACTION_TOO_LARGE`, `ACTION_MOVE_NO_REASON`,
- * `PENDING_CLOCKS_BAD_BEFORE`, `ACTION_NO_DETERMINATION`).
+ * C-117.2–C-117.4 and C-117.6 (N217, N237, K275: `NO_SUCH_ACTION`, `ACTION_TOO_LARGE`, `ACTION_MOVE_NO_REASON`,
+ * `ACTION_NO_DETERMINATION`); C-117.5 (`PENDING_CLOCKS_BAD_BEFORE`) is `action-clocks`' (N428).
  *
  * WHAT STAYS IN `legacy-checks` FOR NOW, and why: the vocabularies and grammar functions a module later than this one
  * still imports from there (`affordances`: `ACTION_KINDS`, `RISK_TIERS`, `riskTierState`, `LAW_LEVELS`,
@@ -1182,13 +1182,6 @@ export const ACTION_CATALOGUE_CHECKS = {
     translation: 'Moving an action records why, in your own words, and nothing fills the reason in for you. No reason '
       + 'was given, so the action did not move.',
   },
-  /* R31: the date the pending-clock read looks before is a date; the condition is this read's own. */
-  PENDING_CLOCKS_BAD_BEFORE: {
-    check: 'C-117.5',
-    where: 'src/actions/index.mjs pendingClocks > is-pending-before',
-    translation: 'The deadlines are listed up to a date written year-month-day, and the date given was not one. '
-      + 'Nothing was read.',
-  },
   /* R8: an action recorded for a breach rests on a live conformance determination the author may see. */
   ACTION_NO_DETERMINATION: {
     check: 'C-117.6',
@@ -1235,7 +1228,7 @@ export const ACTION_CATALOGUE_CHECKS = {
   },
   CONTACT_NOT_A_MEMBER: {
     check: 'C-117.11',
-    where: 'src/actions/index.mjs #contactAndPlan > is-contact-member',
+    where: 'src/actions/index.mjs contactNotAMember > is-contact-member',
     translation: 'The contact for an action is a member of this group, named by their member id, and the id given '
       + 'names no member here. Nothing was written.',
   },
