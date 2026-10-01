@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` layer 2, membership (amended as the
 ## B2 · CHANGE
 
 K771: all five new modules are now in modules.json on tranche/T19 (site-profiles, credentials, inquiry-grammar, action-grammar, plane). Merge tranche/T19; your R83 (rule 8): `MODULE_ORDER` gains all five in this job, so the three module-order tests go green and no later re-open is needed.
+
+## B3 · CHANGE
+
+K774 (from CREDENTIALS #1): (1) your CUSTODIAL_CHECKS copy leaves out C-96.8 BAD_KEY (credentials'); (2) your deletion drops credentials, sessions, bootstrap, signers, ai_credentials from MEMBERSHIP_EXEMPT_TABLES; (3) new R95 registerPasswordSetter: enroll (R16) calls the registered setter inside its act (credentials registers setPassword, its R20); (4) your deletion drops memberSet's and adminRemove's session-delete and signer-revoke statements (credentials' onRevoked listener does both) and #claimed's read of credentials. Merge tranche/T19.
