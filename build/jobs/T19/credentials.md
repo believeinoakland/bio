@@ -28,3 +28,23 @@ The copy is built and pushed (`job/T19/credentials` @ 633280d85f), against membe
 - ✱ deletion: `SIGNER_ENROLMENT_CHECKS` can go from the catalogue once membership's deletion drops its imports (`membership/index.mjs`, `t16-own-keys.test.mjs`). `AI_CREDENTIAL_CHECKS` is also imported by the old suite `test/aicredential.test.mjs`:47, so per K635 its deletion waits for the release unless you rule the old suite's import may be cut (it is not run, K619).
 
 Next: on your word that the seam merged, I merge `tranche/T19`, run my tests and legacy-store's unshimmed, and complete.
+
+## Completion (CREDENTIALS #1)
+
+**Entries applied** (B1 START, B2 ANSWER K774, B3 CHANGE K776; `current.md` layer 2, credentials):
+- `bio-plane/src/credentials/` new: `index.mjs` (R1–R20), `schema.mjs` (`credentials`, `sessions`, `bootstrap`, `signers`, `ai_credentials`, their additive columns; a `signers(member_id)` index for R16's cascade), `checks.mjs` (✱ `SIGNER_ENROLMENT_CHECKS` C-63, `AI_CREDENTIAL_CHECKS` C-29.1–.5/.11, and `CREDENTIALS_CHECKS` C-96.8, C-96.15–.17, `where`s naming this module; K774 (1)). Copied from `membership/index.mjs` and `schema.mjs` without change of meaning; `members` read only through membership's `memberFacts`, `sessionRights`, `activeAdmins`, `isAdministrator`, `notAnAdmin` (K774 (3): `attests` is one JS predicate over the key's and the member's status, used by `signerList` and `attestingKeys`). `credentialsOf(ctx)` starts once: `onRevoked` (R16), `registerClaimed` (R17), `registerPasswordSetter` when membership offers it (R20). R18 declares each table exempt, tolerating membership's declaration of the same tables until its deletion drops them (K774 (2)). `credentialsOps`: the 12 routes.
+- Legacy-store (§12.2): import; `credentialsOf(this.ctx).migrate()` after membership's; `...credentialsOps(...)` after `membershipOps`; the 12 delegates and `LOGIN_REFUSAL_DETAIL` re-pointed; +16/−18.
+- Converts: `signer-enrolment` (`converts.test.mjs`), `aicredential` (`ai.test.mjs` R12, R15).
+
+**Requirement marks met, for BOB to strike** (I write no requirements file): R1–R19, and R20 on credentials' side (the setter registered and tested through a membership offering R95; the real-membership arm of its test runs once membership's R95 lands).
+
+**Deferred:** none of my module's. ✱ deletion from the catalogue is not done here: `SIGNER_ENROLMENT_CHECKS` can go once membership's deletion drops its two imports; `AI_CREDENTIAL_CHECKS` is also imported by the old suite `test/aicredential.test.mjs`:47 (K635 holds that deletion unless BOB rules otherwise).
+
+**Found in other modules:**
+- control-plane: `test/m/control-plane/families.test.mjs` R22 (CHECK_FAMILIES total) turns red with this module, green on `tranche/T19`: control-plane's `CHECK_FAMILIES` lacks `credentials/checks.mjs`' `AI_CREDENTIAL_CHECKS`, `CREDENTIALS_CHECKS`, `SIGNER_ENROLMENT_CHECKS` (control-plane's change, L11, or accepted red by name).
+- membership: its deletion should drop `BAD_KEY` from its copy of `CUSTODIAL_CHECKS`, the five tables from `MEMBERSHIP_EXEMPT_TABLES`, its own session/signer cascade in `memberSet`/`adminRemove`, `#claimed`'s interim read of `credentials`, and `Store.SIGNER_ATTESTS`' reader; R95's setter is asked `{role, password}` and answers a promise of `{ok, role}` (my reading).
+- Red on `tranche/T19` too, not mine: membership `module-order` R83 and R79 order (rule 8), promotion `registry.test.mjs` R39/R45/R46 (MODULE_ORDER), query-language five tests.
+
+**Tests and checks run:** `node --test test/m/credentials/` 33 pass, 0 fail; `test/m/legacy-store/` 4 pass, 0 fail; `test/m/membership/` 137 pass, 2 fail (R83, R79: identical without this change); whole `test/m/` 4336 pass, 9 fail, 20 todo (the 9: families R22 above, the 8 listed as red on the tranche). Checks: format 0 failures (87 modules); architecture 0 (11 files, 27 imports); coverage 20 of 20; ownership 0 (legacy-store +16/−18, legacy-checks 0).
+
+Size (session_01DykXv9jATJADcFBDEepSZh): test runs 9, module lines 918
