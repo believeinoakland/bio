@@ -8,8 +8,8 @@
  * It is NOT the member's surface: `pdf-worker/src/index.mjs` declares the fleet
  * surface, and adding a route there is a change to I6 that belongs with the
  * CPDF-10 item that will consume the pixels, not with the measurement that
- * establishes they exist. This file is imported only by the probe and by the
- * suite's workerd arm.
+ * establishes they exist. This file is imported only by the `--workerd` arm of
+ * `pagepixels-corpus.probe.mjs`; the suites' workerd arms bundle their own entry.
  */
 import { renderPageToPixels } from "./pagepixels.mjs";
 

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /* CPDF-12 — IS A PAGE OF PIXELS REACHABLE IN WORKERD, AND IS THE PICTURE REAL?
  *
- * NOT part of the battery (a `.probe.mjs` is not discovered by `battery.mjs` or
- * `coverage.mjs`). It reaches the network and, with `--ocr`, installs an OCR
- * engine into an OS temp directory. The battery-resident half of this work is
- * `pdf-worker/test/pagepixels.test.mjs`, which is hermetic.
+ * NOT a test: a `.probe.mjs` is run by hand, and neither `npm test` in
+ * `pdf-worker` nor any `node --test` glob reaches it. It reaches the network
+ * and, with `--ocr`, installs an OCR engine into an OS temp directory. The
+ * hermetic half of this work is `pdf-worker/test/pagepixels.test.mjs`.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * THE GATE THAT WOULD CATCH THIS INSTRUMENT LYING
@@ -402,8 +402,8 @@ async function armWorkerd(docs) {
     console.log(`  NO NUMBER: could not bundle (${String(e.message).split("\n").slice(0, 2).join(" | ")})`);
     return null;
   }
-  /* `modulesRoot: "/"` with BOTH scriptPath and script is `pdf-worker.test.mjs`'s
-   * own idiom, copied rather than reinvented: without it workerd refuses to
+  /* `modulesRoot: "/"` with BOTH scriptPath and script was `pdf-worker.test.mjs`'s
+   * idiom, copied rather than reinvented: without it workerd refuses to
    * start with `can't use ".." to break out of starting directory`. */
   const mf = new Miniflare({
     modules: true, modulesRoot: "/", scriptPath: bundle, script: readFileSync(bundle, "utf8"),
