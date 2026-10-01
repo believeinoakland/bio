@@ -59,3 +59,17 @@ test("R9: the audit sweep counts the case-member arm over a held bundle, and eac
   assert.equal(w.promotion.registerStep("ratification", { check: () => null }).ok, false);
   assert.equal(w.record.registerAuditCheck("ratification", () => []).ok, false);
 });
+
+test("record-core R70 (K783): this module registers its mint-seed sources once at creation, `cases` and `case_documents`, and the ledger learns a live case id from each", () => {
+  const w = world();
+  const again = w.record.registerMintSeed("ratification", [["CASE", "cases", "case_id"]]);
+  assert.deepEqual([again.ok, again.reason], [false, "MINT_SEED_DECLARED"], "registered at creation, once");
+  const minted = (id) => w.row(`SELECT source FROM minted_ids WHERE id=?`, id)?.source ?? null;
+  const P = w.project("Team", "alice");
+  w.st.sql.exec(`INSERT INTO cases (case_id, project_id, opened) VALUES (?, ?, ?)`, "CASE-2026-0042", P, "t");
+  w.caseDoc("CASE-2026-0043", 1, "---\nformat: bio-case-document/5\n---\n");
+  assert.deepEqual([minted("CASE-2026-0042"), minted("CASE-2026-0043")], [null, null], "negative control: not yet seeded");
+  w.record.seedMintLedger([]);
+  assert.deepEqual([minted("CASE-2026-0042"), minted("CASE-2026-0043")], ["live", "live"],
+    "the first from `cases` alone, the second from `case_documents` alone");
+});

@@ -10,7 +10,7 @@
    `caseMemberFindings`); none reads source text. Where an old suite read "the /5 document op=publish really authored",
    that document is case-authoring's to write (a module this one may not import), so it is built here by hand in the
    same format — `bio-case-document/5`, the fixture's `cleanCase` with the old suite's authored values — rendered to
-   bytes with `fmText` and parsed back with legacy-checks' `parseFrontmatter`, as the old suites parsed the bytes they
+   bytes with `fmText` and parsed back with record-grammar's `parseFrontmatter`, as the old suites parsed the bytes they
    read. The signatures are real SSHSIGs (the fixture's signer), never a stand-in. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -19,7 +19,7 @@ import { caseRatifyOp, ratifyOp } from "../../../src/ratification/ops.mjs";
 import { checkCaseDocument, completenessFields, caseMemberFindings, isCaseMemberBytes, SUBJECT_POSITIONS,
          caseConclusionRowLines, RATIFY_MACHINE_FENCE_CHECKS as FENCE, RATIFY_ATTRIBUTION_CHECKS as ATTRIBUTION,
          RATIFY_SCOPE_CHECKS as SCOPE } from "../../../src/ratification/index.mjs";
-import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { caseDocumentStatesMemberBlocks } from "../../../src/publication/checks.mjs";
 
 const Q1 = "INQ-2026-0001-first", CASE = "CASE-2026-0001";
@@ -144,7 +144,7 @@ async function caseWorld({ mutate = (d) => d } = {}) {
   const docSha = w.caseDoc(CASE, 1, text);
   const facts = { ok: true, doc: { case_id: CASE, edition: 1, doc_sha: docSha, text },
                   attribution: { reached: [], legacy: [], stated: [], current: [] },
-                  signers: w.membership.attestingKeys(), memberBasis: null, priorCase: null };
+                  signers: w.credentials.attestingKeys(), memberBasis: null, priorCase: null };
   w.pub.facts.set(`${CASE}#1`, facts);
   const sig = await signCase(key, CASE, 1, docSha);
   const body = { caseId: CASE, edition: 1, expectedSha: docSha, sig };

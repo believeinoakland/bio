@@ -262,7 +262,7 @@ async function caseWorld({ members: ids = ["INQ-2026-9128-lead", "INQ-2026-9128-
   const docSha = w.caseDoc(CASE, 1, text, { owner: P });
   if (steered)
     w.pub.facts.set(`${CASE}#1`, { ok: true, doc: { case_id: CASE, edition: 1, doc_sha: docSha, text },
-      attribution: { reached: [], legacy: [], stated: [], current: [] }, signers: w.membership.attestingKeys(),
+      attribution: { reached: [], legacy: [], stated: [], current: [] }, signers: w.credentials.attestingKeys(),
       memberBasis: null, priorCase: null });
   const sig = await signCase(s.iris, CASE, 1, docSha);
   const caseRatify = async (o, body = { caseId: CASE, edition: 1, expectedSha: docSha, sig }) => {
@@ -397,7 +397,7 @@ test("R2, R8 (grounds): op=caseratify's gate runs the same arm over the document
                              body: CASE_BODY });
     const docSha = w.caseDoc(CASE, 1, text);
     w.pub.facts.set(`${CASE}#1`, { ok: true, doc: { case_id: CASE, edition: 1, doc_sha: docSha, text },
-      attribution: { reached: [], legacy: [], stated: [], current: [] }, signers: w.membership.attestingKeys(),
+      attribution: { reached: [], legacy: [], stated: [], current: [] }, signers: w.credentials.attestingKeys(),
       memberBasis: { [GQ]: GROUNDED }, priorCase: null });
     const p = plane(w, as("iris"));
     const r = await caseRatifyOp(p.request({ caseId: CASE, edition: 1, expectedSha: docSha, sig: await signCase(iris, CASE, 1, docSha) }),

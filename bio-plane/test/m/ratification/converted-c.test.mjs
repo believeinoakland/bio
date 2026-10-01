@@ -10,7 +10,7 @@
    The old suites drove op=publish (case-authoring's) to author the /5 case document the case gate then ran over. This
    file may not import case-authoring, so it writes a document of the same shape BY HAND (`publishedCaseText`, below):
    the lines, keys and body sections `caseDocumentText` writes for a two-member case whose project declared no bar and
-   whose basis legs name nothing the record can resolve (casesign's corpus), and parses it with legacy-checks'
+   whose basis legs name nothing the record can resolve (casesign's corpus), and parses it with record-grammar's
    `parseFrontmatter`, as the old suites parsed the text op=publish returned. Every other act is driven at the module's
    interface: the store half (`ratificationOf` through the fixture's `world()`), the Worker half (`caseRatifyOp`,
    `ratifyOp` with the fixture's `plane(w)`), and the pure `checkCaseDocument`. */
@@ -19,7 +19,8 @@ import assert from "node:assert/strict";
 import { world, plane, newKey, signBundle, signCase, cleanInfoMd, sha, V, SILENT, NOW } from "./fixture.mjs";
 import { caseRatifyOp, ratifyOp } from "../../../src/ratification/ops.mjs";
 import { checkCaseDocument, CASE_DOCUMENT_FAMILY, caseConclusionRowLines } from "../../../src/ratification/index.mjs";
-import { parseFrontmatter, CASE_AUTHORITY_CHECKS, PROJECT_AUTHORITY_CHECKS } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { CASE_AUTHORITY_CHECKS, PROJECT_AUTHORITY_CHECKS } from "../../../src/membership/index.mjs";
 
 /* ================================================================ a /5 case document, in op=publish's shape */
 
@@ -158,7 +159,7 @@ async function caseCeremony() {
     const docSha = w.caseDoc(CASE, 1, text);
     w.pub.facts.set(`${CASE}#1`, { ok: true, doc: { case_id: CASE, edition: 1, doc_sha: docSha, text },
                                    attribution: { reached: [], legacy: [], stated: [], current: [] },
-                                   signers: w.membership.attestingKeys(), memberBasis: { [LEAD]: [], [SUPP]: [] }, priorCase: null });
+                                   signers: w.credentials.attestingKeys(), memberBasis: { [LEAD]: [], [SUPP]: [] }, priorCase: null });
     return docSha;
   };
   const text = publishedCaseText({ caseId: CASE, project: P, members, conclusions: [[LEAD, conc[LEAD]], [SUPP, conc[SUPP]]] });

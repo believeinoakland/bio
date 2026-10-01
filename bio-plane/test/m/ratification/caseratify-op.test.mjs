@@ -26,7 +26,7 @@ async function setup({ mutate = (d) => d } = {}) {
   const docSha = w.caseDoc(CASE, 1, text);
   const facts = { ok: true, doc: { case_id: CASE, edition: 1, doc_sha: docSha, text },
                   attribution: { reached: [], legacy: [], stated: [], current: [] },
-                  signers: w.membership.attestingKeys(), memberBasis: null, priorCase: null };
+                  signers: w.credentials.attestingKeys(), memberBasis: null, priorCase: null };
   w.pub.facts.set(`${CASE}#1`, facts);
   const sig = await signCase(key, CASE, 1, docSha);
   const run = async (body = { caseId: CASE, edition: 1, expectedSha: docSha, sig }, o = {}) => {
@@ -74,7 +74,7 @@ test("R2: in order — the facts (publication's answer for a case the caller has
     ["ATTRIBUTION_STATEMENT_STALE", 409, "C-92.11", ATTRIBUTION.ATTRIBUTION_STATEMENT_STALE,
      () => { facts.attribution.stated = [{ observation: "INFO-2026-0009-o", level: "group", shown: null }]; }],
     ["CASE_RATIFY_STALE", 409, undefined, null, () => { facts.doc.doc_sha = docSha; }],
-    ["NO_SIGNERS", 409, undefined, null, () => { facts.signers = w.membership.attestingKeys(); }],
+    ["NO_SIGNERS", 409, undefined, null, () => { facts.signers = w.credentials.attestingKeys(); }],
     ["SIG_", 403, undefined, null, () => {}],
   ];
   for (const [reason, status, check, row, relax] of steps) {
