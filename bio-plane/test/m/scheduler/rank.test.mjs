@@ -55,7 +55,7 @@ test("R10: intent is asked once, naming every subject by kind; one that throws o
 test("R10: each batch-bounded tick receives the rank with its now, reading intent's servesOf; no other tick does", async () => {
   assert.deepEqual([...RANKED].sort(), ["archive-monitor", "bias-debt", "capture-request-drain", "monitor-cadence"]);
   const all = Object.fromEntries(SCHEDULER_ORDER.map((n) => [n, { due: 1 }]));
-  for (const n of ["bias-debt", "archive-monitor", "monitor-cadence"]) all[n].due = NOW;
+  for (const n of ["bias-debt", "archive-monitor", "monitor-cadence", "deadline-recheck"]) all[n].due = NOW;
   const { s, calls } = world({ ...all, serves: { tick: { serves: [{ kind: "address", id: "g", gaps: ["k"], aspirations: [] }] } } });
   const got = {};
   s.register("legacy-store", { name: "queue-renotify", key: "queuerenotify", due: (t) => t, wake: () => null,
@@ -71,7 +71,8 @@ test("R10: each batch-bounded tick receives the rank with its now, reading inten
     assert.deepEqual(r.map((x) => x.id), ["g", "p"]);
   }
   assert.equal(got["queue-renotify"], undefined, "a tick that is not batch-bounded receives no rank");
-  for (const m of ["aiRuns.reap", "calibration.calibrationTick", "intent.ageSurfaced", "reevaluation.noticeSweep"])
+  for (const m of ["aiRuns.reap", "calibration.calibrationTick", "intent.ageSurfaced", "reevaluation.noticeSweep",
+                   "monitoring.deadlineRecheck"])
     assert.equal(calls.find(([x]) => x === m).length, 2, `${m}: given now alone`);
   assert.ok(calls.some(([m]) => m === "intent.servesOf"));
 });

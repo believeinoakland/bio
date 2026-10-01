@@ -7,7 +7,8 @@ import { world, consumer, writes, NOW } from "./fixture.mjs";
 
 /* The owners' tick services (the overdue scan's is also its wake, so it is judged by the answer instead). */
 const TICKS = ["retrieval.sweepSelections", "monitoring.archiveTick", "monitoring.cadenceTick", "connections.sweep", "aiRuns.reap", "aiRuns.wake", "captureRequests.drain",
-               "calibration.calibrationTick", "bias.biasDebtSweep", "intent.ageSurfaced", "reevaluation.noticeSweep"];
+               "calibration.calibrationTick", "bias.biasDebtSweep", "intent.ageSurfaced", "reevaluation.noticeSweep",
+               "monitoring.deadlineRecheck"];
 const ticked = (calls) => calls.filter(([m]) => TICKS.includes(m)).map(([m]) => m);
 
 test("R1: it runs, in registry order, the tick of every consumer due at most now + grace, awaiting each, then reconciles over the whole registry", async () => {
@@ -66,7 +67,7 @@ test("R2: the answer's fields; the drain's counts, zero when it did not tick; ea
   assert.deepEqual(r.overduescan, { overdue_count: 0, next_deadline: null, next_deadline_at: null });
   assert.equal(typeof r.monitor, "object", "the archive monitor is due at every firing");
   for (const k of ["airunwake", "calibration", "biasdebt", "intentage", "noticesweep", "monitorcadence",
-                   "queuerenotify", "groupdomain"]) assert.equal(k in r, false, `${k}: did not tick, absent`);
+                   "queuerenotify", "groupdomain", "deadlinerecheck"]) assert.equal(k in r, false, `${k}: did not tick, absent`);
   assert.deepEqual(r.probes, []);
 });
 
@@ -85,13 +86,13 @@ test("R2: the drain's counts when the registered drain ticked, and each register
 
 test("R2: every real consumer's key, when each ticks", async () => {
   const all = Object.fromEntries(SCHEDULER_ORDER.map((n) => [n, { due: 1, tick: { x: n } }]));
-  for (const n of ["bias-debt", "intent-age", "notice-sweep", "archive-monitor", "monitor-cadence"]) all[n].due = NOW;
+  for (const n of ["bias-debt", "intent-age", "notice-sweep", "archive-monitor", "monitor-cadence", "deadline-recheck"]) all[n].due = NOW;
   const { s } = world(all);
   for (const [n, key] of [["task-drain", "drain"], ["queue-renotify", "queuerenotify"], ["group-domain-recheck", "groupdomain"]])
     s.register("legacy-store", consumer(n, { key, due: (t) => t, tick: key === "drain" ? { drain: { drained: 0 } } : { [key]: { x: n } } }));
   const r = await s.onAlarm(NOW);
   for (const k of ["monitor", "connderive", "overduescan", "queuerenotify", "monitorcadence", "airunreap", "capturerequests",
-                   "airunwake", "calibration", "groupdomain", "biasdebt", "intentage", "noticesweep"])
+                   "airunwake", "calibration", "groupdomain", "biasdebt", "intentage", "noticesweep", "deadlinerecheck"])
     assert.ok(k in r, k);
   assert.deepEqual(r.probes, []);
 });
@@ -160,7 +161,7 @@ test("R6: the five always-due consumers are due at every firing; every other onl
     [3, 3, 3, 3]);
   assert.equal(calls.filter(([x, t]) => x === "progressions.overdueScan").length >= 3, true, "the overdue scan ticked each firing");
   for (const m of ["monitoring.cadenceTick", "aiRuns.reap", "aiRuns.wake", "captureRequests.drain", "calibration.calibrationTick", "bias.biasDebtSweep",
-                   "intent.ageSurfaced", "reevaluation.noticeSweep"]) assert.equal(n(m), 0, `${m}: its owner said not due`);
+                   "intent.ageSurfaced", "reevaluation.noticeSweep", "monitoring.deadlineRecheck"]) assert.equal(n(m), 0, `${m}: its owner said not due`);
   assert.equal(rq.ticks.length, 0);
 });
 

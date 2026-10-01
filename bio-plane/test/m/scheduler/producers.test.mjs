@@ -21,6 +21,7 @@ function producers({ debtDue = null } = {}) {
     calibration: { onSubjectRegistered: reg("calibrationSubject"), onSignalRecorded: reg("calibrationSignal") },
     aiRuns: { onRunOpened: reg("aiRuns") },
     captureRequests: { onRequestFiled: reg("captureRequests") },
+    entities: { onResolved: reg("entities") },
   };
   return { p, heard, fire: async (name, payload, event = null) => {
     const l = (heard[name] || []).find((x) => x.event === event);
@@ -36,7 +37,7 @@ test("R9: it registers arm with each earlier producer's notice, under its own na
     retrieval: [["scheduler", null]], bias: [["scheduler", null]], promotion: [["scheduler", null]],
     capture: [["scheduler", "source-outcome"]], progressions: [["scheduler", null]],
     calibrationSubject: [["scheduler", null]], calibrationSignal: [["scheduler", null]], aiRuns: [["scheduler", null]],
-    captureRequests: [["scheduler", null]] });
+    captureRequests: [["scheduler", null]], entities: [["scheduler", null]] });
 });
 
 test("R9: on an idle instance each notice leaves the alarm armed at the consumer's wake", async () => {
@@ -46,6 +47,7 @@ test("R9: on an idle instance each notice leaves the alarm armed at the consumer
     ["a lens moved (bias R23)", "bias", "bias-debt", {}, null, { debtDue: NOW }],
     ["a promotion that leaves a bundle monitored (promotion R45)", "promotion", "monitor-cadence", { bundleId: "B" }, null, {}],
     ["a promotion while a bias debt is due (promotion R45)", "promotion", "bias-debt", { bundleId: "C" }, null, { debtDue: NOW }],
+    ["a promotion that leaves an action holding a pending clock entry (promotion R45, monitoring R50)", "promotion", "deadline-recheck", { bundleId: "ACT-1" }, null, { unconfigured: true }],
     ["a counted source failure, monitoring configured (capture R44)", "capture", "archive-monitor", { counted: true, outcome: "fetch_failed" }, "source-outcome", {}],
 
     ["a calibration subject registered (calibration R18)", "calibrationSubject", "calibration-reprobe", { engine: "e", probe_id: "p", next_probe: 9 }, null, {}],
@@ -57,7 +59,7 @@ test("R9: on an idle instance each notice leaves the alarm armed at the consumer
     const wake = NOW + 4321;
     /* The drain's wake is now + its interval while a request is pending (capture-requests R37). */
     const set = cons === "capture-request-drain" ? { due: 1, wake: 4321 } : { wake };
-    const { s, st } = world({ [cons]: set, monitoring: { configured: true } });
+    const { s, st } = world({ [cons]: set, monitoring: { configured: !opts.unconfigured } });
     const { p, fire } = producers(opts);
     s.listenTo(p);
     assert.equal(st.alarm, null, `${what}: idle before`);
@@ -72,7 +74,7 @@ test("R9: on an idle instance each notice leaves the alarm armed at the consumer
 test("R9: a notice that creates no consumer's work arms nothing", async () => {
   const cases = [
     ["a lens change with no debt due", "bias", {}, null, { debtDue: null }, true],
-    ["a promotion, monitoring unconfigured, no debt due", "promotion", { bundleId: "B" }, null, {}, false],
+    ["a promotion, monitoring unconfigured, no debt due, no clock pending", "promotion", { bundleId: "B" }, null, {}, false],
     ["a success", "capture", { counted: true, outcome: "success" }, "source-outcome", {}, true],
     ["an uncounted (governed) outcome", "capture", { counted: false, outcome: "governed" }, "source-outcome", {}, true],
     ["a failure, monitoring unconfigured", "capture", { counted: true, outcome: "fetch_failed" }, "source-outcome", {}, false],
@@ -108,7 +110,24 @@ test("R9: a producer later than this module arms by calling arm itself (R4), its
   assert.equal(st.alarm, NOW + 86400000);
 });
 
-test.todo("R9: a resolution that marks an entity arms the connection sweep through entities' notice (not yet met: entities R13's onResolved runs inside the resolving transaction, where the alarm cannot be set; legacy-store's resolve route arms after it, J1 (3))");
+test("R9: a resolution that marks an entity arms the connection sweep through entities' notice, after the resolving transaction, once", async () => {
+  const { s, st } = world({ "connection-derive": { wake: NOW + 60000 } });
+  const { p, heard } = producers();
+  s.listenTo(p);
+  const l = heard.entities[0];
+  /* entities R13 calls its listeners synchronously inside the transaction: nothing may touch storage there */
+  st.log.length = 0;
+  const answers = [l.fn({ entityId: "E1", raised: false }), l.fn({ entityId: "E2", raised: true }), l.fn({ entityId: "E1", raised: true })];
+  assert.deepEqual(answers, [undefined, undefined, undefined], "the listener answers nothing the resolve reads");
+  assert.deepEqual(st.log, [], "no storage call inside the transaction");
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(st.alarm, NOW + 60000, "armed at the sweep's wake once the transaction returned");
+  assert.deepEqual(writes(st), [["setAlarm", NOW + 60000]], "one arm for the three resolutions");
+  l.fn({ entityId: "E3", raised: false });
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(writes(st).length, 1, "a later resolve arms again, never pushing the set alarm later");
+  assert.equal(st.log.filter(([m]) => m === "getAlarm").length, 2, "a second, separate arm ran");
+});
 
 test("R17: every notice it registers only schedules: no tick runs and nothing but the alarm is written", async () => {
   const { s, st, calls } = world({ "bias-debt": { due: NOW, wake: NOW + 10 }, "selection-sweep": { wake: NOW + 20 },
@@ -119,6 +138,7 @@ test("R17: every notice it registers only schedules: no tick runs and nothing bu
   await fire("retrieval", {}); await fire("bias", {}); await fire("promotion", { bundleId: "B" });
   await fire("capture", { counted: true, outcome: "source_refused" }, "source-outcome"); await fire("progressions", {});
   await fire("calibrationSubject", {}); await fire("calibrationSignal", {}); await fire("aiRuns", {}); await fire("captureRequests", {});
+  await fire("entities", { entityId: "E" }); await new Promise((r) => setTimeout(r, 0));
   assert.deepEqual(calls.filter(([m]) => ["bias.biasDebtSweep", "retrieval.sweepSelections", "connections.sweep",
     "calibration.calibrationTick", "aiRuns.reap", "aiRuns.wake", "captureRequests.drain"].includes(m)), []);
   assert.deepEqual(writes(st).map(([m]) => m), ["setAlarm"], "set once, then never pushed later");
