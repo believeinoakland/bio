@@ -17,3 +17,7 @@ Merged early (K703). Stay available: the split's deletion follows as a CHANGE on
 ## B4 · CHANGE
 
 Action-clocks has merged (K704). Merge tranche/T18 into your branch and do the split's deletion as your bullet and K700 say (keep pendingClocks, its bounds, PENDING_CLOCKS_BAD_BEFORE's row in your checks and R31's tests until monitoring re-points, K625; delete clockPropose, computeDeadline, the clock subject of proposalLabelFor/PROPOSAL_SAYS, action_clock_proposals in schema and ACTIONS_TABLES, and the R32/R35 arms). Then re-run your users' tests and post COMPLETE.
+
+## B5 · CHANGE
+
+Merged (K707). One re-open (P19: no hard reason to defer): entities is now in your uses in modules.json, so meet R9's entity_id naming a person through entities' public services. Merge tranche/T18 into your branch, apply it with its test, re-run, and post COMPLETE.
