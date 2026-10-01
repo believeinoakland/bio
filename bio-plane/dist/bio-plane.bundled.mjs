@@ -5540,6 +5540,7 @@ __export(checks_exports, {
   CAPTURE_REQUEST_ARM_CHECKS: () => CAPTURE_REQUEST_ARM_CHECKS,
   CIVICOS_CONTACT_URL: () => CIVICOS_CONTACT_URL,
   DRIVE_CAPTURE_CHECKS: () => DRIVE_CAPTURE_CHECKS,
+  INSTALLATION_CHECKS: () => INSTALLATION_CHECKS2,
   RENDER_CAPTURE_CHECKS: () => RENDER_CAPTURE_CHECKS,
   civicosUserAgent: () => civicosUserAgent
 });
@@ -5667,7 +5668,19 @@ var DRIVE_CAPTURE_CHECKS = Object.freeze({
     translation: "The export address said it was sending a document and sent a web page instead. This instance checks the bytes rather than taking the label, so the application page was recognised and refused. Nothing was filed under that document address."
   })
 });
-var ACQUISITION_CHECKS = Object.freeze({ ...CAPTURE_REQUEST_ARM_CHECKS, ...RENDER_CAPTURE_CHECKS, ...DRIVE_CAPTURE_CHECKS });
+var INSTALLATION_CHECKS2 = Object.freeze({
+  EVIDENCE_STORAGE_NOT_CONFIGURED: Object.freeze({
+    check: "C-68.1",
+    where: at("is-storage-absent"),
+    translation: "This copy was installed without the storage it keeps captured documents in, so it cannot keep or read the bytes of a captured document. That is a fact about how the copy was set up, not about this request: whoever installed it can connect that storage in the hosting account. Nothing was changed."
+  })
+});
+var ACQUISITION_CHECKS = Object.freeze({
+  ...CAPTURE_REQUEST_ARM_CHECKS,
+  ...RENDER_CAPTURE_CHECKS,
+  ...DRIVE_CAPTURE_CHECKS,
+  ...INSTALLATION_CHECKS2
+});
 
 // src/cpu.mjs
 function makeMeter() {
@@ -28150,10 +28163,17 @@ function safeJson(text5) {
   }
 }
 var bareSha = (v) => typeof v === "string" ? v.trim().replace(/^sha256:/, "").toLowerCase() : null;
-var FINDING_MEANS = {
+var OBSERVATION_MEANS = Object.freeze({
   NEVER_LOOKED: "nobody looked at this level for this subject",
+  LOOKED_ABSENT: "we looked and it is positively not there",
   LOOKED_INDETERMINATE: "we looked and could not tell",
-  PRESENT: "we looked and it is there"
+  PRESENT: "we looked and it is there",
+  partial: "we looked and got part of it (SWH's crawl status; CPDF-5's measured 88% case)"
+});
+var FINDING_MEANS = {
+  NEVER_LOOKED: OBSERVATION_MEANS.NEVER_LOOKED,
+  LOOKED_INDETERMINATE: OBSERVATION_MEANS.LOOKED_INDETERMINATE,
+  PRESENT: OBSERVATION_MEANS.PRESENT
 };
 function bundleGate(col, viewer) {
   if (typeof col !== "string" || !/^[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$/.test(col))
@@ -28274,6 +28294,9 @@ function routeFinding(objectType, mark) {
     note: marked ? ROUTE_MARK_NOTE : "this document's route was assessed and every document in its register can be shown"
   };
 }
+var ROUTE_FINDING_KEY = "route";
+var ROUTE_TALLY_MARKED_MAX = 20;
+var ROUTE_TALLY_NOTE = "these are STATED DOUBTS, not conformance errors, and they are deliberately not counted in `tally` or `withErrors`: each names a document whose route cannot be shown, standing where the group put it (DEC-56/DEC-19). `NEVER_LOOKED` is a different fact again \u2014 it means no assessment has run, not that anything is wrong.";
 var ROUTE_MARKED_FINDING = "LOOKED_INDETERMINATE";
 var ROUTE_MARKED_LIMIT_DEFAULT = 50;
 var ROUTE_MARKED_LIMIT_MAX = 200;
@@ -28572,6 +28595,8 @@ var Provenance = class _Provenance {
   #signingKey;
   #listeners = [];
   // R47: {module, fn, rank}
+  #testimony = [];
+  // R52: {module, check, project, rank, seq}
   #order;
   constructor({ storage, record, membership, promotion, now, instanceName, signingKey, order } = {}) {
     this.#storage = storage;
@@ -28713,6 +28738,73 @@ var Provenance = class _Provenance {
   /** Registers this module's check and projection with promotion, once (the factory calls it). */
   joinPromotion() {
     return this.#promotion.registerStep("provenance", { check: (c) => this.#check(c), project: (c) => this.#project(c) });
+  }
+  /* ===================================================================== *
+   * R52: THE TESTIMONY PATH'S LATER WORK, AS ONE SLOT (`build/extraction/legacy-store.md` §4.2 (5); K31's pattern, as
+   * R47; a fixed slot in the step order, as record-grammar R28's, K763).
+   * ===================================================================== */
+  /** R52 — a later module's work on a member's observation, registered once at start: a `check` asked before the
+   *  write, a `project`ion written after it, or both. A malformed or repeated registration is refused through
+   *  membership's `listenerRefusal` (its R81), the one site of `LISTENER_MALFORMED` and `LISTENER_DECLARED`. */
+  onTestimony(module, spec) {
+    const fnOr = (v) => v === void 0 || v === null || typeof v === "function";
+    const check = isObj4(spec) && typeof spec.check === "function" ? spec.check : null;
+    const project = isObj4(spec) && typeof spec.project === "function" ? spec.project : null;
+    const formed = isObj4(spec) && fnOr(spec.check) && fnOr(spec.project) && (check || project);
+    const refused = listenerRefusal(this.#testimony, module, formed ? check || project : null);
+    if (refused) return refused;
+    const i = this.#order.indexOf(module);
+    this.#testimony.push({ module, check, project, rank: i === -1 ? Infinity : i, seq: this.#testimony.length });
+    this.#testimony.sort((a, b) => a.rank - b.rank || a.seq - b.seq);
+    return { ok: true, module };
+  }
+  /* The path's own fields as R28 wrote them, for a promotion that carries the testimony path; null for any other. */
+  #testimonyOf(c) {
+    const t = c && c.pkg && c.pkg[TESTIMONY_PATH];
+    if (!t) return null;
+    return {
+      bundleId: c.bundleId,
+      captureSha: t.captureSha,
+      words: t.words,
+      author: t.author,
+      observedAt: t.observedAt,
+      recordedAt: t.recordedAt
+    };
+  }
+  /** R52 — the registrations as one slot, which the composition root runs at the place the legacy store's promotion
+   *  step runs the testimony work today: `check(c)` at the end of that step's check, `project(c)` at the end of its
+   *  projection (`c` the promotion's step context). This module runs neither in its own step and calls no later
+   *  module: what runs is what registered. On a promotion without the testimony path both answer null. */
+  testimonySlot() {
+    return {
+      /* Every registered check, in the modules' order; the first refusal refuses the promotion as it came. */
+      check: (c) => {
+        const t = this.#testimonyOf(c);
+        if (!t) return null;
+        for (const { check } of this.#testimony) {
+          if (!check) continue;
+          const out = check({ ...t, earlier: {} });
+          if (out && out.ok === false) return out;
+        }
+        return null;
+      },
+      /* Every registered projection, in the modules' order, each told what the ones before it answered. Their
+         answers are joined, in that order, as `testimony`. A projection that throws is not caught: the promotion
+         rolls back whole. */
+      project: (c) => {
+        const t = this.#testimonyOf(c);
+        if (!t) return null;
+        const earlier = {}, testimony = {};
+        for (const { module, project } of this.#testimony) {
+          if (!project) continue;
+          const out = project({ ...t, earlier: { ...earlier } });
+          if (out && out.ok === false) return out;
+          earlier[module] = out ?? null;
+          if (isObj4(out)) Object.assign(testimony, out);
+        }
+        return { testimony };
+      }
+    };
   }
   /* Why is a register row unreferenced? (D-9)
    *
@@ -29682,6 +29774,54 @@ sha256: ${captureSha}
   routeOf(bundleId, objectType) {
     return routeFinding(objectType, this.#latestRouteMark(bundleId));
   }
+  /** R54 — the route-marker tally over one audit page (record-core R68's `page`: `{bundles: [{bundleId, type, state}],
+   *  after, last}`), registered as the audit's `route` finding (see the block above `ROUTE_FINDING_KEY`). Reads the
+   *  standing mark of each bundle the page names, over the page's own id range, kept for the page's ids only. */
+  routeTally({ bundles = [], after = "", last = null } = {}) {
+    const page = Array.isArray(bundles) ? bundles.filter(isObj4) : [];
+    const ids = new Set(page.map((b) => b.bundleId));
+    const top2 = last ?? (page.length ? page[page.length - 1].bundleId : null);
+    const marks = /* @__PURE__ */ new Map();
+    if (page.length) {
+      for (const m of this.#rows(
+        `SELECT m.* FROM provenance_route_marks m
+          WHERE m.bundle_id > ? AND m.bundle_id <= ?
+            AND m.seq = (SELECT MAX(x.seq) FROM provenance_route_marks x WHERE x.bundle_id = m.bundle_id)`,
+        String(after ?? ""),
+        String(top2)
+      ))
+        if (ids.has(m.bundle_id)) marks.set(m.bundle_id, m);
+    }
+    const tally = { LOOKED_INDETERMINATE: 0, PRESENT: 0, NEVER_LOOKED: 0, notApplicable: 0 };
+    const marked = [];
+    let markedTotal = 0;
+    for (const b of page) {
+      const found = routeFinding(b.type, marks.get(b.bundleId) || null);
+      if (!found.applies) {
+        tally.notApplicable++;
+        continue;
+      }
+      tally[found.finding] = (tally[found.finding] || 0) + 1;
+      if (!found.marked) continue;
+      markedTotal++;
+      if (marked.length < ROUTE_TALLY_MARKED_MAX) marked.push({ bundleId: b.bundleId, state: b.state, ...found });
+    }
+    return { tally, marked, markedTotal, markedShown: marked.length, means: OBSERVATION_MEANS, note: ROUTE_TALLY_NOTE };
+  }
+  /** R55 — this module's figures for `op=stats` and purge's proof (record-core R63), as the legacy store's `#counts`
+   *  takes them: `register` and `routeMarks`, each keyed on `bundle_id`. `hid` (`{sql, args}`, the bundles the caller
+   *  may not see, or null for a whole count) drops the rows naming a hidden bundle; a row whose column is null names
+   *  none and is counted (`NULL NOT IN (…)` is NULL, so the column is read through COALESCE). Writes nothing. */
+  counts(hid = null) {
+    const n = (table2) => {
+      const hidden = isObj4(hid) && typeof hid.sql === "string";
+      return this.#one(
+        `SELECT count(*) AS c FROM ${table2}${hidden ? ` WHERE COALESCE(bundle_id, '') NOT IN ${hid.sql}` : ""}`,
+        ...hidden && Array.isArray(hid.args) ? hid.args : []
+      ).c;
+    };
+    return { register: n("register"), routeMarks: n("provenance_route_marks") };
+  }
   /** REC-63 / DEC-56: ASSESS one document's provenance route and record what was
    *  found — the act DEC-56's ruling licenses and D-204 said had nowhere to go.
    *
@@ -30304,6 +30444,8 @@ function provenanceOf(host, deps) {
     ], { exempt: ["receipt_keys"] });
     p.joinPromotion();
     record.registerAuditCheck("provenance", ({ raw }) => registerChecks(imageForChecks(raw)));
+    record.registerAuditFinding("provenance", ROUTE_FINDING_KEY, (page) => p.routeTally(page));
+    record.registerCounts("provenance", ["register", "routeMarks"], (hid) => p.counts(hid));
   }
   return p;
 }
@@ -30586,12 +30728,17 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
   const answer = (status, b) => ({ status, body: b });
   const op = "acquire";
   const ev = cap.core && typeof cap.core.evidenceStore === "function" ? cap.core.evidenceStore() : null;
-  if (!ev) return answer(503, {
-    ok: false,
-    reason: "EVIDENCE_STORAGE_NOT_CONFIGURED",
-    op,
-    error: "this instance has no evidence storage configured"
-  });
+  if (!ev) {
+    const row2 = INSTALLATION_CHECKS2.EVIDENCE_STORAGE_NOT_CONFIGURED;
+    return answer(503, {
+      ok: false,
+      reason: "EVIDENCE_STORAGE_NOT_CONFIGURED",
+      check: row2.check,
+      translation: row2.translation,
+      op,
+      error: "this instance has no evidence storage configured"
+    });
+  }
   if (!captureRequest && body.via === "capture-request") {
     const row2 = CAPTURE_REQUEST_ARM_CHECKS.CAPTURE_NOT_DRAINING;
     return answer(403, {
@@ -50472,6 +50619,933 @@ async function checkInformationExtension2(ctx, findings) {
 }
 var INFORMATION_GRAMMAR = Object.freeze({ ids: Object.freeze(["C-2.7"]), arm: checkInformationExtension2 });
 
+// src/credentials/schema.mjs
+var CREDENTIALS_SCHEMA = `
+-- Credentials live here rather than in Worker secrets, because a Worker cannot
+-- rewrite its own secret. ADMIN_TOKEN is a bootstrap credential used once; the
+-- real password is chosen by the operator and only its hash is stored. Losing
+-- it is recoverable by overwriting ADMIN_TOKEN in the dashboard, which returns
+-- the instance to an unclaimed state. A member's password is stored under the
+-- role 'member:<member_id>'.
+CREATE TABLE IF NOT EXISTS credentials (
+  role       TEXT PRIMARY KEY,
+  salt       TEXT NOT NULL,
+  hash       TEXT NOT NULL,
+  iterations INTEGER NOT NULL,
+  updated    TEXT NOT NULL
+);
+
+-- Sessions are DO-backed so a password login can be exchanged for a bearer
+-- token without the password travelling on every later request.
+CREATE TABLE IF NOT EXISTS sessions (
+  token   TEXT PRIMARY KEY,
+  role    TEXT NOT NULL,
+  expires INTEGER NOT NULL,
+  created TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS sessions_expires ON sessions(expires);
+
+-- One row, id=1. Records that the bootstrap credential has been spent.
+CREATE TABLE IF NOT EXISTS bootstrap (
+  id          INTEGER PRIMARY KEY CHECK (id = 1),
+  consumed_at TEXT,
+  token_fp    TEXT
+);
+
+-- Registered signing keys, the plane's projection of the member key
+-- registry. key_b64 is the bare base64 of the OpenSSH wire public key, the
+-- exact bytes an SSHSIG embeds, so matching is byte equality. member_id names
+-- a member of membership's roster, read through its services (R8, R11).
+CREATE TABLE IF NOT EXISTS signers (
+  key_b64   TEXT PRIMARY KEY,
+  member_id TEXT NOT NULL,
+  comment   TEXT,
+  status    TEXT NOT NULL DEFAULT 'active',
+  added     TEXT NOT NULL,
+  -- REC-159: the actor whose act last set the key's status; NULL reads 'not recorded'.
+  status_by TEXT,
+  -- R8 (N364, DEC-80 item 4): how the key was registered, 'admin' by an administrator (R6) or 'self' by its own
+  -- member from a signed-in session (R9), and who registered it. A row written before these columns was
+  -- registered by R6, the only door there was, so a NULL origin reads 'admin'; NULL registered_by reads
+  -- 'not recorded'. Neither is back-filled. attests never reads origin (R19).
+  origin    TEXT,
+  registered_by TEXT
+);
+CREATE INDEX IF NOT EXISTS signers_member ON signers(member_id);
+
+-- PL-11 / IS-5 / D-199: THE ai CREDENTIAL'S DECLARED TASK SCOPE, AND THE
+-- WHOLE REASON IT IS A TABLE RATHER THAN A BINDING.
+--
+-- The four token classes -- admin, member, probe, daemon -- are ENV BINDINGS:
+-- an operator sets a value in the hosting dashboard and the plane compares
+-- against it, a settings row by another name, which D-199 (2) rules out for
+-- this one class (DEC-17's reasoning: a settings row "would be a way to change
+-- the standard with nothing to read afterwards"). A presented ai token resolves
+-- HERE, against a row a member wrote: who minted it, when, for whom, and what
+-- it may do. Amending the reach is another row with a name against it.
+--
+-- THE VALUE IS NEVER STORED. 'token_id' is the IDENTITY, a short public name
+-- the record can print, an act can cite and a member can revoke; 'secret_sha'
+-- is the SHA-256 of the presented value, which a lookup compares.
+--
+-- BOTH PRINCIPAL KINDS ARE LEGITIMATE AND CARRY DIFFERENT ACCOUNTABILITY, which
+-- is why 'principal_kind' is not nullable (D-199 (4), DEC-55 det 4): an
+-- ORGANISATION-scoped key acts for the group, a MEMBER-scoped key is
+-- attributable to that member. 'principal' IS THE VIEWER the plane stamps on
+-- this credential's reads, so who is behind it and what it may read are one
+-- string.
+--
+-- 'scope_writes' is a JSON array of op names, arriving already judged at the
+-- mint edge (the control plane's ops table is the only thing that knows which
+-- ops a member reaches); the declared writes narrow that floor, never widen it.
+--
+-- NOT PURGED (R18): this is identity, and a whole-store purge that cleared it
+-- would revoke every agent's authority as a side effect of resetting the corpus.
+CREATE TABLE IF NOT EXISTS ai_credentials (
+  token_id        TEXT PRIMARY KEY, -- the public IDENTITY of the credential. NEVER its value
+  secret_sha      TEXT NOT NULL,    -- SHA-256 of the presented value. NEVER its value
+  principal_kind  TEXT NOT NULL,    -- organisation | member. D-199 (4): an act says which
+  principal       TEXT NOT NULL,    -- the stamped viewer: class:ai for an org key, member:<id> for a member key
+  task_scope      TEXT NOT NULL,    -- the declared scope name, e.g. investigative
+  scope_writes    TEXT NOT NULL,    -- JSON array of op names this scope may MUTATE. reads are the floor
+  scope_note      TEXT NOT NULL,    -- what the authoring member said this credential is for
+  minted_by       TEXT NOT NULL,    -- the MEMBER who minted it. D-199 (3): never a machine
+  minted_at       TEXT NOT NULL,
+  revoked_at      TEXT,
+  revoked_by      TEXT,
+  -- D-463: the namespace this credential is confined to for its whole life ('scratch'), or NULL for one that is
+  -- not confined. It arrives already judged at the mint edge (the control plane owns the namespaces). NULLABLE AND
+  -- NEVER BACK-FILLED: a credential minted before this column existed was minted unconfined, and NULL is that fact.
+  confined_to     TEXT
+);
+CREATE INDEX IF NOT EXISTS ai_credentials_secret ON ai_credentials(secret_sha);
+CREATE INDEX IF NOT EXISTS ai_credentials_principal ON ai_credentials(principal_kind, principal);
+`;
+var CREDENTIALS_ADDITIVE_COLUMNS = [
+  ["signers", "status_by", "TEXT"],
+  ["signers", "origin", "TEXT"],
+  ["signers", "registered_by", "TEXT"],
+  ["ai_credentials", "confined_to", "TEXT"]
+];
+var CREDENTIALS_EXEMPT_TABLES = ["credentials", "sessions", "bootstrap", "signers", "ai_credentials"];
+
+// src/credentials/checks.mjs
+var at5 = (fn, region) => `src/credentials/index.mjs ${fn} > ${region}`;
+var SIGNER_ENROLMENT_CHECKS2 = Object.freeze({
+  SIGNER_MEMBER_NOT_ENROLLED: Object.freeze({
+    check: "C-63.1",
+    where: at5("#signerMemberBar", "is-signer-member-attesting"),
+    translation: "That person has not enrolled yet. A signing key belongs to a member who has taken up their invitation and chosen a handle; until then this instance would refuse anything signed with it, so registering it now would put a key on the roster that cannot sign. Nothing was written. Send them their invitation link, and register the key once they have enrolled."
+  }),
+  SIGNER_MEMBER_NOT_ACTIVE: Object.freeze({
+    check: "C-63.2",
+    where: at5("#signerMemberBar", "is-signer-member-attesting"),
+    translation: "That member\u2019s membership is not active, so this instance would refuse anything signed with their key. Nothing was written. Reinstate the member first if they should be able to sign again."
+  })
+});
+var AI_CREDENTIAL_CHECKS = Object.freeze({
+  /* D-199 (3): "If an agent can request a broader token, the scoping is theatre." */
+  AI_CREDENTIAL_MINT_NOT_A_MEMBER: Object.freeze({
+    check: "C-29.1",
+    where: at5("aiCredentialMint", "is-ai-credential-mint"),
+    translation: "Only a named person signed in to this instance can create an agent credential. Deciding what an automated worker is allowed to reach is a judgement somebody has to be accountable for, so an automated worker cannot make it \u2014 not even about itself."
+  }),
+  /* D-199 (4) / DEC-55 det 4: an act says which principal stands behind it. */
+  AI_CREDENTIAL_PRINCIPAL_UNSTATED: Object.freeze({
+    check: "C-29.2",
+    where: at5("aiCredentialMint", "is-ai-credential-mint"),
+    translation: "An agent credential has to say who stands behind it: the organisation as a whole, or one named member. The two carry different accountability and they see different things, so the record will not hold one that says neither."
+  }),
+  /* The identity is what acts cite, so it is never rebound. */
+  AI_CREDENTIAL_IDENTITY_TAKEN: Object.freeze({
+    check: "C-29.3",
+    where: at5("aiCredentialMint", "is-ai-credential-mint"),
+    translation: "That name already belongs to an agent credential on this instance. Acts in the record cite the name, so binding it to something new would quietly change who did work that has already been done. Retire the old one or choose another name."
+  }),
+  /* The row carries `revoked_by`, and a machine name there would record a decision nobody in the group made. */
+  AI_CREDENTIAL_REVOKE_NOT_A_MEMBER: Object.freeze({
+    check: "C-29.4",
+    where: at5("aiCredentialRevoke", "is-ai-credential-revoke"),
+    translation: "Withdrawing an agent credential is recorded against the person who withdrew it, so a named member has to be the one doing it. An automated caller has no name to put there and the record would then show a decision nobody made."
+  }),
+  AI_CREDENTIAL_UNKNOWN: Object.freeze({
+    check: "C-29.5",
+    where: at5("aiCredentialRevoke", "is-ai-credential-revoke"),
+    translation: "There is no agent credential by that name on this instance, so nothing was withdrawn. Being told that plainly matters more than it looks: believing you have taken an authority away when you have not is the worse of the two outcomes."
+  }),
+  /* R14: a member-scoped credential's principal is the member who mints it. */
+  AI_CREDENTIAL_PRINCIPAL_NOT_THE_MINTER: Object.freeze({
+    check: "C-29.11",
+    where: at5("aiCredentialMint", "is-ai-credential-mint"),
+    translation: "A credential that acts for one member acts for the member who creates it, and nobody else. You named another member, and nobody can authorise an agent in someone else's name: it would see what they see and its work would be recorded as theirs. Nothing was created. The member it should act for can create it themselves."
+  })
+});
+var CREDENTIALS_CHECKS = Object.freeze({
+  BAD_KEY: Object.freeze({
+    check: "C-96.8",
+    where: at5("signerAdd", "is-signer-key-shape"),
+    translation: "That is not a public key this group can register. It takes the base64 part of an ssh-ed25519 public key, the part that begins AAAA. Nothing was written."
+  }),
+  SIGNER_KEY_HELD_BY_ANOTHER: Object.freeze({
+    check: "C-96.15",
+    where: at5("signerRegisterOwn", "is-signer-key-held"),
+    translation: "This key is registered to another member, so it cannot be yours. Make a new key in this browser. Nothing was changed."
+  }),
+  SIGNER_KEY_REVOKED: Object.freeze({
+    check: "C-96.16",
+    where: at5("signerRegisterOwn", "is-signer-key-revoked"),
+    translation: "This key was revoked, so it cannot be registered again. Make a new key in this browser, or ask an administrator. Nothing was changed."
+  }),
+  MACHINE_CANNOT_REGISTER_KEY: Object.freeze({
+    check: "C-96.17",
+    where: at5("signerRegisterOwn", "is-machine-register-key"),
+    translation: "A member registers their own signing key, from their own signed-in session. The credential that asked here has no member behind it: it is an automated one, the operator's token, or a call with nobody signed in. Sign in as yourself to register your key, or ask an administrator to register one for you. Nothing was changed."
+  })
+});
+
+// src/credentials/index.mjs
+var stampSecond2 = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
+var ROOT = Membership.ROOT_ADMIN;
+var Credentials = class _Credentials {
+  constructor({ sql, core = null, membership = null } = {}) {
+    this.sql = sql;
+    this.core = core;
+    this.membership = membership;
+  }
+  #rows(q7, ...a) {
+    return [...this.sql.exec(q7, ...a)];
+  }
+  #one(q7, ...a) {
+    const r = this.#rows(q7, ...a);
+    return r.length ? r[0] : null;
+  }
+  /* ===== START: the seam with membership (K637) =====
+   *
+   * R16: one listener on membership's revocation notice (its R79). Each time a member becomes `revoked` (a carried
+   * removal, membership R8; a revocation, its R20), every session of theirs ends and every signer key registered to
+   * them is revoked, named for the act's actor, inside the revoking act (the notice is called after the act's writes,
+   * in the caller's transaction). Membership ignores a listener's answer and survives its throw; a session left open
+   * by a failure here holds no capability (membership R92 resolves a revoked member to none at every read) and a key
+   * left `active` does not attest (R8 asks the member's status), so a failure is never a credential kept.
+   * R17: the one fact `claimed()`, read by membership's R64 and R86 through its R94. Registered once; each answer is
+   * membership's R81 (a second registration is refused, so `start` is idempotent through `credentialsOf`).
+   * R20 (K774): `setPassword` registered as the setter membership's `enroll` calls inside its own act (its R95), so a
+   * member's password is set in the one act that enrols them, as before the split, and membership stores none. The
+   * setter is asked `{role, password}` and answers R3's `{ok, role}` (a promise: the derivation is asynchronous). Until
+   * membership offers R95 (its later work in this layer, K774) there is nothing to register with, and `password` reads
+   * null. */
+  start() {
+    const revoked = this.membership.onRevoked("credentials", (notice) => this.#memberRevoked(notice));
+    const claimed = this.membership.registerClaimed("credentials", () => this.claimed());
+    const password = typeof this.membership.registerPasswordSetter === "function" ? this.membership.registerPasswordSetter(({ role, password: password2 } = {}) => this.setPassword({ role, password: password2 })) : null;
+    return { revoked, claimed, password };
+  }
+  #memberRevoked({ memberId, by = null } = {}) {
+    if (typeof memberId !== "string" || memberId === "") return;
+    this.sql.exec(`DELETE FROM sessions WHERE role=?`, `member:${memberId}`);
+    this.sql.exec(`UPDATE signers SET status='revoked', status_by=? WHERE member_id=?`, by ?? null, memberId);
+  }
+  /* R17: true exactly when the founder's credential is held, which R1's claim writes and a re-armed claim replaces.
+     Writes nothing and never throws: a store that cannot be read answers not claimed. */
+  claimed() {
+    try {
+      return !!this.#one(`SELECT role FROM credentials WHERE role=?`, ROOT);
+    } catch {
+      return false;
+    }
+  }
+  /* This module's tables, at every boot, idempotent: the additive columns an older store lacks, then every table and
+     index created if absent, then R18's purge exemption declared. Run by the host inside its boot. */
+  migrate() {
+    const cols = (t) => [...this.sql.exec(`PRAGMA table_info(${t})`)].map((r) => r.name);
+    for (const [table2, column, decl] of CREDENTIALS_ADDITIVE_COLUMNS) {
+      const have = cols(table2);
+      if (have.length && !have.includes(column)) this.sql.exec(`ALTER TABLE ${table2} ADD COLUMN ${column} ${decl}`);
+    }
+    const bare2 = CREDENTIALS_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+    for (const st of bare2.split(";")) {
+      const t = st.trim();
+      if (t) this.sql.exec(t);
+    }
+    this.declareTables();
+  }
+  /* R18, through record-core's `declarePurge` (its R21): every table here is exempt. Each is declared on its own so
+     that, while membership still declares a table this module took from it (until membership's deletion drops it from
+     `MEMBERSHIP_EXEMPT_TABLES`, K637), that table stays exempt under membership's declaration and the rest are this
+     module's. Any other refusal is thrown: a purge that silently cleared a credential would revoke authority as a side
+     effect of resetting the corpus. */
+  declareTables() {
+    if (this.#declared) return false;
+    for (const name of CREDENTIALS_EXEMPT_TABLES) {
+      const answer = this.core.declarePurge("credentials", [], { exempt: [name] });
+      if (answer && answer.ok === false && !(answer.reason === "TABLE_DECLARED" && answer.declaredBy === "membership"))
+        throw new Error(`credentials: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
+    }
+    this.#declared = true;
+    return true;
+  }
+  #declared = false;
+  /* ===== SIGN-IN AND SESSIONS (R1–R5) =====
+   *
+   * A Worker cannot rewrite its own secret, so ADMIN_TOKEN is a bootstrap credential rather than the credential. It is
+   * spent once, exchanging itself for an operator-chosen password whose hash lives here. Recovery is to overwrite
+   * ADMIN_TOKEN in the dashboard, which re-arms the claim. That makes the group's hosting login the root of trust,
+   * which is the only thing they reliably still have when a password is lost. */
+  static #enc = new TextEncoder();
+  static async #derive(password, salt, iterations) {
+    const key = await crypto.subtle.importKey(
+      "raw",
+      _Credentials.#enc.encode(password),
+      "PBKDF2",
+      false,
+      ["deriveBits"]
+    );
+    const bits = await crypto.subtle.deriveBits(
+      { name: "PBKDF2", hash: "SHA-256", salt: _Credentials.#enc.encode(salt), iterations },
+      key,
+      256
+    );
+    return [...new Uint8Array(bits)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+  static #rand(n = 32) {
+    return [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+  /* REC-41: A FIXED, PUBLISHED, DELIBERATELY WORTHLESS SALT, and the one place a refusal pays what an acceptance pays.
+     Collapsing the sign-in refusals into one code and one sentence (R4) is defeated by a stopwatch if the arms do not
+     COST the same: an arm that refuses without a password check would answer in microseconds while the wrong-password
+     arm runs PBKDF2 at 100,000 iterations, so "is this an active member" would be answerable with a timer. Every such
+     arm awaits this first. It equalises the DOMINANT cost and is not a proof of constant time (the lookup and the
+     compare still differ by microseconds); it removes the measurement an ordinary caller can make over the internet.
+     The salt guards nothing and is never stored; a real credential's salt is minted per password by `setPassword`. */
+  static #TIMING_SALT = "bio-login-timing-equaliser";
+  static async #payLoginCost(password) {
+    await _Credentials.#derive(String(password ?? ""), _Credentials.#TIMING_SALT, 1e5);
+  }
+  /* R2 (REC-41, closing D-188). `op=bootstrap` is reached by any stranger, and it answers ONE question, the one the
+     setup page asks before it can show anything: has this instance been claimed, and is there a live bootstrap
+     credential to claim it with. It no longer answers `roles` (every role holding a credential and when its password
+     was set: a roster handed to anyone in one unauthenticated request), and nothing consumed it; the credentials table
+     is not read here at all, so there is no roster in this answer for a later refactor to leak. `consumedAt` stays: it
+     is the instant the INSTANCE was claimed, a fact about this copy of the software that names nobody. */
+  bootstrapState(tokenFp = null) {
+    const b = this.#one(`SELECT consumed_at, token_fp FROM bootstrap WHERE id=1`);
+    const spent = !!(b && b.consumed_at);
+    const rearmed = spent && tokenFp !== null && b.token_fp !== tokenFp;
+    return {
+      claimed: spent && !rearmed,
+      rearmed,
+      consumedAt: rearmed ? null : b?.consumed_at || null
+    };
+  }
+  /* R1: spending the bootstrap credential. Refused once spent, so a leaked ADMIN_TOKEN cannot silently re-claim a
+     running instance; a replaced one (a different fingerprint) re-arms it. */
+  async claim({ role = ROOT, password, tokenFp = null } = {}) {
+    if (typeof password !== "string" || password.length < 12)
+      return { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 };
+    const st = this.bootstrapState(tokenFp);
+    if (st.claimed)
+      return { ok: false, reason: "ALREADY_CLAIMED", consumedAt: st.consumedAt };
+    await this.setPassword({ role, password });
+    const now = (/* @__PURE__ */ new Date()).toISOString();
+    this.sql.exec(`INSERT INTO bootstrap (id, consumed_at, token_fp) VALUES (1, ?, ?)
+                   ON CONFLICT(id) DO UPDATE SET consumed_at=excluded.consumed_at,
+                     token_fp=excluded.token_fp`, now, tokenFp);
+    return { ok: true, role, consumedAt: now };
+  }
+  /* R3: a salted, derived hash for `role`, replacing any earlier one; never the password. Who may call it is the
+     control plane's rule (`op=setpassword`). */
+  async setPassword({ role, password, iterations = 1e5 } = {}) {
+    const salt = _Credentials.#rand(16);
+    const hash = await _Credentials.#derive(password, salt, iterations);
+    this.sql.exec(
+      `INSERT INTO credentials (role, salt, hash, iterations, updated) VALUES (?,?,?,?,?)
+       ON CONFLICT(role) DO UPDATE SET salt=excluded.salt, hash=excluded.hash,
+         iterations=excluded.iterations, updated=excluded.updated`,
+      role,
+      salt,
+      hash,
+      iterations,
+      (/* @__PURE__ */ new Date()).toISOString()
+    );
+    return { ok: true, role };
+  }
+  /* R4 (REC-39, REC-41): THE WORDS A REFUSED SIGN-IN IS GIVEN, in one place, because one refusal answers every arm: no
+     credential under the role, a member who is not active, and a stored credential the password does not derive. Two
+     sentences would tell the arms apart at a glance, and telling them apart is what the collapse prevents: with
+     `op=bootstrap`'s roster closed, a distinguishable refusal is an unmetered anonymous oracle over who holds a
+     credential. D-57's rule shapes the sentence: a refusal states what THE MECHANISM FOUND and never makes a claim about
+     who is asking. It says "active" rather than "no such role" because the obvious wording is false for the revoked
+     member, whose credential row is still there; and it says that it does not separate the arms, rather than leaving a
+     reader to assume it does. Reversing it costs two lines (the arms are still separate below); the honest way back is
+     a rate limit plus an authenticated diagnostic, not a louder anonymous refusal. */
+  static LOGIN_REFUSAL_DETAIL = {
+    SIGN_IN_REFUSED: "no session was issued and nothing was written. Either this instance holds no active credential under that role \u2014 a role that was never registered and one whose membership is no longer active are the same answer here \u2014 or a credential is stored and the password supplied does not derive its stored hash. The password itself is never kept, only a salted derivation of it, so that is the only comparison there is to make. Which of those happened, the record does not say: it is one answer deliberately, so that a refusal cannot be used to find out which roles hold a credential on this instance."
+  };
+  static #refused() {
+    return { ok: false, reason: "SIGN_IN_REFUSED", detail: _Credentials.LOGIN_REFUSAL_DETAIL.SIGN_IN_REFUSED };
+  }
+  /* R4: exchanges a password for a bearer token, so the password does not travel on every later request. A member's
+     sign-in is refused unless the member is active (membership R68's standing), so revocation closes the front door as
+     well as the sessions; that arm never touches a password, so it pays the same cost first and answers the same
+     words, byte for byte. */
+  async login({ role = ROOT, password, ttlSeconds = 43200 } = {}) {
+    if (typeof role === "string" && role.startsWith("member:")) {
+      const m = this.#memberFacts(role.slice(7));
+      if (!m || m.status !== "active") {
+        await _Credentials.#payLoginCost(password);
+        return _Credentials.#refused();
+      }
+    }
+    const c = this.#one(`SELECT salt, hash, iterations FROM credentials WHERE role=?`, role);
+    if (!c) {
+      await _Credentials.#payLoginCost(password);
+      return _Credentials.#refused();
+    }
+    const got = await _Credentials.#derive(String(password ?? ""), c.salt, c.iterations);
+    if (got !== c.hash) return _Credentials.#refused();
+    const token = _Credentials.#rand(32);
+    const expires = Date.now() + ttlSeconds * 1e3;
+    this.sql.exec(`DELETE FROM sessions WHERE expires < ?`, Date.now());
+    this.sql.exec(
+      `INSERT INTO sessions (token, role, expires, created) VALUES (?,?,?,?)`,
+      token,
+      role,
+      expires,
+      (/* @__PURE__ */ new Date()).toISOString()
+    );
+    return { ok: true, role, token, expires };
+  }
+  /* R5: what a session is, and what it may do (Membership Architecture v2 §5), resolved HERE at every read through
+     membership's `sessionRights` (its R92) rather than cached on the session row: a capability change or a revocation
+     takes effect on the next request, not on the next login. */
+  session(token) {
+    if (!token) return null;
+    const s = this.#one(`SELECT role, expires FROM sessions WHERE token=?`, token);
+    if (!s) return null;
+    if (s.expires < Date.now()) {
+      this.sql.exec(`DELETE FROM sessions WHERE token=?`, token);
+      return null;
+    }
+    const r = this.membership.sessionRights(s.role) || {};
+    return {
+      role: s.role,
+      expires: s.expires,
+      capabilities: r.capabilities ?? [],
+      administer: r.administer === true,
+      member: r.member ?? null,
+      handle: r.handle ?? null,
+      rootOfTrust: r.rootOfTrust === true
+    };
+  }
+  /* membership R68: a member's standing, or null. Never throws here: an unreadable answer is no member. */
+  #memberFacts(memberId) {
+    if (typeof memberId !== "string" || memberId === "") return null;
+    try {
+      return this.membership.memberFacts(memberId) || null;
+    } catch {
+      return null;
+    }
+  }
+  /* ===== SIGNING KEYS (R6–R11, R19) ===== */
+  /* REC-159 — §4.9's custodial acts are refused before anything is looked up, so a caller with no standing learns
+   * nothing about the member or key it named. `by` is the control plane's STAMP. Three shapes, three answers:
+   *   - a member's id (a signed-in session): admitted only as one of membership's administrators (its R86), else
+   *     NOT_AN_ADMIN through membership's `notAnAdmin` (its R84), exactly as membership R12 admits;
+   *   - `class:<cls>`, the operator's bearer (BOB #22's ruling): the plane decides which classes reach here, and the
+   *     record names the credential;
+   *   - absent, a route with no plane in front of it: nothing is attributed, and the row records `not recorded`.
+   * Answers null when the act may proceed. */
+  #custodialBar(by, act) {
+    if (by === null || by === void 0 || by === "") return null;
+    if (String(by).startsWith(MACHINE_CLASS_PREFIX)) return null;
+    if (this.membership.activeAdmins().includes(by)) return null;
+    return notAnAdmin(by, act);
+  }
+  /* REC-159: the stored actor, or the stated absence of one. */
+  static #statusBy(v) {
+    return typeof v === "string" && v !== "" ? v : "not recorded";
+  }
+  /* R8, R11, R19 (D-158) — ONE PREDICATE, AND IT IS WHAT KEEPS THE ROSTER AND THE GATE FROM DISAGREEING. A key attests
+   * exactly when the key is `active` and its member is `active`; `origin` is never read (R19). `signerList` projects it
+   * as `attests` and `attestingKeys` filters by it, so the roster can never report a key `op=ratify` would refuse:
+   * two copies of the rule and a third reader that never asked it is what once let `op=signerlist` report `active` for
+   * a key the gate answered `SIG_UNKNOWN_KEY`. The member's status is membership's fact (its R68), never a join on
+   * its table. */
+  static #attests(keyStatus, memberStatus) {
+    return keyStatus === "active" && memberStatus === "active";
+  }
+  /* D-158 — THE WRITE HALF: a key is registered only to a member who can attest, so the roster tells the truth and the
+   * gate is not relaxed (relaxing it would widen an authority: a signature attesting in the name of a roster slot no
+   * person has taken up). TWO CODES, because there are two facts: a member with no handle has never enrolled; one with
+   * a handle whose status is not `active` is not standing. The answer carries the stored status and the enrolment fact
+   * beside the code. Answers null when the member may attest. */
+  #signerMemberBar(memberId) {
+    const m = this.#memberFacts(memberId);
+    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (m.status === "active") return null;
+    const enrolled = typeof m.handle === "string" && m.handle !== "";
+    const refusal20 = (code, detail) => {
+      const row2 = SIGNER_ENROLMENT_CHECKS2[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row2.check,
+        translation: row2.translation,
+        detail,
+        memberId,
+        member_status: m.status,
+        enrolled
+      };
+    };
+    if (!enrolled)
+      return refusal20(
+        "SIGNER_MEMBER_NOT_ENROLLED",
+        `${memberId} has not enrolled: status '${m.status}', no handle chosen. op=ratify weighs a signature against the member's own standing, so a key registered now would sit on the roster as one this instance would refuse. Nothing was written.`
+      );
+    return refusal20(
+      "SIGNER_MEMBER_NOT_ACTIVE",
+      `${memberId} is on the roster with status '${m.status}' rather than 'active'. op=ratify weighs a signature against the member's own standing and would refuse this one. Nothing was written.`
+    );
+  }
+  /* The shape R6 and R9 both take: the base64 field of an ssh-ed25519 public key (the OpenSSH wire bytes, which an
+     Ed25519 WebCrypto key exports to as well; `sshsig.mjs` verifies either). One predicate, so the two doors cannot
+     disagree about what a key is. */
+  static #keyShaped(keyB64) {
+    return typeof keyB64 === "string" && /^AAAA[A-Za-z0-9+/=]+$/.test(keyB64);
+  }
+  /* R6: an administrator registers a key for a member. Registering a known key rebinds it and makes it `active`, never
+     a second row; `origin` 'admin' and `registered_by` the stamped actor (NULL reads `not recorded`). */
+  signerAdd({ keyB64, memberId, comment, by = null } = {}) {
+    const barCust = this.#custodialBar(by, "registering a signing key");
+    if (barCust) return barCust;
+    const row2 = CREDENTIALS_CHECKS.BAD_KEY;
+    if (!_Credentials.#keyShaped(keyB64))
+      return {
+        ok: false,
+        reason: "BAD_KEY",
+        code: "BAD_KEY",
+        check: row2.check,
+        translation: row2.translation,
+        detail: "expected the base64 field of an ssh-ed25519 public key"
+      };
+    const barAdd = this.#signerMemberBar(memberId);
+    if (barAdd) return barAdd;
+    this.sql.exec(
+      `INSERT INTO signers (key_b64,member_id,comment,status,added,status_by,origin,registered_by)
+       VALUES (?,?,?,'active',?,?,'admin',?)
+       ON CONFLICT(key_b64) DO UPDATE SET member_id=excluded.member_id,
+         comment=excluded.comment, status='active', status_by=excluded.status_by,
+         origin='admin', registered_by=excluded.registered_by`,
+      keyB64,
+      memberId,
+      comment ?? null,
+      (/* @__PURE__ */ new Date()).toISOString(),
+      by || null,
+      by || null
+    );
+    return { ok: true, keyB64, memberId, by: _Credentials.#statusBy(by) };
+  }
+  /* ===== R9, R10, R19 (N364; DEC-80 item 4, Bob's ruling K509 (2)) — A MEMBER REGISTERS THEIR OWN KEY =====
+   *
+   * The key is made in the member's own browser, never by another, and each use is confirmed on the device (the
+   * interface's to keep; the plane cannot test it). From a signed-in session the member registers its public half
+   * here, and it attests exactly as an administrator-registered key does (R19). What keeps it accountable is that every
+   * administrator is told (`notified`, membership R86's list at this instant, and the key's row, which the feed's
+   * notice reads: N375, K535) and any of them can revoke the key (R7).
+   *
+   * THE ORDER, each step the requirement's: who is asking (a machine credential, the operator's bearer or no stamp
+   * has no member to register for: C-96.17); the key's shape (R6's answer, relayed from R6's own region so C-96.8
+   * keeps its one site); the member's standing (R6's bar); and whether ANOTHER member holds the key. A held key is
+   * never rebound, and the refusal names no one. A key `by` already holds and that is active answers `existed: true`,
+   * unchanged; one `by` holds that was revoked is refused and stays revoked (K535): only an administrator re-activates
+   * a key (R7). */
+  signerRegisterOwn({ keyB64, comment = null, by = null } = {}) {
+    if (by === null || by === void 0 || by === "" || isMachineIdentity(by)) {
+      const row2 = CREDENTIALS_CHECKS.MACHINE_CANNOT_REGISTER_KEY;
+      return {
+        ok: false,
+        reason: "MACHINE_CANNOT_REGISTER_KEY",
+        code: "MACHINE_CANNOT_REGISTER_KEY",
+        check: row2.check,
+        translation: row2.translation,
+        by: by || null,
+        detail: "a member registers their own signing key from their own signed-in session. A machine credential, the operator's bearer and an unstamped call have no member behind them to hold one; an administrator registers a key for a member with op=signeradd. Nothing was written."
+      };
+    }
+    if (!_Credentials.#keyShaped(keyB64)) return this.signerAdd({ keyB64 });
+    const bar = this.#signerMemberBar(by);
+    if (bar) return bar;
+    const held = this.#one(`SELECT member_id, status, origin, registered_by FROM signers WHERE key_b64=?`, keyB64);
+    if (held && held.member_id !== by) {
+      const row2 = CREDENTIALS_CHECKS.SIGNER_KEY_HELD_BY_ANOTHER;
+      return {
+        ok: false,
+        reason: "SIGNER_KEY_HELD_BY_ANOTHER",
+        code: "SIGNER_KEY_HELD_BY_ANOTHER",
+        check: row2.check,
+        translation: row2.translation,
+        detail: "this key is registered to another member of this group, and a registered key is never rebound by its own member's act. Nothing was written."
+      };
+    }
+    if (held && held.status !== "active") {
+      const row2 = CREDENTIALS_CHECKS.SIGNER_KEY_REVOKED;
+      return {
+        ok: false,
+        reason: "SIGNER_KEY_REVOKED",
+        code: "SIGNER_KEY_REVOKED",
+        check: row2.check,
+        translation: row2.translation,
+        detail: "this key of yours was revoked, and a revoked key is re-activated only by an administrator (op=signerset), so that a revocation stands. Nothing was written."
+      };
+    }
+    if (!held)
+      this.sql.exec(
+        `INSERT INTO signers (key_b64,member_id,comment,status,added,status_by,origin,registered_by)
+         VALUES (?,?,?,'active',?,?,'self',?)`,
+        keyB64,
+        by,
+        comment ?? null,
+        (/* @__PURE__ */ new Date()).toISOString(),
+        by,
+        by
+      );
+    return {
+      ok: true,
+      keyB64,
+      memberId: by,
+      status: "active",
+      origin: held ? held.origin === "self" ? "self" : "admin" : "self",
+      registered_by: held ? _Credentials.#statusBy(held.registered_by) : by,
+      existed: !!held,
+      notified: this.membership.activeAdmins(),
+      detail: held ? "this key is already registered to you and active; nothing was written. Every administrator is told of the registration, and any of them can revoke the key." : "registered to you, and it attests as any registered key does. Every administrator is told of the registration, and any of them can revoke the key."
+    };
+  }
+  /* R10: a member revokes their own key, never refused for a key they hold, whatever its state or theirs (revoking
+     narrows a claim, D-158). A key they do not hold answers NO_SUCH_KEY exactly as `signerSet` answers a key no one
+     holds, so the answer never says whether a key is registered to somebody else. */
+  signerRevokeOwn({ keyB64, by = null } = {}) {
+    const row2 = typeof keyB64 === "string" && typeof by === "string" && by !== "" ? this.#one(`SELECT status FROM signers WHERE key_b64=? AND member_id=?`, keyB64, by) : null;
+    if (!row2) return { ok: false, reason: "NO_SUCH_KEY" };
+    const already = row2.status === "revoked";
+    if (!already) this.sql.exec(`UPDATE signers SET status='revoked', status_by=? WHERE key_b64=?`, by, keyB64);
+    return { ok: true, keyB64, status: "revoked", by, already };
+  }
+  /* R8 (D-158) — THE ROSTER SAYS WHICH STATE EACH KEY IS ACTUALLY IN. `status` is the administrator's own switch on
+   * the key; `member_status` is the stored fact underneath (membership's, R68), and `attests` is whether `op=ratify`
+   * would accept a signature from this key now, from the one predicate. A key whose member is gone is REPORTED, not
+   * dropped, and `attests_why` names a stored fact in every branch; its last branch, `undetermined`, is unreachable
+   * while the predicate is what it is, and kept so a derived reason never quietly guesses. */
+  signerList() {
+    const facts = /* @__PURE__ */ new Map();
+    const statusOf = (id) => {
+      if (!facts.has(id)) facts.set(id, this.#memberFacts(id)?.status ?? null);
+      return facts.get(id);
+    };
+    return { signers: this.#rows(
+      `SELECT key_b64, member_id, comment, status, added, status_by, origin, registered_by
+         FROM signers ORDER BY added, key_b64`
+    ).map((r) => {
+      const memberStatus = statusOf(r.member_id);
+      const attests = _Credentials.#attests(r.status, memberStatus);
+      return {
+        key_b64: r.key_b64,
+        member_id: r.member_id,
+        comment: r.comment,
+        status: r.status,
+        added: r.added,
+        status_by: _Credentials.#statusBy(r.status_by),
+        /* REC-159 */
+        /* R6 was the only door before R9, so a row with no recorded origin is an administrator's. */
+        origin: r.origin === "self" ? "self" : "admin",
+        registered_by: _Credentials.#statusBy(r.registered_by),
+        member_status: memberStatus,
+        attests,
+        attests_why: attests ? null : r.status !== "active" ? "key_revoked" : memberStatus === null ? "member_absent" : memberStatus !== "active" ? `member_${memberStatus}` : "undetermined"
+      };
+    }) };
+  }
+  /* R7: an administrator sets a key's status. Only ACTIVATION is barred as R6 bars the owning member, because
+     membership's revocation revokes the member's keys (R16) and this would otherwise undo it one call later; revoking
+     narrows a claim and is never refused. */
+  signerSet({ keyB64, status, by = null } = {}) {
+    const barCust = this.#custodialBar(by, "setting a signing key's status");
+    if (barCust) return barCust;
+    if (!["active", "revoked"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
+    const row2 = this.#one(`SELECT key_b64, member_id FROM signers WHERE key_b64=?`, keyB64);
+    if (!row2) return { ok: false, reason: "NO_SUCH_KEY" };
+    if (status === "active") {
+      const barSet = this.#signerMemberBar(row2.member_id);
+      if (barSet) return barSet;
+    }
+    this.sql.exec(`UPDATE signers SET status=?, status_by=? WHERE key_b64=?`, status, by || null, keyB64);
+    return { ok: true, keyB64, status, by: _Credentials.#statusBy(by) };
+  }
+  /* R11: the signer keys that attest, by R8's one predicate: the set the ratification gate accepts, for every reader
+     that splices it (`signerList`, the gate's facts, a case's document facts). */
+  attestingKeys() {
+    const facts = /* @__PURE__ */ new Map();
+    const statusOf = (id) => {
+      if (!facts.has(id)) facts.set(id, this.#memberFacts(id)?.status ?? null);
+      return facts.get(id);
+    };
+    return this.#rows(`SELECT key_b64, member_id, status FROM signers ORDER BY added, key_b64`).filter((r) => _Credentials.#attests(r.status, statusOf(r.member_id))).map((r) => ({ key_b64: r.key_b64, member_id: r.member_id }));
+  }
+  /* ===== AI CREDENTIALS (R12–R15) =====
+   *
+   * PL-11 / IS-5 / D-199 — THE `ai` CREDENTIAL, AND WHY ITS SCOPE IS A ROW. What an AI credential may reach must be
+   * amendable only as an authored, dated, on-the-record act (D-199 (2), DEC-17's reasoning), so this class is not a
+   * binding: a presented credential resolves against a row naming the member who minted it and when, and widening it
+   * is another row with another name against it. THE VALUE NEVER ARRIVES HERE: the control plane generates the secret,
+   * hashes it, hands this module the HASH, and returns the value to the minting member once. */
+  /* R12–R14: a MEMBER act (D-199 (3)), and the record says who, when, for whom and what for (D-199 (4)). `writes` and
+     `confinedTo` arrive already judged at the mint edge (the control plane's ops table and namespaces are the only
+     things that know); what this method judges is what the RECORD must say. */
+  aiCredentialMint({
+    who: who2 = null,
+    tokenId = null,
+    secretSha = null,
+    principalKind = null,
+    principalMember: principalMember2 = null,
+    taskScope = null,
+    writes = [],
+    note = null,
+    confinedTo = null,
+    at: at23 = null
+  } = {}) {
+    const refusal20 = (code, detail, extra) => {
+      const row2 = AI_CREDENTIAL_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row2.check,
+        translation: row2.translation,
+        detail,
+        ...extra || {}
+      };
+    };
+    const now = at23 || stampSecond2();
+    const id = String(tokenId ?? "").trim();
+    const kind = String(principalKind ?? "").trim().toLowerCase();
+    if (!who2 || isMachineIdentity(who2))
+      return refusal20(
+        "AI_CREDENTIAL_MINT_NOT_A_MEMBER",
+        who2 ? `'${String(who2).slice(0, 60)}' is a machine identity, and minting an AI credential is a MEMBER act, never an AI act (D-199 (3)): if an agent can request a broader token, the scoping is theatre. This is REC-46's ONE predicate, so it catches token:ai without knowing that class exists.` : "no member is named on this act. An authority granted by nobody is an authority nobody can be asked about afterwards.",
+        { who: who2 || null }
+      );
+    const minter = String(who2).trim();
+    if (kind === "member" && principalMember2 !== null && principalMember2 !== void 0 && String(principalMember2).trim() !== "" && String(principalMember2).trim() !== minter)
+      return refusal20(
+        "AI_CREDENTIAL_PRINCIPAL_NOT_THE_MINTER",
+        `a member-scoped credential acts for the member who mints it, and '${String(principalMember2).slice(0, 60)}' is not '${minter.slice(0, 60)}'. A member cannot authorise an agent in another member's name. Nothing was written.`,
+        { principalMember: String(principalMember2).slice(0, 60) }
+      );
+    if (kind === "organisation" && !this.membership.isAdministrator(minter))
+      return notAnAdmin(
+        minter,
+        "minting an organisation-wide AI credential",
+        { remedy: "A member-scoped AI credential, which acts for you alone, is open to every member." }
+      );
+    const principal = kind === "organisation" ? `${MACHINE_CLASS_PREFIX}ai` : kind === "member" ? `member:${minter}` : null;
+    if (!principal || principal === "member:")
+      return refusal20(
+        "AI_CREDENTIAL_PRINCIPAL_UNSTATED",
+        `principalKind was '${kind.slice(0, 40) || "(none)"}'. It is 'organisation' (the key acts for the group, nobody individual behind it) or 'member' (attributable to that member). They carry different accountability and the record states which, never the token's value.`,
+        { principalKind: kind || null }
+      );
+    if (!id || this.#one(`SELECT token_id FROM ai_credentials WHERE token_id=?`, id))
+      return refusal20(
+        "AI_CREDENTIAL_IDENTITY_TAKEN",
+        id ? `'${id.slice(0, 60)}' already names a credential on this instance. Acts cite the IDENTITY, so rebinding it would re-attribute work already done.` : "pass an identity for this credential: it is the name acts will cite, and a credential nothing can name is one nothing can revoke either.",
+        { tokenId: id || null }
+      );
+    const declared = (Array.isArray(writes) ? writes : []).map((w) => String(w)).sort();
+    const confinement = confinedTo === null || confinedTo === void 0 ? null : String(confinedTo);
+    this.sql.exec(
+      `INSERT INTO ai_credentials (token_id, secret_sha, principal_kind, principal, task_scope,
+         scope_writes, scope_note, minted_by, minted_at, confined_to)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      id,
+      String(secretSha ?? ""),
+      kind,
+      principal,
+      String(taskScope ?? "investigative"),
+      JSON.stringify(declared),
+      String(note ?? ""),
+      String(who2),
+      now,
+      confinement
+    );
+    return { ok: true, minted: true, credential: this.#aiCredentialPublic(
+      this.#one(`SELECT * FROM ai_credentials WHERE token_id=?`, id)
+    ) };
+  }
+  /* R15: also a member act, and the reason is `revoked_by` rather than the risk (C-29.4). Revoking twice answers
+     `already: true`, and the row is kept with its `revokedAt`. */
+  aiCredentialRevoke({ who: who2 = null, tokenId = null, at: at23 = null } = {}) {
+    const refusal20 = (code, detail, extra) => {
+      const row3 = AI_CREDENTIAL_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row3.check,
+        translation: row3.translation,
+        detail,
+        ...extra || {}
+      };
+    };
+    const now = at23 || stampSecond2();
+    const id = String(tokenId ?? "").trim();
+    if (!who2 || isMachineIdentity(who2))
+      return refusal20(
+        "AI_CREDENTIAL_REVOKE_NOT_A_MEMBER",
+        who2 ? `'${String(who2).slice(0, 60)}' is a machine identity. The row carries revoked_by, and a machine name there would record the group withdrawing an authority nobody in the group decided to withdraw.` : "no member is named on this act, and a withdrawal nobody authored is not one.",
+        { who: who2 || null }
+      );
+    const row2 = id ? this.#one(`SELECT * FROM ai_credentials WHERE token_id=?`, id) : null;
+    if (!row2)
+      return refusal20(
+        "AI_CREDENTIAL_UNKNOWN",
+        `no credential on this instance is called '${id.slice(0, 60) || "(none)"}'. Nothing was withdrawn, and being told so is the point: believing an authority is gone when it is not is the worse of the two outcomes.`,
+        { tokenId: id || null }
+      );
+    if (row2.revoked_at)
+      return {
+        ok: true,
+        revoked: true,
+        already: true,
+        credential: this.#aiCredentialPublic(row2)
+      };
+    this.sql.exec(
+      `UPDATE ai_credentials SET revoked_at=?, revoked_by=? WHERE token_id=?`,
+      now,
+      String(who2),
+      id
+    );
+    return {
+      ok: true,
+      revoked: true,
+      already: false,
+      credential: this.#aiCredentialPublic(
+        this.#one(`SELECT * FROM ai_credentials WHERE token_id=?`, id)
+      )
+    };
+  }
+  /* R15: resolve a PRESENTED credential to its record row, by the SHA of the value and never the value. A REVOKED ROW
+     IS RETURNED rather than hidden, the fail-closed direction here: the gate must tell a withdrawn credential from an
+     unknown string. */
+  aiCredentialLook({ secretSha = null } = {}) {
+    const sha = String(secretSha ?? "").trim().toLowerCase();
+    if (!/^[0-9a-f]{64}$/.test(sha)) return { found: false, credential: null };
+    const row2 = this.#one(`SELECT * FROM ai_credentials WHERE secret_sha=?`, sha);
+    if (!row2) return { found: false, credential: null };
+    return { found: true, credential: {
+      ...this.#aiCredentialPublic(row2),
+      /* The gate needs these two as values: the viewer it stamps, and the ops the record declared. */
+      principal: row2.principal,
+      writes: this.#aiCredentialWrites(row2)
+    } };
+  }
+  /* R15: what the group can see about its own agents, never a value and never a hash (the hash is a verifier, and
+     publishing it would make every read of this list an offline guessing target). BOUNDED, AND IT SAYS SO
+     (REC-57 / D-225): `limit` is the cap applied (default 200, at most 500), and `truncated` is measured by reading
+     one row past it. */
+  aiCredentials({ limit = null } = {}) {
+    const asked = Number(limit);
+    const cap = Number.isFinite(asked) && asked > 0 ? Math.min(500, Math.floor(asked)) : 200;
+    const found = this.#rows(
+      `SELECT * FROM ai_credentials ORDER BY minted_at, token_id LIMIT ?`,
+      cap + 1
+    );
+    const rows2 = found.slice(0, cap);
+    return {
+      count: rows2.length,
+      limit: cap,
+      truncated: found.length > cap,
+      credentials: rows2.map((r) => this.#aiCredentialPublic(r))
+    };
+  }
+  #aiCredentialWrites(row2) {
+    try {
+      const w = JSON.parse(row2.scope_writes || "[]");
+      return Array.isArray(w) ? w.map(String) : [];
+    } catch {
+      return [];
+    }
+  }
+  /* ONE projection, used by the mint, the revoke, the list and the gate's lookup, so no surface is shown a shape the
+     others do not agree with, and ONE place decides `secret_sha` is not in it. `confinedTo` is stated as a value, null
+     for "not confined", rather than left off: it is the one property a member must read back to know whether an agent
+     can touch the record at all (D-463). */
+  #aiCredentialPublic(row2) {
+    if (!row2) return null;
+    return {
+      tokenId: row2.token_id,
+      principalKind: row2.principal_kind,
+      principal: row2.principal,
+      taskScope: row2.task_scope,
+      writes: this.#aiCredentialWrites(row2),
+      note: row2.scope_note || null,
+      mintedBy: row2.minted_by,
+      mintedAt: row2.minted_at,
+      revokedAt: row2.revoked_at || null,
+      revokedBy: row2.revoked_by || null,
+      revoked: !!row2.revoked_at,
+      confinedTo: row2.confined_to || null
+    };
+  }
+};
+var OF4 = /* @__PURE__ */ new WeakMap();
+function credentialsOf(ctx, { record = null, membership = null } = {}) {
+  const storage = ctx && ctx.storage ? ctx.storage : ctx;
+  let c = OF4.get(storage);
+  if (!c) {
+    c = new Credentials({
+      sql: storage.sql,
+      core: record ?? recordOf(ctx),
+      membership: membership ?? membershipOf(ctx, { record })
+    });
+    OF4.set(storage, c);
+    c.start();
+  }
+  return c;
+}
+function credentialsOps(c, url, body, env) {
+  return {
+    /* D-199: `who` is the SERVER'S stamp, and `secretSha` never comes from a caller: the control plane generates the
+       value, hashes it, and this module never sees the value. */
+    aicredentialmint: () => c.aiCredentialMint({
+      ...body || {},
+      who: url.searchParams.get("who"),
+      secretSha: url.searchParams.get("secretSha")
+    }),
+    aicredentialrevoke: () => c.aiCredentialRevoke({
+      tokenId: url.searchParams.get("tokenId"),
+      who: url.searchParams.get("who")
+    }),
+    aicredentials: () => c.aiCredentials({ limit: url.searchParams.get("limit") }),
+    /* INTERNAL ONLY, the gate's own lookup; it takes the HASH because the value never crosses this boundary. */
+    aicredentiallook: () => c.aiCredentialLook({ secretSha: url.searchParams.get("sha") }),
+    /* D-116: the DO's own build under `storeVersion`, never `version` (the routing isolate's, spread before this).
+       null, never a default: a DO with no VERSION bound cannot say which build it is. */
+    bootstrap: () => ({
+      ...c.bootstrapState(url.searchParams.get("fp")),
+      storeVersion: typeof env?.VERSION === "string" && env.VERSION ? env.VERSION : null
+    }),
+    claim: () => c.claim({ ...body || {}, tokenFp: url.searchParams.get("fp") }),
+    login: () => c.login(body || {}),
+    setpassword: () => c.setPassword(body || {}),
+    session: () => ({ session: c.session(url.searchParams.get("t")) }),
+    /* REC-159: spread the body, THEN the stamp. */
+    signeradd: () => c.signerAdd({ ...body || {}, by: url.searchParams.get("by") }),
+    signerlist: () => c.signerList(),
+    signerset: () => c.signerSet({ ...body || {}, by: url.searchParams.get("by") })
+  };
+}
+
 // src/capture/schema.mjs
 var CAPTURE_SCHEMA = `
 -- The knock: quarantined public intake. Payload bytes live in R2 under
@@ -50983,7 +52057,7 @@ var CAPTURE_EXEMPT_TABLES = [
 ];
 
 // src/capture/index.mjs
-var stampSecond2 = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
+var stampSecond3 = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
 var ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 var HEX643 = /^[0-9a-f]{64}$/;
 var te5 = new TextEncoder();
@@ -51067,6 +52141,7 @@ function captureOf(ctx, opts = {}) {
     instances8.set(storage, c);
     supplied.set(c, new Set(["env", "governor", "record", "provenance"].filter((k) => opts[k] != null)));
     registerGrammar(c.core);
+    registerFigures(c);
     return c;
   }
   const given = supplied.get(c);
@@ -51093,24 +52168,31 @@ function registerGrammar(record) {
   if (answer && answer.ok === false)
     throw new Error(`capture: record-core refused the information grammar: ${answer.reason}${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
 }
+function registerFigures(c) {
+  const record = c.core;
+  if (!record || typeof record.registerCounts !== "function") return;
+  const answer = record.registerCounts("capture", [...Capture.COUNT_KEYS], (hid) => c.counts(hid));
+  if (answer && answer.ok === false)
+    throw new Error(`capture: record-core refused its figures: ${answer.reason}${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
+}
 var Capture = class _Capture {
   #sql;
   #storage;
   #listeners = /* @__PURE__ */ new Map();
   #declared = false;
-  constructor(storage, { record, env = {}, governor = null, provenance = null, membership = null } = {}) {
+  constructor(storage, { record, env = {}, governor = null, provenance = null, credentials = null } = {}) {
     this.#storage = storage;
     this.#sql = storage.sql;
     this.core = record;
     this.env = env || {};
     this.governor = governor;
     this.provenance = provenance;
-    this.membership = membership;
+    this.credentials = credentials;
   }
-  /* membership's instance for this storage (R69's attesting keys), reached when first needed. */
-  #members() {
-    if (!this.membership) this.membership = membershipOf({ storage: this.#storage }, { record: this.core });
-    return this.membership;
+  /* credentials' instance for this storage (R69's attesting keys, its R11), reached when first needed. */
+  #credentials() {
+    if (!this.credentials) this.credentials = credentialsOf({ storage: this.#storage }, { record: this.core });
+    return this.credentials;
   }
   #rows(q7, ...a) {
     return [...this.#sql.exec(q7, ...a)];
@@ -51248,7 +52330,7 @@ var Capture = class _Capture {
     if (!r) {
       const k = new Uint8Array(32);
       crypto.getRandomValues(k);
-      this.#tx(() => this.#sql.exec(`INSERT OR IGNORE INTO knock_key (id, key_hex, created) VALUES (1, ?, ?)`, hexOf2(k), stampSecond2()));
+      this.#tx(() => this.#sql.exec(`INSERT OR IGNORE INTO knock_key (id, key_hex, created) VALUES (1, ?, ?)`, hexOf2(k), stampSecond3()));
       r = this.#one(`SELECT key_hex FROM knock_key WHERE id = 1`);
     }
     return Uint8Array.from(r.key_hex.match(/../g).map((h) => parseInt(h, 16)));
@@ -51271,7 +52353,7 @@ var Capture = class _Capture {
       if (!create) return null;
       const k = new Uint8Array(32);
       crypto.getRandomValues(k);
-      this.#tx(() => this.#sql.exec(`INSERT OR IGNORE INTO knocker_key (id, key_hex, created) VALUES (1, ?, ?)`, hexOf2(k), stampSecond2()));
+      this.#tx(() => this.#sql.exec(`INSERT OR IGNORE INTO knocker_key (id, key_hex, created) VALUES (1, ?, ?)`, hexOf2(k), stampSecond3()));
       r = this.#one(`SELECT key_hex FROM knocker_key WHERE id = 1`);
     }
     return Uint8Array.from(r.key_hex.match(/../g).map((h) => parseInt(h, 16)));
@@ -51564,13 +52646,19 @@ var Capture = class _Capture {
       };
     }
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
-    if (!ev) return {
-      ok: false,
-      reason: "EVIDENCE_STORAGE_NOT_CONFIGURED",
-      status: 503,
-      knockId,
-      detail: "this instance has no evidence storage configured, so the knock's bytes cannot be held under their own digest; nothing was written"
-    };
+    if (!ev) {
+      const row3 = INSTALLATION_CHECKS2.EVIDENCE_STORAGE_NOT_CONFIGURED;
+      return {
+        ok: false,
+        reason: "EVIDENCE_STORAGE_NOT_CONFIGURED",
+        code: "EVIDENCE_STORAGE_NOT_CONFIGURED",
+        check: row3.check,
+        translation: row3.translation,
+        status: 503,
+        knockId,
+        detail: "this instance has no evidence storage configured, so the knock's bytes cannot be held under their own digest; nothing was written"
+      };
+    }
     let bytes2 = null;
     try {
       if (row2.in_r2) {
@@ -51606,7 +52694,7 @@ var Capture = class _Capture {
         detail: "the knock's bytes could not be held under their own digest, so nothing was written"
       };
     }
-    const when = typeof at23 === "string" && ISO_INSTANT.test(at23) ? at23 : stampSecond2();
+    const when = typeof at23 === "string" && ISO_INSTANT.test(at23) ? at23 : stampSecond3();
     const address = `knock:${knockId}`;
     const profile = await profileOf({
       ev,
@@ -51773,7 +52861,7 @@ var Capture = class _Capture {
       `INSERT OR IGNORE INTO capture_actors (capture_sha, actor, at) VALUES (?, ?, ?)`,
       captureSha,
       actor,
-      at23 && ISO_INSTANT.test(at23) ? at23 : stampSecond2()
+      at23 && ISO_INSTANT.test(at23) ? at23 : stampSecond3()
     ));
     return { recorded: true };
   }
@@ -51781,7 +52869,7 @@ var Capture = class _Capture {
    *  `NOT_THE_CAPTURING_ACTOR` (C-118.5) for anyone this module did not record as capturing it (and for a capture it
    *  recorded no actor for), `ACCOUNT_NO_TEXT` (C-118.6), and `SIG_<reason>` unless `signature` verifies
    *  (`signatures.verifySshsig`, `NS_RATIFY`) over `captureAccountStatement(captureSha, text)` against one of `by`'s
-   *  attesting keys (`membership.attestingKeys`). Append-only. */
+   *  attesting keys (`credentials.attestingKeys`, its R11). Append-only. */
   async recordCaptureAccount({ captureSha, text: text5, signature, by, at: at23 = null } = {}) {
     const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
     const who2 = memberIdOf(by);
@@ -51812,7 +52900,7 @@ var Capture = class _Capture {
     }
     let keys = [];
     try {
-      keys = (this.#members().attestingKeys() || []).filter((k) => memberIdOf(k.member_id) === who2).map((k) => k.key_b64);
+      keys = (this.#credentials().attestingKeys() || []).filter((k) => memberIdOf(k.member_id) === who2).map((k) => k.key_b64);
     } catch {
       keys = [];
     }
@@ -51828,7 +52916,7 @@ var Capture = class _Capture {
         detail: "the signature does not verify over this account's statement against a key of yours that attests, so nothing was written"
       };
     }
-    const when = at23 && ISO_INSTANT.test(at23) ? at23 : stampSecond2();
+    const when = at23 && ISO_INSTANT.test(at23) ? at23 : stampSecond3();
     const seq = this.#tx(() => {
       const n = Number(this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM capture_accounts WHERE capture_sha = ?`, sha).n) + 1;
       this.#sql.exec(
@@ -51910,7 +52998,7 @@ var Capture = class _Capture {
     const attempts = Array.isArray(out && out.attempts) ? out.attempts.filter((a) => a && typeof a === "object") : [];
     if (!attempts.length && out && out.ok === false && out.reason !== "NO_ATTESTATION" && out.reason !== "ATTEST_FAILED")
       return { ...out, status: 409 };
-    const now = stampSecond2();
+    const now = stampSecond3();
     const outcomes = [];
     for (const a of attempts.length ? attempts : [{ service: "attest", ok: false, note: String(out && (out.note || out.reason) || "no attempt was reported") }]) {
       const at23 = typeof a.attempted === "string" && ISO_INSTANT.test(a.attempted) ? a.attempted : now;
@@ -52013,7 +53101,7 @@ var Capture = class _Capture {
    *  admission plus reservation, so a render that never reports cannot hold one for ever. */
   renderAdmit({ allowanceMs, reserveMs = 0, cap = null, at: at23 = null } = {}) {
     return this.#tx(() => {
-      const now = at23 || stampSecond2();
+      const now = at23 || stampSecond3();
       const day = now.slice(0, 10);
       const allowance = Number.isFinite(Number(allowanceMs)) ? Math.max(0, Math.floor(Number(allowanceMs))) : 0;
       const reserve = Number.isFinite(Number(reserveMs)) ? Math.max(0, Math.ceil(Number(reserveMs))) : 0;
@@ -52081,7 +53169,7 @@ var Capture = class _Capture {
   renderSpend({ ms: ms2, releaseMs = 0, slot = null, at: at23 = null } = {}) {
     return this.#tx(() => {
       if (typeof slot === "string" && slot) this.#sql.exec(`DELETE FROM render_slots WHERE slot = ?`, slot);
-      const now = at23 || stampSecond2();
+      const now = at23 || stampSecond3();
       const day = now.slice(0, 10);
       const n = typeof ms2 === "number" && Number.isFinite(ms2) && ms2 >= 0 ? Math.ceil(ms2) : null;
       const rel = Number.isFinite(Number(releaseMs)) ? Math.max(0, Math.ceil(Number(releaseMs))) : 0;
@@ -52118,7 +53206,7 @@ var Capture = class _Capture {
   recordLinks({ sourceCapture, sourceBundle = null, capturedAt, links = [] } = {}) {
     return this.#tx(() => {
       if (!sourceCapture) return { recorded: 0 };
-      const now = stampSecond2();
+      const now = stampSecond3();
       const kept = /* @__PURE__ */ new Set();
       let n = 0;
       for (const l of links) {
@@ -52218,7 +53306,7 @@ var Capture = class _Capture {
     const rows2 = found.slice(0, bound);
     const next = truncated3 ? cursorOf([rows2[rows2.length - 1].citation_norm, rows2[rows2.length - 1].link_ref]) : null;
     if (!rows2.length) return { sourceCapture, resolved: 0, links: [], limit: cap, truncated: truncated3, next };
-    const T = stampSecond2(Date.parse(rows2[0].captured_at) || Date.parse(at23 || "") || Date.now());
+    const T = stampSecond3(Date.parse(rows2[0].captured_at) || Date.parse(at23 || "") || Date.now());
     const out = [];
     const tally = { linked: 0, offsite: 0, intra: 0, anchor: 0, refused: 0 };
     const verdicts = { contemporaneous: 0, superseded: 0, undetermined: 0 };
@@ -52342,7 +53430,7 @@ var Capture = class _Capture {
     limit = null
   } = {}) {
     return this.#tx(() => {
-      const now = at23 || stampSecond2();
+      const now = at23 || stampSecond3();
       this.#sql.exec(
         `INSERT INTO link_verdicts (source_capture, address_norm, verdict, basis, target_bundle, target_capture, at, detail)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING`,
@@ -52488,7 +53576,7 @@ var Capture = class _Capture {
         n >= 2 ? "chrome" : "undetermined",
         n,
         n >= 2 ? `contained in a chrome region and recurred on ${n} distinct pages of ${host}` : `contained in a chrome region on one page of ${host} only: whether it is the site's navigation or that page's own is undetermined until another page of the host carries it`,
-        at23 || stampSecond2()
+        at23 || stampSecond3()
       );
     }
   }
@@ -52527,7 +53615,7 @@ var Capture = class _Capture {
         cap + 1
       );
       const page = found.slice(0, cap);
-      const at23 = stampSecond2();
+      const at23 = stampSecond3();
       for (const r of page) this.#chromeDeriveCapture(r.capture_sha, at23);
       const truncated3 = found.length > cap;
       return {
@@ -52633,7 +53721,7 @@ var Capture = class _Capture {
   saveCaptureSession({ session, locator, primarySha, primaryFile, base, state, ttlMs = 36e5, at: at23 = null } = {}) {
     return this.#tx(() => {
       const now = at23 ? new Date(at23) : /* @__PURE__ */ new Date();
-      const iso5 = (d) => stampSecond2(d.getTime());
+      const iso5 = (d) => stampSecond3(d.getTime());
       this.#sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, iso5(now));
       if (!session || !state) return { session: null, saved: false };
       const cur = this.#one(`SELECT ticks FROM capture_sessions WHERE session = ?`, session);
@@ -52668,7 +53756,7 @@ var Capture = class _Capture {
   loadCaptureSession({ session, at: at23 = null } = {}) {
     return this.#tx(() => {
       const now = at23 ? new Date(at23) : /* @__PURE__ */ new Date();
-      this.#sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, stampSecond2(now.getTime()));
+      this.#sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, stampSecond3(now.getTime()));
       const r = this.#one(`SELECT * FROM capture_sessions WHERE session = ?`, session);
       if (!r) return {
         session,
@@ -52703,7 +53791,7 @@ var Capture = class _Capture {
   /** R46: every live session, for `queue`'s partial-capture condition. Writes nothing, never throws. */
   liveCaptureSessions(now) {
     try {
-      const at23 = typeof now === "string" ? now : stampSecond2(Number.isFinite(Number(now)) ? Number(now) : Date.now());
+      const at23 = typeof now === "string" ? now : stampSecond3(Number.isFinite(Number(now)) ? Number(now) : Date.now());
       return this.#rows(`SELECT * FROM capture_sessions WHERE expires > ? ORDER BY session`, at23).map((r) => {
         let state = null;
         try {
@@ -52790,7 +53878,7 @@ var Capture = class _Capture {
   recordSiteAssets({ host, primarySha, observations = [], at: at23 = null, limit = null } = {}) {
     return this.#tx(() => {
       if (!host || !primarySha) return { host: null, recorded: 0 };
-      const now = at23 || stampSecond2();
+      const now = at23 || stampSecond3();
       const cap = limitOf(limit);
       let truncated3 = false;
       let added = 0, changedCount = 0;
@@ -52915,7 +54003,7 @@ var Capture = class _Capture {
    *  refusals are collected and reported, never thrown. */
   recordReuseVerdicts({ bundleId = null, verdicts = [], at: at23 = null } = {}) {
     return this.#tx(() => {
-      const now = at23 || stampSecond2();
+      const now = at23 || stampSecond3();
       let recorded = 0;
       const refusals = [];
       for (const v of verdicts) {
@@ -53021,7 +54109,7 @@ var Capture = class _Capture {
    *  that MOVED keeps the old value and the date ("51 until Tuesday, now 1000" is the fact worth acting on). */
   recordCaptureLimit({ runtime = "subrequests", observed = null, at: at23 = null } = {}) {
     return this.#tx(() => {
-      const now = at23 || stampSecond2();
+      const now = at23 || stampSecond3();
       const cur = this.#one(`SELECT * FROM capture_limits WHERE runtime = ?`, runtime);
       if (observed == null) {
         if (cur) this.#sql.exec(`UPDATE capture_limits SET since_probe = since_probe + 1 WHERE runtime = ?`, runtime);
@@ -53068,7 +54156,7 @@ var Capture = class _Capture {
       return { ok: false, reason: "BAD_CAPTURE_SHA", detail: "a capture sha256 identifies the event; a bundle does not exist yet at capture time" };
     const text5 = boundedSubject(subject) || "a capture whose authority could not be determined";
     const loc = typeof locator === "string" && locator.length <= 2e3 ? locator : null;
-    const now = at23 && ISO_INSTANT.test(at23) ? at23 : stampSecond2();
+    const now = at23 && ISO_INSTANT.test(at23) ? at23 : stampSecond3();
     const existing = this.#tx(() => {
       const held = this.#one(`SELECT capture_sha FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha);
       if (!held)
@@ -53119,7 +54207,7 @@ var Capture = class _Capture {
         if (!this.#one(`SELECT 1 AS x FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha)) return { found: false };
         this.#sql.exec(
           `UPDATE task_queue SET attempts = attempts + 1, last_try = ? WHERE kind=? AND capture_sha=?`,
-          at23 ?? stampSecond2(),
+          at23 ?? stampSecond3(),
           kind,
           captureSha
         );
@@ -53159,7 +54247,7 @@ var Capture = class _Capture {
         captureSha,
         etag || null,
         lastModified || null,
-        at23 && ISO_INSTANT.test(at23) ? at23 : stampSecond2()
+        at23 && ISO_INSTANT.test(at23) ? at23 : stampSecond3()
       ));
       return { recorded: true };
     } catch {
@@ -53222,7 +54310,7 @@ var Capture = class _Capture {
     if (typeof addressNorm !== "string" || addressNorm === "") return { ok: false, reason: "NO_ADDRESS" };
     if (!SOURCE_OUTCOMES.includes(outcome))
       return { ok: false, reason: "BAD_OUTCOME", detail: `outcome must be one of: ${SOURCE_OUTCOMES.join(", ")}` };
-    const now = at23 && ISO_INSTANT.test(at23) ? at23 : stampSecond2();
+    const now = at23 && ISO_INSTANT.test(at23) ? at23 : stampSecond3();
     const st = Number.isInteger(status) ? status : null;
     this.#tx(() => {
       this.#sql.exec(`INSERT INTO source_reachability (address_norm, updated_at) VALUES (?, ?) ON CONFLICT(address_norm) DO NOTHING`, addressNorm, now);
@@ -53270,7 +54358,7 @@ var Capture = class _Capture {
         thresholds: TH,
         basis: "no attempt on this address has ever been recorded"
       };
-    const at23 = now && ISO_INSTANT.test(now) ? now : stampSecond2();
+    const at23 = now && ISO_INSTANT.test(now) ? now : stampSecond3();
     const byCount = row2.consecutive_failures >= TH.failures;
     const since = row2.first_failure_since ? Date.parse(row2.first_failure_since) : null;
     const staleDays = since === null ? 0 : (Date.parse(at23) - since) / 864e5;
@@ -53293,6 +54381,26 @@ var Capture = class _Capture {
       thresholds: TH,
       basis: byCount ? `${row2.consecutive_failures} consecutive failures produced by the source, threshold ${TH.failures}` : byAge ? `failing since ${row2.first_failure_since}, ${Math.floor(staleDays)} days, threshold ${TH.days} with at least ${TH.minForAge} failures` : row2.governed_refusals > 0 && row2.consecutive_failures === 0 ? `not eligible: ${row2.governed_refusals} governed refusal(s) recorded and DELIBERATELY not counted; the source has not failed` : row2.consecutive_failures === 1 && staleDays >= TH.days ? `not eligible: failing for ${Math.floor(staleDays)} days but on ONE failure that was never retried, which is a gap in our monitoring rather than evidence the source is unreachable; retry it` : "not eligible: the threshold is not met"
     };
+  }
+  /* ==================================================================== *
+   * Its figures (R75)
+   * ==================================================================== */
+  /** R75: the figures `registerCounts` (record-core R63) asks for, in this order. */
+  static COUNT_KEYS = Object.freeze(["taskQueue", "sourceReachability"]);
+  /** R75: `taskQueue` (the `task_queue` rows) and `sourceReachability` (the `source_reachability` rows), as the legacy
+   *  store's `#counts` took them. Neither table names a bundle, so `hid` (the bundles the caller may not see) leaves
+   *  no row out and each figure counts every row. A figure that cannot be read is null, never zero. Synchronous;
+   *  writes nothing; never throws. */
+  counts(hid = null) {
+    const n = (table2) => {
+      try {
+        const v = Number(this.#one(`SELECT count(*) AS c FROM ${table2}`).c);
+        return Number.isFinite(v) ? v : null;
+      } catch {
+        return null;
+      }
+    };
+    return { taskQueue: n("task_queue"), sourceReachability: n("source_reachability") };
   }
 };
 function captureOps(c, url, body, env) {
@@ -58046,86 +59154,86 @@ __export(checks_exports15, {
   notADisposition: () => notADisposition,
   refusal: () => refusal8
 });
-var at5 = (fn, region) => `src/progressions/index.mjs ${fn} > ${region}`;
+var at6 = (fn, region) => `src/progressions/index.mjs ${fn} > ${region}`;
 var PROGRESSION_CHECKS = Object.freeze({
   PROGRESSION_NO_LABEL: {
     check: "C-100.2",
-    where: at5("defineProgression", "is-progression-labelled"),
+    where: at6("defineProgression", "is-progression-labelled"),
     translation: "A declared flow carries a name a person can read, and this one has none. Give it a name. Nothing was written."
   },
   NO_STAGES: {
     check: "C-100.3",
-    where: at5("defineProgression", "is-progression-staged"),
+    where: at6("defineProgression", "is-progression-staged"),
     translation: "A declared flow is its steps in order, and this one names no step. Name at least one step. Nothing was written."
   },
   NO_STAGE_KEY: {
     check: "C-100.4",
-    where: at5("defineProgression", "is-stage-keyed"),
+    where: at6("defineProgression", "is-stage-keyed"),
     translation: "One step of this flow has no key, so nothing could later be placed at it or found missing from it. Give every step a key. Nothing was written."
   },
   DUPLICATE_STAGE: {
     check: "C-100.5",
-    where: at5("defineProgression", "is-stage-unique"),
+    where: at6("defineProgression", "is-stage-unique"),
     translation: "Two steps of this flow share one key, so a document placed at that key could belong to either. Give each step its own key. Nothing was written."
   },
   NO_CARDINALITY: {
     check: "C-100.6",
-    where: at5("defineProgression", "is-stage-counted"),
+    where: at6("defineProgression", "is-stage-counted"),
     translation: "One step does not say how many documents it may hold (exactly one, at most one, or any number), so the record could not tell a step holding too many from one holding the usual set. Say how many. Nothing was written."
   },
   BAD_REQUIRED: {
     check: "C-100.7",
-    where: at5("defineProgression", "is-stage-required"),
+    where: at6("defineProgression", "is-stage-required"),
     translation: "One step does not say how firmly it is expected, in one of the five words the record understands (always, usually, sometimes, never, unless an exception is recorded). Use one of them. Nothing was written."
   },
   UNKNOWN_AFTER: {
     check: "C-33.26",
-    where: at5("defineProgression", "is-progression-order"),
+    where: at6("defineProgression", "is-progression-order"),
     translation: "One step here says it comes after a step this sequence does not contain, so the order cannot be worked out. Name a step that exists, or leave the ordering off and let it stand on its own."
   },
   PROGRESSION_VERSION_NOT_HELD: {
     check: "C-100.8",
-    where: at5("readProgression", "is-version-held"),
+    where: at6("readProgression", "is-version-held"),
     translation: "The record holds no such version of this flow. The versions it does hold are named beside this message, and each reads back in full."
   },
   NO_PLACEMENTS: {
     check: "C-100.10",
-    where: at5("threadInstance", "is-thread-placed"),
+    where: at6("threadInstance", "is-thread-placed"),
     translation: "Threading places documents at the steps of a flow, and this request places none. Name at least one step and the document that fills it. Nothing was written."
   },
   NO_SUCH_PROGRESSION: {
     check: "C-100.11",
-    where: at5("#declared", "is-progression-declared"),
+    where: at6("#declared", "is-progression-declared"),
     translation: "No flow of that key has been declared, so there is nothing to place documents in or to decide about. Declare the flow first. Nothing was written."
   },
   NO_STAGE: {
     check: "C-100.13",
-    where: at5("#stageNamed", "is-stage-named"),
+    where: at6("#stageNamed", "is-stage-named"),
     translation: "This request does not say which step of the flow it is about. Name the step. Nothing was written."
   },
   BAD_STAGE: {
     check: "C-100.14",
-    where: at5("#stageOf", "is-stage-of-progression"),
+    where: at6("#stageOf", "is-stage-of-progression"),
     translation: "The step named here is not a step of this flow as it is declared now. Name one of its steps. Nothing was written."
   },
   NO_CAPTURE: {
     check: "C-100.15",
-    where: at5("#documentNamed", "is-document-named"),
+    where: at6("#documentNamed", "is-document-named"),
     translation: "A step is filled by a captured document, named by its fingerprint, and this request names none. Name the document. Nothing was written."
   },
   DUPLICATE_PLACEMENT: {
     check: "C-100.16",
-    where: at5("threadInstance", "is-placement-unique"),
+    where: at6("threadInstance", "is-placement-unique"),
     translation: "The same document is placed at the same step twice in this request. Place it once. Nothing was written."
   },
   NOT_CONCERNED: {
     check: "C-100.17",
-    where: at5("#concerned", "is-document-concerned"),
+    where: at6("#concerned", "is-document-concerned"),
     translation: "The record does not show this document concerning the subject this instance follows, so it cannot be placed in it or excuse one of its steps. Resolve the document to the subject first, or use it in the instance of the subject it does concern. Nothing was written."
   },
   NO_REASON: {
     check: "C-100.18",
-    where: at5("#reasonStated", "is-reason-stated"),
+    where: at6("#reasonStated", "is-reason-stated"),
     translation: "This act is recorded with a reason, in your own words, and none was given. A decision or an excused step with no reason leaves nobody able to say why later. Give the reason. Nothing was written."
   },
   NOT_A_DISPOSITION: {
@@ -58135,22 +59243,22 @@ var PROGRESSION_CHECKS = Object.freeze({
   },
   BAD_REASON: {
     check: "C-100.21",
-    where: at5("disposeProposal", "is-reason-bounded"),
+    where: at6("disposeProposal", "is-reason-bounded"),
     translation: "The reason is too long or contains a quotation mark, a backslash or a line break, which the record cannot keep as written. Shorten it to one plain line. Nothing was written."
   },
   NO_DECIDER: {
     check: "C-100.22",
-    where: at5("disposeProposal", "is-decider-stamped"),
+    where: at6("disposeProposal", "is-decider-stamped"),
     translation: "A decision is recorded under the member who took it, and this request reached the record without one. Sign in and decide again. Nothing was written."
   },
   NO_DEFINITION_VERSION: {
     check: "C-33.42",
-    where: at5("disposeProposal", "is-dispose-version-named"),
+    where: at6("disposeProposal", "is-dispose-version-named"),
     translation: "Setting aside one of the record's own questions is a decision about the way a body is said to work \u2014 and that description is written down, dated, and rewritten when the group learns better. This request does not say which of those versions you were reading when you decided, so the record cannot say what you actually judged. Open the question again and send the version shown beside it. Nothing was recorded."
   },
   DEFINITION_MOVED: {
     check: "C-33.43",
-    where: at5("disposeProposal", "is-dispose-version-current"),
+    where: at6("disposeProposal", "is-dispose-version-current"),
     translation: "The version of the declared flow this decision names is not the one standing now. Rather than file your decision against a description you did not read, the record keeps it out and asks you to look again: read the question against the version in force and decide again. The answer may well be the same one, and it will then be yours. Both versions are named beside this message, the earlier one still reads back in full, and nothing was recorded."
   }
 });
@@ -61283,17 +62391,17 @@ var Bias = class _Bias {
     return { re_ran: target, discharged: true, lens_ran_under: formed, lens_in_force: inForce, settled };
   }
 };
-var OF4 = /* @__PURE__ */ new WeakMap();
+var OF5 = /* @__PURE__ */ new WeakMap();
 function biasOf(ctx, deps = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let b = OF4.get(storage);
+  let b = OF5.get(storage);
   if (!b) {
     const record = deps && deps.record || recordOf(ctx);
     const membership = deps && deps.membership || membershipOf(ctx, { record });
     const promotion = deps && deps.promotion || promotionOf(ctx);
     const entities = deps && deps.entities !== void 0 ? deps.entities : entitiesOf(ctx, { record, membership });
     b = new Bias({ sql: storage.sql, record, membership, entities, env: deps && deps.env });
-    OF4.set(storage, b);
+    OF5.set(storage, b);
     record.declarePurge("bias", [
       "bias_statements",
       { name: "bias_adoptions", keys: ["bundle_id", "scope_id"] },
@@ -73967,7 +75075,7 @@ __export(credentials_exports, {
   CREDENTIAL_SCOPES: () => CREDENTIAL_SCOPES,
   CaptureCredentials: () => CaptureCredentials,
   REVOCATION: () => REVOCATION,
-  credentialsOf: () => credentialsOf,
+  credentialsOf: () => credentialsOf2,
   hostNameOf: () => hostNameOf,
   principalMember: () => principalMember
 });
@@ -73975,61 +75083,61 @@ var CREDENTIAL_KINDS2 = Object.freeze(["login", "user-agent", "other"]);
 var CREDENTIAL_SCOPES = Object.freeze(["member", "project", "group"]);
 var REVOCATION = "(revocation)";
 var CREDENTIALS_TABLE = "capture_credentials";
-var at6 = (fn, region) => `src/capture-sources/credentials.mjs ${fn} > ${region}`;
+var at7 = (fn, region) => `src/capture-sources/credentials.mjs ${fn} > ${region}`;
 var CAPTURE_CREDENTIAL_CHECKS = Object.freeze({
   CAPTURE_CREDENTIAL_NOT_A_MEMBER: {
     check: "C-105.1",
-    where: at6("credentialSupply", "is-credential-supplier-member"),
+    where: at7("credentialSupply", "is-credential-supplier-member"),
     translation: "Only an active member may supply a credential."
   },
   CAPTURE_CREDENTIAL_BAD_KIND: {
     check: "C-105.2",
-    where: at6("credentialSupply", "is-credential-kind"),
+    where: at7("credentialSupply", "is-credential-kind"),
     translation: "A credential's kind is one of login, user-agent or other."
   },
   CAPTURE_CREDENTIAL_BAD_HOST: {
     check: "C-105.3",
-    where: at6("credentialSupply", "is-credential-host"),
+    where: at7("credentialSupply", "is-credential-host"),
     translation: "A credential is for one host, named as a bare host name: no scheme, path, port or user part."
   },
   CAPTURE_CREDENTIAL_BAD_SCOPE: {
     check: "C-105.4",
-    where: at6("credentialSupply", "is-credential-scope"),
+    where: at7("credentialSupply", "is-credential-scope"),
     translation: "A credential's scope is member, project or group, and only a project-scoped credential names a project."
   },
   CAPTURE_CREDENTIAL_NO_PROJECT: {
     check: "C-105.5",
-    where: at6("credentialSupply", "is-credential-project"),
+    where: at7("credentialSupply", "is-credential-project"),
     translation: "A project-scoped credential names a project the record holds."
   },
   CAPTURE_CREDENTIAL_NO_SECRET: {
     check: "C-105.6",
-    where: at6("credentialSupply", "is-credential-secret"),
+    where: at7("credentialSupply", "is-credential-secret"),
     translation: "A credential carries a non-empty secret: the login, setting or other value the site asked for."
   },
   CAPTURE_CREDENTIAL_NOT_PERMITTED: {
     check: "C-105.7",
-    where: at6("#r63Refusal", "is-credential-permitted"),
+    where: at7("#r63Refusal", "is-credential-permitted"),
     translation: "This member may not supply or withdraw a credential at that scope."
   },
   CAPTURE_CREDENTIAL_NO_KEY: {
     check: "C-105.8",
-    where: at6("credentialSupply", "is-credential-key-bound"),
+    where: at7("credentialSupply", "is-credential-key-bound"),
     translation: "No encryption key is bound to this instance, so no credential is stored or used."
   },
   CAPTURE_CREDENTIAL_NO_SUCH: {
     check: "C-105.9",
-    where: at6("credentialWithdraw", "is-credential-seen"),
+    where: at7("credentialWithdraw", "is-credential-seen"),
     translation: "No credential by that id is visible to you here. One that does not exist and one you may not see are answered alike, so this is not a hint either way."
   },
   CAPTURE_CREDENTIAL_SUPPLY_FAILED: {
     check: "C-105.10",
-    where: at6("credentialSupply", "is-credential-stored"),
+    where: at7("credentialSupply", "is-credential-stored"),
     translation: "The credential could not be encrypted and stored, so nothing was written. Nothing you entered is repeated here; try again, and if it keeps failing tell an administrator."
   },
   CAPTURE_CREDENTIAL_WITHDRAW_FAILED: {
     check: "C-105.11",
-    where: at6("credentialWithdraw", "is-credential-withdrawn"),
+    where: at7("credentialWithdraw", "is-credential-withdrawn"),
     translation: "The credential could not be read or withdrawn just now, so nothing was changed. Try again, and if it keeps failing tell an administrator."
   }
 });
@@ -74073,10 +75181,10 @@ var b642 = (bytes2) => {
 var unb642 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 var utf82 = (s) => new TextEncoder().encode(s);
 var stamp = (ms2) => new Date(ms2).toISOString().replace(/\.\d+Z$/, "Z");
-var OF5 = /* @__PURE__ */ new WeakMap();
-function credentialsOf(ctx, { key = null, record = null, membership = null, now = null } = {}) {
+var OF6 = /* @__PURE__ */ new WeakMap();
+function credentialsOf2(ctx, { key = null, record = null, membership = null, now = null } = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let c = OF5.get(storage);
+  let c = OF6.get(storage);
   if (!c) {
     c = new CaptureCredentials({
       sql: storage.sql,
@@ -74085,7 +75193,7 @@ function credentialsOf(ctx, { key = null, record = null, membership = null, now 
       key,
       now
     });
-    OF5.set(storage, c);
+    OF6.set(storage, c);
   }
   return c;
 }
@@ -75976,7 +77084,7 @@ function captureRequestsOf(host, deps = {}) {
       governor: deps.governor || governorOf(host, withEnv),
       capture: deps.capture || captureOf(host, withEnv),
       /* CAPTURE-SOURCES #2's note: the key rides the first `credentialsOf` call. */
-      credentials: deps.credentials === void 0 ? credentialsOf(host, { key: env.CAPTURE_CREDENTIALS_KEY ?? null }) : deps.credentials,
+      credentials: deps.credentials === void 0 ? credentialsOf2(host, { key: env.CAPTURE_CREDENTIALS_KEY ?? null }) : deps.credentials,
       /* R38 (N141): the one promotion on this storage, through which a requested capture enters the record. */
       promotion: deps.promotion || promotionOf(host, { record }),
       /* R14 (N295): the member-browser agent is inquiry's R44 answer. Reached when the drain asks, not at creation, so
@@ -76025,136 +77133,136 @@ __export(checks_exports20, {
   INTENT_CHECKS: () => INTENT_CHECKS,
   refusal: () => refusal12
 });
-var at7 = (fn, region) => `src/intent/index.mjs ${fn} > ${region}`;
+var at8 = (fn, region) => `src/intent/index.mjs ${fn} > ${region}`;
 var INTENT_CHECKS = Object.freeze({
   NO_OBJECTIVE: {
     check: "C-2.9",
-    where: at7("#checkProject", "is-objective-stated"),
+    where: at8("#checkProject", "is-objective-stated"),
     translation: "A project states what it is trying to achieve, and this one states nothing. Write its objective and send it again. Nothing was written."
   },
   MACHINE_CANNOT_SET_OBJECTIVE: {
     check: "C-111.1",
-    where: at7("setCondition", "is-condition-member"),
+    where: at8("setCondition", "is-condition-member"),
     translation: "What a project is aiming at is a member's decision. An assistant may point out gaps; it may not set or change the measure. Sign in as a member. Nothing was written."
   },
   CONDITION_UNREADABLE: {
     check: "C-111.3",
-    where: at7("#conditionRefusal", "is-condition-shaped"),
+    where: at8("#conditionRefusal", "is-condition-shaped"),
     translation: "The measure sent for this objective is not in the shape the record reads: a progression, an entity, what each matching instance must reach, and the share of them that must reach it. Nothing was written."
   },
   NO_SUCH_PROGRESSION: {
     check: "C-111.4",
-    where: at7("refuseNoSuchProgression", "is-named-progression"),
+    where: at8("refuseNoSuchProgression", "is-named-progression"),
     translation: "The measure names a declared flow the record does not hold. Declare the flow first, or name one that exists. Nothing was written."
   },
   BAD_STAGE: {
     check: "C-111.6",
-    where: at7("#conditionRefusal", "is-condition-stage"),
+    where: at8("#conditionRefusal", "is-condition-stage"),
     translation: "The measure requires a step the declared flow does not have. Name steps the flow declares. Nothing was written."
   },
   CONDITION_BAD_GRADE: {
     check: "C-111.7",
-    where: at7("#conditionRefusal", "is-condition-grade"),
+    where: at8("#conditionRefusal", "is-condition-grade"),
     translation: "The grade the measure requires is not one of the four the record uses, A (strongest) to D. Nothing was written."
   },
   BAD_SHARE: {
     check: "C-111.8",
-    where: at7("#conditionRefusal", "is-condition-share"),
+    where: at8("#conditionRefusal", "is-condition-share"),
     translation: "The share of instances that must meet the measure is a whole number from 1 to 100. Nothing was written."
   },
   MACHINE_CANNOT_DECLARE_GOAL: {
     check: "C-111.9",
-    where: at7("goalMachineRefusal", "is-goal-member"),
+    where: at8("goalMachineRefusal", "is-goal-member"),
     translation: "Declaring a goal, tying a project to it and closing it are members' decisions. An assistant may propose; it may not decide what the group pursues. Sign in as a member. Nothing was written."
   },
   PURSUIT_UNSTATED: {
     check: "C-111.10",
-    where: at7("refusePursuitUnstated", "is-pursuit-stated"),
+    where: at8("refusePursuitUnstated", "is-pursuit-stated"),
     translation: "A goal says what it pursues and what bounds it, and an aspiration says what it holds to. Something here is empty. Write it and send it again. Nothing was written."
   },
   NO_SUCH_GOAL: {
     check: "C-111.11",
-    where: at7("refuseNoSuchGoal", "is-goal-held"),
+    where: at8("refuseNoSuchGoal", "is-goal-held"),
     translation: "No goal answers to that id here. Nothing was written."
   },
   NO_SUCH_ASPIRATION: {
     check: "C-111.12",
-    where: at7("refuseNoSuchAspiration", "is-aspiration-held"),
+    where: at8("refuseNoSuchAspiration", "is-aspiration-held"),
     translation: "No aspiration answers to that id here. Nothing was written."
   },
   NO_REASON: {
     check: "C-111.13",
-    where: at7("refuseNoReason", "is-reason-stated"),
+    where: at8("refuseNoReason", "is-reason-stated"),
     translation: "This act is recorded with a reason in your own words, and none was given. The record keeps why, so the next reader is not left guessing. Nothing was written."
   },
   MACHINE_CANNOT_DECLARE_ASPIRATION: {
     check: "C-111.14",
-    where: at7("aspirationMachineRefusal", "is-aspiration-member"),
+    where: at8("aspirationMachineRefusal", "is-aspiration-member"),
     translation: "What the group holds to is its members' decision, and so is setting one aside. An assistant may propose; it may not declare, depart from or retire an aspiration. Sign in as a member. Nothing was written."
   },
   NOT_YOURS: {
     check: "C-111.15",
-    where: at7("#aspirationAuthority", "is-aspiration-yours"),
+    where: at8("#aspirationAuthority", "is-aspiration-yours"),
     translation: "A member's own aspiration is declared, revised and retired by that member alone. Nothing was written."
   },
   NO_LESSON: {
     check: "C-111.17",
-    where: at7("refuseNoLesson", "is-retirement-taught"),
+    where: at8("refuseNoLesson", "is-retirement-taught"),
     translation: "Retiring an aspiration records what pursuing it taught the group, and nothing was written there. Say what was learned. Nothing was retired."
   },
   MACHINE_CANNOT_TRIAGE: {
     check: "C-111.18",
-    where: at7("triage", "is-triage-member"),
+    where: at8("triage", "is-triage-member"),
     translation: "An assistant may turn a finding into an open question, and nothing more. Adopting it, deferring it or dismissing it is a member's decision. Sign in as a member. Nothing was written."
   },
   MACHINE_CANNOT_CHOOSE_THE_QUESTION: {
     check: "C-111.19",
-    where: at7("workObjective", "is-objective-member"),
+    where: at8("workObjective", "is-objective-member"),
     translation: "Setting an assistant to work on a project's objective is a member's act: the objective is the group's, and so is the choice to pursue it. Sign in as a member. No run was opened."
   },
   PURSUIT_STATE_MOVE_UNDECLARED: {
     check: "C-111.20",
-    where: at7("#checkPursuit", "is-pursuit-state-move"),
+    where: at8("#checkPursuit", "is-pursuit-state-move"),
     translation: "An aspiration is held until it is retired, and a goal is open until it is closed. No other move is accepted, and neither comes back. Nothing was written."
   },
   BAD_SCOPE: {
     check: "C-111.21",
-    where: at7("refuseBadScope", "is-aspiration-scoped"),
+    where: at8("refuseBadScope", "is-aspiration-scoped"),
     translation: "An aspiration belongs to the group, to one project, or to one member, and a project's or a member's names which one. This one does not. Nothing was written."
   },
   NO_SUCH_PROPOSAL: {
     check: "C-111.22",
-    where: at7("triage", "is-proposal-open"),
+    where: at8("triage", "is-proposal-open"),
     translation: "No open proposal answers to that key. It may already have been decided; the decision stays readable with its reason. Nothing was written."
   },
   TRIAGE_ACT_UNKNOWN: {
     check: "C-111.23",
-    where: at7("triage", "is-triage-act"),
+    where: at8("triage", "is-triage-act"),
     translation: "A proposal is adopted into a project's objective, turned into an open question, deferred or dismissed. This act is none of those. Nothing was written."
   },
   SOURCE_DECLARED: {
     check: "C-111.24",
-    where: at7("registerSource", "is-source-once"),
+    where: at8("registerSource", "is-source-once"),
     translation: "This source of proposals is already registered. A source registers once, when the plane starts."
   },
   SOURCE_MALFORMED: {
     check: "C-111.25",
-    where: at7("registerSource", "is-source-shaped"),
+    where: at8("registerSource", "is-source-shaped"),
     translation: "A source of proposals names its kind and gives a reader. This registration does not."
   },
   PURSUIT_ENDED: {
     check: "C-111.26",
-    where: at7("refusePursuitEnded", "is-pursuit-live"),
+    where: at8("refusePursuitEnded", "is-pursuit-live"),
     translation: "This goal is closed, or this aspiration is retired. It stays readable with everything recorded under it, and it does not reopen. Nothing was written."
   },
   ADOPTIONS_UNSPLICEABLE: {
     check: "C-111.28",
-    where: at7("triage", "is-adoptions-spliceable"),
+    where: at8("triage", "is-adoptions-spliceable"),
     translation: "The project's record of adopted proposals is not in a shape the record can add to, so this adoption could not be written into it. Nothing was written."
   },
   NO_NOTE: {
     check: "C-111.27",
-    where: at7("recordDeadEnd", "is-dead-end-noted"),
+    where: at8("recordDeadEnd", "is-dead-end-noted"),
     translation: "A dead end is recorded with what was tried and why it went nowhere, and nothing was written. Nothing was recorded."
   }
 });
@@ -78294,16 +79402,16 @@ __export(checks_exports21, {
   VERSION_STRENGTH_DEFAULT_STATES: () => VERSION_STRENGTH_DEFAULT_STATES,
   VERSION_STRENGTH_INERT_SOURCES: () => VERSION_STRENGTH_INERT_SOURCES
 });
-var at8 = (fn, region) => `src/strength/index.mjs ${fn} > ${region}`;
+var at9 = (fn, region) => `src/strength/index.mjs ${fn} > ${region}`;
 var VERSION_STRENGTH_CHECKS = Object.freeze({
   VERSION_STRENGTH_NO_INQUIRY: {
     check: "C-30.1",
-    where: at8("versionStrength", "is-version-strength"),
+    where: at9("versionStrength", "is-version-strength"),
     translation: "This asks how strongly one question is answered, and no question was named. There is no default question here and there must not be one."
   },
   VERSION_STRENGTH_NOT_AN_INQUIRY: {
     check: "C-30.2",
-    where: at8("versionStrength", "is-version-strength"),
+    where: at9("versionStrength", "is-version-strength"),
     translation: "That is not a question, so there is nothing here to say how strongly it is answered. Only a question carries readings of the evidence, and only a reading has a strength."
   },
   /* THE FOUR BEATS' FIRST BEAT, one altitude down from PL-2's acts and for the
@@ -78312,17 +79420,17 @@ var VERSION_STRENGTH_CHECKS = Object.freeze({
      thing, which is worse than being asked which was meant. */
   VERSION_STRENGTH_NO_VERSION: {
     check: "C-30.3",
-    where: at8("versionStrength", "is-version-strength"),
+    where: at9("versionStrength", "is-version-strength"),
     translation: "Say which reading of the evidence to measure, or say which project is asking so that the reading it stands on can be used. There is no default reading, because a strength reported for a reading nobody meant is a number about something else."
   },
   VERSION_STRENGTH_NO_SUCH_VERSION: {
     check: "C-30.4",
-    where: at8("versionStrength", "is-version-strength"),
+    where: at9("versionStrength", "is-version-strength"),
     translation: "No reading by that name belongs to this question, or this project has not said which reading it stands on. An empty answer here would say the question rests on nothing when the truth is that nobody has pointed at anything yet."
   },
   VERSION_STRENGTH_UNKNOWN_STATE: {
     check: "C-30.5",
-    where: at8("versionStrength", "is-version-strength"),
+    where: at9("versionStrength", "is-version-strength"),
     translation: "One of the words used to say which readings to count is not one this record knows. The set is closed on purpose: a strength that quietly counted readings nobody recognises would be a number no reader could check."
   },
   /* §6 rule 6, and it is the mechanism rather than a nicety: *"Exploring an
@@ -78332,7 +79440,7 @@ var VERSION_STRENGTH_CHECKS = Object.freeze({
      state-set line (DEC-40) wherever it renders. */
   VERSION_STRENGTH_STATE_EXCLUDED: {
     check: "C-30.6",
-    where: at8("versionStrength", "is-version-strength"),
+    where: at9("versionStrength", "is-version-strength"),
     translation: "Nobody has adopted that reading, so it is not what this record answers with. You can still see what it would come to \u2014 ask for it as a what-if by saying which kinds of reading to count \u2014 and the answer will say on its face that that is what it is."
   },
   /* DEC-44 determination 1, at the version altitude: *"A case does NOT compose a
@@ -78344,7 +79452,7 @@ var VERSION_STRENGTH_CHECKS = Object.freeze({
      number is the record claiming something neither population supports. */
   VERSION_STRENGTH_COMPOSED: {
     check: "C-30.7",
-    where: at8("refusePairComposed", "is-pair-composed"),
+    where: at9("refusePairComposed", "is-pair-composed"),
     translation: "This answer tried to report one overall figure for a question, and there is no such figure. How well the documents were captured and how firmly they connect to the subject are two separate measurements over two separate things, and averaging them or picking one would state something neither of them says."
   },
   /* DEC-40 determination 2, and its own negative control: *"a filtered
@@ -78356,12 +79464,12 @@ var VERSION_STRENGTH_CHECKS = Object.freeze({
      the record's own. */
   VERSION_STRENGTH_UNFILTERED: {
     check: "C-30.8",
-    where: at8("refusePairComposed", "is-pair-composed"),
+    where: at9("refusePairComposed", "is-pair-composed"),
     translation: "This answer did not say which readings it counted, and a strength separated from that is a misreading waiting to happen. Every answer here says on its face whether it is the record's own or a view somebody constructed."
   },
   VERSION_STRENGTH_TOO_MANY_STATES: {
     check: "C-30.9",
-    where: at8("versionStrength", "is-version-strength"),
+    where: at9("versionStrength", "is-version-strength"),
     translation: "More kinds of reading were named than this record has. The bound is said here rather than applied quietly, so nothing is dropped without you being told."
   }
 });
@@ -78370,37 +79478,37 @@ var VERSION_STRENGTH_INERT_SOURCES = ["hunch"];
 var PARTITION_INDEPENDENCE_CHECKS = Object.freeze({
   PARTITION_INDEPENDENCE_NO_INQUIRY: {
     check: "C-71.1",
-    where: at8("partitionIndependence", "is-partition-independence"),
+    where: at9("partitionIndependence", "is-partition-independence"),
     translation: "This asks whether the groups of reasons behind one question share a source, and no question was named. There is no default question here and there must not be one."
   },
   PARTITION_INDEPENDENCE_NOT_AN_INQUIRY: {
     check: "C-71.2",
-    where: at8("partitionIndependence", "is-partition-independence"),
+    where: at9("partitionIndependence", "is-partition-independence"),
     translation: "That is not a question you can read here, so it has no reasons to group. Only a question rests on reasons, and a question you may not see answers exactly as one that does not exist."
   },
   PARTITION_INDEPENDENCE_UNREADABLE: {
     check: "C-71.3",
-    where: at8("partitionIndependence", "is-partition-independence"),
+    where: at9("partitionIndependence", "is-partition-independence"),
     translation: "The grouping of reasons could not be read. Send it as a list of groups, each group a list of the positions of the reasons in it, or as groups each carrying a name and its positions. Every group needs at least one reason and a name no other group has."
   },
   PARTITION_INDEPENDENCE_UNKNOWN_LEG: {
     check: "C-71.4",
-    where: at8("partitionIndependence", "is-partition-independence"),
+    where: at9("partitionIndependence", "is-partition-independence"),
     translation: "The grouping names a reason this question does not have. It was not dropped quietly, because an answer about groups the question does not hold would be an answer about something else."
   },
   PARTITION_INDEPENDENCE_LEG_TWICE: {
     check: "C-71.5",
-    where: at8("partitionIndependence", "is-partition-independence"),
+    where: at9("partitionIndependence", "is-partition-independence"),
     translation: "One reason was put in two groups. Each reason belongs to exactly one group, because a reason shared by two groups would make them share a source by construction."
   },
   PARTITION_INDEPENDENCE_NOT_TOTAL: {
     check: "C-71.6",
-    where: at8("partitionIndependence", "is-partition-independence"),
+    where: at9("partitionIndependence", "is-partition-independence"),
     translation: "Some of this question's reasons are in no group. A grouping covers every reason, as a written reading does, so that what is checked here is what would be written."
   },
   PARTITION_INDEPENDENCE_TOO_MANY_LEGS: {
     check: "C-71.7",
-    where: at8("partitionIndependence", "is-partition-independence"),
+    where: at9("partitionIndependence", "is-partition-independence"),
     translation: "This question rests on more reasons than a written reading may hold, so a grouping of all of them could not be written and is not checked. The bound is said here rather than applied quietly."
   },
   /* REC-192 — THE VERSION ARM (BOB #31, 2026-09-23 22:22Z): the same read over a WRITTEN reading's
@@ -78409,31 +79517,31 @@ var PARTITION_INDEPENDENCE_CHECKS = Object.freeze({
      strength. */
   PARTITION_INDEPENDENCE_TWO_SUBJECTS: {
     check: "C-71.8",
-    where: at8("partitionIndependence", "is-partition-independence"),
+    where: at9("partitionIndependence", "is-partition-independence"),
     translation: "Both a written reading and a proposed grouping were named. This answers for one of them at a time, and which one was meant is not something to guess, so name only the one you want."
   },
   PARTITION_INDEPENDENCE_NO_SUCH_VERSION: {
     check: "C-71.9",
-    where: at8("partitionIndependence", "is-partition-independence"),
+    where: at9("partitionIndependence", "is-partition-independence"),
     translation: "No reading by that name belongs to this question, so there are no written groups of it to check. Nothing was substituted for it."
   }
 });
 var STRENGTH_BAR_CHECKS = Object.freeze({
   MACHINE_CANNOT_DECLARE: {
     check: "C-32.9",
-    where: at8("strengthBarSet", "is-machine-strength-bar"),
+    where: at9("strengthBarSet", "is-machine-strength-bar"),
     translation: "How much evidence this group requires of itself is the group's own declaration about the standard it works to, and everything filed afterwards is measured against it. An automated credential cannot set that bar for the people it works for. Sign in to change it."
   },
   STRENGTH_BAR_NOT_ADMIN: {
     check: "C-107.1",
-    where: at8("strengthBarSet", "is-admin-strength-bar"),
+    where: at9("strengthBarSet", "is-admin-strength-bar"),
     translation: "The standard of evidence a new project starts from is set for the whole group, so only an administrator can change it. A project can still declare its own standard in its own document. Nothing was changed."
   },
   /* N208 (K275): this module's own condition, a bar letter outside the grades, with its own row; intent's grade
      refusal is `CONDITION_BAD_GRADE`, another condition (K238). */
   BAD_GRADE: {
     check: "C-107.2",
-    where: at8("strengthBarSet", "is-strength-bar-grade"),
+    where: at9("strengthBarSet", "is-strength-bar-grade"),
     translation: "A standard of evidence is stated in the grades the record uses, A to D, one for how the documents were captured and one for how firmly they connect. One of the two given is not a grade. Nothing was changed."
   }
 });
@@ -79554,36 +80662,36 @@ __export(checks_exports22, {
   noSuchSource: () => noSuchSource,
   secretNotRecognised: () => secretNotRecognised
 });
-var at9 = (fn, region) => `src/sources/checks.mjs ${fn} > ${region}`;
+var at10 = (fn, region) => `src/sources/checks.mjs ${fn} > ${region}`;
 var SOURCES_CHECKS = Object.freeze({
   NO_SUCH_SOURCE: Object.freeze({
     check: "C-121.1",
-    where: at9("noSuchSource", "is-source-held"),
+    where: at10("noSuchSource", "is-source-held"),
     translation: "No source you can see answers to that id. Nothing was written."
   }),
   BAD_DISCLOSURE: Object.freeze({
     check: "C-121.2",
-    where: at9("badDisclosure", "is-disclosure-well-formed"),
+    where: at10("badDisclosure", "is-disclosure-well-formed"),
     translation: "A disclosure names what was revealed (a pseudonym link, an attribute or a name), how it became known, and to whom it is known, each from the listed choices. The field that is not one of them is named. Nothing was written."
   }),
   NO_EVIDENCE: Object.freeze({
     check: "C-121.3",
-    where: at9("noEvidence", "is-evidence-named"),
+    where: at10("noEvidence", "is-evidence-named"),
     translation: "What is recorded about a source is recorded with its evidence. Name the evidence. Nothing was written."
   }),
   NO_SIGHT_LIST: Object.freeze({
     check: "C-121.4",
-    where: at9("noSightList", "is-sight-listed"),
+    where: at10("noSightList", "is-sight-listed"),
     translation: "A detail about a source that is stored can be read only by the members listed for it, and none is listed. List at least one member, or record that the detail is known without storing it. Nothing was written."
   }),
   CONSENT_NOT_STANDING: Object.freeze({
     check: "C-121.5",
-    where: at9("consentNotStanding", "is-consent-standing"),
+    where: at10("consentNotStanding", "is-consent-standing"),
     translation: "That consent cannot be recorded: the detail it names is not in this source's history, or consent to a wider audience already stands. Nothing was written."
   }),
   SECRET_NOT_RECOGNISED: Object.freeze({
     check: "C-121.6",
-    where: at9("secretNotRecognised", "is-secret-recognised"),
+    where: at10("secretNotRecognised", "is-secret-recognised"),
     translation: "That secret was not recognised, so nothing was recorded. Check it and try again."
   })
 });
@@ -80457,10 +81565,10 @@ var Sources = class _Sources {
     return { ok: true, entry: w.entry, audience: w.audience, act: w.act, at: w.at, statement: w.statement };
   }
 };
-var OF6 = /* @__PURE__ */ new WeakMap();
+var OF7 = /* @__PURE__ */ new WeakMap();
 function sourcesOf(ctx, deps = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let s = OF6.get(storage);
+  let s = OF7.get(storage);
   if (!s) {
     const record = deps.record ?? recordOf(ctx);
     s = new Sources({
@@ -80470,7 +81578,7 @@ function sourcesOf(ctx, deps = {}) {
       capture: deps.capture ?? (() => captureOf(ctx)),
       now: deps.now ?? null
     });
-    OF6.set(storage, s);
+    OF7.set(storage, s);
   }
   return s;
 }
@@ -80504,7 +81612,7 @@ __export(checks_exports23, {
   checkReevalPending: () => checkReevalPending,
   rowOf: () => rowOf2
 });
-var at10 = (fn, region) => `src/reevaluation/index.mjs ${fn} > ${region}`;
+var at11 = (fn, region) => `src/reevaluation/index.mjs ${fn} > ${region}`;
 var finding2 = (check, severity, message2, repairs) => ({ check, severity, message: message2, ...repairs ? { repairable: true, repairs } : {} });
 var REEVAL_SOURCES = Object.freeze(["deletion", "source_status", "wp_retraction", "annotation"]);
 var REEVAL_POLICY_AGE_DAYS = 30;
@@ -80571,60 +81679,60 @@ var VERSION_NOTICE_SUBJECT_CHECKS = Object.freeze({
      citation, or for two at once, is a list the caller did not ask for wearing the word "notice". */
   VERSION_NOTICE_NO_SUBJECT: {
     check: "C-80.1",
-    where: at10("versionNotice", "is-version-notice-subject"),
+    where: at11("versionNotice", "is-version-notice-subject"),
     translation: "That request did not say which citation to check. Ask about one question (target=) to check every passage its evidence rests on, or about one passage (content=) \u2014 one of the two, not both and not neither."
   },
   /* The question named is not one this caller may read, or is not a question. */
   VERSION_NOTICE_NO_INQUIRY: {
     check: "C-80.2",
-    where: at10("versionNotice", "is-version-notice-subject"),
+    where: at11("versionNotice", "is-version-notice-subject"),
     translation: "There is no question by that id that you can read here. A question you may not see answers exactly as one that does not exist, so nothing about it was checked."
   }
 });
 var REEVALUATION_ACT_CHECKS = Object.freeze({
   MACHINE_CANNOT_ADOPT_VERSION: {
     check: "C-110.1",
-    where: at10("#choiceSubject", "is-version-choice"),
+    where: at11("#choiceSubject", "is-version-choice"),
     translation: "Only a named member can move a reference to a newer version of a document. The assistant and the plane's own credentials may say a newer version exists; they never choose which one a finding rests on."
   },
   MACHINE_CANNOT_KEEP_VERSION: {
     check: "C-110.2",
-    where: at10("#choiceSubject", "is-version-choice"),
+    where: at11("#choiceSubject", "is-version-choice"),
     translation: "Only a named member can record that a reference stays on the earlier version. That is a judgement about the evidence, and a machine credential holds no judgement the record would stand behind."
   },
   VERSION_NOTICE_NOT_FOUND: {
     check: "C-110.3",
-    where: at10("#choiceSubject", "is-version-choice"),
+    where: at11("#choiceSubject", "is-version-choice"),
     translation: "There is no notice by that id that you can read here. A notice about a question you may not see answers exactly as one that does not exist."
   },
   VERSION_NOTICE_CLOSED: {
     check: "C-110.4",
-    where: at10("#choiceSubject", "is-version-choice"),
+    where: at11("#choiceSubject", "is-version-choice"),
     translation: "That notice has already been answered: the reference was either moved to the newer version or kept on the earlier one, and the answer stands as recorded. A yet newer version raises a notice of its own."
   },
   VERSION_CHOICE_WHY_MALFORMED: {
     check: "C-110.5",
-    where: at10("#choiceSubject", "is-version-choice"),
+    where: at11("#choiceSubject", "is-version-choice"),
     translation: "The reason is too long, or holds a quotation mark, a backslash or a line break, which the record cannot store. Shorten it or leave those characters out."
   },
   MACHINE_CANNOT_RECORD_REEVALUATION: {
     check: "C-110.6",
-    where: at10("recordReevaluation", "is-reevaluation-record"),
+    where: at11("recordReevaluation", "is-reevaluation-record"),
     translation: "Only a named member can record that a finding was looked at again. A re-evaluation is a judgement about whether the finding still stands, and a machine credential holds no judgement the record would stand behind."
   },
   REEVALUATION_NO_SUCH_CAUSE: {
     check: "C-110.7",
-    where: at10("recordReevaluation", "is-reevaluation-record"),
+    where: at11("recordReevaluation", "is-reevaluation-record"),
     translation: "Nothing that finding rests on has moved in the way named, or the finding is not one you can read here, so there is no second look owed to record. Ask for the finding's re-evaluations to see what is owed."
   },
   REEVALUATION_NOTE_MALFORMED: {
     check: "C-110.8",
-    where: at10("recordReevaluation", "is-reevaluation-record"),
+    where: at11("recordReevaluation", "is-reevaluation-record"),
     translation: "A recorded re-evaluation says what was looked at and what was decided. The note is missing, too long, or holds a quotation mark, a backslash or a line break, which the record cannot store."
   },
   VERSION_ADOPT_UNWRITABLE: {
     check: "C-110.9",
-    where: at10("adoptVersion", "is-version-adoptable"),
+    where: at11("adoptVersion", "is-version-adoptable"),
     translation: "The reference could not be moved: the question's document no longer holds the leg this notice was about, or the newer version could not be written into it. Nothing was written, and the notice stays open."
   }
 });
@@ -86529,101 +87637,101 @@ __export(checks_exports25, {
   STANDARDS_CHECKS: () => STANDARDS_CHECKS,
   refusal: () => refusal13
 });
-var at11 = (fn, region) => `src/standards/index.mjs ${fn} > ${region}`;
+var at12 = (fn, region) => `src/standards/index.mjs ${fn} > ${region}`;
 var STANDARDS_CHECKS = Object.freeze({
   MACHINE_CANNOT_DECLARE_STANDARD: {
     check: "C-112.1",
-    where: at11("machineRefusal", "is-standard-member"),
+    where: at12("machineRefusal", "is-standard-member"),
     translation: "Recording a standard is a member's act. An assistant may propose one for members to consider; it may not enter one in the record. Sign in as a member. Nothing was written."
   },
   STANDARD_NO_CITE: {
     check: "C-112.2",
-    where: at11("refuseNoCite", "is-standard-cited"),
+    where: at12("refuseNoCite", "is-standard-cited"),
     translation: "A standard is recorded with its citation: how it is cited, in at most 200 characters. None was given, or it is too long. Nothing was written."
   },
   STANDARD_KIND_UNKNOWN: {
     check: "C-112.3",
-    where: at11("refuseKindUnknown", "is-standard-kind"),
+    where: at12("refuseKindUnknown", "is-standard-kind"),
     translation: "A standard is a statute, a regulation, an ordinance, a court decision or order, an adopted policy or a public commitment. This one names none of them. Nothing was written."
   },
   STANDARD_NO_ISSUER: {
     check: "C-112.4",
-    where: at11("#declareRefusal", "is-standard-issuer"),
+    where: at12("#declareRefusal", "is-standard-issuer"),
     translation: "A standard names the body that made it. None was given. Nothing was written."
   },
   STANDARD_NO_TEXT: {
     check: "C-112.5",
-    where: at11("#declareRefusal", "is-standard-text"),
+    where: at12("#declareRefusal", "is-standard-text"),
     translation: "A standard is held with its own words as captured: name at least one passage of a captured document that holds its text. None was named. Nothing was written."
   },
   STANDARD_TEXT_UNRESOLVED: {
     check: "C-112.6",
-    where: at11("refuseTextUnresolved", "is-standard-text-held"),
+    where: at12("refuseTextUnresolved", "is-standard-text-held"),
     translation: "A passage named as this standard's text is not held in the record. Capture the document and cite the passage first. Nothing was written."
   },
   STANDARD_PERIOD_INVALID: {
     check: "C-112.7",
-    where: at11("#declareRefusal", "is-standard-period"),
+    where: at12("#declareRefusal", "is-standard-period"),
     translation: "A standard's period in force is a start and an end, each a date written YYYY-MM-DD or left unstated, and the end is not before the start. Nothing was written."
   },
   STANDARD_SUPERSEDES_UNKNOWN: {
     check: "C-112.8",
-    where: at11("#declareRefusal", "is-superseded-held"),
+    where: at12("#declareRefusal", "is-superseded-held"),
     translation: "The standard this one is said to supersede is not held in the record. Name one that is. Nothing was written."
   },
   STANDARD_ALREADY_SUPERSEDED: {
     check: "C-112.9",
-    where: at11("#declareRefusal", "is-supersession-once"),
+    where: at12("#declareRefusal", "is-supersession-once"),
     translation: "The standard named is already superseded by another, which the answer names. A standard is superseded once; supersede the later one instead. Nothing was written."
   },
   NO_SUCH_STANDARD: {
     check: "C-112.10",
-    where: at11("noSuchStandard", "is-standard-held"),
+    where: at12("noSuchStandard", "is-standard-held"),
     translation: "No standard answers to that id here. Nothing was written."
   },
   STANDARD_NO_ID: {
     check: "C-112.11",
-    where: at11("refuseNoId", "is-standard-named"),
+    where: at12("refuseNoId", "is-standard-named"),
     translation: "A standard is read by its id, and none was named. Name the standard to read. Nothing was answered."
   },
   STANDARD_DATE_INVALID: {
     check: "C-112.12",
-    where: at11("refuseDateInvalid", "is-date-readable"),
+    where: at12("refuseDateInvalid", "is-date-readable"),
     translation: "The date asked about is written YYYY-MM-DD, and this one is not. Nothing was answered."
   },
   STANDARD_WHY_INVALID: {
     check: "C-112.13",
-    where: at11("standardPropose", "is-proposal-why"),
+    where: at12("standardPropose", "is-proposal-why"),
     translation: "A proposal says why the standard applies, in at most 240 characters. None was given, or it is too long. Nothing was written."
   },
   STANDARD_PROPOSER_UNNAMED: {
     check: "C-112.14",
-    where: at11("standardPropose", "is-proposer-named"),
+    where: at12("standardPropose", "is-proposer-named"),
     translation: "This proposal carries nobody. A proposal is labelled with who made it, and one nobody can be named for could say nothing. Nothing was written."
   },
   STANDARD_NO_SUCH_PROPOSAL: {
     check: "C-112.15",
-    where: at11("standardAdopt", "is-proposal-held"),
+    where: at12("standardAdopt", "is-proposal-held"),
     translation: "No proposal of a standard answers to that id here. Nothing was written."
   },
   STANDARD_PROPOSAL_ADOPTED: {
     check: "C-112.16",
-    where: at11("#adoptRefusal", "is-proposal-open"),
+    where: at12("#adoptRefusal", "is-proposal-open"),
     translation: "This proposal was already adopted, as the standard the answer names. A proposal is adopted once. Nothing was written."
   },
   STANDARD_FIELD_UNKNOWN: {
     check: "C-112.17",
-    where: at11("refuseFieldUnknown", "is-standard-field"),
+    where: at12("refuseFieldUnknown", "is-standard-field"),
     translation: "This act takes only the fields it names, and the ones listed are not among them. The record holds a standard's citation, kind, issuer, text and period, and never a view of its merit. Nothing was written."
   },
   STANDARD_WRITTEN_ELSEWHERE: {
     check: "C-112.18",
-    where: at11("#checkStandard", "is-standard-written-here"),
+    where: at12("#checkStandard", "is-standard-written-here"),
     translation: "A standard enters the record only when a member records or adopts one, and it is never edited: a correction is a new standard that supersedes it. This write is neither. Nothing was written."
   },
   STANDARD_ACT_INVALID: {
     check: "C-112.19",
-    where: at11("standardPropose", "is-proposal-act"),
+    where: at12("standardPropose", "is-proposal-act"),
     translation: "The government act a proposal names is given by its id, in at most 200 characters, and this one is not. Nothing was written."
   }
 });
@@ -87377,131 +88485,131 @@ __export(checks_exports26, {
   CONFORMANCE_CHECKS: () => CONFORMANCE_CHECKS,
   refusal: () => refusal14
 });
-var at12 = (fn, region) => `src/conformance/index.mjs ${fn} > ${region}`;
+var at13 = (fn, region) => `src/conformance/index.mjs ${fn} > ${region}`;
 var CONFORMANCE_CHECKS = Object.freeze({
   MACHINE_CANNOT_DETERMINE: {
     check: "C-113.1",
-    where: at12("#refuseMachine", "is-determination-member"),
+    where: at13("#refuseMachine", "is-determination-member"),
     translation: "Whether a government act complied is a member's judgment. An assistant may prepare the comparison; it may not determine. Sign in as a member. Nothing was written."
   },
   DETERMINATION_NOT_A_PARTICIPANT: {
     check: "C-113.3",
-    where: at12("#participantRefusal", "is-project-joined"),
+    where: at13("#participantRefusal", "is-project-joined"),
     translation: "Only a member who has joined this project records its determinations. Join the project first. Nothing was written."
   },
   DETERMINATION_TOO_LARGE: {
     check: "C-113.4",
-    where: at12("#sizeRefusal", "is-within-bounds"),
+    where: at13("#sizeRefusal", "is-within-bounds"),
     translation: "This names more than one determination or comparison may carry. Split it into several. Nothing was written."
   },
   ACT_INCOMPLETE: {
     check: "C-113.5",
-    where: at12("#actOf", "is-act-complete"),
+    where: at13("#actOf", "is-act-complete"),
     translation: "A government act is named by what was done, the office that did it (its role and body, never a person), when, and the record that shows it. A part is missing or unreadable. Nothing was written."
   },
   NO_FINDINGS: {
     check: "C-113.6",
-    where: at12("#pinFindings", "is-finding-named"),
+    where: at13("#pinFindings", "is-finding-named"),
     translation: "A determination rests on at least one published finding. Name the findings it rests on. Nothing was written."
   },
   FINDING_NOT_PUBLISHED: {
     check: "C-113.7",
-    where: at12("#pinFindings", "is-finding-published"),
+    where: at13("#pinFindings", "is-finding-published"),
     translation: "A determination rests only on findings this project has published in a ratified case edition. The finding named is not one. Publish it first. Nothing was written."
   },
   NO_STANDARDS: {
     check: "C-113.8",
-    where: at12("#readStandards", "is-standard-named"),
+    where: at13("#readStandards", "is-standard-named"),
     translation: "A determination measures the act against at least one standard the record holds. Name the standards. Nothing was written."
   },
   STANDARD_NOT_IN_FORCE: {
     check: "C-113.10",
-    where: at12("#readStandards", "is-standard-in-force"),
+    where: at13("#readStandards", "is-standard-in-force"),
     translation: "A standard named was not in force when the act was done, by the period the record states for it. An act is measured against the standards that applied to it. Nothing was written."
   },
   ROWS_INCOMPLETE: {
     check: "C-113.11",
-    where: at12("#readRows", "is-comparison-complete"),
+    where: at13("#readRows", "is-comparison-complete"),
     translation: "Each standard is compared in rows: what it requires, what was done, and whether the two align, diverge or are open. A standard has no row, or a row is missing a part. Nothing was written."
   },
   OUTCOME_UNKNOWN: {
     check: "C-113.12",
-    where: at12("determine", "is-outcome-stated"),
+    where: at13("determine", "is-outcome-stated"),
     translation: "Each standard carries the member's outcome: compliant, noncompliant or unclear. One is missing or not one of the three. Nothing was written."
   },
   UNCLEAR_NO_QUESTION: {
     check: "C-113.13",
-    where: at12("#readQuestions", "is-question-named"),
+    where: at13("#readQuestions", "is-question-named"),
     translation: "An unclear outcome names what is still open, each question sent back to an inquiry you can see or to a new one. A question is missing or names no inquiry here. Nothing was written."
   },
   SIGNIFICANCE_IS_A_MEMBERS_JUDGMENT: {
     check: "C-113.14",
-    where: at12("#refuseSignificance", "is-significance-absent"),
+    where: at13("#refuseSignificance", "is-significance-absent"),
     translation: "A determination records whether the act complied, not how much it matters. Significance, severity, priority, urgency, rank and score are members' judgments made with the consequences in front of them. Nothing was written."
   },
   NO_SUCH_DETERMINATION: {
     check: "C-113.15",
-    where: at12("noSuchDetermination", "is-determination-seen"),
+    where: at13("noSuchDetermination", "is-determination-seen"),
     translation: "No determination answers to that id here. One you cannot see is answered exactly as one that does not exist."
   },
   SUPERSEDES_ANOTHER_ACT: {
     check: "C-113.16",
-    where: at12("#supersession", "is-same-act"),
+    where: at13("#supersession", "is-same-act"),
     translation: "A determination supersedes only an earlier determination of the same act. The one named is about another act. Nothing was written."
   },
   BAD_REASON: {
     check: "C-113.17",
-    where: at12("#supersession", "is-reason-stated"),
+    where: at13("#supersession", "is-reason-stated"),
     translation: "The reason for superseding a determination is not text of at most 500 characters. Say why, more briefly. Nothing was written."
   },
   NO_REASON: {
     check: "C-113.22",
-    where: at12("#supersession", "is-reason-given"),
+    where: at13("#supersession", "is-reason-given"),
     translation: "Superseding a determination says why it is superseded. Give the reason. Nothing was written."
   },
   PROPOSAL_CANNOT_DETERMINE: {
     check: "C-113.19",
-    where: at12("comparisonPropose", "is-proposal-outcomeless"),
+    where: at13("comparisonPropose", "is-proposal-outcomeless"),
     translation: "A comparison sets out rows and questions for members; it never states whether the act complied. Remove the outcome. Nothing was written."
   },
   NO_SUCH_COMPARISON: {
     check: "C-113.20",
-    where: at12("refuseNoSuchComparison", "is-comparison-seen"),
+    where: at13("refuseNoSuchComparison", "is-comparison-seen"),
     translation: "No comparison answers to that id in this project. One you cannot see is answered exactly as one that does not exist. Nothing was written."
   },
   DETERMINATION_SUPERSEDED: {
     check: "C-113.23",
-    where: at12("determinationSuperseded", "is-determination-live"),
+    where: at13("determinationSuperseded", "is-determination-live"),
     translation: "That determination has been superseded, and a superseded determination is not acted on or superseded again. Use the determination that replaced it. Nothing was written."
   },
   NO_SUCH_CONTRADICTION_INQUIRY: {
     check: "C-113.24",
-    where: at12("#contradictionInquiry", "is-contradiction-inquiry-seen"),
+    where: at13("#contradictionInquiry", "is-contradiction-inquiry-seen"),
     translation: "No question you can see answers to that id as one taken up from a contradiction, so no comparison starts from it. Nothing was written."
   },
   CAUSE_NOT_EVIDENCED: {
     check: "C-113.25",
-    where: at12("#causeRefusal", "is-cause-evidenced"),
+    where: at13("#causeRefusal", "is-cause-evidenced"),
     translation: "A cause is recorded on a determination only when evidence you can see shows it. A cause not yet shown stays in the question where it is being worked out, and the determination says the cause is not established. Nothing was written."
   },
   CAUSE_UNSTATED: {
     check: "C-113.26",
-    where: at12("#causeRefusal", "is-cause-stated"),
+    where: at13("#causeRefusal", "is-cause-stated"),
     translation: "The cause is stated in a sentence of your own, of at most 2,000 characters. Nothing was written."
   },
   RECOMMENDATION_IS_AN_ACTION: {
     check: "C-113.27",
-    where: at12("#refuseRecommendation", "is-recommendation-absent"),
+    where: at13("#refuseRecommendation", "is-recommendation-absent"),
     translation: "A determination records what was required, what was done, and why, and never what should be done. Propose an action instead. Nothing was written."
   },
   STANDARD_SIDE_UNNAMED: {
     check: "C-113.28",
-    where: at12("comparisonFacts", "is-standard-side-named"),
+    where: at13("comparisonFacts", "is-standard-side-named"),
     translation: "Name which side of the question states what the standard requires, a or b. The plane never chooses it. Nothing was written."
   },
   DETERMINATION_ONLY_BY_ITS_ACT: {
     check: "C-113.21",
-    where: at12("check", "is-determination-act"),
+    where: at13("check", "is-determination-act"),
     translation: "A determination is recorded only by the determination act, and never edited: a correction is a new determination that supersedes it. Nothing was written."
   }
 });
@@ -92934,8 +94042,8 @@ var checks_exports28 = {};
 __export(checks_exports28, {
   CONSEQUENCES_CHECKS: () => CONSEQUENCES_CHECKS
 });
-var at13 = (fn) => `src/consequences/index.mjs ${fn}`;
-var row = (n, fn, translation) => Object.freeze({ check: `C-114.${n}`, where: at13(fn), translation });
+var at14 = (fn) => `src/consequences/index.mjs ${fn}`;
+var row = (n, fn, translation) => Object.freeze({ check: `C-114.${n}`, where: at14(fn), translation });
 var CONSEQUENCES_CHECKS = Object.freeze({
   CONSEQUENCE_NOT_NONCOMPLIANT: row(2, "#record", "A consequence is what a breach did: it is recorded against a standard the determination found noncompliant."),
   CONSEQUENCE_NOT_A_PARTICIPANT: row(3, "#participantRefusal", "Recording a consequence, or whether it has been addressed, is work inside the determination's project, done by a member who has joined it. A machine may prepare a computed part and answers no project's authority."),
@@ -94872,202 +95980,202 @@ __export(checks_exports29, {
   FILINGS_CHECKS: () => FILINGS_CHECKS,
   rowOf: () => rowOf4
 });
-var at14 = (fn, region) => `src/filings/index.mjs ${fn} > ${region}`;
+var at15 = (fn, region) => `src/filings/index.mjs ${fn} > ${region}`;
 var FILINGS_CHECKS = Object.freeze({
   FILING_NO_PREPARER: {
     check: "C-115.1",
-    where: at14("filingPrepare", "is-filing-prepare"),
+    where: at15("filingPrepare", "is-filing-prepare"),
     translation: "Nobody is named as the one preparing this draft. Every draft names who prepared it."
   },
   ACTION_CLOSED: {
     check: "C-115.3",
-    where: at14("#closed", "is-action-closed"),
+    where: at15("#closed", "is-action-closed"),
     translation: "The action is resolved or abandoned, so nothing is prepared for it."
   },
   FILING_TIER_UNDETERMINED: {
     check: "C-115.4",
-    where: at14("filingPrepare", "is-filing-prepare"),
+    where: at15("filingPrepare", "is-filing-prepare"),
     translation: "The action's risk tier has not been stated, and an unstated tier is never read as the lowest. A member states the tier first."
   },
   TIER3_COUNSEL_PACKET: {
     check: "C-115.5",
-    where: at14("filingPrepare", "is-filing-prepare"),
+    where: at15("filingPrepare", "is-filing-prepare"),
     translation: "This action's governing tier is 3: no filing is prepared for it. The group names counsel, and a counsel packet is assembled for counsel's review instead."
   },
   KIND_NO_TEMPLATE: {
     check: "C-115.6",
-    where: at14("filingPrepare", "is-filing-prepare"),
+    where: at15("filingPrepare", "is-filing-prepare"),
     translation: "The jurisdiction profile holds no template for this kind of action (or its profiles disagree on one), so there is nothing to pre-fill."
   },
   MACHINE_CANNOT_APPROVE: {
     check: "C-115.7",
-    where: at14("filingApprove", "is-filing-approve"),
+    where: at15("filingApprove", "is-filing-approve"),
     translation: "Only a named member can approve a filing. A machine may prepare the words; it never approves them."
   },
   NO_SUCH_FILING: {
     check: "C-115.8",
-    where: at14("#noFiling", "is-no-such-filing"),
+    where: at15("#noFiling", "is-no-such-filing"),
     translation: "There is no draft by that id that you can read here. A draft of an action you may not see answers exactly as one that does not exist."
   },
   ALREADY_APPROVED: {
     check: "C-115.9",
-    where: at14("#alreadyApproved", "is-already-approved"),
+    where: at15("#alreadyApproved", "is-already-approved"),
     translation: "This draft has already been approved, and an approval stands as recorded. Prepare a new draft to approve another text."
   },
   FILING_STALE: {
     check: "C-115.10",
-    where: at14("filingApprove", "is-filing-approve"),
+    where: at15("filingApprove", "is-filing-approve"),
     translation: "Something the draft was prepared from has changed since, as named. Prepare the draft again so it says what the record says now."
   },
   STILL_UNFILLED: {
     check: "C-115.11",
-    where: at14("filingApprove", "is-filing-approve"),
+    where: at15("filingApprove", "is-filing-approve"),
     translation: "The text still holds a blank the record could not fill, marked UNFILLED. A member writes it in before the text can be approved."
   },
   TEXT_UNWRITABLE: {
     check: "C-115.12",
-    where: at14("filingApprove", "is-filing-approve"),
+    where: at15("filingApprove", "is-filing-approve"),
     translation: "The text is empty, too long, or not readable as text, so it cannot be recorded as approved."
   },
   MACHINE_CANNOT_FILE: {
     check: "C-115.13",
-    where: at14("filingRecordSent", "is-filing-sent"),
+    where: at15("filingRecordSent", "is-filing-sent"),
     translation: "Only a named member can record that a filing was sent. The instance sends nothing itself."
   },
   NOT_APPROVED: {
     check: "C-115.14",
-    where: at14("filingRecordSent", "is-filing-sent"),
+    where: at15("filingRecordSent", "is-filing-sent"),
     translation: "A member approves the draft before it is recorded as sent."
   },
   ALREADY_SENT: {
     check: "C-115.15",
-    where: at14("filingRecordSent", "is-filing-sent"),
+    where: at15("filingRecordSent", "is-filing-sent"),
     translation: "This draft is already recorded as sent, and that record stands."
   },
   MACHINE_CANNOT_NAME_COUNSEL: {
     check: "C-115.16",
-    where: at14("counselPacket", "is-counsel-packet"),
+    where: at15("counselPacket", "is-counsel-packet"),
     translation: "Only a named member can name the group's counsel and assemble a packet for them."
   },
   NOT_TIER3: {
     check: "C-115.17",
-    where: at14("counselPacket", "is-counsel-packet"),
+    where: at15("counselPacket", "is-counsel-packet"),
     translation: "A counsel packet is assembled only for an action whose governing tier is 3. A Tier 1 or 2 action is prepared as a filing."
   },
   NO_COUNSEL: {
     check: "C-115.18",
-    where: at14("counselPacket", "is-counsel-packet"),
+    where: at15("counselPacket", "is-counsel-packet"),
     translation: "Name counsel by a name and an organisation, each on one line and not too long; a contact is optional."
   },
   NO_DETERMINATION: {
     check: "C-115.19",
-    where: at14("counselPacket", "is-counsel-packet"),
+    where: at15("counselPacket", "is-counsel-packet"),
     translation: "The action rests on no live determination you can read, so there are no facts to assemble for counsel."
   },
   NO_SUCH_PACKET: {
     check: "C-115.20",
-    where: at14("#noPacket", "is-no-such-packet"),
+    where: at15("#noPacket", "is-no-such-packet"),
     translation: "There is no counsel packet by that id and version that you can read here. A packet for an action you may not see answers exactly as one that does not exist."
   },
   MACHINE_CANNOT_EXPORT: {
     check: "C-115.21",
-    where: at14("counselPacketExport", "is-packet-export"),
+    where: at15("counselPacketExport", "is-packet-export"),
     translation: "Only a named member can hand a counsel packet to counsel."
   },
   NO_THEORY: {
     check: "C-115.22",
-    where: at14("theoryPropose", "is-theory-propose"),
+    where: at15("theoryPropose", "is-theory-propose"),
     translation: "State the candidate theory, and any remedy, in words that are not too long."
   },
   THEORY_NO_STANDARDS: {
     check: "C-115.23",
-    where: at14("theoryPropose", "is-theory-propose"),
+    where: at15("theoryPropose", "is-theory-propose"),
     translation: "A candidate theory names the standards it rests on."
   },
   THEORY_STANDARD_UNREADABLE: {
     check: "C-115.24",
-    where: at14("theoryPropose", "is-theory-propose"),
+    where: at15("theoryPropose", "is-theory-propose"),
     translation: "The standards the theory names cannot be read here, so the proposal is not recorded."
   },
   THEORY_WHY_REFUSED: {
     check: "C-115.25",
-    where: at14("theoryPropose", "is-theory-propose"),
+    where: at15("theoryPropose", "is-theory-propose"),
     translation: "Say why the theory is proposed, in at most 1,000 characters."
   },
   DETERMINATION_UNREADABLE: {
     check: "C-115.26",
-    where: at14("availableActions", "is-available-actions"),
+    where: at15("availableActions", "is-available-actions"),
     translation: "No determination can be read here, so the actions available against its offices cannot be listed."
   },
   THEORY_NO_PROPOSER: {
     check: "C-115.27",
-    where: at14("theoryPropose", "is-theory-propose"),
+    where: at15("theoryPropose", "is-theory-propose"),
     translation: "Nobody is named as the one proposing this theory. Every proposal names who made it."
   },
   /* T18 (K608, K613 (3)): R23's communications and R26's template library. */
   COMMUNICATION_NO_PREPARER: {
     check: "C-115.28",
-    where: at14("communicationPrepare", "is-communication-prepare"),
+    where: at15("communicationPrepare", "is-communication-prepare"),
     translation: "Nobody is named as the one preparing this communication. Every draft names who prepared it."
   },
   COMMUNICATION_TEXT_REFUSED: {
     check: "C-115.29",
-    where: at14("communicationPrepare", "is-communication-prepare"),
+    where: at15("communicationPrepare", "is-communication-prepare"),
     translation: "The communication's words are empty, too long, or not readable as text."
   },
   COMMUNICATION_PURPOSE_REFUSED: {
     check: "C-115.30",
-    where: at14("communicationPrepare", "is-communication-prepare"),
+    where: at15("communicationPrepare", "is-communication-prepare"),
     translation: "Say what the communication is for, in at most 500 characters."
   },
   MACHINE_CANNOT_SAVE_TEMPLATE: {
     check: "C-115.31",
-    where: at14("templateSave", "is-template-save"),
+    where: at15("templateSave", "is-template-save"),
     translation: "Only a named member can add a template to the group's library. A machine may draft words; it never makes them the group's boilerplate."
   },
   TEMPLATE_NAME_REFUSED: {
     check: "C-115.32",
-    where: at14("templateSave", "is-template-save"),
+    where: at15("templateSave", "is-template-save"),
     translation: "Name the template in one line of at most 200 characters."
   },
   TEMPLATE_KIND_REFUSED: {
     check: "C-115.33",
-    where: at14("templateSave", "is-template-save"),
+    where: at15("templateSave", "is-template-save"),
     translation: "A template's kind is written as a kind is: lower-case letters, digits and underscores. Leave it out for a template of no kind."
   },
   TEMPLATE_FROM_UNAPPROVED: {
     check: "C-115.34",
-    where: at14("templateSave", "is-template-save"),
+    where: at15("templateSave", "is-template-save"),
     translation: "A template is kept from a draft a member has approved. Approve the draft first."
   },
   TEMPLATE_TEXT_REFUSED: {
     check: "C-115.35",
-    where: at14("templateSave", "is-template-save"),
+    where: at15("templateSave", "is-template-save"),
     translation: "The template's words are empty, too long, or not readable as text."
   },
   TEMPLATE_KIND_TIER3: {
     check: "C-115.36",
-    where: at14("templateSave", "is-template-save"),
+    where: at15("templateSave", "is-template-save"),
     translation: "This kind's tier is 3: it requires competent counsel, and no template is kept for it."
   },
   TEMPLATE_NAME_TAKEN: {
     check: "C-115.37",
-    where: at14("templateSave", "is-template-save"),
+    where: at15("templateSave", "is-template-save"),
     translation: "The group's library already holds a template by this name. Choose another name."
   },
   NO_SUCH_TEMPLATE: {
     check: "C-115.38",
-    where: at14("filingPrepare", "is-filing-prepare"),
+    where: at15("filingPrepare", "is-filing-prepare"),
     translation: "There is no template by that id in the group's library that you can read here. One you may not see answers exactly as one that does not exist."
   },
   TEMPLATE_KIND_MISMATCH: {
     check: "C-115.39",
-    where: at14("filingPrepare", "is-filing-prepare"),
+    where: at15("filingPrepare", "is-filing-prepare"),
     translation: "The template named was kept for another kind of action. Name one kept for this kind, or for none."
   },
   TEMPLATE_NOT_NAMED: {
     check: "C-115.40",
-    where: at14("filingPrepare", "is-filing-prepare"),
+    where: at15("filingPrepare", "is-filing-prepare"),
     translation: "The jurisdiction profile holds no template for this kind, but the group's library does: name the one to fill."
   }
 });
@@ -97181,216 +98289,216 @@ __export(checks_exports30, {
   ESCALATION_CHECKS: () => ESCALATION_CHECKS,
   refusal: () => refusal15
 });
-var at15 = (fn, region) => `src/escalation/index.mjs ${fn} > ${region}`;
+var at16 = (fn, region) => `src/escalation/index.mjs ${fn} > ${region}`;
 var ESCALATION_CHECKS = Object.freeze({
   MACHINE_CANNOT_OPEN: {
     check: "C-116.1",
-    where: at15("escalationOpen", "is-open-member"),
+    where: at16("escalationOpen", "is-open-member"),
     translation: "Opening an escalation is a member's act. An assistant may point out a breach worth pursuing; it may not open one. Sign in as a member. Nothing was written."
   },
   ESCALATION_CARRIES_NO_JUDGMENT: {
     check: "C-116.2",
-    where: at15("refuseJudgment", "is-no-judgment"),
+    where: at16("refuseJudgment", "is-no-judgment"),
     translation: "An escalation records no significance, severity, priority, urgency, rank or score. Whether a breach warrants action, and how urgently, is the members' judgment, made with the consequences in front of them. Send the act without it. Nothing was written."
   },
   NOT_NONCOMPLIANT: {
     check: "C-116.5",
-    where: at15("escalationOpen", "is-determination-noncompliant"),
+    where: at16("escalationOpen", "is-determination-noncompliant"),
     translation: "That determination finds no standard breached, so there is nothing to escalate. Nothing was written."
   },
   ESCALATION_NOT_A_PARTICIPANT: {
     check: "C-116.6",
-    where: at15("escalationOpen", "is-open-joined"),
+    where: at16("escalationOpen", "is-open-joined"),
     translation: "An escalation is opened by a member who has joined the project that made the determination. Join the project first. Nothing was written."
   },
   ALREADY_OPEN: {
     check: "C-116.7",
-    where: at15("escalationOpen", "is-one-escalation"),
+    where: at16("escalationOpen", "is-one-escalation"),
     translation: "This determination already has an escalation that has not ended; there is one at a time. Work in that one. Nothing was written."
   },
   NO_SUCH_ESCALATION: {
     check: "C-116.8",
-    where: at15("refuseNoSuchEscalation", "is-escalation-seen"),
+    where: at16("refuseNoSuchEscalation", "is-escalation-seen"),
     translation: "No escalation answers to that here. One in a project you may not see is answered exactly as one that does not exist. Nothing was written."
   },
   MACHINE_CANNOT_ATTACH: {
     check: "C-116.9",
-    where: at15("escalationAttach", "is-attach-member"),
+    where: at16("escalationAttach", "is-attach-member"),
     translation: "Attaching an action to an escalation is a member's act. An assistant may prepare the action; it may not attach it. Nothing was written."
   },
   ESCALATION_ENDED: {
     check: "C-116.10",
-    where: at15("refuseEnded", "is-escalation-ended"),
+    where: at16("refuseEnded", "is-escalation-ended"),
     translation: "This escalation has ended: compliance was restored and the consequences addressed. An ended escalation is never reopened; a new breach is a new determination. Nothing was written."
   },
   NOT_A_BREACH_ACTION: {
     check: "C-116.12",
-    where: at15("escalationAttach", "is-breach-action"),
+    where: at16("escalationAttach", "is-breach-action"),
     translation: "An escalation's acts are actions recorded for the breach: the action states that it is one and rests on the escalation's determination. Record it so, then attach it. Nothing was written."
   },
   ACTION_PREMISE_OVERRIDDEN: {
     check: "C-116.45",
-    where: at15("escalationAttach", "is-premise-established"),
+    where: at16("escalationAttach", "is-premise-established"),
     translation: "That action was recorded with its premise overridden: it does not rest on a determined breach. An escalation pursues a determined breach only, so the action cannot be attached to one. Nothing was written."
   },
   STAGE_TAKES_NO_ACTION: {
     check: "C-116.13",
-    where: at15("escalationAttach", "is-attaching-stage"),
+    where: at16("escalationAttach", "is-attaching-stage"),
     translation: "Actions are attached at notification, legal tools and political accountability. The escalation's stage now takes none. Nothing was written."
   },
   ALREADY_ATTACHED: {
     check: "C-116.14",
-    where: at15("escalationAttach", "is-attached-once"),
+    where: at16("escalationAttach", "is-attached-once"),
     translation: "That action is already attached to an escalation. An action belongs to one escalation, at one stage. Nothing was written."
   },
   NOT_ACCOUNTABILITY: {
     check: "C-116.15",
-    where: at15("escalationAttach", "is-accountability-purpose"),
+    where: at16("escalationAttach", "is-accountability-purpose"),
     translation: "An act of political accountability states its purpose: asking an elected office to act on the breach, an oversight request, an audit request, testimony, or legislation that restores or enforces an existing requirement. Policy advocacy and candidate support are not among them. Nothing was written."
   },
   NOT_THE_BREACH: {
     check: "C-116.16",
-    where: at15("escalationAttach", "is-pursued-standard"),
+    where: at16("escalationAttach", "is-pursued-standard"),
     translation: "An act of political accountability names the requirement it seeks enforced, from the standards this escalation pursues, and no other. Nothing was written."
   },
   COUNTERPARTY_NOT_ELECTED: {
     check: "C-116.17",
-    where: at15("escalationAttach", "is-elected-office"),
+    where: at16("escalationAttach", "is-elected-office"),
     translation: "An official request asks an elected office to act. The jurisdiction profile marks the office this action is addressed to as not elected. Address it to an elected office. Nothing was written."
   },
   COUNTERPARTY_NOT_OVERSIGHT: {
     check: "C-116.18",
-    where: at15("escalationAttach", "is-oversight-office"),
+    where: at16("escalationAttach", "is-oversight-office"),
     translation: "An oversight or audit request goes to an oversight or audit body. The jurisdiction profile marks the office this action is addressed to as not one. Nothing was written."
   },
   MACHINE_CANNOT_EVALUATE: {
     check: "C-116.19",
-    where: at15("escalationEvaluate", "is-evaluate-member"),
+    where: at16("escalationEvaluate", "is-evaluate-member"),
     translation: "Reading what the government answered is a member's judgment. An assistant may summarise the response; it may not evaluate it. Nothing was written."
   },
   NOT_IN_EVALUATION: {
     check: "C-116.20",
-    where: at15("escalationEvaluate", "is-evaluation-stage"),
+    where: at16("escalationEvaluate", "is-evaluation-stage"),
     translation: "A response is evaluated at the response-evaluation stage, and this escalation is at another. Nothing was written."
   },
   READING_UNKNOWN: {
     check: "C-116.21",
-    where: at15("escalationEvaluate", "is-reading-known"),
+    where: at16("escalationEvaluate", "is-reading-known"),
     translation: "A reading of a response is one of: complied, partial, denied, or none (nothing came back in time). Nothing was written."
   },
   NO_SUCH_RESPONSE: {
     check: "C-116.22",
-    where: at15("refuseNoSuchResponse", "is-named-response"),
+    where: at16("refuseNoSuchResponse", "is-named-response"),
     translation: "The evaluation names the reply it reads: a received entry of an action attached to this escalation. Nothing was written."
   },
   RESPONSE_FOR_NONE: {
     check: "C-116.23",
-    where: at15("escalationEvaluate", "is-none-unnamed"),
+    where: at16("escalationEvaluate", "is-none-unnamed"),
     translation: "A reading of none says nothing came back in time, so it names no reply. Nothing was written."
   },
   NO_REASON: {
     check: "C-116.24",
-    where: at15("refuseReason", "is-reason-given"),
+    where: at16("refuseReason", "is-reason-given"),
     translation: "This act needs a reason, in your own words, of up to 2,000 characters. Nothing was written."
   },
   MACHINE_CANNOT_ADVANCE: {
     check: "C-116.25",
-    where: at15("#edgeArgs", "is-edge-member"),
+    where: at16("#edgeArgs", "is-edge-member"),
     translation: "Moving an escalation to its next stage is a member's act. The protocol proposes a stage when its trigger is met; a member advances it. Nothing was written."
   },
   MACHINE_CANNOT_DECLINE: {
     check: "C-116.26",
-    where: at15("#edgeArgs", "is-edge-member"),
+    where: at16("#edgeArgs", "is-edge-member"),
     translation: "Choosing not to move an escalation now is a member's act, with the member's reason. Nothing was written."
   },
   NOT_OPEN: {
     check: "C-116.27",
-    where: at15("#edgeArgs", "is-edge-open"),
+    where: at16("#edgeArgs", "is-edge-open"),
     translation: "The escalation's stage moves only while it is open. A suspended one is resumed first; an ended one never moves again. Nothing was written."
   },
   ILLEGAL_STAGE: {
     check: "C-116.28",
-    where: at15("#edgeArgs", "is-edge-legal"),
+    where: at16("#edgeArgs", "is-edge-legal"),
     translation: "The escalation cannot move from its stage to that one. The stages it can move to are listed. Nothing was written."
   },
   TRIGGER_NOT_MET: {
     check: "C-116.29",
-    where: at15("escalationAdvance", "is-trigger-met"),
+    where: at16("escalationAdvance", "is-trigger-met"),
     translation: "That stage's trigger is not met in the record yet; what is missing is named. When it is met the stage is proposed, and a member advances it. Nothing was written."
   },
   EDGE_NOT_PROPOSED: {
     check: "C-116.30",
-    where: at15("escalationDecline", "is-edge-proposed"),
+    where: at16("escalationDecline", "is-edge-proposed"),
     translation: "That stage is not proposed, so there is nothing to decline. Nothing was written."
   },
   MACHINE_CANNOT_END: {
     check: "C-116.31",
-    where: at15("escalationEnd", "is-end-member"),
+    where: at16("escalationEnd", "is-end-member"),
     translation: "Ending an escalation is a member's act, and only once compliance is restored and the consequences are addressed. Nothing was written."
   },
   ALREADY_ENDED: {
     check: "C-116.32",
-    where: at15("escalationEnd", "is-end-once"),
+    where: at16("escalationEnd", "is-end-once"),
     translation: "This escalation has already ended. Nothing was written."
   },
   COMPLIANCE_NOT_RESTORED: {
     check: "C-116.33",
-    where: at15("escalationEnd", "is-compliance-restored"),
+    where: at16("escalationEnd", "is-compliance-restored"),
     translation: "An escalation ends only when compliance is restored: for every standard it pursues, a later determination of the same act finds the government compliant. The standards still lacking one are named. Nothing was written."
   },
   CONSEQUENCES_NOT_ADDRESSED: {
     check: "C-116.34",
-    where: at15("escalationEnd", "is-consequences-addressed"),
+    where: at16("escalationEnd", "is-consequences-addressed"),
     translation: "An escalation ends only when the consequences of the breach are addressed, and a recorded consequence is not. Nothing was written."
   },
   CONSEQUENCES_UNDETERMINED: {
     check: "C-116.35",
-    where: at15("escalationEnd", "is-consequences-determined"),
+    where: at16("escalationEnd", "is-consequences-determined"),
     translation: "Whether the consequences of the breach are addressed is undetermined: none is recorded, or one is undetermined or unproven. If the group judges the breach had no consequence, record that as an assessed consequence and address it. Nothing was written."
   },
   MACHINE_CANNOT_SUSPEND: {
     check: "C-116.36",
-    where: at15("escalationSuspend", "is-suspend-member"),
+    where: at16("escalationSuspend", "is-suspend-member"),
     translation: "Suspending an escalation is a member's act, with a reason. Nothing was written."
   },
   ALREADY_SUSPENDED: {
     check: "C-116.37",
-    where: at15("escalationSuspend", "is-suspend-once"),
+    where: at16("escalationSuspend", "is-suspend-once"),
     translation: "This escalation is already suspended. Nothing was written."
   },
   MACHINE_CANNOT_RESUME: {
     check: "C-116.38",
-    where: at15("escalationResume", "is-resume-member"),
+    where: at16("escalationResume", "is-resume-member"),
     translation: "Resuming an escalation is a member's act. Nothing was written."
   },
   NOT_SUSPENDED: {
     check: "C-116.39",
-    where: at15("escalationResume", "is-resume-suspended"),
+    where: at16("escalationResume", "is-resume-suspended"),
     translation: "This escalation is not suspended, so there is nothing to resume. Nothing was written."
   },
   MACHINE_CANNOT_WRITE_ESCALATION: {
     check: "C-116.40",
-    where: at15("check", "is-escalation-member"),
+    where: at16("check", "is-escalation-member"),
     translation: "An escalation's record is written by members' acts only. An automated credential cannot write it. Nothing was written."
   },
   ESCALATION_BY_ACT_ONLY: {
     check: "C-116.41",
-    where: at15("check", "is-escalation-act"),
+    where: at16("check", "is-escalation-act"),
     translation: "An escalation changes only through its own acts (open, attach, evaluate, advance, decline, suspend, resume, end), so its history and what is read from it never disagree. Nothing was written."
   },
   ESCALATION_HISTORY_REWRITTEN: {
     check: "C-116.42",
-    where: at15("check", "is-escalation-append-only"),
+    where: at16("check", "is-escalation-append-only"),
     translation: "An escalation's history is never edited; each act adds to it. Nothing was written."
   },
   UNSPLICEABLE_ESCALATION: {
     check: "C-116.43",
-    where: at15("#append", "is-escalation-spliceable"),
+    where: at16("#append", "is-escalation-spliceable"),
     translation: "The escalation's record cannot be extended in place. Nothing was written."
   },
   PROVIDER_UNAVAILABLE: {
     check: "C-116.44",
-    where: at15("refuseProviderUnavailable", "is-provider-present"),
+    where: at16("refuseProviderUnavailable", "is-provider-present"),
     translation: "Part of the record this answer depends on cannot be read on this instance yet, so nothing is answered in its place. Nothing was written."
   }
 });
@@ -98429,11 +99537,11 @@ function asText9(v) {
   if (typeof v === "string") return v;
   return new TextDecoder().decode(v);
 }
-var at16 = (fn, region) => `src/monitoring/index.mjs ${fn} > ${region}`;
+var at17 = (fn, region) => `src/monitoring/index.mjs ${fn} > ${region}`;
 var DRIVE_TICK_CHECKS = Object.freeze({
   DRIVE_TICK_EXPORT_IS_THE_SHELL: Object.freeze({
     check: "C-48.8",
-    where: at16("monitor", "is-drive-tick-export"),
+    where: at17("monitor", "is-drive-tick-export"),
     translation: "The check of that Google Drive document did not run: the export address answered with a web page rather than a document, which is what Drive does when a file stops being shared with anyone who has the link. Nothing was compared and nothing about the record changed \u2014 what is known is that this instance could not see the document today."
   }),
   /* THE SAME TICK, CAUGHT ON THE BYTES. C-48.7's reasoning one op over: the
@@ -98444,14 +99552,14 @@ var DRIVE_TICK_CHECKS = Object.freeze({
      the document CHANGED on every visit — the cry-wolf this row exists to end. */
   DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL: Object.freeze({
     check: "C-48.9",
-    where: at16("monitor", "is-drive-tick-bytes"),
+    where: at17("monitor", "is-drive-tick-bytes"),
     translation: "The check of that Google Drive document did not run: the export address said it was sending a document and sent a web page instead. This instance reads the bytes rather than the label, so the application page was recognised and not compared against the captured document \u2014 comparing it would report a change on every visit that nobody made."
   })
 });
 var GATHERING_CHECKS = Object.freeze({
   GATHERING_REFUSED: Object.freeze({
     check: "C-18.10",
-    where: at16("gatheringCheck", "is-gathering-refused"),
+    where: at17("gatheringCheck", "is-gathering-refused"),
     translation: "This was not saved: the list of things to gather that it carries is not written the way the record writes them, and a gathering request is shown to members as data, so it must stay within its grammar. The findings beside this say which requests and what is wrong with each. Nothing was changed."
   })
 });
@@ -107143,18 +108251,18 @@ __export(checks_exports33, {
   PUBLISH_ACT_CHECKS: () => PUBLISH_ACT_CHECKS,
   STATEMENT_ACK_CHECKS: () => STATEMENT_ACK_CHECKS
 });
-var at17 = (fn, region) => `src/case-authoring/index.mjs ${fn} > ${region}`;
+var at18 = (fn, region) => `src/case-authoring/index.mjs ${fn} > ${region}`;
 var PUBLISH_ACT_CHECKS = Object.freeze({
   /* R1: the fence alone, before anything else is read. */
   MACHINE_CANNOT_PUBLISH: {
     check: "C-32.6",
-    where: at17("#publishCase", "is-machine-publish"),
+    where: at18("#publishCase", "is-machine-publish"),
     translation: "Publishing puts the group's name on a case, together with an assertion that it is complete and a stated position on putting it to the people it concerns. Both of those are declared judgements, and the credential that asked here is an automated one. It can assemble the case; sign in to publish it."
   },
   /* R3: a case silent about what it leaves out (REC-64). */
   NO_STATEMENT: {
     check: "C-33.14",
-    where: at17("#publishCase", "is-publish-statement"),
+    where: at18("#publishCase", "is-publish-statement"),
     translation: "A published case has to say what it does NOT cover. A case that is silent about its own limits is claiming to cover everything, and that is the overclaim this record exists to refuse."
   }
 });
@@ -107163,95 +108271,95 @@ var CASE_DERIVATION_CHECKS = Object.freeze({
      new one): a further edition of one of them and a new case over the same findings are opposite acts. */
   CASE_IDENTITY_AMBIGUOUS: {
     check: "C-44.1",
-    where: at17("#publishCase", "case-identity-derivation"),
+    where: at18("#publishCase", "case-identity-derivation"),
     translation: "This publication did not say which case it is. The findings you are publishing already serve more than one published case, and a finding is allowed to serve many \u2014 so the record cannot work out from them alone whether you are publishing a further edition of one of those cases or starting a new case that rests on the same work. Nothing has been published and nothing has changed. Say which case this is, or say that it is a new one, and publish again."
   },
   /* R9: the three conditions under which naming a draft would bind its readings falsely, each asked before a case id is
      minted, so a refusal spends none; none of them can refuse a publication that names no draft. */
   PUBLISH_DRAFT_NOT_FOUND: {
     check: "C-44.3",
-    where: at17("#publishCase", "is-publish-draft-found"),
+    where: at18("#publishCase", "is-publish-draft-found"),
     translation: "The draft named for this case is not a draft of this project that you can open. Nothing was published. Name the draft this case was prepared in, or publish without naming one; readings of a draft that was not named are then counted in the case file and not attributed to anyone."
   },
   PUBLISH_DRAFT_NOT_THIS_CASE: {
     check: "C-44.4",
-    where: at17("#publishCase", "is-publish-draft-this-case"),
+    where: at18("#publishCase", "is-publish-draft-this-case"),
     translation: "The draft named here was prepared for a different case than the one being published, so its readers did not read this one. Nothing was published. Publish the case that draft is for, or name the draft of this case."
   },
   PUBLISH_DRAFT_ALREADY_BOUND: {
     check: "C-44.5",
-    where: at17("#publishCase", "is-publish-draft-bound"),
+    where: at18("#publishCase", "is-publish-draft-bound"),
     translation: "That draft has already been named as the draft of another published case, and the people who read it are listed there. One draft becomes one case, so it cannot be named for this one too. Nothing was published."
   }
 });
 var STATEMENT_ACK_CHECKS = Object.freeze({
   STATEMENT_ACK_NO_SUBJECT: {
     check: "C-82.2",
-    where: at17("acknowledgeStatement", "is-statement-ack-subject"),
+    where: at18("acknowledgeStatement", "is-statement-ack-subject"),
     translation: "Say which statement you are acknowledging: a draft case, or a case document, by its case and edition, that has been written but not yet signed."
   },
   STATEMENT_ACK_ALREADY_SIGNED: {
     check: "C-82.3",
-    where: at17("acknowledgeStatement", "is-statement-ack-signed"),
+    where: at18("acknowledgeStatement", "is-statement-ack-signed"),
     translation: "This edition of the case is already signed, and the signature covers its list of who acknowledged the statement, so a new acknowledgement could not appear in it. A signed edition is corrected only by publishing the next edition."
   },
   STATEMENT_ACK_NOT_A_PARTICIPANT: {
     check: "C-82.4",
-    where: at17("acknowledgeStatement", "is-statement-ack-participant"),
+    where: at18("acknowledgeStatement", "is-statement-ack-participant"),
     translation: "Only someone who has joined the project that makes this case, or someone given a review copy of it, can acknowledge its statement. Being able to see a project is not the same as having joined it: an invited member who has not joined yet, and an administrator, cannot acknowledge it."
   },
   STATEMENT_ACK_NO_STATEMENT: {
     check: "C-82.5",
-    where: at17("acknowledgeStatement", "is-statement-ack-statement"),
+    where: at18("acknowledgeStatement", "is-statement-ack-statement"),
     translation: "This draft does not yet say what its case leaves out, so there is nothing to acknowledge. Once an editor of the draft writes that statement, you can acknowledge it."
   },
   STATEMENT_ACK_BY_ITS_AUTHOR: {
     check: "C-82.6",
-    where: at17("acknowledgeStatement", "is-statement-ack-by-its-author"),
+    where: at18("acknowledgeStatement", "is-statement-ack-by-its-author"),
     translation: "You wrote this statement or published this case, so you have already read it. An acknowledgement means a second person has read what the case leaves out, so it has to come from someone else: another participant in the project, or a reader given a review copy. The case can be published without one, and will say so."
   },
   STATEMENT_ACK_AUTHOR_UNDETERMINED: {
     check: "C-82.7",
-    where: at17("acknowledgeStatement", "is-statement-ack-author-undetermined"),
+    where: at18("acknowledgeStatement", "is-statement-ack-author-undetermined"),
     translation: "The record does not say who wrote this statement, so it cannot tell whether you are its author. For a draft, ask an editor of the project to save the statement again; for a published case, it can be published again from a draft that records who wrote it. You can acknowledge it after that. The case can be published either way."
   }
 });
 var CASE_DISCLOSURE_CHECKS = Object.freeze({
   TENSION_NOT_DISCLOSED: {
     check: "C-120.1",
-    where: at17("#tensionsJudged", "is-tension-disclosed"),
+    where: at18("#tensionsJudged", "is-tension-disclosed"),
     translation: "A finding in this case rests on something the record holds in unresolved conflict, and a case may be published with it only if the conflict is disclosed. Each one is named. One in conflict with a record you cannot see is named by its finding, and the published case will highlight it without naming that record. Disclose it, or resolve it first. Nothing was published."
   },
   DISCLOSURE_NOT_STANDING: {
     check: "C-120.2",
-    where: at17("#tensionsJudged", "is-disclosure-standing"),
+    where: at18("#tensionsJudged", "is-disclosure-standing"),
     translation: "One of the conflicts disclosed is not an unresolved conflict on this case's findings: it may have been resolved since. Read the list again. Nothing was published."
   },
   TENSIONS_UNDETERMINED: {
     check: "C-120.3",
-    where: at17("#undetermined", "is-tensions-determined"),
+    where: at18("#undetermined", "is-tensions-determined"),
     translation: "The record could not be read completely for conflicts on this case's findings, so what must be disclosed is not known. Try again. Nothing was published."
   },
   /* R35 (DEC-81 item 3 (b)): the owner's attributed acknowledgement, in the pattern of NO_FALSIFIER's override. */
   CO_ATTESTATION_UNACKNOWLEDGED: {
     check: "C-120.4",
-    where: at17("#selfAttestedJudged", "is-co-attestation-acknowledged"),
+    where: at18("#selfAttestedJudged", "is-co-attestation-acknowledged"),
     translation: "A load-bearing document has no trusted timestamp and co-archive. Retry them, or acknowledge publishing it as self-attested only, with a reason. Nothing was written."
   },
   SELF_ATTESTED_NO_REASON: {
     check: "C-120.5",
-    where: at17("#selfAttestedJudged", "is-self-attested-reasoned"),
+    where: at18("#selfAttestedJudged", "is-self-attested-reasoned"),
     translation: "Publishing a document as self-attested only says why. Give the reason. Nothing was written."
   },
   SELF_ATTESTATION_NOT_STANDING: {
     check: "C-120.6",
-    where: at17("#selfAttestedJudged", "is-self-attestation-standing"),
+    where: at18("#selfAttestedJudged", "is-self-attestation-standing"),
     translation: "A document acknowledged as self-attested only is either co-attested already or not one this case rests on, so it needs no acknowledgement. Remove it from the list. Nothing was written."
   },
   /* R12 (Publication §3 rule 4; DEC-20): the one bias that must be cleared before publication. */
   UNCLEARED_HUNCH: {
     check: "C-120.7",
-    where: at17("#hunchDebt", "is-hunch-cleared"),
+    where: at18("#hunchDebt", "is-hunch-cleared"),
     translation: "A finding in this case rests on a hunch. A hunch is temporary declared bias, and it is the one bias that must be cleared before publication: the case must still hold with the hunch removed. Give each leg a grade the record earns, or take the hunch out of the basis, and publish again. Nothing was written."
   }
 });
@@ -112887,30 +113995,30 @@ __export(checks_exports35, {
   TASK_ACTOR_CHECKS: () => TASK_ACTOR_CHECKS,
   checkInboxGrammar: () => checkInboxGrammar
 });
-var at18 = (fn, region) => `src/tasks/index.mjs ${fn} > ${region}`;
+var at19 = (fn, region) => `src/tasks/index.mjs ${fn} > ${region}`;
 var QUEUE_MACHINE_CHECKS = Object.freeze({
   MACHINE_CANNOT_FORWARD: Object.freeze({
     check: "C-32.10",
-    where: at18("taskForward", "is-machine-forward"),
+    where: at19("taskForward", "is-machine-forward"),
     translation: "Forwarding hands an obligation to a named person, and deciding who is better placed to answer it is a judgement about people rather than about records. The credential that asked here is an automated one: it can surface the work and route it as it arrives, and cannot re-address it. Sign in to forward it."
   }),
   MACHINE_CANNOT_RESOLVE: Object.freeze({
     check: "C-32.11",
-    where: at18("taskResolve", "is-machine-resolve"),
+    where: at19("taskResolve", "is-machine-resolve"),
     translation: "Closing an obligation says the thing the record asked for has been answered, and somebody has to be willing to say that. The credential that asked here is an automated one \u2014 it may surface the work and prepare what it needs, and closing work that is nobody's is still closing it. Sign in to resolve it."
   })
 });
 var TASK_ACTOR_CHECKS = Object.freeze({
   TASK_NOT_YOURS: Object.freeze({
     check: "C-76.1",
-    where: at18("#refuseNotYours", "is-task-actor-fence"),
+    where: at19("#refuseNotYours", "is-task-actor-fence"),
     translation: "This task is not yours to act on: it is with another member now, so nothing was done to it. The record says below who holds it. Ask them, or an administrator, if it still needs you."
   })
 });
 var QUEUE_INBOX_CHECKS = Object.freeze({
   INBOX_REFUSED: Object.freeze({
     check: "C-19.2",
-    where: at18("inboxCheck", "is-inbox-refused"),
+    where: at19("inboxCheck", "is-inbox-refused"),
     translation: "This was not saved: the list of tasks it carries is not written the way the record writes tasks, so a member could be shown something in it that the record cannot vouch for. The findings beside this say which entries and what is wrong with each. Nothing was changed."
   })
 });
@@ -113685,13 +114793,13 @@ var Tasks = class _Tasks {
     };
   }
 };
-var OF7 = /* @__PURE__ */ new WeakMap();
+var OF8 = /* @__PURE__ */ new WeakMap();
 function tasksOf(ctx, deps = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let t = OF7.get(storage);
+  let t = OF8.get(storage);
   if (!t) {
     t = new Tasks({ host: ctx, storage, deps: { ...deps || {} } });
-    OF7.set(storage, t);
+    OF8.set(storage, t);
     const record = deps && deps.record || recordOf(ctx);
     t.seedLedger();
     const held = record.declarePurge("tasks", [{ name: "tasks", keys: [] }]);
@@ -114017,300 +115125,300 @@ __export(checks_exports36, {
   ACTION_PLAN_CHECKS: () => ACTION_PLAN_CHECKS,
   refusal: () => refusal18
 });
-var at19 = (fn, region) => `src/action-plans/index.mjs ${fn} > ${region}`;
+var at20 = (fn, region) => `src/action-plans/index.mjs ${fn} > ${region}`;
 var ACTION_PLAN_CHECKS = Object.freeze({
   /* ---- R1, R4: opening a plan and its subjects ---- */
   MACHINE_CANNOT_PLAN: {
     check: "C-124.1",
-    where: at19("#member", "is-plan-member"),
+    where: at20("#member", "is-plan-member"),
     translation: "An action plan is the group's own working material, and only a member opens it, changes what it is about or closes it. An assistant may propose options; it may not do this. Sign in as a member. Nothing was written."
   },
   PLAN_NO_TITLE: {
     check: "C-124.2",
-    where: at19("planOpen", "is-plan-titled"),
+    where: at20("planOpen", "is-plan-titled"),
     translation: "A plan needs a title of 1 to 200 characters, with no quotation mark, backslash or line break. Nothing was written."
   },
   PLAN_NO_SUBJECT: {
     check: "C-124.3",
-    where: at19("refuseNoSubject", "is-plan-subjects"),
+    where: at20("refuseNoSubject", "is-plan-subjects"),
     translation: "A plan is about 1 to 50 matters: an open question, or one standard's outcome of a determination. Nothing was written."
   },
   SUBJECT_MALFORMED: {
     check: "C-124.4",
-    where: at19("refuseMalformed", "is-subject-shaped"),
+    where: at20("refuseMalformed", "is-subject-shaped"),
     translation: "A matter is either {kind: inquiry, inquiry} for a question still open, or {kind: outcome, determination, standard} for one standard's outcome of a determination. The one named was neither. Nothing was written."
   },
   NO_SUCH_INQUIRY: {
     check: "C-124.5",
-    where: at19("refuseNoSuchInquiry", "is-inquiry-seen"),
+    where: at20("refuseNoSuchInquiry", "is-inquiry-seen"),
     translation: "No question answers to that id here. One you may not see is answered exactly as one that does not exist. Nothing was written."
   },
   SUBJECT_NOT_OF_PROJECT: {
     check: "C-124.6",
-    where: at19("#subjects", "is-subject-of-project"),
+    where: at20("#subjects", "is-subject-of-project"),
     translation: "A plan is about the project's own matters: a question the project draws on, or a determination the project made. This one belongs to another project. Nothing was written."
   },
   SUBJECT_NOT_LIVE: {
     check: "C-124.7",
-    where: at19("#subjects", "is-subject-live"),
+    where: at20("#subjects", "is-subject-live"),
     translation: "That matter is no longer live: the determination has been superseded, or the question is closed. Plan from the live one. Nothing was written."
   },
   SUBJECT_IN_ACTIVE_PLAN: {
     check: "C-124.8",
-    where: at19("#subjects", "is-subject-free"),
+    where: at20("#subjects", "is-subject-free"),
     translation: "That matter is already in an open plan of this project, which is named. A matter is in one open plan of a project at a time; work in that one, or close it first. Nothing was written."
   },
   NO_SUCH_PLAN: {
     check: "C-124.9",
-    where: at19("noSuchPlan", "is-plan-seen"),
+    where: at20("noSuchPlan", "is-plan-seen"),
     translation: "No action plan answers to that id here. A plan in a project you may not see is answered exactly as one that does not exist. Nothing was written."
   },
   PLAN_CLOSED: {
     check: "C-124.10",
-    where: at19("refusePlanClosed", "is-plan-open"),
+    where: at20("refusePlanClosed", "is-plan-open"),
     translation: "This plan has been closed. A closed plan stays readable, and nothing is added to it. Nothing was written."
   },
   PLAN_NO_REASON: {
     check: "C-124.11",
-    where: at19("refuseReason", "is-reason-given"),
+    where: at20("refuseReason", "is-reason-given"),
     translation: "This act needs a reason in your own words, of 1 to 500 characters, with no quotation mark, backslash or line break. Nothing was written."
   },
   /* ---- R9–R12: options and proposals ---- */
   MACHINE_CANNOT_ADD_OPTION: {
     check: "C-124.12",
-    where: at19("#optionMember", "is-option-member"),
+    where: at20("#optionMember", "is-option-member"),
     translation: "An option in a plan is a member's act: adding one, revising one or adopting a proposal. An assistant may propose options; a member adopts them. Nothing was written."
   },
   OPTION_NO_SUMMARY: {
     check: "C-124.13",
-    where: at19("#optionFields", "is-option-summary"),
+    where: at20("#optionFields", "is-option-summary"),
     translation: "An option needs a summary of 1 to 200 characters. Nothing was written."
   },
   OPTION_DETAIL_TOO_LONG: {
     check: "C-124.14",
-    where: at19("#optionFields", "is-option-detail"),
+    where: at20("#optionFields", "is-option-detail"),
     translation: "An option's detail is at most 5,000 characters. Nothing was written."
   },
   CATEGORY_UNKNOWN: {
     check: "C-124.15",
-    where: at19("#optionFields", "is-option-category"),
+    where: at20("#optionFields", "is-option-category"),
     translation: "An option's category is one of: mitigation, legal, awareness, journalistic, grassroots, other. Nothing was written."
   },
   OPTION_NO_SUBJECT: {
     check: "C-124.16",
-    where: at19("#optionFields", "is-option-subject"),
+    where: at20("#optionFields", "is-option-subject"),
     translation: "An option serves at least one of the plan's matters, and names only matters the plan is about. Nothing was written."
   },
   ADDRESSEE_REFUSED: {
     check: "C-124.17",
-    where: at19("#optionFields", "is-option-addressee"),
+    where: at20("#optionFields", "is-option-addressee"),
     translation: "An addressee is an office by its role and body, a reporter or outlet, an organisation or another civic group by role and organisation, or a described audience. It is never a private individual. Nothing was written."
   },
   DATE_REFUSED: {
     check: "C-124.18",
-    where: at19("#optionFields", "is-option-date"),
+    where: at20("#optionFields", "is-option-date"),
     translation: "A regulated date is written year-month-day and names its basis: the statute, order or commitment that sets it. Nothing was written."
   },
   TIER_REFUSED: {
     check: "C-124.19",
-    where: at19("#optionFields", "is-option-tier"),
+    where: at20("#optionFields", "is-option-tier"),
     translation: "A tier is stated only on a legal option, and is 1, 2, 3 or undetermined. Nothing was written."
   },
   LOBBYING_NO_REQUIREMENT: {
     check: "C-124.20",
-    where: at19("#optionFields", "is-lobbying-enforces"),
+    where: at20("#optionFields", "is-lobbying-enforces"),
     translation: "An option you mark as lobbying names the existing requirement it seeks enforced or restored: a standard, or a determined matter of the plan. Lobbying for anything else is not an act this record holds. Nothing was written."
   },
   OPTION_KEY_REFUSED: {
     check: "C-124.21",
-    where: at19("refuseKeys", "is-no-cost-or-score"),
+    where: at20("refuseKeys", "is-no-cost-or-score"),
     translation: "A plan holds no cost, budget, money to be spent, assignee, hours or significance score. Those are not what this record is for. Send the act without them. Nothing was written."
   },
   NO_SUCH_PLAN_PROPOSAL: {
     check: "C-124.22",
-    where: at19("optionAdopt", "is-proposal-seen"),
+    where: at20("optionAdopt", "is-proposal-seen"),
     translation: "No proposal for an option answers to that id in a plan you may see. Nothing was written."
   },
   PROPOSAL_ADOPTED: {
     check: "C-124.23",
-    where: at19("optionAdopt", "is-proposal-once"),
+    where: at20("optionAdopt", "is-proposal-once"),
     translation: "That proposal has already been adopted as an option, which is named. A proposal is adopted once. Nothing was written."
   },
   PROPOSAL_NO_PROPOSER: {
     check: "C-124.24",
-    where: at19("optionPropose", "is-proposer-stamped"),
+    where: at20("optionPropose", "is-proposer-stamped"),
     translation: "A proposal names who made it. This one came with no signed-in caller. Nothing was written."
   },
   PROPOSAL_WHY_REFUSED: {
     check: "C-124.25",
-    where: at19("optionPropose", "is-proposal-why"),
+    where: at20("optionPropose", "is-proposal-why"),
     translation: "A proposal says why it is offered, in 1 to 500 characters. Nothing was written."
   },
   /* ---- R13: dispositions ---- */
   MACHINE_CANNOT_DISPOSE: {
     check: "C-124.26",
-    where: at19("optionDispose", "is-dispose-member"),
+    where: at20("optionDispose", "is-dispose-member"),
     translation: "Choosing, declining or marking an option done or blocked is a member's decision. An assistant may not make it. Nothing was written."
   },
   DISPOSITION_UNKNOWN: {
     check: "C-124.27",
-    where: at19("optionDispose", "is-disposition-known"),
+    where: at20("optionDispose", "is-disposition-known"),
     translation: "A disposition is one of: open, chosen, declined, done, blocked. Nothing was written."
   },
   NO_SUCH_OPTION: {
     check: "C-124.28",
-    where: at19("refuseNoSuchOption", "is-option-held"),
+    where: at20("refuseNoSuchOption", "is-option-held"),
     translation: "The plan holds no option of that id; the first one not found is named. Nothing was written."
   },
   /* ---- R14–R16: scenarios and checkpoints ---- */
   MACHINE_CANNOT_SCHEDULE: {
     check: "C-124.29",
-    where: at19("scenarioSet", "is-scenario-member"),
+    where: at20("scenarioSet", "is-scenario-member"),
     translation: "Laying options out over time is a member's act. An assistant may propose options; it may not set a scenario. Nothing was written."
   },
   SCENARIO_OUT_OF_RANGE: {
     check: "C-124.30",
-    where: at19("scenarioSet", "is-scenario-numbered"),
+    where: at20("scenarioSet", "is-scenario-numbered"),
     translation: "A plan holds at most three scenarios, numbered 1, 2 and 3. Nothing was written."
   },
   SCENARIO_NAME_REFUSED: {
     check: "C-124.31",
-    where: at19("scenarioSet", "is-scenario-named"),
+    where: at20("scenarioSet", "is-scenario-named"),
     translation: "A scenario needs a name of 1 to 200 characters, with no quotation mark, backslash or line break. Nothing was written."
   },
   PHASE_MALFORMED: {
     check: "C-124.32",
-    where: at19("#scenarioPhases", "is-phase-shaped"),
+    where: at20("#scenarioPhases", "is-phase-shaped"),
     translation: "A phase has an id, a name, the chosen options it holds, when it starts (at the plan's start, after another phase, on one outcome of another phase's checkpoint, or when another matter's track reaches a point), and may have a checkpoint after 1 to 3,650 days, a condition of up to 500 characters and the phase each judgement leads to. The phase named was not so. Nothing was written."
   },
   PHASE_OPTION_NOT_CHOSEN: {
     check: "C-124.33",
-    where: at19("#scenarioPhases", "is-phase-option-chosen"),
+    where: at20("#scenarioPhases", "is-phase-option-chosen"),
     translation: "A phase holds only options the group has chosen. Choose the option first. Nothing was written."
   },
   PHASE_CYCLE: {
     check: "C-124.34",
-    where: at19("#scenarioPhases", "is-phase-acyclic"),
+    where: at20("#scenarioPhases", "is-phase-acyclic"),
     translation: "A phase cannot start after itself: following when each phase starts leads back to the phase named. Nothing was written."
   },
   BRANCH_UNKNOWN: {
     check: "C-124.35",
-    where: at19("#scenarioPhases", "is-branch-known"),
+    where: at20("#scenarioPhases", "is-branch-known"),
     translation: "A phase starts after, or a judgement leads to, a phase of the same scenario, or a matter the plan is about. The one named is neither. Nothing was written."
   },
   MACHINE_CANNOT_JUDGE: {
     check: "C-124.36",
-    where: at19("checkpointRecord", "is-judge-member"),
+    where: at20("checkpointRecord", "is-judge-member"),
     translation: "Whether a checkpoint's condition was met is the group's own judgement. An assistant may not make it. Nothing was written."
   },
   CHECKPOINT_REFUSED: {
     check: "C-124.37",
-    where: at19("checkpointRecord", "is-checkpoint-named"),
+    where: at20("checkpointRecord", "is-checkpoint-named"),
     translation: "A judgement names a scenario of the plan, one of its phases that has a checkpoint, met or not_met, and a note of up to 500 characters. Nothing was written."
   },
   CHECKPOINT_NOT_DUE: {
     check: "C-124.38",
-    where: at19("checkpointRecord", "is-checkpoint-due"),
+    where: at20("checkpointRecord", "is-checkpoint-due"),
     translation: "That checkpoint is not due yet: its phase has not started, or its days have not passed. Nothing was written."
   },
   CHECKPOINT_JUDGED: {
     check: "C-124.39",
-    where: at19("checkpointRecord", "is-checkpoint-once"),
+    where: at20("checkpointRecord", "is-checkpoint-once"),
     translation: "That checkpoint has already been judged. Nothing was written."
   },
   /* ---- R18: starting an option ---- */
   MACHINE_CANNOT_START: {
     check: "C-124.40",
-    where: at19("optionStart", "is-start-member"),
+    where: at20("optionStart", "is-start-member"),
     translation: "Starting an option creates an action the group takes in the world, and only a member does that. Nothing was written."
   },
   OPTION_NOT_CHOSEN: {
     check: "C-124.41",
-    where: at19("optionStart", "is-start-chosen"),
+    where: at20("optionStart", "is-start-chosen"),
     translation: "Only an option the group has chosen is started. Choose it first. Nothing was written."
   },
   OPTION_STARTED: {
     check: "C-124.42",
-    where: at19("optionStart", "is-start-once"),
+    where: at20("optionStart", "is-start-once"),
     translation: "That option has already been started; the action it created is named. Nothing was written."
   },
   /* ---- R20: closing ---- */
   MACHINE_CANNOT_CLOSE_PLAN: {
     check: "C-124.43",
-    where: at19("planClose", "is-close-member"),
+    where: at20("planClose", "is-close-member"),
     translation: "Closing a plan is a member's act, with a reason. A plan never closes itself. Nothing was written."
   },
   /* ---- R21: the project's kind of work ---- */
   WORK_KIND_UNKNOWN: {
     check: "C-124.44",
-    where: at19("#workKindsCheck", "is-work-kind-known"),
+    where: at20("#workKindsCheck", "is-work-kind-known"),
     translation: "A project's kinds of work are drawn from: reporting, fixing, legal, oversight, other. Nothing was written."
   },
   MACHINE_CANNOT_SET_WORK_KIND: {
     check: "C-124.45",
-    where: at19("#workKindsCheck", "is-work-kind-member"),
+    where: at20("#workKindsCheck", "is-work-kind-member"),
     translation: "A project's kinds of work are set by an owner of the project. An automated credential cannot set them. Nothing was written."
   },
   /* ---- R30, R31, R34: the planning run ---- */
   PLAN_NOT_OF_PROJECT: {
     check: "C-124.46",
-    where: at19("planRunCheck", "is-plan-of-context"),
+    where: at20("planRunCheck", "is-plan-of-context"),
     translation: "A planning run works on a plan of the project it is opened over, and this plan is another project's. Nothing was written."
   },
   PROPOSAL_NO_RUN: {
     check: "C-124.47",
-    where: at19("#runGate", "is-proposal-run"),
+    where: at20("#runGate", "is-proposal-run"),
     translation: "An assistant's proposal names the planning run it was made under, one you can see. Nothing was written."
   },
   PROPOSAL_RUN_NOT_RUNNING: {
     check: "C-124.48",
-    where: at19("#runGate", "is-proposal-run-running"),
+    where: at20("#runGate", "is-proposal-run-running"),
     translation: "That planning run is no longer running, so it proposes nothing more. Nothing was written."
   },
   PROPOSAL_RUN_OTHER_PLAN: {
     check: "C-124.49",
-    where: at19("refuseRunOtherPlan", "is-run-of-plan"),
+    where: at20("refuseRunOtherPlan", "is-run-of-plan"),
     translation: "That run is not a planning run of this plan. Nothing was written."
   },
   PROPOSAL_BOUND_REACHED: {
     check: "C-124.50",
-    where: at19("#runGate", "is-proposal-bound"),
+    where: at20("#runGate", "is-proposal-bound"),
     translation: "That planning run has made every proposal it was allowed. Nothing was written."
   },
   PROPOSAL_NO_SOURCE: {
     check: "C-124.51",
-    where: at19("#sources", "is-proposal-sourced"),
+    where: at20("#sources", "is-proposal-sourced"),
     translation: "An assistant's proposal names what it rests on: findings, determinations, standards, consequences, plans or options you can see. One named is none of those here; one you may not see is answered as one that does not exist. Nothing was written."
   },
   PROPOSALS_CURSOR_REFUSED: {
     check: "C-124.52",
-    where: at19("planProposals", "is-cursor-given"),
+    where: at20("planProposals", "is-cursor-given"),
     translation: "That page marker was not given by this list. Ask for the first page again. Nothing was read."
   },
   /* ---- the record object (R27, R24): the plan's document ---- */
   MACHINE_CANNOT_WRITE_PLAN: {
     check: "C-124.53",
-    where: at19("check", "is-plan-doc-member"),
+    where: at20("check", "is-plan-doc-member"),
     translation: "An action plan's record is written by members' acts only. An automated credential cannot write it. Nothing was written."
   },
   PLAN_BY_ACT_ONLY: {
     check: "C-124.54",
-    where: at19("check", "is-plan-doc-act"),
+    where: at20("check", "is-plan-doc-act"),
     translation: "An action plan changes only through its own acts, so its history and what is read from it never disagree. Nothing was written."
   },
   PLAN_HISTORY_REWRITTEN: {
     check: "C-124.55",
-    where: at19("check", "is-plan-append-only"),
+    where: at20("check", "is-plan-append-only"),
     translation: "An action plan's history is never edited; each act adds to it. Nothing was written."
   },
   UNSPLICEABLE_PLAN: {
     check: "C-124.56",
-    where: at19("#append", "is-plan-spliceable"),
+    where: at20("#append", "is-plan-spliceable"),
     translation: "The plan's record cannot be extended in place. Nothing was written."
   },
   PLAN_PROVIDER_UNAVAILABLE: {
     check: "C-124.57",
-    where: at19("refuseProviderUnavailable", "is-provider-present"),
+    where: at20("refuseProviderUnavailable", "is-provider-present"),
     translation: "An action plan reads matters, actions and runs held by other parts of the record, and one of them is not on this instance yet, so the plan is not answered in part. Nothing was written."
   }
 });
@@ -119116,13 +120224,13 @@ var QueueProducers = class _QueueProducers {
   }
   static DAY_MS = 864e5;
 };
-var OF8 = /* @__PURE__ */ new WeakMap();
+var OF9 = /* @__PURE__ */ new WeakMap();
 function queueProducersOf(ctx, deps = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let p = OF8.get(storage);
+  let p = OF9.get(storage);
   if (!p) {
     p = new QueueProducers({ host: ctx, storage, deps: { ...deps || {} } });
-    OF8.set(storage, p);
+    OF9.set(storage, p);
   }
   return p;
 }
@@ -119410,21 +120518,21 @@ __export(checks_exports37, {
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
   queueRefusal: () => queueRefusal
 });
-var at20 = (fn, region) => `src/queue/index.mjs ${fn} > ${region}`;
+var at21 = (fn, region) => `src/queue/index.mjs ${fn} > ${region}`;
 var QUEUE_MINT_CHECKS = Object.freeze({
   NO_CLASS: Object.freeze({
     check: "C-31.1",
-    where: at20("queueFeed", "is-queue-mint"),
+    where: at21("queueFeed", "is-queue-mint"),
     translation: "Your list could not be assembled: something on it does not say what sort of item it is, and showing it without that would put an entry in front of you that nobody can act on. Nothing has been lost and nothing about the record has changed \u2014 this is a fault on our side, not something you did."
   }),
   NO_SUCH_KIND: Object.freeze({
     check: "C-31.2",
-    where: at20("queueFeed", "is-queue-mint"),
+    where: at21("queueFeed", "is-queue-mint"),
     translation: "Your list could not be assembled: something on it is described in a word this record does not know, so there is no sentence to show you in place of it. Rather than showing you a line you could not read, the list refuses whole. Nothing has been lost."
   }),
   KIND_MISCLASSED: Object.freeze({
     check: "C-31.3",
-    where: at20("queueFeed", "is-queue-mint"),
+    where: at21("queueFeed", "is-queue-mint"),
     translation: "Your list could not be assembled: something on it is filed one way and described another, and the difference decides whether setting it aside is a private choice of yours or a change to the record everyone shares. That is not a difference to guess at, so the list refuses until it is right. Nothing has been lost."
   })
 });
@@ -119432,21 +120540,21 @@ var QUEUE_ACT_CHECKS = Object.freeze({
   /* REC-64 / C-33.27: an OBLIGATION is never muted (R19, R31). */
   KIND_NOT_PERSONAL: Object.freeze({
     check: "C-33.27",
-    where: at20("queueMute", "is-mute-class"),
+    where: at21("queueMute", "is-mute-class"),
     translation: "Setting this aside would be a change everybody sees rather than a private choice of yours, and that is a decision the group takes together rather than one this control makes. The kinds you can quiet for yourself are listed beside the refusal."
   }),
   /* REC-205 / C-33.44: a CONDITION or an OBLIGATION named to the dispose act (R28). The translation names the act that
      does reach the item, since a member holding a selection needs the next move. N301: what the record NOTICED. */
   CLASS_NOT_DISPOSED: Object.freeze({
     check: "C-33.44",
-    where: at20("proposeDispose", "is-dispose-class"),
+    where: at21("proposeDispose", "is-dispose-class"),
     translation: "This is not something the record disposes of. Deferring and dismissing are decisions about something the record NOTICED \u2014 its own question \u2014 and this item is a different kind of thing: a CONDITION is a fact about our machinery that you silence for yourself, and an OBLIGATION is work a named person owes and leaves every list when it is resolved. Nothing about it was changed, and it is still in your list. The answer names the act that does reach it."
   }),
   /* R29 (D-623) / C-33.50: the project arm with no project, and the bridge's FINDING key (R27, R28). One code, one
      sentence at both sites: setting a noticed item aside is one team's decision, and the team was not named. */
   NO_PROJECT_SCOPE: Object.freeze({
     check: "C-33.50",
-    where: at20("#noProjectScope", "is-dispose-scope"),
+    where: at21("#noProjectScope", "is-dispose-scope"),
     translation: "Setting this aside is a decision one project takes for its own list, and no project was named for it. Choose the project you are acting for (the item lists the ones it is filed under) and ask again. Nothing was written, and no team's list moved."
   })
 });
@@ -121177,13 +122285,13 @@ var Queue = class _Queue {
     };
   }
 };
-var OF9 = /* @__PURE__ */ new WeakMap();
+var OF10 = /* @__PURE__ */ new WeakMap();
 function queueOf(ctx, deps = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let q7 = OF9.get(storage);
+  let q7 = OF10.get(storage);
   if (!q7) {
     q7 = new Queue({ host: ctx, storage, deps: { ...deps || {} } });
-    OF9.set(storage, q7);
+    OF10.set(storage, q7);
     const record = deps && deps.record || recordOf(ctx);
     record.declarePurge("queue", [
       { name: "queue_state", keys: ["case_id"] },
@@ -122014,933 +123122,6 @@ ${CALIBRATION_SCHEMA}
 
 ${HOST_GOVERNOR_SCHEMA}
 `;
-
-// src/credentials/schema.mjs
-var CREDENTIALS_SCHEMA = `
--- Credentials live here rather than in Worker secrets, because a Worker cannot
--- rewrite its own secret. ADMIN_TOKEN is a bootstrap credential used once; the
--- real password is chosen by the operator and only its hash is stored. Losing
--- it is recoverable by overwriting ADMIN_TOKEN in the dashboard, which returns
--- the instance to an unclaimed state. A member's password is stored under the
--- role 'member:<member_id>'.
-CREATE TABLE IF NOT EXISTS credentials (
-  role       TEXT PRIMARY KEY,
-  salt       TEXT NOT NULL,
-  hash       TEXT NOT NULL,
-  iterations INTEGER NOT NULL,
-  updated    TEXT NOT NULL
-);
-
--- Sessions are DO-backed so a password login can be exchanged for a bearer
--- token without the password travelling on every later request.
-CREATE TABLE IF NOT EXISTS sessions (
-  token   TEXT PRIMARY KEY,
-  role    TEXT NOT NULL,
-  expires INTEGER NOT NULL,
-  created TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS sessions_expires ON sessions(expires);
-
--- One row, id=1. Records that the bootstrap credential has been spent.
-CREATE TABLE IF NOT EXISTS bootstrap (
-  id          INTEGER PRIMARY KEY CHECK (id = 1),
-  consumed_at TEXT,
-  token_fp    TEXT
-);
-
--- Registered signing keys, the plane's projection of the member key
--- registry. key_b64 is the bare base64 of the OpenSSH wire public key, the
--- exact bytes an SSHSIG embeds, so matching is byte equality. member_id names
--- a member of membership's roster, read through its services (R8, R11).
-CREATE TABLE IF NOT EXISTS signers (
-  key_b64   TEXT PRIMARY KEY,
-  member_id TEXT NOT NULL,
-  comment   TEXT,
-  status    TEXT NOT NULL DEFAULT 'active',
-  added     TEXT NOT NULL,
-  -- REC-159: the actor whose act last set the key's status; NULL reads 'not recorded'.
-  status_by TEXT,
-  -- R8 (N364, DEC-80 item 4): how the key was registered, 'admin' by an administrator (R6) or 'self' by its own
-  -- member from a signed-in session (R9), and who registered it. A row written before these columns was
-  -- registered by R6, the only door there was, so a NULL origin reads 'admin'; NULL registered_by reads
-  -- 'not recorded'. Neither is back-filled. attests never reads origin (R19).
-  origin    TEXT,
-  registered_by TEXT
-);
-CREATE INDEX IF NOT EXISTS signers_member ON signers(member_id);
-
--- PL-11 / IS-5 / D-199: THE ai CREDENTIAL'S DECLARED TASK SCOPE, AND THE
--- WHOLE REASON IT IS A TABLE RATHER THAN A BINDING.
---
--- The four token classes -- admin, member, probe, daemon -- are ENV BINDINGS:
--- an operator sets a value in the hosting dashboard and the plane compares
--- against it, a settings row by another name, which D-199 (2) rules out for
--- this one class (DEC-17's reasoning: a settings row "would be a way to change
--- the standard with nothing to read afterwards"). A presented ai token resolves
--- HERE, against a row a member wrote: who minted it, when, for whom, and what
--- it may do. Amending the reach is another row with a name against it.
---
--- THE VALUE IS NEVER STORED. 'token_id' is the IDENTITY, a short public name
--- the record can print, an act can cite and a member can revoke; 'secret_sha'
--- is the SHA-256 of the presented value, which a lookup compares.
---
--- BOTH PRINCIPAL KINDS ARE LEGITIMATE AND CARRY DIFFERENT ACCOUNTABILITY, which
--- is why 'principal_kind' is not nullable (D-199 (4), DEC-55 det 4): an
--- ORGANISATION-scoped key acts for the group, a MEMBER-scoped key is
--- attributable to that member. 'principal' IS THE VIEWER the plane stamps on
--- this credential's reads, so who is behind it and what it may read are one
--- string.
---
--- 'scope_writes' is a JSON array of op names, arriving already judged at the
--- mint edge (the control plane's ops table is the only thing that knows which
--- ops a member reaches); the declared writes narrow that floor, never widen it.
---
--- NOT PURGED (R18): this is identity, and a whole-store purge that cleared it
--- would revoke every agent's authority as a side effect of resetting the corpus.
-CREATE TABLE IF NOT EXISTS ai_credentials (
-  token_id        TEXT PRIMARY KEY, -- the public IDENTITY of the credential. NEVER its value
-  secret_sha      TEXT NOT NULL,    -- SHA-256 of the presented value. NEVER its value
-  principal_kind  TEXT NOT NULL,    -- organisation | member. D-199 (4): an act says which
-  principal       TEXT NOT NULL,    -- the stamped viewer: class:ai for an org key, member:<id> for a member key
-  task_scope      TEXT NOT NULL,    -- the declared scope name, e.g. investigative
-  scope_writes    TEXT NOT NULL,    -- JSON array of op names this scope may MUTATE. reads are the floor
-  scope_note      TEXT NOT NULL,    -- what the authoring member said this credential is for
-  minted_by       TEXT NOT NULL,    -- the MEMBER who minted it. D-199 (3): never a machine
-  minted_at       TEXT NOT NULL,
-  revoked_at      TEXT,
-  revoked_by      TEXT,
-  -- D-463: the namespace this credential is confined to for its whole life ('scratch'), or NULL for one that is
-  -- not confined. It arrives already judged at the mint edge (the control plane owns the namespaces). NULLABLE AND
-  -- NEVER BACK-FILLED: a credential minted before this column existed was minted unconfined, and NULL is that fact.
-  confined_to     TEXT
-);
-CREATE INDEX IF NOT EXISTS ai_credentials_secret ON ai_credentials(secret_sha);
-CREATE INDEX IF NOT EXISTS ai_credentials_principal ON ai_credentials(principal_kind, principal);
-`;
-var CREDENTIALS_ADDITIVE_COLUMNS = [
-  ["signers", "status_by", "TEXT"],
-  ["signers", "origin", "TEXT"],
-  ["signers", "registered_by", "TEXT"],
-  ["ai_credentials", "confined_to", "TEXT"]
-];
-var CREDENTIALS_EXEMPT_TABLES = ["credentials", "sessions", "bootstrap", "signers", "ai_credentials"];
-
-// src/credentials/checks.mjs
-var at21 = (fn, region) => `src/credentials/index.mjs ${fn} > ${region}`;
-var SIGNER_ENROLMENT_CHECKS2 = Object.freeze({
-  SIGNER_MEMBER_NOT_ENROLLED: Object.freeze({
-    check: "C-63.1",
-    where: at21("#signerMemberBar", "is-signer-member-attesting"),
-    translation: "That person has not enrolled yet. A signing key belongs to a member who has taken up their invitation and chosen a handle; until then this instance would refuse anything signed with it, so registering it now would put a key on the roster that cannot sign. Nothing was written. Send them their invitation link, and register the key once they have enrolled."
-  }),
-  SIGNER_MEMBER_NOT_ACTIVE: Object.freeze({
-    check: "C-63.2",
-    where: at21("#signerMemberBar", "is-signer-member-attesting"),
-    translation: "That member\u2019s membership is not active, so this instance would refuse anything signed with their key. Nothing was written. Reinstate the member first if they should be able to sign again."
-  })
-});
-var AI_CREDENTIAL_CHECKS = Object.freeze({
-  /* D-199 (3): "If an agent can request a broader token, the scoping is theatre." */
-  AI_CREDENTIAL_MINT_NOT_A_MEMBER: Object.freeze({
-    check: "C-29.1",
-    where: at21("aiCredentialMint", "is-ai-credential-mint"),
-    translation: "Only a named person signed in to this instance can create an agent credential. Deciding what an automated worker is allowed to reach is a judgement somebody has to be accountable for, so an automated worker cannot make it \u2014 not even about itself."
-  }),
-  /* D-199 (4) / DEC-55 det 4: an act says which principal stands behind it. */
-  AI_CREDENTIAL_PRINCIPAL_UNSTATED: Object.freeze({
-    check: "C-29.2",
-    where: at21("aiCredentialMint", "is-ai-credential-mint"),
-    translation: "An agent credential has to say who stands behind it: the organisation as a whole, or one named member. The two carry different accountability and they see different things, so the record will not hold one that says neither."
-  }),
-  /* The identity is what acts cite, so it is never rebound. */
-  AI_CREDENTIAL_IDENTITY_TAKEN: Object.freeze({
-    check: "C-29.3",
-    where: at21("aiCredentialMint", "is-ai-credential-mint"),
-    translation: "That name already belongs to an agent credential on this instance. Acts in the record cite the name, so binding it to something new would quietly change who did work that has already been done. Retire the old one or choose another name."
-  }),
-  /* The row carries `revoked_by`, and a machine name there would record a decision nobody in the group made. */
-  AI_CREDENTIAL_REVOKE_NOT_A_MEMBER: Object.freeze({
-    check: "C-29.4",
-    where: at21("aiCredentialRevoke", "is-ai-credential-revoke"),
-    translation: "Withdrawing an agent credential is recorded against the person who withdrew it, so a named member has to be the one doing it. An automated caller has no name to put there and the record would then show a decision nobody made."
-  }),
-  AI_CREDENTIAL_UNKNOWN: Object.freeze({
-    check: "C-29.5",
-    where: at21("aiCredentialRevoke", "is-ai-credential-revoke"),
-    translation: "There is no agent credential by that name on this instance, so nothing was withdrawn. Being told that plainly matters more than it looks: believing you have taken an authority away when you have not is the worse of the two outcomes."
-  }),
-  /* R14: a member-scoped credential's principal is the member who mints it. */
-  AI_CREDENTIAL_PRINCIPAL_NOT_THE_MINTER: Object.freeze({
-    check: "C-29.11",
-    where: at21("aiCredentialMint", "is-ai-credential-mint"),
-    translation: "A credential that acts for one member acts for the member who creates it, and nobody else. You named another member, and nobody can authorise an agent in someone else's name: it would see what they see and its work would be recorded as theirs. Nothing was created. The member it should act for can create it themselves."
-  })
-});
-var CREDENTIALS_CHECKS = Object.freeze({
-  BAD_KEY: Object.freeze({
-    check: "C-96.8",
-    where: at21("signerAdd", "is-signer-key-shape"),
-    translation: "That is not a public key this group can register. It takes the base64 part of an ssh-ed25519 public key, the part that begins AAAA. Nothing was written."
-  }),
-  SIGNER_KEY_HELD_BY_ANOTHER: Object.freeze({
-    check: "C-96.15",
-    where: at21("signerRegisterOwn", "is-signer-key-held"),
-    translation: "This key is registered to another member, so it cannot be yours. Make a new key in this browser. Nothing was changed."
-  }),
-  SIGNER_KEY_REVOKED: Object.freeze({
-    check: "C-96.16",
-    where: at21("signerRegisterOwn", "is-signer-key-revoked"),
-    translation: "This key was revoked, so it cannot be registered again. Make a new key in this browser, or ask an administrator. Nothing was changed."
-  }),
-  MACHINE_CANNOT_REGISTER_KEY: Object.freeze({
-    check: "C-96.17",
-    where: at21("signerRegisterOwn", "is-machine-register-key"),
-    translation: "A member registers their own signing key, from their own signed-in session. The credential that asked here has no member behind it: it is an automated one, the operator's token, or a call with nobody signed in. Sign in as yourself to register your key, or ask an administrator to register one for you. Nothing was changed."
-  })
-});
-
-// src/credentials/index.mjs
-var stampSecond3 = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
-var ROOT = Membership.ROOT_ADMIN;
-var Credentials = class _Credentials {
-  constructor({ sql, core = null, membership = null } = {}) {
-    this.sql = sql;
-    this.core = core;
-    this.membership = membership;
-  }
-  #rows(q7, ...a) {
-    return [...this.sql.exec(q7, ...a)];
-  }
-  #one(q7, ...a) {
-    const r = this.#rows(q7, ...a);
-    return r.length ? r[0] : null;
-  }
-  /* ===== START: the seam with membership (K637) =====
-   *
-   * R16: one listener on membership's revocation notice (its R79). Each time a member becomes `revoked` (a carried
-   * removal, membership R8; a revocation, its R20), every session of theirs ends and every signer key registered to
-   * them is revoked, named for the act's actor, inside the revoking act (the notice is called after the act's writes,
-   * in the caller's transaction). Membership ignores a listener's answer and survives its throw; a session left open
-   * by a failure here holds no capability (membership R92 resolves a revoked member to none at every read) and a key
-   * left `active` does not attest (R8 asks the member's status), so a failure is never a credential kept.
-   * R17: the one fact `claimed()`, read by membership's R64 and R86 through its R94. Registered once; each answer is
-   * membership's R81 (a second registration is refused, so `start` is idempotent through `credentialsOf`).
-   * R20 (K774): `setPassword` registered as the setter membership's `enroll` calls inside its own act (its R95), so a
-   * member's password is set in the one act that enrols them, as before the split, and membership stores none. The
-   * setter is asked `{role, password}` and answers R3's `{ok, role}` (a promise: the derivation is asynchronous). Until
-   * membership offers R95 (its later work in this layer, K774) there is nothing to register with, and `password` reads
-   * null. */
-  start() {
-    const revoked = this.membership.onRevoked("credentials", (notice) => this.#memberRevoked(notice));
-    const claimed = this.membership.registerClaimed("credentials", () => this.claimed());
-    const password = typeof this.membership.registerPasswordSetter === "function" ? this.membership.registerPasswordSetter(({ role, password: password2 } = {}) => this.setPassword({ role, password: password2 })) : null;
-    return { revoked, claimed, password };
-  }
-  #memberRevoked({ memberId, by = null } = {}) {
-    if (typeof memberId !== "string" || memberId === "") return;
-    this.sql.exec(`DELETE FROM sessions WHERE role=?`, `member:${memberId}`);
-    this.sql.exec(`UPDATE signers SET status='revoked', status_by=? WHERE member_id=?`, by ?? null, memberId);
-  }
-  /* R17: true exactly when the founder's credential is held, which R1's claim writes and a re-armed claim replaces.
-     Writes nothing and never throws: a store that cannot be read answers not claimed. */
-  claimed() {
-    try {
-      return !!this.#one(`SELECT role FROM credentials WHERE role=?`, ROOT);
-    } catch {
-      return false;
-    }
-  }
-  /* This module's tables, at every boot, idempotent: the additive columns an older store lacks, then every table and
-     index created if absent, then R18's purge exemption declared. Run by the host inside its boot. */
-  migrate() {
-    const cols = (t) => [...this.sql.exec(`PRAGMA table_info(${t})`)].map((r) => r.name);
-    for (const [table2, column, decl] of CREDENTIALS_ADDITIVE_COLUMNS) {
-      const have = cols(table2);
-      if (have.length && !have.includes(column)) this.sql.exec(`ALTER TABLE ${table2} ADD COLUMN ${column} ${decl}`);
-    }
-    const bare2 = CREDENTIALS_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
-    for (const st of bare2.split(";")) {
-      const t = st.trim();
-      if (t) this.sql.exec(t);
-    }
-    this.declareTables();
-  }
-  /* R18, through record-core's `declarePurge` (its R21): every table here is exempt. Each is declared on its own so
-     that, while membership still declares a table this module took from it (until membership's deletion drops it from
-     `MEMBERSHIP_EXEMPT_TABLES`, K637), that table stays exempt under membership's declaration and the rest are this
-     module's. Any other refusal is thrown: a purge that silently cleared a credential would revoke authority as a side
-     effect of resetting the corpus. */
-  declareTables() {
-    if (this.#declared) return false;
-    for (const name of CREDENTIALS_EXEMPT_TABLES) {
-      const answer = this.core.declarePurge("credentials", [], { exempt: [name] });
-      if (answer && answer.ok === false && !(answer.reason === "TABLE_DECLARED" && answer.declaredBy === "membership"))
-        throw new Error(`credentials: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
-    }
-    this.#declared = true;
-    return true;
-  }
-  #declared = false;
-  /* ===== SIGN-IN AND SESSIONS (R1–R5) =====
-   *
-   * A Worker cannot rewrite its own secret, so ADMIN_TOKEN is a bootstrap credential rather than the credential. It is
-   * spent once, exchanging itself for an operator-chosen password whose hash lives here. Recovery is to overwrite
-   * ADMIN_TOKEN in the dashboard, which re-arms the claim. That makes the group's hosting login the root of trust,
-   * which is the only thing they reliably still have when a password is lost. */
-  static #enc = new TextEncoder();
-  static async #derive(password, salt, iterations) {
-    const key = await crypto.subtle.importKey(
-      "raw",
-      _Credentials.#enc.encode(password),
-      "PBKDF2",
-      false,
-      ["deriveBits"]
-    );
-    const bits = await crypto.subtle.deriveBits(
-      { name: "PBKDF2", hash: "SHA-256", salt: _Credentials.#enc.encode(salt), iterations },
-      key,
-      256
-    );
-    return [...new Uint8Array(bits)].map((b) => b.toString(16).padStart(2, "0")).join("");
-  }
-  static #rand(n = 32) {
-    return [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
-  }
-  /* REC-41: A FIXED, PUBLISHED, DELIBERATELY WORTHLESS SALT, and the one place a refusal pays what an acceptance pays.
-     Collapsing the sign-in refusals into one code and one sentence (R4) is defeated by a stopwatch if the arms do not
-     COST the same: an arm that refuses without a password check would answer in microseconds while the wrong-password
-     arm runs PBKDF2 at 100,000 iterations, so "is this an active member" would be answerable with a timer. Every such
-     arm awaits this first. It equalises the DOMINANT cost and is not a proof of constant time (the lookup and the
-     compare still differ by microseconds); it removes the measurement an ordinary caller can make over the internet.
-     The salt guards nothing and is never stored; a real credential's salt is minted per password by `setPassword`. */
-  static #TIMING_SALT = "bio-login-timing-equaliser";
-  static async #payLoginCost(password) {
-    await _Credentials.#derive(String(password ?? ""), _Credentials.#TIMING_SALT, 1e5);
-  }
-  /* R2 (REC-41, closing D-188). `op=bootstrap` is reached by any stranger, and it answers ONE question, the one the
-     setup page asks before it can show anything: has this instance been claimed, and is there a live bootstrap
-     credential to claim it with. It no longer answers `roles` (every role holding a credential and when its password
-     was set: a roster handed to anyone in one unauthenticated request), and nothing consumed it; the credentials table
-     is not read here at all, so there is no roster in this answer for a later refactor to leak. `consumedAt` stays: it
-     is the instant the INSTANCE was claimed, a fact about this copy of the software that names nobody. */
-  bootstrapState(tokenFp = null) {
-    const b = this.#one(`SELECT consumed_at, token_fp FROM bootstrap WHERE id=1`);
-    const spent = !!(b && b.consumed_at);
-    const rearmed = spent && tokenFp !== null && b.token_fp !== tokenFp;
-    return {
-      claimed: spent && !rearmed,
-      rearmed,
-      consumedAt: rearmed ? null : b?.consumed_at || null
-    };
-  }
-  /* R1: spending the bootstrap credential. Refused once spent, so a leaked ADMIN_TOKEN cannot silently re-claim a
-     running instance; a replaced one (a different fingerprint) re-arms it. */
-  async claim({ role = ROOT, password, tokenFp = null } = {}) {
-    if (typeof password !== "string" || password.length < 12)
-      return { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 };
-    const st = this.bootstrapState(tokenFp);
-    if (st.claimed)
-      return { ok: false, reason: "ALREADY_CLAIMED", consumedAt: st.consumedAt };
-    await this.setPassword({ role, password });
-    const now = (/* @__PURE__ */ new Date()).toISOString();
-    this.sql.exec(`INSERT INTO bootstrap (id, consumed_at, token_fp) VALUES (1, ?, ?)
-                   ON CONFLICT(id) DO UPDATE SET consumed_at=excluded.consumed_at,
-                     token_fp=excluded.token_fp`, now, tokenFp);
-    return { ok: true, role, consumedAt: now };
-  }
-  /* R3: a salted, derived hash for `role`, replacing any earlier one; never the password. Who may call it is the
-     control plane's rule (`op=setpassword`). */
-  async setPassword({ role, password, iterations = 1e5 } = {}) {
-    const salt = _Credentials.#rand(16);
-    const hash = await _Credentials.#derive(password, salt, iterations);
-    this.sql.exec(
-      `INSERT INTO credentials (role, salt, hash, iterations, updated) VALUES (?,?,?,?,?)
-       ON CONFLICT(role) DO UPDATE SET salt=excluded.salt, hash=excluded.hash,
-         iterations=excluded.iterations, updated=excluded.updated`,
-      role,
-      salt,
-      hash,
-      iterations,
-      (/* @__PURE__ */ new Date()).toISOString()
-    );
-    return { ok: true, role };
-  }
-  /* R4 (REC-39, REC-41): THE WORDS A REFUSED SIGN-IN IS GIVEN, in one place, because one refusal answers every arm: no
-     credential under the role, a member who is not active, and a stored credential the password does not derive. Two
-     sentences would tell the arms apart at a glance, and telling them apart is what the collapse prevents: with
-     `op=bootstrap`'s roster closed, a distinguishable refusal is an unmetered anonymous oracle over who holds a
-     credential. D-57's rule shapes the sentence: a refusal states what THE MECHANISM FOUND and never makes a claim about
-     who is asking. It says "active" rather than "no such role" because the obvious wording is false for the revoked
-     member, whose credential row is still there; and it says that it does not separate the arms, rather than leaving a
-     reader to assume it does. Reversing it costs two lines (the arms are still separate below); the honest way back is
-     a rate limit plus an authenticated diagnostic, not a louder anonymous refusal. */
-  static LOGIN_REFUSAL_DETAIL = {
-    SIGN_IN_REFUSED: "no session was issued and nothing was written. Either this instance holds no active credential under that role \u2014 a role that was never registered and one whose membership is no longer active are the same answer here \u2014 or a credential is stored and the password supplied does not derive its stored hash. The password itself is never kept, only a salted derivation of it, so that is the only comparison there is to make. Which of those happened, the record does not say: it is one answer deliberately, so that a refusal cannot be used to find out which roles hold a credential on this instance."
-  };
-  static #refused() {
-    return { ok: false, reason: "SIGN_IN_REFUSED", detail: _Credentials.LOGIN_REFUSAL_DETAIL.SIGN_IN_REFUSED };
-  }
-  /* R4: exchanges a password for a bearer token, so the password does not travel on every later request. A member's
-     sign-in is refused unless the member is active (membership R68's standing), so revocation closes the front door as
-     well as the sessions; that arm never touches a password, so it pays the same cost first and answers the same
-     words, byte for byte. */
-  async login({ role = ROOT, password, ttlSeconds = 43200 } = {}) {
-    if (typeof role === "string" && role.startsWith("member:")) {
-      const m = this.#memberFacts(role.slice(7));
-      if (!m || m.status !== "active") {
-        await _Credentials.#payLoginCost(password);
-        return _Credentials.#refused();
-      }
-    }
-    const c = this.#one(`SELECT salt, hash, iterations FROM credentials WHERE role=?`, role);
-    if (!c) {
-      await _Credentials.#payLoginCost(password);
-      return _Credentials.#refused();
-    }
-    const got = await _Credentials.#derive(String(password ?? ""), c.salt, c.iterations);
-    if (got !== c.hash) return _Credentials.#refused();
-    const token = _Credentials.#rand(32);
-    const expires = Date.now() + ttlSeconds * 1e3;
-    this.sql.exec(`DELETE FROM sessions WHERE expires < ?`, Date.now());
-    this.sql.exec(
-      `INSERT INTO sessions (token, role, expires, created) VALUES (?,?,?,?)`,
-      token,
-      role,
-      expires,
-      (/* @__PURE__ */ new Date()).toISOString()
-    );
-    return { ok: true, role, token, expires };
-  }
-  /* R5: what a session is, and what it may do (Membership Architecture v2 §5), resolved HERE at every read through
-     membership's `sessionRights` (its R92) rather than cached on the session row: a capability change or a revocation
-     takes effect on the next request, not on the next login. */
-  session(token) {
-    if (!token) return null;
-    const s = this.#one(`SELECT role, expires FROM sessions WHERE token=?`, token);
-    if (!s) return null;
-    if (s.expires < Date.now()) {
-      this.sql.exec(`DELETE FROM sessions WHERE token=?`, token);
-      return null;
-    }
-    const r = this.membership.sessionRights(s.role) || {};
-    return {
-      role: s.role,
-      expires: s.expires,
-      capabilities: r.capabilities ?? [],
-      administer: r.administer === true,
-      member: r.member ?? null,
-      handle: r.handle ?? null,
-      rootOfTrust: r.rootOfTrust === true
-    };
-  }
-  /* membership R68: a member's standing, or null. Never throws here: an unreadable answer is no member. */
-  #memberFacts(memberId) {
-    if (typeof memberId !== "string" || memberId === "") return null;
-    try {
-      return this.membership.memberFacts(memberId) || null;
-    } catch {
-      return null;
-    }
-  }
-  /* ===== SIGNING KEYS (R6–R11, R19) ===== */
-  /* REC-159 — §4.9's custodial acts are refused before anything is looked up, so a caller with no standing learns
-   * nothing about the member or key it named. `by` is the control plane's STAMP. Three shapes, three answers:
-   *   - a member's id (a signed-in session): admitted only as one of membership's administrators (its R86), else
-   *     NOT_AN_ADMIN through membership's `notAnAdmin` (its R84), exactly as membership R12 admits;
-   *   - `class:<cls>`, the operator's bearer (BOB #22's ruling): the plane decides which classes reach here, and the
-   *     record names the credential;
-   *   - absent, a route with no plane in front of it: nothing is attributed, and the row records `not recorded`.
-   * Answers null when the act may proceed. */
-  #custodialBar(by, act) {
-    if (by === null || by === void 0 || by === "") return null;
-    if (String(by).startsWith(MACHINE_CLASS_PREFIX)) return null;
-    if (this.membership.activeAdmins().includes(by)) return null;
-    return notAnAdmin(by, act);
-  }
-  /* REC-159: the stored actor, or the stated absence of one. */
-  static #statusBy(v) {
-    return typeof v === "string" && v !== "" ? v : "not recorded";
-  }
-  /* R8, R11, R19 (D-158) — ONE PREDICATE, AND IT IS WHAT KEEPS THE ROSTER AND THE GATE FROM DISAGREEING. A key attests
-   * exactly when the key is `active` and its member is `active`; `origin` is never read (R19). `signerList` projects it
-   * as `attests` and `attestingKeys` filters by it, so the roster can never report a key `op=ratify` would refuse:
-   * two copies of the rule and a third reader that never asked it is what once let `op=signerlist` report `active` for
-   * a key the gate answered `SIG_UNKNOWN_KEY`. The member's status is membership's fact (its R68), never a join on
-   * its table. */
-  static #attests(keyStatus, memberStatus) {
-    return keyStatus === "active" && memberStatus === "active";
-  }
-  /* D-158 — THE WRITE HALF: a key is registered only to a member who can attest, so the roster tells the truth and the
-   * gate is not relaxed (relaxing it would widen an authority: a signature attesting in the name of a roster slot no
-   * person has taken up). TWO CODES, because there are two facts: a member with no handle has never enrolled; one with
-   * a handle whose status is not `active` is not standing. The answer carries the stored status and the enrolment fact
-   * beside the code. Answers null when the member may attest. */
-  #signerMemberBar(memberId) {
-    const m = this.#memberFacts(memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
-    if (m.status === "active") return null;
-    const enrolled = typeof m.handle === "string" && m.handle !== "";
-    const refusal20 = (code, detail) => {
-      const row2 = SIGNER_ENROLMENT_CHECKS2[code];
-      return {
-        ok: false,
-        reason: code,
-        code,
-        check: row2.check,
-        translation: row2.translation,
-        detail,
-        memberId,
-        member_status: m.status,
-        enrolled
-      };
-    };
-    if (!enrolled)
-      return refusal20(
-        "SIGNER_MEMBER_NOT_ENROLLED",
-        `${memberId} has not enrolled: status '${m.status}', no handle chosen. op=ratify weighs a signature against the member's own standing, so a key registered now would sit on the roster as one this instance would refuse. Nothing was written.`
-      );
-    return refusal20(
-      "SIGNER_MEMBER_NOT_ACTIVE",
-      `${memberId} is on the roster with status '${m.status}' rather than 'active'. op=ratify weighs a signature against the member's own standing and would refuse this one. Nothing was written.`
-    );
-  }
-  /* The shape R6 and R9 both take: the base64 field of an ssh-ed25519 public key (the OpenSSH wire bytes, which an
-     Ed25519 WebCrypto key exports to as well; `sshsig.mjs` verifies either). One predicate, so the two doors cannot
-     disagree about what a key is. */
-  static #keyShaped(keyB64) {
-    return typeof keyB64 === "string" && /^AAAA[A-Za-z0-9+/=]+$/.test(keyB64);
-  }
-  /* R6: an administrator registers a key for a member. Registering a known key rebinds it and makes it `active`, never
-     a second row; `origin` 'admin' and `registered_by` the stamped actor (NULL reads `not recorded`). */
-  signerAdd({ keyB64, memberId, comment, by = null } = {}) {
-    const barCust = this.#custodialBar(by, "registering a signing key");
-    if (barCust) return barCust;
-    const row2 = CREDENTIALS_CHECKS.BAD_KEY;
-    if (!_Credentials.#keyShaped(keyB64))
-      return {
-        ok: false,
-        reason: "BAD_KEY",
-        code: "BAD_KEY",
-        check: row2.check,
-        translation: row2.translation,
-        detail: "expected the base64 field of an ssh-ed25519 public key"
-      };
-    const barAdd = this.#signerMemberBar(memberId);
-    if (barAdd) return barAdd;
-    this.sql.exec(
-      `INSERT INTO signers (key_b64,member_id,comment,status,added,status_by,origin,registered_by)
-       VALUES (?,?,?,'active',?,?,'admin',?)
-       ON CONFLICT(key_b64) DO UPDATE SET member_id=excluded.member_id,
-         comment=excluded.comment, status='active', status_by=excluded.status_by,
-         origin='admin', registered_by=excluded.registered_by`,
-      keyB64,
-      memberId,
-      comment ?? null,
-      (/* @__PURE__ */ new Date()).toISOString(),
-      by || null,
-      by || null
-    );
-    return { ok: true, keyB64, memberId, by: _Credentials.#statusBy(by) };
-  }
-  /* ===== R9, R10, R19 (N364; DEC-80 item 4, Bob's ruling K509 (2)) — A MEMBER REGISTERS THEIR OWN KEY =====
-   *
-   * The key is made in the member's own browser, never by another, and each use is confirmed on the device (the
-   * interface's to keep; the plane cannot test it). From a signed-in session the member registers its public half
-   * here, and it attests exactly as an administrator-registered key does (R19). What keeps it accountable is that every
-   * administrator is told (`notified`, membership R86's list at this instant, and the key's row, which the feed's
-   * notice reads: N375, K535) and any of them can revoke the key (R7).
-   *
-   * THE ORDER, each step the requirement's: who is asking (a machine credential, the operator's bearer or no stamp
-   * has no member to register for: C-96.17); the key's shape (R6's answer, relayed from R6's own region so C-96.8
-   * keeps its one site); the member's standing (R6's bar); and whether ANOTHER member holds the key. A held key is
-   * never rebound, and the refusal names no one. A key `by` already holds and that is active answers `existed: true`,
-   * unchanged; one `by` holds that was revoked is refused and stays revoked (K535): only an administrator re-activates
-   * a key (R7). */
-  signerRegisterOwn({ keyB64, comment = null, by = null } = {}) {
-    if (by === null || by === void 0 || by === "" || isMachineIdentity(by)) {
-      const row2 = CREDENTIALS_CHECKS.MACHINE_CANNOT_REGISTER_KEY;
-      return {
-        ok: false,
-        reason: "MACHINE_CANNOT_REGISTER_KEY",
-        code: "MACHINE_CANNOT_REGISTER_KEY",
-        check: row2.check,
-        translation: row2.translation,
-        by: by || null,
-        detail: "a member registers their own signing key from their own signed-in session. A machine credential, the operator's bearer and an unstamped call have no member behind them to hold one; an administrator registers a key for a member with op=signeradd. Nothing was written."
-      };
-    }
-    if (!_Credentials.#keyShaped(keyB64)) return this.signerAdd({ keyB64 });
-    const bar = this.#signerMemberBar(by);
-    if (bar) return bar;
-    const held = this.#one(`SELECT member_id, status, origin, registered_by FROM signers WHERE key_b64=?`, keyB64);
-    if (held && held.member_id !== by) {
-      const row2 = CREDENTIALS_CHECKS.SIGNER_KEY_HELD_BY_ANOTHER;
-      return {
-        ok: false,
-        reason: "SIGNER_KEY_HELD_BY_ANOTHER",
-        code: "SIGNER_KEY_HELD_BY_ANOTHER",
-        check: row2.check,
-        translation: row2.translation,
-        detail: "this key is registered to another member of this group, and a registered key is never rebound by its own member's act. Nothing was written."
-      };
-    }
-    if (held && held.status !== "active") {
-      const row2 = CREDENTIALS_CHECKS.SIGNER_KEY_REVOKED;
-      return {
-        ok: false,
-        reason: "SIGNER_KEY_REVOKED",
-        code: "SIGNER_KEY_REVOKED",
-        check: row2.check,
-        translation: row2.translation,
-        detail: "this key of yours was revoked, and a revoked key is re-activated only by an administrator (op=signerset), so that a revocation stands. Nothing was written."
-      };
-    }
-    if (!held)
-      this.sql.exec(
-        `INSERT INTO signers (key_b64,member_id,comment,status,added,status_by,origin,registered_by)
-         VALUES (?,?,?,'active',?,?,'self',?)`,
-        keyB64,
-        by,
-        comment ?? null,
-        (/* @__PURE__ */ new Date()).toISOString(),
-        by,
-        by
-      );
-    return {
-      ok: true,
-      keyB64,
-      memberId: by,
-      status: "active",
-      origin: held ? held.origin === "self" ? "self" : "admin" : "self",
-      registered_by: held ? _Credentials.#statusBy(held.registered_by) : by,
-      existed: !!held,
-      notified: this.membership.activeAdmins(),
-      detail: held ? "this key is already registered to you and active; nothing was written. Every administrator is told of the registration, and any of them can revoke the key." : "registered to you, and it attests as any registered key does. Every administrator is told of the registration, and any of them can revoke the key."
-    };
-  }
-  /* R10: a member revokes their own key, never refused for a key they hold, whatever its state or theirs (revoking
-     narrows a claim, D-158). A key they do not hold answers NO_SUCH_KEY exactly as `signerSet` answers a key no one
-     holds, so the answer never says whether a key is registered to somebody else. */
-  signerRevokeOwn({ keyB64, by = null } = {}) {
-    const row2 = typeof keyB64 === "string" && typeof by === "string" && by !== "" ? this.#one(`SELECT status FROM signers WHERE key_b64=? AND member_id=?`, keyB64, by) : null;
-    if (!row2) return { ok: false, reason: "NO_SUCH_KEY" };
-    const already = row2.status === "revoked";
-    if (!already) this.sql.exec(`UPDATE signers SET status='revoked', status_by=? WHERE key_b64=?`, by, keyB64);
-    return { ok: true, keyB64, status: "revoked", by, already };
-  }
-  /* R8 (D-158) — THE ROSTER SAYS WHICH STATE EACH KEY IS ACTUALLY IN. `status` is the administrator's own switch on
-   * the key; `member_status` is the stored fact underneath (membership's, R68), and `attests` is whether `op=ratify`
-   * would accept a signature from this key now, from the one predicate. A key whose member is gone is REPORTED, not
-   * dropped, and `attests_why` names a stored fact in every branch; its last branch, `undetermined`, is unreachable
-   * while the predicate is what it is, and kept so a derived reason never quietly guesses. */
-  signerList() {
-    const facts = /* @__PURE__ */ new Map();
-    const statusOf = (id) => {
-      if (!facts.has(id)) facts.set(id, this.#memberFacts(id)?.status ?? null);
-      return facts.get(id);
-    };
-    return { signers: this.#rows(
-      `SELECT key_b64, member_id, comment, status, added, status_by, origin, registered_by
-         FROM signers ORDER BY added, key_b64`
-    ).map((r) => {
-      const memberStatus = statusOf(r.member_id);
-      const attests = _Credentials.#attests(r.status, memberStatus);
-      return {
-        key_b64: r.key_b64,
-        member_id: r.member_id,
-        comment: r.comment,
-        status: r.status,
-        added: r.added,
-        status_by: _Credentials.#statusBy(r.status_by),
-        /* REC-159 */
-        /* R6 was the only door before R9, so a row with no recorded origin is an administrator's. */
-        origin: r.origin === "self" ? "self" : "admin",
-        registered_by: _Credentials.#statusBy(r.registered_by),
-        member_status: memberStatus,
-        attests,
-        attests_why: attests ? null : r.status !== "active" ? "key_revoked" : memberStatus === null ? "member_absent" : memberStatus !== "active" ? `member_${memberStatus}` : "undetermined"
-      };
-    }) };
-  }
-  /* R7: an administrator sets a key's status. Only ACTIVATION is barred as R6 bars the owning member, because
-     membership's revocation revokes the member's keys (R16) and this would otherwise undo it one call later; revoking
-     narrows a claim and is never refused. */
-  signerSet({ keyB64, status, by = null } = {}) {
-    const barCust = this.#custodialBar(by, "setting a signing key's status");
-    if (barCust) return barCust;
-    if (!["active", "revoked"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
-    const row2 = this.#one(`SELECT key_b64, member_id FROM signers WHERE key_b64=?`, keyB64);
-    if (!row2) return { ok: false, reason: "NO_SUCH_KEY" };
-    if (status === "active") {
-      const barSet = this.#signerMemberBar(row2.member_id);
-      if (barSet) return barSet;
-    }
-    this.sql.exec(`UPDATE signers SET status=?, status_by=? WHERE key_b64=?`, status, by || null, keyB64);
-    return { ok: true, keyB64, status, by: _Credentials.#statusBy(by) };
-  }
-  /* R11: the signer keys that attest, by R8's one predicate: the set the ratification gate accepts, for every reader
-     that splices it (`signerList`, the gate's facts, a case's document facts). */
-  attestingKeys() {
-    const facts = /* @__PURE__ */ new Map();
-    const statusOf = (id) => {
-      if (!facts.has(id)) facts.set(id, this.#memberFacts(id)?.status ?? null);
-      return facts.get(id);
-    };
-    return this.#rows(`SELECT key_b64, member_id, status FROM signers ORDER BY added, key_b64`).filter((r) => _Credentials.#attests(r.status, statusOf(r.member_id))).map((r) => ({ key_b64: r.key_b64, member_id: r.member_id }));
-  }
-  /* ===== AI CREDENTIALS (R12–R15) =====
-   *
-   * PL-11 / IS-5 / D-199 — THE `ai` CREDENTIAL, AND WHY ITS SCOPE IS A ROW. What an AI credential may reach must be
-   * amendable only as an authored, dated, on-the-record act (D-199 (2), DEC-17's reasoning), so this class is not a
-   * binding: a presented credential resolves against a row naming the member who minted it and when, and widening it
-   * is another row with another name against it. THE VALUE NEVER ARRIVES HERE: the control plane generates the secret,
-   * hashes it, hands this module the HASH, and returns the value to the minting member once. */
-  /* R12–R14: a MEMBER act (D-199 (3)), and the record says who, when, for whom and what for (D-199 (4)). `writes` and
-     `confinedTo` arrive already judged at the mint edge (the control plane's ops table and namespaces are the only
-     things that know); what this method judges is what the RECORD must say. */
-  aiCredentialMint({
-    who: who2 = null,
-    tokenId = null,
-    secretSha = null,
-    principalKind = null,
-    principalMember: principalMember2 = null,
-    taskScope = null,
-    writes = [],
-    note = null,
-    confinedTo = null,
-    at: at23 = null
-  } = {}) {
-    const refusal20 = (code, detail, extra) => {
-      const row2 = AI_CREDENTIAL_CHECKS[code];
-      return {
-        ok: false,
-        reason: code,
-        code,
-        check: row2.check,
-        translation: row2.translation,
-        detail,
-        ...extra || {}
-      };
-    };
-    const now = at23 || stampSecond3();
-    const id = String(tokenId ?? "").trim();
-    const kind = String(principalKind ?? "").trim().toLowerCase();
-    if (!who2 || isMachineIdentity(who2))
-      return refusal20(
-        "AI_CREDENTIAL_MINT_NOT_A_MEMBER",
-        who2 ? `'${String(who2).slice(0, 60)}' is a machine identity, and minting an AI credential is a MEMBER act, never an AI act (D-199 (3)): if an agent can request a broader token, the scoping is theatre. This is REC-46's ONE predicate, so it catches token:ai without knowing that class exists.` : "no member is named on this act. An authority granted by nobody is an authority nobody can be asked about afterwards.",
-        { who: who2 || null }
-      );
-    const minter = String(who2).trim();
-    if (kind === "member" && principalMember2 !== null && principalMember2 !== void 0 && String(principalMember2).trim() !== "" && String(principalMember2).trim() !== minter)
-      return refusal20(
-        "AI_CREDENTIAL_PRINCIPAL_NOT_THE_MINTER",
-        `a member-scoped credential acts for the member who mints it, and '${String(principalMember2).slice(0, 60)}' is not '${minter.slice(0, 60)}'. A member cannot authorise an agent in another member's name. Nothing was written.`,
-        { principalMember: String(principalMember2).slice(0, 60) }
-      );
-    if (kind === "organisation" && !this.membership.isAdministrator(minter))
-      return notAnAdmin(
-        minter,
-        "minting an organisation-wide AI credential",
-        { remedy: "A member-scoped AI credential, which acts for you alone, is open to every member." }
-      );
-    const principal = kind === "organisation" ? `${MACHINE_CLASS_PREFIX}ai` : kind === "member" ? `member:${minter}` : null;
-    if (!principal || principal === "member:")
-      return refusal20(
-        "AI_CREDENTIAL_PRINCIPAL_UNSTATED",
-        `principalKind was '${kind.slice(0, 40) || "(none)"}'. It is 'organisation' (the key acts for the group, nobody individual behind it) or 'member' (attributable to that member). They carry different accountability and the record states which, never the token's value.`,
-        { principalKind: kind || null }
-      );
-    if (!id || this.#one(`SELECT token_id FROM ai_credentials WHERE token_id=?`, id))
-      return refusal20(
-        "AI_CREDENTIAL_IDENTITY_TAKEN",
-        id ? `'${id.slice(0, 60)}' already names a credential on this instance. Acts cite the IDENTITY, so rebinding it would re-attribute work already done.` : "pass an identity for this credential: it is the name acts will cite, and a credential nothing can name is one nothing can revoke either.",
-        { tokenId: id || null }
-      );
-    const declared = (Array.isArray(writes) ? writes : []).map((w) => String(w)).sort();
-    const confinement = confinedTo === null || confinedTo === void 0 ? null : String(confinedTo);
-    this.sql.exec(
-      `INSERT INTO ai_credentials (token_id, secret_sha, principal_kind, principal, task_scope,
-         scope_writes, scope_note, minted_by, minted_at, confined_to)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      id,
-      String(secretSha ?? ""),
-      kind,
-      principal,
-      String(taskScope ?? "investigative"),
-      JSON.stringify(declared),
-      String(note ?? ""),
-      String(who2),
-      now,
-      confinement
-    );
-    return { ok: true, minted: true, credential: this.#aiCredentialPublic(
-      this.#one(`SELECT * FROM ai_credentials WHERE token_id=?`, id)
-    ) };
-  }
-  /* R15: also a member act, and the reason is `revoked_by` rather than the risk (C-29.4). Revoking twice answers
-     `already: true`, and the row is kept with its `revokedAt`. */
-  aiCredentialRevoke({ who: who2 = null, tokenId = null, at: at23 = null } = {}) {
-    const refusal20 = (code, detail, extra) => {
-      const row3 = AI_CREDENTIAL_CHECKS[code];
-      return {
-        ok: false,
-        reason: code,
-        code,
-        check: row3.check,
-        translation: row3.translation,
-        detail,
-        ...extra || {}
-      };
-    };
-    const now = at23 || stampSecond3();
-    const id = String(tokenId ?? "").trim();
-    if (!who2 || isMachineIdentity(who2))
-      return refusal20(
-        "AI_CREDENTIAL_REVOKE_NOT_A_MEMBER",
-        who2 ? `'${String(who2).slice(0, 60)}' is a machine identity. The row carries revoked_by, and a machine name there would record the group withdrawing an authority nobody in the group decided to withdraw.` : "no member is named on this act, and a withdrawal nobody authored is not one.",
-        { who: who2 || null }
-      );
-    const row2 = id ? this.#one(`SELECT * FROM ai_credentials WHERE token_id=?`, id) : null;
-    if (!row2)
-      return refusal20(
-        "AI_CREDENTIAL_UNKNOWN",
-        `no credential on this instance is called '${id.slice(0, 60) || "(none)"}'. Nothing was withdrawn, and being told so is the point: believing an authority is gone when it is not is the worse of the two outcomes.`,
-        { tokenId: id || null }
-      );
-    if (row2.revoked_at)
-      return {
-        ok: true,
-        revoked: true,
-        already: true,
-        credential: this.#aiCredentialPublic(row2)
-      };
-    this.sql.exec(
-      `UPDATE ai_credentials SET revoked_at=?, revoked_by=? WHERE token_id=?`,
-      now,
-      String(who2),
-      id
-    );
-    return {
-      ok: true,
-      revoked: true,
-      already: false,
-      credential: this.#aiCredentialPublic(
-        this.#one(`SELECT * FROM ai_credentials WHERE token_id=?`, id)
-      )
-    };
-  }
-  /* R15: resolve a PRESENTED credential to its record row, by the SHA of the value and never the value. A REVOKED ROW
-     IS RETURNED rather than hidden, the fail-closed direction here: the gate must tell a withdrawn credential from an
-     unknown string. */
-  aiCredentialLook({ secretSha = null } = {}) {
-    const sha = String(secretSha ?? "").trim().toLowerCase();
-    if (!/^[0-9a-f]{64}$/.test(sha)) return { found: false, credential: null };
-    const row2 = this.#one(`SELECT * FROM ai_credentials WHERE secret_sha=?`, sha);
-    if (!row2) return { found: false, credential: null };
-    return { found: true, credential: {
-      ...this.#aiCredentialPublic(row2),
-      /* The gate needs these two as values: the viewer it stamps, and the ops the record declared. */
-      principal: row2.principal,
-      writes: this.#aiCredentialWrites(row2)
-    } };
-  }
-  /* R15: what the group can see about its own agents, never a value and never a hash (the hash is a verifier, and
-     publishing it would make every read of this list an offline guessing target). BOUNDED, AND IT SAYS SO
-     (REC-57 / D-225): `limit` is the cap applied (default 200, at most 500), and `truncated` is measured by reading
-     one row past it. */
-  aiCredentials({ limit = null } = {}) {
-    const asked = Number(limit);
-    const cap = Number.isFinite(asked) && asked > 0 ? Math.min(500, Math.floor(asked)) : 200;
-    const found = this.#rows(
-      `SELECT * FROM ai_credentials ORDER BY minted_at, token_id LIMIT ?`,
-      cap + 1
-    );
-    const rows2 = found.slice(0, cap);
-    return {
-      count: rows2.length,
-      limit: cap,
-      truncated: found.length > cap,
-      credentials: rows2.map((r) => this.#aiCredentialPublic(r))
-    };
-  }
-  #aiCredentialWrites(row2) {
-    try {
-      const w = JSON.parse(row2.scope_writes || "[]");
-      return Array.isArray(w) ? w.map(String) : [];
-    } catch {
-      return [];
-    }
-  }
-  /* ONE projection, used by the mint, the revoke, the list and the gate's lookup, so no surface is shown a shape the
-     others do not agree with, and ONE place decides `secret_sha` is not in it. `confinedTo` is stated as a value, null
-     for "not confined", rather than left off: it is the one property a member must read back to know whether an agent
-     can touch the record at all (D-463). */
-  #aiCredentialPublic(row2) {
-    if (!row2) return null;
-    return {
-      tokenId: row2.token_id,
-      principalKind: row2.principal_kind,
-      principal: row2.principal,
-      taskScope: row2.task_scope,
-      writes: this.#aiCredentialWrites(row2),
-      note: row2.scope_note || null,
-      mintedBy: row2.minted_by,
-      mintedAt: row2.minted_at,
-      revokedAt: row2.revoked_at || null,
-      revokedBy: row2.revoked_by || null,
-      revoked: !!row2.revoked_at,
-      confinedTo: row2.confined_to || null
-    };
-  }
-};
-var OF10 = /* @__PURE__ */ new WeakMap();
-function credentialsOf2(ctx, { record = null, membership = null } = {}) {
-  const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let c = OF10.get(storage);
-  if (!c) {
-    c = new Credentials({
-      sql: storage.sql,
-      core: record ?? recordOf(ctx),
-      membership: membership ?? membershipOf(ctx, { record })
-    });
-    OF10.set(storage, c);
-    c.start();
-  }
-  return c;
-}
-function credentialsOps(c, url, body, env) {
-  return {
-    /* D-199: `who` is the SERVER'S stamp, and `secretSha` never comes from a caller: the control plane generates the
-       value, hashes it, and this module never sees the value. */
-    aicredentialmint: () => c.aiCredentialMint({
-      ...body || {},
-      who: url.searchParams.get("who"),
-      secretSha: url.searchParams.get("secretSha")
-    }),
-    aicredentialrevoke: () => c.aiCredentialRevoke({
-      tokenId: url.searchParams.get("tokenId"),
-      who: url.searchParams.get("who")
-    }),
-    aicredentials: () => c.aiCredentials({ limit: url.searchParams.get("limit") }),
-    /* INTERNAL ONLY, the gate's own lookup; it takes the HASH because the value never crosses this boundary. */
-    aicredentiallook: () => c.aiCredentialLook({ secretSha: url.searchParams.get("sha") }),
-    /* D-116: the DO's own build under `storeVersion`, never `version` (the routing isolate's, spread before this).
-       null, never a default: a DO with no VERSION bound cannot say which build it is. */
-    bootstrap: () => ({
-      ...c.bootstrapState(url.searchParams.get("fp")),
-      storeVersion: typeof env?.VERSION === "string" && env.VERSION ? env.VERSION : null
-    }),
-    claim: () => c.claim({ ...body || {}, tokenFp: url.searchParams.get("fp") }),
-    login: () => c.login(body || {}),
-    setpassword: () => c.setPassword(body || {}),
-    session: () => ({ session: c.session(url.searchParams.get("t")) }),
-    /* REC-159: spread the body, THEN the stamp. */
-    signeradd: () => c.signerAdd({ ...body || {}, by: url.searchParams.get("by") }),
-    signerlist: () => c.signerList(),
-    signerset: () => c.signerSet({ ...body || {}, by: url.searchParams.get("by") })
-  };
-}
 
 // src/extractrun.mjs
 var EXTRACT_RUN_MODE = "extract";
@@ -125634,7 +125815,7 @@ var Store = class _Store extends DurableObject {
       if (t) this.sql.exec(t);
     }
     membershipOf(this.ctx).migrate();
-    credentialsOf2(this.ctx).migrate();
+    credentialsOf(this.ctx).migrate();
     provenanceOf(this.ctx).migrate();
     contentOf(this.ctx).migrate();
     connectionsOf(this.ctx).migrate();
@@ -126031,7 +126212,7 @@ Changes: state ${cur.current_state} to retired. Reason: ${why}.
     const gate = viewerPredicate(viewer);
     const sighted = /* @__PURE__ */ new Map();
     const visible = (id) => sighted.has(id) ? sighted.get(id) : sighted.set(id, !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args)).get(id);
-    const { clean, withErrors, tally, tallyDetail = {}, offenders, limit: cap, page: ids } = await recordAudit(this.ctx, {
+    const { clean, withErrors, tally, tallyDetail = {}, offenders, limit: cap, page: ids, [ROUTE_FINDING_KEY]: route } = await recordAudit(this.ctx, {
       after,
       limit,
       visible,
@@ -126045,51 +126226,13 @@ Changes: state ${cur.current_state} to retired. Reason: ${why}.
     });
     const page = ids.map((id) => this.#one(`SELECT bundle_id, object_type, current_state FROM bundles WHERE bundle_id=?`, id));
     const last = page.length ? page[page.length - 1].bundle_id : after;
-    const pageIds = new Set(page.map((r) => r.bundle_id));
-    const marks = /* @__PURE__ */ new Map();
-    if (page.length) {
-      for (const m of this.#rows(
-        `SELECT m.* FROM provenance_route_marks m
-          WHERE m.bundle_id > ? AND m.bundle_id <= ?
-            AND m.seq = (SELECT MAX(x.seq) FROM provenance_route_marks x WHERE x.bundle_id = m.bundle_id)`,
-        after,
-        last
-      ))
-        if (pageIds.has(m.bundle_id)) marks.set(m.bundle_id, m);
-    }
-    const routeTally = { LOOKED_INDETERMINATE: 0, PRESENT: 0, NEVER_LOOKED: 0, notApplicable: 0 };
-    const routeMarked = [];
-    let markedTotal = 0;
-    for (const row2 of page) {
-      const found = routeFinding(row2.object_type, marks.get(row2.bundle_id) || null);
-      if (!found.applies) {
-        routeTally.notApplicable++;
-        continue;
-      }
-      routeTally[found.finding] = (routeTally[found.finding] || 0) + 1;
-      if (!found.marked) continue;
-      markedTotal++;
-      if (routeMarked.length < 20)
-        routeMarked.push({ bundleId: row2.bundle_id, state: row2.current_state, ...found });
-    }
     return {
       ok: true,
       checked: page.length,
       clean,
       withErrors,
       tally,
-      /* ALWAYS PRESENT, unlike `tallyDetail` beside it, and the difference is the
-         item: an absent tally would say nothing, and "nothing to report" and
-         "this build does not report it" would read alike — which is the exact
-         conflation the marker exists to end, arriving one level up. */
-      route: {
-        tally: routeTally,
-        marked: routeMarked,
-        markedTotal,
-        markedShown: routeMarked.length,
-        means: OBSERVATION_STATES,
-        note: "these are STATED DOUBTS, not conformance errors, and they are deliberately not counted in `tally` or `withErrors`: each names a document whose route cannot be shown, standing where the group put it (DEC-56/DEC-19). `NEVER_LOOKED` is a different fact again \u2014 it means no assessment has run, not that anything is wrong."
-      },
+      [ROUTE_FINDING_KEY]: route,
       ...Object.keys(tallyDetail).length ? { tallyDetail } : {},
       offenders,
       /* REC-57: `cursor` and `total` were already here and are UNTOUCHED — between
@@ -126857,20 +127000,20 @@ Changes: state ${cur.current_state} to retired. Reason: ${why}.
     return [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
   }
   bootstrapState(...a) {
-    return credentialsOf2(this.ctx).bootstrapState(...a);
+    return credentialsOf(this.ctx).bootstrapState(...a);
   }
   claim(...a) {
-    return credentialsOf2(this.ctx).claim(...a);
+    return credentialsOf(this.ctx).claim(...a);
   }
   setPassword(...a) {
-    return credentialsOf2(this.ctx).setPassword(...a);
+    return credentialsOf(this.ctx).setPassword(...a);
   }
   static LOGIN_REFUSAL_DETAIL = Credentials.LOGIN_REFUSAL_DETAIL;
   login(...a) {
-    return credentialsOf2(this.ctx).login(...a);
+    return credentialsOf(this.ctx).login(...a);
   }
   session(...a) {
-    return credentialsOf2(this.ctx).session(...a);
+    return credentialsOf(this.ctx).session(...a);
   }
   /* D-9, D-533: the register's rows classified, and the parts a holding bundle's record names: provenance's (R6, R8). */
   registerAudit() {
@@ -127016,13 +127159,13 @@ Changes: state ${cur.current_state} to retired. Reason: ${why}.
   }
   static SIGNER_ATTESTS = Membership.SIGNER_ATTESTS;
   signerAdd(...a) {
-    return credentialsOf2(this.ctx).signerAdd(...a);
+    return credentialsOf(this.ctx).signerAdd(...a);
   }
   signerList(...a) {
-    return credentialsOf2(this.ctx).signerList(...a);
+    return credentialsOf(this.ctx).signerList(...a);
   }
   signerSet(...a) {
-    return credentialsOf2(this.ctx).signerSet(...a);
+    return credentialsOf(this.ctx).signerSet(...a);
   }
   /** REC-18: op=earnedbasis — WHAT THE RECORD EARNS for each candidate leg,
    *  BEFORE the leg is written.
@@ -127206,16 +127349,16 @@ Changes: state ${cur.current_state} to retired. Reason: ${why}.
     return captureRequestsOf(this.ctx).drain(o);
   }
   aiCredentialMint(...a) {
-    return credentialsOf2(this.ctx).aiCredentialMint(...a);
+    return credentialsOf(this.ctx).aiCredentialMint(...a);
   }
   aiCredentialRevoke(...a) {
-    return credentialsOf2(this.ctx).aiCredentialRevoke(...a);
+    return credentialsOf(this.ctx).aiCredentialRevoke(...a);
   }
   aiCredentialLook(...a) {
-    return credentialsOf2(this.ctx).aiCredentialLook(...a);
+    return credentialsOf(this.ctx).aiCredentialLook(...a);
   }
   aiCredentials(...a) {
-    return credentialsOf2(this.ctx).aiCredentials(...a);
+    return credentialsOf(this.ctx).aiCredentials(...a);
   }
   /* REC-83 / IC-84 — THE CONTENT-GRAIN READS' THREE BOUNDS.
    *
@@ -127285,7 +127428,7 @@ Changes: state ${cur.current_state} to retired. Reason: ${why}.
   routes(url, body) {
     const map = {
       ...membershipOps(membershipOf(this.ctx), url, body, this.env),
-      ...credentialsOps(credentialsOf2(this.ctx), url, body, this.env),
+      ...credentialsOps(credentialsOf(this.ctx), url, body, this.env),
       ...captureOps(captureOf(this.ctx), url, body, this.env),
       ...calibrationOps(calibrationOf(this.ctx), url, body),
       ...biasOps(biasOf(this.ctx), url, body),
