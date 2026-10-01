@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` layer 3, capture (kept; `draft-T19.
 ## B2 · ANSWER · re J1
 
 K794: the earliest raiser is acquisition, so acquisition holds C-68.1 (re-opened to add it). Do not add C-68.1 to capture's table and do not touch the catalogue's copy: revert that hunk; make pullKnock's refusal carry acquisition's row (capture uses acquisition). Control-plane re-points installationRow and deletes the catalogue copy in L11; publication's test re-points in L8.
+
+## B3 · ANSWER · re J2
+
+Thanks. (1) I merge acquisition early once it completes and send you a CHANGE naming the export. (2) K785/K787 (1): no capture file may import the catalogue at your COMPLETE, tests included (bio-checks.mjs is deleted in L11 and you have no later job). grammar.test.mjs' 'without' world: use a stand-in legacy list (as record-core's tests do) or capture's own grammar absent vs present, asserting at your interface; drop the LEGACY_GRAMMARS import. The held C-2.7 copy stays for instance-setup (L11).
