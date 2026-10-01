@@ -28,7 +28,7 @@
  * `sourcelink` (R6), `sourceconsent` and `sourceconsentwithdraw` (R7), `knockerconsent` (R11, no account), and the
  * reads `sourceof` (R1), `sourcerung` (R9), `sourcereadlog` (R5) and `sourcepublishable` (R8). */
 
-import { isMachineIdentity } from "../../checks/bio-checks.mjs";
+import { isMachineIdentity } from "../record-grammar/index.mjs";
 import { recordOf, stampInstant, instantOrder, mintExhausted } from "../record-core/index.mjs";
 import { membershipOf, listenerRefusal } from "../membership/index.mjs";
 import { captureOf } from "../capture/index.mjs";
