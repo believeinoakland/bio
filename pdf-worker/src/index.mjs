@@ -21,8 +21,8 @@
  *     returns derived structure and the plane decides what it means; a hop a
  *     component can hand us is a hop a component can invent (D-112). It holds no
  *     STORE (Durable Object) binding, so it structurally CANNOT write the record,
- *     and it never calls .put/.delete on R2 (asserted in the suite + a hygiene
- *     source scan).
+ *     and it never calls .put/.delete on R2 (R37 in `test/structure.test.mjs`:
+ *     CAPTURES is only ever .get, and the bucket is unchanged after calls).
  *   - Hold a `PUBLISHED` binding. `CAPTURES` read is the whole of its need; every
  *     Worker inside the private fence must stay named and minimal.
  *   - Be reached by anything but the plane. It has no member-facing surface and
