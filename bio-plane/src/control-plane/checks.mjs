@@ -97,9 +97,10 @@ export const REPLAY_CHECKS = {
      session; this is the end state. A promotion of ANY type and ANY revision that asserts a replay names its
      drive-provenance capture, and `op=promote` verifies it against what the record HOLDS — the capture registered
      by this promotion, its bytes read back and hashed, and one preserved promotion record naming this bundle and
-     listing this revision's `bundle.md` SHA-256 — never against the request's own claim. Measured
-     before this existed (`9f8b69e6`, `risk-tier.test.mjs` §8 arm (δ)): the admin deploy token sending `replay: true`
-     with no provenance landed `risk_tier: 1` on an action nobody assessed. Asked in `op=promote`'s stamp block
+     listing this revision's `bundle.md` SHA-256 — never against the request's own claim. Found
+     before this existed (`9f8b69e6`, by the old `risk-tier.test.mjs` §8 arm (δ)): the admin deploy token sending
+     `replay: true` with no provenance landed `risk_tier: 1` on an action nobody assessed. R16's tests
+     (`test/m/control-plane/gates.test.mjs`, `converts.test.mjs`) prove the gate now. Asked in `op=promote`'s stamp block
      BEFORE the store is called, so nothing is written. The admin is refused rather than downgraded to an ordinary
      promotion, because an honest replay carries the past verbatim and an ordinary creation is rewritten on the way in.
      (Its one honest sender was the Drive-era migration tool, `migrate.mjs`, retired in K739; no product caller sends a
@@ -128,8 +129,7 @@ export const REPLAY_CHECKS = {
 
    ONE ROW AND NOT THREE, and the reason is that the CONDITION is one condition.
    `AI_BEYOND_TASK_SCOPE` is the standing precedent for a single code whose
-   producers are told apart by a field, and `refusal-wire.test.mjs` already pins
-   that pair for exactly this reason. The site names the argument and the shape
+   producers are told apart by a field. The site names the argument and the shape
    it wanted, so a caller can tell `op=capture`'s complaint from `op=monitor`'s
    without the catalogue growing a row per call site.
 

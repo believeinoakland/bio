@@ -1,8 +1,8 @@
-/* control-plane: THE HELD PROMOTION STEP (R42; K764, K846, K861 (3), (4), K874). The step `legacy-store` registered with
-   promotion and `plane` held as `plane-held` (plane R10), moved whole: provenance's testimony slot (its R52) and
-   membership's sight index (D-497), which membership cannot register because it does not use promotion. This module
-   registers nothing: `plane` registers `promotionStep(host)` under this module's name at the rank the held step has in
-   its `STEP_ORDER` (after every module of layer 10, before `affordances` and `tasks`), so every step's checks and
+/* control-plane: THE PROMOTION STEP (R42; K764, K846, K861 (3), (4), K874, K923). The step `legacy-store` once registered
+   with promotion, now this module's export: provenance's testimony slot (its R52) and membership's sight index (D-497),
+   which membership cannot register because it does not use promotion. This module registers nothing itself: `plane`
+   registers `promotionStep(host)` under this module's name (plane R10), at the rank `legacy-store`'s step had in its
+   `STEP_ORDER` (after every module of layer 10, before `affordances` and `tasks`), so every step's checks and
    projections, every answer and the order of refusals are as they were. */
 import { stepContext } from "../promotion/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";

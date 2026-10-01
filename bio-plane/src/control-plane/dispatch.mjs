@@ -32,8 +32,9 @@ import { pullAndFile } from "./pull.mjs";
  * when that id is a PROJECT the caller sees at EXISTENCE, so an id of anything inside a project (a bundle, a run, a
  * draft), an absent id, a hidden project and every caller with full sight all fall through to the read unchanged.
  * `PROJECT_NAMING_READS_NOT` names each read whose parameters name something that is never a bundle, with the
- * reason, and `project-sight.test.mjs` §11 sweeps every id-carrying read op into exactly one of the two tables, so a
- * new read cannot join the plane unclassified.
+ * reason, and R27's tests (`test/m/control-plane/dispatch.test.mjs`, `routes.test.mjs`, `doorbell.test.mjs`) hold each
+ * read in at most one of the two tables and drive each classified read's answer. (Ported from the old
+ * `project-sight.test.mjs` §11's sweep.)
  *
  * COST, STATED: one indexed lookup on `project_sight` per named parameter of a stamped read, and `#sight` only for
  * an id that row calls discoverable. A viewer never sent (an internal call) is not asked. */
@@ -108,6 +109,11 @@ export const PROJECT_NAMING_READS_NOT = Object.freeze({
   sourcerung: "`source_id` is a SOURCE id, never a bundle id",
   sourcereadlog: "`source_id` is a SOURCE id, never a bundle id",
   sourcepublishable: "`source_id` is a SOURCE id, never a bundle id",
+  /* K921's reads: a filing template's or a local fact's own key, never a bundle id. */
+  templateread: "`template` is a TEMPLATE id (`TPL-`) and `version` one of its versions, never a bundle id",
+  templatecomments: "`template` is a TEMPLATE id (`TPL-`) and `version` one of its versions, never a bundle id",
+  factstatus: "`path` is a local FACT's path in a profile, never a bundle id",
+  factsdue: "`paths` are local FACTs' paths in a profile, never a bundle id",
 });
 
 /* R27 (REC-196): the answer for a read naming a discoverable project's own id, asked by a caller at EXISTENCE: C-70.1
