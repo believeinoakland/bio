@@ -3,8 +3,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { basisVersionFindings, versionsIn, VERSION_MACHINE, versionNeedsReason, VERSION_NAME_RE, VERSION_STATES,
          BASIS_VERSION_CHECKS, VERSION_ACT_CHECKS, NARROW_CHECKS, SUGGEST_KINDS, compositionDiff, sameComposition,
-         versionAsWritten } from "../../../src/basis-versions/index.mjs";
-import { ACT_SHAPE_CHECKS, MACHINE_FENCE_CHECKS, SUGGEST_CHECKS, SUFFICIENCY_UNCLAIMED } from "../../../checks/bio-checks.mjs";
+         versionAsWritten, CONCLUDE_ACT_CHECKS, VERSION_KIND_CHECKS, SUFFICIENCY_UNCLAIMED }
+  from "../../../src/basis-versions/index.mjs";
 
 const T = "2026-09-27T00:00:00Z";
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-r";
@@ -35,7 +35,7 @@ test("R1: a version carries a description, a unique permitted name, a known stat
   assert.deepEqual(codes(fm({ v: { hidden: "yes" } })), ["VERSION_HIDDEN_NOT_BOOLEAN"]);
   assert.deepEqual(codes(fm({ v: { kind: "hunch" } })), ["VERSION_KIND_UNKNOWN"]);
   for (const k of Object.keys(SUGGEST_KINDS)) assert.deepEqual(codes(fm({ v: { kind: k } })), [], `kind ${k} is known`);
-  assert.equal(SUGGEST_CHECKS.VERSION_KIND_UNKNOWN.check, "C-27.15");
+  assert.equal(VERSION_KIND_CHECKS.VERSION_KIND_UNKNOWN.check, "C-27.15");
   /* moved into a state that needs a reason: a named member, a reason and an ISO instant */
   assert.deepEqual(codes(fm({ v: { state: "rejected", state_by: "member:bo", state_at: T, state_reason: "does not hold up" } })), []);
   assert.ok(codes(fm({ v: { state: "rejected", state_by: "class:ai", state_at: T, state_reason: "does not hold up" } }))
@@ -193,9 +193,9 @@ test("R35: every check this module mints is a catalogue row with its C-number an
   const want25 = Array.from({ length: 34 }, (_, i) => `C-25.${i + 1}`);
   assert.deepEqual([...new Set([...nums(BASIS_VERSION_CHECKS), ...nums(VERSION_ACT_CHECKS)])].sort(), [...want25].sort());
   assert.deepEqual(nums(NARROW_CHECKS).sort(), Array.from({ length: 11 }, (_, i) => `C-50.${i + 1}`).sort());
-  const act = Object.values(ACT_SHAPE_CHECKS).map((r) => r.check);
+  const act = Object.values(CONCLUDE_ACT_CHECKS).map((r) => r.check);
   for (const c of ["C-33.1", "C-33.2", "C-33.33", "C-33.34", "C-33.35", "C-33.36", "C-33.37"]) assert.ok(act.includes(c), c);
-  assert.equal(MACHINE_FENCE_CHECKS.MACHINE_CANNOT_CONCLUDE.check, "C-32.2");
+  assert.equal(CONCLUDE_ACT_CHECKS.MACHINE_CANNOT_CONCLUDE.check, "C-32.2");
   for (const m of [BASIS_VERSION_CHECKS, VERSION_ACT_CHECKS, NARROW_CHECKS])
     for (const [k, r] of Object.entries(m)) assert.ok(typeof r.translation === "string" && r.translation.length > 20, k);
 });
