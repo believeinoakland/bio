@@ -1540,3 +1540,270 @@ response: **Bob, 2026-09-29: items 1 and 3 as recommended; item 2 not ruled.**
 decided: 2026-09-29 · Bob
 reasoning recorded in: this entry.
 owed: the relevance suggestion as labelled machine work with its dismissal memory and per-member switch (run-productions or retrieval, as BOB places it), and the unattended grade note (capture, queue), for Bob's approval; the UX page's open question 13 marked ruled.
+
+### DEC-96 · answered
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 12: the four points DEC-92 left for later)
+for: bob
+question: What does "Accepted by our group" commit a group to, is it public, and how is it withdrawn; how is a "Flagged" mark raised, answered and cleared, and who sees it; does "Meets standards" return; and what does a reader of the group's own case see when it rests on work the group accepted or flagged?
+why it is Bob's: doctrine (inherited trust: the fact of publication, never the credibility of the content) and UX.
+provisional: DEC-92 set the origin mark and its five labels; acceptance is "a new reasoned act, attributed, with a reason"; "Flagged" comes only from a member's recorded evaluation.
+alternative: (B) a public, signed list of acceptances and flags published beside the group's cases; (C) acceptance as full vouching, the accepted work graded afresh as the group's own; (D) defer until a second group publishes.
+recommendation: (A) a reasoned stance, made public when the group's own case relies on it.
+reversal cost: low; nothing is built.
+response: **As recommended (Bob, 2026-10-01): option A.**
+  1. ACCEPTING: "Accept into our work" is a reasoned act. It asks what was checked and records who, when and why. It names one edition: a newer edition of the same work reads "Another group's" until someone accepts it. Acceptance changes no grade: the cited edition's grades stand as published, and a cited case can never be stronger than its frozen edition (the inherited-trust rule of 2026-07-30 holds). Withdrawing an acceptance is a reasoned act too, corrected forward like every act, and sends re-evaluation notices to the work that rests on it.
+  2. FLAGGING: a flag is a member's recorded evaluation naming the specific issue, never a machine's. It stays inside the group, seen by those who may see the work that cites the flagged edition, and a member clears it with a reason.
+  3. "MEETS STANDARDS" stays deferred until an evaluator of incoming work exists; if it returns, it is labelled machine work and never acts as a trust level.
+  4. WHAT A READER SEES: when the group's published case relies on another group's work, the case states the acceptance (who accepted which edition, and why), and it must disclose any open flag on that work, as it must disclose an open contradiction: disclosed, never blocked (DEC-84 (13)).
+  Next step, when triggered: a public list of the group's acceptances and flags (option B) is built on these same recorded acts when a second group asks to see who accepted or flagged its work.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 12.
+owed: the accept, withdraw, flag and clear acts (reasoned), the case's statement of acceptance, and the publication check that open flags on relied-on work are disclosed, as requirements for Bob's approval (BOB places them); the UX page's open question 12 marked ruled.
+
+### DEC-97 · answered
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 13: DEC-95 item 2, not ruled then)
+for: bob
+question: Is there a list of held captures (collected, not yet released or set aside), and may a member act on several at once from it; and is anything beyond crucial material barred from a batch?
+why it is Bob's: UX, and doctrine (Intake Doctrine §4's batch rule and what "contested" means).
+provisional: batch release is allowed for large, uniform collections, each document with its own entry and the member's recorded acknowledgement; crucial or contested material is never batched (Intake Doctrine §4, 2026-07-27); the bulk release act is built, all or nothing (ratification R20-R27, K583).
+alternative: (B) the list for seeing, every act one document at a time; (C) no list, held captures shown only in search and through DEC-95's guarded suggestions.
+recommendation: (A) the held list with bulk handling.
+reversal cost: low; no screen is built.
+response: **Bob, 2026-10-01: A.**
+  1. THE LIST: a "Held captures" view, per member and per project, showing only what the viewer may see; sortable by age, source and project; each row shows its age; nothing about held captures is notified (DEC-69, DEC-94).
+  2. ACTING ON SEVERAL: the member ticks several (nothing pre-ticked) and chooses one of three acts: vouch for them together as one batch release (Intake Doctrine §4: each document its own release entry, the member's recorded acknowledgement of homogeneity and of what was sampled and checked); set them aside together with one reason (each stays held with that reason, never deleted); or link them to a question.
+  3. WHAT IS NOT ELIGIBLE: crucial documents, and documents caught in an unresolved contradiction (which fills the doctrine's word "contested"), are shown as not eligible, with the reason, before the member acts, so the all-or-nothing batch act never refuses unseen.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 13; Intake Doctrine §4.
+owed: the held-captures list and the bulk set-aside and bulk link acts (no set-aside act exists today), and the batch eligibility check's "contested" arm (a document in an unresolved contradiction), as requirements for Bob's approval (BOB places them); the UX page's open question 13 marked ruled.
+
+### DEC-98 · answered
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 15)
+for: bob
+question: What do screens say while empty, loading, failed or waiting (renders held back, capture requests hours away, legal clocks of days): one shared vocabulary or screen by screen; must every wait say what, from whom and by when; may an empty screen offer a next step?
+why it is Bob's: UX; it extends DEC-86's rule (state what is not known, never as an error) to the ordinary states, and touches DEC-69 (no nagging).
+provisional: DEC-86 (Undetermined and its four neighbours); DEC-94 item 2 (a nearing deadline changes display only); instance-setup R20 and Publication §7 (a page that cannot read says so, never that none is recorded).
+alternative: (A) the shared vocabulary without next steps; (B) each screen designed on its own.
+recommendation: (C) A, plus a next step on something just created.
+reversal cost: low; nothing is built.
+response: **Bob, 2026-10-01: C, as recommended.**
+  1. ONE VOCABULARY, everywhere, each state with its own fixed look and none dressed as an error: "Nothing here" (truly empty); "Still loading"; "Could not read this, because…" (the screen's own request failed); and the record's "Undetermined, because…" (DEC-86). A screen that cannot tell "could not read" from "none" says "could not read".
+  2. EVERY WAIT SAYS WHAT, FROM WHOM AND BY WHEN: one line naming what is awaited, from whom, and the expected or legal date where one exists, or that no date is set.
+  3. A NEXT STEP ONLY ON SOMETHING JUST CREATED: an empty screen for something the member has just created (a new project, a new plan) shows one plain next step ("Nothing here yet. Add the first question."); nowhere else.
+  Exact wording and looks are the redesign's.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 15; Interaction Constructs §U.
+owed: each screen's reads distinguish empty, still loading and could-not-read (a check in each screen's build, BOB's to place); the redesign's patterns; the UX page's open question 15 marked ruled.
+
+### DEC-99 · answered
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 16)
+for: bob
+question: What accessibility standard must the member screens and the published case meet, which languages, and may a group issue a translated version of a published case?
+why it is Bob's: requirements and UX (a standing requirement every screen is built to; who signs a translation is doctrine).
+provisional: no standard named anywhere; DEC-79, DEC-82 and DEC-90 already require colour never to be the only signal, focus and tap equivalents to hover, and a docked assistant panel; product code names no place (K1); jurisdictions R37 (locale is the language of the jurisdiction's publications).
+alternative: (B) A plus the interface in a profile's local languages and translated cases now; (C) defer both.
+recommendation: (A) WCAG 2.2 AA now for everything; English first, built for translation; a translated case's principle recorded now, its design later.
+reversal cost: low now; high once screens are built without it.
+response: **As recommended (Bob, 2026-10-01): A.**
+  1. THE STANDARD: WCAG 2.2 at level AA for every member screen of the redesign and for the published case page, print and file; each new screen is checked against it before it is accepted.
+  2. LANGUAGE: English for now, the interface built so its words live in one place and another language can be added without rebuilding screens; a published case appears in the language its group wrote it in. The interface in a place's languages is a later decision.
+  3. TRANSLATED CASES: principle now, design later. A translation is never presented as the signed case: it is marked as an unofficial translation and names the signed original. Whether and how a group issues one through CivicOS is decided when a group asks to publish one.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 16; Interaction Constructs §L.
+owed: the standard as a requirement every member screen and the published case meets, with its acceptance check, and the interface's words held in one place (BOB places them, for Bob's approval); the UX page's open question 16 marked ruled.
+
+### DEC-100 · answered in part
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 36, after publication: a case's docket and withdrawing a case; Bob's discussion of how the CPUC curates a docket)
+for: bob
+question: In a published case's docket, who has standing to have a response listed; does the docket support confidential (sealed) entries or redacted public versions; and must the group disclose its off-the-record contacts with the subject after publication, as CPUC ex parte notices do?
+why it is Bob's: doctrine (the subject's right of reply, DEC-13; publication's openness) and UX.
+provisional: the subject's right of reply is a declaration, not a gate (Publication §3 rule 6, DEC-13); the CPUC model offered three imports: party-like standing, filing under seal with a redacted public version, and ex parte disclosure.
+alternative: as discussed with Bob, 2026-10-01 (the CPUC comparison in this session).
+recommendation: the named subject gets party-like standing; sealed and redacted entries and an ex parte rule were offered for decision.
+reversal cost: low; nothing is built.
+response: **Bob, 2026-10-01, three points; the rest of question 36 stays open.**
+  1. STANDING: the subject named in a case has party-like standing (its responses that reach the group are listed on the public docket). Anyone else may still submit a response; whether it is added to the publicly visible docket is at the group's discretion. In Bob's words: "an unapproved subject can still submit, though it's at the group's discretion as to whether it gets added to the publically visible docket."
+  2. NO CONFIDENTIAL OR REDACTED ENTRIES: "Given CivicOS's foundational principals, I don't believe it's appropriate to support confidential filings or redacted versions." The docket has no sealed entries and no redacted public versions: an entry is public whole, or it is not on the public docket (it may still be held in the group's record).
+  3. NO DISCLOSURE RULE FOR OFF-THE-RECORD CONTACTS: "I don't think that our principals necessitate that off-the-record contacts be disclosed." The group's contacts with the subject after publication are not required to be noted on the docket.
+  AMENDED the same day (Bob, 2026-10-01):
+  4. STANDING MAY BE GRANTED: Bob confirmed the reading of "unapproved subject": a group may grant standing to others besides the named subject (as the CPUC grants party status); anyone without standing may still submit, listed publicly at the group's discretion. What a grant gives, and whether it can be withdrawn, stays open.
+  5. REDACTION IS THE SUBMITTER'S ALONE (refining item 2): "The submitter of a decoration of some type can submit a re[d]acted version. What I'm suggesting is that the system won't allow the host group to further redact content submitted by others. That said, I think that it should be possible for the group to decline the posting of a submittal - even by a named subject - if the submitted material includes redactions. I'm thinking that this will in practice discourage re[d]actions." The group never redacts what others submit; a submitter may send its own redacted version; the group may decline to post any submission that contains redactions, even the named subject's (an exception to item 1's listing).
+decided: 2026-10-01 · Bob (in part)
+reasoning recorded in: this entry; the UX substrate's brief for question 36.
+owed: nothing to build yet; the docket's design (question 36's other points: the docket itself, the required core, how entries are signed and travel, outside responses, withdrawal) awaits Bob's ruling. The UX page's question 36 marked settled in part.
+
+### DEC-101 · answered
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 18: how a correction reaches people who relied on an earlier edition; its newer-edition notice is in question 36)
+for: bob
+question: Must every new edition carry a written "What changed in this edition, and why" statement; may the system generate it or a computed list of differences; and how do other groups that cite a case learn of a new edition?
+why it is Bob's: doctrine (publication's forward-only correction, the member's act versus machine work) and UX.
+provisional: a published case is revised as a new edition and supersession is surfaced, not followed (Publication §2, DEC-12); the exclusion statement is authored fresh per edition (C-21.1).
+alternative: the brief's options: a required written statement; a computed list of differences only; both; banner and editions list only.
+recommendation: both, the written statement leading with a computed list beneath.
+reversal cost: low; nothing is built.
+response: **Bob, 2026-10-01, in his own terms:**
+  1. A SYSTEM DRAFT IS WELCOME: "there's always tension between members inappropriately delegating to the system and the system facilitating (enabling!) member's understanding, capabilities, efficiency/productivity, rigor, and so on. In that light, I have no problem with the system generating an initial, perhaps partial, description of the changes in a new edition. To the extent possible, this generated text should not amount to a diff, but provide a detailed, high level description of changes and, to the extent that the system can determine, and explanation for the motivation for the revision." The draft is labelled machine work until a member adopts or rewrites it; the signed statement is the group's, and the record keeps that it began as a machine draft (the existing machine-work rule, DEC-84 (14)).
+  2. REQUIRED IN EVERY REVISION: "The what changed statement should be required in all revisions of a publication." Every edition after the first carries it; a new edition cannot be signed without it.
+  3. WATCHING OTHER GROUPS' EDITIONS: "Just as an instance can be configured to proactively look for updates of documents, it should similarly be able to monitor and respond to new editions of published case from other groups." A copy may watch the cases of other groups it cites or follows and respond to a new edition by telling the members whose work rests on the cited edition (re-evaluation notices, the queue); nothing is pushed between groups.
+  Not adopted: a separate computed list of differences (the brief's option C); the aid is the high-level description above.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 18; Publication §5A.
+owed: the statement as a required part of a new edition's signing (publication, case-authoring); the assistant's draft of it, labelled machine work, with its origin kept; watching other groups' published cases for new editions, as standing intent or monitoring, with its re-evaluation and queue responses (BOB places them, for Bob's approval); the UX page's question 18 marked ruled.
+
+### DEC-102 · answered
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 19: how members choose how they are credited)
+for: bob
+question: Confirm that a case edition cannot be signed while a member whose observation it uses has not chosen a credit level, and that "by name" publishes the member's handle, never a legal name; approve where the member is asked and how the levels appear; and, as Bob raised, should the credit level a member chooses change the weight of their testimony?
+why it is Bob's: doctrine (members' control of their own words and identity; how testimony is weighed) and UX.
+provisional: four credit levels chosen by the member (Publication §3 rule 7); testimony keeps its D grade at every credit level (MEMBER-KNOWLEDGE-DESIGN §3); unchosen blocks signing and "name" needs a handle, both built and approved "for now" (K102).
+alternative: the brief's options: (B) credit the group if no choice is made; (C) "by name" means a typed legal name; (D) a standing preference the member can override.
+recommendation: (A) keep both built rules; ask in the member's queue and show the state on the draft; every level shown publicly in one neutral style with the grade beside it.
+reversal cost: low for the display; the testimony rule changes a designed (MEMBER-KNOWLEDGE-DESIGN §3) and partly built rule.
+response: **Bob, 2026-10-01: A, and testimony weighed by identity.**
+  1. ANONYMOUS MEMBER TESTIMONY IS LIKE AN ANONYMOUS TIP: "I'm wondering whether a member's anonymously provided testimony and evidence should be treated like an anonymous tip - only potentially weaker. I suggest weaker because a member might have a vested interest in a published finding. The opportunities for abuse are manifold. Anonymous testimony and evidence must be corroborated based on journalistic and legal standards."
+  2. IDENTITY BUYS STRENGTH: "In order for testimony or evidence to have greater strength, the member must identify themselves according identity levels already used elsewhere in the system." Read by the design session as the credit levels: the group and the project are anonymous; cover and name identify, in that order; a change of level reaches the findings resting on the testimony as re-evaluation notices (as DEC-78 item 5 (e) does for a source). This replaces MEMBER-KNOWLEDGE-DESIGN §3's rule that testimony keeps one grade at every credit level.
+  3. "A": both built rules confirmed (an edition is not signed while a member whose observation it uses has not chosen a credit level, the owner's way forward being to drop the finding resting on it; "by name" publishes the member's handle, never a legal name); the member is asked by a to-do in their own queue, the state shown on the case draft; every level appears publicly in one neutral style with the grade beside it, so the weight shows through the grade, never through a stigmatizing look.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 19; MEMBER-KNOWLEDGE-DESIGN §3 (amended); Publication §3 rule 7 (amended).
+owed: how each identity level maps to the testimony grade and how anonymous testimony counts in strength (it cannot alone carry a finding until corroborated), what counts as corroboration to journalistic and legal standards, the re-evaluation notice on a change of level (strength, ratification, reevaluation; BOB drafts for Bob's approval); "for now" lifted from ratification R2/R18 and publication R17; the UX page's question 19 marked ruled.
+
+### DEC-103 · answered
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 20: how a group's declared bias appears to the public)
+for: bob
+question: Do public readers see the lens's actual statements with their justifications, or only the publisher's acknowledgement and a reference to the lens; are the statements printed into the signed case; and is the full form required on the page or may it open as a summary?
+why it is Bob's: doctrine (the two-audience choice: a lens that is weighable, not a weapon) and UX.
+provisional: the lens is public and accompanies every published case (DEC-20); the acknowledgement is the publisher's own words at publication (DEC-46 (2)); the signed case carries only the manifest (set names, revisions, fingerprint), not the statements (case-authoring R14).
+alternative: (B) the full lens on the page only, read live and checked against the fingerprint; (C) a summary first; (D) the acknowledgement and manifest only.
+recommendation: (A) the full lens printed into the signed case, reasons attached.
+reversal cost: moderate once cases are signed in the new format.
+response: **As recommended (Bob, 2026-10-01): A.** At publication every statement in force is printed into the signed case (kind in plain words, subject, text, justification and evidence), citing only public material and counting what is withheld. The page shows "The lens this case was produced under": the acknowledgement first, then each statement with its reasons beneath, then two lines on why groups declare bias; collapsed on screen to one line per statement with its justification, full in print. The publisher sees exactly what will be printed before signing. Earlier cases keep only the fingerprint.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 20; Declared Bias, "RULED 2026-10-01".
+owed: a new signed case format carrying the statements with their justifications and evidence, the withheld-citation count, the public page's lens section and its print form, the pre-signing preview (case-authoring, publication, public-read; BOB drafts for Bob's approval); the UX page's question 20 marked ruled.
+
+### DEC-104 · answered
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 21: what a hunch's grade does, and clearing hunches before publishing)
+for: bob
+question: Confirm that a hunch never counts in any strength reading and correct the doctrine sentence that says it "composes normally"; decide what the hunch's letter is for once strength ignores it; and approve a standing "hunches to clear" list.
+why it is Bob's: doctrine (DEC-15's hunch, DEC-20's publication block) and UX.
+provisional: a hunch counts for nothing in strength and is always named, approved "for now" (strength R5, K102, K187); Declared Bias still said a hunch "composes normally" while open.
+alternative: (B) two strength readings while investigating, with and without hunches; (C) hunches carry no letter.
+recommendation: (A) the letter stays on the link; strength ignores it.
+reversal cost: low.
+response: **As recommended (Bob, 2026-10-01): A.** A hunch counts for nothing in any strength reading, and strength says how many hunches it left out ("for now" lifted from strength R5). The hunch's letter appears only on the link itself, in the hunch style, as the member's stated confidence when the guess was made, beside "not counted". A "Hunches to clear" list sits on the question and project pages, as status where the work lives and never a notification, and the check before publishing lists them again. Declared Bias's "composes normally" is corrected: a hunch links evidence while open but never lifts strength.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 21; Declared Bias (corrected).
+owed: "for now" lifted from strength R5; strength's count of hunches left out; the "Hunches to clear" list on question and project pages (BOB places them); the UX page's question 21 marked ruled.
+
+### DEC-105 · answered
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 22: standards of proof by audience, the project's bar)
+for: bob
+question: Ship the project's bar setting now with plain meanings and an honest note that no audience guidance exists, or hold it; what form audience guidance takes when it comes; and whether its research is commissioned now or on a trigger.
+why it is Bob's: requirements and UX (what the product tells a group about standards of proof).
+provisional: the bar belongs to a project and never combines across projects (DEC-72); co-attested Grade B suffices to publish (DEC-81); for actions each venue's standard is a sourced profile fact, never refusing (K597 (3), K600 (b)); the audience catalogue is owed (Publication §7).
+alternative: (B) audience standards as sourced profile facts now; (C) research first, the screen waits.
+recommendation: (A) letters now with an honest note, B named as the form guidance takes, the research on a trigger.
+reversal cost: low.
+response: **As recommended (Bob, 2026-10-01): A.** The owner sets a letter per axis, or none, each with its one-line meaning from the measures map, under the line "CivicOS has no guidance yet on what particular audiences expect. Readers see the bar you set in these words." When guidance comes it takes the venue form (B): sourced audience standards in the jurisdiction profile beside the choice, "Undetermined" where unresearched, never preselected or defaulted. The research waits for its trigger: a group asks what bar suits an audience, or a case is challenged as below its audience's standard.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 22; Publication §7.
+owed: the bar screen's honest note (strength, project settings; BOB places it); later, on the trigger, audience standards as profile facts (jurisdictions); the UX page's question 22 marked ruled.
+
+### DEC-106 · answered
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 24: always knowing which side of the privacy fence you are on)
+for: bob
+question: Are members taught two spaces (working and published, with review copies and outgoing drafts as marked items on the working side) or three (with "shared for review" its own); and does each document and case carry a path-to-publication marker?
+why it is Bob's: UX principle (UI-KICKOFF's law that working and published material never share an ambiguous screen).
+provisional: a review copy never leaves the group's copy and is marked as what it is (Publication §6A); publishing is the only irreversible act, through the ceremony (DEC-19, DEC-80); the steps toward it are the path to publication (K356).
+alternative: (A) two spaces with banded in-between items; (B) three named spaces; (D) leave it to Design.
+recommendation: (C) two spaces plus a path marker on each item.
+reversal cost: low; nothing is built.
+response: **As recommended (Bob, 2026-10-01): C.** Two spaces with distinct frames, the working record and the published record; review copies and outgoing drafts appear inside the working frame with a band saying what they are and who can see them; each document and case carries a small path-to-publication marker. Frames, colours, bands and the marker's look are Design's.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 24; Interaction Constructs §W.
+owed: nothing new to build beyond the redesign's screens (the plainer definition of a review copy, "never shown to anyone outside the group except through a review link you issue", in the redesign's words); the UX page's question 24 marked ruled.
+
+### DEC-107 · answered
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 25: the word members see for the queue's to-do class, the part the Action answers left to Bob)
+for: bob
+question: What word do members see on the queue's to-do class (internal code OBLIGATION), given Bob's 1 August ruling that "obligation" means a public body's duty, and is "obligation" kept, in everything members and readers see, for a public body's duty only?
+why it is Bob's: member vocabulary, as "Noticed" was (K356).
+provisional: NOTIFICATIONS.md "What the three classes actually ARE" (2026-08-01): obligations are the civic system's own flows, a member's task is downstream of them; a plan's checkpoints are the group's own (action-plans R23, UX-ANSWERS, K608 (4)); FINDING is shown as "Noticed" (K356).
+alternative: (B) "Obligation" with the owner named ("Obligation · ours"); (C) "Obligation" as now.
+recommendation: (A) "To do" for members, the internal code unchanged.
+reversal cost: low.
+response: **As recommended (Bob, 2026-10-01): A.** Members see "To do" wherever they saw "Obligation"; the internal code is unchanged, as with "Noticed". "Obligation" is used on members' and readers' screens only for a public body's duty. Each item's sentence still names whose step it is where that matters ("our plan", "the city's deadline"); the mapping is recorded once and in the glossary members can open from the queue.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 25; NOTIFICATIONS.md (RULED 2026-10-01).
+owed: member-facing text that says "Obligation" for the to-do class re-worded to "To do" (queue, queue-producers, the redesign; BOB places it, as K899 (1) placed "record"); the UX page's question 25 marked ruled.
+
+### DEC-108 · answered
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 26: when the doorbell's limit is hit, what the sender and the group are told; Bob widened it to the doorbell's inbox, its limits, a gatekeeper and a discard archive)
+for: bob
+question: What the doorbell's inbox looks like and how it is sorted; whether the limits (12 per source and 300 in total in any 10 minutes) suffice; what a would-be knocker is told when a limit holds; whether spam and denial-of-service floods can be screened; what happens to discarded knocks; and whether a count-only tally of refused knocks is kept.
+why it is Bob's: UX, and doctrine (the doorbell is the one route in for people who cannot join).
+provisional: Intake Doctrine §2a (the limit is a bound, published with its method; a refused knock stores nothing); DEC-78 (pulling a knock).
+alternative: the brief's options on the tally: (A) record nothing, fix the refusal text; (B) a count-only status on the inbox page; (C) B plus one queue item when the doorbell stays full.
+recommendation: (B) for the tally.
+reversal cost: low; the limits are constants.
+response: **Bob, 2026-10-01, in his words:**
+  1. THE INBOX: "I imagine the doorbell experience to be like an email inbox, with unhandled entries highlighted, but handled entries still visible."
+  2. SORTING: "Knocks can be sorted in the list chronologically, by status, knocker identity (secret) or not, project affected, etc."
+  3. LOWER LIMITS, AND THE KNOCKER TOLD: "I don't think that the current limits (at most 12 from one sender and 300 in total in any 10 minutes) is sufficient. I think those limits should be 5 and 10, and potential knockers being aware when a limit is in affect so that they don't think that they've knocked when they haven't." Read as: at most 5 knocks from one source and 10 in total in any 10 minutes.
+  4. A GATEKEEPER: "It should also be possible to enable a gatekeeper function able to identify and dismiss obvious spam and DOS submissions." Read as: optional per group, labelled machine work, its dismissals going to the discard archive below.
+  5. A DISCARD ARCHIVE: "The system may want to archive the discards, just in case a gem comes in buried in the morass. But perhaps the archive is automatically cleared on a tight schedule (a week after receipt?)." Recorded as: discards are archived and cleared automatically one week after receipt, Bob's suggested figure.
+  6. THE TALLY (Bob, later the same day, "YES" to the brief's remaining question, as recommended, B): the system keeps a count-only tally of knocks it turned away (a daily total for the whole doorbell, how many times the whole-doorbell limit was reached, and when last; no addresses, fingerprints, times of individual knocks or content), shown to members as status on the inbox page, never a queue item or notification; the sender's refusal text says, truthfully, that the group can see how often its doorbell turns people away.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 26; Intake Doctrine §2a.
+owed: the limits lowered to 5 and 10 with the published sentence; the knock page telling a would-be knocker when a limit holds; the inbox's highlighting and sorting; the optional gatekeeper (machine work) and the discard archive with its one-week clearing (capture, the doorbell's page, the inbox; BOB drafts for Bob's approval); the count-only tally as status on the inbox page and the refusal text's truthful sentence (with BOB's privacy check of the tally before it is built); how a litigation hold (question 31) affects the archive's clearing; the UX page's question 26 marked ruled.
+
+### DEC-109 · answered
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 27: what the founder is told about who really controls the group's copy)
+for: bob
+question: Does the claim page tell the founder the whole truth about the hosting account's power; does the explanation stay visible in administrator settings with who holds hosting access; and must anyone record that they read it? (Custody itself stays deferred, DEC-2.)
+why it is Bob's: doctrine (the root of trust, Membership v2 §4.6, §4.8) and UX.
+provisional: the claim page shows a reassurance-only card (the hosting account is a way back in); membership R11 records who holds hosting access when a second administrator joins.
+alternative: (A) the whole truth at claim only; (C) B plus a recorded acknowledgement; (D) the wording as it is.
+recommendation: (B) the whole truth at claim, plus a standing card for administrators.
+reversal cost: low; wording.
+response: **As recommended (Bob, 2026-10-01): B.** The claim page and the wizard's last screen replace the reassurance-only card with a short plain block, shown before the founder chooses a password: whoever can sign in to the hosting account controls the copy (can replace the one-time password, claim the copy again, read everything, lock everyone out, and no administrators' vote can stop them); use a group account, not a personal login; add at least one other trusted person; where possible let someone other than the administrators hold it; the same account is the way back in if the password is lost. Administrator settings carry a standing "Who controls this copy" card with the same explanation, who the group recorded as holding hosting access and when, and the date the copy was last claimed or re-claimed where the copy can show it. No acknowledgement act.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 27; Membership v2 §4.8.
+owed: the claim page's and wizard's wording (instance-setup), the administrator settings card (the redesign), and whether the copy can show its last claim date (BOB confirms); the UX page's question 27 marked ruled.
+
+### DEC-110 · answered
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 28: the queue's three kinds of item, their names and treatment)
+for: bob
+question: The three names members see ("To do", "Noticed", and "Signal" or "Status" for the third, replacing "Condition"), and whether each kind is shown differently, with its own icon, wording, buttons and a link to its home, while the queue stays one list in its present order.
+why it is Bob's: member vocabulary and UX (Bob's 1 August ruling: one queue, three kinds treated differently).
+provisional: NOTIFICATIONS.md "Presented and treated differently — decided"; queue R6's order (to-dos, noticed, signals), R12, R16, R19; "To do" (DEC-107) and "Noticed" (K356).
+alternative: (B) rename the chips only; (C) three separate sections or tabs.
+recommendation: (A) three plain names, three treatments, links home, "Signal" for the third.
+reversal cost: low.
+response: **Bob, 2026-10-01: as recommended (A, "Signal"), with re-sorting and folding:**
+  1. "It's my sense that the queue should be re-sortable based on time added, time due, case, type."
+  2. "When sorted by case or type, the queue should be collapsable (by case or type) so that a member can focus."
+  3. "otherwise, as recommended": members see "To do", "Noticed" and "Signal"; each kind has its own icon, wording, buttons and an "Open…" link to its home (until the flow model and signal history exist, the link goes to the thing the item concerns); the queue stays one list, its default order grouped by case with to-dos, then noticed items, then signals. The internal "noticed" disposition clash is the architecture session's to rename.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 28; NOTIFICATIONS.md (RULED 2026-10-01).
+owed: "Condition" re-worded to "Signal" in member-facing text; the queue read able to sort by time added, time due, case and kind (queue; BOB places it); the redesign's three item styles, sorting and collapsible groups; the UX page's question 28 marked ruled.
+
+### DEC-111 · answered
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU, then session_01TNeXM2Qvi7zMXT6BntbENE from 2026-10-01; the development process runs on his secondary account) (the UX canon's open question 29: the network's directory, forum and 'working on' signals)
+for: bob
+question: Whether CivicOS connects to the network's directory, forum and 'working on' signals; if 'working on' signals come inside CivicOS, how they are kept honest so that "catfish groups" cannot discourage other groups with empty claims, and what "anonymous-compatible" means.
+why it is Bob's: scope and doctrine (Roadmap §11 "Inter-group awareness"; Design Requirements 9, 10, 13, 14), member-facing outward acts, and, as holder of the network's domains, the network site's policy.
+provisional: Roadmap §11 ("Lightweight directory entries. Optional, anonymous-compatible, no ownership implied"; "No group owns an issue"); Design Requirement 10 (believeinoakland.org as directory: no pre-approval, compliance status, visible community flags, downloadable mirror); Publication §3 rule 10 and §7 (credential-free public index; public identity is the slug); the outward-act warning (DR-13, the tell discipline).
+alternative: (B) CivicOS submits listings and shows directory status; (C) a 'working on' act, optionally anonymous; (D) out of scope.
+recommendation: (A) the three stay outside CivicOS, with links out and a prefilled directory submission; extended in discussion with Bob into project-backed, signed 'working on' notices published at the group's own address and read by the directory.
+reversal cost: medium (a new outward act, a public notice format, weekly sealed timestamps, and the network site's policy).
+response: **Bob, 2026-10-01: A, extended, confirmed after discussion:**
+  1. "I've registered believeincities.org, believeincities.com, believein.city. So every city could have a url redirect like believeincities.org/oakland or whatever. I think that we have to be careful in this decision to make sure that "catfish groups" don't pepper the local landscape with claims that they're working on this and that, and 10 other issues - thus discouraging other groups from taking up those causes. There needs to be some sort of feedback loop that creates clarity and fosters appropriate levels of collaboration, while not spooking other motivated groups."
+  2. "What if the CivicOS instance of a group claiming to be working on an issue got involved in the process of keeping a group honest? Maybe claims written by hand show as weaker than claims made by and communicated through a group's CivicOS instance provide more clarity about what's really going on."
+  3. "The draft [says] nothing about the group's instance inserting evidence-based description of the group's work on the issue. What I'm suggesting is that there must be a project defined as working on the issue. Only a project owner can ask their instance to submit a reference to the project to the believeincities.org/<place> directory. The posting must include a date, but the submitting owner can set the date to be later than when the project was created - but not earlier. The code that generates the posting, which is signed the way a published case is signed, gives an indicator (1 to 10?) indicating how active the work on the project is."
+  4. "I agree with your safeguards." (only members' own work counts, never the assistant's; weeks with work, not volume; a trailing 90 days re-signed monthly; a published method). Asked whether modified code can reach a signed posting: yes, and an owner's key can sign any statement by hand; prevention would need a central host, so fakes are made detectable, attributable and unable to rise past "Reported".
+  5. "a. five worded steps"; "b. every group has an identifiable 'slug'." (no anonymous notices); "c. whether they're interested in collaborating" (the only optional extra).
+  6. "confirmed", on the full text: CivicOS: (1) a 'working on' notice comes only from a project defined as working on the issue, posted only by that project's owner, after a warning that the public, including anyone being examined, will see it and that stopping later won't unsay it; (2) it carries the group's slug (never members' names), the owner's wording (optionally naming the public body and the matter), "Working on this since" (no earlier than the project's creation, no later than today), the date posted, the activity level in five steps, "Interested in collaborating" only if the owner chooses, and links to any case the project published, and nothing else from the project's private work; (3) the activity level counts weeks in the last 13 with real work by members (never the assistant's, never volume) by a published method, re-signed monthly while the project is open; (4) each counted week gets an independent timestamp on a sealed summary of that week's work, and at publication the group opens the seals that relate to the case; (5) the notice is signed by a project owner as a published case is signed, published at the group's own public address, and the group's public page lists its owners' public signing keys, without names; (6) stopping or closing says so, with an optional handoff note, and a notice Dormant for a further month lapses into the group's record unless renewed or stopped; (7) no anonymous notices; (8) links out to the directory and forum, and a prefilled directory submission after publication. For the network site (Bob's direction as holder of the domains): (9) the directory lives at believeincities.org/<place>, believein.city the short form, believeinoakland.org redirecting to believeincities.org/oakland, each notice filed under the public body it examines and shown on every place page that body touches; (10) it reads notices at each group's address, records when it first saw each notice and each signing key, and keeps every notice; (11) notices show as Stated (typed by hand, no project; lapses after 60 days), Reported (signed by the group's copy) or Proven (seals opened at publication); (12) each group's record is facts, never a score; notices on the same matter side by side, each saying "others welcome"; never the word "claim" on public pages; impossible combinations flagged automatically; community flags stay visible; (13) a group with no published work has at most two open notices.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 29 and its handoff §5; BIO_Publication_v0_1.md §5B (RULED 2026-10-01); BIO_Complete_Roadmap_v5.md §11 "Inter-group awareness" (RULED 2026-10-01); BIO_Design_Requirements_v2.md §10 (RULED 2026-10-01).
+owed: the "tell the network" act on a project (owner only, outward-act warning, the since-date bounds) and its stop, handoff and lapse; the notice format, signed by an owner's key as a case is (a new statement namespace), in the group's public index; the activity level's published method (five steps over 13 weeks; cut-offs proposed 10–13, 7–9, 4–6, 1–3, 0, tunable within the principles) and monthly re-signing; the weekly independent timestamp on a sealed summary of the week's work and its selective opening at publication; the project reference a later case carries; the owners' public signing keys on the group's public page (this also closes the silence on how a stranger trusts a case's attestor key); links out and the prefilled directory submission; the network site's display and policy (Bob's direction, outside CivicOS); the UX page's question 29 marked ruled.

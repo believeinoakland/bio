@@ -1,6 +1,6 @@
 # BIO Declared Bias, v0.1 DRAFT
 
-**Status** · The doctrine of bias as a declared, justified, first-class construct: three statement kinds, bundles and adoption, the subject registry and the masking safeguards, bias debt versus HUNCH DEBT, the authored acknowledgement at export, differential traversal and the cross-group rerun. Titled "v0.1 DRAFT, drafted July 27, 2026, from Bob's proposal"; its header's "nothing here is ratified doctrine, no check exists, no code implements it" is now false — it carries three RULED markers (DEC-6 and DEC-15 of 2026-08-01, DEC-46 of 2026-08-04, built by REC-47), one AMENDED (DEC-20) and one STRUCK sentence (D-188), and the plane carries `object_type: bias`, `op=biasmanifest`, the acknowledgement, and — since D-84 (2026-09-23) — the manifest stamped into every newly published case document. Partially complete: a v0.1 body with dated rulings layered in place and a header never re-dated. Read the "READ THIS FIRST" banner in the hunch section before anything else — bias debt and HUNCH DEBT mean opposite things for publication and the body once said otherwise. Bias debt is RAISED since D-86 (2026-09-23) and SETTLED since REC-207 (2026-09-24, BOB #32's ruling of 2026-09-23 23:42Z): one disclosed, never-blocking obligation per run whose lens moved, and three acts that settle it — the lens moving back, a re-run under the lens now in force, and a member's resolve with a required stated reason — each RECORDED, append-only, and read back by `op=biasdebt` (`construct-status.json` 7.bias-debt). Since REC-188 the gate refuses a `bio-case-document/3` without the manifest (C-41.13). as of 2026-09-25 (REC-207 BUILT BOB #32's ruling of 2026-09-23 23:42Z: what settles a bias-debt obligation; REC-187 BUILT BOB #31's ruling — the manifest names the ADOPTED revision and hashes exactly its statements; D-468 then made the bias state machine ENFORCED at the write path rather than merely declared (C-26.12), which closes the adopted-set half of the adoption residue; REC-210 BUILT BOB #32's: an adoption pinning a still-PROPOSED revision is a REPLACEMENT and SAYS so, on the act's answer and on op=biasmanifest, and the ruling moved into §"Bias bundles and adoption").
+**Status** · The doctrine of bias as a declared, justified, first-class construct: three statement kinds, bundles and adoption, the subject registry and the masking safeguards, bias debt versus HUNCH DEBT, the authored acknowledgement at export, differential traversal and the cross-group rerun. Titled "v0.1 DRAFT, drafted July 27, 2026, from Bob's proposal"; its header's "nothing here is ratified doctrine, no check exists, no code implements it" is now false — it carries three RULED markers (DEC-6 and DEC-15 of 2026-08-01, DEC-46 of 2026-08-04, built by REC-47), one AMENDED (DEC-20) and one STRUCK sentence (D-188), and the plane carries `object_type: bias`, `op=biasmanifest`, the acknowledgement, and — since D-84 (2026-09-23) — the manifest stamped into every newly published case document. Partially complete: a v0.1 body with dated rulings layered in place and a header never re-dated. Read the "READ THIS FIRST" banner in the hunch section before anything else — bias debt and HUNCH DEBT mean opposite things for publication and the body once said otherwise. Bias debt is RAISED since D-86 (2026-09-23) and SETTLED since REC-207 (2026-09-24, BOB #32's ruling of 2026-09-23 23:42Z): one disclosed, never-blocking obligation per run whose lens moved, and three acts that settle it — the lens moving back, a re-run under the lens now in force, and a member's resolve with a required stated reason — each RECORDED, append-only, and read back by `op=biasdebt` (`construct-status.json` 7.bias-debt). Since REC-188 the gate refuses a `bio-case-document/3` without the manifest (C-41.13). as of 2026-10-01 (REC-207 BUILT BOB #32's ruling of 2026-09-23 23:42Z: what settles a bias-debt obligation; REC-187 BUILT BOB #31's ruling — the manifest names the ADOPTED revision and hashes exactly its statements; D-468 then made the bias state machine ENFORCED at the write path rather than merely declared (C-26.12), which closes the adopted-set half of the adoption residue; REC-210 BUILT BOB #32's: an adoption pinning a still-PROPOSED revision is a REPLACEMENT and SAYS so, on the act's answer and on op=biasmanifest, and the ruling moved into §"Bias bundles and adoption").
 
 **Place in the system** · Owns construct 7 of `BIO_System_Design.md` §3 (declared bias) and the subject-registry requirement, which D-83 makes the same construct as the Content Framework's entity axis. `BIO_Content_Framework_v0_10.md` §13 defers to it; `BIO_Interaction_Constructs_v0_1.md` consumes it for the TASK clock; `BIO_Case_Making_v0_1.md` for hunch debt on plan premises.
 
@@ -27,6 +27,7 @@
   - [RULED 2026-09-23 by BOB #32: what settles a bias-debt obligation (D-86)](#ruled-2026-09-23-by-bob-32-what-settles-a-bias-debt-obligation-d-86)
   - [RULED 2026-08-01: a HUNCH is temporary declared bias, and it is HUNCH DEBT](#ruled-2026-08-01-a-hunch-is-temporary-declared-bias-and-it-is-hunch-debt)
 - [The bias acknowledgement, authored at export](#the-bias-acknowledgement-authored-at-export)
+  - [RULED 2026-10-01 by Bob (DEC-103): the full lens is printed into the signed case](#ruled-2026-10-01-by-bob-dec-103-the-full-lens-is-printed-into-the-signed-case)
 - [Differential traversal and the cross-group rerun](#differential-traversal-and-the-cross-group-rerun)
 - [The two-audience choice, made knowingly](#the-two-audience-choice-made-knowingly)
 - [Sequencing](#sequencing)
@@ -451,9 +452,16 @@ an uncleared hunch cannot publish at a claimed strength. `op=publishpreflight` r
 
 **A hunch is not an `undetermined` leg and must never be composed as one.** R1 suspends
 an axis when a grade is ABSENT; a hunch grade is PRESENT and asserted. During `open` it
-composes normally — that is what makes it useful — and the case is simply unpublishable
+links the evidence it joins — that is what makes it useful, for traversal, search and
+suggestion — but it never lifts a strength reading, and the case is simply unpublishable
 while it stands. Treating a hunch as undetermined would destroy exactly the
-traversability this ruling exists to preserve.
+traversability this ruling exists to preserve. **CORRECTED 2026-10-01 by Bob (DEC-104):**
+this paragraph said a hunch "composes normally" while open; a hunch counts for nothing in
+any strength reading (strength R5), which says how many hunches it left out. The hunch's
+letter stays on the link itself, in the hunch style, as the member's stated confidence when
+the guess was made, beside the words "not counted". A standing "Hunches to clear" list sits
+on the question and project pages (status where the work lives, never a notification), and
+the check before publishing lists them again.
 
 **Sequencing, stated so a later session does not conclude the bias half was forgotten:**
 registering a hunch as a first-class statement in the bias manifest needs
@@ -541,6 +549,16 @@ retired — so a later revision merely proposed neither moves the lens nor lifts
 revision's statements and residue out of THAT revision's bytes, never the head's projection, and a pin whose bytes the
 record cannot produce is answered UNDETERMINED, never "not in force". `bio-plane/test/d84-case-manifest.test.mjs` §4
 recomputes the stamped hash from the stamped shas' bytes alone across propose → adopt → later propose.
+
+### RULED 2026-10-01 by Bob (DEC-103): the full lens is printed into the signed case
+
+Readers see the lens itself, not only its name and fingerprint. At publication every statement in force is printed into the
+signed case: its kind in plain words, its subject, its text, and its justification and evidence directly beneath, citing only
+published or otherwise public material and stating how many citations are withheld (never which). The published page shows
+"The lens this case was produced under": the publisher's acknowledgement first, then each statement with its reasons, then two
+lines on why groups declare bias. On screen it opens collapsed to one line per statement with its justification; in print it is
+always full. Because the statements are in the signed bytes, the lens survives print, download and the group's system going
+away. The publisher sees exactly what will be printed before signing. Earlier cases keep only the manifest's fingerprint.
 
 ## Differential traversal and the cross-group rerun
 

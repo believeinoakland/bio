@@ -1,6 +1,6 @@
 # BIO interaction constructs — v0.2 (v0.1 derivation retained below)
 
-**Status** · The member-facing interaction shapes for M8: QUEUE and ACT as the two constructs, the rung ladder of authored acts, UNDETERMINED as a display primitive, and the v0.1 derivation of seven candidates retained below as the TYPES inside the two. "v0.2 (v0.1 derivation retained below)", "Written 2026-07-31 (session BOB) at Bob's direction"; revision 0.2 was the session's same-day answer to Bob's challenge on construct count, not a ruling; four dated rulings are embedded (DEC-8, DEC-16, DEC-27, DEC-36) plus DEC-19's correction and FW-14's. Partially complete: the v0.2 shape is stated, its falsifier ("build T and one act, then re-read this") has no recorded re-read, and the filename says v0_1 while the body says v0.2. §P's accountability rule is BUILT for an agent-surfaced QUESTION (D-82, 2026-09-23: one marker wherever a question is listed or shown), beside UI-5's derived marker for a finding. §S's bulk half is BUILT for the acts whose items are NOT bundles, as ONE call carrying the member's enumerated set under the `per-item` weight — the queue's (D-126, IC-235) and `op=resolve` over captured documents (D-291, IC-247, on BOB #32's ruling of 2026-09-23 23:30Z naming §S); §S's body still describes only the bundle LEASE (`op=select`) and says nothing of that second shape. **§M GAINED THE MEASURES MAP (Bob, 2026-09-29, DEC-82): letters grade evidence, bars show progress, weights mark acts.** **§U GAINED ITS TREATMENT (DEC-86): one "Undetermined" component with a mandatory reason, four visibly distinct neighbours.** **§F GAINED FRICTION MATCHES WEIGHT (DEC-87): friction escalates with an act's rung.** as of 2026-09-29.
+**Status** · The member-facing interaction shapes for M8: QUEUE and ACT as the two constructs, the rung ladder of authored acts, UNDETERMINED as a display primitive, and the v0.1 derivation of seven candidates retained below as the TYPES inside the two. "v0.2 (v0.1 derivation retained below)", "Written 2026-07-31 (session BOB) at Bob's direction"; revision 0.2 was the session's same-day answer to Bob's challenge on construct count, not a ruling; four dated rulings are embedded (DEC-8, DEC-16, DEC-27, DEC-36) plus DEC-19's correction and FW-14's. Partially complete: the v0.2 shape is stated, its falsifier ("build T and one act, then re-read this") has no recorded re-read, and the filename says v0_1 while the body says v0.2. §P's accountability rule is BUILT for an agent-surfaced QUESTION (D-82, 2026-09-23: one marker wherever a question is listed or shown), beside UI-5's derived marker for a finding. §S's bulk half is BUILT for the acts whose items are NOT bundles, as ONE call carrying the member's enumerated set under the `per-item` weight — the queue's (D-126, IC-235) and `op=resolve` over captured documents (D-291, IC-247, on BOB #32's ruling of 2026-09-23 23:30Z naming §S); §S's body still describes only the bundle LEASE (`op=select`) and says nothing of that second shape. **§M GAINED THE MEASURES MAP (Bob, 2026-09-29, DEC-82): letters grade evidence, bars show progress, weights mark acts.** **§U GAINED ITS TREATMENT (DEC-86): one "Undetermined" component with a mandatory reason, four visibly distinct neighbours.** **§F GAINED FRICTION MATCHES WEIGHT (DEC-87): friction escalates with an act's rung.** **§U GAINED EMPTY, LOADING, FAILED AND WAITING (DEC-98): one vocabulary everywhere.** **§L ADDED, ACCESS AND LANGUAGE (DEC-99): WCAG 2.2 AA for every screen and the published case.** **§W ADDED, WORKING AND PUBLISHED (DEC-106): two spaces, in-between items banded, a path marker on each item.** as of 2026-10-01.
 
 **Place in the system** · Owns construct 12 of `BIO_System_Design.md` §3 (member surfaces): it governs M8 (`docs/development/MILESTONES.md`; the UI area's governing design per `QUEUE.md`), hands queue content to `docs/development/NOTIFICATIONS.md`, and its pre-flight rule (DEC-8) is what the assistant construct and every act surface rest on. Distinct from `CONSTRUCTS.md`, the content inventory — the name collision is stated in the document.
 
@@ -32,6 +32,8 @@
 - [U · UNDETERMINED — a display primitive, not an act](#u-undetermined-a-display-primitive-not-an-act)
 - [F · FRICTION MATCHES WEIGHT — how an act's rung is felt (Bob, 2026-09-29, DEC-87)](#f-friction-matches-weight-how-an-acts-rung-is-felt-bob-2026-09-29-dec-87)
 - [M · THE MEASURES MAP — how every scale reads, approved by Bob 2026-09-29 (DEC-82)](#m-the-measures-map-how-every-scale-reads-approved-by-bob-2026-09-29-dec-82)
+- [L · ACCESS AND LANGUAGE — the standard every screen meets (Bob, 2026-10-01, DEC-99)](#l-access-and-language-the-standard-every-screen-meets-bob-2026-10-01-dec-99)
+- [W · WORKING AND PUBLISHED — the fence a member can always see (Bob, 2026-10-01, DEC-106)](#w-working-and-published-the-fence-a-member-can-always-see-bob-2026-10-01-dec-106)
 - [What this changes about how M8 is built](#what-this-changes-about-how-m8-is-built)
 
 ---
@@ -589,6 +591,15 @@ searched there; distinct from looked-and-absent, observation-log R1); **"Refused
 reason and translation). None of the five is ever dressed as an error, and all five are written as named terms (§M). The
 exact marks and sentence patterns are the redesign's, within this rule.
 
+**EMPTY, LOADING, FAILED AND WAITING (Bob, 2026-10-01, DEC-98, question 15, option C).** The ordinary states share one
+vocabulary across every screen, each with its own fixed look and none dressed as an error: **"Nothing here"** (truly empty);
+**"Still loading"**; **"Could not read this, because…"** (the screen's own request failed); and the record's own
+**"Undetermined, because…"** above. A screen that cannot tell "could not read" from "none" says "could not read", never
+"none". Every wait carries one line naming what is awaited, from whom, and the expected or legal date where one exists
+("Waiting on the City Clerk's reply, due 14 October"), or that no date is set. An empty screen offers one plain next step
+only on something the member has just created (a new project, a new plan: "Nothing here yet. Add the first question.");
+nowhere else, so it informs at the act and never nudges (DEC-69). Exact wording and looks are the redesign's.
+
 ## F · FRICTION MATCHES WEIGHT — how an act's rung is felt (Bob, 2026-09-29, DEC-87)
 
 **The principle, in Bob's words.** The work must be *"efficient, productive, sustainable"*, and the tool should *"fade into the
@@ -641,6 +652,32 @@ against. What it rules, stated here so the canon carries it without the page:
   (testimony beside when present), one phrase against the project's bar ("Meets the bar", "Short on connection", "Short on
   capture", "Unrated"), and "Undetermined" with its reason; never one combined badge (DEC-44). A hover names the weakest document
   or link and how to raise it; a click opens the question with that leg highlighted.
+
+## L · ACCESS AND LANGUAGE — the standard every screen meets (Bob, 2026-10-01, DEC-99)
+
+**The standard.** Every member screen of the redesign, and the published case in all its forms (page, print and file), is built
+to **WCAG 2.2 at level AA**. Each new screen is checked against it before it is accepted, as part of accepting the screen, not
+as a separate pass at the end. The rules already set are part of meeting it: colour is never the only signal (each scale has
+its icon, each stage bar its name, §M, DEC-79); every explanation that opens on hover also opens on keyboard focus or a tap;
+the assistant panel docks and never floats, so it cannot trap or lose focus (DEC-90).
+
+**Language.** The interface is in English for now, built so that its words live in one place and another language can be
+added without rebuilding screens. A published case appears in the language its group wrote it in. Offering the interface in a
+place's languages, named by its jurisdiction profile, is a later decision.
+
+**Translated cases (principle now, design later).** A translation of a published case is never presented as the signed case:
+it is marked as an unofficial translation and names the signed original. Whether and how a group issues translations through
+CivicOS is decided when a group asks to publish one.
+
+## W · WORKING AND PUBLISHED — the fence a member can always see (Bob, 2026-10-01, DEC-106)
+
+Members are taught **two spaces**, each with its own distinct frame: the group's private **working** record, and the public
+**published** record. Material that sits between them is shown as working material, because that is what it is: a review copy
+(which never leaves the group's copy and a named outsider may read) and an outgoing draft each appear inside the working frame
+with a band saying what it is and who can see it ("Shared for review: 2 people outside the group can read this"). Each document
+and case also carries a small **path-to-publication marker** showing where it stands (for example "working → shared for review →
+published"). Publishing remains the only crossing, through the ceremony. Frames, colours, bands and the marker's look are the
+redesign's, within this rule.
 
 ## What this changes about how M8 is built
 
