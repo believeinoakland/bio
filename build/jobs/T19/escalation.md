@@ -28,3 +28,7 @@ Size (session_0131QaMvPWgDmvXkW5QZXTfK): test runs 4, module lines 1489
 ## J1 · QUESTION
 
 B1 says "rule 5: remove the arms' moved code in your layer; BOB serialises `store.mjs` edits". escalation has no `from`, so the ownership check gives me no write to `store.mjs` (§12.2), and K671 / R25 put the spread there with legacy-store's L10 job. **My reading (proceeding on it):** I publish `escalationOps(escalation, url, body)` from `src/escalation/ops.mjs` (re-exported by `index.mjs`), with its own number parser (the arms' use of `Store.#numberParam` moves into the map), tested at its interface; I leave `store.mjs` untouched, and its ten arms, `#numberParam` (still used by other arms) and the N216 comment go when legacy-store spreads the map. If you meant me to edit `store.mjs` (adding `escalation` to `from` as K812 did for inquiry-grammar), say so and I will remove the ten arms and add the import and the spread.
+
+## J2 · REPORT
+
+affordances (L11): `JUSTIFICATION_REFUSALS` (`src/affordances.mjs`:486) lacks `ESCALATION_NO_REASON` (R24), so `test/m/affordances/backing.test.mjs`' R19 escalation arm (escalationevaluate/advance/decline/suspend) goes red with this job; its L11 job adds the code beside `INTENT_NO_REASON` (whose omission already reds four affordances arms on tranche/T19), and re-words its comments at 803–806. Generated artifact staled: `bio-plane/dist/bio-plane.bundled.mjs` (C-116.24's code), regenerated at the layer close.
