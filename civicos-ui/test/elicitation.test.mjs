@@ -43,8 +43,9 @@
  *      never sent.
  *
  * WHAT IS DELIBERATELY NOT ASSERTED HERE: the arithmetic. What a partition
- * COMPOSES TO is REC-42's and REC-45's, driven against the real plane in
- * `bio-plane/test/grounds.test.mjs` and `bio-plane/test/inquiryground.test.mjs`.
+ * COMPOSES TO is REC-42's and REC-45's, the plane's to prove (it was driven against
+ * the real plane in `bio-plane/test/grounds.test.mjs` and `inquiryground.test.mjs`,
+ * both since deleted).
  * This suite asserts what a member is ASKED, what is DERIVED from their answers,
  * what is SENT, and what is SHOWN BACK — and takes every number in the receipt
  * from the record's own answer without checking its value, because a surface
@@ -52,9 +53,10 @@
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
    discard the writer's own output. SHARED from the plane's test estate rather than copied into
-   this one — ONE implementation, so `bio-plane/test/tally-through-pipe.test.mjs` guards it for
-   both estates and a node release closing the private door goes red once instead of half. The
-   import is for its SIDE EFFECT and is idempotent. Census: `stdio-census.test.mjs`. */
+   this one — ONE implementation, so test-support's R6 test
+   (`bio-plane/test/m/test-support/test-support.test.mjs`) guards it for both estates and a
+   node release closing the private door goes red once instead of half.
+   The import is for its SIDE EFFECT and is idempotent. Census: `stdio-census.test.mjs`. */
 import fs from "fs"; import vm from "vm"; import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
 /* UI-53: the DEC-32 clause 1 ban family is DERIVED IN ONE PLACE and this suite

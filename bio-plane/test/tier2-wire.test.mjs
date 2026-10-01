@@ -6,7 +6,7 @@
  * byte-identical `bio-plane.bundled.mjs`, because nothing imported the new
  * exports and esbuild shook them out. Only the bundle MANIFEST changed.
  *
- * THIS SUITE IS THE OTHER HALF. `tier-pagewise.test.mjs` drives the RULE; this
+ * THIS SUITE IS THE OTHER HALF. text-chain's R102 test drives the RULE; this
  * one drives the WIRE — the two call sites in `index.mjs` CPDF-20's DELEGATION
  * names, through `op=pdfstructure` and `op=acquire`, with the REAL pdf-worker
  * running from its committed bundle under the same miniflare. A store-level
@@ -37,8 +37,8 @@
  * M-141's documents both ways and NO verdict moves, the closest non-escalating
  * margin being this one at 1,814 against a 24-character move (M-145).]
  *
- * NEGATIVE CONTROL: `node bio-plane/test/nc-rec98.mjs` — COMMITTED, so it re-runs
- * in one step. NINE rows, each armed ALONE with every other defence held open,
+ * NEGATIVE CONTROL: `node bio-plane/test/nc-rec98.mjs` (deleted in T20; it re-ran
+ * in one step). NINE rows, each armed ALONE with every other defence held open,
  * each restored from a uniquely named per-arm pristine copy verified by sha256
  * AND by `cmp` with the byte count printed and floored, and each DECLARING
  * before it ran what must fail and what must not:

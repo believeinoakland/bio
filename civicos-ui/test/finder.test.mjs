@@ -172,9 +172,10 @@
  * ======================================================================== */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
    discard the writer's own output. SHARED from the plane's test estate rather than copied into
-   this one — ONE implementation, so `bio-plane/test/tally-through-pipe.test.mjs` guards it for
-   both estates and a node release closing the private door goes red once instead of half. The
-   import is for its SIDE EFFECT and is idempotent. Census: `stdio-census.test.mjs`. */
+   this one — ONE implementation, so test-support's R6 test
+   (`bio-plane/test/m/test-support/test-support.test.mjs`) guards it for both estates and a
+   node release closing the private door goes red once instead of half.
+   The import is for its SIDE EFFECT and is idempotent. Census: `stdio-census.test.mjs`. */
 import vm from "vm";
 import fs from "fs";
 import { webcrypto } from "crypto";
@@ -193,7 +194,7 @@ import { appScript } from "./extract.mjs";
 
    `store.mjs` cannot be imported (it opens with `import … from
    "cloudflare:workers"`, which only workerd provides), so it is read TEXTUALLY,
-   the way `check-semantics.mjs` and `auth-surface.test.mjs` already read it.
+   the way `check-semantics.mjs` and `auth-surface.test.mjs` (both deleted in T20) read it.
 
    THE EXTRACTION IS GUARDED, because one that silently yielded "" would make
    every `includes()` below trivially true — the costless equality arriving in

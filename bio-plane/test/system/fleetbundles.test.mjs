@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/fleetbundles.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and neither the battery nor the fleet walk must discover it (PL-3/PL-4/PL-11's precedent). THE HARNESS LIVES INSIDE THIS WORKTREE and never in a shared scratchpad, which a concurrent worker overwrote between ARM and RESTORE once already (PL-10). Every arm is armed ALONE, every restore is verified BY sha256 AND BY CONTENT (`cmp`), and every arm names what MUST fail AND what MUST NOT. ALL SIX ARMS RUN 2026-09-10 IN WORKTREE agent-abe10acbf93247266; baseline recorded at each arm.
+/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/fleetbundles.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and neither `node --test` over `test/system/` nor the fleet walk must discover it (PL-3/PL-4/PL-11's precedent). THE HARNESS LIVES INSIDE THIS WORKTREE and never in a shared scratchpad, which a concurrent worker overwrote between ARM and RESTORE once already (PL-10). Every arm is armed ALONE, every restore is verified BY sha256 AND BY CONTENT (`cmp`), and every arm names what MUST fail AND what MUST NOT. ALL SIX ARMS RUN 2026-09-10 IN WORKTREE agent-abe10acbf93247266; baseline recorded at each arm.
    **BASELINE 43 pass / 0 fail, exit 0** (read from the process's own status, never a pipeline's), before each arm.
    (1) **THE ARM THIS ITEM EXISTS FOR — A SOURCE MOVES AND THE ARTIFACT DOES NOT.** Append one export to `agent-worker/src/harness.mjs` and do NOT rebuild -> **42 pass, 1 FAIL, exit 1**, naming `agent-worker`, naming `src/harness.mjs`, and saying STALE BUNDLE. pdf-worker held. **DECLARED WRONG FIRST AND CORRECTED INTO SOMETHING STRONGER RATHER THAN SMOOTHED, and this is the most useful thing the control found:** it was declared to fail from BOTH arms and the BYTE-IDENTITY ARM STAYED GREEN, because `harness.mjs` is a NON-ENTRY module and **esbuild TREE-SHAKES an unused export out of one** — the bundle really was byte-identical to a fresh build of the changed source. **So byte-identity alone would have PASSED a real source change**, and the dependency-free input-hash arm is the load-bearing one rather than a fallback for machines that cannot build. Arm (1b) is the pair that proves the other half.
    (1b) **THE SAME CHANGE ON THE ENTRY.** Append one export to `agent-worker/src/index.mjs` -> **39 pass, 4 FAIL, exit 1**: the input-hash arm AND the byte-identity arm AND the manifest-sha arm, because an ENTRY's exports are not tree-shaken. pdf-worker held.
@@ -25,12 +25,15 @@
  * **A COMMITTED PER-MEMBER BUNDLE WHOSE GATE ASSERTS IT IS BYTE-IDENTICAL TO A
  * FRESH BUILD OF ITS SOURCE — A STALE ARTIFACT FAILS INSTEAD OF SHIPPING.**
  *
- * WHY IT LIVES IN THE PLANE'S `test/` AND NOT IN A MEMBER'S. `battery.mjs`
- * SKIPS a fleet member's suites when that member has no `node_modules` — loudly
- * and by name, which is the right treatment for a member's own suite and the
- * wrong one for a guard. **A guard that skips is not a guard.** `pdf-worker`'s
- * own suites were run by NOTHING for eight days for exactly this reason. A plane
- * suite runs wherever the battery runs.
+ * WHY IT LIVES IN THE PLANE'S `test/` AND NOT IN A MEMBER'S. The old battery
+ * (`battery.mjs`, deleted in T20) SKIPPED a fleet member's suites when that member
+ * had no `node_modules` — loudly and by name, which is the right treatment for a
+ * member's own suite and the wrong one for a guard. **A guard that skips is not a
+ * guard.** `pdf-worker`'s own suites were run by NOTHING for eight days for exactly
+ * this reason. This suite runs from the repository root whichever member is
+ * installed: in the `regression` workflow's `node --test` over `bio-plane/test/system/`
+ * and in the verify step of every layer close (`build/manifest.md`, "Generated
+ * artifacts").
  *
  * ---- HOW THE TWO SIDES ARE KEPT GENUINELY INDEPENDENT -----------------------
  *
@@ -577,15 +580,14 @@ console.log("\n--- 7 · and the committed bytes really are a Worker: each boots 
   }
 }
 
-console.log("\n--- 8 · THE PLANE ITSELF (FL-10, D-298): the same guard, because the battery proves the artifact WORKS, never that it MATCHES ---");
+console.log("\n--- 8 · THE PLANE ITSELF (FL-10, D-298): the same guard, because `bundle.test.mjs` proves the artifact WORKS, never that it MATCHES ---");
 {
   /* D-298, measured by DIST: `dist/bio-plane.bundled.mjs` sat 114 commits stale
      against `src` while the battery stayed green — `bundle.test.mjs` livefires
      the artifact, which proves it WORKS and says nothing about whether anyone
      ships from it. The plane is NOT a fleet member (it holds the store; the
      member rules would refuse it), so it arrives as `planeMember()`'s descriptor
-     and the member walk, `GUARDED_FLOOR` and `battery.mjs`'s census all keep
-     their meaning. Booting the artifact is NOT re-proved here — that is
+     and the member walk and `GUARDED_FLOOR` keep their meaning. Booting the artifact is NOT re-proved here — that is
      `bundle.test.mjs`'s whole job, one file over. */
   const plane = planeMember(REPO_ROOT);
 

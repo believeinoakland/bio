@@ -30,7 +30,7 @@
  *  - An item carrying BOTH an `assignee` and `recipients`: no producer publishes one (measured: `recipients` is
  *    written by `#obligationsBiasDebt` alone). The branch exists and is not driven here.
  *
- * NEGATIVE CONTROL: arms declared and run in `queue-recipients.control.mjs`; results recorded on the line below.
+ * NEGATIVE CONTROL: arms declared and run in `queue-recipients.control.mjs` (deleted in T20); results recorded on the line below.
  * CONTROL RESULT 2026-09-24 (D-528 worker), `node civicos-ui/test/queue-recipients.control.mjs`, every arm armed alone
  * on the EXTRACTED script (app.html never edited, nothing to restore), each splice asserted to match exactly once:
  *   baseline      exit 0 · 15 pass / 0 fail.

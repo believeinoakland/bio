@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: `node civicos-ui/test/group-identity-surface.control.mjs` (from the repo root) — a BASELINE and five
+/* NEGATIVE CONTROL: `node civicos-ui/test/group-identity-surface.control.mjs` (from the repo root; deleted in T20) — a BASELINE and five
  * arms, each mutating `civicos-ui/app.html` ALONE, restored and verified by sha256 AND `cmp` against a per-arm pristine
  * copy; what each arm MUST and MUST NOT fail is declared in the driver before it arms. RUN 2026-09-25 by UI-78 against
  * app.html 73a4f7de… (1,618,811 bytes), the file IDENTICAL to pristine at the end — 6/6 AS DECLARED: BASELINE GREEN

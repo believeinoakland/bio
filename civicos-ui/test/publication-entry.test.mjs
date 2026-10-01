@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL (UI-57, 2026-09-10): `node civicos-ui/test/case6.control.mjs f`
+/* NEGATIVE CONTROL (UI-57, 2026-09-10): `node civicos-ui/test/case6.control.mjs f` (deleted in T20)
  * — and `g` and `h` beside it, each armed ALONE. `f` is the arm this item exists
  * for: it re-gates the section on the ACT, which is the code as it stood before
  * UI-57, and the non-owner's rule statement must FAIL as ABSENT and be named.
@@ -7,7 +7,7 @@
  * the non-owner's own page. RESULTS are recorded in the driver and in this
  * file's UI-57 block below.
  *
- * NEGATIVE CONTROL: `node civicos-ui/test/case6.control.mjs c` — ONE ARM, armed
+ * NEGATIVE CONTROL: `node civicos-ui/test/case6.control.mjs c` (deleted in T20) — ONE ARM, armed
  * ALONE, run 2026-09-10, `civicos-ui/app.html` restored from a uniquely-named
  * pristine copy and verified by sha256 AND by `cmp` with the byte count printed
  * (1203867 B, MATCH / IDENTICAL) and a minimum floored.
@@ -137,9 +137,10 @@
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
    discard the writer's own output. SHARED from the plane's test estate rather than copied into
-   this one — ONE implementation, so `bio-plane/test/tally-through-pipe.test.mjs` guards it for
-   both estates and a node release closing the private door goes red once instead of half. The
-   import is for its SIDE EFFECT and is idempotent. Census: `stdio-census.test.mjs`. */
+   this one — ONE implementation, so test-support's R6 test
+   (`bio-plane/test/m/test-support/test-support.test.mjs`) guards it for both estates and a
+   node release closing the private door goes red once instead of half.
+   The import is for its SIDE EFFECT and is idempotent. Census: `stdio-census.test.mjs`. */
 import fs from "fs"; import vm from "vm"; import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
 

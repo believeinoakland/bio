@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: `node civicos-ui/test/group-surface.control.mjs` (from the repo root) — a BASELINE and four arms,
+/* NEGATIVE CONTROL: `node civicos-ui/test/group-surface.control.mjs` (from the repo root; deleted in T20) — a BASELINE and four arms,
  * each mutating `civicos-ui/app.html` ALONE on disk, restored and verified by sha256 AND `cmp` against a per-arm
  * pristine copy. Declared before arming, and the results of the run are in the control's own header:
  *   BASELINE -> GREEN · (A) THE ROW'S CONTROL, the `GROUP` literal restored -> RED, the no-literal arm failing BY NAME
