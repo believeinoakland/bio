@@ -1,6 +1,6 @@
 # Plan: tranche T19 (final draft)
 
-**Status** · DRAFT by a worker for BOB #79, 2026-10-01, read on `tranche/T18` @ 33f1276bce (layers 1–10 closed, K721; layer 11 running, K722: tasks, queue, op-declarations, queue-producers, instance-setup COMPLETE and merged, K723–K730; affordances, admission, control-plane, legacy-index, installer running). Derived from `draft-T19-refresh.md` (BOB #78, read @ ba630ce2da), which is a delta over `draft-T19.md` (adopted K653): an entry marked **kept** or "as drafted" carries `draft-T19.md`'s text for that module unchanged. Not to be opened by this BOB (K716): T19 opens under Bob's secondary account once T18 has closed. Sources: the two drafts, rulings K686–K730, `next.md` (to N434), `build/jobs/T18/*.md` (layers 8–10 on the tranche; layer 11 on the tranche or `origin/job/T18/<module>`), `current.md`, `layers.md`, `modules.json`, and the tree (every catalogue and `store.mjs` importer grepped @ 33f1276bce, multi-line imports parsed). Marks: **kept** · **amended** (how) · **done in T18** (ruling or record) · **moot** · **new** · **⚑L11** (waits on a layer-11 job still running; re-read at T18's close, K424).
+**Status** · DRAFT by a worker for BOB #79, 2026-10-01, read on `tranche/T18` @ 33f1276bce (layers 1–10 closed, K721); adopted K734. **Updated @ ac5ef075a0** (K731–K737): affordances, admission and control-plane COMPLETE and merged, so their ⚑L11 marks are resolved; N435, N436 placed. Still running: legacy-index (BLOCKED on Bob's approval of its `git rm`), installer. Derived from `draft-T19-refresh.md` (BOB #78, read @ ba630ce2da), which is a delta over `draft-T19.md` (adopted K653): an entry marked **kept** or "as drafted" carries `draft-T19.md`'s text for that module unchanged. Not to be opened by this BOB (K716): T19 opens under Bob's secondary account once T18 has closed. Sources: the two drafts, rulings K686–K730, `next.md` (to N436), `build/jobs/T18/*.md` (layers 8–10 on the tranche; layer 11 on the tranche or `origin/job/T18/<module>`), `current.md`, `layers.md`, `modules.json`, and the tree (every catalogue and `store.mjs` importer grepped @ 33f1276bce, multi-line imports parsed). Marks: **kept** · **amended** (how) · **done in T18** (ruling or record) · **moot** · **new** · **⚑L11** (waits on a layer-11 job still running; re-read at T18's close, K424).
 
 ## What changed versus draft-T19-refresh.md
 
@@ -13,7 +13,7 @@
 7. **ratification L8:** refuse-gate's retire arm was converted at legacy-store's interface (`test/m/legacy-store/retire.test.mjs`, K720); it moves to ratification's tests with `op=retire`.
 8. **public-read L8:** the Worker files' physical move is dropped (recommended to BOB): they are already public-read's by `paths` (K697, K702), and moving them would leave a re-export for filings (L9) and control-plane (L11) held into T20.
 9. **The final sweep (Bob, 2026-10-01, P19)** applied to every deferral (table below): 15 kept, 3 carried (N22 to test-support L1; N175 to BOB's opening act; `contentIdFor` to inquiry L6), 4 struck as moot.
-10. **Sizes re-measured** (own code, `paths` less tests): catalogue 8,856; `store.mjs` 2,013; `schema.mjs` 28; `src/index.mjs` 463; `tools/` **76 files, 26,235 lines** (the refresh's 69/25,780 counted top-level files only); actions 3,846 (so action-grammar's split holds, P6); ratification 3,601; publication 3,833; docprofile 4,060; membership 3,890; provenance 3,714; inquiry 3,649; control-plane 6,578 before its T18 deletion ⚑L11.
+10. **Sizes re-measured** (own code, `paths` less tests): catalogue 8,811; `store.mjs` 1,998; `schema.mjs` 25; `src/index.mjs` 371; `tools/` **76 files, 26,235 lines** (the refresh's 69/25,780 counted top-level files only); actions 3,846 (so action-grammar's split holds, P6); ratification 3,601; publication 3,833; docprofile 4,060; membership 3,890; provenance 3,714; inquiry 3,649; control-plane 3,268 after its T18 deletion (K737).
 
 ## Priorities, finish report, rules
 
@@ -52,7 +52,7 @@
   - **N425:** `bundles.criticality` derived from the document's own front matter as well as the envelope, named by a test (R39 worded before L2; matches ratification R22, K692).
   - **N426** (new; K704, K710): every bundle is committed with `project: null` (`promotion/index.mjs`:800). Promotion writes the project a document states (escalations, plans and every project record), so record-core's `bundleInfo().project` (R34) holds it and membership's `viewerPredicate` fences their bundle reads by project sight; tested with a plan's and an escalation's bundle read record-wide by a member outside the project. Recommended over "R34 says the column is unused" (BOB's wording, P17; it restores the sight the modules' own reads already hold, so no change of doctrine).
   - **N221:** confirm no per-member fallback remains in `gate.mjs`.
-  - **The stamp** covers T18's layers 3–11 as the records name them: C-24, C-34, C-53, C-89, C-103 (provenance); C-85, C-2.7 (capture); C-83, C-48.1–.7, C-28.13 (acquisition); C-52, C-80.3 (content); C-74 (connections); C-33.25 (entities); C-22 (observation-log); C-22.5–.18 `where`s, C-109.2–.7 (run-rules); C-104 (run-productions); C-28 copy (capture-requests); C-33.40 (basis-versions); C-44.2, C-98.8 `where`s (publication, K697); C-32.1, C-33.10–.12, C-102.10 (ratification, RATIFICATION #9); C-32.6, C-33.14 (case-authoring, K695); C-33.3, C-101.3, C-101.4, C-117.7–.19 (actions); C-117.5, C-123.1–.3 (action-clocks); C-115.3, C-115.9 `where`s, C-115.28–.40 (filings); C-116.45 (escalation); C-124.1–.57 (action-plans, K711); C-48.8/.9, C-18.10 (monitoring, K717); C-33.41's `where` (N430, record-grammar L1); control-plane's C-61, C-61.1 ⚑L11; plus T19's layers 1–2.
+  - **The stamp** covers T18's layers 3–11 as the records name them: C-24, C-34, C-53, C-89, C-103 (provenance); C-85, C-2.7 (capture); C-83, C-48.1–.7, C-28.13 (acquisition); C-52, C-80.3 (content); C-74 (connections); C-33.25 (entities); C-22 (observation-log); C-22.5–.18 `where`s, C-109.2–.7 (run-rules); C-104 (run-productions); C-28 copy (capture-requests); C-33.40 (basis-versions); C-44.2, C-98.8 `where`s (publication, K697); C-32.1, C-33.10–.12, C-102.10 (ratification, RATIFICATION #9); C-32.6, C-33.14 (case-authoring, K695); C-33.3, C-101.3, C-101.4, C-117.7–.19 (actions); C-117.5, C-123.1–.3 (action-clocks); C-115.3, C-115.9 `where`s, C-115.28–.40 (filings); C-116.45 (escalation); C-124.1–.57 (action-plans, K711); C-48.8/.9, C-18.10 (monitoring, K717); C-33.41's `where` (N430, record-grammar L1); control-plane's C-61, C-61.1 (K737); admission's copied rows (K731); plus T19's layers 1–2.
 
 ## Layer 3
 
@@ -79,7 +79,7 @@
 - **citation**, **run-productions** (N155's last share), **contradiction** (with N136's rest) · **kept.**
 - **basis-versions** · **kept** (catalogue share; merges early).
 - **strength** · **amended** as the refresh, plus: `converts.test.mjs`:10's catalogue parity arm dropped, then the catalogue's `STRENGTH_STATES` deleted (its last importer; ratification re-pointed, K691, K692).
-- **ai-runs** · **kept** ⚑L11. The four re-exports go: legacy-store's `airun.mjs` import is **done in T18** (K720); control-plane's `import * as M_AI_RUNS from "../ai-runs/checks.mjs"` (`control-plane/index.mjs`:26 on the tranche) is gone on `job/T18/control-plane`, ⚑L11 until it merges. N242's arm G: confirm with the guard that no code is minted in both ai-runs and run-rules (CONSEQUENCES #4's reading).
+- **ai-runs** · **kept** (⚑L11 resolved). The four re-exports go: legacy-store's `airun.mjs` import is **done in T18** (K720); control-plane's `M_AI_RUNS` import of `ai-runs/checks.mjs` is gone (K737; no `src/` importer of the four at ac5ef075a0). N242's arm G: confirm with the guard that no code is minted in both ai-runs and run-rules (CONSEQUENCES #4's reading).
 - **capture-requests** · **amended.** Its C-28 copy becomes the only one: the catalogue's `CAPTURE_REQUEST_CHECKS` deleted after agent-worker's test re-point merges (rule 4).
 - **skills** · **amended.** As drafted, plus **N430** (K720): `src/skillpack.mjs` has no product importer left; the job deletes it (and its `test/m/skills/` uses) or shows its reader.
 - **agent-worker** · **amended** as the refresh (tests `wire-vocabulary.test.mjs`:68, `plane-capturerequest.mjs`:27, `plane-suggest.mjs`:86; **N421**). N420's share is **done in T18** (`test/plan.test.mjs`:222). Merges early for capture-requests' C-28 deletion.
@@ -96,7 +96,7 @@
 - **public-read** · **amended.** ⚑L8 resolved: `caseflags` and `casedocument` are **done in T18** (moved to `publication/door.mjs`, K697); the Worker files are public-read's by `paths` (K697, K702). Kept: rows C-44.2, C-68.5, C-98.1–.9 into its `checks.mjs` (K651). New: `caseTensionsOf`, `caseDocumentBlocks` from case-grammar (PUBLIC-READ #1's deferral); `publication/worker.mjs`'s catalogue imports (`parseFrontmatter`, `normalizeType`, `sectionText`) and `convert-d442…`:18 to record-grammar. **Moot:** the physical move into `src/public-read/` (change 8). Merges early for publication.
 - **project-stage** · **new** (refresh): `parseFrontmatter` (`index.mjs`:24). **Size:** 1 line.
 - **ratification** · **amended.** `op=retire` (BOB-3) with its requirements; refuse-gate's retire arm moves from `test/m/legacy-store/retire.test.mjs` (K720) to ratification's tests; mint-ledger seeds; `attestingKeys` to credentials; catalogue re-points (`checks.mjs`, `ops.mjs`, `release.mjs`, `index.mjs` and six tests). N400, N407, N417 **done in T18** (K691, K692). Its C-32.1, C-33.10–.12, C-102.10 copies are made (RATIFICATION #9); the catalogue's go with `REGISTRATION_CHECKS` (promotion, L2) and `MACHINE_FENCE_CHECKS`/`ACT_SHAPE_CHECKS` (L6).
-- **case-authoring** · **amended** as the refresh, plus **N424** (`uses` gains case-grammar, BOB's edge). Catalogue imports: `document.mjs`, `index.mjs`, four tests. Its C-32.6/C-33.14 copies are made (K695); the catalogue's go with the L6 table deletions.
+- **case-authoring** · **amended** as the refresh, plus **N424** (`uses` gains case-grammar, BOB's edge), and **N435** (K737; N407's other half): `publishpreflight` reads the door's `aiCred` stamp (`viewer: q("aiCred") ? {stamp: q("viewer"), aiCred: JSON.parse(q("aiCred"))} : q("viewer")`), so ratification R18's fences hold an agent; tested with an agent credential's stamp. Catalogue imports: `document.mjs`, `index.mjs`, four tests. Its C-32.6/C-33.14 copies are made (K695); the catalogue's go with the L6 table deletions.
 - **review** · **amended:** **N423** (`uses` gains record-grammar); `acts.test.mjs`' `PROJECT_VISIBILITY_CHECKS` to membership; R17 **done in T18** (K688).
 
 ## Layer 9
@@ -106,7 +106,7 @@
 - **actions** · **amended.** The split's deletion and the catalogue re-points as drafted, plus **N428** (K717): delete its `pendingClocks` copy, its two bounds, `PENDING_CLOCKS_BAD_BEFORE`'s row and R31's tests (monitoring reads action-clocks', MONITORING #7). **N427:** export the governed helper `contactNotAMember` (R45), as `noSuchAction` is. Merges early for action-clocks and action-plans.
 - **action-clocks** · **new** (⚑L9 resolved: imports the catalogue). `parseFrontmatter`, `normalizeType`, `isMachineIdentity` (`index.mjs`:31, `fixture.mjs`:14) to record-grammar; `lawProposalLabel` to action-grammar (`uses` gains it). **N427:** export `reminderRefused` (R4). Merges early for action-plans. **Size:** ~20.
 - **escalation** · **kept** (its ops map out of `store.mjs`, lines ~1913–1942 at HEAD; re-points).
-- **action-plans** · **new** (⚑L9 resolved). Catalogue re-points (`doc.mjs`:7, `index.mjs`:59, `fixture.mjs`:19). **N432** (K727): `optionPropose` reads a second stamp, `principal` (`<principal>/<tokenId>`), for the run gate (R31) and keeps `proposer` (`class:ai/<tokenId>`) for the label (R11); control-plane stamps both from T18 (K727) ⚑L11. **N427:** answer `CONTACT_NOT_A_MEMBER` and `REMINDER_REFUSED` through the two exports and drop the roll-back probes. ⚑L9's deferral row (unfinished Rs) is moot: ACTION-PLANS #1 deferred none (K711). Last in the layer.
+- **action-plans** · **new** (⚑L9 resolved). Catalogue re-points (`doc.mjs`:7, `index.mjs`:59, `fixture.mjs`:19). **N432** (K727): `optionPropose` reads a second stamp, `principal` (`<principal>/<tokenId>`), for the run gate (R31) and keeps `proposer` (`class:ai/<tokenId>`) for the label (R11); control-plane stamps both (K727, K737). **N427:** answer `CONTACT_NOT_A_MEMBER` and `REMINDER_REFUSED` through the two exports and drop the roll-back probes. ⚑L9's deferral row (unfinished Rs) is moot: ACTION-PLANS #1 deferred none (K711). Last in the layer.
 
 ## Layer 10
 
@@ -115,13 +115,13 @@
 
 ## Layer 11
 
-- **affordances** · **kept** ⚑L11. AFFORDANCES #9 is open: it built `affordancesOps` and left the store arm for control-plane (K723 (A)); its census of K727's 14 writes and 6 reads and the door's two keys (K730) are T18's. T19 as drafted: `src/index.mjs`' `op=affordances` arm (:209 at HEAD), re-points (`affordances.mjs`, `facts.mjs`, two tests).
+- **affordances** · **kept.** ⚑L11 resolved: `affordancesOps`, the store arm's removal by control-plane, the census of K727's 14 writes and 6 reads (R27 count 71), the door's two keys and `uses` gaining action-clocks and action-plans are **done in T18** (K723, K732, K733, K737). T19 as drafted: `src/index.mjs`' `op=affordances` arm (:176 at ac5ef075a0), re-points (`affordances.mjs`, `facts.mjs`, two tests).
 - **tasks** · **kept** (re-points). N410, N412 **done in T18** (K723).
 - **queue-producers** · **kept** (re-points). Its T18 job **done** (K728, K730).
-- **queue** · **kept.** `src/index.mjs`' `op=queue` arm (:323 at HEAD); `schema.mjs`' queue fragment ⚑L11 (control-plane's N13 share); re-points. N410's share **done in T18** (K725).
+- **queue** · **kept.** `src/index.mjs`' `op=queue` arm (:290 at ac5ef075a0); re-points. N410's share and `PRODUCER_DEPS` **done in T18** (K725, K731); `schema.mjs`' queue fragment and the store's queue/tasks imports **done in T18** (N13, K735, K736).
 - **instance-setup** · **amended.** Re-points (`setup.mjs`:19: `STATES`, `HEADINGS`, `deriveInquiryTitle` to record-grammar; two tests); the user agent **done in T18** (K729). **N420** (plane side): `op=profiles` (R12, R16) also answers `view: {deadlines, venues, legal_organisations}` from `jurisdictions.combine` over the active profiles, which agent-worker R51 reads; tested with two profiles, one not Oakland's.
-- **admission** · **kept** ⚑L11 (credentials re-points). N407's stamp, N411's verdict, `readerOf` and the project-creation gate are T18's (K723).
-- **control-plane** · **kept** ⚑L11. Already T18's: `CHECK_FAMILIES` (N245, N272, N337, N403, N414), R41 `fences`/`pack`, N413, N419, N336's plane side (`PLANE_LIMITS_STATEMENT`, K723), K727's stamps, N13, C-61 ✱. N420's serve side is moot (change 3). Its last act ends the catalogue (rule 1).
+- **admission** · **kept** (credentials re-points). ⚑L11 resolved: N-A22's copy, R16 `readerOf`, R11 `projectCreationGate`, N411, N407's `callerViewer` **done in T18** (K731); its rows `awaiting stamp` (promotion L2).
+- **control-plane** · **kept.** ⚑L11 resolved, **done in T18** (K735, K737; 3,268 lines): the split's deletion, `CHECK_FAMILIES` with totality (N245, N272, N337, N403, N414), R41, R39, C-61 ✱, N13, the N402/N413 pin, N419, N336's `PLANE_LIMITS_STATEMENT` on the door, the action layer's stamps, N407's door share. Left as drafted, plus: `ops.mjs`, now a 4-line act-gate re-export for legacy-index, deleted with legacy-index's need of it; `index.mjs`:8's catalogue imports. N420's serve side is moot (change 3). Its last act ends the catalogue (rule 1).
 - **plane** (new) · **kept.**
 - **legacy-index** · **kept** ⚑L11. LEGACY-INDEX #11 is BLOCKED: the permission check refused `git rm` of `migrate/`, `coverage.mjs`, `declared-source.mjs` and the four probes; Bob's approval in that session is the one act. If T18 closes without them, they join this job. `tools/`: 76 files, 26,235 lines.
 
@@ -136,7 +136,7 @@ Hard reasons allowed: **order** (P4); **size** before a split (P6); **dependency
 | docprofile's `registry.mjs` re-export | none: the facade is design, not a copy | struck, moot |
 | old-suite-only exports (K635) | none: K653 BOB-1 | struck, moot; `isSufficiencyClaimed`, `isMachineMinted` deleted L1; `contentIdFor` **carried** to inquiry L6 (a module test imports it) |
 | old battery, nine instruments, the DEC-49 guard's floors, `system` suites, fleetbundles' agent-worker inputs arm (K641) | Bob's: run and deleted at the release he calls (K619, K633, K635) | kept |
-| N57, N248, N279, N68, N70's legacy-tests and legacy-index shares, N431, N434 | Bob's: old suites, the release (K619) | kept |
+| N57, N248, N279, N68, N70's legacy-tests and legacy-index shares, N431, N434, N436 | Bob's: old suites, the release (K619) | kept |
 | legacy-ui, N70/N68 legacy-ui shares, N241, N371, N389, N-A13 | Bob's: UX (K633) | kept |
 | `cpra_request` identifier | Bob's: UX; an interface name changes with a migration his question sets (N71) | kept |
 | N-A14 | Bob's (legal text) and deploy (a source for holidays and offices) | kept |
@@ -160,17 +160,17 @@ Hard reasons allowed: **order** (P4); **size** before a split (P6); **dependency
 
 | legacy | refresh's "today" | today | after T19 |
 |---|---|---|---|
-| `bio-checks.mjs` | 8,963 | 8,856 (T18 L8–9: ratification −80, actions −27; control-plane's ~43 ⚑L11) | 0 |
-| `store.mjs` | 2,940 | 2,013 (K720) | 0 |
-| `schema.mjs` | 83 | 28 (K720) | 0 |
-| `src/index.mjs` | 539 | 463 (the §4.4 moves, T18 L8–11) | 0 |
+| `bio-checks.mjs` | 8,963 | 8,811 (T18 L8–11: ratification −80, actions −27, control-plane −45) | 0 |
+| `store.mjs` | 2,940 | 1,998 (K720, K737) | 0 |
+| `schema.mjs` | 83 | 25 (K720, K735) | 0 |
+| `src/index.mjs` | 539 | 371 (the §4.4 moves, T18 L8–11) | 0 |
 | `tools/` | "69 files, 25,780" (top level only) | 76 files, 26,235 | ~0 |
 
 ## next.md: every entry
 
-- **Placed in T19 jobs:** N21, N26, N31, N404, N416 (L1); N22 (L1, sweep); N70's legacy-checks, promotion, membership and record-core shares, N221, N422, N425, N426 (L2); N136's rest, N155, N421, N422, N430 (L5–L6); N433 (L7; L5 if one row); N423, N424 (L8); N427, N428, N432, REC-201's outward share (L9); N429 (L10); N420 (L11).
-- **Deferred (table):** N34, DIST-14, N57, N68, N70's skills, legacy-ui and legacy-tests shares, N71, N75, N144, N232, N241, N248, N279, N317, N320, N371, N431, N434, REC-201's identifier, N175 (BOB's opening act).
-- **Met or moot by T18's close (to `archive/next-applied.md` at T19's opening):** N137 (K675), N157 (K683), N211 (RATIFICATION #10, K696: `SUBJECT_POSITIONS`, `caseEditionClaimed` deleted, no importer at HEAD), N242 (T18 shares: CONFORMANCE #6, CONSEQUENCES #4, ESCALATION #6, MONITORING #7's C-18.10, CASE-AUTHORING #8, PUBLIC-READ #1; record-core's is N422; the duplicate-row failures clear with T19's deletions, the floors at the release), N249 (K700, BASIS-VERSIONS #5), N362 (K604), N372 (K575), N400 (K692), N405 (INQUIRY #7), N406 (K650, K685), N409 (K655), N410 (K723, K725), N412 (K723), N415 (K657), N417 (K691), N418 (K655), N420-mail (K659); ⚑L11: N13, N245, N272, N336, N337, N401, N402, N403, N407, N408, N411, N413, N414. 30 entries.
+- **Placed in T19 jobs:** N21, N26, N31, N404, N416 (L1); N22 (L1, sweep); N70's legacy-checks, promotion, membership and record-core shares, N221, N422, N425, N426 (L2); N136's rest, N155, N421, N422, N430 (L5–L6); N433 (L7; L5 if one row); N423, N424, N435 (L8); N427, N428, N432, REC-201's outward share (L9); N429 (L10); N420 (L11).
+- **Deferred (table):** N34, DIST-14, N57, N68, N70's skills, legacy-ui and legacy-tests shares, N71, N75, N144, N232, N241, N248, N279, N317, N320, N371, N431, N434, N436, REC-201's identifier, N175 (BOB's opening act).
+- **Met or moot by T18's close (to `archive/next-applied.md` at T19's opening):** N137 (K675), N157 (K683), N211 (RATIFICATION #10, K696: `SUBJECT_POSITIONS`, `caseEditionClaimed` deleted, no importer at HEAD), N242 (T18 shares: CONFORMANCE #6, CONSEQUENCES #4, ESCALATION #6, MONITORING #7's C-18.10, CASE-AUTHORING #8, PUBLIC-READ #1; record-core's is N422; the duplicate-row failures clear with T19's deletions, the floors at the release), N249 (K700, BASIS-VERSIONS #5), N362 (K604), N372 (K575), N400 (K692), N405 (INQUIRY #7), N406 (K650, K685), N409 (K655), N410 (K723, K725), N412 (K723), N415 (K657), N417 (K691), N418 (K655), N420-mail (K659), N13 (K735, K737), N245, N272, N337, N403, N414 (K737), N402, N413 (K737), N407 (K692, K731, K737; case-authoring's half is N435), N408 (K650, K737 R39), N411 (K731), N336 (K723, K737; the live installer waits on a signed release, table); ⚑L11: N401 (legacy-index, BLOCKED). 30 entries.
 
 ## For BOB (P17) and for Bob
 
