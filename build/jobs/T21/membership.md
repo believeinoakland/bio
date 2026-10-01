@@ -28,3 +28,7 @@ Size (session_01UPfhtBfCMAXM1TSrfENr6o): test runs 8, module lines 3341
 ## J1 · REPORT
 
 Generated artifact made stale by this job: the plane's bundle, bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (inputs src/membership/index.mjs, checks.mjs, schema.mjs changed). No other bundle manifest names a membership file. Not regenerated (mechanics §14).
+
+## J2 · COMPLETE
+
+N453, N468, N469 and K936 applied; record: build/jobs/T21/membership.md, Completion. Rows leaving membership's table for promotion's stamp: C-96.8 BAD_KEY, C-96.15 SIGNER_KEY_HELD_BY_ANOTHER, C-96.16 SIGNER_KEY_REVOKED, C-96.17 MACHINE_CANNOT_REGISTER_KEY, C-63.1 SIGNER_MEMBER_NOT_ENROLLED, C-63.2 SIGNER_MEMBER_NOT_ACTIVE (each kept in credentials/checks.mjs). Re-scan: no caller of the copies remained. MODULE_ORDER gains local-facts and filing-templates: R83/R79 green, and promotion's R39/R45/R46 ordering test too. Proof: test/m/membership 139/139, credentials 33/33, ratification 181/181, control-plane 93/93; whole test/m no new red against tranche/T21 (44 fail vs baseline 50). Four checks 0 failures. Ready to merge early.
