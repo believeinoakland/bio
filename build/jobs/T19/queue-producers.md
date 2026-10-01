@@ -26,3 +26,7 @@
 - `node checks/ownership.mjs … queue-producers tranche/T19`: 4 files changed; 0 failures.
 
 Size (session_01FZSGgbjMuFtZDx2WWorcCu): test runs 5, module lines 2686
+
+## J1 · COMPLETE
+
+Done. Rule 1 re-points (record-grammar types/document/actors; conditions.test.mjs too), K784 (R14 reads credentials.signerList), K789 (world.mjs builds credentials): queue-producers 46/46; format, architecture, coverage (18/18), ownership all 0 failures. For you, in my record: requirements Uses and R14 still name legacy-checks and membership.signerList/R26/R27/R89 (now record-grammar and credentials R7/R8/R9), and modules.json uses can drop legacy-checks; dist/bio-plane.bundled.mjs stale (layer close); queue's 17 reds are its own K789 fixtures, same before and after my change.
