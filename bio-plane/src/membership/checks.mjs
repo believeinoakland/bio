@@ -422,3 +422,44 @@ export const CASE_AUTHORITY_CHECKS = {
       + 'owners. Nothing was committed. Ask an owner of the project to review it and sign it.',
   },
 };
+
+/* NAMED COPY (K784, N445): C-63, the rows the `signerRegisterOwn` copy's member bar answers, held here with the copy
+   until membership's T20 job deletes both; `credentials` holds the family as its own. Copied from the catalogue with
+   its names, ids, `where`s and translations unchanged. */
+/* D-158 / C-63 — A SIGNING KEY IS REGISTERED TO A MEMBER WHO CAN ATTEST
+ * (Membership Architecture v2 §6, enrolment: *"At enrolment the member chooses a handle … and a
+ * password"*; §10's `members`/`signers` sketch; §4's *"Approve signing keys"*).
+ *
+ * WHY A REFUSAL AND NOT A JOIN AT READ. `op=signerlist` read the `signers` table alone while
+ * `op=ratify` weighed a signature against `s.status='active' AND m.status='active'`, so a key
+ * registered for somebody who had never enrolled read `active` on the roster and came back
+ * `SIG_UNKNOWN_KEY` at the gate — MEASURED 2026-08-02 over real ssh-keygen signatures. Making the
+ * roster JOIN was the smaller change and would have left a row that means nothing; refusing at the
+ * WRITE keeps the table honest, and it is the shape `signerAdd`'s existing `NO_SUCH_MEMBER` check
+ * already reaches for. The other direction — the GATE accepting the key — was refused on doctrine
+ * rather than on cost: it would widen an authority, letting a signature attest in the name of a
+ * roster slot no person has taken up, which is the class D-136 closed for the §4.7 vote.
+ *
+ * TWO CODES FOR TWO FACTS. A member with no handle has never enrolled; a member who has one and is
+ * not `active` has been revoked or is otherwise not standing. One canned sentence could not be true
+ * of both, and a code that covered both would be the plane inventing a state to describe them.
+ * Both are minted in ONE region, `#signerMemberBar`, which `signerAdd` and `signerSet`'s activation
+ * branch both consume — the second door exists because `memberSet` cascades a revocation into this
+ * table and `op=signerset` could otherwise undo the cascade one call later. */
+export const SIGNER_ENROLMENT_CHECKS = {
+  SIGNER_MEMBER_NOT_ENROLLED: {
+    check: 'C-63.1',
+    where: 'src/membership/index.mjs #signerMemberBar > is-signer-member-attesting',
+    translation: 'That person has not enrolled yet. A signing key belongs to a member who has taken up '
+      + 'their invitation and chosen a handle; until then this instance would refuse anything signed '
+      + 'with it, so registering it now would put a key on the roster that cannot sign. Nothing was '
+      + 'written. Send them their invitation link, and register the key once they have enrolled.',
+  },
+  SIGNER_MEMBER_NOT_ACTIVE: {
+    check: 'C-63.2',
+    where: 'src/membership/index.mjs #signerMemberBar > is-signer-member-attesting',
+    translation: 'That member’s membership is not active, so this instance would refuse anything '
+      + 'signed with their key. Nothing was written. Reinstate the member first if they should be '
+      + 'able to sign again.',
+  },
+};

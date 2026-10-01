@@ -15,12 +15,11 @@
  * (record-core R37); every other bundle fact (a project's title) is asked of `core.bundleInfo` (R34).
  */
 import { MACHINE_CLASS_PREFIX, isMachineIdentity } from "../record-grammar/index.mjs";
-import { SIGNER_ENROLMENT_CHECKS } from "../../checks/bio-checks.mjs";
 import { MEMBERSHIP_SCHEMA, MEMBERSHIP_ADDITIVE_COLUMNS, MEMBERSHIP_EXEMPT_TABLES,
          MEMBERSHIP_PROJECT_TABLES } from "./schema.mjs";
 export { MEMBERSHIP_PROJECT_TABLES, MEMBERSHIP_EXEMPT_TABLES } from "./schema.mjs";
 import { MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS, CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS,
-         PROJECT_JOIN_REQUEST_CHECKS, CASE_AUTHORITY_CHECKS } from "./checks.mjs";
+         PROJECT_JOIN_REQUEST_CHECKS, CASE_AUTHORITY_CHECKS, SIGNER_ENROLMENT_CHECKS } from "./checks.mjs";
 export { MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS, CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS,
          PROJECT_JOIN_REQUEST_CHECKS, CASE_AUTHORITY_CHECKS } from "./checks.mjs";
 import { recordOf } from "../record-core/index.mjs";
