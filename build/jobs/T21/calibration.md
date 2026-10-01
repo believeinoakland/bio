@@ -26,3 +26,7 @@ Size (session_01AhYpL2J9LWAd7Lz7PeLWAj): test runs 2, module lines 39 (20 added,
 ## J1 · REPORT
 
 Stale generated artifact: the plane's bundle bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (not_product); my change touches bio-plane/src/calibration/schema.mjs (comment lines inside CALIBRATION_SCHEMA, which the bundle embeds) and bio-plane/src/calibration/index.mjs (comments). Regenerated nothing. Nothing found in another module.
+
+## J2 · COMPLETE
+
+N469: schema.mjs:44's replaced_by note no longer claims the deleted versionchain suite's whole-schema sweep as live (no module test carries it, not one of my requirements: claim dropped, the naming provenance kept). Re-scan: no other such note, no 'battery'. Own stale notes fixed: 'legacy store's dispatcher' -> plane/store.mjs (index.mjs x2); schema.mjs header on the deleted legacy schema.mjs. Comments only; DDL unchanged. Nothing deferred. test/m/calibration 65/65, test/m/extraction 171/171. format, architecture, coverage (20/20), ownership: 0 failures. Stale: plane bundle (REPORT J1). Record: build/jobs/T21/calibration.md on job/T21/calibration.
