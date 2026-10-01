@@ -1,43 +1,35 @@
 # docprofile — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code: `docprofile/` (index, pipeline, recogniser, registry, events, readtext, handlers, doctypes). R6 and R30 built in T2 (N3): every local fact comes from the jurisdiction view; the no-view fallback (K39) retires with N21. Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`).
+**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code: `docprofile/` (index, pipeline, recogniser, registry, events, readtext, handlers, doctypes). R6 and R30 built in T2 (N3): every local fact comes from the jurisdiction view; the no-view fallback (K39) retires with N21. Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`). SPLIT on `tranche/T19`, 2026-10-01, by a worker for BOB #80 (K617, K653 BOB-2): the host-stack axis, the shared registry and ladder, the digests, fidelity, the profile record and the event catalogue moved to `site-profiles` (R1–R3, R7–R10, R26–R28 retired here, moved without change of meaning); `docprofile/registry.mjs` stays this module's facade and re-exports `site-profiles`' names, so its importers need no re-point; references to the moved services name `site-profiles`, no meaning changed.
 
 ## Public
 
 ### Purpose
 
-Recognises what a captured document IS — which host-technology stack served it (`identify`)
-and which content type it is (`doctypeFor`) — and, given two captures of the same address, says
+Recognises which content type a captured document is (`doctypeFor`), over the host-stack
+identification `site-profiles` gives (`identify`), and, given two captures of the same address, says
 what changed between them in LAYERS that stop as soon as one can decide (`assess`), never by
-comparing raw bytes. It also judges whether a rendition is faithful enough to show (`fidelity`)
-and gives extraction the one entry point that runs the same recognisers over text from any
-container (`readText`). The four stack recognisers (`aspnet_webforms`, `wordpress`,
-`client_rendered`, `conservative`) detect TECHNOLOGY — viewstate fields, WordPress asset paths,
-an empty mount point — and need no jurisdiction: the same signals mean the same thing in every
-jurisdiction. Every registered CONTENT TYPE, by contrast, recognises a document by the vocabulary
+comparing raw bytes. It gives extraction the one entry point that runs the same recognisers over text from any
+container (`readText`). Its `registry.mjs` re-exports `site-profiles`' services, so a caller reaches
+both through this module. The stack recognisers detect technology and need no jurisdiction
+(`site-profiles`). Every registered CONTENT TYPE, by contrast, recognises a document by the vocabulary
 one jurisdiction's clerks, staff and systems actually write — a masthead's wording, a code's own
 abbreviation, a report template's section names — and takes that vocabulary from the active
 jurisdiction profiles rather than holding it in code.
 
 ### Provides
 
-**`identify(ctx) → {handler, confidence, signals, considered, kind?, why?}`** `ctx` carries
-whatever the caller knows about one fetch: `headers`, `locator` (the address), `content_type`,
-`text` (the bytes decoded, when read as text).
-- **R1** Always returns a handler: the first registered stack recogniser to match at CERTAIN
-  confidence, else the highest-confidence match among those that matched, else the always-present
-  `conservative` handler at confidence NONE, with `why` stating that nothing was recognised.
-- **R2** `kind` is the winning handler's own classification of the address (for example an index,
-  a record, a shell) when the handler defines one; absent when it does not.
-- **R3** Confidence is one of the ONE ladder's four values — CERTAIN, LIKELY, POSSIBLE, NONE —
-  shared by every recogniser this module runs, on both axes.
-- Errors: never throws, provided every registered handler's own `detect` does not.
+**`identify(ctx)`** is `site-profiles`' (re-exported).
+- **R1** *(retired: moved to `site-profiles` R1, K617)*
+- **R2** *(retired: moved to `site-profiles` R2, K617)*
+- **R3** *(retired: moved to `site-profiles` R3, K617)*
 
-**`doctypeFor(ctx) → {type, confidence, signals, considered, also}`** `ctx` additionally carries
-`handler` (from `identify`), `kind`, and `view`: the combined view of the active jurisdiction
+**`doctypeFor(ctx) → {type, confidence, signals, considered, also}`** `ctx` carries `site-profiles`' `identify` context
+(`headers`, `locator`, `content_type`, `text`) and additionally `handler` (from `identify`), `kind`, and `view`: the combined view of the active jurisdiction
 profiles that `jurisdictions.combine` gives.
 - **R4** Always returns a type: the first registered content type to match at CERTAIN confidence,
-  else the highest-confidence match, else the `generic` fallback at confidence NONE.
+  else the highest-confidence match, else the `generic` fallback at confidence NONE. Confidence is
+  `site-profiles`' one ladder (its R3, R4).
 - **R5** `also` names every OTHER non-fallback registered type whose own `detect` also matches
   this same `ctx`, so a document satisfying more than one class (measured: about one in twelve)
   states all of them rather than letting the first match stand for the whole document. A type
@@ -54,21 +46,11 @@ profiles that `jurisdictions.combine` gives.
 - Errors: never throws, provided no registered type's own `detect` throws outside the `also` pass
   (R5 states what happens there).
 
-**`digests(bytes, handler, ctx) → {identity, rendition, evidentiary, applied, boundary_missed, mechanical_bytes, presentational_bytes, textual}`**
-`ctx.sha256` is a caller-supplied hash function.
-- **R7** `identity` is always `sha256(bytes)`.
-- **R8** When `handler.textual` is false, `rendition` and `evidentiary` both equal `identity` and
-  `textual` is `false` on the result.
-- **R9** When textual: `rendition` is the decoded text with the handler's MECHANICAL rules applied;
-  `evidentiary` additionally has the handler's declared BOUNDARY applied (everything outside it
-  normalised as presentational, region `"presentational"`) or, when the handler declares no
-  boundary, its own PRESENTATIONAL rules. The three region labels a rule or a boundary reports
-  under are exactly `"mechanical"`, `"presentational"` and `"evidentiary"`.
-- **R10** A declared boundary that does not match the text normalises NOTHING beyond the
-  mechanical pass, and `boundary_missed` is `true`; a boundary that missed is never read as a
-  document with no content.
-- Errors: throws only when `ctx.sha256` is not a function (a caller precondition); otherwise
-  never throws.
+**`digests(bytes, handler, ctx)`** is `site-profiles`' (re-exported).
+- **R7** *(retired: moved to `site-profiles` R6, K617)*
+- **R8** *(retired: moved to `site-profiles` R7, K617)*
+- **R9** *(retired: moved to `site-profiles` R8, K617)*
+- **R10** *(retired: moved to `site-profiles` R9, K617)*
 
 **`assess(before, after, ctx) → the layered result`** `before`/`after` are byte arrays of two
 captures of one address. `ctx` carries `locator`, `headers`, `sha256`, and optionally `now`,
@@ -85,7 +67,7 @@ captures of one address. `ctx` carries `locator`, `headers`, `sha256`, and optio
 - **R13** `meaningful` is `true` only for `changed`; `false` for `identical`, `unchanged`,
   `restyled` and `routine`; `null` for `unwatchable`, `undetermined`, and a content type that
   could not parse the document — never guessed in either direction.
-- **R14** `events[]` is drawn from the module's one significance-graded catalogue (`event`,
+- **R14** `events[]` is drawn from the one significance-graded catalogue (`site-profiles` R13) (`event`,
   `notice`, `routine`; a type naming an event kind the catalogue does not hold is a defect in
   that type, caught by the catalogue itself). `meaningful` is always
   `worstSignificance(events) === "event"`; it is never a second fact carried beside the events.
@@ -97,7 +79,7 @@ captures of one address. `ctx` carries `locator`, `headers`, `sha256`, and optio
   `changed`/`routine` events on the same result, and is `null` only when nothing was confirmed. A
   read that FOUND NOTHING on either side is reported as a failed reader (`meaningful: null`, a
   stated `why`), never as an emptied or unchanged document.
-- **R17** The result also carries `profile` (`profileRecord`'s own serialisation of the L1 stack
+- **R17** The result also carries `profile` (`site-profiles`' `profileRecord`'s own serialisation of the L1 stack
   identification) and, once L4 is reached, `content_type` (the winning content type's key).
 - Errors: never throws; a content type's own `parse`/`assess` throwing is caught and reported as
   `meaningful: null` with a stated reason.
@@ -111,7 +93,7 @@ whatever the caller knows (locator, headers, content type, `at`) plus, for the d
   plane's own measured essentially-nothing line). `why` and `partial` state which.
 - **R19** `determined:true` otherwise, carrying `partial` (true when any part is undetermined but
   not so much that R18 refused), `text_from` (which shape supplied the text), the recognised
-  `stack` and `doctype` (as `identify`/`doctypeFor` gave them), the content type's own `parsed`
+  `stack` and `doctype` (as `site-profiles`' `identify` and `doctypeFor` gave them), the content type's own `parsed`
   result or a `parse_error` naming why it has none, and `position_parts`/`position_why` stating
   whether the supplied text carried enough structure to place a reference at all.
 - **R20** The content type's reader is handed a total `locate(offset)` function built from the
@@ -138,25 +120,10 @@ whatever the caller knows (locator, headers, content type, `at`) plus, for the d
   segment all answer `null`; otherwise the containing segment's own `source`.
 - Errors: never throws.
 
-**`fidelity(manifest, handler, ctx) → {level, missing, critical, why?}`** `manifest.subresources`
-is a list of `{ok, reason?, kind?, url?}`.
-- **R26** `level` is `faithful` when every part is present or ignorable by the handler;
-  `degraded` when every missing part is non-critical (named in `missing`, none in `critical`);
-  `insufficient` when any missing part is render-critical (named in `critical`), and the render
-  is refused rather than shown misleadingly.
-- Errors: never throws.
-
-**`profileRecord(id, ctx) → record`** Serialises one `identify()` result for the capture's own
-provenance.
-- **R27** Returns `{handler, handler_label, handler_version, confidence, signals, document_kind,
-  considered, at, note}` — the handler's own key/label/version, `identify`'s confidence and
-  signals, `id.kind` (or `"unknown"`), `ctx.now` or the current instant, and `id.why` (or `null`)
-  as `note`. A judgment's author and version are always named, so a later session can find and
-  revise it.
-- Errors: never throws.
-
-**`CONFIDENCE`** — the one ladder shared by both axes: `CERTAIN`, `LIKELY`, `POSSIBLE`, `NONE`,
-ranked in that order (**R28**).
+**`fidelity`**, **`profileRecord`**, **`CONFIDENCE`** are `site-profiles`' (re-exported).
+- **R26** *(retired: moved to `site-profiles` R11, K617)*
+- **R27** *(retired: moved to `site-profiles` R12, K617)*
+- **R28** *(retired: moved to `site-profiles` R4, K617)*
 
 **`CONTRACT`** — how a monitored document of a given content type should be watched, declared per
 type: `SUBSTANCE` (watch the evidentiary digest; any change is an event, furniture moving a
@@ -168,6 +135,11 @@ reported "unchanged") (**R29**).
 
 ### Uses
 
+- `site-profiles`: `identify` (its R1–R3) for the stack a document was served by; `compare` (R10)
+  for `assess`' byte layers L2–L3; `profileRecord` (R12) for `assess`' `profile`; `CONFIDENCE` and
+  `makeRegistry` (R4, R5) for the content-type axis; the event catalogue (R13, R14) for every
+  content type's events and `assess`' `meaningful`; `unescapeHtml` (R15) for the calendar's keys.
+  `registry.mjs` re-exports its names (`digests`, `fidelity` and the rest) for this module's callers.
 - `jurisdictions`: the combined view (`combine`). Instrument numbers (an ordinance's or resolution's
   number, in its caption or cited by another document) are recognised with the view's IDENTIFIER
   section, the same forms `id-spaces` uses for `enactment`, so the fact is stated once. For every
@@ -216,14 +188,15 @@ reported "unchanged") (**R29**).
 
 - **R30** No place is named in this module's own code. Every local fact a
   content type tests for (R6) comes from the active jurisdiction profiles; the tests include at
-  least one profile that is not Oakland's, for every content type. The four stack handlers hold no
-  such facts and need none, because they recognise technology, never place.
+  least one profile that is not Oakland's, for every content type. The four stack handlers
+  (`site-profiles`', its R16) hold no such facts and need none, because they recognise technology,
+  never place.
 - **R31** Deterministic over its inputs: the same `bytes`/`text` and the same `ctx` values always
   give the same answer. The one exception is a content type's own forward-looking connections
   (the calendar's "minutes not yet published" fact), which read `ctx.now` when given and the wall
   clock only when it is not; nothing in this module reads a store or the network.
 - **R32** The failure asymmetry governs every default: an unrecognised document is never assumed
-  decorated (`conservative` treats almost nothing as machinery and nothing as furniture, so any
+  decorated (`site-profiles`' `conservative` treats almost nothing as machinery and nothing as furniture, so any
   byte difference is reported), and a recogniser applied without CERTAIN confidence never asserts
   "unchanged" — only `conservative`'s own narrowing is trusted without certainty.
 - **R33** A reading, or a diff of two readings, that found NOTHING is a failed reader stated as
@@ -253,14 +226,12 @@ reported "unchanged") (**R29**).
   independently. Whether `docprofile` should instead recognise and normalise an instrument number
   through `id-spaces` — one fact, read once — is an architecture question for BOB, not settled
   here.
-- **`compare()` and the stack registry's `register`/`handlers`.** `pipeline.mjs`'s `assess` is
-  built on the L2/L3 primitive `compare()`, and the stack axis's own `register`/`handlers` are how
-  the four built-in handlers reach the registry at load time. Neither is required above because no
-  OTHER module calls either today (`DOCUMENT-PROFILES.md`'s own Known Gaps section states
-  `compare()` has no caller in `bio-plane/src`); the job implementing this file may keep, narrow or
-  drop them as it sees fit as long as R1–R29 keep holding.
+- **`compare()` and the stack registry.** `pipeline.mjs`'s `assess` is built on `site-profiles`'
+  `compare()` (its R10). The four built-in handlers are registered by `site-profiles` itself (its
+  Suggestions); this module's `registry.mjs` stops registering them once it does, and only
+  re-exports.
 - **The `legacy-ui` edge.** `civicos-ui/app.html`'s bundled copy of this package calls `fidelity()`
-  directly (`tools/bundle-docprofile.mjs`'s flattened build), which is real use of R26 from outside
+  directly (`tools/bundle-docprofile.mjs`'s flattened build), which is real use of `site-profiles` R11 (was R26) from outside
   `bio-plane/src` — but `build/modules.json`'s `legacy-ui` entry declares `uses: ["legacy-checks"]`
   only, not `docprofile`. Worth BOB's attention as a missing `uses` edge; not settled here.
 - For the module job: the recogniser-vocabulary section most naturally keys each kind of fact by
