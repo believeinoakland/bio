@@ -85,3 +85,16 @@ COMPLETE for R43 and B4's steps 1–3 (B6, K854). Branch `job/T19/control-plane`
 **Tests and checks:** module 91 tests, 91 pass, 0 fail. Whole `test/m`: 4,578 tests, 4,555 pass, 3 fail: capture-sources R55/R57/R63 and text-chain extent (both accepted, K853, N446), and plane R8 (plane's own, green once plane deletes the store files). 20 todo. format 0 failures; architecture 2 (above); coverage 26 of 27 (R42, T20); ownership 1 (the ordered deletion of `test/m/legacy-checks/`).
 
 Size (session_01Q7pSz3M4L3gNs61ha41Bff): test runs 27, module lines 3296
+
+## J7 · COMPLETE
+
+COMPLETE (B7, K856), superseding J6 for merging. Branch `job/T19/control-plane` @ 35dd59e285 (tranche/T19 merged in). Everything in J5 and J6 stands: R43, the wrapper and `ops.mjs` deleted, and the names accepted red. With this on top:
+
+1. **`store-class.test.mjs`** is deleted from my tests. PLANE #1 takes it from my branch history (its last version is at 999220604b) and re-titles it to plane's ids.
+2. **The doorbell's real-record arms** (the four pull arms, sources' map, the own-key acts) now run on `test/m/control-plane/record.mjs`, my own fixture. It composes the record from earlier modules only, all in my `uses`: record-core, membership, credentials, promotion, provenance, calibration, extraction, content, entities, connections, progressions, bias, observation-log, retrieval, inquiry-grammar, inquiry, basis-versions, contradiction, ai-runs, run-productions, capture-requests, intent, capture and instance-setup. They are built and migrated in the composition root's order (host-governor's tables come from capture's own governor). The door is my `dispatch` over capture's routes plus `controlPlaneRoutes`. R36 is still named by my own tests. Two arm titles that named the retired R35 now name R26.
+
+No module test of mine imports plane.
+
+**Tests and checks:** module 85 tests, 85 pass, 0 fail (store-class's six arms left with the file). Whole `test/m`: 4,572 tests, 4,549 pass, 3 fail (capture-sources R55/R57/R63 and text-chain extent, both accepted under K853 and N446; plane R8, plane's own until its deletion step), 20 todo. format 0 failures; architecture 0 failures; coverage 26 of 27 (R42, T20); ownership 1 (the ordered deletion of `test/m/legacy-checks/`).
+
+Size (session_01Q7pSz3M4L3gNs61ha41Bff): test runs 37, module lines 3296
