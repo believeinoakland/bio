@@ -82,6 +82,12 @@ const DAY_MS = 86400000;
 const ACT = Symbol("escalation act");
 const COMPLETED_READINGS = new Set(["denied", "partial", "none"]);
 
+/** R7 (N462; DEC-36, K913): an evaluation's trigger id, `n` its place (1, 2, …) among this escalation's evaluations,
+ *  so it counts no other entry of the log. */
+const evaluationId = (escalation, n) => `${escalation}/evaluation#${n}`;
+/* R13's compatibility (N462): the form recorded before R7's id, `<id>/evaluation/<seq>`, `seq` the log's number. */
+const OLD_EVALUATION_ID = /^(.+)\/evaluation\/(\d+)$/;
+
 const str = (v) => (typeof v === "string" ? v.trim() : "");
 const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 /* A snap key's tail: eight hex digits, the form the catalogue maps a history file to its manifest entry by (C-12.2). */
@@ -248,8 +254,10 @@ export class Escalation {
       return i === -1 ? null : { ledger: l, index: i, entry: l[i] };
     };
     const latest = evaluations.at(-1) || null;
-    const byEvaluation = (ev, why) => (ev && COMPLETED_READINGS.has(ev.reading)
-      ? [{ ms: instantMs(ev.at), ids: [`${e.id}/evaluation/${ev.seq}`] }] : []);
+    /* R7, R8: the evaluation named by its place among the evaluations, never by the log's `seq`, which counts every
+       act (an attachment the viewer may not see among them, R26). */
+    const byEvaluation = (ev) => (ev && COMPLETED_READINGS.has(ev.reading)
+      ? [{ ms: instantMs(ev.at), ids: [evaluationId(e.id, evaluations.indexOf(ev) + 1)] }] : []);
     const evalMissing = (ev, scope) => (!ev ? `no evaluation ${scope}`
       : ev.reading === "complied" ? `the evaluation in force reads complied: it proposes no stage. Compliance is restored `
         + `only by a live compliant determination of the same act for every standard pursued (escalationEnd)`
@@ -425,9 +433,18 @@ export class Escalation {
              oversight: typeof o.oversight === "boolean" ? o.oversight : undefined };
   }
 
-  /* The history: every act on the escalation, oldest first, from its document's log (R18). */
+  /* The history: every act on the escalation, oldest first, from its document's log (R18). R13's compatibility (N462):
+     a trigger id recorded in the old form `<id>/evaluation/<seq>` is answered in R7's form when that log entry is an
+     evaluation, and left as recorded when it names none; the document is never edited. */
   #history(id) {
-    return logOf(this.#text(id));
+    const log = logOf(this.#text(id));
+    const ordinal = new Map(log.filter((x) => x.kind === "evaluate" && !x.unreadable).map((x, i) => [x.seq, i + 1]));
+    const current = (t) => {
+      const m = typeof t === "string" ? OLD_EVALUATION_ID.exec(t) : null;
+      return m && m[1] === id && ordinal.has(Number(m[2])) ? evaluationId(id, ordinal.get(Number(m[2]))) : t;
+    };
+    return log.map((x) => (isObj(x.trigger) && Array.isArray(x.trigger.ids)
+      ? { ...x, trigger: { ...x.trigger, ids: x.trigger.ids.map(current) } } : x));
   }
 
   /** R26 (K903 (4), DEC-36): the read with every attached action the viewer may not see withheld whole, in the history
