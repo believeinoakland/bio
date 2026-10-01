@@ -163,11 +163,11 @@ test("R4 disclosable lists every disclosed key with its load_when, and nothing o
   for (const d of resident.disclosable) assert.deepEqual(Object.keys(d).sort(), ["layer", "load_when"]);
 });
 
-test("R5 disclosed holds the judgement layers, then vocabularies, acts, bounds, refusals, contradiction, action_planning, recipes, each with load_when and sourcing", () => {
+test("R5 disclosed holds the judgement layers, then vocabularies, acts, bounds, refusals, contradiction, action_planning, filing_drafting, recipes, each with load_when and sourcing", () => {
   const pub = published();
   const { disclosed } = renderPack(pub);
-  assert.deepEqual(Object.keys(disclosed),
-    [...JUDGEMENT_KEYS, "vocabularies", "acts", "bounds", "refusals", "contradiction", "action_planning", "recipes"]);
+  assert.deepEqual(Object.keys(disclosed), [...JUDGEMENT_KEYS, "vocabularies", "acts", "bounds", "refusals",
+    "contradiction", "action_planning", "filing_drafting", "recipes"]);
   assert.deepEqual(JUDGEMENT_KEYS.map((k) => disclosed[k]), JUDGEMENT_KEYS.map((k) => judgementLayers()[k]));
   assert.equal(disclosed.vocabularies.body, pub.vocabularies, "the published vocabularies, unchanged");
   assert.equal(disclosed.vocabularies.sourcing, "driven");
