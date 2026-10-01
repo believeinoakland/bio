@@ -52,7 +52,9 @@ test("R22 (K585 (1)): CHECK_FAMILIES is total — every DEC-49 row any module of
     assert.ok(owned.has(`bio-plane/${path}`), path);
     assert.ok(Object.entries(ns).some(([k, v]) => isFamily(k, v)), path);
   }
-  assert.equal(M.CHECK_FAMILY_FILES[0][0], "checks/bio-checks.mjs");
+  /* R43: the catalogue is no source; record-grammar's shared rows come first, the module's own last */
+  assert.equal(M.CHECK_FAMILY_FILES.some(([p]) => p.startsWith("checks/")), false);
+  assert.equal(M.CHECK_FAMILY_FILES[0][0], "src/record-grammar/acts.mjs");
   assert.equal(M.CHECK_FAMILY_FILES.at(-1)[0], "src/control-plane/checks.mjs");
   for (const dropped of ["src/textchain.mjs", "src/action-clocks/checks.mjs", "src/monitoring/checks.mjs", "src/connections/checks.mjs"]) {
     const missing = await unreached(M.CHECK_FAMILY_FILES.filter(([p]) => p !== dropped));
