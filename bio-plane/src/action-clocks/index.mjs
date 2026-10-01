@@ -28,7 +28,10 @@ import { PROJECTION_TABLE } from "../retrieval/index.mjs";
 import { conformanceOf } from "../conformance/index.mjs";
 import { actionsOf, noSuchAction } from "../actions/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
-import { parseFrontmatter, normalizeType, isMachineIdentity, lawProposalLabel } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
+import { normalizeType } from "../record-grammar/types.mjs";
+import { isMachineIdentity } from "../record-grammar/actors.mjs";
+import { lawProposalLabel } from "../action-grammar/index.mjs";
 import { ACTION_CLOCK_CHECKS } from "./checks.mjs";
 import { ACTION_CLOCKS_TABLES, migrateActionClocks } from "./schema.mjs";
 
@@ -67,6 +70,25 @@ function isDay(v) {
   return Number.isFinite(t) && new Date(t).toISOString().slice(0, 10) === v;
 }
 const clampLimit = (v, dflt, max) => { const n = Math.floor(Number(v)); return Number.isFinite(n) && n > 0 ? Math.min(n, max) : dflt; };
+
+/* R4 (N427, K711): the one site minting `REMINDER_REFUSED`, the refusal of a reminder request's own shape, its detail
+   naming the arm (`entry`, `on`, `from`, `held`, `bound`). Exported as `actions`' `noSuchAction` is, so a later module
+   judging a request's shape before the action exists (`action-plans` R29) answers through it. `extra` adds a caller's
+   own fields beside these and never replaces one of them. Writes nothing and never throws. */
+const REMINDER_REFUSED_FIXED = new Set(["ok", "reason", "code", "check", "translation", "detail", "arm"]);
+const textOf = (v) => { try { return v === undefined || v === null ? null : String(v); } catch { return null; } };
+export function reminderRefused(arm, detail, extra = null) {
+  let own = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own = Object.entries(extra).filter(([k]) => !REMINDER_REFUSED_FIXED.has(k));
+  } catch { own = []; }
+  /* DEC-49 REGION is-reminder-refused */
+  const row = ACTION_CLOCK_CHECKS.REMINDER_REFUSED;
+  return { ok: false, reason: "REMINDER_REFUSED", code: "REMINDER_REFUSED", check: row.check, translation: row.translation,
+           ...Object.fromEntries(own), detail: textOf(detail), arm: textOf(arm) };
+  /* END DEC-49 REGION is-reminder-refused */
+}
 
 export class ActionClocks {
   #deps;
@@ -303,12 +325,6 @@ export class ActionClocks {
     /* END DEC-49 REGION is-machine-reminder */
     return null;
   }
-  /* R4, R6: the one site that answers a reminder request's own shape, its detail naming the arm. */
-  #reminderRefused(arm, detail, extra) {
-    /* DEC-49 REGION is-reminder-refused */
-    return refuse("REMINDER_REFUSED", detail, { arm, ...(extra || {}) });
-    /* END DEC-49 REGION is-reminder-refused */
-  }
   /* R4, R6: the action as the viewer may see it, through `actions`' read (its R29); absent, invisible and not an action
      are answered alike, through `actions`' one answer (its R43). */
   #actionFor(target, viewer) {
@@ -337,28 +353,28 @@ export class ActionClocks {
     const pos = typeof entry === "number" ? entry : /^\d+$/.test(String(entry ?? "").trim()) ? Number(String(entry).trim()) : NaN;
     const e = Number.isInteger(pos) && pos >= 0 ? a.clock[pos] : undefined;
     if (!e || typeof e !== "object" || !isDay(e.date))
-      return this.#reminderRefused("entry", `entry ${String(entry ?? "").slice(0, 20) || "(none)"} names no clock entry of `
+      return reminderRefused("entry", `entry ${String(entry ?? "").slice(0, 20) || "(none)"} names no clock entry of `
         + "this action with a YYYY-MM-DD date: a reminder is set on a dated deadline. Nothing was changed.",
         { target: a.id, entry: entry ?? null });
     const day = on === null || on === undefined || on === "" ? null : String(on).trim();
     const was = from === null || from === undefined || from === "" ? null : String(from).trim();
     if (day === null && was === null)
-      return this.#reminderRefused("on", "on= is the day to be reminded, YYYY-MM-DD; with no day, name the reminder "
+      return reminderRefused("on", "on= is the day to be reminded, YYYY-MM-DD; with no day, name the reminder "
         + "to remove as from=. Nothing was changed.", { target: a.id, entry: pos });
     if (day !== null && !isDay(day))
-      return this.#reminderRefused("on", `on '${day.slice(0, 20)}' is not a date written YYYY-MM-DD. Nothing was changed.`,
+      return reminderRefused("on", `on '${day.slice(0, 20)}' is not a date written YYYY-MM-DD. Nothing was changed.`,
         { target: a.id, entry: pos, on: day.slice(0, 20) });
     const at = stampInstant("second", this.#nowMs(null));
     return this.record.transact(() => {
       const old = was === null ? null : this.#held(a.id, pos, was, who);
       if (was !== null && !old)
-        return this.#reminderRefused("from", `from ${was.slice(0, 20)} names no reminder of yours on this entry: you `
+        return reminderRefused("from", `from ${was.slice(0, 20)} names no reminder of yours on this entry: you `
           + "change or remove only a reminder you set. Nothing was changed.", { target: a.id, entry: pos, from: was.slice(0, 20) });
       if (day !== null && this.#held(a.id, pos, day, who))
-        return this.#reminderRefused("held", `you already hold a reminder on this entry for ${day}. Nothing was changed.`,
+        return reminderRefused("held", `you already hold a reminder on this entry for ${day}. Nothing was changed.`,
           { target: a.id, entry: pos, on: day });
       if (day !== null && !old && this.#standing(a.id) >= REMINDERS_PER_ACTION_MAX)
-        return this.#reminderRefused("bound", `this action holds ${REMINDERS_PER_ACTION_MAX} reminders, the most it `
+        return reminderRefused("bound", `this action holds ${REMINDERS_PER_ACTION_MAX} reminders, the most it `
           + "holds. Nothing was changed.", { target: a.id, entry: pos, max: REMINDERS_PER_ACTION_MAX });
       if (old) this.sql.exec(`UPDATE action_reminders SET removed_at=? WHERE rid=?`, at, old.rid);
       if (day !== null)
@@ -456,7 +472,7 @@ export class ActionClocks {
     /* END DEC-49 REGION is-no-such-reminder */
     const day = on === null || on === undefined || on === "" ? null : String(on).trim();
     if (day !== null && (!isDay(day) || !(day > today)))
-      return this.#reminderRefused("on", `on '${day.slice(0, 20)}' is not a date written YYYY-MM-DD after today `
+      return reminderRefused("on", `on '${day.slice(0, 20)}' is not a date written YYYY-MM-DD after today `
         + `(${today}): a further reminder is for a later day. Nothing was answered.`, { target: a.id, entry: pos, today });
     const at = stampInstant("second", this.#nowMs(null));
     return this.record.transact(() => {
@@ -464,7 +480,7 @@ export class ActionClocks {
       /* R4's add, under its own rules: a day already held is held once; the answered ones freed their places. */
       if (day !== null && !this.#held(a.id, pos, day, who)) {
         if (this.#standing(a.id) >= REMINDERS_PER_ACTION_MAX)
-          return this.#reminderRefused("bound", `this action holds ${REMINDERS_PER_ACTION_MAX} reminders, the most it `
+          return reminderRefused("bound", `this action holds ${REMINDERS_PER_ACTION_MAX} reminders, the most it `
             + "holds. Nothing was answered.", { target: a.id, entry: pos, max: REMINDERS_PER_ACTION_MAX });
         this.sql.exec(`INSERT INTO action_reminders (bundle_id, entry, day, set_by, set_at) VALUES (?,?,?,?,?)`,
           a.id, pos, day, who, at);
@@ -475,7 +491,7 @@ export class ActionClocks {
 }
 
 /* R2: the label of a clock entry proposed apart; it says, in each state, what the proposal is not. The governing-laws
-   label's states are legacy-checks' (REC-195). */
+   label's states are action-grammar's (REC-195, its R2). */
 const PROPOSAL_SAYS = {
   machine_proposed: "a machine credential computed this clock entry from the jurisdiction profile. That is machine "
     + "work, labelled as machine work: it is not on the action's clock, and nothing puts it there until a member "
