@@ -17,11 +17,13 @@
 
 **Found in another module (REPORTED in COMPLETE):** `filings` R7 (`test/m/filings/` "R7 the sending is one `sent` correspondence entry …") now fails: `src/filings/index.mjs`:573 offers clock entries through `actions.clockPropose`, which left with the split. Its re-point to `action-clocks` is filings' own entry this layer ("The split's share: `clockPropose` read from action-clocks"). Nothing else in another module.
 
-**Deferred:** R9's `entity_id` naming a person (needs the entities registry, not in this module's uses; ACTIONS #1's deferral). Nothing else.
+**B5 (K707) re-open done:** R9's `entity_id` naming a person, through `entities`' `readEntity` (its R5), now in the uses: refused `COUNTERPARTY_REFUSED` with a finding naming `arm: person`, on every named arm; an office in the registry and an id the registry does not hold land. *Meets R9's last remainder.* Deferred: nothing.
+
+**After B5:** actions 61/61. Users (`affordances`, `escalation`, `filings`, `instance-setup`, `monitoring`, `control-plane`, `action-clocks`, `actions`) 477: 469 pass, 2 fail: control-plane R36 (N419, red on the tranche before) and control-plane "R3 R7 R12: layer 9's 22 mutating ops … the op maps hold exactly those 37 ops", which pins layer 9's op set: this job's R47/R48 ops (`actioncreate`, `action`, `actions`, `actionpressure`), already on `tranche/T18` since the early merge, are N-A12's op specs for `op-declarations`/`control-plane` (layer 11). Checks: format, architecture, coverage 46/46, ownership all 0 failures.
 
 **Tests and checks (final):** `node --test test/m/actions/` 60 pass, 0 fail. Users' tests (`affordances`, `escalation`, `filings`, `instance-setup`, `monitoring`, `control-plane`, `action-clocks`): 406, 394 pass, 6 fail: filings R7 (above, filings' re-point), and the 5 that fail on `tranche/T18` without this job (filings R11, R15 ×2, R21: K651; control-plane R36: N419). Checks: format 0 failures; architecture 0 failures; coverage 46 of 46 live ids named; ownership 0 failures (legacy-checks: the first commit removed 27 lines, `RESOLUTIONS`, and added none).
 
-Size (session_01GDJca1oCWXbx9GUtgd2bh9): test runs 11, module lines 3829
+Size (session_01GDJca1oCWXbx9GUtgd2bh9): test runs 14, module lines 3846
 
 ## J1 · QUESTION
 
