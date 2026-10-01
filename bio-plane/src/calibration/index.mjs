@@ -18,7 +18,8 @@
  *           run last, in the order they registered.
  *   now     the module's clock, milliseconds since the epoch (default: the wall clock). A caller's body never sets it.
  * The ops (`calibrations`, `calibrate`, `calibrationsubject`, `calibrationsignal`) are `calibrationOps`' entries,
- * which the legacy store's dispatcher spreads in.
+ * which the legacy store's dispatcher spreads in. The host calls `migrate()` (R20) at boot, after record-core's, and
+ * before any service here is asked.
  */
 
 import { checkCalibration, checkSignal, compare, drifted, nextProbeDue, cadenceSentence,
@@ -26,7 +27,7 @@ import { checkCalibration, checkSignal, compare, drifted, nextProbeDue, cadenceS
 import { recordOf } from "../record-core/index.mjs";
 import { listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { CALIBRATION_CHECKS } from "./checks.mjs";
-import { CALIBRATION_TABLES } from "./schema.mjs";
+import { CALIBRATION_SCHEMA, CALIBRATION_TABLES } from "./schema.mjs";
 
 export { checkCalibration, checkSignal, compare, drifted, nextProbeDue, cadenceSentence, DRIFT, PROBE_REQUIRED,
          CALIBRATION_CADENCE_MS } from "../calibration.mjs";
@@ -122,6 +123,18 @@ class Calibration {
     const signals = s && Number.isFinite(s.by) ? [{ probe_by: s.by }] : [];
     const due = nextProbeDue({ lastAt: subject.last_probe_ms ?? null, signals });
     return { ...due, overdue: due.at <= now };
+  }
+
+  /* ---------------------------------------------------------------- R20: the tables */
+
+  /** R20: creates this module's three tables and their indexes where they are absent, from its own schema text
+   *  (`CALIBRATION_SCHEMA`), whose every statement is `IF NOT EXISTS`: a table or index already held is left as it
+   *  is, nothing else is added or changed, and a second call changes nothing. Answers the tables it created. */
+  migrate() {
+    const absent = CALIBRATION_TABLES.filter((t) => !this.#rows(`PRAGMA table_info(${t})`).length);
+    const bare = CALIBRATION_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+    for (const st of bare.split(";")) { const t = st.trim(); if (t) this.#sql.exec(t); }
+    return { ok: true, created: absent };
   }
 
   /* ---------------------------------------------------------------- R12: the listeners */

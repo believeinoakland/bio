@@ -2,7 +2,7 @@
    (build/requirements/calibration.md). Each test names the requirement ids it checks in its title. No storage. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { BASIS_GRADES } from "../../../checks/bio-checks.mjs";
+import { BASIS_GRADES } from "../../../src/record-grammar/index.mjs";
 import { checkCalibration, checkSignal, compare, drifted, nextProbeDue, cadenceSentence, DRIFT, PROBE_REQUIRED,
          CALIBRATION_CADENCE_MS, CALIBRATION_CHECKS } from "../../../src/calibration/index.mjs";
 

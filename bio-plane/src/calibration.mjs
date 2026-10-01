@@ -103,8 +103,8 @@
  */
 
 /* The module's own refusal rows (C-42, moved from the catalogue at T5-1) and the grade
-   vocabulary, which stays the catalogue's. */
-import { BASIS_GRADES } from "../checks/bio-checks.mjs";
+   vocabulary, which is record-grammar's (its R16). */
+import { BASIS_GRADES } from "./record-grammar/index.mjs";
 import { CALIBRATION_CHECKS } from "./calibration/checks.mjs";
 
 /* ------------------------------------------------------------------ *
