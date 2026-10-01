@@ -76,7 +76,8 @@ types.register(regulation);
    and read that as a tier-3 gap. FW-20 re-took the census through the plane with its
    fleet bound and the premise did not survive: the markers were `no_tounicode`, TIER 2's
    case, and with the tier-2 member bound 56 of 57 name-matched documents read from text
-   (`bio-plane/scripts/fw20-decode-census.mjs`; `docs/development/measurements/M-121.md`). So the type
+   (`docs/development/measurements/M-121.md`; the census script itself was retired in T18 and
+   is in git history). So the type
    is written from directories that were actually fetched AND read — see its own header.
    Registered AFTER the three substance types: `recognise` breaks on the first CERTAIN,
    and a report or an instrument that happens to carry a contact block is that document

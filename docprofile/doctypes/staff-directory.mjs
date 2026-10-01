@@ -8,8 +8,8 @@
  * WHY THIS TYPE WAS NOT WRITTEN BY FW-18, AND WHAT CHANGED. FW-18 measured 0 of 30
  * name-matched directory PDFs decodable at TIER 1 and withheld the type (D-376), calling
  * the class "a tier-3 gap wearing a content-type gap's clothes". FW-20 re-took that
- * census through the plane WITH ITS FLEET BOUND (`bio-plane/scripts/fw20-decode-census.mjs`,
- * `docs/development/measurements/M-121.md`) and the premise did not survive: the undetermined markers
+ * census through the plane WITH ITS FLEET BOUND (`docs/development/measurements/M-121.md`;
+ * the census script was retired in T18 and is in git history) and the premise did not survive: the undetermined markers
  * on those documents are `no_tounicode` — fonts with no Unicode map — which is TIER 2's
  * case, not a missing text layer, so tier 3 is never asked. With the tier-2 member bound,
  * 56 of 57 name-matched documents read from text. The class was never unreadable to the
@@ -161,6 +161,9 @@ export default {
    *  THE KEY IS THE ADDRESS, NEVER THE NAME. An address is the identifier the document
    *  itself assigns to an entry and is stable across revisions of the sheet; a person's
    *  name is not a source-assigned id (framework §7, and the minutes reader's own rule).
+   *  The key is the BARE address, as every other type's key is bare (`26-0910`, never
+   *  `legislation:26-0910`): a consumer writes the reference as `kind:key`, and a key
+   *  that carried its kind read `contact:contact:<address>` there (N404).
    *
    *  FW-17 / IC-86 — each entry carries WHERE it was read, from `ctx.locate` at the
    *  address's own RAW offset. `rect` is null: tier-1 and tier-2 text carry no geometry. */
@@ -174,7 +177,7 @@ export default {
       const endAt = raw.indexOf("\n", a.offset);
       const line = raw.slice(start, endAt < 0 ? raw.length : endAt).replace(/\s+/g, " ").trim();
       const phones = [...new Set(line.match(SD_PHONE) || [])];
-      entities.push(entity(`contact:${a.address}`, "contact", line.slice(0, 160) || a.address,
+      entities.push(entity(a.address, "contact", line.slice(0, 160) || a.address,
         { address: a.address, organisation: a.domain === domain, line, phone: phones.join(", ") || null },
         locate(a.offset)));
     }
