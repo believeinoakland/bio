@@ -482,7 +482,7 @@ export class Monitoring {
     const fm = parseFrontmatter(live).data || {};
     if (!fm.monitoring || fm.monitoring.enabled !== true)
       return answer({ ok: false, reason: "NOT_MONITORED",
-                      detail: "this bundle does not ask to be monitored" }, 409);
+                      detail: "this record does not ask to be monitored" }, 409);
     const locator = fm.source?.locator;
     if (typeof locator !== "string" || !isPublicHttpsLocator(locator))
       return answer({ ok: false, reason: "NO_LOCATOR",
@@ -1037,7 +1037,7 @@ export class Monitoring {
                httpStatus = null, reason = null, scope = null, actorClass = "plane", actor = null,
                locator = null, content = undefined, contentBasis = null,
                captured = null, uncaptured = null } = {}) {
-    if (!bundleId || !address) return { ok: false, written: false, why: "a monitor look needs a bundle and an address" };
+    if (!bundleId || !address) return { ok: false, written: false, why: "a monitor look needs a record and an address" };
     /* REC-191: the type this look read the address as, kept BEFORE the observation's own
        early returns, because a look with no baseline to compare still read what the
        document is. `content` absent means the caller read nothing (a governed look). */
@@ -1053,7 +1053,7 @@ export class Monitoring {
       const home = /^[0-9a-f]{64}$/.test(s) ? this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ?`, s) : null;
       if (s !== seen) uncapturedWhy = "the capture offered is not the sha this tick saw";
       else if (!home || home.bundle_id !== String(bundleId))
-        uncapturedWhy = "the served bytes are not registered under this bundle";
+        uncapturedWhy = "the served bytes are not registered under this record";
       else {
         capturedSha = s;
         /* The version at the address, filed through the ONE writer of `captured_locators`

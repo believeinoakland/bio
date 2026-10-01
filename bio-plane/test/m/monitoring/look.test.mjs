@@ -41,6 +41,11 @@ test("R11 one observation row per look, authority sweep naming the bundle, level
   const other = w.m.recordLook({ bundleId: id, address: ADDR, outcome: "unbaselined", baseline: b.cap });
   assert.deepEqual([other.written, other.why], [false, "no observation is recorded for the outcome 'unbaselined'"]);
   assert.equal(w.looks().length, n0 + 6);
+  /* a look naming no bundle or no address writes nothing and says why, in member-read words (K899 (1)) */
+  for (const missing of [{ bundleId: null }, { address: null }])
+    assert.deepEqual(w.m.recordLook({ bundleId: id, address: ADDR, outcome: "removed", ...missing }),
+                     { ok: false, written: false, why: "a monitor look needs a record and an address" });
+  assert.equal(w.looks().length, n0 + 6);
   /* a rendered tick's detail says frame and that the content is undetermined */
   assert.equal(monitorObservationFor({ outcome: "unchanged", baseline: b.cap, scope: "frame" }).detail, "frame unchanged; content undetermined");
   assert.match(monitorObservationFor({ outcome: "changed", baseline: b.cap, seen: H("x"), scope: "frame" }).detail, /^frame changed; .*; content undetermined$/);
@@ -62,7 +67,7 @@ test("R12 a changed look names a capture only when the register holds it under t
   const notSeen = look({ sha256: o.cap }, H("zzz"));
   assert.deepEqual([notSeen.captured, notSeen.uncaptured], [null, "the capture offered is not the sha this tick saw"]);
   const elsewhere = look({ sha256: o.cap }, o.cap);
-  assert.deepEqual([elsewhere.captured, elsewhere.uncaptured], [null, "the served bytes are not registered under this bundle"]);
+  assert.deepEqual([elsewhere.captured, elsewhere.uncaptured], [null, "the served bytes are not registered under this record"]);
   assert.equal(w.looks().at(-1).result_ref, b.cap);
   assert.equal(w.rows(`SELECT count(*) c FROM captured_locators WHERE capture_sha=?`, o.cap)[0].c, 0, "no version recorded");
   /* a tick that captured: the look names the new capture and the version is recorded at the address, once */
