@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` (T21) layer 2, promotion. (1) N456 
 ## B2 · CHANGE
 
 K941: `bio-plane/test/system/row-census.test.mjs` is legacy-tests' file, not yours. Re-pin your own `ROW_CENSUS` and stamp as your START says, but do not edit that suite; if your stamp turns it red, say so in your COMPLETE (which rows, which pin): legacy-tests re-pins it in L11, and it is an accepted red by name until then. No merge needed for this.
+
+## B3 · CHANGE
+
+record-core (K944) and membership (K946) are merged into tranche/T21 (@ 3e16dc612d). Merge tranche/T21 into your branch and stamp (your item 4). Rows membership removed, for the stamp: C-96.8 BAD_KEY, C-96.15 SIGNER_KEY_HELD_BY_ANOTHER, C-96.16 SIGNER_KEY_REVOKED, C-96.17 MACHINE_CANNOT_REGISTER_KEY, C-63.1, C-63.2 (credentials keeps its own copies). registry.test.mjs:58 should now be green.
