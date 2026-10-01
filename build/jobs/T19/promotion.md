@@ -1,6 +1,6 @@
 # promotion (T19)
 
-**Status** · session_01HJeD3rGAqsS7o4aqav9wm3 · depth 2 · WAITING ON BOB (J2) · handled B4
+**Status** · session_01HJeD3rGAqsS7o4aqav9wm3 · depth 2 · WAITING ON BOB (J2) · handled B5
 
 ## J1 · QUESTION
 
