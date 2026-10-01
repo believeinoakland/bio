@@ -24,3 +24,7 @@
 - `ownership reevaluation tranche/T19`: 5 files changed; legacy-store 0 added, 0 removed; legacy-checks 0 added, 0 removed; 0 failures.
 
 Size (session_01WArww1p9WPhPW7tHUiPSts): test runs 4, module lines 26 (16 added, 10 removed)
+
+## J1 · REPORT
+
+legacy-checks: the catalogue's extent algebra (canonicalExtent, describeExtent, CONTENT_EXTENT_KINDS, CONTENT_EXTENT_A1_RE, CONTENT_EXTENT_RANGE_RE, rangeCorners, canonicalRange, contentCitedAs, a1ToRowCol) and VERSION_NAME_RE all STAY: each is still referenced by held catalogue code (extentRelation -> canonicalExtent; checkContentExtent and its covers* helpers -> describeExtent and the rest; basisVersionFindings -> VERSION_NAME_RE). Those callers have no named importer in product source (only control-plane families.mjs' namespace import, which composes the row tables; the C-45 rows' where still names 'checks/bio-checks.mjs checkContentExtent > is-content-extent'). Their live copies are content extent-core.mjs, basis-versions and inquiry-grammar. So they, the algebra and VERSION_NAME_RE go together at the catalogue's whole deletion (K786) or when their owners' rows are re-pointed; text-chain's extent.test.mjs parity (N446) and old suites (K619) read them until then. Nothing deleted from legacy-checks; ownership 0 lines there.
