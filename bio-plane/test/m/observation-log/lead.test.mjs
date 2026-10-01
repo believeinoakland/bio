@@ -5,7 +5,7 @@ import { world, V, MACHINE, sha } from "./fixture.mjs";
 import { observationLogOps, LEAD_VOCABULARY, OBSERVATION_STATE_WORDS, LEAD_LOOK_OUTCOMES, LEAD_READ_LIMIT_MAX,
          LEAD_LIST_LIMIT_MAX, LEAD_ID_RE } from "../../../src/observation-log/index.mjs";
 import { CAPTURE_TEXT_UNIT_CAP } from "../../../src/extraction/index.mjs";
-import { BUNDLE_ID_RE, leadLegFindings } from "../../../checks/bio-checks.mjs";
+import { BUNDLE_ID_RE } from "../../../src/record-grammar/ids.mjs";
 
 const code = (r) => r && (r.code || r.reason);
 const check = (r) => r && r.check;
@@ -216,7 +216,7 @@ test("R20 R21 leadList: every lead this viewer may read, each once with its own 
   assert.equal(w.count("observation_log"), 2, "a list writes nothing");
 });
 
-test("R25 a lead is never evidence: its id has no bundle shape, the leg grammar refuses it by name (C-54.1), and nothing here mints a bundle or a content row", () => {
+test("R25 a lead is never evidence: its id has no bundle shape, every act answers evidence false, and nothing here mints a bundle or a content row (C-54.1's refusal at the leg grammars is tested there)", () => {
   const w = group();
   const bundles = w.count("bundles"), content = w.count("content");
   const L = w.obs.lead({ words: "w", author: "alice" }).lead_id;
@@ -234,9 +234,6 @@ test("R25 a lead is never evidence: its id has no bundle shape, the leg grammar 
   for (let i = 0; i < 20; i++) assert.match(w.obs.lead({ words: `w${i}`, author: "alice" }).lead_id, LEAD_ID_RE);
   for (const id of ["INFO-2026-0001", "PROJ-A", "PROJ-2026-0001", "LEAD-2026-09-27-abc", "lead-2026-0927-abc", "LEAD-2026-0927-", ""])
     assert.equal(LEAD_ID_RE.test(id), false, id);
-  const findings = [];
-  assert.equal(leadLegFindings("basis[0]", { target: L }, findings), true);
-  assert.equal(findings[0].check, "C-54.1");
   for (const r of [w.obs.lead({ words: "x", author: "alice" }), w.obs.leadRead({ id: L, viewer: V("alice") }),
                    w.obs.leadLook({ lead: L, state: "LOOKED_ABSENT", looker: "alice", viewer: V("alice") })])
     assert.equal(r.evidence, false);

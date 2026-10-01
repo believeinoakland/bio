@@ -155,13 +155,12 @@ export class Store extends DurableObject {
     actionPlansOf(ctx);
     monitoringOf(ctx, { env });
     promotion.registerStep("legacy-store", { check: (c) => this.#promoteChecks(c), project: (c) => this.#promoteProjections(c) });
-    /* capture R55 (K99): legacy-store registers with capture the observation log's rows until observation-log does. */
     const capture = captureOf(ctx, { env });
     /* capture-requests (K58, K61): its table, its `sweep` resolver and its drain; the run sight it reads is ai-runs'
        (its R28), and it registers its wait source with ai-runs (ai-runs R41). */
     captureRequestsOf(ctx, { env, storeName: () => this.#ownNamespace() || "bio", now: () => this.#nowMs(null),
       runs: aiRunsOf(ctx, env), aiRuns: aiRunsOf(ctx, env) });
-    capture.on("observation", "legacy-store", ({ row, at }) => this.#observe(row, at));
+    observationLogOf(ctx).listenToCapture(capture);
     schedulerOf(ctx, env);
     registerLegacyGrammars(recordOf(ctx), LEGACY_GRAMMARS);
     ctx.blockConcurrencyWhile(async () => this.#migrate());
