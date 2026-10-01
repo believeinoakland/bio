@@ -18,12 +18,12 @@
 
 import { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, PER_ITEM_MAX, deriveActs, decorate, vocabulariesFor } from "../affordances.mjs";
 
-const CATALOGUE_DETAIL = "pass target=<bundle id> for the acts available on that object right now; "
+const CATALOGUE_DETAIL = "pass target=<record id> for the acts available on that object right now; "
   + "rung is the weight ladder (vocabularies.rung_ladder, low to high, IRREVERSIBLE "
   + "at the top per DEC-19 with vocabularies.rung_correction_path beside it) and is "
   + "null only where the act carries a STATED absence — read rung_absence for the "
   + "ground, and vocabularies.rung_absence_grounds for what that ground means; "
-  + "capture_acts are keyed by a capture sha rather than by a bundle, so they are "
+  + "capture_acts are keyed by a capture sha rather than by a record, so they are "
   + "published with their metadata and never derived against an object's state; "
   + "set_acts take a selection as `items` under the per-item weight: each item is "
   + "applied or RETAINED with its own act's reason, and none stops the others";

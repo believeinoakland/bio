@@ -1188,6 +1188,9 @@ export const RUNG_ABSENT = {
   templatesave:         { ground: "undetermined", is: "a member keeps an approved draft, or their derivative of it, as a named template of the group's; no machine writes one (filings R26)" },
   actioncreate:         { ground: "undetermined", is: "a member creates an action, the same write as promoting an action document (actions R47)" },
   actionpressure:       { ground: "undetermined", is: "a member marks a received correspondence entry as pressure directed at the group, appended to a table of its own and never rewritten; an entry is marked once (actions R48)" },
+  /* K899 (7), K902 (T20): a hold statement on a `legal` pressure mark, graded beside `actionpressure` as the tranche's
+     entry rules. It is appended and never rewritten, and a later statement supersedes it on read with both kept. */
+  actionhold:           { ground: "undetermined", is: "a member states whether a litigation hold is in place on a reply marked as legal pressure, appended and never rewritten (actions R52)" },
   /* K727 (T18), on R27's rule: action-plans' acts that ask no authored reason and that no published act takes back —
      opening a plan, adding, proposing and adopting an option (`goaldeclare`'s, `standardpropose`'s and `standardadopt`'s
      grounds), a checkpoint's judgement (its note optional, never re-judged) and starting an option as an action
@@ -2638,6 +2641,9 @@ export const NON_ACTS = {
   templatesave: "draft-directed: a member keeps an approved draft as a named template of the group's, keyed by the draft; writes a template row and moves no bundle",
   actioncreate: "creation: a member creates an action from its document, the same write as its promotion; acts on no existing bundle",
   actionpressure: "entry-directed: a member marks one received correspondence entry as pressure, keyed by (action, entry ordinal); appends a mark and never rewrites the entry",
+  /* K899 (7), K902 (T20): a litigation hold is stated on one `legal` pressure mark, `actionpressure`'s key; it is
+     reached where the mark is shown (and from the hold reminder, queue-producers R19), never beside a bundle. */
+  actionhold: "entry-directed: keyed by (action, entry ordinal); appends a hold statement and never rewrites the entry or its mark",
   /* K727 (T18): action-plans' twelve acts. A plan is a `PLN-` record object whose options, scenarios and checkpoints are
      rows of its own, none a bundle state `affordanceFacts` describes; they are reached in the plan's view. Its reads
      (`plan`, `plans`, `planproposals`) carry no `NEEDS` row and are not named here (R12). */
