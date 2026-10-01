@@ -1,3 +1,33 @@
 # agent-worker (T21)
 
 **Status** · session_01WsT5JSUQHYjxrPzv8AYzFY · depth 2 · RUNNING until 2026-10-01T19:40:22Z (node test/{harness,agent-worker,fanout,wire-vocabulary}.control.mjs (every arm)) · handled B1
+
+## Completion (AGENT-WORKER #8)
+
+**Entries applied.**
+- **N458** (K899 (1)): "record" for "bundle" in the text members read. The re-scan of my paths found exactly the two named strings: `PLANE_OPS.search.why` (`src/harness.mjs`:291) now reads "which held record a citation names, and the source address its bytes name", and the unchained reason the `collect` row publishes (`src/index.mjs`:950) "the cited record names no source address, so no version chain can hold it". Identifiers, comments and `bundle_id`/`bundle:` fixtures are left as they are (N71). No test pinned either string; R21's test (`requirements.test.mjs`) gains an arm: a cited record whose search hit names no source address is read through no chain, counted as itself, and its reason is that sentence.
+- **N467** (my share): every arm that ran a deleted suite, re-pointed or retired, each said at the arm.
+  - `agent-worker.control.mjs` V5 (spawned `bio-plane/scripts/battery.mjs`): **re-pointed** to the package's own `npm test`. A failed assertion in `agent-worker.test.mjs` must make `npm test` exit non-zero and name that file, with every other suite as on a clean `npm test` taken first. For it to mean anything, `package.json`'s `test` script now runs every suite: `node --test --test-concurrency=1 test/*.test.mjs` (it ran only `agent-worker.test.mjs`, so the regression workflow never ran harness, fanout, requirements, plan, versions, wire-vocabulary or cascade).
+  - `harness.control.mjs` (ran `airun.test.mjs` and `skillsequencing.test.mjs`, `runAirun`/`runSeq`): its runner is now `runModule`, one module test file under `node --test`, failures named by test title. **Re-pointed:** E1, E2 to this member's `requirements.test.mjs` R44/R14 pins (skillsequencing B3, B4's share); F1 (the misattribution named by B7 here; run-rules R1 must hold), F2 (run-rules R1 and R9, ai-runs R14), F4 (run-rules R1), G1 (run-rules R1, ai-runs R14, B7's FL-8 arm), G3 (run-rules R1, the exact RUN_STATUS set, alone), G4 (run-rules R1, ai-runs R14), G5 (plane half: run-rules R1, ai-runs R14 green). **Retired:** G2, whose only subject was airun W1, an arm over ai-runs' source text; it changes no behaviour, so no remaining test can fail under it.
+- **N469** (K931): each note naming a T20-deleted file as live re-worded.
+  - `fleet-member.json` `note`: who reads the marker now (`bio-plane/scripts/fleet-bundle.mjs`) and who runs `testDir` (the package's `npm test`, every `test/*.test.mjs`). Text only.
+  - `src/index.mjs`:230, `src/subsession.mjs`:87: `check-refusal-codes.mjs` named as deleted with the old battery (T20), the reason kept.
+  - The "neither the battery nor the fleet walk must discover it" sentence (`agent-worker.test.mjs`, `harness.test.mjs`, `fanout.test.mjs`, `wire-vocabulary.test.mjs` and all four control drivers, `cascade.control.mjs`, `versions.control.mjs`, `plane-meaning.mjs`, `plane-suggest.mjs`): now `npm test` and `node --test`, which take only `*.test.mjs`.
+  - `agent-worker.test.mjs` :22–25, :56–60, :70 (the battery as what runs today) made past; :40 (V5) re-declared; :696 airun ARM PQ → ai-runs' R19 test (`m/ai-runs/reads.test.mjs`).
+  - `harness.test.mjs` :1226, :1232 (airun ARM H1) → ai-runs' R14 test (`m/ai-runs/tick-close.test.mjs`); :1628 (`nc-rec100.mjs`): its two arms (`aw-steplog`, `aw-refused`) are carried into `harness.control.mjs` as **S1, S2** (run: AS DECLARED); :43 and the E/F/G declarations kept as made, with a T21 paragraph saying what each now runs.
+  - `versions.test.mjs`:33 (`aicredential.test.mjs`) → credentials' `m/credentials/ai.test.mjs` (R12–R15).
+  - Found on re-scan: `plane-suggest.mjs` and `wire-vocabulary.test.mjs` named `bio-plane/test/suggest.test.mjs` and `vf4-suggestprobe.mjs` as where the store-bound checks are driven → run-productions' `m/run-productions/suggest.test.mjs`, the probe named as deleted.
+  - Kept as provenance: `requirements.test.mjs`:1311 ("Moved from skillsequencing…"), the dated RESULTS blocks in `harness.control.mjs`/`harness.test.mjs`, "found by m025-arm-anchor-witness".
+- **Flaws fixed in my module:** (1) `npm test` ran one suite of eight (above). (2) `requirements.test.mjs` R14 and R44 read `MODES.<mode>.deployed` without `?.`, so a deleted mode row KILLED the suite instead of failing an arm (found by re-pointed E2, first NOT AS DECLARED: requirements 0/-1). (3) `harness.control.mjs` H2 and D2 had not armed (each anchor matched twice since mode plan's table and `adjust` row repeated the line, K660): re-anchored on spans unique to the check-mode rows; both AS DECLARED. (4) `src/index.mjs`'s refusal note spoke of "arm C's walk" of a deleted guard; re-worded to what a future check would need.
+
+**Deferred:** none.
+
+**Found in other modules / generated artifacts (REPORT J1):** stale: `agent-worker/dist/agent-worker.bundled.mjs` and its manifest (`src/harness.mjs`, `src/index.mjs`, `src/subsession.mjs` changed); `requirements.test.mjs` R45's two arms report it until BOB regenerates.
+
+**Tests and checks.**
+- `npm test` in `agent-worker/` (now every suite): 7 of 8 files pass; `requirements.test.mjs` 272 passed, 2 failed — both R45 (the committed bundle is stale against this change's `src/`; clears when BOB regenerates). By suite: agent-worker 140/0, cascade 29/0, fanout 184/0, harness 261/0, plan 55/0, requirements 272/2 (one arm added, R21), versions 20/0, wire-vocabulary 83/0. Baseline before the change: all eight green (requirements 272/0 with one arm fewer).
+- Controls, every arm: `agent-worker.control.mjs` 15/15 AS DECLARED (V1–V4 retired with coverage.mjs, K636); `harness.control.mjs` 26 run, 24 AS DECLARED on the full pass, the two findings H2 and D2 never armed (pre-existing), then re-anchored and re-run: 2/2 AS DECLARED, so every armed arm is AS DECLARED (F3, G2 retired); `fanout.control.mjs` 10/10; `wire-vocabulary.control.mjs` 5/5; `cascade.control.mjs` and `versions.control.mjs` ran, restores verified, baselines 29/0 and 20/0 (cascade's arms 2 and 3 read 21/8 and 27/2 against their recorded 20/9 and 26/3; arms not touched by this job, noted only).
+- No layer tests are named in `build/manifest.md`.
+- format: 86 modules, 84 requirements files; 0 failures. architecture: 31 product files, 83 relative imports; 0 failures. coverage: 53 of 53 live requirement ids named by a test; 0 failures. ownership: 20 files changed by agent-worker between tranche/T21 and HEAD; 0 failures.
+
+Size (session_01WsT5JSUQHYjxrPzv8AYzFY): test runs 22, module lines 3766
