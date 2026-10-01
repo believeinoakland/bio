@@ -349,7 +349,8 @@ export class ActionClocks {
    *  deadline counted in business days: the holiday entries that apply to its offices (R10) for each year from the UTC
    *  year of the instance clock to the year of its latest pending clock entry, and at least the next year; and its
    *  offices' `hours`. Only facts the active profiles hold are paths (a year they do not list has no fact to confirm,
-   *  and a count reaching it is undetermined, jurisdictions R33). At most 500 actions read, `truncated` stated. */
+   *  and a count reaching it is undetermined, jurisdictions R33). Each path's actions are `{action, project,
+   *  created_by}`, the project and creator as R3 computes them (K1000). At most 500 actions read, `truncated` stated. */
   calendarFactsRead({ viewer = null, now = null } = {}) {
     const today = this.#today(now);
     const view = this.#view();
@@ -361,24 +362,26 @@ export class ActionClocks {
       WHERE b.object_type='action' AND b.current_state NOT IN (${closed}) AND (${gate.sql}) ORDER BY b.bundle_id LIMIT ?`,
       ...CLOSED_ACTION_STATES, ...gate.args, CALENDAR_FACTS_ACTIONS_MAX + 1) : [];
     const read = new Map();
-    const add = (path, id) => {
+    const add = (path, a) => {
       if (typeof path !== "string" || !path) return;
       if (!read.has(path)) read.set(path, []);
-      if (!read.get(path).includes(id)) read.get(path).push(id);
+      if (!read.get(path).includes(a)) read.get(path).push(a);
     };
     const y0 = Number(today.slice(0, 4));
     for (const r of rows.slice(0, CALENDAR_FACTS_ACTIONS_MAX)) {
       const fm = this.#heldFm(r.bundle_id) || {};
       if (!business.has(fm.action_kind)) continue;
+      /* K1000: the action as its paths answer it, one object shared by every path it reads. */
+      const a = { action: r.bundle_id, project: this.#projectOf(fm, viewer), created_by: this.#createdBy(r.bundle_id) };
       const offices = actionOffices(fm, view);
       let y1 = y0 + 1;
       for (const e of Array.isArray(fm.clock) ? fm.clock : [])
         if (e && e.status === "pending" && isDay(e.date)) y1 = Math.max(y1, Number(e.date.slice(0, 4)));
       for (let y = y0; y <= y1; y++)
-        for (const h of yearEntries(view, offices, y).entries) { try { add(factPath(holidayFact(h)), r.bundle_id); } catch { /* no path */ } }
-      for (const f of officeHours(view, offices)) { try { add(factPath(f), r.bundle_id); } catch { /* no path */ } }
+        for (const h of yearEntries(view, offices, y).entries) { try { add(factPath(holidayFact(h)), a); } catch { /* no path */ } }
+      for (const f of officeHours(view, offices)) { try { add(factPath(f), a); } catch { /* no path */ } }
     }
-    const paths = [...read.keys()].sort().map((path) => ({ path, actions: read.get(path) }));
+    const paths = [...read.keys()].sort().map((path) => ({ path, actions: read.get(path).map((a) => ({ ...a })) }));
     return { ok: true, as_of: today, paths, actions_limit: CALENDAR_FACTS_ACTIONS_MAX,
              truncated: rows.length > CALENDAR_FACTS_ACTIONS_MAX };
   }
