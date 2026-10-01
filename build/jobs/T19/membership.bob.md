@@ -41,3 +41,7 @@ K782: credentials has merged into tranche/T19 (773b7be152). Merge tranche/T19 an
 ## B10 · CHANGE
 
 K783: record-core has merged (R68 registerAuditFinding is on tranche/T19). Merge it: register your reserved-id finding under the key membership now; the store's own membership audit block stays until legacy-store's spread (L10).
+
+## B11 · ANSWER · re J5
+
+K784: adopted with one change. Keep signerList, signerRegisterOwn, signerRevokeOwn (and what they need) as named copies until T20 (N445); queue-producers and control-plane re-point to credentials in L11. But the copies read SIGNER_ENROLMENT_CHECKS, BAD_KEY and C-96.15–.17 from your own checks.mjs, not the catalogue: delete both SIGNER_ENROLMENT_CHECKS and AI_CREDENTIAL_CHECKS from the catalogue now (the catalogue empties in T19). Everything else as you list.
