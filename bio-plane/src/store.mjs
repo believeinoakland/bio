@@ -1,6 +1,6 @@
 import { DurableObject } from "cloudflare:workers";
 /* The catalog's own frontmatter parser, its type map (REC-10, the MAP RULE) and its digest. */
-import { parseFrontmatter, createSha256, normalizeType, LEGACY_TYPE_ALIASES } from "../checks/bio-checks.mjs";
+import { parseFrontmatter, createSha256, normalizeType } from "../checks/bio-checks.mjs";
 /* REC-132 / C-55: the reserved member id's refusal row, and the audit's report of it. */
 import { MEMBER_ID_CHECKS } from "../checks/bio-checks.mjs";
 /* D-85 / C-66: an assistant opens a question only inside a run it holds (INVESTIGATIVE-SESSION.md §11 item 5, rule 2). */
@@ -22,7 +22,7 @@ import { Membership, membershipOf, membershipOps, hiddenBundles } from "./member
 import { observationLogOf, observationLogOps, OBSERVATION_LOG_MODULE } from "./observation-log/index.mjs";
 import { runProductionsOf, runProductionsOps } from "./run-productions/index.mjs";
 import { captureRequestsOf, captureRequestsOps } from "./capture-requests/index.mjs";
-import { recordOf, stampInstant } from "./record-core/index.mjs";
+import { recordOf, stampInstant, registerLegacyGrammars } from "./record-core/index.mjs";
 export { stampInstant, instantOrder } from "./record-core/index.mjs";
 import { governorOf, governorRoutes } from "./host-governor/index.mjs";
 import { captureOf, captureOps } from "./capture/index.mjs";
@@ -163,11 +163,13 @@ export class Store extends DurableObject {
       runs: aiRunsOf(ctx, env), aiRuns: aiRunsOf(ctx, env) });
     capture.on("observation", "legacy-store", ({ row, at }) => this.#observe(row, at));
     schedulerOf(ctx, env);
+    registerLegacyGrammars(recordOf(ctx));
     ctx.blockConcurrencyWhile(async () => this.#migrate());
     ctx.blockConcurrencyWhile(async () => schedulerOf(ctx, env).start());
   }
 
   #migrate() {
+    recordOf(this.ctx).migrate();
     const bare = SCHEMA_TEXT.split("\n").filter(l => !l.trim().startsWith("--")).join("\n");
     /* CREATE TABLE IF NOT EXISTS does nothing to a table that already exists, so
        columns added after a store was first written need adding by hand. Done
@@ -195,8 +197,6 @@ export class Store extends DurableObject {
        * fresh store, or an old store gaining a table, gets them from the second pass. Both passes
        * are guarded on PRAGMA and are therefore idempotent on every boot. */
     const ADDITIVE_COLUMNS = [
-      ["manifest", "writer", "TEXT"],
-      ["manifest", "operation", "TEXT"],
       /* REC-18 / DATA-MODEL D1(b): the registry ENTITY this question is about,
          and it is the whole of the subject-entity linkage — one nullable
          projection column, no new table, no join row, no ordinal.
@@ -252,34 +252,11 @@ export class Store extends DurableObject {
 
     /* REC-143: the second pass — see ADDITIVE_COLUMNS above the schema for why there are two. */
     addColumns();
-    /* classification was REMOVED from the Information catalog on 2026-07-27
-       (Bob's decision, recorded in the state doc v30 entry). fact/analysis/
-       judgment is a stance a citing project takes toward a passage, not a
-       property a document has, so the vocabulary moves to the citation model
-       when anchored citations land. Dropped rather than orphaned so a store
-       migrated forward and a fresh install present the same table; guarded on
-       PRAGMA because this must be idempotent across every boot, and DROP
-       COLUMN on a column already gone is an error. Bundle frontmatter still
-       carrying the field is inert and drains on each bundle's next promotion;
-       history is append-only and keeps it forever, which is correct. */
-    const bundleCols = [...this.sql.exec(`PRAGMA table_info(bundles)`)].map((r) => r.name);
-    if (bundleCols.includes("classification"))
-      this.sql.exec(`ALTER TABLE bundles DROP COLUMN classification`);
-    /* The type renames (problem→focus 2026-07-27, focus→inquiry REC-10).
-       Normalisation site 2 of 4. The projection is DERIVED, so it is the
-       layer the design normalizes: frontmatter in append-only history keeps
-       whatever spelling it was written with, and every projection row says
-       the canonical type. GENERATED from the catalog's own alias map rather
-       than restated, so a fourth name is one catalog entry and zero edits
-       here. Idempotent by construction. */
-    for (const [legacy, canonical] of Object.entries(LEGACY_TYPE_ALIASES))
-      this.sql.exec(`UPDATE bundles SET object_type=? WHERE object_type=?`, canonical, legacy);
     retrievalOf(this.ctx).migrate();   /* retrieval's projection columns, text index and selections, and its backfill (K4, R3) */
 
     /* D-432: the opaque minter's ledger learns every gated id that already stands in a live row, and every one the
        counter issued for an untailed gated prefix — LAST, because it reads tables the schema pass above creates.
        Every boot, idempotently; `#seedMintLedger` says what it reads and what it cannot see. */
-    recordOf(this.ctx).migrate();
     recordOf(this.ctx).seedMintLedger(Store.#MINT_LEDGER_LIVE);
 
     /* D-497: the SIGHT INDEX is recomputed from the owners' acts, every boot, AFTER the schema pass creates
