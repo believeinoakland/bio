@@ -67,3 +67,50 @@ Both expect C-2.8's case-key arm at op=ratify. Their test world builds a record 
 - record-core :2048 (re-opened)
 - query-language ×5
 - membership's module-order (`plane`)
+
+## J5 · COMPLETE
+
+Complete. Head: d93286c6ad on job/T19/promotion.
+
+**Entries applied**
+- **R52 (N425).** `bundles.criticality` is `crucial` when the document's front matter or the envelope says so; otherwise it is the envelope's.
+- **R53 (N426).** Every bundle is committed with the project its document's `project:` names; none for a project's own bundle or a document stating none. Tested at the module, and end to end through the Store: a plan and an escalation are hidden from a member outside the project on `op=list` and seen by its participant. A negative control confirms both tests fail without R53.
+- **R54 (K760).** `promotionOps(promotion, url, body)` holds `promote`, `reopen` and `projectfork`, with the stamps read from the query.
+- **R55 (K773).** C-18.6/.7 (`checkInfo2Contract` and its helpers) moved to `src/promotion/info2.mjs`. It is registered with record-core once per record and has left `LEGACY_GRAMMARS`.
+- **Rows moved from the catalogue's shared tables into promotion's, lines unchanged.** C-33.21/.24/.38/.49, C-67.1, C-32.5 (`PROMOTION_ROW_CHECKS`), C-59.1–.4 (`PROJECT_MINT_CHECKS`) and C-102.4–.9 (`PROMOTION_REGISTRATION_CHECKS`).
+  - C-26.12 and C-64.1 are copies, held twice until bias (L5), inquiry and strength (L6) and instance-setup (L11) re-point.
+  - The catalogue's duplicates removed: C-102.1–.3, C-102.10 and `PROJECT_ID_CHECKS` (C-59.5) (K783). `REGISTRATION_CHECKS` is left empty for connections' L5 test import (K785).
+- **N44.** The C-64.1 region `is-group-undetermined` is added in `#promote`.
+- **No promotion file imports the catalogue (K785, B8).**
+  - Names it held moved to record-grammar, `CUSTODIAL_CHECKS` and `PROJECT_VISIBILITY_CHECKS` to membership.
+  - `gate.mjs` uses record-grammar's `checkBundle`.
+  - Test oracles on the catalogue were replaced by assertions at the interface. Write-path R18 states the five rows later modules enforce at this write.
+- **Held copies.** `MECHANICAL_FIELD_SETS`' catalogue copy deleted after `moved.test`:146's comparison was dropped (K750). `gate.test` R27 no longer leans on the held C-2.7 (K767).
+- **N221.** Confirmed: `runCaseGate` holds no per-member fallback. N70's nested-fact share was already met (`#fact`).
+- **The stamp (rule 7).** `CATALOG_VERSION` 1.48.0 → 1.49.0 (MINOR). `ROW_CENSUS` is {1.49.0, 1051, c7e4b82cbbbc2578aba38f221cde45e25f83bce54f5e2707dec982ed7ded38e3}: R50's census of HEAD, diffed line by line against 1.48.0's (887, bfda481e…, reproduced at d75700d9c9).
+  - Totals: 97 arrived, 0 departed, 64 changed, 65 now held twice, 3 held once again. Each is listed in `gate.mjs`' 1.49.0 note.
+  - B9's rows are included: C-96.18, C-96.15–.17 and C-63 now credentials'/membership's, C-102.19/.20, and the `where`s of C-28.13, C-32.1 and C-33.10–.12.
+- **`uses`.** record-grammar is added (K780).
+
+**Deferred.** Nothing.
+
+**For other modules and BOB**
+- **R50's file set.** Since K771 the census includes `tools/`, a module's `paths`, and those files run when imported (they spawn processes). None holds a row literal: three hold a `check:` key with no C-number. The stamp read them as R50 reads scripts, text only, which moves no figure. legacy-tests' `test/system/row-census.mjs` will execute them as it stands. For R50's wording and the release (with legacy-tests' 1.48.0 and 1.49.0 re-pins, K619): name `tools/` among R50's scripts.
+- **Reds my changes cause, all accepted or carried (K781).**
+  - legacy-checks' `catalogue.test`:273 (six-slot pin).
+  - provenance's `register-checks.test`:105 (L3 START).
+  - ratification's `release.test`:195 (L8 START).
+  - record-core :2058 (re-opened).
+  - Ratification's `converted-c`:226 and `converted-d`:479 need the test world to call `registerLegacyGrammars` (J4). They are now red on the tranche base too.
+- **N444.** The legacy-ui guard will report as rowless the codes whose rows moved out of catalogue families (ABSENT and the others).
+- **Stale generated artifacts.** The catalogue and promotion changed, so the plane bundle and agent-worker inputs are stale; yours to regenerate at the layer close.
+
+**Tests and checks**
+- `node --test test/m/promotion/`: 99 pass, 0 fail.
+- `node --test test/m/` (covers every module using promotion; the manifest names no layer tests): 4386 tests, 4086 pass, 280 fail. The tranche base @ origin/tranche/T19 fails the same 280 (4363 tests), except that exactly three are only mine, the K781 ones above. Three fail on base only.
+- format: 87 modules, 82 requirements files; 0 failures.
+- architecture promotion: 22 product files, 80 relative imports; 0 failures.
+- coverage promotion: 55 of 55 live requirement ids named by a test; 0 failures.
+- ownership promotion tranche/T19: 24 files changed; legacy-checks 0 lines added, 285 removed; legacy-store 0 added, 0 removed; 0 failures.
+
+Size (session_01HJeD3rGAqsS7o4aqav9wm3): test runs 31, module lines 3070
