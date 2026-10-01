@@ -77,7 +77,7 @@ export const QUEUE_ACT_CHECKS = Object.freeze({
 });
 
 /** A refusal carrying its row: `{ok: false, reason, code, check, translation, …extra}`. `row` is one of the rows
- *  above; the code is the caller's string literal, so the DEC-49 guard can read it at the site. */
+ *  above; the code is the caller's string literal at the site (the module's tests compare code, check and translation). */
 export function queueRefusal(code, row, extra = {}) {
   return { ok: false, reason: code, code, check: row.check, translation: row.translation, ...extra };
 }

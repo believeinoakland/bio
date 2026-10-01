@@ -101,7 +101,7 @@
   // is DIST's (D-115/D-116).
   //
   // INERT UNTIL DIST DEPLOYS THE MEMBER, exactly as PDF_WORKER and AGENT_WORKER
-  // shipped. `index.mjs` reads this binding on ONE branch — a document with no
+  // shipped. `extraction/pipeline.mjs` reads it on ONE branch — a document with no
   // text layer at all — and an instance without it says so in the record rather
   // than filing an empty document (D-115). Nothing else changes for an instance
   // that has not installed the fleet.
@@ -137,8 +137,8 @@
   // one primary fetch plus at most SUBRESOURCE_CAP (400, subresources.mjs)
   // external fetches, with one R2 write per newly held part and the Durable
   // Object's own calls beside them — on the order of 1,000 subrequests.
-  // Ratification's re-fetch is bounded by the calibrated ceiling (index.mjs,
-  // capturelimit), and a capture that meets the ceiling resumes on the next
+  // Ratification's re-fetch is bounded by the calibrated ceiling (ratification's
+  // ops.mjs, capturelimit), and a capture that meets the ceiling resumes on the next
   // tick rather than failing. So 10,000 is about TEN TIMES the largest sized
   // path. Not LOWER: purge, backfill and the other bulk paths are not sized
   // per invocation, and a fence below what every deployed instance has run

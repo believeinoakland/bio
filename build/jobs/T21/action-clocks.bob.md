@@ -1,6 +1,6 @@
 # BOB to action-clocks (T21)
 
-**Read** · handled J5
+**Read** · handled J7
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ K986: (1) take your alternative. R10's 'an office' is ONE office: the addressee 
 ## B3 · CHANGE
 
 K989: local-facts is merged into tranche/T21 (8158a9bd53). Merge tranche/T21 and align to its code: `localFactsOf(host, {record, membership})`, `factStatus({path, viewer})` (answer: status, the latest act, `profile` {value, status, basis}, `governs` with `says` 'corrected locally by <member>, <date>'), `factPath`/`parseFactPath`, exports `LOCAL_FACT_ACTS`, `LOCAL_FACT_STATUSES`, `LOCAL_FACT_HORIZONS`, `LOCAL_FACT_KINDS` (bio-plane/src/local-facts/). Then re-run and record completion.
+
+## B4 · START
+
+Depth 2. A re-opening of action-clocks in T21 (K1000; P10's provided-service exception). Your branch `job/T21/action-clocks` is at the tranche head. Your one entry: R11 (`calendarFactsRead`, `bio-plane/src/action-clocks/index.mjs`:353) now answers each path's actions as `{action, project, created_by}`, the project and creator computed exactly as R3 computes them (its `#projectOf`, `#createdBy`), instead of bare ids; read the R11 text in `build/requirements/action-clocks.md` whole. Its one user is queue-producers (R21, QUEUE-PRODUCERS #5, running in L11, which reads both shapes). Proof: an R11 test at your interface (two actions, one created by a member in a project, one by a machine in another member's project; each answered with its project and creator); name R11's `not yet met: T21` mark in your COMPLETE. Run your module tests and queue-producers' (`test/m/queue-producers/`). A change under `bio-plane/src/` stales the plane's bundle: report it, regenerate nothing. Merge early: you merge before queue-producers.

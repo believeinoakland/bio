@@ -28115,9 +28115,10 @@ var REPLAY_CHECKS = {
      session; this is the end state. A promotion of ANY type and ANY revision that asserts a replay names its
      drive-provenance capture, and `op=promote` verifies it against what the record HOLDS — the capture registered
      by this promotion, its bytes read back and hashed, and one preserved promotion record naming this bundle and
-     listing this revision's `bundle.md` SHA-256 — never against the request's own claim. Measured
-     before this existed (`9f8b69e6`, `risk-tier.test.mjs` §8 arm (δ)): the admin deploy token sending `replay: true`
-     with no provenance landed `risk_tier: 1` on an action nobody assessed. Asked in `op=promote`'s stamp block
+     listing this revision's `bundle.md` SHA-256 — never against the request's own claim. Found
+     before this existed (`9f8b69e6`, by the old `risk-tier.test.mjs` §8 arm (δ)): the admin deploy token sending
+     `replay: true` with no provenance landed `risk_tier: 1` on an action nobody assessed. R16's tests
+     (`test/m/control-plane/gates.test.mjs`, `converts.test.mjs`) prove the gate now. Asked in `op=promote`'s stamp block
      BEFORE the store is called, so nothing is written. The admin is refused rather than downgraded to an ordinary
      promotion, because an honest replay carries the past verbatim and an ordinary creation is rewritten on the way in.
      (Its one honest sender was the Drive-era migration tool, `migrate.mjs`, retired in K739; no product caller sends a
@@ -85666,9 +85667,2531 @@ function caseAuthoringOps(c, url, body) {
   };
 }
 
-// src/citation/checks.mjs
+// src/filing-templates/blanks.mjs
+var FILING_BLANKS = Object.freeze({
+  counterparty_role: "the official role of the office the action is addressed to (the action's counterparty)",
+  counterparty_body: "the body of that office (an office's arm only)",
+  counterparty_organisation: "the organisation of a reporter, an organisation or another group the action is addressed to",
+  counterparty_description: "the audience the action is addressed to, as the action describes it",
+  act: "what the government did, as the action's determination states it",
+  act_date: "when it did it (a date, or a period from and to)",
+  standards: "the citations of the standards the determination names",
+  findings: "each finding the determination rests on, with its published case edition",
+  governing_laws: "the governing laws a member stated for the action",
+  law: "the law a records request is made under, as the action states it",
+  clock: "the action's clock entries, each with its basis",
+  venue: "where the kind is filed (the profile's venue name)",
+  venue_how: "by what means it is filed (the profile's venue means)",
+  group: "the producing group",
+  date: "the date the draft was prepared"
+});
+var FILING_TEXT_MAX = 65536;
+var BLANK_RE = /\{\{\s*([a-z][a-z0-9_]*)\s*\}\}/g;
+function blanksOf(text5) {
+  const names = typeof text5 === "string" ? [...new Set([...text5.matchAll(BLANK_RE)].map((m) => m[1]))] : [];
+  return { blanks: names, unknown: names.find((n) => !Object.prototype.hasOwnProperty.call(FILING_BLANKS, n)) ?? null };
+}
+
+// src/filing-templates/checks.mjs
 var checks_exports28 = {};
 __export(checks_exports28, {
+  FILING_TEMPLATE_CHECKS: () => FILING_TEMPLATE_CHECKS,
+  rowOf: () => rowOf5
+});
+var at11 = (fn, region) => `src/filing-templates/index.mjs ${fn} > ${region}`;
+var FILING_TEMPLATE_CHECKS = Object.freeze({
+  /* ---- moved from filings (C-115) ---- */
+  MACHINE_CANNOT_DRAFT_TEMPLATE: {
+    check: "C-115.31",
+    where: at11("#machine", "is-template-member"),
+    translation: "Only a named member drafts, revises, submits or opens a template for review. A machine may propose wording; it never makes it a template's text."
+  },
+  TEMPLATE_NAME_REFUSED: {
+    check: "C-115.32",
+    where: at11("#shapeRefusal", "is-template-shape"),
+    translation: "Name the template in one line of at most 200 characters."
+  },
+  TEMPLATE_KIND_REFUSED: {
+    check: "C-115.33",
+    where: at11("#shapeRefusal", "is-template-shape"),
+    translation: "A template's kind is written as a kind is: lower-case letters, digits and underscores."
+  },
+  TEMPLATE_TEXT_REFUSED: {
+    check: "C-115.35",
+    where: at11("#textRefusal", "is-template-text"),
+    translation: "The template's words are empty, too long, or not readable as text."
+  },
+  TEMPLATE_TIER3_FILE: {
+    check: "C-115.36",
+    where: at11("#shapeRefusal", "is-template-shape"),
+    translation: "This kind's tier is 3: it requires competent counsel, so no template the group files in its own name is kept for it. A template that is the basis of a briefing to counsel may serve it."
+  },
+  TEMPLATE_NAME_TAKEN: {
+    check: "C-115.37",
+    where: at11("#shapeRefusal", "is-template-shape"),
+    translation: "The group's library already holds a template by this name. Choose another name."
+  },
+  NO_SUCH_TEMPLATE: {
+    check: "C-115.38",
+    where: at11("#noTemplate", "is-no-such-template"),
+    translation: "There is no template by that id in the group's library that you can read here. One you may not see answers exactly as one that does not exist."
+  },
+  /* ---- new (C-125) ---- */
+  TEMPLATE_KIND_UNKNOWN: {
+    check: "C-125.1",
+    where: at11("#shapeRefusal", "is-template-shape"),
+    translation: "A template written for a jurisdiction profile serves a kind of action that profile holds, and the profile named holds no such kind."
+  },
+  TEMPLATE_USE_REFUSED: {
+    check: "C-125.2",
+    where: at11("#shapeRefusal", "is-template-shape"),
+    translation: "Say what the template is for: file (wording the group files in its own name) or brief (the basis of a briefing to counsel)."
+  },
+  TEMPLATE_PROFILE_UNKNOWN: {
+    check: "C-125.3",
+    where: at11("#shapeRefusal", "is-template-shape"),
+    translation: "A template is written for jurisdiction profiles this instance holds, or for none in particular (general), and a profile named is not held."
+  },
+  TEMPLATE_BLANK_UNKNOWN: {
+    check: "C-125.4",
+    where: at11("#textRefusal", "is-template-text"),
+    translation: "The words name a blank that no filing fills. Use only the blanks filings fill, written {{name}}."
+  },
+  TEMPLATE_SCOPE_REFUSED: {
+    check: "C-125.5",
+    where: at11("#scope", "is-template-scope"),
+    translation: "This is done by a member taking part in the template's project (or, for withdrawing a version, by its author), and you are not. Nothing was changed."
+  },
+  TEMPLATE_DRAFT_OPEN: {
+    check: "C-125.6",
+    where: at11("templateDraft", "is-template-draft"),
+    translation: "The template already has a version in draft or in review, as named. Finish or withdraw it before starting another."
+  },
+  TEMPLATE_RETIRED: {
+    check: "C-125.7",
+    where: at11("#retired", "is-template-retired"),
+    translation: "The template has been retired from use, for the reason given. None of its versions is offered, and no new version is drafted of it."
+  },
+  TEMPLATE_FROM_REFUSED: {
+    check: "C-125.8",
+    where: at11("#fromRefusal", "is-template-from"),
+    translation: "A draft starts from a template version or a proposal you can read here, and the one named is not one. A filing's text becomes a template only through the filing's own keep-as-template act."
+  },
+  NOT_A_DRAFT: {
+    check: "C-125.9",
+    where: at11("#notADraft", "is-not-a-draft"),
+    translation: "This version has left draft, so its text is fixed. Changing the wording makes a new version."
+  },
+  TEMPLATE_NO_PROPOSER: {
+    check: "C-125.10",
+    where: at11("templatePropose", "is-template-propose"),
+    translation: "Nobody is named as the one proposing this wording. Every proposal names who made it."
+  },
+  TEMPLATE_WHY_REFUSED: {
+    check: "C-125.11",
+    where: at11("templatePropose", "is-template-propose"),
+    translation: "Say why the wording is proposed, in at most 1,000 characters."
+  },
+  REVIEWER_UNKNOWN: {
+    check: "C-125.12",
+    where: at11("templateSubmit", "is-template-submit"),
+    translation: "A reviewer asked is a member who can read the template, and one named is not. Nothing was submitted."
+  },
+  NO_REVIEWERS: {
+    check: "C-125.13",
+    where: at11("templateSubmit", "is-template-submit"),
+    translation: "A version goes to review with someone to review it: name a member, or open a review grant for a professional first."
+  },
+  GRANT_RECIPIENT_REFUSED: {
+    check: "C-125.14",
+    where: at11("templateReviewGrant", "is-template-grant"),
+    translation: "Name the reviewer and their organisation, each in one line of at most 200 characters."
+  },
+  GRANT_NO_SECRET: {
+    check: "C-125.15",
+    where: at11("templateReviewGrant", "is-template-grant"),
+    translation: "A review grant opens by a secret link the instance makes, and none was made for this request. Nothing was granted."
+  },
+  NO_SUCH_GRANT: {
+    check: "C-125.16",
+    where: at11("templateGrantRevoke", "is-template-grant-revoke"),
+    translation: "There is no review grant by that id on a template you can read here."
+  },
+  NO_TEMPLATE_GRANT: {
+    check: "C-125.17",
+    where: at11("noTemplateGrant", "is-no-template-grant"),
+    translation: "Nothing answers to this link. A review link is read only while it is open; one withdrawn, or whose version has left review, answers exactly as one that never existed."
+  },
+  MACHINE_CANNOT_REVIEW_TEMPLATE: {
+    check: "C-125.18",
+    where: at11("#machine", "is-template-member"),
+    translation: "Only a member or a professional reviewer gives a review. A machine's critique is a comment, shown as machine work, and never counts as a review."
+  },
+  NOT_IN_REVIEW: {
+    check: "C-125.19",
+    where: at11("#notInReview", "is-not-in-review"),
+    translation: "This version is not in review, so it is not reviewed, approved or opened for review here."
+  },
+  REVIEW_REFUSED: {
+    check: "C-125.20",
+    where: at11("templateReview", "is-template-review"),
+    translation: "A review states its outcome (no concerns, concerns or changes requested), what it covered in 1 to 200 characters, any comment in at most 4,000 and any credential in at most 200."
+  },
+  REVIEW_STALE: {
+    check: "C-125.21",
+    where: at11("templateReview", "is-template-review"),
+    translation: "The text reviewed is not the version's text. Read the version as it stands and review that."
+  },
+  MACHINE_CANNOT_APPROVE_TEMPLATE: {
+    check: "C-125.22",
+    where: at11("#machine", "is-template-member"),
+    translation: "Only a named member approves, widens, retires or withdraws a template. A machine may propose wording; it never decides."
+  },
+  TEMPLATE_NOT_APPROVED: {
+    check: "C-125.23",
+    where: at11("templateApprove", "is-template-approve"),
+    translation: "Only an approved version's template is made group-wide, and this version is not approved."
+  },
+  NOT_AN_APPROVER: {
+    check: "C-125.24",
+    where: at11("#notAnApprover", "is-not-an-approver"),
+    translation: "An owner of the template's project approves or retires it, and an administrator makes it group-wide or retires a group-wide one. You are not the one who does this here."
+  },
+  APPROVER_IS_AUTHOR: {
+    check: "C-125.25",
+    where: at11("templateApprove", "is-template-approve"),
+    translation: "The version's author is its only member contributor, so someone else approves it."
+  },
+  REVIEWS_INSUFFICIENT: {
+    check: "C-125.26",
+    where: at11("templateApprove", "is-template-approve"),
+    translation: "The version lacks the reviews its tier requires, each with no concerns, or a review requesting changes still stands. A Tier 1 kind needs one member's review; otherwise a professional's review, or the approver's written reason for going without one."
+  },
+  TEMPLATE_REASON_REFUSED: {
+    check: "C-125.27",
+    where: at11("templateRetire", "is-template-retire"),
+    translation: "Give the reason in 1 to 500 characters."
+  },
+  TEMPLATE_ALREADY_ENDED: {
+    check: "C-125.28",
+    where: at11("templateRetire", "is-template-retire"),
+    translation: "This was already retired or withdrawn, as recorded, and that stands."
+  },
+  TEMPLATE_NOTES_REFUSED: {
+    check: "C-125.29",
+    where: at11("#textRefusal", "is-template-text"),
+    translation: "A version's notes are text of at most 8,000 characters."
+  },
+  COMMENT_REFUSED: {
+    check: "C-125.30",
+    where: at11("templateComment", "is-template-comment"),
+    translation: "A comment names who wrote it and is 1 to 4,000 characters; a note is added by a member who may revise the template, once its version has left draft."
+  },
+  TEMPLATE_NOT_OFFERED: {
+    check: "C-125.31",
+    where: at11("offeredVersion", "is-offered-version"),
+    translation: "That version is not offered for a filing: it is a draft, in review or withdrawn, or the template has no approved version."
+  },
+  TEMPLATES_STATE_REFUSED: {
+    check: "C-125.32",
+    where: at11("templatesFor", "is-templates-state"),
+    translation: "Templates are listed as offered, or by one of: draft, in_review, withdrawn, retired, proposed."
+  }
+});
+function rowOf5(code) {
+  return Object.prototype.hasOwnProperty.call(FILING_TEMPLATE_CHECKS, code) ? FILING_TEMPLATE_CHECKS[code] : null;
+}
+
+// src/filing-templates/schema.mjs
+var FILING_TEMPLATES_SCHEMA = `
+-- R1: A TEMPLATE. scope is its project; widened by a 'widened' event (R10).
+-- profiles is a JSON list of profile ids, or the string general. migrated_from
+-- is filings' library id for a row taken over by the migration (K927).
+CREATE TABLE IF NOT EXISTS tpl_templates (
+  template_id    TEXT PRIMARY KEY,
+  bundle_id      TEXT,
+  project        TEXT,
+  kind           TEXT,
+  use            TEXT NOT NULL,
+  profiles       TEXT NOT NULL,
+  name           TEXT NOT NULL,
+  origin         TEXT NOT NULL,
+  created_by     TEXT NOT NULL,
+  created_name   TEXT NOT NULL,
+  created_at     TEXT NOT NULL,
+  migrated_from  TEXT UNIQUE
+);
+-- R2: A VERSION, counting from 1 within its template. Its text and sha are its
+-- latest revision's; derived_from is null or JSON {filing, sha} | {version} | {proposal}.
+CREATE TABLE IF NOT EXISTS tpl_versions (
+  template_id    TEXT NOT NULL,
+  version        INTEGER NOT NULL,
+  bundle_id      TEXT,
+  author         TEXT NOT NULL,
+  author_name    TEXT NOT NULL,
+  derived_from   TEXT,
+  created_at     TEXT NOT NULL,
+  PRIMARY KEY (template_id, version)
+);
+-- R4, R5: EVERY REVISION of a version's text, with its author; adopted names the
+-- proposal (R6) whose text it took.
+CREATE TABLE IF NOT EXISTS tpl_revisions (
+  rid            INTEGER PRIMARY KEY,
+  template_id    TEXT NOT NULL,
+  version        INTEGER NOT NULL,
+  bundle_id      TEXT,
+  text           TEXT NOT NULL,
+  sha            TEXT NOT NULL,
+  author         TEXT NOT NULL,
+  author_name    TEXT NOT NULL,
+  adopted        TEXT,
+  at             TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS tpl_revisions_version ON tpl_revisions (template_id, version, rid);
+-- R12: EVERY EDIT of a draft's notes; carried marks the predecessor's notes a new
+-- version starts with.
+CREATE TABLE IF NOT EXISTS tpl_notes (
+  nid            INTEGER PRIMARY KEY,
+  template_id    TEXT NOT NULL,
+  version        INTEGER NOT NULL,
+  bundle_id      TEXT,
+  text           TEXT NOT NULL,
+  author         TEXT,
+  author_name    TEXT,
+  carried        INTEGER NOT NULL DEFAULT 0,
+  at             TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS tpl_notes_version ON tpl_notes (template_id, version, nid);
+-- R7, R10, R11: WHAT HAPPENED TO A VERSION OR A TEMPLATE: submitted, approved,
+-- updated (by its successor), withdrawn; widened and retired (version NULL).
+-- detail is JSON (the tier, profiles and reason of an approval, a successor, a reason).
+CREATE TABLE IF NOT EXISTS tpl_events (
+  eid            INTEGER PRIMARY KEY,
+  template_id    TEXT NOT NULL,
+  version        INTEGER,
+  bundle_id      TEXT,
+  event          TEXT NOT NULL,
+  actor          TEXT NOT NULL,
+  actor_name     TEXT NOT NULL,
+  detail         TEXT,
+  at             TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS tpl_events_template ON tpl_events (template_id, event, version);
+-- R7, R20: THE MEMBERS ASKED TO REVIEW a version, with who asked and when.
+CREATE TABLE IF NOT EXISTS tpl_reviewers (
+  template_id    TEXT NOT NULL,
+  version        INTEGER NOT NULL,
+  member         TEXT NOT NULL,
+  bundle_id      TEXT,
+  member_name    TEXT NOT NULL,
+  asked_by       TEXT NOT NULL,
+  asked_name     TEXT NOT NULL,
+  at             TEXT NOT NULL,
+  PRIMARY KEY (template_id, version, member)
+);
+-- R6: A PROPOSAL of wording, for a template or for a kind, stored apart and labelled.
+CREATE TABLE IF NOT EXISTS tpl_proposals (
+  proposal_id    TEXT PRIMARY KEY,
+  bundle_id      TEXT,
+  template_id    TEXT,
+  kind           TEXT,
+  text           TEXT NOT NULL,
+  sha            TEXT NOT NULL,
+  why            TEXT NOT NULL,
+  proposer       TEXT NOT NULL,
+  run            TEXT,
+  model          TEXT,
+  skill_pack     TEXT,
+  at             TEXT NOT NULL
+);
+-- R9: A REVIEW, against the sha it read; a reviewer's later review of the same sha
+-- stands in place of the earlier, which is kept.
+CREATE TABLE IF NOT EXISTS tpl_reviews (
+  rvid           INTEGER PRIMARY KEY,
+  template_id    TEXT NOT NULL,
+  version        INTEGER NOT NULL,
+  bundle_id      TEXT,
+  sha            TEXT NOT NULL,
+  kind           TEXT NOT NULL,
+  reviewer       TEXT NOT NULL,
+  reviewer_name  TEXT NOT NULL,
+  organisation   TEXT,
+  credential     TEXT,
+  expertise      TEXT,
+  outcome        TEXT NOT NULL,
+  scope          TEXT NOT NULL,
+  comment        TEXT,
+  at             TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS tpl_reviews_version ON tpl_reviews (template_id, version, rvid);
+-- R8: A REVIEW GRANT to a named non-member, by the SHA-256 of a secret the control
+-- plane made (the secret itself never reaches this module).
+CREATE TABLE IF NOT EXISTS tpl_grants (
+  grant_id       TEXT PRIMARY KEY,
+  template_id    TEXT NOT NULL,
+  version        INTEGER NOT NULL,
+  bundle_id      TEXT,
+  recipient      TEXT NOT NULL,
+  organisation   TEXT NOT NULL,
+  secret_sha     TEXT NOT NULL UNIQUE,
+  actor          TEXT NOT NULL,
+  actor_name     TEXT NOT NULL,
+  at             TEXT NOT NULL
+);
+-- R8: A GRANT'S REVOCATION, at most one per grant.
+CREATE TABLE IF NOT EXISTS tpl_grant_revocations (
+  grant_id       TEXT PRIMARY KEY,
+  bundle_id      TEXT,
+  actor          TEXT NOT NULL,
+  actor_name     TEXT NOT NULL,
+  at             TEXT NOT NULL
+);
+-- R12, R13: A COMMENT on a version, by a member, a grant or a labelled run; note
+-- marks a note added after the version left draft.
+CREATE TABLE IF NOT EXISTS tpl_comments (
+  cid            INTEGER PRIMARY KEY,
+  template_id    TEXT NOT NULL,
+  version        INTEGER NOT NULL,
+  bundle_id      TEXT,
+  text           TEXT NOT NULL,
+  note           INTEGER NOT NULL DEFAULT 0,
+  kind           TEXT NOT NULL,
+  author         TEXT NOT NULL,
+  author_name    TEXT NOT NULL,
+  organisation   TEXT,
+  at             TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS tpl_comments_version ON tpl_comments (template_id, version, cid);
+`;
+var FILING_TEMPLATES_TABLES = Object.freeze([
+  "tpl_templates",
+  "tpl_versions",
+  "tpl_revisions",
+  "tpl_notes",
+  "tpl_events",
+  "tpl_reviewers",
+  "tpl_proposals",
+  "tpl_reviews",
+  "tpl_grants",
+  "tpl_grant_revocations",
+  "tpl_comments"
+]);
+var FILING_TEMPLATES_MINT_SEED = Object.freeze([
+  Object.freeze(["TPL", "tpl_templates", "template_id"]),
+  Object.freeze(["TPP", "tpl_proposals", "proposal_id"]),
+  Object.freeze(["TRG", "tpl_grants", "grant_id"])
+]);
+function migrateFilingTemplates(sql) {
+  const bare2 = FILING_TEMPLATES_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).map((l) => l.replace(/\s--.*$/, "")).join("\n");
+  for (const s of bare2.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+}
+
+// src/filing-templates/index.mjs
+var TEMPLATE_STATES = Object.freeze(["draft", "in_review", "approved", "updated", "withdrawn"]);
+var TEMPLATE_USES2 = Object.freeze(["file", "brief"]);
+var REVIEW_OUTCOMES2 = Object.freeze(["no_concerns", "concerns", "changes_requested"]);
+var TEMPLATE_ORIGINS = Object.freeze(["group", "profile", "imported"]);
+var TEMPLATE_NAME_MAX = 200;
+var TEMPLATE_NOTES_MAX = 8e3;
+var PROPOSAL_WHY_MAX = 1e3;
+var GRANT_FIELD_MAX = 200;
+var REVIEW_SCOPE_MAX = 200;
+var REVIEW_COMMENT_MAX = 4e3;
+var REVIEW_CREDENTIAL_MAX = 200;
+var APPROVAL_REASON_MAX = 1e3;
+var ENDING_REASON_MAX = 500;
+var COMMENT_MAX = 4e3;
+var COMMENTS_MAX = 500;
+var TEMPLATES_FOR_MAX = 200;
+var REVIEWS_REQUESTED_MAX = 500;
+var MIGRATED_NOTE = "kept before templates were reviewed (K921)";
+var TEMPLATES_STATES_LISTED = Object.freeze(["draft", "in_review", "withdrawn", "retired", "proposed"]);
+var KIND_RE2 = /^[a-z][a-z0-9_]*$/;
+var SHA_RE = /^[0-9a-f]{64}$/;
+var VERSION_RE = /^(.+)@([1-9][0-9]*)$/;
+var WELL_FORMED = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
+var str9 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
+var json = (v) => JSON.stringify(v ?? null);
+var parse = (s) => {
+  try {
+    return JSON.parse(s);
+  } catch {
+    return null;
+  }
+};
+var utf82 = (s) => new TextEncoder().encode(s).length;
+var oneLine2 = (v, max) => typeof v === "string" && !!v.trim() && v.trim().length <= max && !/[\n\r]/.test(v) && !WELL_FORMED.test(v);
+var textUpTo = (v, max, min = 1) => typeof v === "string" && v.trim().length >= min && v.length <= max && !WELL_FORMED.test(v);
+var clamp3 = (v, dflt, max) => {
+  const n = Math.floor(Number(v));
+  return v !== null && v !== void 0 && v !== "" && Number.isFinite(n) ? Math.min(Math.max(n, 1), max) : dflt;
+};
+var listOf = (v) => (Array.isArray(v) ? v : typeof v === "string" ? v.split(",") : []).map((x) => String(x ?? "").trim()).filter(Boolean);
+var OFFERED = Object.freeze(["approved", "updated"]);
+function withRow2(r) {
+  if (!r || typeof r !== "object" || r.ok !== false || typeof r.reason !== "string" || r.check) return r;
+  const row2 = rowOf5(r.reason);
+  return row2 ? { ...r, code: r.code ?? r.reason, check: row2.check, translation: row2.translation } : r;
+}
+var refuse3 = (code, detail, extra) => withRow2({ ok: false, reason: code, detail, ...extra || {} });
+function noTemplateGrant() {
+  const row2 = FILING_TEMPLATE_CHECKS.NO_TEMPLATE_GRANT;
+  return {
+    ok: false,
+    reason: "NO_TEMPLATE_GRANT",
+    code: "NO_TEMPLATE_GRANT",
+    check: row2.check,
+    translation: row2.translation,
+    detail: "nothing answers to this review link: a link is read only while its grant is open and its version is in draft or in review; any other answers exactly as one that never existed."
+  };
+}
+var versionId = (template, version) => `${template}@${version}`;
+function parseVersionId(v) {
+  const m = typeof v === "string" ? VERSION_RE.exec(v.trim()) : null;
+  return m ? { template: m[1], version: Number(m[2]) } : null;
+}
+var FilingTemplates = class _FilingTemplates {
+  constructor({ storage, record, membership, jurisdictions = null, now = null, env = null } = {}) {
+    this.sql = storage.sql;
+    this.record = record;
+    this.membership = membership;
+    this.jur = jurisdictions && typeof jurisdictions === "object" ? jurisdictions : jurisdictions_exports;
+    this.now = typeof now === "function" ? now : null;
+    this.env = env && typeof env === "object" ? env : {};
+  }
+  migrate() {
+    migrateFilingTemplates(this.sql);
+  }
+  #rows(q7, ...a) {
+    return [...this.sql.exec(q7, ...a)];
+  }
+  #one(q7, ...a) {
+    for (const r of this.sql.exec(q7, ...a)) return r;
+    return null;
+  }
+  #call(fn, dflt = null) {
+    try {
+      return fn();
+    } catch {
+      return dflt;
+    }
+  }
+  #nowMs() {
+    if (this.now) {
+      const n = Number(this.now());
+      if (Number.isFinite(n) && n >= 0) return n;
+    }
+    const v = Number(this.env.BIO_NOW_MS);
+    return Number.isFinite(v) && v >= 0 ? v : Date.now();
+  }
+  #when() {
+    return stampInstant("second", this.#nowMs());
+  }
+  /* ================================================================ who acts (R16, R22) */
+  /* The member an identity names (membership R76), or null for a machine, the bare founder or nobody. */
+  #member(identity) {
+    if (!str9(identity) || isMachineIdentity(identity)) return null;
+    return this.#call(() => this.membership.positionalMember(null, String(identity).trim()));
+  }
+  /* R16: a member's name at the time of the act, by value: their handle, else their id. */
+  #nameOf(memberId) {
+    const f17 = this.#call(() => this.membership.memberFacts(memberId));
+    return f17 && str9(f17.handle) || memberId;
+  }
+  #who(memberId) {
+    return memberId ? { id: memberId, name: this.#nameOf(memberId) } : null;
+  }
+  /* R22: a machine, or a call stamped with nobody, is refused by shape before anything else is asked. `act` is the
+     fence's family: drafting (R3, R4, R7, R8), reviewing (R9), or approving and ending (R10, R11). */
+  #machine(act, who2) {
+    if (str9(who2) && !isMachineIdentity(who2)) return null;
+    const code = act === "review" ? "MACHINE_CANNOT_REVIEW_TEMPLATE" : act === "approve" ? "MACHINE_CANNOT_APPROVE_TEMPLATE" : "MACHINE_CANNOT_DRAFT_TEMPLATE";
+    return refuse3(code, str9(who2) ? `'${String(who2).trim().slice(0, 60)}' is a machine identity: a machine proposes wording and comments, labelled, and nothing else` : "no member is named as the one acting: this call carries nobody");
+  }
+  /* ================================================================ the one-condition answers */
+  /* R3, R24, R25: absent and invisible are one answer. */
+  #noTemplate(asked) {
+    return refuse3(
+      "NO_SUCH_TEMPLATE",
+      "no template by that id is readable here; one you may not see answers the same",
+      { template: str9(typeof asked === "string" ? asked : null) }
+    );
+  }
+  #scope(t, detail) {
+    return refuse3("TEMPLATE_SCOPE_REFUSED", detail, { template: t ? t.id : null });
+  }
+  #retired(t) {
+    return refuse3(
+      "TEMPLATE_RETIRED",
+      `the template was retired: ${t.retired.reason}`,
+      { template: t.id, retired: t.retired }
+    );
+  }
+  #notADraft(t, n, state) {
+    return refuse3("NOT_A_DRAFT", `the version is ${state}, past draft: its text is fixed`, { version: versionId(t.id, n), state });
+  }
+  #notInReview(t, n, state) {
+    return refuse3("NOT_IN_REVIEW", `the version is ${state}, not in review`, { version: versionId(t.id, n), state });
+  }
+  #notAnApprover(t, detail) {
+    return refuse3("NOT_AN_APPROVER", detail, { template: t.id });
+  }
+  #fromRefusal(detail) {
+    return refuse3("TEMPLATE_FROM_REFUSED", detail);
+  }
+  /* ================================================================ the profiles (R1, R15) */
+  #activeIds() {
+    let ids = this.#call(() => this.record.getSetting("jurisdiction_profiles"));
+    if (typeof ids === "string") ids = parse(ids);
+    return Array.isArray(ids) ? ids.filter((x) => typeof x === "string" && x) : [];
+  }
+  #profile(id) {
+    return typeof id === "string" ? this.#call(() => this.jur.get(id)) : null;
+  }
+  #kindIn(profile, kind) {
+    return profile && Array.isArray(profile.action_kinds) ? profile.action_kinds.find((k) => k && k.kind === kind) || null : null;
+  }
+  /* The Terms: the tier of a template's kind, the strictest across the profiles it names (for a `general` one,
+     across the active view), undetermined when none states one. */
+  #tierOf(kind, profiles) {
+    const tiers = [];
+    for (const p of Array.isArray(profiles) ? profiles : this.#activeIds()) {
+      const e = this.#kindIn(this.#profile(p), kind);
+      if (e && [1, 2, 3].includes(e.tier)) tiers.push(e.tier);
+    }
+    return tiers.length ? Math.max(...tiers) : "undetermined";
+  }
+  /* R15: the profile's templates, one per active profile and kind, each an approved version of origin `profile`, scope
+     `group`, its profiles the profile it is in. */
+  #profileTemplates() {
+    const out = [];
+    for (const pid of this.#activeIds()) {
+      const p = this.#profile(pid);
+      for (const k of p && Array.isArray(p.action_kinds) ? p.action_kinds : []) {
+        const t = k && k.template;
+        if (!t || typeof t !== "object" || typeof t.text !== "string" || !str9(t.id)) continue;
+        if (out.some((x) => x.id === t.id)) continue;
+        out.push({
+          id: t.id,
+          origin: "profile",
+          kind: k.kind,
+          use: t.use,
+          profiles: [pid],
+          name: str9(k.label) || k.kind,
+          scope: "group",
+          project: null,
+          bundle_id: null,
+          widened: null,
+          retired: null,
+          created_at: str9(t.approved_at) || "",
+          profileTemplate: t,
+          tier: [1, 2, 3].includes(k.tier) ? k.tier : "undetermined"
+        });
+      }
+    }
+    return out;
+  }
+  /* ================================================================ templates and their sight (R24) */
+  #groupTemplate(id) {
+    const r = typeof id === "string" ? this.#one(`SELECT * FROM tpl_templates WHERE template_id=?`, id) : null;
+    if (!r) return null;
+    const ev = (e) => this.#one(`SELECT actor, actor_name, detail, at FROM tpl_events WHERE template_id=? AND version IS NULL
+                                  AND event=? ORDER BY eid LIMIT 1`, r.template_id, e);
+    const end2 = (e) => e ? { by: { id: e.actor, name: e.actor_name }, at: e.at, ...parse(e.detail) || {} } : null;
+    const w = ev("widened"), x = ev("retired");
+    const profiles = r.profiles === "general" ? "general" : parse(r.profiles) || [];
+    return {
+      id: r.template_id,
+      origin: r.origin,
+      kind: r.kind,
+      use: r.use,
+      profiles,
+      name: r.name,
+      project: r.project,
+      bundle_id: r.bundle_id,
+      scope: w ? "group" : { project: r.project },
+      widened: end2(w),
+      retired: end2(x),
+      created_at: r.created_at,
+      created_by: { id: r.created_by, name: r.created_name },
+      migrated_from: r.migrated_from ?? null
+    };
+  }
+  /* R24: a project's template is seen by whoever may see its project (membership's one rule); a group or profile
+     template by every member (a viewer the rule admits to anything). */
+  #canSee(t, viewer) {
+    if (!t) return false;
+    if (t.origin === "profile" || t.widened) return viewerPredicate(viewer).scope !== "DENY";
+    return !!t.bundle_id && this.#call(() => this.membership.inSight(t.bundle_id, viewer)) === true;
+  }
+  #template(id, viewer) {
+    const key = str9(id);
+    if (!key) return null;
+    const t = this.#groupTemplate(key) || this.#profileTemplates().find((p) => p.id === key) || null;
+    return t && this.#canSee(t, viewer) ? t : null;
+  }
+  /* ================================================================ versions (R2, R5, R9, R10, R12) */
+  #events(tid) {
+    return this.#rows(`SELECT * FROM tpl_events WHERE template_id=? ORDER BY eid`, tid);
+  }
+  #stateOf(events, n) {
+    const has3 = (e) => events.some((x) => x.version === n && x.event === e);
+    return has3("withdrawn") ? "withdrawn" : has3("updated") ? "updated" : has3("approved") ? "approved" : has3("submitted") ? "in_review" : "draft";
+  }
+  #numbers(tid) {
+    return this.#rows(`SELECT version FROM tpl_versions WHERE template_id=? ORDER BY version`, tid).map((r) => r.version);
+  }
+  #latestRevision(tid, n) {
+    return this.#one(`SELECT * FROM tpl_revisions WHERE template_id=? AND version=? ORDER BY rid DESC LIMIT 1`, tid, n);
+  }
+  /* The version of `t` named by a version id or a number (a profile template's own number), or null. */
+  #versionOf(t, asked) {
+    const p = parseVersionId(asked);
+    const n = p ? p.template === t.id ? p.version : null : /^[1-9][0-9]*$/.test(String(asked ?? "").trim()) ? Number(String(asked).trim()) : null;
+    if (n === null) return null;
+    if (t.origin === "profile") return n === Number(t.profileTemplate.version) ? n : null;
+    return this.#one(`SELECT 1 AS x FROM tpl_versions WHERE template_id=? AND version=?`, t.id, n) ? n : null;
+  }
+  /* A version id the viewer may see: its template and number, or null. */
+  #resolve(asked, viewer) {
+    const p = parseVersionId(asked);
+    const t = p ? this.#template(p.template, viewer) : null;
+    const n = t ? this.#versionOf(t, asked) : null;
+    return t && n !== null ? { t, n } : null;
+  }
+  /* The latest approved version (R14's default), or null. */
+  #latestApproved(t, events) {
+    if (t.origin === "profile") return Number(t.profileTemplate.version);
+    const ns = this.#numbers(t.id).filter((n) => this.#stateOf(events, n) === "approved");
+    return ns.length ? ns[ns.length - 1] : null;
+  }
+  #openVersion(t, events) {
+    return this.#numbers(t.id).find((n) => ["draft", "in_review"].includes(this.#stateOf(events, n))) ?? null;
+  }
+  /* R5: every member who revised the version and every adopted proposal's run, in time order, each dated; written by
+     R3, R4 and R6's adoption alone (it is read from their rows). */
+  #contributors(tid, n) {
+    const out = [], members = /* @__PURE__ */ new Set();
+    for (const r of this.#rows(`SELECT author, author_name, adopted, at FROM tpl_revisions WHERE template_id=? AND version=?
+                                 ORDER BY rid`, tid, n)) {
+      if (!members.has(r.author)) {
+        members.add(r.author);
+        out.push({ kind: "member", member: r.author, name: r.author_name, at: r.at });
+      }
+      if (r.adopted && !out.some((c) => c.proposal === r.adopted)) {
+        const p = this.#one(`SELECT * FROM tpl_proposals WHERE proposal_id=?`, r.adopted);
+        if (p) out.push({
+          kind: "run",
+          proposal: p.proposal_id,
+          run: p.run ?? null,
+          model: p.model ?? null,
+          skill_pack: p.skill_pack ?? null,
+          label: proposalLabel(p.proposer, "template"),
+          at: r.at
+        });
+      }
+    }
+    return out;
+  }
+  /* R9: every review of the version, each marked whether it stands (a reviewer's latest of that sha). */
+  #reviews(tid, n) {
+    const rows2 = this.#rows(`SELECT * FROM tpl_reviews WHERE template_id=? AND version=? ORDER BY rvid`, tid, n);
+    const latest = /* @__PURE__ */ new Map();
+    for (const r of rows2) latest.set(`${r.kind}|${r.reviewer}|${r.sha}`, r.rvid);
+    return rows2.map((r) => ({
+      kind: r.kind,
+      outcome: r.outcome,
+      scope: r.scope,
+      comment: r.comment ?? null,
+      sha: r.sha,
+      at: r.at,
+      reviewer: r.kind === "professional" ? {
+        grant: r.reviewer,
+        name: r.reviewer_name,
+        organisation: r.organisation,
+        credential: r.credential ?? null,
+        credential_says: "as the reviewer stated it; never verified"
+      } : { id: r.reviewer, name: r.reviewer_name, expertise: parse(r.expertise) || [] },
+      stands: latest.get(`${r.kind}|${r.reviewer}|${r.sha}`) === r.rvid
+    }));
+  }
+  static #summary(reviews, sha) {
+    const s = { member: 0, professional: 0, no_concerns: 0, concerns: 0, changes_requested: 0 };
+    for (const r of reviews) if (r.stands && (!sha || r.sha === sha)) {
+      s[r.kind] += 1;
+      s[r.outcome] += 1;
+    }
+    return s;
+  }
+  /* R12: a version's notes: the latest edit, every edit with its author and time, and the notes added after draft. */
+  #notes(tid, n) {
+    const edits = this.#rows(`SELECT text, author, author_name, carried, at FROM tpl_notes WHERE template_id=? AND version=?
+                               ORDER BY nid`, tid, n).map((e) => ({ text: e.text, by: e.author ? { id: e.author, name: e.author_name } : null, carried: e.carried === 1, at: e.at }));
+    const last = edits[edits.length - 1] || null;
+    const added = this.#rows(`SELECT text, author, author_name, at FROM tpl_comments WHERE template_id=? AND version=? AND note=1
+                               ORDER BY cid`, tid, n).map((a) => ({ text: a.text, by: { id: a.author, name: a.author_name }, at: a.at }));
+    return { text: last ? last.text : "", carried: !!(last && last.carried), edits, added };
+  }
+  /* R2: one version whole, with its attribution (R5, R9, R10, R12, R16). */
+  #versionView(t, n, events) {
+    if (t.origin === "profile") return this.#profileVersion(t);
+    const v = this.#one(`SELECT * FROM tpl_versions WHERE template_id=? AND version=?`, t.id, n);
+    const rev = this.#latestRevision(t.id, n);
+    const state = this.#stateOf(events, n);
+    const ev = (e) => events.find((x) => x.version === n && x.event === e) || null;
+    const by = (e) => ({ id: e.actor, name: e.actor_name });
+    const ap = ev("approved"), up = ev("updated"), wd = ev("withdrawn"), sub = ev("submitted");
+    const reviews = this.#reviews(t.id, n);
+    return {
+      id: versionId(t.id, n),
+      template: t.id,
+      version: n,
+      text: rev.text,
+      sha: rev.sha,
+      state,
+      notes: this.#notes(t.id, n),
+      author: { id: v.author, name: v.author_name },
+      contributors: this.#contributors(t.id, n),
+      derived_from: parse(v.derived_from),
+      reviews,
+      reviews_summary: _FilingTemplates.#summary(reviews, rev.sha),
+      approved: ap ? { by: by(ap), at: ap.at, ...parse(ap.detail) || {} } : null,
+      updated_by: up ? versionId(t.id, (parse(up.detail) || {}).by) : null,
+      ended: wd ? { ending: "withdrawn", by: by(wd), at: wd.at, reason: (parse(wd.detail) || {}).reason ?? null } : t.retired ? { ending: "retired", ...t.retired } : null,
+      submitted: sub ? { by: by(sub), at: sub.at } : null,
+      reviewers: this.#rows(`SELECT member, member_name, asked_by, asked_name, at FROM tpl_reviewers WHERE template_id=? AND version=?
+                              ORDER BY member`, t.id, n).map((r) => ({ member: r.member, name: r.member_name, asked_by: { id: r.asked_by, name: r.asked_name }, at: r.at })),
+      revisions: this.#rows(`SELECT sha, author, author_name, adopted, at FROM tpl_revisions WHERE template_id=? AND version=?
+                              ORDER BY rid`, t.id, n).map((r) => ({ sha: r.sha, by: { id: r.author, name: r.author_name }, ...r.adopted ? { adopted: r.adopted } : {}, at: r.at })),
+      created_at: v.created_at
+    };
+  }
+  /* R15: a profile template as an approved version, with the attribution the profile carries. */
+  #profileVersion(t) {
+    const p = t.profileTemplate;
+    const reviews = (Array.isArray(p.reviews) ? p.reviews : []).map((r) => ({
+      kind: r.kind,
+      outcome: r.outcome,
+      scope: r.scope,
+      comment: null,
+      at: r.at ?? null,
+      stands: true,
+      reviewer: {
+        name: r.reviewer,
+        ...r.organisation ? { organisation: r.organisation } : {},
+        ...r.credential ? { credential: r.credential, credential_says: "as the profile states it; never verified" } : {}
+      }
+    }));
+    const n = Number(p.version);
+    return {
+      id: versionId(t.id, n),
+      template: t.id,
+      version: n,
+      text: p.text,
+      sha: sha256HexSync(p.text),
+      state: "approved",
+      notes: {
+        text: typeof p.notes === "string" ? p.notes : "",
+        carried: false,
+        edits: [],
+        added: this.#rows(`SELECT text, author, author_name, at FROM tpl_comments WHERE template_id=? AND version=? AND note=1
+                                   ORDER BY cid`, t.id, n).map((a) => ({ text: a.text, by: { id: a.author, name: a.author_name }, at: a.at }))
+      },
+      author: { name: p.authored_by },
+      contributors: (Array.isArray(p.contributors) ? p.contributors : []).map((c) => ({ kind: "member", name: c })),
+      derived_from: null,
+      reviews,
+      reviews_summary: _FilingTemplates.#summary(reviews, null),
+      approved: {
+        by: { name: p.approved_by },
+        at: p.approved_at ?? null,
+        tier: t.tier,
+        profiles: t.profiles,
+        reason: null,
+        basis: p.basis ?? null,
+        profile: t.profiles[0]
+      },
+      updated_by: null,
+      ended: null,
+      submitted: null,
+      reviewers: [],
+      revisions: [],
+      created_at: p.approved_at ?? null
+    };
+  }
+  /* R14: a version as a list shows it. */
+  #listed(view, isDefault) {
+    return {
+      id: view.id,
+      version: view.version,
+      state: view.state,
+      author: view.author,
+      contributors: view.contributors,
+      reviews: view.reviews_summary,
+      approved: view.approved ? {
+        by: view.approved.by,
+        at: view.approved.at,
+        tier: view.approved.tier,
+        reason: view.approved.reason ?? null
+      } : null,
+      created_at: view.created_at,
+      ...view.updated_by ? { updated_by: view.updated_by } : {},
+      ...view.ended ? { ended: view.ended } : {},
+      ...isDefault ? { default: true } : {}
+    };
+  }
+  static #head(t, extra = {}) {
+    return {
+      id: t.id,
+      kind: t.kind,
+      use: t.use,
+      profiles: t.profiles,
+      name: t.name,
+      scope: t.scope,
+      origin: t.origin,
+      ...t.retired ? { retired: t.retired } : {},
+      ...extra
+    };
+  }
+  /* R15: a profile template whose text names a blank outside FILING_BLANKS is not offered. */
+  static #badBlank(t) {
+    return t.origin === "profile" ? blanksOf(t.profileTemplate.text).unknown : null;
+  }
+  /* ================================================================ the judges (R1, R2, R12) */
+  #parseProfiles(v) {
+    if (v === "general") return "general";
+    const l = listOf(v);
+    return l.length === 1 && l[0] === "general" ? "general" : l;
+  }
+  /* R1: the template's own fields, in R1's order. */
+  #shapeRefusal({ kind, use, profiles, name: name2, project }) {
+    if (typeof kind !== "string" || !KIND_RE2.test(kind))
+      return refuse3(
+        "TEMPLATE_KIND_REFUSED",
+        "a kind is lower-case letters, digits and underscores, beginning with a letter",
+        { kind: typeof kind === "string" ? kind.slice(0, 60) : null }
+      );
+    const listed = Array.isArray(profiles) ? profiles : [];
+    for (const p of listed) {
+      const held = this.#profile(p);
+      if (held && !this.#kindIn(held, kind))
+        return refuse3("TEMPLATE_KIND_UNKNOWN", `the profile '${p}' holds no action kind '${kind}'`, { kind, profile: p });
+    }
+    if (!TEMPLATE_USES2.includes(use))
+      return refuse3("TEMPLATE_USE_REFUSED", "a template's use is file or brief", { use: typeof use === "string" ? use.slice(0, 20) : null });
+    if (profiles !== "general") {
+      if (!listed.length) return refuse3("TEMPLATE_PROFILE_UNKNOWN", "a template names the profiles it is written for, or general", { profile: null });
+      const missing = listed.find((p) => !this.#profile(p));
+      if (missing) return refuse3("TEMPLATE_PROFILE_UNKNOWN", `no profile '${missing.slice(0, 60)}' is held`, { profile: missing.slice(0, 60) });
+    }
+    if (use === "file" && this.#tierOf(kind, profiles) === 3)
+      return refuse3("TEMPLATE_TIER3_FILE", "the kind's tier is 3: no file template is kept for it; a brief template may serve it", { kind });
+    if (!oneLine2(name2, TEMPLATE_NAME_MAX))
+      return refuse3("TEMPLATE_NAME_REFUSED", `a template is named in one line of 1 to ${TEMPLATE_NAME_MAX} characters`, { max: TEMPLATE_NAME_MAX });
+    const taken = this.#rows(`SELECT template_id FROM tpl_templates WHERE project IS ? AND name=?`, project, name2.trim()).map((r) => this.#groupTemplate(r.template_id)).find((t) => t && !t.retired && !t.widened);
+    if (taken) return refuse3("TEMPLATE_NAME_TAKEN", "the scope's library already holds a template by this name", { name: name2.trim() });
+    return null;
+  }
+  /* R2, R12: a text and any notes. */
+  #textRefusal(text5, notes) {
+    if (typeof text5 !== "string" || !text5.trim() || WELL_FORMED.test(text5) || utf82(text5) > FILING_TEXT_MAX)
+      return refuse3(
+        "TEMPLATE_TEXT_REFUSED",
+        `a template's words are non-empty UTF-8 text of at most ${FILING_TEXT_MAX} bytes`,
+        { max_bytes: FILING_TEXT_MAX }
+      );
+    const { unknown } = blanksOf(text5);
+    if (unknown) return refuse3("TEMPLATE_BLANK_UNKNOWN", `{{${unknown}}} is not a blank filings fill`, { blank: unknown, blanks: Object.keys(FILING_BLANKS) });
+    if (notes !== void 0 && notes !== null && (typeof notes !== "string" || notes.length > TEMPLATE_NOTES_MAX || WELL_FORMED.test(notes)))
+      return refuse3("TEMPLATE_NOTES_REFUSED", `a version's notes are text of at most ${TEMPLATE_NOTES_MAX} characters`, { max: TEMPLATE_NOTES_MAX });
+    return null;
+  }
+  #notesRefusal(notes) {
+    if (notes === void 0 || notes === null) return null;
+    return this.#textRefusal("x", notes);
+  }
+  /* R3, R4, R6: a proposal the viewer may see (one for a named template is seen as its template; one for a kind by every
+     member), or null. */
+  #proposal(id, viewer) {
+    const p = str9(id) ? this.#one(`SELECT * FROM tpl_proposals WHERE proposal_id=?`, str9(id)) : null;
+    if (!p) return null;
+    if (p.template_id) return this.#template(p.template_id, viewer) ? p : null;
+    return viewerPredicate(viewer).scope !== "DENY" ? p : null;
+  }
+  /* Opaque ids (R1, R6, R8): never a counter; one already held here, in `filings`' library or by a profile template is
+     drawn again. */
+  #mint(prefix, year) {
+    const filings = this.#call(() => this.#rows(`PRAGMA table_info(filing_templates)`).some((c) => c.name === "template_id"), false);
+    const profileIds = new Set(prefix === "TPL" ? this.#profileTemplates().map((t) => t.id) : []);
+    return this.record.mintOpaqueId(prefix, year, "", (id) => profileIds.has(id) || !!this.#one(`SELECT 1 AS x FROM tpl_templates WHERE template_id=? UNION ALL SELECT 1 FROM tpl_proposals WHERE proposal_id=?
+                      UNION ALL SELECT 1 FROM tpl_grants WHERE grant_id=?`, id, id, id) || filings && !!this.#one(`SELECT 1 AS x FROM filing_templates WHERE template_id=?`, id));
+  }
+  /* ================================================================ R3: templateDraft */
+  /** R3 (`op=templatedraft`): a new template and its first draft, or a new draft version of a named template. `from`
+   *  is a version id, a proposal id, or, only through `filings`' own service (its R32), `{filing, sha}`; `via: "op"`
+   *  marks a call that came through the op, where `{filing, sha}` is refused. */
+  templateDraft({
+    template = null,
+    project = null,
+    kind = null,
+    use = null,
+    profiles = null,
+    name: name2 = null,
+    text: text5 = void 0,
+    from = null,
+    notes = null,
+    author = null,
+    viewer = null,
+    via = null
+  } = {}) {
+    const machine3 = this.#machine("draft", author);
+    if (machine3) return machine3;
+    let t = null;
+    if (template !== null && template !== void 0 && template !== "") {
+      t = this.#template(template, viewer);
+      if (!t) return this.#noTemplate(template);
+    }
+    const member = this.#member(author);
+    const scopeProject = t ? t.project : str9(project);
+    if (!scopeProject || !member || !this.#call(() => this.membership.isJoinedParticipant(scopeProject, member)))
+      return this.#scope(t, t && t.origin === "profile" ? "a profile's template is read-only here: draft the group's own from it (from=)" : "a template is drafted by a joined participant of its project");
+    let events = [];
+    if (t) {
+      events = this.#events(t.id);
+      const open = this.#openVersion(t, events);
+      if (open !== null)
+        return refuse3(
+          "TEMPLATE_DRAFT_OPEN",
+          `version ${open} is ${this.#stateOf(events, open)}: finish or withdraw it first`,
+          { version: versionId(t.id, open), state: this.#stateOf(events, open) }
+        );
+      if (t.retired) return this.#retired(t);
+    }
+    const prof = t ? t.profiles : this.#parseProfiles(profiles);
+    if (!t) {
+      const shape = this.#shapeRefusal({ kind, use, profiles: prof, name: name2, project: scopeProject });
+      if (shape) return shape;
+    }
+    let source = null, fromBad = null;
+    if (from !== null && from !== void 0 && from !== "") {
+      if (typeof from === "object" && !Array.isArray(from)) {
+        if (via === "op") fromBad = "a filing's text becomes a template only through filings' own act (op=templatesave)";
+        else if (!str9(from.filing) || typeof from.sha !== "string" || !SHA_RE.test(from.sha))
+          fromBad = "a filing source is {filing, sha}: the approved draft's id and its text's SHA-256";
+        else source = { derived: { filing: str9(from.filing), sha: from.sha }, text: void 0 };
+      } else if (typeof from === "string" && parseVersionId(from)) {
+        const r = this.#resolve(from, viewer);
+        if (!r) fromBad = `no version '${from.slice(0, 80)}' is readable here`;
+        else source = { derived: { version: versionId(r.t.id, r.n) }, text: this.#versionView(r.t, r.n, this.#events(r.t.id)).text };
+      } else if (typeof from === "string") {
+        const p = this.#proposal(from, viewer);
+        if (!p) fromBad = `no proposal '${from.slice(0, 80)}' is readable here`;
+        else source = { derived: { proposal: p.proposal_id }, text: p.text, proposal: p.proposal_id };
+      } else fromBad = "from names a version, a proposal, or (through filings) an approved filing draft";
+    }
+    const body = text5 === void 0 || text5 === null ? source ? source.text : text5 : text5;
+    const bad = this.#textRefusal(body, notes);
+    if (bad) return bad;
+    if (fromBad) return this.#fromRefusal(fromBad);
+    const at25 = this.#when();
+    const name_ = this.#nameOf(member);
+    return this.record.transact(() => {
+      let tid = t ? t.id : null;
+      if (!t) {
+        tid = this.#mint("TPL", at25.slice(0, 4));
+        if (!tid) return mintExhausted("TPL");
+        this.sql.exec(
+          `INSERT INTO tpl_templates (template_id, bundle_id, project, kind, use, profiles, name, origin, created_by,
+                         created_name, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+          tid,
+          scopeProject,
+          scopeProject,
+          kind,
+          use,
+          prof === "general" ? "general" : json(prof),
+          name2.trim(),
+          "group",
+          member,
+          name_,
+          at25
+        );
+      }
+      const bundle = t ? t.bundle_id : scopeProject;
+      const prev = t ? Math.max(0, ...this.#numbers(tid)) : 0;
+      const n = prev + 1;
+      this.sql.exec(`INSERT INTO tpl_versions (template_id, version, bundle_id, author, author_name, derived_from, created_at)
+                     VALUES (?,?,?,?,?,?,?)`, tid, n, bundle, member, name_, source ? json(source.derived) : null, at25);
+      const sha = sha256HexSync(body);
+      this.sql.exec(`INSERT INTO tpl_revisions (template_id, version, bundle_id, text, sha, author, author_name, adopted, at)
+                     VALUES (?,?,?,?,?,?,?,?,?)`, tid, n, bundle, body, sha, member, name_, source && source.proposal ? source.proposal : null, at25);
+      if (prev) {
+        const was = this.#one(`SELECT text, author, author_name FROM tpl_notes WHERE template_id=? AND version=? ORDER BY nid DESC LIMIT 1`, tid, prev);
+        if (was) this.sql.exec(`INSERT INTO tpl_notes (template_id, version, bundle_id, text, author, author_name, carried, at)
+                                VALUES (?,?,?,?,?,?,1,?)`, tid, n, bundle, was.text, was.author, was.author_name, at25);
+      }
+      if (typeof notes === "string")
+        this.sql.exec(`INSERT INTO tpl_notes (template_id, version, bundle_id, text, author, author_name, carried, at)
+                       VALUES (?,?,?,?,?,?,0,?)`, tid, n, bundle, notes, member, name_, at25);
+      return {
+        ok: true,
+        template: tid,
+        version: versionId(tid, n),
+        sha,
+        state: "draft",
+        ...source ? { derived_from: source.derived } : {},
+        says: "a draft: it is not offered for a filing until it is reviewed and approved"
+      };
+    });
+  }
+  /* ================================================================ R4: templateRevise */
+  /** R4 (`op=templaterevise`): a new revision of a draft's text (or a proposal's, `adopt`), every earlier one kept; and
+   *  any edit of its notes (R12). */
+  templateRevise({ version = null, text: text5 = void 0, adopt = null, notes = null, author = null, viewer = null } = {}) {
+    const machine3 = this.#machine("draft", author);
+    if (machine3) return machine3;
+    const r = this.#resolve(version, viewer);
+    if (!r) return this.#noTemplate(parseVersionId(version)?.template ?? version);
+    const { t, n } = r;
+    const member = this.#member(author);
+    if (!t.project || !member || !this.#call(() => this.membership.isJoinedParticipant(t.project, member)))
+      return this.#scope(t, t.origin === "profile" ? "a profile's template is read-only here" : "a draft is revised by a joined participant of its project");
+    const state = this.#stateOf(this.#events(t.id), n);
+    if (state !== "draft") return this.#notADraft(t, n, state);
+    const p = adopt !== null && adopt !== void 0 && adopt !== "" ? this.#proposal(adopt, viewer) : null;
+    const adopting = adopt !== null && adopt !== void 0 && adopt !== "";
+    const body = text5 !== void 0 && text5 !== null ? text5 : p ? p.text : void 0;
+    const notesOnly = body === void 0 && !adopting && typeof notes === "string";
+    if (!notesOnly) {
+      const bad = this.#textRefusal(body, notes);
+      if (bad) return bad;
+    } else {
+      const bad = this.#notesRefusal(notes);
+      if (bad) return bad;
+    }
+    if (adopting && !p) return this.#fromRefusal(`no proposal '${String(adopt).slice(0, 80)}' is readable here`);
+    const at25 = this.#when();
+    const name_ = this.#nameOf(member);
+    return this.record.transact(() => {
+      let sha = this.#latestRevision(t.id, n).sha;
+      if (!notesOnly) {
+        sha = sha256HexSync(body);
+        this.sql.exec(`INSERT INTO tpl_revisions (template_id, version, bundle_id, text, sha, author, author_name, adopted, at)
+                       VALUES (?,?,?,?,?,?,?,?,?)`, t.id, n, t.bundle_id, body, sha, member, name_, p ? p.proposal_id : null, at25);
+      }
+      if (typeof notes === "string")
+        this.sql.exec(`INSERT INTO tpl_notes (template_id, version, bundle_id, text, author, author_name, carried, at)
+                       VALUES (?,?,?,?,?,?,0,?)`, t.id, n, t.bundle_id, notes, member, name_, at25);
+      return {
+        ok: true,
+        version: versionId(t.id, n),
+        sha,
+        state: "draft",
+        ...p ? { adopted: p.proposal_id } : {},
+        revisions: this.#one(`SELECT COUNT(*) AS c FROM tpl_revisions WHERE template_id=? AND version=?`, t.id, n).c
+      };
+    });
+  }
+  /* ================================================================ R6: templatePropose */
+  /** R6 (`op=templatepropose`): any credential proposes wording, for a named template or for a kind, stored apart and
+   *  labelled; it is a template's text only when a member takes it as `from` or `adopt`s it. `run`, `model` and
+   *  `skill_pack` are the run's own statement of itself (R5 lists them as stated). */
+  templatePropose({
+    template = null,
+    kind = null,
+    text: text5 = void 0,
+    why = null,
+    proposer = null,
+    viewer = null,
+    run = null,
+    model = null,
+    skill_pack = null
+  } = {}) {
+    const who2 = str9(proposer);
+    if (!who2) return refuse3("TEMPLATE_NO_PROPOSER", "no stamped proposer: a proposal names who made it");
+    let t = null;
+    if (template !== null && template !== void 0 && template !== "") {
+      t = this.#template(template, viewer);
+      if (!t) return this.#noTemplate(template);
+    } else if (typeof kind !== "string" || !KIND_RE2.test(kind)) {
+      const r = this.#shapeRefusal({ kind: typeof kind === "string" ? kind : "" });
+      if (r) return r;
+    }
+    const bad = this.#textRefusal(text5);
+    if (bad) return bad;
+    if (!textUpTo(why, PROPOSAL_WHY_MAX))
+      return refuse3("TEMPLATE_WHY_REFUSED", `say why in 1 to ${PROPOSAL_WHY_MAX} characters`, { max: PROPOSAL_WHY_MAX });
+    const at25 = this.#when();
+    const cut3 = (v) => str9(v) ? String(v).trim().slice(0, 200) : null;
+    return this.record.transact(() => {
+      const id = this.#mint("TPP", at25.slice(0, 4));
+      if (!id) return mintExhausted("TPP");
+      const sha = sha256HexSync(text5);
+      const k = t ? t.kind : kind;
+      this.sql.exec(
+        `INSERT INTO tpl_proposals (proposal_id, bundle_id, template_id, kind, text, sha, why, proposer, run, model,
+                       skill_pack, at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+        id,
+        t ? t.bundle_id : null,
+        t ? t.id : null,
+        k,
+        text5,
+        sha,
+        why.trim(),
+        who2,
+        cut3(run),
+        cut3(model),
+        cut3(skill_pack),
+        at25
+      );
+      return {
+        ok: true,
+        proposal: {
+          id,
+          template: t ? t.id : null,
+          kind: k,
+          sha,
+          why: why.trim(),
+          at: at25,
+          label: proposalLabel(who2, "template")
+        },
+        evidence: false,
+        says: "proposed wording, stored apart: it is not a template's text until a member adopts it into a draft"
+      };
+    });
+  }
+  /* ================================================================ R7: templateSubmit */
+  /* R8: a grant is live while it is not revoked and its version is a draft or in review. */
+  #liveGrants(tid, n, events) {
+    if (!["draft", "in_review"].includes(this.#stateOf(events, n))) return [];
+    return this.#rows(`SELECT g.* FROM tpl_grants g WHERE g.template_id=? AND g.version=?
+                         AND NOT EXISTS (SELECT 1 FROM tpl_grant_revocations r WHERE r.grant_id=g.grant_id) ORDER BY g.grant_id`, tid, n);
+  }
+  /** R7 (`op=templatesubmit`): a draft goes to review, its text and sha fixed, with the members asked to review it. */
+  templateSubmit({ version = null, reviewers = null, author = null, viewer = null } = {}) {
+    const machine3 = this.#machine("draft", author);
+    if (machine3) return machine3;
+    const r = this.#resolve(version, viewer);
+    if (!r) return this.#noTemplate(parseVersionId(version)?.template ?? version);
+    const { t, n } = r;
+    const member = this.#member(author);
+    if (!t.project || !member || !this.#call(() => this.membership.isJoinedParticipant(t.project, member)))
+      return this.#scope(t, t.origin === "profile" ? "a profile's template is read-only here" : "a draft is submitted by a joined participant of its project");
+    const events = this.#events(t.id);
+    const state = this.#stateOf(events, n);
+    if (state !== "draft") return this.#notADraft(t, n, state);
+    const asked = [...new Set(listOf(reviewers).map((x) => x.includes(":") ? x : `member:${x}`))];
+    const ids = [];
+    for (const a of asked) {
+      const id = this.#member(a);
+      const facts = id ? this.#call(() => this.membership.memberFacts(id)) : null;
+      const standing = id && (facts && facts.status === "active" || this.#call(() => this.membership.isAdministrator(id)) === true);
+      if (!standing || !this.#canSee(t, `member:${id}`))
+        return refuse3("REVIEWER_UNKNOWN", `'${a.slice(0, 80)}' is not a member who can read the template`, { reviewer: a.slice(0, 80) });
+      ids.push(id);
+    }
+    if (!ids.length && !this.#liveGrants(t.id, n, events).length)
+      return refuse3("NO_REVIEWERS", "name a member to review it, or open a review grant on the version first");
+    const at25 = this.#when();
+    const sha = this.#latestRevision(t.id, n).sha;
+    const name_ = this.#nameOf(member);
+    return this.record.transact(() => {
+      this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
+                     VALUES (?,?,?,?,?,?,?,?)`, t.id, n, t.bundle_id, "submitted", member, name_, json({ sha, reviewers: ids }), at25);
+      for (const id of ids)
+        this.sql.exec(`INSERT INTO tpl_reviewers (template_id, version, member, bundle_id, member_name, asked_by, asked_name, at)
+                       VALUES (?,?,?,?,?,?,?,?)`, t.id, n, id, t.bundle_id, this.#nameOf(id), member, name_, at25);
+      return {
+        ok: true,
+        version: versionId(t.id, n),
+        state: "in_review",
+        sha,
+        reviewers: ids.map((id) => ({ member: id, name: this.#nameOf(id) })),
+        grants: this.#liveGrants(t.id, n, this.#events(t.id)).map((g) => g.grant_id)
+      };
+    });
+  }
+  /* ================================================================ R8: review grants */
+  /** R8 (`op=templatereviewgrant`): a participant of the template's project opens a revocable door to one draft or
+   *  in-review version for a named non-member, by a secret whose SHA-256 the control plane took. */
+  templateReviewGrant({ version = null, recipient = null, organisation = null, secretSha = null, by = null, viewer = null } = {}) {
+    const machine3 = this.#machine("draft", by);
+    if (machine3) return machine3;
+    const r = this.#resolve(version, viewer);
+    if (!r) return this.#noTemplate(parseVersionId(version)?.template ?? version);
+    const { t, n } = r;
+    const member = this.#member(by);
+    if (!t.project || !member || !this.#call(() => this.membership.isJoinedParticipant(t.project, member)))
+      return this.#scope(t, t.origin === "profile" ? "a profile's template is read-only here" : "a review grant is opened by a joined participant of the template's project");
+    const state = this.#stateOf(this.#events(t.id), n);
+    if (!["draft", "in_review"].includes(state)) return this.#notInReview(t, n, state);
+    if (!oneLine2(recipient, GRANT_FIELD_MAX) || !oneLine2(organisation, GRANT_FIELD_MAX))
+      return refuse3(
+        "GRANT_RECIPIENT_REFUSED",
+        `the reviewer and their organisation, each one line of 1 to ${GRANT_FIELD_MAX} characters`,
+        { max: GRANT_FIELD_MAX }
+      );
+    const s = typeof secretSha === "string" ? secretSha.trim() : "";
+    if (!SHA_RE.test(s) || this.#one(`SELECT 1 AS x FROM tpl_grants WHERE secret_sha=?`, s))
+      return refuse3("GRANT_NO_SECRET", "no fresh secret digest was stamped for this grant: the control plane makes the secret");
+    const at25 = this.#when();
+    return this.record.transact(() => {
+      const id = this.#mint("TRG", at25.slice(0, 4));
+      if (!id) return mintExhausted("TRG");
+      const name_ = this.#nameOf(member);
+      this.sql.exec(
+        `INSERT INTO tpl_grants (grant_id, template_id, version, bundle_id, recipient, organisation, secret_sha, actor,
+                       actor_name, at) VALUES (?,?,?,?,?,?,?,?,?,?)`,
+        id,
+        t.id,
+        n,
+        t.bundle_id,
+        recipient.trim(),
+        organisation.trim(),
+        s,
+        member,
+        name_,
+        at25
+      );
+      return {
+        ok: true,
+        grant: id,
+        version: versionId(t.id, n),
+        recipient: recipient.trim(),
+        organisation: organisation.trim(),
+        by: { id: member, name: name_ },
+        at: at25,
+        says: "the reviewer reads, comments on and reviews this one version through the link while it is a draft or in review"
+      };
+    });
+  }
+  /** R8 (`op=templategrantrevoke`): a grant's revocation, recorded with the revoker and instant; a second answers the
+   *  first, unchanged. */
+  templateGrantRevoke({ grant = null, by = null, viewer = null } = {}) {
+    const machine3 = this.#machine("draft", by);
+    if (machine3) return machine3;
+    const g = str9(grant) ? this.#one(`SELECT * FROM tpl_grants WHERE grant_id=?`, str9(grant)) : null;
+    const t = g ? this.#template(g.template_id, viewer) : null;
+    if (!t) return refuse3("NO_SUCH_GRANT", "no review grant by that id is readable here", { grant: str9(grant) });
+    const member = this.#member(by);
+    if (!member || !this.#call(() => this.membership.isJoinedParticipant(t.project, member)))
+      return this.#scope(t, "a review grant is revoked by a joined participant of the template's project");
+    const held = this.#one(`SELECT actor, actor_name, at FROM tpl_grant_revocations WHERE grant_id=?`, g.grant_id);
+    if (held) return { ok: true, grant: g.grant_id, existed: true, revoked: { by: { id: held.actor, name: held.actor_name }, at: held.at } };
+    const at25 = this.#when();
+    const name_ = this.#nameOf(member);
+    this.sql.exec(
+      `INSERT INTO tpl_grant_revocations (grant_id, bundle_id, actor, actor_name, at) VALUES (?,?,?,?,?)`,
+      g.grant_id,
+      g.bundle_id,
+      member,
+      name_,
+      at25
+    );
+    return { ok: true, grant: g.grant_id, existed: false, revoked: { by: { id: member, name: name_ }, at: at25 } };
+  }
+  /* R8: the door: a live grant for `secretSha`, as {grant, t, n}, or null (the dead answer). */
+  #door(secretSha) {
+    const s = typeof secretSha === "string" ? secretSha.trim() : "";
+    if (!SHA_RE.test(s)) return null;
+    const g = this.#one(`SELECT * FROM tpl_grants WHERE secret_sha=?
+                           AND NOT EXISTS (SELECT 1 FROM tpl_grant_revocations r WHERE r.grant_id=tpl_grants.grant_id)`, s);
+    const t = g ? this.#groupTemplate(g.template_id) : null;
+    if (!t || !["draft", "in_review"].includes(this.#stateOf(this.#events(t.id), g.version))) return null;
+    return { grant: g, t, n: g.version };
+  }
+  /* Through a door, a version asked must be the grant's own; absent, it is. */
+  static #doorAdmits(d, asked) {
+    if (asked === null || asked === void 0 || asked === "") return true;
+    const p = parseVersionId(asked);
+    return p ? p.template === d.t.id && p.version === d.n : String(asked).trim() === String(d.n);
+  }
+  static #hasSecret(s) {
+    return s !== null && s !== void 0 && s !== "";
+  }
+  /* ================================================================ R9: templateReview */
+  /** R9 (`op=templatereview`): one review against the version's present sha, by a member who may see the template or
+   *  through a live grant. */
+  templateReview({
+    version = null,
+    outcome = null,
+    scope = null,
+    comment = null,
+    credential = null,
+    sha = null,
+    author = null,
+    secretSha = null,
+    viewer = null
+  } = {}) {
+    let t, n, reviewer;
+    if (_FilingTemplates.#hasSecret(secretSha)) {
+      const d = this.#door(secretSha);
+      if (!d || !_FilingTemplates.#doorAdmits(d, version)) return noTemplateGrant();
+      ({ t, n } = d);
+      reviewer = { kind: "professional", id: d.grant.grant_id, name: d.grant.recipient, organisation: d.grant.organisation };
+    } else {
+      const machine3 = this.#machine("review", author);
+      if (machine3) return machine3;
+      const r = this.#resolve(version, viewer);
+      const member = this.#member(author);
+      if (!r || !member) return this.#noTemplate(parseVersionId(version)?.template ?? version);
+      ({ t, n } = r);
+      const ex = this.#call(() => this.membership.expertiseList({ memberId: member }));
+      reviewer = {
+        kind: "member",
+        id: member,
+        name: this.#nameOf(member),
+        expertise: ex && Array.isArray(ex.expertise) ? ex.expertise.filter((e) => e.state !== "withdrawn").map((e) => ({ label: e.label, confirmed: e.confirmed === true })) : []
+      };
+    }
+    const state = t.origin === "profile" ? "approved" : this.#stateOf(this.#events(t.id), n);
+    if (state !== "in_review") return this.#notInReview(t, n, state);
+    const present2 = this.#latestRevision(t.id, n).sha;
+    if (!REVIEW_OUTCOMES2.includes(outcome) || !oneLine2(scope, REVIEW_SCOPE_MAX) || comment !== null && comment !== void 0 && !textUpTo(comment, REVIEW_COMMENT_MAX, 0) || reviewer.kind === "professional" && credential !== null && credential !== void 0 && !oneLine2(credential, REVIEW_CREDENTIAL_MAX))
+      return refuse3("REVIEW_REFUSED", `outcome is one of ${REVIEW_OUTCOMES2.join(", ")}; scope 1 to ${REVIEW_SCOPE_MAX} characters; comment at most ${REVIEW_COMMENT_MAX}; credential at most ${REVIEW_CREDENTIAL_MAX}`, { outcomes: REVIEW_OUTCOMES2 });
+    if (sha !== null && sha !== void 0 && sha !== "" && sha !== present2)
+      return refuse3("REVIEW_STALE", "the text reviewed is not the version's present text", { sha: present2 });
+    const at25 = this.#when();
+    const cred = reviewer.kind === "professional" && str9(credential) ? credential.trim() : null;
+    this.sql.exec(
+      `INSERT INTO tpl_reviews (template_id, version, bundle_id, sha, kind, reviewer, reviewer_name, organisation,
+                     credential, expertise, outcome, scope, comment, at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      t.id,
+      n,
+      t.bundle_id,
+      present2,
+      reviewer.kind,
+      reviewer.id,
+      reviewer.name,
+      reviewer.organisation ?? null,
+      cred,
+      reviewer.kind === "member" ? json(reviewer.expertise) : null,
+      outcome,
+      scope.trim(),
+      str9(comment) ? comment : null,
+      at25
+    );
+    return { ok: true, version: versionId(t.id, n), review: {
+      kind: reviewer.kind,
+      outcome,
+      scope: scope.trim(),
+      sha: present2,
+      at: at25,
+      reviewer: reviewer.kind === "professional" ? { grant: reviewer.id, name: reviewer.name, organisation: reviewer.organisation, credential: cred, credential_says: "as stated; never verified" } : { id: reviewer.id, name: reviewer.name, expertise: reviewer.expertise }
+    } };
+  }
+  /* ================================================================ R10: templateApprove */
+  /** R10 (`op=templateapprove`): an owner of the template's project approves an in-review version after the reviews its
+   *  tier requires, the earlier approved version then `updated`; with `widen`, an administrator makes an approved
+   *  project template group-wide. */
+  templateApprove({ version = null, widen = false, reason = null, by = null, viewer = null } = {}) {
+    const machine3 = this.#machine("approve", by);
+    if (machine3) return machine3;
+    const r = this.#resolve(version, viewer);
+    if (!r) return this.#noTemplate(parseVersionId(version)?.template ?? version);
+    const { t, n } = r;
+    const member = this.#member(by);
+    const events = t.origin === "profile" ? [] : this.#events(t.id);
+    const state = t.origin === "profile" ? "approved" : this.#stateOf(events, n);
+    const widening = widen === true || widen === "true" || widen === "1" || widen === 1;
+    const name_ = member ? this.#nameOf(member) : null;
+    if (widening) {
+      if (t.origin === "profile") return this.#notAnApprover(t, "a profile's template is already offered to the whole group");
+      if (!OFFERED.includes(state) || t.retired)
+        return refuse3(
+          "TEMPLATE_NOT_APPROVED",
+          `the version is ${t.retired ? "of a retired template" : state}: only an approved project template is widened`,
+          { version: versionId(t.id, n), state }
+        );
+      if (!member || this.#call(() => this.membership.isAdministrator(member)) !== true)
+        return this.#notAnApprover(t, "an administrator makes a template group-wide");
+      if (t.widened) return { ok: true, template: t.id, existed: true, widened: t.widened, scope: "group" };
+      const at26 = this.#when();
+      this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
+                     VALUES (?,NULL,?,?,?,?,?,?)`, t.id, t.bundle_id, "widened", member, name_, json({ from: { project: t.project } }), at26);
+      return { ok: true, template: t.id, existed: false, scope: "group", widened: { by: { id: member, name: name_ }, at: at26 } };
+    }
+    if (state !== "in_review") return this.#notInReview(t, n, state);
+    if (!member || this.#call(() => this.membership.isProjectOwner(t.project, member)) !== true)
+      return this.#notAnApprover(t, "an owner of the template's project approves it");
+    const v = this.#one(`SELECT author FROM tpl_versions WHERE template_id=? AND version=?`, t.id, n);
+    const others = this.#contributors(t.id, n).filter((c) => c.kind === "member" && c.member !== v.author);
+    if (v.author === member && !others.length)
+      return refuse3(
+        "APPROVER_IS_AUTHOR",
+        "you are the version's author and its only member contributor: another member approves it",
+        { version: versionId(t.id, n) }
+      );
+    const sha = this.#latestRevision(t.id, n).sha;
+    const standing = this.#reviews(t.id, n).filter((x) => x.stands && x.sha === sha);
+    const tier = this.#tierOf(t.kind, t.profiles);
+    const why = textUpTo(reason, APPROVAL_REASON_MAX) ? reason.trim() : null;
+    const needs = tier === 1 ? "member" : "professional";
+    const blocking = standing.filter((x) => x.outcome === "changes_requested");
+    const met = standing.some((x) => x.kind === needs && x.outcome === "no_concerns") || needs === "professional" && !!why;
+    if (blocking.length || !met)
+      return refuse3(
+        "REVIEWS_INSUFFICIENT",
+        blocking.length ? "a review requesting changes stands" : tier === 1 ? "a Tier 1 kind needs one member's review with no concerns" : `${tier === "undetermined" ? "an undetermined tier" : `Tier ${tier}`} needs a professional's review with no concerns, or the approver's reason for going without one (1 to ${APPROVAL_REASON_MAX} characters)`,
+        { version: versionId(t.id, n), tier, needs, reviews: _FilingTemplates.#summary(standing, sha) }
+      );
+    const at25 = this.#when();
+    const prev = this.#latestApproved(t, events);
+    return this.record.transact(() => {
+      const detail = { tier, tier_words: RISK_TIERS[tier] ?? null, profiles: t.profiles, reason: why, sha };
+      this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
+                     VALUES (?,?,?,?,?,?,?,?)`, t.id, n, t.bundle_id, "approved", member, name_, json(detail), at25);
+      if (prev !== null && prev !== n)
+        this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
+                       VALUES (?,?,?,?,?,?,?,?)`, t.id, prev, t.bundle_id, "updated", member, name_, json({ by: n }), at25);
+      return {
+        ok: true,
+        version: versionId(t.id, n),
+        state: "approved",
+        approved: { by: { id: member, name: name_ }, at: at25, ...detail },
+        updated: prev !== null && prev !== n ? versionId(t.id, prev) : null,
+        says: "approved: offered for a filing as the template's default; an earlier approved version stays offered, as updated"
+      };
+    });
+  }
+  /* ================================================================ R11: templateRetire */
+  /** R11 (`op=templateretire`): without `version`, an approver of its scope retires the whole template; with it, its
+   *  author withdraws a draft or in-review version. Nothing is deleted. */
+  templateRetire({ template = null, version = null, reason = null, by = null, viewer = null } = {}) {
+    const machine3 = this.#machine("approve", by);
+    if (machine3) return machine3;
+    const named = template ?? parseVersionId(version)?.template ?? null;
+    const t = this.#template(named, viewer);
+    if (!t) return this.#noTemplate(named);
+    const member = this.#member(by);
+    const why = textUpTo(reason, ENDING_REASON_MAX);
+    if (version === null || version === void 0 || version === "") {
+      const approver = t.origin !== "profile" && !!member && (t.widened ? this.#call(() => this.membership.isAdministrator(member)) === true : this.#call(() => this.membership.isProjectOwner(t.project, member)) === true);
+      if (!approver) return this.#notAnApprover(t, t.origin === "profile" ? "a profile's template is read-only here" : t.widened ? "an administrator retires a group-wide template" : "an owner of the template's project retires it");
+      if (!why) return refuse3("TEMPLATE_REASON_REFUSED", `give the reason in 1 to ${ENDING_REASON_MAX} characters`, { max: ENDING_REASON_MAX });
+      if (t.retired) return refuse3("TEMPLATE_ALREADY_ENDED", "the template was already retired", { template: t.id, ended: { ending: "retired", ...t.retired } });
+      const at26 = this.#when();
+      const name_2 = this.#nameOf(member);
+      this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
+                     VALUES (?,NULL,?,?,?,?,?,?)`, t.id, t.bundle_id, "retired", member, name_2, json({ reason: reason.trim() }), at26);
+      return {
+        ok: true,
+        template: t.id,
+        retired: { by: { id: member, name: name_2 }, at: at26, reason: reason.trim() },
+        says: "retired: none of its versions is offered again; each stays readable with this reason"
+      };
+    }
+    const n = this.#versionOf(t, version);
+    if (n === null) return this.#noTemplate(named);
+    const events = t.origin === "profile" ? [] : this.#events(t.id);
+    const v = t.origin === "profile" ? null : this.#one(`SELECT author FROM tpl_versions WHERE template_id=? AND version=?`, t.id, n);
+    if (!v || !member || v.author !== member) return this.#scope(t, "a version is withdrawn by its author");
+    const state = this.#stateOf(events, n);
+    if (OFFERED.includes(state)) return this.#notADraft(t, n, state);
+    if (!why) return refuse3("TEMPLATE_REASON_REFUSED", `give the reason in 1 to ${ENDING_REASON_MAX} characters`, { max: ENDING_REASON_MAX });
+    if (state === "withdrawn") {
+      const e = events.find((x) => x.version === n && x.event === "withdrawn");
+      return refuse3("TEMPLATE_ALREADY_ENDED", "the version was already withdrawn", {
+        version: versionId(t.id, n),
+        ended: { ending: "withdrawn", by: { id: e.actor, name: e.actor_name }, at: e.at, reason: (parse(e.detail) || {}).reason ?? null }
+      });
+    }
+    const at25 = this.#when();
+    const name_ = this.#nameOf(member);
+    this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
+                   VALUES (?,?,?,?,?,?,?,?)`, t.id, n, t.bundle_id, "withdrawn", member, name_, json({ reason: reason.trim() }), at25);
+    return { ok: true, version: versionId(t.id, n), state: "withdrawn", withdrawn: { by: { id: member, name: name_ }, at: at25, reason: reason.trim() } };
+  }
+  /* ================================================================ R12, R13: comments and notes */
+  /** R13 (`op=templatecomment`): a comment on a version, attributed to the member, the grant or a labelled run; with
+   *  `note`, a note added (R12) by a member who may revise, once the version has left draft. */
+  templateComment({ template = null, version = null, text: text5 = null, note = false, author = null, secretSha = null, viewer = null } = {}) {
+    let t, n, by;
+    if (_FilingTemplates.#hasSecret(secretSha)) {
+      const d = this.#door(secretSha);
+      if (!d || template && str9(template) !== d.t.id || !_FilingTemplates.#doorAdmits(d, version)) return noTemplateGrant();
+      ({ t, n } = d);
+      by = { kind: "grant", id: d.grant.grant_id, name: d.grant.recipient, organisation: d.grant.organisation };
+    } else {
+      t = this.#template(template ?? parseVersionId(version)?.template, viewer);
+      n = t ? this.#versionOf(t, version) : null;
+      if (!t || n === null) return this.#noTemplate(template);
+      const who2 = str9(author);
+      const member = this.#member(author);
+      by = !who2 ? null : isMachineIdentity(who2) ? { kind: "run", id: who2, name: who2, label: proposalLabel(who2, "template") } : member ? { kind: "member", id: member, name: this.#nameOf(member) } : null;
+    }
+    const isNote = note === true || note === "true" || note === "1" || note === 1;
+    if (!by || !textUpTo(text5, COMMENT_MAX))
+      return refuse3(
+        "COMMENT_REFUSED",
+        by ? `a comment is 1 to ${COMMENT_MAX} characters` : "a comment names who wrote it: this call carries nobody",
+        { max: COMMENT_MAX }
+      );
+    if (isNote) {
+      if (by.kind !== "member" || !t.project || !this.#call(() => this.membership.isJoinedParticipant(t.project, by.id)))
+        return this.#scope(t, "a note is added by a member who may revise the template");
+      if (this.#stateOf(this.#events(t.id), n) === "draft")
+        return refuse3("COMMENT_REFUSED", "a draft's notes are edited by revising it (op=templaterevise, notes=)", { max: COMMENT_MAX });
+    }
+    const at25 = this.#when();
+    this.sql.exec(`INSERT INTO tpl_comments (template_id, version, bundle_id, text, note, kind, author, author_name, organisation, at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?)`, t.id, n, t.bundle_id, text5, isNote ? 1 : 0, by.kind, by.id, by.name, by.organisation ?? null, at25);
+    return { ok: true, comment: { template: t.id, version: versionId(t.id, n), text: text5, note: isNote, by: _FilingTemplates.#by(by), at: at25 } };
+  }
+  static #by(b) {
+    return b.kind === "grant" ? { kind: "grant", grant: b.id, name: b.name, organisation: b.organisation } : b.kind === "run" ? { kind: "run", label: b.label ?? proposalLabel(b.id, "template") } : { kind: "member", id: b.id, name: b.name };
+  }
+  /** R13 (`op=templatecomments`): a template's comments (or one version's), newest last, `limit` in [1, 500]; a grant's
+   *  door reads only its own version's. */
+  templateComments({ template = null, version = null, limit = null, author = null, secretSha = null, viewer = null } = {}) {
+    let t, n = null;
+    if (_FilingTemplates.#hasSecret(secretSha)) {
+      const d = this.#door(secretSha);
+      if (!d || template && str9(template) !== d.t.id || !_FilingTemplates.#doorAdmits(d, version)) return noTemplateGrant();
+      ({ t, n } = d);
+    } else {
+      t = this.#template(template ?? parseVersionId(version)?.template, viewer);
+      if (!t) return this.#noTemplate(template);
+      if (version !== null && version !== void 0 && version !== "") {
+        n = this.#versionOf(t, version);
+        if (n === null) return this.#noTemplate(template);
+      }
+    }
+    const max = clamp3(limit, COMMENTS_MAX, COMMENTS_MAX);
+    const rows2 = this.#rows(
+      `SELECT * FROM tpl_comments WHERE template_id=? ${n !== null ? "AND version=?" : ""} ORDER BY cid LIMIT ?`,
+      t.id,
+      ...n !== null ? [n] : [],
+      max + 1
+    );
+    return {
+      ok: true,
+      template: t.id,
+      ...n !== null ? { version: versionId(t.id, n) } : {},
+      limit: max,
+      truncated: rows2.length > max,
+      comments: rows2.slice(0, max).map((c) => ({
+        version: versionId(t.id, c.version),
+        text: c.text,
+        note: c.note === 1,
+        by: _FilingTemplates.#by({ kind: c.kind, id: c.author, name: c.author_name, organisation: c.organisation }),
+        at: c.at
+      }))
+    };
+  }
+  /* ================================================================ R14, R15: the reads */
+  #visibleTemplates(viewer) {
+    const group = this.#rows(`SELECT template_id FROM tpl_templates ORDER BY created_at DESC, template_id DESC`).map((r) => this.#groupTemplate(r.template_id)).filter((t) => this.#canSee(t, viewer));
+    const prof = this.#profileTemplates().filter((t) => this.#canSee(t, viewer));
+    return [...group, ...prof].sort((a, b) => a.created_at < b.created_at ? 1 : a.created_at > b.created_at ? -1 : a.id < b.id ? 1 : -1);
+  }
+  /** R14 (`op=templates`): the templates the viewer may see, newest first, at most 200, with `truncated`. By default
+   *  every offered version, the latest approved marked `default: true`; `state` lists instead drafts, versions in
+   *  review, withdrawn versions, retired templates' versions, or open proposals (`proposed`). */
+  templatesFor({ kind = null, profile = null, use = null, state = null, viewer = null } = {}) {
+    const st = str9(state);
+    if (st && st !== "offered" && !TEMPLATES_STATES_LISTED.includes(st))
+      return refuse3("TEMPLATES_STATE_REFUSED", `state is offered or one of ${TEMPLATES_STATES_LISTED.join(", ")}`, { states: TEMPLATES_STATES_LISTED });
+    const k = str9(kind), p = str9(profile), u = str9(use);
+    if (st === "proposed") {
+      const rows2 = this.#rows(`SELECT * FROM tpl_proposals p WHERE NOT EXISTS (SELECT 1 FROM tpl_revisions r WHERE r.adopted=p.proposal_id)
+                                 ORDER BY at DESC, proposal_id DESC`).filter((x) => (!k || x.kind === k) && this.#proposal(x.proposal_id, viewer));
+      return {
+        ok: true,
+        state: "proposed",
+        kind: k,
+        truncated: rows2.length > TEMPLATES_FOR_MAX,
+        proposals: rows2.slice(0, TEMPLATES_FOR_MAX).map((x) => ({
+          id: x.proposal_id,
+          template: x.template_id ?? null,
+          kind: x.kind,
+          text: x.text,
+          sha: x.sha,
+          why: x.why,
+          at: x.at,
+          label: proposalLabel(x.proposer, "template")
+        })),
+        says: "proposed wording: none of it is offered, and none is a template's text until a member adopts it"
+      };
+    }
+    const out = [];
+    for (const t of this.#visibleTemplates(viewer)) {
+      if (k && t.kind !== k || u && t.use !== u) continue;
+      if (p && t.profiles !== "general" && !t.profiles.includes(p)) continue;
+      const events = t.origin === "profile" ? [] : this.#events(t.id);
+      const numbers = t.origin === "profile" ? [Number(t.profileTemplate.version)] : this.#numbers(t.id);
+      const stateOf2 = (n) => t.origin === "profile" ? "approved" : this.#stateOf(events, n);
+      let pick2;
+      if (!st || st === "offered") {
+        if (t.retired || _FilingTemplates.#badBlank(t)) continue;
+        pick2 = numbers.filter((n) => OFFERED.includes(stateOf2(n)));
+      } else if (st === "retired") pick2 = t.retired ? numbers : [];
+      else pick2 = t.retired ? [] : numbers.filter((n) => stateOf2(n) === st);
+      if (!pick2.length) continue;
+      const dflt = !st || st === "offered" ? this.#latestApproved(t, events) : null;
+      out.push(_FilingTemplates.#head(t, {
+        ...p ? { written_for: t.profiles !== "general" && t.profiles.includes(p) } : {},
+        versions: pick2.slice().reverse().map((n) => this.#listed(this.#versionView(t, n, events), n === dflt))
+      }));
+    }
+    return {
+      ok: true,
+      state: st || "offered",
+      kind: k,
+      profile: p,
+      use: u,
+      templates: out.slice(0, TEMPLATES_FOR_MAX),
+      truncated: out.length > TEMPLATES_FOR_MAX
+    };
+  }
+  /** R14, R15 (`op=templateread`): one version (the latest approved by default, else the latest) with its whole
+   *  attribution, the proposals adopted into it and its comments' count; a grant's door reads only its own version. */
+  templateRead({ template = null, version = null, author = null, secretSha = null, viewer = null } = {}) {
+    let t, n;
+    if (_FilingTemplates.#hasSecret(secretSha)) {
+      const d = this.#door(secretSha);
+      if (!d || template && str9(template) !== d.t.id || !_FilingTemplates.#doorAdmits(d, version)) return noTemplateGrant();
+      ({ t, n } = d);
+    } else {
+      t = this.#template(template ?? parseVersionId(version)?.template, viewer);
+      if (!t) return this.#noTemplate(template);
+      const events2 = t.origin === "profile" ? [] : this.#events(t.id);
+      n = version !== null && version !== void 0 && version !== "" ? this.#versionOf(t, version) : this.#latestApproved(t, events2) ?? Math.max(...this.#numbers(t.id));
+      if (n === null || !Number.isFinite(n)) return this.#noTemplate(template);
+    }
+    const events = t.origin === "profile" ? [] : this.#events(t.id);
+    const view = this.#versionView(t, n, events);
+    const adopted = this.#rows(`SELECT DISTINCT p.* FROM tpl_proposals p JOIN tpl_revisions r ON r.adopted=p.proposal_id
+                                 WHERE r.template_id=? AND r.version=? ORDER BY p.proposal_id`, t.id, n).map((x) => ({ id: x.proposal_id, sha: x.sha, why: x.why, at: x.at, label: proposalLabel(x.proposer, "template") }));
+    const bad = _FilingTemplates.#badBlank(t);
+    return {
+      ok: true,
+      template: _FilingTemplates.#head(t),
+      version: { ...view, proposals_adopted: adopted },
+      comments: this.#one(`SELECT COUNT(*) AS c FROM tpl_comments WHERE template_id=? AND version=?`, t.id, n).c,
+      offered: OFFERED.includes(view.state) && !t.retired && !bad,
+      ...view.state === "approved" && n === this.#latestApproved(t, events) ? { default: true } : {},
+      ...bad ? { blank_unknown: withRow2({
+        ok: false,
+        reason: "TEMPLATE_BLANK_UNKNOWN",
+        blank: bad,
+        detail: `{{${bad}}} is not a blank filings fill, so this template is not offered`
+      }) } : {}
+    };
+  }
+  /* ================================================================ R25: offeredVersion */
+  /** R25 (`filings` R28, R31): the version of `template` a filing or briefing may use, with its metadata; the latest
+   *  approved when `version` is absent. Writes nothing. */
+  offeredVersion({ template = null, version = null, viewer = null } = {}) {
+    const t = this.#template(template, viewer);
+    if (!t) return this.#noTemplate(template);
+    if (t.retired) return this.#retired(t);
+    const bad = _FilingTemplates.#badBlank(t);
+    if (bad) return refuse3(
+      "TEMPLATE_BLANK_UNKNOWN",
+      `{{${bad}}} is not a blank filings fill, so this template is not offered`,
+      { template: t.id, blank: bad }
+    );
+    const events = t.origin === "profile" ? [] : this.#events(t.id);
+    const latest = this.#latestApproved(t, events);
+    const n = version === null || version === void 0 || version === "" ? latest : this.#versionOf(t, version);
+    const state = n === null ? null : t.origin === "profile" ? "approved" : this.#stateOf(events, n);
+    if (n === null || !OFFERED.includes(state))
+      return refuse3(
+        "TEMPLATE_NOT_OFFERED",
+        n === null ? version ? "no such version of this template" : "the template has no approved version" : `the version is ${state}: only an approved or updated version is offered`,
+        { template: t.id, ...n !== null ? { version: versionId(t.id, n), state } : {} }
+      );
+    const { id, version: number, ...meta } = this.#listed(this.#versionView(t, n, events), n === latest);
+    const view = this.#versionView(t, n, events);
+    return {
+      ok: true,
+      template: t.id,
+      version: id,
+      number,
+      use: t.use,
+      kind: t.kind,
+      profiles: t.profiles,
+      origin: t.origin,
+      name: t.name,
+      sha: view.sha,
+      text: view.text,
+      ...meta
+    };
+  }
+  /* ================================================================ R20: reviewsRequested */
+  /** R20 (`queue-producers` R20): every (version, member) pair where the member was asked to review, the version is in
+   *  review, and the member has given no review of its present sha; at most 500 per page in (version id, member)
+   *  order after `after` (a previous page's `cursor`, or a version id, read as after all its members). Writes nothing. */
+  reviewsRequested({ after = null, limit = null, viewer = null } = {}) {
+    const max = clamp3(limit, REVIEWS_REQUESTED_MAX, REVIEWS_REQUESTED_MAX);
+    const from = str9(after);
+    const at25 = from ? /^(.+)#([^#]*)$/.exec(from) : null;
+    const vid = `(r.template_id || '@' || r.version)`;
+    const seek = at25 ? { sql: `AND (${vid} > ? OR (${vid} = ? AND r.member > ?))`, args: [at25[1], at25[1], at25[2]] } : from ? { sql: `AND ${vid} > ?`, args: [from] } : { sql: "", args: [] };
+    const rows2 = this.#rows(`SELECT r.*, ${vid} AS vid FROM tpl_reviewers r
+      WHERE EXISTS (SELECT 1 FROM tpl_events e WHERE e.template_id=r.template_id AND e.version=r.version AND e.event='submitted')
+        AND NOT EXISTS (SELECT 1 FROM tpl_events e WHERE e.template_id=r.template_id AND e.version=r.version
+                          AND e.event IN ('approved','updated','withdrawn'))
+        AND NOT EXISTS (SELECT 1 FROM tpl_reviews v WHERE v.template_id=r.template_id AND v.version=r.version AND v.kind='member'
+                          AND v.reviewer=r.member AND v.sha=(SELECT x.sha FROM tpl_revisions x WHERE x.template_id=r.template_id
+                            AND x.version=r.version ORDER BY x.rid DESC LIMIT 1))
+        ${seek.sql}
+      ORDER BY vid, r.member`, ...seek.args);
+    const seen = /* @__PURE__ */ new Map();
+    const items = [];
+    let truncated3 = false;
+    for (const r of rows2) {
+      if (!seen.has(r.template_id)) seen.set(r.template_id, this.#template(r.template_id, viewer));
+      const t = seen.get(r.template_id);
+      if (!t) continue;
+      if (items.length === max) {
+        truncated3 = true;
+        break;
+      }
+      items.push({
+        template: t.id,
+        version: r.vid,
+        name: t.name,
+        kind: t.kind,
+        member: r.member,
+        member_name: r.member_name,
+        asked_by: { id: r.asked_by, name: r.asked_name },
+        asked_at: r.at
+      });
+    }
+    const tail = items[items.length - 1];
+    return { ok: true, items, limit: max, truncated: truncated3, cursor: truncated3 && tail ? `${tail.version}#${tail.member}` : null };
+  }
+  /* ================================================================ the migration from filings (K927) */
+  /** Each template `filings` R26 saved becomes a template of origin `group` with one `draft` version, author its saver,
+   *  `derived_from` its filing draft, and a carried note (K921, K927): offered only once reviewed and approved. A row
+   *  already migrated is passed over, so it runs at every start and changes nothing the second time. `filings`'
+   *  table is read, never written. */
+  migrateFromFilings() {
+    const cols = this.#call(() => this.#rows(`PRAGMA table_info(filing_templates)`).map((c) => c.name), []);
+    if (!["template_id", "name", "text", "from_filing", "action_id", "author", "at"].every((c) => cols.includes(c))) return { migrated: 0 };
+    const rows2 = this.#rows(`SELECT f.* FROM filing_templates f WHERE NOT EXISTS
+                               (SELECT 1 FROM tpl_templates t WHERE t.migrated_from=f.template_id) ORDER BY f.at, f.template_id`);
+    let migrated = 0;
+    for (const f17 of rows2) {
+      const basis = parse(f17.basis) || {};
+      const project = str9(basis.project);
+      const bundle = project || str9(f17.action_id);
+      const member = this.#member(f17.author) || str9(f17.author) || "unrecorded";
+      const name_ = this.#nameOf(member);
+      const at25 = str9(f17.at) || this.#when();
+      const ok2 = this.record.transact(() => {
+        const id = this.#mint("TPL", at25.slice(0, 4));
+        if (!id) return mintExhausted("TPL");
+        this.sql.exec(
+          `INSERT INTO tpl_templates (template_id, bundle_id, project, kind, use, profiles, name, origin, created_by,
+                         created_name, created_at, migrated_from) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+          id,
+          bundle,
+          project,
+          typeof f17.kind === "string" && KIND_RE2.test(f17.kind) ? f17.kind : null,
+          "file",
+          "general",
+          String(f17.name),
+          "group",
+          member,
+          name_,
+          at25,
+          f17.template_id
+        );
+        const sha = sha256HexSync(String(f17.text));
+        this.sql.exec(`INSERT INTO tpl_versions (template_id, version, bundle_id, author, author_name, derived_from, created_at)
+                       VALUES (?,1,?,?,?,?,?)`, id, bundle, member, name_, json({ filing: f17.from_filing, sha }), at25);
+        this.sql.exec(`INSERT INTO tpl_revisions (template_id, version, bundle_id, text, sha, author, author_name, adopted, at)
+                       VALUES (?,1,?,?,?,?,?,NULL,?)`, id, bundle, String(f17.text), sha, member, name_, at25);
+        this.sql.exec(`INSERT INTO tpl_notes (template_id, version, bundle_id, text, author, author_name, carried, at)
+                       VALUES (?,1,?,?,?,?,1,?)`, id, bundle, MIGRATED_NOTE, member, name_, at25);
+        return { ok: true };
+      });
+      if (ok2 && ok2.ok) migrated++;
+    }
+    return { migrated };
+  }
+};
+for (const m of [
+  "templateDraft",
+  "templateRevise",
+  "templatePropose",
+  "templateSubmit",
+  "templateReviewGrant",
+  "templateGrantRevoke",
+  "templateReview",
+  "templateApprove",
+  "templateRetire",
+  "templateComment",
+  "templateComments",
+  "templatesFor",
+  "templateRead",
+  "offeredVersion",
+  "reviewsRequested"
+]) {
+  const fn = FilingTemplates.prototype[m];
+  FilingTemplates.prototype[m] = function(...a) {
+    return withRow2(fn.apply(this, a));
+  };
+}
+var instances20 = /* @__PURE__ */ new WeakMap();
+function filingTemplatesOf(host, deps) {
+  let f17 = instances20.get(host);
+  if (!f17) {
+    const d = deps || {};
+    const storage = d.storage || host.storage;
+    const record = d.record || recordOf(host);
+    const membership = d.membership || membershipOf(host, { record });
+    f17 = new FilingTemplates({ ...d, storage, record, membership, env: d.env ?? host.env ?? null });
+    instances20.set(host, f17);
+    f17.migrate();
+    record.declarePurge("filing-templates", [...FILING_TEMPLATES_TABLES]);
+    record.registerMintSeed("filing-templates", FILING_TEMPLATES_MINT_SEED.map((x) => [...x]));
+    f17.migrateFromFilings();
+  }
+  return f17;
+}
+function filingTemplatesOps(m, url, body) {
+  const q7 = (k) => url.searchParams.get(k);
+  const has3 = (k) => url.searchParams.has(k);
+  const b = body && typeof body === "object" ? body : {};
+  const pick2 = (k) => b[k] !== void 0 && b[k] !== null ? b[k] : has3(k) ? q7(k) : null;
+  const stamps = { viewer: q7("viewer") };
+  const door = { secretSha: q7("secretSha") };
+  return {
+    templatedraft: () => m.templateDraft({
+      template: pick2("template"),
+      project: pick2("project"),
+      kind: pick2("kind"),
+      use: pick2("use"),
+      profiles: pick2("profiles"),
+      name: pick2("name"),
+      text: b.text,
+      from: pick2("from"),
+      notes: b.notes ?? null,
+      author: q7("author"),
+      via: "op",
+      ...stamps
+    }),
+    templaterevise: () => m.templateRevise({
+      version: pick2("version"),
+      text: b.text,
+      adopt: pick2("adopt"),
+      notes: b.notes ?? null,
+      author: q7("author"),
+      ...stamps
+    }),
+    templatepropose: () => m.templatePropose({
+      template: pick2("template"),
+      kind: pick2("kind"),
+      text: b.text,
+      why: b.why ?? null,
+      run: pick2("run"),
+      model: pick2("model"),
+      skill_pack: pick2("skill_pack"),
+      proposer: q7("author"),
+      ...stamps
+    }),
+    templatesubmit: () => m.templateSubmit({ version: pick2("version"), reviewers: pick2("reviewers"), author: q7("author"), ...stamps }),
+    templatereviewgrant: () => m.templateReviewGrant({
+      version: pick2("version"),
+      recipient: pick2("recipient"),
+      organisation: pick2("organisation"),
+      secretSha: q7("secretSha"),
+      by: q7("author"),
+      ...stamps
+    }),
+    templategrantrevoke: () => m.templateGrantRevoke({ grant: pick2("grant"), by: q7("author"), ...stamps }),
+    templatereview: () => m.templateReview({
+      version: pick2("version"),
+      outcome: pick2("outcome"),
+      scope: pick2("scope"),
+      comment: b.comment ?? null,
+      credential: pick2("credential"),
+      sha: pick2("sha"),
+      author: q7("author"),
+      ...door,
+      ...stamps
+    }),
+    templateapprove: () => m.templateApprove({
+      version: pick2("version"),
+      widen: pick2("widen") ?? false,
+      reason: b.reason ?? null,
+      by: q7("author"),
+      ...stamps
+    }),
+    templateretire: () => m.templateRetire({
+      template: pick2("template"),
+      version: pick2("version"),
+      reason: b.reason ?? null,
+      by: q7("author"),
+      ...stamps
+    }),
+    templatecomment: () => m.templateComment({
+      template: pick2("template"),
+      version: pick2("version"),
+      text: b.text ?? null,
+      note: pick2("note") ?? false,
+      author: q7("author"),
+      ...door,
+      ...stamps
+    }),
+    templatecomments: () => m.templateComments({
+      template: q7("template"),
+      version: q7("version"),
+      limit: q7("limit"),
+      author: q7("author"),
+      ...door,
+      ...stamps
+    }),
+    templates: () => m.templatesFor({ kind: q7("kind"), profile: q7("profile"), use: q7("use"), state: q7("state"), ...stamps }),
+    templateread: () => m.templateRead({ template: q7("template"), version: q7("version"), author: q7("author"), ...door, ...stamps })
+  };
+}
+
+// src/local-facts/checks.mjs
+var checks_exports29 = {};
+__export(checks_exports29, {
+  LOCAL_FACTS_CHECKS: () => LOCAL_FACTS_CHECKS,
+  refusal: () => refusal10
+});
+var at12 = (fn, region) => `src/local-facts/index.mjs ${fn} > ${region}`;
+var LOCAL_FACTS_CHECKS = Object.freeze({
+  MACHINE_CANNOT_CONFIRM: {
+    check: "C-126.1",
+    where: at12("machineRefusal", "is-fact-member"),
+    translation: "Confirming, correcting or disputing a local fact (a holiday calendar, an office's hours, the time zone) is a member's act. An assistant may re-check a source and report what it found; it may not record a confirmation. Sign in as a member. Nothing was written."
+  },
+  NO_SUCH_FACT: {
+    check: "C-126.2",
+    where: at12("noSuchFact", "is-fact-named"),
+    translation: "No local fact of this instance's active jurisdiction profiles answers to that path. A path names one profile's holiday year, an office's hours or the time zone. Nothing was written."
+  },
+  FACT_ACT_REFUSED: {
+    check: "C-126.3",
+    where: at12("factConfirm", "is-fact-act"),
+    translation: "A member confirms, corrects or disputes a local fact; this act is none of the three. Nothing was written."
+  },
+  FACT_HOW_REFUSED: {
+    check: "C-126.4",
+    where: at12("factConfirm", "is-fact-how"),
+    translation: "Say how you checked, in at most 500 characters: the official page and its address, a call to the office, a visit. None was given, or it is too long. Nothing was written."
+  },
+  FACT_VALUE_REFUSED: {
+    check: "C-126.5",
+    where: at12("factConfirm", "is-fact-correction"),
+    translation: "A correction gives the corrected value, in the form the profile holds that fact in, and its source in at most 500 characters. The value is missing or not of that form, or the source is missing or too long. Nothing was written."
+  }
+});
+function refusal10(code, detail, extra) {
+  const row2 = LOCAL_FACTS_CHECKS[code];
+  return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
+}
+
+// src/local-facts/schema.mjs
+var LOCAL_FACTS_SCHEMA = `
+-- R1, R5: a member's confirm, correct or dispute of the fact at path. value_json is the value the act is about: for a
+-- confirm, the value that governed when it was made; for a correct, the corrected value; for a dispute, the value
+-- disputed. source is a correction's source, else NULL.
+CREATE TABLE IF NOT EXISTS local_fact_acts (
+  seq           INTEGER PRIMARY KEY AUTOINCREMENT,
+  path          TEXT NOT NULL,
+  profile       TEXT NOT NULL,
+  act           TEXT NOT NULL,
+  how           TEXT NOT NULL,
+  value_json    TEXT,
+  source        TEXT,
+  by_member     TEXT NOT NULL,
+  at            TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS local_fact_acts_path ON local_fact_acts(path, seq);
+`;
+var LOCAL_FACTS_TABLES = Object.freeze([{ name: "local_fact_acts", keys: [] }]);
+function migrateLocalFacts(sql) {
+  const bare2 = LOCAL_FACTS_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  for (const s of bare2.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+}
+
+// src/local-facts/paths.mjs
+var LOCAL_FACT_KINDS = Object.freeze(["holidays", "hours", "time_zone"]);
+var PROFILE_RE = /^[a-z0-9][a-z0-9-]*$/;
+var YEAR_RE = /^\d{4}$/;
+var PATH_MAX = 1e3;
+var enc2 = (s) => encodeURIComponent(s);
+var name = (s) => typeof s === "string" && s.trim() !== "" && s === s.trim();
+var isObj10 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+function officeToken(o) {
+  if (name(o)) return `role=${enc2(o)}`;
+  if (isObj10(o) && Object.keys(o).length === 1 && name(o.venue)) return `venue=${enc2(o.venue)}`;
+  return null;
+}
+function officesToken(offices) {
+  if (offices === void 0 || offices === null) return "";
+  if (!Array.isArray(offices) || !offices.length) return null;
+  const t = offices.map(officeToken);
+  if (t.some((x) => x === null)) return null;
+  return [...new Set(t)].sort().join(",");
+}
+function factPath(parts) {
+  try {
+    if (!isObj10(parts) || typeof parts.profile !== "string" || !PROFILE_RE.test(parts.profile)) return null;
+    const { profile, fact } = parts;
+    let p = null;
+    if (fact === "time_zone") p = `${profile}/time_zone`;
+    else if (fact === "holidays") {
+      const y = typeof parts.year === "number" ? String(parts.year) : parts.year;
+      if (typeof y !== "string" || !YEAR_RE.test(y)) return null;
+      const o = officesToken(parts.offices);
+      if (o === null) return null;
+      p = `${profile}/holidays/${y}${o ? `/${o}` : ""}`;
+    } else if (fact === "hours") {
+      const of = parts.office;
+      if (!isObj10(of)) return null;
+      const keys = Object.keys(of).sort().join(",");
+      if (keys === "body,role" && name(of.role) && name(of.body)) p = `${profile}/hours/role=${enc2(of.role)},body=${enc2(of.body)}`;
+      else if (keys === "venue" && name(of.venue)) p = `${profile}/hours/venue=${enc2(of.venue)}`;
+      else return null;
+    } else return null;
+    return p.length <= PATH_MAX ? p : null;
+  } catch {
+    return null;
+  }
+}
+var dec = (s) => {
+  try {
+    return decodeURIComponent(s);
+  } catch {
+    return null;
+  }
+};
+function parseFactPath(path) {
+  try {
+    if (typeof path !== "string" || !path || path.length > PATH_MAX) return null;
+    const seg = path.split("/");
+    const [profile, fact] = seg;
+    let parts = null;
+    if (fact === "time_zone" && seg.length === 2) parts = { profile, fact };
+    else if (fact === "holidays" && (seg.length === 3 || seg.length === 4)) {
+      parts = { profile, fact, year: Number(seg[2]) };
+      if (seg.length === 4) {
+        const offices = [];
+        for (const t of seg[3].split(",")) {
+          const m = /^(role|venue)=(.+)$/.exec(t);
+          const v = m && dec(m[2]);
+          if (v === null || !m) return null;
+          offices.push(m[1] === "role" ? v : { venue: v });
+        }
+        parts.offices = offices;
+      }
+    } else if (fact === "hours" && seg.length === 3) {
+      let m = /^role=([^,]+),body=([^,]+)$/.exec(seg[2]);
+      if (m) {
+        const role = dec(m[1]), body = dec(m[2]);
+        if (role === null || body === null) return null;
+        parts = { profile, fact, office: { role, body } };
+      } else {
+        m = /^venue=([^,]+)$/.exec(seg[2]);
+        const v = m && dec(m[1]);
+        if (v === null || !m) return null;
+        parts = { profile, fact, office: { venue: v } };
+      }
+    } else return null;
+    return factPath(parts) === path ? parts : null;
+  } catch {
+    return null;
+  }
+}
+
+// src/local-facts/index.mjs
+var LOCAL_FACT_ACTS = Object.freeze(["confirm", "correct", "dispute"]);
+var LOCAL_FACT_STATUSES = Object.freeze(["confirmed", "unconfirmed", "corrected", "disputed", "absent"]);
+var LOCAL_FACT_HORIZONS = Object.freeze({
+  holidays: Object.freeze({ lasts: "until_year_end", due_from: Object.freeze({ month: 11, day: 1, years_before: 1 }) }),
+  hours: Object.freeze({ lapse_days: 183 }),
+  time_zone: Object.freeze({ lapse_days: 183 })
+});
+var HOW_MAX = 500;
+var SOURCE_MAX = 500;
+var str10 = (v) => typeof v === "string" ? v.trim() : "";
+var isObj11 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var clone2 = (v) => v === void 0 ? void 0 : JSON.parse(JSON.stringify(v));
+var safeJson14 = (s) => {
+  try {
+    return s == null ? null : JSON.parse(s);
+  } catch {
+    return null;
+  }
+};
+var addDays = (date, n) => new Date(Date.parse(`${date}T00:00:00Z`) + n * 864e5).toISOString().slice(0, 10);
+var givers = (x, own3) => own3 ? [own3] : [x.profile, ...(x.bases || []).map((b) => b.profile)].filter(Boolean);
+function factIn(p, parts, own3 = null) {
+  if (!isObj11(p)) return null;
+  const mine = (x) => givers(x, own3).includes(parts.profile);
+  if (parts.fact === "time_zone") {
+    const z = p.time_zone;
+    return isObj11(z) && mine(z) ? { value: z.value, status: z.status, basis: z.basis } : null;
+  }
+  if (parts.fact === "holidays") {
+    const key = officesToken(parts.offices);
+    const h = (Array.isArray(p.holidays) ? p.holidays : []).find((e) => isObj11(e) && Number(e.year) === parts.year && officesToken(e.offices) === key && mine(e));
+    if (!h) return null;
+    const days = (h.days || []).map((d) => ({ date: d.date, name: d.name })).sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+    return { value: days, status: h.status, basis: h.basis };
+  }
+  if (parts.fact === "hours") {
+    const hoursOf = (h) => isObj11(h) && mine(h) ? { value: { weekly: clone2(h.weekly) }, status: h.status, basis: h.basis } : null;
+    if (parts.office.venue !== void 0) {
+      const k = (Array.isArray(p.action_kinds) ? p.action_kinds : []).find((e) => isObj11(e) && e.kind === parts.office.venue);
+      return k && isObj11(k.venue) ? hoursOf(k.venue.hours) : null;
+    }
+    const c = (Array.isArray(p.counterparties) ? p.counterparties : []).find((e) => isObj11(e) && e.role === parts.office.role && e.body === parts.office.body && isObj11(e.hours));
+    return c ? hoursOf(c.hours) : null;
+  }
+  return null;
+}
+function factsOf(p) {
+  const out = [];
+  if (!isObj11(p)) return out;
+  if (isObj11(p.time_zone)) out.push({ profile: p.id, fact: "time_zone" });
+  for (const h of Array.isArray(p.holidays) ? p.holidays : [])
+    if (isObj11(h)) out.push({ profile: p.id, fact: "holidays", year: Number(h.year), ...h.offices ? { offices: h.offices } : {} });
+  for (const c of Array.isArray(p.counterparties) ? p.counterparties : [])
+    if (isObj11(c) && isObj11(c.hours)) out.push({ profile: p.id, fact: "hours", office: { role: c.role, body: c.body } });
+  for (const k of Array.isArray(p.action_kinds) ? p.action_kinds : [])
+    if (isObj11(k) && isObj11(k.venue) && isObj11(k.venue.hours)) out.push({ profile: p.id, fact: "hours", office: { venue: k.kind } });
+  return out;
+}
+function withValue(p, parts, value) {
+  const q7 = clone2(p);
+  if (parts.fact === "time_zone") {
+    if (typeof value !== "string") return null;
+    q7.time_zone.value = value;
+  } else if (parts.fact === "holidays") {
+    if (!Array.isArray(value)) return null;
+    const key = officesToken(parts.offices);
+    const h = q7.holidays.find((e) => Number(e.year) === parts.year && officesToken(e.offices) === key);
+    h.days = clone2(value);
+  } else {
+    if (!isObj11(value) || Object.keys(value).join() !== "weekly") return null;
+    const target = parts.office.venue !== void 0 ? q7.action_kinds.find((k) => k.kind === parts.office.venue).venue : q7.counterparties.find((c) => c.role === parts.office.role && c.body === parts.office.body);
+    target.hours.weekly = clone2(value.weekly);
+  }
+  return q7;
+}
+var LocalFacts = class _LocalFacts {
+  constructor({
+    storage,
+    record,
+    membership = null,
+    combine: combine2 = combine,
+    get: get2 = get,
+    validate: validate2 = validate,
+    now = null
+  } = {}) {
+    this.storage = storage;
+    this.sql = storage.sql;
+    this.record = record;
+    this.membership = membership;
+    this.combine = combine2;
+    this.getProfile = get2;
+    this.validate = validate2;
+    this.now = typeof now === "function" ? now : () => (/* @__PURE__ */ new Date()).toISOString();
+    migrateLocalFacts(this.sql);
+  }
+  #rows(qs, ...a) {
+    return [...this.sql.exec(qs, ...a)];
+  }
+  #today() {
+    return stampInstant("second", Date.parse(this.now())).slice(0, 10);
+  }
+  /** The module's table, created at construction; kept, idempotent, for the composition root's migration pass. */
+  migrate() {
+    migrateLocalFacts(this.sql);
+  }
+  /* The active profiles: their ids as held, and the combined view (record-core R26, jurisdictions R12–R16). A profile
+     the instance names but cannot resolve, or a list that does not combine, gives no fact. */
+  #active() {
+    const ids = this.record.getSetting("jurisdiction_profiles");
+    const held = /* @__PURE__ */ new Map();
+    if (Array.isArray(ids)) for (const id of ids) {
+      if (typeof id !== "string" || held.has(id)) continue;
+      const p = this.getProfile(id);
+      if (isObj11(p)) held.set(id, p);
+    }
+    let view = null;
+    if (held.size) {
+      const c = this.combine([...held.keys()]);
+      if (c && c.ok) view = c.view;
+      else held.clear();
+    }
+    return { held, view };
+  }
+  /* A viewer that membership refuses sees no fact; no viewer sent is a direct internal call and sees every one. */
+  static #blind(viewer) {
+    return viewer !== void 0 && viewer !== null && viewerPredicate(viewer).scope === "DENY";
+  }
+  #acts(path) {
+    return this.#rows(`SELECT seq, act, how, value_json, source, by_member, at FROM local_fact_acts WHERE path=? ORDER BY seq`, path).map((r) => ({
+      act: r.act,
+      by: r.by_member,
+      at: r.at,
+      how: r.how,
+      value: safeJson14(r.value_json),
+      ...r.act === "correct" ? { source: r.source } : {}
+    }));
+  }
+  /* R2, R3: one named fact's status, from its acts and the view. `held` is the profile's own fact (R1: what may be
+     acted on), `inView` the fact as the active profiles combine it (absent when withheld as a conflict). */
+  #status(path, parts, held, inView, today) {
+    const acts = this.#acts(path);
+    const latest = acts.length ? acts[acts.length - 1] : null;
+    const said2 = (a) => a ? { act: a.act, by: a.by, at: a.at, how: a.how } : null;
+    const base = { path, fact: parts, latest: said2(latest), acts: acts.length };
+    if (!inView) {
+      return {
+        ...base,
+        status: "absent",
+        due: false,
+        profile: null,
+        governs: null,
+        why: held ? "the active jurisdiction profiles disagree on this fact, so it is withheld: what depends on it is undetermined" : "no active jurisdiction profile holds this fact, so what depends on it is undetermined"
+      };
+    }
+    const correction = [...acts].reverse().find((a) => a.act === "correct") || null;
+    const profile = { value: clone2(inView.value), status: inView.status, basis: inView.basis };
+    const governs = correction ? {
+      value: clone2(correction.value),
+      origin: "corrected",
+      source: correction.source,
+      says: `corrected locally by ${correction.by}, ${correction.at.slice(0, 10)}`
+    } : { value: clone2(inView.value), origin: "profile" };
+    const horizon = this.#horizon(parts, latest, today);
+    const out = { ...base, profile, governs, ...horizon.dates };
+    if (!latest) return { ...out, status: "unconfirmed", due: horizon.due, why: `no member has confirmed it${horizon.dueWhy}` };
+    if (latest.act === "dispute") return { ...out, status: "disputed", due: true, why: `disputed by ${latest.by}, ${latest.at.slice(0, 10)}` };
+    if (latest.act === "correct") return { ...out, status: "corrected", due: false, why: governs.says };
+    if (canonicalJson(latest.value) !== canonicalJson(governs.value))
+      return {
+        ...out,
+        status: "unconfirmed",
+        due: horizon.due,
+        lapsed: said2(latest),
+        why: `the value ${latest.by} confirmed on ${latest.at.slice(0, 10)} has since changed${horizon.dueWhy}`
+      };
+    if (horizon.lapsed)
+      return {
+        ...out,
+        status: "unconfirmed",
+        due: horizon.due,
+        lapsed: said2(latest),
+        why: `the confirmation by ${latest.by} on ${latest.at.slice(0, 10)} lapsed on ${horizon.dates.lapses_on}${horizon.dueWhy}`
+      };
+    return { ...out, status: "confirmed", due: false, why: `confirmed by ${latest.by}, ${latest.at.slice(0, 10)}` };
+  }
+  /* R3: when a confirmation of this fact lapses, and from when the fact is due. */
+  #horizon(parts, latest, today) {
+    const confirmed = latest && latest.act === "confirm" ? latest.at.slice(0, 10) : null;
+    if (parts.fact === "holidays") {
+      const y = parts.year, due_from = `${y - 1}-11-01`, lapses_on2 = `${y + 1}-01-01`;
+      const due = today >= due_from;
+      return {
+        due,
+        lapsed: !!confirmed && today >= lapses_on2,
+        dueWhy: due ? `; the year is due from ${due_from}` : `; the year falls due on ${due_from}`,
+        dates: { due_from, ...confirmed ? { lapses_on: lapses_on2 } : {} }
+      };
+    }
+    const lapses_on = confirmed ? addDays(confirmed, LOCAL_FACT_HORIZONS[parts.fact].lapse_days) : null;
+    return {
+      due: true,
+      lapsed: !!confirmed && today >= lapses_on,
+      dueWhy: "",
+      dates: lapses_on ? { lapses_on } : {}
+    };
+  }
+  /* One path against the active profiles: its parts, the held fact and the view's, or why it names none. */
+  #resolve(path, active) {
+    const parts = parseFactPath(path);
+    if (!parts) return { named: false };
+    const p = active.held.get(parts.profile);
+    if (!p) return { named: false, parts };
+    const held = factIn(p, parts, parts.profile);
+    return { named: true, parts, p, held, inView: held ? factIn(active.view, parts) : null };
+  }
+  /* ===================================================================== *
+   * R1: factConfirm
+   * ===================================================================== */
+  /** R1, R5: records a member's `confirm`, `correct` or `dispute` of the fact at `path`, appended and never replaced.
+   *  Refusals in order: MACHINE_CANNOT_CONFIRM, NO_SUCH_FACT, FACT_ACT_REFUSED, FACT_HOW_REFUSED, FACT_VALUE_REFUSED. */
+  factConfirm(a = {}) {
+    const b = isObj11(a) ? a : {};
+    const machine3 = machineRefusal(b.by);
+    if (machine3) return machine3;
+    const path = typeof b.path === "string" ? b.path : null;
+    const active = this.#active();
+    const r = path && !_LocalFacts.#blind(b.viewer) ? this.#resolve(path, active) : { named: false };
+    if (!r.named || !r.held) return noSuchFact(path);
+    const act = b.act;
+    if (!LOCAL_FACT_ACTS.includes(act))
+      return refusal10(
+        "FACT_ACT_REFUSED",
+        `the act is one of ${LOCAL_FACT_ACTS.join(", ")}.`,
+        { act: typeof act === "string" ? act.slice(0, 40) : null, acts: [...LOCAL_FACT_ACTS] }
+      );
+    const how = str10(b.how);
+    if (!how || how.length > HOW_MAX)
+      return refusal10("FACT_HOW_REFUSED", `say how you checked, in 1 to ${HOW_MAX} characters.`, { max: HOW_MAX });
+    let value = null, source = null;
+    if (act === "correct") {
+      source = str10(b.source);
+      const q7 = b.value === void 0 ? null : withValue(r.p, r.parts, b.value);
+      const v = q7 ? this.validate(q7) : null;
+      if (!source || source.length > SOURCE_MAX || !v || !v.ok)
+        return refusal10(
+          "FACT_VALUE_REFUSED",
+          `a correction gives the corrected value in the form the profile holds it, and its source in 1 to ${SOURCE_MAX} characters.`,
+          { errors: v && !v.ok ? v.errors.slice(0, 10) : void 0, max: SOURCE_MAX }
+        );
+      value = b.value;
+    } else {
+      const s = r.inView ? this.#status(path, r.parts, r.held, r.inView, this.#today()) : null;
+      value = s && s.governs ? s.governs.value : r.held.value;
+    }
+    const at25 = stampInstant("second", Date.parse(this.now()));
+    const by = str10(b.by);
+    return this.record.transact(() => {
+      this.sql.exec(
+        `INSERT INTO local_fact_acts (path, profile, act, how, value_json, source, by_member, at)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        path,
+        r.parts.profile,
+        act,
+        how,
+        canonicalJson(value),
+        source,
+        by,
+        at25
+      );
+      return { ok: true, path, act, at: at25 };
+    });
+  }
+  /* ===================================================================== *
+   * R2: factStatus
+   * ===================================================================== */
+  /** R2, R3: one fact's status (with `path`), or every fact of the active profiles, corrections and disputes first. */
+  factStatus(a = {}) {
+    const b = isObj11(a) ? a : {};
+    const active = this.#active();
+    const blind = _LocalFacts.#blind(b.viewer);
+    const today = this.#today();
+    if (b.path !== void 0 && b.path !== null && b.path !== "") {
+      const r = !blind && typeof b.path === "string" ? this.#resolve(b.path, active) : { named: false };
+      if (!r.named) return noSuchFact(typeof b.path === "string" ? b.path : null);
+      return { ok: true, ...this.#status(b.path, r.parts, r.held, r.inView, today) };
+    }
+    const facts = blind ? [] : this.#all(active, today);
+    const rank6 = (f17) => f17.status === "corrected" || f17.status === "disputed" ? 0 : 1;
+    facts.sort((x, y) => rank6(x) - rank6(y) || (x.path < y.path ? -1 : x.path > y.path ? 1 : 0));
+    return {
+      ok: true,
+      facts,
+      count: facts.length,
+      note: "corrections and disputes come first, for a member to report for a profile fix; this instance transmits nothing"
+    };
+  }
+  /* Every fact of the active profiles, once each, with its status. */
+  #all(active, today) {
+    const out = /* @__PURE__ */ new Map();
+    for (const p of active.held.values()) for (const parts of factsOf(p)) {
+      const path = factPath(parts);
+      if (!path || out.has(path)) continue;
+      const r = this.#resolve(path, active);
+      if (r.named && r.held) out.set(path, this.#status(path, r.parts, r.held, r.inView, today));
+    }
+    return [...out.values()];
+  }
+  /* ===================================================================== *
+   * R4: factsDue
+   * ===================================================================== */
+  /** R4: every fact that is unconfirmed (lapsed included) or disputed, once each; with `paths`, only those of them. A
+   *  path that does not name a fact of an active profile is listed in `unknown`; one that names a fact the active
+   *  profiles do not hold, in `absent`. Writes nothing. */
+  factsDue(a = {}) {
+    const b = isObj11(a) ? a : {};
+    const active = this.#active();
+    const blind = _LocalFacts.#blind(b.viewer);
+    const today = this.#today();
+    const pick2 = (s) => s.status === "disputed" || s.status === "unconfirmed";
+    const shape = (s) => ({
+      path: s.path,
+      fact: s.fact,
+      status: s.status,
+      due: s.due,
+      why: s.why,
+      latest: s.latest,
+      ...s.lapsed ? { lapsed: s.lapsed } : {},
+      ...s.due_from ? { due_from: s.due_from } : {},
+      ...s.lapses_on ? { lapses_on: s.lapses_on } : {}
+    });
+    if (b.paths === void 0 || b.paths === null) {
+      const due2 = blind ? [] : this.#all(active, today).filter(pick2).map(shape);
+      return { ok: true, due: due2, unknown: [], absent: [] };
+    }
+    const asked = [...new Set(Array.isArray(b.paths) ? b.paths : [b.paths])];
+    const due = [], unknown = [], absent = [];
+    for (const path of asked) {
+      const r = !blind && typeof path === "string" ? this.#resolve(path, active) : { named: false };
+      if (!r.named) {
+        unknown.push(typeof path === "string" ? path.slice(0, 1e3) : null);
+        continue;
+      }
+      const s = this.#status(path, r.parts, r.held, r.inView, today);
+      if (s.status === "absent") absent.push(path);
+      else if (pick2(s)) due.push(shape(s));
+    }
+    return { ok: true, due, unknown, absent };
+  }
+};
+function machineRefusal(by) {
+  if (str10(by) && !isMachineIdentity(str10(by))) return null;
+  return refusal10("MACHINE_CANNOT_CONFIRM", "confirming, correcting or disputing a local fact is a named member's act; an assistant's re-check reaches a member as its run's output. Nothing was written.");
+}
+function noSuchFact(path) {
+  return refusal10(
+    "NO_SUCH_FACT",
+    "no local fact of the active jurisdiction profiles answers to that path.",
+    { path: typeof path === "string" ? path.slice(0, 1e3) : null }
+  );
+}
+function localFactsOps(s, url, body) {
+  const qp = (k) => url.searchParams.get(k);
+  const b = isObj11(body) ? body : {};
+  const paths = () => Array.isArray(b.paths) ? b.paths : url.searchParams.getAll("path").length ? url.searchParams.getAll("path") : void 0;
+  return {
+    factconfirm: () => s.factConfirm({ ...b, viewer: qp("viewer") }),
+    factstatus: () => s.factStatus({ path: qp("path") ?? b.path, viewer: qp("viewer") }),
+    factsdue: () => s.factsDue({ paths: paths(), viewer: qp("viewer") })
+  };
+}
+var instances21 = /* @__PURE__ */ new WeakMap();
+function localFactsOf(host, deps) {
+  let s = instances21.get(host);
+  if (!s) {
+    const d = deps || {};
+    const storage = d.storage || host.storage;
+    const record = d.record || recordOf(host);
+    const membership = d.membership || membershipOf(host, { record });
+    s = new LocalFacts({ ...d, storage, record, membership });
+    instances21.set(host, s);
+    record.declarePurge("local-facts", LOCAL_FACTS_TABLES);
+  }
+  return s;
+}
+
+// src/citation/checks.mjs
+var checks_exports30 = {};
+__export(checks_exports30, {
   CITE_CHECKS: () => CITE_CHECKS,
   CITE_EXTENT_CHECKS: () => CITE_EXTENT_CHECKS
 });
@@ -85920,7 +88443,7 @@ var EXTENT_PARAMS = Object.freeze({
   extent_cited_as: "text",
   content_id: "text"
 });
-var rowOf5 = (family, code) => ({ code, check: family[code].check, translation: family[code].translation });
+var rowOf6 = (family, code) => ({ code, check: family[code].check, translation: family[code].translation });
 var rand7 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 var Citation = class {
   constructor({ record, membership, promotion, content, retrieval, inquiry = null, now } = {}) {
@@ -86069,7 +88592,7 @@ var Citation = class {
         return {
           ok: false,
           reason: "RETIRED_NOT_CITABLE",
-          ...rowOf5(CITE_CHECKS, "RETIRED_NOT_CITABLE"),
+          ...rowOf6(CITE_CHECKS, "RETIRED_NOT_CITABLE"),
           project,
           handle,
           offenders: retiredMembers.sort(),
@@ -86234,7 +88757,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
       return {
         ok: false,
         reason: "BAD_NOTE",
-        ...rowOf5(CITE_CHECKS, "BAD_NOTE"),
+        ...rowOf6(CITE_CHECKS, "BAD_NOTE"),
         detail: "a note is at most 200 characters and cannot contain a quote, a backslash, or a newline"
       };
     if (ontoInquiry && (!this.inquiry || typeof this.inquiry.earned !== "function" || typeof this.inquiry.checkLegExtentGrammar !== "function" || !Array.isArray(this.inquiry.BASIS_ROLES)))
@@ -86253,7 +88776,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
         return {
           ok: false,
           reason: "NO_ROLE",
-          ...rowOf5(CITE_CHECKS, "NO_ROLE"),
+          ...rowOf6(CITE_CHECKS, "NO_ROLE"),
           project,
           handle,
           roles: roles.slice(),
@@ -86264,7 +88787,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
         return {
           ok: false,
           reason: "BAD_ROLE",
-          ...rowOf5(CITE_CHECKS, "BAD_ROLE"),
+          ...rowOf6(CITE_CHECKS, "BAD_ROLE"),
           project,
           handle,
           got: rl,
@@ -86276,7 +88799,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
       return {
         ok: false,
         reason: "ROLE_NOT_APPLICABLE",
-        ...rowOf5(CITE_CHECKS, "ROLE_NOT_APPLICABLE"),
+        ...rowOf6(CITE_CHECKS, "ROLE_NOT_APPLICABLE"),
         project,
         handle,
         got: rl,
@@ -86315,7 +88838,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
       return {
         ok: false,
         reason: "RETIRED_NOT_CITABLE",
-        ...rowOf5(CITE_CHECKS, "RETIRED_NOT_CITABLE"),
+        ...rowOf6(CITE_CHECKS, "RETIRED_NOT_CITABLE"),
         project,
         handle,
         offenders: retiredMembers.sort(),
@@ -86342,7 +88865,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
       return {
         ok: false,
         reason: "SEVERED_EDGE",
-        ...rowOf5(CITE_CHECKS, "SEVERED_EDGE"),
+        ...rowOf6(CITE_CHECKS, "SEVERED_EDGE"),
         project,
         handle,
         offenders: severed.sort(),
@@ -86355,7 +88878,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
       return {
         ok: false,
         reason: "UNKNOWN_EXTENT_FIELD",
-        ...rowOf5(CITE_EXTENT_CHECKS, "UNKNOWN_EXTENT_FIELD"),
+        ...rowOf6(CITE_EXTENT_CHECKS, "UNKNOWN_EXTENT_FIELD"),
         project,
         handle,
         drift: sel.drift,
@@ -86368,7 +88891,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
       return {
         ok: false,
         reason: "EXTENT_NOT_APPLICABLE",
-        ...rowOf5(CITE_EXTENT_CHECKS, "EXTENT_NOT_APPLICABLE"),
+        ...rowOf6(CITE_EXTENT_CHECKS, "EXTENT_NOT_APPLICABLE"),
         project,
         handle,
         got: authored,
@@ -86379,7 +88902,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
       return {
         ok: false,
         reason: "EXTENT_ON_MANY",
-        ...rowOf5(CITE_EXTENT_CHECKS, "EXTENT_ON_MANY"),
+        ...rowOf6(CITE_EXTENT_CHECKS, "EXTENT_ON_MANY"),
         project,
         handle,
         offenders: add.slice().sort(),
@@ -86393,7 +88916,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
         return {
           ok: false,
           reason: "BAD_EXTENT_VALUE",
-          ...rowOf5(CITE_EXTENT_CHECKS, "BAD_EXTENT_VALUE"),
+          ...rowOf6(CITE_EXTENT_CHECKS, "BAD_EXTENT_VALUE"),
           project,
           handle,
           field: k,
@@ -86597,12 +89120,12 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     };
   }
 };
-var instances20 = /* @__PURE__ */ new WeakMap();
+var instances22 = /* @__PURE__ */ new WeakMap();
 function inquiryServices2(k) {
   return { earned: (subject, targets, contentIds) => k.earned(subject, targets, contentIds), checkLegExtentGrammar, BASIS_ROLES };
 }
 function citationOf(host, deps) {
-  let c = instances20.get(host);
+  let c = instances22.get(host);
   if (!c) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -86612,7 +89135,7 @@ function citationOf(host, deps) {
     const retrieval = d.retrieval || retrievalOf(host, { record, membership, promotion });
     const inquiry = d.inquiry || inquiryServices2(inquiryOf(host, { record, membership, promotion, content }));
     c = new Citation({ ...d, record, membership, promotion, content, retrieval, inquiry });
-    instances20.set(host, c);
+    instances22.set(host, c);
   }
   return c;
 }
@@ -86833,12 +89356,12 @@ var AffordanceFacts = class {
     };
   }
 };
-var instances21 = /* @__PURE__ */ new WeakMap();
+var instances23 = /* @__PURE__ */ new WeakMap();
 function affordancesOf(host, deps) {
-  let a = instances21.get(host);
+  let a = instances23.get(host);
   if (!a) {
     a = new AffordanceFacts(host, deps);
-    instances21.set(host, a);
+    instances23.set(host, a);
   }
   return a;
 }
@@ -87095,7 +89618,16 @@ var VOCABULARIES = {
   plurality_differences: PLURALITY_DIFFERENCES,
   resolution_kinds: RESOLUTION_KINDS,
   norm_canons: NORM_CANONS,
-  dismissal_reasons: DISMISSAL_REASONS
+  dismissal_reasons: DISMISSAL_REASONS,
+  /* R30 (K921, T21): what a member offers when a template is drafted, filed under and reviewed, and when a local fact
+     is acted on and read — each the array its owner refuses against (TEMPLATE_USE_REFUSED, REVIEW_REFUSED,
+     FACT_ACT_REFUSED) or answers in (a version's state, a fact's status), so a surface offers a choice before a member
+     is refused it. */
+  template_states: TEMPLATE_STATES,
+  template_uses: TEMPLATE_USES2,
+  template_review_outcomes: REVIEW_OUTCOMES2,
+  local_fact_acts: LOCAL_FACT_ACTS,
+  local_fact_statuses: LOCAL_FACT_STATUSES
 };
 function vocabulariesFor(kinds) {
   const ok2 = Array.isArray(kinds) && kinds.length > 0 && kinds.every((k) => typeof k === "string" && k.length > 0);
@@ -87259,6 +89791,13 @@ var RUNGS2 = {
      statement, the earlier kept (actions R52). */
   actionhold: "reasoned",
   // HOLD_REFUSED (actions R52, C-117.21: a hold stated without its reason)
+  /* R30 (K921, T21), on R27's rule: a template's retirement (or a draft's withdrawal) asks its reason and stands, and an
+     approver's later act supersedes nothing; a member's confirmation, correction or dispute of a local fact asks how
+     they checked it, and a later act supersedes it on read, as `actionrisktier`'s revision does. */
+  templateretire: "reasoned",
+  // TEMPLATE_REASON_REFUSED (filing-templates R11)
+  factconfirm: "reasoned",
+  // FACT_HOW_REFUSED (local-facts R1)
   /* The version pair whose target state is in VERSION_REASON_REQUIRED. The
      OTHER FOUR version acts route through the SAME `#moveVersionState` and the
      SAME `VERSION_NO_REASON` refusal, and the branch DOES NOT FIRE for them —
@@ -87266,7 +89805,7 @@ var RUNGS2 = {
      accepted, revert → suggested, current → null, hide → null, none of which is
      in the array. A classifier that graded these six by finding the code in the
      shared helper would have promoted four ops to a rung the store does not
-     enforce; the suite therefore reads the exported predicate, not the text. */
+     enforce; R19's drive therefore performs the acts, never reading the text. */
   versionreject: "reasoned",
   // VERSION_REASON_REQUIRED includes 'rejected'
   versionconsider: "reasoned",
@@ -87601,7 +90140,7 @@ var RUNG_ABSENT = {
      account), and no published act takes any of them back. `actioncreate` is a member's chosen act, not `promote`'s
      substrate, though it rides the same write: `entitycreate`'s ground. */
   communicationprepare: { ground: "undetermined", is: "a machine or a member prepares a draft message, briefing or statement for an action, stored apart and labelled as its preparer's; never sent until a member approves it, `filingprepare`'s ground (filings R23)" },
-  templatesave: { ground: "undetermined", is: "a member keeps an approved draft, or their derivative of it, as a named template of the group's; no machine writes one (filings R26)" },
+  templatesave: { ground: "undetermined", is: "a member starts a template draft (or a draft of a new version of a named template) from an approved filing draft, handed to the template library's draft act; no machine writes one (filings R32)" },
   actioncreate: { ground: "undetermined", is: "a member creates an action, the same write as promoting an action document (actions R47)" },
   actionpressure: { ground: "undetermined", is: "a member marks a received correspondence entry as pressure directed at the group, appended to a table of its own and never rewritten; an entry is marked once (actions R48)" },
   /* K727 (T18), on R27's rule: action-plans' acts that ask no authored reason and that no published act takes back —
@@ -87619,7 +90158,20 @@ var RUNG_ABSENT = {
   reminderset: { ground: "caller-owned", is: "a member asks to be reminded of a dated clock entry on a day, or changes or removes their own reminder (action-clocks R4)" },
   reminderanswer: { ground: "caller-owned", is: "a member answers their own due reminder, with a further one or none (action-clocks R6)" },
   /* `export`'s ground: the bytes are already the record's; this hands them over and logs who took them. */
-  counselpacketexport: { ground: "substrate", is: "hands a member a counsel packet version's bytes and records who exported it, when and for which counsel (filings R11)" }
+  counselpacketexport: { ground: "substrate", is: "hands a member a counsel packet version's bytes and records who exported it, when and for which counsel (filings R11)" },
+  /* R30 (K921, T21): the template library's acts. The grant and its revocation are `reviewgrant`'s and `reviewrevoke`'s
+     ground: their subject is WHO MAY READ AND REVIEW one version. The other seven are R27's rule: none asks an authored
+     reason that the act revises what stands, and no published act takes one back — a later version updates, never
+     undoes, and a review or comment is answered by another. */
+  templatereviewgrant: { ground: "credential", is: "a participant of the template's project gives a named non-member a revocable read-comment-and-review door to one draft or in-review version, by a per-grant secret (filing-templates R8)" },
+  templategrantrevoke: { ground: "credential", is: "withdraws a template review grant; the secret then answers as one never issued (filing-templates R8)" },
+  templatedraft: { ground: "undetermined", is: "a member creates a template and its first draft, or a draft of a new version of one, from their own words, a version they may see or a proposal; never offered until reviewed and approved (filing-templates R3)" },
+  templaterevise: { ground: "undetermined", is: "a member revises a draft's text, every earlier revision kept with its author and time, or adopts a proposal's text (filing-templates R4)" },
+  templatepropose: { ground: "undetermined", is: "a machine or a member PROPOSES wording for a template or a kind with its why, stored apart and labelled; a template's text only when a member takes it up (filing-templates R6)" },
+  templatesubmit: { ground: "undetermined", is: "a member moves a draft to review, fixing its text, and names the members asked to review it (filing-templates R7)" },
+  templatereview: { ground: "undetermined", is: "a member, or a professional through a live grant, records one review of a version's present text: no concerns, concerns, or changes requested; a later review of the same text stands in its place, the earlier kept (filing-templates R9)" },
+  templatecomment: { ground: "undetermined", is: "a member, a grant's recipient or a labelled run comments on a version, or a member adds a note; attributed, never edited (filing-templates R12, R13)" },
+  templateapprove: { ground: "undetermined", is: "an approver who is not the version's sole author approves a reviewed version, the earlier approved version marked updated and still offered; or an administrator widens an approved template to the group (filing-templates R10)" }
 };
 var CAPTURE_ACTS = [
   /* op=attest. The verb is "co-attest" because the group is not the only
@@ -88191,8 +90743,8 @@ var ACTS = [
    * all six route through the same `#moveVersionState` and the same
    * `VERSION_NO_REASON` refusal, so anything grading these ops by finding that
    * code in the shared helper would have promoted four of them to a rung the
-   * store does not enforce. `rung-ladder.test.mjs` therefore reads the exported
-   * predicate and `Store.VERSION_ACT_TO`, never the helper's text.
+   * store does not enforce. R19's drive therefore performs the acts (this
+   * module's tests), never reading the helper's text.
    * `versionrevert` and `versionhide` are `reversible` (revert's target state
    * reaches every state it runs from; hide is its own inverse — `hidden=false`).
    * `versionaccept` and `versioncurrent` are `reversible` since R27's ruling
@@ -88497,7 +91049,8 @@ var MACHINE_REFUSALS = {
   /* D-149's act, added at integration by c19-unionfix (2026-09-24): the store refuses a machine BY NAME at it
      (C-32.18, `is-machine-set-laws`), and D-149 landed it in ACTS without this entry — so a machine credential
      was OFFERED "State governing laws" and refused at the act, the DEC-8 disagreement this map exists to
-     prevent. Found when `d311-roster-affordances.test.mjs` gained the drive its fixture guard demanded. */
+     prevent. Found when the old `d311-roster-affordances` suite gained the drive its fixture guard demanded;
+     R20's drive holds it now. */
   actionlaws: "MACHINE_CANNOT_SET_LAWS",
   /* REC-214: the store refuses a machine at the member's revision act by C-32.19's own code, through the one
      helper `promote`'s action block also asks (`#machineRiskTierRefusal`). */
@@ -89137,12 +91690,41 @@ var OPS = frozenTable({
   escalationresume: { classes: ["admin", "member", "probe"], mutating: true },
   escalation: { classes: ["admin", "member", "probe"], mutating: false },
   escalationsdue: { classes: ["admin", "member", "probe"], mutating: false },
-  /* T18 (N-A12, K608; K705): filings' drafted communication (R23), its group templates (R26) and their read. Any
-     credential prepares a communication, labelled (`proposalLabel`); only a member saves a template, a machine refused
-     by name (MACHINE_CANNOT_SAVE_TEMPLATE); the read is viewer-stamped. */
+  /* T18 (N-A12, K608; K705): filings' drafted communication (R23). Any credential prepares a communication, labelled
+     (`proposalLabel`). T21 (K922 (1)): `templatesave` is filings R32's, a member starting a template draft from an
+     approved filing through `filing-templates.templateDraft` (a machine refused by that module, its R3); its spec and
+     stamps are unchanged. The library's read, `templates`, is `filing-templates`' (its R14), declared below. */
   communicationprepare: { classes: ["admin", "member", "probe"], mutating: true },
   templatesave: { classes: ["admin", "member", "probe"], mutating: true },
+  /* T21 (K921, K927; filing-templates R3, R4, R7, R8, R10, R11): the template library's member acts. A machine reaches
+     each and the module refuses it by name (MACHINE_CANNOT_DRAFT_TEMPLATE, MACHINE_CANNOT_APPROVE_TEMPLATE), conclude's
+     posture; `author` (the module's `by` where its R says `by`) and `viewer` stamped. `templatereviewgrant` takes the
+     grant's `secretSha` from the door (control-plane R44), as `reviewgrant` does. */
+  templatedraft: { classes: ["admin", "member", "probe"], mutating: true },
+  templaterevise: { classes: ["admin", "member", "probe"], mutating: true },
+  templatesubmit: { classes: ["admin", "member", "probe"], mutating: true },
+  templatereviewgrant: { classes: ["admin", "member", "probe"], mutating: true },
+  templategrantrevoke: { classes: ["admin", "member", "probe"], mutating: true },
+  templateapprove: { classes: ["admin", "member", "probe"], mutating: true },
+  templateretire: { classes: ["admin", "member", "probe"], mutating: true },
+  /* filing-templates R6: any credential proposes wording (an agent credential by its scope), labelled; `proposer` and
+     `viewer` stamped, `optionpropose`'s posture. */
+  templatepropose: { classes: ["admin", "member", "probe"], mutating: true },
+  /* filing-templates R8, R9, R12–R14: the review grant's doors, `reviewcopy`'s and `reviewcomment`'s posture — public at
+     the class gate because each gates itself: a member by session (`author`), a recipient by the grant's secret
+     (`secretSha`), every other caller the one dead answer (NO_TEMPLATE_GRANT). */
+  templatereview: { classes: null, mutating: true },
+  templatecomment: { classes: null, mutating: true },
+  templateread: { classes: null, mutating: false },
+  templatecomments: { classes: null, mutating: false },
+  /* filing-templates R14 (moved from filings R26, K921): the library's list; viewer-stamped. */
   templates: { classes: ["admin", "member", "probe"], mutating: false },
+  /* T21 (K921; local-facts R1, R2, R4): a member's confirmation, correction or dispute of a profile fact (a machine
+     reaches it and the module refuses it by name, MACHINE_CANNOT_CONFIRM; `by` and `viewer` stamped), and the two reads,
+     viewer-stamped. */
+  factconfirm: { classes: ["admin", "member", "probe"], mutating: true },
+  factstatus: { classes: ["admin", "member", "probe"], mutating: false },
+  factsdue: { classes: ["admin", "member", "probe"], mutating: false },
   /* T18 (N-A12; actions R47, R48, K709): an action's creation as a promotion and its pressure mark, a member's acts
      (the module refuses a machine by name, MACHINE_CANNOT_MARK_PRESSURE; a creation the promotion's own fences); the
      read and the list are viewer-stamped. */
@@ -89216,7 +91798,7 @@ var OPS = frozenTable({
   capturerequests: { classes: ["admin", "member", "probe"], mutating: false },
   /* T6-13 (capture-requests R42): retrying a request the source refused, a member's act on the group's queue. */
   capturerequestretry: { classes: ["admin", "member"], mutating: true },
-  /* PL-11 / D-199: no row names `ai` (asserted); no probe (minting is a member act, C-29.1); the read is wider and
+  /* PL-11 / D-199: no row names `ai` (this module's R2 test); no probe (minting is a member act, C-29.1); the read is wider and
      carries no value. */
   aicredentialmint: { classes: ["admin", "member"], mutating: true },
   aicredentialrevoke: { classes: ["admin", "member"], mutating: true },
@@ -89403,7 +91985,23 @@ var FILINGS_ACTIONS = frozenList([
   "communicationprepare",
   "templatesave"
 ]);
-var FILINGS_READS = frozenList(["counselpacketread", "filingsfor", "availableactions", "templates"]);
+var FILINGS_READS = frozenList(["counselpacketread", "filingsfor", "availableactions"]);
+var FILING_TEMPLATES_ACTIONS = frozenList([
+  "templatedraft",
+  "templaterevise",
+  "templatesubmit",
+  "templatereviewgrant",
+  "templategrantrevoke",
+  "templateapprove",
+  "templateretire"
+]);
+var FILING_TEMPLATES_READS = frozenList(["templates"]);
+var TEMPLATE_PROPOSAL_ACTIONS = frozenList(["templatepropose"]);
+var TEMPLATE_DOOR_ACTIONS = frozenList(["templatereview", "templatecomment"]);
+var TEMPLATE_DOOR_READS = frozenList(["templateread", "templatecomments"]);
+var GRANT_SECRET_ACTIONS = frozenList(["reviewgrant", "templatereviewgrant"]);
+var LOCAL_FACTS_ACTIONS = frozenList(["factconfirm"]);
+var LOCAL_FACTS_READS = frozenList(["factstatus", "factsdue"]);
 var ESCALATION_ACTIONS = frozenList([
   "escalationopen",
   "escalationattach",
@@ -89455,9 +92053,16 @@ var QUERY_AUTHOR_ACTIONS = frozenList([
   ...ESCALATION_ACTIONS,
   ...ACTIONS_ACTIONS,
   ...ACTION_CLOCKS_ACTIONS,
-  ...ACTION_PLANS_ACTIONS
+  ...ACTION_PLANS_ACTIONS,
+  ...FILING_TEMPLATES_ACTIONS
 ]);
-var ACTION_LAYER_ACTIONS = frozenList([...STANDARDS_ACTIONS, ...QUERY_AUTHOR_ACTIONS, ...PLAN_PROPOSAL_ACTIONS]);
+var ACTION_LAYER_ACTIONS = frozenList([
+  ...STANDARDS_ACTIONS,
+  ...QUERY_AUTHOR_ACTIONS,
+  ...PLAN_PROPOSAL_ACTIONS,
+  ...TEMPLATE_PROPOSAL_ACTIONS,
+  ...LOCAL_FACTS_ACTIONS
+]);
 var ACTION_LAYER_READS = frozenList([
   ...STANDARDS_READS,
   ...CONFORMANCE_READS,
@@ -89465,7 +92070,9 @@ var ACTION_LAYER_READS = frozenList([
   ...FILINGS_READS,
   ...ESCALATION_READS,
   ...ACTIONS_READS,
-  ...ACTION_PLANS_READS
+  ...ACTION_PLANS_READS,
+  ...FILING_TEMPLATES_READS,
+  ...LOCAL_FACTS_READS
 ]);
 var PLAN_RUN_SCOPE = Object.freeze({
   reads: frozenList([
@@ -89554,10 +92161,11 @@ var SESSION_OPS = Object.freeze({
        `sess.role === "admin" ? "admin" : "member"`, so `SESSION_OPS.admin`
        does NOT mean *an administrator's session*: it means THE FOUNDER'S
        PASSWORD SESSION AND NOTHING ELSE. An enrolled administrator holds
-       `member:<id>` however their roster row reads —
-       `d270-refusal-truth.test.mjs` records two separate harnesses making
-       exactly that mistake and measuring a split of zero over a plane that
-       had one. So `...GOVERNANCE_ACTIONS` in the ADMIN SET ALONE would have
+       `member:<id>` however their roster row reads — found by D-270, where
+       two separate harnesses made exactly that mistake and measured a split
+       of zero over a plane that had one; admission's tests
+       (`test/m/admission/admission.test.mjs`) now prove the founder's set is
+       the founder's session alone. So `...GOVERNANCE_ACTIONS` in the ADMIN SET ALONE would have
        given the §4.7 vote to ONE person, the founder, while the operator
        fence below took the bearer route away from everybody else — and §4.7
        needs *the consensus of all existing administrators*. A group of three
@@ -89682,6 +92290,16 @@ var SESSION_OPS = Object.freeze({
     ...PLAN_PROPOSAL_ACTIONS,
     /* N345: contradiction's six acts on a candidate, a member's own acts in their own name, in BOTH sets. */
     ...CONTRADICTION_ACTIONS,
+    /* T21 (K921, K927; op-declarations R8): every op of filing-templates and local-facts — the member
+       acts, the proposal, the grant's doors (public at the class gate; a member's session reaches them
+       too) and the reads — in BOTH sets, because an administrator is a member too. */
+    ...FILING_TEMPLATES_ACTIONS,
+    ...FILING_TEMPLATES_READS,
+    ...TEMPLATE_PROPOSAL_ACTIONS,
+    ...TEMPLATE_DOOR_ACTIONS,
+    ...TEMPLATE_DOOR_READS,
+    ...LOCAL_FACTS_ACTIONS,
+    ...LOCAL_FACTS_READS,
     /* N314 (T12, monitoring R30): the daemon's pause, every member session's to ask; monitoring refuses a
        non-administrator by name. */
     "monitorpause",
@@ -89789,6 +92407,13 @@ var SESSION_OPS = Object.freeze({
     ...ACTION_PLANS_ACTIONS,
     ...PLAN_PROPOSAL_ACTIONS,
     ...CONTRADICTION_ACTIONS,
+    ...FILING_TEMPLATES_ACTIONS,
+    ...FILING_TEMPLATES_READS,
+    ...TEMPLATE_PROPOSAL_ACTIONS,
+    ...TEMPLATE_DOOR_ACTIONS,
+    ...TEMPLATE_DOOR_READS,
+    ...LOCAL_FACTS_ACTIONS,
+    ...LOCAL_FACTS_READS,
     ...IDENTITY_ACTIONS,
     ...GOVERNANCE_ACTIONS,
     ...CUSTODIAL_ACTIONS,
@@ -90258,8 +92883,8 @@ var NEEDS = Object.freeze({
      section 4 process, and §5 says an administrator holds every working
      capability and their own field is not consulted at all — so a capability
      test here would be a test of a field the design says nobody reads.
-     PRESENT rather than absent because both totality guards must SEE them: the
-     capability suite fails on a session-reachable mutating op that is missing
+     PRESENT rather than absent because both totality guards must SEE them: this
+     module's R3 test fails on a session-reachable mutating op that is missing
      from this table, and `affordances.mjs` requires every NEEDS key to be an ACT
      or a NAMED non-act — all three are named there with their reasons. */
   membercaps: null,
@@ -90529,7 +93154,32 @@ var NEEDS = Object.freeze({
      of it. What bounds the two is the module's: a machine refused by name, and only the member who set a reminder
      changes or answers it. Present, null, so the capability totality sees each. */
   reminderset: null,
-  reminderanswer: null
+  reminderanswer: null,
+  /* T21 (K921, K927; op-declarations R8): the template library's member acts and the proposal write its rows in a
+     member's name (or, for the proposal, a labelled machine's), `templatesave`'s capability and reason; confirming,
+     correcting or disputing a profile fact writes local-facts' row in the member's name, the same. NO fifth capability
+     token (CAPABILITIES.md §4): who may approve, retire or grant is the module's, asked of the stamped author. */
+  templatedraft: "contribute",
+  templaterevise: "contribute",
+  templatesubmit: "contribute",
+  templatereviewgrant: "contribute",
+  templategrantrevoke: "contribute",
+  templateapprove: "contribute",
+  templateretire: "contribute",
+  templatepropose: "contribute",
+  factconfirm: "contribute",
+  /* NO CAPABILITY for the grant's two mutating doors: a recipient reaches them by the secret, with no session to hold a
+     capability (`reviewcomment`'s posture), and a member's review or comment is judged by the module, asked of who may
+     see the template. Nor for the five reads, on `contradictionpairs`' reasoning (asking the record is reading it).
+     PRESENT, null, because affordances names all seven in NON_ACTS (its R30) and its totality reads a NON_ACTS key this
+     table does not carry as stale (its R12), K516's precedent. */
+  templatereview: null,
+  templatecomment: null,
+  templateread: null,
+  templatecomments: null,
+  templates: null,
+  factstatus: null,
+  factsdue: null
 });
 var ACT_GATE = Object.freeze({
   needs: (id) => (Object.hasOwn(NEEDS, id) ? NEEDS[id] : null) ?? null,
@@ -90552,8 +93202,8 @@ var UNATTENDED_BY_DECISION = Object.freeze({
 });
 
 // src/admission/checks.mjs
-var checks_exports29 = {};
-__export(checks_exports29, {
+var checks_exports31 = {};
+__export(checks_exports31, {
   ADMISSION_CHECKS: () => ADMISSION_CHECKS,
   AI_SCOPE_CHECKS: () => AI_SCOPE_CHECKS,
   GROUP_IDENTITY_FENCE_CHECKS: () => GROUP_IDENTITY_FENCE_CHECKS,
@@ -90797,17 +93447,17 @@ var GROUP_IDENTITY_FENCE_CHECKS = {
 // src/admission/index.mjs
 var SCRATCH = "scratch";
 var NAMESPACES = Object.freeze(["bio", SCRATCH]);
-function rowOf6(table2, family, code) {
+function rowOf7(table2, family, code) {
   const row2 = table2[code];
   if (!row2 || typeof row2.translation !== "string" || !row2.translation)
     throw new Error(`admission: ${code} has no ${family} row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
   return { code, check: row2.check, translation: row2.translation };
 }
-var admissionRow = (code) => rowOf6(ADMISSION_CHECKS, "ADMISSION_CHECKS", code);
-var namespaceRow = (code) => rowOf6(NAMESPACE_CHECKS, "NAMESPACE_CHECKS", code);
-var aiScopeRow = (code) => rowOf6(AI_SCOPE_CHECKS, "AI_SCOPE_CHECKS", code);
-var operatorFenceRow = (code) => rowOf6(OPERATOR_FENCE_CHECKS, "OPERATOR_FENCE_CHECKS", code);
-var identityFenceRow = (code) => rowOf6(GROUP_IDENTITY_FENCE_CHECKS, "GROUP_IDENTITY_FENCE_CHECKS", code);
+var admissionRow = (code) => rowOf7(ADMISSION_CHECKS, "ADMISSION_CHECKS", code);
+var namespaceRow = (code) => rowOf7(NAMESPACE_CHECKS, "NAMESPACE_CHECKS", code);
+var aiScopeRow = (code) => rowOf7(AI_SCOPE_CHECKS, "AI_SCOPE_CHECKS", code);
+var operatorFenceRow = (code) => rowOf7(OPERATOR_FENCE_CHECKS, "OPERATOR_FENCE_CHECKS", code);
+var identityFenceRow = (code) => rowOf7(GROUP_IDENTITY_FENCE_CHECKS, "GROUP_IDENTITY_FENCE_CHECKS", code);
 function namespaceGate(url) {
   if (!url.searchParams.has("store")) return null;
   const asked = url.searchParams.get("store");
@@ -91207,61 +93857,61 @@ var CREDENTIAL_KINDS2 = Object.freeze(["login", "user-agent", "other"]);
 var CREDENTIAL_SCOPES = Object.freeze(["member", "project", "group"]);
 var REVOCATION = "(revocation)";
 var CREDENTIALS_TABLE = "capture_credentials";
-var at11 = (fn, region) => `src/capture-sources/credentials.mjs ${fn} > ${region}`;
+var at13 = (fn, region) => `src/capture-sources/credentials.mjs ${fn} > ${region}`;
 var CAPTURE_CREDENTIAL_CHECKS = Object.freeze({
   CAPTURE_CREDENTIAL_NOT_A_MEMBER: {
     check: "C-105.1",
-    where: at11("credentialSupply", "is-credential-supplier-member"),
+    where: at13("credentialSupply", "is-credential-supplier-member"),
     translation: "Only an active member may supply a credential."
   },
   CAPTURE_CREDENTIAL_BAD_KIND: {
     check: "C-105.2",
-    where: at11("credentialSupply", "is-credential-kind"),
+    where: at13("credentialSupply", "is-credential-kind"),
     translation: "A credential's kind is one of login, user-agent or other."
   },
   CAPTURE_CREDENTIAL_BAD_HOST: {
     check: "C-105.3",
-    where: at11("credentialSupply", "is-credential-host"),
+    where: at13("credentialSupply", "is-credential-host"),
     translation: "A credential is for one host, named as a bare host name: no scheme, path, port or user part."
   },
   CAPTURE_CREDENTIAL_BAD_SCOPE: {
     check: "C-105.4",
-    where: at11("credentialSupply", "is-credential-scope"),
+    where: at13("credentialSupply", "is-credential-scope"),
     translation: "A credential's scope is member, project or group, and only a project-scoped credential names a project."
   },
   CAPTURE_CREDENTIAL_NO_PROJECT: {
     check: "C-105.5",
-    where: at11("credentialSupply", "is-credential-project"),
+    where: at13("credentialSupply", "is-credential-project"),
     translation: "A project-scoped credential names a project the record holds."
   },
   CAPTURE_CREDENTIAL_NO_SECRET: {
     check: "C-105.6",
-    where: at11("credentialSupply", "is-credential-secret"),
+    where: at13("credentialSupply", "is-credential-secret"),
     translation: "A credential carries a non-empty secret: the login, setting or other value the site asked for."
   },
   CAPTURE_CREDENTIAL_NOT_PERMITTED: {
     check: "C-105.7",
-    where: at11("#r63Refusal", "is-credential-permitted"),
+    where: at13("#r63Refusal", "is-credential-permitted"),
     translation: "This member may not supply or withdraw a credential at that scope."
   },
   CAPTURE_CREDENTIAL_NO_KEY: {
     check: "C-105.8",
-    where: at11("credentialSupply", "is-credential-key-bound"),
+    where: at13("credentialSupply", "is-credential-key-bound"),
     translation: "No encryption key is bound to this instance, so no credential is stored or used."
   },
   CAPTURE_CREDENTIAL_NO_SUCH: {
     check: "C-105.9",
-    where: at11("credentialWithdraw", "is-credential-seen"),
+    where: at13("credentialWithdraw", "is-credential-seen"),
     translation: "No credential by that id is visible to you here. One that does not exist and one you may not see are answered alike, so this is not a hint either way."
   },
   CAPTURE_CREDENTIAL_SUPPLY_FAILED: {
     check: "C-105.10",
-    where: at11("credentialSupply", "is-credential-stored"),
+    where: at13("credentialSupply", "is-credential-stored"),
     translation: "The credential could not be encrypted and stored, so nothing was written. Nothing you entered is repeated here; try again, and if it keeps failing tell an administrator."
   },
   CAPTURE_CREDENTIAL_WITHDRAW_FAILED: {
     check: "C-105.11",
-    where: at11("credentialWithdraw", "is-credential-withdrawn"),
+    where: at13("credentialWithdraw", "is-credential-withdrawn"),
     translation: "The credential could not be read or withdrawn just now, so nothing was changed. Try again, and if it keeps failing tell an administrator."
   }
 });
@@ -91279,7 +93929,7 @@ var CAPTURE_CREDENTIALS_SCHEMA = `CREATE TABLE IF NOT EXISTS ${CREDENTIALS_TABLE
   withdrawn_at TEXT,
   withdrawn_by TEXT
 )`;
-function refusal10(code, detail) {
+function refusal11(code, detail) {
   const row2 = CAPTURE_CREDENTIAL_CHECKS[code];
   return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail };
 }
@@ -91303,7 +93953,7 @@ var b643 = (bytes2) => {
   return btoa(s);
 };
 var unb643 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
-var utf82 = (s) => new TextEncoder().encode(s);
+var utf83 = (s) => new TextEncoder().encode(s);
 var stamp = (ms2) => new Date(ms2).toISOString().replace(/\.\d+Z$/, "Z");
 var OF7 = /* @__PURE__ */ new WeakMap();
 function credentialsOf2(ctx, { key = null, record = null, membership = null, now = null } = {}) {
@@ -91355,9 +94005,9 @@ var CaptureCredentials = class _CaptureCredentials {
   async #aesKey() {
     if (!this.#secret) return null;
     if (!this.#key) {
-      const base = await crypto.subtle.importKey("raw", utf82(this.#secret), "HKDF", false, ["deriveKey"]);
+      const base = await crypto.subtle.importKey("raw", utf83(this.#secret), "HKDF", false, ["deriveKey"]);
       this.#key = await crypto.subtle.deriveKey(
-        { name: "HKDF", hash: "SHA-256", salt: utf82("civicos capture-sources"), info: utf82("capture credentials v1") },
+        { name: "HKDF", hash: "SHA-256", salt: utf83("civicos capture-sources"), info: utf83("capture credentials v1") },
         base,
         { name: "AES-GCM", length: 256 },
         false,
@@ -91367,7 +94017,7 @@ var CaptureCredentials = class _CaptureCredentials {
     return this.#key;
   }
   static #aad(id, scope, project) {
-    return utf82(JSON.stringify([id, scope, project ?? null]));
+    return utf83(JSON.stringify([id, scope, project ?? null]));
   }
   /* ---- who is who (membership) ---- */
   #active(memberId) {
@@ -91388,13 +94038,13 @@ var CaptureCredentials = class _CaptureCredentials {
   #r63Refusal(by, { scope, project, row: row2 = null }) {
     if (row2 === null) {
       if (scope === "project" && !this.#members.isProjectEditor(project, by))
-        return refusal10("CAPTURE_CREDENTIAL_NOT_PERMITTED", "only an editor of the project may supply a credential for it");
+        return refusal11("CAPTURE_CREDENTIAL_NOT_PERMITTED", "only an editor of the project may supply a credential for it");
       return null;
     }
     if (row2.supplied_by === by) return null;
     if (row2.scope === "project")
-      return this.#members.isProjectOwner(row2.project, by) ? null : refusal10("CAPTURE_CREDENTIAL_NOT_PERMITTED", "only its supplier or an owner of its project may withdraw a project credential");
-    return this.#members.isAdministrator(by) ? null : refusal10("CAPTURE_CREDENTIAL_NOT_PERMITTED", `only its supplier or an administrator may withdraw a ${row2.scope} credential`);
+      return this.#members.isProjectOwner(row2.project, by) ? null : refusal11("CAPTURE_CREDENTIAL_NOT_PERMITTED", "only its supplier or an owner of its project may withdraw a project credential");
+    return this.#members.isAdministrator(by) ? null : refusal11("CAPTURE_CREDENTIAL_NOT_PERMITTED", `only its supplier or an administrator may withdraw a ${row2.scope} credential`);
   }
   /* ---- the listing entry (R58): never the secret, any part of it, its length or a digest ---- */
   static #entry(r) {
@@ -91444,33 +94094,33 @@ var CaptureCredentials = class _CaptureCredentials {
     const { kind, host, secret, scope, project, by } = args && typeof args === "object" ? args : {};
     try {
       if (!this.#active(by))
-        return refusal10("CAPTURE_CREDENTIAL_NOT_A_MEMBER", "the supplier named is not an active member of this instance");
+        return refusal11("CAPTURE_CREDENTIAL_NOT_A_MEMBER", "the supplier named is not an active member of this instance");
       if (!CREDENTIAL_KINDS2.includes(kind))
-        return refusal10("CAPTURE_CREDENTIAL_BAD_KIND", `the kind given is not one of ${CREDENTIAL_KINDS2.join(", ")}`);
+        return refusal11("CAPTURE_CREDENTIAL_BAD_KIND", `the kind given is not one of ${CREDENTIAL_KINDS2.join(", ")}`);
       const h = hostNameOf(host);
       if (!h)
-        return refusal10(
+        return refusal11(
           "CAPTURE_CREDENTIAL_BAD_HOST",
           "the host given is not a bare host name (a credential is for the one host the source that refused is served from)"
         );
       const given = project !== void 0 && project !== null;
       if (!CREDENTIAL_SCOPES.includes(scope) || given && scope !== "project")
-        return refusal10("CAPTURE_CREDENTIAL_BAD_SCOPE", given && CREDENTIAL_SCOPES.includes(scope) ? `a ${scope} credential names no project` : `the scope given is not one of ${CREDENTIAL_SCOPES.join(", ")}`);
+        return refusal11("CAPTURE_CREDENTIAL_BAD_SCOPE", given && CREDENTIAL_SCOPES.includes(scope) ? `a ${scope} credential names no project` : `the scope given is not one of ${CREDENTIAL_SCOPES.join(", ")}`);
       if (scope === "project") {
         const b = typeof project === "string" && project !== "" ? this.#core.bundleInfo(project) : null;
         if (!b || b.type !== "project")
-          return refusal10("CAPTURE_CREDENTIAL_NO_PROJECT", "the project named is not a project this record holds");
+          return refusal11("CAPTURE_CREDENTIAL_NO_PROJECT", "the project named is not a project this record holds");
       }
       if (typeof secret !== "string" || secret === "")
-        return refusal10("CAPTURE_CREDENTIAL_NO_SECRET", "no secret was given");
+        return refusal11("CAPTURE_CREDENTIAL_NO_SECRET", "no secret was given");
       const denied = this.#r63Refusal(by, { scope, project });
       if (denied) return denied;
       const key = await this.#aesKey();
       if (!key)
-        return refusal10("CAPTURE_CREDENTIAL_NO_KEY", "no encryption key is bound to this instance, so nothing is stored in the clear");
+        return refusal11("CAPTURE_CREDENTIAL_NO_KEY", "no encryption key is bound to this instance, so nothing is stored in the clear");
       return await this.#store({ kind, h, secret, scope, project, by, key });
     } catch {
-      return refusal10(
+      return refusal11(
         "CAPTURE_CREDENTIAL_SUPPLY_FAILED",
         "the credential could not be encrypted and stored, so nothing was written"
       );
@@ -91485,7 +94135,7 @@ var CaptureCredentials = class _CaptureCredentials {
     const ct = new Uint8Array(await crypto.subtle.encrypt(
       { name: "AES-GCM", iv, additionalData: _CaptureCredentials.#aad(id, scope, proj) },
       key,
-      utf82(secret)
+      utf83(secret)
     ));
     const at25 = stamp(this.#now());
     this.#core.transact(() => {
@@ -91561,7 +94211,7 @@ var CaptureCredentials = class _CaptureCredentials {
     try {
       const found = typeof credential === "string" && credential !== "" ? this.#one(`SELECT * FROM ${CREDENTIALS_TABLE} WHERE credential_id=?`, credential) : null;
       if (!found || !this.#sees(by, found))
-        return refusal10("CAPTURE_CREDENTIAL_NO_SUCH", "no credential by that id is visible to this member");
+        return refusal11("CAPTURE_CREDENTIAL_NO_SUCH", "no credential by that id is visible to this member");
       const [row2] = this.#sweep([found]);
       const denied = this.#r63Refusal(by, { row: row2 });
       if (denied) return denied;
@@ -91569,7 +94219,7 @@ var CaptureCredentials = class _CaptureCredentials {
       const at25 = this.#core.transact(() => this.#destroy(row2.credential_id, by));
       return { ok: true, already: false, withdrawn: _CaptureCredentials.#entry({ ...row2, withdrawn_at: at25, withdrawn_by: by }) };
     } catch {
-      return refusal10(
+      return refusal11(
         "CAPTURE_CREDENTIAL_WITHDRAW_FAILED",
         "the credential could not be read or withdrawn, so nothing was changed"
       );
@@ -91625,8 +94275,8 @@ var CaptureCredentials = class _CaptureCredentials {
 };
 
 // src/run-rules/checks.mjs
-var checks_exports30 = {};
-__export(checks_exports30, {
+var checks_exports32 = {};
+__export(checks_exports32, {
   AI_RUNS_CHECKS: () => AI_RUNS_CHECKS,
   AI_RUNS_CONTEXT_CHECKS: () => AI_RUNS_CONTEXT_CHECKS,
   AI_RUN_ACT_SHAPE_CHECKS: () => AI_RUN_ACT_SHAPE_CHECKS,
@@ -92051,8 +94701,8 @@ var AI_RUNS_CHECKS = Object.freeze({
 });
 
 // src/run-productions/checks.mjs
-var checks_exports31 = {};
-__export(checks_exports31, {
+var checks_exports33 = {};
+__export(checks_exports33, {
   EXTRACT_PROPOSE_CHECKS: () => EXTRACT_PROPOSE_CHECKS,
   EXTRACT_PROPOSE_CHECK_KEYS: () => EXTRACT_PROPOSE_CHECK_KEYS,
   ROWLESS_CODES: () => ROWLESS_CODES,
@@ -92281,8 +94931,8 @@ var SUGGEST_CHECKS = pick(SUGGEST_ROWS, SUGGEST_CHECK_KEYS);
 var EXTRACT_PROPOSE_CHECKS = pick(EXTRACT_PROPOSE_ROWS, EXTRACT_PROPOSE_CHECK_KEYS);
 
 // src/capture-requests/checks.mjs
-var checks_exports32 = {};
-__export(checks_exports32, {
+var checks_exports34 = {};
+__export(checks_exports34, {
   CAPTURE_PURPOSES: () => CAPTURE_PURPOSES,
   CAPTURE_REQUEST_CHECKS: () => CAPTURE_REQUEST_CHECKS,
   CAPTURE_SOURCE_CHECKS: () => CAPTURE_SOURCE_CHECKS,
@@ -92521,14 +95171,14 @@ __export(skilldoctrine_exports, {
 });
 
 // src/run-rules/skill-version.mjs
-function refusal11(key, detail) {
+function refusal12(key, detail) {
   const row2 = AI_RUN_OWN_CHECKS[key];
   return { ok: false, code: key, check: row2.check, translation: row2.translation, detail };
 }
 function checkSkillVersion(version) {
   const v = typeof version === "string" ? version.trim() : "";
   if (/^[^\s@]+@[^\s@]+$/.test(v)) return null;
-  return refusal11("AI_RUN_SKILL_VERSION_UNNAMED", !v ? "this run named no skill version. \xA711 records the conditions a run was formed under \u2014 the manifest in force, the standard pair, and the skill version it ran under \u2014 because a version is only interpretable against them" : `'${v.slice(0, 60)}' names no pack. A skill version is <pack>@<edition>, and a bare edition cannot be read once a second pack exists \u2014 it looks like an answer and identifies nothing`);
+  return refusal12("AI_RUN_SKILL_VERSION_UNNAMED", !v ? "this run named no skill version. \xA711 records the conditions a run was formed under \u2014 the manifest in force, the standard pair, and the skill version it ran under \u2014 because a version is only interpretable against them" : `'${v.slice(0, 60)}' names no pack. A skill version is <pack>@<edition>, and a bare edition cannot be read once a second pack exists \u2014 it looks like an answer and identifies nothing`);
 }
 
 // src/run-rules/rules.mjs
@@ -92598,7 +95248,7 @@ var RUN_CONTEXTS = {
   inquiry: "a question the group is working on, which any project may draw on",
   project: "a body of work with its own members, its own bar and its own lens"
 };
-function refusal12(key, detail, extra = null) {
+function refusal13(key, detail, extra = null) {
   const row2 = AI_RUN_CHECKS2[key];
   return {
     ok: false,
@@ -92613,7 +95263,7 @@ function checkBound(bound) {
   const b = bound == null ? "" : String(bound);
   if (Object.prototype.hasOwnProperty.call(RUN_BOUNDS, b)) return null;
   if (Object.prototype.hasOwnProperty.call(RUN_ENDINGS, b)) return null;
-  return refusal12(
+  return refusal13(
     "AI_RUN_BOUND_UNNAMED",
     `'${b || "(absent)"}' names no bound and no ending. Bounds: ${Object.keys(RUN_BOUNDS).join(", ")}; endings: ${Object.keys(RUN_ENDINGS).join(", ")} (\xA714b.6)`
   );
@@ -92624,14 +95274,14 @@ function checkConsume(entries, { seed = false, allowance = false, map = false, l
   if (list2) {
     if (entries == null) return null;
     if (!Array.isArray(entries))
-      return refusal12(
+      return refusal13(
         "AI_RUN_BOUND_UNKNOWN",
         `\`bounds\` was ${typeof entries === "object" ? "a map" : `a ${typeof entries}`}: it is a list of { bound, allowed, unit }, one per bound the run is held to (\xA714b.6). Nothing was written`,
         { bound: null }
       );
     const bad = entries.findIndex((e) => !e || typeof e !== "object" || Array.isArray(e));
     if (bad >= 0)
-      return refusal12(
+      return refusal13(
         "AI_RUN_BOUND_UNKNOWN",
         `\`bounds[${bad}]\` is ${(JSON.stringify(entries[bad]) ?? String(entries[bad])).slice(0, 60)}, not a { bound, allowed, unit } entry, so it names no bound (\xA714b.6). Nothing was written`,
         { bound: null }
@@ -92644,7 +95294,7 @@ function checkConsume(entries, { seed = false, allowance = false, map = false, l
   if (map) {
     if (entries == null) return null;
     if (typeof entries !== "object" || Array.isArray(entries))
-      return refusal12(
+      return refusal13(
         "AI_RUN_BOUND_UNKNOWN",
         `\`consume\` was ${Array.isArray(entries) ? "an array" : `a ${typeof entries}`} (${(JSON.stringify(entries) ?? String(entries)).slice(0, 80)}): it is a map from a bound's name to the figure spent on it, e.g. { fetches: 1 }, and an array's keys are positions, which name no bound (\xA714b.6). Nothing was written`,
         { bound: null }
@@ -92654,33 +95304,33 @@ function checkConsume(entries, { seed = false, allowance = false, map = false, l
   for (const [k, v] of Array.isArray(entries) ? entries : []) {
     const b = String(k);
     if (!Object.prototype.hasOwnProperty.call(RUN_BOUNDS, b))
-      return refusal12(
+      return refusal13(
         "AI_RUN_BOUND_UNKNOWN",
         `'${b === "" ? "(absent)" : b.slice(0, 60)}' names no bound of a run. The bounds a caller spends are ` + Object.keys(RUN_BOUNDS).filter((x) => !PLANE_COUNTED_BOUNDS.includes(x) && !PLANE_DECIDED_BOUNDS.includes(x)).join(", ") + ` (\xA714b.6); a figure for a bound that does not exist counts nothing. Nothing was written`,
         { bound: b }
       );
     if (PLANE_DECIDED_BOUNDS.includes(b))
-      return refusal12(
+      return refusal13(
         "AI_RUN_BOUND_PLANE_COUNTED",
         `'${b}' is decided by the plane \u2014 a run's lease lapses on the clock, read by the reaper, and nothing spends it (\xA714b.6) \u2014 so no figure for it, not even a zero, is the caller's to send or a member's to declare. Nothing was written`,
         { bound: b }
       );
     if (allowance && (v == null || v === 0))
-      return refusal12(
+      return refusal13(
         "AI_RUN_BOUND_NO_ALLOWANCE",
         `'${b}' was declared with ${v == null ? "no `allowed`" : "`allowed: 0`"}: a declared bound states how much the run may spend, a whole number of one or more, and a bound the run is not held to is left out of \`bounds\` (\xA714b item 6). A zero allowance would be read as no ceiling at all. Nothing was written`,
         { bound: b }
       );
     if (seed && v == null) continue;
     if (!(typeof v === "number" && Number.isSafeInteger(v) && v >= 0))
-      return refusal12(
+      return refusal13(
         "AI_RUN_CONSUME_INVALID",
         `'${b}' was ${allowance ? "declared an allowance of" : "given"} ${typeof v === "number" ? String(v) : (JSON.stringify(v) ?? String(v)).slice(0, 60)} \u2014 a bound's figure is a whole number of zero or more, ${allowance ? "allowed or spent" : "and a count never goes down"} (\xA714b.6). Nothing was written`,
         { bound: b }
       );
     if (allowance) continue;
     if (v !== 0 && PLANE_COUNTED_BOUNDS.includes(b))
-      return refusal12(
+      return refusal13(
         "AI_RUN_BOUND_PLANE_COUNTED",
         `'${b}' is counted by the plane as the run's work lands, never by the caller (\xA711 item 5 rule 2, SK-8), so a figure sent for it could only disagree with the count. Nothing was written`,
         { bound: b }
@@ -92700,7 +95350,7 @@ function checkRunState(state) {
   if (typeof json6 !== "string") return null;
   const bytes2 = new TextEncoder().encode(json6).length;
   if (bytes2 <= AI_RUN_STATE_MAX_BYTES) return null;
-  return refusal12(
+  return refusal13(
     "AI_RUN_STATE_TOO_LARGE",
     `the run's state is ${bytes2} bytes as JSON, over the ${AI_RUN_STATE_MAX_BYTES} a run may keep: \`state\` is the run's resumable work list (\xA714b.7), not what it read. Nothing was written`,
     { bytes: bytes2, limit: AI_RUN_STATE_MAX_BYTES }
@@ -92769,7 +95419,7 @@ function projectGate({
       why: PROJECT_GATE_GROUNDS.PARTICIPANT,
       projects: all.length
     };
-  return refusal12(
+  return refusal13(
     "AI_RUN_NOT_PROJECT_MEMBER",
     `starting or continuing a run over ${label} is work inside that project, and this account has not joined it (DEC-63). This is not a capability: holding contribute would not change it, and an owner of that project inviting you would`
   );
@@ -92778,12 +95428,12 @@ function checkRunContextKind({ contextType = null, contextId = null, found = nul
   const said2 = String(contextType ?? "");
   const id = JSON.stringify(String(contextId ?? "").slice(0, 200));
   if (!Object.prototype.hasOwnProperty.call(RUN_CONTEXTS, said2))
-    return refusal12(
+    return refusal13(
       "AI_RUN_NO_SUCH_CONTEXT",
       `${JSON.stringify(said2.slice(0, 60))} is not a kind of run context: a run is over a question ("inquiry") or a project ("project"), and nothing else, so no run over ${id} was opened`
     );
   if (found !== null && found !== void 0 && found === said2) return null;
-  return refusal12(
+  return refusal13(
     "AI_RUN_NO_SUCH_CONTEXT",
     `no ${JSON.stringify(said2)} answers to ${id} here. A run's context must be the kind the run names; something you cannot see answers exactly as something that does not exist (Membership Architecture v2 \xA77.9)`
   );
@@ -92798,7 +95448,7 @@ function runPrincipalGate({ caller = null, principal = null, act = null } = {}) 
   const who2 = runPrincipalOf(caller), owner = runPrincipalOf(principal);
   if (who2 && owner && who2 === owner) return null;
   const doing = typeof act === "string" && act.trim() ? act.trim() : "ticking or closing a run";
-  return refusal12(
+  return refusal13(
     "AI_RUN_NOT_PRINCIPAL",
     `${doing} is its principal's act \u2014 the member who opened it, or a machine credential that member minted \u2014 and this account is not that principal (DEC-24: a run's work is attributed to its principal). A run nobody drives ends on its own lease and bounds`
   );
@@ -92997,7 +95647,7 @@ CREATE TABLE IF NOT EXISTS inquiry_run_surfacings (
 
 // src/ai-runs/index.mjs
 var ROW2 = (code) => AI_RUNS_CHECKS[code];
-var safeJson14 = (s) => {
+var safeJson15 = (s) => {
   try {
     return s == null ? null : JSON.parse(s);
   } catch {
@@ -94569,7 +97219,7 @@ var AiRuns = class _AiRuns {
       /* B6 (AGENT-WORKER #1 REPORT 3): the run's resumable scratch as its last tick wrote it (R12), so a resumed
          segment continues its work list rather than restarting it; null when it cannot be read back. Never a
          transcript (DEC-61): it is the work list the run itself sent. */
-      state: safeJson14(row2.state),
+      state: safeJson15(row2.state),
       /* R19 (N190): the run this run re-runs (REC-207's `rerun_of`, judged at the open), published only when this
          viewer can see that run too, through the same sight; else null — a run that re-runs nothing and one whose
          earlier run is out of view answer alike, so the field never says a hidden run exists. */
@@ -94787,7 +97437,7 @@ var AiRuns = class _AiRuns {
     });
     const recordedSha = recorded && typeof recorded.statements_sha === "string" ? recorded.statements_sha : null;
     const atOpenHeld = row2.lens_at_open != null && String(row2.lens_at_open).trim() !== "";
-    const atOpenParsed = atOpenHeld ? safeJson14(String(row2.lens_at_open)) : null;
+    const atOpenParsed = atOpenHeld ? safeJson15(String(row2.lens_at_open)) : null;
     const atOpen = atOpenParsed && typeof atOpenParsed === "object" && !Array.isArray(atOpenParsed) ? atOpenParsed : null;
     const atOpenUnreadable = atOpenHeld && !atOpen;
     const shaOf2 = (m) => m && m.in_force === true && typeof m.statements_sha === "string" ? m.statements_sha : null;
@@ -95613,7 +98263,7 @@ var EXTRACT_PROPOSALS_LIMIT_MAX = 500;
 var EXTRACT_RATIO_DOCUMENTS_MAX = 64;
 var EXTRACT_PROPOSALS_SAYS = "these readings are PROPOSALS. A machine read text this record already holds and said what it names. Nothing here is part of a finding until a MEMBER cites it, and none of it counts as extraction coverage";
 var EXTRACT_PROPOSAL_ROW_SAYS = "a machine proposed this reading. It is not extraction coverage and it is not part of any finding \u2014 it becomes part of one when a MEMBER cites it, and not before";
-var safeJson15 = (s) => {
+var safeJson16 = (s) => {
   try {
     return s == null ? null : JSON.parse(s);
   } catch {
@@ -96398,7 +99048,7 @@ Changes: reading '${name2}' proposed as ${kind}, in state suggested, carrying ru
       ref_kind: x.ref_kind,
       ref_key: x.ref_key,
       label: x.label,
-      basis: { fn: x.fn, version: x.fn_version, chain: safeJson15(x.chain), says: describeChain(safeJson15(x.chain)) },
+      basis: { fn: x.fn, version: x.fn_version, chain: safeJson16(x.chain), says: describeChain(safeJson16(x.chain)) },
       cap: x.cap,
       earned: x.earned,
       position: readingSourceFromColumns(x.pos_kind, x.pos, x.pos_ref),
@@ -96494,9 +99144,9 @@ Changes: reading '${name2}' proposed as ${kind}, in state suggested, carrying ru
     return out;
   }
 };
-var instances22 = /* @__PURE__ */ new WeakMap();
+var instances24 = /* @__PURE__ */ new WeakMap();
 function runProductionsOf(host, deps) {
-  let p = instances22.get(host);
+  let p = instances24.get(host);
   if (!p) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -96515,7 +99165,7 @@ function runProductionsOf(host, deps) {
       basisVersions: d.basisVersions || basisVersionsOf(host, { record, membership, content }),
       now: d.now || null
     });
-    instances22.set(host, p);
+    instances24.set(host, p);
     record.declarePurge(RUN_PRODUCTIONS_MODULE, RUN_PRODUCTIONS_TABLES);
     p.basisVersions.onCandidates(RUN_PRODUCTIONS_MODULE, (a) => p.candidates(a));
   }
@@ -97184,156 +99834,156 @@ function judgementLayers() {
 var JUDGEMENT_VERSION = `${JUDGEMENT_ID}@${JUDGEMENT_EDITION}`;
 
 // src/intent/checks.mjs
-var checks_exports33 = {};
-__export(checks_exports33, {
+var checks_exports35 = {};
+__export(checks_exports35, {
   INTENT_CHECKS: () => INTENT_CHECKS,
-  refusal: () => refusal13
+  refusal: () => refusal14
 });
-var at12 = (fn, region) => `src/intent/index.mjs ${fn} > ${region}`;
+var at14 = (fn, region) => `src/intent/index.mjs ${fn} > ${region}`;
 var INTENT_CHECKS = Object.freeze({
   NO_OBJECTIVE: {
     check: "C-2.9",
-    where: at12("#checkProject", "is-objective-stated"),
+    where: at14("#checkProject", "is-objective-stated"),
     translation: "A project states what it is trying to achieve, and this one states nothing. Write its objective and send it again. Nothing was written."
   },
   MACHINE_CANNOT_SET_OBJECTIVE: {
     check: "C-111.1",
-    where: at12("setCondition", "is-condition-member"),
+    where: at14("setCondition", "is-condition-member"),
     translation: "What a project is aiming at is a member's decision. An assistant may point out gaps; it may not set or change the measure. Sign in as a member. Nothing was written."
   },
   CONDITION_UNREADABLE: {
     check: "C-111.3",
-    where: at12("#conditionRefusal", "is-condition-shaped"),
+    where: at14("#conditionRefusal", "is-condition-shaped"),
     translation: "The measure sent for this objective is not in the shape the record reads: a progression, an entity, what each matching instance must reach, and the share of them that must reach it. Nothing was written."
   },
   INTENT_NO_SUCH_PROGRESSION: {
     check: "C-111.4",
-    where: at12("refuseNoSuchProgression", "is-named-progression"),
+    where: at14("refuseNoSuchProgression", "is-named-progression"),
     translation: "The measure names a declared flow the record does not hold. Declare the flow first, or name one that exists. Nothing was written."
   },
   INTENT_BAD_STAGE: {
     check: "C-111.6",
-    where: at12("#conditionRefusal", "is-condition-stage"),
+    where: at14("#conditionRefusal", "is-condition-stage"),
     translation: "The measure requires a step the declared flow does not have. Name steps the flow declares. Nothing was written."
   },
   CONDITION_BAD_GRADE: {
     check: "C-111.7",
-    where: at12("#conditionRefusal", "is-condition-grade"),
+    where: at14("#conditionRefusal", "is-condition-grade"),
     translation: "The grade the measure requires is not one of the four the record uses, A (strongest) to D. Nothing was written."
   },
   BAD_SHARE: {
     check: "C-111.8",
-    where: at12("#conditionRefusal", "is-condition-share"),
+    where: at14("#conditionRefusal", "is-condition-share"),
     translation: "The share of instances that must meet the measure is a whole number from 1 to 100. Nothing was written."
   },
   MACHINE_CANNOT_DECLARE_GOAL: {
     check: "C-111.9",
-    where: at12("goalMachineRefusal", "is-goal-member"),
+    where: at14("goalMachineRefusal", "is-goal-member"),
     translation: "Declaring a goal, tying a project to it and closing it are members' decisions. An assistant may propose; it may not decide what the group pursues. Sign in as a member. Nothing was written."
   },
   PURSUIT_UNSTATED: {
     check: "C-111.10",
-    where: at12("refusePursuitUnstated", "is-pursuit-stated"),
+    where: at14("refusePursuitUnstated", "is-pursuit-stated"),
     translation: "A goal says what it pursues and what bounds it, and an aspiration says what it holds to. Something here is empty. Write it and send it again. Nothing was written."
   },
   NO_SUCH_GOAL: {
     check: "C-111.11",
-    where: at12("refuseNoSuchGoal", "is-goal-held"),
+    where: at14("refuseNoSuchGoal", "is-goal-held"),
     translation: "No goal answers to that id here. Nothing was written."
   },
   NO_SUCH_ASPIRATION: {
     check: "C-111.12",
-    where: at12("refuseNoSuchAspiration", "is-aspiration-held"),
+    where: at14("refuseNoSuchAspiration", "is-aspiration-held"),
     translation: "No aspiration answers to that id here. Nothing was written."
   },
   INTENT_NO_REASON: {
     check: "C-111.13",
-    where: at12("refuseNoReason", "is-reason-stated"),
+    where: at14("refuseNoReason", "is-reason-stated"),
     translation: "This act is recorded with a reason in your own words, and none was given. The record keeps why, so the next reader is not left guessing. Nothing was written."
   },
   MACHINE_CANNOT_DECLARE_ASPIRATION: {
     check: "C-111.14",
-    where: at12("aspirationMachineRefusal", "is-aspiration-member"),
+    where: at14("aspirationMachineRefusal", "is-aspiration-member"),
     translation: "What the group holds to is its members' decision, and so is setting one aside. An assistant may propose; it may not declare, depart from or retire an aspiration. Sign in as a member. Nothing was written."
   },
   NOT_YOURS: {
     check: "C-111.15",
-    where: at12("#aspirationAuthority", "is-aspiration-yours"),
+    where: at14("#aspirationAuthority", "is-aspiration-yours"),
     translation: "A member's own aspiration is declared, revised and retired by that member alone. Nothing was written."
   },
   NO_LESSON: {
     check: "C-111.17",
-    where: at12("refuseNoLesson", "is-retirement-taught"),
+    where: at14("refuseNoLesson", "is-retirement-taught"),
     translation: "Retiring an aspiration records what pursuing it taught the group, and nothing was written there. Say what was learned. Nothing was retired."
   },
   MACHINE_CANNOT_TRIAGE: {
     check: "C-111.18",
-    where: at12("triage", "is-triage-member"),
+    where: at14("triage", "is-triage-member"),
     translation: "An assistant may turn a finding into an open question, and nothing more. Adopting it, deferring it or dismissing it is a member's decision. Sign in as a member. Nothing was written."
   },
   MACHINE_CANNOT_CHOOSE_THE_QUESTION: {
     check: "C-111.19",
-    where: at12("workObjective", "is-objective-member"),
+    where: at14("workObjective", "is-objective-member"),
     translation: "Setting an assistant to work on a project's objective is a member's act: the objective is the group's, and so is the choice to pursue it. Sign in as a member. No run was opened."
   },
   PURSUIT_STATE_MOVE_UNDECLARED: {
     check: "C-111.20",
-    where: at12("#checkPursuit", "is-pursuit-state-move"),
+    where: at14("#checkPursuit", "is-pursuit-state-move"),
     translation: "An aspiration is held until it is retired, and a goal is open until it is closed. No other move is accepted, and neither comes back. Nothing was written."
   },
   BAD_SCOPE: {
     check: "C-111.21",
-    where: at12("refuseBadScope", "is-aspiration-scoped"),
+    where: at14("refuseBadScope", "is-aspiration-scoped"),
     translation: "An aspiration belongs to the group, to one project, or to one member, and a project's or a member's names which one. This one does not. Nothing was written."
   },
   NO_SUCH_PROPOSAL: {
     check: "C-111.22",
-    where: at12("triage", "is-proposal-open"),
+    where: at14("triage", "is-proposal-open"),
     translation: "No open proposal answers to that key. It may already have been decided; the decision stays readable with its reason. Nothing was written."
   },
   TRIAGE_ACT_UNKNOWN: {
     check: "C-111.23",
-    where: at12("triage", "is-triage-act"),
+    where: at14("triage", "is-triage-act"),
     translation: "A proposal is adopted into a project's objective, turned into an open question, deferred or dismissed. This act is none of those. Nothing was written."
   },
   SOURCE_DECLARED: {
     check: "C-111.24",
-    where: at12("registerSource", "is-source-once"),
+    where: at14("registerSource", "is-source-once"),
     translation: "This source of proposals is already registered. A source registers once, when the plane starts."
   },
   SOURCE_MALFORMED: {
     check: "C-111.25",
-    where: at12("registerSource", "is-source-shaped"),
+    where: at14("registerSource", "is-source-shaped"),
     translation: "A source of proposals names its kind and gives a reader. This registration does not."
   },
   PURSUIT_ENDED: {
     check: "C-111.26",
-    where: at12("refusePursuitEnded", "is-pursuit-live"),
+    where: at14("refusePursuitEnded", "is-pursuit-live"),
     translation: "This goal is closed, or this aspiration is retired. It stays readable with everything recorded under it, and it does not reopen. Nothing was written."
   },
   ADOPTIONS_UNSPLICEABLE: {
     check: "C-111.28",
-    where: at12("triage", "is-adoptions-spliceable"),
+    where: at14("triage", "is-adoptions-spliceable"),
     translation: "The project's record of adopted proposals is not in a shape the record can add to, so this adoption could not be written into it. Nothing was written."
   },
   NO_NOTE: {
     check: "C-111.27",
-    where: at12("recordDeadEnd", "is-dead-end-noted"),
+    where: at14("recordDeadEnd", "is-dead-end-noted"),
     translation: "A dead end is recorded with what was tried and why it went nowhere, and nothing was written. Nothing was recorded."
   }
 });
-function refusal13(code, detail, extra) {
+function refusal14(code, detail, extra) {
   const row2 = INTENT_CHECKS[code];
   return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
 }
 
 // src/public-read/checks.mjs
-var checks_exports34 = {};
-__export(checks_exports34, {
+var checks_exports36 = {};
+__export(checks_exports36, {
   CASE_RESOLUTION_CHECKS: () => CASE_RESOLUTION_CHECKS,
   PUBLISHED_READ_CHECKS: () => PUBLISHED_READ_CHECKS,
   PUBLISHED_STORE_CHECKS: () => PUBLISHED_STORE_CHECKS,
-  rowOf: () => rowOf7
+  rowOf: () => rowOf8
 });
 var CASE_RESOLUTION_CHECKS = {
   /* UI-81 (2026-09-23) — D-309's OTHER HALF, the READ, given its row. `op=publishedcase` handed a
@@ -97414,7 +100064,7 @@ var PUBLISHED_READ_CHECKS = {
     translation: "This case document is published and signed, but this copy of the record could not produce its exact contents just now, so it hands over nothing rather than something different. The fingerprint is genuine and can still be checked. Nothing was changed. Whoever runs this copy can repair it."
   }
 };
-function rowOf7(code) {
+function rowOf8(code) {
   const row2 = Object.hasOwn(CASE_RESOLUTION_CHECKS, code) ? CASE_RESOLUTION_CHECKS[code] : Object.hasOwn(PUBLISHED_STORE_CHECKS, code) ? PUBLISHED_STORE_CHECKS[code] : Object.hasOwn(PUBLISHED_READ_CHECKS, code) ? PUBLISHED_READ_CHECKS[code] : null;
   if (!row2 || typeof row2.translation !== "string" || !row2.translation)
     throw new Error(`public-read: ${code} has no row with a canned translation (DEC-49)`);
@@ -97422,11 +100072,11 @@ function rowOf7(code) {
 }
 
 // src/review/checks.mjs
-var checks_exports35 = {};
-__export(checks_exports35, {
+var checks_exports37 = {};
+__export(checks_exports37, {
   REVIEW_COPY_CHECKS: () => REVIEW_COPY_CHECKS
 });
-var at13 = (fn, region) => `src/review/index.mjs ${fn} > ${region}`;
+var at15 = (fn, region) => `src/review/index.mjs ${fn} > ${region}`;
 var REVIEW_COPY_CHECKS = Object.freeze({
   /* REC-126 / DEC-31 / IC-145 — THE REVIEW COPY's three authoring acts (draft, grant, revoke) share ONE fence,
      because they are one doctrine: the act is ADDRESSED and ATTRIBUTED (`BIO_Publication_v0_1.md` §6A.2), so the
@@ -97435,321 +100085,321 @@ var REVIEW_COPY_CHECKS = Object.freeze({
      split by number and unchanged (R23). */
   MACHINE_CANNOT_REVIEW: {
     check: "C-32.16",
-    where: at13("act", "is-machine-review"),
+    where: at15("act", "is-machine-review"),
     translation: "Handing a draft of the group's case to a named person, or withdrawing it, is an act somebody in the group answers for, and the record names who did it. The credential that asked here is an automated one: it can help prepare the draft, and it cannot address it to anyone. Sign in to do this yourself."
   },
   NO_REVIEW_COPY: {
     check: "C-87.1",
-    where: at13("noReviewCopy", "is-no-review-copy"),
+    where: at15("noReviewCopy", "is-no-review-copy"),
     translation: "No review copy answers to this request. A review copy is read through the grant issued for it, or by a member with standing in the project that produced it. A grant that was withdrawn, one whose draft has moved on to another edition, and one that never existed all answer the same way, so this answer tells you nothing about which of those is the case."
   },
   REVIEW_UNKNOWN_ACT: {
     check: "C-87.2",
-    where: at13("act", "is-review-unknown-act"),
+    where: at15("act", "is-review-unknown-act"),
     translation: "That is not one of the things you can do to a review copy. There are three: draft the case that will be shown, grant someone a copy to read, and withdraw a grant you issued."
   },
   REVIEW_NOT_PROJECT_OWNER: {
     check: "C-87.3",
-    where: at13("notReviewOwner", "is-review-authority"),
+    where: at15("notReviewOwner", "is-review-authority"),
     translation: "You do not hold this act's authority over this project. Drafting the case needs permission to edit the project's work; handing the draft to someone outside the group, and withdrawing a copy you handed over, are the project owner's own acts. A project, draft or grant you hold no such authority over is answered exactly as one that does not exist, so this answer does not tell you whether it is there."
   },
   REVIEW_NO_PROJECT: {
     check: "C-87.4",
-    where: at13("#draft", "is-review-no-project"),
+    where: at15("#draft", "is-review-no-project"),
     translation: "Say which project this draft belongs to. A draft case is a piece of a project's work, the same as a published case is, and it is not held by anybody until it names one."
   },
   REVIEW_DRAFT_CHANGES_PROJECT: {
     check: "C-87.5",
-    where: at13("#draft", "is-review-draft-changes-project"),
+    where: at15("#draft", "is-review-draft-changes-project"),
     translation: "This draft belongs to a different project, and a case does not change hands. If the other project should be making this case, draft it there as a case of its own."
   },
   REVIEW_NO_SUCH_CASE: {
     check: "C-87.6",
-    where: at13("#draft", "is-review-no-such-case"),
+    where: at15("#draft", "is-review-no-such-case"),
     translation: "This project has published no case by that name. A draft may name an existing case, which makes the draft that case's next edition; a case another project published is answered exactly as one that does not exist. Leave the name off and the draft is a new case."
   },
   REVIEW_DRAFT_TOO_LARGE: {
     check: "C-87.7",
-    where: at13("#draft", "is-review-draft-too-large"),
+    where: at15("#draft", "is-review-draft-too-large"),
     translation: "This draft's arguments are larger than the plane will store: the limit is 64 KiB, the same size publishing the case would accept. Nothing was saved. Material this large belongs in the documents and content the case rests on rather than in the draft itself."
   },
   REVIEW_NO_RECIPIENT: {
     check: "C-87.8",
-    where: at13("#grant", "is-review-recipient"),
+    where: at15("#grant", "is-review-recipient"),
     translation: "Say who this copy is for, in one line. Handing a draft to someone is an addressed act: the record says who it went to, and a grant addressed to nobody would leave no such record."
   },
   REVIEW_NO_SECRET: {
     check: "C-87.9",
-    where: at13("#grant", "is-review-secret"),
+    where: at15("#grant", "is-review-secret"),
     translation: "The reading secret that would let this recipient open the copy was not set. That secret is made for you when the grant is issued, so this is a fault in the request rather than something you supply; nothing was issued. Try issuing the grant again."
   },
   REVIEW_NO_GRANT: {
     check: "C-87.10",
-    where: at13("#revoke", "is-review-grant-named"),
+    where: at15("#revoke", "is-review-grant-named"),
     translation: "Say which grant to withdraw, by the id you were given when it was issued. Nothing was withdrawn. This answer says only that no grant was named; it says nothing about which grants exist."
   },
   REVIEW_NO_COMMENT_TEXT: {
     check: "C-87.11",
-    where: at13("comment", "is-review-comment-text"),
+    where: at15("comment", "is-review-comment-text"),
     translation: "A comment has to say something, and at most 4000 characters of it. Nothing was recorded. What you have written is still yours to send once it is within that length."
   }
 });
 
 // src/standards/checks.mjs
-var checks_exports36 = {};
-__export(checks_exports36, {
+var checks_exports38 = {};
+__export(checks_exports38, {
   STANDARDS_CHECKS: () => STANDARDS_CHECKS,
-  refusal: () => refusal14
+  refusal: () => refusal15
 });
-var at14 = (fn, region) => `src/standards/index.mjs ${fn} > ${region}`;
+var at16 = (fn, region) => `src/standards/index.mjs ${fn} > ${region}`;
 var STANDARDS_CHECKS = Object.freeze({
   MACHINE_CANNOT_DECLARE_STANDARD: {
     check: "C-112.1",
-    where: at14("machineRefusal", "is-standard-member"),
+    where: at16("machineRefusal", "is-standard-member"),
     translation: "Recording a standard is a member's act. An assistant may propose one for members to consider; it may not enter one in the record. Sign in as a member. Nothing was written."
   },
   STANDARD_NO_CITE: {
     check: "C-112.2",
-    where: at14("refuseNoCite", "is-standard-cited"),
+    where: at16("refuseNoCite", "is-standard-cited"),
     translation: "A standard is recorded with its citation: how it is cited, in at most 200 characters. None was given, or it is too long. Nothing was written."
   },
   STANDARD_KIND_UNKNOWN: {
     check: "C-112.3",
-    where: at14("refuseKindUnknown", "is-standard-kind"),
+    where: at16("refuseKindUnknown", "is-standard-kind"),
     translation: "A standard is a statute, a regulation, an ordinance, a court decision or order, an adopted policy or a public commitment. This one names none of them. Nothing was written."
   },
   STANDARD_NO_ISSUER: {
     check: "C-112.4",
-    where: at14("#declareRefusal", "is-standard-issuer"),
+    where: at16("#declareRefusal", "is-standard-issuer"),
     translation: "A standard names the body that made it. None was given. Nothing was written."
   },
   STANDARD_NO_TEXT: {
     check: "C-112.5",
-    where: at14("#declareRefusal", "is-standard-text"),
+    where: at16("#declareRefusal", "is-standard-text"),
     translation: "A standard is held with its own words as captured: name at least one passage of a captured document that holds its text. None was named. Nothing was written."
   },
   STANDARD_TEXT_UNRESOLVED: {
     check: "C-112.6",
-    where: at14("refuseTextUnresolved", "is-standard-text-held"),
+    where: at16("refuseTextUnresolved", "is-standard-text-held"),
     translation: "A passage named as this standard's text is not held in the record. Capture the document and cite the passage first. Nothing was written."
   },
   STANDARD_PERIOD_INVALID: {
     check: "C-112.7",
-    where: at14("#declareRefusal", "is-standard-period"),
+    where: at16("#declareRefusal", "is-standard-period"),
     translation: "A standard's period in force is a start and an end, each a date written YYYY-MM-DD or left unstated, and the end is not before the start. Nothing was written."
   },
   STANDARD_SUPERSEDES_UNKNOWN: {
     check: "C-112.8",
-    where: at14("#declareRefusal", "is-superseded-held"),
+    where: at16("#declareRefusal", "is-superseded-held"),
     translation: "The standard this one is said to supersede is not held in the record. Name one that is. Nothing was written."
   },
   STANDARD_ALREADY_SUPERSEDED: {
     check: "C-112.9",
-    where: at14("#declareRefusal", "is-supersession-once"),
+    where: at16("#declareRefusal", "is-supersession-once"),
     translation: "The standard named is already superseded by another, which the answer names. A standard is superseded once; supersede the later one instead. Nothing was written."
   },
   NO_SUCH_STANDARD: {
     check: "C-112.10",
-    where: at14("noSuchStandard", "is-standard-held"),
+    where: at16("noSuchStandard", "is-standard-held"),
     translation: "No standard answers to that id here. Nothing was written."
   },
   STANDARD_NO_ID: {
     check: "C-112.11",
-    where: at14("refuseNoId", "is-standard-named"),
+    where: at16("refuseNoId", "is-standard-named"),
     translation: "A standard is read by its id, and none was named. Name the standard to read. Nothing was answered."
   },
   STANDARD_DATE_INVALID: {
     check: "C-112.12",
-    where: at14("refuseDateInvalid", "is-date-readable"),
+    where: at16("refuseDateInvalid", "is-date-readable"),
     translation: "The date asked about is written YYYY-MM-DD, and this one is not. Nothing was answered."
   },
   STANDARD_WHY_INVALID: {
     check: "C-112.13",
-    where: at14("standardPropose", "is-proposal-why"),
+    where: at16("standardPropose", "is-proposal-why"),
     translation: "A proposal says why the standard applies, in at most 240 characters. None was given, or it is too long. Nothing was written."
   },
   STANDARD_PROPOSER_UNNAMED: {
     check: "C-112.14",
-    where: at14("standardPropose", "is-proposer-named"),
+    where: at16("standardPropose", "is-proposer-named"),
     translation: "This proposal carries nobody. A proposal is labelled with who made it, and one nobody can be named for could say nothing. Nothing was written."
   },
   STANDARD_NO_SUCH_PROPOSAL: {
     check: "C-112.15",
-    where: at14("standardAdopt", "is-proposal-held"),
+    where: at16("standardAdopt", "is-proposal-held"),
     translation: "No proposal of a standard answers to that id here. Nothing was written."
   },
   STANDARD_PROPOSAL_ADOPTED: {
     check: "C-112.16",
-    where: at14("#adoptRefusal", "is-proposal-open"),
+    where: at16("#adoptRefusal", "is-proposal-open"),
     translation: "This proposal was already adopted, as the standard the answer names. A proposal is adopted once. Nothing was written."
   },
   STANDARD_FIELD_UNKNOWN: {
     check: "C-112.17",
-    where: at14("refuseFieldUnknown", "is-standard-field"),
+    where: at16("refuseFieldUnknown", "is-standard-field"),
     translation: "This act takes only the fields it names, and the ones listed are not among them. The record holds a standard's citation, kind, issuer, text and period, and never a view of its merit. Nothing was written."
   },
   STANDARD_WRITTEN_ELSEWHERE: {
     check: "C-112.18",
-    where: at14("#checkStandard", "is-standard-written-here"),
+    where: at16("#checkStandard", "is-standard-written-here"),
     translation: "A standard enters the record only when a member records or adopts one, and it is never edited: a correction is a new standard that supersedes it. This write is neither. Nothing was written."
   },
   STANDARD_ACT_INVALID: {
     check: "C-112.19",
-    where: at14("standardPropose", "is-proposal-act"),
+    where: at16("standardPropose", "is-proposal-act"),
     translation: "The government act a proposal names is given by its id, in at most 200 characters, and this one is not. Nothing was written."
   }
 });
-function refusal14(code, detail, extra) {
+function refusal15(code, detail, extra) {
   const row2 = STANDARDS_CHECKS[code];
   return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
 }
 
 // src/conformance/checks.mjs
-var checks_exports37 = {};
-__export(checks_exports37, {
+var checks_exports39 = {};
+__export(checks_exports39, {
   CONFORMANCE_CHECKS: () => CONFORMANCE_CHECKS,
-  refusal: () => refusal15
+  refusal: () => refusal16
 });
-var at15 = (fn, region) => `src/conformance/index.mjs ${fn} > ${region}`;
+var at17 = (fn, region) => `src/conformance/index.mjs ${fn} > ${region}`;
 var CONFORMANCE_CHECKS = Object.freeze({
   MACHINE_CANNOT_DETERMINE: {
     check: "C-113.1",
-    where: at15("#refuseMachine", "is-determination-member"),
+    where: at17("#refuseMachine", "is-determination-member"),
     translation: "Whether a government act complied is a member's judgment. An assistant may prepare the comparison; it may not determine. Sign in as a member. Nothing was written."
   },
   DETERMINATION_NOT_A_PARTICIPANT: {
     check: "C-113.3",
-    where: at15("#participantRefusal", "is-project-joined"),
+    where: at17("#participantRefusal", "is-project-joined"),
     translation: "Only a member who has joined this project records its determinations. Join the project first. Nothing was written."
   },
   DETERMINATION_TOO_LARGE: {
     check: "C-113.4",
-    where: at15("#sizeRefusal", "is-within-bounds"),
+    where: at17("#sizeRefusal", "is-within-bounds"),
     translation: "This names more than one determination or comparison may carry. Split it into several. Nothing was written."
   },
   ACT_INCOMPLETE: {
     check: "C-113.5",
-    where: at15("#actOf", "is-act-complete"),
+    where: at17("#actOf", "is-act-complete"),
     translation: "A government act is named by what was done, the office that did it (its role and body, never a person), when, and the record that shows it. A part is missing or unreadable. Nothing was written."
   },
   NO_FINDINGS: {
     check: "C-113.6",
-    where: at15("#pinFindings", "is-finding-named"),
+    where: at17("#pinFindings", "is-finding-named"),
     translation: "A determination rests on at least one published finding. Name the findings it rests on. Nothing was written."
   },
   FINDING_NOT_PUBLISHED: {
     check: "C-113.7",
-    where: at15("#pinFindings", "is-finding-published"),
+    where: at17("#pinFindings", "is-finding-published"),
     translation: "A determination rests only on findings this project has published in a ratified case edition. The finding named is not one. Publish it first. Nothing was written."
   },
   NO_STANDARDS: {
     check: "C-113.8",
-    where: at15("#readStandards", "is-standard-named"),
+    where: at17("#readStandards", "is-standard-named"),
     translation: "A determination measures the act against at least one standard the record holds. Name the standards. Nothing was written."
   },
   STANDARD_NOT_IN_FORCE: {
     check: "C-113.10",
-    where: at15("#readStandards", "is-standard-in-force"),
+    where: at17("#readStandards", "is-standard-in-force"),
     translation: "A standard named was not in force when the act was done, by the period the record states for it. An act is measured against the standards that applied to it. Nothing was written."
   },
   ROWS_INCOMPLETE: {
     check: "C-113.11",
-    where: at15("#readRows", "is-comparison-complete"),
+    where: at17("#readRows", "is-comparison-complete"),
     translation: "Each standard is compared in rows: what it requires, what was done, and whether the two align, diverge or are open. A standard has no row, or a row is missing a part. Nothing was written."
   },
   OUTCOME_UNKNOWN: {
     check: "C-113.12",
-    where: at15("determine", "is-outcome-stated"),
+    where: at17("determine", "is-outcome-stated"),
     translation: "Each standard carries the member's outcome: compliant, noncompliant or unclear. One is missing or not one of the three. Nothing was written."
   },
   UNCLEAR_NO_QUESTION: {
     check: "C-113.13",
-    where: at15("#readQuestions", "is-question-named"),
+    where: at17("#readQuestions", "is-question-named"),
     translation: "An unclear outcome names what is still open, each question sent back to an inquiry you can see or to a new one. A question is missing or names no inquiry here. Nothing was written."
   },
   SIGNIFICANCE_IS_A_MEMBERS_JUDGMENT: {
     check: "C-113.14",
-    where: at15("#refuseSignificance", "is-significance-absent"),
+    where: at17("#refuseSignificance", "is-significance-absent"),
     translation: "A determination records whether the act complied, not how much it matters. Significance, severity, priority, urgency, rank and score are members' judgments made with the consequences in front of them. Nothing was written."
   },
   NO_SUCH_DETERMINATION: {
     check: "C-113.15",
-    where: at15("noSuchDetermination", "is-determination-seen"),
+    where: at17("noSuchDetermination", "is-determination-seen"),
     translation: "No determination answers to that id here. One you cannot see is answered exactly as one that does not exist."
   },
   SUPERSEDES_ANOTHER_ACT: {
     check: "C-113.16",
-    where: at15("#supersession", "is-same-act"),
+    where: at17("#supersession", "is-same-act"),
     translation: "A determination supersedes only an earlier determination of the same act. The one named is about another act. Nothing was written."
   },
   CONFORMANCE_BAD_REASON: {
     check: "C-113.17",
-    where: at15("#supersession", "is-reason-stated"),
+    where: at17("#supersession", "is-reason-stated"),
     translation: "The reason for superseding a determination is not text of at most 500 characters. Say why, more briefly. Nothing was written."
   },
   CONFORMANCE_NO_REASON: {
     check: "C-113.22",
-    where: at15("#supersession", "is-reason-given"),
+    where: at17("#supersession", "is-reason-given"),
     translation: "Superseding a determination says why it is superseded. Give the reason. Nothing was written."
   },
   PROPOSAL_CANNOT_DETERMINE: {
     check: "C-113.19",
-    where: at15("comparisonPropose", "is-proposal-outcomeless"),
+    where: at17("comparisonPropose", "is-proposal-outcomeless"),
     translation: "A comparison sets out rows and questions for members; it never states whether the act complied. Remove the outcome. Nothing was written."
   },
   NO_SUCH_COMPARISON: {
     check: "C-113.20",
-    where: at15("refuseNoSuchComparison", "is-comparison-seen"),
+    where: at17("refuseNoSuchComparison", "is-comparison-seen"),
     translation: "No comparison answers to that id in this project. One you cannot see is answered exactly as one that does not exist. Nothing was written."
   },
   DETERMINATION_SUPERSEDED: {
     check: "C-113.23",
-    where: at15("determinationSuperseded", "is-determination-live"),
+    where: at17("determinationSuperseded", "is-determination-live"),
     translation: "That determination has been superseded, and a superseded determination is not acted on or superseded again. Use the determination that replaced it. Nothing was written."
   },
   NO_SUCH_CONTRADICTION_INQUIRY: {
     check: "C-113.24",
-    where: at15("#contradictionInquiry", "is-contradiction-inquiry-seen"),
+    where: at17("#contradictionInquiry", "is-contradiction-inquiry-seen"),
     translation: "No question you can see answers to that id as one taken up from a contradiction, so no comparison starts from it. Nothing was written."
   },
   CAUSE_NOT_EVIDENCED: {
     check: "C-113.25",
-    where: at15("#causeRefusal", "is-cause-evidenced"),
+    where: at17("#causeRefusal", "is-cause-evidenced"),
     translation: "A cause is recorded on a determination only when evidence you can see shows it. A cause not yet shown stays in the question where it is being worked out, and the determination says the cause is not established. Nothing was written."
   },
   CAUSE_UNSTATED: {
     check: "C-113.26",
-    where: at15("#causeRefusal", "is-cause-stated"),
+    where: at17("#causeRefusal", "is-cause-stated"),
     translation: "The cause is stated in a sentence of your own, of at most 2,000 characters. Nothing was written."
   },
   RECOMMENDATION_IS_AN_ACTION: {
     check: "C-113.27",
-    where: at15("#refuseRecommendation", "is-recommendation-absent"),
+    where: at17("#refuseRecommendation", "is-recommendation-absent"),
     translation: "A determination records what was required, what was done, and why, and never what should be done. Propose an action instead. Nothing was written."
   },
   STANDARD_SIDE_UNNAMED: {
     check: "C-113.28",
-    where: at15("comparisonFacts", "is-standard-side-named"),
+    where: at17("comparisonFacts", "is-standard-side-named"),
     translation: "Name which side of the question states what the standard requires, a or b. The plane never chooses it. Nothing was written."
   },
   DETERMINATION_ONLY_BY_ITS_ACT: {
     check: "C-113.21",
-    where: at15("check", "is-determination-act"),
+    where: at17("check", "is-determination-act"),
     translation: "A determination is recorded only by the determination act, and never edited: a correction is a new determination that supersedes it. Nothing was written."
   }
 });
-function refusal15(code, detail, extra = {}) {
+function refusal16(code, detail, extra = {}) {
   const row2 = CONFORMANCE_CHECKS[code];
   return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra };
 }
 
 // src/consequences/checks.mjs
-var checks_exports38 = {};
-__export(checks_exports38, {
+var checks_exports40 = {};
+__export(checks_exports40, {
   CONSEQUENCES_CHECKS: () => CONSEQUENCES_CHECKS
 });
-var at16 = (fn) => `src/consequences/index.mjs ${fn}`;
-var row = (n, fn, translation) => Object.freeze({ check: `C-114.${n}`, where: at16(fn), translation });
+var at18 = (fn) => `src/consequences/index.mjs ${fn}`;
+var row = (n, fn, translation) => Object.freeze({ check: `C-114.${n}`, where: at18(fn), translation });
 var CONSEQUENCES_CHECKS = Object.freeze({
   CONSEQUENCE_NOT_NONCOMPLIANT: row(2, "#record", "A consequence is what a breach did: it is recorded against a standard the determination found noncompliant."),
   CONSEQUENCE_NOT_A_PARTICIPANT: row(3, "#participantRefusal", "Recording a consequence, or whether it has been addressed, is work inside the determination's project, done by a member who has joined it. A machine may prepare a computed part and answers no project's authority."),
@@ -97773,8 +100423,8 @@ var CONSEQUENCES_CHECKS = Object.freeze({
 });
 
 // src/action-clocks/checks.mjs
-var checks_exports39 = {};
-__export(checks_exports39, {
+var checks_exports41 = {};
+__export(checks_exports41, {
   ACTION_CLOCK_CHECKS: () => ACTION_CLOCK_CHECKS
 });
 var ACTION_CLOCK_CHECKS = {
@@ -97805,721 +100455,721 @@ var ACTION_CLOCK_CHECKS = {
 };
 
 // src/filings/checks.mjs
-var checks_exports40 = {};
-__export(checks_exports40, {
+var checks_exports42 = {};
+__export(checks_exports42, {
   FILINGS_CHECKS: () => FILINGS_CHECKS,
-  rowOf: () => rowOf8
+  rowOf: () => rowOf9
 });
-var at17 = (fn, region) => `src/filings/index.mjs ${fn} > ${region}`;
+var at19 = (fn, region) => `src/filings/index.mjs ${fn} > ${region}`;
 var FILINGS_CHECKS = Object.freeze({
   FILING_NO_PREPARER: {
     check: "C-115.1",
-    where: at17("filingPrepare", "is-filing-prepare"),
+    where: at19("filingPrepare", "is-filing-prepare"),
     translation: "Nobody is named as the one preparing this draft. Every draft names who prepared it."
   },
   ACTION_CLOSED: {
     check: "C-115.3",
-    where: at17("#closed", "is-action-closed"),
+    where: at19("#closed", "is-action-closed"),
     translation: "The action is resolved or abandoned, so nothing is prepared for it."
   },
   FILING_TIER_UNDETERMINED: {
     check: "C-115.4",
-    where: at17("filingPrepare", "is-filing-prepare"),
+    where: at19("filingPrepare", "is-filing-prepare"),
     translation: "The action's risk tier has not been stated, and an unstated tier is never read as the lowest. A member states the tier first."
   },
   TIER3_COUNSEL_PACKET: {
     check: "C-115.5",
-    where: at17("filingPrepare", "is-filing-prepare"),
+    where: at19("filingPrepare", "is-filing-prepare"),
     translation: "This action's governing tier is 3: no filing is prepared for it. The group names counsel, and a counsel packet is assembled for counsel's review instead."
   },
   MACHINE_CANNOT_APPROVE: {
     check: "C-115.7",
-    where: at17("filingApprove", "is-filing-approve"),
+    where: at19("filingApprove", "is-filing-approve"),
     translation: "Only a named member can approve a filing. A machine may prepare the words; it never approves them."
   },
   NO_SUCH_FILING: {
     check: "C-115.8",
-    where: at17("#noFiling", "is-no-such-filing"),
+    where: at19("#noFiling", "is-no-such-filing"),
     translation: "There is no draft by that id that you can read here. A draft of an action you may not see answers exactly as one that does not exist."
   },
   ALREADY_APPROVED: {
     check: "C-115.9",
-    where: at17("#alreadyApproved", "is-already-approved"),
+    where: at19("#alreadyApproved", "is-already-approved"),
     translation: "This draft has already been approved, and an approval stands as recorded. Prepare a new draft to approve another text."
   },
   FILING_STALE: {
     check: "C-115.10",
-    where: at17("filingApprove", "is-filing-approve"),
+    where: at19("filingApprove", "is-filing-approve"),
     translation: "Something the draft was prepared from has changed since, as named. Prepare the draft again so it says what the record says now."
   },
   STILL_UNFILLED: {
     check: "C-115.11",
-    where: at17("filingApprove", "is-filing-approve"),
+    where: at19("filingApprove", "is-filing-approve"),
     translation: "The text still holds a blank the record could not fill, marked UNFILLED. A member writes it in before the text can be approved."
   },
   TEXT_UNWRITABLE: {
     check: "C-115.12",
-    where: at17("#unwritable", "is-text-unwritable"),
+    where: at19("#unwritable", "is-text-unwritable"),
     translation: "The text is empty, too long, or not readable as text, so it cannot be prepared or recorded as approved."
   },
   MACHINE_CANNOT_FILE: {
     check: "C-115.13",
-    where: at17("filingRecordSent", "is-filing-sent"),
+    where: at19("filingRecordSent", "is-filing-sent"),
     translation: "Only a named member can record that a filing was sent. The instance sends nothing itself."
   },
   NOT_APPROVED: {
     check: "C-115.14",
-    where: at17("filingRecordSent", "is-filing-sent"),
+    where: at19("filingRecordSent", "is-filing-sent"),
     translation: "A member approves the draft before it is recorded as sent."
   },
   ALREADY_SENT: {
     check: "C-115.15",
-    where: at17("filingRecordSent", "is-filing-sent"),
+    where: at19("filingRecordSent", "is-filing-sent"),
     translation: "This draft is already recorded as sent, and that record stands."
   },
   MACHINE_CANNOT_NAME_COUNSEL: {
     check: "C-115.16",
-    where: at17("counselPacket", "is-counsel-packet"),
+    where: at19("counselPacket", "is-counsel-packet"),
     translation: "Only a named member can name the group's counsel and assemble a packet for them."
   },
   NO_COUNSEL: {
     check: "C-115.18",
-    where: at17("counselPacket", "is-counsel-packet"),
+    where: at19("counselPacket", "is-counsel-packet"),
     translation: "Name counsel by a name and an organisation, each on one line and not too long; a contact is optional."
   },
   NO_DETERMINATION: {
     check: "C-115.19",
-    where: at17("counselPacket", "is-counsel-packet-basis"),
+    where: at19("counselPacket", "is-counsel-packet-basis"),
     translation: "The action rests on no live determination you can read, so there are no facts to assemble for counsel."
   },
   NO_SUCH_PACKET: {
     check: "C-115.20",
-    where: at17("#noPacket", "is-no-such-packet"),
+    where: at19("#noPacket", "is-no-such-packet"),
     translation: "There is no counsel packet by that id and version that you can read here. A packet for an action you may not see answers exactly as one that does not exist."
   },
   MACHINE_CANNOT_EXPORT: {
     check: "C-115.21",
-    where: at17("counselPacketExport", "is-packet-export"),
+    where: at19("counselPacketExport", "is-packet-export"),
     translation: "Only a named member can hand a counsel packet to counsel."
   },
   NO_THEORY: {
     check: "C-115.22",
-    where: at17("theoryPropose", "is-theory-propose"),
+    where: at19("theoryPropose", "is-theory-propose"),
     translation: "State the candidate theory, and any remedy, in words that are not too long."
   },
   THEORY_NO_STANDARDS: {
     check: "C-115.23",
-    where: at17("theoryPropose", "is-theory-propose"),
+    where: at19("theoryPropose", "is-theory-propose"),
     translation: "A candidate theory names the standards it rests on."
   },
   THEORY_STANDARD_UNREADABLE: {
     check: "C-115.24",
-    where: at17("theoryPropose", "is-theory-propose"),
+    where: at19("theoryPropose", "is-theory-propose"),
     translation: "The standards the theory names cannot be read here, so the proposal is not recorded."
   },
   THEORY_WHY_REFUSED: {
     check: "C-115.25",
-    where: at17("theoryPropose", "is-theory-propose"),
+    where: at19("theoryPropose", "is-theory-propose"),
     translation: "Say why the theory is proposed, in at most 1,000 characters."
   },
   DETERMINATION_UNREADABLE: {
     check: "C-115.26",
-    where: at17("availableActions", "is-available-actions"),
+    where: at19("availableActions", "is-available-actions"),
     translation: "No determination can be read here, so the actions available against its offices cannot be listed."
   },
   THEORY_NO_PROPOSER: {
     check: "C-115.27",
-    where: at17("theoryPropose", "is-theory-propose"),
+    where: at19("theoryPropose", "is-theory-propose"),
     translation: "Nobody is named as the one proposing this theory. Every proposal names who made it."
   },
   /* T18 (K608, K613 (3)): R23's communications; R26's template library (its rows .31–.33, .35–.38 moved to
      `filing-templates` in T21, K921, K922). */
   COMMUNICATION_NO_PREPARER: {
     check: "C-115.28",
-    where: at17("communicationPrepare", "is-communication-prepare"),
+    where: at19("communicationPrepare", "is-communication-prepare"),
     translation: "Nobody is named as the one preparing this communication. Every draft names who prepared it."
   },
   COMMUNICATION_TEXT_REFUSED: {
     check: "C-115.29",
-    where: at17("communicationPrepare", "is-communication-prepare"),
+    where: at19("communicationPrepare", "is-communication-prepare"),
     translation: "The communication's words are empty, too long, or not readable as text."
   },
   COMMUNICATION_PURPOSE_REFUSED: {
     check: "C-115.30",
-    where: at17("communicationPrepare", "is-communication-prepare"),
+    where: at19("communicationPrepare", "is-communication-prepare"),
     translation: "Say what the communication is for, in at most 500 characters."
   },
   TEMPLATE_FROM_UNAPPROVED: {
     check: "C-115.34",
-    where: at17("templateSave", "is-template-save"),
+    where: at19("templateSave", "is-template-save"),
     translation: "A template is drafted from a draft a member has approved. Approve the draft first."
   },
   TEMPLATE_KIND_MISMATCH: {
     check: "C-115.39",
-    where: at17("#kindMismatch", "is-template-kind-mismatch"),
+    where: at19("#kindMismatch", "is-template-kind-mismatch"),
     translation: "The template named is written for another kind of action. Name one written for this kind."
   },
   TEMPLATE_NOT_NAMED: {
     check: "C-115.40",
-    where: at17("filingPrepare", "is-template-not-named"),
+    where: at19("filingPrepare", "is-template-not-named"),
     translation: "The jurisdiction profile holds no file template for this kind: name a template, or write the words."
   },
   /* T21 (K921, K922, K924): R28's and R31's templates. */
   TEMPLATE_USE_BRIEF: {
     check: "C-115.41",
-    where: at17("filingPrepare", "is-template-use-brief"),
+    where: at19("filingPrepare", "is-template-use-brief"),
     translation: "The template named is a briefing to counsel: it serves a counsel packet, never a filing."
   },
   TEMPLATE_USE_FILE: {
     check: "C-115.42",
-    where: at17("counselPacket", "is-template-use-file"),
+    where: at19("counselPacket", "is-template-use-file"),
     translation: "The template named is wording the group files in its own name: a counsel packet's briefing takes a brief template."
   },
   TEMPLATE_AND_TEXT: {
     check: "C-115.43",
-    where: at17("filingPrepare", "is-filing-prepare"),
+    where: at19("filingPrepare", "is-filing-prepare"),
     translation: "Name a template or write the words, not both."
   }
 });
-function rowOf8(code) {
+function rowOf9(code) {
   return Object.prototype.hasOwnProperty.call(FILINGS_CHECKS, code) ? FILINGS_CHECKS[code] : null;
 }
 
 // src/escalation/checks.mjs
-var checks_exports41 = {};
-__export(checks_exports41, {
+var checks_exports43 = {};
+__export(checks_exports43, {
   ESCALATION_CHECKS: () => ESCALATION_CHECKS,
-  refusal: () => refusal16
+  refusal: () => refusal17
 });
-var at18 = (fn, region) => `src/escalation/index.mjs ${fn} > ${region}`;
+var at20 = (fn, region) => `src/escalation/index.mjs ${fn} > ${region}`;
 var ESCALATION_CHECKS = Object.freeze({
   MACHINE_CANNOT_OPEN: {
     check: "C-116.1",
-    where: at18("escalationOpen", "is-open-member"),
+    where: at20("escalationOpen", "is-open-member"),
     translation: "Opening an escalation is a member's act. An assistant may point out a breach worth pursuing; it may not open one. Sign in as a member. Nothing was written."
   },
   ESCALATION_CARRIES_NO_JUDGMENT: {
     check: "C-116.2",
-    where: at18("refuseJudgment", "is-no-judgment"),
+    where: at20("refuseJudgment", "is-no-judgment"),
     translation: "An escalation records no significance, severity, priority, urgency, rank or score. Whether a breach warrants action, and how urgently, is the members' judgment, made with the consequences in front of them. Send the act without it. Nothing was written."
   },
   NOT_NONCOMPLIANT: {
     check: "C-116.5",
-    where: at18("escalationOpen", "is-determination-noncompliant"),
+    where: at20("escalationOpen", "is-determination-noncompliant"),
     translation: "That determination finds no standard breached, so there is nothing to escalate. Nothing was written."
   },
   ESCALATION_NOT_A_PARTICIPANT: {
     check: "C-116.6",
-    where: at18("escalationOpen", "is-open-joined"),
+    where: at20("escalationOpen", "is-open-joined"),
     translation: "An escalation is opened by a member who has joined the project that made the determination. Join the project first. Nothing was written."
   },
   ALREADY_OPEN: {
     check: "C-116.7",
-    where: at18("escalationOpen", "is-one-escalation"),
+    where: at20("escalationOpen", "is-one-escalation"),
     translation: "This determination already has an escalation that has not ended; there is one at a time. Work in that one. Nothing was written."
   },
   NO_SUCH_ESCALATION: {
     check: "C-116.8",
-    where: at18("refuseNoSuchEscalation", "is-escalation-seen"),
+    where: at20("refuseNoSuchEscalation", "is-escalation-seen"),
     translation: "No escalation answers to that here. One in a project you may not see is answered exactly as one that does not exist. Nothing was written."
   },
   MACHINE_CANNOT_ATTACH: {
     check: "C-116.9",
-    where: at18("escalationAttach", "is-attach-member"),
+    where: at20("escalationAttach", "is-attach-member"),
     translation: "Attaching an action to an escalation is a member's act. An assistant may prepare the action; it may not attach it. Nothing was written."
   },
   ESCALATION_ENDED: {
     check: "C-116.10",
-    where: at18("refuseEnded", "is-escalation-ended"),
+    where: at20("refuseEnded", "is-escalation-ended"),
     translation: "This escalation has ended: compliance was restored and the consequences addressed. An ended escalation is never reopened; a new breach is a new determination. Nothing was written."
   },
   NOT_A_BREACH_ACTION: {
     check: "C-116.12",
-    where: at18("escalationAttach", "is-breach-action"),
+    where: at20("escalationAttach", "is-breach-action"),
     translation: "An escalation's acts are actions recorded for the breach: the action states that it is one and rests on the escalation's determination. Record it so, then attach it. Nothing was written."
   },
   ACTION_PREMISE_OVERRIDDEN: {
     check: "C-116.45",
-    where: at18("escalationAttach", "is-premise-established"),
+    where: at20("escalationAttach", "is-premise-established"),
     translation: "That action was recorded with its premise overridden: it does not rest on a determined breach. An escalation pursues a determined breach only, so the action cannot be attached to one. Nothing was written."
   },
   STAGE_TAKES_NO_ACTION: {
     check: "C-116.13",
-    where: at18("escalationAttach", "is-attaching-stage"),
+    where: at20("escalationAttach", "is-attaching-stage"),
     translation: "Actions are attached at notification, legal tools and political accountability. The escalation's stage now takes none. Nothing was written."
   },
   ALREADY_ATTACHED: {
     check: "C-116.14",
-    where: at18("escalationAttach", "is-attached-once"),
+    where: at20("escalationAttach", "is-attached-once"),
     translation: "That action is already attached to an escalation. An action belongs to one escalation, at one stage. Nothing was written."
   },
   NOT_ACCOUNTABILITY: {
     check: "C-116.15",
-    where: at18("escalationAttach", "is-accountability-purpose"),
+    where: at20("escalationAttach", "is-accountability-purpose"),
     translation: "An act of political accountability states its purpose: asking an elected office to act on the breach, an oversight request, an audit request, testimony, or legislation that restores or enforces an existing requirement. Policy advocacy and candidate support are not among them. Nothing was written."
   },
   NOT_THE_BREACH: {
     check: "C-116.16",
-    where: at18("escalationAttach", "is-pursued-standard"),
+    where: at20("escalationAttach", "is-pursued-standard"),
     translation: "An act of political accountability names the requirement it seeks enforced, from the standards this escalation pursues, and no other. Nothing was written."
   },
   COUNTERPARTY_NOT_ELECTED: {
     check: "C-116.17",
-    where: at18("escalationAttach", "is-elected-office"),
+    where: at20("escalationAttach", "is-elected-office"),
     translation: "An official request asks an elected office to act. The jurisdiction profile marks the office this action is addressed to as not elected. Address it to an elected office. Nothing was written."
   },
   COUNTERPARTY_NOT_OVERSIGHT: {
     check: "C-116.18",
-    where: at18("escalationAttach", "is-oversight-office"),
+    where: at20("escalationAttach", "is-oversight-office"),
     translation: "An oversight or audit request goes to an oversight or audit body. The jurisdiction profile marks the office this action is addressed to as not one. Nothing was written."
   },
   MACHINE_CANNOT_EVALUATE: {
     check: "C-116.19",
-    where: at18("escalationEvaluate", "is-evaluate-member"),
+    where: at20("escalationEvaluate", "is-evaluate-member"),
     translation: "Reading what the government answered is a member's judgment. An assistant may summarise the response; it may not evaluate it. Nothing was written."
   },
   NOT_IN_EVALUATION: {
     check: "C-116.20",
-    where: at18("escalationEvaluate", "is-evaluation-stage"),
+    where: at20("escalationEvaluate", "is-evaluation-stage"),
     translation: "A response is evaluated at the response-evaluation stage, and this escalation is at another. Nothing was written."
   },
   READING_UNKNOWN: {
     check: "C-116.21",
-    where: at18("escalationEvaluate", "is-reading-known"),
+    where: at20("escalationEvaluate", "is-reading-known"),
     translation: "A reading of a response is one of: complied, partial, denied, or none (nothing came back in time). Nothing was written."
   },
   NO_SUCH_RESPONSE: {
     check: "C-116.22",
-    where: at18("refuseNoSuchResponse", "is-named-response"),
+    where: at20("refuseNoSuchResponse", "is-named-response"),
     translation: "The evaluation names the reply it reads: a received entry of an action attached to this escalation. Nothing was written."
   },
   RESPONSE_FOR_NONE: {
     check: "C-116.23",
-    where: at18("escalationEvaluate", "is-none-unnamed"),
+    where: at20("escalationEvaluate", "is-none-unnamed"),
     translation: "A reading of none says nothing came back in time, so it names no reply. Nothing was written."
   },
   ESCALATION_NO_REASON: {
     check: "C-116.24",
-    where: at18("refuseReason", "is-reason-given"),
+    where: at20("refuseReason", "is-reason-given"),
     translation: "This act needs a reason, in your own words, of up to 2,000 characters. Nothing was written."
   },
   MACHINE_CANNOT_ADVANCE: {
     check: "C-116.25",
-    where: at18("#edgeArgs", "is-edge-member"),
+    where: at20("#edgeArgs", "is-edge-member"),
     translation: "Moving an escalation to its next stage is a member's act. The protocol proposes a stage when its trigger is met; a member advances it. Nothing was written."
   },
   MACHINE_CANNOT_DECLINE: {
     check: "C-116.26",
-    where: at18("#edgeArgs", "is-edge-member"),
+    where: at20("#edgeArgs", "is-edge-member"),
     translation: "Choosing not to move an escalation now is a member's act, with the member's reason. Nothing was written."
   },
   NOT_OPEN: {
     check: "C-116.27",
-    where: at18("#edgeArgs", "is-edge-open"),
+    where: at20("#edgeArgs", "is-edge-open"),
     translation: "The escalation's stage moves only while it is open. A suspended one is resumed first; an ended one never moves again. Nothing was written."
   },
   ILLEGAL_STAGE: {
     check: "C-116.28",
-    where: at18("#edgeArgs", "is-edge-legal"),
+    where: at20("#edgeArgs", "is-edge-legal"),
     translation: "The escalation cannot move from its stage to that one. The stages it can move to are listed. Nothing was written."
   },
   TRIGGER_NOT_MET: {
     check: "C-116.29",
-    where: at18("escalationAdvance", "is-trigger-met"),
+    where: at20("escalationAdvance", "is-trigger-met"),
     translation: "That stage's trigger is not met in the record yet; what is missing is named. When it is met the stage is proposed, and a member advances it. Nothing was written."
   },
   EDGE_NOT_PROPOSED: {
     check: "C-116.30",
-    where: at18("escalationDecline", "is-edge-proposed"),
+    where: at20("escalationDecline", "is-edge-proposed"),
     translation: "That stage is not proposed, so there is nothing to decline. Nothing was written."
   },
   MACHINE_CANNOT_END: {
     check: "C-116.31",
-    where: at18("escalationEnd", "is-end-member"),
+    where: at20("escalationEnd", "is-end-member"),
     translation: "Ending an escalation is a member's act, and only once compliance is restored and the consequences are addressed. Nothing was written."
   },
   ALREADY_ENDED: {
     check: "C-116.32",
-    where: at18("escalationEnd", "is-end-once"),
+    where: at20("escalationEnd", "is-end-once"),
     translation: "This escalation has already ended. Nothing was written."
   },
   COMPLIANCE_NOT_RESTORED: {
     check: "C-116.33",
-    where: at18("escalationEnd", "is-compliance-restored"),
+    where: at20("escalationEnd", "is-compliance-restored"),
     translation: "An escalation ends only when compliance is restored: for every standard it pursues, a later determination of the same act finds the government compliant. The standards still lacking one are named. Nothing was written."
   },
   CONSEQUENCES_NOT_ADDRESSED: {
     check: "C-116.34",
-    where: at18("escalationEnd", "is-consequences-addressed"),
+    where: at20("escalationEnd", "is-consequences-addressed"),
     translation: "An escalation ends only when the consequences of the breach are addressed, and a recorded consequence is not. Nothing was written."
   },
   CONSEQUENCES_UNDETERMINED: {
     check: "C-116.35",
-    where: at18("escalationEnd", "is-consequences-determined"),
+    where: at20("escalationEnd", "is-consequences-determined"),
     translation: "Whether the consequences of the breach are addressed is undetermined: none is recorded, or one is undetermined or unproven. If the group judges the breach had no consequence, record that as an assessed consequence and address it. Nothing was written."
   },
   MACHINE_CANNOT_SUSPEND: {
     check: "C-116.36",
-    where: at18("escalationSuspend", "is-suspend-member"),
+    where: at20("escalationSuspend", "is-suspend-member"),
     translation: "Suspending an escalation is a member's act, with a reason. Nothing was written."
   },
   ALREADY_SUSPENDED: {
     check: "C-116.37",
-    where: at18("escalationSuspend", "is-suspend-once"),
+    where: at20("escalationSuspend", "is-suspend-once"),
     translation: "This escalation is already suspended. Nothing was written."
   },
   MACHINE_CANNOT_RESUME: {
     check: "C-116.38",
-    where: at18("escalationResume", "is-resume-member"),
+    where: at20("escalationResume", "is-resume-member"),
     translation: "Resuming an escalation is a member's act. Nothing was written."
   },
   NOT_SUSPENDED: {
     check: "C-116.39",
-    where: at18("escalationResume", "is-resume-suspended"),
+    where: at20("escalationResume", "is-resume-suspended"),
     translation: "This escalation is not suspended, so there is nothing to resume. Nothing was written."
   },
   MACHINE_CANNOT_WRITE_ESCALATION: {
     check: "C-116.40",
-    where: at18("check", "is-escalation-member"),
+    where: at20("check", "is-escalation-member"),
     translation: "An escalation's record is written by members' acts only. An automated credential cannot write it. Nothing was written."
   },
   ESCALATION_BY_ACT_ONLY: {
     check: "C-116.41",
-    where: at18("check", "is-escalation-act"),
+    where: at20("check", "is-escalation-act"),
     translation: "An escalation changes only through its own acts (open, attach, evaluate, advance, decline, suspend, resume, end), so its history and what is read from it never disagree. Nothing was written."
   },
   ESCALATION_HISTORY_REWRITTEN: {
     check: "C-116.42",
-    where: at18("check", "is-escalation-append-only"),
+    where: at20("check", "is-escalation-append-only"),
     translation: "An escalation's history is never edited; each act adds to it. Nothing was written."
   },
   UNSPLICEABLE_ESCALATION: {
     check: "C-116.43",
-    where: at18("#append", "is-escalation-spliceable"),
+    where: at20("#append", "is-escalation-spliceable"),
     translation: "The escalation's record cannot be extended in place. Nothing was written."
   },
   PROVIDER_UNAVAILABLE: {
     check: "C-116.44",
-    where: at18("refuseProviderUnavailable", "is-provider-present"),
+    where: at20("refuseProviderUnavailable", "is-provider-present"),
     translation: "Part of the record this answer depends on cannot be read on this instance yet, so nothing is answered in its place. Nothing was written."
   }
 });
-function refusal16(code, detail, extra) {
+function refusal17(code, detail, extra) {
   const row2 = ESCALATION_CHECKS[code];
   return { ok: false, reason: code, detail, ...extra || {}, code, check: row2.check, translation: row2.translation };
 }
 
 // src/action-plans/checks.mjs
-var checks_exports42 = {};
-__export(checks_exports42, {
+var checks_exports44 = {};
+__export(checks_exports44, {
   ACTION_PLAN_CHECKS: () => ACTION_PLAN_CHECKS,
-  refusal: () => refusal17
+  refusal: () => refusal18
 });
-var at19 = (fn, region) => `src/action-plans/index.mjs ${fn} > ${region}`;
+var at21 = (fn, region) => `src/action-plans/index.mjs ${fn} > ${region}`;
 var ACTION_PLAN_CHECKS = Object.freeze({
   /* ---- R1, R4: opening a plan and its subjects ---- */
   MACHINE_CANNOT_PLAN: {
     check: "C-124.1",
-    where: at19("#member", "is-plan-member"),
+    where: at21("#member", "is-plan-member"),
     translation: "An action plan is the group's own working material, and only a member opens it, changes what it is about or closes it. An assistant may propose options; it may not do this. Sign in as a member. Nothing was written."
   },
   PLAN_NO_TITLE: {
     check: "C-124.2",
-    where: at19("planOpen", "is-plan-titled"),
+    where: at21("planOpen", "is-plan-titled"),
     translation: "A plan needs a title of 1 to 200 characters, with no quotation mark, backslash or line break. Nothing was written."
   },
   PLAN_NO_SUBJECT: {
     check: "C-124.3",
-    where: at19("refuseNoSubject", "is-plan-subjects"),
+    where: at21("refuseNoSubject", "is-plan-subjects"),
     translation: "A plan is about 1 to 50 matters: an open question, or one standard's outcome of a determination. Nothing was written."
   },
   SUBJECT_MALFORMED: {
     check: "C-124.4",
-    where: at19("refuseMalformed", "is-subject-shaped"),
+    where: at21("refuseMalformed", "is-subject-shaped"),
     translation: "A matter is either {kind: inquiry, inquiry} for a question still open, or {kind: outcome, determination, standard} for one standard's outcome of a determination. The one named was neither. Nothing was written."
   },
   NO_SUCH_INQUIRY: {
     check: "C-124.5",
-    where: at19("refuseNoSuchInquiry", "is-inquiry-seen"),
+    where: at21("refuseNoSuchInquiry", "is-inquiry-seen"),
     translation: "No question answers to that id here. One you may not see is answered exactly as one that does not exist. Nothing was written."
   },
   SUBJECT_NOT_OF_PROJECT: {
     check: "C-124.6",
-    where: at19("#subjects", "is-subject-of-project"),
+    where: at21("#subjects", "is-subject-of-project"),
     translation: "A plan is about the project's own matters: a question the project draws on, or a determination the project made. This one belongs to another project. Nothing was written."
   },
   SUBJECT_NOT_LIVE: {
     check: "C-124.7",
-    where: at19("#subjects", "is-subject-live"),
+    where: at21("#subjects", "is-subject-live"),
     translation: "That matter is no longer live: the determination has been superseded, or the question is closed. Plan from the live one. Nothing was written."
   },
   SUBJECT_IN_ACTIVE_PLAN: {
     check: "C-124.8",
-    where: at19("#subjects", "is-subject-free"),
+    where: at21("#subjects", "is-subject-free"),
     translation: "That matter is already in an open plan of this project, which is named. A matter is in one open plan of a project at a time; work in that one, or close it first. Nothing was written."
   },
   NO_SUCH_PLAN: {
     check: "C-124.9",
-    where: at19("noSuchPlan", "is-plan-seen"),
+    where: at21("noSuchPlan", "is-plan-seen"),
     translation: "No action plan answers to that id here. A plan in a project you may not see is answered exactly as one that does not exist. Nothing was written."
   },
   PLAN_CLOSED: {
     check: "C-124.10",
-    where: at19("refusePlanClosed", "is-plan-open"),
+    where: at21("refusePlanClosed", "is-plan-open"),
     translation: "This plan has been closed. A closed plan stays readable, and nothing is added to it. Nothing was written."
   },
   PLAN_NO_REASON: {
     check: "C-124.11",
-    where: at19("refuseReason", "is-reason-given"),
+    where: at21("refuseReason", "is-reason-given"),
     translation: "This act needs a reason in your own words, of 1 to 500 characters, with no quotation mark, backslash or line break. Nothing was written."
   },
   /* ---- R9–R12: options and proposals ---- */
   MACHINE_CANNOT_ADD_OPTION: {
     check: "C-124.12",
-    where: at19("#optionMember", "is-option-member"),
+    where: at21("#optionMember", "is-option-member"),
     translation: "An option in a plan is a member's act: adding one, revising one or adopting a proposal. An assistant may propose options; a member adopts them. Nothing was written."
   },
   OPTION_NO_SUMMARY: {
     check: "C-124.13",
-    where: at19("#optionFields", "is-option-summary"),
+    where: at21("#optionFields", "is-option-summary"),
     translation: "An option needs a summary of 1 to 200 characters. Nothing was written."
   },
   OPTION_DETAIL_TOO_LONG: {
     check: "C-124.14",
-    where: at19("#optionFields", "is-option-detail"),
+    where: at21("#optionFields", "is-option-detail"),
     translation: "An option's detail is at most 5,000 characters. Nothing was written."
   },
   CATEGORY_UNKNOWN: {
     check: "C-124.15",
-    where: at19("#optionFields", "is-option-category"),
+    where: at21("#optionFields", "is-option-category"),
     translation: "An option's category is one of: mitigation, legal, awareness, journalistic, grassroots, other. Nothing was written."
   },
   OPTION_NO_SUBJECT: {
     check: "C-124.16",
-    where: at19("#optionFields", "is-option-subject"),
+    where: at21("#optionFields", "is-option-subject"),
     translation: "An option serves at least one of the plan's matters, and names only matters the plan is about. Nothing was written."
   },
   ADDRESSEE_REFUSED: {
     check: "C-124.17",
-    where: at19("#optionFields", "is-option-addressee"),
+    where: at21("#optionFields", "is-option-addressee"),
     translation: "An addressee is an office by its role and body, a reporter or outlet, an organisation or another civic group by role and organisation, or a described audience. It is never a private individual. Nothing was written."
   },
   DATE_REFUSED: {
     check: "C-124.18",
-    where: at19("#optionFields", "is-option-date"),
+    where: at21("#optionFields", "is-option-date"),
     translation: "A regulated date is written year-month-day and names its basis: the statute, order or commitment that sets it. Nothing was written."
   },
   TIER_REFUSED: {
     check: "C-124.19",
-    where: at19("#optionFields", "is-option-tier"),
+    where: at21("#optionFields", "is-option-tier"),
     translation: "A tier is stated only on a legal option, and is 1, 2, 3 or undetermined. Nothing was written."
   },
   LOBBYING_NO_REQUIREMENT: {
     check: "C-124.20",
-    where: at19("#optionFields", "is-lobbying-enforces"),
+    where: at21("#optionFields", "is-lobbying-enforces"),
     translation: "An option you mark as lobbying names the existing requirement it seeks enforced or restored: a standard, or a determined matter of the plan. Lobbying for anything else is not an act this record holds. Nothing was written."
   },
   OPTION_KEY_REFUSED: {
     check: "C-124.21",
-    where: at19("refuseKeys", "is-no-cost-or-score"),
+    where: at21("refuseKeys", "is-no-cost-or-score"),
     translation: "A plan holds no cost, budget, money to be spent, assignee, hours or significance score. Those are not what this record is for. Send the act without them. Nothing was written."
   },
   NO_SUCH_PLAN_PROPOSAL: {
     check: "C-124.22",
-    where: at19("optionAdopt", "is-proposal-seen"),
+    where: at21("optionAdopt", "is-proposal-seen"),
     translation: "No proposal for an option answers to that id in a plan you may see. Nothing was written."
   },
   PROPOSAL_ADOPTED: {
     check: "C-124.23",
-    where: at19("optionAdopt", "is-proposal-once"),
+    where: at21("optionAdopt", "is-proposal-once"),
     translation: "That proposal has already been adopted as an option, which is named. A proposal is adopted once. Nothing was written."
   },
   PROPOSAL_NO_PROPOSER: {
     check: "C-124.24",
-    where: at19("optionPropose", "is-proposer-stamped"),
+    where: at21("optionPropose", "is-proposer-stamped"),
     translation: "A proposal names who made it. This one came with no signed-in caller. Nothing was written."
   },
   PROPOSAL_WHY_REFUSED: {
     check: "C-124.25",
-    where: at19("optionPropose", "is-proposal-why"),
+    where: at21("optionPropose", "is-proposal-why"),
     translation: "A proposal says why it is offered, in 1 to 500 characters. Nothing was written."
   },
   /* ---- R13: dispositions ---- */
   MACHINE_CANNOT_DISPOSE: {
     check: "C-124.26",
-    where: at19("optionDispose", "is-dispose-member"),
+    where: at21("optionDispose", "is-dispose-member"),
     translation: "Choosing, declining or marking an option done or blocked is a member's decision. An assistant may not make it. Nothing was written."
   },
   DISPOSITION_UNKNOWN: {
     check: "C-124.27",
-    where: at19("optionDispose", "is-disposition-known"),
+    where: at21("optionDispose", "is-disposition-known"),
     translation: "A disposition is one of: open, chosen, declined, done, blocked. Nothing was written."
   },
   NO_SUCH_OPTION: {
     check: "C-124.28",
-    where: at19("refuseNoSuchOption", "is-option-held"),
+    where: at21("refuseNoSuchOption", "is-option-held"),
     translation: "The plan holds no option of that id; the first one not found is named. Nothing was written."
   },
   /* ---- R14–R16: scenarios and checkpoints ---- */
   MACHINE_CANNOT_SCHEDULE: {
     check: "C-124.29",
-    where: at19("scenarioSet", "is-scenario-member"),
+    where: at21("scenarioSet", "is-scenario-member"),
     translation: "Laying options out over time is a member's act. An assistant may propose options; it may not set a scenario. Nothing was written."
   },
   SCENARIO_OUT_OF_RANGE: {
     check: "C-124.30",
-    where: at19("scenarioSet", "is-scenario-numbered"),
+    where: at21("scenarioSet", "is-scenario-numbered"),
     translation: "A plan holds at most three scenarios, numbered 1, 2 and 3. Nothing was written."
   },
   SCENARIO_NAME_REFUSED: {
     check: "C-124.31",
-    where: at19("scenarioSet", "is-scenario-named"),
+    where: at21("scenarioSet", "is-scenario-named"),
     translation: "A scenario needs a name of 1 to 200 characters, with no quotation mark, backslash or line break. Nothing was written."
   },
   PHASE_MALFORMED: {
     check: "C-124.32",
-    where: at19("#scenarioPhases", "is-phase-shaped"),
+    where: at21("#scenarioPhases", "is-phase-shaped"),
     translation: "A phase has an id, a name, the chosen options it holds, when it starts (at the plan's start, after another phase, on one outcome of another phase's checkpoint, or when another matter's track reaches a point), and may have a checkpoint after 1 to 3,650 days, a condition of up to 500 characters and the phase each judgement leads to. The phase named was not so. Nothing was written."
   },
   PHASE_OPTION_NOT_CHOSEN: {
     check: "C-124.33",
-    where: at19("#scenarioPhases", "is-phase-option-chosen"),
+    where: at21("#scenarioPhases", "is-phase-option-chosen"),
     translation: "A phase holds only options the group has chosen. Choose the option first. Nothing was written."
   },
   PHASE_CYCLE: {
     check: "C-124.34",
-    where: at19("#scenarioPhases", "is-phase-acyclic"),
+    where: at21("#scenarioPhases", "is-phase-acyclic"),
     translation: "A phase cannot start after itself: following when each phase starts leads back to the phase named. Nothing was written."
   },
   BRANCH_UNKNOWN: {
     check: "C-124.35",
-    where: at19("#scenarioPhases", "is-branch-known"),
+    where: at21("#scenarioPhases", "is-branch-known"),
     translation: "A phase starts after, or a judgement leads to, a phase of the same scenario, or a matter the plan is about. The one named is neither. Nothing was written."
   },
   MACHINE_CANNOT_JUDGE: {
     check: "C-124.36",
-    where: at19("checkpointRecord", "is-judge-member"),
+    where: at21("checkpointRecord", "is-judge-member"),
     translation: "Whether a checkpoint's condition was met is the group's own judgement. An assistant may not make it. Nothing was written."
   },
   CHECKPOINT_REFUSED: {
     check: "C-124.37",
-    where: at19("checkpointRecord", "is-checkpoint-named"),
+    where: at21("checkpointRecord", "is-checkpoint-named"),
     translation: "A judgement names a scenario of the plan, one of its phases that has a checkpoint, met or not_met, and a note of up to 500 characters. Nothing was written."
   },
   CHECKPOINT_NOT_DUE: {
     check: "C-124.38",
-    where: at19("checkpointRecord", "is-checkpoint-due"),
+    where: at21("checkpointRecord", "is-checkpoint-due"),
     translation: "That checkpoint is not due yet: its phase has not started, or its days have not passed. Nothing was written."
   },
   CHECKPOINT_JUDGED: {
     check: "C-124.39",
-    where: at19("checkpointRecord", "is-checkpoint-once"),
+    where: at21("checkpointRecord", "is-checkpoint-once"),
     translation: "That checkpoint has already been judged. Nothing was written."
   },
   /* ---- R18: starting an option ---- */
   MACHINE_CANNOT_START: {
     check: "C-124.40",
-    where: at19("optionStart", "is-start-member"),
+    where: at21("optionStart", "is-start-member"),
     translation: "Starting an option creates an action the group takes in the world, and only a member does that. Nothing was written."
   },
   OPTION_NOT_CHOSEN: {
     check: "C-124.41",
-    where: at19("optionStart", "is-start-chosen"),
+    where: at21("optionStart", "is-start-chosen"),
     translation: "Only an option the group has chosen is started. Choose it first. Nothing was written."
   },
   OPTION_STARTED: {
     check: "C-124.42",
-    where: at19("optionStart", "is-start-once"),
+    where: at21("optionStart", "is-start-once"),
     translation: "That option has already been started; the action it created is named. Nothing was written."
   },
   /* ---- R20: closing ---- */
   MACHINE_CANNOT_CLOSE_PLAN: {
     check: "C-124.43",
-    where: at19("planClose", "is-close-member"),
+    where: at21("planClose", "is-close-member"),
     translation: "Closing a plan is a member's act, with a reason. A plan never closes itself. Nothing was written."
   },
   /* ---- R21: the project's kind of work ---- */
   WORK_KIND_UNKNOWN: {
     check: "C-124.44",
-    where: at19("#workKindsCheck", "is-work-kind-known"),
+    where: at21("#workKindsCheck", "is-work-kind-known"),
     translation: "A project's kinds of work are drawn from: reporting, fixing, legal, oversight, other. Nothing was written."
   },
   MACHINE_CANNOT_SET_WORK_KIND: {
     check: "C-124.45",
-    where: at19("#workKindsCheck", "is-work-kind-member"),
+    where: at21("#workKindsCheck", "is-work-kind-member"),
     translation: "A project's kinds of work are set by an owner of the project. An automated credential cannot set them. Nothing was written."
   },
   /* ---- R30, R31, R34: the planning run ---- */
   PLAN_NOT_OF_PROJECT: {
     check: "C-124.46",
-    where: at19("planRunCheck", "is-plan-of-context"),
+    where: at21("planRunCheck", "is-plan-of-context"),
     translation: "A planning run works on a plan of the project it is opened over, and this plan is another project's. Nothing was written."
   },
   PROPOSAL_NO_RUN: {
     check: "C-124.47",
-    where: at19("#runGate", "is-proposal-run"),
+    where: at21("#runGate", "is-proposal-run"),
     translation: "An assistant's proposal names the planning run it was made under, one you can see. Nothing was written."
   },
   PROPOSAL_RUN_NOT_RUNNING: {
     check: "C-124.48",
-    where: at19("#runGate", "is-proposal-run-running"),
+    where: at21("#runGate", "is-proposal-run-running"),
     translation: "That planning run is no longer running, so it proposes nothing more. Nothing was written."
   },
   PROPOSAL_RUN_OTHER_PLAN: {
     check: "C-124.49",
-    where: at19("refuseRunOtherPlan", "is-run-of-plan"),
+    where: at21("refuseRunOtherPlan", "is-run-of-plan"),
     translation: "That run is not a planning run of this plan. Nothing was written."
   },
   PROPOSAL_BOUND_REACHED: {
     check: "C-124.50",
-    where: at19("#runGate", "is-proposal-bound"),
+    where: at21("#runGate", "is-proposal-bound"),
     translation: "That planning run has made every proposal it was allowed. Nothing was written."
   },
   PROPOSAL_NO_SOURCE: {
     check: "C-124.51",
-    where: at19("#sources", "is-proposal-sourced"),
+    where: at21("#sources", "is-proposal-sourced"),
     translation: "An assistant's proposal names what it rests on: findings, determinations, standards, consequences, plans or options you can see. One named is none of those here; one you may not see is answered as one that does not exist. Nothing was written."
   },
   PROPOSALS_CURSOR_REFUSED: {
     check: "C-124.52",
-    where: at19("planProposals", "is-cursor-given"),
+    where: at21("planProposals", "is-cursor-given"),
     translation: "That page marker was not given by this list. Ask for the first page again. Nothing was read."
   },
   /* ---- the record object (R27, R24): the plan's document ---- */
   MACHINE_CANNOT_WRITE_PLAN: {
     check: "C-124.53",
-    where: at19("check", "is-plan-doc-member"),
+    where: at21("check", "is-plan-doc-member"),
     translation: "An action plan's record is written by members' acts only. An automated credential cannot write it. Nothing was written."
   },
   PLAN_BY_ACT_ONLY: {
     check: "C-124.54",
-    where: at19("check", "is-plan-doc-act"),
+    where: at21("check", "is-plan-doc-act"),
     translation: "An action plan changes only through its own acts, so its history and what is read from it never disagree. Nothing was written."
   },
   PLAN_HISTORY_REWRITTEN: {
     check: "C-124.55",
-    where: at19("check", "is-plan-append-only"),
+    where: at21("check", "is-plan-append-only"),
     translation: "An action plan's history is never edited; each act adds to it. Nothing was written."
   },
   UNSPLICEABLE_PLAN: {
     check: "C-124.56",
-    where: at19("#append", "is-plan-spliceable"),
+    where: at21("#append", "is-plan-spliceable"),
     translation: "The plan's record cannot be extended in place. Nothing was written."
   },
   PLAN_PROVIDER_UNAVAILABLE: {
     check: "C-124.57",
-    where: at19("refuseProviderUnavailable", "is-provider-present"),
+    where: at21("refuseProviderUnavailable", "is-provider-present"),
     translation: "An action plan reads matters, actions and runs held by other parts of the record, and one of them is not on this instance yet, so the plan is not answered in part. Nothing was written."
   }
 });
-function refusal17(code, detail, extra) {
+function refusal18(code, detail, extra) {
   const row2 = ACTION_PLAN_CHECKS[code];
   return { ok: false, reason: code, detail, ...extra || {}, code, check: row2.check, translation: row2.translation };
 }
 
 // src/monitoring/checks.mjs
-var checks_exports43 = {};
-__export(checks_exports43, {
+var checks_exports45 = {};
+__export(checks_exports45, {
   CADENCE_ENUM: () => CADENCE_ENUM,
   CRITICALITY_ENUM: () => CRITICALITY_ENUM,
   DRIVE_TICK_CHECKS: () => DRIVE_TICK_CHECKS,
@@ -98536,11 +101186,11 @@ function asText8(v) {
   if (typeof v === "string") return v;
   return new TextDecoder().decode(v);
 }
-var at20 = (fn, region) => `src/monitoring/index.mjs ${fn} > ${region}`;
+var at22 = (fn, region) => `src/monitoring/index.mjs ${fn} > ${region}`;
 var DRIVE_TICK_CHECKS = Object.freeze({
   DRIVE_TICK_EXPORT_IS_THE_SHELL: Object.freeze({
     check: "C-48.8",
-    where: at20("monitor", "is-drive-tick-export"),
+    where: at22("monitor", "is-drive-tick-export"),
     translation: "The check of that Google Drive document did not run: the export address answered with a web page rather than a document, which is what Drive does when a file stops being shared with anyone who has the link. Nothing was compared and nothing about the record changed \u2014 what is known is that this instance could not see the document today."
   }),
   /* THE SAME TICK, CAUGHT ON THE BYTES. C-48.7's reasoning one op over: the
@@ -98551,14 +101201,14 @@ var DRIVE_TICK_CHECKS = Object.freeze({
      the document CHANGED on every visit — the cry-wolf this row exists to end. */
   DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL: Object.freeze({
     check: "C-48.9",
-    where: at20("monitor", "is-drive-tick-bytes"),
+    where: at22("monitor", "is-drive-tick-bytes"),
     translation: "The check of that Google Drive document did not run: the export address said it was sending a document and sent a web page instead. This instance reads the bytes rather than the label, so the application page was recognised and not compared against the captured document \u2014 comparing it would report a change on every visit that nobody made."
   })
 });
 var GATHERING_CHECKS = Object.freeze({
   GATHERING_REFUSED: Object.freeze({
     check: "C-18.10",
-    where: at20("gatheringCheck", "is-gathering-refused"),
+    where: at22("gatheringCheck", "is-gathering-refused"),
     translation: "This was not saved: the list of things to gather that it carries is not written the way the record writes them, and a gathering request is shown to members as data, so it must stay within its grammar. The findings beside this say which requests and what is wrong with each. Nothing was changed."
   })
 });
@@ -98639,37 +101289,37 @@ function checkGatheringGrammar(ctx, findings) {
 }
 
 // src/tasks/checks.mjs
-var checks_exports44 = {};
-__export(checks_exports44, {
+var checks_exports46 = {};
+__export(checks_exports46, {
   QUEUE_INBOX_CHECKS: () => QUEUE_INBOX_CHECKS,
   QUEUE_MACHINE_CHECKS: () => QUEUE_MACHINE_CHECKS,
   TASK_ACTOR_CHECKS: () => TASK_ACTOR_CHECKS,
   checkInboxGrammar: () => checkInboxGrammar
 });
-var at21 = (fn, region) => `src/tasks/index.mjs ${fn} > ${region}`;
+var at23 = (fn, region) => `src/tasks/index.mjs ${fn} > ${region}`;
 var QUEUE_MACHINE_CHECKS = Object.freeze({
   MACHINE_CANNOT_FORWARD: Object.freeze({
     check: "C-32.10",
-    where: at21("taskForward", "is-machine-forward"),
+    where: at23("taskForward", "is-machine-forward"),
     translation: "Forwarding hands an obligation to a named person, and deciding who is better placed to answer it is a judgement about people rather than about records. The credential that asked here is an automated one: it can surface the work and route it as it arrives, and cannot re-address it. Sign in to forward it."
   }),
   MACHINE_CANNOT_RESOLVE: Object.freeze({
     check: "C-32.11",
-    where: at21("taskResolve", "is-machine-resolve"),
+    where: at23("taskResolve", "is-machine-resolve"),
     translation: "Closing an obligation says the thing the record asked for has been answered, and somebody has to be willing to say that. The credential that asked here is an automated one \u2014 it may surface the work and prepare what it needs, and closing work that is nobody's is still closing it. Sign in to resolve it."
   })
 });
 var TASK_ACTOR_CHECKS = Object.freeze({
   TASK_NOT_YOURS: Object.freeze({
     check: "C-76.1",
-    where: at21("#refuseNotYours", "is-task-actor-fence"),
+    where: at23("#refuseNotYours", "is-task-actor-fence"),
     translation: "This task is not yours to act on: it is with another member now, so nothing was done to it. The record says below who holds it. Ask them, or an administrator, if it still needs you."
   })
 });
 var QUEUE_INBOX_CHECKS = Object.freeze({
   INBOX_REFUSED: Object.freeze({
     check: "C-19.2",
-    where: at21("inboxCheck", "is-inbox-refused"),
+    where: at23("inboxCheck", "is-inbox-refused"),
     translation: "This was not saved: the list of tasks it carries is not written the way the record writes tasks, so a member could be shown something in it that the record cannot vouch for. The findings beside this say which entries and what is wrong with each. Nothing was changed."
   })
 });
@@ -98787,27 +101437,27 @@ function checkInboxGrammar(ctx, findings) {
 }
 
 // src/queue/checks.mjs
-var checks_exports45 = {};
-__export(checks_exports45, {
+var checks_exports47 = {};
+__export(checks_exports47, {
   QUEUE_ACT_CHECKS: () => QUEUE_ACT_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
   queueRefusal: () => queueRefusal
 });
-var at22 = (fn, region) => `src/queue/index.mjs ${fn} > ${region}`;
+var at24 = (fn, region) => `src/queue/index.mjs ${fn} > ${region}`;
 var QUEUE_MINT_CHECKS = Object.freeze({
   NO_CLASS: Object.freeze({
     check: "C-31.1",
-    where: at22("queueFeed", "is-queue-mint"),
+    where: at24("queueFeed", "is-queue-mint"),
     translation: "Your list could not be assembled: something on it does not say what sort of item it is, and showing it without that would put an entry in front of you that nobody can act on. Nothing has been lost and nothing about the record has changed \u2014 this is a fault on our side, not something you did."
   }),
   NO_SUCH_KIND: Object.freeze({
     check: "C-31.2",
-    where: at22("queueFeed", "is-queue-mint"),
+    where: at24("queueFeed", "is-queue-mint"),
     translation: "Your list could not be assembled: something on it is described in a word this record does not know, so there is no sentence to show you in place of it. Rather than showing you a line you could not read, the list refuses whole. Nothing has been lost."
   }),
   KIND_MISCLASSED: Object.freeze({
     check: "C-31.3",
-    where: at22("queueFeed", "is-queue-mint"),
+    where: at24("queueFeed", "is-queue-mint"),
     translation: "Your list could not be assembled: something on it is filed one way and described another, and the difference decides whether setting it aside is a private choice of yours or a change to the record everyone shares. That is not a difference to guess at, so the list refuses until it is right. Nothing has been lost."
   })
 });
@@ -98815,21 +101465,21 @@ var QUEUE_ACT_CHECKS = Object.freeze({
   /* REC-64 / C-33.27: an OBLIGATION is never muted (R19, R31). */
   KIND_NOT_PERSONAL: Object.freeze({
     check: "C-33.27",
-    where: at22("queueMute", "is-mute-class"),
+    where: at24("queueMute", "is-mute-class"),
     translation: "Setting this aside would be a change everybody sees rather than a private choice of yours, and that is a decision the group takes together rather than one this control makes. The kinds you can quiet for yourself are listed beside the refusal."
   }),
   /* REC-205 / C-33.44: a CONDITION or an OBLIGATION named to the dispose act (R28). The translation names the act that
      does reach the item, since a member holding a selection needs the next move. N301: what the record NOTICED. */
   CLASS_NOT_DISPOSED: Object.freeze({
     check: "C-33.44",
-    where: at22("proposeDispose", "is-dispose-class"),
+    where: at24("proposeDispose", "is-dispose-class"),
     translation: "This is not something the record disposes of. Deferring and dismissing are decisions about something the record NOTICED \u2014 its own question \u2014 and this item is a different kind of thing: a CONDITION is a fact about our machinery that you silence for yourself, and an OBLIGATION is work a named person owes and leaves every list when it is resolved. Nothing about it was changed, and it is still in your list. The answer names the act that does reach it."
   }),
   /* R29 (D-623) / C-33.50: the project arm with no project, and the bridge's FINDING key (R27, R28). One code, one
      sentence at both sites: setting a noticed item aside is one team's decision, and the team was not named. */
   NO_PROJECT_SCOPE: Object.freeze({
     check: "C-33.50",
-    where: at22("#noProjectScope", "is-dispose-scope"),
+    where: at24("#noProjectScope", "is-dispose-scope"),
     translation: "Setting this aside is a decision one project takes for its own list, and no project was named for it. Choose the project you are acting for (the item lists the ones it is filed under) and ask again. Nothing was written, and no team's list moved."
   })
 });
@@ -99089,7 +101739,7 @@ var shown = (v) => {
     return typeof v;
   }
 };
-var clamp3 = (limit, dflt, max) => {
+var clamp4 = (limit, dflt, max) => {
   const n = Math.floor(Number(limit));
   return Math.max(1, Math.min(Number.isFinite(n) && n > 0 ? n : dflt, max));
 };
@@ -100002,7 +102652,7 @@ var CaptureRequests = class _CaptureRequests {
     return { sql: `EXISTS (SELECT 1 FROM bundles b WHERE b.bundle_id = ${col} AND (${gate.sql}))`, args: gate.args };
   }
   #bounded(where, args, order, limit, gateCol, viewer) {
-    const cap = clamp3(limit, CAPTURE_REQUEST_READ_LIMIT, CAPTURE_REQUEST_READ_MAX);
+    const cap = clamp4(limit, CAPTURE_REQUEST_READ_LIMIT, CAPTURE_REQUEST_READ_MAX);
     const seen = _CaptureRequests.#gate(gateCol, viewer);
     const found = this.#rows(
       `SELECT cr.* FROM capture_requests cr WHERE ${[...where, `(${seen.sql})`].join(" AND ")} ORDER BY ${order} LIMIT ?`,
@@ -100149,7 +102799,7 @@ var CaptureRequests = class _CaptureRequests {
         return false;
       }
     };
-    const bound = (limit) => clamp3(limit, CAPTURE_REQUEST_WAIT_BATCH, CAPTURE_REQUEST_READ_MAX);
+    const bound = (limit) => clamp4(limit, CAPTURE_REQUEST_WAIT_BATCH, CAPTURE_REQUEST_READ_MAX);
     return {
       tickMs: () => this.drainIntervalMs(),
       holds: (iso5, limit) => {
@@ -100256,10 +102906,10 @@ function deemingActor(attribution) {
 function lookAuthority(q7) {
   return q7 && q7.run ? { authorityKind: "run", authority: String(q7.run), actorClass: "machine" } : { authorityKind: "sweep", authority: q7 && q7.request ? String(q7.request) : null, actorClass: "plane" };
 }
-var instances23 = /* @__PURE__ */ new WeakMap();
+var instances25 = /* @__PURE__ */ new WeakMap();
 function captureRequestsOf(host, deps = {}) {
   const storage = host && host.storage ? host.storage : host;
-  let c = instances23.get(storage);
+  let c = instances25.get(storage);
   if (!c) {
     const env = deps.env || {};
     const record = deps.record || recordOf(host);
@@ -100280,7 +102930,7 @@ function captureRequestsOf(host, deps = {}) {
       inquiry: deps.inquiry || { memberUserAgent: (id) => inquiryOf(host).memberUserAgent(id) }
     };
     c = new CaptureRequests(storage, d);
-    instances23.set(storage, c);
+    instances25.set(storage, c);
     record.declarePurge(CAPTURE_REQUESTS_MODULE, [{ name: "capture_requests", keys: ["target"], clears: ["lead_inquiry"] }]);
     if (typeof record.registerCounts === "function") {
       const counted = record.registerCounts(CAPTURE_REQUESTS_MODULE, [...CAPTURE_REQUESTS_COUNT_KEYS], (hid) => c.counts(hid));
@@ -100634,10 +103284,10 @@ var REQUESTS_MAX = 1e3;
 var GOALS_READ_MAX = 1e3;
 var AGEING_READ_MAX = 1e3;
 var AUTHORS_PAGE = 64;
-var str9 = (v) => typeof v === "string" ? v.trim() : "";
-var isObj10 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var str11 = (v) => typeof v === "string" ? v.trim() : "";
+var isObj12 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var rand8 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
-var machine = (who2) => !str9(who2) || isMachineIdentity(str9(who2));
+var machine = (who2) => !str11(who2) || isMachineIdentity(str11(who2));
 var second = (iso5) => String(iso5).replace(/\.\d+Z$/, "Z");
 var bodyText = (s) => String(s).trim().replace(/^#/gm, " #");
 var Intent = class {
@@ -100729,8 +103379,8 @@ var Intent = class {
   /* The member id behind an author (membership R76), null for a machine; the founder's session is `admin` (R9: an
      administrator's act, the founder included). */
   #memberOf(author) {
-    if (str9(author) === "admin") return "admin";
-    return this.membership.positionalMember(str9(author), str9(author));
+    if (str11(author) === "admin") return "admin";
+    return this.membership.positionalMember(str11(author), str11(author));
   }
   /* ===================================================================== *
    * THE WRITE (R2, R8–R11, R16, R26): every document intent writes goes through `promotion`, whose check runs this
@@ -100793,7 +103443,7 @@ var Intent = class {
   #checkProject(c) {
     const fm = c.docFm || {};
     if (typeof fm.objective !== "string" || fm.objective.trim() === "")
-      return refusal13("NO_OBJECTIVE", "this project's document states no objective, or an empty one (C-2.9). A project says what it is trying to achieve. Nothing was written.");
+      return refusal14("NO_OBJECTIVE", "this project's document states no objective, or an empty one (C-2.9). A project says what it is trying to achieve. Nothing was written.");
     const now = conditionOf(fm);
     const held = c.head ? conditionOf(parseFm(this.record.readFile(c.bundleId, "bundle.md")?.text) || {}) : null;
     if (now && JSON.stringify(now.condition) !== JSON.stringify(held ? held.condition : null))
@@ -100810,7 +103460,7 @@ var Intent = class {
     const from = c.head ? c.head.currentState : null, to = c.promotedState;
     const legal = c.head ? to === from || from === first && to === last : to === first;
     if (!legal)
-      return refusal13(
+      return refusal14(
         "PURSUIT_STATE_MOVE_UNDECLARED",
         `a ${type} ${c.head ? `at '${from}' moves only to '${last}', once` : `is created '${first}'`}, and this promotion names '${String(to).slice(0, 40)}'. Nothing was written.`,
         { object_type: type, from, to: to ?? null }
@@ -100834,10 +103484,10 @@ var Intent = class {
      (the founder included), anyone else answered through membership's `notAnAdmin` with the next step (N327). */
   #aspirationAuthority(scope, owner, author, viewer) {
     const who2 = this.#memberOf(author);
-    if (!ASPIRATION_SCOPES.includes(scope) || scope !== "group" && !str9(owner) || scope === "group" && owner != null)
+    if (!ASPIRATION_SCOPES.includes(scope) || scope !== "group" && !str11(owner) || scope === "group" && owner != null)
       return refuseBadScope("an aspiration is the group's (naming no owner), a project's or a member's (naming which). Nothing was written.", { scope: scope ?? null, scopes: ASPIRATION_SCOPES });
-    if (scope === "member" && str9(owner) !== who2)
-      return refusal13("NOT_YOURS", "a member's aspiration is declared, revised and retired by that member alone. Nothing was written.", { owner });
+    if (scope === "member" && str11(owner) !== who2)
+      return refusal14("NOT_YOURS", "a member's aspiration is declared, revised and retired by that member alone. Nothing was written.", { owner });
     if (scope === "project") {
       const p = this.#project(owner, viewer);
       if (p.refused) return p.refused;
@@ -100845,34 +103495,34 @@ var Intent = class {
       if (denied) return denied;
     }
     if (scope === "group" && !this.membership.isAdministrator(who2))
-      return notAnAdmin(str9(author) || null, GROUP_ASPIRATION_ACT, { remedy: GROUP_ASPIRATION_REMEDY });
+      return notAnAdmin(str11(author) || null, GROUP_ASPIRATION_ACT, { remedy: GROUP_ASPIRATION_REMEDY });
     return null;
   }
   /* R2: the condition's shape, then what it names, in R2's order; null when it is readable and names what exists. */
   #conditionRefusal(c) {
-    const shaped = isObj10(c) && TOKEN.test(str9(c.progression)) && TOKEN.test(str9(c.entity)) && (c.relation == null || typeof c.relation === "string" && this.entities.relationKinds().includes(c.relation)) && (c.filter == null || isObj10(c.filter) && Object.entries(c.filter).every(([k, v]) => /^[a-z][a-z0-9_]{0,39}$/.test(k) && TOKEN.test(String(v)))) && isObj10(c.required) && (c.required.stages == null || Array.isArray(c.required.stages) && c.required.stages.every((s) => TOKEN.test(String(s)))) && isObj10(c.satisfied);
+    const shaped = isObj12(c) && TOKEN.test(str11(c.progression)) && TOKEN.test(str11(c.entity)) && (c.relation == null || typeof c.relation === "string" && this.entities.relationKinds().includes(c.relation)) && (c.filter == null || isObj12(c.filter) && Object.entries(c.filter).every(([k, v]) => /^[a-z][a-z0-9_]{0,39}$/.test(k) && TOKEN.test(String(v)))) && isObj12(c.required) && (c.required.stages == null || Array.isArray(c.required.stages) && c.required.stages.every((s) => TOKEN.test(String(s)))) && isObj12(c.satisfied);
     if (!shaped)
-      return refusal13("CONDITION_UNREADABLE", "a condition is {progression, entity, relation?, filter?, required: {grade?, stages?}, satisfied: {share}}, each name a bare key or id. Nothing was written.");
-    const def = this.progressions.readProgression({ progressionKey: str9(c.progression) });
+      return refusal14("CONDITION_UNREADABLE", "a condition is {progression, entity, relation?, filter?, required: {grade?, stages?}, satisfied: {share}}, each name a bare key or id. Nothing was written.");
+    const def = this.progressions.readProgression({ progressionKey: str11(c.progression) });
     if (!def || def.ok === false || !def.found)
       return refuseNoSuchProgression(
         "the condition names a flow the record has not declared. Nothing was written.",
-        { progression: str9(c.progression) }
+        { progression: str11(c.progression) }
       );
-    if (!this.entities.has(str9(c.entity))) return noSuchEntity(str9(c.entity));
+    if (!this.entities.has(str11(c.entity))) return noSuchEntity(str11(c.entity));
     const declared = new Set(def.stages.map((s) => s.stage_key));
     const bad = (c.required.stages || []).map(String).filter((s) => !declared.has(s));
     if (bad.length)
-      return refusal13(
+      return refusal14(
         "INTENT_BAD_STAGE",
-        `the flow '${str9(c.progression)}' declares no stage ${bad.join(", ")}. Nothing was written.`,
+        `the flow '${str11(c.progression)}' declares no stage ${bad.join(", ")}. Nothing was written.`,
         { stages: bad, declared: [...declared] }
       );
     if (c.required.grade != null && !GRADES.includes(c.required.grade))
-      return refusal13("CONDITION_BAD_GRADE", "a required grade is one of A, B, C, D. Nothing was written.", { grades: GRADES });
+      return refusal14("CONDITION_BAD_GRADE", "a required grade is one of A, B, C, D. Nothing was written.", { grades: GRADES });
     const share = c.satisfied.share;
     if (!Number.isInteger(share) || share < 1 || share > 100)
-      return refusal13("BAD_SHARE", "a share is a whole number from 1 to 100. Nothing was written.");
+      return refusal14("BAD_SHARE", "a share is a whole number from 1 to 100. Nothing was written.");
     return null;
   }
   /** record-core R59: C-2.9's objective arm in the audit, beside the grammar's `closed_reason` arm (R29), over the same image
@@ -100897,14 +103547,14 @@ var Intent = class {
    *  project's document through `promotion`; the earlier revision stays in history. */
   setCondition({ project, condition, author, viewer = null } = {}) {
     if (machine(author))
-      return refusal13("MACHINE_CANNOT_SET_OBJECTIVE", "setting or changing an objective's measure is a named member's act (DEC-24 rule 2). Nothing was written.");
+      return refusal14("MACHINE_CANNOT_SET_OBJECTIVE", "setting or changing an objective's measure is a named member's act (DEC-24 rule 2). Nothing was written.");
     const p = this.#project(project, viewer);
     if (p.refused) return p.refused;
     const denied = this.membership.projectAuthority(project, author, "joined", "setCondition");
     if (denied) return denied;
     const c = condition == null ? null : {
       ...condition,
-      required: isObj10(condition.required) ? {
+      required: isObj12(condition.required) ? {
         grade: condition.required.grade ?? null,
         stages: condition.required.stages ?? []
       } : condition.required,
@@ -100917,22 +103567,22 @@ var Intent = class {
     }
     const at25 = this.#when();
     let text5 = removeBlock3(p.doc.text, CONDITION_KEY);
-    if (c) text5 = setBlock(text5, CONDITION_KEY, conditionLines(c, str9(author), at25));
+    if (c) text5 = setBlock(text5, CONDITION_KEY, conditionLines(c, str11(author), at25));
     text5 = setField(text5, "last_updated", q(at25));
     text5 = logEntry(
       text5,
       at25,
       c ? "Objective condition set" : "Objective condition removed",
-      str9(author),
+      str11(author),
       c ? `the objective's satisfaction condition is ${JSON.stringify(c)}.` : "the objective states no condition."
     );
-    const r = this.#revise(p.doc, text5, str9(author), viewer);
+    const r = this.#revise(p.doc, text5, str11(author), viewer);
     if (!r.ok) return r;
-    return { ok: true, project, condition: c, set_by: str9(author), at: at25, bundleSha: r.bundleSha };
+    return { ok: true, project, condition: c, set_by: str11(author), at: at25, bundleSha: r.bundleSha };
   }
   /* The matched instances of a condition (R4), each assembled by progressions and judged; derived, never stored. */
   #measure(cond, viewer) {
-    const key = str9(cond.progression), anchor = str9(cond.entity);
+    const key = str11(cond.progression), anchor = str11(cond.entity);
     const related = /* @__PURE__ */ new Set([anchor]);
     if (cond.relation) {
       const e = this.entities.readEntity({ entityId: anchor });
@@ -101273,7 +103923,7 @@ var Intent = class {
   declareGoal({ statement, bounds, aspiration = null, author, viewer = null } = {}) {
     const byMachine = goalMachineRefusal(author);
     if (byMachine) return byMachine;
-    if (!str9(statement) || !str9(bounds))
+    if (!str11(statement) || !str11(bounds))
       return refusePursuitUnstated("a goal states what it pursues and what bounds it. Nothing was written.");
     if (aspiration != null && aspiration !== "") {
       const a = this.#pursuit(aspiration, ASPIRATION, viewer ?? author);
@@ -101289,11 +103939,11 @@ var Intent = class {
     const r = this.#create(
       id,
       GOAL,
-      goalDoc({ id, statement, bounds, aspiration: aspiration || null, author: str9(author), at: at25 }),
-      str9(author)
+      goalDoc({ id, statement, bounds, aspiration: aspiration || null, author: str11(author), at: at25 }),
+      str11(author)
     );
     if (!r.ok) return r;
-    return { ok: true, goal: id, state: "open", aspiration: aspiration || null, author: str9(author), at: at25 };
+    return { ok: true, goal: id, state: "open", aspiration: aspiration || null, author: str11(author), at: at25 };
   }
   /** R8: record that a project's objective serves a goal, as the author's dated claim; the author has joined it. */
   linkObjective({ goal, project, author, viewer = null } = {}) {
@@ -101307,15 +103957,15 @@ var Intent = class {
     if (p.refused) return p.refused;
     const denied = this.membership.projectAuthority(project, author, "joined", "linkObjective");
     if (denied) return denied;
-    if ((Array.isArray(g.fm.objectives) ? g.fm.objectives : []).some((o) => isObj10(o) && o.project === project))
+    if ((Array.isArray(g.fm.objectives) ? g.fm.objectives : []).some((o) => isObj12(o) && o.project === project))
       return { ok: true, goal, project, already: true };
     const at25 = this.#when();
-    let text5 = appendItem(g.text, "objectives", { project, by: TOKEN.test(str9(author)) ? str9(author) : q(author), at: q(at25) });
+    let text5 = appendItem(g.text, "objectives", { project, by: TOKEN.test(str11(author)) ? str11(author) : q(author), at: q(at25) });
     text5 = setField(text5, "last_updated", q(at25));
-    text5 = logEntry(text5, at25, "Objective linked", str9(author), `${project}'s objective serves this goal.`);
-    const r = this.#revise(g, text5, str9(author), viewer);
+    text5 = logEntry(text5, at25, "Objective linked", str11(author), `${project}'s objective serves this goal.`);
+    const r = this.#revise(g, text5, str11(author), viewer);
     if (!r.ok) return r;
-    return { ok: true, goal, project, by: str9(author), at: at25 };
+    return { ok: true, goal, project, by: str11(author), at: at25 };
   }
   /** R8: close a goal with its reason; it stays readable with its objectives and reason. */
   closeGoal({ goal, reason, author, viewer = null } = {}) {
@@ -101323,7 +103973,7 @@ var Intent = class {
     if (byMachine) return byMachine;
     const g = this.#pursuit(goal, GOAL, viewer ?? author);
     if (!g) return refuseNoSuchGoal("no goal answers to that id here. Nothing was written.", { goal: goal ?? null });
-    if (!str9(reason)) return refuseNoReason("a goal is closed with the reason it closed. Nothing was written.");
+    if (!str11(reason)) return refuseNoReason("a goal is closed with the reason it closed. Nothing was written.");
     if (g.head.currentState === "closed")
       return refusePursuitEnded("this goal is already closed. Nothing was written.", { goal });
     const at25 = this.#when();
@@ -101332,14 +103982,14 @@ var Intent = class {
       from: "open",
       to: "closed",
       blurb: "closed; the reason is in its document",
-      author: str9(author)
+      author: str11(author)
     });
     text5 = setField(setField(setField(text5, "prior_state", "open"), "current_state", "closed"), "last_updated", q(at25));
     text5 = setSection2(text5, "Why It Closed", bodyText(reason));
-    text5 = logEntry(text5, at25, "Closed", str9(author), "open to closed.");
-    const r = this.#revise(g, text5, str9(author), viewer);
+    text5 = logEntry(text5, at25, "Closed", str11(author), "open to closed.");
+    const r = this.#revise(g, text5, str11(author), viewer);
     if (!r.ok) return r;
-    return { ok: true, goal, state: "closed", reason: str9(reason), author: str9(author), at: at25 };
+    return { ok: true, goal, state: "closed", reason: str11(reason), author: str11(author), at: at25 };
   }
   /** R8: a goal as the record holds it: its statement, bounds, aspiration, the objectives linked (each a project the
    *  viewer may see), its state and, once closed, its reason. No progress figure: its objectives carry theirs. */
@@ -101349,7 +103999,7 @@ var Intent = class {
     return { ok: true, goal: this.#goalView(g, viewer) };
   }
   #goalView(g, viewer) {
-    const objectives = (Array.isArray(g.fm.objectives) ? g.fm.objectives : []).filter(isObj10).filter((o) => viewer == null || this.membership.inSight(o.project, viewer)).map((o) => ({ project: o.project, by: o.by ?? null, at: o.at ?? null }));
+    const objectives = (Array.isArray(g.fm.objectives) ? g.fm.objectives : []).filter(isObj12).filter((o) => viewer == null || this.membership.inSight(o.project, viewer)).map((o) => ({ project: o.project, by: o.by ?? null, at: o.at ?? null }));
     const asp = typeof g.fm.aspiration === "string" && g.fm.aspiration ? g.fm.aspiration : null;
     const aspiration = asp && (viewer == null || this.#pursuit(asp, ASPIRATION, viewer)) ? asp : null;
     return {
@@ -101371,14 +104021,14 @@ var Intent = class {
   declareAspiration({ scope, owner = null, statement, entities = [], progressions = [], author, viewer = null } = {}) {
     const byMachine = aspirationMachineRefusal(author);
     if (byMachine) return byMachine;
-    const own3 = scope === "group" ? null : str9(owner) || null;
-    if (!ASPIRATION_SCOPES.includes(scope) || scope !== "group" && !own3 || scope === "group" && str9(owner))
+    const own3 = scope === "group" ? null : str11(owner) || null;
+    if (!ASPIRATION_SCOPES.includes(scope) || scope !== "group" && !own3 || scope === "group" && str11(owner))
       return refuseBadScope("an aspiration is the group's (naming no owner), a project's or a member's (naming which). Nothing was written.", { scope: scope ?? null, scopes: ASPIRATION_SCOPES });
-    if (!str9(statement)) return refusePursuitUnstated("an aspiration states what it holds to. Nothing was written.");
+    if (!str11(statement)) return refusePursuitUnstated("an aspiration states what it holds to. Nothing was written.");
     const denied = this.#aspirationAuthority(scope, own3, author, viewer ?? author);
     if (denied) return denied;
-    const ents = (Array.isArray(entities) ? entities : []).map(str9).filter(Boolean);
-    const progs = (Array.isArray(progressions) ? progressions : []).map(str9).filter(Boolean);
+    const ents = (Array.isArray(entities) ? entities : []).map(str11).filter(Boolean);
+    const progs = (Array.isArray(progressions) ? progressions : []).map(str11).filter(Boolean);
     const badEnt = ents.find((e) => !TOKEN.test(e) || !this.entities.has(e));
     if (badEnt) return noSuchEntity(badEnt);
     const badProg = progs.find((k) => {
@@ -101398,14 +104048,14 @@ var Intent = class {
         statement,
         entities: ents,
         progressions: progs,
-        author: str9(author),
+        author: str11(author),
         at: at25
       }),
-      str9(author),
-      { actorViewer: viewer ?? str9(author) }
+      str11(author),
+      { actorViewer: viewer ?? str11(author) }
     );
     if (!r.ok) return r;
-    return { ok: true, aspiration: id, scope, owner: own3, state: "held", author: str9(author), at: at25 };
+    return { ok: true, aspiration: id, scope, owner: own3, state: "held", author: str11(author), at: at25 };
   }
   /** R10: a project records its departure from a held group aspiration, with a reason. */
   departFrom({ project, aspiration, reason, author, viewer = null } = {}) {
@@ -101422,7 +104072,7 @@ var Intent = class {
       return refuseBadScope("a project departs only from an aspiration the whole group holds; a project's or a member's own is not held by other projects. Nothing was written.", { scope: a.fm.scope ?? null });
     if (a.head.currentState === "retired")
       return refusePursuitEnded("a retired aspiration is held by no project, so there is nothing to depart from. Nothing was written.", { aspiration });
-    if (!str9(reason)) return refuseNoReason("a departure from the group's aspiration records why. Nothing was written.");
+    if (!str11(reason)) return refuseNoReason("a departure from the group's aspiration records why. Nothing was written.");
     const denied = this.membership.projectAuthority(project, author, "joined", "departFrom");
     if (denied) return denied;
     const at25 = this.#when();
@@ -101430,11 +104080,11 @@ var Intent = class {
       `INSERT INTO intent_departures (project_id, aspiration_id, reason, author, at) VALUES (?,?,?,?,?)`,
       project,
       aspiration,
-      str9(reason).slice(0, 4e3),
-      str9(author),
+      str11(reason).slice(0, 4e3),
+      str11(author),
       at25
     ));
-    return { ok: true, project, aspiration, reason: str9(reason), author: str9(author), at: at25, notable: true };
+    return { ok: true, project, aspiration, reason: str11(reason), author: str11(author), at: at25, notable: true };
   }
   /** R11: a dead end, appended to the aspiration's pursuit record, dated and authored, never removed. */
   recordDeadEnd({ aspiration, note, author, viewer = null } = {}) {
@@ -101445,22 +104095,22 @@ var Intent = class {
       "no aspiration answers to that id here. Nothing was written.",
       { aspiration: aspiration ?? null }
     );
-    if (!str9(note))
-      return refusal13("NO_NOTE", "a dead end records what was tried and why it went nowhere. Nothing was written.");
+    if (!str11(note))
+      return refusal14("NO_NOTE", "a dead end records what was tried and why it went nowhere. Nothing was written.");
     const denied = this.#aspirationAuthority(a.fm.scope, a.fm.owner ?? null, author, viewer ?? author);
     if (denied) return denied;
     const at25 = this.#when();
     let text5 = appendSection(
       a.text,
       "Dead Ends",
-      `### ${at25} | ${str9(author)}
+      `### ${at25} | ${str11(author)}
 ${bodyText(note)}`
     );
     text5 = setField(text5, "last_updated", q(at25));
-    text5 = logEntry(text5, at25, "Dead end recorded", str9(author), "a dead end was appended to the pursuit record.");
-    const r = this.#revise(a, text5, str9(author), viewer);
+    text5 = logEntry(text5, at25, "Dead end recorded", str11(author), "a dead end was appended to the pursuit record.");
+    const r = this.#revise(a, text5, str11(author), viewer);
     if (!r.ok) return r;
-    return { ok: true, aspiration, note: str9(note), author: str9(author), at: at25 };
+    return { ok: true, aspiration, note: str11(note), author: str11(author), at: at25 };
   }
   /** R11: retire an aspiration with what pursuing it taught; it and its pursuit record stay readable. */
   retireAspiration({ aspiration, taught, author, viewer = null } = {}) {
@@ -101473,7 +104123,7 @@ ${bodyText(note)}`
     );
     if (a.head.currentState === "retired")
       return refusePursuitEnded("this aspiration is already retired. Nothing was written.", { aspiration });
-    if (!str9(taught))
+    if (!str11(taught))
       return refuseNoLesson("retiring an aspiration records what pursuing it taught. Nothing was written.");
     const denied = this.#aspirationAuthority(a.fm.scope, a.fm.owner ?? null, author, viewer ?? author);
     if (denied) return denied;
@@ -101483,14 +104133,14 @@ ${bodyText(note)}`
       from: "held",
       to: "retired",
       blurb: "retired; what it taught is in its document",
-      author: str9(author)
+      author: str11(author)
     });
     text5 = setField(setField(setField(text5, "prior_state", "held"), "current_state", "retired"), "last_updated", q(at25));
     text5 = setSection2(text5, "Taught", bodyText(taught));
-    text5 = logEntry(text5, at25, "Retired", str9(author), "held to retired.");
-    const r = this.#revise(a, text5, str9(author), viewer);
+    text5 = logEntry(text5, at25, "Retired", str11(author), "held to retired.");
+    const r = this.#revise(a, text5, str11(author), viewer);
     if (!r.ok) return r;
-    return { ok: true, aspiration, state: "retired", taught: str9(taught), author: str9(author), at: at25 };
+    return { ok: true, aspiration, state: "retired", taught: str11(taught), author: str11(author), at: at25 };
   }
   /* R12, R13, R28 (N209, K338, N323): the first `max` aspirations the viewer may see, in id order, held or retired and
      of any scope, walked a page at a time and read one past so a cut says so; answers the held ones among them. An
@@ -101556,7 +104206,7 @@ ${bodyText(note)}`
     const departed = dep.latest;
     const group = held.filter((a) => a.scope === "group" && !departed.has(a.id));
     const own3 = project ? held.filter((a) => a.scope === "project" && a.owner === project) : [];
-    const mine = member ? held.filter((a) => a.scope === "member" && a.owner === str9(member)) : [];
+    const mine = member ? held.filter((a) => a.scope === "member" && a.owner === str11(member)) : [];
     const departures = [...departed.values()].filter((d) => held.some((a) => a.id === d.aspiration));
     return {
       ok: true,
@@ -101642,7 +104292,7 @@ ${bodyText(note)}`
       inquiry: r.inquiry_id,
       reason: r.reason,
       grade: r.grade,
-      basis: safeJson16(r.basis_json),
+      basis: safeJson17(r.basis_json),
       author: r.author,
       at: r.at
     }));
@@ -101694,9 +104344,9 @@ ${bodyText(note)}`
    *  answers its proposals, `{key, kind, grade, basis, instances, surfaced_by}`. */
   registerSource(kind, reader) {
     if (typeof kind !== "string" || !TOKEN.test(kind) || typeof reader !== "function" || kind === "progressions" || kind === "intent")
-      return refusal13("SOURCE_MALFORMED", "a source names its kind (a key, not 'progressions' or 'intent', which are read directly) and gives a reader function.", { kind: typeof kind === "string" ? kind : null });
+      return refusal14("SOURCE_MALFORMED", "a source names its kind (a key, not 'progressions' or 'intent', which are read directly) and gives a reader function.", { kind: typeof kind === "string" ? kind : null });
     if (this.#sources.has(kind))
-      return refusal13("SOURCE_DECLARED", `the source '${kind}' is already registered.`, { kind });
+      return refusal14("SOURCE_DECLARED", `the source '${kind}' is already registered.`, { kind });
     this.#sources.set(kind, reader);
     return { ok: true, kind };
   }
@@ -101731,7 +104381,7 @@ ${bodyText(note)}`
         got = [];
       }
       for (const p of Array.isArray(got) ? got : [])
-        if (isObj10(p) && typeof p.key === "string" && p.key)
+        if (isObj12(p) && typeof p.key === "string" && p.key)
           out.push({
             key: `${kind}::${p.key}`,
             source: kind,
@@ -101849,14 +104499,14 @@ ${bodyText(note)}`
     assistantPrincipal = null
   } = {}) {
     if (!TRIAGE_ACTS.includes(act))
-      return refusal13(
+      return refusal14(
         "TRIAGE_ACT_UNKNOWN",
         `a proposal is triaged by one of ${TRIAGE_ACTS.join(", ")}. Nothing was written.`,
         { acts: TRIAGE_ACTS }
       );
     const isMachine3 = machine(author);
     if (isMachine3 && act !== "question")
-      return refusal13("MACHINE_CANNOT_TRIAGE", "an assistant may open a question from a proposal and take no other act on it. Nothing was written.");
+      return refusal14("MACHINE_CANNOT_TRIAGE", "an assistant may open a question from a proposal and take no other act on it. Nothing was written.");
     let proj = null;
     if (project != null && project !== "") {
       const p = this.#project(project, viewer ?? (isMachine3 ? null : author));
@@ -101865,8 +104515,8 @@ ${bodyText(note)}`
     }
     const found = this.#isDecided(proposal) ? null : this.#allProposals(proj ? proj.id : null, viewer).list.find((p) => p.key === proposal);
     if (!found)
-      return refusal13("NO_SUCH_PROPOSAL", "no open proposal answers to that key; a decided one stays readable with its reason. Nothing was written.", { proposal: typeof proposal === "string" ? proposal : null });
-    const why = str9(reason);
+      return refusal14("NO_SUCH_PROPOSAL", "no open proposal answers to that key; a decided one stays readable with its reason. Nothing was written.", { proposal: typeof proposal === "string" ? proposal : null });
+    const why = str11(reason);
     if ((act === "defer" || act === "dismiss") && !why)
       return refuseNoReason("a proposal is deferred or dismissed with a reason in your own words. Nothing was written.");
     if (act === "adopt" && !proj)
@@ -101884,14 +104534,14 @@ ${bodyText(note)}`
         {
           proposal: q(found.key),
           source: found.source,
-          by: TOKEN.test(str9(author)) ? str9(author) : q(author),
+          by: TOKEN.test(str11(author)) ? str11(author) : q(author),
           at: q(at25)
         }
       );
-      if (text5 === null) return refusal13("ADOPTIONS_UNSPLICEABLE", "the project's objective_adoptions block is not in a shape this grammar can extend. Nothing was written.");
+      if (text5 === null) return refusal14("ADOPTIONS_UNSPLICEABLE", "the project's objective_adoptions block is not in a shape this grammar can extend. Nothing was written.");
       text5 = setField(text5, "last_updated", q(at25));
-      text5 = logEntry(text5, at25, "Proposal adopted", str9(author), `the proposal ${found.key} is adopted into the objective.`);
-      const r = this.#revise(proj, text5, str9(author), viewer);
+      text5 = logEntry(text5, at25, "Proposal adopted", str11(author), `the proposal ${found.key} is adopted into the objective.`);
+      const r = this.#revise(proj, text5, str11(author), viewer);
       if (!r.ok) return r;
     } else if (act === "question") {
       const opened = this.#openQuestion(found, author, viewer, run, assistantPrincipal, at25);
@@ -101904,7 +104554,7 @@ ${bodyText(note)}`
         to: act === "defer" ? "deferred" : "dismissed",
         reason: why,
         definitionVersion: found.basis.definition_version,
-        decidedBy: str9(author)
+        decidedBy: str11(author)
       });
       if (!d || d.ok !== true) return d;
       extra = { progressions: { key: d.key, state: d.state, definition_version: d.definition_version } };
@@ -101921,7 +104571,7 @@ ${bodyText(note)}`
       why || null,
       found.grade ?? null,
       JSON.stringify(found.basis ?? null),
-      str9(author) || PLANE_ACTOR,
+      str11(author) || PLANE_ACTOR,
       at25
     ));
     return {
@@ -101930,7 +104580,7 @@ ${bodyText(note)}`
       act,
       project: proj ? proj.id : null,
       reason: why || null,
-      author: str9(author) || null,
+      author: str11(author) || null,
       at: at25,
       ...extra
     };
@@ -101940,7 +104590,7 @@ ${bodyText(note)}`
   #openQuestion(found, author, viewer, run, assistantPrincipal, at25) {
     const id = `${this.record.allocId("INQ", at25.slice(0, 4)).id}-question`;
     const question = questionOf(found);
-    const who2 = str9(author) || PLANE_ACTOR;
+    const who2 = str11(author) || PLANE_ACTOR;
     const text5 = [
       "---",
       `id: ${id}`,
@@ -101995,7 +104645,7 @@ ${bodyText(note)}`
       files: [{ path: "bundle.md", text: text5 }],
       meta: { object_type: "inquiry", current_state: "surfaced", created: at25, last_updated: at25 },
       ...run ? { run } : {},
-      ...str9(assistantPrincipal) ? { assistantPrincipal: str9(assistantPrincipal) } : {},
+      ...str11(assistantPrincipal) ? { assistantPrincipal: str11(assistantPrincipal) } : {},
       actorViewer: viewer ?? null
     });
   }
@@ -102108,7 +104758,7 @@ ${bodyText(note)}`
    *  `objective`. `run` carries what `ai-runs.open` takes (its id, principals, skill version, bounds, …). */
   async workObjective({ project, author, viewer = null, run = {} } = {}) {
     if (machine(author))
-      return refusal13("MACHINE_CANNOT_CHOOSE_THE_QUESTION", "setting an assistant to work an objective is a member's act (DEC-24 rule 2). No run was opened.");
+      return refusal14("MACHINE_CANNOT_CHOOSE_THE_QUESTION", "setting an assistant to work an objective is a member's act (DEC-24 rule 2). No run was opened.");
     const p = this.#project(project, viewer ?? author);
     if (p.refused) return p.refused;
     const g = this.gaps({ project, viewer: viewer ?? author });
@@ -102119,14 +104769,14 @@ ${bodyText(note)}`
       authority: { kind: "objective", ref: project }
     };
     const opened = await this.#lazy(this.aiRunsRef).open({
-      ...isObj10(run) ? run : {},
+      ...isObj12(run) ? run : {},
       contextType: "project",
       contextId: project,
       state: { instructions },
       actor: this.#memberOf(author),
       viewer: viewer ?? author
     });
-    return { ...isObj10(opened) ? opened : {}, project, instructions };
+    return { ...isObj12(opened) ? opened : {}, project, instructions };
   }
 };
 function refuseNoSuchGoal(detail, extra) {
@@ -102226,7 +104876,7 @@ function refusePursuitEnded(detail, extra) {
   };
 }
 function goalMachineRefusal(author, member = true) {
-  if (str9(author) && !isMachineIdentity(str9(author)) && member) return null;
+  if (str11(author) && !isMachineIdentity(str11(author)) && member) return null;
   const row2 = INTENT_CHECKS.MACHINE_CANNOT_DECLARE_GOAL;
   return {
     ok: false,
@@ -102238,7 +104888,7 @@ function goalMachineRefusal(author, member = true) {
   };
 }
 function aspirationMachineRefusal(author, member = true) {
-  if (str9(author) && !isMachineIdentity(str9(author)) && member) return null;
+  if (str11(author) && !isMachineIdentity(str11(author)) && member) return null;
   const row2 = INTENT_CHECKS.MACHINE_CANNOT_DECLARE_ASPIRATION;
   return {
     ok: false,
@@ -102250,7 +104900,7 @@ function aspirationMachineRefusal(author, member = true) {
   };
 }
 function captureRequestsNamed(basis) {
-  if (!isObj10(basis)) return [];
+  if (!isObj12(basis)) return [];
   const out = [];
   for (const k of ["capture_request", "capture_requests", "requests"]) {
     const v = basis[k];
@@ -102258,7 +104908,7 @@ function captureRequestsNamed(basis) {
   }
   return out;
 }
-var safeJson16 = (s) => {
+var safeJson17 = (s) => {
   try {
     return s == null ? null : JSON.parse(s);
   } catch {
@@ -102266,7 +104916,7 @@ var safeJson16 = (s) => {
   }
 };
 function questionOf(p) {
-  const b = isObj10(p.basis) ? p.basis : {};
+  const b = isObj12(p.basis) ? p.basis : {};
   if (p.source === "progressions")
     return `Why is the '${b.stage_key}' stage of '${b.progression_key}' missing where the flow requires it?`;
   if (p.kind === GAP_KIND)
@@ -102296,9 +104946,9 @@ function intentOps(i, url, body) {
     workobjective: () => i.workObjective({ ...b, viewer: qp("viewer") })
   };
 }
-var instances24 = /* @__PURE__ */ new WeakMap();
+var instances26 = /* @__PURE__ */ new WeakMap();
 function intentOf(host, deps) {
-  let i = instances24.get(host);
+  let i = instances26.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -102318,7 +104968,7 @@ function intentOf(host, deps) {
       retrieval: d.retrieval || (() => retrievalOf(host)),
       captureRequests: d.captureRequests || (() => captureRequestsOf(host))
     });
-    instances24.set(host, i);
+    instances26.set(host, i);
     record.declarePurge("intent", INTENT_TABLES);
     promotion.registerStep("intent", { check: (c) => i.check(c) });
     record.registerAuditCheck("intent", (image) => i.auditCheck(image));
@@ -102395,10 +105045,10 @@ var ACT_MAX = 200;
 var DECLARE_KEYS = Object.freeze(["cite", "kind", "issuer", "text", "period", "supersedes", "author", "viewer"]);
 var PROPOSE_KEYS = Object.freeze(["cite", "kind", "issuer", "text", "why", "act", "proposer", "viewer"]);
 var ADOPT_KEYS = Object.freeze([...DECLARE_KEYS, "proposal"]);
-var str10 = (v) => typeof v === "string" ? v.trim() : "";
-var isObj11 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var str12 = (v) => typeof v === "string" ? v.trim() : "";
+var isObj13 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var rand9 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
-var safeJson17 = (s) => {
+var safeJson18 = (s) => {
   try {
     return s == null ? null : JSON.parse(s);
   } catch {
@@ -102510,10 +105160,10 @@ var Standards = class {
     const level = typeof first.level === "string" && first.level ? first.level : "undetermined";
     const differs = [];
     for (const f17 of ["kind", "issuer"])
-      if (str10(declared[f17]) && str10(declared[f17]) !== first[f17])
+      if (str12(declared[f17]) && str12(declared[f17]) !== first[f17])
         differs.push({
           field: f17,
-          declared: str10(declared[f17]),
+          declared: str12(declared[f17]),
           source: first[f17],
           says: `recorded as declared; the matched source says ${f17} '${first[f17]}'`
         });
@@ -102541,7 +105191,7 @@ var Standards = class {
   }
   #checkStandard(c) {
     if (c.replay || c.creation && this.#writing !== null && c.bundleId === this.#writing) return null;
-    return refusal14(
+    return refusal15(
       "STANDARD_WRITTEN_ELSEWHERE",
       c.head ? "a standard is never edited: a correction is a new standard that supersedes it. Nothing was written." : "a standard is recorded by a member's act, never by a raw promotion. Nothing was written.",
       { bundleId: c.bundleId ?? null }
@@ -102552,26 +105202,26 @@ var Standards = class {
    * ===================================================================== */
   /** R1–R4, R6: record a standard. */
   standardDeclare(args = {}) {
-    const a = isObj11(args) ? args : {};
-    const byMachine = machineRefusal(a.author);
+    const a = isObj13(args) ? args : {};
+    const byMachine = machineRefusal2(a.author);
     if (byMachine) return byMachine;
     const unknown = refuseFieldUnknown(a, DECLARE_KEYS);
     if (unknown) return unknown;
     const d = this.#declareRefusal(a);
     if (d.ok === false) return d;
-    return this.#write(d.fields, str10(a.author), a.viewer ?? null, null);
+    return this.#write(d.fields, str12(a.author), a.viewer ?? null, null);
   }
   /* R1's refusals after the author, in R1's order, then R6's; `{ok: true, fields}`, checked, when none applies. */
   #declareRefusal(a) {
-    const cite = str10(a.cite);
+    const cite = str12(a.cite);
     if (!cite || cite.length > CITE_MAX) return refuseNoCite(cite.length);
     if (!STANDARD_KINDS.includes(a.kind)) return refuseKindUnknown(a.kind);
-    const issuer = str10(a.issuer);
+    const issuer = str12(a.issuer);
     if (!issuer)
-      return refusal14("STANDARD_NO_ISSUER", "a standard names the body that made it. Nothing was written.");
+      return refusal15("STANDARD_NO_ISSUER", "a standard names the body that made it. Nothing was written.");
     const texts = textIds(a.text);
     if (!texts || !texts.length || texts.length > TEXTS_MAX)
-      return refusal14(
+      return refusal15(
         "STANDARD_NO_TEXT",
         texts && texts.length > TEXTS_MAX ? `a standard's text names at most ${TEXTS_MAX} passages. Nothing was written.` : "a standard is held with its own words as captured: name one or more content ids. Nothing was written.",
         { max: TEXTS_MAX }
@@ -102580,14 +105230,14 @@ var Standards = class {
     if (unresolved) return refuseTextUnresolved(unresolved);
     const period = periodOf(a.period);
     if (!period)
-      return refusal14("STANDARD_PERIOD_INVALID", "a period is {from, to}, each a YYYY-MM-DD date or null, and `to` is not before `from`. Nothing was written.");
+      return refusal15("STANDARD_PERIOD_INVALID", "a period is {from, to}, each a YYYY-MM-DD date or null, and `to` is not before `from`. Nothing was written.");
     const supersedes = a.supersedes == null || a.supersedes === "" ? null : String(a.supersedes);
     if (supersedes !== null) {
       if (!this.#row(supersedes))
-        return refusal14("STANDARD_SUPERSEDES_UNKNOWN", "no standard answers to the id this one is said to supersede. Nothing was written.", { supersedes });
+        return refusal15("STANDARD_SUPERSEDES_UNKNOWN", "no standard answers to the id this one is said to supersede. Nothing was written.", { supersedes });
       const later = this.#successorOf(supersedes);
       if (later)
-        return refusal14("STANDARD_ALREADY_SUPERSEDED", `${supersedes} is already superseded by ${later}. Nothing was written.`, { supersedes, superseded_by: later });
+        return refusal15("STANDARD_ALREADY_SUPERSEDED", `${supersedes} is already superseded by ${later}. Nothing was written.`, { supersedes, superseded_by: later });
     }
     return { ok: true, fields: { cite, kind: a.kind, issuer, texts, period, supersedes } };
   }
@@ -102677,7 +105327,7 @@ var Standards = class {
       issuer: row2.issuer,
       text: texts,
       period: { from: row2.period_from ?? null, to: row2.period_to ?? null },
-      source: safeJson17(row2.source_json),
+      source: safeJson18(row2.source_json),
       declared_by: row2.declared_by,
       declared_at: row2.declared_at,
       supersedes: row2.supersedes ?? null,
@@ -102687,7 +105337,7 @@ var Standards = class {
   }
   /** R5: one standard, with each text passage's standing and whether a newer capture of its document holds it. */
   standardRead({ id = null, viewer = null } = {}) {
-    const sid = str10(id);
+    const sid = str12(id);
     if (!sid) return refuseNoId("standard");
     const row2 = this.#row(sid);
     if (!row2 || !this.#readable(sid, viewer)) return refuseNoSuchStandard(sid);
@@ -102712,10 +105362,10 @@ var Standards = class {
   }
   /** R7: whether a standard was in force on a date, with why. */
   inForce(id, date) {
-    if (!str10(id)) return refuseNoId("standardinforce");
+    if (!str12(id)) return refuseNoId("standardinforce");
     if (!isDate2(date)) return refuseDateInvalid(date);
-    const row2 = this.#row(str10(id));
-    if (!row2) return refuseNoSuchStandard(str10(id));
+    const row2 = this.#row(str12(id));
+    if (!row2) return refuseNoSuchStandard(str12(id));
     return { ok: true, id: row2.standard_id, date, ...inForceAt({ from: row2.period_from, to: row2.period_to }, date) };
   }
   /** R8: the standards the filters admit, in id order, at most `PAGE_MAX` per page; with `at`, each with R7's answer
@@ -102731,22 +105381,22 @@ var Standards = class {
       where.push("s.kind=?");
       args.push(kind);
     }
-    if (str10(source) === "undetermined") where.push(`json_extract(s.source_json, '$.state')='undetermined'`);
-    else if (str10(source)) {
+    if (str12(source) === "undetermined") where.push(`json_extract(s.source_json, '$.state')='undetermined'`);
+    else if (str12(source)) {
       where.push(`json_extract(s.source_json, '$.source')=?`);
-      args.push(str10(source));
+      args.push(str12(source));
     }
-    if (str10(cite)) {
+    if (str12(cite)) {
       where.push("instr(lower(s.cite), lower(?)) > 0");
-      args.push(str10(cite));
+      args.push(str12(cite));
     }
     if (date) {
       where.push("NOT ((s.period_from IS NOT NULL AND s.period_from > ?) OR (s.period_to IS NOT NULL AND s.period_to < ?))");
       args.push(date, date);
     }
-    if (str10(after)) {
+    if (str12(after)) {
       where.push("s.standard_id > ?");
-      args.push(str10(after));
+      args.push(str12(after));
     }
     const rows2 = this.#rows(`SELECT s.* FROM standards s JOIN bundles b ON b.bundle_id = s.standard_id
                               WHERE ${where.join(" AND ")} ORDER BY s.standard_id LIMIT ?`, ...args, n + 1);
@@ -102771,33 +105421,33 @@ var Standards = class {
    * ===================================================================== */
   /** R9: a proposal, stored apart from standards and labelled with who proposed it and whether it is machine work. */
   standardPropose(args = {}) {
-    const a = isObj11(args) ? args : {};
+    const a = isObj13(args) ? args : {};
     const unknown = refuseFieldUnknown(a, PROPOSE_KEYS);
     if (unknown) return unknown;
-    const who2 = str10(a.proposer);
+    const who2 = str12(a.proposer);
     if (!who2)
-      return refusal14("STANDARD_PROPOSER_UNNAMED", "the plane stamps the proposer from the credential that asked, and this call carries nobody. Nothing was written.");
-    const cite = str10(a.cite);
+      return refusal15("STANDARD_PROPOSER_UNNAMED", "the plane stamps the proposer from the credential that asked, and this call carries nobody. Nothing was written.");
+    const cite = str12(a.cite);
     if (!cite || cite.length > CITE_MAX) return refuseNoCite(cite.length);
     if (a.kind != null && a.kind !== "" && !STANDARD_KINDS.includes(a.kind)) return refuseKindUnknown(a.kind);
     const texts = a.text == null ? [] : textIds(a.text);
     if (texts === null || texts.length > TEXTS_MAX) return refuseTextUnresolved(null);
     const unresolved = this.#unresolvedText(texts, a.viewer ?? null);
     if (unresolved) return refuseTextUnresolved(unresolved);
-    const why = str10(a.why);
+    const why = str12(a.why);
     if (!why || why.length > WHY_MAX)
-      return refusal14(
+      return refusal15(
         "STANDARD_WHY_INVALID",
         `a proposal says why, in 1 to ${WHY_MAX} characters. Nothing was written.`,
         { max: WHY_MAX }
       );
     const act = a.act == null || a.act === "" ? null : a.act;
     if (act !== null && (typeof act !== "string" || !act.trim() || act.length > ACT_MAX))
-      return refusal14("STANDARD_ACT_INVALID", `the act a proposal names is an id of at most ${ACT_MAX} characters. Nothing was written.`, { max: ACT_MAX });
+      return refusal15("STANDARD_ACT_INVALID", `the act a proposal names is an id of at most ${ACT_MAX} characters. Nothing was written.`, { max: ACT_MAX });
     return this.record.transact(() => {
       const at25 = this.#when();
       const id = this.record.allocId("STDP", at25.slice(0, 4)).id;
-      const kind = a.kind || null, issuer = str10(a.issuer) || null;
+      const kind = a.kind || null, issuer = str12(a.issuer) || null;
       this.sql.exec(
         `INSERT INTO standard_proposals (proposal_id, cite, kind, issuer, text_json, why, act, proposed_by,
                        proposed_at) VALUES (?,?,?,?,?,?,?,?,?)`,
@@ -102832,7 +105482,7 @@ var Standards = class {
       cite: p.cite,
       kind: p.kind ?? null,
       issuer: p.issuer ?? null,
-      text: safeJson17(p.text_json) || [],
+      text: safeJson18(p.text_json) || [],
       why: p.why,
       act: p.act ?? null,
       at: p.proposed_at,
@@ -102843,14 +105493,14 @@ var Standards = class {
   /** R10: a member adopts a proposal: R1 by that member, naming it. A field the member does not state is the
    *  proposal's, and the answer says which were; the standard records the proposal, and the proposal its adoption. */
   standardAdopt(args = {}) {
-    const a = isObj11(args) ? args : {};
-    const byMachine = machineRefusal(a.author);
+    const a = isObj13(args) ? args : {};
+    const byMachine = machineRefusal2(a.author);
     if (byMachine) return byMachine;
     const unknown = refuseFieldUnknown(a, ADOPT_KEYS);
     if (unknown) return unknown;
-    const p = this.#proposal(str10(a.proposal));
+    const p = this.#proposal(str12(a.proposal));
     if (!p || a.viewer != null && viewerPredicate(a.viewer).scope === "DENY")
-      return refusal14("STANDARD_NO_SUCH_PROPOSAL", "no proposal of a standard answers to that id here. Nothing was written.", { proposal: str10(a.proposal) || null });
+      return refusal15("STANDARD_NO_SUCH_PROPOSAL", "no proposal of a standard answers to that id here. Nothing was written.", { proposal: str12(a.proposal) || null });
     const done = this.#adoptRefusal(p);
     if (done) return done;
     const fromProposal = [];
@@ -102866,11 +105516,11 @@ var Standards = class {
       cite: take("cite", p.cite),
       kind: take("kind", p.kind),
       issuer: take("issuer", p.issuer),
-      text: take("text", (safeJson17(p.text_json) || []).length ? safeJson17(p.text_json) : null)
+      text: take("text", (safeJson18(p.text_json) || []).length ? safeJson18(p.text_json) : null)
     };
     const d = this.#declareRefusal(fields);
     if (d.ok === false) return d;
-    const r = this.#write(d.fields, str10(a.author), a.viewer ?? null, p.proposal_id);
+    const r = this.#write(d.fields, str12(a.author), a.viewer ?? null, p.proposal_id);
     if (!r || !r.ok) return r;
     return { ...r, adopted: {
       proposal: p.proposal_id,
@@ -102882,7 +105532,7 @@ var Standards = class {
   #adoptRefusal(p) {
     const held = this.#one(`SELECT standard_id FROM standard_adoptions WHERE proposal_id=?`, p.proposal_id);
     if (held)
-      return refusal14(
+      return refusal15(
         "STANDARD_PROPOSAL_ADOPTED",
         `${p.proposal_id} was adopted as ${held.standard_id}. Nothing was written.`,
         { proposal: p.proposal_id, standard: held.standard_id }
@@ -102952,38 +105602,38 @@ function textIds(v) {
 }
 function periodOf(p) {
   if (p === void 0 || p === null) return { from: null, to: null };
-  if (!isObj11(p) || Object.keys(p).some((k) => k !== "from" && k !== "to")) return null;
+  if (!isObj13(p) || Object.keys(p).some((k) => k !== "from" && k !== "to")) return null;
   const from = p.from ?? null, to = p.to ?? null;
   if (from !== null && !isDate2(from) || to !== null && !isDate2(to)) return null;
   if (from !== null && to !== null && to < from) return null;
   return { from, to };
 }
-function machineRefusal(author) {
-  if (str10(author) && !isMachineIdentity(str10(author))) return null;
-  return refusal14("MACHINE_CANNOT_DECLARE_STANDARD", "recording a standard is a named member's act; a machine proposes one (standardPropose). Nothing was written.");
+function machineRefusal2(author) {
+  if (str12(author) && !isMachineIdentity(str12(author))) return null;
+  return refusal15("MACHINE_CANNOT_DECLARE_STANDARD", "recording a standard is a named member's act; a machine proposes one (standardPropose). Nothing was written.");
 }
 function refuseFieldUnknown(a, keys) {
   const unknown = Object.keys(a).filter((k) => !keys.includes(k)).sort();
   if (unknown.length)
-    return refusal14("STANDARD_FIELD_UNKNOWN", `this act takes ${keys.join(", ")}, and not ${unknown.join(", ")}. Nothing was written.`, { rejected: unknown, accepted: [...keys] });
+    return refusal15("STANDARD_FIELD_UNKNOWN", `this act takes ${keys.join(", ")}, and not ${unknown.join(", ")}. Nothing was written.`, { rejected: unknown, accepted: [...keys] });
   return null;
 }
 function refuseNoCite(length) {
-  return refusal14(
+  return refusal15(
     "STANDARD_NO_CITE",
     length ? `a citation is at most ${CITE_MAX} characters, and this one is ${length}. Nothing was written.` : "a standard is recorded with its citation. Nothing was written.",
     { max: CITE_MAX }
   );
 }
 function refuseKindUnknown(kind) {
-  return refusal14(
+  return refusal15(
     "STANDARD_KIND_UNKNOWN",
     `a standard's kind is one of ${STANDARD_KINDS.join(", ")}. Nothing was written.`,
     { kind: typeof kind === "string" ? kind.slice(0, 40) : null, kinds: [...STANDARD_KINDS] }
   );
 }
 function refuseTextUnresolved(contentId) {
-  return refusal14(
+  return refusal15(
     "STANDARD_TEXT_UNRESOLVED",
     contentId ? `no content row is held for ${String(contentId).slice(0, 80)}. Nothing was written.` : `a proposal's text is a list of at most ${TEXTS_MAX} content ids. Nothing was written.`,
     { content_id: contentId === null ? null : String(contentId).slice(0, 80) }
@@ -103013,10 +105663,10 @@ var NO_SUCH_STANDARD_DETAIL = "no standard answers to that id here. One your cre
 var NO_SUCH_STANDARD_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "standard", "detail"]);
 var refuseNoSuchStandard = (id) => noSuchStandard(id, { id });
 function refuseNoId(op) {
-  return refusal14("STANDARD_NO_ID", `a standard is read by its id, and none was named: ${op} takes id=<standard id>. Nothing was answered.`, { op });
+  return refusal15("STANDARD_NO_ID", `a standard is read by its id, and none was named: ${op} takes id=<standard id>. Nothing was answered.`, { op });
 }
 function refuseDateInvalid(date) {
-  return refusal14(
+  return refusal15(
     "STANDARD_DATE_INVALID",
     "a date is written YYYY-MM-DD and names a day that exists.",
     { date: typeof date === "string" ? date.slice(0, 40) : null }
@@ -103042,9 +105692,9 @@ function standardsOps(s, url, body) {
     standardadopt: () => s.standardAdopt({ ...b, viewer: qp("viewer") })
   };
 }
-var instances25 = /* @__PURE__ */ new WeakMap();
+var instances27 = /* @__PURE__ */ new WeakMap();
 function standardsOf(host, deps) {
-  let s = instances25.get(host);
+  let s = instances27.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -103059,7 +105709,7 @@ function standardsOf(host, deps) {
       promotion,
       content: d.content || (() => contentOf(host, { record, membership }))
     });
-    instances25.set(host, s);
+    instances27.set(host, s);
     record.declarePurge("standards", STANDARDS_TABLES);
     promotion.registerStep("standards", { check: (c) => s.check(c) });
   }
@@ -103243,13 +105893,13 @@ var RECOMMENDATION_KEYS = Object.freeze(["recommendation", "policy"]);
 var FACTS_SAY = "These are facts the record holds, as the two sides of the question state them: what one side says the standard requires, and what the other says was done. They are the record's, not an outcome: whether the act complied is a member's determination.";
 var OUTCOMES_DIFFER_SAYS = "The outcomes differ from one standard to another. Each is the member's, given per standard, and none is composed into one verdict.";
 var DATE_RE5 = /^\d{4}-\d{2}-\d{2}$/;
-var str11 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
-var isObj12 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+var str13 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
+var isObj14 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var text4 = (v) => typeof v === "string" && v.trim() && v.length <= TEXT_MAX ? v.trim() : null;
 var isDate3 = (v) => typeof v === "string" && DATE_RE5.test(v) && !Number.isNaN(Date.parse(`${v}T00:00:00Z`)) && (/* @__PURE__ */ new Date(`${v}T00:00:00Z`)).toISOString().slice(0, 10) === v;
 var q3 = (s) => `"${String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'")}"`;
-var oneLine2 = (s) => String(s ?? "").replace(/[\r\n]+/g, " ").trim();
-var safeJson18 = (s, dflt = null) => {
+var oneLine3 = (s) => String(s ?? "").replace(/[\r\n]+/g, " ").trim();
+var safeJson19 = (s, dflt = null) => {
   try {
     return s == null ? dflt : JSON.parse(s);
   } catch {
@@ -103263,7 +105913,7 @@ function significanceKeys(v, found = /* @__PURE__ */ new Set(), depth = 0) {
     for (const x of v.slice(0, 500)) significanceKeys(x, found, depth + 1);
     return found;
   }
-  if (isObj12(v))
+  if (isObj14(v))
     for (const [k, x] of Object.entries(v).slice(0, 200)) {
       if (SIGNIFICANCE_KEYS.includes(String(k).toLowerCase())) found.add(k);
       significanceKeys(x, found, depth + 1);
@@ -103276,7 +105926,7 @@ function recommendationKeys(v, found = /* @__PURE__ */ new Set(), depth = 0) {
     for (const x of v.slice(0, 500)) recommendationKeys(x, found, depth + 1);
     return found;
   }
-  if (isObj12(v))
+  if (isObj14(v))
     for (const [k, x] of Object.entries(v).slice(0, 200)) {
       if (RECOMMENDATION_KEYS.includes(String(k).toLowerCase())) found.add(k);
       recommendationKeys(x, found, depth + 1);
@@ -103286,11 +105936,11 @@ function recommendationKeys(v, found = /* @__PURE__ */ new Set(), depth = 0) {
 function namesOutcome(v, depth = 0) {
   if (depth > 12) return false;
   if (Array.isArray(v)) return v.slice(0, 500).some((x) => namesOutcome(x, depth + 1));
-  if (isObj12(v))
+  if (isObj14(v))
     return Object.entries(v).slice(0, 200).some(([k, x]) => ["outcome", "outcomes", "verdict"].includes(String(k).toLowerCase()) || namesOutcome(x, depth + 1));
   return false;
 }
-var axisOf = (a) => isObj12(a) ? { state: a.state ?? null, grade: a.grade ?? null } : null;
+var axisOf = (a) => isObj14(a) ? { state: a.state ?? null, grade: a.grade ?? null } : null;
 var Conformance = class _Conformance {
   #deps;
   #writing = /* @__PURE__ */ new Set();
@@ -103358,18 +106008,18 @@ var Conformance = class _Conformance {
    * ===================================================================== */
   /* R1, R13: an empty or machine author. */
   #refuseMachine(author) {
-    if (!str11(author) || isMachineIdentity(author))
-      return refusal15(
+    if (!str13(author) || isMachineIdentity(author))
+      return refusal16(
         "MACHINE_CANNOT_DETERMINE",
         "a determination is a member's judgment; this act names no member author, or a machine credential. A machine may prepare a comparison (comparisonPropose). Nothing was written.",
-        { author: str11(author) }
+        { author: str13(author) }
       );
     return null;
   }
   /* R1, R15 (membership R44): a project the viewer sees only at existence answers membership's own refusal; one not
      seen, absent or not a project, one answer: membership's `noSuchProject` (its R78, N274), whose row is its own. */
   #projectRefusal(project, viewer) {
-    const id = str11(project);
+    const id = str13(project);
     const existence = id ? this.membership.existenceAct(id, viewer) : null;
     if (existence) return existence;
     const info = id ? this.record.bundleInfo(id) : null;
@@ -103383,7 +106033,7 @@ var Conformance = class _Conformance {
     const member = this.membership.positionalMember(null, author);
     const denied = member ? this.membership.projectAuthority(project, author, "joined", "determine") : true;
     if (denied)
-      return refusal15("DETERMINATION_NOT_A_PARTICIPANT", "only a member who has joined the project records its determinations. Nothing was written.", { project, author: str11(author) });
+      return refusal16("DETERMINATION_NOT_A_PARTICIPANT", "only a member who has joined the project records its determinations. Nothing was written.", { project, author: str13(author) });
     return null;
   }
   /* The bounds every determination and comparison keeps (LIMITS). `of` names what the part belongs to when it is not
@@ -103392,7 +106042,7 @@ var Conformance = class _Conformance {
     for (const [part, v] of Object.entries(parts)) {
       const n = Array.isArray(v) ? v.length : 0;
       if (n > LIMITS[part])
-        return refusal15("DETERMINATION_TOO_LARGE", `${n} ${part}${of ? ` of the ${of}` : ""} is more than one carries (at most ${LIMITS[part]}). Nothing was written.`, { part, count: n, max: LIMITS[part], ...of ? { of } : {} });
+        return refusal16("DETERMINATION_TOO_LARGE", `${n} ${part}${of ? ` of the ${of}` : ""} is more than one carries (at most ${LIMITS[part]}). Nothing was written.`, { part, count: n, max: LIMITS[part], ...of ? { of } : {} });
     }
     return null;
   }
@@ -103400,7 +106050,7 @@ var Conformance = class _Conformance {
   #refuseSignificance(input) {
     const keys = [...significanceKeys(input)];
     if (keys.length)
-      return refusal15("SIGNIFICANCE_IS_A_MEMBERS_JUDGMENT", `the input carries ${keys.join(", ")}: whether and how much a breach matters is a member's judgment made with the consequences in front of them, and this module records none. Nothing was written.`, { keys });
+      return refusal16("SIGNIFICANCE_IS_A_MEMBERS_JUDGMENT", `the input carries ${keys.join(", ")}: whether and how much a breach matters is a member's judgment made with the consequences in front of them, and this module records none. Nothing was written.`, { keys });
     return null;
   }
   /* R22: a cause, when one is given, is a statement of the member's own with evidence the author may see; a cause not
@@ -103408,12 +106058,12 @@ var Conformance = class _Conformance {
      Answers `{ok, cause}` (cause null when none) or the refusal, in R22's order. */
   #causeRefusal(cause, author) {
     if (cause === void 0 || cause === null) return { ok: true, cause: null };
-    const c = isObj12(cause) ? cause : {};
+    const c = isObj14(cause) ? cause : {};
     const statement = typeof c.statement === "string" ? c.statement.trim() : "";
     if (!statement || statement.length > CAUSE_MAX)
-      return refusal15("CAUSE_UNSTATED", `a cause is stated as text of your own, of at most ${CAUSE_MAX} characters; this ${statement ? `is ${statement.length}` : "states none"}. Nothing was written.`, { max: CAUSE_MAX });
+      return refusal16("CAUSE_UNSTATED", `a cause is stated as text of your own, of at most ${CAUSE_MAX} characters; this ${statement ? `is ${statement.length}` : "states none"}. Nothing was written.`, { max: CAUSE_MAX });
     const list2 = Array.isArray(c.evidence) ? c.evidence : typeof c.evidence === "string" ? [c.evidence] : [];
-    const ids = list2.map(str11);
+    const ids = list2.map(str13);
     const unseen = ids.filter((cid) => {
       if (!cid) return true;
       let row2 = null;
@@ -103425,7 +106075,7 @@ var Conformance = class _Conformance {
       return !row2 || !this.membership.inSight(row2.bundle_id, author);
     });
     if (!ids.length || unseen.length)
-      return refusal15(
+      return refusal16(
         "CAUSE_NOT_EVIDENCED",
         ids.length ? "the cause names evidence you may not see, or that the record does not hold. A cause not yet shown stays in the question where it is worked out. Nothing was written." : "the cause names no evidence. A cause not yet shown stays in the question where it is worked out, and the determination says the cause is not established. Nothing was written.",
         { unresolved: unseen.filter(Boolean).slice(0, 20) }
@@ -103437,13 +106087,13 @@ var Conformance = class _Conformance {
   #refuseRecommendation(input) {
     const keys = [...recommendationKeys(input)];
     if (keys.length)
-      return refusal15("RECOMMENDATION_IS_AN_ACTION", `the input carries ${keys.join(", ")}: a determination records what was required, what was done and why, never what should be done. Propose an action instead. Nothing was written.`, { keys });
+      return refusal16("RECOMMENDATION_IS_AN_ACTION", `the input carries ${keys.join(", ")}: a determination records what was required, what was done and why, never what should be done. Propose an action instead. Nothing was written.`, { keys });
     return null;
   }
   /* R12, R21 (inquiry R48): a contradiction inquiry the viewer may see, and the candidate it took up. Absent, unseen
      and a plain inquiry are one answer. */
   #contradictionInquiry(id, viewer) {
-    const iid = str11(id);
+    const iid = str13(id);
     let info = null, link = null;
     try {
       info = iid ? this.record.bundleInfo(iid) : null;
@@ -103458,13 +106108,13 @@ var Conformance = class _Conformance {
         link = null;
       }
     }
-    if (!seen || !isObj12(link) || !str11(link.candidate))
-      return refusal15(
+    if (!seen || !isObj14(link) || !str13(link.candidate))
+      return refusal16(
         "NO_SUCH_CONTRADICTION_INQUIRY",
         "no question you may see answers to that id as one taken up from a contradiction. One you may not see answers exactly as one that does not exist. Nothing was written.",
         { contradiction: iid }
       );
-    return { ok: true, inquiry: iid, candidate: str11(link.candidate), resolution: isObj12(link.resolution) ? link.resolution : null };
+    return { ok: true, inquiry: iid, candidate: str13(link.candidate), resolution: isObj14(link.resolution) ? link.resolution : null };
   }
   /* ===================================================================== *
    * THE PARTS OF A DETERMINATION (R1–R4, R6, R7)
@@ -103472,19 +106122,19 @@ var Conformance = class _Conformance {
   /* R1, K171 (6): the act. `{id}` names an act an earlier determination of this project minted, and answers it as
      recorded; otherwise every part is required. With `supersedes` and no act id, the act is the predecessor's (R7). */
   #actOf(act, project, supersedes) {
-    const a = isObj12(act) ? act : {};
-    let id = str11(a.id);
-    if (!id && str11(supersedes)) {
+    const a = isObj14(act) ? act : {};
+    let id = str13(a.id);
+    if (!id && str13(supersedes)) {
       const prev = this.#one(
         `SELECT act_id FROM determinations WHERE determination_id=? AND project_id=?`,
-        str11(supersedes),
+        str13(supersedes),
         project
       );
       if (prev) id = prev.act_id;
     }
     const incomplete = (part, detail, extra = {}) => {
       const missing = { part, ...extra };
-      return refusal15("ACT_INCOMPLETE", `${detail} The act names what was done, the office that did it, when, and the content that shows it. Nothing was written.`, missing);
+      return refusal16("ACT_INCOMPLETE", `${detail} The act names what was done, the office that did it, when, and the content that shows it. Nothing was written.`, missing);
     };
     if (id) {
       const held = this.#one(
@@ -103501,12 +106151,12 @@ var Conformance = class _Conformance {
     }
     const description = text4(a.description);
     if (!description) return incomplete("description", "the act states no description of what the government did.");
-    const actor = isObj12(a.actor) ? a.actor : {};
+    const actor = isObj14(a.actor) ? a.actor : {};
     const role = text4(actor.role), body = text4(actor.body);
     if (!role || !body)
       return incomplete("actor", "the act names the office that did it by its official role and body, never by a person.");
     let at25 = null, from = null, to = null;
-    if (a.at != null || !isObj12(a.period)) {
+    if (a.at != null || !isObj14(a.period)) {
       if (!isDate3(a.at)) return incomplete("at", "the act states when it was done, as a date (YYYY-MM-DD), or a period.");
       at25 = a.at;
     } else {
@@ -103515,7 +106165,7 @@ var Conformance = class _Conformance {
       if (!isDate3(from) || !isDate3(to) || to < from)
         return incomplete("period", "the act's period states both ends as dates (YYYY-MM-DD), the end not before the start.");
     }
-    const ev = Array.isArray(a.evidence) ? a.evidence.map(str11) : [];
+    const ev = Array.isArray(a.evidence) ? a.evidence.map(str13) : [];
     if (!ev.length || ev.some((x) => !x)) return incomplete("evidence", "the act names the content that shows it.");
     const unheld = [...new Set(ev)].filter((cid) => {
       try {
@@ -103541,7 +106191,7 @@ var Conformance = class _Conformance {
   }
   /* The act as recorded; with `seen` (R24), an evidence content id the viewer may not see leaves the list. */
   #actView(r, seen = null) {
-    const evidence = safeJson18(r.act_evidence, []);
+    const evidence = safeJson19(r.act_evidence, []);
     return {
       id: r.act_id,
       description: r.act_description,
@@ -103598,15 +106248,15 @@ var Conformance = class _Conformance {
   #pinFindings(findings, project) {
     const list2 = Array.isArray(findings) ? findings : [];
     if (!list2.length)
-      return refusal15("NO_FINDINGS", "a determination rests on at least one published finding (R14). Nothing was written.");
+      return refusal16("NO_FINDINGS", "a determination rests on at least one published finding (R14). Nothing was written.");
     const pins = [], seen = /* @__PURE__ */ new Set();
     for (const item of list2) {
-      const f17 = isObj12(item) ? {
-        finding: str11(item.finding ?? item.id),
-        version: str11(item.version),
-        case: str11(item.case),
+      const f17 = isObj14(item) ? {
+        finding: str13(item.finding ?? item.id),
+        version: str13(item.version),
+        case: str13(item.case),
         edition: item.edition == null ? null : Number(item.edition)
-      } : { finding: str11(item), version: null, case: null, edition: null };
+      } : { finding: str13(item), version: null, case: null, edition: null };
       let items = [];
       if (f17.finding) {
         let r = null;
@@ -103619,7 +106269,7 @@ var Conformance = class _Conformance {
         items = items.filter((i) => i.project === project && (!f17.case || i.case === f17.case) && (f17.edition == null || i.edition === f17.edition));
       }
       if (!items.length)
-        return refusal15("FINDING_NOT_PUBLISHED", `${String(f17.finding ?? "a finding named").slice(0, 80)} is not a finding this project has published in a ratified case edition. A finding published only by another project, or not at all, is not one. Nothing was written.`, { finding: f17.finding });
+        return refusal16("FINDING_NOT_PUBLISHED", `${String(f17.finding ?? "a finding named").slice(0, 80)} is not a finding this project has published in a ratified case edition. A finding published only by another project, or not at all, is not one. Nothing was written.`, { finding: f17.finding });
       const pick2 = items.reduce((best, i) => !best || i.case > best.case || i.case === best.case && i.edition > best.edition ? i : best, null);
       if (seen.has(f17.finding)) continue;
       seen.add(f17.finding);
@@ -103639,11 +106289,11 @@ var Conformance = class _Conformance {
   #readStandards(standards, act, viewer) {
     const list2 = Array.isArray(standards) ? standards : [];
     if (!list2.length)
-      return refusal15("NO_STANDARDS", "a determination measures the act against at least one standard the record holds (R14). Nothing was written.");
+      return refusal16("NO_STANDARDS", "a determination measures the act against at least one standard the record holds (R14). Nothing was written.");
     const out = [], byId = /* @__PURE__ */ new Map();
     for (const item of list2) {
-      const id = isObj12(item) ? str11(item.standard ?? item.id) : str11(item);
-      const outcome = isObj12(item) ? item.outcome : void 0;
+      const id = isObj14(item) ? str13(item.standard ?? item.id) : str13(item);
+      const outcome = isObj14(item) ? item.outcome : void 0;
       let read2 = null;
       try {
         read2 = id ? this.standards.standardRead({ id, viewer }) : null;
@@ -103654,7 +106304,7 @@ var Conformance = class _Conformance {
       const answers = _Conformance.datesOf(act).map((d) => this.#inForce(id, d));
       const not = answers.find((x) => x.answer === "not_in_force");
       if (not)
-        return refusal15("STANDARD_NOT_IN_FORCE", `${id} was not in force on ${not.date}${not.why ? ` (${not.why})` : ""}. Nothing was written.`, { standard: id, date: not.date });
+        return refusal16("STANDARD_NOT_IN_FORCE", `${id} was not in force on ${not.date}${not.why ? ` (${not.why})` : ""}. Nothing was written.`, { standard: id, date: not.date });
       const und = answers.find((x) => x.answer !== "in_force");
       if (byId.has(id)) {
         byId.get(id).outcomes.push(outcome);
@@ -103681,9 +106331,9 @@ var Conformance = class _Conformance {
     } catch {
       r = null;
     }
-    const ok2 = isObj12(r) && r.ok !== false;
+    const ok2 = isObj14(r) && r.ok !== false;
     const answer = ok2 && ["in_force", "not_in_force", "undetermined"].includes(r.state) ? r.state : "undetermined";
-    return { date, answer, why: ok2 ? r.why ?? null : isObj12(r) ? r.detail ?? r.reason ?? null : "standards did not answer" };
+    return { date, answer, why: ok2 ? r.why ?? null : isObj14(r) ? r.detail ?? r.reason ?? null : "standards did not answer" };
   }
   /* R1: every standard has a row, and every row states what the standard requires, what was done and its reading. */
   #readRows(rows2, standards) {
@@ -103692,11 +106342,11 @@ var Conformance = class _Conformance {
     const out = [];
     const incomplete = (detail, extra = {}) => {
       const where = { ...extra };
-      return refusal15("ROWS_INCOMPLETE", `${detail} Each standard named has a row stating what it requires, what was done and its reading. Nothing was written.`, where);
+      return refusal16("ROWS_INCOMPLETE", `${detail} Each standard named has a row stating what it requires, what was done and its reading. Nothing was written.`, where);
     };
     for (const [i, r] of list2.entries()) {
-      const row2 = isObj12(r) ? r : {};
-      const standard = str11(row2.standard), requires = text4(row2.requires), did = text4(row2.did);
+      const row2 = isObj14(r) ? r : {};
+      const standard = str13(row2.standard), requires = text4(row2.requires), did = text4(row2.did);
       const reading = READINGS.includes(row2.reading) ? row2.reading : null;
       if (!standard || !named.has(standard))
         return incomplete(`row ${i} names no standard this determination names.`, { row: i });
@@ -103706,7 +106356,7 @@ var Conformance = class _Conformance {
           !did && "what was done",
           !reading && `a reading (${READINGS.join(", ")})`
         ].filter(Boolean).join(", ")}: each is required.`, { row: i });
-      const content = Array.isArray(row2.content) ? row2.content.map(str11).filter(Boolean).slice(0, LIMITS.evidence) : str11(row2.content) ? [str11(row2.content)] : [];
+      const content = Array.isArray(row2.content) ? row2.content.map(str13).filter(Boolean).slice(0, LIMITS.evidence) : str13(row2.content) ? [str13(row2.content)] : [];
       out.push({ standard, requires, did, reading, content });
     }
     const bare2 = standards.find((s) => !out.some((r) => r.standard === s.standard));
@@ -103719,13 +106369,13 @@ var Conformance = class _Conformance {
     const out = [];
     const bad = (detail, extra = {}) => {
       const which = { ...extra };
-      return refusal15("UNCLEAR_NO_QUESTION", `${detail} Each question is sent back to an inquiry the author may see, or to a new one opened with this determination. Nothing was written.`, which);
+      return refusal16("UNCLEAR_NO_QUESTION", `${detail} Each question is sent back to an inquiry the author may see, or to a new one opened with this determination. Nothing was written.`, which);
     };
     for (const [i, x] of list2.entries()) {
-      const item = isObj12(x) ? x : { question: x };
+      const item = isObj14(x) ? x : { question: x };
       const question = text4(item.question);
       if (!question) return bad(`question ${i} states no question.`, { question: i });
-      const inquiry = str11(item.inquiry);
+      const inquiry = str13(item.inquiry);
       if (inquiry) {
         const info = this.record.bundleInfo(inquiry);
         if (!info || normalizeType(info.type) !== "inquiry" || !this.membership.inSight(inquiry, author))
@@ -103741,18 +106391,18 @@ var Conformance = class _Conformance {
      reason: an absent one is `CONFORMANCE_NO_REASON`, one over REASON_MAX characters or not text
      `CONFORMANCE_BAD_REASON` (N233, K264; R23: this module's own codes, never progressions' `NO_REASON`/`BAD_REASON`). */
   #supersession(supersedes, reason, act, project, viewer) {
-    const id = str11(supersedes);
+    const id = str13(supersedes);
     if (!id) return { ok: true, prev: null };
     const prev = this.#one(`SELECT * FROM determinations WHERE determination_id=?`, id);
     if (!prev || prev.project_id !== project || this.membership.sight(prev.project_id, viewer) !== Membership.SIGHT_FULL)
       return noSuchDetermination(id, { supersedes: id });
     if (act.id && act.id !== prev.act_id)
-      return refusal15("SUPERSEDES_ANOTHER_ACT", `${id} is a determination of ${prev.act_id}, and this names ${act.id}. Nothing was written.`, { supersedes: id, act: act.id, predecessor_act: prev.act_id });
+      return refusal16("SUPERSEDES_ANOTHER_ACT", `${id} is a determination of ${prev.act_id}, and this names ${act.id}. Nothing was written.`, { supersedes: id, act: act.id, predecessor_act: prev.act_id });
     const why = typeof reason === "string" ? reason.trim() : reason == null ? "" : null;
     if (why === "")
-      return refusal15("CONFORMANCE_NO_REASON", "superseding a determination says why it is superseded; this names no reason. Nothing was written.", { supersedes: id, max: REASON_MAX2 });
+      return refusal16("CONFORMANCE_NO_REASON", "superseding a determination says why it is superseded; this names no reason. Nothing was written.", { supersedes: id, max: REASON_MAX2 });
     if (why === null || why.length > REASON_MAX2)
-      return refusal15("CONFORMANCE_BAD_REASON", `superseding a determination says why, as text of at most ${REASON_MAX2} characters. Nothing was written.`, { supersedes: id, max: REASON_MAX2 });
+      return refusal16("CONFORMANCE_BAD_REASON", `superseding a determination says why, as text of at most ${REASON_MAX2} characters. Nothing was written.`, { supersedes: id, max: REASON_MAX2 });
     const by = this.#one(`SELECT superseded_by FROM determination_supersessions WHERE superseded=?`, id);
     if (by) return determinationSuperseded(id, by.superseded_by, { supersedes: id });
     return { ok: true, prev, reason: why };
@@ -103776,11 +106426,11 @@ var Conformance = class _Conformance {
       proposal = null,
       cause = null,
       author = null
-    } = isObj12(input) ? input : {};
+    } = isObj14(input) ? input : {};
     const viewer = input && input.viewer != null ? input.viewer : author;
     const byMachine = this.#refuseMachine(author);
     if (byMachine) return byMachine;
-    const pid = str11(project);
+    const pid = str13(project);
     const unseen = this.#projectRefusal(pid, viewer);
     if (unseen) return unseen;
     const notJoined = this.#participantRefusal(pid, author);
@@ -103790,8 +106440,8 @@ var Conformance = class _Conformance {
       standards,
       rows: rows2,
       questions,
-      evidence: isObj12(act) ? act.evidence : null
-    }) || this.#sizeRefusal({ evidence: isObj12(cause) && Array.isArray(cause.evidence) ? cause.evidence : null }, "cause");
+      evidence: isObj14(act) ? act.evidence : null
+    }) || this.#sizeRefusal({ evidence: isObj14(cause) && Array.isArray(cause.evidence) ? cause.evidence : null }, "cause");
     if (large) return large;
     const a = this.#actOf(act, pid, supersedes);
     if (!a.ok) return a;
@@ -103804,7 +106454,7 @@ var Conformance = class _Conformance {
     for (const x of s.standards) {
       const outcomes = [...new Set(x.outcomes)];
       if (outcomes.length !== 1 || !OUTCOMES.includes(outcomes[0]))
-        return refusal15("OUTCOME_UNKNOWN", `${x.standard} carries ${outcomes.length > 1 ? "two outcomes" : "no outcome"}: each standard carries one of ${OUTCOMES.join(", ")}. Nothing was written.`, { standard: x.standard });
+        return refusal16("OUTCOME_UNKNOWN", `${x.standard} carries ${outcomes.length > 1 ? "two outcomes" : "no outcome"}: each standard carries one of ${OUTCOMES.join(", ")}. Nothing was written.`, { standard: x.standard });
       x.outcome = outcomes[0];
     }
     const qs = this.#readQuestions(questions, s.standards.map((x) => x.outcome), author);
@@ -103815,7 +106465,7 @@ var Conformance = class _Conformance {
     if (!why.ok) return why;
     const rec = this.#refuseRecommendation(input);
     if (rec) return rec;
-    const drew = str11(proposal);
+    const drew = str13(proposal);
     if (drew && !this.#one(`SELECT proposal_id FROM comparison_proposals WHERE proposal_id=? AND project_id=?`, drew, pid))
       return refuseNoSuchComparison(drew);
     const sup = this.#supersession(supersedes, reason, a.act, pid, viewer);
@@ -103830,7 +106480,7 @@ var Conformance = class _Conformance {
       sup,
       proposal: drew,
       cause: why.cause,
-      author: str11(author),
+      author: str13(author),
       viewer
     });
   }
@@ -104008,7 +106658,7 @@ var Conformance = class _Conformance {
       "",
       "## Session Log",
       "",
-      `### Session ${at25} | Opened | ${oneLine2(author)}`,
+      `### Session ${at25} | Opened | ${oneLine3(author)}`,
       `Changes: opened by the determination ${determination} in the project ${project}, whose outcome is unclear on this question.`,
       "",
       "## Review Notes",
@@ -104030,7 +106680,7 @@ var Conformance = class _Conformance {
    * ===================================================================== */
   /* R15: the determination's row when the viewer sees its project in full, else null (absent and unseen alike). */
   #seen(id, viewer) {
-    const r = str11(id) ? this.#one(`SELECT * FROM determinations WHERE determination_id=?`, str11(id)) : null;
+    const r = str13(id) ? this.#one(`SELECT * FROM determinations WHERE determination_id=?`, str13(id)) : null;
     return r && this.membership.sight(r.project_id, viewer) === Membership.SIGHT_FULL ? r : null;
   }
   /** R9: one determination: the act, each standard with its outcome, whether it was in force and its rows (with any
@@ -104051,7 +106701,7 @@ var Conformance = class _Conformance {
    *  3: a statement, with no duty), and `basis_changed` stands while any cause is left. */
   determinationRead({ id = null, viewer = null } = {}) {
     const r = this.#seen(id, viewer);
-    if (!r) return noSuchDetermination(str11(id));
+    if (!r) return noSuchDetermination(str13(id));
     const did = r.determination_id;
     const seen = this.#sight(viewer);
     const rows2 = this.#rows(
@@ -104078,7 +106728,7 @@ var Conformance = class _Conformance {
           requires: x.requires,
           did: x.did,
           reading: x.reading,
-          content: seen.contents(safeJson18(x.content, []))
+          content: seen.contents(safeJson19(x.content, []))
         })),
         disagreement
       };
@@ -104094,7 +106744,7 @@ var Conformance = class _Conformance {
       } catch {
         live = null;
       }
-      const frozen = safeJson18(x.frozen, null);
+      const frozen = safeJson19(x.frozen, null);
       return {
         finding: x.finding_id,
         case: x.case_id,
@@ -104128,7 +106778,7 @@ var Conformance = class _Conformance {
     const cz = this.#one(`SELECT statement, evidence FROM determination_causes WHERE determination_id=?`, did);
     const cause = cz ? {
       statement: cz.statement,
-      evidence: seen.contents(safeJson18(cz.evidence, []).slice(0, LIMITS.evidence))
+      evidence: seen.contents(safeJson19(cz.evidence, []).slice(0, LIMITS.evidence))
     } : null;
     return seen.mark({
       ok: true,
@@ -104227,7 +106877,7 @@ var Conformance = class _Conformance {
         detail: `${p.case_id} is published at edition ${later.edition}; this determination pins edition ${p.edition}`
       });
     }
-    const passages = new Set(safeJson18(r.act_evidence, []));
+    const passages = new Set(safeJson19(r.act_evidence, []));
     for (const s of this.#rows(`SELECT standard_id FROM determination_standards WHERE determination_id=? ORDER BY ord
                                 LIMIT ?`, r.determination_id, LIMITS.standards)) {
       if (!seen.sees(s.standard_id)) continue;
@@ -104241,7 +106891,7 @@ var Conformance = class _Conformance {
         seen.withheld = true;
         continue;
       }
-      const next = str11(read2.superseded_by);
+      const next = str13(read2.superseded_by);
       if (next)
         add({
           kind: "standard",
@@ -104252,7 +106902,7 @@ var Conformance = class _Conformance {
         });
       for (const t of (Array.isArray(read2.text) ? read2.text : []).slice(0, LIMITS.evidence))
         if (typeof t === "string") passages.add(t);
-        else if (isObj12(t) && str11(t.content_id ?? t.id)) passages.add(str11(t.content_id ?? t.id));
+        else if (isObj14(t) && str13(t.content_id ?? t.id)) passages.add(str13(t.content_id ?? t.id));
     }
     for (const cid of [...passages].slice(0, 2 * LIMITS.evidence)) {
       if (!seen.seesContent(cid)) continue;
@@ -104287,36 +106937,36 @@ var Conformance = class _Conformance {
     limit = null,
     viewer = null
   } = {}) {
-    const pid = str11(project);
+    const pid = str13(project);
     if (pid) {
       const unseen = this.#projectRefusal(pid, viewer);
       if (unseen) return unseen;
     }
     const cap = Number.isInteger(Number(limit)) && Number(limit) >= 1 ? Math.min(Number(limit), DETERMINATIONS_PAGE_MAX) : DETERMINATIONS_PAGE_MAX;
     const gate = viewerPredicate(viewer);
-    const where = [`d.determination_id > ?`, `(${gate.sql})`], args = [str11(after) ?? "", ...gate.args];
+    const where = [`d.determination_id > ?`, `(${gate.sql})`], args = [str13(after) ?? "", ...gate.args];
     if (pid) {
       where.push(`d.project_id = ?`);
       args.push(pid);
     }
-    if (str11(act)) {
+    if (str13(act)) {
       where.push(`d.act_id = ?`);
-      args.push(str11(act));
+      args.push(str13(act));
     }
-    if (str11(standard)) {
+    if (str13(standard)) {
       where.push(`EXISTS (SELECT 1 FROM determination_standards s WHERE s.determination_id = d.determination_id
                           AND s.standard_id = ?)`);
-      args.push(str11(standard));
+      args.push(str13(standard));
     }
-    if (str11(outcome)) {
+    if (str13(outcome)) {
       where.push(`EXISTS (SELECT 1 FROM determination_standards s WHERE s.determination_id = d.determination_id
                           AND s.outcome = ?)`);
-      args.push(str11(outcome));
+      args.push(str13(outcome));
     }
-    if (str11(finding3)) {
+    if (str13(finding3)) {
       where.push(`EXISTS (SELECT 1 FROM determination_findings f WHERE f.determination_id = d.determination_id
                           AND f.finding_id = ?)`);
-      args.push(str11(finding3));
+      args.push(str13(finding3));
     }
     if (live === true || live === "true" || live === "1")
       where.push(`NOT EXISTS (SELECT 1 FROM determination_supersessions x WHERE x.superseded = d.determination_id)`);
@@ -104369,15 +107019,15 @@ var Conformance = class _Conformance {
       questions = null,
       proposer = null,
       contradiction = null
-    } = isObj12(input) ? input : {};
+    } = isObj14(input) ? input : {};
     const viewer = input && input.viewer != null ? input.viewer : proposer;
-    const pid = str11(project);
+    const pid = str13(project);
     const unseen = this.#projectRefusal(pid, viewer);
     if (unseen) return unseen;
-    const large = this.#sizeRefusal({ standards, rows: rows2, questions, evidence: isObj12(act) ? act.evidence : null });
+    const large = this.#sizeRefusal({ standards, rows: rows2, questions, evidence: isObj14(act) ? act.evidence : null });
     if (large) return large;
     if (namesOutcome(input))
-      return refusal15("PROPOSAL_CANNOT_DETERMINE", "a comparison carries rows and questions and never an outcome: only a member's determination records whether the act complied. Nothing was written.");
+      return refusal16("PROPOSAL_CANNOT_DETERMINE", "a comparison carries rows and questions and never an outcome: only a member's determination records whether the act complied. Nothing was written.");
     const sig = this.#refuseSignificance(input);
     if (sig) return sig;
     let from = null;
@@ -104385,29 +107035,29 @@ var Conformance = class _Conformance {
       from = this.#contradictionInquiry(contradiction, viewer);
       if (!from.ok) return from;
     }
-    const a = isObj12(act) ? act : {};
+    const a = isObj14(act) ? act : {};
     const theAct = {
-      id: str11(a.id),
+      id: str13(a.id),
       description: text4(a.description),
-      actor: isObj12(a.actor) ? { role: text4(a.actor.role), body: text4(a.actor.body) } : null,
+      actor: isObj14(a.actor) ? { role: text4(a.actor.role), body: text4(a.actor.body) } : null,
       at: isDate3(a.at) ? a.at : null,
-      period: isObj12(a.period) ? {
+      period: isObj14(a.period) ? {
         from: isDate3(a.period.from) ? a.period.from : null,
         to: isDate3(a.period.to) ? a.period.to : null
       } : null,
-      evidence: Array.isArray(a.evidence) ? a.evidence.map(str11).filter(Boolean) : []
+      evidence: Array.isArray(a.evidence) ? a.evidence.map(str13).filter(Boolean) : []
     };
-    const stds = (Array.isArray(standards) ? standards : []).map((x) => isObj12(x) ? str11(x.standard ?? x.id) : str11(x)).filter(Boolean);
-    const rs = (Array.isArray(rows2) ? rows2 : []).filter(isObj12).map((x) => ({
-      standard: str11(x.standard),
+    const stds = (Array.isArray(standards) ? standards : []).map((x) => isObj14(x) ? str13(x.standard ?? x.id) : str13(x)).filter(Boolean);
+    const rs = (Array.isArray(rows2) ? rows2 : []).filter(isObj14).map((x) => ({
+      standard: str13(x.standard),
       requires: text4(x.requires),
       did: text4(x.did),
       reading: READINGS.includes(x.reading) ? x.reading : null,
-      content: Array.isArray(x.content) ? x.content.map(str11).filter(Boolean).slice(0, LIMITS.evidence) : []
+      content: Array.isArray(x.content) ? x.content.map(str13).filter(Boolean).slice(0, LIMITS.evidence) : []
     }));
-    const qs = (Array.isArray(questions) ? questions : []).map((x) => isObj12(x) ? x : { question: x }).map((x) => ({ question: text4(x.question), inquiry: str11(x.inquiry) })).filter((x) => x.question);
+    const qs = (Array.isArray(questions) ? questions : []).map((x) => isObj14(x) ? x : { question: x }).map((x) => ({ question: text4(x.question), inquiry: str13(x.inquiry) })).filter((x) => x.question);
     const at25 = this.#when();
-    const who2 = str11(proposer);
+    const who2 = str13(proposer);
     let id = null;
     this.record.transact(() => {
       id = this.record.allocId("CMP", at25.slice(0, 4)).id;
@@ -104436,7 +107086,7 @@ var Conformance = class _Conformance {
   }
   /** R12: one proposal, its label and the determinations that drew on it; absent, unseen and another project's alike. */
   comparisonRead({ id = null, viewer = null } = {}) {
-    const r = str11(id) ? this.#one(`SELECT * FROM comparison_proposals WHERE proposal_id=?`, str11(id)) : null;
+    const r = str13(id) ? this.#one(`SELECT * FROM comparison_proposals WHERE proposal_id=?`, str13(id)) : null;
     if (!r || this.membership.sight(r.project_id, viewer) !== Membership.SIGHT_FULL) return refuseNoSuchComparison(id);
     return { ok: true, proposal: this.#proposalView(r, viewer) };
   }
@@ -104450,11 +107100,11 @@ var Conformance = class _Conformance {
                              ORDER BY determination_id LIMIT ?`, r.proposal_id, DETERMINATIONS_PAGE_MAX);
     const from = this.#one(`SELECT inquiry_id FROM comparison_proposal_contradictions WHERE proposal_id=?`, r.proposal_id);
     const seen = this.#sight(viewer);
-    const act = safeJson18(r.act, null);
-    const hidden = new Set(safeJson18(r.standards, []).filter((s) => !seen.sees(s)));
-    const rows2 = safeJson18(r.rows, []).filter((x) => !isObj12(x) || !x.standard || !hidden.has(x.standard) && seen.sees(x.standard)).map((x) => isObj12(x) && Array.isArray(x.content) ? { ...x, content: seen.contents(x.content) } : x);
-    const questions = safeJson18(r.questions, []).map((x) => {
-      if (!isObj12(x) || !x.inquiry || seen.sees(x.inquiry)) return x;
+    const act = safeJson19(r.act, null);
+    const hidden = new Set(safeJson19(r.standards, []).filter((s) => !seen.sees(s)));
+    const rows2 = safeJson19(r.rows, []).filter((x) => !isObj14(x) || !x.standard || !hidden.has(x.standard) && seen.sees(x.standard)).map((x) => isObj14(x) && Array.isArray(x.content) ? { ...x, content: seen.contents(x.content) } : x);
+    const questions = safeJson19(r.questions, []).map((x) => {
+      if (!isObj14(x) || !x.inquiry || seen.sees(x.inquiry)) return x;
       const { inquiry: _i, ...rest } = x;
       return rest;
     });
@@ -104462,8 +107112,8 @@ var Conformance = class _Conformance {
     return seen.mark({
       id: r.proposal_id,
       project: r.project_id,
-      act: isObj12(act) ? { ...act, evidence: seen.contents(act.evidence) } : act,
-      standards: safeJson18(r.standards, []).filter((s) => !hidden.has(s)),
+      act: isObj14(act) ? { ...act, evidence: seen.contents(act.evidence) } : act,
+      standards: safeJson19(r.standards, []).filter((s) => !hidden.has(s)),
       rows: rows2,
       questions,
       proposer: r.proposer ?? null,
@@ -104487,7 +107137,7 @@ var Conformance = class _Conformance {
     if (!from.ok) return from;
     const side = typeof standardSide === "string" ? standardSide : null;
     if (side !== "a" && side !== "b")
-      return refusal15("STANDARD_SIDE_UNNAMED", "name which side of the question states what the standard requires, a or b: the plane never chooses it. Nothing was written.", { contradiction: from.inquiry });
+      return refusal16("STANDARD_SIDE_UNNAMED", "name which side of the question states what the standard requires, a or b: the plane never chooses it. Nothing was written.", { contradiction: from.inquiry });
     let listed = null;
     try {
       listed = this.contradiction.candidatesFor({ on: { candidate: from.candidate }, viewer });
@@ -104495,7 +107145,7 @@ var Conformance = class _Conformance {
       listed = null;
     }
     const cand = listed && Array.isArray(listed.candidates) ? listed.candidates.find((x) => x && x.candidate === from.candidate) : null;
-    if (!cand || !isObj12(cand.a) || !isObj12(cand.b)) return this.#contradictionInquiry(null, viewer);
+    if (!cand || !isObj14(cand.a) || !isObj14(cand.b)) return this.#contradictionInquiry(null, viewer);
     const fact = (x) => ({
       kind: x.kind ?? null,
       text: this.#sideText(x),
@@ -104526,7 +107176,7 @@ var Conformance = class _Conformance {
      a claim or stance side names no passage and keeps its claim's words as contradiction shows them. Asked only of a
      side this viewer already sees (the caller's R12 gate); a read that throws is `null`, never guessed. */
   #sideText(x) {
-    const cid = str11(x.content_id);
+    const cid = str13(x.content_id);
     if (!cid) return typeof x.text === "string" ? x.text : null;
     try {
       const t = this.content.passageText(cid);
@@ -104542,16 +107192,16 @@ var Conformance = class _Conformance {
    *  newer capture (affected or undetermined) flags every determination whose act it evidences. Recorded once; the
    *  determination itself is not touched. */
   basisChanged(event2) {
-    if (!isObj12(event2) || !str11(event2.subject)) return { flagged: 0 };
+    if (!isObj14(event2) || !str13(event2.subject)) return { flagged: 0 };
     const kind = event2.kind === "passage" ? "passage" : "finding";
     if (kind === "passage" && !["affected", "undetermined"].includes(event2.affects)) return { flagged: 0 };
-    const subject = str11(event2.subject);
+    const subject = str13(event2.subject);
     const ids = kind === "finding" ? this.#rows(`SELECT DISTINCT determination_id FROM determination_findings WHERE finding_id=?
                     ORDER BY determination_id LIMIT 1000`, subject) : this.#rows(`SELECT d.determination_id FROM determinations d, json_each(d.act_evidence) e WHERE e.value=?
                     ORDER BY d.determination_id LIMIT 1000`, subject);
     const at25 = this.#when();
-    const source = str11(event2.source) ?? (kind === "passage" ? "newer_capture" : "changed");
-    const since = str11(event2.since) ?? "";
+    const source = str13(event2.source) ?? (kind === "passage" ? "newer_capture" : "changed");
+    const since = str13(event2.since) ?? "";
     const detail = typeof event2.detail === "string" ? event2.detail.slice(0, 500) : null;
     this.record.transact(() => {
       for (const { determination_id } of ids)
@@ -104575,7 +107225,7 @@ var Conformance = class _Conformance {
   check(c) {
     const type = normalizeType(c && c.promotedType);
     if (type !== "determination" || c.replay || this.#writing.has(c.bundleId)) return null;
-    return refusal15(
+    return refusal16(
       "DETERMINATION_ONLY_BY_ITS_ACT",
       "a determination is recorded by the determination act and never revised: a correction is a new determination that supersedes it. Nothing was written.",
       { bundleId: c.bundleId ?? null }
@@ -104624,7 +107274,7 @@ function determinationSuperseded(determinationId, supersededBy = null, extra = n
   };
 }
 function refuseNoSuchComparison(id) {
-  return refusal15("NO_SUCH_COMPARISON", "no comparison answers to that id in this project. One you may not see answers exactly as one that does not exist. Nothing was written.", { proposal: str11(id) });
+  return refusal16("NO_SUCH_COMPARISON", "no comparison answers to that id in this project. One you may not see answers exactly as one that does not exist. Nothing was written.", { proposal: str13(id) });
 }
 function determinationDoc({
   id,
@@ -104641,7 +107291,7 @@ function determinationDoc({
   at: at25
 }) {
   const when = act.at ? `on ${act.at}` : `from ${act.period.from} to ${act.period.to}`;
-  const title = `Determination: ${oneLine2(act.description).slice(0, 100)}`;
+  const title = `Determination: ${oneLine3(act.description).slice(0, 100)}`;
   const lines = [
     "---",
     `id: ${id}`,
@@ -104672,17 +107322,17 @@ function determinationDoc({
     "",
     "## Act",
     "",
-    `${oneLine2(act.description)}`,
+    `${oneLine3(act.description)}`,
     "",
-    `Done by ${oneLine2(act.actor.role)}, ${oneLine2(act.actor.body)}, ${when}. Shown by: ${act.evidence.join(", ")}.`,
+    `Done by ${oneLine3(act.actor.role)}, ${oneLine3(act.actor.body)}, ${when}. Shown by: ${act.evidence.join(", ")}.`,
     "",
     "## Standards and Outcomes",
     "",
-    ...standards.map((s) => `- ${s.standard}: ${s.outcome}${s.in_force === "undetermined" ? ` (whether it was in force is undetermined: ${oneLine2(s.in_force_why)})` : ""}`),
+    ...standards.map((s) => `- ${s.standard}: ${s.outcome}${s.in_force === "undetermined" ? ` (whether it was in force is undetermined: ${oneLine3(s.in_force_why)})` : ""}`),
     "",
     "## Comparison",
     "",
-    ...rows2.map((r) => `- ${r.standard} requires: ${oneLine2(r.requires)}. Done: ${oneLine2(r.did)}. Reading: ${r.reading}.` + (r.content.length ? ` Shown by: ${r.content.join(", ")}.` : "")),
+    ...rows2.map((r) => `- ${r.standard} requires: ${oneLine3(r.requires)}. Done: ${oneLine3(r.did)}. Reading: ${r.reading}.` + (r.content.length ? ` Shown by: ${r.content.join(", ")}.` : "")),
     "",
     "## Findings",
     "",
@@ -104690,24 +107340,24 @@ function determinationDoc({
     "",
     "## Open Questions",
     "",
-    ...questions.length ? questions.map((x) => `- ${oneLine2(x.question)} (${x.inquiry})`) : ["None."],
+    ...questions.length ? questions.map((x) => `- ${oneLine3(x.question)} (${x.inquiry})`) : ["None."],
     "",
     "## Cause",
     "",
-    ...cause ? [oneLine2(cause.statement), "", `Shown by: ${cause.evidence.join(", ")}.`] : [`${CAUSE_NOT_ESTABLISHED[0].toUpperCase()}${CAUSE_NOT_ESTABLISHED.slice(1)}.`],
+    ...cause ? [oneLine3(cause.statement), "", `Shown by: ${cause.evidence.join(", ")}.`] : [`${CAUSE_NOT_ESTABLISHED[0].toUpperCase()}${CAUSE_NOT_ESTABLISHED.slice(1)}.`],
     "",
-    ...sup && sup.prev ? ["## Supersedes", "", `${sup.prev.determination_id}: ${oneLine2(sup.reason)}`, ""] : [],
+    ...sup && sup.prev ? ["## Supersedes", "", `${sup.prev.determination_id}: ${oneLine3(sup.reason)}`, ""] : [],
     "## Session Log",
     "",
-    `### Session ${at25} | Determined | ${oneLine2(author)}`,
+    `### Session ${at25} | Determined | ${oneLine3(author)}`,
     `Changes: determination recorded in ${project}.`,
     ""
   ];
   return lines.join("\n");
 }
-var instances26 = /* @__PURE__ */ new WeakMap();
+var instances28 = /* @__PURE__ */ new WeakMap();
 function conformanceOf(host, deps) {
-  let c = instances26.get(host);
+  let c = instances28.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -104715,7 +107365,7 @@ function conformanceOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     c = new Conformance({ ...d, host, storage, record, membership, promotion });
-    instances26.set(host, c);
+    instances28.set(host, c);
     c.migrate();
     record.declarePurge("conformance", CONFORMANCE_TABLES);
     promotion.registerStep("conformance", { check: (x) => c.check(x) });
@@ -105015,13 +107665,13 @@ var ROWS = Object.assign(
   RECORDS_LAW_FENCE_CHECKS,
   ACTION_CATALOGUE_CHECKS
 );
-function withRow2(r) {
+function withRow3(r) {
   if (!r || typeof r !== "object" || r.ok !== false || typeof r.reason !== "string") return r;
   const row2 = ROWS[r.reason];
   if (!row2) return r;
   return { ...r, code: r.code ?? r.reason, check: r.check ?? row2.check, translation: r.translation ?? row2.translation };
 }
-var refuse3 = (code, detail, extra) => withRow2({ ok: false, reason: code, detail, ...extra || {} });
+var refuse4 = (code, detail, extra) => withRow3({ ok: false, reason: code, detail, ...extra || {} });
 var NO_SUCH_ACTION_DETAIL = "no action answers to that id here. An action you may not see is answered exactly as one that does not exist, so this is not a hint either way.";
 var NO_SUCH_ACTION_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "action", "detail"]);
 function noSuchAction(actionId, extra = null) {
@@ -105397,7 +108047,7 @@ var Actions = class _Actions {
     const was = head ? _Actions.#lawsKey(heldFm) : JSON.stringify([null, null, null]);
     const now = _Actions.#lawsKey(nextFm);
     if (was !== now)
-      return refuse3(
+      return refuse4(
         "GOVERNING_LAWS_REWRITTEN",
         `${head ? "this revision of" : "this creation of"} ${bundleId} sets or changes its governing laws without op=actionlaws. The laws that govern a request are a member's authored statement, set by that act and carried forward unchanged by every other write. Nothing was written.`,
         { bundleId }
@@ -105411,7 +108061,7 @@ var Actions = class _Actions {
   #machineRiskTierRefusal({ who: who2, nextTier, heldTier, cur, act }) {
     const heldSet = heldTier === 1 || heldTier === 2 || heldTier === 3;
     if ((!who2 || isMachineIdentity(who2)) && (act || (nextTier === 1 || nextTier === 2 || nextTier === 3 || heldSet) && nextTier !== heldTier))
-      return refuse3(
+      return refuse4(
         "MACHINE_CANNOT_SET_RISK_TIER",
         (act ? `op=actionrisktier is a member's authored revision of this action's risk tier (held: ${heldTier}).` : cur ? `this revision states risk_tier ${nextTier} where the version it replaces states ${heldTier}.` : `this creation states risk_tier ${nextTier}.`) + " A risk tier is a member's assessment of the legal exposure of filing this action, and only a member's authored act sets 1, 2 or 3. A machine credential may carry a member's tier forward unchanged, and may leave the tier unstated (undetermined) only where no member has set one; it may not remove a member's tier. Nothing was written.",
         { risk_tier: nextTier, held: cur ? heldTier : null }
@@ -105430,7 +108080,7 @@ var Actions = class _Actions {
     const tierMoved = head ? nextTier !== heldTier : false;
     const histMoved = histKey(nextFm) !== (head ? histKey(heldFm) : "[]");
     if (tierMoved || histMoved)
-      return refuse3(
+      return refuse4(
         "RISK_TIER_REWRITTEN",
         (tierMoved ? `this revision of ${bundleId} states risk_tier ${nextTier} where the version it replaces states ${heldTier}` : `this ${head ? "revision" : "creation"} of ${bundleId} ${head ? "changes" : "states"} its risk_tier_history`) + " without op=actionrisktier. After intake a risk tier is revised by that act alone \u2014 it records who, when and why, and keeps every earlier tier readable. Nothing was written.",
         { bundleId, ...head ? { held: heldTier } : {}, risk_tier: nextTier }
@@ -105442,7 +108092,7 @@ var Actions = class _Actions {
     const lawOf = (fm) => fm && typeof fm.law === "string" && fm.law.trim() ? fm.law.trim() : null;
     const was = creation ? null : lawOf(heldFm), now = lawOf(nextFm);
     if ((!who2 || isMachineIdentity(who2)) && was !== now)
-      return refuse3(
+      return refuse4(
         "MACHINE_CANNOT_STATE_RECORDS_LAW",
         "which law governs a records request is a member's statement. A machine credential may write a records_request stating no law, and may propose one (op=actionlawspropose); it may not state, change or remove the law. Nothing was written.",
         { held: was, law: now }
@@ -105460,10 +108110,10 @@ var Actions = class _Actions {
     if (kindMoved) {
       const kinds = this.kinds();
       if (!kinds.includes(nextFm.action_kind))
-        return refuse3("ACTION_KIND_UNKNOWN", `action_kind '${String(nextFm.action_kind).slice(0, 40)}' is not a kind this instance offers: one of ${kinds.join(", ")}. Nothing was written.`, { legal: kinds });
+        return refuse4("ACTION_KIND_UNKNOWN", `action_kind '${String(nextFm.action_kind).slice(0, 40)}' is not a kind this instance offers: one of ${kinds.join(", ")}. Nothing was written.`, { legal: kinds });
     }
     if (riskTierState(nextFm.risk_tier) === null)
-      return refuse3("RISK_TIER_REFUSED", `risk_tier '${String(nextFm.risk_tier).slice(0, 20)}' is not 1, 2, 3 or undetermined. Nothing was written.`, { legal: Object.keys(RISK_TIERS) });
+      return refuse4("RISK_TIER_REFUSED", `risk_tier '${String(nextFm.risk_tier).slice(0, 20)}' is not 1, 2, 3 or undetermined. Nothing was written.`, { legal: Object.keys(RISK_TIERS) });
     const cp = nextFm.counterparty;
     const cpMoved = creation || !heldFm || JSON.stringify(heldFm.counterparty ?? null) !== JSON.stringify(cp ?? null);
     if (cpMoved && cp !== void 0 && cp !== null) {
@@ -105474,14 +108124,14 @@ var Actions = class _Actions {
       if (!cf.length && eid && this.#namesPerson(eid))
         cf.push({ check: "C-2.10", severity: "error", message: `counterparty.entity_id '${eid.slice(0, 40)}' names a person in the subject registry: an action is addressed to an office, an organisation or an audience, never a private individual (R9, arm: person)` });
       if (cf.length || office)
-        return refuse3(
+        return refuse4(
           "COUNTERPARTY_REFUSED",
           cf.length ? cf[0].message : "a named counterparty is an office, stated by its official role and the body it belongs to (R9). Nothing was written.",
           { findings: findingsOf(cf.length ? cf : [{ check: "C-2.10", severity: "error", message: "counterparty names no office (role and body)" }]) }
         );
     }
     if (nextFm.current_state === "resolved" && !RESOLUTIONS.includes(nextFm.resolution))
-      return refuse3("ACTION_RESOLUTION_REFUSED", `a resolved action names how it ended: one of ${RESOLUTIONS.join(", ")}. Nothing was written.`, { legal: RESOLUTIONS });
+      return refuse4("ACTION_RESOLUTION_REFUSED", `a resolved action names how it ended: one of ${RESOLUTIONS.join(", ")}. Nothing was written.`, { legal: RESOLUTIONS });
     const clock = nextFm.clock;
     if (clock !== void 0 && clock !== null) {
       const bad = [];
@@ -105494,7 +108144,7 @@ var Actions = class _Actions {
           if (!["pending", "met", "overdue", "waived"].includes(e.status)) bad.push({ check: "C-11.1", detail: `clock[${i}].status '${e.status}' is not one of: pending, met, overdue, waived` });
         }
       });
-      if (bad.length) return refuse3("CLOCK_REFUSED", bad[0].detail, { findings: bad });
+      if (bad.length) return refuse4("CLOCK_REFUSED", bad[0].detail, { findings: bad });
     }
     if (!creation && (!who2 || isMachineIdentity(who2) || writer === "mechanical")) {
       const today = new Date(this.#nowMs(null)).toISOString().slice(0, 10);
@@ -105504,7 +108154,7 @@ var Actions = class _Actions {
       const moved = clockMovesNotMechanical(heldClock, nextClock, today);
       const reshaped = heldClock.length !== nextClock.length || heldClock.some((e, i) => _Actions.#clockShape(e) !== _Actions.#clockShape(nextClock[i]));
       if (moved.length || reshaped || !recheck && JSON.stringify(heldClock) !== JSON.stringify(nextClock))
-        return refuse3("CLOCK_STATUS_NOT_MECHANICAL", "a machine write may move a pending clock entry whose date has passed to overdue, and nothing else: it never adds, removes or re-dates an entry or sets another status. Nothing was written.", { moves: moved });
+        return refuse4("CLOCK_STATUS_NOT_MECHANICAL", "a machine write may move a pending clock entry whose date has passed to overdue, and nothing else: it never adds, removes or re-dates an entry or sets another status. Nothing was written.", { moves: moved });
     }
     return null;
   }
@@ -105526,18 +108176,18 @@ var Actions = class _Actions {
     const held = key(heldFm), next = key(nextFm);
     if (held !== next) {
       if (!who2 || isMachineIdentity(who2))
-        return refuse3("MACHINE_CANNOT_OVERRIDE", "a premise override is a member's open statement that the group acts on a breach it has not determined, with the reason why. A machine credential may not state or change one. Nothing was written.");
+        return refuse4("MACHINE_CANNOT_OVERRIDE", "a premise override is a member's open statement that the group acts on a breach it has not determined, with the reason why. A machine credential may not state or change one. Nothing was written.");
       const o = nextFm.premise_override;
       const firstBreach = nextFm.breach === true && !(heldFm && heldFm.breach === true);
       if (held !== "null" || !firstBreach)
-        return refuse3("PREMISE_OVERRIDE_REWRITTEN", held !== "null" ? "this write edits or removes the action's premise override. It is stated once and kept as it was. Nothing was written." : "a premise override is stated on the creation or revision that first marks the action a breach, and on no other write. Nothing was written.");
+        return refuse4("PREMISE_OVERRIDE_REWRITTEN", held !== "null" ? "this write edits or removes the action's premise override. It is stated once and kept as it was. Nothing was written." : "a premise override is stated on the creation or revision that first marks the action a breach, and on no other write. Nothing was written.");
       const keys = o && typeof o === "object" && !Array.isArray(o) ? Object.keys(o) : null;
       if (!keys || keys.join() !== "reason" || typeof o.reason !== "string" || !o.reason.trim() || o.reason.length > NOTE_MAX4 || /["\\\r\n]/.test(o.reason))
-        return refuse3("PREMISE_OVERRIDE_REFUSED", `premise_override is {reason}: 1 to ${NOTE_MAX4} characters with no quote, backslash or line break. Nothing was written.`, { max: NOTE_MAX4 });
+        return refuse4("PREMISE_OVERRIDE_REFUSED", `premise_override is {reason}: 1 to ${NOTE_MAX4} characters with no quote, backslash or line break. Nothing was written.`, { max: NOTE_MAX4 });
     }
     const cp = nextFm.counterparty;
     if (nextFm.breach === true && cp !== void 0 && cp !== null && !addresseeIsOffice(cp))
-      return refuse3("ADDRESSEE_NOT_AN_OFFICE", `an action recorded for a breach is addressed to the office responsible, by its official role and body; this one is addressed to ${cp && typeof cp === "object" && cp.state === "named" ? `a ${cp.kind}` : `${cp && cp.state ? `an addressee ${cp.state}` : "no office"}`}. Nothing was written.`, { counterparty_state: cp && typeof cp === "object" ? cp.state ?? null : null });
+      return refuse4("ADDRESSEE_NOT_AN_OFFICE", `an action recorded for a breach is addressed to the office responsible, by its official role and body; this one is addressed to ${cp && typeof cp === "object" && cp.state === "named" ? `a ${cp.kind}` : `${cp && cp.state ? `an addressee ${cp.state}` : "no office"}`}. Nothing was written.`, { counterparty_state: cp && typeof cp === "object" ? cp.state ?? null : null });
     return null;
   }
   /* R45 (D5), R46 (Bob's ruling 1 of 2026-09-29): the group's contact, set or changed by a member and naming one; the
@@ -105546,7 +108196,7 @@ var Actions = class _Actions {
     const same = (k) => JSON.stringify(heldFm && heldFm[k] !== void 0 ? heldFm[k] : null) === JSON.stringify(nextFm[k] !== void 0 ? nextFm[k] : null);
     if (!same("contact")) {
       if (!who2 || isMachineIdentity(who2))
-        return refuse3("MACHINE_CANNOT_SET_CONTACT", "the group's contact for an action is a member's choice; a machine credential may not set or change it. Nothing was written.");
+        return refuse4("MACHINE_CANNOT_SET_CONTACT", "the group's contact for an action is a member's choice; a machine credential may not set or change it. Nothing was written.");
       const id = contactId(nextFm.contact);
       let facts = null;
       if (id) {
@@ -105561,11 +108211,11 @@ var Actions = class _Actions {
     const has3 = (fm, k) => fm && fm[k] !== void 0 && fm[k] !== null && fm[k] !== "";
     if (c.head) {
       if (!same("plan") || !same("option"))
-        return refuse3("PLAN_LINK_REWRITTEN", "the plan and option an action was started from are set when it is created and never set, changed or removed by a revision. Nothing was written.");
+        return refuse4("PLAN_LINK_REWRITTEN", "the plan and option an action was started from are set when it is created and never set, changed or removed by a revision. Nothing was written.");
     } else if (has3(nextFm, "plan") || has3(nextFm, "option")) {
       const plan = nextFm.plan, option = nextFm.option;
       if (typeof plan !== "string" || !PLAN_ID_RE.test(plan) || !(typeof option === "string" && /^[A-Za-z0-9_.:-]{1,80}$/.test(option) || Number.isInteger(option)))
-        return refuse3("PLAN_LINK_REFUSED", "plan is a PLN- id and option a token of 1 to 80 letters, digits, '_', '.', ':' or '-', stated together. Nothing was written.");
+        return refuse4("PLAN_LINK_REFUSED", "plan is a PLN- id and option a token of 1 to 80 letters, digits, '_', '.', ':' or '-', stated together. Nothing was written.");
     }
     return null;
   }
@@ -105578,7 +108228,7 @@ var Actions = class _Actions {
     const part = legs > ACTION_LEGS_MAX ? "action_basis" : "correspondence";
     const count = part === "action_basis" ? legs : ledger;
     const limit = part === "action_basis" ? ACTION_LEGS_MAX : ACTION_LEDGER_MAX;
-    return refuse3("ACTION_TOO_LARGE", `this action's ${part} holds ${count} entries; an action holds at most ${limit}. Nothing was written.`, { part, count, limit });
+    return refuse4("ACTION_TOO_LARGE", `this action's ${part} holds ${count} entries; an action holds at most ${limit}. Nothing was written.`, { part, count, limit });
   }
   /** R1–R3, R5–R8, R33: this module's check, run inside every promotion before the write (promotion R39). */
   check(c) {
@@ -105605,14 +108255,14 @@ var Actions = class _Actions {
       if (large) return large;
       const af = [];
       actionBasisFindings(nextFm, af);
-      if (af.some((x) => x.severity === "error")) return refuse3("ACTION_BASIS_REFUSED", void 0, { findings: findingsOf(af) });
+      if (af.some((x) => x.severity === "error")) return refuse4("ACTION_BASIS_REFUSED", void 0, { findings: findingsOf(af) });
       const cf = [];
       correspondenceFindings(nextFm, cf);
-      if (cf.some((x) => x.severity === "error")) return refuse3("CORRESPONDENCE_REFUSED", void 0, { findings: findingsOf(cf) });
+      if (cf.some((x) => x.severity === "error")) return refuse4("CORRESPONDENCE_REFUSED", void 0, { findings: findingsOf(cf) });
       for (const leg of Array.isArray(nextFm.action_basis) ? nextFm.action_basis : []) {
         if (!leg || typeof leg.target !== "string") continue;
         if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, leg.target))
-          return refuse3("ACTION_BASIS_REFUSED", void 0, { target: leg.target, findings: [{
+          return refuse4("ACTION_BASIS_REFUSED", void 0, { target: leg.target, findings: [{
             check: "C-2.10",
             detail: `action_basis target '${leg.target}' does not resolve in this store: an action that names why it exists names something that exists, or it points a reader at nothing while claiming a reason`
           }] });
@@ -105621,7 +108271,7 @@ var Actions = class _Actions {
         if (!e || typeof e.artifact_sha !== "string" || !e.artifact_sha.trim()) continue;
         const sha = e.artifact_sha.trim().replace(/^sha256:/, "").toLowerCase();
         if (!this.#one(`SELECT capture_sha FROM register WHERE capture_sha=?`, sha))
-          return refuse3("CORRESPONDENCE_REFUSED", void 0, { artifact_sha: sha, findings: [{
+          return refuse4("CORRESPONDENCE_REFUSED", void 0, { artifact_sha: sha, findings: [{
             check: "C-2.10",
             detail: `correspondence artifact_sha '${sha.slice(0, 16)}...' does not resolve in the register: an entry claiming captured bytes names bytes this store holds, or it is testimony and says so with an account and an author (DEC-13)`,
             repairs: ["capture the artifact first (op=capture), then record its sha", "or record a named account instead"]
@@ -105633,11 +108283,11 @@ var Actions = class _Actions {
     if (nextFm && typeof nextFm === "object" && !pkg.replay) {
       const rf = [];
       respondsToEdgeFindings(nextFm, rf);
-      if (rf.some((x) => x.severity === "error")) return refuse3("RESPONDS_TO_REFUSED", void 0, { findings: findingsOf(rf) });
+      if (rf.some((x) => x.severity === "error")) return refuse4("RESPONDS_TO_REFUSED", void 0, { findings: findingsOf(rf) });
       for (const r of Array.isArray(nextFm.references) ? nextFm.references : []) {
         if (!r || typeof r !== "object" || r.rel !== "responds_to") continue;
         if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, r.target))
-          return refuse3("RESPONDS_TO_REFUSED", void 0, { target: r.target, findings: [{
+          return refuse4("RESPONDS_TO_REFUSED", void 0, { target: r.target, findings: [{
             check: "C-6.1",
             detail: `responds_to target '${r.target}' does not resolve in this store: this document claims to be what came back from an ask that is not here`
           }] });
@@ -105669,7 +108319,7 @@ var Actions = class _Actions {
       return null;
     }
     if (superseded) return determinationSuperseded(superseded.id, superseded.by);
-    return refuse3(
+    return refuse4(
       "ACTION_NO_DETERMINATION",
       readable ? "an action recorded for a breach rests on a live conformance determination you may see, as a rests_on leg. None of its legs names one. Nothing was written." : "an action recorded for a breach rests on a conformance determination, and no determination can be read on this instance yet, so none could be found. Nothing was written.",
       readable ? {} : { cause: "CONFORMANCE_UNAVAILABLE" }
@@ -106385,15 +109035,15 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
   /* R48 (K597 (1)): the conditions on a pressure mark, at `actionCorrespond` and `actionPressure` alike. */
   #pressureRefusal({ who: who2, mark, direction }) {
     if (!who2 || isMachineIdentity(who2))
-      return refuse3("MACHINE_CANNOT_MARK_PRESSURE", "marking pressure directed at the group is a member's judgement; a machine credential may not mark it. Nothing was written.");
+      return refuse4("MACHINE_CANNOT_MARK_PRESSURE", "marking pressure directed at the group is a member's judgement; a machine credential may not mark it. Nothing was written.");
     if (!mark || !PRESSURE_KINDS.includes(mark.kind) || !mark.note || mark.note.length > NOTE_MAX4 || /["\\\r\n]/.test(mark.raw))
-      return refuse3(
+      return refuse4(
         "PRESSURE_REFUSED",
         `a pressure mark is {kind, note}: kind one of ${PRESSURE_KINDS.join(", ")}, the note 1 to ${NOTE_MAX4} characters with no quote, backslash or line break. Nothing was written.`,
         { legal: PRESSURE_KINDS, max: NOTE_MAX4 }
       );
     if (direction !== "received")
-      return refuse3("PRESSURE_NOT_RECEIVED", `pressure is marked on a received entry; this one is ${direction || "not one"}. Nothing was written.`);
+      return refuse4("PRESSURE_NOT_RECEIVED", `pressure is marked on a received entry; this one is ${direction || "not one"}. Nothing was written.`);
     return null;
   }
   /** R48: `actionPressure` marks pressure on a received entry already recorded, in this module's own table; the entry
@@ -106414,7 +109064,7 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
     const n = typeof ord === "number" ? ord : /^\d+$/.test(String(ord ?? "").trim()) ? Number(String(ord).trim()) : NaN;
     const entry = Number.isInteger(n) ? ledger[n] : void 0;
     if (!entry || typeof entry !== "object")
-      return refuse3(
+      return refuse4(
         "PRESSURE_NO_ENTRY",
         "no correspondence entry stands at that position. Nothing was written.",
         { target, ord: ord ?? null, entries: ledger.length }
@@ -106422,7 +109072,7 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
     const notReceived = this.#pressureRefusal({ who: who2, mark, direction: entry.direction });
     if (notReceived) return { ...notReceived, target, ord: n };
     if (this.#one(`SELECT ord FROM action_pressure WHERE bundle_id=? AND ord=?`, target, n))
-      return refuse3("PRESSURE_MARKED", "that entry is already marked as pressure, and a mark is never rewritten. Nothing was written.", { target, ord: n });
+      return refuse4("PRESSURE_MARKED", "that entry is already marked as pressure, and a mark is never rewritten. Nothing was written.", { target, ord: n });
     const at25 = stampInstant("second", this.#nowMs(null));
     this.sql.exec(
       `INSERT INTO action_pressure (bundle_id, ord, kind, note, marked_by, at) VALUES (?,?,?,?,?,?)`,
@@ -106442,8 +109092,8 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
     const who2 = String(author ?? "").trim();
     const h = typeof hold === "string" ? hold.trim() : "";
     const why = typeof reason === "string" ? reason.trim() : "";
-    const machine3 = !who2 || isMachineIdentity(who2) ? refuse3("MACHINE_CANNOT_SET_HOLD", "saying whether a litigation hold is in place is a member's judgement; a machine credential may not state it. Nothing was written.") : null;
-    const shape = !HOLD_STATES.includes(h) || !why || why.length > NOTE_MAX4 || /["\\\r\n]/.test(why) ? refuse3("HOLD_REFUSED", `a litigation hold is one of ${HOLD_STATES.join(", ")}, with a reason of 1 to ${NOTE_MAX4} characters and no quote, backslash or line break. Nothing was written.`, { legal: HOLD_STATES, max: NOTE_MAX4 }) : null;
+    const machine3 = !who2 || isMachineIdentity(who2) ? refuse4("MACHINE_CANNOT_SET_HOLD", "saying whether a litigation hold is in place is a member's judgement; a machine credential may not state it. Nothing was written.") : null;
+    const shape = !HOLD_STATES.includes(h) || !why || why.length > NOTE_MAX4 || /["\\\r\n]/.test(why) ? refuse4("HOLD_REFUSED", `a litigation hold is one of ${HOLD_STATES.join(", ")}, with a reason of 1 to ${NOTE_MAX4} characters and no quote, backslash or line break. Nothing was written.`, { legal: HOLD_STATES, max: NOTE_MAX4 }) : null;
     if (machine3) return machine3;
     if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
     if (shape) return { ...shape, target };
@@ -106454,7 +109104,7 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
     const n = typeof ord === "number" ? ord : /^\d+$/.test(String(ord ?? "").trim()) ? Number(String(ord).trim()) : NaN;
     const mark = Number.isInteger(n) ? this.#one(`SELECT kind FROM action_pressure WHERE bundle_id=? AND ord=?`, target, n) : null;
     if (!mark || mark.kind !== "legal")
-      return refuse3("HOLD_NO_LEGAL_MARK", "a litigation hold is stated on a received entry marked as legal pressure; the entry named carries no such mark. Nothing was written.", { target, ord: ord ?? null });
+      return refuse4("HOLD_NO_LEGAL_MARK", "a litigation hold is stated on a received entry marked as legal pressure; the entry named carries no such mark. Nothing was written.", { target, ord: ord ?? null });
     const at25 = stampInstant("second", this.#nowMs(null));
     const seq = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM action_holds WHERE bundle_id=? AND ord=?`, target, n).n;
     this.sql.exec(
@@ -106871,7 +109521,7 @@ Reason: ${why}
   /* R23, R28 (C-90.2): the one site that answers a tier that is not 1, 2 or 3, for the act and for a proposal alike
      (one condition, one code). */
   #badRiskTier(target, tier, who2) {
-    return refuse3(
+    return refuse4(
       "BAD_RISK_TIER",
       `${who2} states a tier of 1 (file freely), 2 (file with caution) or 3 (do not file without counsel). Undetermined is what an action reads when nobody has assessed it, not a tier to set.`,
       { target, tier: tier ?? null, legal: [1, 2, 3] }
@@ -107530,7 +110180,7 @@ Changes: responds_to edge added to ${actionId}.
     if (asked !== 1 && asked !== 2 && asked !== 3) return this.#badRiskTier(target, tier, "a proposal");
     const why = typeof basis === "string" ? basis.trim() : "";
     if (!why || why.length > RISK_PROPOSAL_BASIS_MAX || /["\\\r\n]/.test(why))
-      return refuse3("RISK_PROPOSAL_BASIS_REFUSED", `a proposed tier carries its basis: 1 to ${RISK_PROPOSAL_BASIS_MAX} characters with no quote, backslash or line break`, { target, max: RISK_PROPOSAL_BASIS_MAX });
+      return refuse4("RISK_PROPOSAL_BASIS_REFUSED", `a proposed tier carries its basis: 1 to ${RISK_PROPOSAL_BASIS_MAX} characters with no quote, backslash or line break`, { target, max: RISK_PROPOSAL_BASIS_MAX });
     const b = this.#visibleAction(target, viewer);
     if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
     if (normalizeType(b.object_type) !== "action")
@@ -107617,7 +110267,7 @@ for (const m of [
 ]) {
   const fn = Actions.prototype[m];
   Actions.prototype[m] = function(...a) {
-    return withRow2(fn.apply(this, a));
+    return withRow3(fn.apply(this, a));
   };
 }
 var PROPOSAL_SAYS2 = {
@@ -107631,9 +110281,9 @@ function proposalLabelFor(who2, subject) {
   const base = lawProposalLabel(who2);
   return { by: base.by, state: base.state, machine_work: base.machine_work, says: PROPOSAL_SAYS2[subject][base.state] };
 }
-var instances27 = /* @__PURE__ */ new WeakMap();
+var instances29 = /* @__PURE__ */ new WeakMap();
 function actionsOf(host, deps) {
-  let a = instances27.get(host);
+  let a = instances29.get(host);
   if (!a) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -107641,7 +110291,7 @@ function actionsOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     a = new Actions({ ...d, host, storage, record, membership, promotion });
-    instances27.set(host, a);
+    instances29.set(host, a);
     a.migrate();
     void a.conformance;
     record.declarePurge("actions", [...ACTIONS_TABLES]);
@@ -107757,530 +110407,6 @@ function actionsOps(a, url, body) {
   };
 }
 
-// src/local-facts/checks.mjs
-var at23 = (fn, region) => `src/local-facts/index.mjs ${fn} > ${region}`;
-var LOCAL_FACTS_CHECKS = Object.freeze({
-  MACHINE_CANNOT_CONFIRM: {
-    check: "C-126.1",
-    where: at23("machineRefusal", "is-fact-member"),
-    translation: "Confirming, correcting or disputing a local fact (a holiday calendar, an office's hours, the time zone) is a member's act. An assistant may re-check a source and report what it found; it may not record a confirmation. Sign in as a member. Nothing was written."
-  },
-  NO_SUCH_FACT: {
-    check: "C-126.2",
-    where: at23("noSuchFact", "is-fact-named"),
-    translation: "No local fact of this instance's active jurisdiction profiles answers to that path. A path names one profile's holiday year, an office's hours or the time zone. Nothing was written."
-  },
-  FACT_ACT_REFUSED: {
-    check: "C-126.3",
-    where: at23("factConfirm", "is-fact-act"),
-    translation: "A member confirms, corrects or disputes a local fact; this act is none of the three. Nothing was written."
-  },
-  FACT_HOW_REFUSED: {
-    check: "C-126.4",
-    where: at23("factConfirm", "is-fact-how"),
-    translation: "Say how you checked, in at most 500 characters: the official page and its address, a call to the office, a visit. None was given, or it is too long. Nothing was written."
-  },
-  FACT_VALUE_REFUSED: {
-    check: "C-126.5",
-    where: at23("factConfirm", "is-fact-correction"),
-    translation: "A correction gives the corrected value, in the form the profile holds that fact in, and its source in at most 500 characters. The value is missing or not of that form, or the source is missing or too long. Nothing was written."
-  }
-});
-function refusal18(code, detail, extra) {
-  const row2 = LOCAL_FACTS_CHECKS[code];
-  return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
-}
-
-// src/local-facts/schema.mjs
-var LOCAL_FACTS_SCHEMA = `
--- R1, R5: a member's confirm, correct or dispute of the fact at path. value_json is the value the act is about: for a
--- confirm, the value that governed when it was made; for a correct, the corrected value; for a dispute, the value
--- disputed. source is a correction's source, else NULL.
-CREATE TABLE IF NOT EXISTS local_fact_acts (
-  seq           INTEGER PRIMARY KEY AUTOINCREMENT,
-  path          TEXT NOT NULL,
-  profile       TEXT NOT NULL,
-  act           TEXT NOT NULL,
-  how           TEXT NOT NULL,
-  value_json    TEXT,
-  source        TEXT,
-  by_member     TEXT NOT NULL,
-  at            TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS local_fact_acts_path ON local_fact_acts(path, seq);
-`;
-var LOCAL_FACTS_TABLES = Object.freeze([{ name: "local_fact_acts", keys: [] }]);
-function migrateLocalFacts(sql) {
-  const bare2 = LOCAL_FACTS_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
-  for (const s of bare2.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
-}
-
-// src/local-facts/paths.mjs
-var LOCAL_FACT_KINDS = Object.freeze(["holidays", "hours", "time_zone"]);
-var PROFILE_RE = /^[a-z0-9][a-z0-9-]*$/;
-var YEAR_RE = /^\d{4}$/;
-var PATH_MAX = 1e3;
-var enc2 = (s) => encodeURIComponent(s);
-var name = (s) => typeof s === "string" && s.trim() !== "" && s === s.trim();
-var isObj13 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
-function officeToken(o) {
-  if (name(o)) return `role=${enc2(o)}`;
-  if (isObj13(o) && Object.keys(o).length === 1 && name(o.venue)) return `venue=${enc2(o.venue)}`;
-  return null;
-}
-function officesToken(offices) {
-  if (offices === void 0 || offices === null) return "";
-  if (!Array.isArray(offices) || !offices.length) return null;
-  const t = offices.map(officeToken);
-  if (t.some((x) => x === null)) return null;
-  return [...new Set(t)].sort().join(",");
-}
-function factPath(parts) {
-  try {
-    if (!isObj13(parts) || typeof parts.profile !== "string" || !PROFILE_RE.test(parts.profile)) return null;
-    const { profile, fact } = parts;
-    let p = null;
-    if (fact === "time_zone") p = `${profile}/time_zone`;
-    else if (fact === "holidays") {
-      const y = typeof parts.year === "number" ? String(parts.year) : parts.year;
-      if (typeof y !== "string" || !YEAR_RE.test(y)) return null;
-      const o = officesToken(parts.offices);
-      if (o === null) return null;
-      p = `${profile}/holidays/${y}${o ? `/${o}` : ""}`;
-    } else if (fact === "hours") {
-      const of = parts.office;
-      if (!isObj13(of)) return null;
-      const keys = Object.keys(of).sort().join(",");
-      if (keys === "body,role" && name(of.role) && name(of.body)) p = `${profile}/hours/role=${enc2(of.role)},body=${enc2(of.body)}`;
-      else if (keys === "venue" && name(of.venue)) p = `${profile}/hours/venue=${enc2(of.venue)}`;
-      else return null;
-    } else return null;
-    return p.length <= PATH_MAX ? p : null;
-  } catch {
-    return null;
-  }
-}
-var dec = (s) => {
-  try {
-    return decodeURIComponent(s);
-  } catch {
-    return null;
-  }
-};
-function parseFactPath(path) {
-  try {
-    if (typeof path !== "string" || !path || path.length > PATH_MAX) return null;
-    const seg = path.split("/");
-    const [profile, fact] = seg;
-    let parts = null;
-    if (fact === "time_zone" && seg.length === 2) parts = { profile, fact };
-    else if (fact === "holidays" && (seg.length === 3 || seg.length === 4)) {
-      parts = { profile, fact, year: Number(seg[2]) };
-      if (seg.length === 4) {
-        const offices = [];
-        for (const t of seg[3].split(",")) {
-          const m = /^(role|venue)=(.+)$/.exec(t);
-          const v = m && dec(m[2]);
-          if (v === null || !m) return null;
-          offices.push(m[1] === "role" ? v : { venue: v });
-        }
-        parts.offices = offices;
-      }
-    } else if (fact === "hours" && seg.length === 3) {
-      let m = /^role=([^,]+),body=([^,]+)$/.exec(seg[2]);
-      if (m) {
-        const role = dec(m[1]), body = dec(m[2]);
-        if (role === null || body === null) return null;
-        parts = { profile, fact, office: { role, body } };
-      } else {
-        m = /^venue=([^,]+)$/.exec(seg[2]);
-        const v = m && dec(m[1]);
-        if (v === null || !m) return null;
-        parts = { profile, fact, office: { venue: v } };
-      }
-    } else return null;
-    return factPath(parts) === path ? parts : null;
-  } catch {
-    return null;
-  }
-}
-
-// src/local-facts/index.mjs
-var LOCAL_FACT_ACTS = Object.freeze(["confirm", "correct", "dispute"]);
-var LOCAL_FACT_STATUSES = Object.freeze(["confirmed", "unconfirmed", "corrected", "disputed", "absent"]);
-var LOCAL_FACT_HORIZONS = Object.freeze({
-  holidays: Object.freeze({ lasts: "until_year_end", due_from: Object.freeze({ month: 11, day: 1, years_before: 1 }) }),
-  hours: Object.freeze({ lapse_days: 183 }),
-  time_zone: Object.freeze({ lapse_days: 183 })
-});
-var HOW_MAX = 500;
-var SOURCE_MAX = 500;
-var str12 = (v) => typeof v === "string" ? v.trim() : "";
-var isObj14 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
-var clone2 = (v) => v === void 0 ? void 0 : JSON.parse(JSON.stringify(v));
-var safeJson19 = (s) => {
-  try {
-    return s == null ? null : JSON.parse(s);
-  } catch {
-    return null;
-  }
-};
-var addDays = (date, n) => new Date(Date.parse(`${date}T00:00:00Z`) + n * 864e5).toISOString().slice(0, 10);
-var givers = (x, own3) => own3 ? [own3] : [x.profile, ...(x.bases || []).map((b) => b.profile)].filter(Boolean);
-function factIn(p, parts, own3 = null) {
-  if (!isObj14(p)) return null;
-  const mine = (x) => givers(x, own3).includes(parts.profile);
-  if (parts.fact === "time_zone") {
-    const z = p.time_zone;
-    return isObj14(z) && mine(z) ? { value: z.value, status: z.status, basis: z.basis } : null;
-  }
-  if (parts.fact === "holidays") {
-    const key = officesToken(parts.offices);
-    const h = (Array.isArray(p.holidays) ? p.holidays : []).find((e) => isObj14(e) && Number(e.year) === parts.year && officesToken(e.offices) === key && mine(e));
-    if (!h) return null;
-    const days = (h.days || []).map((d) => ({ date: d.date, name: d.name })).sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
-    return { value: days, status: h.status, basis: h.basis };
-  }
-  if (parts.fact === "hours") {
-    const hoursOf = (h) => isObj14(h) && mine(h) ? { value: { weekly: clone2(h.weekly) }, status: h.status, basis: h.basis } : null;
-    if (parts.office.venue !== void 0) {
-      const k = (Array.isArray(p.action_kinds) ? p.action_kinds : []).find((e) => isObj14(e) && e.kind === parts.office.venue);
-      return k && isObj14(k.venue) ? hoursOf(k.venue.hours) : null;
-    }
-    const c = (Array.isArray(p.counterparties) ? p.counterparties : []).find((e) => isObj14(e) && e.role === parts.office.role && e.body === parts.office.body && isObj14(e.hours));
-    return c ? hoursOf(c.hours) : null;
-  }
-  return null;
-}
-function factsOf(p) {
-  const out = [];
-  if (!isObj14(p)) return out;
-  if (isObj14(p.time_zone)) out.push({ profile: p.id, fact: "time_zone" });
-  for (const h of Array.isArray(p.holidays) ? p.holidays : [])
-    if (isObj14(h)) out.push({ profile: p.id, fact: "holidays", year: Number(h.year), ...h.offices ? { offices: h.offices } : {} });
-  for (const c of Array.isArray(p.counterparties) ? p.counterparties : [])
-    if (isObj14(c) && isObj14(c.hours)) out.push({ profile: p.id, fact: "hours", office: { role: c.role, body: c.body } });
-  for (const k of Array.isArray(p.action_kinds) ? p.action_kinds : [])
-    if (isObj14(k) && isObj14(k.venue) && isObj14(k.venue.hours)) out.push({ profile: p.id, fact: "hours", office: { venue: k.kind } });
-  return out;
-}
-function withValue(p, parts, value) {
-  const q7 = clone2(p);
-  if (parts.fact === "time_zone") {
-    if (typeof value !== "string") return null;
-    q7.time_zone.value = value;
-  } else if (parts.fact === "holidays") {
-    if (!Array.isArray(value)) return null;
-    const key = officesToken(parts.offices);
-    const h = q7.holidays.find((e) => Number(e.year) === parts.year && officesToken(e.offices) === key);
-    h.days = clone2(value);
-  } else {
-    if (!isObj14(value) || Object.keys(value).join() !== "weekly") return null;
-    const target = parts.office.venue !== void 0 ? q7.action_kinds.find((k) => k.kind === parts.office.venue).venue : q7.counterparties.find((c) => c.role === parts.office.role && c.body === parts.office.body);
-    target.hours.weekly = clone2(value.weekly);
-  }
-  return q7;
-}
-var LocalFacts = class _LocalFacts {
-  constructor({
-    storage,
-    record,
-    membership = null,
-    combine: combine2 = combine,
-    get: get2 = get,
-    validate: validate2 = validate,
-    now = null
-  } = {}) {
-    this.storage = storage;
-    this.sql = storage.sql;
-    this.record = record;
-    this.membership = membership;
-    this.combine = combine2;
-    this.getProfile = get2;
-    this.validate = validate2;
-    this.now = typeof now === "function" ? now : () => (/* @__PURE__ */ new Date()).toISOString();
-    migrateLocalFacts(this.sql);
-  }
-  #rows(qs, ...a) {
-    return [...this.sql.exec(qs, ...a)];
-  }
-  #today() {
-    return stampInstant("second", Date.parse(this.now())).slice(0, 10);
-  }
-  /** The module's table, created at construction; kept, idempotent, for the composition root's migration pass. */
-  migrate() {
-    migrateLocalFacts(this.sql);
-  }
-  /* The active profiles: their ids as held, and the combined view (record-core R26, jurisdictions R12–R16). A profile
-     the instance names but cannot resolve, or a list that does not combine, gives no fact. */
-  #active() {
-    const ids = this.record.getSetting("jurisdiction_profiles");
-    const held = /* @__PURE__ */ new Map();
-    if (Array.isArray(ids)) for (const id of ids) {
-      if (typeof id !== "string" || held.has(id)) continue;
-      const p = this.getProfile(id);
-      if (isObj14(p)) held.set(id, p);
-    }
-    let view = null;
-    if (held.size) {
-      const c = this.combine([...held.keys()]);
-      if (c && c.ok) view = c.view;
-      else held.clear();
-    }
-    return { held, view };
-  }
-  /* A viewer that membership refuses sees no fact; no viewer sent is a direct internal call and sees every one. */
-  static #blind(viewer) {
-    return viewer !== void 0 && viewer !== null && viewerPredicate(viewer).scope === "DENY";
-  }
-  #acts(path) {
-    return this.#rows(`SELECT seq, act, how, value_json, source, by_member, at FROM local_fact_acts WHERE path=? ORDER BY seq`, path).map((r) => ({
-      act: r.act,
-      by: r.by_member,
-      at: r.at,
-      how: r.how,
-      value: safeJson19(r.value_json),
-      ...r.act === "correct" ? { source: r.source } : {}
-    }));
-  }
-  /* R2, R3: one named fact's status, from its acts and the view. `held` is the profile's own fact (R1: what may be
-     acted on), `inView` the fact as the active profiles combine it (absent when withheld as a conflict). */
-  #status(path, parts, held, inView, today) {
-    const acts = this.#acts(path);
-    const latest = acts.length ? acts[acts.length - 1] : null;
-    const said2 = (a) => a ? { act: a.act, by: a.by, at: a.at, how: a.how } : null;
-    const base = { path, fact: parts, latest: said2(latest), acts: acts.length };
-    if (!inView) {
-      return {
-        ...base,
-        status: "absent",
-        due: false,
-        profile: null,
-        governs: null,
-        why: held ? "the active jurisdiction profiles disagree on this fact, so it is withheld: what depends on it is undetermined" : "no active jurisdiction profile holds this fact, so what depends on it is undetermined"
-      };
-    }
-    const correction = [...acts].reverse().find((a) => a.act === "correct") || null;
-    const profile = { value: clone2(inView.value), status: inView.status, basis: inView.basis };
-    const governs = correction ? {
-      value: clone2(correction.value),
-      origin: "corrected",
-      source: correction.source,
-      says: `corrected locally by ${correction.by}, ${correction.at.slice(0, 10)}`
-    } : { value: clone2(inView.value), origin: "profile" };
-    const horizon = this.#horizon(parts, latest, today);
-    const out = { ...base, profile, governs, ...horizon.dates };
-    if (!latest) return { ...out, status: "unconfirmed", due: horizon.due, why: `no member has confirmed it${horizon.dueWhy}` };
-    if (latest.act === "dispute") return { ...out, status: "disputed", due: true, why: `disputed by ${latest.by}, ${latest.at.slice(0, 10)}` };
-    if (latest.act === "correct") return { ...out, status: "corrected", due: false, why: governs.says };
-    if (canonicalJson(latest.value) !== canonicalJson(governs.value))
-      return {
-        ...out,
-        status: "unconfirmed",
-        due: horizon.due,
-        lapsed: said2(latest),
-        why: `the value ${latest.by} confirmed on ${latest.at.slice(0, 10)} has since changed${horizon.dueWhy}`
-      };
-    if (horizon.lapsed)
-      return {
-        ...out,
-        status: "unconfirmed",
-        due: horizon.due,
-        lapsed: said2(latest),
-        why: `the confirmation by ${latest.by} on ${latest.at.slice(0, 10)} lapsed on ${horizon.dates.lapses_on}${horizon.dueWhy}`
-      };
-    return { ...out, status: "confirmed", due: false, why: `confirmed by ${latest.by}, ${latest.at.slice(0, 10)}` };
-  }
-  /* R3: when a confirmation of this fact lapses, and from when the fact is due. */
-  #horizon(parts, latest, today) {
-    const confirmed = latest && latest.act === "confirm" ? latest.at.slice(0, 10) : null;
-    if (parts.fact === "holidays") {
-      const y = parts.year, due_from = `${y - 1}-11-01`, lapses_on2 = `${y + 1}-01-01`;
-      const due = today >= due_from;
-      return {
-        due,
-        lapsed: !!confirmed && today >= lapses_on2,
-        dueWhy: due ? `; the year is due from ${due_from}` : `; the year falls due on ${due_from}`,
-        dates: { due_from, ...confirmed ? { lapses_on: lapses_on2 } : {} }
-      };
-    }
-    const lapses_on = confirmed ? addDays(confirmed, LOCAL_FACT_HORIZONS[parts.fact].lapse_days) : null;
-    return {
-      due: true,
-      lapsed: !!confirmed && today >= lapses_on,
-      dueWhy: "",
-      dates: lapses_on ? { lapses_on } : {}
-    };
-  }
-  /* One path against the active profiles: its parts, the held fact and the view's, or why it names none. */
-  #resolve(path, active) {
-    const parts = parseFactPath(path);
-    if (!parts) return { named: false };
-    const p = active.held.get(parts.profile);
-    if (!p) return { named: false, parts };
-    const held = factIn(p, parts, parts.profile);
-    return { named: true, parts, p, held, inView: held ? factIn(active.view, parts) : null };
-  }
-  /* ===================================================================== *
-   * R1: factConfirm
-   * ===================================================================== */
-  /** R1, R5: records a member's `confirm`, `correct` or `dispute` of the fact at `path`, appended and never replaced.
-   *  Refusals in order: MACHINE_CANNOT_CONFIRM, NO_SUCH_FACT, FACT_ACT_REFUSED, FACT_HOW_REFUSED, FACT_VALUE_REFUSED. */
-  factConfirm(a = {}) {
-    const b = isObj14(a) ? a : {};
-    const machine3 = machineRefusal2(b.by);
-    if (machine3) return machine3;
-    const path = typeof b.path === "string" ? b.path : null;
-    const active = this.#active();
-    const r = path && !_LocalFacts.#blind(b.viewer) ? this.#resolve(path, active) : { named: false };
-    if (!r.named || !r.held) return noSuchFact(path);
-    const act = b.act;
-    if (!LOCAL_FACT_ACTS.includes(act))
-      return refusal18(
-        "FACT_ACT_REFUSED",
-        `the act is one of ${LOCAL_FACT_ACTS.join(", ")}.`,
-        { act: typeof act === "string" ? act.slice(0, 40) : null, acts: [...LOCAL_FACT_ACTS] }
-      );
-    const how = str12(b.how);
-    if (!how || how.length > HOW_MAX)
-      return refusal18("FACT_HOW_REFUSED", `say how you checked, in 1 to ${HOW_MAX} characters.`, { max: HOW_MAX });
-    let value = null, source = null;
-    if (act === "correct") {
-      source = str12(b.source);
-      const q7 = b.value === void 0 ? null : withValue(r.p, r.parts, b.value);
-      const v = q7 ? this.validate(q7) : null;
-      if (!source || source.length > SOURCE_MAX || !v || !v.ok)
-        return refusal18(
-          "FACT_VALUE_REFUSED",
-          `a correction gives the corrected value in the form the profile holds it, and its source in 1 to ${SOURCE_MAX} characters.`,
-          { errors: v && !v.ok ? v.errors.slice(0, 10) : void 0, max: SOURCE_MAX }
-        );
-      value = b.value;
-    } else {
-      const s = r.inView ? this.#status(path, r.parts, r.held, r.inView, this.#today()) : null;
-      value = s && s.governs ? s.governs.value : r.held.value;
-    }
-    const at25 = stampInstant("second", Date.parse(this.now()));
-    const by = str12(b.by);
-    return this.record.transact(() => {
-      this.sql.exec(
-        `INSERT INTO local_fact_acts (path, profile, act, how, value_json, source, by_member, at)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        path,
-        r.parts.profile,
-        act,
-        how,
-        canonicalJson(value),
-        source,
-        by,
-        at25
-      );
-      return { ok: true, path, act, at: at25 };
-    });
-  }
-  /* ===================================================================== *
-   * R2: factStatus
-   * ===================================================================== */
-  /** R2, R3: one fact's status (with `path`), or every fact of the active profiles, corrections and disputes first. */
-  factStatus(a = {}) {
-    const b = isObj14(a) ? a : {};
-    const active = this.#active();
-    const blind = _LocalFacts.#blind(b.viewer);
-    const today = this.#today();
-    if (b.path !== void 0 && b.path !== null && b.path !== "") {
-      const r = !blind && typeof b.path === "string" ? this.#resolve(b.path, active) : { named: false };
-      if (!r.named) return noSuchFact(typeof b.path === "string" ? b.path : null);
-      return { ok: true, ...this.#status(b.path, r.parts, r.held, r.inView, today) };
-    }
-    const facts = blind ? [] : this.#all(active, today);
-    const rank6 = (f17) => f17.status === "corrected" || f17.status === "disputed" ? 0 : 1;
-    facts.sort((x, y) => rank6(x) - rank6(y) || (x.path < y.path ? -1 : x.path > y.path ? 1 : 0));
-    return {
-      ok: true,
-      facts,
-      count: facts.length,
-      note: "corrections and disputes come first, for a member to report for a profile fix; this instance transmits nothing"
-    };
-  }
-  /* Every fact of the active profiles, once each, with its status. */
-  #all(active, today) {
-    const out = /* @__PURE__ */ new Map();
-    for (const p of active.held.values()) for (const parts of factsOf(p)) {
-      const path = factPath(parts);
-      if (!path || out.has(path)) continue;
-      const r = this.#resolve(path, active);
-      if (r.named && r.held) out.set(path, this.#status(path, r.parts, r.held, r.inView, today));
-    }
-    return [...out.values()];
-  }
-  /* ===================================================================== *
-   * R4: factsDue
-   * ===================================================================== */
-  /** R4: every fact that is unconfirmed (lapsed included) or disputed, once each; with `paths`, only those of them. A
-   *  path that does not name a fact of an active profile is listed in `unknown`; one that names a fact the active
-   *  profiles do not hold, in `absent`. Writes nothing. */
-  factsDue(a = {}) {
-    const b = isObj14(a) ? a : {};
-    const active = this.#active();
-    const blind = _LocalFacts.#blind(b.viewer);
-    const today = this.#today();
-    const pick2 = (s) => s.status === "disputed" || s.status === "unconfirmed";
-    const shape = (s) => ({
-      path: s.path,
-      fact: s.fact,
-      status: s.status,
-      due: s.due,
-      why: s.why,
-      latest: s.latest,
-      ...s.lapsed ? { lapsed: s.lapsed } : {},
-      ...s.due_from ? { due_from: s.due_from } : {},
-      ...s.lapses_on ? { lapses_on: s.lapses_on } : {}
-    });
-    if (b.paths === void 0 || b.paths === null) {
-      const due2 = blind ? [] : this.#all(active, today).filter(pick2).map(shape);
-      return { ok: true, due: due2, unknown: [], absent: [] };
-    }
-    const asked = [...new Set(Array.isArray(b.paths) ? b.paths : [b.paths])];
-    const due = [], unknown = [], absent = [];
-    for (const path of asked) {
-      const r = !blind && typeof path === "string" ? this.#resolve(path, active) : { named: false };
-      if (!r.named) {
-        unknown.push(typeof path === "string" ? path.slice(0, 1e3) : null);
-        continue;
-      }
-      const s = this.#status(path, r.parts, r.held, r.inView, today);
-      if (s.status === "absent") absent.push(path);
-      else if (pick2(s)) due.push(shape(s));
-    }
-    return { ok: true, due, unknown, absent };
-  }
-};
-function machineRefusal2(by) {
-  if (str12(by) && !isMachineIdentity(str12(by))) return null;
-  return refusal18("MACHINE_CANNOT_CONFIRM", "confirming, correcting or disputing a local fact is a named member's act; an assistant's re-check reaches a member as its run's output. Nothing was written.");
-}
-function noSuchFact(path) {
-  return refusal18(
-    "NO_SUCH_FACT",
-    "no local fact of the active jurisdiction profiles answers to that path.",
-    { path: typeof path === "string" ? path.slice(0, 1e3) : null }
-  );
-}
-var instances28 = /* @__PURE__ */ new WeakMap();
-function localFactsOf(host, deps) {
-  let s = instances28.get(host);
-  if (!s) {
-    const d = deps || {};
-    const storage = d.storage || host.storage;
-    const record = d.record || recordOf(host);
-    const membership = d.membership || membershipOf(host, { record });
-    s = new LocalFacts({ ...d, storage, record, membership });
-    instances28.set(host, s);
-    record.declarePurge("local-facts", LOCAL_FACTS_TABLES);
-  }
-  return s;
-}
-
 // src/action-clocks/schema.mjs
 var ACTION_CLOCKS_SCHEMA = `
 -- R2: A CLOCK ENTRY COMPUTED FROM A PROFILE DEADLINE, STORED APART FROM
@@ -108333,13 +110459,13 @@ var REMINDERS_PER_ACTION_MAX = 50;
 var REMINDERS_READ_MAX = 500;
 var CALENDAR_FACTS_ACTIONS_MAX = 500;
 var CLOSED_ACTION_STATES = Object.freeze(["resolved", "abandoned"]);
-function withRow3(r) {
+function withRow4(r) {
   if (!r || typeof r !== "object" || r.ok !== false || typeof r.reason !== "string") return r;
   const row2 = ACTION_CLOCK_CHECKS[r.reason];
   if (!row2) return r;
   return { ...r, code: r.code ?? r.reason, check: r.check ?? row2.check, translation: r.translation ?? row2.translation };
 }
-var refuse4 = (code, detail, extra) => withRow3({ ok: false, reason: code, detail, ...extra || {} });
+var refuse5 = (code, detail, extra) => withRow4({ ok: false, reason: code, detail, ...extra || {} });
 var DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
 function isDay(v) {
   if (typeof v !== "string" || !DAY_RE.test(v)) return false;
@@ -108564,7 +110690,7 @@ var ActionClocks = class {
   pendingClocks({ before, limit = null, after = null, viewer = null } = {}) {
     const day = String(before ?? "").slice(0, 10);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(day))
-      return refuse4("PENDING_CLOCKS_BAD_BEFORE", "before= is a date, YYYY-MM-DD", { before: before ?? null });
+      return refuse5("PENDING_CLOCKS_BAD_BEFORE", "before= is a date, YYYY-MM-DD", { before: before ?? null });
     const max = clampLimit2(limit, PENDING_CLOCKS_MAX, PENDING_CLOCKS_MAX);
     const gate = viewerPredicate(viewer);
     const page = this.#entryPage({
@@ -108733,7 +110859,8 @@ var ActionClocks = class {
    *  deadline counted in business days: the holiday entries that apply to its offices (R10) for each year from the UTC
    *  year of the instance clock to the year of its latest pending clock entry, and at least the next year; and its
    *  offices' `hours`. Only facts the active profiles hold are paths (a year they do not list has no fact to confirm,
-   *  and a count reaching it is undetermined, jurisdictions R33). At most 500 actions read, `truncated` stated. */
+   *  and a count reaching it is undetermined, jurisdictions R33). Each path's actions are `{action, project,
+   *  created_by}`, the project and creator as R3 computes them (K1000). At most 500 actions read, `truncated` stated. */
   calendarFactsRead({ viewer = null, now = null } = {}) {
     const today = this.#today(now);
     const view = this.#view();
@@ -108748,15 +110875,16 @@ var ActionClocks = class {
       CALENDAR_FACTS_ACTIONS_MAX + 1
     ) : [];
     const read2 = /* @__PURE__ */ new Map();
-    const add = (path, id) => {
+    const add = (path, a) => {
       if (typeof path !== "string" || !path) return;
       if (!read2.has(path)) read2.set(path, []);
-      if (!read2.get(path).includes(id)) read2.get(path).push(id);
+      if (!read2.get(path).includes(a)) read2.get(path).push(a);
     };
     const y0 = Number(today.slice(0, 4));
     for (const r of rows2.slice(0, CALENDAR_FACTS_ACTIONS_MAX)) {
       const fm = this.#heldFm(r.bundle_id) || {};
       if (!business.has(fm.action_kind)) continue;
+      const a = { action: r.bundle_id, project: this.#projectOf(fm, viewer), created_by: this.#createdBy(r.bundle_id) };
       const offices = actionOffices(fm, view);
       let y1 = y0 + 1;
       for (const e of Array.isArray(fm.clock) ? fm.clock : [])
@@ -108764,18 +110892,18 @@ var ActionClocks = class {
       for (let y = y0; y <= y1; y++)
         for (const h of yearEntries(view, offices, y).entries) {
           try {
-            add(factPath(holidayFact(h)), r.bundle_id);
+            add(factPath(holidayFact(h)), a);
           } catch {
           }
         }
       for (const f17 of officeHours(view, offices)) {
         try {
-          add(factPath(f17), r.bundle_id);
+          add(factPath(f17), a);
         } catch {
         }
       }
     }
-    const paths = [...read2.keys()].sort().map((path) => ({ path, actions: read2.get(path) }));
+    const paths = [...read2.keys()].sort().map((path) => ({ path, actions: read2.get(path).map((a) => ({ ...a })) }));
     return {
       ok: true,
       as_of: today,
@@ -108790,7 +110918,7 @@ var ActionClocks = class {
   #machineReminder(author) {
     const who2 = String(author ?? "").trim();
     if (!who2 || isMachineIdentity(who2))
-      return refuse4("MACHINE_CANNOT_SET_REMINDER", "a reminder is a member's own request to be reminded, set, changed and answered by that member alone. A machine credential never sets one, and a call that carries nobody is not a member. Nothing was changed.");
+      return refuse5("MACHINE_CANNOT_SET_REMINDER", "a reminder is a member's own request to be reminded, set, changed and answered by that member alone. A machine credential never sets one, and a call that carries nobody is not a member. Nothing was changed.");
     return null;
   }
   /* R4, R6: the action as the viewer may see it, through `actions`' read (its R29); absent, invisible and not an action
@@ -108972,7 +111100,7 @@ var ActionClocks = class {
     const due = Number.isInteger(pos) && pos >= 0 ? this.#rows(`SELECT rid, day FROM action_reminders WHERE bundle_id=? AND entry=? AND set_by=? AND day <= ?
                       AND answered_at IS NULL AND removed_at IS NULL ORDER BY day, rid`, a.id, pos, who2, today) : [];
     if (!due.length)
-      return refuse4("NO_SUCH_REMINDER", "no reminder of yours on this entry has come due and is waiting for an answer. Nothing was answered.", { target: a.id, entry: Number.isInteger(pos) ? pos : entry ?? null });
+      return refuse5("NO_SUCH_REMINDER", "no reminder of yours on this entry has come due and is waiting for an answer. Nothing was answered.", { target: a.id, entry: Number.isInteger(pos) ? pos : entry ?? null });
     const day = on === null || on === void 0 || on === "" ? null : String(on).trim();
     if (day !== null && (!isDay(day) || !(day > today)))
       return reminderRefused("on", `on '${day.slice(0, 20)}' is not a date written YYYY-MM-DD after today (${today}): a further reminder is for a later day. Nothing was answered.`, { target: a.id, entry: pos, today });
@@ -109136,19 +111264,19 @@ function computeDeadline(d, fm, view, { factOf = null } = {}) {
 for (const m of ["pendingClocks", "clockPropose", "reminderSet", "reminderAnswer"]) {
   const fn = ActionClocks.prototype[m];
   ActionClocks.prototype[m] = function(...a) {
-    return withRow3(fn.apply(this, a));
+    return withRow4(fn.apply(this, a));
   };
 }
-var instances29 = /* @__PURE__ */ new WeakMap();
+var instances30 = /* @__PURE__ */ new WeakMap();
 function actionClocksOf(host, deps) {
-  let a = instances29.get(host);
+  let a = instances30.get(host);
   if (!a) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     a = new ActionClocks({ ...d, host, storage, record, membership });
-    instances29.set(host, a);
+    instances30.set(host, a);
     a.migrate();
     void a.actions;
     record.declarePurge("action-clocks", ["action_reminders"]);
@@ -109379,11 +111507,11 @@ var PERSON_KINDS = /* @__PURE__ */ new Set([
 var PERSON_KEYS = ["name", "person", "individual", "personal_name", "full_name"];
 var CONCLUDED = /* @__PURE__ */ new Set(["concluded", "published"]);
 var INTERNAL2 = `${MACHINE_CLASS_PREFIX}admin`;
-var str13 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
+var str14 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
 var isObj15 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var q4 = (v) => JSON.stringify(v ?? null);
-var json = (v) => v == null ? null : JSON.stringify(v);
-var parse = (s) => {
+var json2 = (v) => v == null ? null : JSON.stringify(v);
+var parse2 = (s) => {
   if (s == null) return null;
   try {
     return JSON.parse(s);
@@ -109391,12 +111519,12 @@ var parse = (s) => {
     return null;
   }
 };
-var machine2 = (who2) => !str13(who2) || isMachineIdentity(str13(who2));
+var machine2 = (who2) => !str14(who2) || isMachineIdentity(str14(who2));
 var second2 = (iso5) => String(iso5).replace(/\.\d+Z$/, "Z");
 var rand11 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 var HEX646 = /^[0-9a-f]{64}$/;
 var DATE2 = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2}))?$/;
-function refuse5(code, detail, extra = {}) {
+function refuse6(code, detail, extra = {}) {
   const row2 = CONSEQUENCES_CHECKS[code];
   return {
     ok: false,
@@ -109409,56 +111537,56 @@ function refuse5(code, detail, extra = {}) {
 }
 var NOTHING = " Nothing was written.";
 function noSuchPart(id, wrote = false) {
-  return refuse5("NO_SUCH_PART", `no consequence part answers to that id here; one you may not see is answered exactly as one that does not exist.${wrote ? NOTHING : ""}`, { id: id ?? null });
+  return refuse6("NO_SUCH_PART", `no consequence part answers to that id here; one you may not see is answered exactly as one that does not exist.${wrote ? NOTHING : ""}`, { id: id ?? null });
 }
 function alreadySuperseded(id, next) {
-  return refuse5(
+  return refuse6(
     "ALREADY_SUPERSEDED",
     `${id} has been revised by ${next}; act on that one.${NOTHING}`,
     { id, superseded_by: next }
   );
 }
 function reasonRefusal(reason) {
-  if (!str13(reason)) return refuse5("NO_REASON", `the record says why.${NOTHING}`);
+  if (!str14(reason)) return refuse6("NO_REASON", `the record says why.${NOTHING}`);
   if (reason.trim().length > REASON_MAX3)
-    return refuse5("BAD_REASON", `a reason is at most ${REASON_MAX3} characters.${NOTHING}`);
+    return refuse6("BAD_REASON", `a reason is at most ${REASON_MAX3} characters.${NOTHING}`);
   return null;
 }
 function basisUnreadable(why, extra = {}) {
-  return refuse5("BASIS_UNREADABLE", `${why}.${NOTHING}`, extra);
+  return refuse6("BASIS_UNREADABLE", `${why}.${NOTHING}`, extra);
 }
 function checkAffected(a) {
   const o = isObj15(a) ? a : {};
-  const kind = str13(o.kind) ? o.kind.trim().toLowerCase() : null;
+  const kind = str14(o.kind) ? o.kind.trim().toLowerCase() : null;
   const personKey = [o, isObj15(o.role) ? o.role : {}].flatMap((x) => PERSON_KEYS.filter((k) => x[k] != null && x[k] !== ""));
-  const halfRole = o.role != null && (!isObj15(o.role) || !str13(o.role.role) || !str13(o.role.body));
-  const unknown = !isObj15(a) || !kind || !AFFECTED_KINDS.includes(kind) || !str13(o.description);
+  const halfRole = o.role != null && (!isObj15(o.role) || !str14(o.role.role) || !str14(o.role.body));
+  const unknown = !isObj15(a) || !kind || !AFFECTED_KINDS.includes(kind) || !str14(o.description);
   const individual = isObj15(a) && (kind && PERSON_KINDS.has(kind) || personKey.length || halfRole && !unknown);
   if (individual)
-    return refuse5("AFFECTED_INDIVIDUAL", `people are counted as a class or named in their official role, never singled out${personKey.length ? ` (the affected carries ${personKey.join(", ")})` : ""}${halfRole && !personKey.length ? " (a role is an office, {role, body}: the office and the body it belongs to)" : ""}: record a class (kind "class") or an office (role {role, body}). Nothing was written.`, { kind: kind ?? null });
+    return refuse6("AFFECTED_INDIVIDUAL", `people are counted as a class or named in their official role, never singled out${personKey.length ? ` (the affected carries ${personKey.join(", ")})` : ""}${halfRole && !personKey.length ? " (a role is an office, {role, body}: the office and the body it belongs to)" : ""}: record a class (kind "class") or an office (role {role, body}). Nothing was written.`, { kind: kind ?? null });
   if (unknown)
-    return refuse5("AFFECTED_UNKNOWN_KIND", `${!kind || !AFFECTED_KINDS.includes(kind) ? `${isObj15(a) ? `"${String(o.kind ?? "")}" is not a kind of affected` : "an affected is {kind, description, role?}"}` : "an affected is described"}: kind one of ${AFFECTED_KINDS.join(", ")}, with a description. Nothing was written.`, { kind: kind ?? null });
+    return refuse6("AFFECTED_UNKNOWN_KIND", `${!kind || !AFFECTED_KINDS.includes(kind) ? `${isObj15(a) ? `"${String(o.kind ?? "")}" is not a kind of affected` : "an affected is {kind, description, role?}"}` : "an affected is described"}: kind one of ${AFFECTED_KINDS.join(", ")}, with a description. Nothing was written.`, { kind: kind ?? null });
   const role = o.role != null ? { role: o.role.role.trim(), body: o.role.body.trim() } : null;
   return { ok: true, affected: { kind, description: o.description.trim(), ...role ? { role } : {} } };
 }
 function checkMeasure(m) {
   if (m == null) return { ok: true, measure: null };
-  if (!isObj15(m) || !str13(m.unit) || !UNITS.includes(m.unit.trim()))
-    return refuse5(
+  if (!isObj15(m) || !str14(m.unit) || !UNITS.includes(m.unit.trim()))
+    return refuse6(
       "MEASURE_UNKNOWN_UNIT",
       `a measure's unit is one of ${UNITS.join(", ")}. Nothing was written.`,
       { unit: isObj15(m) ? m.unit ?? null : null }
     );
   const unit = m.unit.trim();
-  const bad = (why) => refuse5("MEASURE_INVALID", `${why}. Nothing was written.`, { unit });
+  const bad = (why) => refuse6("MEASURE_INVALID", `${why}. Nothing was written.`, { unit });
   if (m.currency != null && m.currency !== "") {
     if (unit !== "money") return bad(`a currency belongs to a measure of money, and this one is of ${unit}`);
-    if (!str13(m.currency)) return bad("a currency is named by its code, such as USD");
+    if (!str14(m.currency)) return bad("a currency is named by its code, such as USD");
   }
   const hasValue = m.value !== void 0 && m.value !== null;
   const hasRange = m.range !== void 0 && m.range !== null;
   if (hasValue && hasRange) return bad("a measure carries a value or a range, not both");
-  const out = { unit, ...str13(m.currency) ? { currency: m.currency.trim().toUpperCase() } : {} };
+  const out = { unit, ...str14(m.currency) ? { currency: m.currency.trim().toUpperCase() } : {} };
   if (hasValue) {
     if (typeof m.value !== "number" || !Number.isFinite(m.value)) return bad("the value is not a finite number");
     out.value = m.value;
@@ -109473,10 +111601,10 @@ function checkMeasure(m) {
   return { ok: true, measure: out };
 }
 function checkPeriod(p) {
-  const bad = (why) => refuse5("PERIOD_INVALID", `${why}. Nothing was written.`);
+  const bad = (why) => refuse6("PERIOD_INVALID", `${why}. Nothing was written.`);
   if (!isObj15(p)) return bad("a period is {from, to}: the dates the consequence ran between");
-  const from = str13(p.from);
-  const to = str13(p.to);
+  const from = str14(p.from);
+  const to = str14(p.to);
   if (!from || !to || !DATE2.test(from) || !DATE2.test(to) || Number.isNaN(Date.parse(from)) || Number.isNaN(Date.parse(to)))
     return bad("a period's from and to are dates, YYYY-MM-DD, or instants");
   if (Date.parse(from) > Date.parse(to)) return bad("the period is reversed: it ends before it starts");
@@ -109490,7 +111618,7 @@ function isZeroMeasure(m) {
 function zeroCausation(inquiryId) {
   return {
     state: "not_applicable",
-    inquiry: str13(inquiryId),
+    inquiry: str14(inquiryId),
     why: "the measure is zero: the part states no harm, so there is no causation to establish"
   };
 }
@@ -109569,7 +111697,7 @@ var Consequences = class {
      conformance's answer lives in one place. */
   #determination(id, viewer) {
     const c = this.conformance;
-    if (!str13(id) || !c || typeof c.determinationRead !== "function") return null;
+    if (!str14(id) || !c || typeof c.determinationRead !== "function") return null;
     let d;
     try {
       d = c.determinationRead({ id, viewer: viewer ?? INTERNAL2 });
@@ -109593,11 +111721,11 @@ var Consequences = class {
     const sup = body.superseded_by ?? body.supersededBy ?? body.links?.superseded_by ?? null;
     const live = body.live === false ? false : !(Array.isArray(sup) ? sup.length : sup);
     const supersededBy = (Array.isArray(sup) ? sup[0] : isObj15(sup) ? sup.id : sup) ?? null;
-    return { id, project: body.project ?? null, outcome, live, supersededBy: str13(supersededBy) };
+    return { id, project: body.project ?? null, outcome, live, supersededBy: str14(supersededBy) };
   }
   /* A part's row, or null when absent or in a project the viewer may not see (R13: one answer). */
   #part(id, viewer) {
-    if (!str13(id)) return null;
+    if (!str14(id)) return null;
     const r = this.#one(`SELECT * FROM consequence_parts WHERE bundle_id=?`, id);
     if (!r || !this.#seesProject(r.project, viewer)) return null;
     return r;
@@ -109608,7 +111736,7 @@ var Consequences = class {
   /* R5: a named inquiry's causation, as it reads now: established when it is an inquiry the reader may see that has
      concluded and is not superseded; unproven otherwise, with why. */
   #causationNow(inquiryId, viewer) {
-    if (!str13(inquiryId))
+    if (!str14(inquiryId))
       return {
         state: "unproven",
         inquiry: null,
@@ -109653,7 +111781,7 @@ var Consequences = class {
   }
   /* R9, R3: an evidence or rests-on id resolves to a content row, or a finding (an inquiry), the author may see. */
   #resolvesEvidence(id, who2) {
-    if (!str13(id)) return false;
+    if (!str14(id)) return false;
     if (HEX646.test(id)) {
       const row2 = this.content.contentRow(id);
       return !!row2 && this.membership.inSight(row2.bundle_id, who2);
@@ -109665,7 +111793,7 @@ var Consequences = class {
   #evidenceRefusal(ids, who2, what) {
     const unknown = ids.filter((x) => !this.#resolvesEvidence(x, who2));
     if (!unknown.length) return null;
-    return refuse5(
+    return refuse6(
       "NO_SUCH_EVIDENCE",
       `${what} content or findings this record holds and you may see.${NOTHING}`,
       { unknown: unknown.map((x) => typeof x === "string" ? x : null) }
@@ -109675,9 +111803,9 @@ var Consequences = class {
      translated); null when the author has, or the part is in no project. */
   #participantRefusal(project, author, act) {
     if (!project) return null;
-    const denied = this.membership.projectAuthority(project, str13(author), "joined", act);
+    const denied = this.membership.projectAuthority(project, str14(author), "joined", act);
     if (!denied) return null;
-    return refuse5("CONSEQUENCE_NOT_A_PARTICIPANT", `acting on a consequence is work inside ${project}, and ${str13(author)} has not joined it.${NOTHING}`, { project });
+    return refuse6("CONSEQUENCE_NOT_A_PARTICIPANT", `acting on a consequence is work inside ${project}, and ${str14(author)} has not joined it.${NOTHING}`, { project });
   }
   /* ===================================================================== *
    * R1–R6: RECORDING A PART
@@ -109698,13 +111826,13 @@ var Consequences = class {
     const bad = reasonRefusal(reason);
     if (bad) return bad;
     const pick2 = (k, stored) => k in args ? args[k] : stored;
-    const oldBasis = old.op ? { op: old.op, operands: this.#operands(old.bundle_id).map((o) => ({ content: o.content_id, figure: o.figure })) } : old.state === "assessed" ? { rationale: old.rationale, rests_on: parse(old.rests_on) || [] } : { why: old.undetermined_code };
+    const oldBasis = old.op ? { op: old.op, operands: this.#operands(old.bundle_id).map((o) => ({ content: o.content_id, figure: o.figure })) } : old.state === "assessed" ? { rationale: old.rationale, rests_on: parse2(old.rests_on) || [] } : { why: old.undetermined_code };
     return this.#record({
       determination: old.determination,
       standard: old.standard,
-      affected: pick2("affected", parse(old.affected)),
-      measure: pick2("measure", parse(old.measure)),
-      period: pick2("period", parse(old.period)),
+      affected: pick2("affected", parse2(old.affected)),
+      measure: pick2("measure", parse2(old.measure)),
+      period: pick2("period", parse2(old.period)),
       basis: pick2("basis", oldBasis),
       causation: pick2("causation", old.causation),
       author,
@@ -109722,15 +111850,15 @@ var Consequences = class {
     author = null,
     viewer = null
   } = {}, rev) {
-    const who2 = viewer ?? (str13(author) || null);
+    const who2 = viewer ?? (str14(author) || null);
     const byMachine = machine2(author);
     const d = this.#determination(determination, who2);
     if (!d || !this.#seesProject(d.project, who2)) return noSuchDetermination(determination ?? null);
     if (!d.live) return determinationSuperseded(d.id, d.supersededBy);
-    if (!str13(standard) || d.outcome(standard) !== "noncompliant")
-      return refuse5(
+    if (!str14(standard) || d.outcome(standard) !== "noncompliant")
+      return refuse6(
         "CONSEQUENCE_NOT_NONCOMPLIANT",
-        `${d.id}'s outcome for ${str13(standard) ?? "that standard"} is ${d.outcome(standard) ?? "not stated"}, not noncompliant: a consequence is what a breach did.${NOTHING}`,
+        `${d.id}'s outcome for ${str14(standard) ?? "that standard"} is ${d.outcome(standard) ?? "not stated"}, not noncompliant: a consequence is what a breach did.${NOTHING}`,
         { determination: d.id, standard: standard ?? null }
       );
     if (!byMachine) {
@@ -109758,7 +111886,7 @@ var Consequences = class {
         period: p.period,
         state: b.state,
         causation: cause,
-        author: str13(author) ?? "",
+        author: str14(author) ?? "",
         machine: byMachine,
         at: at25,
         supersedes: rev ? rev.supersedes : null,
@@ -109769,7 +111897,7 @@ var Consequences = class {
         bundleId: id,
         base: null,
         snapKey: `${at25.replace(/[-:]/g, "")}_${rand11(4)}`,
-        author: str13(author) ?? INTERNAL2,
+        author: str14(author) ?? INTERNAL2,
         files: [{ path: "bundle.md", text: partDoc(id, part) }],
         meta: { object_type: "consequence", title: titleOf3(part), current_state: "recorded", created: at25, last_updated: at25 }
       });
@@ -109783,23 +111911,23 @@ var Consequences = class {
         d.id,
         standard,
         d.project,
-        json(a.affected),
-        json(b.measure),
-        json(p.period),
+        json2(a.affected),
+        json2(b.measure),
+        json2(p.period),
         b.state,
         b.op ?? null,
-        json(b.value),
+        json2(b.value),
         b.grade ?? null,
         b.gradeWhy ?? null,
         b.rationale ?? null,
-        json(b.restsOn),
+        json2(b.restsOn),
         b.undeterminedCode ?? null,
         b.undeterminedWhy ?? null,
         cause.inquiry,
         cause.state,
         cause.why,
         byMachine ? 1 : 0,
-        str13(author) ?? "",
+        str14(author) ?? "",
         at25,
         rev ? rev.supersedes : null,
         rev ? rev.reason : null
@@ -109827,12 +111955,12 @@ var Consequences = class {
     if (computation) return this.#computation(basis, measure, who2);
     const hasFigure = measure && ("value" in measure || "range" in measure);
     if (byMachine)
-      return refuse5("MACHINE_CANNOT_ASSESS", "a machine may prepare a computed part, from the record's own figures, and propose an assessment as text for a member; it never records an assessment or an undetermined judgment. Nothing was written.");
+      return refuse6("MACHINE_CANNOT_ASSESS", "a machine may prepare a computed part, from the record's own figures, and propose an assessment as text for a member; it never records an assessment or an undetermined judgment. Nothing was written.");
     if (hasFigure) {
-      const rationale = isObj15(basis) ? str13(basis.rationale) : null;
-      if (!rationale) return refuse5("NO_RATIONALE", `an assessed value says why: a rationale of at most ${RATIONALE_MAX} characters. Nothing was written.`);
+      const rationale = isObj15(basis) ? str14(basis.rationale) : null;
+      if (!rationale) return refuse6("NO_RATIONALE", `an assessed value says why: a rationale of at most ${RATIONALE_MAX} characters. Nothing was written.`);
       if (rationale.length > RATIONALE_MAX)
-        return refuse5("BAD_RATIONALE", `a rationale is at most ${RATIONALE_MAX} characters. Nothing was written.`);
+        return refuse6("BAD_RATIONALE", `a rationale is at most ${RATIONALE_MAX} characters. Nothing was written.`);
       const rests = basis.rests_on ?? basis.restsOn ?? [];
       if (!Array.isArray(rests))
         return basisUnreadable("what an assessment rests on is a list of content ids or findings, possibly empty");
@@ -109847,7 +111975,7 @@ var Consequences = class {
         doc: { rationale, rests_on: rests.map(String) }
       };
     }
-    const code = isObj15(basis) && str13(basis.why) && UNDETERMINED_WHY[basis.why.trim()] ? basis.why.trim() : "not_assessed";
+    const code = isObj15(basis) && str14(basis.why) && UNDETERMINED_WHY[basis.why.trim()] ? basis.why.trim() : "not_assessed";
     return {
       ok: true,
       state: "undetermined",
@@ -109860,10 +111988,10 @@ var Consequences = class {
   /* R2, R4: a computation over the record. The value is this module's arithmetic over the figures the passages hold;
      an operand not held, or a figure its passage does not hold, leaves the computation lacking it (undetermined). */
   #computation(basis, measure, who2) {
-    const op = str13(basis.op);
+    const op = str14(basis.op);
     if (!op || !OPS2.includes(op))
       return basisUnreadable(`a computation names its op, one of ${OPS2.join(", ")}`, { op: basis.op ?? null });
-    if (!Array.isArray(basis.operands) || basis.operands.some((o) => !isObj15(o) || !str13(o.content)))
+    if (!Array.isArray(basis.operands) || basis.operands.some((o) => !isObj15(o) || !str14(o.content)))
       return basisUnreadable("a computation's operands are a list of {content, figure}: the content id whose passage holds the figure, and the figure as read");
     const operands = [];
     let lacking = null;
@@ -109966,9 +112094,9 @@ var Consequences = class {
       determination: r.determination,
       standard: r.standard,
       project: r.project,
-      affected: parse(r.affected),
-      measure: parse(r.measure),
-      period: parse(r.period),
+      affected: parse2(r.affected),
+      measure: parse2(r.measure),
+      period: parse2(r.period),
       state: r.state,
       author: r.author || null,
       at: r.at,
@@ -110001,7 +112129,7 @@ var Consequences = class {
       out.grade = { grade: r.grade, determined: r.grade !== null, why: gradeWhyFor(r, place) };
       out.label = r.machine ? { machine_work: true, says: `machine work: computed by ${r.author || "a machine"} from the operands shown` } : { machine_work: false, says: `computed from the operands shown; recorded by ${r.author}` };
     } else if (r.state === "assessed") {
-      const recorded = parse(r.rests_on) || [];
+      const recorded = parse2(r.rests_on) || [];
       const rests = recorded.filter((x) => this.#resolvesEvidence(x, who2));
       if (rests.length < recorded.length) withheld = true;
       out.assessment = {
@@ -110043,7 +112171,7 @@ var Consequences = class {
     }
     const a = this.#addressedOf(r.bundle_id);
     if (a) {
-      const recorded = parse(a.evidence) || [];
+      const recorded = parse2(a.evidence) || [];
       const evidence = recorded.filter((x) => this.#resolvesEvidence(x, who2));
       if (evidence.length < recorded.length) withheld = true;
       out.addressed = { state: a.state, evidence, reason: a.reason, by: a.author, at: a.at };
@@ -110118,7 +112246,7 @@ var Consequences = class {
   consequencesOf({ determination = null, standard = null, viewer = null } = {}) {
     const d = this.#determination(determination, viewer);
     if (!d || !this.#seesProject(d.project, viewer)) return noSuchDetermination(determination ?? null);
-    const rows2 = this.#liveParts(d.id, str13(standard)).filter((r) => this.#seesProject(r.project, viewer));
+    const rows2 = this.#liveParts(d.id, str14(standard)).filter((r) => this.#seesProject(r.project, viewer));
     const parts = rows2.map((r) => this.#answer(r, viewer));
     const groups = /* @__PURE__ */ new Map();
     for (const p of parts) {
@@ -110138,7 +112266,7 @@ var Consequences = class {
     return {
       ok: true,
       determination: d.id,
-      standard: str13(standard),
+      standard: str14(standard),
       parts,
       totals,
       undetermined: parts.filter((p) => p.state === "undetermined").map((p) => p.id),
@@ -110152,8 +112280,8 @@ var Consequences = class {
   /** R9: a member records a part addressed or not, with evidence and a reason. */
   addressedRecord({ id = null, state = null, evidence = null, reason = null, author = null, viewer = null } = {}) {
     if (machine2(author))
-      return refuse5("MACHINE_CANNOT_ADDRESS", "whether a consequence has been addressed is a member's judgment, with evidence; a machine never records it. Nothing was written.");
-    const who2 = viewer ?? str13(author);
+      return refuse6("MACHINE_CANNOT_ADDRESS", "whether a consequence has been addressed is a member's judgment, with evidence; a machine never records it. Nothing was written.");
+    const who2 = viewer ?? str14(author);
     const r = this.#part(id, who2);
     if (!r) return noSuchPart(id, true);
     const next = this.#successor(r.bundle_id);
@@ -110161,7 +112289,7 @@ var Consequences = class {
     const denied = this.#participantRefusal(r.project, author, "addressedRecord");
     if (denied) return denied;
     if (!ADDRESSED_STATES.includes(state))
-      return refuse5(
+      return refuse6(
         "ADDRESSED_UNKNOWN_STATE",
         `a part is recorded ${ADDRESSED_STATES.join(" or ")}. Nothing was written.`,
         { state: state ?? null }
@@ -110170,13 +112298,13 @@ var Consequences = class {
     if (bad) return bad;
     const ev = evidence == null ? [] : Array.isArray(evidence) ? evidence : [evidence];
     if (state === "addressed" && !ev.length)
-      return refuse5("ADDRESSED_NO_EVIDENCE", "a consequence is recorded addressed with the evidence that it was: content or findings in the record. Partial redress does not end an escalation. Nothing was written.");
+      return refuse6("ADDRESSED_NO_EVIDENCE", "a consequence is recorded addressed with the evidence that it was: content or findings in the record. Partial redress does not end an escalation. Nothing was written.");
     const unseen = this.#evidenceRefusal(ev, who2, "evidence is");
     if (unseen) return unseen;
     const at25 = this.#when();
     this.record.transact(() => this.sql.exec(`INSERT INTO consequence_addressed (part_id, state, evidence, reason, author, at)
-      VALUES (?,?,?,?,?,?)`, r.bundle_id, state, JSON.stringify(ev.map(String)), reason.trim(), str13(author), at25));
-    return { ok: true, id: r.bundle_id, state, evidence: ev.map(String), reason: reason.trim(), by: str13(author), at: at25 };
+      VALUES (?,?,?,?,?,?)`, r.bundle_id, state, JSON.stringify(ev.map(String)), reason.trim(), str14(author), at25));
+    return { ok: true, id: r.bundle_id, state, evidence: ev.map(String), reason: reason.trim(), by: str14(author), at: at25 };
   }
   /** R9: per part, and overall: `addressed` only when every live part is addressed; any undetermined part or unproven
    *  causation makes it `undetermined` (what is not known cannot be addressed); otherwise any part not addressed, or
@@ -110298,9 +112426,9 @@ function partDoc(id, p) {
     ""
   ].join("\n");
 }
-var instances30 = /* @__PURE__ */ new WeakMap();
+var instances31 = /* @__PURE__ */ new WeakMap();
 function consequencesModule(host, deps) {
-  let c = instances30.get(host);
+  let c = instances31.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -110308,7 +112436,7 @@ function consequencesModule(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     c = new Consequences({ ...d, host, storage, record, membership, promotion });
-    instances30.set(host, c);
+    instances31.set(host, c);
     c.migrate();
     record.declarePurge("consequences", CONSEQUENCES_TABLES);
   }
@@ -110340,7 +112468,7 @@ var safeJson20 = (s) => {
     return null;
   }
 };
-var str14 = (v) => typeof v === "string" && v.trim() ? v.trim() : "";
+var str15 = (v) => typeof v === "string" && v.trim() ? v.trim() : "";
 var PublicRead = class {
   #evidenceBlock = null;
   // R8: {module, name, fn}, filled once
@@ -110361,7 +112489,7 @@ var PublicRead = class {
    *  available-actions block (its R15). Nothing it answers enters the case's own bytes. A second registration is
    *  refused `PROVIDER_DECLARED`, a malformed one `PROVIDER_MALFORMED`. */
   registerEvidenceBlock(module, name2, fn) {
-    if (!str14(module) || !/^[a-z][a-z0-9_]{0,63}$/.test(String(name2 ?? "")) || typeof fn !== "function")
+    if (!str15(module) || !/^[a-z][a-z0-9_]{0,63}$/.test(String(name2 ?? "")) || typeof fn !== "function")
       return {
         ok: false,
         reason: "PROVIDER_MALFORMED",
@@ -110374,7 +112502,7 @@ var PublicRead = class {
         module: this.#evidenceBlock.module,
         detail: `the evidence-package block is already registered by ${this.#evidenceBlock.module}`
       };
-    this.#evidenceBlock = { module: str14(module), name: String(name2), fn };
+    this.#evidenceBlock = { module: str15(module), name: String(name2), fn };
     return { ok: true, module: this.#evidenceBlock.module, name: this.#evidenceBlock.name };
   }
   /* R8: the package's block for one answered case edition, computed at the read. A block that throws is stated as
@@ -110701,7 +112829,7 @@ var PublicRead = class {
       return {
         ok: false,
         reason: "NOT_PUBLISHED",
-        ...rowOf7("NOT_PUBLISHED"),
+        ...rowOf8("NOT_PUBLISHED"),
         detail: "no published edition answers to that. A case that was never published, an edition that does not exist and an id that never existed are one answer here, because the published projection is the only thing this read can see."
       };
     }
@@ -110997,7 +113125,7 @@ var PublicRead = class {
     return {
       ok: false,
       reason: "FINDING_IN_SEVERAL_CASES",
-      ...rowOf7("FINDING_IN_SEVERAL_CASES"),
+      ...rowOf8("FINDING_IN_SEVERAL_CASES"),
       target: bundleId,
       cases,
       memberships: rows2.map((x) => ({ case_id: x.case_id, edition: x.edition })),
@@ -111090,15 +113218,15 @@ var PublicRead = class {
     return legacy.map((r) => ({ case_id: r.case_id, edition: Number(r.edition) }));
   }
 };
-var instances31 = /* @__PURE__ */ new WeakMap();
+var instances32 = /* @__PURE__ */ new WeakMap();
 function publicReadOf(host, deps) {
-  let r = instances31.get(host);
+  let r = instances32.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const publication = d.publication || publicationOf(host);
     r = new PublicRead({ storage, publication });
-    instances31.set(host, r);
+    instances32.set(host, r);
   }
   return r;
 }
@@ -111159,1887 +113287,6 @@ async function inbandQuartet({ subject, over, date = null, author = null, bar = 
       floors: floorsOf(bar)
     }
   };
-}
-
-// src/filing-templates/blanks.mjs
-var FILING_BLANKS = Object.freeze({
-  counterparty_role: "the official role of the office the action is addressed to (the action's counterparty)",
-  counterparty_body: "the body of that office (an office's arm only)",
-  counterparty_organisation: "the organisation of a reporter, an organisation or another group the action is addressed to",
-  counterparty_description: "the audience the action is addressed to, as the action describes it",
-  act: "what the government did, as the action's determination states it",
-  act_date: "when it did it (a date, or a period from and to)",
-  standards: "the citations of the standards the determination names",
-  findings: "each finding the determination rests on, with its published case edition",
-  governing_laws: "the governing laws a member stated for the action",
-  law: "the law a records request is made under, as the action states it",
-  clock: "the action's clock entries, each with its basis",
-  venue: "where the kind is filed (the profile's venue name)",
-  venue_how: "by what means it is filed (the profile's venue means)",
-  group: "the producing group",
-  date: "the date the draft was prepared"
-});
-var FILING_TEXT_MAX = 65536;
-var BLANK_RE = /\{\{\s*([a-z][a-z0-9_]*)\s*\}\}/g;
-function blanksOf(text5) {
-  const names = typeof text5 === "string" ? [...new Set([...text5.matchAll(BLANK_RE)].map((m) => m[1]))] : [];
-  return { blanks: names, unknown: names.find((n) => !Object.prototype.hasOwnProperty.call(FILING_BLANKS, n)) ?? null };
-}
-
-// src/filing-templates/checks.mjs
-var at24 = (fn, region) => `src/filing-templates/index.mjs ${fn} > ${region}`;
-var FILING_TEMPLATE_CHECKS = Object.freeze({
-  /* ---- moved from filings (C-115) ---- */
-  MACHINE_CANNOT_DRAFT_TEMPLATE: {
-    check: "C-115.31",
-    where: at24("#machine", "is-template-member"),
-    translation: "Only a named member drafts, revises, submits or opens a template for review. A machine may propose wording; it never makes it a template's text."
-  },
-  TEMPLATE_NAME_REFUSED: {
-    check: "C-115.32",
-    where: at24("#shapeRefusal", "is-template-shape"),
-    translation: "Name the template in one line of at most 200 characters."
-  },
-  TEMPLATE_KIND_REFUSED: {
-    check: "C-115.33",
-    where: at24("#shapeRefusal", "is-template-shape"),
-    translation: "A template's kind is written as a kind is: lower-case letters, digits and underscores."
-  },
-  TEMPLATE_TEXT_REFUSED: {
-    check: "C-115.35",
-    where: at24("#textRefusal", "is-template-text"),
-    translation: "The template's words are empty, too long, or not readable as text."
-  },
-  TEMPLATE_TIER3_FILE: {
-    check: "C-115.36",
-    where: at24("#shapeRefusal", "is-template-shape"),
-    translation: "This kind's tier is 3: it requires competent counsel, so no template the group files in its own name is kept for it. A template that is the basis of a briefing to counsel may serve it."
-  },
-  TEMPLATE_NAME_TAKEN: {
-    check: "C-115.37",
-    where: at24("#shapeRefusal", "is-template-shape"),
-    translation: "The group's library already holds a template by this name. Choose another name."
-  },
-  NO_SUCH_TEMPLATE: {
-    check: "C-115.38",
-    where: at24("#noTemplate", "is-no-such-template"),
-    translation: "There is no template by that id in the group's library that you can read here. One you may not see answers exactly as one that does not exist."
-  },
-  /* ---- new (C-125) ---- */
-  TEMPLATE_KIND_UNKNOWN: {
-    check: "C-125.1",
-    where: at24("#shapeRefusal", "is-template-shape"),
-    translation: "A template written for a jurisdiction profile serves a kind of action that profile holds, and the profile named holds no such kind."
-  },
-  TEMPLATE_USE_REFUSED: {
-    check: "C-125.2",
-    where: at24("#shapeRefusal", "is-template-shape"),
-    translation: "Say what the template is for: file (wording the group files in its own name) or brief (the basis of a briefing to counsel)."
-  },
-  TEMPLATE_PROFILE_UNKNOWN: {
-    check: "C-125.3",
-    where: at24("#shapeRefusal", "is-template-shape"),
-    translation: "A template is written for jurisdiction profiles this instance holds, or for none in particular (general), and a profile named is not held."
-  },
-  TEMPLATE_BLANK_UNKNOWN: {
-    check: "C-125.4",
-    where: at24("#textRefusal", "is-template-text"),
-    translation: "The words name a blank that no filing fills. Use only the blanks filings fill, written {{name}}."
-  },
-  TEMPLATE_SCOPE_REFUSED: {
-    check: "C-125.5",
-    where: at24("#scope", "is-template-scope"),
-    translation: "This is done by a member taking part in the template's project (or, for withdrawing a version, by its author), and you are not. Nothing was changed."
-  },
-  TEMPLATE_DRAFT_OPEN: {
-    check: "C-125.6",
-    where: at24("templateDraft", "is-template-draft"),
-    translation: "The template already has a version in draft or in review, as named. Finish or withdraw it before starting another."
-  },
-  TEMPLATE_RETIRED: {
-    check: "C-125.7",
-    where: at24("#retired", "is-template-retired"),
-    translation: "The template has been retired from use, for the reason given. None of its versions is offered, and no new version is drafted of it."
-  },
-  TEMPLATE_FROM_REFUSED: {
-    check: "C-125.8",
-    where: at24("#fromRefusal", "is-template-from"),
-    translation: "A draft starts from a template version or a proposal you can read here, and the one named is not one. A filing's text becomes a template only through the filing's own keep-as-template act."
-  },
-  NOT_A_DRAFT: {
-    check: "C-125.9",
-    where: at24("#notADraft", "is-not-a-draft"),
-    translation: "This version has left draft, so its text is fixed. Changing the wording makes a new version."
-  },
-  TEMPLATE_NO_PROPOSER: {
-    check: "C-125.10",
-    where: at24("templatePropose", "is-template-propose"),
-    translation: "Nobody is named as the one proposing this wording. Every proposal names who made it."
-  },
-  TEMPLATE_WHY_REFUSED: {
-    check: "C-125.11",
-    where: at24("templatePropose", "is-template-propose"),
-    translation: "Say why the wording is proposed, in at most 1,000 characters."
-  },
-  REVIEWER_UNKNOWN: {
-    check: "C-125.12",
-    where: at24("templateSubmit", "is-template-submit"),
-    translation: "A reviewer asked is a member who can read the template, and one named is not. Nothing was submitted."
-  },
-  NO_REVIEWERS: {
-    check: "C-125.13",
-    where: at24("templateSubmit", "is-template-submit"),
-    translation: "A version goes to review with someone to review it: name a member, or open a review grant for a professional first."
-  },
-  GRANT_RECIPIENT_REFUSED: {
-    check: "C-125.14",
-    where: at24("templateReviewGrant", "is-template-grant"),
-    translation: "Name the reviewer and their organisation, each in one line of at most 200 characters."
-  },
-  GRANT_NO_SECRET: {
-    check: "C-125.15",
-    where: at24("templateReviewGrant", "is-template-grant"),
-    translation: "A review grant opens by a secret link the instance makes, and none was made for this request. Nothing was granted."
-  },
-  NO_SUCH_GRANT: {
-    check: "C-125.16",
-    where: at24("templateGrantRevoke", "is-template-grant-revoke"),
-    translation: "There is no review grant by that id on a template you can read here."
-  },
-  NO_TEMPLATE_GRANT: {
-    check: "C-125.17",
-    where: at24("noTemplateGrant", "is-no-template-grant"),
-    translation: "Nothing answers to this link. A review link is read only while it is open; one withdrawn, or whose version has left review, answers exactly as one that never existed."
-  },
-  MACHINE_CANNOT_REVIEW_TEMPLATE: {
-    check: "C-125.18",
-    where: at24("#machine", "is-template-member"),
-    translation: "Only a member or a professional reviewer gives a review. A machine's critique is a comment, shown as machine work, and never counts as a review."
-  },
-  NOT_IN_REVIEW: {
-    check: "C-125.19",
-    where: at24("#notInReview", "is-not-in-review"),
-    translation: "This version is not in review, so it is not reviewed, approved or opened for review here."
-  },
-  REVIEW_REFUSED: {
-    check: "C-125.20",
-    where: at24("templateReview", "is-template-review"),
-    translation: "A review states its outcome (no concerns, concerns or changes requested), what it covered in 1 to 200 characters, any comment in at most 4,000 and any credential in at most 200."
-  },
-  REVIEW_STALE: {
-    check: "C-125.21",
-    where: at24("templateReview", "is-template-review"),
-    translation: "The text reviewed is not the version's text. Read the version as it stands and review that."
-  },
-  MACHINE_CANNOT_APPROVE_TEMPLATE: {
-    check: "C-125.22",
-    where: at24("#machine", "is-template-member"),
-    translation: "Only a named member approves, widens, retires or withdraws a template. A machine may propose wording; it never decides."
-  },
-  TEMPLATE_NOT_APPROVED: {
-    check: "C-125.23",
-    where: at24("templateApprove", "is-template-approve"),
-    translation: "Only an approved version's template is made group-wide, and this version is not approved."
-  },
-  NOT_AN_APPROVER: {
-    check: "C-125.24",
-    where: at24("#notAnApprover", "is-not-an-approver"),
-    translation: "An owner of the template's project approves or retires it, and an administrator makes it group-wide or retires a group-wide one. You are not the one who does this here."
-  },
-  APPROVER_IS_AUTHOR: {
-    check: "C-125.25",
-    where: at24("templateApprove", "is-template-approve"),
-    translation: "The version's author is its only member contributor, so someone else approves it."
-  },
-  REVIEWS_INSUFFICIENT: {
-    check: "C-125.26",
-    where: at24("templateApprove", "is-template-approve"),
-    translation: "The version lacks the reviews its tier requires, each with no concerns, or a review requesting changes still stands. A Tier 1 kind needs one member's review; otherwise a professional's review, or the approver's written reason for going without one."
-  },
-  TEMPLATE_REASON_REFUSED: {
-    check: "C-125.27",
-    where: at24("templateRetire", "is-template-retire"),
-    translation: "Give the reason in 1 to 500 characters."
-  },
-  TEMPLATE_ALREADY_ENDED: {
-    check: "C-125.28",
-    where: at24("templateRetire", "is-template-retire"),
-    translation: "This was already retired or withdrawn, as recorded, and that stands."
-  },
-  TEMPLATE_NOTES_REFUSED: {
-    check: "C-125.29",
-    where: at24("#textRefusal", "is-template-text"),
-    translation: "A version's notes are text of at most 8,000 characters."
-  },
-  COMMENT_REFUSED: {
-    check: "C-125.30",
-    where: at24("templateComment", "is-template-comment"),
-    translation: "A comment names who wrote it and is 1 to 4,000 characters; a note is added by a member who may revise the template, once its version has left draft."
-  },
-  TEMPLATE_NOT_OFFERED: {
-    check: "C-125.31",
-    where: at24("offeredVersion", "is-offered-version"),
-    translation: "That version is not offered for a filing: it is a draft, in review or withdrawn, or the template has no approved version."
-  },
-  TEMPLATES_STATE_REFUSED: {
-    check: "C-125.32",
-    where: at24("templatesFor", "is-templates-state"),
-    translation: "Templates are listed as offered, or by one of: draft, in_review, withdrawn, retired, proposed."
-  }
-});
-function rowOf9(code) {
-  return Object.prototype.hasOwnProperty.call(FILING_TEMPLATE_CHECKS, code) ? FILING_TEMPLATE_CHECKS[code] : null;
-}
-
-// src/filing-templates/schema.mjs
-var FILING_TEMPLATES_SCHEMA = `
--- R1: A TEMPLATE. scope is its project; widened by a 'widened' event (R10).
--- profiles is a JSON list of profile ids, or the string general. migrated_from
--- is filings' library id for a row taken over by the migration (K927).
-CREATE TABLE IF NOT EXISTS tpl_templates (
-  template_id    TEXT PRIMARY KEY,
-  bundle_id      TEXT,
-  project        TEXT,
-  kind           TEXT,
-  use            TEXT NOT NULL,
-  profiles       TEXT NOT NULL,
-  name           TEXT NOT NULL,
-  origin         TEXT NOT NULL,
-  created_by     TEXT NOT NULL,
-  created_name   TEXT NOT NULL,
-  created_at     TEXT NOT NULL,
-  migrated_from  TEXT UNIQUE
-);
--- R2: A VERSION, counting from 1 within its template. Its text and sha are its
--- latest revision's; derived_from is null or JSON {filing, sha} | {version} | {proposal}.
-CREATE TABLE IF NOT EXISTS tpl_versions (
-  template_id    TEXT NOT NULL,
-  version        INTEGER NOT NULL,
-  bundle_id      TEXT,
-  author         TEXT NOT NULL,
-  author_name    TEXT NOT NULL,
-  derived_from   TEXT,
-  created_at     TEXT NOT NULL,
-  PRIMARY KEY (template_id, version)
-);
--- R4, R5: EVERY REVISION of a version's text, with its author; adopted names the
--- proposal (R6) whose text it took.
-CREATE TABLE IF NOT EXISTS tpl_revisions (
-  rid            INTEGER PRIMARY KEY,
-  template_id    TEXT NOT NULL,
-  version        INTEGER NOT NULL,
-  bundle_id      TEXT,
-  text           TEXT NOT NULL,
-  sha            TEXT NOT NULL,
-  author         TEXT NOT NULL,
-  author_name    TEXT NOT NULL,
-  adopted        TEXT,
-  at             TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS tpl_revisions_version ON tpl_revisions (template_id, version, rid);
--- R12: EVERY EDIT of a draft's notes; carried marks the predecessor's notes a new
--- version starts with.
-CREATE TABLE IF NOT EXISTS tpl_notes (
-  nid            INTEGER PRIMARY KEY,
-  template_id    TEXT NOT NULL,
-  version        INTEGER NOT NULL,
-  bundle_id      TEXT,
-  text           TEXT NOT NULL,
-  author         TEXT,
-  author_name    TEXT,
-  carried        INTEGER NOT NULL DEFAULT 0,
-  at             TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS tpl_notes_version ON tpl_notes (template_id, version, nid);
--- R7, R10, R11: WHAT HAPPENED TO A VERSION OR A TEMPLATE: submitted, approved,
--- updated (by its successor), withdrawn; widened and retired (version NULL).
--- detail is JSON (the tier, profiles and reason of an approval, a successor, a reason).
-CREATE TABLE IF NOT EXISTS tpl_events (
-  eid            INTEGER PRIMARY KEY,
-  template_id    TEXT NOT NULL,
-  version        INTEGER,
-  bundle_id      TEXT,
-  event          TEXT NOT NULL,
-  actor          TEXT NOT NULL,
-  actor_name     TEXT NOT NULL,
-  detail         TEXT,
-  at             TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS tpl_events_template ON tpl_events (template_id, event, version);
--- R7, R20: THE MEMBERS ASKED TO REVIEW a version, with who asked and when.
-CREATE TABLE IF NOT EXISTS tpl_reviewers (
-  template_id    TEXT NOT NULL,
-  version        INTEGER NOT NULL,
-  member         TEXT NOT NULL,
-  bundle_id      TEXT,
-  member_name    TEXT NOT NULL,
-  asked_by       TEXT NOT NULL,
-  asked_name     TEXT NOT NULL,
-  at             TEXT NOT NULL,
-  PRIMARY KEY (template_id, version, member)
-);
--- R6: A PROPOSAL of wording, for a template or for a kind, stored apart and labelled.
-CREATE TABLE IF NOT EXISTS tpl_proposals (
-  proposal_id    TEXT PRIMARY KEY,
-  bundle_id      TEXT,
-  template_id    TEXT,
-  kind           TEXT,
-  text           TEXT NOT NULL,
-  sha            TEXT NOT NULL,
-  why            TEXT NOT NULL,
-  proposer       TEXT NOT NULL,
-  run            TEXT,
-  model          TEXT,
-  skill_pack     TEXT,
-  at             TEXT NOT NULL
-);
--- R9: A REVIEW, against the sha it read; a reviewer's later review of the same sha
--- stands in place of the earlier, which is kept.
-CREATE TABLE IF NOT EXISTS tpl_reviews (
-  rvid           INTEGER PRIMARY KEY,
-  template_id    TEXT NOT NULL,
-  version        INTEGER NOT NULL,
-  bundle_id      TEXT,
-  sha            TEXT NOT NULL,
-  kind           TEXT NOT NULL,
-  reviewer       TEXT NOT NULL,
-  reviewer_name  TEXT NOT NULL,
-  organisation   TEXT,
-  credential     TEXT,
-  expertise      TEXT,
-  outcome        TEXT NOT NULL,
-  scope          TEXT NOT NULL,
-  comment        TEXT,
-  at             TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS tpl_reviews_version ON tpl_reviews (template_id, version, rvid);
--- R8: A REVIEW GRANT to a named non-member, by the SHA-256 of a secret the control
--- plane made (the secret itself never reaches this module).
-CREATE TABLE IF NOT EXISTS tpl_grants (
-  grant_id       TEXT PRIMARY KEY,
-  template_id    TEXT NOT NULL,
-  version        INTEGER NOT NULL,
-  bundle_id      TEXT,
-  recipient      TEXT NOT NULL,
-  organisation   TEXT NOT NULL,
-  secret_sha     TEXT NOT NULL UNIQUE,
-  actor          TEXT NOT NULL,
-  actor_name     TEXT NOT NULL,
-  at             TEXT NOT NULL
-);
--- R8: A GRANT'S REVOCATION, at most one per grant.
-CREATE TABLE IF NOT EXISTS tpl_grant_revocations (
-  grant_id       TEXT PRIMARY KEY,
-  bundle_id      TEXT,
-  actor          TEXT NOT NULL,
-  actor_name     TEXT NOT NULL,
-  at             TEXT NOT NULL
-);
--- R12, R13: A COMMENT on a version, by a member, a grant or a labelled run; note
--- marks a note added after the version left draft.
-CREATE TABLE IF NOT EXISTS tpl_comments (
-  cid            INTEGER PRIMARY KEY,
-  template_id    TEXT NOT NULL,
-  version        INTEGER NOT NULL,
-  bundle_id      TEXT,
-  text           TEXT NOT NULL,
-  note           INTEGER NOT NULL DEFAULT 0,
-  kind           TEXT NOT NULL,
-  author         TEXT NOT NULL,
-  author_name    TEXT NOT NULL,
-  organisation   TEXT,
-  at             TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS tpl_comments_version ON tpl_comments (template_id, version, cid);
-`;
-var FILING_TEMPLATES_TABLES = Object.freeze([
-  "tpl_templates",
-  "tpl_versions",
-  "tpl_revisions",
-  "tpl_notes",
-  "tpl_events",
-  "tpl_reviewers",
-  "tpl_proposals",
-  "tpl_reviews",
-  "tpl_grants",
-  "tpl_grant_revocations",
-  "tpl_comments"
-]);
-var FILING_TEMPLATES_MINT_SEED = Object.freeze([
-  Object.freeze(["TPL", "tpl_templates", "template_id"]),
-  Object.freeze(["TPP", "tpl_proposals", "proposal_id"]),
-  Object.freeze(["TRG", "tpl_grants", "grant_id"])
-]);
-function migrateFilingTemplates(sql) {
-  const bare2 = FILING_TEMPLATES_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).map((l) => l.replace(/\s--.*$/, "")).join("\n");
-  for (const s of bare2.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
-}
-
-// src/filing-templates/index.mjs
-var TEMPLATE_STATES = Object.freeze(["draft", "in_review", "approved", "updated", "withdrawn"]);
-var TEMPLATE_USES2 = Object.freeze(["file", "brief"]);
-var REVIEW_OUTCOMES2 = Object.freeze(["no_concerns", "concerns", "changes_requested"]);
-var TEMPLATE_ORIGINS = Object.freeze(["group", "profile", "imported"]);
-var TEMPLATE_NAME_MAX = 200;
-var TEMPLATE_NOTES_MAX = 8e3;
-var PROPOSAL_WHY_MAX = 1e3;
-var GRANT_FIELD_MAX = 200;
-var REVIEW_SCOPE_MAX = 200;
-var REVIEW_COMMENT_MAX = 4e3;
-var REVIEW_CREDENTIAL_MAX = 200;
-var APPROVAL_REASON_MAX = 1e3;
-var ENDING_REASON_MAX = 500;
-var COMMENT_MAX = 4e3;
-var COMMENTS_MAX = 500;
-var TEMPLATES_FOR_MAX = 200;
-var REVIEWS_REQUESTED_MAX = 500;
-var MIGRATED_NOTE = "kept before templates were reviewed (K921)";
-var TEMPLATES_STATES_LISTED = Object.freeze(["draft", "in_review", "withdrawn", "retired", "proposed"]);
-var KIND_RE2 = /^[a-z][a-z0-9_]*$/;
-var SHA_RE = /^[0-9a-f]{64}$/;
-var VERSION_RE = /^(.+)@([1-9][0-9]*)$/;
-var WELL_FORMED = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
-var str15 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
-var json2 = (v) => JSON.stringify(v ?? null);
-var parse2 = (s) => {
-  try {
-    return JSON.parse(s);
-  } catch {
-    return null;
-  }
-};
-var utf83 = (s) => new TextEncoder().encode(s).length;
-var oneLine3 = (v, max) => typeof v === "string" && !!v.trim() && v.trim().length <= max && !/[\n\r]/.test(v) && !WELL_FORMED.test(v);
-var textUpTo = (v, max, min = 1) => typeof v === "string" && v.trim().length >= min && v.length <= max && !WELL_FORMED.test(v);
-var clamp4 = (v, dflt, max) => {
-  const n = Math.floor(Number(v));
-  return v !== null && v !== void 0 && v !== "" && Number.isFinite(n) ? Math.min(Math.max(n, 1), max) : dflt;
-};
-var listOf = (v) => (Array.isArray(v) ? v : typeof v === "string" ? v.split(",") : []).map((x) => String(x ?? "").trim()).filter(Boolean);
-var OFFERED = Object.freeze(["approved", "updated"]);
-function withRow4(r) {
-  if (!r || typeof r !== "object" || r.ok !== false || typeof r.reason !== "string" || r.check) return r;
-  const row2 = rowOf9(r.reason);
-  return row2 ? { ...r, code: r.code ?? r.reason, check: row2.check, translation: row2.translation } : r;
-}
-var refuse6 = (code, detail, extra) => withRow4({ ok: false, reason: code, detail, ...extra || {} });
-function noTemplateGrant() {
-  const row2 = FILING_TEMPLATE_CHECKS.NO_TEMPLATE_GRANT;
-  return {
-    ok: false,
-    reason: "NO_TEMPLATE_GRANT",
-    code: "NO_TEMPLATE_GRANT",
-    check: row2.check,
-    translation: row2.translation,
-    detail: "nothing answers to this review link: a link is read only while its grant is open and its version is in draft or in review; any other answers exactly as one that never existed."
-  };
-}
-var versionId = (template, version) => `${template}@${version}`;
-function parseVersionId(v) {
-  const m = typeof v === "string" ? VERSION_RE.exec(v.trim()) : null;
-  return m ? { template: m[1], version: Number(m[2]) } : null;
-}
-var FilingTemplates = class _FilingTemplates {
-  constructor({ storage, record, membership, jurisdictions = null, now = null, env = null } = {}) {
-    this.sql = storage.sql;
-    this.record = record;
-    this.membership = membership;
-    this.jur = jurisdictions && typeof jurisdictions === "object" ? jurisdictions : jurisdictions_exports;
-    this.now = typeof now === "function" ? now : null;
-    this.env = env && typeof env === "object" ? env : {};
-  }
-  migrate() {
-    migrateFilingTemplates(this.sql);
-  }
-  #rows(q7, ...a) {
-    return [...this.sql.exec(q7, ...a)];
-  }
-  #one(q7, ...a) {
-    for (const r of this.sql.exec(q7, ...a)) return r;
-    return null;
-  }
-  #call(fn, dflt = null) {
-    try {
-      return fn();
-    } catch {
-      return dflt;
-    }
-  }
-  #nowMs() {
-    if (this.now) {
-      const n = Number(this.now());
-      if (Number.isFinite(n) && n >= 0) return n;
-    }
-    const v = Number(this.env.BIO_NOW_MS);
-    return Number.isFinite(v) && v >= 0 ? v : Date.now();
-  }
-  #when() {
-    return stampInstant("second", this.#nowMs());
-  }
-  /* ================================================================ who acts (R16, R22) */
-  /* The member an identity names (membership R76), or null for a machine, the bare founder or nobody. */
-  #member(identity) {
-    if (!str15(identity) || isMachineIdentity(identity)) return null;
-    return this.#call(() => this.membership.positionalMember(null, String(identity).trim()));
-  }
-  /* R16: a member's name at the time of the act, by value: their handle, else their id. */
-  #nameOf(memberId) {
-    const f17 = this.#call(() => this.membership.memberFacts(memberId));
-    return f17 && str15(f17.handle) || memberId;
-  }
-  #who(memberId) {
-    return memberId ? { id: memberId, name: this.#nameOf(memberId) } : null;
-  }
-  /* R22: a machine, or a call stamped with nobody, is refused by shape before anything else is asked. `act` is the
-     fence's family: drafting (R3, R4, R7, R8), reviewing (R9), or approving and ending (R10, R11). */
-  #machine(act, who2) {
-    if (str15(who2) && !isMachineIdentity(who2)) return null;
-    const code = act === "review" ? "MACHINE_CANNOT_REVIEW_TEMPLATE" : act === "approve" ? "MACHINE_CANNOT_APPROVE_TEMPLATE" : "MACHINE_CANNOT_DRAFT_TEMPLATE";
-    return refuse6(code, str15(who2) ? `'${String(who2).trim().slice(0, 60)}' is a machine identity: a machine proposes wording and comments, labelled, and nothing else` : "no member is named as the one acting: this call carries nobody");
-  }
-  /* ================================================================ the one-condition answers */
-  /* R3, R24, R25: absent and invisible are one answer. */
-  #noTemplate(asked) {
-    return refuse6(
-      "NO_SUCH_TEMPLATE",
-      "no template by that id is readable here; one you may not see answers the same",
-      { template: str15(typeof asked === "string" ? asked : null) }
-    );
-  }
-  #scope(t, detail) {
-    return refuse6("TEMPLATE_SCOPE_REFUSED", detail, { template: t ? t.id : null });
-  }
-  #retired(t) {
-    return refuse6(
-      "TEMPLATE_RETIRED",
-      `the template was retired: ${t.retired.reason}`,
-      { template: t.id, retired: t.retired }
-    );
-  }
-  #notADraft(t, n, state) {
-    return refuse6("NOT_A_DRAFT", `the version is ${state}, past draft: its text is fixed`, { version: versionId(t.id, n), state });
-  }
-  #notInReview(t, n, state) {
-    return refuse6("NOT_IN_REVIEW", `the version is ${state}, not in review`, { version: versionId(t.id, n), state });
-  }
-  #notAnApprover(t, detail) {
-    return refuse6("NOT_AN_APPROVER", detail, { template: t.id });
-  }
-  #fromRefusal(detail) {
-    return refuse6("TEMPLATE_FROM_REFUSED", detail);
-  }
-  /* ================================================================ the profiles (R1, R15) */
-  #activeIds() {
-    let ids = this.#call(() => this.record.getSetting("jurisdiction_profiles"));
-    if (typeof ids === "string") ids = parse2(ids);
-    return Array.isArray(ids) ? ids.filter((x) => typeof x === "string" && x) : [];
-  }
-  #profile(id) {
-    return typeof id === "string" ? this.#call(() => this.jur.get(id)) : null;
-  }
-  #kindIn(profile, kind) {
-    return profile && Array.isArray(profile.action_kinds) ? profile.action_kinds.find((k) => k && k.kind === kind) || null : null;
-  }
-  /* The Terms: the tier of a template's kind, the strictest across the profiles it names (for a `general` one,
-     across the active view), undetermined when none states one. */
-  #tierOf(kind, profiles) {
-    const tiers = [];
-    for (const p of Array.isArray(profiles) ? profiles : this.#activeIds()) {
-      const e = this.#kindIn(this.#profile(p), kind);
-      if (e && [1, 2, 3].includes(e.tier)) tiers.push(e.tier);
-    }
-    return tiers.length ? Math.max(...tiers) : "undetermined";
-  }
-  /* R15: the profile's templates, one per active profile and kind, each an approved version of origin `profile`, scope
-     `group`, its profiles the profile it is in. */
-  #profileTemplates() {
-    const out = [];
-    for (const pid of this.#activeIds()) {
-      const p = this.#profile(pid);
-      for (const k of p && Array.isArray(p.action_kinds) ? p.action_kinds : []) {
-        const t = k && k.template;
-        if (!t || typeof t !== "object" || typeof t.text !== "string" || !str15(t.id)) continue;
-        if (out.some((x) => x.id === t.id)) continue;
-        out.push({
-          id: t.id,
-          origin: "profile",
-          kind: k.kind,
-          use: t.use,
-          profiles: [pid],
-          name: str15(k.label) || k.kind,
-          scope: "group",
-          project: null,
-          bundle_id: null,
-          widened: null,
-          retired: null,
-          created_at: str15(t.approved_at) || "",
-          profileTemplate: t,
-          tier: [1, 2, 3].includes(k.tier) ? k.tier : "undetermined"
-        });
-      }
-    }
-    return out;
-  }
-  /* ================================================================ templates and their sight (R24) */
-  #groupTemplate(id) {
-    const r = typeof id === "string" ? this.#one(`SELECT * FROM tpl_templates WHERE template_id=?`, id) : null;
-    if (!r) return null;
-    const ev = (e) => this.#one(`SELECT actor, actor_name, detail, at FROM tpl_events WHERE template_id=? AND version IS NULL
-                                  AND event=? ORDER BY eid LIMIT 1`, r.template_id, e);
-    const end2 = (e) => e ? { by: { id: e.actor, name: e.actor_name }, at: e.at, ...parse2(e.detail) || {} } : null;
-    const w = ev("widened"), x = ev("retired");
-    const profiles = r.profiles === "general" ? "general" : parse2(r.profiles) || [];
-    return {
-      id: r.template_id,
-      origin: r.origin,
-      kind: r.kind,
-      use: r.use,
-      profiles,
-      name: r.name,
-      project: r.project,
-      bundle_id: r.bundle_id,
-      scope: w ? "group" : { project: r.project },
-      widened: end2(w),
-      retired: end2(x),
-      created_at: r.created_at,
-      created_by: { id: r.created_by, name: r.created_name },
-      migrated_from: r.migrated_from ?? null
-    };
-  }
-  /* R24: a project's template is seen by whoever may see its project (membership's one rule); a group or profile
-     template by every member (a viewer the rule admits to anything). */
-  #canSee(t, viewer) {
-    if (!t) return false;
-    if (t.origin === "profile" || t.widened) return viewerPredicate(viewer).scope !== "DENY";
-    return !!t.bundle_id && this.#call(() => this.membership.inSight(t.bundle_id, viewer)) === true;
-  }
-  #template(id, viewer) {
-    const key = str15(id);
-    if (!key) return null;
-    const t = this.#groupTemplate(key) || this.#profileTemplates().find((p) => p.id === key) || null;
-    return t && this.#canSee(t, viewer) ? t : null;
-  }
-  /* ================================================================ versions (R2, R5, R9, R10, R12) */
-  #events(tid) {
-    return this.#rows(`SELECT * FROM tpl_events WHERE template_id=? ORDER BY eid`, tid);
-  }
-  #stateOf(events, n) {
-    const has3 = (e) => events.some((x) => x.version === n && x.event === e);
-    return has3("withdrawn") ? "withdrawn" : has3("updated") ? "updated" : has3("approved") ? "approved" : has3("submitted") ? "in_review" : "draft";
-  }
-  #numbers(tid) {
-    return this.#rows(`SELECT version FROM tpl_versions WHERE template_id=? ORDER BY version`, tid).map((r) => r.version);
-  }
-  #latestRevision(tid, n) {
-    return this.#one(`SELECT * FROM tpl_revisions WHERE template_id=? AND version=? ORDER BY rid DESC LIMIT 1`, tid, n);
-  }
-  /* The version of `t` named by a version id or a number (a profile template's own number), or null. */
-  #versionOf(t, asked) {
-    const p = parseVersionId(asked);
-    const n = p ? p.template === t.id ? p.version : null : /^[1-9][0-9]*$/.test(String(asked ?? "").trim()) ? Number(String(asked).trim()) : null;
-    if (n === null) return null;
-    if (t.origin === "profile") return n === Number(t.profileTemplate.version) ? n : null;
-    return this.#one(`SELECT 1 AS x FROM tpl_versions WHERE template_id=? AND version=?`, t.id, n) ? n : null;
-  }
-  /* A version id the viewer may see: its template and number, or null. */
-  #resolve(asked, viewer) {
-    const p = parseVersionId(asked);
-    const t = p ? this.#template(p.template, viewer) : null;
-    const n = t ? this.#versionOf(t, asked) : null;
-    return t && n !== null ? { t, n } : null;
-  }
-  /* The latest approved version (R14's default), or null. */
-  #latestApproved(t, events) {
-    if (t.origin === "profile") return Number(t.profileTemplate.version);
-    const ns = this.#numbers(t.id).filter((n) => this.#stateOf(events, n) === "approved");
-    return ns.length ? ns[ns.length - 1] : null;
-  }
-  #openVersion(t, events) {
-    return this.#numbers(t.id).find((n) => ["draft", "in_review"].includes(this.#stateOf(events, n))) ?? null;
-  }
-  /* R5: every member who revised the version and every adopted proposal's run, in time order, each dated; written by
-     R3, R4 and R6's adoption alone (it is read from their rows). */
-  #contributors(tid, n) {
-    const out = [], members = /* @__PURE__ */ new Set();
-    for (const r of this.#rows(`SELECT author, author_name, adopted, at FROM tpl_revisions WHERE template_id=? AND version=?
-                                 ORDER BY rid`, tid, n)) {
-      if (!members.has(r.author)) {
-        members.add(r.author);
-        out.push({ kind: "member", member: r.author, name: r.author_name, at: r.at });
-      }
-      if (r.adopted && !out.some((c) => c.proposal === r.adopted)) {
-        const p = this.#one(`SELECT * FROM tpl_proposals WHERE proposal_id=?`, r.adopted);
-        if (p) out.push({
-          kind: "run",
-          proposal: p.proposal_id,
-          run: p.run ?? null,
-          model: p.model ?? null,
-          skill_pack: p.skill_pack ?? null,
-          label: proposalLabel(p.proposer, "template"),
-          at: r.at
-        });
-      }
-    }
-    return out;
-  }
-  /* R9: every review of the version, each marked whether it stands (a reviewer's latest of that sha). */
-  #reviews(tid, n) {
-    const rows2 = this.#rows(`SELECT * FROM tpl_reviews WHERE template_id=? AND version=? ORDER BY rvid`, tid, n);
-    const latest = /* @__PURE__ */ new Map();
-    for (const r of rows2) latest.set(`${r.kind}|${r.reviewer}|${r.sha}`, r.rvid);
-    return rows2.map((r) => ({
-      kind: r.kind,
-      outcome: r.outcome,
-      scope: r.scope,
-      comment: r.comment ?? null,
-      sha: r.sha,
-      at: r.at,
-      reviewer: r.kind === "professional" ? {
-        grant: r.reviewer,
-        name: r.reviewer_name,
-        organisation: r.organisation,
-        credential: r.credential ?? null,
-        credential_says: "as the reviewer stated it; never verified"
-      } : { id: r.reviewer, name: r.reviewer_name, expertise: parse2(r.expertise) || [] },
-      stands: latest.get(`${r.kind}|${r.reviewer}|${r.sha}`) === r.rvid
-    }));
-  }
-  static #summary(reviews, sha) {
-    const s = { member: 0, professional: 0, no_concerns: 0, concerns: 0, changes_requested: 0 };
-    for (const r of reviews) if (r.stands && (!sha || r.sha === sha)) {
-      s[r.kind] += 1;
-      s[r.outcome] += 1;
-    }
-    return s;
-  }
-  /* R12: a version's notes: the latest edit, every edit with its author and time, and the notes added after draft. */
-  #notes(tid, n) {
-    const edits = this.#rows(`SELECT text, author, author_name, carried, at FROM tpl_notes WHERE template_id=? AND version=?
-                               ORDER BY nid`, tid, n).map((e) => ({ text: e.text, by: e.author ? { id: e.author, name: e.author_name } : null, carried: e.carried === 1, at: e.at }));
-    const last = edits[edits.length - 1] || null;
-    const added = this.#rows(`SELECT text, author, author_name, at FROM tpl_comments WHERE template_id=? AND version=? AND note=1
-                               ORDER BY cid`, tid, n).map((a) => ({ text: a.text, by: { id: a.author, name: a.author_name }, at: a.at }));
-    return { text: last ? last.text : "", carried: !!(last && last.carried), edits, added };
-  }
-  /* R2: one version whole, with its attribution (R5, R9, R10, R12, R16). */
-  #versionView(t, n, events) {
-    if (t.origin === "profile") return this.#profileVersion(t);
-    const v = this.#one(`SELECT * FROM tpl_versions WHERE template_id=? AND version=?`, t.id, n);
-    const rev = this.#latestRevision(t.id, n);
-    const state = this.#stateOf(events, n);
-    const ev = (e) => events.find((x) => x.version === n && x.event === e) || null;
-    const by = (e) => ({ id: e.actor, name: e.actor_name });
-    const ap = ev("approved"), up = ev("updated"), wd = ev("withdrawn"), sub = ev("submitted");
-    const reviews = this.#reviews(t.id, n);
-    return {
-      id: versionId(t.id, n),
-      template: t.id,
-      version: n,
-      text: rev.text,
-      sha: rev.sha,
-      state,
-      notes: this.#notes(t.id, n),
-      author: { id: v.author, name: v.author_name },
-      contributors: this.#contributors(t.id, n),
-      derived_from: parse2(v.derived_from),
-      reviews,
-      reviews_summary: _FilingTemplates.#summary(reviews, rev.sha),
-      approved: ap ? { by: by(ap), at: ap.at, ...parse2(ap.detail) || {} } : null,
-      updated_by: up ? versionId(t.id, (parse2(up.detail) || {}).by) : null,
-      ended: wd ? { ending: "withdrawn", by: by(wd), at: wd.at, reason: (parse2(wd.detail) || {}).reason ?? null } : t.retired ? { ending: "retired", ...t.retired } : null,
-      submitted: sub ? { by: by(sub), at: sub.at } : null,
-      reviewers: this.#rows(`SELECT member, member_name, asked_by, asked_name, at FROM tpl_reviewers WHERE template_id=? AND version=?
-                              ORDER BY member`, t.id, n).map((r) => ({ member: r.member, name: r.member_name, asked_by: { id: r.asked_by, name: r.asked_name }, at: r.at })),
-      revisions: this.#rows(`SELECT sha, author, author_name, adopted, at FROM tpl_revisions WHERE template_id=? AND version=?
-                              ORDER BY rid`, t.id, n).map((r) => ({ sha: r.sha, by: { id: r.author, name: r.author_name }, ...r.adopted ? { adopted: r.adopted } : {}, at: r.at })),
-      created_at: v.created_at
-    };
-  }
-  /* R15: a profile template as an approved version, with the attribution the profile carries. */
-  #profileVersion(t) {
-    const p = t.profileTemplate;
-    const reviews = (Array.isArray(p.reviews) ? p.reviews : []).map((r) => ({
-      kind: r.kind,
-      outcome: r.outcome,
-      scope: r.scope,
-      comment: null,
-      at: r.at ?? null,
-      stands: true,
-      reviewer: {
-        name: r.reviewer,
-        ...r.organisation ? { organisation: r.organisation } : {},
-        ...r.credential ? { credential: r.credential, credential_says: "as the profile states it; never verified" } : {}
-      }
-    }));
-    const n = Number(p.version);
-    return {
-      id: versionId(t.id, n),
-      template: t.id,
-      version: n,
-      text: p.text,
-      sha: sha256HexSync(p.text),
-      state: "approved",
-      notes: {
-        text: typeof p.notes === "string" ? p.notes : "",
-        carried: false,
-        edits: [],
-        added: this.#rows(`SELECT text, author, author_name, at FROM tpl_comments WHERE template_id=? AND version=? AND note=1
-                                   ORDER BY cid`, t.id, n).map((a) => ({ text: a.text, by: { id: a.author, name: a.author_name }, at: a.at }))
-      },
-      author: { name: p.authored_by },
-      contributors: (Array.isArray(p.contributors) ? p.contributors : []).map((c) => ({ kind: "member", name: c })),
-      derived_from: null,
-      reviews,
-      reviews_summary: _FilingTemplates.#summary(reviews, null),
-      approved: {
-        by: { name: p.approved_by },
-        at: p.approved_at ?? null,
-        tier: t.tier,
-        profiles: t.profiles,
-        reason: null,
-        basis: p.basis ?? null,
-        profile: t.profiles[0]
-      },
-      updated_by: null,
-      ended: null,
-      submitted: null,
-      reviewers: [],
-      revisions: [],
-      created_at: p.approved_at ?? null
-    };
-  }
-  /* R14: a version as a list shows it. */
-  #listed(view, isDefault) {
-    return {
-      id: view.id,
-      version: view.version,
-      state: view.state,
-      author: view.author,
-      contributors: view.contributors,
-      reviews: view.reviews_summary,
-      approved: view.approved ? {
-        by: view.approved.by,
-        at: view.approved.at,
-        tier: view.approved.tier,
-        reason: view.approved.reason ?? null
-      } : null,
-      created_at: view.created_at,
-      ...view.updated_by ? { updated_by: view.updated_by } : {},
-      ...view.ended ? { ended: view.ended } : {},
-      ...isDefault ? { default: true } : {}
-    };
-  }
-  static #head(t, extra = {}) {
-    return {
-      id: t.id,
-      kind: t.kind,
-      use: t.use,
-      profiles: t.profiles,
-      name: t.name,
-      scope: t.scope,
-      origin: t.origin,
-      ...t.retired ? { retired: t.retired } : {},
-      ...extra
-    };
-  }
-  /* R15: a profile template whose text names a blank outside FILING_BLANKS is not offered. */
-  static #badBlank(t) {
-    return t.origin === "profile" ? blanksOf(t.profileTemplate.text).unknown : null;
-  }
-  /* ================================================================ the judges (R1, R2, R12) */
-  #parseProfiles(v) {
-    if (v === "general") return "general";
-    const l = listOf(v);
-    return l.length === 1 && l[0] === "general" ? "general" : l;
-  }
-  /* R1: the template's own fields, in R1's order. */
-  #shapeRefusal({ kind, use, profiles, name: name2, project }) {
-    if (typeof kind !== "string" || !KIND_RE2.test(kind))
-      return refuse6(
-        "TEMPLATE_KIND_REFUSED",
-        "a kind is lower-case letters, digits and underscores, beginning with a letter",
-        { kind: typeof kind === "string" ? kind.slice(0, 60) : null }
-      );
-    const listed = Array.isArray(profiles) ? profiles : [];
-    for (const p of listed) {
-      const held = this.#profile(p);
-      if (held && !this.#kindIn(held, kind))
-        return refuse6("TEMPLATE_KIND_UNKNOWN", `the profile '${p}' holds no action kind '${kind}'`, { kind, profile: p });
-    }
-    if (!TEMPLATE_USES2.includes(use))
-      return refuse6("TEMPLATE_USE_REFUSED", "a template's use is file or brief", { use: typeof use === "string" ? use.slice(0, 20) : null });
-    if (profiles !== "general") {
-      if (!listed.length) return refuse6("TEMPLATE_PROFILE_UNKNOWN", "a template names the profiles it is written for, or general", { profile: null });
-      const missing = listed.find((p) => !this.#profile(p));
-      if (missing) return refuse6("TEMPLATE_PROFILE_UNKNOWN", `no profile '${missing.slice(0, 60)}' is held`, { profile: missing.slice(0, 60) });
-    }
-    if (use === "file" && this.#tierOf(kind, profiles) === 3)
-      return refuse6("TEMPLATE_TIER3_FILE", "the kind's tier is 3: no file template is kept for it; a brief template may serve it", { kind });
-    if (!oneLine3(name2, TEMPLATE_NAME_MAX))
-      return refuse6("TEMPLATE_NAME_REFUSED", `a template is named in one line of 1 to ${TEMPLATE_NAME_MAX} characters`, { max: TEMPLATE_NAME_MAX });
-    const taken = this.#rows(`SELECT template_id FROM tpl_templates WHERE project IS ? AND name=?`, project, name2.trim()).map((r) => this.#groupTemplate(r.template_id)).find((t) => t && !t.retired && !t.widened);
-    if (taken) return refuse6("TEMPLATE_NAME_TAKEN", "the scope's library already holds a template by this name", { name: name2.trim() });
-    return null;
-  }
-  /* R2, R12: a text and any notes. */
-  #textRefusal(text5, notes) {
-    if (typeof text5 !== "string" || !text5.trim() || WELL_FORMED.test(text5) || utf83(text5) > FILING_TEXT_MAX)
-      return refuse6(
-        "TEMPLATE_TEXT_REFUSED",
-        `a template's words are non-empty UTF-8 text of at most ${FILING_TEXT_MAX} bytes`,
-        { max_bytes: FILING_TEXT_MAX }
-      );
-    const { unknown } = blanksOf(text5);
-    if (unknown) return refuse6("TEMPLATE_BLANK_UNKNOWN", `{{${unknown}}} is not a blank filings fill`, { blank: unknown, blanks: Object.keys(FILING_BLANKS) });
-    if (notes !== void 0 && notes !== null && (typeof notes !== "string" || notes.length > TEMPLATE_NOTES_MAX || WELL_FORMED.test(notes)))
-      return refuse6("TEMPLATE_NOTES_REFUSED", `a version's notes are text of at most ${TEMPLATE_NOTES_MAX} characters`, { max: TEMPLATE_NOTES_MAX });
-    return null;
-  }
-  #notesRefusal(notes) {
-    if (notes === void 0 || notes === null) return null;
-    return this.#textRefusal("x", notes);
-  }
-  /* R3, R4, R6: a proposal the viewer may see (one for a named template is seen as its template; one for a kind by every
-     member), or null. */
-  #proposal(id, viewer) {
-    const p = str15(id) ? this.#one(`SELECT * FROM tpl_proposals WHERE proposal_id=?`, str15(id)) : null;
-    if (!p) return null;
-    if (p.template_id) return this.#template(p.template_id, viewer) ? p : null;
-    return viewerPredicate(viewer).scope !== "DENY" ? p : null;
-  }
-  /* Opaque ids (R1, R6, R8): never a counter; one already held here, in `filings`' library or by a profile template is
-     drawn again. */
-  #mint(prefix, year) {
-    const filings = this.#call(() => this.#rows(`PRAGMA table_info(filing_templates)`).some((c) => c.name === "template_id"), false);
-    const profileIds = new Set(prefix === "TPL" ? this.#profileTemplates().map((t) => t.id) : []);
-    return this.record.mintOpaqueId(prefix, year, "", (id) => profileIds.has(id) || !!this.#one(`SELECT 1 AS x FROM tpl_templates WHERE template_id=? UNION ALL SELECT 1 FROM tpl_proposals WHERE proposal_id=?
-                      UNION ALL SELECT 1 FROM tpl_grants WHERE grant_id=?`, id, id, id) || filings && !!this.#one(`SELECT 1 AS x FROM filing_templates WHERE template_id=?`, id));
-  }
-  /* ================================================================ R3: templateDraft */
-  /** R3 (`op=templatedraft`): a new template and its first draft, or a new draft version of a named template. `from`
-   *  is a version id, a proposal id, or, only through `filings`' own service (its R32), `{filing, sha}`; `via: "op"`
-   *  marks a call that came through the op, where `{filing, sha}` is refused. */
-  templateDraft({
-    template = null,
-    project = null,
-    kind = null,
-    use = null,
-    profiles = null,
-    name: name2 = null,
-    text: text5 = void 0,
-    from = null,
-    notes = null,
-    author = null,
-    viewer = null,
-    via = null
-  } = {}) {
-    const machine3 = this.#machine("draft", author);
-    if (machine3) return machine3;
-    let t = null;
-    if (template !== null && template !== void 0 && template !== "") {
-      t = this.#template(template, viewer);
-      if (!t) return this.#noTemplate(template);
-    }
-    const member = this.#member(author);
-    const scopeProject = t ? t.project : str15(project);
-    if (!scopeProject || !member || !this.#call(() => this.membership.isJoinedParticipant(scopeProject, member)))
-      return this.#scope(t, t && t.origin === "profile" ? "a profile's template is read-only here: draft the group's own from it (from=)" : "a template is drafted by a joined participant of its project");
-    let events = [];
-    if (t) {
-      events = this.#events(t.id);
-      const open = this.#openVersion(t, events);
-      if (open !== null)
-        return refuse6(
-          "TEMPLATE_DRAFT_OPEN",
-          `version ${open} is ${this.#stateOf(events, open)}: finish or withdraw it first`,
-          { version: versionId(t.id, open), state: this.#stateOf(events, open) }
-        );
-      if (t.retired) return this.#retired(t);
-    }
-    const prof = t ? t.profiles : this.#parseProfiles(profiles);
-    if (!t) {
-      const shape = this.#shapeRefusal({ kind, use, profiles: prof, name: name2, project: scopeProject });
-      if (shape) return shape;
-    }
-    let source = null, fromBad = null;
-    if (from !== null && from !== void 0 && from !== "") {
-      if (typeof from === "object" && !Array.isArray(from)) {
-        if (via === "op") fromBad = "a filing's text becomes a template only through filings' own act (op=templatesave)";
-        else if (!str15(from.filing) || typeof from.sha !== "string" || !SHA_RE.test(from.sha))
-          fromBad = "a filing source is {filing, sha}: the approved draft's id and its text's SHA-256";
-        else source = { derived: { filing: str15(from.filing), sha: from.sha }, text: void 0 };
-      } else if (typeof from === "string" && parseVersionId(from)) {
-        const r = this.#resolve(from, viewer);
-        if (!r) fromBad = `no version '${from.slice(0, 80)}' is readable here`;
-        else source = { derived: { version: versionId(r.t.id, r.n) }, text: this.#versionView(r.t, r.n, this.#events(r.t.id)).text };
-      } else if (typeof from === "string") {
-        const p = this.#proposal(from, viewer);
-        if (!p) fromBad = `no proposal '${from.slice(0, 80)}' is readable here`;
-        else source = { derived: { proposal: p.proposal_id }, text: p.text, proposal: p.proposal_id };
-      } else fromBad = "from names a version, a proposal, or (through filings) an approved filing draft";
-    }
-    const body = text5 === void 0 || text5 === null ? source ? source.text : text5 : text5;
-    const bad = this.#textRefusal(body, notes);
-    if (bad) return bad;
-    if (fromBad) return this.#fromRefusal(fromBad);
-    const at25 = this.#when();
-    const name_ = this.#nameOf(member);
-    return this.record.transact(() => {
-      let tid = t ? t.id : null;
-      if (!t) {
-        tid = this.#mint("TPL", at25.slice(0, 4));
-        if (!tid) return mintExhausted("TPL");
-        this.sql.exec(
-          `INSERT INTO tpl_templates (template_id, bundle_id, project, kind, use, profiles, name, origin, created_by,
-                         created_name, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-          tid,
-          scopeProject,
-          scopeProject,
-          kind,
-          use,
-          prof === "general" ? "general" : json2(prof),
-          name2.trim(),
-          "group",
-          member,
-          name_,
-          at25
-        );
-      }
-      const bundle = t ? t.bundle_id : scopeProject;
-      const prev = t ? Math.max(0, ...this.#numbers(tid)) : 0;
-      const n = prev + 1;
-      this.sql.exec(`INSERT INTO tpl_versions (template_id, version, bundle_id, author, author_name, derived_from, created_at)
-                     VALUES (?,?,?,?,?,?,?)`, tid, n, bundle, member, name_, source ? json2(source.derived) : null, at25);
-      const sha = sha256HexSync(body);
-      this.sql.exec(`INSERT INTO tpl_revisions (template_id, version, bundle_id, text, sha, author, author_name, adopted, at)
-                     VALUES (?,?,?,?,?,?,?,?,?)`, tid, n, bundle, body, sha, member, name_, source && source.proposal ? source.proposal : null, at25);
-      if (prev) {
-        const was = this.#one(`SELECT text, author, author_name FROM tpl_notes WHERE template_id=? AND version=? ORDER BY nid DESC LIMIT 1`, tid, prev);
-        if (was) this.sql.exec(`INSERT INTO tpl_notes (template_id, version, bundle_id, text, author, author_name, carried, at)
-                                VALUES (?,?,?,?,?,?,1,?)`, tid, n, bundle, was.text, was.author, was.author_name, at25);
-      }
-      if (typeof notes === "string")
-        this.sql.exec(`INSERT INTO tpl_notes (template_id, version, bundle_id, text, author, author_name, carried, at)
-                       VALUES (?,?,?,?,?,?,0,?)`, tid, n, bundle, notes, member, name_, at25);
-      return {
-        ok: true,
-        template: tid,
-        version: versionId(tid, n),
-        sha,
-        state: "draft",
-        ...source ? { derived_from: source.derived } : {},
-        says: "a draft: it is not offered for a filing until it is reviewed and approved"
-      };
-    });
-  }
-  /* ================================================================ R4: templateRevise */
-  /** R4 (`op=templaterevise`): a new revision of a draft's text (or a proposal's, `adopt`), every earlier one kept; and
-   *  any edit of its notes (R12). */
-  templateRevise({ version = null, text: text5 = void 0, adopt = null, notes = null, author = null, viewer = null } = {}) {
-    const machine3 = this.#machine("draft", author);
-    if (machine3) return machine3;
-    const r = this.#resolve(version, viewer);
-    if (!r) return this.#noTemplate(parseVersionId(version)?.template ?? version);
-    const { t, n } = r;
-    const member = this.#member(author);
-    if (!t.project || !member || !this.#call(() => this.membership.isJoinedParticipant(t.project, member)))
-      return this.#scope(t, t.origin === "profile" ? "a profile's template is read-only here" : "a draft is revised by a joined participant of its project");
-    const state = this.#stateOf(this.#events(t.id), n);
-    if (state !== "draft") return this.#notADraft(t, n, state);
-    const p = adopt !== null && adopt !== void 0 && adopt !== "" ? this.#proposal(adopt, viewer) : null;
-    const adopting = adopt !== null && adopt !== void 0 && adopt !== "";
-    const body = text5 !== void 0 && text5 !== null ? text5 : p ? p.text : void 0;
-    const notesOnly = body === void 0 && !adopting && typeof notes === "string";
-    if (!notesOnly) {
-      const bad = this.#textRefusal(body, notes);
-      if (bad) return bad;
-    } else {
-      const bad = this.#notesRefusal(notes);
-      if (bad) return bad;
-    }
-    if (adopting && !p) return this.#fromRefusal(`no proposal '${String(adopt).slice(0, 80)}' is readable here`);
-    const at25 = this.#when();
-    const name_ = this.#nameOf(member);
-    return this.record.transact(() => {
-      let sha = this.#latestRevision(t.id, n).sha;
-      if (!notesOnly) {
-        sha = sha256HexSync(body);
-        this.sql.exec(`INSERT INTO tpl_revisions (template_id, version, bundle_id, text, sha, author, author_name, adopted, at)
-                       VALUES (?,?,?,?,?,?,?,?,?)`, t.id, n, t.bundle_id, body, sha, member, name_, p ? p.proposal_id : null, at25);
-      }
-      if (typeof notes === "string")
-        this.sql.exec(`INSERT INTO tpl_notes (template_id, version, bundle_id, text, author, author_name, carried, at)
-                       VALUES (?,?,?,?,?,?,0,?)`, t.id, n, t.bundle_id, notes, member, name_, at25);
-      return {
-        ok: true,
-        version: versionId(t.id, n),
-        sha,
-        state: "draft",
-        ...p ? { adopted: p.proposal_id } : {},
-        revisions: this.#one(`SELECT COUNT(*) AS c FROM tpl_revisions WHERE template_id=? AND version=?`, t.id, n).c
-      };
-    });
-  }
-  /* ================================================================ R6: templatePropose */
-  /** R6 (`op=templatepropose`): any credential proposes wording, for a named template or for a kind, stored apart and
-   *  labelled; it is a template's text only when a member takes it as `from` or `adopt`s it. `run`, `model` and
-   *  `skill_pack` are the run's own statement of itself (R5 lists them as stated). */
-  templatePropose({
-    template = null,
-    kind = null,
-    text: text5 = void 0,
-    why = null,
-    proposer = null,
-    viewer = null,
-    run = null,
-    model = null,
-    skill_pack = null
-  } = {}) {
-    const who2 = str15(proposer);
-    if (!who2) return refuse6("TEMPLATE_NO_PROPOSER", "no stamped proposer: a proposal names who made it");
-    let t = null;
-    if (template !== null && template !== void 0 && template !== "") {
-      t = this.#template(template, viewer);
-      if (!t) return this.#noTemplate(template);
-    } else if (typeof kind !== "string" || !KIND_RE2.test(kind)) {
-      const r = this.#shapeRefusal({ kind: typeof kind === "string" ? kind : "" });
-      if (r) return r;
-    }
-    const bad = this.#textRefusal(text5);
-    if (bad) return bad;
-    if (!textUpTo(why, PROPOSAL_WHY_MAX))
-      return refuse6("TEMPLATE_WHY_REFUSED", `say why in 1 to ${PROPOSAL_WHY_MAX} characters`, { max: PROPOSAL_WHY_MAX });
-    const at25 = this.#when();
-    const cut3 = (v) => str15(v) ? String(v).trim().slice(0, 200) : null;
-    return this.record.transact(() => {
-      const id = this.#mint("TPP", at25.slice(0, 4));
-      if (!id) return mintExhausted("TPP");
-      const sha = sha256HexSync(text5);
-      const k = t ? t.kind : kind;
-      this.sql.exec(
-        `INSERT INTO tpl_proposals (proposal_id, bundle_id, template_id, kind, text, sha, why, proposer, run, model,
-                       skill_pack, at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
-        id,
-        t ? t.bundle_id : null,
-        t ? t.id : null,
-        k,
-        text5,
-        sha,
-        why.trim(),
-        who2,
-        cut3(run),
-        cut3(model),
-        cut3(skill_pack),
-        at25
-      );
-      return {
-        ok: true,
-        proposal: {
-          id,
-          template: t ? t.id : null,
-          kind: k,
-          sha,
-          why: why.trim(),
-          at: at25,
-          label: proposalLabel(who2, "template")
-        },
-        evidence: false,
-        says: "proposed wording, stored apart: it is not a template's text until a member adopts it into a draft"
-      };
-    });
-  }
-  /* ================================================================ R7: templateSubmit */
-  /* R8: a grant is live while it is not revoked and its version is a draft or in review. */
-  #liveGrants(tid, n, events) {
-    if (!["draft", "in_review"].includes(this.#stateOf(events, n))) return [];
-    return this.#rows(`SELECT g.* FROM tpl_grants g WHERE g.template_id=? AND g.version=?
-                         AND NOT EXISTS (SELECT 1 FROM tpl_grant_revocations r WHERE r.grant_id=g.grant_id) ORDER BY g.grant_id`, tid, n);
-  }
-  /** R7 (`op=templatesubmit`): a draft goes to review, its text and sha fixed, with the members asked to review it. */
-  templateSubmit({ version = null, reviewers = null, author = null, viewer = null } = {}) {
-    const machine3 = this.#machine("draft", author);
-    if (machine3) return machine3;
-    const r = this.#resolve(version, viewer);
-    if (!r) return this.#noTemplate(parseVersionId(version)?.template ?? version);
-    const { t, n } = r;
-    const member = this.#member(author);
-    if (!t.project || !member || !this.#call(() => this.membership.isJoinedParticipant(t.project, member)))
-      return this.#scope(t, t.origin === "profile" ? "a profile's template is read-only here" : "a draft is submitted by a joined participant of its project");
-    const events = this.#events(t.id);
-    const state = this.#stateOf(events, n);
-    if (state !== "draft") return this.#notADraft(t, n, state);
-    const asked = [...new Set(listOf(reviewers).map((x) => x.includes(":") ? x : `member:${x}`))];
-    const ids = [];
-    for (const a of asked) {
-      const id = this.#member(a);
-      const facts = id ? this.#call(() => this.membership.memberFacts(id)) : null;
-      const standing = id && (facts && facts.status === "active" || this.#call(() => this.membership.isAdministrator(id)) === true);
-      if (!standing || !this.#canSee(t, `member:${id}`))
-        return refuse6("REVIEWER_UNKNOWN", `'${a.slice(0, 80)}' is not a member who can read the template`, { reviewer: a.slice(0, 80) });
-      ids.push(id);
-    }
-    if (!ids.length && !this.#liveGrants(t.id, n, events).length)
-      return refuse6("NO_REVIEWERS", "name a member to review it, or open a review grant on the version first");
-    const at25 = this.#when();
-    const sha = this.#latestRevision(t.id, n).sha;
-    const name_ = this.#nameOf(member);
-    return this.record.transact(() => {
-      this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
-                     VALUES (?,?,?,?,?,?,?,?)`, t.id, n, t.bundle_id, "submitted", member, name_, json2({ sha, reviewers: ids }), at25);
-      for (const id of ids)
-        this.sql.exec(`INSERT INTO tpl_reviewers (template_id, version, member, bundle_id, member_name, asked_by, asked_name, at)
-                       VALUES (?,?,?,?,?,?,?,?)`, t.id, n, id, t.bundle_id, this.#nameOf(id), member, name_, at25);
-      return {
-        ok: true,
-        version: versionId(t.id, n),
-        state: "in_review",
-        sha,
-        reviewers: ids.map((id) => ({ member: id, name: this.#nameOf(id) })),
-        grants: this.#liveGrants(t.id, n, this.#events(t.id)).map((g) => g.grant_id)
-      };
-    });
-  }
-  /* ================================================================ R8: review grants */
-  /** R8 (`op=templatereviewgrant`): a participant of the template's project opens a revocable door to one draft or
-   *  in-review version for a named non-member, by a secret whose SHA-256 the control plane took. */
-  templateReviewGrant({ version = null, recipient = null, organisation = null, secretSha = null, by = null, viewer = null } = {}) {
-    const machine3 = this.#machine("draft", by);
-    if (machine3) return machine3;
-    const r = this.#resolve(version, viewer);
-    if (!r) return this.#noTemplate(parseVersionId(version)?.template ?? version);
-    const { t, n } = r;
-    const member = this.#member(by);
-    if (!t.project || !member || !this.#call(() => this.membership.isJoinedParticipant(t.project, member)))
-      return this.#scope(t, t.origin === "profile" ? "a profile's template is read-only here" : "a review grant is opened by a joined participant of the template's project");
-    const state = this.#stateOf(this.#events(t.id), n);
-    if (!["draft", "in_review"].includes(state)) return this.#notInReview(t, n, state);
-    if (!oneLine3(recipient, GRANT_FIELD_MAX) || !oneLine3(organisation, GRANT_FIELD_MAX))
-      return refuse6(
-        "GRANT_RECIPIENT_REFUSED",
-        `the reviewer and their organisation, each one line of 1 to ${GRANT_FIELD_MAX} characters`,
-        { max: GRANT_FIELD_MAX }
-      );
-    const s = typeof secretSha === "string" ? secretSha.trim() : "";
-    if (!SHA_RE.test(s) || this.#one(`SELECT 1 AS x FROM tpl_grants WHERE secret_sha=?`, s))
-      return refuse6("GRANT_NO_SECRET", "no fresh secret digest was stamped for this grant: the control plane makes the secret");
-    const at25 = this.#when();
-    return this.record.transact(() => {
-      const id = this.#mint("TRG", at25.slice(0, 4));
-      if (!id) return mintExhausted("TRG");
-      const name_ = this.#nameOf(member);
-      this.sql.exec(
-        `INSERT INTO tpl_grants (grant_id, template_id, version, bundle_id, recipient, organisation, secret_sha, actor,
-                       actor_name, at) VALUES (?,?,?,?,?,?,?,?,?,?)`,
-        id,
-        t.id,
-        n,
-        t.bundle_id,
-        recipient.trim(),
-        organisation.trim(),
-        s,
-        member,
-        name_,
-        at25
-      );
-      return {
-        ok: true,
-        grant: id,
-        version: versionId(t.id, n),
-        recipient: recipient.trim(),
-        organisation: organisation.trim(),
-        by: { id: member, name: name_ },
-        at: at25,
-        says: "the reviewer reads, comments on and reviews this one version through the link while it is a draft or in review"
-      };
-    });
-  }
-  /** R8 (`op=templategrantrevoke`): a grant's revocation, recorded with the revoker and instant; a second answers the
-   *  first, unchanged. */
-  templateGrantRevoke({ grant = null, by = null, viewer = null } = {}) {
-    const machine3 = this.#machine("draft", by);
-    if (machine3) return machine3;
-    const g = str15(grant) ? this.#one(`SELECT * FROM tpl_grants WHERE grant_id=?`, str15(grant)) : null;
-    const t = g ? this.#template(g.template_id, viewer) : null;
-    if (!t) return refuse6("NO_SUCH_GRANT", "no review grant by that id is readable here", { grant: str15(grant) });
-    const member = this.#member(by);
-    if (!member || !this.#call(() => this.membership.isJoinedParticipant(t.project, member)))
-      return this.#scope(t, "a review grant is revoked by a joined participant of the template's project");
-    const held = this.#one(`SELECT actor, actor_name, at FROM tpl_grant_revocations WHERE grant_id=?`, g.grant_id);
-    if (held) return { ok: true, grant: g.grant_id, existed: true, revoked: { by: { id: held.actor, name: held.actor_name }, at: held.at } };
-    const at25 = this.#when();
-    const name_ = this.#nameOf(member);
-    this.sql.exec(
-      `INSERT INTO tpl_grant_revocations (grant_id, bundle_id, actor, actor_name, at) VALUES (?,?,?,?,?)`,
-      g.grant_id,
-      g.bundle_id,
-      member,
-      name_,
-      at25
-    );
-    return { ok: true, grant: g.grant_id, existed: false, revoked: { by: { id: member, name: name_ }, at: at25 } };
-  }
-  /* R8: the door: a live grant for `secretSha`, as {grant, t, n}, or null (the dead answer). */
-  #door(secretSha) {
-    const s = typeof secretSha === "string" ? secretSha.trim() : "";
-    if (!SHA_RE.test(s)) return null;
-    const g = this.#one(`SELECT * FROM tpl_grants WHERE secret_sha=?
-                           AND NOT EXISTS (SELECT 1 FROM tpl_grant_revocations r WHERE r.grant_id=tpl_grants.grant_id)`, s);
-    const t = g ? this.#groupTemplate(g.template_id) : null;
-    if (!t || !["draft", "in_review"].includes(this.#stateOf(this.#events(t.id), g.version))) return null;
-    return { grant: g, t, n: g.version };
-  }
-  /* Through a door, a version asked must be the grant's own; absent, it is. */
-  static #doorAdmits(d, asked) {
-    if (asked === null || asked === void 0 || asked === "") return true;
-    const p = parseVersionId(asked);
-    return p ? p.template === d.t.id && p.version === d.n : String(asked).trim() === String(d.n);
-  }
-  static #hasSecret(s) {
-    return s !== null && s !== void 0 && s !== "";
-  }
-  /* ================================================================ R9: templateReview */
-  /** R9 (`op=templatereview`): one review against the version's present sha, by a member who may see the template or
-   *  through a live grant. */
-  templateReview({
-    version = null,
-    outcome = null,
-    scope = null,
-    comment = null,
-    credential = null,
-    sha = null,
-    author = null,
-    secretSha = null,
-    viewer = null
-  } = {}) {
-    let t, n, reviewer;
-    if (_FilingTemplates.#hasSecret(secretSha)) {
-      const d = this.#door(secretSha);
-      if (!d || !_FilingTemplates.#doorAdmits(d, version)) return noTemplateGrant();
-      ({ t, n } = d);
-      reviewer = { kind: "professional", id: d.grant.grant_id, name: d.grant.recipient, organisation: d.grant.organisation };
-    } else {
-      const machine3 = this.#machine("review", author);
-      if (machine3) return machine3;
-      const r = this.#resolve(version, viewer);
-      const member = this.#member(author);
-      if (!r || !member) return this.#noTemplate(parseVersionId(version)?.template ?? version);
-      ({ t, n } = r);
-      const ex = this.#call(() => this.membership.expertiseList({ memberId: member }));
-      reviewer = {
-        kind: "member",
-        id: member,
-        name: this.#nameOf(member),
-        expertise: ex && Array.isArray(ex.expertise) ? ex.expertise.filter((e) => e.state !== "withdrawn").map((e) => ({ label: e.label, confirmed: e.confirmed === true })) : []
-      };
-    }
-    const state = t.origin === "profile" ? "approved" : this.#stateOf(this.#events(t.id), n);
-    if (state !== "in_review") return this.#notInReview(t, n, state);
-    const present2 = this.#latestRevision(t.id, n).sha;
-    if (!REVIEW_OUTCOMES2.includes(outcome) || !oneLine3(scope, REVIEW_SCOPE_MAX) || comment !== null && comment !== void 0 && !textUpTo(comment, REVIEW_COMMENT_MAX, 0) || reviewer.kind === "professional" && credential !== null && credential !== void 0 && !oneLine3(credential, REVIEW_CREDENTIAL_MAX))
-      return refuse6("REVIEW_REFUSED", `outcome is one of ${REVIEW_OUTCOMES2.join(", ")}; scope 1 to ${REVIEW_SCOPE_MAX} characters; comment at most ${REVIEW_COMMENT_MAX}; credential at most ${REVIEW_CREDENTIAL_MAX}`, { outcomes: REVIEW_OUTCOMES2 });
-    if (sha !== null && sha !== void 0 && sha !== "" && sha !== present2)
-      return refuse6("REVIEW_STALE", "the text reviewed is not the version's present text", { sha: present2 });
-    const at25 = this.#when();
-    const cred = reviewer.kind === "professional" && str15(credential) ? credential.trim() : null;
-    this.sql.exec(
-      `INSERT INTO tpl_reviews (template_id, version, bundle_id, sha, kind, reviewer, reviewer_name, organisation,
-                     credential, expertise, outcome, scope, comment, at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-      t.id,
-      n,
-      t.bundle_id,
-      present2,
-      reviewer.kind,
-      reviewer.id,
-      reviewer.name,
-      reviewer.organisation ?? null,
-      cred,
-      reviewer.kind === "member" ? json2(reviewer.expertise) : null,
-      outcome,
-      scope.trim(),
-      str15(comment) ? comment : null,
-      at25
-    );
-    return { ok: true, version: versionId(t.id, n), review: {
-      kind: reviewer.kind,
-      outcome,
-      scope: scope.trim(),
-      sha: present2,
-      at: at25,
-      reviewer: reviewer.kind === "professional" ? { grant: reviewer.id, name: reviewer.name, organisation: reviewer.organisation, credential: cred, credential_says: "as stated; never verified" } : { id: reviewer.id, name: reviewer.name, expertise: reviewer.expertise }
-    } };
-  }
-  /* ================================================================ R10: templateApprove */
-  /** R10 (`op=templateapprove`): an owner of the template's project approves an in-review version after the reviews its
-   *  tier requires, the earlier approved version then `updated`; with `widen`, an administrator makes an approved
-   *  project template group-wide. */
-  templateApprove({ version = null, widen = false, reason = null, by = null, viewer = null } = {}) {
-    const machine3 = this.#machine("approve", by);
-    if (machine3) return machine3;
-    const r = this.#resolve(version, viewer);
-    if (!r) return this.#noTemplate(parseVersionId(version)?.template ?? version);
-    const { t, n } = r;
-    const member = this.#member(by);
-    const events = t.origin === "profile" ? [] : this.#events(t.id);
-    const state = t.origin === "profile" ? "approved" : this.#stateOf(events, n);
-    const widening = widen === true || widen === "true" || widen === "1" || widen === 1;
-    const name_ = member ? this.#nameOf(member) : null;
-    if (widening) {
-      if (t.origin === "profile") return this.#notAnApprover(t, "a profile's template is already offered to the whole group");
-      if (!OFFERED.includes(state) || t.retired)
-        return refuse6(
-          "TEMPLATE_NOT_APPROVED",
-          `the version is ${t.retired ? "of a retired template" : state}: only an approved project template is widened`,
-          { version: versionId(t.id, n), state }
-        );
-      if (!member || this.#call(() => this.membership.isAdministrator(member)) !== true)
-        return this.#notAnApprover(t, "an administrator makes a template group-wide");
-      if (t.widened) return { ok: true, template: t.id, existed: true, widened: t.widened, scope: "group" };
-      const at26 = this.#when();
-      this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
-                     VALUES (?,NULL,?,?,?,?,?,?)`, t.id, t.bundle_id, "widened", member, name_, json2({ from: { project: t.project } }), at26);
-      return { ok: true, template: t.id, existed: false, scope: "group", widened: { by: { id: member, name: name_ }, at: at26 } };
-    }
-    if (state !== "in_review") return this.#notInReview(t, n, state);
-    if (!member || this.#call(() => this.membership.isProjectOwner(t.project, member)) !== true)
-      return this.#notAnApprover(t, "an owner of the template's project approves it");
-    const v = this.#one(`SELECT author FROM tpl_versions WHERE template_id=? AND version=?`, t.id, n);
-    const others = this.#contributors(t.id, n).filter((c) => c.kind === "member" && c.member !== v.author);
-    if (v.author === member && !others.length)
-      return refuse6(
-        "APPROVER_IS_AUTHOR",
-        "you are the version's author and its only member contributor: another member approves it",
-        { version: versionId(t.id, n) }
-      );
-    const sha = this.#latestRevision(t.id, n).sha;
-    const standing = this.#reviews(t.id, n).filter((x) => x.stands && x.sha === sha);
-    const tier = this.#tierOf(t.kind, t.profiles);
-    const why = textUpTo(reason, APPROVAL_REASON_MAX) ? reason.trim() : null;
-    const needs = tier === 1 ? "member" : "professional";
-    const blocking = standing.filter((x) => x.outcome === "changes_requested");
-    const met = standing.some((x) => x.kind === needs && x.outcome === "no_concerns") || needs === "professional" && !!why;
-    if (blocking.length || !met)
-      return refuse6(
-        "REVIEWS_INSUFFICIENT",
-        blocking.length ? "a review requesting changes stands" : tier === 1 ? "a Tier 1 kind needs one member's review with no concerns" : `${tier === "undetermined" ? "an undetermined tier" : `Tier ${tier}`} needs a professional's review with no concerns, or the approver's reason for going without one (1 to ${APPROVAL_REASON_MAX} characters)`,
-        { version: versionId(t.id, n), tier, needs, reviews: _FilingTemplates.#summary(standing, sha) }
-      );
-    const at25 = this.#when();
-    const prev = this.#latestApproved(t, events);
-    return this.record.transact(() => {
-      const detail = { tier, tier_words: RISK_TIERS[tier] ?? null, profiles: t.profiles, reason: why, sha };
-      this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
-                     VALUES (?,?,?,?,?,?,?,?)`, t.id, n, t.bundle_id, "approved", member, name_, json2(detail), at25);
-      if (prev !== null && prev !== n)
-        this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
-                       VALUES (?,?,?,?,?,?,?,?)`, t.id, prev, t.bundle_id, "updated", member, name_, json2({ by: n }), at25);
-      return {
-        ok: true,
-        version: versionId(t.id, n),
-        state: "approved",
-        approved: { by: { id: member, name: name_ }, at: at25, ...detail },
-        updated: prev !== null && prev !== n ? versionId(t.id, prev) : null,
-        says: "approved: offered for a filing as the template's default; an earlier approved version stays offered, as updated"
-      };
-    });
-  }
-  /* ================================================================ R11: templateRetire */
-  /** R11 (`op=templateretire`): without `version`, an approver of its scope retires the whole template; with it, its
-   *  author withdraws a draft or in-review version. Nothing is deleted. */
-  templateRetire({ template = null, version = null, reason = null, by = null, viewer = null } = {}) {
-    const machine3 = this.#machine("approve", by);
-    if (machine3) return machine3;
-    const named = template ?? parseVersionId(version)?.template ?? null;
-    const t = this.#template(named, viewer);
-    if (!t) return this.#noTemplate(named);
-    const member = this.#member(by);
-    const why = textUpTo(reason, ENDING_REASON_MAX);
-    if (version === null || version === void 0 || version === "") {
-      const approver = t.origin !== "profile" && !!member && (t.widened ? this.#call(() => this.membership.isAdministrator(member)) === true : this.#call(() => this.membership.isProjectOwner(t.project, member)) === true);
-      if (!approver) return this.#notAnApprover(t, t.origin === "profile" ? "a profile's template is read-only here" : t.widened ? "an administrator retires a group-wide template" : "an owner of the template's project retires it");
-      if (!why) return refuse6("TEMPLATE_REASON_REFUSED", `give the reason in 1 to ${ENDING_REASON_MAX} characters`, { max: ENDING_REASON_MAX });
-      if (t.retired) return refuse6("TEMPLATE_ALREADY_ENDED", "the template was already retired", { template: t.id, ended: { ending: "retired", ...t.retired } });
-      const at26 = this.#when();
-      const name_2 = this.#nameOf(member);
-      this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
-                     VALUES (?,NULL,?,?,?,?,?,?)`, t.id, t.bundle_id, "retired", member, name_2, json2({ reason: reason.trim() }), at26);
-      return {
-        ok: true,
-        template: t.id,
-        retired: { by: { id: member, name: name_2 }, at: at26, reason: reason.trim() },
-        says: "retired: none of its versions is offered again; each stays readable with this reason"
-      };
-    }
-    const n = this.#versionOf(t, version);
-    if (n === null) return this.#noTemplate(named);
-    const events = t.origin === "profile" ? [] : this.#events(t.id);
-    const v = t.origin === "profile" ? null : this.#one(`SELECT author FROM tpl_versions WHERE template_id=? AND version=?`, t.id, n);
-    if (!v || !member || v.author !== member) return this.#scope(t, "a version is withdrawn by its author");
-    const state = this.#stateOf(events, n);
-    if (OFFERED.includes(state)) return this.#notADraft(t, n, state);
-    if (!why) return refuse6("TEMPLATE_REASON_REFUSED", `give the reason in 1 to ${ENDING_REASON_MAX} characters`, { max: ENDING_REASON_MAX });
-    if (state === "withdrawn") {
-      const e = events.find((x) => x.version === n && x.event === "withdrawn");
-      return refuse6("TEMPLATE_ALREADY_ENDED", "the version was already withdrawn", {
-        version: versionId(t.id, n),
-        ended: { ending: "withdrawn", by: { id: e.actor, name: e.actor_name }, at: e.at, reason: (parse2(e.detail) || {}).reason ?? null }
-      });
-    }
-    const at25 = this.#when();
-    const name_ = this.#nameOf(member);
-    this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
-                   VALUES (?,?,?,?,?,?,?,?)`, t.id, n, t.bundle_id, "withdrawn", member, name_, json2({ reason: reason.trim() }), at25);
-    return { ok: true, version: versionId(t.id, n), state: "withdrawn", withdrawn: { by: { id: member, name: name_ }, at: at25, reason: reason.trim() } };
-  }
-  /* ================================================================ R12, R13: comments and notes */
-  /** R13 (`op=templatecomment`): a comment on a version, attributed to the member, the grant or a labelled run; with
-   *  `note`, a note added (R12) by a member who may revise, once the version has left draft. */
-  templateComment({ template = null, version = null, text: text5 = null, note = false, author = null, secretSha = null, viewer = null } = {}) {
-    let t, n, by;
-    if (_FilingTemplates.#hasSecret(secretSha)) {
-      const d = this.#door(secretSha);
-      if (!d || template && str15(template) !== d.t.id || !_FilingTemplates.#doorAdmits(d, version)) return noTemplateGrant();
-      ({ t, n } = d);
-      by = { kind: "grant", id: d.grant.grant_id, name: d.grant.recipient, organisation: d.grant.organisation };
-    } else {
-      t = this.#template(template ?? parseVersionId(version)?.template, viewer);
-      n = t ? this.#versionOf(t, version) : null;
-      if (!t || n === null) return this.#noTemplate(template);
-      const who2 = str15(author);
-      const member = this.#member(author);
-      by = !who2 ? null : isMachineIdentity(who2) ? { kind: "run", id: who2, name: who2, label: proposalLabel(who2, "template") } : member ? { kind: "member", id: member, name: this.#nameOf(member) } : null;
-    }
-    const isNote = note === true || note === "true" || note === "1" || note === 1;
-    if (!by || !textUpTo(text5, COMMENT_MAX))
-      return refuse6(
-        "COMMENT_REFUSED",
-        by ? `a comment is 1 to ${COMMENT_MAX} characters` : "a comment names who wrote it: this call carries nobody",
-        { max: COMMENT_MAX }
-      );
-    if (isNote) {
-      if (by.kind !== "member" || !t.project || !this.#call(() => this.membership.isJoinedParticipant(t.project, by.id)))
-        return this.#scope(t, "a note is added by a member who may revise the template");
-      if (this.#stateOf(this.#events(t.id), n) === "draft")
-        return refuse6("COMMENT_REFUSED", "a draft's notes are edited by revising it (op=templaterevise, notes=)", { max: COMMENT_MAX });
-    }
-    const at25 = this.#when();
-    this.sql.exec(`INSERT INTO tpl_comments (template_id, version, bundle_id, text, note, kind, author, author_name, organisation, at)
-                   VALUES (?,?,?,?,?,?,?,?,?,?)`, t.id, n, t.bundle_id, text5, isNote ? 1 : 0, by.kind, by.id, by.name, by.organisation ?? null, at25);
-    return { ok: true, comment: { template: t.id, version: versionId(t.id, n), text: text5, note: isNote, by: _FilingTemplates.#by(by), at: at25 } };
-  }
-  static #by(b) {
-    return b.kind === "grant" ? { kind: "grant", grant: b.id, name: b.name, organisation: b.organisation } : b.kind === "run" ? { kind: "run", label: b.label ?? proposalLabel(b.id, "template") } : { kind: "member", id: b.id, name: b.name };
-  }
-  /** R13 (`op=templatecomments`): a template's comments (or one version's), newest last, `limit` in [1, 500]; a grant's
-   *  door reads only its own version's. */
-  templateComments({ template = null, version = null, limit = null, author = null, secretSha = null, viewer = null } = {}) {
-    let t, n = null;
-    if (_FilingTemplates.#hasSecret(secretSha)) {
-      const d = this.#door(secretSha);
-      if (!d || template && str15(template) !== d.t.id || !_FilingTemplates.#doorAdmits(d, version)) return noTemplateGrant();
-      ({ t, n } = d);
-    } else {
-      t = this.#template(template ?? parseVersionId(version)?.template, viewer);
-      if (!t) return this.#noTemplate(template);
-      if (version !== null && version !== void 0 && version !== "") {
-        n = this.#versionOf(t, version);
-        if (n === null) return this.#noTemplate(template);
-      }
-    }
-    const max = clamp4(limit, COMMENTS_MAX, COMMENTS_MAX);
-    const rows2 = this.#rows(
-      `SELECT * FROM tpl_comments WHERE template_id=? ${n !== null ? "AND version=?" : ""} ORDER BY cid LIMIT ?`,
-      t.id,
-      ...n !== null ? [n] : [],
-      max + 1
-    );
-    return {
-      ok: true,
-      template: t.id,
-      ...n !== null ? { version: versionId(t.id, n) } : {},
-      limit: max,
-      truncated: rows2.length > max,
-      comments: rows2.slice(0, max).map((c) => ({
-        version: versionId(t.id, c.version),
-        text: c.text,
-        note: c.note === 1,
-        by: _FilingTemplates.#by({ kind: c.kind, id: c.author, name: c.author_name, organisation: c.organisation }),
-        at: c.at
-      }))
-    };
-  }
-  /* ================================================================ R14, R15: the reads */
-  #visibleTemplates(viewer) {
-    const group = this.#rows(`SELECT template_id FROM tpl_templates ORDER BY created_at DESC, template_id DESC`).map((r) => this.#groupTemplate(r.template_id)).filter((t) => this.#canSee(t, viewer));
-    const prof = this.#profileTemplates().filter((t) => this.#canSee(t, viewer));
-    return [...group, ...prof].sort((a, b) => a.created_at < b.created_at ? 1 : a.created_at > b.created_at ? -1 : a.id < b.id ? 1 : -1);
-  }
-  /** R14 (`op=templates`): the templates the viewer may see, newest first, at most 200, with `truncated`. By default
-   *  every offered version, the latest approved marked `default: true`; `state` lists instead drafts, versions in
-   *  review, withdrawn versions, retired templates' versions, or open proposals (`proposed`). */
-  templatesFor({ kind = null, profile = null, use = null, state = null, viewer = null } = {}) {
-    const st = str15(state);
-    if (st && st !== "offered" && !TEMPLATES_STATES_LISTED.includes(st))
-      return refuse6("TEMPLATES_STATE_REFUSED", `state is offered or one of ${TEMPLATES_STATES_LISTED.join(", ")}`, { states: TEMPLATES_STATES_LISTED });
-    const k = str15(kind), p = str15(profile), u = str15(use);
-    if (st === "proposed") {
-      const rows2 = this.#rows(`SELECT * FROM tpl_proposals p WHERE NOT EXISTS (SELECT 1 FROM tpl_revisions r WHERE r.adopted=p.proposal_id)
-                                 ORDER BY at DESC, proposal_id DESC`).filter((x) => (!k || x.kind === k) && this.#proposal(x.proposal_id, viewer));
-      return {
-        ok: true,
-        state: "proposed",
-        kind: k,
-        truncated: rows2.length > TEMPLATES_FOR_MAX,
-        proposals: rows2.slice(0, TEMPLATES_FOR_MAX).map((x) => ({
-          id: x.proposal_id,
-          template: x.template_id ?? null,
-          kind: x.kind,
-          text: x.text,
-          sha: x.sha,
-          why: x.why,
-          at: x.at,
-          label: proposalLabel(x.proposer, "template")
-        })),
-        says: "proposed wording: none of it is offered, and none is a template's text until a member adopts it"
-      };
-    }
-    const out = [];
-    for (const t of this.#visibleTemplates(viewer)) {
-      if (k && t.kind !== k || u && t.use !== u) continue;
-      if (p && t.profiles !== "general" && !t.profiles.includes(p)) continue;
-      const events = t.origin === "profile" ? [] : this.#events(t.id);
-      const numbers = t.origin === "profile" ? [Number(t.profileTemplate.version)] : this.#numbers(t.id);
-      const stateOf2 = (n) => t.origin === "profile" ? "approved" : this.#stateOf(events, n);
-      let pick2;
-      if (!st || st === "offered") {
-        if (t.retired || _FilingTemplates.#badBlank(t)) continue;
-        pick2 = numbers.filter((n) => OFFERED.includes(stateOf2(n)));
-      } else if (st === "retired") pick2 = t.retired ? numbers : [];
-      else pick2 = t.retired ? [] : numbers.filter((n) => stateOf2(n) === st);
-      if (!pick2.length) continue;
-      const dflt = !st || st === "offered" ? this.#latestApproved(t, events) : null;
-      out.push(_FilingTemplates.#head(t, {
-        ...p ? { written_for: t.profiles !== "general" && t.profiles.includes(p) } : {},
-        versions: pick2.slice().reverse().map((n) => this.#listed(this.#versionView(t, n, events), n === dflt))
-      }));
-    }
-    return {
-      ok: true,
-      state: st || "offered",
-      kind: k,
-      profile: p,
-      use: u,
-      templates: out.slice(0, TEMPLATES_FOR_MAX),
-      truncated: out.length > TEMPLATES_FOR_MAX
-    };
-  }
-  /** R14, R15 (`op=templateread`): one version (the latest approved by default, else the latest) with its whole
-   *  attribution, the proposals adopted into it and its comments' count; a grant's door reads only its own version. */
-  templateRead({ template = null, version = null, author = null, secretSha = null, viewer = null } = {}) {
-    let t, n;
-    if (_FilingTemplates.#hasSecret(secretSha)) {
-      const d = this.#door(secretSha);
-      if (!d || template && str15(template) !== d.t.id || !_FilingTemplates.#doorAdmits(d, version)) return noTemplateGrant();
-      ({ t, n } = d);
-    } else {
-      t = this.#template(template ?? parseVersionId(version)?.template, viewer);
-      if (!t) return this.#noTemplate(template);
-      const events2 = t.origin === "profile" ? [] : this.#events(t.id);
-      n = version !== null && version !== void 0 && version !== "" ? this.#versionOf(t, version) : this.#latestApproved(t, events2) ?? Math.max(...this.#numbers(t.id));
-      if (n === null || !Number.isFinite(n)) return this.#noTemplate(template);
-    }
-    const events = t.origin === "profile" ? [] : this.#events(t.id);
-    const view = this.#versionView(t, n, events);
-    const adopted = this.#rows(`SELECT DISTINCT p.* FROM tpl_proposals p JOIN tpl_revisions r ON r.adopted=p.proposal_id
-                                 WHERE r.template_id=? AND r.version=? ORDER BY p.proposal_id`, t.id, n).map((x) => ({ id: x.proposal_id, sha: x.sha, why: x.why, at: x.at, label: proposalLabel(x.proposer, "template") }));
-    const bad = _FilingTemplates.#badBlank(t);
-    return {
-      ok: true,
-      template: _FilingTemplates.#head(t),
-      version: { ...view, proposals_adopted: adopted },
-      comments: this.#one(`SELECT COUNT(*) AS c FROM tpl_comments WHERE template_id=? AND version=?`, t.id, n).c,
-      offered: OFFERED.includes(view.state) && !t.retired && !bad,
-      ...view.state === "approved" && n === this.#latestApproved(t, events) ? { default: true } : {},
-      ...bad ? { blank_unknown: withRow4({
-        ok: false,
-        reason: "TEMPLATE_BLANK_UNKNOWN",
-        blank: bad,
-        detail: `{{${bad}}} is not a blank filings fill, so this template is not offered`
-      }) } : {}
-    };
-  }
-  /* ================================================================ R25: offeredVersion */
-  /** R25 (`filings` R28, R31): the version of `template` a filing or briefing may use, with its metadata; the latest
-   *  approved when `version` is absent. Writes nothing. */
-  offeredVersion({ template = null, version = null, viewer = null } = {}) {
-    const t = this.#template(template, viewer);
-    if (!t) return this.#noTemplate(template);
-    if (t.retired) return this.#retired(t);
-    const bad = _FilingTemplates.#badBlank(t);
-    if (bad) return refuse6(
-      "TEMPLATE_BLANK_UNKNOWN",
-      `{{${bad}}} is not a blank filings fill, so this template is not offered`,
-      { template: t.id, blank: bad }
-    );
-    const events = t.origin === "profile" ? [] : this.#events(t.id);
-    const latest = this.#latestApproved(t, events);
-    const n = version === null || version === void 0 || version === "" ? latest : this.#versionOf(t, version);
-    const state = n === null ? null : t.origin === "profile" ? "approved" : this.#stateOf(events, n);
-    if (n === null || !OFFERED.includes(state))
-      return refuse6(
-        "TEMPLATE_NOT_OFFERED",
-        n === null ? version ? "no such version of this template" : "the template has no approved version" : `the version is ${state}: only an approved or updated version is offered`,
-        { template: t.id, ...n !== null ? { version: versionId(t.id, n), state } : {} }
-      );
-    const { id, version: number, ...meta } = this.#listed(this.#versionView(t, n, events), n === latest);
-    const view = this.#versionView(t, n, events);
-    return {
-      ok: true,
-      template: t.id,
-      version: id,
-      number,
-      use: t.use,
-      kind: t.kind,
-      profiles: t.profiles,
-      origin: t.origin,
-      name: t.name,
-      sha: view.sha,
-      text: view.text,
-      ...meta
-    };
-  }
-  /* ================================================================ R20: reviewsRequested */
-  /** R20 (`queue-producers` R20): every (version, member) pair where the member was asked to review, the version is in
-   *  review, and the member has given no review of its present sha; at most 500 per page in (version id, member)
-   *  order after `after` (a previous page's `cursor`, or a version id, read as after all its members). Writes nothing. */
-  reviewsRequested({ after = null, limit = null, viewer = null } = {}) {
-    const max = clamp4(limit, REVIEWS_REQUESTED_MAX, REVIEWS_REQUESTED_MAX);
-    const from = str15(after);
-    const at25 = from ? /^(.+)#([^#]*)$/.exec(from) : null;
-    const vid = `(r.template_id || '@' || r.version)`;
-    const seek = at25 ? { sql: `AND (${vid} > ? OR (${vid} = ? AND r.member > ?))`, args: [at25[1], at25[1], at25[2]] } : from ? { sql: `AND ${vid} > ?`, args: [from] } : { sql: "", args: [] };
-    const rows2 = this.#rows(`SELECT r.*, ${vid} AS vid FROM tpl_reviewers r
-      WHERE EXISTS (SELECT 1 FROM tpl_events e WHERE e.template_id=r.template_id AND e.version=r.version AND e.event='submitted')
-        AND NOT EXISTS (SELECT 1 FROM tpl_events e WHERE e.template_id=r.template_id AND e.version=r.version
-                          AND e.event IN ('approved','updated','withdrawn'))
-        AND NOT EXISTS (SELECT 1 FROM tpl_reviews v WHERE v.template_id=r.template_id AND v.version=r.version AND v.kind='member'
-                          AND v.reviewer=r.member AND v.sha=(SELECT x.sha FROM tpl_revisions x WHERE x.template_id=r.template_id
-                            AND x.version=r.version ORDER BY x.rid DESC LIMIT 1))
-        ${seek.sql}
-      ORDER BY vid, r.member`, ...seek.args);
-    const seen = /* @__PURE__ */ new Map();
-    const items = [];
-    let truncated3 = false;
-    for (const r of rows2) {
-      if (!seen.has(r.template_id)) seen.set(r.template_id, this.#template(r.template_id, viewer));
-      const t = seen.get(r.template_id);
-      if (!t) continue;
-      if (items.length === max) {
-        truncated3 = true;
-        break;
-      }
-      items.push({
-        template: t.id,
-        version: r.vid,
-        name: t.name,
-        kind: t.kind,
-        member: r.member,
-        member_name: r.member_name,
-        asked_by: { id: r.asked_by, name: r.asked_name },
-        asked_at: r.at
-      });
-    }
-    const tail = items[items.length - 1];
-    return { ok: true, items, limit: max, truncated: truncated3, cursor: truncated3 && tail ? `${tail.version}#${tail.member}` : null };
-  }
-  /* ================================================================ the migration from filings (K927) */
-  /** Each template `filings` R26 saved becomes a template of origin `group` with one `draft` version, author its saver,
-   *  `derived_from` its filing draft, and a carried note (K921, K927): offered only once reviewed and approved. A row
-   *  already migrated is passed over, so it runs at every start and changes nothing the second time. `filings`'
-   *  table is read, never written. */
-  migrateFromFilings() {
-    const cols = this.#call(() => this.#rows(`PRAGMA table_info(filing_templates)`).map((c) => c.name), []);
-    if (!["template_id", "name", "text", "from_filing", "action_id", "author", "at"].every((c) => cols.includes(c))) return { migrated: 0 };
-    const rows2 = this.#rows(`SELECT f.* FROM filing_templates f WHERE NOT EXISTS
-                               (SELECT 1 FROM tpl_templates t WHERE t.migrated_from=f.template_id) ORDER BY f.at, f.template_id`);
-    let migrated = 0;
-    for (const f17 of rows2) {
-      const basis = parse2(f17.basis) || {};
-      const project = str15(basis.project);
-      const bundle = project || str15(f17.action_id);
-      const member = this.#member(f17.author) || str15(f17.author) || "unrecorded";
-      const name_ = this.#nameOf(member);
-      const at25 = str15(f17.at) || this.#when();
-      const ok2 = this.record.transact(() => {
-        const id = this.#mint("TPL", at25.slice(0, 4));
-        if (!id) return mintExhausted("TPL");
-        this.sql.exec(
-          `INSERT INTO tpl_templates (template_id, bundle_id, project, kind, use, profiles, name, origin, created_by,
-                         created_name, created_at, migrated_from) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
-          id,
-          bundle,
-          project,
-          typeof f17.kind === "string" && KIND_RE2.test(f17.kind) ? f17.kind : null,
-          "file",
-          "general",
-          String(f17.name),
-          "group",
-          member,
-          name_,
-          at25,
-          f17.template_id
-        );
-        const sha = sha256HexSync(String(f17.text));
-        this.sql.exec(`INSERT INTO tpl_versions (template_id, version, bundle_id, author, author_name, derived_from, created_at)
-                       VALUES (?,1,?,?,?,?,?)`, id, bundle, member, name_, json2({ filing: f17.from_filing, sha }), at25);
-        this.sql.exec(`INSERT INTO tpl_revisions (template_id, version, bundle_id, text, sha, author, author_name, adopted, at)
-                       VALUES (?,1,?,?,?,?,?,NULL,?)`, id, bundle, String(f17.text), sha, member, name_, at25);
-        this.sql.exec(`INSERT INTO tpl_notes (template_id, version, bundle_id, text, author, author_name, carried, at)
-                       VALUES (?,1,?,?,?,?,1,?)`, id, bundle, MIGRATED_NOTE, member, name_, at25);
-        return { ok: true };
-      });
-      if (ok2 && ok2.ok) migrated++;
-    }
-    return { migrated };
-  }
-};
-for (const m of [
-  "templateDraft",
-  "templateRevise",
-  "templatePropose",
-  "templateSubmit",
-  "templateReviewGrant",
-  "templateGrantRevoke",
-  "templateReview",
-  "templateApprove",
-  "templateRetire",
-  "templateComment",
-  "templateComments",
-  "templatesFor",
-  "templateRead",
-  "offeredVersion",
-  "reviewsRequested"
-]) {
-  const fn = FilingTemplates.prototype[m];
-  FilingTemplates.prototype[m] = function(...a) {
-    return withRow4(fn.apply(this, a));
-  };
-}
-var instances32 = /* @__PURE__ */ new WeakMap();
-function filingTemplatesOf(host, deps) {
-  let f17 = instances32.get(host);
-  if (!f17) {
-    const d = deps || {};
-    const storage = d.storage || host.storage;
-    const record = d.record || recordOf(host);
-    const membership = d.membership || membershipOf(host, { record });
-    f17 = new FilingTemplates({ ...d, storage, record, membership, env: d.env ?? host.env ?? null });
-    instances32.set(host, f17);
-    f17.migrate();
-    record.declarePurge("filing-templates", [...FILING_TEMPLATES_TABLES]);
-    record.registerMintSeed("filing-templates", FILING_TEMPLATES_MINT_SEED.map((x) => [...x]));
-    f17.migrateFromFilings();
-  }
-  return f17;
 }
 
 // src/filings/schema.mjs
@@ -113343,7 +113590,7 @@ var isObj16 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var utf84 = (s) => new TextEncoder().encode(s).length;
 var WELL_FORMED2 = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
 var withRowNow = (r) => {
-  const row2 = r && r.ok === false && !r.check ? rowOf8(r.reason) : null;
+  const row2 = r && r.ok === false && !r.check ? rowOf9(r.reason) : null;
   return row2 ? { ...r, code: r.reason, check: row2.check, translation: row2.translation } : r;
 };
 var withRow5 = (r) => r && typeof r.then === "function" ? r.then(withRowNow) : withRowNow(r);
@@ -113727,7 +113974,7 @@ var Filings = class _Filings {
     const id = isObj16(asked) ? str16(asked.id) : str16(asked);
     const version = isObj16(asked) && asked.version != null && asked.version !== "" ? asked.version : null;
     if (!t || typeof t.offeredVersion !== "function")
-      return withRow4({
+      return withRow2({
         ok: false,
         reason: "NO_SUCH_TEMPLATE",
         template: id,
@@ -113816,7 +114063,7 @@ var Filings = class _Filings {
       const bad = _Filings.#unwritable(text5, { action: a.id });
       if (bad) return bad;
       const { unknown } = blanksOf(text5);
-      if (unknown) return withRow4({
+      if (unknown) return withRow2({
         ok: false,
         reason: "TEMPLATE_BLANK_UNKNOWN",
         blank: unknown,
@@ -115044,7 +115291,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
     };
     const t = this.filingTemplates;
     if (!t || typeof t.templateDraft !== "function")
-      return withRow4({
+      return withRow2({
         ok: false,
         reason: "NO_SUCH_TEMPLATE",
         template: str16(template),
@@ -115991,7 +116238,7 @@ var Escalation = class {
     const seq = logOf(text5).length + 1;
     const next = appendEntry(text5, { entry, seq, stage, state, fromState: head.currentState, blurb });
     if (next === null)
-      return refusal16("UNSPLICEABLE_ESCALATION", "the escalation's document cannot be extended in place. Nothing was written.");
+      return refusal17("UNSPLICEABLE_ESCALATION", "the escalation's document cannot be extended in place. Nothing was written.");
     const carried = this.record.livePaths(e.id).filter((p) => p !== "bundle.md").map((path) => {
       const f17 = this.record.readFile(e.id, path);
       return typeof f17.text === "string" ? { path, text: f17.text, sha256: f17.sha256 } : { path, blobSha: f17.blobSha, sha256: f17.sha256, bytes: f17.bytes };
@@ -116024,14 +116271,14 @@ var Escalation = class {
     if (type !== ESCALATION && headType !== ESCALATION) return null;
     if (c.replay) return null;
     if (isMachine(c.author))
-      return refusal16("MACHINE_CANNOT_WRITE_ESCALATION", "an escalation is written only by a member's act; a machine prepares and never acts (Design Requirement 12). Nothing was written.");
+      return refusal17("MACHINE_CANNOT_WRITE_ESCALATION", "an escalation is written only by a member's act; a machine prepares and never acts (Design Requirement 12). Nothing was written.");
     if (!c.pkg || c.pkg[ACT] !== true)
-      return refusal16("ESCALATION_BY_ACT_ONLY", "an escalation changes only through its acts (open, attach, evaluate, advance, decline, suspend, resume, end), so its log and its tables never disagree. Nothing was written.");
+      return refusal17("ESCALATION_BY_ACT_ONLY", "an escalation changes only through its acts (open, attach, evaluate, advance, decline, suspend, resume, end), so its log and its tables never disagree. Nothing was written.");
     if (c.head) {
       const held = logSection(this.#text(c.bundleId)) || "";
       const now = logSection(c.bundleMd && c.bundleMd.text) || "";
       if (!now.startsWith(held))
-        return refusal16("ESCALATION_HISTORY_REWRITTEN", "an escalation's log is append-only. Nothing was written.");
+        return refusal17("ESCALATION_HISTORY_REWRITTEN", "an escalation's log is append-only. Nothing was written.");
     }
     return null;
   }
@@ -116116,7 +116363,7 @@ var Escalation = class {
   escalationOpen(args = {}) {
     const { determination, author, viewer } = args;
     if (isMachine(author))
-      return refusal16("MACHINE_CANNOT_OPEN", "an escalation is opened by a named member; a machine prepares and never acts. Nothing was written.");
+      return refusal17("MACHINE_CANNOT_OPEN", "an escalation is opened by a named member; a machine prepares and never acts. Nothing was written.");
     const judged = refuseJudgment(args);
     if (judged) return judged;
     const d = typeof determination === "string" && determination ? this.conformance.determinationRead({ id: determination, viewer }) : null;
@@ -116128,15 +116375,15 @@ var Escalation = class {
     }
     const pursued = outcomesOf(d).filter((o) => o.outcome === "noncompliant").map((o) => o.standard);
     if (!pursued.length)
-      return refusal16("NOT_NONCOMPLIANT", "no standard's outcome in that determination is noncompliant, so there is no breach to pursue. Nothing was written.");
+      return refusal17("NOT_NONCOMPLIANT", "no standard's outcome in that determination is noncompliant, so there is no breach to pursue. Nothing was written.");
     const project = projectOf2(d);
     const fence4 = this.membership.projectAuthority(project, author, "joined", "escalationOpen");
     if (fence4)
-      return refusal16("ESCALATION_NOT_A_PARTICIPANT", "an escalation is opened by a member who has joined the determination's project. Nothing was written.", { project, membership: fence4.reason });
+      return refusal17("ESCALATION_NOT_A_PARTICIPANT", "an escalation is opened by a member who has joined the determination's project. Nothing was written.", { project, membership: fence4.reason });
     const held = this.#one(`SELECT escalation_id FROM escalations WHERE determination_id=? AND state IN ('open','suspended')
                             ORDER BY escalation_id LIMIT 1`, determination);
     if (held)
-      return refusal16("ALREADY_OPEN", `the escalation ${held.escalation_id} of this determination is not ended; there is one open or suspended escalation per determination. Nothing was written.`, { escalation: held.escalation_id });
+      return refusal17("ALREADY_OPEN", `the escalation ${held.escalation_id} of this determination is not ended; there is one open or suspended escalation per determination. Nothing was written.`, { escalation: held.escalation_id });
     const at25 = this.now();
     const actId = actIdOf(d);
     const r = this.record.transact(() => {
@@ -116180,7 +116427,7 @@ var Escalation = class {
   escalationAttach(args = {}) {
     const { id, action, purpose, standards, author, viewer } = args;
     if (isMachine(author))
-      return refusal16("MACHINE_CANNOT_ATTACH", "an action is attached to an escalation by a named member. Nothing was written.");
+      return refusal17("MACHINE_CANNOT_ATTACH", "an action is attached to an escalation by a named member. Nothing was written.");
     const judged = refuseJudgment(args);
     if (judged) return judged;
     const e = this.#row(id, viewer);
@@ -116190,19 +116437,19 @@ var Escalation = class {
     if (!a || a.ok === false) return noSuchAction(action);
     const override = overrideOf(this.#text(action));
     if (override)
-      return refusal16(
+      return refusal17(
         "ACTION_PREMISE_OVERRIDDEN",
         "that action states a premise_override: it was recorded without a determined breach to rest on, and an escalation pursues a determined breach only. Nothing was written.",
         { action, premise_override: override }
       );
     const legs = Array.isArray(a.legs) ? a.legs : [];
     if (a.breach !== true || !legs.some((l) => isObj17(l) && l.kind === "rests_on" && l.target === e.determination))
-      return refusal16("NOT_A_BREACH_ACTION", "an escalation's act is an action whose document states breach: true and that rests on this escalation's determination. Nothing was written.", { determination: e.determination });
+      return refusal17("NOT_A_BREACH_ACTION", "an escalation's act is an action whose document states breach: true and that rests on this escalation's determination. Nothing was written.", { determination: e.determination });
     if (!ATTACHING_STAGES.includes(e.stage))
-      return refusal16("STAGE_TAKES_NO_ACTION", `stage ${e.stage} (${STAGES[e.stage]}) takes no attached action; stages 2, 5 and 7 do. Nothing was written.`, { stage: e.stage });
+      return refusal17("STAGE_TAKES_NO_ACTION", `stage ${e.stage} (${STAGES[e.stage]}) takes no attached action; stages 2, 5 and 7 do. Nothing was written.`, { stage: e.stage });
     const held = this.#one(`SELECT escalation_id, stage FROM escalation_attachments WHERE action_id=?`, action);
     if (held)
-      return refusal16(
+      return refusal17(
         "ALREADY_ATTACHED",
         "that action is already attached to an escalation, at one stage. Nothing was written.",
         held.escalation_id === e.id ? { escalation: e.id, stage: held.stage } : {}
@@ -116210,7 +116457,7 @@ var Escalation = class {
     const entry = { kind: "attach", action, stage: e.stage, author, at: this.now() };
     if (e.stage === 7) {
       if (!ACCOUNTABILITY_PURPOSES.includes(purpose))
-        return refusal16(
+        return refusal17(
           "NOT_ACCOUNTABILITY",
           `a stage-7 act states one accountability purpose: ${ACCOUNTABILITY_PURPOSES.join(", ")}. Policy advocacy and candidate support have none. Nothing was written.`,
           { purposes: ACCOUNTABILITY_PURPOSES }
@@ -116218,16 +116465,16 @@ var Escalation = class {
       const named = Array.isArray(standards) ? standards.filter((s) => typeof s === "string" && s) : [];
       const foreign = named.filter((s) => !e.standards.includes(s));
       if (!named.length || foreign.length)
-        return refusal16(
+        return refusal17(
           "NOT_THE_BREACH",
           "a stage-7 act names at least one of the escalation's noncompliant standards as the requirement it seeks enforced, and no other. Nothing was written.",
           { pursued: e.standards, ...foreign.length ? { not_pursued: foreign } : {} }
         );
       const office = this.#office(a.counterparty, this.#view());
       if (purpose === "official_request" && office.elected === false)
-        return refusal16("COUNTERPARTY_NOT_ELECTED", "an official request asks an elected office to act on the breach, and the active profiles mark this action's office not elected. Nothing was written.");
+        return refusal17("COUNTERPARTY_NOT_ELECTED", "an official request asks an elected office to act on the breach, and the active profiles mark this action's office not elected. Nothing was written.");
       if ((purpose === "oversight_request" || purpose === "audit_request") && office.oversight === false)
-        return refusal16("COUNTERPARTY_NOT_OVERSIGHT", "an oversight or audit request is addressed to an oversight or audit body, and the active profiles mark this action's office not one. Nothing was written.");
+        return refusal17("COUNTERPARTY_NOT_OVERSIGHT", "an oversight or audit request is addressed to an oversight or audit body, and the active profiles mark this action's office not one. Nothing was written.");
       Object.assign(entry, { purpose, standards: [...new Set(named)] });
     }
     const w = this.#append(e, entry, { blurb: "Action attached" });
@@ -116246,16 +116493,16 @@ var Escalation = class {
   escalationEvaluate(args = {}) {
     const { id, response, reading, reason, author, viewer } = args;
     if (isMachine(author))
-      return refusal16("MACHINE_CANNOT_EVALUATE", "a response is evaluated by a named member. Nothing was written.");
+      return refusal17("MACHINE_CANNOT_EVALUATE", "a response is evaluated by a named member. Nothing was written.");
     const judged = refuseJudgment(args);
     if (judged) return judged;
     const e = this.#row(id, viewer);
     if (!e) return refuseNoSuchEscalation();
     if (e.stage !== 4)
-      return refusal16("NOT_IN_EVALUATION", `the escalation stands at stage ${e.stage} (${STAGES[e.stage]}); a response is evaluated at stage 4. Nothing was written.`, { stage: e.stage });
+      return refusal17("NOT_IN_EVALUATION", `the escalation stands at stage ${e.stage} (${STAGES[e.stage]}); a response is evaluated at stage 4. Nothing was written.`, { stage: e.stage });
     if (e.state === "ended") return refuseEnded();
     if (!READINGS2.includes(reading))
-      return refusal16("READING_UNKNOWN", `a reading is one of ${READINGS2.join(", ")}. Nothing was written.`, { readings: READINGS2 });
+      return refusal17("READING_UNKNOWN", `a reading is one of ${READINGS2.join(", ")}. Nothing was written.`, { readings: READINGS2 });
     let named = null;
     if (response !== void 0 && response !== null) {
       const ok2 = isObj17(response) && typeof response.action === "string" && Number.isInteger(response.ord) && this.#attachments(e.id).some((a) => a.action === response.action) && (this.#ledger(response.action, viewer) || []).some((x) => x.ord === response.ord && x.direction === "received");
@@ -116265,7 +116512,7 @@ var Escalation = class {
     } else if (reading !== "none")
       return refuseNoSuchResponse(`a ${reading} reading names the received entry it reads.`);
     if (named && reading === "none")
-      return refusal16("RESPONSE_FOR_NONE", "a none reading says nothing came back by the clock, so it names no response. Nothing was written.");
+      return refusal17("RESPONSE_FOR_NONE", "a none reading says nothing came back by the clock, so it names no response. Nothing was written.");
     const bad = refuseReason(reason);
     if (bad) return bad;
     const entry = { kind: "evaluate", reading, response: named, reason: str17(reason), author, at: this.now() };
@@ -116285,7 +116532,7 @@ var Escalation = class {
   }
   #edgeArgs(kind, { id, to, reason, author, viewer }, args) {
     if (isMachine(author))
-      return refusal16(
+      return refusal17(
         kind === "advance" ? "MACHINE_CANNOT_ADVANCE" : "MACHINE_CANNOT_DECLINE",
         `an escalation's stage is ${kind === "advance" ? "advanced" : "declined"} by a named member; a proposal is the protocol's derivation, never an act. Nothing was written.`
       );
@@ -116294,7 +116541,7 @@ var Escalation = class {
     const e = this.#row(id, viewer);
     if (!e) return refuseNoSuchEscalation();
     if (e.state !== "open")
-      return refusal16(
+      return refusal17(
         "NOT_OPEN",
         `this escalation is ${e.state}; its stage moves only while it is open. Nothing was written.`,
         { state: e.state }
@@ -116304,7 +116551,7 @@ var Escalation = class {
     const target = typeof to === "string" && /^\d$/.test(to) ? Number(to) : typeof to === "string" ? Number(Object.keys(STAGES).find((k) => STAGES[k] === to)) : to;
     const legal = STAGE_TABLE[e.stage] || [];
     if (!legal.includes(target))
-      return refusal16(
+      return refusal17(
         "ILLEGAL_STAGE",
         `stage ${e.stage} (${STAGES[e.stage]}) moves to ${legal.join(" or ")} only. Nothing was written.`,
         { from: e.stage, legal }
@@ -116320,7 +116567,7 @@ var Escalation = class {
     const { triggers } = this.#triggers(e, nowMs, args.viewer);
     const t = triggers.find((x) => x.to === target);
     if (!t || !t.met)
-      return refusal16(
+      return refusal17(
         "TRIGGER_NOT_MET",
         `the trigger for stage ${target} (${STAGES[target]}) is not met: ${t ? t.missing : "no trigger"}. Nothing was written.`,
         { from: e.stage, to: target, missing: t ? t.missing : null }
@@ -116356,7 +116603,7 @@ var Escalation = class {
     const { triggers } = this.#triggers(e, instantMs2(this.now()), args.viewer);
     const t = triggers.find((x) => x.to === target);
     if (!t || !t.met)
-      return refusal16(
+      return refusal17(
         "EDGE_NOT_PROPOSED",
         `stage ${target} (${STAGES[target]}) is not proposed: ${t ? t.missing : "no trigger"}. Nothing was written.`,
         { from: e.stage, to: target }
@@ -116379,25 +116626,25 @@ var Escalation = class {
   escalationEnd(args = {}) {
     const { id, author, viewer } = args;
     if (isMachine(author))
-      return refusal16("MACHINE_CANNOT_END", "an escalation is ended by a named member. Nothing was written.");
+      return refusal17("MACHINE_CANNOT_END", "an escalation is ended by a named member. Nothing was written.");
     const judged = refuseJudgment(args);
     if (judged) return judged;
     const e = this.#row(id, viewer);
     if (!e) return refuseNoSuchEscalation();
     if (e.state === "ended")
-      return refusal16("ALREADY_ENDED", "this escalation has ended; an ended escalation is never reopened. Nothing was written.");
+      return refusal17("ALREADY_ENDED", "this escalation has ended; an ended escalation is never reopened. Nothing was written.");
     const c = this.#compliance(e, viewer);
     if (c.state !== "met")
-      return refusal16(
+      return refusal17(
         "COMPLIANCE_NOT_RESTORED",
         `compliance is not restored: ${c.why}. Nothing was written.`,
         { ids: c.ids, standards: c.standards ?? [] }
       );
     const q7 = this.#consequencesState(e, viewer);
     if (q7.state === "not_met")
-      return refusal16("CONSEQUENCES_NOT_ADDRESSED", `the consequences are not addressed: ${q7.why}. Nothing was written.`, { ids: q7.ids });
+      return refusal17("CONSEQUENCES_NOT_ADDRESSED", `the consequences are not addressed: ${q7.why}. Nothing was written.`, { ids: q7.ids });
     if (q7.state !== "met")
-      return refusal16(
+      return refusal17(
         "CONSEQUENCES_UNDETERMINED",
         `whether the consequences are addressed is undetermined: ${q7.why}. A group that judges the breach had no consequence records an assessed part saying so and addresses it. Nothing was written.`,
         { ids: q7.ids }
@@ -116411,14 +116658,14 @@ var Escalation = class {
   escalationSuspend(args = {}) {
     const { id, reason, author, viewer } = args;
     if (isMachine(author))
-      return refusal16("MACHINE_CANNOT_SUSPEND", "an escalation is suspended by a named member. Nothing was written.");
+      return refusal17("MACHINE_CANNOT_SUSPEND", "an escalation is suspended by a named member. Nothing was written.");
     const judged = refuseJudgment(args);
     if (judged) return judged;
     const e = this.#row(id, viewer);
     if (!e) return refuseNoSuchEscalation();
     if (e.state === "ended") return refuseEnded();
     if (e.state === "suspended")
-      return refusal16("ALREADY_SUSPENDED", `this escalation has been suspended since ${e.stateSince}; it is resumed before it is suspended again. Nothing was written.`, { since: e.stateSince });
+      return refusal17("ALREADY_SUSPENDED", `this escalation has been suspended since ${e.stateSince}; it is resumed before it is suspended again. Nothing was written.`, { since: e.stateSince });
     const bad = refuseReason(reason);
     if (bad) return bad;
     const entry = { kind: "suspend", from: e.stage, reason: str17(reason), author, at: this.now() };
@@ -116439,14 +116686,14 @@ var Escalation = class {
   escalationResume(args = {}) {
     const { id, reason, author, viewer } = args;
     if (isMachine(author))
-      return refusal16("MACHINE_CANNOT_RESUME", "an escalation is resumed by a named member. Nothing was written.");
+      return refusal17("MACHINE_CANNOT_RESUME", "an escalation is resumed by a named member. Nothing was written.");
     const judged = refuseJudgment(args);
     if (judged) return judged;
     const e = this.#row(id, viewer);
     if (!e) return refuseNoSuchEscalation();
     if (e.state === "ended") return refuseEnded();
     if (e.state !== "suspended")
-      return refusal16(
+      return refusal17(
         "NOT_SUSPENDED",
         "this escalation is open, not suspended, so there is nothing to resume. Nothing was written.",
         { state: e.state }
@@ -116506,28 +116753,28 @@ var Escalation = class {
   }
 };
 function refuseNoSuchEscalation() {
-  return refusal16("NO_SUCH_ESCALATION", "no escalation answers to that id here; one in a project you may not see is answered exactly as one that does not exist.");
+  return refusal17("NO_SUCH_ESCALATION", "no escalation answers to that id here; one in a project you may not see is answered exactly as one that does not exist.");
 }
 function refuseEnded() {
-  return refusal16("ESCALATION_ENDED", "this escalation has ended; nothing is added to it and it is never reopened. Nothing was written.");
+  return refusal17("ESCALATION_ENDED", "this escalation has ended; nothing is added to it and it is never reopened. Nothing was written.");
 }
 function refuseNoSuchResponse(why) {
-  return refusal16("NO_SUCH_RESPONSE", `${why} An evaluation names a received entry of an action attached to this escalation, or no response for a none reading. Nothing was written.`);
+  return refusal17("NO_SUCH_RESPONSE", `${why} An evaluation names a received entry of an action attached to this escalation, or no response for a none reading. Nothing was written.`);
 }
 function refuseReason(reason) {
   const r = str17(reason);
   if (!r || r.length > REASON_MAX4)
-    return refusal16("ESCALATION_NO_REASON", `a reason of 1 to ${REASON_MAX4} characters is required. Nothing was written.`);
+    return refusal17("ESCALATION_NO_REASON", `a reason of 1 to ${REASON_MAX4} characters is required. Nothing was written.`);
   return null;
 }
 function refuseJudgment(args) {
   const found = isObj17(args) ? JUDGMENT_KEYS.filter((k) => k in args) : [];
   if (found.length)
-    return refusal16("ESCALATION_CARRIES_NO_JUDGMENT", "an escalation records no significance, severity, priority, urgency, rank or score: whether a breach warrants action, and how urgently, is a member's judgment, made with the consequences in front of them. Nothing was written.", { keys: found });
+    return refusal17("ESCALATION_CARRIES_NO_JUDGMENT", "an escalation records no significance, severity, priority, urgency, rank or score: whether a breach warrants action, and how urgently, is a member's judgment, made with the consequences in front of them. Nothing was written.", { keys: found });
   return null;
 }
 function refuseProviderUnavailable(provider) {
-  return refusal16("PROVIDER_UNAVAILABLE", `this answer reads the ${provider} module, which this instance does not have yet; nothing is answered in its place.`, { provider });
+  return refusal17("PROVIDER_UNAVAILABLE", `this answer reads the ${provider} module, which this instance does not have yet; nothing is answered in its place.`, { provider });
 }
 var ProviderAbsent = class extends Error {
   constructor(provider) {
@@ -119946,8 +120193,7 @@ ${GROUP_LINE_UNREAD}
        written here draws zero findings; one written with nothing authored still
        draws exactly C-2.10, because this page will not invent an addressee to
        get past its own gate. BOTH INTAKE SURFACES OR NEITHER: app.html carries
-       the same option and the same pair, and add-surface.test.mjs asserts the
-       two together so one cannot be changed without the other. -->
+       the same option and the same pair. -->
   <select id="n-type">
     <option value="information">Information</option>
     <option value="inquiry">Question</option>
@@ -120566,15 +120812,16 @@ const mdFor = (id, type, state, title, body, now, hasDoc, src, act)=>{
   if (type === "project") fm.push("objective: "+JSON.stringify(title));
   /* D-130 / REC-23 / UI-19, 2026-08-05. The counterparty placeholder used to be
      pushed here too - D-130 named only civicos-ui/app.html, this was the SECOND
-     emission site and the one conformance.test.mjs exercises - and REC-23 took
-     it out, leaving the field ABSENT and the gate naming the gap. UI-19 gives
+     emission site - and REC-23 took it out, leaving the field ABSENT and the
+     gate naming the gap. UI-19 gives
      this page the radio pair, so the value arrives FROM THE MEMBER through
      act.counterparty and nothing here invents one.
 
      CALLED WITHOUT act THIS ARM STILL WRITES NO COUNTERPARTY, permanently and
      on purpose: a bundle written by a caller that collected no answer draws
-     exactly C-2.10, which is the honest one error, and conformance.test.mjs
-     asserts BOTH directions so a future default cannot pass by inventing one.
+     exactly C-2.10, which is the honest one error, and the R24 test in
+     test/m/instance-setup/page.test.mjs asserts BOTH directions so a future
+     default cannot pass by inventing one.
 
      action_kind is "other" HERE ONLY, and it is not a chooser this page hides:
      "other" is the catalog's own token for an ask that is not one of the named
@@ -122280,34 +122527,36 @@ var CHECK_FAMILY_FILES = Object.freeze([
   ["src/retrieval/checks.mjs", checks_exports16],
   ["src/inquiry-grammar/checks.mjs", checks_exports10],
   ["src/inquiry/index.mjs", inquiry_exports],
-  ["src/citation/checks.mjs", checks_exports28],
+  ["src/citation/checks.mjs", checks_exports30],
   ["src/basis-versions/checks.mjs", checks_exports18],
   ["src/strength/checks.mjs", checks_exports20],
   ["src/contradiction/checks.mjs", checks_exports21],
-  ["src/run-rules/checks.mjs", checks_exports30],
-  ["src/run-productions/checks.mjs", checks_exports31],
-  ["src/capture-requests/checks.mjs", checks_exports32],
+  ["src/run-rules/checks.mjs", checks_exports32],
+  ["src/run-productions/checks.mjs", checks_exports33],
+  ["src/capture-requests/checks.mjs", checks_exports34],
   ["src/skilldoctrine.mjs", skilldoctrine_exports],
-  ["src/intent/checks.mjs", checks_exports33],
+  ["src/intent/checks.mjs", checks_exports35],
   ["src/reevaluation/checks.mjs", checks_exports23],
   ["src/publication/checks.mjs", checks_exports24],
-  ["src/public-read/checks.mjs", checks_exports34],
+  ["src/public-read/checks.mjs", checks_exports36],
   ["src/ratification/checks.mjs", checks_exports25],
   ["src/case-authoring/checks.mjs", checks_exports27],
-  ["src/review/checks.mjs", checks_exports35],
-  ["src/standards/checks.mjs", checks_exports36],
-  ["src/conformance/checks.mjs", checks_exports37],
-  ["src/consequences/checks.mjs", checks_exports38],
+  ["src/review/checks.mjs", checks_exports37],
+  ["src/local-facts/checks.mjs", checks_exports29],
+  ["src/standards/checks.mjs", checks_exports38],
+  ["src/conformance/checks.mjs", checks_exports39],
+  ["src/consequences/checks.mjs", checks_exports40],
   ["src/action-grammar/checks.mjs", checks_exports19],
-  ["src/action-clocks/checks.mjs", checks_exports39],
-  ["src/filings/checks.mjs", checks_exports40],
-  ["src/escalation/checks.mjs", checks_exports41],
-  ["src/action-plans/checks.mjs", checks_exports42],
-  ["src/monitoring/checks.mjs", checks_exports43],
-  ["src/tasks/checks.mjs", checks_exports44],
-  ["src/queue/checks.mjs", checks_exports45],
+  ["src/action-clocks/checks.mjs", checks_exports41],
+  ["src/filing-templates/checks.mjs", checks_exports28],
+  ["src/filings/checks.mjs", checks_exports42],
+  ["src/escalation/checks.mjs", checks_exports43],
+  ["src/action-plans/checks.mjs", checks_exports44],
+  ["src/monitoring/checks.mjs", checks_exports45],
+  ["src/tasks/checks.mjs", checks_exports46],
+  ["src/queue/checks.mjs", checks_exports47],
   ["src/setup.mjs", setup_exports],
-  ["src/admission/checks.mjs", checks_exports29],
+  ["src/admission/checks.mjs", checks_exports31],
   ["src/control-plane/checks.mjs", checks_exports6]
 ].map((e) => Object.freeze(e)));
 var translated = (row2) => !!row2 && typeof row2 === "object" && typeof row2.translation === "string" && row2.translation !== "";
@@ -122624,6 +122873,50 @@ async function reviewAnswer(out, op) {
     });
     return json5({ ...served, inband: quartet }, 200);
   }
+  return json5({ ok: true, ...r }, 200);
+}
+var TEMPLATE_GRANT_DOORS = Object.freeze([...TEMPLATE_DOOR_ACTIONS, ...TEMPLATE_DOOR_READS]);
+var deadTemplateGrant = () => json5({ ok: false, ...noTemplateGrant() }, 404);
+async function templateGrantDoor({ req, url, env, op, spec, presentedAi, stub }) {
+  const inner = new URL(`http://do/${op}`);
+  for (const [k, v] of url.searchParams) inner.searchParams.set(k, v);
+  for (const k of ["token", "op", "store", "secret", "secretSha", "bySecret", ...QUERY_STAMPS]) inner.searchParams.delete(k);
+  if (url.searchParams.has("secret")) {
+    inner.searchParams.set("bySecret", "1");
+    inner.searchParams.set("secretSha", await sha256Hex12(url.searchParams.get("secret") || ""));
+  } else {
+    const admitted = await admit({
+      url,
+      env,
+      op,
+      spec: { ...spec, classes: ["admin", "member"], machineClasses: [] },
+      method: req.method,
+      presented: presentedAi,
+      doAnswer
+    });
+    if (admitted.silent) return storeSilent(admitted.silent.op, admitted.silent.correlation);
+    if (admitted.refusal || !admitted.caller.viaSession) return deadTemplateGrant();
+    inner.searchParams.set("viewer", admitted.caller.viewer);
+    inner.searchParams.set("author", admitted.caller.identity);
+  }
+  let body;
+  if (req.method === "POST") {
+    let b = {};
+    try {
+      b = JSON.parse(await req.text() || "{}");
+    } catch {
+      b = {};
+    }
+    if (!b || typeof b !== "object" || Array.isArray(b)) b = {};
+    for (const k of [...BODY_STAMPS, ...QUERY_STAMPS, "secretSha", "bySecret"]) delete b[k];
+    body = JSON.stringify(b);
+  }
+  const out = await doAnswer(stub.fetch(new Request(inner, body === void 0 ? { method: "GET" } : { method: "POST", body })));
+  if (out.refused) return storeRefusal(out);
+  if (!out.answered) return storeSilent(op, out.correlation);
+  const r = out.result;
+  if (r?.reason === "NO_TEMPLATE_GRANT") return deadTemplateGrant();
+  if (!r?.ok) return json5({ ok: false, ...r }, r?.reason === "NO_SUCH_TEMPLATE" ? 404 : 400);
   return json5({ ok: true, ...r }, 200);
 }
 async function caseReader(url, env, storeName, presentedAi) {
@@ -123026,6 +123319,7 @@ function makeFetch(hooks = {}) {
           body: JSON.stringify(body2)
         })), op);
       }
+      if (TEMPLATE_GRANT_DOORS.includes(op)) return templateGrantDoor({ req, url, env, op, spec, presentedAi, stub: stub2 });
       if (op === "instancegroup" || op === "groupidentity") return groupRead(op, url, env, presentedAi);
       if (op === "knockerconsent") return knockerConsent(req, stub2);
       return hooks.publicOp({ req, url, env, op, stub: stub2, invStub, fp, presentedAi });
@@ -123070,6 +123364,7 @@ function makeFetch(hooks = {}) {
     for (const [k, v] of url.searchParams) if (k !== "token" && k !== "op") inner.searchParams.set(k, v);
     inner.searchParams.delete("identity");
     for (const k of QUERY_STAMPS) inner.searchParams.delete(k);
+    for (const k of ["secretSha", "bySecret"]) inner.searchParams.delete(k);
     if (op === "lease") inner.searchParams.set("actor", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     if (op === "monitorpause") inner.searchParams.set("actor", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     const IDENTITY_READS = ["leadlook", "leadread", "leadshare", "leadlist", "frontier"];
@@ -123202,6 +123497,11 @@ function makeFetch(hooks = {}) {
         "principal",
         viaSession ? sessIdentity : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
       );
+    }
+    if (TEMPLATE_PROPOSAL_ACTIONS.includes(op)) {
+      const proposer = viaSession ? sessMember : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
+      inner.searchParams.set("proposer", proposer);
+      inner.searchParams.set("author", proposer);
     }
     if (QUERY_AUTHOR_ACTIONS.includes(op))
       inner.searchParams.set(
@@ -123510,6 +123810,17 @@ function makeFetch(hooks = {}) {
       } catch {
       }
     }
+    if (LOCAL_FACTS_ACTIONS.includes(op) && req.method === "POST") {
+      try {
+        const b = passBody ? JSON.parse(passBody) : {};
+        if (b && typeof b === "object" && !Array.isArray(b)) {
+          for (const k of QUERY_STAMPS) delete b[k];
+          b.by = viaSession ? sessIdentity : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
+          passBody = JSON.stringify(b);
+        }
+      } catch {
+      }
+    }
     if (op === "inboxresolve" && passBody) {
       try {
         const b = JSON.parse(passBody);
@@ -123577,6 +123888,21 @@ function makeFetch(hooks = {}) {
         secret,
         secretIsShownOnce: "This is the only time this instance will show this value. It is stored only as a fingerprint and cannot be recovered. Give it to the recipient: it lets them READ this one draft and COMMENT on it, and nothing else. If it is lost, withdraw this grant and issue another.",
         read: "op=reviewcopy&secret=<the value above>"
+      }, store: storeName, tokenClass: cls }, 200);
+    }
+    if (op === "templatereviewgrant") {
+      const { secret, secretSha } = await reviewGrantSecret();
+      inner.searchParams.set("secretSha", secretSha);
+      const issued = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
+      if (issued.refused) return storeRefusal(issued, { op, store: storeName, tokenClass: cls });
+      if (!issued.answered) return storeSilent("templatereviewgrant", issued.correlation);
+      if (!issued.result || issued.result.ok !== true)
+        return json5({ ok: false, ...issued.result || {}, op, store: storeName, tokenClass: cls }, 403);
+      return json5({ ok: true, result: {
+        ...issued.result,
+        secret,
+        secretIsShownOnce: "This is the only time this instance will show this value. It is stored only as a fingerprint and cannot be recovered. Give it to the reviewer: it lets them READ this one template version, COMMENT on it and REVIEW it while it is a draft or in review, and nothing else. If it is lost, withdraw this grant and open another.",
+        read: "op=templateread&secret=<the value above>"
       }, store: storeName, tokenClass: cls }, 200);
     }
     if (op === "casedrafts")
@@ -123780,14 +124106,14 @@ var Unanswered = class extends Error {
 };
 function publishedStoreAbsent(env) {
   if (typeof env.PUBLISHED?.get === "function") return null;
-  const row2 = rowOf7("NO_PUBLISHED_STORE");
+  const row2 = rowOf8("NO_PUBLISHED_STORE");
   return { ok: false, reason: "NO_PUBLISHED_STORE", code: row2.code, check: row2.check, translation: row2.translation };
 }
 function noPublishedPart(sha2562) {
   return {
     ok: false,
     reason: "NO_PUBLISHED_PART",
-    ...rowOf7("NO_PUBLISHED_PART"),
+    ...rowOf8("NO_PUBLISHED_PART"),
     sha256: sha2562,
     detail: "no published part answers to that hash. A hash that was never ratified and a hash that never existed are the same answer here, deliberately."
   };
@@ -123796,7 +124122,7 @@ function publishedObjectMissing() {
   return {
     ok: false,
     reason: "OBJECT_MISSING",
-    ...rowOf7("OBJECT_MISSING"),
+    ...rowOf8("OBJECT_MISSING"),
     detail: "that hash is published, and this instance's published store holds no bytes for it, so they cannot be handed over. The hash is genuine."
   };
 }
@@ -124071,7 +124397,7 @@ async function publishedRoutes({ op, url, env, stub }) {
         return P.json({
           ok: false,
           reason: "CASE_DOCUMENT_UNSERVABLE",
-          ...rowOf7("CASE_DOCUMENT_UNSERVABLE"),
+          ...rowOf8("CASE_DOCUMENT_UNSERVABLE"),
           sha256: shaParam,
           detail: "this hash is a ratified case document's and is published, but the record could not produce bytes that hash to it, so nothing is served. Nothing here says the document was never ratified: op=verify still answers for the hash."
         }, 500);
@@ -124097,7 +124423,7 @@ async function publishedRoutes({ op, url, env, stub }) {
       return P.json({
         ok: false,
         reason: "NOT_A_CONTAINER",
-        ...rowOf7("NOT_A_CONTAINER"),
+        ...rowOf8("NOT_A_CONTAINER"),
         sha256: shaParam,
         detail: "format=zip serialises a case CONTAINER, which is addressed by its MANIFEST's hash. This hash names a part inside a container, not a container."
       }, 400);
@@ -124127,14 +124453,14 @@ async function publishedRoutes({ op, url, env, stub }) {
       return P.json({
         ok: false,
         reason: "MANIFEST_UNREADABLE",
-        ...rowOf7("MANIFEST_UNREADABLE"),
+        ...rowOf8("MANIFEST_UNREADABLE"),
         sha256: shaParam
       }, 500);
     }
     const built = await containerEntries(manifest, raw, pubBytes);
-    if (!built.ok) return P.json({ ok: false, ...built, ...rowOf7(built.reason) }, 409);
+    if (!built.ok) return P.json({ ok: false, ...built, ...rowOf8(built.reason) }, 409);
     const zip = serialiseContainer(built.entries);
-    if (!zip.ok) return P.json({ ok: false, ...zip, ...rowOf7(zip.reason) }, zip.reason === "CONTAINER_TOO_LARGE" ? 413 : 409);
+    if (!zip.ok) return P.json({ ok: false, ...zip, ...rowOf8(zip.reason) }, zip.reason === "CONTAINER_TOO_LARGE" ? 413 : 409);
     const zipSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", zip.bytes))].map((x) => x.toString(16).padStart(2, "0")).join("");
     return new Response(zip.bytes, { status: 200, headers: {
       "content-type": "application/zip",
@@ -125873,13 +126199,13 @@ var ActionPlans = class {
   /** R1, R4, R20, R24: the plan's own acts are a named member's. */
   #member(author) {
     if (isMachine2(author))
-      return refusal17("MACHINE_CANNOT_PLAN", "an action plan is opened, changed and closed by a named member; a machine proposes and never acts. Nothing was written.");
+      return refusal18("MACHINE_CANNOT_PLAN", "an action plan is opened, changed and closed by a named member; a machine proposes and never acts. Nothing was written.");
     return null;
   }
   /** R9, R11: an option is added, revised or adopted by a named member. */
   #optionMember(author) {
     if (isMachine2(author))
-      return refusal17("MACHINE_CANNOT_ADD_OPTION", "an option is added, revised or adopted by a named member; a machine proposes (op=optionpropose) and never adds. Nothing was written.");
+      return refusal18("MACHINE_CANNOT_ADD_OPTION", "an option is added, revised or adopted by a named member; a machine proposes (op=optionpropose) and never adds. Nothing was written.");
     return null;
   }
   /* NO_SUCH_PLAN, PLAN_CLOSED and the joined fence, in that order; `{p}` or a refusal. */
@@ -125928,13 +126254,13 @@ var ActionPlans = class {
       const s = items[i].subject;
       const mine = s.kind === "inquiry" ? this.#inquiryOfProject(s.inquiry, project) : facts[i].project === project;
       if (!mine)
-        return refusal17("SUBJECT_NOT_OF_PROJECT", s.kind === "inquiry" ? `matter ${i}: the project does not draw on that question. Nothing was written.` : `matter ${i}: that determination was made by another project. Nothing was written.`, { index: i });
+        return refusal18("SUBJECT_NOT_OF_PROJECT", s.kind === "inquiry" ? `matter ${i}: the project does not draw on that question. Nothing was written.` : `matter ${i}: that determination was made by another project. Nothing was written.`, { index: i });
     }
     for (let i = 0; i < items.length; i++) {
       const s = items[i].subject;
       const live = s.kind === "inquiry" ? !CLOSED_INQUIRY_STATES.includes(facts[i].state) : facts[i].live === true;
       if (!live)
-        return refusal17(
+        return refusal18(
           "SUBJECT_NOT_LIVE",
           s.kind === "inquiry" ? `matter ${i}: the question is ${facts[i].state}, no longer open. Nothing was written.` : `matter ${i}: the determination has been superseded. Nothing was written.`,
           { index: i, ...s.kind === "outcome" ? { superseded_by: this.#determination(facts[i].superseded_by, viewer) ? facts[i].superseded_by : null } : {} }
@@ -125945,7 +126271,7 @@ var ActionPlans = class {
                               WHERE s.skey=? AND s.removed_seq IS NULL AND p.project_id=? AND p.state='open'
                               ORDER BY s.plan_id LIMIT 1`, items[i].key, project);
       if (held)
-        return refusal17("SUBJECT_IN_ACTIVE_PLAN", `matter ${i} is already in the open plan ${held.plan_id} of this project. Nothing was written.`, { index: i, plan: held.plan_id, ...plan && held.plan_id === plan ? { this_plan: true } : {} });
+        return refusal18("SUBJECT_IN_ACTIVE_PLAN", `matter ${i} is already in the open plan ${held.plan_id} of this project. Nothing was written.`, { index: i, plan: held.plan_id, ...plan && held.plan_id === plan ? { this_plan: true } : {} });
     }
     return { items };
   }
@@ -125953,16 +126279,16 @@ var ActionPlans = class {
   #optionFields(a, p, viewer) {
     const summary = typeof a.summary === "string" ? a.summary.trim() : "";
     if (!summary || summary.length > SUMMARY_MAX)
-      return refusal17(
+      return refusal18(
         "OPTION_NO_SUMMARY",
         `an option has a summary of 1 to ${SUMMARY_MAX} characters. Nothing was written.`,
         { max: SUMMARY_MAX }
       );
     const detail = a.detail === void 0 || a.detail === null ? null : String(a.detail);
     if (detail !== null && detail.length > DETAIL_MAX)
-      return refusal17("OPTION_DETAIL_TOO_LONG", `an option's detail is at most ${DETAIL_MAX} characters; this is ${detail.length}. Nothing was written.`, { max: DETAIL_MAX, length: detail.length });
+      return refusal18("OPTION_DETAIL_TOO_LONG", `an option's detail is at most ${DETAIL_MAX} characters; this is ${detail.length}. Nothing was written.`, { max: DETAIL_MAX, length: detail.length });
     if (!CATEGORIES.includes(a.category))
-      return refusal17(
+      return refusal18(
         "CATEGORY_UNKNOWN",
         `a category is one of ${CATEGORIES.join(", ")}. Nothing was written.`,
         { categories: CATEGORIES }
@@ -125980,11 +126306,11 @@ var ActionPlans = class {
       if (!subjects.some((y) => subjectKey(y) === subjectKey(s))) subjects.push(s);
     }
     if (!subjects.length || foreign !== null)
-      return refusal17("OPTION_NO_SUBJECT", foreign !== null ? "the option names a matter the plan is not about. Nothing was written." : "an option serves at least one of the plan's matters. Nothing was written.");
+      return refusal18("OPTION_NO_SUBJECT", foreign !== null ? "the option names a matter the plan is not about. Nothing was written." : "an option serves at least one of the plan's matters. Nothing was written.");
     let addressee = null;
     if (a.addressee !== void 0 && a.addressee !== null) {
       if (!addresseeArm(a.addressee))
-        return refusal17("ADDRESSEE_REFUSED", "an addressee is {state: named, kind?: office, role, body}, {state: named, kind: press | organisation | group, role, organisation} or {state: audience, description}; never a private individual. Nothing was written.");
+        return refusal18("ADDRESSEE_REFUSED", "an addressee is {state: named, kind?: office, role, body}, {state: named, kind: press | organisation | group, role, organisation} or {state: audience, description}; never a private individual. Nothing was written.");
       addressee = addresseeOf(a.addressee);
     }
     const dates = [];
@@ -125992,19 +126318,19 @@ var ActionPlans = class {
       const list2 = Array.isArray(a.dates) ? a.dates : null;
       const bad = !list2 || list2.length > DATES_MAX || list2.some((d) => !isObj18(d) || !isDay2(d.date) || !isLine(d.basis, NOTE_MAX5));
       if (bad)
-        return refusal17("DATE_REFUSED", `regulated dates are a list of at most ${DATES_MAX} {date: YYYY-MM-DD, basis}, each basis naming the statute, order or commitment that sets it. Nothing was written.`);
+        return refusal18("DATE_REFUSED", `regulated dates are a list of at most ${DATES_MAX} {date: YYYY-MM-DD, basis}, each basis naming the statute, order or commitment that sets it. Nothing was written.`);
       for (const d of list2) dates.push({ date: d.date, basis: d.basis });
     }
     const t = a.tier;
     const given = t !== void 0 && t !== null;
     const tier = !given ? void 0 : /^[123]$/.test(String(t)) ? Number(t) : t;
     if (given && a.category !== "legal" || given && !TIERS2.includes(tier))
-      return refusal17("TIER_REFUSED", a.category !== "legal" ? "a tier is stated only on a legal option. Nothing was written." : "a tier is 1, 2, 3 or undetermined. Nothing was written.", { tiers: TIERS2 });
+      return refusal18("TIER_REFUSED", a.category !== "legal" ? "a tier is stated only on a legal option. Nothing was written." : "a tier is 1, 2, 3 or undetermined. Nothing was written.", { tiers: TIERS2 });
     const lobbying = a.lobbying === true;
     let enforces = null;
     if (a.enforces !== void 0 && a.enforces !== null) enforces = this.#enforces(a.enforces, held, viewer);
     if (lobbying && !enforces || a.enforces !== void 0 && a.enforces !== null && !enforces)
-      return refusal17("LOBBYING_NO_REQUIREMENT", "an option marked lobbying names, in enforces, the standard you can read or the determined matter of the plan whose requirement it seeks enforced or restored. Nothing was written.");
+      return refusal18("LOBBYING_NO_REQUIREMENT", "an option marked lobbying names, in enforces, the standard you can read or the determined matter of the plan whose requirement it seeks enforced or restored. Nothing was written.");
     const keys = refuseKeys(a);
     if (keys) return keys;
     return { fields: {
@@ -126043,7 +126369,7 @@ var ActionPlans = class {
     const seq = logOf2(text5).length + 1;
     const next = appendEntry2(text5, { entry, seq, state, fromState: head.currentState, blurb });
     if (next === null)
-      return refusal17("UNSPLICEABLE_PLAN", "the plan's document cannot be extended in place. Nothing was written.");
+      return refusal18("UNSPLICEABLE_PLAN", "the plan's document cannot be extended in place. Nothing was written.");
     const carried = (this.record.livePaths(p.id) || []).filter((x) => x !== "bundle.md").map((path) => {
       const f17 = this.record.readFile(p.id, path);
       return typeof f17.text === "string" ? { path, text: f17.text, sha256: f17.sha256 } : { path, blobSha: f17.blobSha, sha256: f17.sha256, bytes: f17.bytes };
@@ -126077,14 +126403,14 @@ var ActionPlans = class {
     if (type !== ACTION_PLAN && headType !== ACTION_PLAN) return null;
     if (c.replay) return null;
     if (isMachine2(c.author))
-      return refusal17("MACHINE_CANNOT_WRITE_PLAN", "an action plan is written only by a member's act; a machine proposes and never acts. Nothing was written.");
+      return refusal18("MACHINE_CANNOT_WRITE_PLAN", "an action plan is written only by a member's act; a machine proposes and never acts. Nothing was written.");
     if (!c.pkg || c.pkg[ACT2] !== true)
-      return refusal17("PLAN_BY_ACT_ONLY", "an action plan changes only through its acts, so its log and its tables never disagree. Nothing was written.");
+      return refusal18("PLAN_BY_ACT_ONLY", "an action plan changes only through its acts, so its log and its tables never disagree. Nothing was written.");
     if (c.head) {
       const held = logSection2(this.#text(c.bundleId)) || "";
       const now = logSection2(c.bundleMd && c.bundleMd.text) || "";
       if (!now.startsWith(held))
-        return refusal17("PLAN_HISTORY_REWRITTEN", "an action plan's log is append-only. Nothing was written.");
+        return refusal18("PLAN_HISTORY_REWRITTEN", "an action plan's log is append-only. Nothing was written.");
     }
     return null;
   }
@@ -126098,11 +126424,11 @@ var ActionPlans = class {
     const norm = (v) => JSON.stringify(v === void 0 || v === null ? null : v);
     if (norm(next.work_kinds) === norm(heldFm.work_kinds)) return null;
     if (isMachine2(c.author))
-      return refusal17("MACHINE_CANNOT_SET_WORK_KIND", "a project's kinds of work are set by an owner of the project; a machine credential cannot set or change them. Nothing was written.");
+      return refusal18("MACHINE_CANNOT_SET_WORK_KIND", "a project's kinds of work are set by an owner of the project; a machine credential cannot set or change them. Nothing was written.");
     const kinds = next.work_kinds;
     const bad = kinds !== void 0 && kinds !== null && (!Array.isArray(kinds) || kinds.some((k) => !WORK_KINDS.includes(k)));
     if (bad)
-      return refusal17(
+      return refusal18(
         "WORK_KIND_UNKNOWN",
         `work_kinds is a list drawn from ${WORK_KINDS.join(", ")}. Nothing was written.`,
         { kinds: WORK_KINDS }
@@ -126233,7 +126559,7 @@ var ActionPlans = class {
     const m = this.#member(author);
     if (m) return m;
     if (!isLine(title, TITLE_MAX))
-      return refusal17("PLAN_NO_TITLE", `a plan's title is 1 to ${TITLE_MAX} characters with no quotation mark, backslash or line break. Nothing was written.`, { max: TITLE_MAX });
+      return refusal18("PLAN_NO_TITLE", `a plan's title is 1 to ${TITLE_MAX} characters with no quotation mark, backslash or line break. Nothing was written.`, { max: TITLE_MAX });
     const h = typeof project === "string" && project ? this.record.head(project) : null;
     if (h && normalizeType(h.type) === "project") {
       const seen = this.membership.existenceAct(project, viewer);
@@ -126383,7 +126709,7 @@ var ActionPlans = class {
     const { plan, why, run, sources, proposer, principal, viewer } = args;
     const who2 = str18(proposer);
     if (!who2)
-      return refusal17("PROPOSAL_NO_PROPOSER", "a proposal names who made it, and this one came with no stamped caller. Nothing was written.");
+      return refusal18("PROPOSAL_NO_PROPOSER", "a proposal names who made it, and this one came with no stamped caller. Nothing was written.");
     const p = this.#plan(plan, viewer);
     if (!p) return noSuchPlan(plan);
     if (p.state !== "open") return refusePlanClosed(p.id);
@@ -126396,7 +126722,7 @@ var ActionPlans = class {
     const f17 = this.#optionFields(args, p, viewer);
     if (!f17.fields) return f17;
     if (typeof why !== "string" || !why.trim() || why.length > WHY_MAX2)
-      return refusal17(
+      return refusal18(
         "PROPOSAL_WHY_REFUSED",
         `a proposal says why it is offered, in 1 to ${WHY_MAX2} characters. Nothing was written.`,
         { max: WHY_MAX2 }
@@ -126455,9 +126781,9 @@ var ActionPlans = class {
   #runGate(run, p, caller, viewer) {
     const r = typeof run === "string" && run.trim() ? this.aiRuns.runFor(run.trim(), viewer) : null;
     if (!r)
-      return refusal17("PROPOSAL_NO_RUN", "a machine's proposal names the planning run it was made under, one this caller can see. Nothing was written.", { run: typeof run === "string" ? run : null });
+      return refusal18("PROPOSAL_NO_RUN", "a machine's proposal names the planning run it was made under, one this caller can see. Nothing was written.", { run: typeof run === "string" ? run : null });
     if (r.status !== "running")
-      return refusal17(
+      return refusal18(
         "PROPOSAL_RUN_NOT_RUNNING",
         `run ${r.run} is ${r.status}, not running. Nothing was written.`,
         { run: r.run, status: r.status }
@@ -126467,7 +126793,7 @@ var ActionPlans = class {
     if (np) return np;
     const b = this.aiRuns.boundOf(r.run, "proposals");
     if (!b || b.consumed >= b.allowed)
-      return refusal17("PROPOSAL_BOUND_REACHED", `run ${r.run} has made ${b ? b.consumed : 0} of the ${b ? b.allowed : 0} proposals it declared. Nothing was written.`, { run: r.run, allowed: b ? b.allowed : 0, consumed: b ? b.consumed : 0 });
+      return refusal18("PROPOSAL_BOUND_REACHED", `run ${r.run} has made ${b ? b.consumed : 0} of the ${b ? b.allowed : 0} proposals it declared. Nothing was written.`, { run: r.run, allowed: b ? b.allowed : 0, consumed: b ? b.consumed : 0 });
     return { ok: true, run: r };
   }
   /* R31: what a machine's proposal rests on, each something the viewer can see. `{ok, sources}` or a refusal. */
@@ -126481,7 +126807,7 @@ var ActionPlans = class {
       }
     }
     if (!named.length || named.length > SOURCES_MAX || hidden !== null)
-      return refusal17("PROPOSAL_NO_SOURCE", !named.length || named.length > SOURCES_MAX ? `a machine's proposal names 1 to ${SOURCES_MAX} sources it rests on. Nothing was written.` : "a source named is not a finding, determination, standard, consequence, plan or option this caller can see. Nothing was written.", { max: SOURCES_MAX, ...hidden !== null && typeof hidden === "string" ? { source: hidden.slice(0, 120) } : {} });
+      return refusal18("PROPOSAL_NO_SOURCE", !named.length || named.length > SOURCES_MAX ? `a machine's proposal names 1 to ${SOURCES_MAX} sources it rests on. Nothing was written.` : "a source named is not a finding, determination, standard, consequence, plan or option this caller can see. Nothing was written.", { max: SOURCES_MAX, ...hidden !== null && typeof hidden === "string" ? { source: hidden.slice(0, 120) } : {} });
     return { ok: true, sources: [...new Set(named)] };
   }
   #sourceSeen(s, viewer) {
@@ -126544,7 +126870,7 @@ var ActionPlans = class {
     const row2 = this.#proposalRow(proposal);
     const p = row2 ? this.#plan(row2.plan_id, viewer) : null;
     if (!row2 || !p)
-      return refusal17(
+      return refusal18(
         "NO_SUCH_PLAN_PROPOSAL",
         "no proposal answers to that id in a plan this caller may see. Nothing was written.",
         { proposal: typeof proposal === "string" ? proposal : null }
@@ -126553,7 +126879,7 @@ var ActionPlans = class {
     const fence4 = this.membership.projectAuthority(p.project, author, "joined", "optionAdopt");
     if (fence4) return fence4;
     if (row2.adopted_option)
-      return refusal17(
+      return refusal18(
         "PROPOSAL_ADOPTED",
         `that proposal was adopted as ${row2.adopted_option}. Nothing was written.`,
         { option: row2.adopted_option }
@@ -126583,11 +126909,11 @@ var ActionPlans = class {
   optionDispose(args = {}) {
     const { plan, options, disposition, reason, reminders, author, viewer } = args;
     if (isMachine2(author))
-      return refusal17("MACHINE_CANNOT_DISPOSE", "an option is chosen, declined or marked by a named member; a machine proposes and never decides. Nothing was written.");
+      return refusal18("MACHINE_CANNOT_DISPOSE", "an option is chosen, declined or marked by a named member; a machine proposes and never decides. Nothing was written.");
     const o = this.#openPlan(plan, author, viewer, "optionDispose");
     if (o.r) return o.r;
     if (!DISPOSITIONS2.includes(disposition))
-      return refusal17(
+      return refusal18(
         "DISPOSITION_UNKNOWN",
         `a disposition is one of ${DISPOSITIONS2.join(", ")}. Nothing was written.`,
         { dispositions: DISPOSITIONS2 }
@@ -126661,18 +126987,18 @@ var ActionPlans = class {
   scenarioSet(args = {}) {
     const { plan, scenario, name: name2, phases, author, viewer } = args;
     if (isMachine2(author))
-      return refusal17("MACHINE_CANNOT_SCHEDULE", "a scenario is set by a named member; a machine proposes options and never schedules. Nothing was written.");
+      return refusal18("MACHINE_CANNOT_SCHEDULE", "a scenario is set by a named member; a machine proposes options and never schedules. Nothing was written.");
     const o = this.#openPlan(plan, author, viewer, "scenarioSet");
     if (o.r) return o.r;
     const n = /^[0-9]+$/.test(String(scenario ?? "")) ? Number(scenario) : NaN;
     if (!(Number.isInteger(n) && n >= 1 && n <= SCENARIOS_MAX))
-      return refusal17(
+      return refusal18(
         "SCENARIO_OUT_OF_RANGE",
         `a scenario is numbered 1 to ${SCENARIOS_MAX}. Nothing was written.`,
         { max: SCENARIOS_MAX }
       );
     if (!isLine(name2, TITLE_MAX))
-      return refusal17("SCENARIO_NAME_REFUSED", `a scenario's name is 1 to ${TITLE_MAX} characters with no quotation mark, backslash or line break. Nothing was written.`, { max: TITLE_MAX });
+      return refusal18("SCENARIO_NAME_REFUSED", `a scenario's name is 1 to ${TITLE_MAX} characters with no quotation mark, backslash or line break. Nothing was written.`, { max: TITLE_MAX });
     const ph = this.#scenarioPhases(o.p, phases);
     if (!ph.phases) return ph;
     const keys = refuseKeys(args) || (Array.isArray(phases) ? phases.map((x) => refuseKeys(x)).find(Boolean) : null);
@@ -126699,12 +127025,12 @@ var ActionPlans = class {
     if (r.phases) return r;
     const at25 = { index: r.index, ...r.phase ? { phase: r.phase } : {}, ...r.option ? { option: r.option } : {} };
     if (r.fault === "malformed")
-      return refusal17("PHASE_MALFORMED", `phase ${r.index ?? "list"} is not a phase this scenario can hold: ${r.detail}. Nothing was written.`, at25);
+      return refusal18("PHASE_MALFORMED", `phase ${r.index ?? "list"} is not a phase this scenario can hold: ${r.detail}. Nothing was written.`, at25);
     if (r.fault === "not_chosen")
-      return refusal17("PHASE_OPTION_NOT_CHOSEN", `phase ${r.index} holds an option the group has not chosen: ${r.detail}. Nothing was written.`, at25);
+      return refusal18("PHASE_OPTION_NOT_CHOSEN", `phase ${r.index} holds an option the group has not chosen: ${r.detail}. Nothing was written.`, at25);
     if (r.fault === "branch")
-      return refusal17("BRANCH_UNKNOWN", `phase ${r.index} names a phase or a matter this scenario does not hold: ${r.detail}. Nothing was written.`, at25);
-    return refusal17(
+      return refusal18("BRANCH_UNKNOWN", `phase ${r.index} names a phase or a matter this scenario does not hold: ${r.detail}. Nothing was written.`, at25);
+    return refusal18(
       "PHASE_CYCLE",
       `following when each phase starts leads back to where it began: ${r.detail}, and no phase can start after itself. Nothing was written.`,
       at25
@@ -126753,21 +127079,21 @@ var ActionPlans = class {
   checkpointRecord(args = {}) {
     const { plan, scenario, phase, judged, note, author, viewer } = args;
     if (isMachine2(author))
-      return refusal17("MACHINE_CANNOT_JUDGE", "a checkpoint is judged by a named member; the module never judges a condition and a machine never does. Nothing was written.");
+      return refusal18("MACHINE_CANNOT_JUDGE", "a checkpoint is judged by a named member; the module never judges a condition and a machine never does. Nothing was written.");
     const o = this.#openPlan(plan, author, viewer, "checkpointRecord");
     if (o.r) return o.r;
     const n = /^[0-9]+$/.test(String(scenario ?? "")) ? Number(scenario) : NaN;
     const sc = this.#scenarios(o.p.id).find((x) => x.scenario === n) || null;
     const ph = sc ? sc.phases.find((x) => x.id === phase) : null;
     if (!sc || !ph || !ph.checkpoint || !JUDGEMENTS.includes(judged) || note !== void 0 && note !== null && (typeof note !== "string" || note.length > NOTE_MAX5))
-      return refusal17("CHECKPOINT_REFUSED", !sc ? "the plan holds no scenario of that number. Nothing was written." : !ph ? "the scenario holds no phase of that id. Nothing was written." : !ph.checkpoint ? "that phase has no checkpoint. Nothing was written." : !JUDGEMENTS.includes(judged) ? "a judgement is met or not_met. Nothing was written." : `a note is at most ${NOTE_MAX5} characters. Nothing was written.`);
+      return refusal18("CHECKPOINT_REFUSED", !sc ? "the plan holds no scenario of that number. Nothing was written." : !ph ? "the scenario holds no phase of that id. Nothing was written." : !ph.checkpoint ? "that phase has no checkpoint. Nothing was written." : !JUDGEMENTS.includes(judged) ? "a judgement is met or not_met. Nothing was written." : `a note is at most ${NOTE_MAX5} characters. Nothing was written.`);
     const { judged: held, times } = this.#timed(o.p, sc, viewer);
     const t = times.get(ph.id);
     const nowMs = this.#nowMs();
     if (!t.due || msOf(t.due) > nowMs)
-      return refusal17("CHECKPOINT_NOT_DUE", t.started ? `the checkpoint is due ${t.due}. Nothing was written.` : "the phase has not started, so its checkpoint is not due. Nothing was written.", { due: t.due });
+      return refusal18("CHECKPOINT_NOT_DUE", t.started ? `the checkpoint is due ${t.due}. Nothing was written.` : "the phase has not started, so its checkpoint is not due. Nothing was written.", { due: t.due });
     if (held.has(ph.id))
-      return refusal17("CHECKPOINT_JUDGED", `that checkpoint was judged ${held.get(ph.id).judged} by ${held.get(ph.id).author}. Nothing was written.`, { judged: held.get(ph.id).judged });
+      return refusal18("CHECKPOINT_JUDGED", `that checkpoint was judged ${held.get(ph.id).judged} by ${held.get(ph.id).author}. Nothing was written.`, { judged: held.get(ph.id).judged });
     const entry = {
       kind: "checkpoint",
       scenario: sc.scenario,
@@ -126805,20 +127131,20 @@ var ActionPlans = class {
   optionStart(args = {}) {
     const { plan, option, kind, contact, breach, premise_override: override, author, viewer } = args;
     if (isMachine2(author))
-      return refusal17("MACHINE_CANNOT_START", "an option is started by a named member; a machine never creates an action from a plan. Nothing was written.");
+      return refusal18("MACHINE_CANNOT_START", "an option is started by a named member; a machine never creates an action from a plan. Nothing was written.");
     const o = this.#openPlan(plan, author, viewer, "optionStart");
     if (o.r) return o.r;
     const p = o.p;
     const opt = this.#option(p.id, option);
     if (!opt) return refuseNoSuchOption(option);
     if (opt.disposition !== "chosen")
-      return refusal17(
+      return refusal18(
         "OPTION_NOT_CHOSEN",
         `${opt.id} is ${opt.disposition}, not chosen. Nothing was written.`,
         { disposition: opt.disposition }
       );
     if (opt.action)
-      return refusal17("OPTION_STARTED", `${opt.id} was started as ${opt.action}. Nothing was written.`, { action: opt.action });
+      return refusal18("OPTION_STARTED", `${opt.id} was started as ${opt.action}. Nothing was written.`, { action: opt.action });
     const member = contactId(contact);
     if (contact !== void 0 && contact !== null) {
       let facts = null;
@@ -126864,7 +127190,7 @@ var ActionPlans = class {
   planClose(args = {}) {
     const { id, plan, reason, author, viewer } = args;
     if (isMachine2(author))
-      return refusal17("MACHINE_CANNOT_CLOSE_PLAN", "a plan is closed by a named member with a reason; it never closes itself. Nothing was written.");
+      return refusal18("MACHINE_CANNOT_CLOSE_PLAN", "a plan is closed by a named member with a reason; it never closes itself. Nothing was written.");
     const o = this.#openPlan(id ?? plan, author, viewer, "planClose");
     if (o.r) return o.r;
     const bad = refuseReason2(reason, true);
@@ -127248,7 +127574,7 @@ var ActionPlans = class {
       const n = m ? Number(m[2]) : NaN;
       const max = r ? (this.#one(`SELECT MAX(run_ord) AS n FROM plan_option_proposals WHERE plan_id=? AND run=?`, p.id, r) || {}).n || 0 : 0;
       if (!m || m[1] !== r || !(n > 0 && n < max && n % TRAY_PAGE === 0))
-        return refusal17("PROPOSALS_CURSOR_REFUSED", "after= is a page marker this list gave for this run, and this is not one. Ask for the first page again. Nothing was read.");
+        return refusal18("PROPOSALS_CURSOR_REFUSED", "after= is a page marker this list gave for this run, and this is not one. Ask for the first page again. Nothing was read.");
       from = n;
     }
     if (!r) return { ok: true, plan: p.id, run: null, proposals: [], next: null };
@@ -127269,7 +127595,7 @@ var ActionPlans = class {
     const p = this.#plan(plan, viewer);
     if (!p) return noSuchPlan(typeof plan === "string" ? plan : null);
     if (contextType !== "project" || contextId !== p.project)
-      return refusal17("PLAN_NOT_OF_PROJECT", `plan ${p.id} belongs to ${p.project}, and the run is opened over ${String(contextId ?? "").slice(0, 80) || "no project"}. Nothing was written.`, { plan: p.id });
+      return refusal18("PLAN_NOT_OF_PROJECT", `plan ${p.id} belongs to ${p.project}, and the run is opened over ${String(contextId ?? "").slice(0, 80) || "no project"}. Nothing was written.`, { plan: p.id });
     if (p.state !== "open") return refusePlanClosed(p.id);
     return this.membership.projectAuthority(p.project, actor, "joined", "opening a planning run") || null;
   }
@@ -127365,20 +127691,20 @@ function noSuchPlan(planIdAsked, extra = null) {
   };
 }
 function refuseNoSuchInquiry(inquiry, extra = null) {
-  return refusal17("NO_SUCH_INQUIRY", "no question answers to that id here; one you may not see is answered exactly as one that does not exist. Nothing was written.", { inquiry: typeof inquiry === "string" ? inquiry : null, ...extra || {} });
+  return refusal18("NO_SUCH_INQUIRY", "no question answers to that id here; one you may not see is answered exactly as one that does not exist. Nothing was written.", { inquiry: typeof inquiry === "string" ? inquiry : null, ...extra || {} });
 }
 function refuseNoSubject(detail, count) {
-  return refusal17(
+  return refusal18(
     "PLAN_NO_SUBJECT",
     detail || `a plan is about 1 to ${SUBJECTS_MAX} matters. Nothing was written.`,
     { count: count ?? null, max: SUBJECTS_MAX }
   );
 }
 function refuseMalformed(detail, index) {
-  return refusal17("SUBJECT_MALFORMED", detail || "a matter is {kind: inquiry, inquiry} or {kind: outcome, determination, standard}. Nothing was written.", { index: index ?? null });
+  return refusal18("SUBJECT_MALFORMED", detail || "a matter is {kind: inquiry, inquiry} or {kind: outcome, determination, standard}. Nothing was written.", { index: index ?? null });
 }
 function refusePlanClosed(plan) {
-  return refusal17(
+  return refusal18(
     "PLAN_CLOSED",
     "this plan is closed; it stays readable and nothing is added to it. Nothing was written.",
     { plan }
@@ -127387,23 +127713,23 @@ function refusePlanClosed(plan) {
 function refuseReason2(reason, needed) {
   const given = reason !== void 0 && reason !== null && reason !== "";
   if (needed && !given || given && !isLine(reason, REASON_MAX5))
-    return refusal17("PLAN_NO_REASON", `a reason of 1 to ${REASON_MAX5} characters, with no quotation mark, backslash or line break, is required here. Nothing was written.`, { max: REASON_MAX5 });
+    return refusal18("PLAN_NO_REASON", `a reason of 1 to ${REASON_MAX5} characters, with no quotation mark, backslash or line break, is required here. Nothing was written.`, { max: REASON_MAX5 });
   return null;
 }
 function refuseKeys(args) {
   const found = isObj18(args) ? REFUSED_KEYS.filter((k) => k in args) : [];
   if (found.length)
-    return refusal17("OPTION_KEY_REFUSED", `a plan holds no ${found.join(", ")}: no cost, budget, money to be spent, assignee, hours or significance score. Nothing was written.`, { keys: found });
+    return refusal18("OPTION_KEY_REFUSED", `a plan holds no ${found.join(", ")}: no cost, budget, money to be spent, assignee, hours or significance score. Nothing was written.`, { keys: found });
   return null;
 }
 function refuseNoSuchOption(option) {
-  return refusal17("NO_SUCH_OPTION", `the plan holds no option ${option === null || option === void 0 ? "(none named)" : String(option).slice(0, 80)}. Nothing was written.`, { option: option ?? null });
+  return refusal18("NO_SUCH_OPTION", `the plan holds no option ${option === null || option === void 0 ? "(none named)" : String(option).slice(0, 80)}. Nothing was written.`, { option: option ?? null });
 }
 function refuseRunOtherPlan(run) {
-  return refusal17("PROPOSAL_RUN_OTHER_PLAN", `run ${String(run ?? "").slice(0, 80)} is not a planning run of this plan. Nothing was written.`, { run: run ?? null });
+  return refusal18("PROPOSAL_RUN_OTHER_PLAN", `run ${String(run ?? "").slice(0, 80)} is not a planning run of this plan. Nothing was written.`, { run: run ?? null });
 }
 function refuseProviderUnavailable2(provider) {
-  return refusal17("PLAN_PROVIDER_UNAVAILABLE", `this answer reads the ${provider} module, which this instance does not have yet; nothing is answered in its place.`, { provider });
+  return refusal18("PLAN_PROVIDER_UNAVAILABLE", `this answer reads the ${provider} module, which this instance does not have yet; nothing is answered in its place.`, { provider });
 }
 var ProviderAbsent2 = class extends Error {
   constructor(provider) {
@@ -127781,6 +128107,12 @@ var QueueProducers = class _QueueProducers {
   get #actions() {
     return this.#dep("actions", () => actionsOf(this.#host));
   }
+  get #filingTemplates() {
+    return this.#dep("filingTemplates", () => filingTemplatesOf(this.#host));
+  }
+  get #localFacts() {
+    return this.#dep("localFacts", () => localFactsOf(this.#host));
+  }
   #rows(q7, ...a) {
     return [...this.sql.exec(q7, ...a)];
   }
@@ -127910,6 +128242,8 @@ var QueueProducers = class _QueueProducers {
       items.push(...this.#obligationsEscalationStageProposed(me, viewer, at25));
       items.push(...this.#obligationsActionReminder(me, viewer, at25));
       items.push(...this.#obligationsLitigationHold(me, viewer, at25));
+      items.push(...this.#obligationsTemplateReview(me, viewer, at25));
+      items.push(...this.#obligationsLocalFactDue(me, viewer, at25));
       return {
         items,
         facts: {
@@ -128605,12 +128939,12 @@ var QueueProducers = class _QueueProducers {
     out.bound = cap;
     return out;
   }
-  /** THE TWO BOUNDS THESE PRODUCERS WALK UNDER, AND THEY EXIST BECAUSE THE
-   *  BATTERY REFUSED THE UNBOUNDED VERSION RATHER THAN BECAUSE ANYONE PREDICTED
-   *  IT. `derivation-bounds.test.mjs` holds a CEILING on how many methods derive
-   *  over an unbounded scan — a class of defect this record has paid for (D-227,
-   *  REC-66) — and the first draft of both producers walked straight into it:
-   *  an unbounded read of `refs` with per-row work inside the loop.
+  /** THE BOUNDS THESE PRODUCERS WALK UNDER. A derivation over an unbounded scan
+   *  is a class of defect this record has paid for (D-227, REC-66), and the
+   *  first draft of these producers walked straight into it, found by the old
+   *  suites' ceiling on unbounded derivations: an unbounded read of `refs` with
+   *  per-row work inside the loop. `shared.test.mjs`'s R11 (D-480) test drives
+   *  the shared-question page to exactly its bound and one past it.
    *
    *  PUBLIC so a suite can read them and so the bound a member is told about is
    *  the bound that was applied, never a second copy of the number.
@@ -128800,7 +129134,7 @@ var QueueProducers = class _QueueProducers {
    *  from another team" about a version whose team is undetermined — is the
    *  record claiming more than it can support, which this project ranks as
    *  worse than a missing feature. The gap is stated here, asserted in
-   *  `test/current.test.mjs` (a run-less version produces NO item, driven), and
+   *  `shared.test.mjs` (R2: a run-less version produces NO item, driven), and
    *  raised as **D-266** so it is a known hole with a name rather than a
    *  surprise for whoever next reads this feed.
    *
@@ -130339,6 +130673,150 @@ var QueueProducers = class _QueueProducers {
     }
     return out;
   }
+  /* ======================================================================
+   * K921 · R20, R21 — FILING TEMPLATES AND LOCAL FACTS (filing-templates R7, R20; local-facts R1, R4; action-clocks R11).
+   * Each reads the one fact its owning module offers, derived on read and writing nothing, so an item leaves when that
+   * module stops answering it; raised once and never repeated unless the member asks (DEC-69, DEC-94).
+   * ====================================================================== */
+  /** R20, R21: the acts that answer the items, each the op of the fact's own module. */
+  static TEMPLATE_REVIEW = Object.freeze({ id: "templatereview", label: "Review this template version", weight: "single" });
+  static FACT_CONFIRM = Object.freeze({ id: "factconfirm", label: "Confirm, correct or dispute this local fact", weight: "single" });
+  /** `template-review-requested` (R20; K921; filing-templates R7, R20): one OBLIGATION per (version, member)
+   *  `filing-templates.reviewsRequested` answers the viewer, to that member and to nobody else, naming the version's
+   *  name and kind and the member who asked, aged from the instant asked. It leaves when the member reviews the
+   *  version's present text or the version leaves `in_review` (the read no longer answers it). A template is not a
+   *  record of the case, so the item is homed under no case (as export-performed's). */
+  #obligationsTemplateReview(me, viewer, now) {
+    if (!me) return [];
+    const page = this.#actionPages((after) => this.#filingTemplates.reviewsRequested({ after, viewer }));
+    const out = [];
+    for (const x of page.items) {
+      if (!x || typeof x.version !== "string" || !x.version || typeof x.member !== "string" || x.member !== me) continue;
+      const askedMs = Date.parse(x.asked_at ?? "");
+      const asker = x.asked_by && typeof x.asked_by === "object" ? { id: x.asked_by.id ?? null, name: x.asked_by.name ?? null } : null;
+      const askerName = asker && (asker.name || asker.id) ? asker.name || asker.id : "a member";
+      out.push({
+        id: `OBLIGATION::template-review-requested::${x.version}::${x.member}`,
+        class: "OBLIGATION",
+        kind: "template-review-requested",
+        case: this.#homesOf([]),
+        subject: {
+          kind: "template_version",
+          id: x.version,
+          template: x.template ?? null,
+          name: x.name ?? null,
+          template_kind: x.kind ?? null,
+          asked_by: asker
+        },
+        summary: `${askerName} asked you to review the template ${x.name ? `"${x.name}"` : x.version} (${x.version})`,
+        detail: "a draft of this filing template was sent for review and you are one of the members asked. Review its present text; this is told once, and it leaves when you have reviewed that text or the version leaves review.",
+        basis: {
+          source: "filing-templates.reviewsRequested",
+          template: x.template ?? null,
+          version: x.version,
+          name: x.name ?? null,
+          template_kind: x.kind ?? null,
+          member: x.member,
+          asked_by: asker,
+          asked_at: x.asked_at ?? null,
+          recipients_rule: "asked_member",
+          bound: { pages_bound: _QueueProducers.QUEUE_ACTION_PAGES, truncated: page.truncated },
+          detail: "a review asked for is filing-templates' fact (its R7, R20): a member named a reviewer of a version in review who has not reviewed its present text. It goes to that member and to nobody else, and is raised once (DEC-69, DEC-94)."
+        },
+        age: Number.isFinite(askedMs) ? { state: "determined", since: x.asked_at, ms: Math.max(0, now - askedMs) } : {
+          state: "undetermined",
+          reason: "no_asked_instant",
+          detail: "the request carries no instant this producer can read"
+        },
+        assignee: null,
+        assignee_role: null,
+        recipients: [me],
+        options: [_QueueProducers.TEMPLATE_REVIEW]
+      });
+    }
+    return out;
+  }
+  /** `local-fact-due` (R21; K921, K1000; local-facts R4, action-clocks R11): one OBLIGATION per fact and status, keyed
+   *  `OBLIGATION::local-fact-due::<path>::<status>` so a fact disputed after it was unconfirmed is raised again: per fact
+   *  `local-facts.factsDue({paths})` answers due, `paths` those `action-clocks.calendarFactsRead` answers the viewer, to
+   *  R15's recipients of each action that reads it, taken together; its subject the first such action, naming the fact,
+   *  its status and why it is due. It leaves when a member confirms or corrects the fact or no live action reads it
+   *  (either read no longer answers it). Each reading action is `{action, project, created_by}`, as R3 states them (K1000). */
+  #obligationsLocalFactDue(me, viewer, now) {
+    if (!me) return [];
+    const read2 = this.#actionClocks.calendarFactsRead({ viewer, now });
+    const listed = read2 && read2.ok !== false && Array.isArray(read2.paths) ? read2.paths : [];
+    const readers = /* @__PURE__ */ new Map();
+    for (const p of listed) {
+      if (!p || typeof p.path !== "string" || !p.path) continue;
+      const acts = (Array.isArray(p.actions) ? p.actions : []).filter((a) => a && typeof a === "object" && typeof a.action === "string" && a.action);
+      if (acts.length) readers.set(p.path, acts);
+    }
+    if (readers.size === 0) return [];
+    const due = this.#localFacts.factsDue({ paths: [...readers.keys()], viewer });
+    const list2 = due && due.ok !== false && Array.isArray(due.due) ? due.due : [];
+    const out = [];
+    for (const f17 of list2) {
+      const acts = f17 && typeof f17.path === "string" ? readers.get(f17.path) : null;
+      if (!acts) continue;
+      const rules = /* @__PURE__ */ new Set(), members = /* @__PURE__ */ new Set();
+      for (const a of acts) {
+        const to = this.#actionRecipients(a.created_by, a.project);
+        rules.add(to.rule);
+        for (const m of to.members) members.add(m);
+      }
+      if (!members.has(me)) continue;
+      const first = acts[0];
+      const status = typeof f17.status === "string" ? f17.status : null;
+      const latestAt = f17.latest && typeof f17.latest === "object" && typeof f17.latest.at === "string" ? f17.latest.at : null;
+      const since = status === "disputed" ? latestAt : f17.lapsed && f17.lapses_on ? f17.lapses_on : f17.due_from ?? null;
+      const sinceMs = typeof since === "string" ? Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(since) ? `${since}T00:00:00Z` : since) : NaN;
+      out.push({
+        id: `OBLIGATION::local-fact-due::${f17.path}::${status}`,
+        class: "OBLIGATION",
+        kind: "local-fact-due",
+        case: this.#actionHomes(first.action, first.project, viewer),
+        subject: {
+          kind: "action",
+          id: first.action,
+          project: first.project ?? null,
+          path: f17.path,
+          fact: f17.fact ?? null,
+          status,
+          why: f17.why ?? null
+        },
+        summary: `a local fact a deadline on ${first.action} is counted on is ${status === "disputed" ? "disputed" : "unconfirmed"}` + (f17.why ? `: ${f17.why}` : ""),
+        detail: "a deadline on this action is counted in business days over a local calendar or office's hours that no member here has confirmed as current, or that a member disputed. Confirm it, correct it with its source, or dispute it. This is told once for each status the fact takes; it leaves when a member confirms or corrects the fact, or no live action reads it.",
+        basis: {
+          source: "local-facts.factsDue + action-clocks.calendarFactsRead",
+          path: f17.path,
+          fact: f17.fact ?? null,
+          status,
+          due: f17.due ?? null,
+          why: f17.why ?? null,
+          latest: f17.latest ?? null,
+          ...f17.lapsed ? { lapsed: f17.lapsed } : {},
+          ...f17.due_from ? { due_from: f17.due_from } : {},
+          ...f17.lapses_on ? { lapses_on: f17.lapses_on } : {},
+          actions: acts.map((a) => a.action),
+          recipients: [...members].sort(),
+          recipients_rule: [...rules].sort().join("+"),
+          bound: { actions_limit: read2.actions_limit ?? null, truncated: read2.truncated === true },
+          detail: "a fact due is local-facts' (its R4), asked of the paths a live deadline reads, which are action-clocks' (its R11). It goes to the members who created those actions, else their projects' owners, else the administrators (as R15's), and is raised once per fact and status."
+        },
+        age: Number.isFinite(sinceMs) ? { state: "determined", since, ms: Math.max(0, now - sinceMs) } : {
+          state: "undetermined",
+          reason: "no_due_instant",
+          detail: "the fact carries no day it fell due this producer can read"
+        },
+        assignee: null,
+        assignee_role: null,
+        recipients: [...members].sort(),
+        options: [_QueueProducers.FACT_CONFIRM, ...this.#optionsOf([first.action])]
+      });
+    }
+    return out;
+  }
   static DAY_MS = 864e5;
 };
 var OF9 = /* @__PURE__ */ new WeakMap();
@@ -130392,7 +130870,11 @@ var QUEUE_OBLIGATION_KINDS = {
   /* K899 (7), DEC-61 (R1; actions R52): a reply the group marked as legal pressure asks the group whether to place a
      litigation hold; a member answers by recording the hold in place or released, with a reason, and that act is the
      item's door (R12). An OBLIGATION, never muted. Its producer is `queue-producers`' (its R19). */
-  "litigation-hold": "a reply the group marked as legal pressure: consider whether to place a litigation hold, and record it in place or released with a reason (op=actionhold, DEC-61) \u2014 LIVE: queue-producers R19"
+  "litigation-hold": "a reply the group marked as legal pressure: consider whether to place a litigation hold, and record it in place or released with a reason (op=actionhold, DEC-61) \u2014 LIVE: queue-producers R19",
+  /* K921 (R1; filing-templates R9, local-facts R1): two more OBLIGATIONs a named member owes, each leaving by its own act
+     (R12's doors) and never by a mute. Their producers are `queue-producers`' (its R20, R21). */
+  "template-review-requested": "a member asked you to review a filing template's version (op=templatereview) \u2014 LIVE: queue-producers R20",
+  "local-fact-due": "a holiday calendar or office hours one of the group's deadlines reads is unconfirmed or due for confirmation (op=factconfirm) \u2014 LIVE: queue-producers R21"
 };
 var QUEUE_FINDING_KINDS = {
   "missing_predecessor": "a required predecessor stage is absent (D-73) \u2014 LIVE: queue-producers/proposals.mjs",
@@ -130455,9 +130937,9 @@ var QUEUE_FINDING_KINDS = {
        Both leave a list the way every finding does — by an authored, attributed
        act. CORRECTED 2026-09-23 (D-125, BOB #26's ruling): a member MAY now mute
        either one for THEMSELVES, because a mute is keyed on the member and moves no
-       other member's list; `test/current.test.mjs` drives exactly that — the mute
+       other member's list; the old `test/current.test.mjs` (deleted in T20) drove exactly that — the mute
        accepted, personal, writing no disposition, the finding still on a second
-       member's feed — where it used to drive a refusal. */
+       member's feed — where it used to drive a refusal; `test/m/queue/feed.test.mjs`' R16 test holds it now. */
   "stance-changed-here-not-elsewhere": "a project moved what it stands on for a SHARED question and the other projects drawing on it did not: one question, two live readings, refused by nothing (\xA77, D-216 \u2014 per-project stance) \u2014 LIVE: queue-producers #findingsStanceDiverged",
   "new-version-arrived-from-another-team": "a new reading of a question this project draws on was proposed under ANOTHER project's work, so it arrived without anybody here authoring it (\xA77, D-216 \u2014 one question beneath several projects) \u2014 LIVE: queue-producers #findingsVersionFromAnotherTeam",
   /* REC-124 / INVESTIGATIVE-SESSION.md §7.1 item 3. FINDING for §7's reason:
@@ -130553,8 +131035,8 @@ var QUEUE_SCHEMA = `-- REC-21: the PERSONAL half of the queue, and it is a SEPAR
 -- re-notify clock reads.
 --
 -- case_id IS a bundle id (an inquiry or a project), so this table clears in
--- BOTH purge arms via a DELETE keyed on it (D-113); hygiene.test.mjs holds that
--- against this file.
+-- BOTH purge arms via a DELETE keyed on it (D-113); test/m/queue/invariants.test.mjs'
+-- R36 test holds that.
 CREATE TABLE IF NOT EXISTS queue_state (
   member_id     TEXT NOT NULL,
   case_id       TEXT NOT NULL,
@@ -130613,7 +131095,7 @@ CREATE TABLE IF NOT EXISTS queue_item_mutes (
 --
 -- Member-authored state, like proposal_dispositions above, and cleared by the
 -- WHOLE-STORE arm of op=purge only (it has no bundle_id) -- the D-113
--- silent-leftover, asserted against this file by hygiene.test.mjs.
+-- silent-leftover, held by test/m/queue/invariants.test.mjs' R36 test.
 CREATE TABLE IF NOT EXISTS finding_dispositions (
   project_id TEXT NOT NULL,
   finding_id TEXT NOT NULL,
@@ -130626,11 +131108,11 @@ CREATE TABLE IF NOT EXISTS finding_dispositions (
 );
 -- NO SECONDARY INDEX, AND THAT IS A MEASUREMENT RATHER THAN AN OVERSIGHT. Two were
 -- written here first -- on finding_id and on at, mirroring proposal_dispositions --
--- and airuns.test.mjs's index-reader ratchet FAILED THE BUILD naming them, because
--- nothing filters on either leading column: op=queue reads this table WHOLE, exactly
--- as proposalsFeed reads the other one, and the upsert seeks the primary key. An index
--- with no statement behind it is an access path built for a question no op asks, which
--- is the finding that ratchet exists to hold. Add one WITH the statement that reads it.
+-- and the old airuns.test.mjs's index-reader ratchet (deleted in T20) FAILED THE BUILD
+-- naming them, because nothing filters on either leading column: op=queue reads this
+-- table WHOLE, exactly as proposalsFeed reads the other one, and the upsert seeks the
+-- primary key. An index with no statement behind it is an access path built for a
+-- question no op asks. Add one WITH the statement that reads it.
 `;
 
 // src/queue/index.mjs
@@ -130708,7 +131190,10 @@ var Queue = class _Queue {
     "actionClocks",
     "escalation",
     "actionPlans",
-    "actions"
+    "actions",
+    /* queue-producers R20, R21 (K921): the review requests and the facts due; queue passes them and calls neither. */
+    "filingTemplates",
+    "localFacts"
   ]);
   get #scheduler() {
     return this.#dep("scheduler", () => schedulerOf(this.#host, this.#env));
@@ -131085,14 +131570,17 @@ var Queue = class _Queue {
   /** R12, R28 (K607, K608): the door an OBLIGATION not held in `tasks` leaves by, by kind; every other obligation is a
    *  task (taskresolve). The Action layer's four: a checkpoint is judged (action-plans R16), a proposed stage advanced
    *  or declined (escalation R13), a reminder answered (action-clocks R6), a litigation hold stated (actions R52;
-   *  K899 (7)). */
+   *  K899 (7)); and K921's two: a template version reviewed (filing-templates R9), a local fact confirmed
+   *  (local-facts R1). */
   static OBLIGATION_DOORS = Object.freeze({
     "bias-debt": "biasdebtresolve",
     "signer-self-registered": "signerset",
     "plan-checkpoint-due": "checkpointrecord",
     "escalation-stage-proposed": "escalationadvance",
     "action-reminder": "reminderanswer",
-    "litigation-hold": "actionhold"
+    "litigation-hold": "actionhold",
+    "template-review-requested": "templatereview",
+    "local-fact-due": "factconfirm"
   });
   /** R12: what each of those doors is, said on the item's disposition after the general sentence. */
   static OBLIGATION_DOOR_DETAIL = Object.freeze({
@@ -131101,7 +131589,9 @@ var Queue = class _Queue {
     "plan-checkpoint-due": " This one is a checkpoint your group set in an action plan, keyed by the plan, scenario and phase rather than by a task: it leaves when a member records whether its condition was met (op=checkpointrecord), or when the plan is closed.",
     "escalation-stage-proposed": " This one is an escalation's next stage, proposed because its trigger was met and keyed by the escalation and the stage rather than by a task: a member advances it (op=escalationadvance) or declines it with a reason (op=escalationdecline), and it also leaves when the escalation is suspended or ended.",
     "action-reminder": " This one is a reminder you asked for on one of the group's action deadlines, keyed by the action, the entry and the day rather than by a task: you answer it with another reminder or with none (op=reminderanswer), and it also leaves when the entry is no longer pending or the action is closed.",
-    "litigation-hold": " This one is a reply your group marked as legal pressure, keyed by the action and the entry rather than by a task: it leaves when a member records the hold in place or released, with a reason (op=actionhold)."
+    "litigation-hold": " This one is a reply your group marked as legal pressure, keyed by the action and the entry rather than by a task: it leaves when a member records the hold in place or released, with a reason (op=actionhold).",
+    "template-review-requested": " This one is a review a member asked of you on a filing template's version, keyed by the version and by you rather than by a task: it leaves when you review the version's present text (op=templatereview), or when the version is no longer in review.",
+    "local-fact-due": " This one is a holiday calendar or office hours one of the group's deadlines reads, keyed by the fact rather than by a task: it leaves when a member confirms or corrects the fact (op=factconfirm), or when no live action reads it."
   });
   /** D-266 / IC-60 — THE SECOND IDENTITY, and the whole of what this item added.
    *
@@ -131584,7 +132074,7 @@ var Queue = class _Queue {
            on `suppressed`) could be neither named nor undone — the case form's
            unmute takes the kinds. A map BESIDE `cases` rather than objects IN
            it, because every reader of `cases` holds it as a list of ids (the
-           queue-state suites and civicos-ui); this adds and moves nothing. */
+           module's R14 tests and civicos-ui); this adds and moves nothing. */
         case_kinds: Object.fromEntries([...mutes.keys()].sort().map((c) => [c, [...mutes.get(c)].sort()])),
         /* D-125: every item id this member muted, whether or not it is live
            now — a muted host that is not held today is still muted for them. */
@@ -131668,7 +132158,8 @@ var Queue = class _Queue {
    *  that reaches every ancestor entry — including the entry of a member who
    *  muted conditions on that case, because the new event is an OBLIGATION and
    *  a mute cannot reach one. That is the ordinary consequence loop, not a
-   *  mechanism, and the suite asserts it end to end rather than trusting it.
+   *  mechanism; `feed.test.mjs`' R14/R31 test holds that a mute row naming an obligation's kind suppresses
+   *  none.
    * ======================================================================== */
   /** This member's mute rows, as the pure decision wants them: a Map
    *  case_id -> Set(kind). A caller with no member (a machine credential, an
@@ -134915,7 +135406,12 @@ var PROJECT_NAMING_READS_NOT = Object.freeze({
   sourceof: "`capture` is a CAPTURE's digest",
   sourcerung: "`source_id` is a SOURCE id, never a bundle id",
   sourcereadlog: "`source_id` is a SOURCE id, never a bundle id",
-  sourcepublishable: "`source_id` is a SOURCE id, never a bundle id"
+  sourcepublishable: "`source_id` is a SOURCE id, never a bundle id",
+  /* K921's reads: a filing template's or a local fact's own key, never a bundle id. */
+  templateread: "`template` is a TEMPLATE id (`TPL-`) and `version` one of its versions, never a bundle id",
+  templatecomments: "`template` is a TEMPLATE id (`TPL-`) and `version` one of its versions, never a bundle id",
+  factstatus: "`path` is a local FACT's path in a profile, never a bundle id",
+  factsdue: "`paths` are local FACTs' paths in a profile, never a bundle id"
 });
 function existenceRead(membershipOf2, op, url, body) {
   const params = Object.hasOwn(PROJECT_NAMING_READS, op) ? PROJECT_NAMING_READS[op] : null;
@@ -135106,9 +135602,11 @@ var Store = class extends DurableObject {
     reviewOf(ctx);
     intentOf(ctx);
     caseAuthoringOf(ctx);
+    const localFacts = localFactsOf(ctx);
     const conformance = conformanceOf(ctx);
     const consequences = consequencesModule(ctx, { conformance });
     actionClocksOf(ctx);
+    const filingTemplates = filingTemplatesOf(ctx);
     filingsOf(ctx, { actions: actionsOf(ctx), conformance, standards: standardsOf(ctx), consequences });
     escalationOf(ctx);
     actionPlansOf(ctx);
@@ -135126,7 +135624,7 @@ var Store = class extends DurableObject {
     schedulerOf(ctx, env);
     ctx.blockConcurrencyWhile(async () => this.#migrate());
     ctx.blockConcurrencyWhile(async () => schedulerOf(ctx, env).start());
-    queueOf(ctx, { env }).migrate();
+    queueOf(ctx, { env, filingTemplates, localFacts }).migrate();
     tasksOf(ctx, { env }).migrate();
     ctx.blockConcurrencyWhile(async () => instanceSetupOf(ctx, env).start());
   }
@@ -135165,6 +135663,9 @@ var Store = class extends DurableObject {
     progressionsOf(this.ctx).migrate();
     biasOf(this.ctx).migrate();
     intentOf(this.ctx).migrate();
+    localFactsOf(this.ctx).migrate();
+    filingTemplatesOf(this.ctx).migrate();
+    filingTemplatesOf(this.ctx).migrateFromFilings();
     addColumns();
     retrievalOf(this.ctx).migrate();
     recordOf(this.ctx).seedMintLedger(MINT_LEDGER_LIVE);
@@ -135246,10 +135747,14 @@ var Store = class extends DurableObject {
       ...retrievalRoutes(retrievalOf(ctx), url, body),
       ...actionsOps(actionsOf(ctx), url, body),
       ...actionClocksOps(actionClocksOf(ctx), url, body),
+      ...localFactsOps(localFactsOf(ctx), url, body),
+      /* R11 (K921) */
       ...standardsOps(standardsOf(ctx), url, body),
       ...conformanceOps(conformanceOf(ctx), url, body),
       ...consequencesOps(consequencesModule(ctx), url, body),
       ...filingsOps(filingsOf(ctx), url, body),
+      /* R11 (K921): after filings', so `op=templates`, in both maps until filings drops its arm, is filing-templates' (K991). */
+      ...filingTemplatesOps(filingTemplatesOf(ctx), url, body),
       ...actionPlansOps(actionPlansOf(ctx), url, body),
       /* `optionpropose` answers a promise, which the frame awaits */
       ...escalationOps(escalationOf(ctx), url, body),

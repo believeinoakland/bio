@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { O, world, call, opCalls, aik, cred, FORGED, QUERY_STAMPS } from "./harness.mjs";
 
 const { OPS, ACTION_PLANS_ACTIONS, ACTION_PLANS_READS, ACTION_CLOCKS_ACTIONS, ACTIONS_ACTIONS, ACTIONS_READS,
-        PLAN_PROPOSAL_ACTIONS, FILINGS_ACTIONS, FILINGS_READS } = O;
+        PLAN_PROPOSAL_ACTIONS, FILINGS_ACTIONS } = O;
 
 function callers() {
   const agent = aik();
@@ -31,7 +31,6 @@ test("R17, R29 (K711, K701): action-plans', action-clocks' and actions' acts and
   const acts = [...ACTION_PLANS_ACTIONS, ...ACTION_CLOCKS_ACTIONS, ...ACTIONS_ACTIONS, "communicationprepare", "templatesave"];
   const reads = [...ACTION_PLANS_READS, ...ACTIONS_READS, "templates"];
   assert.ok(acts.includes("planopen") && acts.includes("reminderanswer") && FILINGS_ACTIONS.includes("templatesave"));
-  assert.ok(FILINGS_READS.includes("templates"));
   const { w, list } = callers();
   let driven = 0;
   for (const c of list) {
@@ -93,4 +92,39 @@ test("R17, R29 (N407; ratification R18): op=publishpreflight carries the agent c
   w.env.calls.length = 0;
   await call(w.env, { op: "index", token: agent.token, params: { aiCred: FORGED } });
   assert.equal("aiCred" in opCalls(w.env)[0].params, false);
+});
+
+test("R17, R29 (K921; op-declarations R8): filing-templates' admitted acts (FILING_TEMPLATES_ACTIONS) are stamped author (the positional identity, class:<cls> or class:ai/<tokenId> for a machine; filing-templates reads it as author and by) and viewer; templatepropose (TEMPLATE_PROPOSAL_ACTIONS) proposer, the label, also as the author key filing-templates reads it from; factconfirm (LOCAL_FACTS_ACTIONS) its body `by`, the positional expression, an empty body included; the reads (FILING_TEMPLATES_READS, LOCAL_FACTS_READS) the viewer; a caller's copies never reach the store", async () => {
+  const { FILING_TEMPLATES_ACTIONS, TEMPLATE_PROPOSAL_ACTIONS, LOCAL_FACTS_ACTIONS, FILING_TEMPLATES_READS, LOCAL_FACTS_READS } = O;
+  assert.deepEqual([...FILING_TEMPLATES_ACTIONS].sort(), ["templateapprove", "templatedraft", "templategrantrevoke", "templateretire",
+                                                         "templatereviewgrant", "templaterevise", "templatesubmit"]);
+  assert.deepEqual([[...TEMPLATE_PROPOSAL_ACTIONS], [...LOCAL_FACTS_ACTIONS], [...FILING_TEMPLATES_READS], [...LOCAL_FACTS_READS].sort()],
+                   [["templatepropose"], ["factconfirm"], ["templates"], ["factsdue", "factstatus"]]);
+  const reads = [...FILING_TEMPLATES_READS, ...LOCAL_FACTS_READS];
+  const { w, list } = callers();
+  let driven = 0;
+  for (const c of list) {
+    for (const op of [...FILING_TEMPLATES_ACTIONS, ...TEMPLATE_PROPOSAL_ACTIONS, ...LOCAL_FACTS_ACTIONS, ...reads]) {
+      assert.ok(Object.hasOwn(OPS, op), `${op} has a spec`);
+      for (const body of OPS[op].mutating ? [{ ...FORGE, path: "p" }, undefined] : [undefined]) {
+        w.env.calls.length = 0;
+        await call(w.env, { op, token: c.token, params: { ...c.params, ...FORGE }, method: OPS[op].mutating ? "POST" : "GET", body });
+        const inner = opCalls(w.env).filter((x) => x.route === op);
+        if (!inner.length) continue;   /* a caller its row does not admit */
+        driven++;
+        const p = inner[0].params;
+        assert.equal(p.viewer, c.viewer, `${op} viewer for ${c.name}`);
+        if (FILING_TEMPLATES_ACTIONS.includes(op)) assert.equal(p.author, c.author, `${op} author for ${c.name}`);
+        else if (TEMPLATE_PROPOSAL_ACTIONS.includes(op)) assert.deepEqual([p.proposer, p.author], [c.proposer, c.proposer], `${op} for ${c.name}`);
+        else assert.equal("author" in p, false, `${op} carries no author for ${c.name}`);
+        if (LOCAL_FACTS_ACTIONS.includes(op)) {
+          assert.equal(inner[0].body?.by, c.author, `${op}'s body by for ${c.name}`);
+          if (body) assert.equal(inner[0].body.path, "p");
+          for (const k of QUERY_STAMPS) assert.notEqual(inner[0].body[k], FORGED, `${op}: a forged body ${k} for ${c.name}`);
+        }
+        for (const k of QUERY_STAMPS) assert.notEqual(p[k], FORGED, `${op}: a forged ${k} reached the store for ${c.name}`);
+      }
+    }
+  }
+  assert.ok(driven > 40, String(driven));
 });

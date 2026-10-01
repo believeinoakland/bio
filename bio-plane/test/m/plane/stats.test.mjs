@@ -1,6 +1,6 @@
-/* plane R10 (K842, K861): the stats figures (op=stats and purge's proof) and the leg grades, registered under their
-   owners' names, and the plane's own stats sight (`src/plane/stats.mjs`), registered as `plane`, each answering as it
-   answered under `legacy-store`. */
+/* plane R10 (K842, K861, K923): the stats figures (op=stats and purge's proof) and the leg grades, each owner's export
+   registered by plane under its owner's name, and the plane's own stats sight (`src/plane/stats.mjs`), registered as
+   `plane`; each value is pinned as `legacy-store` answered it. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { store } from "./fixture.mjs";
@@ -17,7 +17,7 @@ import { RunProductions } from "../../../src/run-productions/index.mjs";
 import { BasisVersions } from "../../../src/basis-versions/index.mjs";
 import { ObservationLog } from "../../../src/observation-log/index.mjs";
 
-/* The figures the held copy answered on the wire; their order is free (K861 (5)). */
+/* The figures op=stats answers on the wire, the set `legacy-store` answered (pinned); their order is free (K861 (5)). */
 const WIRE = ["bundles", "files", "history", "refs", "textIndexOk", "projectParticipants", "projectOwnerVotes",
               "proposedReadings", "inquiryMigrationReplays", "observationsNonLead", "basisVersions", "basisVersionLegs",
               "suggestRefusals"];
@@ -40,7 +40,7 @@ async function world() {
 }
 const one = (x, q, ...a) => [...x.ctx.storage.sql.exec(q, ...a)][0];
 
-test("R10: op=stats answers every figure the held copy answered, through the caller's sight, each as its table counts it", async () => {
+test("R10: op=stats answers every figure of the wire's set, through the caller's sight, each as its table counts it", async () => {
   const x = await world();
   const whole = await x.call("/stats", null);   /* no viewer sent: a direct internal call, counted whole */
   for (const k of WIRE) assert.equal(Object.hasOwn(whole, k), true, `op=stats carries ${k}`);
@@ -117,7 +117,7 @@ test("R10: each owner's figures are registered under its own name, the stats sig
   assert.equal(promotionOf(x.ctx).registerStep("plane-held", {}).ok, true, "no step is held as `plane-held`");
 });
 
-test("R10: the leg grades registered as `inquiry` cap each leg's capture letter by its target's earned capture ceiling, as the held copy answered them (inquiry R13, R14)", async () => {
+test("R10: the leg grades registered as `inquiry` cap each leg's capture letter by its target's earned capture ceiling, as inquiry's export answers them (inquiry R13, R14)", async () => {
   const x = await world();
   const legs = [{ grade: "A", target_id: x.P }, { grade: "C", target_id: "INFO-none" }, { grade: "B", target_id: x.P }];
   const cap = inquiryOf(x.ctx).earned(null, [x.P, "INFO-none"])?.earned?.capture || {};
