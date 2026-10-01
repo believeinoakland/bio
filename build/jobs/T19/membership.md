@@ -1,6 +1,6 @@
 # membership (T19)
 
-**Status** · session_01HzHv55JX2Tnkf7jv6Tquna · depth 2 · WAITING ON BOB (J4) · handled B7
+**Status** · session_01HzHv55JX2Tnkf7jv6Tquna · depth 2 · WORKING · handled B7
 
 ## J1 · QUESTION
 
