@@ -1265,25 +1265,30 @@ async function fetchRepoAsset(man) {
 }
 async function selectRelease(emit) {
   emit.step("rel", "Checking the public repository for the newest release");
-  let man = null;
+  let man = null, said = "";
   try {
     man = await fetchRepoManifest();
     if (vcmp(man.version, RELEASE_VERSION) > 0) {
       const source = await fetchRepoAsset(man);
-      emit.ok("rel", "The repository has " + man.version + ", newer than the built-in " + RELEASE_VERSION + ". " + (ARMED_SIGNERS.length ? "It carries a valid signature from a key this installer trusts, so that is what installs." : "Its integrity checked out, so that is what installs."));
-      return { version: String(man.version), source, from: "repository", man };
-    }
-    emit.ok("rel", "The built-in release (" + RELEASE_VERSION + ") is current.");
-    return { version: RELEASE_VERSION, source: RELEASE_SOURCE, from: "built-in", man };
+      const lim2 = planeLimits(source);
+      if (lim2.ok) {
+        emit.ok("rel", "The repository has " + man.version + ", newer than the built-in " + RELEASE_VERSION + ". " + (ARMED_SIGNERS.length ? "It carries a valid signature from a key this installer trusts, so that is what installs." : "Its integrity checked out, so that is what installs."));
+        return { version: String(man.version), source, from: "repository", man, limits: lim2.limits };
+      }
+      said = "The repository has " + man.version + ", but it " + LIMITS_NOT_STATED[lim2.why] + (lim2.detail ? " (" + lim2.detail + ")" : "") + ", so it was NOT used. The installer's own built-in release (" + RELEASE_VERSION + ") installs instead.";
+    } else said = "The built-in release (" + RELEASE_VERSION + ") is current.";
   } catch (e) {
     if (!(e && (e.integrity || e.unsigned || e.signature))) man = null;
     const fallback = " The installer's own built-in release (" + RELEASE_VERSION + ") installs instead, which is safe. This is worth mentioning to the publisher of CivicOS releases.";
-    emit.ok(
-      "rel",
-      e && e.integrity ? "The repository's copy did not pass its integrity check, so it was NOT used." + fallback : e && e.unsigned ? "The repository's copy carries no signature, and this installer only accepts signed releases, so it was NOT used." + fallback : e && e.signature ? "The repository's copy is signed, but not by a key this installer trusts (" + (e.reason || "invalid") + "), so it was NOT used." + fallback : "The public repository was not reachable just now, so the built-in release (" + RELEASE_VERSION + ") is used. That is fine."
-    );
+    said = e && e.integrity ? "The repository's copy did not pass its integrity check, so it was NOT used." + fallback : e && e.unsigned ? "The repository's copy carries no signature, and this installer only accepts signed releases, so it was NOT used." + fallback : e && e.signature ? "The repository's copy is signed, but not by a key this installer trusts (" + (e.reason || "invalid") + "), so it was NOT used." + fallback : "The public repository was not reachable just now, so the built-in release (" + RELEASE_VERSION + ") is used. That is fine.";
   }
-  return { version: RELEASE_VERSION, source: RELEASE_SOURCE, from: "built-in", man };
+  const lim = planeLimits(RELEASE_SOURCE);
+  if (!lim.ok) {
+    emit.no("rel", said);
+    return { refused: "This installer's built-in release (" + RELEASE_VERSION + ") " + LIMITS_NOT_STATED[lim.why] + (lim.detail ? " (" + lim.detail + ")" : "") + ". The plane's limits are a decision the signed release states, and this installer holds no value of its own to send in their place." };
+  }
+  emit.ok("rel", said);
+  return { version: RELEASE_VERSION, source: RELEASE_SOURCE, from: "built-in", man, limits: lim.limits };
 }
 var enc = new TextEncoder();
 var b64url = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
@@ -1413,7 +1418,28 @@ var INSTANCE_AI_BINDING = "INSTANCE_AI_TOKEN";
 var INSTANCE_AI_RE = /^[\x21-\x7e]{16,512}$/;
 var instanceAiOk = (v) => typeof v === "string" && INSTANCE_AI_RE.test(v);
 var instanceAiBinding = (v) => instanceAiOk(v) ? [{ type: "secret_text", name: INSTANCE_AI_BINDING, text: v }] : [];
-var PLANE_LIMITS = Object.freeze({ subrequests: 1e4 });
+var LIMITS_TAG = "bio-plane-limits/1";
+function planeLimits(source) {
+  if (typeof source !== "string") return { ok: false, why: "none" };
+  const bodies = /* @__PURE__ */ new Set();
+  for (const m of source.matchAll(/(["'`])bio-plane-limits\/1( [^"'`\\\n]*)\1/g)) bodies.add(m[2]);
+  if (bodies.size === 0) return { ok: false, why: "none" };
+  if (bodies.size > 1) return { ok: false, why: "unreadable", detail: "it states them " + bodies.size + " different ways" };
+  const [body] = bodies;
+  const limits = {};
+  let last = "";
+  for (const part of body.slice(1).split(" ")) {
+    const kv = /^([a-z][a-z0-9_]*)=([1-9][0-9]{0,8})$/.exec(part);
+    if (!kv || kv[1] <= last) return {
+      ok: false,
+      why: "unreadable",
+      detail: `"${LIMITS_TAG}${body}" is not one key=number per limit, keys sorted`
+    };
+    limits[last = kv[1]] = Number(kv[2]);
+  }
+  return { ok: true, limits: Object.freeze(limits) };
+}
+var LIMITS_NOT_STATED = { none: "states no limits for the plane", unreadable: "states the plane's limits unreadably" };
 var PROFILES_BINDING = "JURISDICTION_PROFILES";
 var HELD_CHOICES = new Set(PROFILE_CHOICES.map((p) => p.id));
 var profilesBinding = (ids) => Array.isArray(ids) && ids.length ? [{ type: "plain_text", name: PROFILES_BINDING, text: ids.join(",") }] : [];
@@ -1431,8 +1457,8 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
     main_module: "index.mjs",
     compatibility_date: "2026-07-01",
     compatibility_flags: ["nodejs_compat"],
-    /* DIST-7 (D-54): the plane's subrequest ceiling, a decision the release states, never Cloudflare's default. */
-    limits: { ...PLANE_LIMITS },
+    /* R20: the plane's limits exactly as the release R8 chose states them (selectRelease), never a value of our own. */
+    limits: { ...release.limits },
     bindings: [
       { type: "durable_object_namespace", name: "STORE", class_name: "Store" },
       { type: "plain_text", name: "VERSION", text: release.version },
@@ -1482,8 +1508,8 @@ async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
     main_module: "index.mjs",
     compatibility_date: "2026-07-01",
     compatibility_flags: ["nodejs_compat"],
-    /* DIST-7 (D-54): the plane's subrequest ceiling, a decision the release states, never Cloudflare's default. */
-    limits: { ...PLANE_LIMITS },
+    /* R20: as on install; restated every update, because a copy installed before DIST-7 has no limit to keep. */
+    limits: { ...release.limits },
     bindings: [
       { type: "plain_text", name: "VERSION", text: release.version },
       /* D-102: bound on UPDATE as well as install, which is what retro-names
@@ -1884,6 +1910,14 @@ async function runInstall(emit, code, saved) {
       "Detail: " + e.message
     );
   }
+  const release = await selectRelease(emit);
+  if (release.refused) {
+    return emit.fail(
+      "This installer cannot say which limits your copy runs under",
+      "Nothing was created, so there is nothing to clean up. " + release.refused,
+      "This is for the publisher of CivicOS releases to fix with a release that states them; try again after the next release."
+    );
+  }
   emit.step("plan", "Checking your account's Workers plan");
   let planAnswer;
   try {
@@ -1920,7 +1954,6 @@ async function runInstall(emit, code, saved) {
       "To continue: sign in at dash.cloudflare.com with this same account, open Billing, add a card or PayPal, then come back here and run the installer again. (Cloudflare said: " + e.message + ")"
     );
   }
-  const release = await selectRelease(emit);
   emit.step("gen", "Generating your credentials");
   const secrets = {
     boot: rand(32),
@@ -2102,6 +2135,13 @@ async function runUpdate(emit, code, saved) {
   } catch {
   }
   const release = await selectRelease(emit);
+  if (release.refused) {
+    return emit.fail(
+      "This update cannot say which limits your copy runs under",
+      "Your copy is still running the version it had before. Nothing about it changed. " + release.refused,
+      "This is for the publisher of CivicOS releases to fix with a release that states them; try again after the next release."
+    );
+  }
   let before = null;
   try {
     const sub0 = (await cf(token, `/accounts/${acct.id}/workers/subdomain`))?.subdomain;
@@ -2260,9 +2300,9 @@ export {
   BROWSER_BINDING,
   CFG,
   INSTANCE_AI_BINDING,
-  PLANE_LIMITS,
   PROFILES_BINDING,
   index_default as default,
   instanceAiOk,
+  planeLimits,
   reportsBuilds
 };
