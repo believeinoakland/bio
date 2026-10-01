@@ -14,3 +14,7 @@
 - **Tests:** `node --test bio-plane/test/m/monitoring/`: tests 78, pass 72, fail 0, todo 6. No layer tests named in `build/manifest.md`. No provided service changed, so no users' tests are owed.
 - **Checks:** format: 84 modules, 82 requirements files; 0 failures. architecture: 14 product files, 68 relative imports; 0 failures. coverage: 50 of 50 live requirement ids named by a test; 0 failures. ownership: 4 files changed by monitoring between tranche/T20 and HEAD; 0 failures.
 - Size (session_01Cpz9f7P1pAVBihwqHqZ5Xe): test runs 1, module lines 2545
+
+## J1 · COMPLETE
+
+Complete (B1). K899 (1) applied at index.mjs:485, :1040, :1056; re-scan of my paths found no other member-read string holding the word (bundleId in REQUIRED_ARGUMENT_MISSING is the argument's identifier). look.test.mjs re-keyed; the other two sentences now pinned (tick.test.mjs R1, look.test.mjs R11). test/m/monitoring 72 pass, 0 fail, 6 todo; format, architecture, coverage (50/50), ownership (4 files) all 0 failures. Stale generated artifacts: the plane bundle, and release/bio-plane.bundled.mjs and newgroup/src/release.mjs (with newgroup's dist) which embed it. Details in the record's Completion section.
