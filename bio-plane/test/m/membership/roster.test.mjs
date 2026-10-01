@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
-import { MACHINE_CLASS_PREFIX, CUSTODIAL_CHECKS } from "../../../checks/bio-checks.mjs";
+import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
+import { CUSTODIAL_CHECKS } from "../../../src/membership/checks.mjs";
 
 test("R12 memberAdd: NOT_AN_ADMIN for a non-administrator member, a machine credential accepted; refusals in order", async () => {
   const w = await world().group("ann");

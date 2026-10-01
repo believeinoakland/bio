@@ -4,7 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
 import { notAnAdmin, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
-import { MACHINE_CLASS_PREFIX } from "../../../checks/bio-checks.mjs";
+import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
 
 const FIELDS = ["by", "check", "code", "detail", "ok", "reason", "translation"];
 const ROW = MEMBERSHIP_CHECKS.NOT_AN_ADMIN;

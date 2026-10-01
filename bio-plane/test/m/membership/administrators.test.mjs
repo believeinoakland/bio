@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
 import { Membership } from "../../../src/membership/index.mjs";
-import { CUSTODIAL_CHECKS } from "../../../checks/bio-checks.mjs";
+import { CUSTODIAL_CHECKS } from "../../../src/membership/checks.mjs";
 
 /* founder + second + third (a proposed third needs both to endorse) */
 async function threeAdmins() {

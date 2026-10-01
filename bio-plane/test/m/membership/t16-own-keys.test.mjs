@@ -6,7 +6,9 @@ import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { world, sqlOver, V } from "./fixture.mjs";
 import { Membership, MEMBERSHIP_CHECKS, membershipOf, viewerPredicate } from "../../../src/membership/index.mjs";
-import { MACHINE_CLASS_PREFIX, CUSTODIAL_CHECKS, SIGNER_ENROLMENT_CHECKS } from "../../../checks/bio-checks.mjs";
+import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
+import { CUSTODIAL_CHECKS } from "../../../src/membership/checks.mjs";
+import { SIGNER_ENROLMENT_CHECKS } from "../../../checks/bio-checks.mjs";
 
 const snapshot = (w) => JSON.stringify(w.rows(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`)
   .map(({ name }) => [name, w.rows(`SELECT * FROM "${name}"`)]));

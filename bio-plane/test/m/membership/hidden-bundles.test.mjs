@@ -4,7 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, realWorld, V } from "./fixture.mjs";
 import { hiddenBundles, viewerPredicate, GATE_MARK } from "../../../src/membership/index.mjs";
-import { MACHINE_CLASS_PREFIX } from "../../../checks/bio-checks.mjs";
+import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
 
 /* INFO-I and CASE-C not projects; PROJ-H hidden (owner ann; bob invited, cal joined then leaving); PROJ-D discoverable
    (owner ann); PROJ-M a machine-made project with no participant; dee outside every project; second an administrator. */
