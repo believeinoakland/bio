@@ -60,7 +60,7 @@ Terms. The **document address** is what the record identifies the document by; t
 ### Uses
 
 - `jurisdictions`: `combine` (R17's view).
-- `legacy-checks`: `isPublicHttpsLocator`, `createSha256`, `EARNED_CAPTURE_CEILING`, `UNREACHABLE_CAPTURE_GRADE` (re-exported from `record-grammar` where moved); the rows of R29 until this module's copies are its own.
+- `record-grammar`: `isPublicHttpsLocator`, `createSha256`, `EARNED_CAPTURE_CEILING`, `UNREACHABLE_CAPTURE_GRADE`.
 - `subresources`: `captureSubresources`, `normalizeAddress`, `normalizeCitation`.
 - `odf-reader`: `odfEvidentiaryDigest`, `ODF_FORMATS` (R17's digests).
 - `format-registry`: `detectFormat`.
