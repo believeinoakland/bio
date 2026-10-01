@@ -29,8 +29,7 @@
  * weeks after a meeting are a fact about the body, not a gap in the record.
  */
 import { CONFIDENCE, CONTRACT, entity, referential, temporal, diffEntities, practiceValue } from "./index.mjs";
-import { event, worstSignificance, isMeaningful, bySeverity } from "../events.mjs";
-import { unescapeHtml } from "../index.mjs";
+import { event, worstSignificance, isMeaningful, bySeverity, unescapeHtml } from "../../site-profiles/index.mjs";
 
 /* How long after a meeting minutes stop being merely late is the JURISDICTION'S
    practice, not this reader's: it is the view's `practice.minutes_due_days`, with the
@@ -174,7 +173,7 @@ export default {
     };
 
     /* Every event below is built with event(type, ...), which stamps the significance
-       from the shared catalogue (events.mjs) rather than inline here — so the grade
+       from the shared catalogue (site-profiles' events.mjs) rather than inline here — so the grade
        lives in one place and a typo'd type throws instead of quietly becoming routine.
        `meaningful` and `worst` are then DERIVED from those graded events, never
        carried as separate facts (CONSTRUCTS Step 0 #5, #6). */

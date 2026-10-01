@@ -72,7 +72,7 @@
  *     (document B) an address's own line may carry two people's text or none; the
  *     entry's `line` fact is that line, verbatim, never a pairing this reader guessed. */
 import { CONFIDENCE, CONTRACT, entity, diffEntities, flatten, alsoSatisfies } from "./index.mjs";
-import { event, worstSignificance, isMeaningful, bySeverity } from "../events.mjs";
+import { event, worstSignificance, isMeaningful, bySeverity } from "../../site-profiles/index.mjs";
 
 /* The smallest number of distinct addresses at one domain that makes contact points the
    BODY of a document rather than a signature block. A staff report names one contact;

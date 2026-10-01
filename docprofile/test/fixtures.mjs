@@ -128,11 +128,6 @@ export const PA_AGENDA = [
   "PA-101",
 ].join("\n");
 
-/** The same agenda with PA-102 pulled and PA-104 added, PA-103's subject changed. */
-export const PA_AGENDA_REVISED = PA_AGENDA
-  .replace("2.1\nPA-102", "2.1\nPA-104")
-  .replace("Mooring Permits", "Mooring Permits And Waitlist");
-
 /** Minutes: masthead at page rate, a motion with its vote, a roster, the frame. */
 export const PA_MINUTES = [
   "Wednesday, March 4, 2026",
@@ -215,7 +210,7 @@ export const PA_DIRECTORY = [
   "Fay Lin, Engineer  flin@portalder.test  555-201-0006",
 ].join("\n");
 
-/* ---- HTML captures, for the stack axis and the layered pipeline ---- */
+/* ---- HTML captures, for the layered pipeline ---- */
 
 const vs = (v) => `<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="${v}" />`;
 
@@ -233,14 +228,6 @@ export function calendarHtml(rows, { state = "abc", range = "This Month" } = {})
 <input id="ctl00_lstYears_Input" value="${range}" />
 <table>${tr}</table>
 </main></form></body></html>`;
-}
-
-/** A WordPress article; `nav` is the site navigation outside the article. */
-export function wordpressArticle({ nav = "Home | News", body = "The harbor reopened today." } = {}) {
-  return `<html><head><meta name="generator" content="WordPress 6.5" />
-<link rel="stylesheet" href="/wp-content/themes/x/style.css?ver=1.2" /></head>
-<body><nav>${nav}</nav><article><h1>Harbor</h1><p>${body}</p></article>
-<footer>© the paper</footer></body></html>`;
 }
 
 /** A client-rendered shell: an empty mount point, a framework marker, no prose. */

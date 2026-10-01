@@ -65,7 +65,7 @@
 import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, flatten, alsoSatisfies,
          vocabulary, vocabRegex, vocabPatterns, allMatches, enactmentPatterns, enactmentNumber, codePatterns,
          IN_PROSE } from "./index.mjs";
-import { event, worstSignificance, isMeaningful, bySeverity } from "../events.mjs";
+import { event, worstSignificance, isMeaningful, bySeverity } from "../../site-profiles/index.mjs";
 
 /* The memorandum header's four labels. Matched over flattened text and as a BLOCK —
    see `memoHeader`. */

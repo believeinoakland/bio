@@ -2,7 +2,7 @@
  *
  * Before CONSTRUCTS Step 0 this file carried its own ordered loop and its own rank
  * table, a near-duplicate of the stack registry's. Now both axes are `makeRegistry()`
- * instances of the one recogniser engine (recogniser.mjs), which is the whole claim
+ * instances of the one recogniser engine (site-profiles' recogniser.mjs), which is the whole claim
  * of framework §4: a third axis is a third `makeRegistry()`, not a third loop.
  *
  * SEVEN types are registered today -- `meeting_calendar`, `meeting_agenda`,
@@ -36,7 +36,7 @@
  * probably looks like is a type that reassures people about things it has not
  * understood. The generic type reports change without describing it, which is noisy and
  * honest, and the noise is the prompt to go and measure. */
-import { makeRegistry } from "../recogniser.mjs";
+import { makeRegistry } from "../../site-profiles/index.mjs";
 import meetingCalendar from "./meeting-calendar.mjs";
 import meetingAgenda from "./meeting-agenda.mjs";
 import meetingMinutes from "./meeting-minutes.mjs";

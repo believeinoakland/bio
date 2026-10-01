@@ -1,27 +1,12 @@
-/* The registry, in priority order. Most specific first; the first CERTAIN
-   detection wins and the conservative handler is last because it never matches
-   and is only ever reached by falling through.
+/* docprofile's facade: the one entry its callers import.
 
-   Adding a stack means adding a file and a line here, which is the whole point of
-   the exercise: the alternative was another branch inside the capture path. */
-import { register } from "./index.mjs";
-import aspnetWebforms from "./handlers/aspnet-webforms.mjs";
-import wordpress from "./handlers/wordpress.mjs";
-import clientRendered from "./handlers/client-rendered.mjs";
-import conservative from "./handlers/conservative.mjs";
-
-/* client_rendered goes FIRST. A shell can also be served by ASP.NET or WordPress,
-   and if either of those matched first the document would be profiled as a page
-   with content when it has none, which is the one failure that is silent. */
-register(clientRendered);
-register(aspnetWebforms);
-register(wordpress);
-register(conservative);
-
-export { aspnetWebforms, wordpress, clientRendered, conservative };
-export * from "./recogniser.mjs";
-export * from "./events.mjs";
-export * from "./index.mjs";
+   The host-stack axis, the shared registry and ladder, the three digests, fidelity, the
+   profile record and the event catalogue are `site-profiles`' (split from this module,
+   K653 BOB-2), which registers its four built-in handlers itself. Its names are
+   re-exported here beside this module's own (the content-type axis, the layered
+   `assess`, `readText`), so a caller reaches both through this file and the split moved
+   no importer. */
+export * from "../site-profiles/index.mjs";
 export * from "./pipeline.mjs";
 export * from "./readtext.mjs";
 export * from "./doctypes/registry.mjs";

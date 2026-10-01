@@ -54,7 +54,7 @@
  */
 import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, flatten, alsoSatisfies,
          vocabPatterns, anyMatch, allMatches, enactmentPatterns, enactmentNumber, codePatterns } from "./index.mjs";
-import { event, worstSignificance, isMeaningful, bySeverity } from "../events.mjs";
+import { event, worstSignificance, isMeaningful, bySeverity } from "../../site-profiles/index.mjs";
 
 /* THE OPERATIVE VOICE — a body enacting, in the forms the measured instruments use plus
    the general shapes. It is the language of enactment, the same in every jurisdiction
