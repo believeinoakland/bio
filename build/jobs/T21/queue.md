@@ -29,3 +29,7 @@
 - `checks/format.mjs`: 0 failures; `checks/architecture.mjs bio queue`: 0 failures; `checks/coverage.mjs bio queue`: 37 of 37 live ids named, 0 failures; `checks/ownership.mjs bio queue tranche/T21`: 8 files changed, 0 failures.
 
 Size (session_01WF7vUMo8WEARASdFVkSXE4): test runs 13, module lines 2620
+
+## J1 · REPORT
+
+Generated artifact staled: my change to bio-plane/src/ (queuestate.mjs, queue/) stales the plane bundle bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (owner not_product); I regenerated nothing. Also seen, not from queue: test/m/control-plane 91/93 (R43/R22 decoration; R22 CHECK_FAMILIES totality) and test/m/affordances 132/133 (layer 9's op maps, R3 R7 R12) fail identically with my change stashed.
