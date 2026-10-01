@@ -2,10 +2,11 @@
    workerd's does (a CURSOR, iterable once, with `toArray()` and `one()`, never an array; K316); every other provider a
    fake in the shape its requirements publish, which a test fills. The tables other modules own and this module reads
    by their read contracts (record-core R37, connections R58) are their owners' schemas where an owner publishes one
-   (record-core's, membership's), else created here with exactly the contracted columns. */
+   (record-core's, membership's, credentials'), else created here with exactly the contracted columns. */
 import { DatabaseSync } from "node:sqlite";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
+import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { tasksOf } from "../../../src/tasks/index.mjs";
 
 export const NOW = Date.parse("2026-09-01T00:00:00Z");
@@ -23,7 +24,8 @@ function cursor(rows) {
   return it;
 }
 
-/** A host over one in-memory database: `{db, host, record, membership, boot}`. `bare`: no table exists until `boot()`. */
+/** A host over one in-memory database: `{db, host, record, membership, credentials, boot}`; the founder's claim, which
+ *  membership reads through credentials (its R94; credentials R17), is made through credentials (its R1). `bare`: no table exists until `boot()`. */
 export function host({ bare = false } = {}) {
   const db = new DatabaseSync(":memory:");
   const statements = [];
@@ -40,14 +42,16 @@ export function host({ bare = false } = {}) {
   const h = { storage };
   const record = recordOf(h, { evidence: null, evidencePrefix: "bio/captures/" });
   const membership = membershipOf(h, { record });
+  const credentials = credentialsOf(h, { record, membership });
   const boot = () => {
     for (const t of RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";")) if (t.trim()) db.exec(t);
     db.exec(`CREATE TABLE IF NOT EXISTS refs (bundle_id TEXT, target_id TEXT, kind TEXT)`);
     record.migrate();
     membership.migrate();
+    credentials.migrate();
   };
   if (!bare) boot();
-  return { db, sql, host: h, record, membership, statements, boot };
+  return { db, sql, host: h, record, membership, credentials, statements, boot };
 }
 
 /** `bare`: the instance is reached before any table exists (a store's first boot); `w.boot()` then creates them. */
