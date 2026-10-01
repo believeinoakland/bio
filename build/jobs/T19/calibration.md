@@ -22,3 +22,7 @@
 - `format`: 87 modules, 82 requirements files; 0 failures. `architecture`: 8 product files, 21 relative imports; 0 failures. `coverage`: 20 of 20 live requirement ids named by a test; 0 failures. `ownership`: 9 files changed; legacy-checks 0 added 0 removed; legacy-store 1 added 3 removed; 0 failures.
 
 Size (session_01SiBLUU5DMdgNvvx69HUkWp): test runs 20, module lines 1107
+
+## J1 · COMPLETE
+
+Calibration T19 L4 complete on job/T19/calibration. R20 met, tested by test/m/calibration/migrate.test.mjs: migrate() runs CALIBRATION_SCHEMA itself; schema.mjs drops its import and interpolation; store.mjs #migrate calls calibrationOf(this.ctx).migrate() right after the schema pass (legacy-store +1/-3; the one added line is in the ownership output). Rule 1: BASIS_GRADES re-pointed to record-grammar in src/calibration.mjs and rules.test.mjs; no calibration file imports bio-checks.mjs. Module tests 65/65; extraction, scheduler, content, legacy-store suites green; format/architecture/coverage/ownership 0 failures. Nothing deferred. The plane bundle is stale (not_product, regenerated at close). Old suites bounds/airuns/airun/hygiene/versionchain/textchain fail at load on the tranche before and after alike. Details in the record.
