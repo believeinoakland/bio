@@ -43,3 +43,6 @@ QUEUE #10 complete on job/T21/queue. Applied B1: R1 catalogues template-review-r
 **Applied:** merged `tranche/T21` (queue-producers R20, R21 merged, K1000). `action.test.mjs`' K728 test, red on the tranche (`calendarFactsRead is not a function`), now gives the `actionClocks` fake `calendarFactsRead` answering one path a live deadline reads, and fakes `filingTemplates.reviewsRequested` and `localFacts.factsDue` recording their calls: it proves R20's and R21's deps reach queue-producers (each asked with the viewer; `factsDue` asked of the path `calendarFactsRead` answered). Negative control: with `localFacts` removed from `PRODUCER_DEPS`, the test fails.
 
 **Tests:** `test/m/queue/` 80/80; `test/m/queue-producers/` 49/49; `test/m/plane/` 28/28. Checks: format 0, architecture 0, coverage 37 of 37, ownership below.
+- `checks/ownership.mjs bio queue tranche/T21`: 2 files changed, 0 failures.
+
+Size (session_01WF7vUMo8WEARASdFVkSXE4): test runs 18, module lines 2620
