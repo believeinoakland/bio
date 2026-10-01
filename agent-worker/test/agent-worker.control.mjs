@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /* THE NEGATIVE CONTROL DRIVER for FL-2 (the agent Worker) and VF-3 (coverage
  * gates the fleet). Deliberately NOT a `.test.mjs`: it EDITS REAL SOURCES while
- * it runs, and neither `scripts/battery.mjs` nor the fleet walk must discover it
- * (PL-3/PL-4/PL-11's precedent).
+ * it runs, and no runner may discover it — the package's `npm test` and
+ * `node --test` take only `*.test.mjs` (PL-3/PL-4/PL-11's precedent).
  *
  *   node agent-worker/test/agent-worker.control.mjs           all arms
  *   node agent-worker/test/agent-worker.control.mjs A3 V2     named arms only
@@ -522,25 +522,39 @@ arm({
   },
 });
 
+/* RE-POINTED BY AGENT-WORKER #8 (T21, N467). V5 spawned `bio-plane/scripts/battery.mjs agent-worker`, which T20
+   deleted (LEGACY-TESTS #18). What runs this member's suites now is its own `npm test` (`node --test` over every
+   `test/*.test.mjs`, the regression workflow's step for this package), so the property is re-pointed to it: a failed
+   assertion in this suite makes `npm test` exit non-zero and name this file, and disturbs no other suite. "No other
+   suite" is measured against a clean `npm test` taken first, since a suite may already be red for a reason of its own
+   (a stale bundle, which `requirements.test.mjs` R45 reports until the bundle is regenerated). */
+const runPackage = () => {
+  const r = spawnSync("npm", ["test"], { cwd: MEMBER, encoding: "utf8", env: { ...process.env } });
+  const out = (r.stdout || "") + (r.stderr || "");
+  const failedFiles = [...new Set([...out.matchAll(/^✖ (test\/[\w.-]+\.test\.mjs) \(/gm)].map((m) => m[1]))].sort();
+  const tally = out.match(/^ℹ fail (\d+)$/m);
+  return { status: r.status, failedFiles, ran: !!tally, out };
+};
+const PACKAGE_CLEAN = (!only.length || only.includes("V5")) ? runPackage() : null;
+
 arm({
-  id: "V5", subject: "THE BATTERY ACTUALLY RUNS THE MEMBER'S SUITE",
-  what: "the member's suite is made to fail one assertion, to prove the battery's fleet lane carries a failure rather than merely listing it",
-  mustFail: "`battery.mjs agent-worker` must exit NON-ZERO and name the member's suite in FAILED",
-  mustNot: "any plane suite — the fleet lane must not disturb the plane's",
+  id: "V5", subject: "THE PACKAGE'S OWN RUNNER ACTUALLY RUNS THE MEMBER'S SUITE",
+  what: "the member's suite is made to fail one assertion, to prove `npm test` carries a failure rather than merely listing the file",
+  mustFail: "`npm test` in agent-worker/ must exit NON-ZERO and name test/agent-worker.test.mjs as a failing file",
+  mustNot: "any other suite — the failing files must be the clean run's plus this one, and nothing else",
   file: join(HERE, "agent-worker.test.mjs"),
   find: `  t("the default bound is 120", bound, 120);`,
   replace: `  t("the default bound is 120", bound, 999);`,
   run: () => {
-    const r = spawnSync(process.execPath, [join(PLANE, "scripts", "battery.mjs"), "agent-worker"],
-      { cwd: PLANE, encoding: "utf8" });
-    const out = (r.stdout || "") + (r.stderr || "");
-    const named = /FAILED: .*agent-worker\/agent-worker\.test\.mjs/.test(out);
-    const failedLine = (out.match(/^\s*FAILED: (.*)$/m) || [, ""])[1];
-    const planeQuiet = failedLine.split(",").map((s) => s.trim()).filter(Boolean)
-      .every((f) => f === "agent-worker/agent-worker.test.mjs");
+    const r = runPackage();
+    const named = r.failedFiles.includes("test/agent-worker.test.mjs");
+    const clean = PACKAGE_CLEAN.failedFiles.filter((f) => f !== "test/agent-worker.test.mjs");
+    const othersQuiet = JSON.stringify(r.failedFiles.filter((f) => f !== "test/agent-worker.test.mjs")) === JSON.stringify(clean);
     return {
-      observed: `exit ${r.status} · the member's suite ${named ? "is NAMED in FAILED" : "was NOT named"} · plane suites ${planeQuiet ? "untouched" : "also failed"}`,
-      asDeclared: r.status !== 0 && named && planeQuiet,
+      observed: `exit ${r.status} (clean ${PACKAGE_CLEAN.status}, failing then: ${PACKAGE_CLEAN.failedFiles.join(", ") || "none"}) · `
+        + `the member's suite ${named ? "is NAMED as failing" : "was NOT named"} · other suites ${othersQuiet ? "as on the clean run" : "ALSO moved"}`,
+      asDeclared: r.ran && PACKAGE_CLEAN.ran && r.status !== 0 && named && othersQuiet
+        && !PACKAGE_CLEAN.failedFiles.includes("test/agent-worker.test.mjs"),
     };
   },
 });

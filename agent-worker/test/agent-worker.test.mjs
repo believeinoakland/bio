@@ -17,15 +17,16 @@
  * where a write would have to land.
  *
  * MINIFLARE IS RESOLVED FROM THE PLANE'S INSTALL when this directory has no
- * `node_modules`, and that is deliberate rather than lazy. `pdf-worker`'s suite
- * imports `miniflare` bare, has no install of its own, and is therefore run by
- * NOTHING — the battery discovers only `bio-plane/test/`, so the first fleet
- * member's suite has never executed while `coverage.mjs` credited its surface as
- * reached from a source read. A suite that cannot run wherever the battery runs
- * is a suite that will stop running, which is `bundle.test.mjs`'s defect (D-93)
- * one directory out.
+ * `node_modules`, and that is deliberate rather than lazy. When this was written
+ * `pdf-worker`'s suite imported `miniflare` bare, had no install of its own, and
+ * so was run by NOTHING — the old battery (deleted in T20) discovered only
+ * `bio-plane/test/`, and `coverage.mjs` credited that member's surface as reached
+ * from a source read. A suite that cannot run wherever the plane's tests run is a
+ * suite that will stop running, which is `bundle.test.mjs`'s defect (D-93) one
+ * directory out. This member has no install of its own either, and its suites run
+ * from its `npm test` with the plane's.
  */
-/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/agent-worker.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and neither the battery nor the fleet walk must discover it (PL-3/PL-4/PL-11's precedent). THE HARNESS LIVES INSIDE THIS WORKTREE and never in a shared scratchpad, which a concurrent worker overwrote between ARM and RESTORE once already. Every arm is armed ALONE with the other defences held OPEN, every restore is verified BY sha256 AND BY CONTENT (`cmp`), and every arm names what MUST fail AND what MUST NOT. **D-451, RUN 2026-09-25 BY WORKER D-451 (cloud): arms D-451a-f added, clean 139/0 (133 before). ARMED ALONE in `src/harness.mjs` — `runContextTarget`'s project branch ignores `context.questions` (FL-11's behaviour); DECLARED must fail D-451a/b/c/e, must hold D-451d/f -> 135/4 AS DECLARED. Restore verified by sha256 AND cmp.**
+/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/agent-worker.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and no runner may discover it: `npm test` and `node --test` take only `*.test.mjs` (PL-3/PL-4/PL-11's precedent). THE HARNESS LIVES INSIDE THIS WORKTREE and never in a shared scratchpad, which a concurrent worker overwrote between ARM and RESTORE once already. Every arm is armed ALONE with the other defences held OPEN, every restore is verified BY sha256 AND BY CONTENT (`cmp`), and every arm names what MUST fail AND what MUST NOT. **D-451, RUN 2026-09-25 BY WORKER D-451 (cloud): arms D-451a-f added, clean 139/0 (133 before). ARMED ALONE in `src/harness.mjs` — `runContextTarget`'s project branch ignores `context.questions` (FL-11's behaviour); DECLARED must fail D-451a/b/c/e, must hold D-451d/f -> 135/4 AS DECLARED. Restore verified by sha256 AND cmp.**
    ALL TWELVE ARMS RUN 2026-08-08 IN WORKTREE agent-ad2c65dacc2cd14ed, baseline 89/0 before each; every one AS DECLARED on the recorded pass. **RE-MEASURED 2026-08-08 BY FL-3 IN WORKTREE agent-ad6e5ed43aac4a2ab, because FL-3 changed this suite and the figures below went stale the moment it did — corrected, never left standing.** New baseline **98/0**; all twelve arms AS DECLARED again. Re-measured figures: A1 91/7 · A2 95/3 · A3 61/37 · A4 94/4 · A5 91/7 · A6 95/3 · V1-V5 unchanged (they read the instrument, not this suite) · O1 98/0 with coverage --strict exit 0. **TWO CONTROL DEFECTS THIS ITEM INTRODUCED AND FIXED, RECORDED RATHER THAN SMOOTHED:** (i) A3's patch string went stale when FL-3 gave `askPlane` a body, so the arm matched ZERO times and reported "THE ARM DID NOT ARM" — a control keyed to a source line goes stale when the line moves, and the only defence is a harness that refuses to score an arm it never armed; (ii) once re-armed, A3 KILLED this suite (`0 pass, -1 FAIL`) because FL-3's new arms read `after.log[0].op` and A3 leaves the mock's log EMPTY. The CLASS was swept across BOTH suites, not the site that bit.  Figures below are MEASURED. **TWO ARMS CAME BACK WRONG FIRST AND BOTH WERE FINDINGS ABOUT THE INSTRUMENT RATHER THAN THE SUBJECT — recorded, not smoothed** (see A2 and A3).
    (A1) FL-2'S NAMED CONTROL, HALF ONE — A DIRECT WRITE. In src/index.mjs make the member call the plane's MUTATING `op=purge` beside its read -> **83 pass, 6 FAIL**: the BEHAVIOURAL arm fails (the plane record's sha256 MOVES) AND the source-scan arm fails (the pinned op set is no longer exactly {whoami}). Held as declared: every refusal arm, the version endpoint, the bound.
    (A2) FL-2'S NAMED CONTROL, HALF TWO — A SECOND CREDENTIAL. Call the plane again under a token of the member's own -> **86 pass, 3 FAIL** (one-credential arm + compiled-in-credential arm); the write arm HELD, which is why this is armed separately: a member may write nothing and still act as somebody it was not handed. **THIS ARM CAME BACK HALF-GREEN FIRST AND THE SOURCE SCAN WAS WRONG:** it read `/aik-[0-9a-f]/`, and a credential spelled `"aik-" + "f".repeat(64)` has no hex after the prefix anywhere in the source, so the scan reported the member clean while it was calling the plane under its own token. Tightened to match the START of any string literal.
@@ -37,7 +38,7 @@
    (V2) THE FLOOR — a whole member DIRECTORY vanishing, which the undeclared-Worker gate structurally cannot see. Raise FLEET_FLOOR.members to 3 -> **exit 1** naming FLEET FLOOR; the undeclared-Worker gate stayed silent, as declared.
    (V3) A MEMBER WITH NO READABLE SURFACE. Rename the SURFACE table -> **exit 1**. This used to report `0/0 ops reached` and PASS — the emptiest possible green.
    (V4) FLEET RULE 2. Declare the `run` surface op `mutating: true` -> **exit 1** naming FLEET RULE 2; every other fleet gate silent.
-   (V5) THE BATTERY ACTUALLY RUNS THIS SUITE. Break one assertion here -> `battery.mjs agent-worker` **exits 1** and NAMES this suite in FAILED. Before FL-2 the battery ran no fleet suite at all, so a member's coverage stood on a source read of a suite nobody executed.
+   (V5) THE PACKAGE'S OWN RUNNER ACTUALLY RUNS THIS SUITE. Break one assertion here -> the member's `npm test` **exits non-zero** and NAMES this suite as the failing file. Before FL-2 the old battery ran no fleet suite at all, so a member's coverage stood on a source read of a suite nobody executed. RE-POINTED BY AGENT-WORKER #8 (T21, N467): it spawned `bio-plane/scripts/battery.mjs agent-worker` until T20 deleted the battery; the runner now is `npm test`, which runs every `test/*.test.mjs` (it ran only this file before T21).
    (O1) OVER-STRICTNESS, nothing broken, and these must PASS: a request exactly at the bound, `turns` omitted entirely, namespaces with hyphens/underscores/capitals, a run_id carrying punctuation, and a DIFFERENT well-formed credential used alone -> **89 pass, 0 FAIL, coverage --strict exit 0**.
    **RE-MEASURED 2026-08-09 BY D-276 IN WORKTREE agent-a76b49f4f882535a0 at base `8b60106`, because D-276 changed this suite and every figure above went stale the moment it did — corrected, never left standing.** New baselines **agent-worker 113/0 · fanout 175/0 · harness 199/0** (they were 98 · 172 · 194). Re-measured: A1 106/7 · A2 110/3 · A3 74/39 · A4 109/4 · A5 106/7 · A6 110/3 · V1/V3/V4/V5 unchanged (they read the instrument, not this suite) · O1 113/0 with coverage --strict exit 0. **V2 CAME BACK "THE ARM DID NOT ARM" ON A CLEAN `main` AND IT WAS PRE-EXISTING** — its anchor in `coverage.mjs` was rewritten by VF-5 (`  members:    2,   // …` became `  members:     2,`), so the patch matched ZERO times; re-anchored on the shortest unambiguous span and AS DECLARED afterwards. That is the THIRD control in this file to go stale when a source line moved, and it was visible only because this harness scores a never-armed arm as a FINDING.
    **SECTION D — D-276: THE MEANING ARM, THE ANSWER CHECK, AND THE FIXTURE.** Three separate defences, armed one at a time and then together, because what matters is which one is load-bearing for which suite. `runNamedSuite` was added to the harness for these: it could previously run only ONE of this member's three suites.
@@ -55,9 +56,9 @@
 
 /* D-186: owns $TMPDIR for this process and removes it on exit. Miniflare's
    `dispose()` disarms its own exit hook and then does not wait for the removal,
-   so the leak is on the SUCCESS path; the battery leaked 41.0 GB that way and
-   filled the machine's disk. A fleet suite the battery now runs must own its
-   ground like every plane suite does. */
+   so the leak is on the SUCCESS path; the old battery leaked 41.0 GB that way and
+   filled the machine's disk. A fleet suite that runs beside the plane's must own
+   its ground like every plane suite does. */
 import "../../bio-plane/test/sandbox.mjs";
 
 import { readFileSync } from "node:fs";
@@ -66,7 +67,7 @@ import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 /* Prefer this directory's own install; fall back to the PLANE's, which is
-   present wherever the battery can run at all. Neither path is a guess: both are
+   present wherever the plane's own tests can run at all. Neither path is a guess: both are
    resolved and the one that answers is used. */
 const { Miniflare } = await (async () => {
   try { return await import("miniflare"); } catch { /* fall through */ }
@@ -693,7 +694,8 @@ console.log("\n--- 8 · D-276: the meaning ARM, driven against the REAL plane in
    AS THE PLANE PUBLISHES THEM. A run over a project lands on a question the project confirmed-cites; `op=airun`
    now publishes that set as `context.questions`. ONE question is the target; several are left to the candidate;
    none, or a plane that publishes no set, is UNDETERMINED and stated — and the project id is never the target.
-   The through-the-op arms are harness.test.mjs FT2-FT2g and bio-plane's airun.test.mjs ARM PQ. */
+   The through-the-op arms are harness.test.mjs FT2-FT2g; that the plane publishes the set is ai-runs' R19 test
+   (`bio-plane/test/m/ai-runs/reads.test.mjs`). */
 console.log("\n--- D-451: runContextTarget over a project run's published questions ---");
 {
   const { runContextTarget } = await import("../src/harness.mjs");

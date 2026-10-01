@@ -5,7 +5,7 @@
   "version": "0.79.0",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "node test/agent-worker.test.mjs",
+    "test": "node --test --test-concurrency=1 test/*.test.mjs",
     "control": "node test/agent-worker.control.mjs"
   },
   "dependencies": {},

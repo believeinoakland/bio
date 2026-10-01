@@ -30,7 +30,8 @@
  *
  * WHAT THIS SUITE DOES NOT CLAIM. The real plane is reached with its MEMBER
  * token, not an `ai` credential — minting one is a member act with its own
- * fixtures (`aicredential.test.mjs`). What an `ai` credential may reach is a
+ * fixtures (credentials' `bio-plane/test/m/credentials/ai.test.mjs`, R12–R15).
+ * What an `ai` credential may reach is a
  * SHAPE over the OPS table (`aiTaskScope`: every non-mutating op a member
  * reaches), and section B0 asserts both reads have that shape; the credential
  * itself is not driven here.

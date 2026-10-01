@@ -28,7 +28,7 @@
  * The whole point of the table is that it stays at zero on a well-behaved run,
  * and a mock that could not count it could not tell a retry loop from a run.**
  */
-/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/harness.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and neither the battery nor the fleet walk must discover it (FL-2/PL-3/PL-4/PL-11's precedent). THE HARNESS LIVES INSIDE THIS WORKTREE and never in a shared scratchpad, which a concurrent worker overwrote between ARM and RESTORE once already. Every arm is armed ALONE with the other defences held OPEN, every restore is verified BY sha256 AND BY CONTENT (`cmp`), and every arm names what MUST fail AND what MUST NOT.
+/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/harness.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and no runner may discover it: `npm test` and `node --test` take only `*.test.mjs` (FL-2/PL-3/PL-4/PL-11's precedent). THE HARNESS LIVES INSIDE THIS WORKTREE and never in a shared scratchpad, which a concurrent worker overwrote between ARM and RESTORE once already. Every arm is armed ALONE with the other defences held OPEN, every restore is verified BY sha256 AND BY CONTENT (`cmp`), and every arm names what MUST fail AND what MUST NOT.
    (H1) DEDUP-BEFORE-WRITE IS THE TABLE'S SHAPE. Add a `submit` edge to `compose`'s `to` and make `nextStep` take it -> the declared-edge walk AND the no-compose-to-submit arm must both FAIL; every refusal arm, the gate and the budget arms must HOLD.
    (H2) F10 — DENIED MEANS ADJUST. Make `nextStep` return `submit` from `submit` when a refusal is set (a verbatim retry) -> the F10 edge arm and the through-the-op `repeats stays 0` arm must FAIL; the dedup arms must HOLD.
    (H3) F10's PRECONDITION. Make `adjust` return `submit` regardless of `adjusted` -> the dropped-candidate arm and the mock's `repeats` counter must FAIL; nothing else.
@@ -62,6 +62,7 @@
    (D1) D-452 — THE DEFECT RESTORED: `adjust` with nothing adjusted and a non-empty queue routes back to `next-pass` -> B5b's `D-452: the rest of the pass is written` must FAIL BY NAME, with the sent-exactly-once, drop-went-to-submit and counts-what-it-wrote D-452 arms, A3's `with candidates queued behind it goes on to submit the REST` and fanout B6b's legal-candidate-LANDED arm (its level-empty candidate sits behind a drop, and that assertion pinned the loss until D-452 corrected it); `D-452: the DROPPED candidate was sent ONCE and never landed`, `D-452: nothing was resent verbatim`, B4, B5, B6, A3's NOTHING-behind-it arm and every FT arm must HOLD.
    (D2) D-452 — THE LIAR'S FIX: the dropped candidate RE-QUEUED behind the rest (`src/index.mjs` `adjust`) -> `D-452: the DROPPED candidate was sent ONCE and never landed`, `D-452: nothing was resent verbatim` and B5's called-ONCE arm must FAIL BY NAME, COUPLED FT1d/FT2d/FT3 (each drives a refusal) declared; `D-452: the rest of the pass is written` must HOLD — the reason the sent-once arm exists.
    D1 AND D2 RUN 2026-09-24 BY THE D-452 WORKER on land/conduct/c18-batch8 @ b0962be0, each armed ALONE, restores verified sha256 + cmp; baseline harness 255/0 with the fix. D1 AS DECLARED first run: harness 250/5; re-run with fanout B6b added to its declaration: harness 250/5 · fanout 183/1, AS DECLARED. T1 and T2 re-run over the new arms, AS DECLARED: T1 harness 233/22 · fanout 177/7, T2 252/3 · 183/1. fanout.control 9/10 and wire-vocabulary.control clean over the corrected fanout B6b; fanout F9's one miss is the same pre-existing coverage exit. **D2 CAME BACK NOT AS DECLARED FIRST, AND IT WAS THE ARM:** re-queued at the HEAD it is a verbatim-retry loop that starves the queue, so the rest-of-pass arm failed too (243/12) — not the liar the row names. Re-armed at the TAIL: 246/9, AS DECLARED. H3 re-run under the fix (its drop arm now reads A3's NOTHING-behind-it assertion, the old one having asserted the defect): 251/4, AS DECLARED. The whole driver, 25 arms: 24 AS DECLARED; H10's harness and member suites 0 FAIL, its `coverage --strict` exit 1 PRE-EXISTING at b0962be0 (C-73.2..C-73.5 never named), not this item's.
+   (T21) RE-POINTED BY AGENT-WORKER #8 (N467, N469), and the declarations above are kept as they were made: wherever an arm above names `bio-plane/test/airun.test.mjs` or `skillsequencing.test.mjs` (both deleted in T20) as what must fail or hold, the driver now runs the module test that took that share — run-rules' R1 (`m/run-rules/rules.test.mjs`) and R9 (`m/run-rules/deployment.test.mjs`), ai-runs' R14 (`m/ai-runs/tick-close.test.mjs`) and this member's `requirements.test.mjs` R14/R44 — each said at its arm. G2 is RETIRED (its only subject, airun W1, read ai-runs' source text). S1 and S2 carry REC-100's `aw-steplog` and `aw-refused` (section R below) from its deleted driver. RUN 2026-10-01: E1 E2 F1 F2 F4 G1 G3 G4 G5 S1 S2 AS DECLARED; E2 first came back NOT AS DECLARED because `requirements.test.mjs` DIED on a deleted `extract` row (read without `?.`), and that suite was made null-tolerant there.
    FULL PER-ARM DETAIL IS IN `test/harness.control.mjs`'s own header.
    D-276's five arms are NOT restated here and are NOT counted here: they belong to `test/agent-worker.control.mjs`, which drives THIS suite as well as its own, and they are enumerated once in `test/agent-worker.test.mjs`'s declaration. Naming them again here would inflate the fleet's arm count with a cross-reference — measured, at the moment of writing this sentence. **RE-MEASURED 2026-08-09 BY D-276: this suite's baseline moved 194/0 to 199/0** and the figures above went stale with it; under those arms this suite reads 192/7, 198/1 and 197/2 respectively.
  * ========================================================================= */
@@ -1223,13 +1224,15 @@ console.log("\n--- B7 · SK-4's gate through the op: an investigate run stops be
      this is evidence that the member's gate produces a close the PLANE'S OWN
      KEYING answers `never-started` for — the table it looks the status up in was
      built by `runStatusFor` at the head of this file. **The behavioural proof
-     that the real plane records it is `bio-plane/test/airun.test.mjs` ARM H1,
-     driven through `op=airunclose` and read back through `op=airun`**, and it is
-     named here so a reader of this arm does not mistake a mock for a record.
+     that the real plane records it is ai-runs' R14 test
+     (`bio-plane/test/m/ai-runs/tick-close.test.mjs`: a close on
+     `mode-not-deployed` read back from the run's row as `never-started`)**,
+     which took `airun.test.mjs` ARM H1's share when T20 deleted that suite, and
+     it is named here so a reader of this arm does not mistake a mock for a record.
      Before FL-8 this same read would have said `stopped`, from a hand copy that
      had disagreed with the plane's `finished` since FL-7 landed. */
   t("FL-8: and the run the gate refused is recorded as one that NEVER STARTED — the plane's own keying, "
-    + "looked up rather than reproduced here, and the real-plane proof is airun.test.mjs ARM H1",
+    + "looked up rather than reproduced here, and the real-plane proof is ai-runs' R14 test",
     st.status ?? null, "never-started");
   await mf.dispose();
 }
@@ -1624,8 +1627,9 @@ console.log("\n--- FT4 · FL-12: an internet-level target files a request naming
  *  copy of it. The budget spend is NOT forwarded (the real run's bounds are the
  *  fixture's, not the mock's), which is stated so nobody reads R as a budget arm.
  *
- *  NEGATIVE CONTROL (declared and RUN 2026-09-18, REC-100, via
- *  `node ../bio-plane/test/nc-rec100.mjs aw-steplog` and `aw-refused`):
+ *  NEGATIVE CONTROL (declared and RUN 2026-09-18, REC-100, via REC-100's driver
+ *  `bio-plane/test/nc-rec100.mjs`, deleted with the old battery in T20; its two
+ *  arms are carried since T21 as `test/harness.control.mjs` S1 and S2):
  *    `aw-steplog` — revert `stepLog` to write the model's PRESENT verbatim.
  *        Declared MUST FAIL R1 and R1b; MUST NOT FAIL R2.
  *    `aw-refused` — revert the tick site to `logged += 1` with `refused[]`

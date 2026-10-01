@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /* THE NEGATIVE CONTROL DRIVER for FL-5 (sub-session fan-out with REPORT
  * contracts, IS-9(a)). Deliberately NOT a `.test.mjs`: it EDITS REAL SOURCES
- * while it runs, and neither `scripts/battery.mjs` nor the fleet walk must
- * discover it (FL-2/FL-3/PL-3/PL-4's precedent).
+ * while it runs, and no runner may discover it — the package's `npm test` and
+ * `node --test` take only `*.test.mjs` (FL-2/FL-3/PL-3/PL-4's precedent).
  *
  *   node agent-worker/test/fanout.control.mjs            all arms
  *   node agent-worker/test/fanout.control.mjs F1 F4b     named arms only
