@@ -41,7 +41,6 @@ Terms are `actions`' (an **action**, its document's keys, the lifecycle). A **fi
 ### Uses
 
 - `record-grammar`: `isMachineIdentity`, `BUNDLE_ID_RE`, `OBJECT_TYPES`, `proposalLabel`, the finding shape, as T19's layer 1 moved them.
-- `legacy-checks`: what the moved code still reads from the catalogue until its owner moves it (rule 1).
 - `jurisdictions`: `LAW_LEVELS` (its R31; R2, the governing-law arm).
 - `connections`: `themeLegFindings` (C-81.1), asked of each leg (R6's function).
 - `inquiry-grammar`: `leadLegFindings` (its R5, C-54.1), the one lead checker the action basis consults (K766: it leaves the catalogue when this module takes C-2.10).

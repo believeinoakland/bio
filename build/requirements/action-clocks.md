@@ -38,8 +38,8 @@ Terms. An **action**, its document and its **clock entry** (`{text, description,
 - `membership`: `viewerPredicate` (R1–R6).
 - `promotion`: nothing for the reminders (they are this module's rows, never a promotion; K624 (3)).
 - `retrieval`: the projection's `action_clock_next` column (its R61), which R1's page seeks, as `actions` R31 did.
-- `legacy-checks`: `parseFrontmatter`, `normalizeType`, `isMachineIdentity`.
-- `action-grammar`: `lawProposalLabel` (its R2), the label of R2's proposals, no longer through the catalogue. *(not declared: T19 layer 9)*
+- `record-grammar`: `parseFrontmatter`, `normalizeType`, `isMachineIdentity`.
+- `action-grammar`: `lawProposalLabel` (its R2), the label of R2's proposals, no longer through the catalogue.
 
 ### Invariants
 

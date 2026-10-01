@@ -84,12 +84,12 @@ Terms. An **action** is a bundle whose type (by its document or its envelope, D-
 
 ### Uses
 
-- `action-grammar`: the vocabularies (its R1, R2), the records-law, quote, lifecycle and basis grammars (its R3–R6), the audit arm (its R7; R51), the readers and arms of R1, R5, R9, R25, R26, R33 and R41 (its R8), and the rows this module's refusals carry (its R9). *(not declared: T19 layer 9)*
-- `legacy-checks`: `parseFrontmatter`, `normalizeType`, `vocabFor`/`STATES`, `OBJECT_TYPES`, `BUNDLE_ID_RE`, `isMachineIdentity`.
+- `action-grammar`: the vocabularies (its R1, R2), the records-law, quote, lifecycle and basis grammars (its R3–R6), the audit arm (its R7; R51), the readers and arms of R1, R5, R9, R25, R26, R33 and R41 (its R8), and the rows this module's refusals carry (its R9).
+- `record-grammar`: `parseFrontmatter`, `normalizeType`, `vocabFor`/`STATES`, `OBJECT_TYPES`, `BUNDLE_ID_RE`, `isMachineIdentity`.
 - `jurisdictions`: `combine`'s view: `action_kinds`, `counterparties`, `records_laws` (R9, R10); `LAW_LEVELS` (R18, K102). (`deadlines` and `holidays` are `action-clocks`' since K617.)
 - `record-core`: `transact`, `acquireLease` and `releaseLease` (R16; its R10, R61), `stampInstant`, `getSetting` (the active profiles), the `bundles` and `files` read contract, `declarePurge` (R36).
 - `membership`: `viewerPredicate`; whether an id names a member of the instance (R45). `promotion`: `promote`, `registerStep` and its facts (R1–R3, R6, R7). *(neither declared)*
-- `provenance`: the `register` read contract (R1, R3, R15, R17). *(not declared)*
+- `provenance`: the `register` read contract (R1, R3, R15, R17).
 - `content`: the capture a document presents (R11). `connections`: the `refs` edge R17 writes through a revision (`themeLegFindings`, K79, is asked by `action-grammar`'s basis grammar).
 - `inquiry`: an inquiry target's visibility for R8's legs. `strength`: none today; remove.
 - `conformance`: `determinationRead` (R8, R30); `determinationSuperseded` (its R20), through which R8's `DETERMINATION_SUPERSEDED` is answered (N312, K275).
