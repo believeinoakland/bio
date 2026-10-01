@@ -29,3 +29,16 @@ R95 (K774). Built on my best reading, pushed @ HEAD of `job/T19/membership`; tel
 3. **Interim**, as J1's: until the split's deletion, with no setter registered `enroll` uses membership's own `setPassword` copy.
 
 Also: in J2 "see my QUESTION J2" should read J1. And CHANGE B3's (1): `BAD_KEY` (C-96.8) stays in my `CUSTODIAL_CHECKS` copy until the deletion removes `signerAdd`, its one minter here; it goes then.
+
+## J4 · REPORT
+
+Progress, `job/T19/membership` @ HEAD (membership tests 158 pass, 0 fail). Done besides the seam:
+- **Families** copied into `membership/checks.mjs`, names, ids, `where`s and translations unchanged (byte-compared against the catalogue): `MEMBER_ID_CHECKS`, `CUSTODIAL_CHECKS` (BAD_KEY leaves with the deletion), `PROJECT_AUTHORITY_CHECKS`, `PROJECT_VISIBILITY_CHECKS`, `PROJECT_JOIN_REQUEST_CHECKS`, `CASE_AUTHORITY_CHECKS`; C-33.28 `LAST_OWNER` and C-33.48 `LAST_COMMITTED_OWNER` into `MEMBERSHIP_CHECKS`. `index.mjs` and my tests read these; they are exported from `membership/index.mjs` too, for promotion's, case-authoring's and review's re-points. The catalogue's copies stay for their other importers (rule 1).
+- **R95** as K778 words it; **C-96.18** new (stamp).
+- **The boot reindex** is in `membership.migrate()` (skipped when no `bundles` table exists); `store.mjs`' boot call and its comment removed (a pure removal, 7 lines). Its delegate `#reindexProjectSight` stays (promotion's projection calls it).
+- **The reserved-id finding** registers from `migrate()` through record-core's `registerAuditFinding("membership", "membership", finding)` (its R68) when the host's record-core offers it; until RECORD-CORE's R68 merges it registers nothing and the store's own `membership` block still answers. When record-core's audit (R73) replaces `store.mjs`' `auditPass`, that block (store.mjs ~650–670, with its `MEMBER_ID_CHECKS` import) goes with it: it is in the store's function record-core is taking, so I have not touched it.
+- **Converts**: `test/m/membership/converts.test.mjs`, the membership shares of `statusby`, `adminvote`, `founder-sight`, `members`, `project-authority`, `project-discoverable`, `ratify-authority`, `project-sight` (12 tests; the key cascade, sign-in sentence and the other modules' shares are not mine).
+
+**Found:** `modules.json` gives membership `uses` without `record-grammar`, while `membership.md`'s Uses names it (`isMachineIdentity`, `MACHINE_CLASS_PREFIX`); the architecture check refuses the import, so I still read them through the catalogue's re-export. Add `record-grammar` to membership's `uses` if you want the re-point in this job; it is a two-line change for me.
+
+Waiting for your word that credentials has merged, to make the split's deletion.
