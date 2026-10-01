@@ -192,8 +192,8 @@ export async function livefire(env, storeName, { capacity = false, viewer = null
   /* ---- whole-store pass on real storage ---- */
   const tw = Date.now();
   /* REC-131 / IC-148: the store's stats under op=stats' one stamp — `dbBytes` for the admin class only
-     (index.mjs decides `capacity` from the authenticated class). D-464: and under its VIEWER stamp too, which
-     index.mjs sets from the same class — the store counts through it and fails closed on an absent one. */
+     (`instanceSetupOp` decides `capacity` from the class the door authenticated). D-464: and under its VIEWER
+     stamp too, which the door sets from the same class — the store counts through it and fails closed on an absent one. */
   const stats = await get(`stats?capacity=${capacity ? "1" : "0"}&viewer=${encodeURIComponent(viewer ?? "")}`);
   const dang = await get("dangling");
   const wholeMs = Date.now() - tw;
@@ -216,7 +216,7 @@ export async function livefire(env, storeName, { capacity = false, viewer = null
      read `SESSION_ROUTE_NOT_RECORDED` until REC-155 recorded §4.10's decision — the namespace gate). So
      REACHING HERE IS THE OP ANSWERING, and `ok` is true — never a verdict.
 
-     The HTTP STATUS is deliberately NOT moved: `index.mjs` keys it to `verdict` and every outcome
+     The HTTP STATUS is deliberately NOT moved: `instanceSetupOp` (setup.mjs) keys it to `verdict` and every outcome
      answers the status it answered before, so a caller reading the status alone is not silenced by
      this change. See that site's comment. */
   const failing = A.filter((a) => !a.ok).map((a) => a.name);
