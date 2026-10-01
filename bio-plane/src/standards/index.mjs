@@ -6,11 +6,11 @@
  * (`conformance` does) and nothing about a standard's merit (R12).
  *
  * A new module (K102, K171): nothing moves (its map, §1). A standard is a record document of type `standard` (R15),
- * `STD-<year>-NNNN-<kind>`, promoted through `promotion` outside any project (K171 (12)); the catalogue knows the type
- * (one state, `recorded`, no edges: legacy-checks' N129). It is never edited: a correction is a new standard that
- * supersedes it, at most once (R4, R6). Its registered check refuses every other write of a standard (R11). The reads
+ * `STD-<year>-NNNN-<kind>`, promoted through `promotion` outside any project (K171 (12)); `record-grammar` knows the
+ * type (one state, `recorded`, no edges: N129). It is never edited: a correction is a new standard that supersedes
+ * it, at most once (R4, R6). Its registered check refuses every other write of a standard (R11). The reads
  * answer from this module's own tables (`./schema.mjs`), written once per act and never updated (R14). A proposal (the
- * Legal/Policy Lookup skill's work, or a member's suggestion) is stored apart and labelled by `legacy-checks`'
+ * Legal/Policy Lookup skill's work, or a member's suggestion) is stored apart and labelled by `record-grammar`'s
  * `proposalLabel(proposer, "standard")` (R9); a member's adoption records a standard naming it (R10).
  *
  * No place is named here (R13): where a citation comes from is read from the active profiles' combined view
@@ -24,7 +24,9 @@
  *   combine      `jurisdictions.combine` (default); a test passes its own, which resolves profiles it wrote by id.
  *   now          the module's clock, an ISO instant (default: the wall clock). */
 
-import { isMachineIdentity, normalizeType, proposalLabel } from "../../checks/bio-checks.mjs";
+import { isMachineIdentity } from "../record-grammar/actors.mjs";
+import { normalizeType } from "../record-grammar/types.mjs";
+import { proposalLabel } from "../record-grammar/labels.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
