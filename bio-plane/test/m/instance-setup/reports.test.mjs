@@ -216,3 +216,34 @@ test("R19 each broken behaviour fails its own assertion by name: verdict fail, f
   const listed = await env.CAPTURES.list();
   assert.ok(listed.objects.every((o) => o.key.startsWith("scratch/")), JSON.stringify(listed.objects.map((o) => o.key)));
 });
+
+/* ------------------------------------------------------------- the report ops' dispatch (legacy-index map §4.4) */
+
+test("R17 R18 R37 R38 the report ops' dispatch, moved out of src/index.mjs: INSTANCE_SETUP_OPS is exactly selftest, livefire, runtime and cpuprobe; instanceSetupOp answers each from the store the door resolved, handing selftest the door's class and viewer and cpuprobe its two bounds, and answers null for any other op; bootstrapOp reads members=1", async () => {
+  const { INSTANCE_SETUP_OPS, instanceSetupOp, bootstrapOp } = await import("../../../src/setup.mjs");
+  assert.deepEqual([...INSTANCE_SETUP_OPS], ["selftest", "livefire", "runtime", "cpuprobe"]);
+  assert.ok(Object.isFrozen(INSTANCE_SETUP_OPS));
+  const w = await boot();
+  const seen = [];
+  const inner = stubOver(w.m, { stats: async () => ({ bundles: 0 }), capturelimit: async () => ({ ceiling: 50 }) });
+  const store = { fetch: async (input, init) => { seen.push(String(input instanceof Request ? input.url : input)); return inner.fetch(input, init); } };
+  const asked = [];
+  const env = { STORE: { idFromName: (n) => { asked.push(n); return n; }, get: () => store }, ADMIN_TOKEN: LIVE, MEMBER_TOKEN: LIVE + "m", PROBE_TOKEN: LIVE + "p" };
+  const url = (q = "") => new URL(`http://x/api/?${q}`);
+  const st = await read(await instanceSetupOp("selftest", url(), env, "scratch", { cls: "probe", viewer: "class:probe", ...io }));
+  assert.deepEqual([st.status, st.body.tokenClass, st.body.ok], [200, "probe", true]);
+  assert.equal(seen.at(-1), "http://x/stats?capacity=0&viewer=class%3Aprobe");
+  assert.equal(asked.at(-1), "scratch");
+  const rt = await read(await instanceSetupOp("runtime", url(), env, "bio", io));
+  assert.deepEqual([rt.status, rt.body.ok, asked.at(-1)], [200, true, "bio"]);
+  const cp = await read(await instanceSetupOp("cpuprobe", url("iterations=100000&budget_ms=50"), env, "scratch", io));
+  assert.deepEqual([cp.status, cp.body.ok, cp.body.state.runs[0].iterations, cp.body.state.runs[0].budget_ms], [200, true, 100000, 50]);
+  for (const other of ["purge", "bootstrap", "stats", "instancegroup", ""])
+    assert.equal(await instanceSetupOp(other, url(), env, "bio", io), null, other);
+  const stub = bootstrapStub();
+  const env2 = { VERSION: "v", AGENT_WORKER: member("agent-worker", "a-1") };
+  assert.equal("memberVersions" in (await read(await bootstrapOp(url(), env2, "fp", { stub, ...io }))).body, false);
+  const withM = await read(await bootstrapOp(url("members=1"), env2, "fp", { stub, ...io }));
+  assert.equal(withM.body.memberVersions["agent-worker"].state, "SERVING");
+  assert.equal(stub.seen.at(-1), "http://do/bootstrap?fp=fp");
+});

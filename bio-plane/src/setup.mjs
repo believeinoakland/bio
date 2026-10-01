@@ -16,7 +16,9 @@
  * when the page is served — see `setupPage` below.
  */
 
-import { STATES, HEADINGS, deriveInquiryTitle, civicosUserAgent } from "../checks/bio-checks.mjs";
+import { STATES, HEADINGS, deriveInquiryTitle } from "../checks/bio-checks.mjs";
+/* The CivicOS agent's one composer is acquisition's (its R24), read there and never copied. */
+import { civicosUserAgent } from "./acquisition/index.mjs";
 /* R32 (N65 (3)): the risk tiers and their reader are actions', read there and never copied (actions R40). */
 import { RISK_TIERS, riskTierState } from "./actions/checks.mjs";
 import { COUNTERPARTY_LEVELS, list as heldProfiles, get as heldProfile, combine as combineProfiles }
@@ -29,6 +31,7 @@ import { schedulerOf } from "./scheduler/index.mjs";
 import { captureOf } from "./capture/index.mjs";
 import { cpuProbe } from "./cpu.mjs";
 import { liveToken } from "./tokens.mjs";
+import { livefire } from "./livefire.mjs";
 import { GROUP_SLUG_RE, FLEET_BINDINGS } from "./setup-fleet.mjs";
 
 /* The intake form obeys the check catalog's own tables rather than a copy of
@@ -2603,4 +2606,64 @@ export async function cpuProbeOp(stub, { iterations = null, budget_ms = null, ru
         + "recorded step is the last one that fit and the ceiling lies just above that step's elapsed_ms."
       : `the store did not confirm step ${confirmed + 1}, so the probe stopped there and burned nothing more: the `
         + `trail is incomplete, and the last step the store confirmed is ${confirmed}.` });
+}
+
+/* ============================================================================================================
+ * THE REPORT OPS' DISPATCH (the legacy-index map's §4.4 plain move, K649 (7)): which of this module's Worker functions
+ * answers each report op, moved out of `src/index.mjs`. The door resolves the store, the class and the viewer stamp
+ * (`control-plane`'s) and hands them in; who may call each op is `op-declarations`' and `admission`'s.
+ * ============================================================================================================ */
+
+/* The admitted ops this module answers at the Worker. `bootstrap` is the public door's default answer (below). */
+export const INSTANCE_SETUP_OPS = Object.freeze(["selftest", "livefire", "runtime", "cpuprobe"]);
+
+/** One of INSTANCE_SETUP_OPS, answered. `storeName` is the namespace the door resolved, `cls` the caller's class,
+ *  `viewer` the door's viewer stamp for that caller, `scratch` the rehearsal namespace's name. */
+export async function instanceSetupOp(op, url, env, storeName, { cls = null, viewer = "", scratch = "scratch", json,
+                                                                  doAnswer, storeSilent, storeRefusal } = {}) {
+  const io = { json, doAnswer, storeSilent, storeRefusal };
+  const store = () => env.STORE.get(env.STORE.idFromName(storeName));
+  /* selftest reports deployment health as JSON, so "did the deploy work" is a
+     link rather than a command. It asserts every binding is present and that
+     the store answers, and it never returns a secret. */
+  if (op === "selftest") return selftest(env, storeName, { cls, scratch, viewer }, { json, doAnswer });
+
+  if (op === "livefire") {
+    const out = await livefire(env, storeName, { capacity: cls === "admin", viewer });
+    /* D-506 / IC-265, on BOB #32's ruling of 2026-09-24 06:07Z. This read `out.ok ? 200 : 500`, and
+       `out.ok` WAS the canary's verdict — which is why a failing canary answered `ok:false` with no
+       code of any kind to every consumer that reads `ok:false` as a refusal. `out.ok` is now
+       `true` whenever the op answered, and the verdict lives in `out.verdict` / `out.failing`.
+       THE STATUS IS KEYED TO THE VERDICT, so it is byte-for-byte what it was for every outcome: a
+       DIST gate or a curl that reads the status alone loses nothing to this change, which is the
+       whole point of moving the verdict to keys of its own rather than deleting it from the wire. */
+    return json(out, out.verdict === "pass" ? 200 : 500);
+  }
+
+  /* What runs here have COST, measured. A read, and the honest counterpart to
+     the store's `capturelimit` read — a DO PATH and not an op, M0-12; nothing
+     on the control plane reaches it — : that one reports a ceiling found by
+     being refused, this one reports consumption found by measuring, because
+     CPU has no catchable refusal to find a ceiling with. */
+  if (op === "runtime") return runtimeOp(store(), io);
+
+  /* Find the CPU ceiling by walking into it. Each completed step is
+     checkpointed durably BEFORE the next begins, so when the isolate is killed
+     the trail shows the last step that finished and the ceiling is bracketed.
+     Probe class only: it burns compute on purpose and belongs nowhere near a
+     member's session. */
+  if (op === "cpuprobe") return cpuProbeOp(store(),
+    { iterations: url.searchParams.get("iterations"), budget_ms: url.searchParams.get("budget_ms") }, io);
+
+  return null;
+}
+
+/** R17 at the public door: op=bootstrap, the default answer of an unauthenticated call. REC-52: the same spread as
+ *  the store reads'. A store silence used to leave a `{ok:true}` carrying the service name, the version and the
+ *  bootstrap flag and NOTHING the store knows — an instance answering "here is what I am" while unable to say
+ *  anything about itself. The installer and `newgroup` both read this op, so the false success reached a caller
+ *  deciding whether an instance was ready. `members=1` adds each member's own build. */
+export function bootstrapOp(url, env, fp, { stub, json, storeSilent, storeRefusal, doAnswer }) {
+  return bootstrapReport(env, fp, { members: url.searchParams.get("members") === "1", stub, json, storeSilent,
+                                    storeRefusal, doAnswer });
 }
