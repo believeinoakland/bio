@@ -29,3 +29,7 @@ Size (session_01VFxeE784CFxt5oNsJ1nMKX): test runs 1, module lines 25
 ## J1 · REPORT
 
 Generated artifact made stale: bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (owner not_product). Two files under bio-plane/src/actions/ changed, comments only; not regenerated.
+
+## J2 · COMPLETE
+
+N469 applied, comments only. index.mjs: the #lawEntries note re-worded as provenance, pointing to control-plane families.test.mjs R22. schema.mjs:35 and :159 now name a new requirement-named R36 test in read.test.mjs (tables == ACTIONS_TABLES, keyed by bundle_id, declared to the purge). The re-scan found 3 more live notes about deleted instruments (#badRiskTier's guard note, machinefences-dec49 ARM B2, the 'named control'): dropped or re-worded. test/m/actions: 63/63 pass. format, architecture, coverage (42/42) and ownership: 0 failures. Record: build/jobs/T21/actions.md.
