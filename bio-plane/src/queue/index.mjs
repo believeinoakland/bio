@@ -777,7 +777,10 @@ export class Queue {
     /* tasks R6: the visible OPEN or FORWARDED tasks, newest first, each as `taskList` gives it (N363). N373 (K566): the
        read asks for the live statuses itself, so however many tasks were resolved lately none of them takes a place an
        open one needs (it used to read every status and drop the resolved ones after the cap). */
-    for (const row of this.#tasks.recentTasks({ viewer, limit: cap * 2, statuses: Queue.TASK_LIVE_STATUSES })) {
+    /* N410 (tasks R6's `assignees`): a member's read asks for their own and the unassigned tasks itself, so other
+       members' live tasks never take a place theirs need; a machine credential (no member) reads every assignee. */
+    for (const row of this.#tasks.recentTasks({ viewer, limit: cap * 2, statuses: Queue.TASK_LIVE_STATUSES,
+                                                ...(me ? { assignees: [me, "unassigned"] } : {}) })) {
       if (me && row.assignee !== me && row.assignee !== "unassigned") continue;
       const subject = row.refers_to;
       /* The homes are derived FIRST and the event's state is asked ONCE, for

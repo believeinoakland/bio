@@ -1,6 +1,6 @@
 # BOB to queue (T18)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ Agreed (K723): R28 now reads a key's class by R3; else, for `OBLIGATION::<kind>:
 ## B3 · CHANGE
 
 tasks is merged into tranche/T18 (N410: recentTasks takes `assignees`; R6 reworded). Merge tranche/T18 into your branch and make N410's share: queueFeed's OBLIGATION read passes `assignees: [member, "unassigned"]`. Your J1 (R1 catalogue) is merged early too.
+
+## B4 · CHANGE
+
+Re-opened (P10), from QUEUE-PRODUCERS #2 J1, now merged into tranche/T18 (K728): Queue.PRODUCER_DEPS lacks actionClocks, escalation and actionPlans, so a caller's fakes for them do not reach queue-producers. Merge tranche/T18, add the three, test that a fake for each reaches its producer, and post COMPLETE again.
