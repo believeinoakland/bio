@@ -1224,7 +1224,7 @@ export const ACTION_CATALOGUE_CHECKS = {
   },
   CONTACT_NOT_A_MEMBER: {
     check: 'C-117.11',
-    where: 'src/actions/index.mjs #contactAndPlan > is-contact-member',
+    where: 'src/actions/index.mjs contactNotAMember > is-contact-member',
     translation: 'The contact for an action is a member of this group, named by their member id, and the id given '
       + 'names no member here. Nothing was written.',
   },

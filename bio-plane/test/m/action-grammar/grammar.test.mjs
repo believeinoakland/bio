@@ -191,10 +191,11 @@ test("R8 by hand: governingLawsOf's undetermined sentence names no law, even for
   assert.deepEqual(pushed((f) => AG.respondsToEdgeFindings(DOCS["refs-bad"], f)).findings.map((x) => x.check), ["C-6.1", "C-6.1", "C-6.1"]);
 });
 
-test("R9: every row is held as before the move, number and translation unchanged; C-73.6's where names its new site; C-117.5 is action-clocks', not here", () => {
+test("R9: every row is held as before the move, number and translation unchanged; C-73.6's where names its new site, C-117.11's names contactNotAMember (K837); C-117.5 is action-clocks', not here", () => {
   const expected = structuredClone(GOLDEN.rows);
   delete expected.ACTION_CATALOGUE_CHECKS.PENDING_CLOCKS_BAD_BEFORE;
   expected.GOVERNING_LAW_CHECKS.RECORDS_LAW_REFUSED.where = "src/action-grammar/checks.mjs recordsLawRefusal > is-records-law";
+  expected.ACTION_CATALOGUE_CHECKS.CONTACT_NOT_A_MEMBER.where = "src/actions/index.mjs contactNotAMember > is-contact-member";
   assert.deepEqual(S.rows, expected);
   for (const n of ROW_NAMES) assert.ok(n in AG, n);
 });
