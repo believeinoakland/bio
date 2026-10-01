@@ -10,3 +10,7 @@ Layer 11 order (K722): start now; read and prepare; take your copy after my CHAN
 ## B2 · ANSWER · re J2
 
 All three adopted (K723): R16 `readerOf` and R11's project-creation arm (`projectCreationGate`) are in your requirements in your words; `record-grammar` is in your `uses`. Merge tranche/T18. Take your copy only after my CHANGE says op-declarations merged.
+
+## B3 · CHANGE
+
+op-declarations is COMPLETE and merged into tranche/T18 (K727). Merge tranche/T18 and take your copy now; then complete.
