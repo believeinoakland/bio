@@ -1,8 +1,7 @@
 // @ts-check
 /* record-grammar: the document grammar every type is judged by: the heading sets (C-3.1), the state machines (C-4),
    the type-keyed vocabulary lookup, the case-member predicate and the one section slicer. Moved from the check
-   catalogue at T19 with their comments; the catalogue re-exports each name until its importers re-point
-   (PROCESS-MECHANICS §12.2). */
+   catalogue at T19 with their comments. */
 
 import { normalizeType } from './types.mjs';
 

@@ -25,6 +25,13 @@ test("R19 false for every other scheme, an authority with @, a local or literal 
     assert.equal(isPublicHttpsLocator(u), false, u);
 });
 
+/* N449 (T20): R19's `not yet met` mark (an upper-case scheme, `localhost.` and `.local` hosts) is met at HEAD. */
+test("R19 an upper-case scheme is https, and a localhost. or .local host is never public", () => {
+  assert.equal(isPublicHttpsLocator("HTTPS://a.example/x"), true);
+  assert.equal(isPublicHttpsLocator("https://localhost./x"), false);
+  assert.equal(isPublicHttpsLocator("https://printer.local/x"), false);
+});
+
 test("R19 a non-string is false, and nothing throws", () => {
   for (const v of [undefined, null, 1, true, {}, [], ["https://example.org"], new URL("https://example.org"),
     { toString() { return "https://example.org"; } }, Symbol("s"), Object.create(null), 10n])

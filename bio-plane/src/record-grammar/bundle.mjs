@@ -2,9 +2,9 @@
 /* record-grammar: the bundle check, `checkBundle`, with its structural arms (C-1, C-2.1–.6, C-3.1, C-4, C-5, C-6.1–.3's
    core, C-12–C-14, C-16, C-17.1) and the grammars seam its type arms are filled through (R28). Copied from the check
    catalogue at T19 with their comments (draft-T19, rule 2; K653 BOB-6). The type arms are not here: each is a place in
-   the order (`EXTENSION_ARMS`) that its owner's registered grammar fills (`opts.grammars`, record-core R67), and the
-   catalogue passes the ones it still holds (`LEGACY_GRAMMARS`, legacy-checks' job), so a bundle's findings, their ids,
-   severities and order are the catalogue's own. Pure over the files it is handed: no store, no network; the clock is
+   the order (`EXTENSION_ARMS`) that its owner's registered grammar fills (`opts.grammars`, record-core R67), so a
+   bundle's findings, their ids, severities and order are the catalogue's own (the catalogue was deleted at T19's close,
+   K855). Pure over the files it is handed: no store, no network; the clock is
    read only where the caller passes no `nowMs` (C-16.3, C-16.5), as the catalogue's has always read it. */
 
 import { BUNDLE_ID_RE, ANN_ID_RE, FILENAME_RE, ISO_TS_RE } from './ids.mjs';
@@ -675,7 +675,7 @@ function checkHistoryCoherence(ctx, findings) {
  * defect and throws before any arm runs, as a malformed entry does. C-2.7's slot (`checkInformationExtension`) is
  * kept for capture's grammar, registered in T18, so its findings keep their place (K751). `checkSupersession` and
  * `checkRecheckCoverage` are inquiry's C-6.1 and C-15.1 arms, separated from `checkReferences` and kept in their
- * places; the catalogue's `LEGACY_GRAMMARS` fills them until inquiry-grammar does (layer 6; K752). */
+ * places; inquiry-grammar's registered grammar fills them (layer 6; K752). */
 export const EXTENSION_ARMS = Object.freeze([
   { name: 'checkInformationExtension', ids: ['C-2.7'] },
   { name: 'checkInfo2Contract', ids: ['C-18.6', 'C-18.7'] },
@@ -735,8 +735,8 @@ export async function checkBundle(input, opts = {}) {
     // files UNION elided via hasFile_; byte checks (hashing, parsing,
     // history audits) stay files-only and skip elided content exactly as
     // they skip absent content, so nothing is ever verified against bytes
-    // the caller does not hold. The gate and cli pass nothing here and are
-    // byte-complete as before.
+    // the caller does not hold. Inquiry's `checkInquiryEntry` passes nothing
+    // here and is byte-complete as before.
     elided: input.elidedPaths instanceof Set ? input.elidedPaths
       : new Set(Array.isArray(input.elidedPaths) ? input.elidedPaths : []),
     sha256: input.sha256,
@@ -763,10 +763,11 @@ export async function checkBundle(input, opts = {}) {
        with which frozen pair) is not in this bundle. Shape:
          { <bundleId>: { latest: n, editions: { "1": {edition, completeness,
              capture: {state, grade}, connection: {state, grade}} } } }
-       Absent means the caller cannot see the published record (the cli, the
-       migrate tool) and C-21.1/C-21.2 cannot fire. Every path a real caller
-       has — the ratification gate and the store's own write path — injects it,
-       which is what keeps the absence from being a way through. */
+       Absent means the caller holds no published record (`runGate` or
+       inquiry's `checkInquiryEntry` handed none) and C-21.1/C-21.2 cannot fire.
+       Ratification's gate injects it, and record-core's audit through
+       publication's registered context (record-core R69), which is what keeps
+       the absence from being a way through. */
     publishedRegistry: input.publishedRegistry || null,
     /* REC-44 / DEC-44: the CASE-altitude half of the same fact, injected on the
        same terms and separated for the reason DEC-44 gives — a case is a
@@ -775,11 +776,11 @@ export async function checkBundle(input, opts = {}) {
        Shape:
          { <caseId>: { latest: n, editions: { "1": {edition, scope,
              completeness, ratified_at} } } }
-       Absent means the caller cannot see the published record (the cli, the
-       migrate tool) and C-21.1 cannot fire; every path a real caller has
-       injects it. Kept SEPARATE from publishedRegistry deliberately: one
-       registry serving both altitudes is how the collapse this item corrects
-       happened in the first place. */
+       Absent means the caller holds no published case record (`runGate`
+       handed none, record-core's audit, inquiry's `checkInquiryEntry`) and
+       C-21.1 cannot fire; ratification's gate injects it. Kept SEPARATE from
+       publishedRegistry deliberately: one registry serving both altitudes is
+       how the collapse this item corrects happened in the first place. */
     publishedCaseRegistry: input.publishedCaseRegistry || null,
     /* REC-18: the second fact the catalog cannot get from the bundle, and it is
        injected on exactly the same terms and for the same reason. What
@@ -790,8 +791,9 @@ export async function checkBundle(input, opts = {}) {
          { subject_entity, subject_label, earned: {
              connection: { <target>: {grade, why, ...} },
              capture:    { <target>: {grade, why, ceiling?} } } }
-       Absent means the caller cannot see the record (the cli, the migrate tool).
-       Every path a real caller has injects it. */
+       Absent means the caller cannot see the record (`runGate` or inquiry's
+       `checkInquiryEntry` handed none). Ratification's gate injects it, and
+       record-core's audit through inquiry's registered context (record-core R69). */
     earnedRegistry: input.earnedRegistry || null,
     sha512: input.sha512 || null,
     fm: null,
@@ -833,8 +835,8 @@ export async function checkBundle(input, opts = {}) {
     for (const g of grammars.rest) await g.arm(ctx, findings);
     /* checkCitationRegister ran here until FW-13 retired it (2026-08-08), and
        checkDeletionRecords beside it until FW-15 retired that too the same day.
-       See CHECK_RETIREMENTS above for what each gated and why keeping it was
-       wrong. The line below is not a replacement for the second: `checkAppendOnly`
+       The catalogue's CHECK_RETIREMENTS said what each gated and why keeping it
+       was wrong. The line below is not a replacement for the second: `checkAppendOnly`
        was ALREADY the enforcement, which is exactly why the ledger was a second
        account of one fact. */
     checkAppendOnly(ctx, findings);

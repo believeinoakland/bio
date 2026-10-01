@@ -1,6 +1,6 @@
 // @ts-check
-/* record-grammar: the grade vocabulary (R16–R18). Moved from the check catalogue at T18 with its comments; the
-   catalogue keeps `EARNED_SOURCE_AXIS` and the arms (`checkEarnedLeg`, `checkTestimonyLeg`) that read these. */
+/* record-grammar: the grade vocabulary (R16–R18). Moved from the check catalogue at T18 with its comments;
+   `EARNED_SOURCE_AXIS` and the arms (`checkEarnedLeg`, `checkTestimonyLeg`) that read these are inquiry-grammar's. */
 
 /* REC-11: the basis leg vocabularies, exported so op=affordances can publish
    them the way it publishes the disposition set, and so no surface keeps a

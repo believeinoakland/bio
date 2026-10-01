@@ -1,7 +1,5 @@
-/* record-grammar's invariants at its interface: pure (R24), one binding per name (R26's side here), no place named
-   (R27). The catalogue's re-exports are later in the order, so this module's tests cannot import them (P4); the
-   cross-module identity (`legacy-checks`' name === this module's) is for `legacy-checks`' tests, which may import this
-   module (T18's job record, J-QUESTION). */
+/* record-grammar's invariants at its interface: pure (R24), one binding per name, no place named (R27). R26 and R41,
+   the catalogue's re-exports, retired with the catalogue at T19's close (K855, K863). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { Worker } from "node:worker_threads";
@@ -75,11 +73,10 @@ const MOVED = ["BUNDLE_ID_RE", "ANN_ID_RE", "FILENAME_RE", "ISO_TS_RE", "OBJECT_
   "sha256HexSync", "INQUIRY_TITLE_MAX", "deriveInquiryTitle", "inquiryQuestionOf", "HEADINGS", "HEADINGS_WHEN",
   "isCaseMemberBytes", "vocabFor", "STATES", "sectionText", "LAW_PROPOSAL_STATES", "lawProposalState", "PROPOSAL_STATES",
   "proposalLabel", "CONTENT_MINTED_BY_PLANE", "CONTENT_MINT_STATES", "contentMintState"];
-/* Provided here and not re-exported by the catalogue in this layer: legacy-checks' wrapper takes `checkBundle` and
-   `EXTENSION_ARMS` (rule 2), and the shared act rows reach the catalogue's readers through `ACT_SHAPE_CHECKS` (R29). */
+/* Provided here from the first without a catalogue twin: `checkBundle`, `EXTENSION_ARMS` and the shared act rows (R29). */
 const OWN = ["b64ToBytes", "SHARED_ACT_CHECKS", "EXTENSION_ARMS", "checkBundle"];
 
-test("R26 R41 one binding per name: the module's entry answers each provided name with the one binding its part holds", () => {
+test("one binding per name: the module's entry answers each provided name with the one binding its part holds", () => {
   assert.deepEqual(Object.keys(RG).sort(), [...MOVED, ...OWN].sort());
   const parts = [IDS, TYPES, FRONTMATTER, JSON_, ACTORS, GRADES, LOCATOR, SHA256, TITLES, DOCUMENT, LABELS, ACTS, BUNDLE];
   for (const n of Object.keys(RG)) {
