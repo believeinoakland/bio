@@ -43,9 +43,10 @@ test("R6: in the runtime, the door answers through the hooks: the version, the s
   assert.equal(page.status, 200);
   assert.match(page.headers.get("content-type") || "", /text\/html/);
   await page.arrayBuffer();
-  const published = await get("op=publishedlist");   /* public-read's door, over the plane binding R6 hands it */
-  assert.equal(published.status, 200, JSON.stringify(published.body));
-  assert.equal(published.body.ok, true);
+  /* public-read's door, over the plane binding R6 hands it: a published case no one published is its own refusal. */
+  const published = await get("op=publishedcase&id=CASE-2026-0001-none");
+  assert.equal(published.status, 404, JSON.stringify(published.body));
+  assert.equal(published.body.code, "NOT_PUBLISHED");
   const boot = await get("op=bootstrap");   /* the public hook's last arm: instance-setup's bootstrap report */
   assert.equal(boot.status, 200);
   assert.equal(boot.body.ok, true);
