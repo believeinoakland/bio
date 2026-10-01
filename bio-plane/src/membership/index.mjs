@@ -37,7 +37,13 @@ export const GATE_MARK = "/*viewer-gate*/";
    N357 (K494, W1): the founder's viewer is spelled bare `admin` or `member:admin` (the founder's positional
    spelling, `resolveSession`'s identity); both see every bundle, and only the second names a member, `admin`. The
    founder has no roster row, so the participant arm below would have shown `member:admin` no project it had not
-   joined while the bare spelling saw them all. */
+   joined while the bare spelling saw them all.
+   N426 (K704, K710): THE PROJECT FENCE. A bundle that belongs to a project (record-core R34's `project`, which promotion
+   writes from the document) is seen exactly when its project is: so an escalation's, a plan's or any project record's
+   bundle read record-wide is fenced by the same two arms that fence the project itself. The project a row is judged
+   by is its own id for a project, and its `project` column for anything else (an empty one names none). A bundle
+   naming a project nobody participates in is seen by the administrators alone, the fail-closed reading of "exactly
+   when it would see that project". */
 export function viewerPredicate(viewer) {
   const v = typeof viewer === "string" ? viewer : "";
   const CLS = MACHINE_CLASS_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -48,9 +54,10 @@ export function viewerPredicate(viewer) {
     return { sql: `${GATE_MARK} 1=1`, args: [], viewer: v, scope: "member", member: memberId };
   return {
     member: memberId,
-    sql: `${GATE_MARK} (b.object_type <> 'project' OR EXISTS (
+    sql: `${GATE_MARK} ((b.object_type <> 'project' AND COALESCE(b.project, '') = '') OR EXISTS (
              SELECT 1 FROM project_participants pp
-             WHERE pp.project_id = b.bundle_id AND pp.member_id = ?)
+             WHERE pp.project_id = (CASE WHEN b.object_type = 'project' THEN b.bundle_id ELSE b.project END)
+               AND pp.member_id = ?)
            OR EXISTS (
              SELECT 1 FROM members am
              WHERE am.member_id = ? AND am.role = 'admin' AND am.status = 'active'))`,
@@ -158,19 +165,19 @@ export function notAParticipant(projectId, by, extra = null) {
    (this module's R79; promotion, provenance and the later modules import it); this module's R83 test holds it equal to
    the file, so a change there fails the suite until the list follows. */
 export const MODULE_ORDER = Object.freeze([
-  /* 1 */ "record-grammar", "legacy-checks", "jurisdictions", "test-support", "bundler", "runtime-limits", "signatures",
+  /* 1 */ "record-grammar", "legacy-checks", "jurisdictions", "test-support", "runtime-limits", "signatures", "bundler",
           "id-spaces", "subresources", "ooxml", "office-readers", "odf-reader", "pdf-reader", "format-registry",
-          "text-chain", "docprofile", "image-codecs", "pdf-pixels", "pdf-worker", "ocr-worker",
-  /* 2 */ "record-core", "membership", "promotion",
+          "text-chain", "site-profiles", "docprofile", "image-codecs", "pdf-pixels", "pdf-worker", "ocr-worker",
+  /* 2 */ "record-core", "membership", "credentials", "promotion",
   /* 3 */ "host-governor", "provenance", "capture-sources", "acquisition", "capture", "sources",
   /* 4 */ "calibration", "extraction", "content",
   /* 5 */ "entities", "connections", "progressions", "bias", "observation-log", "query-language", "retrieval",
-  /* 6 */ "inquiry", "citation", "basis-versions", "strength", "contradiction", "run-rules", "ai-runs",
-          "run-productions", "capture-requests", "skills", "agent-worker",
+  /* 6 */ "inquiry-grammar", "inquiry", "citation", "basis-versions", "strength", "contradiction", "run-rules",
+          "ai-runs", "run-productions", "capture-requests", "skills", "agent-worker",
   /* 7 */ "intent", "reevaluation",
   /* 8 */ "case-grammar", "publication", "public-read", "project-stage", "ratification", "case-authoring", "review",
-  /* 9 */ "standards", "conformance", "consequences", "actions", "action-clocks", "filings", "escalation",
-          "action-plans",
+  /* 9 */ "standards", "conformance", "consequences", "action-grammar", "actions", "action-clocks", "filings",
+          "escalation", "action-plans",
   /* 10 */ "monitoring", "scheduler", "legacy-store",
   /* 11 */ "affordances", "tasks", "queue-producers", "queue", "instance-setup", "op-declarations", "admission",
            "control-plane", "legacy-index", "legacy-ui", "installer", "legacy-tests",
@@ -316,7 +323,29 @@ export class Membership {
     return !!m && m.role === "admin" && m.status === "active";
   }
 
-  #claimed() { return !!this.#one(`SELECT role FROM credentials WHERE role=?`, Membership.ROOT_ADMIN); }
+  /* ===== R94 (K637) — WHETHER THE INSTANCE IS CLAIMED, A FACT `credentials` STATES (its R17) =====
+   *
+   * The founder is an administrator, and first in R86's list, exactly when the instance is claimed: the founder's
+   * credential is held. That credential is `credentials`', so membership never reads it; one later module registers,
+   * once at start, the function that answers it, and R64 and R86 ask that function. Anything but `true`, a throw, or
+   * no registration at all reads as not claimed (fail closed: the founder is then no administrator here). The slot
+   * takes one registration whoever makes it, so its refusals are R81's, naming the holder. */
+  #claimedSource = null;   // {module, fn}
+
+  registerClaimed(module, fn) {
+    const refused = listenerRefusal(this.#claimedSource, module, fn);
+    if (refused) return refused;
+    this.#claimedSource = { module, fn };
+    return { ok: true, module };
+  }
+
+  #claimed() {
+    const source = this.#claimedSource;
+    /* THE SEAM'S INTERIM, removed by the split's deletion (T19 layer 2): until `credentials` merges and registers,
+       this module still holds the credential table it is copied from, and answers from it as before. */
+    if (!source) return !!this.#one(`SELECT role FROM credentials WHERE role=?`, Membership.ROOT_ADMIN);
+    try { return source.fn() === true; } catch { return false; }
+  }
 
   /* R68: a member's cover, handle, role and status, or null; never a credential, key or expertise. */
   memberFacts(memberId) {
@@ -798,7 +827,7 @@ export class Membership {
     const s = this.#one(`SELECT role, expires FROM sessions WHERE token=?`, token);
     if (!s) return null;
     if (s.expires < Date.now()) { this.sql.exec(`DELETE FROM sessions WHERE token=?`, token); return null; }
-    return { role: s.role, expires: s.expires, ...this.#sessionRights(s.role) };
+    return { role: s.role, expires: s.expires, ...this.sessionRights(s.role) };
   }
 
   /* What a session may DO. Membership Architecture v2 section 5.
@@ -827,9 +856,16 @@ export class Membership {
    * gone, or a member whose status is not active resolves to NO capabilities
    * rather than to the member default. Revocation already deletes sessions; this
    * is what covers the race between the delete and an in-flight request.
+   *
+   * R92 (K637): a named service, `credentials`' `session` reads it for every session (its R5). It writes nothing and
+   * never throws: a read it cannot make holds no rights.
    */
-  #sessionRights(role) {
+  sessionRights(role) {
     const none = { capabilities: [], administer: false, member: null, handle: null, rootOfTrust: false };
+    try { return this.#rightsOf(role, none); } catch { return none; }
+  }
+
+  #rightsOf(role, none) {
     if (role === Membership.ROOT_ADMIN)
       return { capabilities: [...Membership.CAPABILITIES], administer: true,
                member: Membership.ROOT_ADMIN, handle: null, rootOfTrust: true };
@@ -2297,8 +2333,7 @@ export class Membership {
     const rows = this.#rows(`SELECT member_id FROM members WHERE role='admin' AND status='active'
                               ORDER BY created, member_id`)
       .map((r) => r.member_id);
-    const claimed = !!this.#one(`SELECT role FROM credentials WHERE role=?`, Membership.ROOT_ADMIN);
-    return claimed ? [Membership.ROOT_ADMIN, ...rows] : rows;
+    return this.#claimed() ? [Membership.ROOT_ADMIN, ...rows] : rows;   /* R94 */
   }
 
   /* REC-159 — THE ROSTER ANSWERS §4.9's CUSTODIAL ACTS, and it is asked BEFORE anything is looked up,
