@@ -5,6 +5,7 @@
    capture's acquire answer carries. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
+import { deflateRawSync, crc32 } from "node:zlib";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { Extraction } from "../../../src/extraction/index.mjs";
@@ -106,8 +107,9 @@ export function promotion() {
     steps.push({ module, ...s }); return { ok: true }; } };
 }
 
-/* A fresh store with record-core, membership and this module. */
-export function fresh({ evidence = bucket(), env = {}, cal = calibration(), prom = promotion() } = {}) {
+/* A fresh store with record-core, membership and this module (its figures registered, R67, as `extractionOf` does).
+   `provenance` is handed to the module as `extractionOf` hands it (R65). */
+export function fresh({ evidence = bucket(), env = {}, cal = calibration(), prom = promotion(), provenance = null } = {}) {
   const s = storage();
   const ctx = { storage: s };
   const core = recordOf(ctx, { evidence, evidencePrefix: "bio/captures/" });
@@ -119,7 +121,9 @@ export function fresh({ evidence = bucket(), env = {}, cal = calibration(), prom
     for (const t of CALIBRATION_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";")) if (t.trim()) s.db.exec(t);
     cal = calibrationOf(ctx, { record: core });
   }
-  const x = new Extraction(s, { record: core, membership, calibration: cal, promotion: prom, env });
+  const x = new Extraction(s, { record: core, membership, calibration: cal, promotion: prom, env,
+                                provenance: typeof provenance === "function" ? provenance(ctx, core, membership) : provenance });
+  x.registerFigures();
   x.migrate();
   return { s, ctx, x, core, membership, evidence, cal, prom, env,
            rows: (q, ...a) => s.sql.exec(q, ...a).toArray(), one: (q, ...a) => s.sql.exec(q, ...a).toArray()[0] || null };
@@ -188,4 +192,45 @@ export function ocrAnswer(pages, { engine = "tess", version = "5.3", cap = "C", 
   return { ok: true, engine, version, cap, measured_by, confidence_floor: floor,
            pages: pages.map((p) => ({ page: p, regions: [{ text: text(p), source: { kind: "pdf-page", ref: `p${p}`, page: p, rect: [0, 0, 10, 10] },
                                                           confidence: "none" }] })) };
+}
+
+/* A .docx package (stored ZIP members deflated by node:zlib, independent of the reader under test) whose
+   `word/document.xml` body is `body`; `wp`/`wr` build paragraphs and runs, `alt` an mc:AlternateContent whose branches
+   are given as `[tag, inner]` pairs, Word's text box (`box`) a Choice and its Fallback copy of the same paragraphs. */
+function zipOf(members) {
+  const u16 = (v) => { const b = Buffer.alloc(2); b.writeUInt16LE(v); return b; };
+  const u32 = (v) => { const b = Buffer.alloc(4); b.writeUInt32LE(v >>> 0); return b; };
+  const out = [], central = [];
+  let offset = 0;
+  for (const [n, d] of members) {
+    const data = Buffer.from(d), comp = deflateRawSync(data), name = Buffer.from(n), crc = crc32(data) >>> 0;
+    const local = Buffer.concat([u32(0x04034b50), u16(20), u16(0x0800), u16(8), u16(0), u16(0), u32(crc), u32(comp.length),
+                                 u32(data.length), u16(name.length), u16(0), name, comp]);
+    central.push(Buffer.concat([u32(0x02014b50), u16(20), u16(20), u16(0x0800), u16(8), u16(0), u16(0), u32(crc),
+                                u32(comp.length), u32(data.length), u16(name.length), u16(0), u16(0), u16(0), u16(0),
+                                u32(0), u32(offset), name]));
+    out.push(local); offset += local.length;
+  }
+  const cd = Buffer.concat(central);
+  return new Uint8Array(Buffer.concat([...out, cd, u32(0x06054b50), u16(0), u16(0), u16(members.length),
+                                       u16(members.length), u32(cd.length), u32(offset), u16(0)]));
+}
+const W_NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
+const MC_NS = 'xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"';
+export const wp = (...runs) => `<w:p>${runs.join("")}</w:p>`;
+export const wr = (t) => `<w:r><w:t xml:space="preserve">${t}</w:t></w:r>`;
+export const wtbl = (t) => `<w:tbl><w:tblGrid><w:gridCol/></w:tblGrid><w:tr><w:tc>${wp(wr(t))}</w:tc></w:tr></w:tbl>`;
+export const alt = (choice, fallback) =>
+  `<mc:AlternateContent ${MC_NS}><mc:Choice Requires="wps">${choice}</mc:Choice><mc:Fallback>${fallback}</mc:Fallback></mc:AlternateContent>`;
+export const box = (paras, fb = paras) =>
+  `<w:r>${alt(`<w:drawing><w:txbxContent>${paras.join("")}</w:txbxContent></w:drawing>`, `<w:pict><w:txbxContent>${fb.join("")}</w:txbxContent></w:pict>`)}</w:r>`;
+export function docx(body) {
+  const ct = '<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+    + '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+    + '<Default Extension="xml" ContentType="application/xml"/>'
+    + '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>';
+  const rels = '<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+    + '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>';
+  return zipOf([["[Content_Types].xml", ct], ["_rels/.rels", rels],
+                ["word/document.xml", `<?xml version="1.0"?><w:document ${W_NS}><w:body>${body}</w:body></w:document>`]]);
 }

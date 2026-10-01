@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bundle, sha } from "./fixture.mjs";
 import { compareProvenance, readingProvenance } from "../../../src/readingprov.mjs";
-import { canonicalExtent } from "../../../checks/bio-checks.mjs";
+import { canonicalExtent } from "../../../src/textchain.mjs";
 import { CAPTURE_TEXT_UNIT_CAP, CAPTURE_TEXT_CAPTURE_UNIT_BOUND, CAPTURE_TEXT_CAPTURE_BOUND, OCCURRENCES_PER_REF,
          TEXT_SOURCE_LIMIT_MAX, labelTerms, extractionOps, noSha } from "../../../src/extraction/index.mjs";
 

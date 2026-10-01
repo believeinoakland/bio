@@ -73,7 +73,7 @@
  * derived.
  */
 
-import { BASIS_GRADES } from "../checks/bio-checks.mjs";
+import { BASIS_GRADES } from "./record-grammar/grades.mjs";
 import { appendStep, checkChain, derivationCap, readingSource } from "./textchain.mjs";
 
 /* ------------------------------------------------------------------ *

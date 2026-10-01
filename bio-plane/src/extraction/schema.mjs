@@ -1,8 +1,8 @@
 /* extraction's tables (layers.md ruling 3: each module owns its tables), moved from `schema.mjs` with their
    reasons unchanged: readings, reading_refs, reading_ref_terms, reading_text_source, capture_text,
-   reading_history; and the four this module added: capture_text_skipped (D-724), capture_text_state (R36),
-   composed_readings (R21, K104). `capture_text_fts` and its triggers are created by `migrate()` (index.mjs):
-   a trigger carries `;` inside BEGIN/END, and this text is split on `;` before it runs. */
+   reading_history; and the five this module added: capture_text_skipped (D-724), capture_text_state (R36),
+   composed_readings (R21, K104), reading_migrations (R66). `capture_text_fts` and its triggers are created by
+   `migrate()` (index.mjs): a trigger carries `;` inside BEGIN/END, and this text is split on `;` before it runs. */
 export const EXTRACTION_SCHEMA = `
 -- 2026-09-14, REC-81: every citation into the content framework in this file names a
 -- SECTION rather than a line. The line numbers they carried went stale the moment the
@@ -244,7 +244,7 @@ CREATE INDEX IF NOT EXISTS reading_text_source_kind
 -- identity without minting it (section 4.5, IC-83's lazy mint).
 --
 -- THE EXTENT IS THE SAME CANONICAL FORM THE content TABLE HASHES OVER, produced
--- by canonicalExtent in bio-checks.mjs and never re-spelled here. That is what
+-- by text-chain's canonicalExtent (textchain.mjs) and never re-spelled here. That is what
 -- makes contentIdFor(capture_sha, extent, chain) computable AT HIT TIME, which
 -- is the whole of section 4.5: a search returns an ADDRESS a member may cite,
 -- and searching mints nothing.
@@ -394,5 +394,24 @@ CREATE TABLE IF NOT EXISTS composed_readings (
   reading_sha256 TEXT PRIMARY KEY,
   capture_sha    TEXT NOT NULL,
   at             TEXT NOT NULL
+);
+
+-- extraction R66 (N26, K763): A ONE-TIME MIGRATION'S OWN ROW, so it runs once per
+-- stored reading. cutoff is the last reading_history rowid held when the migration
+-- first ran on this store: every write of a reading keeps it there first, so a reading
+-- whose last kept row is at or before it was read by the old walk, one after it by
+-- the new. after is the last capture digest examined (candidates are taken in
+-- digest order), so a restart resumes rather than re-reading a capture; done is 1
+-- once no candidate remains, and the migration then reads nothing at start. Not
+-- bundle-keyed, so only the whole-store purge clears it, and the next start then
+-- finds no reading made before its new cutoff.
+CREATE TABLE IF NOT EXISTS reading_migrations (
+  migration  TEXT    PRIMARY KEY,
+  cutoff     INTEGER NOT NULL,
+  after      TEXT    NOT NULL DEFAULT '',
+  done       INTEGER NOT NULL DEFAULT 0,
+  examined   INTEGER NOT NULL DEFAULT 0,
+  migrated   INTEGER NOT NULL DEFAULT 0,
+  at         TEXT    NOT NULL
 );
 `;

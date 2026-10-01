@@ -1034,35 +1034,7 @@ export class Store extends DurableObject {
     return {
       bundles: n("bundles", "bundle_id"), files: n("files", "bundle_id"), history: n("history", "bundle_id"),
       refs: n("refs", "bundle_id", "target_id"), register: n("register", "bundle_id"), indexed: ret.indexed,
-      /* REC-91 / D-113: the CONTENT-GRAIN TEXT INDEX, reported for exactly the
-         reason every other row on this list is -- so a purge can PROVE it took
-         the rows rather than assert it.
-         *
-         * AND THE SECOND FIGURE IS NOT A COUNT, WHICH IS A CORRECTION THIS
-         * ITEM'S OWN NEGATIVE CONTROL FORCED. The first draft reported
-         * `textIndexed: n("capture_text_fts")` beside the base count, on the
-         * reasoning that the two must agree and that a suite asserting it would
-         * be asserting the trigger discipline. **They agree for free.** An
-         * FTS5 EXTERNAL-CONTENT table answers `count(*)` OUT OF ITS CONTENT
-         * TABLE, so the figure was the base count read a second time — measured
-         * on workerd: with a deliberately ORPHANED index entry present, base and
-         * "index" both read 1 while the orphaned term still MATCHED. That is
-         * CLAUDE.md's costs-nothing rule exactly, in an instrument written to
-         * detect the one thing it could not see, and the `replace` control arm
-         * is what caught it: the arm planted a real orphan and the parity
-         * assertion stayed green.
-         *
-         * WHAT IS REPORTED INSTEAD IS A REAL QUESTION WITH A REAL ANSWER. FTS5's
-         * `integrity-check` AT RANK 1 verifies the index AGAINST THE CONTENT
-         * TABLE and throws `SQLITE_CORRUPT_VTAB` when they disagree — measured,
-         * and measured to catch the same orphan plain `integrity-check` (rank 0)
-         * passes over. It costs a walk of the index, which is why it belongs on
-         * an admin read taken deliberately and not on a member path. */
-      textUnits: n("capture_text", "bundle_id"),
-      textIndexOk: (() => {
-        try { this.sql.exec(`INSERT INTO capture_text_fts(capture_text_fts, rank) VALUES('integrity-check', 1)`); return true; }
-        catch { return false; }
-      })(),
+      textIndexOk: extractionOf(this.ctx).textIndexOk(),
       selections: ret.selections,
       selectionItems: ret.selectionItems,
       /* Reported so a purge can prove it took them, and so an operator can see
