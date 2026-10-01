@@ -29893,10 +29893,10 @@ var THEME_CHECKS = {
     translation: "A proposal must say who proposed it, and this one arrived carrying nobody. The record stamps the proposer from the credential that asked; nothing was written."
   },
   /* connections R43, R62 (K152; T6, legacy-checks): TAKING A PLACEMENT BACK, OR TURNING A PROPOSAL DOWN
-  (`op=themewithdraw`). CONNECTIONS #1 (T5) minted these four and held them in `src/connections/themes.mjs`
-  (`THEME_WITHDRAW_CHECKS`), in this family's shape, until the catalogue carried them; they are carried here
-  word for word, so connections' next job re-exports them from here and deletes its copy. The order at the
-  act: the actor (C-81.11), then C-81.6, C-81.8 and C-81.9, then no reason, nothing standing, not the placer. */
+  (`op=themewithdraw`). CONNECTIONS #1 (T5) minted these four in `src/connections/themes.mjs`, in this family's
+  shape; they are here word for word, and `THEME_WITHDRAW_CHECKS` there is a view of these four rows. The order
+  at the act: the actor (C-81.11), then C-81.6, C-81.8 and C-81.9, then no reason, nothing standing, not the
+  placer. */
   THEME_WITHDRAW_NOT_A_MEMBER: {
     check: "C-81.11",
     where: "src/connections/themes.mjs withdraw > is-theme-withdraw",
@@ -29991,10 +29991,10 @@ var AI_RUN_CHECKS = {
   },
   /* DEC-8 as amended by DEC-49: a surface may render a translation keyed on a
      code the plane SENT, which only holds if the plane never sends a condition
-     nobody has translated. The condition vocabulary is `queuestate.mjs`'s, read
-     LIVE rather than copied, and a run naming a kind outside it is a loud
-     refusal instead of a silent new vocabulary — queuestate.mjs's own words for
-     the same fence one surface over. */
+     nobody has translated. The condition vocabulary is this module's
+     `CONDITION_KINDS` (moved here from `queuestate.mjs`, N174, which re-exports
+     it), read LIVE rather than copied, and a run naming a kind outside it is a
+     loud refusal instead of a silent new vocabulary. */
   AI_RUN_CONDITION_UNKNOWN: {
     check: "C-22.4",
     where: "src/observation-log/vocabulary.mjs checkCondition, called from src/ai-runs/index.mjs #aiRunTerminate",
@@ -30094,8 +30094,10 @@ var AI_RUN_CHECKS = {
        ways it failed (`OBSERVATION_REFERENT_FAULTS` in `src/observation-log/vocabulary.mjs`). One code,
        because every fault is this row's condition — a PRESENT whose referent does
        not back it — and a second code behind C-22.10 would be two conditions
-       behind one C-number, which `civicos-ui/check-refusal-codes.mjs` refuses.
-       Section K of `test/observation-log.test.mjs` drives all of it. */
+       behind one C-number, which DEC-49 refuses (R26's test in
+       `test/m/observation-log/vocabulary.test.mjs` holds each C-22 number to its one
+       code). R2's C-22.10 arm in `test/m/observation-log/append.test.mjs` drives the
+       four faults. */
   OBS_PRESENT_NO_REFERENT: {
     check: "C-22.10",
     where: "src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe",
@@ -48444,7 +48446,7 @@ CREATE INDEX IF NOT EXISTS connection_pair_choices_end ON connection_pair_choice
 --
 -- DERIVED from the corpus (an entity is dirty only because a captured document
 -- resolved to it), so a whole-store purge clears it -- op=purge deletes it in the
--- whole-store arm (D-113; hygiene.test.mjs holds the list). It has no bundle_id
+-- whole-store arm (D-113; derive.test.mjs's R36 test holds it). It has no bundle_id
 -- and is a transient queue, so a per-bundle purge leaves it: at worst a stale
 -- entity_id triggers one harmless idempotent re-derivation on the next tick.
 CREATE TABLE IF NOT EXISTS connection_dirty (
@@ -48785,7 +48787,7 @@ var Themes = class _Themes {
     if (!sees)
       return refusal20(
         "THEME_TARGET_NOT_FOUND",
-        t ? `nothing you can see answers to ${t.slice(0, 80)}: name a document by its bundle id or a passage by its content id` : `pass target=<a document's bundle id, or a passage's content id>`,
+        t ? `nothing you can see answers to ${t.slice(0, 80)}: name a document by its record id or a passage by its content id` : `pass target=<a document's record id, or a passage's content id>`,
         { target: t || null }
       );
     if (words && bytes(words) > CAPTURE_TEXT_UNIT_CAP)
@@ -50100,9 +50102,11 @@ var Connections = class _Connections {
   }
   /** R20 (REC-25, `op=backlinks`): every edge INTO a target, the citing bundles filtered by the viewer (Membership v2
    *  §7.9), each with the edge's status read from the citing document. A target the viewer cannot see answers as an
-   *  absent one; nothing counts what was withheld. */
+   *  absent one. A citer the viewer may not see is withheld whole, and the answer says only that one was:
+   *  `out_of_view: true` (DEC-36, K903 (4)), asked by one ungated `EXISTS` beside the gated read, so nothing of the
+   *  withheld citer (its id, title, type, state, relation, or how many) reaches the answer. */
   backlinks({ target = null, viewer = null } = {}) {
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "backlinks are asked of an object: pass target=<bundle id>" };
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: "backlinks are asked of an object: pass target=<record id>" };
     if (!this.sees(target, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
     const gate = viewerPredicate(viewer);
     const rows2 = this.#rows(
@@ -50136,7 +50140,13 @@ var Connections = class _Connections {
         note
       });
     }
-    return { ok: true, target, backlinks: out };
+    const withheld = gate.scope === "member" ? null : this.#one(
+      `SELECT 1 AS x FROM refs r JOIN bundles b ON b.bundle_id = r.bundle_id
+        WHERE r.target_id = ? AND ((${gate.sql}) IS NOT 1) LIMIT 1`,
+      target,
+      ...gate.args
+    );
+    return { ok: true, target, backlinks: out, ...withheld ? { out_of_view: true } : {} };
   }
   /** R21 (C-6.2, `op=dangling`): every edge whose target no bundle holds; a hidden citing bundle's edge withheld whole.
    *  The target is not gated: it names nothing. */
@@ -50175,7 +50185,7 @@ var Connections = class _Connections {
     if (!bundle) return {
       projected: 0,
       edges: [],
-      note: "this capture is not registered to a bundle, so there is no canonical source to hang an edge on"
+      note: "this capture is not registered to a record, so there is no canonical source to hang an edge on"
     };
     const src = this.record.bundleInfo(bundle);
     if (src && src.type === "project") {
@@ -50225,7 +50235,7 @@ var Connections = class _Connections {
       references_written: written.added ?? 0,
       promoted: !!written.promoted,
       ...written.bundleSha ? { bundleSha: written.bundleSha } : {},
-      note: "only resolved links project, and only to a target some bundle has registered. skipped_unregistered counts targets whose BYTES the record holds while no bundle claims them: those become edges when the target is promoted. Each edge is written into the source document's references as links_to and never cites, because the source asserted it and not the group; a member promoting it to cites is a member's act."
+      note: "only resolved links project, and only to a target some record has registered. skipped_unregistered counts targets whose BYTES the record holds while no record claims them: those become edges when the target is promoted. Each edge is written into the source document's references as links_to and never cites, because the source asserted it and not the group; a member promoting it to cites is a member's act."
     };
   }
   /* R28: the links not already in the source document's references[], appended there by ONE promotion of the source
@@ -50234,7 +50244,7 @@ var Connections = class _Connections {
     const md = this.record.readFile(bundle, "bundle.md");
     const head = this.record.head(bundle);
     if (!md || typeof md.text !== "string" || !head)
-      return { ok: false, reason: "NO_DOCUMENT", detail: "the source bundle's document is not held as text, so its links cannot be written into it" };
+      return { ok: false, reason: "NO_DOCUMENT", detail: "the source record's document is not held as text, so its links cannot be written into it" };
     const parsed = parseFrontmatter(md.text);
     const held = new Set((Array.isArray(parsed.data?.references) ? parsed.data.references : []).filter((x) => x && x.rel === "links_to").map((x) => x.target));
     const add = edges.filter((e) => !held.has(e.to));
@@ -50939,12 +50949,12 @@ var OBSERVATION_LOG_SCHEMA = `
 -- THE STATE COLUMN IS DELIBERATELY NOT A SQL ENUM, and no CHECK constraint
 -- appears anywhere below. The refusal lives in code, in this module's
 -- checkObservation (vocabulary.mjs), where it can NAME the legal values and say why -- ai_run_log
--- above made the same choice for the same reason, and DEC-49 is what it is for:
+-- made the same choice for the same reason, and DEC-49 is what it is for:
 -- a SQLite constraint error refuses with a sentence nobody can translate.
 --
 -- THE FOLD. ai_run_log IS THIS TABLE. Its rows are rows here with
--- authority_kind = run, and #migrate copies them across and drops the old table,
--- because two writers for one fact is what section 4.4 forbids. op=airunlog
+-- authority_kind = run, and ai-runs' migration (its R38) copies them across and
+-- drops the old table, because two writers for one fact is what section 4.4 forbids. op=airunlog
 -- reads through the (authority_kind, authority, seq) index and answers in its
 -- existing envelope, so I3 does not change shape.
 --
@@ -51008,8 +51018,9 @@ CREATE INDEX IF NOT EXISTS observation_log_tally ON observation_log(level, state
 -- lead is AUTHORED: nobody has looked yet, and NEVER_LOOKED is never stored.
 --
 -- NO bundle_id, BY THE DESIGN'S FIELD LIST. So a per-bundle purge leaves it and
--- the whole-store purge clears it (D-113). Visibility is the AUTHOR's (a
--- provisional, stated in store.mjs leadRead) because no bundle scopes it.
+-- the whole-store purge clears it (D-113). Visibility is the AUTHOR's and the
+-- projects the author shares it to (BOB #14's ruling, R15; leadReach in index.mjs)
+-- because no bundle scopes it.
 CREATE TABLE IF NOT EXISTS leads (
   lead_id   TEXT PRIMARY KEY,   -- LEAD-YYYY-MMDD-hex, minted by the plane
   author    TEXT NOT NULL,      -- a member id, server-stamped, never a machine (C-54.2)
@@ -51108,11 +51119,12 @@ var OBSERVATION_SUBJECT_KINDS = {
        are the record claiming more than it can support, in the one direction this
        whole table exists to refuse.
   
-       `observation-log.test.mjs`'s arm B9 pins this key set EXACTLY, and that pin
-       is what brought this item here to say so instead of letting a seventh member
-       arrive unremarked. It worked as designed; the arm is CORRECTED with its date
-       and its reason, never exempted. Reported as a DESIGN GAP against sections 3
-       and 4.3 rather than resolved silently. */
+       The old suite's arm B9 (`observation-log.test.mjs`, deleted in T20) pinned
+       this key set EXACTLY, and that pin is what brought this item here to say so
+       instead of letting a seventh member arrive unremarked; the arm was CORRECTED
+       with its date and its reason, never exempted. R1's test in
+       `test/m/observation-log/vocabulary.test.mjs` pins the seven now. Reported as a
+       DESIGN GAP against sections 3 and 4.3 rather than resolved silently. */
   reference: "a reference as a document's reading carries it \u2014 the raw, source-assigned kind:key, before any resolution to a canonical entity (D-83). The subject of a RESOLUTION attempt, whose whole point is that it may match no entity at all"
 };
 var CONTENT_AXIS_STATES = {
@@ -51585,7 +51597,7 @@ function checkObservation(entry, conditionKinds = CONDITION_KINDS, referent = nu
   if (e.bundle != null && String(e.bundle) !== "")
     return refusal7(
       "AI_LOG_NOT_A_BUNDLE",
-      `this entry names bundle '${String(e.bundle)}'; the observation log is its own object (INVESTIGATIVE-SESSION.md \xA711) and bundle.md is written only on success`
+      `this entry names record '${String(e.bundle)}'; the observation log is its own object (INVESTIGATIVE-SESSION.md \xA711) and bundle.md is written only on success`
     );
   const authorityKind = typeof e.authority_kind === "string" ? e.authority_kind : "";
   if (!Object.prototype.hasOwnProperty.call(OBSERVATION_AUTHORITY_KINDS, authorityKind))
@@ -52048,7 +52060,7 @@ var ObservationLog = class _ObservationLog {
   /** R8 — REC-95, THE RESOLUTION ATTEMPT (§4.3's second act), one row per reference the recogniser tried; the
    *  unresolved one is the point. THE SUBJECT IS THE REFERENCE AND THE AUTHORITY IS THE CAPTURE. Registered on
    *  `entities.onResolveAttempt` (its R13), whose payload is `{captureSha, bundleId, ref, matches, considered,
-   *  resolvedBy}`; the legacy store calls it until entities is extracted. */
+   *  resolvedBy}`, through `attachMeaning`. */
   observeResolutionAttempt({
     captureSha = null,
     bundleId = null,
@@ -52085,7 +52097,7 @@ var ObservationLog = class _ObservationLog {
    *  documents and whether it was truncated. `system` IS THE RECORD'S OWN WORD FOR AN UNATTRIBUTED DERIVATION and maps
    *  to the plane with no actor; running it through `contentMintState` would file the scheduler as a member called
    *  "system". Registered on `connections`' derivation notice (its R3), whose payload is `{entityId, count, documents,
-   *  truncated, entityKnown, assertedBy}`; the legacy store calls it until connections is extracted. */
+   *  truncated, entityKnown, assertedBy}`, through `attachMeaning`. */
   observeConnectionDerivation({
     entityId = null,
     count = null,
@@ -52215,15 +52227,16 @@ var ObservationLog = class _ObservationLog {
     );
     return { extraction: q7("extract"), index: q7("derive") };
   }
-  /** R32 (K861, plane R10): this module's share of the instance's figures, exported for `plane` to register under this
-   *  module's name through record-core R63 (`registerCounts("observation-log", ObservationLog.COUNT_KEYS, (hid) =>
-   *  o.counts(hid))`); the module registers nothing itself while plane holds its copy. Both are purge's proof only:
+  /** R32 (K861, plane R10): this module's share of the instance's figures, exported for `plane`, which registers it
+   *  under this module's name through record-core R63 (`src/plane/stats.mjs`: `["observation-log",
+   *  ObservationLog.COUNT_KEYS, (ctx, hid) => observationLogOf(ctx).counts(hid)]`); the module registers nothing
+   *  itself. Both are purge's proof only:
    *  record-core keeps them off `op=stats`' answer (its R64), and the wire's log count, `observationsNonLead`, is
    *  plane's, not this module's (K861 (2)). */
   static COUNT_KEYS = Object.freeze(["observations", "leads"]);
   static #COUNTED = Object.freeze({ observations: "observation_log", leads: "leads" });
   /** R32, D-113 (purge PROVES what it took, and §5: *the purge proof's own count stays whole*): R63's `counts(hid)` for
-   *  this module's share, moved from the plane's held copy with its reading kept. `observations` is every row of the log,
+   *  this module's share, which plane registers under this module's name. `observations` is every row of the log,
    *  lead looks and run rows included; `leads` every lead. NEITHER TABLE HAS A COLUMN NAMING A BUNDLE (R23), so there is
    *  nothing for `hid` to subtract and every `hid`, null included, counts whole: `hid` is taken to fit R63's shape and
    *  never read. A figure whose table cannot be read is left out, and R63 answers it null, never zero. Synchronous;
@@ -52268,7 +52281,7 @@ var ObservationLog = class _ObservationLog {
         reason: "AUTHORITY_NOT_RESOLVABLE",
         code: "AUTHORITY_NOT_RESOLVABLE",
         kind: kind ?? null,
-        detail: `a resolver is registered for one of ${RESOLVED_AUTHORITY_KINDS.join(", ")}; every other authority kind's bundles are fixed by the observation log`
+        detail: `a resolver is registered for one of ${RESOLVED_AUTHORITY_KINDS.join(", ")}; the records every other authority kind names are fixed by the observation log`
       };
     const holder = AUTHORITY_HOLDERS[kind];
     const refused = listenerRefusal(this.resolvers.has(kind) ? { module: holder } : null, holder, resolve, { kind });
@@ -53081,7 +53094,7 @@ var MEANING = {
     key: "bundle_id",
     bare: "grade",
     level: "meaning",
-    grain: "the bundle carrying a capture whose reference resolved so",
+    grain: "the record carrying a capture whose reference resolved so",
     sub: RESOLUTION_SUB,
     ...RESOLUTION_ROW
   },
@@ -53090,7 +53103,7 @@ var MEANING = {
     key: "bundle_id",
     bare: "entity",
     level: "meaning",
-    grain: "the bundle carrying a capture that concerns the subject",
+    grain: "the record carrying a capture that concerns the subject",
     sub: RESOLUTION_SUB,
     ...RESOLUTION_ROW
   },
@@ -53123,9 +53136,9 @@ var MEANING = {
    * the three existing arms compile through exactly the code they compiled
    * through before. THE COLUMN NAMES COME FROM THIS REGISTRY AND THE MEMBER'S
    * STRING IS ALWAYS AN ARGUMENT — the property the whole compiler has, kept
-   * rather than re-argued, and `content-arm.test.mjs` pins it by compiling a
-   * battery of hostile values and asserting the SQL is byte-identical across
-   * all of them while only `args` moves.
+   * rather than re-argued, and R7's test (`test/m/query-language/statements.test.mjs`)
+   * proves it by compiling hostile values and asserting the SQL is byte-identical
+   * across all of them while only `args` moves.
    * ------------------------------------------------------------------- */
   content: {
     table: "content",
@@ -53239,9 +53252,10 @@ var MEANING = {
          question with rows it answers NOTHING about: a member walking the answers
          (each step, undetermined, present) would never meet the images, which is
          the silent drop the row forbids, one layer up. With the third value every
-         row answers exactly one chain question (`rec121-chain-bytes.test.mjs`
-         drives that partition), and `chain_last` below says the same word, so the
-         filter and the row label are one definition read twice. `does-not-apply`
+         row answers exactly one chain question (R6's test in
+         `test/m/query-language/grammar.test.mjs` drives that partition), and
+         `chain_last` below says the same word, so the filter and the row label
+         are one definition read twice. `does-not-apply`
          is NOT in `vocab`, exactly as `undetermined` is not: both are statements
          about the chain rather than step kinds, so neither becomes a bare word
          (`content:does-not-apply` would read as a kind of content). The literal
@@ -53364,9 +53378,10 @@ var MEANING = {
    * where a member's text becomes a MATCH argument. A second spelling would
    * be a second grammar to learn and a second place to get the escaping
    * wrong; `ftsLiteral` doubles an embedded `"` and the expression is always a
-   * BOUND ARGUMENT, never interpolated, which `passage-arm.test.mjs` pins by
-   * compiling hostile values and asserting the SQL is byte-identical while
-   * only `args` moves.
+   * BOUND ARGUMENT, never interpolated, which R7's test
+   * (`test/m/query-language/statements.test.mjs`) proves by compiling hostile
+   * `passage:` values and asserting the SQL is byte-identical while only `args`
+   * moves.
    * ------------------------------------------------------------------- */
   passage: {
     table: "capture_text",
@@ -54491,13 +54506,11 @@ WHERE ${gate.sql}`,
            delivered by a different op that surfaces already use.
     
            HOW IT WAS ESTABLISHED, because "nothing reads it" is the claim this
-           project has most often got wrong: NOT by grep. `test/fieldread.control.mjs
-           --tripwire-sweep` makes each field throw on any read in any spelling and
-           runs the WHOLE battery, which is what reaches `store.mjs` inside workerd
-           where a node sweep cannot see. Five of these fields' siblings read as
-           never-read in node and are LIVE. The pin that stops the two coming back is
-           structural (`Object.keys`) in `query.test.mjs`, because a field with no
-           consumer is invisible to every behavioural assertion there is.
+           project has most often got wrong: NOT by grep. A field-read control of the
+           time made each field throw on any read in any spelling and ran every suite
+           of the day, which is what reached `store.mjs` inside workerd where a node
+           sweep could not see. Five of these fields' siblings read as never-read in
+           node and were LIVE.
     
            REC-90 ADDS A SEVENTH, `level`, AND IT HAS A READER BEFORE IT IS WRITTEN —
            which is the test D-258 above set for a field on this descriptor.
@@ -55044,7 +55057,7 @@ var Frontier = class {
       never_looked_count: never.slice(0, cap).length,
       missing_unexplained: unexplained.slice(0, cap),
       missing_unexplained_count: unexplained.slice(0, cap).length,
-      note: "NEVER_LOOKED is the absence of a row and is reported apart from the tally: these are addresses a document we hold points at that nothing has ever looked for. A missing row is read through section 5.1's causes in order, so an address this record holds a capture of, or one it cannot place after the log's first row, is named in `missing_unexplained` with its cause and never counted as nobody-looked; every such row names the causes it could not rule out. The withholding fence applies ROW-WHOLE (REC-103, design section 6): a row is published only when every bundle it names \u2014 through `result_ref`, through a ratify or link authority, through a run's context or a sweep's capture request \u2014 is one this viewer may see, and a referent this record cannot attribute to a bundle at all withholds the row rather than being waved through. No count of what was withheld is reported, because that count is the leak. The `tally` counts every row at this level rather than this page, names nothing, and is not gated"
+      note: "NEVER_LOOKED is the absence of a row and is reported apart from the tally: these are addresses a document we hold points at that nothing has ever looked for. A missing row is read through section 5.1's causes in order, so an address this record holds a capture of, or one it cannot place after the log's first row, is named in `missing_unexplained` with its cause and never counted as nobody-looked; every such row names the causes it could not rule out. The withholding fence applies ROW-WHOLE (REC-103, design section 6): a row is published only when every record it names \u2014 through `result_ref`, through a ratify or link authority, through a run's context or a sweep's capture request \u2014 is one this viewer may see, and a referent that cannot be attributed to any record at all withholds the row rather than being waved through. No count of what was withheld is reported, because that count is the leak. The `tally` counts every row at this level rather than this page, names nothing, and is not gated"
     };
   }
   /* ---- the content level (R42–R44) ---- */
@@ -55982,7 +55995,7 @@ var Retrieval = class _Retrieval {
         interpretation: "OR",
         total: n,
         q: String(input.q ?? ""),
-        detail: "no bundle matches all of these terms; this many match any of them"
+        detail: "no record matches all of these terms; this many match any of them"
       };
     }
     out.gate.applied = tally.applied;
@@ -56179,7 +56192,7 @@ var Retrieval = class _Retrieval {
         "field:>value, field:<value, field:a..b compare and range",
         "has:field asks whether the field carries any value",
         "fm:path and fm:path=value reach frontmatter no column projects",
-        "leg:, resolves: and concerns: reach the MEANING layer -- leg:hunch is outstanding hunch debt, resolves:C the flagged resolutions, concerns:ENT-1 the reverse index; they answer at BUNDLE grain",
+        "leg:, resolves: and concerns: reach the MEANING layer -- leg:hunch is outstanding hunch debt, resolves:C the flagged resolutions, concerns:ENT-1 the reverse index; they answer at RECORD grain",
         /* REC-90: `content:` searches WHAT HAS BEEN CITED OR MARKED CITABLE, never the text of the documents
            themselves — `passage:` is that question. */
         "content: reaches the CONTENT layer -- the passages somebody has cited or marked citable: content:pdf-page by extent kind, content:stale for citations made under a transcription the record has replaced, content:machine by who minted it, content:ocr by the chain's last step, content:cap<C by the derivation cap, content:uncited for marked-but-unused passages",
@@ -56189,7 +56202,7 @@ var Retrieval = class _Retrieval {
         "content:chain=does-not-apply names the images cited as their own bytes -- no transcription stands between such a citation and what it points at, so its chain is not undetermined and content:chain=undetermined does not match it",
         "content:cap=does-not-apply names the same images -- with nothing transcribed there is no derivation step for a cap to be the weakest of, so their cap is not undetermined and content:cap=undetermined does not match them",
         "a meaning arm takes a bare word (leg:cuts_against), a sub-field (leg:ground=*) or a comparison (resolves:>=B on the bare field, leg:grade>=B or content:cap<C on a named one)",
-        "has:leg asks whether the bundle carries any row in the meaning table at all",
+        "has:leg asks whether the record carries any row in the meaning table at all",
         "sort:field and sort:-field order the result"
       ]
     };
@@ -56213,7 +56226,7 @@ var Retrieval = class _Retrieval {
     const findings = [];
     for (const r of rows2) {
       if (r.fts_id === null || r.fts_id === void 0) {
-        findings.push({ bundleId: r.bundle_id, finding: "NO_FTS_ID", detail: "the bundle has no text index key" });
+        findings.push({ bundleId: r.bundle_id, finding: "NO_FTS_ID", detail: "the record has no text index key" });
         continue;
       }
       const have = this.#one(`SELECT ${FTS_COLUMNS.join(", ")} FROM bundles_fts WHERE rowid=?`, r.fts_id);
@@ -56311,7 +56324,7 @@ var Retrieval = class _Retrieval {
    *  ONE LEFT JOIN against the highest `seq` (provenance R48), never a read per row: the arm with no limit is unbounded
    *  by contract. REC-60 / D-225 kept that arm: a bound applied must be published, and this arm applies none, so a bare
    *  array that is COMPLETE tells no lie; its named consumers (the browser, the audit, the migration verifier) need it
-   *  whole, and `meaning-bounds.test.mjs` pins it complete. Paging is opt-in: a positive `limit` answers the envelope
+   *  whole, and `roster.test.mjs` (R63) holds it complete. Paging is opt-in: a positive `limit` answers the envelope
    *  `{bundles, limit, cursor, total}`, `limit` the bound applied after the 5,000 ceiling (REC-57) and `total` what the
    *  VIEWER may see (a total over rows the caller cannot read would say "something is hidden"). */
   listBundles({ type = null, state = null, after = null, limit = null, viewer = null } = {}) {
@@ -56914,7 +56927,7 @@ var PROGRESSIONS_SCHEMA = `
 -- member-declared state carrying its author and date -- like the subject registry
 -- (entities), NOT a projection of the corpus. So a whole-store purge (the scratch-reset
 -- tool) clears it, but a per-bundle purge leaves it (it has no bundle_id). The connection
--- table above is the TWO-STAGE case of this one (framework: "a connection row is a
+-- table (connections' own) is the TWO-STAGE case of this one (framework: "a connection row is a
 -- progression of two stages; nothing needs both"); they are one construct at two
 -- generalities, not two tables beside each other.
 CREATE TABLE IF NOT EXISTS progression_defs (
@@ -57000,7 +57013,7 @@ CREATE TABLE IF NOT EXISTS progression_stage_versions (
 -- threaded_by is stamped server-side; the GRADE is the record's, never the caller's.
 --
 -- DERIVED-from-the-corpus and carrying bundle_id, so it clears in BOTH purge arms exactly
--- as resolutions do (it is in op=purge's TABLES): a per-bundle purge removes that document's
+-- as resolutions do (declared to record-core's purge, R29): a per-bundle purge removes that document's
 -- placements and the instance honestly re-reads with that stage now unfilled, and a
 -- whole-store purge takes them all (D-113). EXCEPTION documents that discharge a lawful
 -- skip, JUNCTION checks as findings, and the SCHEDULED task that walks this table for
@@ -57041,7 +57054,7 @@ CREATE INDEX IF NOT EXISTS progression_instances_capture ON progression_instance
 -- documents, not a stored "discharged" boolean that could go stale against the live placements.
 --
 -- DERIVED-from-the-corpus and carrying bundle_id, so it clears in BOTH purge arms exactly as
--- progression_instances do (it is in op=purge's TABLES): a per-bundle purge removes that
+-- progression_instances do (declared to record-core's purge, R29): a per-bundle purge removes that
 -- document's discharges and the stage honestly re-reads as an undischarged gap; a whole-store
 -- purge takes them all (D-113). JUNCTION checks as findings and the SCHEDULED walking-task are
 -- DEFERRED past FW-10.
@@ -57133,8 +57146,8 @@ CREATE INDEX IF NOT EXISTS progression_exception_versions_bundle ON progression_
 -- like the registry and the progression definitions above -- but op=purge is the
 -- scratch-reset tool, so a whole-store purge that reported scope ALL while leaving
 -- dispositions is the D-113 silent-leftover: cleared in the whole-store arm only,
--- left by a per-bundle purge (it has no bundle_id). hygiene.test.mjs asserts this
--- against schema.mjs.
+-- left by a per-bundle purge (it has no bundle_id). R29's test in
+-- test/m/progressions/dispose.test.mjs proves it through record-core's purge.
 CREATE TABLE IF NOT EXISTS proposal_dispositions (
   progression_key TEXT NOT NULL,
   stage_key       TEXT NOT NULL,
@@ -80962,7 +80975,7 @@ function checkBiasExtension(ctx, findings) {
     findings.push(f13(
       "C-26.1",
       "error",
-      "a bias bundle carries its statements in frontmatter as statements[], and this one has none",
+      "a bias record carries its statements in frontmatter as statements[], and this one has none",
       ["add statements[] to bundle.md frontmatter, each with id, kind, subject, text and justification"]
     ));
     return;
@@ -80979,7 +80992,7 @@ function checkBiasExtension(ctx, findings) {
     const text5 = typeof s.text === "string" ? s.text.trim() : "";
     const kind = typeof s.kind === "string" ? s.kind.trim() : "";
     if (!id) findings.push(f13("C-26.1", "error", `${at23} has no id, and an id is what an override names`));
-    else if (seen.has(id)) findings.push(f13("C-26.1", "error", `${at23} repeats the statement id '${id}'; ids are stable and unique within a bundle`));
+    else if (seen.has(id)) findings.push(f13("C-26.1", "error", `${at23} repeats the statement id '${id}'; ids are stable and unique within a record`));
     else seen.add(id);
     if (!BIAS_STATEMENT_KINDS.includes(kind)) {
       findings.push(f13(
@@ -81016,8 +81029,8 @@ function checkBiasExtension(ctx, findings) {
         "C-26.4",
         "error",
         `${at23} is a pattern statement with no citation, and a pattern statement cannot leave draft without one`,
-        /* CORRECTED TWICE ON FIRST RUN, and `repair-reachability.test.mjs` is
-           what corrected it, which is the instrument working. The first version
+        /* CORRECTED TWICE ON FIRST RUN, found by `repair-reachability.test.mjs`
+           (a legacy suite, since deleted), which was the instrument working. The first version
            said "or return the bundle to draft" — a MOVE DIRECTIVE naming no
            edge (A2). The second named the edge as `proposed -> draft,
            op=promote` — legal, but A3 then measured that the plane offers NO
@@ -81189,9 +81202,9 @@ var BIAS_CHECKS = {
   },
   /* ---------------------------------------------------------------------------
        REC-207 — SETTLING A BIAS DEBT (BOB #32, 2026-09-23 23:42Z). Seven rows, in
-       the EXISTING family rather than a new one, on SK-1's rule: a new `*_CHECKS`
-       family is a floor in `civicos-ui/check-refusal-codes.mjs` that buys slack for
-       everybody else's walk, and these refusals are bias's in the plainest sense —
+       the EXISTING family rather than a new one, on SK-1's rule (made when the
+       legacy `civicos-ui/check-refusal-codes.mjs`, since deleted, walked every
+       `*_CHECKS` family), because these refusals are bias's in the plainest sense —
        they are the conditions under which the record declines to record that a
        member has settled the obligation a lens change raised.
   
@@ -81273,8 +81286,9 @@ var BIAS_SCHEMA = `-- PL-12 / D-84: THE BIAS SET'S STATEMENTS, a PROJECTION of t
 -- instance may amend or retire its own locked statements through its documented
 -- adoption process.
 --
--- Carries bundle_id, so it clears in BOTH purge arms via the TABLES list
--- (D-113); hygiene.test.mjs holds that list against this file.
+-- Carries bundle_id, so it clears in BOTH purge arms (D-113): this module
+-- declares it to record-core's purge, and R30's test
+-- (test/m/bias/adopt-manifest.test.mjs) holds both arms.
 CREATE TABLE IF NOT EXISTS bias_statements (
   bundle_id     TEXT NOT NULL,   -- the bias bundle
   ord           INTEGER NOT NULL,-- position in statements[], the addressable slot
@@ -81656,7 +81670,7 @@ var Bias = class _Bias {
     if (!bundleId)
       return this.#refuse(
         "BIAS_ADOPTION_NOT_PROPOSED",
-        "op=biasadopt names the bias bundle being adopted: pass bundleId=<BIAS-...>."
+        "op=biasadopt names the bias record being adopted: pass bundleId=<BIAS-...>."
       );
     const h = this.#record.head(String(bundleId));
     if (!h || normalizeType(h.type) !== "bias" || !["proposed", "adopted"].includes(h.currentState))
@@ -81966,7 +81980,7 @@ var Bias = class _Bias {
     if (adopt)
       return this.#refuse(
         "BIAS_INHALE_CANNOT_ADOPT",
-        "op=biasinhale reads a policy and returns a PROPOSAL. Adopting is op=biasadopt, signed by a member \u2014 and only after the proposed set has been written into a bias bundle and offered."
+        "op=biasinhale reads a policy and returns a PROPOSAL. Adopting is op=biasadopt, signed by a member \u2014 and only after the proposed set has been written into a bias record and offered."
       );
     const text5 = String(policy || "");
     const allSentences = text5.split(/\n{2,}|(?<=[.;:])\s+/).map((s) => s.replace(/\s+/g, " ").trim()).filter((s) => s.length > 12);
@@ -82031,7 +82045,7 @@ var Bias = class _Bias {
       installed: false,
       adopted: false,
       writes: 0,
-      proposes: "a member writes these into a bias bundle, justifies each one, points each subject at the registry, offers the set as 'proposed', and adopts it with their name on it. Nothing here is in force and nothing here has been written.",
+      proposes: "a member writes these into a bias record, justifies each one, points each subject at the registry, offers the set as 'proposed', and adopts it with their name on it. Nothing here is in force and nothing here has been written.",
       bars: bars.slice(0, cap),
       bars_count: bars.length,
       statements: statements.slice(0, cap),

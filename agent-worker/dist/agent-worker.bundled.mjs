@@ -724,10 +724,10 @@ var AI_RUN_CHECKS = {
   },
   /* DEC-8 as amended by DEC-49: a surface may render a translation keyed on a
      code the plane SENT, which only holds if the plane never sends a condition
-     nobody has translated. The condition vocabulary is `queuestate.mjs`'s, read
-     LIVE rather than copied, and a run naming a kind outside it is a loud
-     refusal instead of a silent new vocabulary — queuestate.mjs's own words for
-     the same fence one surface over. */
+     nobody has translated. The condition vocabulary is this module's
+     `CONDITION_KINDS` (moved here from `queuestate.mjs`, N174, which re-exports
+     it), read LIVE rather than copied, and a run naming a kind outside it is a
+     loud refusal instead of a silent new vocabulary. */
   AI_RUN_CONDITION_UNKNOWN: {
     check: "C-22.4",
     where: "src/observation-log/vocabulary.mjs checkCondition, called from src/ai-runs/index.mjs #aiRunTerminate",
@@ -827,8 +827,10 @@ var AI_RUN_CHECKS = {
        ways it failed (`OBSERVATION_REFERENT_FAULTS` in `src/observation-log/vocabulary.mjs`). One code,
        because every fault is this row's condition — a PRESENT whose referent does
        not back it — and a second code behind C-22.10 would be two conditions
-       behind one C-number, which `civicos-ui/check-refusal-codes.mjs` refuses.
-       Section K of `test/observation-log.test.mjs` drives all of it. */
+       behind one C-number, which DEC-49 refuses (R26's test in
+       `test/m/observation-log/vocabulary.test.mjs` holds each C-22 number to its one
+       code). R2's C-22.10 arm in `test/m/observation-log/append.test.mjs` drives the
+       four faults. */
   OBS_PRESENT_NO_REFERENT: {
     check: "C-22.10",
     where: "src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe",
