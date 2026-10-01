@@ -34,3 +34,7 @@ Size (session_014EDtgA8oD3Eyhq1jai3Z7j): test runs 9, module lines 5570
 ## J1 · REPORT
 
 Other modules: (1) capture doorbell.test.mjs:272 R56 is flaky. It asserts that !f1.includes("198") over a 16-hex keyed digest with a random key, which fails about 0.34% of runs (14/4096). It failed once in my test/m after-run and passed 5/5 alone. (2) For BOB to place: deploybindings.test.mjs's D-54 live arms read bio-plane/wrangler.jsonc's comment text and src/subresources.mjs's SUBRESOURCE_CAP source (another module's): repository-data ratchets stated by no bundler requirement, left as they are. No generated artifact staled: no changed script is a bundle input.
+
+## J2 · COMPLETE
+
+Done at c269245000 on job/T22/bundler. D5: deploybindings imports scripts/jsonc.mjs; DELETED bio-plane/test/jsonc.mjs (drop it from bundler's tests at the merge; format's one failure until then). N469 re-scan: fleetbundles header (5b, 5c, M0-152 retired in T20), the control's baseline label (sixteen), and notes in fleet-bundle.mjs, resolve-version.mjs and bundles.mjs re-worded; provenance stays. Also: deploybindings' two source-text pins on deploy.mjs retired (R18's command tests prove the same; 41 to 39); release-assemble NO_ARTIFACT names bundles.mjs. bundler 45/45; deploybindings 39/0, fleetbundles 98/0 with no SKIP; test/m 4815 tests, fails membership R79/R83 (accepted) plus capture R56's chance collision (J1), no new red; architecture, coverage 23/23, ownership 0 failures. Record: build/jobs/T22/bundler.md.
