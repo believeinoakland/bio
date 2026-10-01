@@ -55,11 +55,20 @@
  * carry (C-22.4) and the kinds a member may lawfully mute are one list, kept in one place, so the two cannot drift.
  * It is a VOCABULARY, not a producer. What it gives the mute is the set of kinds a member may lawfully mute, which
  * is what the fence needs in order to refuse anything else BY NAME rather than by silence. The list is larger than
- * the feed can emit (four of the twelve have a producer), which is the safe direction: the fence accepts a mute for
+ * the feed can emit (not every kind has a producer), which is the safe direction: the fence accepts a mute for
  * a kind whose generator is not built, and the mint refuses any CONDITION kind this list does not name. A surface
  * never keeps a copy of it; it reads it from the refusal or from op=queue's own answer. */
-import { CONDITION_KINDS as QUEUE_CONDITION_KINDS } from "./observation-log/vocabulary.mjs";
-export { QUEUE_CONDITION_KINDS };
+/* R5 (K608, K611): beside observation-log's twelve, the one condition kind that is not a look's: a deadline on one of the
+ * group's actions passed while its entry is still pending (`queue-producers` R15, from `action-clocks.overdueClocks`).
+ * A CONDITION and not a FINDING (K611): it is said once, when the date passes, and a member quiets it for themselves;
+ * the action's own record is where the overdue entry is met or waived. It is queue's to add and not observation-log's,
+ * because no look ever carries it (C-22.4 checks a look's condition against observation-log's list alone). */
+import { CONDITION_KINDS } from "./observation-log/vocabulary.mjs";
+export const QUEUE_CONDITION_KINDS = Object.freeze({
+  ...CONDITION_KINDS,
+  "action-clock-overdue":       "a deadline on one of the group's actions passed while its entry is still pending "
+                              + "(DEC-94) — LIVE: queue-producers R15, from action-clocks' overdueClocks",
+});
 
 /* Every OTHER kind the catalogue names, with the class it belongs to — so a
  * refusal can say what the kind ACTUALLY is instead of only what it is not, and
@@ -97,6 +106,16 @@ export const QUEUE_OBLIGATION_KINDS = {
      until an administrator decides otherwise, so it is an OBLIGATION of the administrators, never muted. Its producer is
      `queue-producers`' (its R14), which offers membership's revoke. */
   "signer-self-registered":      "a member registered their own signing key; you may revoke it (N375)",
+  /* The Action layer (R1; K608, K613, K614; BIO_Action_v0_1.md §4 rule 5): three OBLIGATIONs, each a judgement or an
+     answer a named member owes, each leaving by its own act (R12's doors) and never by a mute. Their producers are
+     `queue-producers`' (its R16, R17, R18). */
+  "plan-checkpoint-due":         "a checkpoint your group set in an action plan has come; a member judges whether its "
+                              + "condition was met (op=checkpointrecord) — LIVE: queue-producers R16",
+  "escalation-stage-proposed":   "an escalation's next stage is proposed because its trigger was met; a member advances "
+                              + "it or declines with a reason (op=escalationadvance, op=escalationdecline) "
+                              + "— LIVE: queue-producers R17",
+  "action-reminder":             "a reminder you asked for on one of the group's action deadlines; answer it with "
+                              + "another reminder or none (op=reminderanswer, DEC-94) — LIVE: queue-producers R18",
 };
 
 export const QUEUE_FINDING_KINDS = {
@@ -258,7 +277,8 @@ export function classOfKind(kind) {
  * leaves the team's list only by op=proposedispose. OBLIGATION alone is refused. */
 export const MUTE_REFUSAL_DETAIL = {
   OBLIGATION: "an OBLIGATION is something a named person must do for the record to proceed, and it leaves "
-            + "every list only when it is RESOLVED (op=taskresolve) — record state, not a preference. "
+            + "every list only when it is RESOLVED (op=taskresolve, or the act its item names as "
+            + "`disposition.instead`) — record state, not a preference. "
             + "Muting it would remove it from the only surface that routes it while `tasks` carries no "
             + "per-member mute, so the record would go on believing the question reached a person.",
 };

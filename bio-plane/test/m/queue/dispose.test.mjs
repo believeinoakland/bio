@@ -75,7 +75,17 @@ test("R28: the bridge: a CONDITION or OBLIGATION key is CLASS_NOT_DISPOSED with 
                                            ["render-deferred::CR-1", "CONDITION", "render-deferred", "queuemute"],
                                            ["bias-debt::r1", "OBLIGATION", "bias-debt", "biasdebtresolve"],
                                            ["signer-self-registered::K1", "OBLIGATION", "signer-self-registered", "signerset"],
-                                           ["authority-undetermined::TASK-1", "OBLIGATION", "authority-undetermined", "taskresolve"]]) {
+                                           ["authority-undetermined::TASK-1", "OBLIGATION", "authority-undetermined", "taskresolve"],
+                                           ["plan-checkpoint-due::PLN-1::S::2", "OBLIGATION", "plan-checkpoint-due", "checkpointrecord"],
+                                           ["escalation-stage-proposed::ESC-1::filed", "OBLIGATION", "escalation-stage-proposed", "escalationadvance"],
+                                           ["action-reminder::ACT-1::0::2026-09-02", "OBLIGATION", "action-reminder", "reminderanswer"],
+                                           ["action-clock-overdue::ACT-1::0", "CONDITION", "action-clock-overdue", "queuemute"],
+                                           ["CONDITION::action-clock-overdue::ACT-1::0", "CONDITION", "action-clock-overdue", "queuemute"],
+                                           // the published id of an OBLIGATION not held in tasks, read as R26 reads it
+                                           ["OBLIGATION::bias-debt::r1", "OBLIGATION", "bias-debt", "biasdebtresolve"],
+                                           ["OBLIGATION::plan-checkpoint-due::PLN-1::S::2", "OBLIGATION", "plan-checkpoint-due", "checkpointrecord"],
+                                           ["OBLIGATION::escalation-stage-proposed::ESC-1::filed", "OBLIGATION", "escalation-stage-proposed", "escalationadvance"],
+                                           ["OBLIGATION::action-reminder::ACT-1::0::2026-09-02", "OBLIGATION", "action-reminder", "reminderanswer"]]) {
     const r = pd(w, { key, to: "deferred", reason: "r" });
     assert.deepEqual([r.reason, r.class, r.kind, r.instead, r.check, r.translation],
       ["CLASS_NOT_DISPOSED", cls, kind, instead, "C-33.44", QUEUE_ACT_CHECKS.CLASS_NOT_DISPOSED.translation], key);
@@ -86,6 +96,9 @@ test("R28: the bridge: a CONDITION or OBLIGATION key is CLASS_NOT_DISPOSED with 
     assert.deepEqual(r.requires, ["project", "finding"]);
   }
   assert.equal(w.calls.length, 0); assert.equal(w.all(`SELECT count(*) c FROM finding_dispositions`)[0].c, 0);
+  // an OBLIGATION:: key whose second segment is no obligation kind is not read as one
+  pd(w, { key: "OBLIGATION::no-such-kind::x", to: "deferred", reason: "r" });
+  assert.equal(w.calls.length, 1);
 });
 
 test("R29: both NO_PROJECT_SCOPE refusals carry a catalogued check id and a translation", () => {
