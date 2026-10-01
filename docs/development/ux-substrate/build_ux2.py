@@ -439,9 +439,9 @@ ul.bl {{ margin:2px 0; padding-left:18px }} ul.bl li {{ margin:2px 0 }}
 
 <h2 id="needed">What is still needed from you</h2>
 {"".join("<p>" + t + "</p>" for t in x["meta"].get("neededIntro", []))}
-<div class="tw"><table class="need"><thead><tr><th>#</th><th>The decision</th><th>Size of the ask</th></tr></thead><tbody>{need_rows}</tbody></table></div>
+{('<div class="tw"><table class="need"><thead><tr><th>#</th><th>The decision</th><th>Size of the ask</th></tr></thead><tbody>' + need_rows + '</tbody></table></div>') if need else '<p class="rec"><b>Nothing is waiting on you.</b> Every question on this page is settled; see <a href="#settled">what is settled</a>. A new question appears here, with its brief, when one arises.</p>'}
 <ol class="oq">{need_cards}</ol>
-{('<p class="note">Folded into another question: ' + "; ".join(f'{a} ({e((oqs[a-1].get("brief") or {}).get("title") or oqs[a-1].get("question"))}) into <a href="#oq{t}">{t}</a>' for a, t in sorted(absorbed.items())) + '.</p>') if absorbed else ""}
+{('<p class="note">Folded into another question: ' + "; ".join(f'{a} ({e((oqs[a-1].get("brief") or {}).get("title") or oqs[a-1].get("question"))}) into <a href="#{_anchor(t)}">{t}</a>' for a, t in sorted(absorbed.items())) + '.</p>') if absorbed else ""}
 {('<h3 style="margin-top:22px">Left to the design</h3><p>These are open, but they are detail within rules already set, so the designer settles them without you. Say so if you want any of them brought to you.</p><ul class="bl">' + design_items + '</ul>') if design_items else ""}
 
 <h2 id="settled">What is settled</h2>

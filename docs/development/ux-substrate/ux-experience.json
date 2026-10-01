@@ -17237,7 +17237,7 @@
    "basis": "open",
    "relatedUseCases": [],
    "brief": {
-    "stillOpen": "partly",
+    "stillOpen": false,
     "settledSince": "Your rulings of 1 October settled who has standing (the named subject, and others a group grants it to), that the docket holds no confidential entries, that redaction is only ever the submitter's own and a redacted submission may be declined, and that off-the-record contacts need not be disclosed. The rest stays open and is what this brief asks.",
     "title": "After publication: a case's docket, outside responses, and withdrawing a case",
     "inOneBreath": "Now that you have ruled who has standing and that nothing on the docket is sealed or redacted, how should the rest of a published case's docket work: its shelves and required core, how outside responses are found, kept and placed, how entries are signed and travel, and how a case is withdrawn?",
@@ -17563,12 +17563,12 @@
     "date": "2026-10-01",
     "by": "Bob",
     "rulings": [
-     "DEC-100"
+     "DEC-100",
+     "DEC-116"
     ],
-    "status": "partly ruled",
-    "title": "After publication: a case's docket, and withdrawing a case",
-    "decided": "(1) The subject named in a case has party-like standing: its responses that reach the group are listed on the public docket. (2) A group may also grant standing to others besides the named subject, as the CPUC grants party status; anyone without standing may still submit, and whether their submission goes on the public docket is the group's call. (3) No confidential filings: an entry is public whole, or it is not on the public docket, though the group may still keep it in its record. (4) Redaction is the submitter's alone: whoever submits may send a redacted version of their own material, but the group never redacts what others submit. The group may decline to post any submission that contains redactions, even one from the named subject, which in practice discourages redaction. (5) The group is not required to disclose its off-the-record contacts with the subject after publication.",
-    "stillOpen": "the docket itself, its required core, outside responses, how entries are signed and travel, and withdrawal"
+    "status": "ruled",
+    "title": "After publication: a case's docket, outside responses, and withdrawing a case",
+    "decided": "Each case has a docket: dated entries, each naming the edition it concerns, growing while the signed editions never change. The named subject has party-like standing, and a group may grant the same standing to others by a signed entry with a reason (permanent for what they already submitted). There are no confidential entries; only the submitter redacts, and the group may decline redacted submissions. Three shelves: what the group stands behind as accurately listed; 'Reactions elsewhere' ('Listed by the group. Not evidence. Not endorsed.'); and 'In our record only', never published. Checks are on form, never merit, and an entry never makes anything evidence. Required on the first shelf, each a To-do for the project's manager: every response the subject sends; the subject's public statements the group has captured, a press release included; a newer edition with its 'What changed' statement; a withdrawal; anything that would have had to be disclosed at signing. Outside responses are found by a pasted link, a standing watch or a labelled suggestion; captured and co-archived; linked to an edition; and a member chooses, with a reason, record only, public or both. A public reaction shows date, source, links to the original and the archived copy, and a short summary in the group's words, never the whole article. A reply naming a private person is listed as received, without its text, and the subject is asked to resend it without the name. Any member files to the record; only the manager signs an entry into public view; an entry is taken back by a later one, never deleted. Withdrawal is the manager's signed, final entry naming an edition or all, with a published reason: the edition stays readable under a stamp, re-evaluation notices go to everything resting on it, it is never lifted, and nothing is erased. The docket travels by pull: the public page, a feed per case, citing groups' copies and the directory; a copy that cannot reach it says 'Could not read the publisher's docket'."
    }
   }
  ],
