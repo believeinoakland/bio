@@ -524,7 +524,7 @@ function deckOf(parts) {
  *
  *    { slides: [{ slide, shapes: [{ old, new }] }] }
  *
- *  `deck` is `pptxEntry.parts()`'s own result — the deck's files as read —
+ *  `parts` is `pptxEntry.parts()`'s own result — the deck's files as read —
  *  so the slides are numbered exactly as the reading numbers them (declared
  *  deck order; `slide: null` for a part the order does not reach). One entry
  *  per slide part the reading walked, in that order; `shapes` has one entry
@@ -532,12 +532,12 @@ function deckOf(parts) {
  *  with its index now (`new`), null for a shape inside a branch not read —
  *  its content was the duplicate of the branch that is. A slide whose part
  *  was not read (unreadable, or over the size guard) held no shape index and
- *  is not listed. Null when `deck` is not an ok parts result (R21). */
-export function pptxRenumbering(deck) {
-  if (!deck || deck.ok !== true || !(deck.slideXml instanceof Map) || !Array.isArray(deck.slideParts)) return null;
+ *  is not listed. Null when `parts` is not an ok parts result (R21). */
+export function pptxRenumbering(parts) {
+  if (!parts || parts.ok !== true || !(parts.slideXml instanceof Map) || !Array.isArray(parts.slideParts)) return null;
   const slides = [];
-  for (const { part, slide } of deckOf(deck)) {
-    const xml = deck.slideXml.get(part);
+  for (const { part, slide } of deckOf(parts)) {
+    const xml = parts.slideXml.get(part);
     if (typeof xml !== "string") continue;
     const skipped = mceSkipper();
     const shapes = [];

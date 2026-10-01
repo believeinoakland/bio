@@ -2,6 +2,29 @@
 
 **Status** · session_01T9LFGqSu4UfTE1DhyznDUz · depth 2 · WORKING · handled B2
 
+## Record
+
+**Entry applied: N439** (`build/plan/current.md` T20 layer 1; K747, K795 (6), K863, K865). A `.pptx` slide's (and notes slide's) `mc:AlternateContent` is read once: `walkSlide` in `bio-plane/src/pptx.mjs` reads the first `mc:Choice`, skips every later `mc:Choice` and the `mc:Fallback`, and reads the `mc:Fallback` when there is no `mc:Choice` (ECMA-376 Part 3), nested ones selected the same way inside a read branch and ignored whole inside a skipped one. It uses docx's own `mceSkipper`, now exported from `docx.mjs` (one selection rule, not a second copy). A branch not read adds no paragraph, text, `shape` index, hlink or `ridUsage` location; a relationship used only inside it still locates its part, at the shape that holds the `mc:AlternateContent` (slide grain when none holds it), as docx does at the holding paragraph. Slide numbers, `deckLength`, hidden flags and the slide-grain unit do not move. Readings of decks with no `mc:AlternateContent` are unchanged (every existing test passes as it was). **R29** `pptxRenumbering(parts)` added to `pptx.mjs` as K865 words it.
+
+**For extraction's migration (layer 4): what moves in a stored pptx reading, and how.** Only readings of a `.pptx` whose slide or notes parts hold an `mc:AlternateContent` with a branch now skipped (in practice PowerPoint's `p14`/`a14` features: math, ink, newer graphic frames, with a picture `mc:Fallback`) change; `.odp` (odf-reader's own walk) and every other format are untouched. `pptxRenumbering(await pptxEntry.parts(storedBytes))` gives, per slide the reading walked (declared deck order, numbered as the reading numbers it), `shapes[old].new` for every shape the old walk numbered.
+- `slide-shape` `shape` (0-based) on a numbered slide: old → `slides[i].shapes[old].new`, where `slides[i].slide` is the reference's `slide`. A shape inside a branch not read has `new: null` (its content was the duplicate of the read branch's): a reference to it falls to slide grain (`slideShapeRef(slide)`, no shape). Shapes later on the same slide shift down by the shapes the skipped branch held. `slide` and `ref` ("slide <n>") never move; a reference with no `shape` (the slide-grain unit, hidden-slide and speaker-notes sources, a rel carried without usage) never moves.
+- Where `shape` is held: every `structure().links[].source` of kind `slide-shape` with a `shape` (deferred/refused rels used by an `<a:hlinkClick>`, slide-jump anchors' and `slide_unresolved` undetermined links' sources, `intra` embeddings located by `ridUsage`), any `slide-shape` reading position or cited content extent carrying `shape` (`reading_refs`, `extraction`/`content`/`run-productions` `pos_kind`/`extent_kind` rows), and content's bound check of a shape against `text().slides[].shapes` (`coversSlideShape`).
+- A link used only inside a skipped branch: before, one record per usage at the fallback shape; now its rel has no usage and is carried once at slide grain (an hlink also in the read branch under the same rel id is emitted once, at the read shape).
+- Counts and text: `text().slides[].shapes` and `.text`, `document`, `counts.chars`, `speakerNotes[].text`, `counts.notesChars` and the `speaker-notes` envelope item's `text` lose the duplicated branch; nothing is added. A stored reading's text is therefore not reused as is: re-read the stored bytes, then apply the map to references held outside the reading.
+
+**Deferred.** None of N439. DIST-14 stays as it was (needs a deployed plane).
+
+**Found in another module / generated artifact.** `bio-plane/dist/bio-plane.bundled.mjs` (and `.bundle.json`) is stale: it bundles `pptx.mjs` and `docx.mjs` (owner `not_product`; BOB regenerates at the layer close, `npm run build` in `bio-plane/`). Nothing else.
+
+**Requirements met, with their tests** (`bio-plane/test/m/office-readers/pptx-mce.test.mjs`, 8 tests; 7 fail against the walk with the skip disabled, the 8th is R29's null guard): R11's pptx arm (N439) — "R11 pptx text: a shape written as an mc:Choice and its mc:Fallback copy is read once…", "…the first mc:Choice is read and every later one is not…", "…nested mc:AlternateContent…", "R11 R7 pptx: a shape after an mc:AlternateContent takes the index…", "R11 R7 pptx: a relationship used only inside a branch not read…", "R11 R10 pptx: speaker notes read one branch the same way…". R29 — "R29 R11 pptxRenumbering: per slide in deck order…" (against an oracle of the pre-N439 walk) and "R29 pptxRenumbering: an unnumbered slide is listed with slide null…".
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/office-readers/`: tests 83, pass 83, fail 0 (75 before; 8 new). After merging tranche/T20 (B2, K865) and renaming the parameter to R29's `parts`: 83/83.
+- Users of the files: `node --test bio-plane/test/m/odf-reader/ bio-plane/test/m/format-registry/ bio-plane/test/m/extraction/ bio-plane/test/m/observation-log/`: tests 302, pass 302, fail 0. No layer tests are named in `build/manifest.md`.
+- `format: 84 modules, 82 requirements files; 0 failures` · `architecture: 11 product files, 36 relative imports (0 naming no tracked file, not judged); 0 failures` · `coverage: 1 modules, 29 of 29 live requirement ids named by a test; 0 failures` · `ownership: 4 files changed by office-readers between tranche/T20 and HEAD; 0 failures` (final run after the record commit below).
+
+Size (session_01T9LFGqSu4UfTE1DhyznDUz): test runs 9, module lines 3520
+
 ## J1 · QUESTION
 
 Two readings on N439; I am building on both meanwhile, and nothing waits on the answer.
