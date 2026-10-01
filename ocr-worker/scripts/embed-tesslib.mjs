@@ -87,7 +87,7 @@ export function renderTessLib(vendorSrc) {
   if (got !== VENDOR_SHA256)
     throw new Error(`tesseract-wasm's dist/lib.js is sha256 ${got}, this patch was measured `
       + `against ${VENDOR_SHA256}. The two substitutions are anchored on that exact file; `
-      + `re-measure the engine (CPDF-15's probe is the instrument) before moving this pin.`);
+      + `re-measure the engine (as CPDF-15 did, MEASUREMENTS.md 2026-09-10) before moving this pin.`);
   let out = vendorSrc;
   for (const [from] of PATCHES)
     if (!out.includes(from))
