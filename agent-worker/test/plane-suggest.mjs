@@ -31,11 +31,13 @@
  * IT IS DERIVED, NEVER TYPED, AND THAT IS THE WHOLE DESIGN. The kind set comes
  * from `SUGGEST_KINDS`, the level set from `SUGGEST_LEVELS`, the name grammar
  * from `VERSION_NAME_RE`, the placeholder roster from `BOILERPLATE_FORMS` and
- * **the placeholder predicate from `isBoilerplate`'s OWN SOURCE TEXT** — all in
- * the plane's files, none of them re-typed here. A hand copy would agree with
- * the member for free, which this project has now measured at least six times;
- * a derivation cannot. Rename a kind in `bio-checks.mjs` and this fixture
- * changes with it while the member's constant does not, and the suite goes red.
+ * **the placeholder predicate is `isBoilerplate` itself**, carried into the mock
+ * as the exported function — each read from the module that owns it
+ * (run-productions, basis-versions, record-grammar), none of them re-typed here.
+ * A hand copy would agree with the member for free, which this project has
+ * measured at least six times; a derivation cannot. Rename a kind at its owner
+ * and this fixture changes with it while the member's constant does not, and the
+ * suite goes red.
  *
  * IT REPRODUCES **WHERE** THE REFUSAL SITS, which is not where a reader expects
  * and is `plane-meaning.mjs`'s measured finding re-used: a refused submission
@@ -79,11 +81,13 @@
  * NOT a `.test.mjs`: the battery discovers suites by that suffix, and this is an
  * instrument the suites share, not a suite.
  */
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+/* T19 (rule 1): each name from the module that owns it. The version grammar and its rows are basis-versions'
+   (its R1); the object types are record-grammar's. */
 import {
-  VERSION_NAME_RE, BASIS_VERSION_CHECKS, BOILERPLATE_FORMS, isBoilerplate, OBJECT_TYPES,
-} from "../../bio-plane/checks/bio-checks.mjs";
+  VERSION_NAME_RE, BASIS_VERSION_CHECKS, VERSION_STATES, basisVersionFindings,
+} from "../../bio-plane/src/basis-versions/index.mjs";
+import { BOILERPLATE_FORMS, isBoilerplate } from "../../bio-plane/checks/bio-checks.mjs";
+import { OBJECT_TYPES } from "../../bio-plane/src/record-grammar/types.mjs";
 /* N155 (K674, K679): the suggestion's kinds, levels and checks are run-productions', the catalogue's copy going at T19. */
 import { SUGGEST_KINDS, SUGGEST_LEVELS, SUGGEST_CHECKS } from "../../bio-plane/src/run-productions/checks.mjs";
 import { runPrincipalGate } from "../../bio-plane/src/run-rules/index.mjs";
@@ -95,20 +99,30 @@ export const WIRE_LEVELS = [...SUGGEST_LEVELS];
 export const WIRE_NAME_RE = VERSION_NAME_RE;
 /** `isBoilerplate` itself, so a suite can ask the plane's own predicate. */
 export const wireIsBoilerplate = isBoilerplate;
-/** `promote`'s description floor, the one figure C-25.1 turns on — READ OUT OF
- *  THE CHECK'S OWN SOURCE LINE rather than typed. A hand-carried number in a
- *  file nobody re-measures goes stale silently, which is this project's
- *  most-repeated finding; moving the floor in `bio-checks.mjs` moves this, and a
- *  floor that stops being expressible this way THROWS here rather than quietly
- *  reverting to a number this file made up. */
-const CHECKS_SRC = readFileSync(
-  fileURLToPath(new URL("../../bio-plane/checks/bio-checks.mjs", import.meta.url)), "utf8");
+/** `promote`'s description floor, the one figure C-25.1 turns on — MEASURED AT
+ *  THE OWNER'S INTERFACE rather than typed or read out of its text (N421): the
+ *  shortest description basis-versions' own `basisVersionFindings` (its R1) takes
+ *  without a C-25.1 finding, on an otherwise legal version. A hand-carried number
+ *  in a file nobody re-measures goes stale silently, which is this project's
+ *  most-repeated finding; moving the floor at its owner moves this, and a rule
+ *  that stops being a single floor (a shorter one passing while a longer one is
+ *  refused, or none passing at all) THROWS here rather than quietly reverting to
+ *  a number this file made up. */
 export const DESCRIPTION_MIN = (() => {
-  const m = CHECKS_SRC.match(/v\.description\s*!==\s*'string'\s*\|\|\s*v\.description\.trim\(\)\.length\s*<\s*(\d+)/);
-  if (!m) throw new Error(
-    "plane-suggest.mjs: C-25.1's description floor is no longer readable from bio-checks.mjs. "
-    + "The mock will NOT substitute a number of its own — re-derive it at this site.");
-  return Number(m[1]);
+  const C25_1 = BASIS_VERSION_CHECKS.VERSION_NO_DESCRIPTION.check;
+  const refused = (n) => {
+    const findings = [];
+    basisVersionFindings({ basis_versions: [{ name: "v1", state: VERSION_STATES[0], description: "x".repeat(n) }] },
+                         findings);
+    return findings.some((f) => f && f.check === C25_1);
+  };
+  const SPAN = 1000;
+  const at = Array.from({ length: SPAN + 1 }, (_, n) => refused(n));
+  const floor = at.indexOf(false);
+  if (floor < 1 || at.slice(0, floor).some((r) => !r) || at.slice(floor).some((r) => r)) throw new Error(
+    "plane-suggest.mjs: C-25.1 is no longer one description floor under " + SPAN + " characters at basis-versions' "
+    + "basisVersionFindings. The mock will NOT substitute a number of its own — re-derive it at this site.");
+  return floor;
 })();
 
 /** The catalog rows this branch answers with — code, C-number, translation, all

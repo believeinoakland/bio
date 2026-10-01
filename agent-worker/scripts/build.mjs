@@ -19,7 +19,7 @@
  * **The drift objection is ANSWERED, not overruled.** The committed artifact
  * ships beside `dist/agent-worker.bundle.json` — its sha256, its byte length,
  * the exact recipe, and the sha256 of every input — and
- * `bio-plane/test/fleetbundles.test.mjs` asserts the artifact is byte-identical
+ * `bio-plane/test/system/fleetbundles.test.mjs` asserts the artifact is byte-identical
  * to a fresh build of its source. **A stale artifact FAILS instead of shipping.**
  * That is the instrument this record always reaches for: a hash-verified copy of
  * exact bytes, never a second codebase.
