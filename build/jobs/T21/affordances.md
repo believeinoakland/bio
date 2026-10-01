@@ -1,6 +1,6 @@
 # affordances (T21)
 
-**Status** · session_01LvzWGqxgNTP61BdSTnZm48 · depth 2 · WORKING · handled B1
+**Status** · session_01LvzWGqxgNTP61BdSTnZm48 · depth 2 · COMPLETE · handled B1
 
 AFFORDANCES #12, T21 layer 11. Started from `tranche/T21` @ e8749fa859 (merged into `job/T21/affordances` at start).
 
