@@ -20,3 +20,7 @@
 - `format`: 84 modules, 82 requirements files; 0 failures. `architecture`: 10 product files, 19 relative imports; 0 failures. `coverage`: 63 of 63 live requirement ids named by a test; 0 failures. `ownership` (tranche/T20): 1 file changed; 0 failures.
 
 Size (session_01E7bTM3MKu3LsrvRVRuAXcf): test runs 6, module lines 4078
+
+## J1 · COMPLETE
+
+Entry applied (K853): credentials.test.mjs's guard test (:557, which ran legacy-tests' civicos-ui/check-refusal-codes.mjs) is replaced by an interface test, 'R55, R57, R63: the family's one home is CAPTURE_CREDENTIAL_CHECKS, and every refusal answered is its own row, no C-105 number held twice' (arm A: the file's _CHECKS exports are exactly CAPTURE_CREDENTIAL_CHECKS, C-105 numbers unique; arm C: every refusal path driven, each reason a row answered with its own check and translation, the codes answered equal the family's keys). Red met: 'R55, R57, R63: the DEC-49 guard resolves every C-105 region and names none of this module's rows as a failure' is gone; credentials.test.mjs green whole (20/20); module 74 pass, 0 fail, 1 todo (R37). spawnSync import dropped. No product code, no generated artifact. format, architecture, coverage (63/63), ownership: 0 failures. Record: build/jobs/T20/capture-sources.md.
