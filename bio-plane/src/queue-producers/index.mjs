@@ -2648,7 +2648,7 @@ export class QueueProducers {
    *  `local-facts.factsDue({paths})` answers due, `paths` those `action-clocks.calendarFactsRead` answers the viewer, to
    *  R15's recipients of each action that reads it, taken together; its subject the first such action, naming the fact,
    *  its status and why it is due. It leaves when a member confirms or corrects the fact or no live action reads it
-   *  (either read no longer answers it). An action answered as a bare id names no creator and no project. */
+   *  (either read no longer answers it). Each reading action is `{action, project, created_by}`, as R3 states them (K1000). */
   #obligationsLocalFactDue(me, viewer, now) {
     if (!me) return [];
     const read = this.#actionClocks.calendarFactsRead({ viewer, now });
@@ -2657,8 +2657,7 @@ export class QueueProducers {
     for (const p of listed) {
       if (!p || typeof p.path !== "string" || !p.path) continue;
       const acts = (Array.isArray(p.actions) ? p.actions : [])
-        .map((a) => (typeof a === "string" ? { action: a, project: null, created_by: null } : a))
-        .filter((a) => a && typeof a.action === "string" && a.action);
+        .filter((a) => a && typeof a === "object" && typeof a.action === "string" && a.action);
       if (acts.length) readers.set(p.path, acts);
     }
     if (readers.size === 0) return [];

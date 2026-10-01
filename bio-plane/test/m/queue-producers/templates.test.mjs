@@ -67,7 +67,7 @@ test("R21: one OBLIGATION per fact factsDue answers over the paths calendarFacts
     { path: H25, actions: [{ action: "ACT-1", project: "PRJ-1", created_by: "alice" }, { action: "ACT-2", project: "PRJ-1", created_by: "token:member" }] },
     { path: H26, actions: [{ action: "ACT-1", project: "PRJ-1", created_by: "alice" }] },
     { path: HRS, actions: [{ action: "ACT-3", project: null, created_by: null }] },
-    { path: TZ, actions: ["ACT-3"] }];
+    { path: TZ, actions: [{ action: "ACT-3", project: null, created_by: "token:member" }] }];
   const status = {
     [H25]: { path: H25, fact: { profile: "p", fact: "holidays", year: 2025 }, status: "unconfirmed", due: true,
              why: "no member has confirmed it; the year is due from 2024-11-01", latest: null, due_from: "2024-11-01" },
@@ -90,7 +90,7 @@ test("R21: one OBLIGATION per fact factsDue answers over the paths calendarFacts
     "the member who created an action that reads it");
   assert.deepEqual(ids(w.read("olga")), [`OBLIGATION::local-fact-due::${H25}::unconfirmed`], "an action a machine created: its project's owners");
   assert.deepEqual(ids(w.read("ada")), [`OBLIGATION::local-fact-due::${HRS}::unconfirmed`, `OBLIGATION::local-fact-due::${TZ}::unconfirmed`],
-    "no member author and no project (or an action named by id alone): the administrators");
+    "no member author and no project: the administrators");
   assert.deepEqual(ids(w.read("bob")), [], "a member who created no reading action, though he disputed one");
   assert.deepEqual(ids(w.read(null, "class:admin")), [], "a caller with no member is none of the members it goes to");
   const it = byId(alice)[`OBLIGATION::local-fact-due::${H25}::unconfirmed`];
