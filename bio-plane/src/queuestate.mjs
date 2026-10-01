@@ -222,8 +222,9 @@ export const QUEUE_FINDING_KINDS = {
 };
 
 /* THE N-NUMBERS — the catalogue's STABLE IDS, allocated when a generator is built and not before
- * (NOTIFICATIONS.md §The catalogue; `N-<n>` beside `C-<n>`). A row here IS the allocation: it is the
- * site `tools/mintid.mjs` registers for `N`, and a number is taken only with `node tools/mintid.mjs N`.
+ * (NOTIFICATIONS.md §The catalogue; `N-<n>` beside `C-<n>`). A row here IS the allocation: a generator
+ * built later takes the next free number by adding its row here (the old process's `tools/mintid.mjs`,
+ * retired with `tools/` in T19, read these rows as its register for `N`).
  *
  * THE SLUG STAYS THE ITEM'S `kind`, AND THAT IS DELIBERATE RATHER THAN UNFINISHED. The item contract's
  * sketch puts the id in `kind`, but every reader of `kind` today — the mint's `classOfKind`, the mute
@@ -239,8 +240,8 @@ export const QUEUE_FINDING_KINDS = {
  * `catalogue_id`, the item contract's "stable catalogue id" (NOTIFICATIONS.md §The item contract),
  * which no surface renders (`civicos-ui/` reads no `catalogue_id`; a member reads `summary` and
  * `detail`). Exported, it read as a 23rd vocabulary whose one term was the token "N-1" and failed the
- * guard for a reason that was not true of it. So the TABLE stays here, where `tools/mintid.mjs N` reads
- * its rows as text, and what leaves the module is the LOOKUP below — a function, which arm E does not
+ * guard for a reason that was not true of it. So the TABLE stays here, unexported, and what leaves the
+ * module is the LOOKUP below — a function, which arm E does not
  * harvest, exactly as it does not harvest `classOfKind`. */
 const QUEUE_KIND_IDS = {
   "export-performed": "N-1",

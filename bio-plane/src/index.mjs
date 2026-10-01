@@ -22,7 +22,7 @@ import { affordancesOp } from "./affordances.mjs";
    `ATTEST_FENCE` — a different act, a different reader — but it states the same
    doctrine, so its two grade letters come from the same place the refusal reads
    them. N80 (T8): the note is capture's (`acquireGradeNote`, capture's Provides), composed where acquire is. */
-import { queueAnswer } from "./queue/index.mjs";
+import { QUEUE_DOOR_OPS, queueOp } from "./queue/door.mjs";
 
 import { registerAuditOp, attestOp } from "./provenance/ops.mjs";
 import { withBiasChecks } from "./bias/index.mjs";
@@ -168,54 +168,9 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
         gate: ACT_GATE, viewer: affViewer, identity: affIdentity, author: affAuthor, by: affBy, storeName, cls });
     }
 
-    /* op=queue (REC-20, ruled by DEC-16). The member's ONE feed: OBLIGATIONs
-       from `tasks` and FINDINGs from the proposals derivation, in one contract,
-       each with the case set it belongs to and the acts available on its
-       subject.
-
-       Composed the way op=affordances is, and for the same reason: the store
-       derives the ITEMS and the homes (it holds the edges and the D-15
-       predicate), and the act metadata is added HERE, where NEEDS and SESSION_OPS
-       live — through decorateAct, the SAME function op=affordances uses (the
-       rungs are affordances'), so the two answers cannot drift.
-
-       TWO server-side stamps, both set AFTER nothing of the caller's is read,
-       because either one taken from the request would defeat the other:
-         - `member` decides WHOSE obligations these are. A caller who could name
-           the member could read anyone's queue.
-         - `viewer` decides which case names the answer may contain. D-15 has
-           exactly one compilation point and this is the only place the identity
-           enters it; the store fails closed, so a missing stamp yields an
-           ungrouped feed rather than an unfiltered one.
-       A machine credential has no member behind it, so it stamps `member` empty
-       and receives the whole live set — the operator view the token exists for,
-       and the same carve-out D-15 makes for a machine viewer. */
-    if (op === "queue") {
-      const st = env.STORE.get(env.STORE.idFromName(storeName));
-      const inner = new URL("http://do/queue");
-      inner.searchParams.set("viewer", viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`);
-      inner.searchParams.set("member", viaSession ? sessMember : "");
-      for (const k of ["now", "limit"]) {
-        const v = url.searchParams.get(k);
-        if (v !== null) inner.searchParams.set(k, v);
-      }
-      /* REC-52: `(r || { reason: "NO_QUEUE" })` — a store silence reported to a
-         member as a statement that there is no queue. It refused with `ok:false`
-         rather than a false success, so it is the milder half of the class and
-         it is still the plane inventing a word the store never said. */
-      const qOut = await doAnswer(st.fetch(inner.toString()));
-      if (qOut.refused) return storeRefusal(qOut);
-      if (!qOut.answered) return storeSilent("queue", qOut.correlation);
-      const r = qOut.result;
-      if (!r) return storeSilent("queue");
-      /* N231 (affordances R26): op=affordances' vocabularies, `action_kind` asked of `actions` at this call. */
-      const qkOut = await doAnswer(st.fetch("http://do/actionkinds"));
-      if (qkOut.refused) return storeRefusal(qkOut);
-      if (!qkOut.answered) return storeSilent("queue", qkOut.correlation);
-      if (r.ok !== true)
-        return json({ ok: false, ...r, store: storeName, tokenClass: cls }, 400);
-      return json({ ok: true, result: queueAnswer(r, { gate: ACT_GATE, kinds: qkOut.result?.kinds }).result, store: storeName, tokenClass: cls }, 200);
-    }
+    if (QUEUE_DOOR_OPS.includes(op)) return queueOp(op, url, () => env.STORE.get(env.STORE.idFromName(storeName)), { json, doAnswer,
+      storeRefusal, storeSilent, gate: ACT_GATE, storeName, cls,
+      viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`, member: viaSession ? sessMember : "" });
 
     if (op === "registeraudit") return registerAuditOp(env, env.STORE.get(env.STORE.idFromName(storeName)),
       { json, doAnswer, storeSilent, storeRefusal, captureKey, storeName, cls });

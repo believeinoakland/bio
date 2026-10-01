@@ -25,13 +25,14 @@
  *   env       the instance bindings: `BIO_NOW_MS` (the clock);
  *   now       a clock, `() => ms`, in place of `env`'s;
  *   start     false to skip the scheduler registration (a test that drives the consumer itself).
- * The ops are `queueOps`' entries, which the legacy store's dispatcher spreads in.
+ * The ops are `queueOps`' entries, which the legacy store's dispatcher spreads in; `op=queue`'s door half (the store's
+ * answer decorated for the caller, R17) is `door.mjs`' `queueOp`, which the control plane routes to (T19).
  *
  * N301 (K356): the class FINDING keeps its code and its meaning and is shown to members as **Noticed**: the answer
  * publishes `class_labels`, and no member-facing sentence this module owns calls a queue item a finding.
  */
 
-import { normalizeType, STATES, vocabFor, isMachineIdentity } from "../../checks/bio-checks.mjs";
+import { normalizeType, STATES, vocabFor, isMachineIdentity } from "../record-grammar/index.mjs";
 import { recordOf, stampInstant, perItem } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, noSuchProject } from "../membership/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
@@ -739,7 +740,7 @@ export class Queue {
 
   /** op=queue: the member's ONE feed.
    *
-   *  `member` and `viewer` are BOTH stamped server-side at index.mjs and are
+   *  `member` and `viewer` are BOTH stamped server-side by the control plane and are
    *  never taken from the caller — whose queue this is, and whose view its
    *  case names are compiled for, are server decisions or they are not
    *  decisions at all.
@@ -1433,7 +1434,7 @@ export class Queue {
    *  (D-170, BOB #29), which the case form cannot. It writes ONE row of
    *  `queue_item_mutes` and nothing else.
    *
-   *  `member` is stamped server-side at index.mjs and is never taken from the
+   *  `member` is stamped server-side by the control plane and is never taken from the
    *  caller: a caller who could name the member could mute somebody else's
    *  attention, which is the one thing a personal preference must not permit.
    *
@@ -1661,7 +1662,7 @@ export class Queue {
 
      The reason is REQUIRED and never prefilled (NO_REASON, fail-closed) — the whole point is that a
      member's decision to set aside the record's question is itself accountable, in their own words.
-     The deciding member is STAMPED server-side by index.mjs (decidedBy); a caller-supplied value is
+     The deciding member is STAMPED server-side by the control plane (decidedBy); a caller-supplied value is
      overwritten there, and a blank one is refused here (NO_DECIDER) so a bypass fails closed. */
   /* D-266 / IC-60 — THE SECOND KEY SHAPE, AND WHY ONE OP RATHER THAN TWO.
      Deferring and dismissing are ONE act with one vocabulary, one required reason and one
