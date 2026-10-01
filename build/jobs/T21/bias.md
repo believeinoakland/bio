@@ -21,4 +21,4 @@
 - `node checks/coverage.mjs … bias`: 46 of 46 live requirement ids named by a test; 0 failures.
 - `node checks/ownership.mjs … bias tranche/T21`: 4 files changed by bias; 0 failures.
 
-Size (session_01KciRDbs7ix9Xrdx5bdg4Yp): test runs 1, module lines 1813
+Size (session_01KciRDbs7ix9Xrdx5bdg4Yp): test runs 1, module lines 1814
