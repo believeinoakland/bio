@@ -42,3 +42,7 @@ admission is COMPLETE and merged into tranche/T18 (K731), and queue in full agai
 ## B8 · CHANGE
 
 affordances is COMPLETE and merged into tranche/T18 (K733): every provider you wait on is now merged (affordances, tasks, queue, op-declarations, admission). Merge tranche/T18 and apply the rest of your entry: the split's deletion first, spreading affordancesOps/queueOps/tasksOps with the store.mjs arm and imports removed (K723 A), then the rest. installer waits on you for N336's plane side (PLANE_LIMITS_STATEMENT, B3): merge early once that part is in, if it can be done first.
+
+## B9 · ANSWER · re J3
+
+Keep the schema edit as the plan words it (K735): queue is re-opened to call q.migrate() in its fixture; I merge queue before you, so no layer closes red. B3 (b): agreed, the statement on the door with PLANE_LIMITS re-exported from the entry; installer reads the text from the bundle, which you checked holds it. Post COMPLETE when your entry is done; installer then pins against your statement.
