@@ -217,7 +217,10 @@ export function inquiryMd(id, { state = "open", prior = "null", target, extra = 
     "references:", `  - target: ${target}`, "    rel: cites", "    status: confirmed",
     "state_history: []", "surfaced_by: human", 'disposition_reason: ""',
     "basis:", `  - target: ${target}`, "    role: supports",
-    ...(concluded ? ['falsifier: "a budget line restoring the fund would falsify this"'] : []),
+    /* inquiry R11 enforces inquiry-grammar R1 at every write (K819): a concluded inquiry carries a conclusion, a
+       falsifier and a basis leg. */
+    ...(concluded ? ['conclusion: "The harm follows from the act."',
+                     'falsifier: "a budget line restoring the fund would falsify this"'] : []),
     ...extra,
     "---", "", "## Question", "", `Does the cut follow from ${id}?`, "", "## What It Rests On", "",
     "## Conclusion", "", concluded ? "The harm follows from the act." : "", "",
