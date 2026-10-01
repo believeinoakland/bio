@@ -47,6 +47,7 @@ import { ratificationOp } from "./ratification/ops.mjs";
    inside the store's one frame. */
 export { Store } from "./control-plane/dispatch.mjs";
 export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
+export { PLANE_LIMITS } from "./control-plane/index.mjs";
 
 // T12 (control-plane's extraction, K3, K93): the op declarations, the doors, the gates, the stamps and the envelope are
 // control-plane's. What stays here is the arms whose modules have not taken them yet; control-plane routes to them.

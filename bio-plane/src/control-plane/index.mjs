@@ -18,7 +18,7 @@ import { setupPage } from "../setup.mjs";
 import { inbandQuartet } from "../inband.mjs";   /* REC-148: DEC-31's in-band quartet, one function */
 import { normalizeAddress } from "../subresources.mjs";
 import { Store } from "../store.mjs";
-import { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, SOURCE_ACTIONS, SOURCE_READS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, ESCALATION_ACTIONS, ESCALATION_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION } from "./ops.mjs";
+import { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, SOURCE_ACTIONS, SOURCE_READS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, ESCALATION_ACTIONS, ESCALATION_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION, PLAN_PROPOSAL_ACTIONS } from "../op-declarations/index.mjs";
 
 const SCRATCH = "scratch";
 /* REC-22: the ONE namespace the public read path answers from. An instance has
@@ -1303,6 +1303,10 @@ async function publishAffordances(res, url) {
    the verified plane bundle and holds no value of its own; the door carries them as `limits` on the function it makes,
    so a bundle of the door cannot leave them out. */
 const PLANE_LIMITS = Object.freeze({ subrequests: 10000 });
+/* The statement a release's verified bundle is read for (installer R20, K723, K724): the tag, then `key=<positive
+   integer>` for each key of the limits, keys sorted, single spaces, no quotes or backslashes, so a reader of the bundle's
+   text finds it whole. `PLANE_LIMITS` is its parsed form. */
+const PLANE_LIMITS_STATEMENT = "bio-plane-limits/1 subrequests=10000";
 
 /* R1–R25: the Worker entry. `hooks.publicOp(ctx)` answers a public op whose handler still lives in legacy-index;
    `hooks.gatedOp(ctx)` an admitted op's handler there, or undefined for the generic forward below. */
@@ -1316,6 +1320,7 @@ export function makeFetch(hooks = {}) {
     try { return await fetch(req, env); } catch (e) { return planeInternalError(e, req); }
   };
   planeDoor.limits = PLANE_LIMITS;
+  planeDoor.limitsStatement = PLANE_LIMITS_STATEMENT;
   return planeDoor;
   async function fetch(req, env) {
     const url = new URL(req.url);
@@ -2412,6 +2417,21 @@ export function makeFetch(hooks = {}) {
         viaSession ? sessMember
         : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
         : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* T18 (action-plans R11, R31; K711, K727): WHO PROPOSED A PLAN OPTION. Any credential may propose, so the stamp is
+       the label, by `actionlawspropose`'s expression (a session its member, a machine `class:<cls>`, an `ai` credential
+       `class:ai/<tokenId>`); beside it the caller as a planning run's principal, by the run productions' expression
+       (`RUN_PRODUCTION_ACTIONS` below), which action-plans compares with the run's own. A caller's copy of either is
+       overwritten. */
+    if (PLAN_PROPOSAL_ACTIONS.includes(op)) {
+      inner.searchParams.set("proposer",
+        viaSession ? sessMember
+        : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
+        : `${MACHINE_CLASS_PREFIX}${cls}`);
+      inner.searchParams.set("principal",
+        viaSession ? sessIdentity
+        : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}`
+        : `${MACHINE_CLASS_PREFIX}${cls}`);
+    }
     /* T8 (layer 9): WHO DETERMINED, COMPARED, RECORDED A CONSEQUENCE OR ITS ADDRESSING, PREPARED, APPROVED OR SENT A
        FILING, NAMED COUNSEL, EXPORTED A PACKET, PROPOSED A THEORY, OR MOVED AN ESCALATION — conformance, consequences,
        filings and escalation read `author` from the QUERY after the body, so it is set here, after the caller's
@@ -3608,4 +3628,4 @@ export { json, doAnswer, storeSilent, storeRefusal, relayAnswer, StoreSilent, ST
          dec49Row, dec49Attach, CHECK_FAMILIES, CHECK_FAMILY_FILES, sessionOpGate, migrationReplayOf, DRIVE_PROVENANCE_PATH,
          namespaceGate, pinnedNamespaceGate, confinedNamespaceGate, aiReachesAsMember, aiScopeDeclaration,
          aiConfinementDeclaration, aiTaskScope, AI_TOKEN_SHAPE, SCRATCH_ADDRESSING_PUBLIC_OPS, publishAffordances,
-         requiredArgument, PLANE_LIMITS };
+         requiredArgument, PLANE_LIMITS, PLANE_LIMITS_STATEMENT };

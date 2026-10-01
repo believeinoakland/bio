@@ -17,7 +17,7 @@ registerHooks({
 });
 
 export const M = await import("../../../src/control-plane/index.mjs");
-export const O = await import("../../../src/control-plane/ops.mjs");
+export const O = await import("../../../src/op-declarations/index.mjs");
 export const { makeFetch } = M;
 export const { OPS, SESSION_OPS, NEEDS } = O;
 
