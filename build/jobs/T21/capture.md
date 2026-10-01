@@ -1,6 +1,6 @@
 # capture (T21)
 
-**Status** · session_016dWEeR3ZoeXU1HhPQ8dpXs · depth 2 · WORKING · handled B1
+**Status** · session_016dWEeR3ZoeXU1HhPQ8dpXs · depth 2 · COMPLETE · handled B1
 
 CAPTURE #13, T21 layer 3. Started from `job/T21/capture` @ 550ac7ca71 (cut from `tranche/T21`); the tranche has moved since only by plan and mail commits, none touching a file this job read, so no merge.
 
