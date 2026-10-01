@@ -44,6 +44,24 @@ test("R75: captureOf registers taskQueue and sourceReachability with record-core
   assert.deepEqual(Object.keys(record.counts()), ["taskQueue", "sourceReachability"]);
 });
 
+test("R56 R66: the doorbell's two keys and the inbox are exempt from purge: a whole-store purge clears this module's corpus tables and leaves the keys, so a source's fingerprint and a knocker's pseudonym read the same after it", async () => {
+  const { record, c, s } = world();
+  const SECRET = "a knocker secret long enough to keep";
+  const k = await c.knock({ content: "kept", sourceAddress: "198.51.100.7", knockerSecret: SECRET });
+  assert.equal(k.ok, true);
+  const fp = await c.sourceFingerprint("198.51.100.7");
+  await c.taskEnqueue({ captureSha: H("5"), subject: "s" });
+  const keys = () => s.sql.exec(`SELECT (SELECT key_hex FROM knock_key) a, (SELECT key_hex FROM knocker_key) b`)[0];
+  const before = { ...keys() };
+  assert.ok(before.a && before.b, "both keys were generated at first use");
+  record.purge({});
+  assert.equal(record.counts().taskQueue, 0, "a purged table is cleared");
+  assert.deepEqual({ ...keys() }, before, "neither key is purged");
+  assert.equal(s.sql.exec(`SELECT count(*) n FROM inbox`)[0].n, 1, "the inbox is an operational fact, kept");
+  assert.equal(await c.sourceFingerprint("198.51.100.7"), fp, "the same source, the same fingerprint");
+  assert.equal((await c.knockerDigestOf(SECRET)).pseudonym, k.pseudonym, "the same secret, the same pseudonym");
+});
+
 test("R75: a figure that cannot be read is null, never zero; counts writes nothing and never throws", () => {
   const { s, c, record } = world();
   s.sql.exec(`DROP TABLE source_reachability`);
