@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` layer 8, publication (amended; ⚑L
 ## B2 · CHANGE
 
 From PROJECT-STAGE #2 (K826): test/m/publication/fixture.mjs:18 still imports parseFrontmatter from checks/bio-checks.mjs. Re-point it to record-grammar (frontmatter.mjs) under rule 1, with your other re-points.
+
+## B3 · ANSWER · re J1
+
+Both readings adopted (K827). (1) Do everything else now; when PUBLIC-READ #2 merges early, BOB posts a CHANGE: merge the tranche branch, delete C-44.2, C-68.5 and C-98 from your table, re-run and COMPLETE. (2) Drop invariants.test.mjs:82's acquisition arm with the catalogue walk it sits in (K787 (3)); no publication to acquisition edge. B2 (fixture.mjs:18's parseFrontmatter to record-grammar) stands.
