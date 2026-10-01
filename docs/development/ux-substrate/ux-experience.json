@@ -13130,7 +13130,7 @@
    "recommendation": "Option 1 with option 2's recourse shown on the draft; confirm the two provisionals with Bob first.",
    "whoDecides": "Bob for the two provisionals (blocking and handle-as-name, both doctrine about members' own words); Design for the choice screen and uniform public display.",
    "brief": {
-    "stillOpen": "partly",
+    "stillOpen": false,
     "settledSince": "No newer ruling settles it. A build record of 1 October confirms that the part answering 'which credit level applies to this observation in this edition' is now built and tested. The two rules you are asked to confirm are unchanged.",
     "title": "How members choose how they are credited",
     "inOneBreath": "When a published case uses a member's own firsthand observation, where is the member asked to choose how they are credited, and do you confirm the two rules already built around that choice?",
@@ -13355,6 +13355,16 @@
      "BIO_Membership_Architecture_v2.md §3"
     ],
     "size": "quick"
+   },
+   "ruled": {
+    "date": "2026-10-01",
+    "by": "Bob",
+    "rulings": [
+     "DEC-102"
+    ],
+    "status": "ruled",
+    "title": "How members are credited, and what anonymity does to testimony",
+    "decided": "A member chooses how a published case credits their observation, at one of four levels: the group, the project, their cover, or by name ('by name' publishes their handle, never a legal name). An edition is not signed while a member whose observation it uses has not chosen; the owner's way forward is to drop the finding that rests on it. The member is asked by a to-do in their own queue, and the state shows on the case draft. Every level appears publicly in one neutral style with the grade beside it. The level also sets the testimony's weight: testimony credited at the group or project level is anonymous and is treated like an anonymous tip, potentially weaker because a member may have a vested interest, and must be corroborated to journalistic and legal standards before a finding rests on it; identified at cover or name, it may carry greater strength. A change of level reaches the findings resting on it as re-evaluation notices."
    }
   },
   {
