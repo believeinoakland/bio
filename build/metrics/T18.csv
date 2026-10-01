@@ -59,3 +59,13 @@ session_014aGiC7DPqNkCtn6HWkQfta,job,monitoring,20768928,320182,160,46463,,9,251
 session_0111wxi28ywVWcPoZWi8oVBq,job,scheduler,9213526,169503,112,41163,,17,402
 session_01HwGtdw3UFzQvnNqovnN3Mr,job,legacy-store,24777636,292191,206,60104,,19,2287
 session_01Jf4zFtbZbPDgjbHjtw9Nt5,BOB-final,,83420040,657683,719,144992,,,
+session_013tpV1iv7xCPsWFptn9Hfed,job,tasks,8088041,163480,108,19737,,5,955
+session_016Hm4eTWzNWBSHRUQndL8cD,job,op-declarations,26352055,390556,184,67394,,7,2245
+session_017gC7c3PAjzGoFbwwxDzDiH,job,admission,19538032,351638,152,78453,,10,847
+session_017quvzjcQTLPGZEZJVP6Pco,job,queue,25904688,340281,194,53726,,19,2529
+session_0186jCyJmRTyxZqB9kJXtScm,job,control-plane,88804853,546607,437,130146,,48,3268
+session_019U1PuTa7xa7HZ5P3tFmS5D,job,installer,19781795,298844,163,55872,,14,1797
+session_01CwJSXamDinAWCKtAtRctev,job,instance-setup,22797220,426536,146,51984,,15,2926
+session_01FgotLQ7FibdK7RNpDfo4m4,job,affordances,51593455,560868,268,84725,,27,2991
+session_01LkPKEan57umKVtgyg8qesS,job,legacy-index,10523677,189967,122,21983,,3,3
+session_01NvidLD1YV6LuKzED8YRk5f,job,queue-producers,34584644,457097,198,75854,,16,2682
