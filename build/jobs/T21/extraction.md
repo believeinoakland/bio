@@ -21,3 +21,6 @@
 
 Size (session_01UytfHxnxe2XiBtvoaKdHLw): test runs 3, module lines 3997
 
+## J1 · REPORT
+
+Stale generated artifact: bio-plane/dist/bio-plane.bundled.mjs holds both old strings (src/extraction/index.mjs and src/extractrun.mjs changed). release/bio-plane.bundled.mjs also holds the two old strings (distribution's). Nothing found in another module's code.
