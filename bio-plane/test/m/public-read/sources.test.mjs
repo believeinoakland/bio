@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, NOW, sha } from "./fixture.mjs";
-import { caseDocumentBlocks, sourceStatement, unnamedSourceStatement, BLOCKS_PREDATE_SENTENCE } from "../../../src/publication/index.mjs";
+import { caseDocumentBlocks, sourceStatement, unnamedSourceStatement, BLOCKS_PREDATE_SENTENCE } from "../../../src/case-grammar/index.mjs";
 const F = "INQ-2026-0001";
 const CAP = sha("the knocked bytes");
 const CAP2 = sha("more knocked bytes");

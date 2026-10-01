@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, SIG, NOW } from "./fixture.mjs";
-import { rowOf, CASE_RESOLUTION_CHECKS, PUBLISHED_STORE_CHECKS, PUBLISHED_READ_CHECKS } from "../../../src/publication/checks.mjs";
+import { rowOf, CASE_RESOLUTION_CHECKS, PUBLISHED_STORE_CHECKS, PUBLISHED_READ_CHECKS } from "../../../src/public-read/checks.mjs";
 import { DELIVERER_UNDETERMINED_DETAIL } from "../../../src/deliverer.mjs";
 import { PublicRead, publicReadOf, publicReadOps } from "../../../src/public-read/index.mjs";
 
