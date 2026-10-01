@@ -3,17 +3,22 @@
    `pdfStructure`), reached through `extractionOf(ctx)` (K61). Moved from `store.mjs` (the reading writer, the
    re-read, the history, the text-source and text-index writers, the reads, the term helpers, the drift reads) and
    `index.mjs` (`op=pdfstructure`, the acquire wire's reading block), with the rows this job applied named at their
-   sites. The tables are this module's own (`schema.mjs`), declared to record-core's purge here (R49). */
+   sites. The tables are this module's own (`schema.mjs`), declared to record-core's purge here (R49). T19 layer 4:
+   the testimony path's index as a projection in `provenance`'s slot (R65), the figures through record-core's
+   `registerCounts` and `textIndexOk` (R67), and N26's migration of stored `.docx` readings (R66). */
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { calibrationOf } from "../calibration/index.mjs";
+import { provenanceOf } from "../provenance/index.mjs";
+import { docxRenumbering } from "../docx.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { getFormat } from "../formats.mjs";
 import { readText } from "../../../docprofile/registry.mjs";
 import { checkChain, calibrationsOf, isTranscribed, terminalStep, derivationCap, describeChain, glyphCount,
          readingSource, readingSourceJson, readingOccurrenceKey, readingSourceFromColumns, chainKindFor,
-         STEP_KINDS } from "../textchain.mjs";
-import { canonicalExtent, describeExtent, sha256HexSync, contentMintState } from "../../checks/bio-checks.mjs";
+         STEP_KINDS, canonicalExtent, describeExtent } from "../textchain.mjs";
+import { sha256HexSync } from "../record-grammar/sha256.mjs";
+import { contentMintState } from "../record-grammar/labels.mjs";
 import { compareProvenance, readingProvenance, PROVENANCE_SCHEME } from "../readingprov.mjs";
 import { EXTRACTION_SCHEMA } from "./schema.mjs";
 import { REEXTRACT_CHECKS, reextractRow, EXTRACTION_CHECKS, noSha, NO_SHA_DETAIL } from "./checks.mjs";
@@ -21,7 +26,7 @@ import { evidenceAbsent } from "../capture/ops.mjs";
 import { driftObligations } from "./drift.mjs";
 import { membershipBeside } from "./filemembership.mjs";
 import { read as readDocument, tier2Escalate, tier3Extend, tier3SeedFrom, needsTier3, textUnitsFor, layerChainFor,
-         readingFromWire, decodeView, textCountsOf, pageBoxesFrom, CAPTURE_TEXT_UNIT_CAP } from "./pipeline.mjs";
+         readingFromWire, decodeView, textCountsOf, pageBoxesFrom, bytesOf, CAPTURE_TEXT_UNIT_CAP } from "./pipeline.mjs";
 
 export { REEXTRACT_CHECKS, reextractRow, EXTRACTION_CHECKS, noSha, NO_SHA_DETAIL, CAPTURE_TEXT_UNIT_CAP };
 
@@ -43,7 +48,7 @@ export const OCCURRENCES_PER_REF = 256;
    declared before its index so the triggers keep the index true on the per-bundle arm. */
 export const EXTRACTION_TABLES = Object.freeze(["readings", "reading_refs", "reading_ref_terms", "reading_text_source",
   "reading_history", "capture_text", "capture_text_skipped", "capture_text_state"]);
-export const EXTRACTION_WHOLE_ONLY = Object.freeze(["capture_text_fts", "composed_readings"]);
+export const EXTRACTION_WHOLE_ONLY = Object.freeze(["capture_text_fts", "composed_readings", "reading_migrations"]);
 
 /** Whether a purge declaration names one of this module's tables (record-core R21: each owner declares its own). */
 export function extractionOwns(t) {
@@ -98,36 +103,169 @@ function standingOf(author) {
   return m === "member_marked" ? "member" : m === "machine_marked" ? "machine" : "plane";
 }
 
+/* ---- N26 (R66): the pure half of the migration ---- */
+
+/* The migration's name in `reading_migrations`, the mark its docx layer step carries, and one call's batch. */
+export const N26_MIGRATION = "n26-docx";
+export const N26_READER_MARK = "N26";
+export const N26_BATCH = 50;
+
+const isDocxLayer = (step) => !!step && step.step === "layer" && step.container === "docx";
+/** R66: whether a reading's chain carries N26's reader mark on its docx layer step. */
+export function n26Marked(reading) {
+  const chain = reading && Array.isArray(reading.text_source) ? reading.text_source : null;
+  return !!chain && chain.some((s) => isDocxLayer(s) && s.reader === N26_READER_MARK);
+}
+
+/** R66: whether `docxRenumbering`'s map (office-readers R28) moves anything: a paragraph, run or table whose number
+ *  under N26 differs from the old walk's, or that N26 no longer reads. */
+export function renumberingMoves(map) {
+  if (!map) return false;
+  const same = (a, b) => !!a && !!b && a.para === b.para && a.run === b.run;
+  return (map.paragraphs || []).some((p) => p && p.new !== p.old)
+      || (map.runs || []).some((r) => r && !same(r.old, r.new))
+      || (map.tables || []).some((t) => t && t.new !== t.old);
+}
+
+/** R66: a reading made before N26, migrated. `map` is `docxRenumbering` over the stored `word/document.xml`, `text`
+ *  the docx entry's N26 text over the same bytes (R1, R3). Every reference the reading holds is moved: a `doc-para`
+ *  `para` (and its `ref` `¶<n+1>`) to `paragraphs[old].new`, one in a branch not read to `paragraphs[old].outer` as
+ *  a whole paragraph with no run, or unplaced (null) when `outer` is null; a `run` by `runs[i]` the same way; a
+ *  `doc-table` `table` (and its `ref` `table <n+1>`) to `tables[old].new`, unplaced when null; a `#para=` anchor's
+ *  target with its paragraph. The paragraph count and the table list follow the N26 walk (the tables N26 reads, in its
+ *  order), and the text counts are the N26 text's (R60): the duplicated branch is lost and nothing is gained. The
+ *  docx layer step gains `reader: "N26"` and the reading `migrated.n26`, saying what moved. It re-grades nothing (R44)
+ *  and resolves nothing (R46). Pure; the reading handed in is not changed. */
+export function n26MigratedReading(reading, map, text, { at = null } = {}) {
+  const moved = { paragraphs: 0, runs: 0, tables: 0, unplaced: 0 };
+  const runAt = new Map((map.runs || []).map((r) => [`${r.old.para}:${r.old.run}`, r]));
+  /* A whole paragraph, no run: `run` null where the position carried the key (`readingSource`'s shape), else absent. */
+  const paraRef = (para, v) => ({ kind: "doc-para", ref: `¶${para + 1}`, para,
+                                  ...(Object.prototype.hasOwnProperty.call(v, "run") ? { run: null } : {}) });
+  const moveParaRef = (v) => {
+    const p = map.paragraphs[v.para];
+    if (!p) return v;
+    if (Number.isInteger(v.run)) {
+      const r = runAt.get(`${v.para}:${v.run}`);
+      if (r && r.new) {
+        if (r.new.para === v.para && r.new.run === v.run) return v;
+        moved.runs++;
+        return { ...v, para: r.new.para, run: r.new.run, ref: `¶${r.new.para + 1}` };
+      }
+      if (r) { moved.runs++; if (r.outer == null) { moved.unplaced++; return null; } return paraRef(r.outer, v); }
+    }
+    if (p.new != null) {
+      if (p.new === v.para) return v;
+      moved.paragraphs++;
+      return { ...v, para: p.new, ref: `¶${p.new + 1}` };
+    }
+    moved.paragraphs++;
+    if (p.outer == null) { moved.unplaced++; return null; }
+    return paraRef(p.outer, v);
+  };
+  const moveTableRef = (v) => {
+    const t = map.tables[v.table];
+    if (!t || t.new === v.table) return v;
+    moved.tables++;
+    if (t.new == null) { moved.unplaced++; return null; }
+    return { ...v, table: t.new, ref: `table ${t.new + 1}${typeof v.cell === "string" && v.cell ? `, ${v.cell}` : ""}` };
+  };
+  const isAnchor = (v) => !!v && typeof v === "object" && !Array.isArray(v) && typeof v.fragment === "string"
+    && /^#para=[0-9]+$/.test(v.fragment) && Number.isInteger(v.para);
+  const walk = (v) => {
+    if (Array.isArray(v)) return v.map(walk);
+    if (!v || typeof v !== "object") return v;
+    if (v.kind === "doc-para" && Number.isInteger(v.para)) return moveParaRef(v);
+    if (v.kind === "doc-table" && Number.isInteger(v.table)) return moveTableRef(v);
+    /* An internal link's target (docx R7's anchor partition): `{para, fragment: "#para=<n+1>"}`; the fragment moves
+       with its paragraph, and so does the same fragment spelled in a string beside it (the link's `wrapper`). */
+    const o = {}, renamed = [];
+    for (const [k, x] of Object.entries(v)) {
+      o[k] = walk(x);
+      if (isAnchor(x) && o[k] && o[k].fragment !== x.fragment && o[k].fragment) renamed.push([x.fragment, o[k].fragment]);
+    }
+    if (isAnchor(o)) {
+      const p = map.paragraphs[o.para];
+      const to = !p ? o.para : p.new != null ? p.new : p.outer;
+      if (to !== o.para) {
+        moved.paragraphs++;
+        if (to == null) moved.unplaced++;
+        o.para = to ?? null;
+        o.fragment = to == null ? null : `#para=${to + 1}`;
+      }
+    }
+    for (const [from, to] of renamed)
+      for (const [k, x] of Object.entries(o))
+        if (typeof x === "string") o[k] = x.replace(new RegExp(`${from}(?![0-9])`, "g"), to);
+    return o;
+  };
+  const OWN = new Set(["text_source", "provenance", "container_extent", "basis", "migrated"]);
+  const next = {};
+  for (const [k, v] of Object.entries(reading)) next[k] = OWN.has(k) ? v : walk(v);
+  next.text_source = reading.text_source.map((s) => (isDocxLayer(s) ? { ...s, reader: N26_READER_MARK } : s));
+  const ce = reading.container_extent;
+  if (ce && typeof ce === "object") {
+    const paras = Array.isArray(text.paragraphs) ? text.paragraphs : [];
+    const c = { ...ce };
+    if (Object.prototype.hasOwnProperty.call(ce, "paragraphs")) c.paragraphs = paras.length ? paras.length : null;
+    if (Array.isArray(ce.tables))
+      c.tables = (map.tables || []).filter((t) => t && t.new != null).sort((a, b) => a.new - b.new)
+        .map((t) => ce.tables[t.old]).filter((t) => t !== undefined);
+    next.container_extent = c;
+  }
+  for (const k of ["text_chars", "text_glyphs", "text_undetermined"])
+    if (Object.prototype.hasOwnProperty.call(reading, k)) { Object.assign(next, textCountsOf(text)); break; }
+  next.migrated = { ...(reading.migrated && typeof reading.migrated === "object" ? reading.migrated : {}),
+    n26: { at, moved,
+           why: "this reading was made before N26, when every branch of an mc:AlternateContent was read, so its "
+              + "paragraphs, runs and tables were numbered with the duplicated branch counted; it was read again "
+              + "from the stored bytes and every reference it holds was moved to N26's numbering" } };
+  return next;
+}
+
 const instances = new WeakMap();
+
+/* A Durable Object's own state (the composition root's `ctx`), as against a test's `{storage}` stand-in: what the
+   object composes, `provenance` (R65) and the N26 migration's background run (R66), is reached only on one. */
+const isObjectState = (ctx) => !!ctx && typeof ctx.blockConcurrencyWhile === "function";
 
 /** K61: the one Extraction for this object's storage. `opts` is read on the first call only: `env` (the object's
  *  bindings: PDF_WORKER, OCR_WORKER, VERSION), `record` (`recordOf(ctx)`), `membership` (`membershipOf(ctx)`),
  *  `calibration` (`calibrationOf(ctx)`: its R10–R12), `promotion` (whose `registerStep`
- *  this module's projection joins, R20). A test may pass its own. */
+ *  this module's projection joins, R20), `provenance` (whose testimony slot its index joins, R65: `provenanceOf(ctx)`
+ *  on a Durable Object's state, which composes provenance before this module) and `host` (the state whose
+ *  `waitUntil` carries R66's run). A test may pass its own. The first call registers this module's figures (R67). */
 export function extractionOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let x = instances.get(storage);
   if (!x) {
     const record = opts.record ?? recordOf(ctx);
     x = new Extraction(storage, { ...opts, record, membership: opts.membership ?? membershipOf(ctx, { record }),
-                                  calibration: opts.calibration ?? calibrationOf(ctx, { record }) });
+                                  calibration: opts.calibration ?? calibrationOf(ctx, { record }),
+                                  provenance: opts.provenance ?? (isObjectState(ctx) ? provenanceOf(ctx) : null),
+                                  host: opts.host ?? (isObjectState(ctx) ? ctx : null) });
     instances.set(storage, x);
+    x.registerFigures();
   }
   return x;
 }
 
 export class Extraction {
   #sql; #storage; #listeners = []; #indexListeners = []; #declared = false; #stepped = false; #calListening = false;
+  #testified = false; #counted = false; #host = null; #docxRun = null;
 
-  constructor(storage, { record, membership = null, calibration = null, promotion = null, env = {} } = {}) {
+  constructor(storage, { record, membership = null, calibration = null, promotion = null, provenance = null, host = null,
+                         env = {} } = {}) {
     this.#storage = storage;
     this.#sql = storage.sql;
+    this.#host = host;
     this.core = record;
     this.membership = membership;
     this.calibration = calibration;
     this.env = env || {};
     if (promotion) this.joinPromotion(promotion);
     if (calibration) this.listenToCalibration(calibration);
+    if (provenance) this.joinTestimony(provenance);
   }
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
@@ -220,6 +358,7 @@ export class Extraction {
        END`);
     this.declareTables();
     this.#backfillRefTerms(500);
+    this.startDocxMigration();
   }
 
   /** R49: the reading tables declared to record-core's purge, keyed to their bundle; the two whole-store only. */
@@ -242,6 +381,31 @@ export class Extraction {
     const r = promotion.registerStep("extraction", { project: (c) => this.projectPromotion(c) });
     this.#stepped = !(r && r.ok === false);
     return this.#stepped;
+  }
+
+  /** R65 (provenance R52, K763): the testimony path's index, registered once in provenance's testimony slot as a
+   *  projection. The slot runs it inside the promotion's transaction, in the modules' order, over the path's own
+   *  fields: `indexTestimony` (R61) over the words, answering `{indexed}`, R61's `written`. Its R62 notice runs as R61
+   *  states, and a throw from it is not caught, so the whole promotion rolls back. */
+  joinTestimony(provenance) {
+    if (this.#testified || !provenance || typeof provenance.onTestimony !== "function") return false;
+    const r = provenance.onTestimony("extraction", {
+      project: (t) => ({ indexed: this.indexTestimony({ bundleId: t.bundleId, captureSha: t.captureSha, words: t.words,
+                                                        author: t.author }).written }) });
+    this.#testified = !(r && r.ok === false);
+    return this.#testified;
+  }
+
+  /** R67 (record-core R63): this module's figures for `op=stats` and purge's proof, registered once per storage. A
+   *  record with no seam (a test's stand-in) is left alone; a refusal (another module reporting `textUnits`, or this
+   *  module registering twice) is a defect of the wiring and throws, as the purge declaration's does. */
+  registerFigures() {
+    if (this.#counted || !this.core || typeof this.core.registerCounts !== "function") return false;
+    const answer = this.core.registerCounts("extraction", [...Extraction.COUNT_KEYS], (hid) => this.counts(hid));
+    if (answer && answer.ok === false)
+      throw new Error(`extraction: record-core refused its figures: ${answer.reason}${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
+    this.#counted = true;
+    return true;
   }
 
   /** R40: registered with `calibration.onCalibration` (R12 there). */
@@ -341,12 +505,16 @@ export class Extraction {
     return null;
   }
 
+  /* R66 (J1 2.): a stored N26-migrated reading is held the same way. An ordinary revision re-submits the acquire-time
+     reading `data/provenance.json` still carries, made before N26: written back, it would undo the migration (the old
+     numbering, the chain without the mark) and move every cited paragraph back unseen. */
   #heldByReextraction(sha, reading) {
-    if (reading && reading.reextracted) return false;
     const row = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, sha);
     const prior = row ? safeJson(row.reading) : null;
-    return !!(prior && prior.reextracted && typeof prior.at === "string"
-              && typeof reading.at === "string" && prior.at === reading.at);
+    const sameAt = !!(prior && typeof prior.at === "string" && typeof reading.at === "string" && prior.at === reading.at);
+    if (sameAt && n26Marked(prior) && !n26Marked(reading)) return true;
+    if (reading && reading.reextracted) return false;
+    return !!(prior && prior.reextracted && sameAt);
   }
 
   /** R19: the one writer promote and the re-read share, in one `record-core.transact`: the history (R23); the
@@ -742,6 +910,34 @@ export class Extraction {
                          { limit: cap, truncated: page.length > cap });
   }
 
+  /* ---- the figures (R67) ---- */
+
+  /** R67: the figures `registerCounts` asks for, in this order. */
+  static COUNT_KEYS = Object.freeze(["textUnits"]);
+
+  /** R67 (D-464's subtraction, as `store.mjs`' `#counts` took it): `textUnits`, the `capture_text` rows, leaving out
+   *  the rows whose bundle is in `hid` (`{sql, args}`, the bundles the caller may not see; null counts whole). A row
+   *  whose `bundle_id` is null names no bundle and is counted (`COALESCE`: `NULL NOT IN (…)` is NULL). Writes nothing. */
+  counts(hid = null) {
+    const h = hid && typeof hid.sql === "string" ? hid : null;
+    const r = this.#one(`SELECT count(*) c FROM capture_text${h ? ` WHERE COALESCE(bundle_id, '') NOT IN ${h.sql}` : ""}`,
+                        ...(h ? h.args || [] : []));
+    return { textUnits: r ? r.c : null };
+  }
+
+  /** R67 (REC-91 / D-113): whether the content-grain text index agrees with its content table: FTS5's
+   *  `integrity-check` AT RANK 1 verifies the index AGAINST `capture_text` and throws `SQLITE_CORRUPT_VTAB` when they
+   *  disagree (measured, and measured to catch an orphan plain `integrity-check`, rank 0, passes over), so the answer
+   *  is `true` when it passes and `false` when it throws. NOT A COUNT, AND THAT IS A CORRECTION ITS NEGATIVE CONTROL
+   *  FORCED: an FTS5 external-content table answers `count(*)` out of its content table, so a parity count beside
+   *  `textUnits` read the base count a second time and stayed green over a planted orphan that still MATCHED. It walks
+   *  the index, so it belongs on an admin read taken deliberately. A yes or no, so it is a separate service, read under
+   *  today's key by the statistics source, and not one of R63's numbers. */
+  textIndexOk() {
+    try { this.#sql.exec(`INSERT INTO capture_text_fts(capture_text_fts, rank) VALUES('integrity-check', 1)`); return true; }
+    catch { return false; }
+  }
+
   /* REC-36 / REC-40 (R37): the bounded backfill of the name terms for stored references that have none. */
   #backfillRefTerms(limit) {
     limit = Math.max(1, Math.min(Math.floor(Number(limit) || 500), 5000));
@@ -779,6 +975,135 @@ export class Extraction {
     return { ok: true, cleared: captureSha || "ALL", remaining: this.#one(`SELECT count(*) c FROM reading_history`).c };
   }
 
+  /* ---- N26: moving stored ¶ and table references (R66; office-readers R11, R16, R28; K747, K755, K763) ---- */
+
+  /** R66: the migration's own row (`reading_migrations`), created on its first run with the cutoff that decides "made
+   *  before N26": the last `reading_history` row (R23) held when this code first ran on this store. Every write of a
+   *  reading keeps it there first, so a reading whose last kept row is after the cutoff was written by the N26 reader;
+   *  one at or before it, or with no history at all, was not. A row, not an instant, so a reading written in the
+   *  second the migration started is never mistaken for an old one. */
+  #docxState() {
+    let row = this.#one(`SELECT * FROM reading_migrations WHERE migration=?`, N26_MIGRATION);
+    if (!row) {
+      const last = this.#one(`SELECT COALESCE(max(rowid), 0) AS n FROM reading_history`);
+      this.#sql.exec(`INSERT OR IGNORE INTO reading_migrations (migration, cutoff, after, done, examined, migrated, at)
+                      VALUES (?,?,?,0,0,0,?)`, N26_MIGRATION, last ? last.n : 0, "", stampInstant("second"));
+      row = this.#one(`SELECT * FROM reading_migrations WHERE migration=?`, N26_MIGRATION);
+    }
+    return row;
+  }
+
+  /** R66: started by `migrate()` on a Durable Object (its `waitUntil` carries it, in batches, until done), so its cutoff
+   *  is taken inside the boot, before any request can write a reading; a store with no such host (a test) runs
+   *  `migrateDocxReadings` itself. Never throws: a failed run is retried at the next start, from its cursor. */
+  startDocxMigration() {
+    const host = this.#host;
+    if (this.#docxRun || !host || typeof host.waitUntil !== "function") return null;
+    this.#docxRun = (async () => {
+      for (let n = 0; n < 10_000; n++) {
+        const r = await this.migrateDocxReadings();
+        if (!r || r.done || !r.examined) break;
+      }
+    })().catch(() => null);
+    host.waitUntil(this.#docxRun);
+    return this.#docxRun;
+  }
+
+  /** R66: once per stored reading, a `.docx` reading made before N26 whose `word/document.xml` holds an
+   *  `mc:AlternateContent` branch N26 no longer reads is migrated; every other reading is left as it is. Up to `limit`
+   *  candidates per call, in digest order after the cursor, so a restart resumes and a capture is examined once. Each
+   *  is re-read from its stored bytes (R1, R3) and its references moved by `docxRenumbering` (`n26MigratedReading`),
+   *  then written through R19's writer with the docx layer step marked, so the capture's chain differs from the old
+   *  reading's: content's R22 marks its rows stale and R41 grades and notifies (K763). A capture whose renumbering
+   *  moves nothing gets no mark and no re-read. Answers what it examined and did. Writes only through R19. */
+  async migrateDocxReadings({ limit = N26_BATCH } = {}) {
+    const st = this.#docxState();
+    const out = { ok: true, migration: N26_MIGRATION, cutoff: st.cutoff, done: !!st.done, examined: 0, migrated: [],
+                  unmoved: 0, skipped: [] };
+    if (st.done) return out;
+    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || N26_BATCH), 5000));
+    const page = this.#rows(
+      `SELECT capture_sha, bundle_id, reading, origin, asserted_by, justification FROM readings
+        WHERE capture_sha > ? AND (capture_format = 'docx'
+              OR (capture_format IS NULL AND json_extract(reading, '$.text_container') = 'docx'))
+        ORDER BY capture_sha LIMIT ?`, st.after || "", cap + 1);
+    const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+    for (const row of page.slice(0, cap)) {
+      const why = await this.#migrateOne(row, st.cutoff, ev);
+      out.examined++;
+      if (why && why.migrated) out.migrated.push({ capture_sha: row.capture_sha, moved: why.moved });
+      else if (why === "unmoved") out.unmoved++;
+      else if (why) out.skipped.push({ capture_sha: row.capture_sha, why });
+      this.#sql.exec(`UPDATE reading_migrations SET after=?, examined=examined+1, migrated=migrated+?, at=? WHERE migration=?`,
+                     row.capture_sha, why && why.migrated ? 1 : 0, stampInstant("second"), N26_MIGRATION);
+    }
+    if (page.length <= cap) {
+      this.#sql.exec(`UPDATE reading_migrations SET done=1, at=? WHERE migration=?`, stampInstant("second"), N26_MIGRATION);
+      out.done = true;
+    }
+    return out;
+  }
+
+  /* One candidate: "unmoved", a reason it was left as it is, or `{migrated, moved}`. */
+  async #migrateOne(row, cutoff, ev) {
+    const sha = row.capture_sha;
+    const reading = safeJson(row.reading);
+    if (!reading || typeof reading !== "object") return "the stored reading is not readable JSON";
+    if (n26Marked(reading)) return "already migrated";
+    if (checkChain(reading.text_source) || !reading.text_source.some(isDocxLayer))
+      return "the reading carries no docx text layer to mark, so nothing it holds was read from the paragraphs";
+    const last = this.#one(`SELECT rowid AS n FROM reading_history WHERE capture_sha=? ORDER BY seq DESC LIMIT 1`, sha);
+    if (last && Number(last.n) > Number(cutoff))
+      return "read after N26 (its reading was written after the migration's cutoff)";
+    if (!ev) return "this instance has no evidence store bound, so the stored bytes cannot be read again";
+    const doc = this.#storedDocument(row.bundle_id, sha) || { capture: { sha256: sha } };
+    const got = await bytesOf(ev, doc).catch(() => ({ bytes: null }));
+    if (!got.bytes) return "the capture's bytes are not held in the evidence store";
+    const entry = getFormat("docx");
+    if (!entry || typeof entry.parts !== "function" || typeof entry.text !== "function")
+      return "no docx entry is registered";
+    let parts, text;
+    try { parts = await entry.parts(got.bytes); text = parts && parts.ok ? await entry.text(parts) : null; }
+    catch { return "the docx entry could not read the stored bytes"; }
+    const map = parts && parts.ok ? docxRenumbering(parts.documentXml) : null;
+    if (!map || !text || text.ok === false || !Array.isArray(text.paragraphs)) return "unmoved";
+    if (!renumberingMoves(map)) return "unmoved";
+    /* A reading of the old walk states the old walk's paragraph count; one that states the new count is N26's. */
+    const ce = reading.container_extent;
+    if (ce && typeof ce === "object" && Number.isInteger(ce.paragraphs) && ce.paragraphs !== map.paragraphs.length)
+      return "its paragraph count is not the pre-N26 walk's, so it was not read by the old walk";
+    const next = n26MigratedReading(reading, map, text, { at: stampInstant("second") });
+    if (Object.prototype.hasOwnProperty.call(reading, "provenance"))
+      next.provenance = await readingProvenance({ text, chain: next.text_source,
+        tier: Number.isInteger(next.text_tier) ? next.text_tier : null, container: "docx",
+        planeVersion: this.env.VERSION || null, member: null });
+    const u = textUnitsFor(text);
+    const composed = row.origin === "composed" ? true : row.origin === "asserted" ? false : this.#composedHere(reading);
+    /* The stored reading must still be the one examined: a promotion or re-read that landed meanwhile wins. */
+    const wrote = this.core.transact(() => {
+      const now = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, sha);
+      if (!now || now.reading !== row.reading) return null;
+      return this.writeReading({ bundleId: row.bundle_id, captureSha: sha, reading: next, textUnits: u.textUnits,
+        textUnitsOverBound: u.textUnitsOverBound, textUnitsSkipped: u.textUnitsSkipped,
+        author: composed ? null : row.asserted_by ?? null, justification: composed ? null : safeJson(row.justification) ?? row.justification,
+        composed });
+    });
+    if (!wrote) return "the stored reading changed while it was being read again, and the newer one stands";
+    if (composed) this.recordComposed(next, sha);
+    return { migrated: true, moved: next.migrated.n26.moved };
+  }
+
+  /* The capture's document in the bundle's own provenance document (record-core `readFile`), or null. */
+  #storedDocument(bundleId, sha) {
+    let docText = null;
+    try {
+      const f = this.core && typeof this.core.readFile === "function" ? this.core.readFile(bundleId, "data/provenance.json") : null;
+      docText = f && typeof f === "object" ? (f.text ?? f.content ?? null) : (typeof f === "string" ? f : null);
+    } catch { docText = null; }
+    const docs = (safeJson(docText) || {}).documents;
+    return Array.isArray(docs) ? docs.find((d) => d && d.capture && d.capture.sha256 === sha) || null : null;
+  }
+
   /* ---- re-reading, `op=pdfstructure` (R31–R35) ---- */
 
   /** What a re-read needs of the stored reading (D-15: a capture whose bundle the viewer may not see answers as
@@ -788,13 +1113,7 @@ export class Extraction {
     const sha = typeof captureSha === "string" ? captureSha.trim().toLowerCase() : "";
     const row = sha ? this.#one(`SELECT bundle_id, reading FROM readings WHERE capture_sha=?`, sha) : null;
     if (!row || !this.#sees(row.bundle_id, viewer)) return { held: false };
-    let docText = null;
-    try {
-      const f = this.core && typeof this.core.readFile === "function" ? this.core.readFile(row.bundle_id, "data/provenance.json") : null;
-      docText = f && typeof f === "object" ? (f.text ?? f.content ?? null) : (typeof f === "string" ? f : null);
-    } catch { docText = null; }
-    const docs = (safeJson(docText) || {}).documents;
-    const doc = Array.isArray(docs) ? docs.find((d) => d && d.capture && d.capture.sha256 === sha) : null;
+    const doc = this.#storedDocument(row.bundle_id, sha);
     const units = [];
     for (const u of this.#rows(
       `SELECT extent, text FROM capture_text WHERE capture_sha=? AND extent_kind='pdf-page' AND truncated=0`, sha)) {
