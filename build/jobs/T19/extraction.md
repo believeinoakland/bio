@@ -36,3 +36,7 @@ Three readings I am building on (carrying on meanwhile; none blocks the rest of 
 - `checks/format.mjs`: 87 modules, 82 requirements files; 0 failures. `checks/architecture.mjs bio extraction`: 30 product files, 106 relative imports; 0 failures. `checks/coverage.mjs bio extraction`: 62 of 62 live ids; 0 failures. `checks/ownership.mjs bio extraction tranche/T19`: 12 files; legacy-store 1 added, 29 removed; 0 failures.
 
 Size (session_01D1NSnnnUtHGsFbECdwj9Mk): test runs 14, module lines 3886
+
+## J2 · COMPLETE
+
+Complete on job/T19/extraction (record's Completion section). Met: R65 (testimony-slot.test.mjs), R66 (n26.test.mjs, with R20's K800 exception), R67 (figures.test.mjs); rule 1's re-points done, no extraction file imports bio-checks.mjs. store.mjs: textUnits key deleted, textIndexOk reads mine (1 added, 29 removed). Stale: bio-plane/dist/bio-plane.bundled.mjs (not_product's). case-authoring has 1 pre-existing failing test on tranche/T19, not mine. Checks: format 0, architecture 0, coverage 62/62, ownership 0 failures.
