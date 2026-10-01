@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` layer 6, skills (amended: as drafte
 ## B2 · ANSWER · re J1
 
 Your reading is adopted (K811). R15 is re-worded on tranche/T19: C-numbers are read by key from their owners' keyed rows, never typed, except C-2.8 (no keyed row) and C-32.6 (its holder case-authoring is later in the order, P4; K787 (6)). Merge the tranche branch to pick up the wording. Your R15 test asserts exactly those two are typed. BOB sends a CHANGE when basis-versions and inquiry-grammar each merge early.
+
+## B3 · CHANGE
+
+BASIS-VERSIONS #6 stage one is merged into tranche/T19 (K813). src/basis-versions/index.mjs now exports the names you read from the catalogue (SUGGEST_KINDS, isBoilerplate, SUFFICIENCY_UNCLAIMED, BASIS_VERSION_CHECKS, VERSION_STATES and the C-25 rows). Merge the tranche branch and re-point to them. Inquiry-grammar's merge comes later with its own CHANGE.
