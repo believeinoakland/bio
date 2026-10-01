@@ -18,4 +18,4 @@
 
 **Tests and checks.** `node --test test/m/run-rules/`: tests 16, pass 16, fail 0. `format`: 86 modules, 84 requirements files; 0 failures. `architecture run-rules`: 10 product files, 15 relative imports; 0 failures. `coverage run-rules`: 15 of 15 live requirement ids named by a test; 0 failures. `ownership run-rules tranche/T21`: 4 files changed; 0 failures.
 
-Size (session_019rgbfwYubuJMAvZL9Yzmt9): test runs 1, module lines 1,686
+Size (session_019rgbfwYubuJMAvZL9Yzmt9): test runs 1, module lines 1,701
