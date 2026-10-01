@@ -6,7 +6,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as A from "../../../src/affordances.mjs";
-import * as C from "../../../checks/bio-checks.mjs";
+/* The grammars the catalogue reads (T19): the record's (states, grades) and the action document's (kinds and the action
+   vocabularies), each the module whose refusals run on it. */
+import { STATES, BASIS_GRADES, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../../../src/record-grammar/index.mjs";
+import * as actionGrammar from "../../../src/action-grammar/index.mjs";
 import * as inquiry from "../../../src/inquiry/index.mjs";
 import * as entities from "../../../src/entities/index.mjs";
 import * as progressions from "../../../src/progressions/index.mjs";
@@ -14,7 +17,6 @@ import * as promotion from "../../../src/promotion/index.mjs";
 import * as recordCore from "../../../src/record-core/index.mjs";
 import * as basisVersions from "../../../src/basis-versions/index.mjs";
 import * as content from "../../../src/content/index.mjs";
-import * as actions from "../../../src/actions/index.mjs";
 import * as ratification from "../../../src/ratification/index.mjs";
 import * as contradiction from "../../../src/contradiction/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
@@ -137,17 +139,17 @@ test("R4: VOCABULARIES carries exactly the named vocabularies", () => {
 
 test("R4: each fixed value is the very object its enforcing module refuses against — the same reference, never a copy", () => {
   const same = [
-    ["law_levels", actions.LAW_LEVELS], ["dispositions", inquiry.DISPOSITIONS],
+    ["law_levels", actionGrammar.LAW_LEVELS], ["dispositions", inquiry.DISPOSITIONS],
     ["subject_positions", ratification.SUBJECT_POSITIONS], ["basis_roles", inquiry.BASIS_ROLES],
     ["entity_kinds", entities.ENTITY_KINDS], ["relation_kinds", entities.RELATION_KINDS],
-    ["stage_requiredness", progressions.STAGE_REQUIREDNESS], ["action_basis_kinds", actions.ACTION_BASIS_KINDS],
-    ["correspondence_directions", actions.CORRESPONDENCE_DIRECTIONS],
-    ["correspondence_stages", actions.CORRESPONDENCE_STAGES], ["correspondence_outcomes", actions.CORRESPONDENCE_OUTCOMES],
-    ["resolutions", actions.RESOLUTIONS], ["risk_tiers", actions.RISK_TIERS],
+    ["stage_requiredness", progressions.STAGE_REQUIREDNESS], ["action_basis_kinds", actionGrammar.ACTION_BASIS_KINDS],
+    ["correspondence_directions", actionGrammar.CORRESPONDENCE_DIRECTIONS],
+    ["correspondence_stages", actionGrammar.CORRESPONDENCE_STAGES], ["correspondence_outcomes", actionGrammar.CORRESPONDENCE_OUTCOMES],
+    ["resolutions", actionGrammar.RESOLUTIONS], ["risk_tiers", actionGrammar.RISK_TIERS],
     ["version_states", basisVersions.VERSION_MACHINE.legal], ["version_edges", basisVersions.VERSION_MACHINE.edges],
     ["version_reason_required", basisVersions.VERSION_REASON_REQUIRED], ["rung_ladder", RUNG_LADDER],
     ["rung_correction_path", IRREVERSIBLE_CORRECTION_PATH], ["rung_absence_grounds", RUNG_ABSENCE_GROUNDS],
-    ["sufficiency_claim_states", C.SUFFICIENCY_CLAIM_STATES], ["content_mint_states", content.CONTENT_MINT_STATES],
+    ["sufficiency_claim_states", basisVersions.SUFFICIENCY_CLAIM_STATES], ["content_mint_states", content.CONTENT_MINT_STATES],
     /* N345: inquiry R46's frozen vocabularies and contradiction R31's dismissal reasons */
     ["contradiction_coordinates", inquiry.CONTRADICTION_COORDINATES], ["plurality_differences", inquiry.PLURALITY_DIFFERENCES],
     ["resolution_kinds", inquiry.RESOLUTION_KINDS], ["norm_canons", inquiry.NORM_CANONS],
@@ -157,7 +159,8 @@ test("R4: each fixed value is the very object its enforcing module refuses again
   assert.equal(same.length + 1, Object.keys(VOCABULARIES).length, "every key but action_kind is a fixed value checked here");
 });
 
-/* R26: the kinds come from actions at the moment of the call (its R10, R40), the tiers are actions' own. Every
+/* R26: the kinds come from actions at the moment of the call (its R10, R40), through action-grammar's `actionKinds` (its
+   R1), the reader actions answers with; the tiers are action-grammar's (K768). Every
    profile the jurisdictions module lists is taken alone and all together, so a view that adds kinds is exercised. */
 const views = () => {
   const ids = profiles().map((p) => p.id);
@@ -166,34 +169,34 @@ const views = () => {
   const all = combine(ids); if (all && all.ok) out.push([ids.join("+"), all.view]);
   return out;
 };
-test("R26 R4: risk_tiers is actions' RISK_TIERS, and action_kind, with no instance to ask, is actions' answer with no "
-   + "profile active — the product's kinds alone, no kind held here", () => {
-  assert.equal(VOCABULARIES.risk_tiers, actions.RISK_TIERS);
-  assert.deepEqual(VOCABULARIES.action_kind, actions.actionKinds(null));
-  assert.equal(VOCABULARIES.action_kind, actions.PRODUCT_KINDS);
+test("R26 R4: risk_tiers is action-grammar's RISK_TIERS (the same reference), and action_kind, with no instance to ask, "
+   + "is actions' answer with no profile active — the product's kinds alone, no kind held here", () => {
+  assert.equal(VOCABULARIES.risk_tiers, actionGrammar.RISK_TIERS);
+  assert.deepEqual(VOCABULARIES.action_kind, actionGrammar.actionKinds(null));
+  assert.equal(VOCABULARIES.action_kind, actionGrammar.PRODUCT_KINDS);
 });
 
 test("R26 R4: vocabulariesFor(kinds) publishes as action_kind exactly the kinds actions answers for the instance's view, "
    + "the product's kinds then the profiles', and every other vocabulary as the same object", () => {
   const vs = views();
-  assert.ok(vs.some(([, v]) => actions.actionKinds(v).length > actions.PRODUCT_KINDS.length),
+  assert.ok(vs.some(([, v]) => actionGrammar.actionKinds(v).length > actionGrammar.PRODUCT_KINDS.length),
     "some profile adds a kind, so the instrument sees the view");
   for (const [name, view] of vs) {
-    const kinds = actions.actionKinds(view);
+    const kinds = actionGrammar.actionKinds(view);
     const v = A.vocabulariesFor(kinds);
     assert.deepEqual(v.action_kind, kinds, name);
-    assert.deepEqual(v.action_kind.slice(0, actions.PRODUCT_KINDS.length), [...actions.PRODUCT_KINDS], name);
+    assert.deepEqual(v.action_kind.slice(0, actionGrammar.PRODUCT_KINDS.length), [...actionGrammar.PRODUCT_KINDS], name);
     assert.deepEqual(Object.keys(v), Object.keys(VOCABULARIES), name);
     for (const k of Object.keys(VOCABULARIES)) if (k !== "action_kind") assert.equal(v[k], VOCABULARIES[k], `${name}: ${k}`);
   }
   for (const bad of [undefined, null, [], "records_request", [1], [""], [null]])
-    assert.equal(A.vocabulariesFor(bad).action_kind, actions.PRODUCT_KINDS, JSON.stringify(bad));
+    assert.equal(A.vocabulariesFor(bad).action_kind, actionGrammar.PRODUCT_KINDS, JSON.stringify(bad));
 });
 
-test("R26: no action kind is held in this module — none of legacy-checks' local kinds, and no profile's, appears in its "
+test("R26: no action kind is held in this module — none of the action grammar's own kinds beyond the product's, and no profile's, appears in its "
    + "published text or tables", () => {
-  const local = C.ACTION_KINDS.filter((k) => !actions.PRODUCT_KINDS.includes(k));
-  const fromProfiles = views().flatMap(([, v]) => actions.actionKinds(v)).filter((k) => !actions.PRODUCT_KINDS.includes(k));
+  const local = actionGrammar.ACTION_KINDS.filter((k) => !actionGrammar.PRODUCT_KINDS.includes(k));
+  const fromProfiles = views().flatMap(([, v]) => actionGrammar.actionKinds(v)).filter((k) => !actionGrammar.PRODUCT_KINDS.includes(k));
   const kinds = [...new Set([...local, ...fromProfiles])];
   assert.ok(kinds.length > 0, "the instrument has kinds to look for");
   const text = JSON.stringify(outward());
@@ -250,9 +253,9 @@ test("R5: ATTEST_FENCE is DEC-39's wording verbatim, its two letters composed fr
   assert.ok(at > 0, "DEC-39's wording is in DECISIONS.md");
   const lines = dec.slice(at).split("\n").map((l) => l.trimStart());
   const quote = lines.slice(0, lines.findIndex((l) => !l.startsWith(">"))).map((l) => l.replace(/^>\s?/, "")).join(" ").replace(/\*\*?/g, "").replace(/\s+/g, " ").trim();
-  const above = C.BASIS_GRADES[C.BASIS_GRADES.indexOf(C.EARNED_CAPTURE_CEILING) - 1];
-  assert.equal(C.UNREACHABLE_CAPTURE_GRADE, above);
-  assert.equal(A.ATTEST_FENCE, A.attestFence(C.EARNED_CAPTURE_CEILING, above));
+  const above = BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) - 1];
+  assert.equal(UNREACHABLE_CAPTURE_GRADE, above);
+  assert.equal(A.ATTEST_FENCE, A.attestFence(EARNED_CAPTURE_CEILING, above));
   assert.equal(A.attestFence("B", "A"), quote, "Bob's sentence at the ruled letters");
   assert.equal(A.attestFence("C", "B"), quote.replace("Grade B capture", "Grade C capture").replace("Grade A", "Grade B"));
 });
@@ -305,7 +308,7 @@ test("R7: NON_ACTS gives every op it names a reason, names no act, and a reason 
 
 test("R19: `terminal` is given only while STATES.information.edges.retired is empty, and `irreversible` only to publish", () => {
   const terminal = Object.keys(RUNGS).filter((op) => RUNGS[op] === "terminal");
-  assert.deepEqual(C.STATES.information.edges.retired, []);
+  assert.deepEqual(STATES.information.edges.retired, []);
   assert.deepEqual(terminal, ["retire"]);
   assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "irreversible"), ["publish"]);
 });
@@ -317,7 +320,9 @@ test("R19: the justification family names only codes that ask the member for an 
   for (const c of ["NO_REASON", "VERSION_NO_REASON", "NO_ACKNOWLEDGMENT", "NO_MITIGATION", "NO_CONCLUSION",
     "NO_FALSIFIER", "NO_JUSTIFICATION", "THEME_WITHDRAW_NO_REASON", "FILE_MEMBERSHIP_NO_REASON",
     "CONNECTION_ASSERT_NO_BASIS", "NO_LESSON", "BIAS_DEBT_NO_REASON", "RISK_TIER_REASON_REFUSED", "NARROW_NO_DESCRIPTION", "REEVALUATION_NOTE_MALFORMED",
-    "ACTION_MOVE_NO_REASON" /* N310: actions R13 */]) assert.ok(JUSTIFICATION_REFUSALS.includes(c), c);
+    "ACTION_MOVE_NO_REASON" /* N310: actions R13 */,
+    "INTENT_NO_REASON", "CONFORMANCE_NO_REASON", "ESCALATION_NO_REASON" /* K823, K834, K835 */])
+    assert.ok(JUSTIFICATION_REFUSALS.includes(c), c);
   for (const c of ["NO_TARGET", "NO_ID", "NO_KIND", "ENTITY_NO_LABEL", "PROGRESSION_NO_LABEL", "EXPERTISE_NO_LABEL",
     "NO_SUCH_KNOCK", "NO_SUCH_COMPARISON", "NOT_AN_ADMIN", "NO_CITATION", "NO_BODY", "NO_TITLE"])
     assert.ok(!JUSTIFICATION_REFUSALS.includes(c), c);
