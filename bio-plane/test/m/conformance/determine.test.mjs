@@ -322,6 +322,29 @@ test("R6: an unclear outcome names at least one question, each an inquiry the au
   assert.equal(w.c.determine(input({ questions: [{ question: "Anything else?" }] })).questions.length, 1);
 });
 
+test("R6 R9: a question's `opened` is whether this determination's own act opened its inquiry, a boolean on every question, never an instant (N249, K700: distinct from a case's `opened`)", () => {
+  const { w, std, input } = scene();
+  const E = "INQ-2026-0005-existing";
+  w.inquiry(E);
+  const d = w.c.determine(input({ standards: [{ standard: std, outcome: "unclear" }],
+    rows: [{ ...input().rows[0], reading: "open" }],
+    questions: [{ question: "Named?", inquiry: E }, { question: "Opened here?" }, { question: "And this?" }] }));
+  assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));
+  /* in the act's answer, the read and the stored row alike: true exactly for the inquiries this act created */
+  const created = w.rows(`SELECT bundle_id FROM bundles WHERE object_type='inquiry' AND bundle_id <> ? AND bundle_id LIKE 'INQ-%-question'`, E)
+    .map((r) => r.bundle_id);
+  for (const r of [d, w.c.determinationRead({ id: d.id, viewer: V("pat") })]) {
+    assert.ok(r.questions.every((q) => typeof q.opened === "boolean"), JSON.stringify(r.questions));
+    assert.deepEqual(r.questions.map((q) => q.opened), [false, true, true]);
+    assert.deepEqual(r.questions.filter((q) => q.opened).map((q) => q.inquiry).sort(), created.sort());
+  }
+  assert.deepEqual(w.rows(`SELECT opened FROM determination_questions WHERE determination_id=? ORDER BY ord`, d.id)
+    .map((x) => x.opened), [0, 1, 1]);
+  /* a determination naming only existing inquiries opens none */
+  const n = w.c.determine(input({ questions: [{ question: "Named?", inquiry: E }] }));
+  assert.deepEqual(n.questions.map((q) => q.opened), [false]);
+});
+
 test("R6: the determination and every inquiry it opens land together or not at all; a refused determination rolls back the inquiry and spends no id", () => {
   const { w, std, input } = scene();
   /* the next determination id is already held (a replay, which conformance's step does not ask), so the determination's

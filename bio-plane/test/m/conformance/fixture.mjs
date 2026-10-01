@@ -80,8 +80,9 @@ export const LAYER = [{ step: "layer", tier: 1, container: "pdf", cap: null, mea
 export const U = (page, text, truncated = false) =>
   ({ extent: canonicalExtent({ kind: "pdf-page", page }), ref: `page ${page + 1}`, text, truncated });
 
-/* The columns inquiry writes on record-core's `bundles` (its R40), which the store's additive list creates today. */
-const BUNDLE_COLUMNS = ["inquiry_basis_count INTEGER", "inquiry_subject_entity TEXT", "inquiry_superseded_by TEXT"];
+/* The column inquiry writes on record-core's `bundles` (its R40), which the store's additive list creates today. The
+   basis count and the superseded-by index are in inquiry's own table since T18 (its R36), which its `migrate()` makes. */
+const BUNDLE_COLUMNS = ["inquiry_subject_entity TEXT"];
 /* The columns of extraction's tables that inquiry, content and connections join. */
 const EXTRACTION_JOINED = [
   `CREATE TABLE readings (capture_sha TEXT PRIMARY KEY, bundle_id TEXT NOT NULL, content_type TEXT, reading TEXT,

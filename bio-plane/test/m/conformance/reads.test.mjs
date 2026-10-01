@@ -105,8 +105,13 @@ test("R10: flagged basis_changed, naming each cause (a finding reopened, superse
   /* a finding published in a later edition of its case */
   w.inquiry(F, { legs: [{ target: DOC }], question: "Revised?" });
   w.publish(F, proj, { edition: 2 });
-  /* a finding superseded (inquiry's superseded-by column, which its projection writes when a division supersedes it) */
-  w.st.sql.exec(`UPDATE bundles SET inquiry_superseded_by=? WHERE bundle_id=?`, "INQ-2026-0400-child", G);
+  /* a finding superseded: the reopened finding (no longer a case member at its current version, inquiry R35) divided by
+     a member through inquiry's own act (its R23–R26), whose children supersede it (its R16) */
+  const div = w.k.divide({ target: G, reason: "it was two questions", viewer: V("olive"), author: V("olive"),
+    children: [{ id: "INQ-2026-0400-child", question: "Was the notice posted?", legs: [0] },
+               { id: "INQ-2026-0401-child", question: "Was it posted thirty days ahead?", legs: [0] }] });
+  assert.equal(div.ok, true, JSON.stringify(div).slice(0, 300));
+  assert.deepEqual(w.k.supersededBy(G), ["INQ-2026-0400-child", "INQ-2026-0401-child"]);
   /* a standard superseded */
   w.standard("Parks Code 12.08.030 (amended)", { period: { from: "2026-06-01", to: "2030-12-31" }, supersedes: std });
   /* a newer capture of the act's evidence and of the standard's text, neither carrying the passage */
@@ -146,7 +151,10 @@ test("R10: reevaluation's notice is recorded once per cause, and one that names 
   assert.deepEqual(w.c.basisChanged({ kind: "passage", subject: input().act.evidence[0], affects: "affected" }), { flagged: 1 });
   assert.deepEqual(w.c.basisChanged(null), { flagged: 0 });
   const r = w.c.determinationRead({ id: d.id, viewer: V("olive") });
-  assert.deepEqual(r.basis_changed.causes.map((c) => [c.kind, c.source]).sort(), [["finding", "supersession"], ["passage", "newer_capture"]]);
+  /* reevaluation's `supersession` is read in this module's word for it, `superseded`, so one cause is named once (the
+     R10 test above: a real division, told and read); the notice is stored as it was told */
+  assert.deepEqual(r.basis_changed.causes.map((c) => [c.kind, c.source]).sort(), [["finding", "superseded"], ["passage", "newer_capture"]]);
+  assert.equal(w.row(`SELECT source FROM determination_flags WHERE kind='finding'`).source, "supersession");
 });
 
 test("R11 R15: determinationsFor lists at most 200 a page in id order (a lower limit honoured, a higher not), truncated by reading one past, with its filters, and only determinations in projects the viewer sees", () => {
