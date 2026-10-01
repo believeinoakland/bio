@@ -351,6 +351,7 @@ test("R18: bytes that never read back equal exit 1 after four attempts saying no
     assert.equal(und.status, 0);
     assert.match(und.stdout, /limits: UNDETERMINED — the script settings state no limits\.subrequests\. The ceiling sent \(500\) is NOT confirmed/);
     assert.doesNotMatch(und.stdout, /verified: limits/);
+    assert.match(und.stdout, /rollout: serving 1\.2\.3 after/, "and it still waits on the rollout");
   } finally { rm(root); }
 });
 
