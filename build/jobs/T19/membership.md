@@ -86,3 +86,19 @@ Each needs its fixture to construct `credentialsOf(ctx)` (or a stand-in register
 - `checks/ownership.mjs … membership tranche/T19`: 25 files; legacy-store 0 added, 7 removed; legacy-checks 0 added, 117 removed; 0 failures.
 
 Size (session_01HzHv55JX2Tnkf7jv6Tquna): test runs 30, module lines 3637
+
+## J7 · COMPLETE
+
+**COMPLETE again** after B11 (K784) and B12 (K785), `job/T19/membership` @ "membership: C-63 held with its named copies; the catalogue's SIGNER_ENROLMENT_CHECKS deleted". J6 stands, with these changes:
+- `SIGNER_ENROLMENT_CHECKS` (C-63) copied into `membership/checks.mjs` (names, ids, `where`s, translations unchanged), with BAD_KEY and C-96.15–.17 already there. It is read by the `signerList`, `signerRegisterOwn` and `signerRevokeOwn` named copies (until T20, N445). The catalogue's family is deleted (38 lines; legacy-checks now 155 removed, 0 added).
+- **No membership file imports the catalogue** (K785): `index.mjs` reads record-grammar and its own `checks.mjs`; every test under `test/m/membership/` reads record-grammar or membership's own checks (`grep bio-checks` over `src/membership` and `test/m/membership` finds nothing).
+
+**Tests and checks:**
+- `test/m/membership`: tests 136, pass 136, fail 0.
+- Whole `test/m`: tests 4374, pass 4077, fail 277, todo 20. These are the same failures J6 lists by module: 3 already on tranche/T19, 5 query-language, ~269 in other modules' fixtures. None is new.
+- format: 0 failures.
+- architecture: 21 product files, 53 imports; 0 failures.
+- coverage: 78 of 78 live requirement ids named by a test; 0 failures.
+- ownership: 25 files; legacy-store 0 added, 7 removed; legacy-checks 0 added, 155 removed; 0 failures.
+
+Size (session_01HzHv55JX2Tnkf7jv6Tquna): test runs 32, module lines 3676
