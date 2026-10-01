@@ -16270,7 +16270,7 @@
     "UC-129"
    ],
    "brief": {
-    "stillOpen": "partly",
+    "stillOpen": false,
     "settledSince": "Your answer of 1 October settled the act: 'hold in place' or 'hold released', with a reason, recorded by a member, clears the reminder. It is built. What the hold stops, how far it reaches, what members see and whether it blocks the wipe remain open.",
     "title": "The litigation hold: what placing it stops, how far it reaches, and what it blocks",
     "inOneBreath": "Now that a member can record 'hold in place' on a reply marked as a legal threat, should that record actually stop the scheduled deletion of assistant transcripts on members' devices, for which projects, with what shown to members, and should it block the operator's wipe of the group's record?",
@@ -16482,6 +16482,19 @@
      "Checked build/plan/next.md and draft-T21.md: the device transcript store is not planned."
     ],
     "size": "session"
+   },
+   "ruled": {
+    "date": "2026-10-01",
+    "by": "Bob",
+    "rulings": [
+     "K899 (7)",
+     "K901",
+     "DEC-113",
+     "K1019"
+    ],
+    "status": "ruled",
+    "title": "The litigation hold: what it stops, how far it reaches, and what it blocks",
+    "decided": "A hold is a member's recorded statement on a reply marked as a legal threat, 'hold in place' or 'hold released', always with a reason; the latest stands, and it is the reminder's only way out. Once devices store assistant transcripts, 'hold in place' stops both scheduled deletions (at the time limit and at publication), on every member's device, for the threatened action's project (filled in automatically) and any other projects the member names; more can be added by a further statement. A device checks for a hold before deleting and deletes nothing if it cannot check. Any member who can see the action may place a hold; releasing is heavier: its form says what will be deleted and that this cannot be undone, and the administrators and whoever placed the hold are told once. Members who can see a held project see a strip: 'Litigation hold in place since 2 Oct 2026, recorded by Paula Reyes. Assistant transcripts for this project stay on your device: they are not deleted after the usual time or at publication. Please do not clear them yourself.' Members who cannot see the project see nothing. While any hold is in place, the operator's wipe of the real record is refused, and the doorbell archive's one-week clearing pauses. Counsel's review of these defaults is advised."
    }
   },
   {
