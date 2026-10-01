@@ -48,3 +48,7 @@ R15 vs K787 (6). R15 says every clause's `enforced_by` C-number is "read from th
 My best reading, which I am building on: R15's exception list is C-2.8 and C-32.6 (C-32.6 typed because its holder is later in the order, P4; case-authoring's L8 tests assert its row's id equals skills' `cannot_publish`). My R15 test will assert exactly those two numbers are typed and every other one is read from an owner's keyed row (strength, run-productions, run-rules, basis-versions, inquiry-grammar). Please amend R15's wording to name C-32.6 (yours, requirements), or tell me otherwise.
 
 Also, for the record: per K787 (3) I dropped `version.test.mjs`' arm walking the catalogue for a copy of C-22.7, and `pack.test.mjs` R7's whole-catalogue walk (now a walk of the owners' families). I am waiting for inquiry-grammar and basis-versions to merge early before re-pointing `MACHINE_FENCE_CHECKS`/`BASIS_VERSION_CHECKS` (the record-grammar re-points are done).
+
+## J2 · COMPLETE
+
+B4 applied: C-32.8 now read from inquiry-grammar's INQUIRY_GRAMMAR_ROWS; C-25.6 and C-32.2 from basis-versions; C-32.6 typed (K811); BASIS_ROLES, EARNED_GRADE_SOURCES, sha256HexSync from record-grammar. No skills file imports bio-checks.mjs. Tests 39/39; format, architecture, coverage (29/29), ownership all 0 failures. REPORT: the plane bundle is stale (skills' imports changed); BOB regenerates at the close. Details in the record's Completion section.
