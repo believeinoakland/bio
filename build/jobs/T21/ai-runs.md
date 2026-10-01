@@ -12,7 +12,7 @@
 
 **Deferred:** none. **Read:** the module's code and tests whole, its requirements, layer 6's contract and `build/layers.md` rule 6; of the Uses' public parts, only `connections`' `citesInto` as the re-worded :583 cites it (comments-only entry). **Found in other modules:** none new (T20's list already carries the other owners' notes).
 
-**Generated artifacts:** `bio-plane/dist/bio-plane.bundled.mjs` (and `.bundle.json`) is staled by the comment change to `bio-plane/src/ai-runs/index.mjs`; not regenerated (REPORT J2).
+**Generated artifacts:** `bio-plane/dist/bio-plane.bundled.mjs` (and `.bundle.json`) is staled by the comment change to `bio-plane/src/ai-runs/index.mjs`; not regenerated (REPORT J1).
 
 **Tests and checks**
 - `node --test bio-plane/test/m/ai-runs/`: tests 56, pass 56, fail 0.
