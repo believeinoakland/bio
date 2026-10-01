@@ -672,10 +672,12 @@ function checkHistoryCoherence(ctx, findings) {
  * the same `ctx`, so the findings keep their order; an arm no grammar claims runs nothing. (An arm's ids are the
  * grammar ids its own body raises; the helpers it calls go with it.) A grammar that claims no arm runs after the type
  * arms, in list order. A claim covering part of an arm, or two arms, or an id another grammar claims, is a caller's
- * defect and throws before any arm runs, as a malformed entry does. C-2.7's arm (`checkInformationExtension`) is not
- * here: capture registered it in T18 (R28). `checkSupersession` and `checkRecheckCoverage` are inquiry's C-6.1 and
- * C-15.1 arms, separated from `checkReferences` and kept in their places (draft-T19; job record, J2). */
+ * defect and throws before any arm runs, as a malformed entry does. C-2.7's slot (`checkInformationExtension`) is
+ * kept for capture's grammar, registered in T18, so its findings keep their place (K751). `checkSupersession` and
+ * `checkRecheckCoverage` are inquiry's C-6.1 and C-15.1 arms, separated from `checkReferences` and kept in their
+ * places; the catalogue's `LEGACY_GRAMMARS` fills them until inquiry-grammar does (layer 6; K752). */
 export const EXTENSION_ARMS = Object.freeze([
+  { name: 'checkInformationExtension', ids: ['C-2.7'] },
   { name: 'checkInfo2Contract', ids: ['C-18.6', 'C-18.7'] },
   { name: 'checkSupersession', ids: ['C-6.1'] },
   { name: 'checkRecheckCoverage', ids: ['C-15.1'] },
@@ -814,6 +816,7 @@ export async function checkBundle(input, opts = {}) {
       const g = grammars.byArm.get(name);
       if (g) await g.arm(ctx, findings);
     };
+    await typeArm('checkInformationExtension');
     await typeArm('checkInfo2Contract');
     /* N325 (T14): `checkInboxGrammar(ctx, findings)` stood here. The inbox task grammar is queue's, a promotion check
        and an audit check it registers, so the bundle check does not run it; the export went in T15. */

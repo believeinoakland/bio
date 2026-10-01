@@ -36,7 +36,7 @@ const BATTERY = `async (RG) => {
   out.push(RG.BUNDLE_ID_RE.test("PLN-2026-0001-a"), RG.ANN_ID_RE.source, RG.UNREACHABLE_CAPTURE_GRADE);
   out.push(RG.deriveInquiryTitle("  a   question\\nmore"), RG.inquiryQuestionOf("x\\n## Question\\nq\\n## B"), RG.vocabFor(RG.STATES, "problem"));
   out.push(RG.sectionText("## A\\na\\n## B", "## A"), RG.isCaseMemberBytes({ published_strength: [{ axis: "a" }, { axis: "b" }] }));
-  for (const w of ["token:x", "alice", "", "plane"]) out.push(RG.proposalLabel(w, "standard"), RG.contentMintState(w), RG.isMachineMinted(w));
+  for (const w of ["token:x", "alice", "", "plane"]) out.push(RG.proposalLabel(w, "standard"), RG.contentMintState(w));
   const sha = async (v) => RG.createSha256().update(typeof v === "string" ? new TextEncoder().encode(v) : v).hex();
   const files = new Map([["bundle.md", "---\\nid: INFO-2026-0001-a\\nobject_type: information\\n---\\n## Summary\\n## Odd"],
     ["PROMOTING-x.json", "{}"], ["PENDING_PROMOTION.json", JSON.stringify({ created: "2026-01-01T00:00:00Z" })]]);
@@ -74,12 +74,12 @@ const MOVED = ["BUNDLE_ID_RE", "ANN_ID_RE", "FILENAME_RE", "ISO_TS_RE", "OBJECT_
   "EARNED_GRADE_SOURCES", "EARNED_CAPTURE_CEILING", "UNREACHABLE_CAPTURE_GRADE", "isPublicHttpsLocator", "createSha256",
   "sha256HexSync", "INQUIRY_TITLE_MAX", "deriveInquiryTitle", "inquiryQuestionOf", "HEADINGS", "HEADINGS_WHEN",
   "isCaseMemberBytes", "vocabFor", "STATES", "sectionText", "LAW_PROPOSAL_STATES", "lawProposalState", "PROPOSAL_STATES",
-  "proposalLabel", "CONTENT_MINTED_BY_PLANE", "CONTENT_MINT_STATES", "contentMintState", "isMachineMinted"];
+  "proposalLabel", "CONTENT_MINTED_BY_PLANE", "CONTENT_MINT_STATES", "contentMintState"];
 /* Provided here and not re-exported by the catalogue in this layer: legacy-checks' wrapper takes `checkBundle` and
    `EXTENSION_ARMS` (rule 2), and the shared act rows reach the catalogue's readers through `ACT_SHAPE_CHECKS` (R29). */
 const OWN = ["b64ToBytes", "SHARED_ACT_CHECKS", "EXTENSION_ARMS", "checkBundle"];
 
-test("R26 one binding per name: the module's entry answers each provided name with the one binding its part holds", () => {
+test("R26 R41 one binding per name: the module's entry answers each provided name with the one binding its part holds", () => {
   assert.deepEqual(Object.keys(RG).sort(), [...MOVED, ...OWN].sort());
   const parts = [IDS, TYPES, FRONTMATTER, JSON_, ACTORS, GRADES, LOCATOR, SHA256, TITLES, DOCUMENT, LABELS, ACTS, BUNDLE];
   for (const n of Object.keys(RG)) {

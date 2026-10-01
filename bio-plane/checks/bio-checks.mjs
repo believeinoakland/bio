@@ -9,14 +9,15 @@
 import { BUNDLE_ID_RE, ANN_ID_RE, FILENAME_RE, ISO_TS_RE, OBJECT_TYPES, normalizeType, CORE_FIELDS, FORBIDDEN_ALIASES,
   parseFrontmatter, canonicalJson, MACHINE_AUTHOR_PREFIX, isMachineIdentity, BASIS_ROLES, BASIS_GRADES, GRADE_AXES,
   TESTIMONY_GRADE, GRADE_SOURCES, EARNED_GRADE_SOURCES, b64ToBytes, createSha256, sha256HexSync, HEADINGS, HEADINGS_WHEN,
-  isCaseMemberBytes, vocabFor, STATES, sectionText, proposalLabel, SHARED_ACT_CHECKS } from '../src/record-grammar/index.mjs';
+  isCaseMemberBytes, vocabFor, STATES, sectionText, proposalLabel, SHARED_ACT_CHECKS, contentMintState }
+  from '../src/record-grammar/index.mjs';
 export { BUNDLE_ID_RE, ANN_ID_RE, FILENAME_RE, ISO_TS_RE, OBJECT_TYPES, LEGACY_TYPE_ALIASES, normalizeType, CORE_FIELDS,
   FORBIDDEN_ALIASES, parseFrontmatter, canonicalJson, NON_MEMBER_AUTHORS, ACTOR_CLASSES, MACHINE_AUTHOR_PREFIX,
   MACHINE_CLASS_PREFIX, MACHINE_STAMP_PREFIXES, isMachineStamp, isMachineIdentity, BASIS_ROLES, BASIS_GRADES, GRADE_AXES,
   TESTIMONY_GRADE, GRADE_SOURCES, EARNED_GRADE_SOURCES, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE,
   isPublicHttpsLocator, createSha256, sha256HexSync, INQUIRY_TITLE_MAX, deriveInquiryTitle, inquiryQuestionOf, HEADINGS,
   HEADINGS_WHEN, isCaseMemberBytes, vocabFor, STATES, sectionText, LAW_PROPOSAL_STATES, lawProposalState, PROPOSAL_STATES,
-  proposalLabel, CONTENT_MINTED_BY_PLANE, CONTENT_MINT_STATES, contentMintState, isMachineMinted }
+  proposalLabel, CONTENT_MINTED_BY_PLANE, CONTENT_MINT_STATES, contentMintState }
   from '../src/record-grammar/index.mjs';
 // ---------------------------------------------------------------------------
 // Constants (spec v1.1)
@@ -735,6 +736,13 @@ export function isSufficiencyUnclaimed(assertedBy) {
   return sufficiencyClaimState(assertedBy) === 'unclaimed';
 }
 
+
+/** Did a MACHINE CREDENTIAL mark this passage citable on its own? The one
+ *  predicate every consumer asks, so that 5.7's *labelled as machine work* is
+ *  answered in ONE place rather than by four sites agreeing on a prefix. */
+export function isMachineMinted(mintedBy) {
+  return contentMintState(mintedBy) === 'machine_marked';
+}
 
 function latestHistorySnapshot(ctx) {
   const snaps = [...ctx.files.keys()].filter(p => /^_history\/bundle_.*\.md$/.test(p)).sort();

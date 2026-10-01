@@ -2,9 +2,16 @@
 /* record-grammar: the machine-work labels, the plane's own answer to "who proposed this" and "who minted this row",
    each read through `isMachineIdentity` and published as a sentence. Moved from the check catalogue at T19 with their
    comments; the catalogue re-exports each name until its importers re-point (PROCESS-MECHANICS §12.2). REC-195's
-   `lawProposalLabel` is actions' and stays in the catalogue, over `proposalLabel`. */
+   `lawProposalLabel` is actions' and stays in the catalogue, over `proposalLabel`; `isMachineMinted` has no reader and
+   stays there for legacy-checks to delete (K750). */
 
 import { isMachineIdentity } from './actors.mjs';
+
+/* A value stringified and trimmed; one that cannot be stringified (a throwing `toString`, an object with no prototype)
+   is blank, never a throw (R37, R38). */
+function text(v) {
+  try { return String(v ?? '').trim(); } catch { return ''; }
+}
 
 /* =====================================================================
  * REC-195 (D-149's remaining half; `BIO_Case_Making_v0_1.md` §2): A MACHINE'S
@@ -51,7 +58,7 @@ export const LAW_PROPOSAL_STATES = {
  *  and everything the machine predicate does not claim is a name, i.e. a member.
  *  `isMachineIdentity` is REC-46's one predicate and is not re-spelled here. */
 export function lawProposalState(proposedBy) {
-  const s = String(proposedBy ?? '').trim();
+  const s = text(proposedBy);
   if (s.length === 0) return 'unstated';
   return isMachineIdentity(s) ? 'machine_proposed' : 'member_proposed';
 }
@@ -217,7 +224,7 @@ export const CONTENT_MINT_STATES = {
  *  === false` besides, so a collision fails loudly instead of hiding behind
  *  this ordering. Everything left is a name, which is a member. */
 export function contentMintState(mintedBy) {
-  const s = String(mintedBy ?? '').trim();
+  const s = text(mintedBy);
   /*  `s.length === 0` AND NOT `s === ''`, WHICH IS NOT A STYLE CHOICE AND IS
    *  NOT ARBITRARY. `test/sufficiency-state.control.mjs` anchors one of its arms
    *  on the exact line `if (s === '') return 'unstated';` inside
@@ -231,11 +238,4 @@ export function contentMintState(mintedBy) {
   if (s.toLowerCase() === CONTENT_MINTED_BY_PLANE) return 'plane_minted';
   if (isMachineIdentity(s)) return 'machine_marked';
   return 'member_marked';
-}
-
-/** Did a MACHINE CREDENTIAL mark this passage citable on its own? The one
- *  predicate every consumer asks, so that 5.7's *labelled as machine work* is
- *  answered in ONE place rather than by four sites agreeing on a prefix. */
-export function isMachineMinted(mintedBy) {
-  return contentMintState(mintedBy) === 'machine_marked';
 }

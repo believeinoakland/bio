@@ -1,9 +1,10 @@
-/* record-grammar at its interface: the machine-work labels moved at T19 (draft-T19), and the shared act rows (R29). */
+/* record-grammar at its interface: the machine-work labels moved at T19 (R37, R38), and the shared act rows (R29). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
+import * as RG from "../../../src/record-grammar/index.mjs";
 import { LAW_PROPOSAL_STATES, lawProposalState, PROPOSAL_STATES, proposalLabel, CONTENT_MINTED_BY_PLANE, CONTENT_MINT_STATES,
-  contentMintState, isMachineMinted, isMachineIdentity, SHARED_ACT_CHECKS, NON_MEMBER_AUTHORS, ACTOR_CLASSES }
+  contentMintState, isMachineIdentity, SHARED_ACT_CHECKS, NON_MEMBER_AUTHORS, ACTOR_CLASSES }
   from "../../../src/record-grammar/index.mjs";
 
 const STATES3 = ["machine_proposed", "member_proposed", "unstated"];
@@ -11,13 +12,13 @@ const MACHINES = ["token:member", "class:ai", " Token:x ", "claude", "AGENT", ..
 const MEMBERS = ["alice", "Bob Smith", "admin", "tokens", "plane", "none:independent-sufficiency"];
 const BLANKS = [undefined, null, "", "   ", "\n"];
 
-test("lawProposalState: blank is unstated, a machine identity machine_proposed, any other name member_proposed", () => {
+test("R38 lawProposalState: blank is unstated, a machine identity machine_proposed, any other name member_proposed", () => {
   for (const w of BLANKS) assert.equal(lawProposalState(w), "unstated");
   for (const w of MACHINES) assert.equal(lawProposalState(w), "machine_proposed", w);
   for (const w of MEMBERS) assert.equal(lawProposalState(w), "member_proposed", w);
 });
 
-test("PROPOSAL_STATES: one frozen table per subject, governing_laws REC-195's own, each with the three states' sentences", () => {
+test("R38 PROPOSAL_STATES: one frozen table per subject, governing_laws REC-195's own, each with the three states' sentences", () => {
   assert.ok(Object.isFrozen(PROPOSAL_STATES));
   assert.deepEqual(Object.keys(PROPOSAL_STATES), ["governing_laws", "standard", "comparison", "filing_draft", "theory",
     "plan_option", "communication"]);
@@ -32,7 +33,7 @@ test("PROPOSAL_STATES: one frozen table per subject, governing_laws REC-195's ow
   assert.equal(said.size, 7 * 3, "no two sentences are the same");
 });
 
-test("proposalLabel: {by, state, machine_work, says} for every subject and state; an unknown subject throws RangeError", () => {
+test("R38 proposalLabel: {by, state, machine_work, says} for every subject and state; an unknown subject throws RangeError", () => {
   for (const subject of Object.keys(PROPOSAL_STATES)) {
     for (const w of [...BLANKS, ...MACHINES, ...MEMBERS]) {
       const l = proposalLabel(w, subject);
@@ -45,16 +46,24 @@ test("proposalLabel: {by, state, machine_work, says} for every subject and state
   assert.throws(() => proposalLabel("a", "x".repeat(100)), { message: /'x{40}' is not a proposal subject; one of governing_laws, standard/ });
 });
 
-test("CONTENT_MINT_STATES and contentMintState: blank unstated, the plane's own mint, a machine credential, else a member", () => {
+test("R37 CONTENT_MINT_STATES and contentMintState: blank unstated, the plane's own mint, a machine credential, else a member", () => {
   assert.equal(CONTENT_MINTED_BY_PLANE, "plane");
   assert.deepEqual(Object.keys(CONTENT_MINT_STATES), ["member_marked", "plane_minted", "machine_marked", "unstated"]);
+  assert.ok(!Object.isFrozen(CONTENT_MINT_STATES) && !Object.isFrozen(LAW_PROPOSAL_STATES));
+  /* Never throws: a value that cannot be stringified is blank. */
+  for (const v of [{ toString() { throw new Error("x"); } }, Object.create(null)]) {
+    assert.equal(contentMintState(v), "unstated");
+    assert.equal(lawProposalState(v), "unstated");
+  }
+  assert.equal(contentMintState(Symbol("s")), "member_marked");
   for (const v of Object.values(CONTENT_MINT_STATES)) assert.ok(typeof v === "string" && v.length > 20);
   assert.equal(isMachineIdentity(CONTENT_MINTED_BY_PLANE), false);
   for (const w of BLANKS) assert.equal(contentMintState(w), "unstated");
   for (const w of ["plane", " Plane ", "PLANE"]) assert.equal(contentMintState(w), "plane_minted", w);
   for (const w of MACHINES) assert.equal(contentMintState(w), "machine_marked", w);
   for (const w of MEMBERS.filter((m) => m !== "plane")) assert.equal(contentMintState(w), "member_marked", w);
-  for (const w of [...BLANKS, ...MACHINES, ...MEMBERS]) assert.equal(isMachineMinted(w), contentMintState(w) === "machine_marked");
+  /* isMachineMinted does not move (K750). */
+  assert.ok(!("isMachineMinted" in RG));
 });
 
 const NO_BASIS_T = "This asks the record to stand behind something without saying what it rests on. Say what that is first — "

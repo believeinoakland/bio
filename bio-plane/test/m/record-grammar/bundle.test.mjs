@@ -11,7 +11,7 @@ import { fixtures, STUBS, sha256, NOW } from "./fixtures/bundles.mjs";
 const EXPECTED = JSON.parse(readFileSync(new URL("./fixtures/expected.json", import.meta.url), "utf8"));
 const run = (b, grammars = STUBS) => checkBundle(b, { grammars, ...(b.knownSchemas ? { knownSchemas: b.knownSchemas } : {}) });
 
-test("checkBundle: the structural arms give the catalogue's findings, identical in content, ids, severities and order", async () => {
+test("R40 checkBundle: the structural arms give the catalogue's findings, identical in content, ids, severities and order", async () => {
   const all = fixtures();
   assert.deepEqual(Object.keys(all).sort(), Object.keys(EXPECTED).sort());
   for (const [name, b] of Object.entries(all)) assert.deepEqual(await run(b), EXPECTED[name], name);
@@ -22,7 +22,7 @@ test("checkBundle: the structural arms give the catalogue's findings, identical 
     "C-16.1", "C-16.2", "C-16.3", "C-16.4", "C-16.5", "C-17.1"]) assert.ok(ids.has(id), id);
 });
 
-test("checkBundle: pass is false exactly when a finding is an error; the answer is {pass, findings}", async () => {
+test("R39 R40 checkBundle: pass is false exactly when a finding is an error; the answer is {pass, findings}", async () => {
   for (const [name, b] of Object.entries(fixtures())) {
     const r = await run(b);
     assert.deepEqual(Object.keys(r).sort(), ["findings", "pass"], name);
@@ -30,9 +30,10 @@ test("checkBundle: pass is false exactly when a finding is an error; the answer 
   }
 });
 
-test("R28 EXTENSION_ARMS: a frozen list of frozen {name, ids}, in run order, no id in two entries, no C-2.7 arm", () => {
+test("R28 EXTENSION_ARMS: a frozen list of frozen {name, ids}, in checkBundle's order, no id in two entries", () => {
   assert.ok(Object.isFrozen(EXTENSION_ARMS));
   assert.deepEqual(EXTENSION_ARMS.map((a) => [a.name, [...a.ids]]), [
+    ["checkInformationExtension", ["C-2.7"]],
     ["checkInfo2Contract", ["C-18.6", "C-18.7"]],
     ["checkSupersession", ["C-6.1"]],
     ["checkRecheckCoverage", ["C-15.1"]],
@@ -44,7 +45,6 @@ test("R28 EXTENSION_ARMS: a frozen list of frozen {name, ids}, in run order, no 
   }
   const ids = EXTENSION_ARMS.flatMap((a) => a.ids);
   assert.equal(new Set(ids).size, ids.length);
-  assert.ok(!ids.includes("C-2.7") && !EXTENSION_ARMS.some((a) => a.name === "checkInformationExtension"));
   assert.throws(() => { EXTENSION_ARMS.push({}); }, TypeError);
   assert.throws(() => { EXTENSION_ARMS[0].ids.push("C-1.1"); }, TypeError);
 });
@@ -52,16 +52,16 @@ test("R28 EXTENSION_ARMS: a frozen list of frozen {name, ids}, in run order, no 
 /* One bundle, each arm's grammar leaving its own marker, and `checkReferences` a finding of its own (C-6.1). */
 const placed = () => fixtures()["type arms in their places"];
 const mark = (module, ids, check = ids[0]) => ({ module, ids, arm: (ctx, f) => { f.push({ check, severity: "info", message: module }); } });
-const ARMS = () => [mark("info2", ["C-18.7", "C-18.6"]), mark("sup", ["C-6.1"]), mark("recheck", ["C-15.1"]), mark("inq", ["C-2.8"]),
+const ARMS = () => [mark("information", ["C-2.7"]), mark("info2", ["C-18.7", "C-18.6"]), mark("sup", ["C-6.1"]), mark("recheck", ["C-15.1"]), mark("inq", ["C-2.8"]),
   mark("proj", ["C-9.1", "C-2.9"])];
 
-test("R28 a grammar claiming an arm's whole id list runs in that arm's place, over the same context; unclaimed ones after", async () => {
+test("R28 R39 R40 a grammar claiming an arm's whole id list runs in that arm's place, over the same context; unclaimed ones after", async () => {
   const late = mark("later", ["C-500.1"]);
   const r = await checkBundle(placed(), { grammars: [late, ...ARMS().reverse()] });
-  assert.deepEqual(r.findings.map((f) => f.message), ["info2", "references[0].rel 'knows' is not in the closed vocabulary",
-    "sup", "recheck", "inq", "proj", "later"].map((m, i) => (i === 1 ? r.findings[1].message : m)));
-  assert.equal(r.findings[1].check, "C-6.1");
-  assert.match(r.findings[1].message, /closed vocabulary/);
+  assert.deepEqual(r.findings.map((f) => f.message), ["information", "info2", r.findings[2].message, "sup", "recheck", "inq",
+    "proj", "later"]);
+  assert.equal(r.findings[2].check, "C-6.1");
+  assert.match(r.findings[2].message, /closed vocabulary/);
   /* Every arm sees the parsed document and the files: the one context. */
   const seen = [];
   const spy = (module, ids) => ({ module, ids, arm: (ctx) => { seen.push([module, ctx.fm.id, ctx.files.has("bundle.md"), typeof ctx.body]); } });
@@ -69,7 +69,7 @@ test("R28 a grammar claiming an arm's whole id list runs in that arm's place, ov
   assert.deepEqual(seen, EXTENSION_ARMS.map((a) => [a.name, "INFO-2026-0001-a", true, "string"]));
 });
 
-test("R28 an arm no grammar claims runs nothing: no type grammar is built in", async () => {
+test("R28 R39 an arm no grammar claims runs nothing: no type grammar is built in", async () => {
   /* An inquiry concluded on nothing, a supersedes edge with no reason, no recheck trigger, a project ladder: each is a type
      arm's finding, and none is raised without its grammar. */
   const fm = fixtures()["clean inquiry"];
@@ -81,17 +81,18 @@ test("R28 an arm no grammar claims runs nothing: no type grammar is built in", a
   assert.deepEqual(r.findings.filter((f) => ["C-2.8", "C-6.1", "C-15.1", "C-2.9", "C-9.1", "C-18.6", "C-18.7", "C-2.7"].includes(f.check)), []);
   /* With the arms claimed, they are what runs. */
   const r2 = await checkBundle(b, { grammars: ARMS() });
-  assert.deepEqual(r2.findings.filter((f) => f.severity === "info").map((f) => f.message), ["info2", "sup", "recheck", "inq", "proj"]);
+  assert.deepEqual(r2.findings.filter((f) => f.severity === "info").map((f) => f.message), ["information", "info2", "sup", "recheck",
+    "inq", "proj"]);
 });
 
-test("R28 a malformed grammar list, a part claim, a two-arm claim or an id claimed twice throws before any arm runs", async () => {
+test("R28 R39 a malformed grammar list, a part claim, a two-arm claim or an id claimed twice throws before any arm runs", async () => {
   let ran = 0;
   const g = (module, ids) => ({ module, ids, arm: () => { ran++; } });
   const bad = [
     [{}, TypeError], ["x", TypeError], [[null], TypeError], [[{ ids: ["C-1.1"], arm() {} }], TypeError],
     [[{ module: " ", ids: ["C-1.1"], arm() {} }], TypeError], [[{ module: "m", ids: [], arm() {} }], TypeError],
     [[{ module: "m", ids: ["X-1"], arm() {} }], TypeError], [[{ module: "m", ids: ["C-1.1"] }], TypeError],
-    [[g("m", ["C-18.6"])], RangeError], [[g("m", ["C-2.9"])], RangeError], [[g("m", ["C-2.8", "C-6.1"])], RangeError],
+    [[g("m", ["C-18.6"])], RangeError], [[g("m", ["C-2.9"])], RangeError], [[g("m", ["C-2.8", "C-6.1"])], RangeError], [[g("m", ["C-2.7", "C-18.6", "C-18.7"])], RangeError],
     [[g("a", ["C-500.1"]), g("b", ["C-500.1"])], RangeError], [[g("a", ["C-2.8"]), g("b", ["C-2.8"])], RangeError],
   ];
   for (const [grammars, E] of bad) await assert.rejects(checkBundle(placed(), { grammars }), E, JSON.stringify(grammars));
@@ -100,7 +101,7 @@ test("R28 a malformed grammar list, a part claim, a two-arm claim or an id claim
   for (const grammars of [undefined, null]) assert.equal((await checkBundle(placed(), { grammars })).pass, false);
 });
 
-test("checkBundle: the injected sha256 and nowMs are what it reads; files may be strings or bytes", async () => {
+test("R39 checkBundle: the injected sha256, nowMs and package age are what it reads; files may be strings or bytes", async () => {
   const b = fixtures()["C-17.1 fast-forward"];
   const bytes = new Map([...b.files].map(([k, v]) => [k, new TextEncoder().encode(v)]));
   assert.deepEqual(await run({ ...b, files: bytes }), EXPECTED["C-17.1 fast-forward"]);
@@ -113,4 +114,35 @@ test("checkBundle: the injected sha256 and nowMs are what it reads; files may be
   assert.ok(!(await run(young)).findings.some((f) => f.check === "C-16.3"));
   assert.ok((await run({ ...young, nowMs: NOW + 15 * 86400000 })).findings.some((f) => f.check === "C-16.3"));
   assert.ok((await run({ ...young, maxPackageAgeDays: 1 })).findings.some((f) => f.check === "C-16.3"));
+});
+
+test("R39 the default knownSchemas are the fifteen stamps; a passed list replaces them; elidedPaths as a Set or a list", async () => {
+  const STAMPS = ["information@1", "information@2", "inquiry@1", "focus@1", "problem@1", "project@1", "action@1", "bias@1",
+    "standard@1", "determination@1", "consequence@1", "escalation@1", "aspiration@1", "goal@1", "action_plan@1"];
+  const base = fixtures()["clean information"];
+  const at = (schema, opts) => {
+    const type = schema.split("@")[0];
+    const text = base.files.get("bundle.md").replace("object_type: information", `object_type: ${type}`)
+      .replace("schema: information@1", `schema: ${schema}`).replace("id: INFO-", `id: ${prefix(type)}-`);
+    return checkBundle({ ...base, folderName: `${prefix(type)}-2026-0001-a`, files: new Map([["bundle.md", text]]) }, opts);
+  };
+  const prefix = (t) => ({ information: "INFO", inquiry: "INQ", focus: "FOCUS", problem: "PROB", project: "PROJ", action: "ACTN",
+    bias: "BIAS", standard: "STD", determination: "CONF", consequence: "CONS", escalation: "ESC", aspiration: "ASP", goal: "GOAL",
+    action_plan: "PLN" })[t];
+  const unknown = (r) => r.findings.some((f) => f.check === "C-2.5" && /not known to this check catalog/.test(f.message));
+  for (const s of STAMPS) assert.equal(unknown(await at(s)), false, s);
+  for (const s of ["information@3", "inquiry@2", "action_plan@2"]) assert.equal(unknown(await at(s)), true, s);
+  assert.equal(unknown(await at("information@1", { knownSchemas: ["information@2"] })), true);
+  assert.equal(unknown(await at("information@2", { knownSchemas: ["information@2"] })), false);
+  const e = fixtures()["C-12.2 elided snapshots count as present"];
+  assert.deepEqual(await run({ ...e, elidedPaths: new Set(e.elidedPaths) }), EXPECTED["C-12.2 elided snapshots count as present"]);
+  assert.ok((await run({ ...e, elidedPaths: undefined })).findings.some((f) => f.check === "C-12.2"));
+});
+
+test("R39 with no bundle.md, one C-13.1 error and no document arm; format hygiene and the queue still run", async () => {
+  const r = await checkBundle({ folderName: "INFO-2026-0001-a", files: new Map([["bad name.txt", "x"]]), sha256, nowMs: NOW },
+    { grammars: ARMS() });
+  assert.deepEqual(r.findings.map((f) => f.check), ["C-13.1", "C-14.2"]);
+  assert.equal(r.findings[0].message, "bundle.md is missing");
+  assert.equal(r.pass, false);
 });

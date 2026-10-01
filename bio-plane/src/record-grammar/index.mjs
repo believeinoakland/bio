@@ -15,6 +15,6 @@ export { b64ToBytes, createSha256, sha256HexSync } from './sha256.mjs';
 export { INQUIRY_TITLE_MAX, deriveInquiryTitle, inquiryQuestionOf } from './titles.mjs';
 export { HEADINGS, HEADINGS_WHEN, isCaseMemberBytes, vocabFor, STATES, sectionText } from './document.mjs';
 export { LAW_PROPOSAL_STATES, lawProposalState, PROPOSAL_STATES, proposalLabel, CONTENT_MINTED_BY_PLANE,
-  CONTENT_MINT_STATES, contentMintState, isMachineMinted } from './labels.mjs';
+  CONTENT_MINT_STATES, contentMintState } from './labels.mjs';
 export { SHARED_ACT_CHECKS } from './acts.mjs';
 export { EXTENSION_ARMS, checkBundle } from './bundle.mjs';

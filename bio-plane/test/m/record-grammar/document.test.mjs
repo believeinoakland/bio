@@ -1,4 +1,4 @@
-/* record-grammar at its interface: the document grammar moved at T19 (draft-T19): the heading sets, the state
+/* record-grammar at its interface: the document grammar moved at T19 (R30–R36): the heading sets, the state
    machines, the type-keyed vocabulary lookup, the case-member predicate, the section slicer and the inquiry title rule,
    each pinned whole as the catalogue held it. */
 import { test } from "node:test";
@@ -8,7 +8,7 @@ import { HEADINGS, HEADINGS_WHEN, STATES, vocabFor, isCaseMemberBytes, sectionTe
 
 const FOCUS_HEADINGS = ["## Statement", "## Why It Matters", "## Open Questions", "## Session Log", "## Review Notes"];
 
-test("HEADINGS: the literal heading set per type; problem is the same array as focus", () => {
+test("R32 HEADINGS: the literal heading set per type; problem is the same array as focus", () => {
   assert.deepEqual({ ...HEADINGS }, {
     information: ["## Summary", "## Provenance Notes", "## Session Log", "## Review Notes"],
     inquiry: ["## Question", "## What It Rests On", "## Conclusion", "## What Would Falsify This", "## Session Log", "## Review Notes"],
@@ -18,11 +18,13 @@ test("HEADINGS: the literal heading set per type; problem is the same array as f
     bias: ["## Statements", "## Adoption", "## What This Does Not Enforce", "## Session Log", "## Review Notes"],
     problem: FOCUS_HEADINGS });
   assert.ok(HEADINGS.problem === HEADINGS.focus);
+  assert.ok(!Object.isFrozen(HEADINGS));
 });
 
-test("HEADINGS_WHEN: the inquiry's exclusion heading, owed by a case member; none for the legacy spellings", () => {
+test("R33 HEADINGS_WHEN: the inquiry's exclusion heading, owed by a case member; none for the legacy spellings", () => {
   assert.deepEqual({ ...HEADINGS_WHEN }, { inquiry: [{ heading: "## What This Excludes", whenCaseMember: true }], problem: [], focus: [] });
   assert.ok(HEADINGS_WHEN.problem === HEADINGS_WHEN.focus);
+  assert.ok(!Object.isFrozen(HEADINGS_WHEN));
 });
 
 const M = (legal, edges, legacy) => (legacy ? { legal, legacy, edges } : { legal, edges });
@@ -30,7 +32,7 @@ const FOCUS = M(["surfaced", "elevated", "deferred", "dismissed"], { surfaced: [
   deferred: ["surfaced", "elevated", "dismissed"], dismissed: ["surfaced", "elevated", "deferred"], elevated: [] });
 const ONE = M(["recorded"], { recorded: [] });
 
-test("STATES: every type's legal states and edges, inquiry's legacy `published`, and problem the same machine as focus", () => {
+test("R35 STATES: every type's legal states and edges, inquiry's legacy `published`, and problem the same machine as focus", () => {
   assert.deepEqual({ ...STATES }, {
     information: M(["collected", "verified", "retired"], { collected: ["verified"], verified: ["retired"], retired: [] }),
     inquiry: M(["open", "deferred", "dismissed", "surfaced", "concluded", "divided"], {
@@ -52,6 +54,7 @@ test("STATES: every type's legal states and edges, inquiry's legacy `published`,
     action_plan: M(["open", "closed"], { open: ["closed"], closed: [] }),
     problem: FOCUS });
   assert.ok(STATES.problem === STATES.focus);
+  assert.ok(!Object.isFrozen(STATES));
   /* Every canonical type has a machine, every edge lands on a state its machine reads, and nothing enters a legacy state. */
   for (const t of new Set(Object.values(OBJECT_TYPES))) assert.ok(STATES[t], t);
   for (const [t, m] of Object.entries(STATES)) {
@@ -62,7 +65,7 @@ test("STATES: every type's legal states and edges, inquiry's legacy `published`,
   assert.equal(STATES.inquiry.legal[0], "open");
 });
 
-test("vocabFor: the declared spelling first, then the normalized type, else undefined", () => {
+test("R34 vocabFor: the declared spelling first, then the normalized type, else undefined", () => {
   assert.ok(vocabFor(STATES, "problem") === STATES.focus);
   assert.ok(vocabFor(HEADINGS, "focus") === HEADINGS.focus);
   assert.ok(vocabFor(STATES, "inquiry") === STATES.inquiry);
@@ -70,29 +73,36 @@ test("vocabFor: the declared spelling first, then the normalized type, else unde
   assert.equal(vocabFor(t, "problem"), 1);
   assert.equal(vocabFor(t, "focus"), 1);
   assert.equal(vocabFor(t, "x"), 0);
-  for (const odd of ["memo", undefined, null, "constructor"]) assert.equal(vocabFor({ inquiry: 1 }, odd), ({ inquiry: 1 })[normalizeType(odd)]);
+  for (const odd of ["memo", undefined, null]) assert.equal(vocabFor({ inquiry: 1 }, odd), undefined);
+  /* An inherited key is `table[t]` too, and only a missing table throws. */
+  assert.ok(vocabFor({}, "constructor") === Object);
+  assert.ok(vocabFor(STATES, "toString") === Object.prototype.toString);
+  for (const t of [null, undefined]) assert.throws(() => vocabFor(t, "inquiry"), TypeError);
 });
 
-test("isCaseMemberBytes: a frozen array of at least two axis objects; fails closed on any other shape", () => {
+test("R33 isCaseMemberBytes: a frozen array of at least two axis objects; fails closed on any other shape", () => {
   const ax = (a) => ({ axis: a });
   assert.equal(isCaseMemberBytes({ published_strength: [ax("capture"), ax("connection")] }), true);
   assert.equal(isCaseMemberBytes({ published_strength: [ax("capture"), ax("connection"), ax("testimony")] }), true);
   assert.equal(isCaseMemberBytes({ published_strength: [ax("x"), ax("y")] }), true);
-  for (const fm of [undefined, null, {}, { published_strength: [] }, { published_strength: [ax("capture")] },
+  for (const fm of [undefined, null, {}, { published_strength: [] }, { published_strength: [null, ax("a")] }, { published_strength: [ax("capture")] },
     { published_strength: "two" }, { published_strength: [ax("a"), null] }, { published_strength: [ax("a"), { axis: 1 }] },
     { published_strength: [ax("a"), "b"] }]) assert.equal(isCaseMemberBytes(fm), false, JSON.stringify(fm));
 });
 
-test("sectionText: from the heading to the next `## ` line or the end; null when the heading is absent", () => {
+test("R36 sectionText: from the heading to the next `## ` line or the end; null when the heading is absent", () => {
   const body = "## A\na1\n### sub\n## B\nb1\n## C";
   assert.equal(sectionText(body, "## A"), "## A\na1\n### sub");
   assert.equal(sectionText(body, "## B"), "## B\nb1");
   assert.equal(sectionText(body, "## C"), "## C");
   assert.equal(sectionText(body, "## D"), null);
   assert.equal(sectionText("", "## A"), null);
+  assert.equal(sectionText("x ## A\n## B", "## A"), "## A");
+  assert.equal(sectionText("## A\n## A2\n## B", "## A"), "## A");
+  for (const b of [undefined, null, 1, {}]) assert.throws(() => sectionText(b, "## A"), TypeError);
 });
 
-test("deriveInquiryTitle: the first non-empty line, whitespace collapsed, cut at a word boundary before 120 with an ellipsis", () => {
+test("R30 deriveInquiryTitle: the first non-empty line, whitespace collapsed, cut at a word boundary before 120 with an ellipsis", () => {
   assert.equal(INQUIRY_TITLE_MAX, 120);
   assert.equal(deriveInquiryTitle("  Why   is it\tso?  \nmore"), "Why is it so?");
   assert.equal(deriveInquiryTitle("\n \n second"), "second");
@@ -110,10 +120,26 @@ test("deriveInquiryTitle: the first non-empty line, whitespace collapsed, cut at
   }
 });
 
-test("inquiryQuestionOf: the `## Question` section's text, or '' when the document has none", () => {
+test("R31 inquiryQuestionOf: the `## Question` section's text, or '' when the document has none", () => {
   assert.equal(inquiryQuestionOf("## Question\nWhy?\n## What It Rests On\nx"), "Why?");
   assert.equal(inquiryQuestionOf("intro\n## Question  \nline 1\nline 2\n"), "line 1\nline 2\n");
   assert.equal(inquiryQuestionOf("## Question\nonly"), "only");
   for (const v of [undefined, null, "", "## Statement\nx", "## Questions\nx"]) assert.equal(inquiryQuestionOf(v), "");
   assert.equal(deriveInquiryTitle(inquiryQuestionOf("## Question\n  What  happened?\nDetail.\n## B")), "What happened?");
+});
+
+test("R30 deriveInquiryTitle is closure-free: its source text, evaluated alone, gives the same answers", () => {
+  const alone = (0, eval)(`(${deriveInquiryTitle.toString()})`);
+  const inputs = [undefined, null, "", " \n ", "Why?", "  a \t b \n c", "x".repeat(130), ("word ").repeat(40), 7, true,
+    { toString: () => "  from an object  " }, "\n\nthird line first"];
+  for (const v of inputs) assert.equal(alone(v), deriveInquiryTitle(v), String(v));
+});
+
+test("R30 R31 never throw, whatever they are handed that String() accepts", () => {
+  for (const v of [undefined, null, 0, NaN, [], [1, 2], {}, Symbol.iterator.description, "## Question\n\n## B"]) {
+    assert.doesNotThrow(() => deriveInquiryTitle(v));
+    assert.doesNotThrow(() => inquiryQuestionOf(v));
+  }
+  assert.equal(inquiryQuestionOf("## Question\t \nq"), "q");
+  assert.equal(inquiryQuestionOf("## Question x\nq"), "");
 });
