@@ -1468,8 +1468,8 @@ async function checkBundle(input, opts = {}) {
     // files UNION elided via hasFile_; byte checks (hashing, parsing,
     // history audits) stay files-only and skip elided content exactly as
     // they skip absent content, so nothing is ever verified against bytes
-    // the caller does not hold. The gate and cli pass nothing here and are
-    // byte-complete as before.
+    // the caller does not hold. Inquiry's `checkInquiryEntry` passes nothing
+    // here and is byte-complete as before.
     elided: input.elidedPaths instanceof Set ? input.elidedPaths : new Set(Array.isArray(input.elidedPaths) ? input.elidedPaths : []),
     sha256: input.sha256,
     nowMs: input.nowMs,
@@ -1510,10 +1510,11 @@ async function checkBundle(input, opts = {}) {
        with which frozen pair) is not in this bundle. Shape:
          { <bundleId>: { latest: n, editions: { "1": {edition, completeness,
              capture: {state, grade}, connection: {state, grade}} } } }
-       Absent means the caller cannot see the published record (the cli, the
-       migrate tool) and C-21.1/C-21.2 cannot fire. Every path a real caller
-       has — the ratification gate and the store's own write path — injects it,
-       which is what keeps the absence from being a way through. */
+       Absent means the caller holds no published record (`runGate` or
+       inquiry's `checkInquiryEntry` handed none) and C-21.1/C-21.2 cannot fire.
+       Ratification's gate injects it, and record-core's audit through
+       publication's registered context (record-core R69), which is what keeps
+       the absence from being a way through. */
     publishedRegistry: input.publishedRegistry || null,
     /* REC-44 / DEC-44: the CASE-altitude half of the same fact, injected on the
        same terms and separated for the reason DEC-44 gives — a case is a
@@ -1522,11 +1523,11 @@ async function checkBundle(input, opts = {}) {
        Shape:
          { <caseId>: { latest: n, editions: { "1": {edition, scope,
              completeness, ratified_at} } } }
-       Absent means the caller cannot see the published record (the cli, the
-       migrate tool) and C-21.1 cannot fire; every path a real caller has
-       injects it. Kept SEPARATE from publishedRegistry deliberately: one
-       registry serving both altitudes is how the collapse this item corrects
-       happened in the first place. */
+       Absent means the caller holds no published case record (`runGate`
+       handed none, record-core's audit, inquiry's `checkInquiryEntry`) and
+       C-21.1 cannot fire; ratification's gate injects it. Kept SEPARATE from
+       publishedRegistry deliberately: one registry serving both altitudes is
+       how the collapse this item corrects happened in the first place. */
     publishedCaseRegistry: input.publishedCaseRegistry || null,
     /* REC-18: the second fact the catalog cannot get from the bundle, and it is
        injected on exactly the same terms and for the same reason. What
@@ -1537,8 +1538,9 @@ async function checkBundle(input, opts = {}) {
          { subject_entity, subject_label, earned: {
              connection: { <target>: {grade, why, ...} },
              capture:    { <target>: {grade, why, ceiling?} } } }
-       Absent means the caller cannot see the record (the cli, the migrate tool).
-       Every path a real caller has injects it. */
+       Absent means the caller cannot see the record (`runGate` or inquiry's
+       `checkInquiryEntry` handed none). Ratification's gate injects it, and
+       record-core's audit through inquiry's registered context (record-core R69). */
     earnedRegistry: input.earnedRegistry || null,
     sha512: input.sha512 || null,
     fm: null,
@@ -18001,15 +18003,17 @@ function walkSlide(xml) {
   const hlinks = [];
   const ridUsage = /* @__PURE__ */ new Map();
   let shape = -1;
+  const open = [];
   let cur = null;
   let inText = false;
-  const noteRid = (attrs) => {
+  const noteRid = (attrs, at23 = shape >= 0 ? shape : null) => {
     for (const key of ["id", "embed", "link"]) {
       const v = attrs[key];
       if (typeof v === "string" && /^rId/.test(v) && !ridUsage.has(v))
-        ridUsage.set(v, shape >= 0 ? shape : null);
+        ridUsage.set(v, at23);
     }
   };
+  const skipped = mceSkipper();
   TOKEN_RE2.lastIndex = 0;
   let m, prev = 0;
   while ((m = TOKEN_RE2.exec(xml)) !== null) {
@@ -18019,6 +18023,10 @@ function walkSlide(xml) {
     const name = localOf2(m[1]);
     const selfClosed = m[3] === "/";
     const closing = m[0][1] === "/";
+    if (skipped(name, closing, selfClosed)) {
+      if (!closing && m[2] && m[2].includes("=")) noteRid(attrsOf3(m[2]), open.length ? open[open.length - 1] : null);
+      continue;
+    }
     if (closing) {
       if (name === "t") inText = false;
       else if (name === "p") {
@@ -18026,10 +18034,13 @@ function walkSlide(xml) {
           paragraphs.push(cur);
           cur = null;
         }
-      }
+      } else if (SHAPE_TAGS.has(name)) open.pop();
       continue;
     }
-    if (SHAPE_TAGS.has(name)) shape++;
+    if (SHAPE_TAGS.has(name)) {
+      shape++;
+      if (!selfClosed) open.push(shape);
+    }
     const attrs = m[2] && m[2].includes("=") ? attrsOf3(m[2]) : {};
     switch (name) {
       case "p":
@@ -131498,12 +131509,12 @@ bindPublishedPlane({
   STORE_SILENT_DETAIL,
   PUBLISHED_STORE
 });
-var plane_default = { fetch: makeFetch({
+var index_default = { fetch: makeFetch({
   publicOp,
   gatedOp,
   publicInstanceGroup: (env, storeName, projection) => publicInstanceGroup(env, storeName, projection, doAnswer)
 }) };
 export {
   Store,
-  plane_default as default
+  index_default as default
 };
