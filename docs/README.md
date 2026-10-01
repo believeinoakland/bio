@@ -1,11 +1,11 @@
 # Documents
 
-Two files sit at this level because they are entry points fetched by path
-at the start of every working session, and moving them would break a
-protocol that works:
+One file sits at this level because it was an entry point fetched by path
+at the start of every working session. How a session starts is now the
+repository's `CLAUDE.md` and the process repository
+(`believeinoakland/civicos-process`); the old `SESSION-KICKOFF.md` is in
+`archive/` (T19 BOB-5, K653).
 
-- **SESSION-KICKOFF.md** — how a session starts, what permission it needs
-  for what, and what the next task is. Read this first.
 - **BIO_DATAPLANE_STATE.md** — the current state of the build. What exists,
   what was proven, what is next.
 

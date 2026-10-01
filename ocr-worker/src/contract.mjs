@@ -7,9 +7,9 @@
  * all. Putting the constants and the chunk rule here means the SUITE DRIVES THE
  * SAME EXPRESSION THE WORKER RUNS, rather than a copy of it written out again in
  * a test — which is the shape that eventually disagrees, measured six times in
- * this estate (`coverage.mjs`'s own note on the fleet `control` flag, where the
- * arm written to prove a fix came back GREEN because nothing read the flag any
- * more).
+ * this estate (one of them recorded by the fleet-coverage instrument, since
+ * retired, on the fleet `control` flag: the arm written to prove a fix came back
+ * GREEN because nothing read the flag any more).
  */
 
 /* ===================================================================== *
@@ -34,7 +34,8 @@ export const CAP = "C";
 /** Where that letter's measurement lives. A free string a HUMAN follows — the
  *  machine-followable half is CPDF-13's calibration reference, which the PLANE
  *  joins on `engine`+`version` and this member deliberately does not hold (a
- *  measurement must not acquire a second home; `index.mjs` says so at the join). */
+ *  measurement must not acquire a second home; extraction's
+ *  `bio-plane/src/extraction/pipeline.mjs` says so at the join). */
 export const MEASURED_BY =
   "MEASUREMENTS.md 2026-09-10 (CPDF-15) — tesseract-wasm@0.11.0 SIMD + tessdata_fast eng on the "
   + "deployed Workers runtime: 99.89% characters and 89/90 digits with ZERO minted on the one "
