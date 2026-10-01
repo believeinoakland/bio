@@ -52,3 +52,19 @@ Found in other modules (my record's Completion has the detail):
 - **affordances, instance-setup** (L11) and **escalation** (`test/m/escalation/stages.test.mjs`:8): re-point to action-grammar before N447 drops actions' re-exports.
 - **legacy-checks**: three stale comments in `bio-checks.mjs` (:26 `ACTION_KINDS`, :45 `lawProposalLabel`, :128 `CONTENT_HASH_RE` naming `correspondenceFindings`). §12.2 lets me add no lines there.
 - **bundler artifact**: `bio-plane/dist/bio-plane.bundled.mjs` is stale against actions and the catalogue. It is regenerated at the layer close (§14).
+
+## J3 · COMPLETE
+
+ACTIONS #6 complete on `job/T19/actions`, ready to merge early for action-clocks and action-plans (rule 4). Done:
+- The split's deletion, per K835: actions reads action-grammar, and `checks.mjs` is a re-export only.
+- The catalogue's action share deleted: legacy-checks −407, 0 added. `ACTION_KINDS`, `lawProposalLabel`, the K766 set and `CONTENT_HASH_RE` are held; each still has a held caller or reader, named in the record.
+- N428 and N427, and the rule 1 re-points.
+
+Rs met, with their tests: R43 (t11), R45 (t19 ×2, t18), R51 (t19, read, t17, t18).
+
+Checks:
+- Module tests 57/0.
+- format, architecture, coverage (40/40) and ownership: 0 failures each.
+- The five neighbouring modules with failures (legacy-checks, affordances, instance-setup, monitoring, control-plane) fail exactly as on `tranche/T19` before my change.
+
+Reports are in J2.
