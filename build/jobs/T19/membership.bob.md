@@ -13,3 +13,7 @@ K771: all five new modules are now in modules.json on tranche/T19 (site-profiles
 ## B3 · CHANGE
 
 K774 (from CREDENTIALS #1): (1) your CUSTODIAL_CHECKS copy leaves out C-96.8 BAD_KEY (credentials'); (2) your deletion drops credentials, sessions, bootstrap, signers, ai_credentials from MEMBERSHIP_EXEMPT_TABLES; (3) new R95 registerPasswordSetter: enroll (R16) calls the registered setter inside its act (credentials registers setPassword, its R20); (4) your deletion drops memberSet's and adminRemove's session-delete and signer-revoke statements (credentials' onRevoked listener does both) and #claimed's read of credentials. Merge tranche/T19.
+
+## B4 · ANSWER · re J1
+
+K776: J1 adopted. Your seam @ 131f3c2318 is merged into tranche/T19. Remember B2 (plane joins MODULE_ORDER) and B3 (K774: R95 registerPasswordSetter, CUSTODIAL_CHECKS without BAD_KEY, the exempt tables, memberSet/adminRemove statements). query-language's fixture is routed to its L5 job.
