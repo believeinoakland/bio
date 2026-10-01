@@ -47,3 +47,29 @@ For other modules, and for requirement wording, found in this job:
 7. **Generated artifact.** `bio-plane/dist/bio-plane.bundled.mjs` (not_product) is stale: its inputs include the catalogue and record-grammar. BOB regenerates at the close.
 8. **Pre-existing red, not mine.** The three `MODULE_ORDER` tests (`membership/module-order`, `membership/t9-notice-sight-bounds`:188, `promotion/registry`:57) fail on `tranche/T19` without my changes (rule 8). The 97 old suites that read the catalogue's source fail 50/97 both with and without my changes.
 9. **Housekeeping.** Running those old control suites left an untracked `/.retirement-control/` (pristine copies) at the repository root. My permission check refused `rm -rf` on it. It is not committed and needs no action beyond deleting it.
+
+## J4 · COMPLETE
+
+**Entries applied** (`build/plan/current.md` L1 record-grammar, draft-T19's entry, B1–B4):
+- **Moved whole, re-exported by the catalogue (`===`, R26, R41):**
+  - the title rule (`titles.mjs`; R30, R31);
+  - the document vocabulary: `HEADINGS`, `HEADINGS_WHEN`, `isCaseMemberBytes`, `vocabFor`, `STATES`, `sectionText` (`document.mjs`; R32–R36);
+  - the machine-work labels: `LAW_PROPOSAL_STATES`, `lawProposalState`, `PROPOSAL_STATES`, `proposalLabel`, `CONTENT_MINTED_BY_PLANE`, `CONTENT_MINT_STATES`, `contentMintState` (`labels.mjs`; R37, R38).
+
+  `isMachineMinted` and `lawProposalLabel` stay in the catalogue (K750; actions').
+- **N430 / R29:** `SHARED_ACT_CHECKS` (`acts.mjs`) holds C-33.40 `NO_BASIS` and C-33.41 `NO_CITATION`, numbers and translations unchanged. `ACT_SHAPE_CHECKS` spreads them in at their old place, so every reader of the family is unchanged. C-33.41's `where` is re-pointed to entities' `actShapeRefusal` and progressions' `refusal`. The row change is **awaiting stamp** (promotion, L2).
+- **Rule 2 / R28, R39, R40:** `checkBundle` and its structural arms are copied whole into `bundle.mjs`, with `EXTENSION_ARMS` holding six slots in run order (K751, K752): C-2.7, C-18.6/.7, C-6.1 `checkSupersession`, C-15.1 `checkRecheckCoverage`, C-2.8, C-2.9/C-9.1. No type arm is built in. The R28 order matches the code's run order. The catalogue's `checkBundle`, its arms and its `EXTENSION_ARMS` re-export are left for legacy-checks' wrapper (hand-off, B4).
+- **Fixed in my module on the way:** `contentMintState` and `lawProposalState` threw on a value whose `toString` throws. They now fold it to blank, as R37 and R38 ("never throws") require.
+
+**Deferred:** none of my own. For other modules and for wording (legacy-checks' R26 pin, the wrapper's `LEGACY_GRAMMARS`, R24 against R39 on the clock, R31's whitespace, the stale plane bundle): J3.
+
+**One deviation, stated:** I read every record-grammar file, test and requirement whole, the layer contract, the extraction map and the plan entries. Of the 8,811-line catalogue, I read whole every section the move touches: lines 1–1790, 1784–2188, 3520–3955, and the C-33.40/.41 rows with their comments. The other ~4,800 lines of row tables I located by search rather than reading, to stay inside half my window. I moved nothing from them.
+
+**Tests and checks** (`job/T19/record-grammar` @ the commit after this entry's parent):
+- `node --test bio-plane/test/m/record-grammar/`: 57 pass, 0 fail. R40's fixtures (54 bundles, every structural id) are compared with the catalogue's `checkBundle` as it was before the move, in content, ids, severities and order.
+- `test/m/` of the modules that use what changed (legacy-checks, record-core, capture, promotion, intent, inquiry, entities, progressions, text-chain, content, actions, affordances, instance-setup): 1,109 tests, 1,105 pass, 2 fail. One is legacy-checks' R26 pin (J3 §1). The other is promotion `registry.test.mjs`:57, pre-existing (rule 8).
+- Whole `test/m` earlier in this job: 4,228 tests, 4,204 pass, 4 fail. The four are legacy-checks' R26 pin and the three pre-existing `MODULE_ORDER` tests.
+- Layer tests: none (manifest).
+- `node checks/format.mjs`: 0 failures. `architecture.mjs bio record-grammar`: 0 failures. `coverage.mjs bio record-grammar`: 41 of 41 live ids, 0 failures. `ownership.mjs bio record-grammar tranche/T19`: 0 failures. Legacy-checks: 8 lines added (the import and re-export lines, and the two-line comment plus `...SHARED_ACT_CHECKS,`), 716 removed.
+
+Size (session_01JcZMYUrkQxoEUnoX3a9Ssz): test runs 17, module lines 2258
