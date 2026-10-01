@@ -43,3 +43,27 @@ One more red from R55, which you may want to accept by name with legacy-checks':
 `gate.mjs` keeps the catalogue's `checkBundle` wrapper. Its module-level `runGate`, with no grammars passed, must still judge with the legacy slots (R27). Record-core keeps its own oracle import "with the catalogue (rule 1)" in the same way. Promotion's instance gate passes `record.grammars()`, which now include the legacy registration.
 
 Waiting for membership's deletion, then CUSTODIAL/PROJECT_VISIBILITY re-points and the stamp.
+
+## J4 · REPORT
+
+K785/B8 applied @ 0fab60b7a5.
+- `gate.mjs` takes record-grammar's `checkBundle`.
+- Every test oracle on the catalogue is gone:
+  - gate, release and history now use record-grammar's `checkBundle`;
+  - moved and grammar assert at the interface only;
+  - write-path R18 reads promotion's own tables, plus the five rows later modules enforce at this write, stated by code (SELF_BASIS, BASIS_CYCLE, VERSION_FROZEN, VERSION_LEG_UNRESOLVED, SURFACED_BY_REWRITTEN; P4 forbids importing their tables);
+  - promote.test's row walk reads membership's exports.
+- Two catalogue imports are left, for membership's deletion: `CUSTODIAL_CHECKS` (`index.mjs`; EXISTS, C-96.4) and `PROJECT_VISIBILITY_CHECKS` (`fixtures.mjs`). No caller outside promotion uses the module-level `runGate`; ratification goes through `promotion.runGate`, which passes `record.grammars()`.
+
+**Turned red by the switch, ratification's (L8):**
+- `converted-c.test.mjs`:226 (casesign §4)
+- `converted-d.test.mjs`:479 (multifinding)
+
+Both expect C-2.8's case-key arm at op=ratify. Their test world builds a record that never calls record-core's `registerLegacyGrammars(record)`, so no legacy slot is filled. In product the Store's constructor calls it (`store.mjs`:167), so `op=ratify` still runs C-2.8. Fix: the world calls `registerLegacyGrammars`, as `store.mjs` does. That belongs in ratification's L8 START, with release.test's line.
+
+**Red on the tranche base already, not mine:**
+- capture `grammar.test.mjs`:77 and :115 (record-core's R67 rework: no GRAMMAR_DECLARED on a shared slot, and the audit has no C-2.7 without a registration)
+- control-plane `families.test.mjs`:47
+- record-core :2048 (re-opened)
+- query-language ×5
+- membership's module-order (`plane`)
