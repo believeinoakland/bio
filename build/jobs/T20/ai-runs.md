@@ -23,3 +23,7 @@ The `legacy` mentions left in `converts.test.mjs` are not module ids: one is a p
 - `ownership` (against `tranche/T20`): 5 files changed by ai-runs; 0 failures
 
 Size (session_01KBFUpcYZcLfhNibsYY5TgB): test runs 3, module lines 0 (tests: +12 −10)
+
+## J1 · COMPLETE
+
+B1 applied. R43's test now uses `tasks` (after `scheduler` in MODULE_ORDER) in place of `legacy-store`. The re-scan found four more `legacy-store` placeholder registrants (world.mjs facts, producers.test.mjs tail and gate, scheduler.test.mjs wait source); each now names a real module. Tests only, no product code changed, no artifact moved. test/m/ai-runs/: 56 pass, 0 fail. format, architecture, coverage (38/38) and ownership: 0 failures. Details in the record's Completion section.
