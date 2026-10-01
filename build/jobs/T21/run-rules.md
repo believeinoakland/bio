@@ -19,3 +19,7 @@
 **Tests and checks.** `node --test test/m/run-rules/`: tests 16, pass 16, fail 0. `format`: 86 modules, 84 requirements files; 0 failures. `architecture run-rules`: 10 product files, 15 relative imports; 0 failures. `coverage run-rules`: 15 of 15 live requirement ids named by a test; 0 failures. `ownership run-rules tranche/T21`: 4 files changed; 0 failures.
 
 Size (session_019rgbfwYubuJMAvZL9Yzmt9): test runs 1, module lines 1,701
+
+## J1 · REPORT
+
+Generated artifacts staled by my comment-only change (bundle inputs): agent-worker/dist/agent-worker.bundled.mjs (+ .bundle.json) and bio-plane/dist/bio-plane.bundled.mjs (+ .bundle.json); not regenerated. Also found: civicos-ui/test/run.mjs:88 still runs ../check-refusal-codes.mjs, deleted in T20 (legacy-ui/legacy-tests).
