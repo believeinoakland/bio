@@ -16,6 +16,9 @@
  *   actions              `actionRead` (its R29) and `noSuchAction` (its R43).
  *   conformance          `determinationRead` (its R9): the project of the determination an action rests on (R3, R5;
  *                        K702). A host on which it cannot be created answers every project null.
+ *   localFacts           `factStatus` (local-facts R2): each holiday year a business count reads, its status and the
+ *                        value that governs here (R10). A host on which it cannot be created reads every year as
+ *                        unreadable, and a business count is then undetermined.
  *   now                  the instance clock, milliseconds (default: `env.BIO_NOW_MS`, else the wall clock).
  *   env                  the instance bindings.
  *
@@ -32,6 +35,7 @@ import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
 import { normalizeType } from "../record-grammar/types.mjs";
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { lawProposalLabel } from "../action-grammar/index.mjs";
+import { localFactsOf, factPath } from "../local-facts/index.mjs";
 import { ACTION_CLOCK_CHECKS } from "./checks.mjs";
 import { ACTION_CLOCKS_TABLES, migrateActionClocks } from "./schema.mjs";
 
@@ -49,6 +53,8 @@ export const REMINDERS_DUE_MAX = 500;
 /** R4: the most standing reminders one action holds; and the most reminders `remindersFor` answers. */
 export const REMINDERS_PER_ACTION_MAX = 50;
 export const REMINDERS_READ_MAX = 500;
+/** R11: the most actions `calendarFactsRead` reads. */
+export const CALENDAR_FACTS_ACTIONS_MAX = 500;
 
 /** R3, R5: the lifecycle states in which an action's deadlines no longer call for anything. */
 export const CLOSED_ACTION_STATES = Object.freeze(["resolved", "abandoned"]);
@@ -93,11 +99,12 @@ export function reminderRefused(arm, detail, extra = null) {
 export class ActionClocks {
   #deps;
 
-  constructor({ storage, record, membership, actions = null, conformance = null, host = null, now = null, env = null } = {}) {
+  constructor({ storage, record, membership, actions = null, conformance = null, localFacts = null, host = null, now = null,
+                env = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
-    this.#deps = { host, actions, conformance: conformance ?? undefined };
+    this.#deps = { host, actions, conformance: conformance ?? undefined, localFacts: localFacts ?? undefined };
     this.env = env && typeof env === "object" ? env : {};
     this.now = typeof now === "function" ? now : null;
   }
@@ -110,6 +117,15 @@ export class ActionClocks {
       try { this.#deps.conformance = conformanceOf(this.#deps.host); } catch { this.#deps.conformance = false; }
     }
     return this.#deps.conformance || null;
+  }
+
+  /* R10: local-facts' `factStatus`, reached on the same host unless a test passes its own; null where it cannot be
+     created, and every holiday year then reads as unreadable. */
+  get localFacts() {
+    if (this.#deps.localFacts === undefined || this.#deps.localFacts === null) {
+      try { this.#deps.localFacts = localFactsOf(this.#deps.host); } catch { this.#deps.localFacts = false; }
+    }
+    return this.#deps.localFacts || null;
   }
 
   migrate() { migrateActionClocks(this.sql); }
@@ -294,7 +310,7 @@ export class ActionClocks {
     if (!d) return { ok: false, reason: "NO_SUCH_RULE", target, rule: rule || null,
       detail: rule ? `no active profile states a deadline '${String(rule).slice(0, 60)}' for an action of kind '${fm.action_kind}'`
                    : `no rule was named: name the profile deadline's rule (rule=<rule>) for an action of kind '${fm.action_kind}'` };
-    const computed = computeDeadline(d, fm, view);
+    const computed = computeDeadline(d, fm, view, { factOf: this.#factOf(viewer) });
     const basis = `${d.citation}${d.basis ? ` (profile basis: ${d.basis}${d.profile ? `, ${d.profile}` : ""})` : ""}`;
     const entry = { text: d.rule, description: `${d.days} ${d.count} day${d.days === 1 ? "" : "s"} from ${d.starts}`,
                     date: computed.date, basis, status: "pending" };
@@ -306,9 +322,65 @@ export class ActionClocks {
     return { ok: true, target, weight: "single", evidence: false,
              proposal: { ...proposalLabelFor(who), rule, entry, at,
                          ...(computed.start ? { start: computed.start, counted_from: `the day after ${computed.start}` } : {}),
+                         ...(computed.calendar ? { calendar: computed.calendar } : {}),
                          ...(computed.date ? {} : { undetermined: computed.why }) },
              says: "this clock entry is proposed and is not on the action's clock: a member states a clock entry by a "
                  + "revision of the action." };
+  }
+
+  /* R10: one holiday entry's confirmation on this instance, read through local-facts' `factStatus` (its R2) at the
+     entry's path (its R6), as `computeDeadline` takes it. A read that fails, or that local-facts cannot answer, is
+     `absent`, so the count is undetermined rather than counted on a calendar whose state is unknown. */
+  #factOf(viewer) {
+    return (h) => {
+      const lf = this.localFacts;
+      let path = null;
+      try { path = factPath(holidayFact(h)); } catch { path = null; }
+      if (!lf || typeof lf.factStatus !== "function" || typeof path !== "string")
+        return { path, status: "absent", why: "local facts cannot be read on this instance" };
+      let r = null;
+      try { r = lf.factStatus({ path, viewer }); } catch { r = null; }
+      return factAnswer(path, r);
+    };
+  }
+
+  /** R11 (for `queue-producers` R21, through `local-facts` R4): the `local-facts` paths a live deadline reads, once each,
+   *  with the actions that read them. For every visible action not `resolved` or `abandoned` whose kind has a profile
+   *  deadline counted in business days: the holiday entries that apply to its offices (R10) for each year from the UTC
+   *  year of the instance clock to the year of its latest pending clock entry, and at least the next year; and its
+   *  offices' `hours`. Only facts the active profiles hold are paths (a year they do not list has no fact to confirm,
+   *  and a count reaching it is undetermined, jurisdictions R33). At most 500 actions read, `truncated` stated. */
+  calendarFactsRead({ viewer = null, now = null } = {}) {
+    const today = this.#today(now);
+    const view = this.#view();
+    const business = new Set((view && Array.isArray(view.deadlines) ? view.deadlines : [])
+      .filter((d) => d && d.count === "business" && typeof d.applies_to === "string").map((d) => d.applies_to));
+    const gate = viewerPredicate(viewer);
+    const closed = CLOSED_ACTION_STATES.map(() => "?").join(",");
+    const rows = business.size ? this.#rows(`SELECT b.bundle_id FROM bundles b
+      WHERE b.object_type='action' AND b.current_state NOT IN (${closed}) AND (${gate.sql}) ORDER BY b.bundle_id LIMIT ?`,
+      ...CLOSED_ACTION_STATES, ...gate.args, CALENDAR_FACTS_ACTIONS_MAX + 1) : [];
+    const read = new Map();
+    const add = (path, id) => {
+      if (typeof path !== "string" || !path) return;
+      if (!read.has(path)) read.set(path, []);
+      if (!read.get(path).includes(id)) read.get(path).push(id);
+    };
+    const y0 = Number(today.slice(0, 4));
+    for (const r of rows.slice(0, CALENDAR_FACTS_ACTIONS_MAX)) {
+      const fm = this.#heldFm(r.bundle_id) || {};
+      if (!business.has(fm.action_kind)) continue;
+      const offices = actionOffices(fm, view);
+      let y1 = y0 + 1;
+      for (const e of Array.isArray(fm.clock) ? fm.clock : [])
+        if (e && e.status === "pending" && isDay(e.date)) y1 = Math.max(y1, Number(e.date.slice(0, 4)));
+      for (let y = y0; y <= y1; y++)
+        for (const h of yearEntries(view, offices, y).entries) { try { add(factPath(holidayFact(h)), r.bundle_id); } catch { /* no path */ } }
+      for (const f of officeHours(view, offices)) { try { add(factPath(f), r.bundle_id); } catch { /* no path */ } }
+    }
+    const paths = [...read.keys()].sort().map((path) => ({ path, actions: read.get(path) }));
+    return { ok: true, as_of: today, paths, actions_limit: CALENDAR_FACTS_ACTIONS_MAX,
+             truncated: rows.length > CALENDAR_FACTS_ACTIONS_MAX };
   }
 
   /* ================================================================ the reminders (R4–R6, R8) */
@@ -505,11 +577,96 @@ function proposalLabelFor(who) {
   return { by: base.by, state: base.state, machine_work: base.machine_work, says: PROPOSAL_SAYS[base.state] };
 }
 
-/* R2: a deadline's date from its rule, counted from the event the rule names in the action's ledger: `filed` the first
-   sent entry, `received` the first received entry; `act` and `known` are not ledger events, so they are undetermined.
-   A `business` count uses the profile's holiday calendar and is undetermined past the years it lists (jurisdictions
-   R33). Nothing is written. */
-export function computeDeadline(d, fm, view) {
+/* R10 (jurisdictions R43; K986): the ONE office a count for an action is for, as a list of none or one: its addressee
+   when that is a named office (its `role` and `body`), else the venue its kind is filed at when the view's kind carries
+   one (`{venue: <kind>}`); none for any other action, whose count reads only the entries for all offices. */
+export function actionOffices(fm, view) {
+  const cp = fm && typeof fm === "object" ? fm.counterparty : null;
+  if (cp && typeof cp === "object" && cp.state === "named" && (cp.kind === undefined || cp.kind === null || cp.kind === "office")
+      && typeof cp.role === "string" && cp.role.trim())
+    return [{ role: cp.role.trim(), body: typeof cp.body === "string" ? cp.body.trim() : null }];
+  const kind = fm && typeof fm === "object" ? fm.action_kind : null;
+  if ((view && Array.isArray(view.action_kinds) ? view.action_kinds : []).some((k) => k && k.kind === kind && k.venue))
+    return [{ venue: kind }];
+  return [];
+}
+const officeKey = (o) => (typeof o === "string" ? `role:${o}` : o && typeof o.venue === "string" ? `venue:${o.venue}`
+  : o && typeof o.role === "string" ? `role:${o.role}` : null);
+const officeWords = (o) => (o.venue ? `the venue of '${o.venue}'` : `'${o.role}'`);
+
+/* R10 (jurisdictions R33, R43): the holiday entries a count for `offices` (`actionOffices`: none or one) reads for
+   `year`: the year's entry for all offices and those naming the office. An office covered by neither leaves the year
+   undetermined (`uncovered`), as does a year with no entry at all. */
+export function yearEntries(view, offices, year) {
+  const hs = (view && Array.isArray(view.holidays) ? view.holidays : []).filter((h) => h && Number(h.year) === year);
+  const keys = new Set((offices || []).map(officeKey).filter(Boolean));
+  const all = hs.filter((h) => !Array.isArray(h.offices));
+  const named = hs.filter((h) => Array.isArray(h.offices) && h.offices.some((o) => keys.has(officeKey(o))));
+  const uncovered = all.length ? [] : (offices || [])
+    .filter((o) => !named.some((h) => h.offices.some((x) => officeKey(x) === officeKey(o))));
+  return { entries: [...all, ...named], uncovered };
+}
+/* R10, R11: the `local-facts` fact of one holiday entry, and those of the offices' `hours` the view holds (its R6). */
+const holidayFact = (h) => ({ profile: h.profile ?? null, fact: "holidays", year: Number(h.year),
+                              ...(Array.isArray(h.offices) ? { offices: h.offices } : {}) });
+function officeHours(view, offices) {
+  const out = [];
+  for (const o of offices || []) {
+    if (o.venue) {
+      const k = (view && Array.isArray(view.action_kinds) ? view.action_kinds : []).find((x) => x && x.kind === o.venue);
+      if (k && k.venue && k.venue.hours) out.push({ profile: k.profile ?? null, fact: "hours", office: { venue: k.kind } });
+    } else {
+      const c = (view && Array.isArray(view.counterparties) ? view.counterparties : [])
+        .find((x) => x && x.role === o.role && (o.body === null || x.body === o.body));
+      if (c && c.hours) out.push({ profile: c.profile ?? null, fact: "hours", office: { role: c.role, body: c.body } });
+    }
+  }
+  return out;
+}
+/* R10: local-facts' answer for one path (its R2), as the count reads it: its status; the value that governs here
+   (`governs.value`: the latest correction's, else the profile's), which the count counts on whatever the status; for a
+   correction its member and date (the correcting act is the latest while the status is `corrected`) and its `says`; for
+   a lapsed confirmation the date it was made; for a dispute who disputed it and when. */
+function factAnswer(path, r) {
+  if (!r || typeof r !== "object" || r.ok === false)
+    return { path, status: "absent", why: (r && (r.reason || r.code)) || "local facts did not answer" };
+  const g = r.governs && typeof r.governs === "object" ? r.governs : {};
+  const last = r.latest && typeof r.latest === "object" ? r.latest : {};
+  const lapsed = r.lapsed && typeof r.lapsed === "object" ? r.lapsed : {};
+  const day = (v) => (typeof v === "string" ? v.slice(0, 10) : null);
+  return { path, status: typeof r.status === "string" ? r.status : "absent", why: r.why ?? null,
+           value: g.value ?? null, corrected: g.origin === "corrected", says: g.says ?? null,
+           by: last.by ?? null, at: day(last.at), last_at: day(lapsed.at) };
+}
+const daysOf = (v) => (Array.isArray(v) ? v : null);
+
+/* R10: what a business count states of the calendar it read: each holiday entry read with its status, and the whole
+   `confirmed` when every entry is, `corrected` (naming each correction's member and date) when one is and none is
+   unconfirmed, `unconfirmed` ("counted on an unconfirmed calendar (<source>, <date>)", the entry's basis and the lapsed
+   confirmation's date) when any is. Without a reader of the confirmations (a pure caller), `not_read`. */
+function calendarStated(read, readable) {
+  const years = read.map((r) => ({ year: r.year, offices: r.offices, path: r.path, status: r.status, basis: r.basis,
+                                   ...(r.status === "corrected" ? { corrected_by: r.by, corrected_at: r.at } : {}) }));
+  if (!readable) return { status: "not_read", years, says: ["the calendar's confirmation on this instance was not read"] };
+  const says = [];
+  for (const r of read) {
+    if (r.status === "unconfirmed")
+      says.push(`counted on an unconfirmed calendar (${r.basis ?? "no source stated"}, ${r.last_at ?? "never confirmed here"})`);
+    else if (r.status === "corrected") says.push(`counted on a calendar ${r.says ?? `corrected locally by ${r.by}, ${r.at}`}`);
+  }
+  const status = read.some((r) => r.status === "unconfirmed") ? "unconfirmed"
+    : read.some((r) => r.status === "corrected") ? "corrected" : "confirmed";
+  return { status, years, says };
+}
+
+/* R2, R10: a deadline's date from its rule, counted from the event the rule names in the action's ledger: `filed` the
+   first sent entry, `received` the first received entry; `act` and `known` are not ledger events, so they are
+   undetermined. A `business` count reads, for each year it reaches, the holiday entries that apply to the action's
+   office (`actionOffices`, `yearEntries`), each through `factOf` (its status on this instance and, when corrected, the value that
+   governs); it is undetermined past the years the calendar lists for those offices (jurisdictions R33, R43), and when an
+   entry it reads is `disputed` or `absent`. It answers `calendar`, the statement of what it read (`calendarStated`); a
+   `calendar` count reads no holiday and states none. Nothing is written. */
+export function computeDeadline(d, fm, view, { factOf = null } = {}) {
   const ledger = Array.isArray(fm.correspondence) ? fm.correspondence : [];
   const dir = d.starts === "filed" ? "sent" : d.starts === "received" ? "received" : null;
   if (!dir) return { date: null, why: `the rule starts from '${d.starts}', an event the action's ledger does not record` };
@@ -522,19 +679,48 @@ export function computeDeadline(d, fm, view) {
   const iso = (ms) => new Date(ms).toISOString().slice(0, 10);
   if (d.count === "calendar") return { date: iso(t0 + days * 86400000), start };
   if (d.count !== "business") return { date: null, start, why: `the rule's count '${d.count}' is neither calendar nor business` };
-  const years = new Map();
-  for (const h of (view && Array.isArray(view.holidays) ? view.holidays : []))
-    if (h && Number.isInteger(Number(h.year))) years.set(Number(h.year), new Set((h.days || []).map((x) => x && x.date)));
+  const offices = actionOffices(fm, view);
+  const readable = typeof factOf === "function";
+  const read = [];
+  const closed = new Map();
+  const undetermined = (why) => ({ date: null, start, why, calendar: calendarStated(read, readable) });
+  /* One year's closure days, read once: undetermined (a string) where the calendar does not cover it. */
+  const yearOf = (y) => {
+    if (closed.has(y)) return closed.get(y);
+    const { entries, uncovered } = yearEntries(view, offices, y);
+    let out;
+    if (uncovered.length) out = `the count reaches ${y}, and the profile's holiday calendar for ${y} names no entry for `
+      + `${uncovered.map(officeWords).join(" or ")} and none for all offices`;
+    else if (!entries.length) out = `the count reaches ${y}, a year the profile's holiday calendar does not list`;
+    else {
+      const set = new Set();
+      for (const h of entries) {
+        const f = readable ? factOf(h) || { status: "absent" } : { status: null };
+        read.push({ year: y, offices: Array.isArray(h.offices) ? h.offices : null, basis: h.basis ?? null, ...f });
+        if (f.status === "disputed" || f.status === "absent") {
+          out = `the holiday calendar for ${y}${Array.isArray(h.offices) ? ` (${h.offices.map((o) => officeWords(typeof o === "string" ? { role: o } : o)).join(", ")})` : ""} `
+            + (f.status === "disputed" ? `is disputed on this instance${f.by ? ` by ${f.by}` : ""}${f.at ? `, ${f.at}` : ""}`
+              : `cannot be read on this instance: ${f.why || "absent"}`);
+          break;
+        }
+        const ds = f.corrected ? daysOf(f.value) || h.days : h.days;
+        for (const x of ds || []) if (x && typeof x.date === "string") set.add(x.date);
+      }
+      if (out === undefined) out = set;
+    }
+    closed.set(y, out);
+    return out;
+  };
   let t = t0, n = 0;
   while (n < days) {
     t += 86400000;
-    const y = new Date(t).getUTCFullYear();
-    if (!years.has(y)) return { date: null, start, why: `the count reaches ${y}, a year the profile's holiday calendar does not list` };
+    const yd = yearOf(new Date(t).getUTCFullYear());
+    if (typeof yd === "string") return undetermined(yd);
     const wd = new Date(t).getUTCDay();
-    if (wd === 0 || wd === 6 || years.get(y).has(iso(t))) continue;
+    if (wd === 0 || wd === 6 || yd.has(iso(t))) continue;
     n++;
   }
-  return { date: iso(t), start };
+  return { date: iso(t), start, calendar: calendarStated(read, readable) };
 }
 
 /* The reads and acts answer their catalogue-backed refusals with code, check and translation. */
@@ -545,9 +731,8 @@ for (const m of ["pendingClocks", "clockPropose", "reminderSet", "reminderAnswer
 
 const instances = new WeakMap();
 
-/** K61: the one instance per host; at creation it creates and declares its tables (R9). `action_clock_proposals` is
- *  declared on its own: while `actions` still declares it (until `actions`' job deletes its copy, K624 (1)) that
- *  declaration is refused `TABLE_DECLARED` and `actions`' purge clears it; `action_reminders` is declared either way. */
+/** K61: the one instance per host; at creation it creates and declares its tables (R9), each on its own declaration.
+ *  `actions`' copy of `action_clock_proposals` is gone (K914), so this module alone declares it. */
 export function actionClocksOf(host, deps) {
   let a = instances.get(host);
   if (!a) {

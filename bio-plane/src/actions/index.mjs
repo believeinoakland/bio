@@ -1546,12 +1546,9 @@ export class Actions {
    * IT JUDGES THE SHAPE AND NEVER THE LAW. Whether a citation is the RIGHT law for the agency asked is a member's
    * reading and the plane does not try (D-149: the plane encodes no law's rules). Returns the parsed entries or
    * the refusal, and writes nothing. */
-  /* AN INSTANCE METHOD AND NOT A STATIC ONE, which is a property of the INSTRUMENT rather than of the code:
-     `check-refusal-codes.mjs`'s arm C finds the function a `where` names by a pattern that admits `export`,
-     `async` and `function` before the name and NOT `static`, so a `where` pointing at a static method resolves
-     to nothing — and a `where` that resolves to nothing takes its four rows OUT of the judged set while every
-     arm still reports green (measured here: regions 157 -> 156, codesChecked 429 -> 424). Written this way so
-     the guard can see it; it reads no instance state. */
+  /* An instance method that reads no instance state: written so for the legacy refusal-code guard, which could not
+     see a static method (deleted in T20, K879). DEC-49's totality over these codes is control-plane's
+     `test/m/control-plane/families.test.mjs` (its R22). */
   #lawEntries(laws) {
     let list = laws;
     if (typeof list === "string") { try { list = JSON.parse(list); } catch { list = null; } }
@@ -1705,7 +1702,7 @@ export class Actions {
   }
 
   /* R23, R28 (C-90.2): the one site that answers a tier that is not 1, 2 or 3, for the act and for a proposal alike
-     (one condition, one code). An instance method so the refusal guard's `where` can name it. */
+     (one condition, one code). */
   #badRiskTier(target, tier, who) {
     /* DEC-49 REGION is-bad-risk-tier */
     return refuse("BAD_RISK_TIER", `${who} states a tier of 1 (file freely), 2 (file with caution) or 3 (do not file `
@@ -1752,18 +1749,15 @@ export class Actions {
    *  LIST AND LABELLED MACHINE WORK.
    *
    *  THE RULING'S OWN WORDS: *the machine may propose the list from the counterparty, labelled as machine work,
-   *  and never sets it.* D-149 built the half that REFUSES (the machine fence at C-32.18, spelled without backticks here
-   *  because machinefences-dec49's ARM B2 reads a quoted fence literal in this file as a FENCE SITE and asks
-   *  whether it sits inside a governed region — a mention in prose is not one) and said in this
+   *  and never sets it.* D-149 built the half that REFUSES (the machine fence at C-32.18) and said in this
    *  file's own comment that no proposal was built. This is that proposal, and every line of it is about the
    *  difference between the two halves.
    *
    *  IT NEVER SETS THE LIST, AND THAT IS STRUCTURAL RATHER THAN POLICED. This method does not call `promote`, it
    *  writes no file, and it never touches `governing_laws`, `governing_laws_by` or `governing_laws_at`. The list
    *  is the member's and moves only through `actionLaws`; the fence that keeps a revision from moving it
-   *  (C-73.1) is untouched and unreachable from here, because nothing here writes bytes at all. The suite's
-   *  named control arms this method to write the list and the arm that fails is the one whose name says the
-   *  list is the member's.
+   *  (C-73.1) is untouched and unreachable from here, because nothing here writes bytes at all. The module test of
+   *  R18 and R19 (`test/m/actions/acts.test.mjs`) holds that a proposal leaves the list as it stands.
    *
    *  ANY CREDENTIAL MAY PROPOSE, AND THE LABEL CARRIES THE MEANING — `themePropose`'s shape, for its reason
    *  (§8.4 fence 3). A fence admitting only machines would be a fence TIGHTER THAN ITS RULE: D-149 says a

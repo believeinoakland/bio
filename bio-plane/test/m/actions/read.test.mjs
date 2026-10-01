@@ -1,8 +1,9 @@
 /* actions' reads and services at its interface (R12, R25, R26, R29, R30, R36, R39, R41, R51; R31 retired to `action-clocks`, its held copy gone, N428). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, MACHINE, actionMd, CP, NOW_MS } from "./fixture.mjs";
+import { world, storage, V, MACHINE, actionMd, CP, NOW_MS } from "./fixture.mjs";
 import * as actions from "../../../src/actions/index.mjs";
+import { migrateActions } from "../../../src/actions/schema.mjs";
 import * as grammar from "../../../src/action-grammar/index.mjs";
 import { get as profile } from "../../../../jurisdictions/index.mjs";
 
@@ -101,6 +102,19 @@ test("R51 R36 the audit reports C-2.10 and C-11.1 over an action, a missing coun
   for (const t of actions.ACTIONS_TABLES) assert.ok(t in (r.removed || r.tables || r) || JSON.stringify(r).includes(t), t);
   for (const t of ["action_law_proposals", "action_risk_proposals", "correspondence"])
     assert.equal(w.rows(`SELECT COUNT(*) AS n FROM ${t} WHERE bundle_id=?`, A)[0].n, 0, t);
+});
+
+test("R36 every table this module creates is keyed by bundle_id, listed in ACTIONS_TABLES and cleared by the purge", () => {
+  const bare = storage();
+  migrateActions(bare.sql);
+  const made = bare.db.prepare(`SELECT name FROM sqlite_master WHERE type='table'`).all().map((r) => r.name).sort();
+  assert.deepEqual(made, [...actions.ACTIONS_TABLES].sort(), "the schema's tables are exactly the list");
+  for (const t of made)
+    assert.ok(bare.db.prepare(`PRAGMA table_info(${t})`).all().some((c) => c.name === "bundle_id"), `${t} is keyed by bundle_id`);
+  const w = world();
+  w.action(A);
+  const removed = w.record.purge({ bundleId: A }).removed;
+  for (const t of made) assert.ok(t in removed, `${t} is declared to the purge`);
 });
 
 test("R39 R41 no place is named in outward text; an old records-law kind names no law; tests run on the test profile", () => {
