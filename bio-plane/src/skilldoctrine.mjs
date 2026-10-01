@@ -79,14 +79,15 @@
 
 /* The levels, states and definitive subset are observation-log's (K78 (3),
    K81); C-30 and the inert sources are strength's (K181 (3)); the suggestion
-   levels and C-27 are run-productions' (K182 (2)). The catalogue families below
-   are imported from the catalogue until each moves to its module (K6), when this
-   import re-points. */
+   levels and C-27 are run-productions' (K182 (2)); the leg roles and the earned
+   grade sources are record-grammar's. The catalogue families below are imported
+   from the catalogue until each moves to its module (K6), when this import
+   re-points. */
 import { OBSERVATION_LEVELS, OBSERVATION_STATES, DEFINITIVE_STATES } from "./observation-log/index.mjs";
 import { VERSION_STRENGTH_CHECKS, VERSION_STRENGTH_INERT_SOURCES } from "./strength/index.mjs";
 import { SUGGEST_LEVELS, SUGGEST_CHECKS } from "./run-productions/index.mjs";
-import { MACHINE_FENCE_CHECKS, EARNED_GRADE_SOURCES, BASIS_ROLES,
-         BASIS_VERSION_CHECKS } from "../checks/bio-checks.mjs";
+import { BASIS_ROLES, EARNED_GRADE_SOURCES } from "./record-grammar/index.mjs";
+import { MACHINE_FENCE_CHECKS, BASIS_VERSION_CHECKS } from "../checks/bio-checks.mjs";
 /* The run's rows and the one deployment order are run-rules' (its R8, R9, R11;
    N156, K617): read from it, never copied. */
 import { AI_RUN_CHECKS, DEPLOYMENT_SEQUENCE, GATE_ADDRESS, SEQUENCING_SOURCE,

@@ -9,6 +9,7 @@ import { SUGGEST_LEVELS, SUGGEST_CHECKS } from "../../../src/run-productions/ind
 import * as deployment from "../../../src/run-rules/index.mjs";
 import { AI_RUN_OPEN_CHECKS } from "../../../src/run-rules/index.mjs";
 import { RECOMMEND_PROMPT } from "../../../src/contradiction.mjs";
+import { BASIS_ROLES, EARNED_GRADE_SOURCES } from "../../../src/record-grammar/index.mjs";
 import { ROOT, SRC, catalogue, read, norm, foundIn, section, canonDocuments, published, stringLiterals }
   from "./fixture.mjs";
 
@@ -250,8 +251,8 @@ test("R23 no member of an imported or driven vocabulary appears in the module's 
   add("RUN_BOUNDS", Object.keys(RUN_BOUNDS));
   add("RUN_ENDINGS", Object.keys(RUN_ENDINGS));
   add("SUGGEST_LEVELS", SUGGEST_LEVELS);
-  add("BASIS_ROLES", catalogue.BASIS_ROLES);
-  add("EARNED_GRADE_SOURCES", catalogue.EARNED_GRADE_SOURCES);
+  add("BASIS_ROLES", BASIS_ROLES);
+  add("EARNED_GRADE_SOURCES", EARNED_GRADE_SOURCES);
   add("VERSION_STRENGTH_INERT_SOURCES", strength.VERSION_STRENGTH_INERT_SOURCES);
   add("AI_RUN_CHECKS", Object.keys(AI_RUN_CHECKS).filter((k) => !pack.SKILL_CHECK_KEYS.includes(k)));
   add("the published act modes", ["session", "admin-session"]);

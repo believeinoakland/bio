@@ -1,17 +1,20 @@
 /* skills' test fixture: the repository's documents, one normaliser for "found verbatim", a published answer
  * shaped as the plane's `op=affordances` with no target (`{catalog, vocabularies, capture_acts, fences}`), and the
- * check catalogue's namespace, over which `machineFences` computes the published `fences` here as the control
- * plane computes them over its composed families (K585 (1)). Nothing here reads a module later than skills in the
- * order (P4). */
+ * fence families of the modules that own them, over which `machineFences` computes the published `fences` here as
+ * the control plane computes them over its composed families (K585 (1)). The check catalogue is read nowhere (rule
+ * 1), and each fence's row is tested by the module that holds it (K787). Nothing here reads a module later than
+ * skills in the order (P4). */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
-import * as catalogueNs from "../../../checks/bio-checks.mjs";
+import { STRENGTH_BAR_CHECKS } from "../../../src/strength/index.mjs";
 import { machineFences } from "../../../src/skillpack.mjs";
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 export const SRC = ["bio-plane/src/skillpack.mjs", "bio-plane/src/skilldoctrine.mjs"];
-export const catalogue = catalogueNs;
+/* The owners' fence families earlier in the order than skills, each the owner's own export: a namespace of
+   `*_CHECKS` families, `machineFences`' argument. */
+export const owners = Object.freeze({ STRENGTH_BAR_CHECKS });
 
 export const read = (rel) => readFileSync(join(ROOT, rel), "utf8");
 
@@ -57,7 +60,7 @@ export function published(over = {}) {
     ],
     vocabularies: { colours: ["red", "green"], shapes: { round: "a circle" } },
     capture_acts: [{ id: "cap-1" }],
-    fences: machineFences(catalogueNs),
+    fences: machineFences(owners),
     ...over,
   };
 }
