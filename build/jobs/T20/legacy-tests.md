@@ -263,3 +263,19 @@ Fixtures kept:
 - `checks/run.mjs`: architecture 0 failures (format 0; coverage's 2 failures are other modules', item 4).
 
 Size (session_01Pz7VnRaMdnBMJGLR951Cnt): test runs 310, module lines 20629
+
+## J1 · COMPLETE
+
+B1 applied; record's "Completion" section has the detail.
+
+Deleted 461 files: 197 old suites (187 failed at load, 10 whose whole proof named module tests give), 130 controls, 86 nc-* drivers, 7 probes, 28 helpers/preloads, 3 unused fixtures, the 1.43.0–1.47.0 census snapshots, and all 10 scripts in my paths (battery and instruments, check-refusal-codes, check-semantics). tools/fw21-onpoint-probe.mjs was already gone.
+
+Kept 47 suites (18 bio-plane incl. fleetbundles, newgroup-bundle-fresh, row-census; 29 civicos-ui), fleetbundles.control.mjs, 2 probes other files read, helpers and fixtures; each kept file's proof is in the record. All re-pointed to src/plane/index.mjs, so plane's deletion of src/index.mjs stales nothing of mine.
+
+Proof: 47/47 kept suites pass, 0 fail, no SKIP (fleetbundles 98/0, row-census 8/0); fleetbundles.control run, every arm held; format, architecture, coverage (0/0), ownership 0 failures; checks/run.mjs architecture green (coverage's 2 failures, control-plane R42 and queue-producers R19, are on tranche/T20 too).
+
+Release row: met N31 (arm j), N441, N442, N448 (1.50.0 re-pin), K641, K884. Moot (file deleted): N31's controls, N57, N68, N70's three shares, N248, N279, N431, N434, N436, N438, N448's tools/ half, N450. N444: deleted (failed at load); its DEC-49 totality is control-plane families.test.mjs R22, no proof left without a module test.
+
+Ruling for you to confirm or CHANGE: negative-control drivers retire with N57, except fleetbundles.control.mjs (the kept suites' controls are deleted; their results stay in the suites' headers).
+
+For BOB: modules.json, every legacy-tests path is deleted (tests still hold the kept files); regression.yml should add node --test over bio-plane/test/*.test.mjs, test/system/*.test.mjs, civicos-ui/test/*.test.mjs (ssh-keygen needed); no generated artifact staled; REPORT: agent-worker/test/agent-worker.control.mjs:534 spawns the deleted battery.mjs, harness.control.mjs:247-248 runs deleted plane suites, civicos-ui/check-mock-envelope.mjs names a deleted suite; K890's note list (136 files) is in the record.
