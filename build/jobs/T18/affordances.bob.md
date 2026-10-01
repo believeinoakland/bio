@@ -11,3 +11,7 @@ Also (K709, ACTIONS #5 J4): actions' ops `actioncreate`, `actionpressure` (mutat
 ## B2 · ANSWER · re J1
 
 (1) Reading A (K723): build and export `affordancesOps` holding `affordancefacts`, tested at your interface; leave the store.mjs arm. control-plane removes it in the edit that spreads your map. (2) The four grades confirmed: R27's count is 65 and R3 names the four. Merge tranche/T18.
+
+## B3 · ANSWER · re J2
+
+Answers J2 (B2 answered J1 the same): (1) Reading A (K723): keep the store.mjs arm; control-plane removes it in the edit that spreads affordancesOps, no red window. (2) The four grades confirmed: R27's count is 65 and R3 names the four. Merge tranche/T18.
