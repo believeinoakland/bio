@@ -14,6 +14,6 @@
 - `checks/format.mjs`: format: 84 modules, 82 requirements files; 0 failures
 - `checks/architecture.mjs bias`: architecture: 11 product files, 38 relative imports (0 naming no tracked file, not judged); 0 failures
 - `checks/coverage.mjs bias`: coverage: 1 modules, 46 of 46 live requirement ids named by a test; 0 failures
-- `checks/ownership.mjs bias tranche/T20`: see below, run after the commit.
+- `checks/ownership.mjs bias tranche/T20`: ownership: 4 files changed by bias between tranche/T20 and HEAD; 0 failures
 
 Size (session_019fYYaznWEvSJmjoUKHDhz9): test runs 2, module lines 6
