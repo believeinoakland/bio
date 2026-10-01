@@ -6255,44 +6255,6 @@ function coversImagePlacement(e, container) {
     + `[${want.join(', ')}], the rectangle the extent names`;
 }
 
-/* =========================================================================
- * C-102 — A LATER MODULE'S REGISTRATION WITH AN EARLIER ONE, AND ITS ANSWER (K31; T6, legacy-checks, N94).
- *
- * Extraction runs bottom-up, so an earlier module that needs a later one's work offers a REGISTRATION the
- * later one fills (K31): record-core's audit checks (record-core R59) and promotion's facts (promotion R40).
- * Their refusals had no rows, so the guard counted them untranslated and a caller met a bare code.
- *
- * WHY A FAMILY, against SK-1's rule that a family is a floor in the guard, on KNOCK_CHECKS' reasoning: no
- * family's subject is a registration. PER_ITEM_CHECKS is the set a member selects, ACT_SHAPE_CHECKS the shape
- * of a member's act, REQUIRED_ARGUMENT_CHECKS a missing argument at any door. Two of these rows are met only
- * by the instance's own build (a part registering twice, or registering nothing), and their sentences say so
- * rather than send a member looking for a fault in the record.
- *
- * EVERY `where` NAMES A WHOLE FUNCTION, and that is correct here: `registerAuditCheck` refuses with exactly
- * its two rows; `auditPass` mints one code, AUDIT_CHECK_FAILED, as a finding on the bundle whose check threw
- * (counted as an error, never as clean); `fact` answers exactly FACT_UNAVAILABLE and FACT_FAILED.
- * FACT_UNAVAILABLE is also answered, in the same condition, by promotion's private `#fact`, which refuses the
- * act that needed it; its sentence is true at both.
- *
- * T8 (N128, PROMOTION #5's REPORT) adds promotion's own malformed registrations, C-102.6 and C-102.7. Each
- * `where` names a REGION promotion marks, not the whole function, because `registerFact` and `registerStep` also
- * refuse STEP_DECLARED. Not here: LISTENER_MALFORMED and LISTENER_DECLARED, the family's C-102.11 and C-102.12.
- * Under K231's rule, one code one site, every listener registration now refuses through membership's one helper,
- * `listenerRefusal` (N202), so membership holds their rows (`src/membership/checks.mjs` MEMBERSHIP_CHECKS, region
- * `is-listener-registration`; N128).
- *
- * T9 (N206, N214) adds three rows, each at one site:
- *   C-102.8  STEP_DECLARED, now minted only by promotion's helper `stepDeclared`, which `registerStep`,
- *            `registerFact` and `registerCaseCatalogue` call for their one condition (K231, promotion R40, R47);
- *   C-102.9  CASE_CATALOGUE_FAILED, the case gate's finding when the case-document catalogue a later module
- *            registered throws or answers no list of findings: the gate fails closed (promotion R33, R47);
- *            C-102.3's reasoning one door over. Its `where` names the one function that builds that finding,
- *            which `runCaseGate` calls, not `runCaseGate` itself, whose ordinary answer is no refusal;
- *   C-102.10 CASE_MEMBER_REFUSED, the refusal ratification's registered step answers when a document claims
- *            to be a published case member and does not carry what one must (ratification R9, C-2.8's arm).
- * ========================================================================= */
-export const REGISTRATION_CHECKS = {
-};
 
 /* =========================================================================
  * FW-17 · THE DETERMINING REFERENCE PAIR, AND WHAT A PORTION MAY EARN FROM IT
