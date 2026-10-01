@@ -26,3 +26,6 @@
 **Tests and checks run:**
 - `node --test bio-plane/test/m/queue/`: tests 80, pass 80, fail 0.
 - Users and readers of the catalogue: `test/m/plane/` 28/28, `test/m/basis-versions/` 118/118, `test/m/queue-producers/` 47/47, `test/m/tasks/` 71/71; `test/m/control-plane/` 91/93 and `test/m/affordances/` 132/133, the same failures on the base (above). No layer tests named in the manifest.
+- `checks/format.mjs`: 0 failures; `checks/architecture.mjs bio queue`: 0 failures; `checks/coverage.mjs bio queue`: 37 of 37 live ids named, 0 failures; `checks/ownership.mjs bio queue tranche/T21`: 8 files changed, 0 failures.
+
+Size (session_01WF7vUMo8WEARASdFVkSXE4): test runs 13, module lines 2620
