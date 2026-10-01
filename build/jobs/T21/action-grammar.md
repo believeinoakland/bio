@@ -22,3 +22,7 @@ Size (session_01NSG7PWGRJhWFEa8NTAWrtN): test runs 2, module lines 1773
 ## J1 · REPORT
 
 Generated artifact staled: `bio-plane/dist/bio-plane.bundled.mjs` (owner `not_product`). My comment-only change to `src/action-grammar/checks.mjs` and `grammar.mjs` makes `fleetbundles.test.mjs` report STALE BUNDLE for both sources. Regenerated nothing (BOB regenerates at the layer close).
+
+## J2 · COMPLETE
+
+action-grammar T21 complete. N465 and N469 applied, comments only: `checks.mjs`:4's `actions/checks.mjs` note now says it is deleted (provenance kept); `grammar.mjs`:80's 'the old battery' is now its readers today (`actions`, `action-clocks`); the re-scan found more notes naming deleted code as live (two 'the suite' readers, re-pointed to `test/m/action-grammar/` R8; the catalogue's copy, legacy-checks' ENTITY_ID_RE, store.mjs/index.mjs as the caller) and re-worded each. No row or behaviour changed. Tests 24/24 pass; format, architecture, coverage (11/11) and ownership all 0 failures. Plane bundle staled (J1). Details in the record's Completion section.
