@@ -67,8 +67,8 @@
  *     this command does not know exists, which is why the members are DISCOVERED
  *     and why `fleetbundles.test.mjs` floors the count.
  *
- * NEGATIVE CONTROL: declared and run by `bio-plane/test/bundles.test.mjs`, whose
- * header carries the arms and their measured results.
+ * NEGATIVE CONTROL: driven by bundler's R21 tests, `bio-plane/test/m/bundler/release.test.mjs`
+ * (a stale member rebuilt, an unmoved rebuild, a failed build).
  *
  * From the repository root (bundler R21; moved from the old process's `tools/` in T19):
  *   node bio-plane/scripts/bundles.mjs              rebuild every stale bundle, say which
