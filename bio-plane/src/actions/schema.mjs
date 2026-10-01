@@ -1,8 +1,9 @@
-/* actions' tables (requirements: `build/requirements/actions.md`, R3, R8, R19, R28, R36, R48; K4). Moved from `schema.mjs`
- * (legacy-store) with their comments; `action_risk_proposals` (R28, REC-215) is new; `action_clock_proposals` (R32)
- * moved to `action-clocks` (K617); `action_overrides` (R8) and `action_pressure` (R48) are T18's. Each is keyed by the
- * action's `bundle_id` and declared to record-core's purge (K23), so a purge of that action clears its rows. The
- * projection columns on `bundles` are retrieval's; this module only supplies their values (R12). */
+/* actions' tables (requirements: `build/requirements/actions.md`, R3, R8, R19, R28, R36, R48, R52; K4). Moved from
+ * `schema.mjs` (legacy-store) with their comments; `action_risk_proposals` (R28, REC-215) is new;
+ * `action_clock_proposals` (R32) moved to `action-clocks` (K617); `action_overrides` (R8) and `action_pressure` (R48)
+ * are T18's, `action_holds` (R52) T20's. Each is keyed by the action's `bundle_id` and declared to record-core's purge
+ * (K23), so a purge of that action clears its rows. The projection columns on `bundles` are retrieval's; this module
+ * only supplies their values (R12). */
 
 export const ACTIONS_SCHEMA = `
 -- REC-24 (a): WHY AN ACTION EXISTS, and it is DELIBERATELY inquiry_basis's
@@ -207,11 +208,27 @@ CREATE TABLE IF NOT EXISTS action_pressure (
   at          TEXT NOT NULL,
   PRIMARY KEY (bundle_id, ord)
 );
+
+-- R52 (K899 (7), DEC-61): A LITIGATION HOLD stated on a received entry marked
+-- pressure of kind legal: in_place (the group is preserving what the matter may
+-- reach) or released, with the member's reason. Each statement is appended and
+-- never rewritten; the latest for an entry (its highest seq) is its hold. It is
+-- the group's recorded statement and suspends nothing.
+CREATE TABLE IF NOT EXISTS action_holds (
+  bundle_id   TEXT NOT NULL,    -- the action
+  ord         INTEGER NOT NULL, -- the received entry carrying the legal mark
+  seq         INTEGER NOT NULL, -- the statement's place among that entry's, from 1
+  hold        TEXT NOT NULL,    -- in_place | released
+  reason      TEXT NOT NULL,
+  stated_by   TEXT NOT NULL,    -- the member who stated it
+  at          TEXT NOT NULL,
+  PRIMARY KEY (bundle_id, ord, seq)
+);
 `;
 
 /** The tables, each keyed to the action by `bundle_id` (record-core R21, R46). */
 export const ACTIONS_TABLES = Object.freeze(["action_basis", "correspondence", "action_quotes",
-  "action_law_proposals", "action_risk_proposals", "action_overrides", "action_pressure"]);
+  "action_law_proposals", "action_risk_proposals", "action_overrides", "action_pressure", "action_holds"]);
 
 /** Creates the tables; idempotent. */
 export function migrateActions(sql) {

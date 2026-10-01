@@ -48,10 +48,6 @@ import { RISK_TIERS, riskTierState, RESOLUTIONS, CORRESPONDENCE_DIRECTIONS, acti
          ACTION_CATALOGUE_CHECKS } from "../action-grammar/index.mjs";
 import { ACTIONS_TABLES, migrateActions } from "./schema.mjs";
 
-/* K835 (N447 drops it in T20): the action vocabularies `affordances` and its tests read from here until its layer-11 job
-   re-points to action-grammar, re-exported, never a copy. */
-export { PRODUCT_KINDS, RISK_TIERS, LAW_LEVELS, ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS, CORRESPONDENCE_STAGES,
-         CORRESPONDENCE_OUTCOMES, RESOLUTIONS, actionKinds } from "../action-grammar/index.mjs";
 export { ACTIONS_SCHEMA, ACTIONS_TABLES } from "./schema.mjs";
 
 /** R13, R15: the longest reason, account, medium or party (the legacy store's `RELEASE_ACK_MAX`). */
@@ -75,6 +71,10 @@ export const ACTION_LEDGER_MAX = 500;
 const PLAN_ID_RE = /^PLN-\d{4}-\d{4}(-[a-z0-9]+)*$/;
 /** R48 (K597 (1)): the kinds of pressure a received entry may be marked with. */
 export const PRESSURE_KINDS = Object.freeze(["legal", "retaliation", "discrediting", "other"]);
+/** R52 (K899 (7), DEC-61): what a litigation hold on a `legal` pressure mark is stated as. */
+export const HOLD_STATES = Object.freeze(["in_place", "released"]);
+/** R54: the most marks one `holdsDue` page lists. */
+export const HOLDS_DUE_MAX = 500;
 /** R28: the longest basis a proposed tier carries. */
 export const RISK_PROPOSAL_BASIS_MAX = 500;
 
@@ -955,7 +955,7 @@ export class Actions {
       return { ok: false, reason: "NO_RESOLUTION", target, legal: RESOLUTIONS,
                detail: "an action that is resolved says HOW it resolved: one of "
                      + `${RESOLUTIONS.join(", ")}. C-2.10 requires it in the resolved state, so a move `
-                     + "without one would produce a bundle the catalog rejects." };
+                     + "without one would produce a record the catalog rejects." };
     if (to !== "resolved" && res)
       return { ok: false, reason: "RESOLUTION_WITHOUT_RESOLVING", target, to,
                detail: "a resolution describes how an action ENDED; supplying one on a move to "
@@ -1386,6 +1386,44 @@ export class Actions {
     this.sql.exec(`INSERT INTO action_pressure (bundle_id, ord, kind, note, marked_by, at) VALUES (?,?,?,?,?,?)`,
       target, n, mark.kind, mark.note, who, at);
     return { ok: true, target, ord: n, pressure: { kind: mark.kind, note: mark.note }, by: who, at, weight: "single" };
+  }
+
+  /** R52 (K899 (7), DEC-61; N-A19): a member states the litigation hold on a received entry marked pressure of kind
+   *  `legal`: `in_place` or `released`, with a reason. Each statement is appended to this module's own table and never
+   *  rewritten; the latest for an entry is its hold. It is the group's recorded statement and suspends nothing. */
+  actionHold({ target, ord = null, hold = null, reason = null, viewer = null, author = null } = {}) {
+    const who = String(author ?? "").trim();
+    const h = typeof hold === "string" ? hold.trim() : "";
+    const why = typeof reason === "string" ? reason.trim() : "";
+    /* DEC-49 REGION is-hold */
+    const machine = !who || isMachineIdentity(who)
+      ? refuse("MACHINE_CANNOT_SET_HOLD", "saying whether a litigation hold is in place is a member's judgement; a "
+        + "machine credential may not state it. Nothing was written.") : null;
+    const shape = !HOLD_STATES.includes(h) || !why || why.length > NOTE_MAX || /["\\\r\n]/.test(why)
+      ? refuse("HOLD_REFUSED", `a litigation hold is one of ${HOLD_STATES.join(", ")}, with a reason of 1 to ${NOTE_MAX} `
+        + "characters and no quote, backslash or line break. Nothing was written.", { legal: HOLD_STATES, max: NOTE_MAX })
+      : null;
+    /* END DEC-49 REGION is-hold */
+    if (machine) return machine;
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    if (shape) return { ...shape, target };
+    const b = this.#visibleAction(target, viewer);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "action")
+      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
+    const n = typeof ord === "number" ? ord : /^\d+$/.test(String(ord ?? "").trim()) ? Number(String(ord).trim()) : NaN;
+    const mark = Number.isInteger(n)
+      ? this.#one(`SELECT kind FROM action_pressure WHERE bundle_id=? AND ord=?`, target, n) : null;
+    /* DEC-49 REGION is-hold-legal-mark */
+    if (!mark || mark.kind !== "legal")
+      return refuse("HOLD_NO_LEGAL_MARK", "a litigation hold is stated on a received entry marked as legal pressure; the "
+        + "entry named carries no such mark. Nothing was written.", { target, ord: ord ?? null });
+    /* END DEC-49 REGION is-hold-legal-mark */
+    const at = stampInstant("second", this.#nowMs(null));
+    const seq = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM action_holds WHERE bundle_id=? AND ord=?`, target, n).n;
+    this.sql.exec(`INSERT INTO action_holds (bundle_id, ord, seq, hold, reason, stated_by, at) VALUES (?,?,?,?,?,?,?)`,
+      target, n, seq, h, why, who, at);
+    return { ok: true, target, ord: n, hold: h, reason: why, by: who, at };
   }
 
   /** R47: `actionCreate` is the same write as a promotion of an action document (R1–R3, R5–R11, R45, R46 and action-grammar R3 and R6 at the act): the plane
@@ -2041,10 +2079,59 @@ export class Actions {
       option: fm.option === undefined || fm.option === null ? null : fm.option,
       /* R8: the premise override, with who stated it and when. */
       premise_override: this.#overrideRead(row.bundle_id, fm),
-      /* R48: the received entries marked as pressure, apart from the ledger. */
+      /* R48: the received entries marked as pressure, apart from the ledger; R52: a `legal` mark with its holds. */
       pressure: this.#rows(`SELECT ord, kind, note, marked_by, at FROM action_pressure WHERE bundle_id=? ORDER BY ord`,
-        row.bundle_id).map((r) => ({ ord: r.ord, kind: r.kind, note: r.note, by: r.marked_by, at: r.at })),
+        row.bundle_id).map((r) => ({ ord: r.ord, kind: r.kind, note: r.note, by: r.marked_by, at: r.at,
+                                     ...(r.kind === "legal" ? this.#holdsOf(row.bundle_id, r.ord) : {}) })),
     };
+  }
+
+  /* R52: an entry's hold statements, oldest first, and its current hold (the latest; null while none is stated). */
+  #holdsOf(id, ord) {
+    const holds = this.#rows(`SELECT seq, hold, reason, stated_by, at FROM action_holds WHERE bundle_id=? AND ord=?
+      ORDER BY seq`, id, ord).map((h) => ({ seq: h.seq, hold: h.hold, reason: h.reason, by: h.stated_by, at: h.at }));
+    return { holds, hold: holds.length ? holds[holds.length - 1].hold : null };
+  }
+
+  /** R54 (K899 (7); for `queue-producers` R19): every `legal` pressure mark on a visible action on which no hold is
+   *  stated, whatever the action's state (a legal matter outlives the action), at most 500 per page in (action id,
+   *  position) order. `cursor` is the last mark answered, `<action>#<position>`, when `truncated`, else null; `after`
+   *  is a previous page's cursor or an action id, read as after all that action's marks. Writes nothing. */
+  holdsDue({ after = null, limit = null, viewer = null } = {}) {
+    const max = clampLimit(limit, HOLDS_DUE_MAX, HOLDS_DUE_MAX);
+    const gate = viewerPredicate(viewer);
+    const from = after === null || after === undefined || after === "" ? null : String(after);
+    const at = from ? /^(.+)#(\d+)$/.exec(from) : null;
+    const seek = at ? { sql: "AND (p.bundle_id > ? OR (p.bundle_id = ? AND p.ord > ?))", args: [at[1], at[1], Number(at[2])] }
+      : from ? { sql: "AND p.bundle_id > ?", args: [from] } : { sql: "", args: [] };
+    const rows = this.#rows(`SELECT p.bundle_id, p.ord, p.note, p.marked_by, p.at FROM action_pressure p
+      JOIN bundles b ON b.bundle_id = p.bundle_id
+      WHERE p.kind='legal' AND b.object_type='action' AND (${gate.sql}) ${seek.sql}
+        AND NOT EXISTS (SELECT 1 FROM action_holds h WHERE h.bundle_id = p.bundle_id AND h.ord = p.ord)
+      ORDER BY p.bundle_id, p.ord LIMIT ?`, ...gate.args, ...seek.args, max + 1);
+    const truncated = rows.length > max;
+    const projects = new Map();
+    const items = rows.slice(0, max).map((r) => {
+      if (!projects.has(r.bundle_id)) projects.set(r.bundle_id, this.#projectOf(this.#heldFm(r.bundle_id), viewer));
+      return { action: r.bundle_id, ord: r.ord, note: r.note, marked_by: r.marked_by, marked_at: r.at,
+               project: projects.get(r.bundle_id) };
+    });
+    const tail = items[items.length - 1];
+    return { ok: true, items, limit: max, truncated, cursor: truncated && tail ? `${tail.action}#${tail.ord}` : null };
+  }
+
+  /* R54: the action's project, as `action-clocks` answers it: the project of the first determination among its
+     `rests_on` legs the viewer may read (conformance's `determinationRead`), null when it rests on none. */
+  #projectOf(fm, viewer) {
+    const conf = this.conformance;
+    if (!conf || typeof conf.determinationRead !== "function") return null;
+    for (const l of (Array.isArray(fm && fm.action_basis) ? fm.action_basis : [])) {
+      if (!l || typeof l !== "object" || l.kind !== "rests_on" || typeof l.target !== "string") continue;
+      let d = null;
+      try { d = conf.determinationRead({ id: l.target, viewer }); } catch { d = null; }
+      if (d && d.ok !== false && typeof d.project === "string" && d.project) return d.project;
+    }
+    return null;
   }
 
   /* R8: the override as the document states it, stamped with who and when from this module's table; null when the
@@ -2204,7 +2291,7 @@ export class Actions {
 
 /* The acts answer their catalogue-backed refusals with code, check and translation (the Provides' "Terms"). */
 for (const m of ["actionMove", "actionCorrespond", "actionLaws", "actionLawsPropose", "actionRiskTier", "actionQuotes",
-                 "actionRiskPropose", "actionPressure", "actionCreate", "check"]) {
+                 "actionRiskPropose", "actionPressure", "actionHold", "actionCreate", "check"]) {
   const fn = Actions.prototype[m];
   Actions.prototype[m] = function (...a) { return withRow(fn.apply(this, a)); };
 }
@@ -2298,6 +2385,9 @@ export function actionsOps(a, url, body) {
       pressure: b.pressure ?? (q("pressure_kind") !== null || q("pressure_note") !== null
         ? { kind: q("pressure_kind") ?? "", note: q("pressure_note") ?? "" } : null),
       viewer: q("viewer"), author: q("author") }),
+    /* R52: a litigation hold on a `legal` pressure mark (declared to the door by op-declarations, K902). */
+    actionhold: () => a.actionHold({ target: q("target") || b.target, ord: q("ord") ?? b.ord ?? null,
+      hold: q("hold") ?? b.hold ?? null, reason: q("reason") ?? b.reason ?? null, viewer: q("viewer"), author: q("author") }),
     actionquotes: () => a.actionQuotes({ counterparty: q("counterparty"), request: q("request"), answers: q("answers"),
                                          viewer: q("viewer") }),
     /* R42 (N231): the kinds this instance accepts, a read for every signed-in class (the op's spec is the control
