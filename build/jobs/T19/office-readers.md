@@ -21,7 +21,7 @@
 **Tests and checks.**
 - `node --test bio-plane/test/m/office-readers/`: tests 75, pass 75, fail 0 (66 before; 9 new in `mce.test.mjs`, 7 of which fail against the walk with the skip disabled, the other two guarding what must not change).
 - Users of the module: `node --test bio-plane/test/m/odf-reader/ bio-plane/test/m/format-registry/`: tests 84, pass 84, fail 0. No layer tests are named in `build/manifest.md`.
-- `format: 82 modules, 77 requirements files; 0 failures` · `architecture: 10 product files, 32 relative imports (0 naming no tracked file, not judged); 0 failures` · `coverage: 1 modules, 27 of 27 live requirement ids named by a test; 0 failures` · `ownership: 2 files changed by office-readers between tranche/T19 and HEAD; 0 failures` (rerun after commit).
+- `format: 82 modules, 77 requirements files; 0 failures` · `architecture: 10 product files, 32 relative imports (0 naming no tracked file, not judged); 0 failures` · `coverage: 1 modules, 27 of 27 live requirement ids named by a test; 0 failures` · `ownership: 3 files changed by office-readers between tranche/T19 and HEAD; 0 failures` (after commit).
 
 Size (session_0158jNMUufRDREVsYavJs1om): test runs 9, module lines 3,457
 
