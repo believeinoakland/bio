@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 /* D-321 — IS THERE A REAL SCANNED AGENDA PAGE IN THE BYTES THIS PROJECT ALREADY HOLDS?
  *
- * NOT part of the battery (a `.probe.mjs` is discovered by neither `battery.mjs`
- * nor `coverage.mjs`). It reads only the local git object store and writes nothing.
+ * NOT a test: a `.probe.mjs` is run by hand, and neither `npm test` in
+ * `pdf-worker` nor any `node --test` glob reaches it. It reads only the local git
+ * object store and writes nothing.
  *
  * D-321 asks for ONE real image-only page carrying agenda-shaped text, committed
- * to the OCR fixtures, so `ocr-member-e2e.test.mjs` can drive the `reading_refs`
+ * to the OCR fixtures, so an end-to-end OCR test can drive the `reading_refs`
  * join over a real page instead of synthetic ink. The page must come from bytes
  * already held (the cloud proxy refuses Legistar, and a refusal is not routed
  * around). This probe is the SEARCH, and its answer is recorded whichever way it
@@ -29,8 +30,7 @@
  * image-only page this project is known to hold — `scan-ccitt-g4-page.pdf`, the
  * scanned City Council RESOLUTION (Legistar attachment 15721260, page 2) — as
  * image-only. That page is the positive control: the detector can see the class.
- * Whether that page is agenda-shaped is not re-measured here: `ocr-member-e2e.test.mjs`
- * section 4 drives it through the real engine and asserts it mints no reference.
+ * Whether that page is agenda-shaped is not measured here.
  *
  *   node pdf-worker/test/agenda-scan-census.probe.mjs          (from the repo root)
  *   node pdf-worker/test/agenda-scan-census.probe.mjs --dir <d> (a directory of files)
