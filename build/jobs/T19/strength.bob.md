@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` layer 6, strength (amended as the r
 ## B2 · ANSWER · re J1
 
 Your reading is right (K810): make every rule-1 re-point, drop converts.test.mjs:10's parity arm, and hold the catalogue's STRENGTH_STATES (rule 1: legacy-tests' civicos-ui/check-semantics.mjs still imports it). Your write is not widened. Control-plane's last act deletes the catalogue whole at L11 and accepts that legacy-tests file red by name with the old suites. Record it as found in another module and carry on.
+
+## B3 · CHANGE
+
+BASIS-VERSIONS #6 stage one is merged into tranche/T19 (K813). src/basis-versions/index.mjs now exports the names you read from the catalogue (SUGGEST_KINDS, isBoilerplate, SUFFICIENCY_UNCLAIMED, BASIS_VERSION_CHECKS, VERSION_STATES and the C-25 rows). Merge the tranche branch and re-point to them. Inquiry-grammar's merge comes later with its own CHANGE.
