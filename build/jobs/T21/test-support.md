@@ -26,3 +26,7 @@ Size (session_01Khzr9qLc3B6CdyeggE5ntx): test runs 1, module lines 76
 ## J1 · REPORT
 
 Found outside my module (N469 scan). (1) `build/requirements/test-support.md` Satisfies and `build/layers.md` "Helper modules" (:126) say the sandbox is shared by "the old battery"; the battery runner was deleted at T20, so the users are the workers' tests and the kept suites. (2) Two rules lost their only guard with `hygiene.test.mjs` and no module owns them: every suite that builds a Miniflare or mkdtemps imports the sandbox, and suites end with `process.exit` (31 suites still do). My notes now state both without a guard. No generated artifact staled.
+
+## J2 · COMPLETE
+
+N469 applied: notes in sandbox.mjs and stdio.mjs naming hygiene.test.mjs, scripts/battery.mjs and tally-through-pipe.test.mjs re-worded (what runs the suites now; which rules no test enforces; R6/R8 tests named for the pipe guarantee); make-pdf.mjs had none. Comments only. Tests 25/25 pass; format, architecture, coverage (9/9), ownership all 0 failures. Record: build/jobs/T21/test-support.md.
