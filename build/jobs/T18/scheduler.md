@@ -28,3 +28,7 @@ Prepared ahead of monitoring's merge (K713), pushed at 7f28308d14:
 - `format`: 82 modules, 77 requirements files; 0 failures. `architecture`: 8 product files, 25 relative imports; 0 failures. `coverage`: 20 of 20 live requirement ids named by a test; 0 failures. `ownership`: 8 files changed; legacy-store 0 added, 0 removed; 0 failures.
 
 Size (session_0111wxi28ywVWcPoZWi8oVBq): test runs 17, module lines 402
+
+## J2 · COMPLETE
+
+Done at b4ca375f76 (B2 applied). N-A9 in full: deadline-recheck consumer (R5, R2), its promotion arm (R9), plane test with the real alarm marking an action overdue. Monitoring's spin check: a tick that marks nothing holds a past wake to the next UTC day (R50's granularity, not an interval of mine, R7); a marking tick releases it; tested. Convert done through entities' notice. Strike R9's entities mark and R5's deadline-recheck mark. scheduler 51 pass/0 fail/1 todo (R10's); tasks, queue, instance-setup, monitoring green; four checks 0 failures. Record has the findings (legacy-store's redundant resolve arms, J1; a monitoring R50 improvement).
