@@ -522,6 +522,9 @@ export const JUSTIFICATION_REFUSALS = [
      supersession (conformance's C-113.22) and escalation's reasoned acts (escalation R24). The family's requirement,
      unchanged; `NO_REASON` stays for the acts that still answer it. */
   "INTENT_NO_REASON", "CONFORMANCE_NO_REASON", "ESCALATION_NO_REASON",
+  /* K918 (T20): a litigation hold's statement without its reason (actions R52, C-117.21), refused absent as well as
+     malformed, as RISK_TIER_REASON_REFUSED is. */
+  "HOLD_REFUSED",
 ];
 
 /* THE GROUNDS ON WHICH A MUTATING OP HAS NO RUNG. Written ONCE here and pointed
@@ -840,6 +843,9 @@ export const RUNGS = {
   optionrevise:          "reasoned", // PLAN_NO_REASON (action-plans R9: a revision with its reason)
   optiondispose:         "reasoned", // PLAN_NO_REASON (action-plans R13: declined and blocked need a reason)
   planclose:             "reasoned", // PLAN_NO_REASON (action-plans R20: a member closes a plan with a reason)
+  /* K918 (T20), on R27's rule: a litigation hold is stated with its reason and corrected forward by a further
+     statement, the earlier kept (actions R52). */
+  actionhold:            "reasoned", // HOLD_REFUSED (actions R52, C-117.21: a hold stated without its reason)
   /* The version pair whose target state is in VERSION_REASON_REQUIRED. The
      OTHER FOUR version acts route through the SAME `#moveVersionState` and the
      SAME `VERSION_NO_REASON` refusal, and the branch DOES NOT FIRE for them —
@@ -1188,9 +1194,6 @@ export const RUNG_ABSENT = {
   templatesave:         { ground: "undetermined", is: "a member keeps an approved draft, or their derivative of it, as a named template of the group's; no machine writes one (filings R26)" },
   actioncreate:         { ground: "undetermined", is: "a member creates an action, the same write as promoting an action document (actions R47)" },
   actionpressure:       { ground: "undetermined", is: "a member marks a received correspondence entry as pressure directed at the group, appended to a table of its own and never rewritten; an entry is marked once (actions R48)" },
-  /* K899 (7), K902 (T20): a hold statement on a `legal` pressure mark, graded beside `actionpressure` as the tranche's
-     entry rules. It is appended and never rewritten, and a later statement supersedes it on read with both kept. */
-  actionhold:           { ground: "undetermined", is: "a member states whether a litigation hold is in place on a reply marked as legal pressure, appended and never rewritten (actions R52)" },
   /* K727 (T18), on R27's rule: action-plans' acts that ask no authored reason and that no published act takes back —
      opening a plan, adding, proposing and adopting an option (`goaldeclare`'s, `standardpropose`'s and `standardadopt`'s
      grounds), a checkpoint's judgement (its note optional, never re-judged) and starting an option as an action

@@ -90,7 +90,9 @@ test("R2: the rung ladder, low to high, and RUNGS' assignment", () => {
       /* N364: the member's acts on a source's history */
       "sourcedisclose", "sourcelink", "sourceconsent",
       /* K727: action-plans' acts that ask the member's reason */
-      "plansubjectadd", "plansubjectremove", "optionrevise", "optiondispose", "planclose"],
+      "plansubjectadd", "plansubjectremove", "optionrevise", "optiondispose", "planclose",
+      /* K918: actions R52's hold statement */
+      "actionhold"],
   };
   for (const k of Object.keys(want)) want[k].sort();
   const got = {};
@@ -403,11 +405,9 @@ test("R27: no op is graded `undetermined` that the ruling moved, and exactly the
     "inboxpull",
     /* K705, K709: filings' and actions' new writes */
     "communicationprepare", "templatesave", "actioncreate", "actionpressure",
-    /* K902 (T20): actions R52's hold statement */
-    "actionhold",
     /* K727: action-plans' six */
     "planopen", "optionadd", "optionpropose", "optionadopt", "checkpointrecord", "optionstart"].sort());
-  assert.equal(undetermined.length, 72, "R27's count: K902's actionhold added to the 71 held before it");
+  assert.equal(undetermined.length, 71, "R27's count: K727's six added to the 65 held before them");
 });
 
 test("R27: no new rung is added — the ladder keeps its five", () => {
@@ -436,6 +436,7 @@ const LAYER9_RUNGS = {
   /* K727: action-plans' (its R4, R9, R13, R14, R20) */
   plansubjectadd: "reasoned", plansubjectremove: "reasoned", optionrevise: "reasoned", optiondispose: "reasoned",
   planclose: "reasoned", scenarioset: "reversible",
+  actionhold: "reasoned",   // K918: actions R52
 };
 const LAYER9_ABSENT = {
   counselpacketexport: "substrate",
@@ -446,7 +447,6 @@ const LAYER9_ABSENT = {
   escalationattach: "undetermined", escalationend: "undetermined",
   communicationprepare: "undetermined", templatesave: "undetermined",   // K705: filings R23, R26
   actioncreate: "undetermined", actionpressure: "undetermined",         // K709: actions R47, R48
-  actionhold: "undetermined",                                           // K902: actions R52
   /* K727: action-plans' six, and action-clocks' two reminders (a member's own request, `queuesnooze`'s ground) */
   planopen: "undetermined", optionadd: "undetermined", optionpropose: "undetermined", optionadopt: "undetermined",
   checkpointrecord: "undetermined", optionstart: "undetermined",
@@ -650,16 +650,15 @@ test("R3: the signer pair and knockerconsent are graded `credential`, as signera
   for (const op of ["signerregister", "signerrevoke", "knockerconsent", "inboxpull"]) assert.ok(!Object.hasOwn(RUNGS, op), op);
 });
 
-/* K899 (7), K902 (T20): actions R52's `op=actionhold`, a member's hold statement on a `legal` pressure mark, wired as
-   `actionpressure` beside it is: a stated absence (R3, ground `undetermined`) and a NON_ACTS reason (R7), keyed by the
-   entry the mark is on. With the control plane's row for it (mutating, gated) nothing is unaccounted (R12); without
-   either registry it would be named. */
-test("R3 R7 R12: actionhold, actions R52's op, is graded `undetermined` with its sentence and named in NON_ACTS as "
-   + "entry-directed, and with the control plane's row for it nothing is unaccounted", () => {
+/* K899 (7), K902, K918 (T20): actions R52's `op=actionhold`, a member's hold statement on a `legal` pressure mark: graded
+   `reasoned` (R2, R27; its backing is driven in backing.test.mjs) and named in NON_ACTS (R7), keyed by the entry the
+   mark is on. With the control plane's row for it (mutating, gated) nothing is unaccounted (R12). */
+test("R2 R7 R12 R19: actionhold, actions R52's op, is graded `reasoned`, HOLD_REFUSED is in the justification family, "
+   + "it is named in NON_ACTS as entry-directed, and with the control plane's row for it nothing is unaccounted", () => {
   assert.ok(Object.keys(actionsOps({}, new URL("http://x/"), {})).includes("actionhold"), "actions' op map holds it");
-  assert.deepEqual(RUNG_ABSENT.actionhold, { ground: "undetermined", is: "a member states whether a litigation hold is "
-    + "in place on a reply marked as legal pressure, appended and never rewritten (actions R52)" });
-  assert.ok(!Object.hasOwn(RUNGS, "actionhold"));
+  assert.equal(RUNGS.actionhold, "reasoned");
+  assert.ok(!Object.hasOwn(RUNG_ABSENT, "actionhold"));
+  assert.ok(JUSTIFICATION_REFUSALS.includes("HOLD_REFUSED"));
   assert.equal(NON_ACTS.actionhold, "entry-directed: keyed by (action, entry ordinal); appends a hold statement and "
     + "never rewrites the entry or its mark");
   assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => a.id === "actionhold"));
@@ -669,5 +668,6 @@ test("R3 R7 R12: actionhold, actions R52's op, is graded `undetermined` with its
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
   assert.deepEqual(r.stale, base.stale.filter((op) => op !== "actionhold"));
   assert.ok(base.stale.includes("actionhold"), "carried by no row, both its keys read stale");
-  assert.equal(A.decorate({ id: "actionhold", label: "x" }, null).rung_absence, "undetermined", "R24: never a bare null");
+  assert.deepEqual([A.decorate({ id: "actionhold", label: "x" }, null).rung, A.decorate({ id: "actionhold", label: "x" }, null).rung_absence],
+    ["reasoned", null], "R24: a rung, never a bare null");
 });
