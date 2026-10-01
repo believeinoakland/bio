@@ -1,0 +1,12 @@
+session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
+session_011zouWbsKdokGSgTHZdNzmM,job,record-grammar,15785170,245187,6405,35743,,8,2259
+session_014nagcRH9hTKVppmJyfbM18,job,jurisdictions,13946490,248944,130,64021,,14,3170
+session_01RVLyww2mbVhaNCnyJ1r3Vp,job,signatures,7416735,148584,102,17128,,9,1158
+session_013wub6dXNauK3Eb12UzKxmu,job,subresources,2997784,125267,50,8034,,1,1426
+session_01Se6xS58Nis2ohaMchdpduN,job,pdf-pixels,3631845,140147,58,12257,,4,3111
+session_01FhgUeJoRWG4CGHy3n9dbCQ,job,pdf-reader,3727607,158189,54,10219,,1,2941
+session_01FFFeexzv4JahkZvFP77Y6p,job,ocr-worker,5167318,160390,74,15035,,4,1845
+session_01B6vMjCUja1qXTcpkSqYzuB,job,pdf-worker,3384727,75030,68,14201,,3,13
+session_01Qn6hiZsQ1MvFCad8SnL9UK,job,bundler,5827753,179487,74,18963,,2,2448
+session_01QZhPT74LXukUHVTDZ8C1qw,job,runtime-limits,2372830,76875,48,7765,,1,306
+session_01Khzr9qLc3B6CdyeggE5ntx,job,test-support,2350874,76968,48,12215,,1,76
