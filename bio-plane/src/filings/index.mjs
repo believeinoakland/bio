@@ -58,8 +58,11 @@ import { consequencesModule } from "../consequences/index.mjs";
 import { actionsOf, noSuchAction } from "../actions/index.mjs";
 import { actionClocksOf } from "../action-clocks/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
-import { isMachineIdentity, proposalLabel, parseFrontmatter, MACHINE_CLASS_PREFIX, BASIS_GRADES,
-         sha256HexSync } from "../../checks/bio-checks.mjs";
+import { isMachineIdentity, MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
+import { proposalLabel } from "../record-grammar/labels.mjs";
+import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
+import { BASIS_GRADES } from "../record-grammar/grades.mjs";
+import { sha256HexSync } from "../record-grammar/sha256.mjs";
 import { FILINGS_TABLES, migrateFilings } from "./schema.mjs";
 import { rowOf } from "./checks.mjs";
 import { deadlineDate, realDate, COUNTED_FROM } from "./dates.mjs";
