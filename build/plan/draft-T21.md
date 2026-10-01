@@ -1,104 +1,123 @@
 # Plan: tranche T21
 
-**Status** · DRAFT for T21, written by a worker for BOB #85, 2026-10-01. Read on `tranche/T20` @ bae8eb9d04 (layer 1 closed, K870; layer 2 running, K872; folds for L3–L6 and L11 done, K873, K874, K876). Assumes T20 completes as `current.md` plans it (with "Roster after K861": 25 jobs, plane last in L11 deleting `held.mjs` and the `src/index.mjs` re-export; ratification L8 re-pointing `preflight.test.mjs`, K875); nothing T20 places is repeated here. A line marked *conditional* depends on T20's outcome and is dropped if T20 met it. **Re-read against T20's close before opening (K424's practice):** each T20 job's own deferrals (P8), every `awaiting stamp` its layers 3–11 name (T20 rule 4), and plane's last-job REPORT.
+**Status** · DRAFT for T21, written by a worker for BOB #86, 2026-10-01, from next.md @ 3583f43500 (`origin/tranche/T20`, K921; `next.md` unchanged since 52bd6d0292). T20 layer 11 running (K917–K920). Assumes T20 closes as `current.md` plans it: plane last but legacy-tests switches the held code and keeps `src/index.mjs` (K918); instance-setup re-points its four tests (K917); legacy-tests deletes the old suites and accounts for the release row (K879). A line marked *conditional* depends on T20's close. Supersedes BOB #85's `build/plan/draft-T21.md` (written before K882 moved most of it into T20).
 
-Cut from: `next.md`'s open entries (N450 twice, N451–N454, the K820 stale-comment line, and every entry no tranche has carried); `current.md` "Deferred beyond T20", "next.md: every entry", "For BOB and for Bob", "Added at T19 layer 10's close", "Added during T19 layer 11", "Roster after K861"; rulings K795–K877; `build/jobs/T20/*.md` (L1's records, L2's mail); `build/plan/starts-T20/`; `modules.json`. An `N` entry's text is in `next.md`.
+Cut from: `next.md` whole (43 entries); rulings K860–K921; `current.md` (T20); `plan/triage-T20.md`; `plan/draft-T20-answers.md` A.3, B.6; `plan/draft-T20-dec36.md` §6; `plan/draft-filing-templates.md` §3, §5; `build/jobs/T20/*.md`; `modules.json`. Every file:line below was checked at 3583f43500.
 
-**T21's priorities:** BOB's (P17, as K795 ruled for T20): this plan whole. Bob's two open questions (⚑Bob-2, ⚑Bob-3) are written both ways below.
-
-**What T21 finishes (P19's report).** (1) The last held copies in membership (N453) and the stamp of every row T20 changed after its layer 2. (2) Plane's stats sight counts no other module's table (N454). (3) The `INQUIRY_GRAMMAR_ROWS` alias goes (N452). (4) The last stale references to retired files in comments (K820's line, N450 pdf-pixels). Most of (2)–(4) can be done in T20 instead, whose layers 5, 6 and 11 have not started (⚑BOB-1); then T21 is membership, promotion and pdf-pixels, plus whatever Bob rules. What stays is the release (⚑Bob-2), the UI (Bob's), Bob's open questions and the deployments (table).
+**T21's priorities:** BOB's (P17): every entry that can safely be done (P19). Main content: Bob's filing templates and local facts (K921), "record" in members' text across layers 1–6 (N458), the project state's form (b) (N456, K904), DEC-36's last shares (N459, N462), and the leftovers T20's layer order blocked (N452, N453, N455, N463).
 
 ## Rules at the opening
 
-T20's rules hold where they still apply (no legacy-tests stage, K619; merge early, §4; one file, one editor, §12.2; a job names each `not yet met` mark it meets, BOB strikes it at the merge, K775 (6); no layer closes red except a red accepted by name; owners export, plane composes, K861 (1)). T20's rules 1 and 2 are spent. Added:
+T20's rules hold (merge early, §4; one file, one editor, §12.2; a job names each `not yet met` mark it meets, BOB strikes it at the merge, K775 (6); no layer closes red except a red accepted by name; owners export, plane composes, K861). Added:
 
-1. **Folds (BOB, P18, no change of meaning unless named).** Before L1: bundler's R19 lead paragraph re-worded to `deploy.mjs` (N451; wording only, no job); `modules.json`: `tools/fw21-onpoint-probe.mjs` out of legacy-tests' `paths` (the file went with `tools/` in T19, K787; the only `modules.json` path that does not exist at HEAD). Before L2: membership's Uses and any clause naming `signerRegisterOwn`/`signerRevokeOwn` as membership's (credentials R9, R10 hold them). Before L5: connections R60 gains the `refs` figure source as an export (N454, the sequencing below). Before L6: inquiry-grammar R7's note on the kept old name struck (N452). Before L11: plane R10's "`refs` (`connections`' table, K877)" re-worded to "connections' exported `refs` source (its R60)".
-2. **Merge early:** L2 membership before promotion's stamp (last in L2); L6 skills before inquiry-grammar drops the alias (a CHANGE to inquiry-grammar after skills merges, P10); L5 connections before L11 plane (layer order gives it).
-3. **Stamp.** Promotion (L2) stamps T20's layers 3–11 (*conditional* on any `awaiting stamp` there: acquisition's and control-plane's C-68.1 sites, K850, K873, are the known candidates) and T21's layers 1–2 (membership's departures, N453: certain). A row change in T21's layers 3–11 is `awaiting stamp` for T22 (P8); none is expected.
-4. **Accepted red by name:** legacy-tests' `test/signer-enrolment.test.mjs` once N453 deletes membership's copies, with the old suites (K619), unless ⚑Bob-2 arm A deletes it first.
+1. **Folds before each layer (BOB, P18).** Before L1: `modules.json` gets `local-facts` (L9, first, before `standards`) and `filing-templates` (L9, after `action-clocks`, before `filings`), with their uses (below); `requirements/filing-templates.md` and `requirements/local-facts.md` written from `draft-filing-templates.md` §3 as §5 amends it; jurisdictions R40–R45 and record-grammar R42 (§3) folded; record-grammar `STATES.project` wording, form (b) (K904). Before L2: promotion R56 and its C-86.15 row text (`draft-T20-answers.md` B.6 (i), form (b)). Before L6: skills R30 (`filing_drafting`); inquiry-grammar R7's alias note struck (N452). Before L7: reevaluation R16's new source (N457, BOB's design). Before L9: action-clocks R10; filings: R26 retired with a pointer, the draft's R27–R30 **renumbered R28–R31** (R27 is DEC-36's, K906), R8 `counselPacket` at every tier (`NOT_TIER3` retired), `KIND_NO_TEMPLATE` retired (K921 §5); escalation R7, R8, R13 compatibility rule and R26 (N462); BOB's N460 review. Before L11: queue-producers R20, R21; affordances, op-declarations, control-plane, queue and plane clauses for the new ops and producers (K902's pattern).
+2. **Merge early:** L2 membership, then promotion's stamp last. L9 local-facts first, then action-clocks and filing-templates, then filings (it reads all three). L11 op-declarations and affordances early; queue after queue-producers; plane after control-plane.
+3. **Accepted red by name:** C-4.2 from record-grammar's L1 merge (N456's new edges) until promotion's L2 fence merges (B.6 (ii)). Totality on the new ops between L9's close and op-declarations' and affordances' L11 merges (K902's precedent).
+4. **Stamp.** Promotion (L2) stamps T20's layers 3–11 (acquisition's C-68.1 `where`, K887; control-plane's C-68.1 region, K920; action-grammar C-117.20–.22, K912; intent's C-2.9/C-9.1 behaviour, K907; anything else T20's close names) and T21's layers 1–2 (record-grammar C-6.3, the slot's C-9.1 and `STATES.project`; jurisdictions' new codes; membership's N453 departures; promotion's own C-86.15). Rows changed in T21's layers 3–11 are `awaiting stamp` for T22 (P8): provenance C-53.13's translation (N458), every new row of filing-templates and local-facts, filings' C-115.31–.37 moving to filing-templates and its two retired codes.
 
-**Roster (8 jobs; by layer 1, 2, 0, 0, 1, 3, 0, 0, 0, 0, 1):** L1 pdf-pixels · L2 membership, promotion · L5 connections · L6 inquiry-grammar, run-rules, skills · L11 plane. *Conditional:* observation-log (L5), agent-worker (L6), ratification (L8) and promotion's comment share if their T20 STARTs do not take K820's comments (⚑BOB-2); legacy-tests (L11) on ⚑Bob-2 arm A; docprofile (L1), acquisition (L3), monitoring (L10) on ⚑Bob-3 arm B; any module a T20 job's deferral names. If BOB moves N452, N454 and the K820 comments into T20 (⚑BOB-1), connections, inquiry-grammar, run-rules, skills and plane leave, and the roster is 3 jobs (L1 1, L2 2). No new module; none past the 4,000-line mark grows (pdf-worker 4,075 is not touched; pdf-pixels' line is comments).
+## Roster (41 jobs; by layer 5, 3, 3, 1, 5, 9, 2, 0, 6, 1, 6)
 
-## Layer 1
+- **L1** record-grammar (N456, N458, K921), jurisdictions (K921, N-A14), signatures (N458), subresources (N458), pdf-pixels (N455). *Conditional:* ocr-worker, pdf-worker, bundler (notes naming `battery.mjs`, if T20's legacy-tests deletes it)
+- **L2** record-core (N458), membership (N453), promotion (N456, N458, the stamp)
+- **L3** provenance (N458), acquisition (N458), capture (N458)
+- **L4** extraction (N458)
+- **L5** connections (N459, N464, N458), bias (N458), observation-log (N458), query-language (N458), retrieval (N458)
+- **L6** inquiry-grammar (N452, N458), inquiry (N458), citation (N458), basis-versions (N458), strength (N458), contradiction (N458), capture-requests (N463, N458), skills (K921), agent-worker (N458)
+- **L7** intent (N456's share), reevaluation (N457)
+- **L8** none
+- **L9** *local-facts* (new, K921), action-grammar (ACTIONS #7's comment), action-clocks (K921), *filing-templates* (new, K921), filings (K921, N460), escalation (N462, N460)
+- **L10** scheduler (N463)
+- **L11** affordances (K921), queue-producers (K921), queue (K921), op-declarations (K921), control-plane (K921, ACTIONS #7's comment), plane (N463, K921). *Conditional:* legacy-tests (N461's test share, if T20 keeps the suite and the module)
 
-- **pdf-pixels** · N450 (the second, 2026-10-01; PDF-WORKER #4 J1 (2), K865): `pdf-worker/test/pagepixels-corpus.probe.mjs`:5 and `test/agenda-scan-census.probe.mjs`:5 name the retired `coverage.mjs` as a runner the probes avoid; re-word (both files are pdf-pixels' `tests` in `modules.json`). **Size:** 2 comment lines.
-- *Conditional* **docprofile** · ⚑Bob-3 arm B only: drop R6's no-view fallback (N21). **Size:** ~−20, tests.
+No module past the 4,000-line mark grows: extraction (4,002, K891) takes two re-worded strings; pdf-worker is touched only on the `battery.mjs` condition (a JSON note).
 
-## Layer 2
+## STARTs, sketched (BOB writes the final ones)
 
-- **membership** · **N453** (K875; MEMBERSHIP #14 J1, `build/jobs/T20/membership.bob.md`:11): delete `signerRegisterOwn` (`src/membership/index.mjs`:2673), `signerRevokeOwn` and what only they need (`#signerMemberBar`, `#keyShaped`, the `BAD_KEY` answer C-96.8, rows C-96.15–.17, the `SIGNER_ENROLMENT_CHECKS` copy C-63) and their module tests. *Conditional* on ratification's T20 L8 job having re-pointed `test/m/ratification/preflight.test.mjs` (:157, :159, :255, :268, :272) to credentials; re-scan `bio-plane/src`, `bio-plane/test/m`, `agent-worker/`, `newgroup/` first: a caller left names itself and the copy waits (order, P4). Rows leaving membership's table are promotion's stamp. **Size:** ~−150 code, ~−30 rows, tests. Merge early.
-- **promotion** · After membership merges (rule 2). **The stamp:** `CATALOG_VERSION` (`bio-plane/src/gate.mjs`) over membership's N453 departures and every row T20's layers 3–11 left `awaiting stamp` (rule 3); `ROW_CENSUS` (R50) re-pinned. With it, K820's comment share if T20's promotion job did not take it (*conditional*): `gate.mjs`:293–294's stamp note gives C-22.7's `where` as `src/ai-runs/skill-version.mjs`, now `src/run-rules/skill-version.mjs`. **Size:** the stamp, a whole job (PROMOTION #18, #20, #21).
+**L1**
+- **record-grammar** · N456 (form (b), K904): `bundle.mjs`:520–523 delete C-6.3's `workproduct_state` arm; :685 slot ids `['C-2.9']`; `document.mjs`:291–299 `STATES.project` legal `forming`, `closed`, legacy `investigating`, `matured`, edges `forming→closed`, `investigating→closed`, `matured→closed`, `closed→forming`. Intent's claim of `C-9.1` stays harmless (record-core R67 accepts ids outside a slot, `record-core/index.mjs`:1080). N458: `bundle.mjs`:250, :341. K921: R42 `template` in `PROPOSAL_STATES`. Proof: R28, R42 tests; fixtures re-keyed (`test/m/record-grammar/fixtures/`).
+- **jurisdictions** · K921: R40 (template attribution, `TEMPLATE_UNATTRIBUTED`), R41 `time_zone`, R42 `hours`, R43 holidays' `offices`, R44 `status`; R45 the test profile (`profiles/test-port-ellery.mjs`). The first profile (`profiles/oakland-alameda.mjs`) takes the researched holidays, hours and time zone, each `researched` with its `M-<n>` measurement, **only if the research worker's result is in before this job's COMPLETE** (else T22, order P4). Proof: R40–R45 tests.
+- **signatures** · N458: `src/sign-release.html`:138, :142, :144, :397, :398, :403; re-render `signpage.mjs` (`scripts/embed-signpage.mjs`). Stales plane and installer bundles (§14).
+- **subresources** · N458: `subresources.mjs`:1378, :1381.
+- **pdf-pixels** · N455: `pdf-worker/test/pagepixels-corpus.probe.mjs`:5, `test/agenda-scan-census.probe.mjs`:5 name the retired `coverage.mjs`; re-word. Comments only.
+- *Conditional* **ocr-worker**, **pdf-worker**, **bundler** · `ocr-worker/fleet-member.json`:14, `pdf-worker/fleet-member.json`:13, `bio-plane/scripts/fleet-bundle.mjs`:68, :109, :134, :183 name `battery.mjs` as live (triage-T20 "Found while checking"); only if LEGACY-TESTS #18 deletes it (its COMPLETE lists them, K890).
 
-## Layer 3
+**L2**
+- **record-core** · N458: `record-core/index.mjs`:801, :802.
+- **membership** · N453: delete `signerRegisterOwn` (`membership/index.mjs`:2667), `signerRevokeOwn` (:2725), `#signerMemberBar`, `#keyShaped`, `BAD_KEY` (C-96.8), its rows C-96.15–.17 (`checks.mjs`:89–:99; credentials keeps its own, `credentials/checks.mjs`:88–:98) and the `SIGNER_ENROLMENT_CHECKS` copy C-63 (`checks.mjs`:426). Ratification's test re-pointed (K910); re-scan finds no other caller at HEAD (control-plane dispatches to credentials, `dispatch.mjs`:209–210). Merge early.
+- **promotion** · N456: R56, refuse a creation stating a project state other than `forming`/`closed` (`PROJECT_STAGE_COMPUTED`, C-86.15); fence the old project moves, `history.mjs`:217 `STATE_MOVE_FENCED_SINCE` gains `project`. N458: `gate.mjs`:743 and 14 more (A.3). **The stamp** (rule 4); `ROW_CENSUS` re-pinned. Proof: R56, R15, R50 tests; C-4.2 green again.
 
-- *Conditional* **acquisition** · ⚑Bob-3 arm B only: pass `jurisdictions.combine`'s view of the active profiles to `docprofile` on every call, an empty view when none is set (N21). **Size:** ~20, tests.
+**L3**
+- **provenance** 30 hits (`checks.mjs`:363–365 row C-53.13, `awaiting stamp` T22; `index.mjs`, `register-checks.mjs` as A.3) · **acquisition** `index.mjs`:667 · **capture** `index.mjs`:1690 · N458 each; each re-scans its paths first.
 
-## Layer 5
+**L4**
+- **extraction** · N458: `extraction/index.mjs`:866, :1283. No growth (P6, K891).
 
-- **connections** · **N454** (K877; RECORD-CORE #12 J1), step one of two (sequencing below): export a figure source shaped as record-core R63's `counts(hid)` for `refs` (`refs` less the rows whose `bundle_id` or `target_id` is in `hid`, the `COALESCE(k, '')` reading of a NULL key, exactly as plane's copy, `bio-plane/src/plane/held.mjs`:79 at HEAD, moved out of `held.mjs` by plane's T20 job), proven equal by its own tests, and register nothing new: its R60 registration (`src/connections/index.mjs`:1391) keeps its five keys. **Size:** ~20, tests.
-- *Conditional* **observation-log** · K820's share, if its T20 START does not carry it: `src/observation-log/checks.mjs`:11 says the catalogue keeps a copy "until T19's layer 1" and names `airun.mjs` as present; re-word (a provenance note may stay, `layers.md` rule 6). **Size:** ~2 lines.
+**L5**
+- **connections** · N459: `backlinks` (`connections/index.mjs`:898) adds `out_of_view: true` when a citer was withheld (an ungated `EXISTS` beside the gated read), R20 re-worded per `draft-T20-dec36.md` §6. N464 with N458: :899 "bundle id" → "record id", and :955, :983, :984, :996, `themes.mjs`:98, :100. Proof: `test/m/connections/edges.test.mjs` hidden-citer arm and a no-key negative control.
+- **bias** (`checks.mjs`:120, :142; `index.mjs`:302, :562, :617) · **observation-log** (`index.mjs`:633; `vocabulary.mjs`:1504) · **query-language** (`query.mjs`:555, :558, :1864) · **retrieval** (`frontier.mjs`:179, :182; `index.mjs`:530, :716, :737, :759) · N458.
 
-## Layer 6
+**L6**
+- **inquiry-grammar** · N452: delete `INQUIRY_GRAMMAR_ROWS` (`checks.mjs`:89, `index.mjs`:13) and its same-object test (`test/m/inquiry-grammar/grammar.test.mjs`:223–228); no reader left at HEAD (control-plane dropped its alias, K920; skills and inquiry re-pointed, K900). N458: `grammar.mjs`:76, :144, :397, :606, :1060.
+- **capture-requests** · N463: `test/m/capture-requests/plane.test.mjs`:17–18 read `join(SRC, "index.mjs")` (:13): re-point to `src/plane/index.mjs`. N458: `index.mjs`:266.
+- **skills** · K921: R30, the `authored` layer `filing_drafting` (its `load_when` and clauses). Proof: R30 test.
+- **inquiry** (`index.mjs`:887, :1341) · **citation** (`index.mjs`:241, :440) · **basis-versions** (`grammar.mjs`:327; `index.mjs`:936) · **strength** (`index.mjs`:320) · **contradiction** (`index.mjs`:1338) · **agent-worker** (`src/harness.mjs`:291, `src/index.mjs`:950; text the assistant relays counts, K902; regenerates its manifest) · N458.
 
-- **inquiry-grammar** · N452's second half (K867): delete the kept `INQUIRY_GRAMMAR_ROWS` export from `checks.mjs` and `index.mjs` (kept by T20's job, `starts-T20/inquiry-grammar.txt`) and its same-object test, after skills merges (rule 2). Re-scan first; T20's inquiry and control-plane jobs re-point `inquiry/grammar.mjs`:9, :20 and drop `control-plane/families.mjs`:94's alias (*conditional*: a reader left waits, P4). **Size:** ~−5, a test.
-- **run-rules** · K820's share (no T20 job): `src/run-rules/rules.mjs`:104–108 ("this file now re-exports it, so every reader of `airun.mjs` keeps its names ... re-exported until those readers re-point") and `checks.mjs`:223 name `src/airun.mjs` as present; re-word to what holds now (`ai-runs` and run-rules split, K617). **Size:** ~6 comment lines.
-- **skills** · **N452** (K867): `src/skilldoctrine.mjs`:90, :253 and `test/m/skills/fixture.mjs`:12, :21 read `INQUIRY_GRAMMAR_CHECKS` (the fixture's family alias then needs none). Merge early. **Size:** ~4 lines.
-- *Conditional* **agent-worker** · K820's share, if its T20 START does not carry it: `test/harness.control.mjs`:249 (K820's line); and, found by this draft, `src/harness.mjs`:138, :223, :245, :646 and `src/subsession.mjs`:105, :117, :319 cite `bio-plane/src/airun.mjs` as the holder of names now in run-rules. The agent-worker bundle is regenerated by its job (manifest). **Size:** ~10 comment lines.
+**L7**
+- **intent** · N456's share (B.6): `PROJECT_GRAMMAR` (`intent/grammar.mjs`:30) claims `['C-2.9']` only, after record-grammar's slot dropped C-9.1. Proof: R29 test.
+- **reevaluation** · N457: `wp_retraction` (`reevaluation/index.mjs`:311–315, `checks.mjs`:27) re-sourced from a case edition withdrawn or superseded (DEC-72), the field read deleted; R16 as BOB words it before L7. **The source must be read without using an L8 module** (publication, project-stage are later in the order, P4): from record facts through record-core, or by a registration L8 makes (K861's pattern). Proof: R16 tests.
 
-## Layer 8
+**L9**
+- **local-facts** (new) · R1–R5: `factConfirm`, `factStatus`, horizons, `factsDue`, append-only. Uses jurisdictions, membership, record-core, record-grammar (`proposalLabel`). Merge early. Proof: R1–R5 tests; rows new (stamp T22).
+- **action-grammar** · ACTIONS #7's finding (not in `next.md`): `checks.mjs`:4 says `actions/checks.mjs` "goes in `actions`' job", deleted (K914); re-word as provenance. Comments only.
+- **action-clocks** · K921: R10, a business count states the calendar's `status` from `local-facts` R2. Uses gains local-facts.
+- **filing-templates** (new) · R1–R18 as amended by §5 (`use: file|brief`, `TEMPLATE_TIER3_FILE`, `profiles` or `general`, every approved version offered, latest by default). Takes over filings' `templateSave`/`templatesFor` (`filings/index.mjs`:1286, :1348; rows C-115.31–.37). Uses jurisdictions, record-grammar, record-core, membership, review (if R8 reuses its grant service), action-grammar. Merge early.
+- **filings** · K921: R26 retired (code moved), R28–R31 (renumbered): approved versions only, the version recorded, a filing without a template (`template: null`), `counselPacket` at every tier with a `brief` template, calendar status from action-clocks R10. N460: whatever BOB's DEC-36 review finds in the stored packet sections.
+- **escalation** · N462: evaluation trigger ids (`escalation/index.mjs`:251–252, `${e.id}/evaluation/${ev.seq}`) take an id that counts no other entry; recorded ids (R13, R18) read in the old form too. N460: the trigger's ledger reads, if BOB's review changes them. Proof: R7, R8, R13, R26 tests.
 
-- *Conditional* **ratification** · K820's share, if its T20 START does not carry it: `src/ratification/checks.mjs`:434–438 ("`airun.mjs` re-exports it so a reader ..."); re-word. **Size:** ~3 lines.
+**L10**
+- **scheduler** · N463: `test/m/scheduler/plane.test.mjs`:17–18 as capture-requests'.
 
-## Layer 10
+**L11**
+- **op-declarations**, **affordances**, **control-plane** · K921's ops (`templatedraft`…`factconfirm`): declared, graded, dispatched, families registered; control-plane also ACTIONS #7's comment (`families.mjs`:55 says `actions/checks.mjs` re-exports, deleted K914).
+- **queue-producers** · K921: R20 `template-review-requested`, R21 `local-fact-due` (raised once, DEC-94). **queue** · `PRODUCER_DEPS` (`queue/index.mjs`:97) and kinds, as K919 for actions.
+- **plane** · N463: delete `bio-plane/src/index.mjs` (plane R8) once capture-requests, scheduler and instance-setup read `src/plane/index.mjs`; compose the two new modules (tables, purge declarations K23, figures). Last in L11.
+- *Conditional* **legacy-tests** · N461: `civicos-ui/test/publishedcase.test.mjs`:463 `VERIFY_DETAIL` "own bundle sha" → "record sha", only if LEGACY-TESTS #18 keeps the suite and BOB keeps the module (K879); else moot.
 
-- *Conditional* **monitoring** · ⚑Bob-3 arm B only: as acquisition (N21). **Size:** ~20, tests.
+## next.md: every entry (43)
 
-## Layer 11
+**CARRIED (12):** N452 (inquiry-grammar L6) · N453 (membership L2) · N455 (pdf-pixels L1) · N456 (record-grammar L1, promotion L2, intent L7) · N457 (reevaluation L7) · N458 (22 modules L1–6, above) · N459 (connections L5) · N460 (BOB's review before L9; escalation, filings L9) · N461 test share (legacy-tests L11, *conditional*; its release-bundle share is LEFT OUT, deploy) · N462 (escalation L9) · N463 (capture-requests L6, scheduler L10, plane L11) · N464 (connections L5). Not in `next.md` but carried: K921's filing templates and local facts, with N-A14 (local-facts, filing-templates, jurisdictions, record-grammar, skills, action-clocks, filings, queue-producers, queue, op-declarations, affordances, control-plane, plane); ACTIONS #7's comments (action-grammar L9, control-plane L11); the stamp (promotion L2).
 
-- **plane** · **N454** step two, last in L11: its own stats sight reads `refs` from connections' export instead of its own SQL, still in plane's one registration (values and key unchanged); plane R10's `refs` clause as folded (rule 1). **Size:** ~−5, tests re-keyed. *Conditional* with it: whatever plane's T20 job left (`held.mjs` or the `src/index.mjs` re-export, if a reader K867 (1) names had not re-pointed).
-- *Conditional* **legacy-tests** · ⚑Bob-2 arm A only: delete the old suites, the old battery and its instruments (`paths` but the `system` suites the process still runs: `test/system/fleetbundles.test.mjs` at every layer close, §14, re-pointed with N441, N442; `test/system/row-census.mjs`, which promotion's stamp runs); every release-row entry below is then met or moot. Last in L11. **Size:** a deletion, tens of thousands of lines; the kept suites' re-points ~30.
+**MOOT (21 whole, 3 in part):**
+- "Local facts" line and REC-201 line: K899 (1) (`cpra_request` stays internal), K768 (outward text met).
+- N71: K899 (1); its rewording is N458.
+- N317: K899 (3), K904; carried on as N456, N457; intent's share met (K907).
+- N320: K903 (4), met in T20 L9 (K916); connections' share is N459.
+- N439: K870, K891. N443: K866 (signatures), INSTALLER #4 (`jobs/T20/installer.md`:34). N447: K914.
+- Met by LEGACY-TESTS #18 at T20's close (K879, K890), *conditional* on its COMPLETE accounting for each; any left open rejoins legacy-tests in L11: N31, N57, N248, N279, N431, N434, N436, N438, N441, N442, N444, N448 (promotion's share moot, K795 (3)), N450.
+- In part: N68 and N70 (their legacy-index, legacy-tests, affordances, membership, promotion, legacy-store shares met or with LEGACY-TESTS #18; N70's skills share met, triage row 10); N437 (agent-worker K897, control-plane K920, the rest K866, K868). Their legacy-ui shares are LEFT OUT below.
 
-### N454's sequencing (why two steps, and why not "connections registers `refs` itself")
-
-Record-core R63 (`build/requirements/record-core.md`:51) refuses a key another registration holds and **a second registration by the same module**, and a refused registration registers nothing. So: (a) connections cannot add `refs` to its R60 key list while plane's stats sight registers `refs`: whichever registers second loses **every** figure it registers, not only `refs`; (b) plane cannot register connections' source under connections' name (K861's pattern for record-core and membership), because connections already registers once (R60); (c) plane drops `refs` first and connections adds it a tranche later leaves `main` answering `op=stats` without `refs` between the two closes, a behaviour change; and plane, last in the order, always merges after connections within a tranche. The safe form is K861's: connections owns the figure's code and exports it; plane, the composition root, registers it in its own stats sight. No commit holds `refs` twice, no value moves, and connections' table is counted by connections' code, which is N454's substance. Recommended: N454 is met by these two steps, and "connections' own R63 registration" is re-worded so in N454's record (BOB's wording, P17). If BOB wants connections' own registration all the same, the only safe route is a third step: plane's T21 job registers `refs` only while connections' exported key list lacks it, and connections adds `refs` to R60 in T22's L5, plane deleting the condition in T22's L11; not recommended (a temporary branch in the composition for no product change).
-
-## Deferred beyond T21
-
-Hard reasons only (P19): order (P4), size before a split (P6), a dependency not yet built, one job per module (P8), Bob's (P17), deploy (a deployment or a measurement).
-
-| entry | reason | evidence |
+**LEFT OUT (7 whole, 4 in part):**
+| entry | hard reason | note |
 |---|---|---|
-| rows changed at T21's layers 3–11, if any | P8 | promotion's one job is L2 and stamps last; none expected |
-| office-readers R28 `docxRenumbering` and R29 `pptxRenumbering`, retired | deploy | each is retired once its migration (extraction R66, R68) has run at every instance |
-| the release: the old battery and instruments, the DEC-49 guard's floors, legacy-tests' deletion; N31's rest, N57, N68 and N70's legacy-tests, legacy-index (`pensweep.mjs`, now legacy-tests') and affordances (N45, d311) shares, N248, N279, N431, N434, N436, N438, N441, N442, N444 (`check-refusal-codes.mjs` is now legacy-tests'), N448's legacy-tests share, N450 (capture's), K850's load-failing suites | Bob's (K619, K633, K635) | ⚑Bob-2; placed in L11 on arm A |
-| legacy-ui, N70's and N68's legacy-ui shares, N241, N371, N389, N-A13, N437's `app.html` share | Bob's: UX (K633) | untouched until the new interface replaces it |
-| `cpra_request` identifier (REC-201's rest), N71 | Bob's: UX; an interface name changes with a migration his question sets | N71 |
-| N303's rest, N317, N320, N144, N232 | Bob's: doctrine, requirement meaning, UX | T20's table |
-| N70's skills share | Bob's: skills question 1 | T20's table |
-| N-A14 | Bob's (legal text) and deploy (a source for holidays and offices) | T20's table |
-| N-A19 | Bob's: doctrine (K624 (5), DEC-61) | T20's table |
-| `PLN-` affordances, the plan-page surface; joint action | Bob's (K608 (4), K600 (c)) | T20's table |
-| `MODES.plan` deployed (N420's rest) | deploy (K660 (5), run-rules R14) | T20's table |
-| the newgroup installer deployed with N336; N439's and N26's migrations run on `main`'s instances | deploy: a signed release, Bob's act | K723, K724, K800 |
-| contradiction R41 and the K5 arms, DIST-14, N75, N34 | deploy; N34 also size (pdf-worker 4,075, P6) | measured on a deployed plane |
-| N21 | Bob's: requirement meaning (docprofile R6's "until N21") | ⚑Bob-3; placed in L1, L3, L10 on arm B |
+| N34 | deploy (the bound measured on a deployed plane); dependency not yet built (an encoder making a PPM/PPT JBIG2 fixture) | the refusal (`jpxdecode.mjs`:943, image-codecs R4) and the low-memory wavelet (K281) are met |
+| N75 | deploy | code met (K281); the 61.3 MB bound is measured on a deployed plane |
+| DIST-14 | deploy | the CSV bound measured on a deployed plane |
+| N144, N232 | Bob's (K899 (2)) | wait for the new interface |
+| N241, N371 | Bob's: UX (K633) | legacy-ui untouched until the new interface |
+| N68's, N70's, N437's legacy-ui shares (`app.html`) | Bob's: UX (K633) | |
+| N461's release share | deploy (the next signed release build, Bob's act) | `release/bio-plane.bundled.mjs`, `newgroup/src/release.mjs`, `newgroup/dist/newgroup.bundled.mjs` |
 
-**14 rows**, none for the tranche's size or a job's smallness.
+**Table rows carried over (not N entries), each LEFT OUT:** office-readers R28/R29 retired (deploy: each migration runs at every instance); `MODES.plan` deployed (deploy); newgroup installer with N336 (deploy, Bob's act); contradiction R41 and the K5 arms (deploy); `PLN-` affordances, plan-page surface, joint action (Bob's, K608 (4), K600 (c)); N389, N-A13 (Bob's: UX, K633); rows changed in T21 L3–11 (P8, rule 4). N-A19 is met (K899 (7), K916, K920).
 
-## next.md: every entry
+## For BOB
 
-- **Placed in T21:** N450 pdf-pixels (L1), N451 (fold, no job), N452 (skills, inquiry-grammar L6), N453 (membership L2), N454 (connections L5, plane L11), K820's stale-comment line (run-rules L6; observation-log, agent-worker, ratification, promotion *conditional*). On Bob's arms: N21 (⚑Bob-3 B), the release row (⚑Bob-2 A).
-- **Deferred:** the table (N21 and the release row unless Bob rules; N31's rest, N34, N57, N68, N70's remaining shares, N71, N75, N144, N232, N241, N248, N279, N317, N320, N371, N420's `MODES.plan`, N431, N434, N436, N438, N441, N442, N444, N448's legacy-tests share, N450 capture's, DIST-14, the `cpra_request` line).
-- **Carried by T20, to `archive/next-applied.md` at T21's opening if T20 completes as planned:** N437's rest, N439, N443, N445 (all but N453's two copies), N446, N447, N449 (K868, K869, K870 already record N437's record-grammar and pdf-worker shares, N446, N449, N439's L1 half, N443's signatures half as met).
-- **Carried by T19 and still listed in `next.md`** (T20's opening did not move them; move them at T21's opening): N22, N26, N31's bundler share, N70's legacy-checks, promotion, membership, legacy-store shares, N136, N155, N221, N404, N416, N420 but `MODES.plan`, N421–N430, N432, N433, N435, N437's T19 shares, the two "Local facts" lines' `governingLawsOf` and outward-text shares.
-- **Moot:** N21's legacy-index share (legacy-index retired); N448's promotion share (K795 (3)).
-
-## For BOB (P17) and for Bob
-
-- **⚑BOB-1 · Most of T21 fits T20 now (P19).** T20's layers 5, 6 and 11 have not started, and K867 and K875 already added jobs to unstarted T20 layers. N452 (skills joins T20 L6; inquiry-grammar's START drops the alias after skills' early merge, instead of keeping it), N454 (connections joins T20 L5 with the export; plane's T20 START reads it), and K820's comments (run-rules joins T20 L6; one line each in the STARTs of observation-log, agent-worker, ratification; a CHANGE to PROMOTION #21, which is running, P9) can all be done in T20 with no order problem. K877 placed N454 "later"; the new evidence (P15) is the sequencing above, which needs no double hold. Recommended: add them to T20; T21 is then pdf-pixels, membership, promotion and Bob's arms. N453 cannot move (order, P4: ratification L8 follows membership L2).
-- **⚑BOB-2 · K820's comments missed T20's STARTs.** The line predates T20's opening (K820, T19 L6), but no T20 START names it (grep of `starts-T20/` for `airun`: none). Recommended: as ⚑BOB-1.
-- **⚑BOB-3 · Two entries numbered N450 in `next.md`.** The undated one (CAPTURE #11 J2; legacy-tests, cited by T20's table) and the 2026-10-01 one (pdf-pixels, K865). Recommended: renumber the pdf-pixels one N455 in `next.md` and record it in a ruling line; this draft's "N450 pdf-pixels" means it.
-- **⚑BOB-4 · N454's goal re-worded** (sequencing above): recommended met by connections' export and plane's registration; no third step.
-- **⚑BOB-5 · `modules.json` path to a deleted file:** legacy-tests' `tools/fw21-onpoint-probe.mjs` (rule 1). The checks did not flag it; a checks change is the process repository's (P3), with K874's note that coverage matches any `R<n>` in a module's tests.
-- **⚑Bob-2 · The release (K619, K633, K635), unanswered.** *Arm A (recommended, as in T20):* Bob rules that legacy-tests' old suites and instruments are deleted; T21 L11 gets a legacy-tests job, last, keeping and re-pointing the `system` suites the process runs (fleetbundles with N441, N442; `row-census.mjs`), and every release-row entry is met or moot; rule 4's accepted red ends with it. *Arm B:* nothing of the release is placed; the old suites stay red by name (they cannot load since T19), and each later deletion adds to the list. The release's deployment stays deferred either way (deploy).
-- **⚑Bob-3 · N21, unanswered.** *Arm A (recommended, as in T20):* docprofile's no-view fallback is the permanent behaviour of an instance with no jurisdiction profile; BOB re-words R6 without "until N21" at the L1 fold and strikes N21; no job. *Arm B:* acquisition (L3) and monitoring (L10) pass a view always (empty when no profile), and docprofile (L1) drops the fallback: three jobs, a behaviour change for such an instance.
+1. **Dependency cycle in the filing-templates draft.** filing-templates R2 checks blanks against "a blank `filings` publishes" (`FILING_BLANKS`, `filings/index.mjs`:75) and R3 takes `from` an approved filing draft, while `filings` must use filing-templates (R28). Recommended (BOB's, P17): `FILING_BLANKS` and `FILING_TEXT_MAX` (:97) move to filing-templates (filings imports them); R3's `from: filing draft` becomes filings' act passing the draft's text and id to `templateDraft`. Word it at the fold.
+2. **§3's list of eight misses modules.** The actionhold precedent (K902, K919) also needed op-declarations (ops declared) and queue (`PRODUCER_DEPS`); plane composes new modules' tables (`plane/store.mjs`). Included above; confirm.
+3. **Folds before L1, not L9.** jurisdictions (R40–R45), record-grammar (R42) are L1 and skills (R30) L6, so their folds and the two requirement files' `uses` must be done at the opening (rule 1). If the opening cannot wait for them, those three shares go to T22 (order, P4) and filing-templates' L9 job cannot meet R15 (profile templates) or local-facts R1 (its paths name R41–R44 fields).
+4. **The first profile's research** lands only through jurisdictions' L1 job. If it is not ready by then, it waits for T22 (order), and local-facts and action-clocks build against the test profile only.
+5. **Approval of the clause text.** K921 approves the answers and the two modules; BOB's §5 readings are "stated so Bob can correct it". Read as approved unless Bob objects (P17); say so in the opening's report.
+6. **N457's source** cannot use publication or project-stage (L8 after L7, P4). If BOB's design needs them, the event is registered by an L8 module into reevaluation (K861's pattern), or N457 waits on that design (P17 if it changes §5.4's meaning).
+7. **N34 and K899 (5).** K899 (5) listed N34 among the order leftovers for this tranche; at HEAD only the measured bound (deploy) and PPM/PPT JBIG2 (a fixture encoder not built) remain. Recommended: record N34 as deploy and dependency, no job.
+8. **New `next.md` entry wanted:** ACTIONS #7's stale `actions/checks.mjs` comments (`action-grammar/checks.mjs`:4, `control-plane/families.mjs`:55; `action-clocks/checks.mjs`:3 is provenance and may stay, `layers.md` rule 6). Placed above.
+9. **`next.md` housekeeping at the opening:** every MOOT entry above and T20's carried entries to `archive/next-applied.md` (K424); `next.md`'s status line still describes T19.
+10. **Sizes:** filings shrinks (R26 leaves, 1,893 lines today); filing-templates is new (~8 acts, 5 tables, §3); no split due. extraction stays at 4,002 (P6 review before a job that grows it).
