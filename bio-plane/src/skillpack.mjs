@@ -147,7 +147,8 @@ import { RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "./run-rules/index.mjs";
    defence (each sentence pinned to the document it is quoted from, and a
    source-scan proving it holds no control-flow authority). Two deliverables with
    two suites, and the pack composes them. */
-import { judgementLayers, actionPlanningLayer, SKILL_CHECKS, SKILL_CHECK_KEYS } from "./skilldoctrine.mjs";
+import { judgementLayers, actionPlanningLayer, filingDraftingLayer, SKILL_CHECKS, SKILL_CHECK_KEYS }
+  from "./skilldoctrine.mjs";
 export { SKILL_CHECKS, SKILL_CHECK_KEYS };
 /* N345. The recommender's prompt is contradiction's (its R41): measured on the blind fixture of dissolved pairs
    under its digest, and carried here unchanged as the words a run recommends under (R27). The digest is checked
@@ -237,6 +238,8 @@ export const SOURCING = {
   contradiction_unmeasured: "absent", /* while contradiction's RECOMMEND_PROMPT_SHA256 is null (R27) */
   action_planning: "authored",  /* skilldoctrine.mjs, BIO_Action_v0_1.md §4 (R28) */
   action_planning_unpublished: "absent", /* while op=affordances publishes no planning act (R29) */
+  filing_drafting: "authored",  /* skilldoctrine.mjs, BIO_Action_v0_1.md §4 rules 1, 7, 11, 13 (R30) */
+  filing_drafting_unpublished: "absent", /* while op=affordances publishes no template proposal act (R30) */
   recipes:        "absent",     /* absent until the plane publishes recipes — see the header */
   recipes_published: "driven",  /* op=affordances .recipes, validated against .surfaces and .catalog (R10) */
   /* SK-2's five layers. `authored` throughout, and the label is the honest one:
@@ -254,11 +257,10 @@ export const SOURCING = {
  *  every module's check families (K585 (1)), and the pack renders that answer
  *  (R3); this module holds the harvest so the rule has one site.
  *
- *  Harvested from a catalogue namespace by export name matching `_CHECKS$` — the
- *  rule `civicos-ui/check-refusal-codes.mjs` already harvests families by, and
- *  stated the same way it states it: a family added later is picked up, and a
- *  family REMOVED takes its codes with it visibly rather than leaving a hand
- *  list behind that still names them.
+ *  Harvested from a catalogue namespace by export name matching `_CHECKS$` (R7,
+ *  held by the R7 test in `test/m/skills/`): a family added later is picked up,
+ *  and a family REMOVED takes its codes with it visibly rather than leaving a
+ *  hand list behind that still names them.
  *
  *  The row's canned translation is the sentence a member reads when the fence
  *  fires. `ASSISTANT-PILOT.md` §1: when a member hits a refusal, the assistant's
@@ -467,6 +469,10 @@ export function disclosedLayers({ vocabularies, catalog, captureActs, recipes = 
        it may use and must leave to a member, read from the published catalogue; a stated absence while the
        plane publishes no planning act. Authored in `skilldoctrine.mjs`, as the judgement layers are. */
     action_planning: actionPlanningLayer(catalog),
+    /* R30 (K921). The rules a run proposing a filing template's wording works under, and the template acts it
+       may use and must leave to a member, read from the published catalogue; a stated absence while the plane
+       publishes no template proposal act. */
+    filing_drafting: filingDraftingLayer(catalog),
     recipes: Array.isArray(recipes) ? {
       load_when: "the run guides a member through a path to a result, or must say which steps reach it",
       sourcing: SOURCING.recipes_published,

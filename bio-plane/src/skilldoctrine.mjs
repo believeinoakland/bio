@@ -51,10 +51,10 @@
  * fences, that means a clause backed by no code may not read like a clause
  * backed by code. Every clause therefore carries either a non-empty
  * `enforced_by` (C-numbers, read from their owners' rows by KEY so no number
- * is typed here but the two named below) or a non-empty `unenforced_because`, and the suite PRINTS how many
- * clauses are instruction-only. That number is the honest measure of how much of
- * this skill a careless model could ignore, and it is published rather than
- * implied.
+ * is typed here but the two named below) or a non-empty `unenforced_because`, and the R15 test in
+ * `test/m/skills/` holds every clause to one or the other. The clauses with no code
+ * behind them are the honest measure of how much of this skill a careless model
+ * could ignore, and they say so in the layer rather than leaving it implied.
  *
  * ---------------------------------------------------------------------------
  * EVERY VOCABULARY IS IMPORTED. THE AUTHORED SENTENCES ARE PINNED.
@@ -560,7 +560,7 @@ export const CLAUSES = [
  * its own site (*"a machine that writes 'the relevant department' gets past every
  * rule below"*), and a prohibition citing it must state the same limit rather
  * than inheriting its authority. So every prohibition carries BOTH what the code
- * refuses and what it does not reach, and the suite prints the residue every run.
+ * refuses and what it does not reach, and the R17 test holds every one to carrying it.
  * ========================================================================= */
 
 /** Where the prohibitions were copied FROM. Repo-relative, `TABLE_SOURCE`'s shape. */
@@ -770,7 +770,8 @@ export const ACTION_SECTION = "§4";
 /** The rules of §4 the run works under (R28: rules 1–3, 6, 8–10, 13; R29: rule
  *  12), each `{rule, heading, sentences}`, every string a span of §4. Rules 4,
  *  5, 7 and 11 are the record's (compliance, reminders, the sending, the
- *  profile), not a proposing run's. */
+ *  profile), not a planning run's; 7 and 11 bind a run drafting a filing
+ *  template's wording, and the `filing_drafting` layer carries them (R30). */
 export const ACTION_RULES = [
   { rule: 1, heading: "Humans decide.",
     sentences: [
@@ -899,6 +900,102 @@ export function actionPlanningLayer(catalog) {
       note: "this layer is INSTRUCTION. Every act it names is refused or labelled by the module that performs "
         + "it: a proposal is stored apart and labelled as machine work, and the act a member takes on it "
         + "refuses a machine. A run ignoring every word here gets past nothing.",
+    },
+  };
+}
+
+/* =========================================================================
+ * THE FILING DRAFTING LAYER (R30; K921, K927)
+ *
+ * `BIO_Action_v0_1.md` §4, the rules a run works under when it proposes a filing
+ * template's wording or critiques one in a comment: rule 1 (humans decide),
+ * rule 7 (nothing leaves by a system path), rule 11 (jurisdiction lives in
+ * data) and rule 13 (the venue sets the standard of evidence). Rules 1 and 13
+ * are the planning layer's own objects, carried unchanged; 7 and 11 are quoted
+ * here, each a span of its rule's paragraph found by R21's normaliser. Canon
+ * sentences only (K927): what a template's blanks may be is `filing-templates`'
+ * refusal (its R2), and wording that asserts a fact the record does not hold is
+ * `filings`' (its R18), so neither is restated here as doctrine. The layer
+ * holds no gate, as the planning layer holds none.
+ * ========================================================================= */
+
+const actionRule = (n) => ACTION_RULES.find((r) => r.rule === n);
+
+/** The rules of §4 a run drafting a filing template's wording works under (R30),
+ *  in §4's order, each `{rule, heading, sentences}`, every string a span of §4. */
+export const FILING_RULES = [
+  actionRule(1),
+  { rule: 7, heading: "Nothing leaves by a system path.",
+    sentences: [
+      "The instance transmits nothing.",
+      "A member sends by the venue's own means and records the sending with the bytes sent; anything addressed "
+      + "carries the in-band stamp (Publication §3 rule 9).",
+      "A plan is never published (DEC-25); a counsel packet is never published and never fileable as it stands.",
+    ] },
+  { rule: 11, heading: "Jurisdiction lives in data.",
+    sentences: [
+      "Kinds, venues, templates, offices, legal organisations, deadlines and holidays come from a jurisdiction "
+      + "profile; a missing fact reads undetermined, never a default",
+    ] },
+  actionRule(13),
+];
+
+/* THE ACTS THE LAYER NAMES, EACH BY THE REQUIREMENT THAT DEFINES IT (R30), and
+   named once here as a SELECTOR over the published catalogue, as R28's are:
+   `filing-templates` is later in the order (P4). `proposes` is the one act a run
+   may use; `leaves_to_a_member` the acts a member takes on a template (§4 rule 1). */
+export const FILING_TEMPLATE_ACTS = Object.freeze({
+  proposes: Object.freeze([
+    Object.freeze({ id: "templatepropose", defined_by: "filing-templates R6" }),
+  ]),
+  leaves_to_a_member: Object.freeze([
+    Object.freeze({ id: "templatedraft",   defined_by: "filing-templates R3" }),
+    Object.freeze({ id: "templaterevise",  defined_by: "filing-templates R4" }),
+    Object.freeze({ id: "templatesubmit",  defined_by: "filing-templates R7" }),
+    Object.freeze({ id: "templatereview",  defined_by: "filing-templates R9" }),
+    Object.freeze({ id: "templateapprove", defined_by: "filing-templates R10" }),
+  ]),
+});
+
+/** The act a run proposes a template's wording through: while the plane
+ *  publishes it not, the layer is a stated absence. */
+export const FILING_TEMPLATE_ACT = FILING_TEMPLATE_ACTS.proposes[0].id;
+
+/** THE `filing_drafting` LAYER over the published catalogue (R30). Absent in R9's
+ *  form while the catalogue holds no `FILING_TEMPLATE_ACT`; with it, every other
+ *  act named above must be published too, or the render throws naming it, as
+ *  R28's does (R1): a half layer is never rendered as a whole one. */
+export function filingDraftingLayer(catalog) {
+  const byId = new Map((Array.isArray(catalog) ? catalog : [])
+    .filter((a) => a && typeof a.id === "string").map((a) => [a.id, a]));
+  if (!byId.has(FILING_TEMPLATE_ACT)) return {
+    load_when: "never, in this edition",
+    sourcing: "absent",
+    body: {},
+    /* THE ABSENCE, STATED IN THE PACK ITSELF, as the recipes layer states its own. */
+    absent_because: `the plane's published catalogue holds no ${FILING_TEMPLATE_ACT} act, the one act a run `
+      + "proposes a filing template's wording through, so this layer carries no doctrine for work no run can do.",
+  };
+  const read = (a) => {
+    if (!byId.has(a.id))
+      throw new Error(`the filing drafting layer names the act ${a.id} (${a.defined_by}) as the plane `
+        + "publishes it and invents none: op=affordances publishes the template proposal act but not this one");
+    return { id: a.id, defined_by: a.defined_by, act: byId.get(a.id) };
+  };
+  return {
+    load_when: "the run proposes a filing template's wording, or critiques one in a comment",
+    sourcing: "authored",
+    body: {
+      rules: FILING_RULES,
+      source: ACTION_SOURCE,
+      section: ACTION_SECTION,
+      acts: {
+        proposes: FILING_TEMPLATE_ACTS.proposes.map(read),
+        leaves_to_a_member: FILING_TEMPLATE_ACTS.leaves_to_a_member.map(read),
+      },
+      note: "this layer is INSTRUCTION. Every act it names is refused or labelled by the module that performs "
+        + "it: proposed wording is stored apart and labelled as machine work, and becomes a template's text only "
+        + "by a member's act, which refuses a machine. A run ignoring every word here gets past nothing.",
     },
   };
 }
