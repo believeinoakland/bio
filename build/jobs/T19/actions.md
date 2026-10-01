@@ -29,7 +29,7 @@ Two readings, both on B1's split deletion; I carry on with both while you answer
 - R45 (`contactNotAMember`, `contactId`): t19 "R45 contactNotAMember is the one answer…", t19 "R45 the write answers CONTACT_NOT_A_MEMBER through contactNotAMember…", t18 "R45 contact…".
 - R51: t19 "R51 the audit's action arm is registered with record-core's audit, with the instance's kinds"; read "R51 R36 the audit reports…"; t17 "R1 R51 …" (three); t18 "R51 R7 …".
 
-**Found in other modules** (also in REPORT J3):
+**Found in other modules** (also in REPORT J2):
 - **action-grammar** R9, `src/action-grammar/checks.mjs`: row C-117.11 (`CONTACT_NOT_A_MEMBER`) has `where` `src/actions/index.mjs #contactAndPlan > is-contact-member`. The code is now minted in `contactNotAMember` (region `is-contact-member` moved with it), so the `where` should read `src/actions/index.mjs contactNotAMember > is-contact-member`, awaiting stamp. My copy said so before deletion; t19 does not assert the `where`, since the row is action-grammar's.
 - **control-plane** (L11): `families.mjs`:51,103 reads `src/actions/checks.mjs`, now a re-export. It should name `src/action-grammar/checks.mjs` instead, which also reaches C-73.6's re-anchored row.
 - **affordances, instance-setup** (L11) and **escalation** (L9, its `stages.test.mjs`:8): re-point to action-grammar (N447 then drops actions' re-exports).
