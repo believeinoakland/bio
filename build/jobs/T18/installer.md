@@ -14,3 +14,11 @@ N336 / installer R20, read whole (requirements, plan entry, control-plane's entr
 Please confirm (2), or say the literal reading (no fallback to the built-in) or another.
 
 Not blocking: I carry on with everything that does not read control-plane.
+
+## J2 · REPORT
+
+B2 applied (tranche merged, R20 as amended). Pushed on `job/T18/installer`: `planeLimits` reads the one `bio-plane-limits/1 k=v …` statement (keys sorted, positive integers, any quote style) from the bytes R8 chose; a release stating none or unreadably is passed over and named, the built-in used; a built-in stating none refuses the act by name, on the install before anything is created (the release is now chosen before `plan` and `r2`). R20's test replaces its todo (with a negative control: a constant restored in the install upload fails R20 alone, 28/1). The fixture and the wizard suite now serve releases that state limits; the arms about the built-in fallback assert whichever holds, so they survive the cut that embeds a release stating them. `npm test`: embed 23/0, wizard 207/0, requirements 29 pass / 4 todo. format, architecture, coverage (33/33), ownership: 0 failures.
+
+Left, waiting on your CHANGE that control-plane has merged: one pin that this tree's plane states its limits as R20 reads them, equal to `bio-plane/wrangler.jsonc`'s (read from control-plane's statement, not from a release). Then COMPLETE.
+
+For the close (§14, not mine to write): `newgroup/dist/newgroup.bundled.mjs` is now stale against `newgroup/src/index.mjs`; per K724 the regenerated bundle is not to be deployed before a release stating limits is embedded (built from this tree it refuses every act, by name).
