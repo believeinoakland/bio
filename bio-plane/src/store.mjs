@@ -17,7 +17,7 @@ import { actionPlansOf, actionPlansOps } from "./action-plans/index.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* K31: the one write path, extracted to `promotion`; this store registers its share of every promotion there. */
 import { promotionOf, stepContext, recordAudit } from "./promotion/index.mjs";
-import { provenanceOf, routeFinding, TESTIMONY_PATH, ROUTE_FINDING_KEY } from "./provenance/index.mjs";
+import { provenanceOf, TESTIMONY_PATH, ROUTE_FINDING_KEY } from "./provenance/index.mjs";
 import { Membership, membershipOf, membershipOps, hiddenBundles } from "./membership/index.mjs";
 import { Credentials, credentialsOf, credentialsOps } from "./credentials/index.mjs";
 import { observationLogOf, observationLogOps, OBSERVATION_LOG_MODULE } from "./observation-log/index.mjs";
@@ -599,143 +599,6 @@ export class Store extends DurableObject {
   /* REC-63 / DEC-56 / D-204, REC-116: the standing route marker and its reads: provenance's (R22, R23). */
   provenanceRouteAssess(...a) { return provenanceOf(this.ctx).provenanceRouteAssess(...a); }
   provenanceRoutesMarked(...a) { return provenanceOf(this.ctx).provenanceRoutesMarked(...a); }
-
-
-  /* Every bundle, or a page of them.
-   *
-   * Measured: 81ms at 5,000 bundles and 434ms at 20,000, which is honestly linear
-   * and about two seconds at 100,000. It returned everything because nothing had
-   * ever needed less, and a caller that wants everything can still have it, since
-   * breaking that would break the browser, the audit, and the migration verifier
-   * at once.
-   *
-   * So paging is OPT-IN and shaped like the audit's: a cursor that is the last
-   * identifier seen, which makes it resumable and independent of any snapshot of
-   * the store. A caller that passes no limit gets what it always got. */
-  /** REC-63: the joined `route_*` columns folded into ONE published field and
-   *  removed from the row, so a consumer meets the composed finding rather than
-   *  five loose columns it would have to interpret — and interpreting them is
-   *  exactly where the two absences get conflated again. */
-  static #withRoute(r) {
-    const mark = r.route_finding === null || r.route_finding === undefined ? null : {
-      seq: r.route_seq, at: r.route_at, by: r.route_by, finding: r.route_finding,
-      state_at: r.route_state_at, register_state: r.route_register,
-      undetermined: r.route_undetermined, documents_n: r.route_documents_n,
-    };
-    const out = { ...r, route: routeFinding(r.object_type, mark) };
-    for (const k of ["route_seq", "route_at", "route_by", "route_finding", "route_state_at",
-                     "route_register", "route_undetermined", "route_documents_n"]) delete out[k];
-    return out;
-  }
-
-  listBundles(filter = {}) {
-    /* REC-25 / F-8: the D-15 viewer gate, from query.mjs's ONE compilation
-       point. Fail closed — an absent viewer compiles to the deny predicate, so
-       the failure mode of a missing control-plane stamp is an empty list rather
-       than an unfiltered one, exactly as the search path already behaves. */
-    const gate = viewerPredicate(filter.viewer);
-    /* REC-63 / DEC-56: THE MARKER IS PUBLISHED HERE, ON THE ROSTER READ A MEMBER
-       ACTUALLY USES — `op=list` is the most-called bundle read in `app.html`. A
-       marker only the store can see is REC-74's defect one field over, so it
-       travels on the read rather than waiting to be asked for.
-       ONE LEFT JOIN against the highest `seq`, not a per-row lookup: this arm can
-       be unbounded by contract (the licence is pinned in the block below), and a
-       correlated read per row would turn a complete answer into a scan per row. */
-    let q = `SELECT b.bundle_id, b.object_type, b.current_state, b.title, b.last_updated, b.bundle_sha,
-                    m.seq AS route_seq, m.at AS route_at, m.by AS route_by, m.finding AS route_finding,
-                    m.state_at AS route_state_at, m.register_state AS route_register,
-                    m.undetermined AS route_undetermined, m.documents_n AS route_documents_n
-               FROM bundles b
-               LEFT JOIN provenance_route_marks m
-                 ON m.bundle_id = b.bundle_id
-                AND m.seq = (SELECT MAX(x.seq) FROM provenance_route_marks x WHERE x.bundle_id = b.bundle_id)`;
-    const w = [`(${gate.sql})`], a = [...gate.args];
-    /* The projection stores canonical types only (boot normaliser + promote),
-       so a legacy `focus`/`problem` filter value is honoured through the
-       catalog's own map rather than answered with an empty page — the same
-       courtesy query.mjs extends to `type:` filters (REC-10). */
-    if (filter.type) { w.push(`b.object_type=?`); a.push(normalizeType(filter.type)); }
-    if (filter.state) { w.push(`b.current_state=?`); a.push(filter.state); }
-    if (filter.after) { w.push(`b.bundle_id > ?`); a.push(filter.after); }
-    q += ` WHERE ` + w.join(" AND ");
-    q += ` ORDER BY b.bundle_id`;
-    /* ============ REC-60 / D-225 · THE RIDER, DECIDED HERE RATHER THAN ELSEWHERE ===     *
-     * REC-59 left this and routed it to REC-60 to DECIDE: `op=list` keeps an UNBOUNDED
-     * BARE-ARRAY arm while `op=projection` just lost its capped one, so two answers over the
-     * same rows of the same table now differ in shape. The decision is **KEEP**, and the
-     * reasoning is here because a decision recorded only in a queue item is a decision the
-     * next reader will re-open.
-     *
-     * THE DISCRIMINATOR IS NOT "HAS AN ENVELOPE". It is whether a BOUND WAS APPLIED AND NOT
-     * PUBLISHED. Those are two different defects and this sweep separated them:
-     *
-     *   HONESTY   — a bound applied must be published. That is REC-57's discipline, and it is
-     *               what `op=projection` violated: its corpus arms had been capped at 200
-     *               since they were written, the cap was invisible on the wire, and the caller
-     *               could neither see it nor ask past it. It was answering LESS than
-     *               everything while looking like everything.
-     *   BOUNDEDNESS — a response must not grow without limit. That is D-225's concern, and it
-     *               is what the three meaning-layer reads violated.
-     *
-     * THIS ARM VIOLATES NEITHER IN THE WAY `op=projection` DID. It applies NO cap, so it has
-     * no bound to publish, and a bare array that is genuinely COMPLETE tells no lie — the
-     * array IS the answer. Capping it silently would create exactly the defect REC-57 spent
-     * an item removing; enveloping it while leaving it uncapped would add two keys that say
-     * "no bound, nothing withheld", which is what an unbounded bare array already says.
-     *
-     * IT IS ALSO CALLER-SELECTED AND DOCUMENTED. The shape here is chosen by the caller: send
-     * a `limit` and you get the paged envelope, send none and you get everything. That is a
-     * contract, not a trap — unlike `op=projection`, where no parameter existed to ask with.
-     * REC-59's own words on why the unbounded arm is deliberate: *a caller that wants
-     * everything can still have it… breaking that would break the browser, the audit, and the
-     * migration verifier at once.*
-     *
-     * WHAT IS NOT CLAIMED, and it is the honest half. This arm DOES grow without limit, so
-     * D-225's concern applies to it too — it is simply outweighed here by three named
-     * consumers that require completeness, which none of the three meaning-layer reads had.
-     * That is the test this item used and it is the test to re-run if it is ever re-opened:
-     * IS THERE A NAMED CONSUMER THAT REQUIRES COMPLETENESS? Yes here; no there.
-     *
-     * AND THE LICENCE IS PINNED, NOT ASSERTED. `test/meaning-bounds.test.mjs` requires this
-     * arm to be COMPLETE — it returns every row a bounded call totals — because a bare array
-     * is honest only while it is whole. The day this arm quietly caps, that pin fails and the
-     * exception it rests on is gone with it. */
-    const limit = Number(filter.limit);
-    if (!Number.isFinite(limit) || limit <= 0) return this.#rows(q, ...a).map(Store.#withRoute);
-    const cap = Math.min(5000, Math.floor(limit));
-    const rows = this.#rows(q + ` LIMIT ?`, ...a, cap).map(Store.#withRoute);
-    /* The shape changes only when paging was asked for, so no existing caller
-       has to learn a new answer. The total counts what the VIEWER may see:
-       a count that included invisible rows would say "something is hidden",
-       which is half the leak. */
-    /* REC-57: `cursor` and `total` were already here and are UNTOUCHED. `limit`
-       is the bound AFTER the 5000 ceiling, which is the half a caller could not
-       see: ask for 100000 and this op silently answers 5000, and until now the
-       only evidence of that was a `cursor` the caller had no figure to read
-       against. The unbounded arm above returns a bare array and applies NO cap,
-       so it has no bound to publish — a different answer, not a quieter one. */
-    return { bundles: rows, limit: cap,
-             cursor: rows.length === cap ? rows[rows.length - 1].bundle_id : null,
-             total: this.#one(`SELECT COUNT(*) AS n FROM bundles b WHERE (${gate.sql})`, ...gate.args).n };
-  }
-
-  /** The index projection. One stored artifact on Drive, one query here.
-   *  Note the absence of `locator`: there is no substrate path to leak.
-   *  REC-25 / F-8: §7.9 names the index as the one place the graph could
-   *  escape, so the D-15 gate applies here as everywhere — fail closed. */
-  buildIndex({ viewer = null } = {}) {
-    const gate = viewerPredicate(viewer);
-    return {
-      generated: new Date().toISOString(),
-      version: 2,
-      bundles: this.#rows(
-        `SELECT b.bundle_id AS id, b.object_type, b.current_state, b.title, b.last_updated, b.bundle_sha AS sha256
-         FROM bundles b WHERE (${gate.sql}) ORDER BY b.bundle_id`, ...gate.args),
-    };
-  }
-
-
-  #viewerSees(...a) { return membershipOf(this.ctx).inSight(...a); }
 
   /* ---- writes: promotion is the sole writer of live state ---- */
 
@@ -1645,23 +1508,6 @@ export class Store extends DurableObject {
            is never stored under its own hash for R2 to be asked about. */
         registerholds: () => this.registerHolds({ sha: url.searchParams.get("sha256"),
                                                   bundle: url.searchParams.get("bundle") }),
-        /* REC-25 / F-8: the D-15 gate on the whole-image and single-file
-           reads. `viewer` is stamped by the control plane, never taken from a
-           caller's own parameters there; an invisible bundle answers null,
-           exactly as an absent one does, and an absent viewer sees nothing
-           (fail closed, the search path's own posture). The METHODS stay
-           ungated because the store itself is a legitimate whole-corpus
-           reader (audit, eachImage, ratify's assembly); this dispatch map is
-           the store's one external door. */
-        image: () => this.#viewerSees(url.searchParams.get("id"), url.searchParams.get("viewer"))
-          ? recordOf(this.ctx).readImage(url.searchParams.get("id")) : null,
-        file: () => this.#viewerSees(url.searchParams.get("id"), url.searchParams.get("viewer"))
-          ? recordOf(this.ctx).readFile(url.searchParams.get("id"), url.searchParams.get("path")) : null,
-        list: () => this.listBundles({ type: url.searchParams.get("type"), state: url.searchParams.get("state"),
-                                       after: url.searchParams.get("after") || null,
-                                       limit: url.searchParams.get("limit"),
-                                       viewer: url.searchParams.get("viewer") }),
-        index: () => this.buildIndex({ viewer: url.searchParams.get("viewer") }),
         /* REC-83 / IC-84 (4): THE FIXED-KEY CONTENT READ. One key, one row —
            `extras` hands the store EVERY parameter name that arrived so the op
            can refuse a predicate or a page by name rather than ignoring it. The

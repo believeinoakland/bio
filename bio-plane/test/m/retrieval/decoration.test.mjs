@@ -10,7 +10,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, md, T0 } from "./fixture.mjs";
-import { normalizeType } from "../../../checks/bio-checks.mjs";
+import { normalizeType } from "../../../src/record-grammar/types.mjs";
 
 const has = (o, k) => !!o && typeof o === "object" && Object.prototype.hasOwnProperty.call(o, k);
 const inquiry = (id, state) => md({ id, object_type: "inquiry", schema: "inquiry@1",
