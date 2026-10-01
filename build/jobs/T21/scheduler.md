@@ -28,3 +28,7 @@
 - `node checks/ownership.mjs … scheduler tranche/T21`: 1 file changed; 0 failures
 
 Size (session_01UxizJYYPMcD8YrFrU9oLX9): test runs 3, module lines 402
+
+## J1 · COMPLETE
+
+Done at 33733f677b on job/T21/scheduler. N463: plane.test.mjs:17-18 stand the plane up from src/plane/index.mjs (5/5 green; 5/5 before, against src/index.mjs). Test only; no product code changed; no generated artifact staled, nothing regenerated. N469: none listed; re-scan of my paths found no note naming a T20-deleted file as live. scheduler 52 tests, 51 pass, 0 fail, 1 todo (R10's pre-existing todo, noted in the record for your judgement). format, architecture, coverage (20/20), ownership: 0 failures. Record: build/jobs/T21/scheduler.md.
