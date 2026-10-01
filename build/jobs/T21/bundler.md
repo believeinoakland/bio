@@ -13,7 +13,7 @@
 
 **Generated artifacts.** None staled: no bundler file is an input of any bundle (each `dist/*.bundle.json`'s `inputs` and `vendoredInputs` checked), and the only bundler text in a manifest, the `_comment`, is unchanged. Fleet gate green (below).
 
-**Found in another module (REPORT J2).** legacy-tests (no T21 job): `bio-plane/test/system/fleetbundles.test.mjs`:28 says `battery.mjs` SKIPS a member's suites (live claim; a deleted runner) and :587 names `battery.mjs`'s census as live. Same kind as N469; for whoever next holds legacy-tests.
+**Found in another module (REPORT J1).** legacy-tests (no T21 job): `bio-plane/test/system/fleetbundles.test.mjs`:28 says `battery.mjs` SKIPS a member's suites (live claim; a deleted runner) and :587 names `battery.mjs`'s census as live. Same kind as N469; for whoever next holds legacy-tests.
 
 **Tests and checks run** (on this branch, after the change):
 - `node --test bio-plane/test/m/bundler/`: tests 45, pass 45, fail 0, skipped 0.
@@ -23,4 +23,4 @@
 - `checks/coverage.mjs … bundler`: 23 of 23 live requirement ids named by a test; 0 failures.
 - `checks/ownership.mjs … bundler tranche/T21`: 8 files changed; 0 failures.
 
-Size (session_01Qn6hiZsQ1MvFCad8SnL9UK): test runs 2, module lines 0
+Size (session_01Qn6hiZsQ1MvFCad8SnL9UK): test runs 2, module lines 2448
