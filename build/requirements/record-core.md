@@ -106,7 +106,7 @@ and every other module that stores anything, write through and read from.
 - **R21** A module that owns tables declares them here once, at start. `purge` clears every declared table except those declared `exempt`; this module's own tables (`bundles`, `files`, `history`, `manifest`, `leases`) are declared by it. A table declared twice, or by two modules, is refused with `TABLE_DECLARED`.
 - **R46** A declared table is a name, keyed to a bundle by its `bundle_id` column when it has one, or `{name, keys: [columns], whole: "<WHERE clause>"}`: keyed to a bundle by the named columns (any of them matching), and cleared by the whole-store form only where the clause holds. (K61)
 
-**purge({bundleId}) → report**
+**purge({bundleId}) → report** A declaration may also take the form `{name, keys?, clears: [columns]}`: a bundle purge sets each `clears` column to NULL in that table's rows naming the purged bundle, inside the purge's transaction; the whole-store purge is unchanged (K775). *(the `clears` form not yet met: T19 layer 2; capture-requests declares `lead_inquiry` with it in L6)*
 - **R22** With no `bundleId`, clears every row of every declared, non-exempt table; with one, clears only the rows keyed to that bundle. A table no module has declared is never touched.
 - **R23** Never clears the id counter (`seq`), the opaque-id ledger (`minted_ids`) or a table declared `exempt` (such as the instance's identity and settings), in either form: an id once allocated or minted is never reissued, purged store or not.
 - **R24** Reports which form ran (`scope`, `"ALL"` or the bundle id) and a per-table count of what was removed, naming every declared table even when it removed nothing.
