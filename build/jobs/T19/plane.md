@@ -23,3 +23,7 @@ For routing (REPORT-grade, listed now so the owners can plan): module tests outs
 **Tests outside my paths that the deletions break** (with `src/index.mjs` kept as the re-export, every reader of it by path keeps working): `test/m/control-plane/dispatch.test.mjs`:7 and `store-class.test.mjs`:11 (`await import("../../../src/store.mjs")`, control-plane's, for its wrapper deletion), and `test/m/legacy-store/` (deleted by me, per B2). `test/m/queue/world.mjs` no longer imports `schema.mjs` at HEAD. None in agent-worker, host-governor or capture.
 
 **Generated artifact:** `dist/bio-plane.bundled.mjs` is stale against my new files (its entry is `src/index.mjs`, which reaches them only after my deletion step); regenerate at the close.
+
+## J3 · REPORT
+
+`src/index.mjs` reduced (B4, K853): now the one line `export { default, Store } from "./plane/index.mjs";` (K846), tranche merged first. Green through the re-export: host-governor/ops 9/0, instance-setup worker-page 10/0, profiles 7/0, reports 6/0, worker-reports 8/0, capture/plane 2/0, scheduler 51/0. Plane 21/1: R8 red by name until store.mjs, schema.mjs and test/m/legacy-store/ go. Ownership 0 failures (legacy-index: 1 line added, the re-export; 158 removed); architecture 0. `store.mjs`, `schema.mjs`, `test/m/legacy-store/` untouched, waiting for your CHANGE.
