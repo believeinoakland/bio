@@ -27,3 +27,7 @@ Size (session_01A7m8vFb8rvrLPbS3Xo2b4s): test runs 1, module lines 50 (5 files: 
 ## J1 · REPORT
 
 Beyond B1: R18 says NO_ATTESTING_KEY's remedy names credentials R9 (was membership R89); refusals.mjs still said 'membership R89'. I changed the remedy to '(op=signerregister, credentials R9)' and re-keyed the R18 test from /R89/ to /credentials R9\b/. It is member-read product text, outside B1's 'no product code changes', done because the requirement is the contract (JOB.md step 4); say if you want it reverted. Stale generated artifact: the plane bundle (bio-plane/dist/bio-plane.bundled.mjs, .bundle.json; not_product) carries the re-worded strings and the remedy.
+
+## J2 · COMPLETE
+
+B1 applied: K875 (preflight.test.mjs on credentials' signerRegisterOwn/signerRevokeOwn; no other membership signer copy used in my paths), K882 (the airun.mjs comment), K899 (1) (bundle -> record at checks.mjs :311 :522 :686 :693, ops.mjs :375 :774 :776 :826, release.mjs :149; re-scan found no other member-read string; no test pinned the old words). Plus J1's remedy fix. Tests 181/181 pass; format, architecture, coverage (33/33), ownership: 0 failures. Record: build/jobs/T20/ratification.md on job/T20/ratification.
