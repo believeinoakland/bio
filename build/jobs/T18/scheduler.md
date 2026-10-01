@@ -1,6 +1,6 @@
 # scheduler (T18)
 
-**Status** · session_0111wxi28ywVWcPoZWi8oVBq · depth 2 · WORKING · handled B1
+**Status** · session_0111wxi28ywVWcPoZWi8oVBq · depth 2 · WAITING ON BOB (J1) · handled B1
 
 ## J1 · REPORT
 
