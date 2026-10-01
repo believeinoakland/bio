@@ -26,3 +26,7 @@
 - `checks/format.mjs`: 0 failures. `checks/architecture.mjs bias`: 11 product files, 38 imports, 0 failures. `checks/coverage.mjs bias`: 46 of 46 live ids named, 0 failures. `checks/ownership.mjs bias tranche/T19`: legacy-checks 0 added, 42 removed; 0 failures.
 
 Size (session_01NBsR9ExEChyivCpdRoXPVh): test runs 8, module lines 1813
+
+## J1 · COMPLETE
+
+BIAS #5 complete on job/T19/bias (record's Completion section). Applied: rule 1 re-points (checks.mjs and index.mjs to record-grammar; C-26.12 read from promotion's PROMOTION_ROW_CHECKS by reference), the catalogue's BIAS_CHECKS deleted (no importer left; bio-checks.mjs -42), R46 counts registered with record-core under biasStatements/biasAdoptions, K789 credentials in the test world. R met for you to strike: R46 (counts.test.mjs), R29 as re-pointed (checks.test.mjs); all other live Rs still named and passing. Tests: bias 55 pass, 0 fail, 1 todo (R26). Checks: format, architecture, coverage 46/46, ownership all 0 failures. Reports: bio-plane/dist bundle stale (yours at the close); legacy-checks catalogue.test.mjs:273 fails on tranche/T19 without my change too; the old refusal-codes guard's families floor may move at the next regression. No merge-early obligation.
