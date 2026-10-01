@@ -6,7 +6,7 @@ import { world, serve, sha, DAEMON, V, infoMd } from "./fixture.mjs";
 import { monitorOp, monitoringOps, MONITOR_AUTHOR, DRIVE_TICK_CHECKS } from "../../../src/monitoring/index.mjs";
 import { identify } from "../../../../docprofile/registry.mjs";
 import { substanceDigests, DRIVE_CAPTURE_CHECKS } from "../../../src/acquisition/index.mjs";
-import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 const LOC = "https://records.example.org/minutes.txt";
 const DOC = "https://docs.google.com/document/d/1AbCdEfGhIjKlMnOpQrStUvWxYz0123456789abcd/edit";
