@@ -1,6 +1,6 @@
 # inquiry (T21)
 
-**Status** · session_013dLfBDD5vd5k2Wu5bzVhD5 · depth 2 · COMPLETE · handled B1
+**Status** · session_013dLfBDD5vd5k2Wu5bzVhD5 · depth 2 · COMPLETE · handled B2
 
 ## J1 · REPORT
 
@@ -22,3 +22,13 @@ Completion (B1). Pushed on `job/T21/inquiry` @ bf3ac83d63.
 **Tests and checks.** `node --test test/m/inquiry/`: tests 165, pass 164, fail 0, todo 1 (R31, not yet met, pre-existing). No layer tests (manifest); no provided service changed. format: 0 failures; architecture: 0 failures; coverage: 48 of 48 live ids named, 0 failures; ownership vs tranche/T21: 6 files, 0 failures.
 
 Size (session_013dLfBDD5vd5k2Wu5bzVhD5): test runs 2, module lines 3783
+
+## J3 · COMPLETE
+
+Completion again (B2's CHANGE). Merged tranche/T21 (d65d02dd15, K969) into job/T21/inquiry; re-keyed `test/m/inquiry/case-grammar.test.mjs`:223 ('R7 C-21.2 is checked PER FINDING') to inquiry-grammar's new words, "is not a canonical record id". No other test in my paths pins "bundle id". Pushed @ b191d43a58.
+
+Everything in J2 stands (entries, J1's stale-bundle report, nothing deferred).
+
+**Tests and checks.** `node --test test/m/inquiry/`: tests 165, pass 164, fail 0, todo 1 (R31, pre-existing). format, architecture: 0 failures; coverage: 48 of 48, 0 failures; ownership vs tranche/T21: 0 failures.
+
+Size (session_013dLfBDD5vd5k2Wu5bzVhD5): test runs 3, module lines 3783
