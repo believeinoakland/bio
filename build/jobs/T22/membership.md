@@ -1,6 +1,6 @@
 # membership (T22)
 
-**Status** · session_01LdQT1TKUB5SDgdFi5gE5ik · depth 2 · WORKING · handled B1
+**Status** · session_01LdQT1TKUB5SDgdFi5gE5ik · depth 2 · COMPLETE · handled B1
 
 MEMBERSHIP #16, T22 layer 2. Entries from BOB's B1 START (`build/plan/current.md` L2 membership).
 
