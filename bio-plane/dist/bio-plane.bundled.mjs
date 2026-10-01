@@ -30173,7 +30173,6 @@ var LEAD_CHECKS = {
 var checks_exports10 = {};
 __export(checks_exports10, {
   INQUIRY_GRAMMAR_CHECKS: () => INQUIRY_GRAMMAR_CHECKS,
-  INQUIRY_GRAMMAR_ROWS: () => INQUIRY_GRAMMAR_ROWS,
   LEAD_CHECKS: () => LEAD_CHECKS2
 });
 var LEAD_CHECKS2 = {
@@ -30211,7 +30210,6 @@ var INQUIRY_GRAMMAR_CHECKS = Object.freeze({
     translation: "Grounding says some of the reasons behind an answer are strong enough to carry it on their own, and it is the one act here that makes a finding stronger rather than weaker. That decision needs a person behind it, and the credential that asked is an automated one. Sign in to ground it."
   }
 });
-var INQUIRY_GRAMMAR_ROWS = INQUIRY_GRAMMAR_CHECKS;
 
 // src/inquiry-grammar/grammar.mjs
 function f7(check, severity, message2, repairs, code) {
@@ -30237,7 +30235,7 @@ function supersedesEdgeFindings(fm, findings) {
       ));
     }
     if (typeof r.target !== "string" || !BUNDLE_ID_RE.test(r.target)) {
-      findings.push(f7("C-6.1", "error", `references[${i}] is a supersedes edge whose target '${String(r.target).slice(0, 40)}' is not a canonical bundle id: an edge that asserts a lineage must name the thing it came from`));
+      findings.push(f7("C-6.1", "error", `references[${i}] is a supersedes edge whose target '${String(r.target).slice(0, 40)}' is not a canonical record id: an edge that asserts a lineage must name the thing it came from`));
     }
   });
 }
@@ -30276,7 +30274,7 @@ function divisionDisclosureFindings(fm, findings) {
     return;
   }
   for (const s of sibs) {
-    if (!BUNDLE_ID_RE.test(s)) findings.push(f7("C-6.1", "error", `division_siblings names '${String(s).slice(0, 40)}', which is not a canonical bundle id`));
+    if (!BUNDLE_ID_RE.test(s)) findings.push(f7("C-6.1", "error", `division_siblings names '${String(s).slice(0, 40)}', which is not a canonical record id`));
     if (s === parent) findings.push(f7("C-6.1", "error", `division_siblings names ${s}, which is this document's division_parent: the parent is disclosed as the parent, and listing it as a sibling would hide that one of the halves is missing`));
     if (typeof fm.id === "string" && s === fm.id) findings.push(f7("C-6.1", "error", `division_siblings names this document itself: a sibling set that counts the child is a set that can look complete while a real sibling is absent`));
   }
@@ -30431,7 +30429,7 @@ function checkDividedExtension(fm, findings) {
     ));
   }
   for (const id of into) {
-    if (!BUNDLE_ID_RE.test(id)) findings.push(f7("C-2.8", "error", `division.into names '${String(id).slice(0, 40)}', which is not a canonical bundle id`));
+    if (!BUNDLE_ID_RE.test(id)) findings.push(f7("C-2.8", "error", `division.into names '${String(id).slice(0, 40)}', which is not a canonical record id`));
   }
   if (new Set(into).size !== into.length) {
     findings.push(f7("C-2.8", "error", "division.into names the same child twice: a leg apportioned to a child named twice has one home, not two"));
@@ -30570,7 +30568,7 @@ function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
     const t = leg.target;
     let targetType = null;
     if (typeof t !== "string" || !BUNDLE_ID_RE.test(t)) {
-      findings.push(f7("C-2.8", "error", `basis[${i}].target '${String(t).slice(0, 40)}' is not a canonical bundle id`));
+      findings.push(f7("C-2.8", "error", `basis[${i}].target '${String(t).slice(0, 40)}' is not a canonical record id`));
     } else {
       const tt = targetType = normalizeType(OBJECT_TYPES[t.split("-")[0]]);
       if (tt !== "information" && tt !== "inquiry") {
@@ -30847,7 +30845,7 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
     findings.push(f7(
       "C-2.8",
       "error",
-      `basis[${i}] states grade_source '${src}' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this bundle`,
+      `basis[${i}] states grade_source '${src}' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this one record`,
       [
         "run this through the ratification gate or op=promote, which read the record",
         "or state the grade as testimony (grade D, with an author and a date) if it is a member's account"
@@ -58824,8 +58822,9 @@ var INQUIRY_SCHEMA = `
 --
 -- inquiry_basis_target is the reverse index: "which inquiries rest on this
 -- document" (E2, and REC-17's re-evaluation obligation) is ONE indexed lookup.
--- Cleared in BOTH purge arms via the TABLES list (D-113); hygiene.test.mjs
--- holds that list against this file.
+-- Cleared in BOTH purge arms via the TABLES list (D-113); R36's test
+-- (test/m/inquiry/promotion.test.mjs) holds that list against the tables this
+-- schema creates.
 --
 -- REC-42 / DEC-32: the ground column IS THE RELATIONSHIP BETWEEN LEGS, one
 -- nullable column rather than a table because a leg belongs to exactly ONE
@@ -58860,13 +58859,10 @@ CREATE TABLE IF NOT EXISTS inquiry_basis (
   grade_axis   TEXT,            -- 'capture' | 'connection' | 'testimony': the axis the grade is on
                                 -- GRADE_AXES in record-grammar (grades.mjs) is the authority (MK-2 / IC-142)
                                 -- this line named only the first two until 2026-09-23, D-423
-                                -- hygiene.test.mjs DRIVES it against the export, as REC-68 did for grade_source
   grade_source TEXT,            -- 'resolution' | 'testimony' | 'hunch' | 'inherited' | 'capture'
                                 -- GRADE_SOURCES in record-grammar (grades.mjs) is the authority (DEC-15)
                                 -- this line named only the first three until 2026-08-08, REC-68
                                 -- the last two arrived with REC-31/DEC-21 and were never added here
-                                -- hygiene.test.mjs now DRIVES this list against the export, because
-                                -- hand-typing a vocabulary is how it went stale in the first place
   note         TEXT,
   at           TEXT,
   ground       TEXT,            -- REC-42: the OR branch this leg belongs to. NULL = the implicit single ground (AND)
@@ -60186,10 +60182,10 @@ var Inquiry = class _Inquiry {
   }
   /** R52 (1) (K861, plane R10): this module's share of the instance's figures, exported for `plane` to register under
    *  this module's name through `record-core` R63 (`registerCounts("inquiry", Inquiry.COUNT_KEYS, (hid) =>
-   *  k.counts(hid))`); the module registers nothing itself while plane holds its copy. */
+   *  k.counts(hid))`); plane registers it under this module's name, and the module registers nothing itself. */
   static COUNT_KEYS = Object.freeze(["inquiryMigrationReplays"]);
   /** R52 (1), D-464 (A COUNT IS TAKEN THROUGH THE CALLER'S OWN SIGHT): `record-core` R63's `counts(hid)` for this
-   *  module's share, moved from the plane's held copy with its reading kept. `inquiryMigrationReplays` is the rows of
+   *  module's share, registered by plane under this module's name. `inquiryMigrationReplays` is the rows of
    *  `inquiry_migration_replays` (REC-173) less those whose `bundle_id` is in `hid`, membership's `hiddenBundles`
    *  (`{sql, args}`), or null for a viewer that sees every bundle and for the direct internal call, which count whole.
    *  `COALESCE(k, '')`: a NULL key names no bundle, and `NULL NOT IN (…)` is NULL, which would drop the row. A figure
@@ -60340,7 +60336,7 @@ var Inquiry = class _Inquiry {
       return {
         ok: false,
         reason: "NO_REASON",
-        detail: "C-2.8 requires a non-empty disposition_reason for deferred and dismissed, so a disposition with no reason would produce a bundle the catalog rejects."
+        detail: "C-2.8 requires a non-empty disposition_reason for deferred and dismissed, so a disposition with no reason would produce a record the catalog rejects."
       };
     if (why.length > EDGE_REASON_MAX2 || /["\\\r\n]/.test(why))
       return {
@@ -60773,7 +60769,7 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
           reason: "CHILD_EXISTS",
           target,
           child: id,
-          detail: "this id already names a bundle. A division CREATES its children, so re-using an existing id would overwrite a question somebody else is working on."
+          detail: "this id already names a record. A division CREATES its children, so re-using an existing id would overwrite a question somebody else is working on."
         };
     }
     for (const c of kids) {
@@ -61371,8 +61367,9 @@ Apportioned: ${legs.length} leg(s), ${rows2.length} placement(s), ${legs.filter(
         /* A caller's own `asserted_by`/`at` never appear in this object.
            They are not overwritten from `row` — `row` is never read for
            them at all, which is the same thing DELETE buys at the trust
-           boundary and is why the suite asserts a caller's values are
-           DISCARDED rather than merely losing. */
+           boundary and is why R28's test (`test/m/inquiry/ground.test.mjs`)
+           asserts a caller's values are DISCARDED rather than merely
+           losing. */
         asserted_by: carry ? fmSafe(prior.asserted_by) : fmSafe(who2),
         at: carry ? fmSafe(prior.at) : when,
         carried_forward: carry
@@ -61586,14 +61583,9 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
    *  of reads per leg, so an unbounded backfill behind a member-callable read
    *  is REC-66's amplification arriving at a new door. It is capped, and a read
    *  that hit the cap says so and leaves the rest for the next read — safe
-   *  precisely because the id is a pure function of the leg.
-   *
-   *  WHAT THE INSTRUMENT CANNOT SEE, stated because it matters: the
-   *  derivation-bounds walk counts `this.sql.exec(` and `#rows(` INSIDE a
-   *  tainted loop, and `this.ensureLegContent(...)` is a method call it cannot
-   *  follow. This loop would NOT appear on that roster even unbounded. The
-   *  bound is here because the amplification is real, not because the walk
-   *  asked for it. */
+   *  precisely because the id is a pure function of the leg. R15's test
+   *  (`test/m/inquiry/content-legs.test.mjs`) drives the bound over 51 legs and
+   *  the next read's continuation. */
   #backfillLegContent(bundleId, legs) {
     const need = legs.filter((l) => !l.content_id);
     const run = need.slice(0, LEG_BACKFILL_MAX);
@@ -61654,7 +61646,7 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
      all at the declaration in `record-grammar` (`grades.mjs`), and `checkEarnedLeg`
      is the arm that refuses a leg claiming more than this. This class
      keeps no copy: a second literal "B" here is precisely the drift the move
-     exists to prevent, and the affordances suite pins its absence. */
+     exists to prevent. */
   /** The earned registry for one inquiry over one set of basis targets.
    *
    *  CONNECTION: the strongest resolution of each target document's captures to
@@ -62397,16 +62389,17 @@ var BASIS_VERSION_CHECKS = {
   },
   /* §6 rule 3, AND IT IS THE ONE REFUSAL THIS FILE CANNOT REACH ON ITS OWN. A
      pure check over one document cannot see what the record already holds under
-     that name, so the comparison is the store's — `store.mjs`'s promote path
-     computes the composition digest of every offered version and compares it to
+     that name, so the comparison is this module's promotion check (`./index.mjs`
+     `check`, R6), which compares the composition of every offered version to
      the stored one BEFORE anything lands. The row lives here so the C-number,
      the code and the translation stay in one place with its siblings; the
      enforcement site says where it actually fires, which is not this file. */
   VERSION_FROZEN: {
     check: "C-25.11",
-    /* A REGION `where`, NOT a function `where` — see this file's "WHAT A `where`
-       MEANS" block above. `promote` is 870 lines and refuses ~34 things; this row
-       governs the freeze arm and nothing else. The prose `(the basis-version
+    /* A REGION `where`, NOT a function `where`, as the check catalogue's "WHAT
+       A `where` MEANS" block (`legacy-checks`, retired) defined it. `promote`
+       was 870 lines and refused ~34 things; this row governs the freeze arm and
+       nothing else. The prose `(the basis-version
        freeze arm)` said exactly this before REC-71 and no instrument could read
        it, so the guard widened the claim to the whole function and conscripted 32
        unrelated refusals. The span is now DECLARED at the site. */
@@ -62459,8 +62452,7 @@ var BASIS_VERSION_CHECKS = {
      told the wrong one is worse off than one told nothing. */
   VERSION_LEG_UNRESOLVED: {
     check: "C-25.16",
-    /* A REGION `where` — see VERSION_FROZEN above and the "WHAT A `where` MEANS"
-       block at the head of this file. */
+    /* A REGION `where` — see VERSION_FROZEN above. */
     where: "src/basis-versions/index.mjs check > basis-version-resolve, reached from op=promote through the step basis-versions registers with promotion (K31), NOT reachable from a pure document check",
     translation: "One part of that version rests on something this record does not hold. A reading of the evidence that points at a document nobody can open is a reading nobody can check."
   },
@@ -62494,7 +62486,7 @@ var BASIS_VERSION_CHECKS = {
        BOTH LAYERS CALL `versionNeedsReason` AND NEITHER RE-TYPES THE SET. Two
        enforcement layers are what the rule requires; two IMPLEMENTATIONS of the
        membership test are what IS-6's C-22.4 control was absorbed by, so there is
-       one predicate and the suite pins the count. */
+       one predicate. */
   VERSION_DISPOSITION_UNATTRIBUTED: {
     check: "C-25.19",
     where: GRAMMAR_WHERE,
@@ -62591,7 +62583,7 @@ var VERSION_ACT_CHECKS = {
      naming an inquiry that TRANSITIVELY rests on this one is a fact about the
      stored graph, and it becomes a defect at exactly one moment: when a member
      accepts the version and its legs become what the answer rests on. Wired to
-     `#basisCyclePath`, the walk `promote` already runs — never a second one. */
+     `inquiry`'s one cycle walk (`cyclePath`) — never a second one. */
   VERSION_BASIS_CYCLE: {
     check: "C-25.27",
     where: "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
@@ -62647,10 +62639,9 @@ var VERSION_ACT_CHECKS = {
      the changed version becoming a new version." A published case pins each
      member by the hash its members signed, so the claims underneath that hash
      cannot move without the case becoming a statement about the present.
-     NO NEW FAMILY, DELIBERATELY: C-22's own header charges a new `*_CHECKS`
-     family as a floor in `civicos-ui/check-refusal-codes.mjs` that buys slack
-     for everybody else's walk, and this refusal belongs to the six version acts
-     whose family already exists. C-25.32's row records the same choice.
+     NO NEW FAMILY, DELIBERATELY: this refusal belongs to the six version acts,
+     whose family already exists (every family is reached by control-plane's
+     CHECK_FAMILIES, its R22). C-25.32's row records the same choice.
      REACHED BY FOUR OF THE SIX ACTS and not all six — `hide` and `current` are
      the two `VERSION_ACT_TO` maps to null, and the reasoning for leaving them
      outside is at the refusal site rather than restated here.
@@ -63032,7 +63023,7 @@ function basisVersionFindings(fm, findings) {
       if (themeLegFindings(`basis_version_legs[${li}] (version '${name}')`, leg, findings)) continue;
       const t = leg.target;
       if (typeof t !== "string" || !BUNDLE_ID_RE.test(t)) {
-        push("VERSION_LEG_NOT_CITABLE", `basis_version_legs[${li}] (version '${name}').target '${String(t).slice(0, 40)}' is not a canonical bundle id`);
+        push("VERSION_LEG_NOT_CITABLE", `basis_version_legs[${li}] (version '${name}').target '${String(t).slice(0, 40)}' is not a canonical record id`);
       } else if (typeof fm?.id === "string" && t === fm.id) {
         push("VERSION_LEG_SELF", `basis_version_legs[${li}] (version '${name}') rests on ${t}, which is this inquiry: a question is not evidence for its own answer, in any account of it`);
       } else {
@@ -64053,10 +64044,9 @@ var BasisVersions = class _BasisVersions {
    *
    * PL-1 / IS-1: the inquiry's alternative accounts of its evidence and their legs, reported so a purge can PROVE it
    * took them (D-113). A COUNT AND NOTHING ELSE: how many readings of the evidence exist is an operator fact, and what
-   * they say is not an operator surface. Shaped as record-core R63's `counts(hid)` with its key list, for `plane` to
-   * register under this module's name (`registerCounts("basis-versions", [...BasisVersions.COUNT_KEYS], (hid) =>
-   * bv.counts(hid))`). This module registers nothing itself while plane holds its copy (`src/plane/held.mjs`), so no
-   * figure is registered twice. `hid` is R63's: membership's `hiddenBundles(viewer)` (its R88), the bundles the caller
+   * they say is not an operator surface. Shaped as record-core R63's `counts(hid)` with its key list; `plane` registers
+   * it under this module's name through record-core's `registerCounts` (`src/plane/stats.mjs`), and this module
+   * registers nothing itself, so no figure is registered twice. `hid` is R63's: membership's `hiddenBundles(viewer)` (its R88), the bundles the caller
    * may not see, or null for a caller that sees every bundle and for the direct internal call (purge's proof among
    * them), which count whole. A version drops when its `bundle_id` is in `hid`, a leg when its `bundle_id` or its
    * `target_id` is (D-464: a count over rows the caller could not all read is a disclosure of existence).
@@ -64102,8 +64092,8 @@ var BasisVersions = class _BasisVersions {
   versionHide(a) {
     return this.#moveVersionState("hide", a);
   }
-  /* ONE implementation with six entry points: every guard is written once (test/versionstate.test.mjs pinned one
-     implementation, the reason IS-6's control was absorbed). The four beats: CHOOSE (inquiry and version named, never
+  /* ONE implementation with six entry points: every guard is written once (two implementations of one rule are what
+     absorbed IS-6's control). The four beats: CHOOSE (inquiry and version named, never
      defaulted), SEE WHAT WILL BE REFUSED (`preview` runs every guard and writes nothing), AUTHOR THE REASON (never
      prefilled), RECEIPT (the answer and a Session Log entry carry the same facts). A machine identity is refused on
      every act (§4: the AI holds no op that accepts). */
@@ -64435,7 +64425,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
         ok: false,
         reason: "NO_CONCLUSION",
         ...concludeRow("NO_CONCLUSION"),
-        detail: "concluding records WHAT was concluded. C-2.8 requires a non-empty conclusion in the concluded state, so a conclusion with nothing in it would produce a bundle the catalog rejects. An undetermined answer is stated as undetermined, never left blank."
+        detail: "concluding records WHAT was concluded. C-2.8 requires a non-empty conclusion in the concluded state, so a conclusion with nothing in it would produce a record the catalog rejects. An undetermined answer is stated as undetermined, never left blank."
       };
     if (concl && pid)
       return {
@@ -66994,7 +66984,7 @@ var STRENGTH_SCHEMA = `
 -- (AUDIENCES 5). An ABSENT declaration gates nothing and the published case
 -- SAYS SO -- an absent bar is not a bar of zero and must never render as one.
 -- Governance, not corpus: like members and signers it survives a whole-store
--- purge, and hygiene.test.mjs carries that exemption with its reason.
+-- purge; test/m/strength/cache.test.mjs (R23) proves that exemption.
 CREATE TABLE IF NOT EXISTS group_strength_bar (
   group_id   TEXT PRIMARY KEY,
   capture    TEXT,
@@ -67286,7 +67276,7 @@ var Strength = class _Strength {
     if (!id) return {
       ok: false,
       reason: "NO_ID",
-      detail: "the derived pair is asked of one inquiry: pass id=<bundle id>"
+      detail: "the derived pair is asked of one inquiry: pass id=<record id>"
     };
     if (!this.membership.inSight(id, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
     const row2 = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id);
@@ -67297,7 +67287,7 @@ var Strength = class _Strength {
         reason: "NOT_AN_INQUIRY",
         target: id,
         object_type: ty ?? null,
-        detail: `${id} is a ${ty ?? "bundle"}, not an inquiry. The derived pair is a property of a question and what it rests on; a document has no basis to derive one from.`
+        detail: `${id} is a ${ty ?? "record"}, not an inquiry. The derived pair is a property of a question and what it rests on; a document has no basis to derive one from.`
       };
     const s = this.strengthOf(id);
     if (!s.ok) return s;
@@ -67491,7 +67481,7 @@ var Strength = class _Strength {
     if (!name)
       return refusal20(
         "VERSION_STRENGTH_NO_VERSION",
-        project ? `${project.slice(0, 60)} has not said which reading of ${inq} it stands on, and there is no default reading. Name one explicitly to measure it.` : "name the reading to measure (version=<name>), or name the project asking (project=<PRJ-\u2026>) so the reading it stands on can be used. There is no default reading here.",
+        project ? `${project.slice(0, 60)} has not said which reading of ${inq} it stands on, and there is no default reading. Name one explicitly to measure it.` : "name the reading to measure (version=<name>), or name the project asking (project=<PROJ-\u2026>) so the reading it stands on can be used. There is no default reading here.",
         { inquiry: inq, project: project || null }
       );
     const row2 = this.#one(
@@ -70011,7 +70001,7 @@ var Contradiction = class _Contradiction {
           code: "CANDIDATES_NO_SUBJECT",
           check: row2.check,
           translation: row2.translation,
-          detail: "name exactly one of inquiry, content, entity, bundle, project or candidate"
+          detail: "name exactly one of inquiry, content, entity, a record (bundle), project or candidate"
         };
       }
       const n = Number(limit);
@@ -85966,7 +85956,7 @@ var Citation = class {
           handle,
           offenders: retiredMembers.sort(),
           drift: sel.drift,
-          detail: "the group has RETIRED these since the edge was severed, recording that they are superseded or no longer stand, and reinstating the edge would read to every later member as live support. Cite what superseded them, or re-collect the source as a new bundle and cite that. The whole call is refused rather than narrowed to the members that are not retired."
+          detail: "the group has RETIRED these since the edge was severed, recording that they are superseded or no longer stand, and reinstating the edge would read to every later member as live support. Cite what superseded them, or re-collect the source as a new record and cite that. The whole call is refused rather than narrowed to the members that are not retired."
         };
     }
     const doc = this.#document(project, null);
@@ -86212,7 +86202,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
         handle,
         offenders: retiredMembers.sort(),
         drift: sel.drift,
-        detail: "the group has RETIRED these, recording that they are superseded or no longer stand, and a citation made now would read to every later member as live support. Cite what superseded them, or re-collect the source as a new bundle and cite that. The whole call is refused rather than narrowed to the members that are not retired."
+        detail: "the group has RETIRED these, recording that they are superseded or no longer stand, and a citation made now would read to every later member as live support. Cite what superseded them, or re-collect the source as a new record and cite that. The whole call is refused rather than narrowed to the members that are not retired."
       };
     const doc = this.#document(project, "the project's own bundle.md does not parse under the restricted grammar");
     if (!doc.ok) return doc;
@@ -91719,7 +91709,9 @@ var AI_RUN_ACT_SHAPE_CHECKS = {
        and does not belong in C-22. The
        ARM WAS NOT WIDENED: an invariant relaxed to fit a new row is not an
        invariant, and this one is load-bearing — it is what lets `op=audit` reach
-       every C-22 condition without opening the store.
+       every C-22 condition without opening the store. (Since T20 deleted that
+       suite, `test/m/run-rules/table.test.mjs` R11 holds it: each C-22 row this
+       table mints names this module's pure site.)
   
        WHAT IT IS. §14a promises the running-session surface SAYS SO when the
        capability is unavailable, and IS-BUILD-PLAN's FL-6 row names the failure it
@@ -91737,7 +91729,9 @@ var AI_RUN_ACT_SHAPE_CHECKS = {
        failing", arriving at the run door.
   
        ITS `where` IS A WHOLE FUNCTION AND NOT A REGION, which is the only one in
-       REC-64's work — and the reason WAS a defect in the guard rather than a
+       REC-64's work — and the reason WAS a defect in the guard (arm C of
+       `civicos-ui/check-refusal-codes.mjs`, deleted in T20; this paragraph and the
+       two below are its history) rather than a
        judgement about the span. `aiRunOpen` refuses with `started: false`, and arm
        C's matcher was `ok: false`, so a REGION here would have judged zero refusals
        and FAILED as a drifted marker. The whole-function form is honest at this site
@@ -91745,7 +91739,7 @@ var AI_RUN_ACT_SHAPE_CHECKS = {
        blindness was measured and delegated at the guard's own `codesChecked` floor.
   
        **REC-76 CLOSED THAT DELEGATION (D-236), AND THE WHOLE-FUNCTION `where` IS
-       WHAT MADE IT PAY.** Arm C now grades an outcome by whether it DECLARES ITSELF
+       WHAT MADE IT PAY.** Arm C then graded an outcome by whether it DECLARES ITSELF
        A SUCCESS rather than by one literal, so this site went from `92L (0 judged,
        0 code(s) checked)` to four refusals judged — and TWO of them were CODELESS,
        at a governed site, for as long as the row has existed. They are the two rows
@@ -91759,8 +91753,8 @@ var AI_RUN_ACT_SHAPE_CHECKS = {
        the guard failed them by name, because the region was judged once by its own
        rows and again by this whole-function site, where their codes are not rows.
        So each of these three rows now names the region around its one refusal
-       (`is-airun-open-context`, `-capability`, `-already`), and arm C no longer
-       judges a claimed region a second time from an enclosing whole-function
+       (`is-airun-open-context`, `-capability`, `-already`), and arm C stopped
+       judging a claimed region a second time from an enclosing whole-function
        `where` (the guard's `nestedRegionsIn`). What the narrowing costs, stated:
        the five RELAYED refusals in `aiRunOpen` (existence, kind, gate, skill,
        seed — each minted and governed at its own site) are not read at this
@@ -91976,7 +91970,7 @@ var SUGGEST_ROWS = {
      run is what a version is read against, and a run that has ended stopped being the conditions anything is
      formed under. Asked AFTER sight (SUGGEST_NO_RUN for a run the caller cannot see) and position
      (AI_RUN_NOT_PRINCIPAL, C-22.12, relayed from `runPrincipalGate`), so it is said only to the run's principal.
-     C-27.18 is a dotted member of PL-3's family, the family owner's to allocate (`tools/mintid.mjs` C). */
+     C-27.18 is a dotted member of PL-3's family, the family owner's to allocate. */
   SUGGEST_RUN_NOT_RUNNING: {
     check: "C-27.18",
     where: "src/run-productions/index.mjs suggest > is-suggest-shape",
@@ -92153,8 +92147,8 @@ var EXTRACT_PROPOSE_ROWS = {
     translation: "This batch would mark more passages citable than the investigation has left of its limit, so the whole batch was refused rather than cut to fit: a trimmed batch would drop proposals the sender believes were filed. Nothing was proposed. Send fewer, or ask the member who opened the investigation."
   },
   /* K163 (T6): op=extractproposals' unscoped read. run-productions mints this code of its own in place of the
-     store's `NO_SCOPE`, whose other site (a published case's authored scope) is a different condition. Minted
-     nowhere yet: run-productions writes it when it moves `extractProposals` (T6-7) and marks the region. */
+     store's `NO_SCOPE`, whose other site (a published case's authored scope) is a different condition. Minted by
+     `extractProposals` inside its `is-extract-scope` region. */
   EXTRACT_NO_SCOPE: {
     check: "C-104.12",
     where: "src/run-productions/index.mjs extractProposals > is-extract-scope",
@@ -92330,7 +92324,7 @@ var CAPTURE_REQUEST_CHECKS = Object.freeze({
      Every other failure of a fire (not captured, not refused by the source, not a render op=acquire could
      not do) holds the row `requested` under this code, appends a LOOKED_INDETERMINATE look that is NOT
      governed, and answers the row in `held`. The code was written to the row and catalogued nowhere, so
-     `#renderHoldReason` answered it with no check and no sentence (it reads this family, so the row reaches the held row at once). It is the drain's condition, so it is
+     `renderHoldReason` answered it with no check and no sentence (it reads this family, so the row reaches the held row at once). It is the drain's condition, so it is
      this family's (R19: every code the module writes to a row is in C-28 or C-83). The `where` names a
      region, not the drain whole: the drain's other outcomes are other families' codes read from rows, and a
      whole-function `where` would conscript them. capture-requests marks it in its `drain` (T6; re-pointed T8,
@@ -92343,8 +92337,8 @@ var CAPTURE_REQUEST_CHECKS = Object.freeze({
   /* K109 (3), capture-requests R42 (T6, legacy-checks) — THE RETRY'S ONE REFUSAL. `captureRequestRetry`
      (op=capturerequestretry) returns a request to the queue only when it was refused for the SOURCE's reason
      (R40) and its target is one the caller can see; every other request is refused by this code and nothing
-     is written. The code is minted nowhere yet: capture-requests builds R42 in T6 (T6-8), in its own module,
-     and the `where` names that site, as a region on this family's REC-71 rule (a region its job marks). The sentence claims
+     is written. `captureRequestRetry` mints it, and the `where` names that site, a region on this family's REC-71
+     rule. The sentence claims
      nothing about which state the request is in, because an invisible target answers alike. */
   CAPTURE_REQUEST_NOT_RETRYABLE: {
     check: "C-28.18",
@@ -92378,6 +92372,9 @@ __export(skilldoctrine_exports, {
   DESCRIPTION_STANDARD: () => DESCRIPTION_STANDARD,
   DESIGN_SOURCE: () => DESIGN_SOURCE,
   FACTS_SOURCE: () => FACTS_SOURCE,
+  FILING_RULES: () => FILING_RULES,
+  FILING_TEMPLATE_ACT: () => FILING_TEMPLATE_ACT,
+  FILING_TEMPLATE_ACTS: () => FILING_TEMPLATE_ACTS,
   GATE_ADDRESS: () => GATE_ADDRESS,
   JUDGED_ROWS: () => JUDGED_ROWS,
   JUDGEMENT_EDITION: () => JUDGEMENT_EDITION,
@@ -92400,6 +92397,7 @@ __export(skilldoctrine_exports, {
   absenceByLevel: () => absenceByLevel,
   actionPlanningLayer: () => actionPlanningLayer,
   controlFlowAuthority: () => controlFlowAuthority,
+  filingDraftingLayer: () => filingDraftingLayer,
   judgementLayers: () => judgementLayers,
   reportsAs: () => reportsAs
 });
@@ -92717,10 +92715,11 @@ var DEPLOYMENT_SEQUENCE = {
      after the one before it has been verified live. */
   /* `extract` APPENDED 2026-09-14 by FLEET on SK-8's delegation, IN THE SAME
      COMMIT as the row entered `agent-worker/src/harness.mjs`'s `MODES` — which
-     is ARM B3's whole demand (the two rosters are ONE set, held in both
+     was ARM B3's whole demand (the two rosters are ONE set, held in both
      directions) and ARM B4's (index 0 stays the only deployed mode; every later
-     index, `extract` included, is not). The pack's digest moves with this line
-     by construction and nothing needs bumping by hand. */
+     index, `extract` included, is not), arms of `skillsequencing.test.mjs`,
+     deleted in T20; `agent-worker`'s R44, R53 test holds both today. The pack's
+     digest moves with this line by construction and nothing needs bumping by hand. */
   /* `plan` APPENDED (K660 (5), BIO_Action_v0_1.md §4 rule 1): the planning run, which proposes options for an
      action plan from what the record already holds. It is last in the order and it does NOT wait on the chain above
      it: it deploys as soon as `agent-worker` runs model turns (its R40 and R48 met), whether or not `investigate` or
@@ -92728,8 +92727,9 @@ var DEPLOYMENT_SEQUENCE = {
      `agent-worker`'s `MODES.plan` together (its R42, R53). No separate act. */
   order: ["check", "investigate", "extract", "plan"],
   first_deployed_mode: "check",
-  /* §2, VERBATIM. Looked up in the design document through SK-1's normaliser,
-     because a session cannot verify its own copying by re-reading it. */
+  /* §2, VERBATIM. Looked up in the design document through SK-1's normaliser
+     when written (SK-4), because a session cannot verify its own copying by
+     re-reading it. */
   text: "CHECK IS THE FIRST DEPLOYED MODE",
   role: "this session, run with this objective against an EXISTING conclusion, IS DEC-24's CHECK role \u2014 the record read adversarially, by the machine aimed at self-directed overclaiming, the threat model the doctrine names",
   because: "also the safest first deployment, because a run over a concluded inquiry has the smallest authorisation surface and the clearest ground truth to be measured against",
@@ -92737,8 +92737,8 @@ var DEPLOYMENT_SEQUENCE = {
   source: SEQUENCING_SOURCE,
   /* AND PINNED A SECOND TIME, TO A DOCUMENT THAT PHRASES IT DIFFERENTLY. SK-3's
      standard: one pin proves the sentence was copied; two prove the RULING is
-     the one both surfaces carry, so a sequencing quietly reversed on either
-     fails here rather than in a review nobody re-runs. */
+     the one both surfaces carry. (`skillsequencing.test.mjs`, deleted in T20,
+     looked both up; no module test reads the documents today.) */
   also_named_in: "DEC-55's enacted CHECK-first instruction and DEC-60 are satisfied by one build: the session run with \xA72's objective against an existing conclusion IS the CHECK role; deploy that mode first. No second architecture.",
   also_named_in_source: SEQUENCING_ALSO_NAMED_IN,
   /* WHAT MUST HAPPEN BEFORE THE SECOND MODE ENABLES, AND WHO OWNS IT. Neither
@@ -92746,10 +92746,11 @@ var DEPLOYMENT_SEQUENCE = {
   enabling_condition: "CHECK's FIRST LIVE RUN, verified in the instance's own scratch namespace against a CONCLUDED inquiry, swept after, with `op=audit` clean.",
   enabling_condition_owned_by: "VF-4, which waits on DS-4 (DIST's gated deploy)",
   /* THE HONEST STATE OF THAT CONDITION AT THIS COMMIT, AS DATA RATHER THAN AS A
-     SENTENCE IN A COMMENT — so the suite can assert it and so a later session
+     SENTENCE IN A COMMENT — so a test can assert it and so a later session
      cannot leave it stale by editing prose around it. `null` is not "unknown":
-     it is "no live run has been verified", and the suite holds it against the
-     landed flag, which is still `false`. */
+     it is "no live run has been verified"; `test/m/run-rules/deployment.test.mjs`
+     R9 asserts it, and `agent-worker`'s R44, R53 test holds the landed flags to
+     `DEPLOYED_MODES`, which it decides. */
   verification_recorded: null,
   /* HOW THE SECOND MODE ACTUALLY ENABLES, and it is deliberately not a switch. */
   enables_how: "by an EDIT to the landed table under review \u2014 `MODES.investigate.deployed`. A mode that could be enabled by a request parameter would be a gate the caller holds, which is no gate at all.",
@@ -92769,8 +92770,8 @@ var DEPLOYMENT_SEQUENCE = {
      first row still refuses first inside the harness (agent-worker R14), and the two are tallied apart. */
   enforced_by: ["C-109.1"],
   enforced_by_row: `${GATE_ADDRESS.file}:${GATE_ADDRESS.table_export}["${GATE_ADDRESS.row}"]`,
-  /* REQUIRED, AND MEASURED. Every clause is re-measured by the suite against the
-     landed sources rather than believed. */
+  /* REQUIRED, AND MEASURED: each clause was measured against the landed sources
+     when written, rather than believed. */
   does_not_reach: "a DEPLOYMENT. The gate refuses a RUN whose mode is not deployed; nothing refuses shipping a build with the flag already flipped, and no instrument reads a release note. The plane's open refuses a mode not deployed (C-109.1, ai-runs R40), so the RECORD holds no run in one; what neither gate reaches is a run's own work outside the plane's ops. And it cannot verify its own enabling condition: `deployed: true` is an edit, and the REVIEW of that edit \u2014 not this text and not that flag \u2014 is what holds CHECK's live verification in front of it.",
   /* THE ONE SENTENCE THIS RECORD EXISTS TO MAKE UNAMBIGUOUS. */
   holds_no_gate: "This record is INSTRUCTION about an order. It refuses nothing. A model ignoring every word of it gets past nothing, because the row at `gate-mode` runs before anything it could ignore."
@@ -93414,8 +93415,8 @@ var AiRuns = class _AiRuns {
    *  `#runContextProjects` read the other way round: every question `#citesInto` says this project
    *  CONFIRMED-cites (the one live-cites predicate, and the very expression `op=suggest`'s context check (d)
    *  asks, so a SEVERED edge is not a question the run may land on). Not `#refEdgeSevered` directly: the
-   *  severance rule has one definition and a PINNED caller set (`severedhomes.test.mjs`), and a seventh reader
-   *  is the drift D-267 removed. Kept only where `op=suggest` would itself admit it as a target — an inquiry by id (its
+   *  severance rule has one definition, `connections`' `citesInto`, and a seventh reader is the drift D-267
+   *  removed; R19's test holds that a question the project severed is left out. Kept only where `op=suggest` would itself admit it as a target — an inquiry by id (its
    *  `SUGGEST_NOT_AN_INQUIRY` shape test) that THIS viewer can see (`#inSight`, the predicate its viewer gate
    *  asks). A question the viewer cannot see is omitted and not counted (§7.9: a count would say it exists).
    *  So the set published is exactly the set `suggestVersion`'s context check (d) admits for this caller, and
@@ -94049,10 +94050,11 @@ var AiRuns = class _AiRuns {
   /* HOW MANY RUNS ONE TICK HOLDS OR WAKES, AND THE FIGURE WAS NOT CHOSEN — IT
        WAS FORCED BY AN INSTRUMENT. The first shape of this consumer scanned
        `ai_runs` unbounded and looped over what came back, which is precisely the
-       class `derivation-bounds.test.mjs` ratchets (31 methods measured
-       2026-08-08, 11 of them dispatched): a method that AMPLIFIES work over an
-       unbounded scan. The suite failed on the new member and named it, so the
-       scan is bounded rather than the ceiling moved — a ceiling is not a ratchet.
+       class `derivation-bounds.test.mjs` (deleted in T20) ratcheted (31 methods
+       measured 2026-08-08, 11 of them dispatched): a method that AMPLIFIES work
+       over an unbounded scan. That suite failed on the new member and named it,
+       so the scan was bounded rather than the ceiling moved — a ceiling is not a
+       ratchet. The bound is R16's, at most 25 runs per tick, and R16's test holds it.
   
        SIZED ON THE PRODUCER IT FOLLOWS. The drain lands at most
        `CAPTURE_REQUEST_TICK_BATCH` completions per tick, so a wake batch smaller
@@ -94194,7 +94196,7 @@ var AiRuns = class _AiRuns {
    * Nothing a caller sent is compared. REC-152 (C-22.12) would ALSO refuse the resumed run's first tick under a
    * key that is not its principal — and that is exactly why it is not relied on here: a dispatch that leans on
    * the refusal downstream has already handed a member's run to the group's key, and the refusal proves only
-   * that the tick failed. The arm in `test/d260-resume.test.mjs` counts calls AT THE BINDING for that reason.
+   * that the tick failed. R18's test counts calls AT THE BINDING for that reason: no withheld run reaches it.
    *
    * THE SECRET NEVER REACHES THE RECORD. The token is read from the Worker secret, used as the dispatch body's
    * `credential`, and dropped; what the tick answers, and what the wake entry says, name the credential by its
@@ -94550,8 +94552,9 @@ var AiRuns = class _AiRuns {
    *  viewer was never invited to is absent from this list BYTE-IDENTICALLY to a
    *  run that does not exist, and **no count of what was withheld is reported**
    *  — that count is exactly the disclosure that somebody is investigating
-   *  something you cannot see (op=backlinks' rule, and `gate-reads.test.mjs`
-   *  carries the classification). It follows that a well-formed context with no
+   *  something you cannot see (op=backlinks' rule; R22's tests hold it: a
+   *  hidden context answers byte for byte as an empty one, and `truncated`
+   *  counts only the runs the viewer may see). It follows that a well-formed context with no
    *  visible runs answers an ordinary EMPTY LIST: "no runs here" and "no runs
    *  you may see" are ONE answer BY CONSTRUCTION rather than by care.
    *
@@ -94757,7 +94760,7 @@ var AiRuns = class _AiRuns {
    *  not a fence: before this, the search half's payload existed only as a
    *  sentence in a design document, so there was nothing an assertion could read
    *  and nothing a negative control could break. The payload is BUILT here, by
-   *  one function, and `test/bias.test.mjs` asserts over the object this method
+   *  one function, and R23's and R34's test asserts over the object this method
    *  returns — not over a promise about it.
    *
    *  AND THE ASSERTION IS ABSENCE, NEVER EMPTINESS. The search payload is
@@ -94843,8 +94846,10 @@ var AiRuns = class _AiRuns {
    *
    *  Gated on the same column for the same reason as the read above.
    *
-   *  ===========================================================   *  REC-70 — BOUNDED, AND WHY THE RATCHET BUILT TO CATCH THIS DID NOT.
-   *  ===========================================================   *
+   *  ===========================================================
+   *  REC-70 — BOUNDED, AND WHY THE RATCHET BUILT TO CATCH THIS DID NOT.
+   *  ===========================================================
+   *
    *  THE DEFECT: this read was `... FROM ai_run_log WHERE run = ? ORDER BY seq`
    *  with no `LIMIT`, no `limit` and no `truncated` — D-225's class exactly,
    *  arriving in an op IS-6 added AFTER REC-60 measured its roster. A run's log
@@ -94853,8 +94858,8 @@ var AiRuns = class _AiRuns {
    *
    *  THE PART THAT MATTERS MORE, AND IT IS RECORDED HERE BECAUSE THE NEXT
    *  UNBOUNDED READ WILL LAND BESIDE THIS ONE: `test/meaning-bounds.test.mjs`
-   *  exists to fail the build when a new read publishes a collection off an
-   *  unbounded row source, and it did not fail — `op=airunlog` appeared in NONE
+   *  (deleted in T20) existed to fail the build when a new read published a
+   *  collection off an unbounded row source, and it did not fail — `op=airunlog` appeared in NONE
    *  of its three buckets, so the walk never reached this method at all.
    *
    *  THE CAUSE, NAMED: **the walk graded only return objects containing the
@@ -94876,11 +94881,12 @@ var AiRuns = class _AiRuns {
    *  method keeps `found: true`, which is what makes the corrected walk's
    *  verdict on it evidence rather than a coincidence.
    *
-   *  D-227 IS OPEN AND APPLIES HERE. That walk grades what a method PUBLISHES,
-   *  so an envelope left honest over a scan whose `LIMIT` was removed still
-   *  reads as bounded. This op's SQL bound is therefore pinned DIRECTLY, off
-   *  this segment's own source, in `meaning-bounds.test.mjs` — not inferred
-   *  from the envelope. */
+   *  D-227 APPLIED HERE. That walk graded what a method PUBLISHED, so an
+   *  envelope left honest over a scan whose `LIMIT` was removed still read as
+   *  bounded, and the suite pinned this op's SQL bound off its source. The pin
+   *  went with the suite. R24's test holds the published bound (the page,
+   *  `limit` and `truncated` over 205 entries); the SQL `LIMIT` below is what
+   *  keeps the read itself bounded, and no test reads it from the source. */
   log({ run, viewer = null, limit = null } = {}) {
     const seen = this.#bundleGate("r.context_id", viewer);
     const row2 = this.#one(
@@ -96340,9 +96346,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       }))
     };
   }
-  /** R20 (K861, plane R10): this module's figure source, exported with its key list for `plane` to register under this
-   *  module's name through record-core R63 (`registerCounts("run-productions", [...RunProductions.COUNT_KEYS],
-   *  (hid) => p.counts(hid))`); the module registers nothing itself while plane holds its copy. Each figure is the
+  /** R20 (K861, plane R10): this module's figure source, exported with its key list; `plane` registers it under this
+   *  module's name through record-core R63 (`src/plane/stats.mjs`: `["run-productions", RunProductions.COUNT_KEYS,
+   *  (ctx, hid) => runProductionsOf(ctx).counts(hid)]`), and the module registers nothing itself. Each figure is the
    *  table's rows less those naming a bundle in `hid` by the column named here: a proposal by its document, a stored
    *  refusal by its question. */
   static COUNT_KEYS = Object.freeze(["proposedReadings", "suggestRefusals"]);
@@ -96840,6 +96846,69 @@ function actionPlanningLayer(catalog) {
         leaves_to_a_member: PLANNING_ACTS.leaves_to_a_member.map(read2)
       },
       note: "this layer is INSTRUCTION. Every act it names is refused or labelled by the module that performs it: a proposal is stored apart and labelled as machine work, and the act a member takes on it refuses a machine. A run ignoring every word here gets past nothing."
+    }
+  };
+}
+var actionRule = (n) => ACTION_RULES.find((r) => r.rule === n);
+var FILING_RULES = [
+  actionRule(1),
+  {
+    rule: 7,
+    heading: "Nothing leaves by a system path.",
+    sentences: [
+      "The instance transmits nothing.",
+      "A member sends by the venue's own means and records the sending with the bytes sent; anything addressed carries the in-band stamp (Publication \xA73 rule 9).",
+      "A plan is never published (DEC-25); a counsel packet is never published and never fileable as it stands."
+    ]
+  },
+  {
+    rule: 11,
+    heading: "Jurisdiction lives in data.",
+    sentences: [
+      "Kinds, venues, templates, offices, legal organisations, deadlines and holidays come from a jurisdiction profile; a missing fact reads undetermined, never a default"
+    ]
+  },
+  actionRule(13)
+];
+var FILING_TEMPLATE_ACTS = Object.freeze({
+  proposes: Object.freeze([
+    Object.freeze({ id: "templatepropose", defined_by: "filing-templates R6" })
+  ]),
+  leaves_to_a_member: Object.freeze([
+    Object.freeze({ id: "templatedraft", defined_by: "filing-templates R3" }),
+    Object.freeze({ id: "templaterevise", defined_by: "filing-templates R4" }),
+    Object.freeze({ id: "templatesubmit", defined_by: "filing-templates R7" }),
+    Object.freeze({ id: "templatereview", defined_by: "filing-templates R9" }),
+    Object.freeze({ id: "templateapprove", defined_by: "filing-templates R10" })
+  ])
+});
+var FILING_TEMPLATE_ACT = FILING_TEMPLATE_ACTS.proposes[0].id;
+function filingDraftingLayer(catalog) {
+  const byId = new Map((Array.isArray(catalog) ? catalog : []).filter((a) => a && typeof a.id === "string").map((a) => [a.id, a]));
+  if (!byId.has(FILING_TEMPLATE_ACT)) return {
+    load_when: "never, in this edition",
+    sourcing: "absent",
+    body: {},
+    /* THE ABSENCE, STATED IN THE PACK ITSELF, as the recipes layer states its own. */
+    absent_because: `the plane's published catalogue holds no ${FILING_TEMPLATE_ACT} act, the one act a run proposes a filing template's wording through, so this layer carries no doctrine for work no run can do.`
+  };
+  const read2 = (a) => {
+    if (!byId.has(a.id))
+      throw new Error(`the filing drafting layer names the act ${a.id} (${a.defined_by}) as the plane publishes it and invents none: op=affordances publishes the template proposal act but not this one`);
+    return { id: a.id, defined_by: a.defined_by, act: byId.get(a.id) };
+  };
+  return {
+    load_when: "the run proposes a filing template's wording, or critiques one in a comment",
+    sourcing: "authored",
+    body: {
+      rules: FILING_RULES,
+      source: ACTION_SOURCE,
+      section: ACTION_SECTION,
+      acts: {
+        proposes: FILING_TEMPLATE_ACTS.proposes.map(read2),
+        leaves_to_a_member: FILING_TEMPLATE_ACTS.leaves_to_a_member.map(read2)
+      },
+      note: "this layer is INSTRUCTION. Every act it names is refused or labelled by the module that performs it: proposed wording is stored apart and labelled as machine work, and becomes a template's text only by a member's act, which refuses a machine. A run ignoring every word here gets past nothing."
     }
   };
 }
@@ -98725,8 +98794,8 @@ var CAPTURE_REQUESTS_SCHEMA = `
 -- provenance, and nothing that writes it can fetch anything. The daemon drains
 -- it, and DEC-47's conduct rules are enforced at that drain and nowhere else.
 --
--- WHY A TABLE RATHER THAN A CONTROL-PLANE ENQUEUE. index.mjs deliberately omits
--- taskenqueue from the OPS table, with the reasoning written into the table
+-- WHY A TABLE RATHER THAN A CONTROL-PLANE ENQUEUE. The op declarations
+-- (op-declarations) deliberately omit taskenqueue from the OPS table, with the reasoning written into the table
 -- itself: no control-plane route may put an event in the queue on its own
 -- account. A scoped enqueue op would have crossed that. The table keeps the door
 -- the OPS comment closed still closed, keeps the daemon the sole fetcher, and
@@ -99061,7 +99130,7 @@ var CaptureRequests = class _CaptureRequests {
       if (!this.#inquiryInSight(lead, viewer))
         return refusal20(
           "CAPTURE_REQUEST_LEAD_NOT_AN_INQUIRY",
-          `${lead.slice(0, 60)} is not a question readable here. A lead says which OTHER question this evidence bears on, so it names a question or it names nothing \u2014 a document, a project or a bundle id nothing answers to would give the notification a home that cannot hold it.`,
+          `${lead.slice(0, 60)} is not a question readable here. A lead says which OTHER question this evidence bears on, so it names a question or it names nothing \u2014 a document, a project or a record id nothing answers to would give the notification a home that cannot hold it.`,
           { lead_inquiry: lead }
         );
       if (lead === target)
@@ -119433,6 +119502,10 @@ var SOURCING = {
   /* skilldoctrine.mjs, BIO_Action_v0_1.md §4 (R28) */
   action_planning_unpublished: "absent",
   /* while op=affordances publishes no planning act (R29) */
+  filing_drafting: "authored",
+  /* skilldoctrine.mjs, BIO_Action_v0_1.md §4 rules 1, 7, 11, 13 (R30) */
+  filing_drafting_unpublished: "absent",
+  /* while op=affordances publishes no template proposal act (R30) */
   recipes: "absent",
   /* absent until the plane publishes recipes — see the header */
   recipes_published: "driven",
@@ -119582,6 +119655,10 @@ function disclosedLayers({ vocabularies, catalog, captureActs, recipes = null } 
        it may use and must leave to a member, read from the published catalogue; a stated absence while the
        plane publishes no planning act. Authored in `skilldoctrine.mjs`, as the judgement layers are. */
     action_planning: actionPlanningLayer(catalog),
+    /* R30 (K921). The rules a run proposing a filing template's wording works under, and the template acts it
+       may use and must leave to a member, read from the published catalogue; a stated absence while the plane
+       publishes no template proposal act. */
+    filing_drafting: filingDraftingLayer(catalog),
     recipes: Array.isArray(recipes) ? {
       load_when: "the run guides a member through a path to a result, or must say which steps reach it",
       sourcing: SOURCING.recipes_published,
