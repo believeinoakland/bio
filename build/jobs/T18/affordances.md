@@ -85,3 +85,7 @@ Size (session_01FgotLQ7FibdK7RNpDfo4m4): test runs 25, module lines 2981
 ## J5 · COMPLETE
 
 B5 applied, after merging tranche/T18. (a) plane.test.mjs's R17 no-target arm now requires R17's six keys to be present and admits nothing else except the door's `fences` and `pack` (control-plane R41, K730). (b) The layer-9 census is closed by B4 (J4). affordances: 123 pass, 0 fail. format 0, coverage 29/29, ownership 0. Architecture: 3 failures, J4's alone, still waiting on your `uses` edit (add action-plans and action-clocks). Size (session_01FgotLQ7FibdK7RNpDfo4m4): test runs 26, module lines 2991
+
+## J6 · COMPLETE
+
+B6: merged tranche/T18. B5 was already applied (J5: plane.test.mjs's R17 arm admits the door's `fences` and `pack`). affordances: 123 pass, 0 fail. format 0, architecture 0 (the uses edit cleared J4's three), coverage 29/29, ownership 0 (no difference from tranche/T18). Ready for the early merge for control-plane. Size (session_01FgotLQ7FibdK7RNpDfo4m4): test runs 27, module lines 2991
