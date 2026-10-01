@@ -21,3 +21,7 @@
 - `format`: 87 modules, 82 requirements files; 0 failures · `architecture admission`: 9 product files, 16 relative imports; 0 failures · `coverage admission`: 16 of 16 live requirement ids named by a test; 0 failures · `ownership admission tranche/T19`: 4 files; 0 failures.
 
 Size (session_01Fw5r9w5jim55wUjmoiT186): test runs 1, module lines 848
+
+## J1 · COMPLETE
+
+Complete: B1 applied. Both lookups already reach credentials through the store's routes (session, aicredentiallook are credentialsOps'; no import added, code path unchanged); admission's prose re-pointed to credentials R5/R12/R15, and a new R6 test pins both routes to credentials' op map (membership's answers neither), with negative controls. admission 19/19; format, architecture, coverage (16/16), ownership 0 failures. Reports in my record: requirements R6 and Uses (admission.md:44) still name membership.session; uses already lists credentials; no admission source reaches membership now (the edge is yours); plane bundle stale (comments only).
