@@ -11,7 +11,7 @@ import assert from "node:assert/strict";
 import { world, sha, V, provDoc, infoMd } from "./fixture.mjs";
 import { registerChecks, chainFromEvidence, routeFinding, ROUTE_MARK_NOTE } from "../../../src/provenance/index.mjs";
 import { ROUTE_MARK_CHECKS } from "../../../src/provenance/checks.mjs";
-import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 const cap = { path: "snapshots/a.txt", text: "bytes of a" };
 /* The register's C-18.9 findings over one document, at `state`. */

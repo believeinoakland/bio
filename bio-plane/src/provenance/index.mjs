@@ -14,7 +14,10 @@
  *
  * REACHED as `provenanceOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
  * call with `deps` and returned to every later caller. At creation it declares its tables to record-core's purge,
- * registers its check and projection with promotion (R1–R3, R42–R46) and its audit check with record-core (R59, N92).
+ * registers its check and projection with promotion (R1–R3, R42–R46), and with record-core its audit check (R59, N92),
+ * its audit finding `route` (R54; record-core R68) and its figures (R55; record-core R63). The testimony path's later
+ * work is the slot later modules register on (R52, `onTestimony`, `testimonySlot`), and its ops are `./ops.mjs`'s
+ * `provenanceOps` (R53).
  * `deps`:
  *   record, membership, promotion  the modules it uses, `recordOf(host)`, `membershipOf(host)`, `promotionOf(host)`
  *                                  unless a test passes its own.
@@ -27,7 +30,7 @@
  *                 secret by the operator and replaceable. Absent, `signReceipt` answers that no key is bound. */
 
 import { parseFrontmatter, isMachineIdentity, isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, BASIS_GRADES,
-         TESTIMONY_GRADE } from "../../checks/bio-checks.mjs";
+         TESTIMONY_GRADE } from "../record-grammar/index.mjs";
 import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS, TSA_CONTENT_TYPE, TSA_ACCEPT, ARCHIVE_SAVE_BASE,
          ARCHIVE_SERVICE, archiveLocatorFrom } from "../tsa.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
@@ -62,13 +65,23 @@ function safeJson(text) {
 /* A digest as the register keys it: a `sha256:` prefix and case ignored (R5). */
 const bareSha = (v) => (typeof v === "string" ? v.trim().replace(/^sha256:/, "").toLowerCase() : null);
 
-/* D-129's vocabulary as the route marks use it: what each finding MEANS, word for word as `airun.mjs`'s
-   OBSERVATION_STATES states it. That object sits in a later module (ai-runs), which this one cannot import (P4);
-   the three meanings a route finding can carry are held here, and the copy is reported (job record). */
-const FINDING_MEANS = {
+/** D-129's vocabulary, word for word as `observation-log`'s `OBSERVATION_STATES` states it (run-rules re-exports
+ *  the same object), and the `means` the audit's route tally publishes beside it (R54, as `op=audit` has always
+ *  answered it). That object sits in a later module (layer 5), which this one cannot import (P4), so the five
+ *  meanings are held here, unchanged, and the copy is reported (job record, PROVENANCE #9). Frozen: a reader takes
+ *  the words, never a handle to change them. */
+export const OBSERVATION_MEANS = Object.freeze({
   NEVER_LOOKED:         "nobody looked at this level for this subject",
+  LOOKED_ABSENT:        "we looked and it is positively not there",
   LOOKED_INDETERMINATE: "we looked and could not tell",
   PRESENT:              "we looked and it is there",
+  partial:              "we looked and got part of it (SWH's crawl status; CPDF-5's measured 88% case)",
+});
+/* The three meanings a route finding can carry (LOOKED_ABSENT and partial are unreachable for a route, below). */
+const FINDING_MEANS = {
+  NEVER_LOOKED:         OBSERVATION_MEANS.NEVER_LOOKED,
+  LOOKED_INDETERMINATE: OBSERVATION_MEANS.LOOKED_INDETERMINATE,
+  PRESENT:              OBSERVATION_MEANS.PRESENT,
 };
 
 /* D-15: the bundle gate compiled over a QUALIFIED column (the legacy store's `#bundleGate`), for reads that join a
@@ -343,6 +356,41 @@ export function routeFinding(objectType, mark) {
                  : "this document's route was assessed and every document in its register can be shown",
   };
 }
+
+/* ==================================================================== *
+ * REC-63 / DEC-56 — THE MARKER, ON THE SWEEP (R54; record-core R68). Moved from the legacy store's `auditPass`
+ * (T19 layer 3), which now answers this module's registered finding under `route`.
+ *
+ * DEC-56's acceptance is that a document sits at `verified` while the audit REPORTS it, and that the disagreement
+ * is LEGIBLE rather than reading as a bug. Three decisions make that true and each is here rather than in a doc:
+ *
+ *  1. `ok`, `clean`, `withErrors` and `tally` DO NOT MOVE. A marker is a STATED DOUBT, not a conformance error.
+ *     If it were an error, a store that honestly recorded one could never be "audit clean" again, and the honest
+ *     act would have broken the gate that rewards honesty. (A missing chain at `verified` is STILL a C-18.9 error
+ *     and still tallies; the marker explains that finding, it does not cancel it.) Record-core keeps a finding
+ *     beside those fields, never inside them (its R68).
+ *  2. THE TALLY IS OVER THE WHOLE PAGE AND IS ALWAYS PRESENT, including its `NEVER_LOOKED` count. That count is the
+ *     answer to "nobody looked", and an operator who cannot see it cannot tell a clean corpus from an unexamined
+ *     one. An absent tally would say nothing, and "nothing to report" and "this build does not report it" would
+ *     read alike, which is the conflation the marker exists to end, one level up.
+ *  3. THE NAMED LIST IS BOUNDED at 20, like `offenders` beside it, and `markedTotal` publishes how many there were.
+ *     A bound applied and not published is REC-57's defect and it is not being re-created here.
+ *
+ * The marks are read over the PAGE'S OWN ID RANGE and then kept only for the page's ids, so an invisible bundle's
+ * marker cannot ride out on this answer and the read cannot become an unbounded scan of the marks table.
+ * ==================================================================== */
+
+/** The audit answer's key this module's finding is registered under (record-core R68): the one spelling, read by
+ *  the composition root that relays the audit's answer. */
+export const ROUTE_FINDING_KEY = "route";
+/** The most marked bundles one page's finding names (R54); `markedTotal` says how many the page holds. */
+export const ROUTE_TALLY_MARKED_MAX = 20;
+/** The fixed sentence the finding carries (R54), word for word as `op=audit` has always answered it. */
+export const ROUTE_TALLY_NOTE =
+  "these are STATED DOUBTS, not conformance errors, and they are deliberately not counted in "
+  + "`tally` or `withErrors`: each names a document whose route cannot be shown, standing where "
+  + "the group put it (DEC-56/DEC-19). `NEVER_LOOKED` is a different fact again — it means no "
+  + "assessment has run, not that anything is wrong.";
 
 /* The route-mark read's constants (R23). In the legacy store they were declared after the method that used them, so
    that the suites walking `store.mjs` by method segment read them as that method's; here they are module constants. */
@@ -803,6 +851,7 @@ export function withRegisterChecks(image, gate) {
 class Provenance {
   #storage; #sql; #record; #membership; #promotion; #now; #instanceName; #signingKey;
   #listeners = [];        // R47: {module, fn, rank}
+  #testimony = [];        // R52: {module, check, project, rank, seq}
   #order;
 
   constructor({ storage, record, membership, promotion, now, instanceName, signingKey, order } = {}) {
@@ -947,6 +996,71 @@ class Provenance {
   /** Registers this module's check and projection with promotion, once (the factory calls it). */
   joinPromotion() {
     return this.#promotion.registerStep("provenance", { check: (c) => this.#check(c), project: (c) => this.#project(c) });
+  }
+
+  /* ===================================================================== *
+   * R52: THE TESTIMONY PATH'S LATER WORK, AS ONE SLOT (`build/extraction/legacy-store.md` §4.2 (5); K31's pattern, as
+   * R47; a fixed slot in the step order, as record-grammar R28's, K763).
+   * ===================================================================== */
+
+  /** R52 — a later module's work on a member's observation, registered once at start: a `check` asked before the
+   *  write, a `project`ion written after it, or both. A malformed or repeated registration is refused through
+   *  membership's `listenerRefusal` (its R81), the one site of `LISTENER_MALFORMED` and `LISTENER_DECLARED`. */
+  onTestimony(module, spec) {
+    const fnOr = (v) => v === undefined || v === null || typeof v === "function";
+    const check = isObj(spec) && typeof spec.check === "function" ? spec.check : null;
+    const project = isObj(spec) && typeof spec.project === "function" ? spec.project : null;
+    const formed = isObj(spec) && fnOr(spec.check) && fnOr(spec.project) && (check || project);
+    const refused = listenerRefusal(this.#testimony, module, formed ? (check || project) : null);
+    if (refused) return refused;
+    const i = this.#order.indexOf(module);
+    this.#testimony.push({ module, check, project, rank: i === -1 ? Infinity : i, seq: this.#testimony.length });
+    this.#testimony.sort((a, b) => (a.rank - b.rank) || (a.seq - b.seq));
+    return { ok: true, module };
+  }
+
+  /* The path's own fields as R28 wrote them, for a promotion that carries the testimony path; null for any other. */
+  #testimonyOf(c) {
+    const t = c && c.pkg && c.pkg[TESTIMONY_PATH];
+    if (!t) return null;
+    return { bundleId: c.bundleId, captureSha: t.captureSha, words: t.words, author: t.author,
+             observedAt: t.observedAt, recordedAt: t.recordedAt };
+  }
+
+  /** R52 — the registrations as one slot, which the composition root runs at the place the legacy store's promotion
+   *  step runs the testimony work today: `check(c)` at the end of that step's check, `project(c)` at the end of its
+   *  projection (`c` the promotion's step context). This module runs neither in its own step and calls no later
+   *  module: what runs is what registered. On a promotion without the testimony path both answer null. */
+  testimonySlot() {
+    return {
+      /* Every registered check, in the modules' order; the first refusal refuses the promotion as it came. */
+      check: (c) => {
+        const t = this.#testimonyOf(c);
+        if (!t) return null;
+        for (const { check } of this.#testimony) {
+          if (!check) continue;
+          const out = check({ ...t, earlier: {} });
+          if (out && out.ok === false) return out;
+        }
+        return null;
+      },
+      /* Every registered projection, in the modules' order, each told what the ones before it answered. Their
+         answers are joined, in that order, as `testimony`. A projection that throws is not caught: the promotion
+         rolls back whole. */
+      project: (c) => {
+        const t = this.#testimonyOf(c);
+        if (!t) return null;
+        const earlier = {}, testimony = {};
+        for (const { module, project } of this.#testimony) {
+          if (!project) continue;
+          const out = project({ ...t, earlier: { ...earlier } });
+          if (out && out.ok === false) return out;
+          earlier[module] = out ?? null;
+          if (isObj(out)) Object.assign(testimony, out);
+        }
+        return { testimony };
+      },
+    };
   }
 
   /* Why is a register row unreferenced? (D-9)
@@ -1806,6 +1920,48 @@ class Provenance {
     return routeFinding(objectType, this.#latestRouteMark(bundleId));
   }
 
+  /** R54 — the route-marker tally over one audit page (record-core R68's `page`: `{bundles: [{bundleId, type, state}],
+   *  after, last}`), registered as the audit's `route` finding (see the block above `ROUTE_FINDING_KEY`). Reads the
+   *  standing mark of each bundle the page names, over the page's own id range, kept for the page's ids only. */
+  routeTally({ bundles = [], after = "", last = null } = {}) {
+    const page = Array.isArray(bundles) ? bundles.filter(isObj) : [];
+    const ids = new Set(page.map((b) => b.bundleId));
+    const top = last ?? (page.length ? page[page.length - 1].bundleId : null);
+    const marks = new Map();
+    if (page.length)
+      for (const m of this.#rows(
+        `SELECT m.* FROM provenance_route_marks m
+          WHERE m.bundle_id > ? AND m.bundle_id <= ?
+            AND m.seq = (SELECT MAX(x.seq) FROM provenance_route_marks x WHERE x.bundle_id = m.bundle_id)`,
+        String(after ?? ""), String(top)))
+        if (ids.has(m.bundle_id)) marks.set(m.bundle_id, m);
+    const tally = { LOOKED_INDETERMINATE: 0, PRESENT: 0, NEVER_LOOKED: 0, notApplicable: 0 };
+    const marked = [];
+    let markedTotal = 0;
+    for (const b of page) {
+      const found = routeFinding(b.type, marks.get(b.bundleId) || null);
+      if (!found.applies) { tally.notApplicable++; continue; }
+      tally[found.finding] = (tally[found.finding] || 0) + 1;
+      if (!found.marked) continue;
+      markedTotal++;
+      if (marked.length < ROUTE_TALLY_MARKED_MAX) marked.push({ bundleId: b.bundleId, state: b.state, ...found });
+    }
+    return { tally, marked, markedTotal, markedShown: marked.length, means: OBSERVATION_MEANS, note: ROUTE_TALLY_NOTE };
+  }
+
+  /** R55 — this module's figures for `op=stats` and purge's proof (record-core R63), as the legacy store's `#counts`
+   *  takes them: `register` and `routeMarks`, each keyed on `bundle_id`. `hid` (`{sql, args}`, the bundles the caller
+   *  may not see, or null for a whole count) drops the rows naming a hidden bundle; a row whose column is null names
+   *  none and is counted (`NULL NOT IN (…)` is NULL, so the column is read through COALESCE). Writes nothing. */
+  counts(hid = null) {
+    const n = (table) => {
+      const hidden = isObj(hid) && typeof hid.sql === "string";
+      return this.#one(`SELECT count(*) AS c FROM ${table}${hidden ? ` WHERE COALESCE(bundle_id, '') NOT IN ${hid.sql}` : ""}`,
+                       ...(hidden && Array.isArray(hid.args) ? hid.args : [])).c;
+    };
+    return { register: n("register"), routeMarks: n("provenance_route_marks") };
+  }
+
   /** REC-63 / DEC-56: ASSESS one document's provenance route and record what was
    *  found — the act DEC-56's ruling licenses and D-204 said had nowhere to go.
    *
@@ -2434,11 +2590,11 @@ class Provenance {
         const b = new TextEncoder().encode(t);
         return { text: t, bytes: b.length, sha256: createSha256().update(b).hex() };
       };
-      /* The words' later work (the passage index, the content row over them and the extraction look) is the
-         projections of the modules that own it (K31; `extraction`, `content`, `observation-log`), registered with
-         promotion and run inside this same transaction when they read the payload under TESTIMONY_PATH; until they are
-         extracted `legacy-store` registers them. A projection that answers `testimony: {content_id}` names the content
-         row this answer reports. */
+      /* The words' later work (the passage index, the content row over them and the extraction look) is not this
+         module's: it is R52's testimony slot, which `extraction`, `content` and `observation-log` register on and the
+         composition root runs inside this same transaction, at the place the legacy store's promotion step runs that
+         work today (until they register, that step does it itself). The slot's `testimony: {content_id}` names the
+         content row this answer reports; with none named, `content_id` is null. */
       const promoted = this.#promotion.promote({
           bundleId: id, base: null, snapKey: `${recorded.replace(/[-:]/g, "")}_${rand(4)}`,
           author: who,
@@ -2493,7 +2649,8 @@ const instances = new WeakMap();
 
 /** The one provenance instance for `host` (the Durable Object's `ctx`, with its `storage`); `deps` are read on the
  *  first call only. At creation it declares its tables to purge (record-core R21, R46), joins every promotion with
- *  its check and projection (promotion R39) and registers the C-18 arms as an audit check (record-core R59). */
+ *  its check and projection (promotion R39), registers the C-18 arms as an audit check (record-core R59), the
+ *  route-marker tally as the audit's `route` finding (R54; record-core R68) and its figures (R55; record-core R63). */
 export function provenanceOf(host, deps) {
   let p = instances.get(host);
   if (!p) {
@@ -2509,6 +2666,10 @@ export function provenanceOf(host, deps) {
     /* N92, record-core R59 (K130): the C-18 register arms (R42–R46) join the audit over the same image the catalogue
        reads, so the audit judges each bundle once, whole, and loses none of them. */
     record.registerAuditCheck("provenance", ({ raw }) => registerChecks(imageForChecks(raw)));
+    /* R54, record-core R68: the route-marker tally beside every audit page, under `route`. */
+    record.registerAuditFinding("provenance", ROUTE_FINDING_KEY, (page) => p.routeTally(page));
+    /* R55, record-core R63: this module's figures for `op=stats` and purge's proof. */
+    record.registerCounts("provenance", ["register", "routeMarks"], (hid) => p.counts(hid));
   }
   return p;
 }
