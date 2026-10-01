@@ -36,3 +36,6 @@
 
 Size (session_01W1XUggKP4umcYqzdbfTAio): test runs 12, module lines 1308
 
+## J1 · COMPLETE
+
+Done; pushed to job/T19/entities. Record: build/jobs/T19/entities.md, Completion section. Met, with tests (ops.test.mjs): R40 (the 16 arms, resolve and resolvetestify added, each checked against its named service on two worlds built alike) and R41 (four figures through registerCounts, the hid subtraction on resolutions). Rule 1 done: SHARED_ACT_CHECKS and BASIS_GRADES come from record-grammar, and no entities file imports bio-checks.mjs. Rule 5 done: store.mjs' two explicit arms are removed (legacy-store -9/+0), and its spread now answers both. Entities' tests are 63/63. The 5 old-suite failures I ran are the same on the base. All four checks pass. Reports in the record: R40's text gives the arm deletion to legacy-store, but B1 gave it to me and it is done; #counts' four lines are still legacy-store's (R41); the plane bundle needs regenerating; the catalogue's ACT_SHAPE_CHECKS still has importers (progressions, inquiry), so its deletion is not mine.
