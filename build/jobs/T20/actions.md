@@ -2,6 +2,15 @@
 
 **Status** · session_01Fwao5PLUk8ZP3e1RQa7N1d · depth 2 · WORKING · handled B1
 
+
+### Completion
+
+- **Applied:** N447 (`src/actions/checks.mjs` deleted, no importer left; `index.mjs`'s vocabulary re-export dropped, read by no product file or `test/m` suite); R52 `actionHold` (`op=actionhold`), table `action_holds`, the read's `legal` marks with `holds` and `hold`; R54 `holdsDue`; K899 (1) `index.mjs`:958 "record" (the only member-read string holding the word; the rest are identifiers, SQL or comments). C-117.20–.22 minted in `actionHold`'s regions `is-hold` and `is-hold-legal-mark`, as action-grammar's rows name them (merged from `tranche/T20` after B2).
+- **Deferred:** none.
+- **Found in other modules (comments only, no requirement affected):** `control-plane/families.mjs`:55 and the headers of `action-grammar/checks.mjs`:4 and `action-clocks/checks.mjs`:3 still speak of `actions/checks.mjs` as present. Stale generated artifact: the plane bundle.
+- **Tests:** `test/m/actions/` 62 pass, 0 fail; users: action-clocks 21, filings 45, escalation 35, action-plans 38, monitoring 72, plane 28, affordances 131, control-plane 85, action-grammar 24, each 0 fail.
+- **Checks:** format: 0 failures; architecture: 12 product files, 0 failures; coverage: 42 of 42 live ids, 0 failures; ownership: 5 files, 0 failures.
+- Size (session_01Fwao5PLUk8ZP3e1RQa7N1d): test runs 6, module lines 2634
 ## J1 · REPORT
 
 Status: every entry built and pushed on `job/T20/actions` (9b1a51182c..HEAD); one test waits on action-grammar's merge.
