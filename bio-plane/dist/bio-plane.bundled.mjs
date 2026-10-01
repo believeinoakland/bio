@@ -35546,21 +35546,21 @@ CREATE TABLE IF NOT EXISTS calibrations (
   -- WHICH CALIBRATION REPLACED THIS ONE. Set ONCE.
   --
   -- IT IS replaced_by AND NOT superseded_by, AND THAT IS A DELIBERATE
-  -- NAMING CONSTRAINT RATHER THAN A PREFERENCE. D-221's version-chain pin
-  -- (test/versionchain.test.mjs section 2) sweeps the WHOLE schema for any
-  -- stored pointer from one version to another -- supersede/superseded_by/
-  -- predecessor/previous_version and their family -- because the thesis of that
-  -- item is that a document's version history is DERIVED from captures and is
-  -- never an edge somebody wrote down. That pin is total on purpose and this
-  -- column set it off.
+  -- NAMING CONSTRAINT RATHER THAN A PREFERENCE. D-221's thesis is that a
+  -- document's version history is DERIVED from captures and is never an edge
+  -- somebody wrote down, so the record stores no pointer from one version to
+  -- another -- supersede/superseded_by/predecessor/previous_version and their
+  -- family. The legacy suite test/versionchain.test.mjs (section 2) once
+  -- pinned that with a sweep of the WHOLE schema, and this column, spelled
+  -- the usual way, set it off. That suite was deleted at T20 and its sweep
+  -- was not carried; the spelling stays, for the rule it was kept for.
   --
-  -- THE PIN IS RIGHT AND WAS NOT NARROWED. A calibration is a measurement of an
-  -- ENGINE, not a version of a DOCUMENT, so the two constructs have nothing to
-  -- do with each other -- but loosening a total sweep to admit a lookalike is
-  -- how a guard stops being total, and the next stored pointer would arrive
-  -- through the hole this one made. The word moves instead, and this comment is
-  -- here so a later reader knows the relationship is real and why it is spelled
-  -- this way rather than concluding the author did not know the usual word.
+  -- A calibration is a measurement of an ENGINE, not a version of a
+  -- DOCUMENT, so the two constructs have nothing to do with each other --
+  -- but a lookalike name is where the next stored version pointer would
+  -- hide. The word moved instead, and this comment is here so a later reader
+  -- knows the relationship is real and why it is spelled this way rather
+  -- than concluding the author did not know the usual word.
   replaced_by    TEXT,
   drift          TEXT,               -- the verdict AT SUPERSESSION: worse, better, same, incomparable
   note           TEXT
@@ -39212,7 +39212,7 @@ var Extraction = class _Extraction {
         skipped: [],
         skipped_named: 0,
         state: null,
-        why: "an authored observation is indexed under its bundle and its capture digest, and one was not named"
+        why: "an authored observation is indexed under its record and its capture digest, and one was not named"
       };
     return this.core.transact(() => {
       const indexed = this.indexUnits(bundleId, captureSha, [{ extent: { kind: "document" }, text: words, seq: 0 }], null);
@@ -39776,7 +39776,7 @@ var Extraction = class _Extraction {
           ...reextractRow("REEXTRACT_NOT_READ"),
           op,
           sha256: sha,
-          detail: `this record holds no reading of that capture that you can see, so there is nothing for a re-read to replace. A capture is read when a bundle carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.`
+          detail: `this record holds no reading of that capture that you can see, so there is nothing for a re-read to replace. A capture is read when a record carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.`
         } };
     }
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
