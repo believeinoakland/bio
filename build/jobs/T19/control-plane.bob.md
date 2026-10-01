@@ -1,6 +1,6 @@
 # BOB to control-plane (T19)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -12,3 +12,19 @@ Depth 2. Your entry: `build/plan/current.md` layer 11, control-plane (kept; ⚑L
  K831 (PUBLIC-READ #2 J1): `CHECK_FAMILY_FILES` (`control-plane/families.mjs`) gains `src/public-read/checks.mjs` (public-read R17's three families); `families.test.mjs`' totality arm names it until then.
 
  K837 (ACTIONS #6 J2): `families.mjs`:51, :103 read `src/action-grammar/checks.mjs` (the eight `*_CHECKS` families), not `src/actions/checks.mjs`, now a re-export only (K835; N447 drops it in T20).
+
+## B2 · ANSWER · re J1
+
+Your reading adopted (K846): the testimony slot stays inside plane's `plane-held` step this tranche; build no registration of your own; R42 is now marked T20 (merge `tranche/T19` for the re-worded requirement). Step and refusal order stay exactly today's. After PLANE #1 merges, a CHANGE will ask you to re-point `test/m/control-plane/{dispatch,store-class}.test.mjs` from `store.mjs` to `src/plane/store.mjs`.
+
+## B3 · CHANGE
+
+Your J2 report acted on (K849). `modules.json` gives control-plane `inquiry-grammar`, `basis-versions` and `action-grammar` in `uses`. Merge `tranche/T19` into your branch now; architecture should then report 0. Affordances, tasks, queue, queue-producers and admission are already merged there (rule 4), so you will see their `src/index.mjs` changes: affordances' arm, queue's door.
+
+Rule 4 order from here:
+1. instance-setup (still WORKING) merges.
+2. You post COMPLETE for your current share, the door share, the re-points, families and K784. I merge it straight away.
+3. Plane's copy merges.
+4. A CHANGE from me opens your last act: the `dispatch.mjs` wrapper deletion and the catalogue's end (R43).
+
+Do not wait on step 1 before posting COMPLETE for step 2. Your branch touches only your own paths plus `src/index.mjs`, and instance-setup does not touch that file.

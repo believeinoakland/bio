@@ -110,7 +110,7 @@ test("R1, R3 (queue suite's share): a task routed with no manager and no adminis
   assert.equal(w.t.taskResolve({ id: made.id, actor: "dave" }).already, true, "resolved once");
 });
 
-test("R1 (N329): with no project manager the task goes to the earliest active administrator, the first of activeAdmins after the founder (membership R86)", () => {
+test("R1 (N329): with no project manager the task goes to the earliest active administrator, the first of activeAdmins after the founder (membership R86)", async () => {
   const w = box([ev("a3")]);
   w.bundle(DOC2);
   // created in the reverse of member-id order: the earliest row leads, whatever its id
@@ -118,7 +118,7 @@ test("R1 (N329): with no project manager the task goes to the earliest active ad
   w.member("ada", { role: "admin", created: iso(NOW - 1000) });
   w.member("bea", { role: "admin", created: iso(NOW - 3000) });     // a tie on created is broken by id: bea before zed
   w.member("old", { role: "admin", status: "revoked", created: iso(NOW - 9000) });
-  w.run(`INSERT INTO credentials (role, salt, hash, iterations, updated) VALUES ('admin', 's', 'h', 1, ?)`, iso(NOW));   // claimed: the founder leads
+  assert.equal((await w.credentials.claim({ password: "a founder's password", tokenFp: "fp" })).ok, true);   // claimed: the founder leads
   assert.deepEqual(w.membership.activeAdmins(), ["admin", "bea", "zed", "ada"]);
   const r = w.t.taskDrain({ actor: "alarm" });
   assert.deepEqual(r.created.map((c) => [c.assignee, c.assignee_role]), [["bea", "group-admin"]]);
@@ -287,14 +287,14 @@ test("R3: taskForward's refusals in order, then forwarded with its history; task
   assert.equal(Tasks.PER_ITEM_MAX > 0, true);
 });
 
-test("R3: an administrator resolves another member's task; the founder's session is one", () => {
+test("R3: an administrator resolves another member's task; the founder's session is one", async () => {
   const w = box();
   w.member("alice"); w.member("ada", { role: "admin" }); w.bundle(DOC); w.bundle(DOC2);
   w.task("TASK-2026-0001-a", DOC, { assignee: "alice", role: "project-manager" });
   w.task("TASK-2026-0002-b", DOC2, { assignee: "alice", role: "member", status: "forwarded" });
   assert.equal(w.t.taskResolve({ id: "TASK-2026-0001-a", actor: "ada" }).ok, true);
   assert.equal(w.t.taskResolve({ id: "TASK-2026-0002-b", actor: "admin" }).reason, "TASK_NOT_YOURS", "an unclaimed founder is no administrator");
-  w.run(`INSERT INTO credentials (role, salt, hash, iterations, updated) VALUES ('admin', 's', 'h', 1, ?)`, iso(NOW));
+  assert.equal((await w.credentials.claim({ password: "a founder's password", tokenFp: "fp" })).ok, true);
   assert.equal(w.t.taskResolve({ id: "TASK-2026-0002-b", actor: "admin" }).ok, true, "the bare `admin` is not a machine stamp");
 });
 

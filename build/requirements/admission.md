@@ -22,7 +22,7 @@ Terms. An **op spec**, a **class**, the **session sets** and a **capability** ar
 
 **Authentication** (`classify`, the agent credential's and the session's resolution)
 - **R5** (was `control-plane` R7) A `token` equal to the `ADMIN_TOKEN`, `MEMBER_TOKEN`, `PROBE_TOKEN` or `DAEMON_TOKEN` binding (checked in that order) gives that class, but only while the binding is live: set, and not a value ever published (runtime-limits `liveToken`). Any other token gives no binding class.
-- **R6** (was `control-plane` R8) A token shaped `aik-<64 hex>` is resolved once per request against `bio`'s credential rows. A known credential gives class `ai` with its principal, scope and confinement. A 64-hex token is resolved as a session through `membership.session` against `bio`. A store that does not answer either lookup is answered 502 `STORE_DID_NOT_ANSWER` and never as a statement about the caller.
+- **R6** (was `control-plane` R8) A token shaped `aik-<64 hex>` is resolved once per request against `bio`'s credential rows. A known credential gives class `ai` with its principal, scope and confinement. A 64-hex token is resolved as a session through `credentials.session` (its R5) against `bio`; the `aik-` lookup is `credentials.aiCredentialLook` (its R15). A store that does not answer either lookup is answered 502 `STORE_DID_NOT_ANSWER` and never as a statement about the caller.
 - **R7** (was `control-plane` R9) A caller with no class is refused 401 `NOT_AUTHENTICATED` (C-38.1).
 
 **Admission, in this order**
@@ -41,7 +41,7 @@ Terms. An **op spec**, a **class**, the **session sets** and a **capability** ar
 
 - `op-declarations`: `OPS`, `SESSION_OPS`, `NEEDS`, `UNATTENDED_BY_DECISION`, `GOVERNANCE_ACTIONS`, `IDENTITY_ACTIONS` (R3, R8–R13).
 - `runtime-limits`: `liveToken` (R5).
-- `membership`: `session` (R6), through the store's route as today.
+- `credentials`: `session` (its R5) and `aiCredentialLook` (its R15) (R6), through the store's routes.
 
 ### Invariants
 

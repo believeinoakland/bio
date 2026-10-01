@@ -1,7 +1,8 @@
 /* affordances in the running plane (Miniflare, the Durable Object the product runs in). `affordanceFacts` (R13–R16,
    R23) is this module's (`affordancesOf(ctx)`, T9), reached in-process through the durable object's
-   `op=affordancefacts` route, and the `op=affordances` composition (R17) is still the control plane's; both are
-   measured here at those interfaces (K208 Q1). What the acting modules
+   `op=affordancefacts` route, and the `op=affordances` composition (R17) is this module's too since T19
+   (`affordancesOp`, the control plane handing in its gate and stamps), reached through the door; both are measured
+   here at those interfaces (K208 Q1). What the acting modules
    answer when an act is performed is driven here too: the rung backing (R19), the machine map (R20), the agreement
    between an offer and its act (R18's roster half), and that asking writes nothing (R22). */
 import { test, after, before } from "node:test";
@@ -13,7 +14,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, VOCABULARIES, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, RUNGS,
          RUNG_ABSENT, deriveActs, decorate, PER_ITEM_MAX } from "../../../src/affordances.mjs";
-import * as actions from "../../../src/actions/index.mjs";
+import * as actionGrammar from "../../../src/action-grammar/index.mjs";
 import { list as listProfiles, combine as combineProfiles } from "../../../../jurisdictions/index.mjs";
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "src");
@@ -364,30 +365,31 @@ test("R17: with a target, R13's refusal as given, else the target's type, state,
     }
 });
 
-/* R26 (N231): the kinds are asked of the instance's `actions` at the call (its R42), so a profile an administrator
-   makes active (`op=profilesset`) adds its kinds to the next answer, and clearing the profiles takes them away. The
-   profile is chosen from the held, non-test profiles as the one whose view adds kinds, never named here (R25). */
+/* R26 (N231, K768): the kinds are asked of the instance's `actions` at the call (its R42, through action-grammar's
+   `actionKinds`), so a profile an administrator makes active (`op=profilesset`) adds its kinds to the next answer, and
+   clearing the profiles takes them away. The profile is chosen from the held, non-test profiles as the one whose view
+   adds kinds, never named here (R25). */
 test("R26: op=affordances publishes as vocabularies.action_kind the kinds this instance's actions accepts at the moment "
    + "of the call — the product's alone with no profile active, the active profile's added once it is made active — "
-   + "and risk_tiers is actions' own", async () => {
+   + "and risk_tiers is action-grammar's", async () => {
   const vocab = async (q = "") => (await GET(`op=affordances&token=${W.IRIS}${q}`)).vocabularies;
   const setProfiles = async (profiles) => must(`profilesset ${JSON.stringify(profiles)}`,
     await POST(`op=profilesset&token=${W.FOUNDER}`, { profiles }));
   const adds = listProfiles().filter((p) => !p.test)
-    .map((p) => [p.id, actions.actionKinds(combineProfiles([p.id]).view)])
-    .filter(([, kinds]) => kinds.length > actions.PRODUCT_KINDS.length);
+    .map((p) => [p.id, actionGrammar.actionKinds(combineProfiles([p.id]).view)])
+    .filter(([, kinds]) => kinds.length > actionGrammar.PRODUCT_KINDS.length);
   assert.ok(adds.length > 0, "a held profile adds kinds, so the instrument sees the call");
   const [id, kinds] = adds[0];
   await setProfiles([]);
   for (const q of ["", `&target=${E(W.ACTN)}`]) {
     const v = await vocab(q);
-    assert.deepEqual(v.action_kind, [...actions.PRODUCT_KINDS], `none active${q}`);
-    assert.deepEqual(v.risk_tiers, JSON.parse(JSON.stringify(actions.RISK_TIERS)));
+    assert.deepEqual(v.action_kind, [...actionGrammar.PRODUCT_KINDS], `none active${q}`);
+    assert.deepEqual(v.risk_tiers, JSON.parse(JSON.stringify(actionGrammar.RISK_TIERS)));
   }
   await setProfiles([id]);
   for (const q of ["", `&target=${E(W.ACTN)}`]) assert.deepEqual((await vocab(q)).action_kind, kinds, `active${q}`);
   await setProfiles([]);
-  assert.deepEqual((await vocab()).action_kind, [...actions.PRODUCT_KINDS], "cleared");
+  assert.deepEqual((await vocab()).action_kind, [...actionGrammar.PRODUCT_KINDS], "cleared");
 });
 
 test("R21: every label, prompt, ground and vocabulary op=affordances hands a surface is this module's own value", async () => {

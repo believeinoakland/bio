@@ -28,7 +28,7 @@
  * already made each of them with its own options; `deps` (a test's) replaces any of `record`, `membership`,
  * `connections`, `citation`, `inquiry`, `publication`, `basisVersions`, `ratification`, `contradiction`. */
 
-import { normalizeType, parseFrontmatter, isMachineIdentity } from "../../checks/bio-checks.mjs";
+import { normalizeType, parseFrontmatter, isMachineIdentity } from "../record-grammar/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, Membership } from "../membership/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";

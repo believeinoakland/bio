@@ -101,3 +101,6 @@ Plane's held code (plane R10): each owner registers its own share and deletes it
 - **provenance** (L3, new to T20) · registers `testimonySlot()`'s check in its own promotion step; the sight index's projection to its owner (membership or retrieval, as plane's job names it), with that owner's job.
 - **record-core** (L2, already in T20) · the bundle, file, history, ref and text-index counts through R63.
 - **plane** (L11, new to T20) · deletes `src/plane/held.mjs` once empty; R10 retired, R8's "save the held code" struck.
+- **bundler** (L1, now unconditional; K846) · `fleet-bundle.mjs`:196, :198 `planeMember`'s `entry` → `src/plane/index.mjs`; then plane's T20 job deletes the one-line `src/index.mjs`.
+- **control-plane** (L11, new to T20; K846) · R42: register provenance's testimony slot at the `plane-held` step's rank (after provenance's T20 job), and plane's held step drops it.
+- **host-governor** (L?), **capture** (L3), **agent-worker** (L6) (K846) · re-point any module test PLANE #1 names red at T19's close (`ops.test.mjs`:192, `plane.test.mjs`:13, agent-worker's `PLANE_ENTRY`/`PLANE_IDX_PATH`) to `src/plane/`.
