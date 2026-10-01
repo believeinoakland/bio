@@ -1,5 +1,5 @@
 // @ts-check
-/* record-grammar: the bundle check, `checkBundle`, with its structural arms (C-1, C-2.1–.6, C-3.1, C-4, C-5, C-6.1–.3's
+/* record-grammar: the bundle check, `checkBundle`, with its structural arms (C-1, C-2.1–.6, C-3.1, C-4, C-5, C-6.1–.2's
    core, C-12–C-14, C-16, C-17.1) and the grammars seam its type arms are filled through (R28). Copied from the check
    catalogue at T19 with their comments (draft-T19, rule 2; K653 BOB-6). The type arms are not here: each is a place in
    the order (`EXTENSION_ARMS`) that its owner's registered grammar fills (`opts.grammars`, record-core R67), so a
@@ -49,9 +49,9 @@ import { HEADINGS, HEADINGS_WHEN, isCaseMemberBytes, vocabFor, STATES, sectionTe
  *  WHY THIS IS NOT THE D-113 CLASS (a parallel list that falls out of step):
  *  the tally is DERIVED from the findings the checks actually produced, not
  *  from a hand-kept register beside them. A code cannot go stale, because there
- *  is nowhere for it to go stale relative to. `test/repair-reachability.test.mjs`
- *  holds the one property that could drift — a code is stable-shaped and unique
- *  within its check — so a second arm cannot quietly reuse a first arm's code.
+ *  is nowhere for it to go stale relative to. The one property that could drift
+ *  — a code is stable-shaped and unique within its check — is the minting arm's
+ *  to keep: no structural arm here passes a code (N469, T21).
  *
  *  OPTIONAL AND ADDITIVE. 142 of the catalogue's 145 repairable findings pass
  *  none, the property is then absent, and `op=audit`'s `tallyDetail` key is
@@ -247,7 +247,7 @@ function checkWriteCompleteness(ctx, findings) {
     const idx = ctx.body.indexOf('## Session Log');
     const section = idx >= 0 ? ctx.body.slice(idx, ctx.body.indexOf('\n## ', idx + 1) === -1 ? undefined : ctx.body.indexOf('\n## ', idx + 1)) : '';
     if (!/^### Session /m.test(section)) {
-      findings.push(f('C-13.2', 'error', 'bundle has been updated but carries no Session Log entry', ['append the missing Session Log entry naming the gap']));
+      findings.push(f('C-13.2', 'error', 'record has been updated but carries no Session Log entry', ['append the missing Session Log entry naming the gap']));
     }
   }
 }
@@ -338,7 +338,7 @@ async function checkQueueAndBase(ctx, findings) {
     if (!(k in man)) findings.push(f('C-16.1', 'error', `manifest missing '${k}'`));
   }
   if (man.target && man.target !== ctx.folderName) {
-    findings.push(f('C-16.1', 'error', `manifest target '${man.target}' does not match bundle '${ctx.folderName}'`));
+    findings.push(f('C-16.1', 'error', `manifest target '${man.target}' does not match record '${ctx.folderName}'`));
   }
   const listed = new Set();
   if (Array.isArray(man.files)) {
@@ -507,20 +507,9 @@ function checkReferences(ctx, findings) {
       }
     }
   }
-  /* C-6.3, REPLACED by REC-11 (QUEUE.md carries the ruling). The old arm
-     required an elevated Problem to carry an 'elevated_into' reference; it was
-     wrong to keep because elevation is not a state in the inquiry machine at
-     all (the REC-10 collapse removed it — only legacy history carries it, and
-     a legacy document is judged by its own contract, which never enforced the
-     edge at write). Its successor discipline is the basis arm: an inquiry
-     carrying a basis leg must carry the same target in references[], so refs
-     and inquiry_basis — both projections of this one document — cannot
-     disagree. That arm lives in checkInquiryBasis (C-2.8's family) so the
-     store's write path and this checker run the SAME rule. */
-  if (ctx.fm?.workproduct_state === 'distributed') {
-    const hasDist = [...ctx.files.keys()].some(p => p.startsWith('distributions/'));
-    if (!hasDist) findings.push(f('C-6.3', 'error', 'workproduct_state is distributed but distributions/ is empty'));
-  }
+  /* C-6.3 raises nothing here (K904, form (b); N456, T21): its last arm here, a project whose `workproduct_state` was
+     `distributed` with no `distributions/`, went with the hand-written project stage, which `project-stage` now
+     computes at the read. C-6.3's basis-in-references arm is inquiry-grammar's (C-2.8's family). */
   /* REC-16: `supersedes` gains requirements, the way `links_to` has them (C-6.1). They are inquiry's, the
      supersession and division-disclosure arms, and since T19 they are not called from here: `checkBundle` runs them as
      the `checkSupersession` arm, directly after this function, where a registered grammar takes its place (draft-T19,
@@ -675,14 +664,16 @@ function checkHistoryCoherence(ctx, findings) {
  * defect and throws before any arm runs, as a malformed entry does. C-2.7's slot (`checkInformationExtension`) is
  * kept for capture's grammar, registered in T18, so its findings keep their place (K751). `checkSupersession` and
  * `checkRecheckCoverage` are inquiry's C-6.1 and C-15.1 arms, separated from `checkReferences` and kept in their
- * places; inquiry-grammar's registered grammar fills them (layer 6; K752). */
+ * places; inquiry-grammar's registered grammar fills them (layer 6; K752). `checkProjectExtension` is C-2.9 alone since
+ * C-9.1 left with the project stage's computation (K904, N456, T21); a grammar claiming C-9.1 beside it still fills it
+ * whole, the extra id claiming no other slot (record-core R67). */
 export const EXTENSION_ARMS = Object.freeze([
   { name: 'checkInformationExtension', ids: ['C-2.7'] },
   { name: 'checkInfo2Contract', ids: ['C-18.6', 'C-18.7'] },
   { name: 'checkSupersession', ids: ['C-6.1'] },
   { name: 'checkRecheckCoverage', ids: ['C-15.1'] },
   { name: 'checkInquiryExtension', ids: ['C-2.8'] },
-  { name: 'checkProjectExtension', ids: ['C-2.9', 'C-9.1'] },
+  { name: 'checkProjectExtension', ids: ['C-2.9'] },
 ].map((a) => Object.freeze({ name: a.name, ids: Object.freeze(a.ids) })));
 const GRAMMAR_ID_RE = /^C-\d+(\.\d+)?$/;
 

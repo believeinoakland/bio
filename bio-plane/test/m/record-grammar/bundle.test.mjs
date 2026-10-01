@@ -18,8 +18,33 @@ test("R40 checkBundle: the structural arms give the catalogue's findings, identi
   /* The fixtures reach every structural id the move carries. */
   const ids = new Set(Object.values(EXPECTED).flatMap((r) => r.findings.map((f) => f.check)));
   for (const id of ["C-1.1", "C-1.2", "C-1.3", "C-2.1", "C-2.2", "C-2.3", "C-2.4", "C-2.5", "C-2.6", "C-3.1", "C-4.1", "C-4.2",
-    "C-5.1", "C-6.1", "C-6.2", "C-6.3", "C-12.1", "C-12.2", "C-13.1", "C-13.2", "C-14.1", "C-14.2", "C-14.3", "C-14.4",
+    "C-5.1", "C-6.1", "C-6.2", "C-12.1", "C-12.2", "C-13.1", "C-13.2", "C-14.1", "C-14.2", "C-14.3", "C-14.4",
     "C-16.1", "C-16.2", "C-16.3", "C-16.4", "C-16.5", "C-17.1"]) assert.ok(ids.has(id), id);
+});
+
+test("R40 C-6.3's workproduct_state arm is retired: a distributed project with no distributions is no finding (K904, N456)", async () => {
+  for (const [name, b] of Object.entries(fixtures())) assert.ok(!(await run(b)).findings.some((f) => f.check === "C-6.3"), name);
+  const r = await run(fixtures()["C-6.3 retired: a distributed project with no distributions is no finding"]);
+  assert.equal(r.pass, true);
+  assert.deepEqual(r.findings.filter((f) => f.severity !== "info"), []);
+});
+
+test("R35 R40 the project machine at checkBundle: forming and closed legal, investigating and matured read as legal, any other state C-4.1", async () => {
+  const F = fixtures();
+  for (const name of ["clean project", "clean closed project", "C-4.1 project legacy states are readable", "C-4.1 project matured is readable"])
+    assert.ok(!(await run(F[name])).findings.some((f) => f.check === "C-4.1"), name);
+  const r = await run(F["C-4.1 project state outside its machine"]);
+  assert.deepEqual(r.findings.filter((f) => f.check === "C-4.1").map((f) => f.message),
+    ["current_state 'published' is not legal for project (legal: forming, closed)"]);
+});
+
+test("R40 N458: C-13.2's and C-16.1's messages say record, not bundle", async () => {
+  const F = fixtures();
+  const msgs = [...(await run(F["C-13.2 updated without a session entry"])).findings, ...(await run(F["C-16 package checks"])).findings]
+    .filter((f) => f.check === "C-13.2" || f.check === "C-16.1").map((f) => f.message);
+  assert.ok(msgs.includes("record has been updated but carries no Session Log entry"));
+  assert.ok(msgs.includes("manifest target 'INFO-2026-0003-c' does not match record 'INFO-2026-0001-a'"));
+  for (const m of msgs) assert.doesNotMatch(m, /\bbundle\b(?!\.md)/, m);
 });
 
 test("R39 R40 checkBundle: pass is false exactly when a finding is an error; the answer is {pass, findings}", async () => {
@@ -38,7 +63,7 @@ test("R28 EXTENSION_ARMS: a frozen list of frozen {name, ids}, in checkBundle's 
     ["checkSupersession", ["C-6.1"]],
     ["checkRecheckCoverage", ["C-15.1"]],
     ["checkInquiryExtension", ["C-2.8"]],
-    ["checkProjectExtension", ["C-2.9", "C-9.1"]]]);
+    ["checkProjectExtension", ["C-2.9"]]]);
   for (const a of EXTENSION_ARMS) {
     assert.ok(Object.isFrozen(a) && Object.isFrozen(a.ids), a.name);
     assert.deepEqual(Object.keys(a), ["name", "ids"]);
@@ -53,7 +78,7 @@ test("R28 EXTENSION_ARMS: a frozen list of frozen {name, ids}, in checkBundle's 
 const placed = () => fixtures()["type arms in their places"];
 const mark = (module, ids, check = ids[0]) => ({ module, ids, arm: (ctx, f) => { f.push({ check, severity: "info", message: module }); } });
 const ARMS = () => [mark("information", ["C-2.7"]), mark("info2", ["C-18.7", "C-18.6"]), mark("sup", ["C-6.1"]), mark("recheck", ["C-15.1"]), mark("inq", ["C-2.8"]),
-  mark("proj", ["C-9.1", "C-2.9"])];
+  mark("proj", ["C-2.9"])];
 
 test("R28 R39 R40 a grammar claiming an arm's whole id list runs in that arm's place, over the same context; unclaimed ones after", async () => {
   const late = mark("later", ["C-500.1"]);
@@ -67,6 +92,9 @@ test("R28 R39 R40 a grammar claiming an arm's whole id list runs in that arm's p
   const spy = (module, ids) => ({ module, ids, arm: (ctx) => { seen.push([module, ctx.fm.id, ctx.files.has("bundle.md"), typeof ctx.body]); } });
   await checkBundle(placed(), { grammars: EXTENSION_ARMS.map((a) => spy(a.name, [...a.ids])) });
   assert.deepEqual(seen, EXTENSION_ARMS.map((a) => [a.name, "INFO-2026-0001-a", true, "string"]));
+  /* A grammar claiming C-9.1 beside C-2.9 (intent's claim until its L7 job) still fills the project slot whole, in its place. */
+  const r2 = await checkBundle(placed(), { grammars: [late, ...ARMS().slice(0, 5), mark("proj", ["C-9.1", "C-2.9"])] });
+  assert.deepEqual(r2.findings.map((f) => f.message).slice(-2), ["proj", "later"]);
 });
 
 test("R28 R39 an arm no grammar claims runs nothing: no type grammar is built in", async () => {
@@ -92,7 +120,7 @@ test("R28 R39 a malformed grammar list, a part claim, a two-arm claim or an id c
     [{}, TypeError], ["x", TypeError], [[null], TypeError], [[{ ids: ["C-1.1"], arm() {} }], TypeError],
     [[{ module: " ", ids: ["C-1.1"], arm() {} }], TypeError], [[{ module: "m", ids: [], arm() {} }], TypeError],
     [[{ module: "m", ids: ["X-1"], arm() {} }], TypeError], [[{ module: "m", ids: ["C-1.1"] }], TypeError],
-    [[g("m", ["C-18.6"])], RangeError], [[g("m", ["C-2.9"])], RangeError], [[g("m", ["C-2.8", "C-6.1"])], RangeError], [[g("m", ["C-2.7", "C-18.6", "C-18.7"])], RangeError],
+    [[g("m", ["C-18.6"])], RangeError], [[g("m", ["C-2.9", "C-15.1"])], RangeError], [[g("m", ["C-2.8", "C-6.1"])], RangeError], [[g("m", ["C-2.7", "C-18.6", "C-18.7"])], RangeError],
     [[g("a", ["C-500.1"]), g("b", ["C-500.1"])], RangeError], [[g("a", ["C-2.8"]), g("b", ["C-2.8"])], RangeError],
   ];
   for (const [grammars, E] of bad) await assert.rejects(checkBundle(placed(), { grammars }), E, JSON.stringify(grammars));

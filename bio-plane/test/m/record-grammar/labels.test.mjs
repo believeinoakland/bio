@@ -21,7 +21,7 @@ test("R38 lawProposalState: blank is unstated, a machine identity machine_propos
 test("R38 PROPOSAL_STATES: one frozen table per subject, governing_laws REC-195's own, each with the three states' sentences", () => {
   assert.ok(Object.isFrozen(PROPOSAL_STATES));
   assert.deepEqual(Object.keys(PROPOSAL_STATES), ["governing_laws", "standard", "comparison", "filing_draft", "theory",
-    "plan_option", "communication"]);
+    "plan_option", "communication", "template"]);
   assert.ok(PROPOSAL_STATES.governing_laws === LAW_PROPOSAL_STATES);
   const said = new Set();
   for (const [subject, t] of Object.entries(PROPOSAL_STATES)) {
@@ -30,7 +30,25 @@ test("R38 PROPOSAL_STATES: one frozen table per subject, governing_laws REC-195'
     if (subject !== "governing_laws") assert.ok(Object.isFrozen(t), subject);
     assert.match(t.machine_proposed, /machine work, labelled as machine work/, subject);
   }
-  assert.equal(said.size, 7 * 3, "no two sentences are the same");
+  assert.equal(said.size, 8 * 3, "no two sentences are the same");
+});
+
+test("R42 PROPOSAL_STATES.template: last, frozen, three sentences of wording proposed for a filing template, machine work never drafts, reviews or approves", () => {
+  assert.equal(Object.keys(PROPOSAL_STATES).at(-1), "template");
+  const t = PROPOSAL_STATES.template;
+  assert.ok(Object.isFrozen(t));
+  assert.deepEqual(Object.keys(t), STATES3);
+  for (const s of STATES3) {
+    assert.match(t[s], /wording for a filing template/, s);
+    assert.match(t[s], /not a template's text until a member adopts it into a draft|not that until a member adopts it into a draft/, s);
+  }
+  assert.match(t.machine_proposed, /machine work, labelled as machine work: it can propose wording and it can never draft, review or approve a template/);
+  assert.match(t.member_proposed, /the record holds who proposed it/);
+  for (const w of [...BLANKS, ...MACHINES, ...MEMBERS]) {
+    const state = lawProposalState(w);
+    assert.deepEqual(proposalLabel(w, "template"), { by: w ?? null, state, machine_work: state === "machine_proposed", says: t[state] });
+  }
+  assert.throws(() => proposalLabel("a", "templates"), { message: /one of governing_laws, standard, comparison, filing_draft, theory, plan_option, communication, template$/ });
 });
 
 test("R38 proposalLabel: {by, state, machine_work, says} for every subject and state; an unknown subject throws RangeError", () => {

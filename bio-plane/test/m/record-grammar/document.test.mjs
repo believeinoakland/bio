@@ -32,7 +32,7 @@ const FOCUS = M(["surfaced", "elevated", "deferred", "dismissed"], { surfaced: [
   deferred: ["surfaced", "elevated", "dismissed"], dismissed: ["surfaced", "elevated", "deferred"], elevated: [] });
 const ONE = M(["recorded"], { recorded: [] });
 
-test("R35 STATES: every type's legal states and edges, inquiry's legacy `published`, and problem the same machine as focus", () => {
+test("R35 STATES: every type's legal states and edges, inquiry's legacy `published`, project's legacy `investigating` and `matured`, and problem the same machine as focus", () => {
   assert.deepEqual({ ...STATES }, {
     information: M(["collected", "verified", "retired"], { collected: ["verified"], verified: ["retired"], retired: [] }),
     inquiry: M(["open", "deferred", "dismissed", "surfaced", "concluded", "divided"], {
@@ -40,8 +40,8 @@ test("R35 STATES: every type's legal states and edges, inquiry's legacy `publish
       deferred: ["open", "surfaced", "dismissed"], dismissed: ["open", "surfaced", "deferred"],
       concluded: ["open", "surfaced", "deferred", "dismissed", "divided"], published: ["open", "surfaced"], divided: [] }, ["published"]),
     focus: FOCUS,
-    project: M(["forming", "investigating", "matured", "closed"], { forming: ["investigating", "closed"],
-      investigating: ["matured", "closed"], matured: ["closed"], closed: ["investigating"] }),
+    project: M(["forming", "closed"], { forming: ["closed"], investigating: ["closed"], matured: ["closed"], closed: ["forming"] },
+      ["investigating", "matured"]),
     action: M(["planned", "active", "awaiting_response", "resolved", "abandoned"], { planned: ["active", "abandoned"],
       active: ["awaiting_response", "resolved", "abandoned"], awaiting_response: ["active", "resolved", "abandoned"],
       resolved: [], abandoned: [] }),
@@ -63,6 +63,9 @@ test("R35 STATES: every type's legal states and edges, inquiry's legacy `publish
     for (const to of Object.values(m.edges).flat()) assert.ok(m.legal.includes(to), `${t} -> ${to}`);
   }
   assert.equal(STATES.inquiry.legal[0], "open");
+  assert.equal(STATES.project.legal[0], "forming");
+  /* Only inquiry and project carry `legacy` (K904, form (b)). */
+  assert.deepEqual(Object.keys(STATES).filter((t) => "legacy" in STATES[t]), ["inquiry", "project"]);
 });
 
 test("R34 vocabFor: the declared spelling first, then the normalized type, else undefined", () => {
