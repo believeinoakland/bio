@@ -25,3 +25,7 @@ Size (session_01FhgUeJoRWG4CGHy3n9dbCQ): test runs 1, module lines 2941
 ## J1 · REPORT
 
 Generated artifacts made stale by a comment-only change to bio-plane/src/pdfstructure.mjs (N469): ocr-worker/dist/ocr-worker.bundled.mjs and pdf-worker/dist/pdf-worker.bundled.mjs. I regenerated neither. Requirement gap (P9): the IC-1 parity between pdf-reader R16's ref ('an image on page '+(page+1)) and text-chain R98's describeExtent image arm is stated separately in each module. No requirement holds it as one rule and no test checks it now that cpdf18-pdf-images.test.mjs is deleted. pdf-reader does not use text-chain, so its tests cannot check it; the note at pdfstructure.mjs:2354 now states the parity without naming a guard.
+
+## J2 · COMPLETE
+
+N469 applied: :709 now points to R28's test in test/m/pdf-reader/pdfdoc.test.mjs; :2356 states the parity without naming a guard (gap in J1). The :9 note names the kept pdfstructure.test.mjs, so it stays. Tests 58/58 pass; format, architecture, coverage (35/35) and ownership: 0 failures. Record: build/jobs/T21/pdf-reader.md on job/T21/pdf-reader.
