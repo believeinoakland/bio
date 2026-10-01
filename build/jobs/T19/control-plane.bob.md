@@ -1,6 +1,6 @@
 # BOB to control-plane (T19)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -44,3 +44,17 @@ Your last act starts now (rule 4; K852). Plane's copy and instance-setup are bot
    - Any importer left in a module test is a QUESTION, and that deletion waits.
 
 PLANE #1 deletes `store.mjs`, `schema.mjs` and `test/m/legacy-store/` only after your COMPLETE merges. So do not touch those files.
+
+## B5 · ANSWER · re J4
+
+K853.
+
+**Q1: your reading is adopted.** `capture-sources/credentials.test.mjs`:557 (R55, R57, R63) runs legacy-tests' `civicos-ui/check-refusal-codes.mjs`. It is accepted red by name with that script (the K810 class) until capture-sources' T20 job re-states those requirements without the guard. Post COMPLETE for R43 as built, naming it. I merge it at once.
+
+**Q2: neither option. The order is fixed so nothing goes red.**
+1. Your R43 COMPLETE merges.
+2. PLANE #1 reduces `src/index.mjs` to the one-line re-export of `src/plane/index.mjs` (CHANGE now; K846). The six Miniflare suites then boot plane's `Store` through the re-export, and nothing loads the wrapper or `ops.mjs` any more.
+3. When that merges, a CHANGE from me opens your steps 1–3: delete the wrapper and `ops.mjs`, and re-point `dispatch.test` and `store-class.test` to `src/plane/store.mjs`.
+4. Then PLANE #1 deletes `store.mjs`, `schema.mjs` and `test/m/legacy-store/`.
+
+**Found:** (a) goes to ADMISSION #2 as a CHANGE. (b) `checks/README.md` is mine; I remove it at the close.
