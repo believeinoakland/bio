@@ -13,7 +13,8 @@ import { standardsOf } from "../../../src/standards/index.mjs";
 import { conformanceOf } from "../../../src/conformance/index.mjs";
 import { actionsOf } from "../../../src/actions/index.mjs";
 import { publicReadOf } from "../../../src/public-read/index.mjs";
-import { get as profileOf } from "../../../../jurisdictions/index.mjs";
+import { LocalFacts } from "../../../src/local-facts/index.mjs";
+import { get as profileOf, combine } from "../../../../jurisdictions/index.mjs";
 
 export { V, NOW };
 export const MACHINE = "class:daemon";
@@ -111,7 +112,11 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
   const actions = actionsOf(w.host, { ...deps, retrieval: null, conformance, now: () => Date.parse(w.clock.now) });
   /* the value promotion's fact `producingGroup` answers (publication's world registers its provider) */
   const groupRef = w.groupRef;
-  const f = filingsOf(w.host, { record: w.record, publication: w.p, provenance: w.prov, content: w.content, now, ...(profiles !== undefined ? { profiles: () => profiles } : {}) });
+  /* R30: local-facts over the same profiles filings reads: the real module, its active profiles (and any written by a
+     test) answered as filings is handed them, so a holiday entry's path names a fact it holds. */
+  const localFacts = profiles === undefined ? undefined : localFactsOver(w, profiles, now);
+  const f = filingsOf(w.host, { record: w.record, publication: w.p, provenance: w.prov, content: w.content, now,
+                                ...(profiles !== undefined ? { profiles: () => profiles, localFacts } : {}) });
   const evidenceCid = w.content.mint({ bundleId: EVID, captureSha: sha(`the text of ${EVID}`), extent: { kind: "document" },
                                        mintedBy: V("bo") }).content_id;
   const declare = (over) => {
@@ -136,7 +141,7 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
   const D = determine();
   let n = 0;
   const x = {
-    ...w, w, f, pr: publicReadOf(w.host, { publication: w.p }), proj, pin, actions, conformance, standards, consequences, groupRef, evidenceCid, S1, S2, D, declare,
+    ...w, w, f, localFacts: f.localFacts, pr: publicReadOf(w.host, { publication: w.p }), proj, pin, actions, conformance, standards, consequences, groupRef, evidenceCid, S1, S2, D, declare,
     determine, publishEdition, act,
     /* the world's own reads, over the cursor */
     row: (sq, ...a) => [...w.st.sql.exec(sq, ...a)][0] ?? null,
@@ -197,6 +202,18 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
     },
   };
   return x;
+}
+
+/** The real local-facts on the world's storage, its active profiles `profiles` (ids or profile objects, as filings is
+ *  handed them) in place of record-core's setting. */
+export function localFactsOver(w, profiles, now = () => w.clock.now) {
+  const own = new Map(profiles.filter((p) => p && typeof p === "object").map((p) => [p.id, p]));
+  const ids = profiles.map((p) => (typeof p === "string" ? p : p.id));
+  const get = (id) => own.get(id) || profileOf(id);
+  const record = { getSetting: (k) => (k === "jurisdiction_profiles" ? ids : w.record.getSetting(k)),
+                   transact: (fn) => w.record.transact(fn) };
+  return new LocalFacts({ storage: w.st, record, membership: w.membership, get,
+                          combine: (list) => combine(list.map((id) => own.get(id) || id)), now });
 }
 
 /* A document whose capture carries an RFC 3161 attestation and a co-archive locator, as `op=attest` records them. */

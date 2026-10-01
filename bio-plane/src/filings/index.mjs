@@ -25,6 +25,8 @@
  *   actions        `actionRead` (its R29), `actionCorrespond` (R15, R16), from `actionsOf` (K253); and its module-level
  *                  `noSuchAction` (R43), through which every missing action is answered (N217).
  *   actionClocks   `clockPropose` (its R2, was actions R32; K617), from `actionClocksOf`.
+ *   localFacts     `factStatus` (its R2; R30): each holiday year a packet's business-day deadline reads, as action-clocks
+ *                  R10 reads it, from `localFactsOf`.
  *   conformance    `determinationRead` (its R9), `determinationsFor` (R11), from `conformanceOf` (K252).
  *   standards      `standardRead` (its R5), `inForce` (R7), from `standardsOf(host, deps)` (K251).
  *   consequences   `consequencesOf` (its R7), from `consequencesModule(host, deps)` (K171 (17), K250).
@@ -57,6 +59,7 @@ import { conformanceOf } from "../conformance/index.mjs";
 import { consequencesModule } from "../consequences/index.mjs";
 import { actionsOf, noSuchAction } from "../actions/index.mjs";
 import { actionClocksOf } from "../action-clocks/index.mjs";
+import { localFactsOf } from "../local-facts/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { isMachineIdentity, MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
 import { proposalLabel } from "../record-grammar/labels.mjs";
@@ -65,11 +68,11 @@ import { BASIS_GRADES } from "../record-grammar/grades.mjs";
 import { sha256HexSync } from "../record-grammar/sha256.mjs";
 import { FILINGS_TABLES, migrateFilings } from "./schema.mjs";
 import { rowOf } from "./checks.mjs";
-import { deadlineDate, realDate, COUNTED_FROM } from "./dates.mjs";
+import { deadlineDate, factReader, realDate, COUNTED_FROM } from "./dates.mjs";
 
 export { FILINGS_SCHEMA, FILINGS_TABLES } from "./schema.mjs";
 export { FILINGS_CHECKS } from "./checks.mjs";
-export { deadlineDate, COUNTED_FROM } from "./dates.mjs";
+export { deadlineDate, factReader, COUNTED_FROM } from "./dates.mjs";
 
 /** R3: the blanks this module fills, a closed set; a template's `{{name}}` outside it is left unfilled and says so. */
 export const FILING_BLANKS = Object.freeze({
@@ -173,10 +176,11 @@ export class Filings {
   constructor({ storage, record, host = null, membership = null, publication = null, publicRead = null, provenance = null,
                 content = null,
                 actions = null, conformance = null, standards = null, consequences = null, promotion = null, strength = null, actionClocks = null,
+                localFacts = null,
                 producingGroup = null, profiles = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
-    this.#deps = { host, membership, publication, publicRead, provenance, content, actions, conformance, standards, consequences, promotion, strength, actionClocks };
+    this.#deps = { host, membership, publication, publicRead, provenance, content, actions, conformance, standards, consequences, promotion, strength, actionClocks, localFacts };
     /* R3 (N331): the producing group is promotion's fact `producingGroup` (its R40), read as `fact` answers it; a
        function handed in (legacy-store's, until layer 10) is kept and may answer a value, null, or the fact's answer.
        Absent, `#group` asks promotion itself, and says so when no promotion module is reachable (N355: no refusal code
@@ -202,6 +206,9 @@ export class Filings {
   get consequences() { return this.#deps.consequences ||= (this.#deps.host ? consequencesModule(this.#deps.host) : null); }
   get actions() { return this.#deps.actions ||= (this.#deps.host ? actionsOf(this.#deps.host) : null); }
   get actionClocks() { return this.#deps.actionClocks ||= (this.#deps.host ? actionClocksOf(this.#deps.host) : null); }
+  /* R30: local-facts' `factStatus` (its R2), the confirmation of each holiday year a business count reads; with no host
+     and none given, absent, and a business count states its calendar `not_read`. */
+  get localFacts() { return this.#deps.localFacts ||= (this.#deps.host ? localFactsOf(this.#deps.host) : null); }
 
   migrate() { migrateFilings(this.sql); }
 
@@ -883,7 +890,7 @@ export class Filings {
   }
 
   /* R9's deadlines: every claim deadline of the view, its date from a recorded start event only. */
-  #deadlines(v, a, det) {
+  #deadlines(v, a, det, viewer) {
     const rules = v.view && Array.isArray(v.view.deadlines) ? v.view.deadlines.filter((r) => r.applies_to === "claim") : [];
     const entries = a.correspondence.map((e, i) => ({ ...e, ord: Number.isInteger(e.ord) ? e.ord : i }));
     const first = (dir) => entries.filter((e) => e.direction === dir && realDate(String(e.at ?? "").slice(0, 10)))
@@ -900,7 +907,9 @@ export class Filings {
           : { event: r.starts, state: "undetermined", why: `the action's correspondence holds no ${r.starts === "received" ? "received" : "sent"} entry` };
       } else start = { event: r.starts ?? null, state: "undetermined",
                        why: r.starts === "known" ? "the record holds no date on which the group knew of the act" : "the rule names no start event this record holds" };
-      const date = deadlineDate({ start: start.date ?? null, days: r.days, count: r.count, holidays: v.view.holidays });
+      /* R30: counted as action-clocks R10 counts, on the entries for the action's office, each read through local-facts */
+      const date = deadlineDate({ start: start.date ?? null, days: r.days, count: r.count, view: v.view,
+                                  counterparty: a.counterparty, kind: a.kind, factOf: factReader(this.localFacts, viewer) });
       return { rule: r.rule, days: r.days ?? null, count: r.count ?? null, starts: r.starts ?? null,
                ...(r.extension ? { extension: r.extension } : {}), citation: r.citation ?? null,
                basis: r.basis ?? null, profile: r.profile ?? null, source: `profile:${r.profile}/deadlines/${r.rule}`,
@@ -974,7 +983,7 @@ export class Filings {
       theories: section("Candidate theories and remedies", theories,
         { says: theories.length ? "each is a candidate for counsel to weigh, never the group's position or a conclusion"
                                 : "no candidate theory or remedy has been proposed for this action" }),
-      deadlines: section("Deadlines", this.#deadlines(v, a, det),
+      deadlines: section("Deadlines", this.#deadlines(v, a, det, viewer),
         { says: v.view ? `each date is computed only from a recorded start event (${COUNTED_FROM}), else undetermined with why`
                        : `${v.why}, so no claim deadline is known` }),
       consequences: section("Consequences of the breach",
