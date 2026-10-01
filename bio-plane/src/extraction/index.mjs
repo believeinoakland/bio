@@ -5,12 +5,14 @@
    `index.mjs` (`op=pdfstructure`, the acquire wire's reading block), with the rows this job applied named at their
    sites. The tables are this module's own (`schema.mjs`), declared to record-core's purge here (R49). T19 layer 4:
    the testimony path's index as a projection in `provenance`'s slot (R65), the figures through record-core's
-   `registerCounts` and `textIndexOk` (R67), and N26's migration of stored `.docx` readings (R66). */
+   `registerCounts` and `textIndexOk` (R67), and N26's migration of stored `.docx` readings (R66). T20 layer 4: N439's
+   migration of stored `.pptx` readings (R68), run by the same machine as N26's. */
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { calibrationOf } from "../calibration/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { docxRenumbering } from "../docx.mjs";
+import { pptxRenumbering } from "../pptx.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { getFormat } from "../formats.mjs";
 import { readText } from "../../../docprofile/registry.mjs";
@@ -223,10 +225,110 @@ export function n26MigratedReading(reading, map, text, { at = null } = {}) {
   return next;
 }
 
+/* ---- N439 (R68): the pure half of the pptx migration ---- */
+
+/* The migration's name in `reading_migrations`, the mark its pptx layer step carries, and one call's batch. */
+export const N439_MIGRATION = "n439-pptx";
+export const N439_READER_MARK = "N439";
+export const N439_BATCH = 50;
+
+const isPptxLayer = (step) => !!step && step.step === "layer" && step.container === "pptx";
+/** R68: whether a reading's chain carries N439's reader mark on its pptx layer step. */
+export function n439Marked(reading) {
+  const chain = reading && Array.isArray(reading.text_source) ? reading.text_source : null;
+  return !!chain && chain.some((s) => isPptxLayer(s) && s.reader === N439_READER_MARK);
+}
+
+/** R68: whether `pptxRenumbering`'s map (office-readers R29) moves anything: a shape whose index under N439 differs
+ *  from the old walk's, or that N439 no longer reads. */
+export function pptxRenumberingMoves(map) {
+  if (!map || !Array.isArray(map.slides)) return false;
+  return map.slides.some((s) => s && Array.isArray(s.shapes) && s.shapes.some((x) => x && x.new !== x.old));
+}
+
+/** R68: a reading made before N439, migrated. `map` is `pptxRenumbering` over the stored parts, `text` the pptx
+ *  entry's N439 text over the same bytes (R1, R3). Every `slide-shape` reference carrying a `shape` is moved to its
+ *  slide's `shapes[old].new`, unplaced (null) when that is null; one with no `shape` (the slide grain), on a slide
+ *  the map does not list or past its shapes stays as it is. Slide numbers do not move. Each slide's shape count in
+ *  the container extent follows the N439 walk, and the text counts are the N439 text's (R60): the duplicated branch is
+ *  lost and nothing is gained. The pptx layer step gains `reader: "N439"` and the reading `migrated.n439`, saying
+ *  what moved. It re-grades nothing (R44) and resolves nothing (R46). Pure; the reading handed in is not changed. */
+export function n439MigratedReading(reading, map, text, { at = null } = {}) {
+  const moved = { shapes: 0, unplaced: 0 };
+  const bySlide = new Map((map.slides || []).filter((s) => s && Number.isInteger(s.slide)).map((s) => [s.slide, s.shapes || []]));
+  const walk = (v) => {
+    if (Array.isArray(v)) return v.map(walk);
+    if (!v || typeof v !== "object") return v;
+    if (v.kind === "slide-shape" && Number.isInteger(v.slide) && Number.isInteger(v.shape)) {
+      const x = (bySlide.get(v.slide) || [])[v.shape];
+      if (!x || x.new === v.shape) return v;
+      moved.shapes++;
+      if (x.new == null) { moved.unplaced++; return null; }
+      return { ...v, shape: x.new };
+    }
+    const o = {};
+    for (const [k, x] of Object.entries(v)) o[k] = walk(x);
+    return o;
+  };
+  const OWN = new Set(["text_source", "provenance", "container_extent", "basis", "migrated"]);
+  const next = {};
+  for (const [k, v] of Object.entries(reading)) next[k] = OWN.has(k) ? v : walk(v);
+  next.text_source = reading.text_source.map((s) => (isPptxLayer(s) ? { ...s, reader: N439_READER_MARK } : s));
+  const ce = reading.container_extent;
+  if (ce && typeof ce === "object" && Array.isArray(ce.slides)) {
+    const now = new Map((Array.isArray(text.slides) ? text.slides : [])
+      .filter((s) => s && Number.isInteger(s.slide)).map((s) => [s.slide, s.shapes]));
+    next.container_extent = { ...ce, slides: ce.slides.map((s, i) => (s && Number.isInteger(s.shapes) && now.has(i + 1)
+      ? { ...s, shapes: Number.isInteger(now.get(i + 1)) ? now.get(i + 1) : null } : s)) };
+  }
+  for (const k of ["text_chars", "text_glyphs", "text_undetermined"])
+    if (Object.prototype.hasOwnProperty.call(reading, k)) { Object.assign(next, textCountsOf(text)); break; }
+  next.migrated = { ...(reading.migrated && typeof reading.migrated === "object" ? reading.migrated : {}),
+    n439: { at, moved,
+            why: "this reading was made before N439, when every branch of an mc:AlternateContent on a slide was read, "
+               + "so its slide text was doubled and its shapes were numbered with the duplicated branch counted; it was "
+               + "read again from the stored bytes and every shape reference it holds was moved to N439's numbering" } };
+  return next;
+}
+
+/* R66, R68: the two migrations, run by one machine (`#migrate`): the format they read, how a reading is marked, the
+   renumbering map over the entry's parts, whether it moves anything, whether the stored reading states the old walk's
+   counts, and the pure migration. */
+const MIGRATIONS = Object.freeze({
+  [N26_MIGRATION]: Object.freeze({
+    name: N26_MIGRATION, format: "docx", key: "n26", marked: n26Marked, isLayer: isDocxLayer,
+    renumber: (parts) => docxRenumbering(parts.documentXml), moves: renumberingMoves,
+    readable: (text) => Array.isArray(text.paragraphs),
+    /* A reading of the old walk states the old walk's paragraph count; one that states the new count is N26's. */
+    oldWalk: (reading, map) => {
+      const ce = reading.container_extent;
+      return !(ce && typeof ce === "object" && Number.isInteger(ce.paragraphs) && ce.paragraphs !== map.paragraphs.length)
+        || "its paragraph count is not the pre-N26 walk's, so it was not read by the old walk";
+    },
+    migrated: n26MigratedReading,
+    after: "read after N26 (its reading was written after the migration's cutoff)",
+    noLayer: "the reading carries no docx text layer to mark, so nothing it holds was read from the paragraphs" }),
+  [N439_MIGRATION]: Object.freeze({
+    name: N439_MIGRATION, format: "pptx", key: "n439", marked: n439Marked, isLayer: isPptxLayer,
+    renumber: (parts) => pptxRenumbering(parts), moves: pptxRenumberingMoves,
+    readable: (text) => Array.isArray(text.slides),
+    /* A reading of the old walk states each slide's shape count as the old walk counted it. */
+    oldWalk: (reading, map) => {
+      const sl = reading.container_extent && typeof reading.container_extent === "object" ? reading.container_extent.slides : null;
+      if (!Array.isArray(sl)) return true;
+      const differs = map.slides.some((s) => Number.isInteger(s.slide) && sl[s.slide - 1]
+        && Number.isInteger(sl[s.slide - 1].shapes) && sl[s.slide - 1].shapes !== s.shapes.length);
+      return !differs || "its slides' shape counts are not the pre-N439 walk's, so it was not read by the old walk";
+    },
+    migrated: n439MigratedReading,
+    after: "read after N439 (its reading was written after the migration's cutoff)",
+    noLayer: "the reading carries no pptx text layer to mark, so nothing it holds was read from the slides" }),
+});
+
 const instances = new WeakMap();
 
 /* A Durable Object's own state (the composition root's `ctx`), as against a test's `{storage}` stand-in: what the
-   object composes, `provenance` (R65) and the N26 migration's background run (R66), is reached only on one. */
+   object composes, `provenance` (R65) and the N26 and N439 migrations' background run (R66, R68), is reached only on one. */
 const isObjectState = (ctx) => !!ctx && typeof ctx.blockConcurrencyWhile === "function";
 
 /** K61: the one Extraction for this object's storage. `opts` is read on the first call only: `env` (the object's
@@ -234,7 +336,7 @@ const isObjectState = (ctx) => !!ctx && typeof ctx.blockConcurrencyWhile === "fu
  *  `calibration` (`calibrationOf(ctx)`: its R10–R12), `promotion` (whose `registerStep`
  *  this module's projection joins, R20), `provenance` (whose testimony slot its index joins, R65: `provenanceOf(ctx)`
  *  on a Durable Object's state, which composes provenance before this module) and `host` (the state whose
- *  `waitUntil` carries R66's run). A test may pass its own. The first call registers this module's figures (R67). */
+ *  `waitUntil` carries R66's and R68's run). A test may pass its own. The first call registers this module's figures (R67). */
 export function extractionOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let x = instances.get(storage);
@@ -252,7 +354,7 @@ export function extractionOf(ctx, opts = {}) {
 
 export class Extraction {
   #sql; #storage; #listeners = []; #indexListeners = []; #declared = false; #stepped = false; #calListening = false;
-  #testified = false; #counted = false; #host = null; #docxRun = null;
+  #testified = false; #counted = false; #host = null; #migrationRun = null;
 
   constructor(storage, { record, membership = null, calibration = null, promotion = null, provenance = null, host = null,
                          env = {} } = {}) {
@@ -358,7 +460,7 @@ export class Extraction {
        END`);
     this.declareTables();
     this.#backfillRefTerms(500);
-    this.startDocxMigration();
+    this.startMigrations();
   }
 
   /** R49: the reading tables declared to record-core's purge, keyed to their bundle; the two whole-store only. */
@@ -482,7 +584,8 @@ export class Extraction {
 
   /** R20: promotion's projection. For each document in `data/provenance.json` with a capture digest and a reading
    *  object, R19 runs, except that a stored re-read is not replaced by a reading that is not one and carries the
-   *  same `at` (CPDF-19: an ordinary revision re-submits the acquire-time reading, which must not undo the re-read). */
+   *  same `at` (CPDF-19: an ordinary revision re-submits the acquire-time reading, which must not undo the re-read),
+   *  and a stored N26- or N439-migrated reading is not replaced by one without that mark carrying the same `at`. */
   projectPromotion(c) {
     const { bundleId, files, author } = c || {};
     const prov = (Array.isArray(files) ? files : []).find((f) => f && f.path === "data/provenance.json");
@@ -505,14 +608,15 @@ export class Extraction {
     return null;
   }
 
-  /* R66 (J1 2.): a stored N26-migrated reading is held the same way. An ordinary revision re-submits the acquire-time
-     reading `data/provenance.json` still carries, made before N26: written back, it would undo the migration (the old
-     numbering, the chain without the mark) and move every cited paragraph back unseen. */
+  /* R66 (J1 2.), R68: a stored N26- or N439-migrated reading is held the same way. An ordinary revision re-submits the
+     acquire-time reading `data/provenance.json` still carries, made before the fix: written back, it would undo the
+     migration (the old numbering, the chain without the mark) and move every cited paragraph or shape back unseen. */
   #heldByReextraction(sha, reading) {
     const row = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, sha);
     const prior = row ? safeJson(row.reading) : null;
     const sameAt = !!(prior && typeof prior.at === "string" && typeof reading.at === "string" && prior.at === reading.at);
     if (sameAt && n26Marked(prior) && !n26Marked(reading)) return true;
+    if (sameAt && n439Marked(prior) && !n439Marked(reading)) return true;
     if (reading && reading.reextracted) return false;
     return !!(prior && prior.reextracted && sameAt);
   }
@@ -975,107 +1079,119 @@ export class Extraction {
     return { ok: true, cleared: captureSha || "ALL", remaining: this.#one(`SELECT count(*) c FROM reading_history`).c };
   }
 
-  /* ---- N26: moving stored ¶ and table references (R66; office-readers R11, R16, R28; K747, K755, K763) ---- */
+  /* ---- N26 and N439: moving stored references after a reader fix (R66: ¶ and tables, office-readers R11, R16, R28;
+     R68: slide shapes, office-readers R11's pptx arm, R29; K747, K755, K763, K795 (6)) ---- */
 
-  /** R66: the migration's own row (`reading_migrations`), created on its first run with the cutoff that decides "made
-   *  before N26": the last `reading_history` row (R23) held when this code first ran on this store. Every write of a
-   *  reading keeps it there first, so a reading whose last kept row is after the cutoff was written by the N26 reader;
-   *  one at or before it, or with no history at all, was not. A row, not an instant, so a reading written in the
-   *  second the migration started is never mistaken for an old one. */
-  #docxState() {
-    let row = this.#one(`SELECT * FROM reading_migrations WHERE migration=?`, N26_MIGRATION);
+  /** R66, R68: a migration's own row (`reading_migrations`), created on its first run with the cutoff that decides
+   *  "made before" the reader fix: the last `reading_history` row (R23) held when this code first ran on this store.
+   *  Every write of a reading keeps it there first, so a reading whose last kept row is after the cutoff was written by
+   *  the fixed reader; one at or before it, or with no history at all, was not. A row, not an instant, so a reading
+   *  written in the second the migration started is never mistaken for an old one. */
+  #migrationState(name) {
+    let row = this.#one(`SELECT * FROM reading_migrations WHERE migration=?`, name);
     if (!row) {
       const last = this.#one(`SELECT COALESCE(max(rowid), 0) AS n FROM reading_history`);
       this.#sql.exec(`INSERT OR IGNORE INTO reading_migrations (migration, cutoff, after, done, examined, migrated, at)
-                      VALUES (?,?,?,0,0,0,?)`, N26_MIGRATION, last ? last.n : 0, "", stampInstant("second"));
-      row = this.#one(`SELECT * FROM reading_migrations WHERE migration=?`, N26_MIGRATION);
+                      VALUES (?,?,?,0,0,0,?)`, name, last ? last.n : 0, "", stampInstant("second"));
+      row = this.#one(`SELECT * FROM reading_migrations WHERE migration=?`, name);
     }
     return row;
   }
 
-  /** R66: started by `migrate()` on a Durable Object (its `waitUntil` carries it, in batches, until done), so its cutoff
-   *  is taken inside the boot, before any request can write a reading; a store with no such host (a test) runs
-   *  `migrateDocxReadings` itself. Never throws: a failed run is retried at the next start, from its cursor. */
-  startDocxMigration() {
+  /** R66, R68: started by `migrate()` on a Durable Object (its `waitUntil` carries both, docx then pptx, in batches,
+   *  until done), so each cutoff is taken inside the boot, before any request can write a reading; a store with no such
+   *  host (a test) runs `migrateDocxReadings` and `migratePptxReadings` itself. Never throws: a failed run is retried
+   *  at the next start, from its cursor. */
+  startMigrations() {
     const host = this.#host;
-    if (this.#docxRun || !host || typeof host.waitUntil !== "function") return null;
-    this.#docxRun = (async () => {
+    if (this.#migrationRun || !host || typeof host.waitUntil !== "function") return null;
+    this.#migrationState(N26_MIGRATION);
+    this.#migrationState(N439_MIGRATION);
+    const drain = async (step) => {
       for (let n = 0; n < 10_000; n++) {
-        const r = await this.migrateDocxReadings();
+        const r = await step();
         if (!r || r.done || !r.examined) break;
       }
+    };
+    this.#migrationRun = (async () => {
+      await drain(() => this.migrateDocxReadings()).catch(() => null);
+      await drain(() => this.migratePptxReadings()).catch(() => null);
     })().catch(() => null);
-    host.waitUntil(this.#docxRun);
-    return this.#docxRun;
+    host.waitUntil(this.#migrationRun);
+    return this.#migrationRun;
   }
 
   /** R66: once per stored reading, a `.docx` reading made before N26 whose `word/document.xml` holds an
-   *  `mc:AlternateContent` branch N26 no longer reads is migrated; every other reading is left as it is. Up to `limit`
-   *  candidates per call, in digest order after the cursor, so a restart resumes and a capture is examined once. Each
-   *  is re-read from its stored bytes (R1, R3) and its references moved by `docxRenumbering` (`n26MigratedReading`),
-   *  then written through R19's writer with the docx layer step marked, so the capture's chain differs from the old
-   *  reading's: content's R22 marks its rows stale and R41 grades and notifies (K763). A capture whose renumbering
-   *  moves nothing gets no mark and no re-read. Answers what it examined and did. Writes only through R19. */
-  async migrateDocxReadings({ limit = N26_BATCH } = {}) {
-    const st = this.#docxState();
-    const out = { ok: true, migration: N26_MIGRATION, cutoff: st.cutoff, done: !!st.done, examined: 0, migrated: [],
+   *  `mc:AlternateContent` branch N26 no longer reads is migrated; every other reading is left as it is. Each is
+   *  re-read from its stored bytes (R1, R3) and its references moved by `docxRenumbering` (`n26MigratedReading`). */
+  migrateDocxReadings({ limit = N26_BATCH } = {}) { return this.#migrate(MIGRATIONS[N26_MIGRATION], limit); }
+
+  /** R68: once per stored reading, a `.pptx` reading made before N439 whose slides hold an `mc:AlternateContent`
+   *  branch N439 no longer reads is migrated; every other reading is left as it is. Each is re-read from its stored
+   *  bytes (R1, R3) and its `slide-shape` references moved by `pptxRenumbering` (`n439MigratedReading`). */
+  migratePptxReadings({ limit = N439_BATCH } = {}) { return this.#migrate(MIGRATIONS[N439_MIGRATION], limit); }
+
+  /* R66, R68: one migration's batch. Up to `limit` candidates per call, in digest order after the cursor, so a restart
+     resumes and a capture is examined once. Each migrated reading is written through R19's writer with its layer step
+     marked, so the capture's chain differs from the old reading's: content's R22 marks its rows stale and R41 grades
+     and notifies (K763). A capture whose renumbering moves nothing gets no mark and no re-read. Answers what it
+     examined and did. Writes only through R19. */
+  async #migrate(m, limit) {
+    const st = this.#migrationState(m.name);
+    const out = { ok: true, migration: m.name, cutoff: st.cutoff, done: !!st.done, examined: 0, migrated: [],
                   unmoved: 0, skipped: [] };
     if (st.done) return out;
-    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || N26_BATCH), 5000));
+    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || 50), 5000));
     const page = this.#rows(
       `SELECT capture_sha, bundle_id, reading, origin, asserted_by, justification FROM readings
-        WHERE capture_sha > ? AND (capture_format = 'docx'
-              OR (capture_format IS NULL AND json_extract(reading, '$.text_container') = 'docx'))
-        ORDER BY capture_sha LIMIT ?`, st.after || "", cap + 1);
+        WHERE capture_sha > ? AND (capture_format = ?
+              OR (capture_format IS NULL AND json_extract(reading, '$.text_container') = ?))
+        ORDER BY capture_sha LIMIT ?`, st.after || "", m.format, m.format, cap + 1);
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
     for (const row of page.slice(0, cap)) {
-      const why = await this.#migrateOne(row, st.cutoff, ev);
+      const why = await this.#migrateOne(m, row, st.cutoff, ev);
       out.examined++;
       if (why && why.migrated) out.migrated.push({ capture_sha: row.capture_sha, moved: why.moved });
       else if (why === "unmoved") out.unmoved++;
       else if (why) out.skipped.push({ capture_sha: row.capture_sha, why });
       this.#sql.exec(`UPDATE reading_migrations SET after=?, examined=examined+1, migrated=migrated+?, at=? WHERE migration=?`,
-                     row.capture_sha, why && why.migrated ? 1 : 0, stampInstant("second"), N26_MIGRATION);
+                     row.capture_sha, why && why.migrated ? 1 : 0, stampInstant("second"), m.name);
     }
     if (page.length <= cap) {
-      this.#sql.exec(`UPDATE reading_migrations SET done=1, at=? WHERE migration=?`, stampInstant("second"), N26_MIGRATION);
+      this.#sql.exec(`UPDATE reading_migrations SET done=1, at=? WHERE migration=?`, stampInstant("second"), m.name);
       out.done = true;
     }
     return out;
   }
 
   /* One candidate: "unmoved", a reason it was left as it is, or `{migrated, moved}`. */
-  async #migrateOne(row, cutoff, ev) {
+  async #migrateOne(m, row, cutoff, ev) {
     const sha = row.capture_sha;
     const reading = safeJson(row.reading);
     if (!reading || typeof reading !== "object") return "the stored reading is not readable JSON";
-    if (n26Marked(reading)) return "already migrated";
-    if (checkChain(reading.text_source) || !reading.text_source.some(isDocxLayer))
-      return "the reading carries no docx text layer to mark, so nothing it holds was read from the paragraphs";
+    if (m.marked(reading)) return "already migrated";
+    if (checkChain(reading.text_source) || !reading.text_source.some(m.isLayer)) return m.noLayer;
     const last = this.#one(`SELECT rowid AS n FROM reading_history WHERE capture_sha=? ORDER BY seq DESC LIMIT 1`, sha);
-    if (last && Number(last.n) > Number(cutoff))
-      return "read after N26 (its reading was written after the migration's cutoff)";
+    if (last && Number(last.n) > Number(cutoff)) return m.after;
     if (!ev) return "this instance has no evidence store bound, so the stored bytes cannot be read again";
     const doc = this.#storedDocument(row.bundle_id, sha) || { capture: { sha256: sha } };
     const got = await bytesOf(ev, doc).catch(() => ({ bytes: null }));
     if (!got.bytes) return "the capture's bytes are not held in the evidence store";
-    const entry = getFormat("docx");
+    const entry = getFormat(m.format);
     if (!entry || typeof entry.parts !== "function" || typeof entry.text !== "function")
-      return "no docx entry is registered";
+      return `no ${m.format} entry is registered`;
     let parts, text;
     try { parts = await entry.parts(got.bytes); text = parts && parts.ok ? await entry.text(parts) : null; }
-    catch { return "the docx entry could not read the stored bytes"; }
-    const map = parts && parts.ok ? docxRenumbering(parts.documentXml) : null;
-    if (!map || !text || text.ok === false || !Array.isArray(text.paragraphs)) return "unmoved";
-    if (!renumberingMoves(map)) return "unmoved";
-    /* A reading of the old walk states the old walk's paragraph count; one that states the new count is N26's. */
-    const ce = reading.container_extent;
-    if (ce && typeof ce === "object" && Number.isInteger(ce.paragraphs) && ce.paragraphs !== map.paragraphs.length)
-      return "its paragraph count is not the pre-N26 walk's, so it was not read by the old walk";
-    const next = n26MigratedReading(reading, map, text, { at: stampInstant("second") });
+    catch { return `the ${m.format} entry could not read the stored bytes`; }
+    const map = parts && parts.ok ? m.renumber(parts) : null;
+    if (!map || !text || text.ok === false || !m.readable(text)) return "unmoved";
+    if (!m.moves(map)) return "unmoved";
+    const oldWalk = m.oldWalk(reading, map);
+    if (oldWalk !== true) return oldWalk;
+    const next = m.migrated(reading, map, text, { at: stampInstant("second") });
     if (Object.prototype.hasOwnProperty.call(reading, "provenance"))
       next.provenance = await readingProvenance({ text, chain: next.text_source,
-        tier: Number.isInteger(next.text_tier) ? next.text_tier : null, container: "docx",
+        tier: Number.isInteger(next.text_tier) ? next.text_tier : null, container: m.format,
         planeVersion: this.env.VERSION || null, member: null });
     const u = textUnitsFor(text);
     const composed = row.origin === "composed" ? true : row.origin === "asserted" ? false : this.#composedHere(reading);
@@ -1090,7 +1206,7 @@ export class Extraction {
     });
     if (!wrote) return "the stored reading changed while it was being read again, and the newer one stands";
     if (composed) this.recordComposed(next, sha);
-    return { migrated: true, moved: next.migrated.n26.moved };
+    return { migrated: true, moved: next.migrated[m.key].moved };
   }
 
   /* The capture's document in the bundle's own provenance document (record-core `readFile`), or null. */

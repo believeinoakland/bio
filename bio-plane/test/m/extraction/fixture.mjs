@@ -234,3 +234,30 @@ export function docx(body) {
   return zipOf([["[Content_Types].xml", ct], ["_rels/.rels", rels],
                 ["word/document.xml", `<?xml version="1.0"?><w:document ${W_NS}><w:body>${body}</w:body></w:document>`]]);
 }
+
+/* A .pptx package built the same way (R68): `slides` is each slide's `p:spTree` body, in deck order, declared by
+   `ppt/presentation.xml`'s `sldIdLst`; `psp` builds a text shape, `palt` an mc:AlternateContent of a Choice and its
+   Fallback (PowerPoint's p14 graphic frame and the picture of it). */
+const PML_NS = 'xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
+const RELS_NS = "http://schemas.openxmlformats.org/package/2006/relationships";
+const REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+export const psp = (t) => `<p:sp><p:txBody><a:p><a:r><a:t>${t}</a:t></a:r></a:p></p:txBody></p:sp>`;
+export const palt = (choice, fallback) =>
+  `<mc:AlternateContent ${MC_NS}><mc:Choice Requires="p14">${choice}</mc:Choice><mc:Fallback>${fallback}</mc:Fallback></mc:AlternateContent>`;
+export function pptx(slides) {
+  const ct = '<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+    + '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+    + '<Default Extension="xml" ContentType="application/xml"/>'
+    + '<Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>'
+    + slides.map((_, i) => `<Override PartName="/ppt/slides/slide${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`).join("")
+    + '</Types>';
+  const rels = (list) => `<?xml version="1.0"?><Relationships xmlns="${RELS_NS}">`
+    + list.map(([id, type, target]) => `<Relationship Id="${id}" Type="${REL}/${type}" Target="${target}"/>`).join("") + "</Relationships>";
+  const pres = `<?xml version="1.0"?><p:presentation ${PML_NS}><p:sldIdLst>`
+    + slides.map((_, i) => `<p:sldId id="${256 + i}" r:id="rId${i + 10}"/>`).join("") + "</p:sldIdLst></p:presentation>";
+  return zipOf([["[Content_Types].xml", ct], ["_rels/.rels", rels([["rId1", "officeDocument", "ppt/presentation.xml"]])],
+                ["ppt/presentation.xml", pres],
+                ["ppt/_rels/presentation.xml.rels", rels(slides.map((_, i) => [`rId${i + 10}`, "slide", `slides/slide${i + 1}.xml`]))],
+                ...slides.map((tree, i) => [`ppt/slides/slide${i + 1}.xml`,
+                  `<?xml version="1.0"?><p:sld ${PML_NS}><p:cSld><p:spTree>${tree}</p:spTree></p:cSld></p:sld>`])]);
+}
