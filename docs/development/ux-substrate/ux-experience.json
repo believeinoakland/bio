@@ -12844,7 +12844,7 @@
    "recommendation": "Option 1 with option 2 as supporting detail: corrections should explain themselves, and the pull model stays intact.",
    "whoDecides": "Bob: a new required authored statement at publication is a requirement; banner design is Design's.",
    "brief": {
-    "stillOpen": true,
+    "stillOpen": false,
     "settledSince": "",
     "title": "How a correction reaches people who relied on an earlier edition",
     "inOneBreath": "When a group corrects a published case by issuing a new edition, how do people who read or cited the old edition learn what changed and why, given that CivicOS never sends anyone a message?",
@@ -13065,6 +13065,16 @@
      "build/rulings.md K628–K859 checked: none bears on this question"
     ],
     "size": "quick"
+   },
+   "ruled": {
+    "date": "2026-10-01",
+    "by": "Bob",
+    "rulings": [
+     "DEC-101"
+    ],
+    "status": "ruled",
+    "title": "What changed in a new edition, and following other groups' editions",
+    "decided": "Every edition after the first carries a required statement, 'What changed in this edition, and why', shown at the top of the new edition and quoted where the older edition points to it; a new edition cannot be signed without it. The assistant may draft it: an initial, perhaps partial, detailed high-level description of the changes and, as far as the system can tell, the motivation for the revision, never a diff. The draft is labelled machine work until a member adopts or rewrites it, and the record keeps that it began as a machine draft. A group's copy can be configured to watch the published cases of other groups it cites or follows, as it watches documents for updates, and to respond to a new edition by telling the members whose work rests on the cited edition; nothing is pushed between groups."
    }
   },
   {
@@ -17088,7 +17098,7 @@
     "absorbs": [
      17
     ],
-    "absorbNote": "Question 17 (how a case's subject sees it and replies) is wholly inside this one: its 'Did we ask them?' box, linked correspondence and late replies become part of the docket. From question 18 it takes only how readers and citing groups learn that a newer edition exists; 18 stays open as a quick question on the written 'What changed in this edition, and why' statement, which the docket's 'newer edition' entry would quote.",
+    "absorbNote": "Question 17 (how a case's subject sees it and replies) is wholly inside this one: its 'Did we ask them?' box, linked correspondence and late replies become part of the docket. Question 18 is settled (DEC-101): every new edition carries a 'What changed, and why' statement, which the docket's 'newer edition' entry quotes, and a copy may watch other groups' editions.",
     "basics": [
      "A case is what a project publishes: findings (questions the group has answered) with the evidence beneath them. Load-bearing findings are those the case stands on. The project's manager, by default its owner, signs each published version, an edition, with a key registered to them; each has a fingerprint, a code computed from its exact bytes, so anyone can check it. Publication is one-way: a correction is a new edition, the old one stays readable, and a citation names one edition.",
      "Your point of 1 October: a case is a waypoint, not an end product. After publication the world responds without changing the case: the office replies, a paper writes about it, another group cites it. The proposal is a docket beside each case: dated entries, each naming the edition it concerns, growing while the signed editions never change.",
@@ -17189,6 +17199,16 @@
       "point": "A retraction sends re-evaluation notices to everything resting on it; unbuilt, untriggered since 1 October.",
       "why": "The consistency rules; your ruling retiring the old project fields.",
       "src": "State Rules §5.4; reevaluation R16; K899 (3); K901; N457; DEC-96 item 1"
+     },
+     {
+      "point": "A group's copy can watch other groups' published cases it cites or follows and respond to a new edition by telling the members whose work rests on it; nothing is pushed between groups.",
+      "why": "Your ruling of 1 October on new editions: an instance monitors other groups' editions as it monitors documents for updates.",
+      "src": "DEC-101 item 3"
+     },
+     {
+      "point": "Every new edition carries a required 'What changed in this edition, and why' statement; the assistant may draft it as a high-level description, never a diff.",
+      "why": "Your ruling of 1 October on question 18.",
+      "src": "DEC-101 items 1-2"
      }
     ],
     "options": [

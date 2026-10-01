@@ -1631,3 +1631,21 @@ response: **Bob, 2026-10-01, three points; the rest of question 36 stays open.**
 decided: 2026-10-01 · Bob (in part)
 reasoning recorded in: this entry; the UX substrate's brief for question 36.
 owed: nothing to build yet; the docket's design (question 36's other points: the docket itself, the required core, how entries are signed and travel, outside responses, withdrawal) awaits Bob's ruling. The UX page's question 36 marked settled in part.
+
+### DEC-101 · answered
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 18: how a correction reaches people who relied on an earlier edition; its newer-edition notice is in question 36)
+for: bob
+question: Must every new edition carry a written "What changed in this edition, and why" statement; may the system generate it or a computed list of differences; and how do other groups that cite a case learn of a new edition?
+why it is Bob's: doctrine (publication's forward-only correction, the member's act versus machine work) and UX.
+provisional: a published case is revised as a new edition and supersession is surfaced, not followed (Publication §2, DEC-12); the exclusion statement is authored fresh per edition (C-21.1).
+alternative: the brief's options: a required written statement; a computed list of differences only; both; banner and editions list only.
+recommendation: both, the written statement leading with a computed list beneath.
+reversal cost: low; nothing is built.
+response: **Bob, 2026-10-01, in his own terms:**
+  1. A SYSTEM DRAFT IS WELCOME: "there's always tension between members inappropriately delegating to the system and the system facilitating (enabling!) member's understanding, capabilities, efficiency/productivity, rigor, and so on. In that light, I have no problem with the system generating an initial, perhaps partial, description of the changes in a new edition. To the extent possible, this generated text should not amount to a diff, but provide a detailed, high level description of changes and, to the extent that the system can determine, and explanation for the motivation for the revision." The draft is labelled machine work until a member adopts or rewrites it; the signed statement is the group's, and the record keeps that it began as a machine draft (the existing machine-work rule, DEC-84 (14)).
+  2. REQUIRED IN EVERY REVISION: "The what changed statement should be required in all revisions of a publication." Every edition after the first carries it; a new edition cannot be signed without it.
+  3. WATCHING OTHER GROUPS' EDITIONS: "Just as an instance can be configured to proactively look for updates of documents, it should similarly be able to monitor and respond to new editions of published case from other groups." A copy may watch the cases of other groups it cites or follows and respond to a new edition by telling the members whose work rests on the cited edition (re-evaluation notices, the queue); nothing is pushed between groups.
+  Not adopted: a separate computed list of differences (the brief's option C); the aid is the high-level description above.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 18; Publication §5A.
+owed: the statement as a required part of a new edition's signing (publication, case-authoring); the assistant's draft of it, labelled machine work, with its origin kept; watching other groups' published cases for new editions, as standing intent or monitoring, with its re-evaluation and queue responses (BOB places them, for Bob's approval); the UX page's question 18 marked ruled.
