@@ -1,0 +1,11 @@
+session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
+session_0158jNMUufRDREVsYavJs1om,job,office-readers,12323333,241828,122,40460,,10,3457
+session_01JFaNkersyiBgEDxNLun4KD,job,text-chain,12164354,231568,124,44648,,11,2026
+session_01QM4dYxqMfWzRifHkXnvCj7,job,ocr-worker,8019265,146524,7000,20695,,3,959
+session_01JcZMYUrkQxoEUnoX3a9Ssz,job,record-grammar,32677483,367811,232,98928,,17,2258
+session_01BjfEuoaa6XVXhVaMbV2YC9,job,legacy-checks,52319028,466603,20293,64516,,14,1271
+session_01RpWW8ZkFD9dYQi6UAZ9QQ4,job,test-support,3694570,75945,6333,22114,,5,368
+session_012Q6VzShdRmKdjhfmTkxiGp,job,site-profiles,4085548,109556,72,33957,,4,919
+session_01U8i8H62hWH4qZJaGVoo2uf,job,docprofile,25160035,347055,693,52180,,16,3170
+session_01F828m2QDyyWgtT23v7Rivx,job,bundler,13836528,235572,148,76555,,14,2440
+session_01AsjoETVNZH59mnbGoNnFwS,job,signatures,6279679,142403,593,29802,,7,1156
