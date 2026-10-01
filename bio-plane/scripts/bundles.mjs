@@ -133,7 +133,7 @@ export async function survey(members) {
 
 /** Run the member's OWN build. Returns its exit status and its output, both
  *  read from the process rather than from a wrapper (a `&&` chain reports the
- *  wrapper's status, which is how a killed battery reads green). */
+ *  wrapper's status, which is how a killed test run reads green). */
 export function rebuildMember(member, { log = console.log } = {}) {
   const r = spawnSync("npm", ["run", "build"], { cwd: member.abs, encoding: "utf8" });
   const out = [r.stdout || "", r.stderr || ""].join("").trimEnd();

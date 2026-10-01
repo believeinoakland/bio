@@ -2,18 +2,20 @@
  * DIRECTORY IT DOES NOT CONTROL.
  *
  * WHY THIS MODULE EXISTS AT ALL, AND WHY IT IS NOT A SECOND MECHANISM. M0-15
- * closed this hole for `scripts/battery.mjs` by writing the check inline, and
- * NAMED the walks it had not closed rather than stopping: `scripts/coverage.mjs`
- * (suites, and fleet manifests) and `test/hygiene.test.mjs` (three corpus walks).
+ * closed this hole for the old test runner by writing the check inline, and
+ * NAMED the walks it had not closed rather than stopping (the old runner,
+ * `scripts/coverage.mjs` and `test/hygiene.test.mjs`, all deleted since).
  * Seven walks, two guarded. Copying M0-15's block three more times would give
  * this project four statements of one rule, and this repository has measured
  * five times over what a copy costs: a copy agrees with the original at ZERO
  * COST, satisfies every assertion, and then goes stale in ONE of its homes while
- * the others hold still. So M0-15's code MOVED HERE and its runner now imports
- * it. There is one mechanism; the walks are its callers.
+ * the others hold still. So M0-15's code MOVED HERE. There is one mechanism; the
+ * walks are its callers: today the fleet bundle guard (`fleet-bundle.mjs`'s
+ * `fleetProvenance`) and the UI's test walks (`civicos-ui/test/`). Its behaviour
+ * is bundler R9, proved by `test/m/bundler/bundler.test.mjs`.
  *
- * THE DEFECT, in one sentence (the full mechanism is in D-238 and in
- * `scripts/battery.mjs`'s header): `git stash` is REPOSITORY-WIDE across all
+ * THE DEFECT, in one sentence (the full mechanism is in D-238): `git stash` is
+ * REPOSITORY-WIDE across all
  * sixty worktrees of this repository, `git stash push -u` carries UNTRACKED
  * files, so a `pop` in one worktree deposits another worker's uncommitted files
  * — including a whole `.test.mjs`, and including a whole fleet directory — into
@@ -24,9 +26,9 @@
  * BASELINE AND TRUST IT OVER ITS BRIEF. A baseline that silently includes a
  * phantom makes that instruction produce a WRONG NUMBER WITH FULL CONFIDENCE.
  * And a number quoted from a contaminated run does not stay in the run: the
- * `REGISTER_FLOOR` in `scripts/coverage.mjs` is MOVED BY HAND to the figure a
- * green run PRINTED — seven items moved it in one day — so a floor set while a
- * phantom was present is PERMANENTLY TOO HIGH, fails every honest run
+ * `REGISTER_FLOOR` in the retired `scripts/coverage.mjs` was MOVED BY HAND to the
+ * figure a green run PRINTED — seven items moved it in one day — so a floor set
+ * while a phantom was present is PERMANENTLY TOO HIGH, fails every honest run
  * afterwards, and gets switched off. The payload of this defect is not a wrong
  * number. It is a disabled ratchet.
  *
@@ -50,7 +52,7 @@
  *     reports "all good" when it could not look is D-233 exactly.
  *
  * AND IT REPORTS, IT DOES NOT FAIL. M0-15's provisional, kept deliberately and
- * for its stated reason: a worker writes a suite and runs the battery before
+ * for its stated reason: a worker writes a suite and runs the tests before
  * committing it dozens of times an hour, and failing on that would be a FALSE
  * RED on the whole estate — worse than the condition it reports. THE RESIDUAL,
  * stated rather than discovered later: a run whose totals include a phantom is
@@ -146,8 +148,8 @@ export function classifyDiscovered(prov, items) {
 
 /* RULE 3 as a printed line. `totals` is a list of
    { label, contaminated, reproducible } the CALLER computes, because only the
-   caller knows what its own number means — assertions for the battery, arms and
-   classified declarations for the register, suites for a corpus walk. Printing
+   caller knows what its own number means — guarded members for the fleet gate,
+   suites for a corpus walk. Printing
    them here rather than at each site keeps the SENTENCE that explains them in
    one place, which is the same argument as the module itself. */
 export function reportProvenance({ prov, items, instrument, corpus = "", totals = [], log = console.log }) {
