@@ -97,7 +97,9 @@
  * already the only spelling this project has, and neither re-typed here. If a
  * fifth grade letter is ever added, this module follows without an edit.
  *
- * It does not decide whether OCR should run. That is the wire's, in index.mjs.
+ * It does not decide whether OCR should run. That is extraction's
+ * (`bio-plane/src/extraction/pipeline.mjs`); it was the wire's, in the plane's
+ * old `index.mjs`, until that file was deleted.
  *
  * It holds NO ENGINE and NO CALIBRATION. `cap` arrives as a parameter because
  * it is a MEASUREMENT (MEASUREMENTS.md, per engine, per version) and this
@@ -422,9 +424,10 @@ export function mergedChain(parts) {
  * because that is who receives them: op=attesttext is a member-facing act, and
  * the chain refusals surface wherever a caller composes provenance by hand.
  *
- * C-35 IS THIS FAMILY, minted with `node tools/mintid.mjs C` (floor C-34) —
- * not measured free by hand, because seven items collided on a hand-measured
- * id in one day and every one of them was right when it looked.
+ * C-35 IS THIS FAMILY, minted with the old process's `node tools/mintid.mjs C`
+ * (floor C-34; that tool was retired in T19) — not measured free by hand,
+ * because seven items collided on a hand-measured id in one day and every one
+ * of them was right when it looked.
  * ========================================================================= */
 export const TEXT_CHAIN_CHECKS = {
   /* RULE 1. The condition this family exists for. `text_source: "ocr"` is what
@@ -1311,8 +1314,9 @@ export function captureBound(chain, byteGrade = EARNED_CAPTURE_CEILING) {
  *  FOUR, not five, and the missing one is the point: `dom` is in IC-1's union
  *  and has NO PRODUCER anywhere in this tree, so it is refused by name rather
  *  than admitted-and-unused. An arm the record accepts and nothing emits is a
- *  precision the record advertises and does not have — the same rule
- *  `schema.mjs` states about a nullable extent column with no writer, one level
+ *  precision the record advertises and does not have — the same rule the
+ *  plane's old `schema.mjs` (deleted in T19) stated about a nullable extent
+ *  column with no writer, one level
  *  up at the vocabulary instead of at the column. When CONTENT-HTML produces
  *  it, the arm is added HERE and nowhere else. */
 export const READING_POSITION_KINDS = { "pdf-page": 1, "sheet-cell": 1, "slide-shape": 1, "doc-para": 1 };
@@ -1751,9 +1755,10 @@ export function describeExtent(extent) {
  * Anything else keeps Tier 1 — which subsumes §5.2's "a tie keeps tier 1"
  * (fewer steps, the same cap, the same producer marker carried forward).
  *
- * THE SHAPE IS DELIBERATELY `mergeTier3Text`'s, ONE TIER UP (D-252,
- * `index.mjs`): "condition 1 is a claim by a producer about its own output;
- * condition 2 is a fact about the text in hand... a guarantee that rests on
+ * THE SHAPE IS DELIBERATELY `mergeTier3Text`'s, ONE TIER UP (D-252; then in the
+ * plane's old `index.mjs`, extraction's `pipeline.mjs` now): "condition 1 is a
+ * claim by a producer about its own output; condition 2 is a fact about the
+ * text in hand... a guarantee that rests on
  * another component's correctness is the class of mechanism this project meets
  * most often and believes least." Two mechanisms for one job is how the next
  * tier goes dark differently, so this is that mechanism with its comparison
@@ -1779,13 +1784,12 @@ export function describeExtent(extent) {
  * absence with nothing to report is not a finding.
  *
  * WHAT THIS DOES NOT DO. It does not decide whether to CALL Tier 2 — that is
- * `needsTier2`'s, in `index.mjs`, unchanged and deliberately so (the routing
- * half was closed on purpose; it is the ASSIGNMENT half D-283 left open). It
- * holds no engine and reaches no network. And it is NOT WIRED by this landing:
- * the two call sites are `index.mjs`'s, RECORD's control plane, and are a
- * DELEGATION (CLAIMS.md 2026-09-14) exactly as the existing Tier-2 call site's
- * own note in that file already says. Until they are wired the plane's
- * behaviour is unchanged, and that is stated rather than implied. */
+ * `needsTier2`'s, extraction's (`bio-plane/src/extraction/pipeline.mjs`), and
+ * deliberately so (the routing half was closed on purpose; it is the ASSIGNMENT
+ * half D-283 left open). It holds no engine and reaches no network. It was not
+ * wired when it landed: the call sites were then in the plane's old `index.mjs`
+ * and were a DELEGATION (CLAIMS.md 2026-09-14). They are wired now, and they
+ * are extraction's: `pipeline.mjs` calls `mergeTier2Text` and `tier2Note`. */
 
 /** The rule in one sentence, so the probe, the suite and any report quote ONE
  *  spelling of it rather than three that drift. */
@@ -1839,7 +1843,9 @@ const undeterminedChars = (page) =>
  *
  * D-514 CLOSED THE FOUR READER SITES D-501 LEFT, 2026-09-24, and the paragraph
  * that stood here is CORRECTED rather than deleted because what it recorded was
- * a real closure whose reason did not survive the sweep. It read: *that leaves
+ * a real closure whose reason did not survive the sweep. (Every `index.mjs`
+ * below is the plane's old one, since deleted; `needsTier2` and `mergeTier3Text`
+ * are extraction's now, in `bio-plane/src/extraction/pipeline.mjs`.) It read: *that leaves
  * `needsTier2` in `index.mjs`, which compares undetermined REGIONS against
  * `counts.chars`, reading the same class of number; it is the ROUTING half,
  * closed on purpose (index.mjs's own note), and is named in D-501's report
@@ -1848,13 +1854,14 @@ const undeterminedChars = (page) =>
  * HOLDS rather than merely route a document to the wrong member — which is what
  * moved the closure. SCHEDULER #19 rowed all of them as D-514. They are, and
  * each now counts glyphs through `glyphCount` below:
- *   - `needsTier2` (`index.mjs`) — the ROUTING half, the one named above.
+ *   - `needsTier2` (then `index.mjs`, extraction's now) — the ROUTING half, the
+ *     one named above.
  *   - the wholesale-base refusal in `mergeTier2Text` HERE, and its twin in
- *     `mergeTier3Text` (`index.mjs`), each of which refused a whitespace-only
- *     base SAYING it "already holds N decoded character(s)". A false sentence
+ *     `mergeTier3Text` (then `index.mjs`, extraction's now), each of which
+ *     refused a whitespace-only base SAYING it "already holds N decoded character(s)". A false sentence
  *     in a note is the class CLAUDE.md §2 puts above a missing feature.
- *   - the tier-3 LAYER ATTRIBUTION (`index.mjs`), which put a whitespace-only
- *     page into the `layer` part of the chain, so the record named a tier-1
+ *   - the tier-3 LAYER ATTRIBUTION (then `index.mjs`, extraction's now), which
+ *     put a whitespace-only page into the `layer` part of the chain, so the record named a tier-1
  *     derivation for a page from which nothing was derived.
  * `counts.chars` is UNCHANGED at every one of them — no interface moves — because
  * a judgment about whether a document holds decoded text is read off THE TEXT IN
@@ -1864,10 +1871,12 @@ const WHITESPACE = /\s/u;
 /**
  * The glyphs a string holds: non-whitespace CODE POINTS, D-501's unit and the
  * one counter every reader that judges "is there decoded text here" must read
- * (D-514). Exported for those readers; the SUITE deliberately spells the rule
- * again for itself rather than importing it, which is the note in
- * `tier-pagewise.test.mjs` and still true — a suite that shares its subject's
- * helper has stopped being able to disagree with it.
+ * (D-514). Exported for those readers; the award's own counter, `decodedChars`
+ * below, stays unexported, and this module's suite states the award's cases
+ * with its own literal texts rather than through it — the note the since-deleted
+ * `tier-pagewise.test.mjs` carried (its measurement survives as extraction's
+ * `tier-pagewise.probe.mjs`): a suite that shares its subject's helper has
+ * stopped being able to disagree with it.
  *
  * @param {string} s
  * @returns {number}
