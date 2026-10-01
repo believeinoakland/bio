@@ -45,3 +45,11 @@ Size (session_01UKdcungjhYbWwBjvB2YNNz): test runs 7, module lines 638
 ## J3 · REPORT
 
 Other modules, from J2: (1) promotion commits every bundle with project: null (promotion/index.mjs:800), so record-core's bundleInfo().project is null for every action (see J1). (2) actions' job: delete the clock copy as J2 lists; after it, action_clock_proposals purges under action-clocks' declaration. (3) legacy-store (K671): construct actionClocksOf and spread actionClocksOps; op-declarations: specs for reminderset and reminderanswer (mutating, a member's act); control-plane: ACTION_CLOCK_CHECKS in CHECK_FAMILIES. (4) Catalogue family C-123 taken for the reminders' rows; renumber if another T18 job took it.
+
+## J4 · COMPLETE · re J1
+
+**B2 applied (K702).** Merged `tranche/T18` (`d0f6b0776b`); commit `604cd9cf1a`. R3 and R5 now answer the action's `project` as the project of the first determination among its `rests_on` legs, in the document's order, read through `conformance.determinationRead` with the read's viewer; a leg naming no determination, or a determination the viewer may not see, is passed over (my reading of "first": the first one readable to the viewer); null when it rests on none. `created_by` unchanged (first manifest entry's author). `conformance` is reached through `conformanceOf(host)` unless given (a test passes a stand-in); where it cannot be created, every project reads null. `bundleInfo` is no longer used. J2's reading 1 is replaced by this; its other readings stand.
+
+**Tests and checks.** New test "R3 R5 the action's project … (K702)" (an `advances` leg, a document leg and an unseen determination passed over; the first the viewer sees; null with none; through both reads). `node --test bio-plane/test/m/action-clocks/ bio-plane/test/m/actions/`: tests 81, pass 81, fail 0 (action-clocks 20). `format`: 0 failures; `architecture action-clocks`: 7 product files, 27 relative imports, 0 failures; `coverage action-clocks`: 9 of 9, 0 failures; `ownership action-clocks tranche/T18`: 8 files, 0 failures.
+
+Size (session_01UKdcungjhYbWwBjvB2YNNz): test runs 9, module lines 660
