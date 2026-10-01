@@ -333,6 +333,8 @@ test("R11: existed for one part is whether it was held before this call; for sev
   const m1 = await run(w, mr, { locator: "https://a.example/big" });
   assert.equal(m1.body.existed, null); assert.match(m1.body.existed_undetermined, /NOT a finding that the bytes are new/);
   assert.match(m1.body.existed_undetermined, /0 of this fetch's 2 parts were already held/);
+  assert.match(m1.body.existed_undetermined, /holds no row for these bytes under a record that still exists/, "N458: the member's word is record");
+  assert.doesNotMatch(m1.body.existed_undetermined, /\bbundle\b/);
   const m2 = await run(w, mr, { locator: "https://a.example/big" });
   assert.equal(m2.body.existed, null, "several parts never answer false, even when every part was held");
   assert.match(m2.body.existed_undetermined, /2 of this fetch's 2 parts were already held/);
