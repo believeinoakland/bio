@@ -916,25 +916,22 @@ export class RecordCore {
   /** R74 (K861, plane R10): this module's share of the instance's figures, exported for `plane` to register under this
    *  module's name through R63 (`registerCounts("record-core", RecordCore.COUNT_KEYS, (hid) => rc.ownCounts(hid))`); the
    *  module registers nothing itself while plane holds its copy. Each figure is the table's rows less those naming a
-   *  bundle in `hid`, by the columns that name one. */
-  static COUNT_KEYS = Object.freeze(["bundles", "files", "history", "refs"]);
-  static #COUNTED = Object.freeze({ bundles: ["bundles", ["bundle_id"]], files: ["files", ["bundle_id"]],
-                                     history: ["history", ["bundle_id"]], refs: ["refs", ["bundle_id", "target_id"]] });
+   *  bundle in `hid` by its `bundle_id`. `refs` is `connections`' table and not this module's figure (R31; K877). */
+  static COUNT_KEYS = Object.freeze(["bundles", "files", "history"]);
+  static #COUNTED = Object.freeze({ bundles: "bundles", files: "files", history: "history" });
 
   /** R74, D-464 (A COUNT IS TAKEN THROUGH THE CALLER'S OWN SIGHT): R63's `counts(hid)` for this module's share, moved
    *  from the plane's held copy with its reading kept. `hid` is membership's `hiddenBundles` (`{sql, args}`), or null for
    *  a viewer that sees every bundle and for the direct internal call, which count whole. `COALESCE(k, '')`: a NULL key
-   *  names no bundle, and `NULL NOT IN (…)` is NULL, which would drop the row. `refs` is `connections`' table, counted
-   *  here as the held copy counts it (R74); a figure whose table cannot be read is left out, and R63 answers it null.
-   *  Synchronous; writes nothing; never throws. */
+   *  names no bundle, and `NULL NOT IN (…)` is NULL, which would drop the row. A figure whose table cannot be read is
+   *  left out, and R63 answers it null. Synchronous; writes nothing; never throws. */
   ownCounts(hid = null) {
     const out = {};
     for (const key of RecordCore.COUNT_KEYS) {
-      const [table, keys] = RecordCore.#COUNTED[key];
+      const table = RecordCore.#COUNTED[key];
       try {
-        const conds = [], args = [];
-        if (hid) for (const k of keys) { conds.push(`COALESCE(${k}, '') NOT IN ${hid.sql}`); args.push(...hid.args); }
-        out[key] = this.#one(`SELECT count(*) AS c FROM ${table}${conds.length ? ` WHERE ${conds.join(" AND ")}` : ""}`, ...args).c;
+        out[key] = hid ? this.#one(`SELECT count(*) AS c FROM ${table} WHERE COALESCE(bundle_id, '') NOT IN ${hid.sql}`, ...hid.args).c
+                       : this.#one(`SELECT count(*) AS c FROM ${table}`).c;
       } catch { /* unread: R63 answers it null, never zero */ }
     }
     return out;
