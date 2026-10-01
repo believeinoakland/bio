@@ -51,15 +51,14 @@ if (typeof Math.sumPrecise !== "function") {
 import { getDocumentProxy, extractText } from "unpdf";
 import { extractPdfStructure } from "../../bio-plane/src/pdfstructure.mjs";
 
-/* The member's surface, declared for the fleet-coverage instrument to read the
- * same way it reads the plane's OPS table (scripts/coverage.mjs, D-117). Hand it
- * a capture, get back the I2 structure+text shape — and ask it which build is
- * answering.
+/* The member's surface, declared: hand it a capture, get back the I2
+ * structure+text shape, and ask it which build is answering. `fleet-member.json`
+ * names this table as `surface`. The fleet-coverage instrument that read it
+ * (`scripts/coverage.mjs`, D-117) is retired (K739); this module's own suite now
+ * holds both routes and refuses every other (R12, R35).
  *
- * `mutating` is a property of THIS WORKER and must be `false` on every row: fleet
- * rule 2, a member ASSERTS nothing. That is a `--strict` gate rather than a
- * convention (coverage.mjs, VF-3's gate 4), and `version` is a GET that reads one
- * env var, so it could not be anything else. */
+ * `mutating` is FALSE on every row (fleet rule 2: a member ASSERTS nothing).
+ * `version` is a GET that reads one env var, so it could not be anything else. */
 export const SURFACE = {
   structure: { method: "POST", mutating: false },
   version:   { method: "GET",  mutating: false },
