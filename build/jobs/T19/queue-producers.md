@@ -1,6 +1,6 @@
 # queue-producers (T19)
 
-**Status** · session_01FZSGgbjMuFtZDx2WWorcCu · depth 2 · WORKING · handled B1
+**Status** · session_01FZSGgbjMuFtZDx2WWorcCu · depth 2 · COMPLETE · handled B1
 
 ## Completion
 
