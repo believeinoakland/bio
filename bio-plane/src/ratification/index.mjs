@@ -154,7 +154,7 @@ export class Ratification {
    * no-project conclusion is visible as information and is never read as P's,
    * and read strictly that refuses publication to every project whose finding was
    * concluded before the project arm existed — which is EVERY published case in
-   * this record and every publishing caller in the battery, since op=conclude had
+   * this record and every publishing caller the old test battery had, since op=conclude had
    * no project arm before 2026-09-18. Item 5 rules the opposite way about the
    * same bytes: they are read as the conclusion of the relationship that
    * concluded them, or of the no-project relationship where none can be

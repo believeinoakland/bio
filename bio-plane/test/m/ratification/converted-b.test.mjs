@@ -1,5 +1,5 @@
 /* ratification's share of four old suites, converted into module tests at this module's interface (T18; K619: the old
-   suites stay in place, never deleted by the job): `test/publish.test.mjs`, `test/testify.test.mjs`,
+   suites were not deleted by the job): `test/publish.test.mjs`, `test/testify.test.mjs`,
    `test/testimonyaxis.test.mjs` and `test/operator-attest.test.mjs`. Only ratification's share of each is converted
    (T17's legacy-tests rows, "ratification R…"); the other modules' shares (case-authoring's act refusals, publication's
    editions and projections, inquiry's C-21.2, strength's bar and axes, affordances, control-plane's bearer wiring) are

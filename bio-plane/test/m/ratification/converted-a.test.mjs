@@ -3,7 +3,7 @@
    `test/mk6-bundle-names-no-author.test.mjs` and `test/signer-enrolment.test.mjs` (their rows in
    `build/jobs/T17/legacy-tests.md`). Only ratification's share is converted here; the other modules' shares of those
    suites (case-authoring, affordances, inquiry, bias, provenance, publication, membership) are theirs. The old suites
-   stay in place, never deleted by this job (K619).
+   were not deleted by this job (K619).
 
    Every test drives ratification through its interface: the store half (`ratificationOf` via the fixture's world,
    `w.r`, `w.op`), the Worker half (`caseRatifyOp`, `ratifyOp` with `plane(w)`), promotion's case gate running the
