@@ -99,10 +99,6 @@ export const RFC_RESPONSE_WINDOW_PRECEDENT = {
   enforced: false,
 };
 
-/* The subject registry's own key shape: `allocId("ENT", year)` in store.mjs
-   yields ENT-<4-digit year>-<4-digit sequence>, with no slug (unlike a bundle
-   id). Shape only — see (a) above. */
-const ENTITY_ID_RE = /^ENT-\d{4}-\d{4}$/;
 
 
 // ---------------------------------------------------------------------------
@@ -507,26 +503,6 @@ export function divisionDisclosureFindings(fm, findings) {
   }
 }
 
-/** C-15: recheck coverage on inquiries (né Focuses), all dispositions.
- *  The comparison is against 'inquiry' because normalizeType now maps both
- *  legacy spellings there — left at 'focus' this check would silently stop
- *  firing for every document, old and new. */
-function checkRecheckCoverage(ctx, findings) {
-  if (normalizeType(ctx.fm?.object_type) !== 'inquiry') return;
-  const rts = Array.isArray(ctx.fm.recheck_triggers) ? ctx.fm.recheck_triggers : [];
-  if (rts.length === 0) {
-    findings.push(f('C-15.1', 'error', 'every Problem, in every disposition including dismissed, carries at least one recheck trigger', ['author a trigger, dual-audience shape, dated when time-bound']));
-    return;
-  }
-  for (let i = 0; i < rts.length; i++) {
-    const t = rts[i];
-    if (typeof t !== 'object' || !t?.text || !t?.description) {
-      findings.push(f('C-15.1', 'error', `recheck_triggers[${i}] lacks the dual-audience {text, description} shape`));
-    } else if (t.date !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(String(t.date))) {
-      findings.push(f('C-15.1', 'error', `recheck_triggers[${i}].date '${t.date}' is not YYYY-MM-DD`));
-    }
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Step-5 families: per-type extensions (C-2.8/9/10), C-8 citations, C-9 gates,
@@ -534,281 +510,6 @@ function checkRecheckCoverage(ctx, findings) {
 // ---------------------------------------------------------------------------
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-
-/* C-2.8, renamed from checkFocusExtension by REC-10. Keeps surfaced_by and
-   disposition_reason exactly as the focus contract had them; REC-11 adds the
-   basis[] leg grammar via checkInquiryBasis below, and REC-13 the CONCLUDED
-   entry requirements. `completeness` (published) and the division fields
-   arrive with REC-14/16, each with its state. */
-function checkInquiryExtension(ctx, findings) {
-  if (normalizeType(ctx.fm?.object_type) !== 'inquiry') return;
-  const fm = ctx.fm;
-  if (!['agent', 'human'].includes(fm.surfaced_by)) {
-    findings.push(f('C-2.8', 'error', `surfaced_by '${fm.surfaced_by}' is not one of: agent, human`));
-  }
-  if (['deferred', 'dismissed'].includes(fm.current_state)) {
-    if (typeof fm.disposition_reason !== 'string' || fm.disposition_reason.trim() === '') {
-      findings.push(f('C-2.8', 'error', `${fm.current_state} state requires a non-empty disposition_reason`));
-    }
-  }
-  /* REC-13: the `concluded` ENTRY REQUIREMENTS, modelled on C-2.7's `verified`
-     arm above — the state is not a label a document may simply wear, it is a
-     claim the document has to be able to carry.
-     - a CONCLUSION, because `concluded` with nothing concluded is a state
-       change wearing an answer's clothes;
-     - a FALSIFIER, because a finding that names nothing which would overturn
-       it is a narrative rather than a result, and "less narrative" is a
-       constraint on US (CLAUDE.md's stance). This is the requirement the
-       item's negative control removes;
-     - AT LEAST ONE BASIS LEG. DEC-22 is exactly what bounds this: an `open`
-       inquiry may hold a claim with ZERO legs — a STANDING OBJECTIVE, legal
-       and readable and never auto-anything — so the requirement fires HERE
-       and only here. A conclusion resting on nothing is the overclaim this
-       repository's primary threat model is about.
-     An UNDETERMINED conclusion is stated as such in the prose, never faked to
-     pass this gate; what is refused is silence, not uncertainty. */
-  if (fm.current_state === 'concluded') {
-    if (typeof fm.conclusion !== 'string' || fm.conclusion.trim() === '') {
-      /* REC-56 / D-203's SWEEP, and this one is the HARDER half of the class:
-         `concluded -> open` IS a legal edge (REC-13 added it — a conclusion is
-         revisable), so the state machine does not refuse this advice. THE OP
-         SURFACE DOES. `REOPENABLE_FROM` is promotion R51's frozen `["deferred",
-         "dismissed"]` and excludes `concluded` DELIBERATELY and BY NAME:
-         `deriveActs` does not publish `reopen` on a concluded inquiry in no case,
-         and promotion's `#reopen` answers NOT_SET_DOWN with the reason — a conclusion quietly reverting to open
-         still wearing its conclusion records nothing, and the edition machinery
-         is where that move belongs. So the old repair told an operator to do
-         exactly what the plane refuses, on an edge that looks legal, which is
-         why reading repair strings against `STATES` alone would not have found
-         it. affordances.mjs states the principle in its own words on
-         REOPENABLE_FROM: *an act the catalog permits that no caller can perform
-         is the state machine lying.* This is that sentence read backwards — a
-         repair the catalog advises that no caller can perform.
-         The replacement names no destination, so it cannot go stale if the FROM
-         set changes; the source-level walk re-derives reachability from
-         `deriveActs` rather than from anything written here. */
-      findings.push(f('C-2.8', 'error', 'concluded state requires a non-empty conclusion',
-        ['author the conclusion where the document stands: reopening does not pick a concluded inquiry back up (op=reopen answers NOT_SET_DOWN), so there is no act that undoes the conclusion and the repair is made in place']));
-    }
-    /* REC-117 / BOB 2026-09-17. THE FALSIFIER REQUIREMENT BECOMES A REQUIREMENT
-       TO ACCOUNT FOR THE FALSIFIER, which is not the same as dropping it.
-       Bob ruled NO_FALSIFIER overridable "either temporarily or in the
-       published record", and the store's conclude() opens the door; this arm is
-       the OTHER half, and the two must move together. conclude.test.mjs's own
-       header records why: the requirement is enforced twice on purpose, so
-       breaking the store alone leaves the catalog refusing the bundle
-       op=conclude just wrote, and breaking the catalog alone leaves op=conclude
-       refusing the call.
-       THREE OUTCOMES, and the middle one is the one this item is about:
-         a falsifier is stated                 -> clean, exactly as before;
-         none is stated and the ABSENCE is     -> clean, and the record says in
-           attributed to a member with a date     whose name and on what date;
-         none is stated and nothing accounts   -> the original error, unchanged
-           for it                                 in code, severity and words.
-       A HALF-RECORDED OVERRIDE IS AN ERROR IN ITS OWN RIGHT, and it is the arm
-       that matters most: an override missing its actor or its date is a SILENT
-       override — the record has stopped requiring a falsifier and has not said
-       who decided that — which is the only wrong answer this ruling admits. It
-       cannot arise from op=conclude, which writes both or neither; it is
-       reachable by a hand-edited document, and that is exactly what the catalog
-       is for. */
-    const ovBy = typeof fm.falsifier_override_by === 'string' ? fm.falsifier_override_by.trim() : '';
-    const ovAt = typeof fm.falsifier_override_at === 'string' ? fm.falsifier_override_at.trim() : '';
-    const falsStated = typeof fm.falsifier === 'string' && fm.falsifier.trim() !== '';
-    if (!falsStated && !ovBy && !ovAt) {
-      findings.push(f('C-2.8', 'error', 'concluded state requires a non-empty falsifier: a conclusion that names nothing which would overturn it cannot be checked by anyone, including its author',
-        ['state what evidence would falsify this conclusion',
-         'or, if none can honestly be stated, record the absence: conclude with no_falsifier=1 so the record carries who accepted it and when']));
-    } else if (!falsStated && !(ovBy && ovAt)) {
-      findings.push(f('C-2.8', 'error', 'concluded state has no falsifier and only a HALF-RECORDED override: an override missing its ' + (ovBy ? 'date' : 'member') + ' is a silent one, and a record that has stopped requiring a falsifier without saying who accepted that claims more than it can support',
-        ['record both falsifier_override_by and falsifier_override_at, or state a falsifier']));
-    } else if (falsStated && (ovBy || ovAt)) {
-      findings.push(f('C-2.8', 'error', 'concluded state carries BOTH an authored falsifier and a record that none was stated: those are two contradictory claims about this finding and nothing may choose between them',
-        ['remove the falsifier_override_by/at pair if the falsifier stands',
-         'or clear the falsifier if the absence is what the member meant to record']));
-    }
-    if (!Array.isArray(fm.basis) || fm.basis.length < 1) {
-      findings.push(f('C-2.8', 'error', 'concluded state requires at least one basis leg: an open inquiry may rest on nothing (a standing objective), a conclusion may not',
-        ['add a basis[] leg naming what the conclusion rests on, and the same target in references[]']));
-    }
-  }
-  /* CASE-4 / DEC-72: AND THIS IS WHERE THE `case_id` REQUIREMENT SURVIVES. The
-     membership claim is the PAIR, so a document asserting a case EDITION while
-     naming no case would otherwise slip past the whole ceremony by being
-     half-formed — the exact hole REC-44's `case_id` arm was written to close,
-     arriving through the new door. It is refused here, before the ceremony, and
-     it names what is missing rather than what is present. */
-  /* CASE-5b / DEC-72, 2026-09-10: THE ARM IS CORRECTED AND POINTS THE OTHER WAY
-     NOW, AND THE OLD ONE IS WORTH SAYING OUT LOUD BECAUSE IT WAS RIGHT.
-
-     WHAT IT USED TO SAY: `case_edition` with no `case_id` beside it names an
-     edition of no case, so refuse it — membership was the PAIR and a half-formed
-     claim would otherwise slip past the whole ceremony. That was exactly true
-     while op=publish stamped both into every member.
-
-     WHY IT IS WRONG NOW: this item removes BOTH from finding bytes. A finding's
-     bytes no longer name a case at all — the case's assertions live in a case
-     document a member signs (CASE-5b), which is the signature those facts had
-     nowhere to move to until now. So the shape the old arm refused is no longer
-     "half a membership claim", and the shape it ALLOWED — both fields present —
-     is now the one that must not exist.
-
-     IT IS A REFUSAL RATHER THAN AN ABSENCE, and that is the load-bearing part.
-     If the gate merely stopped requiring these fields, a document carrying a
-     stale `case_id` would sail through and every reader that still looks for one
-     would find a case identity nothing in this plane wrote or checked — the
-     second-authority drift D-21 names, arriving through bytes rather than
-     through a table. Refused here, the deletion is a property of the FORMAT and
-     not a property of op=publish remembering not to write it. */
-  for (const k of ['case_id', 'case_edition', 'case_project', 'case_scope', 'case_findings', 'case_roles',
-                   'bias_acknowledgement', 'required_strength']) {
-    const v = fm?.[k];
-    if (v === undefined || v === null || v === '' || v === 'null') continue;
-    findings.push(f('C-2.8', 'error', `a finding's bytes name a case (${k}): since CASE-5b the case's own assertions — its identity, its edition, its producing project, its scope, its roster, its load-bearing partition, its bias acknowledgement and its bar — are signed ONCE, in the CASE DOCUMENT a member reviews and ratifies (op=caseratify), and not N times in N members' frontmatter. A finding is a member of a case because the case pinned its version hash, and that pin is inside the bytes the case's signer signed`,
-      [`remove ${k} from this document's frontmatter`,
-       'the case states these facts once, in its own signed document']));
-  }
-  /* REC-16: the `divided` ENTRY REQUIREMENTS, on the same principle again — a
-     state is not a label a document may wear. What `divided` claims is that
-     this question was two questions and that every leg it rested on now lives
-     on a child, so the document has to be able to carry BOTH halves of that:
-     the division itself, and the account of where every leg went. */
-  if (fm.current_state === 'divided') checkDividedExtension(fm, findings);
-  /* REC-18 / DATA-MODEL D1(b): THE SUBJECT ENTITY, and it is one OPTIONAL
-     scalar rather than a block, a list or a table.
-     - OPTIONAL because DEC-15 rules exactly what its absence costs: "an inquiry
-       with no subject entity simply has no A/B/C available to it, which is
-       honest." Requiring it would make the price a GATE, and a gate that
-       pressures a member into naming a subject they have not established is the
-       bug CLAUDE.md names about the publication fence.
-     - A SCALAR, singular, because the earned grade is "the strongest resolution
-       of that document's captures to THE inquiry's subject entity". With a list,
-       "strongest across all subjects" would let an A earned about a tangential
-       subject be laundered into a leg about the question's real one. A question
-       with two subjects is two questions, and the record already has an act for
-       that (op=inquirydivide, REC-16).
-     - NO JUSTIFICATION FIELD, unlike entity_relations. A declared relation is
-       CONSTITUTIVE — the group fixing what its own statements mean — and D-83
-       requires it justified and cited. Naming what a question is about asserts
-       nothing about the world and carries no grade; it is addressing. */
-  if (fm.subject_entity !== undefined && fm.subject_entity !== null && fm.subject_entity !== '') {
-    if (typeof fm.subject_entity !== 'string' || !ENTITY_ID_RE.test(fm.subject_entity)) {
-      findings.push(f('C-2.8', 'error', `subject_entity '${String(fm.subject_entity).slice(0, 40)}' is not a subject registry key (ENT-YYYY-NNNN)`,
-        ['point subject_entity at an entry in the subject registry (op=entitycreate / op=entitybyalias), or omit it — an inquiry may name no subject, and then no leg of it earns an A/B/C connection grade (DEC-15)']));
-    }
-  }
-  checkInquiryBasis(fm, findings, ctx.publishedRegistry, ctx.earnedRegistry);
-}
-
-/** REC-16 / DEC-28 / R4: what a `divided` parent must be able to say.
- *
- *  TWO TOP-LEVEL KEYS, and the split is forced by the restricted frontmatter
- *  grammar rather than chosen: a block is a map of scalars or an array of
- *  objects, never a map holding an array of objects. So `division` is the map
- *  (the act: into, apportioned_by, at, reason) and `division_apportionment` is
- *  the array (the account: one row per leg, naming the child it went to) —
- *  exactly the shape REC-14's `completeness` / `completeness_excluded` pair
- *  takes, for exactly the same reason.
- *
- *  WHY THE APPORTIONMENT IS A GATE AND NOT MERELY AN OP BEHAVIOUR. R4's whole
- *  argument is that division and severance do not substitute, because
- *  *"every leg gets a home… Neither is not"*: severance REMOVES material from a
- *  question, division only RE-HOMES all of it. The abuse it blocks is that
- *  dividing would otherwise be a cheaper way to shed a finding that CUTS
- *  AGAINST you than severing it. That protection is worth nothing if it lives
- *  only in the op — a hand-written document could then wear `divided` while
- *  quietly dropping the inconvenient leg — so the requirement is that EVERY
- *  ORD in basis[] is accounted for. Ord, not target: duplicate targets are
- *  legal by design (D4 — one document, two legs), and keying on the target
- *  would let one row discharge two legs.
- *
- *  NO PER-LEG REASON (DEC-29). One authored reason for the whole division; the
- *  per-leg judgment is recorded per leg IN THE APPORTIONMENT ITSELF, and the
- *  counterweight to the friction asymmetry with severance is DISCLOSURE, not
- *  ceremony. Nothing here should be read as an invitation to add one. */
-function checkDividedExtension(fm, findings) {
-  const d = (typeof fm.division === 'object' && fm.division && !Array.isArray(fm.division)) ? fm.division : null;
-  if (!d) {
-    findings.push(f('C-2.8', 'error', 'divided state requires a division block: a question recorded as divided with no account of the division is a state change wearing a correction\'s clothes',
-      /* REC-56 / D-203's sweep, third site: `divided` is TERMINAL — `divided:
-         []` — so `divided -> open` is not an edge and C-4.2 refuses it by name,
-         the same shape as `verified -> collected`. It is terminal
-         STRUCTURALLY rather than by policy (the parent's legs are owned by its
-         children now), so this is the one arm in the family where no state move
-         exists in either direction and the honest advice says so.
-         The first repair is UNCHANGED and is not a directive to run the op now
-         — `op=inquirydivide` does not apply at `divided` either — it states
-         where a division block legitimately comes from, which is C-20.1's
-         `re-produce the creation at collected` shape exactly. */
-      ['divide through op=inquirydivide, which authors the block and stamps who apportioned and when',
-       'restore the division block from _history if the division was made and the block was lost',
-       'otherwise raise it: the repair here is not a state move, and C-4.2 refuses any transition this machine does not carry']));
-    return;
-  }
-  const into = Array.isArray(d.into) ? d.into.filter((x) => typeof x === 'string') : [];
-  if (into.length < 2) {
-    findings.push(f('C-2.8', 'error', `division.into names ${into.length} child inquir${into.length === 1 ? 'y' : 'ies'}: a division produces at least TWO questions, because one is a rename and zero is a deletion`,
-      ['name every child the question was divided into']));
-  }
-  for (const id of into) {
-    if (!BUNDLE_ID_RE.test(id)) findings.push(f('C-2.8', 'error', `division.into names '${String(id).slice(0, 40)}', which is not a canonical bundle id`));
-  }
-  if (new Set(into).size !== into.length) {
-    findings.push(f('C-2.8', 'error', 'division.into names the same child twice: a leg apportioned to a child named twice has one home, not two'));
-  }
-  if (typeof d.reason !== 'string' || d.reason.trim() === '') {
-    findings.push(f('C-2.8', 'error', 'division requires a non-empty reason: the reason belongs to the ACT (DEC-28), and a restructuring nobody accounted for is indistinguishable from one nobody should have made',
-      ['author the reason the question was two questions']));
-  }
-  /* REC-46: one predicate, and the blank arm stays its own — absent is not
-     machine, and "nobody apportioned" is a different finding from "a machine
-     did". `isMachineIdentity` answers false for blank precisely so this reads
-     as it always has. */
-  if (typeof d.apportioned_by !== 'string' || d.apportioned_by.trim() === '' || isMachineIdentity(d.apportioned_by)) {
-    findings.push(f('C-2.8', 'error', `division.apportioned_by '${d.apportioned_by}' is not a named member: apportionment is AUTHORED and never automatic, so the record carries the name of whoever decided where each leg went`));
-  }
-  if (!ISO_TS_RE.test(String(d.at || ''))) {
-    findings.push(f('C-2.8', 'error', `division requires 'at' as an ISO timestamp (got '${d.at}')`));
-  }
-  /* THE ACCOUNT. Every leg the parent rested on, including — and this is the
-     abuse R4 blocks — every leg whose role is `cuts_against`. */
-  const legs = Array.isArray(fm.basis) ? fm.basis : [];
-  const rows = Array.isArray(fm.division_apportionment) ? fm.division_apportionment : null;
-  if (!rows) {
-    findings.push(f('C-2.8', 'error', 'divided state requires a division_apportionment field: the parent records WHERE EVERY LEG WENT, because dividing must not be a cheaper way to shed a finding that cuts against you than severing it (R4)',
-      ['author one apportionment row per basis leg, naming the child it went to']));
-    return;
-  }
-  const homes = new Map();            // ord -> Set(child)
-  rows.forEach((r, i) => {
-    if (!r || typeof r !== 'object') { findings.push(f('C-2.8', 'error', `division_apportionment[${i}] is not an object`)); return; }
-    if (!Number.isInteger(r.ord) || r.ord < 0 || r.ord >= legs.length) {
-      findings.push(f('C-2.8', 'error', `division_apportionment[${i}].ord '${r.ord}' does not name a leg of this inquiry's basis (0..${legs.length - 1}): a leg is addressed by its ORDINAL, because one document legitimately carries two legs (D4)`));
-      return;
-    }
-    if (typeof r.to !== 'string' || !into.includes(r.to)) {
-      findings.push(f('C-2.8', 'error', `division_apportionment[${i}].to '${r.to}' is not one of the children named in division.into: a leg's home is a child of THIS division`));
-      return;
-    }
-    const leg = legs[r.ord];
-    if (leg && typeof leg === 'object' && typeof r.target === 'string' && r.target !== leg.target) {
-      findings.push(f('C-2.8', 'error', `division_apportionment[${i}] names target '${r.target}' at ord ${r.ord}, where the basis carries '${leg.target}': the account and the basis are two views of one document and cannot disagree`));
-    }
-    if (!homes.has(r.ord)) homes.set(r.ord, new Set());
-    homes.get(r.ord).add(r.to);
-  });
-  const orphans = [];
-  for (let i = 0; i < legs.length; i++) if (!homes.has(i)) orphans.push(i);
-  if (orphans.length) {
-    const cutting = orphans.filter((i) => legs[i] && legs[i].role === 'cuts_against');
-    findings.push(f('C-2.8', 'error', `basis leg${orphans.length === 1 ? '' : 's'} ${orphans.join(', ')} ${orphans.length === 1 ? 'has' : 'have'} no home in the apportionment${cutting.length ? ` (including ${cutting.length} that cut${cutting.length === 1 ? 's' : ''} AGAINST this inquiry)` : ''}: every leg gets a home on a child, because division RE-HOMES material and only severance REMOVES it (R4)`,
-      ['apportion the remaining leg(s) to a child', 'or sever them with a reason, which is the act that removes material']));
-  }
-  const empty = into.filter((c) => ![...homes.values()].some((s) => s.has(c)));
-  if (empty.length) {
-    findings.push(f('C-2.8', 'error', `division.into names ${empty.join(', ')}, which received no leg of the parent's basis: a child that inherits nothing is a new question, not a half of this one`));
-  }
-}
 
 export const STRENGTH_STATES = ['graded', 'unrated', 'undetermined'];
 
@@ -2291,19 +1992,14 @@ export function lifecycleFindings(entries, i) {
  * `EXTENSION_ARMS` (R28), re-exported here. Record-grammar's `checkBundle` runs a type arm only in a slot a registered
  * grammar claims (`opts.grammars`, record-core R67). The arms whose code is still this catalogue's fill their slots
  * through `LEGACY_GRAMMARS`, one entry per slot, each claiming its slot's whole id list, until each owner registers its
- * own and takes it out of this list (rule 2): C-18.6/.7 promotion (layer 2), C-6.1 and C-15.1 inquiry-grammar and
- * C-2.8 inquiry-grammar (layer 6), C-2.9/C-9.1 intent (layer 7). C-2.7's slot is capture's grammar, which every
- * product caller registers; the held C-2.7 copy above fills it only for a caller registering none (J2). */
+ * own and takes it out of this list (rule 2): C-18.6/.7 promotion (layer 2), C-2.9/C-9.1 intent (layer 7). C-6.1,
+ * C-15.1 and C-2.8 are inquiry-grammar's registered grammar (layer 6, its R6; K812): this wrapper no longer fills them,
+ * and a caller that needs them passes inquiry-grammar's `INQUIRY_GRAMMARS`. C-2.7's slot is capture's grammar, which
+ * every product caller registers; the held C-2.7 copy above fills it only for a caller registering none (J2). */
 export { EXTENSION_ARMS } from '../src/record-grammar/index.mjs';
 
 export const LEGACY_GRAMMARS = Object.freeze([
   { module: 'legacy-checks', ids: ['C-2.7'], arm: checkInformationExtension },
-  { module: 'legacy-checks', ids: ['C-6.1'], arm: (ctx, findings) => {
-    supersedesEdgeFindings(ctx.fm, findings);
-    divisionDisclosureFindings(ctx.fm, findings);
-  } },
-  { module: 'legacy-checks', ids: ['C-15.1'], arm: checkRecheckCoverage },
-  { module: 'legacy-checks', ids: ['C-2.8'], arm: checkInquiryExtension },
   { module: 'legacy-checks', ids: ['C-2.9', 'C-9.1'], arm: checkProjectExtension },
 ].map((g) => Object.freeze({ ...g, ids: Object.freeze(g.ids) })));
 
@@ -5410,36 +5106,6 @@ export const CASE_AUTHORITY_CHECKS = {
   },
 };
 
-/* D-85 / C-66 — AN ASSISTANT OPENS A QUESTION ONLY INSIDE A RUN IT HOLDS (INVESTIGATIVE-SESSION.md §11
- * item 5, rule 2, BOB #25, 2026-09-21). Framework §12 lets an assistant open a question unattended and §13
- * requires it to carry the lens in force when it did; that lens exists only on a run (§3, RULED), and the
- * objective it pursued only as the run's context (DEC-24 rule 2). So an `ai` credential's creation of an
- * inquiry names a RUNNING run whose PRINCIPAL it is, and counts against the run's declared `surfaces` bound.
- * Measured before this existed (`f05c1efd`): an `ai` credential holding `promote` created an inquiry with no
- * run, no lens and no bound, and nothing linked it to any work. Asked in `#surfacingGate` BEFORE `promote`'s
- * transaction, in REC-165's order: SIGHT (a run the caller cannot see answers as one never minted, so
- * SURFACE_NO_RUN covers both), then POSITION (`runPrincipalGate`, C-22.12, relayed), then STATUS, then the
- * BOUND. A MEMBER's own creation is untouched: the rule is about the assistant. */
-export const SURFACE_CHECKS = {
-  /* REC-179 (INVESTIGATIVE-SESSION.md §11 item 5, "Rule 2's reach", BOB #30; D-78's stated intent that a revision
-     carries the value forward): `surfaced_by` records the SURFACING ACT, and that act happens once, at the
-     creation — decided there by the server (D-78's restamp, or REC-173's verified replay). Measured before this
-     existed (`0e7cc03e`): the restamp runs only on a creation and nothing compared a revision's value with the
-     current version's, so a revision relabelled an assistant's question `human` (or a member's `agent`) and
-     landed, and the rule-2 surfacing row REC-171 writes then contradicted the bytes it describes. Asked inside
-     `promote`'s transaction AFTER the compare-and-swap (the current version is then the one the revision is
-     based on) and BEFORE any write. The comparison is of the value the catalog's own parser reads out of each
-     version's `bundle.md` — a respelling of the same value lands — and an unreadable or absent value is a value:
-     a revision may not supply an origin its creation did not record, nor drop one it did. */
-  SURFACED_BY_REWRITTEN: {
-    check: 'C-66.5',
-    where: 'src/store.mjs #promoteChecks > is-promote-surfaced-by, reached from op=promote through the step legacy-store registers with promotion (K31)',
-    translation: 'This revision changes who surfaced the question, a member or an assistant. That is recorded '
-      + 'once, when the question is opened, and a later edit cannot rewrite it. Nothing was saved. Keep the '
-      + 'value the current version carries and save the revision again.',
-  },
-};
-
 /* D-436 / C-64 — THE INSTANCE'S PRODUCING GROUP (BIO_State_Rules_Consistency_v1_5.md §3.1: `group` is the
  * producing group's slug and travels with every distributed copy — so it is in the SIGNED bytes). The plane
  * used to write one literal slug there, true of one instance and false of every instance `newgroup` installs.
@@ -6316,27 +5982,3 @@ export const CONNECTION_PAIR_CHECKS = {
 
 
 
-/** THE CONTENT ADDRESS — `hash(capture_sha, canonical extent, chain)`, IC-83's
- *  own formula and the whole of the dedup-by-construction property.
- *
- *  THE CHAIN IS IN THE ADDRESS ON PURPOSE (Bob, 5.8, and the id is the reason
- *  he gives): a re-extraction produces a DIFFERENT chain over the same bytes,
- *  which is a different transcription of the same passage — so it is a new row
- *  and "the same passage" is a RELATION between rows, never a rewrite of one.
- *  The old row stays and goes `stale`, and the authored edge that holds it
- *  still resolves and says so. An address that quietly followed the newest
- *  chain would move an authored citation without a member's act, which is
- *  exactly what Bob ruled the record never does.
- *
- *  A NULL CHAIN HASHES AS `null` AND NOT AS AN EMPTY ARRAY: "no chain was
- *  recorded" and "a chain was recorded and is empty" are two different facts
- *  about the record (writeTextSource's own distinction), and collapsing them
- *  here would merge two rows that mean different things. */
-export function contentIdFor(captureSha, extent, chain) {
-  return sha256HexSync(canonicalJson({
-    v: 1,
-    capture_sha: String(captureSha ?? ''),
-    extent: canonicalExtent(extent),
-    chain: chain == null ? null : canonicalJson(chain),
-  }));
-}

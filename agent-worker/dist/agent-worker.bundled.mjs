@@ -3044,10 +3044,9 @@ async function handleRun(req, env) {
        `bio-plane/src/index.mjs` at FL-2). So this member says the principal is
        unpublished and names why, rather than defaulting it, inferring it from the
        class, or dropping the field — a run that quietly reported no principal
-       cannot be told from one acting for nobody. Filed as a DELEGATION to the
-       plane's owner in `CLAIMS.md`; FL-6 needs it closed. */
+       cannot be told from one acting for nobody. */
     principal: null,
-    principal_source: "UNPUBLISHED \u2014 no read op an ai credential may call states its own principal (D-199 (4)); see the FL-2 delegation in CLAIMS.md",
+    principal_source: "UNPUBLISHED \u2014 no read op an ai credential may call states its own principal (D-199 (4))",
     plane: { version: asked.body.version ?? null, op: "whoami" },
     worker: { name: "agent-worker", version: env.VERSION || "0.0.0" }
   });

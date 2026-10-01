@@ -9,7 +9,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, inquiryMd } from "./fixture.mjs";
 import { legCapped } from "../../../src/inquiry/index.mjs";
-import { EARNED_CAPTURE_CEILING, BASIS_GRADES } from "../../../checks/bio-checks.mjs";
+import { EARNED_CAPTURE_CEILING, BASIS_GRADES } from "../../../src/record-grammar/index.mjs";
 
 /* THE CHAINS, each a shape and not an engine: `cap` is a measurement handed in, never a calibration held here. */
 const ocrChain = (cap) => [{ step: "pixels" },

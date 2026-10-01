@@ -3,9 +3,10 @@
  * case gate call them and `legacy-checks` is earlier in the order (K138's pattern, as `content/extent.mjs` is for the
  * extent grammar). This file is their one public face: every caller of the inquiry's grammar reaches it here. */
 
-import { STATES, BASIS_ROLES, GROUND_LABEL_RE, INQUIRY_TITLE_MAX, deriveInquiryTitle, inquiryQuestionOf,
-         checkInquiryBasis, checkLegExtentGrammar, leadLegFindings, supersedesEdgeFindings, divisionDisclosureFindings,
-         checkBundle, LEAD_CHECKS, ACT_SHAPE_CHECKS, MACHINE_FENCE_CHECKS } from "../../checks/bio-checks.mjs";
+import { STATES, BASIS_ROLES, INQUIRY_TITLE_MAX, deriveInquiryTitle, inquiryQuestionOf } from "../record-grammar/index.mjs";
+import { GROUND_LABEL_RE, checkInquiryBasis, checkLegExtentGrammar, leadLegFindings, supersedesEdgeFindings,
+         divisionDisclosureFindings, checkBundle, LEAD_CHECKS, ACT_SHAPE_CHECKS, MACHINE_FENCE_CHECKS }
+  from "../../checks/bio-checks.mjs";
 
 export { BASIS_ROLES, GROUND_LABEL_RE, INQUIRY_TITLE_MAX, deriveInquiryTitle, inquiryQuestionOf, checkInquiryBasis,
          checkLegExtentGrammar, leadLegFindings, supersedesEdgeFindings, divisionDisclosureFindings };
