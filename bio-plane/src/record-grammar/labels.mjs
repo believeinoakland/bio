@@ -1,9 +1,8 @@
 // @ts-check
 /* record-grammar: the machine-work labels, the plane's own answer to "who proposed this" and "who minted this row",
    each read through `isMachineIdentity` and published as a sentence. Moved from the check catalogue at T19 with their
-   comments; the catalogue re-exports each name until its importers re-point (PROCESS-MECHANICS §12.2). REC-195's
-   `lawProposalLabel` is actions' and stays in the catalogue, over `proposalLabel`; `isMachineMinted` has no reader and
-   stays there for legacy-checks to delete (K750). */
+   comments. REC-195's `lawProposalLabel` is actions' and lives in action-grammar, over `proposalLabel`;
+   `isMachineMinted` had no reader and went with the catalogue (K750). */
 
 import { isMachineIdentity } from './actors.mjs';
 
