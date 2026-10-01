@@ -30,3 +30,7 @@ R2's text quotes the refusal's words: 'otherwise holder is null and the words sa
 ## J2 · REPORT
 
 Found outside my module (details in my record, Completion): (1) control-plane's test/m/control-plane/catalogue-end.test.mjs R43 test 1 is red: rows-before-r43.json pins C-53.13's translation digest (now 6611137f11985943, was 93c064a948ae1a7f); the only new red in test/m. (2) row-census (test/system) needs AWAITING_STAMP to declare C-53.13 CAPTURE_HELD_BY_ANOTHER_BUNDLE changed after 1.51.0 by provenance; my record names it 'awaiting stamp'. (3) Stale: bio-plane/dist/bio-plane.bundled.mjs (src/provenance changed); release/bio-plane.bundled.mjs also holds the old strings.
+
+## J3 · COMPLETE
+
+N458: all 30 sites re-worded (scan found exactly those), R2 per K948; C-53.13's translation changed, awaiting stamp T22. N469: every listed note re-worded, plus the same kind found by re-scan; schema.mjs' stale 'index has no reader' fixed. Nothing deferred. test/m/provenance 113/113; test/m no new red but control-plane catalogue-end (REPORT J3). format, architecture, coverage (55/55), ownership: 0 failures. Record: build/jobs/T21/provenance.md on job/T21/provenance.
