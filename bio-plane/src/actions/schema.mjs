@@ -31,8 +31,9 @@ export const ACTIONS_SCHEMA = `
 --
 -- action_basis_target is the reverse index: "which actions rest on this
 -- finding" is ONE indexed lookup, exactly as inquiry_basis_target is for
--- questions. Cleared in BOTH purge arms via the TABLES list (D-113);
--- hygiene.test.mjs holds that list against this file.
+-- questions. Cleared in BOTH purge arms via the TABLES list (D-113); the
+-- module test of R36 (test/m/actions/read.test.mjs) holds that list against
+-- this file's tables.
 CREATE TABLE IF NOT EXISTS action_basis (
   bundle_id   TEXT NOT NULL,   -- the action
   ord         INTEGER NOT NULL,-- position in action_basis[], so a leg is addressable
@@ -156,7 +157,7 @@ CREATE INDEX IF NOT EXISTS action_quotes_counterparty ON action_quotes(counterpa
 -- column mapping an agency to a law.
 --
 -- Carries bundle_id, so it clears in BOTH purge arms through the TABLES list
--- (D-113), and hygiene.test.mjs holds that list against this file. A proposal
+-- (D-113), and the module test of R36 holds that list against this file. A proposal
 -- outliving the action it was made against would attach itself to whatever
 -- bundle was next allocated that id -- somebody else's request wearing a
 -- machine's citations.

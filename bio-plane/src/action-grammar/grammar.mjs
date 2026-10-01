@@ -6,8 +6,8 @@
  * `CORRESPONDENCE_DIRECTIONS`, `RFC_RESPONSE_WINDOW_PRECEDENT`), C-2.10's leg and ledger arms (`actionBasisFindings`,
  * `correspondenceFindings`), the quote grammar (D-148: `QUOTE_KEYS`, `isQuoteEntry`, `quoteValue`, `quoteFindings`) and
  * the records-request lifecycle grammar (D-147: `CORRESPONDENCE_STAGES`, `CORRESPONDENCE_OUTCOMES`, `DECISION_STAGES`,
- * `LIFECYCLE_KEYS`, `lifecycleFindings`). Each value is the catalogue's, unchanged (R2). The catalogue keeps its copy
- * until its last importer re-points (rule 1); nothing here imports the catalogue.
+ * `LIFECYCLE_KEYS`, `lifecycleFindings`). Each value is the catalogue's, unchanged (R2). The catalogue was deleted at
+ * T19's close (K855); nothing here imported it.
  *
  * Uses (each read, never copied):
  *   - `record-grammar`: `BUNDLE_ID_RE`, `OBJECT_TYPES`, `proposalLabel`;
@@ -77,7 +77,7 @@ export function riskTierState(v) {
   return v === 1 || v === 2 || v === 3 ? v : null;
 }
 
-/** REC-195's label, kept by name for its readers (`actions`, the old battery): the `governing_laws` case. */
+/** REC-195's label, kept by name for its readers (`actions`, `action-clocks`): the `governing_laws` case. */
 export function lawProposalLabel(proposedBy) {
   return proposalLabel(proposedBy, 'governing_laws');
 }
@@ -109,7 +109,7 @@ export const RFC_RESPONSE_WINDOW_PRECEDENT = {
 
 /** REC-24 (a): the action's basis legs, and DEC-13's specificity requirement.
  *
- *  Exported so the STORE runs this same function at the write (the
+ *  Exported so `actions` runs this same function at the write (the
  *  checkInquiryBasis precedent), which is what stops a malformed basis landing
  *  and auditing clean at the same time.
  *
@@ -190,7 +190,7 @@ export function actionBasisFindings(fm, findings) {
 /** REC-24 (b): the correspondence ledger, and the CAPTURE-OR-TESTIFY choice
  *  made structural.
  *
- *  Exported and run by the store at the write, like actionBasisFindings above.
+ *  Exported and run by `actions` at the write, like actionBasisFindings above.
  *
  *  THE RULE, and why NEITHER and BOTH are both refused. An entry carries either
  *  an `artifact_sha` — bytes we hashed and can produce later — or an `account`
@@ -210,8 +210,8 @@ export function actionBasisFindings(fm, findings) {
  *
  *  `author` IS SERVER-STAMPED and this check only requires its PRESENCE. A
  *  document carrying an account with no author is refused; a document carrying
- *  a FALSE author is not something a pure check can see, and index.mjs
- *  overwriting the field is what makes it true. */
+ *  a FALSE author is not something a pure check can see, and `actions`'
+ *  write overwriting the field is what makes it true. */
 export function correspondenceFindings(fm, findings) {
   const entries = Array.isArray(fm?.correspondence) ? fm.correspondence : [];
   entries.forEach((e, i) => {
