@@ -18,6 +18,6 @@
 **Tests and checks.**
 - agent-worker 140 passed, 0 failed; harness 261/0; fanout 184/0; cascade 29/0; versions 20/0; wire-vocabulary 83/0; plan 55/0; requirements 272/0 (real-plane sections in requirements, harness R, agent-worker §8, versions B all against `src/plane/index.mjs`).
 - `fleetbundles.test.mjs`: agent-worker "no staleness, no recipe drift, no unresolvable import" PASS; one fail, bundler's, above.
-- format: 84 modules, 82 requirements files; 0 failures. architecture: 31 product files, 83 relative imports; 0 failures. coverage: 53 of 53 live requirement ids named by a test; 0 failures. ownership: see commit (re-run after commit, below).
+- format: 84 modules, 82 requirements files; 0 failures. architecture: 31 product files, 83 relative imports; 0 failures. coverage: 53 of 53 live requirement ids named by a test; 0 failures. ownership: 11 files changed by agent-worker between tranche/T20 and HEAD; 0 failures.
 
 Size (session_01LCAbc33dhaBdU5szJg3Mky): test runs 12, module lines 25
