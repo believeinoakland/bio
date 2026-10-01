@@ -384,8 +384,10 @@ test("R27: no op is graded `undetermined` that the ruling moved, and exactly the
     /* N345 (K481): the recommendation, the opt-in and the response */
     "contradictionrecommend", "contradictionoptin", "contradictionrespond",
     /* N364: the pull */
-    "inboxpull"].sort());
-  assert.equal(undetermined.length, 61, "R27's count: N364's inboxpull added to the 60 held before it");
+    "inboxpull",
+    /* K705, K709: filings' and actions' new writes */
+    "communicationprepare", "templatesave", "actioncreate", "actionpressure"].sort());
+  assert.equal(undetermined.length, 65, "R27's count: K705's and K709's four added to the 61 held before them");
 });
 
 test("R27: no new rung is added — the ladder keeps its five", () => {
@@ -397,11 +399,13 @@ test("R27: no new rung is added — the ladder keeps its five", () => {
    durable object dispatches layer 9's (legacy-store's N216, K307). Layer 9's 22 mutating ops each carry a NON_ACTS
    row and a rung or a stated absence exactly as AFFORDANCES #2's record states them; its reads carry none (a read has
    no NEEDS row, K153, so a row would read `stale`). actions' `actionriskpropose` keeps its row; monitoring's
-   `monitoring`, a read, is named nowhere. */
+   `monitoring`, a read, is named nowhere. K705, K709 (T18): filings' `communicationprepare` and `templatesave` and
+   actions' `actioncreate` and `actionpressure` join the writes, `templates`, `action` and `actions` the reads. */
 import { standardsOps } from "../../../src/standards/index.mjs";
 import { conformanceOps } from "../../../src/conformance/index.mjs";
 import { consequencesOps } from "../../../src/consequences/index.mjs";
 import { filingsOps } from "../../../src/filings/index.mjs";
+import { actionsOps } from "../../../src/actions/index.mjs";
 const LAYER9_RUNGS = {
   consequencerevise: "reasoned", addressedrecord: "reasoned", escalationevaluate: "reasoned",
   escalationadvance: "reasoned", escalationdecline: "reasoned", escalationsuspend: "reasoned",
@@ -415,20 +419,28 @@ const LAYER9_ABSENT = {
   filingprepare: "undetermined", filingapprove: "undetermined", filingsent: "undetermined",
   counselpacket: "undetermined", theorypropose: "undetermined", escalationopen: "undetermined",
   escalationattach: "undetermined", escalationend: "undetermined",
+  communicationprepare: "undetermined", templatesave: "undetermined",   // K705: filings R23, R26
+  actioncreate: "undetermined", actionpressure: "undetermined",         // K709: actions R47, R48
 };
 const LAYER9_READS = ["standard", "standards", "standardinforce", "determination", "determinations", "comparison",
   "comparisonfacts" /* conformance R21 (N345), an ungated read like `comparison` */,
   "consequence", "consequencesof", "addressed", "counselpacketread", "filingsfor", "availableactions", "escalation",
-  "escalationsdue"];
-test("R3 R7 R12: layer 9's 22 mutating ops each carry a NON_ACTS reason and their ruled rung or stated absence, its "
-   + "15 reads none, and the op maps hold exactly those 37 ops (K264; conformance's comparisonfacts, N345)", () => {
+  "escalationsdue", "templates" /* K705: filings R26 */, "action", "actions" /* K709: actions R47 */];
+/* actions' op map holds acts and reads catalogued long before layer 9; only the ops K709 adds join this set. */
+const ACTIONS_NEW = ["actioncreate", "actionpressure", "action", "actions"];
+test("R3 R7 R12: layer 9's 26 mutating ops each carry a NON_ACTS reason and their ruled rung or stated absence, its "
+   + "18 reads none, and the op maps hold exactly those 44 ops (K264; conformance's comparisonfacts, N345; K705, K709)", () => {
   const url = new URL("http://x/");
   const keys = (f) => Object.keys(f({}, url, {}));
   const ESCALATION = ["escalationopen", "escalationattach", "escalationevaluate", "escalationadvance", "escalationdecline",
     "escalationend", "escalationsuspend", "escalationresume", "escalation", "escalationsdue"];
-  const ops = [...keys(standardsOps), ...keys(conformanceOps), ...keys(consequencesOps), ...keys(filingsOps), ...ESCALATION];
+  const actions = keys(actionsOps);
+  assert.deepEqual(ACTIONS_NEW.filter((op) => !actions.includes(op)), [], "actions' op map holds K709's four");
+  const ops = [...keys(standardsOps), ...keys(conformanceOps), ...keys(consequencesOps), ...keys(filingsOps), ...ESCALATION,
+               ...ACTIONS_NEW];
   const mutating = [...Object.keys(LAYER9_RUNGS), ...Object.keys(LAYER9_ABSENT)];
-  assert.equal(mutating.length, 22);
+  assert.equal(mutating.length, 26);
+  assert.equal(LAYER9_READS.length, 18);
   assert.deepEqual([...ops].sort(), [...mutating, ...LAYER9_READS].sort());
   for (const op of mutating) {
     assert.ok(typeof NON_ACTS[op] === "string" && NON_ACTS[op].length > 10 && !NON_ACTS[op].startsWith("capture-directed:"), op);

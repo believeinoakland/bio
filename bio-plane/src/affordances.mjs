@@ -115,8 +115,9 @@ import { VERSION_MACHINE, VERSION_REASON_REQUIRED } from "./basis-versions/index
    and this one lands on a field 14.4 requires be labelled. */
 import { CONTENT_MINT_STATES } from "./content/index.mjs";
 /* R13–R16, R23 (T9, K225): the facts the derivation below reads, one object as it stands and one caller as they are,
-   extracted from the legacy store with the three joined-project predicates, whose only caller they were. */
-export { affordancesOf } from "./affordances/facts.mjs";
+   extracted from the legacy store with the three joined-project predicates, whose only caller they were; and (N13) the
+   op map that answers `op=affordancefacts`. */
+export { affordancesOf, affordancesOps } from "./affordances/facts.mjs";
 
 /* The disposition set: the target states op=dispose may write. Every other
  * inquiry state is entered by its own act with its own entry requirements
@@ -1153,6 +1154,14 @@ export const RUNG_ABSENT = {
   escalationattach:     { ground: "undetermined", is: "a member attaches a breach action to an escalation's current stage, 2, 5 or 7, a stage-7 act stating its accountability purpose; never detached (escalation R9, R12)" },
   escalationend:        { ground: "undetermined", is: "a member ends an escalation, only when compliance is restored for every standard pursued and the consequences are addressed; never reopened (escalation R14)" },
   actionriskpropose:    { ground: "undetermined", is: "a machine's or a member's PROPOSAL of an action's risk tier with its basis, stored apart and labelled; restated by the same proposer, and it never sets the tier (actions R28)" },
+  /* K705, K709 (T18 layer 11), on R27's rule: filings' two new writes and actions' two. None asks an authored reason
+     (a pressure mark's note describes what was received, and `PRESSURE_REFUSED` is a malformed mark, not a missing
+     account), and no published act takes any of them back. `actioncreate` is a member's chosen act, not `promote`'s
+     substrate, though it rides the same write: `entitycreate`'s ground. */
+  communicationprepare: { ground: "undetermined", is: "a machine or a member prepares a draft message, briefing or statement for an action, stored apart and labelled as its preparer's; never sent until a member approves it, `filingprepare`'s ground (filings R23)" },
+  templatesave:         { ground: "undetermined", is: "a member keeps an approved draft, or their derivative of it, as a named template of the group's; no machine writes one (filings R26)" },
+  actioncreate:         { ground: "undetermined", is: "a member creates an action, the same write as promoting an action document (actions R47)" },
+  actionpressure:       { ground: "undetermined", is: "a member marks a received correspondence entry as pressure directed at the group, appended to a table of its own and never rewritten; an entry is marked once (actions R48)" },
   /* `export`'s ground: the bytes are already the record's; this hands them over and logs who took them. */
   counselpacketexport:  { ground: "substrate", is: "hands a member a counsel packet version's bytes and records who exported it, when and for which counsel (filings R11)" },
 };
@@ -2581,6 +2590,14 @@ export const NON_ACTS = {
   escalationsuspend: "escalation-directed: a member suspends an escalation with a reason, keyed by escalation id; appends to its log",
   escalationresume: "escalation-directed: a member resumes a suspended escalation at its stage, keyed by escalation id; appends to its log",
   actionriskpropose: "action-directed: a machine or a member proposes an action's risk tier with its basis, keyed by (action, proposer); writes an `action_risk_proposals` row, never the tier",
+  /* K705, K709 (T18 layer 11): filings' and actions' new writes. A draft communication and a template are rows keyed by
+     an action and a group, and a pressure mark is keyed by one correspondence entry; creating an action acts on no
+     existing bundle (`testify`'s reason). Their reads (`templates`, `action`, `actions`) carry no `NEEDS` row and are
+     not named here (R12). */
+  communicationprepare: "action-directed: a machine or a member prepares a draft message, briefing or statement, keyed by action id; writes a draft row labelled as its preparer's, never sent until a member approves it",
+  templatesave: "draft-directed: a member keeps an approved draft as a named template of the group's, keyed by the draft; writes a template row and moves no bundle",
+  actioncreate: "creation: a member creates an action from its document, the same write as its promotion; acts on no existing bundle",
+  actionpressure: "entry-directed: a member marks one received correspondence entry as pressure, keyed by (action, entry ordinal); appends a mark and never rewrites the entry",
 };
 
 /* D-126 — THE FOURTH WEIGHT, `per-item`, AND THE THREE ACTS THAT TAKE A SET.
