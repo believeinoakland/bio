@@ -151,6 +151,8 @@ Each: what it is, and how the plan handles it.
 
 Replaced at each handoff; the progress log (§4) is the history.
 
+**STANDING DIRECTION (Bob, 2026-10-01, K716): stop after T18.** Bob's meter is at 83%. Finish T18 (layers 10 and 11, then the two-step close), make T19's plan ready to open (`next.md` cut from `draft-T19-refresh.md`), then stop: do not open T19, start no job, delete the backstop and `WATCH`. T19 runs under Bob's secondary account. Pass this direction on in every handoff until T19 opens.
+
 **Why this handoff (Bob, 2026-09-30 ~23:18, in BOB #77's session):** Bob stopped all sessions at this break point, ROOT included, to restart from a fresh ROOT. BOB #77 archived every job session and ROOT and wrote their rows; its own session is archived by BOB #78 (row `BOB-final`). Work in flight was stopped where it stood; every job's pushed work and every mailbox are on their branches.
 
 **Principle P19 · Urgency (Bob, K646)** governs, and Bob's T18/T19 priorities stand (K629, K632, K648): remove the legacy constructs and build the Action layer in full. Bob does not act in job sessions (P17).
