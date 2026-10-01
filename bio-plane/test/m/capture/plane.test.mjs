@@ -10,7 +10,7 @@ import { createHash } from "node:crypto";
 import { Miniflare } from "miniflare";
 import { ACQUIRE_GRADE_NOTE } from "../../../src/capture/index.mjs";
 
-const SRC = fileURLToPath(new URL("../../../src/index.mjs", import.meta.url));
+const SRC = fileURLToPath(new URL("../../../src/plane/index.mjs", import.meta.url));
 const T = { admin: "cap-adm", member: "cap-mem" };
 const sha = (s) => createHash("sha256").update(Buffer.from(s)).digest("hex");
 let mf;
