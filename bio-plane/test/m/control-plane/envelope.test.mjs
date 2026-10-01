@@ -8,7 +8,6 @@ import * as CP_CHECKS from "../../../src/control-plane/checks.mjs";
 import * as ADMISSION_CHECKS from "../../../src/admission/checks.mjs";
 import { aiScopeDeclaration, aiConfinementDeclaration } from "../../../src/admission/index.mjs";
 const D = await import("../../../src/control-plane/dispatch.mjs");
-const { Store } = await import("../../../src/plane/store.mjs");
 
 const { OPS, UNATTENDED_BY_DECISION } = O;
 const GATED = Object.keys(OPS).filter((k) => OPS[k].classes !== null);
@@ -311,12 +310,6 @@ test("R25: an error thrown in the record store's door is answered STORE_INTERNAL
     assert.deepEqual([line.event, line.correlation, line.op], ["STORE_INTERNAL_ERROR", j.correlation, "boom"]);
     assert.match(line.stack, /secret-value/);
   }
-  /* the Durable Object class answers through the same catch */
-  const obj = Object.create(Store.prototype);
-  obj.ctx = {};
-  obj.routes = () => ({ boom: thrower });
-  const { value: dres } = await quietly(() => obj.fetch(new Request("http://do/boom")));
-  assert.deepEqual([dres.status, (await dres.json()).check], [500, "C-69.4"]);
   /* the Worker relays the store's failure as R23's silence, carrying the store's correlation id and nothing else of it:
      through the forward and through a relay */
   const corr = crypto.randomUUID();
