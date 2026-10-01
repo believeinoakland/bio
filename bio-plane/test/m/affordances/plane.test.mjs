@@ -18,10 +18,12 @@ import * as actionGrammar from "../../../src/action-grammar/index.mjs";
 import { list as listProfiles, combine as combineProfiles } from "../../../../jurisdictions/index.mjs";
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "src");
+/* N463 (plane R8): the Worker entry is the plane's own `src/plane/index.mjs`, not the one-line re-export at `src/index.mjs`. */
+const ENTRY = join(SRC, "plane", "index.mjs");
 const ADM = "adm-aff", MEM = "mem-aff";
 const mf = new Miniflare({
-  modules: true, modulesRoot: "/", scriptPath: join(SRC, "index.mjs"),
-  script: readFileSync(join(SRC, "index.mjs"), "utf8"), modulesRules: [{ type: "ESModule", include: ["**/*.mjs"] }],
+  modules: true, modulesRoot: "/", scriptPath: ENTRY,
+  script: readFileSync(ENTRY, "utf8"), modulesRules: [{ type: "ESModule", include: ["**/*.mjs"] }],
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } }, r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { INSTANCE_NAME: "aff-plane", ADMIN_TOKEN: ADM, MEMBER_TOKEN: MEM, VERSION: "test",
@@ -602,7 +604,9 @@ test("R19: together the two drives reach every op RUNGS grades `reasoned`", () =
     /* K727: at action-plans' interface over its fixture, backing.test.mjs */
     "plansubjectadd", "plansubjectremove", "optionrevise", "optiondispose", "planclose",
     /* K918: at actions' interface over its fixture, backing.test.mjs */
-    "actionhold"];
+    "actionhold",
+    /* R30: at filing-templates' and local-facts' interfaces over their fixtures, backing.test.mjs */
+    "templateretire", "factconfirm"];
   assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "reasoned" && !driven.includes(op)), []);
 });
 
