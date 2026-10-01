@@ -1,9 +1,10 @@
-/* capture's shares of four legacy suites (T18's converts, K619 (2); the old suites stay until the release deletes them,
-   K619 (3)), proved at the module's interface: `cap13-reuse-pages` (R24: a host's documents are its pages, never its
-   captures), `cap14-reused-from` (R25: a reused part's source is the reusing capture's own record), `d522-unattended-
-   render` (R39: the allowance holds a second render the day cannot pay for) and `subresources` (R23, R24, R25: the
-   `capturelimit`, `siteassets` and `sitechrome` routes). What each suite drove through `op=acquire` is `acquisition`'s
-   share; here the store side is driven as the acquisition act writes it. A fresh store per test; no network. */
+/* capture's shares of four legacy suites (T18's converts, K619 (2)), proved at the module's interface:
+   `cap13-reuse-pages` (R24: a host's documents are its pages, never its captures), `cap14-reused-from` (R25: a reused
+   part's source is the reusing capture's own record), `d522-unattended-render` (R39: the allowance holds a second
+   render the day cannot pay for) and `subresources` (R23, R24, R25: the `capturelimit`, `siteassets` and `sitechrome`
+   routes). T20 deleted the last three suites (K879), so these tests alone prove their claims; `cap13-reuse-pages`
+   stays until the release deletes it (K619 (3)). What each suite drove through `op=acquire` is `acquisition`'s share;
+   here the store side is driven as the acquisition act writes it. A fresh store per test; no network. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, receipt, register, H } from "./fixture.mjs";
