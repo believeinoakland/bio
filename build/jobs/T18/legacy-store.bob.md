@@ -20,3 +20,7 @@ Also (K674 (4)): convert the `retire` arm of the old `refuse-gate` suite (SET_MO
 Also (K682, AI-RUNS #5): re-point `store.mjs`' `airun.mjs` imports to `run-rules` (ai-runs could not: an import from another module's path is not §12.2's; `airun.mjs` is a bare re-export until ai-runs' T19 job deletes it).
 Also (K704, ACTION-CLOCKS #1 J3): construct `actionClocksOf` and spread `actionClocksOps` in the store's dispatch (K671).
 Also (K711, ACTION-PLANS #1 J2): spread `actionPlansOps` in the dispatch (`optionpropose` answers a promise: await it, as `op=airun`), and construct `actionPlansOf` before any plan-mode `airunopen` can run (else ai-runs refuses `AI_RUN_MODE_UNCHECKED`, fail closed).
+
+## B4 · ANSWER · re J2
+
+Your readings stand (K718). The tests path bio-plane/test/m/legacy-store/ is on tranche/T18 now: merge it and write both suites there. You merge after scheduler.
