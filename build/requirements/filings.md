@@ -64,7 +64,7 @@ Terms. The **governing tier** of an action is the stricter (higher) of its kind'
 
 ### Uses
 
-- `jurisdictions`: `combine`'s view: `action_kinds` (tier, venue, template, laws, `advisory`), `counterparties`, `deadlines`, `records_laws`, `legal_organisations`, `holidays` (R25, R32, R33: not yet met there, built by the `jurisdictions` job before layer 9, K171).
+- `jurisdictions`: `combine`'s view: `action_kinds` (tier, venue, template, laws, `advisory`), `counterparties`, `deadlines`, `records_laws`, `legal_organisations`, `holidays` (R25, R32, R33).
 - `record-core`: `allocId`, `transact`, `stampInstant`, `getSetting` (the active profiles), `declarePurge`.
 - `membership`: `viewerPredicate`; `record-grammar`: `isMachineIdentity`, `proposalLabel` (the subject `communication` added by T18's head-of-layer job, R23).
 - `provenance`: the capture's digest, locator and time, and `attestationsOf(captureSha)` (R9's exhibits; to be stated in provenance's requirements before layer 9, K171); capture of the approved bytes (R7).

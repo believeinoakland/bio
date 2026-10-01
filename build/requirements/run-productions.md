@@ -32,7 +32,7 @@ Terms. A **run** and its **bounds** are `ai-runs`'; `ai-runs.runFor` answers a r
 - **R13** Every refusal of R10 and R12 carries a catalogue check and translation, except `NO_TARGET` and `NO_SUCH_BUNDLE`, which the catalogue keeps without a row because many modules mint them for one condition (its REC-64 rule; K163).
 
 **The narrow candidate source, registered with `basis-versions`** (its R25, K31)
-- **R14** For a capture, the proposals with a position, newest first, at most the count asked plus one, each as `{run, ref, label, position, content_id, mint label}`, so `narrowCandidates` lists passages an extract run proposed. *(not yet met: K31 — `narrowCandidates` reads `proposed_readings` directly)*
+- **R14** For a capture, the proposals with a position, newest first, at most the count asked plus one, each as `{run, ref, label, position, content_id, mint label}`, so `narrowCandidates` lists passages an extract run proposed.
 - **R20** (K861, plane R10) The module exports its figure source, `counts(hid)` (shaped as `record-core` R63's), with its key list, for `plane` to register under this module's name: `proposedReadings`, the rows of `proposed_readings` less the rows whose `bundle_id` is in `hid`, and `suggestRefusals`, the rows of `suggest_refusals` less the rows whose `target` (the question refused) is in `hid`, a NULL key naming no bundle (so never dropped by `hid`); a null `hid` counts whole; it answers exactly the listed keys. The module registers nothing itself.
 
 ## Private

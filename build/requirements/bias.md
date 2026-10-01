@@ -50,8 +50,8 @@ Terms. A **statement** is `{id, kind, subject, text, justification, citations?, 
 - **R23** A successful `biasAdopt`, and a promotion that moves a bias set's head, notify each registered module once, after the write. Each module registers once through `onLensChange(module, fn)`: a malformed registration, or a second by the same module, is refused through `membership`'s `listenerRefusal` (its R81: `LISTENER_MALFORMED`, `LISTENER_DECLARED`), and the listeners run in the modules' total order (`membership`'s `MODULE_ORDER`, R83).
 
 **Not yet built** (Declared Bias, "Bias bundles and adoption", safeguards 1–4)
-- **R24** A project statement whose subject is also an instance statement's, and which names no statement it overrides, is listed in the manifest as an interaction, and must carry a justification addressing it. *(not yet met: no row; K102)*
-- **R25** A statement whose subject is not in the registry is listed for the same review. *(not yet met: no row; K102)*
+- **R24** A project statement whose subject is also an instance statement's, and which names no statement it overrides, is listed in the manifest as an interaction, and must carry a justification addressing it.
+- **R25** A statement whose subject is not in the registry is listed for the same review.
 - **R26** A project statement whose effect loosens an instance statement on the same subject is an override whatever it calls itself, and where statements conflict with no named override the strictest applies. *(not yet met: no row; deferred by K102 until evaluation findings exist to apply a lens to, in `strength` and `review`, its stated trigger)*
 
 **The bias debt** (K82 (3), N59; Declared Bias, "Bias debt"). A **work product** is what a lens shaped: today an AI run, registered by `ai-runs` (its R30) with its context, principals, the lens recorded when it began, and whether a viewer may read it. Debts are keyed by work product.

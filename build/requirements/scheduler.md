@@ -17,7 +17,7 @@ Terms. A **consumer** is `{name, key, due(now), wake(now), tick(now)}`: `wake` i
 **onAlarm(now) → answer**; `alarm()` (the runtime's handler) is `onAlarm(Date.now())`
 - **R1** It runs, in registry order, the `tick` of every consumer whose `due(now)` is not null and is at most `now` + grace, awaiting each; then it reconciles authoritatively over the whole registry: the alarm is set to the smallest non-null `wake(now)`, or deleted when there is none.
 - **R2** The answer is `{swept, drained, created, folded, refused, waiting, remaining, rearmed, nextAt, probes}` (the drain's counts, zero when it did not tick; `rearmed` whether an alarm is set; `nextAt` its instant or null; `probes` the test probes that ticked), plus each other consumer that ticked, its answer under its key: `monitor`, `connderive`, `overduescan`, `queuerenotify`, `monitorcadence`, `airunreap`, `capturerequests`, `airunwake`, `calibration`, `groupdomain`, `biasdebt`, `deadlinerecheck`, and a registered consumer's own. A consumer that did not tick is absent. A real consumer never appears in `probes`.
-- **R3** A consumer whose `due`, `wake` or `tick` throws is answered under its key as `{error}` with the message; every other consumer still ticks and the reconcile still runs. *(not yet met: found in this reading; a throw today abandons the rest of the alarm and its reconcile)*
+- **R3** A consumer whose `due`, `wake` or `tick` throws is answered under its key as `{error}` with the message; every other consumer still ticks and the reconcile still runs.
 
 **arm(now) → instant | null** (the producers' door; `#armScheduler` today)
 - **R4** Reconciles without firing: the alarm is set when none is set or when the earliest wake is sooner than it, never pushed later; deleted when no consumer wants one. It answers the alarm as it stands. It runs no tick and writes no work.
@@ -37,10 +37,10 @@ Terms. A **consumer** is `{name, key, due(now), wake(now), tick(now)}`: `wake` i
 - **R10** Where a consumer's due work exceeds its batch, the scheduler ranks it by what `intent`'s `servesOf` (its R28) answers each item serves: work serving an objective's open gap (intent R6), then work serving an aspiration in force, then longest-waiting (no aspiration ranks above another, intent R12; K228); but any work that has waited longer than one whole cadence of its own goes first, so priority orders the work and never starves it. Each batch-bounded tick (`monitor-cadence`, `archive-monitor`, `capture-request-drain`, `bias-debt`) receives the rank with its `now`, as `tick(now, rank)` (N224): `monitoring`'s `cadenceTick(now, rank)` and `archiveTick(now, rank)` (its R19, R20), `capture-requests`' tick (its R11, R12) and `bias`'s `biasDebtSweep` (its R33) as each takes it.
 
 **Recovery** (Technical Architecture v10 §10.7's rule)
-- **R11** When the instance starts, it reconciles as `arm` does, so an alarm lost to a failed firing or a reset is re-derived from durable state rather than waiting for the next producer. *(not yet met: found in this reading)*
+- **R11** When the instance starts, it reconciles as `arm` does, so an alarm lost to a failed firing or a reset is re-derived from durable state rather than waiting for the next producer.
 
 **The suspended run** (D-583)
-- **R12** A run waiting on a request that reaches `expired` is woken on the alarm that expires it, the expiry told to it as a completion, exactly once. *(not yet met: D-583; `capture-requests` R29 counts `captured` and `refused` only)*
+- **R12** A run waiting on a request that reaches `expired` is woken on the alarm that expires it, the expiry told to it as a completion, exactly once.
 
 **The test seam: `SCHED_PROBE`; `schedProbeArm(now)`, `schedProbeLog()`, `schedAlarmAt()`**
 - **R13** With the binding `SCHED_PROBE` unset or unparsable the registry is exactly R5's consumers and the seam writes nothing. Set to a list of `{name, period, fires}`, each becomes an interval consumer due first at arming + `period`, then every `period`, for `fires` firings; its state lives in the storage value `sched_probe`, not a table. `schedProbeArm` arms as R4, `schedProbeLog` answers each probe's firing instants, `schedAlarmAt` the alarm.

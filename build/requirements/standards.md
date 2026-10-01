@@ -44,7 +44,7 @@ Terms. A **period** is `{from, to}`, each a `YYYY-MM-DD` date or null; null is "
 
 ### Uses
 
-- `jurisdictions`: `combine` (R3); the kinds of R23; a source's `level` (R23, R31: not yet met there, built by the `jurisdictions` job before layer 9, K171).
+- `jurisdictions`: `combine` (R3); the kinds of R23; a source's `level` (R23, R31).
 - `record-core`: `getSetting` (the active profiles), `allocId`, `transact`, `stampInstant`.
 - `record-grammar`: `isMachineIdentity`, `proposalLabel` (R1, R9); the `STD-` type registration (R15).
 - `membership`: `viewerPredicate` (R5; a member sees every standard).

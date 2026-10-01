@@ -10,7 +10,7 @@
 - `bio-plane/public/newgroup/index.html` (115, the invitation page).
 - Its bundle `newgroup/dist/newgroup.bundled.mjs`, a generated artifact.
 
-There is no `from`. Not yet met: R13 (MULTI-INSTANCE-ISOLATION row 6), R20 (DIST-15), R21 (N10), R24 (MULTI-INSTANCE-ISOLATION), R30 (instance-setup is not extracted: the grammar is legacy-store's static, the binding names legacy-index's), R32, R33 (K102). Carried old-plan row: DIST-15.
+There is no `from`. Not yet met: R13 (MULTI-INSTANCE-ISOLATION row 6), R24 (MULTI-INSTANCE-ISOLATION), R32, R33 (K102). Carried old-plan row: DIST-15.
 
 **Size (P6).** About 1,770 lines of source (about 1,220 without comment-only and blank lines), and a 1,632-line test battery (`newgroup/test/`). Well under 4,000.
 
