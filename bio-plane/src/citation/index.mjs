@@ -238,7 +238,7 @@ export class Citation {
                  detail: "the group has RETIRED these since the edge was severed, recording that they are "
                        + "superseded or no longer stand, and reinstating the edge would read to every later "
                        + "member as live support. Cite what superseded them, or re-collect the source as a new "
-                       + "bundle and cite that. The whole call is refused rather than narrowed to the members "
+                       + "record and cite that. The whole call is refused rather than narrowed to the members "
                        + "that are not retired." };
     }
 
@@ -437,7 +437,7 @@ export class Citation {
                project, handle, offenders: retiredMembers.sort(), drift: sel.drift,
                detail: "the group has RETIRED these, recording that they are superseded or no longer stand, and "
                      + "a citation made now would read to every later member as live support. Cite what "
-                     + "superseded them, or re-collect the source as a new bundle and cite that. The whole call "
+                     + "superseded them, or re-collect the source as a new record and cite that. The whole call "
                      + "is refused rather than narrowed to the members that are not retired." };
     /* END DEC-49 REGION is-cite-retired */
 
