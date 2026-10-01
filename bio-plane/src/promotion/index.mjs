@@ -1149,11 +1149,13 @@ export function promotionOf(host, deps) {
 }
 
 /* R55 (K773): the information@2 register grammar, registered with record-core's seam (its R67) once per record, when
-   the instance is first made, so the audit and the gate run it in its slot. A record with no seam (a test's stand-in)
-   is left alone; a refusal is a defect of the wiring (another module holding C-18.6/.7, or a second registration) and
+   the first instance over it is made (two hosts may share one record), so the audit and the gate run it in its slot.
+   A record with no seam (a test's stand-in) is left alone; a refusal is a defect of the wiring (another module holding C-18.6/.7, or a second registration) and
    throws, as capture's does, rather than leave the grammar silently unrun. */
+const info2Registered = new WeakSet();
 function registerInfo2Grammar(record) {
-  if (!record || typeof record.registerGrammar !== "function") return;
+  if (!record || typeof record.registerGrammar !== "function" || info2Registered.has(record)) return;
+  info2Registered.add(record);
   const answer = record.registerGrammar("promotion", INFO2_GRAMMAR);
   if (answer && answer.ok === false)
     throw new Error(`promotion: record-core refused the information@2 grammar: ${answer.reason}`

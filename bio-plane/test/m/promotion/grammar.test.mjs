@@ -48,6 +48,9 @@ test("R55: promotion registers the grammar with record-core once per record, whe
   const p = promotionOf(host, { record, membership: makeMembership() });
   assert.equal(promotionOf(host), p);
   assert.deepEqual(calls, [["promotion", INFO2_GRAMMAR]]);
+  /* A second host whose promotion runs over the same record does not register it again. */
+  promotionOf({}, { record, membership: makeMembership() });
+  assert.deepEqual(calls, [["promotion", INFO2_GRAMMAR]]);
   /* Another record (another host): its own registration. */
   const other = makeRecord();
   promotionOf({}, { record: other, membership: makeMembership() });

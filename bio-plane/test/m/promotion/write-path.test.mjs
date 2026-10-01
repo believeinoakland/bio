@@ -215,3 +215,29 @@ test("R16 (rec-181): through the whole write path, an item a live edge cites is 
   const g = await promote(free, retired(free), { base: f.bundleSha });
   assert.equal(g.ok, true, JSON.stringify(g));
 });
+
+test("R53 (N426): through the whole write path, a plan's and an escalation's bundles are committed with the project their documents state, so a member outside the project does not see them on the record-wide read; the project's participant does", async () => {
+  const proj = await promote(null, common(null, "project", "project@1", "Harbor Works", "forming", ['objective: "Learn where the harbor money went."']).concat("---", "").join("\n"),
+    { ownerMemberId: "ruth" });
+  assert.equal(proj.ok, true, JSON.stringify(proj));
+  const P1 = proj.bundleId;
+  const pln = "PLN-2026-0160-a", esc = "ESC-2026-0161-b", free = "INFO-2026-0162-c";
+  const stated = (id, type, schema, title, state) => [...common(id, type, schema, title, state, [`project: ${P1}`, "references: []"]),
+    "---", "", "## Session Log", ""].join("\n");
+  /* A plan and an escalation change only through their own acts, which promote them; filed here as replays (a migrated
+     record), the path those modules' steps admit, since the column is written the same way for every writer. */
+  const a = await promote(pln, stated(pln, "action_plan", "action_plan@1", "A plan", "open"), { replay: true });
+  const b = await promote(esc, stated(esc, "escalation", "escalation@1", "An escalation", "drafted"), { replay: true });
+  const c = await promote(free, info(free));
+  assert.deepEqual([a.ok, b.ok, c.ok], [true, true, true], JSON.stringify([a, b, c]));
+  const listed = async (viewer) => {
+    const r = await call(`/list?viewer=${encodeURIComponent(viewer)}`);
+    return new Set((r.bundles || r.items || r).map((x) => x.bundle_id ?? x.id));
+  };
+  const outsider = await listed("member:zed"), insider = await listed("member:ruth");
+  for (const id of [pln, esc, P1]) {
+    assert.equal(outsider.has(id), false, `${id} is fenced by its project's sight`);
+    assert.equal(insider.has(id), true, `${id} is seen by the project's participant`);
+  }
+  assert.equal(outsider.has(free), true, "a bundle stating no project is fenced by nothing");
+});
