@@ -1,7 +1,7 @@
 /* inquiry's tables (requirements: `build/requirements/inquiry.md`, R36). Moved out of the legacy `schema.mjs` at this
  * module's extraction (layers.md ruling 3, "each module owns its tables"): `inquiry_basis`, `inquiry_exclusions` and
  * `inquiry_migration_replays` (and, since T10, `inquiry_member_agents`; since T15, `inquiry_contradiction_links`; since
- * T18, `inquiry_bundle_facts`), with the comments that record why each is shaped as it is. Each carries `bundle_id`
+ * T18, `inquiry_bundle_facts`, which gained the subject entity in T19), with the comments that record why each is shaped as it is. Each carries `bundle_id`
  * and is declared to record-core's purge by this module (K23). `migrateInquiry` brings a store created under an
  * earlier shape to this one (the `ground` and `content_id` columns REC-42 and REC-82 added, moved here from the
  * store's additive list). */
@@ -30,7 +30,7 @@ export const INQUIRY_SCHEMA = `
 --
 -- grade is NULLABLE and NULL means undetermined and STATED -- never invented
 -- to pass a gate. grade_axis is the axis the grade is ON (capture,
--- connection or testimony -- GRADE_AXES in checks/bio-checks.mjs is the
+-- connection or testimony -- GRADE_AXES in record-grammar (grades.mjs) is the
 -- authority, and testimony joined it with MK-2 / IC-142, a leg on a member's
 -- authored bundle, graded at TESTIMONY_GRADE and no other letter), recorded
 -- on the leg because it is NOT derivable from
@@ -82,11 +82,11 @@ CREATE TABLE IF NOT EXISTS inquiry_basis (
   role         TEXT NOT NULL,   -- 'supports' | 'cuts_against'
   grade        TEXT,            -- A|B|C|D, NULL = undetermined and STATED as such
   grade_axis   TEXT,            -- 'capture' | 'connection' | 'testimony': the axis the grade is on
-                                -- GRADE_AXES in checks/bio-checks.mjs is the authority (MK-2 / IC-142)
+                                -- GRADE_AXES in record-grammar (grades.mjs) is the authority (MK-2 / IC-142)
                                 -- this line named only the first two until 2026-09-23, D-423
                                 -- hygiene.test.mjs DRIVES it against the export, as REC-68 did for grade_source
   grade_source TEXT,            -- 'resolution' | 'testimony' | 'hunch' | 'inherited' | 'capture'
-                                -- GRADE_SOURCES in checks/bio-checks.mjs is the authority (DEC-15)
+                                -- GRADE_SOURCES in record-grammar (grades.mjs) is the authority (DEC-15)
                                 -- this line named only the first three until 2026-08-08, REC-68
                                 -- the last two arrived with REC-31/DEC-21 and were never added here
                                 -- hygiene.test.mjs now DRIVES this list against the export, because
@@ -227,11 +227,14 @@ CREATE INDEX IF NOT EXISTS inquiry_contradiction_links_candidate ON inquiry_cont
 -- nothing supersedes the bundle (supersededByOf is its one parser). The column names are the ones they had on bundles,
 -- so every reader reads the same name. One row per bundle (retrieval R62: its registered table holds at most one row per
 -- key); a bundle with no row reads as NULL for both, as a column never written did. Unindexed beyond the key: both are
--- read by bundle_id. The subject entity stays on bundles (R40).
+-- read by bundle_id. inquiry_subject_entity (N136's rest, T19) is the subject entity R12 records from the document,
+-- NULL for none, under R40's read contract: contradiction joins it here (its pairing and its ladder), by the name it had
+-- on bundles.
 CREATE TABLE IF NOT EXISTS inquiry_bundle_facts (
   bundle_id              TEXT PRIMARY KEY,
   inquiry_basis_count    INTEGER,
-  inquiry_superseded_by  TEXT
+  inquiry_superseded_by  TEXT,
+  inquiry_subject_entity TEXT
 );
 `;
 
@@ -245,19 +248,25 @@ export const BUNDLE_FACTS = "inquiry_bundle_facts";
 export const LEGS_RELATION = Object.freeze({ table: BUNDLE_FACTS, key: "bundle_id", col: "inquiry_basis_count" });
 /** R36: the two columns this module held on `bundles` before T18, moved once by `moveBundleFacts`. */
 const MOVED = ["inquiry_basis_count", "inquiry_superseded_by"];
+/** R36, R40 (N136's rest): the subject entity, held on `bundles` until T19, moved once by `moveSubjectEntity`. */
+export const SUBJECT_COLUMN = "inquiry_subject_entity";
 
-const ADDITIVE = [["inquiry_basis", "ground", "TEXT"], ["inquiry_basis", "content_id", "TEXT"]];
+const ADDITIVE = [["inquiry_basis", "ground", "TEXT"], ["inquiry_basis", "content_id", "TEXT"],
+                  [BUNDLE_FACTS, SUBJECT_COLUMN, "TEXT"]];
 
 /** Create the tables, then add a column an earlier shape lacks (an absent table has no columns and was just created
- *  whole). Idempotent: every boot. */
+ *  whole). Idempotent: every boot. The subject entity is moved off `bundles` on the boot that gives this module's table
+ *  its column (the table created, or the column added), and never again. */
 export function migrateInquiry(sql) {
   const bare = INQUIRY_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  const subjectHeld = [...sql.exec(`PRAGMA table_info(${BUNDLE_FACTS})`)].some((r) => r.name === SUBJECT_COLUMN);
   for (const [table, column, decl] of ADDITIVE) {
     const have = [...sql.exec(`PRAGMA table_info(${table})`)].map((r) => r.name);
     if (have.length && !have.includes(column)) sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
   }
   for (const s of bare.split(";")) { const t = s.trim(); if (t) sql.exec(t); }
   moveBundleFacts(sql);
+  if (!subjectHeld) moveSubjectEntity(sql);
 }
 
 /** R36 (N136): the leg count and the superseded-by index a store written before T18 holds on `bundles`, copied into
@@ -276,4 +285,21 @@ export function moveBundleFacts(sql) {
             ON CONFLICT(bundle_id) DO NOTHING`);
   const [{ m }] = [...sql.exec(`SELECT COUNT(*) AS m FROM ${BUNDLE_FACTS}`)];
   return m;
+}
+
+/** R36, R40 (N136's rest): the subject entity a store written before T19 holds on `bundles`, copied into this module's
+ *  table. `migrateInquiry` calls it once, on the boot that gives the table its column, so a value a later revision
+ *  cleared is never brought back from the inert copy left on `bundles`; called again it copies the same values onto the
+ *  same rows. A bundle that already has a row keeps its other facts. A store whose `bundles` never had the column copies
+ *  nothing. The column is left on such a store's `bundles`, inert: nothing writes or reads it after the move, and
+ *  dropping a column of record-core's table is not this module's to do. Answers the number of values copied. */
+export function moveSubjectEntity(sql) {
+  const have = [...sql.exec(`PRAGMA table_info(bundles)`)].some((r) => r.name === SUBJECT_COLUMN);
+  if (!have) return 0;
+  const [{ n }] = [...sql.exec(`SELECT COUNT(*) AS n FROM bundles WHERE ${SUBJECT_COLUMN} IS NOT NULL AND ${SUBJECT_COLUMN} <> ''`)];
+  if (!n) return 0;
+  sql.exec(`INSERT INTO ${BUNDLE_FACTS} (bundle_id, ${SUBJECT_COLUMN})
+            SELECT bundle_id, ${SUBJECT_COLUMN} FROM bundles WHERE ${SUBJECT_COLUMN} IS NOT NULL AND ${SUBJECT_COLUMN} <> ''
+            ON CONFLICT(bundle_id) DO UPDATE SET ${SUBJECT_COLUMN}=excluded.${SUBJECT_COLUMN}`);
+  return n;
 }

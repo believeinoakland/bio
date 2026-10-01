@@ -3,8 +3,6 @@ import { DurableObject } from "cloudflare:workers";
 import { parseFrontmatter, createSha256, normalizeType } from "../checks/bio-checks.mjs";
 /* REC-132 / C-55: the reserved member id's refusal row, and the audit's report of it. */
 import { MEMBER_ID_CHECKS } from "../checks/bio-checks.mjs";
-/* D-85 / C-66: an assistant opens a question only inside a run it holds (INVESTIGATIVE-SESSION.md §11 item 5, rule 2). */
-import { SURFACE_CHECKS } from "../checks/bio-checks.mjs";
 import { actionsOf, actionsOps } from "./actions/index.mjs";
 import { actionClocksOf, actionClocksOps } from "./action-clocks/index.mjs";
 /* N216 (K250): the layer-9 modules built with no `from`, constructed on this object's host and their ops dispatched here. */
@@ -547,8 +545,7 @@ export class Store extends DurableObject {
       after, limit, visible,
       context: (id) => {
         const targets = this.#rows(`SELECT target_id FROM inquiry_basis WHERE bundle_id=?`, id).map((r) => r.target_id);
-        return { earnedRegistry: targets.length ? this.earnedBasisRegistry(this.#subjectEntityOf(id), targets) : null,
-                 publishedRegistry: this.publishedRegistryFor(id, targets) };
+        return { publishedRegistry: this.publishedRegistryFor(id, targets) };
       } });
     const page = ids.map((id) => this.#one(`SELECT bundle_id, object_type, current_state FROM bundles WHERE bundle_id=?`, id));
     const last = page.length ? page[page.length - 1].bundle_id : after;
@@ -617,45 +614,6 @@ export class Store extends DurableObject {
      extracted. Registered with `promotion` in the constructor; a refusal here refuses the whole promotion. */
   #promoteChecks(c) {
     const { pkg, bundleId, base, files } = stepContext(c);
-    const cur = this.#one(`SELECT bundle_sha, row_version, object_type, current_state, group_id FROM bundles WHERE bundle_id=?`, bundleId);
-      /* REC-179 / C-66.5 (INVESTIGATIVE-SESSION.md §11 item 5, rule 2's reach): A REVISION CARRIES `surfaced_by`
-         FORWARD. The field records the SURFACING ACT, decided once at the trust boundary on the creation (D-78's
-         restamp; REC-173's verified replay keeps the Drive era's), and the restamp runs only there — so without this
-         a revision relabelled the question and REC-171's surfacing row then contradicted the bytes it describes.
-         Asked of every revision of a bundle whose CURRENT version is an inquiry, after the compare-and-swap (so
-         `cur` is the version this revision is based on) and before any write. Both sides are read by the catalog's
-         own parser, never a line scan a caller can step around, so a respelling of the same value lands and a
-         different value is refused in EITHER direction. An absent field and an unreadable document are values
-         too: a revision may not supply an origin its creation did not record, nor drop one it did. `replay` is not
-         an exemption — it is a caller's assertion (`index.mjs` verifies only a CREATION as a replay, REC-173). */
-      if (cur && base !== null && normalizeType(cur.object_type) === "inquiry") {
-        const surfacedOf = (text) => {
-          if (typeof text !== "string") return "unreadable";
-          /* No catch: the catalog's parser does not throw on a string — a document it cannot read comes back
-             `data: null` with its C-2.1 finding, and that is stated here as `unreadable` (provenance-marker's
-             swallowed-read ratchet counts a catch, and this one would catch nothing). */
-          const fm = parseFrontmatter(text).data;
-          if (!fm || typeof fm !== "object") return "unreadable";
-          return Object.prototype.hasOwnProperty.call(fm, "surfaced_by") ? JSON.stringify(fm.surfaced_by) : "absent";
-        };
-        const heldMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId);
-        const nextMd = files.find((f) => f && f.path === "bundle.md");
-        const was = surfacedOf(heldMd ? heldMd.content : null);
-        const now = surfacedOf(nextMd ? nextMd.text : null);
-        /* The C-66 family's own helper shape (`#surfacingGate`'s), shadowing the project-id one in this block only. */
-        const refusal = (code, detail, extra) => {
-          const row = SURFACE_CHECKS[code];
-          return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
-        };
-        /* DEC-49 REGION is-promote-surfaced-by */
-        if (was !== now)
-          return refusal("SURFACED_BY_REWRITTEN",
-            `the current version of ${bundleId} records surfaced_by ${was}, and this revision records ${now}. Who `
-            + `surfaced a question is recorded once, at its creation; a revision carries it forward unchanged. `
-            + `Nothing was written.`, { bundleId, current: was, revision: now });
-        /* END DEC-49 REGION is-promote-surfaced-by */
-      }
-
       // MK-1 / D-184: the authored flag's fence and one capture, one home are provenance's registered check (R2,
       // R3), run before this one. What stays here is the content row's own refusal for the testimony path's words,
       // asked before anything is written (C-45's checker under the context the mint will see), so the mint in the
@@ -801,7 +759,6 @@ export class Store extends DurableObject {
   captureProgressions(...a) { return progressionsOf(this.ctx).captureProgressions(...a); }
 
   /* R13: the earned registry and the declared subject: inquiry's. */
-  #subjectEntityOf(...a) { return inquiryOf(this.ctx).subjectEntityOf(...a); }
   earnedBasisRegistry(...a) { return inquiryOf(this.ctx).earned(...a); }
   earnedRegistryForDoc(...a) { return inquiryOf(this.ctx).earnedForDoc(...a); }
 

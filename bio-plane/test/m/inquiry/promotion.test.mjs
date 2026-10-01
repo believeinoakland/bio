@@ -82,10 +82,12 @@ test("R12 projection: inquiry_basis re-derived whole from basis[]; each leg's co
   const x = w.rows(`SELECT ord, target_id, description, reason, author FROM inquiry_exclusions WHERE bundle_id=? ORDER BY ord`, "INQ-2026-0001-q");
   assert.deepEqual(x.map((r) => [r.target_id, r.description, r.reason, r.author]),
     [[B, "the other memo", "out of scope", "member:alice"], [null, "a records request", "outstanding", "member:alice"]]);
-  const b = w.row(`SELECT f.inquiry_basis_count, b.inquiry_subject_entity FROM bundles b
-                     JOIN inquiry_bundle_facts f ON f.bundle_id = b.bundle_id WHERE b.bundle_id=?`, "INQ-2026-0001-q");
+  const b = w.row(`SELECT inquiry_basis_count, inquiry_subject_entity FROM inquiry_bundle_facts WHERE bundle_id=?`,
+                  "INQ-2026-0001-q");
   assert.deepEqual([b.inquiry_basis_count, b.inquiry_subject_entity], [2, "ENT-2026-0001"],
-    "the count in this module's table (R36), the subject on bundles (R40)");
+    "the count and the subject in this module's table (R36, R40; N136)");
+  assert.equal(w.row(`SELECT inquiry_subject_entity FROM bundles WHERE bundle_id=?`, "INQ-2026-0001-q").inquiry_subject_entity,
+               null, "nothing is written to bundles' old column");
   /* a re-promotion that REORDERS the legs keeps each leg's content row (carried, keyed by target and extent, not ord) */
   const again = w.promote("INQ-2026-0001-q", inquiryMd("INQ-2026-0001-q", { subject: "ENT-2026-0001",
     legs: [{ target: B, role: "cuts_against" }, { target: A }] }));
@@ -142,17 +144,24 @@ test("R37 no place is named in this module's behaviour or outward text", () => {
   }
 });
 
-test("R40 the read contract: inquiry_basis's columns and bundles.inquiry_subject_entity, as R12 records them", () => {
+test("R40 R43 the read contract: inquiry_basis's columns and inquiry_bundle_facts.inquiry_subject_entity, as R12 records them", () => {
   const w = world(); w.doc(A); w.entity("ENT-2026-0001");
   w.inquiry("INQ-2026-0001-q", { subject: "ENT-2026-0001", legs: [{ target: A, note: "n" }] });
   const cols = w.rows(`PRAGMA table_info(inquiry_basis)`).map((c) => c.name);
   for (const c of ["bundle_id", "ord", "role", "target_id", "content_id", "note"]) assert.ok(cols.includes(c), c);
-  const joined = w.row(`SELECT ib.bundle_id, ib.ord, ib.role, ib.target_id, ib.content_id, ib.note, b.inquiry_subject_entity
-                          FROM inquiry_basis ib JOIN bundles b ON b.bundle_id = ib.bundle_id`);
+  const fcols = w.rows(`PRAGMA table_info(inquiry_bundle_facts)`);
+  assert.deepEqual(fcols.filter((c) => c.name === "inquiry_subject_entity").map((c) => c.type), ["TEXT"]);
+  assert.equal(fcols.find((c) => c.name === "bundle_id").pk, 1, "one row per bundle");
+  const joined = w.row(`SELECT ib.bundle_id, ib.ord, ib.role, ib.target_id, ib.content_id, ib.note, f.inquiry_subject_entity
+                          FROM inquiry_basis ib LEFT JOIN inquiry_bundle_facts f ON f.bundle_id = ib.bundle_id`);
   assert.deepEqual([joined.bundle_id, joined.ord, joined.role, joined.target_id, joined.note, joined.inquiry_subject_entity],
     ["INQ-2026-0001-q", 0, "supports", A, "n", "ENT-2026-0001"]);
   assert.match(joined.content_id, /^[0-9a-f]{64}$/);
+  assert.equal(w.k.subjectEntityOf("INQ-2026-0001-q"), "ENT-2026-0001", "R43 answers the recorded subject");
   w.promote("INQ-2026-0001-q", inquiryMd("INQ-2026-0001-q", { legs: [{ target: A }] }));
-  assert.equal(w.row(`SELECT inquiry_subject_entity FROM bundles WHERE bundle_id=?`, "INQ-2026-0001-q").inquiry_subject_entity, null,
-               "null for none");
+  assert.equal(w.row(`SELECT inquiry_subject_entity FROM inquiry_bundle_facts WHERE bundle_id=?`, "INQ-2026-0001-q")
+    .inquiry_subject_entity, null, "null for none");
+  assert.equal(w.k.subjectEntityOf("INQ-2026-0001-q"), null);
+  assert.equal(w.k.subjectEntityOf("INQ-2026-0099-x"), null, "a bundle with no row reads as null");
+  assert.equal(w.k.subjectEntityOf(null), null, "never throws");
 });
