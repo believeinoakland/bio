@@ -4,7 +4,12 @@ import assert from "node:assert/strict";
 import { standard, P, V, SECRET } from "./fixture.mjs";
 import { REVIEW_COPY_CHECKS, REVIEW_MARKING, REVIEW_TABLES, REVIEW_LIST_MAX, noReviewCopy, caseIdentitySentence,
          statedEdition, reviewOwns } from "../../../src/review/index.mjs";
-import * as catalogue from "../../../checks/bio-checks.mjs";
+import * as recordCore from "../../../src/record-core/index.mjs";
+import * as membership from "../../../src/membership/index.mjs";
+import * as strength from "../../../src/strength/index.mjs";
+import * as basisVersionsChecks from "../../../src/basis-versions/checks.mjs";
+import * as publication from "../../../src/publication/index.mjs";
+import * as caseAuthoring from "../../../src/case-authoring/index.mjs";
 import { DRAFTS_READ_MAX } from "../../../src/case-authoring/index.mjs";
 
 /** Every act and read, over two drafts (one naming a case), a grant, a revocation, comments and the list. */
@@ -90,16 +95,20 @@ test("R23, R27: C-87.1–C-87.11 and C-32.16 held here with their ids and transl
     REVIEW_NO_GRANT: "C-87.10", REVIEW_NO_COMMENT_TEXT: "C-87.11" };
   assert.deepEqual(Object.fromEntries(Object.entries(REVIEW_COPY_CHECKS).map(([k, v]) => [k, v.check])), want);
   assert.ok(Object.isFrozen(REVIEW_COPY_CHECKS));
-  /* R27 (N322): C-87.12 retired into record-core's C-59.6; its number is not reused, here or in the catalogue */
+  /* R27 (N322): C-87.12 retired into record-core's C-59.6; its number is not reused here */
   assert.equal("MINT_EXHAUSTED" in REVIEW_COPY_CHECKS, false);
-  const held = (fams) => fams.flatMap((fam) => Object.values(fam)).filter((r) => r && typeof r === "object").map((r) => r.check);
-  assert.equal(held([REVIEW_COPY_CHECKS, ...Object.values(catalogue).filter((v) => v && typeof v === "object")]).includes("C-87.12"), false);
-  /* moved, never copied: the catalogue holds neither the family nor the machine row */
-  assert.equal(catalogue.REVIEW_COPY_CHECKS, undefined);
-  assert.equal(catalogue.MACHINE_FENCE_CHECKS.MACHINE_CANNOT_REVIEW, undefined);
-  for (const fam of Object.values(catalogue).filter((v) => v && typeof v === "object"))
-    for (const row of Object.values(fam))
-      assert.ok(!(row && typeof row === "object" && Object.values(want).includes(row.check)), `catalogue still holds ${row && row.check}`);
+  assert.equal(recordCore.RECORD_CORE_CHECKS.MINT_EXHAUSTED.check, "C-59.6", "the one row is record-core's");
+  /* moved, never copied: no row of a module this one uses holds C-87.12 or one of this module's numbers, while the
+     fence rows C-32.16 was split from by number stand at their own homes (C-32.2 basis-versions', C-32.6 case-authoring's) */
+  const rowsOf = (ns) => Object.values(ns).filter((v) => v && typeof v === "object" && !Array.isArray(v))
+    .flatMap((fam) => Object.values(fam)).filter((r) => r && typeof r === "object" && typeof r.check === "string");
+  const elsewhere = [recordCore, membership, strength, basisVersionsChecks, publication, caseAuthoring].flatMap(rowsOf);
+  assert.ok(elsewhere.length > 50, "the homes' rows were read");
+  for (const r of [...Object.values(REVIEW_COPY_CHECKS), ...elsewhere]) assert.notEqual(r.check, "C-87.12");
+  for (const r of elsewhere)
+    assert.ok(!Object.values(want).includes(r.check), `${r.check} is held outside review`);
+  const held = new Set(elsewhere.map((r) => r.check));
+  for (const c of ["C-32.2", "C-32.6"]) assert.ok(held.has(c), `${c} at its home`);
   const w = standard();
   const d = w.r.act({ act: "draft", author: "ann", project: P, statement: "S" });
   for (const [code, check] of Object.entries(want)) {

@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { standard, P, Q, V, SECRET, NOW } from "./fixture.mjs";
 import { REVIEW_COPY_CHECKS, REVIEW_DRAFT_FIELDS, REVIEW_RECIPIENT_MAX, REVIEW_DRAFT_MAX, reviewOps,
          caseIdentitySentence } from "../../../src/review/index.mjs";
-import { PROJECT_VISIBILITY_CHECKS } from "../../../checks/bio-checks.mjs";
+import { PROJECT_VISIBILITY_CHECKS } from "../../../src/membership/index.mjs";
 import { mintExhausted, RECORD_CORE_CHECKS } from "../../../src/record-core/index.mjs";
 
 const row = (code) => REVIEW_COPY_CHECKS[code];
