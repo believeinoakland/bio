@@ -48,3 +48,7 @@ Next: on your word that the seam merged, I merge `tranche/T19`, run my tests and
 **Tests and checks run:** `node --test test/m/credentials/` 33 pass, 0 fail; `test/m/legacy-store/` 4 pass, 0 fail; `test/m/membership/` 137 pass, 2 fail (R83, R79: identical without this change); whole `test/m/` 4336 pass, 9 fail, 20 todo (the 9: families R22 above, the 8 listed as red on the tranche). Checks: format 0 failures (87 modules); architecture 0 (11 files, 27 imports); coverage 20 of 20; ownership 0 (legacy-store +16/−18, legacy-checks 0).
 
 Size (session_01DykXv9jATJADcFBDEepSZh): test runs 9, module lines 918
+
+## J4 · COMPLETE
+
+Complete: job/T19/credentials @ 4975c29b15, ready to merge early. R1–R20 built (R20 on my side; its real-membership arm runs once membership's R95 lands); 33/33 module tests; legacy-store 4/4; checks 0 failures (coverage 20/20, ownership legacy-store +16/−18). One red I cause elsewhere: control-plane families.test R22, CHECK_FAMILIES lacks credentials' three families (control-plane's, L11, or accept by name). Marks to strike, membership deletion notes and the ✱ deletion's K635 hold: see my record's Completion.
