@@ -253,5 +253,5 @@ test("R66: on a Durable Object the migration is started by migrate() and carried
   assert.equal(waited.length, 1);
   /* no host, no background run */
   const x3 = new Extraction(f.s, { record, membership: f.membership, env: {} });
-  assert.equal(x3.startDocxMigration(), null);
+  assert.equal(x3.startMigrations(), null);
 });
