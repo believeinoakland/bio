@@ -54,3 +54,7 @@ Folded: BIO_Interaction_Constructs_v0_1.md §W (new). On PR #6's branch. Owed: n
 ## U14 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-107 (Bob, question 25, as recommended): the queue's OBLIGATION class is shown to members as "To do", internal code unchanged (as FINDING is "Noticed", K356); on members' and readers' screens "obligation" means only a public body's duty; each item's sentence names whose step it is.
 Folded: NOTIFICATIONS.md (RULED 2026-10-01). On PR #6's branch. Owed (its owed: line): member-facing "Obligation" for the to-do class re-worded to "To do", placed as K899 (1) placed "record".
+
+## U15 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
+DEC-108 (Bob, question 26, in part): the doorbell inbox reads like an email inbox (unhandled highlighted, handled visible), sortable by time, status, knocker secret or not, project affected; limits lowered to at most 5 knocks per source and 10 in total in any 10 minutes, and a would-be knocker is told whenever a limit holds; an optional gatekeeper (machine work) dismisses obvious spam and denial-of-service submissions; discards go to an archive cleared automatically a week after receipt. The count-only tally of refused knocks stays open.
+Folded: BIO_Intake_Doctrine_v1_1.md §2a. On PR #6's branch. Owed (its owed: line): the new limits and published sentence, the knock page's notice, the inbox's highlighting and sorting, the gatekeeper and the discard archive; how a litigation hold affects the archive's clearing.
