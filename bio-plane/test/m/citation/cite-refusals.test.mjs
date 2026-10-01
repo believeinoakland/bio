@@ -142,6 +142,9 @@ test("R1, R5, R11: RETIRED_NOT_CITABLE (C-33.39) names every retired member, on 
     carries(r, CITE_CHECKS, "RETIRED_NOT_CITABLE");
     assert.deepEqual(r.offenders, ["INFO-2026-0003"]);
     assert.equal(r.code, "RETIRED_NOT_CITABLE");
+    /* The member reads "record", never "bundle" (N458); the interface names stay. */
+    assert.match(r.detail, /re-collect the source as a new record and cite that/);
+    assert.doesNotMatch(r.detail, /\bbundle\b(?!\.md)/);
   }
   assert.doesNotMatch(w.md(p), /INFO-2026-0001/);
 });
