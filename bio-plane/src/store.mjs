@@ -1038,12 +1038,6 @@ export class Store extends DurableObject {
          against a refusal without opening one. A COUNT AND NOTHING ELSE — the
          same line queueState, aiRuns and basisVersions draw. */
       suggestRefusals: prod.suggestRefusals,
-      /* PL-4 / IS-4: the outbound work list, reported for the same reason and
-         with one more of its own — this is the only counter in the store that
-         says how much traffic this instance is about to send to somebody else's
-         server, and a purge that reported scope ALL while it stood would leave a
-         leftover visible from OUTSIDE the instance. */
-      captureRequests: n("capture_requests", "lead_inquiry"),
 
       /* PL-12 / D-84: the declared-bias statements and the adoptions that put
          them in force, reported so a whole-store purge can PROVE it took them
@@ -1106,7 +1100,6 @@ export class Store extends DurableObject {
     // record-core R22: every declared table (legacy-store's are declared in the constructor), in one transaction.
     recordOf(this.ctx).transact(() => {
       recordOf(this.ctx).purge({ bundleId });
-      if (bundleId) captureRequestsOf(this.ctx).clearLead(bundleId);
     });
     const after = recordOf(this.ctx).proofCounts();
     const d = (k) => before[k] - after[k];
