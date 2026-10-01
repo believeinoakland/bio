@@ -38,3 +38,7 @@ Folded: MEMBER-KNOWLEDGE-DESIGN §3, BIO_Publication_v0_1.md §3 rule 7. On PR #
 ## U10 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-103 (Bob, question 20, as recommended): the full declared-bias lens is printed into the signed case (each statement's kind, subject, text, justification and evidence; public citations only, withheld ones counted); the page shows the acknowledgement, then the statements with their reasons, collapsed on screen and full in print; the publisher previews it before signing; earlier cases keep only the fingerprint.
 Folded: BIO_Declared_Bias_v0_1.md ("RULED 2026-10-01"). On PR #6's branch. Owed (its owed: line): a new signed case format with the statements, the withheld count, the page's lens section and print form, the pre-signing preview.
+
+## U11 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
+DEC-104 (Bob, question 21, as recommended): a hunch counts for nothing in any strength reading ("for now" lifted from strength R5), and strength says how many it left out; the hunch's letter stays on the link only, in the hunch style, beside "not counted"; a "Hunches to clear" list on question and project pages (status, never a notification), repeated by the check before publishing. Declared Bias's "composes normally" corrected.
+Folded: BIO_Declared_Bias_v0_1.md (hunch paragraph, corrected). On PR #6's branch. Owed (its owed: line): R5's "for now" lifted, the left-out count, the list.
