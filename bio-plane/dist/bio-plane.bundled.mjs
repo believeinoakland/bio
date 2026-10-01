@@ -15604,8 +15604,8 @@ CREATE TABLE IF NOT EXISTS seq (
 -- draw asks this table as well as the live rows.
 -- EXEMPT FROM op=purge, IN BOTH ARMS, ON SEQ'S REASONING. The standing rule that a
 -- DERIVED table is named in purge does not reach it: nothing here is derived from
--- the corpus, and clearing it is the defect it closes. hygiene.test.mjs lists it
--- among the purge exemptions, beside seq.
+-- the corpus, and clearing it is the defect it closes. record-core's R23 test
+-- (test/m/record-core) proves it exempt from both forms, beside seq.
 -- Written in the minting act's own transaction, never one of its own, so an act that
 -- rolls back (the review copy's dry run of the publish gates) takes its row back with
 -- it. Seeded at every boot by record-core seedMintLedger from the live rows of each gated
@@ -16528,7 +16528,7 @@ var RecordCore = class _RecordCore {
       }
     } catch {
     }
-    out.note = "read-only: a bundle whose manifest holds fewer rows than it has promotions lost a row to a repeated snap key before REC-176; nothing is rewritten. 'undetermined' is one promotion of a bundle with no creation row, which an overwrite and a store predating the creation row both produce. Which key collided is not recorded and is not guessed.";
+    out.note = "read-only: a record whose manifest holds fewer rows than it has promotions lost a row to a repeated snap key before REC-176; nothing is rewritten. 'undetermined' is one promotion of a record with no creation row, which an overwrite and a store predating the creation row both produce. Which key collided is not recorded and is not guessed.";
     return out;
   }
   /* ---- the write path (R33) ---- */
@@ -16698,14 +16698,14 @@ var RecordCore = class _RecordCore {
     }
     return Object.fromEntries(out);
   }
-  /** R74 (K861, plane R10): this module's share of the instance's figures, exported for `plane` to register under this
-   *  module's name through R63 (`registerCounts("record-core", RecordCore.COUNT_KEYS, (hid) => rc.ownCounts(hid))`); the
-   *  module registers nothing itself while plane holds its copy. Each figure is the table's rows less those naming a
-   *  bundle in `hid` by its `bundle_id`. `refs` is `connections`' table and not this module's figure (R31; K877). */
+  /** R74 (K861, plane R10): this module's share of the instance's figures, exported for `plane`, which registers it
+   *  under this module's name through R63 (`registerCounts("record-core", RecordCore.COUNT_KEYS, (hid) => rc.ownCounts(hid))`);
+   *  the module registers nothing itself. Each figure is the table's rows less those naming a bundle in `hid` by its
+   *  `bundle_id`. `refs` is `connections`' table and not this module's figure (R31; K877). */
   static COUNT_KEYS = Object.freeze(["bundles", "files", "history"]);
   static #COUNTED = Object.freeze({ bundles: "bundles", files: "files", history: "history" });
   /** R74, D-464 (A COUNT IS TAKEN THROUGH THE CALLER'S OWN SIGHT): R63's `counts(hid)` for this module's share, moved
-   *  from the plane's held copy with its reading kept. `hid` is membership's `hiddenBundles` (`{sql, args}`), or null for
+   *  here from the plane in T20 (K861) with its reading kept. `hid` is membership's `hiddenBundles` (`{sql, args}`), or null for
    *  a viewer that sees every bundle and for the direct internal call, which count whole. `COALESCE(k, '')`: a NULL key
    *  names no bundle, and `NULL NOT IN (…)` is NULL, which would drop the row. A figure whose table cannot be read is
    *  left out, and R63 answers it null. Synchronous; writes nothing; never throws. */
@@ -17873,9 +17873,9 @@ CREATE INDEX IF NOT EXISTS project_visibility_project ON project_visibility(proj
 -- project_participants precedent).
 -- THE ROW IS THE PROJECT AND ITS SETTING AND NOTHING ELSE. No date: a projection needs none, the act log
 -- above carries every date there is, and a column that moved on each recompute would make an UNCHANGED boot
--- rewrite every row with different bytes -- which is a RESTART PLUS A PURE READ MOVING A TABLE, and is what
--- versionnotice.test.mjs's no-write WITNESS refuses. That witness is the guarantee a live verification's
--- no-write claim rests on, so the derivation is idempotent at the byte instead.
+-- rewrite every row with different bytes -- which is a RESTART PLUS A PURE READ MOVING A TABLE, and a live
+-- verification's no-write claim rests on the tables reading the same before and after, so the derivation is
+-- idempotent at the byte instead (test/m/membership/t19-enrol-boot.test.mjs holds a second boot's rows unchanged).
 CREATE TABLE IF NOT EXISTS project_sight (
   project_id TEXT PRIMARY KEY,
   setting    TEXT NOT NULL CHECK (setting IN ('discoverable','hidden'))
@@ -18037,8 +18037,7 @@ __export(checks_exports3, {
   MEMBER_ID_CHECKS: () => MEMBER_ID_CHECKS,
   PROJECT_AUTHORITY_CHECKS: () => PROJECT_AUTHORITY_CHECKS,
   PROJECT_JOIN_REQUEST_CHECKS: () => PROJECT_JOIN_REQUEST_CHECKS,
-  PROJECT_VISIBILITY_CHECKS: () => PROJECT_VISIBILITY_CHECKS,
-  SIGNER_ENROLMENT_CHECKS: () => SIGNER_ENROLMENT_CHECKS
+  PROJECT_VISIBILITY_CHECKS: () => PROJECT_VISIBILITY_CHECKS
 });
 var at3 = (fn, region) => `src/membership/index.mjs ${fn} > ${region}`;
 var MEMBERSHIP_CHECKS = Object.freeze({
@@ -18081,21 +18080,6 @@ var MEMBERSHIP_CHECKS = Object.freeze({
     check: "C-102.12",
     where: at3("listenerRefusal", "is-listener-registration"),
     translation: "A part of this instance tried to register a listener it had already registered, or one that another part already holds, so the second registration was refused and the first still stands. This is a fault in how the instance was built, not in the record, and nothing in the record changed."
-  }),
-  SIGNER_KEY_HELD_BY_ANOTHER: Object.freeze({
-    check: "C-96.15",
-    where: at3("signerRegisterOwn", "is-signer-key-held"),
-    translation: "This key is registered to another member, so it cannot be yours. Make a new key in this browser. Nothing was changed."
-  }),
-  SIGNER_KEY_REVOKED: Object.freeze({
-    check: "C-96.16",
-    where: at3("signerRegisterOwn", "is-signer-key-revoked"),
-    translation: "This key was revoked, so it cannot be registered again. Make a new key in this browser, or ask an administrator. Nothing was changed."
-  }),
-  MACHINE_CANNOT_REGISTER_KEY: Object.freeze({
-    check: "C-96.17",
-    where: at3("signerRegisterOwn", "is-machine-register-key"),
-    translation: "A member registers their own signing key, from their own signed-in session. The credential that asked here has no member behind it: it is an automated one, the operator's token, or a call with nobody signed in. Sign in as yourself to register your key, or ask an administrator to register one for you. Nothing was changed."
   }),
   /* R95 (K774): an enrolment whose password the registered setter could not record (or with no setter registered).
      The next free number of C-96, this module's family for the acts on a member's own row (K107 (3), K174). */
@@ -18160,11 +18144,6 @@ var CUSTODIAL_CHECKS = {
     check: "C-96.7",
     where: "src/membership/index.mjs memberSet > is-admin-requires-vote",
     translation: "An administrator cannot be deactivated by another administrator acting alone. Removing an administrator takes a majority of all administrators, in which the one facing removal is counted but does not vote. Nothing was changed."
-  },
-  BAD_KEY: {
-    check: "C-96.8",
-    where: "src/membership/index.mjs signerAdd > is-signer-key-shape",
-    translation: "That is not a public key this group can register. It takes the base64 part of an ssh-ed25519 public key, the part that begins AAAA. Nothing was written."
   },
   TARGET_NOT_AN_ADMIN: {
     check: "C-96.9",
@@ -18290,18 +18269,6 @@ var CASE_AUTHORITY_CHECKS = {
        because the same code now answers at both acts and the old sentence was false at one. */
     where: "src/membership/index.mjs caseAuthority > is-case-signer-owner",
     translation: "A case and each finding in it are published in the project's name, so each has to be signed by an owner of that project. This signature belongs to someone who is not one of its owners. Nothing was committed. Ask an owner of the project to review it and sign it."
-  }
-};
-var SIGNER_ENROLMENT_CHECKS = {
-  SIGNER_MEMBER_NOT_ENROLLED: {
-    check: "C-63.1",
-    where: "src/membership/index.mjs #signerMemberBar > is-signer-member-attesting",
-    translation: "That person has not enrolled yet. A signing key belongs to a member who has taken up their invitation and chosen a handle; until then this instance would refuse anything signed with it, so registering it now would put a key on the roster that cannot sign. Nothing was written. Send them their invitation link, and register the key once they have enrolled."
-  },
-  SIGNER_MEMBER_NOT_ACTIVE: {
-    check: "C-63.2",
-    where: "src/membership/index.mjs #signerMemberBar > is-signer-member-attesting",
-    translation: "That member\u2019s membership is not active, so this instance would refuse anything signed with their key. Nothing was written. Reinstate the member first if they should be able to sign again."
   }
 };
 
@@ -18478,12 +18445,14 @@ var MODULE_ORDER = Object.freeze([
   "case-authoring",
   "review",
   /* 9 */
+  "local-facts",
   "standards",
   "conformance",
   "consequences",
   "action-grammar",
   "actions",
   "action-clocks",
+  "filing-templates",
   "filings",
   "escalation",
   "action-plans",
@@ -18599,11 +18568,11 @@ var Membership = class _Membership {
    *
    * The figures `op=stats` and purge's proof report of this module's project-keyed tables (REC-27, D-137: the
    * participation graph and the pending owner votes, so a purge can PROVE it took them), shaped as record-core R63's
-   * `counts(hid)` with its key list, for `plane` to register under this module's name (`registerCounts("membership",
-   * [...Membership.COUNT_KEYS], (hid) => m.counts(hid))`). This module registers nothing itself while plane holds its
-   * copy (`src/plane/held.mjs`), so no figure is registered twice. `hid` is R63's: R88's `hiddenBundles(viewer)`, the
-   * bundles the caller may not see, or null for a caller that sees every bundle and for the direct internal call (purge's
-   * proof among them), which count whole. Each table drops the rows whose `project_id` is in `hid` (D-464: a count over
+   * `counts(hid)` with its key list, which `plane` registers under this module's name (`registerCounts("membership",
+   * [...Membership.COUNT_KEYS], (hid) => m.counts(hid))`, plane R10), so this module registers nothing itself and no
+   * figure is registered twice. `hid` is R63's: R88's `hiddenBundles(viewer)`, the bundles the caller may not see, or
+   * null for a caller that sees every bundle and for the direct internal call (purge's proof among them), which count
+   * whole. Each table drops the rows whose `project_id` is in `hid` (D-464: a count over
    * rows the caller could not all read is a disclosure of existence). `COALESCE(project_id, '')`: a NULL key names no
    * bundle, and `NULL NOT IN (…)` is NULL, so without it the row would be dropped. Synchronous; writes nothing. */
   static COUNT_KEYS = Object.freeze(["projectParticipants", "projectOwnerVotes"]);
@@ -19039,8 +19008,7 @@ var Membership = class _Membership {
    * verbs, and the brief's). An ABSENT identity is also not asked: that is every internal
    * caller (`cite` promoting its own edit, `forkProject`, the version pointer's own write),
    * and the control plane stamps it on every enumerated act, deleted first so a caller can
-   * never name one. The suite's negative control removes the stamp from one act and its arm
-   * goes red, which is what makes "the control plane always stamps it" a measurement.
+   * never name one.
    *
    * WHAT IT DOES NOT TOUCH, and each is deliberate: §7.13's add-an-owner (`projectOwnerRescue`)
    * is the ONE administrator path and keeps its condition, its vote and its record — it never
@@ -19155,7 +19123,7 @@ var Membership = class _Membership {
    * `#projectAuthority` or its own owner test, so C-56 and NOT_THE_OWNER are only ever said to a
    * caller who can already see the project (an invited member, or an administrator, §7.3) — and
    * say nothing a caller did not already know. Asked the other way round, the positional refusal is
-   * the oracle (the suite's `position-first` control arm measures exactly that). */
+   * the oracle (R61; `test/m/membership/sight.test.mjs`'s R61 test holds that an outsider never learns ownership). */
   /* N142: a named service (the layer-6 modules gate with it and `viewerPredicate`), so it is total: an id that is not
      a non-empty string names no bundle, and nothing it is handed makes it throw. */
   inSight(bundleId, viewer) {
@@ -19221,7 +19189,7 @@ var Membership = class _Membership {
    * CASE below and nowhere else. `#visibilityOf` reads the answer; the directory joins the same table; nobody
    * restates the default. REC-149's first build DID restate it — its directory took candidates from the
    * visibility table — and its own `default-discoverable` control arm caught that by flipping the default and
-   * watching the directory not move. That arm now flips THIS CASE, and both must move together.
+   * watching the directory not move.
    *
    * DERIVED, NEVER AUTHORED. `project_visibility` stays the record: append-only, one row per owner's act. This
    * table is a projection of it that a statement can join, recomputed WHOLE at every boot (the `#seedMintLedger`
@@ -19232,21 +19200,21 @@ var Membership = class _Membership {
    * FIRST DRAFT HAD. It carried a third column, `at`, a fresh timestamp written on every recompute — so an
    * UNCHANGED boot rewrote every row with different bytes, and A RESTART PLUS A PURE READ THEN MOVED A TABLE.
    * `versionnotice.test.mjs`'s no-write WITNESS caught it by name on the first full battery (`WITNESS QUIET`
-   * and `NOTHING WRITTEN (the whole store)`, both naming `project_sight`), which is what that witness is FOR:
-   * CLAUDE.md §5 rests every live verification's no-write guarantee on the record's tables reading the same
-   * before and after, so a derivation that writes on every boot does not cost a test, it costs the instrument.
+   * and `NOTHING WRITTEN (the whole store)`, both naming `project_sight`): a live verification's no-write guarantee
+   * rests on the record's tables reading the same before and after, so a derivation that writes on every boot
+   * costs that guarantee.
    * Two narrower fixes were tried at the STATEMENT and BOTH ARE REFUSED BY WORKERD with
    * `Error: incomplete input: SQLITE_ERROR` — a `WHERE` on the conflict action, and the same guard moved into
    * a LEFT JOIN against the index — while `node:sqlite` prepares each of them without complaint, which is the
    * receipt for driving the plane's own engine rather than a local one. So the column went instead: a
    * projection needs no date of its own, the act log carries every date there is, and an unchanged recompute
-   * now writes rows BYTE-IDENTICAL to the ones it found. That is idempotence at the only level the witness
-   * reads, and it costs nothing.
+   * now writes rows BYTE-IDENTICAL to the ones it found, and it costs nothing (`test/m/membership/t19-enrol-boot.test.mjs`
+   * holds a second boot's index idempotent at the byte, R45 and R85).
    *
    * COST, STATED. Two statements. Given a projectId both address ONE row through a primary key and an indexed
    * lookup; given none, both run once over the projects in `bundles` — inside SQLite, nothing per row in JS,
-   * at boot only, reached by no op. `derivation-bounds.test.mjs` grades JS loops over an unbounded `#rows(` and
-   * by its own statement cannot see work inside SQL; this is stated rather than left for that reader to miss. */
+   * at boot only, reached by no op. The work is inside SQL, so it is stated here rather than left for a reader of
+   * this file's JS loops to miss. */
   reindexProjectSight(projectId = null) {
     this.sql.exec(
       `DELETE FROM project_sight
@@ -19815,8 +19783,7 @@ var Membership = class _Membership {
      `#projectAuthority` answers "not asked" for an ABSENT identity. So an ABSENT viewer (the
      parameter not sent at all: null) is NOT ASKED here, on that precedent; ANY viewer that was sent,
      including an empty one, is asked through `#inSight` and fails closed. The control plane stamps
-     every roster act (`PROJECT_ACTIONS`), and the suite's `roster-stamp-dropped` arm is what makes
-     that a measurement: without the stamp these acts fall back to disclosing, and its arms go red. */
+     every roster act (`PROJECT_ACTIONS`): without the stamp these acts would fall back to disclosing. */
   rosterInSight(projectId, viewer) {
     return viewer === null || viewer === void 0 || this.inSight(projectId, viewer);
   }
@@ -19840,9 +19807,8 @@ var Membership = class _Membership {
    *  assembles no SQL of its own, and every row question it asks goes through a
    *  predicate a refusal also runs. A LIMIT is deliberately NOT taken — a bound
    *  that stopped before an owner row would withhold the act from a genuine
-   *  owner, which is the over-strictness failure this item's control arms exist
-   *  to catch, and what bounds this set is roster ACTS (an invite, a join) and
-   *  never a corpus. */
+   *  owner, the over-strictness failure, and what bounds this set is roster ACTS
+   *  (an invite, a join) and never a corpus. */
   ownsAnyProject(memberId) {
     return this.#rows(`SELECT project_id FROM project_participants WHERE member_id=?`, memberId).some((p) => this.isProjectOwner(p.project_id, memberId));
   }
@@ -20684,7 +20650,8 @@ var Membership = class _Membership {
    *  same roster before this item and were whole except for who supplied the
    *  answer. A bearer credential stamps `class:<cls>`, which is in no roster,
    *  so it is refused here even if the control plane's fence in front of it were
-   *  removed — which is exactly what the `fence-dropped` control arm measures.
+   *  removed (R9's test in `test/m/membership/not-an-admin-visibility.test.mjs`
+   *  asks it with a bearer's stamp and no fence in front).
    *
    *  IT IS ASKED BEFORE `NO_SUCH_MEMBER`, deliberately: who may ask is settled
    *  before the record answers whether a member exists, so a caller with no
@@ -21063,164 +21030,6 @@ var Membership = class _Membership {
       detail: "reactivated as an ordinary member. Administrator status is not restored by reactivation: the group voted them out under 4.7, and putting them back is an appointment, which needs the consensus of all existing administrators like any other."
     } : {} };
   }
-  /* ---- the signer-key copies that wait (K636 BOB-1, N445; T20) ----
-   *
-   * `credentials` holds each of these (its R6, R9, R10, with C-63, C-96.8 and C-96.15–.17). MEMBERSHIP #14's re-scan
-   * (T20, J1) found one caller still on two copies, ratification's `preflight.test.mjs` (`w.membership.signerRegisterOwn`
-   * and `signerRevokeOwn`), so those two, and the member bar, key shape and rows only they answer through, wait for
-   * it to re-point (P4); every other copy is deleted. */
-  /* D-158 — THE WRITE HALF, and WHICH WAY the two were made to agree is the
-   * decision, not a detail.
-   *
-   * The roster tells the truth; the gate is NOT relaxed. Letting the gate accept
-   * a key whose member never enrolled would WIDEN AN AUTHORITY: a signature would
-   * attest in the name of a roster slot no person has taken up, and the
-   * `attestor_member` this plane stamps on a published edition would be an
-   * attribution nobody made. That is the class D-136 closed for the §4.7 vote one
-   * act over. Membership Architecture v2 §6 is the authority — enrolment is where
-   * the person chooses their handle and their password — and §11 item 8 already
-   * says a member stopped only by the absence of a signing key is the key doing
-   * the capability's job. Narrowing a claim and widening an authority are not two
-   * spellings of one fix.
-   *
-   * TWO CODES, because there are two facts and one sentence could not be true of
-   * both. A member with no handle has NEVER ENROLLED; a member with one whose
-   * status is not `active` has been revoked or is otherwise not standing. The
-   * answer carries the STORED status and the enrolment fact beside the code, so
-   * the caller is told the state rather than a word invented to cover both.
-   *
-   * ANSWERS NULL when the member may attest, so a caller reads
-   * `const bar = …; if (bar) return bar;` and nothing else. */
-  #signerMemberBar(memberId) {
-    const m = this.#one(`SELECT member_id, status, handle FROM members WHERE member_id=?`, memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
-    if (m.status === "active") return null;
-    const enrolled = typeof m.handle === "string" && m.handle !== "";
-    const refusal20 = (code, detail) => {
-      const row2 = SIGNER_ENROLMENT_CHECKS[code];
-      return {
-        ok: false,
-        reason: code,
-        code,
-        check: row2.check,
-        translation: row2.translation,
-        detail,
-        memberId: m.member_id,
-        member_status: m.status,
-        enrolled
-      };
-    };
-    if (!enrolled)
-      return refusal20(
-        "SIGNER_MEMBER_NOT_ENROLLED",
-        `${m.member_id} has not enrolled: status '${m.status}', no handle chosen. op=ratify weighs a signature against the member's own standing, so a key registered now would sit on the roster as one this instance would refuse. Nothing was written.`
-      );
-    return refusal20(
-      "SIGNER_MEMBER_NOT_ACTIVE",
-      `${m.member_id} is on the roster with status '${m.status}' rather than 'active'. op=ratify weighs a signature against the member's own standing and would refuse this one. Nothing was written.`
-    );
-  }
-  /* The shape R25 and R89 both take: the base64 field of an ssh-ed25519 public key (the OpenSSH wire bytes, which
-     an Ed25519 WebCrypto key exports to as well; `sshsig.mjs` verifies either). One predicate, so the two doors
-     cannot disagree about what a key is. */
-  static #keyShaped(keyB64) {
-    return typeof keyB64 === "string" && /^AAAA[A-Za-z0-9+/=]+$/.test(keyB64);
-  }
-  /* ===== R89–R91 (N364; DEC-80 item 4, Bob's ruling K509 (2)) — A MEMBER REGISTERS THEIR OWN KEY =====
-   *
-   * The key is made in the member's own browser, never by another, and each use is confirmed on the device (that is
-   * the interface's to keep; the plane cannot test it). From a signed-in session the member registers its public
-   * half here, and it attests exactly as an administrator-registered key does (R91: `credentials`' attesting
-   * predicate never reads `origin`). Registration is no longer a custodial act, so what keeps it accountable is that every administrator
-   * is told (`notified`, R86's list at this instant, and the key's row, which the feed's notice reads: N375, K535)
-   * and any of them can revoke the key (R26).
-   *
-   * THE ORDER, and each step is the requirement's: who is asking (a machine credential, the operator's bearer or no
-   * stamp at all has no member to register for: C-96.17, N387); the key's shape (R25's answer, RELAYED from R25's
-   * own region so C-96.8 keeps its one site); the member's standing (R25's bar, the gate's own question); and whether ANOTHER member
-   * holds the key. A held key is never rebound, and the refusal names no one: whose key it is, is not the caller's
-   * to learn. A key `by` already holds and that is active answers `existed: true` and is not rewritten: its origin
-   * and who registered it stay as first recorded. One `by` holds that was revoked is refused and stays revoked
-   * (K535): only an administrator re-activates a key (R26), so an administrator's revocation sticks. */
-  /* NAMED COPY (K636 BOB-1; J5): `credentials` R9 is the one. Its last caller, ratification's `preflight.test.mjs`,
-     re-points to it, and then this copy is deleted (T20, J1). */
-  signerRegisterOwn({ keyB64, comment = null, by = null } = {}) {
-    if (by === null || by === void 0 || by === "" || isMachineIdentity(by)) {
-      const row2 = MEMBERSHIP_CHECKS.MACHINE_CANNOT_REGISTER_KEY;
-      return {
-        ok: false,
-        reason: "MACHINE_CANNOT_REGISTER_KEY",
-        code: "MACHINE_CANNOT_REGISTER_KEY",
-        check: row2.check,
-        translation: row2.translation,
-        by: by || null,
-        detail: "a member registers their own signing key from their own signed-in session. A machine credential, the operator's bearer and an unstamped call have no member behind them to hold one; an administrator registers a key for a member with op=signeradd. Nothing was written."
-      };
-    }
-    if (!_Membership.#keyShaped(keyB64)) {
-      return _Membership.#custodialRefusal("BAD_KEY", "expected the base64 field of an ssh-ed25519 public key");
-    }
-    const bar = this.#signerMemberBar(by);
-    if (bar) return bar;
-    const held = this.#one(`SELECT member_id, status, origin, registered_by FROM signers WHERE key_b64=?`, keyB64);
-    if (held && held.member_id !== by) {
-      const row2 = MEMBERSHIP_CHECKS.SIGNER_KEY_HELD_BY_ANOTHER;
-      return {
-        ok: false,
-        reason: "SIGNER_KEY_HELD_BY_ANOTHER",
-        code: "SIGNER_KEY_HELD_BY_ANOTHER",
-        check: row2.check,
-        translation: row2.translation,
-        detail: "this key is registered to another member of this group, and a registered key is never rebound by its own member's act. Nothing was written."
-      };
-    }
-    if (held && held.status !== "active") {
-      const row2 = MEMBERSHIP_CHECKS.SIGNER_KEY_REVOKED;
-      return {
-        ok: false,
-        reason: "SIGNER_KEY_REVOKED",
-        code: "SIGNER_KEY_REVOKED",
-        check: row2.check,
-        translation: row2.translation,
-        detail: "this key of yours was revoked, and a revoked key is re-activated only by an administrator (op=signerset), so that a revocation stands. Nothing was written."
-      };
-    }
-    if (!held)
-      this.sql.exec(
-        `INSERT INTO signers (key_b64,member_id,comment,status,added,status_by,origin,registered_by)
-         VALUES (?,?,?,'active',?,?,'self',?)`,
-        keyB64,
-        by,
-        comment ?? null,
-        (/* @__PURE__ */ new Date()).toISOString(),
-        by,
-        by
-      );
-    return {
-      ok: true,
-      keyB64,
-      memberId: by,
-      status: "active",
-      origin: held ? held.origin === "self" ? "self" : "admin" : "self",
-      registered_by: held ? _Membership.#statusBy(held.registered_by) : by,
-      existed: !!held,
-      notified: this.activeAdmins(),
-      detail: held ? "this key is already registered to you and active; nothing was written. Every administrator is told of the registration, and any of them can revoke the key." : "registered to you, and it attests as any registered key does. Every administrator is told of the registration, and any of them can revoke the key."
-    };
-  }
-  /* R90 (N364): a member revokes their own key, and this is never refused for a key they hold, whatever its state
-     or theirs (revoking narrows a claim, D-158). A key they do not hold answers NO_SUCH_KEY exactly as `signerSet`
-     answers a key no one holds, whoever holds it, so the answer never says whether a key is registered to somebody
-     else. A replacement is a new R89; an administrator revokes any key by R26. */
-  /* NAMED COPY (K636 BOB-1; J5): `credentials` R10 is the one. Its last caller, ratification's `preflight.test.mjs`,
-     re-points to it, and then this copy is deleted (T20, J1). */
-  signerRevokeOwn({ keyB64, by = null } = {}) {
-    const row2 = typeof keyB64 === "string" && typeof by === "string" && by !== "" ? this.#one(`SELECT status FROM signers WHERE key_b64=? AND member_id=?`, keyB64, by) : null;
-    if (!row2) return { ok: false, reason: "NO_SUCH_KEY" };
-    const already = row2.status === "revoked";
-    if (!already) this.sql.exec(`UPDATE signers SET status='revoked', status_by=? WHERE key_b64=?`, by, keyB64);
-    return { ok: true, keyB64, status: "revoked", by, already };
-  }
 };
 var OF2 = /* @__PURE__ */ new WeakMap();
 function membershipOf(ctx, { record = null } = {}) {
@@ -21460,6 +21269,13 @@ var PROMOTION_CHECKS = {
     check: "C-86.14",
     where: "src/promotion/index.mjs #promote > is-revision-regroups-bundle",
     translation: "This change says the item was produced by a different group than the record holds. A change can alter what a document says, but not whose it is: the record keeps who produced each thing so it can be held to account, and letting a later change move that would let anyone re-attribute it. Nothing was written. Send it again with the group the record holds, or with none."
+  },
+  /* R56 (K899 (3), K904, N456; Bob's form (b)): a project's stage is computed (`project-stage` R2), so a creation stating
+     any other stage than `forming` or `closed` is refused; a revision's move is R15's over the declared table. */
+  PROJECT_STAGE_COMPUTED: {
+    check: "C-86.15",
+    where: "src/promotion/index.mjs #promote > is-project-stage-computed",
+    translation: "A project's stage is worked out from its record (the questions it holds, what it has concluded and what it has published), so it is never written by hand. Only closing a project, with its reason, or reopening it is written. Nothing was written."
   },
   BUNDLE_ID_DISAGREES: {
     check: "C-1.1",
@@ -21707,7 +21523,7 @@ async function checkMechanicalConformance({ files, sha256: sha2562 }, findings) 
       "C-20.1",
       "info",
       'the history manifest carries no write order (a seq on every entry), so mechanical promotions were audited in snap-key order, which is not a clock: "prior" may not be the snapshot written before (I-20)',
-      ["re-export the bundle from a plane that writes seq into _history/manifest.json"]
+      ["re-export the record from a plane that writes seq into _history/manifest.json"]
     ));
   for (let i = 0; i < entries.length; i++) {
     const e = entries[i];
@@ -21840,7 +21656,7 @@ async function checkDivergence({ files, sha256: sha2562 }, findings) {
       "C-17.2",
       "info",
       "the history manifest carries no write order (a seq on every entry), so the divergence was classified in snap-key order, which is not a clock: its anchor and intervening set may not be the ones written (I-20)",
-      ["re-export the bundle from a plane that writes seq into _history/manifest.json"]
+      ["re-export the record from a plane that writes seq into _history/manifest.json"]
     ));
   const names = Array.isArray(man.files) ? man.files.map((e) => e && e.name) : [];
   if (cls.rung === "disjoint-auto")
@@ -21858,7 +21674,7 @@ async function checkDivergence({ files, sha256: sha2562 }, findings) {
       ["rebase via a reconciliation session", "supersede: human selects one, the other preserved as a diverged branch in _history", "apply-disjoint only if re-examination shows the overlap illusory"]
     ));
 }
-var STATE_MOVE_FENCED_SINCE = { bias: "2026-09-24", "*": "2026-09-26" };
+var STATE_MOVE_FENCED_SINCE = { bias: "2026-09-24", project: "2026-10-01", "*": "2026-09-26" };
 var fenceOf = (t) => STATE_MOVE_FENCED_SINCE[t] ?? STATE_MOVE_FENCED_SINCE["*"];
 function recordedMoves(files) {
   const man = readJson(files, "_history/manifest.json");
@@ -22179,7 +21995,7 @@ async function checkReleaseSignature({ folderName, fm, files, releaseRegistry, s
     findings.push(finding(
       "error",
       `the key registry is declared present but unreadable at this call site (${regAny.reason || "no reason given"}); the gate cannot check signatures and will not pass them`,
-      ["restore access to the registry bundle", "do not promote until the registry reads"]
+      ["restore access to the registry record", "do not promote until the registry reads"]
     ));
     return findings;
   }
@@ -22190,11 +22006,11 @@ async function checkReleaseSignature({ folderName, fm, files, releaseRegistry, s
     for (const e of history.filter((x) => x && x.from_state === "collected" && x.to_state === "verified" && x.timestamp && x.timestamp >= migration))
       findings.push(finding(
         "error",
-        `release at ${e.timestamp} is at or after the migration instant ${migration}, but this bundle is ${fm.schema || "a pre-contract schema"}: the signed release register exists only at information@2, so this ratification cannot carry a signature the gate can check`,
+        `release at ${e.timestamp} is at or after the migration instant ${migration}, but this record is ${fm.schema || "a pre-contract schema"}: the signed release register exists only at information@2, so this ratification cannot carry a signature the gate can check`,
         [
-          "migrate the bundle to information@2, then sign the transition and add the releases[] entry",
+          "migrate the record to information@2, then sign the transition and add the releases[] entry",
           "or retire it with the reason recorded (verified -> retired, op=retire), if the release cannot be signed",
-          "either way the repair is made where the bundle stands: C-4.2 refuses any transition that is not an edge in this machine"
+          "either way the repair is made where the record stands: C-4.2 refuses any transition that is not an edge in this machine"
         ]
       ));
     return findings;
@@ -22232,7 +22048,7 @@ async function checkReleaseSignature({ folderName, fm, files, releaseRegistry, s
         [
           "sign the transition and add the releases[] entry",
           "or retire it with the reason recorded (verified -> retired, op=retire), if the release cannot be signed",
-          "either way the repair is made where the bundle stands: C-4.2 refuses any transition that is not an edge in this machine"
+          "either way the repair is made where the record stands: C-4.2 refuses any transition that is not an edge in this machine"
         ]
       ));
       continue;
@@ -22264,7 +22080,7 @@ async function checkReleaseSignature({ folderName, fm, files, releaseRegistry, s
       findings.push(finding(
         "warn",
         `release at ${e.timestamp} records registry ${String(rec.registry_sha256).slice(0, 12)}\u2026 but the registry in force is ${String(reg.sha256).slice(0, 12)}\u2026; the usual cause is signing against a stale mirror`,
-        ["re-verify against the recorded registry version out of the registry bundle history"]
+        ["re-verify against the recorded registry version out of the registry record's history"]
       ));
     const message2 = latin1(releaseMessage({
       bundle: folderName,
@@ -22497,12 +22313,12 @@ function withProducingGroup(text5, slug) {
 }
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.50.0";
+var CATALOG_VERSION = "1.51.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var ROW_CENSUS = Object.freeze({
   version: CATALOG_VERSION,
-  rows: 986,
-  digest: "dd61926a033ecd289e1fa7446cae09aa976470daf13bc46d8bd379b072ff43a5"
+  rows: 984,
+  digest: "b7c43a32428e85c549fc98c3d1f74408f7a958cb47b9a4f9bc2b7f751cfd1d53"
 });
 var hex2 = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te3 = new TextEncoder();
@@ -22626,7 +22442,7 @@ async function runGate({
     if (!probe.present && probe.heldInParts)
       errors.push({
         check: "PLANE_HELD_IN_PARTS",
-        detail: `registered capture is held only in parts: this plane's acquisition receipt names the whole hash, and the working bucket stores the document as its parts, each under its own hash, but the bundle's data/provenance.json names no parts for it. Publication copies the parts the record names, so name them there, or register the parts rather than the whole`,
+        detail: `registered capture is held only in parts: this plane's acquisition receipt names the whole hash, and the working bucket stores the document as its parts, each under its own hash, but the record's data/provenance.json names no parts for it. Publication copies the parts the record names, so name them there, or register the parts rather than the whole`,
         where: { path: r.path, sha256: r.capture_sha }
       });
     else if (!probe.present)
@@ -22942,7 +22758,7 @@ var Promotion = class {
         found.push({
           check: g.module,
           severity: "error",
-          message: `${g.module}'s grammar threw on ${ctx && ctx.folderName}, so it judged nothing and the bundle is not passed: ${cut(e && e.message ? e.message : e, 200)}`
+          message: `${g.module}'s grammar threw on ${ctx && ctx.folderName}, so it judged nothing and the record is not passed: ${cut(e && e.message ? e.message : e, 200)}`
         });
       }
     } }));
@@ -23157,7 +22973,7 @@ var Promotion = class {
         const seen = head && sight === "EXISTENCE" ? membership.existenceAct(bundleId, pkg.actorViewer ?? "") : null;
         if (seen) return seen;
         if (!head || sight !== "FULL")
-          return refusal("ABSENT", "update attempted against a bundle that does not exist");
+          return refusal("ABSENT", "update attempted against a record that does not exist");
       }
       const held = record.manifestEntry(bundleId, snapKey);
       const kind = replay ? "promotion-replay" : "promotion";
@@ -23182,7 +22998,7 @@ var Promotion = class {
           detail: "the record already holds this promotion under this snap key, byte for byte; nothing was written"
         };
       }
-      if (head && base === null) return refusal("EXISTS", "creation attempted against an existing bundle");
+      if (head && base === null) return refusal("EXISTS", "creation attempted against an existing record");
       if (head && (promotedTitle === void 0 || promotedTitle === null || promotedTitle === "") && head.title)
         promotedTitle = head.title;
       let typeCarried = null;
@@ -23213,6 +23029,12 @@ var Promotion = class {
             { fields: unstated }
           );
       }
+      if (!head && promotedType === "project" && promotedState !== "forming" && promotedState !== "closed")
+        return refusal(
+          "PROJECT_STAGE_COMPUTED",
+          `this new project states current_state '${cut(promotedState, 40)}'. A project is created forming (or closed); its stage after that is worked out from its record, never written. Send it again at forming. Nothing was written.`,
+          { current_state: cut(promotedState, 40), legal: ["forming", "closed"] }
+        );
       if (promotedType === "project") {
         const key = projectNameKey(promotedTitle);
         if (!key)
@@ -23222,7 +23044,7 @@ var Promotion = class {
       if (head && normalizeType(head.type) === "project") {
         const to = promotedState, from = head.currentState;
         const deactivating = from !== "closed" && to === "closed" && promotedClosedReason === "abandoned";
-        const reactivating = from === "closed" && to === "investigating";
+        const reactivating = from === "closed" && to !== "closed";
         if (deactivating || reactivating) {
           const actor = typeof pkg.actorMemberId === "string" && pkg.actorMemberId ? pkg.actorMemberId : null;
           if (!actor || !membership.isProjectOwner(bundleId, actor))
@@ -23239,7 +23061,7 @@ var Promotion = class {
       if (head && head.bundleSha !== base)
         return refusal(
           "CAS_STALE",
-          "the base this revision names is not the bundle's current version: someone else changed it since it was read. Nothing was written.",
+          "the base this revision names is not the record's current version: someone else changed it since it was read. Nothing was written.",
           { expected: head.bundleSha, got: base }
         );
       if (head && typeCarried === null && promotedType !== normalizeType(head.type) && !replay)
@@ -42864,10 +42686,10 @@ var checks_exports14 = {};
 __export(checks_exports14, {
   AI_CREDENTIAL_CHECKS: () => AI_CREDENTIAL_CHECKS,
   CREDENTIALS_CHECKS: () => CREDENTIALS_CHECKS,
-  SIGNER_ENROLMENT_CHECKS: () => SIGNER_ENROLMENT_CHECKS2
+  SIGNER_ENROLMENT_CHECKS: () => SIGNER_ENROLMENT_CHECKS
 });
 var at5 = (fn, region) => `src/credentials/index.mjs ${fn} > ${region}`;
-var SIGNER_ENROLMENT_CHECKS2 = Object.freeze({
+var SIGNER_ENROLMENT_CHECKS = Object.freeze({
   SIGNER_MEMBER_NOT_ENROLLED: Object.freeze({
     check: "C-63.1",
     where: at5("#signerMemberBar", "is-signer-member-attesting"),
@@ -43221,7 +43043,7 @@ var Credentials = class _Credentials {
     if (m.status === "active") return null;
     const enrolled = typeof m.handle === "string" && m.handle !== "";
     const refusal20 = (code, detail) => {
-      const row2 = SIGNER_ENROLMENT_CHECKS2[code];
+      const row2 = SIGNER_ENROLMENT_CHECKS[code];
       return {
         ok: false,
         reason: code,
