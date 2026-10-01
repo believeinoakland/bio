@@ -34,7 +34,7 @@
  *   consequences   `addressed` (its R9); default `consequencesModule(host)` (K250).
  *   actions        `actionRead` (its R29: the ledger, legs, `breach`, counterparty); default `actionsOf(host)` (K253).
  *                  Its `actionFacts` (R12, the one clock rule) is imported, a pure function. An action's
- *                  `premise_override` (its R8) is read from its document (R23).
+ *                  `premise_override` (its R8) is read from its document by its `Actions.overrideOf` (R23).
  *   filings        `filingsFor` (its R13), `availableActions` (its R21); default `filingsOf(host)` (K248, B8).
  *   view           the active profiles' combined view (`jurisdictions.combine`, record-core R26), or null.
  *   now            the instance clock, an ISO string (default: the wall clock, to the second). */
@@ -44,7 +44,7 @@ import { membershipOf } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { conformanceOf, noSuchDetermination, determinationSuperseded } from "../conformance/index.mjs";
 import { consequencesModule } from "../consequences/index.mjs";
-import { actionsOf, actionFacts, noSuchAction } from "../actions/index.mjs";
+import { Actions, actionsOf, actionFacts, noSuchAction } from "../actions/index.mjs";
 import { filingsOf } from "../filings/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { isMachineIdentity } from "../../checks/bio-checks.mjs";
@@ -107,12 +107,9 @@ const actIdOf = (d) => actOf(d).id ?? null;
 const projectOf = (d) => d.project ?? null;
 const recordedAtOf = (d) => d.at ?? null;
 
-/** actions R8 (K600 (a)): the `premise_override` an action's document states, or null when it states none. Read from
- *  the document, where actions' rule says it is stated, after `actionRead` has answered the action to this viewer. */
-function overrideOf(text) {
-  const v = parseFm(text)?.premise_override;
-  return v === undefined || v === null || v === false || v === "null" || v === "" ? null : v;
-}
+/** actions R8 (K600 (a)): the `premise_override` an action's document states, `{reason}`, or null when it states none,
+ *  by actions' own rule (`Actions.overrideOf`), read after `actionRead` has answered the action to this viewer. */
+const overrideOf = (text) => Actions.overrideOf(parseFm(text));
 
 /** actions R25/R29 (K253): an action's correspondence ledger, in order, `[{ord, direction, at, recorded_at}]`. */
 function ledgerOf(block) {

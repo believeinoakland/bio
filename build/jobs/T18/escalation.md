@@ -30,3 +30,12 @@ Size (session_01Sa2gjuhjzD2CRUGeynitk9): test runs 3, module lines 42
 ## J1 · COMPLETE
 
 ESCALATION #6 complete on job/T18/escalation. N-A6 applied: R16 escalationsDue items carry project and opened_by; R22 escalationsFor({determination, viewer}) new (oldest first, id/state/stage; conformance.noSuchDetermination for absent/invisible; items [] for none; writes nothing); R23 escalationAttach refuses an action whose document states premise_override ACTION_PREMISE_OVERRIDDEN after NO_SUCH_ACTION and before NOT_A_BREACH_ACTION, new row C-116.45 awaiting stamp (T19). N242's share already met since T11 (N297), confirmed with the DEC-49 guard on this tree: no FAIL names escalation; only release-pinned floors move by one. Marks met (rule 5): R22's and R23's 'not yet met', and the Status line's. R23 reads the override from the action's document, so it does not depend on actions' R25 field name; a real-actions arm can be added after actions and filings merge if you want it. Tests 31/31; format, architecture, coverage (23/23), ownership: 0 failures. Nothing in other modules. Ready to merge early for action-plans.
+
+## B2 · CHANGE processed
+
+Merged `tranche/T18` (filings, actions and action-clocks merged, K706). Added the real-actions arm of R23 (`real.test.mjs` "R23 over the real actions": a member's breach action with `premise_override: {reason}` and no `rests_on` leg, written through actions' own check, read back with its override, refused `ACTION_PREMISE_OVERRIDDEN` C-116.45 at stage 2 with nothing written; the same kind of action resting on the determination attaches). The override is now read by actions' own rule, `Actions.overrideOf` (`{reason}` with a non-empty reason, else none), so the two modules cannot disagree about what an override is; my earlier "any non-null value" reading is replaced.
+
+Re-run after the merge: `node --test bio-plane/test/m/escalation/`: tests 32, pass 32, fail 0. DEC-49 guard: no FAIL names escalation, C-116 or the new code. format: 0 failures; architecture: 0 failures; coverage: 23 of 23; ownership: below.
+
+Size (session_01Sa2gjuhjzD2CRUGeynitk9): test runs 6, module lines 40
+
