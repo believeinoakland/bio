@@ -30,7 +30,7 @@ The obligation inbox: tasks routed from captures whose authority is undetermined
 
 ### Uses
 
-- `legacy-checks`: `isMachineIdentity`, `isMachineStamp`, `isPublicHttpsLocator` (R1, R3, R4).
+- `record-grammar`: `isMachineStamp`, `isPublicHttpsLocator`, `ISO_TS_RE`, `BUNDLE_ID_RE` (R1, R3, R4).
 - `record-core`: `stampInstant`, `mintOpaqueId`, `mintExhausted` (its R62; R1), `bundleInfo`, `seedMintLedger` (its R40), `registerCounts` (its R63) (R5), `registerAuditCheck` (its R59; R4), `declarePurge` (R8), `perItem` (its R50–R52; R3).
 - `membership`: `viewerPredicate` and `GATE_MARK` (the `taskList` gate, R2, R6), `projectOwners` (its R65), `memberFacts` (its R68), `activeAdmins` (its R86), `isAdministrator` (its R64) (R1, R3).
 - `promotion`: `registerStep`, its R39, which registers R4's grammar as a promotion check (K462).

@@ -23,7 +23,7 @@ Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queu
 - **R3** CONDITIONs, derived on read and writing nothing: governor-holding-host per held host (its documents gathered at most 16, past which the home set states `subject_bound` and is undetermined); partial-capture-outstanding per live capture session; capture-completed-unattended per bundle a machine credential wrote and per completed capture request; render-deferred per render request held under a code or expired, its reason the code's own translation; archive-fallback-eligible per address `monitoring.archiveEligible` answers (its R47, what the next tick would find: K406 Q2); monitoring-recheck-due per monitored address `monitoring({viewer})` (monitoring R32) answers overdue by more than its interval or unscheduled (monitoring R16, R31) (N229).
 - **R9** An out-of-inquiry-lead offers, on the inquiry it bears on, the inquiry-grain act take it up (cite into that inquiry).
 - **R10** A FINDING's `basis` names its source and derivation (D-82).
-- **R14** (N375; `membership` R89, K535) OBLIGATIONs `signer-self-registered`: for an administrator member (`membership` R64), or the `admin` machine credential as R2's export-performed, one per key `membership.signerList` answers (its R27) `active` with `origin: "self"`, keyed `OBLIGATION::signer-self-registered::<key>`, naming the key's comment and its member (`registered_by`), `age` from its `added` instant, and offering R26's revoke (`membership.signerSet` to `revoked`). It goes to no one else, and leaves when the key is no longer `active`.
+- **R14** (N375; `credentials` R9, K535, K784) OBLIGATIONs `signer-self-registered`: for an administrator member (`membership` R64), or the `admin` machine credential as R2's export-performed, one per key `credentials.signerList` answers (its R8) `active` with `origin: "self"`, keyed `OBLIGATION::signer-self-registered::<key>`, naming the key's comment and its member (`registered_by`), `age` from its `added` instant, and offering the revoke (`credentials` R7, `signerSet` to `revoked`). It goes to no one else, and leaves when the key is no longer `active`.
 
 **The Action layer** (K608; recipients as Bob's notification rulings provide: DEC-10, DEC-69, DEC-70 and DEC-94, K613–K615: an item informs once at the occurrence, is dispositionable and ages; it goes to the member who authored the thing it concerns, else the project's owners (`membership` R65), else the administrators (`membership` R86); a nearing deadline changes an item's position, colour or wording only, and mints no item; no outside channel is used; nothing is repeated unless the member asks)
 - **R15** (monitoring R34; K608, K611) CONDITIONs `action-clock-overdue`: one per clock entry `action-clocks.overdueClocks` answers the viewer (its R3), keyed `CONDITION::action-clock-overdue::<action>::<position>`, to the member who created the action, else its project's owners, else the administrators; its subject the action, naming the entry's date, basis and text, its `age` from the day after the entry's date. It leaves when the entry is `met` or `waived` or the action is `resolved` or `abandoned`. It is raised once per entry (an overdue date is new and notifies once, DEC-10, DEC-94 (4)); nothing here re-notifies it.
@@ -55,9 +55,9 @@ Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queu
 
 ### Uses
 
-- `legacy-checks`: `normalizeType`, `STATES`, `vocabFor`, `MACHINE_AUTHOR_PREFIX`, `MACHINE_CLASS_PREFIX`.
+- `record-grammar`: `normalizeType`, `STATES`, `vocabFor`, `MACHINE_AUTHOR_PREFIX`, `MACHINE_CLASS_PREFIX`.
 - `record-core`: `bundleInfo`, `head`, `manifestByAuthor` (its R53; R3), `stampInstant`.
-- `membership`: `viewerPredicate` and `inSight` (the viewer gate), `isAdministrator` (its R64; R2's export-performed), `activeAdmins` (its R86), `signerList` (its R27; R14), `participation` (R2's objective-gap, R4's joined projects), `hiddenBundles` (its R88; N352), `projectOwners` (its R65; R6).
+- `membership`: `viewerPredicate` and `inSight` (the viewer gate), `isAdministrator` (its R64; R2's export-performed), `activeAdmins` (its R86), `participation` (R2's objective-gap, R4's joined projects), `hiddenBundles` (its R88; N352), `projectOwners` (its R65; R6).
 - `host-governor`: `governorHolding` (its R14; R3).
 - `provenance`: `homeOf`, `register` (capture to bundle) and `captured_locators` by host (R2, R3).
 - `capture`: `liveCaptureSessions` (its R46; R3).
@@ -76,6 +76,7 @@ Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queu
 - `action-clocks`: `overdueClocks` (its R3; R15), `remindersDue` (its R5; R18).
 - `escalation`: `escalationsDue` (its R16; R17).
 - `action-plans`: `checkpointsDue` (its R17; R16).
+- `credentials`: `signerList` (its R8), `signerSet` (its R7) (R14).
 
 ### Invariants
 
