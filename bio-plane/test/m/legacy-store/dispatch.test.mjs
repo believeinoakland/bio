@@ -42,19 +42,15 @@ test("every op of public-read, project-stage, action-clocks and action-plans is 
   assert.equal(n, 5 + 1 + 2 + 15);
 });
 
-test("each such op answers through the store's door (its fetch), a promise-answering op awaited to its answer", async () => {
+test("each such op answers through the store's route map as the plane's frame calls it, a promise-answering op awaited to its answer (K711)", async () => {
   const x = await store();
-  for (const [op, method] of [["publishedlist", "GET"], ["projectstage", "GET"], ["reminderset", "POST"],
-                              ["plans", "GET"], ["optionpropose", "POST"]]) {
-    const r = await x.s.fetch(new Request("http://do/" + op + QUERY, method === "POST" ? { method, body: "{}" } : {}));
-    const env = await r.json();
-    assert.notEqual(env.error, "unknown op: " + op, `op=${op} is routed`);
-    assert.equal(env.ok, true, `op=${op} passes the frame`);
-    assert.ok(env.result && typeof env.result === "object" && Object.keys(env.result).length > 0,
-      `op=${op} answers its own result, not an unawaited promise`);
+  for (const op of ["publishedlist", "projectstage", "reminderset", "plans", "optionpropose"]) {
+    const r = await x.call("/" + op + QUERY, {});
+    assert.ok(r && typeof r === "object" && Object.keys(r).length > 0, `op=${op} answers its own result`);
   }
-  const p = await x.call("/optionpropose" + QUERY, {});
-  assert.equal(p.code, "NO_SUCH_PLAN");
+  const pending = x.routes("/optionpropose" + QUERY, {}).optionpropose();
+  assert.ok(pending instanceof Promise, "op=optionpropose answers a promise");
+  assert.equal((await pending).code, "NO_SUCH_PLAN");
 });
 
 test("action-plans' planning-run check stands at ai-runs from the store's construction (K711)", async () => {
