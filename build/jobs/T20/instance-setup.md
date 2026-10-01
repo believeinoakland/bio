@@ -25,3 +25,11 @@
 - `node checks/ownership.mjs … instance-setup tranche/T20`: 8 files changed; 0 failures (after commit 392777a059)
 
 Size (session_01U4jhWTgF7AFwVmwh2MDfmz): test runs 5, module lines 2948
+
+## J1 · COMPLETE
+
+Done. The details are in this record's Completion section.
+- K867: the four whole-plane suites (`worker-page`:19, `profiles`:158, `reports`:132, `worker-reports`:17) now run over `src/plane/index.mjs`. The re-scan found one more read of the old entry: `worker-page`'s failing-store script imported `./index.mjs`, and it now imports `./plane/index.mjs`. Nothing in this module's tests reads `src/index.mjs` now, so **plane may delete it**. The four suites pass 31 of 31.
+- K899 (1): the 13 named lines in `setup.mjs` say "record". The re-scan of `paths` found no other text a member reads. The R25 pin is re-keyed. The new test `K899 (1) …` covers the served bytes and the browse, not-found and refusal sentences, and it fails against the old text.
+- Staled: `bio-plane/dist/bio-plane.bundled.mjs` and `.bundle.json`. Not regenerated.
+- Tests: 86 of 86 pass. format, architecture, coverage (46 of 46 ids) and ownership (8 files): 0 failures each.
