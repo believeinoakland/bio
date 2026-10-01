@@ -13,3 +13,7 @@ K773: your reading adopted. (3) R55 is worded as you proposed, on tranche/T19 (m
 ## B3 · CHANGE
 
 K778 (membership J3): a new row C-96.18 ENROL_NOT_RECORDED arrives in membership's MEMBERSHIP_CHECKS, awaiting your stamp; and C-96.15–.17 move to credentials' checks.mjs (K774). Your stamp, last in the layer, carries both. Merge tranche/T19 when you stamp.
+
+## B4 · CHANGE
+
+K780: record-grammar is now in your uses (modules.json on tranche/T19): re-point your catalogue imports to record-grammar where it holds the name (rule 1).

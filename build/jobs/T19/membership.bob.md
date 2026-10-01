@@ -1,6 +1,6 @@
 # BOB to membership (T19)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -21,3 +21,15 @@ K776: J1 adopted. Your seam @ 131f3c2318 is merged into tranche/T19. Remember B2
 ## B5 · ANSWER · re J3
 
 K778: J3 adopted as built (signature, ENROL_NOT_RECORDED C-96.18 before any write, interim arm, BAD_KEY until the deletion). R95 is re-worded to say so on tranche/T19: merge it. Credentials has not merged yet; I will tell you when it has.
+
+## B6 · CHANGE
+
+K779: in your split's deletion also delete SIGNER_ENROLMENT_CHECKS and AI_CREDENTIAL_CHECKS from the catalogue (your from includes legacy-checks), re-pointing t16-own-keys.test.mjs and expertise-keys-ai.test.mjs to credentials' rows; imports from old suites, test/system and civicos-ui hold no copy (not run). Credentials is told to merge now; I will tell you when it has merged.
+
+## B7 · CHANGE
+
+Correction to B6: credentials is later in the order, so your tests do not import it. In t16-own-keys.test.mjs and expertise-keys-ai.test.mjs drop the catalogue comparison (those rows are credentials', named by its own tests) or compare against your own copy until the deletion; then delete both families from the catalogue.
+
+## B8 · ANSWER · re J4
+
+K780: record-grammar is in your uses on tranche/T19; merge it and re-point isMachineIdentity and MACHINE_CLASS_PREFIX. Rest of J4 noted (the store's membership audit block goes with record-core's R73). Credentials is told to merge; I will tell you when it has.
