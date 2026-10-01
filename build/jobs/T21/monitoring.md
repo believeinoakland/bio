@@ -23,3 +23,7 @@
 - `node checks/ownership.mjs … monitoring tranche/T21` → 4 files changed by monitoring between tranche/T21 and HEAD; 0 failures.
 
 Size (session_017tQLk2aQAUDMSy5xnai7Pb): test runs 4, module lines 2543
+
+## J1 · REPORT
+
+Generated artifact staled (manifest §14): my change to bio-plane/src/monitoring/index.mjs and checks.mjs stales bio-plane/dist/bio-plane.bundled.mjs and bio-plane.bundle.json (owned not_product). fleetbundles.test.mjs passes on tranche/T21 and fails with my change (the plane member stale). Regenerate at the layer close: bio-plane/: npm run build. I regenerated nothing (B1).
