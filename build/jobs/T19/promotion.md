@@ -28,3 +28,18 @@ Progress @ f5301d174b. Built: R52, R53 (also end to end through the Store: a pla
 5. **Rule 8: `MODULE_ORDER` lacks `plane`** (added to `modules.json` at K771). The three `MODULE_ORDER` tests are red: membership's `module-order`/R79 and promotion's R39/R45/R46. That is membership's (K657).
 6. Already red on the tranche, not mine: query-language's five (K776).
 7. **legacy-ui guard** (not run per tranche): `ABSENT` is also minted at `store.mjs` gateFacts and `src/index.mjs` op=monitor, and its row now lives in promotion's table, not a catalogue `_CHECKS` family. Same for C-32.5, C-33.21 and the others. `civicos-ui/check-refusal-codes.mjs` harvests only catalogue families, so it will report those codes rowless at the release.
+
+## J3 · REPORT
+
+B6 done @ HEAD. I merged tranche/T19 and removed rows from the catalogue (pure removals; promotion holds C-102.4–.9 since J2):
+- C-102.1–.3 from `REGISTRATION_CHECKS`; record-core holds its own.
+- C-102.10 from `REGISTRATION_CHECKS`; ratification's `RATIFY_REGISTRATION_CHECKS` holds it.
+- `PROJECT_ID_CHECKS` whole; C-59.5 is record-core's, C-59.1–.4 promotion's.
+
+`REGISTRATION_CHECKS` is now an empty export. I cannot delete it yet, because connections' `test/m/connections/derive.test.mjs`:6 still imports it. The rows it reads there, `LISTENER_*`, are membership's and were never in that table. Rule 1: connections' L5 job re-points the import and deletes the export. The old suite `test/mint-ledger.test.mjs` imported `PROJECT_ID_CHECKS`; it is not run per tranche (K619).
+
+One more red from R55, which you may want to accept by name with legacy-checks': record-core's `record-core.test.mjs`:2058 hard-codes the five legacy grammars `registerLegacyGrammars` registers, and there are now four. This is K781 (2)'s pin, one module over. The rest of that test holds: its own findings equal the catalogue wrapper's.
+
+`gate.mjs` keeps the catalogue's `checkBundle` wrapper. Its module-level `runGate`, with no grammars passed, must still judge with the legacy slots (R27). Record-core keeps its own oracle import "with the catalogue (rule 1)" in the same way. Promotion's instance gate passes `record.grammars()`, which now include the legacy registration.
+
+Waiting for membership's deletion, then CUSTODIAL/PROJECT_VISIBILITY re-points and the stamp.
