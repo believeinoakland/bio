@@ -27,6 +27,6 @@
 - `node --test test/m/basis-versions/`: tests 118, pass 118, fail 0. Baseline before the change: 118/118.
 - `node --test test/m/basis-versions/ test/m/inquiry-grammar/ test/m/inquiry/ test/m/plane/`: tests 334, pass 333, fail 0, todo 1 (inquiry R31, MK-5, not mine).
 - `node --test test/m/` (bio-plane): tests 4685, pass 4623, fail 42. These are the same failing suites CONNECTIONS #9 measured on the unchanged base: filings, project-stage `stage.test.mjs`, intent `grammar.test.mjs` and control-plane `catalogue-end.test.mjs`. None is in my paths or reads my changed text.
-- format: 86 modules, 84 requirements files; 0 failures. architecture: 23 product files, 79 relative imports; 0 failures. coverage: 44 of 44 live requirement ids named by a test; 0 failures. ownership: re-run after the commit (below).
+- format: 86 modules, 84 requirements files; 0 failures. architecture: 23 product files, 79 relative imports; 0 failures. coverage: 44 of 44 live requirement ids named by a test; 0 failures. ownership: 8 files changed by basis-versions between tranche/T21 and HEAD; 0 failures.
 
 Size (session_01PhpTLeguue11UqsuKUrqaP): test runs 6, module lines 3506
