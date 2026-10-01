@@ -14,3 +14,17 @@ The entry says "as drafted" (draft-T19.md:41) plus your START's list. Measured a
 6. **Store share** ("sight reindex and visibility answer"): `store.mjs` now only delegates to `promotionOf(...)`. I find nothing left to move except R54's three arms, which legacy-store spreads (K671).
 
 The answer decides only items 3 and 4. I carry on with the rest.
+
+## J2 · REPORT
+
+Progress @ f5301d174b. Built: R52, R53 (also end to end through the Store: a plan and an escalation under a project are hidden from a member outside it on `op=list`), R54, R55 (K773). Rows C-33.21/.24/.38/.49, C-67.1, C-32.5, C-59.1–.4 and C-102.4–.9 moved into promotion's tables. C-26.12 and C-64.1 are copied (held twice). The C-64.1 region is added (N44). Every catalogue name is re-pointed to record-grammar. `MECHANICAL_FIELD_SETS`' catalogue copy is deleted (K750). gate.test's R27 is off the held C-2.7 (K767). N221 is confirmed. Catalogue diff: 0 lines added. Promotion's tests: 107 pass, 1 red, the rule-8 one below. Still to do: the stamp, after record-core, credentials and membership's deletion merge. Also CUSTODIAL_CHECKS → membership's copy once its deletion lands.
+
+**For you:**
+
+1. **Needs a `uses` edge: promotion → record-grammar.** Architecture fails without it: promotion's code and tests now import record-grammar (the re-points). `modules.json` is yours.
+2. **legacy-checks' own test goes red from R55, as K773 implies.** `test/m/legacy-checks/catalogue.test.mjs`:271–286 pins six `LEGACY_GRAMMARS` slots, and there are now five. Re-open legacy-checks to drop C-18.6/.7 from `LEGACY_SLOTS`, or accept it red by name.
+3. **provenance (L3): `register-checks.test.mjs`:105 goes red** ("R45: C-18.6 … at the gate"). It calls the catalogue's `checkBundle` with no grammars and expects C-18.6. The arm is now promotion's registered grammar (R55). Provenance's job should re-point the test to promotion's `checkInfo2Contract` / `INFO2_GRAMMAR`, which needs a `uses` edge on promotion. Provenance's R45 names C-18.6 at the gate, so check its wording against promotion R55.
+4. **ratification (L8): `release.test.mjs`:195 goes red, by design of R52.** Its setup asserts a bundle whose document says `criticality: crucial` is recorded `supporting` (line 200). Promote no longer records that (N425). The verdict it tests, CRUCIAL_IN_BATCH, still holds, so only that setup line needs re-wording.
+5. **Rule 8: `MODULE_ORDER` lacks `plane`** (added to `modules.json` at K771). The three `MODULE_ORDER` tests are red: membership's `module-order`/R79 and promotion's R39/R45/R46. That is membership's (K657).
+6. Already red on the tranche, not mine: query-language's five (K776).
+7. **legacy-ui guard** (not run per tranche): `ABSENT` is also minted at `store.mjs` gateFacts and `src/index.mjs` op=monitor, and its row now lives in promotion's table, not a catalogue `_CHECKS` family. Same for C-32.5, C-33.21 and the others. `civicos-ui/check-refusal-codes.mjs` harvests only catalogue families, so it will report those codes rowless at the release.
