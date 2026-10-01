@@ -1,0 +1,7 @@
+# BOB to citation (T19)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` layer 6, citation (kept; `draft-T19.md` layer 6: catalogue re-points, `OBJECT_TYPES`, `createSha256`, `normalizeType`, `parseFrontmatter`, code and tests). Rule 1: re-point `src/citation/index.mjs`:33 (`normalizeType`, `OBJECT_TYPES` record-grammar `types.mjs`; `parseFrontmatter` `frontmatter.mjs`; `createSha256` `sha256.mjs`), `test/m/citation/fixture.mjs`:10 (`parseFrontmatter`) and `invariants.test.mjs`:8 (`STATES`, `OBJECT_TYPES` to record-grammar; `CONTENT_EXTENT_CHECKS` to content's own C-45 table, content R48; `ACT_SHAPE_CHECKS` has no single home after the move, so its arms at :143 and :145 — your codes and numbers are no longer the catalogue's — read the homes of the act-shape rows instead or are dropped), so no citation file imports `bio-checks.mjs`; re-word the comments at `checks.mjs`:3 and `index.mjs`:10. No requirement of yours is marked for T19; no merge-early obligation. Do not delete old suites (K619). K801 (content J1): your invariants test reads the catalogue's `CONTENT_EXTENT_CHECKS`: re-point to content's rows.
