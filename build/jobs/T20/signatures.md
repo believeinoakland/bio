@@ -22,3 +22,7 @@
 - `format`: 84 modules, 82 requirements files; 0 failures. `architecture`: 8 product files, 7 relative imports; 0 failures. `coverage`: 36 of 36 live requirement ids named by a test; 0 failures. `ownership` against `tranche/T20`: 1 file changed; 0 failures.
 
 Size (session_01ML4Fo3S55aQzLtgsN7sP6F): test runs 6, module lines 1158
+
+## J1 · REPORT
+
+Generated artifacts after my comment-only change to bio-plane/src/sshsig.mjs: (1) plane bundle STALE: fleetbundles.test.mjs goes from the 3 accepted FAILs to 4, the added one is 'bio-plane: no staleness … THE D-298 ARM'; regenerate at the L1 close. (2) newgroup bundle: sshsig.mjs is an input, but newgroup-bundle-fresh.test.mjs still passes (its bundle drops comments, so the bytes did not change); regenerate it at the close anyway, per the manifest. (3) For the owner of fleetbundles.test.mjs: one of the 3 accepted FAILs, '(j) … DO name node tools/bundles.mjs', still requires a remedy naming a script deleted with tools/; it is red without my change. Details in my record.
