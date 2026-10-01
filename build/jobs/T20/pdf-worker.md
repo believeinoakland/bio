@@ -27,3 +27,10 @@
 - No layer tests are named in `build/manifest.md`.
 
 Size (session_01517coXM6VXW6mGeq6J943P): test runs 4, module lines 4,074
+
+## J1 · REPORT
+
+1. `pdf-worker/dist/` is stale: `src/index.mjs` (a bundle input) changed, comments only. Not regenerated; for the L1 close.
+2. `pdf-pixels` (not mine): `pdf-worker/test/pagepixels-corpus.probe.mjs`:5 and `test/agenda-scan-census.probe.mjs`:5 name the retired `coverage.mjs` as a runner the probes avoid (N437's kind).
+3. `build/requirements/pdf-worker.md` (yours): R35's lead-in names `bio-plane/scripts/coverage.mjs` as the reader of `SURFACE`/`fleet-member.json` (retired, K739); Suggestions name `bio-plane/test/fleetbundles.test.mjs`, now `bio-plane/test/system/`.
+4. Pre-existing red on `tranche/T20`, fixed in my own test: structure R4 read `NAMESPACES` from `bio-plane/src/index.mjs`; the control-plane split (804c1d026d) moved it to `bio-plane/src/admission/index.mjs` as `export const`. The test now reads that file; full-set check unchanged.
