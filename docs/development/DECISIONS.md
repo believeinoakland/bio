@@ -1680,3 +1680,17 @@ response: **As recommended (Bob, 2026-10-01): A.** At publication every statemen
 decided: 2026-10-01 · Bob
 reasoning recorded in: this entry; the UX substrate's brief for question 20; Declared Bias, "RULED 2026-10-01".
 owed: a new signed case format carrying the statements with their justifications and evidence, the withheld-citation count, the public page's lens section and its print form, the pre-signing preview (case-authoring, publication, public-read; BOB drafts for Bob's approval); the UX page's question 20 marked ruled.
+
+### DEC-104 · answered
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 21: what a hunch's grade does, and clearing hunches before publishing)
+for: bob
+question: Confirm that a hunch never counts in any strength reading and correct the doctrine sentence that says it "composes normally"; decide what the hunch's letter is for once strength ignores it; and approve a standing "hunches to clear" list.
+why it is Bob's: doctrine (DEC-15's hunch, DEC-20's publication block) and UX.
+provisional: a hunch counts for nothing in strength and is always named, approved "for now" (strength R5, K102, K187); Declared Bias still said a hunch "composes normally" while open.
+alternative: (B) two strength readings while investigating, with and without hunches; (C) hunches carry no letter.
+recommendation: (A) the letter stays on the link; strength ignores it.
+reversal cost: low.
+response: **As recommended (Bob, 2026-10-01): A.** A hunch counts for nothing in any strength reading, and strength says how many hunches it left out ("for now" lifted from strength R5). The hunch's letter appears only on the link itself, in the hunch style, as the member's stated confidence when the guess was made, beside "not counted". A "Hunches to clear" list sits on the question and project pages, as status where the work lives and never a notification, and the check before publishing lists them again. Declared Bias's "composes normally" is corrected: a hunch links evidence while open but never lifts strength.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 21; Declared Bias (corrected).
+owed: "for now" lifted from strength R5; strength's count of hunches left out; the "Hunches to clear" list on question and project pages (BOB places them); the UX page's question 21 marked ruled.

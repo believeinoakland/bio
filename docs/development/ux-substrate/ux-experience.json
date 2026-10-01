@@ -13672,7 +13672,7 @@
    "recommendation": "Combine the first and third: show the hunch grade only on the leg, keep strength hunch-free with the count named, and list hunches as a to-do before publishing. Bob should confirm strength R5 overrides the 'composes normally' sentence.",
    "whoDecides": "Bob for the one doctrinal point (whether a hunch counts in any strength figure while open, R5 versus the Declared Bias text); Design for the visual treatment and the clearing list.",
    "brief": {
-    "stillOpen": "partly",
+    "stillOpen": false,
     "settledSince": "",
     "title": "What a hunch's grade does, and clearing hunches before publishing",
     "inOneBreath": "Now that a hunch counts for nothing in a question's strength, what is its temporary grade for, does the doctrine sentence saying it 'composes normally' get corrected, and how do members see the hunches they must clear before publishing?",
@@ -13872,6 +13872,19 @@
      "connections R41, R44, R48 (theme hunches are a separate use)"
     ],
     "size": "short"
+   },
+   "ruled": {
+    "date": "2026-10-01",
+    "by": "Bob",
+    "rulings": [
+     "DEC-15",
+     "DEC-20",
+     "DEC-80",
+     "DEC-104"
+    ],
+    "status": "ruled",
+    "title": "What a hunch's grade does, and clearing hunches before publishing",
+    "decided": "A hunch is temporary declared bias: visible as a hunch everywhere from the moment it is made, with its author and date. It links the evidence it joins, for traversal, search and suggestion, but counts for nothing in any strength reading, and strength says how many hunches it left out. The hunch's letter appears only on the link itself, in the hunch style, as the member's stated confidence when the guess was made, beside 'not counted'. A 'Hunches to clear' list sits on the question and project pages, as status where the work lives and never a notification; the check before publishing, before the ceremony's first screen, names every hunch still standing, and a case cannot be published while one stands."
    }
   },
   {

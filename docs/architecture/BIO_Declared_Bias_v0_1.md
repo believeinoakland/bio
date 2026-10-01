@@ -452,9 +452,16 @@ an uncleared hunch cannot publish at a claimed strength. `op=publishpreflight` r
 
 **A hunch is not an `undetermined` leg and must never be composed as one.** R1 suspends
 an axis when a grade is ABSENT; a hunch grade is PRESENT and asserted. During `open` it
-composes normally — that is what makes it useful — and the case is simply unpublishable
+links the evidence it joins — that is what makes it useful, for traversal, search and
+suggestion — but it never lifts a strength reading, and the case is simply unpublishable
 while it stands. Treating a hunch as undetermined would destroy exactly the
-traversability this ruling exists to preserve.
+traversability this ruling exists to preserve. **CORRECTED 2026-10-01 by Bob (DEC-104):**
+this paragraph said a hunch "composes normally" while open; a hunch counts for nothing in
+any strength reading (strength R5), which says how many hunches it left out. The hunch's
+letter stays on the link itself, in the hunch style, as the member's stated confidence when
+the guess was made, beside the words "not counted". A standing "Hunches to clear" list sits
+on the question and project pages (status where the work lives, never a notification), and
+the check before publishing lists them again.
 
 **Sequencing, stated so a later session does not conclude the bias half was forgotten:**
 registering a hunch as a first-class statement in the bias manifest needs
