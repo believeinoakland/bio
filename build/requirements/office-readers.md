@@ -145,6 +145,11 @@ xlsx and csv), or `{ok:false, container, reason}` when `parts` failed.
     `deckLength` is the number of `<p:sldId>` slots the bytes declare (an unresolvable slot
     still counts), or `null` when the declared order cannot be read — never counted off the
     slide parts present, which would under-report a deck with unreadable trailing slides.
+    In each slide's `mc:AlternateContent` only the first `mc:Choice` is read, or the
+    `mc:Fallback` when there is no `mc:Choice`, nested ones alike; a branch not selected is
+    not read, so its text is not in `text` or `document` and its shapes take no `shape` index
+    (nor do the `hlinks` and `ridUsage` they would carry). Slide numbers and the slide unit do
+    not move (N439, K747, K863). *(not yet met: T20 layer 1, N439)*
   - `xlsx`: `document` is every sheet's text, tab-joined per row, newline-joined across
     rows and sheets. `sheets` is `[{sheet, name, hidden, rows, cols, usedRows, usedCols,
     range, text, undetermined}]`. `rows`/`cols` are the FIXED format bound
@@ -229,8 +234,9 @@ second copy that could drift.
 - **R27** `rangeUnitFor(sheetName, a, b, sheets, grid = null) -> {unit} | {why}`. `a`, `b`: corners as R26 returns them, in any order; `sheets`: the workbook's sheet names; `grid`: the format's bound `{rows, cols}`, or `null` when the format fixes none. `unit` is the `sheet-range` reference (R18's shape and builder) of the rectangle, top-left corner first. The sheet matches exactly, else without case when exactly one sheet answers; the unit carries the workbook's spelling. `why`: `not_a_range_reference` (a corner is not `{col, row}` of positive integers), `no_such_sheet` (no sheet answers, two answer without case, or `sheetName`/`sheets` is not a string/array), `outside_grid` (either corner past `grid` on either axis). Never throws. R9's units are built through it.
 
 - **R28** `docxRenumbering(documentXml) -> {paragraphs:[{old, new, outer}], runs:[{old, new, outer}], tables:[{old, new}]}`: for a stored docx reading made before N26, every `<w:p>`, `<w:r>` and `<w:tbl>` as the pre-N26 walk numbered it (`old`, 0-based, every branch of `mc:AlternateContent` counted), its index under R11 and R16 (`new`), `null` for one inside a branch not read, with `outer` the new index of the paragraph that holds that `mc:AlternateContent`. Used only by extraction's migration of stored ¶ and table references (N26, layer 4); retired once that migration has run (K747).
+- **R29** `pptxRenumbering(deckFiles) -> {slides:[{slide, shapes:[{old, new}]}]}`: for a stored pptx reading made before N439, per slide, every shape as the pre-N439 walk numbered it (`old`, 0-based, every branch of `mc:AlternateContent` counted) and its index under R11's pptx arm (`new`), `null` for a shape inside a branch not read. Used only by extraction's migration of stored `slide-shape` references (layer 4); retired once that migration has run, as R28 (K795 (6), K863). *(not yet met: T20 layer 1, N439)*
 
-Errors: none of R1–R28 ever throws. A precondition this module cannot verify (bytes that
+Errors: none of R1–R29 ever throws. A precondition this module cannot verify (bytes that
 are not this format, a value `recognise`-style helpers were not asked to check) is answered
 as a stated `undetermined`/`ok:false`, never an exception and never a guess.
 
