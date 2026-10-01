@@ -2,6 +2,30 @@
 
 **Status** · session_01VKxymxaNpmDPoVYbMyJ7no · depth 2 · WORKING · handled B4
 
+## Completion (FILINGS #6)
+
+**Entries applied.**
+- The publication split's re-points (K651): `filingsOf` registers the available-actions block with `public-read` (its R8; R15); `reads.test.mjs` and `packet.test.mjs` read `publishedCase`, `verifySha`, `publishedList`, `publishedManifest` and `registerEvidenceBlock` from `public-read`. publication's next job may delete its 17-line copy.
+- N-A5: R3's addressee arms (blanks `counterparty_organisation`, `counterparty_description` added; a blank the arm does not hold is unfilled naming the arm); R8's packet for an action resting on a premise override (facts say no determination is held); R22 the in-band quartet on approved bytes (filings and communications) and every packet export, by `inbandQuartet`, floors from `strength.projectBar` (K701); R23 `communicationPrepare` (`op=communicationprepare`, table `communication_drafts`, `FIL-` ids, R6/R7 unchanged, listed by R13 marked a communication); R24 the disclosure first on every draft, packet, communication, approved bytes and export; R25 each exhibit's capture grade (provenance's `captureGrade`), co-attestation, and its reading against the kind's venue standard (accepted, contestable, below, undetermined), never a refusal.
+- N-A18 / R26: `templateSave` (`op=templatesave`), `filingPrepare({template})`, `templatesFor` (`op=templates`, K701), table `filing_templates`, keyed to the draft's action and purged with it; codes as confirmed in B2.
+- The split's share: `clockPropose` read from `action-clocks` (its R2); `dates.mjs`' `deadlineDate` now counts through `action-clocks`' `computeDeadline`, so one rule counts a clock entry's date and a packet's deadline.
+- Decided (reported in J1): `filingApprove` and `counselPacketExport` are async (the quartet's hash is crypto.subtle's); the store's dispatch awaits every op. Columns added to existing tables by a guarded `ALTER TABLE` (`FILINGS_COLUMNS`).
+
+**Rows `awaiting stamp` (T19's promotion).** New: C-115.28–C-115.40. `where` only: C-115.3 `ACTION_CLOSED` (`#closed` › `is-action-closed`), C-115.9 `ALREADY_APPROVED` (`#alreadyApproved` › `is-already-approved`).
+
+**Deferred.** Nothing.
+
+**Found in other modules.**
+- `affordances` (layer 11): `test/m/affordances/catalogue.test.mjs` "R3 R7 R12: layer 9's 22 mutating ops …" pins the set of layer-9 op names and fails on my three new ops (`communicationprepare`, `templatesave`, `templates`); it needs `NON_ACTS` reasons and rungs for the two acts and `templates` among its reads (J2). `control-plane` needs their op specs (B2: in its START).
+- `conformance`: "R10: flagged basis_changed …" fails on `tranche/T18` itself, not through this job.
+- `public-read`'s `src/inband.mjs` (still in `publication`'s paths until BOB's edit) is imported here for R22.
+
+**Tests and checks** (on `job/T18/filings` @ f6a59738a9, tranche/T18 merged through B5):
+- `node --test bio-plane/test/m/filings/`: 45 pass, 0 fail. Users of filings: escalation 29/0, public-read 65/0, skills 39/0, action-clocks 20/0, actions 61/0; affordances 105/1 (the census above; 106/0 on tranche/T18).
+- `format`: 82 modules, 0 failures. `architecture filings`: 13 files, 53 imports, 0 failures. `coverage filings`: 26 of 26 ids named, 0 failures. `ownership filings tranche/T18`: 13 files, 0 failures.
+
+Size (session_01VKxymxaNpmDPoVYbMyJ7no): test runs 26, module lines 1873
+
 ## J1 · QUESTION
 
 Three points, my best reading of each in brackets; I carry on with it.
