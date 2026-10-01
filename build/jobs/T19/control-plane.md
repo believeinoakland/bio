@@ -68,3 +68,20 @@ COMPLETE for R43 as built (B5, K853). Branch `job/T19/control-plane` @ cee8b13d7
 **Tests and checks:** module `node --test test/m/control-plane/` 91 tests, 91 pass, 0 fail. Whole `test/m` before the last merge: 4,578 tests, 4,554 pass, 4 fail (the two above, plane R8 plane's own, admission's flake), 20 todo. format 0 failures; architecture 0 failures; coverage 26 of 27 (R42, T20); ownership 1 (the instructed deletion above).
 
 Size (session_01Q7pSz3M4L3gNs61ha41Bff): test runs 21, module lines 3340
+
+## J6 · COMPLETE
+
+COMPLETE for R43 and B4's steps 1–3 (B6, K854). Branch `job/T19/control-plane` @ 999220604b (tranche/T19 merged in). It supersedes J5 for merging: everything in J5 stands (R43, its tests, the names accepted red), with this on top.
+
+**Applied (steps 1–3):**
+1. The wrapper: `dispatch.mjs`' `class Store extends LegacyStore`, its statics, its constructor (queue, tasks, instance-setup start) and its default-export forwarder are deleted, with the imports only they used (`store.mjs`, `setup.mjs`, `membershipOf`). `dispatch.mjs` is now `dispatch`, `existenceRead`, the two R27 tables, the internal-error answer and `controlPlaneRoutes`, which plane spreads (its R5). The header says so.
+2. The tests: re-pointed to `src/plane/store.mjs`, as B6 asked. Two of them only used the class to show "its `fetch` is the door", which `dispatch` is already tested for directly, so those arms are dropped, not re-pointed: `dispatch.test.mjs` (it now pins that control-plane exports no `Store`) and `envelope.test.mjs` R25. `store-class.test.mjs` and `doorbell.test.mjs`' real-record arms construct plane's `Store`. Their titles now name R25/R26, because R35 is retired here.
+3. `ops.mjs` is deleted. Nothing reads it: plane's `door.mjs` takes `ACT_GATE` from op-declarations directly, and `src/index.mjs` is the one-line re-export. The re-exports of `classify`, `scopeFor` and the two machine prefixes (kept only for legacy-index's arms) are dropped too; `SCRATCH` and `NAMESPACES` stay, for plane's door and the fleet pin. My comments no longer name legacy-index's arms.
+
+**One check is red because of step 2, for you to route:** the architecture check judges module tests too. `store-class.test.mjs` and `doorbell.test.mjs` import `src/plane/store.mjs`, which is "not earlier in the order": 2 failures, and 0 on product files. `store-class.test.mjs` tests plane R1 through my door (instance-setup started once, its fourteen routes, queue/tasks/affordances through `controlPlaneRoutes`). `doorbell.test.mjs`' four pull arms and its sources/own-key arms need a real record, which only plane's construction builds. My recommendation: `store-class.test.mjs` moves whole to `test/m/plane/` (it is plane R1 and R5), and the doorbell's real-record arms either move there too or are accepted as they are (driving the door through the class that runs it). Rebuilding plane's construction inside my tests would duplicate plane. Say which and I do my half.
+
+**R met, with tests:** R43 (`catalogue-end.test.mjs`, `families.test.mjs`); R25, R26 (`dispatch.test.mjs`, `envelope.test.mjs`, `store-class.test.mjs`); R36 (`doorbell.test.mjs`). The rest as J3 and J5. R42: T20.
+
+**Tests and checks:** module 91 tests, 91 pass, 0 fail. Whole `test/m`: 4,578 tests, 4,555 pass, 3 fail: capture-sources R55/R57/R63 and text-chain extent (both accepted, K853, N446), and plane R8 (plane's own, green once plane deletes the store files). 20 todo. format 0 failures; architecture 2 (above); coverage 26 of 27 (R42, T20); ownership 1 (the ordered deletion of `test/m/legacy-checks/`).
+
+Size (session_01Q7pSz3M4L3gNs61ha41Bff): test runs 27, module lines 3296
