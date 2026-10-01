@@ -56,8 +56,7 @@ Terms. A **draft** is `{draft_id, project_id, case_id, params, created_by, creat
 
 ### Uses
 
-- `legacy-checks`: C-87 and C-32.16 until they move (R23).
-- `record-grammar` (N423, K688): `isMachineIdentity` (its R15), no longer through the catalogue's re-export. *(not declared: T19 layer 8)*
+- `record-grammar` (N423, K688): `isMachineIdentity` (its R15), no longer through the catalogue's re-export.
 - `record-core`: `recordOf(ctx)`, `transact`, `mintOpaqueId`, `mintExhausted` (its R62; R27), `declarePurge`; `bundles` and `files` for findings (R12).
 - `membership`: `isProjectEditor`, `isProjectOwner`, `projectOwners`, `existenceAct`, `viewerPredicate`.
 - `strength`: the project's bar (`#projectBar`, R11).

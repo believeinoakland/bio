@@ -32,7 +32,7 @@ A project's stage, what each stage has earned and still needs, and its work prod
 
 ### Uses
 
-- `legacy-checks`: `parseFrontmatter` (the project's `bundle.md`, R2's rule 1).
+- `record-grammar`: `parseFrontmatter` (the project's `bundle.md`, R2's rule 1).
 - `record-core`: the `bundles` read contract (`object_type`, its R37) and `readFile` (the project's `bundle.md` through the `files` contract, for R2's rule 1).
 - `membership`: `sight` (its R44), `existenceAct`, `noSuchProject`, for R1's fence.
 - `inquiry`: `basisFor` (the legs, R2's rule 3).

@@ -73,7 +73,7 @@ Terms are `publication`'s. A **preparation** is an unsigned case document; a **s
 
 #### The ceremony's pre-flight: publishPreflight({…publishCase's inputs, viewer, author}) (`op=publishpreflight`; N364, DEC-80 item 3, REC-15)
 
-- **R34** It runs `publishCase` inside a transaction it rolls back (R18), then `ratification.caseRatifyPreflight` over the text that would be stored, with `author` as signer and, as its `viewer`, the stamped `viewer`, or `{stamp: viewer, aiCred}` when the control plane stamps the caller's minted agent credential (`aiCred`, its token id and principal; N407), so `ratification` R18's machine fences hold an agent whatever its viewer stamp. It answers `{ready, first, blockers[], steps}`. `first` is exactly the refusal `op=publish` would give (DEC-8). `blockers` lists every other refusal it can reach independently: R6, R12, R35 and R31 (as R32 reads it), and `ratification` R18's list. `steps` gives the five steps' content: what becomes permanent; what this rests on (roles, pairs, bar); what you are leaving out (exclusions, searched section, bias, R32's tensions, R35's self-attested documents, R37's source statements); the edition this creates; and sign. It writes nothing. *(not yet met: T19 layer 8, N435: the route passes the viewer stamp alone)*
+- **R34** It runs `publishCase` inside a transaction it rolls back (R18), then `ratification.caseRatifyPreflight` over the text that would be stored, with `author` as signer and, as its `viewer`, the stamped `viewer`, or `{stamp: viewer, aiCred}` when the control plane stamps the caller's minted agent credential (`aiCred`, its token id and principal; N407), so `ratification` R18's machine fences hold an agent whatever its viewer stamp. It answers `{ready, first, blockers[], steps}`. `first` is exactly the refusal `op=publish` would give (DEC-8). `blockers` lists every other refusal it can reach independently: R6, R12, R35 and R31 (as R32 reads it), and `ratification` R18's list. `steps` gives the five steps' content: what becomes permanent; what this rests on (roles, pairs, bar); what you are leaving out (exclusions, searched section, bias, R32's tensions, R35's self-attested documents, R37's source statements); the edition this creates; and sign. It writes nothing.
 
 #### Each document's grade and co-attestation, and its source (N364; DEC-81 items 1 and 3, DEC-78 item 5)
 
@@ -85,7 +85,7 @@ Terms are `publication`'s. A **preparation** is an unsigned case document; a **s
 
 ### Uses
 
-- `legacy-checks`: the rows until they move (R29), `parseFrontmatter`, `normalizeType`, `isMachineIdentity`, `canonicalJson`.
+- `record-grammar`: `parseFrontmatter`, `normalizeType`, `isMachineIdentity`, `canonicalJson` (the rows are this module's own, R29).
 - `record-core`: `recordOf(ctx)`, `transact`, `mintOpaqueId`, `mintExhausted` (its R62; R7), `stampInstant`, `declarePurge`.
 - `membership`: `viewerPredicate`, `isProjectOwner`, `isJoinedParticipant`, `existenceAct`; `noSuchProject` (its R78), through which R2's `NO_SUCH_PROJECT` is answered (K231).
 - `provenance`: the `register` and `captured_locators` read contracts (R16).
@@ -97,7 +97,7 @@ Terms are `publication`'s. A **preparation** is an unsigned case document; a **s
 - `strength`: `strengthOf`, `projectBar`, `STRENGTH_AXES`, the axis words (R6, R14).
 - `reevaluation`: the raise for a new member edition (R15).
 - `publication`: `caseRelation`, the published registries (R7's derivation), `storeCaseDocument`, `reauthorSection`, `attributionStatements`, `reviewProvider`, `hasCaseStanding`, the format grammar (the `/5` predicate, N345; `case-grammar` R1, R2, through `publication`'s re-export, K651).
-- `case-grammar` (N424, K690): the acknowledgements section's locator (`REAUTHORABLE_SECTIONS`, its R3), read for `#reauthorAcknowledgements` rather than spelled a second time, and `fmSafe` (its one front-matter spelling), read rather than copied. *(not declared: T19 layer 8)*
+- `case-grammar` (N424, K690): the acknowledgements section's locator (`REAUTHORABLE_SECTIONS`, its R3), read for `#reauthorAcknowledgements` rather than spelled a second time, and `fmSafe` (its one front-matter spelling), read rather than copied.
 - `ratification`: `caseConclusionFor`, `editionsRecordingConclusion` (R4, R8), `completenessFields`, `biasAcknowledgementOf`, `SUBJECT_POSITIONS`, `SEARCHED_SUBJECT_SOURCES`.
 - `contradiction` (N345): `unresolvedRecordOn` (its R29), for R31 and R32.
 - N364: `sources`: `publishableAt` (its R8), for R37. `capture`: `lateAttestationsOf` (its R68), `captureAccountsOf` (its R69), for R35 and R36. `provenance`: `attestationsOf` (its R49), `captureGrade` (its R24–R27, R51), for R35. `ratification`: `caseRatifyPreflight` (its R18), for R34.

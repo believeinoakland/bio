@@ -30,7 +30,7 @@ The case document's grammar, one spelling for every module: the formats and thei
 
 ### Uses
 
-- `legacy-checks`: `parseFrontmatter` (R1's blocks and tension section, R4), re-exported from `record-grammar`.
+- `record-grammar`: `parseFrontmatter` (R1's blocks and tension section, R4).
 
 ### Invariants
 

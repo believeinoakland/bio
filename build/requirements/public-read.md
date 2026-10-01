@@ -35,7 +35,7 @@ Terms are `publication`'s (a case, an edition, the case document, a pin, the pub
 
 ### Uses
 
-- `legacy-checks`: `parseFrontmatter`, `normalizeType`, `sectionText` (the Worker's reads).
+- `record-grammar`: `parseFrontmatter`, `normalizeType`, `sectionText` (the Worker's reads).
 - `signatures`: `verifySshsig`, `NS_RATIFY`, `ratifyStatement`, `caseRatifyStatement` (a published case's signature, R3; the Worker).
 - `ooxml`: `crc32` (R6).
 - `case-grammar`: the format predicates (R1 there), for R3 and the Worker; `caseTensionsOf` and `caseDocumentBlocks` (R3's `tensions`, `captures:` and `sources:` blocks), read from `case-grammar` itself, not through `publication`'s re-export.
