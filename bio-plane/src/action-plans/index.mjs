@@ -79,6 +79,8 @@ const PROPOSAL_SAYS = "this is a proposal, not an option: it is stored apart fro
 const CHECK_SAYS = "a check informs; it never refuses or changes anything.";
 const DAY_MS = 86400000;
 const ACT = Symbol("action-plans act");
+/* R35: marks a liveness whose successor was withheld; never answered. */
+const WITHHELD = Symbol("action-plans withheld");
 const GRADE_RANK = Object.freeze({ A: 0, B: 1, C: 2, D: 3 });
 
 const isMachine = (who) => str(who) === "" || isMachineIdentity(str(who));
@@ -195,6 +197,10 @@ export class ActionPlans {
     if (s.kind === "inquiry") return { support: "hypothetical", why: "a suspected matter: an inquiry still open, not a determination" };
     const d = this.#determination(s.determination, viewer);
     if (!d) return { support: "undetermined", why: "the determination does not answer to this reader" };
+    /* R35: what conformance withheld (its R24) is not measured by its absence; support is never computed over the
+       visible findings alone. */
+    if (d.out_of_view === true)
+      return { support: "short", why: "a finding the determination rests on is not one you may see, so it is not shown to meet the project's bar" };
     const bar = this.strength.projectBar(project) || {};
     const axes = ["capture", "connection"].filter((a) => typeof bar[a] === "string" && bar[a] in GRADE_RANK);
     if (!axes.length) return { support: "established", why: "determined; the project declares no bar, so nothing is measured against one" };
@@ -211,18 +217,51 @@ export class ActionPlans {
     return { support: "established", why: "determined; every finding it rests on meets the project's bar on each declared axis" };
   }
 
-  /** R8: a subject's liveness, derived when read. */
+  /** R8: a subject's liveness, derived when read; null for a subject the viewer may not see, which R35 withholds whole.
+   *  A successor the viewer may not see is left out, the key with it (R35); `withheld` says so. */
   #liveness(s, viewer) {
     if (s.kind === "inquiry") {
       const f = this.#inquiryFacts(s.inquiry, viewer);
-      if (!f) return { state: "undetermined", says: "an object you may not see" };
+      if (!f) return null;
       return CLOSED_INQUIRY_STATES.includes(f.state) ? { state: "closed", inquiry_state: f.state } : { state: "live" };
     }
     const d = this.#determination(s.determination, viewer);
-    if (!d) return { state: "undetermined", says: "an object you may not see" };
+    if (!d) return null;
     if (d.live === true) return { state: "live" };
-    const by = typeof d.superseded_by === "string" && this.#determination(d.superseded_by, viewer) ? d.superseded_by : null;
-    return { state: "superseded", successor: by };
+    if (typeof d.superseded_by !== "string") return { state: "superseded", successor: null };
+    if (!this.#determination(d.superseded_by, viewer)) return { state: "superseded", [WITHHELD]: true };
+    return { state: "superseded", successor: d.superseded_by };
+  }
+
+  /* R35: one read's sight of the objects a plan names, asked once each. `subject(s)` and `action(id)` answer whether the
+     viewer may see it; `field(f)` is an option's fields with every unseen subject withheld whole (its `subjects`, an
+     `enforces` naming one); `phases(ps)` drops a `when_subject` naming one; `withheld` is set whenever anything is. */
+  #sight(viewer) {
+    const memo = new Map();
+    const ask = (k, f) => { if (!memo.has(k)) memo.set(k, !!f()); return memo.get(k); };
+    const v = {
+      withheld: false,
+      subject: (s) => {
+        const seen = !s || typeof s !== "object" ? true : ask(`s:${subjectKey(s)}`, () => (s.kind === "inquiry"
+          ? this.#inquiryFacts(s.inquiry, viewer) : this.#determination(s.determination, viewer)));
+        if (!seen) v.withheld = true;
+        return seen;
+      },
+      action: (id) => ask(`a:${id}`, () => ok(this.actions.actionRead({ id, viewer }))),
+      subjects: (list) => (Array.isArray(list) ? list.filter((s) => v.subject(s)) : list),
+      fields: (f) => {
+        if (!isObj(f)) return f;
+        const out = { ...f, subjects: v.subjects(f.subjects) };
+        if (out.enforces && out.enforces.subject && !v.subject(out.enforces.subject)) delete out.enforces;
+        return out;
+      },
+      phases: (ps) => (Array.isArray(ps) ? ps.map((ph) => {
+        if (!isObj(ph) || !isObj(ph.starts) || !ph.starts.when_subject || v.subject(ph.starts.when_subject)) return ph;
+        const { when_subject, ...starts } = ph.starts;
+        return { ...ph, starts };
+      }) : ps),
+    };
+    return v;
   }
 
   /* ===================================================================== *
@@ -822,13 +861,20 @@ export class ActionPlans {
 
   #proposalRow(id) { return typeof id === "string" ? this.#one(`SELECT * FROM plan_option_proposals WHERE proposal_id=?`, id) : null; }
   /* R11, R32: a proposal as answered: labelled, with its why and sources; a machine's with its disclosure and the
-     project's work_kinds as they stood when its run opened; never a score. */
-  #proposalView(r) {
+     project's work_kinds as they stood when its run opened; never a score. Read through a plan (`see`, R35), a subject or
+     source the viewer may not see is withheld whole; the proposer's own answer is given as stored. */
+  #proposalView(r, see = null, viewer = null) {
     const machine = r.machine === 1;
     const kinds = machine ? this.#runRow(r.run) : null;
-    return { id: r.proposal_id, plan: r.plan_id, ...unjson(r.fields_json, {}), why: r.why,
+    const fields = unjson(r.fields_json, {});
+    let sources = machine ? unjson(r.sources_json, []) : null;
+    if (see && Array.isArray(sources)) {
+      const kept = sources.filter((x) => this.#sourceSeen(x, viewer));
+      if (kept.length !== sources.length) { see.withheld = true; sources = kept; }
+    }
+    return { id: r.proposal_id, plan: r.plan_id, ...(see ? see.fields(fields) : fields), why: r.why,
              label: proposalLabel(r.proposer, "plan_option"),
-             ...(machine ? { run: r.run, skill_version: r.skill_version ?? null, sources: unjson(r.sources_json, []),
+             ...(machine ? { run: r.run, skill_version: r.skill_version ?? null, sources,
                              disclosure: DISCLOSURE(r.run, r.skill_version),
                              work_kinds: kinds && kinds.work_kinds_json !== null && kinds.work_kinds_json !== undefined
                                ? { state: "stated", kinds: unjson(kinds.work_kinds_json, []) }
@@ -1160,17 +1206,20 @@ export class ActionPlans {
    * THE READS
    * ===================================================================== */
 
-  /** R6, R8, R19, R32, R34: the plan as the record stands at `nowMs`. */
+  /** R6, R8, R19, R32, R34: the plan as the record stands at `nowMs`; R35: what the viewer may not see withheld whole,
+   *  and `out_of_view: true` when anything was. */
   planRead({ id, nowMs, viewer } = {}) {
     const p = this.#plan(id, viewer);
     if (!p) return noSuchPlan(id);
     const now = Number.isFinite(nowMs) ? nowMs : this.#nowMs();
+    const see = this.#sight(viewer);
     const all = this.#subjectsOf(p.id, { all: true });
     const current = all.filter((s) => s.removedSeq === null);
     const inPlan = new Set(current.map((s) => s.key));
     const live = new Map();
-    const subjects = current.map((s) => {
-      const lv = this.#liveness(s.subject, viewer);
+    const subjects = current.filter((s) => see.subject(s.subject)).map((s) => {
+      let lv = this.#liveness(s.subject, viewer);
+      if (lv[WITHHELD]) { see.withheld = true; lv = { state: lv.state }; }
       live.set(s.key, lv);
       const out = { subject: s.subject, key: s.key, ...this.#support(s.subject, p.project, viewer), liveness: lv,
                     added_by: s.addedBy, added_at: s.addedAt };
@@ -1181,22 +1230,43 @@ export class ActionPlans {
       if (s.subject.kind === "outcome") out.escalation = this.#escalationOf(s.subject, viewer);
       return out;
     });
-    const options = this.#options(p.id).map((o) => this.#optionView(p, o, live, viewer));
-    const scenarios = this.#scenarios(p.id).map((sc) => this.#scenarioView(p, sc, viewer));
+    const held = this.#options(p.id);
+    const options = held.map((o) => this.#optionView(p, o, live, viewer, see));
+    const scenarios = this.#scenarios(p.id).map((sc) => this.#scenarioView(p, sc, viewer, see));
     const proposals = this.#rows(`SELECT * FROM plan_option_proposals WHERE plan_id=? AND machine=0 ORDER BY n`, p.id)
-      .map((r) => this.#proposalView(r));
+      .map((r) => this.#proposalView(r, see, viewer));
     const runs = this.#planRuns(p.id).map((run) => {
-      const page = this.#trayPage(p.id, run, 0);
+      const page = this.#trayPage(p.id, run, 0, see, viewer);
       return { run, proposals: page.proposals, next: page.next };
     });
+    const removed = all.filter((s) => s.removedSeq !== null && !inPlan.has(s.key) && see.subject(s.subject))
+      .map((s) => ({ subject: s.subject, key: s.key }));
+    const checks = this.#checks(p, options, scenarios, live, now, viewer, new Map(held.map((o) => [o.id, o.fields])));
+    const history = this.#historyView(p.id, see);
     return {
       ok: true, id: p.id, project: p.project, title: p.title, state: p.state, opened_by: p.openedBy, opened_at: p.openedAt,
       ...(p.state === "closed" ? { closed: { by: p.closedBy, at: p.closedAt, reason: p.closeReason } } : {}),
-      as_of: iso(now), work_kinds: this.#workKinds(p.project), subjects,
-      removed_subjects: all.filter((s) => s.removedSeq !== null && !inPlan.has(s.key)).map((s) => ({ subject: s.subject, key: s.key })),
-      options, proposals, planning_runs: runs, scenarios, checks: this.#checks(p, options, scenarios, live, now, viewer),
-      history: this.#history(p.id),
+      as_of: iso(now), work_kinds: this.#workKinds(p.project), subjects, removed_subjects: removed,
+      options, proposals, planning_runs: runs, scenarios, checks, history, ...(see.withheld ? { out_of_view: true } : {}),
     };
+  }
+
+  /* R6, R35: the plan's history as the viewer may read it. An act about a subject the viewer may not see leaves the
+     list; an unseen subject, action or track leaves the entry that names it. When an act is withheld, no entry carries
+     its `seq`, so the gap counts nothing. */
+  #historyView(planId, see) {
+    let dropped = false;
+    const out = [];
+    for (const h of this.#history(planId)) {
+      if ((h.kind === "subject_add" || h.kind === "subject_remove") && !see.subject(h.subject)) { dropped = true; continue; }
+      const e = { ...h };
+      if (h.kind === "open" && Array.isArray(h.subjects)) e.subjects = h.subjects.filter((x) => see.subject(x && x.subject));
+      if (h.fields) e.fields = see.fields(h.fields);
+      if (h.phases) e.phases = see.phases(h.phases);
+      if (h.kind === "start" && typeof h.action === "string" && !see.action(h.action)) { delete e.action; see.withheld = true; }
+      out.push(e);
+    }
+    return dropped ? out.map(({ seq, ...e }) => e) : out;
   }
 
   /** R21: the project's `work_kinds` as its document states them, or undetermined; it gates, filters and orders nothing. */
@@ -1236,12 +1306,16 @@ export class ActionPlans {
     return cur ? { id: cur.id, state: cur.state, stage: cur.stage, stage_name: cur.stage_name ?? null } : null;
   }
 
-  #optionView(p, o, live, viewer) {
-    const f = o.fields;
+  /* R6, R8, R35: one option as the viewer may read it: a subject they may not see leaves its `subjects`,
+     `subjects_liveness` and `available`, and an action they may not see leaves the `action` key. Whether every matter it
+     serves is no longer live is said only when every one is seen. */
+  #optionView(p, o, live, viewer, see) {
+    const f = see.fields(o.fields);
+    const whole = (o.fields.subjects || []).length === (f.subjects || []).length;
     const bound = (f.subjects || []).map((s) => ({ key: subjectKey(s), liveness: live.get(subjectKey(s)) || { state: "subject_removed" } }));
-    const anyLive = bound.some((b) => b.liveness.state === "live");
+    const anyLive = !whole || bound.some((b) => b.liveness.state === "live");
     const revisions = this.#rows(`SELECT * FROM plan_option_revisions WHERE plan_id=? AND option_id=? ORDER BY rev`, p.id, o.id)
-      .map((r) => ({ rev: r.rev, fields: unjson(r.fields_json, {}), reason: r.reason ?? null, author: r.author, at: r.at }));
+      .map((r) => ({ rev: r.rev, fields: see.fields(unjson(r.fields_json, {})), reason: r.reason ?? null, author: r.author, at: r.at }));
     const dispositions = this.#rows(`SELECT * FROM plan_history WHERE plan_id=? AND kind='dispose' ORDER BY seq`, p.id)
       .map((h) => ({ ...unjson(h.entry_json, {}), seq: h.seq })).filter((e) => (e.options || []).includes(o.id))
       .map((e) => ({ disposition: e.disposition, reason: e.reason ?? null, author: e.author, at: e.at }));
@@ -1252,8 +1326,8 @@ export class ActionPlans {
     Object.assign(out, this.#origin(o.proposal ? this.#proposalRow(o.proposal) : null));
     if (o.action) {
       const a = this.actions.actionRead({ id: o.action, viewer });
-      out.action = ok(a) ? { id: o.action, state: a.current_state ?? null, started_by: o.startedBy, started_at: o.startedAt }
-        : { id: null, says: "an object you may not see" };
+      if (ok(a)) out.action = { id: o.action, state: a.current_state ?? null, started_by: o.startedBy, started_at: o.startedAt };
+      else see.withheld = true;
     } else out.action = null;
     if (f.category === "legal") {
       out.available = (f.subjects || []).filter((s) => s.kind === "outcome").map((s) => {
@@ -1264,10 +1338,11 @@ export class ActionPlans {
     return out;
   }
 
-  #scenarioView(p, sc, viewer) {
+  #scenarioView(p, sc, viewer, see) {
     const { judged, times } = this.#timed(p, sc, viewer);
+    const shown = see.phases(sc.phases);
     return { scenario: sc.scenario, version: sc.version, versions: sc.versions, name: sc.name, set_by: sc.author, set_at: sc.at,
-             phases: sc.phases.map((ph) => {
+             phases: shown.map((ph) => {
                const t = times.get(ph.id), j = judged.get(ph.id) || null;
                return { ...ph, started: t.started, started_at: t.at, earliest: t.earliest, checkpoint_due: t.due,
                         judgement: j, ...(j ? { leads_to: this.#leadsTo(ph, sc.phases, j.judged) } : {}) };
@@ -1277,7 +1352,9 @@ export class ActionPlans {
   }
 
   /** R19: the checks, each with its reason; derived on read, they refuse and change nothing. */
-  #checks(p, options, scenarios, live, now, viewer) {
+  /* `held` maps an option to its fields as recorded: whether an option rests only on suspected matters is the plan's own
+     fact, asked of every subject it serves, seen or not (R35 withholds the subject, not what the plan says of it). */
+  #checks(p, options, scenarios, live, now, viewer, held) {
     const out = [];
     const today = dayOf(now);
     const outward = (o) => !!o.addressee;
@@ -1288,9 +1365,9 @@ export class ActionPlans {
       if (pending(o)) for (const d of o.dates || [])
         if (d.date < today) out.push({ check: "date_past", option: o.id, date: d.date, says: `${o.id}'s regulated date ${d.date} has passed (${d.basis})` });
       const states = (o.subjects_liveness || []).map((b) => b.liveness.state);
-      if (states.length && !states.includes("live"))
+      if (states.length && !states.includes("live") && o.says)
         out.push({ check: "subjects_not_live", option: o.id, says: `every matter ${o.id} serves is no longer live` });
-      const hypothetical = (o.subjects || []).every((s) => s.kind === "inquiry");
+      const hypothetical = ((held.get(o.id) || o).subjects || []).every((s) => s.kind === "inquiry");
       if (outward(o) && hypothetical)
         out.push({ check: "outward_on_hypothesis", option: o.id, says: `${o.id} addresses someone outside the group and rests `
           + "only on suspected matters: nothing it serves is determined yet" });
@@ -1334,6 +1411,10 @@ export class ActionPlans {
     const cap = Number.isInteger(Number(limit)) && Number(limit) > 0 ? Math.min(Number(limit), PLANS_PAGE_MAX) : PLANS_PAGE_MAX;
     const s = subject === null || subject === undefined || subject === "" ? null
       : typeof subject === "string" ? subject : (normSubject(subject) ? subjectKey(normSubject(subject)) : "\u0000");
+    const see = this.#sight(viewer);
+    /* R35: a matter the viewer may not see finds nothing, so a plan's holding it is not told. */
+    const asked = s === null ? null : subjectOfKey(s);
+    if (asked && !see.subject(asked)) return { ok: true, items: [], truncated: false, cursor: null, limit: cap };
     const where = [], args = [];
     if (project) { where.push("p.project_id=?"); args.push(String(project)); }
     if (state) { where.push("p.state=?"); args.push(String(state)); }
@@ -1348,8 +1429,10 @@ export class ActionPlans {
         cursor = r.plan_id;
         if (!this.#sees(r.project_id, viewer)) continue;
         if (items.length === cap) { truncated = true; break; }
+        const held = this.#subjectsOf(r.plan_id).map((x) => x.subject);
+        const shown = see.subjects(held);
         items.push({ id: r.plan_id, project: r.project_id, title: r.title, state: r.state, opened_by: r.opened_by,
-                     opened_at: r.opened_at, subjects: this.#subjectsOf(r.plan_id).map((x) => x.subject) });
+                     opened_at: r.opened_at, subjects: shown, ...(shown.length !== held.length ? { out_of_view: true } : {}) });
       }
       if (truncated || rows.length <= cap) break;
     }
@@ -1385,11 +1468,11 @@ export class ActionPlans {
       if (!runs.some((x) => x.run === r.run)) runs.push({ run: r.run, at: r.at });
     return runs.sort((a, b) => instantOrder(a.at, b.at) || (a.run < b.run ? -1 : 1)).map((r) => r.run);
   }
-  #trayPage(planId, run, from) {
+  #trayPage(planId, run, from, see, viewer) {
     const rows = this.#rows(`SELECT * FROM plan_option_proposals WHERE plan_id=? AND run=? AND run_ord > ? ORDER BY run_ord LIMIT ?`,
       planId, run, from, TRAY_PAGE + 1);
     const page = rows.slice(0, TRAY_PAGE);
-    return { proposals: page.map((r) => this.#proposalView(r)),
+    return { proposals: page.map((r) => this.#proposalView(r, see, viewer)),
              next: rows.length > TRAY_PAGE ? `${run}#${page.at(-1).run_ord}` : null };
   }
 
@@ -1414,9 +1497,11 @@ export class ActionPlans {
       from = n;
     }
     if (!r) return { ok: true, plan: p.id, run: null, proposals: [], next: null };
-    const page = this.#trayPage(p.id, r, from);
+    const see = this.#sight(viewer);
+    const page = this.#trayPage(p.id, r, from, see, viewer);
     return { ok: true, plan: p.id, run: r, proposals: page.proposals, next: page.next,
-             says: "the assistant's proposals in its own order, strongest first; no score is recorded or answered" };
+             says: "the assistant's proposals in its own order, strongest first; no score is recorded or answered",
+             ...(see.withheld ? { out_of_view: true } : {}) };
   }
 
   /** R30 (fills ai-runs R47): a planning run is opened over an open plan of its project, by a member who has joined it. */
@@ -1444,6 +1529,14 @@ export class ActionPlans {
         r.run, p.id, p.project, wk.state === "stated" ? JSON.stringify(wk.kinds) : null, this.now());
     } catch { /* a listener never changes the run (ai-runs R43) */ }
   }
+}
+
+/* R7, R35: the subject a key (R3's identity) names; null for a string that is not one. */
+function subjectOfKey(k) {
+  const m = /^inquiry:(.+)$/.exec(k) || /^outcome:([^#]+)#(.+)$/.exec(k);
+  if (!m) return null;
+  return k.startsWith("inquiry:") ? normSubject({ kind: "inquiry", inquiry: m[1] })
+    : normSubject({ kind: "outcome", determination: m[1], standard: m[2] });
 }
 
 /* ===================================================================== *
