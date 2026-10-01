@@ -55,3 +55,29 @@ Replaces J1. One correction: basis-versions' and skills' tests only mention `op=
 - format: 0 failures. architecture affordances: 0 failures. coverage affordances: 29 of 29 live ids named, 0 failures. ownership affordances tranche/T18: 7 files, legacy-store 0 added / 0 removed, legacy-index 0 / 0, 0 failures.
 
 Size (session_01FgotLQ7FibdK7RNpDfo4m4): test runs 16, module lines 2944
+
+## J4 · COMPLETE
+
+B4 applied, after merging tranche/T18. Each op is graded on R27's rule, the way the four were:
+
+- **`reasoned`** (each refuses `PLAN_NO_REASON`, action-plans R4): plansubjectadd, plansubjectremove, optionrevise (R9), optiondispose (R13: declined and blocked need a reason; choosing asks none, `triage`'s shape, K212) and planclose (R20). `PLAN_NO_REASON` joins `JUSTIFICATION_REFUSALS`.
+- **`reversible`**: scenarioset. A further scenarioset replaces it whole and keeps the earlier version in history, and it asks no reason (R14; `actionlaws`' precedent).
+- **`undetermined`**: planopen, optionadd, optionpropose, optionadopt, checkpointrecord (its note is optional, and a checkpoint is judged once), optionstart (`actioncreate`'s ground).
+- **`caller-owned`**: reminderset and reminderanswer, `queuesnooze`'s ground (action-clocks R4, R6: a member's own request, kept in that module's table).
+
+**New count: 71 ops graded `undetermined`** (65 + the six). For R3: the six are `undetermined` and the two reminders are `caller-owned`. R2 gains five `reasoned` and one `reversible`.
+
+**One correction to B4.** In op-declarations' `NEEDS`, `reminderset` and `reminderanswer` are present as keys with value `null`, the same form `queuesnooze` and `select` take. So they are gated rows, and each needs a `NON_ACTS` reason (given: "personal state …"). The twelve plan ops have `NON_ACTS` reasons too. `plan`, `plans` and `planproposals` are in `LAYER9_READS`, with `action`, `actions` and `templates`.
+
+**Totality, measured:** `unaccounted` over op-declarations' live `OPS` and `NEEDS` (gated means the key is in `NEEDS`) is `{unpublished: [], unranked: [], stale: []}`.
+
+**Tests:**
+- affordances: 123 pass, 0 fail. `catalogue.test.mjs`'s layer-9 census now holds 40 writes and 21 reads and includes action-plans' and action-clocks' op maps; R27 asserts 71.
+- New R19/R2 backing in `backing.test.mjs`: each of the five `reasoned` ops is refused without a reason by a code in the family and accepted with one; scenarioset is replaced by a further one.
+- Other modules: queue 68/0, tasks 71/0, skills 39/0, op-declarations 16/0, action-plans 38/0; control-plane 79/1 (R36, K658's accepted red).
+
+**Checks:** format 0, coverage 29/29 and 0 failures, ownership 0 (legacy-store and legacy-index 0/0). **Architecture: 3 failures, needing one edit by you:** add `action-plans` and `action-clocks` (both layer 9, earlier than mine) to affordances' `uses` in `build/modules.json`, for the same reason `standards`, `conformance`, `consequences`, `filings` and `escalation` are there: their op maps and the backing of each rung. The failures are `catalogue.test.mjs` importing `actionPlansOps` and `actionClocksOps`, and `backing.test.mjs` importing action-plans' fixture. With that edit, architecture reads 0 (nothing else failed).
+
+Everything else in J3 stands.
+
+Size (session_01FgotLQ7FibdK7RNpDfo4m4): test runs 25, module lines 2981
