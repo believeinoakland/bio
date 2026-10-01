@@ -31,3 +31,7 @@ Size (session_01XLWRBsRPw2zAufibUqk5eL): test runs 8, module lines 2,159
 ## J1 · REPORT
 
 Found in other modules (record, Completion): (1) legacy-tests: bio-plane/test/system/d278-codeless-refusals.test.mjs:205-206 pins the old publishedcase argument sentence; already red on tranche/T20 (imports the deleted checks/bio-checks.mjs), deleted in L11 (K879), so not re-keyed. (2) civicos-ui/test/publishedcase.test.mjs:463 VERIFY_DETAIL is a stale fixture copy of the old verification sentence (own bundle sha); stubbed, nothing fails. (3) Generated artifact staled: the plane bundle bio-plane/dist/bio-plane.bundled.mjs (+ .bundle.json), inputs src/public-read/index.mjs and src/publication/worker.mjs; release/bio-plane.bundled.mjs also carries the old strings.
+
+## J2 · COMPLETE
+
+K899 (1) applied at index.mjs:775 and worker.mjs:526-528, :714 (record id, record sha); re-scan of paths found nothing else (only identifiers: index.mjs:206, worker.mjs:307, :321). New record-word.test.mjs (R1-R4). public-read 70/70; ratification 181/181, filings 45/45, control-plane 85/85; format, architecture, coverage (17/17), ownership 0 failures. No row changed, nothing awaits a stamp. Branch job/T20/public-read.
