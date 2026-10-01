@@ -1393,47 +1393,6 @@ function checkInheritedLeg(leg, i, graded, registry, findings) {
   }
 }
 
-function checkProjectExtension(ctx, findings) {
-  if (ctx.fm?.object_type !== 'project') return;
-  const fm = ctx.fm;
-  const WS = ['draft', 'internally_checked', 'externally_compliant', 'distributed'];
-  if (fm.workproduct_state !== undefined && fm.workproduct_state !== null && !WS.includes(fm.workproduct_state)) {
-    findings.push(f('C-2.9', 'error', `workproduct_state '${fm.workproduct_state}' is not one of: ${WS.join(', ')}`));
-  }
-  const evals = Array.isArray(fm.evaluations) ? fm.evaluations : [];
-  for (let i = 0; i < evals.length; i++) {
-    const e = evals[i];
-    if (!e || !['compliance', 'argument'].includes(e.kind) || !['internal', 'external'].includes(e.strictness)
-        || !['pass', 'findings'].includes(e.result) || !ISO_TS_RE.test(e.timestamp || '')) {
-      findings.push(f('C-2.9', 'error', `evaluations[${i}] lacks the required kind/strictness/result/timestamp shape`));
-    } else if (e.result === 'findings' && !e.findings_ref) {
-      findings.push(f('C-2.9', 'error', `evaluations[${i}] result is findings but findings_ref is empty`));
-    }
-  }
-  if (fm.current_state === 'closed' && !['resolved', 'superseded', 'abandoned'].includes(fm.closed_reason)) {
-    findings.push(f('C-2.9', 'error', `closed state requires closed_reason in: resolved, superseded, abandoned`));
-  }
-  // C-9: the readiness ladder advances only on recorded evaluations
-  const ws = fm.workproduct_state;
-  const passed = (kind, stricts) => evals.some(e => e && e.kind === kind && e.result === 'pass' && stricts.includes(e.strictness));
-  if (['internally_checked', 'externally_compliant', 'distributed'].includes(ws)) {
-    for (const kind of ['compliance', 'argument']) {
-      if (!passed(kind, ['internal', 'external'])) {
-        findings.push(f('C-9.1', 'error', `workproduct_state '${ws}' requires a passing ${kind} evaluation (internal strictness or better)`,
-          ['run the missing evaluation', 'demote workproduct_state to the highest earned rung']));
-      }
-    }
-  }
-  if (['externally_compliant', 'distributed'].includes(ws)) {
-    for (const kind of ['compliance', 'argument']) {
-      if (!passed(kind, ['external'])) {
-        findings.push(f('C-9.1', 'error', `workproduct_state '${ws}' requires a passing external-strictness ${kind} evaluation`,
-          ['run the missing evaluation', 'demote workproduct_state to the highest earned rung']));
-      }
-    }
-  }
-}
-
 /* RETIRED CHECKS — ids this catalogue once carried and deliberately no longer
  * enforces. RECORDED here rather than deleted, for the reason ORCHESTRATION's
  * supersession rule gives: an item that vanishes is indistinguishable from one
@@ -2000,7 +1959,6 @@ export { EXTENSION_ARMS } from '../src/record-grammar/index.mjs';
 
 export const LEGACY_GRAMMARS = Object.freeze([
   { module: 'legacy-checks', ids: ['C-2.7'], arm: checkInformationExtension },
-  { module: 'legacy-checks', ids: ['C-2.9', 'C-9.1'], arm: checkProjectExtension },
 ].map((g) => Object.freeze({ ...g, ids: Object.freeze(g.ids) })));
 
 /**

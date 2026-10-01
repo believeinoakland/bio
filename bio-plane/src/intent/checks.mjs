@@ -3,11 +3,15 @@
  * reached.
  *
  * One row moved here from the check catalogue: C-2.9's objective arm (R1, R22), its id unchanged, as C-45 and C-80 were
- * split (map §3.3); the catalogue keeps C-2.9's other arms. The rest are this module's own family, C-111 (N180: C-110 is
+ * split (map §3.3). C-2.9's other arms and C-9.1 followed in T19 as this module's grammar (R29, `./grammar.mjs`); they
+ * raise findings, not refusals, and carry no row. The rest are this module's own family, C-111 (N180: C-110 is
  * reevaluation's, K199), minted at the extraction (K107 (3)'s rule: the job names a new code's row; K174: a module holds
  * its new family). A code another module mints for another condition is not borrowed here: a goal or aspiration with
  * no statement is `PURSUIT_UNSTATED` (the catalogue's `NO_STATEMENT` is `publishCase`'s), and a condition's grade
- * outside A–D is `CONDITION_BAD_GRADE` (strength's `BAD_GRADE` is its own). Refusals minted
+ * outside A–D is `CONDITION_BAD_GRADE` (strength's `BAD_GRADE` is its own). For the same reason (N433, K730, R30; one
+ * code, one row, DEC-49) C-111.4, C-111.6 and C-111.13 answer `INTENT_NO_SUCH_PROGRESSION`, `INTENT_BAD_STAGE` and
+ * `INTENT_NO_REASON`, their numbers and translations unchanged: `NO_SUCH_PROGRESSION`, `BAD_STAGE` and `NO_REASON` are
+ * progressions' (C-100.11, C-100.14, C-100.18). The three codes changed in T19 layer 7 and are awaiting stamp. Refusals minted
  * by the modules intent uses (membership's `PROJECT_ACT_NOT_A_PARTICIPANT` and C-70.1, progressions' dispose rows,
  * ai-runs' open rows) are relayed with their own rows and are not restated here. `NO_SUCH_PROJECT` is membership's one
  * row (C-70.5, answered through its `noSuchProject`, R78); intent's C-111.2 is retired (N208, K275) and its number is
@@ -36,12 +40,12 @@ export const INTENT_CHECKS = Object.freeze({
     translation: 'The measure sent for this objective is not in the shape the record reads: a progression, an entity, '
       + 'what each matching instance must reach, and the share of them that must reach it. Nothing was written.',
   },
-  NO_SUCH_PROGRESSION: {
+  INTENT_NO_SUCH_PROGRESSION: {
     check: 'C-111.4', where: at("refuseNoSuchProgression", "is-named-progression"),
     translation: 'The measure names a declared flow the record does not hold. Declare the flow first, or name one '
       + 'that exists. Nothing was written.',
   },
-  BAD_STAGE: {
+  INTENT_BAD_STAGE: {
     check: 'C-111.6', where: at("#conditionRefusal", "is-condition-stage"),
     translation: 'The measure requires a step the declared flow does not have. Name steps the flow declares. '
       + 'Nothing was written.',
@@ -74,7 +78,7 @@ export const INTENT_CHECKS = Object.freeze({
     check: 'C-111.12', where: at("refuseNoSuchAspiration", "is-aspiration-held"),
     translation: 'No aspiration answers to that id here. Nothing was written.',
   },
-  NO_REASON: {
+  INTENT_NO_REASON: {
     check: 'C-111.13', where: at("refuseNoReason", "is-reason-stated"),
     translation: 'This act is recorded with a reason in your own words, and none was given. The record keeps why, '
       + 'so the next reader is not left guessing. Nothing was written.',

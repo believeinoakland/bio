@@ -1,5 +1,5 @@
 /* intent over the modules it uses, the real ones where they need no module outside intent's uses (record-core,
-   membership, promotion, entities, progressions), on a real SQLite database (node:sqlite) standing in for a Durable
+   membership, credentials, promotion, entities, progressions), on a real SQLite database (node:sqlite) standing in for a Durable
    Object's storage. Four are stand-ins in the shape of their Provides, which the test controls and records: inquiry's
    `dispose` (R20–R22: the selection resolved, each member moved to the disposition with its reason and author),
    retrieval's `selectionCreate` (R18), ai-runs' `open` (R9–R10) and capture-requests' reads (`captureRequests`, R23;
@@ -8,11 +8,12 @@
 import { DatabaseSync } from "node:sqlite";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
+import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { entitiesOf } from "../../../src/entities/index.mjs";
 import { progressionsOf } from "../../../src/progressions/index.mjs";
 import { intentOf } from "../../../src/intent/index.mjs";
-import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
@@ -78,6 +79,10 @@ export function world({ now = NOW, plane = null } = {}) {
   record.migrate();
   const membership = membershipOf(host, { record });
   membership.migrate();
+  /* K789: the founder's credential, and so whether the instance is claimed (membership R94), are credentials' (its
+     R16, R17), built over the same storage after membership's tables. */
+  const credentials = credentialsOf(host, { record, membership });
+  credentials.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => clock.now });
   promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
   const entities = entitiesOf(host, { record, membership, provenance: {}, now: () => clock.now });
@@ -145,7 +150,7 @@ export function world({ now = NOW, plane = null } = {}) {
   if (plane) progressions = buildProgressions();
   let n = 0;
   const w = {
-    st, host, record, membership, promotion, entities, progressions, i, clock, calls, requests,
+    st, host, record, membership, credentials, promotion, entities, progressions, i, clock, calls, requests,
     /** The four stand-ins intent was built with, so a test can make one answer otherwise. */
     stand: { inquiry, retrieval, aiRuns, captureRequests },
     rows: (q, ...a) => st.sql.exec(q, ...a).toArray(),
