@@ -1,6 +1,5 @@
-import { livefire } from "./livefire.mjs";
-import { publicInstanceGroup, instanceGroupOp, groupIdentityOp, bootstrapReport, selftest, runtimeOp,
-         cpuProbeOp } from "./setup.mjs";
+import { publicInstanceGroup, instanceGroupOp, groupIdentityOp, bootstrapOp, INSTANCE_SETUP_OPS,
+         instanceSetupOp } from "./setup.mjs";
 import { caseRatifyStatement, NS_RATIFY } from "./sshsig.mjs";
 /* REC-46 (2026-08-04): the two prefixes this file STAMPS on a machine
    credential now come from the catalog rather than being typed here twenty
@@ -143,14 +142,7 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
          probe is confined to scratch. Nothing is read back out except by a
          signed-in member. */
       { const knocked = await capturePublicOp(op, req, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer }); if (knocked) return knocked; }
-      /* REC-52: the same spread as section 7a's. A store silence used to leave
-         a `{ok:true}` carrying the service name, the version and the bootstrap
-         flag and NOTHING the store knows — an instance answering "here is what
-         I am" while unable to say anything about itself. The installer and
-         `newgroup` both read this op (measured at newgroup/src/index.mjs:364
-         and :631), so the false success reached a caller deciding whether an
-         instance was ready. */
-      return bootstrapReport(env, fp, { members: url.searchParams.get("members") === "1", stub, json, storeSilent, storeRefusal, doAnswer });
+      return bootstrapOp(url, env, fp, { stub, json, storeSilent, storeRefusal, doAnswer });
 }
 
 /* The admitted ops whose handlers are still here; undefined for control-plane's generic forward. */
@@ -324,24 +316,9 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
     if (op === "registeraudit") return registerAuditOp(env, env.STORE.get(env.STORE.idFromName(storeName)),
       { json, doAnswer, storeSilent, storeRefusal, captureKey, storeName, cls });
 
-    /* selftest reports deployment health as JSON, so "did the deploy work" is a
-       link rather than a command. It asserts every binding is present and that
-       the store answers, and it never returns a secret. */
-    if (op === "selftest") return selftest(env, storeName, { cls, scratch: SCRATCH,
-      viewer: viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}` }, { json, doAnswer });
+    if (INSTANCE_SETUP_OPS.includes(op)) return instanceSetupOp(op, url, env, storeName, { cls, scratch: SCRATCH, json, doAnswer,
+      storeSilent, storeRefusal, viewer: viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}` });
 
-    if (op === "livefire") {
-      const out = await livefire(env, storeName, { capacity: cls === "admin",
-        viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}` });
-      /* D-506 / IC-265, on BOB #32's ruling of 2026-09-24 06:07Z. This read `out.ok ? 200 : 500`, and
-         `out.ok` WAS the canary's verdict — which is why a failing canary answered `ok:false` with no
-         code of any kind to every consumer that reads `ok:false` as a refusal. `out.ok` is now
-         `true` whenever the op answered, and the verdict lives in `out.verdict` / `out.failing`.
-         THE STATUS IS KEYED TO THE VERDICT, so it is byte-for-byte what it was for every outcome: a
-         DIST gate or a curl that reads the status alone loses nothing to this change, which is the
-         whole point of moving the verdict to keys of its own rather than deleting it from the wire. */
-      return json(out, out.verdict === "pass" ? 200 : 500);
-    }
 
     /* capture is the one op that moves bytes. PUT or POST writes capture
        content to the working bucket, content-addressed by its SHA-256 and
@@ -360,21 +337,6 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
        partition a link falls in depends on what the record holds, and the
        record changes, so the answer is computed at read time and never frozen
        into the capture. */
-    /* What runs here have COST, measured. A read, and the honest counterpart to
-       the store's `capturelimit` read — a DO PATH and not an op, M0-12; nothing
-       on the control plane reaches it — : that one reports a ceiling found by
-       being refused, this
-       one reports consumption found by measuring, because CPU has no catchable
-       refusal to find a ceiling with. */
-    if (op === "runtime") return runtimeOp(env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent, storeRefusal, doAnswer });
-
-    /* Find the CPU ceiling by walking into it. Each completed step is
-       checkpointed durably BEFORE the next begins, so when the isolate is killed
-       the trail shows the last step that finished and the ceiling is bracketed.
-       Probe class only: it burns compute on purpose and belongs nowhere near a
-       member's session. */
-    if (op === "cpuprobe") return cpuProbeOp(env.STORE.get(env.STORE.idFromName(storeName)),
-      { iterations: url.searchParams.get("iterations"), budget_ms: url.searchParams.get("budget_ms") }, { json, storeSilent, storeRefusal, doAnswer });
 
     if (CONNECTIONS_OPS.includes(op)) return connectionsOp(op, url, () => env.STORE.get(env.STORE.idFromName(storeName)), { json, doAnswer, storeRefusal, storeSilent,
       viewer: viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`,

@@ -153,6 +153,8 @@ Replaced at each handoff; the progress log (§4) is the history.
 
 **STANDING DIRECTION (Bob, 2026-10-01, K716): stop after T18.** Bob's meter is at 83%. Finish T18 (layer 11, then the two-step close), make T19's plan ready to open (`next.md` cut from `draft-T19-refresh.md` plus N426–N430), then stop: do not open T19, start no job, delete the backstop and `WATCH`. T19 runs under Bob's secondary account. Pass this direction on in every handoff until T19 opens.
 
+**T19's plan, before it is marked ready (Bob, 2026-10-01; P19):** a final sweep: every open `next.md` entry (N426–N430 and whatever layer 11 reports) placed against its module's job in T19, and every deferral naming its hard reason (order, a module's size before its split, a dependency not built, one job per module, a question that is Bob's, a deployment or measurement); a deferral without one is struck and the entry carried.
+
 **Why this handoff:** BOB #78's context passed ~3x its working set (P13). Its session is archived by BOB #79 (row `BOB-final`).
 
 **P19 governs** (urgency; Bob asked 2026-10-01 that BOB always seizes every chance to finish work early and safely): merge a job the moment its provided services are done; re-open a job rather than defer when the reason is not hard (K707 did so for actions R9).
