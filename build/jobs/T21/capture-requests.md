@@ -32,3 +32,7 @@ Size (session_01JL9Lx4gBJnTxwqg28ioRKt): test runs 3, module lines 1601
 ## J1 · REPORT
 
 Generated artifact staled: bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (not_product): src/capture-requests/index.mjs, checks.mjs and schema.mjs changed (N458's one sentence, comments). Not regenerated. test/m reds not mine: 42 fail, the 41 ACQUISITION #4 recorded (filings 35, project-stage 5, intent 1) plus control-plane/catalogue-end.test.mjs R43/R22 (C-53.13's pinned digest 93c064a948ae1a7f, actual 6611137f11985943), which fails identically with this change stashed.
+
+## J2 · COMPLETE
+
+Done at d95aaa7f9d on job/T21/capture-requests. N463: plane.test.mjs stands the plane up from src/plane/index.mjs (4/4 green). N458: index.mjs:266's C-28.14 detail now says 'a record id nothing answers to'; no test pinned the old words. N469: none listed; checks.mjs:52-53 and :74 named 'the suite' (the battery) as live, re-worded to drain.test.mjs' R14 tests; three stale comments in my own files fixed. capture-requests 63/63; test/m 4685 tests, 42 fail, none mine (REPORT J1); format, architecture, coverage (44/44), ownership: 0 failures. Record: build/jobs/T21/capture-requests.md.
