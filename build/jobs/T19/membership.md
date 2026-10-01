@@ -53,3 +53,36 @@ Deleting them breaks both modules until their L11 jobs.
 **My best reading:** keep `signerList`, `signerRegisterOwn` and `signerRevokeOwn` as named copies too (K636 BOB-1's pattern, deleted by membership's T20 job once queue-producers and control-plane re-point in L11), with what they need: `#signerMemberBar`, `#keyShaped`, `SIGNER_ATTESTS`, the BAD_KEY answer, rows C-96.15–.17, and the catalogue's `SIGNER_ENROLMENT_CHECKS` import. So I would delete `AI_CREDENTIAL_CHECKS` from the catalogue now (no copy needs it) but **not** `SIGNER_ENROLMENT_CHECKS` (B6/K779), and keep `BAD_KEY` and C-96.15–.17 here, all held twice with credentials' until T20 (K529's lag). Everything else in B3/B9 is deleted: sessions and passwords, `signerAdd`, `signerSet`, the AI mint/revoke/list, their routes, tables and tests, the interim arms, the direct session and signer writes in `memberSet`/`adminRemove`, the exempt list.
 
 The other reading: queue-producers and control-plane re-point in this layer instead (not my files). I am doing everything else now; the copies' part waits on your answer.
+
+## J6 · COMPLETE
+
+**COMPLETE**, `job/T19/membership` @ the commit "membership: the split's deletion" (pushed; tranche/T19 @ 773b7be152 merged in).
+
+**Entries applied** (`build/plan/current.md` layer 2; B1–B10):
+- **The seam** (merged early, K776): R92 `sessionRights`; R94 `registerClaimed`, with R64 `isAdministrator` and R86 `activeAdmins` reading it; R95 `registerPasswordSetter` (K774, K778), with `ENROL_NOT_RECORDED` (new row **C-96.18**); R79 `onRevoked` unchanged.
+- **The split's deletion** (B3, B9; K637, K774, K778, K779): `bootstrapState`, `claim`, `setPassword`, `login`, `session`, `LOGIN_REFUSAL_DETAIL` and the timing equaliser; `signerAdd`, `signerSet`; `aiCredentialMint`, `aiCredentialRevoke`, `aiCredentials`; the routes `aicredential*`, `bootstrap`, `claim`, `login`, `setpassword`, `session`, `signeradd`, `signerlist`, `signerset`; the tables `credentials`, `sessions`, `bootstrap`, `signers`, `ai_credentials` and their additive columns; the moved Rs' tests (R1–R3, R25–R30, R62, R70, R72, R73, R89–R91: `t16-own-keys`, `t17-machine-register-key`, and those parts of `signin`, now `capabilities-arithmetic`, and `expertise-keys-ai`, now `expertise`; t16's one R43 test moved to `sight`). The interim claimed and password arms are gone. `memberSet` and `adminRemove` no longer write sessions or signers: they tell R79's listeners (R8, R20). `MEMBERSHIP_EXEMPT_TABLES` is `members`, `member_expertise`, `admin_votes`, `hosting_access`. The catalogue's `AI_CREDENTIAL_CHECKS` is deleted (117 lines).
+- **Named copies kept** (K636 BOB-1): `attestingKeys`, `aiCredentialLook` (with `SIGNER_ATTESTS` and the AI projection helpers); and, on **J5's reading (still unanswered)**, `signerList`, `signerRegisterOwn`, `signerRevokeOwn` with `#signerMemberBar`, `#keyShaped`, the BAD_KEY answer, rows C-96.15–.17 and the catalogue's `SIGNER_ENROLMENT_CHECKS` (so that family is **not** deleted from the catalogue yet). If you rule the other way, a CHANGE re-opens me and I delete them.
+- **Families** into `membership/checks.mjs` (byte-equal copies, names kept): `MEMBER_ID_CHECKS`, `CUSTODIAL_CHECKS`, `PROJECT_AUTHORITY_CHECKS`, `PROJECT_VISIBILITY_CHECKS`, `PROJECT_JOIN_REQUEST_CHECKS`, `CASE_AUTHORITY_CHECKS`; C-33.28, C-33.48 into `MEMBERSHIP_CHECKS`; exported from `index.mjs`. `CUSTODIAL_CHECKS` keeps BAD_KEY while the `signerRegisterOwn` copy mints it.
+- **R43's project fence** (N426); **R83** `MODULE_ORDER` = `modules.json` (site-profiles, credentials, inquiry-grammar, action-grammar, plane; a layer-1 misorder fixed).
+- **Legacy-store's share:** the boot reindex in `migrate()` (store.mjs: 7 lines removed); the reserved-id finding registered through record-core's R68 under `membership` (the store's own block stays until L10, K783).
+- **N70's bounds:** already met (R82); unchanged.
+- **Converts:** `converts.test.mjs`, the membership shares of `statusby`, `adminvote`, `founder-sight`, `members`, `project-authority`, `project-discoverable`, `ratify-authority`, `project-sight`.
+- `isMachineIdentity`, `MACHINE_CLASS_PREFIX` from record-grammar (K780); a stale test reference in a comment corrected.
+
+**Deferred:** none of mine.
+
+**Found in other modules (their files; I cannot change them).** Whole `test/m`: 4,374 tests, 4,077 pass, **277 fail**, 20 todo. Three of those fail on `tranche/T19` without my branch (capture R37 ×2, control-plane R22), and five are query-language's `b.project` (J2, routed to L5). The other ~269 are **other modules' test fixtures that still use the credential code membership no longer holds**. None is a product failure, since the store wires `credentials` (`credentialsOf(ctx).migrate()` creates the tables and registers the claim, the setter and the listener):
+- calling `membership.claim` (or `m.claim`, `w.membership.claim`): ai-runs 54, bias 35, capture-sources 17, instance-setup 4, provenance 2, monitoring 1;
+- building membership without credentials, so `no such table: signers`/`credentials` (the `attestingKeys` copy, `signerList` and the door read `signers`): ratification 80, queue-producers 32, queue 17, publication 16 (+3 downstream: two door 502s, one `aiCredentialMint`), capture 3, tasks 2, intent 1, affordances 1, case-authoring 1 (R34, downstream).
+
+Each needs its fixture to construct `credentialsOf(ctx)` (or a stand-in registering R94, R95 and R79, as `test/m/membership/fixture.mjs` now does) and to claim through credentials. Modules in layers before credentials' users may need `uses: credentials` for that, or a stand-in. **Merge timing is yours:** merging my deletion turns these red until each module's fixture is re-pointed. The plane bundle (`bio-plane/dist`) is stale by my change; it is regenerated at the layer close.
+
+**Tests and checks:**
+- `node --test test/m/membership/`: tests 136, pass 136, fail 0.
+- `node --test test/m/`: tests 4374, pass 4077, fail 277 (above), todo 20.
+- `checks/format.mjs`: 87 modules, 82 requirements files; 0 failures.
+- `checks/architecture.mjs … membership`: 21 product files, 54 relative imports; 0 failures.
+- `checks/coverage.mjs … membership`: 78 of 78 live requirement ids named by a test; 0 failures.
+- `checks/ownership.mjs … membership tranche/T19`: 25 files; legacy-store 0 added, 7 removed; legacy-checks 0 added, 117 removed; 0 failures.
+
+Size (session_01HzHv55JX2Tnkf7jv6Tquna): test runs 30, module lines 3637
