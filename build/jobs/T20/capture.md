@@ -1,6 +1,6 @@
 # capture (T20)
 
-**Status** · session_015soMeRVHoEuTpMbyTVTmi8 · depth 2 · WORKING · handled B1
+**Status** · session_015soMeRVHoEuTpMbyTVTmi8 · depth 2 · COMPLETE · handled B1
 
 ## Completion (CAPTURE #12)
 
