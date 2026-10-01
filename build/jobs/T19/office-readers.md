@@ -46,3 +46,7 @@ Open for you: J1 (1) R11/R16 wording; J1 (2) whether `docxRenumbering` becomes R
 ## J3 · QUESTION
 
 R28 names `runs:[{old, new, outer}]` without saying what a run's index is (runs are numbered within their paragraph, R15). Best reading, built and pushed: `old` and `new` are each the R15 address `{para, run}`; `new` is null for a run in a branch not read, and `outer` is then the new paragraph index it maps to (its own paragraph's, or that paragraph's `outer`); `outer` is null for a kept run. Nothing else hangs on it; COMPLETE follows. Say CHANGE if you meant another shape.
+
+## J4 · COMPLETE
+
+B2 applied: tranche/T19 merged; R28's tests named R28 (coverage 28/28); `docxRenumbering`'s `runs` in R28's `{old, new, outer}` shape on my J3 reading. office-readers, odf-reader and format-registry 159/159; format, architecture, coverage, ownership 0 failures. The record states which stored references move and how (Record section). pptx is N439, not done here. Stale: `bio-plane/dist/bio-plane.bundled.mjs`.
