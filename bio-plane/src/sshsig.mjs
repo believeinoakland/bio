@@ -24,8 +24,10 @@
  *              | string hash_algorithm | string H(message)
  *
  * No secrets appear anywhere in this module: it holds public keys and
- * verifies. Signing happens where the private key lives, in the operator's
- * browser (src/sign-release.html, served as SIGN_HTML) or in stock ssh-keygen.
+ * verifies. Signing happens where the private key lives: in the operator's
+ * browser (src/sign-release.html, served as SIGN_HTML), in stock ssh-keygen,
+ * or, for a release, in the release signer on the operator's machine
+ * (scripts/sign-sshsig.mjs, which no bundle reaches).
  */
 
 const te = new TextEncoder();
@@ -226,7 +228,7 @@ export const NS_FLEET = "bio-release-fleet";
    the manifest DROP a member: every remaining signature still verifies and the
    installer silently installs less, which is D-115's "quietly doing less" with
    cryptographic cover.
-   The producer (`tools/release-assemble.mjs`) and the verifier (`newgroup`) must
+   The producer (`bio-plane/scripts/release-assemble.mjs`) and the verifier (`newgroup`) must
    derive byte-identical statements from the same manifest, and they run in
    different processes on different machines months apart. If each built its own
    string, the first divergence would present as "signature invalid" on a release
@@ -267,7 +269,7 @@ const renderServices = (services) => [...(services || [])]
    swapped model or wasm core changes what the record claims while every
    signature still verified. That is the record claiming more than it can
    support, with cryptographic cover.
-   Rendered `path:sha256:bytes`, sorted by path, and `parts=` is always present
+   Rendered `path:type:sha256:bytes`, sorted by path, and `parts=` is always present
    so a member with none is STATED rather than omitted — absent and empty must
    not look alike, here as everywhere else in this statement. */
 const renderParts = (parts) => [...(parts || [])]
