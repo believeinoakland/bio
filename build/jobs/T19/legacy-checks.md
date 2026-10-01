@@ -109,3 +109,7 @@ So the product loses nothing. Only the four tests do.
 The catalogue went from 8,811 lines at the opening to 6,769, net of record-grammar's move.
 
 Size (session_01BjfEuoaa6XVXhVaMbV2YC9): test runs 14, module lines 1271 (200 added, 1071 removed)
+
+## J4 · REPORT
+
+Correction to J3: the catalogue is 7,124 lines now (`wc -l`), not 6,769; it was 8,811 at the opening. Nothing else in J3 changes.
