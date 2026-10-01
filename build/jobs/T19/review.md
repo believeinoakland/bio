@@ -23,3 +23,7 @@
 - `ownership.mjs … review tranche/T19`: 5 files changed; legacy-store 0/0, legacy-checks 0/0; 0 failures.
 
 Size (session_01Gjpq2CxzEx1JPPHzAofDxV): test runs 1, module lines 1010
+
+## J1 · COMPLETE
+
+Entry applied (layer 8, review; B1). No review file imports bio-checks.mjs: index.mjs:62 isMachineIdentity from record-grammar; acts.test.mjs:7 PROJECT_VISIBILITY_CHECKS from membership; invariants.test.mjs drops the catalogue and reads its own rows and the homes in its uses (C-87.12 held by no row, C-59.6 record-core's, C-32.2/C-32.6 at their homes); comments at index.mjs:10 and checks.mjs:13 re-worded. Tests 33/33 pass; format, architecture, coverage (27/27), ownership: 0 failures. Nothing deferred. One note for BOB: requirements/review.md:60's '(not declared: T19 layer 8)' is stale since K780. Record: build/jobs/T19/review.md on job/T19/review.
