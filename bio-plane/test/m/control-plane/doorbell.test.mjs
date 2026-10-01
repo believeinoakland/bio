@@ -1,7 +1,7 @@
 /* control-plane: N364's routes (T16, layer 11) and the doorbell's pull (R36). Capture's `inboxpull`, `knocksof`,
    `pulledknocks`, `reattest`, `lateattestations`, `captureaccount`, `captureaccounts`; sources' `sourcedisclose`,
    `sourcelink`, `sourceconsent`, `sourceconsentwithdraw`, `sourceof`, `sourcerung`, `sourcereadlog`, `sourcepublishable`
-   and the no-account `knockerconsent`; membership's `signerregister`, `signerrevoke`; case-authoring's `publishpreflight`.
+   and the no-account `knockerconsent`; credentials' `signerregister`, `signerrevoke`; case-authoring's `publishpreflight`.
    Each op is driven through `makeFetch(hooks)` for every kind of caller with every stamp forged; the pull is driven at the
    record store's door over a real record (node:sqlite behind the Durable Object's storage shape), with capture real. */
 import { test } from "node:test";
@@ -541,9 +541,9 @@ test("R35, R26 (N379, K566): the record store's door dispatches sources' own map
   assert.deepEqual([u.status, u.json.error], [400, "unknown op: sourcenothing"]);
 });
 
-test("R35 (N364; membership R89, R90): the record store's door routes signerregister and signerrevoke to membership's own-key acts, `by` read from the query over the body's", async () => {
+test("R26 (N364, K784; credentials R9, R10): the record store's door routes signerregister and signerrevoke to credentials' own-key acts, `by` read from the query over the body's", async () => {
   const r = await record();
-  /* a machine stamp in the query is refused by membership, whatever the body names */
+  /* a machine stamp in the query is refused by credentials, whatever the body names */
   for (const op of ["signerregister", "signerrevoke"]) {
     const a = await r.go(`${op}?by=class:admin`, "POST", { keyB64: "AAAA", by: "ann" });
     assert.equal(a.status, 200, op);
@@ -551,7 +551,7 @@ test("R35 (N364; membership R89, R90): the record store's door routes signerregi
     assert.equal(a.json.result.ok, false, op);
     assert.ok(["MACHINE_CANNOT_REGISTER_KEY", "NO_SUCH_KEY"].includes(a.json.result.reason), `${op}: ${a.json.result.reason}`);
   }
-  /* negative control: the query's `by` reaches membership — a member id that is no member is answered as such */
+  /* negative control: the query's `by` reaches credentials — a member id that is no member is answered as such */
   const n = await r.go("signerregister?by=nobody", "POST", { keyB64: "AAAA", by: "class:admin" });
   assert.notEqual(n.json.result.reason, "MACHINE_CANNOT_REGISTER_KEY");
 });

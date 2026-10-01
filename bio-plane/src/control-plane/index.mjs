@@ -4,14 +4,17 @@
    R28's order and reads op-declarations' tables. An op's own handler is its module's: `makeFetch(hooks)` takes the arms
    that still live in legacy-index (`publicOp` for the unauthenticated ops, `gatedOp` for the admitted ones) and routes
    to them, so routing is one place while the arms still live there (the map's §3). */
-import { parseFrontmatter, createSha256, normalizeType, INSTALLATION_CHECKS,
-         MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../../checks/bio-checks.mjs";
+/* The shared grammar this door reads (the front matter, the digest, a type's canonical spelling, the two machine-stamp
+   prefixes) is record-grammar's. */
+import { parseFrontmatter, createSha256, normalizeType, MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
+/* C-68.1 (K794, K796): the capability complaint's row is acquisition's, its earliest raiser (K78 (3)). */
+import { INSTALLATION_CHECKS } from "../acquisition/checks.mjs";
 /* R32: the doors' own rows (`checks.mjs`). */
 import { DISPATCH_CHECKS, BOOTSTRAP_CHECKS, REPLAY_CHECKS, REQUIRED_ARGUMENT_CHECKS } from "./checks.mjs";
 /* K617, K624 (2): who may call an op is `admission`'s — the namespace gates, the credential's resolution, the admission
    in its order, the bearer fences, the reader of a public op's caller and the mint's secrets — called here in R28's
    order; each gate answers `null`, a refusal `{status, body}` this door answers as given, or a silence. */
-import { SCRATCH, namespaceGate, confinedNamespaceGate, pinnedNamespaceGate,
+import { SCRATCH, classify, scopeFor, namespaceGate, confinedNamespaceGate, pinnedNamespaceGate,
          aiCredentialPresented, admit, bearerFence, readerOf, aiCredentialMint, reviewGrantSecret,
          projectCreationGate } from "../admission/index.mjs";
 /* R22, R41 (K585 (1)): the composed catalogue — the check catalogue, every module's families, this module's own — and the
@@ -20,7 +23,7 @@ import { CHECK_FAMILIES, CHECK_FAMILY_FILES, dec49Row } from "./families.mjs";
 import { machineFences, renderPack } from "../skillpack.mjs";
 import { liveToken } from "../tokens.mjs";
 import { SIGN_HTML } from "../signpage.mjs";
-import { setupPage } from "../setup.mjs";
+import { setupPage, instanceGroupOp, groupIdentityOp } from "../setup.mjs";
 import { inbandQuartet } from "../inband.mjs";   /* REC-148: DEC-31's in-band quartet, one function */
 import { normalizeAddress } from "../subresources.mjs";
 /* R18: the capability vocabulary `op=whoami` publishes is membership's (N13: no longer read through legacy-store). */
@@ -70,8 +73,8 @@ async function reviewAnswer(out, op) {
        hashed with. The hash is over every byte of this answer but `inband` itself, in the form it is
        served; the floors are the project's required strength, the quantity `op=publish` freezes into
        the case document and the container carries as `bar`. The store's `required_strength` is read
-       into the floors and not served twice. (Moved here from the review door's inline branch by CONDUCT #19
-       at c19-batch9, when REC-198 made this function the one answer shape for every read of a draft.) */
+       into the floors and not served twice. (Moved here from the review door's inline branch when REC-198
+       made this function the one answer shape for every read of a draft.) */
     const { required_strength: bar, ...copy } = r;
     const served = { ok: true, ...copy };
     const { quartet } = await inbandQuartet({
@@ -372,8 +375,8 @@ function requiredArgument(op, argument, shape, error) {
 
 /* D-278 / C-68 and C-69: the same reader again, one per family, and the same
    refusal to invent. */
-/* C-68.2–.4 are this module's (R15); C-68.1, `storageAbsent`'s, is still read from the catalogue for legacy-index's
-   raiser until capture holds it (the map's §2). */
+/* C-68.2–.4 are this module's (R15); C-68.1, `storageAbsent`'s, is acquisition's row (K794), read here for the raiser this
+   door hands the arms it routes to. */
 const installationRow = (code) => {
   const row = BOOTSTRAP_CHECKS[code] ?? INSTALLATION_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
@@ -403,6 +406,40 @@ class StoreSilent extends Error {
    prefix. The ONE place this shape is written, so op=capture and op=pdfstructure
    read the identical object rather than two copies of the key drifting apart. */
 const captureKey = (storeName, sha) => `${storeName}/captures/${sha}`;
+
+/* THE CAPABILITY COMPLAINT (C-68.1, D-278). A copy installed with no evidence
+ * storage bound cannot serve `capture`, `pdfstructure`, `acquire` or `attest`.
+ * ONE row for the four, the op named beside it, minted here rather than at four
+ * sites for the same reason `requiredArgument` is: a DEC-49 row holds one
+ * `where`. `error` is passed in BYTE-IDENTICAL from each site — the sites said
+ * two different sentences before this and still do. Handed to every arm this
+ * door routes those ops to (moved from legacy-index at T19, its door share). */
+function storageAbsent(op, error) {
+  /* DEC-49 REGION is-storage-absent */
+  return json({ ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED",
+                ...installationRow("EVIDENCE_STORAGE_NOT_CONFIGURED"), error, op }, 503);
+  /* END DEC-49 REGION is-storage-absent */
+}
+
+/* REC-163 / IC-174 and REC-164: WHICH STORE `op=instancegroup` and `op=groupidentity` read, and WHO ASKS — the
+   resolution is the door's, the answer instance-setup's (`instanceGroupOp`, `groupIdentityOp`). Who asks decides which
+   projection, never whether: a caller the admission gate would admit (a machine class in its own namespace, a session,
+   an agent credential in scope) is answered the store's whole row, provenance included, `caseReader` deciding it; anybody
+   else the public projection. The store: the namespace a machine credential is confined to or names (`scopeFor`'s rule,
+   so a probe naming nothing still reads `scratch`), and for every other caller `store=scratch` when named and `bio`
+   otherwise, the invitation ops' rule. A silence is a silence (REC-52): never "no group is recorded". Moved from
+   legacy-index at T19 (its door share). */
+async function groupRead(op, url, env, presentedAi) {
+  const held = url.searchParams.get("token");
+  const heldCls = held ? await classify(held, env) : null;
+  const heldScope = heldCls ? scopeFor(heldCls, url) : null;
+  const store = heldScope && !heldScope.error ? heldScope.name
+    : (url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio");
+  const reader = await caseReader(url, env, store, presentedAi.cred);
+  if (reader.silent) return storeSilent(reader.silent, reader.correlation);
+  const io = { json, storeSilent, storeRefusal, doAnswer };
+  return op === "instancegroup" ? instanceGroupOp(env, store, reader, io) : groupIdentityOp(env, store, reader, io);
+}
 
 
 /* REC-173 (INVESTIGATIVE-SESSION.md §11 item 5, "A MIGRATION IS A REPLAY, NOT A SURFACING", BOB #30): IS THIS
@@ -559,7 +596,7 @@ export function makeFetch(hooks = {}) {
        for the one deployment that predates this, and should be dropped once
        that instance is gone. */
     /* The signing page, served by the group's own instance. It is the same
-       self-contained file that ships in tools/, with no network calls, and
+       self-contained file a release ships, with no network calls, and
        it holds no secret: keys are made and used in the visitor's browser.
        Serving it means the instance can LINK to it, which is the difference
        between a step an ordinary person can follow and one they cannot. */
@@ -585,7 +622,7 @@ export function makeFetch(hooks = {}) {
        HTML route: it answers before `path` and `op` exist, so D-456's `namespaceGate` and D-461's
        `pinnedNamespaceGate`, both of which run at the op front door a few lines down, never see it. MEASURED: the
        read was written `publicInstanceGroup(env, "bio")`, so `/?store=scratch` served `bio`'s slug as this copy's
-       own — a live verification whose whole no-write guarantee is naming its namespace (CLAUDE.md §5, D-325) read
+       own — a live verification whose whole no-write guarantee is naming its namespace (D-325) read
        production while believing it was in scratch — and `/?store=nonsense` did the same, which is D-456's own
        defect surviving at the one route D-456 did not reach. Found by D-461's worker.
 
@@ -720,8 +757,22 @@ export function makeFetch(hooks = {}) {
           commentBody === null ? undefined : { method: "POST", body: commentBody }));
         return reviewAnswer(out, op);
       }
+      /* The sign-in and the invitation's two steps, relayed to the store's routes (credentials' `login`, membership's
+         `invitelook` and `enroll`) and answered through R24's relay (D-679). The invitation ops answer from the store
+         the caller names (`invStub` above). Moved from legacy-index at T19 (its door share). */
+      if (op === "login") {
+        const body = await req.json().catch(() => ({}));
+        return relayAnswer(stub.fetch(new Request("http://do/login", {
+          method: "POST", body: JSON.stringify({ role: body.role || "admin", password: body.password }) })), "login");
+      }
+      if (op === "invitelook" || op === "enroll") {
+        const body = await req.json().catch(() => ({}));
+        return relayAnswer(invStub.fetch(new Request(`http://do/${op}`, {
+          method: "POST", body: JSON.stringify(body) })), op);
+      }
+      if (op === "instancegroup" || op === "groupidentity") return groupRead(op, url, env, presentedAi);
       if (op === "knockerconsent") return knockerConsent(req, stub);
-      /* The public ops whose handlers are their modules' (membership, publication, instance-setup, capture). */
+      /* The public ops whose handlers are their modules' (publication, public-read, instance-setup, capture). */
       return hooks.publicOp({ req, url, env, op, stub, invStub, fp, presentedAi });
     }
 
@@ -1589,13 +1640,13 @@ export function makeFetch(hooks = {}) {
        moves no state and applies to no selection, so it would inherit an `owner`
        stamp and a set-application shape it does not have.
        IDENTITY-CLAIM: OPEN — DEC-52 rules on three verbs and reconstructing a provenance
-       chain is not one of them. Routed to CONDUCT, pinned by name, not decided.
+       chain is not one of them. Left for Bob, pinned by name, not decided.
        OPEN AND NAMED, REC-65: the sentence above says "a named member's judgement"
        and **NOTHING IN THE PLANE REFUSES A MACHINE FROM MAKING IT** —
        `provenanceChainRebuild` carries no identity fence of any kind. DEC-52 ruled on
        three verbs and this is not one of them, so REC-65 neither fenced it nor extended
        the ruling to cover it; a worker doing either would be deciding doctrine nobody
-       asked for. It is ROUTED to CONDUCT and PINNED as a known-open finding in
+       asked for. It is LEFT for Bob and PINNED as a known-open finding in
        `test/identity-claims.test.mjs`, which fails if a fence appears OR if this
        sentence stops making the claim — so the gap cannot close silently in either
        direction. What is NOT open: the stamp itself. A machine arrives named
@@ -1755,8 +1806,8 @@ export function makeFetch(hooks = {}) {
        `class:<cls>`, which is on no roster: it opens a proposal and endorses nothing.
        **PROVISIONAL, AND BOB'S TO RULE: a bearer reaching `memberadd` is NOT
        refused** the way C-32.17 refuses one at the three ops above. MEASURED
-       before choosing (MEASUREMENTS M-84): 99 battery suites, five probes and
-       FLEET's live VF-4 run create their members through a bearer `memberadd`;
+       before choosing (M-84): 99 battery suites, five probes and a live
+       verification run create their members through a bearer `memberadd`;
        `setup.mjs`, the one non-test caller, posts with the founder's SESSION.
        With this stamp a bearer's `by` names nobody, and what the op still does for
        one — an invitation, §4.2's second administrator, a proposal awaiting every
@@ -1988,7 +2039,7 @@ export function makeFetch(hooks = {}) {
            the exemption. MEASURED by D-505 through op=promote (`risk-tier.test.mjs` §7 arm (ix), now INVERTED): a
            MEMBER-class deploy token sending `replay: true` landed `risk_tier: 1` — "file freely" — on an action
            nobody assessed, and `op=projection` published it. A provenance hop a caller can hand us is one a caller
-           can invent (`CLAUDE.md` §5), which is the reasoning `migrationReplay` below already answers one field over.
+           can invent, which is the reasoning `migrationReplay` below already answers one field over.
            THE CONDITION IS THE ADMIN CLASS WITH NO SESSION, AND BOTH HALVES ARE LOAD-BEARING. Admin is the only class
            `migrate.mjs` uses (it narrowed to admin at REC-173, and refuses to run under any other), so the migration
            is untouched. `!viaSession` is there because the session block above sets `cls = kind` from
@@ -2031,7 +2082,7 @@ export function makeFetch(hooks = {}) {
            does not model (Membership §DEC-2, deferred). After this step no caller can ASSERT a replay the held
            bytes do not list; an admin can still FABRICATE the bytes. */
         delete b.replay;
-        const creatingInquiry = b.base === null && !!b.meta && promotedType === "inquiry";   /* D-526's one derivation (c21-batch28) */
+        const creatingInquiry = b.base === null && !!b.meta && promotedType === "inquiry";   /* D-526's one derivation */
         /* R16: the verdict reached before the handler (above); an unverified assertion never reaches this line. */
         const proven = replay?.proven ?? null;
         if (proven) b.replay = true;
@@ -2362,7 +2413,7 @@ export function makeFetch(hooks = {}) {
        closed.
 
        IDENTITY-CLAIM: OPEN — DEC-52 rules on three verbs and setting aside the record's
-       own question is not one of them. Routed to CONDUCT, pinned by name, not decided.
+       own question is not one of them. Left for Bob, pinned by name, not decided.
 
        OPEN, NAMED, AND DELIBERATELY NOT CLOSED BY REC-65 — read this before adding a
        fence OR relying on its absence. **DEC-52 DOES NOT REACH THIS ACT.** Bob ruled on
@@ -2376,12 +2427,11 @@ export function makeFetch(hooks = {}) {
        WHY IT IS LEFT AS IT IS RATHER THAN FENCED OR BLESSED: fencing it would be a
        worker deciding a doctrine question Bob has not been asked, and blessing it would
        be worse — it would extend a ruling by analogy, which is exactly how a ruling
-       drifts. It is ROUTED to CONDUCT (REC-65's report) as the question DEC-52's
+       drifts. It is LEFT for Bob (REC-65's report) as the question DEC-52's
        reasoning raises without answering, and it is PINNED as a known-open finding in
        `test/identity-claims.test.mjs` so it cannot quietly become normal. **The pin
        fails when either half moves** — when a fence appears, or when this comment stops
-       claiming it is a member's decision — which is the mechanical expiry M0-12's ledger
-       technique exists for. */
+       claiming it is a member's decision — a pin that expires mechanically. */
     if (op === "proposedispose" && passBody) {
       try {
         const b = JSON.parse(passBody);
@@ -2591,7 +2641,7 @@ export function makeFetch(hooks = {}) {
 export { json, doAnswer, storeSilent, storeRefusal, relayAnswer, StoreSilent, STORE_SILENT_REASON, STORE_SILENT_DETAIL, PUBLISHED_STORE,
          sha256Hex, fingerprint, caseReader, reviewAnswer, captureKey, installationRow, dispatchRow, replayRow,
          dec49Row, dec49Attach, CHECK_FAMILIES, CHECK_FAMILY_FILES, migrationReplayOf, DRIVE_PROVENANCE_PATH,
-         publishAffordances, requiredArgument, PLANE_LIMITS, PLANE_LIMITS_STATEMENT };
+         publishAffordances, requiredArgument, storageAbsent, PLANE_LIMITS, PLANE_LIMITS_STATEMENT };
 /* K624 (1), (2): `legacy-index`' arms (`src/index.mjs`) read these of admission through this module until their modules
    take them; the door itself calls admission directly. */
 export { SCRATCH, NAMESPACES, classify, scopeFor } from "../admission/index.mjs";

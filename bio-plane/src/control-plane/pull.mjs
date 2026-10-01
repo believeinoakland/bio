@@ -10,7 +10,7 @@
    group, C-64.1; a mint exhausted; a package refused; a store fault, answered `PULL_WITHIN_FAILED`) leaves neither
    written. A knock already pulled does not call `within`: its bundle is the one holding its capture, and a pulled knock
    whose capture no bundle holds (pulled through capture's own route) is promoted by this door's next pull. */
-import { createSha256 } from "../../checks/bio-checks.mjs";
+import { createSha256 } from "../record-grammar/index.mjs";
 import { stampInstant } from "../record-core/index.mjs";
 
 /* The id's stem is record-core's `INFO-<year>-NNNN`; the slug says where the material came from. */

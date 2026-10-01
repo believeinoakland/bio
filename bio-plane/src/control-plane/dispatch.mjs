@@ -6,6 +6,7 @@
    wrapped, so the frame is this module's and the routes stay where they are. */
 import { Store as LegacyStore } from "../store.mjs";
 import { membershipOf } from "../membership/index.mjs";
+import { credentialsOf } from "../credentials/index.mjs";
 import { instanceSetupOf, instanceSetupOps } from "../setup.mjs";
 import { captureOf } from "../capture/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
@@ -47,7 +48,7 @@ export const PROJECT_NAMING_READS = Object.freeze({
   capturerequests: ["target"], tasks: ["refers"], biasmanifest: ["scopeId"], airuns: ["contextId"],
   casedrafts: ["project"], gatefacts: ["id"], affordancefacts: ["target"],
   projectownerarith: ["projectId"], projectvisibility: ["projectId"], projectparticipants: ["projectId"],
-  /* c22-batch29 (REC-196 x REC-150): REC-150's requests read names the project by its own id, so the door answers
+  /* REC-196 x REC-150: REC-150's requests read names the project by its own id, so the door answers
      C-70.1 at EXISTENCE before the route, as for every read above; without `projectId` it lists the caller's own. */
   projectrequests: ["projectId"],
   /* N193: a document's bundle id. N216's layer-9 reads naming a record object's bundle, or (`determinations`) a project. */
@@ -77,7 +78,7 @@ export const PROJECT_NAMING_READS_NOT = Object.freeze({
   airun: "`run` is a RUN id — a thing inside a project, whose existence is contents",
   airunlog: "`run` is a RUN id — a thing inside a project, whose existence is contents",
   airunspawn: "`run` is a RUN id — a thing inside a project, whose existence is contents",
-  /* c22-batch29: `biasdebt` (REC-207, on main) reached REC-196's sweep only at this union. */
+  /* `biasdebt` (REC-207) reached REC-196's sweep only when the two met. */
   biasdebt: "`run` is a RUN id — a thing inside a project, whose existence is contents",
   reviewcopy: "`draft` is a DRAFT id — a thing inside a project, whose existence is contents",
   casedocument: "`case` is a CASE id, answered by the case door's own fence",
@@ -214,8 +215,8 @@ export class Store extends LegacyStore {
 
 /* N364, N13: the routes this composition root adds to the one map, each passing R26's frame: queue's, tasks' and
    affordances' maps; `sources`' own map (N379, K566: its acts, its reads and the no-account `knockerconsent`, which no
-   other module dispatches); membership's two own-key acts, which membership keeps out of its map (`by` spread, then
-   overridden, as `signeradd`); and R36's pull, a route of its own beside capture's `inboxpull`, which the Worker's
+   other module dispatches); the two own-key acts, credentials' since layer 2 (K757, K784), which credentials keeps out of
+   its map (`by` spread, then overridden, as `signeradd`); and R36's pull, a route of its own beside capture's `inboxpull`, which the Worker's
    `op=inboxpull` addresses. */
 export function controlPlaneRoutes(ctx, url, body) {
   const q = (k) => url.searchParams.get(k);
@@ -234,8 +235,8 @@ export function controlPlaneRoutes(ctx, url, body) {
     /* N13 (K723 A): affordances' facts route (its R13–R16), the facts `op=affordances` derives an object's acts from. */
     ...lazily(affordancesOps, affordancesOf),
     ...sourceRoutes,
-    signerregister: () => membershipOf(ctx).signerRegisterOwn({ ...b, by: q("by") }),
-    signerrevoke: () => membershipOf(ctx).signerRevokeOwn({ ...b, by: q("by") }),
+    signerregister: () => credentialsOf(ctx).signerRegisterOwn({ ...b, by: q("by") }),
+    signerrevoke: () => credentialsOf(ctx).signerRevokeOwn({ ...b, by: q("by") }),
     inboxpullfile: () => pullAndFile({ capture: captureOf(ctx), promotion: promotionOf(ctx), record: recordOf(ctx),
                                        provenance: provenanceOf(ctx) },
                                      { knockId: (typeof b.knockId === "string" && b.knockId) || q("id"),
