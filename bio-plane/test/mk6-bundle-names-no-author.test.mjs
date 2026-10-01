@@ -63,7 +63,7 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
 }
 
 /* ------------------------------------------------ the real plane (MK-7: nothing is cut) */
-const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
+const IDX = fileURLToPath(new URL("../src/plane/index.mjs", import.meta.url));
 
 const ADM = "adm-mk6";
 const mf = new Miniflare({

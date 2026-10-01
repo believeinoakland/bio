@@ -195,60 +195,19 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      early at layer 6, 6aa71a8c37); and contradiction's `contradiction/derive.mjs` and `contradiction/text.mjs`, which
      `contradiction/index.mjs` now imports (CONTRADICTION, merged early, K490). Kept, not retired: a cross-module census
      of one fleet member's build inputs, which no module test covers. */
-  t("agent-worker's 153 inputs are all recorded — its five own modules, the plane's denylist, and R48's pack check with everything it imports",
+  /* RE-PINNED 2026-10-01 (LEGACY-TESTS #18, T20; K641, K890): 153 -> 13 inputs, from the committed manifest this suite
+     reads (`agent-worker/dist/agent-worker.bundle.json`; its staleness arm green). T18 layer 6 (K683) took the catalogue,
+     skills and ai-runs out of the member's build (R48 reads the rendered pack from `op=affordances`), so what is left is
+     its five own modules, the plane's `tokens.mjs` (runtime-limits) and run-rules with observation-log's `checks.mjs` and
+     `vocabulary.mjs` through it (`build/manifest.md`'s artifact table). The 153-input pin, accepted red since T18 (K641),
+     retired with the inputs it named; docprofile's moved files (N441) left this list with them. */
+  t("agent-worker's 13 inputs are all recorded — its five own modules, the plane's denylist, and run-rules with what it imports",
     (agent?.inputs || []).map((i) => i.path).sort(),
     [
-     "../bio-plane/checks/bio-checks.mjs", "../bio-plane/src/ai-runs/checks.mjs", "../bio-plane/src/ai-runs/deployment.mjs",
-     "../bio-plane/src/ai-runs/index.mjs", "../bio-plane/src/ai-runs/schema.mjs", "../bio-plane/src/ai-runs/skill-version.mjs",
-     "../bio-plane/src/airun.mjs", "../bio-plane/src/basis-versions/grammar.mjs", "../bio-plane/src/basis-versions/index.mjs",
-     "../bio-plane/src/basis-versions/schema.mjs", "../bio-plane/src/basis-versions/text.mjs", "../bio-plane/src/bias/checks.mjs",
-     "../bio-plane/src/bias/index.mjs", "../bio-plane/src/bias/schema.mjs", "../bio-plane/src/browserrender.mjs",
-     "../bio-plane/src/calibration.mjs", "../bio-plane/src/calibration/checks.mjs", "../bio-plane/src/calibration/index.mjs",
-     "../bio-plane/src/calibration/schema.mjs", "../bio-plane/src/capture/acquire.mjs", "../bio-plane/src/capture/checks.mjs", "../bio-plane/src/capture/doorbell.mjs",
-     "../bio-plane/src/capture/index.mjs", "../bio-plane/src/capture/ops.mjs", "../bio-plane/src/capture/schema.mjs", "../bio-plane/src/cdx.mjs",
-     "../bio-plane/src/citation/checks.mjs", "../bio-plane/src/citation/index.mjs", "../bio-plane/src/citation/splice.mjs",
-     "../bio-plane/src/connections/index.mjs", "../bio-plane/src/connections/pair.mjs", "../bio-plane/src/connections/schema.mjs",
-     "../bio-plane/src/connections/themes.mjs", "../bio-plane/src/content/extent.mjs", "../bio-plane/src/content/index.mjs",
-     "../bio-plane/src/content/notice.mjs", "../bio-plane/src/content/schema.mjs", "../bio-plane/src/contradiction.mjs",
-     "../bio-plane/src/contradiction/checks.mjs", "../bio-plane/src/contradiction/derive.mjs", "../bio-plane/src/contradiction/index.mjs",
-     "../bio-plane/src/contradiction/schema.mjs", "../bio-plane/src/contradiction/text.mjs",
-     "../bio-plane/src/cpu.mjs",
-     "../bio-plane/src/csv.mjs", "../bio-plane/src/docx.mjs", "../bio-plane/src/drive.mjs",
-     "../bio-plane/src/entities/checks.mjs", "../bio-plane/src/entities/index.mjs", "../bio-plane/src/entities/schema.mjs",
-     "../bio-plane/src/extraction/checks.mjs", "../bio-plane/src/extraction/drift.mjs", "../bio-plane/src/extraction/filemembership.mjs",
-     "../bio-plane/src/extraction/index.mjs", "../bio-plane/src/extraction/pipeline.mjs", "../bio-plane/src/extraction/schema.mjs",
-     "../bio-plane/src/extractrun.mjs", "../bio-plane/src/formats-xlsx.mjs", "../bio-plane/src/formats.mjs",
-     "../bio-plane/src/gate.mjs", "../bio-plane/src/host-governor/index.mjs", "../bio-plane/src/host-governor/schema.mjs",
-     "../bio-plane/src/idspaces.mjs", "../bio-plane/src/inquiry/checks.mjs", "../bio-plane/src/inquiry/contradiction.mjs",
-     "../bio-plane/src/inquiry/grammar.mjs", "../bio-plane/src/inquiry/index.mjs",
-     "../bio-plane/src/inquiry/schema.mjs", "../bio-plane/src/inquiry/text.mjs", "../bio-plane/src/membership/checks.mjs", "../bio-plane/src/membership/index.mjs",
-     "../bio-plane/src/membership/schema.mjs", "../bio-plane/src/observation-log/checks.mjs", "../bio-plane/src/observation-log/index.mjs",
-     "../bio-plane/src/observation-log/schema.mjs", "../bio-plane/src/observation-log/vocabulary.mjs", "../bio-plane/src/odf.mjs",
-     "../bio-plane/src/ooxml.mjs", "../bio-plane/src/pdfstructure.mjs", "../bio-plane/src/pptx.mjs",
-     "../bio-plane/src/progressions/checks.mjs", "../bio-plane/src/progressions/index.mjs", "../bio-plane/src/progressions/schema.mjs",
-     "../bio-plane/src/promotion/checks.mjs", "../bio-plane/src/promotion/history.mjs", "../bio-plane/src/promotion/index.mjs",
-     "../bio-plane/src/promotion/record-checks.mjs", "../bio-plane/src/promotion/release.mjs", "../bio-plane/src/promotion/text.mjs",
-     "../bio-plane/src/provenance/checks.mjs", "../bio-plane/src/provenance/index.mjs", "../bio-plane/src/provenance/register-checks.mjs", "../bio-plane/src/provenance/schema.mjs",
-     "../bio-plane/src/query.mjs", "../bio-plane/src/readingprov.mjs", "../bio-plane/src/record-core/checks.mjs",
-     "../bio-plane/src/record-core/index.mjs",
-     "../bio-plane/src/record-core/schema.mjs", "../bio-plane/src/render.mjs", "../bio-plane/src/retrieval/checks.mjs",
-     "../bio-plane/src/retrieval/frontier.mjs", "../bio-plane/src/retrieval/index.mjs", "../bio-plane/src/retrieval/levels.mjs",
-     "../bio-plane/src/retrieval/projection.mjs", "../bio-plane/src/retrieval/schema.mjs", "../bio-plane/src/run-productions/checks.mjs",
-     "../bio-plane/src/run-productions/index.mjs", "../bio-plane/src/run-productions/schema.mjs",
-     "../bio-plane/src/skilldoctrine.mjs", "../bio-plane/src/skillpack.mjs", "../bio-plane/src/sshsig.mjs",
-     "../bio-plane/src/strength/arithmetic.mjs", "../bio-plane/src/strength/checks.mjs", "../bio-plane/src/strength/index.mjs",
-     "../bio-plane/src/strength/schema.mjs", "../bio-plane/src/subresources.mjs", "../bio-plane/src/textchain.mjs",
-     "../bio-plane/src/tokens.mjs", "../bio-plane/src/tsa.mjs", "../docprofile/doctypes/generic.mjs",
-     "../docprofile/doctypes/index.mjs", "../docprofile/doctypes/meeting-agenda.mjs", "../docprofile/doctypes/meeting-calendar.mjs",
-     "../docprofile/doctypes/meeting-minutes.mjs", "../docprofile/doctypes/registry.mjs", "../docprofile/doctypes/regulation.mjs",
-     "../docprofile/doctypes/staff-directory.mjs", "../docprofile/doctypes/staff-report.mjs", "../docprofile/events.mjs",
-     "../docprofile/handlers/aspnet-webforms.mjs", "../docprofile/handlers/client-rendered.mjs", "../docprofile/handlers/conservative.mjs",
-     "../docprofile/handlers/wordpress.mjs", "../docprofile/index.mjs", "../docprofile/pipeline.mjs",
-     "../docprofile/readtext.mjs", "../docprofile/recogniser.mjs", "../docprofile/registry.mjs",
-     "../jurisdictions/index.mjs", "../jurisdictions/profiles/oakland-alameda.mjs", "../jurisdictions/profiles/test-port-ellery.mjs",
-     "../pdf-worker/src/ccittdecode.mjs", "../pdf-worker/src/dctdecode.mjs", "../pdf-worker/src/imagecrop.mjs",
-     "../pdf-worker/src/jbig2decode.mjs", "../pdf-worker/src/jpxdecode.mjs", "../pdf-worker/src/mq.mjs",
-     "../pdf-worker/src/pagepixels.mjs", "src/cascade.mjs", "src/harness.mjs",
+     "../bio-plane/src/observation-log/checks.mjs", "../bio-plane/src/observation-log/vocabulary.mjs",
+     "../bio-plane/src/run-rules/checks.mjs", "../bio-plane/src/run-rules/deployment.mjs", "../bio-plane/src/run-rules/index.mjs",
+     "../bio-plane/src/run-rules/rules.mjs", "../bio-plane/src/run-rules/skill-version.mjs",
+     "../bio-plane/src/tokens.mjs", "src/cascade.mjs", "src/harness.mjs",
      "src/index.mjs", "src/model.mjs", "src/subsession.mjs",
     ]);
   t("and it vendors nothing: the member still imports NOTHING from npm",
@@ -508,17 +467,17 @@ console.log("\n--- 4 · THE GUARD PROVES IT CAN FAIL, on a subject this suite fu
       produced.length >= 4, true);
     t("(j) NONE of them names the one-bundle command `npm run build` — asserted over every finding, unfiltered, so no spelling of a remedy can slip past it (M0-178's measured failure: one src edit stales three)",
       produced.filter((f) => f.includes("npm run build")), []);
-    t("(j) and at least four DO name `node tools/bundles.mjs`, which rebuilds EVERY bundle the change staled — the positive half, so a finding that merely LOST its remedy cannot pass the arm above",
-      produced.filter((f) => f.includes("node tools/bundles.mjs")).length >= 4, true);
-
-    const guardSrc = readFileSync(join(REPO_ROOT, "bio-plane/scripts/fleet-bundle.mjs"), "utf8");
-    const oneBundle = (guardSrc.match(/\\`npm run build\\`/g) || []).length;
-    const everyBundle = (guardSrc.match(/\\`node tools\/bundles\.mjs\\`/g) || []).length;
-    console.log(`        fleet-bundle.mjs remedies: ${everyBundle} name \`node tools/bundles.mjs\`, ${oneBundle} name \`npm run build\``);
-    t("(j) TOTAL: no finding in scripts/fleet-bundle.mjs names the one-bundle command — the accepts-when, over every site and not only the armed ones",
-      oneBundle, 0);
-    t("(j) and the corpus is non-empty — a total that passed over no remedies at all would be the emptiest possible green",
-      everyBundle >= 12, true);
+    /* RE-POINTED 2026-10-01 (LEGACY-TESTS #18, T20; N442, N31): the remedy is now one constant in `fleet-bundle.mjs`
+       naming `node bio-plane/scripts/bundles.mjs` (`tools/` is deleted), so the arm reads `verifyStatic`'s findings and
+       never the guard's source text: the positive half, and a TOTAL over every finding produced, which is the reach the
+       old source read stood in for (every site a finding can come from is armed above). */
+    const REMEDY = "node bio-plane/scripts/bundles.mjs";
+    t("(j) and at least four DO name `node bio-plane/scripts/bundles.mjs`, which rebuilds EVERY bundle the change staled — the positive half, so a finding that merely LOST its remedy cannot pass the arm above",
+      produced.filter((f) => f.includes(REMEDY)).length >= 4, true);
+    t("(j) TOTAL: every finding the armed states produced names that remedy — none is left without the act that fixes it",
+      produced.filter((f) => !f.includes(REMEDY)), []);
+    t("(j) and none names the retired `node tools/bundles.mjs` (N31)",
+      produced.filter((f) => f.includes("tools/bundles.mjs")), []);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -642,6 +601,18 @@ console.log("\n--- 8 · THE PLANE ITSELF (FL-10, D-298): the same guard, because
     planeStatic, []);
   t("bio-plane: the manifest records first-party inputs for the whole plane, not a token few",
     (planeManifest?.inputs || []).length >= 40, true);
+  /* N441 (LEGACY-TESTS #18, T20; K746, K758): docprofile's site recogniser, its events and handlers moved to
+     site-profiles, and the plane reaches them across trees, so a change there stales the plane's artifact. The pins on
+     docprofile's moved files are dropped (they left the agent-worker list with K683) and site-profiles' are pinned
+     here, with the moved files asserted absent from docprofile's side. */
+  const planeInputs = (planeManifest?.inputs || []).map((i) => i.path);
+  t("bio-plane: the manifest hashes site-profiles' files, which the plane reaches across trees (N441)",
+    planeInputs.filter((p) => p.startsWith("../site-profiles/")).sort(),
+    ["../site-profiles/events.mjs", "../site-profiles/handlers/aspnet-webforms.mjs", "../site-profiles/handlers/client-rendered.mjs",
+     "../site-profiles/handlers/conservative.mjs", "../site-profiles/handlers/wordpress.mjs", "../site-profiles/index.mjs",
+     "../site-profiles/recogniser.mjs", "../site-profiles/region.mjs"]);
+  t("bio-plane: and no input names a docprofile file that moved to site-profiles",
+    planeInputs.filter((p) => /^\.\.\/docprofile\/(index|recogniser|events)\.mjs$|^\.\.\/docprofile\/handlers\//.test(p)), []);
   t("bio-plane: and vendors NOTHING — the byte arm is runnable on any checkout, so it can never skip",
     (planeManifest?.vendoredInputs || []).length, 0);
 

@@ -228,8 +228,13 @@ section("ARM C", () => {
   for (const c of census)
     console.log(`    ${c.consumes ? "CONSUMES" : (DIFFERENT_QUESTION.has(c.f) ? "NAMED   " : "RIVAL   ")}  ${c.f}  [cites DEC-32: ${c.d1 ? "y" : "n"} · carries a ban regex: ${c.d2 ? "y" : "n"}]`);
 
-  ok(`ARM C REACH: the census walked ${files.length} files and found ${census.length} candidate site(s) (floor 4) — a census over nothing reports clean, and three headline totality assertions in this project have passed over an empty corpus`,
-     files.length >= 20 && census.length >= 4);
+  /* RE-STATED 2026-10-01 (LEGACY-TESTS #18, T20; K879): the old suites that failed at load were deleted, among them
+     two of D-269's four hand-list sites (`connections-sidebar`, `version-review`, with its control) and all three NAMED
+     files. The arm now holds the directory as it is: every ban site consumes the one family or is named, no consumer
+     keeps a private list, and the census floors at the figures this run printed (30 files, 2 sites). The pins on the
+     deleted files went with them. */
+  ok(`ARM C REACH: the census walked ${files.length} files and found ${census.length} candidate site(s) (floor 2) — a census over nothing reports clean, and three headline totality assertions in this project have passed over an empty corpus`,
+     files.length >= 20 && census.length >= 2);
 
   /* BOTH DETECTORS' POLARITY, DRIVEN — because on a clean tree D2 matches NOTHING
      (every hand list is gone), and a detector that has never fired is
@@ -275,14 +280,8 @@ section("ARM C", () => {
      rivals.length === 0);
 
   const consuming = census.filter((c) => c.consumes).map((c) => c.f).sort();
-  ok(`ARM C: all four of D-269's hand-list sites are consumers — [${consuming.join(", ")}]`,
-     ["connections-sidebar.test.mjs", "elicitation.test.mjs", "notifications.test.mjs", "version-review.test.mjs"]
-       .every((f) => consuming.includes(f)));
-
-  /* THE FOURTH LIST IS PINNED AS A FINDING, so the record cannot quietly go back
-     to saying there were three. */
-  ok("ARM C: `connections-sidebar.test.mjs` is one of them — D-269's delegation said THREE hand lists and there were FOUR, and it was missed because the census was keyed on the phrase the delegation used",
-     consuming.includes("connections-sidebar.test.mjs"));
+  ok(`ARM C: the two of D-269's hand-list sites still in the tree are consumers — [${consuming.join(", ")}]`,
+     ["elicitation.test.mjs", "notifications.test.mjs"].every((f) => consuming.includes(f)));
 
   /* AND NO CONSUMER MAY KEEP A PRIVATE LIST BESIDE THE SHARED ONE. Checked by
      SHAPE (a regex-literal ban pattern), not by the spelling `const BANNED`. */
@@ -297,16 +296,8 @@ section("ARM C", () => {
   }
 
   for (const [f, why] of DIFFERENT_QUESTION)
-    ok(`ARM C: \`${f}\` is kept and NAMED rather than folded in — ${why.slice(0, 60)}…`,
-       files.includes(f) && why.length >= 80);
-  /* THE CONTROL DRIVER MUST STILL BE ABLE TO SEE ITS SUBJECT. UI-42's arm is
-     keyed on the ASSERTION TEXT of the suite this item edited, so a rename there
-     would silently disarm somebody else's negative control — the "arm that never
-     armed" this project has sighted repeatedly. Pinned rather than trusted. */
-  const vrevSays = readFileSync(UITEST + "version-review.control.mjs", "utf8")
-    .match(/says:\s*"not one analyst word"/);
-  ok("ARM C: UI-42's control driver keys on `not one analyst word`, and `version-review.test.mjs` STILL CARRIES that exact assertion text after this item's edit — an arm that cannot find its subject never arms",
-     !!vrevSays && /not one analyst word reaches the member/.test(readFileSync(UITEST + "version-review.test.mjs", "utf8")));
+    if (files.includes(f))
+      ok(`ARM C: \`${f}\` is kept and NAMED rather than folded in — ${why.slice(0, 60)}…`, why.length >= 80);
 });
 
 /* ==================================================================== *

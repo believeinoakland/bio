@@ -55,7 +55,7 @@ catch(e){
   console.error("  Run `npm ci` in bio-plane/. " + String(e && e.message || e));
   process.exit(1);
 }
-const IDX = new URL("../../bio-plane/src/index.mjs", import.meta.url);
+const IDX = new URL("../../bio-plane/src/plane/index.mjs", import.meta.url);
 const ADM = "adm-ui78", MEM = "mem-ui78", PRB = "prb-ui78";
 const ORIGIN = "http://x";                      /* the address every request reaches, so the address a claim binds */
 const SLUG = "harbour-watch-coalition";

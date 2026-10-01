@@ -128,7 +128,7 @@ catch (e) {
   console.error("review-copy: the real plane could not be started — miniflare is not installed. Run `npm ci` in bio-plane/.");
   process.exit(1);
 }
-const IDX = new URL("../../bio-plane/src/index.mjs", import.meta.url);
+const IDX = new URL("../../bio-plane/src/plane/index.mjs", import.meta.url);
 mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX.pathname,
   script: fs.readFileSync(IDX, "utf8"),

@@ -28,7 +28,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 
-const PLANE = fileURLToPath(new URL("../../src/index.mjs", import.meta.url));
+const PLANE = fileURLToPath(new URL("../../src/plane/index.mjs", import.meta.url));
 const BUNDLE = fileURLToPath(new URL("../../../pdf-worker/dist/pdf-worker.bundled.mjs", import.meta.url));
 const hex = (b) => createHash("sha256").update(b).digest("hex");
 

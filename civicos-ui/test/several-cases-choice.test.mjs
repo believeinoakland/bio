@@ -93,7 +93,7 @@ catch (e) {
   console.error("several-cases-choice: the real plane could not be started — miniflare is not installed. Run `npm ci` in bio-plane/.");
   process.exit(1);
 }
-const IDX = new URL("../../bio-plane/src/index.mjs", import.meta.url);
+const IDX = new URL("../../bio-plane/src/plane/index.mjs", import.meta.url);
 mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX.pathname,
   script: fs.readFileSync(IDX, "utf8"),
@@ -246,8 +246,10 @@ ok("SUBSTRATE: op=publishedcase by the finding's id refuses naming BOTH cases, a
    JSON.stringify(several).slice(0, 300));
 /* The row is read from the catalogue, never typed here: a hand copy agrees at zero cost. */
 /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; PUBLICATION #1 J4.6): C-44.2 left the catalogue's CASE_DERIVATION_CHECKS for
-   publication's `CASE_RESOLUTION_CHECKS` (the refusal is the published read's), read from the plane's module. */
-const { CASE_RESOLUTION_CHECKS } = await import(pathToFileURL(new URL("../../bio-plane/src/publication/checks.mjs", import.meta.url).pathname).href);
+   publication's `CASE_RESOLUTION_CHECKS` (the refusal is the published read's), read from the plane's module.
+   RE-ANCHORED 2026-10-01 (LEGACY-TESTS #18, T20): the table moved again with the published read, to public-read's
+   `checks.mjs` (the publication split, K651). */
+const { CASE_RESOLUTION_CHECKS } = await import(pathToFileURL(new URL("../../bio-plane/src/public-read/checks.mjs", import.meta.url).pathname).href);
 const ROW = Object.values(CASE_RESOLUTION_CHECKS || {}).find((r) => r && r.check === "C-44.2") || null;
 ok("DEC-49: the refusal carries its CODE, its C-number (C-44.2) and the catalogue row's canned translation — "
  + "the code the reason carries, the translation a sentence and not the code",

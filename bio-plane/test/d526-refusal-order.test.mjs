@@ -41,7 +41,7 @@ import { join } from "node:path";
 
 /* The control driver points this at an armed copy of the sources. */
 const SRC_DIR = process.env.D526_SRC || fileURLToPath(new URL("../src", import.meta.url));
-const IDX = join(SRC_DIR, "index.mjs");
+const IDX = join(SRC_DIR, "plane", "index.mjs");   /* the plane's entry since T20 (plane R6) */
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -167,7 +167,9 @@ for (const [label, env] of ENVELOPES) {
 console.log("\n--- 2. a machine credential opening a question outside any run meets SURFACE_NO_RUN, however labelled ---");
 for (const [label, env] of ENVELOPES) {
   const id = `INQ-2026-0526-surface-${label.toLowerCase()}`;
-  const r = await promote({ id, text: inquiryMd(id), metaType: env === null ? "inquiry" : env, state: "open",
+  /* RE-ANCHORED 2026-10-01 (LEGACY-TESTS #18, T20): inquiry R11 runs inquiry-grammar R1 at the write (K681), so a
+     document with no `surfaced_by` is refused BASIS_REFUSED before the surfacing gate this arm is about. */
+  const r = await promote({ id, text: inquiryMd(id, { surfacedBy: "agent" }), metaType: env === null ? "inquiry" : env, state: "open",
                             title: "Where did it go", token: "mem-d526" });
   /* UPDATED 2026-09-26 (T3, legacy-tests; promotion R39 as K62 wrote it): this fence is now a check legacy-store
      REGISTERS with promotion, and promotion's own refusals run before every registered check, so MISLABELLED meets

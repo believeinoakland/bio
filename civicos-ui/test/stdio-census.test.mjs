@@ -158,13 +158,15 @@ ok(gap.length === 0,
 /* THE CENSUS MUST NOT BE VACUOUS. A sweep over an empty population passes, and this
    file's whole value is the population it walks — the costs-nothing rule applied to
    an assertion rather than to a digest. */
-ok(exits.length >= 50,
-   `ARM B2 (anti-vacuity): only ${exits.length} file(s) in this directory call \`process.exit\`, against 55 measured `
-   + `2026-09-16. A census that walks a collapsed population is green for the wrong reason. If suites were `
+/* FLOORS LOWERED 2026-10-01 (LEGACY-TESTS #18, T20; K879): the old suites that failed at load were deleted, and
+   the directory now holds 29 suites and 23 files calling `process.exit`, the figures this run printed. */
+ok(exits.length >= 23,
+   `ARM B2 (anti-vacuity): only ${exits.length} file(s) in this directory call \`process.exit\`, against 23 measured `
+   + `2026-10-01 (55 on 2026-09-16, before T20 deleted the old suites). A census that walks a collapsed population is green for the wrong reason. If suites were `
    + `legitimately deleted, LOWER THIS FLOOR IN THE SAME TURN and say in this message what was deleted.`);
-ok(files.filter(f => f.endsWith(".test.mjs")).length >= 45,
-   `ARM B3 (anti-vacuity): only ${files.filter(f => f.endsWith(".test.mjs")).length} suites discovered here, against 50 `
-   + `measured 2026-09-16 (49 pre-existing plus this one). Same rule as B2 — move the floor deliberately or not at all.`);
+ok(files.filter(f => f.endsWith(".test.mjs")).length >= 29,
+   `ARM B3 (anti-vacuity): only ${files.filter(f => f.endsWith(".test.mjs")).length} suites discovered here, against 29 `
+   + `measured 2026-10-01 (50 on 2026-09-16, before T20 deleted the old suites). Same rule as B2 — move the floor deliberately or not at all.`);
 /* THE MATCHER IS TESTED AGAINST ITS OWN FAILURE MODE, IN THE FILE THAT USES IT. Without
    this, the tightening above is a claim: a census that cannot be shown to REJECT anything
    is a census whose greens mean nothing — `hygiene` staying green under `unflush` is the
@@ -206,7 +208,8 @@ ok(shared.length === exits.length,
   /* T4 (legacy-tests), 2026-09-27: `check-refusal-codes.mjs` REPAIRED (it imports the shared module), measured
      truncating at 46 KB under `refusal-codes.control.mjs`'s piped read with ~30 failures standing; removed here in the
      same commit, as this arm asks. The DELEGATION it names was the old process's ledger (retired, N14). */
-  const RESIDUAL = ["check-semantics.mjs", "check-mock-envelope.mjs"];
+  /* T20 (LEGACY-TESTS #18): `check-semantics.mjs` deleted with the old suites (it failed at load: `walkfloor.mjs`). */
+  const RESIDUAL = ["check-mock-envelope.mjs"];
   const still = RESIDUAL.filter(f => {
     const s = fs.readFileSync(path.join(UIDIR, f), "utf8");
     return /process\.exit/.test(s) && !s.includes("test/stdio.mjs");
