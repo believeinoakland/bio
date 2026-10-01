@@ -1,6 +1,6 @@
 # admission (T18)
 
-**Status** · session_017gC7c3PAjzGoFbwwxDzDiH · depth 2 · WAITING ON BOB (B3 CHANGE: op-declarations merged) · handled B2
+**Status** · session_017gC7c3PAjzGoFbwwxDzDiH · depth 2 · WORKING · handled B2
 
 ## J1 · QUESTION
 
