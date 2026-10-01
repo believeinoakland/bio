@@ -1,6 +1,6 @@
 # plane (T19)
 
-**Status** · session_01LyQdjVWwytEZ1iVYFQbzYm · depth 2 · WAITING ON BOB (J2) · handled B2
+**Status** · session_01LyQdjVWwytEZ1iVYFQbzYm · depth 2 · WAITING ON BOB (J2) · handled B3
 
 ## J1 · QUESTION
 
