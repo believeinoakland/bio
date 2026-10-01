@@ -8,7 +8,7 @@ import { INLINE_MAX, PROMOTION_CHECKS, projectNameKey } from "../../../src/promo
 import * as P from "../../../src/promotion/index.mjs";
 import { STATES, vocabFor, normalizeType, OBJECT_TYPES } from "../../../src/record-grammar/index.mjs";
 import { CUSTODIAL_CHECKS } from "../../../checks/bio-checks.mjs";
-import * as C from "../../../checks/bio-checks.mjs";
+import * as MEMBERSHIP from "../../../src/membership/index.mjs";
 import { mintExhausted } from "../../../src/record-core/index.mjs";
 
 const ID = "INFO-2026-0001";
@@ -445,10 +445,10 @@ test("R20: every refusal names a reason, carrying its catalogue row where one ex
   const absent = q.promote(revise("INFO-2026-0404", "f".repeat(64), infoDoc("INFO-2026-0404")));
   assert.deepEqual([absent.reason, absent.code, absent.check, absent.translation],
                    ["ABSENT", "ABSENT", P.PROMOTION_ROW_CHECKS.ABSENT.check, P.PROMOTION_ROW_CHECKS.ABSENT.translation]);
-  /* Every refusal this door answers with a code a row table holds (the catalogue's, or this module's own since the
-     C-86 and C-97 families moved here) carries that row's check and translation. */
+  /* Every refusal this door answers with a code a row table holds (this module's own, or membership's whose rows it
+     answers with) carries that row's check and translation. */
   const rows = new Map();
-  for (const table of [...Object.values(C), ...Object.values(P)])
+  for (const table of [...Object.values(MEMBERSHIP), ...Object.values(P)])
     if (table && typeof table === "object" && !Array.isArray(table))
       for (const [code, row] of Object.entries(table))
         if (row && typeof row === "object" && typeof row.check === "string" && typeof row.translation === "string")
@@ -469,7 +469,7 @@ test("R20: every refusal names a reason, carrying its catalogue row where one ex
     seen.add(r.reason);
     assert.deepEqual([r.code, r.check, r.translation], [r.reason, row.check, row.translation], r.reason);
   }
-  assert.ok(seen.size >= 8, `answers carrying a catalogue row: ${[...seen]}`);
+  assert.ok(seen.size >= 8, `answers carrying a row: ${[...seen]}`);
 });
 
 test("R20: every row of this module's own refusals carries its check, translation and the `where` naming the region of promote that mints it (N118)", () => {

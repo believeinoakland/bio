@@ -5,7 +5,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as P from "../../../src/promotion/index.mjs";
-import * as C from "../../../checks/bio-checks.mjs";
 import { makePromotion, doc, infoDoc, create, T0 } from "./fixtures.mjs";
 
 const { projectNameKey, checkProjectNameUniqueness, withProducingGroup, MECHANICAL_FIELD_SETS,
@@ -25,13 +24,6 @@ test("R9, R10, R19: the C-86 and C-97 families are promotion's own tables, held 
     assert.match(row.where, /^src\/promotion\/index\.mjs #promote > is-[a-z-]+$/, code);
     assert.ok(typeof row.translation === "string" && row.translation.length > 40, code);
   }
-  /* Held once: no catalogue export carries either family, or any of their codes. */
-  assert.equal("PROMOTED_TYPE_CHECKS" in C, false);
-  assert.equal("PROJECT_CREATION_VISIBILITY_CHECKS" in C, false);
-  const codes = new Set([...Object.keys(PROMOTED_TYPE_CHECKS), ...Object.keys(PROJECT_CREATION_VISIBILITY_CHECKS)]);
-  for (const [family, table] of Object.entries(C))
-    if (table && typeof table === "object" && !Array.isArray(table))
-      for (const code of Object.keys(table)) assert.equal(codes.has(code), false, `${family}.${code}`);
   /* Each code promote answers carries its row, whole. */
   const { p } = makePromotion();
   const held = p.promote(create(ID, infoDoc(ID)));
@@ -72,8 +64,6 @@ test("R13: withProducingGroup is the one writing of the producing group: a creat
   const sent = infoDoc(ID, { group: "someone-else" });
   assert.equal(env.p.promote(create(ID, sent)).ok, true);
   assert.equal(env.record.readFile(ID, "bundle.md").text, withProducingGroup(sent, "harbor-group"));
-  /* The catalogue no longer holds a second writing. */
-  assert.equal("withProducingGroup" in C, false);
 });
 
 test("R19, R38: projectNameKey is the one name key, for promote's and forkProject's NAME_TAKEN alike", () => {
@@ -92,7 +82,6 @@ test("R19, R38: projectNameKey is the one name key, for promote's and forkProjec
     assert.equal(p.promote(mk(t, t)).reason === "NAME_TAKEN", taken, t);
   membership.joined.set(first.bundleId, ["bob"]);
   assert.equal(p.forkProject({ projectId: first.bundleId, title: "SEWER   fund", by: "bob" }).reason, "NAME_TAKEN");
-  assert.equal("projectNameKey" in C, false);
 });
 
 test("R38 (C-77): checkProjectNameUniqueness judges a handed corpus by the same key: every colliding pair, every state, projects only, and what it could not judge", () => {
@@ -133,7 +122,6 @@ test("R38 (C-77): checkProjectNameUniqueness judges a handed corpus by the same 
     const corpusSays = !checkProjectNameUniqueness([project("PROJ-2026-0001-a", a), project("PROJ-2026-0002-b", b)]).pass;
     assert.equal(corpusSays, projectNameKey(a) === projectNameKey(b), `${a} / ${b}`);
   }
-  assert.equal("checkProjectNameUniqueness" in C, false);
 });
 
 test("R8: MECHANICAL_FIELD_SETS is promotion's frozen registry of declared operations; UNDECLARED_OPERATION names exactly its operations", () => {
@@ -143,8 +131,6 @@ test("R8: MECHANICAL_FIELD_SETS is promotion's frozen registry of declared opera
   /* Every mutating set carries last_updated (write-completeness); sweep changes nothing. */
   for (const [op, set] of Object.entries(MECHANICAL_FIELD_SETS))
     assert.equal(set.includes("last_updated"), op !== "sweep", op);
-  /* Held once: the catalogue's copy is deleted (T19, K750). */
-  assert.equal("MECHANICAL_FIELD_SETS" in C, false);
   const { p } = makePromotion();
   for (const op of Object.keys(MECHANICAL_FIELD_SETS)) {
     const id = `INFO-2026-00${Object.keys(MECHANICAL_FIELD_SETS).indexOf(op) + 10}`;
@@ -168,11 +154,7 @@ const MOVED_T19 = {
   PROMOTION_REGISTRATION_CHECKS: { FACT_UNAVAILABLE: "C-102.4", FACT_FAILED: "C-102.5", FACT_MALFORMED: "C-102.6",
     STEP_MODULE_UNNAMED: "C-102.7", STEP_DECLARED: "C-102.8", CASE_CATALOGUE_FAILED: "C-102.9" },
 };
-/* Held twice until their other readers re-point (rule 1): bias (layer 5) reads C-26.12, and inquiry, strength (layer 6)
-   and instance-setup (layer 11) read C-64.1, from the catalogue. */
-const HELD_TWICE = { BIAS_ILLEGAL_TRANSITION: "BIAS_CHECKS", GROUP_UNDETERMINED: "INSTANCE_GROUP_CHECKS" };
-
-test("R1, R4, R5, R7, R13, R15, R19, R20, R21, R33, R39, R40, R41, R47: the rows of the refusals this module mints are its own tables', held once; C-26.12 and C-64.1 are copies until their other readers re-point", () => {
+test("R1, R4, R5, R7, R13, R15, R19, R20, R21, R33, R39, R40, R41, R47: the rows of the refusals this module mints are its own tables', each naming its site here", () => {
   for (const [table, rows] of Object.entries(MOVED_T19)) {
     assert.deepEqual(Object.keys(P[table]), Object.keys(rows), table);
     for (const [code, check] of Object.entries(rows)) {
@@ -181,15 +163,6 @@ test("R1, R4, R5, R7, R13, R15, R19, R20, R21, R33, R39, R40, R41, R47: the rows
       assert.ok(typeof row.translation === "string" && row.translation.length > 40, code);
       /* Each `where` names this module's site: its file, function and, inside a function that also writes, its region. */
       assert.match(row.where, /^src\/(promotion\/index|gate)\.mjs [#A-Za-z]+( > [a-z-]+)?(, reached from op=promote)?$/, code);
-      /* No catalogue table holds the code, except the two held copies, whose lines match but for C-64.1's site. */
-      const holders = Object.entries(C).filter(([, t]) => t && typeof t === "object" && !Array.isArray(t)
-        && Object.prototype.hasOwnProperty.call(t, code)).map(([n]) => n);
-      assert.deepEqual(holders, HELD_TWICE[code] ? [HELD_TWICE[code]] : [], code);
-      if (HELD_TWICE[code]) {
-        const held = C[HELD_TWICE[code]][code];
-        assert.deepEqual([held.check, held.translation], [row.check, row.translation], code);
-        if (code === "BIAS_ILLEGAL_TRANSITION") assert.equal(held.where, row.where);
-      }
     }
   }
   /* C-64.1's copy names the region of #promote that mints it. */

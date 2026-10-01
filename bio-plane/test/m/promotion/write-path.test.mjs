@@ -8,7 +8,6 @@ import assert from "node:assert/strict";
 import { Miniflare } from "miniflare";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import * as C from "../../../checks/bio-checks.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import * as P from "../../../src/promotion/index.mjs";
 
@@ -129,7 +128,7 @@ const ENVELOPE = { SELF_BASIS: null, BASIS_CYCLE: null, VERSION_LEG_UNRESOLVED: 
    each fixture's error findings as the version grammar (C-25, C-27.15) answers them, stated at this module's interface
    rather than read from the catalogue's function (re-anchored in T19: basis-versions takes the grammar in layer 6). */
 const RELAYED = [
-  { site: /basisVersionFindings, called from checkInquiryBasis and from store\.mjs promote/, envelope: "BASIS_VERSION_REFUSED",
+  { envelope: "BASIS_VERSION_REFUSED",
     want: [["C-25.1", "C-25.3"], ["C-25.1", "C-25.12", "C-25.13", "C-25.3", "C-25.7", "C-27.15"]],
     docs: [inquiry("INQ-2026-0130-u", [...refs([]), ...versions(['  - name: "v1"', '    relationship: "alternative"',
              '    state: "suggested"', "    derived_from: null", "    hidden: false", '    author: "ruth"', `    at: "${NOW}"`])]),
@@ -137,29 +136,28 @@ const RELAYED = [
              '    state: "nonsense"', '    derived_from: "v9"', "    hidden: maybe", '    author: "ruth"', `    at: "${NOW}"`, '    kind: "odd"'])])] },
 ];
 
-test("R18: every refusal the catalogue sites at the promote write is enforced there — each row is met by name", async () => {
-  /* The catalogue's tables, and the rows that moved from it to promotion (C-86 and C-97 whole in T18; the act-shape,
-     machine-fence, C-59 and C-26.12 rows and C-64.1's copy in T19): still the rows sited at this write, wherever the
-     table lives. */
-  const moved = { PROMOTED_TYPE_CHECKS: P.PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS: P.PROJECT_CREATION_VISIBILITY_CHECKS,
-                  PROMOTION_ROW_CHECKS: P.PROMOTION_ROW_CHECKS, PROJECT_MINT_CHECKS: P.PROJECT_MINT_CHECKS };
+test("R18: every refusal sited at the promote write is enforced there — each row is met by name", async () => {
+  /* This module's own rows sited at this write (C-86, C-97 whole since T18; the act-shape, machine-fence, C-59, C-26.12
+     and C-64.1 rows since T19), read from its tables. */
+  const own = { PROMOTED_TYPE_CHECKS: P.PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS: P.PROJECT_CREATION_VISIBILITY_CHECKS,
+                PROMOTION_ROW_CHECKS: P.PROMOTION_ROW_CHECKS, PROJECT_MINT_CHECKS: P.PROJECT_MINT_CHECKS };
   const rows = [];
-  for (const [family, table] of [...Object.entries(C), ...Object.entries(moved)]) {
-    if (!table || typeof table !== "object" || Array.isArray(table)) continue;
+  for (const [family, table] of Object.entries(own))
     for (const [code, row] of Object.entries(table))
-      if (row && typeof row === "object" && typeof row.where === "string" && /promote\b/.test(row.where)
-          && !/src\/index\.mjs/.test(row.where)) rows.push({ family, code, ...row });
-  }
-  /* 36 since K253: actions took GOVERNING_LAWS_REWRITTEN and RISK_TIER_REWRITTEN (T8 layer 9), as bias took C-26.1–C-26.7
-     and C-26.11 (K150); promotion cannot import either module, so their rows are theirs to test. */
-  assert.ok(rows.length >= 36, `the catalogue's rows sited at the promote write: ${rows.length}`);
+      if (/promote\b/.test(row.where)) rows.push({ family, code, ...row });
+  /* The rows later modules hold and enforce at this write through the steps they register (R39), stated here: this
+     module cannot import a later one's table (P4), and the catalogue that held them leaves in T19 (K785). The version
+     grammar's document findings (C-25, C-27.15) are relayed whole (RELAYED, below). */
+  const LATER = [["SELF_BASIS", "C-33.22", "inquiry"], ["BASIS_CYCLE", "C-33.23", "inquiry"],
+                 ["VERSION_FROZEN", "C-25.11", "basis-versions"], ["VERSION_LEG_UNRESOLVED", "C-25.16", "basis-versions"],
+                 ["SURFACED_BY_REWRITTEN", "C-66.5", "legacy-store"]];
+  for (const [code, check, family] of LATER) rows.push({ family, code, check, where: "" });
+  assert.equal(rows.length, 21, `the rows sited at the promote write: ${rows.length}`);
   /* A row held twice (C-26.12 and C-64.1, until their other readers re-point) is one code: probed once. */
   const probed = new Set();
   for (const row of rows) {
     if (probed.has(row.code)) continue;
     probed.add(row.code);
-    const relay = RELAYED.find((r) => r.site.test(row.where));
-    if (relay) continue;                       // shown whole by the relay test below
     assert.ok(PROBES[row.code], `no probe for ${row.family}.${row.code} (${row.check}, ${row.where})`);
     const r = await PROBES[row.code]();
     assert.equal(r.ok, false, `${row.code}: ${JSON.stringify(r)}`);

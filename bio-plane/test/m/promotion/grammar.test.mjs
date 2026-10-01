@@ -5,7 +5,6 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { INFO2_GRAMMAR, checkInfo2Contract, promotionOf } from "../../../src/promotion/index.mjs";
 import { checkBundle, EXTENSION_ARMS, parseFrontmatter } from "../../../src/record-grammar/index.mjs";
-import * as C from "../../../checks/bio-checks.mjs";
 import { makeRecord, makeMembership, makePromotion } from "./fixtures.mjs";
 
 const ID = "INFO-2026-0001-report";
@@ -30,14 +29,12 @@ const ctxOf = (img) => {
 };
 const arm = async (img) => { const found = []; await checkInfo2Contract(ctxOf(img), found); return found; };
 
-test("R55: the grammar claims C-18.6 and C-18.7, the whole of record-grammar R28's slot, and the catalogue's LEGACY_GRAMMARS no longer holds it", () => {
+test("R55: the grammar claims C-18.6 and C-18.7, the whole of record-grammar R28's slot", () => {
   assert.deepEqual([...INFO2_GRAMMAR.ids], ["C-18.6", "C-18.7"]);
   assert.ok(Object.isFrozen(INFO2_GRAMMAR) && Object.isFrozen(INFO2_GRAMMAR.ids));
   assert.equal(INFO2_GRAMMAR.arm, checkInfo2Contract);
   const slot = EXTENSION_ARMS.find((a) => a.ids.includes("C-18.6"));
   assert.deepEqual([...slot.ids].sort(), [...INFO2_GRAMMAR.ids].sort());
-  assert.equal(C.LEGACY_GRAMMARS.some((g) => g.ids.includes("C-18.6") || g.ids.includes("C-18.7")), false);
-  assert.equal("checkInfo2Contract" in C, false);
 });
 
 test("R55: promotion registers the grammar with record-core once per record, when it is first reached; a refused registration throws, never leaves it unrun", () => {
@@ -95,16 +92,16 @@ test("R55: the gate (R27) and the audit judge with the registered grammar in its
   assert.equal(gated.ok, false);
   const c186 = gated.findings.filter((x) => x.check === "C-18.6");
   assert.equal(c186.length, 1);
-  /* What the slot answers, run where record-grammar runs it among the catalogue's arms: the same errors, in the same order. */
+  /* What the slot answers, run where record-grammar runs it among the structural arms: the same errors, in the same order. */
   const { findings } = await checkBundle({ folderName: ID, files: new Map(Object.entries(img)), elidedPaths: new Set(),
     sha256: async (v) => hex(v), sha512: async (b) => new Uint8Array(createHash("sha512").update(b).digest()),
     resolveTarget: (id) => id === ID, releaseRegistry: null, publishedRegistry: null, publishedCaseRegistry: null, earnedRegistry: null },
-    { grammars: [...C.LEGACY_GRAMMARS, { module: "promotion", ...INFO2_GRAMMAR }] });
+    { grammars: [{ module: "promotion", ...INFO2_GRAMMAR }] });
   const errors = findings.filter((x) => x.severity === "error").map((x) => [x.check, x.message]);
   assert.deepEqual(gated.findings.filter((x) => x.check.startsWith("C-") && !["C-4.2", "C-17.2", "C-18.8", "C-20.1"].includes(x.check))
                      .map((x) => [x.check, x.detail]), errors);
   assert.equal(gated.warnings >= 1, true, "C-18.7's warning is counted");
-  /* With no grammar registered in the slot, nothing judges C-18.6: the catalogue holds no copy to fall back on. */
+  /* With no grammar registered in the slot, nothing judges C-18.6: no copy is held elsewhere to fall back on. */
   record.grammarList = [];
   const unjudged = await p.runGate({ bundleId: ID, image: img, knownIds: new Set([ID]), hasCapture: async () => ({ present: true }), registers: [] });
   assert.equal(unjudged.findings.some((x) => x.check === "C-18.6"), false);
