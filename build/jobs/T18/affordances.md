@@ -81,3 +81,7 @@ B4 applied, after merging tranche/T18. Each op is graded on R27's rule, the way 
 Everything else in J3 stands.
 
 Size (session_01FgotLQ7FibdK7RNpDfo4m4): test runs 25, module lines 2981
+
+## J5 · COMPLETE
+
+B5 applied, after merging tranche/T18. (a) plane.test.mjs's R17 no-target arm now requires R17's six keys to be present and admits nothing else except the door's `fences` and `pack` (control-plane R41, K730). (b) The layer-9 census is closed by B4 (J4). affordances: 123 pass, 0 fail. format 0, coverage 29/29, ownership 0. Architecture: 3 failures, J4's alone, still waiting on your `uses` edit (add action-plans and action-clocks). Size (session_01FgotLQ7FibdK7RNpDfo4m4): test runs 26, module lines 2991
