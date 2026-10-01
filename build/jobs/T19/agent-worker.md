@@ -27,3 +27,7 @@ Complete at 3b4c3290f4 on `job/T19/agent-worker` (tranche/T19 merged after B2).
 **Tests and checks.** agent-worker 140/0, cascade 29/0, fanout 184/0, harness 261/0, plan 55/0, requirements 272/0, versions 20/0, wire-vocabulary 83/0. Controls: agent-worker A1–A4 4/4 as declared; harness H8 and F2 as declared, F3 retired, F1 as above. Checks: format 0 failures; architecture 31 files, 83 imports, 0 failures; coverage 53 of 53 ids, 0 failures; ownership 19 files, 0 failures.
 
 Size (session_016iPtbmv6EzkgnPETAiejP6): test runs 40, module lines 3763
+
+## J3 · COMPLETE
+
+Re B3: already done in J2 (3b4c3290f4: isBoilerplate and BOILERPLATE_FORMS from basis-versions' index.mjs, which re-exports checks.mjs). tranche/T19 merged again at 1503124cea; bundle rebuilt, byte-identical (no diff); all eight suites green as in J2 (140, 29, 184, 261, 55, 272, 20, 83; 0 fail). J2's record stands. Size (session_016iPtbmv6EzkgnPETAiejP6): test runs 48, module lines 3763
