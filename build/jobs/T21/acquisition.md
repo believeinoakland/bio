@@ -12,7 +12,7 @@
 
 **Deferred:** none.
 
-**Other modules (REPORT J1):** `bio-plane/dist/bio-plane.bundled.mjs` and `.bundle.json` (`not_product`) stale: `src/acquisition/index.mjs` changed; not regenerated. `test/m` reds not mine: 41 fail on `tranche/T21` with and without this change (filings 33 across approve-send, outward, packet, premise, prepare, reads, refusals, sight; project-stage `stage.test.mjs` 6: a document's own `matured`/`investigating`; intent `grammar.test.mjs` 2: R29's slot claim still names C-9.1, its L7 entry).
+**Other modules (REPORT J1):** `bio-plane/dist/bio-plane.bundled.mjs` and `.bundle.json` (`not_product`) stale: `src/acquisition/index.mjs` changed; not regenerated. `test/m` reds not mine: 41 fail on `tranche/T21` with and without this change (filings 35 across approve-send, outward, packet, premise, prepare, reads, refusals, sight; project-stage `stage.test.mjs` 5: a document's own `matured`/`investigating`; intent `grammar.test.mjs` 1: R29's slot claim still names C-9.1, its L7 entry).
 
 **Tests and checks:**
 - `node --test bio-plane/test/m/acquisition/`: tests 59, pass 59, fail 0
@@ -22,4 +22,4 @@
 - `node checks/coverage.mjs … acquisition`: 30 of 30 live requirement ids named by a test; 0 failures
 - `node checks/ownership.mjs … acquisition tranche/T21`: 4 files changed; 0 failures
 
-Size (session_01Acv65uxLHFiE42yCXhKSYx): test runs 3, module lines 1281
+Size (session_01Acv65uxLHFiE42yCXhKSYx): test runs 4, module lines 1281
