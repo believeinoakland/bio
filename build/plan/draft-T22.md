@@ -1,5 +1,7 @@
 # Plan: tranche T22
 
+**Before T22 opens (K954):** BOB implements and certifies the cross-account channel (PROCESS-MECHANICS §13.1, `civicos-process` tools and checks), seeds `build/channels.md` and `mail/BOB`, posts the first NOTICE and DEFER to UX-DESIGN, and merges PR #6 into `main`.
+
 **Status** · DRAFT for T22, written by a worker for BOB #87, 2026-10-01, on `tranche/T21` while T21 runs (layer 1 closed, K940; layer 2 running). Written from the work that remains (P19 as amended 2026-10-01): every entry of the new `next.md` (after T21's opening housekeeping) and the rows T21's layers 3–11 leave `awaiting stamp` (`current.md` T21, rule 4). Lines marked **[T21]** depend on T21's outcome and are re-checked against its close before T22 opens.
 
 **Cut from** · the new `next.md` (12 entries, every one LEFT OUT of T21 with a hard reason); `current.md` (T21) rules 3–4, its roster, "next.md: every entry" and its carried-over table rows; rulings K921–K940; `build/plan/starts-T21/` (provenance, filing-templates, filings, local-facts, intent, action-clocks, promotion, legacy-tests); `requirements/filing-templates.md` R23, `local-facts.md` R8, `filings.md` "Rows"; `plan/t21-requirements-notes.md` 9; `bio-plane/src/filings/checks.mjs`; `bio-plane/test/system/row-census.test.mjs`; `build/jobs/T20/legacy-tests.md`, `build/jobs/T21/*.md`.

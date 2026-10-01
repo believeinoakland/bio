@@ -1,0 +1,150 @@
+<title>Cross-Account Channel</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column, a decision panel up top, numbered clauses as they will read in PROCESS-MECHANICS §13. */
+:root{
+  --bg:#f6f7f4; --surface:#ffffff; --fg:#1d2420; --muted:#5b665f; --rule:#d9ded8;
+  --accent:#2f6b4f; --accent-soft:#e3efe8; --note:#8a5a14; --note-soft:#f7eedc;
+  --display:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --body:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#141917; --surface:#1b2220; --fg:#e4eae6; --muted:#9aa79f; --rule:#2e3833;
+  --accent:#7cc4a0; --accent-soft:#1f3329; --note:#e0b46a; --note-soft:#33291a; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#141917; --surface:#1b2220; --fg:#e4eae6; --muted:#9aa79f; --rule:#2e3833;
+  --accent:#7cc4a0; --accent-soft:#1f3329; --note:#e0b46a; --note-soft:#33291a; color-scheme:dark }
+body{background:var(--bg);color:var(--fg);font:15px/1.6 var(--body)}
+.wrap{max-width:46rem;margin:0 auto;padding-inline:16px;padding-block:2.5rem 4rem}
+h1{font:600 2rem/1.2 var(--display);margin:0 0 .4rem;text-wrap:balance}
+h2{font:600 1.3rem/1.3 var(--display);margin:2.4rem 0 .6rem;text-wrap:balance}
+h3{font:600 1rem/1.4 var(--body);margin:1.4rem 0 .3rem}
+p,li{max-width:65ch}
+.sub{color:var(--muted);margin:0}
+.eyebrow{font:500 .75rem var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+code,.mono{font-family:var(--mono);font-size:.88em}
+pre{font:.85rem/1.5 var(--mono);background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:.8rem 1rem;overflow-x:auto}
+.ask{background:var(--accent-soft);border-radius:8px;padding:1rem 1.2rem;margin-top:1.6rem}
+.ask h2{margin-top:0;font-size:1.1rem}
+.ask ol{margin:.4rem 0 0;padding-left:1.2rem;display:grid;gap:.5rem}
+.diff{background:var(--note-soft);border-left:3px solid var(--note);padding:.6rem .9rem;margin:.8rem 0;border-radius:0 6px 6px 0}
+.diff strong{color:var(--note)}
+.tbl{overflow-x:auto;margin:.6rem 0}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:.78rem;letter-spacing:.05em;text-transform:uppercase}
+td code{white-space:nowrap}
+ul,ol{padding-left:1.3rem}
+li+li{margin-top:.3rem}
+.cl{display:grid;grid-template-columns:2.2rem 1fr;gap:.2rem .6rem;margin:.9rem 0}
+.cl .n{font:600 .95rem var(--mono);color:var(--accent)}
+.cl > div{min-width:0}
+footer{margin-top:3rem;color:var(--muted);font-size:.85rem;border-top:1px solid var(--rule);padding-top:1rem}
+</style>
+<div class="wrap">
+  <div class="eyebrow">Draft for Bob's approval · PROCESS-MECHANICS §13 · BOB #87, 1 October 2026</div>
+  <h1>A channel between your two accounts</h1>
+  <p class="sub">The development process (secondary account) and the UX design session (primary account) can reach each other only through the repository. This adds a mailbox between them, read at fixed moments, with you as the doorbell when it matters.</p>
+
+  <section class="ask">
+    <h2>What I need from you</h2>
+    <ol>
+      <li><strong>Approve the change</strong> as written below, or tell me what to change.</li>
+      <li><strong>One choice where I differ from your outline:</strong> each outbox lives on a <em>dedicated mail branch</em> owned by its writer (<code>mail/BOB</code>, <code>mail/UX-DESIGN</code>), not on the writer's working branch. I recommend it; the reason is in clause 1.</li>
+      <li><strong>PR #6:</strong> I can merge it, but I recommend I do so right after T21 closes (details at the end). Say "merge it now" if you want the DEC numbers on <code>main</code> sooner.</li>
+    </ol>
+  </section>
+
+  <h2>§13.1 Across accounts (new)</h2>
+  <p>Sessions on your two accounts cannot see each other: <code>get_session</code>, <code>send_message</code> and the doorbell (<code>create_trigger</code>) all fail across accounts. The repository is the only place they meet. This clause gives them the same mailbox rules as BOB and its jobs (§13), without a doorbell. It serves P2 (the process and the product are separate, and so are their two streams of rulings), P13 (state lives in git, not in a session) and P17 (you decide; nobody re-asks you a question already settled).</p>
+
+  <div class="cl"><div class="n">1</div><div>
+    <h3>Participants and addresses</h3>
+    <p>A registry, <code>build/channels.md</code> on <code>main</code>, has one row per participant:</p>
+    <div class="tbl"><table>
+      <tr><th>name</th><th>account</th><th>mail branch</th><th>outbox</th><th>writes</th></tr>
+      <tr><td><code>BOB</code></td><td>secondary</td><td><code>mail/BOB</code></td><td><code>mail/BOB.md</code></td><td>BOB and its successors</td></tr>
+      <tr><td><code>UX-DESIGN</code></td><td>primary</td><td><code>mail/UX-DESIGN</code></td><td><code>mail/UX-DESIGN.md</code></td><td>the UX design session and its successors</td></tr>
+    </table></div>
+    <p>The <strong>current session id</strong> is not in the registry. It is the first line of each outbox, <code>**Writer** · &lt;name&gt; · &lt;session id&gt; · &lt;account&gt; · since &lt;date&gt;</code>, and a successor rewrites that one line at takeover, on its own branch. The registry therefore changes only when a participant is added or a branch is renamed, which BOB does at a tranche's close or the UX session does through its PR.</p>
+    <div class="diff"><strong>Where I differ from your outline.</strong> You suggested each outbox live on its writer's working branch. BOB's working branch changes every tranche, and the UX session's changes with each PR, so a reader would first have to look up a moving address in a registry that sits on <code>main</code>, which is frozen while a tranche runs (P12). A dedicated branch per writer never moves, holds only that writer's outbox, and needs no merge into <code>main</code> ever. Each branch is still written only by its owner, which keeps your rule that a session pushes only to its own branch.</div>
+  </div></div>
+
+  <div class="cl"><div class="n">2</div><div>
+    <h3>Mailboxes</h3>
+    <p>An outbox holds numbered, append-only entries and one cursor line per correspondent:</p>
+<pre>**Writer** · BOB · session_01SxgYvH1iLUimhr8gRsNm2Z · secondary · since 2026-10-01
+**Read** · handled UX-DESIGN U4
+
+## B1 · NOTICE · 2026-10-01 · session_01SxgYvH1iLUimhr8gRsNm2Z · secondary
+K904 (Bob): a project's stage is computed; only forming and closed are written.
+Folded: record-grammar R35, promotion R56 (T21).</pre>
+    <p>Entry numbers carry the writer's letter (<code>B</code> for BOB, <code>U</code> for UX-DESIGN) so a reference such as <code>re U3</code> is unambiguous. To send: append to your own outbox and push. To receive: fetch the other side's mail branch, read every entry past your cursor in order, act on each, then move your cursor. Never write the other side's file. Never put a secret in an entry.</p>
+  </div></div>
+
+  <div class="cl"><div class="n">3</div><div>
+    <h3>When each side reads</h3>
+    <p>There is no doorbell across accounts, so each side reads its correspondents' outboxes:</p>
+    <ol type="a">
+      <li>at takeover;</li>
+      <li>at every backstop check it already runs (BOB's every 20 minutes while a layer runs);</li>
+      <li>before recording any ruling of yours, DEC or K, because a ruling on one side may settle or change a question on the other;</li>
+      <li>whenever you say <strong>"check the channel"</strong>.</li>
+    </ol>
+    <p>A session with <code>send_later</code> or a scheduled check-in may also look on its own schedule. No session ever fires a standing routine to reach anyone (§13 already forbids it).</p>
+  </div></div>
+
+  <div class="cl"><div class="n">4</div><div>
+    <h3>Kinds</h3>
+    <div class="tbl"><table>
+      <tr><th>kind</th><th>carries</th></tr>
+      <tr><td><code>NOTICE</code></td><td>a ruling of yours was recorded: its number, a one-line gist, where it is folded</td></tr>
+      <tr><td><code>QUESTION</code> / <code>ANSWER</code></td><td>as in §13; an answer names the question (<code>re U2</code>)</td></tr>
+      <tr><td><code>DEFER</code></td><td>a question moved to the other side, such as the retraction question moved from T21 to the design session on 1 October</td></tr>
+      <tr><td><code>HANDOFF</code></td><td>work a ruling owes the other side, such as requirements to draft from a DEC</td></tr>
+      <tr><td><code>MERGE</code></td><td>asks the other side, or you, to merge a branch</td></tr>
+      <tr><td><code>ACK</code></td><td>received and acted on, naming the entry</td></tr>
+    </table></div>
+  </div></div>
+
+  <div class="cl"><div class="n">5</div><div>
+    <h3>Ownership, so neither side collides with the other</h3>
+    <ul>
+      <li>The design session never writes <code>build/</code> (rulings, plans, requirements, <code>next.md</code>), save its own registry row through its PR. BOB never edits <code>docs/development/ux-substrate/</code> or <code>docs/development/DECISIONS.md</code>, and keeps the design session's text in any merge conflict (K945).</li>
+      <li><strong>DEC numbers</strong> are the design session's. It takes the next free number across <code>main</code> and its own open branch and posts a <code>NOTICE</code> for each. If <code>main</code> gains the same number first, the branch renumbers (K473's practice).</li>
+      <li><strong>K numbers</strong> are BOB's alone.</li>
+      <li>When you rule on a UX question through BOB, BOB posts a <code>NOTICE</code>, so the design session cites the ruling instead of re-asking. K899 (1), K899 (7) and K903 (4) settled questions 32, part of 31, and 23 this way; the design session found them only by reading <code>build/rulings.md</code>.</li>
+      <li>A DEC's <code>owed:</code> work reaches BOB as a <code>HANDOFF</code>; BOB folds it into requirements (P5) once the DEC is on <code>main</code> or you name it, and answers with the K that folds it.</li>
+    </ul>
+  </div></div>
+
+  <div class="cl"><div class="n">6</div><div>
+    <h3>Tooling and check</h3>
+    <p><code>tools/mail.mjs</code> gains five commands, beside the job commands it has:</p>
+<pre>node tools/mail.mjs xpost  --as BOB --kind NOTICE [--re U3] --body-file f   # append to my outbox, push
+node tools/mail.mjs xinbox --as BOB --from UX-DESIGN                       # entries past my cursor
+node tools/mail.mjs xdone  --as BOB --from UX-DESIGN --through U4          # move my cursor
+node tools/mail.mjs xcheck --as BOB                                         # who has unread entries for me
+node tools/mail.mjs xwriter --as BOB --session &lt;id&gt; --account secondary  # the Writer line, at takeover</pre>
+    <p>The design session runs the same tool from its own clone of <code>civicos-process</code> (read access is enough). A fifth check joins <code>checks/run.mjs</code>, <strong>channels</strong>: over each mail branch's history, an entry once pushed is never rewritten or removed, numbers rise by one, and a cursor never moves backwards (P15). It is added with your approval, as §8 requires for a new check.</p>
+  </div></div>
+
+  <div class="cl"><div class="n">7</div><div>
+    <h3>Certification (P3, §15)</h3>
+    <p>The tool and the check are proven by fixture tests in <code>checks/test/</code> (two outboxes on two branches in a scratch repository: post, read past the cursor, move it, a rewritten entry and a backward cursor each failing the check). The cross-account step itself can be proven only between your two real accounts, so §15's "names why only a product run can prove it" applies: the first live exchange (BOB's <code>NOTICE</code>, UX-DESIGN's <code>ACK</code>) is the proof, recorded in <code>dryrun/RUNS.md</code>. Nothing in a module job's mechanics changes, so T21's jobs are unaffected.</p>
+  </div></div>
+
+  <h2>First uses, once it works</h2>
+  <ol>
+    <li>Seed <code>build/channels.md</code> with the two rows, and create <code>mail/BOB</code> with its Writer line.</li>
+    <li>Post a <code>NOTICE</code> to UX-DESIGN listing the UX-relevant rulings since K859: K899 (1) "record", K899 (7) the hold statement, K903 (4) hidden dependents, K904 the project stage, K921 and K924 filing templates and local facts, K943 no withdrawal act for now (the retraction question deferred to the design session), K945 the parallel stream recorded. A <code>DEFER</code> for the retraction question (N470, its question 36).</li>
+    <li>Read UX-DESIGN's outbox once it exists. Until then, PR #6's "Owed to BOB" list stands in for it: DEC-96 to DEC-99 and the earlier DEC-88 and DEC-89 gaps. I file each as a <code>next.md</code> entry once its DEC is on <code>main</code>.</li>
+    <li>Tell the design session how to join: its first commit on <code>mail/UX-DESIGN</code> is the Writer line. That message has to reach it through you or through PR #6's description, since nothing else reaches it today.</li>
+  </ol>
+
+  <h2>PR #6</h2>
+  <p>I can merge it: the repository tools in my session can merge a pull request, and GitHub reports it mergeable with no conflicts. It is still marked draft, and it targets <code>main</code>, which does not change while T21 runs (P12). My recommendation: the design session marks it ready, and I merge it right after T21's close step fast-forwards <code>main</code>, which is a few hours away. T21's work does not depend on DEC-96 to DEC-99. If you want them on <code>main</code> now, say "merge it now": I merge it, and T21's close merges <code>main</code> into the tranche branch before the fast-forward, as K945 already provides.</p>
+
+  <footer>Once you approve: I implement the tool and check in <code>civicos-process</code>, certify them as clause 7 says, record the change as a K ruling, and tell you in one line when the channel is live.</footer>
+</div>
