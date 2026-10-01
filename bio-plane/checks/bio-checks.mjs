@@ -5410,36 +5410,6 @@ export const CASE_AUTHORITY_CHECKS = {
   },
 };
 
-/* D-85 / C-66 — AN ASSISTANT OPENS A QUESTION ONLY INSIDE A RUN IT HOLDS (INVESTIGATIVE-SESSION.md §11
- * item 5, rule 2, BOB #25, 2026-09-21). Framework §12 lets an assistant open a question unattended and §13
- * requires it to carry the lens in force when it did; that lens exists only on a run (§3, RULED), and the
- * objective it pursued only as the run's context (DEC-24 rule 2). So an `ai` credential's creation of an
- * inquiry names a RUNNING run whose PRINCIPAL it is, and counts against the run's declared `surfaces` bound.
- * Measured before this existed (`f05c1efd`): an `ai` credential holding `promote` created an inquiry with no
- * run, no lens and no bound, and nothing linked it to any work. Asked in `#surfacingGate` BEFORE `promote`'s
- * transaction, in REC-165's order: SIGHT (a run the caller cannot see answers as one never minted, so
- * SURFACE_NO_RUN covers both), then POSITION (`runPrincipalGate`, C-22.12, relayed), then STATUS, then the
- * BOUND. A MEMBER's own creation is untouched: the rule is about the assistant. */
-export const SURFACE_CHECKS = {
-  /* REC-179 (INVESTIGATIVE-SESSION.md §11 item 5, "Rule 2's reach", BOB #30; D-78's stated intent that a revision
-     carries the value forward): `surfaced_by` records the SURFACING ACT, and that act happens once, at the
-     creation — decided there by the server (D-78's restamp, or REC-173's verified replay). Measured before this
-     existed (`0e7cc03e`): the restamp runs only on a creation and nothing compared a revision's value with the
-     current version's, so a revision relabelled an assistant's question `human` (or a member's `agent`) and
-     landed, and the rule-2 surfacing row REC-171 writes then contradicted the bytes it describes. Asked inside
-     `promote`'s transaction AFTER the compare-and-swap (the current version is then the one the revision is
-     based on) and BEFORE any write. The comparison is of the value the catalog's own parser reads out of each
-     version's `bundle.md` — a respelling of the same value lands — and an unreadable or absent value is a value:
-     a revision may not supply an origin its creation did not record, nor drop one it did. */
-  SURFACED_BY_REWRITTEN: {
-    check: 'C-66.5',
-    where: 'src/store.mjs #promoteChecks > is-promote-surfaced-by, reached from op=promote through the step legacy-store registers with promotion (K31)',
-    translation: 'This revision changes who surfaced the question, a member or an assistant. That is recorded '
-      + 'once, when the question is opened, and a later edit cannot rewrite it. Nothing was saved. Keep the '
-      + 'value the current version carries and save the revision again.',
-  },
-};
-
 /* D-436 / C-64 — THE INSTANCE'S PRODUCING GROUP (BIO_State_Rules_Consistency_v1_5.md §3.1: `group` is the
  * producing group's slug and travels with every distributed copy — so it is in the SIGNED bytes). The plane
  * used to write one literal slug there, true of one instance and false of every instance `newgroup` installs.
@@ -6316,27 +6286,3 @@ export const CONNECTION_PAIR_CHECKS = {
 
 
 
-/** THE CONTENT ADDRESS — `hash(capture_sha, canonical extent, chain)`, IC-83's
- *  own formula and the whole of the dedup-by-construction property.
- *
- *  THE CHAIN IS IN THE ADDRESS ON PURPOSE (Bob, 5.8, and the id is the reason
- *  he gives): a re-extraction produces a DIFFERENT chain over the same bytes,
- *  which is a different transcription of the same passage — so it is a new row
- *  and "the same passage" is a RELATION between rows, never a rewrite of one.
- *  The old row stays and goes `stale`, and the authored edge that holds it
- *  still resolves and says so. An address that quietly followed the newest
- *  chain would move an authored citation without a member's act, which is
- *  exactly what Bob ruled the record never does.
- *
- *  A NULL CHAIN HASHES AS `null` AND NOT AS AN EMPTY ARRAY: "no chain was
- *  recorded" and "a chain was recorded and is empty" are two different facts
- *  about the record (writeTextSource's own distinction), and collapsing them
- *  here would merge two rows that mean different things. */
-export function contentIdFor(captureSha, extent, chain) {
-  return sha256HexSync(canonicalJson({
-    v: 1,
-    capture_sha: String(captureSha ?? ''),
-    extent: canonicalExtent(extent),
-    chain: chain == null ? null : canonicalJson(chain),
-  }));
-}
