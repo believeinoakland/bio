@@ -246,7 +246,9 @@ function runPlane(file, label) {
 }
 const runAirun = () => runPlane("airun.test.mjs", "airun");
 const runSeq = () => runPlane("skillsequencing.test.mjs", "skillsequencing");
-const AIRUN = join(PLANE, "src", "airun.mjs");
+/* The run vocabulary moved from `airun.mjs` to run-rules (the ai-runs split, K617); the arms that edit it follow it
+   (found by AGENT-WORKER #6 in T19: F2 had stopped arming). */
+const AIRUN = join(PLANE, "src", "run-rules", "rules.mjs");
 
 /* `scripts/coverage.mjs` is retired (legacy-index, K636 BOB-4): no arm spawns it any more. */
 
@@ -294,8 +296,10 @@ function patch(file, find, replace) {
   return { armed: true, hits: 1 };
 }
 
-function arm({ id, subject, what, mustFail, mustNot, file, find, replace, run }) {
+function arm({ id, subject, what, mustFail, mustNot, file, find, replace, run, retired }) {
   if (only.length && !only.includes(id)) return;
+  /* An arm whose subject no longer exists says so rather than reading its absence as a finding (N421 retired one). */
+  if (retired) { console.log(`\n=== ARM ${id} · ${subject}\n    RETIRED        : ${retired}`); return; }
   armsRun++;
   console.log(`\n=== ARM ${id} · ${subject}`);
   console.log(`    WHAT IS BROKEN : ${what}`);
@@ -591,8 +595,9 @@ arm({
   run: () => {
     const rh = runHarness();
     const rm = runMember();
-    const pinnedH = anyFailed(rh, /op the DRIVER actually names is in the pinned set|named in exactly one place|subset of the pinned set/);
-    const pinnedM = anyFailed(rm, /every op named in the source is in the pinned set|every op named is in the pinned set/);
+    /* N421: A9's driver arms are measured at the interface now; their labels are matched beside the old ones. */
+    const pinnedH = anyFailed(rh, /op the DRIVER actually names is in the pinned set|op the DRIVER actually sent the plane|every meaning read went through that one op|named in exactly one place|subset of the pinned set/);
+    const pinnedM = anyFailed(rm, /every op named in the source is in the pinned set|every op named is in the pinned set|every op that reached the plane is in the pinned set/);
     const writeHeld = !anyFailed(rm, /record moved only through ops in the pinned set/)
                    && !anyFailed(rm, /one distinct credential/);
     return {
@@ -688,6 +693,9 @@ arm({
 
 arm({
   id: "F3", subject: "ONE DIRECTION ONLY — the header names a DIFFERENT REAL ending",
+  retired: "A6b no longer reads harness.mjs' header prose (N421, T19): it holds what the gate PRODUCES, over every input "
+         + "it refuses, to the plane's RUN_ENDINGS, so a header sentence is no longer a subject. F1 (the gate regressed) and "
+         + "F2 (the catalogue loses the word) still arm the two directions separately.",
   what: "the header's terminates-on claim is changed from `mode-not-deployed` to `cancelled`. **Both words are real endings the catalogue defines**, so the header -> catalogue direction is satisfied and only the code -> header direction is violated. This is the arm that shows the two directions are two independent assertions rather than one restated",
   mustFail: "A6b's DIRECTION 2 ALONE (the gate produces `mode-not-deployed`, the header now promises `cancelled`)",
   mustNot: "A6b's DIRECTION 1 — `cancelled` IS in the catalogue, so that half must stay GREEN, and a run in which both directions fail together would mean this suite holds one assertion written twice",

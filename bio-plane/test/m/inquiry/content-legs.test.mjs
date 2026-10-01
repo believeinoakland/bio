@@ -15,7 +15,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, inquiryMd, infoMd, provDoc, sha, V } from "./fixture.mjs";
-import { CONTENT_EXTENT_CHECKS, EARNED_CAPTURE_CEILING, contentIdFor } from "../../../checks/bio-checks.mjs";
+import { CONTENT_EXTENT_CHECKS, contentIdFor } from "../../../src/content/index.mjs";
+import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
 import { LEG_BACKFILL_MAX } from "../../../src/inquiry/index.mjs";
 
 /* ------------------------------------------------------------------------------------------------ helpers */

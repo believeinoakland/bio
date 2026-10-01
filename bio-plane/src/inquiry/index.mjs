@@ -23,14 +23,14 @@
  *                retrieval and provenance are reached lazily, on first use).
  *   now          the module's clock, an ISO instant at second precision (default: the wall clock). */
 
-import { parseFrontmatter, normalizeType, OBJECT_TYPES, STATES, vocabFor, deriveInquiryTitle, checkInquiryBasis,
-         BUNDLE_ID_RE, supersedesEdgeFindings, divisionDisclosureFindings, isMachineIdentity, createSha256,
-         BASIS_GRADES, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE, TESTIMONY_GRADE, ACT_SHAPE_CHECKS,
-         MACHINE_FENCE_CHECKS, INSTANCE_GROUP_CHECKS } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter, normalizeType, OBJECT_TYPES, STATES, vocabFor, deriveInquiryTitle, BUNDLE_ID_RE,
+         isMachineIdentity, createSha256, BASIS_GRADES, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE, TESTIMONY_GRADE,
+         SHARED_ACT_CHECKS } from "../record-grammar/index.mjs";
+import { checkInquiryBasis, supersedesEdgeFindings, divisionDisclosureFindings, INQUIRY_ROWS } from "./grammar.mjs";
 import { captureBound, isTranscribed } from "../textchain.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/index.mjs";
-import { promotionOf, stepContext } from "../promotion/index.mjs";
+import { promotionOf, stepContext, PROMOTION_ROW_CHECKS } from "../promotion/index.mjs";
 import { contentOf, CONTENT_EXTENT_CHECKS, CONTENT_MINTED_BY_PLANE, canonicalExtent, legContentId }
   from "../content/index.mjs";
 import { connectionsOf, refsReplacedOf } from "../connections/index.mjs";
@@ -39,15 +39,16 @@ import { retrievalOf } from "../retrieval/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { notADisposition, DISPOSITIONS } from "../progressions/index.mjs";
 import { INQUIRY_TABLES, migrateInquiry, BUNDLE_FACTS, LEGS_RELATION } from "./schema.mjs";
-import { INQUIRY_CONTRADICTION_CHECKS } from "./checks.mjs";
+import { INQUIRY_CONTRADICTION_CHECKS, INQUIRY_SURFACE_CHECKS } from "./checks.mjs";
 import { checkInquiryEntry } from "./grammar.mjs";
 import { contradictionFindings, candidateOf, readResolution, exploresOf, CANDIDATE_RE } from "./contradiction.mjs";
 import { setScalar, setOrAddScalar, appendStateHistory, removeBlock, setOrAddBlock, setSection, appendSessionLog,
          spliceBasisGround, blockEntries, fmSafe, rand } from "./text.mjs";
 
-export { INQUIRY_SCHEMA, INQUIRY_TABLES, BUNDLE_FACTS, LEGS_RELATION, moveBundleFacts } from "./schema.mjs";
+export { INQUIRY_SCHEMA, INQUIRY_TABLES, BUNDLE_FACTS, LEGS_RELATION, SUBJECT_COLUMN, moveBundleFacts, moveSubjectEntity }
+  from "./schema.mjs";
 export * from "./grammar.mjs";
-export { INQUIRY_CONTRADICTION_CHECKS } from "./checks.mjs";
+export { INQUIRY_CONTRADICTION_CHECKS, INQUIRY_SURFACE_CHECKS } from "./checks.mjs";
 export { CONTRADICTION_COORDINATES, PLURALITY_DIFFERENCES, DISSOLVED_BY, NORM_CANONS, RESOLUTION_KINDS, resolutionFamily,
          resolutionLines, CANDIDATE_RE, QUALIFIER_MAX, HYPOTHESIS_MAX } from "./contradiction.mjs";
 
@@ -98,8 +99,8 @@ const GRADE_RANK = gradeRank;
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 
 /** The catalogue row a refusal code has, if any: its check id and canned translation travel with it (DEC-49). */
-const ROW_FAMILIES = [ACT_SHAPE_CHECKS, MACHINE_FENCE_CHECKS, INSTANCE_GROUP_CHECKS, INQUIRY_DISPOSE_CHECKS,
-                      INQUIRY_CONTRADICTION_CHECKS];
+const ROW_FAMILIES = [INQUIRY_ROWS, SHARED_ACT_CHECKS, INQUIRY_DISPOSE_CHECKS, INQUIRY_CONTRADICTION_CHECKS,
+                      INQUIRY_SURFACE_CHECKS];
 function withRow(answer) {
   if (!answer || answer.ok !== false || typeof answer.reason !== "string" || answer.check) return answer;
   const row = ROW_FAMILIES.map((f) => f && f[answer.reason]).find((r) => r && r.check);
@@ -134,7 +135,7 @@ export function supersededByOf(row) {
  *  nothing; `basis-versions` answers through it too. `extra` adds the caller's fields and never replaces these. */
 export function actNoBasis(detail, extra = {}) {
   /* DEC-49 REGION is-act-no-basis */
-  const row = ACT_SHAPE_CHECKS.NO_BASIS;
+  const row = SHARED_ACT_CHECKS.NO_BASIS;
   return { ...(extra && typeof extra === "object" ? extra : {}),
            ok: false, reason: "NO_BASIS", code: "NO_BASIS", check: row.check, translation: row.translation, detail };
   /* END DEC-49 REGION is-act-no-basis */
@@ -167,6 +168,23 @@ function legRebuilt(l) {
   return [`  - target: ${l.target}`, `    role: ${l.role ?? "supports"}`,
     ...keys.filter((k) => l[k] !== undefined && l[k] !== null && l[k] !== "").map((k) => `    ${k}: ${val(l[k])}`),
     ...(typeof l.note === "string" ? [`    note: "${fmSafe(l.note)}"`] : [])];
+}
+
+/* R42 (N422): `base` with a `listeners_failed` key read through `failed()` whenever the object is read: present, as the
+   list `failed()` answers, exactly while that list is not empty; every other key is `base`'s own. */
+const LISTENERS_FAILED = "listeners_failed";
+function liveFailures(base, failed) {
+  const now = () => { const f = failed(); return f.length ? f : null; };
+  return new Proxy(base, {
+    get: (t, k, rcv) => (k === LISTENERS_FAILED ? (now() ?? undefined) : Reflect.get(t, k, rcv)),
+    has: (t, k) => (k === LISTENERS_FAILED ? now() !== null : Reflect.has(t, k)),
+    ownKeys: (t) => [...Reflect.ownKeys(t).filter((k) => k !== LISTENERS_FAILED), ...(now() ? [LISTENERS_FAILED] : [])],
+    getOwnPropertyDescriptor: (t, k) => {
+      if (k !== LISTENERS_FAILED) return Reflect.getOwnPropertyDescriptor(t, k);
+      const f = now();
+      return f ? { value: f, writable: true, enumerable: true, configurable: true } : undefined;
+    },
+  });
 }
 
 /* ------------------------------------------------------------------ the module */
@@ -243,29 +261,34 @@ export class Inquiry {
     this.#onGrounded = { module, fn };
     return { ok: true, module };
   }
-  /* The re-evaluation an act raised, `{raised, failed}`, or null when no module is registered to raise it. The listener
-     answers the dependents (an array), or `{raised, listeners_failed}` when some of its own listeners failed
-     (reevaluation R8), which are carried unchanged (R42, N160); a listener that throws is named there itself, and
-     never undoes the act. */
+  /* The re-evaluation an act raised, `{raised, failed, answer}`, or null when no module is registered to raise it. The
+     listener answers the dependents (an array), or an object `{raised, listeners_failed?}` (reevaluation R8), which is
+     kept itself as `answer` (N422): reevaluation writes the listeners that failed onto it after the outermost commit
+     (its R8, record-core R66), so a copy taken here would miss them under a caller's transaction. A listener that
+     throws is named in `failed` itself, and never undoes the act. */
   #raise(target, cause, since, viewer) {
     if (!this.#onRaised) return null;
     try {
       const r = this.#onRaised.fn({ target, cause, since, viewer });
-      if (Array.isArray(r)) return { raised: r, failed: [] };
+      if (Array.isArray(r)) return { raised: r, failed: [], answer: null };
       if (r && typeof r === "object")
-        return { raised: Array.isArray(r.raised) ? r.raised : [],
-                 failed: Array.isArray(r.listeners_failed) ? r.listeners_failed : [] };
-      return { raised: [], failed: [] };
-    } catch { return { raised: [], failed: [this.#onRaised.module] }; }
+        return { raised: Array.isArray(r.raised) ? r.raised : [], failed: [], answer: r };
+      return { raised: [], failed: [], answer: null };
+    } catch { return { raised: [], failed: [this.#onRaised.module], answer: null }; }
   }
-  /* R42: the `reevaluation` field of an act's answer, over what each raise answered (in order), or the absence. */
+  /* R42: the `reevaluation` field of an act's answer, over what each raise answered (in order), or the absence. Its
+     `listeners_failed` is read when the reply is read (N422), from each raise's own failure and from what each answer
+     object names then, each module once; absent while none has failed. */
   static #reevaluation(cause, since, raises) {
     if (raises === null)
       return { reevaluation_absent: "no module is registered to raise the re-evaluation this act would raise, so none is named here" };
-    const failed = [];
-    for (const r of raises) for (const f of r.failed) if (!failed.includes(f)) failed.push(f);
-    return { reevaluation: { source: cause, since, raised: raises.flatMap((r) => r.raised),
-                             ...(failed.length ? { listeners_failed: failed } : {}) } };
+    return { reevaluation: liveFailures({ source: cause, since, raised: raises.flatMap((r) => r.raised) }, () => {
+      const failed = [];
+      for (const r of raises)
+        for (const f of [...r.failed, ...(r.answer && Array.isArray(r.answer.listeners_failed) ? r.answer.listeners_failed : [])])
+          if (!failed.includes(f)) failed.push(f);
+      return failed;
+    }) };
   }
   #reevaluationField(target, cause, since, viewer) {
     const r = this.#raise(target, cause, since, viewer);
@@ -279,7 +302,7 @@ export class Inquiry {
   /* D-436 / C-64.1: a creation this act would make cannot name the group that produced it. */
   #groupUndetermined(act, detail) {
     /* DEC-49 REGION is-group-undetermined */
-    const row = INSTANCE_GROUP_CHECKS.GROUP_UNDETERMINED;
+    const row = PROMOTION_ROW_CHECKS.GROUP_UNDETERMINED;
     return { ok: false, reason: "GROUP_UNDETERMINED", code: "GROUP_UNDETERMINED", check: row.check,
              translation: row.translation, act, detail };
     /* END DEC-49 REGION is-group-undetermined */
@@ -418,6 +441,42 @@ export class Inquiry {
                                + `conflict has one question where it is resolved. Work on it in ${holder}.` });
       /* END DEC-49 REGION is-candidate-taken-up */
     }
+    return this.#surfacedByCarried(c);
+  }
+
+  /* R50 (REC-179 / C-66.5, INVESTIGATIVE-SESSION.md §11 item 5, rule 2's reach): A REVISION CARRIES `surfaced_by`
+     FORWARD. The field records the surfacing act, decided once at the trust boundary on the creation (D-78's restamp;
+     REC-173's verified replay keeps the Drive era's), so without this a revision relabelled the question and the
+     surfacing row then contradicted the bytes it describes. Asked of every revision of a bundle whose CURRENT version
+     is an inquiry, after the compare-and-swap (so the head is the version this revision is based on) and before any
+     write. Both sides are read by the record's own parser, never a line scan a caller can step around, so a respelling
+     of the same value lands and a different value is refused in either direction. An absent field and an unreadable
+     document are values too. `replay` is no exemption: it is a caller's assertion (only a creation is verified as a
+     replay, REC-173). Moved from legacy-store's share of every promotion (T19 layer 6). */
+  #surfacedByCarried(c) {
+    const { bundleId, base, files, head } = stepContext(c);
+    if (!head || base === null || normalizeType(head.type) !== "inquiry") return null;
+    const surfacedOf = (text) => {
+      if (typeof text !== "string") return "unreadable";
+      /* No catch: the parser does not throw on a string; a document it cannot read comes back `data: null`. */
+      const fm = parseFrontmatter(text).data;
+      if (!fm || typeof fm !== "object") return "unreadable";
+      return Object.prototype.hasOwnProperty.call(fm, "surfaced_by") ? JSON.stringify(fm.surfaced_by) : "absent";
+    };
+    const held = this.record.readFile(bundleId, "bundle.md");
+    const next = Array.isArray(files) ? files.find((f) => f && f.path === "bundle.md") : null;
+    const was = surfacedOf(held ? held.text : null);
+    const now = surfacedOf(next ? next.text : null);
+    /* DEC-49 REGION is-promote-surfaced-by */
+    if (was !== now) {
+      const row = INQUIRY_SURFACE_CHECKS.SURFACED_BY_REWRITTEN;
+      return { ok: false, reason: "SURFACED_BY_REWRITTEN", code: "SURFACED_BY_REWRITTEN", check: row.check,
+               translation: row.translation, bundleId, current: was, revision: now,
+               detail: `the current version of ${bundleId} records surfaced_by ${was}, and this revision records ${now}. `
+                     + `Who surfaced a question is recorded once, at its creation; a revision carries it forward `
+                     + `unchanged. Nothing was written.` };
+    }
+    /* END DEC-49 REGION is-promote-surfaced-by */
     return null;
   }
 
@@ -524,10 +583,10 @@ export class Inquiry {
       const n = this.#one(`SELECT count(*) AS c FROM inquiry_basis WHERE bundle_id=?`, bundleId).c;
       const subject = basisFm && typeof basisFm.subject_entity === "string" && basisFm.subject_entity.trim()
         ? basisFm.subject_entity.trim() : null;
-      /* R36 (N136): the count in this module's own table; the subject on `bundles`, R40's read contract. */
-      this.sql.exec(`INSERT INTO ${BUNDLE_FACTS} (bundle_id, inquiry_basis_count) VALUES (?,?)
-                     ON CONFLICT(bundle_id) DO UPDATE SET inquiry_basis_count=excluded.inquiry_basis_count`, bundleId, n);
-      this.sql.exec(`UPDATE bundles SET inquiry_subject_entity=? WHERE bundle_id=?`, subject, bundleId);
+      /* R36, R40 (N136): the count and the subject in this module's own table, R40's read contract. */
+      this.sql.exec(`INSERT INTO ${BUNDLE_FACTS} (bundle_id, inquiry_basis_count, inquiry_subject_entity) VALUES (?,?,?)
+                     ON CONFLICT(bundle_id) DO UPDATE SET inquiry_basis_count=excluded.inquiry_basis_count,
+                       inquiry_subject_entity=excluded.inquiry_subject_entity`, bundleId, n, subject);
     }
     /* R48 (N345): the contradiction link, its resolution while the document is concluded, and `explores`, re-derived
        whole from the document; no row for a plain inquiry. */
@@ -965,7 +1024,7 @@ export class Inquiry {
       for (const id of disposed) {
         const r = this.#raise(id, "deferred", when, viewer);
         if (r === null) { raises = null; break; }
-        raises.push({ raised: r.raised.map((d) => ({ ...d, target: id })), failed: r.failed });
+        raises.push({ ...r, raised: r.raised.map((d) => ({ ...d, target: id })) });
       }
       reevaluation = Inquiry.#reevaluation("deferred", when, raises);
     }
@@ -2132,23 +2191,25 @@ export class Inquiry {
    * is the failure mode CLAUDE.md names about gates.
    */
 
-  /* The inquiry's declared subject, from the DOCUMENT and not from the column.
-     The projection is a cache like every other; the bytes are the authority,
-     and at promote time the column has not been written yet. */
+  /* R43: the inquiry's recorded subject, the column R12 writes from the document into this module's table (R40), or
+     null; never throws. The bytes stay the authority: the write path and the gate read the document's own
+     `subject_entity` (`earnedForDoc`), because at promote time the column has not been written yet. */
   subjectEntityOf(bundleId) {
-    const row = this.#one(`SELECT inquiry_subject_entity FROM bundles WHERE bundle_id=?`, bundleId);
-    return row && row.inquiry_subject_entity ? row.inquiry_subject_entity : null;
+    try {
+      const row = this.#one(`SELECT inquiry_subject_entity FROM ${BUNDLE_FACTS} WHERE bundle_id=?`, bundleId);
+      return row && row.inquiry_subject_entity ? row.inquiry_subject_entity : null;
+    } catch { return null; }
   }
 
   /* THE CAPTURE-AXIS CEILING is doctrine rather than a tuning knob, and as of
-     REC-43 / DEC-39 it is DECLARED IN THE CHECK CATALOG rather than here.
+     REC-43 / DEC-39 it is DECLARED IN THE RECORD'S GRAMMAR rather than here.
      `static EARNED_CAPTURE_CEILING = "B"` stood on this line until 2026-08-04
      and the value is unchanged; what moved is WHERE it is written, so that the
      published co-attestation fence can be composed from it (affordances.mjs
      cannot import this file — this file imports IT). The doctrine, the reason
      for the direction and the derivation of the unreachable letter above it are
-     all at the declaration in `checks/bio-checks.mjs`, beside `checkEarnedLeg`,
-     which is the arm that refuses a leg claiming more than this. This class
+     all at the declaration in `record-grammar` (`grades.mjs`), and `checkEarnedLeg`
+     is the arm that refuses a leg claiming more than this. This class
      keeps no copy: a second literal "B" here is precisely the drift the move
      exists to prevent, and the affordances suite pins its absence. */
 
@@ -2691,7 +2752,8 @@ export class Inquiry {
   earnedBasis({ id, targets = null, viewer = null } = {}) {
     if (!id) return { ok: false, reason: "NO_ID", detail: "earnedbasis requires ?id=<inquiry>" };
     if (!this.membership.inSight(id, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
-    const b = this.#one(`SELECT object_type, inquiry_subject_entity FROM bundles WHERE bundle_id=?`, id);
+    const b = this.#one(`SELECT b.object_type, f.inquiry_subject_entity FROM bundles b
+                           LEFT JOIN ${BUNDLE_FACTS} f ON f.bundle_id = b.bundle_id WHERE b.bundle_id=?`, id);
     if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
     if (normalizeType(b.object_type) !== "inquiry")
       return { ok: false, reason: "NOT_AN_INQUIRY", target: id,
@@ -2828,6 +2890,13 @@ export function inquiryOf(host, deps) {
     k = new Inquiry({ ...d, host, storage: d.storage || host.storage, record, membership, promotion, content });
     instances.set(host, k);
     record.declarePurge("inquiry", INQUIRY_TABLES);
+    /* K783 (record-core R69, R45): the audit's context for each bundle's checks, the earned registry over the legs its
+       basis projects (R13), null for a bundle resting on nothing. */
+    if (typeof record.registerAuditContext === "function")
+      record.registerAuditContext("inquiry", (id) => {
+        const targets = [...k.sql.exec(`SELECT target_id FROM inquiry_basis WHERE bundle_id=?`, id)].map((r) => r.target_id);
+        return { earnedRegistry: targets.length ? k.earned(k.subjectEntityOf(id), targets) : null };
+      });
     promotion.registerStep("inquiry", { check: (c) => k.check(c), project: (c) => k.project(c) });
     if (typeof content.onStale === "function") content.onStale("inquiry", (notice) => k.staled(notice));
     /* R36 (N136): the `legs` field read from this module's table (retrieval R62); N405: the migrated arm of

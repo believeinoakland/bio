@@ -44,7 +44,9 @@
  * and nothing here claims to be the half it is not.
  *
  * WHAT IT MUST NOT DO (fleet rules 2/3, inherited from I6 and asserted in the
- * suite — behaviourally AND by a source scan, as I6's are for `pdf-worker`):
+ * suite behaviourally, at this member's interface — what it reads from `env`,
+ * what it touches on its one binding, and what reaches the plane and the model
+ * (`test/inprocess.mjs`, N421)):
  *
  *   - WRITE ANYTHING DIRECTLY, BY ANY ROUTE. It holds no STORE (Durable Object)
  *     binding and no R2 binding at all — not CAPTURES and above all not
@@ -240,13 +242,13 @@ const refusal = (code, detail, status, extra) =>
 
 /* ---------------------------------------------------------------- THE SURFACE
  *
- * Declared for the fleet-coverage instrument to read the same way it reads the
- * plane's OPS table (`bio-plane/scripts/coverage.mjs`, D-117/VF-3).
+ * What this member answers, as data (R34): `fleet-member.json` names this export,
+ * and the suites hold it to the routes the handler actually serves.
  *
  * `mutating` is a property of THIS WORKER and not of what the plane may do
  * downstream, and for a fleet member it must be `false` on every row — fleet
- * rule 2, a member ASSERTS nothing. That is not left to discipline: `--strict`
- * fails a member that declares a mutating surface op. */
+ * rule 2, a member ASSERTS nothing. That is not left to discipline: the suites
+ * fail a member that declares a mutating surface op. */
 export const SURFACE = {
   run:     { method: "POST", mutating: false },
   version: { method: "GET",  mutating: false },
@@ -772,15 +774,13 @@ function publishedPack(answer) {
  *  restriction — and two call sites naming the op would be two readers to keep in
  *  step. §14b.1's query-never-load is not "call this op"; it is that the run
  *  reaches everything it does not hold by ASKING, through one door. D-15's
- *  one-compilation-point rule is the same argument one layer down, and FL-3's
- *  suite pins the literal to a single occurrence for exactly this reason.
+ *  one-compilation-point rule is the same argument one layer down, and
+ *  `harness.test.mjs` A9 holds it at the interface: every meaning read a run makes
+ *  reaches the plane as this op, the parent's at `MEANING_ARM` (N421).
  *
  *  IT ANSWERS THROUGH `planeAnswer`, so there is no way to read these rows
  *  without having decided what to do about a refusal. The op's NAME is a
- *  constant because `planeAnswer` also wants it — writing the literal twice
- *  would break `harness.test.mjs`'s one-meaning-reader pin with a LABEL rather
- *  than with a second reader, and a pin that fires on a label is a pin that gets
- *  loosened. The pin is right; the code says the name once. */
+ *  constant because `planeAnswer` also wants it, so the code says the name once. */
 const MEANING_OP = "meaningrows";
 const meaningRead = async (call, { q = "", rows, limit = 50, ids = null } = {}) =>
   planeAnswer(await call(MEANING_OP, { q, rows, limit }, ids ? { ids } : null), MEANING_OP);
@@ -1560,10 +1560,9 @@ async function handleRun(req, env) {
        `bio-plane/src/index.mjs` at FL-2). So this member says the principal is
        unpublished and names why, rather than defaulting it, inferring it from the
        class, or dropping the field — a run that quietly reported no principal
-       cannot be told from one acting for nobody. Filed as a DELEGATION to the
-       plane's owner in `CLAIMS.md`; FL-6 needs it closed. */
+       cannot be told from one acting for nobody. */
     principal: null,
-    principal_source: "UNPUBLISHED — no read op an ai credential may call states its own principal (D-199 (4)); see the FL-2 delegation in CLAIMS.md",
+    principal_source: "UNPUBLISHED — no read op an ai credential may call states its own principal (D-199 (4))",
 
     plane: { version: asked.body.version ?? null, op: "whoami" },
     worker: { name: "agent-worker", version: env.VERSION || "0.0.0" },
