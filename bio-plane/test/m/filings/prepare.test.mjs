@@ -31,7 +31,7 @@ function rekind(x, id, patch) {
     ? Object.fromEntries(Object.entries({ ...k, ...patch }).filter(([, v]) => v !== undefined)) : k)) };
 }
 
-test("R1 refusals in order: NO_AUTHOR (FILING_NO_PREPARER), NO_SUCH_ACTION (absent and invisible one answer), ACTION_CLOSED, FILING_TIER_UNDETERMINED, TIER3_COUNSEL_PACKET, KIND_NO_TEMPLATE; each with a negative control", () => {
+test("R1 refusals in order: NO_AUTHOR (FILING_NO_PREPARER), NO_SUCH_ACTION (absent and invisible one answer), ACTION_CLOSED, FILING_TIER_UNDETERMINED, TIER3_COUNSEL_PACKET, KIND_NO_TEMPLATE; each with a negative control", async () => {
   const x = world();
   const A = x.action();
   assert.equal(prep(x, A, { preparer: "" }).reason, "FILING_NO_PREPARER");
@@ -54,7 +54,7 @@ test("R1 refusals in order: NO_AUTHOR (FILING_NO_PREPARER), NO_SUCH_ACTION (abse
   assert.equal(prep(x, x.action({ kind: "other" })).reason, "KIND_NO_TEMPLATE", "a kind the profile does not hold");
 });
 
-test("R1 KIND_NO_TEMPLATE also when no profile is active and when the active profiles disagree on the template (withheld as a conflict)", () => {
+test("R1 KIND_NO_TEMPLATE also when no profile is active and when the active profiles disagree on the template (withheld as a conflict)", async () => {
   const none = world({ profiles: [] });
   const r = prep(none, none.action());
   assert.equal(r.reason, "KIND_NO_TEMPLATE");
@@ -68,7 +68,7 @@ test("R1 KIND_NO_TEMPLATE also when no profile is active and when the active pro
   assert.match(c.detail, /different templates/);
 });
 
-test("R2 the stricter of the kind's tier and the action's governs; an undetermined action tier is refused, never read as 1; with no kind tier the action's alone governs, stated", () => {
+test("R2 the stricter of the kind's tier and the action's governs; an undetermined action tier is refused, never read as 1; with no kind tier the action's alone governs, stated", async () => {
   const x = world();
   assert.equal(prep(x, x.action({ kind: "bylaw_complaint", risk_tier: 3 })).reason, "TIER3_COUNSEL_PACKET",
                "a member may raise a Tier 1 kind to 3");
@@ -93,7 +93,7 @@ test("R2 the stricter of the kind's tier and the action's governs; an undetermin
   assert.match(c.governing.says, /disagree on this kind's tier/);
 });
 
-test("R3 every blank is filled from the record naming its source, or left as a visible [UNFILLED: name] marker listed with why; never from the preparer", () => {
+test("R3 every blank is filled from the record naming its source, or left as a visible [UNFILLED: name] marker listed with why; never from the preparer", async () => {
   const x0 = world();
   const x = world({ profiles: [otherProfile(x0)] });
   const A = x.action({ kind: "records_request", risk_tier: 2, law: "Test Stat. § 1.100" });
@@ -102,8 +102,10 @@ test("R3 every blank is filled from the record naming its source, or left as a v
   const r = prep(x, B);
   assert.equal(r.ok, true);
   const by = Object.fromEntries(r.blanks.map((b) => [b.name, b]));
-  assert.deepEqual(r.unfilled.map((u) => u.name), ["law"], "a bylaw complaint states no law; every other blank filled");
-  assert.match(r.unfilled[0].why, /undetermined/);
+  assert.deepEqual(r.unfilled.map((u) => u.name), ["counterparty_organisation", "counterparty_description", "law"],
+                   "a bylaw complaint states no law, and an office holds no organisation or description; every other blank filled");
+  assert.match(r.unfilled[2].why, /undetermined/);
+  for (const u of r.unfilled.slice(0, 2)) assert.match(u.why, /addressed to an office, which holds no/);
   assert.deepEqual([by.counterparty_role.value, by.counterparty_role.source], ["Selectboard", B]);
   assert.deepEqual([by.counterparty_body.value, by.counterparty_body.source], ["Port Ellery Selectboard", B]);
   assert.deepEqual([by.act.value, by.act.source], ["the works order let on 2026-03-02", x.D]);
@@ -151,7 +153,7 @@ test("R3 every blank is filled from the record naming its source, or left as a v
   assert.equal(prep(y, T, { preparer: MACHINE, viewer: MACHINE }).text, t.text);
 });
 
-test("R3 the producing group is read through promotion's fact producingGroup (N331): registered, the group blank is filled from it; with no provider (FACT_UNAVAILABLE) or a failing one (FACT_FAILED) it is left unfilled as undetermined, never as unrecorded; a handed-in reader still works", () => {
+test("R3 the producing group is read through promotion's fact producingGroup (N331): registered, the group blank is filled from it; with no provider (FACT_UNAVAILABLE) or a failing one (FACT_FAILED) it is left unfilled as undetermined, never as unrecorded; a handed-in reader still works", async () => {
   const other = otherProfile(world());   /* its template names the group blank */
   const x = world({ profiles: [other] });
   const A = x.action();
@@ -212,7 +214,7 @@ test("R3 the producing group is read through promotion's fact producingGroup (N3
   assert.equal(handed(() => x.promotion.fact("producingGroup")).blank.value, "test-group");
 });
 
-test("R4 a Tier 2 draft carries the profile's advisory note first in the text and as advisory; Tier 1 carries none; with no note it is an unfilled blank", () => {
+test("R4 a Tier 2 draft carries the profile's advisory note first in the text and as advisory; Tier 1 carries none; with no note it is an unfilled blank", async () => {
   const x = world();
   const r = prep(x, x.action({ kind: "records_request", risk_tier: 2 }));
   const note = x.profile().action_kinds.find((k) => k.kind === "records_request").advisory;
@@ -230,7 +232,7 @@ test("R4 a Tier 2 draft carries the profile's advisory note first in the text an
   assert.match(n.unfilled[0].why, /undetermined/);
 });
 
-test("R5 any credential may prepare; the draft is stored apart, labelled with its preparer and whether it is machine work, answered evidence: false with a sentence; preparing again makes a new draft, never an edit", () => {
+test("R5 any credential may prepare; the draft is stored apart, labelled with its preparer and whether it is machine work, answered evidence: false with a sentence; preparing again makes a new draft, never an edit", async () => {
   const x = world();
   const A = x.action();
   const before = x.text(A);
@@ -250,7 +252,7 @@ test("R5 any credential may prepare; the draft is stored apart, labelled with it
   assert.equal(x.count("filing_drafts"), 2);
 });
 
-test("R17 a Tier 3 governing tier never yields a template, a pre-filled filing or a fileable document; a profile cannot hold a Tier 3 template", () => {
+test("R17 a Tier 3 governing tier never yields a template, a pre-filled filing or a fileable document; a profile cannot hold a Tier 3 template", async () => {
   const x = world();
   assert.equal(prep(x, x.action({ kind: "commitment_claim", risk_tier: 3 })).reason, "TIER3_COUNSEL_PACKET");
   const A = x.action({ risk_tier: 3 });
@@ -265,7 +267,7 @@ test("R17 a Tier 3 governing tier never yields a template, a pre-filled filing o
   assert.ok(validate(bad).errors.some((e) => e.code === "TEMPLATE_TIER3"));
 });
 
-test("R20 no place, law, venue or template is named in behaviour or outward text: each comes from the active profiles, the test profile included; none active, none is named", () => {
+test("R20 no place, law, venue or template is named in behaviour or outward text: each comes from the active profiles, the test profile included; none active, none is named", async () => {
   const x0 = world();
   const outputs = [];
   for (const profiles of [[PROFILE], [otherProfile(x0)]]) {

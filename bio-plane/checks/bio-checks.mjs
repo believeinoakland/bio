@@ -637,33 +637,6 @@ export const ACTION_BASIS_KINDS = ['rests_on', 'advances'];
  * frequently the more useful one. */
 export const CORRESPONDENCE_DIRECTIONS = ['sent', 'received', 'no_response'];
 
-/* REC-39: THE FOUR RESOLUTIONS — how an action ENDED, required by C-2.10 the
- * moment its state is `resolved`. Exported for the reason every array above it
- * is, and it is the LAST of the action loop's closed sets to get a home.
- *
- * WHAT IT COST TO HAVE NO HOME, measured by UI-24 rather than argued: these
- * four words were written out TWICE — inline in `checkActionExtension` below,
- * and again as a local `const RESOLUTIONS` inside `store.mjs actionMove()` —
- * and published NOWHERE, so `op=affordances` could not answer what a resolution
- * may be. A surface could therefore learn them only by asking `op=actionmove`
- * for a move it knew would be refused and reading the words out of the
- * `NO_RESOLUTION` refusal's `legal` list. That is a legitimate DEC-8 reading and
- * it is not a publication: it made the option set a property of a REFUSAL, so
- * the words could not be offered until the member had already been told no.
- *
- * THE DIRECTION IS THE ONE `ACTION_KINDS` ALREADY TAKES and is not a choice
- * between equals (REC-35's finding, restated): the vocabulary lives where its
- * CHECK runs, `affordances.mjs` imports it into `VOCABULARIES`, and `store.mjs`
- * imports it for the act's own pre-flight refusal. Exporting it from the store
- * instead would close an import cycle — `store.mjs` already imports
- * `affordances.mjs` — and crash at load in the temporal dead zone.
- *
- * ONE ARRAY, THREE READERS. Change a word here and C-2.10's finding, the act's
- * `NO_RESOLUTION` refusal and the published vocabulary all move together; the
- * affordances suite pins the publication equal-by-import in both directions so
- * a literal copy cannot be reintroduced quietly. */
-export const RESOLUTIONS = ['complied', 'denied', 'escalated', 'withdrawn'];
-
 /* DEC-13's SOURCED PRECEDENT for a response window, carried as a citation and
  * NOT as an enforced range. GAO's own protocols under GAGAS/Yellow Book give an
  * audited agency 7 to 30 calendar days on a draft. What this catalog enforces is

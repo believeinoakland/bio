@@ -1,7 +1,8 @@
-/* actions' tables (requirements: `build/requirements/actions.md`, R3, R19, R28, R32, R36; K4). Moved from `schema.mjs`
- * (legacy-store) with their comments; `action_risk_proposals` (R28, REC-215) and `action_clock_proposals` (R32) are
- * new. Each is keyed by the action's `bundle_id` and declared to record-core's purge (K23), so a purge of that action
- * clears its rows. The projection columns on `bundles` are retrieval's; this module only supplies their values (R12). */
+/* actions' tables (requirements: `build/requirements/actions.md`, R3, R8, R19, R28, R36, R48; K4). Moved from `schema.mjs`
+ * (legacy-store) with their comments; `action_risk_proposals` (R28, REC-215) is new; `action_clock_proposals` (R32)
+ * moved to `action-clocks` (K617); `action_overrides` (R8) and `action_pressure` (R48) are T18's. Each is keyed by the
+ * action's `bundle_id` and declared to record-core's purge (K23), so a purge of that action clears its rows. The
+ * projection columns on `bundles` are retrieval's; this module only supplies their values (R12). */
 
 export const ACTIONS_SCHEMA = `
 -- REC-24 (a): WHY AN ACTION EXISTS, and it is DELIBERATELY inquiry_basis's
@@ -182,26 +183,35 @@ CREATE TABLE IF NOT EXISTS action_risk_proposals (
   PRIMARY KEY (bundle_id, proposed_by)
 );
 
--- R32: A CLOCK ENTRY COMPUTED FROM A PROFILE DEADLINE, STORED APART FROM
--- clock[]. A proposer's restatement of the same rule replaces its own row.
--- date is NULL when the computation is undetermined, and why says why. A
--- member states a clock entry by a revision of the action; nothing here is one.
-CREATE TABLE IF NOT EXISTS action_clock_proposals (
-  bundle_id   TEXT NOT NULL,   -- the action
-  proposed_by TEXT NOT NULL,   -- the control plane's stamp
-  rule        TEXT NOT NULL,   -- the profile deadline's rule
-  date        TEXT,            -- YYYY-MM-DD, or NULL when undetermined
-  basis       TEXT NOT NULL,   -- the rule's citation and its profile basis
-  entry_json  TEXT NOT NULL,   -- the proposed {text, description, date, basis, status}
-  why         TEXT,            -- why the date is undetermined, when it is
-  proposed_at TEXT NOT NULL,
-  PRIMARY KEY (bundle_id, proposed_by, rule)
+-- R8 (K600 (a)): WHO STATED A PREMISE OVERRIDE, AND WHEN. The reason is the
+-- document's own (premise_override: {reason}); this module stamps the author and
+-- the time of the promotion that first carried it, once, and never again: the
+-- override is never edited or removed (PREMISE_OVERRIDE_REWRITTEN).
+CREATE TABLE IF NOT EXISTS action_overrides (
+  bundle_id   TEXT PRIMARY KEY, -- the action
+  reason      TEXT NOT NULL,    -- as the document states it
+  stated_by   TEXT,             -- the promotion's author
+  at          TEXT NOT NULL     -- when it first landed
+);
+
+-- R48 (K597 (1)): PRESSURE MARKED ON A RECEIVED ENTRY - a threat, retaliation,
+-- discrediting or legal harassment directed at the group. A member's mark, kept
+-- in this table and never written into the entry (the ledger is append-only,
+-- R34); one mark per entry.
+CREATE TABLE IF NOT EXISTS action_pressure (
+  bundle_id   TEXT NOT NULL,    -- the action
+  ord         INTEGER NOT NULL, -- the received correspondence entry
+  kind        TEXT NOT NULL,    -- legal | retaliation | discrediting | other
+  note        TEXT NOT NULL,
+  marked_by   TEXT NOT NULL,    -- the member who marked it
+  at          TEXT NOT NULL,
+  PRIMARY KEY (bundle_id, ord)
 );
 `;
 
 /** The tables, each keyed to the action by `bundle_id` (record-core R21, R46). */
 export const ACTIONS_TABLES = Object.freeze(["action_basis", "correspondence", "action_quotes",
-  "action_law_proposals", "action_risk_proposals", "action_clock_proposals"]);
+  "action_law_proposals", "action_risk_proposals", "action_overrides", "action_pressure"]);
 
 /** Creates the tables; idempotent. */
 export function migrateActions(sql) {

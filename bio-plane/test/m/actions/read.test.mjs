@@ -1,4 +1,4 @@
-/* actions' reads and services at its interface (R12, R25, R26, R29–R32, R35–R41). */
+/* actions' reads and services at its interface (R12, R25, R26, R29–R31, R36–R41; R31's tests guard the copy of `pendingClocks` kept until monitoring re-points, K625). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, actionMd, CP, NOW_MS } from "./fixture.mjs";
@@ -24,7 +24,7 @@ test("R12 actionFacts is pure; null for another type or an unparsable document; 
   assert.equal(w.reg.facts.length, 1); assert.equal(w.reg.facts[0].m, "actions", "registered with retrieval R53");
 });
 
-test("R25 R26 R35 the projection block: derived at now beside the cached flag; legs, ledger, laws, proposals, lifecycle, own outcome, responses", () => {
+test("R25 R26 the projection block: derived at now beside the cached flag; legs, ledger, laws, proposals, lifecycle, own outcome, responses", () => {
   const w = world();
   w.doc("INFO-2026-0001-d");
   w.action(A, ["risk_tier: 2", "clock:", ...CLK("2026-09-14"), "action_basis:", "  - target: INFO-2026-0001-d", "    kind: rests_on",
@@ -97,35 +97,6 @@ test("R31 pendingClocks lists pending entries dated before `before` across visib
   const B = "ACTN-2026-0002-b";
   w.action(B, ["clock:", ...CLK("2026-01-01"), ...CLK("2026-01-02")]);
   assert.deepEqual([w.a.pendingClocks({ before: "2026-10-01", limit: 2, viewer: M }).truncated], [true]);
-});
-
-test("R32 clockPropose computes from the profile's deadline, stored apart and labelled; business days by the holiday calendar", () => {
-  const w = world();
-  const pe = profile("test-port-ellery");
-  const dl = pe.deadlines.find((d) => d.applies_to === "records_request");
-  w.action(A);
-  const P = (x) => w.a.clockPropose({ target: A, rule: dl.rule, proposer: MACHINE, viewer: MACHINE, ...x });
-  const und = P({});
-  assert.equal(und.ok, true); assert.equal(und.proposal.entry.date, null, "no start event in the ledger");
-  assert.ok(und.proposal.undetermined);
-  const ev = dl.starts === "filed" ? "sent" : "received";
-  w.a.actionCorrespond({ target: A, direction: ev, at: "2026-09-01", ...(ev === "sent" ? { account: "filed" } : { account: "got it" }), viewer: M, author: M });
-  const p = P({});
-  assert.equal(p.ok, true); assert.equal(p.evidence, false); assert.equal(p.proposal.machine_work, true);
-  assert.equal(p.proposal.counted_from, "the day after 2026-09-01", "counted from the day after the start event (B4)");
-  assert.match(p.proposal.entry.basis, new RegExp(dl.citation.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-  assert.ok(dl.count === "business" ? (p.proposal.entry.date === null || /^\d{4}-\d{2}-\d{2}$/.test(p.proposal.entry.date)) : /^\d{4}/.test(p.proposal.entry.date));
-  assert.equal(w.fm(A).clock, undefined, "never written into clock[]");
-  assert.equal(P({ rule: "no_such" }).reason, "NO_SUCH_RULE");
-  /* N246: an absent rule has no code of its own; it is answered NO_SUCH_RULE at that code's place (R32's second arm). */
-  for (const rule of [undefined, null, ""]) assert.equal(P({ rule }).reason, "NO_SUCH_RULE");
-  assert.equal(P({ rule: undefined, target: "ACTN-2026-0404-x" }).reason, "NO_SUCH_BUNDLE", "after NO_SUCH_BUNDLE, in order");
-  assert.equal(P({ rule: undefined, target: "" }).reason, "NO_TARGET");
-  const ids = new Set(Object.keys({ ...actions.ACTION_CATALOGUE_CHECKS, ...actions.ACTION_FENCE_CHECKS }));
-  assert.ok(!ids.has("NO_RULE"));
-  assert.equal(P({ proposer: "" }).reason, "NO_AUTHOR");
-  const cal = actions.actionKinds(null);
-  assert.deepEqual(cal, ["records_request", "request_for_comment", "other"]);
 });
 
 test("R37 R36 the audit reports C-2.10 and C-11.1 over an action, a missing counterparty and a past pending entry; tables purge with the action", () => {

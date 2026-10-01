@@ -19,13 +19,13 @@
  * cannot import this module, so its `checkBundle` no longer runs the action arm: this module registers it with
  * record-core's audit and with promotion (R37). */
 
-import { isMachineIdentity, BUNDLE_ID_RE, OBJECT_TYPES, RISK_TIERS, riskTierState, RESOLUTIONS, ACTION_KINDS,
+import { isMachineIdentity, BUNDLE_ID_RE, OBJECT_TYPES, RISK_TIERS, riskTierState, ACTION_KINDS,
          ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS, actionBasisFindings, correspondenceFindings, isQuoteEntry,
          quoteValue, quoteFindings, QUOTE_KEYS, lifecycleFindings, CORRESPONDENCE_STAGES, CORRESPONDENCE_OUTCOMES,
          DECISION_STAGES, LIFECYCLE_KEYS, lawProposalLabel, proposalLabel, RFC_RESPONSE_WINDOW_PRECEDENT } from "../../checks/bio-checks.mjs";
 import { LAW_LEVELS } from "../../../jurisdictions/index.mjs";
 
-export { RISK_TIERS, riskTierState, RESOLUTIONS, ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS, actionBasisFindings,
+export { RISK_TIERS, riskTierState, ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS, actionBasisFindings,
          correspondenceFindings, isQuoteEntry, quoteValue, quoteFindings, QUOTE_KEYS, lifecycleFindings,
          CORRESPONDENCE_STAGES, CORRESPONDENCE_OUTCOMES, DECISION_STAGES, LIFECYCLE_KEYS, lawProposalLabel, LAW_LEVELS,
          RFC_RESPONSE_WINDOW_PRECEDENT };
@@ -42,6 +42,14 @@ const CONTENT_HASH_RE = /^sha256:[0-9a-f]{64}$/;
 /* The subject registry's key shape (legacy-checks keeps its own for C-2.8's subject arm; bias has a private one). */
 const ENTITY_ID_RE = /^ENT-\d{4}-\d{4}$/;
 const UNWRITABLE = /["\\\r\n]/;
+
+/* ---------------------------------------------------------------------------------------------- R7: the endings */
+
+/** R7, R13 (REC-39; D3, K590): HOW A RESOLVED ACTION ENDED, the one array C-2.10's finding, `actionMove`'s
+ *  `NO_RESOLUTION` and the published vocabulary (`affordances`) read. Moved from the catalogue in T18 (its only product
+ *  importer was this module). `completed` is allowed on any kind: the action was carried out and no counterparty's
+ *  answer decides it; what happened is the action's own outcome (R26, DEC-14). */
+export const RESOLUTIONS = Object.freeze(["complied", "denied", "escalated", "withdrawn", "completed"]);
 
 /* ---------------------------------------------------------------------------------------------- R10: the kinds */
 
@@ -114,10 +122,18 @@ export function recordsLawOf(fm, author = null) {
 
 /* ---------------------------------------------------------------------------------------------- R9: the counterparty */
 
+/** R9 (D1, K590): the named addressee kinds. An office (`kind` absent reads `office`) is named by role and body; the
+ *  others (a reporter by role and outlet, an organisation, another civic group) by role and organisation. */
+export const ADDRESSEE_KINDS = Object.freeze(["office", "press", "organisation", "group"]);
+/** R9: the longest description of an audience addressee. */
+export const AUDIENCE_DESCRIPTION_MAX = 500;
+
 /** R9: the counterparty as an office, `{role, body}`, from either shape: the office shape as written, or the earlier
- *  `{state: named, name}` read with its name as the office's role and no body. Null for an undetermined or absent one. */
+ *  `{state: named, name}` read with its name as the office's role and no body. Null for any other addressee: a named
+ *  non-office, an audience, an undetermined or absent one. */
 export function counterpartyOffice(cp) {
   if (!cp || typeof cp !== "object" || Array.isArray(cp) || cp.state !== "named") return null;
+  if (cp.kind !== undefined && cp.kind !== null && cp.kind !== "office") return null;
   const role = typeof cp.role === "string" && cp.role.trim() ? cp.role.trim() : null;
   const body = typeof cp.body === "string" && cp.body.trim() ? cp.body.trim() : null;
   if (role || body) return { role, body, level: typeof cp.level === "string" ? cp.level : null,
@@ -127,12 +143,19 @@ export function counterpartyOffice(cp) {
                   legacy: true } : null;
 }
 
-/** R3, R27: the name a quote's counterparty is matched by: an office as "role, body", an earlier name as written. */
+/** R3, R9, R27: the name a quote's counterparty is matched by: an office as "role, body" (an earlier name as written),
+ *  another named addressee as "role, organisation", and none for an audience or an undetermined one. */
 export function counterpartyName(cp) {
   const o = counterpartyOffice(cp);
-  if (!o) return null;
-  return o.legacy || !o.body ? o.role : o.role ? `${o.role}, ${o.body}` : o.body;
+  if (o) return o.legacy || !o.body ? o.role : o.role ? `${o.role}, ${o.body}` : o.body;
+  if (!cp || typeof cp !== "object" || Array.isArray(cp) || cp.state !== "named" || !ADDRESSEE_KINDS.includes(cp.kind)) return null;
+  const role = typeof cp.role === "string" ? cp.role.trim() : "";
+  const org = typeof cp.organisation === "string" ? cp.organisation.trim() : "";
+  return role && org ? `${role}, ${org}` : null;
 }
+
+/** R8, R9: whether the addressee is an office (`ADDRESSEE_NOT_AN_OFFICE` asks it of a breach action). */
+export function addresseeIsOffice(cp) { return !!counterpartyOffice(cp); }
 
 /* ---------------------------------------------------------------------------------------------- R33: the clock's mechanical write */
 
@@ -377,7 +400,7 @@ export const LAW_PROPOSAL_WHY_MAX = 240;
  *  So exactly ONE placeholder is named here, and it is named because it was
  *  MACHINE-WRITTEN on every action by two intake surfaces rather than typed by
  *  anyone. */
-const COUNTERPARTY_STATES = ['named', 'undetermined'];
+const COUNTERPARTY_STATES = ['named', 'audience', 'undetermined'];
 /* The one placeholder, compared case-folded and trimmed. It is the exact string
    `mdFor` wrote in `civicos-ui/app.html` and `src/setup.mjs` until this item
    deleted it, so a bundle carrying it was written by a machine that had no
@@ -433,7 +456,8 @@ export function counterpartyFindings(fm, findings) {
   const isPlaceholder = (v) =>
     typeof v === 'string' && v.trim().toLowerCase() === COUNTERPARTY_PLACEHOLDER;
   const REPAIRS = [
-    'name the office: counterparty.state = named with counterparty.role and counterparty.body',
+    'name the addressee: counterparty.state = named with role and body (an office), or kind press, organisation or group with role and organisation',
+    'or describe an audience: counterparty.state = audience with counterparty.description',
     'or state that it is undetermined: counterparty.state = undetermined with an authored counterparty.basis saying why',
   ];
   const cp = fm.counterparty;
@@ -462,36 +486,72 @@ export function counterpartyFindings(fm, findings) {
     return;
   }
 
-  /* R9 (`jurisdictions` R24): a named counterparty is an OFFICE, `{role, body, level?, entity_id?}`, never a person.
-     The earlier `{state: named, name}` reads as written, its name as the office's (`counterpartyOffice`), and is
-     not refused by the audit; a WRITE that states a new counterparty in that shape is refused at the act (R7). */
+  /* R9 (`jurisdictions` R24; D1, K590): the ADDRESSEE. A named one is an office `{kind?: office, role, body, level?,
+     entity_id?}` or a press, organisation or group `{kind, role, organisation}`; an audience is described; never a
+     person. The earlier `{state: named, name}` reads as written, its name as the office's (`counterpartyOffice`), and is
+     not refused by the audit; a WRITE that states a new counterparty in that shape is refused at the act (R7). Each
+     finding names its arm. */
   const str = (v) => (typeof v === 'string' ? v.trim() : '');
   const name = str(cp.name), role = str(cp.role), body = str(cp.body), basis = str(cp.basis);
+  const org = str(cp.organisation), description = str(cp.description);
   const entityId = cp.entity_id === undefined || cp.entity_id === null ? '' : String(cp.entity_id).trim();
-  for (const [k, v] of [['name', name], ['role', role], ['body', body], ['basis', basis]])
+  for (const [k, v] of [['name', name], ['role', role], ['body', body], ['organisation', org], ['basis', basis],
+                        ['description', description]])
     if (isPlaceholder(v))
       findings.push(f('C-2.10', 'error', `counterparty.${k} is the placeholder '${COUNTERPARTY_PLACEHOLDER}', which is not `
-        + 'an office or a reason (D-130)', REPAIRS));
+        + 'an addressee or a reason (D-130)', REPAIRS));
   if (cp.state === 'named') {
-    if (!name && (!role || !body))
-      findings.push(f('C-2.10', 'error', 'counterparty.state is named and the office is not: a named counterparty is an '
-        + 'office, stated by its official role and the body it belongs to (R9)', REPAIRS));
+    const kind = cp.kind === undefined || cp.kind === null ? 'office' : cp.kind;
+    if (!ADDRESSEE_KINDS.includes(kind)) {
+      findings.push(f('C-2.10', 'error', `counterparty.kind '${String(cp.kind).slice(0, 40)}' is not one of: `
+        + `${ADDRESSEE_KINDS.join(', ')} (R9, arm: kind)`, REPAIRS));
+      return;
+    }
+    if (kind === 'office') {
+      if (!name && (!role || !body))
+        findings.push(f('C-2.10', 'error', 'counterparty.state is named and the office is not: a named office is stated '
+          + 'by its official role and the body it belongs to (R9, arm: office)', REPAIRS));
+      if (org)
+        findings.push(f('C-2.10', 'error', 'counterparty names an office and carries an organisation: an office is '
+          + 'stated by its role and body (R9, arm: office)', REPAIRS));
+    } else {
+      if (!role || !org)
+        findings.push(f('C-2.10', 'error', `counterparty is a named ${kind} with no ${!role ? 'role' : 'organisation'}: `
+          + `a ${kind} addressee is stated by a role and the organisation it belongs to, never a person by name `
+          + `(R9, arm: ${kind})`, REPAIRS));
+      for (const [k, v] of [['body', body], ['name', name], ['level', str(cp.level)]])
+        if (v) findings.push(f('C-2.10', 'error', `counterparty is a named ${kind} and carries ${k}: only an office `
+          + `carries one (R9, arm: ${kind})`, REPAIRS));
+    }
     if (entityId && !ENTITY_ID_RE.test(entityId))
       findings.push(f('C-2.10', 'error',
         `counterparty.entity_id '${entityId.slice(0, 40)}' is not a subject registry key (ENT-YYYY-NNNN)`,
         ['point entity_id at the office in the subject registry, or omit it: it is optional']));
+  } else if (cp.state === 'audience') {
+    if (!description)
+      findings.push(f('C-2.10', 'error', 'counterparty.state is audience and counterparty.description is empty: an '
+        + 'audience addressee is described in words (R9, arm: audience)', REPAIRS));
+    else if (description.length > AUDIENCE_DESCRIPTION_MAX || UNWRITABLE.test(String(cp.description)))
+      findings.push(f('C-2.10', 'error', `counterparty.description is not 1 to ${AUDIENCE_DESCRIPTION_MAX} characters `
+        + 'with no quote, backslash or line break (R9, arm: audience)', REPAIRS));
+    const asserted = [['name', name], ['role', role], ['body', body], ['organisation', org], ['entity_id', entityId]]
+      .filter(([, v]) => v);
+    if (asserted.length)
+      findings.push(f('C-2.10', 'error', `counterparty is an audience and carries ${asserted.map(([k]) => k).join(', ')}: `
+        + 'an audience is described, never named (R9, arm: audience)', REPAIRS));
   } else {
     if (!basis)
       findings.push(f('C-2.10', 'error',
         'counterparty.state is undetermined and counterparty.basis is empty: undetermined is first-class and must be '
-        + 'STATED, so an action that does not know who it is addressed to says what it does know',
+        + 'STATED, so an action that does not know who it is addressed to says what it does know (R9, arm: undetermined)',
         ['author counterparty.basis: what has been established so far, and what would settle it']));
-    const asserted = [['name', name], ['role', role], ['body', body], ['entity_id', entityId]].filter(([, v]) => v);
+    const asserted = [['name', name], ['role', role], ['body', body], ['organisation', org], ['entity_id', entityId]]
+      .filter(([, v]) => v);
     if (asserted.length)
       findings.push(f('C-2.10', 'error',
         `counterparty.state is undetermined and it carries ${asserted.map(([k]) => k).join(', ')}: the block asserts `
-        + 'a counterparty and denies having one in the same breath',
-        ['set state: named if that is the office', 'or clear them and leave the basis to say what is known']));
+        + 'a counterparty and denies having one in the same breath (R9, arm: undetermined)',
+        ['set state: named if that is the addressee', 'or clear them and leave the basis to say what is known']));
   }
 }
 /** D-147: THE LIFECYCLE, READ BACK AS ONE DATED CHAIN — a pure function over one document and a day, so
@@ -726,9 +786,10 @@ export const ACTION_ACT_CHECKS = {
   NO_RESOLUTION: {
     check: 'C-33.3',
     where: 'src/actions/index.mjs actionMove > is-move-resolution',
-    translation: 'An action that has ended says how it ended, and this move does not. The record '
-      + 'keeps a closed set of endings so that a reader later can tell what actually happened '
-      + 'rather than only that something stopped.',
+    translation: 'An action that has ended says how it ended, and this move does not: complied, denied, escalated, '
+      + 'withdrawn, or completed when the group carried it out and no answer was awaited. The record keeps a closed '
+      + 'set of endings so that a reader later can tell what actually happened rather than only that something '
+      + 'stopped.',
   },
   RESOLUTION_WITHOUT_RESOLVING: {
     check: 'C-33.4',
@@ -1071,17 +1132,18 @@ export const ACTION_CATALOGUE_CHECKS = {
   COUNTERPARTY_REFUSED: {
     check: 'C-101.3',
     where: 'src/actions/index.mjs #writeArms > is-promote-counterparty',
-    translation: 'An action says who it is addressed to: an office named by its official role and the body it '
-      + 'belongs to, or an undetermined counterparty with a few words on what is known and what would settle it. '
-      + 'This write carried a placeholder, a bare name outside that shape, a person, or a counterparty that said '
-      + 'both things at once, so nothing was written. Leaving the counterparty out is allowed while the action is '
-      + 'a draft.',
+    translation: 'An action says who it is addressed to: an office by its official role and the body it belongs to; '
+      + 'a reporter, an organisation or another group by a role and the organisation; an audience described in '
+      + 'words; or an undetermined addressee with a few words on what is known and what would settle it. This write '
+      + 'carried a placeholder, a bare name outside those shapes, a person, or an addressee that said two things at '
+      + 'once, so nothing was written. Leaving the addressee out is allowed while the action is a draft.',
   },
   ACTION_RESOLUTION_REFUSED: {
     check: 'C-101.4',
     where: 'src/actions/index.mjs #writeArms > is-promote-action-resolution',
-    translation: 'A resolved action says how it ended: complied, denied, escalated or withdrawn. This write marked '
-      + 'the action resolved without one of those, so nothing was written.',
+    translation: 'A resolved action says how it ended: complied, denied, escalated, withdrawn, or completed when the '
+      + 'group carried it out and no answer was awaited. This write marked the action resolved without one of those, '
+      + 'so nothing was written.',
   },
   CLOCK_REFUSED: {
     check: 'C-101.5',
@@ -1134,5 +1196,92 @@ export const ACTION_CATALOGUE_CHECKS = {
     translation: 'An action taken for a breach rests on the group\'s recorded determination that the government '
       + 'acted out of conformance, and this one names no such determination that you can see, so nothing was '
       + 'written. Name the determination it rests on.',
+  },
+  /* R9 (D1, K590): a breach action addresses an office; a press, organisation, group or audience addressee is for an
+     action that seeks evidence or attention. */
+  ADDRESSEE_NOT_AN_OFFICE: {
+    check: 'C-117.7',
+    where: 'src/actions/index.mjs #overrideAndAddressee > is-breach-addressee',
+    translation: 'An action taken for a breach is addressed to the office responsible, named by its official role and '
+      + 'body. This one is addressed to someone else, so nothing was written. Address the office, or record the '
+      + 'action without marking it a breach.',
+  },
+  /* R8 (K600 (a)): the premise override is a member's open statement. */
+  MACHINE_CANNOT_OVERRIDE: {
+    check: 'C-117.8',
+    where: 'src/actions/index.mjs #overrideAndAddressee > is-machine-override',
+    translation: 'Acting on a breach the group has not determined is a member\'s open decision, made with a reason '
+      + 'and answered for. The credential that asked here is an automated one, so it cannot state or change that '
+      + 'override. Sign in to state it yourself.',
+  },
+  PREMISE_OVERRIDE_REWRITTEN: {
+    check: 'C-117.9',
+    where: 'src/actions/index.mjs #overrideAndAddressee > is-premise-override',
+    translation: 'A premise override is stated once, when the action is first marked a breach, and then kept as it '
+      + 'was: it is never edited, removed or added later. This write would have changed it, so nothing was written.',
+  },
+  PREMISE_OVERRIDE_REFUSED: {
+    check: 'C-117.19',
+    where: 'src/actions/index.mjs #overrideAndAddressee > is-premise-override',
+    translation: 'A premise override carries one thing, the reason the group acts without a determination: up to 500 '
+      + 'characters with no quotation mark, backslash or line break. This one did not, so nothing was written.',
+  },
+  /* R45 (D5, K590): the group's contact for an action. */
+  MACHINE_CANNOT_SET_CONTACT: {
+    check: 'C-117.10',
+    where: 'src/actions/index.mjs #contactAndPlan > is-machine-contact',
+    translation: 'Who the group\'s contact for an action is, is a member\'s choice. The credential that asked here is '
+      + 'an automated one, so it cannot set or change it. Sign in to set it yourself.',
+  },
+  CONTACT_NOT_A_MEMBER: {
+    check: 'C-117.11',
+    where: 'src/actions/index.mjs #contactAndPlan > is-contact-member',
+    translation: 'The contact for an action is a member of this group, named by their member id, and the id given '
+      + 'names no member here. Nothing was written.',
+  },
+  /* R46 (Bob's ruling 1 of 2026-09-29, K590): the plan an action was started from. */
+  PLAN_LINK_REWRITTEN: {
+    check: 'C-117.12',
+    where: 'src/actions/index.mjs #contactAndPlan > is-plan-link',
+    translation: 'The plan and option an action was started from are recorded when it is created and never changed '
+      + 'or removed afterwards. This write would have set, changed or removed them, so nothing was written.',
+  },
+  PLAN_LINK_REFUSED: {
+    check: 'C-117.13',
+    where: 'src/actions/index.mjs #contactAndPlan > is-plan-link',
+    translation: 'An action started from a plan names the plan by its id and the option by a short token, together. '
+      + 'This write named one without the other, or one in another form, so nothing was written.',
+  },
+  /* R48 (K597 (1)): pressure directed at the group, marked on what came back. */
+  MACHINE_CANNOT_MARK_PRESSURE: {
+    check: 'C-117.14',
+    where: 'src/actions/index.mjs #pressureRefusal > is-pressure',
+    translation: 'Marking a reply as a threat, retaliation, discrediting or legal harassment is a member\'s judgement, '
+      + 'and somebody answers for it. The credential that asked here is an automated one, so it cannot mark one. '
+      + 'Sign in to mark it yourself.',
+  },
+  PRESSURE_REFUSED: {
+    check: 'C-117.15',
+    where: 'src/actions/index.mjs #pressureRefusal > is-pressure',
+    translation: 'A pressure mark says which kind it is (legal, retaliation, discrediting or other) and carries a note '
+      + 'of up to 500 characters with no quotation mark, backslash or line break. This one did not, so nothing was '
+      + 'written.',
+  },
+  PRESSURE_NOT_RECEIVED: {
+    check: 'C-117.16',
+    where: 'src/actions/index.mjs #pressureRefusal > is-pressure',
+    translation: 'Pressure is marked on something the group received. The entry named records something sent, or a '
+      + 'reply that never came, so nothing was written.',
+  },
+  PRESSURE_MARKED: {
+    check: 'C-117.17',
+    where: 'src/actions/index.mjs actionPressure > is-pressure-marked',
+    translation: 'That entry is already marked as pressure, and a mark is never rewritten. Nothing was written.',
+  },
+  PRESSURE_NO_ENTRY: {
+    check: 'C-117.18',
+    where: 'src/actions/index.mjs actionPressure > is-pressure-entry',
+    translation: 'The entry is named by its position in the action\'s correspondence, counted from zero, and no entry '
+      + 'stands at the position given. Nothing was written.',
   },
 };
