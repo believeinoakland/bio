@@ -27,8 +27,9 @@ import { aiRunsOf } from "../ai-runs/index.mjs";
 import { runPrincipalGate } from "../run-rules/index.mjs";
 import { EXTRACT_RUN_MODE, proposalChain, checkProposedRef, proposedReadingGrade, mintRatio } from "../extractrun.mjs";
 import { readingSource, readingSourceJson, readingSourceFromColumns, describeChain } from "../textchain.mjs";
-import { parseFrontmatter, normalizeType, OBJECT_TYPES, canonicalJson, isBoilerplate, isMachineIdentity,
-         SUFFICIENCY_UNCLAIMED, MACHINE_CLASS_PREFIX } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter, normalizeType, OBJECT_TYPES, canonicalJson, isMachineIdentity, MACHINE_CLASS_PREFIX }
+  from "../record-grammar/index.mjs";
+import { isBoilerplate } from "../../checks/bio-checks.mjs";
 import { SUGGEST_CHECKS, EXTRACT_PROPOSE_CHECKS, SUGGEST_KINDS, SUGGEST_LEVELS } from "./checks.mjs";
 import { RUN_PRODUCTIONS_TABLES, migrateRunProductions } from "./schema.mjs";
 
