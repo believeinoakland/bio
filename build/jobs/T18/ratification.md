@@ -51,3 +51,7 @@ Also, for the record: the bulk release (N400) is extracted and pushed (5ad5eca9f
 ## J3 · COMPLETE
 
 Complete (RATIFICATION #10). N417 applied (store-half ratifygate, K691; tested with a registered grammar and a negative control), B3 applied, the 16 legacy suites' ratification shares converted (62 tests in converted-a..d). Module tests 168/168; format, architecture, coverage, ownership 0 failures. Deferred only ratify-op.test.mjs:210–211 (waits for publication's merge, your CHANGE). Found for you: control-plane's doorbell.test.mjs:465 fails on tranche/T18 without my change (detail wording). Details in my record's Completion section.
+
+## J4 · COMPLETE
+
+B5 applied (K697): tranche/T18 merged; ratify-op.test.mjs' published reads now from public-read (publicReadOf: publishedManifest, publishedList, publishedEditions). Tests 168/168; format, architecture, coverage (27/27), ownership: 0 failures. Nothing deferred.
