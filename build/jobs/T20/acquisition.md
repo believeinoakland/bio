@@ -27,3 +27,7 @@ None.
 - `format`: 84 modules, 82 requirements files, 0 failures. `architecture acquisition`: 9 product files, 37 relative imports, 0 failures. `coverage acquisition`: 30 of 30 live ids named by a test, 0 failures. `ownership acquisition tranche/T20`: 0 failures (re-run after commit, below).
 
 Size (session_0168H7EAyX21CBeSgd7swg8h): test runs 8, module lines 1281
+
+## J1 · REPORT
+
+Found in other modules (record, 'Found in other modules'): (1) capture's pullKnock (src/capture/index.mjs:605-:610) is a third C-68.1 minting site with its own body {ok, reason, code, check, translation, status, knockId, detail} and no DEC-49 region; it cannot call evidenceStorageAbsent without its answer changing, so whether and how it re-points is yours, against acquisition R29's one region. (2) Stale generated artifact: bio-plane/dist/bio-plane.bundled.mjs (not_product) still carries the old where and acquire's inline region; regenerate at the layer close. (3) acquisition's Provides does not yet name evidenceStorageAbsent(op, error, {code = true}) -> {status: 503, body}; a Provides line is your wording.
