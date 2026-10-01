@@ -1,6 +1,6 @@
 # control-plane (T19)
 
-**Status** · session_01Q7pSz3M4L3gNs61ha41Bff · depth 2 · COMPLETE · handled B3
+**Status** · session_01Q7pSz3M4L3gNs61ha41Bff · depth 2 · WAITING ON BOB (J4) · handled B4
 
 ## J1 · QUESTION
 
@@ -32,3 +32,15 @@ COMPLETE for step 2 of B3 (this share; the wrapper deletion, ops.mjs and R43's d
 **Tests and checks:** `node --test test/m/control-plane/` 90 tests, 90 pass, 0 fail. format 0 failures; architecture 0 failures; coverage 26 of 27 (R42, T20); ownership 0 failures.
 
 Size (session_01Q7pSz3M4L3gNs61ha41Bff): test runs 12, module lines 3342
+
+## J4 · QUESTION
+
+Two blockers in B4's last act; the R43 deletion is built on my branch (@ 633e6056ec, not COMPLETE, do not merge yet).
+
+**Q1 — R43: a module test still reads the catalogue (B4: "a QUESTION, and that deletion waits").** The re-scan finds no product file and no module test that imports `bio-checks.mjs`, apart from text-chain's `extent.test.mjs` (N446, accepted). But `test/m/capture-sources/credentials.test.mjs`:557 ("R55, R57, R63: the DEC-49 guard resolves every C-105 region…") spawns legacy-tests' `civicos-ui/check-refusal-codes.mjs`. That guard reads `checks/bio-checks.mjs` by a NAMED path, so with the file gone it crashes at `readFileSync` and the arm goes red. That is 1 test. Capture-sources' layer is closed. Best reading: accept it red by name with the guard script it runs (K810's class: the guard is legacy-tests', not run), until capture-sources' T20 job re-states R55/R57/R63 without the guard. If you agree I post COMPLETE for R43 as built. Otherwise say what to keep.
+
+**Q2 — the wrapper and `ops.mjs` (B4 steps 1–3).** `src/index.mjs` still exists and loads both: `:38 export { Store } from "./control-plane/dispatch.mjs"` and `:46 import { decorateAct, ACT_GATE } from "./control-plane/ops.mjs"`. Six module-test files of closed modules boot the whole Worker from `src/index.mjs` through Miniflare (`className: "Store"`): `host-governor/ops.test.mjs`:192, `instance-setup/{worker-page,profiles,reports,worker-reports}.test.mjs`, `capture/plane.test.mjs`. That is 42 tests, all green today. Deleting the wrapper or `ops.mjs` breaks `src/index.mjs` at load, so all 42 go red. I cannot re-point `src/index.mjs` to plane (my rule allows only imports from my own paths there, and control-plane may not use plane). Plane R8 needs those six re-pointed to `src/plane/index.mjs` anyway before `src/index.mjs` goes. Best reading: hold steps 1–3 until plane's file deletion re-points the six (or you route that). Then I delete the wrapper and `ops.mjs` and re-point `dispatch.test`/`store-class.test`, in a short follow-up. Alternatively, if you accept the 42 red until plane's deletion, I make steps 1–3 now. Your call.
+
+**Found:** (a) admission's `admission.test.mjs`:197 is flaky, about 1 run in 16: `K.revoked.replace(/.$/, "0")` leaves the revoked credential unchanged when its last character is already `0`, so the answer is `AI_CREDENTIAL_REVOKED`. It is red in one of my full runs and green on reruns; admission's. (b) `bio-plane/checks/README.md` (`not_product`) describes the deleted catalogue and is now an orphan; yours to remove or keep.
+
+Full `test/m` with the deletion: 4,578 tests, 4,554 pass, 4 fail (text-chain extent N446; capture-sources R55/R57/R63 per Q1; plane R8, plane's own and red before my change; admission's flake), 20 todo. Module 91/91.
