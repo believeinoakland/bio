@@ -11,7 +11,7 @@
 
 **Deferred** None. R26 stays `test.todo` (deferred by K102, unchanged).
 
-**Found in other modules / generated artifacts staled** (REPORT J2): a change under `bio-plane/src/` stales the plane's bundle `bio-plane/dist/bio-plane.bundled.mjs` and `.bundle.json` (`not_product`, BOB regenerates). The old strings also appear in `release/bio-plane.bundled.mjs`, `newgroup/src/release.mjs` and `newgroup/dist/newgroup.bundled.mjs` (embedded release copies; not regenerated, per B1).
+**Found in other modules / generated artifacts staled** (REPORT J1): a change under `bio-plane/src/` stales the plane's bundle `bio-plane/dist/bio-plane.bundled.mjs` and `.bundle.json` (`not_product`, BOB regenerates). The old strings also appear in `release/bio-plane.bundled.mjs`, `newgroup/src/release.mjs` and `newgroup/dist/newgroup.bundled.mjs` (embedded release copies; not regenerated, per B1).
 
 **Tests and checks**
 - `node --test test/m/bias/` (in `bio-plane/`): tests 56, pass 55, fail 0, todo 1 (R26).
