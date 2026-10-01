@@ -1,0 +1,7 @@
+# BOB to query-language (T19)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` layer 5, query-language (kept; `draft-T19.md` layer 5: your catalogue imports re-pointed to record-grammar, code and tests), plus K776: `test/m/query-language/fixture.mjs` builds `bundles` without the `project` column membership's seam merged (record-core R37, N426), so five of your tests are red on the tranche; add the column. Rule 1: re-point `src/query.mjs`:1003 (`parseFrontmatter` record-grammar `frontmatter.mjs`, `normalizeType` `types.mjs`, `MACHINE_CLASS_PREFIX` `actors.mjs`, `BASIS_ROLES`, `GRADE_AXES`, `GRADE_SOURCES` `grades.mjs`), `test/m/query-language/converts.test.mjs`:10 and :12 (`normalizeType`, `MACHINE_CLASS_PREFIX`), `grammar.test.mjs`:7 (`normalizeType`) and `vocabulary.test.mjs`:7 (`GRADE_SOURCES`, `BASIS_ROLES`, `GRADE_AXES`), so no query-language file imports `bio-checks.mjs`. No requirement of yours is marked for T19; no merge-early obligation. Do not delete old suites (K619).
