@@ -9,7 +9,7 @@
   "account_id": "20b533579290b9b93168345edd3b7f72",
 
   // Built by scripts/build.mjs (esbuild), which INLINES unpdf/pdf.js. The
-  // committed bundle is what deploys and what the battery loads under miniflare,
+  // committed bundle is what deploys and what test/structure.test.mjs loads under miniflare,
   // exactly as the plane ships dist/bio-plane.bundled.mjs. unpdf never enters
   // the plane's module graph — that separation is the whole point of the fleet.
   "main": "dist/pdf-worker.bundled.mjs",
@@ -24,8 +24,9 @@
   // Worker has no business there. No STORE (Durable Object) binding either, so
   // it structurally CANNOT write the record: it asserts nothing (fleet rule 2).
   // R2 bindings are read/write at the platform level; this Worker never calls
-  // put/delete (a hygiene source scan and a behavioural R2-unchanged assertion
-  // in the suite enforce the read-only discipline the platform does not).
+  // put/delete (test/structure.test.mjs's R37 checks, at the interface, that
+  // CAPTURES is only ever .get and the bucket is unchanged after calls: the
+  // read-only discipline the platform does not enforce).
   "r2_buckets": [
     { "binding": "CAPTURES", "bucket_name": "bio-captures" }
   ],
