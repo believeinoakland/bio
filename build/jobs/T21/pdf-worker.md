@@ -30,3 +30,7 @@
   - `ownership: 6 files changed by pdf-worker between tranche/T21 and HEAD; 0 failures`
 
 Size (session_01B6vMjCUja1qXTcpkSqYzuB): test runs 3, module lines 13 (comments and one JSON note in five files)
+
+## J1 · REPORT
+
+**pdf-worker/dist/ staled (comment-only).** Re-wording the 'hygiene source scan' claim in `src/index.mjs` (:24–25, now R37 in test/structure.test.mjs) changes that input's hash, so `dist/pdf-worker.bundle.json` is stale. `dist/pdf-worker.bundled.mjs` is not: a trial `npm run build` changed only the manifest, then I restored `dist/`. Until your L1-close regeneration, fleetbundles.test.mjs fails pdf-worker's STALE BUNDLE arm (97 pass, 1 fail); with the trial rebuild, 98/0. The fleet-member.json note is not a bundle input. Nothing found in another module.
