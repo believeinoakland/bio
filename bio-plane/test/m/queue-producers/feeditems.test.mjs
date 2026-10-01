@@ -112,7 +112,7 @@ test("R8: every producer's items, homed through homesOf and offered optionsOf; n
   assert.deepEqual(m["OBLIGATION::action-reminder::ACT-1::0::2026-08-15"].options.map((o) => o.id), ["reminderanswer", "opt"]);
   assert.deepEqual(m["OBLIGATION::litigation-hold::ACT-1::1"].options.map((o) => o.id), ["actionhold", "opt"]);
   assert.deepEqual(m["OBLIGATION::template-review-requested::TPL-1@1::alice"].options.map((o) => o.id), ["templatereview"]);
-  assert.deepEqual(m["OBLIGATION::local-fact-due::profile:p/holidays/2026/*"].options.map((o) => o.id), ["factconfirm", "opt"]);
+  assert.deepEqual(m["OBLIGATION::local-fact-due::profile:p/holidays/2026/*::unconfirmed"].options.map((o) => o.id), ["factconfirm", "opt"]);
   // the homes are the walk's: the stance item is homed under both projects drawing on the question
   assert.deepEqual(m["FINDING::stance-changed-here-not-elsewhere::INQ-S::PRJ-A"].case.ancestors.map((a) => a.id), ["PRJ-A", "PRJ-B"]);
   // the facts, and one proposalsFeed read for both the findings and the dispositions

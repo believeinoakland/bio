@@ -2643,7 +2643,8 @@ export class QueueProducers {
     return out;
   }
 
-  /** `local-fact-due` (R21; K921; local-facts R4, action-clocks R11): one OBLIGATION per fact
+  /** `local-fact-due` (R21; K921, K1000; local-facts R4, action-clocks R11): one OBLIGATION per fact and status, keyed
+   *  `OBLIGATION::local-fact-due::<path>::<status>` so a fact disputed after it was unconfirmed is raised again: per fact
    *  `local-facts.factsDue({paths})` answers due, `paths` those `action-clocks.calendarFactsRead` answers the viewer, to
    *  R15's recipients of each action that reads it, taken together; its subject the first such action, naming the fact,
    *  its status and why it is due. It leaves when a member confirms or corrects the fact or no live action reads it
@@ -2681,7 +2682,7 @@ export class QueueProducers {
       const since = status === "disputed" ? latestAt : (f.lapsed && f.lapses_on ? f.lapses_on : f.due_from ?? null);
       const sinceMs = typeof since === "string" ? Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(since) ? `${since}T00:00:00Z` : since) : NaN;
       out.push({
-        id: `OBLIGATION::local-fact-due::${f.path}`,
+        id: `OBLIGATION::local-fact-due::${f.path}::${status}`,
         class: "OBLIGATION",
         kind: "local-fact-due",
         case: this.#actionHomes(first.action, first.project, viewer),

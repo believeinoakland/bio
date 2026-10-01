@@ -59,7 +59,7 @@ test("R20: one OBLIGATION per (version, member) reviewsRequested answers the vie
   assert.deepEqual(ids(w.read("alice")), []);
 });
 
-test("R21: one OBLIGATION per fact factsDue answers over the paths calendarFactsRead answers the viewer, keyed OBLIGATION::local-fact-due::<path>, to R15's recipients of the actions that read it", () => {
+test("R21: one OBLIGATION per fact factsDue answers over the paths calendarFactsRead answers the viewer, keyed OBLIGATION::local-fact-due::<path>::<status>, to R15's recipients of the actions that read it", () => {
   const H25 = "profile:p/holidays/2025/*", H26 = "profile:p/holidays/2026/*", HRS = "profile:p/hours/clerk", TZ = "profile:p/time_zone";
   const reads = [];
   const facts = [];
@@ -86,14 +86,14 @@ test("R21: one OBLIGATION per fact factsDue answers over the paths calendarFacts
   const alice = w.read("alice");
   assert.deepEqual(reads.slice(0, 2), [["calendar", { viewer: "member:alice", now: NOW }], ["facts", { paths: [H25, H26, HRS, TZ], viewer: "member:alice" }]],
     "the paths are those calendarFactsRead answers the viewer, passed to factsDue");
-  assert.deepEqual(ids(alice), [`OBLIGATION::local-fact-due::${H25}`, `OBLIGATION::local-fact-due::${H26}`],
+  assert.deepEqual(ids(alice), [`OBLIGATION::local-fact-due::${H25}::unconfirmed`, `OBLIGATION::local-fact-due::${H26}::disputed`],
     "the member who created an action that reads it");
-  assert.deepEqual(ids(w.read("olga")), [`OBLIGATION::local-fact-due::${H25}`], "an action a machine created: its project's owners");
-  assert.deepEqual(ids(w.read("ada")), [`OBLIGATION::local-fact-due::${HRS}`, `OBLIGATION::local-fact-due::${TZ}`],
+  assert.deepEqual(ids(w.read("olga")), [`OBLIGATION::local-fact-due::${H25}::unconfirmed`], "an action a machine created: its project's owners");
+  assert.deepEqual(ids(w.read("ada")), [`OBLIGATION::local-fact-due::${HRS}::unconfirmed`, `OBLIGATION::local-fact-due::${TZ}::unconfirmed`],
     "no member author and no project (or an action named by id alone): the administrators");
   assert.deepEqual(ids(w.read("bob")), [], "a member who created no reading action, though he disputed one");
   assert.deepEqual(ids(w.read(null, "class:admin")), [], "a caller with no member is none of the members it goes to");
-  const it = byId(alice)[`OBLIGATION::local-fact-due::${H25}`];
+  const it = byId(alice)[`OBLIGATION::local-fact-due::${H25}::unconfirmed`];
   assert.deepEqual([it.class, it.kind], ["OBLIGATION", "local-fact-due"]);
   assert.deepEqual(it.subject, { kind: "action", id: "ACT-1", project: "PRJ-1", path: H25, fact: status[H25].fact,
     status: "unconfirmed", why: status[H25].why }, "its subject the first reading action, naming the fact, its status and why it is due");
@@ -101,23 +101,28 @@ test("R21: one OBLIGATION per fact factsDue answers over the paths calendarFacts
   assert.equal(it.basis.recipients_rule, "author+project_owners");
   assert.deepEqual(it.basis.actions, ["ACT-1", "ACT-2"]);
   assert.deepEqual(it.age, { state: "determined", since: "2024-11-01", ms: NOW - Date.parse("2024-11-01T00:00:00Z") }, "aged from the day it fell due");
-  const disputed = byId(alice)[`OBLIGATION::local-fact-due::${H26}`];
+  const disputed = byId(alice)[`OBLIGATION::local-fact-due::${H26}::disputed`];
   assert.equal(disputed.subject.status, "disputed");
   assert.deepEqual(disputed.age, { state: "determined", since: iso(NOW - 2 * DAY), ms: 2 * DAY }, "a dispute ages from the dispute");
   const ada = byId(w.read("ada"));
-  assert.deepEqual(ada[`OBLIGATION::local-fact-due::${HRS}`].age, { state: "determined", since: "2026-08-29", ms: 3 * DAY },
+  assert.deepEqual(ada[`OBLIGATION::local-fact-due::${HRS}::unconfirmed`].age, { state: "determined", since: "2026-08-29", ms: 3 * DAY },
     "a lapsed confirmation ages from the day it lapsed");
-  assert.equal(ada[`OBLIGATION::local-fact-due::${TZ}`].age.state, "undetermined");
-  assert.equal(ada[`OBLIGATION::local-fact-due::${HRS}`].basis.recipients_rule, "administrators");
+  assert.equal(ada[`OBLIGATION::local-fact-due::${TZ}::unconfirmed`].age.state, "undetermined");
+  assert.equal(ada[`OBLIGATION::local-fact-due::${HRS}::unconfirmed`].basis.recipients_rule, "administrators");
   assert.deepEqual(it.options, [{ id: "factconfirm", label: "Confirm, correct or dispute this local fact", weight: "single" },
     { id: "opt", on: ["ACT-1"] }], "its door, the confirmation, beside the acts on the action");
   assert.deepEqual(it.case.ancestors.map((a) => [a.id, a.depth]), [["PRJ-1", 0]], "homed under the action's project");
   assert.equal(it.basis.source, "local-facts.factsDue + action-clocks.calendarFactsRead");
   // raised once per fact and status: the same read twice is the same items, the status on each
   assert.deepEqual(ids(w.read("alice")), ids(alice));
+  // a new status is raised again, under its own key (K1000): disputed after it was unconfirmed
+  const before = status[H25];
+  status[H25] = { ...before, status: "disputed", why: "disputed by alice", latest: { act: "dispute", by: "alice", at: iso(NOW - DAY), how: "called" } };
+  assert.deepEqual(ids(w.read("alice")), [`OBLIGATION::local-fact-due::${H25}::disputed`, `OBLIGATION::local-fact-due::${H26}::disputed`]);
+  status[H25] = before;
   // it leaves when a member confirms or corrects the fact (factsDue no longer answers it) ...
   delete status[H25];
-  assert.deepEqual(ids(w.read("alice")), [`OBLIGATION::local-fact-due::${H26}`]);
+  assert.deepEqual(ids(w.read("alice")), [`OBLIGATION::local-fact-due::${H26}::disputed`]);
   // ... or no live action reads it (calendarFactsRead no longer lists it), and nothing is asked of local-facts then
   paths = [];
   const n = facts.length;
