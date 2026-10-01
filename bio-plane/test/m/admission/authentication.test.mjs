@@ -112,3 +112,32 @@ test("R7: a caller with no class is refused 401 NOT_AUTHENTICATED (C-38.1), for 
   assert.ok((await gate(env, { op: "index", token: env.MEMBER_TOKEN, method: "GET" })).caller);
   assert.ok((await gate(env, { op: "index", token: S.ann, method: "GET" })).caller);
 });
+
+test("R6: both lookups are credentials' (K637): the routes the module asks, `session?t=` and `aicredentiallook?sha=`, are answered by credentials' own op map, through its `session` (its R5) and `aiCredentialLook` (its R15), and membership's map answers neither", async () => {
+  const { credentialsOps } = await import("../../../src/credentials/index.mjs");
+  const { membershipOps } = await import("../../../src/membership/index.mjs");
+  const S = hex64(), K = aik();
+  const asked = [];
+  const c = {
+    session: (t) => { asked.push(["session", t]); return t === S ? { role: "member:ann", capabilities: ["contribute"] } : null; },
+    aiCredentialLook: ({ secretSha }) => { asked.push(["aiCredentialLook", secretSha]);
+      return secretSha === sha(K) ? { found: true, credential: { tokenId: "agent-ann", principal: "member:ann", writes: [],
+                                                                  revoked: false, confinedTo: null, taskScope: "t" } }
+                                  : { found: false }; },
+  };
+  const { env } = world({ answer: async (call) => {
+    const u = new URL(call.href);
+    const route = credentialsOps(c, u, null, {})[call.route];
+    assert.ok(route, `credentials answers ${call.route}`);
+    assert.equal(membershipOps({}, u, null, {})[call.route], undefined, `membership answers no ${call.route}`);
+    return new Response(JSON.stringify({ ok: true, result: await route() }));
+  } });
+  const s = await gate(env, { op: "index", token: S, method: "GET" });
+  assert.deepEqual([s.caller.cls, s.caller.viaSession, s.caller.member, [...s.caller.caps]], ["member", true, "ann", ["contribute"]]);
+  const k = await gate(env, { op: "index", token: K, method: "GET" });
+  assert.deepEqual([k.caller.cls, k.caller.aiCred.tokenId], ["ai", "agent-ann"]);
+  assert.deepEqual(asked, [["session", S], ["aiCredentialLook", sha(K)]]);
+  /* negative controls: an unknown session and an unknown agent credential resolve to no one, through the same routes */
+  refused(await gate(env, { op: "index", token: hex64(), method: "GET" }), 401, "NOT_AUTHENTICATED", "C-38.1");
+  refused(await gate(env, { op: "index", token: aik(), method: "GET" }), 401, "NOT_AUTHENTICATED", "C-38.1");
+});

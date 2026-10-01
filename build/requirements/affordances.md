@@ -44,7 +44,7 @@ Terms. An **act** is `{id, label, weight, types, applies(facts, type), prompt?}`
 - **R16** Facts are counts, never ids: no answer names a bundle other than the target.
 
 **The action vocabularies** (N65 (3), K92 (2))
-- **R26** `risk_tiers` in `VOCABULARIES` is `action-grammar`'s `RISK_TIERS` (the same reference, R4; its R1, was `actions` R40). `action_kind` answers the kinds `actions` accepts (actions R10): its product kinds, then the `action_kinds` of the active profiles' combined view (`jurisdictions.combine`); with no profile active, the product kinds alone. No kind is held here. *(not yet met: T19 layer 11: `affordances.mjs`:88 reads the action vocabularies from `actions`)*
+- **R26** `risk_tiers` in `VOCABULARIES` is `action-grammar`'s `RISK_TIERS` (the same reference, R4; its R1, was `actions` R40). `action_kind` answers the kinds `actions` accepts (actions R10): its product kinds, then the `action_kinds` of the active profiles' combined view (`jurisdictions.combine`); with no profile active, the product kinds alone. No kind is held here.
 
 **affordances({target?, viewer, identity, author, by, gate}) → answer** (`op=affordances`)
 - **R17** With no target: `{target: null, catalog, vocabularies, capture_acts, set_acts, detail}`, `catalog` each act decorated with `appliesTo` (its types), `set_acts` each decorated with `set_key`, `item_keys`, `shared_keys` and `max_items` (`PER_ITEM_MAX`). With a target: R13's refusal as given, else `{target, object_type, current_state, acts, vocabularies, capture_acts}`, `acts` being R8–R10 decorated. `capture_acts` is never filtered by the target. Every act in `catalog` is a member's: its `mode` is `session` or `admin-session`, never `machine` (INVESTIGATIVE-SESSION §4; K728).
@@ -53,13 +53,13 @@ Terms. An **act** is `{id, label, weight, types, applies(facts, type), prompt?}`
 
 ### Uses
 
-- `legacy-checks`: `STATES`, `normalizeType`, `vocabFor`, `isMachineIdentity`, `EARNED_CAPTURE_CEILING`, `UNREACHABLE_CAPTURE_GRADE`, `SUFFICIENCY_CLAIM_STATES`, `ACTION_KINDS`, `LAW_LEVELS`, `SUBJECT_POSITIONS`, `BASIS_ROLES`, `ACTION_BASIS_KINDS`, `CORRESPONDENCE_*`, `RESOLUTIONS`, `RISK_TIERS`, `VERSION_MACHINE`, `VERSION_REASON_REQUIRED`, `CONTENT_MINT_STATES`, each until the module that owns it is extracted, then from that module (`record-grammar`, `action-grammar`, `publication`, `inquiry`, `basis-versions`, `content`).
-- `record-core`: the `bundles` read contract (`current_state`, `criticality` included), `readFile` for `bundle.md`, `PER_ITEM_MAX` (its R49). *(not declared)*
+- `record-grammar`: `STATES`, `normalizeType`, `vocabFor`, `parseFrontmatter`, `isMachineIdentity`, `EARNED_CAPTURE_CEILING`, `UNREACHABLE_CAPTURE_GRADE`, `BASIS_GRADES`. `basis-versions`: `SUFFICIENCY_CLAIM_STATES`, `VERSION_MACHINE`. `action-grammar`: `ACTION_KINDS`, `PRODUCT_KINDS`, `LAW_LEVELS`, `ACTION_BASIS_KINDS`, `CORRESPONDENCE_*`, `RESOLUTIONS`, `RISK_TIERS`.
+- `record-core`: the `bundles` read contract (`current_state`, `criticality` included), `readFile` for `bundle.md`, `PER_ITEM_MAX` (its R49).
 - `membership`: `viewerPredicate`, `positionalMember` (R76), `ownsAnyProject` (R67), `isProjectOwner`, `isJoinedParticipant` (R54), `participation` (R74), `ownerMath` (R38), `projectOwners` (R65), `rescueRefusal` (R75).
-- `promotion`: `REOPENABLE_FROM` (N52); `fact(name)` for the case relation (K83 (5)). *(not declared)*
-- `connections`: `citesInto`. `citation`: `retiredNotCitable` (R5). `inquiry`: `restsOnLive`. `basis-versions`: a project's conclusion of an inquiry (the three joined-project predicates). `publication`: the case relation and `#editionsRecordingConclusion`'s answer. *(connections, basis-versions not declared)*
+- `promotion`: `REOPENABLE_FROM` (N52); `fact(name)` for the case relation (K83 (5)).
+- `connections`: `citesInto`. `citation`: `retiredNotCitable` (R5). `inquiry`: `restsOnLive`. `basis-versions`: a project's conclusion of an inquiry (the three joined-project predicates). `publication`: the case relation and `#editionsRecordingConclusion`'s answer.
 - `jurisdictions`: `list`, `get`, `combine` (R25's place names, R26's `action_kind`; K212).
-- `inquiry`: `DISPOSITIONS` (R6). `progressions`: `STAGE_REQUIREDNESS`. `entities`: `ENTITY_KINDS`, `RELATION_KINDS`. `action-grammar`: `RISK_TIERS`, `actionKinds` (its R1) and the other action vocabularies (its R2) (R26); `content`: its vocabularies. *(none declared)*
+- `inquiry`: `DISPOSITIONS` (R6). `progressions`: `STAGE_REQUIREDNESS`. `entities`: `ENTITY_KINDS`, `RELATION_KINDS`. `action-grammar`: `RISK_TIERS`, `actionKinds` (its R1) and the other action vocabularies (its R2) (R26); `content`: its vocabularies.
 - `intent`: its open proposal, the backing of R19's `triage` (K221).
 - `inquiry`: R46's vocabularies (R4; N345). `contradiction`: `DISMISSAL_REASONS` (its R31; R4; N345); `candidateSidesSeen` (its R56; R14's `contradiction_sides_seen`, N365).
 - `sources` and `capture` (N364): their op maps, the ops R2 and R3 grade, and the backing of each rung (R19).
