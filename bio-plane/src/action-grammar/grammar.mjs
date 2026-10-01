@@ -152,7 +152,7 @@ export function actionBasisFindings(fm, findings) {
     const target = typeof l.target === 'string' ? l.target : '';
     if (!BUNDLE_ID_RE.test(target)) {
       findings.push(f('C-2.10', 'error',
-        `action_basis[${i}].target '${String(l.target).slice(0, 40)}' is not a canonical bundle id`, REPAIRS));
+        `action_basis[${i}].target '${String(l.target).slice(0, 40)}' is not a canonical record id`, REPAIRS));
     } else if (OBJECT_TYPES[target.split('-')[0]] === 'action') {
       findings.push(f('C-2.10', 'error',
         `action_basis[${i}].target '${target}' is an ACTION: an action does not rest on our own action. `
