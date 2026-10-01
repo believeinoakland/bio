@@ -33,3 +33,7 @@ Generated artifacts after my change to `bio-plane/src/sign-release.html` and its
 ## J3 · COMPLETE
 
 Done. N458: "record" for "bundle" in the signer page's member-read text (`sign-release.html` :138, :142, :144, :397, :398, :403; :123's file name stays), `signpage.mjs` re-rendered by `embed-signpage.mjs`. N469: no note in my paths names a deleted file. Proof: a new R32 arm over the rendered page and the strings its script writes (fails on the old page). signatures 56/56, bundler 45/45; format, architecture, coverage (36/36), ownership 0 failures. Plane bundle stale (REPORT J2). J1 (the requirement id the proof names) is still open; built on my reading.
+
+## J4 · COMPLETE
+
+Done after B2. Merged tranche/T21 (e654bd030c). R32's new clause (K934), marked *(not yet met: T21)*, is met: the R32 arm "the page calls what a member ratifies a record, never a bundle (K899 (1)); the release asset's file name stays" tests it over the rendered page and the strings its script writes, and passes (it fails on the old page). signatures 56/56; format, architecture, coverage (36/36), ownership 0 failures. Plane bundle stale (REPORT J2). The mark is yours to strike.
