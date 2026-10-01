@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { world, k4World, sha, MACHINE, MEMBER, OUTSIDER } from "./fixture.mjs";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { canonicalJson } from "../../../checks/bio-checks.mjs";
+import { canonicalJson } from "../../../src/record-grammar/json.mjs";
 import { Contradiction, CONTRADICTION_CANDIDATE_CHECKS, CONTRADICTION_PAIR_CHECKS, CONTRADICTION_LABELS,
          CONTRADICTION_TABLES } from "../../../src/contradiction/index.mjs";
 
