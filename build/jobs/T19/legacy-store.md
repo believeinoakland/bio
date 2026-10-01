@@ -31,3 +31,7 @@
 - `format`: 0 failures · `architecture legacy-store`: 0 failures · `coverage legacy-store`: 0 of 0 ids (no requirements file), 0 failures · `ownership legacy-store tranche/T19`: 5 files, 0 failures.
 
 Size (session_01DvEPvGCVkt6sg1XQX8BGBC): test runs 9, module lines 508
+
+## J1 · COMPLETE
+
+Complete: every B1 entry and B2 applied; store.mjs 1,437 → 501, schema.mjs 18 → 7, no catalogue import. The 382 route ops answer as before; fresh-store schema identical. legacy-store 7/7; full test/m has no new failure (the same red set as before). Checks: format, architecture, coverage, ownership 0 failures. Reports in my record: unregistered count figures (membership, run-productions, inquiry, basis-versions, observation-log), the leg-grade registration still in legacy-store's name, scheduler's test needing schedAlarmAt, the old suite's sight-via-redactor arm, and the plane bundle made stale.
