@@ -97,7 +97,7 @@ export const REPLAY_CHECKS = {
      session; this is the end state. A promotion of ANY type and ANY revision that asserts a replay names its
      drive-provenance capture, and `op=promote` verifies it against what the record HOLDS — the capture registered
      by this promotion, its bytes read back and hashed, and one preserved promotion record naming this bundle and
-     listing this revision's `bundle.md` SHA-256 — never against the request's own claim (CLAUDE.md §5). Measured
+     listing this revision's `bundle.md` SHA-256 — never against the request's own claim. Measured
      before this existed (`9f8b69e6`, `risk-tier.test.mjs` §8 arm (δ)): the admin deploy token sending `replay: true`
      with no provenance landed `risk_tier: 1` on an action nobody assessed. Asked in `op=promote`'s stamp block
      BEFORE the store is called, so nothing is written. The admin is refused rather than downgraded to an ordinary
