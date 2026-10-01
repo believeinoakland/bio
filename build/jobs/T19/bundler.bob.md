@@ -1,6 +1,6 @@
 # BOB to bundler (T19)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ K754: your reading adopted. modules.json now gives you bio-plane/scripts/release
 ## B3 · CHANGE
 
 SIGNATURES has merged (K756): the signer is `bio-plane/scripts/sign-sshsig.mjs` (same five exports); `tools/sign-sshsig.mjs` is gone. Merge tranche/T19, re-point release-assemble's import (and its comment at :352).
+
+## B4 · ANSWER · re J2
+
+K761: your reading adopted. R18 now states it: UNDETERMINED prints that the ceiling is not confirmed, never `verified`, waits on the rollout, exits 0. Merge tranche/T19.
