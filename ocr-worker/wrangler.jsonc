@@ -10,7 +10,8 @@
   "account_id": "20b533579290b9b93168345edd3b7f72",
 
   // Built by scripts/build.mjs through bio-plane/scripts/fleet-bundle.mjs. The
-  // committed bundle is what deploys and what the battery loads under miniflare.
+  // committed bundle is what deploys and what this member's suite and the
+  // plane's OCR suites load under miniflare (test/memberworker.mjs).
   "main": "dist/ocr-worker.bundled.mjs",
   "compatibility_date": "2026-07-01",
 
