@@ -22,3 +22,7 @@
 - `checks/ownership.mjs … text-chain tranche/T20`: `ownership: 3 files changed by text-chain between tranche/T20 and HEAD; 0 failures`
 
 Size (session_01DmBUmF4hco6t1MeYZwfZeR): test runs 7, module lines 2023
+
+## J1 · COMPLETE
+
+N446 applied: extent.test.mjs drops the catalogue parity (import, theirs, the R97 parity test, R98's catalogue arm, header). R97 and R98 are each swept over the same >2,000 inputs against the requirement's own statement, so none of R92-R98 loses coverage (+34 test lines net, not the plan's -40, for that reason). Source: stale catalogue comments re-worded, no behaviour change. Module tests 112 pass / 0 fail; format, architecture, coverage (103/103), ownership: 0 failures. Nothing deferred; nothing found in other modules; no generated artifact moves. Record: build/jobs/T20/text-chain.md.
