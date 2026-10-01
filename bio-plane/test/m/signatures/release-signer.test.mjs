@@ -16,7 +16,6 @@ import { join } from "node:path";
 import vm from "node:vm";
 
 import * as signer from "../../../scripts/sign-sshsig.mjs";
-import * as shim from "../../../../tools/sign-sshsig.mjs";
 import { verifySshsig, NS_RELEASE, NS_RATIFY, NS_FLEET, fleetStatement } from "../../../src/sshsig.mjs";
 import { SIGN_HTML } from "../../../src/signpage.mjs";
 
@@ -341,11 +340,4 @@ test("R36 signing and the public line print nothing and write no file", () => {
   assert.equal(r.stderr, "");
   assert.deepEqual(JSON.parse(r.output[3]), { said: [], n: 2 });
   assert.deepEqual(readdirSync(work), []);
-});
-
-/* ======================================================= the old path, kept */
-
-test("R33 R34 R35 the old path tools/sign-sshsig.mjs re-exports the same services until its importer re-points", () => {
-  assert.deepEqual(Object.keys(shim).sort(), Object.keys(signer).sort());
-  for (const k of Object.keys(signer)) assert.equal(shim[k], signer[k], k);
 });
