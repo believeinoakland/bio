@@ -1,6 +1,6 @@
 # BOB to text-chain (T22)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
