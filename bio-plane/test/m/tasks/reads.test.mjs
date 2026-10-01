@@ -1,5 +1,5 @@
 /* R6 (N363): the three reads `queue`'s feed makes of the inbox, each answering what the feed read before the split:
-   recentTasks (with N373's statuses), resolvedTasks, taskExists (gated, N374). Each never throws; a store without the table answers empty or false. */
+   recentTasks (with N373's statuses and N410's assignees), resolvedTasks, taskExists (gated, N374). Each never throws; a store without the table answers empty or false. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, host, NOW, iso } from "./world.mjs";
@@ -68,6 +68,36 @@ test("R6: recentTasks with statuses answers only tasks of those statuses, the ca
   assert.deepEqual(w.t.recentTasks({ statuses: live }), [], "an absent viewer is denied");
 });
 
+test("R6: recentTasks with assignees answers only tasks held by those (unassigned a value like any), the cap taken over them alone (N410)", () => {
+  const w = seeded();
+  const live = ["open", "forwarded"];
+  // others' live tasks, newer than alice's own, that must not crowd hers out of the cap
+  w.task("TASK-2026-0007-other1", DOC, { kind: "k7", assignee: "bob", created: iso(NOW - 10) });
+  w.task("TASK-2026-0008-other2", DOC2, { kind: "k8", assignee: "bob", created: iso(NOW - 20) });
+  w.task("TASK-2026-0009-free", DOC2, { kind: "k9", created: iso(NOW - 3000) });
+  const mine = { viewer: "member:alice", statuses: live, assignees: ["alice", "unassigned"] };
+  assert.deepEqual(w.t.recentTasks(mine).map((t) => t.id), ["TASK-2026-0009-free", "TASK-2026-0001-a"],
+    "the viewer's own and the unassigned, created descending; bob's live tasks left out");
+  assert.deepEqual(w.t.recentTasks({ ...mine, limit: 2 }).map((t) => t.id), ["TASK-2026-0009-free", "TASK-2026-0001-a"],
+    "the newer tasks of other assignees do not crowd them out of the cap");
+  assert.deepEqual(w.t.recentTasks({ ...mine, limit: 1 }).map((t) => t.id), ["TASK-2026-0009-free"]);
+  assert.deepEqual(w.t.recentTasks({ viewer: "member:alice", assignees: ["bob"] }).map((t) => t.id),
+    ["TASK-2026-0007-other1", "TASK-2026-0008-other2", "TASK-2026-0002-b"], "of any status when statuses is absent");
+  assert.deepEqual(w.t.recentTasks({ viewer: "member:alice", assignees: ["unassigned"] }).map((t) => t.id),
+    w.t.recentTasks({ viewer: "member:alice" }).filter((t) => t.assignee === "unassigned").map((t) => t.id),
+    "exactly the visible tasks so held, each as recentTasks gives it");
+  assert.deepEqual(w.t.recentTasks({ viewer: "member:alice", assignees: ["alice"] }),
+    w.t.taskList({ viewer: "member:alice", assignee: "alice" }).tasks, "each as taskList gives it");
+  assert.deepEqual(w.t.recentTasks({ viewer: "member:alice", assignees: [] }), [], "an empty assignees answers none");
+  assert.deepEqual(w.t.recentTasks({ viewer: "member:alice", assignees: ["nobody"] }), []);
+  assert.deepEqual(w.t.recentTasks({ viewer: "member:alice", assignees: null }), w.t.recentTasks({ viewer: "member:alice" }),
+    "absent assignees: any assignee");
+  // gated as without assignees: the hidden project's unassigned task is withheld from alice, shown to bob
+  assert.equal(w.t.recentTasks({ viewer: "member:alice", assignees: ["unassigned"] }).some((t) => t.refers_to === PRJ), false);
+  assert.equal(w.t.recentTasks({ viewer: "member:bob", assignees: ["unassigned"] }).some((t) => t.id === "TASK-2026-0005-h"), true);
+  assert.deepEqual(w.t.recentTasks({ assignees: ["alice"] }), [], "an absent viewer is denied");
+});
+
 test("R6, R9: taskExists({id, viewer}) answers whether a task has that id on a subject the viewer may see; a hidden one answers as none (N374)", () => {
   const w = seeded();
   assert.equal(w.t.taskExists({ id: "TASK-2026-0001-a", viewer: "member:alice" }), true);
@@ -90,6 +120,7 @@ test("R6: on a store without the table, each answers empty or false and never th
   assert.deepEqual(t.recentTasks({ viewer: "class:admin" }), []);
   assert.deepEqual(t.resolvedTasks({ viewer: "class:admin", since: iso(NOW) }), []);
   assert.deepEqual(t.recentTasks({ viewer: "class:admin", statuses: ["open"] }), []);
+  assert.deepEqual(t.recentTasks({ viewer: "class:admin", assignees: ["alice"] }), []);
   assert.equal(t.taskExists({ id: "TASK-2026-0001-a", viewer: "class:admin" }), false);
   // nor on an argument that is no query
   const w = seeded();

@@ -7,10 +7,11 @@ import {
 } from "../../../src/queuestate.mjs";
 import { CONDITION_KINDS } from "../../../src/observation-log/vocabulary.mjs";
 
-/* R1's nine, N345's two duties among them (DEC-85's unseen one included), and N375's self-registered key. */
+/* R1's twelve, N345's two duties among them (DEC-85's unseen one included), N375's self-registered key, and the Action
+   layer's three (K608, K614). */
 const OBLIGATION = ["authority-undetermined", "bias-debt", "endorsement-owed", "expertise-confirmation-owed",
   "membership-request", "project-owners-inactive", "contradiction-duty", "contradiction-duty-unseen",
-  "signer-self-registered"];
+  "signer-self-registered", "plan-checkpoint-due", "escalation-stage-proposed", "action-reminder"];
 /* R1's twenty-six, `cardinality_exceeded` (N107, K209), `newer-capture-affects-reference` (N172) and N345's five among
    them. */
 const FINDING = ["missing_predecessor", "overdue_successor", "temporal-expectation-due", "source-modified",
@@ -20,10 +21,12 @@ const FINDING = ["missing_predecessor", "overdue_successor", "temporal-expectati
   "shared-inquiry-concluded-by-another-project", "cardinality_exceeded", "newer-capture-affects-reference",
   "contradiction-plurality-unseen", "contradiction-lead", "contradiction-plurality", "side-corrected",
   "tension-after-publication"];
-const CONDITION = ["monitoring-recheck-due", "archive-fallback-eligible", "capture-session-ttl-expiring",
+/* observation-log's twelve (R5), and the overdue action clock (K611). */
+const LOOK_CONDITION = ["monitoring-recheck-due", "archive-fallback-eligible", "capture-session-ttl-expiring",
   "source-unreachable-governed", "capture-completed-unattended", "partial-capture-outstanding", "text-undetermined",
   "client-rendered-shell", "invitation-spent-or-expired", "governor-holding-host", "runtime-ceiling-reached",
   "render-deferred"];
+const CONDITION = [...LOOK_CONDITION, "action-clock-overdue"];
 const sorted = (a) => [...a].sort();
 
 test("R1: every catalogued kind answers its class, anything else null, and every kind has its sentence", () => {
@@ -41,6 +44,11 @@ test("R1: every catalogued kind answers its class, anything else null, and every
     for (const [k, s] of Object.entries(vocab)) assert.ok(typeof s === "string" && s.trim().length > 0, k);
   // N375: the self-registered key is an OBLIGATION whose sentence says what happened and what may be done
   assert.match(QUEUE_OBLIGATION_KINDS["signer-self-registered"], /registered their own signing key; you may revoke it/);
+  // the Action layer's kinds (K608, K611, K614): each sentence says what came and what a member does about it
+  assert.match(QUEUE_OBLIGATION_KINDS["plan-checkpoint-due"], /checkpoint your group set in an action plan has come; a member judges whether its condition was met/);
+  assert.match(QUEUE_OBLIGATION_KINDS["escalation-stage-proposed"], /next stage is proposed because its trigger was met; a member advances it or declines with a reason/);
+  assert.match(QUEUE_OBLIGATION_KINDS["action-reminder"], /reminder you asked for on one of the group's action deadlines; answer it with another reminder or none/);
+  assert.match(QUEUE_CONDITION_KINDS["action-clock-overdue"], /deadline on one of the group's actions passed while its entry is still pending/);
   // the cardinality finding is worded as what it is: never "required and absent"
   assert.doesNotMatch(QUEUE_FINDING_KINDS.cardinality_exceeded, /absent/);
 });
@@ -96,9 +104,13 @@ test("R4: suppressedBy names the first muted ancestor holding the kind, with no 
     assert.deepEqual(parseMutedKinds(serializeMutedKinds(kinds)), sorted(new Set(kinds)));
 });
 
-test("R5: the condition kinds are observation-log's vocabulary, re-exported as QUEUE_CONDITION_KINDS", () => {
-  assert.equal(QUEUE_CONDITION_KINDS, CONDITION_KINDS);
-  assert.deepEqual(sorted(Object.keys(QUEUE_CONDITION_KINDS)), sorted(CONDITION));
-  assert.equal(Object.keys(QUEUE_CONDITION_KINDS).length, 12);
-  for (const k of Object.keys(CONDITION_KINDS)) assert.equal(classOfKind(k), "CONDITION", k);
+test("R5: the condition kinds are observation-log's vocabulary with action-clock-overdue, re-exported as QUEUE_CONDITION_KINDS", () => {
+  assert.deepEqual(sorted(Object.keys(CONDITION_KINDS)), sorted(LOOK_CONDITION));
+  // every one of observation-log's, with its own sentence, and action-clock-overdue beside them; nothing else
+  for (const [k, s] of Object.entries(CONDITION_KINDS)) assert.equal(QUEUE_CONDITION_KINDS[k], s, k);
+  assert.deepEqual(sorted(Object.keys(QUEUE_CONDITION_KINDS)), sorted([...Object.keys(CONDITION_KINDS), "action-clock-overdue"]));
+  assert.equal(Object.keys(QUEUE_CONDITION_KINDS).length, 13);
+  assert.ok(!("action-clock-overdue" in CONDITION_KINDS), "observation-log's list is not changed: no look carries it");
+  assert.ok(Object.isFrozen(QUEUE_CONDITION_KINDS));
+  for (const k of Object.keys(QUEUE_CONDITION_KINDS)) assert.equal(classOfKind(k), "CONDITION", k);
 });

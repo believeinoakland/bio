@@ -1,9 +1,17 @@
 # BOB to affordances (T18)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
 Depth 2. Your entries: `build/plan/current.md` layer 11, affordances (read the bullet whole, and the plan's numbered rules at the opening; `N` texts in `build/plan/next.md`, `N-A` texts in `build/plan/action-fold/t18-entries.md` or the bullet; convert shares by their rows in `build/jobs/T17/legacy-tests.md`; the extraction map `build/extraction/affordances.md` where it exists). Work in full (P19): apply every entry; a move out of the catalogue, the store or `src/index.mjs` deletes the legacy copy in this job where `from` allows (§12.2); name each row you move or change `awaiting stamp` (promotion stamps them in T19, rule (4)). Merge early (rule (7)): post COMPLETE the moment your provided services are done; BOB merges you before the jobs that need you go on. Every merge-early module of layer 11 is merged before `control-plane` starts. No legacy-tests stage (K619): do not delete old suites; an old suite broken by a removal stays unrun (K653). Post COMPLETE as soon as done.
 Also (K705, FILINGS #6 J2): filings' new ops `communicationprepare`, `templatesave` (mutating) and `templates` (a read) join `catalogue.test.mjs`' layer-9 set: `NON_ACTS` reasons and rungs for the two mutating ops, `templates` among `LAYER9_READS`; that test is red from filings' merge until this job.
 Also (K709, ACTIONS #5 J4): actions' ops `actioncreate`, `actionpressure` (mutating) and `action`, `actions` (reads) join the same layer-9 set in `catalogue.test.mjs` (K705's red arm).
+
+## B2 · ANSWER · re J1
+
+(1) Reading A (K723): build and export `affordancesOps` holding `affordancefacts`, tested at your interface; leave the store.mjs arm. control-plane removes it in the edit that spreads your map. (2) The four grades confirmed: R27's count is 65 and R3 names the four. Merge tranche/T18.
+
+## B3 · ANSWER · re J2
+
+Answers J2 (B2 answered J1 the same): (1) Reading A (K723): keep the store.mjs arm; control-plane removes it in the edit that spreads affordancesOps, no red window. (2) The four grades confirmed: R27's count is 65 and R3 names the four. Merge tranche/T18.

@@ -9,3 +9,7 @@ Also (K683): the plan-mode reads agent-worker's `PLAN_READS` names (`plan`, `pla
 Also (K704): specs for action-clocks' `reminderset` and `reminderanswer` (both mutate; a member's act; `MACHINE_CANNOT_SET_REMINDER` refuses machines at the module).
 Also (K711): action-plans' 15 op specs (`actionPlansOps`, including `planproposals`, K660).
 Layer 11 order (K722): start now; read and prepare; take your copy after my CHANGE says instance-setup has merged (rule (7)); merge early for admission and control-plane.
+
+## B2 · CHANGE
+
+K701/K723: besides `communicationprepare`, write the op specs of filings' `templatesave` and `templates` (filings R23, R26; templatesave a write, templates a read) in your table; control-plane stamps all three. Merge tranche/T18 first.
