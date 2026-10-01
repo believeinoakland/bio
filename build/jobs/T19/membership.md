@@ -20,3 +20,12 @@ Tests: `test/m/membership` 139 pass, 0 fail. Checks: format, architecture, cover
 **Found in another module (query-language, L5):** with the fence, `test/m/query-language/fixture.mjs` builds a `bundles` table without `project`, so five of its tests fail `no such column: b.project` (converts.test.mjs:262, fields.test.mjs:45, projection.test.mjs:48, statements.test.mjs:103, statements.test.mjs:207). Whole `test/m`: 4,307 pass, 5 fail (those five), 20 todo. The fix is one column in that fixture (record-core R37 names `bundles.project` part of the contract); it is query-language's to write. Every other module's tests pass. No generated artifact touched by me needs regeneration beyond the plane bundle at the layer close.
 
 Next, while credentials builds: the families into `membership/checks.mjs`, the boot reindex, the converts; then the reserved-id finding once record-core's R68 merges, and the split's deletion when you tell me credentials has merged.
+
+## J3 · QUESTION
+
+R95 (K774). Built on my best reading, pushed @ HEAD of `job/T19/membership`; tell me if any part is wrong.
+1. **Signature.** `registerPasswordSetter(fn, module = "credentials")`: R95 names `(fn)`; the optional second argument only names the holder in R81's `LISTENER_DECLARED` (a non-function is `LISTENER_MALFORMED`; a second registration is refused). CREDENTIALS can call `registerPasswordSetter((a) => this.setPassword(a))`. The setter is called `fn({role, password})` (`role` = `member:<id>`), and answers like `setPassword` (`{ok: true, role}`); a throw or `{ok: false}` counts as not written.
+2. **"Refuses as it would on a failed write."** No service throws, so the refusal needs a code. I minted `ENROL_NOT_RECORDED`, row **C-96.18** in `MEMBERSHIP_CHECKS` (next free C-96; translation: the enrolment could not be completed, nothing changed, the invitation link still works). It answers when no setter is registered (after the deletion) and when the setter throws or answers `ok: false`. The setter runs before any membership write, so the invitation stays live and the member stays `invited`. A new row: promotion's stamp should carry C-96.18 (and C-96.15–.17 leaving for credentials).
+3. **Interim**, as J1's: until the split's deletion, with no setter registered `enroll` uses membership's own `setPassword` copy.
+
+Also: in J2 "see my QUESTION J2" should read J1. And CHANGE B3's (1): `BAD_KEY` (C-96.8) stays in my `CUSTODIAL_CHECKS` copy until the deletion removes `signerAdd`, its one minter here; it goes then.
