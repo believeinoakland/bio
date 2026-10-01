@@ -4,7 +4,7 @@
  *
  * The esbuild recipe is NOT written here. It lives in
  * `bio-plane/scripts/fleet-bundle.mjs`, which is also what
- * `bio-plane/test/fleetbundles.test.mjs` builds with when it asserts this
+ * `bio-plane/test/system/fleetbundles.test.mjs` builds with when it asserts this
  * committed artifact is byte-identical to a fresh build of its source. One
  * expression of the recipe, or the build and the guard can disagree and the
  * guard is the one that would be wrong.
