@@ -1,10 +1,19 @@
 /* The test profile (R22): the City of Port Ellery and Marlow County, a jurisdiction made up for tests.
  * Every basis is `TEST`. It supplies every section and vocabulary key the first profile supplies, with
  * different values in each, shares no host with it (all hosts are under the reserved `.example`
- * domain), and adds a captured crosswalk, a holiday calendar and a venue's evidence standard (R39), which
- * the first profile has none of. Modules that take local facts are tested against it (`build/layers.md`,
- * "No jurisdiction in the product", rule 3). */
+ * domain), and adds a captured crosswalk, a venue's evidence standard (R39) and attributed templates (R40),
+ * which the first profile has none of. Its calendar (R41–R44, R45) has a holiday year for every office with
+ * entries of that year for one office and for one venue, hours on an office and a venue, and both statuses.
+ * Modules that take local facts are tested against it (`build/layers.md`, "No jurisdiction in the product",
+ * rule 3). */
 const R = String.raw;
+
+/* R40: a template's whole attribution, as filing-templates reads a profile template (its R15); every blank in
+   the texts below is one of filing-templates' blanks. */
+const attributed = (id, use, text, review) => ({
+  id, version: 1, use, text, notes: "A made-up template for tests.", authored_by: "Ada Example",
+  contributors: ["Ben Example"], reviews: [review], approved_by: "Cy Example", approved_at: "2026-09-01", basis: "TEST",
+});
 
 export default {
   id: "test-port-ellery",
@@ -114,6 +123,7 @@ export default {
 
   practice: { minutes_due_days: { value: 30, basis: "TEST" } },
   locale: { value: "en-GB", basis: "TEST" },
+  time_zone: { value: "America/Halifax", status: "researched", basis: "TEST" },
   search_terms: [{ term: "harbour", basis: "TEST" }],
   records_laws: [
     { level: "state", name: "Freedom of Records Act (test)", citation: "Test Stat. § 1.100", basis: "TEST" },
@@ -128,7 +138,11 @@ export default {
       cite: { re: R`\bMCBC\s+\d{4}-\d+` }, basis: "TEST" },
   ],
   counterparties: [
-    { role: "Town Clerk", body: "City of Port Ellery", level: "city", elected: false, basis: "TEST" },
+    { role: "Town Clerk", body: "City of Port Ellery", level: "city", elected: false,
+      hours: { weekly: [...["mon", "tue", "wed", "thu"].map((day) => ({ day, open: "09:00", close: "12:30" })),
+        ...["mon", "tue", "wed", "thu"].map((day) => ({ day, open: "13:30", close: "16:00" })),
+        { day: "fri", open: "09:00", close: "12:00" }], status: "researched", basis: "TEST" },
+      basis: "TEST" },
     { role: "Selectboard", body: "Port Ellery Selectboard", level: "city", elected: true, basis: "TEST" },
     { role: "Harbour District Board", body: "Port Ellery Harbour District", level: "district", elected: true, oversight: false, basis: "TEST" },
     { role: "Examiner of Accounts", body: "Marlow County Audit Office", level: "county", elected: false, oversight: true, basis: "TEST" },
@@ -136,16 +150,26 @@ export default {
   action_kinds: [
     { kind: "records_request", label: "request under the records act", tier: 2,
       laws: ["Freedom of Records Act (test)", "Port Ellery Open Government Bylaw"],
-      venue: { name: "the Town Clerk's office", how: "email", basis: "TEST" },
-      template: "To the Town Clerk: under {{law}}, please provide {{records}}.",
+      venue: { name: "the Town Clerk's office", how: "email", basis: "TEST",
+        hours: { weekly: ["mon", "tue", "wed", "thu", "fri"].map((day) => ({ day, open: "08:00", close: "18:00" })),
+          status: "ruled", basis: "TEST" } },
+      template: attributed("TPL-test-records-request", "file", "To the {{counterparty_role}}: under {{law}}, {{group}} asks for the records described below.",
+        { reviewer: "Dee Example", kind: "professional", organisation: "Marlow Commons Legal Society (test)",
+          credential: "solicitor (test)", scope: "the whole text", outcome: "no_concerns", at: "2026-08-20" }),
       advisory: "A test advisory: have a solicitor read the request before it is sent.", basis: "TEST" },
     { kind: "bylaw_complaint", label: "complaint under the bylaws", tier: 1, laws: ["Port Ellery Bylaws"],
       venue: { name: "the Selectboard", how: "in_person", basis: "TEST" },
-      template: "To the Selectboard: {{act}} does not conform to {{bylaw}}.", basis: "TEST" },
+      template: attributed("TPL-test-bylaw-complaint", "file", "To the {{counterparty_role}}: {{act}} does not conform to {{standards}}.",
+        { reviewer: "Dee Example", kind: "member", scope: "the whole text", outcome: "no_concerns", at: "2026-08-21" }),
+      basis: "TEST" },
     { kind: "commitment_claim", label: "claim on a budget commitment", tier: 3,
       venue: { name: "Marlow County Court", how: "court", basis: "TEST" },
       evidence: { standard: "Marlow County Court Rule 9.02 (test): a record authenticated by its custodian",
         accepts: [{ grade: "A", coattested: true }, { grade: "B" }], contestable: [{ grade: "C" }], basis: "TEST" },
+      /* A Tier 3 kind takes a briefing to counsel, never a `file` template (K921). */
+      template: attributed("TPL-test-commitment-brief", "brief", "For counsel: {{group}} asks whether {{act}} ({{act_date}}) breaches {{standards}}, on {{findings}}.",
+        { reviewer: "Dee Example", kind: "professional", organisation: "Marlow Commons Legal Society (test)",
+          credential: "solicitor (test)", scope: "the whole text", outcome: "concerns", at: "2026-08-22" }),
       basis: "TEST" },
   ],
   deadlines: [
@@ -160,14 +184,20 @@ export default {
       contacts: [{ how: "web", value: "https://legal.marlow-county.example" }, { how: "phone", value: "+1 555 0100" }],
       basis: "TEST" },
   ],
+  /* The entries for one office and one venue come first: each adds its days to the year every office keeps (R43). */
   holidays: [
+    { year: 2026, offices: ["Town Clerk"], days: [{ date: "2026-08-14", name: "Clerk's records day" }],
+      status: "ruled", basis: "TEST" },
+    { year: 2026, offices: [{ venue: "commitment_claim" }], days: [
+      { date: "2026-08-31", name: "Court vacation day" }, { date: "2026-12-24", name: "Court closed" }],
+      status: "researched", basis: "TEST" },
     { year: 2026, days: [
       { date: "2026-01-01", name: "New Year's Day" }, { date: "2026-03-17", name: "Harbour Day" },
       { date: "2026-07-03", name: "Founders' Day (observed)" }, { date: "2026-12-25", name: "Christmas Day" }],
-      basis: "TEST" },
+      status: "researched", basis: "TEST" },
     { year: 2027, days: [
       { date: "2027-01-01", name: "New Year's Day" }, { date: "2027-03-17", name: "Harbour Day" },
       { date: "2027-12-24", name: "Christmas Day (observed)" }],
-      basis: "TEST" },
+      status: "researched", basis: "TEST" },
   ],
 };
