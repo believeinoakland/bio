@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { world, plane, newKey, signBundle, cleanInfoMd, sha, V, SILENT } from "./fixture.mjs";
 import { ratifyOp } from "../../../src/ratification/ops.mjs";
 import { publishedGraphEdges } from "../../../src/publication/index.mjs";
+import { publicReadOf } from "../../../src/public-read/index.mjs";
 import { RATIFY_MACHINE_FENCE_CHECKS as FENCE, RATIFY_TESTIMONY_CHECKS as TESTIMONY,
          RATIFY_ATTRIBUTION_CHECKS as ATTRIBUTION, RATIFY_SCOPE_CHECKS as SCOPE } from "../../../src/ratification/index.mjs";
 
@@ -249,8 +250,9 @@ test("R5: a finding's reference to a target not yet published never enters the p
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
   assert.deepEqual(w.st.sql.exec(`SELECT to_bundle, kind, disclosure FROM published_edges WHERE from_bundle=?`, Q),
     [{ to_bundle: "INQ-2026-0000-parent", kind: "division_parent", disclosure: "name" }]);
-  assert.doesNotMatch(JSON.stringify([w.publication.publishedManifest(), w.publication.publishedList(),
-                                      w.publication.publishedEditions(Q)]), new RegExp(DOC));
+  /* the public reads are public-read's (its R4, R2; K651) */
+  const pr = publicReadOf(w.host, { storage: w.st, publication: w.publication });
+  assert.doesNotMatch(JSON.stringify([pr.publishedManifest(), pr.publishedList(), pr.publishedEditions(Q)]), new RegExp(DOC));
 });
 
 test("R16, R5: the reference held for a published finding becomes a `serve` edge when its target is published; nothing else in either edition changes", () => {

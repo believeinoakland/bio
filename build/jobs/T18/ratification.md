@@ -25,7 +25,7 @@ Two points; I am carrying on with my best reading of each.
 
 **Entries applied:** every entry of plan layer 8, ratification: N400 (R20–R27) and K674 (4) (#9); N211; T17's two findings (the dead codes, K691; the /5 fixtures); N417 (B2); K649's STRENGTH_STATES and userAgent re-points; N407; the legacy-index §4.4 dispatch move; `assembleCaseContainer` from public-read (K651, K691); the 16 converts. B3 applied (tranche merged, checks re-run). Rows moved or copied are `awaiting stamp` (promotion, T19).
 
-**Deferred:** `ratify-op.test.mjs`:210–211's re-point to public-read's reads, waiting on publication's merge (B2, B4: BOB's CHANGE).
+**Deferred:** none. B5 (K697): tranche/T18 merged; `ratify-op.test.mjs`' R5 test reads `publishedManifest`, `publishedList` and `publishedEditions` from public-read (`publicReadOf`, its R4, R2; K651); tests 168/168, format, architecture (82 imports), coverage 27/27, ownership: 0 failures.
 
 **Found in other modules (for BOB):**
 - control-plane: `test/m/control-plane/doorbell.test.mjs`:465 (R36, N380) fails on tranche/T18 without my change: the refusal detail reads "the act run with the pull did not complete, …" where the test expects /the promotion did not complete/.
@@ -33,7 +33,7 @@ Two points; I am carrying on with my best reading of each.
 
 **Tests and checks:** `node --test test/m/ratification/`: tests 168, pass 168, fail 0. Users' tests: case-authoring 69/0, review 30/0, affordances 106/0, control-plane 79 pass / 1 fail (the doorbell arm above, pre-existing). `format`: 0 failures; `architecture`: 20 product files, 81 relative imports, 0 failures; `coverage`: 27 of 27 live requirement ids named by a test, 0 failures; `ownership`: legacy-store 0 added / 215 removed, legacy-checks 0 / 80, legacy-index 2 / 3, 0 failures.
 
-Size (session_019etcwAHXE3ju7ZSV9kHRnw): test runs 12, module lines 3601
+Size (session_019etcwAHXE3ju7ZSV9kHRnw): test runs 13, module lines 3601
 - [x] K649: `checks.mjs`' `STRENGTH_STATES` re-pointed to `strength` (the architecture check fails until `strength` is in ratification's `uses`: REPORT J2); `ops.mjs`' `userAgent` re-pointed to `acquisition`.
 - [x] N407 (K649 (4)): R18's pre-flight reads a viewer `{stamp, aiCred}`; an agent credential holds C-32.13 and C-32.15 whatever its stamp (tested with a stub viewer; admission stamps it in layer 11).
 - [x] legacy-index map §4.4: `src/index.mjs`' `caseratify` and `ratify` dispatch lines replaced by one call to `ratificationOp` (`ops.mjs`), the context both handlers read handed in (2 lines added, 3 removed there). `assembleCaseContainer` still handed in by the door until public-read merges (its re-point waits for BOB's CHANGE, with `ratify-op.test.mjs`:210–211's).

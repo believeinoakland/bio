@@ -17,8 +17,8 @@
 import { verifySshsig, ratifyStatement, caseRatifyStatement, NS_RATIFY } from "../sshsig.mjs";
 import { deliveringPrincipal, delivererOf } from "../deliverer.mjs";
 import { publishedGraphEdges } from "../publication/index.mjs";
-/* K651, K691: the case container's one assembly (public-read R6), read here rather than handed in by the door. Its file
-   joins public-read's paths when publication's job merges (plan T18 rule (10)). */
+/* K651, K691: the case container's one assembly (public-read R6), read here rather than handed in by the door; the file
+   is public-read's since publication's merge (K697). */
 import { assembleCaseContainer as assembleContainer } from "../publication/worker.mjs";
 import { partsHeld, withRegisterChecks } from "../provenance/index.mjs";
 import { userAgent } from "../acquisition/index.mjs";
