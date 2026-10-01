@@ -19,6 +19,7 @@ import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 import { promotionOf, stepContext, recordAudit } from "./promotion/index.mjs";
 import { provenanceOf, routeFinding, TESTIMONY_PATH } from "./provenance/index.mjs";
 import { Membership, membershipOf, membershipOps, hiddenBundles } from "./membership/index.mjs";
+import { Credentials, credentialsOf, credentialsOps } from "./credentials/index.mjs";
 import { observationLogOf, observationLogOps, OBSERVATION_LOG_MODULE } from "./observation-log/index.mjs";
 import { runProductionsOf, runProductionsOps } from "./run-productions/index.mjs";
 import { captureRequestsOf, captureRequestsOps } from "./capture-requests/index.mjs";
@@ -232,6 +233,7 @@ export class Store extends DurableObject {
 
     for (const s of bare.split(";")) { const t = s.trim(); if (t) this.sql.exec(t); }
     membershipOf(this.ctx).migrate();   /* membership's tables (R57–R59), after the schema pass: nothing in the schema text names them */
+    credentialsOf(this.ctx).migrate();   /* credentials' tables (R18), after membership's: its listener and claim fact registered */
     provenanceOf(this.ctx).migrate();   /* provenance's tables (R41), likewise: its schema is its own */
     contentOf(this.ctx).migrate();      /* content's tables (R39), likewise, with the chain_kind and cited_as migrations */
     connectionsOf(this.ctx).migrate();  /* connections' tables (R36), likewise, with the pair columns' migrations */
@@ -1423,22 +1425,17 @@ export class Store extends DurableObject {
       .map((b) => b.toString(16).padStart(2, "0")).join("");
   }
 
+  bootstrapState(...a) { return credentialsOf(this.ctx).bootstrapState(...a); }
 
+  claim(...a) { return credentialsOf(this.ctx).claim(...a); }
 
-  bootstrapState(...a) { return membershipOf(this.ctx).bootstrapState(...a); }
+  setPassword(...a) { return credentialsOf(this.ctx).setPassword(...a); }
 
-  claim(...a) { return membershipOf(this.ctx).claim(...a); }
+  static LOGIN_REFUSAL_DETAIL = Credentials.LOGIN_REFUSAL_DETAIL;
 
-  setPassword(...a) { return membershipOf(this.ctx).setPassword(...a); }
+  login(...a) { return credentialsOf(this.ctx).login(...a); }
 
-
-
-
-  static LOGIN_REFUSAL_DETAIL = Membership.LOGIN_REFUSAL_DETAIL;
-
-  login(...a) { return membershipOf(this.ctx).login(...a); }
-
-  session(...a) { return membershipOf(this.ctx).session(...a); }
+  session(...a) { return credentialsOf(this.ctx).session(...a); }
 
   /* D-9, D-533: the register's rows classified, and the parts a holding bundle's record names: provenance's (R6, R8). */
   registerAudit() { return provenanceOf(this.ctx).registerRows(); }
@@ -1559,11 +1556,11 @@ export class Store extends DurableObject {
   static SIGNER_ATTESTS = Membership.SIGNER_ATTESTS;
 
 
-  signerAdd(...a) { return membershipOf(this.ctx).signerAdd(...a); }
+  signerAdd(...a) { return credentialsOf(this.ctx).signerAdd(...a); }
 
-  signerList(...a) { return membershipOf(this.ctx).signerList(...a); }
+  signerList(...a) { return credentialsOf(this.ctx).signerList(...a); }
 
-  signerSet(...a) { return membershipOf(this.ctx).signerSet(...a); }
+  signerSet(...a) { return credentialsOf(this.ctx).signerSet(...a); }
 
   /** REC-18: op=earnedbasis — WHAT THE RECORD EARNS for each candidate leg,
    *  BEFORE the leg is written.
@@ -1663,13 +1660,13 @@ export class Store extends DurableObject {
      reachable as a Durable Object method for the scheduler's consumer and the suites that drive it. */
   captureRequestDrain(o) { return captureRequestsOf(this.ctx).drain(o); }
 
-  aiCredentialMint(...a) { return membershipOf(this.ctx).aiCredentialMint(...a); }
+  aiCredentialMint(...a) { return credentialsOf(this.ctx).aiCredentialMint(...a); }
 
-  aiCredentialRevoke(...a) { return membershipOf(this.ctx).aiCredentialRevoke(...a); }
+  aiCredentialRevoke(...a) { return credentialsOf(this.ctx).aiCredentialRevoke(...a); }
 
-  aiCredentialLook(...a) { return membershipOf(this.ctx).aiCredentialLook(...a); }
+  aiCredentialLook(...a) { return credentialsOf(this.ctx).aiCredentialLook(...a); }
 
-  aiCredentials(...a) { return membershipOf(this.ctx).aiCredentials(...a); }
+  aiCredentials(...a) { return credentialsOf(this.ctx).aiCredentials(...a); }
 
   /* REC-83 / IC-84 — THE CONTENT-GRAIN READS' THREE BOUNDS.
    *
@@ -1732,6 +1729,7 @@ export class Store extends DurableObject {
   routes(url, body) {
       const map = {
         ...membershipOps(membershipOf(this.ctx), url, body, this.env),
+        ...credentialsOps(credentialsOf(this.ctx), url, body, this.env),
         ...captureOps(captureOf(this.ctx), url, body, this.env),
         ...calibrationOps(calibrationOf(this.ctx), url, body),
         ...biasOps(biasOf(this.ctx), url, body),
