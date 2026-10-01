@@ -42,3 +42,7 @@ N26 applied on `job/T19/office-readers`: a `.docx` `mc:AlternateContent` is read
 For extraction (layer 4): the record's "Record" section states exactly which stored references move (`doc-para` para/ref/run, `doc-table` ordinals, link sources and `#para=` anchors, evidentiary sources, paragraph counts, text units) and how, with `docxRenumbering(documentXml)` exported from `docx.mjs` giving the exact old→new map from the stored bytes.
 
 Open for you: J1 (1) R11/R16 wording; J1 (2) whether `docxRenumbering` becomes R28 (built and tested, not in Provides); J1 (3) the same flaw in `pptx.mjs`, deferred, for `next.md`. Stale: `bio-plane/dist/bio-plane.bundled.mjs` (bundles docx.mjs). A CHANGE reopens me.
+
+## J3 · QUESTION
+
+R28 names `runs:[{old, new, outer}]` without saying what a run's index is (runs are numbered within their paragraph, R15). Best reading, built and pushed: `old` and `new` are each the R15 address `{para, run}`; `new` is null for a run in a branch not read, and `outer` is then the new paragraph index it maps to (its own paragraph's, or that paragraph's `outer`); `outer` is null for a kept run. Nothing else hangs on it; COMPLETE follows. Say CHANGE if you meant another shape.
