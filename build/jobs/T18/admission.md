@@ -38,3 +38,9 @@ Replaces J1 (same two proposals, unchanged) and adds one `uses` edge.
 (1) and (2): as J1 — R16 `readerOf` (group-public) and R11's project-creation arm (`projectCreationGate`), words as in J1.
 
 (3) `uses`: admission needs `record-grammar` (layer 1) for `MACHINE_CLASS_PREFIX` (`class:`), the machine viewer stamp `readerOf` answers and the viewer N407 carries (`callerViewer`: a session's viewer, an `ai` caller's `{stamp: principal, aiCred}`, else `class:<cls>`). Reading: add the edge to `modules.json` (admission uses runtime-limits, membership, op-declarations, record-grammar), as the code imports it; the architecture check fails until it is there. I also use runtime-limits' `sha256hex` (R9) for the credential lookup's digest, no new edge.
+
+## J3 · COMPLETE
+
+Complete per B3 (K727), ready to merge early for control-plane. `bio-plane/src/admission/` (847 lines): every entry of layer 11's bullet (N-A22's copy, K723's R16 `readerOf` and R11's `projectCreationGate`, N411's own verdict, N407's `callerViewer`, the converts' admission share); rows C-38.1–.8, C-78.1–.3, C-29.6–.10, C-32.17, C-64.4 copied with `where`s re-pointed here, awaiting stamp (T19). Marks met: R14, R15. Tests 18/18; format, architecture, coverage (16/16), ownership: 0 failures each.
+
+REPORT for control-plane's job (details in my record's Completion): re-point to `admit`, `bearerFence`, `readerOf`, `aiCredentialMint`, `reviewGrantSecret`, `projectCreationGate`, answering `{status, body}` as given; a silence is `{silent: {op, correlation}}`. Its `test/m/control-plane/admission.test.mjs` mutates `SESSION_OPS`/`UNATTENDED_BY_DECISION`, frozen by op-declarations R5, so it fails once it reads op-declarations' tables (admission's `sessionOpGate`/`admit` take an optional `tables` for exactly that). N407's wiring to ratification R18 through `op=publishpreflight` (a query string) is control-plane's and case-authoring's.
