@@ -1,10 +1,10 @@
 /* action-plans' document (R2, R27): a plan is a record document of type `action_plan` under a `PLN-` id (record-grammar
- * R1, R3; legacy-checks' `STATES.action_plan`, open → closed). Its front matter says what project it belongs to and
+ * R1, R3; its `STATES.action_plan`, open → closed). Its front matter says what project it belongs to and
  * where it stands; its body's Plan Log holds every act on it, one entry each, appended and never edited, each entry its
  * fields as JSON (any text is kept as written in a body section, where the front matter's grammar has no escapes). The
  * module's tables are projections of this log. Escalation's document is the pattern (its doc.mjs). */
 
-import { parseFrontmatter } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../record-grammar/index.mjs";
 
 export const ACTION_PLAN = "action_plan";
 export const LOG = "Plan Log";

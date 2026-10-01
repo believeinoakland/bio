@@ -3,6 +3,17 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, opened, option, choose, V, MACHINE, by, OFFICE, ms, DAY } from "./fixture.mjs";
+import { contactNotAMember } from "../../../src/actions/index.mjs";
+import { reminderRefused } from "../../../src/action-clocks/index.mjs";
+
+/* N427: count the writes asked of actions and action-clocks, so a refusal is shown to be answered before any write. */
+const spy = (w) => {
+  const n = { create: 0, remind: 0 };
+  const create = w.actions.actionCreate.bind(w.actions), remind = w.clocks.reminderSet.bind(w.clocks);
+  w.actions.actionCreate = (a) => { n.create++; return create(a); };
+  w.clocks.reminderSet = (a) => { n.remind++; return remind(a); };
+  return n;
+};
 
 const code = (r) => r.code ?? r.reason;
 const start = (w, opt, extra = {}) => w.ap.optionStart({ plan: w.PL, option: opt, kind: "other", ...by("bob"), ...extra });
@@ -17,8 +28,12 @@ test("R18: a chosen option starts an action carrying its addressee, dated clock 
   assert.equal(code(start(w, a, { plan: "PLN-2026-0999-plan" })), "NO_SUCH_PLAN");
   assert.equal(code(start(w, "opt-99")), "NO_SUCH_OPTION");
   choose(w, [a]);
+  const calls = spy(w);
   const nobody = start(w, a, { contact: "nobody" });
-  assert.equal(code(nobody), "CONTACT_NOT_A_MEMBER"); assert.ok(nobody.check && nobody.translation);
+  assert.deepEqual(nobody, contactNotAMember(), "answered through actions' one site (its R45)");
+  assert.deepEqual(start(w, a, { contact: "member:nobody" }), contactNotAMember());
+  assert.deepEqual(start(w, a, { contact: "" }), contactNotAMember(), "a stated blank contact names no member, as actions asks it");
+  assert.deepEqual(calls, { create: 0, remind: 0 }, "asked before any write, never by a rolled-back write of the action");
   assert.equal(code(start(w, a, { kind: "summon_dragons" })), "ACTION_KIND_UNKNOWN", "the action's write refusal passes through");
   assert.equal(code(start(w, a, { contact: "nobody", kind: "summon_dragons" })), "CONTACT_NOT_A_MEMBER", "the contact is asked first");
   assert.equal(w.count("bundles WHERE object_type='action'"), 0, "a refused start writes no action");
@@ -63,10 +78,19 @@ test("R29: choosing a dated option holds the member's reminders, set on the acti
   const a = option(w, { dates: DATES });
   const none = option(w, { summary: "No reminders", dates: DATES });
   const refusedChoice = (rem, extra = {}) => w.ap.optionDispose({ plan: w.PL, options: [a], disposition: "chosen", reminders: rem, ...by("bob"), ...extra });
-  assert.equal(code(refusedChoice([{ date: "2026-11-02", on: "2026-10-30" }])), "REMINDER_REFUSED", "naming no date of the option");
-  assert.equal(code(refusedChoice([{ date: "2026-11-01", on: "soon" }])), "REMINDER_REFUSED", "a day that is not a date");
-  assert.equal(code(w.ap.optionDispose({ plan: w.PL, options: [a], disposition: "declined", reason: "r",
-    reminders: [{ date: "2026-11-01", on: "2026-10-30" }], ...by("bob") })), "REMINDER_REFUSED");
+  const calls = spy(w);
+  const row = reminderRefused("x", "x");
+  const through = (r, arm) => {
+    assert.equal(code(r), "REMINDER_REFUSED");
+    assert.deepEqual([r.check, r.translation, r.arm], [row.check, row.translation, arm], "answered through action-clocks' one site (its R4)");
+  };
+  through(refusedChoice([{ date: "2026-11-02", on: "2026-10-30" }]), "entry");
+  through(refusedChoice([{ date: "2026-11-01", on: "soon" }]), "on");
+  through(refusedChoice([{ date: "2026-11-01" }]), "on");
+  through(refusedChoice("tomorrow"), "entry");
+  through(w.ap.optionDispose({ plan: w.PL, options: [a], disposition: "declined", reason: "r",
+    reminders: [{ date: "2026-11-01", on: "2026-10-30" }], ...by("bob") }), "entry");
+  assert.deepEqual(calls, { create: 0, remind: 0 }, "judged before any action exists, never by a rolled-back write");
   assert.equal(w.ap.planRead({ id: w.PL, viewer: V("bob") }).options[0].disposition, "open", "the whole act refused with it");
   assert.equal(w.count("bundles WHERE object_type='action'"), 0, "asking action-clocks leaves no action behind");
   assert.equal(w.count("action_reminders"), 0);

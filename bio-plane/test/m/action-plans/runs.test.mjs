@@ -2,12 +2,13 @@
    tray, and that a machine proposes and nothing else. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { seeded, opened, option, choose, V, MACHINE, by, OFFICE } from "./fixture.mjs";
+import { seeded, opened, option, choose, V, MACHINE, AGENT, RUN_PRINCIPAL, by, OFFICE } from "./fixture.mjs";
 import { DISCLOSURE, noSuchPlan, actionPlansOf } from "../../../src/action-plans/index.mjs";
 
 const code = (r) => r.code ?? r.reason;
 const propose = (w, run, extra = {}) => w.ap.optionPropose({ plan: w.PL, summary: "Ask the clerk", category: "awareness",
-  subjects: [w.S1], why: "The clerk holds the records", run, sources: [w.D], proposer: MACHINE, viewer: MACHINE, ...extra });
+  subjects: [w.S1], why: "The clerk holds the records", run, sources: [w.D], proposer: AGENT, principal: RUN_PRINCIPAL, viewer: MACHINE,
+  ...extra });
 
 test("R30: the plan-mode open check: absent and invisible alike, another project, closed, not joined; a suspected-only plan passes", () => {
   const w = seeded();
@@ -24,7 +25,7 @@ test("R30: the plan-mode open check: absent and invisible alike, another project
   assert.equal(code(check({})), "PLAN_CLOSED");
 });
 
-test("R31: a machine's proposal names a running planning run of this plan it holds, within its bound, resting on what it can see", async () => {
+test("R11 R31: a machine's proposal names a running planning run of this plan whose principal is the principal stamp, within its bound, resting on what it can see; the proposer stamp labels it", async () => {
   const w = seeded();
   opened(w);
   const { run } = w.openRun({ plan: w.PL, project: w.P, proposals: 2 });
@@ -38,7 +39,14 @@ test("R31: a machine's proposal names a running planning run of this plan it hol
   const plan2 = w.ap.planOpen({ project: w.P, subjects: [w.S2], title: "Other", ...by("bob") }).id;
   const r2 = w.openRun({ plan: plan2, project: w.P });
   assert.equal(code(await propose(w, r2.run)), "PROPOSAL_RUN_OTHER_PLAN", "another plan's run");
-  assert.equal(code(await propose(w, run, { proposer: "class:other" })), "AI_RUN_NOT_PRINCIPAL");
+  /* N432: the gate compares the principal stamp with the run's principal, never the proposer label */
+  assert.equal(code(await propose(w, run, { principal: "member:dave/tok-9" })), "AI_RUN_NOT_PRINCIPAL");
+  assert.equal(code(await propose(w, run, { principal: undefined })), "AI_RUN_NOT_PRINCIPAL", "an absent principal stamp");
+  assert.equal(code(await propose(w, run, { principal: undefined, proposer: RUN_PRINCIPAL.replace("member:", "class:") })),
+    "AI_RUN_NOT_PRINCIPAL", "a proposer naming the run's principal does not stand in for the principal stamp");
+  const byLabel = w.openRun({ plan: plan2, project: w.P, principal: AGENT });
+  assert.equal(code(await propose(w, byLabel.run, { plan: plan2 })), "AI_RUN_NOT_PRINCIPAL",
+    "a run whose principal equals the label refuses a caller whose principal stamp differs");
   assert.equal(code(await propose(w, run, { category: "x" })), "CATEGORY_UNKNOWN", "then R9's field refusals");
   assert.equal(code(await propose(w, run, { addressee: { state: "named", name: "A Person" } })), "ADDRESSEE_REFUSED");
   assert.equal(code(await propose(w, run, { lobbying: true })), "LOBBYING_NO_REQUIREMENT");
@@ -52,6 +60,9 @@ test("R31: a machine's proposal names a running planning run of this plan it hol
   assert.equal(w.runs.get(run).bounds.proposals.consumed, 0, "never consumed on a refusal");
   const ok1 = await propose(w, run, { sources: [w.D, w.I, `${w.PL}`] });
   assert.equal(ok1.ok, true, JSON.stringify(ok1));
+  assert.notEqual(AGENT, RUN_PRINCIPAL, "the label and the principal differ, and the gate passes on the principal");
+  assert.deepEqual([ok1.proposal.label.by, ok1.proposal.label.machine_work], [AGENT, true], "R11: labelled by its proposer");
+  assert.equal(JSON.stringify(ok1).includes(RUN_PRINCIPAL), false, "the principal stamp is not the label");
   assert.equal(w.runs.get(run).bounds.proposals.consumed, 1);
   assert.equal((await propose(w, run)).ok, true);
   assert.equal(w.runs.get(run).bounds.proposals.consumed, 2);

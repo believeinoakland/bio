@@ -3,7 +3,7 @@
    plane's stamps; a provider not given refuses rather than answering in part. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { seeded, world, opened, option, choose, V, MACHINE, by, OFFICE } from "./fixture.mjs";
+import { seeded, world, opened, option, choose, V, MACHINE, AGENT, RUN_PRINCIPAL, by, OFFICE } from "./fixture.mjs";
 import { actionPlansOps, actionPlansOwns, ACTION_PLANS_TABLES, ACTION_PLAN_CHECKS } from "../../../src/action-plans/index.mjs";
 
 const code = (r) => r.code ?? r.reason;
@@ -70,7 +70,7 @@ test("R28: a fact not supplied answers undetermined, never a default; no place i
 const op = (ops, name) => ops[name]();
 const url = (q) => new URL(`https://plane.test/?${new URLSearchParams(q)}`);
 
-test("R1 R6 R7 R9 R11 R13 R14 R16 R18 R20 R34: actionPlansOps reaches each service with the stamped author and viewer, never the body's", async () => {
+test("R1 R6 R7 R9 R11 R13 R14 R16 R18 R20 R31 R34: actionPlansOps reaches each service with the stamped author, viewer, proposer and principal, never the body's", async () => {
   const w = seeded();
   const ops = (q, body) => actionPlansOps(w.ap, url(q), body);
   assert.deepEqual(Object.keys(ops({}, {})).sort(), ["checkpointrecord", "optionadd", "optionadopt", "optiondispose", "optionpropose",
@@ -88,6 +88,15 @@ test("R1 R6 R7 R9 R11 R13 R14 R16 R18 R20 R34: actionPlansOps reaches each servi
   assert.equal(op(ops({ ...stamp, plan: w.PL, option: add.option }, { reason: "better", summary: "S2" }), "optionrevise").ok, true);
   const prop = await op(ops({ proposer: V("bob"), viewer: V("bob"), plan: w.PL }, { summary: "P", category: "other", subjects: [w.S1], why: "w", proposer: V("alice") }), "optionpropose");
   assert.equal(prop.proposal.label.by, V("bob"));
+  /* R11, R31 (N432): an agent's proposal reads both stamps from the query, proposer for the label, principal for the run */
+  const { run } = w.openRun({ plan: w.PL, project: w.P });
+  const agent = { proposer: AGENT, principal: RUN_PRINCIPAL, viewer: MACHINE, plan: w.PL, run };
+  const body = { summary: "A", category: "other", subjects: [w.S1], why: "w", sources: [w.D] };
+  const mp = await op(ops(agent, { ...body, proposer: V("alice"), principal: "member:dave/tok-9" }), "optionpropose");
+  assert.equal(mp.ok, true, JSON.stringify(mp)); assert.equal(mp.proposal.label.by, AGENT); assert.equal(mp.proposal.run, run);
+  const { principal: _, ...unstamped } = agent;
+  assert.equal(code(await op(ops(unstamped, { ...body, principal: RUN_PRINCIPAL }), "optionpropose")), "AI_RUN_NOT_PRINCIPAL",
+    "a principal in the body never stands in for the stamp");
   assert.equal(op(ops({ ...stamp, proposal: prop.proposal.id }, {}), "optionadopt").ok, true);
   assert.equal(op(ops({ ...stamp, plan: w.PL, disposition: "chosen" }, { options: [add.option] }), "optiondispose").ok, true);
   assert.equal(op(ops({ ...stamp, plan: w.PL, scenario: "1" }, { name: "S", phases: [{ id: "a", name: "A", options: [add.option], starts: "plan_start", checkpoint: { after_days: 1 } }] }), "scenarioset").ok, true);

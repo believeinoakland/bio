@@ -16,7 +16,7 @@ import { actionsOf } from "../../../src/actions/index.mjs";
 import { actionClocksOf } from "../../../src/action-clocks/index.mjs";
 import { actionPlansOf } from "../../../src/action-plans/index.mjs";
 import { runPrincipalGate } from "../../../src/run-rules/index.mjs";
-import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 function cursor(rows) {
@@ -46,6 +46,10 @@ export function storage() {
 
 export const V = (id) => `member:${id}`;
 export const MACHINE = "class:ai";
+/** The control plane's two stamps on an agent's `optionpropose` (K727): `proposer`, its label (`class:ai/<tokenId>`),
+ *  and `principal`, the credential's principal and token (`<principal>/<tokenId>`), which a run it opened holds. */
+export const AGENT = "class:ai/tok-1";
+export const RUN_PRINCIPAL = "member:bob/tok-1";
 export const NOW = "2026-10-01T12:00:00Z";
 export const DAY = 86400000;
 export const ms = (iso) => Date.parse(iso);
@@ -196,7 +200,7 @@ export function world({ profiles = ["test-port-ellery"], omit = [] } = {}) {
     supersede(id, by) { determinations.get(id).superseded_by = by; },
     standard(id, { superseded = false } = {}) { standardsHeld.set(id, { superseded_by: superseded ? "STD-2026-9999-x" : null }); return id; },
     /** A planning run (ai-runs' stand-in), opened through the registered check and listener as `open` would. */
-    openRun({ plan, project, actor = V("bob"), principal = MACHINE, proposals = 20, status = "running", mode = "plan", skill = "planning@1" } = {}) {
+    openRun({ plan, project, actor = V("bob"), principal = RUN_PRINCIPAL, proposals = 20, status = "running", mode = "plan", skill = "planning@1" } = {}) {
       const run = `RUN-${++nr}`;
       const check = reg.checks.find((c) => c.mode === "plan");
       const said = mode === "plan" ? check.fn({ contextType: "project", contextId: project, plan, actor, viewer: actor }) : null;
