@@ -19,6 +19,8 @@ import * as basisVersions from "../../../src/basis-versions/index.mjs";
 import * as content from "../../../src/content/index.mjs";
 import * as ratification from "../../../src/ratification/index.mjs";
 import * as contradiction from "../../../src/contradiction/index.mjs";
+import * as filingTemplates from "../../../src/filing-templates/index.mjs";
+import * as localFacts from "../../../src/local-facts/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { list as profiles, get as profile } from "../../../../jurisdictions/index.mjs";
 
@@ -92,7 +94,9 @@ test("R2: the rung ladder, low to high, and RUNGS' assignment", () => {
       /* K727: action-plans' acts that ask the member's reason */
       "plansubjectadd", "plansubjectremove", "optionrevise", "optiondispose", "planclose",
       /* K918: actions R52's hold statement */
-      "actionhold"],
+      "actionhold",
+      /* R30: a template's retirement and a member's act on a local fact */
+      "templateretire", "factconfirm"],
   };
   for (const k of Object.keys(want)) want[k].sort();
   const got = {};
@@ -136,7 +140,9 @@ test("R4: VOCABULARIES carries exactly the named vocabularies", () => {
     "version_states", "version_edges", "version_reason_required", "rung_ladder", "rung_correction_path",
     "rung_absence_grounds", "sufficiency_claim_states", "content_mint_states",
     /* N345 */ "contradiction_coordinates", "plurality_differences", "resolution_kinds", "norm_canons",
-    "dismissal_reasons"].sort());
+    "dismissal_reasons",
+    /* R30 */ "template_states", "template_uses", "template_review_outcomes", "local_fact_acts",
+    "local_fact_statuses"].sort());
 });
 
 test("R4: each fixed value is the very object its enforcing module refuses against — the same reference, never a copy", () => {
@@ -156,6 +162,10 @@ test("R4: each fixed value is the very object its enforcing module refuses again
     ["contradiction_coordinates", inquiry.CONTRADICTION_COORDINATES], ["plurality_differences", inquiry.PLURALITY_DIFFERENCES],
     ["resolution_kinds", inquiry.RESOLUTION_KINDS], ["norm_canons", inquiry.NORM_CANONS],
     ["dismissal_reasons", contradiction.DISMISSAL_REASONS],
+    /* R30: filing-templates R21's three and local-facts R7's two */
+    ["template_states", filingTemplates.TEMPLATE_STATES], ["template_uses", filingTemplates.TEMPLATE_USES],
+    ["template_review_outcomes", filingTemplates.REVIEW_OUTCOMES], ["local_fact_acts", localFacts.LOCAL_FACT_ACTS],
+    ["local_fact_statuses", localFacts.LOCAL_FACT_STATUSES],
   ];
   assert.deepEqual(same.filter(([k, v]) => VOCABULARIES[k] !== v).map(([k]) => k), []);
   assert.equal(same.length + 1, Object.keys(VOCABULARIES).length, "every key but action_kind is a fixed value checked here");
@@ -323,7 +333,8 @@ test("R19: the justification family names only codes that ask the member for an 
     "NO_FALSIFIER", "NO_JUSTIFICATION", "THEME_WITHDRAW_NO_REASON", "FILE_MEMBERSHIP_NO_REASON",
     "CONNECTION_ASSERT_NO_BASIS", "NO_LESSON", "BIAS_DEBT_NO_REASON", "RISK_TIER_REASON_REFUSED", "NARROW_NO_DESCRIPTION", "REEVALUATION_NOTE_MALFORMED",
     "ACTION_MOVE_NO_REASON" /* N310: actions R13 */,
-    "INTENT_NO_REASON", "CONFORMANCE_NO_REASON", "ESCALATION_NO_REASON" /* K823, K834, K835 */])
+    "INTENT_NO_REASON", "CONFORMANCE_NO_REASON", "ESCALATION_NO_REASON" /* K823, K834, K835 */,
+    "TEMPLATE_REASON_REFUSED", "FACT_HOW_REFUSED" /* R30 */])
     assert.ok(JUSTIFICATION_REFUSALS.includes(c), c);
   for (const c of ["NO_TARGET", "NO_ID", "NO_KIND", "ENTITY_NO_LABEL", "PROGRESSION_NO_LABEL", "EXPERTISE_NO_LABEL",
     "NO_SUCH_KNOCK", "NO_SUCH_COMPARISON", "NOT_AN_ADMIN", "NO_CITATION", "NO_BODY", "NO_TITLE"])
@@ -406,8 +417,11 @@ test("R27: no op is graded `undetermined` that the ruling moved, and exactly the
     /* K705, K709: filings' and actions' new writes */
     "communicationprepare", "templatesave", "actioncreate", "actionpressure",
     /* K727: action-plans' six */
-    "planopen", "optionadd", "optionpropose", "optionadopt", "checkpointrecord", "optionstart"].sort());
-  assert.equal(undetermined.length, 71, "R27's count: K727's six added to the 65 held before them");
+    "planopen", "optionadd", "optionpropose", "optionadopt", "checkpointrecord", "optionstart",
+    /* R30: K921's seven */
+    "templatedraft", "templaterevise", "templatepropose", "templatesubmit", "templatereview", "templatecomment",
+    "templateapprove"].sort());
+  assert.equal(undetermined.length, 78, "R27's count: K921's seven (R30) added to the 71 held before them");
 });
 
 test("R27: no new rung is added — the ladder keeps its five", () => {
@@ -420,7 +434,8 @@ test("R27: no new rung is added — the ladder keeps its five", () => {
    row and a rung or a stated absence exactly as AFFORDANCES #2's record states them; its reads carry none (a read has
    no NEEDS row, K153, so a row would read `stale`). actions' `actionriskpropose` keeps its row; monitoring's
    `monitoring`, a read, is named nowhere. K705, K709 (T18): filings' `communicationprepare` and `templatesave` and
-   actions' `actioncreate` and `actionpressure` join the writes, `templates`, `action` and `actions` the reads. */
+   actions' `actioncreate` and `actionpressure` join the writes, `action` and `actions` the reads. K992 (T21): `templates`
+   left filings' op map for filing-templates' (its R14), whose ops R30 grades in the test after this one. */
 import { standardsOps } from "../../../src/standards/index.mjs";
 import { conformanceOps } from "../../../src/conformance/index.mjs";
 import { consequencesOps } from "../../../src/consequences/index.mjs";
@@ -455,12 +470,13 @@ const LAYER9_ABSENT = {
 const LAYER9_READS = ["standard", "standards", "standardinforce", "determination", "determinations", "comparison",
   "comparisonfacts" /* conformance R21 (N345), an ungated read like `comparison` */,
   "consequence", "consequencesof", "addressed", "counselpacketread", "filingsfor", "availableactions", "escalation",
-  "escalationsdue", "templates" /* K705: filings R26 */, "action", "actions" /* K709: actions R47 */,
+  "escalationsdue", "action", "actions" /* K709: actions R47 */,
   "plan", "plans", "planproposals" /* K727: action-plans R6, R7, R34 */];
 /* actions' op map holds acts and reads catalogued long before layer 9; only the ops K709 adds join this set. */
 const ACTIONS_NEW = ["actioncreate", "actionpressure", "actionhold" /* K902 */, "action", "actions"];
 test("R3 R7 R12: layer 9's 41 mutating ops each carry a NON_ACTS reason and their ruled rung or stated absence, its "
-   + "21 reads none, and the op maps hold exactly those 62 ops (K264; conformance's comparisonfacts, N345; K705, K709, K727, K902)", () => {
+   + "20 reads none, and the op maps hold exactly those 61 ops (K264; conformance's comparisonfacts, N345; K705, K709, K727, "
+   + "K902; K992: `templates` is filing-templates')", () => {
   const url = new URL("http://x/");
   const keys = (f) => Object.keys(f({}, url, {}));
   const ESCALATION = ["escalationopen", "escalationattach", "escalationevaluate", "escalationadvance", "escalationdecline",
@@ -471,7 +487,7 @@ test("R3 R7 R12: layer 9's 41 mutating ops each carry a NON_ACTS reason and thei
                ...ACTIONS_NEW, ...keys(actionPlansOps), ...keys(actionClocksOps)];
   const mutating = [...Object.keys(LAYER9_RUNGS), ...Object.keys(LAYER9_ABSENT)];
   assert.equal(mutating.length, 41);
-  assert.equal(LAYER9_READS.length, 21);
+  assert.equal(LAYER9_READS.length, 20);
   assert.deepEqual([...ops].sort(), [...mutating, ...LAYER9_READS].sort());
   for (const op of mutating) {
     assert.ok(typeof NON_ACTS[op] === "string" && NON_ACTS[op].length > 10 && !NON_ACTS[op].startsWith("capture-directed:"), op);
@@ -670,4 +686,82 @@ test("R2 R7 R12 R19: actionhold, actions R52's op, is graded `reasoned`, HOLD_RE
   assert.ok(base.stale.includes("actionhold"), "carried by no row, both its keys read stale");
   assert.deepEqual([A.decorate({ id: "actionhold", label: "x" }, null).rung, A.decorate({ id: "actionhold", label: "x" }, null).rung_absence],
     ["reasoned", null], "R24: a rung, never a bare null");
+});
+
+/* R30 (K921, K922 (3), T21): the ops of `filing-templates` and `local-facts`, keyed to their op maps. The two that ask an
+   account are graded `reasoned` (their backing is driven in backing.test.mjs), the grant pair `credential` as
+   `reviewgrant` and `reviewrevoke`, the other seven template acts `undetermined` on R27's rule; every op, the reads
+   included, carries its `NON_ACTS` reason, so the control plane gates each with a `NEEDS` row (op-declarations and
+   control-plane's T21 share; until they merge, these rows read `stale` against the real table, red by name: plan rule 3). */
+import { filingTemplatesOps } from "../../../src/filing-templates/index.mjs";
+import { localFactsOps } from "../../../src/local-facts/index.mjs";
+const R30_RUNGS = { templateretire: "reasoned", factconfirm: "reasoned" };
+const R30_ABSENT = { templatereviewgrant: "credential", templategrantrevoke: "credential",
+  templatedraft: "undetermined", templaterevise: "undetermined", templatepropose: "undetermined",
+  templatesubmit: "undetermined", templatereview: "undetermined", templatecomment: "undetermined",
+  templateapprove: "undetermined" };
+const R30_READS = ["templates", "templateread", "templatecomments", "factstatus", "factsdue"];
+const R30_WRITES = [...Object.keys(R30_RUNGS), ...Object.keys(R30_ABSENT)];
+const TEMPLATE_DIRECTED = "template-directed: keyed by a template or one of its versions, reached from the template "
+  + "library; writes this module's rows and moves no bundle";
+const GRANT_DOOR = "reached also through a review grant's door";
+
+test("R30 R2 R3 R12: the op maps of filing-templates and local-facts hold exactly R30's ops; templateretire and "
+   + "factconfirm are `reasoned`, the grant pair `credential` as reviewgrant and reviewrevoke, K921's seven "
+   + "`undetermined`, and with the control plane's rows for them nothing is unaccounted", () => {
+  const url = new URL("http://x/");
+  assert.deepEqual([...Object.keys(filingTemplatesOps({}, url, {})), ...Object.keys(localFactsOps({}, url, {}))].sort(),
+    [...R30_WRITES, ...R30_READS].sort());
+  for (const [op, r] of Object.entries(R30_RUNGS)) { assert.equal(RUNGS[op], r, op); assert.ok(!Object.hasOwn(RUNG_ABSENT, op), op); }
+  for (const [op, g] of Object.entries(R30_ABSENT)) {
+    assert.equal(RUNG_ABSENT[op]?.ground, g, op); assert.ok(!Object.hasOwn(RUNGS, op), op);
+    assert.ok(typeof RUNG_ABSENT[op].is === "string" && RUNG_ABSENT[op].is.length > 40, op);
+  }
+  assert.equal(RUNG_ABSENT.templatereviewgrant.ground, RUNG_ABSENT.reviewgrant.ground);
+  assert.equal(RUNG_ABSENT.templategrantrevoke.ground, RUNG_ABSENT.reviewrevoke.ground);
+  for (const op of R30_READS) assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
+  assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => R30_WRITES.includes(a.id) || R30_READS.includes(a.id)));
+  /* R24: each write decorates with a rung or a stated absence, never both and never neither */
+  for (const op of R30_WRITES) {
+    const d = A.decorate({ id: op, label: "x" }, null);
+    assert.equal((d.rung === null) !== (d.rung_absence === null), true, op);
+  }
+  /* the control plane's rows: the writes mutating and gated, the reads gated (each has a NON_ACTS reason) */
+  const table = [...R30_WRITES.map((op) => ({ op, mutating: true, gated: true })),
+    ...R30_READS.map((op) => ({ op, mutating: false, gated: true }))];
+  const r = A.unaccounted(table);
+  assert.deepEqual([r.unpublished, r.unranked], [[], []]);
+  assert.deepEqual(r.stale.filter((op) => R30_WRITES.includes(op) || R30_READS.includes(op)), []);
+  /* carried by no row (the real table before op-declarations' and control-plane's merges), every one reads stale */
+  assert.deepEqual([...R30_WRITES, ...R30_READS].filter((op) => !A.unaccounted([]).stale.includes(op)), []);
+  /* and the totality holds with them: R3 R12's consistency test above covers the whole catalogue */
+});
+
+test("R30 R7: NON_ACTS gives each of R30's ops its reason — the template acts template-directed, the review, the "
+   + "comment and the two reads a grant reaches naming the grant's door, factconfirm fact-directed, the reads `read:` — "
+   + "and templatesave's rows stay", () => {
+  const TEMPLATE_ACTS = ["templatedraft", "templaterevise", "templatepropose", "templatesubmit", "templatereviewgrant",
+    "templategrantrevoke", "templatereview", "templatecomment", "templateapprove", "templateretire"];
+  const DOOR = ["templatereview", "templatecomment", "templateread", "templatecomments"];
+  for (const op of TEMPLATE_ACTS) assert.ok(NON_ACTS[op]?.startsWith(TEMPLATE_DIRECTED), op);
+  for (const op of ["templates", "templateread", "templatecomments", "factstatus", "factsdue"])
+    assert.ok(NON_ACTS[op]?.startsWith("read: "), op);
+  for (const op of [...TEMPLATE_ACTS, ...R30_READS]) assert.equal(NON_ACTS[op].includes(GRANT_DOOR), DOOR.includes(op), op);
+  assert.equal(NON_ACTS.factconfirm, "fact-directed: keyed by a profile fact's path, reached from the calendar and "
+    + "offices; moves no bundle");
+  for (const op of [...R30_WRITES, ...R30_READS]) assert.ok(!NON_ACTS[op].startsWith("capture-directed:"), op);
+  /* filings R32's templatesave keeps its rows: a NON_ACTS reason and its `undetermined` ground */
+  assert.ok(typeof NON_ACTS.templatesave === "string" && NON_ACTS.templatesave.startsWith("draft-directed:"));
+  assert.equal(RUNG_ABSENT.templatesave.ground, "undetermined");
+  assert.match(RUNG_ABSENT.templatesave.is, /filings R32/);
+});
+
+test("R30 R19: TEMPLATE_REASON_REFUSED and FACT_HOW_REFUSED are in the justification family, and each is a code its "
+   + "owner answers with (its own checks table)", () => {
+  for (const c of ["TEMPLATE_REASON_REFUSED", "FACT_HOW_REFUSED"]) assert.ok(JUSTIFICATION_REFUSALS.includes(c), c);
+  assert.ok(Object.hasOwn(filingTemplates.FILING_TEMPLATE_CHECKS, "TEMPLATE_REASON_REFUSED"));
+  assert.ok(Object.hasOwn(localFacts.LOCAL_FACTS_CHECKS, "FACT_HOW_REFUSED"));
+  /* the template and fact refusals that ask for an object, a choice or a form, never an account, stay out */
+  for (const c of ["NO_SUCH_TEMPLATE", "TEMPLATE_TEXT_REFUSED", "NOT_A_DRAFT", "NO_SUCH_FACT", "FACT_ACT_REFUSED",
+    "FACT_VALUE_REFUSED", "MACHINE_CANNOT_CONFIRM", "REVIEW_REFUSED"]) assert.ok(!JUSTIFICATION_REFUSALS.includes(c), c);
 });
