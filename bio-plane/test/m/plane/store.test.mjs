@@ -64,13 +64,13 @@ test("R2: record-core is handed the evidence bucket and the prefix of the object
   assert.equal(recordOf(st.ctx).evidenceStore(), null, "no bucket bound, no evidence store");
 });
 
-test("R2: before the first request every module's start registrations are held, each slot in the modules' order, and the held shares under `plane-held`", async () => {
+test("R2: before the first request every module's start registrations are held, each slot in the modules' order, the stats sight as `plane`, the leg grades as `inquiry` and the held step under `plane-held`", async () => {
   const x = await store();
-  /* The held stats figures and leg grades are the one registration of their slot. */
+  /* The stats sight and the leg grades are the one registration of their slot. */
   const second = recordOf(x.ctx).registerStatsSource("probe", () => ({}));
   assert.equal(second.code, "STATS_SOURCE_DECLARED");
-  assert.equal(second.heldBy, HELD);
-  assert.deepEqual(retrievalOf(x.ctx).registerLegGrades("probe", () => []), { ok: false, reason: "RESOLVER_DECLARED", module: "probe", declaredBy: HELD });
+  assert.equal(second.heldBy, "plane");
+  assert.deepEqual(retrievalOf(x.ctx).registerLegGrades("probe", () => []), { ok: false, reason: "RESOLVER_DECLARED", module: "probe", declaredBy: "inquiry" });
   /* Every step a module of the order registers at start is held: a second registration of each is refused. */
   for (const m of ["provenance", "extraction", "retrieval", "inquiry", "basis-versions", "strength", "bias", "ai-runs",
                    "intent", "reevaluation", "publication", "ratification", "standards", "conformance", "actions",
