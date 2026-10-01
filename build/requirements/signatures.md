@@ -68,7 +68,7 @@ Builds and verifies the signed and timestamped statements the plane and the inst
 - **R31** The page's own script signs `bio-release` and `bio-ratify` statements that both `ssh-keygen -Y verify` and `verifySshsig` (R1) accept.
 - **R32** The page's visible text names the product CivicOS, never BIO (`layers.md` rule 4); its wire formats are unchanged: the `BIOKEY-RAW1.`/`BIOKEY1.` prefixes, the `bio-release`/`bio-ratify` namespaces and the download filename.
 
-**The release signer (`tools/sign-sshsig.mjs`; T19 BOB-5)** — run only on an operator's machine by the release assembler (bundler R23), never imported by the plane or the installer.
+**The release signer (`bio-plane/scripts/sign-sshsig.mjs`, moved from `tools/` in T19; BOB-5)** — run only on an operator's machine by the release assembler (bundler R23), never imported by the plane or the installer.
 
 `signSshsig(envelope, message, namespace) → string`
 - **R33** Returns an armored OpenSSH signature (`-----BEGIN SSH SIGNATURE-----`, base64 wrapped at 70 columns, `-----END SSH SIGNATURE-----` and a newline): a version-1 SSHSIG blob with an `ssh-ed25519` key and signature, `namespace`, an empty reserved field and hash algorithm `sha512`, signing the exact bytes of `message` with the key the envelope's seed gives. Same inputs give the same output (Ed25519 is deterministic). Stock `ssh-keygen -Y verify` and `verifySshsig` (R2) both accept it for that namespace and the key of R35.

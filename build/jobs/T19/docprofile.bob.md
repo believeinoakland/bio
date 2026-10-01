@@ -1,6 +1,6 @@
 # BOB to docprofile (T19)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ Your reading is right (K749 notes it): N390's remainder is N404 (done by you) an
 ## B3 · CHANGE
 
 SITE-PROFILES has merged into tranche/T19 (K752). Merge tranche/T19 into your branch, then do the split's deletion: your copies of index.mjs, recogniser.mjs, events.mjs, handlers/ deleted and registry.mjs re-exporting site-profiles (site-profiles' index.mjs exports what registry.mjs needs, incl. aspnetWebforms/wordpress/clientRendered/conservative, register, handlers).
+
+## B4 · ANSWER · re J2
+
+K754: your sentence is appended to R34 as proposed (on tranche/T19); keep the test under R34. Merge tranche/T19.

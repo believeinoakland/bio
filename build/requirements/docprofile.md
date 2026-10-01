@@ -204,7 +204,7 @@ reported "unchanged") (**R29**).
   read.
 - **R34** An entity's position (`source`) is only ever what `ctx.locate` returned for the offset
   the reader actually read it at — never composed, never guessed — and is absent, not invented,
-  when the supplied text carried no structure to place it in.
+  when the supplied text carried no structure to place it in. A reference read more than once is one entity, `source` its first sighting's, carrying `occurrences`: every place it was read, in reading order, the first included, each what `ctx.locate` returned for that read (null where it could not say); a reference read once carries no `occurrences` (D-454; K754).
 - **R35** Every "no" (no match, no confidence, no position, no digest, no meaningful change) says
   which kind of no and why; absence is never reported as sameness and never as non-existence.
 
