@@ -26,7 +26,7 @@
  * for a plane that does not exist, and would have let a member checking only the
  * envelope's `ok` pass while still being blind on the wire.
  *
- * NOT a `.test.mjs`: the battery discovers suites by that suffix, and this is an
+ * NOT a `.test.mjs`: the runners discover suites by that suffix, and this is an
  * instrument the suites share, not a suite.
  */
 import { MEANING } from "../../bio-plane/src/query.mjs";

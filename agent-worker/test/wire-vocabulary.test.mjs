@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/wire-vocabulary.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and neither the battery nor the fleet walk must discover it (FL-2/FL-3/PL-3's precedent). THE HARNESS LIVES INSIDE THIS WORKTREE and never in a shared scratchpad. Every arm is armed ALONE with the other defences held OPEN, every restore is verified BY sha256 AND BY CONTENT (`cmp`) AND by size against a UNIQUELY-NAMED per-arm pristine copy with its byte count printed and floored at 1,000 B, and every arm names what MUST fail AND what MUST NOT. FIVE ARMS, ALL FIVE AS DECLARED on the recorded pass (2026-09-13); figures read `wire-vocabulary / harness / fanout`, each `pass/fail`.
+/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/wire-vocabulary.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and no runner may discover it: `npm test` and `node --test` take only `*.test.mjs` (FL-2/FL-3/PL-3's precedent). THE HARNESS LIVES INSIDE THIS WORKTREE and never in a shared scratchpad. Every arm is armed ALONE with the other defences held OPEN, every restore is verified BY sha256 AND BY CONTENT (`cmp`) AND by size against a UNIQUELY-NAMED per-arm pristine copy with its byte count printed and floored at 1,000 B, and every arm names what MUST fail AND what MUST NOT. FIVE ARMS, ALL FIVE AS DECLARED on the recorded pass (2026-09-13); figures read `wire-vocabulary / harness / fanout`, each `pass/fail`.
  *   (1) W-A · BASELINE, nothing armed -> **83/0 · 214/0 · 182/0**, and it is not decoration:
  *       it is what distinguishes five-arms-broken from five-arms-working. Every suite reached
  *       its own FOOT, which is what the runner matches on, so a killed module reads `-1`.
@@ -54,8 +54,9 @@
  * IT CANNOT SEE anything that needs a store: whether the run exists, whether the
  * viewer may read the question, leg reachability, the strength pair, the
  * independence trace, the substance comparison, `promote`'s frontmatter
- * grammar. Those are `bio-plane/test/suggest.test.mjs`'s, and the live answer is
- * `bio-plane/test/vf4-suggestprobe.mjs`'s. **This suite closes the VOCABULARY —
+ * grammar. Those are run-productions' `bio-plane/test/m/run-productions/suggest.test.mjs`'s
+ * (the live probe, `vf4-suggestprobe.mjs`, was deleted with the old battery in
+ * T20). **This suite closes the VOCABULARY —
  * it does not close the endpoint, and a green here is not evidence a real
  * `op=suggest` would write.**
  * ========================================================================= */

@@ -27,7 +27,7 @@
  * copy of the larger mock would be a second thing to keep in step for the sake of
  * machinery this suite never drives.
  */
-/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/fanout.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and neither the battery nor the fleet walk must discover it. THE HARNESS LIVES INSIDE THIS WORKTREE. Every arm is armed ALONE with the other defences held OPEN, every restore is verified BY sha256 AND BY CONTENT (`cmp`), and every arm names what MUST fail AND what MUST NOT.
+/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/fanout.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and no runner may discover it: `npm test` and `node --test` take only `*.test.mjs`. THE HARNESS LIVES INSIDE THIS WORKTREE. Every arm is armed ALONE with the other defences held OPEN, every restore is verified BY sha256 AND BY CONTENT (`cmp`), and every arm names what MUST fail AND what MUST NOT.
    (F1) THE ITEM'S DECLARED CONTROL (IS-9(a)). Neuter the return contract — `checkReport` returns null for everything -> every document-returning arm, pure AND through the op, must FAIL; the spawn-fence arms must HOLD.
    (F2) THE EXACT KEY SET IS THE RULE. Let an unknown key through -> the document-shaped-return arms must FAIL under every spelling; the citation and bound arms must HOLD.
    (F3) THE PROSE BOUND. Remove the summary ceiling -> the over-bound arms must FAIL, and the key-set arms must HOLD — a document arriving inside `summary` passes every other check.

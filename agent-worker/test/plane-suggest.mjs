@@ -73,12 +73,12 @@
  * and partition arithmetic (C-27.9), the independence trace (C-27.10), the
  * substance comparison against existing versions (C-27.7), the single-part
  * licence (C-27.13's structural half), the frontmatter grammar, or anything
- * `promote` does to a document. Those need a real store; `bio-plane/test/`'s own
- * `suggest.test.mjs` is where they are driven, and the live instrument is
- * `bio-plane/test/vf4-suggestprobe.mjs`. **This branch closes the VOCABULARY,
- * not the endpoint.**
+ * `promote` does to a document. Those need a real store; run-productions' own
+ * `bio-plane/test/m/run-productions/suggest.test.mjs` is where they are driven
+ * (the live probe, `vf4-suggestprobe.mjs`, was deleted with the old battery in
+ * T20). **This branch closes the VOCABULARY, not the endpoint.**
  *
- * NOT a `.test.mjs`: the battery discovers suites by that suffix, and this is an
+ * NOT a `.test.mjs`: the runners discover suites by that suffix, and this is an
  * instrument the suites share, not a suite.
  */
 /* T19 (rule 1): each name from the module that owns it. The version grammar and its rows are basis-versions'

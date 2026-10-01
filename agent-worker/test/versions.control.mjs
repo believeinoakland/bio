@@ -6,8 +6,8 @@
  * Copied from `cascade.control.mjs`'s mechanism, whose reasons are below.
  *
  * DELIBERATELY NOT A `.test.mjs`: it EDITS REAL SOURCES while it runs, and a
- * file the battery discovers must never be one that rewrites the tree under
- * the suites beside it (fleetbundles.control.mjs' precedent, one tree over,
+ * file a runner discovers (`npm test` and `node --test` take `*.test.mjs`) must
+ * never be one that rewrites the tree under the suites beside it (fleetbundles.control.mjs' precedent, one tree over,
  * itself on PL-3/PL-4/PL-11's). The same three paid-for rules hold here:
  * snapshots live in memory inside THIS worktree and are written back in a
  * `finally`; every restore is verified by CONTENT and by sha256 with a byte

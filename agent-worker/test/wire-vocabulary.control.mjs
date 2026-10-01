@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /* THE NEGATIVE CONTROL DRIVER for D-323 / D-324 (the empty-run instrument's own
  * object, and the mocks that could not see it refused). Deliberately NOT a
- * `.test.mjs`: it EDITS REAL SOURCES while it runs, and neither
- * `bio-plane/scripts/battery.mjs` nor the fleet walk must discover it —
- * `harness.control.mjs`'s precedent, unchanged.
+ * `.test.mjs`: it EDITS REAL SOURCES while it runs, and no runner may
+ * discover it — the package's `npm test` and `node --test` take only
+ * `*.test.mjs` — `harness.control.mjs`'s precedent, unchanged.
  *
  *   node agent-worker/test/wire-vocabulary.control.mjs           all arms
  *   node agent-worker/test/wire-vocabulary.control.mjs W-B W-C   named arms only
