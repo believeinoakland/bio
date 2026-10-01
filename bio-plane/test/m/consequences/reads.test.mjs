@@ -125,3 +125,197 @@ test("R8: a causation inquiry reopened or superseded flags the part basis_change
   assert.deepEqual(w2.c.consequenceRead({ id: r.id, viewer: V("alice") }).part.basis_changed.map((c) => c.cause),
                    ["causation_superseded"]);
 });
+
+/* R15 (K903 (4), DEC-36): inside a part the viewer may see, what the viewer may not see is withheld whole, as strength
+   R6 withholds a member. Each test reads one part twice through `sighted`: as pat, from whom the named bundles are
+   withheld, and as alice, who sees everything and is the negative control (today's answer, byte for byte). */
+const PLACEHOLDER = "an object you may not see";
+const holds = (v, s) => JSON.stringify(v).includes(s);
+
+function r15() {
+  const w = setup();
+  w.both = (c, id) => [c.consequenceRead({ id, viewer: V("pat") }).part, c.consequenceRead({ id, viewer: V("alice") }).part];
+  w.today = (id) => w.c.consequenceRead({ id, viewer: V("alice") }).part;
+  return w;
+}
+
+test("R15: a computed part's operand whose content pat may not see leaves the operands; value, grade and the rest stand", () => {
+  const w = r15();
+  const HID = "INFO-2026-0002-hidden";
+  const a = w.figure("INFO-2026-0001-seen", "Cut 1,000", "example.org/a", "direct");
+  const h = w.figure(HID, "Cut 2,500", "example.org/h", "archive.org");
+  /* The hidden operand is first and the weakest (C), so the grade sentence names its place and its content id. */
+  const id = w.part({ unit: "money", currency: "USD" },
+    { op: "sum", operands: [{ content: h, figure: "2,500" }, { content: a, figure: "1,000" }] });
+  const c = w.sighted(new Set([HID]));
+  const [pat, alice] = w.both(c, id);
+  assert.deepEqual(pat.computation.operands.map((o) => o.content), [a], "one operand, no null in the other's place");
+  assert.equal(pat.computation.operands.every((o) => o && o.content && !("says" in o)), true);
+  assert.equal(pat.out_of_view, true);
+  assert.equal(holds(pat, h), false, "the hidden content id is nowhere in the answer");
+  assert.equal(holds(pat, PLACEHOLDER), false, "no placeholder");
+  assert.deepEqual([pat.measure, pat.grade.grade, pat.grade.determined], [alice.measure, "C", true],
+                   "the computed value and grade stand");
+  assert.doesNotMatch(pat.grade.why, /operand (is )?\d/, "the weakest operand is not placed or named");
+  assert.match(pat.grade.why, /capture grade is C/);
+  const { computation: pc, grade: pg, out_of_view, ...patRest } = pat;
+  const { computation: ac, grade: ag, ...aliceRest } = alice;
+  assert.deepEqual(patRest, aliceRest, "every other fact the part records stands");
+  /* Negative control: alice sees both operands, and the answer is today's, with no out_of_view key. */
+  assert.deepEqual(alice, w.today(id));
+  assert.equal("out_of_view" in alice, false);
+  assert.deepEqual(alice.computation.operands.map((o) => o.content), [h, a]);
+  assert.match(alice.grade.why, new RegExp(`the weakest operand is 0 \\(content ${h}\\)`));
+  /* A visible weakest operand is renumbered among the operands answered. */
+  const id2 = w.part({ unit: "money", currency: "USD" },
+    { op: "sum", operands: [{ content: h, figure: "2,500" }, { content: w.figure("INFO-2026-0003-arch", "Cut 7", "example.org/c", "archive.org"), figure: "7" }] });
+  const p2 = c.consequenceRead({ id: id2, viewer: V("pat") }).part;
+  assert.equal(p2.computation.operands.length, 1);
+  assert.equal(p2.grade.grade, "C");
+  /* Ties keep the first, so the hidden operand 0 is the weakest named: pat reads the finding with no place. */
+  assert.equal(holds(p2, h), false);
+  /* consequencesOf: each part answers alike; the listing itself states no out_of_view (K905). */
+  const of = c.consequencesOf({ determination: w.D, viewer: V("pat") });
+  assert.deepEqual(of.parts.find((p) => p.id === id), pat);
+  assert.equal("out_of_view" in of, false);
+  assert.deepEqual(c.consequencesOf({ determination: w.D, viewer: V("alice") }),
+                   w.c.consequencesOf({ determination: w.D, viewer: V("alice") }));
+});
+
+test("R15: an undetermined computation keeps its why without a withheld operand's place, figure or count", () => {
+  const w = r15();
+  const HID = "INFO-2026-0002-hidden";
+  const a = w.figure("INFO-2026-0001-seen", "Cut 1,000");
+  const h = w.figure(HID, "Cut 2,500");
+  const c = w.sighted(new Set([HID]));
+  /* The hidden operand lacks its figure: the sentence about it goes, R4's why stands. */
+  const lacking = w.part({ unit: "money" }, { op: "difference", operands: [{ content: a, figure: "1,000" }, { content: h, figure: "900" }] });
+  let [pat, alice] = w.both(c, lacking);
+  assert.equal(alice.undetermined.why, 'the figure is not in the record: operand 1\'s passage does not hold the figure "900"');
+  assert.deepEqual([pat.state, pat.undetermined.code, pat.undetermined.why], ["undetermined", "not_in_record", "the figure is not in the record"]);
+  assert.deepEqual([pat.computation.operands.length, pat.out_of_view, holds(pat, "900"), holds(pat, h)], [1, true, false, false]);
+  assert.deepEqual(alice, w.today(lacking));
+  assert.equal("out_of_view" in alice, false);
+  /* A seen operand lacks its figure behind a withheld one: renumbered to its place among the operands answered. */
+  const behind = w.part({ unit: "money" }, { op: "difference", operands: [{ content: h, figure: "2,500" }, { content: a, figure: "900" }] });
+  [pat, alice] = w.both(c, behind);
+  assert.equal(alice.undetermined.why, 'the figure is not in the record: operand 1\'s passage does not hold the figure "900"');
+  assert.equal(pat.undetermined.why, 'the figure is not in the record: operand 0\'s passage does not hold the figure "900"');
+  /* The arithmetic's own sentence counts the operands: it goes when one is withheld. */
+  const short = w.part({ unit: "money" }, { op: "difference", operands: [{ content: h, figure: "2,500" }] });
+  [pat, alice] = w.both(c, short);
+  assert.match(alice.undetermined.why, /1 was given/);
+  assert.deepEqual([pat.undetermined.why, pat.computation.operands, pat.out_of_view], ["the figure is not in the record", [], true]);
+});
+
+test("R15: an established causation whose inquiry pat may not see is {state} alone; reopened, it raises pat no cause", () => {
+  const w = r15();
+  const doc = "INFO-2026-0005-d";
+  w.figure(doc, "Cut 1");
+  w.inquiryAt(INQ, "open", { target: doc });
+  w.inquiryAt(INQ, "concluded", { target: doc, prior: "open" });
+  const id = w.part({ unit: "count", value: 3 }, { rationale: "r" }, { causation: INQ });
+  const c = w.sighted(new Set([INQ]));
+  let [pat, alice] = w.both(c, id);
+  assert.deepEqual(pat.causation, { state: "established" }, "no inquiry, why or strength key");
+  assert.equal(pat.out_of_view, true);
+  assert.deepEqual([holds(pat, INQ), holds(pat, PLACEHOLDER), holds(pat, "could not be read for you")], [false, false, false]);
+  const { causation: pk, out_of_view, ...patRest } = pat;
+  const { causation: ak, ...aliceRest } = alice;
+  assert.deepEqual(patRest, aliceRest, "every other fact stands");
+  /* Negative control: alice is named the inquiry with its strength pair, as today, with no out_of_view key. */
+  assert.deepEqual(alice, w.today(id));
+  assert.equal("out_of_view" in alice, false);
+  assert.deepEqual([alice.causation.state, alice.causation.inquiry, Object.keys(alice.causation.strength).sort()],
+                   ["established", INQ, ["capture", "connection", "says", "testimony"]]);
+  /* R8: the same causation reopened is alice's cause and never pat's. */
+  w.inquiryAt(INQ, "open", { target: doc, prior: "concluded" });
+  [pat, alice] = w.both(c, id);
+  assert.deepEqual(alice.basis_changed.map((x) => x.cause), ["causation_reopened"]);
+  assert.equal(pat.basis_changed, undefined);
+  assert.deepEqual([pat.causation, pat.out_of_view], [{ state: "established" }, true]);
+  /* And superseded: neither cause reaches pat. */
+  const sup = new Map([[INQ, ["INQ-2026-0002-next"]]]);
+  const w2 = world({ superseded: sup });
+  w2.D = w2.determination("CONF-2026-0001-act", w2.P, { [S]: "noncompliant" });
+  w2.figure(doc, "Cut 1");
+  w2.inquiryAt(INQ, "open", { target: doc });
+  const r = w2.c.consequenceRecord({ determination: w2.D, standard: S, affected: { kind: "fund", description: "f" },
+    period: { from: "2026-01-01", to: "2026-02-01" }, measure: { unit: "count", value: 1 }, basis: { rationale: "r" },
+    causation: INQ, author: V("alice") });
+  const c2 = w2.sighted(new Set([INQ]));
+  assert.deepEqual(c2.consequenceRead({ id: r.id, viewer: V("alice") }).part.basis_changed.map((x) => x.cause), ["causation_superseded"]);
+  const p2 = c2.consequenceRead({ id: r.id, viewer: V("pat") }).part;
+  assert.deepEqual([p2.causation, p2.basis_changed, p2.out_of_view], [{ state: "unproven" }, undefined, true],
+                   "an unproven causation keeps its state alone too");
+});
+
+test("R15: an assessed part's rests_on and an addressed record's evidence keep only the ids pat may see", () => {
+  const w = r15();
+  const HID = "INFO-2026-0002-hidden";
+  const a = w.figure("INFO-2026-0001-seen", "Restored 1");
+  const h = w.figure(HID, "Restored 2");
+  const doc = "INFO-2026-0005-d";
+  w.figure(doc, "Cut 1");
+  w.inquiryAt(INQ, "open", { target: doc });
+  const id = w.part({ unit: "count", value: 3 }, { rationale: "r", rests_on: [a, h, INQ] });
+  assert.equal(w.c.addressedRecord({ id, state: "addressed", evidence: [h, a, INQ], reason: "restored", author: V("alice") }).ok, true);
+  const c = w.sighted(new Set([HID, INQ]));
+  const [pat, alice] = w.both(c, id);
+  assert.deepEqual(pat.assessment.rests_on, [a]);
+  assert.equal(pat.assessment.says, "a member's assessment, resting on the ids listed");
+  assert.deepEqual(pat.addressed.evidence, [a]);
+  assert.equal(pat.out_of_view, true);
+  assert.deepEqual([holds(pat, h), holds(pat, INQ), holds(pat, PLACEHOLDER)], [false, false, false]);
+  assert.deepEqual([pat.addressed.state, pat.addressed.reason, pat.addressed.by], ["addressed", "restored", V("alice")]);
+  /* Negative control. */
+  assert.deepEqual(alice, w.today(id));
+  assert.equal("out_of_view" in alice, false);
+  assert.deepEqual([alice.assessment.rests_on, alice.addressed.evidence], [[a, h, INQ], [h, a, INQ]]);
+  /* Every id withheld: the sentence is chosen on the list as answered. */
+  const all = w.part({ unit: "count", value: 1 }, { rationale: "r", rests_on: [h] });
+  const p = c.consequenceRead({ id: all, viewer: V("pat") }).part;
+  assert.deepEqual([p.assessment.rests_on, p.assessment.says, p.out_of_view],
+                   [[], "a member's assessment, resting on nothing in the record (stated as none)", true]);
+  /* addressed() states no ids, so it answers pat as alice (K905: a listing states no out_of_view). */
+  assert.deepEqual(c.addressed({ determination: w.D, viewer: V("pat") }), c.addressed({ determination: w.D, viewer: V("alice") }));
+});
+
+test("R15 R8: a newer capture of a withheld operand's document raises pat no cause; a seen operand's is renumbered", () => {
+  const w = r15();
+  const oldText = "Parks fund cut 1,000";
+  const unit = (text) => ({ units: [{ extent: canonicalExtent({ kind: "pdf-page", page: 1 }), ref: "p2", text, truncated: false }], state: "whole" });
+  const operand = (doc, addr) => {
+    const s = w.doc(doc, `old capture of ${doc}`);
+    w.receipt(s, addr, { retrieved: "2026-09-01T00:00:00Z" });
+    w.ex.units[s] = unit(oldText);
+    return w.passage(doc, s, oldText);
+  };
+  const HID = "INFO-2026-0001-hidden";
+  const h = operand(HID, "example.org/h");
+  const v = operand("INFO-2026-0002-seen", "example.org/v");
+  const id = w.part({ unit: "money" }, { op: "sum", operands: [{ content: h, figure: "1,000" }, { content: v, figure: "1,000" }] });
+  for (const [doc, addr] of [["INFO-2026-0003-h2", "example.org/h"], ["INFO-2026-0004-v2", "example.org/v"]]) {
+    const s = w.doc(doc, `new capture of ${doc}`);
+    w.receipt(s, addr, { retrieved: "2026-09-20T00:00:00Z" });
+    w.ex.units[s] = unit("An entirely different page about zoning hearings");
+  }
+  const c = w.sighted(new Set([HID]));
+  const [pat, alice] = w.both(c, id);
+  assert.deepEqual(alice.basis_changed.map((x) => [x.cause, x.operand]), [["newer_capture", 0], ["newer_capture", 1]]);
+  assert.deepEqual(alice, w.today(id));
+  assert.equal("out_of_view" in alice, false);
+  assert.deepEqual(pat.basis_changed.map((x) => [x.cause, x.operand]), [["newer_capture", 0]], "the seen operand, at its place");
+  assert.match(pat.basis_changed[0].why, /operand 0's document/);
+  assert.deepEqual([pat.computation.operands.map((o) => o.content), pat.out_of_view, holds(pat, h)], [[v], true, false]);
+});
+
+test("R13 R14: a part's CONS- object belongs to its determination's project, so it is fenced as the part's reads are", () => {
+  const w = r15();
+  const id = w.part({ unit: "count", value: 2 }, { rationale: "r" });
+  assert.equal(w.record.bundleInfo(id).project, w.P);
+  assert.match(w.record.readFile(id, "bundle.md").text, new RegExp(`^project: "${w.P}"$`, "m"));
+  assert.deepEqual([V("alice"), V("pat"), V("carol"), V("bob")].map((v) => w.membership.inSight(id, v)), [true, true, true, false],
+                   "bob, outside P, is answered as for the part (NO_SUCH_PART), never shown the object");
+  assert.equal(w.c.consequenceRead({ id, viewer: V("bob") }).reason, "NO_SUCH_PART");
+});
