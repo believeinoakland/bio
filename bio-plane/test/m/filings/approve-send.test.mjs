@@ -100,7 +100,7 @@ test("R7 refusals: MACHINE_CANNOT_FILE, NO_SUCH_FILING, NOT_APPROVED, ALREADY_SE
   assert.deepEqual([again.reason, again.ord], ["ALREADY_SENT", 0]);
 });
 
-test("R7 the sending is one `sent` correspondence entry on the action, held as the capture sent or the member's account, linked both ways; no state moves and no clock entry is written; `proposed` carries the next state and actions' offered clock entries", async () => {
+test("R7 the sending is one `sent` correspondence entry on the action, held as the capture sent or the member's account, linked both ways; no state moves and no clock entry is written; `proposed` carries the next state and the clock entries action-clocks offers (its R2)", async () => {
   const { x, A, d, text } = drafted();
   (await approve(x, d.id, { text }));
   const bytes = x.capture("INFO-2026-0003-sent", text);
@@ -116,7 +116,7 @@ test("R7 the sending is one `sent` correspondence entry on the action, held as t
                    "the entry names the draft");
   assert.deepEqual([r.proposed.next_state.from, r.proposed.next_state.to], ["active", "awaiting_response"]);
   assert.deepEqual(r.proposed.clocks, [], "the kind has no deadline starting at filing or receipt");
-  /* A records request: its deadline starts at receipt, and actions offers the clock entry (stored apart). */
+  /* A records request: its deadline starts at receipt, and action-clocks offers the clock entry (stored apart). */
   const B = x.action({ kind: "records_request", risk_tier: 2, state: "planned", law: "Test Stat. § 1.100" });
   const d2 = x.f.filingPrepare({ action: B, preparer: V("bo"), viewer: V("bo") });
   (await approve(x, d2.id, { text: d2.text.replace("[UNFILLED: records]", "the minutes") }));

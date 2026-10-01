@@ -1,24 +1,30 @@
 /* filings — what the group sends, prepared from the record (requirements: `build/requirements/filings.md`; Design
- * Requirement 8 as amended 2026-09-26, K13, K102). For an action whose governing tier is 1 or 2, a draft pre-filled
- * from the record into the profile's template for its kind, every filled blank naming its source (R1–R5); a member
- * approves it and records that it was sent (R6, R7). For Tier 3, a counsel packet for counsel the group names, marked
- * as prepared for counsel's review, never published and never fileable (R8–R12). Candidate theories are proposals,
- * stored apart and labelled (R14). The evidence package's available-actions block is registered with `publication`
- * (R15) and answered on its own for `escalation` (R21). The AI prepares; a member approves, files and records it.
+ * Requirement 8 as amended 2026-09-26, K13, K102; the Action layer, K608, K613 (3)). For an action whose governing tier
+ * is 1 or 2, a draft pre-filled from the record into the profile's template for its kind, or into a template of the
+ * group's library a member kept (R26), every filled blank naming its source (R1–R5); a member approves it and records
+ * that it was sent (R6, R7). For Tier 3, a counsel packet for counsel the group names, marked as prepared for counsel's
+ * review, never published and never fileable (R8–R12). A communication to anyone is drafted without a template and goes
+ * the same way (R23). Approved bytes and exports carry the in-band quartet (R22); whatever is prepared from an action
+ * resting on a premise override says so first (R24); exhibits show their grades beside the venue's standard (R25).
+ * Candidate theories are proposals, stored apart and labelled (R14). The evidence package's available-actions block is
+ * registered with `public-read` (R15) and answered on its own for `escalation` (R21). The AI prepares; a member
+ * approves, files and records it.
  *
  * A NEW MODULE (T8, layer 9): nothing moved into it and it writes no legacy file. Its tables are `./schema.mjs`; a
- * deadline's date is `./dates.mjs`.
+ * deadline's date is `./dates.mjs`, counted by `action-clocks`' rule.
  *
  * REACHED as `filingsOf(host, deps)` (K61): one instance per host, created on the first call with `deps`. At creation it
  * creates its tables, declares them to record-core's purge (K23, R19) and registers the available-actions block with
- * `publication` (its R36; R15 here). `deps` (the layer-2 to layer-8 modules are reached through their factories on the
- * same host unless given; the layer-9 modules are given, never imported):
+ * `public-read` (its R8; R15 here). `deps` (each module is reached through its factory on the same host unless given):
  *   record, publication, provenance, content   `getSetting`, `allocId`, `transact`, `textAtSha`, `declarePurge`;
- *                                   `registerEvidenceBlock`, `publishedEditionsOf`; `attestationsOf`; `contentRow`,
+ *                                   `publishedEditionsOf`; `attestationsOf`, `captureGrade` (R25); `contentRow`,
  *                                   `captureFor`.
- *   membership     `inSight` (its R80): the sight of the project a draft or packet draws on (R11, R13, K316).
- *   actions        `actionRead` (its R29), `actionCorrespond` (R15, R16), `clockPropose` (R32), from `actionsOf` (K253);
- *                  and its module-level `noSuchAction` (R43), through which every missing action is answered (N217).
+ *   publicRead     `registerEvidenceBlock` (its R8; R15), from `publicReadOf` (K651).
+ *   strength       `projectBar` (its R14): the floors of R22's quartet.
+ *   membership     `inSight` (its R80): the sight of the project a draft, packet or template draws on (R11, R13, K316).
+ *   actions        `actionRead` (its R29), `actionCorrespond` (R15, R16), from `actionsOf` (K253); and its module-level
+ *                  `noSuchAction` (R43), through which every missing action is answered (N217).
+ *   actionClocks   `clockPropose` (its R2, was actions R32; K617), from `actionClocksOf`.
  *   conformance    `determinationRead` (its R9), `determinationsFor` (R11), from `conformanceOf` (K252).
  *   standards      `standardRead` (its R5), `inForce` (R7), from `standardsOf(host, deps)` (K251).
  *   consequences   `consequencesOf` (its R7), from `consequencesModule(host, deps)` (K171 (17), K250).
@@ -34,7 +40,8 @@
  * `project_id`, `ratified_at`, its R40); provenance's `register` and `captured_locators` (its R48).
  *
  * No place, law, venue, template or legal organisation is named here (R20): every one comes from the active
- * jurisdiction profiles' combined view (`jurisdictions.combine` over record-core's `jurisdiction_profiles`). */
+ * jurisdiction profiles' combined view (`jurisdictions.combine` over record-core's `jurisdiction_profiles`), or from
+ * the group's own library (R26). */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf } from "../membership/index.mjs";
@@ -49,6 +56,7 @@ import { standardsOf } from "../standards/index.mjs";
 import { conformanceOf } from "../conformance/index.mjs";
 import { consequencesModule } from "../consequences/index.mjs";
 import { actionsOf, noSuchAction } from "../actions/index.mjs";
+import { actionClocksOf } from "../action-clocks/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { isMachineIdentity, proposalLabel, parseFrontmatter, MACHINE_CLASS_PREFIX, BASIS_GRADES,
          sha256HexSync } from "../../checks/bio-checks.mjs";
@@ -159,11 +167,11 @@ export class Filings {
 
   constructor({ storage, record, host = null, membership = null, publication = null, publicRead = null, provenance = null,
                 content = null,
-                actions = null, conformance = null, standards = null, consequences = null, promotion = null, strength = null,
+                actions = null, conformance = null, standards = null, consequences = null, promotion = null, strength = null, actionClocks = null,
                 producingGroup = null, profiles = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
-    this.#deps = { host, membership, publication, publicRead, provenance, content, actions, conformance, standards, consequences, promotion, strength };
+    this.#deps = { host, membership, publication, publicRead, provenance, content, actions, conformance, standards, consequences, promotion, strength, actionClocks };
     /* R3 (N331): the producing group is promotion's fact `producingGroup` (its R40), read as `fact` answers it; a
        function handed in (legacy-store's, until layer 10) is kept and may answer a value, null, or the fact's answer.
        Absent, `#group` asks promotion itself, and says so when no promotion module is reachable (N355: no refusal code
@@ -188,6 +196,7 @@ export class Filings {
   get conformance() { return this.#deps.conformance ||= (this.#deps.host ? conformanceOf(this.#deps.host) : null); }
   get consequences() { return this.#deps.consequences ||= (this.#deps.host ? consequencesModule(this.#deps.host) : null); }
   get actions() { return this.#deps.actions ||= (this.#deps.host ? actionsOf(this.#deps.host) : null); }
+  get actionClocks() { return this.#deps.actionClocks ||= (this.#deps.host ? actionClocksOf(this.#deps.host) : null); }
 
   migrate() { migrateFilings(this.sql); }
 
@@ -713,8 +722,9 @@ export class Filings {
                  + "`proposed` is what a member may choose next" };
   }
 
-  /* R7: the next state a member may choose, and the clock entries actions offers for the kind's deadlines that start
-     at filing or receipt (its R32), each stored apart by actions, none written into the clock. */
+  /* R7: the next state a member may choose, and the clock entries action-clocks offers for the kind's deadlines that
+     start at filing or receipt (its R2, moved from actions R32 by K617), each stored apart there, none written into the
+     clock. */
   #proposed(d, who, viewer) {
     const a = this.#action(d.action_id, viewer);
     const state = a ? a.current_state : null;
@@ -723,8 +733,9 @@ export class Filings {
     const rules = v.view && Array.isArray(v.view.deadlines)
       ? v.view.deadlines.filter((r) => a && r.applies_to === a.kind && (r.starts === "filed" || r.starts === "received")) : [];
     const clocks = rules.map((r) => {
-      const p = this.actions && typeof this.actions.clockPropose === "function"
-        ? this.#call(() => this.actions.clockPropose({ target: d.action_id, rule: r.rule, proposer: who, viewer })) : null;
+      const c = this.actionClocks;
+      const p = c && typeof c.clockPropose === "function"
+        ? this.#call(() => c.clockPropose({ target: d.action_id, rule: r.rule, proposer: who, viewer })) : null;
       return { rule: r.rule, starts: r.starts, citation: r.citation ?? null,
                offered: p ?? { ok: false, reason: "UNAVAILABLE", detail: "no module offers a clock entry" } };
     });
