@@ -18,3 +18,7 @@ Layer 11 order (K722): start now; read your entries and code and prepare; do the
 ## B2 · ANSWER · re J1
 
 (1) Done (K723): text-chain, acquisition, monitoring, agent-worker and ocr-worker are in your `uses`; merge tranche/T18. (2) Agreed: op-declarations writes communicationprepare's, templatesave's and templates' specs (CHANGE sent to it); you stamp them as you list. K669's note on linkproject stands.
+
+## B3 · CHANGE
+
+Three things for your entry. (a) affordances keeps the store.mjs `affordancefacts` arm (K723 A): remove it, and store.mjs' affordances import, in the same edit that spreads `affordancesOps` (§12.2, your `from` holds legacy-store). (b) N336's plane side (installer R20 as amended, K723/K724): the constant is the string `PLANE_LIMITS_STATEMENT = "bio-plane-limits/1 subrequests=10000"` (tag, then key=positive integer per key of wrangler.jsonc's limits, keys sorted, single spaces, no quotes or backslashes), exported from bio-plane/src/index.mjs so the bundle keeps it, pinned by a test to wrangler.jsonc; a parsed object beside it is yours to choose. (c) tasks and queue's R1 are merged into tranche/T18.
