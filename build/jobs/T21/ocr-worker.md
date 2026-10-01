@@ -22,3 +22,7 @@
 - `format`: `86 modules, 84 requirements files; 0 failures`. `architecture`: `20 product files, 20 relative imports (0 naming no tracked file, not judged); 0 failures`. `coverage`: `1 modules, 22 of 22 live requirement ids named by a test; 0 failures`. `ownership`: `6 files changed by ocr-worker between tranche/T21 and HEAD; 0 failures`.
 
 Size (session_01FFFeexzv4JahkZvFP77Y6p): test runs 4, module lines 1845
+
+## J1 · COMPLETE
+
+N469 applied: battery.mjs notes re-worded in fleet-member.json:14, embed-tesslib.mjs:23, and (re-scan) wrangler.jsonc:13, test/memberworker.mjs:3; ocr-worker.test.mjs:67 provenance kept with the fixture's path. No generated artifact staled (fleetbundles 98 pass, 0 fail, no SKIP). npm test 199 passed, 0 failed; format, architecture, coverage (22 of 22), ownership all 0 failures. Nothing deferred. Record: build/jobs/T21/ocr-worker.md.
