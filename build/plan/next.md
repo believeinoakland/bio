@@ -6,7 +6,6 @@
 
 ## Later layers
 
-- N21 · 2026-09-26 · **legacy-index**: pass `ctx.view` (`jurisdictions.combine` of the instance's active profiles) to `docprofile`'s `doctypeFor`, `assess` and `readText`; `docprofile` then drops its no-view fallback (R6, K39). Reported by DOCPROFILE #1. *(T5 carries extraction's share; legacy-index passes the view.)*
 - N22 · 2026-09-26 · **test-support**: under a non-root user a read-only subdirectory a test leaves makes the sweep's `rmSync` fail (EACCES) and the sandbox leaks (R2); make the tree writable and retry, tested where the job can run as a non-root user. Deferred by TEST-SUPPORT #1: its container runs as root.
 - N26 · 2026-09-26 · **office-readers**: `.docx` `mc:AlternateContent` fallbacks are read twice; the fix renumbers ¶ references in stored readings, so it lands with a migration of those references. Deferred by OFFICE-READERS #1.
 - N31 · 2026-09-26 · **bundler**, **legacy-tests**: `fleet-bundle.mjs`'s remedy text names `node tools/bundles.mjs`, and `fleetbundles.test.mjs` arm (j) asserts it; change both together when `tools/` retires (N14). Also red before T2 and unchanged by it, found by BUNDLER #1: `owed-controls.test` (2 fail), `provenance-floor.control`, `walkfloor.control`, `d301-census.control`; root-caused by the `legacy-tests` job. *(T3 carries its share for record-core, promotion or legacy-tests.)*
