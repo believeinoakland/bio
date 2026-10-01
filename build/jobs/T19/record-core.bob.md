@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` layer 2, record-core (amended as th
 ## B2 · ANSWER · re J1
 
 K775: all seven readings adopted. (4) R46 now has the `clears` form (worded on tranche/T19); build it, capture-requests declares lead_inquiry with it in L6. (5) `uses` gains record-grammar on tranche/T19. (6) List each R met with its test in your record; I strike the marks at the merge. Merge tranche/T19.
+
+## B3 · CHANGE
+
+K785 (re-opens your job, P10): no L2 file may import the catalogue at COMPLETE, since bio-checks.mjs is deleted in T19 and you have no later job. (1) registerLegacyGrammars(record, grammars): take the list as an argument; store.mjs' constructor line passes the catalogue's LEGACY_GRAMMARS (an import line there is §12.2 rewiring); drop index.mjs:16's catalogue import. (2) record-core.test.mjs:2058's pin now four legacy grammars (promotion R55 took C-18.6/.7); a dynamic test-only oracle import is fine. Merge tranche/T19 first, then COMPLETE again.
