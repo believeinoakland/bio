@@ -46,3 +46,7 @@ Folded: BIO_Declared_Bias_v0_1.md (hunch paragraph, corrected). On PR #6's branc
 ## U12 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-105 (Bob, question 22, as recommended): the project's bar is set now as plain letters with their measures-map meanings, under an honest note that no audience guidance exists yet; when guidance comes it takes the venue form (sourced audience standards as jurisdiction-profile facts, "Undetermined" where unresearched, never a default); the research waits for its trigger (a group asks what bar suits an audience, or a case is challenged as below its audience's standard).
 Folded: BIO_Publication_v0_1.md §7. On PR #6's branch. Owed (its owed: line): the bar screen's note; later, audience standards as profile facts.
+
+## U13 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
+DEC-106 (Bob, question 24, as recommended): members are taught two spaces with distinct frames (working, published); review copies and outgoing drafts sit inside the working frame with a band saying what they are and who can see them; each document and case carries a small path-to-publication marker. Looks are Design's.
+Folded: BIO_Interaction_Constructs_v0_1.md §W (new). On PR #6's branch. Owed: nothing new beyond the redesign's screens.
