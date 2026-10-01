@@ -24,9 +24,10 @@
  * The CRC-32 comes from `ooxml.mjs` -- the plane's one implementation, already
  * measured against real containers -- so what this module WRITES and what
  * `readContainer`/`readPart` READ agree by construction rather than by
- * agreement. That is also the suite's strongest assertion: the zip is read back
- * through the plane's own reader, which verifies every member's length AND its
- * CRC against the central directory before handing the bytes over.
+ * agreement. That is also the strongest assertion of public-read's R6 tests
+ * (`worker.test.mjs`, `convert-publishedcase.test.mjs` block 4): the zip is read
+ * back through the plane's own reader, which verifies every member's length AND
+ * its CRC against the central directory before handing the bytes over.
  *
  * TAMPER-EVIDENT, NEVER TAMPER-PROOF (DEC-34, and the record must never claim
  * otherwise): nothing here encrypts, locks or write-protects anything. What

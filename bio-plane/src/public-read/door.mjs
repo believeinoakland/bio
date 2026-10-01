@@ -23,7 +23,7 @@ export async function publicReadDoorOp(op, url, env, stub, { json, requiredArgum
      bucket, which the ratification act is the only writer of. The fence is
      structural in two independent layers (a table set and a bucket
      boundary), so it does not depend on a predicate being remembered. That
-     is the property schema.mjs states those tables exist for, and REC-30's
+     is the property this module's R10 states those tables are read for, and REC-30's
      sweep classifies both ops as deliberately ungated for exactly it.
 
      PINNED TO `bio`, like op=verify and op=publishedmanifest below: an
@@ -37,8 +37,8 @@ export async function publicReadDoorOp(op, url, env, stub, { json, requiredArgum
     const sha = (url.searchParams.get("sha256") || "").toLowerCase();
     if (!/^[0-9a-f]{64}$/.test(sha))
       /* D-278: C-61.1. `error` is written as a KEY here rather than passed into the helper, so the
-         sentence stays readable where `preauth-vocabulary.test.mjs` reads it textually; the key after
-         the spread is the one on the wire, byte-identical to the pre-D-278 answer. */
+         sentence stays readable at its site; the key after the spread is the one on the wire,
+         byte-identical to the pre-D-278 answer, and `door.test.mjs`' R1 arm holds that whole answer. */
       return json({ ok: false, ...requiredArgument("verify", "sha256", "<64 lowercase hex>"),
         error: "verify requires sha256=<64 lowercase hex>" }, 400);
     /* REC-52, SITE (a). This read used to be
@@ -70,7 +70,7 @@ export async function publicReadDoorOp(op, url, env, stub, { json, requiredArgum
        the published INDEX, so the rendered consequence was the whole
        record rather than one hash — which is the shape UI-37 measured as
        the worst of its three. The WRAPPED envelope is preserved on the
-       success path (auth-surface.test.mjs pins that it is not flattened). */
+       success path (`door.test.mjs`' R4 arm holds that it is not flattened). */
     const out = await doAnswer(stub.fetch(new Request("http://do/publishedmanifest")));
     if (out.refused) return storeRefusal(out);
     if (!out.answered) return storeSilent("publishedmanifest", out.correlation);

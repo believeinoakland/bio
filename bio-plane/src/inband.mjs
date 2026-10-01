@@ -10,7 +10,8 @@
  * copy — can agree on every fixture and drift the day one of them canonicalises differently (a changed
  * indent, a sorted key), and the record would then carry two "hashes" that mean different things under
  * one name. So the container assembly (`assembleCaseContainer`) and the review copy (`op=reviewcopy`)
- * both call `inbandQuartet`, and `test/reviewcopy-inband.test.mjs` asserts there is no second site.
+ * both call `inbandQuartet` (public-read R7); `worker.test.mjs`' R6 arm holds the container manifest's hash
+ * to the quartet's, and the review copy's call is its own module's to prove.
  *
  * THE CANONICAL FORM IS THE WIRE FORM: `JSON.stringify(value, null, 1)`, UTF-8 — the bytes the container
  * manifest has always been hashed over, and the bytes `json()` in `index.mjs` serves an answer as. So a

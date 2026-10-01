@@ -283,7 +283,7 @@ export async function assembleCaseContainer({ env, stub, storeName, cs, via }) {
                told a stranger to check a signature over a statement it printed
                as 47 numbered integers, and the one thing they had to have in
                ASCII was the one thing they had to decode. Nothing consumed it —
-               measured across `civicos-ui`, the battery and this file — so this
+               measured across `civicos-ui`, the test battery of the day and this file — so this
                is a correction and not a withdrawal, and it rides the /4 bump
                with the rest of what the flip adds. Decoded here rather than by
                changing `ratifyStatement`, whose Uint8Array return is exactly
@@ -405,11 +405,12 @@ export async function publishedRoutes({ op, url, env, stub }) {
        one answer, so the absence of a document cannot be inferred from the
        shape of a refusal.
 
-       It is NOT redundant with the bucket boundary and the suite proves
-       that: point PUBLISHED at the working bucket (a plausible installer
-       slip that nothing else in the plane would catch) and this guard is
-       the only thing standing between an anonymous caller and the working
-       corpus. */
+       It is NOT redundant with the bucket boundary, and
+       `convert-publishedcase.test.mjs`' R5 (block 3) arm proves that: a
+       working document planted in the PUBLISHED bucket (a plausible installer
+       slip that nothing else in the plane would catch) answers exactly as a
+       hash that never existed, because this guard is the only thing standing
+       between an anonymous caller and the working corpus. */
     /* REC-52, a THIRD site the item did not name and the sweep found.
        `!v` and `!v.published` used to be one test, so a store that never
        answered fell into `notFound()` — and `notFound()` is not a shrug,
@@ -543,8 +544,9 @@ export async function publishedRoutes({ op, url, env, stub }) {
      — the plane MANUFACTURING a substantive claim about the record out
      of a failure to answer. `NOT_PUBLISHED` is the store's own word for
      a real absence, and it carries the store's own sentence with it
-     (store.mjs states it, and preauth-vocabulary.test.mjs reads it out
-     of there rather than typing a copy); minting the bare code here
+     (`../public-read/index.mjs` states it, with C-98.8's row from
+     `../public-read/checks.mjs`, and `convert-publishedcase.test.mjs`' R3
+     (block 1) arm holds that this route relays them); minting the bare code here
      produced a refusal that LOOKS like that answer and is not one.
      THE STORE'S OWN `NOT_PUBLISHED` IS UNTOUCHED and still reaches the
      caller verbatim on the branch below — the two must not collapse in
