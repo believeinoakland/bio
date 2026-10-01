@@ -706,8 +706,8 @@ function parseValueSafe(s, pos) {
 /** The two values this may ever answer, and there is deliberately no third.
  *  "authored" IS NOT A MEMBER AND MUST NEVER BECOME ONE — a marker's absence
  *  cannot establish authorship, and a vocabulary that could say so is a
- *  vocabulary that can STRENGTHEN a claim. `producer-provenance.test.mjs`
- *  asserts this array by name for exactly that reason. */
+ *  vocabulary that can STRENGTHEN a claim. R28's test (`test/m/pdf-reader/
+ *  pdfdoc.test.mjs`) asserts this array by name for exactly that reason. */
 export const PRODUCER_DETERMINATIONS = Object.freeze(["ocr", "undetermined"]);
 
 /** The markers. Every row is a product whose named function IS optical
@@ -2352,8 +2352,8 @@ const FORM_DEPTH_LIMIT = 8;
 const r3 = (v) => { const x = Math.round(v * 1000) / 1000; return x === 0 ? 0 : x; };
 
 /** The IC-1 `image` reference for a PDF page. Its `ref` is EXACTLY the human
- *  form `describeExtent` derives for the same address (IC-1's parity rule —
- *  pinned in `cpdf18-pdf-images.test.mjs`). */
+ *  form `describeExtent` derives for the same address (IC-1's parity rule):
+ *  R16 here and text-chain's R98 state the same `an image on page <n+1>`. */
 export function pdfImageRef(page, rect, extra = {}) {
   return { kind: "image", ref: `an image on page ${page + 1}`, page, rect, ...extra };
 }
