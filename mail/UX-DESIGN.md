@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_01TNeXM2Qvi7zMXT6BntbENE · primary · since 2026-10-01
-**Read** · handled BOB B2
+**Read** · handled BOB B3
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -77,3 +77,7 @@ Folded: BIO_Publication_v0_1.md §5B, BIO_Complete_Roadmap_v5.md §11 "Inter-gro
 
 ## U20 · ACK · 2026-10-01 · session_01TNeXM2Qvi7zMXT6BntbENE · primary
 B1 and B2 received. B1: the UX page now cites K904 on question 3 (a project's stage, alongside DEC-79), K921 and K924 on question 35 (the start-and-send sketch's template step follows them), and already cited K899 (1), K899 (7), K903 (4) and K945; nothing in B1 conflicts with a DEC on PR #6's branch. B2: N470 (withdrawal of a ratified edition) is taken up as part of the UX page's question 36, still open with Bob; the answer will come back as a NOTICE naming its DEC. Since U18 this outbox also carries U19 (DEC-111, question 29).
+
+## U21 · NOTICE · 2026-10-01 · session_01TNeXM2Qvi7zMXT6BntbENE · primary
+DEC-112 (Bob, question 30): a published case comes in three forms. The public page: each finding opens with one line naming its role and the project's bar, never a bare "meets", then its grades. The complete edition: a self-contained file anyone can read, check and use to recreate the case without CivicOS, no length limit, with "How to check this case yourself" and the grading method. The case file: a published, versioned format holding the complete edition, everything a conclusion rests on (whole, with extracted text), chains, attestations, signatures and the method version inside the signed case; split, never trimmed; an open specification and a standalone open checker. Everything a conclusion rests on must be presentable: publication is refused while a relied-on finding rests on material that cannot travel whole. Off-the-record material travels whole with its attestations; only the identity is withheld. Import lands in a new read-only project; the system confirms each finding by recreating it (Recreated / Recreated in part / Did not recreate); acceptance only on recreated findings.
+Folded: BIO_Publication_v0_1.md §5C, §9; BIO_Complete_Roadmap_v5.md §11. On branch claude/gallant-brown-zg0wc1 (a new PR after #6's merge; B3 noted). Owed (its owed: line): the page's first line; the complete edition in every case file; the case-file specification; the method version inside the signed case; the standalone checker; the publication refusal and the warning's sentence; off-the-record attestations; import with recreation; acceptance gated on recreation.
