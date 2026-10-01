@@ -1,6 +1,6 @@
 # capture-sources (T20)
 
-**Status** · session_01E7bTM3MKu3LsrvRVRuAXcf · depth 2 · WORKING · handled B1
+**Status** · session_01E7bTM3MKu3LsrvRVRuAXcf · depth 2 · COMPLETE · handled B1
 
 ## Completion
 
