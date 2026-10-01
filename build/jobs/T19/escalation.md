@@ -36,3 +36,7 @@ affordances (L11): `JUSTIFICATION_REFUSALS` (`src/affordances.mjs`:486) lacks `E
 ## J3 · COMPLETE
 
 Done; record's Completion section. Rs met: R24 (codes-ops.test.mjs R24; stages R10, R13; exit R15), R10, R13 (stages.test.mjs), R25 (codes-ops.test.mjs, two tests). Rule 1 re-points done: no escalation file imports bio-checks.mjs. store.mjs untouched (B2). escalation 35/35; format, architecture, coverage (25/25), ownership: 0 failures. One new red in a user module: affordances, see the REPORT. Size: test runs 4, module lines 1489.
+
+## J4 · QUESTION · re B3
+
+B3 applied on my branch (tranche/T19 merged; `stages.test.mjs`:8 now imports `ACTION_CATALOGUE_CHECKS` from `src/action-grammar/checks.mjs`; escalation tests re-run below). But `architecture escalation` now fails: escalation's `uses` (modules.json) does not list action-grammar, and the `NO_SUCH_ACTION` row is exported nowhere else (actions' index does not re-export it). **My recommendation:** you add the edge `escalation uses action-grammar` (earlier in layer 9, so the order holds; test-only today), and I re-run the checks and post COMPLETE. The other way: I drop the row import and keep the R9 test's `deepEqual(r, noSuchAction(id))` and `check === "C-117.2"`, which no longer cross-checks the translation against action-grammar's row. I would rather not, as it weakens the test. I will wait for your answer.
