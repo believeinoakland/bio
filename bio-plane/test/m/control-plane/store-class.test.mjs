@@ -179,7 +179,8 @@ test("R35: this class alone is the frame — constructed without any wrapper it 
   assert.equal(/secret-value|SQLITE/.test(text), false);
 });
 
-test("R26, R35 (N13): queue's and tasks' maps are part of the route map, dispatched by this door — the construction makes their tables (queue, then tasks), each route answers through the door what its own map answers called directly, and legacy-store's own map no longer holds them", async () => {
+test("R26, R35 (N13): queue's, tasks' and affordances' maps are part of the route map, dispatched by this door — the construction makes their tables (queue, then tasks), each route answers through the door what its own map answers called directly, and legacy-store's own map no longer holds them", async () => {
+  const A = await import("../../../src/affordances.mjs");
   const Q = await import("../../../src/queue/index.mjs");
   const T = await import("../../../src/tasks/index.mjs");
   const u = new URL("http://do/");
@@ -192,12 +193,14 @@ test("R26, R35 (N13): queue's and tasks' maps are part of the route map, dispatc
   for (const t of Q.QUEUE_TABLES) assert.ok(tables.includes(t), `queue's ${t}`);
   /* legacy-store's map alone holds none of them */
   const legacy = Object.keys(LegacyStore.prototype.routes.call(store, u, null));
-  for (const op of [...qOps, ...tOps]) assert.equal(legacy.includes(op), false, `legacy-store still routes ${op}`);
+  for (const op of [...qOps, ...tOps, "affordancefacts"]) assert.equal(legacy.includes(op), false, `legacy-store still routes ${op}`);
+  assert.deepEqual(Object.keys(A.affordancesOps(null, u)), ["affordancefacts"]);
   /* through the door, each answers what its own map answers on a second object */
   const twin = object();
   new D.Store(twin.ctx, twin.env);
   await settle(twin);
-  for (const [path, ops, of] of [["tasks?viewer=class:admin", T.tasksOps, T.tasksOf], ["queue?member=ann&viewer=member:ann", Q.queueOps, Q.queueOf]]) {
+  for (const [path, ops, of] of [["tasks?viewer=class:admin", T.tasksOps, T.tasksOf], ["queue?member=ann&viewer=member:ann", Q.queueOps, Q.queueOf],
+                                 ["affordancefacts?target=NOPE-1&viewer=class:admin&identity=class:admin&author=token:admin&by=class:admin", A.affordancesOps, A.affordancesOf]]) {
     const r = await store.fetch(new Request(`http://do/${path}`));
     const url = new URL(`http://do/${path}`);
     const direct = await ops(of(twin.ctx), url, null)[url.pathname.slice(1)]();

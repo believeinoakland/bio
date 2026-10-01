@@ -34,7 +34,6 @@ import { extractionOf, extractionOps } from "./extraction/index.mjs";
 import { entitiesOf, entitiesOps } from "./entities/index.mjs";
 import { basisVersionsOf, basisVersionsOps, VERSION_ACT_TO, BASIS_VERSIONS_LIMIT_DEFAULT, BASIS_VERSIONS_LIMIT_MAX,
          BASIS_VERSION_LEGS_MAX } from "./basis-versions/index.mjs";
-import { affordancesOf } from "./affordances.mjs";
 /* The D-15 viewer gate, from query.mjs's ONE compilation point: this file builds no query of its own. */
 import { viewerPredicate } from "./query.mjs";
 /* `op=audit`'s route tally names its states in D-129's vocabulary: run-rules' (K682). */
@@ -1938,15 +1937,6 @@ export class Store extends DurableObject {
                                                                       limit: Store.#numberParam(url, "limit"),
                                                                       viewer: url.searchParams.get("viewer") }),
         ...monitoringOps(monitoringOf(this.ctx), url, body),
-        /* REC-19: the facts behind op=affordances. The control plane derives
-           the act list from these; this endpoint only reports what the store
-           holds about the object. */
-        affordancefacts: () => affordancesOf(this.ctx).affordanceFacts({ target: url.searchParams.get("target"),
-                                                      viewer: url.searchParams.get("viewer"),
-                                                      identity: url.searchParams.get("identity"),
-                                                      /* D-311: the two act stamps, as the acts receive them */
-                                                      author: url.searchParams.get("author"),
-                                                      by: url.searchParams.get("by") }),
         stats: () => recordOf(this.ctx).stats({ capacity: url.searchParams.get("capacity") === "1",
                                    viewer: url.searchParams.has("viewer") ? url.searchParams.get("viewer") : undefined }),
         retire: () => this.retire({ handle: url.searchParams.get("handle"),

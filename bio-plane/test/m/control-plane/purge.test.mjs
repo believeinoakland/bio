@@ -12,7 +12,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { O, world, call, opCalls, aik, cred, refused } from "./harness.mjs";
 
-test("R6, R9, R10, R11, R12 (N398): op=purge is the root of trust's and the probe's alone — a member binding CLASS_FORBIDDEN, an unknown token NOT_AUTHENTICATED, a session MACHINE_CREDENTIAL_REQUIRED naming its decision, an agent AI_BEYOND_TASK_SCOPE, the probe naming bio SCOPE_REFUSED — and nothing reaches the store on any refusal", async () => {
+test("R28 (N398; admission R4, R7–R10): op=purge is the root of trust's and the probe's alone — a member binding CLASS_FORBIDDEN, an unknown token NOT_AUTHENTICATED, a session MACHINE_CREDENTIAL_REQUIRED naming its decision, an agent AI_BEYOND_TASK_SCOPE, the probe naming bio SCOPE_REFUSED — and nothing reaches the store on any refusal", async () => {
   const agent = aik();
   const { env, S } = world({ creds: { [agent]: cred({ tokenId: "agent-wide", writes: Object.keys(O.OPS) }) } });
   const cases = [

@@ -56,6 +56,7 @@ import * as ACTION_PLANS from "../action-plans/checks.mjs";
 import * as MONITORING from "../monitoring/checks.mjs";
 import * as TASKS from "../tasks/checks.mjs";
 import * as QUEUE from "../queue/checks.mjs";
+import * as ADMISSION from "../admission/checks.mjs";
 import * as INSTANCE_SETUP from "../setup.mjs";
 import * as OWN from "./checks.mjs";
 
@@ -108,6 +109,7 @@ export const CHECK_FAMILY_FILES = Object.freeze([
   ["src/tasks/checks.mjs", TASKS],
   ["src/queue/checks.mjs", QUEUE],
   ["src/setup.mjs", INSTANCE_SETUP],
+  ["src/admission/checks.mjs", ADMISSION],
   ["src/control-plane/checks.mjs", OWN],
 ].map((e) => Object.freeze(e)));
 
