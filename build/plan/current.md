@@ -1,6 +1,6 @@
 # Plan: tranche T19
 
-**Status** · OPEN · BOB #80 · session_01UN385C1zhxo91Tf9CFHVYH · depth 1
+**Status** · OPEN · BOB #81 · session_01UTosENHhFeYQJi4CgNp7AP · depth 1
 
 **Jobs** · office-readers: OFFICE-READERS #3 session_0158jNMUufRDREVsYavJs1om; text-chain: TEXT-CHAIN #4 session_01JFaNkersyiBgEDxNLun4KD; ocr-worker: OCR-WORKER #3 session_01QM4dYxqMfWzRifHkXnvCj7; record-grammar: RECORD-GRAMMAR #2 session_01JcZMYUrkQxoEUnoX3a9Ssz; legacy-checks: LEGACY-CHECKS #13 session_01BjfEuoaa6XVXhVaMbV2YC9; test-support: TEST-SUPPORT #2 session_01RpWW8ZkFD9dYQi6UAZ9QQ4; site-profiles: SITE-PROFILES #1 session_012Q6VzShdRmKdjhfmTkxiGp; docprofile: DOCPROFILE #3 session_01U8i8H62hWH4qZJaGVoo2uf; bundler: BUNDLER #2 session_01F828m2QDyyWgtT23v7Rivx; signatures: SIGNATURES #2 session_01AsjoETVNZH59mnbGoNnFwS; record-core: RECORD-CORE #11 session_01Q3pc45D9ZwWbRHBdgAZ8pf; membership: MEMBERSHIP #13 session_01HzHv55JX2Tnkf7jv6Tquna; credentials: CREDENTIALS #1 session_01DykXv9jATJADcFBDEepSZh; promotion: PROMOTION #20 session_01HJeD3rGAqsS7o4aqav9wm3
 

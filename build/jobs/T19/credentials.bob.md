@@ -1,6 +1,6 @@
 # BOB to credentials (T19)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ K774: (1)(2)(3) adopted as you read them. J2: option (a): membership R95 registe
 ## B3 · CHANGE
 
 MEMBERSHIP's seam has merged into tranche/T19 (K776): sessionRights (R92), registerClaimed (R94), onRevoked, memberFacts as it reported. Merge tranche/T19 and build on it; R95 registerPasswordSetter comes with membership's later work (K774).
+
+## B4 · CHANGE
+
+The seam is already on tranche/T19 (K776 @ 64a41ae597): merge tranche/T19, run your tests and legacy-store's unshimmed, and complete. Also merge for K774/K778 wording (membership R95 refusal ENROL_NOT_RECORDED, C-96.18, membership's). K779: SIGNER_ENROLMENT_CHECKS and AI_CREDENTIAL_CHECKS are deleted from the catalogue by membership's split deletion, not by you; old-suite, test/system and legacy-ui imports hold no copy.

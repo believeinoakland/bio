@@ -9,3 +9,11 @@ Depth 2. Your entry: `build/plan/current.md` layer 2, promotion (amended): as dr
 ## B2 · ANSWER · re J1
 
 K773: your reading adopted. (3) R55 is worded as you proposed, on tranche/T19 (merge it). (4) CHECK_RETIREMENTS stays; it goes with the catalogue file in L11.
+
+## B3 · CHANGE
+
+K778 (membership J3): a new row C-96.18 ENROL_NOT_RECORDED arrives in membership's MEMBERSHIP_CHECKS, awaiting your stamp; and C-96.15–.17 move to credentials' checks.mjs (K774). Your stamp, last in the layer, carries both. Merge tranche/T19 when you stamp.
+
+## B4 · CHANGE
+
+K780: record-grammar is now in your uses (modules.json on tranche/T19): re-point your catalogue imports to record-grammar where it holds the name (rule 1).
