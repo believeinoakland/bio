@@ -3,7 +3,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { list, get } from "../../../../jurisdictions/index.mjs";
-import { BUNDLE_ID_RE, STATES } from "../../../checks/bio-checks.mjs";
+import { BUNDLE_ID_RE } from "../../../src/record-grammar/ids.mjs";
+import { STATES } from "../../../src/record-grammar/document.mjs";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";

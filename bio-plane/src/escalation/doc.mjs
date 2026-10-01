@@ -3,7 +3,7 @@
  * each, appended and never edited (R18), each entry its fields as JSON (any text is kept as written in a body
  * section, where the front matter's grammar has no escapes). The module's tables are projections of this log. */
 
-import { parseFrontmatter } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
 
 export const ESCALATION = "escalation";
 export const LOG = "Escalation Log";
