@@ -31,3 +31,7 @@
 - `node checks/ownership.mjs … queue-producers tranche/T18`: 8 files changed; 0 failures.
 
 Size (session_01NvidLD1YV6LuKzED8YRk5f): test runs 16, module lines 2,682
+
+## J1 · REPORT
+
+Found in other modules (also in my record): (1) queue: Queue.PRODUCER_DEPS lacks actionClocks, escalation and actionPlans, so a caller's fakes for them do not reach queue-producers (queue's tests stub feedItems for the Action kinds, so nothing fails today). (2) action-plans R17: checkpointsDue takes no viewer; queue-producers gates R16 by the plan's project's sight itself (R11). (3) Generated artifact stale: bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (src/queue-producers/index.mjs changed).
