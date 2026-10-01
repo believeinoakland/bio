@@ -26,3 +26,7 @@ Size (session_01KciRDbs7ix9Xrdx5bdg4Yp): test runs 1, module lines 1814
 ## J1 · REPORT
 
 Generated artifacts staled by my change under bio-plane/src/bias/ (regenerated nothing, per B1): the plane's bundle bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (not_product). The old N458 strings also sit in the embedded release copies release/bio-plane.bundled.mjs, newgroup/src/release.mjs and newgroup/dist/newgroup.bundled.mjs. No flaw found in another module.
+
+## J2 · COMPLETE
+
+N458 applied (five member-read strings: C-26.1's two messages, biasadopt's missing-id detail, biasinhale's C-26.8 detail and proposes sentence; interface names kept; no test pinned the old words). N469 applied (checks.mjs :86, :103, :470 and schema.mjs :34 re-pointed to the module tests that prove the claims or to provenance; :202 and :445 kept as provenance). Also fixed own notes naming the retired legacy store as live. test/m/bias: 55 pass, 0 fail, 1 todo (R26, K102). format, architecture, coverage (46/46), ownership: 0 failures. Record: build/jobs/T21/bias.md on job/T21/bias.
