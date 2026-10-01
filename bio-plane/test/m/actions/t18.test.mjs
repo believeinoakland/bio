@@ -301,3 +301,22 @@ test("R2 GOVERNING_LAWS_REWRITTEN with no envelope type: the document alone make
   assert.deepEqual([r.reason, r.check], ["GOVERNING_LAWS_REWRITTEN", "C-73.1"]);
   assert.equal(w.record.head(A), null);
 });
+
+/* B5 (K707): entities joined the uses, so R9's person arm is met through the subject registry (entities R5). */
+test("R9 an entity_id the subject registry holds as a person is refused COUNTERPARTY_REFUSED, its finding naming the arm; an office's lands", () => {
+  const w = world();
+  const ent = (kind, label) => {
+    const r = w.a.entities.createEntity({ kind, label, declaredBy: M });
+    assert.equal(r.ok, true, JSON.stringify(r)); return r.entity_id;
+  };
+  const person = ent("person", "A private resident"), office = ent("office", "Town Clerk");
+  const withId = (id) => md(B, [...CP, `  entity_id: ${id}`]);
+  const r = w.promote(B, withId(person));
+  assert.deepEqual([r.reason, r.check], ["COUNTERPARTY_REFUSED", "C-101.3"]);
+  assert.ok(r.findings.some((f) => /arm: person/.test(f.detail)), JSON.stringify(r.findings));
+  assert.equal(w.record.head(B), null, "nothing was written");
+  assert.equal(w.promote(B, withId(office)).ok, true, "an office in the registry");
+  assert.equal(w.promote(A, md(A, [...CP, "  entity_id: ENT-2026-9999"])).ok, true, "an id the registry does not hold is not a person");
+  const press = w.promote("ACTN-2026-0003-c", md("ACTN-2026-0003-c", [...named("press", "Reporter", "Gazette"), `  entity_id: ${person}`]));
+  assert.equal(press.reason, "COUNTERPARTY_REFUSED", "on every named arm");
+});
