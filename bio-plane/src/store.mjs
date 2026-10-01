@@ -1717,15 +1717,6 @@ export class Store extends DurableObject {
            attested*), so a route that skipped the stamp fails closed. */
         attesttext: () => contentOf(this.ctx).attestText({ ...(body || {}), member: url.searchParams.get("attestor"),
                                                            viewer: url.searchParams.get("viewer") }),
-        /* CONSTRUCTS Step 4, SLICE B (FW-7): the RECOGNISERS. resolve runs the
-           recogniser over a captured document's references and stores each resolution
-           with its §8.1 grade (A/B/C, never D — the machine never testifies);
-           resolvetestify is the member's grade-D testimony path; resolutions reads a
-           document's resolutions; concerns is the REVERSE INDEX, every document that
-           concerns an entity, by joining on entity_id (never through a relation). */
-        /* entities R11, R12; the connection sweep is armed on entities' `onResolved` notice by scheduler (its R9, K714). */
-        resolve: () => entitiesOf(this.ctx).resolve(body || {}),
-        resolvetestify: () => entitiesOf(this.ctx).testify(body || {}),
         recordcapturedlocator: () => this.recordCapturedLocator(body || {}),
         /* PL-10 / D-220: the version chain. `address` arrives ALREADY NORMALISED
            — the control plane runs it through `normalizeAddress`, the same
