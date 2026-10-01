@@ -12,7 +12,6 @@ import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
@@ -517,12 +516,10 @@ test("R55, R56: the host and principal readers", () => {
     ["ann", "ann", "ann", null, null, null, null, null, null]);
 });
 
-/* N273: each C-105 row's `where` names a DEC-49 region that the guard (`civicos-ui/check-refusal-codes.mjs` arm C)
-   resolves: one marker pair, inside the function the row names, over the whole refusal (at least the guard's 4 lines
-   and 120 characters, from the opening marker's comment close to the END marker), minting the row's code. Read
-   twice: once here, independently of the guard's parser, and once by the guard itself. */
+/* N273: each C-105 row's `where` names a DEC-49 region: one marker pair, inside the function the row names, over the
+   whole refusal (at least 4 lines and 120 characters, from the opening marker's comment close to the END marker),
+   minting the row's code. The family's home and its governed sites are proved at the interface below (K853). */
 const PLANE = fileURLToPath(new URL("../../../", import.meta.url));
-const REPO = fileURLToPath(new URL("../../../../", import.meta.url));
 
 test("R55, R57, R63: every C-105 row's `where` names a region inside its function, over its whole refusal, that mints its code", () => {
   const src = readFileSync(`${PLANE}src/capture-sources/credentials.mjs`, "utf8");
@@ -554,14 +551,60 @@ test("R55, R57, R63: every C-105 row's `where` names a region inside its functio
   }
 });
 
-test("R55, R57, R63: the DEC-49 guard resolves every C-105 region and names none of this module's rows as a failure", () => {
-  /* The guard prints its failures on stderr and exits non-zero on other modules'; both streams are read. */
-  const run = spawnSync(process.execPath, [`${REPO}civicos-ui/check-refusal-codes.mjs`], { cwd: REPO, encoding: "utf8", maxBuffer: 64 << 20 });
-  const out = `${run.stdout}\n${run.stderr}`;
-  /* The guard ran to arm C and reads this family where it lives. */
-  assert.match(out, /arm A: HOMES — .*CAPTURE_CREDENTIAL_CHECKS src\/capture-sources\/credentials\.mjs/);
-  assert.match(out, /arm C: \d+ governed sites/);
-  const mine = out.split("\n").filter((l) => /^FAIL/.test(l)
-    && (l.includes("capture-sources/credentials.mjs") || CODES.some((c) => l.includes(c)) || /C-105\./.test(l)));
-  assert.deepEqual(mine, []);
+/* K853: the proof the retired DEC-49 guard gave (its arm A, the family's home; its arm C, the governed sites), restated
+   at the module's interface. The family is found as control-plane's composition finds one (its `families.mjs`): the
+   exports of this file that carry the reserved `_CHECKS` suffix. The sites are the answers: every refusal path is driven
+   and each `CAPTURE_CREDENTIAL_*` reason any answer names must be a row of the family, answered with that row's own
+   `check` and `translation`. */
+test("R55, R57, R63: the family's one home is CAPTURE_CREDENTIAL_CHECKS, and every refusal answered is its own row, no C-105 number held twice", async () => {
+  /* Arm A: the home. This file's `_CHECKS` exports are exactly the one family, a plain object of rows. */
+  const mod = await import("../../../src/capture-sources/credentials.mjs");
+  assert.deepEqual(Object.keys(mod).filter((k) => /_CHECKS$/.test(k)), ["CAPTURE_CREDENTIAL_CHECKS"]);
+  assert.equal(mod.CAPTURE_CREDENTIAL_CHECKS, CAPTURE_CREDENTIAL_CHECKS);
+  assert.ok(Object.isFrozen(CAPTURE_CREDENTIAL_CHECKS) && !Array.isArray(CAPTURE_CREDENTIAL_CHECKS));
+  /* Every code is of the family's name, and no C-105 number is held twice. */
+  for (const c of CODES) assert.match(c, /^CAPTURE_CREDENTIAL_[A-Z_]+$/, c);
+  const checks = CODES.map((c) => CAPTURE_CREDENTIAL_CHECKS[c].check);
+  assert.ok(checks.every((n) => /^C-105\.\d+$/.test(n)), checks.join(", "));
+  assert.equal(new Set(checks).size, checks.length, "a C-105 number held twice");
+
+  /* Arm C: the governed sites. Every refusal path of the module, driven at its interface. */
+  const w = await world();
+  const answers = [];
+  const own = (await w.supply({ scope: "member", by: "ann" })).credential.credential;
+  const p1 = (await w.supply({ scope: "project", project: "P1", by: "ann" })).credential.credential;
+  const grp = (await w.supply({ scope: "group", by: "ann" })).credential.credential;
+  for (const over of [{ by: "nobody" }, { kind: "cookie" }, { host: "https://x" }, { scope: "team" }, { scope: "group", project: "P1" },
+                      { scope: "project", project: "P9" }, { secret: "" }, { scope: "project", project: "P1", by: "dee" }, {}])
+    answers.push(await w.supply(over));
+  answers.push(await (await world({ key: null })).supply({}));
+  const failingInsert = { exec(q, ...a) { if (/^\s*INSERT/.test(q)) throw new Error("disk full"); return w.storage.sql.exec(q, ...a); } };
+  answers.push(await new CaptureCredentials({ sql: failingInsert, core: w.rc, members: w.m, key: KEY })
+    .credentialSupply({ kind: "login", host: HOST, secret: SECRET, scope: "group", by: "ann" }));
+  answers.push(await w.c.credentialWithdraw({ credential: "CRED-nothere", by: "bob" }));
+  answers.push(await w.c.credentialWithdraw({ credential: own, by: "bob" }));
+  answers.push(await w.c.credentialWithdraw({ credential: p1, by: "bob" }));
+  answers.push(await w.c.credentialWithdraw({ credential: grp, by: "bob" }));
+  const stuck = { exec(q, ...a) { if (/^\s*(SELECT|UPDATE)/.test(q)) throw new Error("storage unavailable"); return w.storage.sql.exec(q, ...a); } };
+  answers.push(await new CaptureCredentials({ sql: stuck, core: w.rc, members: w.m, key: KEY }).credentialWithdraw({ credential: grp, by: "ann" }));
+  answers.push(await w.c.credentialWithdraw({ credential: grp, by: "ann" }));
+  answers.push(await w.c.credentialsForFetch({ host: HOST, principalPlane: "member:ann", target: "Q0" }));
+  answers.push(await w.c.credentialsForFetch({ host: "other.example", principalPlane: "member:ann", target: "Q0" }));
+  const k = await world({ key: null });
+  k.db.exec(`INSERT INTO ${CREDENTIALS_TABLE} (credential_id, kind, host, scope, project, supplied_by, supplied_at, iv, ciphertext)
+             VALUES ('CRED-x','login','${HOST}','group',NULL,'dee','2026-09-28T00:00:00Z','AAAAAAAAAAAAAAAA','AAAA')`);
+  answers.push(await k.c.credentialsForFetch({ host: HOST, principalPlane: "member:dee", target: "Q0" }));
+  answers.push(w.c.credentialList({ viewer: "admin" }), w.c.credentialList({ viewer: "member:nobody" }));
+  /* Each refusal is a row of the family, with that row's own check and translation. */
+  const refused = answers.filter((a) => a && a.ok === false);
+  for (const a of refused) {
+    assert.ok(Object.hasOwn(CAPTURE_CREDENTIAL_CHECKS, a.reason), `${a.reason} is not a row of the family`);
+    assert.deepEqual([a.code, a.check, a.translation],
+      [a.reason, CAPTURE_CREDENTIAL_CHECKS[a.reason].check, CAPTURE_CREDENTIAL_CHECKS[a.reason].translation], a.reason);
+  }
+  /* Every family code named anywhere in any answer, a fetch's reason sentence included, is a row of it. */
+  for (const name of new Set(JSON.stringify(answers).match(/CAPTURE_CREDENTIAL_[A-Z_]+/g)))
+    assert.ok(Object.hasOwn(CAPTURE_CREDENTIAL_CHECKS, name), `${name} is named in an answer and is not a row`);
+  /* And every row is answered by a site: no row of the family lacks a refusal path. */
+  assert.deepEqual([...new Set(refused.map((a) => a.reason))].sort(), [...CODES].sort());
 });
