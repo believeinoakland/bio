@@ -1,14 +1,15 @@
-/* control-plane: the Durable Object class (R35). Constructed for real over a Durable Object storage at the plane's shape
-   (node:sqlite behind `sql.exec` answering a cursor, as workerd's does), and driven through its `fetch`. Each route's
-   answer through the door is compared with instance-setup's own route called directly (`instanceSetupOps(m, url,
-   body)[op]()`) on a second object's storage; instance-setup's own door and wrapper are gone (N348, K514). */
+/* control-plane: the record store's door (R25, R26) behind the Durable Object class, which is `plane`'s since T19 (its
+   R1, was this module's R35). The class is constructed for real over a Durable Object storage at the plane's shape
+   (node:sqlite behind `sql.exec` answering a cursor, as workerd's does), and driven through its `fetch`, which is this
+   module's `dispatch`. Each route's answer through the door is compared with instance-setup's own route called directly
+   (`instanceSetupOps(m, url, body)[op]()`) on a second object's storage. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import "./harness.mjs";
 const D = await import("../../../src/control-plane/dispatch.mjs");
+const { Store } = await import("../../../src/plane/store.mjs");
 const S = await import("../../../src/setup.mjs");
-const { Store: LegacyStore } = await import("../../../src/store.mjs");
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 function cursor(rows) {
@@ -71,10 +72,9 @@ const req = ([path, method, body]) => new Request(`http://do/${path}`, body === 
 /* Instants differ between two runs; everything else must not. */
 const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>").replace(/"(at|ms|elapsed_ms|recorded_ms)":\d{10,}/g, '"$1":<n>');
 
-test("R35: the class the instance exports is this module's Store: at construction it starts instance-setup once per object, and a second construction on the same storage starts nothing", async () => {
-  assert.ok(D.Store.prototype instanceof LegacyStore);
+test("R26 (plane R1): the class whose fetch is this door, plane's Store: at construction it starts instance-setup once per object, and a second construction on the same storage starts nothing", async () => {
   const o = object();
-  const first = new D.Store(o.ctx, o.env);
+  const first = new Store(o.ctx, o.env);
   const s1 = started(await settle(o));
   assert.equal(s1.length, 1, "instance-setup started once by the construction");
   assert.equal(s1[0].started, true);
@@ -84,24 +84,24 @@ test("R35: the class the instance exports is this module's Store: at constructio
   assert.equal(r.status, 200);
   assert.equal((await r.json()).result.ok, true);
   /* a second construction on the same storage starts nothing */
-  new D.Store(o.ctx, o.env);
+  new Store(o.ctx, o.env);
   const s2 = started(await settle(o));
   assert.equal(s2.length, 1);
   assert.equal(s2[0].started, false);
   /* negative control: a different object's storage starts on its own */
   const other = object();
-  new D.Store(other.ctx, other.env);
+  new Store(other.ctx, other.env);
   assert.equal(started(await settle(other))[0].started, true);
 });
 
-test("R35: instance-setup's fourteen routes are part of R26's route map beside legacy-store's, and each answers through the door, in R26's envelope, what its own route answers called directly", async () => {
+test("R26: instance-setup's fourteen routes are part of the route map beside every module's, and each answers through the door, in R26's envelope, what its own route answers called directly", async () => {
   const ops = Object.keys(S.instanceSetupOps(null, new URL("http://do/"), null));
   assert.equal(ops.length, 14);
   assert.deepEqual([...new Set(DRIVES.map(([p]) => p.split("?")[0]))].sort(), [...ops].sort(), "every route is driven");
   const now = object(), before = object();
-  const store = new D.Store(now.ctx, now.env);
+  const store = new Store(now.ctx, now.env);
   await settle(now);
-  new LegacyStore(before.ctx, before.env);
+  new Store(before.ctx, before.env);
   await settle(before);
   const m = S.instanceSetupOf(before.ctx, before.env);
   await m.start();
@@ -114,16 +114,16 @@ test("R35: instance-setup's fourteen routes are part of R26's route map beside l
     assert.deepEqual(JSON.parse(mask(at)), JSON.parse(mask(JSON.stringify({ ok: true, result: direct }))), drive[0]);
     assert.equal(JSON.parse(at).ok, true, `${drive[0]}: ${at.slice(0, 200)}`);
   }
-  /* legacy-store's routes answer through the same door, and an unserved route is R26's refusal */
+  /* the other modules' routes answer through the same door, and an unserved route is R26's refusal */
   const alloc = await store.fetch(new Request("http://do/allocid?prefix=T&year=2026"));
   assert.deepEqual([alloc.status, (await alloc.json()).ok], [200, true]);
   const none = await store.fetch(new Request("http://do/nosuchroute"));
   assert.deepEqual([none.status, await none.json()], [400, { ok: false, error: "unknown op: nosuchroute" }]);
 });
 
-test("R35: an instance-setup route passes R26's body read — a non-JSON POST to instancegroupseed is 400 BAD_JSON and nothing is written; an empty body is null", async () => {
+test("R26: an instance-setup route passes the body read — a non-JSON POST to instancegroupseed is 400 BAD_JSON and nothing is written; an empty body is null", async () => {
   const o = object();
-  const store = new D.Store(o.ctx, o.env);
+  const store = new Store(o.ctx, o.env);
   await settle(o);
   for (const bad of ["{", "not json", "{'slug':'grp-x'}"]) {
     const r = await store.fetch(new Request("http://do/instancegroupseed?author=token:admin", { method: "POST", body: bad }));
@@ -142,9 +142,9 @@ test("R35: an instance-setup route passes R26's body read — a non-JSON POST to
   assert.equal((await ok.json()).result.ok, true);
 });
 
-test("R35: a throwing instance-setup route answers R25's STORE_INTERNAL_ERROR (C-69.4) with a correlation id and no stack, message, path or line", async () => {
+test("R25: a throwing instance-setup route answers STORE_INTERNAL_ERROR (C-69.4) with a correlation id and no stack, message, path or line", async () => {
   const o = object();
-  const store = new D.Store(o.ctx, o.env);
+  const store = new Store(o.ctx, o.env);
   await settle(o);
   o.failWith((q) => /instance_group/.test(q));
   const logged = [], was = console.error;
@@ -163,9 +163,9 @@ test("R35: a throwing instance-setup route answers R25's STORE_INTERNAL_ERROR (C
   await assert.rejects(async () => S.instanceSetupOps(m, new URL("http://do/instancegroup"), null).instancegroup(), /secret-value/);
 });
 
-test("R35: this class alone is the frame — constructed without any wrapper it starts instance-setup once, and instance-setup's routes pass R26's body read and R25's catch (the instance's export of it is legacy-index's, tested there: the order forbids importing it here)", async () => {
+test("R25, R26 (plane R1): plane's class alone is the frame — constructed without any wrapper it starts instance-setup once, and instance-setup's routes pass R26's body read and R25's catch", async () => {
   const o = object();
-  const store = new D.Store(o.ctx, o.env);
+  const store = new Store(o.ctx, o.env);
   const s = started(await settle(o));
   assert.deepEqual(s.map((x) => x.started), [true], "instance-setup started once, by this class alone");
   const bad = await store.fetch(new Request("http://do/instancegroupseed?author=token:admin", { method: "POST", body: "{" }));
@@ -179,7 +179,7 @@ test("R35: this class alone is the frame — constructed without any wrapper it 
   assert.equal(/secret-value|SQLITE/.test(text), false);
 });
 
-test("R26, R35 (N13): queue's, tasks' and affordances' maps are part of the route map, dispatched by this door — the construction makes their tables (queue, then tasks), each route answers through the door what its own map answers called directly, and legacy-store's own map no longer holds them", async () => {
+test("R26 (N13): queue's, tasks' and affordances' maps are part of the route map, dispatched by this door — the construction makes their tables (queue, then tasks), each route answers through the door what its own map answers called directly, and they reach the map through this module's controlPlaneRoutes", async () => {
   const A = await import("../../../src/affordances.mjs");
   const Q = await import("../../../src/queue/index.mjs");
   const T = await import("../../../src/tasks/index.mjs");
@@ -187,17 +187,21 @@ test("R26, R35 (N13): queue's, tasks' and affordances' maps are part of the rout
   const qOps = Object.keys(Q.queueOps(null, u, null)), tOps = Object.keys(T.tasksOps(null, u, null));
   assert.ok(qOps.includes("queue") && tOps.includes("tasks"));
   const o = object();
-  const store = new D.Store(o.ctx, o.env);
+  const store = new Store(o.ctx, o.env);
   await settle(o);
   const tables = o.ctx.storage.sql.exec("SELECT name FROM sqlite_master WHERE type='table'").toArray().map((r) => r.name);
   for (const t of Q.QUEUE_TABLES) assert.ok(tables.includes(t), `queue's ${t}`);
-  /* legacy-store's map alone holds none of them */
-  const legacy = Object.keys(LegacyStore.prototype.routes.call(store, u, null));
-  for (const op of [...qOps, ...tOps, "affordancefacts"]) assert.equal(legacy.includes(op), false, `legacy-store still routes ${op}`);
+  /* they are this module's additions to the map (plane R5), and the map the class answers holds them */
+  const mine = Object.keys(D.controlPlaneRoutes(o.ctx, u, null));
+  const map = Object.keys(store.routes(u, null));
+  for (const op of [...qOps, ...tOps, "affordancefacts"]) {
+    assert.ok(mine.includes(op), `controlPlaneRoutes lacks ${op}`);
+    assert.ok(map.includes(op), `the map lacks ${op}`);
+  }
   assert.deepEqual(Object.keys(A.affordancesOps(null, u)), ["affordancefacts"]);
   /* through the door, each answers what its own map answers on a second object */
   const twin = object();
-  new D.Store(twin.ctx, twin.env);
+  new Store(twin.ctx, twin.env);
   await settle(twin);
   for (const [path, ops, of] of [["tasks?viewer=class:admin", T.tasksOps, T.tasksOf], ["queue?member=ann&viewer=member:ann", Q.queueOps, Q.queueOf],
                                  ["affordancefacts?target=NOPE-1&viewer=class:admin&identity=class:admin&author=token:admin&by=class:admin", A.affordancesOps, A.affordancesOf]]) {

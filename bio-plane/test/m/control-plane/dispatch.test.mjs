@@ -1,10 +1,11 @@
 /* control-plane: the record store's door (R26, R27). Driven through `dispatch(req, store)` with a route map and a
-   membership that record what reached them, and through the Durable Object class `Store`, whose `fetch` is the door. */
+   membership that record what reached them, and through the Durable Object class `Store` (plane's, its R1), whose
+   `fetch` is the door. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import "./harness.mjs";
 const D = await import("../../../src/control-plane/dispatch.mjs");
-const { Store: LegacyStore } = await import("../../../src/store.mjs");
+const { Store } = await import("../../../src/plane/store.mjs");
 const { dispatch, PROJECT_NAMING_READS, PROJECT_NAMING_READS_NOT } = D;
 
 /* A store whose routes record their call; `membership` answers existence for the ids in `seen` (discoverable, and seen at
@@ -61,17 +62,15 @@ test("R26: the store's door — an empty POST body is null, a non-JSON body 400 
     const r = await go({ routes: (url) => ({ q: async () => (url.searchParams.get("k") === "1" ? v : "wrong") }), membership: () => null }, "q?k=1");
     assert.deepEqual([r.status, r.json], [200, { ok: true, result: v }]);
   }
-  /* the Durable Object class: legacy-store's, whose fetch is this door over its own `routes` */
-  assert.ok(D.Store.prototype instanceof LegacyStore);
-  assert.equal(typeof LegacyStore.prototype.routes, "function");
-  assert.equal(Object.hasOwn(LegacyStore.prototype, "fetch"), false, "legacy-store keeps no door of its own");
-  const obj = Object.create(D.Store.prototype);
+  /* the Durable Object class: plane's (its R1), whose fetch is this door over its own `routes`; this module holds no class */
+  assert.equal("Store" in D, false, "control-plane exports no Durable Object class");
+  assert.equal(typeof Store.prototype.routes, "function");
+  const obj = Object.create(Store.prototype);
   obj.ctx = {};
   obj.routes = (url, body) => ({ ping: () => ({ pong: body }) });
   const res = await obj.fetch(new Request("http://do/ping", { method: "POST", body: '{"x":2}' }));
   assert.deepEqual(await res.json(), { ok: true, result: { pong: { x: 2 } } });
   assert.equal((await obj.fetch(new Request("http://do/nope"))).status, 400);
-  assert.equal(D.Store.PROJECT_NAMING_READS, PROJECT_NAMING_READS);
 });
 
 test("R27: a read naming a project (PROJECT_NAMING_READS) asked with a stamped viewer and naming a discoverable project is answered by membership.existenceAct first (C-70.1), before its route runs; the reads naming none are listed with the reason", async () => {

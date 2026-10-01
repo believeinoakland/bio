@@ -1,8 +1,9 @@
 /* control-plane's test harness: the module loaded under plain node, a fake `env` whose `STORE` is shaped like a Durable
    Object namespace and records every inner request, and a driver that calls `makeFetch(hooks)`'s `fetch` and reads the
-   answer. `store.mjs` (imported by the module) imports `cloudflare:workers`, which plain node cannot resolve, so the
-   one specifier is answered here by an in-thread resolve hook with a stand-in `DurableObject` class; nothing else is
-   stubbed and no shared helper is touched. Every test drives the module at its interface. */
+   answer. Plane's `src/plane/store.mjs` (the class some suites construct) imports `cloudflare:workers`, which plain
+   node cannot resolve, so the one specifier is answered here by an in-thread resolve hook with a stand-in
+   `DurableObject` class; nothing else is stubbed and no shared helper is touched. Every test drives the module at its
+   interface. */
 import { registerHooks } from "node:module";
 import { createHash, randomBytes } from "node:crypto";
 import assert from "node:assert/strict";

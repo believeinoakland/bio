@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { O, M, world, call, opCalls, hex64, aik, cred, member, refused, FORGED, QUERY_STAMPS, BODY_STAMPS } from "./harness.mjs";
 const D = await import("../../../src/control-plane/dispatch.mjs");
+const { Store } = await import("../../../src/plane/store.mjs");
 const P = await import("../../../src/control-plane/pull.mjs");
 const { captureOf, PULL_WITHIN_FAILED_DETAIL } = await import("../../../src/capture/index.mjs");
 const { provenanceOf } = await import("../../../src/provenance/index.mjs");
@@ -325,7 +326,7 @@ async function record() {
                 id: { equals: () => false, toString: () => "do" }, blockConcurrencyWhile(fn) { const p = fn(); blocked.push(p); return p; },
                 waitUntil() {} };
   const env = { STORE: { idFromName: (x) => x }, CAPTURES: bucket, INSTANCE_NAME: "test" };
-  const store = new D.Store(ctx, env);
+  const store = new Store(ctx, env);   /* plane's class (its R1), whose fetch is this module's `dispatch` */
   for (const p of blocked) await p;
   const go = async (path, method = "GET", body) => {
     const r = await store.fetch(new Request(`http://do/${path}`, body === undefined ? { method } : { method, body: JSON.stringify(body) }));
