@@ -24,3 +24,7 @@ Size (session_01UytfHxnxe2XiBtvoaKdHLw): test runs 3, module lines 3997
 ## J1 · REPORT
 
 Stale generated artifact: bio-plane/dist/bio-plane.bundled.mjs holds both old strings (src/extraction/index.mjs and src/extractrun.mjs changed). release/bio-plane.bundled.mjs also holds the two old strings (distribution's). Nothing found in another module's code.
+
+## J2 · COMPLETE
+
+N458: both read texts re-worded (index.mjs indexTestimony why, REEXTRACT_NOT_READ detail); scan found only those; no test pinned them. N469: extractrun.mjs :92 (also stale: MODES now holds extract, not deployed; points at agent-worker R14) and :194 (provenance kept; live claim points at R42's test, widened in place to check C and null sentences); six convert headers' 'old suites are kept' corrected, markers and titles read 'converted from'. Nothing deferred. Paths 3,997 lines (was 4,002). test/m/extraction 171/171; test/m no new red (42 vs base 43). format, architecture, coverage (63/63), ownership: 0 failures. Record: build/jobs/T21/extraction.md on job/T21/extraction.
