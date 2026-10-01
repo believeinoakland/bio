@@ -39,3 +39,7 @@ Found in other modules (also in my record): (1) queue: Queue.PRODUCER_DEPS lacks
 ## J2 · COMPLETE
 
 queue-producers T18 done on job/T18/queue-producers (tranche/T18 merged, B2 applied). N-A11 (R8 widened; R15 action-clock-overdue as a CONDITION; R16 plan-checkpoint-due via checkpointsDue({nowMs}), K711; R17 escalation-stage-proposed) and N-A17 (R18 action-reminder) applied; R14 signer-self-registered built; R9 tested; the five converts (current, conclude-project, project-sight §10, leadslug, queue-conditions) are module tests. Not-yet-met marks met, to strike: R9, R14, R15, R16, R17, R18. Module tests 46/46, queue's 53/53; format, architecture, coverage (18/18), ownership: 0 failures. Nothing deferred; no catalogue row moved. Details in the record.
+
+## J3 · COMPLETE
+
+B3 applied: tranche/T18 merged (queue complete, dffc1d0ade; K728's struck marks). Re-run: queue-producers tests 46/46, queue's 68/68; format, architecture, coverage (18/18), ownership: 0 failures. Nothing further to change.
