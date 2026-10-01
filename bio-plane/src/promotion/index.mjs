@@ -2,8 +2,8 @@
  * `build/requirements/promotion.md`). It holds the compare-and-swap, keeps history append-only, takes the document's
  * own bytes as the record's word on what it is, and refuses a whole promotion when any rule fails: the bundle advances
  * as one transaction (`record-core.transact`) or nothing is written. Later modules join a promotion by registering a
- * check and a projection (R39) and the facts it needs (R40); a share no owner registers yet is held by `plane` (its
- * R10) until its owner's export is registered. It also runs the gate (`../gate.mjs`), and the case gate over the case-document catalogue a later module
+ * check and a projection (R39) and the facts it needs (R40), each owner its own share (the shares `plane` held for
+ * owners not yet registering, its R10, went to their owners in T20). It also runs the gate (`../gate.mjs`), and the case gate over the case-document catalogue a later module
  * registers with the instance (R33, R47), and reopens a set-down inquiry.
  *
  * REACHED as `promotionOf(host, deps)`: one instance per host (the Durable Object's `ctx`), created on the first call

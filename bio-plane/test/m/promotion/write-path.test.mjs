@@ -1,6 +1,6 @@
 /* promotion R18 — every refusal the catalogue assigns to the promote act is enforced at the write. Driven through the
- * whole write path as the plane runs it: the store (`legacy-store`), which reaches promotion and registers its share
- * of the checks (R39). The catalogue is read for its rows whose site is this write path; each is either probed with a
+ * whole write path as the plane runs it: its composition root (`src/plane/index.mjs`), whose modules reach promotion
+ * and register their shares of the checks (R39; `legacy-store`'s until T19). The catalogue is read for its rows whose site is this write path; each is either probed with a
  * package that meets it, or (for a catalogue function the write runs and relays whole) shown relayed finding for
  * finding. A row sited here that this suite does not name fails it. */
 import { test } from "node:test";
@@ -14,8 +14,8 @@ import * as P from "../../../src/promotion/index.mjs";
 const SRC = (f) => fileURLToPath(new URL("../../../src/" + f, import.meta.url));
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 /* The plane's exported Store (`src/plane/index.mjs`, the composition root; K867: not the `src/index.mjs` re-export, which
-   plane's T20 job deletes), which starts instance-setup's registrations (the fact `producingGroup`, K414); a probe beside
-   it relays each request to that Store, as `store.mjs`'s own default fetch does. */
+   plane's T20 job deleted), which starts instance-setup's registrations (the fact `producingGroup`, K414); a probe beside
+   it relays each request to that Store, as the deleted `store.mjs`'s default fetch did. */
 const PROBE = 'export { Store } from "./plane/index.mjs";\n'
   + 'export default { fetch: (req, env) => env.STORE.get(env.STORE.idFromName("bio")).fetch(req) };\n';
 const mf = new Miniflare({ modules: true, script: PROBE, modulesRoot: "/",
