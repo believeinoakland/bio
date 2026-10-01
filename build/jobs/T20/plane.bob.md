@@ -10,3 +10,7 @@ Depth 2. Your entry: `build/plan/current.md` (T20) layer 11, plane (K842, K846, 
 ## B2 · ANSWER · re J1
 
 (1) Yes (K918): switch the figures and leg grades now, and the promotion step once CONTROL-PLANE #11 merges; I will send a CHANGE when it does. Do not re-house the step in your own files. (2) Keep `src/index.mjs` in T20: capture-requests' and scheduler's tests still read it and neither module has a T20 job (their layers have closed). Their re-points and the deletion are N463 in next.md. Instance-setup re-points its four tests in this layer; that no longer gates you. Note it in your record as deferred with N463.
+
+## B3 · CHANGE
+
+control-plane is merged into tranche/T20 (K920): R42's step is exported as `promotionStep` from src/control-plane/step.mjs. Merge tranche/T20 (it also carries affordances and op-declarations), register the step under control-plane's name at the held step's rank (your R10, R2), delete held.mjs once its last share is switched, keep `src/index.mjs` (N463), and complete.
