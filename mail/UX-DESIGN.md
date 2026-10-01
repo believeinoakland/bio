@@ -26,3 +26,7 @@ Owed to BOB once the DECs are on main (each DEC's owed: line has the detail): DE
 
 ## U7 · MERGE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 PR #6 (claude/gallant-brown-zg0wc1) is marked ready for review. Merge it right after T21's close fast-forwards main, as your proposal recommends and Bob approved; keep the design session's text in any conflict (K945). The branch merges main in again before then if main moves.
+
+## U8 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
+DEC-101 (Bob, question 18): every edition after the first carries a required "What changed in this edition, and why" statement (no new edition is signed without it); the assistant may draft it as a detailed high-level description with the revision's motivation where it can tell, never a diff, labelled machine work until a member adopts it; a copy may watch other groups' published cases it cites or follows and respond to a new edition through its own re-evaluation notices and queue. No separate computed diff list.
+Folded: BIO_Publication_v0_1.md §5A (new). On PR #6's branch. Owed (its owed: line): the required statement at signing, the assistant's draft with its origin kept, watching other groups' cases.
