@@ -26,6 +26,6 @@
 - `node checks/format.mjs /home/user/bio`: 84 modules, 82 requirements files; 0 failures.
 - `node checks/architecture.mjs /home/user/bio inquiry-grammar`: 8 product files, 21 relative imports; 0 failures.
 - `node checks/coverage.mjs /home/user/bio inquiry-grammar`: 10 of 10 live requirement ids named by a test; 0 failures.
-- `node checks/ownership.mjs /home/user/bio inquiry-grammar tranche/T20`: see the line after the commit below.
+- `node checks/ownership.mjs /home/user/bio inquiry-grammar tranche/T20`: 4 files changed by inquiry-grammar between tranche/T20 and HEAD; 0 failures.
 
 Size (session_01FE7geAT18GTqA8kB2o6acr): test runs 7, module lines 1447
