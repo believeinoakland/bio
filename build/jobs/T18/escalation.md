@@ -39,3 +39,6 @@ Re-run after the merge: `node --test bio-plane/test/m/escalation/`: tests 32, pa
 
 Size (session_01Sa2gjuhjzD2CRUGeynitk9): test runs 6, module lines 40
 
+## J3 · COMPLETE · re B2
+
+B2 processed. Merged tranche/T18 (filings, actions, action-clocks). Added R23's real-actions arm in real.test.mjs: a member's breach action with premise_override {reason} and no rests_on leg, written through actions, is refused ACTION_PREMISE_OVERRIDDEN (C-116.45) at stage 2 with nothing written; one resting on the determination attaches. The override is now read by actions' own Actions.overrideOf, so the two modules share one rule. Tests 32/32; DEC-49 guard names nothing of escalation; format, architecture, coverage (23/23), ownership: 0 failures. Ready to merge for action-plans.
