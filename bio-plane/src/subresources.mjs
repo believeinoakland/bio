@@ -788,9 +788,9 @@ export function fetchPolicy(ref, origin) {
  *
  *   anchor   somewhere inside this very document (a #fragment). Decided here,
  *            permanently, and it needs no wrapper beyond staying itself.
- *   intra    another file in THIS bundle, whose bytes are captured alongside.
+ *   intra    another file in THIS record, whose bytes are captured alongside.
  *            Decided at capture and cannot change afterwards.
- *   linked   an address the store may hold a capture of, in some other bundle.
+ *   linked   an address the store may hold a capture of, in some other record.
  *   offsite  an address the store holds nothing for.
  *   refused  executable or otherwise not an address this system will carry.
  *
@@ -1282,8 +1282,8 @@ export async function captureSubresources({
       note("refused", cls.url, { reason: cls.reason, ...(cls.scheme ? { scheme: cls.scheme } : {}) });
       return { type: "refused", wrapper: linkWrapper.refused(), address: null };
     }
-    /* Intra-bundle: the link's address is one this capture already holds bytes
-       for, so it resolves inside the bundle and can never become anything
+    /* Intra-record: the link's address is one this capture already holds bytes
+       for, so it resolves inside the record and can never become anything
        else. */
     const held = byUrl.get(cls.url);
     if (held && held.ok) {
@@ -1348,8 +1348,8 @@ export async function captureSubresources({
       deferred: records.filter((r) => r.reason === "DEFERRED").length,
       refused: records.filter((r) => !r.ok && (r.reason === "REFUSED_SCHEME" || r.reason === "REFUSED_LOCATOR" || r.reason === "UNRESOLVABLE")).length,
       /* Deliberately not fetched: policy skips, plus the two bounds. Every
-         record lands in exactly one of fetched/failed/refused/skipped, and the
-         subresources test asserts that identity, so a new reason that forgets
+         record lands in exactly one of fetched/failed/refused/skipped, and this
+         module's R16 test asserts that identity, so a new reason that forgets
          to name a bucket fails rather than quietly vanishing from the totals. */
       skipped: records.filter((r) => !r.ok && (r.reason === "OUTSIDE_THE_DOCUMENT" || r.reason === "THIRD_PARTY"
                 || r.reason === "COLLAPSED_SRCSET_FAMILY" || r.reason === "CAP_REACHED" || r.reason === "BUDGET_EXHAUSTED"
@@ -1375,10 +1375,10 @@ export async function captureSubresources({
     },
     subresources: records,
     links,
-    link_note: "Every <a> the page carried, characterised. `intra` resolves inside this bundle and is final. "
+    link_note: "Every <a> the page carried, characterised. `intra` resolves inside this record and is final. "
         + "`deferred` is an address whose partition depends on what the store holds and is therefore NOT final: "
         + "held_at_capture records only what was true when this page was captured, and a viewer must re-resolve "
-        + "it against the store at read time. A deferred link that later resolves to a capture in another bundle "
+        + "it against the store at read time. A deferred link that later resolves to a capture in another record "
         + "is a link to THAT VERSION of the target only if the target's capture can be shown to be the version "
         + "the source was pointing at on this page's retrieval date. Until that is established the link is "
         + "unconfirmed, and unconfirmed is a third answer rather than a synonym for either of the other two.",
