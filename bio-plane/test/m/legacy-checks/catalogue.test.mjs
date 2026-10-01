@@ -1,7 +1,8 @@
 /* legacy-checks: the catalogue's own tests (K631). The module has no requirements file (a legacy module, P7), so each
-   test names the plan entry it proves (`build/plan/current.md` T18 layer 1): N-A1's share (the `PLN-` type's states
-   and `proposalLabel`'s two subjects, `action-fold/deltas/legacy-checks.md`), §1b's `checkBundle` grammars seam, and
-   the deletions. Every test reads the catalogue's exports; none reads its source text. */
+   test names the plan entry it proves: T18 layer 1 (N-A1's share, the `PLN-` type's states and `proposalLabel`'s two
+   subjects; §1b's grammars seam; the deletions) and T19 layer 1 (`build/plan/current.md`: rule 2's wrapper over
+   record-grammar's `checkBundle` with `LEGACY_GRAMMARS`, the re-exports record-grammar R26/R41 pin, the deletions and
+   the re-pointed `where`s). Every test reads the catalogue's exports; none reads its source text. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as CAT from "../../../checks/bio-checks.mjs";
@@ -225,16 +226,27 @@ const REEXPORTED = ["BUNDLE_ID_RE", "ANN_ID_RE", "FILENAME_RE", "ISO_TS_RE", "OB
   "EARNED_GRADE_SOURCES", "EARNED_CAPTURE_CEILING", "UNREACHABLE_CAPTURE_GRADE", "isPublicHttpsLocator",
   "createSha256", "sha256HexSync"];
 
-test("R26 every one of the 29 names the catalogue re-exports is record-grammar's own binding, and b64ToBytes is not re-exported", async () => {
+/* record-grammar R41 (T19, B4): the 17 names its R28 and R30–R38 move, re-exported the same way. `checkBundle` is the
+   one record-grammar name the catalogue exports as its own binding: rule 2's wrapper (tested below). */
+const REEXPORTED_T19 = ["INQUIRY_TITLE_MAX", "deriveInquiryTitle", "inquiryQuestionOf", "HEADINGS", "HEADINGS_WHEN",
+  "isCaseMemberBytes", "vocabFor", "STATES", "sectionText", "LAW_PROPOSAL_STATES", "lawProposalState", "PROPOSAL_STATES",
+  "proposalLabel", "CONTENT_MINTED_BY_PLANE", "CONTENT_MINT_STATES", "contentMintState", "EXTENSION_ARMS"];
+
+test("R26 R41 every one of the 46 names the catalogue re-exports is record-grammar's own binding, checkBundle is the catalogue's own wrapper, and b64ToBytes is not re-exported", async () => {
   const RG = await import("../../../src/record-grammar/index.mjs");
   assert.equal(REEXPORTED.length, 29);
-  for (const name of REEXPORTED) {
+  assert.equal(REEXPORTED_T19.length, 17);
+  for (const name of [...REEXPORTED, ...REEXPORTED_T19]) {
     assert.ok(name in RG, `record-grammar provides ${name}`);
     assert.ok(name in CAT, `the catalogue re-exports ${name}`);
     assert.equal(CAT[name], RG[name], name);
   }
   const shared = Object.keys(RG).filter((n) => n in CAT).sort();
-  assert.deepEqual(shared, [...REEXPORTED].sort(), "no other record-grammar name is exported by the catalogue");
+  assert.deepEqual(shared, [...REEXPORTED, ...REEXPORTED_T19, "checkBundle"].sort(),
+    "no other record-grammar name is exported by the catalogue");
+  assert.notEqual(CAT.checkBundle, RG.checkBundle, "the catalogue's checkBundle is rule 2's wrapper");
+  assert.equal("isMachineMinted" in CAT, false, "isMachineMinted is deleted, not re-exported (K750)");
+  assert.equal("isMachineMinted" in RG, false, "and record-grammar does not hold it (R37)");
   assert.ok("b64ToBytes" in RG);
   assert.equal("b64ToBytes" in CAT, false);
 });
@@ -252,4 +264,64 @@ test("N-A1 C-2.5's schema stamp admits a type name holding '_' and still refuses
 test("§1b one grammar replaces one arm: a claim spanning two built-in arms throws", async () => {
   const [a, b] = EXTENSION_ARMS;
   await assert.rejects(run({ grammars: [{ module: "m", ids: [...a.ids, ...b.ids], arm() {} }] }), RangeError);
+});
+
+/* ---- rule 2's wrapper (T19, B4, J2): the catalogue's checkBundle is record-grammar's with LEGACY_GRAMMARS ---- */
+
+const LEGACY_SLOTS = [["C-2.7"], ["C-18.6", "C-18.7"], ["C-6.1"], ["C-15.1"], ["C-2.8"], ["C-2.9", "C-9.1"]];
+
+test("rule 2 LEGACY_GRAMMARS fills six of record-grammar's EXTENSION_ARMS slots, each claimed whole, frozen", async () => {
+  const { LEGACY_GRAMMARS } = CAT;
+  assert.ok(Object.isFrozen(LEGACY_GRAMMARS));
+  assert.deepEqual(LEGACY_GRAMMARS.map((g) => [...g.ids]), LEGACY_SLOTS);
+  for (const g of LEGACY_GRAMMARS) {
+    assert.ok(Object.isFrozen(g) && Object.isFrozen(g.ids));
+    assert.equal(g.module, "legacy-checks");
+    assert.equal(typeof g.arm, "function");
+    const slot = EXTENSION_ARMS.find((a) => a.ids.includes(g.ids[0]));
+    assert.ok(slot, g.ids.join());
+    assert.deepEqual([...slot.ids], [...g.ids], `${slot.name} is claimed whole`);
+  }
+  assert.equal(new Set(LEGACY_GRAMMARS.flatMap((g) => g.ids)).size, 8);
+  assert.equal(LEGACY_GRAMMARS.length, EXTENSION_ARMS.length, "every slot is filled");
+});
+
+test("rule 2 the wrapper answers exactly record-grammar's checkBundle given LEGACY_GRAMMARS (no grammars, and a caller's grammar taking a slot)", async () => {
+  const RG = await import("../../../src/record-grammar/index.mjs");
+  const inq = "---\nid: INQ-2026-0001-q\nobject_type: inquiry\nschema: inquiry@1\ncurrent_state: concluded\nsurfaced_by: robot\n"
+    + "references:\n  - rel: supersedes\n    target: INQ-2026-0002-p\n    status: confirmed\n---\n\n## Question\n\nq\n";
+  const proj = "---\nid: PROJ-2026-0001-p\nobject_type: project\nschema: project@1\ncurrent_state: closed\nworkproduct_state: distributed\n---\n";
+  for (const [folderName, md] of [[INFO, infoMd], ["INQ-2026-0001-q", inq], ["PROJ-2026-0001-p", proj]]) {
+    const input = () => ({ folderName, files: new Map([["bundle.md", md]]), sha256: async () => "0".repeat(64), nowMs: 0 });
+    const want = await RG.checkBundle(input(), { grammars: CAT.LEGACY_GRAMMARS });
+    const got = await checkBundle(input());
+    assert.deepEqual(got.findings.map(key), want.findings.map(key), folderName);
+    assert.ok(got.findings.length > 0, folderName);
+    const ids = new Set(got.findings.map((f) => f.check));
+    if (folderName === "INQ-2026-0001-q") for (const id of ["C-2.8", "C-6.1", "C-15.1"]) assert.ok(ids.has(id), id);
+    if (folderName === "PROJ-2026-0001-p") for (const id of ["C-2.9", "C-9.1"]) assert.ok(ids.has(id), id);
+    const mine = { module: "capture", ids: ["C-2.7"], arm: (ctx, findings) => findings.push({ check: "C-2.7", severity: "warn", message: "caller's" }) };
+    const rest = CAT.LEGACY_GRAMMARS.filter((g) => !g.ids.includes("C-2.7"));
+    const want2 = await RG.checkBundle(input(), { grammars: [mine, ...rest] });
+    const got2 = await checkBundle(input(), { grammars: [mine] });
+    assert.deepEqual(got2.findings.map(key), want2.findings.map(key), `${folderName}, the caller's C-2.7 in its slot`);
+  }
+});
+
+test("J2 the held C-2.7 copy runs only when the caller's grammars claim no C-2.7: a caller's C-2.7 grammar replaces it", async () => {
+  const held = (await run()).findings.filter((f) => f.check === "C-2.7");
+  assert.ok(held.length > 0, "with no grammars, the held copy judges the information extension");
+  let ran = 0;
+  const r = await run({ grammars: [{ module: "capture", ids: ["C-2.7"], arm: () => { ran++; } }] });
+  assert.equal(ran, 1, "the caller's arm runs once");
+  assert.deepEqual(r.findings.filter((f) => f.check === "C-2.7"), [], "and the held copy not at all");
+});
+
+test("rule 2 a refusal of the caller's grammars names the position in the caller's own list", async () => {
+  await assert.rejects(run({ grammars: [{ module: "m", ids: ["C-2.7", "C-18.6", "C-18.7"], arm() {} }] }),
+    (e) => e instanceof RangeError && /opts\.grammars\[0\]/.test(e.message));
+});
+
+test("T19 deletions: isMachineMinted is gone (K750), MONITOR_FREQ is no longer exported, and C-2.7 is not a catalogue export", () => {
+  for (const name of ["isMachineMinted", "MONITOR_FREQ", "checkInformationExtension", "INFO_ENUMS"]) assert.equal(name in CAT, false, name);
 });
