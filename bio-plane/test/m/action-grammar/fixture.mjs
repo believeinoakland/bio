@@ -4,7 +4,17 @@
 import { readFileSync } from "node:fs";
 import { DOCS, KIND_SETS, SCALARS, NOW, TODAY } from "./corpus.mjs";
 
-export const GOLDEN = JSON.parse(readFileSync(new URL("./golden.json", import.meta.url), "utf8"));
+/* K899 (1) (T20 layer 9): text a member reads says "record" where the code before the move said "bundle". These are the
+   two sentences of this module that held the word, each old phrase with its new one; the golden file stays as recorded
+   and is compared with these applied, so no other byte of it moves. */
+export const REWORDED = [
+  ["' is not a canonical bundle id", "' is not a canonical record id"],
+  ["point the edge at the ACTN- bundle whose correspondence this answers", "point the edge at the ACTN- record whose correspondence this answers"],
+];
+const RECORDED = readFileSync(new URL("./golden.json", import.meta.url), "utf8");
+export const GOLDEN = JSON.parse(REWORDED.reduce((text, [was, now]) => text.split(was).join(now), RECORDED));
+/** How many times each old phrase occurs in the golden file as recorded (so a test can say every one was re-worded). */
+export const REWORDED_COUNTS = REWORDED.map(([was]) => RECORDED.split(was).length - 1);
 
 /** JSON's view of a value, so a comparison with the golden file sees exactly what it holds. */
 export const plain = (v) => (v === undefined ? { undefined: true } : JSON.parse(JSON.stringify(v)));

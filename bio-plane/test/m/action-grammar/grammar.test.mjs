@@ -8,7 +8,7 @@ import * as AG from "../../../src/action-grammar/index.mjs";
 import { proposalLabel } from "../../../src/record-grammar/index.mjs";
 import * as J from "../../../../jurisdictions/index.mjs";
 import { DOCS, KIND_SETS, SCALARS, NOW, TODAY } from "./corpus.mjs";
-import { GOLDEN, suite, overDoc, pushed, plain, VALUE_NAMES, ROW_NAMES } from "./fixture.mjs";
+import { GOLDEN, suite, overDoc, pushed, plain, VALUE_NAMES, ROW_NAMES, REWORDED, REWORDED_COUNTS } from "./fixture.mjs";
 
 const S = suite(AG);
 const codes = (list) => list.map((x) => x.code);
@@ -191,26 +191,72 @@ test("R8 by hand: governingLawsOf's undetermined sentence names no law, even for
   assert.deepEqual(pushed((f) => AG.respondsToEdgeFindings(DOCS["refs-bad"], f)).findings.map((x) => x.check), ["C-6.1", "C-6.1", "C-6.1"]);
 });
 
-test("R9: every row is held as before the move, number and translation unchanged; C-73.6's where names its new site, C-117.11's names contactNotAMember (K837); C-117.5 is action-clocks', not here", () => {
+/* R9 (K899 (7), DEC-61): the three rows `actions`' actionHold mints (its R52), as drafted (`build/plan/draft-T20-answers.md`
+   C.3); new in T20 layer 9, awaiting stamp. */
+const HOLD_ROWS = {
+  MACHINE_CANNOT_SET_HOLD: {
+    check: "C-117.20",
+    where: "src/actions/index.mjs actionHold > is-hold",
+    translation: "Saying whether a litigation hold is in place is a member's judgement, and somebody answers for it. The credential that asked here is an automated one, so it cannot say. Sign in to record it yourself.",
+  },
+  HOLD_REFUSED: {
+    check: "C-117.21",
+    where: "src/actions/index.mjs actionHold > is-hold",
+    translation: "A litigation hold is recorded as in place or released, with a reason of up to 500 characters and no quotation mark, backslash or line break. This one was not, so nothing was written.",
+  },
+  HOLD_NO_LEGAL_MARK: {
+    check: "C-117.22",
+    where: "src/actions/index.mjs actionHold > is-hold-legal-mark",
+    translation: "A litigation hold is recorded on something the group received and marked as legal pressure. The entry named carries no such mark, so nothing was written.",
+  },
+};
+
+test("R9: the litigation-hold rows C-117.20 MACHINE_CANNOT_SET_HOLD, C-117.21 HOLD_REFUSED, C-117.22 HOLD_NO_LEGAL_MARK are held in ACTION_CATALOGUE_CHECKS, each {check, where, translation} exactly, after PRESSURE_NO_ENTRY, their wheres naming actions' actionHold regions", () => {
+  const C = AG.ACTION_CATALOGUE_CHECKS;
+  for (const [code, row] of Object.entries(HOLD_ROWS)) assert.deepEqual(C[code], row, code);
+  const keys = Object.keys(C);
+  assert.deepEqual(keys.slice(keys.indexOf("PRESSURE_NO_ENTRY")), ["PRESSURE_NO_ENTRY", ...Object.keys(HOLD_ROWS)]);
+  for (const n of ROW_NAMES) if (n !== "ACTION_CATALOGUE_CHECKS")
+    for (const code of Object.keys(HOLD_ROWS)) assert.ok(!(code in AG[n]), `${code} in ${n}`);
+});
+
+test("R9: every row is held as before the move, number and translation unchanged; C-73.6's where names its new site, C-117.11's names contactNotAMember (K837); C-117.5 is action-clocks', not here; C-117.20–.22 are added", () => {
   const expected = structuredClone(GOLDEN.rows);
   delete expected.ACTION_CATALOGUE_CHECKS.PENDING_CLOCKS_BAD_BEFORE;
+  Object.assign(expected.ACTION_CATALOGUE_CHECKS, structuredClone(HOLD_ROWS));
   expected.GOVERNING_LAW_CHECKS.RECORDS_LAW_REFUSED.where = "src/action-grammar/checks.mjs recordsLawRefusal > is-records-law";
   expected.ACTION_CATALOGUE_CHECKS.CONTACT_NOT_A_MEMBER.where = "src/actions/index.mjs contactNotAMember > is-contact-member";
   assert.deepEqual(S.rows, expected);
   for (const n of ROW_NAMES) assert.ok(n in AG, n);
 });
 
-test("R9 by hand: the rows are exactly C-32.3, .4, .18, .19, .20; C-33.3–.9; C-72.1–.8; C-73.1–.6; C-90.1–.6; C-94.1–.12; C-101.1–.5; C-117.1–.4 and .6–.19, each {check, where, translation}", () => {
+test("R9 by hand: the rows are exactly C-32.3, .4, .18, .19, .20; C-33.3–.9; C-72.1–.8; C-73.1–.6; C-90.1–.6; C-94.1–.12; C-101.1–.5; C-117.1–.4 and .6–.22, each {check, where, translation}", () => {
   const range = (fam, a, b, skip = []) => Array.from({ length: b - a + 1 }, (_, i) => a + i).filter((n) => !skip.includes(n)).map((n) => `${fam}.${n}`);
   const want = ["C-32.3", "C-32.4", "C-32.18", "C-32.19", "C-32.20", ...range("C-33", 3, 9), ...range("C-72", 1, 8), ...range("C-73", 1, 6),
-    ...range("C-90", 1, 6), ...range("C-94", 1, 12), ...range("C-101", 1, 5), ...range("C-117", 1, 19, [5])].sort();
+    ...range("C-90", 1, 6), ...range("C-94", 1, 12), ...range("C-101", 1, 5), ...range("C-117", 1, 22, [5])].sort();
   const rows = ROW_NAMES.flatMap((n) => Object.values(AG[n]));
   assert.deepEqual(rows.map((r) => r.check).sort(), want);
+  assert.equal(new Set(rows.map((r) => r.check)).size, rows.length, "no number twice");
   for (const r of rows) {
     assert.deepEqual(Object.keys(r).sort(), ["check", "translation", "where"]);
     assert.match(r.where, /^src\/(actions\/index|action-grammar\/checks)\.mjs \S+ > is-[a-z0-9-]+$/);
     assert.ok(r.translation.length > 20);
   }
+});
+
+test("R6, R8 (K899 (1)): text a member reads says record, never bundle: actionBasisFindings' target finding and respondsToEdgeFindings' repair are re-worded, and no row, finding, repair or reading over the corpus holds the word", () => {
+  assert.deepEqual(REWORDED_COUNTS.map((n) => n > 0), [true, true], "each old phrase was in the recorded answer");
+  const legs = pushed((f) => AG.actionBasisFindings(DOCS["leg-bad-target"], f)).findings;
+  assert.deepEqual(legs.map((x) => x.message), ["action_basis[0].target 'not-an-id' is not a canonical record id"]);
+  const refs = pushed((f) => AG.respondsToEdgeFindings(DOCS["refs-bad"], f)).findings;
+  for (const x of refs) assert.deepEqual(x.repairs, ["point the edge at the ACTN- record whose correspondence this answers",
+    "or use relates_to, which claims nothing about an exchange"]);
+  const words = [];
+  const walk = (v) => { if (typeof v === "string") words.push(v); else if (v && typeof v === "object") Object.values(v).forEach(walk); };
+  walk({ rows: S.rows, docs: S.docs, scalars: S.scalars, values: S.values });
+  const text = words.join("\n");
+  assert.doesNotMatch(text, /\bbundles?\b/i);
+  for (const [was] of REWORDED) assert.ok(!text.includes(was), was);
 });
 
 test("R10: pure: deeply frozen inputs are read without change, and the same inputs give the same answers", () => {
