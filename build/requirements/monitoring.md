@@ -50,7 +50,7 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 
 **counts()** (N266, K261; for `legacy-store`'s `op=stats`)
 - **R46** `counts()` answers `{monitorFired, monitorTickEpoch, monitorAddressType}`: the number of rows held in R41's three tables, whole-store. It is synchronous, writes nothing and never throws.
-- **R51** This module registers R46's `counts()` once at start through `record-core`'s `registerCounts` (its R63) under the figures `monitorFired`, `monitorTickEpoch` and `monitorAddressType`, each whole-store whatever `hid` names (its tables name no bundle), so `op=stats` and purge's proof read them through record-core, as `store.mjs` calls it by name today, no meaning changed; `legacy-store`'s own job deletes its call (`build/extraction/legacy-store.md` §4.2 (2)). *(not yet met: T19 layer 10)*
+- **R51** This module registers R46's `counts()` once at start through `record-core`'s `registerCounts` (its R63) under the figures `monitorFired`, `monitorTickEpoch` and `monitorAddressType`, each whole-store whatever `hid` names (its tables name no bundle), so `op=stats` and purge's proof read them through record-core, as `store.mjs` calls it by name today, no meaning changed; `legacy-store`'s own job deletes its call (`build/extraction/legacy-store.md` §4.2 (2)).
 
 **driveShells({viewer, limit, after})** (`op=driveshells`; read)
 - **R26** Pages, through the viewer's sight, bundles whose projected locator is a Google address (200 by default, at most 1,000, `truncated` and `cursor`). For each harvestable Drive document it classifies the baseline (`capture-sources.classifyDriveBaseline` over `driveBaselineRow` and at most 50 retrievals, `retrievals_truncated` when cut) into `shells`, `export`, `undetermined`, `no_baseline`; a register not held inline or not parsable is `unreadable` with why; a Drive address that is not a document is counted in `not_documents` by shape. A shell names its remedy (re-acquire the document address) and nothing is re-acquired. `counts` totals each.
@@ -76,26 +76,26 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 - **R34** A `pending` clock entry of an action whose date has passed is marked `overdue` by a mechanical promotion `deadline-recheck` (only `clock[].status` and `last_updated`), and its action's members are told (State Rules §4.4, I-11). *(not yet met: the members being told: no caller outside tests until `scheduler`'s `deadline-recheck` consumer (its R5) and `queue-producers` R15, T18)*
 - **R44** R34's mark is bounded by `actions` R33: it reads the entries through `action-clocks.pendingClocks` (its R1; `actions` R31 before K617's split) and moves an entry only from `pending` to `overdue`, never to or from any other status, and never adds, removes or re-dates an entry; an entry already `met`, `waived` or `overdue` is left as it is.
 - **R35** When a clock is marked overdue or a response is recorded against an action, monitoring asks `escalation` whether a stage's trigger is met, so the next stage is proposed; monitoring never advances a stage.
-- **R50** `deadlineRecheckWake(now)` answers the start of the UTC day after the earliest date among `pending` clock entries of visible-to-this-module actions (`action-clocks.pendingClocks`, read as this module's machine viewer), or null when none is pending; `deadlineRecheckDue(now)` answers that instant when it is at or before `now`, else null. So `scheduler`'s `deadline-recheck` consumer (its R5) runs R34 on the first alarm of the day an entry passes, and an instance with no pending entry holds no wake for it (scheduler R15). (N429, K719) An entry of an action whose last R34 mark failed (`deadlineRecheck`'s `failed`) is left out of that earliest date until the start of the UTC day after the failure, so a mark that keeps failing is asked again once a day (the bound `scheduler`'s `deadline-recheck` consumer keeps today by holding a past wake, K719) and never holds the wake in the past for the entries that can be marked. *(not yet met: T19 layer 10, N429)*
+- **R50** `deadlineRecheckWake(now)` answers the start of the UTC day after the earliest date among `pending` clock entries of visible-to-this-module actions (`action-clocks.pendingClocks`, read as this module's machine viewer), or null when none is pending; `deadlineRecheckDue(now)` answers that instant when it is at or before `now`, else null. So `scheduler`'s `deadline-recheck` consumer (its R5) runs R34 on the first alarm of the day an entry passes, and an instance with no pending entry holds no wake for it (scheduler R15). (N429, K719) An entry of an action whose last R34 mark failed (`deadlineRecheck`'s `failed`) is left out of that earliest date until the start of the UTC day after the failure, so a mark that keeps failing is asked again once a day (the bound `scheduler`'s `deadline-recheck` consumer keeps today by holding a past wake, K719) and never holds the wake in the past for the entries that can be marked.
 
 ## Private
 
 ### Uses
 
-- `legacy-checks`: `MONITOR_FREQ`, `MECHANICAL_FIELD_SETS`, `isPublicHttpsLocator`, `parseFrontmatter`, the C-48.8 and C-48.9 rows until this module's copies are its own (R42).
+- `record-grammar`: `isPublicHttpsLocator`, `ISO_TS_RE`, `parseFrontmatter`, `createSha256`, `MACHINE_CLASS_PREFIX` (`MONITOR_FREQ`, `MECHANICAL_FIELD_SETS` and the C-48.8/.9 rows are this module's own since T18, K717).
 - `record-core`: `recordOf(ctx)`, the image read, `stampInstant` (R47), `declarePurge` (R41).
 - `membership`: `viewerPredicate`, bundle sight (R1, R26, R32); `isAdministrator` (its R64) and `notAnAdmin` (its R84), for R30's pause (N314, N324).
-- `promotion`: `promote` (R8, R34), `registerStep` (R27). *(not declared)*
-- `provenance`: the `register` and `captured_locators` read contract, the captured-locator writer (R12, R15). *(not declared)*
-- `host-governor`: `governedFetch` (R2). *(not declared)*
-- `capture-sources`: `readDriveAddress`, `driveBaselineRow`, `classifyDriveBaseline`, `RENDERED_METHOD`, `RENDER_TICK_UNDETERMINED`. *(not declared)*
+- `promotion`: `promote` (R8, R34), `registerStep` (R27).
+- `provenance`: the `register` and `captured_locators` read contract, the captured-locator writer (R12, R15).
+- `host-governor`: `governedFetch` (R2).
+- `capture-sources`: `readDriveAddress`, `driveBaselineRow`, `classifyDriveBaseline`, `RENDERED_METHOD`, `RENDER_TICK_UNDETERMINED`.
 - `capture`: `acquire`'s archive arm (R20), `sourceReachability`, `reachabilityThresholds` (R43), the outcome record (R8, for R25), the capture key; and `source_reachability` (the pending count and the failing addresses R20 reads), through the read contract `capture` states in its Provides (N166; capture R59, K235).
 - `acquisition`: `substanceDigests`, `profilesAsText`, `ODF_DIGEST_MAX` (its R17), `civicosUserAgent` (its R24); the acquisition act itself through `capture`'s `acquire` (capture R73). *(K649 (1): moved from `capture`; this module's T18 job re-points its imports)*
-- `docprofile`: `identify`, `doctypeFor`, `assess`, `CONTRACT`; `format-registry`: `detectFormat`. *(not declared)*
-- `observation-log`: its one append (R11). *(not declared)*
-- `retrieval`: the projection's monitoring columns and `source_locator` (K75 (3)). *(not declared)*
-- `intent` (its R7), `publication` (its R42, `restingCapturesOf`; N230), `reevaluation` (R33); `action-clocks`: `pendingClocks` (its R1; R34, R44, R50); `actions`: the bound of its R33 (R34, R44); `escalation` (R35). `publication` is *(not declared)*.
-- `runtime-limits`: `unattendedCredential(env)` (its R26: `bound` for R24's configured test, `token()` for the credential a fire spends), until R23. *(not declared)*
+- `docprofile`: `identify`, `doctypeFor`, `assess`, `CONTRACT`; `format-registry`: `detectFormat`.
+- `observation-log`: its one append (R11).
+- `retrieval`: the projection's monitoring columns and `source_locator` (K75 (3)).
+- `intent` (its R7), `publication` (its R42, `restingCapturesOf`; N230), `reevaluation` (R33); `action-clocks`: `pendingClocks` (its R1; R34, R44, R50); `actions`: the bound of its R33 (R34, R44); `escalation` (R35). `publication` is.
+- `runtime-limits`: `unattendedCredential(env)` (its R26: `bound` for R24's configured test, `token()` for the credential a fire spends), until R23.
 - `subresources`: `normalizeAddress` (the look's subject, D-524's baseline match); `jurisdictions`: `combine` over record-core's `jurisdiction_profiles` setting, the view N116 passes to `identify`/`doctypeFor`/`assess` (K259).
 - `extraction`, `content`: nothing here calls them.
 
