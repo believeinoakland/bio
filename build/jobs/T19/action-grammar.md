@@ -76,3 +76,7 @@ Reported in the record:
 
 - Merged `tranche/T19` (actions merged). Row C-117.11 `CONTACT_NOT_A_MEMBER`: `where` is now `src/actions/index.mjs contactNotAMember > is-contact-member` (awaiting stamp); the region sits in actions' exported `contactNotAMember` at that site. R9's parity test pins it ("R9: every row is held as before the move…").
 - Module: 22 pass, 0 fail. format, architecture (7 files, 13 imports), coverage (11 of 11), ownership (legacy-checks +0/−0): all 0 failures.
+
+## J2 · COMPLETE · re B2
+
+B2 done (record: Change B2). Merged tranche/T19; C-117.11 CONTACT_NOT_A_MEMBER's where now reads src/actions/index.mjs contactNotAMember > is-contact-member (awaiting stamp), pinned by R9's parity test. Module 22/22; format, architecture, coverage (11/11), ownership all 0 failures. Everything in J1 still stands.
