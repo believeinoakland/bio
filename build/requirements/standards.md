@@ -34,7 +34,7 @@ Terms. A **period** is `{from, to}`, each a `YYYY-MM-DD` date or null; null is "
 - **R17** The one answer to one condition: no standard the caller may read answers to `standardId` (absent, or any id for a viewer naming no member, answered alike; R5). It answers `{ok: false, reason: "NO_SUCH_STANDARD", code: "NO_SUCH_STANDARD", check, translation, standard, detail}`: `standard` the id as asked (null when none), `detail` one fixed sentence, the same for every caller, and `check` and `translation` its catalogue row's. `extra` adds a caller's own fields and never replaces these. R5 answers through it, and every act of a later module that answers this condition answers through it (`conformance` R1; `filings` R14 passes R5's answer through), so the code is minted at one site; its one catalogue row is this module's (C-112.10), its `where` naming this function, and conformance's C-113.9 gives way to it. It writes nothing and never throws.
 
 **standardPropose({cite, kind?, issuer?, text?, why, act?, proposer, viewer}) → `{ok, proposal}`**; **standardAdopt({proposal, author, viewer, ...R1's fields})**
-- **R9** A proposal (the Legal/Policy Lookup skill's work, or a member's suggestion) is stored apart from standards, labelled with who proposed it and whether it is machine work (`legacy-checks`' `proposalLabel(proposer, "standard")`: `lawProposalState`'s three states, one composer, K171), with a `why` of at most 240 characters. It is never a standard, never read by `standardsIn`, and is answered with a sentence saying so.
+- **R9** A proposal (the Legal/Policy Lookup skill's work, or a member's suggestion) is stored apart from standards, labelled with who proposed it and whether it is machine work (`record-grammar`'s `proposalLabel(proposer, "standard")`: `lawProposalState`'s three states, one composer, K171), with a `why` of at most 240 characters. It is never a standard, never read by `standardsIn`, and is answered with a sentence saying so.
 - **R10** `standardAdopt` is R1 by a member, naming the proposal; the new standard records the proposal it came from, and the proposal records its adoption. A proposal is adopted at most once.
 
 **standardsOf(host) → the module's instance**
@@ -46,9 +46,9 @@ Terms. A **period** is `{from, to}`, each a `YYYY-MM-DD` date or null; null is "
 
 - `jurisdictions`: `combine` (R3); the kinds of R23; a source's `level` (R23, R31: not yet met there, built by the `jurisdictions` job before layer 9, K171).
 - `record-core`: `getSetting` (the active profiles), `allocId`, `transact`, `stampInstant`.
-- `legacy-checks`: `isMachineIdentity`, `proposalLabel` (R1, R9; added by the head-of-layer `legacy-checks` job, K171); the `STD-` type registration (R15, K171).
-- `membership`: `viewerPredicate` (R5; a member sees every standard). *(not declared)*
-- `promotion`: `promote`, a standard being a record object (R15, K102). *(not declared)*
+- `record-grammar`: `isMachineIdentity`, `proposalLabel` (R1, R9); the `STD-` type registration (R15).
+- `membership`: `viewerPredicate` (R5; a member sees every standard).
+- `promotion`: `promote`, a standard being a record object (R15, K102).
 - `content`: `contentRow`, `standings`, `passageNotice`.
 
 ### Invariants

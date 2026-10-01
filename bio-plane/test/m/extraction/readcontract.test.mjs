@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { fresh, bundle } from "./fixture.mjs";
 import { normAlias, labelTerms } from "../../../src/extraction/index.mjs";
 import { readingSourceJson } from "../../../src/textchain.mjs";
-import { canonicalExtent } from "../../../checks/bio-checks.mjs";
+import { canonicalExtent } from "../../../src/textchain.mjs";
 
 const S1 = "1".repeat(64), S2 = "2".repeat(64);
 const layer = [{ step: "layer", tier: 1, container: "pdf", cap: null, measured_by: "unmeasured" }];

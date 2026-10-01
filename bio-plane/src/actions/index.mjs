@@ -5,12 +5,12 @@
  * Extracted from the legacy modules (T8, layer 9; K3, K4, K6, K23, K31, K57, K61, K64, K75 (2), K79, K102):
  * `store.mjs` (the clock rule, `#actionDerived`, `actionMove` … `#spliceCorrespondence`, the governing-laws fence, the
  * action, risk-tier and `responds_to` arms of the promotion step and its three projections, the purge list entries and
- * the dispatch) and `schema.mjs` (the four tables, now `./schema.mjs`); the catalogue's action arms and rows are
- * `./checks.mjs`. The legacy code's comments moved with it.
+ * the dispatch) and `schema.mjs` (the four tables, now `./schema.mjs`). The legacy code's comments moved with it. The
+ * action document's grammar, its arms, readers and rows are `action-grammar`'s (T19 layer 9), read from there.
  *
  * REACHED as `actionsOf(host, deps)` (K61): one instance per host, created on the first call. At creation it creates
  * its tables and declares them to record-core's purge (R36), registers its check and projection with promotion (R1–R3,
- * R7, R11, R33), its audit check with record-core (R37), and its facts and projection decoration with retrieval (R12,
+ * R7, R11, R33), action-grammar's audit arm with record-core (R51), and its facts and projection decoration with retrieval (R12,
  * R25; retrieval R53, R56).
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership, promotion   layer 2: `transact`, `acquireLease`, `releaseLease`, `head`, `readFile`, `livePaths`,
@@ -20,6 +20,7 @@
  *   content        `captureFor` (R11).
  *   conformance    `determinationRead` (R8, R30), when provided (see R8 below); its module-level
  *                  `determinationSuperseded` (its R20), through which R8 answers a superseded determination (N312).
+ *   entities       `readEntity` (its R5): whether an addressee's `entity_id` names a person (R9).
  *   now            the instance clock, milliseconds (default: `env.BIO_NOW_MS`, else the wall clock).
  *   env            the instance bindings.
  *
@@ -31,21 +32,26 @@ import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { contentOf } from "../content/index.mjs";
-import { retrievalOf, PROJECTION_TABLE } from "../retrieval/index.mjs";
+import { retrievalOf } from "../retrieval/index.mjs";
 import { conformanceOf, determinationSuperseded } from "../conformance/index.mjs";
+import { entitiesOf } from "../entities/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
-import { parseFrontmatter, normalizeType, vocabFor, STATES, OBJECT_TYPES, isMachineIdentity, createSha256,
-         BUNDLE_ID_RE } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter, normalizeType, vocabFor, STATES, OBJECT_TYPES, isMachineIdentity,
+         createSha256 } from "../record-grammar/index.mjs";
 import { RISK_TIERS, riskTierState, RESOLUTIONS, CORRESPONDENCE_DIRECTIONS, actionBasisFindings,
          correspondenceFindings, isQuoteEntry, quoteValue, quoteFindings, lifecycleFindings, lawProposalLabel,
          LAW_LEVELS, GOVERNING_LAWS_MAX, CITATION_MAX, RISK_TIER_REASON_MAX, RISK_TIER_HISTORY_MAX, riskTierHistoryOf,
          governingLawsOf, requestLifecycleOf, consequenceState, respondsToEdgeFindings, checkActionExtension,
-         recordsLawRefusal, recordsLawOf, counterpartyName, counterpartyFindings, actionKinds, kindReadsAsWritten,
+         recordsLawRefusal, recordsLawOf, counterpartyName, counterpartyFindings, actionKinds, addresseeIsOffice,
          clockMovesNotMechanical, ACTION_FENCE_CHECKS, ACTION_ACT_CHECKS, GOVERNING_LAW_CHECKS, QUOTE_CHECKS,
-         LIFECYCLE_CHECKS, RISK_TIER_REVISION_CHECKS, RECORDS_LAW_FENCE_CHECKS, ACTION_CATALOGUE_CHECKS } from "./checks.mjs";
+         LIFECYCLE_CHECKS, RISK_TIER_REVISION_CHECKS, RECORDS_LAW_FENCE_CHECKS,
+         ACTION_CATALOGUE_CHECKS } from "../action-grammar/index.mjs";
 import { ACTIONS_TABLES, migrateActions } from "./schema.mjs";
 
-export * from "./checks.mjs";
+/* K835 (N447 drops it in T20): the action vocabularies `affordances` and its tests read from here until its layer-11 job
+   re-points to action-grammar, re-exported, never a copy. */
+export { PRODUCT_KINDS, RISK_TIERS, LAW_LEVELS, ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS, CORRESPONDENCE_STAGES,
+         CORRESPONDENCE_OUTCOMES, RESOLUTIONS, actionKinds } from "../action-grammar/index.mjs";
 export { ACTIONS_SCHEMA, ACTIONS_TABLES } from "./schema.mjs";
 
 /** R13, R15: the longest reason, account, medium or party (the legacy store's `RELEASE_ACK_MAX`). */
@@ -60,13 +66,15 @@ export const LAW_PROPOSALS_READ_MAX = 12;
 export const RISK_PROPOSALS_READ_MAX = 12;
 /** R27: the most quotes one read answers. */
 export const QUOTES_MAX = 500;
-/** R30: the most actions one page lists; R31: the most pending clock entries, and the most actions one page reads. */
+/** R30: the most actions one page lists. */
 export const ACTIONS_PAGE_MAX = 200;
-export const PENDING_CLOCKS_MAX = 500;
-export const PENDING_CLOCKS_ACTIONS_MAX = 500;
 /** R3 (N237, K351): the most `action_basis` and `correspondence` entries one action's document holds. */
 export const ACTION_LEGS_MAX = 500;
 export const ACTION_LEDGER_MAX = 500;
+/** R46: a plan's id, `PLN-YYYY-NNNN` with or without a slug (`action-plans` mints it). */
+const PLAN_ID_RE = /^PLN-\d{4}-\d{4}(-[a-z0-9]+)*$/;
+/** R48 (K597 (1)): the kinds of pressure a received entry may be marked with. */
+export const PRESSURE_KINDS = Object.freeze(["legal", "retaliation", "discrediting", "other"]);
 /** R28: the longest basis a proposed tier carries. */
 export const RISK_PROPOSAL_BASIS_MAX = 500;
 
@@ -110,6 +118,31 @@ export function noSuchAction(actionId, extra = null) {
   return { ok: false, reason: "NO_SUCH_ACTION", code: "NO_SUCH_ACTION", check: row.check,
            translation: row.translation, action, ...Object.fromEntries(own), detail: NO_SUCH_ACTION_DETAIL };
   /* END DEC-49 REGION is-no-such-action */
+}
+
+/* R45 (N427, K711). THE ONE ANSWER TO ONE CONDITION: an action's stated contact names no member of the instance. This
+   write answers it through here, and so does every later module asking it (`action-plans` R18), so
+   `CONTACT_NOT_A_MEMBER` is minted at one site with its one row (C-117.11). The detail is this write's own fixed
+   sentence; `extra` adds a caller's fields beside these and never replaces one. Writes nothing and never throws. */
+const CONTACT_NOT_A_MEMBER_DETAIL = "contact names a member of this instance by member id, and this one names none. "
+  + "Nothing was written.";
+const CONTACT_NOT_A_MEMBER_FIXED = new Set(["ok", "reason", "code", "check", "translation", "detail"]);
+export function contactNotAMember(extra = null) {
+  let own = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own = Object.entries(extra).filter(([k]) => !CONTACT_NOT_A_MEMBER_FIXED.has(k));
+  } catch { own = []; }
+  /* DEC-49 REGION is-contact-member */
+  const row = ACTION_CATALOGUE_CHECKS.CONTACT_NOT_A_MEMBER;
+  return { ok: false, reason: "CONTACT_NOT_A_MEMBER", code: "CONTACT_NOT_A_MEMBER", check: row.check,
+           translation: row.translation, ...Object.fromEntries(own), detail: CONTACT_NOT_A_MEMBER_DETAIL };
+  /* END DEC-49 REGION is-contact-member */
+}
+/** R45 (N427): a stated contact's member id, `member:<id>` or bare, or null. Never throws. */
+export function contactId(v) {
+  if (typeof v !== "string" || !v.trim()) return null;
+  return v.trim().replace(/^member:/, "");
 }
 const findingsOf = (list) => list.filter((x) => x.severity === "error")
   .map((x) => ({ check: x.check, detail: x.message, ...(x.code ? { code: x.code } : {}), ...(x.repairs ? { repairs: x.repairs } : {}) }));
@@ -156,18 +189,27 @@ export class Actions {
   #deps;
 
   constructor({ storage, record, membership, promotion, host = null, retrieval = null, content = null,
-                conformance = null, now = null, env = null } = {}) {
+                conformance = null, entities = null, now = null, env = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, retrieval, content, conformance: conformance ?? undefined };
+    this.#deps = { host, retrieval, content, conformance: conformance ?? undefined, entities };
     this.env = env && typeof env === "object" ? env : {};
     this.now = typeof now === "function" ? now : null;
   }
 
   get retrieval() { return this.#deps.retrieval ||= retrievalOf(this.#deps.host); }
   get content() { return this.#deps.content ||= contentOf(this.#deps.host); }
+  /* R9: the subject registry's `readEntity` (entities R5), for an addressee's `entity_id`. */
+  get entities() { return this.#deps.entities ||= entitiesOf(this.#deps.host); }
+
+  /* R9: whether the registry holds `entityId` as a person. Unregistered, unreadable or another kind: false. */
+  #namesPerson(entityId) {
+    let r = null;
+    try { r = this.entities.readEntity({ entityId }); } catch { r = null; }
+    return !!(r && r.ok && r.found && r.entity && r.entity.kind === "person");
+  }
   /* R8, R30: conformance's `determinationRead` (its R9; K252). Reached on the same host unless a test passes its own; a
      host on which it cannot be created answers null, and R8 then refuses, never passes. */
   get conformance() {
@@ -200,7 +242,7 @@ export class Actions {
     return Date.now();
   }
 
-  /* R10, R32: the active profiles' combined view (record-core R26), or null with none active or none combinable. */
+  /* R10: the active profiles' combined view (record-core R26), or null with none active or none combinable. */
   #view() {
     let ids = null;
     try { ids = this.record.getSetting("jurisdiction_profiles"); } catch { ids = null; }
@@ -209,7 +251,7 @@ export class Actions {
     const c = combine(ids);
     return c && c.ok ? c.view : null;
   }
-  /** R10, R40, R42 (N231): the kinds this instance accepts now: the product's own and the active profiles' combined
+  /** R10, R42 (N231; action-grammar R1's `actionKinds`): the kinds this instance accepts now: the product's own and the active profiles' combined
    *  view. Writes nothing and never throws: a view that cannot be read answers the product's kinds alone. */
   kinds() {
     let view = null;
@@ -420,12 +462,12 @@ export class Actions {
     return null;
   }
 
-  /* R4–R7, R9, R10, R33: the C-2.10 arms enforced at the write (C-73.6, C-101), each by its own name, carrying the
-     arm's own findings. A MISSING counterparty and a pending entry PAST its date land; the audit reports them (R37). */
+  /* R6, R7, R9, R10, R33: the C-2.10 arms enforced at the write (C-73.6, C-101), each by its own name, carrying the
+     arm's own findings. A MISSING counterparty and a pending entry PAST its date land; the audit reports them (R51). */
   #writeArms(c, heldFm, nextFm, who) {
     const { head, writer, operation } = c;
     const creation = !head;
-    /* R4, R6 (N297): the law arm's one refusal, minted by `recordsLawRefusal` alone. */
+    /* R6 (N297; action-grammar R3): the law arm's one refusal, minted by `recordsLawRefusal` alone. */
     const law = recordsLawRefusal(nextFm);
     if (law) return law;
     /* DEC-49 REGION is-promote-action-kind */
@@ -448,8 +490,16 @@ export class Actions {
     if (cpMoved && cp !== undefined && cp !== null) {
       const cf = [];
       counterpartyFindings(nextFm, cf);
+      /* R9: a NEW named office states its role and body (the earlier `{state: named, name}` reads, never written). */
       const office = cp && typeof cp === "object" && !Array.isArray(cp) && cp.state === "named"
+        && (cp.kind === undefined || cp.kind === null || cp.kind === "office")
         && !(typeof cp.role === "string" && cp.role.trim() && typeof cp.body === "string" && cp.body.trim());
+      /* R9: never a private individual: an `entity_id` the subject registry holds as a person (entities R5). */
+      const eid = cp && typeof cp === "object" && !Array.isArray(cp) && typeof cp.entity_id === "string" ? cp.entity_id.trim() : "";
+      if (!cf.length && eid && this.#namesPerson(eid))
+        cf.push({ check: "C-2.10", severity: "error", message: `counterparty.entity_id '${eid.slice(0, 40)}' names a person `
+          + "in the subject registry: an action is addressed to an office, an organisation or an audience, never a private "
+          + "individual (R9, arm: person)" });
       if (cf.length || office)
         return refuse("COUNTERPARTY_REFUSED", cf.length ? cf[0].message
           : "a named counterparty is an office, stated by its official role and the body it belongs to (R9). Nothing was written.",
@@ -501,6 +551,85 @@ export class Actions {
     return JSON.stringify(Object.keys(e).filter((k) => k !== "status").sort().map((k) => [k, e[k]]));
   }
 
+  /** R8: the premise override a document states, `{reason}`, or null when it states none. */
+  static overrideOf(fm) {
+    const o = fm && typeof fm === "object" ? fm.premise_override : null;
+    return o && typeof o === "object" && !Array.isArray(o) && typeof o.reason === "string" && o.reason.trim()
+      ? { reason: o.reason.trim() } : null;
+  }
+
+  /* R8 (K600 (a)), R9 (D1): the premise override and a breach action's addressee. The override is stated by a member
+     on the write that first sets `breach: true`, and then never edited, removed or added; a breach action that states
+     its addressee addresses an office. */
+  #overrideAndAddressee(heldFm, nextFm, who) {
+    const key = (fm) => JSON.stringify(fm && fm.premise_override !== undefined ? fm.premise_override : null);
+    const held = key(heldFm), next = key(nextFm);
+    if (held !== next) {
+      /* DEC-49 REGION is-machine-override */
+      if (!who || isMachineIdentity(who))
+        return refuse("MACHINE_CANNOT_OVERRIDE", "a premise override is a member's open statement that the group acts on "
+          + "a breach it has not determined, with the reason why. A machine credential may not state or change one. "
+          + "Nothing was written.");
+      /* END DEC-49 REGION is-machine-override */
+      const o = nextFm.premise_override;
+      /* DEC-49 REGION is-premise-override */
+      const firstBreach = nextFm.breach === true && !(heldFm && heldFm.breach === true);
+      if (held !== "null" || !firstBreach)
+        return refuse("PREMISE_OVERRIDE_REWRITTEN", held !== "null"
+          ? "this write edits or removes the action's premise override. It is stated once and kept as it was. Nothing was written."
+          : "a premise override is stated on the creation or revision that first marks the action a breach, and on no "
+            + "other write. Nothing was written.");
+      const keys = o && typeof o === "object" && !Array.isArray(o) ? Object.keys(o) : null;
+      if (!keys || keys.join() !== "reason" || typeof o.reason !== "string" || !o.reason.trim()
+          || o.reason.length > NOTE_MAX || /["\\\r\n]/.test(o.reason))
+        return refuse("PREMISE_OVERRIDE_REFUSED", `premise_override is {reason}: 1 to ${NOTE_MAX} characters with no quote, `
+          + "backslash or line break. Nothing was written.", { max: NOTE_MAX });
+      /* END DEC-49 REGION is-premise-override */
+    }
+    const cp = nextFm.counterparty;
+    /* DEC-49 REGION is-breach-addressee */
+    if (nextFm.breach === true && cp !== undefined && cp !== null && !addresseeIsOffice(cp))
+      return refuse("ADDRESSEE_NOT_AN_OFFICE", "an action recorded for a breach is addressed to the office responsible, "
+        + "by its official role and body; this one is addressed to "
+        + `${cp && typeof cp === "object" && cp.state === "named" ? `a ${cp.kind}` : `${cp && cp.state ? `an addressee ${cp.state}` : "no office"}`}. `
+        + "Nothing was written.", { counterparty_state: cp && typeof cp === "object" ? cp.state ?? null : null });
+    /* END DEC-49 REGION is-breach-addressee */
+    return null;
+  }
+
+  /* R45 (D5), R46 (Bob's ruling 1 of 2026-09-29): the group's contact, set or changed by a member and naming one; the
+     plan and option an action was started from, set on its creation and never changed or removed. */
+  #contactAndPlan(c, heldFm, nextFm, who) {
+    const same = (k) => JSON.stringify(heldFm && heldFm[k] !== undefined ? heldFm[k] : null)
+      === JSON.stringify(nextFm[k] !== undefined ? nextFm[k] : null);
+    if (!same("contact")) {
+      /* DEC-49 REGION is-machine-contact */
+      if (!who || isMachineIdentity(who))
+        return refuse("MACHINE_CANNOT_SET_CONTACT", "the group's contact for an action is a member's choice; a machine "
+          + "credential may not set or change it. Nothing was written.");
+      /* END DEC-49 REGION is-machine-contact */
+      const id = contactId(nextFm.contact);
+      let facts = null;
+      if (id) { try { facts = this.membership.memberFacts(id); } catch { facts = null; } }
+      if ((nextFm.contact !== undefined && nextFm.contact !== null) && !facts) return contactNotAMember();
+    }
+    const has = (fm, k) => fm && fm[k] !== undefined && fm[k] !== null && fm[k] !== "";
+    /* DEC-49 REGION is-plan-link */
+    if (c.head) {
+      if (!same("plan") || !same("option"))
+        return refuse("PLAN_LINK_REWRITTEN", "the plan and option an action was started from are set when it is created "
+          + "and never set, changed or removed by a revision. Nothing was written.");
+    } else if (has(nextFm, "plan") || has(nextFm, "option")) {
+      const plan = nextFm.plan, option = nextFm.option;
+      if (typeof plan !== "string" || !PLAN_ID_RE.test(plan)
+          || !((typeof option === "string" && /^[A-Za-z0-9_.:-]{1,80}$/.test(option)) || Number.isInteger(option)))
+        return refuse("PLAN_LINK_REFUSED", "plan is a PLN- id and option a token of 1 to 80 letters, digits, '_', '.', ':' "
+          + "or '-', stated together. Nothing was written.");
+    }
+    /* END DEC-49 REGION is-plan-link */
+    return null;
+  }
+
   /* R3 (N237, K351): a document holding more legs or entries than the projection reads is refused where it is authored
      or revised, with the count and the limit; a replay is never asked (the projection skips it whole). */
   #tooLarge(fm) {
@@ -537,6 +666,10 @@ export class Actions {
       if (law) return law;
       const arms = this.#writeArms(c, heldFm, nextFm, who);
       if (arms) return arms;
+      const premise = this.#overrideAndAddressee(heldFm, nextFm, who);
+      if (premise) return premise;
+      const link = this.#contactAndPlan(c, heldFm, nextFm, who);
+      if (link) return link;
       const large = this.#tooLarge(nextFm);
       if (large) return large;
       /* REC-24: the legs (ACTION_BASIS_REFUSED), the ledger (CORRESPONDENCE_REFUSED) and what only the record can
@@ -587,6 +720,9 @@ export class Actions {
      With no conformance provider the determination cannot be read, and the write is refused, never passed. */
   #breachRefusal(fm, viewer) {
     if (fm.breach !== true) return null;
+    /* R8 (K600 (a)): a member's premise override, judged by `#overrideAndAddressee` before this, stands in for the
+       determination; it is disclosed on everything prepared from the action (`filings` R24). */
+    if (Actions.overrideOf(fm)) return null;
     const legs = (Array.isArray(fm.action_basis) ? fm.action_basis : [])
       .filter((l) => l && typeof l === "object" && l.kind === "rests_on" && typeof l.target === "string");
     const conf = this.conformance;
@@ -627,6 +763,11 @@ export class Actions {
     this.sql.exec(`DELETE FROM correspondence WHERE bundle_id=?`, bundleId);
     this.sql.exec(`DELETE FROM action_quotes WHERE bundle_id=?`, bundleId);
     if (promotedType !== "action" || !fm || typeof fm !== "object") return null;
+    /* R8: who stated the premise override and when, stamped once, the first time a version carries it. */
+    const ov = Actions.overrideOf(fm);
+    if (ov) this.sql.exec(`INSERT INTO action_overrides (bundle_id, reason, stated_by, at) VALUES (?,?,?,?)
+      ON CONFLICT(bundle_id) DO NOTHING`, bundleId, ov.reason, c.author ? String(c.author) : null,
+      stampInstant("second", this.#nowMs(null)));
     if ((Array.isArray(fm.action_basis) && fm.action_basis.length > ACTION_LEGS_MAX)
         || (Array.isArray(fm.correspondence) && fm.correspondence.length > ACTION_LEDGER_MAX)) return null;
     const alegs = Array.isArray(fm.action_basis) ? fm.action_basis : [];
@@ -678,7 +819,7 @@ export class Actions {
     return null;
   }
 
-  /** R37: the audit's action arm over one bundle image (record-core R59): C-2.10's arms and C-11.1 over an action,
+  /** R51: the audit's action arm over one bundle image (record-core R59): C-2.10's arms and C-11.1 over an action,
    *  and C-6.1's `responds_to` arm over any document. */
   audit(image) {
     const files = image && image.files instanceof Map ? image.files : null;
@@ -915,7 +1056,7 @@ export class Actions {
                      artifactSha = "", account = "", quoteAmount = "", quoteCurrency = "",
                      quoteBasis = "", quoteAnswers = "", quoteRevises = "",
                      stage = "", follows = "", outcome = "", exemptions = "", dueBy = "", dueCite = "",
-                     viewer = null, author = null } = {}) {
+                     pressure = null, viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
     /* DEC-49 REGION is-machine-correspond — REC-64/C-32.4. The fence alone. */
     if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
@@ -1010,6 +1151,12 @@ export class Actions {
           `${k} is at most ${NOTE_MAX} characters and cannot contain a quote, a backslash, or a `
           + `newline: the restricted frontmatter grammar has no escapes`, { field: k });
     /* END DEC-49 REGION is-quote-writable */
+    /* R48: a pressure mark stated with the entry, judged as `actionPressure` judges one. */
+    const mark = pressure === null || pressure === undefined || pressure === "" ? null : Actions.#pressureOf(pressure);
+    if (pressure !== null && pressure !== undefined && pressure !== "") {
+      const pr = this.#pressureRefusal({ who, mark, direction });
+      if (pr) return { ...pr, target };
+    }
 
     const gate = viewerPredicate(viewer);
     const b = this.#one(
@@ -1167,13 +1314,105 @@ export class Actions {
        own letter and responds to nothing. */
     const responded = direction === "received" && sha
       ? this.#respondsToInto(sha, target, who) : null;
+    if (mark) this.sql.exec(`INSERT INTO action_pressure (bundle_id, ord, kind, note, marked_by, at) VALUES (?,?,?,?,?,?)`,
+      target, ord, mark.kind, mark.note, who, when);
+    const marked = mark ? { kind: mark.kind, note: mark.note } : null;
     return { ok: true, target, ord, direction, at: day, author: who, recorded_at: when,
              held_as: sha ? "capture" : "testimony",
              ...(sha ? { artifact_sha: sha } : { account: acct }),
              ...(Object.keys(quote).length ? { quote } : {}),
              ...(Object.keys(life).length ? { lifecycle: life } : {}),
              ...(responded ? { responds_to: responded } : {}),
+             ...(marked ? { pressure: marked } : {}),
              weight: "single" };
+  }
+
+  /** R48: a pressure mark as given (`{kind, note}`, or its JSON), trimmed, or null when it is not one. */
+  static #pressureOf(p) {
+    let v = p;
+    if (typeof v === "string") { try { v = JSON.parse(v); } catch { return null; } }
+    if (!v || typeof v !== "object" || Array.isArray(v)) return null;
+    return { kind: typeof v.kind === "string" ? v.kind.trim() : "", note: typeof v.note === "string" ? v.note.trim() : "",
+             raw: typeof v.note === "string" ? v.note : "" };
+  }
+
+  /* R48 (K597 (1)): the conditions on a pressure mark, at `actionCorrespond` and `actionPressure` alike. */
+  #pressureRefusal({ who, mark, direction }) {
+    /* DEC-49 REGION is-pressure */
+    if (!who || isMachineIdentity(who))
+      return refuse("MACHINE_CANNOT_MARK_PRESSURE", "marking pressure directed at the group is a member's judgement; a "
+        + "machine credential may not mark it. Nothing was written.");
+    if (!mark || !PRESSURE_KINDS.includes(mark.kind) || !mark.note || mark.note.length > NOTE_MAX || /["\\\r\n]/.test(mark.raw))
+      return refuse("PRESSURE_REFUSED", `a pressure mark is {kind, note}: kind one of ${PRESSURE_KINDS.join(", ")}, the note `
+        + `1 to ${NOTE_MAX} characters with no quote, backslash or line break. Nothing was written.`,
+        { legal: PRESSURE_KINDS, max: NOTE_MAX });
+    if (direction !== "received")
+      return refuse("PRESSURE_NOT_RECEIVED", `pressure is marked on a received entry; this one is ${direction || "not one"}. `
+        + "Nothing was written.");
+    /* END DEC-49 REGION is-pressure */
+    return null;
+  }
+
+  /** R48: `actionPressure` marks pressure on a received entry already recorded, in this module's own table; the entry
+   *  is never rewritten (R34). */
+  actionPressure({ target, ord = null, pressure = null, viewer = null, author = null } = {}) {
+    const who = String(author ?? "").trim();
+    const mark = Actions.#pressureOf(pressure);
+    if (!who || isMachineIdentity(who)) return this.#pressureRefusal({ who });
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    const shape = this.#pressureRefusal({ who, mark, direction: "received" });
+    if (shape) return { ...shape, target };
+    const b = this.#visibleAction(target, viewer);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "action")
+      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
+    const fm = this.#heldFm(target) || {};
+    const ledger = Array.isArray(fm.correspondence) ? fm.correspondence : [];
+    const n = typeof ord === "number" ? ord : /^\d+$/.test(String(ord ?? "").trim()) ? Number(String(ord).trim()) : NaN;
+    const entry = Number.isInteger(n) ? ledger[n] : undefined;
+    /* DEC-49 REGION is-pressure-entry */
+    if (!entry || typeof entry !== "object")
+      return refuse("PRESSURE_NO_ENTRY", "no correspondence entry stands at that position. Nothing was written.",
+        { target, ord: ord ?? null, entries: ledger.length });
+    /* END DEC-49 REGION is-pressure-entry */
+    const notReceived = this.#pressureRefusal({ who, mark, direction: entry.direction });
+    if (notReceived) return { ...notReceived, target, ord: n };
+    /* DEC-49 REGION is-pressure-marked */
+    if (this.#one(`SELECT ord FROM action_pressure WHERE bundle_id=? AND ord=?`, target, n))
+      return refuse("PRESSURE_MARKED", "that entry is already marked as pressure, and a mark is never rewritten. "
+        + "Nothing was written.", { target, ord: n });
+    /* END DEC-49 REGION is-pressure-marked */
+    const at = stampInstant("second", this.#nowMs(null));
+    this.sql.exec(`INSERT INTO action_pressure (bundle_id, ord, kind, note, marked_by, at) VALUES (?,?,?,?,?,?)`,
+      target, n, mark.kind, mark.note, who, at);
+    return { ok: true, target, ord: n, pressure: { kind: mark.kind, note: mark.note }, by: who, at, weight: "single" };
+  }
+
+  /** R47: `actionCreate` is the same write as a promotion of an action document (R1–R3, R5–R11, R45, R46 and action-grammar R3 and R6 at the act): the plane
+   *  mints the action's id and writes it into the document; the refusals are the promotion's. Answers `{ok, id}`. */
+  actionCreate({ document = null, viewer = null, author = null } = {}) {
+    const text = typeof document === "string" ? document : null;
+    let fm = null;
+    try { fm = text ? parseFrontmatter(text).data : null; } catch { fm = null; }
+    if (!fm || typeof fm !== "object" || normalizeType(fm.object_type) !== "action")
+      return { ok: false, reason: "NOT_AN_ACTION", detail: "op=actioncreate takes an action's bundle.md, whose object_type "
+        + "is action. Nothing was written." };
+    const when = stampInstant("second", this.#nowMs(null));
+    const minted = this.record.allocId("ACTN", when.slice(0, 4));
+    const id = minted && minted.id;
+    if (!id) return { ok: false, reason: "NO_ID", detail: "no action id could be allocated. Nothing was written." };
+    const withId = Actions.#setOrAddScalar(text, "id", id);
+    const bytes = new TextEncoder().encode(withId);
+    const who = String(author ?? "").trim();
+    const r = this.promotion.promote({
+      bundleId: id, base: null, snapKey: `${when.replace(/[-:]/g, "")}_${Actions.#rand(4)}`,
+      author: who || null, viewer: viewer ?? (who || null),
+      files: [{ path: "bundle.md", text: withId, bytes: bytes.length, sha256: createSha256().update(bytes).hex() }],
+      meta: { object_type: fm.object_type, title: fm.title, current_state: fm.current_state, prior_state: fm.prior_state ?? null,
+              created: fm.created ?? when, last_updated: fm.last_updated ?? when, criticality: fm.criticality ?? null },
+    });
+    if (!r.ok) return r;
+    return { ok: true, id };
   }
 
   /* D-149 (Bob, 2026-09-22; BIO_Case_Making_v0_1.md §2, *A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*):
@@ -1752,7 +1991,7 @@ export class Actions {
     }
     return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
   }
-  /* ================================================================ the read (R25, R26, R29–R31) */
+  /* ================================================================ the read (R25, R26, R29, R30) */
 
   /** R25, REC-24 (f)/(g): everything about ONE action that is DERIVED rather than stored — the clock's verdict at a
    *  named instant, the action's own outcome (DEC-14), the ledger, the legs, and what responded. `row` is the
@@ -1795,7 +2034,28 @@ export class Actions {
       own_outcome: consequenceState(fm),
       responses: this.#rows(`SELECT bundle_id FROM refs WHERE target_id=? AND kind='responds_to' ORDER BY bundle_id`,
         row.bundle_id).map((r) => r.bundle_id),
+      /* R45: the group's contact, a member id; it grants nothing. */
+      contact: typeof fm.contact === "string" && fm.contact.trim() ? fm.contact.trim() : null,
+      /* R46: the plan and option the action was started from, as created. */
+      plan: typeof fm.plan === "string" ? fm.plan : null,
+      option: fm.option === undefined || fm.option === null ? null : fm.option,
+      /* R8: the premise override, with who stated it and when. */
+      premise_override: this.#overrideRead(row.bundle_id, fm),
+      /* R48: the received entries marked as pressure, apart from the ledger. */
+      pressure: this.#rows(`SELECT ord, kind, note, marked_by, at FROM action_pressure WHERE bundle_id=? ORDER BY ord`,
+        row.bundle_id).map((r) => ({ ord: r.ord, kind: r.kind, note: r.note, by: r.marked_by, at: r.at })),
     };
+  }
+
+  /* R8: the override as the document states it, stamped with who and when from this module's table; null when the
+     document states none. */
+  #overrideRead(id, fm) {
+    const o = Actions.overrideOf(fm);
+    if (!o) return null;
+    const r = this.#one(`SELECT stated_by, at FROM action_overrides WHERE bundle_id=?`, id);
+    return { reason: o.reason, by: r ? r.stated_by : null, at: r ? r.at : null,
+             says: "Rests on an unestablished premise: a member chose to act on this breach without a determination, "
+                 + "for the reason stated." };
   }
 
   /* R5: the recorded author class of the action's creation (record-core R15–R16's manifest, first by `seq`): a law
@@ -1834,12 +2094,14 @@ export class Actions {
 
   /** R30: visible actions by filters, in id order, at most 200 per page, `truncated` by reading one past. */
   actionsFor({ determination = null, counterparty = null, state = null, kind = null, after = null, limit = null,
-               viewer = null } = {}) {
+               pressure = null, viewer = null } = {}) {
     const max = clampLimit(limit, ACTIONS_PAGE_MAX, ACTIONS_PAGE_MAX);
     const gate = viewerPredicate(viewer);
     const where = [`b.object_type='action'`, `(${gate.sql})`, `b.bundle_id>?`], fixed = [...gate.args];
     const tail = [];
     if (state) { where.push(`b.current_state=?`); tail.push(String(state)); }
+    /* R48: `pressure: true` lists only the actions holding a pressure mark. */
+    if (pressure === true || pressure === "true") where.push(`EXISTS (SELECT 1 FROM action_pressure p WHERE p.bundle_id=b.bundle_id)`);
     if (determination) { where.push(`EXISTS (SELECT 1 FROM action_basis l WHERE l.bundle_id=b.bundle_id AND l.kind='rests_on' AND l.target_id=?)`); tail.push(String(determination)); }
     const out = [];
     let truncated = false;
@@ -1865,55 +2127,7 @@ export class Actions {
                  says: "the legs are matched by the determination named; whether it is live is conformance's to say, and it is not provided on this instance" } : {}) };
   }
 
-  /** R31 (N237, N311): every `pending` clock entry dated before `before` across visible actions, at most 500 per page,
-   *  in (action id, entry position) order after `after`: a previous page's `cursor` (`<action>#<position>`), or an
-   *  action id, read as after all that action's entries. A page reads at most 500 actions and may end inside one;
-   *  `cursor` is the last entry answered when `truncated`, else null, so paging from the start through each `cursor` to
-   *  null reaches every entry, an action holding more than a page among them. The seek is retrieval's projection
-   *  (`bundle_projection`, its R61), joined on `bundle_id`; the entries are read from the document, the authority. */
-  pendingClocks({ before, limit = null, after = null, viewer = null } = {}) {
-    const day = String(before ?? "").slice(0, 10);
-    /* DEC-49 REGION is-pending-before */
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(day))
-      return refuse("PENDING_CLOCKS_BAD_BEFORE", "before= is a date, YYYY-MM-DD", { before: before ?? null });
-    /* END DEC-49 REGION is-pending-before */
-    const max = clampLimit(limit, PENDING_CLOCKS_MAX, PENDING_CLOCKS_MAX);
-    /* `<action>#<position>` resumes inside that action, after the position; anything else is an action id. */
-    const from = after === null || after === undefined || after === "" ? null : String(after);
-    const at = from ? /^(.+)#(\d+)$/.exec(from) : null;
-    const seek = at ? { id: at[1], pos: Number(at[2]) } : from ? { id: from, pos: Infinity } : null;
-    const gate = viewerPredicate(viewer);
-    const rows = this.#rows(`SELECT b.bundle_id FROM bundles b JOIN ${PROJECTION_TABLE} bp ON bp.bundle_id = b.bundle_id
-      WHERE b.object_type='action' AND (${gate.sql}) ${seek ? "AND b.bundle_id>=?" : ""}
-        AND bp.action_clock_next IS NOT NULL AND bp.action_clock_next < ? ORDER BY b.bundle_id LIMIT ?`,
-      ...gate.args, ...(seek ? [seek.id] : []), day, PENDING_CLOCKS_ACTIONS_MAX + 1);
-    const items = [];
-    let truncated = rows.length > PENDING_CLOCKS_ACTIONS_MAX;
-    let full = false, lastRead = null;
-    read: for (const r of rows.slice(0, PENDING_CLOCKS_ACTIONS_MAX)) {
-      const fm = this.#heldFm(r.bundle_id) || {};
-      const clock = Array.isArray(fm.clock) ? fm.clock : [];
-      const skip = seek && r.bundle_id === seek.id ? seek.pos : -1;
-      for (let i = skip + 1; i < clock.length; i++) {
-        const e = clock[i];
-        if (!e || e.status !== "pending" || typeof e.date !== "string" || !(e.date < day)) continue;
-        /* The page is full and an entry remains: the next page resumes after the last one answered. */
-        if (items.length === max) { full = truncated = true; break read; }
-        items.push({ action: r.bundle_id, ord: i, date: e.date, basis: e.basis ?? null, text: e.text ?? null,
-                     past: e.date < day });
-      }
-      lastRead = { id: r.bundle_id, end: Math.max(clock.length - 1, Number.isFinite(skip) ? skip : 0, 0) };
-    }
-    /* The last entry answered; when the page ends on the action bound past an action whose document holds none (its
-       projection behind it), the end of that action instead, so the next page still moves on. */
-    const tail = items[items.length - 1];
-    const cursor = !truncated ? null
-      : tail && (full || !lastRead || tail.action === lastRead.id) ? `${tail.action}#${tail.ord}`
-        : lastRead ? `${lastRead.id}#${lastRead.end}` : null;
-    return { ok: true, before: day, items, limit: max, actions_limit: PENDING_CLOCKS_ACTIONS_MAX, truncated, cursor };
-  }
-
-  /* ================================================================ proposals (R19, R28, R32) */
+  /* ================================================================ proposals (R19, R28) */
 
   /** R28 (REC-215): a proposed tier, stored apart, labelled; it never touches `risk_tier` or its history. */
   actionRiskPropose({ target, tier = null, basis = null, proposer = null, viewer = null } = {}) {
@@ -1959,41 +2173,6 @@ export class Actions {
                  + "about nothing else." };
   }
 
-  /** R32: a clock entry computed from a profile deadline that applies to the action's kind, stored apart and labelled;
-   *  never written into `clock[]`. */
-  clockPropose({ target, rule, proposer = null, viewer = null } = {}) {
-    const who = String(proposer ?? "").trim();
-    if (!who) return { ok: false, reason: "NO_AUTHOR", detail: "this call carries nobody: the proposer is stamped from the credential that asked." };
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
-    /* R32 (N246): an absent `rule` has no code of its own; it is answered `NO_SUCH_RULE` at that code's place. */
-    const b = this.#visibleAction(target, viewer);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action")
-      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
-    const fm = this.#heldFm(target) || {};
-    const view = this.#view();
-    const d = rule ? (view && Array.isArray(view.deadlines) ? view.deadlines : [])
-      .find((x) => x && x.rule === rule && x.applies_to === fm.action_kind) : null;
-    if (!d) return { ok: false, reason: "NO_SUCH_RULE", target, rule: rule || null,
-      detail: rule ? `no active profile states a deadline '${String(rule).slice(0, 60)}' for an action of kind '${fm.action_kind}'`
-                   : `no rule was named: name the profile deadline's rule (rule=<rule>) for an action of kind '${fm.action_kind}'` };
-    const computed = computeDeadline(d, fm, view);
-    const basis = `${d.citation}${d.basis ? ` (profile basis: ${d.basis}${d.profile ? `, ${d.profile}` : ""})` : ""}`;
-    const entry = { text: d.rule, description: `${d.days} ${d.count} day${d.days === 1 ? "" : "s"} from ${d.starts}`,
-                    date: computed.date, basis, status: "pending" };
-    const at = stampInstant("second", this.#nowMs(null));
-    this.sql.exec(`INSERT INTO action_clock_proposals (bundle_id, proposed_by, rule, date, basis, entry_json, why, proposed_at)
-      VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(bundle_id, proposed_by, rule) DO UPDATE SET date=excluded.date,
-      basis=excluded.basis, entry_json=excluded.entry_json, why=excluded.why, proposed_at=excluded.proposed_at`,
-      target, who, rule, computed.date, basis, JSON.stringify(entry), computed.why ?? null, at);
-    return { ok: true, target, weight: "single", evidence: false,
-             proposal: { ...proposalLabelFor(who, "clock"), rule, entry, at,
-                         ...(computed.start ? { start: computed.start, counted_from: `the day after ${computed.start}` } : {}),
-                         ...(computed.date ? {} : { undetermined: computed.why }) },
-             says: "this clock entry is proposed and is not on the action's clock: a member states a clock entry by a "
-                 + "revision of the action." };
-  }
-
   #lawProposalsFor(bundleId) {
     const cap = LAW_PROPOSALS_READ_MAX;
     const rowCap = (cap + 1) * GOVERNING_LAWS_MAX;
@@ -2025,13 +2204,13 @@ export class Actions {
 
 /* The acts answer their catalogue-backed refusals with code, check and translation (the Provides' "Terms"). */
 for (const m of ["actionMove", "actionCorrespond", "actionLaws", "actionLawsPropose", "actionRiskTier", "actionQuotes",
-                 "actionRiskPropose", "check"]) {
+                 "actionRiskPropose", "actionPressure", "actionCreate", "check"]) {
   const fn = Actions.prototype[m];
   Actions.prototype[m] = function (...a) { return withRow(fn.apply(this, a)); };
 }
 
-/* R19, R28, R32: the label of a proposal stored apart. The governing-laws sentence is legacy-checks' (REC-195); the
-   tier's and the clock entry's say, in each state, what the proposal is not. */
+/* R19, R28: the label of a proposal stored apart. The governing-laws sentence is legacy-checks' (REC-195); the
+   tier's says, in each state, what the proposal is not. (The clock entry's moved to `action-clocks` with R32, K617.) */
 const PROPOSAL_SAYS = {
   risk_tier: {
     machine_proposed: "a machine credential proposed this risk tier. That is machine work, labelled as machine work: it "
@@ -2041,56 +2220,16 @@ const PROPOSAL_SAYS = {
       + "risk-tier act sets that, and the record holds who made the proposal",
     unstated: "the record does not say who proposed this risk tier",
   },
-  clock: {
-    machine_proposed: "a machine credential computed this clock entry from the jurisdiction profile. That is machine "
-      + "work, labelled as machine work: it is not on the action's clock, and nothing puts it there until a member "
-      + "revises the action to state it",
-    member_proposed: "a member asked for this clock entry to be computed from the jurisdiction profile. It is a proposal "
-      + "and not a clock entry: a member states one by revising the action",
-    unstated: "the record does not say who asked for this clock entry",
-  },
 };
 function proposalLabelFor(who, subject) {
   const base = lawProposalLabel(who);
   return { by: base.by, state: base.state, machine_work: base.machine_work, says: PROPOSAL_SAYS[subject][base.state] };
 }
 
-/* R32: a deadline's date from its rule, counted from the event the rule names in the action's ledger: `filed` the first
-   sent entry, `received` the first received entry; `act` and `known` are not ledger events, so they are undetermined.
-   A `business` count uses the profile's holiday calendar and is undetermined past the years it lists (jurisdictions
-   R33). Nothing is written. */
-function computeDeadline(d, fm, view) {
-  const ledger = Array.isArray(fm.correspondence) ? fm.correspondence : [];
-  const dir = d.starts === "filed" ? "sent" : d.starts === "received" ? "received" : null;
-  if (!dir) return { date: null, why: `the rule starts from '${d.starts}', an event the action's ledger does not record` };
-  const e = ledger.find((x) => x && x.direction === dir && typeof x.at === "string" && /^\d{4}-\d{2}-\d{2}/.test(x.at));
-  if (!e) return { date: null, why: `the action's ledger holds no ${dir} entry, the event this rule starts from` };
-  const start = e.at.slice(0, 10);
-  const days = Number(d.days);
-  if (!Number.isInteger(days) || days < 0) return { date: null, start, why: "the rule's number of days is not a whole number" };
-  const t0 = Date.parse(`${start}T00:00:00Z`);
-  const iso = (ms) => new Date(ms).toISOString().slice(0, 10);
-  if (d.count === "calendar") return { date: iso(t0 + days * 86400000), start };
-  if (d.count !== "business") return { date: null, start, why: `the rule's count '${d.count}' is neither calendar nor business` };
-  const years = new Map();
-  for (const h of (view && Array.isArray(view.holidays) ? view.holidays : []))
-    if (h && Number.isInteger(Number(h.year))) years.set(Number(h.year), new Set((h.days || []).map((x) => x && x.date)));
-  let t = t0, n = 0;
-  while (n < days) {
-    t += 86400000;
-    const y = new Date(t).getUTCFullYear();
-    if (!years.has(y)) return { date: null, start, why: `the count reaches ${y}, a year the profile's holiday calendar does not list` };
-    const wd = new Date(t).getUTCDay();
-    if (wd === 0 || wd === 6 || years.get(y).has(iso(t))) continue;
-    n++;
-  }
-  return { date: iso(t), start };
-}
-
 const instances = new WeakMap();
 
 /** K61: the one instance per host; at creation it declares its tables, registers its step, audit, facts and
- *  decoration (R3, R12, R25, R36, R37; retrieval R53, R56). */
+ *  decoration (R3, R12, R25, R36, R51; retrieval R53, R56). */
 export function actionsOf(host, deps) {
   let a = instances.get(host);
   if (!a) {
@@ -2143,7 +2282,22 @@ export function actionsOps(a, url, body) {
       quoteAmount: q("quote_amount"), quoteCurrency: q("quote_currency"), quoteBasis: q("quote_basis"),
       quoteAnswers: q("quote_answers"), quoteRevises: q("quote_revises"),
       stage: q("stage"), follows: q("follows"), outcome: q("outcome"), exemptions: q("exemptions"),
-      dueBy: q("due_by"), dueCite: q("due_cite"), viewer: q("viewer"), author: q("author") }),
+      dueBy: q("due_by"), dueCite: q("due_cite"),
+      pressure: b.pressure ?? (q("pressure_kind") !== null || q("pressure_note") !== null
+        ? { kind: q("pressure_kind") ?? "", note: q("pressure_note") ?? "" } : null),
+      viewer: q("viewer"), author: q("author") }),
+    /* R47: the action's creation as a promotion, its read and its list, with the stamps the control plane makes. */
+    actioncreate: () => a.actionCreate({ document: typeof b.document === "string" ? b.document : null,
+                                         viewer: q("viewer"), author: q("author") }),
+    action: () => a.actionRead({ id: q("id") || q("target") || b.id || null, viewer: q("viewer"), now: q("now") }),
+    actions: () => a.actionsFor({ determination: q("determination"), counterparty: q("counterparty"), state: q("state"),
+                                  kind: q("kind"), after: q("after"), limit: q("limit"), pressure: q("pressure"),
+                                  viewer: q("viewer") }),
+    /* R48: a pressure mark on a recorded received entry. */
+    actionpressure: () => a.actionPressure({ target: q("target") || b.target, ord: q("ord") ?? b.ord ?? null,
+      pressure: b.pressure ?? (q("pressure_kind") !== null || q("pressure_note") !== null
+        ? { kind: q("pressure_kind") ?? "", note: q("pressure_note") ?? "" } : null),
+      viewer: q("viewer"), author: q("author") }),
     actionquotes: () => a.actionQuotes({ counterparty: q("counterparty"), request: q("request"), answers: q("answers"),
                                          viewer: q("viewer") }),
     /* R42 (N231): the kinds this instance accepts, a read for every signed-in class (the op's spec is the control

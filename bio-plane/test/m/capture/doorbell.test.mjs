@@ -5,8 +5,7 @@ import assert from "node:assert/strict";
 import { fresh, bucket, sha } from "./fixture.mjs";
 import { captureOps } from "../../../src/capture/index.mjs";
 import { knockOp, KNOCK } from "../../../src/capture/doorbell.mjs";
-import { KNOCK_CHECKS } from "../../../checks/bio-checks.mjs";
-import { CAPTURE_CHECKS } from "../../../src/capture/checks.mjs";
+import { CAPTURE_CHECKS, KNOCK_CHECKS } from "../../../src/capture/checks.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 const requiredArgument = (op, argument, shape, error) => ({ reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error });
@@ -173,6 +172,21 @@ test("R51: content that decodes to zero bytes is refused 400 KNOCK_EMPTY with it
                      [400, "KNOCK_EMPTY", "KNOCK_EMPTY", row("KNOCK_EMPTY").check, row("KNOCK_EMPTY").translation]);
   }
   assert.deepEqual(st.calls, []);
+});
+
+test("R37 R47 R48 R49 R50 R51 (K649): C-85's five rows are in this module's own table, each with its check, its where naming the one site that mints it, and a translation", () => {
+  const want = { RATE_IP: ["C-85.1", "src/capture/index.mjs #knockRateRefusal > is-knock-rate"],
+                 RATE_GLOBAL: ["C-85.2", "src/capture/index.mjs #knockRateRefusal > is-knock-rate"],
+                 KNOCK_ENVELOPE_TOO_LARGE: ["C-85.3", "src/capture/doorbell.mjs knockEnvelopeTooLarge > is-knock-envelope-too-large"],
+                 KNOCK_PAYLOAD_TOO_LARGE: ["C-85.4", "src/capture/doorbell.mjs knockPayloadTooLarge > is-knock-payload-too-large"],
+                 KNOCK_EMPTY: ["C-85.5", "src/capture/doorbell.mjs knockEmpty > is-knock-empty"] };
+  assert.deepEqual(Object.keys(KNOCK_CHECKS).sort(), Object.keys(want).sort(), "the five rows, and no other");
+  for (const [code, [check, where]] of Object.entries(want)) {
+    assert.deepEqual([KNOCK_CHECKS[code].check, KNOCK_CHECKS[code].where], [check, where], code);
+    assert.ok(typeof KNOCK_CHECKS[code].translation === "string" && KNOCK_CHECKS[code].translation.length > 40, code);
+  }
+  const ids = Object.values(KNOCK_CHECKS).map((r) => r.check);
+  assert.ok(!Object.values(CAPTURE_CHECKS).some((r) => ids.includes(r.check)), "no id held twice in this module's tables");
 });
 
 test("R52: a C-85 translation is the row's sentence, names no figure, and a code with no row fails as an internal error", async () => {

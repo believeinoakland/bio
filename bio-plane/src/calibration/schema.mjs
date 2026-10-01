@@ -1,8 +1,7 @@
 /* calibration's tables (requirements: `build/requirements/calibration.md`): the calibrations, the engines this
  * instance probes, and the announcement signals. Moved from `schema.mjs` at the module's extraction (T5-1; Bob's
- * ruling 3, "each module owns its tables"); `schema.mjs` interpolates this text where the tables stood, so the
- * store's schema pass creates them as before. Exempt from purge (R16): they are measurements of engines, not of
- * the record. */
+ * ruling 3, "each module owns its tables"). The module's own `migrate()` (R20) runs this text; `schema.mjs` no
+ * longer names it (T19). Exempt from purge (R16): they are measurements of engines, not of the record. */
 export const CALIBRATION_TABLES = Object.freeze(["calibrations", "calibration_subjects", "calibration_signals"]);
 
 export const CALIBRATION_SCHEMA = `-- CPDF-13 / D-183 / D-253: THE CALIBRATION -- a dated, identified fidelity

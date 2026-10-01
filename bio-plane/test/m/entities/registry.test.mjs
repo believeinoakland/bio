@@ -44,9 +44,15 @@ test("R2 addAlias refuses NO_ENTITY, NO_ALIAS, NO_SUCH_ENTITY, then ALREADY_ALIA
   const a = e.createEntity({ kind: "office", label: "City Clerk" }).entity_id;
   const b = e.createEntity({ kind: "person", label: "Pat Doe" }).entity_id;
   assert.equal(e.addAlias({ alias: "x" }).reason, "NO_ENTITY");
-  const na = e.addAlias({ entityId: a, alias: " \t " });
-  assert.deepEqual([na.reason, na.code, na.check], ["NO_ALIAS", "NO_ALIAS", "C-33.25"], "a name that folds to nothing: the catalogue's row");
-  assert.ok(na.translation);
+  const nr = ENTITY_CHECKS.NO_ALIAS;
+  assert.deepEqual([nr.check, nr.where], ["C-33.25", "src/entities/index.mjs addAlias > is-alias-named"], "this module's own row (copied, T18)");
+  for (const alias of [undefined, null, "", " \t ", "\n\n"]) {
+    const na = e.addAlias({ entityId: a, alias });
+    assert.deepEqual([na.ok, na.reason, na.code, na.check, na.translation], [false, "NO_ALIAS", "NO_ALIAS", nr.check, nr.translation],
+                     `a name that folds to nothing (${JSON.stringify(alias)}): the module's row`);
+    assert.equal(typeof na.detail, "string");
+  }
+  assert.equal(e.readEntity({ entityId: a }).entity.aliases.length, 1, "a refused alias writes nothing");
   assert.equal(e.addAlias({ entityId: "ENT-2026-9999", alias: "x" }).reason, "NO_SUCH_ENTITY");
   const dup = e.addAlias({ entityId: a, alias: "  CITY clerk " });
   assert.equal(dup.reason, "ALREADY_ALIASED");

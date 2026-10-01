@@ -1,21 +1,31 @@
 /* record-core — the record's storage (layer 2): id allocation, leases, the append-only history and
    manifest of every promotion, the instance's settings, the evidence store, and purge. It holds no
    member, capability or fence (membership's) and decides nothing about what may be committed
-   (promotion's). Requirements: build/requirements/record-core.md (R1–R63).
+   (promotion's). Requirements: build/requirements/record-core.md (R1–R73).
 
    REACHED THROUGH `recordOf(ctx)`: one instance per Durable Object storage, so every module in the
    object shares one transaction depth, one purge declaration list and one evidence binding. The
    instance reads and writes only this module's own tables and the clock (R31); `purge` also clears
    the tables other modules declared to it (R21), and `seedMintLedger` reads the live rows its
-   caller names. Extracted from `legacy-store` (store.mjs, schema.mjs) in T3; the reasoning the
-   legacy comments carried is kept beside the code it explains. */
-import { checkBundle, createSha256, PROJECT_ID_CHECKS, PER_ITEM_CHECKS } from "../../checks/bio-checks.mjs";
-import { RECORD_CORE_CHECKS } from "./checks.mjs";
+   caller and the registered seeds name (R40, R70). Extracted from `legacy-store` (store.mjs, schema.mjs) in T3; the
+   reasoning the legacy comments carried is kept beside the code it explains. T19: the audit's seams (R68, R69), the
+   mint seeds (R70), the schema run first (R71) and the ops map (R72, R73). */
+import { checkBundle, createSha256, EXTENSION_ARMS, LEGACY_TYPE_ALIASES } from "../record-grammar/index.mjs";
+import { RECORD_SCHEMA } from "./schema.mjs";
+import { RECORD_CORE_CHECKS, PER_ITEM_CHECKS } from "./checks.mjs";
 
-export { RECORD_SCHEMA } from "./schema.mjs";
-export { RECORD_CORE_CHECKS } from "./checks.mjs";
+export { RECORD_SCHEMA };
+export { RECORD_CORE_CHECKS, PER_ITEM_CHECKS } from "./checks.mjs";
 
 const IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/;
+const C_ID = /^C-\d+(\.\d+)?$/;             /* a catalogue check id, as `checkBundle`'s grammars name them */
+
+/* A refusal under one of this module's own rows (DEC-49): its code, its row's check and translation, and the detail;
+   `more` adds the refusal's own fields and never replaces these. */
+function rowRefusal(code, detail, more) {
+  const row = RECORD_CORE_CHECKS[code];
+  return { ...more, ok: false, reason: code, code, check: row.check, translation: row.translation, detail };
+}
 const REFUSED = Symbol("record-core-refusal");
 const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
@@ -223,6 +233,8 @@ export function perItem(act, body, stamped, one, { itemKeys = null, sharedKeys =
 }
 
 const instances = new WeakMap();
+/* The storage's SQL of an instance, for this module's own route arms (R73's sight gate) and nothing outside it. */
+let sqlOf;
 
 /** R39: the one RecordCore for this object's storage. `ctx` is the Durable Object state (anything with
  *  `storage.sql` and `storage.transactionSync`), or that storage itself. `opts` is read on the first call
@@ -252,9 +264,17 @@ export class RecordCore {
   static OWN_TABLES = Object.freeze(["files", "history", "manifest", "leases", "bundles"]);
   static EXEMPT_TABLES = Object.freeze(["seq", "minted_ids", "settings"]);
 
-  #storage; #sql; #depth = 0; #declared = new Map(); #order = []; #evidence; #evidencePrefix; #firstBoot;
+  static { sqlOf = (rc) => rc.#sql; }
+
+  #storage; #sql; #declared = new Map(); #order = []; #evidence; #evidencePrefix; #firstBoot;
+  #held = [];             // R66: one list per open `transact`, outermost first, of what `afterCommit` held
   #auditChecks = [];      // R59: {module, check}, in registration order
+  #grammars = [];         // R67: {module, ids, arm}, in registration order
   #countsBy = [];         // R63: {module, keys, counts}, in registration order
+  #statsSource = null;    // R65: {module, figures}, the one source of the instance's figures
+  #auditFindings = [];    // R68: {module, key, finding}, in registration order
+  #auditContexts = [];    // R69: {module, context}, in registration order
+  #mintSeeds = [];        // R70: {module, sources}, in registration order
 
   constructor(storage, { evidence = null, evidencePrefix = "bio/captures/" } = {}) {
     this.#storage = storage;
@@ -277,15 +297,46 @@ export class RecordCore {
    *  this instance was made; false at every later boot. `instance-setup` reads it. */
   isFirstBoot() { return this.#firstBoot === true; }
 
-  /** Additive columns this module's tables gained after a store was first written. Called by the
-   *  store after its schema pass; idempotent. */
+  /* The additive columns this module's tables gained after a store was first written: nullable, so an older row simply
+     has none (a hand-authored promotion names no writer, a bundle committed before R34's column names no project). */
+  static #ADDITIVE_COLUMNS = Object.freeze([
+    ["manifest", "writer", "TEXT"], ["manifest", "operation", "TEXT"], ["bundles", "project", "TEXT"],
+  ]);
+
+  /** R71: this module's schema (`RECORD_SCHEMA`) and its own migrations, run by the composition root BEFORE any other
+   *  module's `migrate`, so `bundles` exists before any module reads it. Every step is guarded on what the storage
+   *  already holds, so a second run changes nothing.
+   *  REC-143 — THE ADDITIVE COLUMNS ARE ADDED BEFORE THE SCHEMA RUNS, AND AGAIN AFTER IT. The schema text carries
+   *  indexes, and an index over a column only this list adds would hit an OLD table that lacks it and throw inside
+   *  blockConcurrencyWhile (every release 0.59.0–0.63.0 bricked an existing store so). So the whole list runs first for
+   *  every table that exists, and again after the schema, for a table the schema created on this boot (a guarded
+   *  `ALTER` on a table created whole adds nothing).
+   *  `classification` was REMOVED from the Information catalogue on 2026-07-27 (Bob's decision, state doc v30): dropped
+   *  rather than orphaned, so a store migrated forward and a fresh install present the same table; guarded, because
+   *  `DROP COLUMN` on a column already gone is an error. History keeps any frontmatter that carried it, which is correct.
+   *  The type renames (problem → focus 2026-07-27, focus → inquiry REC-10) are normalised in `bundles.object_type`, the
+   *  DERIVED layer, from record-grammar's own `LEGACY_TYPE_ALIASES` rather than restated, so a further name is one entry
+   *  there and no edit here; append-only history keeps whatever spelling it was written with. */
   migrate() {
-    const cols = this.#rows(`PRAGMA table_info(bundles)`).map((r) => r.name);
-    if (cols.length && !cols.includes("project")) this.#sql.exec(`ALTER TABLE bundles ADD COLUMN project TEXT`);
+    const addColumns = () => {
+      for (const [table, column, decl] of RecordCore.#ADDITIVE_COLUMNS) {
+        const have = this.#rows(`PRAGMA table_info(${table})`).map((r) => r.name);
+        /* An absent table reads as no columns: it is skipped here and the schema creates it. */
+        if (have.length && !have.includes(column)) this.#sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
+      }
+    };
+    addColumns();
+    const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+    for (const statement of bare.split(";")) { const t = statement.trim(); if (t) this.#sql.exec(t); }
+    addColumns();
     this.#sql.exec(`CREATE INDEX IF NOT EXISTS bundles_project ON bundles(project, bundle_id)`);
+    if (this.#rows(`PRAGMA table_info(bundles)`).some((r) => r.name === "classification"))
+      this.#sql.exec(`ALTER TABLE bundles DROP COLUMN classification`);
+    for (const [legacy, canonical] of Object.entries(LEGACY_TYPE_ALIASES))
+      this.#sql.exec(`UPDATE bundles SET object_type=? WHERE object_type=?`, canonical, legacy);
   }
 
-  /* ---- transactions (R32) ---- */
+  /* ---- transactions (R32, R66) ---- */
 
   /** Runs `fn` as one transaction over the whole store. A throw, or a returned refusal (`ok:false`),
    *  rolls back every row written inside it, in any module's tables; a refusal is then returned, a
@@ -293,20 +344,44 @@ export class RecordCore {
    *  `transactionSync` nests so, measured in Miniflare): a nested call that throws or refuses rolls back
    *  its own writes and ids and nothing else, and the outer call decides the rest (R32, K133). */
   transact(fn) {
-    let result;
-    this.#depth++;
+    let result, out, committed = false;
+    const held = [];                  /* R66: what `afterCommit` held inside this call */
+    this.#held.push(held);
     try {
-      return this.#storage.transactionSync(() => {
+      out = this.#storage.transactionSync(() => {
         result = fn();
         if (result && typeof result === "object" && result.ok === false) throw REFUSED;
         return result;
       });
+      committed = true;
     } catch (e) {
-      if (e === REFUSED) return result;
-      throw e;
+      if (e !== REFUSED) throw e;     /* a throw drops what this call held, with its rows */
+      out = result;                   /* so does a refusal */
     } finally {
-      this.#depth--;
+      this.#held.pop();
     }
+    /* R66: a savepoint that committed hands what it held to the transaction around it, which may still roll it
+       back; the outermost commit runs it, now, before this call returns. */
+    if (committed) {
+      if (this.#held.length) this.#held[this.#held.length - 1].push(...held);
+      else RecordCore.#runHeld(held);
+    }
+    return out;
+  }
+
+  /** R66 (N406, K598): `fn` runs after the record has committed what it was asked in: at once outside any `transact`;
+   *  inside one, synchronously just after the outermost `transact` commits and before that call returns, in the order
+   *  the calls were made; never when the transaction, or the savepoint holding it, rolls back (a throw or an `ok:false`
+   *  answer). A held `fn` that throws does not undo the commit, stop the others or change what `transact` answers: a
+   *  caller that must know (reevaluation's `listeners_failed`) catches its own. A non-function is a caller's defect. */
+  afterCommit(fn) {
+    if (typeof fn !== "function") throw new TypeError("afterCommit: fn is not a function");
+    if (this.#held.length) this.#held[this.#held.length - 1].push(fn);
+    else RecordCore.#runHeld([fn]);
+  }
+
+  static #runHeld(fns) {
+    for (const fn of fns) { try { fn(); } catch { /* R66: the commit stands, and so do the others */ } }
   }
 
   /* ---- ids (R1–R9) ---- */
@@ -334,7 +409,7 @@ export class RecordCore {
     const gated = RecordCore.GATED_ID_PREFIXES.find((g) => scope.startsWith(`${g}-`));
     /* DEC-49 REGION is-allocid-prefix-gated */
     if (gated) {
-      const row = PROJECT_ID_CHECKS.ALLOCID_PREFIX_GATED;
+      const row = RECORD_CORE_CHECKS.ALLOCID_PREFIX_GATED;
       return { ok: false, reason: "ALLOCID_PREFIX_GATED", code: "ALLOCID_PREFIX_GATED", check: row.check,
                translation: row.translation,
                detail: `${gated}- ids are minted by the plane, opaque, by the act that creates the object; op=allocid `
@@ -377,7 +452,8 @@ export class RecordCore {
    *  prefix is the caller's, of any length and any characters. */
   seedMintLedger(sources = []) {
     const at = new Date().toISOString();
-    for (const [prefix, table, column] of sources) {
+    /* R40, R70: the caller's sources, then every registered module's, each named by its table's owner. */
+    for (const [prefix, table, column] of [...sources, ...this.#mintSeeds.flatMap((r) => r.sources)]) {
       if (!IDENT.test(String(table)) || !IDENT.test(String(column))) continue;
       const head = `${prefix}-`;
       this.#sql.exec(`INSERT OR IGNORE INTO minted_ids (id,recorded_at,source)
@@ -392,6 +468,28 @@ export class RecordCore {
                     SELECT s.scope || '-' || printf('%04d', n.i), ?, 'counter'
                       FROM seq s JOIN n ON n.i < s.next WHERE ${inScope("s.scope")}`,
                    ...scopes, at, ...scopes);
+  }
+
+  /** R70 (`build/extraction/legacy-store.md` §4.2 (3)): a later module whose table holds opaque ids registers once, at
+   *  start, its seed sources, `[[prefix, table, column], …]` over its own tables only, and `seedMintLedger` (R40) learns
+   *  their live ids as it learns its caller's, so the ledger knows every id an opaque mint site's `taken` reads without
+   *  this module naming a later module's table. A second registration by the same module is `MINT_SEED_DECLARED`; no
+   *  module name, or a source that is not three non-empty strings, `MINT_SEED_MALFORMED`. A refused registration
+   *  registers nothing; an accepted one writes nothing until the next seed. */
+  registerMintSeed(module, sources) {
+    const named = typeof module === "string" && module.trim() !== "";
+    const wellFormed = (x) => Array.isArray(x) && x.length === 3 && x.every((v) => typeof v === "string" && v.trim() !== "");
+    /* DEC-49 REGION is-mint-seed-registration */
+    if (!named || !Array.isArray(sources) || !sources.every(wellFormed))
+      return rowRefusal("MINT_SEED_MALFORMED", "a mint seed names its module and a list of [prefix, table, column] sources, "
+        + "each three non-empty strings; nothing was registered.", { module: named ? module : null });
+    if (this.#mintSeeds.some((r) => r.module === module))
+      return rowRefusal("MINT_SEED_DECLARED", `${module} has already registered its mint seed; the first still stands.`,
+                        { module, heldBy: module });
+    /* END DEC-49 REGION is-mint-seed-registration */
+    const held = Object.freeze(sources.map((x) => Object.freeze([...x])));
+    this.#mintSeeds.push({ module, sources: held });
+    return { ok: true, module, sources: held.map((x) => [...x]) };
   }
 
   /* ---- leases (R10–R12, R61) ---- */
@@ -814,32 +912,228 @@ export class RecordCore {
     return Object.fromEntries(out);
   }
 
-  /* ---- the audit sweep (R18–R20, R45, R59) ---- */
+  /* ---- the instance's figures and what each caller is told of them (R64, R65; K621) ---- */
+
+  /* REC-131 / IC-148 (BOB #15's corrected ruling, `MEMBER-KNOWLEDGE-DESIGN.md` §5, *A COUNT IS A DISCLOSURE OF
+     EXISTENCE*): a count over rows a caller could not all read goes only to a caller who could read them all, and for
+     members' leads THAT CALLER DOES NOT EXIST, so `leads` is on the wire for no class. ONE KEY NEVER CARRIES TWO
+     MEANINGS: the wire's log count excludes lead looks and is published as `observationsNonLead`, a name that states
+     its predicate; purge's `observations` keeps the whole log, and the wire carries no `observations` key, so no reader
+     compares the two under one name. The themes and their placements (D-162) are purge's proof only: a count of
+     members' lenses is not an operator fact. */
+  static #PROOF_ONLY = Object.freeze(["leads", "observations", "themes", "themePlacements"]);
+  static #WIRE_ONLY = Object.freeze(["observationsNonLead"]);
+
+  /** R65 (K621): the one source of the instance's figures, registered once at start, `figures({viewer, proof})`
+   *  answering them through the caller's sight (`viewer` exactly as the caller sent it, `undefined` when never sent,
+   *  a direct internal call that counts whole). The sight and the counting are the source's, over the tables it
+   *  reads; which figures each caller is told is this module's (R64). A second source is `STATS_SOURCE_DECLARED`,
+   *  naming the holder; one without a module name or a function `STATS_SOURCE_MALFORMED`. */
+  registerStatsSource(module, figures) {
+    /* DEC-49 REGION is-stats-source-registration */
+    if (typeof module !== "string" || !module.trim() || typeof figures !== "function")
+      return rowRefusal("STATS_SOURCE_MALFORMED", "a statistics source names its module and is a function; nothing was registered.",
+                       { module: typeof module === "string" ? module : null });
+    if (this.#statsSource)
+      return rowRefusal("STATS_SOURCE_DECLARED", `the instance's figures are already supplied by ${this.#statsSource.module}; `
+        + "nothing was registered.", { module, heldBy: this.#statsSource.module });
+    /* END DEC-49 REGION is-stats-source-registration */
+    this.#statsSource = { module, figures };
+    return { ok: true, module };
+  }
+
+  /* The source's figures, as a plain object of its own enumerable fields; none (`{}`) when no source is registered or
+     it threw or answered no object. A field that cannot be read is left out. */
+  #figures(viewer, proof) {
+    const out = {};
+    if (!this.#statsSource) return out;
+    let got;
+    try { got = this.#statsSource.figures({ viewer, proof }); } catch { return out; }
+    if (!got || typeof got !== "object" || typeof got.then === "function") return out;
+    let keys = [];
+    try { keys = Object.keys(got); } catch { return out; }
+    for (const k of keys) { try { Object.defineProperty(out, k, { value: got[k], enumerable: true, writable: true, configurable: true }); } catch { /* unread */ } }
+    return out;
+  }
+
+  /* The database's size, a figure of this object's storage and no table's; null when the storage states none. */
+  #dbBytes() {
+    try { const n = this.#sql.databaseSize; return typeof n === "number" && Number.isFinite(n) ? n : null; } catch { return null; }
+  }
+
+  /** R64 (N408, K621): `op=stats`. The instance's figures through the caller's sight (R65's source), with the same
+   *  keys for every class of caller: never `leads` nor `observations` (nor the themes, purge's only), whatever the
+   *  source answers; the observation log as `observationsNonLead`. `capacity` IS THE ONE CLASS DISTINCTION, AND IT
+   *  GOVERNS `dbBytes` AND NOTHING ELSE (BOB #15, resuming REC-131): the database's size moves in whole pages on every
+   *  write, a lead's included, so a member diffing it across a colleague's authoring could detect a large lead;
+   *  capacity is an operator need. It is the control plane's word, set from the authenticated class after the
+   *  caller's parameters are copied, so only `true` itself grants it: an absent or any other value is false, and a
+   *  door that forgets to stamp loses `dbBytes` rather than leaking it. THE RESIDUE, STATED RATHER THAN HIDDEN: the
+   *  admin class still receives a figure that moves on every write, so an operator can tell that something large was
+   *  written, never that it was a lead, and no lead is readable to it. Writes nothing; never throws. */
+  stats({ capacity = false, viewer } = {}) {
+    const f = this.#figures(viewer, false);
+    for (const k of [...RecordCore.#PROOF_ONLY, "dbBytes"]) delete f[k];
+    if (capacity === true) f.dbBytes = this.#dbBytes();
+    return f;
+  }
+
+  /** R64: purge's proof of what it removed, the private form of the same figures, WHOLE (§5: *the purge proof's own
+   *  count stays whole*): the whole log as `observations`, with `leads`, the themes and `dbBytes`, and no
+   *  `observationsNonLead`. No route answers it: purge reads it before and after it clears. Writes nothing; never
+   *  throws. */
+  proofCounts() {
+    const f = this.#figures(undefined, true);
+    for (const k of [...RecordCore.#WIRE_ONLY, "dbBytes"]) delete f[k];
+    f.dbBytes = this.#dbBytes();
+    return f;
+  }
+
+  /* ---- the audit sweep (R18–R20, R45, R59, R67–R69) ---- */
+
+  /* The three audit seams' registrations are one shape (R59, R68, R69): a module registers once per seam, by name, with a
+     function; R68's carries the key its finding answers under. They share one door, `registerAuditCheck`, so each of
+     C-102.1 and C-102.2 is refused at one site whichever seam is asked (DEC-49); the seam is chosen by these private
+     tokens, which no caller outside this module holds. */
+  static #CHECK_SEAM = Symbol("audit check");
+  static #FINDING_SEAM = Symbol("audit finding");
+  static #CONTEXT_SEAM = Symbol("audit context");
+  /* R68: the answer's own fields, which no finding's key may take. */
+  static #AUDIT_FIELDS = Object.freeze(["ok", "checked", "clean", "withErrors", "tally", "tallyDetail", "offenders", "limit",
+                                        "cursor", "page", "total"]);
 
   /** R59 (N51, K130, the K31 pattern): a later module registers, once at start, an audit check that `auditPass`
    *  runs over every bundle of a page beside the catalogue, called `check(image, context)`: `image` is what
    *  `checkBundle` gets (`bundleId`/`folderName`, `files`, `elidedPaths`, `sha256`, `sha512`, R19's `resolveTarget`)
-   *  and `raw`, the bundle's `readImage`; `context` is R45's for the bundle (`{}` when the caller gives none), so a check that left the catalogue for its module is not
-   *  lost to the audit, and the bundle is judged once, whole. */
-  registerAuditCheck(module, check) {
-    if (typeof module !== "string" || !module || typeof check !== "function")
-      return { ok: false, reason: "AUDIT_CHECK_MALFORMED", detail: "an audit check names its module and is a function" };
-    if (this.#auditChecks.some((c) => c.module === module))
-      return { ok: false, reason: "AUDIT_CHECK_DECLARED", module, detail: `${module} has already registered its audit check` };
-    this.#auditChecks.push({ module, check });
-    return { ok: true, module };
+   *  and `raw`, the bundle's `readImage`; `context` is R45's for the bundle (`{}` when there is none), so a check that
+   *  left the catalogue for its module is not lost to the audit, and the bundle is judged once, whole. */
+  registerAuditCheck(module, check, seam = RecordCore.#CHECK_SEAM, key = undefined) {
+    const finding = seam === RecordCore.#FINDING_SEAM, context = seam === RecordCore.#CONTEXT_SEAM;
+    const list = finding ? this.#auditFindings : context ? this.#auditContexts : this.#auditChecks;
+    const what = finding ? "audit finding" : context ? "audit context" : "audit check";
+    const keyHeldBy = !finding ? null : RecordCore.#AUDIT_FIELDS.includes(key) ? "auditPass"
+      : (this.#auditFindings.find((r) => r.key === key) || {}).module ?? null;
+    /* DEC-49 REGION is-audit-check-registration */
+    if (typeof module !== "string" || !module || typeof check !== "function" || (finding && (typeof key !== "string" || !key)))
+      return rowRefusal("AUDIT_CHECK_MALFORMED", `an ${what} names its module${finding ? ", a non-empty key" : ""} and is a `
+        + "function; nothing was registered.");
+    if (list.some((c) => c.module === module) || keyHeldBy)
+      return rowRefusal("AUDIT_CHECK_DECLARED", keyHeldBy
+        ? `the audit's answer key ${key} is already held by ${keyHeldBy}; nothing was registered.`
+        : `${module} has already registered its ${what}; the first still runs.`,
+        { module, ...(keyHeldBy ? { key, heldBy: keyHeldBy } : {}) });
+    /* END DEC-49 REGION is-audit-check-registration */
+    if (finding) list.push({ module, key, finding: check });
+    else if (context) list.push({ module, context: check });
+    else list.push({ module, check });
+    return { ok: true, module, ...(finding ? { key } : {}) };
   }
 
-  /** R18–R20: the check catalogue over a bounded page of bundles in id order after `after`, run WHERE
-   *  THE DATA IS (one network round trip per image was ~97% of an outside pass's cost). What a reference
-   *  resolves against is the WHOLE corpus, asked of `bundles` by its key one reference at a time, and never
-   *  leaves this method: filtering it would manufacture dangling-reference findings out of a viewer's
-   *  position (REC-30). What is gated is what leaves: the page holds only bundles `visible(id)` admits.
-   *  N117: every read here carries an SQL `LIMIT` — the cursor read takes the ids after `after` a page's
-   *  worth at a time and stops once the page is full, and no read loads the corpus's ids whole.
-   *  `context(id)` adds the caller's further checkBundle options for a bundle (the earned and published
-   *  registries later modules build). Blob-backed files are declared elided: existence assertions see them,
-   *  byte checks skip them. */
+  /** R68 (`build/extraction/legacy-store.md` §4.2 (1)): a later module registers once, at start, a page finding
+   *  `finding(page)` under its answer key `key` (provenance's route-marker tally as `route`, membership's reserved-id
+   *  finding as `membership`). `auditPass` calls each once per page, in registration order, and answers its result under
+   *  its key, beside the page's own figures, which a finding never moves: a stated finding, not a conformance error. The
+   *  refusals are R59's rows. */
+  registerAuditFinding(module, key, finding) {
+    return this.registerAuditCheck(module, finding, RecordCore.#FINDING_SEAM, key);
+  }
+
+  /** R69: a later module registers once, at start, `context(bundleId)`, answering options for that bundle's checks
+   *  (inquiry's earned registry, publication's published registry); R45 merges every registration's answer, in
+   *  registration order, before the caller's own. The refusals are R59's rows. */
+  registerAuditContext(module, context) {
+    return this.registerAuditCheck(module, context, RecordCore.#CONTEXT_SEAM);
+  }
+
+  /** R67 (§1b, K585 (2), K766): a type grammar leaves the check catalogue by registering here, once, at its module's
+   *  start: `ids` are the check ids its `arm(ctx, findings)` raises. Ids covering one or more of record-grammar's
+   *  `EXTENSION_ARMS` slots (its R28) claim each slot whole, and the grammar runs in each claimed slot's place; a slot
+   *  may be claimed by several registrations, whose arms run there in registration order (`grammars()`). Refused,
+   *  before anything is registered: a malformed entry, or ids claiming part of a slot (`GRAMMAR_MALFORMED`); a module's
+   *  second registration, or an id another registration holds, unless it is an id of a slot both claim
+   *  (`GRAMMAR_DECLARED`, naming the holder). An accepted registration answers `{ok: true, module, ids}`. */
+  registerGrammar(module, { ids, arm } = {}) {
+    const named = typeof module === "string" && module.trim() !== "";
+    const listed = Array.isArray(ids) && ids.length > 0 && ids.every((id) => typeof id === "string" && C_ID.test(id));
+    const partial = listed ? EXTENSION_ARMS.find((a) => a.ids.some((id) => ids.includes(id)) && !a.ids.every((id) => ids.includes(id))) : null;
+    const slotIds = new Set(listed ? EXTENSION_ARMS.filter((a) => a.ids.every((id) => ids.includes(id))).flatMap((a) => a.ids) : []);
+    let clash = null;
+    if (named && listed) {
+      if (this.#grammars.some((g) => g.module === module)) clash = { heldBy: module };
+      for (let i = 0; !clash && i < ids.length; i++) {
+        if (ids.indexOf(ids[i]) < i) { clash = { id: ids[i], heldBy: module }; break; }
+        const g = this.#grammars.find((x) => x.ids.includes(ids[i]));
+        if (g && !slotIds.has(ids[i])) clash = { id: ids[i], heldBy: g.module };
+      }
+    }
+    /* DEC-49 REGION is-grammar-registration */
+    if (!named || !listed || typeof arm !== "function" || partial)
+      return rowRefusal("GRAMMAR_MALFORMED", partial
+        ? `the grammar claims part of ${partial.name}, whose ids are ${partial.ids.join(", ")}; a slot is claimed whole. Nothing was registered.`
+        : "a grammar names its module, a non-empty list of the check ids it raises and a function to run; nothing was registered.",
+        { module: named ? module : null });
+    if (clash)
+      return rowRefusal("GRAMMAR_DECLARED", clash.id === undefined
+        ? `${module} has already registered its grammar; the first still stands.`
+        : `the check ${clash.id} is already claimed by ${clash.heldBy}; nothing was registered.`, { module, ...clash });
+    /* END DEC-49 REGION is-grammar-registration */
+    const slots = EXTENSION_ARMS.filter((a) => a.ids.every((id) => ids.includes(id))).map((a) => a.name);
+    this.#grammars.push(Object.freeze({ module, ids: Object.freeze([...ids]), arm, slots: Object.freeze(slots) }));
+    return { ok: true, module, ids: [...ids] };
+  }
+
+  /** R67 (K766): the registered grammars as record-grammar's `checkBundle` takes them (`opts.grammars`, its R39): what
+   *  the audit (R18) and promotion's gate pass, so a bundle is judged by one grammar list at both. A registration that is
+   *  the one claimant of the one slot it claims, or claims none, is answered as it was registered, `{module, ids, arm}`,
+   *  in registration order. A slot several registrations claim, or a registration claiming several slots, is answered
+   *  as one entry per slot, at its first claimant's place: `{module: <first claimant>, ids: <the slot's ids>, arm}`,
+   *  whose arm runs every claimant's arm in registration order, each as `arm(ctx, findings, {slot, rest})`: `slot` is
+   *  the slot's `EXTENSION_ARMS` name, and `rest()` runs the slot's later claimants at that point, once (a claimant's
+   *  sub-slot); those not run when an arm returns run after it. A fresh list each call; the entries are frozen. */
+  grammars() { return this.#bundleGrammars(null); }
+
+  /* `grammars()`' list. With `wrap`, each claimant's arm is called through `wrap(registration, run)`: the audit wraps each
+     claimant on its own (one that throws is one error of its own, R67); `null` calls each as it is. */
+  #bundleGrammars(wrap) {
+    const out = [], composed = new Map(), call = wrap || ((g, run) => run());
+    const passThrough = (g) => g.slots.length === 0
+      || (g.slots.length === 1 && !this.#grammars.some((x) => x !== g && x.slots.includes(g.slots[0])));
+    for (const g of this.#grammars) {
+      if (passThrough(g)) {
+        out.push(wrap === null ? g : Object.freeze({ module: g.module, ids: g.ids,
+          arm: (ctx, findings, ...more) => wrap(g, () => g.arm(ctx, findings, ...more)) }));
+        continue;
+      }
+      for (const slot of g.slots) {
+        if (composed.has(slot)) { composed.get(slot).push(g); continue; }
+        const claimants = [g];
+        composed.set(slot, claimants);
+        const ids = EXTENSION_ARMS.find((a) => a.name === slot).ids;
+        out.push(Object.freeze({ module: g.module, ids, arm: async (ctx, findings) => {
+          let next = 0;
+          const rest = async () => {
+            while (next < claimants.length) {
+              const c = claimants[next++];
+              await call(c, () => c.arm(ctx, findings, { slot, rest }));
+            }
+          };
+          await rest();
+        } }));
+      }
+    }
+    return out;
+  }
+
+  /** R18–R20, R45, R59, R67–R69: the check catalogue (record-grammar's `checkBundle`, with `grammars()`) over a bounded
+   *  page of bundles in id order after `after`, run WHERE THE DATA IS (one network round trip per image was ~97% of an
+   *  outside pass's cost). What a reference resolves against is the WHOLE corpus, asked of `bundles` by its key one
+   *  reference at a time, and never leaves this method: filtering it would manufacture dangling-reference findings out
+   *  of a viewer's position (REC-30). What is gated is what leaves: the page holds only bundles `visible(id)` admits.
+   *  N117: every read here carries an SQL `LIMIT` — the cursor read takes the ids after `after` a page's worth at a time
+   *  and stops once the page is full, and no read loads the corpus's ids whole. R45: a bundle's context is every R69
+   *  registration's answer, merged in registration order, then the caller's own `context(id)`. Blob-backed files are
+   *  declared elided: existence assertions see them, byte checks skip them. R68: every registered finding's answer is
+   *  carried under its key, beside the page's figures, which it never moves. */
   async auditPass({ after = "", limit = 200, visible = null, context = null } = {}) {
     const cap = RecordCore.#bound(limit);
     const page = [];
@@ -854,8 +1148,18 @@ export class RecordCore {
       if (page.length >= cap || batch.length < cap) break;
       scan = batch[batch.length - 1].bundle_id;
     }
+    /* R59, R67, R69, C-102.3: a registered check, grammar, context or finding that threw is one error of its own on the
+       bundle, under its module's name, never a clean bundle and never a throw out of the pass. */
+    /* DEC-49 REGION is-audit-check-failed */
+    const failOn = (into, module, id, e) => {
+      into.push({ check: module, code: "AUDIT_CHECK_FAILED", severity: "error",
+                  message: `${module}'s audit check threw on ${id}: ${String((e && e.message) || e).slice(0, 200)}`,
+                  translation: RECORD_CORE_CHECKS.AUDIT_CHECK_FAILED.translation });
+    };
+    /* END DEC-49 REGION is-audit-check-failed */
     const sha256 = async (v) => hex(await crypto.subtle.digest("SHA-256", typeof v === "string" ? te.encode(v) : v));
     const sha512 = async (b) => new Uint8Array(await crypto.subtle.digest("SHA-512", b));
+    const resolveTarget = (t) => typeof t === "string" && !!this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id=? LIMIT 1`, t);
     /* REC-56 / D-206: `tally` is keyed by check id and `tallyDetail` by `<check>/<code>`, because one
        check can report different facts; `tallyDetail` is absent when nothing on the page carried a code. */
     const tally = {}; const tallyDetail = {}; const offenders = [];
@@ -866,21 +1170,25 @@ export class RecordCore {
       for (const [path, v] of Object.entries(img)) {
         if (typeof v === "string") files.set(path, v); else elided.add(path);
       }
-      const extra = typeof context === "function" ? (context(id) || {}) : {};
-      const resolveTarget = (t) => typeof t === "string" && !!this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id=? LIMIT 1`, t);
+      const failed = [];
+      const extra = {};
+      for (const { module, context: of } of this.#auditContexts) {
+        let got;
+        try { got = of(id); } catch (e) { failOn(failed, module, id, e); continue; }
+        if (got && typeof got === "object") Object.assign(extra, got);
+      }
+      if (typeof context === "function") Object.assign(extra, context(id) || {});
+      const grammars = this.#bundleGrammars(async (g, run) => { try { await run(); } catch (e) { failOn(failed, g.module, id, e); } });
       const { findings } = await checkBundle({
         folderName: id, files, elidedPaths: elided, sha256, sha512, resolveTarget, ...extra,
-      });
-      /* R59: every registered check over the same image, in registration order. A check that throws is an error
-         finding of its own, never a clean bundle. */
+      }, { grammars });
+      findings.push(...failed);
+      /* R59: every registered check over the same image, in registration order. */
       for (const { module, check } of this.#auditChecks) {
         let more;
         try { more = await check({ bundleId: id, folderName: id, raw: img, files, elidedPaths: elided, sha256, sha512,
                                    resolveTarget }, extra); }
-        catch (e) {
-          more = [{ check: module, code: "AUDIT_CHECK_FAILED", severity: "error",
-                    message: `${module}'s audit check threw on ${id}: ${String((e && e.message) || e).slice(0, 200)}` }];
-        }
+        catch (e) { more = []; failOn(findings, module, id, e); }
         if (Array.isArray(more)) findings.push(...more.filter((f) => f && typeof f === "object"));
       }
       const errs = findings.filter((f) => f.severity === "error");
@@ -895,7 +1203,24 @@ export class RecordCore {
         offenders.push({ bundleId: id, errors: errs.slice(0, 5).map((e) => ({ check: e.check, detail: e.message })) });
     }
     const last = page.length ? page[page.length - 1] : after;
-    return { ok: true, checked: page.length, clean, withErrors, tally,
+    /* R68: each registered finding over the page, `{bundles: [{bundleId, type, state}], after, last}`. */
+    const stated = {};
+    if (this.#auditFindings.length) {
+      const bundles = [];
+      for (const id of page)
+        bundles.push({ ...(this.#one(`SELECT bundle_id AS bundleId, object_type AS type, current_state AS state
+                                         FROM bundles WHERE bundle_id=?`, id) || { bundleId: id, type: null, state: null }) });
+      for (const { module, key, finding } of this.#auditFindings) {
+        try { stated[key] = await finding({ bundles, after: String(after ?? ""), last }); }
+        catch (e) {
+          const lost = [];
+          failOn(lost, module, "this page", e);
+          stated[key] = { ok: false, reason: lost[0].code, code: lost[0].code, check: RECORD_CORE_CHECKS[lost[0].code].check,
+                          translation: lost[0].translation, detail: lost[0].message };
+        }
+      }
+    }
+    return { ...stated, ok: true, checked: page.length, clean, withErrors, tally,
              ...(Object.keys(tallyDetail).length ? { tallyDetail } : {}),
              offenders, limit: cap, cursor: page.length === cap ? last : null, page };
   }
@@ -903,16 +1228,18 @@ export class RecordCore {
   /* ---- purge (R21–R24) ---- */
 
   /** R21, R46: a module declares the tables it owns, once, at start. An entry is a table name, keyed to a
-   *  bundle by its `bundle_id` column when it has one, or `{name, keys, whole}`: keyed to a bundle by the
-   *  named columns (any of them matching; none, and only the whole-store form clears it), and cleared by
-   *  the whole-store form only where the `whole` clause holds. `exempt` names tables purge never clears.
+   *  bundle by its `bundle_id` column when it has one, or `{name, keys, whole, clears}`: keyed to a bundle by the
+   *  named columns (any of them matching; none, and only the whole-store form clears it), cleared by the whole-store
+   *  form only where the `whole` clause holds, and, for `clears` (K775), a pointer column a bundle's purge sets to
+   *  NULL where it names the bundle, on rows that stay. `exempt` names tables purge never clears.
    *  A table declared twice, or by two modules, is refused, and the refused declaration declares nothing. */
   declarePurge(module, tables = [], { exempt = [] } = {}) {
     const entries = [...tables.map((t) => (typeof t === "string" ? { name: t } : { ...t })),
                      ...exempt.map((name) => ({ name, exempt: true }))];
     const names = new Set();
     for (const e of entries) {
-      if (!IDENT.test(String(e.name)) || (e.keys != null && !(Array.isArray(e.keys) && e.keys.every((k) => IDENT.test(String(k))))))
+      const columns = (list) => list == null || (Array.isArray(list) && list.every((k) => IDENT.test(String(k))));
+      if (!IDENT.test(String(e.name)) || !columns(e.keys) || !columns(e.clears))
         return { ok: false, reason: "TABLE_NAME_INVALID", table: String(e.name), module };
       if (this.#declared.has(e.name) || names.has(e.name))
         return { ok: false, reason: "TABLE_DECLARED", table: e.name, module,
@@ -920,15 +1247,17 @@ export class RecordCore {
       names.add(e.name);
     }
     for (const e of entries) {
-      const d = { module, name: e.name, exempt: !!e.exempt, keys: e.keys == null ? null : [...e.keys], whole: e.whole || null };
+      const d = { module, name: e.name, exempt: !!e.exempt, keys: e.keys == null ? null : [...e.keys], whole: e.whole || null,
+                  clears: e.clears == null ? [] : [...e.clears] };
       this.#declared.set(e.name, d);
       this.#order.push(d);
     }
     return { ok: true };
   }
 
-  /** R22–R24: whole-store (no `bundleId`) or one bundle's rows, from every declared non-exempt table,
-   *  in declaration order and this module's `bundles` last, in one transaction. `seq`, `minted_ids` and
+  /** R22–R24, R46: whole-store (no `bundleId`) or one bundle's rows, from every declared non-exempt table,
+   *  in declaration order and this module's `bundles` last, in one transaction; a bundle's purge also sets each
+   *  declared `clears` column to NULL where it names the bundle (K775), in the same transaction. `seq`, `minted_ids` and
    *  `settings` are exempt in both forms, on the counter's reasoning: an id once allocated or minted is
    *  never reissued, and a purge that reset them would make identifiers ambiguous across it. An
    *  undeclared table is never touched. Evidence objects are untouched (content-addressed, immutable). */
@@ -942,6 +1271,7 @@ export class RecordCore {
         removed[d.name] = 0;
         let where, args = [];
         if (one) {
+          for (const c of d.clears) this.#sql.exec(`UPDATE ${d.name} SET ${c}=NULL WHERE ${c}=?`, bundleId);
           const keys = d.keys ?? (this.#rows(`PRAGMA table_info(${d.name})`).some((c) => c.name === "bundle_id") ? ["bundle_id"] : []);
           if (!keys.length) continue;
           where = keys.map((k) => `${k}=?`).join(" OR "); args = keys.map(() => bundleId);
@@ -997,4 +1327,92 @@ export class RecordCore {
       put: (digest, bytes) => bucket.put(key(digest), bytes, { sha256: String(digest) }),
     };
   }
+}
+
+/* ---- rule 2: the catalogue's type arms its owners have not taken yet ---- */
+
+/** Rule 2 (K653 BOB-6, K775 (3), K785): the type arms the catalogue still holds (its `LEGACY_GRAMMARS`, handed in as
+ *  `grammars` by the composition root, so this module imports no catalogue), registered with `record` in the
+ *  catalogue's name, LAST, once every module that takes a slot has registered its own: one registration, as
+ *  `legacy-checks`, of the entries whose slots no registration holds yet, its arm running the entry of the slot it is
+ *  called in (R67's `{slot}`). So record-grammar's `checkBundle` called with `grammars()` judges a bundle as the
+ *  catalogue's wrapper does, and no slot is filled twice (capture's C-2.7 is never doubled). Each entry is
+ *  `{module, ids, arm}` claiming one slot whole; one that is not, or a `grammars` that is not a list, registers nothing
+ *  of it. Answers what `registerGrammar` answers, or `{ok: true, module: "legacy-checks", ids: []}` when nothing is left
+ *  to register. Goes with the catalogue (rule 1). */
+export function registerLegacyGrammars(record, grammars) {
+  const held = new Set(record.grammars().flatMap((g) => g.ids));
+  const slotOf = (g) => {
+    if (!g || typeof g.arm !== "function" || !Array.isArray(g.ids) || !g.ids.length) return null;
+    const slot = EXTENSION_ARMS.find((a) => a.ids.length === g.ids.length && a.ids.every((id) => g.ids.includes(id)));
+    return slot ? slot.name : null;
+  };
+  const legacy = (Array.isArray(grammars) ? grammars : []).filter((g) => slotOf(g) && !g.ids.some((id) => held.has(id)));
+  if (!legacy.length) return { ok: true, module: "legacy-checks", ids: [] };
+  const bySlot = new Map(legacy.map((g) => [slotOf(g), g]));
+  return record.registerGrammar("legacy-checks", {
+    ids: legacy.flatMap((g) => g.ids),
+    arm: (ctx, findings, where) => (where && bySlot.has(where.slot) ? bySlot.get(where.slot) : legacy[0]).arm(ctx, findings),
+  });
+}
+
+/* ---- the routes (R72, R73) ---- */
+
+/* The keys of purge's proof whose difference `op=purge` answers as `removed` (R72), in today's order. */
+const PURGE_REMOVED = Object.freeze(["bundles", "files", "history", "refs", "register", "tasks", "taskQueue",
+  "sourceReachability", "entities", "entityAliases", "entityRelations", "resolutions", "connections", "progressionDefs",
+  "connectionPairChoices", "progressionStages", "progressionDefVersions", "progressionStageVersions",
+  "progressionInstances", "progressionExceptions", "connectionDirty", "proposalDispositions", "queueState",
+  "projectParticipants", "projectOwnerVotes", "aiRuns", "aiRunBounds", "aiRunLog", "leads", "themes", "themePlacements",
+  "suggestRefusals", "captureRequests"]);
+
+/** R72 (`build/extraction/legacy-store.md` §4.2 (6), §4.4 (2); K757; the `membershipOps` pattern): this module's route
+ *  arms, keyed by op name, each a function of no arguments answering what its service answers, its parameters read from
+ *  `url`'s query, where the control plane stamps `viewer` and `capacity` (never from the body). Which credential reaches
+ *  each op is `op-declarations`' and `control-plane`'s, never this map's. `sight` is membership's `viewerPredicate`
+ *  (its R43), handed in by the composition root, since this module uses no membership (R19, R73). */
+export function recordCoreOps(record, url, body, { sight = null } = {}) {
+  const q = (k) => url.searchParams.get(k);
+  return {
+    allocid: () => record.allocIdOp(q("prefix"), q("year")),
+    /* a courtesy lock of five minutes (R10–R12) */
+    lease: () => record.acquireLease(q("id"), q("actor"), 300000),
+    /* REC-176, REC-175: the two read-only censuses */
+    snapkeycensus: () => record.snapKeyCensus({ limit: q("limit") }),
+    digestcensus: () => record.digestCensus({ limit: q("limit") }),
+    /* R64: `capacity` is the control plane's stamp from the authenticated class, true exactly when it is `1`; a viewer
+       never stamped is a direct internal call, counted whole */
+    stats: () => record.stats({ capacity: q("capacity") === "1", viewer: url.searchParams.has("viewer") ? q("viewer") : undefined }),
+    audit: () => audit(record, { after: q("after") || "", limit: q("limit"), viewer: q("viewer"), sight }),
+    /* R22–R24, D-113: one transaction, the private proof read just before and just after */
+    purge: () => {
+      const bundleId = q("bundleId") || null;
+      const before = record.proofCounts();
+      const { scope } = record.transact(() => record.purge({ bundleId }));
+      const after = record.proofCounts();
+      const removed = Object.fromEntries(PURGE_REMOVED.map((k) => [k, before[k] - after[k]]));
+      return { ok: true, scope, before, after, removed };
+    },
+  };
+}
+
+/* R73: today's sweep, gated by the caller's sight. `visible(id)` asks, once per id the page names, whether the bundle
+   passes `sight(viewer)`; references still resolve against the whole corpus (R19). An absent or unknown viewer, a sight
+   not handed in, or one that cannot be read, sees nothing: an empty page and `total` 0 (fail closed, membership R43's
+   "any other viewer"). The page's ids themselves are not answered. */
+async function audit(record, { after, limit, viewer, sight }) {
+  let gate = null;
+  try { gate = typeof sight === "function" ? sight(viewer) : null; } catch { gate = null; }
+  if (!gate || typeof gate.sql !== "string") gate = { sql: "0=1", args: [] };
+  const args = Array.isArray(gate.args) ? gate.args : [];
+  const one = (sql, ...a) => { for (const r of sqlOf(record).exec(sql, ...a)) return r; return null; };
+  const sighted = new Map();
+  const visible = (id) => {
+    if (!sighted.has(id)) sighted.set(id, !!one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, id, ...args));
+    return sighted.get(id);
+  };
+  const { page, ...answer } = await record.auditPass({ after, limit, visible });
+  void page;
+  const total = one(`SELECT COUNT(*) AS n FROM bundles b WHERE (${gate.sql})`, ...args);
+  return { ...answer, total: total ? Number(total.n) : 0 };
 }

@@ -36,10 +36,10 @@ Terms. **Affected** is `{kind, description, role?}`, `kind` one of `class`, `fun
 
 ### Uses
 
-- `legacy-checks`: `isMachineIdentity`; the `CONS-` type registration (R14, K171).
+- `record-grammar`: `isMachineIdentity`; the `CONS-` type registration (R14).
 - `record-core`: `allocId`, `transact`, `stampInstant`.
 - `membership`: `sight`, `projectAuthority`, `viewerPredicate`.
-- `promotion`: `promote`, a part being a record object (R14, K102). *(not declared)*
+- `promotion`: `promote`, a part being a record object (R14, K102).
 - `content`: `contentRow` and its passage text (R2's operands), `passageNotice` (R8).
 - `provenance`: `captureGrade` (R2, K171).
 - `inquiry`: the causation inquiry's state and supersession (R5, R8).

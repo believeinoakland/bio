@@ -1,7 +1,9 @@
-/* ratification over the modules it uses. record-core, membership, promotion and publication are the real ones, on a
-   real SQLite database (node:sqlite) standing in for a Durable Object's storage: the head, the transaction, the
-   authority and sight questions, the registrations (R8, R9), publication's tables and its two commits (R22, with R35)
-   are theirs. What basis-versions, provenance and inquiry provide is a provider the test controls, as
+/* ratification over the modules it uses. record-core, membership, credentials, promotion and publication are the real
+   ones, on a real SQLite database (node:sqlite) standing in for a Durable Object's storage: the head, the transaction,
+   the authority and sight questions, the attesting keys (credentials R11, K757), the registrations (R8, R9), the mint
+   seed (record-core R70), publication's tables and its two commits (R22, with R35) are theirs. The record carries
+   inquiry-grammar's grammar (its R6, record-core R67), registered as the store's composition root registers it, so
+   C-2.8's inquiry arm runs in op=ratify's gate as it does on the store's host (K790). What basis-versions, provenance and inquiry provide is a provider the test controls, as
    `ratificationOf`'s deps take them (the conclusion reads of R1, the gate facts of R7); so are the publication reads a
    test steers (the case document facts, the pins, what rests on a bundle). Every call to publication is recorded, so a
    test can say what this module handed it. Every test drives `ratification` at its interface: the store half
@@ -11,6 +13,8 @@ import { DatabaseSync } from "node:sqlite";
 import { createHash, webcrypto } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
+import { credentialsOf } from "../../../src/credentials/index.mjs";
+import { registerInquiryGrammar } from "../../../src/inquiry-grammar/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { publicationOf } from "../../../src/publication/index.mjs";
 import { ratificationOf, ratificationOps } from "../../../src/ratification/index.mjs";
@@ -77,14 +81,28 @@ export const signBundle = (key, id, bundleSha) => sign(key, ratifyStatement(id, 
 
 /* ---------------------------------------------------------------- the world */
 
+/** An in-memory R2 bucket over a Map of key to bytes. */
+export const bucketOver = (m) => ({
+  head: async (k) => (m.has(k) ? { size: m.get(k).length } : null),
+  get: async (k) => (m.has(k) ? { body: m.get(k), arrayBuffer: async () => m.get(k) } : null),
+  put: async (k, v) => { m.set(k, v instanceof Uint8Array ? v : new TextEncoder().encode(String(v))); },
+});
+
 export function world() {
   const st = storage();
   const host = { storage: st };
   for (const t of bare(RECORD_SCHEMA).split(";")) if (t.trim()) st.db.exec(t);
-  const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
+  /* record-core R38's evidence store, over an in-memory bucket (keys `bio/captures/<digest>`); R4's gate probes it */
+  const evidence = new Map();
+  const record = recordOf(host, { evidence: bucketOver(evidence), evidencePrefix: "bio/captures/" });
   record.migrate();
   const membership = membershipOf(host, { record });
   membership.migrate();
+  /* credentials after membership, as the composition root migrates them (K789): its tables (signers among them), its
+     listener and its claim fact registered with membership (its R16, R17, R20) */
+  const credentials = credentialsOf(host, { record, membership });
+  credentials.migrate();
+  registerInquiryGrammar(record);
   const promotion = promotionOf(host, { record, membership, now: () => NOW });
   promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
   /* the columns of inquiry's `inquiry_basis` and connections' `refs` that R7's facts join, as their writers fill them */
@@ -104,7 +122,12 @@ export function world() {
   };
   /* provenance's register rows and inquiry's earned registry, for R7 */
   const registers = new Map();
-  const provenance = { registeredFor: (id) => registers.get(id) ?? [] };
+  /* provenance R5's `registerHolds`, as the test sets it by hash: what the register's receipts and the bundle's record
+     name for a whole hash the evidence store does not hold (nothing, by default) */
+  const holds = new Map();
+  const provenance = { registeredFor: (id) => registers.get(id) ?? [],
+                       registerHolds: ({ sha }) => holds.get(sha) ?? { ok: true, sha, asked: true, parts: null,
+                                                                       registered: false, acquired: false } };
   const inquiry = { subjectEntityOf: (id) => `ENT-of-${id}`,
                     earned: (subject, targets) => ({ subject, earned: { capture: Object.fromEntries(targets.map((t) => [t, null])) } }) };
 
@@ -149,16 +172,17 @@ export function world() {
       return typeof fn === "function" ? (...a) => { calls.push([k, ...a]); return fn(...a); } : fn;
     },
   });
-  const r = ratificationOf(host, { storage: st, record, membership, promotion, provenance, inquiry, basisVersions,
-                                   publication });
+  const r = ratificationOf(host, { storage: st, record, membership, credentials, promotion, provenance, inquiry,
+                                   basisVersions, publication });
   let n = 0;
   const w = {
-    st, host, record, membership, promotion, r, bv, key, registers, pub, publication, calls,
+    st, host, record, membership, credentials, promotion, r, bv, key, registers, holds, evidence, pub, publication, calls,
     ops: {},   /* stand-ins for other modules' Durable Object ops, by name (the Worker half's tests) */
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
     sha: (id) => record.head(id)?.bundleSha ?? null,
-    /** An active member, and optionally a registered active signing key. */
+    /** An active member, and optionally a registered active signing key (a credentials `signers` row, as R6 leaves
+     *  one). */
     member(id, { role = "member", signer = null } = {}) {
       st.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
                    VALUES (?, ?, ?, ?, 'active', '["contribute"]', 't', 't')`, id, `Cover ${id}`, `h_${id}`, role);
@@ -225,10 +249,10 @@ export function projMd(title) {
           "references: []", "state_history: []", "---", "", "## Objective", "", "Find out.", ""].join("\n");
 }
 
-/** A /4 case document's text over `members` ([{id, pin, role}]), with `conclusions` rows ([[member, conclusion]])
+/** A /5 case document's text (the format op=publish authors) over `members` ([{id, pin, role}]), with `conclusions` rows ([[member, conclusion]])
  *  written by this module's one writer, and `extra` frontmatter lines. */
 export function caseMd({ caseId, edition, project, members, conclusions = [], extra = [], rowLines }) {
-  return ["---", "format: bio-case-document/4", `case_id: ${caseId}`, `case_edition: ${edition}`,
+  return ["---", "format: bio-case-document/5", `case_id: ${caseId}`, `case_edition: ${edition}`,
     `case_project: ${project}`, `case_scope: "whether the permits were issued as the minutes say"`,
     `bias_acknowledgement: "we expected the permits were late"`,
     "case_findings:", ...members.map((m) => `  - ${m.id}`),
@@ -270,10 +294,11 @@ export function cleanInfoMd(id) {
     "## Provenance Notes", "", "None.", "", "## Review Notes", "", "## Session Log", ""].join("\n");
 }
 
-/** A catalogue-clean bio-case-document/4 as an object (`checkCaseDocument` draws no finding over it). */
+/** A catalogue-clean bio-case-document/5 as an object, the format op=publish authors, with its tension section empty
+ *  (`checkCaseDocument` draws no finding over it). */
 export function cleanCase({ caseId, edition, project, members }) {
   return {
-    format: "bio-case-document/4", case_id: caseId, case_edition: edition, case_project: project,
+    format: "bio-case-document/5", case_id: caseId, case_edition: edition, case_project: project,
     case_scope: "whether the permits were issued as the minutes say", bias_acknowledgement: "we expected them late",
     case_findings: members.map((m) => m.id),
     case_roles: members.map((m, i) => ({ target: m.id, role: i ? "supporting" : "load_bearing", version_sha: m.pin, edition: 1 })),
@@ -288,7 +313,7 @@ export function cleanCase({ caseId, edition, project, members }) {
     bias_manifest_bundles: [], bias_manifest_pins_proposed: [], case_citations: [],
     case_strength: members.flatMap((m) => [{ target: m.id, axis: "capture", state: "unrated", grade: null },
                                            { target: m.id, axis: "connection", state: "unrated", grade: null }]),
-    case_strength_grounds: [],
+    case_strength_grounds: [], case_tensions: [], case_tension_sentences: [], case_tensions_unread: [],
   };
 }
 export const CASE_BODY = "# Case\n\n## What This Excludes\n\nNothing named.\n";
@@ -318,17 +343,12 @@ export function plane(w, { session = { role: "member:alice" }, viaSession = true
       if (op === "reusedparts") return { parts: [] };
       if (op === "capturelimit") return { observed: null };
       if (op === "recordreuseverdicts") return { ok: true };
-      if (op === "registerholds") return { parts: null, acquired: false };
       const mine = ratificationOps(w.r, url, body)[op];
       if (mine) return mine();
       throw new Error(`no op ${op}`);
     },
   };
-  const bucket = (m) => ({
-    head: async (k) => (m.has(k) ? { size: m.get(k).length } : null),
-    get: async (k) => (m.has(k) ? { body: m.get(k) } : null),
-    put: async (k, v) => { m.set(k, v instanceof Uint8Array ? v : new TextEncoder().encode(String(v))); },
-  });
+  const bucket = bucketOver;
   const json = (body, status = 200) => ({ status, body });
   const ctx = {
     env: { CAPTURES: bucket(captures), PUBLISHED: bucket(published) }, json, storeName: "s",

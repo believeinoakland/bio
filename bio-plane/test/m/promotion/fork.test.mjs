@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { makePromotion, doc, T0 } from "./fixtures.mjs";
-import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { noSuchProject, notAParticipant } from "../../../src/membership/index.mjs";
 
 const NOW = "2026-09-26T08:00:00.000Z";

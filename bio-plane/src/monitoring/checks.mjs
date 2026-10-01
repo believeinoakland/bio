@@ -1,11 +1,19 @@
 /* monitoring — its checks (requirements: `build/requirements/monitoring.md`, R27, R42; K6, K49).
  *
- * Moved from `legacy-checks` (`checks/bio-checks.mjs`) in T8 with their comments: C-18.5, `checkGatheringGrammar` and
- * its four vocabularies. `legacy-checks` cannot import this module, so its `checkBundle` no longer runs C-18.5: this
- * module registers it with promotion (at the write, R27) and with record-core's audit (R42). The C-48.8 and C-48.9
- * rows stay in `legacy-checks` (`DRIVE_CAPTURE_CHECKS`), read in place as capture reads the C-48 family (K72 (1)). */
+ * Moved from `legacy-checks` (the legacy check catalogue) in T8 with their comments: C-18.5, `checkGatheringGrammar` and
+ * its four vocabularies. The grammar it reads (`isPublicHttpsLocator`, `ISO_TS_RE`) is `record-grammar`'s (T19). `legacy-checks` cannot import this module, so its `checkBundle` no longer runs C-18.5: this
+ * module registers it with promotion (at the write, R27) and with record-core's audit (R42).
+ *
+ * T18 (R42 as worded, K649 (6)): the C-48.8 and C-48.9 rows (`DRIVE_TICK_EXPORT_IS_THE_SHELL`,
+ * `DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL`) are copied here from the catalogue's `DRIVE_CAPTURE_CHECKS` with their
+ * comments, code, number, translation and reasons unchanged, their `where` naming this module's site; they are no longer
+ * read in place, and the catalogue's copy is T19's layer 1's to delete (K529). The rest of C-48 is `acquisition`'s (its
+ * R29). New with them (N242's share, DEC-49): C-18.10, the row of C-18.5's refusal at the write, `GATHERING_REFUSED`,
+ * which until now reached the wire with no translation (queue's C-19.2 `INBOX_REFUSED` is its twin). All three rows are
+ * `awaiting stamp` (T19's promotion job). */
 
-import { isPublicHttpsLocator, ISO_TS_RE } from "../../checks/bio-checks.mjs";
+import { isPublicHttpsLocator } from "../record-grammar/locator.mjs";
+import { ISO_TS_RE } from "../record-grammar/ids.mjs";
 
 /* The catalogue's finding shape (legacy-checks' private `f`), for the check that moved here. */
 function f(check, severity, message) {
@@ -15,6 +23,60 @@ function asText(v) {
   if (typeof v === 'string') return v;
   return new TextDecoder().decode(v);
 }
+
+const at = (fn, region) => `src/monitoring/index.mjs ${fn} > ${region}`;
+
+/* D-472 — THE SHELL, ON A TICK, AND WHY IT IS ITS OWN CODE RATHER THAN C-48.5
+   FIRING FROM A SECOND PLACE. A capture that meets the shell has captured
+   nothing and the member's remedy is to share the file. A TICK that meets the
+   shell has not captured anything either — it never would — and what it has
+   lost is the CHECK: the record's last comparison still stands, undisturbed,
+   and nothing about the document changed. Those are two different facts about
+   the member's own situation, and DEC-49's canned translation is the sentence
+   they actually read, so one sentence cannot be true of both. PL-4's rule cuts
+   the same way it did for C-48.5/C-48.7: two predicates, two sites, both
+   drivable — `op=acquire` drives the pair in `acquisition`, `op=monitor` drives
+   this pair, and `test/monitor-assess.test.mjs` drives both of these by name. */
+export const DRIVE_TICK_CHECKS = Object.freeze({
+  DRIVE_TICK_EXPORT_IS_THE_SHELL: Object.freeze({
+    check: 'C-48.8',
+    where: at('monitor', 'is-drive-tick-export'),
+    translation: 'The check of that Google Drive document did not run: the export address answered '
+      + 'with a web page rather than a document, which is what Drive does when a file stops being '
+      + 'shared with anyone who has the link. Nothing was compared and nothing about the record '
+      + 'changed — what is known is that this instance could not see the document today.',
+  }),
+  /* THE SAME TICK, CAUGHT ON THE BYTES. C-48.7's reasoning one op over: the
+     declared type and the first kibibyte are two different pieces of evidence,
+     and "Google told us it was a document and it was a web page" is the more
+     serious fact. On a tick the consequence is the same either way and it is
+     still worth two codes, because a tick that compared the shell would report
+     the document CHANGED on every visit — the cry-wolf this row exists to end. */
+  DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL: Object.freeze({
+    check: 'C-48.9',
+    where: at('monitor', 'is-drive-tick-bytes'),
+    translation: 'The check of that Google Drive document did not run: the export address said it '
+      + 'was sending a document and sent a web page instead. This instance reads the bytes rather '
+      + 'than the label, so the application page was recognised and not compared against the '
+      + 'captured document — comparing it would report a change on every visit that nobody made.',
+  }),
+});
+
+/* C-18.10 — the gathering grammar's refusal at the write (R27; N242's share): a non-replay promotion carrying a
+   `data/gathering.json` whose C-18.5 grammar finds an error. The `findings` beside it name each C-18.5 error; the
+   translation is the sentence a member reads, so it says what happened and that nothing was saved. */
+export const GATHERING_CHECKS = Object.freeze({
+  GATHERING_REFUSED: Object.freeze({
+    check: 'C-18.10',
+    where: at('gatheringCheck', 'is-gathering-refused'),
+    translation: 'This was not saved: the list of things to gather that it carries is not written the way the record '
+      + 'writes them, and a gathering request is shown to members as data, so it must stay within its grammar. The '
+      + 'findings beside this say which requests and what is wrong with each. Nothing was changed.',
+  }),
+});
+
+/** R42: every row this module holds, keyed by code, for a reader that looks one up by the code an answer carries. */
+export const MONITORING_CHECKS = Object.freeze({ ...DRIVE_TICK_CHECKS, ...GATHERING_CHECKS });
 
 export const GATH_ID_RE = /^GATH-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
 export const CRITICALITY_ENUM = ['crucial', 'supporting'];

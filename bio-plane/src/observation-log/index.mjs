@@ -1,4 +1,4 @@
-/* observation-log — the record of looking (requirements: `build/requirements/observation-log.md`, R1–R28; map:
+/* observation-log — the record of looking (requirements: `build/requirements/observation-log.md`, R1–R31; map:
  * `build/extraction/observation-log.md`). Extracted from the legacy store (the append site `#observe` and
  * `#observationReferent`, the writers `#observeExtraction`, `#observeIndexed`, `#observeReaderRun`,
  * `#observeResolutionAttempt`, `#observeConnectionDerivation` and the receipt's look, the missing-row rule, the
@@ -7,11 +7,11 @@
  *
  * `observationLogOf(ctx)` answers the one instance per Durable Object storage (K61). It reaches `record-core` and
  * `membership` through their factories, declares its tables to purge (R23, K23), and registers its writers with
- * `provenance` (the receipt, R5) and `extraction` (the reading notice, R6–R8, and the index notice, R7) on the same
- * `ctx` (K31).
- * `entities.onResolveAttempt` and `connections`' derivation notice are registered by `attachMeaning` once those
- * modules are extracted; until then the legacy store calls `observeResolutionAttempt` and
- * `observeConnectionDerivation` where they fire. */
+ * `provenance` (the receipt, R5, and the testimony slot, R30) and `extraction` (the reading notice, R6–R8, and the
+ * index notice, R7) on the same `ctx` (K31). `listenToCapture` registers the row writer on `capture`'s `observation`
+ * event (R31), which the composition root calls once capture exists. `attachMeaning` registers the meaning-level writers with `entities.onResolveAttempt` and `connections`'
+ * derivation notice, and this module's derivation statement as connections' provider (its R5, R51), each under this
+ * module's own name. */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/index.mjs";
@@ -19,7 +19,8 @@ import { provenanceOf } from "../provenance/index.mjs";
 import { extractionOf, CAPTURE_TEXT_UNIT_CAP, CAPTURE_TEXT_CAPTURE_BOUND, CAPTURE_TEXT_CAPTURE_UNIT_BOUND }
   from "../extraction/index.mjs";
 import { tiersEvidenced } from "../textchain.mjs";
-import { contentMintState, isMachineIdentity } from "../../checks/bio-checks.mjs";
+import { contentMintState } from "../record-grammar/labels.mjs";
+import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { LEAD_CHECKS } from "./checks.mjs";
 import { OBSERVATION_LOG_TABLES, migrateObservationLog } from "./schema.mjs";
 import {
@@ -29,7 +30,7 @@ import {
 } from "./vocabulary.mjs";
 
 export * from "./vocabulary.mjs";
-export { LEAD_CHECKS, OBSERVATION_CHECKS, OBSERVATION_CHECK_KEYS } from "./checks.mjs";
+export { AI_RUN_CHECKS, LEAD_CHECKS, LEAD_ID_RE, OBSERVATION_CHECKS, OBSERVATION_CHECK_KEYS } from "./checks.mjs";
 export { OBSERVATION_LOG_SCHEMA, OBSERVATION_LOG_TABLES, observationLogOwns } from "./schema.mjs";
 
 /* WHICH CONTAINERS HAVE AN INDEXING UNIT ARM AT ALL, which is a DIFFERENT
@@ -126,6 +127,7 @@ export class ObservationLog {
     this.resolvers = new Map();
     this.listening = false;
     this.indexListening = false;
+    this.captureListening = false;
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -236,6 +238,43 @@ export class ObservationLog {
       detail: `${observation} (via ${via})`,
     }, retrieved);
     return refused ? { ...refused, ok: false } : { written: true };
+  }
+
+  /** R30 — THE TESTIMONY PATH'S LOOK (MK-1, D-184): a member's authored observation is its own text, so its promotion
+   *  records the extraction no step performed, as the content-level `extract` row `op=contentaxis` reads. Without it the
+   *  capture has no `extract` row and reads NOBODY LOOKED, which is false: the words ARE the text. Registered as this
+   *  module's projection in provenance's testimony slot (its R52), which runs it after content's, so `earlier.content`
+   *  names the row content's projection minted; that row is the referent. A refused row THROWS, so the whole promotion
+   *  rolls back rather than keep an authored bundle with no look behind it, and an accepted one answers nothing into the
+   *  promotion's answer. */
+  testimonyLook({ bundleId = null, captureSha = null, author = null, earlier = null } = {}) {
+    const minted = earlier && earlier.content && typeof earlier.content === "object" ? earlier.content.content_id : null;
+    const refused = this.observe({
+      actorClass: "member", actor: author ?? null, authorityKind: "extract",
+      authority: bundleId == null ? null : String(bundleId),
+      level: "content", subjectKind: "capture", subject: captureSha, state: "PRESENT", condition: null,
+      resultKind: "content", resultRef: minted ?? null,
+      detail: "first extraction; a member's authored observation: its bytes ARE its text, as written, so the whole "
+            + "document is text and no extraction step stands between them",
+    });
+    if (refused) {
+      const err = new Error(`observation-log: the authored observation's extraction row was refused ${refused.check} `
+                          + `(${refused.code}): ${refused.detail}`);
+      err.refusal = refused;
+      throw err;
+    }
+    return null;
+  }
+
+  /** R31 — capture's `observation` event (its R26: the document-level row each reuse verdict maps to), registered once
+   *  as this module's listener: each row it hands over is appended through `observe(row, at)`, and what `observe`
+   *  answers (null, or the refusal capture reports among its `observation_refusals`) is the listener's answer. The
+   *  composition root calls it once capture exists; a second call is a no-op. Answers whether it is listening. */
+  listenToCapture(capture) {
+    if (this.captureListening || !capture || typeof capture.on !== "function") return this.captureListening;
+    const r = capture.on("observation", OBSERVATION_LOG_MODULE, (e) => this.observe(e && e.row, (e && e.at) || null));
+    this.captureListening = !(r && r.ok === false);
+    return this.captureListening;
   }
 
   /** Registers `onReadingNotice` with extraction's reading notice (its R24) and `onIndexNotice` with its index notice
@@ -454,14 +493,18 @@ export class ObservationLog {
     return { written: bad ? 0 : 1, refused: bad ? [bad] : [], state: bad ? null : row.state };
   }
 
-  /** Registers the meaning-level writers with `entities` and `connections` once those modules are extracted (R8): each
-   *  takes `(module, fn)` and refuses a second registration. Answers which were registered. */
+  /** Registers the meaning-level writers with `entities` (its R13) and `connections` (its R3) (R8), and this module's
+   *  derivation statement as connections' provider (its R5, R51), each under this module's own name: each takes
+   *  `(module, fn)` and refuses a second registration, whose refusal is answered. Answers which were registered. */
   attachMeaning({ entities = null, connections = null } = {}) {
     const out = {};
     if (entities && typeof entities.onResolveAttempt === "function")
       out.entities = entities.onResolveAttempt(OBSERVATION_LOG_MODULE, (e) => this.observeResolutionAttempt(e));
     if (connections && typeof connections.onDerived === "function")
       out.connections = connections.onDerived(OBSERVATION_LOG_MODULE, (e) => this.observeConnectionDerivation(e));
+    if (connections && typeof connections.registerDerivationProvider === "function")
+      out.derivationProvider = connections.registerDerivationProvider(OBSERVATION_LOG_MODULE,
+        (id, o) => this.derivationStatementFor(id, o));
     return out;
   }
 
@@ -932,7 +975,9 @@ const instances = new WeakMap();
 
 /** The one observation-log instance for `host` (the Durable Object's `ctx`, with its `storage`); `deps` are read on
  *  the first call only. At creation it declares its tables to purge (R23) and registers its writers with provenance's
- *  receipt (R5) and extraction's reading notice (R6–R8) and index notice (R7). */
+ *  receipt (R5) and testimony slot (R30), extraction's reading notice (R6–R8) and index notice (R7), and, when
+ *  `deps.capture` is given, capture's `observation` event (R31). A refused testimony registration is a defect of the
+ *  wiring and throws. */
 export function observationLogOf(host, deps) {
   let o = instances.get(host);
   if (!o) {
@@ -945,6 +990,12 @@ export function observationLogOf(host, deps) {
     const provenance = d.provenance === undefined ? provenanceOf(host) : d.provenance;
     if (provenance && typeof provenance.onReceipt === "function")
       provenance.onReceipt(OBSERVATION_LOG_MODULE, (e) => o.receiptLook(e));
+    if (provenance && typeof provenance.onTestimony === "function") {
+      const r = provenance.onTestimony(OBSERVATION_LOG_MODULE, { project: (t) => o.testimonyLook(t) });
+      if (r && r.ok === false)
+        throw new Error(`observation-log: provenance refused its testimony registration: ${r.code || r.reason}`);
+    }
+    if (d.capture) o.listenToCapture(d.capture);
     o.listenTo(d.extraction === undefined ? extractionOf(host) : d.extraction);
     o.attachMeaning({ entities: d.entities || null, connections: d.connections || null });
   }

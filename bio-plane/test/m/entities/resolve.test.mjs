@@ -154,7 +154,7 @@ test("R27 grade states how a reference was matched and nothing else: a C never r
 
 test("R33 gradeRank ranks the catalogue's grades in its own order, strongest highest; no other value has a rank", async () => {
   const { gradeRank } = await import("../../../src/entities/index.mjs");
-  const { BASIS_GRADES } = await import("../../../checks/bio-checks.mjs");
+  const { BASIS_GRADES } = await import("../../../src/record-grammar/grades.mjs");
   assert.deepEqual(Object.keys(gradeRank), [...BASIS_GRADES]);
   for (let i = 1; i < BASIS_GRADES.length; i++) assert.ok(gradeRank[BASIS_GRADES[i - 1]] > gradeRank[BASIS_GRADES[i]]);
   assert.deepEqual(gradeRank, { A: 4, B: 3, C: 2, D: 1 });

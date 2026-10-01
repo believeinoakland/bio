@@ -28,7 +28,7 @@
  * already made each of them with its own options; `deps` (a test's) replaces any of `record`, `membership`,
  * `connections`, `citation`, `inquiry`, `publication`, `basisVersions`, `ratification`, `contradiction`. */
 
-import { normalizeType, parseFrontmatter, isMachineIdentity } from "../../checks/bio-checks.mjs";
+import { normalizeType, parseFrontmatter, isMachineIdentity } from "../record-grammar/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, Membership } from "../membership/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
@@ -238,4 +238,15 @@ export function affordancesOf(host, deps) {
   let a = instances.get(host);
   if (!a) { a = new AffordanceFacts(host, deps); instances.set(host, a); }
   return a;
+}
+
+/* N13's share (`legacy-store`'s map §4.1): the route this module answers, `op=affordancefacts` (R13–R16), as an op map
+   the composition root spreads into the durable object's one route map, as every other module's is. The stamps arrive
+   on the query exactly as the acts receive them; an absent one reads null (R15). */
+export function affordancesOps(a, url) {
+  const q = (k) => url.searchParams.get(k);
+  return {
+    affordancefacts: () => a.affordanceFacts({ target: q("target"), viewer: q("viewer"), identity: q("identity"),
+                                               author: q("author"), by: q("by") }),
+  };
 }

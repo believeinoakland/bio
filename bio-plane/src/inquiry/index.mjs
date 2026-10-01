@@ -1,6 +1,6 @@
 /* inquiry — the one recursive object of case-making (requirements: `build/requirements/inquiry.md`). A question, which
  * gathers evidence and other inquiries as the legs of its basis, and may reach a conclusion. This module holds the
- * inquiry's lifecycle and its grammar (the public face of the catalogue's rules, `./grammar.mjs`), the basis legs and
+ * inquiry's lifecycle and its grammar (the public face of `inquiry-grammar`'s rules, `./grammar.mjs`), the basis legs and
  * what the record can earn for each (the earned registry, R13–R15), the ground partition (DEC-32), the exclusions a
  * completeness statement names, supersession and division. It holds no version of a basis, no conclusion and no
  * strength: those are `basis-versions`' and `strength`'s, which read what this module holds.
@@ -8,28 +8,31 @@
  * Extracted from the legacy modules (T7, layer 6; K3, K64, K83, K102, N55, N56): `store.mjs` (REC-11's basis projection
  * and cycle guard, REC-14's exclusions, REC-16's division, REC-17's live-leg predicate and superseded-by index, REC-18's
  * earned registry with REC-83/REC-88/MK-2's arms, REC-45's grounding, S-11's disposition, REC-82/REC-84's leg content,
- * REC-220's leg versions, REC-173's replay row), `schema.mjs` (the three tables, now `./schema.mjs`). The catalogue's
- * leg and entry grammar stays in `legacy-checks`, which its own `checkBundle`, basis-version and action grammars call and
- * which is earlier in the order (K138's pattern); `./grammar.mjs` is its one public face here. The legacy code's comments
- * moved with it, shortened where they only restated it.
+ * REC-220's leg versions, REC-173's replay row), `schema.mjs` (the three tables, now `./schema.mjs`). The leg and entry
+ * grammar is `inquiry-grammar`'s since T19 (moved from the catalogue, K766), judged at the write synchronously (R11);
+ * `./grammar.mjs` is its one public face here. The legacy code's comments moved with it, shortened where they only
+ * restated it.
  *
  * REACHED as `inquiryOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first call
  * with `deps`, returned to every later caller. At creation it declares its tables to purge (R36), joins every promotion
- * (R11's check, R12's projection) and every re-read that stales content (content R41's `onStale`).
+ * (R11's check, R12's projection) and every re-read that stales content (content R41's `onStale`), and registers with
+ * retrieval the `legs` field's relation (R36, its R62) and the migrated arm of `surfaced_in` (N405, its R56).
  * `deps`:
  *   record, membership, promotion, content, connections, entities, retrieval, provenance   the modules it uses,
  *                through their factories on the same host unless a test passes its own (connections, entities,
  *                retrieval and provenance are reached lazily, on first use).
  *   now          the module's clock, an ISO instant at second precision (default: the wall clock). */
 
-import { parseFrontmatter, normalizeType, OBJECT_TYPES, STATES, vocabFor, deriveInquiryTitle, checkInquiryBasis,
-         BUNDLE_ID_RE, supersedesEdgeFindings, divisionDisclosureFindings, isMachineIdentity, createSha256,
-         BASIS_GRADES, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE, TESTIMONY_GRADE, ACT_SHAPE_CHECKS,
-         MACHINE_FENCE_CHECKS, INSTANCE_GROUP_CHECKS } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter, normalizeType, OBJECT_TYPES, STATES, vocabFor, deriveInquiryTitle, BUNDLE_ID_RE,
+         isMachineIdentity, createSha256, BASIS_GRADES, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE, TESTIMONY_GRADE,
+         SHARED_ACT_CHECKS } from "../record-grammar/index.mjs";
+import { checkInquiryBasis, checkInquiryExtension, supersedesEdgeFindings, divisionDisclosureFindings, INQUIRY_ROWS }
+  from "./grammar.mjs";
+import { INQUIRY_GRAMMARS } from "../inquiry-grammar/index.mjs";
 import { captureBound, isTranscribed } from "../textchain.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/index.mjs";
-import { promotionOf, stepContext } from "../promotion/index.mjs";
+import { promotionOf, stepContext, PROMOTION_ROW_CHECKS } from "../promotion/index.mjs";
 import { contentOf, CONTENT_EXTENT_CHECKS, CONTENT_MINTED_BY_PLANE, canonicalExtent, legContentId }
   from "../content/index.mjs";
 import { connectionsOf, refsReplacedOf } from "../connections/index.mjs";
@@ -37,15 +40,17 @@ import { entitiesOf, gradeRank } from "../entities/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { notADisposition, DISPOSITIONS } from "../progressions/index.mjs";
-import { INQUIRY_TABLES, migrateInquiry } from "./schema.mjs";
-import { INQUIRY_CONTRADICTION_CHECKS } from "./checks.mjs";
+import { INQUIRY_TABLES, migrateInquiry, BUNDLE_FACTS, LEGS_RELATION } from "./schema.mjs";
+import { INQUIRY_CONTRADICTION_CHECKS, INQUIRY_SURFACE_CHECKS } from "./checks.mjs";
+import { checkInquiryEntry } from "./grammar.mjs";
 import { contradictionFindings, candidateOf, readResolution, exploresOf, CANDIDATE_RE } from "./contradiction.mjs";
 import { setScalar, setOrAddScalar, appendStateHistory, removeBlock, setOrAddBlock, setSection, appendSessionLog,
          spliceBasisGround, blockEntries, fmSafe, rand } from "./text.mjs";
 
-export { INQUIRY_SCHEMA, INQUIRY_TABLES } from "./schema.mjs";
+export { INQUIRY_SCHEMA, INQUIRY_TABLES, BUNDLE_FACTS, LEGS_RELATION, SUBJECT_COLUMN, moveBundleFacts, moveSubjectEntity }
+  from "./schema.mjs";
 export * from "./grammar.mjs";
-export { INQUIRY_CONTRADICTION_CHECKS } from "./checks.mjs";
+export { INQUIRY_CONTRADICTION_CHECKS, INQUIRY_SURFACE_CHECKS } from "./checks.mjs";
 export { CONTRADICTION_COORDINATES, PLURALITY_DIFFERENCES, DISSOLVED_BY, NORM_CANONS, RESOLUTION_KINDS, resolutionFamily,
          resolutionLines, CANDIDATE_RE, QUALIFIER_MAX, HYPOTHESIS_MAX } from "./contradiction.mjs";
 
@@ -96,8 +101,8 @@ const GRADE_RANK = gradeRank;
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 
 /** The catalogue row a refusal code has, if any: its check id and canned translation travel with it (DEC-49). */
-const ROW_FAMILIES = [ACT_SHAPE_CHECKS, MACHINE_FENCE_CHECKS, INSTANCE_GROUP_CHECKS, INQUIRY_DISPOSE_CHECKS,
-                      INQUIRY_CONTRADICTION_CHECKS];
+const ROW_FAMILIES = [INQUIRY_ROWS, SHARED_ACT_CHECKS, INQUIRY_DISPOSE_CHECKS, INQUIRY_CONTRADICTION_CHECKS,
+                      INQUIRY_SURFACE_CHECKS];
 function withRow(answer) {
   if (!answer || answer.ok !== false || typeof answer.reason !== "string" || answer.check) return answer;
   const row = ROW_FAMILIES.map((f) => f && f[answer.reason]).find((r) => r && r.check);
@@ -132,7 +137,7 @@ export function supersededByOf(row) {
  *  nothing; `basis-versions` answers through it too. `extra` adds the caller's fields and never replaces these. */
 export function actNoBasis(detail, extra = {}) {
   /* DEC-49 REGION is-act-no-basis */
-  const row = ACT_SHAPE_CHECKS.NO_BASIS;
+  const row = SHARED_ACT_CHECKS.NO_BASIS;
   return { ...(extra && typeof extra === "object" ? extra : {}),
            ok: false, reason: "NO_BASIS", code: "NO_BASIS", check: row.check, translation: row.translation, detail };
   /* END DEC-49 REGION is-act-no-basis */
@@ -167,6 +172,23 @@ function legRebuilt(l) {
     ...(typeof l.note === "string" ? [`    note: "${fmSafe(l.note)}"`] : [])];
 }
 
+/* R42 (N422): `base` with a `listeners_failed` key read through `failed()` whenever the object is read: present, as the
+   list `failed()` answers, exactly while that list is not empty; every other key is `base`'s own. */
+const LISTENERS_FAILED = "listeners_failed";
+function liveFailures(base, failed) {
+  const now = () => { const f = failed(); return f.length ? f : null; };
+  return new Proxy(base, {
+    get: (t, k, rcv) => (k === LISTENERS_FAILED ? (now() ?? undefined) : Reflect.get(t, k, rcv)),
+    has: (t, k) => (k === LISTENERS_FAILED ? now() !== null : Reflect.has(t, k)),
+    ownKeys: (t) => [...Reflect.ownKeys(t).filter((k) => k !== LISTENERS_FAILED), ...(now() ? [LISTENERS_FAILED] : [])],
+    getOwnPropertyDescriptor: (t, k) => {
+      if (k !== LISTENERS_FAILED) return Reflect.getOwnPropertyDescriptor(t, k);
+      const f = now();
+      return f ? { value: f, writable: true, enumerable: true, configurable: true } : undefined;
+    },
+  });
+}
+
 /* ------------------------------------------------------------------ the module */
 
 export class Inquiry {
@@ -197,13 +219,12 @@ export class Inquiry {
   #promote(pkg) { return this.promotion.promote(pkg); }
   #when() { const w = this.now(); return typeof w === "string" && w ? w : stampInstant("second"); }
 
-  /** The tables, their migrations and the superseded-by backfill (R36; REC-17's boot pass, bounded by the number of
-   *  `supersedes` edges, which is the number of divisions anybody has performed). Idempotent: every boot. */
+  /** The tables, their migrations (with N136's move of the leg count and the superseded-by index off `bundles`, R36)
+   *  and the superseded-by backfill (REC-17's boot pass, bounded by the number of `supersedes` edges, which is the
+   *  number of divisions anybody has performed). Idempotent: every boot. */
   migrate() {
     migrateInquiry(this.sql);
-    const hasColumn = this.#rows(`PRAGMA table_info(bundles)`).some((r) => r.name === "inquiry_superseded_by");
-    const hasRefs = this.#rows(`PRAGMA table_info(refs)`).length > 0;
-    if (hasColumn && hasRefs)
+    if (this.#rows(`PRAGMA table_info(refs)`).length > 0)
       for (const r of this.#rows(`SELECT DISTINCT target_id FROM refs WHERE kind='supersedes'`))
         this.writeSupersededBy(r.target_id);
   }
@@ -242,29 +263,34 @@ export class Inquiry {
     this.#onGrounded = { module, fn };
     return { ok: true, module };
   }
-  /* The re-evaluation an act raised, `{raised, failed}`, or null when no module is registered to raise it. The listener
-     answers the dependents (an array), or `{raised, listeners_failed}` when some of its own listeners failed
-     (reevaluation R8), which are carried unchanged (R42, N160); a listener that throws is named there itself, and
-     never undoes the act. */
+  /* The re-evaluation an act raised, `{raised, failed, answer}`, or null when no module is registered to raise it. The
+     listener answers the dependents (an array), or an object `{raised, listeners_failed?}` (reevaluation R8), which is
+     kept itself as `answer` (N422): reevaluation writes the listeners that failed onto it after the outermost commit
+     (its R8, record-core R66), so a copy taken here would miss them under a caller's transaction. A listener that
+     throws is named in `failed` itself, and never undoes the act. */
   #raise(target, cause, since, viewer) {
     if (!this.#onRaised) return null;
     try {
       const r = this.#onRaised.fn({ target, cause, since, viewer });
-      if (Array.isArray(r)) return { raised: r, failed: [] };
+      if (Array.isArray(r)) return { raised: r, failed: [], answer: null };
       if (r && typeof r === "object")
-        return { raised: Array.isArray(r.raised) ? r.raised : [],
-                 failed: Array.isArray(r.listeners_failed) ? r.listeners_failed : [] };
-      return { raised: [], failed: [] };
-    } catch { return { raised: [], failed: [this.#onRaised.module] }; }
+        return { raised: Array.isArray(r.raised) ? r.raised : [], failed: [], answer: r };
+      return { raised: [], failed: [], answer: null };
+    } catch { return { raised: [], failed: [this.#onRaised.module], answer: null }; }
   }
-  /* R42: the `reevaluation` field of an act's answer, over what each raise answered (in order), or the absence. */
+  /* R42: the `reevaluation` field of an act's answer, over what each raise answered (in order), or the absence. Its
+     `listeners_failed` is read when the reply is read (N422), from each raise's own failure and from what each answer
+     object names then, each module once; absent while none has failed. */
   static #reevaluation(cause, since, raises) {
     if (raises === null)
       return { reevaluation_absent: "no module is registered to raise the re-evaluation this act would raise, so none is named here" };
-    const failed = [];
-    for (const r of raises) for (const f of r.failed) if (!failed.includes(f)) failed.push(f);
-    return { reevaluation: { source: cause, since, raised: raises.flatMap((r) => r.raised),
-                             ...(failed.length ? { listeners_failed: failed } : {}) } };
+    return { reevaluation: liveFailures({ source: cause, since, raised: raises.flatMap((r) => r.raised) }, () => {
+      const failed = [];
+      for (const r of raises)
+        for (const f of [...r.failed, ...(r.answer && Array.isArray(r.answer.listeners_failed) ? r.answer.listeners_failed : [])])
+          if (!failed.includes(f)) failed.push(f);
+      return failed;
+    }) };
   }
   #reevaluationField(target, cause, since, viewer) {
     const r = this.#raise(target, cause, since, viewer);
@@ -278,7 +304,7 @@ export class Inquiry {
   /* D-436 / C-64.1: a creation this act would make cannot name the group that produced it. */
   #groupUndetermined(act, detail) {
     /* DEC-49 REGION is-group-undetermined */
-    const row = INSTANCE_GROUP_CHECKS.GROUP_UNDETERMINED;
+    const row = PROMOTION_ROW_CHECKS.GROUP_UNDETERMINED;
     return { ok: false, reason: "GROUP_UNDETERMINED", code: "GROUP_UNDETERMINED", check: row.check,
              translation: row.translation, act, detail };
     /* END DEC-49 REGION is-group-undetermined */
@@ -297,26 +323,32 @@ export class Inquiry {
     const basisFm = isInquiry ? docFm : null;
     const basisLegs = basisFm && Array.isArray(basisFm.basis) ? basisFm.basis.filter((l) => l && typeof l === "object") : [];
     const replay = !!(pkg && pkg.replay);
-    /* REC-11 / REC-42: the leg grammar at the WRITE, by the catalogue's own function, with the published and earned
-       registries injected (C-21.2, REC-18). Shape refusals honour the replay exemption: the record's history must be
-       holdable verbatim. */
-    if (basisFm && !replay
-        && ((basisFm.basis !== undefined && basisFm.basis !== null)
-            || (basisFm.grounds !== undefined && basisFm.grounds !== null))) {
+    /* R11 (K681; `inquiry-grammar` R1, R2, R4): the entry arm at the WRITE, judged synchronously by inquiry-grammar's
+       own `checkInquiryExtension` over the document: the entry requirements, the division block, the subject's shape and
+       the leg grammar, with the published and earned registries injected (C-21.2, REC-18). The version block is
+       `basis-versions`' own check at the same write (its R6), not this arm's. Shape refusals honour the replay
+       exemption: the record's history must be holdable verbatim. */
+    if (basisFm && !replay) {
       const bf = [];
-      checkInquiryBasis(basisFm, bf, this.#publishedRegistry(bundleId,
-        basisLegs.map((l) => l.target).filter((t) => typeof t === "string")),
-        this.earnedForDoc(basisFm, basisLegs));
+      checkInquiryExtension({ fm: basisFm,
+        publishedRegistry: this.#publishedRegistry(bundleId, basisLegs.map((l) => l.target).filter((t) => typeof t === "string")),
+        earnedRegistry: this.earnedForDoc(basisFm, basisLegs) }, bf);
       const errs = bf.filter((x) => x.severity === "error");
       if (errs.length)
         return { ok: false, reason: "BASIS_REFUSED",
                  findings: errs.map((x) => ({ check: x.check, detail: x.message,
-                   ...(x.code ? { code: x.code, translation: CONTENT_EXTENT_CHECKS[x.code]?.translation } : {}),
+                   /* a code with a catalogue row carries its translation (Terms); a sub-code of C-2.8 with none
+                      (the testimony arms) carries its code alone, never an empty key */
+                   ...(x.code ? { code: x.code } : {}),
+                   ...(x.code && CONTENT_EXTENT_CHECKS[x.code]?.translation
+                     ? { translation: CONTENT_EXTENT_CHECKS[x.code].translation } : {}),
                    ...(x.repairs ? { repairs: x.repairs } : {}) })) };
       /* REC-82 / REC-84: the content extent of each leg (content R27), after the grammar so a broken leg is told
          about the leg first. */
-      const cerrs = this.content.citationRefusals(basisLegs, (i) => `basis[${i}]`, this.content.citationPlan(basisLegs));
-      if (cerrs.length) return { ok: false, reason: "BASIS_REFUSED", findings: cerrs };
+      if (basisLegs.length) {
+        const cerrs = this.content.citationRefusals(basisLegs, (i) => `basis[${i}]`, this.content.citationPlan(basisLegs));
+        if (cerrs.length) return { ok: false, reason: "BASIS_REFUSED", findings: cerrs };
+      }
     }
     /* REC-18: a subject entity the registry does not hold. */
     if (isInquiry && docFm && !replay && typeof docFm.subject_entity === "string" && docFm.subject_entity.trim() !== "") {
@@ -413,6 +445,42 @@ export class Inquiry {
                                + `conflict has one question where it is resolved. Work on it in ${holder}.` });
       /* END DEC-49 REGION is-candidate-taken-up */
     }
+    return this.#surfacedByCarried(c);
+  }
+
+  /* R50 (REC-179 / C-66.5, INVESTIGATIVE-SESSION.md §11 item 5, rule 2's reach): A REVISION CARRIES `surfaced_by`
+     FORWARD. The field records the surfacing act, decided once at the trust boundary on the creation (D-78's restamp;
+     REC-173's verified replay keeps the Drive era's), so without this a revision relabelled the question and the
+     surfacing row then contradicted the bytes it describes. Asked of every revision of a bundle whose CURRENT version
+     is an inquiry, after the compare-and-swap (so the head is the version this revision is based on) and before any
+     write. Both sides are read by the record's own parser, never a line scan a caller can step around, so a respelling
+     of the same value lands and a different value is refused in either direction. An absent field and an unreadable
+     document are values too. `replay` is no exemption: it is a caller's assertion (only a creation is verified as a
+     replay, REC-173). Moved from legacy-store's share of every promotion (T19 layer 6). */
+  #surfacedByCarried(c) {
+    const { bundleId, base, files, head } = stepContext(c);
+    if (!head || base === null || normalizeType(head.type) !== "inquiry") return null;
+    const surfacedOf = (text) => {
+      if (typeof text !== "string") return "unreadable";
+      /* No catch: the parser does not throw on a string; a document it cannot read comes back `data: null`. */
+      const fm = parseFrontmatter(text).data;
+      if (!fm || typeof fm !== "object") return "unreadable";
+      return Object.prototype.hasOwnProperty.call(fm, "surfaced_by") ? JSON.stringify(fm.surfaced_by) : "absent";
+    };
+    const held = this.record.readFile(bundleId, "bundle.md");
+    const next = Array.isArray(files) ? files.find((f) => f && f.path === "bundle.md") : null;
+    const was = surfacedOf(held ? held.text : null);
+    const now = surfacedOf(next ? next.text : null);
+    /* DEC-49 REGION is-promote-surfaced-by */
+    if (was !== now) {
+      const row = INQUIRY_SURFACE_CHECKS.SURFACED_BY_REWRITTEN;
+      return { ok: false, reason: "SURFACED_BY_REWRITTEN", code: "SURFACED_BY_REWRITTEN", check: row.check,
+               translation: row.translation, bundleId, current: was, revision: now,
+               detail: `the current version of ${bundleId} records surfaced_by ${was}, and this revision records ${now}. `
+                     + `Who surfaced a question is recorded once, at its creation; a revision carries it forward `
+                     + `unchanged. Nothing was written.` };
+    }
+    /* END DEC-49 REGION is-promote-surfaced-by */
     return null;
   }
 
@@ -519,7 +587,10 @@ export class Inquiry {
       const n = this.#one(`SELECT count(*) AS c FROM inquiry_basis WHERE bundle_id=?`, bundleId).c;
       const subject = basisFm && typeof basisFm.subject_entity === "string" && basisFm.subject_entity.trim()
         ? basisFm.subject_entity.trim() : null;
-      this.sql.exec(`UPDATE bundles SET inquiry_basis_count=?, inquiry_subject_entity=? WHERE bundle_id=?`, n, subject, bundleId);
+      /* R36, R40 (N136): the count and the subject in this module's own table, R40's read contract. */
+      this.sql.exec(`INSERT INTO ${BUNDLE_FACTS} (bundle_id, inquiry_basis_count, inquiry_subject_entity) VALUES (?,?,?)
+                     ON CONFLICT(bundle_id) DO UPDATE SET inquiry_basis_count=excluded.inquiry_basis_count,
+                       inquiry_subject_entity=excluded.inquiry_subject_entity`, bundleId, n, subject);
     }
     /* R48 (N345): the contradiction link, its resolution while the document is concluded, and `explores`, re-derived
        whole from the document; no row for a plain inquiry. */
@@ -554,18 +625,23 @@ export class Inquiry {
   }
 
   /** R12, R16: ONE bundle's superseded-by index from the `supersedes` edges pointing at it (connections' `refs`), the
-   *  ids comma-joined and sorted, NULL when nothing supersedes it. An id with no row is a no-op. */
+   *  ids comma-joined and sorted, NULL when nothing supersedes it, held in this module's table (R36). An id with no
+   *  bundle is a no-op. */
   writeSupersededBy(targetId) {
     if (!targetId) return null;
     const ids = this.#rows(`SELECT bundle_id FROM refs WHERE target_id=? AND kind='supersedes' ORDER BY bundle_id`, targetId)
       .map((r) => r.bundle_id);
-    this.sql.exec(`UPDATE bundles SET inquiry_superseded_by=? WHERE bundle_id=?`, ids.length ? ids.join(",") : null, targetId);
+    const v = ids.length ? ids.join(",") : null;
+    if (v === null) this.sql.exec(`UPDATE ${BUNDLE_FACTS} SET inquiry_superseded_by=NULL WHERE bundle_id=?`, targetId);
+    else this.sql.exec(`INSERT INTO ${BUNDLE_FACTS} (bundle_id, inquiry_superseded_by)
+                        SELECT bundle_id, ? FROM bundles WHERE bundle_id=?
+                        ON CONFLICT(bundle_id) DO UPDATE SET inquiry_superseded_by=excluded.inquiry_superseded_by`, v, targetId);
     return ids;
   }
 
   /** R16: the ids that supersede `id`, from the index. */
   supersededBy(id) {
-    return supersededByOf(this.#one(`SELECT inquiry_superseded_by FROM bundles WHERE bundle_id=?`, id));
+    return supersededByOf(this.#one(`SELECT inquiry_superseded_by FROM ${BUNDLE_FACTS} WHERE bundle_id=?`, id));
   }
 
   /** R18 (publication R12 reads it): the exclusions naming `targetId` the viewer may see, each with its inquiry, edition,
@@ -640,6 +716,47 @@ export class Inquiry {
       const ua = fm && typeof fm === "object" ? fm.member_user_agent : null;
       return typeof ua === "string" && ua.trim() !== "" ? ua.trim() : null;
     } catch { return null; }
+  }
+
+  /** N405 (REC-173, INVESTIGATIVE-SESSION.md §11 item 5): the `surfaced_in` of a question whose creation was a
+   *  server-verified MIGRATION REPLAY (R12's row), surfaced in the Drive era and not inside a run on this plane: said in
+   *  words, with the capture and promotion the replay named. Null for any other bundle; the rest of `surfaced_in` is
+   *  ai-runs' (its R27). Registered as this module's decoration of retrieval's single-bundle answer (its R56). Not gated
+   *  (the answer it decorates is); never throws. */
+  migratedSurfacing(id) {
+    try {
+      if (!id || typeof id !== "string") return null;
+      const mig = this.#one(`SELECT capture_sha, promotion_key, at FROM inquiry_migration_replays WHERE bundle_id=?`, id);
+      return mig ? { recorded: false, stated: "not recorded (migrated from the Drive era)", run: null, lens: null,
+                     migrated: { capture: mig.capture_sha, promotion: mig.promotion_key ?? null, at: mig.at } } : null;
+    } catch { return null; }
+  }
+
+  /** R17, R11 (`inquiry-grammar` R1, R2): the entry requirements over one document, judged by record-grammar's
+   *  `checkBundle` with the type grammars later modules registered with record-core (its `grammars()`), as promotion's
+   *  gate judges a bundle (its R27), so a grammar registered there judges an inquiry here as it does there. A slot of
+   *  `inquiry-grammar`'s that no registration claims (a record nothing registered it with) is filled by its own arm
+   *  (`INQUIRY_GRAMMARS`), so the inquiry is never left unjudged. A grammar whose arm throws is one error of its own,
+   *  naming its module; a record that cannot answer its registrations is an error, never read as none. Never throws. */
+  async checkEntry(bundleMd, opts = {}) {
+    let grammars;
+    try {
+      grammars = this.record.grammars().map((g) => ({ module: g.module, ids: g.ids, arm: async (ctx, found) => {
+        try { await g.arm(ctx, found); }
+        catch (e) {
+          found.push({ check: g.module, severity: "error",
+                       message: `${g.module}'s grammar threw, so it judged nothing and the document is not passed: `
+                              + `${fmSafe(e && e.message ? e.message : e).slice(0, 200)}` });
+        }
+      } }));
+    } catch (e) {
+      return [{ check: "C-2.8", severity: "error",
+                message: `the registered grammars could not be read, so the entry requirements were not judged: `
+                       + `${fmSafe(e && e.message ? e.message : e).slice(0, 200)}` }];
+    }
+    const claimed = new Set(grammars.flatMap((g) => (Array.isArray(g.ids) ? g.ids : [])));
+    grammars = [...grammars, ...INQUIRY_GRAMMARS.filter((g) => !g.ids.some((id) => claimed.has(id)))];
+    return checkInquiryEntry(bundleMd, { ...(opts && typeof opts === "object" ? opts : {}), grammars });
   }
 
   /* ---------------------------------------------------------------- content R41: a re-read that staled rows */
@@ -914,7 +1031,7 @@ export class Inquiry {
       for (const id of disposed) {
         const r = this.#raise(id, "deferred", when, viewer);
         if (r === null) { raises = null; break; }
-        raises.push({ raised: r.raised.map((d) => ({ ...d, target: id })), failed: r.failed });
+        raises.push({ ...r, raised: r.raised.map((d) => ({ ...d, target: id })) });
       }
       reevaluation = Inquiry.#reevaluation("deferred", when, raises);
     }
@@ -1420,14 +1537,15 @@ export class Inquiry {
       const findings = [];
       supersedesEdgeFindings(cf, findings);
       divisionDisclosureFindings(cf, findings);
-      checkInquiryBasis(cf, findings, this.#publishedRegistry(pl.id,
+      /* R23 (`inquiry-grammar` R1–R2, R4): the entry arm, as the child's own promotion will judge it (R11). */
+      checkInquiryExtension({ fm: cf, publishedRegistry: this.#publishedRegistry(pl.id,
         pl.legs.map((l) => l.target).filter((t) => typeof t === "string")),
         /* REC-18: the earned registry for the CHILD, judged before the parent
            moves exactly as every other rule here is. A child inherits the
            parent's subject_entity through the copied frontmatter, so an
            apportioned earned leg is re-confirmed against the record rather than
            carried across on trust. */
-        this.earnedForDoc(cf, pl.legs));
+        earnedRegistry: this.earnedForDoc(cf, pl.legs) }, findings);
       /* R47: the contradiction arm, as the child's promotion will judge it */
       for (const x of contradictionFindings(cf)) findings.push({ check: x.check, severity: "error", message: x.detail });
       const errs = findings.filter((x) => x.severity === "error");
@@ -2081,23 +2199,25 @@ export class Inquiry {
    * is the failure mode CLAUDE.md names about gates.
    */
 
-  /* The inquiry's declared subject, from the DOCUMENT and not from the column.
-     The projection is a cache like every other; the bytes are the authority,
-     and at promote time the column has not been written yet. */
+  /* R43: the inquiry's recorded subject, the column R12 writes from the document into this module's table (R40), or
+     null; never throws. The bytes stay the authority: the write path and the gate read the document's own
+     `subject_entity` (`earnedForDoc`), because at promote time the column has not been written yet. */
   subjectEntityOf(bundleId) {
-    const row = this.#one(`SELECT inquiry_subject_entity FROM bundles WHERE bundle_id=?`, bundleId);
-    return row && row.inquiry_subject_entity ? row.inquiry_subject_entity : null;
+    try {
+      const row = this.#one(`SELECT inquiry_subject_entity FROM ${BUNDLE_FACTS} WHERE bundle_id=?`, bundleId);
+      return row && row.inquiry_subject_entity ? row.inquiry_subject_entity : null;
+    } catch { return null; }
   }
 
   /* THE CAPTURE-AXIS CEILING is doctrine rather than a tuning knob, and as of
-     REC-43 / DEC-39 it is DECLARED IN THE CHECK CATALOG rather than here.
+     REC-43 / DEC-39 it is DECLARED IN THE RECORD'S GRAMMAR rather than here.
      `static EARNED_CAPTURE_CEILING = "B"` stood on this line until 2026-08-04
      and the value is unchanged; what moved is WHERE it is written, so that the
      published co-attestation fence can be composed from it (affordances.mjs
      cannot import this file — this file imports IT). The doctrine, the reason
      for the direction and the derivation of the unreachable letter above it are
-     all at the declaration in `checks/bio-checks.mjs`, beside `checkEarnedLeg`,
-     which is the arm that refuses a leg claiming more than this. This class
+     all at the declaration in `record-grammar` (`grades.mjs`), and `checkEarnedLeg`
+     is the arm that refuses a leg claiming more than this. This class
      keeps no copy: a second literal "B" here is precisely the drift the move
      exists to prevent, and the affordances suite pins its absence. */
 
@@ -2640,7 +2760,8 @@ export class Inquiry {
   earnedBasis({ id, targets = null, viewer = null } = {}) {
     if (!id) return { ok: false, reason: "NO_ID", detail: "earnedbasis requires ?id=<inquiry>" };
     if (!this.membership.inSight(id, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
-    const b = this.#one(`SELECT object_type, inquiry_subject_entity FROM bundles WHERE bundle_id=?`, id);
+    const b = this.#one(`SELECT b.object_type, f.inquiry_subject_entity FROM bundles b
+                           LEFT JOIN ${BUNDLE_FACTS} f ON f.bundle_id = b.bundle_id WHERE b.bundle_id=?`, id);
     if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
     if (normalizeType(b.object_type) !== "inquiry")
       return { ok: false, reason: "NOT_AN_INQUIRY", target: id,
@@ -2777,8 +2898,26 @@ export function inquiryOf(host, deps) {
     k = new Inquiry({ ...d, host, storage: d.storage || host.storage, record, membership, promotion, content });
     instances.set(host, k);
     record.declarePurge("inquiry", INQUIRY_TABLES);
+    /* K783 (record-core R69, R45): the audit's context for each bundle's checks, the earned registry over the legs its
+       basis projects (R13), null for a bundle resting on nothing. */
+    if (typeof record.registerAuditContext === "function")
+      record.registerAuditContext("inquiry", (id) => {
+        const targets = [...k.sql.exec(`SELECT target_id FROM inquiry_basis WHERE bundle_id=?`, id)].map((r) => r.target_id);
+        return { earnedRegistry: targets.length ? k.earned(k.subjectEntityOf(id), targets) : null };
+      });
     promotion.registerStep("inquiry", { check: (c) => k.check(c), project: (c) => k.project(c) });
     if (typeof content.onStale === "function") content.onStale("inquiry", (notice) => k.staled(notice));
+    /* R36 (N136): the `legs` field read from this module's table (retrieval R62); N405: the migrated arm of
+       `surfaced_in` on retrieval's single-bundle answer (its R56). Retrieval is created at start before any module
+       reaches this one; a stand-in that offers neither registration is left alone. */
+    const retrieval = k.retrieval;
+    if (retrieval && typeof retrieval.registerField === "function")
+      retrieval.registerField("inquiry", "legs", LEGS_RELATION);
+    if (retrieval && typeof retrieval.registerProjectionDecoration === "function")
+      retrieval.registerProjectionDecoration("inquiry", (row) => {
+        const m = row && normalizeType(row.object_type) === "inquiry" ? k.migratedSurfacing(row.bundle_id) : null;
+        return m ? { surfaced_in: m } : {};
+      });
   }
   return k;
 }

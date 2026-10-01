@@ -93,7 +93,7 @@
  * fidelity places on the capture axis and nothing else: DEC-4's doctrine is
  * that fidelity BOUNDS the capture axis as its weakest link, so there is no
  * third scale and no new machinery. The letters are `BASIS_GRADES` and the
- * ceiling is `EARNED_CAPTURE_CEILING` — both IMPORTED from the catalogue, both
+ * ceiling is `EARNED_CAPTURE_CEILING` — both IMPORTED from `record-grammar`, both
  * already the only spelling this project has, and neither re-typed here. If a
  * fifth grade letter is ever added, this module follows without an edit.
  *
@@ -107,9 +107,7 @@
  * measured letter and NAMES where it was measured.
  */
 
-import {
-  TEXT_CHAIN_CHECKS, BASIS_GRADES, EARNED_CAPTURE_CEILING, isMachineIdentity,
-} from "../checks/bio-checks.mjs";
+import { BASIS_GRADES, EARNED_CAPTURE_CEILING, isMachineIdentity, canonicalJson } from "./record-grammar/index.mjs";
 
 /* ------------------------------------------------------------------ *
  * The vocabulary
@@ -248,8 +246,9 @@ export const MACHINE_READ_KINDS = Object.freeze(
  *  where its number came from. */
 export const CONFIDENCE_BASES = { engine: 1, none: 1 };
 
-/** The extent kinds an attestation may be scoped to, narrowest first. */
-export const EXTENT_KINDS = { region: 1, page: 1, document: 1 };
+/** The extent kinds an attestation may be scoped to, narrowest first. Internal (N416): `checkAttestation` (R51) and
+ *  `extentCovers` (R55) read it, and no other module does. */
+const EXTENT_KINDS = { region: 1, page: 1, document: 1 };
 
 /* ===================================================================== *
  * D-252 — A DERIVATION HAS AN EXTENT TOO, AND IT IS THE MIRROR OF THE ONE
@@ -405,6 +404,161 @@ export function mergedChain(parts) {
   return out;
 }
 
+/* =========================================================================
+ * CPDF-10 — THE TRANSCRIPTION PROVENANCE CHAIN'S REFUSALS (C-35, DEC-49).
+ *
+ * The family for this module, held here since T18 (K629, K630; it moved
+ * whole from the check catalogue, `legacy-checks`), and it is worth saying what these
+ * conditions have in common because it is not "OCR went wrong". Every one of
+ * them refuses a claim the record could not support LATER, at the moment it is
+ * made — a chain that collapsed to a label, a derivation that claimed to have
+ * improved what it received, a confidence number with nothing behind it, a
+ * region nobody could read offered as text anyway, an attestation with no
+ * person or no scope behind it. None of them is about accuracy. All of them
+ * are about the record claiming more than it can support, which CLAUDE.md
+ * ranks above a missing feature and far above an ugly one.
+ *
+ * THE TRANSLATIONS ARE WRITTEN FOR A MEMBER LOOKING AT A SCANNED DOCUMENT,
+ * because that is who receives them: op=attesttext is a member-facing act, and
+ * the chain refusals surface wherever a caller composes provenance by hand.
+ *
+ * C-35 IS THIS FAMILY, minted with `node tools/mintid.mjs C` (floor C-34) —
+ * not measured free by hand, because seven items collided on a hand-measured
+ * id in one day and every one of them was right when it looked.
+ * ========================================================================= */
+export const TEXT_CHAIN_CHECKS = {
+  /* RULE 1. The condition this family exists for. `text_source: "ocr"` is what
+     a careful author writes and it is still a loss: the engine is gone, and an
+     engine is what a calibration is OF (CPDF-13) and what a re-run would need. */
+  TEXT_CHAIN_COLLAPSED: {
+    check: 'C-35.1',
+    where: 'src/textchain.mjs checkChain > is-text-chain-shape',
+    translation: 'This says the text came from a machine but not which one, or through how many '
+      + 'hands. A scanned document can pass through a scanner, a reader and a clean-up pass before '
+      + 'anyone sees it, and each one can change what it says — so the record keeps the whole '
+      + 'sequence rather than a single word for it.',
+  },
+  TEXT_CHAIN_EMPTY: {
+    check: 'C-35.2',
+    where: 'src/textchain.mjs checkChain > is-text-chain-shape',
+    translation: 'Nothing here says where this text came from. Text with no stated origin looks '
+      + 'exactly like text a publisher typed, and the difference is the whole reason this record '
+      + 'is worth trusting.',
+  },
+  TEXT_CHAIN_STEP_SHAPE: {
+    check: 'C-35.3',
+    where: 'src/textchain.mjs checkChain > is-text-chain-shape',
+    translation: 'One of the steps that produced this text is not readable as a step.',
+  },
+  TEXT_CHAIN_STEP_UNKNOWN: {
+    check: 'C-35.4',
+    where: 'src/textchain.mjs checkChain > is-text-chain-shape',
+    translation: 'One step in this text\'s history is of a kind the record does not know. It cannot '
+      + 'tell whether that step produced the text or checked it, and those are very different '
+      + 'things, so it will not guess.',
+  },
+  /* Rule 1 arriving one level down: the chain is an array and one of its
+     entries is still just a label. */
+  TEXT_CHAIN_STEP_UNNAMED: {
+    check: 'C-35.5',
+    where: 'src/textchain.mjs checkChain > is-text-chain-shape',
+    translation: 'This says a machine read the text but not which machine. Two readers of the same '
+      + 'scan disagree, and knowing which one produced a line is what lets anybody check it later.',
+  },
+  /* RULE 2, and the translation carries the distinction the rule turns on,
+     because the member who trips this will believe they improved the text —
+     and they will be right about readability. */
+  TEXT_CHAIN_STRENGTHENS: {
+    check: 'C-35.6',
+    where: 'src/textchain.mjs appendStep > is-text-chain-monotone',
+    translation: 'This step claims the text became more reliable by being processed further. '
+      + 'Cleaning up a garbled line makes it easier to READ, not more likely to be what the page '
+      + 'actually said — so a later step can only ever be as trustworthy as what it was given.',
+  },
+  /* RULE 3. Note the fence is on the BASIS, not on the number: a self-reported
+     0.99 and a computed 0.99 are the same bytes. */
+  TEXT_CONFIDENCE_PSEUDO: {
+    check: 'C-35.7',
+    where: 'src/textchain.mjs checkConfidence > is-text-region-confidence',
+    translation: 'This confidence figure is the machine\'s own opinion of itself. A reader that '
+      + 'measures how clearly each character resolved is saying something checkable; a model asked '
+      + 'how sure it is will answer confidently either way, and that number cannot be used as a '
+      + 'threshold. Where an engine reports no confidence, the record says so plainly instead.',
+  },
+  TEXT_CONFIDENCE_SHAPE: {
+    check: 'C-35.8',
+    where: 'src/textchain.mjs checkConfidence > is-text-region-confidence',
+    translation: 'The confidence on this region is not readable. Note that saying "this engine '
+      + 'reports no confidence" is a real answer here — an absent one is not the same thing.',
+  },
+  /* The anchor. Without it there is no way to point a reader at the pixels, and
+     an unverifiable transcription is the thing this item refuses to ship. */
+  TEXT_ANCHOR_MISSING: {
+    check: 'C-35.9',
+    where: 'src/textchain.mjs checkAnchor > is-text-anchor',
+    translation: 'Text a machine read off an image has to say WHERE on the page it came from, so '
+      + 'anyone can look at that part of the scan and see for themselves. Without it the reading '
+      + 'cannot be checked against the document at all.',
+  },
+  /* Attestation, (a): a member act, refusable to a machine credential. */
+  TEXT_ATTEST_MACHINE: {
+    check: 'C-35.10',
+    where: 'src/textchain.mjs checkAttestation > is-text-attestation',
+    translation: 'Attesting is a person saying they compared this text against the image of the '
+      + 'page and it matches. The credential that asked here is an automated one: it can run the '
+      + 'reader and lay the two side by side, and it cannot be the one who says they agree. Sign '
+      + 'in and attest it yourself.',
+  },
+  /* Attestation, (b): scoped to what was actually checked. */
+  TEXT_ATTEST_EXTENT: {
+    check: 'C-35.11',
+    where: 'src/textchain.mjs checkAttestation > is-text-attestation',
+    translation: 'An attestation has to say how much of the document you checked — this region, '
+      + 'this page, or all of it. Checking one table and having that stand behind an entire scanned '
+      + 'report is exactly what this record will not do on your behalf.',
+  },
+  /* CPDF-13 / D-253. The calibration REFERENCE, and note carefully what this
+     row does NOT refuse: a step with a `cap` and no calibration is the
+     pre-CPDF-13 shape and is LEGAL — every chain written before this rule
+     existed is that shape, and refusing it would be a fence tighter than its
+     rule wearing the costume of caution. What is refused is a reference that is
+     PRESENT AND UNREADABLE, because an unresolvable pointer is worse than an
+     absent one: it looks like a binding and joins to nothing. */
+  TEXT_CHAIN_CAL_REF: {
+    check: 'C-35.12',
+    where: 'src/textchain.mjs checkChain > is-text-chain-shape',
+    translation: 'This step points at the measurement its fidelity rests on, but the pointer is not '
+      + 'readable as one. A measurement nobody can look up is not a measurement this record can '
+      + 'stand behind — and a broken pointer is worse than none, because it looks like one that works.',
+  },
+  /* CAP-10 / DEC-75 / IC-122. A step kind that declares its letter must be
+     CALIBRATED (`STEP_KINDS[k].letter`) — today only `convert`, a conversion
+     the serving host made before any text was read — may carry a letter only
+     beside the calibration it rests on. The permitted move is UNDETERMINED
+     now, raised later by a calibration row (CAP-11 measures, a row raises);
+     a letter written now and lowered later is the move Bob's 5.8 forbids. */
+  TEXT_CHAIN_LETTER_UNCALIBRATED: {
+    check: 'C-35.13',
+    where: 'src/textchain.mjs checkChain > is-text-chain-shape',
+    translation: 'This step says how faithful a conversion of the document was, but nobody has '
+      + 'measured that. When a site hands us its own converted copy of a file, the record cannot '
+      + 'tell what the conversion changed until it has compared the copies — so until then it says '
+      + '"not yet determined" rather than giving a grade it has not earned.',
+  },
+  /* REC-87 / IC-127. A step kind whose letter is NEVER written on the step
+     (`STEP_KINDS[k].letter === "never"`) — today only `typed`, a member typing
+     a portion's text (Bob's 5.2). A person has no calibration, so the one route
+     to a letter is a SECOND member's attestation; a letter on the step would be
+     the typist grading their own work. */
+  TEXT_CHAIN_LETTER_ON_PERSON: {
+    check: 'C-35.14',
+    where: 'src/textchain.mjs checkChain > is-text-chain-shape',
+    translation: 'This says how faithful a member\'s own typing of the page is. Nobody grades their '
+      + 'own transcription: what a member typed stays "not yet determined" until a different member '
+      + 'checks it against the page and says it matches.',
+  },
+};
+
 /* ------------------------------------------------------------------ *
  * Refusals — DEC-49. One row per condition in TEXT_CHAIN_CHECKS, the code a
  * STRING LITERAL at its site, so the guard can see it.
@@ -480,7 +634,7 @@ export function checkChain(chain) {
         + `calibration is OF a named producer and format, and neither can be recovered from the `
         + `word '${step.step}'`);
     /* CPDF-13 / D-253 — THE CALIBRATION REFERENCE. Optional, and read the
-       comment in the checks catalogue for why it is optional rather than
+       comment on `TEXT_CHAIN_CAL_REF` above for why it is optional rather than
        required: every chain written before this rule existed carries a `cap`
        and no calibration, and refusing those would be a fence tighter than its
        rule. What is refused is a reference PRESENT AND UNREADABLE, because an
@@ -1337,9 +1491,9 @@ export function readingPositionInExtent(position, extentKind, extent) {
    span `A:C` or a whole-row span `2:5` as a range (either corner order). Columns and rows are
    1-based. Anything else answers null, never a guess. */
 const A1_COL = (letters) => [...letters.toUpperCase()].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0);
+/* One cell is the extent algebra's cell (R93, R94), read after a trim. */
 function a1Cell(s) {
-  const m = typeof s === "string" && /^\$?([A-Za-z]{1,3})\$?([1-9][0-9]{0,6})$/.exec(s.trim());
-  return m ? { col: A1_COL(m[1]), row: Number(m[2]) } : null;
+  return typeof s === "string" && CONTENT_EXTENT_A1_RE.test(s.trim()) ? a1ToRowCol(s.trim()) : null;
 }
 function a1Range(s) {
   if (typeof s !== "string" || !s.trim()) return null;
@@ -1358,6 +1512,186 @@ function a1Range(s) {
   if (ya && yb) { const [p, q] = [Number(ya[1]), Number(yb[1])];
     return { c0: 1, c1: Infinity, r0: Math.min(p, q), r1: Math.max(p, q) }; }
   return null;
+}
+
+/* ===================================================================== *
+ * THE CONTENT-EXTENT ALGEBRA (R92–R98; K578, K585 (3), draft-T19 line 28)
+ * ===================================================================== *
+ *
+ * An ADDRESS into a document: IC-1's arms, unified with attestation's document|page|region, plus
+ * EXTRACTION-BREADTH §3.2's `sheet-range`, `doc-table` and `image` (REC-82, REC-85, FW-19 / IC-125). It is
+ * COPIED here from the check catalogue (`legacy-checks`), whose inquiry grammar still calls its own copy and
+ * cannot import this module; its other importers re-point here in their own layers, and `reevaluation`
+ * deletes the catalogue's copy (rule 1). Until then the two copies must answer alike, byte for byte:
+ * `canonicalExtent` is what every content id is taken over (`contentIdFor`), and an id minted by one copy
+ * must be the id the other would mint. The suite compares them over the same inputs.
+ *
+ * The refusals (C-45) and the extent checks are not here: they are content's. What is here is pure
+ * geometry and spelling — which kinds exist, how a cell or range is read, the one canonical form of an
+ * address, and its human form. The producers' numbering is NOT uniform and that is the most dangerous
+ * thing about this grammar: `para`, `shape`, `table` and `page` are 0-based, `slide` is 1-based, and a cell
+ * is A1 notation in which both halves are 1-based. */
+
+/** The kinds a content row may be addressed in (R92). `landed` is what this plane can evaluate today; the
+ *  column is kept with every arm true because `dom` joins the day a producer emits one, unlanded for one
+ *  item's width. `image` is a REFERENCE rather than an arm of IC-1's text union, and is here because a row's
+ *  `extent_kind` is the one vocabulary a row is addressed in; what sets it apart is `cited_as`
+ *  (`contentCitedAs`). */
+export const CONTENT_EXTENT_KINDS = {
+  document:      { landed: true,  human: "the whole document" },
+  "pdf-page":    { landed: true,  human: "a page of a PDF" },
+  "sheet-cell":  { landed: true,  human: "a cell of a spreadsheet" },
+  "slide-shape": { landed: true,  human: "a shape on a slide" },
+  "doc-para":    { landed: true,  human: "a paragraph of a document" },
+  "sheet-range": { landed: true,  human: "a range of cells in a spreadsheet" },
+  "doc-table":   { landed: true,  human: "a table in a document" },
+  image:         { landed: true,  human: "an image in a document" },
+};
+
+/** A CELL IN A1 NOTATION (R93), as the container emits it and as a member may paste it. `$` markers and
+ *  either case are admitted and normalised away by `canonicalExtent`: `B14`, `$B$14` and `b14` are one cell.
+ *  Three letters and seven digits is a SHAPE bound, not one spreadsheet's ceiling. */
+export const CONTENT_EXTENT_A1_RE = /^\$?[A-Za-z]{1,3}\$?[1-9][0-9]{0,6}$/;
+
+/** A RANGE IN A1:A1 NOTATION, or one cell standing for a one-cell range (R93). */
+export const CONTENT_EXTENT_RANGE_RE =
+  /^\$?[A-Za-z]{1,3}\$?[1-9][0-9]{0,6}(:\$?[A-Za-z]{1,3}\$?[1-9][0-9]{0,6})?$/;
+
+/* The catalogue's `String(x == null ? "" : x)`, made total (R83): a value with no string form (an object with
+   no prototype, a throwing `toString`) reads as "", which no pattern here matches. Every other input reads
+   exactly as the catalogue's copy reads it. */
+function asString(x) {
+  if (x == null) return "";
+  try { return String(x); } catch { return ""; }
+}
+
+/** A1 -> `{ col, row }`, both 1-BASED (R94). The column is bijective base 26 (A..Z, AA..AZ, ...), with no
+ *  zero digit: getting that wrong puts AA at 26 and refuses the last column of every wide sheet. */
+export function a1ToRowCol(cell) {
+  const t = asString(cell).replace(/\$/g, "").toUpperCase();
+  const m = /^([A-Z]{1,3})([1-9][0-9]{0,6})$/.exec(t);
+  if (!m) return null;
+  let col = 0;
+  for (const ch of m[1]) col = col * 26 + (ch.charCodeAt(0) - 64);
+  return { col, row: parseInt(m[2], 10) };
+}
+
+/** A range's two corners, ORDERED (top-left first), 1-based, or null (R95). A range spelled bottom-right
+ *  first names the same cells, so it is reordered rather than refused — `normRect`'s rule, in a grid. */
+export function rangeCorners(range) {
+  const t = asString(range).trim();
+  if (!CONTENT_EXTENT_RANGE_RE.test(t)) return null;
+  const [a, b = a] = t.split(":");
+  const p = a1ToRowCol(a), q = a1ToRowCol(b);
+  if (!p || !q) return null;
+  return { r0: Math.min(p.row, q.row), c0: Math.min(p.col, q.col),
+           r1: Math.max(p.row, q.row), c1: Math.max(p.col, q.col) };
+}
+
+/* 1-based column number -> A1 letters (bijective base 26: 27 -> AA). */
+function a1Letters(n) {
+  let out = "";
+  for (let c = n; c > 0; c = Math.floor((c - 1) / 26)) out = String.fromCharCode(65 + ((c - 1) % 26)) + out;
+  return out;
+}
+
+/** The canonical spelling of a range (R95): ordered corners, no `$`, upper case, and ALWAYS two corners —
+ *  `B3` and `B3:B3` are one range. */
+export function canonicalRange(range) {
+  const k = rangeCorners(range);
+  if (!k) return null;
+  return `${a1Letters(k.c0)}${k.r0}:${a1Letters(k.c1)}${k.r1}`;
+}
+
+/** `cited_as`, THE FIELD THAT KEEPS TWO NULLS APART (R96; EXTRACTION-BREADTH §3.1). An image cited AS ITSELF
+ *  is bytes, with no chain and no derivation cap, and that null is a fact about what is cited, not an
+ *  undetermined transcription. The default is the kind's own meaning (`bytes` for an image, `text` for every
+ *  other kind); anything stated is returned unchanged, for content's checker to refuse by name. */
+export function contentCitedAs(extent) {
+  const e = extent && typeof extent === "object" ? extent : {};
+  const v = e.cited_as;
+  if (v === undefined || v === null || v === "") return e.kind === "image" ? "bytes" : "text";
+  return v;
+}
+
+const isFourFinite = (r) => Array.isArray(r) && r.length === 4
+  && r.every((n) => typeof n === "number" && Number.isFinite(n));
+const minMaxRect = (r) => [Math.min(r[0], r[2]), Math.min(r[1], r[3]), Math.max(r[0], r[2]), Math.max(r[1], r[3])];
+const trimmedOrNull = (s) => (typeof s === "string" && s.trim() ? s.trim() : null);
+const canonicalCell = (c) => (typeof c === "string" && CONTENT_EXTENT_A1_RE.test(c.trim())
+  ? c.trim().replace(/\$/g, "").toUpperCase() : null);
+const intOrNull = (n) => (Number.isInteger(n) ? n : null);
+
+/** The CANONICAL form of an extent — the bytes the content address is taken over (R97). Two members who mean
+ *  the same passage must produce the same string, or dedup-by-construction is a claim rather than a
+ *  mechanism: the fields are fixed per arm, absent is null rather than missing, a rect is normalised, a cell
+ *  is A1-normalised, a range is reordered and given both corners, and the human `ref` is NOT part of it.
+ *  The sheet NAME is kept as the container spelled it: this module has no warrant to decide two of a
+ *  workbook's names are one. `cited_as` is in the IMAGE's address only, so every older arm's address is
+ *  unchanged. An extent nobody can evaluate still gets a form (the function is total); nothing mints one. */
+export function canonicalExtent(extent) {
+  const e = extent && typeof extent === "object" ? extent : {};
+  if (e.kind === "document") return canonicalJson({ kind: "document" });
+  if (e.kind === "pdf-page")
+    return canonicalJson({ kind: "pdf-page", page: intOrNull(e.page), rect: isFourFinite(e.rect) ? minMaxRect(e.rect) : null });
+  if (e.kind === "sheet-cell")
+    return canonicalJson({ kind: "sheet-cell", sheet: trimmedOrNull(e.sheet), cell: canonicalCell(e.cell) });
+  if (e.kind === "slide-shape")
+    return canonicalJson({ kind: "slide-shape", slide: intOrNull(e.slide), shape: intOrNull(e.shape) });
+  if (e.kind === "doc-para")
+    return canonicalJson({ kind: "doc-para", para: intOrNull(e.para), run: intOrNull(e.run) });
+  if (e.kind === "sheet-range")
+    return canonicalJson({ kind: "sheet-range", sheet: trimmedOrNull(e.sheet),
+      range: typeof e.range === "string" ? canonicalRange(e.range) : null });
+  if (e.kind === "doc-table")
+    return canonicalJson({ kind: "doc-table", table: intOrNull(e.table), cell: canonicalCell(e.cell) });
+  if (e.kind === "image")
+    return canonicalJson({ kind: "image", cited_as: contentCitedAs(e),
+      part: typeof e.part === "string" ? e.part.trim().toLowerCase() : null,
+      page: intOrNull(e.page), rect: isFourFinite(e.rect) ? minMaxRect(e.rect) : null });
+  return canonicalJson({ kind: e.kind ?? null, fields: e.fields ?? null });
+}
+
+/** The human form IC-1 requires, DERIVED when the member authored none (R98) — composed FROM the extent, so
+ *  it cannot describe another one (`describeChain`'s rule). The derived form is the producer's own `ref`
+ *  for the same address (`Sheet1!B14`, `¶12`, `slide 7`); pages, paragraphs and tables are shown 1-based.
+ *  `run` and `shape` are in the address and not in the sentence: two rows citing two shapes of one slide
+ *  describe alike and address apart — under-describing, never over-claiming. */
+export function describeExtent(extent) {
+  const e = extent && typeof extent === "object" ? extent : {};
+  if (typeof e.ref === "string" && e.ref.trim()) return e.ref.trim();
+  if (e.kind === "document") return "the whole document";
+  if (e.kind === "pdf-page") {
+    if (!Number.isInteger(e.page)) return "a page of this document";
+    return Array.isArray(e.rect) && e.rect.length === 4 ? `page ${e.page + 1}, a region of it` : `page ${e.page + 1}`;
+  }
+  if (e.kind === "sheet-cell") {
+    const sheet = trimmedOrNull(e.sheet), cell = trimmedOrNull(e.cell);
+    return sheet && cell ? `${sheet}!${cell}` : "a cell of this spreadsheet";
+  }
+  if (e.kind === "doc-para")
+    return Number.isInteger(e.para) ? `¶${e.para + 1}` : "a paragraph of this document";
+  if (e.kind === "slide-shape")
+    return Number.isInteger(e.slide) ? `slide ${e.slide}` : "a shape in this deck";
+  if (e.kind === "sheet-range") {
+    const sheet = trimmedOrNull(e.sheet);
+    const range = typeof e.range === "string" ? canonicalRange(e.range) : null;
+    return sheet && range ? `${sheet}!${range}` : "a range of cells in this spreadsheet";
+  }
+  if (e.kind === "doc-table") {
+    if (!Number.isInteger(e.table)) return "a table in this document";
+    const cell = typeof e.cell === "string" && e.cell.trim() ? e.cell.trim().replace(/\$/g, "").toUpperCase() : null;
+    return `table ${e.table + 1}${cell ? `, ${cell}` : ""}`;
+  }
+  if (e.kind === "image") {
+    if (typeof e.part === "string" && e.part.trim()) return `image ${e.part.trim().toLowerCase().slice(0, 12)}`;
+    if (Number.isInteger(e.page)) return `an image on page ${e.page + 1}`;
+    return "an image in this document";
+  }
+  /* Own keys only: a kind such as `constructor` is not a kind, and reads as one nobody can name. */
+  const row = typeof e.kind === "string" && Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS, e.kind)
+    ? CONTENT_EXTENT_KINDS[e.kind] : null;
+  return row ? row.human : "a part of this document the record cannot name";
 }
 
 /*__CPDF20_PER_PAGE_START__*/

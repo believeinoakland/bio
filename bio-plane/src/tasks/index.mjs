@@ -22,7 +22,7 @@
  * The ops are `tasksOps`' entries, which the legacy store's dispatcher spreads in.
  */
 
-import { isMachineStamp, isPublicHttpsLocator } from "../../checks/bio-checks.mjs";
+import { isMachineStamp, isPublicHttpsLocator } from "../record-grammar/index.mjs";
 import { recordOf, stampInstant, perItem, mintExhausted } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
@@ -432,19 +432,22 @@ export class Tasks {
      throws: a store without the table answers empty, or false. */
 
   /** R6: the tasks on subjects the viewer may see, of any status or, when `statuses` is given (an array), only of those
-   *  (N373, K566), newest first (`created` descending, then `id`), at most `limit` (1–1,000, default 200), each as
-   *  `taskList` gives a task. Given `statuses`, the cap is taken over the tasks of those statuses, so tasks of the others
-   *  never crowd them out; an empty `statuses` answers none. */
+   *  (N373, K566), and of any assignee or, when `assignees` is given (an array of member ids, `"unassigned"` a value
+   *  like any other), only of those (N410), newest first (`created` descending, then `id`), at most `limit` (1–1,000,
+   *  default 200), each as `taskList` gives a task. The cap is taken over the tasks so filtered, so tasks of other
+   *  statuses or other assignees never crowd them out; an empty `statuses` or `assignees` answers none. */
   recentTasks(q = {}) {
-    const { viewer = null, limit = 200, statuses = null } = asQuery(q);
+    const { viewer = null, limit = 200, statuses = null, assignees = null } = asQuery(q);
     try {
       const cap = clampLimit(limit, 200, 1000);
-      const only = Array.isArray(statuses) ? statuses.filter((x) => typeof x === "string") : null;
-      if (only && !only.length) return [];
+      const strings = (a) => (Array.isArray(a) ? a.filter((x) => typeof x === "string") : null);
+      const only = strings(statuses), whose = strings(assignees);
+      if ((only && !only.length) || (whose && !whose.length)) return [];
       const seen = this.#bundleGate("tk.refers_to", viewer);
-      const which = only ? ` AND tk.status IN (${only.map(() => "?").join(",")})` : "";
-      return this.#rows(`SELECT tk.* FROM tasks tk WHERE (${seen.sql})${which} ORDER BY tk.created DESC, tk.id LIMIT ?`,
-        ...seen.args, ...(only || []), cap).map((r) => this.#taskOf(r));
+      const among = (col, xs) => (xs ? ` AND ${col} IN (${xs.map(() => "?").join(",")})` : "");
+      return this.#rows(`SELECT tk.* FROM tasks tk WHERE (${seen.sql})${among("tk.status", only)}${among("tk.assignee", whose)}
+          ORDER BY tk.created DESC, tk.id LIMIT ?`,
+        ...seen.args, ...(only || []), ...(whose || []), cap).map((r) => this.#taskOf(r));
     } catch { return []; }
   }
 
@@ -513,8 +516,7 @@ export class Tasks {
        its code, check and translation; `reason`, `detail` and the assignee name who holds the task. */
     return {
       ok: false,
-      reason: "TASK_NOT_YOURS",
-      code: "TASK_NOT_YOURS",
+      reason: "TASK_NOT_YOURS", code: "TASK_NOT_YOURS",   /* N412: the code at ONE literal site, its one mint */
       check: TASK_ACTOR_CHECKS.TASK_NOT_YOURS.check,
       translation: TASK_ACTOR_CHECKS.TASK_NOT_YOURS.translation,
       detail: `this task is not yours to ${verb}; it is with ${row.assignee}`,
@@ -541,7 +543,7 @@ export class Tasks {
    *  this identity — rather than `isMachineIdentity`, which also refuses a bare
    *  class word: the bare string "admin" is a LEGITIMATE actor here, ROOT_ADMIN's
    *  own session, so a bare-class arm would refuse the root administrator's
-   *  browser. Both predicates derive from the catalogue's one prefix list. */
+   *  browser. Both predicates derive from record-grammar's one prefix list (`MACHINE_CLASS_PREFIX`). */
   taskForward({ id = null, to = null, actor = null, now = null, items } = {}) {
     /* D-126: WITH `items`, a SET under the PER-ITEM weight; the actor (the control plane's stamp) is forced
        onto every item. */

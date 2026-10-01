@@ -1,39 +1,40 @@
-/* inquiry — the grammar (requirements: `build/requirements/inquiry.md`, R1–R10, R38). The catalogue's own functions
- * and rows, held in `legacy-checks` because the catalogue's `checkBundle`, its basis-version and action grammars and the
- * case gate call them and `legacy-checks` is earlier in the order (K138's pattern, as `content/extent.mjs` is for the
- * extent grammar). This file is their one public face: every caller of the inquiry's grammar reaches it here. */
+/* inquiry — the grammar face (requirements: `build/requirements/inquiry.md`, R1, R4–R9, R17). The leg and entry grammar
+ * is `inquiry-grammar`'s (its R1–R8) and the state table and title helpers `record-grammar`'s (its R30, R31); each name
+ * is re-exported here as the same binding, so every caller of the inquiry's grammar reaches it here and R4–R9 are met
+ * through them. */
 
-import { STATES, BASIS_ROLES, GROUND_LABEL_RE, INQUIRY_TITLE_MAX, deriveInquiryTitle, inquiryQuestionOf,
-         checkInquiryBasis, checkLegExtentGrammar, leadLegFindings, supersedesEdgeFindings, divisionDisclosureFindings,
-         checkBundle, LEAD_CHECKS, ACT_SHAPE_CHECKS, MACHINE_FENCE_CHECKS } from "../../checks/bio-checks.mjs";
+import { STATES, BASIS_ROLES, INQUIRY_TITLE_MAX, deriveInquiryTitle, inquiryQuestionOf, checkBundle }
+  from "../record-grammar/index.mjs";
+import { GROUND_LABEL_RE, checkInquiryBasis, checkLegExtentGrammar, leadLegFindings, supersedesEdgeFindings,
+         divisionDisclosureFindings, checkInquiryExtension, INQUIRY_GRAMMAR_ROWS, INQUIRY_GRAMMARS }
+  from "../inquiry-grammar/index.mjs";
 
 export { BASIS_ROLES, GROUND_LABEL_RE, INQUIRY_TITLE_MAX, deriveInquiryTitle, inquiryQuestionOf, checkInquiryBasis,
-         checkLegExtentGrammar, leadLegFindings, supersedesEdgeFindings, divisionDisclosureFindings };
+         checkLegExtentGrammar, leadLegFindings, supersedesEdgeFindings, divisionDisclosureFindings, checkInquiryExtension };
 
-/** R1: the inquiry's state machine, `{legal, edges}` — the catalogue's own table, never a copy. */
+/** R1: the inquiry's state machine, `{legal, edges}` — record-grammar's own table, never a copy. */
 export const INQUIRY_MACHINE = STATES.inquiry;
 
-/** R38: the rows this module's acts and checks mint, by code, as the catalogue holds them (K6). */
-export const INQUIRY_ROWS = Object.freeze({
-  LEAD_NOT_EVIDENCE: LEAD_CHECKS.LEAD_NOT_EVIDENCE,                 // C-54.1
-  NOT_INQUIRIES: ACT_SHAPE_CHECKS.NOT_INQUIRIES,                     // C-33.13
-  SELF_BASIS: ACT_SHAPE_CHECKS.SELF_BASIS,                           // C-33.22
-  BASIS_CYCLE: ACT_SHAPE_CHECKS.BASIS_CYCLE,                         // C-33.23
-  MACHINE_CANNOT_DIVIDE: MACHINE_FENCE_CHECKS.MACHINE_CANNOT_DIVIDE, // C-32.7
-  MACHINE_CANNOT_GROUND: MACHINE_FENCE_CHECKS.MACHINE_CANNOT_GROUND, // C-32.8
-});
+/** R38: the rows this module's acts mint and its grammar raises, by code: `inquiry-grammar`'s (its R7), read, never a
+ *  copy. */
+export const INQUIRY_ROWS = INQUIRY_GRAMMAR_ROWS;
 
-/** R2, R3 (C-2.8, C-6.1): an inquiry document's entry requirements, judged by the catalogue's own inquiry extension
- *  over the document as `checkBundle` reads it. `bundleMd` is the document's text; `opts` are `checkBundle`'s facts
- *  (`publishedRegistry`, `earnedRegistry`), null blinding the arms that need them. Answers the error findings, each
- *  `{check, severity, message, repairs?}`. Never throws. */
+/** R17 (`inquiry-grammar` R1, R2; C-2.8, C-6.1, C-15.1): an inquiry document's entry requirements, judged by
+ *  record-grammar's `checkBundle` over the document as it reads it. `bundleMd` is the document's text; `opts` are
+ *  `checkBundle`'s facts (`publishedRegistry`, `earnedRegistry`), null blinding the arms that need them, and `grammars`,
+ *  the type grammars registered with record-core, which the instance's `checkEntry` passes from the record as
+ *  promotion's gate does; with none named, `inquiry-grammar`'s own (`INQUIRY_GRAMMARS`), so a caller holding no record
+ *  still has the inquiry judged. Answers the error findings, each `{check, severity, message, repairs?}`. Never throws:
+ *  a document it cannot judge (a malformed grammar list among them) is one C-2.8 error saying so. */
 export async function checkInquiryEntry(bundleMd, opts = {}) {
   try {
+    const o = opts && typeof opts === "object" ? opts : {};
     const text = String(bundleMd ?? "");
     const id = (/^id:\s*(\S+)/m.exec(text) || [])[1] || "";
     const r = await checkBundle({ folderName: id, files: new Map([["bundle.md", text]]),
-                                  publishedRegistry: opts.publishedRegistry ?? null,
-                                  earnedRegistry: opts.earnedRegistry ?? null });
+                                  publishedRegistry: o.publishedRegistry ?? null,
+                                  earnedRegistry: o.earnedRegistry ?? null },
+                                { grammars: o.grammars === undefined ? INQUIRY_GRAMMARS : o.grammars });
     const all = r && Array.isArray(r.findings) ? r.findings : [];
     return all.filter((x) => x && x.severity === "error");
   } catch (e) {

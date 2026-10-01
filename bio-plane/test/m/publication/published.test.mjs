@@ -1,10 +1,11 @@
-/* publication — the published projection: its registries (R7), the public reads (R8–R12, R25, R26), the deliverer
-   (R14, R27, R28), the commits the ceremonies make (R22, R24, R35) and the evidence-package block (R36). Driven at the
-   module's interface. */
+/* publication — the published projection: its registries (R7), what stays here of the public read path (R12, R25,
+   R26), the deliverer (R14, R27, R28) and the commits the ceremonies make (R22, R24, R35). Driven at the module's
+   interface. The public reads themselves (verify, the lists, the published case, the manifest, the evidence-package
+   block) are `public-read`'s since K651 and tested there; here they are observed through this module's own answers
+   (R53's case edition state, R1's case document, R7's registry) and its tables. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { planeWorld as world, cursor, V, SIG, NOW } from "./fixture.mjs";
-import { rowOf } from "../../../src/publication/checks.mjs";
 import { delivererOf, deliveringPrincipal, DELIVERER_UNDETERMINED_DETAIL } from "../../../src/deliverer.mjs";
 
 const F = "INQ-2026-0001", G = "INQ-2026-0002", DOC = "INFO-2026-0001-minutes";
@@ -52,103 +53,6 @@ test("R7 publishedRegistryFor answers each published edition and its frozen pair
                    ["bias_acknowledgement", "completeness", "edition", "ratified_at", "scope"]);
   assert.deepEqual(w.promotion.fact("publishedCaseRegistry", ["CASE-2026-0001"]).value, creg);
   assert.deepEqual(w.p.publishedCaseRegistryFor([]), {});
-});
-
-test("R8 verifySha answers whether a hash is published and every place it is, the signed case document's hash included (D-734)", () => {
-  const { w, pin } = published();
-  const v = w.op("verify", { sha256: pin.toUpperCase() });
-  assert.deepEqual([v.published, v.sha256, v.matches.map((m) => [m.bundle_id, m.path, m.kind])],
-                   [true, pin, [[F, "bundle.md", "bundle"]]]);
-  const doc = w.row(`SELECT doc_sha FROM case_documents`).doc_sha;
-  assert.deepEqual(w.p.verifySha(doc).matches.map((m) => [m.bundle_id, m.path, m.kind]),
-                   [["CASE-2026-0001", "case-document-edition-1.md", "case_document"]]);
-  assert.deepEqual(w.p.verifySha("0".repeat(64)), { published: false, sha256: "0".repeat(64), matches: [] });
-  assert.deepEqual(w.p.publishedCaseDocumentText(doc).found, true);
-  assert.deepEqual(w.p.publishedCaseDocumentText("0".repeat(64)), { found: false });
-});
-
-test("R9 publishedList and publishedEditions name every edition with its signer, deliverer and gate version, and every case a finding serves", () => {
-  const { w } = published();
-  const list = w.op("publishedlist");
-  assert.deepEqual(list.bundles.map((b) => [b.bundle_id, b.edition, b.attestor_member, b.gate_version, b.case_id]),
-                   [[F, 1, "olive", "plane-gate/test", "CASE-2026-0001"]]);
-  assert.deepEqual(list.bundles[0].delivered_by, { kind: "member", member: "olive" });
-  assert.deepEqual(list.bundles[0].cases, [{ case_id: "CASE-2026-0001", edition: 1 }]);
-  assert.deepEqual(list.cases.map((c) => [c.case_id, c.edition, c.findings]), [["CASE-2026-0001", 1, [F]]]);
-  assert.equal(w.op("publishededitions", {}).reason, "NO_ID");
-  const eds = w.op("publishededitions", { id: F });
-  assert.deepEqual(eds.editions.map((e) => [e.edition, e.case_id, e.scope, e.bias_acknowledgement]),
-                   [[1, "CASE-2026-0001", "The question.", "none declared"]]);
-  /* a finding two cases pin: every case named, the scalar null */
-  const { w: w2, proj, pin } = published();
-  w2.prepare("CASE-2026-0002", 1, { project: proj, roles: [{ target: F, version_sha: pin }] });
-  w2.signCase("CASE-2026-0002", 1, { project: proj, roster: [{ bundle_id: F, version_sha: pin, role: "supporting" }] });
-  const b = w2.p.publishedList().bundles[0];
-  assert.deepEqual([b.case_id, b.case_edition, b.cases.map((c) => c.case_id)], [null, null, ["CASE-2026-0001", "CASE-2026-0002"]]);
-  const e2 = w2.p.publishedEditions(F).editions[0];
-  assert.deepEqual([e2.case_id, e2.scope, e2.cases.length], [null, null, 2]);
-});
-
-test("R10 publishedCase resolves by case, by finding and by hash, and answers the case edition whole, with no case-level strength", () => {
-  const { w, pin } = published();
-  const byCase = w.op("publishedcase", { id: "CASE-2026-0001" });
-  const byFinding = w.op("publishedcase", { id: F });
-  const byHash = w.op("publishedcase", { sha256: pin });
-  for (const c of [byCase, byFinding, byHash]) {
-    assert.equal(c.ok, true);
-    assert.deepEqual([c.caseId, c.edition, c.scope, c.bias_acknowledgement, c.complete, c.awaiting],
-                     ["CASE-2026-0001", 1, "The question.", "none declared", true, []]);
-    assert.equal("strength" in c, false, "no case-level strength (R26)");
-    assert.deepEqual(c.findings.map((f) => [f.bundle_id, f.version_sha, f.role, f.frozen_from]),
-                     [[F, pin, "load_bearing", "case_document"]]);
-    assert.deepEqual(c.findings[0].strength.map((s) => [s.axis, s.grade]), [["capture", "B"], ["connection", "C"]]);
-    assert.match(c.findings[0].case_excludes, /Nothing else\./);
-    assert.deepEqual(c.findings[0].serves.map((s) => s.to), [DOC].filter(() => false), "DOC is not published: not served");
-    assert.deepEqual(c.findings[0].unresolved, [], "a serve edge to an unpublished target was dropped at the write");
-    assert.deepEqual(c.editions, [1]);
-    assert.equal(c.document.attestor.member, "olive", "D-712: the signed case document is served");
-    assert.deepEqual(Object.keys(c.completeness).sort(), ["author", "statement"]);
-    assert.ok("manifest" in c && "files" in c && "evidence_package" in c);
-  }
-  assert.equal(byFinding.asked, F);
-  assert.equal(byCase.asked, undefined);
-  const none = w.op("publishedcase", { id: "NOPE" });
-  assert.deepEqual([none.ok, none.reason, none.code, none.check, none.translation],
-                   [false, "NOT_PUBLISHED", "NOT_PUBLISHED", "C-98.8", rowOf("NOT_PUBLISHED").translation]);
-  /* a finding several cases pin is refused, naming them (C-44.2), unless the reader names the case */
-  const { w: w2, proj, pin: pin2 } = published();
-  w2.prepare("CASE-2026-0002", 1, { project: proj, roles: [{ target: F, version_sha: pin2 }] });
-  w2.signCase("CASE-2026-0002", 1, { project: proj, roster: [{ bundle_id: F, version_sha: pin2 }] });
-  const amb = w2.op("publishedcase", { id: F });
-  assert.deepEqual([amb.reason, amb.code, amb.check, amb.translation, amb.cases],
-                   ["FINDING_IN_SEVERAL_CASES", "FINDING_IN_SEVERAL_CASES", "C-44.2", rowOf("FINDING_IN_SEVERAL_CASES").translation,
-                    ["CASE-2026-0001", "CASE-2026-0002"]]);
-  assert.equal(w2.op("publishedcase", { sha256: pin2 }).reason, "FINDING_IN_SEVERAL_CASES");
-  assert.equal(w2.op("publishedcase", { id: F, caseId: "CASE-2026-0002" }).caseId, "CASE-2026-0002");
-  /* a ratified bundle in no case answers as what it is: no case identity, no scope, no case document */
-  const { w: w3 } = published();
-  w3.signFinding(DOC, { sig: SIG(7) });
-  const loose = w3.op("publishedcase", { id: DOC });
-  assert.deepEqual([loose.ok, loose.caseId, loose.scope, loose.completeness, loose.document],
-                   [true, null, null, null, null]);
-});
-
-test("R11 publishedManifest serves the whole projection; where ratified documents pinning one sha freeze different pairs the row says CASES_DISAGREE", () => {
-  const { w, proj, pin } = published();
-  const agreeing = w.op("publishedmanifest");
-  assert.equal(agreeing.ok, true);
-  assert.equal(agreeing.published.length, 1);
-  assert.equal("strengthByCase" in agreeing.published[0], false, "an agreeing row is unchanged");
-  assert.deepEqual(agreeing.published[0].strength.map((s) => s.grade), ["B", "C"]);
-  for (const c of agreeing.cases) assert.equal("strength" in c, false, "no case row carries a strength");
-  /* a second case reads the same bytes at another pair */
-  w.prepare("CASE-2026-0002", 1, { project: proj, roles: [{ target: F, version_sha: pin }],
-                                   strength: [{ target: F, axis: "capture", grade: "D" }] });
-  w.signCase("CASE-2026-0002", 1, { project: proj, roster: [{ bundle_id: F, version_sha: pin }] });
-  const row = w.p.publishedManifest().published[0];
-  assert.deepEqual([row.strength, row.strengthUndetermined], [null, "CASES_DISAGREE"]);
-  assert.deepEqual(row.strengthByCase.map((c) => [c.case_id, c.edition, c.strength.map((s) => s.grade)]),
-                   [["CASE-2026-0001", 1, ["B", "C"]], ["CASE-2026-0002", 1, ["D"]]]);
 });
 
 test("R12 publishedTargets answers R7's registry for those ids; excludedBy answers every case naming a document in its exclusions", () => {
@@ -265,38 +169,45 @@ test("R24 nothing updates or deletes a published row, a signed document or a pub
   assert.deepEqual(now.cases, frozen.cases);
   const shas = JSON.parse(now.published_shas);
   assert.deepEqual(shas.slice(0, JSON.parse(frozen.published_shas).length), JSON.parse(frozen.published_shas), "append-only");
-  assert.equal(w.p.verifySha(pin).published, true);
+  assert.ok(shas.some((r) => r.sha256 === pin), "the published hash still answers");
 });
 
-test("R25 the public read path needs no credential and reads the published projection only: working material is never answered", () => {
+test("R25 R12 what stays here of the public read path needs no credential and reads the published projection only: working material is never answered", () => {
   const w = world();
   w.member("olive");
   const proj = w.project("Parks", "olive");
-  w.inquiry(F);
+  w.doc(DOC);
+  w.inquiry(F, { extra: ["completeness_excluded:", `  - target: ${DOC}`, '    description: "live row"', '    reason: "scope"'] });
   const pin = w.head(F);
-  w.prepare("CASE-2026-0001", 1, { project: proj, roles: [{ target: F, version_sha: pin }] });
+  w.prepare("CASE-2026-0001", 1, { project: proj, roles: [{ target: F, version_sha: pin }],
+                                   excluded: [{ target: DOC, description: "the minutes" }] });
   const fresh = world();
-  for (const [op, q] of [["publishedcase", { id: F }], ["publishedcase", { id: "CASE-2026-0001" }], ["publishedcase", { sha256: pin }],
-                         ["verify", { sha256: pin }], ["publishedlist", {}], ["publishededitions", { id: F }], ["publishedmanifest", {}]]) {
+  /* a prepared (unsigned) case and a working finding answer the credential-free reads as if nothing were there */
+  for (const [op, q] of [["publishedtargets", { ids: `${F},${DOC}` }], ["caseflags", {}], ["caseflags", { case: "CASE-2026-0001" }],
+                         ["caseflags", { target: F }]]) {
     const a = w.op(op, q), b = fresh.op(op, q);
-    if (op === "publishedmanifest") { delete a.detail; delete b.detail; }
     assert.deepEqual(a, b, `${op} ${JSON.stringify(q)} answers as if nothing were there`);
   }
+  assert.deepEqual(w.p.caseEditionState("CASE-2026-0001", 1), null, "an unsigned preparation is no published case edition");
   const doc = w.row(`SELECT doc_sha FROM case_documents`).doc_sha;
   assert.deepEqual(w.p.publishedCaseDocumentText(doc), { found: false }, "an unsigned document's text is unreachable");
+  /* excludedBy (R12) answers an unsigned document's exclusion only to standing, never to a stranger */
+  assert.deepEqual(w.p.excludedBy(DOC, "nobody").cases, []);
+  assert.equal(w.p.excludedBy(DOC, V("stranger")).cases.some((c) => c.from === "case_document"), false);
 });
-
 test("R26 no answer, document or row this module serves composes a case-level strength: every pair is per member and per axis", () => {
   const { w } = published();
-  const c = w.p.publishedCase({ id: "CASE-2026-0001" });
-  assert.equal("strength" in c, false);
-  assert.equal("strength" in c.document, false);
-  for (const f of c.findings) assert.ok(Array.isArray(f.strength) && f.strength.every((s) => s.axis));
-  for (const row of w.p.publishedManifest().cases) assert.equal("strength" in row, false);
-  for (const row of w.p.publishedList().cases) assert.equal("strength" in row, false);
   const st = w.p.caseEditionState("CASE-2026-0001", 1);
   assert.equal("strength" in st, false);
-  assert.match(w.p.publishedManifest().altitudes, /no strength/);
+  assert.equal("strength" in st.document, false);
+  for (const f of st.findings) assert.ok(Array.isArray(f.strength) && f.strength.every((s) => s.axis));
+  const doc = w.p.caseDocument("CASE-2026-0001", 1, null);
+  assert.equal("strength" in doc, false);
+  for (const c of Object.values(w.p.publishedCaseRegistryFor(["CASE-2026-0001"])))
+    for (const e of Object.values(c.editions)) assert.equal("strength" in e, false);
+  for (const e of w.p.publishedEditionsOf({ finding: F }).items)
+    assert.deepEqual(Object.keys(e.strength).sort(), ["capture", "connection"], "per axis, never composed");
+  for (const r of w.rows(`SELECT * FROM published_cases`)) assert.equal("strength" in r, false);
 });
 
 test("R27 signer and deliverer are two facts, and neither is copied from the other", () => {
@@ -313,15 +224,15 @@ test("R27 signer and deliverer are two facts, and neither is copied from the oth
     attestorMember: "olive", gateVersion: "g", sigArmored: SIG(2), deliveredBy: null, edges: [] }));
   const doc = w.p.caseDocument("CASE-2026-0001", 1, null);
   assert.deepEqual([doc.attestor_member, doc.delivered_by], ["olive", { kind: "founder", member: null }]);
-  const row = w.p.publishedList().bundles[0];
-  assert.equal(row.attestor_member, "olive");
+  const row = w.p.caseEditionState("CASE-2026-0001", 1).findings[0];
+  assert.equal(row.attestor.member, "olive");
   assert.equal(row.delivered_by.kind, "undetermined", "a deliverer never recorded is not read off the signer");
 });
 
 test("R28 undetermined is stated and never filled: a deliverer, an acknowledgement list a document is silent about, a citation's version before /4", () => {
   const { w } = published();
   w.st.sql.exec(`UPDATE published_bundles SET delivered_by=NULL`);
-  const f = w.p.publishedCase({ id: "CASE-2026-0001" }).findings[0];
+  const f = w.p.caseEditionState("CASE-2026-0001", 1).findings[0];
   assert.deepEqual(f.delivered_by, { kind: "undetermined", member: null, detail: DELIVERER_UNDETERMINED_DETAIL });
   assert.equal(w.p.caseDocument("CASE-2026-0001", 1, null).citations.state, "signed");
   /* the completeness a caller commits is stored as given: a list the document was silent about stays null */
@@ -354,7 +265,8 @@ test("R35 publishing a target turns every name edge a published finding holds to
                    [{ from_bundle: F, kind: "cites", disclosure: "serve" },
                     { from_bundle: F, kind: "division_sibling", disclosure: "name" },
                     { from_bundle: "UNPUBLISHED-1", kind: "cites", disclosure: "name" }]);
-  assert.deepEqual(w.p.publishedCase({ id: "CASE-2026-0001" }).findings[0].serves.map((s) => s.to), [G]);
+  assert.equal(w.row(`SELECT COUNT(*) AS n FROM published_edges WHERE from_bundle=? AND disclosure='serve'`, F).n, 1,
+               "F serves G alone: DOC's reference stays held");
 });
 
 test("R22 (N256) a reference to evidence not yet published is held privately, never in the published graph, and becomes a serve edge when the evidence is published", () => {
@@ -367,11 +279,10 @@ test("R22 (N256) a reference to evidence not yet published is held privately, ne
   const retry = w.signFinding(F, { edges: [{ to: DOC, kind: "cites", disclosure: "serve" }] });
   assert.deepEqual([retry.existed, retry.edges], [true, { serve: 0, name: 0, held: 1, dropped: 0 }]);
   assert.equal(w.count("published_held_references"), 1, "held once");
-  /* the id is never published while held: no public read names it */
-  const f = w.p.publishedCase({ id: "CASE-2026-0001" }).findings[0];
-  for (const list of [f.serves, f.names, f.unresolved]) assert.equal(list.some((e) => e.to === DOC), false);
-  /* (the case's own signed document names DOC among its exclusions: that is the case's statement, not the graph's) */
-  for (const read of [w.op("publishedmanifest"), w.op("publishedlist"), w.op("publishedtargets", { ids: F })])
+  /* the id is never published while held: the published graph and the registry name it nowhere (the case's own signed
+     document names DOC among its exclusions: that is the case's statement, not the graph's) */
+  assert.equal(w.row(`SELECT COUNT(*) AS n FROM published_edges WHERE to_bundle=? OR from_bundle=?`, DOC, DOC).n, 0);
+  for (const read of [w.op("publishedtargets", { ids: F }), w.p.caseEditionState("CASE-2026-0001", 1).findings])
     assert.equal(JSON.stringify(read).includes(DOC), false);
   /* a held reference to another target stays held when DOC is published */
   w.record.transact(() => w.p.publishEdges(F, [{ to: G, kind: "cites", disclosure: "serve" }], NOW));
@@ -382,7 +293,7 @@ test("R22 (N256) a reference to evidence not yet published is held privately, ne
   assert.deepEqual(w.rows(`SELECT to_bundle, linked_at FROM published_held_references ORDER BY to_bundle`),
                    [{ to_bundle: G, linked_at: null }, { to_bundle: DOC, linked_at: "2026-09-29T00:00:00Z" }]
                      .sort((a, b) => (a.to_bundle < b.to_bundle ? -1 : 1)));
-  assert.deepEqual(w.p.publishedCase({ id: "CASE-2026-0001" }).findings[0].serves.map((e) => e.to), [DOC]);
+  assert.deepEqual(w.rows(`SELECT to_bundle FROM published_edges WHERE from_bundle=? AND disclosure='serve'`, F).map((e) => e.to_bundle), [DOC]);
   /* publishing it again links nothing more */
   assert.equal("heldLinked" in w.signFinding(DOC, { sig: SIG(7) }), false);
   assert.equal(edgesTo(G).length, 0);
@@ -420,19 +331,3 @@ test("R35 turns every name edge and every held reference to a target set-wise, o
                    [{ from_bundle: "UNPUB-1" }], "the unpublished finding's stays held");
 });
 
-test("R36 one evidence-package block, filled once, computed at the read beside the case; with none, the package says it carries none", () => {
-  const { w } = published();
-  const none = w.p.publishedCase({ id: "CASE-2026-0001" }).evidence_package;
-  assert.deepEqual(none.blocks, {});
-  assert.match(none.detail, /carries none/);
-  assert.equal(w.p.registerEvidenceBlock("filings", "Bad Name", () => 1).reason, "PROVIDER_MALFORMED");
-  let calls = 0;
-  assert.deepEqual(w.p.registerEvidenceBlock("filings", "available_actions",
-    ({ caseId, edition, findings }) => { calls++; return { caseId, edition, findings }; }), { ok: true, module: "filings", name: "available_actions" });
-  assert.equal(w.p.registerEvidenceBlock("other", "x", () => 1).reason, "PROVIDER_DECLARED");
-  const pkg = w.p.publishedCase({ id: "CASE-2026-0001" }).evidence_package;
-  assert.deepEqual(pkg.blocks, { available_actions: { caseId: "CASE-2026-0001", edition: 1, findings: [F] } });
-  w.p.publishedCase({ id: "CASE-2026-0001" });
-  assert.equal(calls, 2, "computed at each read, never stored");
-  assert.equal(JSON.stringify(w.snapshot(PUBLISHED)).includes("available_actions"), false, "nothing enters the case's bytes");
-});

@@ -67,7 +67,7 @@
  * capture's own profile, and a caller must not read `stack.handler.shell` off
  * this result as a verdict about the document.
  */
-import { identify } from "./index.mjs";
+import { identify } from "../site-profiles/index.mjs";
 import { doctypeFor } from "./doctypes/registry.mjs";
 
 /* FW-17 / IC-86 — THE SEGMENT MAP: where in the CONTAINER each stretch of the

@@ -92,8 +92,8 @@
 
 import { LEVELS } from "./harness.mjs";
 
-/* D-129's five, and this is a COPY of the plane's `OBSERVATION_STATES` held to
-   the plane's own file by a source pin in `test/fanout.test.mjs` — the same
+/* D-129's five, and this is a COPY of the plane's `OBSERVATION_STATES`, pinned
+   to run-rules' export in `test/fanout.test.mjs` and the requirements suite (R44) — the same
    decision `harness.mjs` records for `LEVELS`, for the same two reasons: a fleet
    member ships alone, and the plane publishes no op that names them. A sixth
    state added there fails this member's suite rather than silently arriving in a
@@ -161,10 +161,10 @@ export const CITATION_KEYS = { address: true };
  *
  * "The parent holds the only write and the only manifest" is the plan row's
  * sentence, and this is the half of it a suite can measure: every op here must be
- * one the PLANE declares `mutating: false`, checked against the plane's own OPS
- * table by `test/fanout.test.mjs` rather than against this comment. An op that
- * turns mutating in the plane fails this member's suite rather than a sub-session
- * quietly gaining a write.
+ * one this member's `PLANE_OPS` declares `mutating: false`, checked by
+ * `test/fanout.test.mjs` rather than against this comment, and control-plane pins
+ * that declaration op by op to the plane's own table (N402). An op that turns
+ * mutating fails a suite rather than a sub-session quietly gaining a write.
  *
  * IT GRANTS NOTHING, exactly as `PLANE_OPS` grants nothing (D-199 (2)): what a
  * credential may reach is a row a MEMBER authored, read at the plane's gate by

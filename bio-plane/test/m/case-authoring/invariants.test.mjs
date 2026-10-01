@@ -5,9 +5,8 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { world, V, AUTHORED } from "./fixture.mjs";
 import { caseAuthoringOps, caseAuthoringOwns, CASE_AUTHORING_TABLES, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS,
-         CASE_DISCLOSURE_CHECKS, STATEMENT_ACK_MAX, SEARCHED_LEVEL_OUTCOMES } from "../../../src/case-authoring/index.mjs";
-import { MACHINE_FENCE_CHECKS } from "../../../checks/bio-checks.mjs";
-import * as CATALOGUE from "../../../checks/bio-checks.mjs";
+         CASE_DISCLOSURE_CHECKS, PUBLISH_ACT_CHECKS, STATEMENT_ACK_MAX, SEARCHED_LEVEL_OUTCOMES }
+  from "../../../src/case-authoring/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
 
@@ -71,7 +70,7 @@ test("R28: statement_acknowledgements is declared whole to record-core's purge: 
   assert.equal(w.count("statement_acknowledgements"), 0);
 });
 
-test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3–C-44.5, C-82.2–C-82.7 — and the family C-120.1–C-120.7 is held here, every refusal carrying its check, code and translation; C-32.6 is the catalogue's row, which this module answers with", () => {
+test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3–C-44.5, C-82.2–C-82.7, C-32.6 (and R3's C-33.14) — and the family C-120.1–C-120.7 is held here, every refusal carrying its check, code and translation", () => {
   assert.deepEqual(Object.entries(CASE_DERIVATION_CHECKS).map(([k, v]) => [k, v.check]),
     [["CASE_IDENTITY_AMBIGUOUS", "C-44.1"], ["PUBLISH_DRAFT_NOT_FOUND", "C-44.3"], ["PUBLISH_DRAFT_NOT_THIS_CASE", "C-44.4"],
      ["PUBLISH_DRAFT_ALREADY_BOUND", "C-44.5"]]);
@@ -81,33 +80,26 @@ test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3
      ["STATEMENT_ACK_BY_ITS_AUTHOR", "C-82.6"], ["STATEMENT_ACK_AUTHOR_UNDETERMINED", "C-82.7"]]);
   assert.deepEqual(Object.values(CASE_DISCLOSURE_CHECKS).map((v) => v.check),
     ["C-120.1", "C-120.2", "C-120.3", "C-120.4", "C-120.5", "C-120.6", "C-120.7"]);
+  assert.deepEqual(Object.entries(PUBLISH_ACT_CHECKS).map(([k, v]) => [k, v.check]),
+    [["MACHINE_CANNOT_PUBLISH", "C-32.6"], ["NO_STATEMENT", "C-33.14"]]);
   for (const row of [...Object.values(CASE_DERIVATION_CHECKS), ...Object.values(STATEMENT_ACK_CHECKS),
-                     ...Object.values(CASE_DISCLOSURE_CHECKS)]) {
+                     ...Object.values(CASE_DISCLOSURE_CHECKS), ...Object.values(PUBLISH_ACT_CHECKS)]) {
     assert.match(row.where, /^src\/case-authoring\/index\.mjs \S+ > [a-z-]+$/, "each row names this module's region");
     assert.ok(typeof row.translation === "string" && row.translation.length > 40, "a member's sentence");
     assert.ok(!/[A-Z]{2,}_[A-Z_]+/.test(row.translation), "no code in a member's words");
   }
-  /* the rows left the catalogue: one row per code, here. Asked of every row family the catalogue exports, by code and
-     by check id, so the answer does not depend on which (possibly emptied, possibly removed) family once held them. */
-  const moved = [...Object.entries(CASE_DERIVATION_CHECKS), ...Object.entries(STATEMENT_ACK_CHECKS),
-                 ...Object.entries(CASE_DISCLOSURE_CHECKS)];
-  const codes = new Set(moved.map(([k]) => k)), ids = new Set(moved.map(([, v]) => v.check));
-  const held = [];
-  let families = 0;
-  for (const [name, family] of Object.entries(CATALOGUE)) {
-    if (!family || typeof family !== "object" || Array.isArray(family)) continue;
-    const rows = Object.entries(family).filter(([, v]) => v && typeof v === "object" && typeof v.check === "string");
-    if (rows.length) families += 1;
-    for (const [k, v] of rows) if (codes.has(k) || ids.has(v.check)) held.push(`${name}.${k} (${v.check})`);
-  }
-  assert.ok(families > 10, "the walk reached the catalogue's row families");
-  assert.deepEqual(held, [], "no row of the catalogue holds a moved code or check id");
-  assert.equal("STATEMENT_ACK_CHECKS" in CATALOGUE, false);
-  /* the machine fence answers with the catalogue's C-32.6 row */
-  assert.equal(MACHINE_FENCE_CHECKS.MACHINE_CANNOT_PUBLISH.check, "C-32.6");
+  /* one row per code and per check id across this module's families: no code or id is held twice here */
+  const all = [...Object.entries(CASE_DERIVATION_CHECKS), ...Object.entries(STATEMENT_ACK_CHECKS),
+               ...Object.entries(CASE_DISCLOSURE_CHECKS), ...Object.entries(PUBLISH_ACT_CHECKS)];
+  assert.equal(new Set(all.map(([k]) => k)).size, all.length, "each code once");
+  assert.equal(new Set(all.map(([, v]) => v.check)).size, all.length, "each check id once");
+  /* the machine fence and the missing statement answer with this module's own rows */
   const { w, P } = setup();
   const m = w.publish(P, "alice", [Q], { author: "class:daemon" });
-  assert.deepEqual([m.check, m.translation], ["C-32.6", MACHINE_FENCE_CHECKS.MACHINE_CANNOT_PUBLISH.translation]);
+  assert.deepEqual([m.code, m.check, m.translation],
+    ["MACHINE_CANNOT_PUBLISH", "C-32.6", PUBLISH_ACT_CHECKS.MACHINE_CANNOT_PUBLISH.translation]);
+  const s = w.publish(P, "alice", [Q], { statement: "" });
+  assert.deepEqual([s.code, s.check, s.translation], ["NO_STATEMENT", "C-33.14", PUBLISH_ACT_CHECKS.NO_STATEMENT.translation]);
   assert.equal(STATEMENT_ACK_MAX, 500);
 });
 
@@ -141,7 +133,7 @@ test("R30: no place is named in this module's behaviour or outward text — ever
     say(w.publish(P, "alice", [Q], over));
   say(w.ca.acknowledgeStatement({ viewer: V("bo") }));
   say(Object.values(CASE_DERIVATION_CHECKS)); say(Object.values(STATEMENT_ACK_CHECKS)); say(SEARCHED_LEVEL_OUTCOMES);
-  say(Object.values(CASE_DISCLOSURE_CHECKS));
+  say(Object.values(CASE_DISCLOSURE_CHECKS)); say(Object.values(PUBLISH_ACT_CHECKS));
   const all = said.join("\n");
   for (const p of places) assert.equal(all.includes(p), false, `names ${p}`);
 });

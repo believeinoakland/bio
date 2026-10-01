@@ -4,9 +4,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, T0, ENV, refused, renderRefusal, sha, filed } from "./fixture.mjs";
 import { captureRequestAttribution, CAPTURE_REQUEST_TICK_BATCH, CAPTURE_REQUEST_TTL_MS, CAPTURE_SOURCE_CHECKS,
-         sourceReasonOf, captureRequestsOps } from "../../../src/capture-requests/index.mjs";
-import { CAPTURE_REQUEST_CHECKS, RENDER_CAPTURE_CHECKS, civicosUserAgent, userAgentIsLegible }
-  from "../../../checks/bio-checks.mjs";
+         CAPTURE_REQUEST_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, userAgentIsLegible, sourceReasonOf, captureRequestsOps }
+  from "../../../src/capture-requests/index.mjs";
+import { RENDER_CAPTURE_CHECKS, civicosUserAgent } from "../../../src/acquisition/index.mjs";
 
 const iso = (ms) => new Date(ms).toISOString().replace(/\.\d+Z$/, "Z");
 const addr = (i) => `https://h${i}.example.org/doc`;
@@ -174,6 +174,19 @@ test("R14 the civicos agent is the catalogue's composer and legible; the member 
   assert.equal(userAgentIsLegible(ua), true);
 });
 
+test("R14 the conduct vocabulary: the purposes are exactly investigate and acquire, the agent forms exactly civicos and member-browser, both frozen; a legible agent names a (+<url> contact, and nothing else is legible", () => {
+  assert.deepEqual([...CAPTURE_PURPOSES], ["investigate", "acquire"]);
+  assert.deepEqual([...CAPTURE_UA_MODES], ["civicos", "member-browser"]);
+  assert.equal(Object.isFrozen(CAPTURE_PURPOSES), true);
+  assert.equal(Object.isFrozen(CAPTURE_UA_MODES), true);
+  for (const p of CAPTURE_PURPOSES) assert.equal(userAgentIsLegible(civicosUserAgent("1.0.0", "i", p)), true, p);
+  for (const ua of ["Bot/1.0 (+https://example.org/bot)", "x (+http://e.org)"])
+    assert.equal(userAgentIsLegible(ua), true, ua);
+  for (const ua of [undefined, null, 7, {}, "", "   ", "CivicOS/1.0 (instance i; investigate)", "x (https://e.org)",
+                    "x (+ftp://e.org)", "x (+https://)", "x +https://e.org", "Mozilla/5.0 (compatible; +https://example.org/bot)"])
+    assert.equal(userAgentIsLegible(ua), false, String(ua));
+});
+
 test("R15 a row passing conduct is set draining in the tick that fires, counts one fetch for its host, and is fired with the row's address, purpose, agent and render, its sweep origin (R38) and nothing else", async () => {
   const w = world().scene();
   const id = w.ask({ address: "https://s.example.org/doc", render: true }).request;
@@ -205,7 +218,7 @@ test("R15 a row passing conduct is set draining in the tick that fires, counts o
 });
 
 test("R16 nothing outside the drain makes the instance fetch for a request: the drain fires capture's in-process arm, and op=acquire refuses via capture-request from any caller (C-28.13)", async () => {
-  const { acquire } = await import("../../../src/capture/acquire.mjs");
+  const { acquire } = await import("../../../src/acquisition/index.mjs");
   const fakeCap = { core: { evidenceStore: () => ({ head: async () => null, get: async () => null, put: async () => ({}) }) } };
   for (const cls of ["admin", "member", "probe", "daemon", "ai", null]) {
     const res = await acquire(fakeCap, { via: "capture-request", request: "CR-x", locator: "https://example.org/a" }, { cls });

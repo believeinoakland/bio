@@ -869,7 +869,7 @@ export async function read(document, { evidence = null, env = {}, storeName = "b
   }
 }
 
-async function bytesOf(evidence, doc) {
+export async function bytesOf(evidence, doc) {
   const whole = async (digest) => {
     const o = await evidence.get(digest);
     return o ? new Uint8Array(await o.arrayBuffer()) : null;

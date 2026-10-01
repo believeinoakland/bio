@@ -8,7 +8,8 @@ import assert from "node:assert/strict";
 import { Miniflare } from "miniflare";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import * as C from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import * as P from "../../../src/promotion/index.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../../../src/" + f, import.meta.url));
 const sha = (s) => createHash("sha256").update(s).digest("hex");
@@ -100,6 +101,8 @@ probe("BIAS_ILLEGAL_TRANSITION", async () => {
   assert.equal(a.ok, true, JSON.stringify(a));
   return promote(id, bias(id, "proposed", STATEMENT), { base: a.bundleSha });
 });
+/* R13: a creation naming no group, on a store that records none (this probe's store was never given one). */
+probe("GROUP_UNDETERMINED", () => promote("INFO-2026-0122-v", info("INFO-2026-0122-v").replace("group: test-group\n", "")));
 probe("SURFACED_BY_REWRITTEN", async () => {
   const id = "INQ-2026-0118-r";
   const a = await promote(id, inquiry(id, refs([])));
@@ -121,30 +124,40 @@ probe("VERSION_FROZEN", async () => {
 /* The answer each probe must meet: its reason, or the envelope that relays it (with the row's check among findings). */
 const ENVELOPE = { SELF_BASIS: null, BASIS_CYCLE: null, VERSION_LEG_UNRESOLVED: null, VERSION_FROZEN: null };
 
-/* The catalogue functions the write runs and relays whole, and the envelope that carries their findings. */
+/* The checks the write runs through a registered step and relays whole, the envelope that carries their findings, and
+   each fixture's error findings as the version grammar (C-25, C-27.15) answers them, stated at this module's interface
+   rather than read from the catalogue's function (re-anchored in T19: basis-versions takes the grammar in layer 6). */
 const RELAYED = [
-  { site: /basisVersionFindings, called from checkInquiryBasis and from store\.mjs promote/, envelope: "BASIS_VERSION_REFUSED",
-    fn: (fm) => { const f = []; C.basisVersionFindings(fm, f); return f; },
+  { envelope: "BASIS_VERSION_REFUSED",
+    want: [["C-25.1", "C-25.3"], ["C-25.1", "C-25.12", "C-25.13", "C-25.3", "C-25.7", "C-27.15"]],
     docs: [inquiry("INQ-2026-0130-u", [...refs([]), ...versions(['  - name: "v1"', '    relationship: "alternative"',
              '    state: "suggested"', "    derived_from: null", "    hidden: false", '    author: "ruth"', `    at: "${NOW}"`])]),
            inquiry("INQ-2026-0131-v", [...refs([]), ...versions(['  - name: "v1"', '    description: "d"', '    relationship: "alternative"',
              '    state: "nonsense"', '    derived_from: "v9"', "    hidden: maybe", '    author: "ruth"', `    at: "${NOW}"`, '    kind: "odd"'])])] },
 ];
 
-test("R18: every refusal the catalogue sites at the promote write is enforced there — each row is met by name", async () => {
+test("R18: every refusal sited at the promote write is enforced there — each row is met by name", async () => {
+  /* This module's own rows sited at this write (C-86, C-97 whole since T18; the act-shape, machine-fence, C-59, C-26.12
+     and C-64.1 rows since T19), read from its tables. */
+  const own = { PROMOTED_TYPE_CHECKS: P.PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS: P.PROJECT_CREATION_VISIBILITY_CHECKS,
+                PROMOTION_ROW_CHECKS: P.PROMOTION_ROW_CHECKS, PROJECT_MINT_CHECKS: P.PROJECT_MINT_CHECKS };
   const rows = [];
-  for (const [family, table] of Object.entries(C)) {
-    if (!table || typeof table !== "object" || Array.isArray(table)) continue;
+  for (const [family, table] of Object.entries(own))
     for (const [code, row] of Object.entries(table))
-      if (row && typeof row === "object" && typeof row.where === "string" && /promote\b/.test(row.where)
-          && !/src\/index\.mjs/.test(row.where)) rows.push({ family, code, ...row });
-  }
-  /* 36 since K253: actions took GOVERNING_LAWS_REWRITTEN and RISK_TIER_REWRITTEN (T8 layer 9), as bias took C-26.1–C-26.7
-     and C-26.11 (K150); promotion cannot import either module, so their rows are theirs to test. */
-  assert.ok(rows.length >= 36, `the catalogue's rows sited at the promote write: ${rows.length}`);
+      if (/promote\b/.test(row.where)) rows.push({ family, code, ...row });
+  /* The rows later modules hold and enforce at this write through the steps they register (R39), stated here: this
+     module cannot import a later one's table (P4), and the catalogue that held them leaves in T19 (K785). The version
+     grammar's document findings (C-25, C-27.15) are relayed whole (RELAYED, below). */
+  const LATER = [["SELF_BASIS", "C-33.22", "inquiry"], ["BASIS_CYCLE", "C-33.23", "inquiry"],
+                 ["VERSION_FROZEN", "C-25.11", "basis-versions"], ["VERSION_LEG_UNRESOLVED", "C-25.16", "basis-versions"],
+                 ["SURFACED_BY_REWRITTEN", "C-66.5", "legacy-store"]];
+  for (const [code, check, family] of LATER) rows.push({ family, code, check, where: "" });
+  assert.equal(rows.length, 21, `the rows sited at the promote write: ${rows.length}`);
+  /* A row held twice (C-26.12 and C-64.1, until their other readers re-point) is one code: probed once. */
+  const probed = new Set();
   for (const row of rows) {
-    const relay = RELAYED.find((r) => r.site.test(row.where));
-    if (relay) continue;                       // shown whole by the relay test below
+    if (probed.has(row.code)) continue;
+    probed.add(row.code);
     assert.ok(PROBES[row.code], `no probe for ${row.family}.${row.code} (${row.check}, ${row.where})`);
     const r = await PROBES[row.code]();
     assert.equal(r.ok, false, `${row.code}: ${JSON.stringify(r)}`);
@@ -154,12 +167,12 @@ test("R18: every refusal the catalogue sites at the promote write is enforced th
   }
 });
 
-test("R18: a catalogue function the write runs is relayed whole: the write's findings are the function's errors, finding for finding", async () => {
+test("R18: a check the write runs through a registered step is relayed whole: the write's findings are its errors, finding for finding", async () => {
   for (const relay of RELAYED) {
     const arms = new Set();
-    for (const text of relay.docs) {
-      const fm = C.parseFrontmatter(text).data;
-      const want = relay.fn(fm, text).filter((x) => x.severity === "error").map((x) => x.check).sort();
+    for (const [i, text] of relay.docs.entries()) {
+      const fm = parseFrontmatter(text).data;
+      const want = [...relay.want[i]].sort();
       assert.ok(want.length, "the fixture meets at least one arm");
       want.forEach((c) => arms.add(c));
       const r = await promote(fm.id, text);
@@ -182,4 +195,47 @@ test("R17: through the whole write path, an unreadable revision gets the readabi
   assert.deepEqual([blob.reason, blob.why], ["BUNDLE_MD_UNREADABLE", "blob"]);
   const nofm = await rev([{ path: "bundle.md", text: "no front matter here" }]);
   assert.deepEqual([nofm.reason, nofm.why], ["BUNDLE_MD_UNREADABLE", "front_matter"]);
+});
+
+test("R16 (rec-181): through the whole write path, an item a live edge cites is refused its retirement CITED, naming the citer and `to: retired`; with no edge it retires", async () => {
+  const verified = (id) => info(id).replace("current_state: collected", "current_state: verified");
+  const retired = (id) => info(id).replace("current_state: collected", "current_state: retired")
+    .replace("prior_state: null", "prior_state: verified");
+  const cited = "INFO-2026-0150-z", free = "INFO-2026-0151-z", citer = "INQ-2026-0152-z";
+  const c = await promote(cited, verified(cited), { replay: true });
+  const f = await promote(free, verified(free), { replay: true });
+  assert.deepEqual([c.ok, f.ok], [true, true], JSON.stringify([c, f]));
+  const q = await promote(citer, inquiry(citer, refs([cited])));
+  assert.equal(q.ok, true, JSON.stringify(q));
+  const r = await promote(cited, retired(cited), { base: c.bundleSha });
+  assert.deepEqual([r.ok, r.reason, r.to], [false, "CITED", "retired"], JSON.stringify(r));
+  assert.deepEqual(r.offenders, [{ id: cited, citedBy: [citer] }]);
+  const g = await promote(free, retired(free), { base: f.bundleSha });
+  assert.equal(g.ok, true, JSON.stringify(g));
+});
+
+test("R53 (N426): through the whole write path, a plan's and an escalation's bundles are committed with the project their documents state, so a member outside the project does not see them on the record-wide read; the project's participant does", async () => {
+  const proj = await promote(null, common(null, "project", "project@1", "Harbor Works", "forming", ['objective: "Learn where the harbor money went."']).concat("---", "").join("\n"),
+    { ownerMemberId: "ruth" });
+  assert.equal(proj.ok, true, JSON.stringify(proj));
+  const P1 = proj.bundleId;
+  const pln = "PLN-2026-0160-a", esc = "ESC-2026-0161-b", free = "INFO-2026-0162-c";
+  const stated = (id, type, schema, title, state) => [...common(id, type, schema, title, state, [`project: ${P1}`, "references: []"]),
+    "---", "", "## Session Log", ""].join("\n");
+  /* A plan and an escalation change only through their own acts, which promote them; filed here as replays (a migrated
+     record), the path those modules' steps admit, since the column is written the same way for every writer. */
+  const a = await promote(pln, stated(pln, "action_plan", "action_plan@1", "A plan", "open"), { replay: true });
+  const b = await promote(esc, stated(esc, "escalation", "escalation@1", "An escalation", "drafted"), { replay: true });
+  const c = await promote(free, info(free));
+  assert.deepEqual([a.ok, b.ok, c.ok], [true, true, true], JSON.stringify([a, b, c]));
+  const listed = async (viewer) => {
+    const r = await call(`/list?viewer=${encodeURIComponent(viewer)}`);
+    return new Set((r.bundles || r.items || r).map((x) => x.bundle_id ?? x.id));
+  };
+  const outsider = await listed("member:zed"), insider = await listed("member:ruth");
+  for (const id of [pln, esc, P1]) {
+    assert.equal(outsider.has(id), false, `${id} is fenced by its project's sight`);
+    assert.equal(insider.has(id), true, `${id} is seen by the project's participant`);
+  }
+  assert.equal(outsider.has(free), true, "a bundle stating no project is fenced by nothing");
 });

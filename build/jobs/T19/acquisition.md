@@ -1,0 +1,57 @@
+# acquisition (T19)
+
+**Status** · session_01RaLL3nDAnEmSKcyNi9iC9w · depth 2 · COMPLETE · handled B3
+
+## J1 · COMPLETE
+
+Complete. Head: 1b8ebb9a2a on job/T19/acquisition.
+
+**Entry applied (B1)**
+- `index.mjs`:15 now takes `isPublicHttpsLocator`, `createSha256`, `EARNED_CAPTURE_CEILING` and `UNREACHABLE_CAPTURE_GRADE` from record-grammar's index (`../record-grammar/index.mjs`, which re-exports them from `locator.mjs`, `sha256.mjs` and `grades.mjs`). The four module tests (`acquire`, `grades`, `selflink-render`, `subresources-walk`) import the grade letters from the same place. No acquisition file imports `bio-checks.mjs`. The catalogue already re-exported these exact bindings, so behaviour does not change.
+- Two comments that went stale are corrected. The R10 hasher is record-grammar's, not "the catalogue's". `checks.mjs`' header now says its C-48.1–.7, C-83 and C-28.13 rows are the only copies (T19 L1 deleted the catalogue's, K717, K769). It used to say they stayed until then. Rows, `where`s and translations are unchanged; C-28.13's `where` still names `is-capture-request-arm`, awaiting the stamp.
+- R7 is still not met (N77), and its marker is unchanged. No old suite was deleted (K619).
+
+**Deferred.** Nothing.
+
+**For BOB (your files, and generated artifacts)**
+1. **Stale `uses` edge and Uses text.** `modules.json` still lists `legacy-checks` in acquisition's `uses`, but nothing in acquisition imports it now. The requirements' Private Uses still say `legacy-checks: isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE (re-exported from record-grammar where moved); the rows of R29 until this module's copies are its own`. Both halves are done: the four names are record-grammar's (R18–R20), and R29's rows are this module's own. The requirements' Status line also still says the catalogue's copies "are deleted by T19's layer 1", which has now happened. It is yours to reword and to drop the edge. `record-grammar` is already in acquisition's `uses`.
+2. **Stale generated artifact.** `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`). `fleetbundles.test.mjs` reports STALE BUNDLE for `src/acquisition/index.mjs` and `checks.mjs`. I did not regenerate it (§14); your layer-close regeneration covers it.
+3. **record-grammar R19's "not yet met" marker looks stale.** At HEAD, `isPublicHttpsLocator` answers `true` for `HTTPS://a.example/x` and `false` for `https://localhost./x` and `https://printer.local/x`, which is what R19 asks. acquisition R2 and R28 now rely on it directly. Worth a look at record-grammar's next job.
+
+**Tests and checks**
+- `node --test test/m/acquisition/`: tests 55, pass 55, fail 0, skipped 0. No service I provide changed (imports only; the same bindings), so I did not run other modules' suites. The manifest names no layer tests.
+- `format`: 87 modules, 82 requirements files; 0 failures · `architecture acquisition`: 9 product files, 37 relative imports; 0 failures · `coverage acquisition`: 30 of 30 live requirement ids named by a test; 0 failures · `ownership acquisition tranche/T19`: 7 files changed; legacy-checks: 0 line(s) added, 0 removed; 0 failures.
+- `fleetbundles.test.mjs` (to check for staleness, item 2): bio-plane STALE as above. Its `(j)` remedy-text arm fails on that finding's wording (`node bio-plane/scripts/bundles.mjs` against the expected `node tools/bundles.mjs`). That is the test's own expectation, not this change.
+
+Size (session_01RaLL3nDAnEmSKcyNi9iC9w): test runs 2, module lines 1246
+
+## J2 · QUESTION · re B2
+
+B2 (K794): what I'm building now, and the two places it rubs against my requirements.
+
+1. **R29 does not name C-68.1.** R29 lists this module's rows exactly (C-48.1–.7, C-83.1–.8, C-28.13), and my R29 test pins that set. My best reading: R29 gains `C-68.1 (EVIDENCE_STORAGE_NOT_CONFIGURED, K794; acquire with no evidence storage)`, and I widen the test to match. Please word it into R29, or give it its own R.
+2. **The `where` B2 says to keep.** R29 says each row's `where` names *this module's* site. The catalogue's C-68.1 `where` is `src/index.mjs storageAbsent > is-storage-absent`, which is legacy-index's helper. My best reading follows B2 literally: the line is unchanged, held twice (rule 1), and my R29 test exempts C-68.1 from the "names acquisition's site" check, by name. If you would rather it name my site (`src/acquisition/index.mjs acquire > is-storage-absent`, a new region at :298), say so; that would be a row change, awaiting the stamp.
+
+I'm carrying on with both readings. The answer only changes the `where` line and its test arm.
+
+## J3 · COMPLETE
+
+Complete again (B2, B3). Head: ef2c6dd844 on job/T19/acquisition (tranche/T19 merged in twice: for B2's reworded Uses and for B3's R29).
+
+**Entries applied**
+- **B2 (K794): C-68.1 is acquisition's.** `checks.mjs` holds `INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED`, frozen, with the catalogue's number and translation unchanged. It is in `ACQUISITION_CHECKS` and exported from `index.mjs` (capture's `pullKnock` can read it there). The raise at `acquire`'s start (no evidence store) now carries `check` and `translation` beside the `reason`, `op` and `error` it already carried. The catalogue's copy is untouched (ownership: legacy-checks 0 added, 0 removed).
+- **B3 (K796).** Its `where` is `src/acquisition/index.mjs acquire > is-storage-absent`, a new DEC-49 region round the raise, awaiting the stamp. The R29 test has no exemption.
+- **Tests at the interface.** The R29 table test now pins C-68.1 among exactly 17 rows and its row's text exactly. The every-refusal test drives it with a negative control. A new R29 (C-68.1) test covers the direct, archive, render and capture-request arms with no storage: each answers 503 with the row, with nothing fetched, filed or stored. Mutation check: with the row stripped from the raise, 2 tests go red.
+
+**Deferred.** Nothing.
+
+**For BOB**
+- The plane bundle stays stale (now also from this commit); your layer-close regeneration covers it.
+- capture (K794): `pullKnock` should read `INSTALLATION_CHECKS` from acquisition when its job runs; I did not touch it.
+
+**Tests and checks**
+- `node --test test/m/acquisition/`: tests 56, pass 56, fail 0.
+- Users of `acquire` (its refusal answer changed): extraction 145/0 fail, capture-requests 63/0. capture, ratification, monitoring, instance-setup and control-plane fail 5, 81, 1, 4, 1. I diffed the failing-test list with and without this change: identical, 92 lines each, so none is mine.
+- `format` 0 failures · `architecture` 9 product files, 37 relative imports, 0 failures · `coverage` 30 of 30, 0 failures · `ownership` 8 files changed; legacy-checks 0 added, 0 removed; 0 failures.
+
+Size (session_01RaLL3nDAnEmSKcyNi9iC9w): test runs 7, module lines 1267

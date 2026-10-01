@@ -1,11 +1,11 @@
 /* membership — who the members are and what each may do; projects as working groups, sight, and the fence.
  *
- * Requirements: build/requirements/membership.md (R1–R91; T17's N387 R89's machine fence, its row C-96.17;
- * T16's N357 the founder's `member:admin` (R43) and N364 a
- * member's own key (R27, R89–R91); T15's N352 `hiddenBundles` (R88); T14's N128 listener rows (R81), N327 `remedy` (R84), N329
- * `activeAdmins` ordered (R86) and N335 `notAParticipant` (R87); T13's N324 `notAnAdmin` (R84) and N332's `visibilityOf` (R85); T9's N123 revocation notice `onRevoked`, N142's `inSight` and
- * N70's bounds, as MEMBERSHIP #3 proposed them, J2). Extracted from the legacy store (T3-2); the legacy
- * store keeps its public methods as one-line delegations to this class, so every op and every caller answers
+ * Requirements: build/requirements/membership.md (R4–R95; T19's split, K637: sessions and passwords, signer keys and
+ * AI credentials are `credentials`', reached only through R79's `onRevoked`, R94's `registerClaimed` and R95's
+ * `registerPasswordSetter`; N426's project fence (R43); T17's N387; T16's N357 and N364; T15's N352 (R88); T14's N128
+ * (R81), N327 (R84), N329 (R86) and N335 (R87); T13's N324 (R84) and N332 (R85); T9's N123 (R79), N142 (R80) and N70's
+ * bounds). Extracted from the legacy store (T3-2); the legacy store keeps its public methods as one-line delegations
+ * to this class, so every op and every caller answers
  * as before. Design: docs/architecture/BIO_Membership_Architecture_v2.md.
  *
  * SHAPE (K61). `membershipOf(ctx)` answers the one instance for a Durable Object's storage, over `ctx.storage.sql`,
@@ -14,14 +14,14 @@
  * SQL joins record-core's `bundles` only on the stated read contract, `bundle_id` and `object_type`
  * (record-core R37); every other bundle fact (a project's title) is asked of `core.bundleInfo` (R34).
  */
-import { MACHINE_CLASS_PREFIX, isMachineIdentity, AI_CREDENTIAL_CHECKS, MEMBER_ID_CHECKS, SIGNER_ENROLMENT_CHECKS,
-         CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS, PROJECT_JOIN_REQUEST_CHECKS,
-         CASE_AUTHORITY_CHECKS } from "../../checks/bio-checks.mjs";
+import { MACHINE_CLASS_PREFIX, isMachineIdentity } from "../record-grammar/index.mjs";
 import { MEMBERSHIP_SCHEMA, MEMBERSHIP_ADDITIVE_COLUMNS, MEMBERSHIP_EXEMPT_TABLES,
          MEMBERSHIP_PROJECT_TABLES } from "./schema.mjs";
 export { MEMBERSHIP_PROJECT_TABLES, MEMBERSHIP_EXEMPT_TABLES } from "./schema.mjs";
-import { MEMBERSHIP_CHECKS } from "./checks.mjs";
-export { MEMBERSHIP_CHECKS } from "./checks.mjs";
+import { MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS, CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS,
+         PROJECT_JOIN_REQUEST_CHECKS, CASE_AUTHORITY_CHECKS, SIGNER_ENROLMENT_CHECKS } from "./checks.mjs";
+export { MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS, CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS,
+         PROJECT_JOIN_REQUEST_CHECKS, CASE_AUTHORITY_CHECKS } from "./checks.mjs";
 import { recordOf } from "../record-core/index.mjs";
 
 /* The marker every generated statement carries (moved from query.mjs with `viewerPredicate`, K57). It is a SQL
@@ -37,7 +37,13 @@ export const GATE_MARK = "/*viewer-gate*/";
    N357 (K494, W1): the founder's viewer is spelled bare `admin` or `member:admin` (the founder's positional
    spelling, `resolveSession`'s identity); both see every bundle, and only the second names a member, `admin`. The
    founder has no roster row, so the participant arm below would have shown `member:admin` no project it had not
-   joined while the bare spelling saw them all. */
+   joined while the bare spelling saw them all.
+   N426 (K704, K710): THE PROJECT FENCE. A bundle that belongs to a project (record-core R34's `project`, which promotion
+   writes from the document) is seen exactly when its project is: so an escalation's, a plan's or any project record's
+   bundle read record-wide is fenced by the same two arms that fence the project itself. The project a row is judged
+   by is its own id for a project, and its `project` column for anything else (an empty one names none). A bundle
+   naming a project nobody participates in is seen by the administrators alone, the fail-closed reading of "exactly
+   when it would see that project". */
 export function viewerPredicate(viewer) {
   const v = typeof viewer === "string" ? viewer : "";
   const CLS = MACHINE_CLASS_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -48,9 +54,10 @@ export function viewerPredicate(viewer) {
     return { sql: `${GATE_MARK} 1=1`, args: [], viewer: v, scope: "member", member: memberId };
   return {
     member: memberId,
-    sql: `${GATE_MARK} (b.object_type <> 'project' OR EXISTS (
+    sql: `${GATE_MARK} ((b.object_type <> 'project' AND COALESCE(b.project, '') = '') OR EXISTS (
              SELECT 1 FROM project_participants pp
-             WHERE pp.project_id = b.bundle_id AND pp.member_id = ?)
+             WHERE pp.project_id = (CASE WHEN b.object_type = 'project' THEN b.bundle_id ELSE b.project END)
+               AND pp.member_id = ?)
            OR EXISTS (
              SELECT 1 FROM members am
              WHERE am.member_id = ? AND am.role = 'admin' AND am.status = 'active'))`,
@@ -158,21 +165,22 @@ export function notAParticipant(projectId, by, extra = null) {
    (this module's R79; promotion, provenance and the later modules import it); this module's R83 test holds it equal to
    the file, so a change there fails the suite until the list follows. */
 export const MODULE_ORDER = Object.freeze([
-  /* 1 */ "legacy-checks", "jurisdictions", "test-support", "bundler", "runtime-limits", "signatures", "id-spaces",
-          "subresources", "ooxml", "office-readers", "odf-reader", "pdf-reader", "format-registry", "text-chain",
-          "docprofile", "image-codecs", "pdf-pixels", "pdf-worker", "ocr-worker",
-  /* 2 */ "record-core", "membership", "promotion",
-  /* 3 */ "host-governor", "provenance", "capture-sources", "capture", "sources",
+  /* 1 */ "record-grammar", "legacy-checks", "jurisdictions", "test-support", "runtime-limits", "signatures", "bundler",
+          "id-spaces", "subresources", "ooxml", "office-readers", "odf-reader", "pdf-reader", "format-registry",
+          "text-chain", "site-profiles", "docprofile", "image-codecs", "pdf-pixels", "pdf-worker", "ocr-worker",
+  /* 2 */ "record-core", "membership", "credentials", "promotion",
+  /* 3 */ "host-governor", "provenance", "capture-sources", "acquisition", "capture", "sources",
   /* 4 */ "calibration", "extraction", "content",
   /* 5 */ "entities", "connections", "progressions", "bias", "observation-log", "query-language", "retrieval",
-  /* 6 */ "inquiry", "citation", "basis-versions", "strength", "contradiction", "ai-runs", "run-productions",
-          "capture-requests", "skills", "agent-worker",
+  /* 6 */ "inquiry-grammar", "inquiry", "citation", "basis-versions", "strength", "contradiction", "run-rules",
+          "ai-runs", "run-productions", "capture-requests", "skills", "agent-worker",
   /* 7 */ "intent", "reevaluation",
-  /* 8 */ "publication", "ratification", "case-authoring", "review",
-  /* 9 */ "standards", "conformance", "consequences", "actions", "filings", "escalation",
+  /* 8 */ "case-grammar", "publication", "public-read", "project-stage", "ratification", "case-authoring", "review",
+  /* 9 */ "standards", "conformance", "consequences", "action-grammar", "actions", "action-clocks", "filings",
+          "escalation", "action-plans",
   /* 10 */ "monitoring", "scheduler", "legacy-store",
-  /* 11 */ "affordances", "tasks", "queue-producers", "queue", "instance-setup", "control-plane", "legacy-index",
-           "legacy-ui", "installer", "legacy-tests",
+  /* 11 */ "affordances", "tasks", "queue-producers", "queue", "instance-setup", "op-declarations", "admission",
+           "control-plane", "plane", "legacy-index", "legacy-ui", "installer", "legacy-tests",
 ]);
 
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
@@ -219,9 +227,6 @@ export function listenerRefusal(held, module, fn, extra) {
   /* END DEC-49 REGION is-listener-registration */
 }
 
-/* A whole-second instant, the record's `…:00Z` spelling (the legacy store's the whole-second spelling). */
-const stampSecond = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
-
 export class Membership {
   constructor({ sql, core = null } = {}) {
     this.sql = sql;
@@ -240,7 +245,9 @@ export class Membership {
   /* This module's tables, at every boot (R57–R59), idempotent: `members.name` renamed to `cover` (2026-07-24);
      every table and index created if absent; the additive columns an older store lacks added; the vestigial
      `members.expertise` column dropped (K57: `member_expertise` is the record, R21–R24); the tables declared to
-     record-core's purge (R59) when its `declarePurge` is present. Run by the host inside its boot. */
+     record-core's purge (R59) when its `declarePurge` is present; and the sight index recomputed whole from the owners'
+     acts (D-497: a derivation, so an index that disagreed with `project_visibility` cannot survive a restart; moved
+     here from the legacy store's boot, T19). Run by the host inside its boot, after record-core's schema. */
   migrate() {
     const cols = (t) => [...this.sql.exec(`PRAGMA table_info(${t})`)].map((r) => r.name);
     const memberCols = cols("members");
@@ -257,6 +264,9 @@ export class Membership {
     for (const st of bare.split(";")) { const t = st.trim(); if (t) this.sql.exec(t); }
     if (cols("members").includes("expertise")) this.sql.exec(`ALTER TABLE members DROP COLUMN expertise`);
     this.declareTables();
+    this.#registerReservedIdFinding();
+    /* No `bundles` table yet means no project to index (a host whose record-core has not made its schema). */
+    if (cols("bundles").length) this.reindexProjectSight();
   }
 
   /* R59, through record-core's `declarePurge` (its R21) once record-core provides it. */
@@ -274,6 +284,35 @@ export class Membership {
     return true;
   }
   #declared = false;
+
+  /* REC-132 / D-422 / C-55: A MEMBER HOLDING THE RESERVED ID IS REPORTED BY THE AUDIT, NEVER RENAMED (moved from the
+     legacy store's `auditPass`, T19, through record-core's R68 seam). `memberAdd` refuses the id `admin` (R12), but an
+     instance that enrolled one before the reservation still holds it, and every name-keyed check reads it as the
+     founder. Renaming it would rewrite who the record says acted, so the audit SAYS it and an administrator decides.
+     Always answered under the key `membership`, so "none held" and "this build does not look" never read alike; a
+     stated finding, never a conformance error. It names only the reserved id, which is public, and that row's role
+     and status. Registered once; a host whose record-core does not offer the seam registers nothing. */
+  #registerReservedIdFinding() {
+    if (this.#findingRegistered || !this.core || typeof this.core.registerAuditFinding !== "function") return;
+    this.core.registerAuditFinding("membership", "membership", () => this.#reservedIdFinding());
+    this.#findingRegistered = true;
+  }
+  #findingRegistered = false;
+
+  #reservedIdFinding() {
+    const id = Membership.ROOT_ADMIN;
+    const m = this.#one(`SELECT role, status FROM members WHERE member_id = ?`, id);
+    return {
+      reservedId: id, held: !!m, role: m ? m.role : null, status: m ? m.status : null,
+      check: MEMBER_ID_CHECKS.MEMBER_ID_RESERVED.check,
+      says: m
+        ? `a member is enrolled under the reserved id '${id}' (role ${m.role}, status ${m.status}). `
+          + `Every check that asks whether someone administers by name reads it as the founding `
+          + `administrator. It was enrolled before the id was reserved and has NOT been renamed: an `
+          + `administrator should decide what it is and re-enrol the person under another id`
+        : `no member holds the reserved id '${id}'`,
+    };
+  }
 
   /* ===== R79 (N123, K159, K285) — THE REVOCATION NOTICE (K31's pattern) =====
    *
@@ -315,7 +354,54 @@ export class Membership {
     return !!m && m.role === "admin" && m.status === "active";
   }
 
-  #claimed() { return !!this.#one(`SELECT role FROM credentials WHERE role=?`, Membership.ROOT_ADMIN); }
+  /* ===== R94 (K637) — WHETHER THE INSTANCE IS CLAIMED, A FACT `credentials` STATES (its R17) =====
+   *
+   * The founder is an administrator, and first in R86's list, exactly when the instance is claimed: the founder's
+   * credential is held. That credential is `credentials`', so membership never reads it; one later module registers,
+   * once at start, the function that answers it, and R64 and R86 ask that function. Anything but `true`, a throw, or
+   * no registration at all reads as not claimed (fail closed: the founder is then no administrator here). The slot
+   * takes one registration whoever makes it, so its refusals are R81's, naming the holder. */
+  #claimedSource = null;   // {module, fn}
+
+  registerClaimed(module, fn) {
+    const refused = listenerRefusal(this.#claimedSource, module, fn);
+    if (refused) return refused;
+    this.#claimedSource = { module, fn };
+    return { ok: true, module };
+  }
+
+  /* ===== R95 (K774) — THE PASSWORD AN ENROLMENT SETS, A WRITE `credentials` MAKES (its R20) =====
+   *
+   * Enrolment (R16) is one act: the member chooses a handle and a password, becomes active and spends the invitation.
+   * The password is `credentials`', so membership never stores one; one module registers, once, the setter `enroll`
+   * calls inside its act, `fn({role, password})`. Its refusals are R81's: a setter that is not a function is
+   * LISTENER_MALFORMED, a second registration LISTENER_DECLARED naming the holder (`module`, when the registrant names
+   * itself). */
+  #passwordSetter = null;   // {module, fn}
+
+  registerPasswordSetter(fn, module = "credentials") {
+    const refused = listenerRefusal(this.#passwordSetter, typeof module === "string" && module ? module : "credentials", fn);
+    if (refused) return refused;
+    this.#passwordSetter = { module, fn };
+    return { ok: true, module };
+  }
+
+  /* The enrolment's password write: the registered setter, answering true when it wrote; with none registered,
+     nothing can be written, and the enrolment is refused before membership writes anything. */
+  async #setEnrolmentPassword(role, password) {
+    const setter = this.#passwordSetter;
+    if (!setter) return false;
+    try {
+      const r = await setter.fn({ role, password });
+      return !(r && typeof r === "object" && r.ok === false);
+    } catch { return false; }
+  }
+
+  #claimed() {
+    const source = this.#claimedSource;
+    if (!source) return false;
+    try { return source.fn() === true; } catch { return false; }
+  }
 
   /* R68: a member's cover, handle, role and status, or null; never a credential, key or expertise. */
   memberFacts(memberId) {
@@ -330,7 +416,8 @@ export class Membership {
       projectId).map((r) => r.member_id);
   }
 
-  /* R70: the signer keys that attest, by R27's one predicate — the set the ratification gate accepts. */
+  /* NAMED COPY (K636 BOB-1): `credentials` R11 is the one `attestingKeys` now; this copy stays until its callers
+     (capture L3, ratification and publication L8) re-point in T19, and membership's T20 job deletes it. */
   attestingKeys() {
     return this.#rows(
       `SELECT s.key_b64, s.member_id FROM signers s
@@ -495,309 +582,11 @@ export class Membership {
     return g.scope === "DENY" ? null : g.member;
   }
 
-  /* ---- credentials ----
-
-     A Worker cannot rewrite its own secret, so ADMIN_TOKEN is a bootstrap
-     credential rather than the credential. It is spent once, exchanging itself
-     for an operator-chosen password whose hash lives here. Recovery is to
-     overwrite ADMIN_TOKEN in the dashboard, which clears the consumed marker
-     and returns the instance to unclaimed. That makes the group's Cloudflare
-     login the root of trust, which is the only thing they reliably still have
-     when a password is lost. */
-
   static #enc = new TextEncoder();
-
-  static async #derive(password, salt, iterations) {
-    const key = await crypto.subtle.importKey(
-      "raw", Membership.#enc.encode(password), "PBKDF2", false, ["deriveBits"]);
-    const bits = await crypto.subtle.deriveBits(
-      { name: "PBKDF2", hash: "SHA-256", salt: Membership.#enc.encode(salt), iterations }, key, 256);
-    return [...new Uint8Array(bits)].map((b) => b.toString(16).padStart(2, "0")).join("");
-  }
 
   static #rand(n = 32) {
     return [...crypto.getRandomValues(new Uint8Array(n))]
       .map((b) => b.toString(16).padStart(2, "0")).join("");
-  }
-
-  /* A fixed, published, deliberately WORTHLESS salt, and the one place a
-     refusal pays what an acceptance pays.
-
-     REC-41, 2026-08-05. Collapsing the login refusals into one code and one
-     sentence (see LOGIN_REFUSAL_DETAIL) is defeated by a stopwatch if the arms
-     do not COST the same. Before this, every arm that refuses without a
-     password check — no credentials row, and the DO dispatch's revoked/absent
-     member arm — returned immediately, while the wrong-password arm ran PBKDF2
-     at 100,000 iterations. That is tens of milliseconds, not the sub-millisecond
-     difference a network round trip hides, so "is this an active member" was
-     answerable with a timer even with the wire answers identical.
-
-     Every such arm now awaits this first. STATED HONESTLY AND NOT OVERCLAIMED:
-     it equalises the DOMINANT cost and is NOT a proof of constant time — the
-     SQL lookup and the string compare still differ by microseconds. It removes
-     the measurement an ordinary caller can actually make over the internet,
-     which is the threat this is for.
-
-     The salt guards nothing and is never stored; a real credential's salt is
-     minted per password by `setPassword`. */
-  static #TIMING_SALT = "bio-login-timing-equaliser";
-
-  static async #payLoginCost(password) {
-    await Membership.#derive(String(password ?? ""), Membership.#TIMING_SALT, 100000);
-  }
-
-  /* WHAT THIS ANSWERS, AND WHAT IT DELIBERATELY NO LONGER ANSWERS (REC-41,
-     2026-08-05, closing D-188).
-
-     `op=bootstrap` is `classes: null` — no token, no session, any stranger on
-     the internet. It exists to answer ONE question, the one the setup page must
-     ask before it can show anything: has this instance been claimed yet, and is
-     there a live bootstrap credential to claim it with. `gate-reads.test.mjs`
-     has always described it in exactly those words ("answers whether this
-     instance has been claimed").
-
-     UNTIL THIS ITEM IT ALSO ANSWERED `roles`: every role holding a credential,
-     each with the date its password was last set. Two facts about the people in
-     the group — who they are, and when each of them last touched their
-     password — handed to any caller in one unauthenticated request. That is a
-     ROSTER, and a roster is what `memberList` withholds the pairing from and
-     what schema.mjs's `members.cover` comment says the cover/handle split
-     exists to protect (D-157: "the rare defect whose blast radius is OUTSIDE
-     the project").
-
-     MEASURED BEFORE REMOVING IT, because a claim in a queue item is a claim and
-     not a measurement (REC-39 first, re-measured here 2026-08-05): NOTHING
-     consumes the field. `src/setup.mjs` reads `version`, `claimed`,
-     `bootstrapConfigured`, `rearmed` and `consumedAt` and never `roles` — its
-     "Roles with passwords" row is filled from the signed-in role, not from this
-     answer. `newgroup/src/index.mjs` calls the op twice and reads `version`
-     only. `civicos-ui` does not call the op at all. No suite asserted on it.
-     So the disclosure was not paying for anything, which is why the removal is
-     a straight subtraction rather than a trade.
-
-     THE CREDENTIALS TABLE IS NO LONGER READ HERE AT ALL. The field is not
-     blanked, emptied or gated — the SELECT is gone, so there is no roster in
-     this answer to leak by a later refactor, and a caller cannot tell from the
-     shape that one was ever computed. */
-  bootstrapState(tokenFp = null) {
-    const b = this.#one(`SELECT consumed_at, token_fp FROM bootstrap WHERE id=1`);
-    const spent = !!(b && b.consumed_at);
-    /* A different bootstrap secret than the one that was spent means the
-       operator has rotated it in the dashboard, which is the recovery gesture.
-       Re-arm rather than lock them out. */
-    const rearmed = spent && tokenFp !== null && b.token_fp !== tokenFp;
-    /* `consumedAt` STAYS, and the distinction is worth stating so it is not
-       swept away next time. It is the instant the INSTANCE was claimed — a fact
-       about this copy of the software, which the setup page shows its operator
-       and which names nobody. It is not a per-person password date, and there
-       is exactly one of it however many members the group has. */
-    return {
-      claimed: spent && !rearmed,
-      rearmed,
-      consumedAt: rearmed ? null : (b?.consumed_at || null),
-    };
-  }
-
-  /* Spending the bootstrap credential. Refuses if already spent, so a leaked
-     ADMIN_TOKEN cannot silently re-claim a running instance. */
-  async claim({ role = "admin", password, tokenFp = null } = {}) {
-    if (typeof password !== "string" || password.length < 12)
-      return { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 };
-    const st = this.bootstrapState(tokenFp);
-    if (st.claimed)
-      return { ok: false, reason: "ALREADY_CLAIMED", consumedAt: st.consumedAt };
-    await this.setPassword({ role, password });
-    const now = new Date().toISOString();
-    this.sql.exec(`INSERT INTO bootstrap (id, consumed_at, token_fp) VALUES (1, ?, ?)
-                   ON CONFLICT(id) DO UPDATE SET consumed_at=excluded.consumed_at,
-                     token_fp=excluded.token_fp`, now, tokenFp);
-    return { ok: true, role, consumedAt: now };
-  }
-
-  async setPassword({ role, password, iterations = 100000 }) {
-    const salt = Membership.#rand(16);
-    const hash = await Membership.#derive(password, salt, iterations);
-    this.sql.exec(
-      `INSERT INTO credentials (role, salt, hash, iterations, updated) VALUES (?,?,?,?,?)
-       ON CONFLICT(role) DO UPDATE SET salt=excluded.salt, hash=excluded.hash,
-         iterations=excluded.iterations, updated=excluded.updated`,
-      role, salt, hash, iterations, new Date().toISOString());
-    return { ok: true, role };
-  }
-
-  /* THE WORDS A REFUSED SIGN-IN IS GIVEN, REC-39, and they live in ONE place
-     because the SAME NO_SUCH_ROLE is returned from two arms — here, where no
-     credential row exists, and in the DO dispatch's `login:` wrapper, where a
-     credential exists and the member is not active. Two sentences would tell
-     those two arms apart at a glance, and telling them apart is exactly what
-     that wrapper exists to prevent.
-
-     D-57'S RULE, WHICH IS WHAT THESE SENTENCES ARE FOR. D-57 is a refusal whose
-     BASIS was false about the caller's own material — a self-reference reported
-     as a change — printed to a member verbatim because a surface renders the
-     plane's words rather than paraphrasing them. So a refusal detail must state
-     what THE MECHANISM FOUND and must never make a claim about who is asking.
-     Neither sentence below says "you", advises, or characterises the attempt:
-     one says a credential exists and the supplied password does not derive its
-     stored hash; the other says this instance holds no ACTIVE credential under
-     that role. Both are checkable statements about the store.
-
-     WHY THE NO_SUCH_ROLE SENTENCE SAYS "ACTIVE" AND NOT "NO SUCH ROLE". The
-     obvious wording — "no role by that name is registered here" — is FALSE for
-     the revoked member, whose credential row is still there and whose sign-in is
-     refused by the wrapper. Writing the obvious sentence would have made
-     revocation distinguishable from never-having-existed in prose while the
-     reason code kept them identical, which is the enrollment rule (a spent, a
-     wrong and a never-existent invitation answer alike) broken by a comment.
-     "No active credential" is exactly true of both arms and separates neither,
-     and the sentence SAYS that it does not separate them rather than leaving a
-     reader to assume it does.
-
-     ── REVISITED AND REVERSED, REC-41, 2026-08-05. READ THIS BEFORE THE HISTORY
-     BELOW IT. ──────────────────────────────────────────────────────────────────
-
-     REC-39 kept `NO_SUCH_ROLE` and `BAD_PASSWORD` distinguishable on ONE ground,
-     recorded here so it could be re-opened: that `op=bootstrap` already handed
-     any stranger the whole role roster in a single unauthenticated call, "more
-     completely and more cheaply than login probing could ever assemble it", so
-     collapsing the two would have defended nothing. REC-41 CLOSED THAT ROSTER
-     (see `bootstrapState` above). The ground is gone, so the decision was not
-     inherited — it was made again, on evidence, in the same turn that removed
-     it. THE OUTCOME: the two refusals are COLLAPSED into one reason code and one
-     sentence. There is now exactly one way `op=login` says no.
-
-     WHAT WAS MEASURED, 2026-08-05, rather than argued:
-
-     1. `op=login` is `classes: null` and carries NO rate limit of any kind. The
-        only unauthenticated op in this plane that meters a caller is `op=knock`
-        (per-IP and global windows, `KNOCK` in index.mjs). So with distinct
-        codes, "does this role hold a credential" is an unmetered anonymous
-        oracle answering one guess per request, forever. Closing the wholesale
-        route while leaving that open would have made the plane disclose the
-        same set of facts more slowly, and let this file claim a closure the
-        plane does not deliver.
-     2. THIS PLANE ALREADY DECIDED THIS QUESTION, THREE TIMES, AND ALWAYS THE
-        OTHER WAY. `#INVITE_MISS`: a spent invitation and one that never existed
-        return byte-identical answers, "the security property and not tidiness".
-        `NOT_PUBLISHED` on the published read: never-published, no-such-edition
-        and never-existed are "one answer here". And `NO_SUCH_ROLE` ITSELF
-        already collapses its own two arms — a revoked member and a role that
-        was never registered — for exactly this reason. Login was the one
-        unauthenticated identity probe in the plane still separating its
-        outcomes, and it was separating them only because of a disclosure that
-        no longer exists.
-     3. THE DISTINCTION HAD ONE CONSUMER AND THE CONSUMER WAS PART OF THE
-        DEFECT. `src/setup.mjs` branched on `NO_SUCH_ROLE` to render "No member
-        by that name has set a password on this copy yet" — a PARAPHRASE that
-        stated the disclosure more plainly than the plane ever did, to an
-        anonymous visitor, on the instance's own front door. It now renders the
-        plane's own sentence (DEC-8: a surface renders what it received).
-        `civicos-ui` does not branch on the code at all — `signIn` hands the
-        refusal to `teach()` — so no UI edit was owed.
-
-     WHAT THE COLLAPSE DOES NOT COST, since that is the case against it and it
-     deserves stating rather than skipping. A member who cannot get in is not
-     left guessing: the one sentence NAMES both possibilities — no active
-     credential under that role, or a stored credential whose derivation the
-     supplied password does not reproduce — and then says the record does not
-     report which. That is the same shape `NO_SUCH_ROLE` already used for its
-     own two arms and `#INVITE_MISS` for its two, and it is honest in the way
-     D-57 requires: it states what the mechanism did, including that the
-     mechanism deliberately declines to separate them. Nothing true was deleted;
-     one fact stopped being reported, and the answer SAYS it stopped.
-
-     WHAT IS NOT CLAIMED BY THIS, because overclaiming a fix is the failure this
-     project exists to refuse. Member identity is NOT secret after this change,
-     and it was never this mechanism's to keep: `op=publishedcase` is `classes:
-     null` and publishes `attestor.member` on every ratified finding, because a
-     signature that does not name its signer is not a signature. A member who
-     has ratified something public is publicly named, deliberately. What closes
-     here is the general oracle over EVERYONE who holds a credential — including
-     the members who have never published anything, whom nothing else names.
-
-     REVERSING THIS costs two lines: the two codes are additive to re-split, and
-     `login()` still knows which arm it took. If a future item finds a caller
-     that genuinely needs to tell a mistyped role from a mistyped password, the
-     honest way back is a rate limit plus an AUTHENTICATED diagnostic, not a
-     louder anonymous refusal.
-
-     ── REC-39's original reasoning, kept because the parts of it that are still
-     true are still load-bearing. ──────────────────────────────────────────────
-
-     D-57'S RULE, WHICH IS WHAT THESE SENTENCES ARE FOR, is unchanged: a refusal
-     detail must state what THE MECHANISM FOUND and must never make a claim about
-     who is asking. The sentence below says "you" nowhere, does not advise, and
-     does not characterise the attempt.
-
-     WHY IT SAYS "ACTIVE" AND NOT "NO SUCH ROLE", also unchanged and now covering
-     three arms rather than two. The obvious wording — "no role by that name is
-     registered here" — is FALSE for the revoked member, whose credential row is
-     still there and whose sign-in is refused by the DO dispatch's wrapper.
-     Writing the obvious sentence would make revocation distinguishable from
-     never-having-existed in prose while the reason code keeps them identical,
-     which is the enrollment rule broken by a comment. "No active credential" is
-     exactly true of both of those arms and separates neither, and the sentence
-     SAYS that it does not separate them rather than leaving a reader to assume
-     it does. */
-  static LOGIN_REFUSAL_DETAIL = {
-    SIGN_IN_REFUSED:
-      "no session was issued and nothing was written. Either this instance holds no active credential "
-      + "under that role — a role that was never registered and one whose membership is no longer active "
-      + "are the same answer here — or a credential is stored and the password supplied does not derive "
-      + "its stored hash. The password itself is never kept, only a salted derivation of it, so that is "
-      + "the only comparison there is to make. Which of those happened, the record does not say: it is one "
-      + "answer deliberately, so that a refusal cannot be used to find out which roles hold a credential "
-      + "on this instance.",
-  };
-
-  /* Exchanges a password for a bearer token so the password does not travel on
-     every later request. Constant-time comparison is not meaningful over a
-     network round trip at this granularity, but the derived-hash compare avoids
-     ever holding the password beyond this call. */
-  async login({ role = "admin", password, ttlSeconds = 43200 } = {}) {
-    /* REC-41, 2026-08-05: ONE refusal. Both arms below answer identically —
-       same code, same sentence, byte for byte — because with op=bootstrap's
-       roster closed a distinguishable refusal is the enumeration surface that
-       replaces it. The full reasoning is at LOGIN_REFUSAL_DETAIL above; the
-       arms stay separate HERE only because the derivation cannot run without a
-       stored salt. */
-    /* K57 (R2): A MEMBER'S SIGN-IN IS REFUSED UNLESS THE MEMBER IS ACTIVE, so revocation closes the front door as
-       well as the sessions. This arm lived in the legacy dispatcher's `login` wrapper; it is here so that every
-       path to a session meets it. It decides from the members table alone and never touches a password, so it
-       pays the same cost first (`#payLoginCost`) and answers the same words, byte for byte: a stranger with a
-       timer and any password must not be able to enumerate the live roster. */
-    if (typeof role === "string" && role.startsWith("member:")) {
-      const m = this.#one(`SELECT status FROM members WHERE member_id=?`, role.slice(7));
-      if (!m || m.status !== "active") {
-        await Membership.#payLoginCost(password);
-        return { ok: false, reason: "SIGN_IN_REFUSED", detail: Membership.LOGIN_REFUSAL_DETAIL.SIGN_IN_REFUSED };
-      }
-    }
-    const c = this.#one(`SELECT salt, hash, iterations FROM credentials WHERE role=?`, role);
-    /* AND THE ARMS MUST COST THE SAME, or the collapse above is defeated with a
-       stopwatch — see #payLoginCost. */
-    if (!c) {
-      await Membership.#payLoginCost(password);
-      return { ok: false, reason: "SIGN_IN_REFUSED",
-               detail: Membership.LOGIN_REFUSAL_DETAIL.SIGN_IN_REFUSED };
-    }
-    const got = await Membership.#derive(String(password ?? ""), c.salt, c.iterations);
-    if (got !== c.hash) return { ok: false, reason: "SIGN_IN_REFUSED",
-                                 detail: Membership.LOGIN_REFUSAL_DETAIL.SIGN_IN_REFUSED };
-    const token = Membership.#rand(32);
-    const expires = Date.now() + ttlSeconds * 1000;
-    this.sql.exec(`DELETE FROM sessions WHERE expires < ?`, Date.now());
-    this.sql.exec(`INSERT INTO sessions (token, role, expires, created) VALUES (?,?,?,?)`,
-      token, role, expires, new Date().toISOString());
-    return { ok: true, role, token, expires };
-  }
-
-  session(token) {
-    if (!token) return null;
-    const s = this.#one(`SELECT role, expires FROM sessions WHERE token=?`, token);
-    if (!s) return null;
-    if (s.expires < Date.now()) { this.sql.exec(`DELETE FROM sessions WHERE token=?`, token); return null; }
-    return { role: s.role, expires: s.expires, ...this.#sessionRights(s.role) };
   }
 
   /* What a session may DO. Membership Architecture v2 section 5.
@@ -826,9 +615,16 @@ export class Membership {
    * gone, or a member whose status is not active resolves to NO capabilities
    * rather than to the member default. Revocation already deletes sessions; this
    * is what covers the race between the delete and an in-flight request.
+   *
+   * R92 (K637): a named service, `credentials`' `session` reads it for every session (its R5). It writes nothing and
+   * never throws: a read it cannot make holds no rights.
    */
-  #sessionRights(role) {
+  sessionRights(role) {
     const none = { capabilities: [], administer: false, member: null, handle: null, rootOfTrust: false };
+    try { return this.#rightsOf(role, none); } catch { return none; }
+  }
+
+  #rightsOf(role, none) {
     if (role === Membership.ROOT_ADMIN)
       return { capabilities: [...Membership.CAPABILITIES], administer: true,
                member: Membership.ROOT_ADMIN, handle: null, rootOfTrust: true };
@@ -2164,7 +1960,7 @@ export class Membership {
    *
    * The arithmetic of section 4.7 lives in ONE place, `adminArithmetic`, and
    * every rule below reads it rather than restating it. The table in the
-   * architecture document is the specification and `test/membership.test.mjs`
+   * architecture document is the specification and R5's test (`test/m/membership/`)
    * asserts it row by row, because this is the part of the design that is cheap
    * to get subtly wrong and expensive to discover wrong.
    */
@@ -2296,8 +2092,7 @@ export class Membership {
     const rows = this.#rows(`SELECT member_id FROM members WHERE role='admin' AND status='active'
                               ORDER BY created, member_id`)
       .map((r) => r.member_id);
-    const claimed = !!this.#one(`SELECT role FROM credentials WHERE role=?`, Membership.ROOT_ADMIN);
-    return claimed ? [Membership.ROOT_ADMIN, ...rows] : rows;
+    return this.#claimed() ? [Membership.ROOT_ADMIN, ...rows] : rows;   /* R94 */
   }
 
   /* REC-159 — THE ROSTER ANSWERS §4.9's CUSTODIAL ACTS, and it is asked BEFORE anything is looked up,
@@ -2466,14 +2261,12 @@ export class Membership {
       return { ok: false, reason: "VOTES_SHORT", memberId, have: votes.length, need: math.votesNeeded,
                ...math, deciders: votes.map((v) => v.voter).sort() };
 
-    /* Carried. Revocation is immediate and takes sessions and signing keys with
-       it, exactly as an ordinary revocation does. */
-    /* D-610 (BOB #35, 2026-09-25): the removal is recorded under the administrator whose vote CARRIED
-       it, and the cascade onto the member's keys names the same actor, as `memberSet`'s does (REC-159). */
+    /* Carried. Revocation is immediate and takes sessions and signing keys with it, exactly as an ordinary
+       revocation does: R79's listeners are told in this act, and `credentials`' (its R16) ends the sessions and
+       revokes the keys, naming the same actor. */
+    /* D-610 (BOB #35, 2026-09-25): the removal is recorded under the administrator whose vote CARRIED it. */
     this.sql.exec(`UPDATE members SET status='revoked', status_by=?, updated=? WHERE member_id=?`, by, now, memberId);
-    this.sql.exec(`DELETE FROM sessions WHERE role=?`, `member:${memberId}`);
-    this.sql.exec(`UPDATE signers SET status='revoked', status_by=? WHERE member_id=?`, by, memberId);
-    if (m.status !== "revoked") this.#announceRevoked(memberId, by, now);   /* N123 */
+    if (m.status !== "revoked") this.#announceRevoked(memberId, by, now);   /* N123, R8 */
     return { ok: true, memberId, removed: true, ...math,
              deciders: votes.map((v) => v.voter).sort(), reasons: votes.map((v) => v.reason).filter(Boolean),
              alsoDo: "removing an administrator in the application is half of an ejection. The other half is "
@@ -2658,7 +2451,9 @@ export class Membership {
       return { ok: false, reason: "HANDLE_TAKEN", handle: h };
     if (typeof password !== "string" || password.length < 12)
       return { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 };
-    await this.setPassword({ role: `member:${m.member_id}`, password });
+    /* R95 (K774): the password is set by the registered setter, inside this act and before anything here is
+       written, so a setter that did not write leaves the invitation live and the member as they were. */
+    if (!(await this.#setEnrolmentPassword(`member:${m.member_id}`, password))) return Membership.#enrolNotRecorded();
     /* Cover, capabilities and role are the administrator's and are NOT read from
        this call. An invitee who posts their own is ignored rather than refused,
        because the fields are not theirs to send and naming them in an error
@@ -2670,6 +2465,18 @@ export class Membership {
     this.sql.exec(`UPDATE members SET status='active', handle=?, invite_hash=NULL, status_by=?, updated=? WHERE member_id=?`,
       h, m.member_id, new Date().toISOString(), m.member_id);
     return { ok: true, memberId: m.member_id, handle: h };
+  }
+
+  /* R95: the enrolment whose password could not be set. Nothing was written, the invitation is still live, and the
+     answer says so; its row is this module's C-96.18. */
+  static #enrolNotRecorded() {
+    /* DEC-49 REGION is-enrol-password-set */
+    const row = MEMBERSHIP_CHECKS.ENROL_NOT_RECORDED;
+    return { ok: false, reason: "ENROL_NOT_RECORDED", code: "ENROL_NOT_RECORDED", check: row.check,
+             translation: row.translation,
+             detail: "the password could not be recorded, so the enrolment did not happen: the member is not active "
+                   + "and the invitation is still live. Nothing was written." };
+    /* END DEC-49 REGION is-enrol-password-set */
   }
 
   memberList({ administer } = {}) {
@@ -2763,14 +2570,9 @@ export class Membership {
         status, actor, now, memberId);
     else
       this.sql.exec(`UPDATE members SET status=?, status_by=?, updated=? WHERE member_id=?`, status, actor, now, memberId);
-    if (status === "revoked") {
-      /* Revocation is immediate: live sessions die with it, and the member's
-         registered keys stop attesting. */
-      this.sql.exec(`DELETE FROM sessions WHERE role=?`, `member:${memberId}`);
-      /* REC-159: the cascade is this act's too, so the keys it revokes name its actor. */
-      this.sql.exec(`UPDATE signers SET status='revoked', status_by=? WHERE member_id=?`, actor, memberId);
-      if (m.status !== "revoked") this.#announceRevoked(memberId, actor, now);   /* N123 */
-    }
+    /* Revocation is immediate: R79's listeners are told in this act, and `credentials`' (its R16) ends the
+       member's live sessions and revokes their keys, naming this act's actor (REC-159). */
+    if (status === "revoked" && m.status !== "revoked") this.#announceRevoked(memberId, actor, now);   /* N123, R20 */
     return { ok: true, memberId, status, by: Membership.#statusBy(actor), ...(demoted ? { demoted: true,
       detail: "reactivated as an ordinary member. Administrator status is not restored by reactivation: "
             + "the group voted them out under 4.7, and putting them back is an appointment, which needs "
@@ -2845,33 +2647,6 @@ export class Membership {
     /* END DEC-49 REGION is-signer-member-attesting */
   }
 
-  signerAdd({ keyB64, memberId, comment, by = null } = {}) {
-    /* REC-159: the roster first, before the key is judged or the member looked up. */
-    const barCust = this.#custodialBar(by, "registering a signing key");
-    if (barCust) return barCust;
-    const refusal = (code, detail, extra) => Membership.#custodialRefusal(code, detail, extra);   /* D-134 / C-96 */
-    /* DEC-49 REGION is-signer-key-shape */
-    if (!Membership.#keyShaped(keyB64))
-      return refusal("BAD_KEY", "expected the base64 field of an ssh-ed25519 public key");
-    /* END DEC-49 REGION is-signer-key-shape */
-    /* D-158: this asked only whether the member EXISTED, where the gate asks
-       whether their membership is ACTIVE. `NO_SUCH_MEMBER` is unchanged and still
-       arrives first — it is inside the bar, on the same lookup, so two different
-       facts keep two different answers. */
-    const barAdd = this.#signerMemberBar(memberId);
-    if (barAdd) return barAdd;
-    /* R27 (N364): an administrator's registration, `origin` 'admin', `registered_by` the stamped actor (NULL reads
-       `not recorded`, REC-159's rule). A rebinding is this act too, so it records the same two. */
-    this.sql.exec(
-      `INSERT INTO signers (key_b64,member_id,comment,status,added,status_by,origin,registered_by)
-       VALUES (?,?,?,'active',?,?,'admin',?)
-       ON CONFLICT(key_b64) DO UPDATE SET member_id=excluded.member_id,
-         comment=excluded.comment, status='active', status_by=excluded.status_by,
-         origin='admin', registered_by=excluded.registered_by`,
-      keyB64, memberId, comment ?? null, new Date().toISOString(), by || null, by || null);
-    return { ok: true, keyB64, memberId, by: Membership.#statusBy(by) };
-  }
-
   /* The shape R25 and R89 both take: the base64 field of an ssh-ed25519 public key (the OpenSSH wire bytes, which
      an Ed25519 WebCrypto key exports to as well; `sshsig.mjs` verifies either). One predicate, so the two doors
      cannot disagree about what a key is. */
@@ -2893,6 +2668,8 @@ export class Membership {
    * to learn. A key `by` already holds and that is active answers `existed: true` and is not rewritten: its origin
    * and who registered it stay as first recorded. One `by` holds that was revoked is refused and stays revoked
    * (K535): only an administrator re-activates a key (R26), so an administrator's revocation sticks. */
+  /* NAMED COPY (K636 BOB-1; J5): `credentials` R9 is the one; this copy stays until control-plane (`dispatch.mjs`) re-points in T19's layer 11, and
+     membership's T20 job deletes it. */
   signerRegisterOwn({ keyB64, comment = null, by = null } = {}) {
     /* N387 (K571; DEC-49): the fence carries its row, C-96.17, minted here alone. */
     /* DEC-49 REGION is-machine-register-key */
@@ -2905,7 +2682,11 @@ export class Membership {
                      + "one; an administrator registers a key for a member with op=signeradd. Nothing was written." };
     }
     /* END DEC-49 REGION is-machine-register-key */
-    if (!Membership.#keyShaped(keyB64)) return this.signerAdd({ keyB64 });   /* R25's BAD_KEY, from its one site */
+    if (!Membership.#keyShaped(keyB64)) {
+      /* DEC-49 REGION is-signer-key-shape */
+      return Membership.#custodialRefusal("BAD_KEY", "expected the base64 field of an ssh-ed25519 public key");
+      /* END DEC-49 REGION is-signer-key-shape */
+    }
     const bar = this.#signerMemberBar(by);
     if (bar) return bar;
     const held = this.#one(`SELECT member_id, status, origin, registered_by FROM signers WHERE key_b64=?`, keyB64);
@@ -2945,6 +2726,8 @@ export class Membership {
      or theirs (revoking narrows a claim, D-158). A key they do not hold answers NO_SUCH_KEY exactly as `signerSet`
      answers a key no one holds, whoever holds it, so the answer never says whether a key is registered to somebody
      else. A replacement is a new R89; an administrator revokes any key by R26. */
+  /* NAMED COPY (K636 BOB-1; J5): `credentials` R10 is the one; this copy stays until control-plane (`dispatch.mjs`) re-points in T19's layer 11, and
+     membership's T20 job deletes it. */
   signerRevokeOwn({ keyB64, by = null } = {}) {
     const row = typeof keyB64 === "string" && typeof by === "string" && by !== ""
       ? this.#one(`SELECT status FROM signers WHERE key_b64=? AND member_id=?`, keyB64, by) : null;
@@ -2977,6 +2760,8 @@ export class Membership {
    * above is what it is, and it is kept because a derived reason that quietly
    * guessed when the predicate moved would be this row's own defect one altitude
    * up. Undetermined is first-class and gets said. */
+  /* NAMED COPY (K636 BOB-1; J5): `credentials` R8 is the one; this copy stays until queue-producers re-points in T19's layer 11, and
+     membership's T20 job deletes it. */
   signerList() {
     return { signers: this.#rows(
       `SELECT s.key_b64, s.member_id, s.comment, s.status, s.added, s.status_by, s.origin, s.registered_by,
@@ -2997,26 +2782,6 @@ export class Membership {
             : r.member_status !== "active" ? `member_${r.member_status}`
             : "undetermined",
         })) };
-  }
-
-  signerSet({ keyB64, status, by = null } = {}) {
-    /* REC-159: the roster first, before the key is looked up. */
-    const barCust = this.#custodialBar(by, "setting a signing key's status");
-    if (barCust) return barCust;
-    if (!["active", "revoked"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
-    const row = this.#one(`SELECT key_b64, member_id FROM signers WHERE key_b64=?`, keyB64);
-    if (!row) return { ok: false, reason: "NO_SUCH_KEY" };
-    /* D-158, THE SECOND DOOR ONTO THE SAME DISAGREEMENT. `memberSet` cascades a
-       revocation into this table, and without this an administrator could undo
-       that cascade one call later and put the roster back into the state the
-       gate refuses. Only ACTIVATION is barred: revoking narrows a claim and is
-       never blocked. */
-    if (status === "active") {
-      const barSet = this.#signerMemberBar(row.member_id);
-      if (barSet) return barSet;
-    }
-    this.sql.exec(`UPDATE signers SET status=?, status_by=? WHERE key_b64=?`, status, by || null, keyB64);
-    return { ok: true, keyB64, status, by: Membership.#statusBy(by) };
   }
 
   /* =====================================================================
@@ -3042,149 +2807,6 @@ export class Membership {
    * logging it, and the suite asserts it over this file's own source.
    * ===================================================================== */
 
-  /** op=aicredentialmint. A MEMBER act (D-199 (3)), and the record says who,
-   *  when, for whom and what for (D-199 (4)).
-   *
-   *  `writes` ARRIVES ALREADY JUDGED, by `aiScopeDeclaration` in index.mjs, and
-   *  that is deliberate rather than trusting: the reach question is "which
-   *  classes may call this op", the OPS table is the only thing that knows, and
-   *  a copy of it here would be the third unsynchronised answer REC-46 spent an
-   *  item removing. What this method judges is what the RECORD must say, which
-   *  is its own business and nobody else's. */
-  aiCredentialMint({ who = null, tokenId = null, secretSha = null, principalKind = null,
-                     principalMember = null, taskScope = null, writes = [], note = null,
-                     confinedTo = null, at = null } = {}) {
-    const refusal = (code, detail, extra) => {
-      const row = AI_CREDENTIAL_CHECKS[code];
-      return { ok: false, reason: code, code, check: row.check,
-               translation: row.translation, detail, ...(extra || {}) };
-    };
-    const now = at || stampSecond();
-    const id = String(tokenId ?? "").trim();
-    const kind = String(principalKind ?? "").trim().toLowerCase();
-
-    /* DEC-49 REGION is-ai-credential-mint
-     *
-     * THE SPAN the mint's three rows name (REC-71). A REGION and not the whole
-     * function, so the ordinary shape guards below it are not conscripted into
-     * this family by a `where` that claims too much. The local helper is
-     * `refusal` and every code is a STRING LITERAL at its site, which is what
-     * lets arm C of the DEC-49 guard COMPARE them rather than read past a
-     * variable (PL-3's measured fix, applied at allocation time).
-     *
-     * D-199 (3) FIRST, BEFORE ANY SHAPE QUESTION, and the order is the point: a
-     * caller who may not mint at all is told that, rather than being walked
-     * through the shape of a credential they were never going to get. */
-    if (!who || isMachineIdentity(who))
-      return refusal("AI_CREDENTIAL_MINT_NOT_A_MEMBER",
-        who ? `'${String(who).slice(0, 60)}' is a machine identity, and minting an AI credential is a `
-              + `MEMBER act, never an AI act (D-199 (3)): if an agent can request a broader token, the `
-              + `scoping is theatre. This is REC-46's ONE predicate, so it catches token:ai without `
-              + `knowing that class exists.`
-            : "no member is named on this act. An authority granted by nobody is an authority nobody "
-              + "can be asked about afterwards.",
-        { who: who || null });
-
-    /* D-199 (4). BOTH KINDS ARE LEGITIMATE AND THEY ARE NOT INTERCHANGEABLE,
-       which is why neither is defaulted from the other: an organisation key
-       acts for the group with nobody individual behind it, a member key is
-       attributable, and an act must SAY WHICH. The principal composed here is
-       also the VIEWER the gate stamps, so an unstated principal is a credential
-       with no answer to "what may it see" either. */
-    /* R29 (C-29.11): a member-scoped credential acts for the member who minted it, and for nobody else. Naming another
-       member as its principal would let one member hand an agent another's sight and attribution. */
-    const minter = String(who).trim();
-    if (kind === "member" && principalMember !== null && principalMember !== undefined
-        && String(principalMember).trim() !== "" && String(principalMember).trim() !== minter)
-      return refusal("AI_CREDENTIAL_PRINCIPAL_NOT_THE_MINTER",
-        `a member-scoped credential acts for the member who mints it, and '${String(principalMember).slice(0, 60)}' `
-        + `is not '${minter.slice(0, 60)}'. A member cannot authorise an agent in another member's name. Nothing `
-        + `was written.`, { principalMember: String(principalMember).slice(0, 60) });
-    /* R62 (Bob, 2026-09-26): an ORGANISATION-scoped credential acts for the whole group, so only an active
-       administrator (the founder included) mints one; anyone else is answered through R84 (N327, DEC-83), its remedy
-       the member-scoped credential open to every member. */
-    if (kind === "organisation" && !this.isAdministrator(minter))
-      return notAnAdmin(minter, "minting an organisation-wide AI credential",
-        { remedy: "A member-scoped AI credential, which acts for you alone, is open to every member." });
-    const principal = kind === "organisation" ? `${MACHINE_CLASS_PREFIX}ai`
-                    : kind === "member" ? `member:${minter}`
-                    : null;
-    if (!principal || principal === "member:")
-      return refusal("AI_CREDENTIAL_PRINCIPAL_UNSTATED",
-        `principalKind was '${kind.slice(0, 40) || "(none)"}'. It is 'organisation' (the key acts for `
-        + `the group, nobody individual behind it) or 'member' (attributable to that member). They `
-        + `carry different accountability and the record states which, never the token's value.`,
-        { principalKind: kind || null });
-
-    if (!id || this.#one(`SELECT token_id FROM ai_credentials WHERE token_id=?`, id))
-      return refusal("AI_CREDENTIAL_IDENTITY_TAKEN",
-        id ? `'${id.slice(0, 60)}' already names a credential on this instance. Acts cite the `
-             + `IDENTITY, so rebinding it would re-attribute work already done.`
-           : "pass an identity for this credential: it is the name acts will cite, and a credential "
-             + "nothing can name is one nothing can revoke either.",
-        { tokenId: id || null });
-    /* END DEC-49 REGION is-ai-credential-mint */
-
-    const declared = (Array.isArray(writes) ? writes : []).map((w) => String(w)).sort();
-    /* D-463: `confinedTo` ARRIVES ALREADY JUDGED, by `aiConfinementDeclaration` in index.mjs, for
-       `writes`' reason one field over: the set of namespaces is index.mjs's `NAMESPACES` and a copy of it
-       here would be a second answer to "which namespaces exist" that ages separately. What this method
-       does with it is the record's business — it stores 'scratch' or it stores NULL, and nothing between. */
-    const confinement = confinedTo === null || confinedTo === undefined ? null : String(confinedTo);
-    this.sql.exec(
-      `INSERT INTO ai_credentials (token_id, secret_sha, principal_kind, principal, task_scope,
-         scope_writes, scope_note, minted_by, minted_at, confined_to)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      id, String(secretSha ?? ""), kind, principal, String(taskScope ?? "investigative"),
-      JSON.stringify(declared), String(note ?? ""), String(who), now, confinement);
-    return { ok: true, minted: true, credential: this.#aiCredentialPublic(
-      this.#one(`SELECT * FROM ai_credentials WHERE token_id=?`, id)) };
-  }
-
-  /** op=aicredentialrevoke. Also a member act, and the reason is `revoked_by`
-   *  rather than the risk — see C-29.4's note in the catalog. */
-  aiCredentialRevoke({ who = null, tokenId = null, at = null } = {}) {
-    const refusal = (code, detail, extra) => {
-      const row = AI_CREDENTIAL_CHECKS[code];
-      return { ok: false, reason: code, code, check: row.check,
-               translation: row.translation, detail, ...(extra || {}) };
-    };
-    const now = at || stampSecond();
-    const id = String(tokenId ?? "").trim();
-
-    /* DEC-49 REGION is-ai-credential-revoke
-     *
-     * The revoke's two rows, in their own region for the same reason the mint's
-     * three are in theirs: a `where` naming this whole function would govern the
-     * idempotence answer below, which is not a refusal and owes no translation.
-     * Helper `refusal`, codes as STRING LITERALS. */
-    if (!who || isMachineIdentity(who))
-      return refusal("AI_CREDENTIAL_REVOKE_NOT_A_MEMBER",
-        who ? `'${String(who).slice(0, 60)}' is a machine identity. The row carries revoked_by, and a `
-              + `machine name there would record the group withdrawing an authority nobody in the `
-              + `group decided to withdraw.`
-            : "no member is named on this act, and a withdrawal nobody authored is not one.",
-        { who: who || null });
-
-    const row = id ? this.#one(`SELECT * FROM ai_credentials WHERE token_id=?`, id) : null;
-    if (!row)
-      return refusal("AI_CREDENTIAL_UNKNOWN",
-        `no credential on this instance is called '${id.slice(0, 60) || "(none)"}'. Nothing was `
-        + `withdrawn, and being told so is the point: believing an authority is gone when it is not `
-        + `is the worse of the two outcomes.`,
-        { tokenId: id || null });
-    /* END DEC-49 REGION is-ai-credential-revoke */
-
-    if (row.revoked_at)
-      return { ok: true, revoked: true, already: true,
-               credential: this.#aiCredentialPublic(row) };
-    this.sql.exec(`UPDATE ai_credentials SET revoked_at=?, revoked_by=? WHERE token_id=?`,
-                  now, String(who), id);
-    return { ok: true, revoked: true, already: false,
-             credential: this.#aiCredentialPublic(
-               this.#one(`SELECT * FROM ai_credentials WHERE token_id=?`, id)) };
-  }
-
   /** Resolve a PRESENTED credential to its record row. Takes the SHA of the
    *  value and never the value, so the thing that would be worth stealing from
    *  a log is not in one.
@@ -3193,6 +2815,8 @@ export class Membership {
    *  direction here rather than the loose one: the gate must be able to tell a
    *  withdrawn credential from an unknown string, because those are different
    *  answers and only one of them is worth a member's attention. */
+  /* NAMED COPY (K636 BOB-1; J5): `credentials` R15 is the one; this copy stays until ai-runs (L6), admission and control-plane (L11) re-point in T19, and
+     membership's T20 job deletes it. */
   aiCredentialLook({ secretSha = null } = {}) {
     const sha = String(secretSha ?? "").trim().toLowerCase();
     if (!/^[0-9a-f]{64}$/.test(sha)) return { found: false, credential: null };
@@ -3204,30 +2828,6 @@ export class Membership {
          viewer it stamps, and the ops the record declared. Neither is a secret
          and both are already on the public projection above. */
       principal: row.principal, writes: this.#aiCredentialWrites(row) } };
-  }
-
-  /** op=aicredentials. What the group can see about its own agents. NEVER a
-   *  value and never a hash — the hash is a verifier, and publishing it would
-   *  turn every read of this list into an offline guessing target.
-   *
-   *  BOUNDED, AND IT SAYS SO (REC-57 / REC-60 / D-225). It would have been easy
-   *  to argue this roster is small by nature and leave it bare; that is the
-   *  argument every bare roster on `meaning-bounds`' list was once made with,
-   *  and the instrument caught this one on its first whole-battery run. `limit`
-   *  is the bound APPLIED after clamping, never the number asked for, and
-   *  `truncated` answers the second of REC-57's two questions — a read cut at
-   *  its cap that does not SAY so leaves a caller believing they saw every
-   *  agent this instance runs, which is the worst thing for this list in
-   *  particular to be wrong about. */
-  aiCredentials({ limit = null } = {}) {
-    const asked = Number(limit);
-    const cap = Number.isFinite(asked) && asked > 0 ? Math.min(500, Math.floor(asked)) : 200;
-    /* CAP + 1 so the answer can say it was cut, captureRequests' spelling. */
-    const found = this.#rows(
-      `SELECT * FROM ai_credentials ORDER BY minted_at, token_id LIMIT ?`, cap + 1);
-    const rows = found.slice(0, cap);
-    return { count: rows.length, limit: cap, truncated: found.length > cap,
-             credentials: rows.map((r) => this.#aiCredentialPublic(r)) };
   }
 
   #aiCredentialWrites(row) {
@@ -3272,38 +2872,9 @@ export function membershipOf(ctx, { record = null } = {}) {
    a caller's own copy never wins (D-136). */
 export function membershipOps(m, url, body, env) {
   return {
-        /* PL-11 / IS-5 / D-199. `who` is the SERVER'S stamp and is read from the
-           query rather than the body for exactly the reason every other identity
-           field in this map is: the control plane deletes the caller's own copy
-           and sets it, so a caller who names themselves is overwritten rather
-           than honoured. `secretSha` likewise never comes from a caller — the
-           control plane generates the value, hashes it, and this object never
-           sees the value at all. */
-        aicredentialmint: () => m.aiCredentialMint({
-          ...(body || {}),
-          who: url.searchParams.get("who"),
-          secretSha: url.searchParams.get("secretSha") }),
-        aicredentialrevoke: () => m.aiCredentialRevoke({
-          tokenId: url.searchParams.get("tokenId"),
-          who: url.searchParams.get("who") }),
-        aicredentials: () => m.aiCredentials({ limit: url.searchParams.get("limit") }),
-        /* INTERNAL ONLY and deliberately NOT an op — the gate's own lookup, the
-           `session` entry's precedent one line of reasoning over. No caller
-           reaches it, and it takes the HASH because the value never crosses
-           this boundary. */
-        aicredentiallook: () => m.aiCredentialLook({ secretSha: url.searchParams.get("sha") }),
-        /* D-116: THE DO'S OWN BUILD, under a field that is NEVER `version`. `op=bootstrap`'s `version` is the ROUTING
-           isolate's env.VERSION, and this answer is spread AFTER it, so a `version` here would REPLACE that reading
-           rather than stand beside it. `env` is the env of the worker version THIS OBJECT is running, which rolls
-           out on its own (D-108); nothing in the request is read for it, so a caller cannot hand it a value to echo.
-           null, never a default: a DO with no VERSION bound cannot say which build it is, and says exactly that. */
-        bootstrap: () => ({ ...m.bootstrapState(url.searchParams.get("fp")),
-                            storeVersion: typeof env?.VERSION === "string" && env.VERSION
-                              ? env.VERSION : null }),
-        claim: () => m.claim({ ...(body || {}), tokenFp: url.searchParams.get("fp") }),
-        /* K57 (R2): the inactive-member arm lives in login() itself now, so every path to a sign-in answers the
-           one refusal at the one cost. */
-        login: () => m.login(body || {}),
+        /* T19 (K637): `aicredentialmint`, `aicredentialrevoke`, `aicredentials`, `aicredentiallook`, `bootstrap`,
+           `claim`, `login`, `signeradd`, `signerlist`, `signerset`, `setpassword` and `session` are `credentials`'
+           ops (its own map). */
         /* REC-156 — `memberadd`'s `by` COMES FROM THE QUERY TOO: spread the body,
            THEN set `by`, exactly as D-136's three below and for their reason.
            `memberAdd` writes the proposer's `admin_votes` ('add') row from it, and a
@@ -3401,11 +2972,6 @@ export function membershipOps(m, url, body, env) {
         projectrequests: () => m.projectRequests({ projectId: url.searchParams.get("projectId"),
           by: url.searchParams.get("by"), viewer: url.searchParams.get("viewer"),
           limit: url.searchParams.get("limit") }),
-        signeradd: () => m.signerAdd({ ...(body || {}), by: url.searchParams.get("by") }),   /* REC-159 */
-        signerlist: () => m.signerList(),
-        signerset: () => m.signerSet({ ...(body || {}), by: url.searchParams.get("by") }),   /* REC-159 */
-        setpassword: () => m.setPassword(body || {}),
-        session: () => ({ session: m.session(url.searchParams.get("t")) }),
         /* N18: the canon rules built in T3 (R10, R11, R19). `by` is the control plane's stamp, read after the body. */
         adminresign: () => m.adminResign({ by: url.searchParams.get("by") }),
         hostingaccessset: () => m.hostingAccessSet({ ...(body || {}), by: url.searchParams.get("by") }),

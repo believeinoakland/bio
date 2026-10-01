@@ -1,12 +1,10 @@
-/* publication — the case document: its fenced reads (R1, R2, R29), its exclusions (R3), its grammar (R20), its writes
-   (R21), the review provider (R23) and the read contract (R40). Driven at the module's interface. */
+/* publication — the case document: its fenced reads (R1, R2, R29), its exclusions (R3), its writes (R21), the review
+   provider (R23) and the read contract (R40). Its grammar is `case-grammar`'s since K651 (tested there), re-exported
+   here unchanged. Driven at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { planeWorld as world, caseDoc, V, SIG, NOW, sha } from "./fixture.mjs";
-import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMATS_ACCEPTED, caseDocumentStatesMemberBlocks,
-         caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures, caseDocumentRequiresTensionSection,
-         REAUTHORABLE_SECTIONS,
-         PUBLICATION_TABLES } from "../../../src/publication/index.mjs";
+import { CASE_DOCUMENT_FORMAT, REAUTHORABLE_SECTIONS, PUBLICATION_TABLES } from "../../../src/publication/index.mjs";
 
 /* One project owned by olive, one finding prepared into CASE-2026-0001 edition 1 (unsigned). */
 function prepared(opts = {}) {
@@ -120,23 +118,20 @@ test("R3 a document's exclusions are projected whole when it is stored or re-aut
                    [["CASE-2026-0001", 1, "INQ-2026-0001", "case_document"]]);
 });
 
-test("R20 the case document's grammar: /5 is written, /1–/5 accepted, and the four predicates read the token, pure and never throwing", () => {
+test("K651 the case document's grammar is case-grammar's, re-exported here unchanged: every name is the same binding", async () => {
+  const pub = await import("../../../src/publication/index.mjs");
+  const chk = await import("../../../src/publication/checks.mjs");
+  const cg = await import("../../../src/case-grammar/index.mjs");
+  for (const name of ["CASE_DOCUMENT_FORMAT", "CASE_DOCUMENT_FORMATS_ACCEPTED", "caseDocumentStatesMemberBlocks",
+                      "caseDocumentRequiresDisclosures", "caseDocumentRequiresV4Disclosures", "caseDocumentRequiresTensionSection",
+                      "caseTensionsOf", "caseDocumentBlocks", "captureBlockLines", "sourceBlockLines", "sourceStatement",
+                      "unnamedSourceStatement", "REAUTHORABLE_SECTIONS", "ATTRIBUTION_LEVELS", "ATTRIBUTION_PROSE_HEAD",
+                      "attributionFrontmatterLines", "attributionBodyLines", "publishedGraphEdges"])
+    assert.equal(pub[name], cg[name], name);
+  for (const name of ["CASE_DOCUMENT_FORMAT", "caseDocumentStatesMemberBlocks", "caseDocumentRequiresTensionSection"])
+    assert.equal(chk[name], cg[name], `checks.mjs ${name}`);
   assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/5");
-  assert.deepEqual([...CASE_DOCUMENT_FORMATS_ACCEPTED], ["bio-case-document/5", "bio-case-document/4",
-    "bio-case-document/3", "bio-case-document/2", "bio-case-document/1"]);
-  const f = (v) => ({ format: `bio-case-document/${v}` });
-  const vs = [5, 4, 3, 2, 1, 6, 0];
-  assert.deepEqual(vs.map((v) => caseDocumentStatesMemberBlocks(f(v))), [true, true, true, true, false, false, false]);
-  assert.deepEqual(vs.map((v) => caseDocumentRequiresDisclosures(f(v))), [true, true, true, false, false, false, false]);
-  assert.deepEqual(vs.map((v) => caseDocumentRequiresV4Disclosures(f(v))), [true, true, false, false, false, false, false]);
-  assert.deepEqual(vs.map((v) => caseDocumentRequiresTensionSection(f(v))), [true, false, false, false, false, false, false]);
-  const throwing = { get format() { throw new Error("boom"); } };
-  for (const odd of [null, undefined, 7, "x", {}, [], { format: null }, { format: "bio-case-document/5 " }, throwing])
-    for (const pred of [caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures,
-                        caseDocumentRequiresTensionSection])
-      assert.equal(pred(odd), false);
 });
-
 test("R21 storeCaseDocument replaces an unsigned document, never a signed one, and answers what the store holds", () => {
   const { w, proj, roles } = prepared();
   const text2 = caseDoc("CASE-2026-0001", 1, { project: proj, roles, excludes: "Now this." });
@@ -235,15 +230,29 @@ test("R29 working material answers an outsider exactly as something that does no
   assert.equal(w.p.excludedBy("", V("olive")).reason, "NO_ID");
 });
 
-test("R40 the five tables and the named columns are the stated read contract", () => {
+test("R40 the seven tables and their named columns are the stated read contract, and a later module's SQL reads them as named", () => {
   const w = world();
   const cols = (t) => w.rows(`PRAGMA table_info(${t})`).map((c) => c.name);
   const contract = { cases: ["case_id", "project_id"],
-    published_cases: ["case_id", "edition", "completeness", "bias_acknowledgement", "ratified_at"],
-    published_case_members: ["case_id", "bundle_id"], published_bundles: ["bundle_id", "edition", "bundle_sha"],
+    published_cases: ["case_id", "edition", "completeness", "bias_acknowledgement", "ratified_at", "bar", "scope", "manifest",
+                      "manifest_sha"],
+    published_case_members: ["case_id", "bundle_id", "ord", "version_sha", "role"],
+    published_edges: ["from_bundle", "to_bundle", "kind", "disclosure", "published"],
+    published_shas: ["sha256", "bundle_id", "path", "kind", "bytes", "published"],
     case_documents: ["case_id", "edition", "doc_sha", "text", "draft_id", "authored_by", "authored_at", "sig_armored",
                      "ratified_at"] };
   for (const [t, want] of Object.entries(contract))
     for (const c of want) assert.ok(cols(t).includes(c), `${t}.${c}`);
+  /* published_bundles: every column, as the contract says */
+  assert.deepEqual(cols("published_bundles").sort(), ["attestor_key", "attestor_member", "bundle_id", "bundle_sha", "delivered_by",
+    "edition", "gate_version", "parts", "ratified_at", "required", "sig_armored", "strength", "title"]);
   assert.ok(PUBLICATION_TABLES.some((t) => (t.name || t) === "case_documents"));
+  /* each read a later module makes under the contract (public-read R1–R5, project-stage R3) is answerable as written */
+  for (const q of [`SELECT sha256, bundle_id, path, kind, bytes, published FROM published_shas`,
+                   `SELECT from_bundle, to_bundle, kind, disclosure, published FROM published_edges`,
+                   `SELECT case_id, edition, scope, bar, ratified_at, manifest, manifest_sha FROM published_cases`,
+                   `SELECT case_id, edition, ord, bundle_id, version_sha, role FROM published_case_members`,
+                   `SELECT c.case_id, k.project_id FROM published_cases c LEFT JOIN cases k ON k.case_id=c.case_id`,
+                   `SELECT case_id, edition, text, sig_armored FROM case_documents`])
+    assert.deepEqual(w.rows(q), [], q);
 });

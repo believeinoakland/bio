@@ -2,7 +2,7 @@
    row), R2 (setCondition), R3–R5 (progress), R6 (gaps), R7 (watchSet). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { checkBundle } from "../../../checks/bio-checks.mjs";
+import { checkBundle } from "../../../src/record-grammar/index.mjs";
 import { INTENT_CHECKS } from "../../../src/intent/index.mjs";
 import { noSuchProject, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 import { noSuchEntity, ENTITY_CHECKS } from "../../../src/entities/index.mjs";
@@ -36,13 +36,14 @@ test("R1 a promotion of a project whose document states no objective, or an empt
   assert.equal(w.revise(P, w.text(P).replace("current_state: forming", "current_state: forming"), V("alice")).ok, true);
 });
 
-test("R22 C-2.9's objective arm moved to intent with its test: the catalogue no longer reports it, intent's audit check does (same id), and every refusal this module names has a row", async () => {
+test("R22 C-2.9's objective arm moved to intent with its test: the bundle grammar no longer reports it, intent's audit check does (same id), and every refusal this module names has a row", async () => {
+  const w = world();
+  /* record-grammar's checkBundle with the grammars the record answers (intent's R29 among them) */
   const noObjective = projMd("X", null).replace("---\n", "---\nid: PROJ-2026-0001-x\n");
   const cat = await checkBundle({ folderName: "PROJ-2026-0001-x", files: new Map([["bundle.md", noObjective]]),
-                                  sha256: async () => "0" });
+                                  sha256: async () => "0" }, { grammars: w.record.grammars() });
   assert.ok(!cat.findings.some((f) => f.check === "C-2.9" && /objective/.test(f.message)), "the catalogue's arm is gone");
   /* the audit keeps it, through intent's registered check (record-core R59) */
-  const w = world();
   w.member("alice");
   const P = w.project("Audited", "alice");
   w.st.sql.exec(`UPDATE files SET content=? WHERE bundle_id=? AND path='bundle.md'`, w.text(P).replace(/^objective: .*\n/m, ""), P);
@@ -50,10 +51,13 @@ test("R22 C-2.9's objective arm moved to intent with its test: the catalogue no 
   assert.equal(pass.tally["C-2.9"], 1);
   assert.equal(pass.tallyDetail["C-2.9/NO_OBJECTIVE"], 1);
   /* every refusal code intent.md names has its row here, with a check id and a translation */
-  const named = ["NO_OBJECTIVE", "MACHINE_CANNOT_SET_OBJECTIVE", "CONDITION_UNREADABLE", "NO_SUCH_PROGRESSION",
-    "BAD_STAGE", "CONDITION_BAD_GRADE", "BAD_SHARE", "MACHINE_CANNOT_DECLARE_GOAL", "PURSUIT_UNSTATED", "NO_SUCH_GOAL",
-    "NO_SUCH_ASPIRATION", "NO_REASON", "MACHINE_CANNOT_DECLARE_ASPIRATION", "NOT_YOURS",
-    "NO_LESSON", "MACHINE_CANNOT_TRIAGE", "MACHINE_CANNOT_CHOOSE_THE_QUESTION"];
+  const named = ["NO_OBJECTIVE", "MACHINE_CANNOT_SET_OBJECTIVE", "CONDITION_UNREADABLE", "INTENT_NO_SUCH_PROGRESSION",
+    "INTENT_BAD_STAGE", "CONDITION_BAD_GRADE", "BAD_SHARE", "MACHINE_CANNOT_DECLARE_GOAL", "PURSUIT_UNSTATED", "NO_SUCH_GOAL",
+    "NO_SUCH_ASPIRATION", "INTENT_NO_REASON", "MACHINE_CANNOT_DECLARE_ASPIRATION", "NOT_YOURS",
+    "NO_LESSON", "MACHINE_CANNOT_TRIAGE", "MACHINE_CANNOT_CHOOSE_THE_QUESTION", "PURSUIT_STATE_MOVE_UNDECLARED", "BAD_SCOPE",
+    "NO_SUCH_PROPOSAL", "TRIAGE_ACT_UNKNOWN", "SOURCE_DECLARED", "SOURCE_MALFORMED", "PURSUIT_ENDED",
+    "ADOPTIONS_UNSPLICEABLE", "NO_NOTE"];
+  assert.deepEqual(Object.keys(INTENT_CHECKS).sort(), [...named].sort(), "a row for each, and no other");
   for (const code of named) {
     assert.ok(INTENT_CHECKS[code], `${code} has a row`);
     assert.match(INTENT_CHECKS[code].check, /^C-\d+\.\d+$/);
@@ -141,9 +145,9 @@ test("R2 setCondition's refusals, in order: machine, absent or unseen project (o
                      { ...COND, progression: "" }, { ...COND, filter: "kind=body" }, { ...COND, filter: { k: { nested: 1 } } },
                      { ...COND, required: { grade: "B", stages: "need" } }, "text"])
     assert.equal(set(bad).reason, "CONDITION_UNREADABLE", JSON.stringify(bad));
-  assert.equal(set({ ...COND, progression: "nope", required: { grade: "E" } }).reason, "NO_SUCH_PROGRESSION", "asked before the grade");
+  assert.equal(set({ ...COND, progression: "nope", required: { grade: "E" } }).reason, "INTENT_NO_SUCH_PROGRESSION", "asked before the grade");
   assert.deepEqual(set({ ...COND, entity: "ENT-9", required: { grade: "E" } }), noSuchEntity("ENT-9"), "asked before the stage and grade");
-  assert.equal(set({ ...COND, required: { grade: "E", stages: ["need", "signoff"] } }).reason, "BAD_STAGE");
+  assert.equal(set({ ...COND, required: { grade: "E", stages: ["need", "signoff"] } }).reason, "INTENT_BAD_STAGE");
   assert.equal(set({ ...COND, required: { grade: "E", stages: ["need"] } }).reason, "CONDITION_BAD_GRADE");
   for (const share of [0, 101, 50.5, "50", null, -1]) assert.equal(set({ ...COND, satisfied: { share } }).reason, "BAD_SHARE", String(share));
   for (const r of [set(COND, MACHINE), absent, set(COND, V("carol")), set({}), set({ ...COND, satisfied: { share: 0 } })]) {
@@ -186,7 +190,7 @@ test("R2 success writes a new revision of the project document through promotion
   assert.equal(w.record.head(P).rowVersion, before.rowVersion + 2);
   /* a raw promotion carrying an unreadable or wrong condition is refused at the write */
   const bad = w.text(P).replace("references: []", "references: []\nobjective_condition:\n  progression: nope\n  entity: ENT-1\n  required_grade: B\n  required_stages: []\n  share: 50");
-  assert.equal(w.revise(P, bad, V("bob")).reason, "NO_SUCH_PROGRESSION");
+  assert.equal(w.revise(P, bad, V("bob")).reason, "INTENT_NO_SUCH_PROGRESSION");
   const badShare = w.text(P).replace("references: []", "references: []\nobjective_condition:\n  progression: proc\n  entity: ENT-1\n  required_grade: B\n  required_stages: []\n  share: 500");
   assert.equal(w.revise(P, badShare, V("bob")).reason, "BAD_SHARE");
 });

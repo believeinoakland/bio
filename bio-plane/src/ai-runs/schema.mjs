@@ -1,5 +1,5 @@
 /* ai-runs' tables (R38; Bob's ruling 3, "each module owns its tables"), moved from `schema.mjs` at the module's
- * extraction. `lens_at_open` and `rerun_of` were additive columns of the store's migration; they are part of the
+ * extraction. `lens_at_open`, `rerun_of` and `plan` (R46) are additive columns of the store's migration; they are part of the
  * table here, and `migrate` adds them to a table created before them. */
 export const AI_RUNS_TABLES = Object.freeze(["ai_runs", "ai_run_bounds", "inquiry_run_surfacings"]);
 
@@ -53,7 +53,9 @@ CREATE TABLE IF NOT EXISTS ai_runs (
   stopped_condition     TEXT,
   stopped_at            TEXT,
   lens_at_open          TEXT,
-  rerun_of              TEXT
+  rerun_of              TEXT,
+  -- R46 (K660): the plan a run in mode 'plan' works on, stored verbatim; NULL for every other run.
+  plan                  TEXT
 );
 CREATE INDEX IF NOT EXISTS ai_runs_expires ON ai_runs(status, expires);
 CREATE INDEX IF NOT EXISTS ai_runs_context ON ai_runs(context_id);

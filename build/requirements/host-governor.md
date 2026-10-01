@@ -48,7 +48,7 @@ Paces this instance's outbound fetches, one host at a time, so it leans on anoth
 - **R18** Reached by the `admin`, `member` and `probe` classes and by every session. `host=` narrows to one host; absent, all. Answers `{ok: true, hosts}` from R13. A store that does not answer is reported as silence (`storeSilent`), never as an empty `{ok: true}`, which would claim the instance is holding nothing.
 
 **op=governorconfig** (a write)
-- **R19** Reached by the `admin` and `probe` classes and, among sessions, by the founder's session alone; an enrolled administrator's and a member's session are refused (the refusal and its wording are the session gate's, `control-plane`). Refuses a missing `host` with `NEED_HOST` and a present `appetite_per_min` that is not a positive number with `BAD_APPETITE`; an absent one clears the host's appetite (R11). A store that does not answer is reported as silence, never `{ok: true}`.
+- **R19** Reached by the `admin` and `probe` classes and, among sessions, by the founder's session alone; an enrolled administrator's and a member's session are refused (the refusal and its wording are the session gate's, `admission` R8, split from `control-plane`, K624). Refuses a missing `host` with `NEED_HOST` and a present `appetite_per_min` that is not a positive number with `BAD_APPETITE`; an absent one clears the host's appetite (R11). A store that does not answer is reported as silence, never `{ok: true}`.
 
 **How the module is reached: governorOf(ctx, opts?) → the instance** (K61)
 

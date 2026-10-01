@@ -1,9 +1,8 @@
 /* content: citation refusals and resolution, for the modules whose edges cite (R27, R28), with C-45.5 and C-45.6. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { CONTENT_EXTENT_CHECKS } from "../../../checks/bio-checks.mjs";
 import { world, V } from "./fixture.mjs";
-import { contentIdFor } from "../../../src/content/index.mjs";
+import { contentIdFor, CONTENT_EXTENT_CHECKS } from "../../../src/content/index.mjs";
 
 const DOC = "INFO-2026-0001-a", OTHER = "INFO-2026-0002-b", EMPTY = "INFO-2026-0003-empty", Q = "INQ-2026-0001-q";
 

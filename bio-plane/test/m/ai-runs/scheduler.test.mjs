@@ -130,10 +130,10 @@ test("R18: a woken run is dispatched only when its principal is the instance's o
     await w.group("ann");
     w.bundle(INQ);
     if (mint) {
-      const m = w.membership.aiCredentialMint({ who: mint === "member" ? "ann" : "admin", tokenId: "tok-org", secretSha: sha(TOKEN),
+      const m = w.credentials.aiCredentialMint({ who: mint === "member" ? "ann" : "admin", tokenId: "tok-org", secretSha: sha(TOKEN),
         principalKind: mint, taskScope: "investigative", writes: ["airuntick"], note: "the instance's key" });
       assert.equal(m.ok, true, JSON.stringify(m));
-      if (revoke) w.membership.aiCredentialRevoke({ who: "admin", tokenId: "tok-org" });
+      if (revoke) w.credentials.aiCredentialRevoke({ who: "admin", tokenId: "tok-org" });
     }
     bound(w, store);
     await w.runs.open(OPEN({ principalPlane: principal }));
@@ -145,7 +145,7 @@ test("R18: a woken run is dispatched only when its principal is the instance's o
   /* the one comparison: stamps equal → dispatched, the body carrying the credential and no more */
   const aw = agentWorker();
   const w = await setup(env(aw));
-  const cred = w.membership.aiCredentialLook({ secretSha: sha(TOKEN) }).credential;
+  const cred = w.credentials.aiCredentialLook({ secretSha: sha(TOKEN) }).credential;
   const stamp = `${cred.principal}/${cred.tokenId}`;
   const w1 = await setup(env(aw), { principal: stamp });
   const d = await decision(w1);

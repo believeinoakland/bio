@@ -1,9 +1,9 @@
-/* queue-producers — the feed's producers (requirements: `build/requirements/queue-producers.md`, R1–R13).
+/* queue-producers — the feed's producers (requirements: `build/requirements/queue-producers.md`, R1–R18).
  * Split out of `queue` by N363 (Bob's K507; seams ruled K531, `build/plan/draft-N363-queue-split.md` §1, §3.2): each
  * producer derives, on read and writing nothing, the items one provider's facts earn for a viewer, naming each item's
  * subjects and home subjects, for `queue` to home, offer, mint and publish.
  *
- *   feedItems      queue's one read of this module (R8): every item R1–R7 and R9 derive for a member and viewer, each
+ *   feedItems      queue's one read of this module (R8): every item R1–R7, R9, R14 and R15–R18 derive for a member and viewer, each
  *                  homed through queue's walk and carrying queue's options (both passed in), with the facts the answer
  *                  publishes beside them. No item carries `disposition` (queue's mint gives it) or `catalogue_id`
  *                  (queue stamps it from its R2).
@@ -13,8 +13,8 @@
  * REACHED as `queueProducersOf(ctx, deps)`: one instance per Durable Object storage. It registers nothing and holds no
  * check row: it refuses nothing (draft §3.3).
  * `deps` (each defaults to its module's instance on the same `ctx`, reached lazily when first asked):
- *   record, membership, governor, provenance, capture, captureRequests, basisVersions, progressions, aiRuns, bias,
- *   publication, reevaluation, intent, monitoring, contradiction   the providers.
+ *   record, membership, credentials, governor, provenance, capture, captureRequests, basisVersions, progressions, aiRuns, bias,
+ *   publication, reevaluation, intent, monitoring, contradiction, actionClocks, escalation, actionPlans   the providers.
  *
  * R7 (queue's homes walk) and R12 (queue's options) stay in queue, one walk and one derivation: `feedItems` takes them
  * as `homesOf(subjectIds)` and `optionsOf(subjectIds)`, closed over the read's viewer and identity by queue, and holds
@@ -22,9 +22,12 @@
  * depth 0) are built over `homesOf`.
  */
 
-import { normalizeType, STATES, vocabFor, MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../../checks/bio-checks.mjs";
+import { normalizeType } from "../record-grammar/types.mjs";
+import { STATES, vocabFor } from "../record-grammar/document.mjs";
+import { MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, hiddenBundles, GATE_MARK } from "../membership/index.mjs";
+import { credentialsOf } from "../credentials/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { captureOf } from "../capture/index.mjs";
@@ -38,6 +41,9 @@ import { publicationOf, EXPORT_LOG_LIMIT_DEFAULT } from "../publication/index.mj
 import { reevaluationOf } from "../reevaluation/index.mjs";
 import { intentOf } from "../intent/index.mjs";
 import { monitoringOf } from "../monitoring/index.mjs";
+import { actionClocksOf } from "../action-clocks/index.mjs";
+import { escalationOf } from "../escalation/index.mjs";
+import { actionPlansOf } from "../action-plans/index.mjs";
 import { proposalFindingItems } from "./proposals.mjs";
 
 export { proposalFindingItems, CARDINALITY_EXCEEDED } from "./proposals.mjs";
@@ -62,6 +68,7 @@ export class QueueProducers {
   }
   get #record() { return this.#dep("record", () => recordOf(this.#host)); }
   get #membership() { return this.#dep("membership", () => membershipOf(this.#host)); }
+  get #credentials() { return this.#dep("credentials", () => credentialsOf(this.#host)); }
   get #governor() { return this.#dep("governor", () => governorOf(this.#host)); }
   get #provenance() { return this.#dep("provenance", () => provenanceOf(this.#host)); }
   get #capture() { return this.#dep("capture", () => captureOf(this.#host)); }
@@ -75,6 +82,9 @@ export class QueueProducers {
   get #reevaluation() { return this.#dep("reevaluation", () => reevaluationOf(this.#host)); }
   get #intent() { return this.#dep("intent", () => intentOf(this.#host)); }
   get #monitoring() { return this.#dep("monitoring", () => monitoringOf(this.#host)); }
+  get #actionClocks() { return this.#dep("actionClocks", () => actionClocksOf(this.#host)); }
+  get #escalation() { return this.#dep("escalation", () => escalationOf(this.#host)); }
+  get #actionPlans() { return this.#dep("actionPlans", () => actionPlansOf(this.#host)); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
@@ -130,8 +140,8 @@ export class QueueProducers {
   /** R3: how many SUBJECT documents one CONDITION may gather before the gathering is reported `subject_bound`.
    *  Sixteen: twice the option bound, because a home set is cheaper than an affordances derivation. */
   static QUEUE_CONDITION_SUBJECTS_MAX = 16;
-  /** The prefix the control plane stamps on a MACHINE credential's `author`, `token:<class>`, imported from the
-   *  catalogue so the stamp and the read are the same string (REC-46); what `capture-completed-unattended` reads. */
+  /** The prefix the control plane stamps on a MACHINE credential's `author`, `token:<class>`, imported from
+   *  record-grammar so the stamp and the read are the same string (REC-46); what `capture-completed-unattended` reads. */
   static QUEUE_MACHINE_AUTHOR_PREFIX = MACHINE_AUTHOR_PREFIX;
   /** R9: the lead's inquiry-grain act, take it up (cite into that inquiry); queue decorates it (its R17) and adds the
    *  set-aside at its mint, where the disposition is known (its R18). */
@@ -187,6 +197,13 @@ export class QueueProducers {
       items.push(...this.#findingsSideCorrected(viewer, at));
       items.push(...this.#findingsTensionAfterPublication(me, viewer, at));
       items.push(...this.#contradictionUnseenItems(me, scope, viewer));
+      /* OBLIGATION · R14: a member's own signing key, to the administrators. */
+      items.push(...this.#obligationsSignerSelfRegistered(me, viewer, at));
+      /* The Action layer · R15–R18: an overdue date, a checkpoint come due, a stage proposed, a reminder asked for. */
+      items.push(...this.#conditionsActionClockOverdue(me, viewer, at));
+      items.push(...this.#obligationsPlanCheckpointDue(me, viewer, at));
+      items.push(...this.#obligationsEscalationStageProposed(me, viewer, at));
+      items.push(...this.#obligationsActionReminder(me, viewer, at));
       return {
         items,
         facts: {
@@ -1492,9 +1509,11 @@ export class QueueProducers {
    * ====================================================================== */
 
   /** A home set made of the named cases themselves (each at depth 0, when this viewer sees it and it is a case) and
-   *  every ancestor above them (queue R7): for an item that is ABOUT a case rather than about a document under one. */
-  #homesAt(caseIds, viewer) {
-    const up = this.#homesOf(caseIds);
+   *  every ancestor above them (queue R7): for an item that is ABOUT a case rather than about a document under one.
+   *  `walkFrom` (R15–R18) names the subjects the walk starts from when they are not the cases themselves: an action's
+   *  item is homed under its project at depth 0 and under whatever its action's own walk reaches. */
+  #homesAt(caseIds, viewer, walkFrom = caseIds) {
+    const up = this.#homesOf(walkFrom);
     const gate = viewerPredicate(viewer);
     const own = [];
     for (const id of [...new Set((caseIds || []).filter((x) => typeof x === "string" && x))]) {
@@ -2225,6 +2244,291 @@ export class QueueProducers {
     }
     return out;
   }
+
+  /* ======================================================================
+   * N375 · R14 — A MEMBER'S OWN SIGNING KEY, TOLD TO EVERY ADMINISTRATOR (credentials R9, was membership R89).
+   * ====================================================================== */
+
+  /** R14: the act an administrator takes on a self-registered key, credentials R7's revoke (`op=signerset`). */
+  static SIGNER_REVOKE = Object.freeze({ id: "signerset", label: "Revoke this signing key", weight: "single" });
+
+  /** `signer-self-registered` (R14; credentials R8, R9; N375): for an administrator member (membership R64), or the
+   *  `admin` machine credential as export-performed's reader is, one OBLIGATION per key `credentials.signerList`
+   *  answers `active` with `origin: "self"`, naming the key's comment and its member, aged from its `added` instant, and
+   *  offering credentials R7's revoke. Every other reader gets none, and not a count. It leaves when the key is no longer
+   *  `active`: the list is read at every read, so nothing is stored to clear. */
+  #obligationsSignerSelfRegistered(me, viewer, now) {
+    const admin = me ? this.#isAdminMember(me) : viewer === `${MACHINE_CLASS_PREFIX}admin`;
+    if (!admin) return [];
+    const list = this.#credentials.signerList();
+    const keys = (list && Array.isArray(list.signers) ? list.signers : [])
+      .filter((k) => k && k.status === "active" && k.origin === "self" && typeof k.key_b64 === "string" && k.key_b64);
+    if (keys.length === 0) return [];
+    const raisedTo = this.#activeAdmins();
+    const homes = this.#homesOf([]);
+    return keys.map((k) => {
+      const addedMs = Date.parse(k.added ?? "");
+      const member = k.registered_by && k.registered_by !== "not recorded" ? k.registered_by : k.member_id;
+      return {
+        id: `OBLIGATION::signer-self-registered::${k.key_b64}`,
+        class: "OBLIGATION",
+        kind: "signer-self-registered",
+        case: homes,
+        subject: { kind: "signer_key", id: k.key_b64, member: k.member_id ?? null, comment: k.comment ?? null,
+                   registered_by: member ?? null },
+        summary: `${member || "a member"} registered a signing key for themselves${k.comment ? `: ${k.comment}` : ""}`,
+        detail: "a member registered their own browser-held signing key from a signed-in session, and it is active. "
+              + "Every administrator is told; an administrator may revoke it. Nothing here changes the key.",
+        basis: { source: "credentials.signerList", key: k.key_b64, member: k.member_id ?? null, comment: k.comment ?? null,
+                 registered_by: member ?? null, origin: "self", status: k.status, added: k.added ?? null,
+                 attests: k.attests === true, raised_to: raisedTo,
+                 detail: "the key is credentials' own row (its R8), registered by its member (its R9) and read here at "
+                       + "every read: it is told to every administrator and to nobody else, and it leaves when the key is "
+                       + "no longer active, by an administrator's revoke (its R7) or otherwise." },
+        age: Number.isFinite(addedMs)
+          ? { state: "determined", since: k.added, ms: Math.max(0, now - addedMs) }
+          : { state: "undetermined", reason: "unparseable_added",
+              detail: "the key's row carries an added stamp this producer cannot read as an instant" },
+        assignee: null,
+        assignee_role: null,
+        options: [QueueProducers.SIGNER_REVOKE],
+      };
+    });
+  }
+
+  /* ======================================================================
+   * K608 · R15–R18 — THE ACTION LAYER (monitoring R34, R35; action-clocks R3, R5; escalation R16; action-plans R17).
+   *
+   * Bob's notification rulings (DEC-10, DEC-69, DEC-70, DEC-94; K613–K615): an item informs once at the occurrence, is
+   * dispositionable and ages; it goes to the member who authored the thing it concerns, else the project's owners
+   * (membership R65), else the administrators (membership R86); a nearing deadline changes an item's position, colour
+   * or wording only and mints none; no outside channel is used; nothing is repeated unless the member asks. Each kind
+   * reads the one fact its owning module offers, derived on read and writing nothing, so an item leaves when that
+   * module stops answering it. A caller with no member is none of the members these name, and is told none of them.
+   * ====================================================================== */
+
+  /** How many pages of `overdueClocks` and `remindersDue` (each at most 500 entries) one read follows. */
+  static QUEUE_ACTION_PAGES = 20;
+  /** R16, R17, R18: the producers' own acts, each the op the item's fact is answered by. */
+  static CHECKPOINT_JUDGE = Object.freeze({ id: "checkpointrecord", label: "Judge this checkpoint: met or not met", weight: "single" });
+  static STAGE_ADVANCE = Object.freeze({ id: "escalationadvance", label: "Advance to the proposed stage", weight: "single" });
+  static STAGE_DECLINE = Object.freeze({ id: "escalationdecline", label: "Decline to advance now, with a reason", weight: "single" });
+  static REMINDER_ANSWER = Object.freeze({ id: "reminderanswer", label: "Remind me again on a later day, or not again", weight: "single" });
+
+  /** Who an Action-layer item goes to (R15–R17): the member who authored the thing, when that is a member (a machine
+   *  credential is not), else the project's owners, else the administrators; with the rule that chose them. */
+  #actionRecipients(author, project) {
+    const who = typeof author === "string" ? author.trim() : "";
+    if (who && !who.startsWith(MACHINE_AUTHOR_PREFIX) && !who.startsWith(MACHINE_CLASS_PREFIX))
+      return { rule: "author", members: [who] };
+    const owners = project ? (this.#membership.projectOwners(project) || []) : [];
+    if (owners.length) return { rule: "project_owners", members: [...owners] };
+    return { rule: "administrators", members: this.#activeAdmins() };
+  }
+
+  /** A provider's paged read followed by its cursor, at most QUEUE_ACTION_PAGES pages; `truncated` when it was cut. */
+  #actionPages(read) {
+    const items = [];
+    let after = null, cut = false;
+    for (let page = 0; ; page += 1) {
+      if (page === QueueProducers.QUEUE_ACTION_PAGES) { cut = true; break; }
+      const r = read(after);
+      if (!r || r.ok === false || !Array.isArray(r.items)) break;
+      items.push(...r.items);
+      if (!r.truncated || !r.cursor) break;
+      after = r.cursor;
+    }
+    return { items, truncated: cut };
+  }
+
+  /** The homes of an item about an action: its project at depth 0 (as `#homesAt`), and whatever the walk reaches from
+   *  the action itself (queue R7). */
+  #actionHomes(action, project, viewer) {
+    const cases = typeof project === "string" && project ? [project] : [];
+    return this.#homesAt(cases, viewer, [action, ...cases]);
+  }
+
+  /** `action-clock-overdue` (R15; monitoring R34; action-clocks R3; K611): one CONDITION per clock entry
+   *  `action-clocks.overdueClocks` answers the viewer, to its recipients, homed under the action's project and the
+   *  action's own walk, aged from the day after the entry's date. Raised once per entry and never re-notified here: it
+   *  stands until the entry is met or waived, or the action is resolved or abandoned, and then the read no longer
+   *  answers it. */
+  #conditionsActionClockOverdue(me, viewer, now) {
+    if (!me) return [];
+    const page = this.#actionPages((after) => this.#actionClocks.overdueClocks({ after, viewer, now }));
+    const out = [];
+    for (const e of page.items) {
+      if (!e || typeof e.action !== "string" || !e.action || !Number.isInteger(e.ord)) continue;
+      const to = this.#actionRecipients(e.created_by, e.project);
+      if (!to.members.includes(me)) continue;
+      const dated = typeof e.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && Number.isFinite(Date.parse(`${e.date}T00:00:00Z`));
+      const sinceMs = dated ? Date.parse(`${e.date}T00:00:00Z`) + QueueProducers.DAY_MS : NaN;
+      out.push({
+        id: `CONDITION::action-clock-overdue::${e.action}::${e.ord}`,
+        class: "CONDITION",
+        kind: "action-clock-overdue",
+        case: this.#actionHomes(e.action, e.project, viewer),
+        subject: { kind: "action", id: e.action, entry: e.ord, date: e.date ?? null, basis: e.basis ?? null,
+                   text: e.text ?? null, project: e.project ?? null },
+        summary: `a date on ${e.action} has passed: ${e.text || "a clock entry"}${e.date ? `, due ${e.date}` : ""}`,
+        detail: `the date this action's clock names${e.basis ? ` (${e.basis})` : ""} has passed and the entry is not marked `
+              + "met or waived. This says that the date passed, not why. It is told once, and it leaves when the entry is "
+              + "marked met or waived or the action is resolved or abandoned.",
+        basis: { source: "action-clocks.overdueClocks", action: e.action, entry: e.ord, date: e.date ?? null,
+                 basis: e.basis ?? null, text: e.text ?? null, status: e.status ?? null, past: e.past ?? null,
+                 project: e.project ?? null, created_by: e.created_by ?? null, recipients_rule: to.rule,
+                 bound: { pages_bound: QueueProducers.QUEUE_ACTION_PAGES, truncated: page.truncated },
+                 detail: "an overdue entry is action-clocks' fact (its R3): a stored status of overdue, or a pending entry "
+                       + "dated before today. It goes to the member who created the action, else the project's owners, "
+                       + "else the administrators (DEC-10, DEC-94), and is raised once: nothing here repeats it." },
+        age: dated
+          ? { state: "determined", since: `${new Date(sinceMs).toISOString().slice(0, 10)}T00:00:00Z`,
+              ms: Math.max(0, now - sinceMs) }
+          : { state: "undetermined", reason: "no_entry_date",
+              detail: "the entry carries no date this producer can read, so when it fell overdue is not derivable" },
+        assignee: null,
+        assignee_role: null,
+        recipients: to.members,
+        options: this.#optionsOf([e.action]),
+      });
+    }
+    return out;
+  }
+
+  /** `plan-checkpoint-due` (R16; action-plans R17, K711): one OBLIGATION per checkpoint `action-plans.checkpointsDue`
+   *  answers at the read's instant, on a plan whose project this viewer sees (the read names no viewer, so the plan's
+   *  project is asked here, R11), to its recipients, homed under that project, aged from the checkpoint's day. Never a
+   *  FINDING or a CONDITION (action-plans R23). It leaves when a member judges the checkpoint or closes the plan. */
+  #obligationsPlanCheckpointDue(me, viewer, now) {
+    if (!me) return [];
+    const r = this.#actionPlans.checkpointsDue({ nowMs: now });
+    if (!r || r.ok === false || !Array.isArray(r.items)) return [];
+    const visible = this.#bundleRedactor(viewer);
+    const out = [];
+    for (const c of r.items) {
+      if (!c || typeof c.plan !== "string" || !c.plan || typeof c.project !== "string" || !c.project) continue;
+      if (visible(c.project) === null) continue;     // R11: a plan of a project this viewer may not see is no item
+      const to = this.#actionRecipients(c.set_by, c.project);
+      if (!to.members.includes(me)) continue;
+      const due = typeof c.due === "string" ? c.due : null;
+      const dueMs = due === null ? NaN : /^\d{4}-\d{2}-\d{2}$/.test(due) ? Date.parse(`${due}T00:00:00Z`) : Date.parse(due);
+      out.push({
+        id: `OBLIGATION::plan-checkpoint-due::${c.plan}::${c.scenario}::${c.phase}`,
+        class: "OBLIGATION",
+        kind: "plan-checkpoint-due",
+        case: this.#homesAt([c.project], viewer),
+        subject: { kind: "plan", id: c.plan, project: c.project, scenario: c.scenario ?? null, phase: c.phase ?? null,
+                   version: c.version ?? null },
+        summary: `a checkpoint of plan ${c.plan} has come due: scenario ${c.scenario}, phase ${c.phase}`,
+        detail: "the day this plan's scenario set for judging a phase has come, and no member has judged it. A member "
+              + "records whether its condition was met; nothing here judges it, and a checkpoint passed unjudged says "
+              + "nothing about the government.",
+        basis: { source: "action-plans.checkpointsDue", plan: c.plan, project: c.project, scenario: c.scenario ?? null,
+                 phase: c.phase ?? null, version: c.version ?? null, set_by: c.set_by ?? null, due,
+                 days_since_due: Number.isFinite(c.days_since_due) ? c.days_since_due : null, recipients_rule: to.rule,
+                 bound: { limit: r.limit ?? null, truncated: r.truncated === true },
+                 detail: "a checkpoint come due is action-plans' fact (its R17): read here at the read's instant and never "
+                       + "stored. It goes to the member who set the scenario's current version, else the project's owners, "
+                       + "else the administrators, and leaves when a member judges it or closes the plan." },
+        age: Number.isFinite(dueMs)
+          ? { state: "determined", since: due, ms: Math.max(0, now - dueMs) }
+          : { state: "undetermined", reason: "no_checkpoint_day",
+              detail: "the checkpoint carries no day this producer can read" },
+        assignee: null,
+        assignee_role: null,
+        recipients: to.members,
+        options: [QueueProducers.CHECKPOINT_JUDGE],
+      });
+    }
+    return out;
+  }
+
+  /** `escalation-stage-proposed` (R17; monitoring R35, escalation R16): one OBLIGATION per (escalation, proposed edge)
+   *  `escalation.escalationsDue` answers the viewer, to its recipients, homed under the escalation's project, aged from
+   *  the trigger's instant (escalation R2, a fact of the record). It leaves when a member advances or declines the edge,
+   *  or the escalation is suspended or ended. */
+  #obligationsEscalationStageProposed(me, viewer, now) {
+    if (!me) return [];
+    const r = this.#escalation.escalationsDue({ nowMs: now, viewer });
+    if (!r || r.ok === false || !Array.isArray(r.items)) return [];
+    const out = [];
+    for (const p of r.items) {
+      if (!p || typeof p.id !== "string" || !p.id || p.to === undefined || p.to === null) continue;
+      const to = this.#actionRecipients(p.opened_by, p.project);
+      if (!to.members.includes(me)) continue;
+      const atMs = Date.parse(p.instant ?? "");
+      out.push({
+        id: `OBLIGATION::escalation-stage-proposed::${p.id}::${p.to}`,
+        class: "OBLIGATION",
+        kind: "escalation-stage-proposed",
+        case: this.#homesAt(typeof p.project === "string" && p.project ? [p.project] : [], viewer),
+        subject: { kind: "escalation", id: p.id, project: p.project ?? null, from: p.from ?? null, to: p.to,
+                   stage: p.stage ?? null },
+        summary: `escalation ${p.id} may move to its next stage: ${p.stage || `stage ${p.to}`}`,
+        detail: "the record now meets the trigger for this escalation's next stage. A member advances it or declines to "
+              + "for now, with a reason; nothing moves until a member does.",
+        basis: { source: "escalation.escalationsDue", escalation: p.id, project: p.project ?? null, from: p.from ?? null,
+                 to: p.to, stage: p.stage ?? null, instant: p.instant ?? null, ids: Array.isArray(p.ids) ? p.ids : [],
+                 opened_by: p.opened_by ?? null, recipients_rule: to.rule,
+                 bound: { limit: r.limit ?? null, truncated: r.truncated === true },
+                 detail: "a proposed stage is escalation's (its R16): its trigger met by the record, dated by the record's "
+                       + "own instant and never by this read. It goes to the member who opened the escalation, else the "
+                       + "project's owners, else the administrators." },
+        age: Number.isFinite(atMs)
+          ? { state: "determined", since: p.instant, ms: Math.max(0, now - atMs) }
+          : { state: "undetermined", reason: "no_trigger_instant",
+              detail: "the proposal carries no trigger instant this producer can read" },
+        assignee: null,
+        assignee_role: null,
+        recipients: to.members,
+        options: [QueueProducers.STAGE_ADVANCE, QueueProducers.STAGE_DECLINE],
+      });
+    }
+    return out;
+  }
+
+  /** `action-reminder` (R18; DEC-94 (1), K613 (1), K614; action-clocks R4–R6): one OBLIGATION per reminder
+   *  `action-clocks.remindersDue` answers the viewer, to the member who set it and to nobody else, homed as R15's,
+   *  aged from the reminder's day, offering its answer: another reminder on a later day, or none (action-clocks R6). It
+   *  leaves when that member answers it, or the entry is no longer pending, or the action is resolved or abandoned.
+   *  Nothing reminds that no member asked for (DEC-69). */
+  #obligationsActionReminder(me, viewer, now) {
+    if (!me) return [];
+    const page = this.#actionPages((after) => this.#actionClocks.remindersDue({ nowMs: now, after, viewer }));
+    const out = [];
+    for (const x of page.items) {
+      if (!x || typeof x.action !== "string" || !x.action || !Number.isInteger(x.ord) || x.set_by !== me) continue;
+      const onMs = typeof x.on === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x.on) ? Date.parse(`${x.on}T00:00:00Z`) : NaN;
+      out.push({
+        id: `OBLIGATION::action-reminder::${x.action}::${x.ord}::${x.on}`,
+        class: "OBLIGATION",
+        kind: "action-reminder",
+        case: this.#actionHomes(x.action, x.project, viewer),
+        subject: { kind: "action", id: x.action, entry: x.ord, date: x.date ?? null, basis: x.basis ?? null,
+                   text: x.text ?? null, on: x.on ?? null, project: x.project ?? null },
+        summary: `the reminder you asked for: ${x.text || "a clock entry"} on ${x.action}${x.date ? `, due ${x.date}` : ""}`,
+        detail: `you asked to be reminded of this date on ${x.on}. Answer it with another reminder on a later day, or with `
+              + "none; nothing reminds you again unless you ask.",
+        basis: { source: "action-clocks.remindersDue", action: x.action, entry: x.ord, date: x.date ?? null,
+                 basis: x.basis ?? null, text: x.text ?? null, on: x.on ?? null, set_by: x.set_by,
+                 project: x.project ?? null,
+                 bound: { pages_bound: QueueProducers.QUEUE_ACTION_PAGES, truncated: page.truncated },
+                 detail: "a reminder is the member's own request, held by action-clocks (its R4) and due when its day has "
+                       + "come (its R5): it goes to the member who set it and to nobody else, and it leaves when that "
+                       + "member answers it (its R6) or the entry or the action no longer calls for it." },
+        age: Number.isFinite(onMs)
+          ? { state: "determined", since: `${x.on}T00:00:00Z`, ms: Math.max(0, now - onMs) }
+          : { state: "undetermined", reason: "no_reminder_day",
+              detail: "the reminder carries no day this producer can read" },
+        assignee: null,
+        assignee_role: null,
+        recipients: [me],
+        options: [QueueProducers.REMINDER_ANSWER, ...this.#optionsOf([x.action])],
+      });
+    }
+    return out;
+  }
+  static DAY_MS = 86400000;
 }
 
 const OF = new WeakMap();

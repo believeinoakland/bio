@@ -152,7 +152,7 @@ Terms. A **key** is one of `K1` (one inquiry, opposite roles: a `supports` and a
   - no question is `TAKE_UP_NO_QUESTION` (C-93.23). The plane fills in none: R25's `default_question` is shown, and the surface sends what the member accepts;
   - a `frame` other than `a` or `b` (the side the question is framed around) is `TAKE_UP_NO_FRAME` (C-93.24).
 
-  **What it writes.** Otherwise, in one act, through `promotion.promote`: a new inquiry, `open`, `surfaced_by: human`, titled from the question (`inquiry` R10), carrying `contradiction: {candidate}` (`inquiry` R47) and both sides as legs, with no grade:
+  **What it writes.** Otherwise, in one act, through `promotion.promote`: a new inquiry, `open`, `surfaced_by: human`, titled from the question (`record-grammar` R30), carrying `contradiction: {candidate}` (`inquiry` R47) and both sides as legs, with no grade:
   - the framed side as `supports` and the other as `cuts_against` (K447 (8));
   - a claim or stance side as an inquiry leg on its inquiry;
   - a leg or extent side as a leg on its information bundle, naming its content row;
@@ -285,7 +285,7 @@ Terms. A **key** is one of `K1` (one inquiry, opposite roles: a `supports` and a
 ### Uses
 
 - `promotion` (N345): `promote` (R35, R36) and `registerStep` (R38).
-- `legacy-checks`: C-60 and C-93 until they move (R20); `sha256HexSync`, `canonicalJson`. *(not declared)*
+- `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K808, K820).
 - `record-core`: `recordOf(ctx)`, `transact`, `declarePurge`; `bundles` by its read contract (R37 there), including the inquiry's subject entity column, and its `title`, for a revealed party's name (R52).
 - `membership`: `membershipOf(ctx)`, `viewerPredicate` and the bundle gate (R10); `sight` (K5), `isJoinedParticipant` and `projectOwners` (R24's reach); the existence answer (R77), `noSuchProject` (R78), `notAParticipant` (R87) and `memberFacts` (R68, the responder's own cover) for R50–R54. *(not declared)*
 - `content`: `contentRow` and the rows of a capture (R8, R14), by service or a stated read contract on `content`.
@@ -299,7 +299,7 @@ Terms. A **key** is one of `K1` (one inquiry, opposite roles: a `supports` and a
 - **R18** The pairing is deterministic: the same record and viewer give the same pairs; keys are added, never widened.
 - **R19** No act here edits, grades or deletes a side, and no act but a member's (R31–R36) says what a candidate turned out to be. A candidate is shown to a member only by R25–R29, only to a viewer who may see both of its sides now (R10), and only at a weight R24 gives it. A conflict between projects that a viewer sees half is told to them only by R50's notice and R27's `unseen_conflict` mark, on their own side, and only when they are a joined participant of a party reached through that side (R49–R55; DEC-85).
 - **R20** Each check moves here as an invariant with its test (K6): C-60.1, C-93.1–C-93.7; and C-60.2, C-60.3 and C-93.8–C-93.39 (N345; translations below).
-- **R21** Whether a run is visible, running and the caller's is asked of a run gate `ai-runs` registers here as `registerRunGate(module, gate)`, `gate(run, viewer, caller) → {found, running, refusal}` (`found` false for blank, absent or invisible alike; `refusal` null or ai-runs R5's `AI_RUN_NOT_PRINCIPAL`) (K31, K182), `legacy-store` registering until then; with none registered, R13's run checks refuse as C-93.2.
+- **R21** Whether a run is visible, running and the caller's is asked of a run gate `ai-runs` registers here as `registerRunGate(module, gate)`, `gate(run, viewer, caller) → {found, running, refusal}` (`found` false for blank, absent or invisible alike; `refusal` null or `run-rules` R5's `AI_RUN_NOT_PRINCIPAL`) (K31, K182), `legacy-store` registering until then; with none registered, R13's run checks refuse as C-93.2.
 - **R22** `contradiction_candidates` is declared to record-core's purge by `a_bundle_id` and `b_bundle_id` (K23).
 - **R23** No place is named in this module's behaviour or outward text.
 - **R42** `contradiction_acts`, `contradiction_recommendations`, `contradiction_optins` (with the `revealed` rows, held in `contradiction_optins`) and `contradiction_responses` are append-only. A candidate's state, weight and marks are derived at the read from the candidate, those rows and the inquiry's document (R24, R26, R27). Nothing is copied that could disagree.

@@ -12,7 +12,7 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { standardsOf } from "../../../src/standards/index.mjs";
-import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/frontmatter.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(s, "utf8").digest("hex");

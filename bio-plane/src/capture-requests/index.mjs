@@ -10,7 +10,7 @@
  *
  * THE FENCE IS IN PROCESS (K58). The drain fires `capture`'s trusted in-process arm with the row's own address,
  * purpose, agent and render flag, which is exactly what the conduct check judged; nothing outside this module's drain
- * can reach that arm, and `op=acquire` refuses `via: "capture-request"` from any caller (C-28.13, capture R1).
+ * can reach that arm, and `op=acquire` refuses `via: "capture-request"` from any caller (C-28.13, acquisition R1).
  *
  * DEC-47's CONDUCT IS ENFORCED ONCE, AT THE DRAIN. The authorisation question is CLOSED — the inquiry and the session
  * launch ARE the authorisation, and a member asked to approve forty URLs *"has not done the research and cannot judge
@@ -25,10 +25,11 @@
  *
  * Reached through `captureRequestsOf(ctx, deps)` (K61); every module it uses is reached through its own factory on
  * the same storage, and a test may pass its own. */
-import {
-  CAPTURE_REQUEST_CHECKS, RENDER_CAPTURE_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, userAgentIsLegible,
-  civicosUserAgent, isPublicHttpsLocator, MACHINE_AUTHOR_PREFIX, normalizeType, createSha256,
-} from "../../checks/bio-checks.mjs";
+import { isPublicHttpsLocator } from "../record-grammar/locator.mjs";
+import { MACHINE_AUTHOR_PREFIX } from "../record-grammar/actors.mjs";
+import { normalizeType } from "../record-grammar/types.mjs";
+import { createSha256 } from "../record-grammar/sha256.mjs";
+import { RENDER_CAPTURE_CHECKS, civicosUserAgent } from "../acquisition/index.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { viewerPredicate, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
@@ -37,11 +38,12 @@ import { captureOf } from "../capture/index.mjs";
 import { credentialsOf } from "../capture-sources/credentials.mjs";
 import { observationLogOf } from "../observation-log/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
-import { runPrincipalGate } from "../airun.mjs";
+import { runPrincipalGate } from "../run-rules/index.mjs";
 import { migrateCaptureRequests } from "./schema.mjs";
-import { CAPTURE_SOURCE_CHECKS } from "./checks.mjs";
+import { CAPTURE_REQUEST_CHECKS, CAPTURE_SOURCE_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, userAgentIsLegible }
+  from "./checks.mjs";
 
-export { CAPTURE_SOURCE_CHECKS };
+export { CAPTURE_REQUEST_CHECKS, CAPTURE_SOURCE_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, userAgentIsLegible };
 
 export const CAPTURE_REQUESTS_MODULE = "capture-requests";
 
@@ -68,10 +70,12 @@ export const CAPTURE_REQUEST_STATES = Object.freeze(["requested", "draining", "c
 export const CAPTURE_REQUEST_TERMINAL = Object.freeze(["captured", "refused", "expired"]);
 /** R40: why a source turned a request away. */
 export const SOURCE_REASONS = Object.freeze(["login", "paywall", "user-agent", "other"]);
-/** R4: the fields that would make a request a capture. */
+/** R35: the figure this module reports to record-core's counts (its R63). */
+export const CAPTURE_REQUESTS_COUNT_KEYS = Object.freeze(["captureRequests"]);
 /** R18: the two render results `capture` decides after the page was fetched, by their C-83 check (C-83.6, C-83.7). */
 const RENDER_NOT_A_PAGE_CHECK = "C-83.6";
 const RENDER_FAILED_CHECK = "C-83.7";
+/** R4: the fields that would make a request a capture. */
 export const CAPTURE_FIELDS = Object.freeze(["capture_sha", "sha256", "bytes", "content", "provenance_chain", "via", "retrieved"]);
 
 /** R40: the source's HTTP answer as its reason, and whether it ends the request. A login is asked by 401 (and a proxy's
@@ -659,7 +663,7 @@ export class CaptureRequests {
                        + `member actually used; composing one would be inventing a client that does `
                        + `not exist, which is the fabricated-Mozilla case wearing the ruling's clothes.` };
     } else {
-      /* The honest product string, composed by the catalogue's ONE composer — the same function `capture` sends. */
+      /* The honest product string, composed by `acquisition`'s ONE composer (its R24) — the string it sends. */
       const env = this.#env();
       ua = civicosUserAgent(env.VERSION, env.INSTANCE_NAME, q.purpose);
       if (!userAgentIsLegible(ua))
@@ -709,7 +713,7 @@ export class CaptureRequests {
    *  plane principal, target and host); none is admitted, the fetch goes without, and the source's refusal stands.
    *
    *  WHAT COMES BACK OUT: a filed capture's digest, grade and whether the bytes were already held (R39); a render
-   *  `capture` refused, named by its C-83 code (read off the catalogue, never a spelling invented here) and its own
+   *  `capture` refused, named by its C-83 code (read off `acquisition`'s rows, never a spelling invented here) and its own
    *  word for the hold (D-520); otherwise the reason and, for a source's answer, its status. D-205: a thrown error's
    *  message is never carried, because it can carry a query string and a query string can carry a credential. */
   async #fire(q, verdict) {
@@ -997,10 +1001,18 @@ export class CaptureRequests {
     };
   }
 
-  /** R35: a bundle's purge clears `lead_inquiry` where it names the bundle (record-core's keyed form deletes rows by
-   *  `target`; a lead is a pointer on a row that stays). */
-  clearLead(bundleId) {
-    if (bundleId) this.#sql.exec(`UPDATE capture_requests SET lead_inquiry=NULL WHERE lead_inquiry=?`, String(bundleId));
+  /** R35: the census figure this module reports through record-core's `registerCounts` (its R63), for `op=stats` and
+   *  purge's proof. PL-4 / IS-4: the outbound work list is the only figure in the store that says how much traffic this
+   *  instance is about to send to somebody else's server, and a purge that reported scope ALL while it stood would leave
+   *  a leftover visible from OUTSIDE the instance. A COUNT AND NOTHING ELSE. `hid` (the bundles the caller may not see,
+   *  `{sql, args}`, or null for a direct internal call) drops the rows whose lead names one, as the store's counter
+   *  did; `COALESCE`, because a NULL lead names no bundle and `NULL NOT IN (…)` would drop the row. */
+  counts(hid = null) {
+    const hidden = hid !== null && typeof hid === "object" && typeof hid.sql === "string";
+    const args = hidden && Array.isArray(hid.args) ? hid.args : [];
+    return { captureRequests: Number(this.#one(
+      `SELECT count(*) AS c FROM capture_requests${hidden ? ` WHERE COALESCE(lead_inquiry, '') NOT IN ${hid.sql}` : ""}`,
+      ...args).c) || 0 };
   }
 
   /* ==================================================================== *
@@ -1055,7 +1067,7 @@ const instances = new WeakMap();
 
 /** K61: the one capture-requests instance for `host` (the Durable Object's `ctx`, with its `storage`); `deps` are read
  *  on the first call only (see the class). At creation it declares its table to record-core's purge, keyed to a bundle
- *  by `target` (R35), and registers R28 as observation-log's `sweep` resolver (its R13, N39). */
+ *  by `target` with `lead_inquiry` cleared (R35), registers its figure with record-core's counts (R35), and registers R28 as observation-log's `sweep` resolver (its R13, N39). */
 export function captureRequestsOf(host, deps = {}) {
   const storage = host && host.storage ? host.storage : host;
   let c = instances.get(storage);
@@ -1081,7 +1093,15 @@ export function captureRequestsOf(host, deps = {}) {
     };
     c = new CaptureRequests(storage, d);
     instances.set(storage, c);
-    record.declarePurge(CAPTURE_REQUESTS_MODULE, [{ name: "capture_requests", keys: ["target"] }]);
+    /* R35: keyed to a bundle by `target` (a bundle's purge deletes its requests), and `lead_inquiry` a pointer a
+       bundle's purge clears where it names the bundle, on rows that stay (record-core R46's `clears` form, K775 (4)). */
+    record.declarePurge(CAPTURE_REQUESTS_MODULE, [{ name: "capture_requests", keys: ["target"], clears: ["lead_inquiry"] }]);
+    /* R35: the census counts it (record-core R63). A record with no seam (a test's stand-in) is not asked. */
+    if (typeof record.registerCounts === "function") {
+      const counted = record.registerCounts(CAPTURE_REQUESTS_MODULE, [...CAPTURE_REQUESTS_COUNT_KEYS], (hid) => c.counts(hid));
+      if (counted && counted.ok === false)
+        throw new Error(`capture-requests: record-core refused its figures: ${counted.reason}`);
+    }
     d.observations.registerAuthority("sweep", (request) => {
       const b = c.bundlesOf(request);
       return b ? [b.target, b.lead_inquiry].filter(Boolean) : null;

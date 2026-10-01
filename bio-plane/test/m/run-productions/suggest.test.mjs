@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { SUGGEST_CHECKS } from "../../../src/run-productions/index.mjs";
-import { SUFFICIENCY_UNCLAIMED } from "../../../checks/bio-checks.mjs";
+import { SUFFICIENCY_UNCLAIMED } from "../../../src/basis-versions/index.mjs";
 import { world, GRADED, Q, Q2, PROJ, HIDDEN_PROJ, DOC, DOC2, RUN, XRUN, ALICE, ALICE_TOKEN, BOB, MACHINE, sha } from "./fixture.mjs";
 
 const row = (code) => SUGGEST_CHECKS[code];
@@ -237,6 +237,18 @@ test("R3: a refusal of the write by basis-versions or promotion is returned unch
   assert.deepEqual(r.findings, [{ code: "X" }]);
   assert.equal(r.code, "BASIS_VERSION_REFUSED");
   assert.equal(w.suggest({ name: "w" }).repeated, true);
+  /* N411: the relay states its own verdict and names the code and reason it carries; every other field is the
+     provider's, unchanged, whichever of code and reason the provider gave. */
+  const given = { ok: false, code: "PROMOTE_REFUSED", check: "C-59.1", translation: "t", detail: "d", findings: [{ code: "Y" }] };
+  w.basisVersions.refuse = given;
+  const relayed = w.suggest({ name: "w2" });
+  const { repeated, evaluated, wrote, target, name, ...rest } = relayed;
+  assert.deepEqual([relayed.ok, repeated, evaluated, wrote, target, name], [false, false, true, false, Q, "w2"]);
+  assert.deepEqual(rest, { ...given, reason: "PROMOTE_REFUSED" });
+  w.basisVersions.refuse = { ok: false, reason: "ONLY_A_REASON" };
+  const reasonOnly = w.suggest({ name: "w3" });
+  assert.deepEqual([reasonOnly.ok, reasonOnly.code, reasonOnly.reason], [false, "ONLY_A_REASON", "ONLY_A_REASON"]);
+  w.basisVersions.refuse = null;
 });
 
 test("R4: success writes exactly one version through appendVersion, in state suggested, carrying its run, kind, author and description, with a Session Log entry naming the run; every leg a document leg", () => {

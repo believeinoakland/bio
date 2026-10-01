@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { Miniflare } from "miniflare";
-import { governorOp, governorRoutes } from "../../../src/host-governor/index.mjs";
+import { governorOp, governorOpResponse, governorRoutes, GOVERNOR_OPS } from "../../../src/host-governor/index.mjs";
 import { world } from "./fixture.mjs";
 
 const url = (q) => new URL(`http://x/api/?${q}`);
@@ -85,11 +85,12 @@ const doAnswer = async (res) => {
 const storeRefusal = (out, extra = {}) => json({ ...out.reply.body, ...extra }, out.reply.status);
 const storeSilent = (op, correlation = undefined) =>
   json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op, detail: "this instance could not consult its own record", correlation }, 502);
-/* The caller as legacy-index is to call at layer 11: the relay handed, each answer composed into the reply. */
+/* The Worker's arm, `governorOpResponse`, with the plane's relay handed as the control plane hands it; `g` is what
+   `governorOp` answered under the same relay, so each reply is checked against the handler's answer too. */
 const relayed = async (op, q, store, opened = []) => {
   const spy = async (res) => { const out = await doAnswer(res); opened.push(out); return out; };
-  const g = await governorOp(op, url(q), store, { doAnswer: spy, storeRefusal });
-  const res = g.refused ? g.response : g.silent ? storeSilent(op, g.correlation) : json(g.body, g.status);
+  const res = await governorOpResponse(op, url(q), store, { json, doAnswer: spy, storeRefusal, storeSilent });
+  const g = await governorOp(op, url(q), store, { doAnswer, storeRefusal });
   return { g, status: res.status, body: await res.json() };
 };
 const stubStore = (status, body) => ({ fetch: async () => (typeof body === "string" ? new Response(body, { status })
@@ -168,11 +169,23 @@ test("R27, R18, R19: with the relay handed, an answer is answered as before, and
   assert.equal((await relayed("governorconfig", "op=governorconfig&appetite_per_min=4", untouched)).body.reason, "NEED_HOST");
   assert.equal((await relayed("governorconfig", "op=governorconfig&host=h.example&appetite_per_min=0", untouched)).body.reason, "BAD_APPETITE");
   assert.equal(await governorOp("links", url("op=links"), untouched, { doAnswer, storeRefusal }), null);
-  // a relay missing either function is no relay: the call answers as a caller handing none (legacy-index's today)
+  // a relay missing either function is no relay: the call answers as a caller handing none
   for (const partial of [{ doAnswer }, { storeRefusal }, {}]) {
     const g = await governorOp("governorstate", url("op=governorstate"), stubStore(400, { ok: false, reason: "BAD_JSON" }), partial);
     assert.deepEqual(g, { silent: true });
   }
+});
+
+test("R18, R19: the Worker's arm answers exactly the two ops, and null for any other, asking the store nothing", async () => {
+  assert.deepEqual([...GOVERNOR_OPS], ["governorstate", "governorconfig"]);
+  const untouched = { fetch: async () => { throw new Error("asked the store"); } };
+  const plane = { json, doAnswer, storeRefusal, storeSilent };
+  for (const op of ["links", "governoradmit", "governorreport", "", "GOVERNORSTATE"])
+    assert.equal(await governorOpResponse(op, url(`op=${op}`), untouched, plane), null, op);
+  const w = world();
+  w.g.governorReport({ host: "b.example", status: 503 });
+  const res = await governorOpResponse("governorstate", url("op=governorstate"), () => storeOver(w.g), plane);
+  assert.deepEqual([res.status, await res.json()], [200, { ok: true, hosts: w.g.governorState({}).hosts }]);
 });
 
 /* ---- through the whole plane ---- */
@@ -266,4 +279,19 @@ test("R19: op=governorconfig is reached by the admin and probe classes and the f
   const cleared = await call(`op=governorconfig&token=${T.admin}&host=cfg.example`);
   assert.deepEqual([cleared.ok, cleared.appetite_per_min], [true, null]);
   assert.equal(await appetiteOf("cfg.example"), null);
+});
+
+test("R18, R14: through the whole plane, a refusal reported to the Durable Object's route is the hold op=governorstate answers (queue-conditions' share)", async () => {
+  const ns = await mf.getDurableObjectNamespace("STORE");
+  const obj = ns.get(ns.idFromName("bio"));
+  const route = async (path, body) => (await (await obj.fetch(`http://x/${path}`, { method: "POST", body: JSON.stringify(body) })).json()).result;
+  const held = await route("governorreport", { host: "held.example", status: 429 });
+  assert.deepEqual([held.recorded, held.refusals, held.cooloff_ms >= 60_000], [true, 1, true]);
+  const r = await call(`op=governorstate&token=${T.admin}&host=held.example`);
+  assert.equal(r.ok, true);
+  assert.deepEqual([r.hosts[0].cooloff_until, r.hosts[0].refusals, r.hosts[0].last_refusal_status],
+                   [held.cooloff_until, 1, 429]);
+  assert.equal((await route("governoradmit", { host: "held.example" })).reason, "cooling_off");
+  const again = await call(`op=governorstate&token=${T.admin}&host=held.example`);
+  assert.deepEqual([again.hosts[0].refused_total, again.hosts[0].granted], [1, 0]);
 });

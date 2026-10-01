@@ -305,3 +305,48 @@ test("R18: a comment through R10's doors, text trimmed of 1 to 4,000 characters,
   w.r.act({ act: "revoke", author: "ann", grant: g.grantId });
   assert.equal(JSON.stringify(w.r.comment({ secretSha: SECRET(1), bySecret: true, text: "x" })), DEAD);
 });
+
+test("R17: on the module's own clock every act it dates is stamped to the millisecond, so its own acts are ranked by instant and never tied within a second", () => {
+  const MS = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+  const inWindow = (at, from, to) => MS.test(at) && Date.parse(at) >= from && Date.parse(at) <= to;
+  /* no clock handed in: the module's default */
+  const w = standard({ injectClock: false });
+  const from = Date.now();
+  const d = draft(w, {}, "ed");
+  const e = w.r.act({ act: "draft", author: "ann", draft: d.draftId, statement: "S2" });
+  const g = grant(w, d, 1);
+  const g2 = grant(w, d, 2);
+  const rv = w.r.act({ act: "revoke", author: "bea", grant: g2.grantId });
+  const m = w.r.comment({ draft: d.draftId, viewer: V("ivy"), text: "a member's note" });
+  const rc = w.r.comment({ secretSha: SECRET(1), bySecret: true, text: "a recipient's note" });
+  const to = Date.now();
+  assert.ok([d, e, g, g2, rv, m, rc].every((r) => r.ok), "every act landed");
+  /* what the answers say */
+  for (const [what, at] of [["grant issuedAt", g.issuedAt], ["revokedAt", rv.revokedAt], ["member comment", m.comment.at],
+                            ["recipient comment", rc.comment.at]])
+    assert.ok(inWindow(at, from, to), `${what}: ${at}`);
+  /* what the record holds */
+  const dr = w.row(`SELECT created_at, updated_at FROM case_drafts WHERE draft_id=?`, d.draftId);
+  const gr = w.rows(`SELECT issued_at, revoked_at FROM review_grants ORDER BY grant_id`);
+  const cr = w.rows(`SELECT at FROM review_comments ORDER BY comment_id`);
+  for (const at of [dr.created_at, dr.updated_at, ...gr.map((x) => x.issued_at), gr.find((x) => x.revoked_at).revoked_at,
+                    ...cr.map((x) => x.at)])
+    assert.ok(inWindow(at, from, to), String(at));
+  assert.equal(gr.filter((x) => x.revoked_at).length, 1);
+  /* what the copy serves, and the date it carries: every candidate ranked, none named undetermined within a second */
+  const c = w.r.copy({ draft: d.draftId, viewer: V("ann") });
+  for (const at of [c.updated_at, ...c.comments.map((x) => x.at), ...c.grants.flatMap((x) => [x.issued_at, x.revoked_at]).filter(Boolean)])
+    assert.ok(inWindow(at, from, to), String(at));
+  assert.deepEqual(c.last_change.undetermined_within, [], "the module's own acts are never tied");
+  assert.ok(inWindow(c.last_change.at, from, to));
+  assert.doesNotMatch(c.last_change.stated, /undetermined:/);
+  /* a clock handed in that answers no usable instant falls back to the same millisecond stamp */
+  const w2 = standard();
+  for (const bad of [undefined, null, "", 0, 1790000000000]) {
+    w2.clock.now = bad;
+    const t0 = Date.now();
+    const x = draft(w2);
+    const at = w2.row(`SELECT created_at FROM case_drafts WHERE draft_id=?`, x.draftId).created_at;
+    assert.ok(inWindow(at, t0, Date.now()), `${String(bad)} → ${at}`);
+  }
+});

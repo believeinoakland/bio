@@ -424,13 +424,13 @@ export { MACHINE_READ_KINDS };
 
 export const MEANING = {
   /* The basis of an inquiry, one row per LEG. D-223's table.
-     EVERY VOCABULARY HERE IS IMPORTED FROM THE CHECK CATALOG, never listed. The
+     EVERY VOCABULARY HERE IS IMPORTED FROM `record-grammar`, never listed. The
      first version of this registry typed the three grade sources the SCHEMA
      COMMENT names, and the live vocabulary has FIVE — `inherited` and `capture`
      were added by REC-31 and DEC-21 and that comment was never corrected. A hand
      copy would have made two of a member's legitimate questions unanswerable
      while every test passed, because the tests would have been written from the
-     same copy. The catalog IS the vocabulary; this is a view of it. */
+     same copy. The grammar IS the vocabulary; this is a view of it. */
   leg: {
     table: "inquiry_basis", key: "bundle_id", bare: "grade",
     grain: "the inquiry whose basis carries such a leg",
@@ -906,7 +906,7 @@ export const MEANING = {
    resolved by declaration order: picking one silently would answer a question
    the member did not ask, and on this surface a confidently wrong answer is the
    failure mode the whole item exists to remove. It is a warning and not a
-   load-time throw because the vocabularies come from the CATALOG, and a doctrine
+   load-time throw because the vocabularies come from `record-grammar`, and a doctrine
    change that introduces a collision must not brick the plane at import.
    `ambiguousBareWords()` publishes the set instead, so a NEW collision fails a
    suite rather than arriving as a surprise in front of a member. */
@@ -992,16 +992,18 @@ function rowColumns(m) {
 /* The text columns of the FTS5 table, in table order. `meta` carries the
    flattened frontmatter so a bare term finds a value no column projects, which
    is what makes the per-schema tail searchable without a schema per version. */
-/* Every vocabulary is IMPORTED FROM ITS OWNER, never listed (R22). The catalogue
-   (`legacy-checks`) holds the frontmatter parser, the type map, the machine-class
-   prefix and the leg vocabularies; `content` holds the extent grammar's kinds (its
+/* Every vocabulary is IMPORTED FROM ITS OWNER, never listed (R22). `record-grammar`
+   holds the frontmatter parser, the type map, the machine-class prefix and the leg
+   vocabularies; `content` holds the extent grammar's kinds (its
    R1: the eight and `envelope`), the literal the mint path writes for the plane, and
    `cited_as`'s rule; `text-chain` holds the step kinds and `mixed`. A hand copy of
    any of them would let a legitimate spelling (`content:pdf-page`, `content:plane`)
    go quietly unanswerable while every test written from the same copy passed, which
    is how the `leg:` arm's first version lost two of five grade sources. */
-import { parseFrontmatter, normalizeType, MACHINE_CLASS_PREFIX,
-         BASIS_ROLES, GRADE_AXES, GRADE_SOURCES } from "../checks/bio-checks.mjs";
+import { parseFrontmatter } from "./record-grammar/frontmatter.mjs";
+import { normalizeType } from "./record-grammar/types.mjs";
+import { MACHINE_CLASS_PREFIX } from "./record-grammar/actors.mjs";
+import { BASIS_ROLES, GRADE_AXES, GRADE_SOURCES } from "./record-grammar/grades.mjs";
 import { CONTENT_EXTENT_KINDS, CONTENT_MINTED_BY_PLANE, contentCitedAs } from "./content/index.mjs";
 /* REC-90: the chain's step kinds, from the module that CLASSIFIES them. Nothing
    here tests a step name against a literal — `content:chain=ocr` reads its
@@ -1473,7 +1475,7 @@ function selector(tok, ctx) {
   let raw = String(tok.value);
   /* The type renames (normalisation site 4 of 4, REC-10): the projection
      stores canonical types only, so the legacy spellings `problem` and
-     `focus` are honoured as filter values THROUGH THE CATALOG'S OWN MAP
+     `focus` are honoured as filter values THROUGH `record-grammar`'s OWN MAP
      rather than restated here or answered with an empty page. The deliberate
      carve-out stands: schema stamps are document truth and are NOT mapped. */
   if (f.col === "object_type") raw = normalizeType(raw.toLowerCase());
@@ -1863,6 +1865,36 @@ function relationOf(second, warnings) {
   return null;
 }
 
+/* R26 (N136, N137): a field whose column a later module holds in a table of its own is read through the relation
+   the caller names, `{fields: {<field>: {table, key, col}}}`, keyed by the field's registry column. The names are
+   the caller's, taken only when each is an SQL identifier; a relation that is not three identifiers, or a name
+   that is not a field, is ignored with a warning and the field read where it stands. The field's registry column
+   stays the plan's name for it (the AST, `cached`, `facetCols`), so no answer changes by a relation. */
+function fieldRelationsOf(second, warnings) {
+  const fs = second && typeof second === "object" ? second.fields : null;
+  const out = new Map();
+  if (fs === null || fs === undefined) return out;
+  if (typeof fs !== "object" || Array.isArray(fs)) {
+    warnings.push("fields: not a map of fields to relations; every field is read as before");
+    return out;
+  }
+  for (const [name, r] of Object.entries(fs)) {
+    if (!Object.prototype.hasOwnProperty.call(FIELDS, name)) {
+      warnings.push(`fields: ${JSON.stringify(name)} is not a field; ignored`);
+      continue;
+    }
+    if (!r || typeof r !== "object" || ![r.table, r.key, r.col].every((x) => typeof x === "string" && IDENT.test(x))) {
+      warnings.push(`fields: ${JSON.stringify(name)} is not a table, a key and a column; read as before`);
+      continue;
+    }
+    out.set(FIELDS[name].col, { table: r.table, key: r.key, col: r.col });
+  }
+  return out;
+}
+/* A field's value on a bundle's row (`b`), through its relation: a scalar subquery on the relation's key, so a
+   relation can never multiply a bundle's row. */
+const fieldValue = (fr) => `(SELECT fr.${fr.col} FROM ${fr.table} fr WHERE fr.${fr.key} = b.bundle_id)`;
+
 /* MEASURED: workerd refuses a compound SELECT of more than five terms
    ("too many terms in compound SELECT"), which is far below SQLite's documented
    default of 500. Six metadata filters, which is one ordinary pass over a filter
@@ -1889,7 +1921,18 @@ function chain(op, parts, rel) {
   }), rel);
 }
 
-function metaSql(node, rel) {
+function metaSql(node, rel, frs) {
+  /* R26: a field read through its relation is the bundles whose key the relation holds with the value, as a set
+     keyed on `fts_id` like every other leaf. */
+  const fr = node.col && frs ? frs.get(node.col) : null;
+  if (fr) {
+    const inner = node.cmp === "present"
+      ? { sql: `SELECT ${fr.key} FROM ${fr.table} WHERE ${fr.col} IS NOT NULL AND ${fr.col} <> ''`, args: [] }
+      : { sql: `SELECT ${fr.key} FROM ${fr.table} WHERE ${fr.col} ${node.cmp} ?`, args: [node.value] };
+    return { sql: rel ? `SELECT fts_id AS fid FROM ${rel.table} WHERE fts_id IS NOT NULL AND ${rel.key} IN (${inner.sql})`
+                      : `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL AND bundle_id IN (${inner.sql})`,
+             args: inner.args };
+  }
   const fromProj = !!(node.json || PROJ_COLS.has(node.col));
   const lhs = node.json ? `json_extract(fm_json, ?)` : rel && !fromProj ? `b.${node.col}` : node.col;
   const args = node.json ? [node.json] : [];
@@ -1964,33 +2007,33 @@ function meaningSql(node, rel) {
            args: w.args, compound: false };
 }
 
-function setSql(node, rel = null) {
+function setSql(node, rel = null, frs = null) {
   if (!node) return { sql: allOf(rel), args: [], compound: false };
   /* Whole subtree expressible as text: one MATCH. */
   const fe = ftsExpr(node);
   if (fe !== null)
     return { sql: `SELECT rowid AS fid FROM bundles_fts WHERE bundles_fts MATCH ?`, args: [fe], compound: false };
-  if (node.op === "meta") return { ...metaSql(node, rel), compound: false };
+  if (node.op === "meta") return { ...metaSql(node, rel, frs), compound: false };
   if (node.op === "meaning") return meaningSql(node, rel);
   if (node.op === "text")
     return { sql: `SELECT rowid AS fid FROM bundles_fts WHERE bundles_fts MATCH ?`, args: [ftsAtom(node)], compound: false };
   if (node.op === "not") {
     /* Negation with nothing to subtract from is the complement of the corpus. */
-    const inner = operand(setSql(node.kid, rel));
+    const inner = operand(setSql(node.kid, rel, frs));
     return { sql: `${allOf(rel)} EXCEPT ${inner.sql}`, args: inner.args, compound: true };
   }
   if (node.op === "or")
-    return chain("UNION", node.kids.map((k) => operand(setSql(k, rel))), rel);
+    return chain("UNION", node.kids.map((k) => operand(setSql(k, rel, frs))), rel);
   if (node.op === "and") {
     const pos = node.kids.filter((k) => k.op !== "not");
     const neg = node.kids.filter((k) => k.op === "not").map((k) => k.kid);
-    const posChain = chain("INTERSECT", (pos.length ? pos : [null]).map((k) => operand(setSql(k, rel))), rel);
+    const posChain = chain("INTERSECT", (pos.length ? pos : [null]).map((k) => operand(setSql(k, rel, frs))), rel);
     if (!neg.length) return posChain;
     /* The positive side is a compound in its own right when it had more than one
        arm, so it is wrapped before EXCEPT is applied to it. */
     const head = { sql: posChain.compound ? `SELECT fid FROM (${posChain.sql})` : posChain.sql,
                    args: posChain.args, compound: false };
-    return chain("EXCEPT", [head, ...neg.map((n) => operand(setSql(n, rel)))], rel);
+    return chain("EXCEPT", [head, ...neg.map((n) => operand(setSql(n, rel, frs)))], rel);
   }
   return { sql: allOf(rel), args: [], compound: false };
 }
@@ -2001,7 +2044,10 @@ const operand = (s) => (s.compound ? { sql: `SELECT fid FROM (${s.sql})`, args: 
  * compile: the only entry point. Returns the parsed query plus the four
  * statements the surface runs, every one of which carries the viewer gate.
  * Its second argument names the relation the projection is read through
- * (`{projection: {table, key}}`, R25); without one, `bundles` holds it.
+ * (`{projection: {table, key}}`, R25); without one, `bundles` holds it. It may
+ * also name, per field, the relation a later module holds that field's column in
+ * (`{fields: {<field>: {table, key, col}}}`, R26); a field named with none is read
+ * where R3's registry puts it.
  * ------------------------------------------------------------------------- */
 
 export const PROVENANCE_COLS = [
@@ -2040,6 +2086,10 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
   const rowJoin = rel ? `JOIN ${rel.table} bp ON bp.fts_id = s.fid JOIN bundles b ON b.bundle_id = bp.${rel.key}`
                       : `JOIN bundles b ON b.fts_id = s.fid`;
   const ref = (col) => (rel && PROJ_COLS.has(col) ? `bp.${col}` : `b.${col}`);
+  /* R26: the fields the caller names a relation for, read through it wherever the plan filters (`metaSql`),
+     facets or sorts (`fieldRef`) by them. */
+  const frs = fieldRelationsOf(relation, ctx.warnings);
+  const fieldRef = (col) => (frs.has(col) ? fieldValue(frs.get(col)) : ref(col));
   const ast = parseTokens(tokenize(q), implicitOp === "or" ? "or" : "and", ctx);
   /* An explicit sort parameter outranks a `sort:` token in the query string:
      the parameter is a header the member just clicked, the token is what they
@@ -2094,7 +2144,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
      that pulled them apart. One predicate, two callers. */
   const passageOn = (armName) =>
     !!(armName && MEANING[armName] && MEANING[armName].ftsTable && passageMatch);
-  const set = setSql(ast, rel);
+  const set = setSql(ast, rel, frs);
   /* ---------------------------------------------------------------------
    * REC-92 / §4.4 — THE TALLY IS TAKEN OVER THE QUERY'S *OTHER* ARMS, AND
    * THAT PHRASE IN §4.4 IS LOAD-BEARING RATHER THAN INCIDENTAL.
@@ -2134,7 +2184,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
     }
     return node;
   };
-  const armSet = (arm) => setSql(stripMeaningArm(ast, arm), rel);
+  const armSet = (arm) => setSql(stripMeaningArm(ast, arm), rel, frs);
 
   /* Whether the query is a bare implicit conjunction of more than one atom,
      which is the only case where offering the OR reading makes sense. */
@@ -2202,7 +2252,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
   if (sortField === "relevance" && rank) order = `COALESCE(r.score, 0) ${sortDir}, b.bundle_id ASC`;
   else if (sortField === "relevance") order = `b.last_updated DESC, b.bundle_id ASC`;
   else {
-    const col = ref(SORTABLE[sortField]);
+    const col = fieldRef(SORTABLE[sortField]);
     order = `(${col} IS NULL) ASC, ${col} ${sortDir}, b.bundle_id ASC`;
   }
 
@@ -2266,9 +2316,9 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
       const c = cte(false);
       const arms = group.map((name) => {
         const f = FIELDS[name];
-        return `SELECT '${name}' AS field, ${ref(f.col)} AS value, count(*) AS n\n`
+        return `SELECT '${name}' AS field, ${fieldRef(f.col)} AS value, count(*) AS n\n`
              + `  FROM scope s ${rowJoin}\n`
-             + `  WHERE ${gate.sql} AND ${ref(f.col)} IS NOT NULL GROUP BY ${ref(f.col)}`;
+             + `  WHERE ${gate.sql} AND ${fieldRef(f.col)} IS NOT NULL GROUP BY ${fieldRef(f.col)}`;
       });
       out.push({ sql: `${c.sql.replace("hits(fid) AS (", "hits(fid) AS MATERIALIZED (")}\n`
                     + arms.join("\nUNION ALL\n") + `\nORDER BY field ASC, n DESC, value ASC`,
@@ -2588,7 +2638,9 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
   const facetScan = () => {
     if (!facetList.length) return null;
     const c = cte(false);
-    const sel = facetList.map((n) => ref(FIELDS[n].col)).join(", ");
+    /* A field read through its relation is named by its registry column, which `facetCols` publishes (R26). */
+    const sel = facetList.map((n) => (frs.has(FIELDS[n].col) ? `${fieldRef(FIELDS[n].col)} AS ${FIELDS[n].col}`
+                                                              : ref(FIELDS[n].col))).join(", ");
     return { sql: `${c.sql}\nSELECT ${sel} FROM scope s ${rowJoin}\nWHERE ${gate.sql}`,
              args: [...c.args, ...gate.args] };
   };

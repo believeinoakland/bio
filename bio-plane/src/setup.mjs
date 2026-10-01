@@ -16,9 +16,14 @@
  * when the page is served — see `setupPage` below.
  */
 
-import { STATES, HEADINGS, deriveInquiryTitle, civicosUserAgent } from "../checks/bio-checks.mjs";
-/* R32 (N65 (3)): the risk tiers and their reader are actions', read there and never copied (actions R40). */
-import { RISK_TIERS, riskTierState } from "./actions/checks.mjs";
+/* R24: the record's document vocabulary and the inquiry title rule are record-grammar's (its R30, R32, R35), read
+   there and never copied. */
+import { STATES, HEADINGS } from "./record-grammar/document.mjs";
+import { deriveInquiryTitle } from "./record-grammar/titles.mjs";
+/* The CivicOS agent's one composer is acquisition's (its R24), read there and never copied. */
+import { civicosUserAgent } from "./acquisition/index.mjs";
+/* R32 (N65 (3)): the risk tiers and their reader are action-grammar's, read there and never copied (its R1). */
+import { RISK_TIERS, riskTierState } from "./action-grammar/index.mjs";
 import { COUNTERPARTY_LEVELS, list as heldProfiles, get as heldProfile, combine as combineProfiles }
   from "../../jurisdictions/index.mjs";
 import { recordOf, stampInstant } from "./record-core/index.mjs";
@@ -29,10 +34,11 @@ import { schedulerOf } from "./scheduler/index.mjs";
 import { captureOf } from "./capture/index.mjs";
 import { cpuProbe } from "./cpu.mjs";
 import { liveToken } from "./tokens.mjs";
+import { livefire } from "./livefire.mjs";
 import { GROUP_SLUG_RE, FLEET_BINDINGS } from "./setup-fleet.mjs";
 
-/* The intake form obeys the check catalog's own tables rather than a copy of
-   them. Injected at module load, so a catalog change moves the UI with it and
+/* The intake form obeys the record grammar's own tables (record-grammar R32, R35) rather than a copy of
+   them. Injected at module load, so a grammar change moves the UI with it and
    drift is impossible rather than merely discouraged. The previous version
    carried a hand-written table that stamped `forming` on Problems and Actions,
    which is legal for neither, and the plane's own gate was too thin to notice
@@ -42,7 +48,7 @@ const FIRST_STATE_JSON = JSON.stringify(
 const HEADINGS_JSON = JSON.stringify(HEADINGS);
 /* D-483: the tier vocabulary, injected the way FIRST_STATE and HEADINGS are and for the same reason —
    the words a member is offered are the PLANE's words, read from the one map op=affordances publishes as
-   vocabularies.risk_tiers (affordances.mjs holds RISK_TIERS itself, not a copy of it), so a catalogue
+   vocabularies.risk_tiers (both read action-grammar's RISK_TIERS, never a copy of it), so a vocabulary
    change moves this control with it and a surface inventing a label is impossible rather than discouraged.
    riskTierState travels with the map because the page must not decide for itself WHICH keys a member may
    author: the settable tiers are exactly the values the plane reads back as themselves. */
@@ -882,7 +888,7 @@ function ratifyWhy(r){
    here can claim to be someone else. */
 const NL = String.fromCharCode(10);
 const PREFIX = { information:"INFO", inquiry:"INQ", focus:"FOCUS", problem:"PROB", project:"PROJ", action:"ACTN" };
-/* From the check catalog, not from memory. */
+/* From the record grammar's tables (record-grammar R32, R35), not from memory. */
 const FIRST_STATE = ${FIRST_STATE_JSON};
 const HEADINGS = ${HEADINGS_JSON};
 /* information@1 for typed intake, deliberately. The @2 contract makes the
@@ -1056,7 +1062,7 @@ function acquireWhy(a){
 /* ---- create ---- */
 /* C-16: a Question has ONE authored field, the question itself. No Title
    control and no second gating field: the title is DERIVED from the question
-   (the rule lives in the check catalog and is embedded verbatim below, so
+   (the rule is record-grammar's, R30, and is embedded verbatim below, so
    this page and the store's projection cannot drift), and a gate that
    pressures a member into writing what they do not know is a bug in the
    gate. */
@@ -2220,7 +2226,8 @@ export class InstanceSetup {
   }
 
   /** R12, R16: the active profiles, each with its name and what it covers, the conflicts `jurisdictions.combine`
-   *  reports over them, and the held profiles an administrator may choose among (R15), from the namespace addressed. */
+   *  reports over them, the facts of their combined view `agent-worker` reads (`view`, N420), and the held profiles an
+   *  administrator may choose among (R15), from the namespace addressed. */
   profiles() {
     const core = this.#record();
     const set = core.getSetting("jurisdiction_profiles");
@@ -2232,7 +2239,7 @@ export class InstanceSetup {
     });
     const combined = ids.length ? combineProfiles(ids) : { ok: true, conflicts: [] };
     const out = { ok: true, profiles: active, conflicts: combined.ok ? combined.conflicts : [],
-                  ...(combined.ok ? {} : { errors: combined.errors }), choices };
+                  ...(combined.ok ? {} : { errors: combined.errors }), view: profileView(combined), choices };
     if (!ids.length) {
       out.detail = "no active profile: this copy reads no local facts, which is valid, and every fact that needs one "
         + "is answered as undetermined until an administrator chooses";
@@ -2381,6 +2388,24 @@ export class InstanceSetup {
                         + "completed step's elapsed time and below what its next step would have cost."
                         : "No run has been cut off yet, so the ceiling is above everything tried.") };
   }
+}
+
+/* R12 (N420): the three facts of the active profiles' combined view that `agent-worker` R51 reads: `deadlines` and
+   `legal_organisations` as `jurisdictions.combine` gives them (its R29, R34), and `venues`, each `{kind, venue}` of a
+   combined `action_kinds` entry that gives one (its R25, R29). A fact no active profile states, or that `combine`
+   withholds (a conflict) or cannot give (its errors), is ABSENT, never an empty list: the reader then reads it
+   undetermined, which is what it is. Nothing here chooses between profiles or supplies a default. */
+function profileView(combined) {
+  const view = {};
+  const v = combined && combined.ok === true && combined.view && typeof combined.view === "object" ? combined.view : null;
+  if (!v) return view;
+  for (const fact of ["deadlines", "legal_organisations"])
+    if (Array.isArray(v[fact]) && v[fact].length) view[fact] = v[fact];
+  const venues = (Array.isArray(v.action_kinds) ? v.action_kinds : [])
+    .filter((k) => k && typeof k.kind === "string" && k.venue && typeof k.venue === "object")
+    .map((k) => ({ kind: k.kind, venue: k.venue }));
+  if (venues.length) view.venues = venues;
+  return view;
 }
 
 const INSTANCES = new WeakMap();
@@ -2603,4 +2628,64 @@ export async function cpuProbeOp(stub, { iterations = null, budget_ms = null, ru
         + "recorded step is the last one that fit and the ceiling lies just above that step's elapsed_ms."
       : `the store did not confirm step ${confirmed + 1}, so the probe stopped there and burned nothing more: the `
         + `trail is incomplete, and the last step the store confirmed is ${confirmed}.` });
+}
+
+/* ============================================================================================================
+ * THE REPORT OPS' DISPATCH (the legacy-index map's §4.4 plain move, K649 (7)): which of this module's Worker functions
+ * answers each report op, moved out of `src/index.mjs`. The door resolves the store, the class and the viewer stamp
+ * (`control-plane`'s) and hands them in; who may call each op is `op-declarations`' and `admission`'s.
+ * ============================================================================================================ */
+
+/* The admitted ops this module answers at the Worker. `bootstrap` is the public door's default answer (below). */
+export const INSTANCE_SETUP_OPS = Object.freeze(["selftest", "livefire", "runtime", "cpuprobe"]);
+
+/** One of INSTANCE_SETUP_OPS, answered. `storeName` is the namespace the door resolved, `cls` the caller's class,
+ *  `viewer` the door's viewer stamp for that caller, `scratch` the rehearsal namespace's name. */
+export async function instanceSetupOp(op, url, env, storeName, { cls = null, viewer = "", scratch = "scratch", json,
+                                                                  doAnswer, storeSilent, storeRefusal } = {}) {
+  const io = { json, doAnswer, storeSilent, storeRefusal };
+  const store = () => env.STORE.get(env.STORE.idFromName(storeName));
+  /* selftest reports deployment health as JSON, so "did the deploy work" is a
+     link rather than a command. It asserts every binding is present and that
+     the store answers, and it never returns a secret. */
+  if (op === "selftest") return selftest(env, storeName, { cls, scratch, viewer }, { json, doAnswer });
+
+  if (op === "livefire") {
+    const out = await livefire(env, storeName, { capacity: cls === "admin", viewer });
+    /* D-506 / IC-265, on BOB #32's ruling of 2026-09-24 06:07Z. This read `out.ok ? 200 : 500`, and
+       `out.ok` WAS the canary's verdict — which is why a failing canary answered `ok:false` with no
+       code of any kind to every consumer that reads `ok:false` as a refusal. `out.ok` is now
+       `true` whenever the op answered, and the verdict lives in `out.verdict` / `out.failing`.
+       THE STATUS IS KEYED TO THE VERDICT, so it is byte-for-byte what it was for every outcome: a
+       DIST gate or a curl that reads the status alone loses nothing to this change, which is the
+       whole point of moving the verdict to keys of its own rather than deleting it from the wire. */
+    return json(out, out.verdict === "pass" ? 200 : 500);
+  }
+
+  /* What runs here have COST, measured. A read, and the honest counterpart to
+     the store's `capturelimit` read — a DO PATH and not an op, M0-12; nothing
+     on the control plane reaches it — : that one reports a ceiling found by
+     being refused, this one reports consumption found by measuring, because
+     CPU has no catchable refusal to find a ceiling with. */
+  if (op === "runtime") return runtimeOp(store(), io);
+
+  /* Find the CPU ceiling by walking into it. Each completed step is
+     checkpointed durably BEFORE the next begins, so when the isolate is killed
+     the trail shows the last step that finished and the ceiling is bracketed.
+     Probe class only: it burns compute on purpose and belongs nowhere near a
+     member's session. */
+  if (op === "cpuprobe") return cpuProbeOp(store(),
+    { iterations: url.searchParams.get("iterations"), budget_ms: url.searchParams.get("budget_ms") }, io);
+
+  return null;
+}
+
+/** R17 at the public door: op=bootstrap, the default answer of an unauthenticated call. REC-52: the same spread as
+ *  the store reads'. A store silence used to leave a `{ok:true}` carrying the service name, the version and the
+ *  bootstrap flag and NOTHING the store knows — an instance answering "here is what I am" while unable to say
+ *  anything about itself. The installer and `newgroup` both read this op, so the false success reached a caller
+ *  deciding whether an instance was ready. `members=1` adds each member's own build. */
+export function bootstrapOp(url, env, fp, { stub, json, storeSilent, storeRefusal, doAnswer }) {
+  return bootstrapReport(env, fp, { members: url.searchParams.get("members") === "1", stub, json, storeSilent,
+                                    storeRefusal, doAnswer });
 }

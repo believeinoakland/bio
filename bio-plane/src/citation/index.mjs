@@ -7,9 +7,10 @@
  *
  * Extracted from the legacy modules (T7, T6-2; K3, K64, K83, K102, N55): `store.mjs` (`cite`, `#edgeTransition`,
  * `sever`, `reinstate`, `#retiredNotCitable`, `#spliceEdgeStatus`, `#legExtentLines`, `#spliceBasis`, the three
- * `CITE_*` bounds and `EDGE_NOTE_MAX`, and the three ops' dispatch entries) and `bio-checks.mjs` (rows C-33.15–C-33.19,
- * C-33.39 and C-45.7–C-45.10, now `./checks.mjs`). The legacy code's comments moved with it, shortened where they only
- * restated it.
+ * `CITE_*` bounds and `EDGE_NOTE_MAX`, and the three ops' dispatch entries) and the legacy check catalogue
+ * (`legacy-checks`: rows C-33.15–C-33.19, C-33.39 and C-45.7–C-45.10, now `./checks.mjs`). The record grammar it reads
+ * (`normalizeType`, `OBJECT_TYPES`, `parseFrontmatter`, `createSha256`) is `record-grammar`'s. The legacy code's
+ * comments moved with it, shortened where they only restated it.
  *
  * A CITATION EXISTS ONLY IN THE CITING DOCUMENT'S BYTES (R6, D-21). Both acts write the document and promote it; `refs`
  * and `inquiry_basis` are projections of those bytes (`connections`', `inquiry`'s), re-derived inside the promotion, and
@@ -30,7 +31,9 @@
  *                a question `INQUIRY_UNAVAILABLE` (never written ungraded by default).
  *   now          the module's clock, milliseconds since the epoch (default: the wall clock). */
 
-import { normalizeType, OBJECT_TYPES, parseFrontmatter, createSha256 } from "../../checks/bio-checks.mjs";
+import { normalizeType, OBJECT_TYPES } from "../record-grammar/types.mjs";
+import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
+import { createSha256 } from "../record-grammar/sha256.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, noSuchProject } from "../membership/index.mjs";
 import { promotionOf, INLINE_MAX } from "../promotion/index.mjs";

@@ -139,7 +139,17 @@ test("R24 a look is recorded only under an authority the record can name: `membe
   for (const k of [null, "", "member", "search", "browse"])
     assert.equal(w.obs.observe(entry({ authority_kind: k, actor_class: "member", actor: "alice" })).check, "C-22.9", String(k));
   assert.equal(w.count("observation_log"), 0);
-  // reads write nothing
-  w.obs.latest("internet"); w.obs.leadList({ viewer: "member:alice" });
-  assert.equal(w.count("observation_log"), 0);
+  // no read this module serves writes a row, whoever reads: a member's viewing is not a look
+  w.obs.observe(entry());
+  const L = w.obs.lead({ words: "w", author: "alice" }).lead_id;
+  const n = w.count("observation_log");
+  for (const viewer of ["member:alice", "class:member", null]) {
+    w.obs.latest("document"); w.obs.latest("internet", { subjectKind: "description" }); w.obs.byAuthority("acquire", "INFO-2026-0001");
+    w.obs.firstRowAt("document"); w.obs.verification("document", "address", "https://example.org/a");
+    w.obs.missingCauseAt("content", { registeredAt: "2026-09-27T04:00:00Z" }); w.obs.contentRows("c");
+    w.obs.derivationStatementFor("ENT-1"); w.obs.rowVisible(w.log()[0], viewer); w.obs.rowGate(viewer)(w.log()[0]);
+    w.obs.leadReach(viewer); w.obs.leadRead({ id: L, viewer }); w.obs.leadList({ viewer });
+    w.obs.referentVisible("capture", "c", viewer);
+  }
+  assert.equal(w.count("observation_log"), n);
 });

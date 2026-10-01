@@ -6,7 +6,7 @@ import { generateKeyPairSync, createHash } from "node:crypto";
 import { world, sha, evidence, provDoc, infoMd } from "./fixture.mjs";
 import { attest, attestStatus } from "../../../src/provenance/index.mjs";
 import { TSA_ENDPOINTS, ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE } from "../../../src/tsa.mjs";
-import { PROVENANCE_ACT_CHECKS } from "../../../checks/bio-checks.mjs";
+import { PROVENANCE_ACT_CHECKS, ATTEST_CHECKS } from "../../../src/provenance/checks.mjs";
 
 /* A TimeStampResp, granted, whose token carries the digest's raw bytes (what `parseTimestampResponse` binds on). */
 function granted(digestHex) {
@@ -55,7 +55,9 @@ test("R31: a digest must be 64 hex; a miss asks the record, which separates part
   assert.deepEqual([partsOk.ok, partsOk.held.form, partsOk.held.on], [true, "parts", "acquisition_receipt"]);
   /* The register alone: CAPTURE_HELD_IN_PARTS, which does not call the bytes missing. */
   const reg = await attest({ sha256: s }, { head: empty.head, put: empty.put, fetch: n.fetch, holds: holds({ acquired: false, registered: true }) });
-  assert.deepEqual([reg.reason, attestStatus(reg)], ["CAPTURE_HELD_IN_PARTS", 409]);
+  assert.deepEqual([reg.reason, reg.code, reg.check, reg.translation, attestStatus(reg)],
+                   ["CAPTURE_HELD_IN_PARTS", "CAPTURE_HELD_IN_PARTS", "C-89.1", ATTEST_CHECKS.CAPTURE_HELD_IN_PARTS.translation, 409],
+                   "the refusal carries its catalogue row");
   assert.match(reg.detail, /Nothing here says the bytes are missing/);
   /* Neither; and the record not asked. */
   const none = await attest({ sha256: s }, { head: empty.head, put: empty.put, fetch: n.fetch, holds: holds({ acquired: false, registered: false }) });

@@ -9,13 +9,16 @@
  * walk could not finish is `undetermined`. The retired word for the first is not written in this module, because in
  * SB-OUTPUT §5.1 it names the opposite behaviour. */
 
-import { BASIS_GRADES } from "../../checks/bio-checks.mjs";
+import { BASIS_GRADES } from "../record-grammar/grades.mjs";
 
 /** The axes, named once so no site spells one and none can drift. MK-2 appended `testimony` (MEMBER-KNOWLEDGE-DESIGN
  *  §3): a member's authored observation is graded on the member's trust, which is not how a document was read in. */
 export const STRENGTH_AXES = Object.freeze(["capture", "connection", "testimony"]);
 /** The axes that range over DOCUMENTS: a grade on either, authored on a leg to another inquiry, has no referent. */
 export const DOCUMENT_AXES = Object.freeze(["capture", "testimony"]);
+/** The three states an axis answer is in, and no fourth (R3, R4): `graded`, `unrated`, `undetermined`. Defined here, where
+ *  the arithmetic produces them, and read from here by every other module (ratification, R9). */
+export const STRENGTH_STATES = Object.freeze(["graded", "unrated", "undetermined"]);
 /** R2: the depth bound of the walk. Equal to the queue's ancestor depth, and this module's own (Suggestions). */
 export const DEPTH_BOUND = 6;
 

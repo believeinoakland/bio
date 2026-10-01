@@ -12,8 +12,8 @@
  * REC-120's unchosen mention, REC-122's choice with D-454's occurrences, REC-5's dirty set, REC-19's live-cites
  * predicate, D-267's severance, REC-25's backlinks, C-6.2's dangling read, REC-52's link projection, D-162's themes),
  * `schema.mjs` (the tables, now `./schema.mjs`) and `bio-checks.mjs` (the two pair predicates, now `./pair.mjs`; the
- * C-49, C-74 and C-81 rows and `themeLegFindings` stay in the catalogue, whose own grammars call them, and are
- * re-exported here as their one public face). The built work on `land/worker/D-575`, `D-625`, `D-706` and `D-722`
+ * C-74 rows, now `./checks.mjs` (T18); the C-49 and C-81 rows and `themeLegFindings`, copied to `./checks.mjs` (T19),
+ * the catalogue keeping its copy for its own grammars until `inquiry-grammar` deletes it). The built work on `land/worker/D-575`, `D-625`, `D-706` and `D-722`
  * is taken in (R6, R15, R26, R27). The legacy code's comments moved with it, shortened where they only restated it.
  *
  * REACHED as `connectionsOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the
@@ -30,9 +30,11 @@
  *                capture and extraction this module creates when none is passed (K155).
  *   now          the module's clock, an ISO instant (default: the wall clock). */
 
-import { isMachineIdentity, BUNDLE_ID_RE, MACHINE_CLASS_PREFIX, parseFrontmatter, sha256HexSync,
-         CONNECTION_PAIR_CHECKS, CONNECTION_CHOICE_CHECKS, THEME_CHECKS, THEME_ID_RE, themeLegFindings }
-  from "../../checks/bio-checks.mjs";
+import { isMachineIdentity, MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
+import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
+import { sha256HexSync } from "../record-grammar/sha256.mjs";
+import { CONNECTION_CHOICE_CHECKS, CONNECTION_PAIR_CHECKS, THEME_CHECKS, THEME_ID_RE, THEME_REF_RE, THEME_LEG_KEYS,
+         themeLegFindings } from "./checks.mjs";
 import { readingSourceFromColumns, readingSourceJson, readingOccurrenceKey, readingPositionInExtent }
   from "../textchain.mjs";
 import { normalizeAddress } from "../subresources.mjs";
@@ -51,9 +53,10 @@ import { Themes } from "./themes.mjs";
 export { CONNECTIONS_SCHEMA, CONNECTIONS_TABLES, CONNECTIONS_TABLE_NAMES } from "./schema.mjs";
 export { checkConnectionPairCovers, checkConnectionMentionUnchosen } from "./pair.mjs";
 export { THEME_READ_LIMIT_DEFAULT, THEME_READ_LIMIT_MAX, THEME_WITHDRAW_CHECKS } from "./themes.mjs";
-/* R35, R46 (K138 Q7's pattern): the rows and the leg check stay in the catalogue, whose own leg grammars call
-   `themeLegFindings`; this module is their one public face. */
-export { CONNECTION_PAIR_CHECKS, CONNECTION_CHOICE_CHECKS, THEME_CHECKS, THEME_ID_RE, themeLegFindings };
+/* R35, R46: C-49, C-74 and C-81 and the leg check are this module's own (`./checks.mjs`; C-74 T18, the rest copied
+   T19), its public face for `inquiry-grammar` and `action-grammar` (`themeLegFindings`). */
+export { CONNECTION_PAIR_CHECKS, CONNECTION_CHOICE_CHECKS, THEME_CHECKS, THEME_ID_RE, THEME_REF_RE, THEME_LEG_KEYS,
+         themeLegFindings };
 
 /** R2, R4: the meaning layer's bound (REC-60 / D-225): the default and the ceiling of every connection read. */
 export const CONNECTIONS_LIMIT_DEFAULT = 500;
@@ -65,11 +68,17 @@ export const CONNECTION_DERIVE_DELAY_MS = 60000;
 export const CONNECTION_DERIVE_BATCH = 100;
 /** R1 (REC-120 / D-161 act 2): the rule that selects the pair, written onto every derived row and read back. */
 export const PAIR_RULE = "strongest-graded/first-reference-by-sort";
+/** R60: this module's figures for `op=stats` and purge's proof (record-core R63; `themes` and `themePlacements` are
+ *  purge's only, record-core R65 removing them from the wire). */
+export const CONNECTIONS_COUNT_KEYS = Object.freeze(["connections", "connectionPairChoices", "connectionDirty", "themes",
+                                                     "themePlacements"]);
 /** R31, R49: the reads of rows asserted apart, bounded like every read here. */
 export const ASSERTED_LIMIT_DEFAULT = 200;
 export const ASSERTED_LIMIT_MAX = 2000;
 /** R31: a member's stated basis, stored whole up to this bound and refused over it. */
 export const ASSERT_BASIS_MAX = 4000;
+/** R28 (C-6.1): the contemporaneity verdicts a links_to entry may carry; any other is written as undetermined. */
+const LINK_VERDICTS = ["contemporaneous", "superseded", "undetermined"];
 /** R29: the machine viewer the system's own re-projection reads through. */
 const SYSTEM_VIEWER = `${MACHINE_CLASS_PREFIX}daemon`;
 
@@ -121,6 +130,23 @@ export class Connections {
   #transact(fn) { return this.record.transact(fn); }
 
   migrate() { migrateConnections(this.sql); }
+
+  /** R60 (record-core R63): this module's figures, each counted as the legacy store's `#counts` took it. `hid` is the
+   *  bundles the caller may not see (`{sql, args}`), or null for a whole count: a figure keyed on a bundle column
+   *  leaves out the rows whose column names one in `hid` (a null column names none, and is counted); a figure with
+   *  no such column counts every row. Synchronous; writes nothing. */
+  counts(hid = null) {
+    const hidden = !!hid && typeof hid === "object" && typeof hid.sql === "string";
+    const args = hidden && Array.isArray(hid.args) ? hid.args : [];
+    const n = (table, ...keys) => {
+      const conds = hidden ? keys.map((k) => `COALESCE(${k}, '') NOT IN ${hid.sql}`) : [];
+      return this.#one(`SELECT count(*) AS c FROM ${table}${conds.length ? ` WHERE ${conds.join(" AND ")}` : ""}`,
+                       ...(hidden ? keys.flatMap(() => args) : [])).c;
+    };
+    return { connections: n("connections", "a_bundle_id", "b_bundle_id"),
+             connectionPairChoices: n("connection_pair_choices", "a_bundle_id", "b_bundle_id"),
+             connectionDirty: n("connection_dirty"), themes: n("themes"), themePlacements: n("theme_placements") };
+  }
 
   /* ---- sight (R12, R33) ---- */
 
@@ -534,8 +560,8 @@ export class Connections {
   }
 
   /** R13 composed for an internal caller with no viewer (the earned-basis registry: the write path, the gate), which
-   *  names no bundle id: each row's portion connection axis in the registry's shape, through one subject. A `document`
-   *  row is not answered here (it earns what its document earns, the caller's own entry). */
+   *  names no bundle id: each held row's portion connection axis in the registry's shape, through one subject (R52); a
+   *  `document` row is answered too, reached by every connection of its capture (R7, R10). */
   portionAxes(contentIds, { entityId = null } = {}) {
     const out = {};
     const g = this.portionGrades(contentIds, `${MACHINE_CLASS_PREFIX}daemon`, { entityId });
@@ -960,9 +986,12 @@ export class Connections {
     const add = edges.filter((e) => !held.has(e.to));
     if (!add.length) return { ok: true, promoted: false, added: 0 };
     const when = this.now();
+    /* C-6.1's links_to arm: the entry is the SOURCE's on its face (`asserted_by: source`), carries the address the
+       source wrote and a contemporaneity verdict, `undetermined` its resting state and stated rather than omitted. */
+    const quoted = (v) => cut(String(v || "").replace(/["\\\n\r]/g, ""), 400);
     let text = spliceReferences(md.text, add.map((e) => ({
-      rel: "links_to", target: e.to, status: "confirmed",
-      note: cut(String(e.address || "").replace(/["\\\n\r]/g, ""), 400) })));
+      rel: "links_to", target: e.to, status: "confirmed", asserted_by: "source", address: quoted(e.address),
+      verdict: LINK_VERDICTS.includes(e.verdict) ? e.verdict : "undetermined", note: quoted(e.address) })));
     if (!text) return { ok: false, reason: "UNSPLICEABLE_REFERENCES",
                         detail: "the source document's references block is not in a shape this act can extend in place" };
     text = setScalar(text, "last_updated", `"${when}"`);
@@ -1297,7 +1326,11 @@ function spliceReferences(text, additions) {
   const end = lines.indexOf("---", 1);
   if (end === -1) return null;
   const block = additions.map((a) =>
-    `  - rel: ${a.rel}\n    target: ${a.target}\n    status: ${a.status}\n    note: "${a.note ?? ""}"`);
+    `  - rel: ${a.rel}\n    target: ${a.target}\n    status: ${a.status}`
+    + (a.asserted_by ? `\n    asserted_by: ${a.asserted_by}` : "")
+    + (a.address != null ? `\n    address: "${a.address}"` : "")
+    + (a.verdict ? `\n    verdict: ${a.verdict}` : "")
+    + `\n    note: "${a.note ?? ""}"`);
   let ref = -1;
   for (let i = 1; i < end; i++) if (/^references:/.test(lines[i])) { ref = i; break; }
   if (ref === -1) return [...lines.slice(0, end), "references:", ...block, ...lines.slice(end)].join("\n");
@@ -1331,7 +1364,7 @@ function randHex(n) {
 const instances = new WeakMap();
 
 /** The one connections instance for `host` (the Durable Object's `ctx`, with its `storage`); `deps` are read on the
- *  first call only. At creation it declares its tables (R36) and registers its projection and fact with promotion
+ *  first call only. At creation it declares its tables (R36), registers its figures (R60) and registers its projection and fact with promotion
  *  (R19, R23), its link notice (R29) and its re-derivation with extraction (R49), and marks dirt on entities'
  *  `onResolved` (R17). */
 export function connectionsOf(host, deps) {
@@ -1353,6 +1386,13 @@ export function connectionsOf(host, deps) {
                           capture, entities });
     instances.set(host, k);
     record.declarePurge("connections", CONNECTIONS_TABLES);
+    /* R60: the figures, once at start (record-core R63); a refusal is a build fault, never a silent gap. */
+    if (typeof record.registerCounts === "function") {
+      const counted = record.registerCounts("connections", [...CONNECTIONS_COUNT_KEYS], (hid) => k.counts(hid));
+      if (counted && counted.ok === false)
+        throw new Error(`connections: record-core refused its figures: ${counted.reason}`
+                        + `${counted.heldBy ? ` (held by ${counted.heldBy})` : ""}`);
+    }
     promotion.registerStep("connections", { project: (c) => k.projectRefs(c) });
     promotion.registerFact("citedBy", "connections", (id) => k.citedBy(id));
     promotion.onCommitted("connections", ({ bundleId, replay }) => (replay ? null : k.relinkTargetsOf(bundleId)));

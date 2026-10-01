@@ -20,7 +20,7 @@ import { publicationOf } from "../../../src/publication/index.mjs";
 import { standardsOf } from "../../../src/standards/index.mjs";
 import { contradictionOf, inquiryServices } from "../../../src/contradiction/index.mjs";
 import { conformanceOf, conformanceOps } from "../../../src/conformance/index.mjs";
-import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -80,8 +80,9 @@ export const LAYER = [{ step: "layer", tier: 1, container: "pdf", cap: null, mea
 export const U = (page, text, truncated = false) =>
   ({ extent: canonicalExtent({ kind: "pdf-page", page }), ref: `page ${page + 1}`, text, truncated });
 
-/* The columns inquiry writes on record-core's `bundles` (its R40), which the store's additive list creates today. */
-const BUNDLE_COLUMNS = ["inquiry_basis_count INTEGER", "inquiry_subject_entity TEXT", "inquiry_superseded_by TEXT"];
+/* The column inquiry writes on record-core's `bundles` (its R40), which the store's additive list creates today. The
+   basis count and the superseded-by index are in inquiry's own table since T18 (its R36), which its `migrate()` makes. */
+const BUNDLE_COLUMNS = ["inquiry_subject_entity TEXT"];
 /* The columns of extraction's tables that inquiry, content and connections join. */
 const EXTRACTION_JOINED = [
   `CREATE TABLE readings (capture_sha TEXT PRIMARY KEY, bundle_id TEXT NOT NULL, content_type TEXT, reading TEXT,

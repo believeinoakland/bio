@@ -1,12 +1,13 @@
-/* The queue's test world: record-core and membership real, over node:sqlite behind a `sql` that answers as workerd's
+/* The queue's test world: record-core, membership and credentials real, over node:sqlite behind a `sql` that answers as workerd's
    does (a CURSOR, iterable once, with `toArray()` and `one()`, never an array; K316); every other provider a fake in
    the shape its requirements publish, which a test fills. The tables other modules own and this module reads by their
-   read contracts (record-core R37, provenance R48, inquiry R40, connections R58, progressions R34) are
-   the real schema's where `schema.mjs` holds them, else created here with exactly the contracted columns. */
+   read contracts (record-core R37, provenance R48, inquiry R40, connections R58, progressions R34) are made by their
+   owners' `migrate()` where this module uses the owner, else created here with exactly the contracted columns
+   (`schema.mjs` holds no fragment since T19, so nothing is read from it). */
 import { DatabaseSync } from "node:sqlite";
-import { SCHEMA } from "../../../src/schema.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
+import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { queueOf } from "../../../src/queue/index.mjs";
 import { tasksOf } from "../../../src/tasks/index.mjs";
 
@@ -42,15 +43,22 @@ export function world(fakes = {}, { bare = false } = {}) {
   const host = { storage };
   const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
   const membership = membershipOf(host, { record });
+  /* `credentials` real (K789): the signing keys, the claim and the credentials are its tables since membership's split,
+     so a feed that asks for self-registered keys (queue-producers R14) reads them there. */
+  const credentials = credentialsOf(host, { record, membership });
   const boot = () => {
-    for (const t of SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";")) if (t.trim()) db.exec(t);
-    db.exec(`CREATE TABLE IF NOT EXISTS inquiry_basis (bundle_id TEXT, ord INTEGER, role TEXT, target_id TEXT, content_id TEXT, note TEXT);
+    db.exec(`CREATE TABLE IF NOT EXISTS register (capture_sha TEXT PRIMARY KEY, bundle_id TEXT, path TEXT, registered TEXT,
+               authored INTEGER, bytes INTEGER, author TEXT);
+             CREATE TABLE IF NOT EXISTS captured_locators (address_norm TEXT, address TEXT, retrieval_locator TEXT, capture_sha TEXT,
+               first_retrieved TEXT, last_retrieved TEXT, via TEXT);
+             CREATE TABLE IF NOT EXISTS inquiry_basis (bundle_id TEXT, ord INTEGER, role TEXT, target_id TEXT, content_id TEXT, note TEXT);
              CREATE TABLE IF NOT EXISTS refs (bundle_id TEXT, target_id TEXT, kind TEXT);
              CREATE TABLE IF NOT EXISTS inquiry_basis_version_legs (bundle_id TEXT, name TEXT, ord INTEGER, target_id TEXT, target_type TEXT,
                role TEXT, grade TEXT, grade_axis TEXT, grade_source TEXT, ground TEXT, content_id TEXT);
              CREATE TABLE IF NOT EXISTS progression_instances (progression_key TEXT, entity_id TEXT, stage_key TEXT, capture_sha TEXT, bundle_id TEXT)`);
     record.migrate();
     membership.migrate();
+    credentials.migrate();
   };
   if (!bare) boot();
   const F = defaultFakes();
@@ -59,8 +67,10 @@ export function world(fakes = {}, { bare = false } = {}) {
   const tasks = tasksOf(host, { record, membership, start: false, now: () => w.now, capture: F.capture, provenance: F.provenance });
   if (!bare) tasks.migrate();
   const q = queueOf(host, { record, membership, start: false, now: () => w.now, tasks, ...F });
+  /* R36: queue makes its own tables (`migrate`), never through the legacy store's SCHEMA (K735). */
+  if (!bare) q.migrate();
   const w = {
-    db, sql, host, record, membership, q, tasks, fakes: F, statements, now: NOW, boot: () => { boot(); tasks.migrate(); },
+    db, sql, host, record, membership, credentials, q, tasks, fakes: F, statements, now: NOW, boot: () => { boot(); tasks.migrate(); q.migrate(); },
     run: (s, ...a) => db.prepare(s).run(...a.map(bind)),
     all: (s, ...a) => db.prepare(s).all(...a.map(bind)),
     bundle(id, type = "information", { title = id, state = null } = {}) {

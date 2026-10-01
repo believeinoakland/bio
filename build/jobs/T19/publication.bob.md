@@ -1,0 +1,19 @@
+# BOB to publication (T19)
+
+**Read** · handled J2
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` layer 8, publication (amended; ⚑L8–9 resolved): filings re-pointed (FILINGS #6, K706), so delete your 17-line `registerEvidenceBlock` copy (`index.mjs`:240; public-read's is the one filings calls); `SECTIONS` and `signedCitations` done in T18 (K690, PUBLICATION #8). Kept: the moved rows C-44.2, C-68.5, C-98.1–.9 deleted from `publication/checks.mjs` after public-read copies them, as your R33 says (K768: C-92.1–.9 and C-122.1 stay yours; C-44.2, C-68.5, C-98 are public-read's R17); `INSTALLATION_CHECKS` re-anchored out of `publication/checks.mjs` and `test/m/publication/invariants.test.mjs` (:82 reads the catalogue's C-68.1) so control-plane takes C-68 at L11; `attestingKeys` (`index.mjs`:1538, today `membership.attestingKeys`) to credentials (K757; `uses` lacks credentials: BOB's edge); your mint-ledger seeds (`published_cases`, `case_documents`, `published_case_members`) registered through record-core's `registerMintSeed` (R70). Rule 1: re-point `src/publication/index.mjs`:53 (`parseFrontmatter`, `isMachineIdentity`, `createSha256`, `sectionText` to record-grammar), `test/m/publication/fixture.mjs`:18 and `convert-ratify-authority.test.mjs`:11 (`parseFrontmatter`), and `invariants.test.mjs`:6's whole-catalogue import, so no publication file imports `bio-checks.mjs` (`worker.mjs` is public-read's); re-word the comments at `index.mjs`:13 and :2645. Start after public-read merges (rule 4). List in your COMPLETE each R you met and its test; BOB strikes the marks at the merge (K775 (6)). Do not delete old suites (K619). K783: register `registerAuditContext` for the published registry (record-core R69) and `registerMintSeed` for `published_cases` and `published_case_members` (R70). K789 (membership's split deletion, MEMBERSHIP #13 J6): about 19 of your tests fail on tranche/T19 because their fixtures call `membership.claim` or build membership without credentials (`no such table: signers`/`credentials`): construct credentials in your fixtures (`credentialsOf(ctx).migrate()` after membership's, or a stand-in registering membership R94, R95 and R79 as `test/m/membership/fixture.mjs` does) and claim through credentials (`uses` gains credentials). These reds are accepted by name until your job. K794: `invariants.test.mjs`:82 reads C-68.1 from acquisition, not the catalogue.
+
+## B2 · CHANGE
+
+From PROJECT-STAGE #2 (K826): test/m/publication/fixture.mjs:18 still imports parseFrontmatter from checks/bio-checks.mjs. Re-point it to record-grammar (frontmatter.mjs) under rule 1, with your other re-points.
+
+## B3 · ANSWER · re J1
+
+Both readings adopted (K827). (1) Do everything else now; when PUBLIC-READ #2 merges early, BOB posts a CHANGE: merge the tranche branch, delete C-44.2, C-68.5 and C-98 from your table, re-run and COMPLETE. (2) Drop invariants.test.mjs:82's acquisition arm with the catalogue walk it sits in (K787 (3)); no publication to acquisition edge. B2 (fixture.mjs:18's parseFrontmatter to record-grammar) stands.
+
+## B4 · CHANGE
+
+PUBLIC-READ #2 is merged into `tranche/T19` (K831): its `checks.mjs` holds C-44.2, C-68.5 and C-98.1–.9 and every raiser reads them there. As K827 (1) set: merge `tranche/T19` into your branch, delete those rows from your table, finish your entries and post COMPLETE. `families.test.mjs`' totality arm naming public-read's families is accepted red by name until control-plane (L11).

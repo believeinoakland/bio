@@ -1,17 +1,18 @@
 /* control-plane: THE RECORD STORE'S DOOR (R25–R27). `dispatch(req, store)` is the one frame every Durable Object request
    passes: the body read, the route looked up in the modules' own maps (the `membershipOps` pattern; `store.routes(url,
-   body)`, legacy-store's method until each module takes its own), the existence answer of a read naming a
-   discoverable project (R27), the `{ok: true, result}` envelope, and the one catch (R25). Moved from legacy-store's
-   `Store.fetch` at control-plane's extraction (built T12, K93; held by K412, re-applied T13 by N333); `Store` here is the Durable Object class, legacy-store's
-   wrapped, so the frame is this module's and the routes stay where they are. */
-import { Store as LegacyStore } from "../store.mjs";
-import { membershipOf } from "../membership/index.mjs";
-import { instanceSetupOf, instanceSetupOps } from "../setup.mjs";
+   body)`, the union `plane` composes, its R5), the existence answer of a read naming a discoverable project (R27), the
+   `{ok: true, result}` envelope, and the one catch (R25). Moved from legacy-store's `Store.fetch` at control-plane's
+   extraction (built T12, K93; re-applied T13 by N333). The Durable Object class whose `fetch` this is is `plane`'s (its
+   R1, was this module's R35, moved at T19), which also spreads `controlPlaneRoutes` below into its map. */
+import { credentialsOf } from "../credentials/index.mjs";
 import { captureOf } from "../capture/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { sourcesOf, sourcesOps } from "../sources/index.mjs";
+import { queueOf, queueOps } from "../queue/index.mjs";
+import { tasksOf, tasksOps } from "../tasks/index.mjs";
+import { affordancesOf, affordancesOps } from "../affordances.mjs";
 import { DISPATCH_CHECKS } from "./checks.mjs";
 import { pullAndFile } from "./pull.mjs";
 
@@ -44,7 +45,7 @@ export const PROJECT_NAMING_READS = Object.freeze({
   capturerequests: ["target"], tasks: ["refers"], biasmanifest: ["scopeId"], airuns: ["contextId"],
   casedrafts: ["project"], gatefacts: ["id"], affordancefacts: ["target"],
   projectownerarith: ["projectId"], projectvisibility: ["projectId"], projectparticipants: ["projectId"],
-  /* c22-batch29 (REC-196 x REC-150): REC-150's requests read names the project by its own id, so the door answers
+  /* REC-196 x REC-150: REC-150's requests read names the project by its own id, so the door answers
      C-70.1 at EXISTENCE before the route, as for every read above; without `projectId` it lists the caller's own. */
   projectrequests: ["projectId"],
   /* N193: a document's bundle id. N216's layer-9 reads naming a record object's bundle, or (`determinations`) a project. */
@@ -74,7 +75,7 @@ export const PROJECT_NAMING_READS_NOT = Object.freeze({
   airun: "`run` is a RUN id — a thing inside a project, whose existence is contents",
   airunlog: "`run` is a RUN id — a thing inside a project, whose existence is contents",
   airunspawn: "`run` is a RUN id — a thing inside a project, whose existence is contents",
-  /* c22-batch29: `biasdebt` (REC-207, on main) reached REC-196's sweep only at this union. */
+  /* `biasdebt` (REC-207) reached REC-196's sweep only when the two met. */
   biasdebt: "`run` is a RUN id — a thing inside a project, whose existence is contents",
   reviewcopy: "`draft` is a DRAFT id — a thing inside a project, whose existence is contents",
   casedocument: "`case` is a CASE id, answered by the case door's own fence",
@@ -183,32 +184,11 @@ export async function dispatch(req, store) {
   }
 }
 
-/* K93: the Durable Object class is this module's. Legacy-store's class keeps its construction and its routes; its
-   `fetch` is this module's `dispatch`. The two tables are carried as statics too, where their readers find them.
-   R35 (N348): this module is the composition root. At construction it starts `instance-setup` once per object (its
-   `start` is idempotent on one storage, so a second construction, or a wrapper that also starts it, starts nothing),
-   and instance-setup's routes join the one route map beside legacy-store's, so they pass R26's body read and envelope,
-   R27's existence read and R25's catch like every other route. */
-export class Store extends LegacyStore {
-  static PROJECT_NAMING_READS = PROJECT_NAMING_READS;
-  static PROJECT_NAMING_READS_NOT = PROJECT_NAMING_READS_NOT;
-  constructor(ctx, env) {
-    super(ctx, env);
-    ctx.blockConcurrencyWhile(async () => instanceSetupOf(ctx, env).start());
-  }
-  async fetch(req) {
-    return dispatch(req, {
-      routes: (url, body) => ({ ...this.routes(url, body), ...instanceSetupOps(instanceSetupOf(this.ctx, this.env), url, body),
-                                ...controlPlaneRoutes(this.ctx, url, body) }),
-      membership: () => membershipOf(this.ctx),
-    });
-  }
-}
-
-/* N364: the routes this composition root adds to the one map, each passing R26's frame: `sources`' own map (N379, K566:
-   its acts, its reads and the no-account `knockerconsent`, which no other module dispatches), membership's two own-key
-   acts, which membership keeps out of its map (`by` spread, then overridden, as `signeradd`), and R36's pull, a route of
-   its own beside capture's `inboxpull`, which the Worker's `op=inboxpull` addresses. */
+/* N364, N13: the routes this module adds to plane's one map (plane R5), each passing R26's frame: queue's, tasks' and
+   affordances' maps; `sources`' own map (N379, K566: its acts, its reads and the no-account `knockerconsent`, which no
+   other module dispatches); the two own-key acts, credentials' since layer 2 (K757, K784), which credentials keeps out of
+   its map (`by` spread, then overridden, as `signeradd`); and R36's pull, a route of its own beside capture's `inboxpull`, which the Worker's
+   `op=inboxpull` addresses. */
 export function controlPlaneRoutes(ctx, url, body) {
   const q = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" && !Array.isArray(body) ? body : {};
@@ -216,21 +196,21 @@ export function controlPlaneRoutes(ctx, url, body) {
      route builds it. */
   const sourceRoutes = Object.fromEntries(Object.keys(sourcesOps(null, url, body))
     .map((op) => [op, () => sourcesOps(sourcesOf(ctx), url, body)[op]()]));
+  /* N13: queue's, tasks' and affordances' own maps (the `membershipOps` pattern), dispatched here and no longer by
+     legacy-store, made
+     the same way: an instance is reached only when one of its routes runs. */
+  const lazily = (ops, of) => Object.fromEntries(Object.keys(ops(null, url, body)).map((op) => [op, () => ops(of(ctx), url, body)[op]()]));
   return {
+    ...lazily(queueOps, queueOf),
+    ...lazily(tasksOps, tasksOf),
+    /* N13 (K723 A): affordances' facts route (its R13–R16), the facts `op=affordances` derives an object's acts from. */
+    ...lazily(affordancesOps, affordancesOf),
     ...sourceRoutes,
-    signerregister: () => membershipOf(ctx).signerRegisterOwn({ ...b, by: q("by") }),
-    signerrevoke: () => membershipOf(ctx).signerRevokeOwn({ ...b, by: q("by") }),
+    signerregister: () => credentialsOf(ctx).signerRegisterOwn({ ...b, by: q("by") }),
+    signerrevoke: () => credentialsOf(ctx).signerRevokeOwn({ ...b, by: q("by") }),
     inboxpullfile: () => pullAndFile({ capture: captureOf(ctx), promotion: promotionOf(ctx), record: recordOf(ctx),
                                        provenance: provenanceOf(ctx) },
                                      { knockId: (typeof b.knockId === "string" && b.knockId) || q("id"),
                                        by: q("by"), identity: q("identity"), viewer: q("viewer") }),
   };
 }
-
-/* legacy-store's own default export, carried with the class: a bare forwarder to `bio`, so a harness that runs the record
-   store alone as a Worker names this file where it named `store.mjs`. The instance's Worker is legacy-index's. */
-export default {
-  fetch(req, env) {
-    return env.STORE.get(env.STORE.idFromName("bio")).fetch(req);
-  },
-};

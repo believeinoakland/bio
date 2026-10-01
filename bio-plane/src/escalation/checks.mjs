@@ -6,7 +6,9 @@
  * `NO_SUCH_ACTION` is actions' own (its R43 `noSuchAction`, C-117.2; N217), so C-116.11 is retired and not reused;
  * `NO_SUCH_DETERMINATION` and `DETERMINATION_SUPERSEDED` are conformance's own (its R19 `noSuchDetermination`, R20
  * `determinationSuperseded`; N309, N312, K380), so C-116.3 and C-116.4 are retired and not reused. C-116.6 and C-116.30
- * carry their module's names, `ESCALATION_NOT_A_PARTICIPANT` and `EDGE_NOT_PROPOSED` (K380). */
+ * carry their module's names, `ESCALATION_NOT_A_PARTICIPANT` and `EDGE_NOT_PROPOSED` (K380). C-116.24 is
+ * `ESCALATION_NO_REASON` (R24; N433, K766), its row and translation unchanged, so the module never answers
+ * `progressions`' `NO_REASON` (C-100.18) and no code is held with two rows (DEC-49). */
 
 const at = (fn, region) => `src/escalation/index.mjs ${fn} > ${region}`;
 
@@ -55,6 +57,11 @@ export const ESCALATION_CHECKS = Object.freeze({
     check: 'C-116.12', where: at("escalationAttach", "is-breach-action"),
     translation: 'An escalation\'s acts are actions recorded for the breach: the action states that it is one and rests '
       + 'on the escalation\'s determination. Record it so, then attach it. Nothing was written.',
+  },
+  ACTION_PREMISE_OVERRIDDEN: {
+    check: 'C-116.45', where: at("escalationAttach", "is-premise-established"),
+    translation: 'That action was recorded with its premise overridden: it does not rest on a determined breach. An '
+      + 'escalation pursues a determined breach only, so the action cannot be attached to one. Nothing was written.',
   },
   STAGE_TAKES_NO_ACTION: {
     check: 'C-116.13', where: at("escalationAttach", "is-attaching-stage"),
@@ -111,7 +118,7 @@ export const ESCALATION_CHECKS = Object.freeze({
     check: 'C-116.23', where: at("escalationEvaluate", "is-none-unnamed"),
     translation: 'A reading of none says nothing came back in time, so it names no reply. Nothing was written.',
   },
-  NO_REASON: {
+  ESCALATION_NO_REASON: {
     check: 'C-116.24', where: at("refuseReason", "is-reason-given"),
     translation: 'This act needs a reason, in your own words, of up to 2,000 characters. Nothing was written.',
   },

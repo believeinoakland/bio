@@ -1,13 +1,14 @@
 /* provenance: the C-18 register arms (R42–R46): each keeps its catalogue id and severity, refuses at the write through
    the module's registered check, and still runs at the gate (`withRegisterChecks`) and in the audit (its registered
-   audit check, record-core R59; N92). C-18.6 (R45) hashes stored bytes and stays in the catalogue, run by the gate (K72 (4)). */
+   audit check, record-core R59; N92). C-18.6 (R45) hashes stored bytes at the gate (K72 (4)): since T19 promotion's
+   information@2 grammar, registered with record-core into record-grammar's checkBundle (promotion R55, K781). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, provDoc, infoMd } from "./fixture.mjs";
 import * as provenance from "../../../src/provenance/index.mjs";
 import { registerChecks, withRegisterChecks } from "../../../src/provenance/index.mjs";
-import { PROVENANCE_ACT_CHECKS } from "../../../checks/bio-checks.mjs";
-import { checkBundle, parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { PROVENANCE_ACT_CHECKS } from "../../../src/provenance/checks.mjs";
+import { checkBundle, parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 const run = (docs, { md = infoMd("INFO-2026-0001-x"), files = {}, reg = null } = {}) => registerChecks({
   files: new Map([["bundle.md", md], ["data/provenance.json", reg ?? JSON.stringify({ documents: docs })], ...Object.entries(files)]),
@@ -105,9 +106,15 @@ test("R44: C-18.4, a crucial document with neither co-archive nor timestamp is f
 test("R45: C-18.6, every registered capture's stored bytes hash to the recorded digest, at the gate", async () => {
   const md = infoMd("INFO-2026-0001-x").replace("schema: information@1", "schema: information@2");
   const hash = async (v) => sha(typeof v === "string" ? v : Buffer.from(v));
-  const gate = async (docs, files) => (await checkBundle({ folderName: "INFO-2026-0001-x", sha256: hash,
-    files: new Map([["bundle.md", md], ["data/provenance.json", JSON.stringify({ documents: docs })], ...Object.entries(files)]) }))
-    .findings.filter((x) => x.check === "C-18.6");
+  /* The gate runs record-grammar's checkBundle with the grammars the record holds (promotion R27); C-18.6 is
+     promotion's, registered with record-core once per record when promotion is built (its R55, K781). */
+  const w = world();
+  const grammars = w.record.grammars();
+  assert.deepEqual(grammars.filter((g) => g.ids.includes("C-18.6")).map((g) => [g.module, [...g.ids].sort()]),
+                   [["promotion", ["C-18.6", "C-18.7"]]], "C-18.6 is registered, by promotion, with C-18.7");
+  const run = (docs, files, opts) => checkBundle({ folderName: "INFO-2026-0001-x", sha256: hash,
+    files: new Map([["bundle.md", md], ["data/provenance.json", JSON.stringify({ documents: docs })], ...Object.entries(files)]) }, opts);
+  const gate = async (docs, files) => (await run(docs, files, { grammars })).findings.filter((x) => x.check === "C-18.6");
   const doc = { ...good, capture: { ...good.capture, sha256: sha(cap.text), encoding: "utf8" } };
   assert.deepEqual(await gate([doc], { [cap.path]: cap.text }), []);
   const moved = await gate([doc], { [cap.path]: "mutated bytes" });
@@ -123,6 +130,8 @@ test("R45: C-18.6, every registered capture's stored bytes hash to the recorded 
   assert.deepEqual(await gate([b64], { [cap.path]: Buffer.from(cap.text).toString("base64") }), []);
   const undecodable = await gate([b64], { [cap.path]: "***not base64***" });
   assert.match(undecodable[0].message, /could not be decoded/);
+  /* The slot is filled by the registration alone: with no grammar, nothing hashes the bytes. */
+  assert.deepEqual((await run([doc], { [cap.path]: "mutated bytes" }, {})).findings.filter((x) => x.check === "C-18.6"), []);
 });
 
 test("R46: C-18.9, at or past verified every document records a chain whose hops name their attestors, and its authority", () => {

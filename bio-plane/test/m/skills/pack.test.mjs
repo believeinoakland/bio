@@ -7,11 +7,11 @@ import { renderPack, machineFences, memberOnlyActs, packVersion, SKILL_PACK_ID, 
          ABSENCE_ANSWER_SHAPE } from "../../../src/skillpack.mjs";
 import { judgementLayers } from "../../../src/skilldoctrine.mjs";
 import { OBSERVATION_LEVELS, OBSERVATION_STATES } from "../../../src/observation-log/index.mjs";
-import { RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "../../../src/airun.mjs";
+import { RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "../../../src/run-rules/index.mjs";
 import { RECOMMEND_PROMPT, RECOMMEND_PROMPT_SHA256 } from "../../../src/contradiction.mjs";
 import { controlFlowAuthority } from "../../../src/skilldoctrine.mjs";
 import { createHash } from "node:crypto";
-import { ROOT, catalogue, published } from "./fixture.mjs";
+import { ROOT, owners, published } from "./fixture.mjs";
 
 const SOURCINGS = new Set(["authored", "imported", "driven", "absent"]);
 const JUDGEMENT_KEYS = ["composition", "description", "search", "absence", "prohibitions",
@@ -33,7 +33,7 @@ const MADE_CATALOGUE = {
   C_CHECKS: null,
 };
 
-test("R1 renderPack throws naming the missing source, and renders nothing, for each empty source", () => {
+test("R1 renderPack throws naming the missing source, and renders nothing, for each empty source, published.fences among them", () => {
   const cases = [
     [{ vocabularies: undefined }, /no vocabularies/],
     [{ vocabularies: {} }, /no vocabularies/],
@@ -42,12 +42,14 @@ test("R1 renderPack throws naming the missing source, and renders nothing, for e
     [{ catalog: [] }, /no acts/],
     [{ catalog: [{ id: "only-machine", mode: "machine" }, { id: "no-mode" }] }, /catalogue published none/],
   ];
-  for (const [over, re] of cases) assert.throws(() => renderPack(published(over), catalogue), re);
-  assert.throws(() => renderPack(null, catalogue), /no vocabularies/);
-  assert.throws(() => renderPack(published(), {}), /no fence row was harvested/);
-  assert.throws(() => renderPack(published(), { X_CHECKS: { OTHER: { translation: "t" } } }),
-    /no fence row was harvested/);
-  assert.ok(renderPack(published(), catalogue).version, "the full sources render");
+  for (const [over, re] of cases) assert.throws(() => renderPack(published(over)), re);
+  assert.throws(() => renderPack(null), /no vocabularies/);
+  for (const fences of [undefined, null, [], "x", { MACHINE_CANNOT_X: { translation: "t" } }])
+    assert.throws(() => renderPack(published({ fences })), /op=affordances published no fences/, JSON.stringify(fences));
+  /* The catalogue is no input: a second argument, empty or full, changes nothing (§1a, K585 (1)). */
+  assert.throws(() => renderPack(published({ fences: [] }), owners), /published no fences/);
+  assert.equal(renderPack(published(), {}).version, renderPack(published()).version);
+  assert.ok(renderPack(published()).version, "the full sources render");
 });
 
 test("R1 the imported levels or absence states empty: renderPack throws and renders nothing", () => {
@@ -59,9 +61,9 @@ test("R1 the imported levels or absence states empty: renderPack throws and rend
     mock.module(${JSON.stringify("file://" + join(ROOT, "bio-plane/src/observation-log/index.mjs"))}, {
       namedExports: { ...real, ${which}: {} } });
     const { renderPack } = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/src/skillpack.mjs"))});
-    const cat = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/checks/bio-checks.mjs"))});
-    const pub = { vocabularies: { v: ["x"] }, catalog: [{ id: "a", mode: "session" }] };
-    try { renderPack(pub, cat); console.log("RENDERED"); } catch (e) { console.log("THREW " + e.message); }`;
+    const { published } = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/test/m/skills/fixture.mjs"))});
+    const pub = published({ vocabularies: { v: ["x"] }, catalog: [{ id: "a", mode: "session" }] });
+    try { renderPack(pub); console.log("RENDERED"); } catch (e) { console.log("THREW " + e.message); }`;
   for (const which of ["OBSERVATION_LEVELS", "OBSERVATION_STATES"]) {
     const out = execFileSync(process.execPath, ["--experimental-test-module-mocks", "--no-warnings",
       "--input-type=module", "-e", script(which)], { encoding: "utf8" });
@@ -79,9 +81,9 @@ function renderWithContradiction(over) {
     const real = { ...(await import(${JSON.stringify(file + "?real")})) };
     mock.module(${JSON.stringify("file://" + file)}, { namedExports: { ...real, ...${JSON.stringify(over)} } });
     const { renderPack } = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/src/skillpack.mjs"))});
-    const cat = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/checks/bio-checks.mjs"))});
-    const pub = { vocabularies: { v: ["x"] }, catalog: [{ id: "a", mode: "session" }] };
-    try { const p = renderPack(pub, cat); console.log("RENDERED " + JSON.stringify({ layer: p.disclosed.contradiction, version: p.version })); }
+    const { published } = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/test/m/skills/fixture.mjs"))});
+    const pub = published({ vocabularies: { v: ["x"] }, catalog: [{ id: "a", mode: "session" }] });
+    try { const p = renderPack(pub); console.log("RENDERED " + JSON.stringify({ layer: p.disclosed.contradiction, version: p.version })); }
     catch (e) { console.log("THREW " + e.message); }`;
   const out = execFileSync(process.execPath, ["--experimental-test-module-mocks", "--no-warnings",
     "--input-type=module", "-e", script], { encoding: "utf8" });
@@ -114,7 +116,7 @@ test("R1 R27 contradiction's recommender prompt absent or blank, or not the prom
 });
 
 test("R2 resident holds exactly objective, boundary, four_level, absence, disclosable, each with its source and sourcing", () => {
-  const { resident } = renderPack(published(), catalogue);
+  const { resident } = renderPack(published());
   assert.deepEqual(Object.keys(resident).sort(), ["absence", "boundary", "disclosable", "four_level", "objective"]);
   assert.deepEqual(resident.objective, { text: OBJECTIVE, source: AUTHORED_SOURCES.OBJECTIVE, sourcing: "authored" });
   assert.equal(resident.boundary.rule, BOUNDARY);
@@ -136,39 +138,43 @@ test("R2 resident holds exactly objective, boundary, four_level, absence, disclo
     assert.ok(resident[k].source, `${k} carries its source`);
 });
 
-test("R3 boundary.fences is machineFences(catalogue), member_only_acts is memberOnlyActs(catalog), and fences_note states the subset", () => {
+test("R3 boundary.fences is published.fences unchanged, member_only_acts is memberOnlyActs(catalog), and fences_note states the subset", () => {
   const pub = published();
-  const { resident: { boundary } } = renderPack(pub, catalogue);
-  assert.deepEqual(boundary.fences, machineFences(catalogue));
+  const { resident: { boundary } } = renderPack(pub);
+  assert.equal(boundary.fences, pub.fences, "the published fences, unchanged");
+  assert.deepEqual(boundary.fences, machineFences(owners));
   assert.ok(boundary.fences.length > 0);
+  /* Whatever the plane publishes is what is carried: a fence from a module's own family arrives as published. */
+  const moved = [...pub.fences, { code: "MACHINE_CANNOT_MOVED", family: "MODULE_CHECKS", check: "C-9.9", says: "moved words" }];
+  assert.equal(renderPack(published({ fences: moved })).resident.boundary.fences, moved);
   assert.deepEqual(boundary.member_only_acts, memberOnlyActs(pub.catalog));
-  assert.equal(boundary.fences_sourcing, "imported");
+  assert.equal(boundary.fences_sourcing, "driven");
   assert.equal(boundary.member_only_sourcing, "driven");
   assert.match(boundary.fences_note, /canned translation/);
   assert.match(boundary.fences_note, /paraphrases none/);
   for (const f of boundary.fences)
-    assert.equal(f.says, catalogue[f.family][f.code].translation, `${f.code} is the translation verbatim`);
+    assert.equal(f.says, owners[f.family][f.code].translation, `${f.code} is the owner's translation verbatim`);
 });
 
 test("R4 disclosable lists every disclosed key with its load_when, and nothing of any body", () => {
-  const { resident, disclosed } = renderPack(published(), catalogue);
+  const { resident, disclosed } = renderPack(published());
   assert.deepEqual(resident.disclosable,
     Object.keys(disclosed).map((k) => ({ layer: k, load_when: disclosed[k].load_when })));
   for (const d of resident.disclosable) assert.deepEqual(Object.keys(d).sort(), ["layer", "load_when"]);
 });
 
-test("R5 disclosed holds the judgement layers, then vocabularies, acts, bounds, refusals, recipes, each with load_when and sourcing", () => {
+test("R5 disclosed holds the judgement layers, then vocabularies, acts, bounds, refusals, contradiction, action_planning, recipes, each with load_when and sourcing", () => {
   const pub = published();
-  const { disclosed } = renderPack(pub, catalogue);
+  const { disclosed } = renderPack(pub);
   assert.deepEqual(Object.keys(disclosed),
-    [...JUDGEMENT_KEYS, "vocabularies", "acts", "bounds", "refusals", "contradiction", "recipes"]);
+    [...JUDGEMENT_KEYS, "vocabularies", "acts", "bounds", "refusals", "contradiction", "action_planning", "recipes"]);
   assert.deepEqual(JUDGEMENT_KEYS.map((k) => disclosed[k]), JUDGEMENT_KEYS.map((k) => judgementLayers()[k]));
   assert.equal(disclosed.vocabularies.body, pub.vocabularies, "the published vocabularies, unchanged");
   assert.equal(disclosed.vocabularies.sourcing, "driven");
   assert.deepEqual(disclosed.acts.body, { catalog: pub.catalog, capture_acts: pub.capture_acts });
   assert.equal(disclosed.acts.body.catalog, pub.catalog);
   for (const notList of [undefined, null, "x", { a: 1 }]) {
-    const r = renderPack(published({ capture_acts: notList }), catalogue);
+    const r = renderPack(published({ capture_acts: notList }));
     assert.deepEqual(r.disclosed.acts.body.capture_acts, [], `capture_acts ${JSON.stringify(notList)} is []`);
   }
   assert.deepEqual(disclosed.bounds.body, { bounds: RUN_BOUNDS, endings: RUN_ENDINGS });
@@ -194,7 +200,7 @@ test("R27 measured, the contradiction layer carries contradiction's RECOMMEND_PR
   assert.equal(sha256(measured.body.recommend_prompt), measured.body.recommend_prompt_sha256,
     "the carried words are the ones measured under the digest");
   /* Unmeasured, as contradiction holds it today (RECOMMEND_PROMPT_SHA256 null): the absence stated, R9's form. */
-  const { disclosed, resident } = renderPack(published(), catalogue);
+  const { disclosed, resident } = renderPack(published());
   const layer = disclosed.contradiction;
   if (RECOMMEND_PROMPT_SHA256 === null) {
     assert.deepEqual(Object.keys(layer).sort(), ["absent_because", "body", "load_when", "sourcing"]);
@@ -217,7 +223,7 @@ test("R27 measured, the contradiction layer carries contradiction's RECOMMEND_PR
 });
 
 test("R6 version is packVersion(pack), id is investigative-session, edition the authored edition", () => {
-  const pack = renderPack(published(), catalogue);
+  const pack = renderPack(published());
   assert.equal(pack.version, packVersion(pack));
   assert.equal(pack.id, "investigative-session");
   assert.equal(pack.id, SKILL_PACK_ID);
@@ -234,17 +240,16 @@ test("R7 machineFences: every MACHINE_CANNOT_ row with a translation of every _C
     { code: "MACHINE_CANNOT_ZED", family: "Z_CHECKS", check: "C-9.2", says: "zed words" },
   ]);
   for (const odd of [undefined, null, 3, "x", [], {}]) assert.deepEqual(machineFences(odd), []);
-  /* Over the real catalogue, against an independent walk of it. */
+  /* Over the owners' families, against an independent walk of them (the whole catalogue's walk is dropped: each
+     fence's row is tested by its holder, K787). */
   const expected = [];
-  for (const [family, rows] of Object.entries(catalogue)) {
-    if (!family.endsWith("_CHECKS") || !rows || typeof rows !== "object") continue;
+  for (const [family, rows] of Object.entries(owners))
     for (const [code, row] of Object.entries(rows))
       if (code.startsWith("MACHINE_CANNOT_") && row && typeof row.translation === "string" && row.translation)
         expected.push({ code, family, check: row.check ?? null, says: row.translation });
-  }
   expected.sort((a, b) => (a.code < b.code ? -1 : 1));
   assert.ok(expected.length > 0);
-  assert.deepEqual(machineFences(catalogue), expected);
+  assert.deepEqual(machineFences(owners), expected);
 });
 
 test("R8 memberOnlyActs: every act whose mode is a string other than machine, sorted by id, label and prompt null when absent; a non-list gives []", () => {
@@ -258,7 +263,7 @@ test("R8 memberOnlyActs: every act whose mode is a string other than machine, so
 
 test("R9 with no recipes published, recipes loads never, is absent, has an empty body and states why", () => {
   for (const recipes of [undefined, null, "x", { a: 1 }]) {
-    const { disclosed: { recipes: layer } } = renderPack(published({ recipes }), catalogue);
+    const { disclosed: { recipes: layer } } = renderPack(published({ recipes }));
     assert.equal(layer.load_when, "never, in this edition");
     assert.equal(layer.sourcing, "absent");
     assert.deepEqual(layer.body, []);
@@ -270,7 +275,7 @@ test("R9 with no recipes published, recipes loads never, is absent, has an empty
 test("R10 published recipes are carried as data, each step a published surface and act; a step naming anything else fails the render", () => {
   const surfaces = [{ id: "s-home" }, { id: "s-queue" }];
   const recipes = [{ id: "r1", steps: [{ surface: "s-home", act: "act-b" }, { surface: "s-queue", act: "act-m" }] }];
-  const { disclosed: { recipes: layer } } = renderPack(published({ surfaces, recipes }), catalogue);
+  const { disclosed: { recipes: layer } } = renderPack(published({ surfaces, recipes }));
   assert.equal(layer.body, recipes, "the published recipes, unchanged");
   assert.equal(layer.sourcing, "driven");
   assert.ok(layer.load_when.trim() && layer.load_when !== "never, in this edition");
@@ -282,13 +287,13 @@ test("R10 published recipes are carried as data, each step a published surface a
       /recipe r5 step 2 names the act "act-gone"/],
     [[{ id: "r6", steps: [{ act: "act-b" }] }], /recipe r6 step 1 names the surface undefined/],
   ];
-  for (const [rs, re] of bad) assert.throws(() => renderPack(published({ surfaces, recipes: rs }), catalogue), re);
-  assert.throws(() => renderPack(published({ recipes }), catalogue), /names the surface "s-home"/,
+  for (const [rs, re] of bad) assert.throws(() => renderPack(published({ surfaces, recipes: rs })), re);
+  assert.throws(() => renderPack(published({ recipes })), /names the surface "s-home"/,
     "no published surfaces: every surface is unknown");
 });
 
 test("R11 packVersion is investigative-session@<edition>+<16 hex>, over the pack without its version, in canonical form; any rendered word moves it", () => {
-  const pack = renderPack(published(), catalogue);
+  const pack = renderPack(published());
   const re = new RegExp(`^investigative-session@${DOCTRINE_EDITION}\\+[0-9a-f]{16}$`);
   assert.match(pack.version, re);
   assert.equal(packVersion({ ...pack, version: "anything" }), pack.version, "the version field is excluded");
@@ -296,7 +301,7 @@ test("R11 packVersion is investigative-session@<edition>+<16 hex>, over the pack
   const reordered = Object.fromEntries(Object.entries(rest).reverse());
   reordered.resident = Object.fromEntries(Object.entries(rest.resident).reverse());
   assert.equal(packVersion(reordered), pack.version, "key order at any depth does not move it");
-  assert.equal(renderPack(published(), catalogue).version, pack.version, "the same pack gives the same string");
+  assert.equal(renderPack(published()).version, pack.version, "the same pack gives the same string");
   const moved = [
     published({ vocabularies: { colours: ["red", "greén"], shapes: { round: "a circle" } } }),
     published({ vocabularies: { colours: ["red", "green"], shapes: { round: "a circle." } } }),
@@ -305,7 +310,7 @@ test("R11 packVersion is investigative-session@<edition>+<16 hex>, over the pack
   ];
   const seen = new Set([pack.version]);
   for (const p of moved) {
-    const v = renderPack(p, catalogue).version;
+    const v = renderPack(p).version;
     assert.match(v, re);
     assert.ok(!seen.has(v), `a changed word gives a different digest: ${v}`);
     seen.add(v);
@@ -321,17 +326,17 @@ test("R22 pure: no clock, randomness, network or storage is touched, and the sam
   try {
     Date.now = trap("Date.now"); Math.random = trap("Math.random"); globalThis.fetch = trap("fetch");
     globalThis.Date = new Proxy(saved.Date, { construct: trap("new Date"), apply: trap("Date()") });
-    a = JSON.stringify(renderPack(published(), catalogue));
-    b = JSON.stringify(renderPack(published(), catalogue));
+    a = JSON.stringify(renderPack(published()));
+    b = JSON.stringify(renderPack(published()));
   } finally {
     Date.now = saved.now; Math.random = saved.random; globalThis.fetch = saved.fetch; globalThis.Date = saved.Date;
   }
   assert.equal(a, b);
-  assert.equal(JSON.stringify(renderPack(published(), catalogue)), a);
+  assert.equal(JSON.stringify(renderPack(published())), a);
 });
 
 test("R26 no place is named in the rendered pack", () => {
-  const text = JSON.stringify(renderPack(published(), catalogue));
+  const text = JSON.stringify(renderPack(published()));
   for (const place of ["Oakland", "Alameda", "California", "Berkeley", "San Francisco"])
     assert.ok(!text.includes(place), `the pack names ${place}`);
 });

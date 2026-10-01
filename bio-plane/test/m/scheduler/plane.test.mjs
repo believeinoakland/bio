@@ -56,6 +56,91 @@ test("R9: a selection created on an idle instance leaves the alarm armed at the 
   assert.ok(at >= t0 + 330_000 - 5 && at <= Date.now() + 330_000, "at now + the selection lifetime + 30 s (retrieval R51)");
 });
 
+/* An information bundle carrying one captured document whose reading names an ordinance, in the register's shape
+   op=acquire writes (C-18.1), so op=resolve has a reference to resolve. */
+async function promoteReading(id, captureSha, ref) {
+  const C = "2026-09-01T00:00:00Z", loc = `https://fixture.invalid/${id}.bin`, file = `snapshots/${id}.bin`;
+  const md = ["---", `id: ${id}`, "object_type: information", "schema: information@1", `title: "Reading ${id}"`,
+    "current_state: collected", "prior_state: null", `created: ${C}`, `last_updated: ${C}`, "produced_by:",
+    "  mode: assisted", "  capability_tier: session", "group: a-group", "references: []", "state_history: []",
+    "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
+    "criticality: supporting", "source_status: unchanged", "source:", "  locator: in hand", "  authority: synthetic",
+    `  retrieved: ${C}`, "monitoring:", "  enabled: false", "  frequency: none", "---", "", "## Summary", "", "A reading.",
+    "", "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+  const doc = { file, locator: loc, retrieved: C, authority_state: "undetermined",
+    authority_basis: `a test fixture: no authority was asserted and none is determined; recorded ${C}`,
+    origin: { kind: "named_request" },
+    capture: { method: "bio-plane acquire, https fetch, hashed at receipt", grade: "B", actor_class: "session",
+               sha256: captureSha, encoding: "binary", bytes: 10 },
+    reading: { content_type: "meeting_calendar", reader_version: 1, found: true, at: C,
+               entities: [{ ref, kind: "ordinance", key: ref.split(":")[1], label: `Ordinance ${ref}` }] } };
+  const prov = JSON.stringify({ documents: [doc] });
+  return await POST("op=promote&token=mem-sch", { bundleId: id, base: null, snapKey: `${id}-s`, author: "sch", register: [],
+    meta: { object_type: "information", group: "a-group", title: `Reading ${id}`, current_state: "collected", created: C, last_updated: C },
+    files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+            { path: file, blobSha: captureSha, sha256: captureSha, bytes: 10 }] });
+}
+
+test("R9: a resolution that marks an entity leaves the alarm armed at the connection sweep's wake (entities R13, connections R18)", async () => {
+  const obj = await store();
+  const ent = await POST("op=entitycreate&token=mem-sch", { kind: "ordinance", label: "A Rent Ordinance", aliases: ["ordinance:24680"] });
+  assert.equal(ent.ok, true, JSON.stringify(ent));
+  const capA = sha("sched-resolve-A"), capB = sha("sched-resolve-B");
+  for (const [id, c] of [["INFO-2026-0001-sch", capA], ["INFO-2026-0002-sch", capB]]) {
+    const pr = await promoteReading(id, c, "ordinance:24680");
+    assert.equal(pr.ok, true, JSON.stringify(pr).slice(0, 300));
+  }
+  await obj.onAlarm(Date.now());
+  const before = await obj.schedAlarmAt();
+  const t0 = Date.now();
+  for (const c of [capA, capB]) {
+    const r = await POST("op=resolve&token=mem-sch", { captureSha: c });
+    assert.equal(r.resolved?.[0]?.entity_id, ent.entity_id, JSON.stringify(r).slice(0, 300));
+  }
+  const at = await obj.schedAlarmAt();
+  assert.ok(at !== null && (before === null || at <= before), `armed: ${at} (was ${before})`);
+  assert.ok(at >= t0 + 60_000 - 5 && at <= Date.now() + 60_000, "at now + the sweep's delay (connections R18's 60 s)");
+  const fired = await obj.onAlarm(at);
+  assert.deepEqual([fired.connderive?.entities, fired.connderive?.remaining], [1, 0], "the sweep derives the marked entity");
+});
+
+test("R5, R9: a promotion that leaves an action holding a past-dated pending clock entry arms the deadline re-check, and the real alarm marks it overdue (monitoring R34, R50)", async () => {
+  const obj = await store();
+  const DAY = 86_400_000;
+  /* yesterday, UTC: R50's wake is the start of today, already passed, so the arm sets the real alarm and workerd fires
+     it; the plane's own clock judges the mark (actions R33), so the date must truly have passed */
+  const date = new Date(Math.floor(Date.now() / DAY) * DAY - DAY).toISOString().slice(0, 10);
+  const ACT = "ACTN-2026-0900-sched";
+  const C = "2026-09-01T00:00:00Z";
+  const md = ["---", `id: ${ACT}`, "object_type: action", `title: ${ACT}`, "current_state: planned", `created: "${C}"`,
+    `last_updated: "${C}"`, "action_kind: records_request", "risk_tier: 1", "counterparty:", "  state: named",
+    "  role: Town Clerk", "  body: Town of Port Ellery", "clock:", "  - text: reply", "    description: reply window",
+    `    date: ${date}`, "    basis: statute", "    status: pending", "---", "", "An action.", ""].join("\n");
+  /* a risk tier is set only by a member's authored act (actions R40), so the action is promoted by an enrolled member */
+  const add = await POST("op=memberadd&token=adm-sch",
+    { memberId: "sam", cover: "cover for sam", role: "admin", capabilities: ["contribute", "publish"] });
+  assert.equal((await POST("op=enroll", { invite: add.invite, handle: "sam", password: "sam-passphrase-1" })).ok, true);
+  const SAM = (await POST("op=login", { role: "member:sam", password: "sam-passphrase-1" })).token;
+  const first = await obj.onAlarm(Date.now());
+  assert.equal("deadlinerecheck" in first, false, "nothing pending: it does not tick");
+  const pr = await POST(`op=promote&token=${SAM}`, { bundleId: ACT, base: null, snapKey: "20260920T000000Z_0900", author: "sch",
+    register: [], files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
+    meta: { object_type: "action", group: "a-group", title: ACT, current_state: "planned", created: C, last_updated: C } });
+  assert.equal(pr.ok, true, JSON.stringify(pr).slice(0, 300));
+  /* the real alarm fires and ticks the consumer: the entry leaves `pending`, so a later firing finds nothing due */
+  let r = null;
+  for (let i = 0; i < 100; i++) {
+    r = await GET(`op=image&token=${SAM}&id=${ACT}`);
+    const st = JSON.stringify(r);
+    if (/overdue/.test(st)) break;
+    await new Promise((ok) => setTimeout(ok, 50));
+  }
+  assert.match(JSON.stringify(r), /status: overdue/, JSON.stringify(r).slice(0, 400));
+  const after = await obj.onAlarm(Date.now());
+  assert.equal("deadlinerecheck" in after, false, "marked, it holds no wake (R15), so it is not due again");
+});
+
 test("R12: a run waiting on a request that reaches expired is woken on the alarm that expires it, exactly once", async () => {
   const obj = await store();
   const add = await POST("op=memberadd&token=adm-sch",

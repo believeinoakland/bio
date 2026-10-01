@@ -2,7 +2,7 @@
    (build/requirements/calibration.md). Each test names the requirement ids it checks in its title. No storage. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { BASIS_GRADES } from "../../../checks/bio-checks.mjs";
+import { BASIS_GRADES } from "../../../src/record-grammar/index.mjs";
 import { checkCalibration, checkSignal, compare, drifted, nextProbeDue, cadenceSentence, DRIFT, PROBE_REQUIRED,
          CALIBRATION_CADENCE_MS, CALIBRATION_CHECKS } from "../../../src/calibration/index.mjs";
 
@@ -25,6 +25,12 @@ test("R1 R14: checkCalibration accepts a whole measurement, and a null cap, and 
   assert.equal(checkCalibration(cal({ cap: undefined })), null, "an absent cap is undetermined");
   for (const g of BASIS_GRADES) assert.equal(checkCalibration(cal({ cap: g })), null, g);
   assert.equal(checkCalibration(cal({ probe_inputs: "corpus c1", scores: "cer 0.02" })), null, "stated as text");
+});
+
+test("R1: checkCalibration accepts fields it does not know, and inputs and scores given as JSON text", () => {
+  assert.equal(checkCalibration(cal({ dpi: 300, operator_note: "ran twice", nested: { a: [1] } })), null);
+  assert.equal(checkCalibration(cal({ probe_inputs: '{"corpus":"x"}', scores: '{"cer":0.01}' })), null);
+  assert.equal(checkCalibration({ ...cal(), calibration_id: undefined, replaced_by: "CAL-9", drift: "worse" }), null);
 });
 
 test("R1 R14: checkCalibration refuses CAL_SHAPE (C-42.1) for a non-object or a cap off the scale", () => {
@@ -100,6 +106,16 @@ test("R3: nextProbeDue is at once for a never-probed engine, else never later th
   assert.match(cadenceSentence(), /every 30 day/);
 });
 
+test("R3 R6: the cadence's sentence is composed from the constant it states", () => {
+  assert.equal(cadenceSentence(),
+    `one probe per calibratable engine every ${CALIBRATION_CADENCE_MS / DAY} day(s), on this instance's own account`);
+  assert.equal(cadenceSentence(CALIBRATION_CADENCE_MS), cadenceSentence());
+  assert.equal(cadenceSentence(7 * DAY), "one probe per calibratable engine every 7 day(s), on this instance's own account");
+  assert.equal(cadenceSentence(1.5 * DAY), "one probe per calibratable engine every 1.50 day(s), on this instance's own account");
+  assert.match(nextProbeDue({ lastAt: 0 }).why, new RegExp(cadenceSentence().replace(/[()]/g, "\\$&")));
+  assert.match(nextProbeDue({ lastAt: 0, cadenceMs: 7 * DAY }).why, /every 7 day\(s\)/);
+});
+
 test("R3: a signal can only bring the probe forward, never push it out", () => {
   const L = Date.UTC(2026, 8, 1), C = L + CALIBRATION_CADENCE_MS;
   assert.equal(nextProbeDue({ lastAt: L, signals: [{ probe_by: L + DAY }] }).at, L + DAY);
@@ -135,6 +151,8 @@ test("R14: the family's rows are C-42.1–C-42.10, one code one row, each with a
   for (const [k, v] of Object.entries(CALIBRATION_CHECKS)) {
     assert.ok(typeof v.translation === "string" && v.translation.length > 40, k);
     assert.ok(typeof v.where === "string" && v.where.length > 0, k);
+    assert.match(v.where, /^src\/calibration(\/index)?\.mjs [A-Za-z]+ > is-calibration-[a-z]+$/,
+                 `${k} names the smallest span, a region, never a whole file`);
   }
 });
 

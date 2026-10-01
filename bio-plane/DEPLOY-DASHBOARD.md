@@ -129,6 +129,6 @@ warm. Add a route in Workers, Domains & Routes, Add Custom Domain.
 
 ## What this path does not do
 
-The manual CLI path in `DEPLOY.md` and the API-token path in `SESSION-HANDOFF.md`
+The manual CLI path in `DEPLOY.md` and the API-token path in `docs/archive/bio-plane-SESSION-HANDOFF.md` (archived with the old process's documents)
 both remain valid. This one exists so that deploying costs no credential and no
 terminal.

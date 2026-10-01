@@ -71,7 +71,7 @@ Terms. A **dependent** is a bundle with a basis leg naming the target (`inquiry_
 
 ### Uses
 
-- `legacy-checks`: the C-10.1, C-80.1 and C-80.2 rows until they move (R23), `normalizeType`, `ISO_TS_RE`, `parseFrontmatter`.
+- `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K808, K823).
 - `record-core`: `recordOf(ctx)`, the `bundles` and `files` read contract, `transact` (R14–R16); `stampInstant` (its R47), which spells every whole-second stamp this module writes, none spelled by hand (N239, D-543).
 - `membership`: `bundleRedactor`, `viewerPredicate`; a project's owners and `listenerRefusal` (R81), for R26 (N210). *(not declared)*
 - `promotion`: `registerStep` (R22's check); the reopen registration (R7); `REOPENABLE_FROM` (R2); the fact `publishedRegistry` (R2's ratified edition, R17's frozen pair). *(not declared)*

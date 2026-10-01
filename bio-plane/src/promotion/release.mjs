@@ -8,7 +8,7 @@
  * windows), and the canonical release message (the catalogue's `releaseMessage`). */
 
 import { verifySshsig } from "../sshsig.mjs";
-import { canonicalJson, isMachineIdentity } from "../../checks/bio-checks.mjs";
+import { canonicalJson, isMachineIdentity } from "../record-grammar/index.mjs";
 
 /** The exact message a release signature covers (design 5.1), canonical JSON so signer and verifier agree byte for byte. */
 export function releaseMessage(fields) {

@@ -14,9 +14,10 @@
    re-read and silently got the old text back would believe the record had
    looked again when it had not.
 
-   DEC-49's shape, on DRIVE_CAPTURE_CHECKS' precedent above: the C-number, the
-   wire code and the CANNED TRANSLATION are one row, read at the site through a
-   helper that throws on a code with no sentence behind it.
+   DEC-49's shape, on DRIVE_CAPTURE_CHECKS' precedent (C-48, now `acquisition`'s,
+   `acquisition/checks.mjs`, with its reader `driveRow`): the C-number, the wire
+   code and the CANNED TRANSLATION are one row, read at the site through a helper
+   that throws on a code with no sentence behind it.
    =========================================================================== */
 export const REEXTRACT_CHECKS = {
   /* The flag is present and is not `1`. Refused rather than read as absent:

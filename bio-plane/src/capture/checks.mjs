@@ -2,8 +2,9 @@
  * carries its code, its row and the member's translation, so a surface shows the same sentence wherever the act is
  * reached.
  *
- * The rest of this module's rows are still in the check catalogue (C-48, C-83, C-85, C-28.13), until those checks move
- * here. The row below is new with R63 (N285, K275, K343): "no evidence object is held under a digest" is one condition,
+ * C-48.1–C-48.7, C-83 and C-28.13 went with the acquisition act to `acquisition` (its R29; K617, K649 (1)). C-85, the
+ * doorbell's five refusals, moved here from the catalogue in T18 (`KNOCK_CHECKS`, below; K585 (3), K649), the
+ * catalogue's copy deleted in the same job (✱, K586): no product module but this one reads it. The row below is new with R63 (N285, K275, K343): "no evidence object is held under a digest" is one condition,
  * minted at one site, `evidenceAbsent` (`src/capture/ops.mjs`), which this module's R21 get and extraction's R31 answer
  * through. The evidence store had no family in the catalogue, so it takes the next free family number, C-118
  * (K107 (3)'s rule: the job names a new code's row; K174: a module holds its new rows).
@@ -51,3 +52,81 @@ export const CAPTURE_CHECKS = Object.freeze({
                + 'empty. Write it. Nothing was written.',
   }),
 });
+
+/* C-85 — THE DOORBELL'S REFUSALS (D-508, D-513; R47–R52), moved from the check catalogue in T18 with their reasoning:
+
+   `op=knock` is the one door open to the public, the one refusal surface whose reader is guaranteed NOT to be a
+   member, so every refusal it makes carries a code, its row and a canned translation (DEC-49), never a bare store
+   reason. `stated` IS NOT A TRANSLATION and the two are kept apart: `stated` publishes the instance's own bound,
+   composed in `doorbell.mjs` from the limits it runs (R31, R47, R48), and must move when they move; the translation is
+   the knocker's answer (what happened, what it means for what they sent, what to do) and names no figure at all
+   (R52), because a figure here would be a second authority for the bound and the two could disagree.
+
+   One family for the door rather than the limiter: no other family's subject is the public door (C-28 is a member's
+   capture request, C-69 the router's "no op by that name", C-61 a shape rule at any door). THREE size-and-content
+   rows, not one widened sentence: a request body this door will not READ (the envelope, before anything is decoded)
+   and decoded material THIS INSTANCE cannot HOLD (a far smaller cap without evidence storage, with another remedy)
+   are two conditions, and empty content a third. Their keys are the door's own (`KNOCK_ENVELOPE_TOO_LARGE`,
+   `KNOCK_PAYLOAD_TOO_LARGE`, `KNOCK_EMPTY`), because the older tokens are minted elsewhere in the plane and a row under
+   either would have claimed those sites for this door's sentence.
+
+   Each `where` names the smallest span in which the refusal is enforced: the three helpers in `doorbell.mjs`, which
+   answer before the store is called, and the one region `is-knock-rate` in `Capture#knockRateRefusal`, whose two
+   adjacent lines are both rate refusals. The code is a string literal at its site (DEC-49's rule). The codes are READ
+   as well as minted, deliberately: `knockOp` compares the store's `reason` against the two rate codes to attach the
+   bound (a surface keying on a code the plane sent, not a second mint).
+
+   NOT FROZEN, unlike `CAPTURE_CHECKS`: R52 holds that a code whose row is missing or has no translation fails as an
+   internal error rather than reach a knocker bare, and its test removes a row to prove it. The helpers read the row
+   at the moment of the refusal, never a copy. */
+export const KNOCK_CHECKS = {
+  RATE_IP: {
+    check: 'C-85.1',
+    where: 'src/capture/index.mjs #knockRateRefusal > is-knock-rate',
+    translation: 'This group\'s inbox is not taking any more material from where you are sending it '
+      + 'just now. It is a limit on how fast one sender may knock, not a judgement about you or '
+      + 'about what you sent, and it lifts on its own shortly — the bound is published beside this '
+      + 'message. Nothing was stored and nothing was read, so send the same material again a little '
+      + 'later and it will arrive.',
+  },
+  RATE_GLOBAL: {
+    check: 'C-85.2',
+    where: 'src/capture/index.mjs #knockRateRefusal > is-knock-rate',
+    translation: 'This group\'s inbox is not taking any more material from anyone just now. The whole '
+      + 'instance is at its limit rather than you — the cap exists so that no one sender can fill '
+      + 'the inbox — and it lifts on its own shortly; the bound is published beside this message. '
+      + 'Nothing was stored and nothing was read, so send the same material again a little later. '
+      + 'If it keeps happening, the group\'s members can be told the doorbell is saturated.',
+  },
+  /* D-513 — THE THREE REFUSALS THIS DOOR MAKES BEFORE THE STORE IS CALLED. Each
+     `where` names a module-scope helper (capture's `doorbell.mjs` since T4) and
+     the region inside it, because that is where each refusal is enforced; the two oversize
+     rows are two conditions and deliberately not one row with a widened
+     sentence. */
+  KNOCK_ENVELOPE_TOO_LARGE: {
+    check: 'C-85.3',
+    where: 'src/capture/doorbell.mjs knockEnvelopeTooLarge > is-knock-envelope-too-large',
+    translation: 'This group\'s inbox did not read what you sent, because the request itself is larger '
+      + 'than this door accepts. Nothing was stored, nothing was opened, and nothing about your '
+      + 'material was judged — its size was read off the request and it stopped there. The size this '
+      + 'instance will read is published beside this message. Send the material again smaller, or as '
+      + 'more than one knock, and it will be read.',
+  },
+  KNOCK_PAYLOAD_TOO_LARGE: {
+    check: 'C-85.4',
+    where: 'src/capture/doorbell.mjs knockPayloadTooLarge > is-knock-payload-too-large',
+    translation: 'This group\'s inbox read your material and cannot keep it, because it is larger than '
+      + 'this instance stores. That is a fact about how this group has set its instance up rather '
+      + 'than a judgement about what you sent — a group that has configured evidence storage can keep '
+      + 'far more — and the size this one can keep is published beside this message. Nothing was '
+      + 'stored. Send something smaller, or ask the group\'s members how to get the whole of it to them.',
+  },
+  KNOCK_EMPTY: {
+    check: 'C-85.5',
+    where: 'src/capture/doorbell.mjs knockEmpty > is-knock-empty',
+    translation: 'This group\'s inbox has nothing to keep, because what you sent decoded to no bytes at '
+      + 'all. The request itself was well formed and named its content, so this is most likely an '
+      + 'empty file or an empty box rather than anything wrong with how you sent it. Nothing was '
+      + 'stored. Check what you attached and knock again.',
+  },
+};

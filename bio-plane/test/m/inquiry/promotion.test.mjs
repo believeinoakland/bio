@@ -82,8 +82,12 @@ test("R12 projection: inquiry_basis re-derived whole from basis[]; each leg's co
   const x = w.rows(`SELECT ord, target_id, description, reason, author FROM inquiry_exclusions WHERE bundle_id=? ORDER BY ord`, "INQ-2026-0001-q");
   assert.deepEqual(x.map((r) => [r.target_id, r.description, r.reason, r.author]),
     [[B, "the other memo", "out of scope", "member:alice"], [null, "a records request", "outstanding", "member:alice"]]);
-  const b = w.row(`SELECT inquiry_basis_count, inquiry_subject_entity FROM bundles WHERE bundle_id=?`, "INQ-2026-0001-q");
-  assert.deepEqual([b.inquiry_basis_count, b.inquiry_subject_entity], [2, "ENT-2026-0001"]);
+  const b = w.row(`SELECT inquiry_basis_count, inquiry_subject_entity FROM inquiry_bundle_facts WHERE bundle_id=?`,
+                  "INQ-2026-0001-q");
+  assert.deepEqual([b.inquiry_basis_count, b.inquiry_subject_entity], [2, "ENT-2026-0001"],
+    "the count and the subject in this module's table (R36, R40; N136)");
+  assert.equal(w.row(`SELECT inquiry_subject_entity FROM bundles WHERE bundle_id=?`, "INQ-2026-0001-q").inquiry_subject_entity,
+               null, "nothing is written to bundles' old column");
   /* a re-promotion that REORDERS the legs keeps each leg's content row (carried, keyed by target and extent, not ord) */
   const again = w.promote("INQ-2026-0001-q", inquiryMd("INQ-2026-0001-q", { subject: "ENT-2026-0001",
     legs: [{ target: B, role: "cuts_against" }, { target: A }] }));
@@ -119,7 +123,7 @@ test("R36 the module's tables carry bundle_id and are declared to record-core's 
   assert.equal(w.promote("INQ-2026-0001-q", w.text("INQ-2026-0001-q").replace("---\n\n## Question",
     `contradiction:\n  candidate: ${"c".repeat(64)}\n---\n\n## Question`)).ok, true);
   assert.deepEqual(INQUIRY_TABLES, ["inquiry_basis", "inquiry_exclusions", "inquiry_migration_replays", "inquiry_member_agents",
-                                    "inquiry_contradiction_links"]);
+                                    "inquiry_contradiction_links", "inquiry_bundle_facts"]);
   for (const t of INQUIRY_TABLES) {
     assert.ok(w.rows(`PRAGMA table_info(${t})`).some((c) => c.name === "bundle_id"), t);
     assert.ok(inquiryOwns(t) && inquiryOwns({ name: t }));
@@ -128,6 +132,7 @@ test("R36 the module's tables carry bundle_id and are declared to record-core's 
   assert.equal(w.count("inquiry_basis"), 0);
   assert.equal(w.count("inquiry_member_agents"), 0);
   assert.equal(w.count("inquiry_contradiction_links"), 0, "R48's projection is purged with its inquiry");
+  assert.equal(w.count("inquiry_bundle_facts"), 0, "the leg count and superseded-by index are purged with it (N136)");
   assert.ok(JSON.stringify(r).includes("inquiry_basis"), JSON.stringify(r).slice(0, 300));
 });
 
@@ -139,17 +144,50 @@ test("R37 no place is named in this module's behaviour or outward text", () => {
   }
 });
 
-test("R40 the read contract: inquiry_basis's columns and bundles.inquiry_subject_entity, as R12 records them", () => {
+test("R40 R43 the read contract: inquiry_basis's columns and inquiry_bundle_facts.inquiry_subject_entity, as R12 records them", () => {
   const w = world(); w.doc(A); w.entity("ENT-2026-0001");
   w.inquiry("INQ-2026-0001-q", { subject: "ENT-2026-0001", legs: [{ target: A, note: "n" }] });
   const cols = w.rows(`PRAGMA table_info(inquiry_basis)`).map((c) => c.name);
   for (const c of ["bundle_id", "ord", "role", "target_id", "content_id", "note"]) assert.ok(cols.includes(c), c);
-  const joined = w.row(`SELECT ib.bundle_id, ib.ord, ib.role, ib.target_id, ib.content_id, ib.note, b.inquiry_subject_entity
-                          FROM inquiry_basis ib JOIN bundles b ON b.bundle_id = ib.bundle_id`);
+  const fcols = w.rows(`PRAGMA table_info(inquiry_bundle_facts)`);
+  assert.deepEqual(fcols.filter((c) => c.name === "inquiry_subject_entity").map((c) => c.type), ["TEXT"]);
+  assert.equal(fcols.find((c) => c.name === "bundle_id").pk, 1, "one row per bundle");
+  const joined = w.row(`SELECT ib.bundle_id, ib.ord, ib.role, ib.target_id, ib.content_id, ib.note, f.inquiry_subject_entity
+                          FROM inquiry_basis ib LEFT JOIN inquiry_bundle_facts f ON f.bundle_id = ib.bundle_id`);
   assert.deepEqual([joined.bundle_id, joined.ord, joined.role, joined.target_id, joined.note, joined.inquiry_subject_entity],
     ["INQ-2026-0001-q", 0, "supports", A, "n", "ENT-2026-0001"]);
   assert.match(joined.content_id, /^[0-9a-f]{64}$/);
+  assert.equal(w.k.subjectEntityOf("INQ-2026-0001-q"), "ENT-2026-0001", "R43 answers the recorded subject");
   w.promote("INQ-2026-0001-q", inquiryMd("INQ-2026-0001-q", { legs: [{ target: A }] }));
-  assert.equal(w.row(`SELECT inquiry_subject_entity FROM bundles WHERE bundle_id=?`, "INQ-2026-0001-q").inquiry_subject_entity, null,
-               "null for none");
+  assert.equal(w.row(`SELECT inquiry_subject_entity FROM inquiry_bundle_facts WHERE bundle_id=?`, "INQ-2026-0001-q")
+    .inquiry_subject_entity, null, "null for none");
+  assert.equal(w.k.subjectEntityOf("INQ-2026-0001-q"), null);
+  assert.equal(w.k.subjectEntityOf("INQ-2026-0099-x"), null, "a bundle with no row reads as null");
+  assert.equal(w.k.subjectEntityOf(null), null, "never throws");
+});
+
+test("R11 K681 the entry arm at the write: inquiry-grammar's entry requirements, division block and subject shape refuse a promotion synchronously, BASIS_REFUSED at C-2.8; a replay is exempt", () => {
+  const w = world(); w.doc(A);
+  const Q = "INQ-2026-0011-e";
+  const robot = w.promote(Q, inquiryMd(Q).replace("surfaced_by: human", "surfaced_by: robot"));
+  assert.deepEqual([robot.ok, robot.reason], [false, "BASIS_REFUSED"]);
+  assert.ok(robot.findings.some((x) => x.check === "C-2.8" && /surfaced_by 'robot'/.test(x.detail)), JSON.stringify(robot));
+  assert.equal(w.record.head(Q), null, "nothing written");
+  /* a question resting on nothing: no basis, no grounds, still judged (the arm is not only the leg grammar) */
+  const deferred = w.promote(Q, inquiryMd(Q, { state: "deferred" }));
+  assert.ok(deferred.findings.some((x) => /deferred state requires a non-empty disposition_reason/.test(x.detail)));
+  const concluded = w.promote(Q, inquiryMd(Q, { state: "concluded" }));
+  assert.deepEqual(concluded.reason, "BASIS_REFUSED");
+  assert.ok(concluded.findings.some((x) => /concluded state requires a non-empty conclusion/.test(x.detail)));
+  assert.ok(concluded.findings.some((x) => /at least one basis leg/.test(x.detail)));
+  const divided = w.promote(Q, inquiryMd(Q, { state: "divided", legs: [{ target: A }] }));
+  assert.ok(divided.findings.some((x) => /divided state requires a division block/.test(x.detail)));
+  const shape = w.promote(Q, inquiryMd(Q, { subject: "not-an-entity" }));
+  assert.ok(shape.findings.some((x) => x.check === "C-2.8" && /subject registry key/.test(x.detail)), "the shape before the registry");
+  const caseKey = w.promote(Q, inquiryMd(Q, { extra: ["case_id: CASE-2026-0001"] }));
+  assert.ok(caseKey.findings.some((x) => /name a case \(case_id\)/.test(x.detail)));
+  /* negative controls: the well-formed question lands, and a replay of the malformed one is held verbatim */
+  assert.equal(w.promote(Q, inquiryMd(Q)).ok, true);
+  assert.equal(w.promote("INQ-2026-0012-r", inquiryMd("INQ-2026-0012-r").replace("surfaced_by: human", "surfaced_by: robot"),
+    null, { replay: true }).ok, true);
 });

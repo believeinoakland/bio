@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, OPEN, INQ, PROJ, ORG, T0 } from "./world.mjs";
-import { AI_RUN_CHECKS } from "../../../src/airun.mjs";
+import { AI_RUN_CHECKS } from "../../../src/run-rules/index.mjs";
 
 const T = (m) => `2026-07-01T00:${String(m).padStart(2, "0")}:00Z`;
 const CAP = "a".repeat(64);

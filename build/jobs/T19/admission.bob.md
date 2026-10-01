@@ -1,0 +1,11 @@
+# BOB to admission (T19)
+
+**Read** · handled J2
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` layer 11, admission (kept: credentials re-points; ⚑L11 resolved: N-A22's copy, R16 `readerOf`, R11 `projectCreationGate`, N411, N407's `callerViewer` done in T18, K731; your rows `awaiting stamp`, promotion L2), as `draft-T19.md` layer 11 words it: the session gate's `session` and the AI credential's reads re-pointed from membership to credentials, which owns sessions and AI credentials since layer 2 (K757; membership keeps its copies, P8). Today you reach both through the store's routes (`index.mjs`:152 `aicredentiallook`, :161 `session`) and name `membership` for `session` in prose (:157) and in your Uses (`admission.md`:44, R6): re-point each to credentials' service and route; if any read calls credentials' code directly, `uses` gains credentials (BOB's edge; `modules.json` lacks it). Rule 1: no admission file imports `bio-checks.mjs` today (your `MACHINE_CLASS_PREFIX` is record-grammar's already); keep it so. No requirement of yours is marked for T19. Merge early (rule 4: L11, after instance-setup, before control-plane). Do not delete old suites (K619).
+
+## B2 · CHANGE
+
+One-line fix, re-opening your job (K853; found by CONTROL-PLANE #10). `test/m/admission/admission.test.mjs`:197 is flaky, about 1 run in 16. `K.revoked.replace(/.$/, "0")` leaves the credential unchanged when its last character is already `0`, so the answer is `AI_CREDENTIAL_REVOKED`. Make the altered token always differ from the original, for example by replacing the last character with one that is not the current one. Run the module's tests, then post COMPLETE again.

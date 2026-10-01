@@ -7,10 +7,12 @@
  * `SUBJECT_POSITIONS`, `CASE_MEMBER_ROLES`, `biasAcknowledgementOf`, `completenessFields`, `checkPublishedExtension`
  * (C-2.8's case-member arm), `SEARCHED_SUBJECT_SOURCES`, `CASE_DOCUMENT_FAMILY` (C-41.1–C-41.15),
  * `CASE_CITATION_VERSIONS`, `checkCaseDocument`; the rows C-32.12–C-32.15, C-53.10–C-53.12, C-58.1–C-58.3, C-65.1 and
- * C-92.10–C-92.12. A row's `where` names the region in this module that mints it. The case-document formats and their
- * three predicates are `publication`'s (its R20). The legacy code's comments moved with it. */
+ * C-92.10–C-92.12; and, copied in T18 (split tables), C-32.1, C-33.10–C-33.12 (the bulk release) and C-102.10. A
+ * row's `where` names the region in this module that mints it. The case-document formats and their three predicates
+ * are `publication`'s (its R20). The legacy code's comments moved with it. */
 
-import { ISO_TS_RE, BUNDLE_ID_RE, BASIS_GRADES, GRADE_AXES, STRENGTH_STATES } from "../../checks/bio-checks.mjs";
+import { ISO_TS_RE, BUNDLE_ID_RE, BASIS_GRADES, GRADE_AXES } from "../record-grammar/index.mjs";
+import { STRENGTH_STATES } from "../strength/index.mjs";
 import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED,
          caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures,
          caseDocumentRequiresV4Disclosures } from "../publication/index.mjs";
@@ -1122,8 +1124,55 @@ export const RATIFY_SCOPE_CHECKS = {
   },
 };
 
+/* C-32.1 and C-33.10–C-33.12: the bulk release's refusals (R20, R22; N400, K636), copied from the catalogue's
+   `MACHINE_FENCE_CHECKS` and `ACT_SHAPE_CHECKS` with their ids and translations unchanged when `release` moved here
+   (`./release.mjs`). Split tables: the catalogue's copies are deleted in T19 (plan T18 rule (3)). */
+export const RELEASE_CHECKS = {
+  MACHINE_CANNOT_RELEASE: {
+    check: 'C-32.1',
+    where: 'src/ratification/release.mjs release > is-machine-release',
+    translation: 'Moving documents from collected to verified is a decision a named person makes '
+      + 'and signs. The credential that asked here is an automated one, so it can gather the batch '
+      + 'and lay out the review, and cannot be the one who says the batch is good. Sign in and '
+      + 'release it yourself.',
+  },
+  NO_ACKNOWLEDGMENT: {
+    check: 'C-33.10',
+    where: 'src/ratification/release.mjs release > is-release-account',
+    translation: 'Releasing a batch at once records your explicit acknowledgment that the batch is '
+      + 'of a piece and that you weighed the risk of doing them together. Without it the record '
+      + 'shows only that a button was pressed.',
+  },
+  NO_MITIGATION: {
+    check: 'C-33.11',
+    where: 'src/ratification/release.mjs release > is-release-account',
+    translation: 'Releasing a batch at once records what you actually did to check it — what was '
+      + 'sampled and what was verified. A concrete note can be audited by somebody later; silence '
+      + 'cannot be audited at all.',
+  },
+  ENTRY_REQUIREMENTS: {
+    check: 'C-33.12',
+    where: 'src/ratification/release.mjs release > is-release-entry',
+    translation: 'Some of these documents are missing something the verified state requires, and '
+      + 'releasing them as they stand would produce records the catalog rejects the moment they '
+      + 'exist. The offending documents are named so they can be fixed rather than guessed at.',
+  },
+};
+
+/* C-102.10: the refusal this module's registered promotion step answers (R9), copied from the catalogue's
+   `REGISTRATION_CHECKS` with its id and translation unchanged (split tables; T19 deletes the catalogue's copy). */
+export const RATIFY_REGISTRATION_CHECKS = {
+  CASE_MEMBER_REFUSED: {
+    check: 'C-102.10',
+    where: 'src/ratification/index.mjs check',
+    translation: 'This document claims to be part of a published case, and it does not carry what a part of '
+      + 'a published case must carry, so it was not written. Each problem is named beside this message. '
+      + 'Nothing in the record changed.',
+  },
+};
+
 const FAMILIES = [RATIFY_MACHINE_FENCE_CHECKS, RATIFY_TESTIMONY_CHECKS, RATIFY_ATTRIBUTION_CHECKS,
-                  CASE_CONCLUSION_CHECKS, RATIFY_SCOPE_CHECKS];
+                  CASE_CONCLUSION_CHECKS, RATIFY_SCOPE_CHECKS, RELEASE_CHECKS, RATIFY_REGISTRATION_CHECKS];
 
 /** DEC-49: a refusal code's `{code, check, translation}`, from the one row that holds it. IT THROWS RATHER THAN
  *  RETURNING A PARTIAL ROW: a code with no canned sentence behind it must not reach a member, and a throw is loud where

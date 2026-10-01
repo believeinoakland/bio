@@ -123,11 +123,15 @@ test("R6 earned arms: testimony only where the registry holds an authored observ
 });
 
 test("R7 an inherited leg rests on a published case at an edition the registry holds, no stronger than its frozen strength", () => {
-  const pub = { [INQ]: { editions: { 1: { strength: { capture: "C", connection: "C" } } } } };
+  /* the published registry as the check reads it: each edition's axes, each {state, grade} */
+  const pub = { [INQ]: { object_type: "inquiry", editions: { 1: { capture: { state: "graded", grade: "C" },
+                                                                 connection: { state: "graded", grade: "C" } } } } };
   const fm = (extra) => fmWith([{ target: INQ, role: "supports", grade_source: "inherited", target_edition: 1, ...extra }]);
-  const plain = basisErrs(fm({}), pub);
+  assert.deepEqual(basisErrs(fm({ grade: "C", grade_axis: "connection" }), pub), [], "the frozen grade itself is inherited");
+  assert.deepEqual(basisErrs(fm({ grade: "D", grade_axis: "capture" }), pub), [], "a weaker one too");
   const over = basisErrs(fm({ grade: "A", grade_axis: "connection" }), pub);
-  assert.ok(over.length > plain.length || over.some((x) => /stronger|inherit|frozen/i.test(x.message)), JSON.stringify(over.map((x) => x.message)));
+  assert.deepEqual(over.map((x) => x.check), ["C-21.2"]);
+  assert.match(over[0].message, /whose frozen connection strength is C/);
   assert.ok(basisErrs(fm({ target_edition: 9 }), pub).length, "an edition the registry does not hold");
   assert.ok(basisErrs(fmWith([{ target: INFO, role: "supports", grade_source: "inherited" }]), pub).length, "inherited rests on a published case");
 });
@@ -181,3 +185,23 @@ test("R38 the rows the module mints stay in the catalogue with their ids: C-54.1
 /* R31 (MK-5) is NOT YET MET, deferred by K181: no module defines an opinion element or its id yet, so there is
    nothing a refusal could name. Its test arrives with the element (case-authoring or publication). */
 test.todo("R31 a leg naming an opinion case element is refused by name (not yet met: MK-5; no module defines an opinion element or its id yet, K181)");
+
+test("R4 R5 R8 R9 R17 R38 the grammar face re-exports inquiry-grammar's and record-grammar's names as the same bindings, and reads inquiry-grammar's rows, never a copy", async () => {
+  const face = await import("../../../src/inquiry/index.mjs");
+  const IG = await import("../../../src/inquiry-grammar/index.mjs");
+  const RG = await import("../../../src/record-grammar/index.mjs");
+  for (const n of ["checkInquiryBasis", "checkLegExtentGrammar", "leadLegFindings", "supersedesEdgeFindings",
+                   "divisionDisclosureFindings", "GROUND_LABEL_RE", "checkInquiryExtension"])
+    assert.equal(face[n], IG[n], n);
+  for (const n of ["BASIS_ROLES", "INQUIRY_TITLE_MAX", "deriveInquiryTitle", "inquiryQuestionOf"]) assert.equal(face[n], RG[n], n);
+  assert.equal(face.INQUIRY_MACHINE, RG.STATES.inquiry);
+  assert.equal(INQUIRY_ROWS, IG.INQUIRY_GRAMMAR_ROWS, "R38: inquiry-grammar's rows, read");
+  for (const code of ["NOT_INQUIRIES", "SELF_BASIS", "BASIS_CYCLE", "MACHINE_CANNOT_DIVIDE", "MACHINE_CANNOT_GROUND", "LEAD_NOT_EVIDENCE"])
+    assert.ok(INQUIRY_ROWS[code] && INQUIRY_ROWS[code].check && INQUIRY_ROWS[code].translation, code);
+  /* R17: with no grammars named, the face judges with inquiry-grammar's own arms */
+  const bad = inquiryMd("INQ-2026-0009-z").replace("surfaced_by: human", "surfaced_by: robot");
+  assert.deepEqual(await checkInquiryEntry(bad), await checkInquiryEntry(bad, { grammars: IG.INQUIRY_GRAMMARS }));
+  assert.ok((await checkInquiryEntry(bad)).some((x) => x.check === "C-2.8"));
+  assert.ok(!(await checkInquiryEntry(bad, { grammars: [] })).some((x) => ["C-2.8", "C-6.1", "C-15.1"].includes(x.check)),
+    "an empty list judges nothing of the inquiry's: it is the caller's list");
+});

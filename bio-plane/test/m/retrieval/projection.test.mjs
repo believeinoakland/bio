@@ -247,7 +247,7 @@ test("R5, R56: decorations run in the modules' total order, whatever order they 
   assert.equal(one.first, true);
 });
 
-test("R58: migrate() creates the projection table, its indexes, the keyed text index and the selection tables and backfills, idempotently; retrievalRoutes answers every op of R1–R54 for the router", async () => {
+test("R58: migrate() creates the projection table, its indexes, the keyed text index and the selection tables and backfills, idempotently; retrievalRoutes answers every op of R1–R54 and R63–R65 for the router", async () => {
   const w = world();
   w.doc("INFO-1", { source_status: "live" }, { files: [{ path: "n.md", text: "hello water" }] });
   const cols = w.rows(`PRAGMA table_info(bundle_projection)`).map((c) => c.name);
@@ -261,8 +261,9 @@ test("R58: migrate() creates the projection table, its indexes, the keyed text i
   /* The routes: each op answers what the service answers, with the stamps from the query. */
   const url = (op, q = "") => new URL(`http://x/${op}?${q}`);
   const routes = (u, body) => retrievalRoutes(w.retrieval, u, body);
-  assert.deepEqual(Object.keys(routes(url("x"))).sort(), ["contentaxis", "frontier", "meaningrows", "projection", "projectionclear",
-    "projectionplan", "reproject", "search", "searchfields", "searchindexcheck", "select", "selection", "selectionlist", "selectionrelease"]);
+  assert.deepEqual(Object.keys(routes(url("x"))).sort(), ["contentaxis", "file", "frontier", "image", "index", "list", "meaningrows",
+    "projection", "projectionclear", "projectionplan", "reproject", "search", "searchfields", "searchindexcheck", "select", "selection",
+    "selectionlist", "selectionrelease"]);
   assert.equal(routes(url("search", "q=water&viewer=member:vera")).search().total, 1);
   assert.equal(routes(url("search", "q=water")).search().total, 0, "no viewer stamp, nothing");
   assert.equal(routes(url("projection", "id=INFO-1&viewer=member:vera")).projection().source_status, "live");
@@ -280,6 +281,11 @@ test("R58: migrate() creates the projection table, its indexes, the keyed text i
   assert.equal(routes(url("projectionclear"), { bundleId: "INFO-1" }).projectionclear().scope, "INFO-1");
   assert.equal(routes(url("reproject"), { limit: 3 }).reproject().reprojected, 1);
   assert.deepEqual(Object.keys(routes(url("projectionplan")).projectionplan()), ["source_status", "produced_mode", "schema_id", "reeval_flag"]);
+  /* R63–R65's four (R66 tests their parameters whole, `roster.test.mjs`). */
+  assert.deepEqual(routes(url("list", "viewer=member:vera")).list().map((b) => b.bundle_id), ["INFO-1"]);
+  assert.deepEqual(routes(url("index", "viewer=member:vera")).index().bundles.map((b) => b.id), ["INFO-1"]);
+  assert.equal(routes(url("image", "id=INFO-1&viewer=member:vera")).image()["n.md"], "hello water");
+  assert.equal(routes(url("file", "id=INFO-1&path=n.md&viewer=member:vera")).file().text, "hello water");
 });
 
 const MOVED = [...PROJECTION_COLS, "fts_id"];

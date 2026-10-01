@@ -1,0 +1,142 @@
+/* case-grammar — the case document's grammar, one spelling for every module (requirements:
+ * `build/requirements/case-grammar.md`; BIO_Publication_v0_1.md §3 rules 2, 7, 12, 16 and §7; MEMBER-KNOWLEDGE-DESIGN.md
+ * §4; N345, N364; D-431, D-442). Text in, values out: the formats and their predicates (R1, `./formats.mjs`), the `/5`
+ * blocks (R1, `./blocks.mjs`) and tension section (R1, `./tensions.mjs`), the attribution run's text (R2), the
+ * sections a later act re-authors (R3), the citations a signed document carries (R4) and the edge set a finding rests
+ * on (R5). It reads no table, holds no store and never throws.
+ *
+ * Split from `publication` by copy (K651, K624 (1)): the format block of `publication/checks.mjs`, and `fmSafe`,
+ * `SECTIONS`, `REAUTHORABLE_SECTIONS`, `signedCitations`, the attribution renderers and `publishedGraphEdges` of
+ * `publication/index.mjs`, with their comments. `publication`'s job deletes its copies and re-exports this module, so
+ * `ratification`, `case-authoring` and `control-plane` import what they import today. */
+
+import { parseFrontmatter } from "../record-grammar/index.mjs";
+import { caseDocumentRequiresV4Disclosures } from "./formats.mjs";
+import { fmSafe } from "./blocks.mjs";
+
+export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2,
+         CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED, caseDocumentStatesMemberBlocks,
+         caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures,
+         caseDocumentRequiresTensionSection } from "./formats.mjs";
+export { caseDocumentBlocks, captureBlockLines, sourceBlockLines, sourceStatement, unnamedSourceStatement,
+         sourceRowsStanding, CAPTURE_FIELDS, ACKNOWLEDGEMENT_FIELDS, SOURCE_FIELDS, SOURCE_BASES,
+         BLOCKS_PREDATE_SENTENCE, BLOCK_UNREADABLE_SENTENCE, NOT_RECORDED_STATED, fmSafe } from "./blocks.mjs";
+export { caseTensionsOf, disclosedCandidates, TENSION_STATE_WORDS, TENSION_HIGHLIGHT_SENTENCE, TENSION_DEPTH_SENTENCE,
+         TENSIONS_PREDATE_SENTENCE, TENSIONS_UNREADABLE_SENTENCE } from "./tensions.mjs";
+
+
+/** MK-7 — THE ATTRIBUTION LEVELS (MEMBER-KNOWLEDGE-DESIGN.md §4, §4.6), MOST PROTECTIVE FIRST (R2).
+ *  `group` is the floor every level shares (§4.3): every published case is the group's. `name`
+ *  publishes the member's HANDLE — §4.6's reading of "to the member by name", which is a PROVISIONAL
+ *  carried to Bob (the record holds no legal name and must not start to). The member id is never
+ *  published at any level. */
+export const ATTRIBUTION_LEVELS = Object.freeze(["group", "project", "cover", "name"]);
+
+/* MK-7 — THE TWO RENDERINGS OF THE STATEMENTS, ONE SPELLING EACH (R2): written when op=publish authors a document
+   reaching an observation, and spliced when the author's act lands on one authored and unsigned. The frontmatter
+   run starts at `observation_attributions:` and ends at the next top-level key; the prose starts at
+   `ATTRIBUTION_PROSE_HEAD` and ends before the next `## ` heading. A document reaching NO observation
+   carries neither, so every other case document's bytes are exactly what they were. */
+export const ATTRIBUTION_PROSE_HEAD = "## Whose Words These Are";
+/* The rows a renderer writes: each object of an array; anything else writes none, so neither renderer throws. */
+const rowsOf = (rows) => (Array.isArray(rows) ? rows.filter((r) => r && typeof r === "object") : []);
+export function attributionFrontmatterLines(rows) {
+  return ["observation_attributions:",
+    ...rowsOf(rows).flatMap((r) => [
+      `  - observation: ${r.observation}`,
+      `    level: ${r.level ?? "null"}`,
+      `    shown: ${r.shown == null ? "null" : `"${fmSafe(r.shown)}"`}`,
+      `    chosen_at_edition: ${r.chosen_at_edition ?? "null"}`])];
+}
+export function attributionBodyLines(given) {
+  const rows = rowsOf(given);
+  const said = { group: "the group that publishes this case", project: "the project that produced it",
+                 cover: "the cover the group knows its author by", name: "the name its author chose to appear under" };
+  return [ATTRIBUTION_PROSE_HEAD, "",
+    `This case rests, directly or through another finding, on ${rows.length} firsthand observation`
+    + `${rows.length === 1 ? "" : "s"} recorded by a member of this group. What it shows of who SAID each one is `
+    + "that member's own choice, made for this edition and never filled in for them (MEMBER-KNOWLEDGE-DESIGN.md "
+    + "§4). An observation names no person in its own bytes; the words below are the whole of the attribution.",
+    "",
+    ...rows.map((r) => !r.level
+      ? `- **${r.observation}** — NO LEVEL IS CHOSEN: ${r.why}. This edition cannot be signed until its author `
+        + "chooses one, or the finding resting on it leaves the case."
+      : `- **${r.observation}** — attributed to ${said[r.level]}${r.shown == null ? " (this record names no "
+        + "producing group, so none is printed)" : `: ${r.shown}`} — level \`${r.level}\`, chosen at edition `
+        + `${r.chosen_at_edition}.`),
+    ""];
+}
+
+/* R3 (publication R21's locators): the sections of a case document a module other than the one that authored it may
+   re-author, each a front matter run and a prose run. Each locator takes the document's lines and answers the run's
+   half-open line range `{f0, f1, b0, b1}`, or null when the document carries no such run (it was authored before the
+   section existed, or `lines` is not an array of lines); `reauthorSection` then leaves the document as it is. */
+const located = (locate) => (lines) => {
+  try { return Array.isArray(lines) ? locate(lines.map((l) => String(l))) : null; } catch { return null; }
+};
+export const SECTIONS = Object.freeze({
+  /* MK-7: `observation_attributions:` to the next top-level key; `## Whose Words These Are` to the next `## `. */
+  attribution: located((lines) => {
+    const f0 = lines.indexOf("observation_attributions:");
+    let f1 = f0 + 1;
+    while (f0 >= 0 && f1 < lines.length && lines[f1].startsWith("  ")) f1++;
+    const b0 = lines.indexOf(ATTRIBUTION_PROSE_HEAD);
+    let b1 = b0 + 1;
+    while (b0 >= 0 && b1 < lines.length && !lines[b1].startsWith("## ")) b1++;
+    return f0 < 0 || b0 < 0 || b1 >= lines.length ? null : { f0, f1, b0, b1 };
+  }),
+  /* D-150 / REC-212: the statement's acknowledgement list — from `  statement_sha: ` to `completeness_excluded:`,
+     and from `**Who else read this statement.**` to the blank line before `## What Was Searched`. */
+  acknowledgements: located((lines) => {
+    const f0 = lines.findIndex((l) => l.startsWith("  statement_sha: "));
+    const f1 = lines.indexOf("completeness_excluded:");
+    const b0 = lines.findIndex((l) => l.startsWith("**Who else read this statement.**"));
+    const b1 = lines.indexOf("## What Was Searched");
+    return f0 < 0 || f1 < f0 || b0 < 0 || b1 < b0 + 1 ? null : { f0, f1, b0, b1: b1 - 1 };
+  }),
+});
+export const REAUTHORABLE_SECTIONS = Object.freeze(Object.keys(SECTIONS));
+
+/* R4, R6: the citations a signed case document carries. A `/4` or `/5` document carrying `case_citations` answers them
+   as signed; every other document states that its citation versions are undetermined, never filled. */
+export const CITATIONS_UNDETERMINED_SENTENCE = "version undetermined (signed before capture pins): this document was "
+  + "signed before a case's citation edges were pinned to the capture they were made against, and it carries neither";
+export function signedCitations(text) {
+  try {
+    const fm = parseFrontmatter(String(text || "")).data || {};
+    if (caseDocumentRequiresV4Disclosures(fm) && Array.isArray(fm.case_citations))
+      return { state: "signed", rows: fm.case_citations };
+  } catch { /* an unreadable document signed nothing this module can read: undetermined, below */ }
+  return { state: "undetermined", rows: null, stated: CITATIONS_UNDETERMINED_SENTENCE };
+}
+
+/* ===== D-431 — WHAT A FINDING "RESTS ON", NAMED ONCE, AND READ BY BOTH THE SERVING AND THE REFUSAL (R5) =====
+   BIO_Publication_v0_1.md §3 rule 2, the second note (BOB #16, 2026-09-19): *"Rests on is the edge set the
+   published graph already uses to decide it may serve an edge, named by the builder from the code and proved
+   identical at both sites."* NAMED FROM THE CODE: the published graph is written by `publishEdges` from the
+   edges `op=ratify` reads out of the RATIFIED BYTES, and it SERVES an edge only when the edge is of the
+   `serve` class and its target is itself published. The `serve` class is every `references[]` entry (its
+   `rel` as the kind, `cites` when none is authored); the two division disclosures are NAME-ONLY by kind and
+   are never served. So a finding RESTS ON exactly the targets of its `serve`-class edges.
+   This one function IS that edge set: `ratification` builds the graph it hands `publishEdges` from it, and
+   `publication`'s `ratifiedFindingsRestingOn` asks it of each pinned finding's bytes — one function, two readers,
+   so the refusal and the serving cannot come to read different quantities. A second spelling of this list
+   anywhere is the defect it exists to prevent. */
+export function publishedGraphEdges(fm) {
+  try {
+    const d = fm && typeof fm === "object" ? fm : {};
+    const refs = Array.isArray(d.references) ? d.references : [];
+    return [
+      ...refs.filter((r) => r && typeof r.target === "string")
+        .map((r) => ({ to: r.target, kind: typeof r.rel === "string" && r.rel ? r.rel : "cites",
+                       disclosure: "serve" })),
+      ...(typeof d.division_parent === "string" && d.division_parent !== "null"
+        ? [{ to: d.division_parent, kind: "division_parent", disclosure: "name" }] : []),
+      ...(Array.isArray(d.division_siblings) ? d.division_siblings : [])
+        .filter((s) => typeof s === "string" && s)
+        .map((s) => ({ to: s, kind: "division_sibling", disclosure: "name" })),
+    ];
+  } catch {
+    return [];
+  }
+}

@@ -1,0 +1,27 @@
+// @ts-check
+/* record-grammar: the type vocabulary (R3–R5). Moved from the check catalogue at T18 with its comments. */
+
+/* The construct formerly named Problem, then FOCUS, is the INQUIRY (REC-10;
+   RECONCILED.md is the design). History is append-only and is not rewritten,
+   so `problem` and `focus` and their literals remain LEGAL LEGACY ALIASES
+   wherever they already exist, and the catalog judges a document by its
+   NORMALIZED type. PROB-/FOCUS- ids may carry any spelling, because a
+   bundle's id is immutable while its frontmatter modernizes on promotion.
+   The alias map is FLATTENED, never chained: normalizeType is a single
+   lookup, so problem points straight at inquiry rather than at focus. */
+/* PL-12 / D-84: `bias` joins as a SIXTH prefix and a FIFTH canonical type. It
+   has no legacy spelling and never will — it is born under the collapse rather
+   than before it — so it appears exactly once here and needs no entry in
+   LEGACY_TYPE_ALIASES. */
+/* K171 (1) and K198 (2) (T8): six more canonical types, one prefix each and no legacy spelling, on `bias`'s terms.
+   The Action layer's four are its modules' record objects (standards R15, conformance R17, consequences R14,
+   escalation R21); `aspiration` and `goal` are intent's (its R26). */
+/* N-A1 (T18, K608): `action_plan`, the Action fold's action plan (`action-plans`' record), on the same terms. */
+export const OBJECT_TYPES = { INFO: 'information', PROB: 'inquiry', FOCUS: 'inquiry', INQ: 'inquiry', PROJ: 'project', ACTN: 'action', BIAS: 'bias',
+  STD: 'standard', CONF: 'determination', CONS: 'consequence', ESC: 'escalation', ASP: 'aspiration', GOAL: 'goal',
+  PLN: 'action_plan' };
+export const LEGACY_TYPE_ALIASES = { problem: 'inquiry', focus: 'inquiry' };
+/* An OWN key only (R5): `constructor`, `toString` and the other `Object.prototype` names are types nobody declared,
+   and answer themselves, never an inherited function. Only a string can be an alias. */
+export const normalizeType = (t) =>
+  (typeof t === 'string' && Object.prototype.hasOwnProperty.call(LEGACY_TYPE_ALIASES, t) ? LEGACY_TYPE_ALIASES[t] : t);

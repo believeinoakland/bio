@@ -1,8 +1,8 @@
 # control-plane — requirements
 
-**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 11. It has no code of its own yet. It is extracted from `legacy-index` (`bio-plane/src/index.mjs`), and from `legacy-store` and `legacy-checks` where the map says so. Code today: re-measured 2026-09-28 on `tranche/T10` @ `6faa8084` by a worker for BOB #59; `build/extraction/control-plane.md` has the table (T3's ranges kept there in brackets). Not yet met: R24 (D-679), R19's last sentence (D-586). R25 met T13 (N333). R34 (the act gate) worded from the code by a worker for BOB #59, 2026-09-28. Carried old-plan rows: D-629, D-679, and D-586 (placed here by membership's file). folded by a worker for BOB #66, 2026-09-29 (T14 opening; `build/plan/draft-T14-wordings.md`, K444, K445): N339 and N349 R23 (every relay, with the correlation); N347 R22 reads `capture`'s rows; N348 R35 (the Durable Object class); uses gain `capture`; met in T14 (CONTROL-PLANE #5, K476). N364 (DEC-78 item 1; W5 of `build/plan/draft-T16.md`) folded by a worker for BOB #71, 2026-09-30 (T16 opening): R36; uses gain `promotion` and `sources`; built by CONTROL-PLANE #7 (K563), its filing waiting on N381.
+**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 11. It has no code of its own yet. It is extracted from `legacy-index` (`bio-plane/src/index.mjs`), and from `legacy-store` and `legacy-checks` where the map says so. Code today: re-measured 2026-09-28 on `tranche/T10` @ `6faa8084` by a worker for BOB #59; `build/extraction/control-plane.md` has the table (T3's ranges kept there in brackets). Not yet met: R24 (D-679), R19's last sentence (D-586). R25 met T13 (N333). R34 (the act gate) worded from the code by a worker for BOB #59, 2026-09-28. Carried old-plan rows: D-629, D-679, and D-586 (placed here by membership's file). folded by a worker for BOB #66, 2026-09-29 (T14 opening; `build/plan/draft-T14-wordings.md`, K444, K445): N339 and N349 R23 (every relay, with the correlation); N347 R22 reads `capture`'s rows; N348 R35 (the Durable Object class); uses gain `capture`; met in T14 (CONTROL-PLANE #5, K476). N364 (DEC-78 item 1; W5 of `build/plan/draft-T16.md`) folded by a worker for BOB #71, 2026-09-30 (T16 opening): R36; uses gain `promotion` and `sources`; built by CONTROL-PLANE #7 (K563), its filing waiting on N381. Action layer folded 2026-09-30 (K608, K617): no new id; R26, R29 and R31 already require the op specs and stamps of `action-plans`' fourteen ops, `actions`' `actioncreate`, `action`, `actions` and `actionpressure`, `action-clocks`' `reminderanswer` and `filings`' `communicationprepare`, R22 `action-plans`' check table, and R27 `plans` among `PROJECT_NAMING_READS`; uses gain `action-plans` and `action-clocks`. Split three ways at T18's opening by a worker for BOB #75, 2026-09-30 (K617, K624 (1), (2)): what each op is (`ops.mjs`: R31, R34) moved to `op-declarations`, and the credential and admission path (R3–R14, R19, and R32's admission rows) to `admission`, each with its meaning unchanged and its id retired here; this module keeps the door (routing, the stamps, the answer's decoration and envelope, the store's dispatch, the pull) and uses both. R19's open mark (D-586) moves with it to `admission` R13. K621: R39 written (N408's reservation), `op=purge`'s confirmation gate. Folded by a worker for BOB #80, 2026-10-01 (T19 layer-11 fold; K653 BOB-2, K764, `current.md` rules 1 and 6): R35 (the Durable Object class) moved to `plane` R1 without change of meaning, retired here; R42 the testimony slot's place once `legacy-store`'s promotion step goes (provenance R52, K764); R43 the catalogue's end (rule 1); `ops.mjs` deleted with `legacy-index`'s need of it; `index.mjs`:8's and `pull.mjs`'s catalogue imports re-pointed to `record-grammar` (Uses).
 
-**Size (P6).** At most about 6,630 lines move (about 1,930 of code), counting the whole forward; without the forward's op-specific arms, which leave with their modules, about 4,880 (about 1,460) (`build/extraction/control-plane.md`, re-measured 2026-09-28). Past the 4,000-line mark by lines; accepted as fitting one reading (K93, and BOB 2026-09-28), since the op declarations are a table. The split to take if a job reports it cannot read the module whole is in Suggestions.
+**Size (P6).** After the split (K624 (2)) about 3,500 lines remain here (`index.mjs` less the admission path, `checks.mjs` less its admission rows, `dispatch.mjs`, `pull.mjs`); `op-declarations` takes ~2,100 and `admission` ~900. Before it: at most about 6,630 lines move (about 1,930 of code), counting the whole forward; without the forward's op-specific arms, which leave with their modules, about 4,880 (about 1,460) (`build/extraction/control-plane.md`, re-measured 2026-09-28). Past the 4,000-line mark by lines; accepted as fitting one reading (K93, and BOB 2026-09-28), since the op declarations are a table. The split to take if a job reports it cannot read the module whole is in Suggestions.
 
 ## Public
 
@@ -15,26 +15,26 @@ The instance's two doors: the Worker's HTTP entry and the record store's interna
 Terms. An **op spec** is `{classes, machineClasses?, mutating}`, with the op's session sets (`member`, `admin`), the capability it needs (`NEEDS`) and the stamps it takes. `classes: null` marks a **public** op. A **class** is `admin`, `member`, `probe` or `daemon` (the four binding credentials), `ai` (a minted agent credential), or a session's kind (`admin` for the founder's password session, `member` for every enrolled member). A **stamp** is a field the control plane sets on the request to the handler: `viewer`, `identity`, `author`, `by`, `actor`, `who`, `origin`, `administer`, and in a body `actorIdentity`, `actorViewer`, `actorMemberId`, `ownerMemberId`, `assistantPrincipal`, `migrationReplay`. The **namespaces** are `bio` and `scratch`.
 
 **`fetch(req, env)`, the Worker entry: routing**
-- **R1** `OPTIONS` answers 204 with `access-control-allow-origin: *`. `GET /version` answers `VERSION` (or `0.0.0`) as plain text. `GET /sign` answers `signatures`' signing page. `GET /` with no `op` answers `instance-setup`'s page (its R20), built from its public read of the namespace addressed: R6 applies first, and `store=scratch` reads `scratch` while anything else reads `bio`. The page is served `cache-control: no-store`.
+- **R1** `OPTIONS` answers 204 with `access-control-allow-origin: *`. `GET /version` answers `VERSION` (or `0.0.0`) as plain text. `GET /sign` answers `signatures`' signing page. `GET /` with no `op` answers `instance-setup`'s page (its R20), built from its public read of the namespace addressed: `admission` R4 applies first, and `store=scratch` reads `scratch` while anything else reads `bio`. The page is served `cache-control: no-store`.
 - **R2** The op is the `op` parameter, else the path after `/api/` (or `/`), else `selftest`. A name with no spec is refused 400 `UNKNOWN_OP` (C-69.1), and `error` is `"unknown op"` as the first key after `ok`. An op with a spec is answered by the handler its module provides, or else forwarded to the store's route of that name (R26).
 
 **Namespaces, before any credential is judged**
-- **R3** A `store=` that is present and not exactly `bio` or `scratch` is refused 400 `NAMESPACE_UNKNOWN` (C-78.1), naming the namespaces. This applies to every caller and to R1's page.
-- **R4** For an `ai` credential minted confined to `scratch`, a named `store=` other than `scratch` is refused 403 `NAMESPACE_CONFINED` (C-78.3), and an absent one is set to `scratch`.
-- **R5** A public op that answers only from `bio` refuses `store=scratch` with 400 `NAMESPACE_PINNED` (C-78.2). The public ops that do address scratch are declared (`invitelook`, `enroll`, `instancegroup`, `groupidentity`), and every other public op is pinned.
-- **R6** Admitted callers land as follows: `probe` in `scratch` (a named other namespace is refused 403 `SCOPE_REFUSED`, C-38.6), and every other class in `scratch` when `store=scratch` is given, else `bio`. Every forwarded answer carries `store`, the namespace that answered.
+- **R3** *(retired: moved to `admission` R1, K617)*
+- **R4** *(retired: moved to `admission` R2, K617)*
+- **R5** *(retired: moved to `admission` R3, K617)*
+- **R6** *(retired: moved to `admission` R4, K617)*
 
 **Authentication**
-- **R7** A `token` equal to the `ADMIN_TOKEN`, `MEMBER_TOKEN`, `PROBE_TOKEN` or `DAEMON_TOKEN` binding (checked in that order) gives that class, but only while the binding is live: set, and not a value ever published (runtime-limits `liveToken`). Any other token gives no binding class.
-- **R8** A token shaped `aik-<64 hex>` is resolved once per request against `bio`'s credential rows. A known credential gives class `ai` with its principal, scope and confinement. A 64-hex token is resolved as a session through `membership.session` against `bio`. A store that does not answer either lookup is answered 502 `STORE_DID_NOT_ANSWER` and never as a statement about the caller.
-- **R9** A caller with no class is refused 401 `NOT_AUTHENTICATED` (C-38.1).
+- **R7** *(retired: moved to `admission` R5, K617)*
+- **R8** *(retired: moved to `admission` R6, K617)*
+- **R9** *(retired: moved to `admission` R7, K617)*
 
 **Admission, in this order**
-- **R10** A session reaching a mutating op outside its kind's session set is refused 403. The refusal depends on why. `SESSION_ROLE_CANNOT_REACH_OP` (C-38.7) is used when the other kind's set holds the op, with `reachedBy` set to `founder` or `member`. `MACHINE_CREDENTIAL_REQUIRED` (C-38.3) is used when a recorded decision reserves the op to a credential, and cites that decision. `SESSION_ROUTE_NOT_RECORDED` (C-38.8) is used when no decision is recorded. `capture`'s GET is a read. A session asking for `export` is refused `ROOT_OF_TRUST_REQUIRED` (C-38.4).
-- **R11** A binding class not in the op's `classes` is refused 403 `CLASS_FORBIDDEN` (C-38.2). For a caller that did not arrive by a session, `machineClasses` is used instead where the spec gives it.
-- **R12** An `ai` caller is refused `AI_CREDENTIAL_REVOKED` (C-29.7) when its credential is withdrawn. It is refused `AI_BEYOND_TASK_SCOPE` (C-29.6) when no member reaches the op, or when the op is mutating and not among its declared writes.
-- **R13** A session missing the op's capability is refused 403 `NOT_CAPABLE` (C-38.5), naming `needs` and `held`. A binding class holds no capabilities and is bounded by R11 alone.
-- **R14** A bearer (any caller not arriving by a session) asking for a §4 governance act (`adminendorse`, `adminremove`, `membercaps`) is refused 403 `OPERATOR_TOKEN_CANNOT_GOVERN` (C-32.17). Asking for a group-identity act (`groupnameset`, `groupdomainset`), it is refused `GROUP_IDENTITY_NEEDS_SESSION` (C-64.4). Each refusal names the class.
+- **R10** *(retired: moved to `admission` R8, K617)*
+- **R11** *(retired: moved to `admission` R9, K617)*
+- **R12** *(retired: moved to `admission` R10, K617)*
+- **R13** *(retired: moved to `admission` R11, K617)*
+- **R14** *(retired: moved to `admission` R12, K617)*
 - **R15** `claim` is checked against the bootstrap credential before `membership.claim` runs. An unset `ADMIN_TOKEN` is refused 409 `BOOTSTRAP_CREDENTIAL_UNSET` (C-68.2). A published one is refused 409 `BOOTSTRAP_CREDENTIAL_PUBLISHED` (C-68.3). A body's `bootstrapToken` that differs is refused 403 `BOOTSTRAP_CREDENTIAL_MISMATCH` (C-68.4). The claim carries the credential's fingerprint, never its value.
 - **R16** A promotion asserting `replay` keeps it only for the `admin` class without a session, and only when the drive-provenance capture it names is registered, its bytes hash back, and one preserved promotion record names this bundle and this revision's `bundle.md` SHA-256. Otherwise an asserted replay is refused `REPLAY_UNVERIFIED` (C-66.6) before the store is called, and any other caller's `replay` is deleted.
 
@@ -44,12 +44,12 @@ Terms. An **op spec** is `{classes, machineClasses?, mutating}`, with the op's s
   - an `ai` credential: its principal as viewer, and `class:ai/<tokenId>` as author (REC-134);
   - a binding class: `class:<cls>`, or `token:<cls>` where the op's recorded decision names that form (D-311).
 
-  The founder's `author` is `admin`, and `member:admin` on the action-layer and intent acts (T8). `origin` is the origin the request reached. So no handler ever receives a caller's own statement of who or where they are.
+  The founder's `author` is `admin`, and `member:admin` on the action-layer and intent acts (T8). `origin` is the origin the request reached. On `publishpreflight` an `ai` caller's credential is also stamped as `aiCred` (N407, K737). So no handler ever receives a caller's own statement of who or where they are.
 - **R18** `administer` is true exactly for a session that administers (membership R3) and for the `admin` binding class. `op=whoami` answers `tokenClass`, `session`, `member`, `handle`, `administer`, `rootOfTrust`, the session's sorted `capabilities` (`null` for a credential), the capability `vocabulary` and `confinedTo` (for an `ai` credential, else `null`).
-- **R19** An agent credential's scope is judged when it is minted. An op no spec declares is refused `AI_SCOPE_UNKNOWN_OP` (C-29.8). An op no member reaches is refused `AI_SCOPE_BEYOND_MEMBER_REACH` (C-29.9). A `confinedTo` other than absent or exactly `scratch` is refused `AI_CONFINEMENT_NOT_SCRATCH` (C-29.10). The credential's value and a review grant's secret are generated here, returned once in the minting answer, and passed on only as their SHA-256. An op a bearer is refused by R14 counts as beyond member reach, both at the mint and in R12.
+- **R19** *(retired: moved to `admission` R13, K617)*
 
 **Doors that authenticate by a secret**
-- **R20** `reviewcopy`, `reviewcomment` and `statementack` admit a caller holding a review grant's secret, whose digest the store checks. A draft outside the fence is answered 404 `NO_REVIEW_COPY`, with the same bytes from `reviewcopy` and from `casedrafts`.
+- **R20** `reviewcopy`, `reviewcomment` and `statementack` admit a caller holding a review grant's secret, whose digest the store checks. A draft outside the fence is answered 404 `NO_REVIEW_COPY`, with the same bytes from `reviewcopy` and from `casedrafts`. `op=reviewcopy`'s in-band `date` is the copy's `last_change.at` as the store states it (d543, K737).
 
 **The envelope**
 - **R21** Every answer is JSON with `access-control-allow-origin: *`. A forwarded answer is the handler's, with `store` and `tokenClass` added and its HTTP status kept.
@@ -58,17 +58,21 @@ Terms. An **op spec** is `{classes, machineClasses?, mutating}`, with the op's s
 - **R24** A public op relaying the store's answer answers the store's own status, and answers R23 on a store failure, never 200.
 - **R25** An error thrown anywhere in either door is answered with a named internal-error code (`PLANE_INTERNAL_ERROR` in the Worker, `STORE_INTERNAL_ERROR` in the store) and a correlation id. It never carries the stack, the message, a path or a line, and the stack is logged server-side under the correlation id.
 
-**The act gate: `ACT_GATE`, `decorateAct(act)`** (read by `affordances.decorate`, its R11, for `op=affordances` and queue R17's `op=queue`)
-- **R34** `ACT_GATE` is `{needs(id), mode(id)}`, read from the same tables that gate the ops: `needs(id)` answers `NEEDS[id]` (the capability a session needs for the op), or `null` when the op has no row; `mode(id)` answers `session` when the member session set (`SESSION_OPS.member`) holds the op, else `admin-session` when the founder's set (`SESSION_OPS.admin`) holds it, else `machine`. `decorateAct(act)` is `affordances.decorate(act, ACT_GATE)`, and it is the one decoration both `op=affordances` and `op=queue` apply, so an option in the feed equals the act `op=affordances` publishes for that subject. The gate is read only when a request is decorated, after both tables exist.
+**The act gate** (moved to `op-declarations` with the tables it reads, K624)
+- **R34** *(retired: moved to `op-declarations` R1, K617)*
 
 **The Durable Object class** (K93; N348)
-- **R35** The Durable Object class the instance exports is this module's (`dispatch.mjs`'s `Store`). At construction it starts `instance-setup` once per object (`instanceSetupOf(ctx, env).start()`, the composition root's share), and `instance-setup`'s routes (`instanceSetupOps`) are part of R26's route map, beside `legacy-store`'s. So every store route passes the one frame: R26's body read and envelope, R27's existence read and R25's catch. No module answers a store route outside it.
+- **R35** *(retired: moved to `plane` R1, K653 BOB-2; T19's layer-11 fold)*
+- **R42** (K764; provenance R52) Once `legacy-store`'s promotion step goes, this module holds `provenance`'s `testimonySlot()` among the registered promotion steps (promotion R39) at the rank that step holds today, whatever this module's own place in the order: its `check` runs after the checks of every module before `legacy-store` in the order (`monitoring`'s included) and before `tasks`', and its `project` after those modules' projections and before any later module's; so every step's checks and projections, and the order of refusals, are those of today. *(not yet met: T20, K846: the slot stays inside plane's `plane-held` step until provenance's and control-plane's T20 jobs)*
 
 **The doorbell's pull** (N364; DEC-78 item 1)
 - **R36** `op=inboxpull` routes to capture's `pullKnock` (capture R65) stamping `by` from the session, and in the same act promotes the pulled document as a new information bundle at `collected`, the puller its author; the pull and its promotion are one act, through capture R65's `within` (K559, K580): a refusal or a fault of either leaves neither written, and a fault answers a fixed sentence, never store text. A knock already pulled whose capture no bundle holds (pulled through capture's own route) is promoted by the door's next pull of it (K609).
 - **R37** (D-78, N398, K607) On `op=promote`, a creation (`base: null`) of an inquiry (its document's `object_type` through `normalizeType`, a legacy spelling included) that is not a verified replay (R16) has `surfaced_by` in its `bundle.md` front matter set by the control plane: `human` for a session, `agent` for any other caller; the caller's value never reaches the store. Its `sha256` and `bytes` are recomputed when the caller sent no digest or the digest of the text it sent, else left as sent so the store refuses the mismatch. A revision is not restamped.
 - **R38** (D-61, N398, K607) `op=lease`'s `actor` is set by the control plane: a session's member, any other caller `token:<class>` (an `ai` credential `token:ai`); the caller's `actor` never reaches the store. The lease itself is record-core's (its R10).
-- **R40** (N399, K607) `op=stats` is stamped `capacity=1` exactly for the `admin` class (the ADMIN_TOKEN binding and the founder's session), else `capacity=0`, beside its `viewer` (R17); a caller's `capacity` never reaches the store, in either direction. (R39 is held for `op=purge`'s confirmation gate, N408.)
+- **R39** (N408, K621) `op=purge` whose `confirm` is not exactly the namespace the request resolved to (`admission` R4) is refused 400 `REQUIRED_ARGUMENT_MISSING` (C-61.1), naming `argument` `confirm`, `expected` (that namespace) and `got` (the `confirm` sent, or null), with `tokenClass` and `store`, before the store is called: nothing is read or written. So a purge never lands in a namespace its caller did not name; a probe, confined to `scratch` (`admission` R4), can confirm only `scratch`. C-61.1's row moves to this module's own `checks.mjs` with the gate.
+- **R40** (N399, K607) `op=stats` is stamped `capacity=1` exactly for the `admin` class (the ADMIN_TOKEN binding and the founder's session), else `capacity=0`, beside its `viewer` (R17); a caller's `capacity` never reaches the store, in either direction.
+- **R43** (rule 1, K648) This module's last act ends the catalogue: once every other importer has re-pointed, no product module and no module test imports `checks/bio-checks.mjs`, the file and `test/m/legacy-checks/` are gone, and `CHECK_FAMILIES` (R22, R41) is composed of the modules' own families and this module's alone, still total over `build/modules.json` (every module with a check table has its entry). R22's decoration reads only those families, and every code it decorated before reads the same `code`, `check` and `translation`.
+- **R41** (K656; `agent-worker` R48, N157) The untargeted `op=affordances` answer is `affordances`' R17 answer with two keys added: `fences`, `skills`' `machineFences` over `CHECK_FAMILIES` (K585 (1); the pack's `boundary.fences`, `skills` R3), and `pack`, `skills.renderPack(published)` whole with its `version`, `published` being that same answer with its `fences` (`{catalog, vocabularies, capture_acts, fences}`, and `surfaces`, `recipes` once published). A targeted answer carries neither key. If rendering throws, the answer carries `pack: null` and `pack_absent` (the error's message), never a partial pack, so a reader refuses it (`agent-worker` R48).
 
 **`dispatch(req)`, the record store's door**
 - **R26** An empty POST body is `null`, and a body that is not JSON is refused 400 `BAD_JSON`. A route no module serves is refused 400 `unknown op: <op>`. An answer is `{ok: true, result}`. The routes are the modules' own maps (the `membershipOps` pattern).
@@ -78,26 +82,33 @@ Terms. An **op spec** is `{classes, machineClasses?, mutating}`, with the op's s
 
 ### Uses
 
-- `membership`: `session` (R8), `claim` (R15), `existenceAct` (R27), `isAdministrator`.
-- `runtime-limits`: `liveToken` (R7, R15).
+- `op-declarations` (K624): `OPS`, `SESSION_OPS`, `NEEDS`, the act lists (R2, R17, R26, R29), `decorateAct` and `ACT_GATE` (for `op=affordances`; `ops.mjs`, the re-export for `legacy-index`'s `op=affordances` and `op=queue` arms, is deleted once those arms leave `src/index.mjs` for `affordances` and `queue`, T19 layer 11).
+- `admission` (K624): its gates, called in R28's order, and the caller it admits (class, session, member, viewer, identity, `ai` credential), from which R17 stamps.
+- `membership`: `claim` (R15), `existenceAct` (R27), `isAdministrator`.
+- `runtime-limits`: `liveToken` (R15).
 - `signatures`: the signing page (R1).
-- `publication`: `inbandQuartet`, for the review copy's answer (R20).
-- `instance-setup`: `setupPage`, its public group read (R1), the reports' handlers; `instanceSetupOf` and its `start`, `instanceSetupOps` (R35; N348).
-- `affordances`: `decorate` (its R11) for R34, and `ACTS`, `CAPTURE_ACTS`, `PER_ITEM_ACTS`, `VOCABULARIES` for `op=affordances`' answer while its arm is here.
-- `legacy-checks`: the rows of R32 until they move; `CHECK_CATALOGUE` (R22); `MACHINE_AUTHOR_PREFIX`, `MACHINE_CLASS_PREFIX`.
-- `legacy-store`: its store routes and class until each module takes its own.
+- `public-read`: `inbandQuartet` (its R7, was `publication` R16; K651), for the review copy's answer (R20).
+- `instance-setup`: `setupPage`, its public group read (R1), the reports' handlers; `instanceSetupOf` and its `start`, `instanceSetupOps` (N348; `plane` R1 since T19's layer-11 fold, while `dispatch.mjs`' `Store` still wraps `legacy-store`'s class).
+- `skills`: `renderPack`, `machineFences` (R41).
+- `affordances`: `ACTS`, `CAPTURE_ACTS`, `PER_ITEM_ACTS`, `VOCABULARIES` for `op=affordances`' answer while its arm is here.
+- `legacy-checks`: the rows of R32 until they move, and C-61.1 (R39) until it moves here; `CHECK_CATALOGUE` (R22) until R43; none after T19's layer 11.
+- `record-grammar`: `parseFrontmatter`, `createSha256`, `normalizeType`, `MACHINE_AUTHOR_PREFIX`, `MACHINE_CLASS_PREFIX` (`index.mjs`:7–8 and `pull.mjs`:13 import them from the catalogue today; re-pointed in T19's layer 11).
+- `legacy-store`: its store routes and class until each module takes its own; then `plane` holds the class (its R1) and this module's `dispatch` and `controlPlaneRoutes` are what `plane` calls (R26).
 - `capture`: `CAPTURE_CHECKS` (R22; N347); `pullKnock` (its R65), for R36 (N364).
 - `promotion`: `promote`, for R36's promotion of the pulled document (N364).
 - `sources` (N364): its op handlers (`sourcedisclose`, `sourcelink`, `sourceconsent`, `sourceconsentwithdraw`) and the no-account door `knockerconsent` (its R11), which this module routes and stamps.
+- `action-plans`: `actionPlansOps` (R26), its check table (R22); `planopen`, `plansubjectadd`, `plansubjectremove`, `plan`, `plans`, `optionadd`, `optionrevise`, `optionpropose` (any credential, stamped `proposer`), `optionadopt`, `optiondispose`, `scenarioset`, `checkpointrecord`, `optionstart`, `planclose`, each with `author` and `viewer` stamped (R29; specs in `op-declarations`); `plans` names a project (R27). (T18, K608)
+- `action-clocks`: its ops (R26) and check table (R22): `reminderset` and `reminderanswer` (its R4, R6), `author` and `viewer` stamped (R29; specs in `op-declarations`). (T18, K617, K624 (3))
+- `actions` and `filings` (routed through their own maps, R26): the op specs and stamps of `actioncreate`, `action`, `actions`, `actionpressure` (`actions` R47, R48) and `communicationprepare` (`filings` R23, stamped `preparer`) (R29; specs in `op-declarations`). (T18, K608)
 - Every module whose op handlers or store routes it routes. These uses are declared as each module is extracted (K93).
 
 ### Invariants
 
-- **R28** The gates run in one order, which the tests pin: R3, R4, R5, then the public ops (R15 among them), then R10's export refusal, R7–R8 with R10's session gate, R9, R11/R12, R13, R6's scope refusal, then R14 and R16, and then the op. Nothing is read or written when a gate refuses.
+- **R28** The gates run in one order, which the tests pin: `admission` R1, R2, R3, then the public ops (R15 among them), then `admission` R8's export refusal, `admission` R5–R6 with R8's session gate, `admission` R7, R9/R10, R11, `admission` R4's scope refusal, then `admission` R12 and R16, and then the op. Nothing is read or written when a gate refuses.
 - **R29** No handler receives a caller-supplied value for any stamp (R17). This is tested for every op that declares a stamp.
-- **R30** No credential, session token, secret or stack appears in any answer, except the one minting answer of R19.
-- **R31** An op spec for every op any module serves, and no spec without a handler or a store route.
-- **R32** Each check moves here as an invariant with its test (K6): C-38.1–C-38.8, C-69.1, C-69.2 and the two internal-error rows R25 adds, C-78.1–C-78.3, C-29.6–C-29.10, C-32.17, C-64.4, C-68.2–C-68.4 and C-66.6.
+- **R30** No credential, session token, secret or stack appears in any answer, except the one minting answer of `admission` R13.
+- **R31** *(retired: moved to `op-declarations` R6, K617)*
+- **R32** Each check moves here as an invariant with its test (K6): C-69.1, C-69.2 and the two internal-error rows R25 adds, C-68.2–C-68.4 and C-66.6. (C-38.1–C-38.8, C-78.1–C-78.3, C-29.6–C-29.10, C-32.17 and C-64.4 moved to `admission` R14 with the gates that raise them, K617, K624.)
 - **R33** No place is named in this module's behaviour or outward text.
 
 ### Satisfies
@@ -115,7 +126,7 @@ Terms. An **op spec** is `{classes, machineClasses?, mutating}`, with the op's s
 - **Shape.** An op table `{op: {spec, handler?}}` and a store-route table assembled from each module's map. The generic forward (today's tail of `fetch`) is the default handler.
 - **The internal-error codes** take the next free C-69 numbers when D-629's built work (`land/worker/D-629` @ `5e202b33`) is judged. That branch minted C-69.2 before D-561 gave C-69.2 to `STORE_DID_NOT_ANSWER` on `main`.
 - **For callers.** Handlers read stamps from the request, never the body's own fields. `promotion` trusts its identity stamps as given (its Suggestions); that trust is kept by R17 and R29.
-- **The split, if a job cannot read the module whole** (P6; BOB, 2026-09-28): the op declarations (`OPS`, the act lists, `SESSION_OPS`, `NEEDS`, `UNATTENDED_BY_DECISION`: about 2,950 lines, about 690 of code) as one data file separable from the two doors, which read it.
+- **The split** (K617, K624 (1), (2)): taken at T18. `op-declarations` and `admission` build their paths by copy and merge first; this module's job then deletes `ops.mjs`, the admission path and their rows, calls `admission`'s gates in R28's order, and keeps re-exports only for the importers outside the product modules (`legacy-index`'s `decorateAct`, `ACT_GATE`, in `ops.mjs`, deleted in T19's layer 11 with `legacy-index`'s need of it; the old suites, which read source and retire at the next release, K619).
 - **Tests.** One arm per refusal code, with a negative control each. R28's order is driven by a request that would fail two gates at once. R29 is driven by sending every stamp field on every declared op.
 
 ## Open for Bob

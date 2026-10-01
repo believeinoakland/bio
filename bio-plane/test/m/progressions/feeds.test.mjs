@@ -87,6 +87,74 @@ test("R18 R25: an applying decision takes its finding out of instances and propo
   assert.equal(g.dispositions[0].applies, false);
 });
 
+/* Converted from `test/d266scope.test.mjs` (progressions' share, K619): the key shape `progression::stage` names no
+   project; one decision ages its stage's question under every instance at once; a re-triage replaces it (D-79 ages a
+   finding and never freezes it), and every read publishes the new decision alone. */
+test("R18 R22 R12: a decision keyed on (progression, stage) names no project, ages the stage under every instance at once; a re-triage replaces it and every read publishes only the new one", async () => {
+  const w = seeded();
+  await three(w);
+  const open = w.p.proposalsFeed(Date.parse("2026-09-01"));
+  assert.deepEqual(open.proposals.find((p) => p.key === "proc::award").instances.map((i) => i.entity_id), ["ENT-1", "ENT-2"]);
+  w.clock.now = "2026-09-02T00:00:00.000Z";
+  const act = w.p.disposeProposal({ key: "proc::award", to: "dismissed", reason: "the filing predates the record",
+                                    definitionVersion: 1, decidedBy: "member:alice" });
+  assert.deepEqual(act, { ok: true, key: "proc::award", progression_key: "proc", stage_key: "award", to: "dismissed",
+                          state: "dismissed", reason: "the filing predates the record", decided_by: "member:alice",
+                          at: "2026-09-02T00:00:00.000Z", bundle: null, definition_version: 1 });
+  const aged = (f) => {
+    assert.ok(!f.proposals.some((p) => p.key === "proc::award"));
+    assert.ok(!f.instances.some((i) => i.findings.some((x) => x.stage_key === "award")));
+    for (const e of ["ENT-1", "ENT-2"]) {
+      const inst = w.p.readInstance({ progressionKey: "proc", entityId: e, viewer: MEMBER });
+      assert.deepEqual([inst.finding_count, inst.open_finding_count], [1, 0], e);
+    }
+  };
+  const once = w.p.proposalsFeed(Date.parse("2026-09-03"));
+  aged(once);
+  assert.deepEqual(once.dispositions.map((d) => [d.key, d.state, d.reason]), [["proc::award", "dismissed", "the filing predates the record"]]);
+  // re-triage: dismissed to deferred, with a new reason; one row, the old reason gone from every read, the finding still aged
+  w.clock.now = "2026-09-04T00:00:00.000Z";
+  const again = w.p.disposeProposal({ key: "proc::award", to: "deferred", reason: "revisit after the budget cycle",
+                                      definitionVersion: 1, decidedBy: "member:bea" });
+  assert.deepEqual([again.ok, again.state, again.decided_by], [true, "deferred", "member:bea"]);
+  assert.equal(w.count("proposal_dispositions"), 1);
+  const twice = w.p.proposalsFeed(Date.parse("2026-09-05"));
+  aged(twice);
+  assert.deepEqual(twice.dispositions.map((d) => [d.key, d.state, d.reason, d.decided_by, d.at, d.applies]),
+    [["proc::award", "deferred", "revisit after the budget cycle", "member:bea", "2026-09-04T00:00:00.000Z", true]]);
+  const reads = JSON.stringify([twice, w.p.readInstance({ progressionKey: "proc", entityId: "ENT-1", viewer: MEMBER }),
+                                w.p.captureProgressions({ captureSha: "sa", nowMs: Date.parse("2026-09-05") })]);
+  assert.doesNotMatch(reads, /predates the record/);
+  assert.equal(w.p.readInstance({ progressionKey: "proc", entityId: "ENT-2", viewer: MEMBER }).findings[0].disposition.state, "deferred");
+  // negative control: the other stage's question is untouched by either decision
+  assert.deepEqual(twice.proposals.map((p) => p.key), ["proc::contract"]);
+});
+
+/* Converted from `test/queue.test.mjs` (progressions' share, K619; the suite has no row): the finding `op=queue`
+   aggregates. A `usually` `0..1` predecessor left unplaced under a placed `always` stage is one missing finding and
+   one proposal; the placed stage is none; the feed reads the same twice and writes nothing. */
+test("R11 R18 R24: an unplaced usually 0..1 predecessor under a placed always stage is one finding and one proposal; the feed reads alike twice and writes nothing", async () => {
+  const w = seeded();
+  w.p.defineProgression({ progressionKey: "procurement", label: "Procurement", declaredBy: "member:alice", stages: [
+    { key: "solicitation", label: "RFP / RFQ / IFB", cardinality: "0..1", required: "usually" },
+    { key: "award", label: "council resolution", after: "solicitation", cardinality: "1", required: "always" } ] });
+  const r = await w.p.threadInstance({ progressionKey: "procurement", entityId: "ENT-1", placements: [{ stage: "award", captureSha: "sa" }],
+                                       threadedBy: "member:alice", viewer: MEMBER });
+  assert.deepEqual(r.findings.map((f) => [f.kind, f.stage_key, f.stage_label, f.required, f.dischargeable]),
+    [["missing_predecessor", "solicitation", "RFP / RFQ / IFB", "usually", true]]);
+  const before = w.snapshot();
+  const f = w.p.proposalsFeed(Date.parse("2026-09-01"));
+  assert.deepEqual(f.proposals.map((p) => [p.key, p.stage_label, p.required, p.n, p.surfaced_by]),
+    [["procurement::solicitation", "RFP / RFQ / IFB", "usually", 1, "machine"]]);
+  assert.deepEqual([f.instance_count, f.proposal_count, f.disposition_count], [1, 1, 0]);
+  assert.deepEqual(w.p.proposalsFeed(Date.parse("2026-09-01")), f);
+  assert.deepEqual(w.snapshot(), before);
+  // negative control: placing the predecessor leaves nothing to propose
+  await w.p.threadInstance({ progressionKey: "procurement", entityId: "ENT-1", threadedBy: "member:alice", viewer: MEMBER,
+                             placements: [{ stage: "solicitation", captureSha: "sb" }, { stage: "award", captureSha: "sa" }] });
+  assert.deepEqual(w.p.proposalsFeed(Date.parse("2026-09-01")).proposals, []);
+});
+
 test("R18 R31: a cardinality finding is an open finding of its instance", async () => {
   const w = seeded();
   w.define();

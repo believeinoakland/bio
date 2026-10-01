@@ -1,0 +1,268 @@
+/* action-plans over the modules it uses: the real ones where it writes or reads the record (record-core, membership,
+   promotion) and where it creates (actions, action-clocks: R18 and R29 create a real action and set real reminders), on
+   a real SQLite database (node:sqlite) standing in for a Durable Object's storage, answering as workerd's does (a
+   cursor); and stand-ins, in the shape of their Provides, for the modules whose facts the test controls: inquiry
+   (`projectsDrawingOn`), strength (`projectBar`), conformance (`determinationRead` R9, `determinationsFor` R11),
+   standards (`standardRead` R5), escalation (`escalationsFor` R22, `escalationRead` R2), filings (`availableActions`
+   R21) and ai-runs (`registerOpenCheck` R47, `onRunOpened` R43, `runFor` R28, `read` R19, `boundOf`/`consumeBound`
+   R29). An inquiry and a determination are real bundles in the record (so an action's legs resolve); their facts are
+   the stand-ins'. Every test drives `action-plans` at its interface, under the jurisdictions test profile. */
+import { DatabaseSync } from "node:sqlite";
+import { createHash } from "node:crypto";
+import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
+import { membershipOf } from "../../../src/membership/index.mjs";
+import { promotionOf } from "../../../src/promotion/index.mjs";
+import { actionsOf } from "../../../src/actions/index.mjs";
+import { actionClocksOf } from "../../../src/action-clocks/index.mjs";
+import { actionPlansOf } from "../../../src/action-plans/index.mjs";
+import { runPrincipalGate } from "../../../src/run-rules/index.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+
+const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
+function cursor(rows) {
+  let i = 0;
+  const c = {
+    next() { return i < rows.length ? { done: false, value: rows[i++] } : { done: true, value: undefined }; },
+    [Symbol.iterator]() { return c; },
+    toArray() { const out = rows.slice(i); i = rows.length; return out; },
+    one() { const rest = c.toArray(); if (rest.length !== 1) throw new Error(`Expected exactly one result, got ${rest.length}`); return rest[0]; },
+  };
+  return c;
+}
+export function storage() {
+  const db = new DatabaseSync(":memory:");
+  let n = 0;
+  const sql = { exec(q, ...args) {
+    const st = db.prepare(q);
+    return cursor(st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []));
+  } };
+  return { db, sql, transactionSync(fn) {
+    const sp = `sp${n++}`;
+    db.exec(`SAVEPOINT ${sp}`);
+    try { const r = fn(); db.exec(`RELEASE ${sp}`); return r; }
+    catch (e) { db.exec(`ROLLBACK TO ${sp}`); db.exec(`RELEASE ${sp}`); throw e; }
+  } };
+}
+
+export const V = (id) => `member:${id}`;
+export const MACHINE = "class:ai";
+/** The control plane's two stamps on an agent's `optionpropose` (K727): `proposer`, its label (`class:ai/<tokenId>`),
+ *  and `principal`, the credential's principal and token (`<principal>/<tokenId>`), which a run it opened holds. */
+export const AGENT = "class:ai/tok-1";
+export const RUN_PRINCIPAL = "member:bob/tok-1";
+export const NOW = "2026-10-01T12:00:00Z";
+export const DAY = 86400000;
+export const ms = (iso) => Date.parse(iso);
+export const OFFICE = { state: "named", kind: "office", role: "Town Clerk", body: "City of Port Ellery" };
+const EMPTY = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+
+export function world({ profiles = ["test-port-ellery"], omit = [] } = {}) {
+  const st = storage();
+  const host = { storage: st };
+  const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
+  const clock = { now: NOW };
+  const nowMs = () => ms(clock.now);
+  const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
+  record.migrate();
+  const membership = membershipOf(host, { record });
+  membership.migrate();
+  const promotion = promotionOf(host, { record, membership, now: () => clock.now });
+  promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
+  if (profiles) record.setSetting("jurisdiction_profiles", profiles, "test");
+  /* connections' `refs` projection, as far as actions' read joins it (its R25). */
+  st.db.exec(`CREATE TABLE refs (bundle_id TEXT, target_id TEXT, kind TEXT)`);
+
+  const sees = (project, viewer) => viewer === null || viewer === undefined || membership.inSight(project, viewer);
+  /* conformance's stand-in: determinations as its R9 answers them, sight by the determination's project. */
+  const determinations = new Map();
+  const conformance = {
+    determinationRead({ id, viewer }) {
+      const d = determinations.get(id);
+      if (!d || !sees(d.project, viewer)) return { ok: false, reason: "NO_SUCH_DETERMINATION" };
+      return { ok: true, ...structuredClone(d), live: !d.superseded_by };
+    },
+    determinationsFor({ act, live, after, viewer }) {
+      const items = [...determinations.values()].filter((d) => sees(d.project, viewer) && (!act || d.act.id === act)
+        && (!live || !d.superseded_by) && (!after || d.id > after)).sort((a, b) => (a.id < b.id ? -1 : 1))
+        .map((d) => ({ ...structuredClone(d), live: !d.superseded_by }));
+      return { ok: true, items, cursor: null, truncated: false };
+    },
+  };
+  const drawing = new Map();
+  const inquiry = { projectsDrawingOn: (id) => [...(drawing.get(id) || [])] };
+  const bars = new Map();
+  const strength = { projectBar: (p) => ({ declared: bars.has(p), capture: bars.get(p)?.capture ?? null, connection: bars.get(p)?.connection ?? null }) };
+  const standardsHeld = new Map();
+  const standards = { standardRead: ({ id, viewer }) => {
+    const s = standardsHeld.get(id);
+    return s && viewer !== V("outsider") ? { ok: true, id, ...s } : { ok: false, reason: "NO_SUCH_STANDARD" };
+  } };
+  const escalations = new Map();      // determination -> [{id, state, stage, history}]
+  const escalation = {
+    escalationsFor: ({ determination, viewer }) => {
+      const d = determinations.get(determination);
+      if (!d || !sees(d.project, viewer)) return { ok: false, reason: "NO_SUCH_DETERMINATION" };
+      return { ok: true, determination, items: (escalations.get(determination) || []).map((e) => ({ id: e.id, state: e.state, stage: e.stage })) };
+    },
+    escalationRead: ({ id }) => {
+      for (const l of escalations.values()) for (const e of l) if (e.id === id) return { ok: true, id, stage: e.stage, history: e.history };
+      return { ok: false, reason: "NO_SUCH_ESCALATION" };
+    },
+  };
+  const filings = { availableActions: ({ determination }) => ({ ok: true, determination, kinds: [{ kind: "complaint", tier: 1 }] }) };
+  /* ai-runs' stand-in. */
+  const runs = new Map();
+  const reg = { checks: [], listeners: [] };
+  const aiRuns = {
+    registerOpenCheck: (module, mode, fn) => { reg.checks.push({ module, mode, fn }); return { ok: true }; },
+    onRunOpened: (module, fn) => { reg.listeners.push({ module, fn }); return { ok: true }; },
+    runFor: (run, viewer) => { const r = runs.get(run); return r && (viewer !== V("outsider")) ? { run: r.run, status: r.status, mode: r.mode,
+      context_type: r.context_type, context_id: r.context_id, principal_plane: r.principal_plane, principal_claude: "acct",
+      ...(r.mode === "plan" ? { plan: r.plan } : {}) } : null; },
+    read: async ({ run }) => { const r = runs.get(run); return r ? { found: true, session: { id: run, principal: { plane: r.principal_plane, skill: r.skill } } } : { found: false }; },
+    boundOf: (run, bound) => { const r = runs.get(run); return r && r.bounds[bound] ? { ...r.bounds[bound] } : null; },
+    consumeBound: (run, bound, n) => { const r = runs.get(run); if (!r.bounds[bound]) r.bounds[bound] = { allowed: 0, consumed: 0 };
+      st.sql.exec(`CREATE TABLE IF NOT EXISTS stub_consumed (run TEXT, n INTEGER)`); st.sql.exec(`INSERT INTO stub_consumed VALUES (?, ?)`, run, n);
+      r.bounds[bound].consumed += n; return null; },
+  };
+  const stand = { inquiry, strength, conformance, standards, escalation, filings, aiRuns };
+  /* actions, real, over the stand-in conformance; what it registers with retrieval is the test's (nothing here reads it). */
+  const retrievalStub = { registerActionFacts: () => ({ ok: true }), registerProjectionDecoration: () => ({ ok: true }) };
+  const actions = actionsOf(host, { record, membership, promotion, retrieval: retrievalStub, conformance,
+                                    content: { captureFor: () => null }, now: nowMs });
+  const clocks = actionClocksOf(host, { record, membership, actions, conformance, now: nowMs });
+  const given = Object.fromEntries(Object.entries(stand).filter(([k]) => !omit.includes(k)).map(([k, v]) => [k, v]));
+  for (const k of omit) given[k] = null;
+  const ap = actionPlansOf(host, { record, membership, promotion, ...given, actions: omit.includes("actions") ? null : actions,
+                                   clocks: omit.includes("clocks") ? null : clocks, now: () => clock.now });
+
+  let n = 0, nd = 0, ni = 0, nr = 0;
+  const commitBundle = (id, type, text, state) => {
+    const sha = createHash("sha256").update(text, "utf8").digest("hex");
+    record.transact(() => record.commit({ bundleId: id, type, title: id, project: null, snapKey: `b${++n}`, kind: "promotion",
+      base: EMPTY, author: V("alice"), writer: null, operation: null,
+      files: [{ path: "bundle.md", text, sha256: sha, bytes: Buffer.byteLength(text) }], state, priorState: null,
+      group: "test-group", created: clock.now, lastUpdated: clock.now, criticality: null, at: clock.now }));
+  };
+  const w = {
+    st, host, record, membership, promotion, ap, actions, clocks, clock, stand, determinations, drawing, bars, standardsHeld,
+    escalations, runs, reg,
+    rows: (q, ...a) => [...st.sql.exec(q, ...a)],
+    count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,
+    fm: (id) => { const t = record.readFile(id, "bundle.md")?.text; return t ? parseFrontmatter(t).data : null; },
+    text: (id) => record.readFile(id, "bundle.md")?.text ?? null,
+    snapshot() {
+      const out = {};
+      for (const { name } of st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`))
+        out[name] = JSON.stringify([...st.sql.exec(`SELECT * FROM ${name}`)]);
+      return out;
+    },
+    member(id, { role = "member", status = "active" } = {}) {
+      st.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
+                   VALUES (?, ?, ?, ?, ?, '["contribute"]', 't', 't')`, id, `Cover ${id}`, `h_${id}`, role, status);
+    },
+    project(title, owner, extra = []) {
+      const r = promotion.promote({ base: null, snapKey: `k${++n}`, author: V(owner), ownerMemberId: owner,
+        files: [{ path: "bundle.md", text: projMd(title, extra) }], meta: { object_type: "project" } });
+      if (!r.ok) throw new Error(`fixture project refused: ${JSON.stringify(r).slice(0, 400)}`);
+      return r.bundleId;
+    },
+    /** A revision of a project's document with extra front-matter lines, by `author`. */
+    reviseProject(id, title, extra, author) {
+      const head = record.head(id);
+      const held = record.readFile(id, "bundle.md").text;
+      const idLine = held.split("\n").find((l) => l.startsWith("id:"));
+      const text = projMd(title, extra).replace("---\n", `---\n${idLine}\n`);
+      return promotion.promote({ bundleId: id, base: head.bundleSha, snapKey: `k${++n}`, author,
+        files: [{ path: "bundle.md", text }], meta: { object_type: "project" } });
+    },
+    join(projectId, memberId, state = "joined") {
+      st.sql.exec(`INSERT OR REPLACE INTO project_participants (project_id, member_id, state, owner, created, updated)
+                   VALUES (?, ?, ?, 0, 't', 't')`, projectId, memberId, state);
+    },
+    /** A real inquiry bundle at `state`, drawn on by `projects`. */
+    inquiry(projects = [], state = "open") {
+      const id = `INQ-2026-${String(++ni).padStart(4, "0")}-q`;
+      commitBundle(id, "inquiry", ["---", `id: ${id}`, "object_type: inquiry", `title: "${id}"`, `current_state: ${state}`, "---", "", "## Question", "", "Why?", ""].join("\n"), state);
+      drawing.set(id, new Set(projects));
+      return id;
+    },
+    setInquiryState(id, state) { st.sql.exec(`UPDATE bundles SET current_state=? WHERE bundle_id=?`, state, id); },
+    /** A determination (a real CONF- bundle; its facts conformance's stand-in's). */
+    determine({ project, outcomes, act = null, findings = [] } = {}) {
+      const id = `CONF-2026-${String(++nd).padStart(4, "0")}-determination`;
+      commitBundle(id, "determination", ["---", `id: ${id}`, "object_type: determination", `title: "${id}"`, "current_state: recorded", "---", "", "D.", ""].join("\n"), "recorded");
+      determinations.set(id, { id, project, act: { id: act ?? `ACT-2026-${String(nd).padStart(4, "0")}`, actor: { role: "Town Clerk", body: "City of Port Ellery" } },
+        outcomes, findings, at: clock.now, superseded_by: null });
+      return id;
+    },
+    supersede(id, by) { determinations.get(id).superseded_by = by; },
+    standard(id, { superseded = false } = {}) { standardsHeld.set(id, { superseded_by: superseded ? "STD-2026-9999-x" : null }); return id; },
+    /** A planning run (ai-runs' stand-in), opened through the registered check and listener as `open` would. */
+    openRun({ plan, project, actor = V("bob"), principal = RUN_PRINCIPAL, proposals = 20, status = "running", mode = "plan", skill = "planning@1" } = {}) {
+      const run = `RUN-${++nr}`;
+      const check = reg.checks.find((c) => c.mode === "plan");
+      const said = mode === "plan" ? check.fn({ contextType: "project", contextId: project, plan, actor, viewer: actor }) : null;
+      if (said) return said;
+      runs.set(run, { run, status, mode, context_type: "project", context_id: project, principal_plane: principal, plan, skill,
+                      bounds: { proposals: { allowed: proposals, consumed: 0 } } });
+      for (const l of reg.listeners) l.fn({ run, contextType: "project", contextId: project });
+      return { ok: true, run };
+    },
+    principalGate: runPrincipalGate,
+  };
+  return w;
+}
+
+export function projMd(title, extra = []) {
+  return ["---", "object_type: project", "schema: project@1", `title: "${title}"`, "current_state: forming",
+          "prior_state: null", `created: "2026-09-27T00:00:00Z"`, `last_updated: "2026-09-27T00:00:00Z"`,
+          `objective: "Find out what happened."`, ...extra, "references: []", "state_history: []", "---", "",
+          "## Objective", "", "Find out.", ""].join("\n");
+}
+
+/** The common world: alice (owner) and bob joined in P; carol invited, not joined; dave a member outside it; Q a second
+ *  project of dave's. An open inquiry I drawn on by P; a determination D of P, noncompliant on S1, compliant on S2,
+ *  unclear on S3. */
+export function seeded(opts = {}) {
+  const w = world(opts);
+  for (const m of ["alice", "bob", "carol", "dave"]) w.member(m);
+  w.P = w.project("Budget watch", "alice");
+  w.join(w.P, "bob");
+  w.join(w.P, "carol", "invited");
+  w.Q = w.project("Harbour watch", "dave");
+  w.I = w.inquiry([w.P]);
+  w.D = w.determine({ project: w.P, outcomes: [{ standard: "STD-2026-0001-a", outcome: "noncompliant" },
+    { standard: "STD-2026-0002-b", outcome: "compliant" }, { standard: "STD-2026-0003-c", outcome: "unclear" }] });
+  w.SI = { kind: "inquiry", inquiry: w.I };
+  w.S1 = { kind: "outcome", determination: w.D, standard: "STD-2026-0001-a" };
+  w.S2 = { kind: "outcome", determination: w.D, standard: "STD-2026-0002-b" };
+  w.S3 = { kind: "outcome", determination: w.D, standard: "STD-2026-0003-c" };
+  return w;
+}
+
+/** Open a plan in P about `subjects` by bob; throws on refusal. */
+export function opened(w, subjects = [w.SI, w.S1]) {
+  const r = w.ap.planOpen({ project: w.P, subjects, title: "What we do about it", author: V("bob"), viewer: V("bob") });
+  if (!r.ok) throw new Error(`fixture open refused: ${JSON.stringify(r).slice(0, 400)}`);
+  w.PL = r.id;
+  return r;
+}
+
+/** Add an option by bob; throws on refusal. */
+export function option(w, fields = {}) {
+  const r = w.ap.optionAdd({ plan: w.PL, summary: "Write to the clerk", category: "awareness", subjects: [w.S1], author: V("bob"),
+                             viewer: V("bob"), ...fields });
+  if (!r.ok) throw new Error(`fixture option refused: ${JSON.stringify(r).slice(0, 400)}`);
+  return r.option;
+}
+
+/** Choose options by bob; throws on refusal. */
+export function choose(w, options, extra = {}) {
+  const r = w.ap.optionDispose({ plan: w.PL, options, disposition: "chosen", author: V("bob"), viewer: V("bob"), ...extra });
+  if (!r.ok) throw new Error(`fixture choose refused: ${JSON.stringify(r).slice(0, 400)}`);
+  return r;
+}
+
+export const by = (who, extra = {}) => ({ author: V(who), viewer: V(who), ...extra });

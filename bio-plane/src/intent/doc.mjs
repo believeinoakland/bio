@@ -1,16 +1,16 @@
 /* intent's documents (R2, R8–R11, R26): the aspiration and the goal, which are record documents of their own types, and
  * the two things intent writes into a project's document (the objective's condition and the adoptions). The record's
- * front matter grammar (the catalogue's `parseFrontmatter`) has one level of map, lists of flat maps and inline scalar
+ * front matter grammar (record-grammar's `parseFrontmatter`) has one level of map, lists of flat maps and inline scalar
  * lists, and no escapes; so a scalar written here is a bare token or a quoted string holding no quote, backslash or
  * line break, and every free text a member writes (a statement, bounds, a dead end, a lesson, a reason) lives in a
  * body section, where any text is kept as written. Each edit rewrites one field or one section and leaves every other
  * byte alone. */
 
-import { parseFrontmatter, deriveInquiryTitle, BASIS_GRADES } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter, deriveInquiryTitle, BASIS_GRADES } from "../record-grammar/index.mjs";
 
 export const ASPIRATION = "aspiration", GOAL = "goal";
 export const ASPIRATION_SCOPES = Object.freeze(["group", "project", "member"]);
-/** The grades a condition may require: the catalogue's, never a copy of them (N181 (3)). */
+/** The grades a condition may require: record-grammar's, never a copy of them (N181 (3)). */
 export const GRADES = BASIS_GRADES;
 
 /** A token the grammar holds bare: an id, a key, a grade, a kind. */

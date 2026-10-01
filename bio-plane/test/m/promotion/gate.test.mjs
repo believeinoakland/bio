@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { runGate, runCaseGate, CATALOG_VERSION, GATE_VERSION, ROW_CENSUS } from "../../../src/promotion/index.mjs";
-import { checkBundle, parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { checkBundle, parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { doc, T0, makePromotion } from "./fixtures.mjs";
 
 const ID = "INFO-2026-0001-report";
@@ -13,7 +13,7 @@ const md = (over = {}) => doc({ id: ID, object_type: "information", schema: "inf
 const base = (image, over = {}) => ({ bundleId: ID, image, knownIds: new Set([ID]), hasCapture: async () => ({ present: true }),
   registers: [], releaseRegistry: null, publishedRegistry: null, publishedCaseRegistry: null, earnedRegistry: null, ...over });
 
-/* What the catalogue itself says about the same image, as R27 defines the inputs. */
+/* What record-grammar's checkBundle says about the same image, as R27 defines the inputs (no grammars passed). */
 async function catalogue(image, knownIds = new Set([ID])) {
   const files = new Map(), elided = new Set();
   for (const [p, v] of Object.entries(image)) {
@@ -28,7 +28,7 @@ async function catalogue(image, knownIds = new Set([ID])) {
   return findings;
 }
 
-test("R27: runGate runs the whole bundle catalogue over the image: text entries are files, blob references are elided and never read, knownIds resolves references", async () => {
+test("R27: runGate runs checkBundle over the image: text entries are files, blob references are elided and never read, knownIds resolves references", async () => {
   const images = [
     { "bundle.md": md() },
     { "bundle.md": md({ id: "INFO-2026-0009-other" }) },
@@ -165,3 +165,45 @@ test("R50: ROW_CENSUS is a frozen {version, rows, digest}: the stamp's CATALOG_V
   assert.equal(Object.getOwnPropertyDescriptor(ROW_CENSUS, "rows").writable, false);
 });
 
+
+test("R27 (§1b): the gate passes the registered grammars to the catalogue: a grammar claiming an arm runs in its place, one claiming none runs after, and the findings are the catalogue's own with the same grammars", async () => {
+  const image = { "bundle.md": md({ source_status: "nonsense" }) };
+  const claim = { module: "capture", ids: ["C-2.7"],
+                  arm: (ctx, findings) => { findings.push({ check: "C-2.7", severity: "error", message: "from capture's grammar" }); } };
+  const extra = { module: "later", ids: ["C-999.1"],
+                  arm: (ctx, findings) => { findings.push({ check: "C-999.1", severity: "error", message: `after, over ${ctx.folderName}` }); } };
+  const catalogueWith = async (grammars) => {
+    const files = new Map(Object.entries(image));
+    const { findings } = await checkBundle({ folderName: ID, files, elidedPaths: new Set(),
+      sha256: async (v) => hex(typeof v === "string" ? Buffer.from(v, "utf8") : Buffer.from(v)),
+      sha512: async (b) => new Uint8Array(createHash("sha512").update(b).digest()),
+      resolveTarget: (id) => id === ID, releaseRegistry: null, publishedRegistry: null, publishedCaseRegistry: null,
+      earnedRegistry: null }, { grammars });
+    return findings.filter((f) => f.severity === "error").map((f) => [f.check, f.message]);
+  };
+  /* C-2.7's slot is capture's grammar, which every product caller registers (K767): the test registers a grammar in
+     that slot, as capture does, and never leans on the catalogue's held copy, which fills the slot only for a caller
+     registering none. (This module's tests cannot import capture, a later layer, so `claim` stands in for it.) */
+  const builtIn = (await runGate(base(image))).findings.map((f) => [f.check, f.detail]);
+  /* Through promotion's instance: the record's registrations, and no caller's. */
+  const { p, record } = makePromotion();
+  record.grammarList = [claim, extra];
+  const got = (await p.runGate(base(image, { grammars: [] }))).findings.map((f) => [f.check, f.detail]);
+  assert.deepEqual(got, (await catalogueWith([claim, extra])).concat(
+    (await runGate(base(image))).findings.filter((f) => !f.check.startsWith("C-")).map((f) => [f.check, f.detail])));
+  const c27 = got.filter(([c]) => c === "C-2.7");
+  assert.deepEqual(c27, [["C-2.7", "from capture's grammar"]], "the built-in arm is skipped, never run twice");
+  assert.deepEqual(got.filter(([c]) => c === "C-999.1"), [["C-999.1", `after, over ${ID}`]]);
+  /* With none registered, the instance's gate is the built-in catalogue's. */
+  record.grammarList = [];
+  assert.deepEqual((await p.runGate(base(image))).findings.map((f) => [f.check, f.detail]), builtIn);
+  /* A grammar that throws judged nothing: one error naming its module, ok false, never a pass or a throw out (R37). */
+  record.grammarList = [{ module: "capture", ids: ["C-2.7"], arm: () => { throw new Error("arm broke"); } }];
+  const broke = await p.runGate(base(image));
+  assert.equal(broke.ok, false);
+  assert.deepEqual(broke.findings.filter((f) => f.check === "capture").map((f) => /capture's grammar threw on .*arm broke/.test(f.detail)), [true]);
+  assert.equal(broke.findings.some((f) => f.check === "C-2.7"), false, "the built-in arm does not run in its place");
+  /* A record that cannot answer its registrations rejects the gate: an unread list is never read as empty (R37). */
+  record.grammars = () => { throw new Error("registrations unreadable"); };
+  await assert.rejects(p.runGate(base(image)), /registrations unreadable/);
+});

@@ -36,7 +36,7 @@ function namesNothing(x, answer, extra = []) {
     assert.equal(bytes.includes(s), false, `names ${s}: ${bytes.slice(0, 300)}`);
 }
 
-test("R11 a counsel packet is read only by a member who may see the action and the project of every determination and consequence it draws on: NO_SUCH_PACKET otherwise, the same answer as an absent packet, by every read and export", () => {
+test("R11 a counsel packet is read only by a member who may see the action and the project of every determination and consequence it draws on: NO_SUCH_PACKET otherwise, the same answer as an absent packet, by every read and export", async () => {
   const { x, T3, p, cons } = hidden();
   /* the outsider may see the action itself */
   assert.equal(x.actions.actionRead({ id: T3, viewer: OUTSIDER }).ok, true, "the action is not hidden");
@@ -52,15 +52,15 @@ test("R11 a counsel packet is read only by a member who may see the action and t
   for (const r of [x.f.counselPacketRead({ id: p.id, viewer: OUTSIDER }),
                    x.f.counselPacketRead({ id: p.id, version: 1, viewer: OUTSIDER }),
                    x.op("counselpacketread", { id: p.id, viewer: OUTSIDER }),
-                   x.f.counselPacketExport({ id: p.id, version: 1, author: OUTSIDER, viewer: OUTSIDER }),
-                   x.op("counselpacketexport", { id: p.id, author: OUTSIDER, viewer: OUTSIDER })]) {
+                   (await x.f.counselPacketExport({ id: p.id, version: 1, author: OUTSIDER, viewer: OUTSIDER })),
+                   await x.op("counselpacketexport", { id: p.id, author: OUTSIDER, viewer: OUTSIDER })]) {
     assert.equal(r.reason, "NO_SUCH_PACKET");
     assert.deepEqual({ ...r, id: null }, { ...absent, id: null }, "one answer for hidden and absent");
     namesNothing(x, r);
   }
   /* nothing was exported for the outsider; a member's export is recorded */
   assert.equal(x.count("counsel_packet_exports"), 0);
-  assert.equal(x.f.counselPacketExport({ id: p.id, author: V("bo"), viewer: V("bo") }).ok, true);
+  assert.equal((await x.f.counselPacketExport({ id: p.id, author: V("bo"), viewer: V("bo") })).ok, true);
   /* a theory proposed against the packet is refused as for an absent packet */
   const t = x.f.theoryPropose({ packet: p.id, theory: "A breach.", standards: [x.S1], why: "w", proposer: OUTSIDER,
                                 viewer: OUTSIDER });
@@ -72,7 +72,7 @@ test("R11 a counsel packet is read only by a member who may see the action and t
   assert.equal(x.f.counselPacketRead({ id: p.id, viewer: OUTSIDER }).ok, true, "an invited participant sees the project");
 });
 
-test("R13 filingsFor leaves out every draft and packet drawing on a determination or consequence in a project the viewer may not see, naming nothing of it (its id, its determination, its words), basis_changed included; a member of the project reads them all", () => {
+test("R13 filingsFor leaves out every draft and packet drawing on a determination or consequence in a project the viewer may not see, naming nothing of it (its id, its determination, its words), basis_changed included; a member of the project reads them all", async () => {
   const { x, A, T3, d, p } = hidden();
   /* the outsider's own draft, prepared where the determination is hidden, draws on nothing it may not see */
   const own = x.f.filingPrepare({ action: A, preparer: OUTSIDER, viewer: OUTSIDER });
@@ -99,17 +99,17 @@ test("R13 filingsFor leaves out every draft and packet drawing on a determinatio
   }
 });
 
-test("R6 R7 R19 a draft drawing on a determination in a project the viewer may not see answers as absent to approval and to recording it sent", () => {
+test("R6 R7 R19 a draft drawing on a determination in a project the viewer may not see answers as absent to approval and to recording it sent", async () => {
   const { x, d } = hidden();
-  const absent = x.f.filingApprove({ filing: "FIL-2026-9999", text: "t", author: OUTSIDER, viewer: OUTSIDER });
+  const absent = (await x.f.filingApprove({ filing: "FIL-2026-9999", text: "t", author: OUTSIDER, viewer: OUTSIDER }));
   x.determine({ supersedes: x.D, reason: "corrected",
                 act: { ...x.act, id: x.conformance.determinationRead({ id: x.D, viewer: MACHINE }).act.id } });
-  const r = x.f.filingApprove({ filing: d.id, text: "t", author: OUTSIDER, viewer: OUTSIDER });
+  const r = (await x.f.filingApprove({ filing: d.id, text: "t", author: OUTSIDER, viewer: OUTSIDER }));
   assert.equal(r.reason, "NO_SUCH_FILING", "not FILING_STALE naming the hidden determination");
   assert.deepEqual({ ...r, filing: null }, { ...absent, filing: null });
   namesNothing(x, r);
   const s = x.f.filingRecordSent({ filing: d.id, at: "2026-09-29", account: "handed in", author: OUTSIDER, viewer: OUTSIDER });
   assert.equal(s.reason, "NO_SUCH_FILING");
-  assert.equal(x.f.filingApprove({ filing: d.id, text: "t", author: V("bo"), viewer: V("bo") }).reason, "FILING_STALE",
+  assert.equal((await x.f.filingApprove({ filing: d.id, text: "t", author: V("bo"), viewer: V("bo") })).reason, "FILING_STALE",
                "a member of the project reaches the draft");
 });

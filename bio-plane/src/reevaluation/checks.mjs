@@ -3,10 +3,10 @@
  *
  * Moved here from the check catalogue with their ids and translations unchanged (K6, R23): C-10.1 (`reeval_pending`'s
  * shape, `checkReevalPending`, which ran inside the catalogue's core frontmatter check) and C-80.1, C-80.2 (the notice's
- * subject). C-80.3 is `content`'s (its `passageNotice`) and stays in the catalogue's `VERSION_NOTICE_CHECKS` until
- * content takes it. The member acts R15 and R16 add are this module's own family, C-110. */
+ * subject). C-80.3 is `content`'s (its `passageNotice`), in content's own `VERSION_NOTICE_CHECKS` since T18. The
+ * member acts R15 and R16 add are this module's own family, C-110. */
 
-import { ISO_TS_RE } from "../../checks/bio-checks.mjs";
+import { ISO_TS_RE } from "../record-grammar/ids.mjs";
 
 const at = (fn, region) => `src/reevaluation/index.mjs ${fn} > ${region}`;
 

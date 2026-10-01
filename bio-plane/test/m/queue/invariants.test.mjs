@@ -15,10 +15,6 @@ test("R35: the checks this module holds carry their ids and words: C-31.1–.3, 
   const mod = await import("../../../src/queue/index.mjs");
   for (const moved of ["QUEUE_MACHINE_CHECKS", "TASK_ACTOR_CHECKS", "QUEUE_INBOX_CHECKS", "checkInboxGrammar"])
     assert.equal(mod[moved], undefined, `${moved} went to tasks`);
-  const catalogue = await import("../../../checks/bio-checks.mjs");
-  assert.equal(catalogue.QUEUE_MINT_CHECKS, undefined, "QUEUE_MINT_CHECKS has left the catalogue");
-  assert.equal(catalogue.ACT_SHAPE_CHECKS.CLASS_NOT_DISPOSED, undefined);
-  assert.equal(catalogue.ACT_SHAPE_CHECKS.KIND_NOT_PERSONAL, undefined);
 });
 
 test("R36: queue_state purges by case_id; queue_item_mutes and finding_dispositions only in the whole-store purge", () => {

@@ -7,7 +7,7 @@ import { world, V, MACHINE, STRANGER } from "./fixture.mjs";
 import { FILINGS_CHECKS, Filings } from "../../../src/filings/index.mjs";
 import { noSuchAction } from "../../../src/actions/index.mjs";
 
-test("R1 R6 R7 R8 R11 R13 R14 R21 each refusal of this module carries its code, its C-115 row and translation; one actions answered passes through as it came", () => {
+test("R1 R6 R7 R8 R11 R13 R14 R21 R23 R26 each refusal of this module carries its code, its C-115 row and translation; one actions answered passes through as it came", async () => {
   const x = world();
   const A = x.action();
   const T3 = x.action({ kind: "commitment_claim" });
@@ -28,14 +28,14 @@ test("R1 R6 R7 R8 R11 R13 R14 R21 each refusal of this module carries its code, 
   expect(prep(T3), "TIER3_COUNSEL_PACKET");
   expect(prep(x.action({ kind: "other" })), "KIND_NO_TEMPLATE");
   const d = f.filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") });
-  expect(f.filingApprove({ filing: d.id, author: MACHINE }), "MACHINE_CANNOT_APPROVE");
-  expect(f.filingApprove({ filing: "NONE", author: V("bo"), viewer: V("bo") }), "NO_SUCH_FILING");
-  expect(f.filingApprove({ filing: d.id, author: V("bo"), viewer: V("bo") }), "STILL_UNFILLED");
-  expect(f.filingApprove({ filing: d.id, text: "\uDC00", author: V("bo"), viewer: V("bo") }), "TEXT_UNWRITABLE");
+  expect((await f.filingApprove({ filing: d.id, author: MACHINE })), "MACHINE_CANNOT_APPROVE");
+  expect((await f.filingApprove({ filing: "NONE", author: V("bo"), viewer: V("bo") })), "NO_SUCH_FILING");
+  expect((await f.filingApprove({ filing: d.id, author: V("bo"), viewer: V("bo") })), "STILL_UNFILLED");
+  expect((await f.filingApprove({ filing: d.id, text: "\uDC00", author: V("bo"), viewer: V("bo") })), "TEXT_UNWRITABLE");
   expect(f.filingRecordSent({ filing: d.id, author: MACHINE }), "MACHINE_CANNOT_FILE");
   expect(f.filingRecordSent({ filing: d.id, at: "2026-09-29", account: "x", author: V("bo"), viewer: V("bo") }), "NOT_APPROVED");
-  f.filingApprove({ filing: d.id, text: "Filed words.", author: V("bo"), viewer: V("bo") });
-  expect(f.filingApprove({ filing: d.id, text: "Other words.", author: V("bo"), viewer: V("bo") }), "ALREADY_APPROVED");
+  (await f.filingApprove({ filing: d.id, text: "Filed words.", author: V("bo"), viewer: V("bo") }));
+  expect((await f.filingApprove({ filing: d.id, text: "Other words.", author: V("bo"), viewer: V("bo") })), "ALREADY_APPROVED");
   const passed = f.filingRecordSent({ filing: d.id, at: "not a date", account: "x", author: V("bo"), viewer: V("bo") });
   assert.equal(passed.reason, "BAD_DATE");
   assert.doesNotMatch(String(passed.check), /^C-115\./, "actions' refusal passes through as it came, its own row");
@@ -43,7 +43,7 @@ test("R1 R6 R7 R8 R11 R13 R14 R21 each refusal of this module carries its code, 
   expect(f.filingRecordSent({ filing: d.id, at: "2026-09-29", account: "x", author: V("bo"), viewer: V("bo") }), "ALREADY_SENT");
   const d2 = f.filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") });
   x.actions.actionRiskTier({ target: A, tier: 2, reason: "raised on review", author: V("olive"), viewer: V("olive") });
-  expect(f.filingApprove({ filing: d2.id, text: "t", author: V("bo"), viewer: V("bo") }), "FILING_STALE");
+  expect((await f.filingApprove({ filing: d2.id, text: "t", author: V("bo"), viewer: V("bo") })), "FILING_STALE");
   const counsel = { name: "A. Counsel", organisation: "Test Chambers" };
   expect(f.counselPacket({ action: T3, counsel, author: MACHINE }), "MACHINE_CANNOT_NAME_COUNSEL");
   expect(f.counselPacket({ action: A, counsel, author: V("bo"), viewer: V("bo") }), "NOT_TIER3");
@@ -52,7 +52,7 @@ test("R1 R6 R7 R8 R11 R13 R14 R21 each refusal of this module carries its code, 
          "NO_DETERMINATION");
   const p = f.counselPacket({ action: T3, counsel, author: V("bo"), viewer: V("bo") });
   expect(f.counselPacketRead({ id: "NONE", viewer: V("bo") }), "NO_SUCH_PACKET");
-  expect(f.counselPacketExport({ id: p.id, author: MACHINE }), "MACHINE_CANNOT_EXPORT");
+  expect((await f.counselPacketExport({ id: p.id, author: MACHINE })), "MACHINE_CANNOT_EXPORT");
   const tp = (o) => f.theoryPropose({ action: T3, theory: "t", standards: [x.S1], why: "w", proposer: V("bo"), viewer: V("bo"), ...o });
   expect(tp({ theory: "" }), "NO_THEORY");
   expect(tp({ standards: [] }), "THEORY_NO_STANDARDS");
@@ -70,6 +70,31 @@ test("R1 R6 R7 R8 R11 R13 R14 R21 each refusal of this module carries its code, 
   expect(bare.availableActions({ determination: x.D, viewer: V("bo") }), "DETERMINATION_UNREADABLE");
   expect(bare.theoryPropose({ action: T3, theory: "t", standards: ["STD-X"], why: "w", proposer: V("bo"), viewer: V("bo") }),
          "THEORY_STANDARD_UNREADABLE");
+  /* R23: communications */
+  const cp = (o) => f.communicationPrepare({ action: A, text: "A word to the board.", purpose: "a briefing", preparer: V("bo"),
+                                             viewer: V("bo"), ...o });
+  expect(cp({ preparer: "" }), "COMMUNICATION_NO_PREPARER");
+  expect(cp({ action: x.action({ state: "abandoned" }) }), "ACTION_CLOSED");
+  expect(cp({ text: "" }), "COMMUNICATION_TEXT_REFUSED");
+  expect(cp({ purpose: "x".repeat(501) }), "COMMUNICATION_PURPOSE_REFUSED");
+  assert.deepEqual(cp({ action: "NONE" }), noSuchAction("NONE"), "actions' answer, its row");
+  /* R26: the template library */
+  const ts = (o) => f.templateSave({ from: d.id, name: "notice", author: V("bo"), viewer: V("bo"), ...o });
+  expect(ts({ author: MACHINE }), "MACHINE_CANNOT_SAVE_TEMPLATE");
+  expect(ts({ name: "a\nb" }), "TEMPLATE_NAME_REFUSED");
+  expect(ts({ kind: "Not A Kind" }), "TEMPLATE_KIND_REFUSED");
+  expect(ts({ from: d2.id }), "TEMPLATE_FROM_UNAPPROVED");
+  expect(ts({ text: "" }), "TEMPLATE_TEXT_REFUSED");
+  expect(ts({ kind: "commitment_claim" }), "TEMPLATE_KIND_TIER3");
+  assert.equal(ts({ kind: "bylaw_complaint" }).ok, true);
+  expect(ts({}), "TEMPLATE_NAME_TAKEN");
+  const O = x.action({ kind: "other" });
+  const named = (template) => f.filingPrepare({ action: O, template, preparer: V("bo"), viewer: V("bo") });
+  expect(named("TPL-2026-9999"), "NO_SUCH_TEMPLATE");
+  const tpl = f.templatesFor({ viewer: V("bo") }).templates[0].template;
+  expect(named(tpl), "TEMPLATE_KIND_MISMATCH");
+  assert.equal(ts({ name: "a general letter", kind: null }).ok, true);
+  expect(named(null), "TEMPLATE_NOT_NAMED");
   assert.deepEqual([...seen].sort(), Object.keys(FILINGS_CHECKS).sort(), "every row of the family is answered");
   assert.equal("NO_SUCH_ACTION" in FILINGS_CHECKS, false, "C-115.2 gave way to actions' row (N217)");
   const checks = Object.values(FILINGS_CHECKS).map((r) => r.check);
@@ -77,7 +102,7 @@ test("R1 R6 R7 R8 R11 R13 R14 R21 each refusal of this module carries its code, 
   for (const c of checks) assert.match(c, /^C-115\.\d+$/);
 });
 
-test("R1 R3 R8 R15 R21 with a layer-9 provider absent, filings refuses or states the fact undetermined, never passes it (K248)", () => {
+test("R1 R3 R8 R15 R21 with a layer-9 provider absent, filings refuses or states the fact undetermined, never passes it (K248)", async () => {
   const x = world();
   const bare = new Filings({ storage: x.st, record: x.record, publication: x.p, provenance: x.prov, content: x.content,
                              now: () => x.clock.now });
@@ -100,7 +125,7 @@ test("R1 R3 R8 R15 R21 with a layer-9 provider absent, filings refuses or states
   assert.match(block.says, /undetermined/);
 });
 
-test("R1 R8 R13 R14 every missing action is answered through actions' noSuchAction (its R43, N217): absent, invisible and not an action alike, byte-identical to actions' own answer, its row actions'", () => {
+test("R1 R8 R13 R14 every missing action is answered through actions' noSuchAction (its R43, N217): absent, invisible and not an action alike, byte-identical to actions' own answer, its row actions'", async () => {
   const x = world();
   const A = x.action();
   const T3 = x.action({ kind: "commitment_claim" });

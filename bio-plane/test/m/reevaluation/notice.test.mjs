@@ -2,11 +2,10 @@
    "changed from" audit (R12, R13). Both are reads: every table is byte-identical across each. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, U } from "./fixture.mjs";
+import { world, V, U, projMd, provDoc } from "./fixture.mjs";
 import { VERSION_NOTICE_SUBJECT_CHECKS, VERSION_NOTICE_LEGS_MAX, CHANGED_FROM_SENTENCE,
          CHANGED_FROM_AUDIT_LIMIT_DEFAULT, CHANGED_FROM_AUDIT_LIMIT_MAX } from "../../../src/reevaluation/index.mjs";
-import { VERSION_NOTICE_STATES, VERSION_NOTICE_GRADES } from "../../../src/content/index.mjs";
-import { VERSION_NOTICE_CHECKS } from "../../../checks/bio-checks.mjs";
+import { VERSION_NOTICE_STATES, VERSION_NOTICE_GRADES, VERSION_NOTICE_CHECKS } from "../../../src/content/index.mjs";
 
 const OLD = "INFO-2026-0001-old", NEW = "INFO-2026-0002-new", Q = "INQ-2026-0001-q", OTHER = "INQ-2026-0002-other";
 const ADMIN = "class:admin";
@@ -124,4 +123,43 @@ test("R13: the three totals count every affected bundle; the listing clamped to 
   assert.equal(w.r.changedFromAudit({ limit: 50000 }).limit, CHANGED_FROM_AUDIT_LIMIT_MAX);
   assert.match(all.note, /never evidence it was right/);
   assert.deepEqual(w.snapshot(), before, "every body stays byte-identical");
+});
+
+/* Converted from the old `versionnotice` suite (T18): the gate, the refusal family, and every shape of the read quiet. */
+test("R10 R11 (converts versionnotice §4–5): every shape of the read writes nothing; the family is C-80's three rows; a newer version in a project the viewer was not invited to is not in its chain and not named", () => {
+  const w = world();
+  const a = w.cap("a", "old"), b = w.cap("b", "new");
+  w.doc(OLD, [a]);
+  const P = w.promotion.promote({ base: null, snapKey: "kp", author: "member:owen", ownerMemberId: "owen",
+    files: [{ path: "bundle.md", text: projMd("Closed work", []) }, { path: b.path, text: b.text },
+            { path: "data/provenance.json", text: JSON.stringify({ documents: [provDoc(b)] }) }],
+    meta: { object_type: "project" },
+    register: [{ sha256: b.sha, path: b.path, encoding: "utf8", bytes: Buffer.byteLength(b.text) }] });
+  assert.equal(P.ok, true, JSON.stringify(P).slice(0, 300));
+  w.read(a.sha, [U(0, "alpha"), U(1, "the budget was cut")]);
+  w.read(b.sha, [U(0, "alpha"), U(1, "something else entirely")]);
+  w.at(a.sha, "ex.org/doc", "2026-09-01T00:00:00Z"); w.at(b.sha, "ex.org/doc", "2026-09-20T00:00:00Z");
+  const cid = w.passage(OLD, a.sha);
+  w.inquiry(OTHER, {});
+  w.inquiry(Q, { legs: [{ target: OLD, content_id: cid }, { target: OTHER }] });
+  w.member("ann"); w.member("owen");
+  const shapes = [{ target: Q, viewer: ADMIN }, { target: Q, viewer: V("ann") }, { target: Q, viewer: V("owen") },
+                  { content: cid, viewer: ADMIN }, { content: cid, viewer: V("ann") }, { target: Q, limit: 1, viewer: ADMIN },
+                  { viewer: ADMIN }, { target: Q, content: cid, viewer: ADMIN }, { target: OLD, viewer: ADMIN },
+                  { content: "9".repeat(64), viewer: ADMIN }, { target: Q, viewer: "nobody" }];
+  const said = quiet(w, () => shapes.map((s) => w.r.versionNotice(s)));
+  assert.deepEqual(said.map((r) => r.ok ? r.notices.length : r.code),
+    [2, 2, 2, 1, 1, 1, "VERSION_NOTICE_NO_SUBJECT", "VERSION_NOTICE_NO_SUBJECT", "VERSION_NOTICE_NO_INQUIRY",
+     "VERSION_NOTICE_NO_CONTENT", "VERSION_NOTICE_NO_INQUIRY"]);
+  const family = { ...VERSION_NOTICE_SUBJECT_CHECKS, ...VERSION_NOTICE_CHECKS };
+  assert.deepEqual(Object.values(family).map((r) => r.check).sort(), ["C-80.1", "C-80.2", "C-80.3"]);
+  assert.ok(Object.values(family).every((r) => r.translation.length > 60));
+  const [asAdmin, asAnn, asOwen] = said;
+  assert.deepEqual([asAdmin.notices[0].newer, asAdmin.notices[0].candidates[0].capture_sha], [true, b.sha]);
+  assert.deepEqual([asOwen.notices[0].newer, asOwen.notices[0].candidates[0].capture_sha], [true, b.sha], "the project's owner is told");
+  assert.deepEqual([asAnn.notices[0].state, asAnn.notices[0].newer], ["no_newer_capture", false],
+    "the uninvited reads a chain holding nothing after the cited capture");
+  assert.equal(JSON.stringify(asAnn).includes(b.sha) || JSON.stringify(asAnn).includes(P.bundleId), false,
+    "nothing names the hidden capture or the project holding it");
+  assert.match(asAnn.visible_to, /not in them/);
 });

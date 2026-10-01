@@ -19,7 +19,7 @@ import { contentOf } from "../../../src/content/index.mjs";
 import { entitiesOf } from "../../../src/entities/index.mjs";
 import { inquiryOf } from "../../../src/inquiry/index.mjs";
 import { migrateBasisVersions } from "../../../src/basis-versions/schema.mjs";
-import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/frontmatter.mjs";
 import { contradictionOf, inquiryServices } from "../../../src/contradiction/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
@@ -48,8 +48,6 @@ export function storage() {
   };
 }
 
-/* The columns inquiry writes on record-core's `bundles` (its R40), which the store's additive list creates today. */
-const BUNDLE_COLUMNS = ["inquiry_basis_count INTEGER", "inquiry_subject_entity TEXT", "inquiry_superseded_by TEXT"];
 
 /** A fresh record with the modules above and contradiction over it. `gate: false` registers no run gate. */
 export function world({ gate = true, now = null } = {}) {
@@ -57,7 +55,6 @@ export function world({ gate = true, now = null } = {}) {
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
-  for (const c of BUNDLE_COLUMNS) st.db.exec(`ALTER TABLE bundles ADD COLUMN ${c}`);
   const clock = { now: NOW };
   const tick = () => clock.now;
   const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
@@ -150,8 +147,12 @@ export function world({ gate = true, now = null } = {}) {
     text: (id) => record.readFile(id, "bundle.md")?.text ?? null,
     fm: (id) => { const t = record.readFile(id, "bundle.md")?.text; return t ? parseFrontmatter(t).data : null; },
     bundle(id, { type = "information", subject = null } = {}) {
-      st.sql.exec(`INSERT OR IGNORE INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, row_version, inquiry_subject_entity)
-                   VALUES (?, ?, 'g', ?, 'collected', '2026-01-01', '2026-01-01', 'x', 1, ?)`, id, type, `title of ${id}`, subject);
+      st.sql.exec(`INSERT OR IGNORE INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, row_version)
+                   VALUES (?, ?, 'g', ?, 'collected', '2026-01-01', '2026-01-01', 'x', 1)`, id, type, `title of ${id}`);
+      /* The subject entity is inquiry's, in its `inquiry_bundle_facts` (its R40, N136); a bundle with no row has none. */
+      if (subject !== null)
+        st.sql.exec(`INSERT INTO inquiry_bundle_facts (bundle_id, inquiry_subject_entity) VALUES (?, ?)
+                     ON CONFLICT(bundle_id) DO UPDATE SET inquiry_subject_entity = excluded.inquiry_subject_entity`, id, subject);
       return id;
     },
     /* An inquiry bundle; `project: true` makes it a project-typed bundle m1 takes part in, the one kind membership

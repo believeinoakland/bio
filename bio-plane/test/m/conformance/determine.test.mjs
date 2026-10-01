@@ -322,6 +322,29 @@ test("R6: an unclear outcome names at least one question, each an inquiry the au
   assert.equal(w.c.determine(input({ questions: [{ question: "Anything else?" }] })).questions.length, 1);
 });
 
+test("R6 R9: a question's `opened` is whether this determination's own act opened its inquiry, a boolean on every question, never an instant (N249, K700: distinct from a case's `opened`)", () => {
+  const { w, std, input } = scene();
+  const E = "INQ-2026-0005-existing";
+  w.inquiry(E);
+  const d = w.c.determine(input({ standards: [{ standard: std, outcome: "unclear" }],
+    rows: [{ ...input().rows[0], reading: "open" }],
+    questions: [{ question: "Named?", inquiry: E }, { question: "Opened here?" }, { question: "And this?" }] }));
+  assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));
+  /* in the act's answer, the read and the stored row alike: true exactly for the inquiries this act created */
+  const created = w.rows(`SELECT bundle_id FROM bundles WHERE object_type='inquiry' AND bundle_id <> ? AND bundle_id LIKE 'INQ-%-question'`, E)
+    .map((r) => r.bundle_id);
+  for (const r of [d, w.c.determinationRead({ id: d.id, viewer: V("pat") })]) {
+    assert.ok(r.questions.every((q) => typeof q.opened === "boolean"), JSON.stringify(r.questions));
+    assert.deepEqual(r.questions.map((q) => q.opened), [false, true, true]);
+    assert.deepEqual(r.questions.filter((q) => q.opened).map((q) => q.inquiry).sort(), created.sort());
+  }
+  assert.deepEqual(w.rows(`SELECT opened FROM determination_questions WHERE determination_id=? ORDER BY ord`, d.id)
+    .map((x) => x.opened), [0, 1, 1]);
+  /* a determination naming only existing inquiries opens none */
+  const n = w.c.determine(input({ questions: [{ question: "Named?", inquiry: E }] }));
+  assert.deepEqual(n.questions.map((q) => q.opened), [false]);
+});
+
 test("R6: the determination and every inquiry it opens land together or not at all; a refused determination rolls back the inquiry and spends no id", () => {
   const { w, std, input } = scene();
   /* the next determination id is already held (a replay, which conformance's step does not ask), so the determination's
@@ -358,12 +381,13 @@ test("R7 R19 R20: a determination is never edited; a later one names the act by 
   /* the same act is the id's equality, never the description's */
   const twin = w.c.determine(input());
   assert.notEqual(twin.act.id, first.act.id);
-  /* N233: an absent reason is NO_REASON; BAD_REASON stays the malformed code (over REASON_MAX, or not text) */
+  /* N233, R23: an absent reason is CONFORMANCE_NO_REASON; CONFORMANCE_BAD_REASON the malformed code (over REASON_MAX,
+     or not text) */
   for (const reason of [undefined, null, "", "   "])
-    refused(nothing(w, () => w.c.determine(input({ supersedes: first.id, reason }))), "NO_REASON");
+    refused(nothing(w, () => w.c.determine(input({ supersedes: first.id, reason }))), "CONFORMANCE_NO_REASON");
   for (const reason of ["x".repeat(REASON_MAX + 1), 42, ["why"], { why: "x" }])
-    refused(nothing(w, () => w.c.determine(input({ supersedes: first.id, reason }))), "BAD_REASON");
-  assert.notEqual(CONFORMANCE_CHECKS.NO_REASON.translation, CONFORMANCE_CHECKS.BAD_REASON.translation);
+    refused(nothing(w, () => w.c.determine(input({ supersedes: first.id, reason }))), "CONFORMANCE_BAD_REASON");
+  assert.notEqual(CONFORMANCE_CHECKS.CONFORMANCE_NO_REASON.translation, CONFORMANCE_CHECKS.CONFORMANCE_BAD_REASON.translation);
   const other = w.c.determine(input({ act: { id: twin.act.id }, supersedes: first.id, reason: "the act was misdated" }));
   refused(other, "SUPERSEDES_ANOTHER_ACT");
   assert.deepEqual([other.act, other.predecessor_act], [twin.act.id, first.act.id]);
@@ -477,4 +501,37 @@ test("R13: nothing a machine writes is a determination or an outcome: the act re
   assert.equal(w.c.determinationRead({ id: ok.id, viewer: V("olive") }).standards[0].outcome, "noncompliant");
   /* nothing in the record of determinations was written by a machine */
   assert.deepEqual(w.rows(`SELECT author FROM determinations`).filter((r) => /^class:/.test(r.author)), []);
+});
+
+test("R23: a supersession with no reason is CONFORMANCE_NO_REASON (C-113.22), one over 500 characters or not text CONFORMANCE_BAD_REASON (C-113.17), each row's number and translation unchanged; it never answers progressions' NO_REASON or BAD_REASON", () => {
+  const { w, input } = scene();
+  const first = w.c.determine(input());
+  /* the two rows, their numbers and translations as they stood before the codes became this module's own (N433, K766) */
+  assert.deepEqual([CONFORMANCE_CHECKS.CONFORMANCE_NO_REASON.check, CONFORMANCE_CHECKS.CONFORMANCE_NO_REASON.translation],
+    ["C-113.22", "Superseding a determination says why it is superseded. Give the reason. Nothing was written."]);
+  assert.deepEqual([CONFORMANCE_CHECKS.CONFORMANCE_BAD_REASON.check, CONFORMANCE_CHECKS.CONFORMANCE_BAD_REASON.translation],
+    ["C-113.17", "The reason for superseding a determination is not text of at most 500 characters. Say why, more "
+      + "briefly. Nothing was written."]);
+  /* no row of this module carries progressions' names, and no number is held by two rows (DEC-49) */
+  for (const shared of ["NO_REASON", "BAD_REASON"]) assert.equal(shared in CONFORMANCE_CHECKS, false, shared);
+  const rows = Object.values(CONFORMANCE_CHECKS).map((r) => r.check);
+  assert.equal(new Set(rows).size, rows.length);
+  assert.deepEqual(Object.entries(CONFORMANCE_CHECKS).filter(([, r]) => ["C-113.17", "C-113.22"].includes(r.check))
+    .map(([k]) => k).sort(), ["CONFORMANCE_BAD_REASON", "CONFORMANCE_NO_REASON"]);
+  /* every absent reason answers the one code with its row, and writes nothing; every malformed one the other */
+  const absent = [undefined, null, "", "   ", "\n\t"];
+  const malformed = ["x".repeat(REASON_MAX + 1), 42, 0, true, false, ["why"], { why: "x" }];
+  for (const [reasons, code] of [[absent, "CONFORMANCE_NO_REASON"], [malformed, "CONFORMANCE_BAD_REASON"]])
+    for (const reason of reasons) {
+      const r = nothing(w, () => w.c.determine(input({ supersedes: first.id, reason })));
+      refused(r, code);
+      assert.deepEqual([r.supersedes, r.max], [first.id, REASON_MAX]);
+      assert.notEqual(r.reason, code === "CONFORMANCE_NO_REASON" ? "NO_REASON" : "BAD_REASON");
+    }
+  /* through the op as well: the code the control plane relays is this module's */
+  const viaOp = w.op("determine", { author: V("olive"), viewer: V("olive") }, { ...input(), supersedes: first.id });
+  refused(viaOp, "CONFORMANCE_NO_REASON");
+  /* the controls: a reason at the bound, after trimming, is recorded */
+  const ok = w.c.determine(input({ supersedes: first.id, reason: ` ${"r".repeat(REASON_MAX)} ` }));
+  assert.deepEqual([ok.ok, ok.reason], [true, "r".repeat(REASON_MAX)]);
 });

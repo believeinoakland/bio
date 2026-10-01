@@ -6,7 +6,7 @@
  * its write-order rank. A walk that needs "the promotion before" takes `seq` order, never key order, whose lexical
  * order is not a clock. An image with no `seq` on every entry is still walked, in key order, and the finding says so. */
 
-import { parseFrontmatter, canonicalJson, vocabFor, normalizeType, STATES, MECHANICAL_FIELD_SETS } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter, canonicalJson, vocabFor, normalizeType, STATES } from "../record-grammar/index.mjs";
 import { EMPTY_STRING_SHA } from "../record-core/index.mjs";
 
 const f = (check, severity, message, repairs) => ({ check, severity, message, ...(repairs ? { repairs } : {}) });
@@ -27,6 +27,19 @@ export function historyWriteOrder(raw) {
 }
 
 /* ------------------------------------------------------------------------------------------------ C-20.1 */
+
+/** Per-operation closed field sets (daemon slate Section 0), the registry C-20.1 and R8 read: a mechanical promotion
+ *  names one of these operations and changes only its fields. `last_updated` rides every mutating set: the
+ *  write-completeness law (C-12.1, C-13.2) makes it inseparable from any update. Front-matter paths in dotted form;
+ *  `clock[]` denotes clock entry fields. Copied here from the catalogue in T18 (K636): the catalogue's copy stays until
+ *  monitoring's tests re-point here (layer 10) and T19's layer 1 deletes it; the two are held equal by R8's test. */
+export const MECHANICAL_FIELD_SETS = Object.freeze({
+  "monitor-tick": Object.freeze(["source_status", "monitoring.last_checked", "reeval_pending.flag", "reeval_pending.since",
+                                 "reeval_pending.source", "last_updated"]),
+  "sweep": Object.freeze([]),
+  "deadline-recheck": Object.freeze(["clock[].status", "last_updated"]),
+  "member-attest": Object.freeze(["last_updated"]),
+});
 
 /** Append-only surfaces a mechanical writer may add to, beyond bundle.md and snapshots/ (daemon slate Section 0;
  *  data/snapshot-manifest.json joined with capture fidelity, 0.36.0). */

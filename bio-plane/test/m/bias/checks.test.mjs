@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { checkBiasSet, checkBiasImage, withBiasChecks, BIAS_CHECKS, BIAS_STATEMENT_KINDS, BIAS_VERDICT_WHOLESALE,
          BIAS_VERDICT_SPEAKER, BIAS_BAR_PHRASING, biasOf } from "../../../src/bias/index.mjs";
-import { BIAS_CHECKS as CATALOGUE_BIAS_CHECKS } from "../../../checks/bio-checks.mjs";
+import { PROMOTION_ROW_CHECKS } from "../../../src/promotion/index.mjs";
 import { FM, S, biasMd, RESIDUE, world } from "./world.mjs";
 
 const ID = "BIAS-2026-0001-house-lens";
@@ -83,7 +83,7 @@ test("R7: C-26.7 an adopted set whose What This Does Not Enforce section is abse
   for (const state of ["draft", "proposed"]) assert.ok(!errs(clean({ current_state: state }), null).includes("C-26.7"), state);
 });
 
-test("R29: every C-26 row, C-26.1–C-26.19, is here with its check, where and translation; C-26.12 is the catalogue's own row; C-26.20 is retired and its number not reused (N327)", () => {
+test("R29: every C-26 row, C-26.1–C-26.19, is here with its check, where and translation; C-26.12 is promotion's own row, joined by reference; C-26.20 is retired and its number not reused (N327)", () => {
   const rows = Object.entries(BIAS_CHECKS);
   const ids = rows.map(([, r]) => r.check).sort((a, b) => Number(a.split(".")[1]) - Number(b.split(".")[1]));
   assert.deepEqual(ids, Array.from({ length: 19 }, (_, i) => `C-26.${i + 1}`));
@@ -93,8 +93,8 @@ test("R29: every C-26 row, C-26.1–C-26.19, is here with its check, where and t
     assert.ok(typeof r.translation === "string" && r.translation.length > 40, code);
   }
   assert.equal(new Set(rows.map(([, r]) => r.translation)).size, rows.length, "no translation is a copy of another's");
-  assert.equal(BIAS_CHECKS.BIAS_ILLEGAL_TRANSITION, CATALOGUE_BIAS_CHECKS.BIAS_ILLEGAL_TRANSITION);
-  assert.deepEqual(Object.keys(CATALOGUE_BIAS_CHECKS), ["BIAS_ILLEGAL_TRANSITION"], "the catalogue holds only promotion's row");
+  assert.equal(BIAS_CHECKS.BIAS_ILLEGAL_TRANSITION, PROMOTION_ROW_CHECKS.BIAS_ILLEGAL_TRANSITION, "promotion's row, not a copy");
+  assert.equal(BIAS_CHECKS.BIAS_ILLEGAL_TRANSITION.check, "C-26.12");
 });
 
 test("R29: C-26.1–C-26.7 run in the audit (record-core R59) and at the ratification gate (withBiasChecks), over the same image", async () => {

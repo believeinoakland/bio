@@ -1,6 +1,6 @@
 # instance-setup — requirements
 
-**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 11. Code today: its own paths `bio-plane/src/setup.mjs` and `bio-plane/src/livefire.mjs`, and, moving in at its extraction (K69, N38), the group-identity cluster C-64 and the instance's reports; re-measured 2026-09-28 on `tranche/T10` @ `6faa8084` by a worker for BOB #59, `build/extraction/instance-setup.md` has the table (T3's ranges kept there in brackets). `from` reads `["legacy-store", "legacy-checks", "legacy-index"]`. Met at the interface: R12–R16, R24, R25 (K417, K441), R34 (K518). Carried old-plan row: D-719. N65 (3) and N66 folded by a drafting worker for BOB #43, 2026-09-26: R32, met (K417); the first boot named as record-core's `isFirstBoot` (its R54). K98 folded by a drafting worker for BOB #43, 2026-09-26: the instance's measurement of its own limits (`op=runtime`, `op=cpuprobe`, the store's runtime observations and probe trail) comes here, R33–R42 (the map's §1a); R34, R39 and R40 met (K417, K441). N235 and the re-measure folded by a worker for BOB #59, 2026-09-28 (R24's shape; R42 met in substance; uses gain `capture` and `actions`). folded by a worker for BOB #66, 2026-09-29 (T14 opening; `build/plan/draft-T14-wordings.md`, K444, K445): N339 (with N349) R43; N348 the start moves to `control-plane`'s `Store` (Suggestions); met in T14 (INSTANCE-SETUP #3 and CONTROL-PLANE #5, K476).
+**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 11. Code today: its own paths `bio-plane/src/setup.mjs` and `bio-plane/src/livefire.mjs`, and, moving in at its extraction (K69, N38), the group-identity cluster C-64 and the instance's reports; re-measured 2026-09-28 on `tranche/T10` @ `6faa8084` by a worker for BOB #59, `build/extraction/instance-setup.md` has the table (T3's ranges kept there in brackets). `from` reads `["legacy-store", "legacy-checks", "legacy-index"]`. Met at the interface: R12–R16, R24, R25 (K417, K441), R34 (K518). Carried old-plan row: D-719. N65 (3) and N66 folded by a drafting worker for BOB #43, 2026-09-26: R32, met (K417); the first boot named as record-core's `isFirstBoot` (its R54). K98 folded by a drafting worker for BOB #43, 2026-09-26: the instance's measurement of its own limits (`op=runtime`, `op=cpuprobe`, the store's runtime observations and probe trail) comes here, R33–R42 (the map's §1a); R34, R39 and R40 met (K417, K441). N235 and the re-measure folded by a worker for BOB #59, 2026-09-28 (R24's shape; R42 met in substance; uses gain `capture` and `actions`). folded by a worker for BOB #66, 2026-09-29 (T14 opening; `build/plan/draft-T14-wordings.md`, K444, K445): N339 (with N349) R43; N348 the start moves to `control-plane`'s `Store` (Suggestions); met in T14 (INSTANCE-SETUP #3 and CONTROL-PLANE #5, K476). Folded by a worker for BOB #80, 2026-10-01 (T19 layer-11 fold; N420, K768): R12 and R16 gain `op=profiles`' `view` (the combined view's `deadlines`, `venues`, `legal_organisations`, which `agent-worker` R51 reads); R32 re-pointed to `action-grammar`'s `RISK_TIERS`; uses gain `record-grammar` and `action-grammar`.
 
 **Size (P6).** About 856 lines move in (about 531 of code); with its own files about 2,530, about 2,800–2,900 with R12–R16, R34, R39 and R40 built (`build/extraction/instance-setup.md`, re-measured 2026-09-28). Well under 4,000.
 
@@ -30,11 +30,11 @@ Terms. The **slug** is the producing group's short name, in `GROUP_SLUG_RE`'s gr
 - **R11** `groupIdentity()` (a credentialed read) answers R10 and also the recorded name, both histories oldest first, the current claim with its latest check, and at most the 20 newest checks with `domain_checks_limit` and a measured `domain_checks_truncated`.
 
 **The jurisdiction profiles: `profiles()`, `profilesSet({profiles, by})`** (N10)
-- **R12** The active profiles are record-core's setting `jurisdiction_profiles` (record-core R26), an ordered list of held profile ids. `profiles()` answers the list with each profile's `name` and `covers`, and the `conflicts` `jurisdictions.combine` reports over it; an empty or unset list is answered as "no active profile", which is valid (jurisdictions R16).
+- **R12** The active profiles are record-core's setting `jurisdiction_profiles` (record-core R26), an ordered list of held profile ids. `profiles()` answers the list with each profile's `name` and `covers`, and the `conflicts` `jurisdictions.combine` reports over it; an empty or unset list is answered as "no active profile", which is valid (jurisdictions R16). The answer also carries `view: {deadlines, venues, legal_organisations}` (N420), read from `jurisdictions.combine` over the same list: `deadlines` and `legal_organisations` as the combined view gives them (jurisdictions R29, R34), `venues` each `{kind, venue}` of a combined `action_kinds` entry that gives one (jurisdictions R25, R29); a fact no active profile states, or one `combine` withholds or cannot give (its `conflicts`, `errors`), is absent from `view`, never an empty list, so `agent-worker` R51 reads it undetermined.
 - **R13** At the first boot, the ids the installer bound as `JURISDICTION_PROFILES` (comma-separated, in order) are recorded as the setting when every id is held and none is a test profile; otherwise nothing is recorded and `profiles()` says why.
 - **R14** `profilesSet` replaces the list: `NOT_A_LIST`; `UNKNOWN_PROFILE` naming an id not held; `PROFILE_IS_TEST` naming a test profile; `PROFILES_NOT_ADMIN` unless `by` is an administrator's own signed-in session (K102). It records through `setSetting` with `by`, so each change is dated and attributed.
 - **R15** The page (R20) shows the active profiles by name, and offers an administrator the choice among every held non-test profile, none preselected; before a change is sent, it warns that local facts will read differently from then on, and choosing none is allowed and stated.
-- **R16** `profiles()` and `profilesSet` answer from the namespace addressed; a scratch store holds its own list.
+- **R16** `profiles()` and `profilesSet` answer from the namespace addressed, `view` (R12) included; a scratch store holds its own list.
 
 **The instance's reports: `bootstrapReport(env, fp, {members})`, `selftest(env, store, caller)`, `livefire(env, store, {capacity, viewer})`** (`op=bootstrap`, `op=selftest`, `op=livefire`)
 - **R17** `op=bootstrap` answers `service`, `version` (this isolate's `VERSION`, `0.0.0` when unset), `bootstrapConfigured` (a live `ADMIN_TOKEN`: set, and not a published value), membership's `bootstrapState` (R72) and `storeVersion` read from the record store's own environment, never the isolate's; with `members=1` it adds `memberVersions`, for each member in `FLEET_BINDINGS` its own `/version` asked through the binding within 4 seconds: `SERVING` with its version, `UNBOUND`, `SILENT` or `MISNAMED` (another worker answered).
@@ -61,16 +61,19 @@ Terms. The **slug** is the producing group's short name, in `GROUP_SLUG_RE`'s gr
 - **R45** (D-62, N397, K605) The intake form's bundle writer writes an information bundle's `content_hash: sha256:<hex>`, the captured document's own digest, whenever a document was captured, and none for typed intake, so a document bundle meets C-2.7's `content_hash` at `verified`.
 - **R46** (D-110, D-97, N397, K605) The intake form states each capture refusal `acquire` makes (`BAD_LOCATOR`, `SOURCE_REFUSED`, `FETCH_FAILED`, `EMPTY`, `TOO_LARGE`) in its own sentence and any other reason as "could not be captured: <code>"; it explains no refusal the plane no longer makes (no `NO_AUTHORITY` sentence).
 - **R25** A bundle's history is listed in write order when every entry carries a distinct integer `seq`, else by snap key, and the page says which order it shows.
-- **R32** The risk tiers R24's form offers, and the tier it writes, are `actions`' `RISK_TIERS` and `riskTierState` (N65 (3)), never a copy; the page states `action_kind: other`, a product kind (actions R10), and offers no other kind.
+- **R32** The risk tiers R24's form offers, and the tier it writes, are `action-grammar`'s `RISK_TIERS` and `riskTierState` (its R1, was `actions` R40; N65 (3)), never a copy; the page states `action_kind: other`, a product kind (actions R10), and offers no other kind.
 
 ## Private
 
 ### Uses
 
-- `jurisdictions`: `list`, `get`, `combine` (R12–R16).
+- `jurisdictions`: `list`, `get`, `combine` (R12–R16; `view`'s facts, N420).
 - `capture`: `captureLimit` (R37), and the listener registration of its R55 (R42).
-- `legacy-checks`: C-64's rows until they move (R30); `STATES`, `HEADINGS`, `deriveInquiryTitle` for the page, and `RISK_TIERS`, `riskTierState` until `actions` holds them (R32); `civicosUserAgent`.
-- `actions`: `RISK_TIERS`, `riskTierState` (R24, R32), and R9's counterparty shape (R24).
+- `legacy-checks`: C-64's rows until they move (R30).
+- `record-grammar`: `STATES`, `HEADINGS`, `deriveInquiryTitle` for the page (R24, R32; `setup.mjs`:19 reads them from the catalogue until T19's layer 11).
+- `acquisition`: `civicosUserAgent`.
+- `action-grammar`: `RISK_TIERS`, `riskTierState` (its R1; R24, R32).
+- `actions`: R9's counterparty shape (R24).
 - `runtime-limits`: `liveToken`, `PUBLISHED_TOKEN_HASHES` (R17–R19), `cpuProbe` (R38).
 - `record-core`: `recordOf(ctx)`, `getSetting`/`setSetting` (R12–R14), `declarePurge` (R28), and `isFirstBoot` (its R54; R2, R13). *(not declared)*
 - `membership`: `isAdministrator` (R64), `bootstrapState` (R72). *(not declared)*
@@ -84,7 +87,7 @@ Terms. The **slug** is the producing group's short name, in `GROUP_SLUG_RE`'s gr
 - **R27** The display name is presentation only: it enters no signed bytes. Signed bytes carry the slug (State Rules §3.1).
 - **R28** `instance_group`, `group_identity_history` and `group_domain_checks` are declared to record-core exempt from purge, in both forms (record-core R21, R23); the profiles setting is exempt as every setting is (record-core R25).
 - **R29** Nothing a caller sends names who set a value or where the instance is: `by`, `author` and `origin` are the control plane's stamps.
-- **R30** Each check moves here as an invariant with its test (K6): C-64.2, C-64.3, C-64.5, C-64.6, C-64.7. C-64.1 (`GROUP_UNDETERMINED`, raised at the write) is `promotion`'s; C-64.4 (a bearer on the two sets) is `control-plane`'s.
+- **R30** Each check moves here as an invariant with its test (K6): C-64.2, C-64.3, C-64.5, C-64.6, C-64.7. C-64.1 (`GROUP_UNDETERMINED`, raised at the write) is `promotion`'s; C-64.4 (a bearer on the two sets) is `admission`'s (its R12, R14; split from `control-plane`, K624).
 - **R31** No place is named in this module's behaviour or outward text; local facts come only through R12.
 - **R41** The runtime observations and the probe trail (R33–R40) are measurements of the runtime, not of the corpus: `purge` never clears them, in either form (declared to record-core exempt, record-core R21, R23).
 - **R42** At start this module registers with `capture` (its R55) a listener that records each walk's compute measurement through R33 (`metric` `capture_work_bytes`, the value as `ms` until R34's unit is recorded, the detail as given). *(met in substance: `legacy-store` registers this listener on capture's R55 today, and this module takes the registration at its extraction; the store route `recordruntime` is left with no product caller and goes with it)*
@@ -102,14 +105,14 @@ Terms. The **slug** is the producing group's short name, in `GROUP_SLUG_RE`'s gr
 
 ### Suggestions
 
-- **Factory and start.** `instanceSetupOf(ctx, env)` (K61). The Durable Object's composition root calls it at start: registers R1's fact, the purge exemptions and the scheduler consumer, and runs R2 and R13 when record-core's `isFirstBoot()` is true. `control-plane`'s `Store` does it (its R35; N348).
+- **Factory and start.** `instanceSetupOf(ctx, env)` (K61). The Durable Object's composition root calls it at start: registers R1's fact, the purge exemptions and the scheduler consumer, and runs R2 and R13 when record-core's `isFirstBoot()` is true. `control-plane`'s `Store` does it (N348), and `plane`'s once it holds the class (its R1, was `control-plane` R35; T19 layer 11).
 - **The first boot.** record-core decides it today inside `#migrate` (`PRAGMA table_info(bundles)` empty before the schema pass); it offers the answer as `isFirstBoot()` (record-core R54, N66).
 - **Readers of the group elsewhere** (testify, the divide, the group bar, attribution, filings) read `promotion`'s fact (N56) and refuse C-64.1 with promotion's row. `#groupUndetermined` has already left `legacy-store`: `inquiry` holds it (`inquirydivide`) and `strength` raises C-64.1 itself; the one reader left in `legacy-store` is `filingsOf`'s `producingGroup`, which reads the fact at this module's extraction.
 - **For the installer.** It imports `GROUP_SLUG_RE` and `FLEET_BINDINGS` from here, instead of a test pinning two copies by source text (`instance-group.test.mjs`, the wizard suite).
 - **Tests.** R2 and R13 need a store booted twice (first and later boot); R8 needs a fake governor and fetch covering all four verdicts; R19 runs against a scratch store and a broken fixture per arm (its own negative controls). R38–R40 need a store whose checkpoint write can be made to fail and two probe runs in sequence; R37 and R38 each need a silent store (as `plane-envelope.test.mjs` poisons `runtimeobservations` today).
 - **The installer's part (K102).** The installer offers the profiles with nothing preselected (installer R21); this module records them at the first boot (R13), as it records the slug.
 - **The record browser (K102).** This module keeps claim, sign-in, enrolment, the healthy panel and the instance's settings (R20–R24). The page's record surfaces (browse, add, revise, inbox, members and keys) follow ruling 4: a UI placeholder, kept working, with no new work planned except the carried D-719 (R25).
-- **The limits (K98).** `op=runtime` and `op=cpuprobe` are the instance measuring itself, with this module's other report ops (K93 (2)); `runtime-limits` stays a pure library in layer 1, and `control-plane` keeps their `OPS` rows and routes.
+- **The limits (K98).** `op=runtime` and `op=cpuprobe` are the instance measuring itself, with this module's other report ops (K93 (2)); `runtime-limits` stays a pure library in layer 1, and `op-declarations` holds their `OPS` rows and `control-plane` their routes (K624).
 
 ## Open for Bob
 
@@ -117,8 +120,8 @@ None: answered by Bob 2026-09-26 (K102).
 
 ## Decided by BOB
 
-- C-64 splits: C-64.1 goes to `promotion`, C-64.4 goes to `control-plane`, and the rest come here. `withProducingGroup` and `stampGroup` are already `promotion`'s (K69's list named `#stampGroup`, which T3 moved).
+- C-64 splits: C-64.1 goes to `promotion`, C-64.4 goes to `control-plane` (since K624 `admission`), and the rest come here. `withProducingGroup` and `stampGroup` are already `promotion`'s (K69's list named `#stampGroup`, which T3 moved).
 - `from`: `legacy-store`, `legacy-checks` and `legacy-index`. Uses gain `record-core`, `membership`, `promotion`, `host-governor` and `scheduler`.
 - The instance's reports (`bootstrap`'s Worker arm, `selftest`, `livefire`) are this module's. The `/` route itself is `control-plane`'s, which calls R20.
-- `op=runtime` and `op=cpuprobe`, with the store's runtime observations and probe trail, are this module's (K98); their routes and classes stay `control-plane`'s.
+- `op=runtime` and `op=cpuprobe`, with the store's runtime observations and probe trail, are this module's (K98); their routes stay `control-plane`'s and their classes `op-declarations`' (K624).
 - The profiles reach the instance at install as a plain binding, `JURISDICTION_PROFILES`, recorded once at first boot (R13), the same channel as the slug.

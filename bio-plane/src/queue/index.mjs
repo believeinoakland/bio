@@ -21,17 +21,18 @@
  *   record, membership, connections, progressions, bias, affordances, scheduler, tasks,
  *   producers   the providers (`producers` is `queue-producers`, handed whichever of its own providers were given
  *              here: governor, provenance, capture, captureRequests, basisVersions, aiRuns, publication, reevaluation,
- *              intent, monitoring, contradiction and the shared ones);
+ *              intent, monitoring, contradiction, actionClocks, escalation, actionPlans and the shared ones);
  *   env       the instance bindings: `BIO_NOW_MS` (the clock);
  *   now       a clock, `() => ms`, in place of `env`'s;
  *   start     false to skip the scheduler registration (a test that drives the consumer itself).
- * The ops are `queueOps`' entries, which the legacy store's dispatcher spreads in.
+ * The ops are `queueOps`' entries, which the legacy store's dispatcher spreads in; `op=queue`'s door half (the store's
+ * answer decorated for the caller, R17) is `door.mjs`' `queueOp`, which the control plane routes to (T19).
  *
  * N301 (K356): the class FINDING keeps its code and its meaning and is shown to members as **Noticed**: the answer
  * publishes `class_labels`, and no member-facing sentence this module owns calls a queue item a finding.
  */
 
-import { normalizeType, STATES, vocabFor, isMachineIdentity } from "../../checks/bio-checks.mjs";
+import { normalizeType, STATES, vocabFor, isMachineIdentity } from "../record-grammar/index.mjs";
 import { recordOf, stampInstant, perItem } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, noSuchProject } from "../membership/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
@@ -93,7 +94,9 @@ export class Queue {
       Queue.PRODUCER_DEPS.filter((k) => this.#deps[k] !== undefined).map((k) => [k, this.#deps[k]]))));
   }
   static PRODUCER_DEPS = Object.freeze(["record", "membership", "governor", "provenance", "capture", "captureRequests",
-    "basisVersions", "progressions", "aiRuns", "bias", "publication", "reevaluation", "intent", "monitoring", "contradiction"]);
+    "basisVersions", "progressions", "aiRuns", "bias", "publication", "reevaluation", "intent", "monitoring", "contradiction",
+    /* queue-producers R15–R18 (K608, K728): the Action layer's providers. */
+    "actionClocks", "escalation", "actionPlans"]);
   get #scheduler() { return this.#dep("scheduler", () => schedulerOf(this.#host, this.#env)); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -476,10 +479,33 @@ export class Queue {
    *  publication below. A list of field names rather than a list of kinds: the
    *  kinds change every wave and this pair has not changed since REC-7. */
   static QUEUE_DISPOSITION_KEY = ["progression_key", "stage_key"];
-  /** R12: the door an OBLIGATION not held in `tasks` leaves by, by kind; every other obligation is a task (taskresolve). */
   /** R8: the task statuses an OBLIGATION is live in (N373). */
   static TASK_LIVE_STATUSES = Object.freeze(["open", "forwarded"]);
-  static OBLIGATION_DOORS = Object.freeze({ "bias-debt": "biasdebtresolve", "signer-self-registered": "signerset" });
+  /** R12, R28 (K607, K608): the door an OBLIGATION not held in `tasks` leaves by, by kind; every other obligation is a
+   *  task (taskresolve). The Action layer's three: a checkpoint is judged (action-plans R16), a proposed stage advanced
+   *  or declined (escalation R13), a reminder answered (action-clocks R6). */
+  static OBLIGATION_DOORS = Object.freeze({ "bias-debt": "biasdebtresolve", "signer-self-registered": "signerset",
+    "plan-checkpoint-due": "checkpointrecord", "escalation-stage-proposed": "escalationadvance",
+    "action-reminder": "reminderanswer" });
+  /** R12: what each of those doors is, said on the item's disposition after the general sentence. */
+  static OBLIGATION_DOOR_DETAIL = Object.freeze({
+    "bias-debt": " This one is a bias debt, which is keyed by the RUN it is about rather than by "
+      + "a task, so it is settled through op=biasdebtresolve with a stated reason — or "
+      + "by a re-run under the lens now in force, or by the lens moving back "
+      + "(BOB #32, 2026-09-23).",
+    "signer-self-registered": " This one is a signing key a member registered for themselves, which is keyed by the "
+      + "KEY rather than by a task, so it leaves when an administrator revokes the key "
+      + "(op=signerset), or when it is otherwise no longer active.",
+    "plan-checkpoint-due": " This one is a checkpoint your group set in an action plan, keyed by the plan, scenario "
+      + "and phase rather than by a task: it leaves when a member records whether its condition was met "
+      + "(op=checkpointrecord), or when the plan is closed.",
+    "escalation-stage-proposed": " This one is an escalation's next stage, proposed because its trigger was met and "
+      + "keyed by the escalation and the stage rather than by a task: a member advances it (op=escalationadvance) or "
+      + "declines it with a reason (op=escalationdecline), and it also leaves when the escalation is suspended or ended.",
+    "action-reminder": " This one is a reminder you asked for on one of the group's action deadlines, keyed by the "
+      + "action, the entry and the day rather than by a task: you answer it with another reminder or with none "
+      + "(op=reminderanswer), and it also leaves when the entry is no longer pending or the action is closed.",
+  });
 
   /** D-266 / IC-60 — THE SECOND IDENTITY, and the whole of what this item added.
    *
@@ -544,16 +570,8 @@ export class Queue {
                detail: "an OBLIGATION is something a named person must do for the record to proceed "
                      + "and it leaves every list when it is RESOLVED (D-125, DEC-16). Disposing of it "
                      + "is not a narrower version of that act, it is a different one."
-                     + (item.kind === "bias-debt"
-                        ? " This one is a bias debt, which is keyed by the RUN it is about rather than by "
-                        + "a task, so it is settled through op=biasdebtresolve with a stated reason — or "
-                        + "by a re-run under the lens now in force, or by the lens moving back "
-                        + "(BOB #32, 2026-09-23)."
-                        : item.kind === "signer-self-registered"
-                        ? " This one is a signing key a member registered for themselves, which is keyed by the "
-                        + "KEY rather than by a task, so it leaves when an administrator revokes the key "
-                        + "(op=signerset), or when it is otherwise no longer active."
-                        : "") };
+                     + (Object.prototype.hasOwnProperty.call(Queue.OBLIGATION_DOOR_DETAIL, item.kind)
+                        ? Queue.OBLIGATION_DOOR_DETAIL[item.kind] : "") };
     if (item.class === "CONDITION")
       return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
                reason: "a_condition_is_acknowledged_or_muted",
@@ -722,7 +740,7 @@ export class Queue {
 
   /** op=queue: the member's ONE feed.
    *
-   *  `member` and `viewer` are BOTH stamped server-side at index.mjs and are
+   *  `member` and `viewer` are BOTH stamped server-side by the control plane and are
    *  never taken from the caller — whose queue this is, and whose view its
    *  case names are compiled for, are server decisions or they are not
    *  decisions at all.
@@ -762,7 +780,10 @@ export class Queue {
     /* tasks R6: the visible OPEN or FORWARDED tasks, newest first, each as `taskList` gives it (N363). N373 (K566): the
        read asks for the live statuses itself, so however many tasks were resolved lately none of them takes a place an
        open one needs (it used to read every status and drop the resolved ones after the cap). */
-    for (const row of this.#tasks.recentTasks({ viewer, limit: cap * 2, statuses: Queue.TASK_LIVE_STATUSES })) {
+    /* N410 (tasks R6's `assignees`): a member's read asks for their own and the unassigned tasks itself, so other
+       members' live tasks never take a place theirs need; a machine credential (no member) reads every assignee. */
+    for (const row of this.#tasks.recentTasks({ viewer, limit: cap * 2, statuses: Queue.TASK_LIVE_STATUSES,
+                                                ...(me ? { assignees: [me, "unassigned"] } : {}) })) {
       if (me && row.assignee !== me && row.assignee !== "unassigned") continue;
       const subject = row.refers_to;
       /* The homes are derived FIRST and the event's state is asked ONCE, for
@@ -1413,7 +1434,7 @@ export class Queue {
    *  (D-170, BOB #29), which the case form cannot. It writes ONE row of
    *  `queue_item_mutes` and nothing else.
    *
-   *  `member` is stamped server-side at index.mjs and is never taken from the
+   *  `member` is stamped server-side by the control plane and is never taken from the
    *  caller: a caller who could name the member could mute somebody else's
    *  attention, which is the one thing a personal preference must not permit.
    *
@@ -1641,7 +1662,7 @@ export class Queue {
 
      The reason is REQUIRED and never prefilled (NO_REASON, fail-closed) — the whole point is that a
      member's decision to set aside the record's question is itself accountable, in their own words.
-     The deciding member is STAMPED server-side by index.mjs (decidedBy); a caller-supplied value is
+     The deciding member is STAMPED server-side by the control plane (decidedBy); a caller-supplied value is
      overwritten there, and a blank one is refused here (NO_DECIDER) so a bypass fails closed. */
   /* D-266 / IC-60 — THE SECOND KEY SHAPE, AND WHY ONE OP RATHER THAN TWO.
      Deferring and dismissing are ONE act with one vocabulary, one required reason and one
@@ -1741,7 +1762,12 @@ export class Queue {
     /* A PUBLISHED ID CARRIES ITS CLASS IN ITS FIRST SEGMENT AND ITS KIND IN ITS SECOND; a key with the
        class segment stripped carries the kind in the FIRST. Both are read here so the bridge does not
        depend on which spelling a page built, and the kind reported is the item's own either way. */
-    const byId = !scoped && keyed ? itemClassOf(keyed) : null;
+    /* R12, R26: an OBLIGATION not held in `tasks` is published as `OBLIGATION::<kind>::<rest>` (bias-debt, the
+       self-registered key, the Action layer's three), which R3 does not read; its second segment is read here as R26
+       reads it at the mute, so the bridge names its door rather than handing a progression arm the word OBLIGATION. */
+    const oblId = !scoped && /^OBLIGATION::/.test(keyed) && classOfKind(keyed.split("::")[1]) === "OBLIGATION"
+      ? "OBLIGATION" : null;
+    const byId = !scoped && keyed ? (itemClassOf(keyed) || oblId) : null;
     const keyClass = byId || (!scoped ? classOfKind(pk) : null);
     const keyKind = byId ? (keyed.split("::")[1] || null) : (keyClass ? pk : null);
     /* DEC-49 REGION is-dispose-class — REC-205/C-33.44. The code is a STRING LITERAL at its site and the

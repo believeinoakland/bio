@@ -8,12 +8,13 @@
  * Extracted from the legacy modules (T7-3; K3, K91, K102, N64, N67): `store.mjs` (PL-1's projection and freeze, PL-2's
  * six acts and CURRENT, PL-3's append, REC-13/REC-124/REC-136's conclusion and its record, REC-86's narrowing, D-235's
  * collections, REC-119's earned leg letters, MK-1's testimony reach, the shared-question producer's
- * `#projectsDrawingOn`), `schema.mjs` (the two tables, now `./schema.mjs`). The grammar and the check rows stay in the
- * catalogue, which calls them itself; `./grammar.mjs` is their face here. The legacy code's comments moved with it,
+ * `#projectsDrawingOn`), `schema.mjs` (the two tables, now `./schema.mjs`). The grammar (`./grammar.mjs`) and the check rows
+ * (`./checks.mjs`) moved from the check catalogue in T19 (K766, K787). The legacy code's comments moved with it,
  * shortened where they only restated it.
  *
  * REACHED as `basisVersionsOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the
- * first call with `deps`, returned to every later caller. At creation it declares its tables to purge (R34), joins
+ * first call with `deps`, returned to every later caller. At creation it declares its tables to purge (R34), registers
+ * its version grammar in record-core's C-2.8 slot after inquiry-grammar's (R43), joins
  * every promotion with its check (R6) and its projection (R7), and registers retrieval's `no_project_conclusion`
  * decoration (R42). `deps`:
  *   record, membership, promotion, content   the modules it uses, through their factories on the same host unless a
@@ -26,8 +27,9 @@
  *                a host that passes none (a test of another module) has no projection to decorate.
  *   now          the module's clock, an ISO instant at second precision (default: the wall clock). */
 
-import { parseFrontmatter, isMachineIdentity, normalizeType, LEGACY_TYPE_ALIASES, OBJECT_TYPES, STATES, vocabFor, isBoilerplate,
-         checkLegExtentGrammar, createSha256, CONTENT_EXTENT_CHECKS, SUGGEST_CHECKS } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter, isMachineIdentity, normalizeType, LEGACY_TYPE_ALIASES, OBJECT_TYPES, STATES, vocabFor,
+         createSha256 } from "../record-grammar/index.mjs";
+import { checkLegExtentGrammar } from "../inquiry-grammar/index.mjs";
 import { readingSourceFromColumns } from "../textchain.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal } from "../membership/index.mjs";
@@ -37,9 +39,10 @@ import { inquiryOf, legCapped, actNoBasis } from "../inquiry/index.mjs";
 /* The extent grammar is content's face (N99): its `extentRelation` holds D-670's space rule and the `envelope` kind,
    which the catalogue's copy does not. */
 import { contentOf, mintLabel, contentMintState, CONTENT_MINTED_BY_PLANE, legContentId, legExtent, canonicalExtent,
-         describeExtent, extentRelation } from "../content/index.mjs";
-import { basisVersionFindings, BASIS_VERSION_CHECKS, VERSION_ACT_CHECKS, VERSION_MACHINE, versionNeedsReason,
-         VERSION_NAME_RE, NARROW_CHECKS, versionsIn, compositionDiff, sameComposition } from "./grammar.mjs";
+         describeExtent, extentRelation, CONTENT_EXTENT_CHECKS } from "../content/index.mjs";
+import { basisVersionFindings, versionsIn, compositionDiff, sameComposition, registerBasisVersionGrammar } from "./grammar.mjs";
+import { BASIS_VERSION_CHECKS, VERSION_ACT_CHECKS, VERSION_KIND_CHECKS, CONCLUDE_ACT_CHECKS, NARROW_CHECKS, VERSION_MACHINE,
+         versionNeedsReason, VERSION_NAME_RE, isBoilerplate } from "./checks.mjs";
 import { fmSafe, quoted, typedValue, randHex, setVersionField, setCurrentVersionRow, appendFmRows,
          appendConclusionEntry } from "./text.mjs";
 import { BASIS_VERSIONS_TABLES, migrateBasisVersions } from "./schema.mjs";
@@ -64,6 +67,8 @@ export const TESTIMONY_REACH_MAX = 200;
 export const TESTIMONY_REACH_DEPTH = 64;
 /** R12, R16: a reason, conclusion, falsifier or commentary written into the frontmatter (no escapes). */
 export const VERSION_REASON_MAX = 500;
+/** R12 (C-25.32): the shortest reason the version grammar stores on a state that needs one (C-25.19's floor). */
+export const VERSION_REASON_MIN = 8;
 /** R14: the six acts and the state each moves a version to; `current` and `hide` move none. */
 export const VERSION_ACT_TO = Object.freeze({
   accept: "accepted", reject: "rejected", consider: "considering", revert: "suggested", current: null, hide: null,
@@ -85,6 +90,10 @@ function extentLegFields(extent) {
   return out;
 }
 
+/* R16, R17, R20, R21: a conclusion refusal's row (C-32.2, C-33.x), carried at its site with its code, so the refusal is
+   translated wherever it is read (DEC-49). */
+const concludeRow = (code) => ({ code, check: CONCLUDE_ACT_CHECKS[code].check,
+                                 translation: CONCLUDE_ACT_CHECKS[code].translation });
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 const isInquiryId = (id) => normalizeType(OBJECT_TYPES[String(id ?? "").split("-")[0]]) === "inquiry";
 /* Every stored `object_type` spelling of an inquiry, the declared one and its legacy aliases, for a bounded SQL read. */
@@ -187,7 +196,7 @@ export class BasisVersions {
       return { ok: false, reason: "BASIS_VERSION_REFUSED",
                findings: verrs.map((x) => ({ check: x.check, detail: x.message, code: x.code,
                                              /* three registries: a kind is C-27's, a leg extent relays C-45's codes */
-                                             translation: (BASIS_VERSION_CHECKS[x.code] ?? SUGGEST_CHECKS[x.code]
+                                             translation: (BASIS_VERSION_CHECKS[x.code] ?? VERSION_KIND_CHECKS[x.code]
                                                            ?? CONTENT_EXTENT_CHECKS[x.code])?.translation,
                                              ...(x.repairs ? { repairs: x.repairs } : {}) })) };
     const offered = versionsIn(docFm);
@@ -666,13 +675,20 @@ export class BasisVersions {
         { target, version: vname, known: rows.map((r) => String(r?.name ?? "").trim()).filter(Boolean).slice(0, 20) });
     const row = rows[idx];
     const from = typeof row.state === "string" ? row.state.trim() : "";
+    /* C-25.31 in its place (R12): a row the writer cannot address in place is told before any judgement of the move,
+       so `preview` answers it as the act does (R14). `current` rewrites only the project (R15), asked below. */
+    if (act !== "current" && setVersionField(text, vname, "hidden", row.hidden === true) === null)
+      return refuse("VERSION_ACT_UNWRITABLE",
+        "this question's version block could not be rewritten in place, so nothing was changed.", { target, version: vname });
 
     /* CASE-3 / CASE-4 / DEC-72 clause 3: a state move on a case member is refused and pointed at the route DEC-12
        built (reopen, move, publish a new edition). `hide` and `current` move no state (`to === null`) and stay open.
        Asked after the reading is located, so a mistyped name is told first. */
     if (to !== null) {
       const member = this.promotion.fact("caseMember", target);
-      if (!member.ok) return { ...member, act, target, version: vname };
+      /* a refusal relayed from another module states its verdict and code here, never only through the spread (N411) */
+      if (!member.ok)
+        return { ...member, ok: false, reason: member.reason, code: member.code, act, target, version: vname };
       if (member.value)
         return refuse("PUBLISHED_CANNOT_MOVE_VERSION",
           `'${vname}' belongs to a question that is PUBLISHED, and a published case froze this finding `
@@ -694,10 +710,12 @@ export class BasisVersions {
           : "Setting a reading aside without saying why leaves the next reader unable to tell a judgement "
             + "from an oversight"}.`, { target, version: vname, from, to });
     /* C-25.32: a reason that arrived and cannot be stored is a different refusal from one that never arrived. */
-    if (why.length > VERSION_REASON_MAX || /["\\\r\n]/.test(why))
+    if (why.length > VERSION_REASON_MAX || /["\\\r\n]/.test(why)
+        || (versionNeedsReason(to) && why.length < VERSION_REASON_MIN))
       return refuse("VERSION_REASON_MALFORMED",
         `a reason is at most ${VERSION_REASON_MAX} characters and cannot contain a quote, a `
-        + `backslash, or a newline: the restricted frontmatter grammar has no escapes.`,
+        + `backslash, or a newline: the restricted frontmatter grammar has no escapes. A reason for setting a `
+        + `reading aside or turning it down is at least ${VERSION_REASON_MIN} characters, the shortest the record keeps.`,
         { target, version: vname, reason_length: why.length });
     if (to !== null && !(VERSION_MACHINE.edges[from] || []).includes(to))
       return refuse("VERSION_ILLEGAL_TRANSITION",
@@ -783,6 +801,11 @@ export class BasisVersions {
         return refuse("VERSION_CURRENT_UNRELATED",
           `${projectId} does not draw on ${target}, so it has no stance on this question to move. `
           + `Cite the question into the project first.`, { target, version: vname, project: projectId });
+      /* C-25.31 on the project's side, before the receipt, so `preview` answers it as the act does (R14) */
+      if (setCurrentVersionRow(ptext, target, vname, who, "") === null)
+        return refuse("VERSION_ACT_UNWRITABLE",
+          `${projectId}'s current_versions block could not be rewritten in place, so its stance cannot be recorded.`,
+          { target, version: vname, project: projectId });
     }
 
     const when = this.now();
@@ -798,7 +821,7 @@ export class BasisVersions {
     /* R15 (REC-166): make-current writes only the project; the question is not promoted at all. */
     if (act === "current") {
       const p = this.#setProjectCurrentVersion(projectRow, target, vname, who, when, why);
-      if (!p.ok) return { ...p, act, target, version: vname, project: projectId };
+      if (!p.ok) return { ...p, ok: false, reason: p.reason, act, target, version: vname, project: projectId };
       return receipt;
     }
 
@@ -825,7 +848,7 @@ export class BasisVersions {
       meta: { object_type: fm.object_type ?? b.object_type, title: fm.title, current_state: b.current_state,
               prior_state: fm.prior_state ?? null, created: fm.created, last_updated: when,
               criticality: fm.criticality ?? null } });
-    if (!promoted.ok) return { ...promoted, act, target, version: vname };
+    if (!promoted.ok) return { ...promoted, ok: false, reason: promoted.reason, act, target, version: vname };
     return receipt;
   }
 
@@ -867,7 +890,7 @@ export class BasisVersions {
     const who = String(author ?? "").trim();
     /* DEC-49 REGION is-machine-conclude — REC-64/C-32.2. */
     if (!who || isMachineIdentity(who))
-      return { ok: false, reason: "MACHINE_CANNOT_CONCLUDE",
+      return { ok: false, reason: "MACHINE_CANNOT_CONCLUDE", ...concludeRow("MACHINE_CANNOT_CONCLUDE"),
                detail: "a conclusion is a named member's assertion about what the record shows. A machine "
                      + "credential may SURFACE a question, gather what it rests on and prepare the answer, "
                      + "and may never author the conclusion. Sign in as a member." };
@@ -883,19 +906,19 @@ export class BasisVersions {
     const noFals = noFalsifier === true || noFalsifier === 1 || noFalsifier === "1" || noFalsifier === "true";
     /* DEC-49 REGION is-conclude-answer — REC-64/C-33.1-2. */
     if (!concl && !pid)
-      return { ok: false, reason: "NO_CONCLUSION",
+      return { ok: false, reason: "NO_CONCLUSION", ...concludeRow("NO_CONCLUSION"),
                detail: "concluding records WHAT was concluded. C-2.8 requires a non-empty conclusion in the "
                      + "concluded state, so a conclusion with nothing in it would produce a bundle the "
                      + "catalog rejects. An undetermined answer is stated as undetermined, never left blank." };
     if (concl && pid)
-      return { ok: false, reason: "CONCLUSION_IS_THE_CLAIM",
+      return { ok: false, reason: "CONCLUSION_IS_THE_CLAIM", ...concludeRow("CONCLUSION_IS_THE_CLAIM"),
                detail: "a project concludes by ADOPTING the claim of the reading it stands on, and that claim "
                      + "is what was concluded (INVESTIGATIVE-SESSION.md §7.1). A separate conclusion text could "
                      + "say what no claim said. Send what you want to add beyond the claim as commentary= — it "
                      + "is recorded in your name and is never evidence — or state the claim itself on a "
                      + "reading first." };
     if (!fals && !noFals)
-      return { ok: false, reason: "NO_FALSIFIER",
+      return { ok: false, reason: "NO_FALSIFIER", ...concludeRow("NO_FALSIFIER"),
                detail: "a conclusion states what would OVERTURN it. Without that the finding cannot be "
                      + "checked by anyone, including its author, and a record that cannot be checked claims "
                      + "more than it can support. If no falsifier can honestly be stated, SAY SO rather than "
@@ -903,7 +926,7 @@ export class BasisVersions {
                      + "falsifier stated` in your name and with today's date, on every surface this finding "
                      + "appears on and in the signed bytes if it is ever published." };
     if (fals && noFals)
-      return { ok: false, reason: "FALSIFIER_AND_NONE_STATED",
+      return { ok: false, reason: "FALSIFIER_AND_NONE_STATED", ...concludeRow("FALSIFIER_AND_NONE_STATED"),
                detail: "you have both stated a falsifier and asked to record that none was stated. Those are "
                      + "two different claims about this finding and the plane will not choose between them. "
                      + "Send the falsifier, or send no_falsifier=1 with the falsifier empty." };
@@ -957,13 +980,13 @@ export class BasisVersions {
 
     /* DEC-49 REGION is-conclude-claim — REC-124/C-33.34. Every arm is the same fact: no claim to adopt. */
     if (!pid && comm)
-      return { ok: false, reason: "NO_CLAIM", target,
+      return { ok: false, reason: "NO_CLAIM", ...concludeRow("NO_CLAIM"), target,
                detail: "commentary is what a member adds BEYOND a PROJECT's adopted claim, and it is recorded "
                      + "on that project's conclusion. A conclusion drawn with no project carries the member's "
                      + "own words in conclusion= beside the claim it adopts, so there is nowhere for commentary "
                      + "to go. Conclude for a project (project=), or send no commentary." };
     if (!pid && !vname)
-      return { ok: false, reason: "NO_CLAIM", target,
+      return { ok: false, reason: "NO_CLAIM", ...concludeRow("NO_CLAIM"), target,
                detail: "a conclusion adopts the claim of a reading, and the claim is what was concluded "
                      + "(INVESTIGATIVE-SESSION.md §7.1). Drawn with no project there is no reading the question "
                      + "stands on, so name it: conclude with version=<the accepted reading whose claim this "
@@ -972,18 +995,18 @@ export class BasisVersions {
     let want = vname;
     if (pid) {
       if (!drawsOn(pfm, target))
-        return { ok: false, reason: "NO_CLAIM", target, project: pid,
+        return { ok: false, reason: "NO_CLAIM", ...concludeRow("NO_CLAIM"), target, project: pid,
                  detail: `${pid} does not draw on ${target}, so it stands on no reading of it and has no `
                        + "claim to adopt. Cite the question into the project, make a reading current, then "
                        + "conclude." };
       const cur = this.currentOf(pid, target, viewer);
       if (!cur)
-        return { ok: false, reason: "NO_CLAIM", target, project: pid,
+        return { ok: false, reason: "NO_CLAIM", ...concludeRow("NO_CLAIM"), target, project: pid,
                  detail: `${pid} stands on no reading of ${target}. Concluding adopts the claim of the `
                        + "reading a project stands on (§7.1), so make an accepted reading current "
                        + "(op=versioncurrent) first." };
       if (vname && vname !== cur.version)
-        return { ok: false, reason: "NO_CLAIM", target, project: pid, version: vname,
+        return { ok: false, reason: "NO_CLAIM", ...concludeRow("NO_CLAIM"), target, project: pid, version: vname,
                  detail: `${pid} stands on reading '${cur.version}', not '${vname.slice(0, 80)}'. A project `
                        + "concludes on the reading it stands on (§7.1 item 1): make that reading current "
                        + "first, or conclude without version=." };
@@ -994,7 +1017,7 @@ export class BasisVersions {
     const claimText = String(v?.claim ?? "").trim();
     const whose = pid ? `${pid} stands on reading` : "this conclusion names reading";
     if (!v || v.state !== "accepted" || !claimText)
-      return { ok: false, reason: "NO_CLAIM", target, ...(pid ? { project: pid } : {}), version: want,
+      return { ok: false, reason: "NO_CLAIM", ...concludeRow("NO_CLAIM"), target, ...(pid ? { project: pid } : {}), version: want,
                detail: !v
                  ? `${whose} '${String(want).slice(0, 80)}', which ${target} does not carry, so there is no `
                    + "claim to adopt. Name a reading it does carry."
@@ -1090,7 +1113,7 @@ export class BasisVersions {
     let text = appendConclusionEntry(md, inquiryId, f);
     if (text === null)
       /* DEC-49 REGION is-conclusion-row — REC-124/C-33.36. */
-      return { ok: false, reason: "UNSPLICEABLE_CONCLUSIONS",
+      return { ok: false, reason: "UNSPLICEABLE_CONCLUSIONS", ...concludeRow("UNSPLICEABLE_CONCLUSIONS"),
                detail: `${pid}'s conclusions block could not be extended in place` };
       /* END DEC-49 REGION is-conclusion-row */
     text = setScalar(text, "last_updated", `"${f.when}"`);
@@ -1138,6 +1161,8 @@ export class BasisVersions {
       return { ok: false, reason: "NOT_AN_INQUIRY", target, object_type: b.object_type,
                detail: "a conclusion answers a question, and only an inquiry carries one." };
     const projRow = pid ? this.#visible(pid, viewer) : null;
+    /* REC-149: at EXISTENCE the positional C-70.1, as conclude and make-current answer (membership R44) */
+    if (pid && !projRow) { const existence = this.membership.existenceAct(pid, viewer); if (existence) return existence; }
     if (!projRow || normalizeType(projRow.object_type) !== "project")
       return { ok: false, reason: "NOT_A_PROJECT", target, project: pid || null,
                detail: pid
@@ -1150,7 +1175,7 @@ export class BasisVersions {
     const rec = this.conclusionRecordOf(pid, target, viewer);
     /* DEC-49 REGION is-withdraw-stance — REC-136/C-33.37. */
     if (!rec.stance || rec.stance.act !== "concluded")
-      return { ok: false, reason: "NOTHING_TO_WITHDRAW", target, project: pid,
+      return { ok: false, reason: "NOTHING_TO_WITHDRAW", ...concludeRow("NOTHING_TO_WITHDRAW"), target, project: pid,
                stance: rec.stance ? rec.stance.state : "none",
                detail: !rec.stance
                  ? `${pid} has never concluded ${target}, so there is no conclusion to withdraw.`
@@ -1608,6 +1633,7 @@ export function basisVersionsOf(host, deps) {
     bv = new BasisVersions({ ...d, inquiry, storage: d.storage || host.storage, record, membership, promotion, content });
     instances.set(host, bv);
     record.declarePurge("basis-versions", BASIS_VERSIONS_TABLES);
+    registerBasisVersionGrammar(record);   /* R43: the version grammar in the C-2.8 slot, after inquiry-grammar's */
     promotion.registerStep("basis-versions", { check: (c) => bv.check(c), project: (c) => bv.project(c) });
     if (d.retrieval) d.retrieval.registerProjectionDecoration("basis-versions", (row, o) => bv.projectionDecoration(row, o));
   }

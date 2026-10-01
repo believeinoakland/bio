@@ -2,8 +2,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, T0, refused, sha } from "./fixture.mjs";
-import { captureRequestsOps, captureRequestAttribution, CAPTURE_REQUEST_TTL_MS } from "../../../src/capture-requests/index.mjs";
-import { CAPTURE_REQUEST_CHECKS } from "../../../checks/bio-checks.mjs";
+import { captureRequestsOps, captureRequestAttribution, CAPTURE_REQUEST_TTL_MS, CAPTURE_REQUEST_CHECKS }
+  from "../../../src/capture-requests/index.mjs";
 
 const iso = (ms) => new Date(ms).toISOString().replace(/\.\d+Z$/, "Z");
 

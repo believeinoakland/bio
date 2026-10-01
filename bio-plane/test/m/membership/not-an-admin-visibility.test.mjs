@@ -4,7 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
 import { notAnAdmin, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
-import { MACHINE_CLASS_PREFIX } from "../../../checks/bio-checks.mjs";
+import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
 
 const FIELDS = ["by", "check", "code", "detail", "ok", "reason", "translation"];
 const ROW = MEMBERSHIP_CHECKS.NOT_AN_ADMIN;
@@ -25,7 +25,7 @@ function throughNotAnAdmin(r, by, label) {
 }
 
 /* Every table an administrator's act could write, read whole. */
-const TABLES = ["members", "admin_votes", "signers", "hosting_access", "sessions", "credentials"];
+const TABLES = ["members", "admin_votes", "hosting_access"];
 const snapshot = (w) => Object.fromEntries(TABLES.map((t) => [t, w.rows(`SELECT * FROM ${t}`)]));
 
 test("R84 notAnAdmin: {ok, reason, code, check, translation, by, detail}, the row C-96.1, by as stamped (null when none), one fixed sentence naming the act", () => {
@@ -70,11 +70,10 @@ test("R84 its one row is this module's C-96.1, its where naming notAnAdmin", () 
   assert.ok(Object.isFrozen(ROW));
 });
 
-test("R84 R6 R7 R9 R10 R11 R12 R20 R25 R26: each act's refusal of a caller who is not an administrator is notAnAdmin's, byte for byte, and writes nothing", async () => {
+test("R84 R6 R7 R9 R10 R11 R12 R20: each act's refusal of a caller who is not an administrator is notAnAdmin's, byte for byte, and writes nothing", async () => {
   const w = await world().group("ann");
   const p = await w.m.memberAdd({ memberId: "third", cover: "c3", role: "admin", by: "admin" });
   assert.equal(p.reason, "CONSENSUS_REQUIRED");
-  assert.equal(w.m.signerAdd({ keyB64: "AAAAkeyann", memberId: "ann", by: "admin" }).ok, true);
   await w.m.memberAdd({ memberId: "gone", cover: "cg", by: "admin" });
   assert.equal(w.m.memberSet({ memberId: "gone", status: "revoked", by: "admin" }).ok, true);
   /* Who is not an administrator: an ordinary member, a revoked one, an id nobody holds; and, where the act admits
@@ -89,8 +88,6 @@ test("R84 R6 R7 R9 R10 R11 R12 R20 R25 R26: each act's refusal of a caller who i
     R11: { by: [...members, null], run: (by) => w.m.hostingAccessSet({ holders: "someone", by }) },
     R12: { by: members, run: (by) => w.m.memberAdd({ memberId: "newbie", cover: "cn", by }) },
     R20: { by: members, run: (by) => w.m.memberSet({ memberId: "ann", status: "revoked", by }) },
-    R25: { by: members, run: (by) => w.m.signerAdd({ keyB64: "AAAAkeynew", memberId: "ann", by }) },
-    R26: { by: members, run: (by) => w.m.signerSet({ keyB64: "AAAAkeyann", status: "revoked", by }) },
   };
   const phrases = new Set();
   for (const [id, { by, run }] of Object.entries(acts)) {

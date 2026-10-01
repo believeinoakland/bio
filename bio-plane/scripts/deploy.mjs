@@ -19,37 +19,22 @@
  * idempotent, and the verification runs regardless of how many attempts it took
  * or what any of them claimed.
  *
- * It also refuses to deploy unless the calling thread HOLDS THE RELEASE BATON.
- * Two threads cutting a plane release at once produces two tags claiming one
- * version and a RELEASE.json whose signature matches neither deployed artifact,
- * and that failure is invisible to git: both threads can push cleanly and still
- * have raced, because a tag and a version bump are additions rather than
- * conflicts. A rejected push does not catch it, so something else has to.
+ * The old process's release-baton gate (`--thread`, `--force-without-baton`,
+ * reading `docs/development/kickoffs/BATON.md` from `main`) was removed with that
+ * process's tooling in T19 (K648, K749): who cuts a release is the process's
+ * question, not this script's.
  *
- * The baton is read from the REMOTE, never the working tree. A thread could edit
- * its local copy to grant itself the baton; what matters is what the other
- * threads can see. It fails CLOSED: if the baton cannot be fetched the deploy is
- * refused, because proceeding blind is precisely the coordination failure this
- * exists to prevent.
- *
- * usage: CF_TOKEN=... CF_ACCT=... node deploy.mjs <slug> <version> <asset>
- *          --thread <NAME>
- *          [--force-without-baton "<reason>"]
+ * usage (bundler R17, R18), from bio-plane/:
+ *   CF_TOKEN=... CF_ACCT=... node scripts/deploy.mjs <slug> <version> <asset>
  */
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { resolveVersion } from "./resolve-version.mjs";
 
-const argv = process.argv.slice(2);
-const flag = (name) => { const i = argv.indexOf(name); return i === -1 ? null : (argv[i + 1] ?? ""); };
-const positional = argv.filter((a, i) => !a.startsWith("--") && !(i > 0 && argv[i - 1].startsWith("--")));
-const [slug, version, assetPath] = positional;
-const thread = flag("--thread");
-const forced = argv.includes("--force-without-baton") ? flag("--force-without-baton") : null;
+const [slug, version, assetPath] = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 const TOKEN = process.env.CF_TOKEN, ACCT = process.env.CF_ACCT;
 if (!slug || !version || !assetPath || !TOKEN || !ACCT) {
-  console.error("usage: CF_TOKEN=... CF_ACCT=... node deploy.mjs <slug> <version> <asset> --thread <NAME>");
-  console.error("       [--force-without-baton \"<reason>\"]");
+  console.error("usage: CF_TOKEN=... CF_ACCT=... node scripts/deploy.mjs <slug> <version> <asset>");
   process.exit(2);
 }
 
@@ -110,22 +95,6 @@ if (!slug || !version || !assetPath || !TOKEN || !ACCT) {
       + " KEPT (keep_bindings: secret_text); without one, every wake says NO_INSTANCE_AI_CREDENTIAL.");
 }
 
-const BATON_URL = "https://raw.githubusercontent.com/believeinoakland/bio/main/docs/development/kickoffs/BATON.md";
-
-/** Read the holder off the remote. Returns null when it cannot be determined,
- *  which is treated as a refusal rather than as permission. */
-async function batonHolder() {
-  const r = await fetch(BATON_URL, { cache: "no-store" });
-  if (!r.ok) return { error: `baton unreadable: HTTP ${r.status}` };
-  const text = await r.text();
-  const block = /BATON-STATE([\s\S]*?)END-BATON-STATE/.exec(text);
-  if (!block) return { error: "baton file has no BATON-STATE block" };
-  const holder = /^\s*holder:\s*(\S+)/m.exec(block[1]);
-  const since = /^\s*since:\s*(\S+)/m.exec(block[1]);
-  if (!holder) return { error: "baton block names no holder" };
-  return { holder: holder[1], since: since ? since[1] : null };
-}
-
 /* ---- D-201: this script deploys THE PLANE, and nothing else ----
  *
  * The metadata below is the plane's: it declares VERSION, INSTANCE_NAME and the
@@ -138,8 +107,7 @@ async function batonHolder() {
  * biosmoke7` — and it is what makes /api reach the plane at all. Deploying it
  * through this script would drop that binding and leave the site serving HTML
  * whose every request fails. Until now the only thing standing between that and
- * a live outage was that nobody had tried it, and an earlier comment here said
- * the UI "is not gated" — true about the BATON, and readable as permission.
+ * a live outage was that nobody had tried it.
  *
  * A slug ALLOWLIST is not available: plane instances are named by the groups
  * that install them, so their slugs are arbitrary by design and cannot be
@@ -152,7 +120,7 @@ const NOT_A_PLANE = {
            "which carries the UI's own metadata and the same read-back-and-hash discipline.",
   "pdf-worker": "a fleet member, not a plane. It reads R2 CAPTURES, holds no PUBLISHED " +
                 "binding and no Durable Object, and writes nothing — this script's metadata " +
-                "would bind it all three. Build it with pdf-worker/scripts/build.mjs.",
+                "would bind it all three. Deploy it with scripts/deploy-fleet.mjs.",
 };
 
 if (Object.hasOwn(NOT_A_PLANE, slug)) {
@@ -164,50 +132,6 @@ if (Object.hasOwn(NOT_A_PLANE, slug)) {
   console.error("plane does not are DELETED. Verifying the bytes afterwards would pass.");
   process.exit(3);
 }
-
-/* Everything that reaches here is a plane, and a plane release is indivisible,
-   so the baton gates all of it. */
-const GATED = true;
-
-if (GATED) {
-  if (forced !== null) {
-    if (!forced.trim()) {
-      console.error("--force-without-baton requires a reason, in quotes, and it will be printed.");
-      process.exit(2);
-    }
-    console.error("");
-    console.error("  !! DEPLOYING WITHOUT THE BATON");
-    console.error(`  !! reason: ${forced}`);
-    console.error("  !! Record this in docs/development/kickoffs/BATON.md under Log,");
-    console.error("  !! with the date, the thread and this reason.");
-    console.error("");
-  } else {
-    if (!thread) {
-      console.error("REFUSING: --thread <NAME> is required for a plane release.");
-      console.error("The baton names one thread at a time; see docs/development/kickoffs/BATON.md");
-      process.exit(3);
-    }
-    let b;
-    try { b = await batonHolder(); }
-    catch (e) { b = { error: `baton unreachable: ${(e && e.message) || e}` }; }
-    if (b.error) {
-      console.error(`REFUSING: ${b.error}`);
-      console.error("The baton is read from the remote and this check fails CLOSED: proceeding blind");
-      console.error("is the coordination failure the baton exists to prevent. Use");
-      console.error('--force-without-baton "<reason>" if you are certain, and log it.');
-      process.exit(3);
-    }
-    if (b.holder !== thread) {
-      console.error(`REFUSING: the release baton is held by ${b.holder}${b.since ? ` since ${b.since}` : ""}, not by ${thread}.`);
-      console.error("Two threads cutting a plane release at once produces two tags claiming one");
-      console.error("version and a RELEASE.json matching neither artifact, and git will not catch it.");
-      console.error("Ask Bob to pass the baton, or wait. See docs/development/kickoffs/BATON.md");
-      process.exit(3);
-    }
-    console.log(`baton: held by ${thread}${b.since ? ` since ${b.since}` : ""}`);
-  }
-}
-
 
 /* ---- D-108: the bytes landing is not the same as the new build serving ----
  *
@@ -296,9 +220,9 @@ const api = `https://api.cloudflare.com/client/v4/accounts/${ACCT}/workers/scrip
    the fleet bindings arm the plane's Tier-3 paths. The targets are
    pre-flighted below so a missing worker is OUR refusal, not code 10143. */
 import { deriveBindings, serviceTargets, deriveLimits, limitsReadBack } from "./derive-bindings.mjs";
-import { stripJsonc } from "./jsonc.mjs";   /* N12: the product's own reader */
-const wranglerCfg = JSON.parse(stripJsonc(
-  readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8")));
+import { parseJsonc } from "./jsonc.mjs";   /* R11: the module's one reader */
+const wranglerCfg = parseJsonc(
+  readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8"), "bio-plane/wrangler.jsonc");
 const meta = {
   main_module: "index.mjs",
   compatibility_date: wranglerCfg.compatibility_date,
@@ -331,13 +255,20 @@ async function settingsNow() {
 /* Pre-flight every derived service target (except the self-reference, which
    this very PUT creates) so the refusal names the missing worker. */
 for (const target of serviceTargets(meta.bindings, slug)) {
-  const r = await fetch(
-    `https://api.cloudflare.com/client/v4/accounts/${ACCT}/workers/scripts/${target}/settings`,
-    { headers: { authorization: `Bearer ${TOKEN}` } });
+  let r;
+  try {
+    r = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${ACCT}/workers/scripts/${target}/settings`,
+      { headers: { authorization: `Bearer ${TOKEN}` } });
+  } catch (e) {
+    /* A request that never answered establishes nothing either (R17). */
+    console.error(`REFUSED [PREFLIGHT_UNREADABLE]: could not establish whether service target "${target}" exists (${(e && e.message) || e}); an unverified target is not a verified one.`);
+    process.exit(1);
+  }
   if (r.status === 404) {
     console.error(`REFUSED [BINDING_TARGET_MISSING]: the derived bindings target worker "${target}",`);
     console.error(`which does not exist on this account. Deploy the fleet member first`);
-    console.error(`(node tools/deploy-fleet.mjs ${target} --instance ${slug}), then deploy the plane.`);
+    console.error(`(node scripts/deploy-fleet.mjs ${target} --instance ${slug}), then deploy the plane.`);
     process.exit(1);
   }
   if (!r.ok) {
@@ -347,7 +278,9 @@ for (const target of serviceTargets(meta.bindings, slug)) {
 }
 
 async function deployed() {
-  const r = await fetch(api, { headers: { authorization: `Bearer ${TOKEN}`, accept: "application/javascript+module" } });
+  let r;
+  try { r = await fetch(api, { headers: { authorization: `Bearer ${TOKEN}`, accept: "application/javascript+module" } }); }
+  catch { return null; }   /* unreadable is not a match */
   if (!r.ok) return null;
   const ct = r.headers.get("content-type") || "";
   const body = Buffer.from(await r.arrayBuffer());
@@ -394,11 +327,13 @@ for (let attempt = 1; attempt <= 4; attempt++) {
   const fd = new FormData();
   fd.append("metadata", new Blob([JSON.stringify(meta)], { type: "application/json" }));
   fd.append("index.mjs", new Blob([source], { type: "application/javascript+module" }), "index.mjs");
-  const r = await fetch(api, { method: "PUT", headers: { authorization: `Bearer ${TOKEN}` }, body: fd });
-  const ct = r.headers.get("content-type") || "";
-  const text = await r.text();
-  /* Reported, never believed. Both branches fall through to the same check. */
-  if (ct.includes("json")) {
+  let r = null, text = "";
+  try { r = await fetch(api, { method: "PUT", headers: { authorization: `Bearer ${TOKEN}` }, body: fd }); text = await r.text(); }
+  catch (e) { console.log(`attempt ${attempt}: the upload request failed (${(e && e.message) || e})`); }
+  const ct = r ? r.headers.get("content-type") || "" : "";
+  /* Reported, never believed. Every branch falls through to the same check. */
+  if (!r) { /* said above */ }
+  else if (ct.includes("json")) {
     let j = null; try { j = JSON.parse(text); } catch { /* claimed JSON, was not */ }
     console.log(`attempt ${attempt}: http ${r.status}, api says ${j ? j.success : "unparseable"}`
       + (j && !j.success ? " " + JSON.stringify(j.errors).slice(0, 200) : ""));

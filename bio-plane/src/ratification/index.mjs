@@ -11,21 +11,27 @@
  * statics, with the one writer of a `case_conclusions` row), `ratifyCaseDocument`, `gateFacts`, `publish` and their
  * dispatch entries; from `index.mjs`, the two handlers (now `./ops.mjs`, the Worker half); from `bio-checks.mjs`, the
  * catalogue and rows in `./checks.mjs`. The legacy code's comments moved with it, shortened where they only restated
- * the code; the commit's own SQL is `publication`'s (its R22) and its comments went with it.
+ * the code; the commit's own SQL is `publication`'s (its R22) and its comments went with it. In T18 (N400, K636) the
+ * bulk release (`Store.release`, R20–R27) moved here from `store.mjs` as `./release.mjs`, and in T19 (K653 BOB-3) the
+ * bulk retirement (`Store.retire`, R28–R31, R33) as `./retire.mjs`.
  *
  * REACHED as `ratificationOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the
- * first call. At creation it registers the case-document catalogue with `promotion` (its R47; R8 here), and the
- * case-member arm of C-2.8 as a promotion check and a record-core audit check (R9).
+ * first call. At creation it registers the case-document catalogue with `promotion` (its R47; R8 here), the
+ * case-member arm of C-2.8 as a promotion check and a record-core audit check (R9), and its mint-ledger seed sources
+ * (`cases`, `case_documents`) with record-core (its R70; K783).
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
- *   record, membership, promotion   layer 2: `head`, `transact`, `registerAuditCheck`; `caseAuthority`,
- *                                   `inSight`, `existenceAct`, `attestingKeys`; `runCaseGate`, `registerCaseCatalogue`,
- *                                   `registerStep`.
- *   provenance     `registeredFor` (the gate's register rows).
+ *   record, membership, promotion   layer 2: `head`, `transact`, `registerAuditCheck`, `registerMintSeed`,
+ *                                   `evidenceStore`; `caseAuthority`, `inSight`, `existenceAct`; `runGate`,
+ *                                   `runCaseGate`, `registerCaseCatalogue`, `registerStep`, `promote`.
+ *   credentials    `attestingKeys` (its R11; R7's signers, R18's NO_ATTESTING_KEY; K757).
+ *   provenance     `registeredFor` (the gate's register rows), `registerHolds` (R4's gate probe).
  *   inquiry        `earned`, `subjectEntityOf` (R7's earned registry).
  *   basisVersions  `conclusionOf`, `conclusionRecordOf`, `noProjectConclusionOf`, `projectsDrawingOn` (R1),
  *                  `testimonyReach` (R7).
  *   publication    the case documents, the case relation and pins, the registries, the attribution facts, and the two
  *                  commits (its R2, R4, R7, R17, R22).
+ *   retrieval      `selectionResolve` (R21, R29: the bulk release's and retirement's selection).
+ *   connections    `citesInto` (its R22; R29: the retirement's live citers, `./retire.mjs`).
  *
  * READ CONTRACTS it reads in its own SQL: publication's `case_documents` and `cases` (its R40), record-core's `manifest`
  * and `history` (`gateFacts`' manifest and history lists, as they were), inquiry's `inquiry_basis` (`bundle_id`,
@@ -35,17 +41,24 @@
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
-import { provenanceOf } from "../provenance/index.mjs";
+import { provenanceOf, partsHeld } from "../provenance/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
-import { parseFrontmatter, normalizeType, isMachineIdentity, MACHINE_CLASS_PREFIX } from "../../checks/bio-checks.mjs";
+import { retrievalOf } from "../retrieval/index.mjs";
+import { connectionsOf } from "../connections/index.mjs";
+import { credentialsOf } from "../credentials/index.mjs";
+import { parseFrontmatter, normalizeType, isMachineIdentity, MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 import { checkCaseDocument, caseMemberFindings, caseMemberImageFindings, completenessFields,
-         RATIFY_SCOPE_CHECKS } from "./checks.mjs";
+         RATIFY_SCOPE_CHECKS, rowOf } from "./checks.mjs";
 import { operatorCaseRefusal, machineCaseRefusal, testimonyCaseRefusal, attributionUnchosenRefusal,
          attributionStaleRefusal, conclusionMovedRefusal, noAttestingKeyRefusal } from "./refusals.mjs";
+import { release } from "./release.mjs";
+import { retire } from "./retire.mjs";
 
 export * from "./checks.mjs";
+export { RELEASE_ACK_MAX } from "./release.mjs";
+export { EDGE_REASON_MAX } from "./retire.mjs";
 
 /* The viewer stamp membership mints for an organisation-scoped agent credential (`aiCredentialMint`'s principal). */
 const AGENT_ORGANISATION_STAMP = `${MACHINE_CLASS_PREFIX}ai`;
@@ -83,12 +96,13 @@ export class Ratification {
   #deps;
 
   constructor({ storage, record, membership, promotion, host = null, provenance = null, inquiry = null,
-                basisVersions = null, publication = null } = {}) {
+                basisVersions = null, publication = null, retrieval = null, connections = null,
+                credentials = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, provenance, inquiry, basisVersions, publication };
+    this.#deps = { host, provenance, inquiry, basisVersions, publication, retrieval, connections, credentials };
   }
 
   /* The modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
@@ -96,6 +110,11 @@ export class Ratification {
   get inquiry() { return this.#deps.inquiry ||= inquiryOf(this.#deps.host); }
   get basisVersions() { return this.#deps.basisVersions ||= basisVersionsOf(this.#deps.host); }
   get publication() { return this.#deps.publication ||= publicationOf(this.#deps.host); }
+  get retrieval() { return this.#deps.retrieval ||= retrievalOf(this.#deps.host); }
+  get connections() { return this.#deps.connections ||= connectionsOf(this.#deps.host); }
+  get credentials() {
+    return this.#deps.credentials ||= credentialsOf(this.#deps.host, { record: this.record, membership: this.membership });
+  }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { for (const r of this.sql.exec(q, ...a)) return r; return null; }
@@ -408,7 +427,7 @@ export class Ratification {
       dangling: this.#rows(
         `SELECT r.target_id FROM refs r LEFT JOIN bundles b ON b.bundle_id=r.target_id
          WHERE r.bundle_id=? AND b.bundle_id IS NULL`, bundleId).map((r) => r.target_id),
-      signers: this.membership.attestingKeys(),   /* membership R70: the ONE predicate (D-158) */
+      signers: this.credentials.attestingKeys(),   /* credentials R11: the ONE predicate (D-158; K757) */
       /* REC-14: the two facts the catalogue cannot get from the bundle — what THIS case asserted at its previous
          edition (C-21.1) and what the cases beneath it FROZE (C-21.2), read with the rows so the gate and the write
          path see the same published record. */
@@ -420,6 +439,45 @@ export class Ratification {
          the write. The subject comes from the PROJECTION here (the document is already promoted). */
       earnedRegistry: this.inquiry.earned(this.inquiry.subjectEntityOf(bundleId), targets),
     };
+  }
+
+  /* ---- R4: `op=ratify`'s gate, on the promotion instance (N417, K691) ----
+
+     `op=ratify`'s gate runs here, in the Durable Object, for `caseGate`'s reason (K233): `promotion.runGate` runs the
+     type grammars later modules registered with record-core (C-2.7 among them), and those registrations live on this
+     host; the Worker has none. The Worker hands what it already read under the ratifier's sight (the image, the known
+     ids, the gate facts' registries and register rows); the register rows' bytes are probed here, in-process: the
+     evidence store (record-core R38), then provenance's `registerHolds` (R5) and, for parts the bundle's record names,
+     `partsHeld` (D-533, D-556). No evidence store bound is every row absent, as the Worker's unbound bucket was. The
+     answer is the gate's verdict and `parted`, the whole-hash rows the gate admitted as held in parts with the parts
+     the record names, which the Worker publishes part by part. */
+  async ratifyGate({ bundleId, image, knownIds, registers, publishedRegistry, publishedCaseRegistry,
+                     earnedRegistry } = {}) {
+    const evidence = this.record.evidenceStore();
+    const parted = [];
+    const gate = await this.promotion.runGate({
+      bundleId, image: image || {}, knownIds: new Set(Array.isArray(knownIds) ? knownIds : []),
+      registers: Array.isArray(registers) ? registers : [],
+      publishedRegistry: publishedRegistry ?? null, publishedCaseRegistry: publishedCaseRegistry ?? null,
+      earnedRegistry: earnedRegistry ?? null,
+      hasCapture: async (sha) => {
+        if (!evidence) return { present: false, bytes: 0 };
+        const h = await evidence.head(sha);
+        if (h) return { present: true, bytes: h.size };
+        /* D-530: a miss on the whole-hash key is not absence; D-556: the parts this bundle's record names are each
+           headed and their digests verified, and the gate admits the row only when all are present and verify. */
+        const held = this.provenance.registerHolds({ sha, bundle: bundleId });
+        const named = held ? held.parts : null;
+        if (named?.state === "unreadable") return { present: false, bytes: 0, parts: { why: named.why } };
+        if (named?.state === "named") {
+          const v = await partsHeld(evidence, (s) => s, named.parts);
+          if (!v.missing.length && !v.disagree.length && !v.unverified.length) parted.push([sha, named.parts]);
+          return { present: false, bytes: 0, parts: { named: named.parts, ...v } };
+        }
+        return { present: false, bytes: 0, ...(held && held.acquired === true ? { heldInParts: true } : {}) };
+      },
+    });
+    return { ...gate, parted };
   }
 
   /* ---- R2: the case document's catalogue, on the promotion instance (K233) ----
@@ -464,10 +522,11 @@ export class Ratification {
        C-32.13 and C-32.15, the credential fences, read from the control plane's `viewer` stamp: every machine
          identity (REC-46's predicate) holds both (the act answers the first; lifted, the second would answer) but an
          operator's bearer stamp `class:<cls>`, which holds C-32.15 alone; a member's or the founder's session holds
-         neither; an absent viewer, an internal caller, is not asked;
+         neither; an absent viewer, an internal caller, is not asked. A viewer `{stamp, aiCred}` carrying a minted agent
+         credential holds both, whatever its stamp (N407: a member-scoped agent's stamp is its minter's);
        C-53.12, C-92.10, C-92.11 over publication's attribution facts for these bytes;
        NO_ATTESTING_KEY, the pre-flight's own: `signer` (a member id, or `member:<id>`) holds no key
-         `membership.attestingKeys` answers (R19: whatever the key's origin);
+         `credentials.attestingKeys` answers (its R11; R19 here: whatever the key's origin);
        CASE_SIGNER_NOT_AN_OWNER through `membership.caseAuthority`, the deliverer not asked (it is fixed only when the
          act is delivered);
        C-65.1, the commit's own comparison (`#conclusionsMoved`) over these bytes, read for the signer;
@@ -494,8 +553,17 @@ export class Ratification {
          answers C-32.15 only (it has no agent credential). A `class:` stamp is an agent credential's only in the
          shapes the plane mints for one: the act's `class:<cls>/<tokenId>`, and membership's organisation principal
          `class:ai` (`aiCredentialMint`), matched as the whole stamp. */
-      const v = viewer === null || viewer === undefined ? "" : String(viewer).trim();
-      if (v && isMachineIdentity(v)) {
+      /* N407 (K649 (4)): the viewer carries the agent credential. A viewer is the control plane's stamp, or
+         `{stamp, aiCred}` when the caller is a minted agent credential (admission stamps it, layer 11). A member-scoped
+         agent's stamp is its minter's (`member:<minter>`, membership R28), so the stamp alone cannot tell it from its
+         member; `aiCred` does, as it does for the act (`./ops.mjs`), which answers such a caller C-32.13 and, lifted,
+         C-32.15 (class `ai`, never through a session). */
+      const carried = viewer && typeof viewer === "object" ? viewer : null;
+      const aiCred = carried && carried.aiCred && typeof carried.aiCred === "object" ? carried.aiCred : null;
+      const v = carried ? String(carried.stamp ?? "").trim()
+        : viewer === null || viewer === undefined ? "" : String(viewer).trim();
+      if (aiCred) refusals.push(machineCaseRefusal("ai"), operatorCaseRefusal("ai"));
+      else if (v && isMachineIdentity(v)) {
         const stamped = v.toLowerCase().startsWith(MACHINE_CLASS_PREFIX);
         const rest = stamped ? v.slice(MACHINE_CLASS_PREFIX.length) : v;
         const cls = stamped ? rest.split("/")[0] : v;
@@ -512,7 +580,7 @@ export class Ratification {
 
       const signerMember = signer === null || signer === undefined || isMachineIdentity(signer) ? null
         : String(signer).trim().replace(/^member:/, "") || null;
-      if (!signerMember || !this.membership.attestingKeys().some((k) => k.member_id === signerMember))
+      if (!signerMember || !this.credentials.attestingKeys().some((k) => k.member_id === signerMember))
         refusals.push(noAttestingKeyRefusal(signerMember));
 
       const denied = this.membership.caseAuthority({ project, deliveredBy: null, signer: signerMember,
@@ -967,7 +1035,7 @@ export class Ratification {
     try { fm = parseFrontmatter(md.text).data; } catch { fm = null; }
     const errs = caseMemberFindings(fm).filter((x) => x.severity === "error");
     if (!errs.length) return null;
-    return { ok: false, reason: "CASE_MEMBER_REFUSED",
+    return { ok: false, reason: "CASE_MEMBER_REFUSED", ...rowOf("CASE_MEMBER_REFUSED"),
              detail: "this document's bytes claim to be a published case member (a frozen published_strength block) "
                    + "and do not carry what a case member must carry. Nothing was written.",
              findings: errs.map((x) => ({ check: x.check, detail: x.message, ...(x.repairs ? { repairs: x.repairs } : {}) })) };
@@ -975,12 +1043,28 @@ export class Ratification {
 
   /** R9: the audit check (record-core R59) over one image: every case-member finding of its bundle.md. */
   audit(image) { return caseMemberImageFindings(image, parseFrontmatter); }
+
+  /** R20–R27: the bulk release of a selection from collected to verified (`./release.mjs`). */
+  release(a) { return release({ sql: this.sql, promotion: this.promotion, retrieval: this.retrieval }, a); }
+
+  /** R28–R31, R33: the bulk retirement of a selection from verified (`./retire.mjs`). */
+  retire(a) {
+    return retire({ sql: this.sql, promotion: this.promotion, retrieval: this.retrieval,
+                    connections: this.connections }, a);
+  }
 }
 
 const instances = new WeakMap();
 
+/* record-core R70 (K783): the tables whose opaque ids the case mint site's `taken` reads, named by this module for the
+   ledger's seed (publication registers its own two, `published_cases` and `published_case_members`). */
+const MINT_SEED = Object.freeze([Object.freeze(["CASE", "cases", "case_id"]),
+                                 Object.freeze(["CASE", "case_documents", "case_id"])]);
+
 /** K61: the one instance per host, created on the first call with `deps`. It registers the case-document catalogue
- *  with promotion (its R47; R8 here) and C-2.8's case-member arm as a promotion check and an audit check (R9). */
+ *  with promotion (its R47; R8 here), C-2.8's case-member arm as a promotion check and an audit check (R9), and its
+ *  mint-ledger seed sources with record-core (its R70); a refused seed registration is a wiring fault and throws,
+ *  rather than leave the ledger blind to the case ids. */
 export function ratificationOf(host, deps) {
   let r = instances.get(host);
   if (!r) {
@@ -994,22 +1078,31 @@ export function ratificationOf(host, deps) {
     promotion.registerCaseCatalogue("ratification", checkCaseDocument);
     promotion.registerStep("ratification", { check: (c) => r.check(c) });
     record.registerAuditCheck("ratification", (image) => r.audit(image));
+    const seeded = record.registerMintSeed("ratification", MINT_SEED.map((x) => [...x]));
+    if (seeded && seeded.ok === false)
+      throw new Error(`ratification: record-core refused its mint seed: ${seeded.reason}`);
   }
   return r;
 }
 
-/** The module's store-half ops (K3), as entries of the legacy store's op map: `gatefacts` (R7), `casegate` (R2's
- *  gate), `caseratify` (R3) and `publish` (R5), the internal hops of the two ceremonies. `viewer` is the control
- *  plane's stamp, read from the query. */
+/** R32: the module's store-half ops (K3), as entries of the legacy store's op map: `gatefacts` (R7), `ratifygate` (R4's
+ *  gate, N417), `casegate` (R2's gate), `caseratify` (R3) and `publish` (R5), the internal hops of the two ceremonies,
+ *  `release` (R20–R27) and `retire` (R28–R31). `viewer`, and release's and retire's `owner` and `author`, are the
+ *  control plane's stamps, read from the query, never from the body. */
 export function ratificationOps(r, url, body) {
   const q = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" ? body : {};
   return {
     gatefacts: () => r.gateFacts(q("id"), q("viewer") ?? null),
+    ratifygate: () => r.ratifyGate(b),
     casegate: () => r.caseGate({ caseId: b.caseId ?? q("case"), edition: Number(b.edition ?? q("edition")),
                                  docSha: b.docSha ?? q("docSha"), viewer: q("viewer") ?? null,
                                  secretSha: q("secretSha") ?? null }),
     caseratify: () => r.ratifyCaseDocument(b),
     publish: () => r.publish(b),
+    release: () => r.release({ handle: q("handle"), acknowledgment: q("acknowledgment"), mitigation: q("mitigation"),
+                               viewer: q("viewer"), owner: q("owner"), author: q("author") }),
+    retire: () => r.retire({ handle: q("handle"), reason: q("reason"), viewer: q("viewer"), owner: q("owner"),
+                             author: q("author") }),
   };
 }

@@ -66,7 +66,7 @@
  */
 import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, flatten, selfNaming, FURNITURE_RECURS, alsoSatisfies,
          vocabPatterns, anyMatch, LINE_END } from "./index.mjs";
-import { event, worstSignificance, isMeaningful, bySeverity } from "../events.mjs";
+import { event, worstSignificance, isMeaningful, bySeverity } from "../../site-profiles/index.mjs";
 
 /* The masthead, line-anchored. `Meeting Minutes`, `Minutes`, either followed by a
    qualifier the clerk appends (`- DRAFT`, `- FINAL`, `- Approved`). NOT a sentence

@@ -7,7 +7,7 @@
  * Extracted from the legacy modules (T8, layer 8; K3, K102): `store.mjs` (REC-126's review copy: `reviewAct` with
  * `#caseDraft`, `#reviewGrant` and `#reviewRevoke`, the draft identity and edition helpers, `#reviewGates`,
  * `#draftPublisher`, the grant and sight predicates, `#reviewLastChange`, `reviewCopy`, `reviewComment`; REC-198's
- * `caseDraftList`; the six dispatch entries), `bio-checks.mjs` (C-87 and C-32.16, now `./checks.mjs`) and `schema.mjs`
+ * `caseDraftList`; the six dispatch entries), the check catalogue (C-87 and C-32.16, now `./checks.mjs`) and `schema.mjs`
  * (`case_drafts`, `review_grants`, `review_comments`, now `./schema.mjs`). The legacy code's comments moved with it,
  * shortened where they only restated the code.
  *
@@ -59,7 +59,7 @@ import { strengthOf } from "../strength/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
 import { caseAuthoringOf } from "../case-authoring/index.mjs";
-import { isMachineIdentity } from "../../checks/bio-checks.mjs";
+import { isMachineIdentity } from "../record-grammar/index.mjs";
 import { REVIEW_COPY_CHECKS } from "./checks.mjs";
 import { REVIEW_TABLES, migrateReview } from "./schema.mjs";
 

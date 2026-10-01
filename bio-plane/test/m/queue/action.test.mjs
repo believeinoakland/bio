@@ -1,0 +1,109 @@
+/* The Action layer's kinds at queue's interface (K608, K611, K614), over a stubbed `queue-producers.feedItems` (its R8,
+   R15–R18) minting each as its requirement keys it: the three OBLIGATIONs pass the mint (R1, R11), name the door each
+   leaves by (R12) and are never muted (R19, R26, R31); the overdue clock is a CONDITION a member may mute (R5, R14, R20). */
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { world, byId, NOW, iso } from "./world.mjs";
+import { QUEUE_ACT_CHECKS } from "../../../src/queue/index.mjs";
+
+const ITEMS = {
+  checkpoint: { id: "OBLIGATION::plan-checkpoint-due::PLN-1::S1::2", class: "OBLIGATION", kind: "plan-checkpoint-due",
+                subject: { kind: "bundle", id: "PLN-1" }, door: "checkpointrecord", says: /op=checkpointrecord/ },
+  stage:      { id: "OBLIGATION::escalation-stage-proposed::ESC-1::filed", class: "OBLIGATION", kind: "escalation-stage-proposed",
+                subject: { kind: "bundle", id: "ESC-1" }, door: "escalationadvance", says: /op=escalationadvance.*op=escalationdecline/ },
+  reminder:   { id: "OBLIGATION::action-reminder::ACT-1::0::2026-09-02", class: "OBLIGATION", kind: "action-reminder",
+                subject: { kind: "bundle", id: "ACT-1" }, door: "reminderanswer", says: /op=reminderanswer/ },
+  overdue:    { id: "CONDITION::action-clock-overdue::ACT-1::0", class: "CONDITION", kind: "action-clock-overdue",
+                subject: { kind: "bundle", id: "ACT-1" } },
+};
+const FACTS = { objective_gap: { bound: 50, truncated: false }, unattributed: { count: 0, inquiries: [] },
+                contradiction: { bound: 50, truncated: false }, dispositions: [] };
+
+function withAction() {
+  const w = world({ producers: { feedItems: (a) => ({ facts: FACTS, items: Object.values(ITEMS).map(({ door, says, ...it }) => ({
+    ...it, case: a.homesOf([it.subject.id]), summary: it.kind, detail: null,
+    basis: { source: "queue-producers", detail: "stubbed as its requirement keys it" },
+    age: { state: "determined", since: iso(NOW - 1000), ms: 1000 }, assignee: "alice", assignee_role: null,
+    options: a.optionsOf([it.subject.id]) })) }) } });
+  w.member("alice");
+  w.bundle("PRJ-1", "project"); w.join("PRJ-1", "alice");
+  for (const id of ["PLN-1", "ESC-1", "ACT-1"]) { w.bundle(id); w.cite("PRJ-1", id); }
+  return w;
+}
+
+test("R1, R11, R12: the Action layer's OBLIGATIONs pass the mint and each names its own door, never taskresolve", () => {
+  const w = withAction();
+  const f = w.feed("alice");
+  assert.equal(f.ok, true, JSON.stringify(f).slice(0, 300));
+  const items = byId(f);
+  for (const k of ["checkpoint", "stage", "reminder"]) {
+    const { id, door, says } = ITEMS[k];
+    const d = items[id].disposition;
+    assert.deepEqual([items[id].class, d.available, d.reason, d.instead], ["OBLIGATION", false, "an_obligation_is_resolved_not_disposed", door], id);
+    assert.match(d.detail, says, id);
+    assert.deepEqual(items[id].case.ancestors.map((a) => a.id), ["PRJ-1"], "homed by R7's walk");
+  }
+  assert.equal(f.counts.obligation, 3);
+  assert.deepEqual(f.items.map((i) => i.class), ["OBLIGATION", "OBLIGATION", "OBLIGATION", "CONDITION"]);
+});
+
+test("R5, R11, R12: action-clock-overdue mints as a CONDITION and its door is queuemute; minted as a FINDING the feed refuses", () => {
+  const w = withAction();
+  const d = byId(w.feed("alice"))[ITEMS.overdue.id].disposition;
+  assert.deepEqual([d.available, d.instead, d.reason], [false, "queuemute", "a_condition_is_acknowledged_or_muted"]);
+  // t18-entries.md's FINDING is not adopted (K611): the mint says so
+  const w2 = world({ producers: { feedItems: (a) => ({ facts: FACTS, items: [{ id: "FINDING::action-clock-overdue::ACT-1::0",
+    class: "FINDING", kind: "action-clock-overdue", case: a.homesOf([]), subject: { kind: "bundle", id: "ACT-1" },
+    basis: { source: "x", detail: "x" }, age: { state: "undetermined" }, assignee: null, assignee_role: null, options: [] }] }) } });
+  const r = w2.feed(null, "class:admin");
+  assert.deepEqual([r.ok, r.reason, r.catalogued_as, r.minted_as], [false, "KIND_MISCLASSED", "CONDITION", "FINDING"]);
+});
+
+test("R19, R26, R31: each Action OBLIGATION is refused KIND_NOT_PERSONAL by kind and by its published id, and no row suppresses it", () => {
+  const w = withAction();
+  for (const k of ["checkpoint", "stage", "reminder"]) {
+    const { id, kind } = ITEMS[k];
+    for (const r of [w.q.queueMute({ member: "alice", viewer: "member:alice", case: "PRJ-1", kinds: [kind] }),
+                     w.q.queueMute({ member: "alice", viewer: "member:alice", item: id })])
+      assert.deepEqual([r.ok, r.reason, r.kind_class, r.check, r.translation],
+        [false, "KIND_NOT_PERSONAL", "OBLIGATION", "C-33.27", QUEUE_ACT_CHECKS.KIND_NOT_PERSONAL.translation], id);
+    w.run(`INSERT INTO queue_item_mutes VALUES ('alice', ?, 'OBLIGATION', ?)`, id, iso(NOW));
+  }
+  assert.equal(w.all(`SELECT count(*) c FROM queue_state`)[0].c, 0, "a refusal writes nothing");
+  w.run(`INSERT INTO queue_state (member_id, case_id, muted_kinds) VALUES ('alice','PRJ-1','action-reminder,escalation-stage-proposed,plan-checkpoint-due')`);
+  const f = w.feed("alice");
+  assert.equal(f.counts.obligation, 3, "rows naming them suppress none");
+  assert.ok(f.mute.suppressed.every((s) => s.class !== "OBLIGATION"));
+});
+
+test("R14, R19, R20: a member mutes action-clock-overdue for themselves, by kind on a case or by its id; another member still sees it", () => {
+  const w = withAction();
+  w.member("bob"); w.join("PRJ-1", "bob");
+  const byKind = w.q.queueMute({ member: "alice", viewer: "member:alice", case: "PRJ-1", kinds: ["action-clock-overdue"] });
+  assert.deepEqual([byKind.ok, byKind.muted_kinds], [true, ["action-clock-overdue"]]);
+  let f = w.feed("alice");
+  assert.equal(byId(f)[ITEMS.overdue.id], undefined);
+  assert.deepEqual(f.mute.suppressed.map((s) => [s.id, s.scope, s.case]), [[ITEMS.overdue.id, "case", "PRJ-1"]]);
+  assert.ok(byId(w.feed("bob"))[ITEMS.overdue.id], "a mute is personal");
+  w.q.queueMute({ member: "alice", viewer: "member:alice", case: "PRJ-1", kinds: ["action-clock-overdue"], unmute: true });
+  const byItem = w.q.queueMute({ member: "alice", viewer: "member:alice", item: ITEMS.overdue.id });
+  assert.deepEqual([byItem.ok, byItem.form, byItem.item_class], [true, "item", "CONDITION"]);
+  f = w.feed("alice");
+  assert.deepEqual(f.mute.suppressed.map((s) => [s.id, s.scope]), [[ITEMS.overdue.id, "item"]]);
+  // it is offered among the mutable kinds a refusal lists
+  const refused = w.q.queueMute({ member: "alice", viewer: "member:alice", case: "PRJ-1", kinds: [] });
+  assert.ok(refused.available.includes("action-clock-overdue"));
+  assert.ok(!refused.available.includes("action-reminder"));
+});
+
+test("R8, R15–R18 (K728): a caller's fakes for the Action layer's providers reach queue-producers, each asked by its producer", () => {
+  const asked = [];
+  const page = (name) => (a) => { asked.push([name, a.viewer]); return { ok: true, items: [], truncated: false, cursor: null }; };
+  const w = world({ actionClocks: { overdueClocks: page("overdueClocks"), remindersDue: page("remindersDue") },
+                    escalation: { escalationsDue: page("escalationsDue") },
+                    actionPlans: { checkpointsDue: page("checkpointsDue") } });
+  w.member("alice");
+  assert.equal(w.feed("alice").ok, true);
+  assert.deepEqual(asked.map(([n]) => n).sort(), ["checkpointsDue", "escalationsDue", "overdueClocks", "remindersDue"]);
+  for (const [n, v] of asked) if (n !== "checkpointsDue") assert.equal(v, "member:alice", n);
+});

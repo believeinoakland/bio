@@ -63,7 +63,7 @@
  * effect take that one too; D-282 was found by a control arm, not by the battery.
  */
 import "./stdio.mjs";
-import { existsSync, mkdtempSync, renameSync, rmSync } from "node:fs";
+import { chmodSync, existsSync, lstatSync, mkdtempSync, readdirSync, renameSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -113,8 +113,28 @@ export const sweepSandbox = () => {
   let target = SANDBOX;
   try { renameSync(SANDBOX, `${SANDBOX}-swept`); target = `${SANDBOX}-swept`; } catch { /* gone already, or unmovable: sweep in place */ }
   for (let i = 0; i < 5 && existsSync(target); i++) {
-    try { rmSync(target, { recursive: true, force: true, maxRetries: 3 }); } catch { /* next pass; the orphan sweep after that */ }
+    try { rmSync(target, { recursive: true, force: true, maxRetries: 3 }); } catch (e) {
+      /* N22: a test that left a directory read-only makes its entries
+         unremovable to a process that is not root (root's override hides
+         this). The tree is ours, so it is made writable and the next pass
+         retries; any other refusal goes to the next pass as before. */
+      if (e?.code === "EACCES") makeWritable(target);
+    }
   }
+};
+
+/* Gives the owner full access to every directory in the tree, parents before
+   children so a directory with no access at all can then be listed. lstat, so
+   a link is never followed: nothing outside the tree changes mode (R9). Files
+   are left alone; removing one needs only its directory writable. */
+const makeWritable = (dir) => {
+  let st;
+  try { st = lstatSync(dir); } catch { return; }
+  if (!st.isDirectory()) return;
+  try { chmodSync(dir, (st.mode & 0o7777) | 0o700); } catch { /* not ours to change; the next pass tries regardless */ }
+  let names = [];
+  try { names = readdirSync(dir); } catch { return; }
+  for (const n of names) makeWritable(join(dir, n));
 };
 
 process.on("exit", sweepSandbox);

@@ -2,7 +2,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as ol from "../../../src/observation-log/index.mjs";
-import { AI_RUN_CHECKS, LEAD_CHECKS as CATALOGUE_LEAD_CHECKS } from "../../../checks/bio-checks.mjs";
 
 const sentence = (s) => typeof s === "string" && s.trim().length > 10;
 
@@ -124,15 +123,36 @@ test("R12 contentAxisFor: the two axes never merged; no row is not_extracted onl
   assert.equal(ol.contentAxisFor({ observed: "PRESENT", unitIndex: false }).state, "undetermined");
 });
 
-test("R26 the C-22 refusals (C-22.17 among them) are the catalogue's rows by reference, numbers unchanged; C-54.2–C-54.10 are this module's rows and have left the catalogue, C-54.1 staying with the leg grammars", () => {
+test("R26 every C-22 row is this module's: AI_RUN_CHECKS held here whole (K586), numbers and codes as allocated, each `where` naming this module's site, each translation a sentence a member can read, each refusal the append answers carrying its row; C-54.2–C-54.10 are this module's rows", () => {
   const want = { AI_LOG_STATE_UNKNOWN: "C-22.1", AI_LOG_GOVERNED_ABSENCE: "C-22.2", AI_LOG_SHELL_PRESENT: "C-22.3",
                  AI_RUN_CONDITION_UNKNOWN: "C-22.4", AI_LOG_NOT_A_BUNDLE: "C-22.6", OBS_AUTHORITY_UNNAMED: "C-22.9",
                  OBS_PRESENT_NO_REFERENT: "C-22.10", AI_LOG_NEVER_LOOKED_STORED: "C-22.17" };
-  assert.deepEqual(Object.fromEntries(Object.entries(ol.OBSERVATION_CHECKS).map(([k, r]) => [k, r.check])), want);
-  for (const k of Object.keys(want)) {
-    assert.equal(ol.OBSERVATION_CHECKS[k], AI_RUN_CHECKS[k], `${k} is the catalogue's one row, not a copy`);
-    assert.ok(sentence(ol.OBSERVATION_CHECKS[k].translation));
+  assert.deepEqual(Object.fromEntries(Object.entries(ol.AI_RUN_CHECKS).map(([k, r]) => [k, r.check])), want);
+  assert.equal(ol.OBSERVATION_CHECKS, ol.AI_RUN_CHECKS, "one object under both names");
+  assert.deepEqual([...ol.OBSERVATION_CHECK_KEYS].sort(), Object.keys(want).sort());
+  for (const [k, r] of Object.entries(ol.AI_RUN_CHECKS)) {
+    assert.deepEqual(Object.keys(r).sort(), ["check", "translation", "where"], k);
+    assert.ok(r.translation.trim().length >= 40, `${k}'s translation is a sentence, not a label`);
+    assert.match(r.where, /^src\/observation-log\/vocabulary\.mjs (checkObservation|checkCondition)\b/, `${k} names its site in this module`);
   }
+  // every C-22 refusal the append answers carries the row's own number and translation, read from here
+  const cases = {
+    AI_LOG_NOT_A_BUNDLE: { bundle: "INFO-2026-0001" }, OBS_AUTHORITY_UNNAMED: { authority_kind: "member" },
+    AI_LOG_STATE_UNKNOWN: { state: "MAYBE" }, AI_LOG_NEVER_LOOKED_STORED: { state: "NEVER_LOOKED" },
+    AI_LOG_GOVERNED_ABSENCE: { governed: true }, AI_LOG_SHELL_PRESENT: { state: "PRESENT", condition: "client-rendered-shell", result_ref: "c" },
+    OBS_PRESENT_NO_REFERENT: { state: "PRESENT" }, AI_RUN_CONDITION_UNKNOWN: { state: "LOOKED_INDETERMINATE", condition: "no-such" },
+  };
+  assert.deepEqual(Object.keys(cases).sort(), Object.keys(want).sort());
+  for (const [k, over] of Object.entries(cases)) {
+    const r = ol.checkObservation({ authority_kind: "acquire", state: "LOOKED_ABSENT", ...over });
+    assert.deepEqual([r.ok, r.code, r.check, r.translation], [false, k, want[k], ol.AI_RUN_CHECKS[k].translation], k);
+    assert.ok(typeof r.detail === "string" && r.detail.length > 0, k);
+  }
+  // C-22.1's detail names the offending value and the vocabulary it is not in
+  const bad = ol.checkObservation({ authority_kind: "acquire", state: "MAYBE" });
+  assert.match(bad.detail, /'MAYBE' is not one of NEVER_LOOKED, LOOKED_ABSENT, LOOKED_INDETERMINATE, PRESENT, partial \(D-129\)/);
+  assert.match(ol.checkObservation({ authority_kind: "acquire" }).detail, /'\(absent\)' is not one of/);
+  assert.equal(ol.checkCondition("no-such").check, "C-22.4");
   const lead = { LEAD_NOT_A_MEMBER: "C-54.2", LEAD_NO_WORDS: "C-54.3", LEAD_TOO_LONG: "C-54.4", LEAD_NOT_FOUND: "C-54.5",
                  LEAD_LOOK_STATE: "C-54.6", LEAD_LOOK_REFERENT: "C-54.7", LEAD_LOOK_NOT_A_MEMBER: "C-54.8",
                  LEAD_SHARE_NOT_A_PARTICIPANT: "C-54.9", LEAD_SHARE_NOT_AUTHOR: "C-54.10" };
@@ -140,10 +160,8 @@ test("R26 the C-22 refusals (C-22.17 among them) are the catalogue's rows by ref
   for (const [k, r] of Object.entries(ol.LEAD_CHECKS)) {
     assert.ok(sentence(r.translation), k);
     assert.match(r.where, /^src\/observation-log\/index\.mjs /, `${k} names its site in this module`);
-    assert.ok(!(k in CATALOGUE_LEAD_CHECKS), `${k} is no longer a catalogue row`);
   }
-  assert.deepEqual(Object.keys(CATALOGUE_LEAD_CHECKS), ["LEAD_NOT_EVIDENCE"]);
-  assert.equal(CATALOGUE_LEAD_CHECKS.LEAD_NOT_EVIDENCE.check, "C-54.1");
+  assert.ok(!("LEAD_NOT_EVIDENCE" in ol.LEAD_CHECKS), "C-54.1 is the leg grammars' row, not this module's");
 });
 
 test("R27 one judgement, one place: every writer's outcome rule, the content-axis rule and the missing-row rule are exported pure functions that answer without storage", () => {

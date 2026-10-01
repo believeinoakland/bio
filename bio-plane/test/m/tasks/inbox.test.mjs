@@ -9,6 +9,7 @@ import { tasksOf, tasksOps, Tasks, QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS, QUEU
          TASKS_TABLES, tasksOwns } from "../../../src/tasks/index.mjs";
 import { mintExhausted } from "../../../src/record-core/index.mjs";
 import { schedulerOf } from "../../../src/scheduler/index.mjs";
+import { Connections } from "../../../src/connections/index.mjs";
 
 const DOC = "INFO-2026-0001-doc", PRJ = "PROJ-2026-0001-team", DOC2 = "INFO-2026-0002-other", DOC3 = "INFO-2026-0003-third";
 const HOMES = { a1: DOC, a2: PRJ, a3: DOC2 };
@@ -48,7 +49,7 @@ test("R1: drain takes queued events in order; unfiled waits, a live task folds, 
   w.run(`UPDATE tasks SET status='resolved', resolved_at=? WHERE id=?`, iso(NOW), stored.id);
   w.queue.push(ev("a1", "fourth"));
   assert.equal(w.t.taskDrain({ actor: "alarm" }).created.length, 1);
-  // a withdrawn cites edge is not a route (connections R22): the owner of the second citer is not tried either
+  // a withdrawn cites edge is not a route (connections R22): its only citer withdrawn, the administrator fallback
   const w1 = box([ev("a1")]); w1.member("olga"); w1.member("ada", { role: "admin" });
   w1.bundle(DOC); w1.bundle(PRJ, "project"); w1.join(PRJ, "olga", { owner: true }); w1.cite(PRJ, DOC);
   w1.fakes.connections.edgeSevered = (from, to) => from === PRJ && to === DOC;
@@ -65,7 +66,51 @@ test("R1: drain takes queued events in order; unfiled waits, a live task folds, 
   for (const [asked, got] of [[0, 1], [9999, 500], [null, 50], ["", 50], ["x", 50]]) assert.equal(box().t.taskDrain({ limit: asked }).limit, got);
 });
 
-test("R1 (N329): with no project manager the task goes to the earliest active administrator, the first of activeAdmins after the founder (membership R86)", () => {
+test("R1 (d280-strengthbar §5): with connections' own edgeSevered over real citing documents, a withdrawn first citer is passed over and the obligation goes to the next live citer's owner", () => {
+  const w = box([ev("a1")]);
+  /* the real predicate (connections R22), reading each citing project's `bundle.md` through record-core */
+  const real = new Connections({ storage: w.host.storage, record: w.record, membership: w.membership });
+  w.fakes.connections.edgeSevered = (...a) => real.edgeSevered(...a);
+  const GONE = "PROJ-2026-0001-gone", HERE = "PROJ-2026-0002-here";   // the withdrawn one sorts first by id
+  w.member("carol"); w.member("dave"); w.member("ada", { role: "admin" });
+  w.bundle(DOC); w.bundle(GONE, "project"); w.bundle(HERE, "project");
+  w.join(GONE, "carol", { owner: true }); w.join(HERE, "dave", { owner: true });
+  const md = (id, status) => ["---", `id: ${id}`, "object_type: project", "references:",
+    `  - target: ${DOC}`, "    rel: cites", `    status: ${status}`, "---", "", "## Summary", ""].join("\n");
+  for (const [id, st] of [[GONE, "severed"], [HERE, "confirmed"]]) {
+    w.run(`INSERT INTO files (bundle_id, path, content, bytes, sha256) VALUES (?, 'bundle.md', ?, ?, 'x')`, id, md(id, st), 1);
+    w.cite(id, DOC);
+  }
+  assert.deepEqual([real.edgeSevered(GONE, DOC, "cites"), real.edgeSevered(HERE, DOC, "cites")], [true, false], "fixture: one withdrawn, one live");
+  const made = w.t.taskDrain({ actor: "consumer", now: iso(NOW) }).created;
+  assert.deepEqual(made.map((c) => [c.refers_to, c.assignee, c.assignee_role]), [[DOC, "dave", "project-manager"]],
+    "not carol, whose project withdrew, though it sorts first");
+  assert.equal(made[0].basis, `owner of ${HERE}, which cites this bundle`, "the basis names the project used, never the withdrawn one");
+  // with both withdrawn, no citer routes: the administrator fallback
+  const w2 = box([ev("a1")]);
+  const real2 = new Connections({ storage: w2.host.storage, record: w2.record, membership: w2.membership });
+  w2.fakes.connections.edgeSevered = (...a) => real2.edgeSevered(...a);
+  w2.member("carol"); w2.member("ada", { role: "admin" }); w2.bundle(DOC); w2.bundle(GONE, "project"); w2.join(GONE, "carol", { owner: true });
+  w2.run(`INSERT INTO files (bundle_id, path, content, bytes, sha256) VALUES (?, 'bundle.md', ?, ?, 'x')`, GONE, md(GONE, "severed"), 1);
+  w2.cite(GONE, DOC);
+  assert.deepEqual(w2.t.taskDrain({}).created.map((c) => [c.assignee, c.assignee_role]), [["ada", "group-admin"]]);
+});
+
+test("R1, R3 (queue suite's share): a task routed with no manager and no administrator is unassigned, and any member may resolve it, once, attributed; a body's other fields write nothing", () => {
+  const w = box([ev("a3")]);
+  w.bundle(DOC2);
+  const made = w.t.taskDrain({ actor: "consumer", now: iso(NOW) }).created[0];
+  assert.deepEqual([made.assignee, made.assignee_role], ["unassigned", "group-admin"]);
+  w.member("dave");
+  const r = w.t.taskResolve({ id: made.id, actor: "dave", note: "checked; unchanged", now: iso(NOW + 1000) });
+  assert.deepEqual(r, { ok: true, id: made.id, status: "resolved", resolved_at: iso(NOW + 1000) });
+  const row = w.all(`SELECT * FROM tasks WHERE id=?`, made.id)[0];
+  assert.deepEqual(JSON.parse(row.history).map((h) => [h.event, h.actor]), [["created", "consumer"], ["resolved", "dave"]]);
+  assert.equal(JSON.stringify(row).includes("checked"), false, "the note is not stored");
+  assert.equal(w.t.taskResolve({ id: made.id, actor: "dave" }).already, true, "resolved once");
+});
+
+test("R1 (N329): with no project manager the task goes to the earliest active administrator, the first of activeAdmins after the founder (membership R86)", async () => {
   const w = box([ev("a3")]);
   w.bundle(DOC2);
   // created in the reverse of member-id order: the earliest row leads, whatever its id
@@ -73,7 +118,7 @@ test("R1 (N329): with no project manager the task goes to the earliest active ad
   w.member("ada", { role: "admin", created: iso(NOW - 1000) });
   w.member("bea", { role: "admin", created: iso(NOW - 3000) });     // a tie on created is broken by id: bea before zed
   w.member("old", { role: "admin", status: "revoked", created: iso(NOW - 9000) });
-  w.run(`INSERT INTO credentials (role, salt, hash, iterations, updated) VALUES ('admin', 's', 'h', 1, ?)`, iso(NOW));   // claimed: the founder leads
+  assert.equal((await w.credentials.claim({ password: "a founder's password", tokenFp: "fp" })).ok, true);   // claimed: the founder leads
   assert.deepEqual(w.membership.activeAdmins(), ["admin", "bea", "zed", "ada"]);
   const r = w.t.taskDrain({ actor: "alarm" });
   assert.deepEqual(r.created.map((c) => [c.assignee, c.assignee_role]), [["bea", "group-admin"]]);
@@ -242,14 +287,14 @@ test("R3: taskForward's refusals in order, then forwarded with its history; task
   assert.equal(Tasks.PER_ITEM_MAX > 0, true);
 });
 
-test("R3: an administrator resolves another member's task; the founder's session is one", () => {
+test("R3: an administrator resolves another member's task; the founder's session is one", async () => {
   const w = box();
   w.member("alice"); w.member("ada", { role: "admin" }); w.bundle(DOC); w.bundle(DOC2);
   w.task("TASK-2026-0001-a", DOC, { assignee: "alice", role: "project-manager" });
   w.task("TASK-2026-0002-b", DOC2, { assignee: "alice", role: "member", status: "forwarded" });
   assert.equal(w.t.taskResolve({ id: "TASK-2026-0001-a", actor: "ada" }).ok, true);
   assert.equal(w.t.taskResolve({ id: "TASK-2026-0002-b", actor: "admin" }).reason, "TASK_NOT_YOURS", "an unclaimed founder is no administrator");
-  w.run(`INSERT INTO credentials (role, salt, hash, iterations, updated) VALUES ('admin', 's', 'h', 1, ?)`, iso(NOW));
+  assert.equal((await w.credentials.claim({ password: "a founder's password", tokenFp: "fp" })).ok, true);
   assert.equal(w.t.taskResolve({ id: "TASK-2026-0002-b", actor: "admin" }).ok, true, "the bare `admin` is not a machine stamp");
 });
 

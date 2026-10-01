@@ -206,3 +206,27 @@ test("R27: working material answers an outsider exactly as something that does n
                                draft: "DRAFT-2026-0001", viewer: V("di"), author: "di" });
   assert.equal(d.reason, "NO_SUCH_PROJECT");
 });
+
+test("R20: an acknowledgement answers the edition the draft's identity states — null for a draft whose case publication derives (no case named, no new case asked), stated on both doors and never dropped; 1 for a new case's draft; the named case's next for a named one — while the row stays keyed at the identity it was given at", () => {
+  const { w, P } = setup();
+  w.draft("DRAFT-2026-0001", P, { statement: AUTHORED.statement }, { statementBy: "alice" });
+  w.draft("DRAFT-2026-0002", P, { statement: AUTHORED.statement, newCase: true }, { statementBy: "alice" });
+  w.grant(S1, { grant_id: "RVG-2026-0001", draft_id: "DRAFT-2026-0001", case_id: null, edition: 1, recipient: "a reader" });
+  const byMember = ack(w, { viewer: V("bo"), draft: "DRAFT-2026-0001" });
+  const byGrant = ack(w, { bySecret: true, secretSha: S1, draft: "DRAFT-2026-0001" });
+  for (const r of [byMember, byGrant]) {
+    assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+    assert.ok(Object.hasOwn(r.acknowledgement, "edition"), "stated, not absent");
+    assert.deepEqual([r.acknowledgement.case_id, r.acknowledgement.edition], [null, null]);
+  }
+  assert.deepEqual(w.rows(`SELECT case_id, edition, acknowledger_kind FROM statement_acknowledgements
+                            WHERE draft_id='DRAFT-2026-0001' ORDER BY ack_id`),
+    [{ case_id: null, edition: 1, acknowledger_kind: "participant" }, { case_id: null, edition: 1, acknowledger_kind: "recipient" }],
+    "the key still binds at the identity it was given at");
+  const fresh = ack(w, { viewer: V("bo"), draft: "DRAFT-2026-0002" });
+  assert.deepEqual([fresh.ok, fresh.acknowledgement.edition], [true, 1], "a new case's draft states edition 1");
+  const pub = w.publish(P, "alice", [Q]); w.ratify(pub);
+  w.draft("DRAFT-2026-0003", P, { statement: AUTHORED.statement }, { caseId: pub.caseId, statementBy: "alice" });
+  const named = ack(w, { viewer: V("bo"), draft: "DRAFT-2026-0003" });
+  assert.deepEqual([named.ok, named.acknowledgement.case_id, named.acknowledgement.edition], [true, pub.caseId, 2]);
+});

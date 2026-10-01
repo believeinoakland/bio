@@ -1,8 +1,8 @@
-/* The producers' test world: record-core and membership real, over node:sqlite behind a `sql` that answers as workerd's
+/* The producers' test world: record-core, membership and credentials real, over node:sqlite behind a `sql` that answers as workerd's
    does (a CURSOR, iterable once, with `toArray()` and `one()`; K316); every other provider a fake in the shape its
    requirements publish, which a test fills. The tables other modules own and this module reads by their read contracts
    (record-core R37, provenance R48, inquiry R40, connections R58, progressions R34) are their owners' own schemas
-   where this module uses the owner (record-core, provenance, membership), else created here with exactly the
+   where this module uses the owner (record-core, provenance, membership, credentials), else created here with exactly the
    contracted columns.
 
    `homesOf` and `optionsOf` are queue's (its R7, R12), passed in by R8; here they are the caller's side of that
@@ -12,6 +12,7 @@ import { DatabaseSync } from "node:sqlite";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { PROVENANCE_SCHEMA } from "../../../src/provenance/schema.mjs";
 import { membershipOf, viewerPredicate } from "../../../src/membership/index.mjs";
+import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { queueProducersOf } from "../../../src/queue-producers/index.mjs";
 
 export const NOW = Date.parse("2026-09-01T00:00:00Z");
@@ -44,6 +45,8 @@ export function world(fakes = {}) {
   const host = { storage };
   const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
   const membership = membershipOf(host, { record });
+  /* credentials registers its seam with membership at its start (credentials R16, R17) and holds the signer keys (its R8). */
+  const credentials = credentialsOf(host, { record, membership });
   for (const t of `${RECORD_SCHEMA};${PROVENANCE_SCHEMA}`.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";")) if (t.trim()) db.exec(t);
   db.exec(`CREATE TABLE IF NOT EXISTS inquiry_basis (bundle_id TEXT, ord INTEGER, role TEXT, target_id TEXT, content_id TEXT, note TEXT);
            CREATE TABLE IF NOT EXISTS refs (bundle_id TEXT, target_id TEXT, kind TEXT);
@@ -52,9 +55,10 @@ export function world(fakes = {}) {
            CREATE TABLE IF NOT EXISTS progression_instances (progression_key TEXT, entity_id TEXT, stage_key TEXT, capture_sha TEXT, bundle_id TEXT)`);
   record.migrate();
   membership.migrate();
+  credentials.migrate();
   const F = defaultFakes();
   for (const [k, v] of Object.entries(fakes)) F[k] = { ...F[k], ...v };
-  const p = queueProducersOf(host, { record, membership, ...F });
+  const p = queueProducersOf(host, { record, membership, credentials, ...F });
 
   /* The caller's R7 walk: every inquiry and project upward by basis legs and cites, through the viewer's gate. */
   const homesOf = (viewer) => (subjects) => {
@@ -78,7 +82,7 @@ export function world(fakes = {}) {
   };
   const asked = { homes: [], options: [] };
   const w = {
-    db, sql, host, record, membership, p, fakes: F, statements, now: NOW, asked,
+    db, sql, host, record, membership, credentials, p, fakes: F, statements, now: NOW, asked,
     run: (s, ...a) => db.prepare(s).run(...a.map(bind)),
     bundle(id, type = "information", { title = id, state = null } = {}) {
       const st = state || ({ inquiry: "open", project: "active", information: "collected" }[type] || "collected");
@@ -94,6 +98,10 @@ export function world(fakes = {}) {
     join(project, member, { owner = false, state = "joined" } = {}) {
       db.prepare(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated) VALUES (?,?,?,?,?,?)`)
         .run(project, member, state, owner ? 1 : 0, iso(NOW), iso(NOW));
+    },
+    signer(key, member, { origin = "self", status = "active", comment = null, added = iso(NOW) } = {}) {
+      db.prepare(`INSERT INTO signers (key_b64, member_id, comment, status, added, origin, registered_by) VALUES (?,?,?,?,?,?,?)`)
+        .run(key, member, comment, status, added, origin, origin === "self" ? member : null);
     },
     cite(from, to, kind = "cites") { db.prepare(`INSERT INTO refs (bundle_id, target_id, kind) VALUES (?,?,?)`).run(from, to, kind); },
     leg(inquiry, target, ord = 0) { db.prepare(`INSERT INTO inquiry_basis (bundle_id, ord, role, target_id) VALUES (?,?,?,?)`).run(inquiry, ord, "supports", target); },
@@ -130,6 +138,10 @@ export function defaultFakes() {
                   archiveEligible: () => ({ ok: true, eligible: [], limit: 50, truncated: false, paused: { paused: false } }) },
     contradiction: { candidatesFor: () => ({ ok: true, candidates: [], truncated: false, cursor: null }),
                      conflictNotices: () => ({ ok: true, notices: [], truncated: false, cursor: null }) },
+    actionClocks: { overdueClocks: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }),
+                    remindersDue: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }) },
+    escalation: { escalationsDue: () => ({ ok: true, items: [], limit: 500, truncated: false }) },
+    actionPlans: { checkpointsDue: () => ({ ok: true, items: [], limit: 500, truncated: false }) },
   };
 }
 

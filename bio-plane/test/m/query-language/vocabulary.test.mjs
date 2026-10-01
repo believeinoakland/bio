@@ -4,7 +4,7 @@ import { world, everyStatement } from "./fixture.mjs";
 import * as Q from "../../../src/query.mjs";
 import { compile, textOf, meaningVocabulary, ambiguousBareWords, cachedNotes, viewerPredicate, GATE_MARK, FIELDS,
          MEANING, SORTABLE, CACHED_FIELDS, DEFAULT_FACETS } from "../../../src/query.mjs";
-import { GRADE_SOURCES, BASIS_ROLES, GRADE_AXES } from "../../../checks/bio-checks.mjs";
+import { GRADE_SOURCES, BASIS_ROLES, GRADE_AXES } from "../../../src/record-grammar/grades.mjs";
 import { CONTENT_EXTENT_KINDS } from "../../../src/content/index.mjs";
 import { STEP_KINDS, CHAIN_KIND_MIXED } from "../../../src/textchain.mjs";
 

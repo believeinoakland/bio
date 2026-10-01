@@ -3,16 +3,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { planeWorld as world, V, SIG, NOW } from "./fixture.mjs";
-import * as CATALOGUE from "../../../checks/bio-checks.mjs";
-import { CASE_RESOLUTION_CHECKS, PUBLISHED_STORE_CHECKS, PUBLISHED_READ_CHECKS, ATTRIBUTION_ACT_CHECKS,
-         CASE_SOURCES_CHECKS, rowOf } from "../../../src/publication/checks.mjs";
+import * as CHECKS from "../../../src/publication/checks.mjs";
+import { ATTRIBUTION_ACT_CHECKS, CASE_SOURCES_CHECKS, rowOf } from "../../../src/publication/checks.mjs";
 import { PUBLICATION_TABLES, PUBLICATION_EXEMPT, publicationOwns } from "../../../src/publication/index.mjs";
 import { migratePublication } from "../../../src/publication/schema.mjs";
 import { storage } from "./fixture.mjs";
 
 const F = "INQ-2026-0001";
-const MINE = { ...CASE_RESOLUTION_CHECKS, ...PUBLISHED_STORE_CHECKS, ...PUBLISHED_READ_CHECKS, ...ATTRIBUTION_ACT_CHECKS,
-               ...CASE_SOURCES_CHECKS };
+const MINE = { ...ATTRIBUTION_ACT_CHECKS, ...CASE_SOURCES_CHECKS };
 
 test("R31 published bytes are exempt from purge; the derived and working tables are declared as the store declared them", () => {
   const w = world();
@@ -58,25 +56,25 @@ test("R31 published bytes are exempt from purge; the derived and working tables 
   assert.equal(publicationOwns("statement_acknowledgements"), false, "case-authoring's");
 });
 
-test("R33 each check moved here with its id, code and translation, is held nowhere else, and names this module's site; R51's new row C-122.1 with them", () => {
+test("R33 this module's table holds exactly C-92.1–.9 and C-122.1, each with its code, sentence and its raiser's site here; C-44.2, C-68.5 and C-98 left it for public-read's (its R17)", () => {
+  /* every table this file exports, not a sample: two, and every row in them is one of the eleven */
+  const tables = Object.entries(CHECKS).filter(([, v]) => v && typeof v === "object" && !Array.isArray(v)
+    && Object.values(v).some((r) => r && typeof r.check === "string"));
+  assert.deepEqual(tables.map(([k]) => k).sort(), ["ATTRIBUTION_ACT_CHECKS", "CASE_SOURCES_CHECKS"]);
   const ids = Object.values(MINE).map((r) => r.check).sort((a, b) => a.localeCompare(b, "en", { numeric: true }));
-  assert.deepEqual(ids, ["C-44.2", "C-68.5", "C-92.1", "C-92.2", "C-92.3", "C-92.4", "C-92.5", "C-92.6", "C-92.7", "C-92.8",
-                         "C-92.9", "C-98.1", "C-98.2", "C-98.3", "C-98.4", "C-98.5", "C-98.6", "C-98.7", "C-98.8", "C-98.9",
-                         "C-122.1"]);
+  assert.deepEqual(ids, ["C-92.1", "C-92.2", "C-92.3", "C-92.4", "C-92.5", "C-92.6", "C-92.7", "C-92.8", "C-92.9", "C-122.1"]);
   for (const [code, row] of Object.entries(MINE)) {
     assert.ok(typeof row.translation === "string" && row.translation.length > 40, `${code} has its sentence`);
-    assert.match(row.where, /^src\/(publication\/(index|worker)\.mjs|container\.mjs) /, `${code}'s site is this module's`);
+    assert.match(row.where, /^src\/publication\/index\.mjs \w+ > is-[a-z-]+$/, `${code}'s site is this module's`);
     assert.deepEqual(rowOf(code), { code, check: row.check, translation: row.translation });
-    for (const [family, rows] of Object.entries(CATALOGUE))
-      if (/_CHECKS$/.test(family) && rows && typeof rows === "object") {
-        assert.equal(Object.prototype.hasOwnProperty.call(rows, code), false, `${code} is not also in the catalogue's ${family}`);
-        assert.ok(!Object.values(rows).some((r) => r && r.check === row.check), `${row.check} is not also in ${family}`);
-      }
   }
-  /* the family the catalogue keeps keeps the rest: C-68.1–.4 */
-  assert.equal(CATALOGUE.INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED.check, "C-68.1");
-  /* negative control: a code with no row is a defect, and says so loudly rather than shipping no sentence */
-  assert.throws(() => rowOf("NOT_A_CODE"), /no row with a canned translation/);
+  /* the moved rows answer nothing here: a code with no row in this table is a defect, and says so loudly */
+  for (const code of ["FINDING_IN_SEVERAL_CASES", "NO_PUBLISHED_STORE", "NO_PUBLISHED_PART", "OBJECT_MISSING", "NOT_A_CONTAINER",
+                      "MANIFEST_UNREADABLE", "PART_MISSING", "DUPLICATE_PATH", "CONTAINER_TOO_LARGE", "NOT_PUBLISHED",
+                      "CASE_DOCUMENT_UNSERVABLE", "NOT_A_CODE"])
+    assert.throws(() => rowOf(code), /no row with a canned translation/, code);
+  for (const id of ["C-44.2", "C-68.5", ...Array.from({ length: 9 }, (_, i) => `C-98.${i + 1}`)])
+    assert.equal(tables.some(([, t]) => Object.values(t).some((r) => r.check === id)), false, `${id} is not held here`);
 });
 
 test("R34 no place is named in this module's behaviour or outward text", () => {
@@ -88,10 +86,11 @@ test("R34 no place is named in this module's behaviour or outward text", () => {
   w.prepare("CASE-2026-0001", 1, { project: proj, roles: [{ target: F, version_sha: pin }] });
   w.signCase("CASE-2026-0001", 1, { project: proj, roster: [{ bundle_id: F, version_sha: pin }] });
   w.signFinding(F);
-  const outward = JSON.stringify([MINE, w.op("publishedcase", { id: "CASE-2026-0001" }), w.op("publishedmanifest"),
-    w.op("publishedlist"), w.op("caseflags", {}), w.op("export", {}), w.op("exportlog", {}), w.op("publishedcase", { id: "X" }),
-    w.op("casedocument", { case: "CASE-2026-0002", edition: 1 }), w.p.reviewProvider().deadAnswer(),
-    w.p.publishedCase({ id: "CASE-2026-0001" }).evidence_package]);
+  const outward = JSON.stringify([MINE, w.p.caseEditionState("CASE-2026-0001", 1), w.op("publishedtargets", { ids: F }),
+    w.op("caseflags", {}), w.op("export", {}), w.op("exportlog", {}), w.op("excludedby", { id: F, viewer: V("olive") }),
+    w.op("casedocument", { case: "CASE-2026-0001", edition: 1 }), w.op("casedocument", { case: "CASE-2026-0002", edition: 1 }),
+    w.p.reviewProvider().deadAnswer(), w.p.publishedEditionsOf({ finding: F }), w.p.caseTensions({}),
+    w.p.caseFlags({}).doctrine, w.op("attribute", {}, {})]);
   for (const place of ["Oakland", "California", "Alameda", "Berkeley", "San Francisco", "Sacramento", "Brown Act", "CPRA",
                        "United States", "County", "City of"])
     assert.equal(outward.includes(place), false, `names ${place}`);

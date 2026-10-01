@@ -284,3 +284,25 @@ test("R8 the meaning level: the reader run per capture (PRESENT with the count, 
   assert.equal(w.obs.derivationStatementFor("ENT-9", { enteredAt: "2030-01-01T00:00:00Z" }).derived, "never_derived");
   assert.equal(w.obs.derivationStatementFor("ENT-9", { hasArtifact: true }).derived, "pre_log");
 });
+
+test("R6 R7 R8 end to end through extraction's own reading write (its R19, R24): one write records the index row, the content row and the reader run in its transaction, a second reading of the capture is a re-extraction, and the answer is this module's under its name", () => {
+  const w = world({ extraction: "module" });
+  const [c] = w.doc("INFO-2026-0001", ["agenda text"]);
+  const r = reading({ entities: [{ kind: "person", key: "jane", ref: "person:jane" }], page_count: 1, text_chars: 11 });
+  const out = w.ex.writeReading({ bundleId: "INFO-2026-0001", captureSha: c, reading: r, author: "member:alice",
+    textUnits: [{ extent: { kind: "page", page: 0 }, ref: "p. 1", text: "agenda text" }] });
+  assert.deepEqual(out.listeners[OBSERVATION_LOG_MODULE],
+    { observed: { written: 1, states: ["PRESENT"], reextraction: false, refused: 0, unclassified: [] } });
+  assert.deepEqual(w.log().map((x) => [x.level, x.authority_kind, x.authority, x.subject, x.state, x.result_kind, x.result_ref, x.actor]), [
+    ["content", "derive", "INFO-2026-0001", c, "PRESENT", "reading", c, "member:alice"],
+    ["content", "extract", "INFO-2026-0001", c, "PRESENT", "reading", c, "member:alice"],
+    ["meaning", "derive", "INFO-2026-0001", c, "PRESENT", "reading", c, "member:alice"]]);
+  assert.match(w.log()[1].detail, /^first extraction; text over the whole document; tier 1/);
+  assert.match(w.log()[2].detail, /found 1 entity reference/);
+  // a second reading of the same capture (no units this time) is a re-extraction; its index row says no unit carried text
+  const again = w.ex.writeReading({ bundleId: "INFO-2026-0001", captureSha: c, reading: { ...r, at: "2026-09-27T04:00:00Z" } });
+  assert.equal(again.listeners[OBSERVATION_LOG_MODULE].observed.reextraction, true);
+  assert.deepEqual(w.log().slice(3).map((x) => [x.level, x.authority_kind, x.state, x.actor_class]),
+    [["content", "derive", "LOOKED_ABSENT", "plane"], ["content", "extract", "PRESENT", "plane"], ["meaning", "derive", "PRESENT", "plane"]]);
+  assert.match(w.log()[4].detail, /^re-extraction; /);
+});

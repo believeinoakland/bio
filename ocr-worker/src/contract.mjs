@@ -7,9 +7,9 @@
  * all. Putting the constants and the chunk rule here means the SUITE DRIVES THE
  * SAME EXPRESSION THE WORKER RUNS, rather than a copy of it written out again in
  * a test — which is the shape that eventually disagrees, measured six times in
- * this estate (`coverage.mjs`'s own note on the fleet `control` flag, where the
- * arm written to prove a fix came back GREEN because nothing read the flag any
- * more).
+ * this estate (one of them recorded by the fleet-coverage instrument, since
+ * retired, on the fleet `control` flag: the arm written to prove a fix came back
+ * GREEN because nothing read the flag any more).
  */
 
 /* ===================================================================== *
@@ -34,7 +34,8 @@ export const CAP = "C";
 /** Where that letter's measurement lives. A free string a HUMAN follows — the
  *  machine-followable half is CPDF-13's calibration reference, which the PLANE
  *  joins on `engine`+`version` and this member deliberately does not hold (a
- *  measurement must not acquire a second home; `index.mjs` says so at the join). */
+ *  measurement must not acquire a second home; extraction's
+ *  `bio-plane/src/extraction/pipeline.mjs` says so at the join). */
 export const MEASURED_BY =
   "MEASUREMENTS.md 2026-09-10 (CPDF-15) — tesseract-wasm@0.11.0 SIMD + tessdata_fast eng on the "
   + "deployed Workers runtime: 99.89% characters and 89/90 digits with ZERO minted on the one "
@@ -59,6 +60,27 @@ export const MAX_FRAME_BYTES = 61_300_000;
  *  anything shorter than width*height*4, so this is not avoidable by sending
  *  less (CPDF-15 measured that refusal). */
 export const frameBytesOf = (w, h) => w * h * 4;
+
+/* D-478 — THE NAMESPACES THIS MEMBER WILL READ FROM: EXACTLY `bio` OR `scratch`, AND NOTHING ELSE.
+ *
+ * Before D-478 the store test read `/^[a-z0-9_-]+$/i`, so `biosmoke`, `Scratch` and any well-shaped name was spent
+ * as the R2 key prefix and came back 404 NOT_FOUND — the same answer as a capture genuinely absent from a real
+ * namespace. *Not found* is not *absent*, and this member's output is GRADED: a page reported unread because the
+ * capture "was not there" is a fact about the document, when the truth was a fact about the NAME.
+ *
+ * The set is the plane's (`namespaceGate` holds `Object.freeze(["bio", SCRATCH])` in code, the same on every
+ * instance), kept here as a COPY because a fleet member cannot import the plane (a later module). A copy ages, so it is
+ * EXPORTED, and control-plane (layer 11, which may import this module) pins it equal to its own namespace gate —
+ * the check that used to parse the plane's source from here, and went empty when that source moved (N402). Exact and case-sensitive: an R2
+ * key is an exact string. NOT NAMING ONE is a different condition, BAD_STORE (`store` absent or not a string); an
+ * empty `store: ""` is a NAMED value and meets NAMESPACE_UNKNOWN. */
+export const NAMESPACES = Object.freeze(["bio", "scratch"]);
+
+/* THE PLANE OPS THIS MEMBER CALLS: NONE. It is called BY the plane (extraction's `OCR_WORKER` binding) and reads
+ * only `CAPTURES.get` (R21); it holds no credential and names no op. Declared in the same shape as agent-worker's
+ * `PLANE_OPS` (`{op: {mutating, why}}`) so control-plane's pin reads both members the one way: every op a member
+ * exports is in the op table with the class and namespace gate the member assumes. An empty set is the claim. */
+export const PLANE_OPS = Object.freeze({});
 
 /* ===================================================================== *
  * Refusals. Every one is STATED, carries what it saw, and leaves the

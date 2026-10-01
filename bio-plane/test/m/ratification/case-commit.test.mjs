@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, caseMd, V, NOW } from "./fixture.mjs";
 import { caseConclusionRowLines, checkCaseDocument, CASE_CONCLUSION_CHECKS } from "../../../src/ratification/index.mjs";
-import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 const Q1 = "INQ-2026-0001-first", Q2 = "INQ-2026-0002-second";
 const CASE = "CASE-2026-0001";

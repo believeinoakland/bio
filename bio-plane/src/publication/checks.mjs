@@ -1,186 +1,20 @@
 /* publication's invariants and refusal rows (requirements: `build/requirements/publication.md`, R33). DEC-49: every
- * refusal this module answers carries its code, its catalogue row and the member's (or the stranger's) translation.
+ * refusal this module answers carries its code, its catalogue row and the member's translation.
  *
- * Moved here from the check catalogue with their ids and translations unchanged (K6, R33): C-44.2 (the read's half
- * of D-309, raised by `#resolveOneCase`; C-44.1 and C-44.3–.5 are case-authoring's, in its `CASE_DERIVATION_CHECKS`),
- * C-68.5 (the published-store complaint, held here as its earliest raiser; the rest of C-68 stays in the catalogue's
- * `INSTALLATION_CHECKS`, and `control-plane` imports this row, K93 (3)), the whole of C-98 (the public door; C-98.9
- * added at the move, K245) and C-92.1–.9 (the attribution act; C-92.10–.12 are ratification's, in its
- * `RATIFY_ATTRIBUTION_CHECKS`).
- * Each family keeps its catalogue name where it moved whole (`PUBLISHED_READ_CHECKS`) and takes a name of its own
- * where the rest of the family is held elsewhere (the catalogue, case-authoring or ratification), so no two families
- * share a name.
+ * Moved here from the check catalogue with their ids and translations unchanged (K6, R33): C-92.1–.9 (the attribution
+ * act; C-92.10–.12 are ratification's, in its `RATIFY_ATTRIBUTION_CHECKS`), under a name of its own because the rest
+ * of the family is held elsewhere. C-122.1 (R51, N364) is new here, a family of its own: a case's sources.
  *
- * C-122.1 (R51, N364) is new here, a family of its own: a case's sources.
+ * C-44.2, C-68.5 and C-98.1–.9, raised by `public-read`'s code since K651, are `public-read`'s (its R17), moved there
+ * with their numbers, wheres and translations unchanged and deleted here (T19), so no row id is held twice.
  *
- * R20, the case document's grammar (`CASE_DOCUMENT_FORMAT` … and its four predicates), is this module's too, and it
- * is defined here (N345): every module reads it from this module. The catalogue keeps its own `/4` copy for its own
- * `checkCaseDocument`, which it cannot import from here (it is first in the order); that copy is legacy-checks'. */
+ * The case document's grammar (`CASE_DOCUMENT_FORMAT` … and its four predicates) is `case-grammar`'s since K651 (its
+ * R1, which was this module's R20), re-exported here unchanged so every importer of this file reads what it read. */
 
-/* N345 (DEC-76 item 4, DEC-84 items 11–13, DEC-85): THE FORMAT MOVES TO /5, FOR THE REASON /3 AND /4 DID. A /5 document
-   is one whose author was obliged to state the contradictions its findings rest on, one level deep, in its tension
-   section (`case_tensions`), and each member's tension sentences; a /4 document had no place to, so a reader could not
-   tell "none was disclosed" from "the format could not disclose one". /4, /3, /2 and /1 stay in the accepted set and
-   are read exactly as written, never re-signed (rule 1). op=publish authors /5 only. */
-export const CASE_DOCUMENT_FORMAT = "bio-case-document/5";
-/* REC-219: /4 states, beside /3's obligations, every adoption pinning a proposed revision and every citation edge with
-   its version. /3 (REC-188) carries the manifest and the acknowledgement list; /2 (D-442, rule 12) states its members'
-   frozen blocks; /1 (legacy) carried the frozen blocks in its members' own bytes. */
-export const CASE_DOCUMENT_FORMAT_V4 = "bio-case-document/4";
-export const CASE_DOCUMENT_FORMAT_V3 = "bio-case-document/3";
-export const CASE_DOCUMENT_FORMAT_V2 = "bio-case-document/2";
-export const CASE_DOCUMENT_FORMAT_LEGACY = "bio-case-document/1";
-export const CASE_DOCUMENT_FORMATS_ACCEPTED = Object.freeze([CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V4,
-  CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY]);
-const formatOf = (fm) => { try { return fm && typeof fm === "object" ? fm.format : undefined; } catch { return undefined; } };
-/* Does the document state its members' frozen blocks itself (rule 12: /2 and later), or were they in the members' own
-   bytes (/1)? ONE predicate for the gate, the committer and every per-case reader. Pure; never throws. */
-export const caseDocumentStatesMemberBlocks = (fm) =>
-  [CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2].includes(formatOf(fm));
-/* REC-188: obliged to carry the bias manifest and the statement's acknowledgement list (C-41.13): /3 and later. */
-export const caseDocumentRequiresDisclosures = (fm) =>
-  [CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3].includes(formatOf(fm));
-/* REC-219: obliged to state the pending adoptions (C-41.14) and the citation edges with their versions (C-41.15): /4
-   and /5. */
-export const caseDocumentRequiresV4Disclosures = (fm) =>
-  [CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V4].includes(formatOf(fm));
-/* N345: obliged to carry the tension section (`case_tensions`, `case_tension_sentences`): /5 only. */
-export const caseDocumentRequiresTensionSection = (fm) => formatOf(fm) === CASE_DOCUMENT_FORMAT;
-
-/* C-44.2 — D-309's read (R10). Its family, C-44, is the case identity: the act's half (C-44.1) is case-authoring's. */
-export const CASE_RESOLUTION_CHECKS = {
-  /* UI-81 (2026-09-23) — D-309's OTHER HALF, the READ, given its row. `op=publishedcase` handed a
-     finding id that several cases pin refuses and names every case (IC-74), because each case is
-     its own artifact and serving one would choose for the reader. That refusal reached the
-     published case page — the one page a stranger reads — with no code and no translation, and no
-     row here named it, so the DEC-49 guard could not see it (R1 misses it; R2 misses it because
-     the surface keys on the refusal's `cases[]`, not on the code). A ROW IN THIS FAMILY rather than
-     a new one: the condition is clause 6's ambiguity at the read where C-44.1 is the same
-     ambiguity at the act, and `#resolveOneCase` already sits in the file whose `refusal` helper
-     reads this table. The translation says what a reader of either surface can do — choose — and
-     names no screen, because every caller of `#resolveOneCase` answers with it. */
-  FINDING_IN_SEVERAL_CASES: {
-    check: 'C-44.2',
-    where: 'src/publication/index.mjs #resolveOneCase > is-finding-in-several-cases',
-    translation: 'This finding is part of more than one published case file. Each case file is its own '
-      + 'publication, with its own scope and its own statement of what it covers, so the record will not '
-      + 'pick one of them for you. Nothing is wrong with the finding. Choose the case file you mean, and '
-      + 'it opens with this finding in it.',
-  },
-};
-
-/* C-68.5 — the published-store complaint (R13), at both public reads. Its family, C-68, is the installation's. */
-export const PUBLISHED_STORE_CHECKS = {
-  /* D-549. The one row in this family whose reader is most likely NOT whoever installed the copy:
-     `publishedbytes` and `publishedcase` are PUBLIC, so the sentence is written for a member of the
-     public holding no credential, and says what they can rely on (the document IS published, and
-     nothing about it changed) before who can cure it. It names no binding and no mechanism. It is
-     true at both sites: at `publishedbytes` the hash has already been verified as published, and at
-     `publishedcase` the finding is a member of a published case. */
-  NO_PUBLISHED_STORE: {
-    check: 'C-68.5',
-    where: 'src/publication/worker.mjs publishedStoreAbsent > is-published-store-absent',
-    translation: 'This copy of the record was set up without the storage it keeps its published documents in, '
-      + 'so it cannot hand over the published document\'s contents. The document is published; this is a fact '
-      + 'about how this copy was set up, not about the document or this request, and nothing was changed. '
-      + 'Whoever runs this copy can connect that storage.',
-  },
-};
-
-/* ===========================================================================
-   D-561 (C-98) — THE PUBLIC DOOR'S OWN REFUSALS: `op=publishedbytes` AND `op=publishedcase`.
-
-   `BIO_Publication_v0_1.md` §4 lists both as the reads a published case is served through, and both are
-   UNGATED (`classes: null`): the reader these sentences are written for is a MEMBER OF THE PUBLIC holding no
-   credential. D-549 translated NO_PUBLISHED_STORE (C-68.5); D-561 enumerated at the code every other code the
-   two ops hand an anonymous caller and found these eight bare, plus STORE_DID_NOT_ANSWER (C-69.2, above).
-
-   EVERY SENTENCE HERE IS WRITTEN FOR A STRANGER, AND THREE RULES HOLD FOR ALL OF THEM:
-     - PLAIN, no internal name: no bucket, binding, manifest key, op name or parameter spelled as code. A hash is
-       "the fingerprint"; a container is "the case file as one download"; its manifest is "the list of its
-       contents".
-     - NEVER MORE THAN THE SITE ALREADY DISCLOSES. NO_PUBLISHED_PART and NOT_PUBLISHED keep their sites' doctrine:
-       never-published and never-existed are ONE answer, and the sentence says so rather than hinting at either.
-       The other six are reached only after the thing asked for was verified PUBLISHED, which is itself a public
-       fact, so saying "it is published" discloses nothing.
-     - A CONDITION OF THIS COPY IS STATED AS ONE, with who can cure it — never as a fact about the document.
-
-   TWO CODES WERE RENAMED TO GET HERE, and that is the non-additive part of this family (I3): the public door
-   answered `NOT_FOUND` and the container `TOO_LARGE`, and both spellings are minted elsewhere in the plane for
-   DIFFERENT conditions (a capture absent from working storage, a progression version, an inbox item; a
-   subresource, a knock). `dec49Attach` decorates by code, so a row under either old spelling would have put the
-   public door's sentence on every other site's refusal — false there. One condition, one code, one row.
-   A third site that answered `NOT_FOUND` — a hash VERIFIED published whose bytes are absent — said "no published
-   part answers to that hash", which was FALSE of it; it now answers OBJECT_MISSING, the code `publishedcase`
-   already used for the same condition, minted at one shared site.
-   =========================================================================== */
-export const PUBLISHED_READ_CHECKS = {
-  NO_PUBLISHED_PART: {
-    check: 'C-98.1',
-    where: 'src/publication/worker.mjs noPublishedPart > is-no-published-part',
-    translation: 'Nothing this copy of the record has published matches that fingerprint. Something that was never '
-      + 'published and something that never existed get this same answer, so it says nothing about anything '
-      + 'unpublished. Check that the fingerprint was copied whole. Nothing was changed.',
-  },
-  OBJECT_MISSING: {
-    check: 'C-98.2',
-    where: 'src/publication/worker.mjs publishedObjectMissing > is-published-object-missing',
-    translation: 'This document is published, but this copy of the record cannot find its contents in its storage, '
-      + 'so it cannot hand them over. The document and its fingerprint are unaffected, and nothing was changed. '
-      + 'Whoever runs this copy can restore the missing contents.',
-  },
-  NOT_A_CONTAINER: {
-    check: 'C-98.3',
-    where: 'src/publication/worker.mjs publishedRoutes > is-not-a-container',
-    translation: 'You asked for a whole case file as one download, but that fingerprint belongs to a single '
-      + 'document inside a case file. Ask for it without the download-as-one-file option to get that document, or '
-      + 'use the fingerprint of the case file\'s list of contents to get the whole case file. Nothing was changed.',
-  },
-  MANIFEST_UNREADABLE: {
-    check: 'C-98.4',
-    where: 'src/publication/worker.mjs publishedRoutes > is-manifest-unreadable',
-    translation: 'This case file is published, but this copy of the record cannot read the list of its contents, '
-      + 'so it cannot put the case file together as one download. Nothing was changed. Whoever runs this copy can '
-      + 'repair it.',
-  },
-  PART_MISSING: {
-    check: 'C-98.5',
-    where: 'src/container.mjs containerEntries > is-part-missing',
-    translation: 'This case file is published, but this copy of the record cannot find one of the documents it '
-      + 'lists, and it will not hand over a case file with a piece missing. The reply names the missing document; '
-      + 'the others can still be asked for one at a time. Nothing was changed. Whoever runs this copy can restore it.',
-  },
-  DUPLICATE_PATH: {
-    check: 'C-98.6',
-    where: 'src/container.mjs serialiseContainer > is-duplicate-path',
-    translation: 'The list of this case file\'s contents puts two documents under the same name, so one download '
-      + 'could be read two ways. This copy will not hand over a case file that says two things about one name. '
-      + 'Each document can still be asked for on its own. Nothing was changed.',
-  },
-  CONTAINER_TOO_LARGE: {
-    check: 'C-98.7',
-    where: 'src/container.mjs serialiseContainer > is-container-too-large',
-    translation: 'This case file is too large to hand over as one download. Every document in it can still be asked '
-      + 'for on its own, which gives the same contents. Nothing was changed.',
-  },
-  NOT_PUBLISHED: {
-    check: 'C-98.8',
-    where: 'src/publication/index.mjs publishedCase > is-not-published',
-    translation: 'Nothing this copy of the record has published answers to what you asked for. A case that was '
-      + 'never published, an edition that does not exist and a name that never existed all get this same answer, '
-      + 'so it says nothing about anything unpublished. Nothing was changed.',
-  },
-  /* D-734 (K245): a RATIFIED case document's hash is published, and its bytes are its signed text, re-hashed before
-     they are served. When the record cannot produce bytes that hash to it, nothing is served and this says so; it is
-     never NO_PUBLISHED_PART, whose sentence would call the document never published. */
-  CASE_DOCUMENT_UNSERVABLE: {
-    check: 'C-98.9',
-    where: 'src/publication/worker.mjs publishedRoutes > is-case-document-unservable',
-    translation: 'This case document is published and signed, but this copy of the record could not produce its exact '
-      + 'contents just now, so it hands over nothing rather than something different. The fingerprint is genuine and '
-      + 'can still be checked. Nothing was changed. Whoever runs this copy can repair it.',
-  },
-};
+export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2,
+         CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED, caseDocumentStatesMemberBlocks,
+         caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures,
+         caseDocumentRequiresTensionSection } from "../case-grammar/index.mjs";
 
 /* ===========================================================================
  * MK-7 (C-92.1–.9) — THE ATTRIBUTION ACT (MEMBER-KNOWLEDGE-DESIGN.md §4.2–§4.6), R17. A member's firsthand
@@ -269,8 +103,7 @@ export const CASE_SOURCES_CHECKS = {
 /** A refusal from one of this module's rows: `reason` and `code` one literal, with its check and translation. The
  *  code is a string literal at every call site (DEC-49); a code with no row here is a defect and throws, loudly. */
 export function rowOf(code) {
-  const row = CASE_RESOLUTION_CHECKS[code] || PUBLISHED_STORE_CHECKS[code] || PUBLISHED_READ_CHECKS[code]
-    || ATTRIBUTION_ACT_CHECKS[code] || CASE_SOURCES_CHECKS[code];
+  const row = ATTRIBUTION_ACT_CHECKS[code] || CASE_SOURCES_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
     throw new Error(`publication: ${code} has no row with a canned translation (DEC-49)`);
   return { code, check: row.check, translation: row.translation };

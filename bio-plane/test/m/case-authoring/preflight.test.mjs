@@ -9,7 +9,7 @@ import { world, V, T0, sha } from "./fixture.mjs";
 import { caseAuthoringOps, CASE_DISCLOSURE_CHECKS, SELF_ATTESTED_SENTENCE } from "../../../src/case-authoring/index.mjs";
 import { caseDocumentBlocks, unnamedSourceStatement, sourceStatement } from "../../../src/publication/index.mjs";
 import { ARCHIVE_VIA, ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
-import { EARNED_CAPTURE_CEILING } from "../../../checks/bio-checks.mjs";
+import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", DOC3 = "INFO-2026-0003-c";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
@@ -422,4 +422,46 @@ test("R34: against the real ratification R18, its list is read over the text op=
   assert.deepEqual(id ? JSON.parse(JSON.stringify(pr).split(id).join("CASE")) : pr, strip(direct.refusals));
   assert.deepEqual(pre.blockers, pr, "ratification's refusals are the blockers here");
   assert.equal(pre.ready, direct.refusals.length === 0);
+});
+
+test("R34 (N435): an agent credential's stamp — {stamp, aiCred}, as the door stamps a minted agent's — is carried whole to ratification R18, so its machine fences hold the agent whatever its viewer stamp; the act and every other read are asked as the stamp; op=publishpreflight reads the door's aiCred beside viewer, and one that does not parse still fences", () => {
+  const { w, P, b } = setup();
+  /* a member-scoped agent credential alice mints: its viewer stamp is alice's own (membership R28's principal) */
+  const mint = w.credentials.aiCredentialMint({ who: "alice", tokenId: "AIC-0001", secretSha: sha("the agent's secret"),
+    principalKind: "member", principalMember: "alice", taskScope: "prepare the case", writes: [] });
+  assert.equal(mint.ok, true, JSON.stringify(mint).slice(0, 300));
+  const aiCred = { tokenId: "AIC-0001", principal: mint.credential.principal };
+  const a = args(P, [Q], { selfAttested: [{ capture: b, reason: REASON }] });
+  const before = w.snapshot();
+  const agent = w.ca.publishPreflight({ ...a, viewer: { stamp: V("alice"), aiCred } });
+  const member = w.ca.publishPreflight(a);
+  assert.deepEqual(w.snapshot(), before, "nothing written by either");
+  /* the act is asked as the stamp: it would publish for both, and their steps read the same document */
+  assert.deepEqual([agent.first, member.first, agent.steps[4].ratification.reached, member.steps[4].ratification.reached],
+    [null, null, true, true]);
+  assert.deepEqual(agent.steps[0].pinned, member.steps[0].pinned);
+  assert.deepEqual(agent.steps[2].tensions, member.steps[2].tensions, "R32's read is asked as the stamp");
+  /* ratification's fences hold the agent, and only the agent */
+  const fenced = ["MACHINE_CANNOT_RATIFY_CASE", "OPERATOR_TOKEN_CANNOT_RATIFY_CASE"];
+  const reasons = (r) => r.steps[4].ratification.refusals.map((x) => x.reason);
+  assert.deepEqual(reasons(agent).filter((x) => fenced.includes(x)), fenced);
+  assert.deepEqual(reasons(member).filter((x) => fenced.includes(x)), [], "negative control: the member's own stamp");
+  assert.deepEqual(reasons(agent).filter((x) => !fenced.includes(x)), reasons(member), "everything else alike");
+  assert.equal(agent.ready, false);
+  for (const code of fenced) assert.ok(agent.blockers.some((x) => x.reason === code), `${code} is a blocker`);
+  /* the route: the door's aiCred beside viewer; absent, the stamp alone; unparsable, still an agent's */
+  const route = (extra) => caseAuthoringOps(w.ca, new URL(`http://do/publishpreflight?author=alice&viewer=${
+    encodeURIComponent(V("alice"))}&project=${P}${extra}`), { ...a, viewer: V("bo"), author: "bo" }).publishpreflight();
+  const viaDoor = route(`&aiCred=${encodeURIComponent(JSON.stringify(aiCred))}`);
+  assert.deepEqual(reasons(viaDoor), reasons(agent));
+  assert.deepEqual(reasons(route("")), reasons(member));
+  assert.deepEqual(reasons(route("&aiCred=not-json")).filter((x) => fenced.includes(x)), fenced, "fails closed");
+  /* last, since it stores a preparation: exactly as ratification answers that viewer over the text op=publish then stores, but for the minted case id */
+  const r = w.ca.publishCase(a);
+  const direct = w.ratification.caseRatifyPreflight({ text: docOf(w, r).text, signer: "alice",
+                                                      viewer: { stamp: V("alice"), aiCred } });
+  const idOf = (x) => /CASE-\d{4}-\d{4}/.exec(JSON.stringify(x))?.[0];
+  const norm = (x, id) => (id ? JSON.parse(JSON.stringify(x).split(id).join("CASE")) : x);
+  const pr = agent.steps[4].ratification.refusals;
+  assert.deepEqual(norm(pr, idOf(pr)), norm(direct.refusals, r.caseId));
 });

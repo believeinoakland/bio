@@ -1,7 +1,7 @@
 /* citation — its checks (K6, R11): C-33.15–C-33.19 and C-33.39 (the act-shape rows of `cite`, and of `reinstate` for
- * C-33.39) and C-45.7–C-45.10 (the four facts about a part that only the act can establish), moved out of the check
- * catalogue (`bio-checks.mjs`, `ACT_SHAPE_CHECKS` and `CONTENT_EXTENT_CHECKS`) with their numbers, codes and
- * translations unchanged. Each row holds the C-number, the DEC-49 region its code is minted in (`where`, re-pointed to
+ * C-33.39) and C-45.7–C-45.10 (the four facts about a part that only the act can establish), moved out of the legacy
+ * check catalogue (`legacy-checks`: its act-shape family C-33, and C-45, whose other rows are now `content`'s) with
+ * their numbers, codes and translations unchanged. Each row holds the C-number, the DEC-49 region its code is minted in (`where`, re-pointed to
  * this module's file) and the canned translation, read from here at the site that refuses, so a surface rendering a
  * translation keyed on a code the plane sent cannot drift from what the plane refuses (DEC-49). */
 

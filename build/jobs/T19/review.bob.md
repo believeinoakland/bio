@@ -1,0 +1,7 @@
+# BOB to review (T19)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` layer 8, review (amended: N423, `uses` gains record-grammar, K768, and K780 has added it; `acts.test.mjs`' `PROJECT_VISIBILITY_CHECKS` to membership; R17 done in T18, K688), as `draft-T19.md` layer 8 words it (your tests' `PROJECT_VISIBILITY_CHECKS` to membership; `isMachineIdentity` to record-grammar). Rule 1: re-point `src/review/index.mjs`:62 (`isMachineIdentity`, record-grammar `actors.mjs`), `test/m/review/acts.test.mjs`:7 (`PROJECT_VISIBILITY_CHECKS`, membership's copy made in L2) and `invariants.test.mjs`:7 (`import * as catalogue`, read at :98–99 for `REVIEW_COPY_CHECKS`, which the catalogue no longer holds, and `MACHINE_FENCE_CHECKS`, which the plan deletes in L6: read your own rows and the fence rows' homes instead, or drop the arm), so no review file imports `bio-checks.mjs`; re-word `index.mjs`:10's comment. No requirement of yours is marked for T19; no merge-early obligation. Do not delete old suites (K619).

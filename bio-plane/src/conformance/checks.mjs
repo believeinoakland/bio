@@ -10,8 +10,10 @@
  * here. `NO_SUCH_PROJECT` is membership's one row (C-70.5, its `noSuchProject`, R78) and `NO_SUCH_STANDARD` standards'
  * (C-112.10, its `noSuchStandard`, R17). Retired, their numbers never reused: C-113.2 (N274, N208, K275), C-113.9
  * (`NO_SUCH_STANDARD`, standards R17) and C-113.18 (`ALREADY_SUPERSEDED`, now R20's `DETERMINATION_SUPERSEDED`,
- * C-113.23) (K380). An absent supersession reason is `NO_REASON` (C-113.22), a malformed one `BAD_REASON` (N233,
- * K264). N345 adds C-113.24–C-113.27 (R12's contradiction link, R22's cause and recommendation) and C-113.28 (R21's
+ * C-113.23) (K380). An absent supersession reason is `CONFORMANCE_NO_REASON` (C-113.22), a malformed one
+ * `CONFORMANCE_BAD_REASON` (C-113.17) (N233, K264); R23 (N433, K766): this module's own codes, each row's number and
+ * translation unchanged, so neither shares a name with progressions' `NO_REASON` (C-100.18) or `BAD_REASON` (C-100.21)
+ * (DEC-49). N345 adds C-113.24–C-113.27 (R12's contradiction link, R22's cause and recommendation) and C-113.28 (R21's
  * side, named by the member), each `awaiting stamp` for T16. */
 
 const at = (fn, region) => `src/conformance/index.mjs ${fn} > ${region}`;
@@ -88,12 +90,12 @@ export const CONFORMANCE_CHECKS = Object.freeze({
     translation: 'A determination supersedes only an earlier determination of the same act. The one named is about '
       + 'another act. Nothing was written.',
   },
-  BAD_REASON: {
+  CONFORMANCE_BAD_REASON: {
     check: 'C-113.17', where: at("#supersession", "is-reason-stated"),
     translation: 'The reason for superseding a determination is not text of at most 500 characters. Say why, more '
       + 'briefly. Nothing was written.',
   },
-  NO_REASON: {
+  CONFORMANCE_NO_REASON: {
     check: 'C-113.22', where: at("#supersession", "is-reason-given"),
     translation: 'Superseding a determination says why it is superseded. Give the reason. Nothing was written.',
   },

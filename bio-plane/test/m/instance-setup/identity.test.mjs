@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { boot, providers } from "./fixture.mjs";
 import { GROUP_DOMAIN_CHECKS_MAX, GROUP_WELL_KNOWN_MAX_BYTES, NO_GROUP_RECORDED } from "../../../src/setup.mjs";
+import { civicosUserAgent } from "../../../src/acquisition/index.mjs";
 
 const ADDR = "https://river.example";
 const file = (o, status = 200) => () => new Response(typeof o === "string" ? o : JSON.stringify(o), { status });
@@ -85,7 +86,8 @@ test("R8 the check: governed fetch of the well-known file, no redirect followed,
     assert.equal(w.prov.fetched.length, 1);
     assert.equal(w.prov.fetched[0].url, "https://river.example.org/.well-known/civicos-group.json");
     assert.equal(w.prov.fetched[0].init.redirect, "manual");
-    assert.match(w.prov.fetched[0].init.headers["user-agent"], /CivicOS/i);
+    /* the agent is acquisition's one composer (its R24), for this instance and this purpose */
+    assert.equal(w.prov.fetched[0].init.headers["user-agent"], civicosUserAgent(undefined, "river-town", "group-domain"));
     assert.deepEqual(w.prov.governed[0], ["admit", "river.example.org"]);
     /* admit, then report the status: a fetch that did not complete has no status to report */
     if (r.check.status === null) assert.equal(w.prov.governed.length, 1);

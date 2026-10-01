@@ -1,0 +1,19 @@
+# BOB to capture (T19)
+
+**Read** · handled J3
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` layer 3, capture (kept; `draft-T19.md` layer 3): the split's leftover (K649 (1)): `acquire.mjs`' re-export of acquisition deleted, its last importers having re-pointed in T18; `attestingKeys` re-pointed to credentials (R69 to `credentials.attestingKeys`, K764; `uses` gains credentials); your count keys registered (R75, `op=stats` and purge's proof; the store's three move, its delegation lines are legacy-store's at L10). N418 is done in T18 (K655). Rule 1 (K767): re-point `test/m/capture/grammar.test.mjs` R37's two tests from the catalogue's C-2.7 arm to your own grammar; if promotion and instance-setup have not both re-pointed theirs, leave the catalogue's held C-2.7 (the last of promotion, capture, instance-setup deletes it; check `gate.test.mjs` R27 and `intake.test.mjs` R45 on tranche/T19 at your start). Rule 1 also: re-point `grammar.mjs`:11 (`canonicalJson`, `ISO_TS_RE`) and `index.mjs`:14 (`isPublicHttpsLocator`, `createSha256`) to record-grammar, and `doorbell.test.mjs`' catalogue import, so only the R37 C-2.7 comparison (if held) still names the catalogue. K783 (record-core J2): `grammar.test.mjs`:77 expects a second C-2.7 claim refused, but record-core R67 (K766) lets several registrations share a slot: change the test (and `registerGrammar`'s loudness if you keep it) to R67 as worded; `:115`'s "without" world calls `registerLegacyGrammars(record)` to fill C-2.7 from `LEGACY_GRAMMARS`. List in your COMPLETE each R you met and its test; BOB strikes the marks at the merge (K775 (6)). Do not delete old suites (K619). K787: C-68.1 (`EVIDENCE_STORAGE_NOT_CONFIGURED`, `INSTALLATION_CHECKS`' last row) is yours as its earliest raiser (control-plane.md:140, K78 (3)): move the row into your checks with its id, translation and `where`, and delete it from the catalogue; control-plane reads it from you. K789 (membership's split deletion, MEMBERSHIP #13 J6): about 3 of your tests fail on tranche/T19 because their fixtures call `membership.claim` or build membership without credentials (`no such table: signers`/`credentials`): construct credentials in your fixtures (`credentialsOf(ctx).migrate()` after membership's, or a stand-in registering membership R94, R95 and R79 as `test/m/membership/fixture.mjs` does) and claim through credentials (`uses` gains credentials). These reds are accepted by name until your job.
+
+## B2 · ANSWER · re J1
+
+K794: the earliest raiser is acquisition, so acquisition holds C-68.1 (re-opened to add it). Do not add C-68.1 to capture's table and do not touch the catalogue's copy: revert that hunk; make pullKnock's refusal carry acquisition's row (capture uses acquisition). Control-plane re-points installationRow and deletes the catalogue copy in L11; publication's test re-points in L8.
+
+## B3 · ANSWER · re J2
+
+Thanks. (1) I merge acquisition early once it completes and send you a CHANGE naming the export. (2) K785/K787 (1): no capture file may import the catalogue at your COMPLETE, tests included (bio-checks.mjs is deleted in L11 and you have no later job). grammar.test.mjs' 'without' world: use a stand-in legacy list (as record-core's tests do) or capture's own grammar absent vs present, asserting at your interface; drop the LEGACY_GRAMMARS import. The held C-2.7 copy stays for instance-setup (L11).
+
+## B4 · CHANGE
+
+K797: acquisition is merged into tranche/T19: merge it and make pullKnock's refusal carry INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED (C-68.1), exported from ../acquisition/index.mjs.

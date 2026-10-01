@@ -4,9 +4,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { makePromotion, doc, infoDoc, create, revise, sha, EMPTY, T0, T1 } from "./fixtures.mjs";
-import { INLINE_MAX, PROMOTION_CHECKS } from "../../../src/promotion/index.mjs";
-import { STATES, vocabFor, normalizeType, projectNameKey, ACT_SHAPE_CHECKS, CUSTODIAL_CHECKS } from "../../../checks/bio-checks.mjs";
-import * as C from "../../../checks/bio-checks.mjs";
+import { INLINE_MAX, PROMOTION_CHECKS, projectNameKey } from "../../../src/promotion/index.mjs";
+import * as P from "../../../src/promotion/index.mjs";
+import { STATES, vocabFor, normalizeType, OBJECT_TYPES } from "../../../src/record-grammar/index.mjs";
+import * as MEMBERSHIP from "../../../src/membership/index.mjs";
+const { CUSTODIAL_CHECKS } = MEMBERSHIP;
 import { mintExhausted } from "../../../src/record-core/index.mjs";
 
 const ID = "INFO-2026-0001";
@@ -283,7 +285,7 @@ test("R15: a state move along an undeclared edge is refused (BIAS_ILLEGAL_TRANSI
       const env = makePromotion();
       /* The catalogue's own id prefixes (its OBJECT_TYPES), so every type it admits is driven; the last prefix a
          type has is its current one (`INQ` for an inquiry, after the legacy `PROB` and `FOCUS`). */
-      const prefix = Object.entries(C.OBJECT_TYPES).filter(([, t]) => t === type).map(([x]) => x).pop();
+      const prefix = Object.entries(OBJECT_TYPES).filter(([, t]) => t === type).map(([x]) => x).pop();
       assert.ok(prefix, `an id prefix for ${type}`);
       const proj = type === "project";
       const d = (s, id) => doc({ id, object_type: type, title: "Same name", current_state: s, created: T0, last_updated: T0, group: "test-group" });
@@ -442,10 +444,11 @@ test("R20: every refusal names a reason, carrying its catalogue row where one ex
                    ["EXISTS", "EXISTS", CUSTODIAL_CHECKS.EXISTS.check, CUSTODIAL_CHECKS.EXISTS.translation]);
   const absent = q.promote(revise("INFO-2026-0404", "f".repeat(64), infoDoc("INFO-2026-0404")));
   assert.deepEqual([absent.reason, absent.code, absent.check, absent.translation],
-                   ["ABSENT", "ABSENT", ACT_SHAPE_CHECKS.ABSENT.check, ACT_SHAPE_CHECKS.ABSENT.translation]);
-  /* Every refusal this door answers with a code the catalogue holds carries that row's check and translation. */
+                   ["ABSENT", "ABSENT", P.PROMOTION_ROW_CHECKS.ABSENT.check, P.PROMOTION_ROW_CHECKS.ABSENT.translation]);
+  /* Every refusal this door answers with a code a row table holds (this module's own, or membership's whose rows it
+     answers with) carries that row's check and translation. */
   const rows = new Map();
-  for (const table of Object.values(C))
+  for (const table of [...Object.values(MEMBERSHIP), ...Object.values(P)])
     if (table && typeof table === "object" && !Array.isArray(table))
       for (const [code, row] of Object.entries(table))
         if (row && typeof row === "object" && typeof row.check === "string" && typeof row.translation === "string")
@@ -466,7 +469,7 @@ test("R20: every refusal names a reason, carrying its catalogue row where one ex
     seen.add(r.reason);
     assert.deepEqual([r.code, r.check, r.translation], [r.reason, row.check, row.translation], r.reason);
   }
-  assert.ok(seen.size >= 8, `answers carrying a catalogue row: ${[...seen]}`);
+  assert.ok(seen.size >= 8, `answers carrying a row: ${[...seen]}`);
 });
 
 test("R20: every row of this module's own refusals carries its check, translation and the `where` naming the region of promote that mints it (N118)", () => {
@@ -500,4 +503,65 @@ test("R20: every row of this module's own refusals carries its check, translatio
   assert.deepEqual(Object.keys(got).sort(), rows.map(([c]) => c).sort());
   for (const [code, r] of Object.entries(got))
     assert.deepEqual([r.reason, r.code, r.check, r.translation], [code, code, PROMOTION_CHECKS[code].check, PROMOTION_CHECKS[code].translation], code);
+});
+
+test("R52: the recorded criticality is crucial when the document's own front matter or the envelope says so; otherwise the envelope's", () => {
+  const { p, record } = makePromotion();
+  const crit = (id) => record.one("SELECT criticality FROM bundles WHERE bundle_id=?", id).criticality;
+  const cases = [
+    ["INFO-2026-0101", "crucial", undefined, "crucial"],      // the document alone says crucial: recorded crucial
+    ["INFO-2026-0102", undefined, "crucial", "crucial"],      // the envelope alone, as before
+    ["INFO-2026-0103", "crucial", "routine", "crucial"],      // either says so
+    ["INFO-2026-0104", "routine", "crucial", "crucial"],
+    ["INFO-2026-0105", "routine", "elevated", "elevated"],    // neither: the envelope's, as before
+    ["INFO-2026-0106", "routine", undefined, null],
+    ["INFO-2026-0107", undefined, undefined, null],
+  ];
+  for (const [id, said, asked, want] of cases) {
+    const r = p.promote(create(id, infoDoc(id, { criticality: said }), { meta: asked === undefined ? {} : { criticality: asked } }));
+    assert.equal(r.ok, true, JSON.stringify(r));
+    assert.equal(crit(id), want, id);
+  }
+  /* A revision is recorded the same way: the document now saying crucial makes the row crucial. */
+  const h = record.head("INFO-2026-0107");
+  assert.equal(p.promote(revise("INFO-2026-0107", h.bundleSha, infoDoc("INFO-2026-0107", { criticality: "crucial" }))).ok, true);
+  assert.equal(crit("INFO-2026-0107"), "crucial");
+  /* Only the word crucial is read from the document: a nested or body `criticality: crucial` is not the document's. */
+  const nested = doc({ id: "INFO-2026-0108", object_type: "information", title: "A report", current_state: "collected", prior_state: null,
+    created: T0, last_updated: T0, group: "test-group" }, "\n## Summary\n\ncriticality: crucial\n\n## Session Log\n");
+  assert.equal(p.promote(create("INFO-2026-0108", nested)).ok, true);
+  assert.equal(crit("INFO-2026-0108"), null);
+});
+
+test("R53: every bundle is committed with the project its document states, which bundleInfo().project then holds; none stated, or a project's own bundle, is no project", () => {
+  const { p, record } = makePromotion();
+  const proj = p.promote({ base: null, snapKey: "p", author: "member:ann", ownerMemberId: "ann", meta: {},
+    files: [{ path: "bundle.md", text: doc({ object_type: "project", title: "Sewer Fund", current_state: "forming", created: T0, last_updated: T0 }) }] });
+  assert.equal(proj.ok, true, JSON.stringify(proj));
+  const P1 = proj.bundleId;
+  /* A plan's and an escalation's documents state their project; an information item states none. */
+  const pln = "PLN-2026-0001", esc = "ESC-2026-0001";
+  const r1 = p.promote(create(pln, doc({ id: pln, object_type: "action_plan", title: "Plan", current_state: "open", created: T0,
+    last_updated: T0, group: "test-group", project: P1 })));
+  const r2 = p.promote(create(esc, doc({ id: esc, object_type: "escalation", title: "Escalation", current_state: "drafted", created: T0,
+    last_updated: T0, group: "test-group", project: P1 })));
+  const r3 = p.promote(create(ID, infoDoc(ID)));
+  assert.deepEqual([r1.ok, r2.ok, r3.ok], [true, true, true], JSON.stringify([r1, r2, r3]));
+  assert.deepEqual([pln, esc, ID, P1].map((id) => record.bundleInfo(id).project), [P1, P1, null, null]);
+  /* The project's own bundle is committed with none, even when its document names one. */
+  const own = record.readFile(P1, "bundle.md").text.replace(/^---\n/, `---\nproject: ${P1}\n`);
+  assert.equal(p.promote(revise(P1, proj.bundleSha, own)).ok, true);
+  assert.equal(record.bundleInfo(P1).project, null);
+  /* A revision writes the project its document now states: a blank or absent one is none, a changed one is the new one. */
+  const at = (id) => record.head(id).bundleSha;
+  const plnText = (project) => doc({ id: pln, object_type: "action_plan", title: "Plan", current_state: "open", created: T0,
+    last_updated: T0, group: "test-group", project });
+  assert.equal(p.promote(revise(pln, at(pln), plnText("PROJ-2026-0002-other"), { snapKey: "k3" })).ok, true);
+  assert.equal(record.bundleInfo(pln).project, "PROJ-2026-0002-other");
+  assert.equal(p.promote(revise(pln, at(pln), plnText(""), { snapKey: "k4" })).ok, true);
+  assert.equal(record.bundleInfo(pln).project, null);
+  assert.equal(p.promote(revise(pln, at(pln), plnText(undefined), { snapKey: "k5" })).ok, true);
+  assert.equal(record.bundleInfo(pln).project, null);
+  /* What the commit is handed is exactly that: record-core is asked to record each. */
+  assert.deepEqual(record.commitCalls.filter((c) => c.bundleId === pln).map((c) => c.project), [P1, "PROJ-2026-0002-other", null, null]);
 });

@@ -20,7 +20,8 @@ import { observationLogOf, OBSERVATION_STATES, DEFINITIVE_STATES, CONTENT_AXIS_S
   from "../observation-log/index.mjs";
 import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MAX,
          meaningVocabulary, MEANING, cachedNotes, MEANING_AXIS_CAP } from "../query.mjs";
-import { normalizeType } from "../../checks/bio-checks.mjs";
+import { normalizeType } from "../record-grammar/types.mjs";
+import { routeFinding } from "../provenance/index.mjs";
 import { MEANING_READ_CHECKS, SELECTION_CHECKS } from "./checks.mjs";
 import { projectionOf, PROJECTION_COLS, PROJECTION_LIMIT_DEFAULT, PROJECTION_LIMIT_MAX } from "./projection.mjs";
 import { meaningLevels } from "./levels.mjs";
@@ -67,9 +68,13 @@ export const CAPTURE_TEXT_SKIPPED_SAYS = "not indexed: over the bound";
 const CLAIMED = `SELECT p.fts_id FROM ${PROJECTION_TABLE} p JOIN bundles cb ON cb.bundle_id = p.bundle_id
                   WHERE p.fts_id IS NOT NULL`;
 
-/* R61: the second argument of every `compile` this module runs (query-language R25): the projection is read through
-   this module's own relation, never off `bundles`. */
-const VIA = Object.freeze({ projection: PROJECTION_RELATION });
+/* R63: the standing route mark's columns as `listBundles` joins them, never left on a published row. */
+const ROUTE_MARK_COLUMNS = Object.freeze(["route_seq", "route_at", "route_by", "route_finding", "route_state_at",
+  "route_register", "route_undetermined", "route_documents_n"]);
+
+/* R62: a table, key or column a registration names is an SQL identifier, nothing else (query-language R7: no name
+   enters a statement that the caller did not state as one). */
+const SQL_IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
 /* A CPDF-10 column this module WROTE as JSON, read back: null rather than a throw on a malformed value. */
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
@@ -106,6 +111,10 @@ export class Retrieval {
   #decorations = [];            // the single-bundle projection's decorations: {module, fn}
   #hiddenRuns = null;           // R39: {module, fn}
   #selectionListeners = [];     // R52: {module, fn, seq}
+  #fields = [];                 // R62: {module, field, table, key, col, seq}
+  /* R61, R62: the second argument of every `compile` this module runs: the projection through this module's own
+     relation (query-language R25), and each registered field through its owner's (its R26). */
+  #via = Object.freeze({ projection: PROJECTION_RELATION });
   #stepped = false;
 
   constructor({ storage, record, membership, promotion, extraction, observation = null, now = null, selectionNow = null,
@@ -257,6 +266,33 @@ export class Retrieval {
     }
     if (viewer !== undefined && viewerPredicate(viewer).scope === "member") return { sql: "", args: [] };
     return { sql: ` AND authority_kind <> 'run'`, args: [] };
+  }
+
+  /** R62 (N136, N137; K75 (2)): a later module that holds the column of one of `query-language`'s fields in a table
+   *  of its own registers it once at start, `{table, key, col}`, `key` equalling `bundles.bundle_id`. Every compile
+   *  this module runs then names the relation to `query-language` (its R26), so the field reads it there. A field
+   *  outside `FIELDS`, a projection column (R2, read through this module's own relation, R61), or a name that is not an
+   *  SQL identifier is refused FIELD_MALFORMED; a field registered twice, FIELD_DECLARED. Registrations apply in the
+   *  modules' total order. */
+  registerField(module, field, relation) {
+    const bad = (detail) => ({ ok: false, reason: "FIELD_MALFORMED", module, field, detail });
+    if (typeof module !== "string" || !module) return bad("a registration names its module");
+    if (typeof field !== "string" || !Object.prototype.hasOwnProperty.call(FIELDS, field))
+      return bad("a registration names one of the query language's fields");
+    if (FIELDS[field].proj || PROJECTION_COLS.includes(FIELDS[field].col))
+      return bad(`${field} is a projection column, which this module holds itself`);
+    const { table, key, col } = relation && typeof relation === "object" ? relation : {};
+    if (![table, key, col].every((n) => typeof n === "string" && SQL_IDENT.test(n)))
+      return bad("a relation is a table, a key and a column, each an SQL identifier");
+    const held = this.#fields.find((f) => f.field === field);
+    if (held) return { ok: false, reason: "FIELD_DECLARED", module, field, declaredBy: held.module,
+                       detail: "a field is registered once" };
+    this.#fields.push({ module, field, table, key, col, seq: this.#fields.length });
+    this.#fields.sort((a, b) => (this.#rank(a.module) - this.#rank(b.module)) || (a.seq - b.seq));
+    this.#via = Object.freeze({ projection: PROJECTION_RELATION,
+      fields: Object.freeze(Object.fromEntries(this.#fields.map((f) =>
+        [f.field, Object.freeze({ table: f.table, key: f.key, col: f.col })]))) });
+    return { ok: true, module, field };
   }
 
   /** R52 (N202): a later module's listener, called after each successful `selectionCreate` with `{handle, expires}`, in
@@ -459,7 +495,7 @@ export class Retrieval {
   /** R6–R9: `op=search`. */
   search(input = {}) {
     const mode = input.mode === "ids" ? "ids" : input.mode === "count" ? "count" : "page";
-    const plan = compile(input, VIA);
+    const plan = compile(input, this.#via);
     const tally = { applied: 0 };
     const total = this.runQuery(plan.statements.count(), tally)[0]?.n ?? 0;
     const out = {
@@ -488,7 +524,7 @@ export class Retrieval {
        is offered. It costs one extra query only in the case that already returned nothing. */
     out.widen = null;
     if (total === 0 && plan.widenable && input.widen !== false) {
-      const or = compile({ ...input, implicitOp: "or" }, VIA);
+      const or = compile({ ...input, implicitOp: "or" }, this.#via);
       const n = this.runQuery(or.statements.count(), tally)[0]?.n ?? 0;
       if (n > 0) out.widen = { interpretation: "OR", total: n, q: String(input.q ?? ""),
                                detail: "no bundle matches all of these terms; this many match any of them" };
@@ -554,7 +590,7 @@ export class Retrieval {
       q: String(input.q ?? ""), viewer: input.viewer ?? null,
       ids: Array.isArray(input.ids) && input.ids.length ? input.ids : null,
       rows: asked, rowLimit: input.limit, rowOffset: input.offset,
-    }, VIA);
+    }, this.#via);
     const tally = { applied: 0 };
     /* The count FIRST, so a statement that somehow lost the gate throws before any row is assembled. */
     const total = this.runQuery(plan.statements.meaning({ mode: "count" }), tally)[0]?.n ?? 0;
@@ -785,6 +821,91 @@ export class Retrieval {
     };
   }
 
+  /* ---- the bundle roster and the gated whole-bundle reads (R63–R65) ----
+   *
+   * `record-core` (layer 2) holds these reads ungated, for the in-process readers (the audit, a whole-image walk); it
+   * cannot gate them by membership's sight or provenance's marks. These are the member-facing doors, each through the
+   * one gate (membership R43, R80): an absent or unrecognised viewer sees nothing (fail closed), and a bundle the viewer
+   * may not see answers exactly as an absent one. */
+
+  /** REC-63: the standing route mark's joined `route_*` columns folded into ONE published field, `route`, provenance's
+   *  `routeFinding` over it (its R23), and removed from the row, so a reader meets the composed finding rather than
+   *  loose columns it would have to interpret. */
+  static #withRoute(r) {
+    const mark = r.route_finding === null || r.route_finding === undefined ? null : {
+      seq: r.route_seq, at: r.route_at, by: r.route_by, finding: r.route_finding,
+      state_at: r.route_state_at, register_state: r.route_register,
+      undetermined: r.route_undetermined, documents_n: r.route_documents_n,
+    };
+    const out = { ...r, route: routeFinding(r.object_type, mark) };
+    for (const k of ROUTE_MARK_COLUMNS) delete out[k];
+    return out;
+  }
+
+  /** R63 (`op=list`): the bundles the viewer's gate passes, in id order, each with its standing route mark's finding.
+   *  ONE LEFT JOIN against the highest `seq` (provenance R48), never a read per row: the arm with no limit is unbounded
+   *  by contract. REC-60 / D-225 kept that arm: a bound applied must be published, and this arm applies none, so a bare
+   *  array that is COMPLETE tells no lie; its named consumers (the browser, the audit, the migration verifier) need it
+   *  whole, and `meaning-bounds.test.mjs` pins it complete. Paging is opt-in: a positive `limit` answers the envelope
+   *  `{bundles, limit, cursor, total}`, `limit` the bound applied after the 5,000 ceiling (REC-57) and `total` what the
+   *  VIEWER may see (a total over rows the caller cannot read would say "something is hidden"). */
+  listBundles({ type = null, state = null, after = null, limit = null, viewer = null } = {}) {
+    const gate = viewerPredicate(viewer);
+    let q = `SELECT b.bundle_id, b.object_type, b.current_state, b.title, b.last_updated, b.bundle_sha,
+                    m.seq AS route_seq, m.at AS route_at, m.by AS route_by, m.finding AS route_finding,
+                    m.state_at AS route_state_at, m.register_state AS route_register,
+                    m.undetermined AS route_undetermined, m.documents_n AS route_documents_n
+               FROM bundles b
+               LEFT JOIN provenance_route_marks m
+                 ON m.bundle_id = b.bundle_id
+                AND m.seq = (SELECT MAX(x.seq) FROM provenance_route_marks x WHERE x.bundle_id = b.bundle_id)`;
+    const w = [`(${gate.sql})`], a = [...gate.args];
+    /* The record stores canonical types only, so a legacy alias (`focus`, `problem`) is matched in its canonical form
+       (the record grammar's R5) rather than answered with an empty page, as `query-language` does for `type:`. */
+    if (type) { w.push(`b.object_type=?`); a.push(normalizeType(type)); }
+    if (state) { w.push(`b.current_state=?`); a.push(state); }
+    if (after) { w.push(`b.bundle_id > ?`); a.push(after); }
+    q += ` WHERE ${w.join(" AND ")} ORDER BY b.bundle_id`;
+    const asked = Number(limit);
+    if (!Number.isFinite(asked) || asked <= 0)
+      return this.#rows(q, ...a).map(Retrieval.#withRoute);
+    const cap = Math.min(PROJECTION_LIMIT_MAX, Math.floor(asked));
+    const rows = this.#rows(`${q} LIMIT ?`, ...a, cap).map(Retrieval.#withRoute);
+    return { bundles: rows, limit: cap,
+             cursor: rows.length === cap ? rows[rows.length - 1].bundle_id : null,
+             total: this.#one(`SELECT COUNT(*) AS n FROM bundles b WHERE (${gate.sql})`, ...gate.args).n };
+  }
+
+  /** R64 (`op=index`): the index projection, every bundle R63's gate passes, in id order. It names no locator: there is
+   *  no substrate path to leak. REC-25 / F-8: Membership §7.9 names the index as the one place the graph could escape,
+   *  so the gate applies here as everywhere, fail closed. */
+  buildIndex({ viewer = null } = {}) {
+    const gate = viewerPredicate(viewer);
+    return {
+      generated: new Date().toISOString(),
+      version: 2,
+      bundles: this.#rows(
+        `SELECT b.bundle_id AS id, b.object_type, b.current_state, b.title, b.last_updated, b.bundle_sha AS sha256
+           FROM bundles b WHERE (${gate.sql}) ORDER BY b.bundle_id`, ...gate.args),
+    };
+  }
+
+  /** R65 (`op=image`): record-core's whole image of a bundle (its R15), only when membership's `inSight` admits the
+   *  viewer (its R80); otherwise null, exactly as for an absent bundle. */
+  readImage({ id = null, viewer = null } = {}) {
+    return this.#sees(id, viewer) ? this.record.readImage(id) : null;
+  }
+
+  /** R65 (`op=file`): record-core's one file (its R13, R14), on the same terms. */
+  readFile({ id = null, path = null, viewer = null } = {}) {
+    return this.#sees(id, viewer) ? this.record.readFile(id, path) : null;
+  }
+
+  #sees(id, viewer) {
+    if (!id || !viewer) return false;
+    try { return this.membership.inSight(id, viewer) === true; } catch { return false; }
+  }
+
   /* ---- selections (R18–R22, R51, R52) ---- */
 
   /** R22: removes every expired selection and answers how many; it runs before every selection act. */
@@ -827,11 +948,11 @@ export class Retrieval {
       /* Chunked, because SQLite bounds how many variables one statement binds. Every chunk still goes through compile()
          and therefore through the viewer gate: an id the viewer may not see never enters the selection. */
       for (let i = 0; i < list.length; i += SELECTION_ID_CHUNK) {
-        const plan = compile({ q, viewer, sort, dir, ids: list.slice(i, i + SELECTION_ID_CHUNK) }, VIA);
+        const plan = compile({ q, viewer, sort, dir, ids: list.slice(i, i + SELECTION_ID_CHUNK) }, this.#via);
         members.push(...this.runQuery(plan.statements.snapshot(), tally));
       }
     } else {
-      const plan = compile({ q, viewer, sort, dir }, VIA);
+      const plan = compile({ q, viewer, sort, dir }, this.#via);
       members = this.runQuery(plan.statements.snapshot(), tally);
     }
     const handle = "sel-" + rand(12);
@@ -907,7 +1028,7 @@ export class Retrieval {
       const idList = stored.map((r) => r.bundle_id);
       for (let i = 0; i < idList.length; i += SELECTION_ID_CHUNK) {
         const plan = compile({ q: "", viewer, sort: sel.sort_field, dir: sel.sort_dir,
-                               ids: idList.slice(i, i + SELECTION_ID_CHUNK) }, VIA);
+                               ids: idList.slice(i, i + SELECTION_ID_CHUNK) }, this.#via);
         for (const r of this.runQuery(plan.statements.snapshot(), tally)) visible.set(r.bundle_id, r.bundle_sha);
       }
       members = [];
@@ -925,7 +1046,7 @@ export class Retrieval {
       drift.removed = drift.purged.length + drift.hidden.length;
       /* Never added: the operator picked items, not a criterion. */
     } else {
-      const plan = compile({ q: sel.q, viewer, sort: sel.sort_field, dir: sel.sort_dir }, VIA);
+      const plan = compile({ q: sel.q, viewer, sort: sel.sort_field, dir: sel.sort_dir }, this.#via);
       members = this.runQuery(plan.statements.snapshot(), tally);
       const digest = digestOf(members.map((m) => m.bundle_id));
       if (digest !== sel.digest) {
@@ -1122,7 +1243,7 @@ const instances = new WeakMap();
  *  `observation` (`observationOf` over observation-log's factory by default), `now` (milliseconds; the clock the
  *  projection's action facts are judged at), `selectionNow` (the selections' clock, the wall clock by default),
  *  and `order` (the modules' total order listeners and decorations run in; membership's `MODULE_ORDER` by default). At creation it declares its
- *  tables to purge (R33) and joins every promotion (R1). */
+ *  tables to purge (R33), joins every promotion (R1) and registers its figures (R67). */
 export function retrievalOf(host, deps) {
   let r = instances.get(host);
   if (!r) {
@@ -1139,8 +1260,23 @@ export function retrievalOf(host, deps) {
     if (answer && answer.ok === false)
       throw new Error(`retrieval: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
     r.joinPromotion();
+    registerFigures(r);
   }
   return r;
+}
+
+/* R67: the figures R60 answers, registered with record-core's `registerCounts` (its R63) under these names, once per
+   storage, when the instance is first made. */
+export const RETRIEVAL_COUNT_KEYS = Object.freeze(["indexed", "selections", "selectionItems"]);
+
+/** R67: a record with no seam (a test's stand-in) is left alone; a refusal (another module reporting one of these
+ *  figures, or retrieval registering twice) is a defect of the wiring and throws. */
+function registerFigures(r) {
+  const record = r.record;
+  if (!record || typeof record.registerCounts !== "function") return;
+  const answer = record.registerCounts("retrieval", [...RETRIEVAL_COUNT_KEYS], (hid) => r.counts(hid));
+  if (answer && answer.ok === false)
+    throw new Error(`retrieval: record-core refused its figures: ${answer.reason}${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
 }
 
 /** R58, K3: the ops this module answers, as entries of the store's op map (its dispatcher spreads them in). `url` carries
@@ -1178,5 +1314,11 @@ export function retrievalRoutes(r, url, body) {
     projectionplan: () => r.projectionPlan(),
     projectionclear: () => r.projectionClear(body || {}),
     reproject: () => r.reproject(body || {}),
+    /* R66: the bundle roster and the gated whole-bundle reads (R63–R65). */
+    list: () => r.listBundles({ type: q.get("type"), state: q.get("state"), after: q.get("after") || null,
+                                limit: q.get("limit"), viewer: q.get("viewer") }),
+    index: () => r.buildIndex({ viewer: q.get("viewer") }),
+    image: () => r.readImage({ id: q.get("id"), viewer: q.get("viewer") }),
+    file: () => r.readFile({ id: q.get("id"), path: q.get("path"), viewer: q.get("viewer") }),
   };
 }

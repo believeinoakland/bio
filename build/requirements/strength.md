@@ -38,7 +38,7 @@ Terms. An **axis** is `capture`, `connection` or `testimony`. An axis answer is 
 - **R26** `candidatePair` answers R1–R5's three axes over `legs` given in place of the inquiry's live basis (each `{target, role, grade, grade_axis, grade_source, ground}`), walking inquiry legs to the depth bound exactly as `strengthOf` does; it writes nothing. A leg whose target cannot be read makes that axis `undetermined`, never an error; a failure of the arithmetic itself is answered as `{pair: null, error}` (the message, at most 200 characters), never thrown.
 - **R27** `candidateIndependence` answers R12's `independence` over `legs` grouped by their `ground` into `parts` declared parts, with the same origin limit (200) and the same `complete: false` when it is reached.
 
-**The cache: writeProjection(bundleId, isInquiry, subjectEntity)** (a projection registered with `promotion`, its R39)
+**The cache: writeProjection(bundleId, isInquiry)** (a projection registered with `promotion`, its R39)
 - **R13** In each inquiry's promotion, the capture and connection grade and state of R1–R5 are written for search (`retrieval`'s fields `capture:` and `connection:`), in the same transaction as the legs they summarise; they are a cache, marked so, and no read of strength answers from them.
 
 **The bar: projectBar(projectId), strengthBarSet({group, capture, connection, author}), strengthBarOf({group, target, project, viewer})** (`op=strengthbar`, `op=strengthbarof`)
@@ -53,10 +53,11 @@ Terms. An **axis** is `capture`, `connection` or `testimony`. An axis answer is 
 
 ### Uses
 
-- `legacy-checks`: the C-30, C-71 and C-32.9 rows until they move (R24), `BASIS_GRADES`, `TESTIMONY_GRADE`, `normalizeType`, `OBJECT_TYPES`, `BUNDLE_ID_RE`.
+- `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K808, K820).
 - `record-core`: `recordOf(ctx)`, the `bundles` read contract.
 - `membership`: `viewerPredicate`, `inSight` (R80), `noSuchProject` (R78), and whether an author is an active administrator (R15). *(not declared)*
 - `promotion`: `registerStep` (R13); the fact `producingGroup`. *(not declared)*
+- `retrieval`: `registerField` (its R62), for R23's cache (K675).
 - `provenance`: the `register` and `captured_locators` read contract (R12).
 - `inquiry`: `basisFor`, `earned`, `legCapped`, `subjectEntityOf`, the registration R17 fills.
 - `basis-versions`: the version rows and legs, `currentOf` (R7, R8); `BASIS_VERSION_LEGS_MAX` (its R9), R8's bound (N184).
@@ -69,7 +70,7 @@ Terms. An **axis** is `capture`, `connection` or `testimony`. An axis answer is 
 - **R20** A what-if is exploration, never a record value, and says so in the answer (§6 rule 6, DEC-40).
 - **R21** The bar is a declaration beside the strength reached, never a gate on the pair (Case Making, what a CLAIM is; DEC-17).
 - **R22** Every read answers an inquiry the viewer may not see as an absent one.
-- **R23** `group_strength_bar` is keyed by group, not by bundle, and is exempt from purge as an instance setting (K23); the cache columns move to a table of this module's keyed by `bundle_id`, declared to purge (K75 (3)).
+- **R23** `group_strength_bar` is keyed by group, not by bundle, and is exempt from purge as an instance setting (K23); the cache columns move to a table of this module's keyed by `bundle_id`, declared to purge (K75 (3)), and are registered with `retrieval` as the columns of the `capture` and `connection` fields (retrieval R62; N137, K649 (6)), so `query-language` reads them there.
 - **R24** Each check moves here as an invariant with its test (K6): C-30.1–C-30.9, C-71.1–C-71.9, C-32.9.
 - **R25** No place is named in this module's behaviour or outward text.
 - **R28** (D-269, DEC-32 clause 1; N395, K595) Every sentence this module answers for a member uses none of the analyst's vocabulary DEC-32 clause 1 forbids: not AND or OR as a word for the relationship, no spelling of disjunction or grounds, nor the terms DEC-32's entry uses for the same construct (partition, conjunct, branch, "independently sufficient"); it names a set of reasons in the elicitation's words. The sentences are each axis's and ground's `detail` and each named member's `why` on every read that answers a pair (`strengthOf`, `inquiryStrength`, `versionStrength`, `candidatePair`, the pair R17 registers); a version answer's `filter` and the `why` of its `graded`, `ungraded` and `hunches` entries; the bar's `detail` and `note` (R14–R16); and every refusal row's `translation` (C-30, C-71, C-32.9, C-107). A value the record holds (an id, a ground label a member wrote) is rendered as written (DEC-8). A refusal's `detail` is the caller's sentence and not in scope (PL-14).

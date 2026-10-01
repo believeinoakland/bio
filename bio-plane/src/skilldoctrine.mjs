@@ -50,8 +50,8 @@
  * `CLAUDE.md`: *"Undetermined is first-class and must be STATED."* Applied to
  * fences, that means a clause backed by no code may not read like a clause
  * backed by code. Every clause therefore carries either a non-empty
- * `enforced_by` (C-numbers, read from the catalogue by KEY so no number is
- * typed here) or a non-empty `unenforced_because`, and the suite PRINTS how many
+ * `enforced_by` (C-numbers, read from their owners' rows by KEY so no number
+ * is typed here but the two named below) or a non-empty `unenforced_because`, and the suite PRINTS how many
  * clauses are instruction-only. That number is the honest measure of how much of
  * this skill a careless model could ignore, and it is published rather than
  * implied.
@@ -63,8 +63,8 @@
  * `ASSISTANT-PILOT.md` §1, and SK-1's measured finding: a hand copy agrees at
  * zero cost until the day the rule moves. The levels, the absence states, the
  * definitive subset, the earned grade sources, the inert sources and the
- * reporting spellings are all IMPORTED; the C-numbers are read off catalogue
- * rows by key. What is AUTHORED is doctrine prose, and every authored sentence
+ * reporting spellings are all IMPORTED; the C-numbers are read off their
+ * owners' rows by key. What is AUTHORED is doctrine prose, and every authored sentence
  * that quotes a document is checked against that document by the suite, exactly
  * as SK-1's four resident sentences are.
  *
@@ -79,25 +79,25 @@
 
 /* The levels, states and definitive subset are observation-log's (K78 (3),
    K81); C-30 and the inert sources are strength's (K181 (3)); the suggestion
-   levels and C-27 are run-productions' (K182 (2)). The catalogue families below
-   are imported from the catalogue until each moves to its module (K6), when this
-   import re-points. */
+   levels and C-27 are run-productions' (K182 (2)); the leg roles and the earned
+   grade sources are record-grammar's; C-25 and C-32.2 are basis-versions' and
+   C-32.8 inquiry-grammar's (T19). Nothing is read from the check catalogue. */
 import { OBSERVATION_LEVELS, OBSERVATION_STATES, DEFINITIVE_STATES } from "./observation-log/index.mjs";
 import { VERSION_STRENGTH_CHECKS, VERSION_STRENGTH_INERT_SOURCES } from "./strength/index.mjs";
 import { SUGGEST_LEVELS, SUGGEST_CHECKS } from "./run-productions/index.mjs";
-import { MACHINE_FENCE_CHECKS, EARNED_GRADE_SOURCES, BASIS_ROLES,
-         BASIS_VERSION_CHECKS } from "../checks/bio-checks.mjs";
-/* The run's rows and the one deployment order are ai-runs' (its R8, R35, R44;
-   N156): read from it, never copied. */
-import { AI_RUN_CHECKS } from "./airun.mjs";
-import { DEPLOYMENT_SEQUENCE, GATE_ADDRESS, SEQUENCING_SOURCE,
-         SEQUENCING_ALSO_NAMED_IN } from "./ai-runs/deployment.mjs";
+import { BASIS_ROLES, EARNED_GRADE_SOURCES } from "./record-grammar/index.mjs";
+import { BASIS_VERSION_CHECKS, CONCLUDE_ACT_CHECKS } from "./basis-versions/index.mjs";
+import { INQUIRY_GRAMMAR_ROWS } from "./inquiry-grammar/index.mjs";
+/* The run's rows and the one deployment order are run-rules' (its R8, R9, R11;
+   N156, K617): read from it, never copied. */
+import { AI_RUN_CHECKS, DEPLOYMENT_SEQUENCE, GATE_ADDRESS, SEQUENCING_SOURCE,
+         SEQUENCING_ALSO_NAMED_IN } from "./run-rules/index.mjs";
 export { DEPLOYMENT_SEQUENCE, GATE_ADDRESS, SEQUENCING_SOURCE, SEQUENCING_ALSO_NAMED_IN };
 
-/* C-22.7 IS NAMED HERE BY KEY (R25; K194, K333), selected from `ai-runs`'
-   `AI_RUN_CHECKS` and never copied. `ai-runs`, earlier in the order, holds the
+/* C-22.7 IS NAMED HERE BY KEY (R25; K194, K333), selected from `run-rules`'
+   `AI_RUN_CHECKS` and never copied. `run-rules`, earlier in the order, holds the
    one predicate that mints it (`checkSkillVersion`, its R8) and so holds the
-   row with it (N289). Named in this file rather than beside the re-export of
+   row with it (its R11; N289). Named in this file rather than beside the re-export of
    `checkSkillVersion` because `skillpack.mjs` imports this one, and the clauses
    below cite the row at load; `skillpack.mjs` re-exports it. */
 export const SKILL_CHECK_KEYS = Object.freeze(["AI_RUN_SKILL_VERSION_UNNAMED"]);
@@ -231,14 +231,14 @@ export function controlFlowAuthority(text) {
  *                      JUDGED_ROWS in `judges` and carry no flow authority.
  *   judges             which right-column rows this clause exercises.
  *   defers             which LEFT-column rows it touches and does not decide.
- *   enforced_by        C-numbers, read off catalogue rows by KEY. None typed.
+ *   enforced_by        C-numbers, read off owners' rows by KEY. Two typed (below).
  *   unenforced_because required when `enforced_by` is empty — an instruction
  *                      with no code behind it says so rather than reading like
  *                      one that has.
  * ========================================================================= */
 
-/* Catalogue rows, resolved to their C-numbers by key so this file holds no
-   number of its own. A row renamed in the catalogue fails at import rather than
+/* Owners' rows, resolved to their C-numbers by key so this file holds no
+   number of its own. A row renamed by its owner fails at import rather than
    leaving a stale number that still looks like a citation. */
 const C = {
   hunch_needs_author:   "C-2.8",            /* checkEarnedLeg's hunch arms — see below */
@@ -249,11 +249,11 @@ const C = {
   branches_not_independent: SUGGEST_CHECKS.SUGGEST_BRANCHES_NOT_INDEPENDENT.check,
   empty_level_unstated: SUGGEST_CHECKS.SUGGEST_EMPTY_LEVEL_UNSTATED.check,
   leg_unreachable:      SUGGEST_CHECKS.SUGGEST_LEG_UNREACHABLE.check,
-  cannot_conclude:      MACHINE_FENCE_CHECKS.MACHINE_CANNOT_CONCLUDE.check,
-  cannot_ground:        MACHINE_FENCE_CHECKS.MACHINE_CANNOT_GROUND.check,
+  cannot_conclude:      CONCLUDE_ACT_CHECKS.MACHINE_CANNOT_CONCLUDE.check,
+  cannot_ground:        INQUIRY_GRAMMAR_ROWS.MACHINE_CANNOT_GROUND.check,
   skill_version:        SKILL_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED.check,
   /* SK-3's additions, read by KEY exactly as SK-2's are. */
-  cannot_publish:       MACHINE_FENCE_CHECKS.MACHINE_CANNOT_PUBLISH.check,
+  cannot_publish:       "C-32.6",           /* case-authoring's row, typed — see below */
   ground_unasserted:    BASIS_VERSION_CHECKS.VERSION_GROUND_UNASSERTED.check,
   strength_composed:    VERSION_STRENGTH_CHECKS.VERSION_STRENGTH_COMPOSED.check,
   strength_unfiltered:  VERSION_STRENGTH_CHECKS.VERSION_STRENGTH_UNFILTERED.check,
@@ -262,13 +262,19 @@ const C = {
 /* THE ONE C-NUMBER WRITTEN OUT, AND IT IS WRITTEN OUT BECAUSE IT HAS NO ROW TO
    READ. `checkEarnedLeg`'s hunch arms — a hunch with no author, a hunch with no
    date — push `C-2.8` at the call site rather than through a keyed registry the
-   way the SUGGEST and MACHINE families do, so there is no `.check` here to
+   way the SUGGEST and fence families do, so there is no `.check` here to
    resolve. Hiding that behind a computed expression would make this file look
    uniformly driven when one member of it is not, which is the false-coverage
    shape this project keeps measuring. It is instead NAMED as the exception and
-   PINNED: the suite asserts the catalogue's source still pushes this number on
-   a hunch with no author, so a renumbering fails here rather than leaving a
-   citation pointing nowhere. */
+   PINNED: the suite asserts it is read from no owner's keyed row and is one of
+   exactly two numbers typed in this module's source (R15); the hunch arms that
+   push it are inquiry-grammar's (its leg grammar), whose own tests hold them.
+
+   AND ONE MORE, FOR A DIFFERENT REASON: C-32.6 (`MACHINE_CANNOT_PUBLISH`) has a
+   keyed row, but its holder, `case-authoring`, is LATER in the order than this
+   module (P4), so no import can carry it (R15; K787 (6), K811). It is typed
+   here, and the holder's own tests assert its row's id equals this
+   `cannot_publish`, so a renumbering fails there by name. */
 
 export const CLAUSES = [
   {
@@ -535,7 +541,7 @@ export const CLAUSES = [
  * sentence saying "never do X" that a model can ignore refuses nothing, so every
  * field below is scanned by `controlFlowAuthority` — the SAME exported function
  * SK-2 built, never a second scanner — and each prohibition names the C-numbers
- * that actually refuse, read off catalogue rows BY KEY.
+ * that actually refuse, read off their owners' rows BY KEY.
  *
  * THE FIFTH PROHIBITION'S CODE HALF IS ALREADY LANDED AND THIS FILE ADDS NONE.
  * `PL-3` built `SUGGEST_BOILERPLATE` / `C-27.12` and the single `isBoilerplate`
@@ -725,16 +731,17 @@ export const PERMITTED_AUTO_COMPOSITION = {
 };
 
 /* =========================================================================
- * SK-4 — CHECK DEPLOYS FIRST. THE ORDER IS ai-runs', RE-EXPORTED HERE.
+ * SK-4 — CHECK DEPLOYS FIRST. THE ORDER IS run-rules', RE-EXPORTED HERE.
  *
  * `IS-BUILD-PLAN.md` SK-4; `INVESTIGATIVE-SESSION.md` §2 (the objective and the
  * first deployed mode) and §14b.4; DEC-24 (the CHECK role) and DEC-55's enacted
  * CHECK-first instruction.
  *
- * This file wrote the deployment order first. It is now held once, by `ai-runs`
- * (`ai-runs/deployment.mjs`, its R44; K182 (3), N156), because the plane's open
- * refuses a run in a mode that is not deployed (C-109.1, ai-runs R40) and must
- * read the order, and `ai-runs` is earlier in the order than this module. So
+ * This file wrote the deployment order first. It is now held once, by
+ * `run-rules` (`run-rules/deployment.mjs`, its R9; K182 (3), N156, K617),
+ * because the plane's open refuses a run in a mode that is not deployed
+ * (C-109.1, ai-runs R40) and must read the order, and `run-rules` is earlier in
+ * the order than this module. So
  * `DEPLOYMENT_SEQUENCE`, `GATE_ADDRESS`, `SEQUENCING_SOURCE` and
  * `SEQUENCING_ALSO_NAMED_IN` are imported above and re-exported unchanged
  * (R18), and the layer below carries them: an ADDRESS for the gate and a
@@ -743,6 +750,158 @@ export const PERMITTED_AUTO_COMPOSITION = {
  * later in the order and a user of this module, dereferences `GATE_ADDRESS` in
  * its own tests; this module's own tests read nothing later in the order (P4).
  * ========================================================================= */
+
+/* =========================================================================
+ * THE ACTION PLANNING LAYER (R28, R29; K608, K660)
+ *
+ * `BIO_Action_v0_1.md` §4, the rules a run works under when it proposes plan
+ * options, standards, comparisons, candidate theories or communication drafts.
+ * Each clause is the rule's own heading and sentences, quoted and pinned to §4
+ * by R21's normaliser, as the resident sentences are; nothing here rewords a
+ * rule. The layer holds no gate: every act it names is fenced by the module
+ * that performs it (the proposal is stored apart and labelled; the member's
+ * act refuses a machine), and a run ignoring every word here gets past nothing.
+ * ========================================================================= */
+
+/** Where the Action layer's rules are quoted from: canon, whole (K608 (1)). */
+export const ACTION_SOURCE = "docs/architecture/BIO_Action_v0_1.md";
+export const ACTION_SECTION = "§4";
+
+/** The rules of §4 the run works under (R28: rules 1–3, 6, 8–10, 13; R29: rule
+ *  12), each `{rule, heading, sentences}`, every string a span of §4. Rules 4,
+ *  5, 7 and 11 are the record's (compliance, reminders, the sending, the
+ *  profile), not a proposing run's. */
+export const ACTION_RULES = [
+  { rule: 1, heading: "Humans decide.",
+    sentences: [
+      "A member takes every act that commits the group: declaring a standard, determining, assessing a "
+      + "consequence, choosing an option, approving, sending, advancing a stage, resolving, closing.",
+      "The machine may find, compare, compute, propose and draft, always labelled as machine work, and never "
+      + "does any of these acts (DEC-24, DEC-27; Roadmap §10).",
+    ] },
+  { rule: 2, heading: "The gate is at the outward act, not the reasoning (DEC-26), and a member may pass it "
+      + "openly (Bob, 2026-09-30).",
+    sentences: [
+      "A plan may rest on premises not yet established, shown as hunch debt.",
+      "An action that asserts a breach is refused by default unless it rests on a live noncompliant "
+      + "determination; a member may proceed anyway only by an attributed act with a stated reason, and the "
+      + "action and everything prepared from it carry that disclosure.",
+      "An action that seeks evidence (a records request, a request for comment) is never gated.",
+    ] },
+  { rule: 3, heading: "No significance, no score.",
+    sentences: [
+      "Whether a matter warrants action, and how urgently, is a member's judgment, recorded only in acts and "
+      + "their reasons: a declined option's reason, an escalation stage declined with a reason.",
+      "No field holds significance, severity, priority or a score.",
+    ] },
+  { rule: 6, heading: "Addressees are roles, not people.",
+    sentences: [
+      "An action is addressed to a government office by role and body, a reporter or outlet, an organisation "
+      + "or another civic group by role and organisation, or a described audience; never a private individual "
+      + "(Requirement 6).",
+      "An action asserting a breach is addressed to an office.",
+    ] },
+  { rule: 8, heading: "No catalogue, no budgets.",
+    sentences: [
+      "Suggested options come from reasoning over the matter and from the group's own earlier plans, never "
+      + "from a fixed list; the plan holds no costs, assignees or hours (Bob, 2026-09-29).",
+    ] },
+  { rule: 9, heading: "The doctrine's limits.",
+    sentences: [
+      "CivicOS takes no position on what policy should be (Operational Principle 1).",
+      "Political accountability asks officials to act on a breach, requests oversight and audits, testifies, "
+      + "and supports legislation that restores or enforces an existing requirement; lobbying is an option "
+      + "only for that.",
+      "Policy advocacy and candidate support are not actions.",
+    ] },
+  { rule: 10, heading: "The work varies, not the person.",
+    sentences: [
+      "A project may declare the kind of work it does (reporting, fixing, legal, oversight, other), which "
+      + "shapes what the assistant suggests and nothing else.",
+      "No attribute of a person gates, filters or orders anything (DEC-17, DEC-54).",
+    ] },
+  /* R29 (K660): the planning skill's own addition, the hostile-response branch. */
+  { rule: 12, heading: "Hope for good faith; prepare for opposition",
+    sentences: [
+      "People are presumed to want better outcomes, and a bad actor is identified by evidence, never by role.",
+      "every plan is checked for a branch that answers a hostile response",
+    ] },
+  { rule: 13, heading: "The venue sets the standard of evidence",
+    sentences: [
+      "No action is refused for its evidence grade.",
+      "Where a filing rests on a grade the opposition could contest, it says so, so counsel and members can "
+      + "prepare (rule 12).",
+    ] },
+];
+
+/* THE ACTS THE LAYER NAMES, EACH BY THE REQUIREMENT THAT DEFINES IT (R28). The
+   modules that hold them are later in the order (P4), so no import can carry
+   them: each id is named once here as a SELECTOR over the published catalogue,
+   as `MACHINE_MODE` is in `skillpack.mjs`, and what the layer carries for it is
+   the catalogue's own entry, unchanged. `proposes` are the acts a run may use;
+   `leaves_to_a_member` the act a member takes on each proposal (§4 rule 1). */
+export const PLANNING_ACTS = Object.freeze({
+  proposes: Object.freeze([
+    Object.freeze({ id: "optionpropose",        defined_by: "action-plans R11" }),
+    Object.freeze({ id: "standardpropose",      defined_by: "standards R9" }),
+    Object.freeze({ id: "comparisonpropose",    defined_by: "conformance R12" }),
+    Object.freeze({ id: "theorypropose",        defined_by: "filings R14" }),
+    Object.freeze({ id: "communicationprepare", defined_by: "filings R23" }),
+  ]),
+  leaves_to_a_member: Object.freeze([
+    Object.freeze({ id: "optionadopt",   defined_by: "action-plans R11" }),
+    Object.freeze({ id: "standardadopt", defined_by: "standards R9" }),
+    Object.freeze({ id: "determine",     defined_by: "conformance R12" }),
+    Object.freeze({ id: "filingapprove", defined_by: "filings R6" }),
+    Object.freeze({ id: "filingsent",    defined_by: "filings R7" }),
+  ]),
+});
+
+/** The act a planning run proposes through (R29): while the plane publishes it
+ *  not, the layer is a stated absence and a plan-mode run has nothing to work
+ *  under. */
+export const PLANNING_ACT = PLANNING_ACTS.proposes[0].id;
+
+/** THE `action_planning` LAYER over the published catalogue (R28, R29). Absent
+ *  in R9's form while the catalogue holds no `PLANNING_ACT`; with it, every
+ *  other act named above must be published too, or the render throws naming it
+ *  (R1): a half layer is never rendered as a whole one. */
+export function actionPlanningLayer(catalog) {
+  const byId = new Map((Array.isArray(catalog) ? catalog : [])
+    .filter((a) => a && typeof a.id === "string").map((a) => [a.id, a]));
+  if (!byId.has(PLANNING_ACT)) return {
+    load_when: "never, in this edition",
+    sourcing: "absent",
+    body: {},
+    /* THE ABSENCE, STATED IN THE PACK ITSELF, as the recipes layer states its own. */
+    absent_because: `the plane's published catalogue holds no ${PLANNING_ACT} act, the one act a run in the `
+      + "plan mode proposes plan options through, so this layer carries no doctrine for work no run can do; a "
+      + "plan-mode run is refused before any turn.",
+  };
+  const read = (a) => {
+    if (!byId.has(a.id))
+      throw new Error(`the action planning layer names the act ${a.id} (${a.defined_by}) as the plane `
+        + "publishes it and invents none: op=affordances publishes the planning act but not this one");
+    return { id: a.id, defined_by: a.defined_by, act: byId.get(a.id) };
+  };
+  return {
+    load_when: "the run proposes plan options, standards, comparisons, candidate theories or communication "
+      + "drafts for an action or a plan, in the plan mode",
+    sourcing: "authored",
+    body: {
+      rules: ACTION_RULES,
+      source: ACTION_SOURCE,
+      section: ACTION_SECTION,
+      acts: {
+        proposes: PLANNING_ACTS.proposes.map(read),
+        leaves_to_a_member: PLANNING_ACTS.leaves_to_a_member.map(read),
+      },
+      note: "this layer is INSTRUCTION. Every act it names is refused or labelled by the module that performs "
+        + "it: a proposal is stored apart and labelled as machine work, and the act a member takes on it "
+        + "refuses a machine. A run ignoring every word here gets past nothing.",
+    },
+  };
+}
 
 /* =========================================================================
  * THE FOUR-LEVEL SEARCH, AND WHICH ABSENCE IS STATED AT EACH
@@ -949,9 +1108,10 @@ export function judgementLayers() {
         gate: GATE_ADDRESS,
         ruled_in: SEQUENCING_SOURCE,
         restated_in: SEQUENCING_ALSO_NAMED_IN,
-        note: "this layer is INSTRUCTION and it holds no flag. The mode that is deployed is read "
-          + "from FL-3's landed table at the address above, which is CODE and is the first row "
-          + "every run takes; this text neither restates that flag nor could change it. What it "
+        note: "this layer is INSTRUCTION and it holds no flag of its own. The mode that is deployed is "
+          + "read from FL-3's landed table at the address above, which is CODE and is the first row "
+          + "every run takes, and by the plane's open from the run's rules, whose record this layer "
+          + "carries unchanged; this text neither restates those flags nor could change them. What it "
           + "adds is the REASON for the order and the enabling condition for the second mode, "
           + "both of which are facts a run should be able to state and neither of which any code "
           + "can be asked to hold.",

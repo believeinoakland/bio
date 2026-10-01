@@ -1,0 +1,72 @@
+# public-read — requirements
+
+**Status** · DRAFT by a worker for BOB #75, 2026-09-30, on `tranche/T18` before layer 8 starts, for BOB's review; split from `publication` by K617 and K651 (seam read `build/extraction/publication-split.md` §3.2: a module whose code, or whose job, would pass about 4,000 lines is split before its next job, along seams BOB names, with no change to any requirement's meaning). R1–R5 and R7–R9 are `publication` R8, R9, R10, R11, R13, R16, R36 and R48, and R6 is `publication` R15's first two sentences (the container and its assembly), moved with their meaning unchanged (only their cross-references re-pointed; the old id is named on each; `publication` retires each as moved and keeps R15's third sentence, `recordCaseManifest`). R10–R15 are copies of `publication` R25–R29 and R34, which hold here as there. R16 states the seam K651 adopted. Layer 8, after `publication`, before `project-stage`. No `from`. Its code is taken by copy (K624 (1)): `registerEvidenceBlock`, `#evidencePackage`, `publishedManifest`, `#frozenPairsByCase`, `verifySha`, `publishedList`, `publishedEditions`, `publishedCase`, `#looseEditionState`, `#resolveOneCase`, `#casesOfSha` and a one-line `#deliveredBy` (`publication/index.mjs` 406–437, 2413–2620, 2915–3429, 3531–3714) and the op entries `publishededitions`, `publishedcase`, `publishedmanifest`, `verify`, `publishedlist`, into `bio-plane/src/public-read/`; `publication`'s job, after this one merges, deletes its copies and spreads `publicReadOps` in `store.mjs`' op map. The Worker files `publication/worker.mjs`, `container.mjs` and `inband.mjs` stay where they are and join this module's `paths` when `publication`'s job, which deletes the tests of them this module has copied, merges (BOB's `modules.json` edit then). Rows C-44.2, C-68.5 and C-98.1–C-98.9 are raised by this module's code and held in `publication`'s table (its R33) until T19, which moves them here (K651). T19 layer 8's wordings, by a worker for BOB #80 on `tranche/T19`, 2026-10-01, before layer 8 (rule 6 of `build/plan/current.md`; K651, `build/extraction/publication-split.md` §6): R17 holds the rows C-44.2, C-68.5 and C-98.1–C-98.9, moved from `publication` R33 with their numbers and translations unchanged (`publication` R33 re-worded to match); Uses re-pointed (`case-grammar`'s `caseTensionsOf` and `caseDocumentBlocks`, no longer through `publication`'s re-export; the rows read from this module's own table). The Worker files stay at their paths (`current.md` change 8). No change of meaning.
+
+**Size (P6).** About 1,915 lines: ~940 of the store side and 974 of the Worker files.
+
+## Public
+
+### Purpose
+
+The published record served to anybody without a credential, and its packaging: the public reads by hash, by finding and by case, and the whole projection; the Worker's public routes and relays; the container and the in-band quartet; the evidence-package block beside a published case. It writes nothing: every table it reads is `publication`'s, read under `publication` R40.
+
+### Provides
+
+Terms are `publication`'s (a case, an edition, the case document, a pin, the published projection, a stamp). Every refusal names `reason`; one with a catalogue row carries its `check`, `code` and `translation`.
+
+#### The public read path (no credential; the published projection only)
+
+- **R1** (was `publication` R8) `verifySha(sha)` (`op=verify`): `{published, sha256, matches: [{bundle_id, path, kind, published}]}`.
+- **R2** (was `publication` R9) `publishedList()` and `publishedEditions(id)` (`NO_ID`): every published edition with its signer, deliverer and gate version; a finding's rows name every case it serves (`cases`), with the scalar case only when there is one, else null.
+- **R3** (was `publication` R10) `publishedCase({id | sha256 | caseId, edition})`: resolved by the hash a case pinned, by case, or by finding. A finding several cases pin is `FINDING_IN_SEVERAL_CASES` (C-44.2), naming them; nothing published is `NOT_PUBLISHED` (C-98.8). The answer carries scope, completeness (with both writer and publisher, acknowledgements a list, `[]` or null as recorded), bias acknowledgement, the bar with its words, each member's pair, grounds and exclusions from its case document, `complete`/`awaiting`, the manifest and files, the editions, and the graph's `serves`, `names` and `unresolved`. It carries no case-level strength. The answer carries `tensions`, read from the signed document, never live. It lists each contradiction the owner disclosed (`case-authoring` R31), with the finding it touches, both sides with their sources, its state (`open`, `explained, not yet shown`, `taken up as a question` or `held irreconcilable, to be reopened by new evidence`), the explanation, who acknowledged it and when, and `depth: 1` with its sentence. Beside each member, its attributed tension sentences. A document before `/5` answers `tensions: null` with the sentence that its format predates the disclosure (R13). A disclosed contradiction with a side the publisher could not see is **highlighted**: its entry carries `unseen_other_side: true` and `case-authoring` R31's fixed sentence that the finding rests on a side in conflict with a record not shown, and its member's block carries the highlighted tension sentence. The answer counts them as `highlighted`, so that a reader's surface can set them apart. Nothing names the unseen record, its content, its source, or the project or members holding it (DEC-85). For a `/5` document the answer also carries its `captures:` and `sources:` blocks (`case-grammar` R1) as signed.
+- **R4** (was `publication` R11) `publishedManifest()` (`op=publishedmanifest`): the whole published projection. Where the ratified documents pinning one sha freeze different pairs, its row carries `strengthByCase` (each case edition's pair), `strength: null` and `strengthUndetermined: "CASES_DISAGREE"`; an agreeing row is unchanged.
+- **R5** (was `publication` R13) `publishedbytes(sha256)` answers bytes by hash only (64 lowercase hex, else the required-argument refusal): `NO_PUBLISHED_PART` (C-98.1, the same answer for never-existed), `OBJECT_MISSING` (C-98.2), no published store bound (C-68.5). In container form: `NOT_A_CONTAINER` (C-98.3), `MANIFEST_UNREADABLE` (C-98.4), `PART_MISSING` (C-98.5), `DUPLICATE_PATH` (C-98.6), `CONTAINER_TOO_LARGE` over 64 MiB (C-98.7).
+
+#### Packaging
+
+- **R6** (was `publication` R15, its first two sentences) The container is a stored (uncompressed) ZIP with fixed timestamps, the manifest at its root and each part under the root at its path; the same manifest and parts give the same bytes. `assembleCaseContainer(case, edition)` builds it once when a case edition's last member is published, recording its manifest through `publication`'s `recordCaseManifest` (`publication` R15), reached through its op as today.
+- **R7** (was `publication` R16) `inbandQuartet({subject, over, date, author, bar})` answers `{format: "bio-inband/1", hash: {sha256 over JSON.stringify(subject, null, 1) as UTF-8, bytes, over}, date, author, floors}`; each floor is the declared grade or null, and no declared bar says so in words. It is the one hasher of the container manifest and the review copy (rule 9).
+
+#### Registrations offered (K31)
+
+- **R8** (was `publication` R36) A later module fills, once at start, one evidence-package block: given a published case edition, it answers a named block `publishedCase` (R3) carries beside the case, computed at the read; with none registered, the answer says the package carries no such block. The evidence package is the published case edition; `filings` fills the available-actions block (its R15), and nothing of legal strategy enters the case's own bytes.
+
+## Private
+
+### Uses
+
+- `record-grammar`: `parseFrontmatter`, `normalizeType`, `sectionText` (the Worker's reads).
+- `signatures`: `verifySshsig`, `NS_RATIFY`, `ratifyStatement`, `caseRatifyStatement` (a published case's signature, R3; the Worker).
+- `ooxml`: `crc32` (R6).
+- `case-grammar`: the format predicates (R1 there), for R3 and the Worker; `caseTensionsOf` and `caseDocumentBlocks` (R3's `tensions`, `captures:` and `sources:` blocks), read from `case-grammar` itself, not through `publication`'s re-export.
+- `publication`: `caseEditionState` (its R53), `soleCase` (its R54), `caseDocMemberFrozen` (its R55), `recordCaseManifest` (its R15), `delivererOf` (its R14), and its tables under its R40. The rows this module's refusals carry are its own (R17).
+
+### Invariants
+
+- **R9** (was `publication` R48; N339, K421) A store answer this module's Worker handlers relay that is the store's own refusal (`control-plane` R23: `ok: false` below 500) is answered with the store's status, code and sentence through `storeRefusal`; only a reply that is no answer is `STORE_DID_NOT_ANSWER`, with the store's correlation id when it gave one (`control-plane` R25; N349).
+- **R10** (copied from `publication` R25) The public read path (R1–R5) needs no credential and reads the published projection and the published store only, so it can disclose nothing unpublished; a scratch namespace is not readable there (rule 10).
+- **R11** (copied from `publication` R26) No answer, document or row this module serves composes a case-level strength: every pair is per member and per axis (DEC-44, DEC-21).
+- **R12** (copied from `publication` R27) Signer and deliverer are two facts, and neither is copied from the other; every authorship field is a stamp or read from a signature.
+- **R13** (copied from `publication` R28) Undetermined is stated and never filled: a deliverer, an acknowledgement list a document is silent about (null, not `[]`), a citation's version in a document older than `/4`.
+- **R14** (copied from `publication` R29) Working material (an unsigned document, a hidden project) answers an outsider exactly as something that does not exist.
+- **R15** (copied from `publication` R34) No place is named in this module's behaviour or outward text.
+- **R17** (K651, K93 (3): rows follow their raisers) The module holds, in its own `checks.mjs`, each `{check, where, translation}` with its number and translation unchanged: C-44.2 (`FINDING_IN_SEVERAL_CASES`, R3), C-68.5 (`NO_PUBLISHED_STORE`, R5) and C-98.1–C-98.9 (the public door's refusals, R3 and R5), with their family names (`CASE_RESOLUTION_CHECKS`, `PUBLISHED_STORE_CHECKS`, `PUBLISHED_READ_CHECKS`) and a `rowOf(code)` answering `{code, check, translation}` for a code with a row here and throwing for any other (DEC-49). Every refusal this module answers with one of these codes carries its row from here; no row id is held in two tables, so `publication`'s copies leave its table (its R33) and `control-plane` reads C-68.5 from here (its layer-11 job). A changed `where` is `awaiting stamp` for promotion's next job. A change to any moves `CATALOG_VERSION` (`publication` R33). 
+- **R16** (K651, K637) This module owns no table and writes nothing: it reads `publication`'s tables only under `publication` R40 and reaches `publication` only through the services named in Uses; the one write on its path, `caseEditionState`'s `ratified_at` stamp, is `publication`'s (its R53).
+
+### Satisfies
+
+- `docs/architecture/BIO_Publication_v0_1.md` §1 (a stranger verifies without this instance), §2, §3 rules 9 (the in-band quartet), 10 (no scratch namespace on the public path), 11, 12, 16, §6A.3 point 1 (the quartet).
+- DEC-12, DEC-19, DEC-20, DEC-44; D-442.
+- N345 (R3's `tensions` and the highlight): DEC-76 item 4; DEC-84 items 11–13; DEC-85. N364 (R3's `captures:` and `sources:` blocks): DEC-81 items 1 and 3; DEC-78 item 5.
+- `filings` R15 (the evidence package's available-actions block, through R8).
+
+### Suggestions
+
+- **The seam (K651).** The copy runs against `publication` as it stands (its R53–R55 exist today as public methods), so this job is first in time with `case-grammar` and `project-stage` and merges early; `publication`'s job deletes its copies. Its later callers re-point in their own jobs: `ratification` (layer 8; `ratify-op.test.mjs`' `publishedManifest`, `publishedList`, `publishedEditions`), `filings` (layer 9: its `registerEvidenceBlock` registration and `reads.test.mjs`, `packet.test.mjs`). `publication` keeps a 17-line `registerEvidenceBlock` copy until filings has re-pointed (K625's pattern); until then `op=publishedcase` carries no available-actions block and those filings arms are red at layer 8's close only (K651).
+- **For callers.** The control plane routes `verify`, `publishedmanifest`, `publishedlist`, `publishededitions`, `publishedcase` and `publishedbytes` with no credential; the Worker's `bindPublishedPlane` hook hand-over stays the door's.
+- **Carried to T19 (K651).** Rows C-44.2, C-68.5 and C-98.1–C-98.9 move into this module's own `checks.mjs` (R17), copied first and deleted from `publication/checks.mjs` by `publication`'s job after this one merges; `control-plane` re-points `M_PUBLICATION`'s C-68.5 in its layer-11 job. The Worker files stay at their paths, this module's by `paths` (K697, K702); their physical move is not made (`current.md` change 8).
+- **Tests:** `worker.test`, `relay.test` and the R8–R11 and R36 arms of `published.test` (`test/m/publication/`), copied here and renamed to this module's ids; R10 and R14 get identical-bytes arms (an unpublished hash answers as a never-existed one).
+
+## Open for Bob
+
+None: the split is BOB's (K617, K651).

@@ -5,15 +5,18 @@
  * for findings arrive as proposals, and only a member's act adopts one, sets it aside with a recorded reason, or (a
  * machine too) opens a question from it (the discovery loop).
  *
- * A new module (K102): the one thing extracted is C-2.9's objective arm from `legacy-checks` (`checkProjectExtension`),
- * which is R1 here, run at the write as a registered promotion check and in the audit as a registered audit check, so
- * neither loses it (R22). Aspirations and goals are record documents of their own types (R26, `./doc.mjs`), written
- * through `promotion` like every other record object, with history, the gate and authored revisions; this module's
+ * A new module (K102): C-2.9's objective arm was extracted from `legacy-checks` (`checkProjectExtension`) as R1 here,
+ * run at the write as a registered promotion check and in the audit as a registered audit check, so neither loses it
+ * (R22); C-2.9's other arms and C-9.1 followed in T19 (R29) as this module's grammar (`./grammar.mjs`), registered with
+ * record-core's grammar seam in record-grammar's `checkProjectExtension` slot. Aspirations and goals are record
+ * documents of their own types (R26, `./doc.mjs`), written through `promotion` like every other record object, with
+ * history, the gate and authored revisions; this module's
  * registered check holds their state machines (`held → retired`, `open → closed`) and who may write them.
  *
  * REACHED as `intentOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
  * call with `deps` and returned to every later caller. At creation it registers its check with `promotion` (R39), its
- * audit check with `record-core` (R59) and its tables with purge (R24). `deps`:
+ * audit check with `record-core` (R59), its tables with purge (R24) and its project grammar with record-core's grammar
+ * seam (R29, `./grammar.mjs`). `deps`:
  *   record, membership, promotion, entities   the modules it uses, through their factories on the same host unless a
  *                test passes its own.
  *   progressions through its factory on the same host, reached on first use (N179: the plane's own instance, built
@@ -24,7 +27,7 @@
  *                factory on the same host, reached lazily on first use, unless a test passes its own.
  *   now          the module's clock, an ISO instant (default: the wall clock). */
 
-import { isMachineIdentity, normalizeType } from "../../checks/bio-checks.mjs";
+import { isMachineIdentity, normalizeType } from "../record-grammar/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, noSuchProject, notAnAdmin } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
@@ -36,6 +39,7 @@ import { retrievalOf } from "../retrieval/index.mjs";
 import { captureRequestsOf } from "../capture-requests/index.mjs";
 import { INTENT_CHECKS, refusal } from "./checks.mjs";
 import { INTENT_TABLES, migrateIntent } from "./schema.mjs";
+import { registerProjectGrammar } from "./grammar.mjs";
 import { ASPIRATION, GOAL, ASPIRATION_SCOPES, GRADES, TOKEN, quotable, q, parseFm, setField, removeBlock, setBlock,
          appendItem, appendHistory, readSection, setSection, appendSection, logEntry, deadEndsOf, aspirationDoc,
          goalDoc, pursuitId, CONDITION_KEY, conditionLines, conditionOf } from "./doc.mjs";
@@ -43,6 +47,8 @@ import { ASPIRATION, GOAL, ASPIRATION_SCOPES, GRADES, TOKEN, quotable, q, parseF
 export { INTENT_CHECKS } from "./checks.mjs";
 export { INTENT_SCHEMA, INTENT_TABLES } from "./schema.mjs";
 export { ASPIRATION_SCOPES } from "./doc.mjs";
+export { PROJECT_GRAMMAR, WORKPRODUCT_STATES, CLOSED_REASONS, checkProjectExtension, registerProjectGrammar }
+  from "./grammar.mjs";
 
 /** R9 (N327, DEC-83): the group aspiration's fixed act, and its next step, for `membership.notAnAdmin` (its R84), which
  *  answers `NOT_AN_ADMIN` in place of the retired `GROUP_ASPIRATION_NOT_ADMIN` (C-111.16, its number not reused). */
@@ -305,7 +311,7 @@ export class Intent {
     const bad = (c.required.stages || []).map(String).filter((s) => !declared.has(s));
     /* DEC-49 REGION is-condition-stage */
     if (bad.length)
-      return refusal("BAD_STAGE", `the flow '${str(c.progression)}' declares no stage ${bad.join(", ")}. Nothing was written.`,
+      return refusal("INTENT_BAD_STAGE", `the flow '${str(c.progression)}' declares no stage ${bad.join(", ")}. Nothing was written.`,
                      { stages: bad, declared: [...declared] });
     /* END DEC-49 REGION is-condition-stage */
     /* DEC-49 REGION is-condition-grade */
@@ -320,7 +326,7 @@ export class Intent {
     return null;
   }
 
-  /** record-core R59: C-2.9's objective arm in the audit, beside the catalogue, over the same image (R22). */
+  /** record-core R59: C-2.9's objective arm in the audit, beside the grammar's other arms (R29), over the same image (R22). */
   auditCheck(image) {
     const md = image && image.files ? image.files.get("bundle.md") : null;
     const fm = parseFm(typeof md === "string" ? md : null);
@@ -1314,16 +1320,16 @@ function refuseNoSuchAspiration(detail, extra) {
 
 function refuseNoSuchProgression(detail, extra) {
   /* DEC-49 REGION is-named-progression */
-  const row = INTENT_CHECKS.NO_SUCH_PROGRESSION;
-  return { ok: false, reason: "NO_SUCH_PROGRESSION", code: "NO_SUCH_PROGRESSION", check: row.check,
+  const row = INTENT_CHECKS.INTENT_NO_SUCH_PROGRESSION;
+  return { ok: false, reason: "INTENT_NO_SUCH_PROGRESSION", code: "INTENT_NO_SUCH_PROGRESSION", check: row.check,
            translation: row.translation, detail, ...(extra || {}) };
   /* END DEC-49 REGION is-named-progression */
 }
 
 function refuseNoReason(detail, extra) {
   /* DEC-49 REGION is-reason-stated */
-  const row = INTENT_CHECKS.NO_REASON;
-  return { ok: false, reason: "NO_REASON", code: "NO_REASON", check: row.check,
+  const row = INTENT_CHECKS.INTENT_NO_REASON;
+  return { ok: false, reason: "INTENT_NO_REASON", code: "INTENT_NO_REASON", check: row.check,
            translation: row.translation, detail, ...(extra || {}) };
   /* END DEC-49 REGION is-reason-stated */
 }
@@ -1437,7 +1443,8 @@ export function intentOps(i, url, body) {
 const instances = new WeakMap();
 
 /** K61: the one instance per host, created on the first call with `deps`. It registers its check with promotion
- *  (R39), its audit check with record-core (R59) and its tables with purge (R24). */
+ *  (R39), its audit check with record-core (R59), its tables with purge (R24) and its project grammar, C-2.9's other
+ *  arms and C-9.1, in record-grammar's `checkProjectExtension` slot (R29). */
 export function intentOf(host, deps) {
   let i = instances.get(host);
   if (!i) {
@@ -1456,6 +1463,7 @@ export function intentOf(host, deps) {
     record.declarePurge("intent", INTENT_TABLES);
     promotion.registerStep("intent", { check: (c) => i.check(c) });
     record.registerAuditCheck("intent", (image) => i.auditCheck(image));
+    registerProjectGrammar(record);
   }
   return i;
 }

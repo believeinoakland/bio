@@ -67,6 +67,16 @@ export const ENTITY_CHECKS = Object.freeze({
     translation: "A subject is registered under a name a person can read, such as 'City Clerk', and this one has none. "
       + 'Nothing was written.',
   }),
+  /* R2 (REC-64; T18, ENTITIES #5): C-33.25 COPIED here from the catalogue's `ACT_SHAPE_CHECKS`, row and translation
+     unchanged. That table is split between modules and its copy leaves the catalogue when the last owner holds its
+     rows (T19, K529's lag); until then the code is held twice, the catalogue's copy unread by this module. */
+  NO_ALIAS: Object.freeze({
+    check: 'C-33.25',
+    where: 'src/entities/index.mjs addAlias > is-alias-named',
+    translation: 'Another name for something needs to actually be a name. This one is empty once '
+      + 'the spacing and punctuation are taken off, so there would be nothing for anybody to '
+      + 'search on later.',
+  }),
   /* R29, R38 (N345, DEC-76 item 3): a defect report names a resolution (capture, reference, subject) the record does
      not hold. The next of C-91. */
   NO_SUCH_RESOLUTION: Object.freeze({

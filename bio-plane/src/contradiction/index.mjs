@@ -1,7 +1,7 @@
 /* contradiction (layer 6): Contradiction's IDENTIFY (`build/requirements/contradiction.md`;
    `docs/development/CONTRADICTION-IDENTIFY-DESIGN.md`). The pairing read (R5–R12) and the one door a run's judgement
    enters the record by (R13–R16), reached through `contradictionOf(ctx)` (K61). Moved from `store.mjs` (REC-146's
-   pairing, REC-147's candidate door, their dispatch), `bio-checks.mjs` (C-60, C-93, now `checks.mjs`) and
+   pairing, REC-147's candidate door, their dispatch), the old catalogue (C-60, C-93, now `checks.mjs`) and
    `schema.mjs` (`contradiction_candidates`, now `schema.mjs` here). The judgement's words stay in
    `../contradiction.mjs` and are re-exported here. Whether a run is visible, running and the caller's is asked of a
    run gate `ai-runs` registers (R21, K31), `legacy-store` registering until then.
@@ -22,9 +22,9 @@
 
    WHAT IT READS OF OTHER MODULES' TABLES, each in its own SQL so the per-key bound stays a bound on the statement
    (D-365): `bundles` (record-core R37), `content` (content R45), `readings.content_type` (extraction R58) and the
-   reading's date through `extraction.readingOf` (R30), and `inquiry_basis`, `bundles.inquiry_subject_entity`,
-   `inquiry_basis_versions`, `inquiry_basis_version_legs` and `resolutions` as their owners' read contracts
-   (CONTRADICTION #1 QUESTION J1). */
+   reading's date through `extraction.readingOf` (R30), and `inquiry_basis`, `inquiry_bundle_facts.inquiry_subject_entity`
+   (inquiry R40; on `bundles` until N136's rest moved it, T19), `inquiry_basis_versions`, `inquiry_basis_version_legs`
+   and `resolutions` as their owners' read contracts (CONTRADICTION #1 QUESTION J1). */
 import { recordOf } from "../record-core/index.mjs";
 import { viewerPredicate, GATE_MARK, membershipOf, noSuchProject, notAParticipant } from "../membership/index.mjs";
 import { extractionOf } from "../extraction/index.mjs";
@@ -34,7 +34,10 @@ import { basisVersionsOf, versionsIn } from "../basis-versions/index.mjs";
 /* `inquiry`'s N345 services (its R46–R48) are read through the namespace, so a name its job has not yet exported reads
    `undefined` rather than failing the import: this module is built against their stated interface (START, K481). */
 import * as inquiryModule from "../inquiry/index.mjs";
-import { sha256HexSync, canonicalJson, isMachineIdentity, parseFrontmatter } from "../../checks/bio-checks.mjs";
+import { sha256HexSync } from "../record-grammar/sha256.mjs";
+import { canonicalJson } from "../record-grammar/json.mjs";
+import { isMachineIdentity } from "../record-grammar/actors.mjs";
+import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
 import { CONTRADICTION_LABELS, JUDGEMENT_PROMPT, JUDGEMENT_PROMPT_SHA256, judgementSide,
          renderJudgementInput, RECOMMEND_PROMPT, RECOMMEND_PROMPT_SHA256 } from "../contradiction.mjs";
 import { CONTRADICTION_SCHEMA, CONTRADICTION_COLUMNS } from "./schema.mjs";
@@ -418,7 +421,8 @@ export class Contradiction {
     return { pairs, truncated, notes: [] };
   }
 
-  /** R8 K2 — one subject, two held claims. Two inquiries with the same `bundles.inquiry_subject_entity`, each with an
+  /** R8 K2 — one subject, two held claims. Two inquiries with the same subject entity (inquiry R40's
+   *  `inquiry_bundle_facts.inquiry_subject_entity`; a bundle with no row has none), each with an
    *  ACCEPTED, unhidden reading carrying a `claim`. `hidden = 0` AND `state = 'accepted'` ARE BOTH REQUIRED AND THEY
    *  ARE DIFFERENT RULES: a suggested, considering or rejected version is not held (section 3), and a HIDDEN accepted
    *  version is one the group PRUNED. `bundle_id >` RATHER THAN `<>` IS WHAT MAKES A PAIR ONE PAIR: without it every
@@ -429,20 +433,22 @@ export class Contradiction {
     const rows = this.#rows(
       `SELECT v1.bundle_id AS a_inquiry, v1.name AS a_version, v1.claim AS a_claim,
               v2.bundle_id AS b_inquiry, v2.name AS b_version, v2.claim AS b_claim,
-              d1.inquiry_subject_entity AS entity_id, d1.title AS a_title, d2.title AS b_title
+              f1.inquiry_subject_entity AS entity_id, d1.title AS a_title, d2.title AS b_title
          FROM inquiry_basis_versions v1
-         JOIN bundles d1 ON d1.bundle_id = v1.bundle_id
-         JOIN bundles d2 ON d2.inquiry_subject_entity = d1.inquiry_subject_entity
-                        AND d2.bundle_id > d1.bundle_id
+         JOIN inquiry_bundle_facts f1 ON f1.bundle_id = v1.bundle_id
+         JOIN inquiry_bundle_facts f2 ON f2.inquiry_subject_entity = f1.inquiry_subject_entity
+                                     AND f2.bundle_id > f1.bundle_id
+         JOIN bundles d1 ON d1.bundle_id = f1.bundle_id
+         JOIN bundles d2 ON d2.bundle_id = f2.bundle_id
          JOIN inquiry_basis_versions v2 ON v2.bundle_id = d2.bundle_id
         WHERE v1.state = 'accepted' AND v2.state = 'accepted'
           AND v1.hidden = 0 AND v2.hidden = 0
           AND v1.claim IS NOT NULL AND v1.claim <> ''
           AND v2.claim IS NOT NULL AND v2.claim <> ''
-          AND d1.inquiry_subject_entity IS NOT NULL AND d1.inquiry_subject_entity <> ''
+          AND f1.inquiry_subject_entity IS NOT NULL AND f1.inquiry_subject_entity <> ''
           AND d1.object_type <> 'aspiration' AND d2.object_type <> 'aspiration'
           AND (${ga.sql}) AND (${gb.sql})
-        ORDER BY d1.inquiry_subject_entity, v1.bundle_id, v1.name, v2.bundle_id, v2.name
+        ORDER BY f1.inquiry_subject_entity, v1.bundle_id, v1.name, v2.bundle_id, v2.name
         LIMIT ?`, ...ga.args, ...gb.args, cap + 1);
     const truncated = rows.length > cap;
     const pairs = (truncated ? rows.slice(0, cap) : rows).map((r) => ({
@@ -725,8 +731,9 @@ export class Contradiction {
     ];
     if (key === "K2") return [
       { level: "viewer", present: true }, anyInquiry(),
-      rung("subject", `SELECT 1 AS x FROM bundles b WHERE b.inquiry_subject_entity IS NOT NULL
-                        AND b.inquiry_subject_entity <> '' AND (${vp.sql}) LIMIT 1`, ...vp.args),
+      rung("subject", `SELECT 1 AS x FROM inquiry_bundle_facts f JOIN bundles b ON b.bundle_id = f.bundle_id
+                        WHERE f.inquiry_subject_entity IS NOT NULL AND f.inquiry_subject_entity <> ''
+                          AND (${vp.sql}) LIMIT 1`, ...vp.args),
       { level: "reading", present: !!heldReading("") },
       { level: "claim", present: !!heldReading("AND v.claim IS NOT NULL AND v.claim <> ''") },
     ];
@@ -1539,7 +1546,7 @@ export class Contradiction {
                                      : "a held claim is not a document");
     const subject = (s) => {
       if (isPart(s)) return this.#entitiesOf(s.capture_sha);
-      const r = s && s.inquiry ? this.#one(`SELECT inquiry_subject_entity AS e FROM bundles WHERE bundle_id=?`, s.inquiry) : null;
+      const r = s && s.inquiry ? this.#one(`SELECT inquiry_subject_entity AS e FROM inquiry_bundle_facts WHERE bundle_id=?`, s.inquiry) : null;
       return { ids: r && r.e ? [r.e] : null, truncated: false };
     };
     const sa = subject(A), sb = subject(B);

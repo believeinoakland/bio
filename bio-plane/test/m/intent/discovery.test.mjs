@@ -53,7 +53,7 @@ test("R16 adopt records the proposal in the named project's objective with who a
   assert.equal(w.i.triage({ proposal: "monitoring::c-1", act: "adopt", author: V("bob") }).reason, "NO_SUCH_PROJECT");
   assert.equal(w.i.triage({ proposal: "monitoring::c-1", act: "adopt", project: w.P, author: V("carol") }).reason, "PROJECT_ACT_NOT_A_PARTICIPANT");
   for (const act of ["defer", "dismiss"])
-    assert.equal(w.i.triage({ proposal: "monitoring::c-2", act, reason: " ", author: V("bob") }).reason, "NO_REASON");
+    assert.equal(w.i.triage({ proposal: "monitoring::c-2", act, reason: " ", author: V("bob") }).reason, "INTENT_NO_REASON");
   /* adopt */
   const a = w.i.triage({ proposal: "monitoring::c-1", act: "adopt", project: w.P, author: V("bob"), viewer: V("bob") });
   assert.equal(a.ok, true);

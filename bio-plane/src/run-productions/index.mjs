@@ -3,12 +3,13 @@
  * legacy store (PL-3/IS-4's suggest endpoint `suggestVersion` with `#suggestionPersisted` and `#suggestionFrontmatter`;
  * SK-8's `extractPropose` and `extractProposals` with `#posFields`; the dispatch of `op=suggest`, `op=extractpropose`
  * and `op=extractproposals`), from the legacy schema (`suggest_refusals`, `proposed_readings`) and from the check
- * catalogue (C-27 and C-104, `checks.mjs`).
+ * catalogue (C-27 and C-104, now this module's own rows in `checks.mjs`).
  *
  * `runProductionsOf(ctx, deps)` answers the one instance per Durable Object storage (K61). It reaches `record-core`,
  * `membership`, `content`, `connections`, `ai-runs`, `strength`, `citation` and `basis-versions` through their
  * factories; a run is read only through ai-runs' `runFor` (its R28) and a bound through its `boundOf` and
- * `consumeBound` (its R29), never in this module's SQL (N194). It declares its tables to purge (R17, K23) and registers
+ * `consumeBound` (its R29), never in this module's SQL (N194); whether the caller holds the run is `run-rules`'
+ * `runPrincipalGate` (its R5). It declares its tables to purge (R17, K23) and registers
  * its candidate source with basis-versions (R14; its R40).
  *
  * WHAT THIS MODULE DOES NOT DO (§4, §10): it accepts, hides, rejects or makes current nothing; it captures and requests
@@ -21,13 +22,13 @@ import { contentOf, mintLabel } from "../content/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
 import { strengthOf, ORIGIN_LIMIT, STRENGTH_AXES } from "../strength/index.mjs";
 import { citationOf } from "../citation/index.mjs";
-import { basisVersionsOf, versionsIn, versionAsWritten } from "../basis-versions/index.mjs";
+import { basisVersionsOf, versionsIn, versionAsWritten, isBoilerplate } from "../basis-versions/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
-import { runPrincipalGate } from "../airun.mjs";
+import { runPrincipalGate } from "../run-rules/index.mjs";
 import { EXTRACT_RUN_MODE, proposalChain, checkProposedRef, proposedReadingGrade, mintRatio } from "../extractrun.mjs";
 import { readingSource, readingSourceJson, readingSourceFromColumns, describeChain } from "../textchain.mjs";
-import { parseFrontmatter, normalizeType, OBJECT_TYPES, canonicalJson, isBoilerplate, isMachineIdentity,
-         SUFFICIENCY_UNCLAIMED, MACHINE_CLASS_PREFIX } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter, normalizeType, OBJECT_TYPES, canonicalJson, isMachineIdentity, MACHINE_CLASS_PREFIX }
+  from "../record-grammar/index.mjs";
 import { SUGGEST_CHECKS, EXTRACT_PROPOSE_CHECKS, SUGGEST_KINDS, SUGGEST_LEVELS } from "./checks.mjs";
 import { RUN_PRODUCTIONS_TABLES, migrateRunProductions } from "./schema.mjs";
 
@@ -186,8 +187,8 @@ export class RunProductions {
 
     /* §11: EVERY VERSION NAMES THE RUN THAT PRODUCED IT. Three questions of the run, in this order, and all BEFORE
        R2's memo, whose key carries no caller (REC-165): (a) SIGHT — `ai-runs.runFor` answers null for an absent and
-       an invisible run alike, so both read as the same SUGGEST_NO_RUN but for the id (§7.9); (b) POSITION — ai-runs'
-       R5, relayed whole; (c) STATUS — a version is formed under a LIVE run's conditions (rule 1). Then (d), BOB #28's
+       an invisible run alike, so both read as the same SUGGEST_NO_RUN but for the id (§7.9); (b) POSITION — run-rules'
+       R5 (`runPrincipalGate`), relayed whole; (c) STATUS — a version is formed under a LIVE run's conditions (rule 1). Then (d), BOB #28's
        target rule, after sight and position so a hidden run still reads as absent. */
     const run = String(args.run ?? "").trim();
     const runRow = run ? this.aiRuns.runFor(run, viewer) : null;
@@ -345,7 +346,7 @@ export class RunProductions {
         + `nothing and asserts nothing.`,
         { target, name, legs: legsIn.length, branches: declared.length }));
 
-    /* C-27.12 — NO BOILERPLATE: the placeholder defect at machine scale, held to the catalogue's one predicate. */
+    /* C-27.12 — NO BOILERPLATE: the placeholder defect at machine scale, held to basis-versions' one predicate. */
     const filler = [];
     if (isBoilerplate(args.description)) filler.push("description");
     if (args.claim !== undefined && args.claim !== null && args.claim !== ""
@@ -487,7 +488,9 @@ export class RunProductions {
      * document and promotes it (its R28), so the document stays the authority (D-21) and the promotion judges it. The
      * Session Log entry names the run. A document the grammar cannot extend in place (its `UNSPLICEABLE_BASIS`) is
      * C-27.14; any other refusal of the write, basis-versions' or the promotion's, is returned unchanged, and stored
-     * under the same key (R2). */
+     * under the same key (R2). THE VERDICT IS THIS SITE'S OWN (N411): the relay states `ok: false` and names the code
+     * and reason it carries, so the refusal is never read as a verdict inherited from the spread; every other field is
+     * the provider's, unchanged (R3). */
     const pv = persisted.version;
     const promoted = this.basisVersions.appendVersion({
       target,
@@ -510,7 +513,9 @@ export class RunProductions {
         "this question's version block is in a shape the restricted frontmatter grammar cannot be "
         + "extended in place, so nothing was written. The grammar has no escapes and a guess would "
         + "corrupt the document silently.", { target, name }));
-    if (!promoted || !promoted.ok) return remember({ ...promoted, code: promoted?.code ?? promoted?.reason, target, name });
+    if (!promoted || !promoted.ok)
+      return remember({ ...promoted, ok: false, reason: promoted?.reason ?? promoted?.code,
+                        code: promoted?.code ?? promoted?.reason, target, name });
     /* END DEC-49 REGION is-suggest-write */
 
     /* R5 — THE ANSWER IS ASSEMBLED OUT OF THREE NAMED GROUPS AND LABELS ITSELF (D-235). `record`: read back out of

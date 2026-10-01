@@ -1,4 +1,4 @@
-/* ai-runs over the real modules it uses — record-core, membership, promotion, connections, bias, observation-log,
+/* ai-runs over the real modules it uses — record-core, membership, credentials, promotion, connections, bias, observation-log,
    retrieval and contradiction — over node:sqlite (the engine a Durable Object runs), at the Durable Object's shape:
    `sql.exec` answers a cursor, never an array, and refuses a LIKE or GLOB pattern over 50 bytes (K313, K316). Each world is its own storage, so
    `aiRunsOf` answers a fresh instance. Tests drive the module at its interface; the helpers below set the record up
@@ -7,6 +7,7 @@ import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
+import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { biasOf, BIAS_SCHEMA } from "../../../src/bias/index.mjs";
 import { observationLogOf } from "../../../src/observation-log/index.mjs";
@@ -72,7 +73,11 @@ function cursor(rows) {
   return c;
 }
 
-export function world({ env = {} } = {}) {
+/** inquiry's R49 as this module reaches it (K674): a stub at the interface, answering from `migrated` by question id,
+ *  null otherwise; inquiry builds the real one in this layer. */
+export const inquiryStub = (migrated = {}) => ({ migratedSurfacing: (id) => migrated[id] ?? null });
+
+export function world({ env = {}, inquiry = inquiryStub(), deployedModes = undefined } = {}) {
   const db = new DatabaseSync(":memory:");
   const sql = { exec(q, ...args) {
     const literal = [...q.matchAll(/\b(?:GLOB|LIKE)\s+'((?:[^']|'')*)'/gi)].map((m) => m[1].replace(/''/g, "'"));
@@ -93,6 +98,8 @@ export function world({ env = {} } = {}) {
   const ctx = { storage };
   const record = recordOf(ctx); record.migrate();
   const membership = membershipOf(ctx, { record }); membership.migrate();
+  /* credentials (K789): the founder's claim, members' passwords and the AI credentials R18 reads are its (its R1–R15). */
+  const credentials = credentialsOf(ctx, { record, membership }); credentials.migrate();
   const promotion = promotionOf(ctx, { record, membership });
   for (const f of ["producingGroup", "citedBy", "caseMember"]) promotion.registerFact(f, "legacy-store", () => (f === "citedBy" ? [] : f === "producingGroup" ? "test-group" : false));
   /* provenance's `register` (its read contract), which a promotion's steps read: empty here, as a record with no
@@ -102,11 +109,11 @@ export function world({ env = {} } = {}) {
   connectionsOf(ctx, { env }).migrate();
   const bias = biasOf(ctx, { env });
   retrievalOf(ctx).migrate();
-  const runs = aiRunsOf(ctx, env);
+  const runs = aiRunsOf(ctx, env, { inquiry, ...(deployedModes ? { deployedModes } : {}) });
   runs.migrate();
   let k = 0;
   const w = {
-    db, sql, ctx, record, membership, promotion, bias, runs,
+    db, sql, ctx, record, membership, credentials, promotion, bias, runs,
     row: (q, ...a) => [...sql.exec(q, ...a)][0] ?? null, rows: (q, ...a) => [...sql.exec(q, ...a)],
     count: (t) => [...sql.exec(`SELECT count(*) AS n FROM ${t}`)][0].n,
     /** Every row of this module's tables and of the observation log, for "nothing was written". */
@@ -123,7 +130,7 @@ export function world({ env = {} } = {}) {
     },
     /* Members: the founder claims (viewer `admin`), a second administrator, then members enrolled to active. */
     async group(...members) {
-      await membership.claim({ password: "founder-passphrase-1", tokenFp: "fp-1" });
+      await credentials.claim({ password: "founder-passphrase-1", tokenFp: "fp-1" });
       for (const [id, role] of [["second", "admin"], ...members.map((m) => [m, "member"])]) {
         const a = await membership.memberAdd({ memberId: id, cover: `cover of ${id}`, role, capabilities: null, by: "admin" });
         if (!a.ok) throw new Error(`memberAdd ${id}: ${JSON.stringify(a)}`);

@@ -163,7 +163,7 @@ test("R19: resolutiondefect, graded `reasoned`, is refused without its reason wi
 
 /* N365 (R14, R8, R18): a contradiction inquiry one member may see, whose linked candidate has one side in a project that
    member takes no part in (contradiction R56's own scene: the inquiry linked by its document, since a leg cannot rest on
-   the project the hidden side is filed in). */
+   the project the hidden side is filed in; its one leg rests on the visible side's document, K819). */
 const halfHidden = () => {
   const w = seeded();
   const hb = "PROJ-2026-0009-h"; w.project(hb, ["m2"]);
@@ -175,7 +175,10 @@ const halfHidden = () => {
   const id = "INQ-2026-0600-half";
   const md = ["---", `id: ${id}`, "object_type: inquiry", "schema: inquiry@1", `title: "Q"`, "current_state: open",
     "prior_state: null", `created: "2026-09-27T00:00:00Z"`, `last_updated: "2026-09-27T00:00:00Z"`, "surfaced_by: human",
-    "contradiction:", `  candidate: "${half}"`, "references: []", "state_history: []", "---", "", "## Question", "", "Q?", ""].join("\n");
+    "contradiction:", `  candidate: "${half}"`, "references:", `  - target: ${INFO.a}`, "    rel: cites", "    status: confirmed",
+    /* K819: inquiry R11 enforces inquiry-grammar R1–R2 at every write, so a question the resolve concludes rests on a
+       leg; it rests on the visible side's document, which changes no one's sight of the candidate's sides */
+    "basis:", `  - target: ${INFO.a}`, "    role: supports", "state_history: []", "---", "", "## Question", "", "Q?", ""].join("\n");
   const pr = w.promotion.promote({ bundleId: id, base: null, snapKey: "half", author: M2, actorViewer: M2,
                                    files: [{ path: "bundle.md", text: md }], meta: { object_type: "inquiry" } });
   assert.equal(pr.ok, true, JSON.stringify(pr).slice(0, 400));

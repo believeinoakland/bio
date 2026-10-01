@@ -19,7 +19,7 @@
  * renders ONE page to pixels through CPDF-12's renderer, runs the engine over
  * that frame, and answers line-grain regions, each carrying the image region a
  * reader can check it against. The contract is the consumer's
- * (`ocrTextFromMember`, `bio-plane/src/index.mjs`): every field below is a field
+ * (`ocrTextFromMember`, `bio-plane/src/extraction/pipeline.mjs`): every field below is a field
  * the plane already refuses on.
  *
  * ---- ONE PAGE PER INVOCATION, AND IT IS MEMORY THAT SAYS SO ----------------
@@ -40,21 +40,11 @@
  */
 import { renderPageToPixels, REFUSALS as RENDER_REFUSALS } from "../../pdf-worker/src/pagepixels.mjs";
 import { pngToSamples, samplesToRgba } from "./pngsamples.mjs";
-import { CAP, MEASURED_BY, MAX_FRAME_BYTES, REFUSALS, chooseChunk, frameBytesOf } from "./contract.mjs";
+import { CAP, MEASURED_BY, MAX_FRAME_BYTES, NAMESPACES, REFUSALS, chooseChunk, frameBytesOf } from "./contract.mjs";
 
-/* D-478 — THE NAMESPACES THIS MEMBER WILL READ FROM: EXACTLY `bio` OR `scratch`, AND NOTHING ELSE.
- *
- * Before D-478 the store test read `/^[a-z0-9_-]+$/i`, so `biosmoke`, `Scratch` and any well-shaped name was spent
- * as the R2 key prefix and came back 404 NOT_FOUND — the same answer as a capture genuinely absent from a real
- * namespace. *Not found* is not *absent*, and this member's output is GRADED: a page reported unread because the
- * capture "was not there" is a fact about the document, when the truth was a fact about the NAME.
- *
- * The set is the plane's (`namespaceGate` holds `Object.freeze(["bio", SCRATCH])` in code, the same on every
- * instance), kept here as a COPY because a fleet member cannot import the plane's `index.mjs`. A copy ages, so the
- * suite reads the plane's set and requires the refusal's `namespaces` to equal it. Exact and case-sensitive: an R2
- * key is an exact string. NOT NAMING ONE is a different condition, BAD_STORE (`store` absent or not a string); an
- * empty `store: ""` is a NAMED value and meets NAMESPACE_UNKNOWN. */
-export const NAMESPACES = Object.freeze(["bio", "scratch"]);
+/* The namespace set (R16) and the plane ops this member calls (none) are declared in `contract.mjs`, which imports
+   no engine, so the plane's control-plane can pin both against its own gate and op table. */
+export { NAMESPACES };
 
 const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), {

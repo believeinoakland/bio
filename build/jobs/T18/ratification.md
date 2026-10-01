@@ -1,0 +1,57 @@
+# ratification (T18)
+
+**Status** · session_019etcwAHXE3ju7ZSV9kHRnw · depth 2 · COMPLETE · handled B5
+
+## Progress (RATIFICATION #9)
+
+Entries (plan layer 8, ratification; B1):
+- [x] N400: `Store.release` and `RELEASE_ACK_MAX` extracted to `src/ratification/release.mjs` (with its own copies of `#appendStateHistory` and `#setScalar`, which `retire` keeps in the store); the store's op-map entry deleted and `release` added to `ratificationOps` (the store already spreads them; nothing new in `dispatch.mjs`). R20–R27 tested in `test/m/ratification/release.test.mjs` (converted from `release.test.mjs`, left in place, K619). Rows C-32.1, C-33.10–.12 and C-102.10 copied into `checks.mjs` (`RELEASE_CHECKS`, `RATIFY_REGISTRATION_CHECKS`), each `awaiting stamp`; the catalogue's copies stay for T19 (rule (3)).
+- [x] K674 (4): `refuse-gate`'s release arm converted (R21, R27 test: a query selection swapped at a constant count is SET_MOVED and moves nothing; a fresh one releases).
+
+## J1 · QUESTION
+
+Two points; I am carrying on with my best reading of each.
+
+1. N417 (the ratify gate through promotion's instance). `op=ratify`'s gate runs in the Worker (`ratification/ops.mjs` `ratifyOp`), which holds no host: `promotionOf(host).runGate` reads `record.grammars()`, and the grammars (capture's C-2.7) are registered on the store's host at the Durable Object. A Worker-side `promotionOf(...)` would see none, so the entry cannot be met where the call stands today. Best reading: move the gate call into the store half, as `op=caseratify`'s gate already is (K233): a store-half op `ratifygate` in `ratificationOps` runs `promotionOf(host).runGate` over the image with the gate facts, `hasCapture` answered in-process through record-core's `evidenceStore()` (its R38), provenance's `partsHeld` and the `registerholds` read; the Worker keeps the fences, the signature, the case-member, register and bias arms, the commit and the copy, and relays `ratifygate` by R17 (the `registerholds` relay becomes in-process, so R17's relay list changes from registerholds to ratifygate; its tests follow). This changes no requirement's meaning (R4: "GATE_REFUSED from promotion.runGate"). If you would rather it wait for T19 (nothing is lost this tranche: the catalogue's built-in C-2.7 still runs at the ratify gate, PROMOTION #19 J2), say so and I leave `ops.mjs` as it is.
+
+2. T17's finding: `CASE_ROLES_DIVERGED` is emitted by nothing. It has no catalogue row anywhere (none in the catalogue or any module's table), and its only mention in code is `ratifyOp`'s list of commit refusals answered 409, beside four more `publication.commitEdition` no longer emits since CASE-5b (`CASE_MEMBERSHIP_DIVERGED`, `CASE_NAMES_NO_PROJECT`, `CASE_ROSTER_EXCLUDES_SELF`; and `CASE_PRODUCTION_DIVERGED`, which only the case commit answers). Best reading: retired by ruling (K6: no row to delete; it went with the format, publication/index.mjs:628); I drop the five dead codes from that list in `ops.mjs` (my own code; no answer changes, since none can arrive).
+- [x] N211: `checks.test.mjs`' parity arms re-pointed (the catalogue no longer exports either; `isCaseMemberBytes`' parity kept, Decided 6); `store.mjs`' unused `SUBJECT_POSITIONS` import deleted (with its orphaned comment); ✱ `SUBJECT_POSITIONS` and `caseEditionClaimed` deleted from the catalogue (80 lines; no product importer: affordances and case-authoring read ratification's; `test/publish.test.mjs`, an old suite, loses its import and stays unrun, K653).
+- [x] T17's findings: (1) `CASE_ROLES_DIVERGED` emitted by nothing: J1 QUESTION (2); on my best reading the five dead codes left `ratifyOp`'s 409 list. (2) the fixtures now gate `/5` documents (`cleanCase`, `caseMd`, `checks.test.mjs`' `doc()`), with a `/4` arm kept.
+- [x] N417 (B2, K691; RATIFICATION #10): a store-half op `ratifygate` (`index.mjs` `ratifyGate`) runs `promotion.runGate` on the store's host over what `ratifyOp` read under the ratifier's scope (image, known ids, the gate facts' registers and registries), probing the register rows in-process (record-core's `evidenceStore`, provenance's `registerHolds`, `partsHeld`) and answering the verdict with `parted` (D-556's rows held in parts); `ratifyOp` relays it by R17 (`ratify/gate`; the `registerholds` relay is gone) and keeps the fences, signature, register, bias and case-member arms, the commit and the copy. `gate.mjs`' `runGate` import and the Worker's `captureKey` use are gone (the door's `captureKey` hand-in dropped from my `src/index.mjs` line). Tested: a registered grammar reaches the ratify gate, with a negative control (fails on the old code); the held-in-parts path end to end; R17's relays re-pointed (`relays.test.mjs`).
+- [x] B2 (2): the five dead codes left `ratifyOp`'s 409 list (done by #9, 93c1acda9e). B2/K691: `assembleCaseContainer` read from its owner (fb5833d5a4). B3: tranche/T18 merged; architecture and coverage re-run, 0 failures.
+- [x] The 16 legacy suites' ratification shares (T17 `legacy-tests.md` rows), converted at the interface into `converted-a` (caseproduction, d84-case-manifest, mk6-bundle-names-no-author, signer-enrolment; 11 tests), `converted-b` (publish, testify, testimonyaxis, operator-attest; 17), `converted-c` (casesign, d442-publish-writes-nothing, ratify-authority, ratify-envelope; 15), `converted-d` (ratify, grounds, deliverer, multifinding; 19). The old suites stay (K619). Where an old suite had op=publish author the /5 document (case-authoring, not in my uses), an equivalent /5 document is built by hand and said so at the site. Not converted, each as not ratification's: other modules' shares per the rows (case-authoring's op=publish refusals and document prose, publication's reads, editions and container, public-read's contents, strength's bar and grounds arithmetic, inquiry's C-21.2 and grounds gate, membership's signer acts, control-plane's bearer wiring through `classify`), and source-text pins (replaced by behaviour where the behaviour is mine). No behaviour found short of its requirement.
+
+## Completion (RATIFICATION #10)
+
+**Entries applied:** every entry of plan layer 8, ratification: N400 (R20–R27) and K674 (4) (#9); N211; T17's two findings (the dead codes, K691; the /5 fixtures); N417 (B2); K649's STRENGTH_STATES and userAgent re-points; N407; the legacy-index §4.4 dispatch move; `assembleCaseContainer` from public-read (K651, K691); the 16 converts. B3 applied (tranche merged, checks re-run). Rows moved or copied are `awaiting stamp` (promotion, T19).
+
+**Deferred:** none. B5 (K697): tranche/T18 merged; `ratify-op.test.mjs`' R5 test reads `publishedManifest`, `publishedList` and `publishedEditions` from public-read (`publicReadOf`, its R4, R2; K651); tests 168/168, format, architecture (82 imports), coverage 27/27, ownership: 0 failures.
+
+**Found in other modules (for BOB):**
+- control-plane: `test/m/control-plane/doorbell.test.mjs`:465 (R36, N380) fails on tranche/T18 without my change: the refusal detail reads "the act run with the pull did not complete, …" where the test expects /the promotion did not complete/.
+- record-core / legacy-checks: a bundle promoted twice with snapshot keys not shaped `YYYYMMDDTHHMMSSZ_<hex>` is refused by C-12.2 ("history file … maps to no manifest entry"); only test fixtures mint such keys, so it is a note, not a defect claim.
+
+**Tests and checks:** `node --test test/m/ratification/`: tests 168, pass 168, fail 0. Users' tests: case-authoring 69/0, review 30/0, affordances 106/0, control-plane 79 pass / 1 fail (the doorbell arm above, pre-existing). `format`: 0 failures; `architecture`: 20 product files, 81 relative imports, 0 failures; `coverage`: 27 of 27 live requirement ids named by a test, 0 failures; `ownership`: legacy-store 0 added / 215 removed, legacy-checks 0 / 80, legacy-index 2 / 3, 0 failures.
+
+Size (session_019etcwAHXE3ju7ZSV9kHRnw): test runs 13, module lines 3601
+- [x] K649: `checks.mjs`' `STRENGTH_STATES` re-pointed to `strength` (the architecture check fails until `strength` is in ratification's `uses`: REPORT J2); `ops.mjs`' `userAgent` re-pointed to `acquisition`.
+- [x] N407 (K649 (4)): R18's pre-flight reads a viewer `{stamp, aiCred}`; an agent credential holds C-32.13 and C-32.15 whatever its stamp (tested with a stub viewer; admission stamps it in layer 11).
+- [x] legacy-index map §4.4: `src/index.mjs`' `caseratify` and `ratify` dispatch lines replaced by one call to `ratificationOp` (`ops.mjs`), the context both handlers read handed in (2 lines added, 3 removed there). `assembleCaseContainer` still handed in by the door until public-read merges (its re-point waits for BOB's CHANGE, with `ratify-op.test.mjs`:210–211's).
+
+## J2 · REPORT
+
+Two things for you, each needing an edit only you make.
+
+1. `uses` edge: the plan's K649 addition re-points `ratification/checks.mjs`' `STRENGTH_STATES` to `strength`, which is not in ratification's `uses` (`modules.json`) or its requirements' Uses. The re-point is pushed (93c1acda9e); `node checks/architecture.mjs bio ratification` fails on it ("imports ... strength, which ratification does not declare in uses") until you add `strength` (layer 6) to both. Proposed Uses line: "- `strength`: `STRENGTH_STATES` (R9, C-2.8's frozen-axis states)."
+
+2. N407's shape, for admission (layer 11) and a wording for R18: the pre-flight now reads a viewer that is either the control plane's stamp (as today) or `{stamp, aiCred}`; a viewer carrying `aiCred` (a minted agent credential) holds C-32.13 and C-32.15, each byte-identical to the act's own for class `ai`, whatever its stamp. Proposed R18 addition after the fences: "a viewer carrying a minted agent credential (`{stamp, aiCred}`, admission's stamp) holds both, whatever its stamp (N407)." Tested with a stub viewer (`preflight.test.mjs`, "R18 (N407)").
+
+Also, for the record: the bulk release (N400) is extracted and pushed (5ad5eca9f2), R20–R27 tested (`release.test.mjs`, 16 tests, the refuse-gate release arm among them, K674 (4)). One flaw fixed in doing it: R22's crucial class read only `bundles.criticality`, which promotion writes from the envelope and never from the bytes, so a document whose own front matter says `criticality: crucial` under an envelope that did not could ride a batch (R27). It now counts as crucial when the column or the document says so (tested). The envelope-only column is promotion's (R39's `meta`); I report it, not change it.
+
+## J3 · COMPLETE
+
+Complete (RATIFICATION #10). N417 applied (store-half ratifygate, K691; tested with a registered grammar and a negative control), B3 applied, the 16 legacy suites' ratification shares converted (62 tests in converted-a..d). Module tests 168/168; format, architecture, coverage, ownership 0 failures. Deferred only ratify-op.test.mjs:210–211 (waits for publication's merge, your CHANGE). Found for you: control-plane's doorbell.test.mjs:465 fails on tranche/T18 without my change (detail wording). Details in my record's Completion section.
+
+## J4 · COMPLETE
+
+B5 applied (K697): tranche/T18 merged; ratify-op.test.mjs' published reads now from public-read (publicReadOf: publishedManifest, publishedList, publishedEditions). Tests 168/168; format, architecture, coverage (27/27), ownership: 0 failures. Nothing deferred.

@@ -2,14 +2,16 @@
  * legacy-checks) with their comments, unchanged in what they find: C-18.1 (the intake provenance register's shape at
  * @1 and @2, release authority and the ratification fence), C-18.3 and C-18.4 (register integrity), C-18.9 (what a
  * capture must establish before it may be published). Each keeps its catalogue id and severity. C-18.6's hashing of
- * the stored bytes (R45) is asynchronous and stays in the catalogue, run by the gate before the transaction (K72 (4));
- * C-18.5 went to monitoring and C-18.7 stays with C-18.8 in promotion (K49).
+ * the stored bytes (R45) is asynchronous and runs at the gate before the transaction (K72 (4)): since T19 it is
+ * promotion's information@2 grammar with C-18.7 (promotion R55, K773), registered with record-core into
+ * record-grammar's `checkBundle`; C-18.5 went to monitoring (K49). The shared grammar these arms read (actor classes,
+ * the grade letters) is record-grammar's.
  *
  * They run in three places, so the move loses none of them: at every promotion, as this module's registered check
  * (`index.mjs`); at the gate, after `runGate` (`withRegisterChecks`); and in the audit, as the module's registered
  * audit check (record-core R59, `provenanceOf`). */
 
-import { isMachineIdentity, ACTOR_CLASSES, BASIS_GRADES, TESTIMONY_GRADE } from "../../checks/bio-checks.mjs";
+import { isMachineIdentity, ACTOR_CLASSES, BASIS_GRADES, TESTIMONY_GRADE } from "../record-grammar/index.mjs";
 
 /* The catalogue's finding shape (bio-checks' `f`): check id, severity, message, and optionally repairs and a code. */
 function f(check, severity, message, repairs, code) {

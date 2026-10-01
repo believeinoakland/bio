@@ -132,3 +132,44 @@ test("R19: determine, graded `reasoned` (N310), superseding a determination with
   const next = w.c.determine(input({ supersedes: first.id, reason: "a second notice rule applies" }));
   assert.equal(next.ok, true, JSON.stringify(next).slice(0, 300));
 });
+
+/* K727 (T18): action-plans' five acts graded `reasoned` and its scenario graded `reversible`, driven at action-plans'
+   interface over its fixture (a project, a plan over its subjects, options). */
+import { seeded as apSeeded, opened as apOpened, option as apOption, choose as apChoose, by as apBy } from "../action-plans/fixture.mjs";
+
+test("R19: plansubjectadd, plansubjectremove, optionrevise, optiondispose (setting an option down) and planclose, graded "
+   + "`reasoned` (K727), are refused without their reason with a code in JUSTIFICATION_REFUSALS, and accepted with one", () => {
+  for (const op of ["plansubjectadd", "plansubjectremove", "optionrevise", "optiondispose", "planclose"])
+    assert.equal(RUNGS[op], "reasoned", op);
+  const scene = () => { const w = apSeeded(); apOpened(w, [w.SI, w.S1]); w.A = apOption(w); return w; };
+  const acts = {
+    plansubjectadd: (w, reason) => w.ap.planSubjectAdd({ plan: w.PL, subject: w.S3, reason, ...apBy("bob") }),
+    plansubjectremove: (w, reason) => w.ap.planSubjectRemove({ plan: w.PL, subject: w.S1, reason, ...apBy("bob") }),
+    optionrevise: (w, reason) => w.ap.optionRevise({ plan: w.PL, option: w.A, summary: "Write again", reason, ...apBy("bob") }),
+    optiondispose: (w, reason) => w.ap.optionDispose({ plan: w.PL, options: [w.A], disposition: "declined", reason, ...apBy("bob") }),
+    planclose: (w, reason) => w.ap.planClose({ id: w.PL, reason, ...apBy("bob") }),
+  };
+  for (const [op, act] of Object.entries(acts)) {
+    for (const reason of NO_WHY) {
+      const r = act(scene(), reason);
+      assert.ok(JUSTIFICATION_REFUSALS.includes(r.reason ?? r.code), `${op} ${JSON.stringify(reason)}: ${JSON.stringify(r).slice(0, 200)}`);
+    }
+    const ok = act(scene(), "the group decided so at its meeting");
+    assert.equal(ok.ok, true, `${op}: ${JSON.stringify(ok).slice(0, 300)}`);
+  }
+  /* optiondispose asks no reason where it revises nothing that stands (choosing), K212 */
+  const w = scene();
+  assert.equal(w.ap.optionDispose({ plan: w.PL, options: [w.A], disposition: "chosen", ...apBy("bob") }).ok, true);
+});
+
+test("R2: scenarioset, graded `reversible` (K727), asks no reason and is taken back by a published act — a further "
+   + "scenarioset replaces it whole, the earlier version kept in history", () => {
+  assert.equal(RUNGS.scenarioset, "reversible");
+  const w = apSeeded(); apOpened(w); const A = apOption(w); apChoose(w, [A]);
+  const phases = [{ id: "ask", name: "Ask", options: [A], starts: "plan_start" }];
+  assert.equal(w.ap.scenarioSet({ plan: w.PL, scenario: 1, name: "First line", phases, ...apBy("bob") }).ok, true);
+  assert.equal(w.ap.scenarioSet({ plan: w.PL, scenario: 1, name: "Second line", phases, ...apBy("bob") }).ok, true);
+  const sc = w.ap.planRead({ id: w.PL, nowMs: Date.now(), viewer: "member:bob" }).scenarios.find((s) => s.scenario === 1);
+  assert.deepEqual([sc.name, sc.version], ["Second line", 2]);
+  assert.ok(sc.history.some((h) => h.name === "First line"), "the earlier version is kept");
+});

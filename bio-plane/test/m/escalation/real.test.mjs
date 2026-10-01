@@ -125,3 +125,32 @@ test("R1 over the real conformance: NO_SUCH_DETERMINATION (absent and unseen) an
   assert.equal(second.ok, true, JSON.stringify(second).slice(0, 300));
   assert.deepEqual(open(first.id), determinationSuperseded(first.id, second.id));
 });
+
+test("R23 over the real actions (K600 (a)): a member's breach action stating a premise_override, written through actions with no determination to rest on, is refused ACTION_PREMISE_OVERRIDDEN at an attaching stage, ahead of NOT_A_BREACH_ACTION; one resting on the determination without the override attaches", () => {
+  const x = real();
+  const d = x.w.c.determine(x.input());
+  const E = x.esc.escalationOpen({ determination: d.id, author: V("pat"), viewer: V("pat") }).id;
+  assert.equal(x.esc.escalationAdvance({ id: E, to: 2, reason: "Notify.", author: V("pat"), viewer: V("pat") }).ok, true);
+  const md = (id, lines) => ["---", `id: ${id}`, "object_type: action", `title: ${id}`, "current_state: planned",
+    'created: "2026-09-28T01:00:00Z"', 'last_updated: "2026-09-28T01:00:00Z"', "action_kind: other",
+    "counterparty:", "  state: named", "  role: Director of Parks", "  body: Parks Department", "breach: true",
+    ...lines, "---", "", "A notice.", ""].join("\n");
+  let k = 0;
+  const make = (id, lines) => {
+    const r = x.w.promotion.promote({ bundleId: id, base: null, snapKey: `20260928T010000Z_000000c${++k}`, author: V("pat"),
+      viewer: V("pat"), files: [{ path: "bundle.md", text: md(id, lines) }], meta: { object_type: "action" } });
+    assert.equal(r.ok, true, JSON.stringify(r).slice(0, 500));
+    return id;
+  };
+  const over = make("ACTN-2026-0001-override", ["premise_override:", '  reason: "The office has not answered; we act before a determination."',
+    "action_basis: []"]);
+  const read = x.esc.actions.actionRead({ id: over, viewer: V("pat") });
+  assert.equal(read.ok, true, JSON.stringify(read).slice(0, 300));
+  assert.equal(read.premise_override?.reason, "The office has not answered; we act before a determination.");
+  const before = x.w.record.head(E).bundleSha;
+  const r = x.esc.escalationAttach({ id: E, action: over, author: V("pat"), viewer: V("pat") });
+  assert.deepEqual([r.ok, r.reason, r.check, r.action], [false, "ACTION_PREMISE_OVERRIDDEN", "C-116.45", over]);
+  assert.equal(x.w.record.head(E).bundleSha, before, "nothing written");
+  const plain = make("ACTN-2026-0002-notice", ["action_basis:", `  - target: ${d.id}`, "    kind: rests_on"]);
+  assert.equal(x.esc.escalationAttach({ id: E, action: plain, author: V("pat"), viewer: V("pat") }).ok, true);
+});
