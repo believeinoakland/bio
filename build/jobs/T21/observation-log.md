@@ -25,3 +25,7 @@ Size (session_013cUgWrip5dZGALsDxc2eyV): test runs 8, module lines 3134
 ## J1 · REPORT
 
 Stale generated artifacts: agent-worker/dist/agent-worker.bundled.mjs (observation-log/checks.mjs and vocabulary.mjs changed; fleetbundles.test.mjs reports STALE BUNDLE for both) and bio-plane/dist/bio-plane.bundled.mjs (index.mjs, checks.mjs, vocabulary.mjs, schema.mjs changed). release/bio-plane.bundled.mjs holds the old strings too (distribution's). Not a module: build/layers.md's legacy-store row still names src/plane/held.mjs. Nothing found in another module's code.
+
+## J2 · COMPLETE
+
+N458: both read texts re-worded (registerAuthority's AUTHORITY_NOT_RESOLVABLE detail; C-22.6's detail 'names record'); scan found only those; R2 and R13 tests now check the words (negative control fails on old source). N468: R32 comments say plane registers the figures under this module's name; figures.test.mjs no longer names held.mjs or plane's copy (pinned count worded as the test's own). N469: checks.mjs :172 and vocabulary.mjs :57, :1439 re-worded; re-scan found five more live claims naming the deleted observation-log.test.mjs, each made provenance and pointed at the module test proving it; one test added (coverage and C-22.10 on one condition). Also fixed stale notes on store.mjs, queuestate.mjs, #migrate. Nothing deferred. test/m/observation-log 60/60; format, architecture, coverage (32/32), ownership: 0 failures. Record: build/jobs/T21/observation-log.md on job/T21/observation-log.
