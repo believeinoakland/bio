@@ -117137,7 +117137,7 @@ var Monitoring = class {
       const reg = JSON.parse(img["data/provenance.json"] || "{}");
       const rows2 = (reg.documents || []).filter((d) => d && typeof d.locator === "string");
       const namesThis = (d) => Array.isArray(d.provenance_chain) && d.provenance_chain.some((h) => h && h.via === "archive.org" && typeof h.document_address === "string" && normalizeAddress(h.document_address) === addressNorm);
-      const match = (driveTick && driveTick.harvestable ? rows2.find((d) => d.locator === driveTick.exportAddress) : null) || rows2.find((d) => d.locator === locator) || rows2.find(namesThis);
+      const match = driveBaselineRow(rows2, driveTick, locator) || rows2.find(namesThis);
       renderTick = !!match && (match.pair && typeof match.pair === "object" && match.pair.primary === "rendered" || match.capture && match.capture.method === RENDERED_METHOD);
       if (renderTick) {
         const shellSha = match.pair && match.pair.shell && match.pair.shell.sha256;
