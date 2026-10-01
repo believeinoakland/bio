@@ -577,26 +577,26 @@ function proposalLabelFor(who) {
   return { by: base.by, state: base.state, machine_work: base.machine_work, says: PROPOSAL_SAYS[base.state] };
 }
 
-/* R10 (jurisdictions R43): the offices a count for an action is for: its addressee when that is a named office (its
-   `role` and `body`), and the venue its kind is filed at when the view's kind carries one (`{venue: <kind>}`). */
+/* R10 (jurisdictions R43; K986): the ONE office a count for an action is for, as a list of none or one: its addressee
+   when that is a named office (its `role` and `body`), else the venue its kind is filed at when the view's kind carries
+   one (`{venue: <kind>}`); none for any other action, whose count reads only the entries for all offices. */
 export function actionOffices(fm, view) {
-  const out = [];
   const cp = fm && typeof fm === "object" ? fm.counterparty : null;
   if (cp && typeof cp === "object" && cp.state === "named" && (cp.kind === undefined || cp.kind === null || cp.kind === "office")
       && typeof cp.role === "string" && cp.role.trim())
-    out.push({ role: cp.role.trim(), body: typeof cp.body === "string" ? cp.body.trim() : null });
+    return [{ role: cp.role.trim(), body: typeof cp.body === "string" ? cp.body.trim() : null }];
   const kind = fm && typeof fm === "object" ? fm.action_kind : null;
   if ((view && Array.isArray(view.action_kinds) ? view.action_kinds : []).some((k) => k && k.kind === kind && k.venue))
-    out.push({ venue: kind });
-  return out;
+    return [{ venue: kind }];
+  return [];
 }
 const officeKey = (o) => (typeof o === "string" ? `role:${o}` : o && typeof o.venue === "string" ? `venue:${o.venue}`
   : o && typeof o.role === "string" ? `role:${o.role}` : null);
 const officeWords = (o) => (o.venue ? `the venue of '${o.venue}'` : `'${o.role}'`);
 
-/* R10 (jurisdictions R33, R43): the holiday entries a count for `offices` reads for `year`: the year's entry for all
-   offices and those naming one of the offices. Each office is covered by the all-offices entry or one naming it; an
-   office covered by neither leaves the year undetermined (`uncovered`), as does a year with no entry at all. */
+/* R10 (jurisdictions R33, R43): the holiday entries a count for `offices` (`actionOffices`: none or one) reads for
+   `year`: the year's entry for all offices and those naming the office. An office covered by neither leaves the year
+   undetermined (`uncovered`), as does a year with no entry at all. */
 export function yearEntries(view, offices, year) {
   const hs = (view && Array.isArray(view.holidays) ? view.holidays : []).filter((h) => h && Number(h.year) === year);
   const keys = new Set((offices || []).map(officeKey).filter(Boolean));
@@ -657,7 +657,7 @@ function calendarStated(read, readable) {
 /* R2, R10: a deadline's date from its rule, counted from the event the rule names in the action's ledger: `filed` the
    first sent entry, `received` the first received entry; `act` and `known` are not ledger events, so they are
    undetermined. A `business` count reads, for each year it reaches, the holiday entries that apply to the action's
-   offices (`yearEntries`), each through `factOf` (its status on this instance and, when corrected, the value that
+   office (`actionOffices`, `yearEntries`), each through `factOf` (its status on this instance and, when corrected, the value that
    governs); it is undetermined past the years the calendar lists for those offices (jurisdictions R33, R43), and when an
    entry it reads is `disputed` or `absent`. It answers `calendar`, the statement of what it read (`calendarStated`); a
    `calendar` count reads no holiday and states none. Nothing is written. */
