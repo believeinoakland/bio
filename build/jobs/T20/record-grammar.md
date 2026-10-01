@@ -26,3 +26,13 @@
 - `node checks/ownership.mjs … record-grammar tranche/T20`: 0 failures (re-run after commit below)
 
 Size (session_01Dr61eQgdPoB6sfPdCc6qXC): test runs 3, module lines 2257
+
+## J1 · COMPLETE
+
+Done. Details are in this record's Completion section.
+- N437's kind: the three registry comments in `bundle.mjs` no longer name the cli or the migrate tool. They now name the callers that exist at HEAD: promotion's `runGate`, inquiry's `checkInquiryEntry`, ratification's gate, and record-core's audit through the registered audit contexts. Comments only.
+- N449: R19 is met at HEAD with no code change. The new test `R19 an upper-case scheme is https, and a localhost. or .local host is never public` (`bio-plane/test/m/record-grammar/locator.test.mjs`) checks it. R19's mark can be struck.
+- Also fixed in this module (comments only): comments that still described the deleted catalogue as present, and the invariants test title that named retired R26 and R41.
+- For you: the marks on R1, R3, R5, R12 and R20 also look met at HEAD, each checked by its named test, and the Status line still says "T18's stage only".
+- Staled: `bio-plane/dist/bio-plane.bundled.mjs` and `.bundle.json`. Not regenerated.
+- Tests: 58 of 58 pass. format, architecture, coverage (39 of 39 ids) and ownership: 0 failures each.
