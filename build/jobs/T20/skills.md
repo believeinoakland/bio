@@ -23,3 +23,7 @@ Size (session_01GnYeqvTWL2RPqooQrRRMCS): test runs 2, module lines 1703
 ## J1 · QUESTION
 
 inquiry-grammar's rename (INQUIRY_GRAMMAR_ROWS → INQUIRY_GRAMMAR_CHECKS) is not on tranche/T20 at 7d7570f07b. My reading: I wait for your word that it has merged, then merge tranche/T20 and re-point skilldoctrine.mjs:90, :253 and test/m/skills/fixture.mjs:12, :21 (dropping the fixture's family alias). Meanwhile I read my requirements, code and tests whole and run the baseline.
+
+## J2 · COMPLETE
+
+B3 applied: tranche/T20 (K897) merged; skilldoctrine.mjs (import, C.cannot_ground) and test/m/skills/fixture.mjs (import; owners names INQUIRY_GRAMMAR_CHECKS directly, alias dropped) re-pointed. No INQUIRY_GRAMMAR_ROWS read remains in skills; inquiry-grammar may drop the alias for skills (control-plane families.mjs:93-94 still reads it). Tests 39/39 pass before and after; format, architecture, coverage (29/29), ownership all 0 failures. Stale artifact: bio-plane/dist/bio-plane.bundled.mjs (plane bundle carries skilldoctrine); agent-worker's bundle does not read skills. Details in the record's Completion section.
