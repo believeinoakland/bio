@@ -23,3 +23,7 @@
 - `node checks/ownership.mjs … tasks tranche/T19`: `ownership: 5 files changed by tasks between tranche/T19 and HEAD; legacy-store: 0 line(s) added, 0 removed; 0 failures`
 
 Size (session_013NyWnRWTkvdb8cPBaL3ELW): test runs 3, module lines 955
+
+## J1 · COMPLETE
+
+Done. Rule 1 re-points applied (checks.mjs:12, index.mjs:25 now import from record-grammar; no tasks file imports bio-checks.mjs). K789: the test world builds credentials and the two tests claim through credentials.claim; tasks tests 71 pass, 0 fail. format, architecture, coverage, ownership: 0 failures. For you: requirements Uses and modules.json uses still name legacy-checks, which tasks no longer imports (details in the record). No generated artifact staled. Ready to merge.
