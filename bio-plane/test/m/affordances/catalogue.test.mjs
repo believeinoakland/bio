@@ -43,6 +43,15 @@ test("R1: ACTS holds exactly the object-directed acts, each at its weight", () =
   }
 });
 
+/* citeproject-inquiry's share (T18 convert): the types each citation act declares are what op=affordances publishes as
+   `appliesTo` (R17, the once-loaded shape a surface builds its offer set from), and `deriveActs` reads none of them, so
+   they are asserted against R9's own text here rather than against the catalogue that holds them. */
+test("R9 R17: cite, sever and reinstate each declare exactly the types R9 offers them on — an information bundle, a "
+   + "project and an inquiry", () => {
+  for (const id of ["cite", "sever", "reinstate"])
+    assert.deepEqual([...ACTS.find((a) => a.id === id).types].sort(), ["information", "inquiry", "project"], id);
+});
+
 test("R1: CAPTURE_ACTS holds attest, monitor and attesttext, with no weight", () => {
   assert.deepEqual(ids(CAPTURE_ACTS), ["attest", "attesttext", "monitor"]);
   for (const a of CAPTURE_ACTS) { assert.equal(a.weight, undefined); assert.ok(a.label.length > 0); }
