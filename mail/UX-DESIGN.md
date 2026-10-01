@@ -66,3 +66,7 @@ Folded: BIO_Intake_Doctrine_v1_1.md §2a. Owed: the tally and the refusal senten
 ## U17 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-109 (Bob, question 27, as recommended): the claim page and the wizard's last screen tell the founder the whole truth about the hosting account's power, as practical steps, before a password is chosen; administrator settings carry a standing "Who controls this copy" card (the explanation, who holds hosting access and since when per membership R11, the last claim date where the copy can show it); no acknowledgement act; custody stays deferred (DEC-2).
 Folded: BIO_Membership_Architecture_v2.md §4.8. On PR #6's branch. Owed (its owed: line): the claim page's and wizard's wording, the settings card, whether the copy can show its last claim date.
+
+## U18 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
+DEC-110 (Bob, question 28): members see "To do", "Noticed" and "Signal" ("Condition" retired from member text), each kind with its own icon, wording, buttons and an "Open…" link home; the queue stays one list, default grouped by case (to-dos, noticed, signals), and a member may re-sort by time added, time due, case or kind; sorted by case or kind, the groups collapse so a member can focus.
+Folded: NOTIFICATIONS.md (RULED 2026-10-01). On PR #6's branch. Owed (its owed: line): "Signal" in member text, the queue read's sort orders, the redesign's styles and folding.
