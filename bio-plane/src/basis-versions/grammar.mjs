@@ -9,7 +9,7 @@
 
 import { BUNDLE_ID_RE, ISO_TS_RE, OBJECT_TYPES, normalizeType, isMachineIdentity, BASIS_ROLES, BASIS_GRADES, GRADE_AXES,
          GRADE_SOURCES } from "../record-grammar/index.mjs";
-import { GROUND_LABEL_RE, leadLegFindings, checkLegExtentGrammar } from "../../checks/bio-checks.mjs";
+import { GROUND_LABEL_RE, leadLegFindings, checkLegExtentGrammar, registerInquiryGrammar } from "../inquiry-grammar/index.mjs";
 import { themeLegFindings } from "../connections/index.mjs";
 import { legContentId, legExtent } from "../content/index.mjs";
 import { canonicalExtent } from "../textchain.mjs";
@@ -569,4 +569,35 @@ export function compositionDiff(before, after) {
     return `${field} changed`;
   }
   return "nothing changed";
+}
+
+/** R43: this module's grammar as record-core's grammar seam takes it (`registerGrammar`, its R67): it claims
+ *  record-grammar R28's C-2.8 slot (`checkInquiryExtension`) whole, after `inquiry-grammar`'s registration, so
+ *  record-core runs it at the sub-slot `inquiry-grammar` R6 offers (`rest()`): for an inquiry, after its entry, division
+ *  and subject-entity findings and before its grounds and leg findings, where the catalogue's `checkInquiryBasis` called
+ *  `basisVersionFindings`. For any other type it adds nothing, so a claimant left to run after an arm that returned
+ *  early (record-core R67) changes no finding. */
+export const BASIS_VERSION_GRAMMAR = Object.freeze({
+  ids: Object.freeze(["C-2.8"]),
+  arm(ctx, findings) {
+    if (normalizeType(ctx?.fm?.object_type) !== "inquiry") return;
+    basisVersionFindings(ctx.fm, findings);
+  },
+});
+
+const grammarRegistered = new WeakSet();
+
+/** R43: registers `BASIS_VERSION_GRAMMAR` with `record` as `basis-versions`, once per record, `inquiry-grammar`'s first
+ *  (its R6 registration is idempotent), so module order is registration order (K775 (2)) whoever reaches this first. A
+ *  record with no seam (a test's stand-in) is left alone; a refusal is a wiring defect and throws, as
+ *  `inquiry-grammar`'s does. Answers record-core's answer, or `null` when nothing was registered. */
+export function registerBasisVersionGrammar(record) {
+  if (!record || typeof record.registerGrammar !== "function" || grammarRegistered.has(record)) return null;
+  registerInquiryGrammar(record);
+  const answer = record.registerGrammar("basis-versions", BASIS_VERSION_GRAMMAR);
+  if (answer && answer.ok === false)
+    throw new Error(`basis-versions: record-core refused the version grammar: ${answer.reason}`
+                    + `${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
+  grammarRegistered.add(record);
+  return answer;
 }
