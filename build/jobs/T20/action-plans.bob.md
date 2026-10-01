@@ -9,3 +9,7 @@ Depth 2. Your entry: build/plan/current.md (T20) layer 9, action-plans (K903 (4)
 ## B2 · CHANGE
 
 conformance is merged into tranche/T20 (K913): R24 applied. CONFORMANCE #8 reports (its J1) that your `#support` (index.mjs :188–206) read a hidden finding (null id, no frozen) as 'short'; it now leaves the list, so support may read 'established' unless it reads the determination's `out_of_view`. Merge tranche/T20 into your branch, make `#support` read a determination with `out_of_view: true` as not established (your R35, DEC-36: nothing withheld may make support read stronger), test it with a reproducing case and a negative control, and complete.
+
+## B3 · CHANGE
+
+Precision on B2: "not established" means exactly R35's last sentence: the subject's support is `short` when conformance withheld a finding it rests on (its `out_of_view`), never computed over the visible findings alone.
