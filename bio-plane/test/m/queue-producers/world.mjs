@@ -95,6 +95,10 @@ export function world(fakes = {}) {
       db.prepare(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated) VALUES (?,?,?,?,?,?)`)
         .run(project, member, state, owner ? 1 : 0, iso(NOW), iso(NOW));
     },
+    signer(key, member, { origin = "self", status = "active", comment = null, added = iso(NOW) } = {}) {
+      db.prepare(`INSERT INTO signers (key_b64, member_id, comment, status, added, origin, registered_by) VALUES (?,?,?,?,?,?,?)`)
+        .run(key, member, comment, status, added, origin, origin === "self" ? member : null);
+    },
     cite(from, to, kind = "cites") { db.prepare(`INSERT INTO refs (bundle_id, target_id, kind) VALUES (?,?,?)`).run(from, to, kind); },
     leg(inquiry, target, ord = 0) { db.prepare(`INSERT INTO inquiry_basis (bundle_id, ord, role, target_id) VALUES (?,?,?,?)`).run(inquiry, ord, "supports", target); },
     /** R8's read, as queue makes it: homesOf and optionsOf closed over the viewer and identity. */
@@ -130,6 +134,10 @@ export function defaultFakes() {
                   archiveEligible: () => ({ ok: true, eligible: [], limit: 50, truncated: false, paused: { paused: false } }) },
     contradiction: { candidatesFor: () => ({ ok: true, candidates: [], truncated: false, cursor: null }),
                      conflictNotices: () => ({ ok: true, notices: [], truncated: false, cursor: null }) },
+    actionClocks: { overdueClocks: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }),
+                    remindersDue: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }) },
+    escalation: { escalationsDue: () => ({ ok: true, items: [], limit: 500, truncated: false }) },
+    actionPlans: { checkpointsDue: () => ({ ok: true, items: [], limit: 500, truncated: false }) },
   };
 }
 
