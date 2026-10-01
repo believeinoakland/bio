@@ -238,15 +238,16 @@ export const RUN_BOUNDS = {
    AND IT IS AN ENDING RATHER THAN A BOUND for the reason this object exists: no
    bound was reached. The gate fires BEFORE any bound is consulted — a run that
    was never allowed to start must not be able to report that it ran out of
-   something — which `harness.test.mjs` A6 and `skillsequencing.test.mjs` ARM D4
-   both measure.
+   something — which `agent-worker/test/harness.test.mjs` A6 measures (the gate
+   fires even with every budget exhausted).
 
-   THE HEADER AND THIS CATALOGUE ARE HELD IN AGREEMENT IN BOTH DIRECTIONS by
-   `agent-worker/test/harness.test.mjs` A6b, which reads THIS FILE and the
-   harness source as text: every ending the header names must exist here, and the
-   ending the gate actually closes on must be the one the header names. Either
-   half drifting fails that arm, which is the thing that stops this recurring —
-   the previous state was exactly one of those two halves being unasserted. */
+   THE GATE AND THIS CATALOGUE ARE HELD IN AGREEMENT IN BOTH DIRECTIONS by
+   `agent-worker/test/harness.test.mjs` A6b, over every input the gate refuses:
+   every ending the gate produces is defined here, and the one ending it produces
+   is `mode-not-deployed`. Either half drifting fails that arm, which is the thing
+   that stops this recurring — the state before FL-7 was exactly one of those two
+   halves being unasserted. (A6b read this file and the harness's header as text
+   until N421 converted it to the behaviour, T19.) */
 export const RUN_ENDINGS = {
   completed:  "the run finished its work",
   cancelled:  "a member stopped it",
@@ -306,16 +307,18 @@ export const RUN_ENDINGS = {
    either. It is left exactly as it was: that run RAN, which is what `finished`
    and `stopped` both presuppose and what `never-started` denies. It is a
    different question, decided on a weaker argument, and moving it here would be
-   a second value-move riding on this one's reasoning. `airun.test.mjs` ARM H3
-   pins the whole partition so a later tidy-up cannot sweep them together.
+   a second value-move riding on this one's reasoning. `test/m/run-rules/rules.test.mjs`
+   R1 pins the whole partition so a later tidy-up cannot sweep them together.
 
-   THE VALUES ARE `1` AND NOT SENTENCES, DELIBERATELY. `civicos-ui/check-refusal-codes.mjs`
-   arm E harvests member-facing vocabularies from this file BY SHAPE — an
-   exported plain object whose values are ALL strings — and its own header
-   records `RUN_STATUS` as *"excluded by that shape rather than by an
-   exception"*. Giving these terms texts would enrol a lifecycle word in the
-   DEC-49 guard as though a surface rendered a sentence in its place, which is
-   not what this vocabulary is. The shape is kept; the reasoning is here. */
+   THE VALUES ARE `1` AND NOT SENTENCES, DELIBERATELY. This file's member-facing
+   vocabularies are the exported plain objects whose values are ALL sentences
+   (DEC-49's shape: RUN_BOUNDS, RUN_ENDINGS, STANDARD_BASIS, RUN_CONTEXTS, each
+   held to it by `rules.test.mjs` R1), and `RUN_STATUS` is kept out of that shape
+   on purpose: giving these terms texts would present a lifecycle word as though a
+   surface rendered a sentence in its place, which is not what this vocabulary is.
+   The shape is kept; the reasoning is here. (`civicos-ui/check-refusal-codes.mjs`
+   arm E, deleted in T20, harvested such vocabularies by that shape and recorded
+   `RUN_STATUS` as excluded by it.) */
 export const RUN_STATUS = { running: 1, finished: 1, stopped: 1, "never-started": 1 };
 
 /* WHICH ENDINGS MEAN THE RUN NEVER STARTED. Declared as DATA rather than as a
@@ -389,9 +392,9 @@ export function runStatusFor(bound) {
  *     nothing" are different facts and only one of them is a defect.
  *
  * Each value is the sentence a surface renders INSTEAD of the machine word, so
- * this vocabulary is DEC-49's shape and is guarded as one by arm E of
- * `civicos-ui/check-refusal-codes.mjs` — the same guard RUN_BOUNDS and
- * RUN_ENDINGS above already answer to. */
+ * this vocabulary is DEC-49's shape and is held to it, as RUN_BOUNDS and
+ * RUN_ENDINGS above are, by `test/m/run-rules/rules.test.mjs` R1 (every value a
+ * sentence). */
 export const STANDARD_BASIS = {
   recorded:
     "this run was formed under a bar the launching project declared",
@@ -420,9 +423,8 @@ export const STANDARD_BASIS = {
  * for symmetry: `op=airuns` REFUSES a context kind outside it (C-36.2), and a
  * refusal that names the kinds it does hold must name them in words a member
  * reads rather than in the machine word they typed wrongly. The values are
- * therefore the sentence, and `civicos-ui/check-refusal-codes.mjs` arm E holds
- * every one of them to that (it harvests this module BY SHAPE, so this landed
- * inside that guard the moment it was written).
+ * therefore the sentence, and `test/m/run-rules/rules.test.mjs` R1 holds every
+ * one of them to that.
  *
  * WHAT THIS DELIBERATELY DOES NOT DO, stated here rather than discovered:
  * **`aiRunOpen` is NOT fenced by it.** The write still accepts any string, so a
@@ -483,9 +485,9 @@ export function checkBound(bound) {
 /* R13 (K660 (2)): `proposals` joins them, counted by `action-plans` through `ai-runs.consumeBound` as each proposal lands.
    REC-169 (INVESTIGATIVE-SESSION.md §14b.6 and §11 item 5 rule 2) — THE BOUNDS THE PLANE COUNTS ITSELF. `mints` is
    counted by `extractPropose` from what it actually minted, and `surfaces` by `promote` when an assistant's question
-   lands (D-85). Each has a writer in `store.mjs` that names it BY LITERAL, and `rec169-consume.test.mjs` ARM C holds
-   this list equal to that census off the source, so a third plane-counted bound fails a suite until it is added here.
-   A caller's figure for one of these can only disagree with the plane's: a positive one makes the bound say passages
+   lands (D-85). Each has a writer that names it BY LITERAL; `test/m/run-rules/rules.test.mjs` R3 and R13 hold this
+   list, and a third plane-counted bound is added here with its writer. (`rec169-consume.test.mjs` ARM C, deleted in
+   T20, held it equal to a census of `store.mjs`' writers read off the source.) A caller's figure for one of these can only disagree with the plane's: a positive one makes the bound say passages
    were minted or questions opened that were not, and a negative one is a refund of what the plane counted. So the
    caller spends neither, at the tick or as a seed at the open — a zero claims nothing and is let through. */
 export const PLANE_COUNTED_BOUNDS = Object.freeze(["mints", "surfaces", "proposals"]);
@@ -493,7 +495,7 @@ export const PLANE_COUNTED_BOUNDS = Object.freeze(["mints", "surfaces", "proposa
 /* REC-172 (§14b.6) — THE BOUND THE PLANE DECIDES, and it is NOT a count. `lease` is the heartbeat whose LAPSE is how a
    killed run is noticed (`finishedBound`'s `expired`, the `ai-run-reap` consumer): the plane reads it off the clock,
    and nothing anywhere spends it. It is kept apart from PLANE_COUNTED_BOUNDS for two reasons, both measured: that list
-   is held EQUAL to the store's literal-named bound writers (rec169's ARM C), and `lease` has none; and a zero is not
+   is the plane's literal-named bound writers (measured by rec169's ARM C), and `lease` has none; and a zero is not
    let through here as it is there, because a zero `mints` is a count of nothing while a zero `lease` is still a figure
    for a thing that has no figures — and the tick's upsert would write a `lease` row into the run's budget, which the
    record would then show beside the allowances a member declared. So ANY figure for it is refused, at the tick and at
@@ -763,10 +765,13 @@ export function projectGate({ actor = null, contextType = null, contextId = null
 
   /* THE REFUSAL ITSELF IS THE RETURN — not an object carrying one — and that is
      what puts the code where DEC-49 requires it. `refusal()` is the family's
-     one builder and the code is a STRING LITERAL at this site, so the guard in
-     `civicos-ui/check-refusal-codes.mjs` can see it; a code held in a variable
-     or arriving through a spread is invisible to it, and one shipped
-     `translation: undefined` to a member exactly that way. THIS IS THE ONE
+     one builder and the code is a STRING LITERAL at this site, read by key from
+     the table, so the refusal carries its row: `test/m/run-rules/table.test.mjs`
+     R11 holds every refusal this module mints to its row, and control-plane's
+     `test/m/control-plane/families.test.mjs` R22 holds the table reached whole.
+     (The guard that read the literal here, `civicos-ui/check-refusal-codes.mjs`,
+     was deleted in T20; a code arriving through a spread was invisible to it, and
+     one shipped `translation: undefined` to a member exactly that way.) THIS IS THE ONE
      PLACE THE CODE IS WRITTEN: the three store call sites RELAY what comes
      back, precisely as `aiRunOpen` already relays C-22.7 from `skillpack.mjs`.
      The answer carries `ok: false` and no `permitted`, so a caller's

@@ -227,7 +227,9 @@ export const AI_RUN_ACT_SHAPE_CHECKS = {
      and does not belong in C-22. The
      ARM WAS NOT WIDENED: an invariant relaxed to fit a new row is not an
      invariant, and this one is load-bearing — it is what lets `op=audit` reach
-     every C-22 condition without opening the store.
+     every C-22 condition without opening the store. (Since T20 deleted that
+     suite, `test/m/run-rules/table.test.mjs` R11 holds it: each C-22 row this
+     table mints names this module's pure site.)
 
      WHAT IT IS. §14a promises the running-session surface SAYS SO when the
      capability is unavailable, and IS-BUILD-PLAN's FL-6 row names the failure it
@@ -245,7 +247,9 @@ export const AI_RUN_ACT_SHAPE_CHECKS = {
      failing", arriving at the run door.
 
      ITS `where` IS A WHOLE FUNCTION AND NOT A REGION, which is the only one in
-     REC-64's work — and the reason WAS a defect in the guard rather than a
+     REC-64's work — and the reason WAS a defect in the guard (arm C of
+     `civicos-ui/check-refusal-codes.mjs`, deleted in T20; this paragraph and the
+     two below are its history) rather than a
      judgement about the span. `aiRunOpen` refuses with `started: false`, and arm
      C's matcher was `ok: false`, so a REGION here would have judged zero refusals
      and FAILED as a drifted marker. The whole-function form is honest at this site
@@ -253,7 +257,7 @@ export const AI_RUN_ACT_SHAPE_CHECKS = {
      blindness was measured and delegated at the guard's own `codesChecked` floor.
 
      **REC-76 CLOSED THAT DELEGATION (D-236), AND THE WHOLE-FUNCTION `where` IS
-     WHAT MADE IT PAY.** Arm C now grades an outcome by whether it DECLARES ITSELF
+     WHAT MADE IT PAY.** Arm C then graded an outcome by whether it DECLARES ITSELF
      A SUCCESS rather than by one literal, so this site went from `92L (0 judged,
      0 code(s) checked)` to four refusals judged — and TWO of them were CODELESS,
      at a governed site, for as long as the row has existed. They are the two rows
@@ -267,8 +271,8 @@ export const AI_RUN_ACT_SHAPE_CHECKS = {
      the guard failed them by name, because the region was judged once by its own
      rows and again by this whole-function site, where their codes are not rows.
      So each of these three rows now names the region around its one refusal
-     (`is-airun-open-context`, `-capability`, `-already`), and arm C no longer
-     judges a claimed region a second time from an enclosing whole-function
+     (`is-airun-open-context`, `-capability`, `-already`), and arm C stopped
+     judging a claimed region a second time from an enclosing whole-function
      `where` (the guard's `nestedRegionsIn`). What the narrowing costs, stated:
      the five RELAYED refusals in `aiRunOpen` (existence, kind, gate, skill,
      seed — each minted and governed at its own site) are not read at this
@@ -370,9 +374,10 @@ export const AI_RUN_ACT_SHAPE_CHECKS = {
  * recorded when seven items collided on an id in one day: the convention was the
  * defect, not the vigilance. **AND THE COLLISION WAS INVISIBLE TO THE BATTERY.**
  * 139/139 suites green at 8,887 assertions with two families both claiming
- * C-34.1-3; only `node civicos-ui/test/run.mjs` caught it, with *"Two conditions
- * behind one C-number are one condition as far as op=audit can see."* If you are
- * about to skip the UI harness because you opened no UI file, this is the receipt.
+ * C-34.1-3; only `node civicos-ui/test/run.mjs` caught it (through
+ * `check-refusal-codes.mjs`, deleted in T20), with *"Two conditions behind one
+ * C-number are one condition as far as op=audit can see."* Within this table, one
+ * C-number per condition is held today by `test/m/run-rules/table.test.mjs` R11.
  *
  * `op=airuns&contextType=&contextId=` answers the one question about a run
  * that no op could answer at all: WHICH RUNS ARE IN THIS CONTEXT. Every other
