@@ -220,7 +220,7 @@ test("R7 C-21.2 is checked PER FINDING: two findings frozen differently each mee
   /* a leg naming the CASE rather than a finding resolves to nothing: legs rest on findings, never on cases */
   const onCase = one({ target: "CASE-2026-0001", ...inh("B", "capture") });
   assert.equal(onCase.ok, false);
-  assert.match(detailsOf(onCase), /basis\[0\]\.target 'CASE-2026-0001' is not a canonical bundle id/);
+  assert.match(detailsOf(onCase), /basis\[0\]\.target 'CASE-2026-0001' is not a canonical record id/);
   /* the pure arm, per finding */
   assert.deepEqual(pureErrs([{ target: FIND_A, ...inh("C", "connection") }]), []);
   assert.deepEqual(pureErrs([{ target: FIND_B, ...inh("C", "connection") }]).map((x) => x.check), ["C-21.2"]);
