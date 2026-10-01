@@ -2,6 +2,41 @@
 
 **Status** · session_01EmH6oQtr3bJcfoBJpJtJPw · depth 2 · WORKING · handled B2
 
+## Completion
+
+**Entries applied** (`build/plan/current.md` layer 9, action-plans: N-A7, R1–R29 as folded, and the planning skill's R30–R34, K660; my J1 readings adopted by K710):
+- **The module whole, new** (`bio-plane/src/action-plans/`, no `from`, nothing moved): `index.mjs` (the acts, reads, step and ops), `values.mjs` (the vocabularies, the shapes of a subject, an addressee and a scenario's phases, and the derivation of phase starts; pure), `doc.mjs` (the `action_plan` document and its append-only Plan Log, escalation's pattern), `schema.mjs` (nine tables, each declared to purge: `plans`, `plan_subjects`, `plan_options`, `plan_option_revisions`, `plan_option_proposals`, `plan_scenarios`, `plan_checkpoints`, `plan_history`, `plan_runs`), `checks.mjs` (family **C-124**, rows C-124.1–C-124.57).
+- **Services** (16): `planOpen`, `planSubjectAdd`, `planSubjectRemove`, `planRead`, `plansFor`, `optionAdd`, `optionRevise`, `optionPropose` (async: it awaits `ai-runs.read` for the run's skill version, K710), `optionAdopt`, `optionDispose`, `scenarioSet`, `checkpointRecord`, `optionStart`, `planClose`, `checkpointsDue` (R17, for queue-producers), `planProposals`; with `noSuchPlan` (R22), `planRunCheck` (R30, registered with `ai-runs.registerOpenCheck` for mode `plan`) and `runOpened` (R32, registered with `ai-runs.onRunOpened`). **Ops** (15, `actionPlansOps(m, url, body)`): `planopen`, `plansubjectadd`, `plansubjectremove`, `plan`, `plans`, `optionadd`, `optionrevise`, `optionpropose`, `optionadopt`, `optiondispose`, `scenarioset`, `checkpointrecord`, `optionstart`, `planclose`, `planproposals`; `author`, `viewer` and `proposer` read from the query after the body. Per BOB's K671 note I did not edit `store.mjs`: `legacy-store`'s layer-10 job adds the one spread line.
+- **R21** is a check registered with promotion over project documents: `work_kinds` from the five kinds (`WORK_KIND_UNKNOWN`), set or changed only by an owner (`membership.projectAuthority(…, "owner")`), a machine refused `MACHINE_CANNOT_SET_WORK_KIND`; a creation is its creator's (the creator becomes its owner in the same act), an edit leaving `work_kinds` unchanged is not asked.
+- **R18/R29 in one act**: the action is composed and written through `actions.actionCreate`, the reminders held with the choice are set through `action-clocks.reminderSet` (the choosing member their author), and the start is appended to the plan, inside one `record.transact`: a refusal of any leaves none.
+
+**Rows, all `awaiting stamp`** (rule (4); promotion stamps them in T19): C-124.1–C-124.57 (57 rows, new). Codes I minted beyond those the requirements name (each a member's-act fence or a shape R-text implies): `MACHINE_CANNOT_DISPOSE` (R13), `MACHINE_CANNOT_SCHEDULE` (R14), `MACHINE_CANNOT_JUDGE` (R16), `MACHINE_CANNOT_CLOSE_PLAN` (R20) (R33 says each act refuses a machine "by its existing code"; R13, R14, R16 and R20 named none, so these are those codes); `DISPOSITION_UNKNOWN` (R13), `SCENARIO_NAME_REFUSED` (R14), `CHECKPOINT_REFUSED` (R16: no such scenario, phase or checkpoint, a judgement other than met/not_met, a long note), `NO_SUCH_PLAN_PROPOSAL` and `PROPOSAL_ADOPTED` (R11), `PROPOSAL_NO_PROPOSER` and `PROPOSAL_WHY_REFUSED` (R11), `MACHINE_CANNOT_WRITE_PLAN`, `PLAN_BY_ACT_ONLY`, `PLAN_HISTORY_REWRITTEN`, `UNSPLICEABLE_PLAN` (the record object's fence, R24, R27), `PLAN_PROVIDER_UNAVAILABLE` (K248). BOB confirms the names.
+
+**Readings taken (decided, for rulings):** the J1 four (K710). Also: a plan's acts other than `optionPropose` and `planProposals` ask `membership.projectAuthority(…, "joined")` after `PLAN_CLOSED` (R9 names it; R13, R14, R16, R18, R20 do not but each is work inside the project); `optionPropose` by a member asks no position (R11: "any credential may propose"), only sight of the plan; a `plan_start` phase starts when its scenario version was set; `{after: P}` starts at P's checkpoint judgement (at P's start when P has none); `{branch_of: P, when}` and P's `branches` start their phase at that judgement; a `when_subject … reaches: stage` track is met when that subject's escalation's history first enters the stage (`escalationRead`), `resolved` when an action started from an option serving that subject is resolved (`actionRead`'s state history); R19's option checks are not asked of a declined option; R19b flags a phase holding an option with an addressee unless its checkpoint's `not_met` judgement leads somewhere; a subject removed with R4 can be re-added; the last subject cannot be removed (`PLAN_NO_SUBJECT`); `reminders` with several options name each reminder's `option`. `CONTACT_NOT_A_MEMBER` (actions R45) and `REMINDER_REFUSED` (action-clocks R4) are each answered by its own module's act, asked on a probe action inside a transaction that always rolls back, so each code keeps its one minting site and R18's and R29's order holds (a first version relayed their rows and the DEC-49 guard counted a second site for each; replaced).
+
+**Not yet met marks this work meets (rule (5)):** R1–R29 and R30–R34 ("Not yet met: R1–R29 (new, K608, K614)", R29's "*(not yet met: new, K614)*", "Not yet met: R30–R34 (new, K660)") in `build/requirements/action-plans.md`'s Status line and R29. BOB strikes them.
+
+**Deferred:** none of this module's entries.
+
+**Size:** the module is 2,529 lines (index 1,690, values 257, checks 312, schema 152, doc 123), over the requirements' 900–1,400 estimate, about a third of it comments in the escalation module's density; well under the 4,000 mark. Tests 1,364 lines in 8 files.
+
+**Found in other modules** (also in my REPORT):
+1. `membership` (R43) / `promotion` (next.md N426): `viewerPredicate` admits every member to any non-project bundle, so a plan document (like an escalation's) is readable by record-wide bundle reads to a member outside its project. Raised for T19 by K710.
+2. `actions` (R45) and `action-clocks` (R4): neither exports a governed helper for `CONTACT_NOT_A_MEMBER` or `REMINDER_REFUSED`, so a later module that must answer the condition in its own order can only reach the one minting site through the act itself (my probe). A `contactNotAMember(extra)` / `reminderRefused(arm, detail, extra)` export, as `noSuchAction` is, would let action-plans route through it and drop the probes.
+3. Wiring for later jobs: `legacy-store` (dispatch spread of `actionPlansOps`; `optionpropose` answers a promise); `op-declarations` (15 op specs, not 14: `planproposals` is new with K660); `control-plane` (stamps `author`, `viewer`, `proposer` on these ops); the host must build `actionPlansOf` before any plan-mode `airunopen`, or ai-runs refuses it `AI_RUN_MODE_UNCHECKED` (fail closed); `queue-producers` R16 reads `checkpointsDue({nowMs, limit})`.
+4. No generated artifact is stale: no bundle takes `src/action-plans/` as input.
+
+**Tests and checks run:**
+- `node --test bio-plane/test/m/action-plans/`: tests 38, pass 38, fail 0 (open, options, read, scenarios, start, runs, invariants; every R1–R34 named, with negative controls). No layer tests named in `build/manifest.md`. I changed no service another module uses.
+- DEC-49 guard (`node civicos-ui/check-refusal-codes.mjs --strict`): 141 failures on this branch and 141 on `origin/tranche/T18` without the module, identical once figures are masked; no FAIL names action-plans or C-124. Its release-pinned floors (K619) move by this module's rows: families +1, rows +57, census +57, reach +57, governedSites +57, regions +57, regionLines +285, codesChecked +58, refusalsJudged +57, outcomeReturns +1.
+- `node checks/format.mjs /home/user/bio`: 82 modules, 77 requirements files; 0 failures.
+- `node checks/architecture.mjs /home/user/bio action-plans`: 13 product files, 42 relative imports; 0 failures.
+- `node checks/coverage.mjs /home/user/bio action-plans`: 34 of 34 live requirement ids named by a test; 0 failures.
+- `node checks/ownership.mjs /home/user/bio action-plans tranche/T18`: 14 files changed by action-plans between tranche/T18 and HEAD; 0 failures.
+
+Size (session_01EmH6oQtr3bJcfoBJpJtJPw): test runs 14, module lines 2529
+
+
 ## J1 · QUESTION
 
 Four readings I am building on now; answer only where you rule otherwise.
