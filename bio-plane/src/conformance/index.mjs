@@ -753,9 +753,13 @@ export class Conformance {
   #flag(r, viewer) {
     const causes = [], keys = new Set();
     const add = (c) => { const k = `${c.kind}|${c.subject}|${c.source}`; if (!keys.has(k)) { keys.add(k); causes.push(c); } };
+    /* reevaluation names a finding's supersession `supersession` (its R2); the record's answer below names it
+       `superseded`, so the one cause is named once, in this module's word. The notice is stored as it was told. */
     for (const x of this.#rows(`SELECT * FROM determination_flags WHERE determination_id=? ORDER BY at, kind, subject
                                 LIMIT 200`, r.determination_id))
-      add({ kind: x.kind, subject: x.subject, source: x.source, since: x.since || null, detail: x.detail ?? null });
+      add({ kind: x.kind, subject: x.subject,
+            source: x.kind === "finding" && x.source === "supersession" ? "superseded" : x.source,
+            since: x.since || null, detail: x.detail ?? null });
     const pins = this.#rows(`SELECT * FROM determination_findings WHERE determination_id=? ORDER BY ord LIMIT ?`,
                             r.determination_id, LIMITS.findings);
     for (const p of pins) {
