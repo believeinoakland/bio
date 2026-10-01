@@ -14,10 +14,14 @@
 
 **Deferred:** nothing. **New tests:** none needed; every re-worded claim points at an existing test.
 
-**Other modules (REPORT J2):** the change is under `bio-plane/src/`, so the plane's generated bundle `bio-plane/dist/bio-plane.bundled.mjs` (`.bundle.json`) is stale (comments only). I regenerated nothing.
+**Other modules (REPORT J1):** the change is under `bio-plane/src/`, so the plane's generated bundle `bio-plane/dist/bio-plane.bundled.mjs` (`.bundle.json`) is stale (comments only). I regenerated nothing.
 
 **Tests and checks run:**
 - `node --test test/m/content/` (in `bio-plane/`): tests 113, pass 113, fail 0. No layer tests are named in `build/manifest.md`.
 - `format`: 86 modules, 84 requirements files; 0 failures. `architecture content`: 22 product files, 67 relative imports; 0 failures. `coverage content`: 51 of 51 live requirement ids named by a test; 0 failures. `ownership content tranche/T21`: 1 file changed; 0 failures.
 
 Size (session_01DWist3yzoyMvJgNepzPwD4): test runs 1, module lines 3468
+
+## J1 · REPORT
+
+Generated artifact staled: bio-plane/dist/bio-plane.bundled.mjs (and .bundle.json), from my comment-only change to bio-plane/src/content/extent-core.mjs (N469; code unchanged). I regenerated nothing (build/manifest.md, Generated artifacts: regenerate in bio-plane/ with npm run build at the layer close). No flaw found in another module.
