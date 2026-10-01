@@ -1611,3 +1611,20 @@ response: **As recommended (Bob, 2026-10-01): A.**
 decided: 2026-10-01 · Bob
 reasoning recorded in: this entry; the UX substrate's brief for question 16; Interaction Constructs §L.
 owed: the standard as a requirement every member screen and the published case meets, with its acceptance check, and the interface's words held in one place (BOB places them, for Bob's approval); the UX page's open question 16 marked ruled.
+
+### DEC-100 · answered in part
+raised: 2026-10-01 · the UX design session with Bob on his primary account (session_01EhPoUTrVCgAqw2ktRyKjCU; the development process runs on his secondary account) (the UX canon's open question 36, after publication: a case's docket and withdrawing a case; Bob's discussion of how the CPUC curates a docket)
+for: bob
+question: In a published case's docket, who has standing to have a response listed; does the docket support confidential (sealed) entries or redacted public versions; and must the group disclose its off-the-record contacts with the subject after publication, as CPUC ex parte notices do?
+why it is Bob's: doctrine (the subject's right of reply, DEC-13; publication's openness) and UX.
+provisional: the subject's right of reply is a declaration, not a gate (Publication §3 rule 6, DEC-13); the CPUC model offered three imports: party-like standing, filing under seal with a redacted public version, and ex parte disclosure.
+alternative: as discussed with Bob, 2026-10-01 (the CPUC comparison in this session).
+recommendation: the named subject gets party-like standing; sealed and redacted entries and an ex parte rule were offered for decision.
+reversal cost: low; nothing is built.
+response: **Bob, 2026-10-01, three points; the rest of question 36 stays open.**
+  1. STANDING: the subject named in a case has party-like standing (its responses that reach the group are listed on the public docket). Anyone else may still submit a response; whether it is added to the publicly visible docket is at the group's discretion. In Bob's words: "an unapproved subject can still submit, though it's at the group's discretion as to whether it gets added to the publically visible docket."
+  2. NO CONFIDENTIAL OR REDACTED ENTRIES: "Given CivicOS's foundational principals, I don't believe it's appropriate to support confidential filings or redacted versions." The docket has no sealed entries and no redacted public versions: an entry is public whole, or it is not on the public docket (it may still be held in the group's record).
+  3. NO DISCLOSURE RULE FOR OFF-THE-RECORD CONTACTS: "I don't think that our principals necessitate that off-the-record contacts be disclosed." The group's contacts with the subject after publication are not required to be noted on the docket.
+decided: 2026-10-01 · Bob (in part)
+reasoning recorded in: this entry; the UX substrate's brief for question 36.
+owed: nothing to build yet; the docket's design (question 36's other points: the docket itself, the required core, how entries are signed and travel, outside responses, withdrawal) awaits Bob's ruling. The UX page's question 36 marked settled in part.
