@@ -25,3 +25,7 @@ None.
 - `format`: 86 modules, 84 requirements files, 0 failures. `architecture ratification`: 22 product files, 97 relative imports, 0 failures. `coverage ratification`: 33 of 33 live ids named by a test, 0 failures. `ownership ratification tranche/T21` (after commit): 8 files changed, 0 failures.
 
 Size (session_01WPpTMc1dBqF38iqe9fWMdR): test runs 1, module lines 3770
+
+## J1 · REPORT
+
+Found in other modules (record, 'Found in other modules'): (1) stale generated artifact: bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (not_product) bundle bio-plane/src/ratification/, whose comment text changed; regenerate at the layer close. (2) case-authoring improvement: its MEMBER_ROLES (case-authoring/index.mjs:92) and ratification's CASE_MEMBER_ROLES are one vocabulary written twice; since the old suite went nothing asserts they agree. case-authoring uses ratification, so its test can assert they are deep-equal (or import CASE_MEMBER_ROLES, Decided 4's SUBJECT_POSITIONS pattern).
