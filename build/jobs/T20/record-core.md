@@ -1,6 +1,6 @@
 # record-core (T20)
 
-**Status** · session_01NEdggWzA6wen9mWzAPWE6z · depth 2 · COMPLETE · handled B1
+**Status** · session_01NEdggWzA6wen9mWzAPWE6z · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
