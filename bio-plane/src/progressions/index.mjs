@@ -8,12 +8,14 @@
  * Extracted from the legacy modules (T5-6; K78, K102): `store.mjs` (the definition and its versions, FW-8, D-128; the
  * instances, FW-9; the exception documents, FW-10; the overdue clock, REC-8; the proposals feed, REC-6, REC-7, REC-184;
  * the per-capture read, REC-9; the progression arm of `proposeDispose`, REC-211, D-552), `schema.mjs` (the seven tables,
- * now `./schema.mjs`) and `bio-checks.mjs` (C-33.26, C-33.42, C-33.43, now `./checks.mjs`). The legacy code's comments
+ * now `./schema.mjs`) and the check catalogue, `legacy-checks` (C-33.26, C-33.42, C-33.43, now `./checks.mjs`; the
+ * shared act rows `NO_BASIS` and `NO_CITATION` are read from `record-grammar`, T19). The legacy code's comments
  * moved with it, shortened where they only restated the code. `proposeDispose`'s project-scoped arm and its class
  * bridge stay in `legacy-store` until `queue` takes them (map §5.1).
  *
  * REACHED as `progressionsOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
- * call with `deps`, returned to every later caller. At creation it declares its tables to record-core's purge (R29).
+ * call with `deps`, returned to every later caller. At creation it declares its tables to record-core's purge (R29)
+ * and registers its figures with record-core's `registerCounts` (R36).
  * `deps`:
  *   record       `recordOf(host)` unless a test passes its own: `transact`, `declarePurge`.
  *   extraction   `extractionOf(host)`: a reading's date (`readingOf(sha).reading.at`, R16); a request naming no
@@ -132,6 +134,35 @@ export class Progressions {
 
   /** The module's tables, with the migration an earlier store's shape needs (REC-184's column). */
   migrate() { migrateProgressions(this.sql); }
+
+  /** R36: the figures `registerCounts` (record-core R63) asks for, in this order, each with its table and the bundle
+   *  column it is keyed on (null: none). */
+  static FIGURES = Object.freeze([
+    ["progressionDefs", "progression_defs", null], ["progressionStages", "progression_stages", null],
+    ["progressionDefVersions", "progression_def_versions", null],
+    ["progressionStageVersions", "progression_stage_versions", null],
+    ["progressionInstances", "progression_instances", "bundle_id"],
+    ["progressionExceptions", "progression_exceptions", "bundle_id"],
+    ["proposalDispositions", "proposal_dispositions", null],
+  ].map((f) => Object.freeze(f)));
+  static COUNT_KEYS = Object.freeze(Progressions.FIGURES.map(([k]) => k));
+
+  /** R36: this module's figures for `op=stats` and purge's proof, as the legacy store's `#counts` took them: with `hid`
+   *  (`{sql, args}`, the bundles the caller may not see) a figure keyed on a bundle column leaves out the rows whose
+   *  column names a bundle in it, a row naming none still counted; a figure with no such column, or no `hid`, counts
+   *  every row. Synchronous; writes nothing. */
+  counts(hid = null) {
+    const hidden = hid !== null && typeof hid === "object" && typeof hid.sql === "string";
+    const args = hidden && Array.isArray(hid.args) ? hid.args : [];
+    const out = {};
+    for (const [key, table, column] of Progressions.FIGURES) {
+      /* `COALESCE(k, '')`: a NULL key names no bundle, and `NULL NOT IN (…)` is NULL — the row would be dropped. */
+      const keyed = hidden && column !== null;
+      out[key] = this.#one(`SELECT count(*) AS c FROM ${table}${keyed ? ` WHERE COALESCE(${column}, '') NOT IN ${hid.sql}` : ""}`,
+                           ...(keyed ? args : [])).c;
+    }
+    return out;
+  }
 
   /* R16: now is the caller's instant (milliseconds; an absent value is null or "", never the epoch), else the instance's
      configured clock, else the wall clock. */
@@ -1132,7 +1163,20 @@ export function progressionsOf(host, deps) {
                            connections: d.connections || { weakerGrade } });
     instances.set(host, p);
     record.declarePurge("progressions", PROGRESSIONS_TABLES);
+    registerFigures(p);
   }
   return p;
+}
+
+/** R36 (`build/extraction/legacy-store.md` §4.2 (2)): this module's figures, registered with record-core's
+ *  `registerCounts` (its R63) once per storage, when the instance is first made. A record with no seam (a test's
+ *  stand-in) is left alone; a refusal (another module reporting one of these figures, or progressions registering
+ *  twice) is a defect of the wiring and throws. */
+function registerFigures(p) {
+  const record = p.record;
+  if (!record || typeof record.registerCounts !== "function") return;
+  const answer = record.registerCounts("progressions", [...Progressions.COUNT_KEYS], (hid) => p.counts(hid));
+  if (answer && answer.ok === false)
+    throw new Error(`progressions: record-core refused its figures: ${answer.reason}${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
 }
 

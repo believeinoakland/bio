@@ -4,7 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, seeded, MEMBER } from "./fixture.mjs";
 import { PROGRESSION_CHECKS, GENERIC_CODES, STAGE_REQUIREDNESS } from "../../../src/progressions/index.mjs";
-import { ACT_SHAPE_CHECKS } from "../../../checks/bio-checks.mjs";
+import { SHARED_ACT_CHECKS } from "../../../src/record-grammar/index.mjs";
 import { noSuchEntity, noEntity, ENTITY_CHECKS } from "../../../src/entities/index.mjs";
 import { noSha, EXTRACTION_CHECKS } from "../../../src/extraction/index.mjs";
 import { listenerRefusal } from "../../../src/membership/index.mjs";
@@ -81,10 +81,10 @@ test("R4 R23: a revision needs basis then citation, judged after every stage; it
   const nb = w.define("proc", { contract: { required: "always" } });
   assert.equal(nb.reason, "NO_BASIS");
   assert.equal(nb.code, "NO_BASIS");
-  assert.equal(nb.check, ACT_SHAPE_CHECKS.NO_BASIS.check);
+  assert.deepEqual([nb.check, nb.translation], [SHARED_ACT_CHECKS.NO_BASIS.check, SHARED_ACT_CHECKS.NO_BASIS.translation]);
   const nc = w.define("proc", { contract: { required: "always" } }, { basis: "the rule changed" });
   assert.equal(nc.reason, "NO_CITATION");
-  assert.equal(nc.check, ACT_SHAPE_CHECKS.NO_CITATION.check);
+  assert.deepEqual([nc.check, nc.translation], [SHARED_ACT_CHECKS.NO_CITATION.check, SHARED_ACT_CHECKS.NO_CITATION.translation]);
   // a bad stage is heard before a missing basis
   assert.equal(w.define("proc", { contract: { required: "nope" } }).reason, "BAD_REQUIRED");
   w.clock.now = "2026-09-02T00:00:00.000Z";
@@ -172,12 +172,13 @@ test("R27 R28: every refusal this module answers carries its code with its row a
   // the generic code (N118): no row of this module's
   assert.deepEqual([...GENERIC_CODES], ["NO_KEY"]);
   for (const c of GENERIC_CODES) assert.equal(PROGRESSION_CHECKS[c], undefined, c);
-  // R28: the three moved rows keep their ids; the shared act rows stay in the catalogue
+  // R28: the three moved rows keep their ids; the shared act rows are record-grammar's (its R29), never this module's
   assert.equal(PROGRESSION_CHECKS.UNKNOWN_AFTER.check, "C-33.26");
   assert.equal(PROGRESSION_CHECKS.NO_DEFINITION_VERSION.check, "C-33.42");
   assert.equal(PROGRESSION_CHECKS.DEFINITION_MOVED.check, "C-33.43");
-  for (const moved of ["UNKNOWN_AFTER", "NO_DEFINITION_VERSION", "DEFINITION_MOVED"]) assert.equal(ACT_SHAPE_CHECKS[moved], undefined, moved);
-  assert.ok(ACT_SHAPE_CHECKS.NO_BASIS && ACT_SHAPE_CHECKS.NO_CITATION);
+  assert.deepEqual(Object.keys(SHARED_ACT_CHECKS).sort(), ["NO_BASIS", "NO_CITATION"]);
+  assert.deepEqual([SHARED_ACT_CHECKS.NO_BASIS.check, SHARED_ACT_CHECKS.NO_CITATION.check], ["C-33.40", "C-33.41"]);
+  for (const shared of ["NO_BASIS", "NO_CITATION"]) assert.equal(PROGRESSION_CHECKS[shared], undefined, shared);
 
   // every refusal each act answers, driven at the interface, and what it carries
   const w = seeded();
@@ -212,8 +213,8 @@ test("R27 R28: every refusal this module answers carries its code with its row a
     assert.equal(r.ok, false, JSON.stringify(r));
     assert.equal(r.code, r.reason);
     seen.add(r.code);
-    if (PROGRESSION_CHECKS[r.code] || ACT_SHAPE_CHECKS[r.code] && (r.code === "NO_BASIS" || r.code === "NO_CITATION")) {
-      const row = PROGRESSION_CHECKS[r.code] || ACT_SHAPE_CHECKS[r.code];
+    if (PROGRESSION_CHECKS[r.code] || SHARED_ACT_CHECKS[r.code]) {
+      const row = PROGRESSION_CHECKS[r.code] || SHARED_ACT_CHECKS[r.code];
       assert.deepEqual([r.check, r.translation], [row.check, row.translation], r.code);
     } else if (r.code === "NO_SUCH_ENTITY") assert.deepEqual(r, noSuchEntity("ENT-9"));          // entities R36 (N208)
     else if (r.code === "NO_ENTITY") assert.deepEqual(r, noEntity(r.detail));                  // entities R37 (N285)
