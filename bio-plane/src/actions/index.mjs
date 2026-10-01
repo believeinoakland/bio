@@ -20,6 +20,7 @@
  *   content        `captureFor` (R11).
  *   conformance    `determinationRead` (R8, R30), when provided (see R8 below); its module-level
  *                  `determinationSuperseded` (its R20), through which R8 answers a superseded determination (N312).
+ *   entities       `readEntity` (its R5): whether an addressee's `entity_id` names a person (R9).
  *   now            the instance clock, milliseconds (default: `env.BIO_NOW_MS`, else the wall clock).
  *   env            the instance bindings.
  *
@@ -33,6 +34,7 @@ import { promotionOf } from "../promotion/index.mjs";
 import { contentOf } from "../content/index.mjs";
 import { retrievalOf, PROJECTION_TABLE } from "../retrieval/index.mjs";
 import { conformanceOf, determinationSuperseded } from "../conformance/index.mjs";
+import { entitiesOf } from "../entities/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { parseFrontmatter, normalizeType, vocabFor, STATES, OBJECT_TYPES, isMachineIdentity, createSha256,
          BUNDLE_ID_RE } from "../../checks/bio-checks.mjs";
@@ -161,18 +163,27 @@ export class Actions {
   #deps;
 
   constructor({ storage, record, membership, promotion, host = null, retrieval = null, content = null,
-                conformance = null, now = null, env = null } = {}) {
+                conformance = null, entities = null, now = null, env = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, retrieval, content, conformance: conformance ?? undefined };
+    this.#deps = { host, retrieval, content, conformance: conformance ?? undefined, entities };
     this.env = env && typeof env === "object" ? env : {};
     this.now = typeof now === "function" ? now : null;
   }
 
   get retrieval() { return this.#deps.retrieval ||= retrievalOf(this.#deps.host); }
   get content() { return this.#deps.content ||= contentOf(this.#deps.host); }
+  /* R9: the subject registry's `readEntity` (entities R5), for an addressee's `entity_id`. */
+  get entities() { return this.#deps.entities ||= entitiesOf(this.#deps.host); }
+
+  /* R9: whether the registry holds `entityId` as a person. Unregistered, unreadable or another kind: false. */
+  #namesPerson(entityId) {
+    let r = null;
+    try { r = this.entities.readEntity({ entityId }); } catch { r = null; }
+    return !!(r && r.ok && r.found && r.entity && r.entity.kind === "person");
+  }
   /* R8, R30: conformance's `determinationRead` (its R9; K252). Reached on the same host unless a test passes its own; a
      host on which it cannot be created answers null, and R8 then refuses, never passes. */
   get conformance() {
@@ -457,6 +468,12 @@ export class Actions {
       const office = cp && typeof cp === "object" && !Array.isArray(cp) && cp.state === "named"
         && (cp.kind === undefined || cp.kind === null || cp.kind === "office")
         && !(typeof cp.role === "string" && cp.role.trim() && typeof cp.body === "string" && cp.body.trim());
+      /* R9: never a private individual: an `entity_id` the subject registry holds as a person (entities R5). */
+      const eid = cp && typeof cp === "object" && !Array.isArray(cp) && typeof cp.entity_id === "string" ? cp.entity_id.trim() : "";
+      if (!cf.length && eid && this.#namesPerson(eid))
+        cf.push({ check: "C-2.10", severity: "error", message: `counterparty.entity_id '${eid.slice(0, 40)}' names a person `
+          + "in the subject registry: an action is addressed to an office, an organisation or an audience, never a private "
+          + "individual (R9, arm: person)" });
       if (cf.length || office)
         return refuse("COUNTERPARTY_REFUSED", cf.length ? cf[0].message
           : "a named counterparty is an office, stated by its official role and the body it belongs to (R9). Nothing was written.",
