@@ -39,3 +39,7 @@ In `contradiction-cause.test.mjs`, the cause test is re-keyed to `evidence: [ev.
 **Deferred:** none. **No row changes** (read shape only); nothing awaits stamp.
 
 Size (session_01EBsqtXm8RVa7m7wuunkc8a): test runs 4, module lines 1538
+
+## J1 · REPORT
+
+R24 is merged on job/T20/conformance (d712a50ca2). Two readers' answers change for a viewer with something withheld, and BOB accepts each one's red by name until its own L9 job: (1) filings: #det/#block (:295-310, :404-405) detect a withheld finding or standard by a null id or a failed read; a hidden item now leaves the list, so filings must read the determination's out_of_view (and its act evidence now omits hidden ids); its own placeholders at :758-760 and :941-942 are no longer reached from my answer. (2) action-plans: #support (:188-206) treated a hidden finding (null, no frozen) as 'short'; it now leaves the list, so support may read 'established' unless it reads out_of_view. No change: escalation :104/:244/:554, consequences :267-278, actions :733, action-clocks :177. No test in test/m went red. Stale generated artifact: the plane bundle bio-plane/dist/bio-plane.bundled.mjs (.bundle.json).
