@@ -110,6 +110,7 @@ test("R27 R20: a dependent the viewer may not see is withheld and not counted; a
   assert.deepEqual(asAnn.entries.map((e) => e.dependent), [Q, D], "a member sees the same record facts");
   const none = w.r.correctedDependents({ viewer: "nobody" });
   assert.deepEqual([none.count, none.entries, Object.keys(none).filter((k) => /withheld|hidden/.test(k))], [0, [], []]);
+  assert.equal(none.out_of_view, undefined, "the untargeted listing states nothing");
   assert.equal(w.r.reevaluations({ viewer: "nobody" }).count, 0);
   /* the viewer is the one contradiction reads the marks for (its R10, R19): a stand-in that shows ann no mark */
   const real = w.c;
