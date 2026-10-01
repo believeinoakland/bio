@@ -19,3 +19,7 @@
 - `format`: 87 modules, 82 requirements files; 0 failures. `architecture filings`: 13 product files, 57 relative imports; 0 failures. `coverage filings`: 26 of 26 live requirement ids named by a test; 0 failures. `ownership filings tranche/T19`: 1 file changed; 0 failures.
 
 Size (session_01XbAMXyGJWg3L2txmzoyqVG): test runs 1, module lines 1876
+
+## J1 · COMPLETE
+
+Rule 1 done: src/filings/index.mjs imports the six names from record-grammar (actors, labels, frontmatter, grades, sha256), the same bindings; no filings file imports bio-checks.mjs, and the tests import no catalogue name. Module tests 45/0; format, architecture, coverage (26/26), ownership: 0 failures. Nothing deferred. One note for the fold: R22-R26 still read 'not yet met' in the requirements though built and tested since T18. Record: build/jobs/T19/filings.md.
