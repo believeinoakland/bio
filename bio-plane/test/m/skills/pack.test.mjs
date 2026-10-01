@@ -11,7 +11,7 @@ import { RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "../../../src/run-rules/i
 import { RECOMMEND_PROMPT, RECOMMEND_PROMPT_SHA256 } from "../../../src/contradiction.mjs";
 import { controlFlowAuthority } from "../../../src/skilldoctrine.mjs";
 import { createHash } from "node:crypto";
-import { ROOT, catalogue, published } from "./fixture.mjs";
+import { ROOT, owners, published } from "./fixture.mjs";
 
 const SOURCINGS = new Set(["authored", "imported", "driven", "absent"]);
 const JUDGEMENT_KEYS = ["composition", "description", "search", "absence", "prohibitions",
@@ -47,7 +47,7 @@ test("R1 renderPack throws naming the missing source, and renders nothing, for e
   for (const fences of [undefined, null, [], "x", { MACHINE_CANNOT_X: { translation: "t" } }])
     assert.throws(() => renderPack(published({ fences })), /op=affordances published no fences/, JSON.stringify(fences));
   /* The catalogue is no input: a second argument, empty or full, changes nothing (§1a, K585 (1)). */
-  assert.throws(() => renderPack(published({ fences: [] }), catalogue), /published no fences/);
+  assert.throws(() => renderPack(published({ fences: [] }), owners), /published no fences/);
   assert.equal(renderPack(published(), {}).version, renderPack(published()).version);
   assert.ok(renderPack(published()).version, "the full sources render");
 });
@@ -60,9 +60,9 @@ test("R1 the imported levels or absence states empty: renderPack throws and rend
     const real = { ...(await import(${JSON.stringify(join(ROOT, "bio-plane/src/observation-log/index.mjs") + "?real")})) };
     mock.module(${JSON.stringify("file://" + join(ROOT, "bio-plane/src/observation-log/index.mjs"))}, {
       namedExports: { ...real, ${which}: {} } });
-    const { renderPack, machineFences } = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/src/skillpack.mjs"))});
-    const cat = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/checks/bio-checks.mjs"))});
-    const pub = { vocabularies: { v: ["x"] }, catalog: [{ id: "a", mode: "session" }], fences: machineFences(cat) };
+    const { renderPack } = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/src/skillpack.mjs"))});
+    const { published } = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/test/m/skills/fixture.mjs"))});
+    const pub = published({ vocabularies: { v: ["x"] }, catalog: [{ id: "a", mode: "session" }] });
     try { renderPack(pub); console.log("RENDERED"); } catch (e) { console.log("THREW " + e.message); }`;
   for (const which of ["OBSERVATION_LEVELS", "OBSERVATION_STATES"]) {
     const out = execFileSync(process.execPath, ["--experimental-test-module-mocks", "--no-warnings",
@@ -80,9 +80,9 @@ function renderWithContradiction(over) {
     import { mock } from "node:test";
     const real = { ...(await import(${JSON.stringify(file + "?real")})) };
     mock.module(${JSON.stringify("file://" + file)}, { namedExports: { ...real, ...${JSON.stringify(over)} } });
-    const { renderPack, machineFences } = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/src/skillpack.mjs"))});
-    const cat = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/checks/bio-checks.mjs"))});
-    const pub = { vocabularies: { v: ["x"] }, catalog: [{ id: "a", mode: "session" }], fences: machineFences(cat) };
+    const { renderPack } = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/src/skillpack.mjs"))});
+    const { published } = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/test/m/skills/fixture.mjs"))});
+    const pub = published({ vocabularies: { v: ["x"] }, catalog: [{ id: "a", mode: "session" }] });
     try { const p = renderPack(pub); console.log("RENDERED " + JSON.stringify({ layer: p.disclosed.contradiction, version: p.version })); }
     catch (e) { console.log("THREW " + e.message); }`;
   const out = execFileSync(process.execPath, ["--experimental-test-module-mocks", "--no-warnings",
@@ -142,7 +142,7 @@ test("R3 boundary.fences is published.fences unchanged, member_only_acts is memb
   const pub = published();
   const { resident: { boundary } } = renderPack(pub);
   assert.equal(boundary.fences, pub.fences, "the published fences, unchanged");
-  assert.deepEqual(boundary.fences, machineFences(catalogue));
+  assert.deepEqual(boundary.fences, machineFences(owners));
   assert.ok(boundary.fences.length > 0);
   /* Whatever the plane publishes is what is carried: a fence from a module's own family arrives as published. */
   const moved = [...pub.fences, { code: "MACHINE_CANNOT_MOVED", family: "MODULE_CHECKS", check: "C-9.9", says: "moved words" }];
@@ -153,7 +153,7 @@ test("R3 boundary.fences is published.fences unchanged, member_only_acts is memb
   assert.match(boundary.fences_note, /canned translation/);
   assert.match(boundary.fences_note, /paraphrases none/);
   for (const f of boundary.fences)
-    assert.equal(f.says, catalogue[f.family][f.code].translation, `${f.code} is the translation verbatim`);
+    assert.equal(f.says, owners[f.family][f.code].translation, `${f.code} is the owner's translation verbatim`);
 });
 
 test("R4 disclosable lists every disclosed key with its load_when, and nothing of any body", () => {
@@ -240,17 +240,16 @@ test("R7 machineFences: every MACHINE_CANNOT_ row with a translation of every _C
     { code: "MACHINE_CANNOT_ZED", family: "Z_CHECKS", check: "C-9.2", says: "zed words" },
   ]);
   for (const odd of [undefined, null, 3, "x", [], {}]) assert.deepEqual(machineFences(odd), []);
-  /* Over the real catalogue, against an independent walk of it. */
+  /* Over the owners' families, against an independent walk of them (the whole catalogue's walk is dropped: each
+     fence's row is tested by its holder, K787). */
   const expected = [];
-  for (const [family, rows] of Object.entries(catalogue)) {
-    if (!family.endsWith("_CHECKS") || !rows || typeof rows !== "object") continue;
+  for (const [family, rows] of Object.entries(owners))
     for (const [code, row] of Object.entries(rows))
       if (code.startsWith("MACHINE_CANNOT_") && row && typeof row.translation === "string" && row.translation)
         expected.push({ code, family, check: row.check ?? null, says: row.translation });
-  }
   expected.sort((a, b) => (a.code < b.code ? -1 : 1));
   assert.ok(expected.length > 0);
-  assert.deepEqual(machineFences(catalogue), expected);
+  assert.deepEqual(machineFences(owners), expected);
 });
 
 test("R8 memberOnlyActs: every act whose mode is a string other than machine, sorted by id, label and prompt null when absent; a non-list gives []", () => {

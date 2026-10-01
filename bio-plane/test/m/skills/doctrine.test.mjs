@@ -9,7 +9,9 @@ import { SUGGEST_LEVELS, SUGGEST_CHECKS } from "../../../src/run-productions/ind
 import * as deployment from "../../../src/run-rules/index.mjs";
 import { AI_RUN_OPEN_CHECKS } from "../../../src/run-rules/index.mjs";
 import { RECOMMEND_PROMPT } from "../../../src/contradiction.mjs";
-import { ROOT, SRC, catalogue, read, norm, foundIn, section, canonDocuments, published, stringLiterals }
+import { BASIS_ROLES, EARNED_GRADE_SOURCES } from "../../../src/record-grammar/index.mjs";
+import { BASIS_VERSION_CHECKS, CONCLUDE_ACT_CHECKS } from "../../../src/basis-versions/index.mjs";
+import { ROOT, SRC, owners, read, norm, foundIn, section, canonDocuments, published, stringLiterals }
   from "./fixture.mjs";
 
 const { DEFERRED_ROWS, JUDGED_ROWS, TABLE_SOURCE, CLAUSES, controlFlowAuthority, CONTROL_FLOW_AUTHORITY,
@@ -30,15 +32,20 @@ function table() {
   return { left: rows.map((r) => r[0]), right: rows.map((r) => r[1]).filter((c) => c !== "—") };
 }
 
-/* Every C-number any keyed row of the catalogue, or of a family moved to its module (strength, run-productions,
-   run-rules: C-22.7 is held only in run-rules' own AI_RUN_CHECKS (its R11) since the catalogue's copy left, N299, K617), carries. */
+/* Every C-number a keyed row of an owner's family carries, for the families the doctrine reads its numbers from:
+   strength's, run-productions', run-rules' (C-22.7 is held only in run-rules' AI_RUN_CHECKS, its R11; N299, K617),
+   basis-versions' (C-25, C-32.2) and the fence owners' (the fixture's `owners`). The check catalogue is read
+   nowhere (rule 1). */
 function keyedNumbers() {
   const out = new Set();
-  for (const rows of [...Object.values(catalogue), strength.VERSION_STRENGTH_CHECKS, SUGGEST_CHECKS, AI_RUN_CHECKS])
-    if (rows && typeof rows === "object" && !Array.isArray(rows))
-      for (const row of Object.values(rows)) if (row && typeof row.check === "string") out.add(row.check);
+  for (const rows of [strength.VERSION_STRENGTH_CHECKS, SUGGEST_CHECKS, AI_RUN_CHECKS, BASIS_VERSION_CHECKS,
+                      CONCLUDE_ACT_CHECKS, ...Object.values(owners)])
+    for (const row of Object.values(rows)) if (row && typeof row.check === "string") out.add(row.check);
   return out;
 }
+/* The two numbers R15 lets the doctrine type: C-2.8, which has no keyed row, and C-32.6, whose holder
+   (case-authoring) is later in the order (P4; K787 (6), K811). */
+const TYPED = ["C-2.8", "C-32.6"];
 
 /* Every string anywhere inside a value. */
 const strings = (v) => typeof v === "string" ? [v] : v && typeof v === "object" ? Object.values(v).flatMap(strings) : [];
@@ -64,11 +71,17 @@ test("R15 every clause judges within JUDGED_ROWS and defers within DEFERRED_ROWS
       assert.ok(typeof c.unenforced_because === "string" && c.unenforced_because.trim(), `${c.id} says why unenforced`);
     for (const n of c.enforced_by) {
       assert.match(n, /^C-\d+\.\d+$/, `${c.id} cites a C-number`);
-      if (n === "C-2.8") assert.ok(!keyed.has(n), "C-2.8 is the one number with no keyed row");
-      else assert.ok(keyed.has(n), `${c.id}'s ${n} is read from a keyed catalogue row`);
+      if (TYPED.includes(n)) assert.ok(!keyed.has(n), `${n} is typed, read from no earlier owner's row`);
+      else assert.ok(keyed.has(n), `${c.id}'s ${n} is read from an owner's keyed row`);
     }
   }
   assert.deepEqual([...new Set(CLAUSES.flatMap((c) => c.defers))].sort(), [...DEFERRED_ROWS].sort());
+  /* Exactly those two numbers are typed: the doctrine's source holds no other C-number literal, and each typed one
+     is cited. */
+  const literals = SRC.flatMap((f) => stringLiterals(read(f))).filter((l) => /^C-\d+\.\d+$/.test(l));
+  assert.deepEqual([...new Set(literals)].sort(), [...TYPED].sort(), "the C-numbers typed in the source");
+  const cited = new Set([...CLAUSES, ...PROHIBITIONS].flatMap((x) => x.enforced_by));
+  for (const n of TYPED) assert.ok(cited.has(n), `${n} is cited`);
 });
 
 test("R16 controlFlowAuthority finds each control-flow pattern and finds none in the clauses' grants, the prohibitions or the deployment record", () => {
@@ -250,8 +263,8 @@ test("R23 no member of an imported or driven vocabulary appears in the module's 
   add("RUN_BOUNDS", Object.keys(RUN_BOUNDS));
   add("RUN_ENDINGS", Object.keys(RUN_ENDINGS));
   add("SUGGEST_LEVELS", SUGGEST_LEVELS);
-  add("BASIS_ROLES", catalogue.BASIS_ROLES);
-  add("EARNED_GRADE_SOURCES", catalogue.EARNED_GRADE_SOURCES);
+  add("BASIS_ROLES", BASIS_ROLES);
+  add("EARNED_GRADE_SOURCES", EARNED_GRADE_SOURCES);
   add("VERSION_STRENGTH_INERT_SOURCES", strength.VERSION_STRENGTH_INERT_SOURCES);
   add("AI_RUN_CHECKS", Object.keys(AI_RUN_CHECKS).filter((k) => !pack.SKILL_CHECK_KEYS.includes(k)));
   add("the published act modes", ["session", "admin-session"]);
@@ -277,7 +290,7 @@ test("R23 no member of an imported or driven vocabulary appears in the module's 
 });
 
 test("R24 it holds no gate: across every export and every input, the only refusal is C-22.7, and the rendered grants carry no control-flow authority", () => {
-  const inputs = [undefined, null, "", "3", "pack@1", 0, {}, [], published(), catalogue];
+  const inputs = [undefined, null, "", "3", "pack@1", 0, {}, [], published(), owners];
   const refusals = new Set();
   const collect = (v, depth = 0) => {
     if (!v || typeof v !== "object" || depth > 12) return;
@@ -287,7 +300,7 @@ test("R24 it holds no gate: across every export and every input, the only refusa
   for (const mod of [pack, doctrine])
     for (const [name, fn] of Object.entries(mod)) {
       if (typeof fn !== "function") continue;
-      for (const a of inputs) for (const b of [undefined, catalogue]) {
+      for (const a of inputs) for (const b of [undefined, owners]) {
         try { collect(fn(a, b)); } catch (e) { assert.ok(e instanceof Error, `${name} throws only Errors`); }
       }
     }

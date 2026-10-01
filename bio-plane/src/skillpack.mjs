@@ -151,10 +151,10 @@ import { judgementLayers, actionPlanningLayer, SKILL_CHECKS, SKILL_CHECK_KEYS } 
 export { SKILL_CHECKS, SKILL_CHECK_KEYS };
 /* N345. The recommender's prompt is contradiction's (its R41): measured on the blind fixture of dissolved pairs
    under its digest, and carried here unchanged as the words a run recommends under (R27). The digest is checked
-   at the render with the catalogue's one synchronous sha256, so a pack built over an unmeasured prompt fails the
+   at the render with record-grammar's one synchronous sha256, so a pack built over an unmeasured prompt fails the
    build (R1); nothing here holds a copy of either. */
 import { RECOMMEND_PROMPT, RECOMMEND_PROMPT_SHA256 } from "./contradiction.mjs";
-import { sha256HexSync } from "../checks/bio-checks.mjs";
+import { sha256HexSync } from "./record-grammar/index.mjs";
 
 /* WHAT THE PACK IS AND WHICH EDITION OF ITS DOCTRINE THIS IS.
    The edition is the AUTHORED half of the version and moves with a release; the

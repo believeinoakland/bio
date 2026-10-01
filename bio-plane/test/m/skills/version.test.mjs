@@ -4,7 +4,7 @@ import { checkSkillVersion, parseSkillVersion, renderPack, SKILL_CHECKS, SKILL_C
   from "../../../src/skillpack.mjs";
 import { CLAUSES } from "../../../src/skilldoctrine.mjs";
 import * as runRules from "../../../src/run-rules/index.mjs";
-import { catalogue, published } from "./fixture.mjs";
+import { published } from "./fixture.mjs";
 
 /* C-22.7's row, read through run-rules (its AI_RUN_CHECKS, R11), never from the catalogue: the row this module names
    is run-rules' (R25, N289, K617), and the catalogue's interim copy left in T12 (N299, K381). */
@@ -79,12 +79,8 @@ test("R25 C-22.7 is named here by key through run-rules, never copied: its code,
   assert.ok(CLAUSES.some((c) => c.enforced_by.includes(ROW.check)), "the doctrine cites the row by its number");
 });
 
-test("R25 C-22.7's row is held in run-rules' own table with its one minting site, and no catalogue family holds a copy", () => {
+test("R25 C-22.7's row is held in run-rules' own table with its one minting site", () => {
   assert.ok(ROW.where.startsWith("src/run-rules/skill-version.mjs checkSkillVersion"), `run-rules' minting site: ${ROW.where}`);
-  for (const [family, rows] of Object.entries(catalogue))
-    if (rows && typeof rows === "object" && !Array.isArray(rows)) {
-      assert.ok(!Object.hasOwn(rows, "AI_RUN_SKILL_VERSION_UNNAMED"), `the catalogue's ${family} holds no copy of the code (N299)`);
-      for (const row of Object.values(rows))
-        assert.ok(!(row && row.check === ROW.check), `the catalogue's ${family} holds no row numbered ${ROW.check}`);
-    }
+  /* The arm walking the check catalogue for a copy is dropped (K787 (3)): no catalogue copy has been held since
+     N299, the catalogue is deleted at T19's close, and a code minted in two modules is ai-runs' guard's (N242 G). */
 });
