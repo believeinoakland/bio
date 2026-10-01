@@ -69,6 +69,7 @@ The verified-to-retired transition of many Information documents at once, over a
 
 ### Uses
 
+- `inquiry-grammar`: `registerInquiryGrammar` (its R6), in the test world only, so op=ratify's tests see C-2.8's arm through the record's grammars (K790, K826).
 - `legacy-checks`: the rows until they move (R14), `parseFrontmatter`, `normalizeType`, `isMachineIdentity`, `sectionText`, `canonicalJson`.
 - `signatures`: `verifySshsig`, `ratifyStatement`, `caseRatifyStatement`, `NS_RATIFY` (R2, R4).
 - `record-core`: `recordOf(ctx)`, `transact`, `stampInstant`, `textAtSha` (its R60; R3), the `bundles`, `history` and `manifest` read contracts (R7). *(`textAtSha` not yet provided: T8's record-core entry)*
