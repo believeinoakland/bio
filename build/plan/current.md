@@ -1,6 +1,9 @@
-# Plan: tranche T19 (final draft)
+# Plan: tranche T19
 
-**Status** · DRAFT by a worker for BOB #79, 2026-10-01, read on `tranche/T18` @ 33f1276bce (layers 1–10 closed, K721); adopted K734. **Updated @ ac5ef075a0** (K731–K737): affordances, admission and control-plane COMPLETE and merged, so their ⚑L11 marks are resolved; N435, N436 placed. Still running: legacy-index (BLOCKED on Bob's approval of its `git rm`), installer. Derived from `draft-T19-refresh.md` (BOB #78, read @ ba630ce2da), which is a delta over `draft-T19.md` (adopted K653): an entry marked **kept** or "as drafted" carries `draft-T19.md`'s text for that module unchanged. Not to be opened by this BOB (K716): T19 opens under Bob's secondary account once T18 has closed. Sources: the two drafts, rulings K686–K730, `next.md` (to N436), `build/jobs/T18/*.md` (layers 8–10 on the tranche; layer 11 on the tranche or `origin/job/T18/<module>`), `current.md`, `layers.md`, `modules.json`, and the tree (every catalogue and `store.mjs` importer grepped @ 33f1276bce, multi-line imports parsed). Marks: **kept** · **amended** (how) · **done in T18** (ruling or record) · **moot** · **new** · **⚑L11** (waits on a layer-11 job still running; re-read at T18's close, K424).
+**Status** · OPEN · BOB #80 · session_01UN385C1zhxo91Tf9CFHVYH · depth 1
+
+Opened by BOB #80, 2026-10-01 (PROCESS-MECHANICS §5), under Bob's secondary account, at `main` @ 2a646f2587, T18 closed (K740, K741). The plan is `draft-T19-final.md` (adopted K734; its text below, unchanged), its Status as drafted: DRAFT by a worker for BOB #79, read on `tranche/T18` @ 33f1276bce and updated @ ac5ef075a0. ⚑L11 resolved at T18's close: LEGACY-INDEX #11's `git rm` was approved by Bob and merged (K739), so N401 is met and legacy-index's T19 job is `tools/` and its remaining paths only. The fold (rule 6's wordings before each layer, rule 8, BOB-5, N175) is on this branch before each layer's jobs read it. Bob's weekly meter at the opening: asked (K743).
+
 
 ## What changed versus draft-T19-refresh.md
 
