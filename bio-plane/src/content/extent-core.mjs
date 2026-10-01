@@ -6,8 +6,9 @@
  * `legHasAuthoredExtent`), the relation (`extentRelation`), the checker (`checkContentExtent`) with its private
  * container predicates, and the part statement (`imagePartUndetermined`). The code below is the catalogue's text
  * line for line (its quoting kept, so the copy can be compared with its source); only the imports, this header, the
- * `refusal` helper's one table and the comments that described the catalogue's own file changed. Every answer,
- * finding and refusal is the catalogue's.
+ * `refusal` helper's one table, the comments that described the catalogue's own file, and the comments that named a
+ * check or suite T20 deleted as live (N469, re-pointed to the module test that proves the claim) changed. Every
+ * answer, finding and refusal is the catalogue's.
  *
  * THE ALGEBRA IS NOT COPIED: `CONTENT_EXTENT_KINDS`' eight, `CONTENT_EXTENT_A1_RE`, `rangeCorners`, `a1ToRowCol`,
  * `canonicalExtent`, `describeExtent` and `contentCitedAs` are read from `text-chain` (its R92–R98), byte-identical to
@@ -28,11 +29,12 @@ import { CONTENT_EXTENT_CHECKS } from "./checks.mjs";
  *  CONTENT-HTML produces one, this constant goes and a row joins the map. */
 export const CONTENT_EXTENT_KIND_NO_PRODUCER = 'dom';
 
-/** DEC-49's refusal helper for this family, and BOTH halves of its spelling are load-bearing rather than style: the
- *  name is exactly `refusal` and the code is a DOUBLE-QUOTED STRING LITERAL at every call site below — that pair is
- *  what `civicos-ui/check-refusal-codes.mjs` matches when it asks whether a `where` region actually contains the
- *  refusal it claims to. Every refusal it answers carries its row's `check` and `translation` from this module's own
- *  table (R48). */
+/** DEC-49's refusal helper for this family. Its spelling, the name exactly `refusal` and the code a DOUBLE-QUOTED
+ *  STRING LITERAL at every call site below inside the `is-content-extent` region, is the catalogue's, kept line for
+ *  line (R48); it is what the old guard `civicos-ui/check-refusal-codes.mjs` matched (deleted in T20). Every refusal
+ *  it answers carries its row's `check` and `translation` from this module's own table, which
+ *  `test/m/content/seams.test.mjs` (R48) proves for every C-45 row at the grammar, the mint and a citation;
+ *  DEC-49's totality across the plane is control-plane's `test/m/control-plane/families.test.mjs` (its R22). */
 function refusal(key, detail, extra = null) {
   const row = CONTENT_EXTENT_CHECKS[key];
   return { ok: false, code: key, check: row.check, translation: row.translation, detail,
@@ -82,10 +84,11 @@ export function legExtent(leg) {
      CHANGING THE CANONICAL FORM OF THESE THREE ARMS MIGRATES NOTHING, and that
      is a fact about the record rather than an argument: every one of them was
      refused as unlanded until this commit, so no row of any of these kinds can
-     exist to have been addressed the old way. The suite asserts the count is
-     zero on a real store rather than reasoning about it. `document` and
-     `pdf-page` are UNTOUCHED here and their canonical bytes are pinned by
-     digest against the pristine tree.
+     exist to have been addressed the old way. REC-85's suite measured the
+     count zero on a real store at its landing rather than reasoning about it.
+     `document` and `pdf-page` are UNTOUCHED here; their canonical form is
+     text-chain's, which `test/m/content/seams.test.mjs` (R48) proves
+     byte-identical answer for answer.
 
      EACH ARM TAKES ONLY ITS OWN FIELDS. A leg naming `extent_cell` under
      `extent_kind: doc-para` has said nothing about a paragraph, and carrying
@@ -359,7 +362,9 @@ export function checkContentExtent(extent, ctx = {}) {
      THE BOUND IS THE CONTAINER'S CAPACITY AND NEVER THE CAPTURE'S USED RANGE,
      and that decision is why `coversSheetCell` below compares against `rows`
      and must never be pointed at `usedRows` (IC-100's RESOLUTION carries the
-     reasoning; COFF-11's `usedrangeasbound` arm breaks if anyone re-points it).
+     reasoning; `test/m/content/converts-extent.test.mjs`' R7 test of the grid
+     and the used range, converted from COFF-11's `usedrangeasbound` arm, breaks
+     if anyone re-points it).
      A cell EXISTS in the grid whether or not it held a value, and in this
      product an empty cell is routinely the finding.
 
@@ -373,8 +378,10 @@ export function checkContentExtent(extent, ctx = {}) {
      in the answer it returns rather than leaving a bare null, and skipping is
      deliberate: refusing a citation for a bound nobody measured would push a
      member toward citing the WHOLE DOCUMENT, which claims MORE and not less.
-     All four arms are driven end to end in
-     `test/capture-container-extent.test.mjs`.
+     Every level of these arms, held, skipped and stated, is driven at this
+     module's interface by the R7 and R8 tests of
+     `test/m/content/converts-extent.test.mjs` (converted from
+     `capture-container-extent`).
      ==================================================================== */
   if (e.kind === 'sheet-cell') {
     if (typeof e.sheet !== 'string' || !e.sheet.trim())
@@ -534,8 +541,9 @@ export function checkContentExtent(extent, ctx = {}) {
      document is a referent that exists the moment the bytes do — it IS the
      document, and DEC-23 says a document is content too — so refusing it would
      make the one universally-legal citation illegal on every unread capture and
-     would break every legacy leg's backfill. The over-strictness arm in the
-     suite is exactly this case. */
+     would break every legacy leg's backfill. The over-strictness arm of
+     `test/m/content/converts-extent.test.mjs` (R12, R27, R28: a whole-document
+     citation of an unread capture) is exactly this case. */
   /* REC-84: AND IT IS SKIPPED, NEVER GUESSED, FOR A CALLER THAT CANNOT SEE THE
      RECORD. `CONTENT_EXTENT_DOCUMENT_ONLY` is that caller (the catalogue, over
      one `bundle.md`); the store passes a real `{ chain, pageCount }` and this
@@ -582,15 +590,17 @@ export function checkContentExtent(extent, ctx = {}) {
  * answering the second question from the first would be inventing a bound.
  *
  * THEY RETURN A SENTENCE OR NULL — NEVER A REFUSAL — AND THAT IS DEC-49'S RULE
- * RATHER THAN A STYLE. The code must be a STRING LITERAL at its site inside the
- * governed region a row's `where` names, because a code held anywhere the guard
- * cannot see is how one shipped `translation: undefined` to a member. Minting
+ * RATHER THAN A STYLE. The code is a STRING LITERAL at its site inside the
+ * governed region a row's `where` names, because a code minted where its row is
+ * not read is how one shipped `translation: undefined` to a member. Minting
  * C-45.1 in here would have put three of its four sites OUTSIDE
- * `is-content-extent` while the row's `where` went on naming that region alone —
- * the MULTI-SITE-CODE condition `civicos-ui/check-refusal-codes.mjs` documents
- * at length and cannot close, joined voluntarily and for no gain. So these
- * functions answer WHAT IS WRONG and `checkContentExtent` answers WHICH CODE
- * THAT IS, which keeps all four C-45.1 sites inside the one span the row claims.
+ * `is-content-extent` while the row's `where` went on naming that region alone
+ * (the MULTI-SITE-CODE condition the old guard `civicos-ui/check-refusal-codes.mjs`,
+ * deleted in T20, documented and could not close). So these functions answer
+ * WHAT IS WRONG and `checkContentExtent` answers WHICH CODE THAT IS, which keeps
+ * all four C-45.1 sites inside the one span the row claims. That every C-45.1
+ * this module answers carries its row's check and translation is
+ * `test/m/content/seams.test.mjs`' (R48).
  */
 
 /** A cell of a named sheet, against the workbook as the record holds it.
@@ -659,10 +669,11 @@ function coversSlideShape(e, container) {
  *  the sheet's GRID (the `sheet-cell` bound, and the same decision: the grid,
  *  never the used range — an empty cell exists). Returns a sentence or null. */
 function coversSheetRange(e, container) {
-  /* Spelled `held` rather than `sheets` for its first two lines ON PURPOSE:
-     `nc-rec85.mjs`'s `overstrict` arm anchors on `coversSheetCell`'s own two
-     lines, and a byte-identical copy here made that anchor match 2x, so the
-     REC-85 control stopped arming (measured at FW-19, `ARMED NO`). */
+  /* Spelled `held` rather than `sheets` for its first two lines: at FW-19 a
+     byte-identical copy of `coversSheetCell`'s two lines here made the REC-85
+     control's anchor on them match twice, and that control stopped arming
+     (measured, `ARMED NO`). That control is gone; the spelling stays because
+     this is the catalogue's text line for line (R48). */
   const held = container && Array.isArray(container.sheets) ? container.sheets : null;
   if (!held || !held.length) return null;
   const sheets = held;
