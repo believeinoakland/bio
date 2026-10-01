@@ -1540,3 +1540,22 @@ response: **Bob, 2026-09-29: items 1 and 3 as recommended; item 2 not ruled.**
 decided: 2026-09-29 · Bob
 reasoning recorded in: this entry.
 owed: the relevance suggestion as labelled machine work with its dismissal memory and per-member switch (run-productions or retrieval, as BOB places it), and the unattended grade note (capture, queue), for Bob's approval; the UX page's open question 13 marked ruled.
+
+### DEC-96 · answered
+raised: 2026-10-01 · the same design session with Bob (the UX canon's open question 12: the four points DEC-92 left for later)
+for: bob
+question: What does "Accepted by our group" commit a group to, is it public, and how is it withdrawn; how is a "Flagged" mark raised, answered and cleared, and who sees it; does "Meets standards" return; and what does a reader of the group's own case see when it rests on work the group accepted or flagged?
+why it is Bob's: doctrine (inherited trust: the fact of publication, never the credibility of the content) and UX.
+provisional: DEC-92 set the origin mark and its five labels; acceptance is "a new reasoned act, attributed, with a reason"; "Flagged" comes only from a member's recorded evaluation.
+alternative: (B) a public, signed list of acceptances and flags published beside the group's cases; (C) acceptance as full vouching, the accepted work graded afresh as the group's own; (D) defer until a second group publishes.
+recommendation: (A) a reasoned stance, made public when the group's own case relies on it.
+reversal cost: low; nothing is built.
+response: **As recommended (Bob, 2026-10-01): option A.**
+  1. ACCEPTING: "Accept into our work" is a reasoned act. It asks what was checked and records who, when and why. It names one edition: a newer edition of the same work reads "Another group's" until someone accepts it. Acceptance changes no grade: the cited edition's grades stand as published, and a cited case can never be stronger than its frozen edition (the inherited-trust rule of 2026-07-30 holds). Withdrawing an acceptance is a reasoned act too, corrected forward like every act, and sends re-evaluation notices to the work that rests on it.
+  2. FLAGGING: a flag is a member's recorded evaluation naming the specific issue, never a machine's. It stays inside the group, seen by those who may see the work that cites the flagged edition, and a member clears it with a reason.
+  3. "MEETS STANDARDS" stays deferred until an evaluator of incoming work exists; if it returns, it is labelled machine work and never acts as a trust level.
+  4. WHAT A READER SEES: when the group's published case relies on another group's work, the case states the acceptance (who accepted which edition, and why), and it must disclose any open flag on that work, as it must disclose an open contradiction: disclosed, never blocked (DEC-84 (13)).
+  Next step, when triggered: a public list of the group's acceptances and flags (option B) is built on these same recorded acts when a second group asks to see who accepted or flagged its work.
+decided: 2026-10-01 · Bob
+reasoning recorded in: this entry; the UX substrate's brief for question 12.
+owed: the accept, withdraw, flag and clear acts (reasoned), the case's statement of acceptance, and the publication check that open flags on relied-on work are disclosed, as requirements for Bob's approval (BOB places them); the UX page's open question 12 marked ruled.

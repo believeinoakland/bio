@@ -11403,23 +11403,18 @@
    "recommendation": "Option 1: it keeps the ambient signal while grounding every level in a recorded fact, and leaves 'meets standards' for when an evaluator exists.",
    "whoDecides": "Bob: the trust hierarchy is mission doctrine (Roadmap §11) and choosing to revise it, and adding an acceptance act, are requirements; the dot's look is Design's.",
    "ruled": {
-    "date": "2026-09-29",
+    "date": "2026-10-01",
     "by": "Bob",
     "rulings": [
-     "DEC-92"
+     "DEC-92",
+     "DEC-96"
     ],
-    "status": "partly ruled",
-    "decided": "The five levels become an origin mark in the same family as 'Machine work', answering who made this: Ours; Another group's (a published edition, signature verified); Accepted by our group (a new reasoned act, attributed, with a reason); 'Not yet evaluated'; 'Flagged' only when a member's recorded evaluation names specific issues, never a machine's. 'Meets standards' is deferred until an evaluator of incoming work exists. The mark is ambient; a hover shows the fact behind it. It is never composed with grades or strength into one trust score.",
-    "stillOpen": [
-     "What accepting another group's work commits the group to, and whether it can be withdrawn",
-     "How a flag is raised, answered and cleared",
-     "Whether 'meets standards' returns, and what evaluates it",
-     "How the mark travels when a group republishes work it accepted"
-    ],
+    "status": "ruled",
+    "decided": "Information from other groups carries an origin mark in the same family as 'Machine work', answering who made this: Ours; Another group's (a published edition, signature verified); Accepted by our group; 'Not yet evaluated'; and 'Flagged'. The mark is ambient, a hover shows the fact behind it, and it is never composed with grades or strength into one trust score. Accepting another group's work is a reasoned act naming one edition (a newer edition reads 'Another group's' until accepted); it records who, when and why, changes no grade, and is withdrawn by a reasoned act that sends re-evaluation notices. A flag is a member's recorded evaluation naming the specific issue, never a machine's; it stays inside the group and is cleared by a member with a reason. 'Meets standards' stays deferred until an evaluator of incoming work exists, and if it returns it is labelled machine work. When a group's published case relies on another group's work, the case states the acceptance and discloses any open flag on it: disclosed, never blocked. A public list of acceptances and flags follows when a second group asks to see who accepted or flagged its work.",
     "title": "Where information from other groups came from (the origin mark)"
    },
    "brief": {
-    "stillOpen": "partly",
+    "stillOpen": false,
     "settledSince": "Nothing since your 29 September ruling settles the four points. The rulings of 30 September to 1 October (the Action layer, removal of old code) do not touch them; the nearest says joint action with another group waits until a coalition asks.",
     "title": "Accepting and flagging another group's work",
     "inOneBreath": "When your group takes on, questions or builds on another group's published work, what does each of those acts mean, who sees it, and how is it undone?",

@@ -1,6 +1,6 @@
 # Believe in Oakland
 
-**Status** · The mission of record: values, operational principles, the fifteen design requirements, the seven-category UX, the trust hierarchy and the original implementation roadmap. Self-described as "Working Document — April 2026 (v5, July 20, 2026: status annotation layer against the P2 development ladder; the plan text of v4 is unchanged)"; no approval or ratification is stated in the document — its authority is that every later document derives its constraints from it. Completeness is split by its own 2026-08-10 banner: **§§1–12 are current doctrine; §§13–15 are history**, and the v5 status annotation measures against the retired substrate. Read it first if you are new, and read the banner before the roadmap sections. **§11 GAINED DEC-92 (Bob, 2026-09-29): the five trust levels are shown as an origin mark, with more to decide later.** as of 2026-09-29.
+**Status** · The mission of record: values, operational principles, the fifteen design requirements, the seven-category UX, the trust hierarchy and the original implementation roadmap. Self-described as "Working Document — April 2026 (v5, July 20, 2026: status annotation layer against the P2 development ladder; the plan text of v4 is unchanged)"; no approval or ratification is stated in the document — its authority is that every later document derives its constraints from it. Completeness is split by its own 2026-08-10 banner: **§§1–12 are current doctrine; §§13–15 are history**, and the v5 status annotation measures against the retired substrate. Read it first if you are new, and read the banner before the roadmap sections. **§11 GAINED DEC-92 (Bob, 2026-09-29): the five trust levels are shown as an origin mark, with more to decide later.** as of 2026-10-01.
 
 **Place in the system** · The top of the mission level (`BIO_System_Design.md` §2): the Design Requirements govern it on conflict, the Technical Architecture Decisions govern it on technology, the State Rules govern it on the data store, and the Functional Architecture extends its §9. It owns no construct; it owns the values and the stance every construct serves.
 
@@ -699,6 +699,13 @@ inherited-trust rule: the fact of publication, never the credibility of the cont
 act, attributed, with a reason); **"Not yet evaluated"**; and **"Flagged"** only when a member's recorded evaluation names specific
 issues, never a machine's. "Meets standards" waits until an evaluator of incoming work exists. The mark stays ambient; a hover
 shows the fact behind it.
+
+**Ruled 2026-10-01 by Bob (DEC-96).** Accepting another group's work is a reasoned act naming one edition (a newer edition reads
+"Another group's" until accepted); it records who, when and why, changes no grade, and is withdrawn by a reasoned act that sends
+re-evaluation notices. A flag names the specific issue, stays inside the group, and is cleared by a member with a reason. "Meets
+standards" stays deferred until an evaluator of incoming work exists, and if it returns it is labelled machine work. When a
+group's published case relies on another group's work, the case states the acceptance and discloses any open flag on it,
+disclosed, never blocked. A public list of acceptances and flags follows when a second group asks to see it.
 
 ## Inter-group awareness
 
