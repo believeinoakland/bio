@@ -18,8 +18,8 @@
  *           run last, in the order they registered.
  *   now     the module's clock, milliseconds since the epoch (default: the wall clock). A caller's body never sets it.
  * The ops (`calibrations`, `calibrate`, `calibrationsubject`, `calibrationsignal`) are `calibrationOps`' entries,
- * which the legacy store's dispatcher spreads in. The host calls `migrate()` (R20) at boot, after record-core's, and
- * before any service here is asked.
+ * which the plane's route map (`plane/store.mjs`) spreads in. The host calls `migrate()` (R20) at boot, after
+ * record-core's, and before any service here is asked.
  */
 
 import { checkCalibration, checkSignal, compare, drifted, nextProbeDue, cadenceSentence,
@@ -500,7 +500,7 @@ export function calibrationOf(ctx, deps = {}) {
   return c;
 }
 
-/* The ops this module answers, as entries of the legacy store's op map (its dispatcher spreads them in). `url` is
+/* The ops this module answers, as entries of the plane's route map (`plane/store.mjs` spreads them in). `url` is
    the request URL, whose query carries the control plane's stamps; `body` the parsed body. `identity` is the control
    plane's stamp of who is asking, deleted from every request before anything is stamped, so a caller can never name
    it (R5). `op=calibrationdrift` is `extraction`'s. */
