@@ -17,7 +17,7 @@ import { KNOCK, isWeakKnockerSecret, knockerSecretWeak } from "./doorbell.mjs";
 import { CAPTURE_CHECKS, KNOCK_CHECKS } from "./checks.mjs";
 import { INFORMATION_GRAMMAR } from "./grammar.mjs";
 import { evidenceAbsent } from "./ops.mjs";
-import { acquire, archiveLookup, profileOf, profileView, governedFetch, governedCall } from "../acquisition/index.mjs";
+import { acquire, archiveLookup, profileOf, profileView, governedFetch, governedCall, INSTALLATION_CHECKS } from "../acquisition/index.mjs";
 import { verifySshsig, NS_RATIFY } from "../sshsig.mjs";
 import { ARCHIVE_SERVICE } from "../tsa.mjs";
 export { acquireGradeNote, ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
@@ -602,8 +602,13 @@ export class Capture {
                pulled_by: row.pulled_by, pulled_at: row.pulled_at, ...(document ? { document } : {}) };
     }
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
-    if (!ev) return { ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", status: 503, knockId,
-                      detail: "this instance has no evidence storage configured, so the knock's bytes cannot be held under their own digest; nothing was written" };
+    if (!ev) {
+      /* C-68.1 (K794, K797): the installation's complaint carries its row, which acquisition holds as its earliest raiser. */
+      const row = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
+      return { ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", code: "EVIDENCE_STORAGE_NOT_CONFIGURED", check: row.check,
+               translation: row.translation, status: 503, knockId,
+               detail: "this instance has no evidence storage configured, so the knock's bytes cannot be held under their own digest; nothing was written" };
+    }
     /* The bytes as received: the evidence bucket's inbox object, else the inline copy. They must hash to the row's digest. */
     let bytes = null;
     try {

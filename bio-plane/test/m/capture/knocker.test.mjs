@@ -12,6 +12,7 @@ import { CAPTURE_CHECKS } from "../../../src/capture/checks.mjs";
 import { NS_RATIFY, NS_RELEASE } from "../../../src/sshsig.mjs";
 import { ARCHIVE_SERVICE } from "../../../src/tsa.mjs";
 import { DOORBELL_VIA } from "../../../src/provenance/index.mjs";
+import { INSTALLATION_CHECKS } from "../../../src/acquisition/index.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 const requiredArgument = (op, argument, shape, error) => ({ reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error });
@@ -261,6 +262,9 @@ test("R65 R37 (C-118.2, C-118.4, R63): refusals in order, NO_SUCH_KNOCK, KNOCK_D
   const k4 = await bare.c.knock({ content: "inline", sourceAddress: "3.3.3.3" });
   const r4 = await bare.c.pullKnock({ knockId: k4.knockId, by: "m1" });
   assert.deepEqual([r4.ok, r4.reason], [false, "EVIDENCE_STORAGE_NOT_CONFIGURED"]);
+  const c681 = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
+  assert.deepEqual([r4.code, r4.check, r4.translation, r4.status], ["EVIDENCE_STORAGE_NOT_CONFIGURED", "C-68.1", c681.translation, 503],
+                   "R37 (K797): the installation's complaint carries its row, C-68.1, acquisition's");
   assert.equal(bare.rows(`SELECT status FROM inbox`)[0].status, "new");
 });
 

@@ -1,18 +1,16 @@
 /* capture R37 (C-2.7; K585 (3)): the information grammar, registered through record-core's grammar seam (its R67), at
    the module's interface: what `captureOf` registers, that another module's claim on the same slot runs beside it
-   (record-core R67 as worded, K766, K783), and that a bundle is judged by record-grammar's `checkBundle` given
-   `record.grammars()` (what promotion's gate passes, its R27) and by record-core's audit (its R18) exactly as by the
-   catalogue's held C-2.7 copy (K767: the one comparison that still names the catalogue, until its last importer
-   deletes it). The other slots are filled as the host fills them, `registerLegacyGrammars`. A fresh store per test;
-   no network. */
+   (record-core R67 as worded, K766, K783), and what a bundle is judged to be by record-grammar's `checkBundle` given
+   `record.grammars()` (what promotion's gate passes, its R27) and by record-core's audit (its R18), with capture's
+   grammar and without it: each C-2.7 finding stated case by case (K785: no capture file names the catalogue), every
+   other finding unchanged. A fresh store per test; no network. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { storage, provenance } from "./fixture.mjs";
 import { captureOf, MONITOR_FREQ, INFORMATION_GRAMMAR, checkInformationExtension } from "../../../src/capture/index.mjs";
-import { recordOf, registerLegacyGrammars } from "../../../src/record-core/index.mjs";
+import { recordOf } from "../../../src/record-core/index.mjs";
 import { checkBundle, canonicalJson } from "../../../src/record-grammar/index.mjs";
-import { LEGACY_GRAMMARS } from "../../../checks/bio-checks.mjs";
 
 const hex = (v) => createHash("sha256").update(typeof v === "string" ? Buffer.from(v, "utf8") : Buffer.from(v)).digest("hex");
 const T0 = "2026-07-01T00:00:00Z";
@@ -63,6 +61,26 @@ const CASES = {
                                                                                criticality: "vital", source: undefined }) },
 };
 
+/* What C-2.7 says of each case, in order: `[severity, message, repairs?]` (the information grammar's own words). */
+const EXPECTED = {
+  "INFO-2026-0001-clean": [],
+  "INFO-2026-0002-enums": [["error", "criticality 'vital' is not one of: crucial, supporting"], ["error", "source_status 'gone' is not one of: unchanged, modified, removed"]],
+  "INFO-2026-0003-nosource": [["error", "source block is missing"]],
+  "INFO-2026-0004-halfsource": [["error", "source.authority is missing"], ["error", "source.retrieved is missing"]],
+  "INFO-2026-0005-monitoring": [["error", "monitoring.enabled 'sometimes' is not boolean"], ["error", "monitoring.frequency 'fortnightly' is not one of: hourly, daily, weekly, monthly, per_meeting, none"]],
+  "INFO-2026-0006-nomonitoring": [["error", "monitoring block is missing"]],
+  "INFO-2026-0007-badhash": [["error", "content_hash 'md5:abc…' is not sha256:<64 hex>"]],
+  "INFO-2026-0008-mismatch": [["error", "content_hash does not match the canonicalized data/dataset.json (declared 000000000000…, actual eb51f16c324f…)", ["refresh content_hash and append a change record", "restore data/dataset.json from history"]]],
+  "INFO-2026-0009-hashok": [],
+  "INFO-2026-0010-verified": [["error", "verified state requires a well-formed content_hash"], ["error", "verified state requires data/dataset.json"], ["error", "verified state requires at least one file in snapshots/"]],
+  "INFO-2026-0011-changes": [["error", "changes.json records[0] lacks detected/kind/summary in the required shape"]],
+  "INFO-2026-0012-changeshape": [["error", "data/changes.json must be {\"records\": [...]}"]],
+  "PROJ-2026-0001-notinfo": [],
+};
+const c27 = (findings) => findings.filter((f) => f.check === "C-2.7")
+  .map((f) => (f.repairs ? [f.severity, f.message, f.repairs, f.repairable] : [f.severity, f.message]));
+const want = (id) => EXPECTED[id].map((e) => (e.length > 2 ? [...e, true] : e));
+
 const judge = async (id, image, grammars) => {
   const files = new Map(Object.entries(image));
   const { findings } = await checkBundle({ folderName: id, files, elidedPaths: new Set(), sha256: async (v) => hex(v),
@@ -78,13 +96,10 @@ function world() {
   return { ctx, record };
 }
 
-/* A host's grammar list (the composition root's order): capture's registration when `capture`, then the catalogue's
-   entries for every slot still free, `registerLegacyGrammars`. Without capture, C-2.7's slot is the catalogue's held
-   copy: the comparison R37's tests make. */
+/* A store with capture reached (its grammar registered) or not (C-2.7's slot left free, so nothing runs there). */
 function hosted({ capture }) {
   const w = world();
   if (capture) captureOf(w.ctx, { record: w.record, provenance: provenance(w.ctx.storage) });
-  assert.equal(registerLegacyGrammars(w.record, LEGACY_GRAMMARS).ok, true);
   return w;
 }
 
@@ -127,43 +142,47 @@ test("R37 (C-2.7; record-core R67, K766): another module's grammar may claim C-2
   assert.ok(captureOf(bare, { record: stand, governor: {}, provenance: provenance(bare.storage) }));
 });
 
-test("R37 (C-2.7): with the grammar registered, record-grammar's checkBundle given record.grammars() (the gate's list) judges every bundle exactly as the catalogue's held copy: the same findings, ids, severities, messages and order", async () => {
-  const mine = hosted({ capture: true }), held = hosted({ capture: false });
-  const listed = mine.record.grammars();
-  assert.deepEqual([listed[0].module, [...listed[0].ids]], ["capture", ["C-2.7"]], "capture's own arm fills C-2.7");
-  assert.ok(listed.slice(1).every((g) => g.module === "legacy-checks" && !g.ids.includes("C-2.7")), "the catalogue only the rest");
-  assert.equal(held.record.grammars().find((g) => g.ids.includes("C-2.7")).module, "legacy-checks");
+test("R37 (C-2.7): with the grammar registered, record-grammar's checkBundle given record.grammars() (the gate's list) raises exactly C-2.7's findings for each case, in order, and every other finding is what it is without the grammar", async () => {
+  const mine = hosted({ capture: true }), none = hosted({ capture: false });
+  assert.deepEqual(mine.record.grammars().map((g) => [g.module, [...g.ids]]), [["capture", ["C-2.7"]]]);
+  assert.deepEqual(none.record.grammars(), []);
   let judged = 0;
   for (const [id, image] of Object.entries(CASES)) {
-    const catalogue = await judge(id, image, held.record.grammars());
     const registered = await judge(id, image, mine.record.grammars());
-    assert.deepEqual(registered, catalogue, id);
-    if (catalogue.some((f) => f.check === "C-2.7")) judged++;
+    const without = await judge(id, image, none.record.grammars());
+    assert.deepEqual(c27(registered), want(id), id);
+    assert.deepEqual(c27(without), [], `${id}: an unclaimed slot runs nothing`);
+    assert.deepEqual(registered.filter((f) => f.check !== "C-2.7"), without, `${id}: no other finding moves`);
+    if (EXPECTED[id].length) judged++;
   }
   assert.ok(judged >= 10, `the cases exercise the grammar (${judged} bundles carry a C-2.7 finding)`);
-  const clean = await judge("INFO-2026-0001-clean", CASES["INFO-2026-0001-clean"], mine.record.grammars());
-  assert.equal(clean.filter((f) => f.check === "C-2.7").length, 0, "a well-formed item raises no C-2.7");
-  assert.equal((await judge("PROJ-2026-0001-notinfo", CASES["PROJ-2026-0001-notinfo"], mine.record.grammars()))
-    .filter((f) => f.check === "C-2.7").length, 0, "another type is not judged by it");
-  /* the registered arm is the one that runs: a grammar standing in its place changes the findings, and none runs nothing */
+  /* the registered arm is the one that runs: a grammar standing in its place changes the findings */
   const decoy = [{ module: "decoy", ids: ["C-2.7"], arm: () => {} }];
-  assert.equal((await judge("INFO-2026-0002-enums", CASES["INFO-2026-0002-enums"], decoy)).some((f) => f.check === "C-2.7"), false);
-  assert.equal((await judge("INFO-2026-0002-enums", CASES["INFO-2026-0002-enums"], [])).some((f) => f.check === "C-2.7"), false);
+  assert.deepEqual(c27(await judge("INFO-2026-0002-enums", CASES["INFO-2026-0002-enums"], decoy)), []);
 });
 
-test("R37 (C-2.7): record-core's audit over the same bundles answers the same report with capture's grammar registered as with the catalogue's arm", async () => {
+test("R37 (C-2.7): record-core's audit over the same bundles tallies exactly the grammar's findings with capture's grammar registered, and is otherwise the report it makes without it", async () => {
   const report = async (register) => {
-    /* "without": C-2.7's slot filled from the catalogue's `LEGACY_GRAMMARS` (K783), as with every other free slot */
     const { record } = hosted({ capture: register });
     for (const [id, image] of Object.entries(CASES))
       record.transact(() => record.commit({ bundleId: id, type: id.startsWith("PROJ") ? "project" : "information", title: "t",
         snapKey: "k1", kind: "creation", author: "member:ann", state: "collected", group: "test-group", created: T0, lastUpdated: T0, at: T0,
         files: Object.entries(image).map(([path, text]) => ({ path, text, sha256: hex(text) })) }));
-    assert.equal(record.grammars().find((g) => g.ids.includes("C-2.7")).module, register ? "capture" : "legacy-checks");
+    assert.equal(record.grammars().length, register ? 1 : 0);
     return record.auditPass({ limit: 50 });
   };
   const withGrammar = await report(true), without = await report(false);
   assert.equal(withGrammar.checked, Object.keys(CASES).length);
-  assert.ok(withGrammar.tally["C-2.7"] >= 10, JSON.stringify(withGrammar.tally));
-  assert.deepEqual(withGrammar, without);
+  const expected = Object.values(EXPECTED).reduce((n, list) => n + list.length, 0);
+  assert.equal(withGrammar.tally["C-2.7"], expected, JSON.stringify(withGrammar.tally));
+  assert.equal(without.tally["C-2.7"], undefined, "an unclaimed slot raises nothing in the audit");
+  const drop = (t) => Object.fromEntries(Object.entries(t || {}).filter(([k]) => !k.startsWith("C-2.7")));
+  assert.deepEqual(drop(withGrammar.tally), drop(without.tally), "every other check tallies alike");
+  assert.deepEqual(drop(withGrammar.tallyDetail), drop(without.tallyDetail));
+  const flagged = Object.keys(CASES).filter((id) => EXPECTED[id].length);
+  const otherErrors = new Set((without.offenders || []).map((o) => o.bundleId ?? o.id ?? o));
+  const offenders = new Set((withGrammar.offenders || []).map((o) => o.bundleId ?? o.id ?? o));
+  for (const id of flagged) assert.ok(offenders.has(id), `${id} is an offender with the grammar`);
+  assert.equal(withGrammar.withErrors, new Set([...flagged, ...otherErrors]).size);
+  assert.equal(withGrammar.clean + withGrammar.withErrors, without.clean + without.withErrors);
 });
