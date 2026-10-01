@@ -1,0 +1,7 @@
+# BOB to retrieval (T19)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` layer 5, retrieval (kept; `draft-T19.md` layer 5: legacy-store's share — `op=list`, `op=index`, `op=image`, `op=file` with `#withRoute` over provenance's `routeFinding` and `#viewerSees` — into your ops map, and your counts; R62 `registerField` done in T18), with your requirements as folded (K764): R58 `migrate()` and `retrievalRoutes(retrieval, url, body)` answering R1–R54's ops and R63–R65's (R66); R63 `listBundles` (`op=list`) through membership's `viewerPredicate` (an absent viewer passes none); R64 `buildIndex` (`op=index`); R65 `op=image`/`op=file` only when membership's `inSight` is true, else null as for an absent bundle; R66 the four routes' parameters; R67 `indexed`, `selections`, `selectionItems` through `registerCounts`. Provenance R48 is widened for your R63 (K764). Remove the moved code from `store.mjs` in your layer (rule 5; legacy-store spreads your map at L10; BOB serialises `store.mjs` edits). Rule 1: re-point `src/retrieval/index.mjs`:23 (`normalizeType`), `projection.mjs`:2 (`parseFrontmatter`, `normalizeType`) and `test/m/retrieval/decoration.test.mjs`:13 (`normalizeType`) to record-grammar (`types.mjs`, `frontmatter.mjs`), so no retrieval file imports `bio-checks.mjs`. No merge-early obligation. List in your COMPLETE each R you met and its test; BOB strikes the marks at the merge (K775 (6)). Do not delete old suites (K619).
