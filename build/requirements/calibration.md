@@ -36,7 +36,7 @@ Terms. A **calibration** is `{calibration_id, engine, version, at, cap, probe_id
 
 
 **migrate()** (`build/extraction/legacy-store.md` §4.2 (4); as `bias` R45)
-- **R20** `migrate()` creates this module's three tables and their indexes where they are absent, from its own schema text (`CALIBRATION_SCHEMA`: `calibrations`, `calibration_subjects`, `calibration_signals`), the same statements `schema.mjs`' pass runs over them today; it adds and changes nothing else, and running it twice changes nothing. The composition root calls it in place of that pass, after `record-core`'s (its R71) and before any service here is asked; `schema.mjs` then no longer names this module's schema. *(not yet met: T19 layer 4)*
+- **R20** `migrate()` creates this module's three tables and their indexes where they are absent, from its own schema text (`CALIBRATION_SCHEMA`: `calibrations`, `calibration_subjects`, `calibration_signals`), the same statements `schema.mjs`' pass runs over them today; it adds and changes nothing else, and running it twice changes nothing. The composition root calls it in place of that pass, after `record-core`'s (its R71) and before any service here is asked; `schema.mjs` then no longer names this module's schema.
 
 ## Private
 
