@@ -1,6 +1,6 @@
 # publication (T19)
 
-**Status** · session_019BeVhgz521rbyLgunTbANL · depth 2 · WAITING ON BOB (J1) · handled B3
+**Status** · session_019BeVhgz521rbyLgunTbANL · depth 2 · WORKING · handled B3
 
 ## J1 · QUESTION
 
