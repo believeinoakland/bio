@@ -10813,7 +10813,8 @@
     "rulings": [
      "DEC-79",
      "K362",
-     "K364"
+     "K364",
+     "K904"
     ],
     "decided": "All four stages are shown: 'forming', 'investigating' and 'matured' are computed from the record, and 'closed' is the owner's reasoned act. Only readiness rungs a case can earn are shown, and each unearned one is stated. The display is coloured bars that build up, one per stage reached, disclosing more on hover (with a focus or tap equivalent) and opening on click to what each stage needs next and when each was reached; each bar is named, and 'closed' shows its reason and never reads as a finished stack.",
     "status": "ruled",
@@ -17180,7 +17181,8 @@
      "build/requirements/actions.md R8; filings.md R22-R25; action-plans.md R23",
      "build/plan/archive/T19.md (the plan-page surface kept as Bob's UX)",
      "Correction to the earlier brief: surfaces.html shows standards, a tier 2 filing draft and a tier 3 counsel packet as well as queue items; PATH.md is a draft, not part of the approved record.",
-     "Checked K628-K859: none settles or changes this question."
+     "Checked K628-K859: none settles or changes this question.",
+     "build/rulings.md K921, K924 (Bob through the development process, cited in BOB's outbox B1): a filing template is the basis of a group's own filing (tiers 1, 2) or of a briefing to counsel (every tier, counsel needed only at Tier 3); every approved version is offered with its metadata, the latest by default, an earlier one 'updated' and still offered; a filing may be written without a template. Built in T21. The start-and-send sketch's template step should follow them."
     ],
     "size": "short"
    }
@@ -17507,7 +17509,8 @@
      "DEC-95 item 3; DEC-77; DEC-24; DEC-94 item 3; K597 (5); DEC-72 (2), (5); DEC-84 (13); DEC-85; DEC-96 items 1 and 4",
      "State Rules §5.4; reevaluation R16; K899 (3); K901; N457; civicos-ui/app.html banner and design notes H1, H2, H7",
      "Analogies only: CPUC Rules of Practice and Procedure (party status, Rule 1.4; information-only service list; public comments outside the formal record; Docket Office rejection for form); Pub. Util. Code §1708; COPE retraction guidelines",
-     "main @ 615672a1a0 (rulings to K926) checked; none settles the remaining parts"
+     "main @ 615672a1a0 (rulings to K926) checked; none settles the remaining parts",
+     "build/rulings.md K943; next.md N470; BOB's outbox B2 (DEFER, 2026-10-01): no withdrawal act for a ratified edition until this question is answered; the answer goes back as a NOTICE naming the DEC."
     ],
     "size": "session"
    },
