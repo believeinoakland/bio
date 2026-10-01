@@ -1,6 +1,7 @@
 /* What moved to promotion from the catalogue in T18 (K636; plan layer 2, promotion): the C-86 and C-97 row families,
- * `withProducingGroup`, `projectNameKey` with C-77's `checkProjectNameUniqueness`, and a copy of
- * `MECHANICAL_FIELD_SETS`. Each is tested here at this module's interface, under the requirement it serves. */
+ * `withProducingGroup`, `projectNameKey` with C-77's `checkProjectNameUniqueness`, and `MECHANICAL_FIELD_SETS` (the
+ * catalogue's copy deleted in T19, K750); and in T19, the rows of the refusals this module mints that the catalogue's
+ * shared tables held. Each is tested here at this module's interface, under the requirement it serves. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as P from "../../../src/promotion/index.mjs";
@@ -142,8 +143,8 @@ test("R8: MECHANICAL_FIELD_SETS is promotion's frozen registry of declared opera
   /* Every mutating set carries last_updated (write-completeness); sweep changes nothing. */
   for (const [op, set] of Object.entries(MECHANICAL_FIELD_SETS))
     assert.equal(set.includes("last_updated"), op !== "sweep", op);
-  /* The catalogue's copy, held until T19 deletes it, is equal field for field (K636). */
-  assert.deepEqual(JSON.parse(JSON.stringify(MECHANICAL_FIELD_SETS)), C.MECHANICAL_FIELD_SETS);
+  /* Held once: the catalogue's copy is deleted (T19, K750). */
+  assert.equal("MECHANICAL_FIELD_SETS" in C, false);
   const { p } = makePromotion();
   for (const op of Object.keys(MECHANICAL_FIELD_SETS)) {
     const id = `INFO-2026-00${Object.keys(MECHANICAL_FIELD_SETS).indexOf(op) + 10}`;
@@ -154,4 +155,72 @@ test("R8: MECHANICAL_FIELD_SETS is promotion's frozen registry of declared opera
     assert.equal(r.reason, "UNDECLARED_OPERATION", String(op));
     assert.equal(r.detail, `a mechanical promotion names one of: ${Object.keys(MECHANICAL_FIELD_SETS).join(", ")}`);
   }
+});
+
+/* T19: the rows each refusal below carries, moved from the catalogue's shared tables, line for line (code, check, where,
+   translation), and the requirement whose refusal each is. */
+const MOVED_T19 = {
+  PROMOTION_ROW_CHECKS: { CAS_STALE: "C-33.21", ABSENT: "C-33.49", SNAP_KEY_TAKEN: "C-67.1", FILES_DROPPED: "C-33.24",
+    FILE_DIGEST_MISMATCH: "C-33.38", MACHINE_CANNOT_REOPEN: "C-32.5", BIAS_ILLEGAL_TRANSITION: "C-26.12",
+    GROUP_UNDETERMINED: "C-64.1" },
+  PROJECT_MINT_CHECKS: { PROJECT_ID_SUPPLIED: "C-59.1", PROJECT_ID_IN_BYTES: "C-59.2", PROJECT_FORK_ID_SUPPLIED: "C-59.3",
+    PROJECT_DOCUMENT_UNREADABLE: "C-59.4" },
+  PROMOTION_REGISTRATION_CHECKS: { FACT_UNAVAILABLE: "C-102.4", FACT_FAILED: "C-102.5", FACT_MALFORMED: "C-102.6",
+    STEP_MODULE_UNNAMED: "C-102.7", STEP_DECLARED: "C-102.8", CASE_CATALOGUE_FAILED: "C-102.9" },
+};
+/* Held twice until their other readers re-point (rule 1): bias (layer 5) reads C-26.12, and inquiry, strength (layer 6)
+   and instance-setup (layer 11) read C-64.1, from the catalogue. */
+const HELD_TWICE = { BIAS_ILLEGAL_TRANSITION: "BIAS_CHECKS", GROUP_UNDETERMINED: "INSTANCE_GROUP_CHECKS" };
+
+test("R1, R4, R5, R7, R13, R15, R19, R20, R21, R33, R39, R40, R41, R47: the rows of the refusals this module mints are its own tables', held once; C-26.12 and C-64.1 are copies until their other readers re-point", () => {
+  for (const [table, rows] of Object.entries(MOVED_T19)) {
+    assert.deepEqual(Object.keys(P[table]), Object.keys(rows), table);
+    for (const [code, check] of Object.entries(rows)) {
+      const row = P[table][code];
+      assert.equal(row.check, check, code);
+      assert.ok(typeof row.translation === "string" && row.translation.length > 40, code);
+      /* Each `where` names this module's site: its file, function and, inside a function that also writes, its region. */
+      assert.match(row.where, /^src\/(promotion\/index|gate)\.mjs [#A-Za-z]+( > [a-z-]+)?(, reached from op=promote)?$/, code);
+      /* No catalogue table holds the code, except the two held copies, whose lines match but for C-64.1's site. */
+      const holders = Object.entries(C).filter(([, t]) => t && typeof t === "object" && !Array.isArray(t)
+        && Object.prototype.hasOwnProperty.call(t, code)).map(([n]) => n);
+      assert.deepEqual(holders, HELD_TWICE[code] ? [HELD_TWICE[code]] : [], code);
+      if (HELD_TWICE[code]) {
+        const held = C[HELD_TWICE[code]][code];
+        assert.deepEqual([held.check, held.translation], [row.check, row.translation], code);
+        if (code === "BIAS_ILLEGAL_TRANSITION") assert.equal(held.where, row.where);
+      }
+    }
+  }
+  /* C-64.1's copy names the region of #promote that mints it. */
+  assert.equal(P.PROMOTION_ROW_CHECKS.GROUP_UNDETERMINED.where, "src/promotion/index.mjs #promote > is-group-undetermined");
+  /* Each code the module answers carries its moved row, whole. */
+  const carries = (r, row) => assert.deepEqual([r.ok, r.code ?? r.reason, r.check, r.translation],
+                                               [false, r.reason, row.check, row.translation], r.reason);
+  const R = P.PROMOTION_ROW_CHECKS, M = P.PROJECT_MINT_CHECKS, G = P.PROMOTION_REGISTRATION_CHECKS;
+  const env = makePromotion();
+  const h = env.p.promote(create(ID, infoDoc(ID)));
+  carries(env.p.promote({ ...create(ID, infoDoc(ID)), base: "0".repeat(64), snapKey: "k2" }), R.CAS_STALE);
+  carries(env.p.promote({ ...create("INFO-2026-0404", infoDoc("INFO-2026-0404")), base: "0".repeat(64) }), R.ABSENT);
+  carries(env.p.promote({ ...create(ID, infoDoc(ID, { title: "Two" })), base: h.bundleSha }), R.SNAP_KEY_TAKEN);
+  carries(env.p.promote({ ...create("INFO-2026-0002", infoDoc("INFO-2026-0002")),
+                          files: [{ path: "bundle.md", text: infoDoc("INFO-2026-0002"), sha256: "f".repeat(64) }] }), R.FILE_DIGEST_MISMATCH);
+  carries(env.p.reopen({ target: ID, reason: "why", author: "token:ai" }), R.MACHINE_CANNOT_REOPEN);
+  const none = makePromotion({ group: null });
+  carries(none.p.promote(create(ID, infoDoc(ID, { group: undefined }))), R.GROUP_UNDETERMINED);
+  const pd = doc({ object_type: "project", title: "P", current_state: "forming", created: T0, last_updated: T0 });
+  carries(env.p.promote({ bundleId: "PROJ-2026-0001-p", base: null, snapKey: "p", meta: {}, files: [{ path: "bundle.md", text: pd }] }),
+          M.PROJECT_ID_SUPPLIED);
+  carries(env.p.forkProject({ projectId: "PROJ-2026-0001-p", newId: "PROJ-2026-0002-q", title: "Q", by: "ann" }), M.PROJECT_FORK_ID_SUPPLIED);
+  carries(env.p.promote({ base: null, snapKey: "q", meta: { object_type: "project" }, files: [{ path: "bundle.md", text: "x" }] }),
+          M.PROJECT_DOCUMENT_UNREADABLE);
+  const bare = makePromotion({ facts: false });
+  carries(bare.p.promote(create(ID, infoDoc(ID))), G.FACT_UNAVAILABLE);
+  carries(bare.p.registerFact("", "m", () => 1), G.FACT_MALFORMED);
+  carries(bare.p.registerStep(""), G.STEP_MODULE_UNNAMED);
+  bare.p.registerFact("f", "m", () => { throw new Error("down"); });
+  carries(bare.p.fact("f"), G.FACT_FAILED);
+  carries(bare.p.registerFact("f", "m", () => 1), G.STEP_DECLARED);
+  const unjudged = bare.p.runCaseGate({});
+  assert.deepEqual(unjudged.findings.map((f) => f.check), ["CASE_CATALOGUE_FAILED"]);
 });

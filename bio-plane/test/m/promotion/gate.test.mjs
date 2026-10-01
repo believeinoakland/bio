@@ -3,7 +3,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { runGate, runCaseGate, CATALOG_VERSION, GATE_VERSION, ROW_CENSUS } from "../../../src/promotion/index.mjs";
-import { checkBundle, parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { checkBundle } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { doc, T0, makePromotion } from "./fixtures.mjs";
 
 const ID = "INFO-2026-0001-report";
@@ -181,8 +182,10 @@ test("R27 (§1b): the gate passes the registered grammars to the catalogue: a gr
       earnedRegistry: null }, { grammars });
     return findings.filter((f) => f.severity === "error").map((f) => [f.check, f.message]);
   };
+  /* C-2.7's slot is capture's grammar, which every product caller registers (K767): the test registers a grammar in
+     that slot, as capture does, and never leans on the catalogue's held copy, which fills the slot only for a caller
+     registering none. (This module's tests cannot import capture, a later layer, so `claim` stands in for it.) */
   const builtIn = (await runGate(base(image))).findings.map((f) => [f.check, f.detail]);
-  assert.ok(builtIn.some(([c]) => c === "C-2.7"), "the built-in information arm judges this document");
   /* Through promotion's instance: the record's registrations, and no caller's. */
   const { p, record } = makePromotion();
   record.grammarList = [claim, extra];

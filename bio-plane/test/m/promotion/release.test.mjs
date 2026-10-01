@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { webcrypto, createHash } from "node:crypto";
 import { runGate } from "../../../src/promotion/index.mjs";
-import { checkBundle } from "../../../checks/bio-checks.mjs";
+import { checkBundle } from "../../../src/record-grammar/index.mjs";
 import { releaseMessage } from "../../../src/promotion/release.mjs";
 
 const ID = "INFO-2026-0001-report";

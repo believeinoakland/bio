@@ -9,6 +9,7 @@ import { Miniflare } from "miniflare";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import * as C from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import * as P from "../../../src/promotion/index.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../../../src/" + f, import.meta.url));
@@ -101,6 +102,8 @@ probe("BIAS_ILLEGAL_TRANSITION", async () => {
   assert.equal(a.ok, true, JSON.stringify(a));
   return promote(id, bias(id, "proposed", STATEMENT), { base: a.bundleSha });
 });
+/* R13: a creation naming no group, on a store that records none (this probe's store was never given one). */
+probe("GROUP_UNDETERMINED", () => promote("INFO-2026-0122-v", info("INFO-2026-0122-v").replace("group: test-group\n", "")));
 probe("SURFACED_BY_REWRITTEN", async () => {
   const id = "INQ-2026-0118-r";
   const a = await promote(id, inquiry(id, refs([])));
@@ -122,10 +125,12 @@ probe("VERSION_FROZEN", async () => {
 /* The answer each probe must meet: its reason, or the envelope that relays it (with the row's check among findings). */
 const ENVELOPE = { SELF_BASIS: null, BASIS_CYCLE: null, VERSION_LEG_UNRESOLVED: null, VERSION_FROZEN: null };
 
-/* The catalogue functions the write runs and relays whole, and the envelope that carries their findings. */
+/* The checks the write runs through a registered step and relays whole, the envelope that carries their findings, and
+   each fixture's error findings as the version grammar (C-25, C-27.15) answers them, stated at this module's interface
+   rather than read from the catalogue's function (re-anchored in T19: basis-versions takes the grammar in layer 6). */
 const RELAYED = [
   { site: /basisVersionFindings, called from checkInquiryBasis and from store\.mjs promote/, envelope: "BASIS_VERSION_REFUSED",
-    fn: (fm) => { const f = []; C.basisVersionFindings(fm, f); return f; },
+    want: [["C-25.1", "C-25.3"], ["C-25.1", "C-25.12", "C-25.13", "C-25.3", "C-25.7", "C-27.15"]],
     docs: [inquiry("INQ-2026-0130-u", [...refs([]), ...versions(['  - name: "v1"', '    relationship: "alternative"',
              '    state: "suggested"', "    derived_from: null", "    hidden: false", '    author: "ruth"', `    at: "${NOW}"`])]),
            inquiry("INQ-2026-0131-v", [...refs([]), ...versions(['  - name: "v1"', '    description: "d"', '    relationship: "alternative"',
@@ -133,9 +138,11 @@ const RELAYED = [
 ];
 
 test("R18: every refusal the catalogue sites at the promote write is enforced there — each row is met by name", async () => {
-  /* The catalogue's tables, and the two families that moved from it to promotion whole in T18 (C-86, C-97): still
-     the catalogue's rows sited at this write, wherever the table lives. */
-  const moved = { PROMOTED_TYPE_CHECKS: P.PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS: P.PROJECT_CREATION_VISIBILITY_CHECKS };
+  /* The catalogue's tables, and the rows that moved from it to promotion (C-86 and C-97 whole in T18; the act-shape,
+     machine-fence, C-59 and C-26.12 rows and C-64.1's copy in T19): still the rows sited at this write, wherever the
+     table lives. */
+  const moved = { PROMOTED_TYPE_CHECKS: P.PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS: P.PROJECT_CREATION_VISIBILITY_CHECKS,
+                  PROMOTION_ROW_CHECKS: P.PROMOTION_ROW_CHECKS, PROJECT_MINT_CHECKS: P.PROJECT_MINT_CHECKS };
   const rows = [];
   for (const [family, table] of [...Object.entries(C), ...Object.entries(moved)]) {
     if (!table || typeof table !== "object" || Array.isArray(table)) continue;
@@ -146,7 +153,11 @@ test("R18: every refusal the catalogue sites at the promote write is enforced th
   /* 36 since K253: actions took GOVERNING_LAWS_REWRITTEN and RISK_TIER_REWRITTEN (T8 layer 9), as bias took C-26.1–C-26.7
      and C-26.11 (K150); promotion cannot import either module, so their rows are theirs to test. */
   assert.ok(rows.length >= 36, `the catalogue's rows sited at the promote write: ${rows.length}`);
+  /* A row held twice (C-26.12 and C-64.1, until their other readers re-point) is one code: probed once. */
+  const probed = new Set();
   for (const row of rows) {
+    if (probed.has(row.code)) continue;
+    probed.add(row.code);
     const relay = RELAYED.find((r) => r.site.test(row.where));
     if (relay) continue;                       // shown whole by the relay test below
     assert.ok(PROBES[row.code], `no probe for ${row.family}.${row.code} (${row.check}, ${row.where})`);
@@ -158,12 +169,12 @@ test("R18: every refusal the catalogue sites at the promote write is enforced th
   }
 });
 
-test("R18: a catalogue function the write runs is relayed whole: the write's findings are the function's errors, finding for finding", async () => {
+test("R18: a check the write runs through a registered step is relayed whole: the write's findings are its errors, finding for finding", async () => {
   for (const relay of RELAYED) {
     const arms = new Set();
-    for (const text of relay.docs) {
-      const fm = C.parseFrontmatter(text).data;
-      const want = relay.fn(fm, text).filter((x) => x.severity === "error").map((x) => x.check).sort();
+    for (const [i, text] of relay.docs.entries()) {
+      const fm = parseFrontmatter(text).data;
+      const want = [...relay.want[i]].sort();
       assert.ok(want.length, "the fixture meets at least one arm");
       want.forEach((c) => arms.add(c));
       const r = await promote(fm.id, text);

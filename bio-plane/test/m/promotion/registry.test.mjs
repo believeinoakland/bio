@@ -2,8 +2,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { makePromotion, doc, infoDoc, create, revise, T0 } from "./fixtures.mjs";
-import { runCaseGate, runGate, GATE_VERSION, PROMOTED_TYPE_CHECKS, projectNameKey } from "../../../src/promotion/index.mjs";
-import { ACT_SHAPE_CHECKS, PROJECT_ID_CHECKS, BIAS_CHECKS, STATES, vocabFor } from "../../../checks/bio-checks.mjs";
+import { runCaseGate, runGate, GATE_VERSION, PROMOTED_TYPE_CHECKS, PROMOTION_ROW_CHECKS, PROJECT_MINT_CHECKS,
+         PROMOTION_REGISTRATION_CHECKS, projectNameKey } from "../../../src/promotion/index.mjs";
+import { STATES, vocabFor } from "../../../src/record-grammar/index.mjs";
 
 const ID = "INFO-2026-0001";
 
@@ -153,17 +154,17 @@ test("R38: a rule held at the door and in the catalogue is the catalogue's one f
   /* Each door refusal with a catalogue row carries that row's check id. */
   const { p, record } = makePromotion();
   const h = p.promote(create(ID, infoDoc(ID)));
-  assert.equal(p.promote(revise(ID, "1".repeat(64), infoDoc(ID))).check, ACT_SHAPE_CHECKS.CAS_STALE.check);
+  assert.equal(p.promote(revise(ID, "1".repeat(64), infoDoc(ID))).check, PROMOTION_ROW_CHECKS.CAS_STALE.check);
   assert.equal(p.promote(create("INFO-2026-0002", infoDoc("INFO-2026-0002"), { meta: { object_type: "action" } })).check,
                PROMOTED_TYPE_CHECKS.ENVELOPE_TYPE_DISAGREES.check);
   assert.equal(p.promote({ bundleId: "PROJ-2026-0001-x", base: null, snapKey: "s", files: [{ path: "bundle.md", text: pd("x") }], meta: {} }).check,
-               PROJECT_ID_CHECKS.PROJECT_ID_SUPPLIED.check);
+               PROJECT_MINT_CHECKS.PROJECT_ID_SUPPLIED.check);
   /* The state machine is the catalogue's table: bias refusals carry its row. */
   const b = "BIAS-2026-0001";
   const bd = (s) => doc({ id: b, object_type: "bias", title: "Lens", current_state: s, created: T0, last_updated: T0 });
   const bb = p.promote({ ...create(b, bd("adopted")), replay: true });
   const back = p.promote(revise(b, bb.bundleSha, bd("proposed")));
-  assert.equal(back.check, BIAS_CHECKS.BIAS_ILLEGAL_TRANSITION.check);
+  assert.equal(back.check, PROMOTION_ROW_CHECKS.BIAS_ILLEGAL_TRANSITION.check);
   assert.deepEqual(back.legal_from, vocabFor(STATES, "bias").edges.adopted);
   void h; void record;
 });
@@ -344,7 +345,7 @@ test("R33: the case gate never throws: a registered catalogue that throws or ans
 });
 
 test("R39, R40, R47: STEP_DECLARED is one answer at every registration that already holds what it registers (a step, a fact, the case catalogue), and the malformed registrations carry their rows (C-102.6, C-102.7)", async () => {
-  const { REGISTRATION_CHECKS } = await import("../../../checks/bio-checks.mjs");
+  const REGISTRATION_CHECKS = PROMOTION_REGISTRATION_CHECKS;
   const { p } = makePromotion();
   p.registerStep("later", {});
   p.registerCaseCatalogue("ratification", () => []);

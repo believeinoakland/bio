@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { runGate, recordChecks } from "../../../src/promotion/index.mjs";
-import { checkBundle } from "../../../checks/bio-checks.mjs";
+import { checkBundle } from "../../../src/record-grammar/index.mjs";
 import { STATE_MOVE_FENCED_SINCE } from "../../../src/promotion/history.mjs";
 
 const ID = "INFO-2026-0001-report";
