@@ -31,3 +31,7 @@
 - `ownership site-profiles tranche/T19`: 0 failures
 
 Size (session_012Q6VzShdRmKdjhfmTkxiGp): test runs 4, module lines 919
+
+## J1 · COMPLETE
+
+site-profiles complete on job/T19/site-profiles: copy of docprofile's index/recogniser/events/handlers, self-registering (REGION moved to leaf region.mjs to avoid the cycle); index.mjs exports everything docprofile/registry.mjs needs, incl. aspnetWebforms/wordpress/clientRendered/conservative, register, handlers. Seven small flaws fixed in the copy (see record). Tests 19/19 pass; format, architecture, coverage (19/19), ownership: 0 failures. Ready to merge early.
