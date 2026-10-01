@@ -1,4 +1,5 @@
-import { publicInstanceGroup, bootstrapOp, INSTANCE_SETUP_OPS, instanceSetupOp } from "./setup.mjs";
+import { publicInstanceGroup, instanceGroupOp, groupIdentityOp, bootstrapOp, INSTANCE_SETUP_OPS,
+         instanceSetupOp } from "./setup.mjs";
 import { caseRatifyStatement, NS_RATIFY } from "./sshsig.mjs";
 /* REC-46 (2026-08-04): the two prefixes this file STAMPS on a machine
    credential now come from the catalog rather than being typed here twenty
