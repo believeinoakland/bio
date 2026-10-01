@@ -65,7 +65,8 @@ export function lawProposalState(proposedBy) {
 /* K171 (2) (T8, N129): THE SAME LABEL FOR EVERY PROPOSAL THE ACTION LAYER STORES APART. A standard proposed by
  * the Legal/Policy Lookup skill or a member (standards R9), a comparison against standards (conformance R12), a
  * filing's draft (filings R5), a candidate theory and remedy (filings R14), an action plan's proposed option
- * (action-plans R11) and a prepared communication (filings R23; both N-A1, T18) are each machine work or a member's
+ * (action-plans R11), a prepared communication (filings R23; both N-A1, T18) and wording proposed for a filing template
+ * (filing-templates R6; K921, T21) are each machine work or a member's
  * suggestion, never the thing itself, and each is labelled by `lawProposalState`'s three states. ONE CLOSED
  * TABLE, keyed by what was proposed: `governing_laws` is REC-195's table above, the same object, so its words
  * cannot drift from it; each other subject says, in each state, what the proposal is not. A subject the table does
@@ -124,6 +125,17 @@ export const PROPOSAL_STATES = Object.freeze({
     member_proposed: 'a member prepared this communication. It is a draft and not a message sent: nobody has '
       + 'approved or sent it, and the record holds who prepared it',
     unstated: 'the record does not say who prepared this communication, and nobody has approved or sent it',
+  }),
+  /* K921 (T21, R42): wording proposed for a filing template (filing-templates R6, R13) is not a template's text until a
+     member adopts it into a draft, and a machine can propose it and never draft, review or approve a template. */
+  template: Object.freeze({
+    machine_proposed: 'a machine credential proposed this wording for a filing template. That is machine work, labelled '
+      + 'as machine work: it can propose wording and it can never draft, review or approve a template. It is not a '
+      + 'template\'s text until a member adopts it into a draft',
+    member_proposed: 'a member proposed this wording for a filing template. It is a proposal and not a template\'s '
+      + 'text: it is not that until a member adopts it into a draft, and the record holds who proposed it',
+    unstated: 'the record does not say who proposed this wording for a filing template, and it is not a template\'s '
+      + 'text until a member adopts it into a draft',
   }),
 });
 
@@ -194,11 +206,12 @@ export const CONTENT_MINTED_BY_PLANE = 'plane';
  *  a distinction the record now draws. */
 /*  THE KEYS ARE SPECIFIC, AND THE REASON IS A MEASUREMENT RATHER THAN TASTE.
  *  The first draft spelled them `member` / `plane` / `machine` / `unstated`, and
- *  `skillpack.test.mjs` ARM B2a went red: `src/skillpack.mjs` has carried
+ *  the old battery's `skillpack.test.mjs` ARM B2a went red (found by it; the
+ *  suite was deleted at T20): `src/skillpack.mjs` carried
  *  `const MACHINE_MODE = "machine"` since SK-2, and publishing a vocabulary
  *  whose key is a single common word made that unrelated literal look like a
- *  HAND COPY of a published term — which is exactly the defect that arm exists
- *  to catch, arriving as a false positive because the key was too generic to
+ *  HAND COPY of a published term — the defect that arm was written to catch,
+ *  arriving as a false positive because the key was too generic to
  *  belong to anybody. The keys are now verbs of THIS act, which is what a
  *  published vocabulary's keys should have been anyway, and `machine_marked`
  *  reads beside `machine_stamped` one vocabulary over. */
@@ -219,20 +232,13 @@ export const CONTENT_MINT_STATES = {
  *  machine said" are different findings. The PLANE's own value is answered
  *  BEFORE `isMachineIdentity`, so the record's mint on a member's behalf can
  *  never be swallowed into `machine` by a later addition to the machine
- *  prefixes — and the suite pins `isMachineIdentity(CONTENT_MINTED_BY_PLANE)
- *  === false` besides, so a collision fails loudly instead of hiding behind
+ *  prefixes — and the module's tests pin `isMachineIdentity(CONTENT_MINTED_BY_PLANE)
+ *  === false` besides (R37), so a collision fails loudly instead of hiding behind
  *  this ordering. Everything left is a name, which is a member. */
 export function contentMintState(mintedBy) {
   const s = text(mintedBy);
-  /*  `s.length === 0` AND NOT `s === ''`, WHICH IS NOT A STYLE CHOICE AND IS
-   *  NOT ARBITRARY. `test/sufficiency-state.control.mjs` anchors one of its arms
-   *  on the exact line `if (s === '') return 'unstated';` inside
-   *  `sufficiencyClaimState` a few dozen lines above, and an arm's anchor has to
-   *  match EXACTLY ONCE or the arm fires on the wrong site and proves nothing.
-   *  Writing the same line here made it match twice, and
-   *  `m025-arm-anchor-witness.test.mjs` said so by name. Re-spelled here rather
-   *  than re-anchored there: another item's control is not mine to edit, and the
-   *  collision is MINE because the second occurrence is the one that arrived. */
+  /*  Spelled `s.length === 0` because a control in the old battery once anchored on the `s === ''` spelling elsewhere
+   *  and had to match it exactly once (found by it; the control was deleted at T20). The two tests are the same. */
   if (s.length === 0) return 'unstated';
   if (s.toLowerCase() === CONTENT_MINTED_BY_PLANE) return 'plane_minted';
   if (isMachineIdentity(s)) return 'machine_marked';
