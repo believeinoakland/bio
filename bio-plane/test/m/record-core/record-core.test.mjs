@@ -4,10 +4,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import * as CATALOGUE from "../../../checks/bio-checks.mjs";
+import { checkBundle, EXTENSION_ARMS } from "../../../src/record-grammar/index.mjs";
 import { recordOf, RecordCore, RECORD_SCHEMA, stampInstant, instantOrder, PER_ITEM_MAX, perItem, EMPTY_STRING_SHA, fileDigestOf,
-         inlineBytesOf, mintExhausted, RECORD_CORE_CHECKS, PER_ITEM_CHECKS } from "../../../src/record-core/index.mjs";
-const { checkBundle, EXTENSION_ARMS } = CATALOGUE;
+         inlineBytesOf, mintExhausted, RECORD_CORE_CHECKS, PER_ITEM_CHECKS, registerLegacyGrammars,
+         recordCoreOps } from "../../../src/record-core/index.mjs";
 import { storage, bucket } from "./storage.mjs";
 
 const fresh = (opts) => { const s = storage(); const rc = recordOf({ storage: s }, opts); rc.migrate(); return { s, rc }; };
@@ -500,7 +500,7 @@ async function expected(rc, id, known, extra = {}) {
   const { findings } = await checkBundle({ folderName: id, files, elidedPaths: elided,
     sha256: async (v) => hexOf(createHash("sha256").update(typeof v === "string" ? v : Buffer.from(v)).digest()),
     sha512: async (b) => new Uint8Array(createHash("sha512").update(Buffer.from(b)).digest()),
-    resolveTarget: (t) => known.has(t), ...extra });
+    resolveTarget: (t) => known.has(t), ...extra }, { grammars: rc.grammars() });
   return findings.filter((f) => f.severity === "error");
 }
 
@@ -1572,7 +1572,6 @@ test("R55 R50 R52: C-75's five rows are this module's own table, PER_ITEM_CHECKS
     assert.ok(Object.isFrozen(row));
   }
   assert.ok(Object.isFrozen(PER_ITEM_CHECKS));
-  assert.equal(CATALOGUE.PER_ITEM_CHECKS, undefined, "the catalogue's copy is gone: one home for C-75");
   // every refusal perItem answers carries its row's check and translation, read from this table
   const cases = [perItem("x", {}, {}, () => ({ ok: true })), perItem("x", { items: Array.from({ length: 101 }, () => ({})) }, {}, () => ({ ok: true })),
                  perItem("x", { items: [7] }, {}, () => ({ ok: true })).items[0], perItem("x", { items: [{}] }, {}, () => { throw new Error("t"); }).items[0],
@@ -1585,14 +1584,23 @@ test("R55 R50 R52: C-75's five rows are this module's own table, PER_ITEM_CHECKS
 test("R3 R27: ALLOCID_PREFIX_GATED's row C-59.5 is held here, its where naming allocIdOp's region, and the refusal carries it", () => {
   const row = RECORD_CORE_CHECKS.ALLOCID_PREFIX_GATED;
   assert.deepEqual([row.check, row.where], ["C-59.5", "src/record-core/index.mjs allocIdOp > is-allocid-prefix-gated"]);
-  assert.equal(row.translation, CATALOGUE.PROJECT_ID_CHECKS.ALLOCID_PREFIX_GATED.translation, "copied unchanged; the catalogue's copy leaves with its split table (T19)");
+  assert.equal(row.translation, "Ids of this kind are given by the record when the thing itself is created, and are not handed out in "
+    + "advance. Create the project, case, draft, grant or task through its own action and the record will answer with its id. "
+    + "Nothing was allocated.", "copied unchanged from the catalogue's PROJECT_ID_CHECKS (T18)");
   const r = fresh().rc.allocIdOp("CASE", "2026");
   assert.deepEqual([r.code, r.check, r.translation], ["ALLOCID_PREFIX_GATED", "C-59.5", row.translation]);
 });
 
 test("R59: registerAuditCheck's refusals carry their code and rows C-102.1 and C-102.2, and a check that threw leaves C-102.3's AUDIT_CHECK_FAILED", async () => {
-  for (const code of ["AUDIT_CHECK_DECLARED", "AUDIT_CHECK_MALFORMED", "AUDIT_CHECK_FAILED"])
-    assert.equal(RECORD_CORE_CHECKS[code].translation, CATALOGUE.REGISTRATION_CHECKS[code].translation, `${code}: copied unchanged`);
+  /* copied unchanged from the catalogue's REGISTRATION_CHECKS (T18) */
+  assert.deepEqual(["AUDIT_CHECK_DECLARED", "AUDIT_CHECK_MALFORMED", "AUDIT_CHECK_FAILED"].map((c) => RECORD_CORE_CHECKS[c].translation), [
+    "A part of this instance tried to register its audit check a second time. Each part registers once, when it starts, so the "
+      + "second was refused and the first still runs. " + BUILD_FAULT,
+    "A part of this instance tried to register an audit check without naming itself or without a check to run, so nothing "
+      + "was registered. " + BUILD_FAULT,
+    "One of the checks the audit runs over this document stopped with an error instead of answering, so the document is "
+      + "counted as having an error rather than as clean. The error is in the check and says nothing yet about the document. "
+      + "The audit changes nothing in the record."]);
   assert.deepEqual(["AUDIT_CHECK_DECLARED", "AUDIT_CHECK_MALFORMED", "AUDIT_CHECK_FAILED"].map((c) => [RECORD_CORE_CHECKS[c].check, RECORD_CORE_CHECKS[c].where]),
     [["C-102.1", "src/record-core/index.mjs registerAuditCheck > is-audit-check-registration"],
      ["C-102.2", "src/record-core/index.mjs registerAuditCheck > is-audit-check-registration"],
@@ -1706,7 +1714,7 @@ test("R67: registerGrammar holds a grammar per module in registration order, and
   assert.doesNotReject(checkBundle({ folderName: "x", files: new Map(), sha256: async () => "", sha512: async () => new Uint8Array() }, { grammars: rc.grammars() }));
 });
 
-test("R67: a malformed grammar, or one claiming part of an arm or two arms, is GRAMMAR_MALFORMED (C-102.16); a second registration or a held id GRAMMAR_DECLARED (C-102.15); nothing is registered", async () => {
+test("R67: a malformed grammar, or one claiming part of a slot, is GRAMMAR_MALFORMED (C-102.16); a second registration or a held id GRAMMAR_DECLARED (C-102.15); nothing is registered", async () => {
   assert.deepEqual([RECORD_CORE_CHECKS.GRAMMAR_DECLARED.check, RECORD_CORE_CHECKS.GRAMMAR_MALFORMED.check], ["C-102.15", "C-102.16"]);
   for (const c of ["GRAMMAR_DECLARED", "GRAMMAR_MALFORMED"]) {
     assert.equal(RECORD_CORE_CHECKS[c].where, "src/record-core/index.mjs registerGrammar > is-grammar-registration");
@@ -1717,8 +1725,7 @@ test("R67: a malformed grammar, or one claiming part of an arm or two arms, is G
   const malformed = [["", { ids: ["C-2.7"], arm: f }], ["  ", { ids: ["C-2.7"], arm: f }], [null, { ids: ["C-2.7"], arm: f }], [7, { ids: ["C-2.7"], arm: f }],
     ["m", { ids: [], arm: f }], ["m", { ids: "C-2.7", arm: f }], ["m", { ids: ["C-2.7", "2.8"], arm: f }], ["m", { ids: ["c-2.7"], arm: f }],
     ["m", { ids: [7], arm: f }], ["m", { ids: ["C-2.7"], arm: "f" }], ["m", { ids: ["C-2.7"] }], ["m", undefined], ["m", {}],
-    ["m", { ids: ["C-18.6"], arm: f }], ["m", { ids: ["C-9.1"], arm: f }], ["m", { ids: ["C-2.7", "C-2.8"], arm: f }],
-    ["m", { ids: ["C-2.9", "C-9.1", "C-2.7"], arm: f }]];
+    ["m", { ids: ["C-18.6"], arm: f }], ["m", { ids: ["C-9.1"], arm: f }], ["m", { ids: ["C-2.7", "C-2.8", "C-9.1"], arm: f }]];
   for (const [m, g] of malformed) {
     const r = rc.registerGrammar(m, g);
     assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, "GRAMMAR_MALFORMED", "GRAMMAR_MALFORMED", "C-102.16", RECORD_CORE_CHECKS.GRAMMAR_MALFORMED.translation],
@@ -1729,9 +1736,10 @@ test("R67: a malformed grammar, or one claiming part of an arm or two arms, is G
   // each refusal names what checkBundle would reject: every arm is claimed whole, never in part
   for (const arm of EXTENSION_ARMS) if (arm.ids.length > 1)
     assert.equal(rc.registerGrammar("m", { ids: [arm.ids[0]], arm: f }).reason, "GRAMMAR_MALFORMED", arm.name);
-  assert.equal(rc.registerGrammar("project", { ids: ["C-9.1", "C-2.9"], arm: f }).ok, true);
+  assert.equal(rc.registerGrammar("project", { ids: ["C-9.1", "C-2.9", "C-800.1"], arm: f }).ok, true);
   const declared = [["project", { ids: ["C-2.7"], arm: f }, { module: "project", heldBy: "project" }],
-                    ["other", { ids: ["C-2.9", "C-9.1"], arm: f }, { module: "other", id: "C-2.9", heldBy: "project" }],
+                    ["other", { ids: ["C-2.9", "C-9.1", "C-800.1"], arm: f }, { module: "other", id: "C-800.1", heldBy: "project" }],
+                    ["other", { ids: ["C-800.1"], arm: f }, { module: "other", id: "C-800.1", heldBy: "project" }],
                     ["other", { ids: ["C-700.1", "C-700.1"], arm: f }, { module: "other", id: "C-700.1", heldBy: "other" }]];
   for (const [m, g, named] of declared) {
     const r = rc.registerGrammar(m, g);
@@ -1968,3 +1976,378 @@ test("R28 R40 R23 (mint-ledger): CASE-<year> ids the counter issued before CASE 
     assert.deepEqual(Object.keys(o).filter((k) => /mint|ledger/i.test(k)), []);
 });
 const pgKeys = (p) => ({ ...p.removed });
+
+/* ---- T19 layer 2: R67 as K766 words it, rule 2's legacy registration, R68–R73, R34/R37/R44's project (N426) ---- */
+
+const doc = (id, type, extra = "") => `---\nid: ${id}\nobject_type: ${type}\ncurrent_state: open\n${extra}---\n\n## Summary\n\nx\n`;
+const imageOf = (rc, id) => {
+  const img = rc.readImage(id), files = new Map(), elided = new Set();
+  for (const [p, v] of Object.entries(img)) typeof v === "string" ? files.set(p, v) : elided.add(p);
+  return { folderName: id, files, elidedPaths: elided,
+           sha256: async (v) => hexOf(createHash("sha256").update(typeof v === "string" ? v : Buffer.from(v)).digest()),
+           sha512: async (b) => new Uint8Array(createHash("sha512").update(Buffer.from(b)).digest()),
+           resolveTarget: () => true };
+};
+
+test("R67 (K766, N422): a registration may claim several whole slots and a slot several registrations, run in its place in registration order; the acceptance is {ok: true, module, ids}", async () => {
+  const { rc } = fresh();
+  const calls = [];
+  const slotted = (who) => async (ctx, findings, where) => {
+    calls.push(`${who}:${where && where.slot}`);
+    if (who === "ig" && where.slot === "checkInquiryExtension") {
+      findings.push({ check: "C-2.8", severity: "warning", message: "entry" });
+      await where.rest();                                              /* the sub-slot: later claimants run here */
+      findings.push({ check: "C-2.8", severity: "warning", message: "legs" });
+    }
+    if (who === "bv") findings.push({ check: "C-25.1", severity: "warning", message: "versions" });
+  };
+  const ig = rc.registerGrammar("inquiry-grammar", { ids: ["C-6.1", "C-15.1", "C-2.8"], arm: slotted("ig") });
+  assert.deepEqual(ig, { ok: true, module: "inquiry-grammar", ids: ["C-6.1", "C-15.1", "C-2.8"] });
+  assert.equal(Object.keys(ig)[0], "ok", "N422: the verdict the DEC-49 guard reads first is `ok: true`, an acceptance");
+  const bv = rc.registerGrammar("basis-versions", { ids: ["C-2.8"], arm: slotted("bv") });
+  assert.deepEqual(bv, { ok: true, module: "basis-versions", ids: ["C-2.8"] }, "a slot another registration claims is not a clash");
+  const info = (ctx, f) => f.push({ check: "C-2.7", severity: "warning", message: "info" });
+  assert.equal(rc.registerGrammar("capture", { ids: ["C-2.7"], arm: info }).ok, true);
+  const g = rc.grammars();
+  assert.deepEqual(g.map((x) => [x.module, [...x.ids]]),
+    [["inquiry-grammar", ["C-6.1"]], ["inquiry-grammar", ["C-15.1"]], ["inquiry-grammar", ["C-2.8"]], ["capture", ["C-2.7"]]],
+    "one entry per claimed slot at its first claimant's place; a lone claimant of one slot as it was registered");
+  assert.equal(g[3].arm, info, "a lone claimant's own arm");
+  assert.ok(g.every((x) => Object.isFrozen(x)));
+  /* the list is one record-grammar's checkBundle accepts, and the slots run in its order, the shared one's claimants in registration order */
+  const { findings } = await checkBundle({ folderName: "INQ-2026-0001-a", files: new Map([["bundle.md", doc("INQ-2026-0001-a", "inquiry")]]),
+    sha256: async () => "", sha512: async () => new Uint8Array() }, { grammars: g });
+  assert.deepEqual(calls, ["ig:checkSupersession", "ig:checkRecheckCoverage", "ig:checkInquiryExtension", "bv:checkInquiryExtension"]);
+  assert.deepEqual(findings.filter((f) => ["entry", "versions", "legs", "info"].includes(f.message)).map((f) => f.message),
+                   ["info", "entry", "versions", "legs"], "rest() ran the later claimant at the sub-slot, once");
+  /* a later claimant not run by rest() runs after the first one returns */
+  const { rc: r2 } = fresh();
+  const order = [];
+  r2.registerGrammar("a", { ids: ["C-2.9", "C-9.1"], arm: () => order.push("a") });
+  r2.registerGrammar("b", { ids: ["C-9.1", "C-2.9"], arm: () => order.push("b") });
+  await checkBundle({ folderName: "x", files: new Map([["bundle.md", doc("x", "project")]]), sha256: async () => "", sha512: async () => new Uint8Array() },
+                    { grammars: r2.grammars() });
+  assert.deepEqual(order, ["a", "b"]);
+  /* a registration claiming no slot runs after the last slot, as registered */
+  assert.equal(r2.registerGrammar("later", { ids: ["C-900.1"], arm: () => order.push("later") }).ok, true);
+  assert.deepEqual(r2.grammars().map((x) => x.module), ["a", "later"]);
+});
+
+test("R67 R59 R18: in the audit each claimant of a shared slot is wrapped on its own: one that throws is one AUDIT_CHECK_FAILED on that bundle, and the others still run", async () => {
+  const { rc, ids } = await auditFixture();
+  const ran = [];
+  rc.registerGrammar("first", { ids: ["C-2.7"], arm: (ctx) => { ran.push(["first", ctx.folderName]); throw new Error("first broke"); } });
+  rc.registerGrammar("second", { ids: ["C-2.7"], arm: (ctx, f) => { ran.push(["second", ctx.folderName]); f.push({ check: "C-2.7", code: "SECOND", severity: "error", message: "s" }); } });
+  const r = await rc.auditPass({ limit: 10 });
+  assert.deepEqual(ran.filter(([w]) => w === "second").map(([, id]) => id), ids, "the second claimant ran on every bundle");
+  assert.equal(r.tally.first, ids.length); assert.equal(r.tallyDetail["first/AUDIT_CHECK_FAILED"], ids.length);
+  assert.equal(r.tallyDetail["C-2.7/SECOND"], ids.length);
+  assert.deepEqual([r.clean, r.withErrors], [0, ids.length]);
+});
+
+test("R67 R18 (rule 2): registerLegacyGrammars fills, as legacy-checks, only the slots no registration holds, and the audit then judges as the catalogue's checkBundle does", async () => {
+  /* the oracle is the catalogue's own wrapper, read here only while the legacy registration exists (both go at rule 1) */
+  const { checkBundle: catalogueCheckBundle, LEGACY_GRAMMARS } = await import("../../../checks/bio-checks.mjs");
+  const { rc } = fresh();
+  const capture = { module: "capture", ids: ["C-2.7"], arm: (ctx, f) => f.push({ check: "C-2.7", severity: "warning", message: "capture's" }) };
+  assert.equal(rc.registerGrammar(capture.module, capture).ok, true);
+  const legacy = registerLegacyGrammars(rc);
+  const want = LEGACY_GRAMMARS.filter((x) => !x.ids.includes("C-2.7")).flatMap((x) => x.ids);
+  assert.deepEqual(legacy, { ok: true, module: "legacy-checks", ids: want }, "every slot but capture's, which is never doubled");
+  assert.deepEqual(registerLegacyGrammars(rc), { ok: true, module: "legacy-checks", ids: [] }, "a second call finds every slot held");
+  assert.equal(rc.grammars().filter((x) => x.module === "legacy-checks").length, want.length === 0 ? 0 : 5, "and registers nothing more");
+  const bodies = [["INFO-2026-0001-a", "information", "source_type: web\n"], ["INQ-2026-0001-b", "inquiry", "question: why?\nbasis: []\n"],
+                  ["PROJ-2026-0001-c", "project", "participants: []\n"], ["INFO-2026-0002-d", "information", ""]];
+  for (const [id, type, extra] of bodies) rc.commit({ bundleId: id, type, snapKey: "K1", files: [file("bundle.md", doc(id, type, extra))] });
+  const r = await rc.auditPass({ limit: 10 });
+  const tally = {};
+  for (const [id] of bodies) {
+    const own = await checkBundle(imageOf(rc, id), { grammars: rc.grammars() });
+    const theirs = await catalogueCheckBundle(imageOf(rc, id), { grammars: [capture] });
+    assert.deepEqual(own.findings, theirs.findings, `${id}: the same findings, in the same order`);
+    for (const e of theirs.findings.filter((f) => f.severity === "error")) tally[e.check] = (tally[e.check] || 0) + 1;
+  }
+  assert.deepEqual(r.tally, tally, "the audit's tally is the catalogue's");
+  /* with every slot held, nothing is registered */
+  const { rc: full } = fresh();
+  for (const a of EXTENSION_ARMS) full.registerGrammar(`m-${a.name}`, { ids: [...a.ids], arm: () => {} });
+  assert.deepEqual(registerLegacyGrammars(full), { ok: true, module: "legacy-checks", ids: [] });
+  assert.ok(!full.grammars().some((x) => x.module === "legacy-checks"));
+});
+
+test("R68: a registered finding answers once per page under its key, beside the page's figures, which it never moves; one that throws is AUDIT_CHECK_FAILED under its key", async () => {
+  const { rc, ids } = await auditFixture();
+  const base = await rc.auditPass({ limit: 10 });
+  const seen = [];
+  assert.deepEqual(rc.registerAuditFinding("provenance", "route", (page) => { seen.push(page); return { tally: page.bundles.length }; }),
+                   { ok: true, module: "provenance", key: "route" });
+  assert.equal(rc.registerAuditFinding("membership", "membership", async () => ({ held: false })).ok, true);
+  assert.equal(rc.registerAuditFinding("broken", "broke", () => { throw new Error("finding bug"); }).ok, true);
+  const r = await rc.auditPass({ limit: 3, after: "" });
+  assert.equal(seen.length, 1, "once per page");
+  assert.deepEqual(seen[0], { bundles: ids.slice(0, 3).map((id) => ({ bundleId: id, type: "information", state: "" })), after: "", last: ids[2] });
+  assert.deepEqual(r.route, { tally: 3 }); assert.deepEqual(r.membership, { held: false });
+  assert.deepEqual([r.broke.ok, r.broke.reason, r.broke.code, r.broke.check, r.broke.translation],
+                   [false, "AUDIT_CHECK_FAILED", "AUDIT_CHECK_FAILED", "C-102.3", RECORD_CORE_CHECKS.AUDIT_CHECK_FAILED.translation]);
+  assert.match(r.broke.detail, /finding bug/);
+  assert.deepEqual(Object.keys(r).slice(0, 3), ["route", "membership", "broke"], "in registration order");
+  const all = await rc.auditPass({ limit: 10 });
+  for (const k of ["ok", "checked", "clean", "withErrors", "tally", "offenders", "limit", "cursor", "page"])
+    assert.deepEqual(all[k], base[k], `${k} is not moved by a finding`);
+  /* an empty page is still a page */
+  const none = await rc.auditPass({ visible: () => false });
+  assert.deepEqual(seen.at(-1), { bundles: [], after: "", last: "" }); assert.deepEqual(none.route, { tally: 0 });
+  /* refusals: R59's rows; a refused registration registers nothing */
+  const f = () => ({});
+  for (const [m, k, fn] of [["", "k", f], [null, "k", f], ["m", "", f], ["m", 7, f], ["m", undefined, f], ["m", "k", "fn"]]) {
+    const x = rc.registerAuditFinding(m, k, fn);
+    assert.deepEqual([x.ok, x.reason, x.code, x.check], [false, "AUDIT_CHECK_MALFORMED", "AUDIT_CHECK_MALFORMED", "C-102.2"]);
+  }
+  for (const [m, k, holder] of [["provenance", "other", "provenance"], ["m2", "route", "provenance"], ["m3", "tally", "auditPass"],
+                                ["m4", "ok", "auditPass"], ["m5", "total", "auditPass"], ["m6", "page", "auditPass"]]) {
+    const x = rc.registerAuditFinding(m, k, f);
+    assert.deepEqual([x.ok, x.reason, x.code, x.check], [false, "AUDIT_CHECK_DECLARED", "AUDIT_CHECK_DECLARED", "C-102.1"], `${m} ${k}`);
+    assert.ok(x.detail.includes(holder));
+  }
+  assert.deepEqual(Object.keys(await rc.auditPass({ limit: 1 })).slice(0, 3), ["route", "membership", "broke"], "nothing more registered");
+  assert.equal(rc.registerAuditCheck("provenance", () => []).ok, true, "the seams are separate: a module registers once in each");
+});
+
+test("R69 R45: registered contexts are merged in registration order, then the caller's, and reach the catalogue and every check; one that throws is AUDIT_CHECK_FAILED on that bundle", async () => {
+  const { rc, ids } = await auditFixture();
+  const got = [];
+  rc.registerAuditCheck("watch", (img, ctx) => { got.push([img.bundleId, ctx]); return []; });
+  assert.deepEqual(rc.registerAuditContext("inquiry", (id) => ({ earnedRegistry: { id }, shared: "inquiry" })), { ok: true, module: "inquiry" });
+  assert.equal(rc.registerAuditContext("publication", (id) => (id === ids[2] ? (() => { throw new Error("ctx bug"); })() : { publishedRegistry: {}, shared: "publication" })).ok, true);
+  const r = await rc.auditPass({ limit: 10, context: () => ({ releaseRegistry: null }) });
+  assert.deepEqual(got.find(([id]) => id === ids[0])[1], { earnedRegistry: { id: ids[0] }, shared: "publication", publishedRegistry: {}, releaseRegistry: null },
+                   "registration order, a later one over an earlier, then the caller's");
+  assert.deepEqual(got.find(([id]) => id === ids[2])[1], { earnedRegistry: { id: ids[2] }, shared: "inquiry", releaseRegistry: null },
+                   "a context that threw gives that bundle nothing from it");
+  assert.equal(r.tally.publication, 1); assert.equal(r.tallyDetail["publication/AUDIT_CHECK_FAILED"], 1);
+  const quiet = await rc.auditPass({ limit: 10, visible: (id) => id === ids[2] });
+  assert.equal(quiet.withErrors, 1, "the bundle is not clean");
+  /* the catalogue sees it too: a grammar reads the merged context */
+  const { rc: r2, ids: i2 } = await auditFixture();
+  const seenByGrammar = [];
+  r2.registerAuditContext("inquiry", () => ({ earnedRegistry: { marker: 1 } }));
+  r2.registerGrammar("probe", { ids: ["C-2.7"], arm: (ctx) => seenByGrammar.push(ctx.earnedRegistry) });
+  await r2.auditPass({ limit: 1 });
+  assert.deepEqual(seenByGrammar, [{ marker: 1 }]); void i2;
+  /* refusals, R59's rows */
+  for (const [m, fn] of [["", () => ({})], [null, () => ({})], ["m", null]])
+    assert.equal(rc.registerAuditContext(m, fn).reason, "AUDIT_CHECK_MALFORMED");
+  const twice = rc.registerAuditContext("inquiry", () => ({}));
+  assert.deepEqual([twice.ok, twice.reason, twice.check, twice.module], [false, "AUDIT_CHECK_DECLARED", "C-102.1", "inquiry"]);
+});
+
+test("R70 R40: registerMintSeed adds a module's own sources to the ledger's seed; MINT_SEED_DECLARED (C-102.19) and MINT_SEED_MALFORMED (C-102.20) register nothing", () => {
+  for (const [c, n] of [["MINT_SEED_DECLARED", "C-102.19"], ["MINT_SEED_MALFORMED", "C-102.20"]]) {
+    const row = RECORD_CORE_CHECKS[c];
+    assert.deepEqual([row.check, row.where], [n, "src/record-core/index.mjs registerMintSeed > is-mint-seed-registration"]);
+    assert.ok(row.translation.endsWith(BUILD_FAULT) && Object.isFrozen(row));
+  }
+  const { s, rc } = fresh();
+  for (const t of ["cases", "case_documents", "published_cases", "elsewhere"]) s.db.exec(`CREATE TABLE ${t} (case_id TEXT)`);
+  s.sql.exec(`INSERT INTO cases VALUES ('CASE-2026-0101')`); s.sql.exec(`INSERT INTO case_documents VALUES ('CASE-2026-0102')`);
+  s.sql.exec(`INSERT INTO published_cases VALUES ('CASE-2026-0103')`); s.sql.exec(`INSERT INTO elsewhere VALUES ('CASE-2026-0104')`);
+  const before = dump(s);
+  assert.deepEqual(rc.registerMintSeed("ratification", [["CASE", "cases", "case_id"], ["CASE", "case_documents", "case_id"]]),
+                   { ok: true, module: "ratification", sources: [["CASE", "cases", "case_id"], ["CASE", "case_documents", "case_id"]] });
+  assert.equal(rc.registerMintSeed("publication", [["CASE", "published_cases", "case_id"]]).ok, true);
+  assert.deepEqual(dump(s), before, "registering writes nothing");
+  const bad = [["", []], [null, []], ["m", null], ["m", "x"], ["m", [["CASE", "t"]]], ["m", [["CASE", "t", ""]]], ["m", [["CASE", "t", 7]]], ["m", [null]]];
+  for (const [m, src] of bad) {
+    const r = rc.registerMintSeed(m, src);
+    assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, "MINT_SEED_MALFORMED", "MINT_SEED_MALFORMED", "C-102.20",
+                     RECORD_CORE_CHECKS.MINT_SEED_MALFORMED.translation], `${String(m)} ${JSON.stringify(src)}`);
+  }
+  const twice = rc.registerMintSeed("ratification", [["CASE", "elsewhere", "case_id"]]);
+  assert.deepEqual({ ...twice, detail: null }, { ok: false, reason: "MINT_SEED_DECLARED", code: "MINT_SEED_DECLARED", check: "C-102.19",
+    translation: RECORD_CORE_CHECKS.MINT_SEED_DECLARED.translation, module: "ratification", heldBy: "ratification", detail: null });
+  rc.seedMintLedger([]);
+  for (const n of [101, 102, 103])
+    assert.equal(draws([n, n + 800], () => rc.mintOpaqueId("CASE", "2026", "", () => false)), `CASE-2026-0${n + 800}`, `CASE-2026-0${n}: learned from a registered source`);
+  assert.equal(draws([104], () => rc.mintOpaqueId("CASE", "2026", "", () => false)), "CASE-2026-0104",
+               "a refused registration's table is never read, nor any table no one names");
+});
+
+test("R71: migrate runs RECORD_SCHEMA itself and this module's own migrations, so a bare storage holds its tables; a store written earlier is brought forward; twice changes nothing", async () => {
+  const s = storage({ schema: false });
+  const rc = recordOf({ storage: s });
+  rc.migrate();
+  const tables = () => rows(s, `SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`).map((r) => r.name);
+  assert.deepEqual(tables(), ["bundles", "files", "history", "leases", "manifest", "minted_ids", "seq", "settings"]);
+  const once = dump(s), schemaOnce = JSON.stringify(rows(s, `SELECT * FROM sqlite_master ORDER BY name`));
+  rc.migrate();
+  assert.deepEqual(dump(s), once); assert.equal(JSON.stringify(rows(s, `SELECT * FROM sqlite_master ORDER BY name`)), schemaOnce, "running it twice changes nothing");
+  /* a store written before the manifest's writer and operation, before R34's project, still holding `classification`,
+     and with legacy type spellings in the derived `bundles` */
+  const { LEGACY_TYPE_ALIASES } = await import("../../../src/record-grammar/index.mjs");
+  const old = storage({ schema: false });
+  old.db.exec(`CREATE TABLE bundles (bundle_id TEXT PRIMARY KEY, object_type TEXT NOT NULL, group_id TEXT NOT NULL, title TEXT,
+                 current_state TEXT NOT NULL, prior_state TEXT, created TEXT NOT NULL, last_updated TEXT NOT NULL, criticality TEXT,
+                 bundle_sha TEXT NOT NULL, row_version INTEGER NOT NULL DEFAULT 1, classification TEXT);
+               CREATE TABLE manifest (bundle_id TEXT NOT NULL, snap_key TEXT NOT NULL, kind TEXT NOT NULL, base TEXT, author TEXT,
+                 created TEXT NOT NULL, files_json TEXT NOT NULL, PRIMARY KEY (bundle_id, snap_key))`);
+  const aliases = Object.entries(LEGACY_TYPE_ALIASES);
+  assert.ok(aliases.length >= 1);
+  aliases.forEach(([legacy], i) => old.sql.exec(`INSERT INTO bundles VALUES (?,?,'',NULL,'open',NULL,'t','t',NULL,'s',1,'fact')`, `B-${i}`, legacy));
+  old.sql.exec(`INSERT INTO manifest VALUES ('B-0','K1','promotion',NULL,'a','t','[]')`);
+  const r2 = recordOf({ storage: old });
+  r2.migrate();
+  const cols = (t) => rows(old, `PRAGMA table_info(${t})`).map((r) => r.name);
+  assert.ok(["writer", "operation"].every((c) => cols("manifest").includes(c)), "the manifest's columns are added");
+  assert.ok(cols("bundles").includes("project") && !cols("bundles").includes("classification"), "project added, classification dropped");
+  assert.deepEqual(rows(old, `SELECT object_type FROM bundles ORDER BY bundle_id`).map((r) => r.object_type), aliases.map(([, c]) => c),
+                   "legacy type spellings normalised from record-grammar's LEGACY_TYPE_ALIASES");
+  assert.deepEqual(r2.manifestEntry("B-0", "K1").writer, null, "an older entry names no writer");
+  assert.deepEqual(r2.bundleInfo("B-0").project, null);
+  assert.ok(rows(old, `PRAGMA index_list(bundles)`).some((r) => r.name === "bundles_project"));
+  const twice = dump(old); r2.migrate(); assert.deepEqual(dump(old), twice);
+});
+
+const opsUrl = (op, params = {}) => { const u = new URL(`https://plane.invalid/?op=${op}`); for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v); return u; };
+
+test("R72: recordCoreOps holds seven ops, each answering what its service answers from the query's parameters", async () => {
+  const { s, rc } = fresh();
+  const ops = (op, p, body = null) => recordCoreOps(rc, opsUrl(op, p), body, {})[op]();
+  assert.deepEqual(Object.keys(recordCoreOps(rc, opsUrl("x"), null)).sort(), ["allocid", "audit", "digestcensus", "lease", "purge", "snapkeycensus", "stats"]);
+  assert.ok(Object.values(recordCoreOps(rc, opsUrl("x"), null)).every((f) => typeof f === "function" && f.length === 0), "each a function of no arguments");
+  assert.deepEqual(ops("allocid", { prefix: "INFO", year: "2026" }), { id: "INFO-2026-0001" });
+  assert.equal(ops("allocid", { prefix: "PROJ", year: "2026" }).reason, "ALLOCID_PREFIX_GATED");
+  assert.equal(ops("allocid", { prefix: "INFO", year: "2026" }, { prefix: "PROJ" }).id, "INFO-2026-0002", "never the body's");
+  put(rc, "INFO-2026-0001-a", "K1");
+  const t0 = Date.now(), lease = ops("lease", { id: "INFO-2026-0001-a", actor: "alice" });
+  assert.equal(lease.ok, true); assert.equal(lease.actor, "alice");
+  const exp = Date.parse(lease.expires);
+  assert.ok(exp >= t0 + 300000 && exp <= Date.now() + 300000, "a lease of five minutes");
+  assert.equal(ops("lease", { id: "INFO-2026-0001-a" }).reason, "ANONYMOUS_LEASE");
+  assert.deepEqual(ops("snapkeycensus", { limit: "1" }), rc.snapKeyCensus({ limit: "1" }));
+  assert.deepEqual(ops("digestcensus", { limit: "0" }), rc.digestCensus({ limit: "0" }));
+  /* stats: capacity exactly when the stamp is 1; a viewer never stamped reaches the source as undefined */
+  const asked = [];
+  Object.defineProperty(s.sql, "databaseSize", { get: () => 512 });
+  rc.registerStatsSource("source", ({ viewer, proof }) => { asked.push([viewer, proof]); return { bundles: 1 }; });
+  assert.deepEqual(ops("stats", { capacity: "1", viewer: "admin" }), { bundles: 1, dbBytes: 512 });
+  for (const c of ["0", "true", ""]) assert.ok(!("dbBytes" in ops("stats", { capacity: c })), `capacity=${c}`);
+  ops("stats", {}); ops("stats", { viewer: "" });
+  assert.deepEqual(asked.slice(-2), [[undefined, false], ["", false]]);
+});
+
+test("R72 R22 R24 R64: op=purge purges in one transaction and answers scope, the private proof before and after, and removed for its named keys", () => {
+  const { s, rc } = fresh();
+  s.db.exec(`CREATE TABLE refs (bundle_id TEXT)`);
+  rc.declarePurge("connections", ["refs"]);
+  const count = (t) => rows(s, `SELECT COUNT(*) AS n FROM ${t}`)[0].n;
+  rc.registerStatsSource("source", ({ proof }) => (proof ? { bundles: count("bundles"), files: count("files"), history: count("history"), refs: count("refs"),
+    leads: 0, observations: 3 } : { bundles: -1 }));
+  put(rc, "INFO-2026-0001-a", "K1"); put(rc, "INFO-2026-0001-a", "K2", "two"); put(rc, "INFO-2026-0002-b", "K1");
+  s.sql.exec(`INSERT INTO refs VALUES ('INFO-2026-0001-a'), ('INFO-2026-0002-b')`);
+  const one = recordCoreOps(rc, opsUrl("purge", { bundleId: "INFO-2026-0001-a" }), null).purge();
+  assert.deepEqual([one.ok, one.scope], [true, "INFO-2026-0001-a"]);
+  assert.deepEqual(one.before, { bundles: 2, files: 2, history: 1, refs: 2, leads: 0, observations: 3, dbBytes: null }, "the proof, whole");
+  assert.deepEqual(one.after, { bundles: 1, files: 1, history: 0, refs: 1, leads: 0, observations: 3, dbBytes: null });
+  const KEYS = ["bundles", "files", "history", "refs", "register", "tasks", "taskQueue", "sourceReachability", "entities", "entityAliases",
+    "entityRelations", "resolutions", "connections", "progressionDefs", "connectionPairChoices", "progressionStages", "progressionDefVersions",
+    "progressionStageVersions", "progressionInstances", "progressionExceptions", "connectionDirty", "proposalDispositions", "queueState",
+    "projectParticipants", "projectOwnerVotes", "aiRuns", "aiRunBounds", "aiRunLog", "leads", "themes", "themePlacements",
+    "suggestRefusals", "captureRequests"];
+  assert.deepEqual(Object.keys(one.removed), KEYS, "exactly R72's keys, in its order");
+  assert.deepEqual([one.removed.bundles, one.removed.files, one.removed.history, one.removed.refs, one.removed.leads], [1, 1, 1, 1, 0]);
+  assert.ok(Number.isNaN(one.removed.register), "a key no figure reports is before less after, as the store answers it");
+  for (const empty of [{}, { bundleId: "" }]) {
+    put(rc, "INFO-2026-0003-c", "K1");
+    const all = recordCoreOps(rc, opsUrl("purge", empty), null).purge();
+    assert.deepEqual([all.scope, count("bundles"), count("refs")], ["ALL", 0, 0], "absent or empty is the whole store");
+  }
+});
+
+test("R73 R19: op=audit is gated by sight(viewer): the page and total are what the viewer may see, references resolve whole, the ids are not answered, and a viewer never seen sees nothing", async () => {
+  const { s, rc, ids } = await auditFixture();
+  /* a sight in membership's shape: {sql, args} over the alias b */
+  const sight = (viewer) => viewer === "all" ? { sql: "1=1", args: [] }
+    : viewer === "some" ? { sql: "b.bundle_id IN (?, ?)", args: [ids[0], ids[3]] } : { sql: "0=1", args: [] };
+  rc.registerAuditFinding("provenance", "route", (page) => ({ n: page.bundles.length }));
+  rc.registerAuditFinding("membership", "membership", () => ({ held: false }));
+  const asked = [];
+  rc.registerAuditContext("inquiry", (id) => { asked.push(id); return {}; });
+  const audit = (p) => recordCoreOps(rc, opsUrl("audit", p), null, { sight }).audit();
+  const all = await audit({ viewer: "all", limit: "10" });
+  const direct = await rc.auditPass({ limit: 10 });
+  const { page, ...same } = direct;
+  assert.deepEqual(all, { ...same, total: 5 }, "today's sweep, with total, without the page's ids");
+  assert.ok(!("page" in all));
+  assert.deepEqual(Object.keys(all).sort(), ["checked", "clean", "cursor", "limit", "membership", "offenders", "ok", "route", "tally", "total", "withErrors",
+    ...(all.tallyDetail ? ["tallyDetail"] : [])].sort());
+  const some = await audit({ viewer: "some" });
+  assert.deepEqual([some.checked, some.total, some.route], [2, 2, { n: 2 }]);
+  assert.ok(some.offenders.every((o) => [ids[0], ids[3]].includes(o.bundleId)));
+  assert.ok(!("C-6.2" in some.tally), "A cites B, out of sight, and B still resolves");
+  /* each id the page names is asked once */
+  const seen = [];
+  const counted = (v) => { const g = sight(v); seen.push(v); return g; };
+  const exec = s.sql.exec; const gated = [];
+  s.sql.exec = (q, ...a) => { if (/b\.bundle_id=\? AND/.test(q)) gated.push(a[0]); return exec(q, ...a); };
+  await recordCoreOps(rc, opsUrl("audit", { viewer: "all", limit: "2" }), null, { sight: counted }).audit();
+  s.sql.exec = exec;
+  assert.deepEqual(gated, ids.slice(0, 2)); assert.deepEqual(seen, ["all"]);
+  /* after and limit, as the page cursor */
+  const p2 = await audit({ viewer: "all", after: ids[1], limit: "2" });
+  assert.deepEqual([p2.checked, p2.cursor], [2, ids[3]]);
+  /* fail closed: no viewer, an unknown one, no sight, a sight that throws */
+  for (const [p, sg] of [[{}, sight], [{ viewer: "nobody" }, sight], [{ viewer: "all" }, null], [{ viewer: "all" }, () => { throw new Error("x"); }],
+                         [{ viewer: "all" }, () => null]]) {
+    const r = await recordCoreOps(rc, opsUrl("audit", p), null, { sight: sg }).audit();
+    assert.deepEqual([r.ok, r.checked, r.total, r.offenders, r.tally], [true, 0, 0, [], {}], JSON.stringify(p));
+  }
+  void asked;
+});
+
+test("R34 R37 R44 (N426): bundles.project records the project the last commit named, bundleInfo answers it, and a later module fences by it in its own SQL", () => {
+  const { s, rc } = fresh();
+  const col = rows(s, `PRAGMA table_info(bundles)`).find((r) => r.name === "project");
+  assert.deepEqual([col.type, col.notnull], ["TEXT", 0]);
+  const c = (id, k, project) => rc.commit({ bundleId: id, type: "plan", snapKey: k, project, files: [file("bundle.md", `${id}${k}`)] });
+  c("PLN-2026-0001-a", "K1", "PROJ-2026-0001-p");
+  c("ESC-2026-0001-b", "K1", "PROJ-2026-0002-q");
+  c("INFO-2026-0001-c", "K1", null);
+  assert.equal(rc.bundleInfo("PLN-2026-0001-a").project, "PROJ-2026-0001-p");
+  assert.equal(rc.bundleInfo("INFO-2026-0001-c").project, null, "a bundle that belongs to no project");
+  c("PLN-2026-0001-a", "K2", "PROJ-2026-0002-q");
+  assert.equal(rc.bundleInfo("PLN-2026-0001-a").project, "PROJ-2026-0002-q", "the last commit's project");
+  c("ESC-2026-0001-b", "K2", null);
+  assert.equal(rc.bundleInfo("ESC-2026-0001-b").project, null, "a commit naming none records none");
+  /* a later module's fence, by project sight, in its own SQL over the read contract */
+  s.db.exec(`CREATE TABLE sees (member TEXT, project_id TEXT)`);
+  s.sql.exec(`INSERT INTO sees VALUES ('iris', 'PROJ-2026-0002-q')`);
+  const visibleTo = (m) => rows(s, `SELECT b.bundle_id FROM bundles b WHERE b.project IS NULL
+                                     OR EXISTS (SELECT 1 FROM sees x WHERE x.member = ? AND x.project_id = b.project) ORDER BY b.bundle_id`, m).map((r) => r.bundle_id);
+  assert.deepEqual(visibleTo("iris"), ["ESC-2026-0001-b", "INFO-2026-0001-c", "PLN-2026-0001-a"]);
+  assert.deepEqual(visibleTo("olaf"), ["ESC-2026-0001-b", "INFO-2026-0001-c"]);
+  assert.deepEqual(rc.listBundles({ project: "PROJ-2026-0002-q" }).ids, ["PLN-2026-0001-a"]);
+});
+
+test("R46 R22 R72 (K775): a clears column is set to NULL where it names the purged bundle, on rows that stay, in the purge's transaction; the whole-store form is unchanged", () => {
+  const { s, rc } = fresh();
+  s.db.exec(`CREATE TABLE capture_requests (id TEXT, target TEXT, lead_inquiry TEXT)`);
+  assert.deepEqual(rc.declarePurge("capture-requests", [{ name: "capture_requests", keys: ["target"], clears: ["lead_inquiry"] }]), { ok: true });
+  assert.equal(rc.declarePurge("x", [{ name: "t2", clears: ["bad col"] }]).reason, "TABLE_NAME_INVALID");
+  assert.equal(rc.declarePurge("x", [{ name: "t3", clears: "lead" }]).reason, "TABLE_NAME_INVALID");
+  put(rc, "INQ-2026-0001-a", "K1"); put(rc, "INFO-2026-0001-t", "K1");
+  s.sql.exec(`INSERT INTO capture_requests VALUES ('r1', 'INFO-2026-0001-t', 'INQ-2026-0001-a'), ('r2', 'INFO-2099-0001-x', 'INQ-2026-0001-a'),
+              ('r3', 'INFO-2099-0002-y', 'INQ-2026-0002-b')`);
+  const r = recordCoreOps(rc, opsUrl("purge", { bundleId: "INQ-2026-0001-a" }), null).purge();
+  assert.equal(r.scope, "INQ-2026-0001-a");
+  assert.deepEqual(rows(s, `SELECT id, target, lead_inquiry FROM capture_requests ORDER BY id`).map((x) => ({ ...x })), [
+    { id: "r1", target: "INFO-2026-0001-t", lead_inquiry: null }, { id: "r2", target: "INFO-2099-0001-x", lead_inquiry: null },
+    { id: "r3", target: "INFO-2099-0002-y", lead_inquiry: "INQ-2026-0002-b" }], "the lead cleared where it named the bundle; the rows stay");
+  rc.purge({ bundleId: "INFO-2026-0001-t" });
+  assert.deepEqual(rows(s, `SELECT id FROM capture_requests ORDER BY id`).map((x) => x.id), ["r2", "r3"], "the keyed form still deletes by target");
+  /* in the purge's transaction: a purge that rolls back takes its clearing back with it */
+  s.sql.exec(`UPDATE capture_requests SET lead_inquiry='INQ-2026-0002-b'`);
+  assert.throws(() => rc.transact(() => { rc.purge({ bundleId: "INQ-2026-0002-b" }); throw new Error("rolled"); }));
+  assert.equal(rows(s, `SELECT COUNT(*) AS n FROM capture_requests WHERE lead_inquiry='INQ-2026-0002-b'`)[0].n, 2);
+  rc.purge({});
+  assert.equal(rows(s, `SELECT COUNT(*) AS n FROM capture_requests`)[0].n, 0, "the whole-store form clears the table, as declared");
+});

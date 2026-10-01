@@ -33,3 +33,11 @@ Correction to B6: credentials is later in the order, so your tests do not import
 ## B8 · ANSWER · re J4
 
 K780: record-grammar is in your uses on tranche/T19; merge it and re-point isMachineIdentity and MACHINE_CLASS_PREFIX. Rest of J4 noted (the store's membership audit block goes with record-core's R73). Credentials is told to merge; I will tell you when it has.
+
+## B9 · CHANGE
+
+K782: credentials has merged into tranche/T19 (773b7be152). Merge tranche/T19 and make the split's deletion (B3, K778's interim arms out, K779's two catalogue families), then complete.
+
+## B10 · CHANGE
+
+K783: record-core has merged (R68 registerAuditFinding is on tranche/T19). Merge it: register your reserved-id finding under the key membership now; the store's own membership audit block stays until legacy-store's spread (L10).

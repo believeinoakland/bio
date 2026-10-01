@@ -13,7 +13,11 @@
  * lag). C-75, the set form's five rows, MOVED here whole as `PER_ITEM_CHECKS` (its family name kept for the guard's and
  * `dec49Row`'s suffix harvest), the catalogue's copy deleted in the same job (K586 BOB-1: record-core was its one
  * importer). C-102.15–.18 are new: the grammar seam's two registration refusals (§1b) and the statistics source's two
- * (R64's source, K621), each met only by the instance's own build, as C-102.1, .2, .13 and .14 are. */
+ * (R64's source, K621), each met only by the instance's own build, as C-102.1, .2, .13 and .14 are.
+ *
+ * T19 (RECORD-CORE #11): C-102.19–.20 are new, the mint seed's two registration refusals (R70), on the same terms.
+ * C-102.15's and .16's meaning follows R67 as K766 words it (a registration may claim several whole slots, a slot
+ * several registrations); their sentences already say so. */
 
 const at = (fn, region) => `src/record-core/index.mjs ${fn} > ${region}`;
 const BUILD_FAULT = 'This is a fault in how the instance was built, not in the record, and nothing in the record changed.';
@@ -85,6 +89,17 @@ export const RECORD_CORE_CHECKS = Object.freeze({
     check: 'C-102.18', where: at("registerStatsSource", "is-stats-source-registration"),
     translation: 'A part of this instance tried to supply the instance\'s figures without naming itself or without a '
       + 'function to count them, so nothing was registered. ' + BUILD_FAULT,
+  }),
+  /* New (T19, R70; `build/extraction/legacy-store.md` §4.2 (3)): a module's seed sources for the opaque-id ledger. */
+  MINT_SEED_DECLARED: Object.freeze({
+    check: 'C-102.19', where: at("registerMintSeed", "is-mint-seed-registration"),
+    translation: 'A part of this instance tried to name the identifiers it holds a second time, so the second was '
+      + 'refused and the first still stands. ' + BUILD_FAULT,
+  }),
+  MINT_SEED_MALFORMED: Object.freeze({
+    check: 'C-102.20', where: at("registerMintSeed", "is-mint-seed-registration"),
+    translation: 'A part of this instance tried to name the identifiers it holds without naming itself, or named a '
+      + 'place to read them that is not a table and a column, so nothing was registered. ' + BUILD_FAULT,
   }),
 });
 

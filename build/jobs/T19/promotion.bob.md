@@ -1,6 +1,6 @@
 # BOB to promotion (T19)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -17,3 +17,11 @@ K778 (membership J3): a new row C-96.18 ENROL_NOT_RECORDED arrives in membership
 ## B4 · CHANGE
 
 K780: record-grammar is now in your uses (modules.json on tranche/T19): re-point your catalogue imports to record-grammar where it holds the name (rule 1).
+
+## B5 · ANSWER · re J2
+
+K781: (1) record-grammar is in your uses (K780, B4). (2) legacy-checks' six-slot pin is accepted red by name; no re-open. (3) provenance's L3 START carries register-checks.test R45's re-point; (4) ratification's L8 START carries release.test's setup line. (5) plane in MODULE_ORDER is membership's (B2). (7) noted as N444 for the release. Stamp after record-core, credentials and membership's deletion merge; I will tell you.
+
+## B6 · CHANGE
+
+K783: record-core (833e9b3334) and credentials (K782) have merged into tranche/T19. Note: the catalogue's C-102.1–.3 copies in REGISTRATION_CHECKS duplicate RECORD_CORE_CHECKS' rows (DEC-49 guard); they leave with REGISTRATION_CHECKS, in your job if you are its last importer. Membership's deletion is next; I will tell you when it merges, then stamp.
