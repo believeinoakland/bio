@@ -172,3 +172,21 @@ test("R8, R9, R10: the one place each is judged is the provider this module fill
   assert.equal(p.caseIdentitySentence("CASE-2026-0001", 2, false), "the next edition (2) of CASE-2026-0001");
   assert.equal(JSON.stringify(p.deadAnswer()), DEAD);
 });
+
+test("R19: a project with no drafts is a stated zero, the whole list and not a refusal, for everyone with standing", () => {
+  const w = standard();
+  /* P holds drafts; Q holds none (another project's drafts are not Q's) */
+  draft(w); draft(w, { newCase: true });
+  for (const [viewer, limit] of [[V("quinn"), null], [V("quinn"), "1"], [V("adm"), null], [V("adm"), 0]]) {
+    const before = w.snapshot();
+    const l = w.r.list({ project: Q, viewer, limit });
+    assert.deepEqual(w.snapshot(), before, "writes nothing");
+    assert.deepEqual(l, { ok: true, kind: "review-drafts", project: Q, drafts: [], count: 0, total: 0,
+                          limit: limit === "1" ? 1 : REVIEW_LIST_MAX, truncated: false }, `${viewer} ${limit}`);
+    assert.notEqual(JSON.stringify(l), DEAD);
+  }
+  /* the zero is only for those with standing: an outsider still reads the dead answer, the same bytes as a project that holds drafts */
+  assert.equal(JSON.stringify(w.r.list({ project: Q, viewer: V("ann") })), DEAD);
+  assert.equal(JSON.stringify(w.r.list({ project: P, viewer: V("quinn") })), DEAD);
+  assert.equal(w.r.list({ project: P, viewer: V("ann") }).total, 2);
+});
