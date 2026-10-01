@@ -18,3 +18,7 @@
 - format: 86 modules, 84 requirements files; 0 failures. architecture: 11 product files, 43 relative imports; 0 failures. coverage: 11 of 11 live requirement ids named by a test; 0 failures. ownership: 4 files changed by citation between tranche/T21 and HEAD; 0 failures.
 
 Size (session_015Lw2eUqxdm1R3Ga3ikfBxs): test runs 2, module lines 1043
+
+## J1 · REPORT
+
+Stale generated artifact: bio-plane/dist/bio-plane.bundled.mjs (bio-plane/src/citation/index.mjs changed). No service changed: only two RETIRED_NOT_CITABLE detail strings, which no module reads.
