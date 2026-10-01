@@ -1,6 +1,6 @@
 /* feedItems (R8) at its interface: what it answers, what it takes from queue, what it never carries; the bias debts
-   (R1); the lead's take-up (R9); and the invariants over every producer (R10–R13), the Action layer's (R15–R19) and the
-   signing key's (R14) among them. */
+   (R1); the lead's take-up (R9); and the invariants over every producer (R10–R13), the Action layer's (R15–R19), the
+   signing key's (R14) and the filing templates' and local facts' (R20, R21) among them. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
@@ -48,7 +48,15 @@ function busy(extra = {}) {
       overdueClocks: () => ({ ok: true, limit: 500, truncated: false, cursor: null, items: [{ action: "ACT-1", ord: 0,
         date: "2026-08-20", basis: "b", text: "t", status: "pending", past: true, project: "PRJ-A", created_by: "alice" }] }),
       remindersDue: () => ({ ok: true, limit: 500, truncated: false, cursor: null, items: [{ action: "ACT-1", ord: 0,
-        date: "2026-08-20", basis: "b", text: "t", on: "2026-08-15", set_by: "alice", project: "PRJ-A" }] }) },
+        date: "2026-08-20", basis: "b", text: "t", on: "2026-08-15", set_by: "alice", project: "PRJ-A" }] }),
+      calendarFactsRead: () => ({ ok: true, as_of: "2026-09-01", actions_limit: 500, truncated: false,
+        paths: [{ path: "profile:p/holidays/2026/*", actions: [{ action: "ACT-1", project: "PRJ-A", created_by: "alice" }] }] }) },
+    filingTemplates: { reviewsRequested: () => ({ ok: true, limit: 500, truncated: false, cursor: null, items: [{ template: "TPL-1",
+      version: "TPL-1@1", name: "Records request", kind: "records_request", member: "alice", member_name: "alice",
+      asked_by: { id: "alice", name: "alice" }, asked_at: iso(NOW - 5) }] }) },
+    localFacts: { factsDue: ({ paths }) => ({ ok: true, unknown: [], absent: [], due: paths.map((path) => ({ path,
+      fact: { profile: "p", fact: "holidays", year: 2026 }, status: "unconfirmed", due: true, why: "no member has confirmed it",
+      latest: null, due_from: "2025-11-01" })) }) },
     escalation: { escalationsDue: () => ({ ok: true, limit: 500, truncated: false, items: [{ id: "ESC-1", project: "PRJ-A",
       opened_by: "alice", from: 1, to: 2, stage: "notification", instant: iso(NOW - 5), ids: [] }] }) },
     actionPlans: { checkpointsDue: () => ({ ok: true, limit: 500, truncated: false, items: [{ plan: "PLN-1", project: "PRJ-A",
@@ -80,7 +88,8 @@ test("R8: every producer's items, homed through homesOf and offered optionsOf; n
                    "newer-capture-affects-reference", "objective-gap", "source-modified", "governor-holding-host",
                    "partial-capture-outstanding", "capture-completed-unattended", "render-deferred",
                    "archive-fallback-eligible", "monitoring-recheck-due", "signer-self-registered", "action-clock-overdue",
-                   "plan-checkpoint-due", "escalation-stage-proposed", "action-reminder", "litigation-hold"])
+                   "plan-checkpoint-due", "escalation-stage-proposed", "action-reminder", "litigation-hold",
+                   "template-review-requested", "local-fact-due"])
     assert.ok(kinds.has(k), k);
   for (const it of r.items) {
     assert.ok(!("disposition" in it), `${it.id}: the mint's`);
@@ -91,7 +100,8 @@ test("R8: every producer's items, homed through homesOf and offered optionsOf; n
   }
   assert.ok(w.asked.homes.length > 0 && w.asked.options.length > 0);
   // the options are exactly what optionsOf answered, except the producers' own acts (R9's take-up, the export log,
-  // R14's revoke, R16's judgement, R17's advance and decline, R18's answer, R19's hold statement)
+  // R14's revoke, R16's judgement, R17's advance and decline, R18's answer, R19's hold statement, R20's review, R21's
+  // confirmation)
   const m = byId(r);
   assert.deepEqual(m["FINDING::p::s"].options, [{ id: "opt", on: ["INF-1"] }]);
   assert.deepEqual(m["FINDING::export-performed::1"].options.map((o) => o.id), ["exportlog"]);
@@ -101,6 +111,8 @@ test("R8: every producer's items, homed through homesOf and offered optionsOf; n
   assert.deepEqual(m["OBLIGATION::escalation-stage-proposed::ESC-1::2"].options.map((o) => o.id), ["escalationadvance", "escalationdecline"]);
   assert.deepEqual(m["OBLIGATION::action-reminder::ACT-1::0::2026-08-15"].options.map((o) => o.id), ["reminderanswer", "opt"]);
   assert.deepEqual(m["OBLIGATION::litigation-hold::ACT-1::1"].options.map((o) => o.id), ["actionhold", "opt"]);
+  assert.deepEqual(m["OBLIGATION::template-review-requested::TPL-1@1::alice"].options.map((o) => o.id), ["templatereview"]);
+  assert.deepEqual(m["OBLIGATION::local-fact-due::profile:p/holidays/2026/*::unconfirmed"].options.map((o) => o.id), ["factconfirm", "opt"]);
   // the homes are the walk's: the stance item is homed under both projects drawing on the question
   assert.deepEqual(m["FINDING::stance-changed-here-not-elsewhere::INQ-S::PRJ-A"].case.ancestors.map((a) => a.id), ["PRJ-A", "PRJ-B"]);
   // the facts, and one proposalsFeed read for both the findings and the dispositions
