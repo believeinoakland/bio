@@ -10,7 +10,7 @@
  * the daily allowance, DEFERRED when it is spent, never the shell as content).
  *
  * THIS MODULE IS PURE, AND THAT IS THE SEAM. It never touches a browser, a binding,
- * R2 or the store. `index.mjs`'s acquire arm asks a RENDERER (see `rendererFor`) for
+ * R2 or the store. `acquisition`'s acquire arm asks a RENDERER (see `rendererFor`) for
  * an answer in the shape `RENDER_ANSWER` documents, and hands that answer here.
  * Everything the record says about the render is derived HERE from that answer and
  * from what the plane itself fetched and hashed — so a suite can drive every rule
@@ -554,8 +554,9 @@ export function renderedAuthority({ asserted, render, at }) {
 /** Which renderer this instance has. THE SEAM.
  *
  *  `env.RENDERER` — a service binding answering `POST /render` with `RENDER_ANSWER`.
- *  Tests inject it through miniflare's `serviceBindings`; a render fleet member
- *  would be bound here the same way PDF_WORKER and OCR_WORKER are. IT GOES FIRST
+ *  A test injects it as `env.RENDERER` (`test/m/capture-sources/render.test.mjs`,
+ *  R18); a render fleet member would be bound here the same way PDF_WORKER and
+ *  OCR_WORKER are. IT GOES FIRST
  *  ON PURPOSE: an instance that has been given a dedicated renderer meant it, and
  *  a browser binding beside it is the fallback, not the override.
  *
@@ -576,10 +577,10 @@ export function renderedAuthority({ asserted, render, at }) {
  *  NOT YET VERIFIED LIVE, AND SAYING SO IS THE POINT: DIST-11 (2026-09-24) declared
  *  `BROWSER` in `wrangler.jsonc` and taught the deploy derivation and newgroup the
  *  class, so a plane holds the binding from its NEXT release; no deployed instance
- *  holds it yet (CONDUCT #20 at c20-batch25, where D-490 met DIST-11). Everything below is driven under
- *  miniflare against a fake that speaks the binding's own protocol
- *  (`test/browser-render.test.mjs`), which proves the DRIVER and proves nothing
- *  about Cloudflare's service. */
+ *  holds it yet (CONDUCT #20 at c20-batch25, where D-490 met DIST-11). The driver is
+ *  driven, in plain Node, against a fake that speaks the binding's own protocol
+ *  (`test/m/capture-sources/browserrender.test.mjs`), which proves the DRIVER and
+ *  proves nothing about Cloudflare's service. */
 export function rendererFor(env) {
   if (env && env.RENDERER && typeof env.RENDERER.fetch === "function")
     return { kind: "service", render: async (req) => {
