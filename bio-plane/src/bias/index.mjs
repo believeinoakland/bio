@@ -11,7 +11,8 @@
  *   the bias debt: work products later modules register (R33), swept against the lens now in force, settled by one
  *                 of three recorded acts (R35, R37, R38), read (R36), and disclosed, never blocking (R28).
  *   counts, uncleared, settled  what `queue` reads: the rows held (R42), the open debts with their recipients (R43)
- *                 and the debts settled since an instant, with what settled each (R44).
+ *                 and the debts settled since an instant, with what settled each (R44). The counts are registered
+ *                 with record-core's `registerCounts` for `op=stats` and purge's proof (R46).
  *   migrate       this module's tables and columns, at every boot (R45).
  *
  * REACHED as `biasOf(ctx, deps)` (K61): one instance per Durable Object storage, created on the first call with `deps`
@@ -27,8 +28,10 @@
  * legacy store's dispatcher spreads in.
  */
 
-import { normalizeType, parseFrontmatter, MACHINE_AUTHOR_PREFIX, isMachineStamp,
-         createSha256 } from "../../checks/bio-checks.mjs";
+import { normalizeType } from "../record-grammar/types.mjs";
+import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
+import { MACHINE_AUTHOR_PREFIX, isMachineStamp } from "../record-grammar/actors.mjs";
+import { createSha256 } from "../record-grammar/sha256.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER,
          notAnAdmin } from "../membership/index.mjs";
@@ -74,6 +77,8 @@ export const BIAS_DEBT_SETTLED_DEFAULT = 200;
 export const BIAS_DEBT_SETTLED_MAX = 1000;
 /* The operator-internal viewer the sweep reads a lens as (R33): the lens in force is a fact about the SCOPE. */
 export const BIAS_DEBT_VIEWER = "admin";
+/* R46: the figures R42's `counts(hid)` answers, registered with record-core under these names, in this order. */
+export const BIAS_COUNT_KEYS = Object.freeze(["biasStatements", "biasAdoptions"]);
 
 /* REC-207: the two settlements a MEMBER or a WORK PRODUCT made, as against the one the sweep derives when the lens
    moves back. Read on the sweep's hot path: it decides whether an unchanged lens delta re-raises the obligation. */
@@ -1068,8 +1073,9 @@ class Bias {
 const OF = new WeakMap();
 
 /** K61: the one bias instance for this Durable Object's storage (`ctx`, or the storage itself). On first reaching
- *  it, its tables are declared to record-core's purge (R30), its step and post-commit notice are registered with
- *  promotion (R8–R10, R23), and its checks with record-core's audit (R1–R7, record-core R59). */
+ *  it, its tables are declared to record-core's purge (R30), its figures registered with record-core's counts (R46,
+ *  record-core R63), its step and post-commit notice registered with promotion (R8–R10, R23), and its checks with
+ *  record-core's audit (R1–R7, record-core R59). A record with no `registerCounts` (a test's stand-in) is not asked. */
 export function biasOf(ctx, deps = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let b = OF.get(storage);
@@ -1086,6 +1092,8 @@ export function biasOf(ctx, deps = {}) {
       { name: "bias_debts", keys: [] },
       { name: "bias_debt_settlements", keys: [] },
     ], { exempt: ["bias_debt_sweeps"] });
+    if (typeof record.registerCounts === "function")
+      record.registerCounts("bias", [...BIAS_COUNT_KEYS], (hid) => b.counts(hid));
     promotion.registerStep("bias", { check: (c) => b.promotionCheck(c), project: (c) => b.promotionProjection(c) });
     promotion.onCommitted("bias", (n) => b.committed(n));
     record.registerAuditCheck("bias", (img) => checkBiasImage(img && img.files instanceof Map ? img.files : img && img.raw));

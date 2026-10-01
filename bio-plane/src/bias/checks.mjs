@@ -1,12 +1,15 @@
 /* bias — the bias set's own checks and the C-26 family (requirements: `build/requirements/bias.md`, R1–R7, R29, R31).
- * Moved from the check catalogue (`checks/bio-checks.mjs`) at the module's extraction (T5-7, K64's pattern): the
- * statement kinds, the verdict and bar predicates, the set's checks and the C-26 rows. The one predicate for a
- * member's statement and for the machine's proposal (R31) is exported from here and nowhere else.
+ * Moved from the check catalogue at the module's extraction (T5-7, K64's pattern): the statement kinds, the verdict and
+ * bar predicates, the set's checks and the C-26 rows. The one predicate for a member's statement and for the machine's
+ * proposal (R31) is exported from here and nowhere else. The grammar it reads (`normalizeType`, `parseFrontmatter`) is
+ * record-grammar's; C-26.12 is promotion's row, which it mints (its R15), joined to this family by reference (T19).
  */
 
-import { normalizeType, parseFrontmatter, BIAS_CHECKS as CATALOGUE_BIAS_CHECKS } from "../../checks/bio-checks.mjs";
+import { normalizeType } from "../record-grammar/types.mjs";
+import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
+import { PROMOTION_ROW_CHECKS } from "../promotion/checks.mjs";
 
-/* C-26.2's key shape (R3). The catalogue's own `ENTITY_ID_RE` is not exported, so it is spelled once here. */
+/* C-26.2's key shape (R3), a subject registry key. Record-grammar exports no such pattern, so it is spelled once here. */
 const ENTITY_ID_RE = /^ENT-\d{4}-\d{4}$/;
 
 /* The catalogue's finding shape, `{check, severity, message, repairs?}`. */
@@ -451,8 +454,8 @@ export const BIAS_CHECKS = {
       + 'record can honour, and each one is named below with what is wrong with it. '
       + 'Nothing was saved, so nothing needs undoing — correct the statements and write it again.',
   },
-  /* C-26.12, BIAS_ILLEGAL_TRANSITION, is promotion's (its R15, `bias-state-edge`) and its row stays in the catalogue,
-     which promotion reads and which cannot import this module; it joins this family by reference, below. */
+  /* C-26.12, BIAS_ILLEGAL_TRANSITION, is promotion's (its R15, `bias-state-edge`): promotion mints it and holds its
+     row, and cannot import this module; it joins this family by reference, below (R29, K586). */
   BIAS_ADOPTION_NOT_PROPOSED: {
     check: 'C-26.10',
     where: 'src/bias/index.mjs biasAdopt, reached from op=biasadopt',
@@ -531,5 +534,5 @@ export const BIAS_CHECKS = {
   /* C-26.20 (BIAS_ADOPTION_NOT_AN_ADMINISTRATOR) is RETIRED and its number is not reused (N327, DEC-83): an
      instance-scope adoption by a non-administrator is membership's one condition, answered `NOT_AN_ADMIN` through
      `membership.notAnAdmin` (its R84, C-96.1), this row's next step riding as its `remedy` (R11). */
-  BIAS_ILLEGAL_TRANSITION: CATALOGUE_BIAS_CHECKS.BIAS_ILLEGAL_TRANSITION,
+  BIAS_ILLEGAL_TRANSITION: PROMOTION_ROW_CHECKS.BIAS_ILLEGAL_TRANSITION,
 };
