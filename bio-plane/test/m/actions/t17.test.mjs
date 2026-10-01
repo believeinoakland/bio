@@ -1,11 +1,11 @@
-/* actions' T17 entry at its interface: DEC-13's request for comment (N396, K573; R44 as proposed in ACTIONS #4 J1, with
-   R1's refusal and R37's audit). Converted from `test/action-loop.test.mjs` section 8, and its non-response arm of
+/* actions' T17 entry at its interface: DEC-13's request for comment (N396, K573): R1's refusal and R51's audit over
+   action-grammar's rule (its R6, was R44 here). Converted from `test/action-loop.test.mjs` section 8, and its non-response arm of
    section 5, over the same shapes: the write through promotion, the audit through `audit`, the read through
-   `actionRead`, the precedent from this module's exports. */
+   `actionRead`. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, actionMd, CP, NOW_MS } from "./fixture.mjs";
-import * as actions from "../../../src/actions/index.mjs";
+import * as grammar from "../../../src/action-grammar/index.mjs";
 
 const M = V("alice");
 const INQ = "INQ-2026-0001-transfer";
@@ -31,7 +31,7 @@ function ground() {
 const audit = (w, text) => w.a.audit({ files: new Map([["bundle.md", text]]) });
 const errors = (f) => f.filter((x) => x.severity === "error");
 
-test("R44 R1 R37 a request for comment naming no inquiry is refused at the write and reported by the audit, by name", () => {
+test("R1 R51 a request for comment naming no inquiry is refused at the write and reported by the audit, by name", () => {
   const w = ground();
   const vague = rfcMd(RFC);
   const f = errors(audit(w, vague));
@@ -45,7 +45,7 @@ test("R44 R1 R37 a request for comment naming no inquiry is refused at the write
   assert.equal(w.record.head(RFC), null, "nothing was written");
 });
 
-test("R44 only an advances leg onto an inquiry is a disclosed inquiry: a rests_on leg, or an advances leg onto a document, is not", () => {
+test("R1 R51 only an advances leg onto an inquiry is a disclosed inquiry: a rests_on leg, or an advances leg onto a document, is not", () => {
   const w = ground();
   for (const legs of [[leg(INQ, "rests_on")], [leg(INFO, "advances")], [leg(INFO, "rests_on"), leg(INQ, "rests_on")]]) {
     const text = rfcMd(RFC, { legs });
@@ -58,7 +58,7 @@ test("R44 only an advances leg onto an inquiry is a disclosed inquiry: a rests_o
   assert.equal(w.promote(RFC, both).ok, true);
 });
 
-test("R44 R1 R29 a request for comment naming the inquiry it put, with its window, is accepted: the disclosed question is a row", () => {
+test("R1 R29 a request for comment naming the inquiry it put, with its window, is accepted: the disclosed question is a row", () => {
   const w = ground();
   const named = rfcMd(RFC, { legs: [[...leg(INQ, "advances"), '    note: "put to the office as a specific claim"']] });
   assert.deepEqual(audit(w, named), [], "the audit finds nothing");
@@ -76,7 +76,7 @@ test("R44 R1 R29 a request for comment naming the inquiry it put, with its windo
   assert.equal(w.a.actionRead({ id: RFC, viewer: M }).legs.length, 1, "the held version stands");
 });
 
-test("R44 R1 R37 a request for comment stating no response window is refused at the write and reported by the audit", () => {
+test("R1 R51 a request for comment stating no response window is refused at the write and reported by the audit", () => {
   const w = ground();
   const noWindow = rfcMd(RFC, { legs: [leg(INQ, "advances")], clock: [] });
   const f = errors(audit(w, noWindow));
@@ -93,7 +93,7 @@ test("R44 R1 R37 a request for comment stating no response window is refused at 
     ["inquiry", "window"]);
 });
 
-test("R44 the window's length is the group's: no range is enforced, and the GAO precedent is exported as a citation marked not enforced", () => {
+test("R1 R51 the window's length is the group's: no range is refused at the write or reported by the audit", () => {
   const w = ground();
   const at = (date, i) => {
     const id = `ACTN-2026-00${10 + i}-rfc`;
@@ -105,22 +105,19 @@ test("R44 the window's length is the group's: no range is enforced, and the GAO 
   /* a day after the instance clock, the precedent's own bounds, and far outside them: all land, none reported. */
   for (const [i, date] of ["2026-09-29", "2026-10-05", "2026-10-28", "2026-12-01", "2027-09-28"].entries())
     assert.deepEqual(at(date, i), { audit: [], write: true }, date);
-  const p = actions.RFC_RESPONSE_WINDOW_PRECEDENT;
-  assert.deepEqual([p.min_days, p.max_days, p.enforced], [7, 30, false]);
-  assert.match(p.source, /GAO/);
   assert.equal(Date.parse("2026-09-28T12:00:00Z"), NOW_MS, "the fixture's clock the dates above are read against");
 });
 
-test("R44 R10 another kind is not asked: a records request naming no inquiry and no window lands", () => {
+test("R10 R1 another kind is not asked: a records request naming no inquiry and no window lands", () => {
   const w = ground();
   const rr = actionMd("ACTN-2026-0002-rr", [...CP, "action_kind: records_request"]);
   assert.deepEqual(errors(audit(w, rr)), []);
   assert.equal(w.promote("ACTN-2026-0002-rr", rr).ok, true);
   assert.ok(w.a.kinds().includes("request_for_comment"), "the product offers the kind on every instance");
-  assert.ok(actions.actionKinds(null).includes("request_for_comment"));
+  assert.ok(grammar.actionKinds(null).includes("request_for_comment"));
 });
 
-test("R44 R15 R34 a non-response to a request for comment is recorded with its date, as a named member's account", () => {
+test("R15 R34 a non-response to a request for comment is recorded with its date, as a named member's account", () => {
   const w = ground();
   assert.equal(w.promote(RFC, rfcMd(RFC, { legs: [leg(INQ, "advances")] })).ok, true);
   const sent = w.a.actionCorrespond({ target: RFC, direction: "sent", at: "2026-09-28", account: "the request went to the office",

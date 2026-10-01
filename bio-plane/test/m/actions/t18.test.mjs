@@ -1,11 +1,12 @@
 /* actions' T18 entries at its interface: N-A4 (R7's `completed`, R8's premise override, R9's addressee arms with
    `ADDRESSEE_NOT_AN_OFFICE`, R45 `contact`, R46 the plan link, R47 `actionCreate` and the ops `action`/`actions`,
-   R48 pressure with `actionPressure`, R49 no grade refusal) and the converts `risk-tier` (R40, R37/R7, R25/R12, the
-   D-505 union arms) and `d526-refusal-order` (R2 with no envelope type). */
+   R48 pressure with `actionPressure`, R49 no grade refusal) and the converts `risk-tier` (R51/R7, R25/R12, the D-505
+   union arms; its R40 table is action-grammar's since T19) and `d526-refusal-order` (R2 with no envelope type). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, actionMd, CP, NOW_MS } from "./fixture.mjs";
 import * as actions from "../../../src/actions/index.mjs";
+import * as grammar from "../../../src/action-grammar/index.mjs";
 
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b";
 const M = V("alice");
@@ -22,7 +23,7 @@ function determination(w) {
 
 test("R7 R13 `completed` ends an action of any kind, at the move and at the write; another word is still refused", () => {
   const w = world();
-  assert.deepEqual([...actions.RESOLUTIONS], ["complied", "denied", "escalated", "withdrawn", "completed"]);
+  assert.deepEqual([...grammar.RESOLUTIONS], ["complied", "denied", "escalated", "withdrawn", "completed"]);
   w.action(A);
   assert.equal(w.a.actionMove({ target: A, to: "active", reason: "sent", viewer: M, author: M }).ok, true);
   const no = w.a.actionMove({ target: A, to: "resolved", resolution: "finished", reason: "done", viewer: M, author: M });
@@ -65,9 +66,9 @@ test("R9 the addressee's arms: office, press, organisation, group, audience, und
   const ph = w.promote(B, md(B, named("press", "to be named", "Gazette")));
   assert.equal(ph.reason, "COUNTERPARTY_REFUSED", "the placeholder anywhere");
   /* R3, R27: the matching name, "role, organisation" for the named non-office arms, none for an audience. */
-  assert.equal(actions.counterpartyName({ state: "named", kind: "press", role: "Reporter", organisation: "Gazette" }), "Reporter, Gazette");
-  assert.equal(actions.counterpartyName({ state: "audience", description: "residents" }), null);
-  assert.equal(actions.counterpartyName({ state: "named", name: "City Clerk" }), "City Clerk", "the earlier shape reads as written");
+  assert.equal(grammar.counterpartyName({ state: "named", kind: "press", role: "Reporter", organisation: "Gazette" }), "Reporter, Gazette");
+  assert.equal(grammar.counterpartyName({ state: "audience", description: "residents" }), null);
+  assert.equal(grammar.counterpartyName({ state: "named", name: "City Clerk" }), "City Clerk", "the earlier shape reads as written");
   assert.equal(w.a.actionsFor({ viewer: M, counterparty: "City desk reporter, Port Ellery Gazette" }).items[0].id, "ACTN-2026-0012-a");
 });
 
@@ -247,19 +248,11 @@ test("R49 no action is refused for the grade of what it rests on: a breach actio
   const r = w.promote(A, md(A, [...CP, "breach: true", "action_basis:", `  - target: ${D1}`, "    kind: rests_on",
     "  - target: INFO-2026-0002-export", "    kind: rests_on"]));
   assert.equal(r.ok, true, JSON.stringify(r));
-  const codes = Object.keys({ ...actions.ACTION_CATALOGUE_CHECKS, ...actions.ACTION_FENCE_CHECKS, ...actions.ACTION_ACT_CHECKS });
+  const codes = Object.keys({ ...grammar.ACTION_CATALOGUE_CHECKS, ...grammar.ACTION_FENCE_CHECKS, ...grammar.ACTION_ACT_CHECKS });
   assert.ok(!codes.some((k) => /GRADE/.test(k)), "no refusal compares a grade with a floor");
 });
 
-/* convert: test/risk-tier.test.mjs (actions' share) */
-test("R40 riskTierState's full table: 1, 2, 3 as numbers; undetermined, absent and null read undetermined; anything else is no tier", () => {
-  const table = [[1, 1], [2, 2], [3, 3], ["undetermined", "undetermined"], [undefined, "undetermined"], [null, "undetermined"],
-    ["1", null], ["2", null], [0, null], [4, null], [9, null], [2.5, null], ["", null], ["unknown", null], [true, null]];
-  for (const [v, want] of table) assert.equal(actions.riskTierState(v), want, JSON.stringify(v));
-  assert.deepEqual(Object.entries(actions.RISK_TIERS).map(([k]) => k).sort(), ["1", "2", "3", "undetermined"]);
-});
-
-test("R37 R7 the C-2.10 audit's tier arm reports a tier of 9 or 'unknown', and the write refuses both by name", () => {
+test("R51 R7 the C-2.10 audit's tier arm reports a tier of 9 or 'unknown', and the write refuses both by name", () => {
   const w = world();
   for (const t of ["9", "unknown"]) {
     const text = md(A, [...CP, `risk_tier: ${t}`]);
@@ -273,7 +266,7 @@ test("R25 R12 a stated undetermined tier reads back undetermined, never defaulte
   const w = world();
   w.action(A, ["risk_tier: undetermined"]);
   const r = w.a.actionRead({ id: A, viewer: M });
-  assert.deepEqual([r.risk_tier, r.risk_tier_words], ["undetermined", actions.RISK_TIERS.undetermined]);
+  assert.deepEqual([r.risk_tier, r.risk_tier_words], ["undetermined", grammar.RISK_TIERS.undetermined]);
   assert.equal(actions.actionFacts(w.text(A), NOW_MS).risk_tier, null);
   assert.equal(w.decorate(A).action.risk_tier, "undetermined");
 });
