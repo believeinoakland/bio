@@ -28,3 +28,7 @@
 - `node checks/ownership.mjs … capture-requests tranche/T21`: 0 failures
 
 Size (session_01JL9Lx4gBJnTxwqg28ioRKt): test runs 3, module lines 1601
+
+## J1 · REPORT
+
+Generated artifact staled: bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (not_product): src/capture-requests/index.mjs, checks.mjs and schema.mjs changed (N458's one sentence, comments). Not regenerated. test/m reds not mine: 42 fail, the 41 ACQUISITION #4 recorded (filings 35, project-stage 5, intent 1) plus control-plane/catalogue-end.test.mjs R43/R22 (C-53.13's pinned digest 93c064a948ae1a7f, actual 6611137f11985943), which fails identically with this change stashed.
