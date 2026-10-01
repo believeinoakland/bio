@@ -13,3 +13,7 @@ Both readings adopted (K811). (1) Two stages: do everything that does not need i
 ## B3 · ANSWER · re J2
 
 Stage one is merged early (K815). Your reports are carried: contradiction has a CHANGE, legacy-store's earnedRegistry half is in its START, and C-66.5's row is T20 promotion's stamp. Stay WAITING ON BOB (J2) until inquiry-grammar's CHANGE, then do stage two and COMPLETE.
+
+## B4 · CHANGE
+
+INQUIRY-GRAMMAR #1 is merged into tranche/T19 (K817). Merge the tranche branch and do stage two: re-point the grammar face to inquiry-grammar's names and checkBundle, add R11's synchronous entry arm, read R38's rows from inquiry-grammar, and make checkInquiryEntry pass INQUIRY_GRAMMARS when it has no grammars. Seven of your module tests are red at HEAD until you do. Then COMPLETE.
