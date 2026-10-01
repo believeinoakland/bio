@@ -42,8 +42,6 @@ import { OBSERVATION_STATES } from "./run-rules/index.mjs";
 import { contradictionOf, contradictionOps } from "./contradiction/index.mjs";
 import { calibrationOf, calibrationOps } from "./calibration/index.mjs";
 import { schedulerOf } from "./scheduler/index.mjs";
-import { queueOf, queueOps } from "./queue/index.mjs";
-import { tasksOf, tasksOps } from "./tasks/index.mjs";
 import { progressionsOf, progressionOps } from "./progressions/index.mjs";
 import { intentOf, intentOps } from "./intent/index.mjs";
 import { strengthOf as strengthModule, strengthOps, STRENGTH_AXES } from "./strength/index.mjs";
@@ -166,7 +164,6 @@ export class Store extends DurableObject {
       runs: aiRunsOf(ctx, env), aiRuns: aiRunsOf(ctx, env) });
     capture.on("observation", "legacy-store", ({ row, at }) => this.#observe(row, at));
     schedulerOf(ctx, env);
-    queueOf(ctx, { env }); tasksOf(ctx, { env }).migrate();   /* queue, then tasks (K61, N363); tasks' table (R8), as standards' (N267) */
     ctx.blockConcurrencyWhile(async () => this.#migrate());
     ctx.blockConcurrencyWhile(async () => schedulerOf(ctx, env).start());
   }
@@ -1849,8 +1846,6 @@ export class Store extends DurableObject {
         /* entities R11, R12; the connection sweep is armed on entities' `onResolved` notice by scheduler (its R9, K714). */
         resolve: () => entitiesOf(this.ctx).resolve(body || {}),
         resolvetestify: () => entitiesOf(this.ctx).testify(body || {}),
-        ...queueOps(queueOf(this.ctx), url, body),
-        ...tasksOps(tasksOf(this.ctx), url, body),
         recordcapturedlocator: () => this.recordCapturedLocator(body || {}),
         /* PL-10 / D-220: the version chain. `address` arrives ALREADY NORMALISED
            — the control plane runs it through `normalizeAddress`, the same

@@ -17,7 +17,8 @@ import { SIGN_HTML } from "../signpage.mjs";
 import { setupPage } from "../setup.mjs";
 import { inbandQuartet } from "../inband.mjs";   /* REC-148: DEC-31's in-band quartet, one function */
 import { normalizeAddress } from "../subresources.mjs";
-import { Store } from "../store.mjs";
+/* R18: the capability vocabulary `op=whoami` publishes is membership's (N13: no longer read through legacy-store). */
+import { Membership } from "../membership/index.mjs";
 import { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, SOURCE_ACTIONS, SOURCE_READS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, ESCALATION_ACTIONS, ESCALATION_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION, PLAN_PROPOSAL_ACTIONS } from "../op-declarations/index.mjs";
 
 const SCRATCH = "scratch";
@@ -1727,7 +1728,7 @@ export function makeFetch(hooks = {}) {
         administer: viaSession ? !!sessRights.administer : cls === "admin",   /* R18: the root of trust administers */
         rootOfTrust: viaSession ? !!sessRights.rootOfTrust : false,
         capabilities: viaSession ? [...sessCaps].sort() : null,
-        vocabulary: Store.CAPABILITIES,
+        vocabulary: Membership.CAPABILITIES,
         /* D-463: WHETHER THIS CREDENTIAL CAN EVER REACH THE RECORD, answered as a value rather than left for a
            caller to infer from the `store` beside it. The two are different facts and an instrument needs both:
            `store` is where THIS call landed, `confinedTo` is where every call it will ever make lands. `null` is
