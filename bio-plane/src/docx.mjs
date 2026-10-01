@@ -574,16 +574,16 @@ export function walkDocumentTables(xml) {
  *  else; it goes when that migration has run.
  *
  *    { paragraphs: [{ old, new, outer }],      // one per <w:p> the OLD walk numbered
- *      runs: [{ para, run, newPara, newRun }], // one per <w:r> the OLD walk numbered
+ *      runs: [{ old, new, outer }],            // one per <w:r> the OLD walk numbered; old/new {para, run}
  *      tables: [{ old, new }] }                // one per <w:tbl> the OLD walk numbered
  *
- *  `new` (`newRun`) is null for a paragraph (run, table) inside a branch no
- *  longer read: its content was the duplicate of the branch that is. Such a
- *  paragraph's `outer` is the NEW index of the paragraph that holds the
- *  `mc:AlternateContent` (null when none does), the narrowest place the
- *  reading still states; a dropped run's `newPara` is its paragraph's new
- *  index, or that paragraph's `outer`. `outer` is null for a kept paragraph.
- *  Null when `xml` is not a string (R21). */
+ *  A run is addressed as R15 addresses it, `{para, run}`. `new` is null for a
+ *  paragraph (run, table) inside a branch no longer read: its content was the
+ *  duplicate of the branch that is. Such a paragraph's `outer` is the NEW
+ *  index of the paragraph that holds the `mc:AlternateContent` (null when
+ *  none does), the narrowest place the reading still states; a dropped run's
+ *  `outer` is its paragraph's new index, or that paragraph's `outer`. `outer`
+ *  is null for what is kept. R28 (K747). Null when `xml` is not a string (R21). */
 export function docxRenumbering(xml) {
   if (typeof xml !== "string") return null;
   /* The paragraph/run numbering exactly as `walkDocumentBody` keeps it. */
@@ -631,8 +631,8 @@ export function docxRenumbering(xml) {
       const para = was.s.para;
       if (skip) {
         const p = paragraphs[para];
-        runs.push({ para, run, newPara: p ? (p.new ?? p.outer) : null, newRun: null });
-      } else runs.push({ para, run, newPara: now.s.para, newRun: now.openR() });
+        runs.push({ old: { para, run }, new: null, outer: p ? (p.new ?? p.outer) : null });
+      } else runs.push({ old: { para, run }, new: { para: now.s.para, run: now.openR() }, outer: null });
     } else if (name === "tbl") {
       tables.push({ old: tables.length, new: skip ? null : tablesNew++ });
     }

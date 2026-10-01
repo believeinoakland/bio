@@ -87,7 +87,7 @@ test("R11 docx: an mc:AlternateContent wrapping runs at paragraph level reads on
   assert.deepEqual(s.links[0].source, docParaRef(0, 2));
 });
 
-/* ------------------------------------------------------------------ N26's migration map */
+/* ------------------------------------------------------------------ R28: N26's migration map */
 
 /* The walk before N26, kept here as the oracle the map is checked against: every <w:p>, <w:r>, <w:tbl>,
    numbered as walkDocumentBody numbered them when every branch was read. */
@@ -115,11 +115,11 @@ const SAMPLE = F.wdoc(
   + `<w:tbl><w:tr><w:tc>${F.wp(box([F.wp(F.wr("in cell"))], [`<w:tbl><w:tr><w:tc>${F.wp(F.wr("fb tbl"))}</w:tc></w:tr></w:tbl>`]))}</w:tc></w:tr></w:tbl>`
   + "<w:p/>" + F.wp(F.wr("last")));
 
-test("N26 R11 docxRenumbering: one entry per paragraph, run and table the old walk numbered; kept ones carry the new walk's numbers exactly", async () => {
+test("R28 R11 docxRenumbering: one entry per paragraph, run and table the old walk numbered; kept ones carry the new walk's numbers exactly", async () => {
   const map = docxRenumbering(SAMPLE);
   const old = oldNumbering(SAMPLE);
   assert.deepEqual(map.paragraphs.map((p) => p.old), old.paras);
-  assert.deepEqual(map.runs.map((r) => [r.para, r.run]), old.runs);
+  assert.deepEqual(map.runs.map((r) => [r.old.para, r.old.run]), old.runs);
   assert.equal(map.tables.length, old.tables);
   const now = (await docxEntry.text(F.docx({ document: SAMPLE }))).paragraphs;
   const kept = map.paragraphs.filter((p) => p.new != null);
@@ -128,16 +128,16 @@ test("N26 R11 docxRenumbering: one entry per paragraph, run and table the old wa
     [0, 0, null], [1, 1, null], [2, 2, null], [3, null, 0], [4, null, 0],
     [5, 3, null], [6, 4, null], [7, 5, null], [8, null, 4], [9, 6, null], [10, 7, null],
   ]);
-  assert.deepEqual(map.runs.filter((r) => r.para === 5).map((r) => [r.run, r.newPara, r.newRun]), [[0, 3, 0], [1, 3, 1], [2, 3, null], [3, 3, null], [4, 3, 2]]);
+  assert.deepEqual(map.runs.filter((r) => r.old.para === 5).map((r) => [r.old.run, r.new, r.outer]), [[0, { para: 3, run: 0 }, null], [1, { para: 3, run: 1 }, null], [2, null, 3], [3, null, 3], [4, { para: 3, run: 2 }, null]]);
   assert.deepEqual(map.tables, [{ old: 0, new: 0 }, { old: 1, new: null }]);
   assert.deepEqual((await docxEntry.text(F.docx({ document: SAMPLE }))).tables.map((t) => t.table), [0]);
 });
 
-test("N26 R11 docxRenumbering: without mc:AlternateContent every number is its own; a non-string is null, never a throw", async () => {
+test("R28 R11 docxRenumbering: without mc:AlternateContent every number is its own; a non-string is null, never a throw", async () => {
   const xml = F.wdoc(F.wp(F.wr("a"), F.wr("b")) + "<w:p/>" + `<w:tbl><w:tr><w:tc>${F.wp(F.wr("c"))}</w:tc></w:tr></w:tbl>`);
   const map = docxRenumbering(xml);
   assert.ok(map.paragraphs.every((p) => p.new === p.old && p.outer === null));
-  assert.ok(map.runs.every((r) => r.newPara === r.para && r.newRun === r.run));
+  assert.ok(map.runs.every((r) => r.new.para === r.old.para && r.new.run === r.old.run && r.outer === null));
   assert.deepEqual(map.tables, [{ old: 0, new: 0 }]);
   for (const x of [undefined, null, 5, {}, new Uint8Array(2)]) assert.equal(docxRenumbering(x), null);
 });
