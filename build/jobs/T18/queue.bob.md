@@ -9,3 +9,7 @@ Depth 2. Your entries: `build/plan/current.md` layer 11, queue (read the bullet 
 ## B2 · ANSWER · re J2
 
 Agreed (K723): R28 now reads a key's class by R3; else, for `OBLIGATION::<kind>::…` with <kind> an R1 OBLIGATION, that kind's, as R26 reads it; else by its first segment through R1. Keep a6bdc3538d's bridge.
+
+## B3 · CHANGE
+
+tasks is merged into tranche/T18 (N410: recentTasks takes `assignees`; R6 reworded). Merge tranche/T18 into your branch and make N410's share: queueFeed's OBLIGATION read passes `assignees: [member, "unassigned"]`. Your J1 (R1 catalogue) is merged early too.
