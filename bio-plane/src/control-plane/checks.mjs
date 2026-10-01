@@ -3,7 +3,7 @@
  *
  * Moved from the check catalogue (`checks/bio-checks.mjs`) at control-plane's extraction (T12, K6, K64's pattern), each
  * row keeping its check id and its words, and each `where` naming its site in this module: the dispatch rows C-69.1–.4
- * whole; the bootstrap claim's C-68.2–.4 (`INSTALLATION_CHECKS` keeps C-68.1, whose raiser is capture's); the
+ * whole; the bootstrap claim's C-68.2–.4 (`INSTALLATION_CHECKS` keeps C-68.1, minted at acquisition's one region); the
  * unverified replay C-66.6; and, at T18 (K621, K636), the argument complaint C-61.1 with R39's gate. The admission rows
  * (C-38, C-78, C-29.6–.10, C-32.17, C-64.4) left with the gates that raise them for `admission`'s own table at the
  * split (K617, K624 (1), (2); admission R14). */
@@ -101,8 +101,9 @@ export const REPLAY_CHECKS = {
      before this existed (`9f8b69e6`, `risk-tier.test.mjs` §8 arm (δ)): the admin deploy token sending `replay: true`
      with no provenance landed `risk_tier: 1` on an action nobody assessed. Asked in `op=promote`'s stamp block
      BEFORE the store is called, so nothing is written. The admin is refused rather than downgraded to an ordinary
-     promotion, because the one honest sender (`migrate.mjs`) carries the past verbatim and an ordinary creation is
-     rewritten on the way in. */
+     promotion, because an honest replay carries the past verbatim and an ordinary creation is rewritten on the way in.
+     (Its one honest sender was the Drive-era migration tool, `migrate.mjs`, retired in K739; no product caller sends a
+     replay today, and the gate stands for any that does.) */
   REPLAY_UNVERIFIED: {
     check: 'C-66.6',
     where: 'src/control-plane/index.mjs fetch > is-promote-replay-verified',

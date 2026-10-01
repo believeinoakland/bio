@@ -111,6 +111,6 @@ export async function pullAndFile(deps, { knockId, by, identity, viewer, now = D
   catch { again = { ok: false, reason: "PROMOTE_FAILED", status: 502, detail: "the promotion did not complete." }; }
   if (again && again.ok === true) return { ...answer, bundle: bundleOf(again) };
   return { ...(again || { ok: false, reason: "PROMOTE_FAILED" }), ok: false, knockId,
-           detail: `the knock was already brought in, and its bundle was not filed; nothing was written. `
+           detail: `the knock was already brought in, and its record was not filed; nothing was written. `
                  + String((again && again.detail) || "").slice(0, 300) };
 }

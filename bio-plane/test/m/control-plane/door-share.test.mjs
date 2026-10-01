@@ -1,12 +1,13 @@
 /* control-plane: legacy-index's door share, moved into the door at T19 (layer 11): the sign-in and invitation relays
    (`login`, `invitelook`, `enroll`), the store and reader resolution of `op=instancegroup` and `op=groupidentity` (their
-   answer instance-setup's), and `storageAbsent`, the C-68.1 raiser the door hands the arms it routes to, reading
-   acquisition's row (K794). Driven through `makeFetch(hooks)` with hooks that decline every public op, so whatever
+   answer instance-setup's), and `storageAbsent`, the C-68.1 raiser the door hands the arms it routes to, answering
+   through acquisition's one region (K794, K850). Driven through `makeFetch(hooks)` with hooks that decline every public op, so whatever
    answers is the door itself. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { M, world, call, refused } from "./harness.mjs";
 import { INSTALLATION_CHECKS } from "../../../src/acquisition/checks.mjs";
+import { evidenceStorageAbsent } from "../../../src/acquisition/index.mjs";
 
 const reply = (o, status = 200) => new Response(JSON.stringify(o), { status });
 /* A public op reaching a hook means the door did not answer it. */
@@ -78,19 +79,26 @@ test("R2, R17 (door share; instance-setup R3, R10, R11): op=instancegroup and op
   }
 });
 
-test("R22, R21 (door share; K794): storageAbsent answers 503 EVIDENCE_STORAGE_NOT_CONFIGURED with acquisition's C-68.1 row, the op and the caller's sentence byte-identical, through the envelope", async () => {
+test("R22, R21 (door share; K794, K850): storageAbsent answers 503 EVIDENCE_STORAGE_NOT_CONFIGURED with acquisition's C-68.1 row, the op and the caller's sentence byte-identical, through the envelope, minted at acquisition's one region", async () => {
   const row = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
-  for (const [op, error] of [["capture", "R2 is not configured on this instance"], ["acquire", "this instance has no evidence storage configured"]]) {
+  for (const [op, error] of [["capture", "R2 is not configured on this instance"], ["acquire", "this instance has no evidence storage configured"],
+                             ["pdfstructure", "R2 is not configured on this instance"], ["attest", "this instance has no evidence storage configured"]]) {
     const r = M.storageAbsent(op, error);
     assert.equal(r.status, 503);
     assert.equal(r.headers.get("access-control-allow-origin"), "*");
     const j = await r.json();
     assert.deepEqual(j, { ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", code: "EVIDENCE_STORAGE_NOT_CONFIGURED",
                           check: "C-68.1", translation: row.translation, error, op });
+    /* the keys in the order the door has always answered them */
+    assert.deepEqual(Object.keys(j), ["ok", "reason", "code", "check", "translation", "error", "op"]);
+    /* K850: one site: the door's body is acquisition's export's, whole */
+    assert.deepEqual(j, evidenceStorageAbsent(op, error).body);
   }
   assert.equal(row.check, "C-68.1");
-  assert.deepEqual(M.installationRow("EVIDENCE_STORAGE_NOT_CONFIGURED"),
-                   { code: "EVIDENCE_STORAGE_NOT_CONFIGURED", check: "C-68.1", translation: row.translation });
-  /* negative control: a code no installation table holds is refused rather than invented */
-  assert.throws(() => M.installationRow("NO_SUCH_INSTALLATION_CODE"), /no INSTALLATION_CHECKS row/);
+  /* the door's own row reader holds C-68.2-.4 only (R15); C-68.1 is no longer read here, and a code it does not hold is
+     refused rather than invented */
+  for (const code of ["BOOTSTRAP_CREDENTIAL_UNSET", "BOOTSTRAP_CREDENTIAL_PUBLISHED", "BOOTSTRAP_CREDENTIAL_MISMATCH"])
+    assert.match(M.installationRow(code).check, /^C-68\.[234]$/, code);
+  assert.throws(() => M.installationRow("EVIDENCE_STORAGE_NOT_CONFIGURED"), /no BOOTSTRAP_CHECKS row/);
+  assert.throws(() => M.installationRow("NO_SUCH_INSTALLATION_CODE"), /no BOOTSTRAP_CHECKS row/);
 });

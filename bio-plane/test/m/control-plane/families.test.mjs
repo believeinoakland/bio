@@ -107,7 +107,7 @@ test("R22: CHECK_FAMILIES holds each code once, the first source's translated ro
 test("R22 (K782, K813, K817, K831, K837): the list reads credentials' three families, basis-versions', inquiry-grammar's, public-read's and action-grammar's (not actions' re-export), and each of their translated rows decorates with its own check and words (negative control: the list without one of them misses its families)", async () => {
   const files = [["src/credentials/checks.mjs", ["SIGNER_ENROLMENT_CHECKS", "AI_CREDENTIAL_CHECKS", "CREDENTIALS_CHECKS"]],
                  ["src/basis-versions/checks.mjs", ["BASIS_VERSION_CHECKS", "VERSION_ACT_CHECKS", "VERSION_KIND_CHECKS", "CONCLUDE_ACT_CHECKS", "NARROW_CHECKS"]],
-                 ["src/inquiry-grammar/checks.mjs", ["LEAD_CHECKS"]],
+                 ["src/inquiry-grammar/checks.mjs", ["LEAD_CHECKS", "INQUIRY_GRAMMAR_CHECKS"]],
                  ["src/public-read/checks.mjs", ["CASE_RESOLUTION_CHECKS", "PUBLISHED_STORE_CHECKS", "PUBLISHED_READ_CHECKS"]],
                  ["src/action-grammar/checks.mjs", ["ACTION_FENCE_CHECKS", "ACTION_ACT_CHECKS", "GOVERNING_LAW_CHECKS", "QUOTE_CHECKS",
                                                     "LIFECYCLE_CHECKS", "RISK_TIER_REVISION_CHECKS", "RECORDS_LAW_FENCE_CHECKS", "ACTION_CATALOGUE_CHECKS"]]];
@@ -128,4 +128,10 @@ test("R22 (K782, K813, K817, K831, K837): the list reads credentials' three fami
     assert.ok(missing.some((m) => m.startsWith(`bio-plane/${path} `)), `without ${path}`);
   }
   assert.ok(rows > 40, String(rows));
+  /* K850: inquiry-grammar's own table is found by the reserved suffix in its namespace as it is, with no alias */
+  const IG = await import("../../../src/inquiry-grammar/checks.mjs");
+  assert.equal(listed.get("src/inquiry-grammar/checks.mjs"), IG);
+  for (const code of Object.keys(IG.INQUIRY_GRAMMAR_CHECKS))
+    assert.deepEqual(M.dec49Row(code), { check: IG.INQUIRY_GRAMMAR_CHECKS[code].check ?? null,
+                                         translation: IG.INQUIRY_GRAMMAR_CHECKS[code].translation }, code);
 });
