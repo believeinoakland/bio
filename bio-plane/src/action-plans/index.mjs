@@ -56,7 +56,7 @@ import { escalationOf } from "../escalation/index.mjs";
 import { filingsOf } from "../filings/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
 import { runPrincipalGate } from "../run-rules/index.mjs";
-import { isMachineIdentity, proposalLabel, normalizeType } from "../../checks/bio-checks.mjs";
+import { isMachineIdentity, proposalLabel, normalizeType } from "../record-grammar/index.mjs";
 import { ACTION_PLAN, planId, planDoc, appendEntry, logOf, logSection, parseFm, q } from "./doc.mjs";
 import { ACTION_PLANS_TABLES, migrateActionPlans } from "./schema.mjs";
 import { ACTION_PLAN_CHECKS, refusal } from "./checks.mjs";
@@ -708,9 +708,11 @@ export class ActionPlans {
     return { ok: true, plan: o.p.id, option: held.id, fields: f.fields, reason: entry.reason, author, at: entry.at };
   }
 
-  /** R11, R31: a proposal, by any credential, stored apart from the options. A machine's names its planning run. */
+  /** R11, R31: a proposal, by any credential, stored apart from the options. A machine's names its planning run. Two
+   *  stamps, neither from the body: `proposer` names the caller for the label and says whether it is machine work;
+   *  `principal` is the caller as a run's principal (`<principal>/<tokenId>`), compared with the run's own (N432). */
   async optionPropose(args = {}) {
-    const { plan, why, run, sources, proposer, viewer } = args;
+    const { plan, why, run, sources, proposer, principal, viewer } = args;
     const who = str(proposer);
     /* DEC-49 REGION is-proposer-stamped */
     if (!who)
@@ -723,7 +725,7 @@ export class ActionPlans {
     const machine = isMachineIdentity(who);
     let gate = null;
     if (machine) {
-      gate = this.#runGate(run, p, who, viewer);
+      gate = this.#runGate(run, p, principal, viewer);
       if (!gate.ok) return gate;
     }
     const f = this.#optionFields(args, p, viewer);
@@ -747,7 +749,7 @@ export class ActionPlans {
     const at = this.now();
     const r = this.record.transact(() => {
       /* R31: the run is asked again inside the transaction, so a bound reached meanwhile is not passed. */
-      if (machine) { const again = this.#runGate(run, p, who, viewer); if (!again.ok) return again; }
+      if (machine) { const again = this.#runGate(run, p, principal, viewer); if (!again.ok) return again; }
       const n = (this.#one(`SELECT COUNT(*) AS n FROM plan_option_proposals WHERE plan_id=?`, p.id) || { n: 0 }).n + 1;
       const id = `${p.id}/proposal/${n}`;
       const ord = machine ? (this.#one(`SELECT COUNT(*) AS n FROM plan_option_proposals WHERE run=?`, gate.run.run) || { n: 0 }).n + 1 : null;
@@ -762,7 +764,8 @@ export class ActionPlans {
     return { ok: true, plan: p.id, proposal: this.#proposalView(this.#proposalRow(r.id)), says: PROPOSAL_SAYS };
   }
 
-  /* R31: the run a machine's proposal names, in R31's order; `{ok, run}` or a refusal. */
+  /* R31: the run a machine's proposal names, in R31's order; `{ok, run}` or a refusal. `caller` is the `principal`
+     stamp (R11), never the `proposer` label: an agent's label (`class:ai/<tokenId>`) is not its run's principal. */
   #runGate(run, p, caller, viewer) {
     const r = typeof run === "string" && run.trim() ? this.aiRuns.runFor(run.trim(), viewer) : null;
     /* DEC-49 REGION is-proposal-run */
@@ -776,7 +779,7 @@ export class ActionPlans {
         { run: r.run, status: r.status });
     /* END DEC-49 REGION is-proposal-run-running */
     if (r.mode !== "plan" || r.plan !== p.id) return refuseRunOtherPlan(r.run);
-    const np = runPrincipalGate({ caller, principal: r.principal_plane, act: "proposing an option under a planning run" });
+    const np = runPrincipalGate({ caller: str(caller), principal: r.principal_plane, act: "proposing an option under a planning run" });
     if (np) return np;
     const b = this.aiRuns.boundOf(r.run, "proposals");
     /* DEC-49 REGION is-proposal-bound */
@@ -1658,8 +1661,8 @@ export function actionPlansOwns(t) {
 }
 
 /** The module's ops (K3, K671), as entries of the legacy store's op map; `legacy-store`'s own job adds the one spread
- *  line to its dispatch. `viewer`, `author` and `proposer` are the control plane's stamps, read from the query and set
- *  after the body, so a caller's own copy never wins. */
+ *  line to its dispatch. `viewer`, `author`, `proposer` and `principal` are the control plane's stamps, read from the
+ *  query and set after the body, so a caller's own copy never wins. */
 export function actionPlansOps(m, url, body) {
   const qp = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" && !Array.isArray(body) ? body : {};
@@ -1675,7 +1678,8 @@ export function actionPlansOps(m, url, body) {
                               after: pick("after"), limit: pick("limit"), viewer: qp("viewer") }),
     optionadd: () => m.optionAdd(stamped({ plan: pick("plan") })),
     optionrevise: () => m.optionRevise(stamped({ plan: pick("plan"), option: pick("option") })),
-    optionpropose: () => m.optionPropose({ ...b, plan: pick("plan"), run: pick("run"), proposer: qp("proposer"), viewer: qp("viewer") }),
+    optionpropose: () => m.optionPropose({ ...b, plan: pick("plan"), run: pick("run"), proposer: qp("proposer"),
+                                                   principal: qp("principal"), viewer: qp("viewer") }),
     optionadopt: () => m.optionAdopt(stamped({ proposal: pick("proposal") })),
     optiondispose: () => m.optionDispose(stamped({ plan: pick("plan"), disposition: pick("disposition") })),
     scenarioset: () => m.scenarioSet(stamped({ plan: pick("plan"), scenario: pick("scenario") })),
