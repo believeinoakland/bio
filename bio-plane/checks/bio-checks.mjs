@@ -23,8 +23,10 @@ export { BUNDLE_ID_RE, ANN_ID_RE, FILENAME_RE, ISO_TS_RE, OBJECT_TYPES, LEGACY_T
 // Constants (spec v1.1)
 // ---------------------------------------------------------------------------
 
-/** The ACTION vocabulary (C-2.10's suite). HELD (K835): `action-grammar` has its own (its R2), and `actions` reads
- *  it there; this copy is read only by affordances' test and goes at control-plane's whole deletion (rule 1, K814). */
+/** The ACTION vocabulary (C-2.10's suite). EXPORTED for op=affordances
+ *  (REC-19): the plane publishes these so a surface never keeps a copy, and
+ *  checkActionExtension consumes this same array, so the gate and the
+ *  publication cannot drift apart. */
 /* DEC-13 adds `request_for_comment` as the EIGHTH kind, and it is the one kind
  * in this array with an extra entry requirement attached (below). Bob's ruling
  * is that what is required is not the contact but the group's DECLARED,
@@ -35,22 +37,16 @@ export { BUNDLE_ID_RE, ANN_ID_RE, FILENAME_RE, ISO_TS_RE, OBJECT_TYPES, LEGACY_T
  * four claims to them" must be different rows in this record. */
 export const ACTION_KINDS = ['cpra_request', 'grand_jury', 'controller_referral', 'public_comment', 'media', 'litigation_support', 'request_for_comment', 'other'];
 
-/* `RISK_TIERS` and `riskTierState` (D-182) stood here until T19. They are `action-grammar`'s (its R1), moved with C-2.10
-   (actions' job, T19 layer 9). */
-
 /* `LAW_LEVELS` (D-149) stood here until T18 (legacy-checks). The governing-law levels are `jurisdictions`' (its R31),
    which actions re-exports and `op=affordances` publishes; this copy had no reader. */
 
 
-/** REC-195's label, kept by name for its readers (`action-clocks`, the old battery): the `governing_laws` case. HELD
- *  (K835): action-grammar has its own; this copy goes at control-plane's whole deletion (rule 1, K814). */
+/** REC-195's label, kept by name for its readers (`actions`, the old battery): the `governing_laws` case. */
 export function lawProposalLabel(proposedBy) {
   return proposalLabel(proposedBy, 'governing_laws');
 }
 
 
-/* `ACTION_BASIS_KINDS`, `CORRESPONDENCE_DIRECTIONS` and `RFC_RESPONSE_WINDOW_PRECEDENT` stood here until T19: they are
-   `action-grammar`'s (its R2, R6), moved with C-2.10. */
 
 
 
@@ -125,8 +121,7 @@ function asText(v) {
    `checkWriteCompleteness`, `checkFormatHygiene`, `checkQueueAndBase`, with `hasFile_`) stood here until T19. They are
    record-grammar's (`src/record-grammar/bundle.mjs`, R40), whose `checkBundle` runs them; this catalogue's
    `checkBundle` below is a wrapper over it (rule 2). `REL_VOCAB` and the history helpers
-   moved with them (legacy-checks, T19). `CONTENT_HASH_RE` stays, for C-2.7's held copy below (C-2.10's arm left with
-   action-grammar, T19 layer 9). */
+   moved with them (legacy-checks, T19). `CONTENT_HASH_RE` stays, for C-2.7 below and `correspondenceFindings` (C-2.10). */
 const CONTENT_HASH_RE = /^sha256:[0-9a-f]{64}$/;
 
 // ---------------------------------------------------------------------------
@@ -1522,10 +1517,7 @@ export const CHECK_RETIREMENTS = {
 };
 
 
-/* C-2.10's action grammar (`actionBasisFindings`, `correspondenceFindings`) and the quote and lifecycle grammars it runs
-   (C-72, C-94: `QUOTE_KEYS`, `isQuoteEntry`, `quoteValue`, `quoteFindings`, `CORRESPONDENCE_STAGES`,
-   `CORRESPONDENCE_OUTCOMES`, `DECISION_STAGES`, `LIFECYCLE_KEYS`, `lifecycleFindings`) stood here until T19. They are
-   `action-grammar`'s (its R2, R4–R6), moved by its job and deleted here by actions' (T19 layer 9, rule 1). */
+
 
 
 /* `checkDeletionRecords` (C-7: the per-bundle deletion ledger) stood here until
