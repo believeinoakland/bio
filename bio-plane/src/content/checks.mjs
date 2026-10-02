@@ -5,7 +5,7 @@
  * C-52, the transcription's nine refusals (R23, R25, R26), moved here from the catalogue in T18 (`TRANSCRIBE_CHECKS`;
  * K585 (3)), the catalogue's copy deleted in the same job (✱, K586): no product module but this one reads it. Rows,
  * codes, `where`s and translations unchanged. C-52.10 (`ATTEST_NO_NOTE`, R25 and R43; DEC-88, K1025), the attestor's
- * note, is a new row minted here in T22, awaiting stamp; it is the one row of this family both attestations answer.
+ * note, is a new row minted here in T22, stamped by 1.53.0; it is the one row of this family both attestations answer.
  *
  * C-80.3, the passage notice's one refusal (R29), was COPIED here in T18 (`VERSION_NOTICE_CHECKS`); this module was the
  * catalogue's last importer of its copy, which T19's content job deleted (K750 (1), K769). This is now the one row.
@@ -103,7 +103,7 @@ export const TRANSCRIBE_CHECKS = {
   },
   /* DEC-88 (K1025): an attestation is a member's word that text matches the page, and the word is only checkable if it
      says what was compared. One row for BOTH attestations, a typing's (R25) and the capture's own text (R43), because
-     the missing fact is the same fact; a sub-number of this allocated family, minted in T22 and awaiting stamp. */
+     the missing fact is the same fact; a sub-number of this allocated family, minted in T22 and stamped by 1.53.0. */
   ATTEST_NO_NOTE: {
     check: 'C-52.10',
     where: 'src/content/index.mjs transcriptionAttest > is-transcription-attest, and attestText > is-text-attest',

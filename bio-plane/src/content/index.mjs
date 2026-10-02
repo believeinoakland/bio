@@ -675,9 +675,9 @@ export class Content {
              says: r.stale ? staleSays(ext) : `${describeExtent(ext)}, as this record holds it` };
   }
 
-  /** Fill in each projected referent's standing, in ONE query over the ids, mutating the rows in place (the legacy
-   *  store's promote projection: a leg that carried its referent finds a row a machine may have minted, and the label
-   *  says so). */
+  /** Fill in each projected referent's standing, in ONE query over the ids, mutating the rows in place (`inquiry`'s
+   *  promote projection, the retired legacy store's until T19: a leg that carried its referent finds a row a machine
+   *  may have minted, and the label says so). */
   projectStandings(rows) {
     const ids = [...new Set(rows.map((r) => r.content_id))];
     const by = new Map();
@@ -1432,8 +1432,9 @@ export function contentOf(host, deps) {
   return c;
 }
 
-/** R49: the testimony path's check and mint, registered once on provenance's testimony slot (its R52), which the
- *  composition root runs where the legacy store's promotion step runs them today. A provenance with no slot (a test's
+/** R49: the testimony path's check and mint, registered once on provenance's testimony slot (its R52), which
+ *  control-plane's promotion step runs (its R42, `src/control-plane/step.mjs`) where the retired legacy store's step
+ *  ran them. A provenance with no slot (a test's
  *  stand-in) is left alone; a refusal (content registering twice) is a defect of the wiring and throws. */
 function joinTestimony(c) {
   const p = c.provenance;

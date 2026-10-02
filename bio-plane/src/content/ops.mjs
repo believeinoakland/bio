@@ -1,10 +1,12 @@
 /* content's ops map (requirements: `build/requirements/content.md` R50; `build/extraction/legacy-store.md` §4.2 (6)).
  * Written at T19 from the legacy store's eight explicit arms (`store.mjs`' route table), each with today's behaviour, for
- * that store's one spread (K671). The parameters are read from the query, where the control plane stamps `viewer` and
- * every authorship field (`mintedBy`, `attestor`, `transcriber`), never from the body. Which credential reaches each op
- * is `op-declarations`' and `control-plane`'s, never this map's. */
+ * that store's one spread (K671); since that store was retired, `plane`'s store (`src/plane/store.mjs`) spreads it. The
+ * parameters are read from the query, where the control plane stamps `viewer` and every authorship field (`mintedBy`,
+ * `attestor`, `transcriber`), never from the body. Which credential reaches each op is `op-declarations`' and
+ * `control-plane`'s, never this map's. */
 
-/** The store's one JSON reader for a query value: `null` for absent or unreadable, never a throw. */
+/** The retired legacy store's one JSON reader for a query value, kept as it was: `null` for absent or unreadable,
+ *  never a throw. */
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 
 /** R50: the module's route arms, keyed by op name, each a function of no arguments answering what its service answers. */
