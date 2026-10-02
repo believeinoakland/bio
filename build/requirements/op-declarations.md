@@ -1,6 +1,6 @@
 # op-declarations — requirements
 
-**Status** · DRAFT by a worker for BOB #75, 2026-09-30, at T18's opening, for BOB's review; split from `control-plane` by K617 and K624 (1), (2) (a product module whose code passes about 4,000 lines is split before its next job, along seams BOB names, with no change to any requirement's meaning). R1 is `control-plane` R34 and R6 is `control-plane` R31, each moved with its meaning unchanged (only its cross-references re-pointed). R2–R5 state, with ids, the tables `control-plane`'s Terms already defined and its R10, R11, R13, R14 and R17 read (no new behaviour: each states what `ops.mjs` holds today). Layer 11, directly after `instance-setup`, before `admission` and `control-plane`. No `from` (`from` names a legacy module only; K624 (1)): this module's job builds its paths from `bio-plane/src/control-plane/ops.mjs` by copy and merges early; `control-plane`'s own job, after it, deletes its copy and re-points. Filing templates and local facts (K921, K922 (3)) folded for T21 by a worker for BOB #86, 2026-10-01, before layer 11, as `actionhold` was (K902, K919): R8 (the new ops' specs) added, not yet met; `templates` and `templatesave` keep their specs, now served by `filing-templates` and `filings` R32.
+**Status** · DRAFT by a worker for BOB #75, 2026-09-30, at T18's opening, for BOB's review; split from `control-plane` by K617 and K624 (1), (2) (a product module whose code passes about 4,000 lines is split before its next job, along seams BOB names, with no change to any requirement's meaning). R1 is `control-plane` R34 and R6 is `control-plane` R31, each moved with its meaning unchanged (only its cross-references re-pointed). R2–R5 state, with ids, the tables `control-plane`'s Terms already defined and its R10, R11, R13, R14 and R17 read (no new behaviour: each states what `ops.mjs` holds today). Layer 11, directly after `instance-setup`, before `admission` and `control-plane`. No `from` (`from` names a legacy module only; K624 (1)): this module's job builds its paths from `bio-plane/src/control-plane/ops.mjs` by copy and merges early; `control-plane`'s own job, after it, deletes its copy and re-points. Filing templates and local facts (K921, K922 (3)) folded for T21 by a worker for BOB #86, 2026-10-01, before layer 11, as `actionhold` was (K902, K919): R8 (the new ops' specs) added, not yet met; `templates` and `templatesave` keep their specs, now served by `filing-templates` and `filings` R32. T22's ops (K1019, K1023), by a fold worker for BOB #91 on `tranche/T22`, 2026-10-02: R9 (their specs, in R8's form) added, not yet met; R6 words the store-internal exemption (`monitorlook`, `doorbellrefused`; K1037), met as the tables stand.
 
 **Size (P6).** About 2,110 lines move (`bio-plane/src/control-plane/ops.mjs` whole: `OPS`, the act lists, `SESSION_OPS`, `NEEDS`, `ACT_GATE`, `decorateAct`, `UNATTENDED_BY_DECISION`), most of it a table and its comments; about 150 written with the Action layer's specs (N-A12's share, N-A21). Well under the mark.
 
@@ -32,6 +32,14 @@ Terms. An **op** is a name the instance answers. An **op spec** is `{classes, ma
 
   R6 holds over them.
 
+**The specs of T22's ops** (K1019, K1023)
+- **R9** `OPS` holds a spec for each op T22 adds, each in `SESSION_OPS.member` and `SESSION_OPS.admin`, with `NEEDS` `contribute` for every mutating op, and the stamps the act lists name: *(not yet met: T22)*
+  - `declinetoescalate` (`escalation` R27) as `escalationopen`: mutating, classes `admin`, `member`, `probe`, in escalation's act list, so `author` and `viewer` are query-stamped (`escalation` R25); `escalationstatus` (`escalation` R28) as `escalationsdue`: a read, classes `admin`, `member`, `probe`, `viewer` stamped;
+  - `capture`'s `heldsetaside` and `heldrestore` (its R79, R81): mutating, classes `admin`, `member`, `probe` (capture refuses a machine author itself, `MACHINE_CANNOT_SET_ASIDE`), `by` and `viewer` stamped; `heldcaptures` and `gradenote` (its R77, R76): reads, classes `admin`, `member`, `probe`, `viewer` stamped; `doorbelltally` (its R80): a read for a member session only, classes `admin`, `member` and `machineClasses: []`, as `knocksof`, `viewer` stamped;
+  - `monitoring`'s `addressfrequencyset` (its R52): mutating, classes `admin`, `member`, `probe`, `author` and `viewer` stamped.
+
+  None is declared for `escalationreasondraft` (`escalation` R29) or the skills' "What changed" ops, which are T23's (K1025, K1035), or for `doorbellrefused` (R6). R6 holds over them.
+
 ## Private
 
 ### Uses
@@ -40,7 +48,7 @@ Terms. An **op** is a name the instance answers. An **op spec** is `{classes, ma
 
 ### Invariants
 
-- **R6** (was `control-plane` R31) An op spec for every op any module serves, and no spec without a handler or a store route.
+- **R6** (was `control-plane` R31) An op spec for every op any module serves, and no spec without a handler or a store route. A store-internal route, which the plane calls only from within itself and which is never a public op, is not served to a caller and has no spec: `monitoring`'s `monitorlook` and `capture`'s `doorbellrefused` (the Worker's count of a knock it refused before the store, `capture` R80; K1037).
 - **R7** No I/O, no store, no network, no clock; no place is named in this module's behaviour or outward text (`build/layers.md`, "No jurisdiction in the product").
 
 ### Satisfies
