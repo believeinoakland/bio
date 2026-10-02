@@ -33,7 +33,7 @@ The case document's grammar, one spelling for every module: the formats and thei
 
 #### The project reference a case carries (DEC-111; K1019, K1031)
 
-- **R10** (DEC-111; `network-notices` R19) A case document may carry `working_on`, a notice id, and nothing else about the notice; a notice id is record-core R6's opaque-id shape, `^[A-Z]+-\d{4}-\d{4}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$` (as `signatures` R38, K1115), and `isNoticeReference(value)` answers whether a value is one (K1119). When it is present, the published case shows it as the project reference. A malformed value is refused by `ratification` R38. It is an optional field of `bio-case-document/5`, with no new format version: a `/5` document without it names no notice (K1114). *(not yet met: T23)*
+- **R10** (DEC-111; `network-notices` R19) A case document may carry `working_on`, a notice id, and nothing else about the notice; a notice id is record-core R6's opaque-id shape, `^[A-Z]+-\d{4}-\d{4}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$` (as `signatures` R38, K1115), and `isNoticeReference(value)` answers whether a value is one (K1119). When it is present, the published case shows it as the project reference. A malformed value is refused by `ratification` R38. It is an optional field of `bio-case-document/5`, with no new format version: a `/5` document without it names no notice (K1114).
 
 ## Private
 

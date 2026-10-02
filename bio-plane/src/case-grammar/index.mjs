@@ -3,8 +3,8 @@
  * §4; N345, N364; D-431, D-442). Text in, values out: the formats and their predicates (R1, `./formats.mjs`), the `/5`
  * blocks (R1, `./blocks.mjs`) and tension section (R1, `./tensions.mjs`), the attribution run's text (R2), the
  * sections a later act re-authors (R3), the citations a signed document carries (R4), the edge set a finding rests
- * on (R5), and what changed in an edition and the lens it was produced under (R8, R9, `./edition.mjs`). It reads no
- * table, holds no store and never throws.
+ * on (R5), what changed in an edition and the lens it was produced under (R8, R9, `./edition.mjs`), and the project
+ * reference a case carries (R10, `./reference.mjs`). It reads no table, holds no store and never throws.
  *
  * Split from `publication` by copy (K651, K624 (1)): the format block of `publication/checks.mjs`, and `fmSafe`,
  * `SECTIONS`, `REAUTHORABLE_SECTIONS`, `signedCitations`, the attribution renderers and `publishedGraphEdges` of
@@ -29,6 +29,7 @@ export { WHAT_CHANGED_HEAD, WHAT_CHANGED_ORIGINS, whatChangedText, whatChangedBl
          whatChangedOf, LENS_HEAD, LENS_STATEMENT_FIELDS, LENS_CITATION_FIELDS, LENS_KIND_WORDS, LENS_CLOSING_SENTENCES,
          LENS_NONE_SENTENCE, LENS_UNDETERMINED_SENTENCE, lensStatementKey, lensBlockLines, lensSectionLines, lensOf,
          editionStatementsOf } from "./edition.mjs";
+export { WORKING_ON_KEY, NOTICE_REFERENCE_PATTERN, isNoticeReference, workingOnLines, workingOnOf } from "./reference.mjs";
 
 
 /** MK-7 — THE ATTRIBUTION LEVELS (MEMBER-KNOWLEDGE-DESIGN.md §4, §4.6), MOST PROTECTIVE FIRST (R2).
