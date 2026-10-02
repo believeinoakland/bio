@@ -23,3 +23,7 @@ Fix commit `7b8a5922bd` on `job/T26/attestation` (from `tranche/T26` @ `60a3668b
 - `checks/format.mjs`: 91 modules, 0 failures. `architecture.mjs`: 9 files, 27 imports, 0 failures. `coverage.mjs`: 10 of 10, 0 failures. `ownership.mjs … tranche/T26`: 4 files, 0 failures.
 
 Size (session_0176zF6WAnondSUb8eCPL194): test runs 605, module lines 558
+
+## J1 · COMPLETE
+
+N517 done on job/T26/attestation (fix 7b8a5922bd). R9's probe now reads each answer's text (every string and key, at any depth) and leaves out only the values under signature and public_key; regex and R9 unchanged. Controls: a guard that signed answers are probed; a place is still caught in a sentence, in a nested note, in a translation and in a statement; a signature holding +ca/ is not flagged. Proof: invariants.test.mjs passed 500/500. Cause measured over 1,000,000 fresh signed answers: old probe 515 false hits, new 0 (about 1 in 2,000 per answer, so about 1 in 500 runs; the old file passed 100/100 here). Re-scan: checks.mjs's 'awaiting stamp until T26 L2' and ops.mjs's 'accepted red 9' re-worded to the past (K1247; plane/door.mjs). attestation 19/19; whole test/m 5341, 5330 pass, 0 fail, 11 todo (red 3 cleared). Checks: format, architecture, coverage and ownership each 0 failures. The plane bundle is stale through those two comment edits; I regenerated nothing. Record: build/jobs/T26/attestation.md.
