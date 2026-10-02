@@ -1,6 +1,6 @@
 # attestation (T25)
 
-**Status** · session_01CCB76CKHZSXMLTrZc9xP3J · depth 2 · WAITING ON BOB (J1) · handled B2
+**Status** · session_01CCB76CKHZSXMLTrZc9xP3J · depth 2 · WAITING ON BOB (J1) · handled B3
 
 ## J1 · REPORT
 
