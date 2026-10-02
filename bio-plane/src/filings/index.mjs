@@ -38,8 +38,8 @@
  *   consequences   `consequencesOf` (its R7), from `consequencesModule(host, deps)` (K171 (17), K250).
  *   promotion      `fact("producingGroup")` (its R40; R3's `group`, N331), from `promotionOf` on the same host unless given.
  *   producingGroup a function answering the instance's producing group, or null when none is recorded (R3's `group`),
- *                  or answering promotion's fact as `fact` answers it. Given only by legacy-store until layer 10; absent,
- *                  the group is read through `promotion.fact("producingGroup")`.
+ *                  or answering promotion's fact as `fact` answers it. No caller hands one in since the legacy store's
+ *                  retirement (a test may); absent, the group is read through `promotion.fact("producingGroup")`.
  *   profiles       a function answering the active profiles (ids or profile objects) to combine; default record-core's
  *                  setting `jurisdiction_profiles` (its R26).
  *   now            the clock for the instants it writes, an ISO string (default: the wall clock, to the second).
@@ -94,6 +94,8 @@ export const THEORY_WHY_MAX = 1000;
 export const THEORY_TEXT_MAX = 2000;
 /** R8: the longest counsel name, organisation or contact. */
 export const COUNSEL_FIELD_MAX = 200;
+/** R8 (DEC-88): the longest reason a packet's author gives, in characters (code points). */
+export const PACKET_REASON_MAX = 2000;
 /** R13: the drafts and the packet versions one `filingsFor` read lists, each. */
 export const FILINGS_FOR_MAX = 200;
 /** R10: the marking every section, the packet's head and every export carry; with no counsel named (Tier 1 or 2, K924),
@@ -171,7 +173,7 @@ export class Filings {
     this.record = record;
     this.#deps = { host, membership, publication, publicRead, provenance, content, actions, conformance, standards, consequences, promotion, strength, actionClocks, localFacts, filingTemplates };
     /* R3 (N331): the producing group is promotion's fact `producingGroup` (its R40), read as `fact` answers it; a
-       function handed in (legacy-store's, until layer 10) is kept and may answer a value, null, or the fact's answer.
+       function handed in (as the retired legacy store's was) is kept and may answer a value, null, or the fact's answer.
        Absent, `#group` asks promotion itself, and says so when no promotion module is reachable (N355: no refusal code
        of promotion's is spelled here). */
     this.producingGroup = typeof producingGroup === "function" ? producingGroup : null;
@@ -1117,14 +1119,27 @@ export class Filings {
   }
 
   /** R8–R10, R12, R31: a counsel packet, for the counsel a member names or (below Tier 3) for the group's own review,
-   *  with a `briefing` section filled from a `brief` template when one is named; assembling again makes a new version. */
-  counselPacket({ action = null, counsel = null, template = null, author = null, viewer = null } = {}) {
+   *  with a `briefing` section filled from a `brief` template when one is named; assembling again makes a new version.
+   *  `reason` is the author's words on why it is assembled, recorded with the version (DEC-88). */
+  counselPacket({ action = null, counsel = null, template = null, reason = undefined, author = null, viewer = null } = {}) {
     const who = str(author);
     /* DEC-49 REGION is-counsel-packet */
     if (!who || isMachineIdentity(who))
       return { ok: false, reason: "MACHINE_CANNOT_NAME_COUNSEL",
                detail: who ? `'${who.slice(0, 60)}' is a machine identity: the group names its counsel`
                            : "no member is named as the one naming counsel" };
+    /* R8 (DEC-88, C-115.44): the author's words on why, kept as written. Blank is empty after trim; the bound counts
+       code points, as publication's attribution reason does (K1030). Asked before the action, so nothing is read or
+       written for a packet with no reason. */
+    const why = typeof reason === "string" ? reason : null;
+    const chars = why == null ? 0 : [...why].length;
+    if (why == null || !why.trim() || chars > PACKET_REASON_MAX)
+      return { ok: false, reason: "PACKET_NO_REASON", max: PACKET_REASON_MAX,
+               detail: why == null
+                 ? (reason === undefined || reason === null ? "say in your own words why this packet is assembled (reason)"
+                   : `the reason must be your words, as text; a ${typeof reason} was sent`)
+                 : !why.trim() ? "the reason is blank: say in your own words why this packet is assembled"
+                 : `the reason is ${chars} characters, over the ${PACKET_REASON_MAX} a packet's reason is kept to; refused rather than cut` };
     const a = this.#action(action, viewer);
     if (!a) return this.#noAction(action);
     /* R8 (K924): a packet at every governing tier; counsel is required at Tier 3 or an undetermined tier (never read as
@@ -1170,10 +1185,10 @@ export class Filings {
       const id = held ? held.packet_id : this.record.allocId("CPK", at.slice(0, 4)).id;
       const version = held ? Number(held.v) + 1 : 1;
       this.sql.exec(`INSERT INTO counsel_packets (packet_id, version, action_id, counsel, author, at, sections, basis, disclosure,
-                       template) VALUES (?,?,?,?,?,?,?,?,?,?)`,
-                    id, version, a.id, json(c), who, at, json(sections), json(basis), disclosure, json(tpl));
+                       template, reason) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+                    id, version, a.id, json(c), who, at, json(sections), json(basis), disclosure, json(tpl), why);
       return { ok: true, id, version, action: a.id, head: this.#head(id, version, a.id, c, who, at, marking, disclosure),
-               sections, marking, disclosure, fileable: false, template: tpl, basis_changed: null };
+               sections, marking, disclosure, fileable: false, template: tpl, reason: why, basis_changed: null };
     });
   }
 
@@ -1239,7 +1254,7 @@ export class Filings {
     return { ok: true, id: r.packet_id, version: Number(r.version), action: r.action_id,
              head: this.#head(r.packet_id, Number(r.version), r.action_id, counsel, r.author, r.at, marking, r.disclosure ?? null),
              sections: parse(r.sections), marking, disclosure: r.disclosure ?? null, fileable: false,
-             template: this.#templateShown(parse(r.template), viewer),
+             template: this.#templateShown(parse(r.template), viewer), reason: r.reason ?? null,
              basis_changed: causes.length ? { causes } : null,
              versions: rows.map((x) => Number(x.version)) };
   }
@@ -1368,7 +1383,7 @@ export class Filings {
       packets: versions.slice(0, FILINGS_FOR_MAX).map((r) => {
         const causes = this.#basisChanged(parse(r.basis) || {}, viewer);
         return { packet: r.packet_id, version: Number(r.version), counsel: parse(r.counsel), assembled_by: r.author, at: r.at,
-                 template: this.#templateShown(parse(r.template), viewer),
+                 reason: r.reason ?? null, template: this.#templateShown(parse(r.template), viewer),
                  basis_changed: causes.length ? { causes } : null,
                  exports: this.#rows(`SELECT author, at, counsel, sha FROM counsel_packet_exports WHERE packet_id=? AND version=?
                                        ORDER BY export_id`, r.packet_id, r.version)
@@ -1597,7 +1612,8 @@ export function filingsOps(f, url, body) {
                                            artifactSha: b.artifactSha ?? b.artifact_sha ?? null, account: b.account ?? null,
                                            author: q("author"), viewer: q("viewer") }),
     counselpacket: () => f.counselPacket({ action: b.action ?? q("action"), counsel: b.counsel ?? null,
-                                           template: b.template ?? q("template"), author: q("author"), viewer: q("viewer") }),
+                                           template: b.template ?? q("template"), reason: b.reason,
+                                           author: q("author"), viewer: q("viewer") }),
     counselpacketread: () => f.counselPacketRead({ id: q("id"), version: q("version"), viewer: q("viewer") }),
     counselpacketexport: () => f.counselPacketExport({ id: b.id ?? q("id"), version: b.version ?? q("version"),
                                                        author: q("author"), viewer: q("viewer") }),
