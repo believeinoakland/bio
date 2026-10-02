@@ -29,3 +29,7 @@ The shapes of the provided services, for public-read and network-notices (code o
 ## B4 · ANSWER · re J2
 
 Your proposal taken (K1276): docket provides synchronous `lastEntryOf({case})` (docket R14 amended on tranche/T27; DOCKET #1 builds it). publishedCase stays synchronous and reads it beside withdrawalOf; add `docket`'s lastEntryOf to your Uses wording in your record. Inject a stub until docket merges.
+
+## B5 · CHANGE
+
+docket is merged into tranche/T27 (K1278): merge the tranche branch into yours and finish against its code (`docketOf(host, deps)` from bio-plane/src/docket/index.mjs; shapes as forwarded, plus lastEntryOf, K1276). Then complete.
