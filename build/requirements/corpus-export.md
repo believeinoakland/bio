@@ -20,7 +20,7 @@ A group that cannot leave can be held. This module exports the working corpus ve
 
   In the same act it appends one `export_log` row: the instant, scope `working-corpus`, the counts, and the note cut at 280 characters. The answer says it was logged and how to verify it.
 - **R2** (was `publication` R19) `exportLog({limit})` (`op=exportlog`) answers the newest rows first, `limit` clamped to [1, 1000], 200 by default, with `truncated`.
-- **R6** (N483; K1122) The module publishes `corpusExportOps(ce, q)`, an object of route arms keyed by op name, each a function of no arguments: `export` answers R1 with `q("note")`, `exportlog` answers R2 with `q("limit")` (publication's former arms, `publication/index.mjs`:2702–2703, moved with today's behaviour). Which credential reaches each op is `op-declarations`' and `control-plane`'s; the plane spreads the map (its composition). *(not yet met: T23)*
+- **R6** (N483; K1122) The module publishes `corpusExportOps(ce, q)`, an object of route arms keyed by op name, each a function of no arguments: `export` answers R1 with `q("note")`, `exportlog` answers R2 with `q("limit")` (publication's former arms, `publication/index.mjs`:2702–2703, moved with today's behaviour). Which credential reaches each op is `op-declarations`' and `control-plane`'s; the plane spreads the map (its composition).
 
 ## Private
 
@@ -53,7 +53,7 @@ A group that cannot leave can be held. This module exports the working corpus ve
   - creates `export_log` (the same DDL, `CREATE TABLE IF NOT EXISTS`, so a store's existing rows stay);
   - declares it to `record-core`'s purge as exempt (R4).
 
-  Until the plane's op map spreads this module's ops, `publication` creates it and its `export` and `exportlog` ops delegate here (the seam map, §4).
+  `publication`'s `export` and `exportlog` delegates are retired (T23 L8, N483); until the plane's op map spreads `corpusExportOps` (T23 L11), those ops route nowhere through the plane (K1122).
 - **For callers.** (was `publication`'s Suggestions, "For callers", its export half) The control plane admits only the root-of-trust credential to `op=export` (`ROOT_OF_TRUST_REQUIRED`) and in-app administrators to `op=exportlog`.
 - **R3's scope** (P17, a detail, for the START). The service is handed R1's manifest and the bytes it names, which the manifest itself does not carry. It answers verified, or each failure by name, and writes nothing. Writing a verified corpus into a receiving store is not stated here.
 - **Tests.**
