@@ -31,3 +31,7 @@
 - `bio-plane/test/system/fleetbundles.test.mjs`: agent-worker STALE BUNDLE (reported above; it is not this job's to regenerate).
 
 Size (session_01XiDMY8V5iF59Evun86B5pi): test runs 4, module lines 1703
+
+## J1 · REPORT
+
+Two things outside my module (wording job, no requirement change made): (1) My comment-only edits to bio-plane/src/run-rules/checks.mjs and rules.mjs stale two bundles: agent-worker/dist/agent-worker.bundled.mjs (agent-worker's; fleetbundles.test.mjs reports STALE BUNDLE against both files, and passes without my edits) and the plane's bio-plane/dist/bio-plane.bundled.mjs (not_product; its manifest lists run-rules). Nothing regenerated. (2) build/requirements/run-rules.md's Status line still says 'Not yet met: R13–R15 (new, K660)'; all three are met and named by passing tests. The requirement text is yours.
