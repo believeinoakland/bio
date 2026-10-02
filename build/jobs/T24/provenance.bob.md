@@ -1,0 +1,7 @@
+# BOB to provenance (T24)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entries: `build/plan/current.md` (T24) L3, provenance. (1) N504 (K1151; folded at the opening, K1180): R57 (`build/requirements/provenance.md`:119, `*(not yet met: T24)*`), `instanceKeyBound()`: true when an instance key is bound, false otherwise (also when it cannot be read); signs and writes nothing (`receipt_keys`, `first_used` untouched); never throws. Its consumer is network-notices R1 (L8). Re-scan your own module for the N502/N508 kind (`plan/t24-stale-notes.md`; N469's rule: a note names the stamp that took its row, 1.54.0 for T23's rows once promotion's L2 merge stamps them, and the plane store or control-plane's routes, never the retired legacy store or legacy-index, as live) and re-word what you find. Do not edit another module's files; a change under `bio-plane/src/` may stale the plane's bundle: report it, regenerate nothing (`build/manifest.md`). Reds you inherit, accepted by name (`build/plan/current.md` T24 "Accepted reds"): red 2 (the UI's DEC-88 tests, Bob's); red 3 (coverage of other modules' opening ids); red 4 (format: `link-sweep`'s directories absent); red 5 (a row you add or change is `awaiting stamp` until T25's L2: list each in COMPLETE); BOB adds any red an earlier merge accepts. Proof: requirement-named R57 tests at your interface with negative controls (bound, unbound, unreadable; `first_used` unchanged after the call); your module's tests green; the whole `bio-plane/test/m` with no red beyond those named.
