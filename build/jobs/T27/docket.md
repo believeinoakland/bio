@@ -2,6 +2,62 @@
 
 **Status** · session_01PJ5cMH43RbHxx4SXkb3E7X · depth 2 · WORKING · handled B2
 
+## Completion
+
+**Entry applied: N520** (DEC-116 with DEC-100; START B1; readings J1, confirmed by B2, K1274). This creates the new module `docket`: `bio-plane/src/docket/` (`index.mjs`, `schema.mjs`, `checks.mjs`, `feed.mjs`), with tests in `bio-plane/test/m/docket/`. **BOB adds both to `docket`'s `modules.json` entry at the merge** (K1043's form). Until then, ownership reports my files as "outside docket's paths". With the two paths added in a scratch edit (not committed), all four checks report 0 failures (below).
+
+What R1–R22 now do:
+- **R1, R11.** `docketFile` files a record entry. Its refusals come in R1's order, and every filing records `found_by` (`watch` when the capture's register entry came from a sweep, else `paste`). With `takesBack` it takes a record entry back instead (J1 reading 2).
+- **R2.** `docketPressure` adds a pressure mark.
+- **R4–R6.** `docketPrepare` and `docketPost` place an entry in public. Prepare writes nothing and answers the same bytes for the same inputs on the same UTC day. Post verifies the signature in `NS_DOCKET` over `docketStatement`, and refuses `DOCKET_STALE` when the docket has moved.
+- **R7, R8.** `docketDecline` declines a submission. A `receipt` entry carries no capture and no bytes; `docketInvitation` answers the request to resend.
+- **R10, R12.** Standing: a grant is live from its post until its `standing-withdrawn` post. A withdrawal of one edition or `all` fixes its editions when it is posted; `withdrawalOf` answers it.
+- **R9, R3.** `coreDue` answers the manager's To-dos. `docketOf` answers all three shelves, each record entry's state, the core, and a contesting entry's prompts.
+- **R13.** `start()` fills `reevaluation.registerDocket` once, with `withdrawals` and `contested` in K1270's shapes. `docketActed` is called after a withdrawal's post or a contesting filing commits; a throw there never undoes the act.
+- **R14, R15, R5.** `docketPublic`, `docketFeed` (Atom 1.0) and `docketSigners`.
+- **R16.** Three tables, declared to purge with no bundle key. The module also registers its figures (`registerCounts`) and a mint seed for `DKT` ids.
+- **R22.** A `docketOps` map is exported for L11.
+
+**Arguments and fields added by J1's readings, for BOB to fold into the requirements (B2):**
+- `docketFile` gains `takesBack` (R11) and `answers` (R8: the receipted record entry a resent reply answers).
+- `docketPrepare` gains `candidate` (R9 (c): a disclosure, published as `answers`) and `grant` (R10: `standing-withdrawn`, published as `answers` with `holder`).
+- `docketPublic` answers:
+  - `captures: {<sha256>: <base64 or null>}`, plus `captures_unread`;
+  - per entry, `json` (the exact signed text) and `fields` (that text parsed);
+  - `feed`, the feed's relative address.
+- Bytes are read through `record-core`'s `evidenceStore()`, not `provenance` as J1 reading 12 said; record-core is a declared use.
+- Exports for later modules: `DOCKET_VOCABULARIES` (affordances R34), `docketOps` (L11), `ATOM_MEDIA_TYPE`, `DOCKET_UNREADABLE`, `OUTWARD_ACT_WARNING`, `RESEND_INVITATION`.
+
+**Catalogue family corrected: C-129, not C-128.** B2 confirmed C-128, but C-128 is `acquisition`'s (`SWEEP_SCOPE_MISSING` and `SWEEP_REDIRECT_OUT_OF_SCOPE`, stamped by 1.54.0). C-129 is free on the tranche and on every T27 job branch. **Rows awaiting stamp** (26; accepted red 2 until T28's promotion stamp): C-129.1–C-129.26:
+- C-129.1–.9: `MACHINE_CANNOT_FILE_DOCKET`, `DOCKET_NOT_A_PARTICIPANT`, `DOCKET_NO_EDITION`, `DOCKET_NOT_ATTRIBUTED`, `DOCKET_NOT_THE_SUBJECT`, `DOCKET_NO_STANDING`, `DOCKET_NO_CAPTURE`, `DOCKET_KIND_UNKNOWN`, `DOCKET_NO_REASON`.
+- C-129.10–.13: `MACHINE_CANNOT_MARK_PRESSURE`, `NO_SUCH_DOCKET_ENTRY`, `PRESSURE_MARKED`, `PRESSURE_REFUSED`.
+- C-129.14–.20: `MACHINE_CANNOT_PLACE_DOCKET`, `DOCKET_NOT_THE_MANAGER`, `DOCKET_NO_GROUP_SLUG`, `DOCKET_ENTRY_SETTLED`, `DOCKET_WRONG_SHELF`, `DOCKET_NO_SUMMARY`, `DOCKET_NO_ARCHIVE_COPY`.
+- C-129.21–.26: `DOCKET_WARNING_NOT_ACKNOWLEDGED`, `DOCKET_STALE`, `DOCKET_SIGNATURE_REFUSED`, `DOCKET_WITHDRAWAL_FINAL`, `DOCKET_TAKE_BACK_FINAL`, `DOCKET_ALREADY_WITHDRAWN`.
+
+With the paths added, `test/system/row-census.test.mjs` names exactly these 26 as "arrived with no record". Without the paths it passes (1073 rows, the pin).
+
+**Flaw found and fixed in the module.** Two record entries that are alike sign to the same public bytes, since the entry names no record id. A held prepare for one could then place the other. The held answer is now kept per record entry, and a post places the entry last prepared. `place.test.mjs` (R5 DOCKET_STALE) covers it.
+
+**N502/N508 re-scan:** nothing to re-word. This is a new module with no legacy-store or legacy-index note and no stale `awaiting stamp`.
+
+**Deferred:** none. The Suggestions' "not drafted" items (other disclosures, a legal mark asking for a hold, a link from a checkpoint to an entry, the citing side of DEC-101 (3)) stay undrafted, as the requirements say.
+
+**Other modules:**
+- `public-read` and `network-notices` should build against the shapes in J2: `docketPublic` and `docketFeed` are async; `docketSigners()` answers `[{keyB64, first_signed}]`.
+- L11 routes the added arguments (`takesBack`, `answers`, `candidate`, `grant`) through `docketOps` (control-plane R48).
+- The plane's bundle is not stale: no plane source imports `docket` yet. `test/system/fleetbundles.test.mjs`: pass 1, fail 0.
+
+**Tests run:** `bio-plane/test/m/docket/` (`file.test.mjs` 11, `place.test.mjs` 13, `reads.test.mjs` 13): tests 37, pass 37, fail 0. Every id R1–R22 is named in a test title. No module uses `docket`'s services yet, so no user-module tests apply.
+
+**Checks** (from `civicos-process`):
+- format: 92 modules, 91 requirements files; 0 failures.
+- architecture, with the paths added: 8 product files, 41 relative imports; 0 failures.
+- coverage, with the paths added: 22 of 22 live requirement ids named by a test; 0 failures.
+- ownership, with the paths added: 9 files changed by docket between tranche/T27 and HEAD; 0 failures.
+- Without the paths: architecture judges 0 files, coverage reports 0 of 22, and ownership fails only on "outside docket's paths". Each closes when BOB adds the paths.
+
+Size (session_01PJ5cMH43RbHxx4SXkb3E7X): test runs 12, module lines 1278
+
 ## J1 · QUESTION
 
 Readings I am building on (docket R1–R22); none changes a provided service's shape that public-read or network-notices use (`docketPublic`, `docketFeed`, `docketSigners`, `withdrawalOf`). Answer only where you rule otherwise.
