@@ -32,3 +32,18 @@ Built and pushed (e1a95e2860). I am waiting for your CHANGEs announcing the affo
 - The users you named are green: `test/m/plane/` apart from that R6, `capture/`, `sources/` and `instance-setup/page.test.mjs`.
 - Checks: format 0 failures; architecture 35 files, 0 failures; coverage 29 of 29; ownership 9 files, 0 failures.
 - Size: `src/control-plane/` is 3,529 lines (was 3,504).
+
+## J2 · REPORT
+
+B2 (K1168) is applied in 71f39643b7.
+- **Stamps.** The door now stamps T23's ops by op-declarations' lists:
+  - `viewer` on `WHAT_CHANGED_PROPOSAL_ACTIONS`, `WHAT_CHANGED_READS`, `NETWORK_NOTICES_ACTIONS` and `NETWORK_NOTICES_READS`;
+  - the proposer's label as `author` (and as `proposedBy`, R10's name) on `WHAT_CHANGED_PROPOSAL_ACTIONS`;
+  - the positional `by` on `NETWORK_NOTICES_BY`.
+  
+  `escalationreasondraft` and `sweeps` already take `viewer` through `ACTION_LAYER_READS`.
+- **Public reads.** I removed my by-name arm, per K1166 (2). The three public reads are reached as `op=publicread&name=<name>` through the public hook. Their own names go to the public hook, never to a store route. `r45-routes.test.mjs` tests this.
+- **Tests.** Run with op-declarations' branch file in place (temporarily, not committed), `test/m/control-plane/` has 123 tests: 122 pass, 1 fail. The fail is affordances' totality (red 5). Each of the four list wirings, removed, turns a test red.
+- **Branch state until op-declarations merges.** My branch imports names that `tranche/T23` does not yet export, so the control-plane suite does not load until I merge `tranche/T23` after op-declarations' merge.
+- **Checks.** format 0 failures; architecture 0; coverage 29 of 29; ownership 0.
+- **Size.** `src/control-plane/` is 3,517 lines.
