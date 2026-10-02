@@ -9,7 +9,8 @@
  * C-32.10, C-32.11, C-76.1) moved to `tasks/checks.mjs` with the inbox (N363; `tasks` R7).
  *
  * N301 (K356): the class `FINDING` keeps its code and its meaning and is shown to members as **Noticed**; "finding" is
- * reserved for a concluded question. So no translation below calls a queue item a finding. */
+ * reserved for a concluded question. So no translation below calls a queue item a finding. R48 (DEC-107): nor a to-do an
+ * obligation, nor a signal a condition. R49 (DEC-110 (1)): `QUEUE_SORT_UNKNOWN` is C-33.51, the row after C-33.50. */
 
 const at = (fn, region) => `src/queue/index.mjs ${fn} > ${region}`;
 
@@ -61,8 +62,8 @@ export const QUEUE_ACT_CHECKS = Object.freeze({
     where: at("proposeDispose", "is-dispose-class"),
     translation: 'This is not something the record disposes of. Deferring and dismissing are decisions '
       + 'about something the record NOTICED — its own question — and this item is a different kind of thing: a '
-      + 'CONDITION is a fact about our machinery that you silence for yourself, and an OBLIGATION is work '
-      + 'a named person owes and leaves every list when it is resolved. Nothing about it was changed, and '
+      + 'signal is a fact about our machinery that you quiet for yourself, and a to-do is work '
+      + 'a named person owes and leaves every list when it is done. Nothing about it was changed, and '
       + 'it is still in your list. The answer names the act that does reach it.',
   }),
   /* R29 (D-623) / C-33.50: the project arm with no project, and the bridge's FINDING key (R27, R28). One code, one
@@ -73,6 +74,14 @@ export const QUEUE_ACT_CHECKS = Object.freeze({
     translation: 'Setting this aside is a decision one project takes for its own list, and no project was named '
       + 'for it. Choose the project you are acting for (the item lists the ones it is filed under) and ask again. '
       + 'Nothing was written, and no team\'s list moved.',
+  }),
+  /* R49 (DEC-110 (1)) / C-33.51: the feed asked for in an order it does not keep, refused before anything is read. */
+  QUEUE_SORT_UNKNOWN: Object.freeze({
+    check: 'C-33.51',
+    where: at("queueFeed", "is-queue-sort"),
+    translation: 'Your list cannot be put in that order. It can be sorted by when each item was added, by when it is '
+      + 'due, by case or by kind, or left in its usual order, grouped by case. Nothing was read or changed; ask '
+      + 'again with one of those.',
   }),
 });
 

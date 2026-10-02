@@ -43,7 +43,8 @@ test("R20: one OBLIGATION per (version, member) reviewsRequested answers the vie
   const it = byId(alice)["OBLIGATION::template-review-requested::TPL-a@2::alice"];
   assert.deepEqual([it.class, it.kind], ["OBLIGATION", "template-review-requested"]);
   assert.deepEqual(it.subject, { kind: "template_version", id: "TPL-a@2", template: "TPL-a", name: "Records request",
-    template_kind: "records_request", asked_by: { id: "olga", name: "Olga" } }, "its subject the version, naming its name, kind and asker");
+    template_kind: "records_request", asked_by: { id: "olga", name: "Olga" }, project: null },
+    "its subject the version, naming its name, kind and asker (and its project, none answered here)");
   assert.deepEqual(it.age, { state: "determined", since: iso(NOW - 2 * DAY), ms: 2 * DAY }, "aged from the instant asked");
   assert.equal(byId(alice)["OBLIGATION::template-review-requested::TPL-b@1::alice"].age.state, "undetermined");
   assert.deepEqual(it.recipients, ["alice"]);
@@ -128,4 +129,38 @@ test("R21: one OBLIGATION per fact factsDue answers over the paths calendarFacts
   const n = facts.length;
   assert.deepEqual(ids(w.read("alice")), []);
   assert.equal(facts.length, n, "with no path read, factsDue is not asked");
+});
+
+test("R20 (N476): a project template's item is homed under its project, a group template's under none, and a template the viewer may not see yields no item and names nothing", () => {
+  const pairs = [
+    { template: "TPL-p", version: "TPL-p@1", name: "Records request", kind: "records_request", project: "PRJ-1", member: "alice",
+      asked_by: { id: "olga", name: "Olga" }, asked_at: iso(NOW - DAY) },
+    { template: "TPL-g", version: "TPL-g@3", name: "Comment letter", kind: "public_comment", project: null, member: "alice",
+      asked_by: { id: "olga", name: "Olga" }, asked_at: iso(NOW - DAY) },
+    /* a template of a project alice may not see: filing-templates answers by the viewer (its R20), so it is answered only
+       to a viewer who sees it; were it handed over, its project is still never named nor walked from */
+    { template: "TPL-h", version: "TPL-h@1", name: "Hidden", kind: "records_request", project: "PRJ-H", member: "bob",
+      asked_by: { id: "olga", name: "Olga" }, asked_at: iso(NOW - DAY) }];
+  const w = people({ filingTemplates: { reviewsRequested: ({ viewer }) => page(pairs.filter((p) =>
+    p.project !== "PRJ-H" || viewer !== "member:alice")) } });
+  w.bundle("PRJ-H", "project");
+  w.bundle("PRJ-2", "project"); w.join("PRJ-2", "alice"); w.cite("PRJ-2", "PRJ-1");       // a case above PRJ-1
+  const m = byId(w.read("alice"));
+  const proj = m["OBLIGATION::template-review-requested::TPL-p@1::alice"];
+  assert.deepEqual(proj.case.ancestors.map((a) => [a.id, a.depth]), [["PRJ-1", 0], ["PRJ-2", 1]],
+    "homed under its project at depth 0 and whatever queue R7's walk reaches above it");
+  assert.equal(proj.case.ungrouped, false);
+  assert.equal(proj.subject.project, "PRJ-1"); assert.equal(proj.basis.project, "PRJ-1");
+  assert.ok(w.asked.homes.some((s) => s.length === 1 && s[0] === "PRJ-1"), "the walk is queue's, started from the project");
+  const grp = m["OBLIGATION::template-review-requested::TPL-g@3::alice"];
+  assert.deepEqual(grp.case.ancestors, [], "a group template's item has no project to be homed under");
+  assert.equal(grp.case.ungrouped, true); assert.equal(grp.subject.project, null);
+  const alice = w.read("alice");
+  assert.equal(ofKind(alice, "template-review-requested").length, 2);
+  assert.ok(!JSON.stringify(alice).includes("PRJ-H") && !JSON.stringify(alice).includes("TPL-h"), "R11: nothing of it in alice's answer");
+  /* bob, a reviewer of the hidden project's template who may not see that project: the item is his, its project unnamed */
+  const bobs = byId(w.read("bob"))["OBLIGATION::template-review-requested::TPL-h@1::bob"];
+  assert.ok(bobs, "the review asked of him stands");
+  assert.equal(bobs.subject.project, null); assert.deepEqual(bobs.case.ancestors, []);
+  assert.ok(!JSON.stringify(w.read("bob")).includes('"PRJ-H"'), "R11: a project the viewer may not see is never named");
 });

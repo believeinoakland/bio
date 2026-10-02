@@ -6,11 +6,11 @@ import { world, NOW, iso } from "./world.mjs";
 import { queueOps, QUEUE_MINT_CHECKS, QUEUE_ACT_CHECKS } from "../../../src/queue/index.mjs";
 import { QUEUE_TABLES } from "../../../src/queue/schema.mjs";
 
-test("R35: the checks this module holds carry their ids and words: C-31.1–.3, C-33.27, C-33.44 (and R29's C-33.50)", async () => {
+test("R35: the checks this module holds carry their ids and words: C-31.1–.3, C-33.27, C-33.44 (and R29's C-33.50, R49's C-33.51)", async () => {
   const rows = { ...QUEUE_MINT_CHECKS, ...QUEUE_ACT_CHECKS };
   assert.deepEqual(Object.fromEntries(Object.entries(rows).map(([k, r]) => [k, r.check])), {
     NO_CLASS: "C-31.1", NO_SUCH_KIND: "C-31.2", KIND_MISCLASSED: "C-31.3", KIND_NOT_PERSONAL: "C-33.27",
-    CLASS_NOT_DISPOSED: "C-33.44", NO_PROJECT_SCOPE: "C-33.50" });
+    CLASS_NOT_DISPOSED: "C-33.44", NO_PROJECT_SCOPE: "C-33.50", QUEUE_SORT_UNKNOWN: "C-33.51" });
   for (const r of Object.values(rows)) { assert.ok(r.translation.length > 20); assert.match(r.where, /^src\/queue\/index\.mjs /); }
   const mod = await import("../../../src/queue/index.mjs");
   for (const moved of ["QUEUE_MACHINE_CHECKS", "TASK_ACTOR_CHECKS", "QUEUE_INBOX_CHECKS", "checkInboxGrammar"])

@@ -57,7 +57,7 @@
  * WHAT IT CANNOT SEE: op=publish / op=caseratify still read the INQUIRY's own
  * state (§7.1 item 4 is NOT built by REC-124 — said in the report), so nothing
  * here drives a project's conclusion into a case. The sharing edge is
- * hand-authored into `references[]`, REC-72's open finding (current.test.mjs).
+ * hand-authored into `references[]`, REC-72's open finding (recorded in the old `current.test.mjs`, deleted in T20).
  * ========================================================================= */
 import { docDate } from "./docdates.mjs";   /* promotion R12: the envelope carries the document's own dates */
 import "./stdio.mjs";
@@ -107,7 +107,7 @@ const enrol = async (memberId, role, caps) => {
   if (!lg.token) throw new Error(`login ${memberId}: ${JSON.stringify(lg)}`);
   return lg.token;
 };
-/* An ADMINISTRATOR, current.test.mjs's reason: one credential drives both teams'
+/* An ADMINISTRATOR, for the old `current.test.mjs`'s reason (deleted in T20): one credential drives both teams'
    acts. Nothing below concludes anything from this credential's reach. */
 const RUTH = await enrol("ruth", "admin", ["contribute", "publish"]);
 
@@ -445,7 +445,7 @@ console.log("\n--- 2. concluding with no claim is refused NO_CLAIM, and nothing 
   ];
   for (const [label, p] of cases) {
     const r = await conclude(p);
-    t(`${label}: refused NO_CLAIM BY NAME, with a detail naming the door (the canned translation is C-33.34's row in bio-checks.mjs, which the DEC-49 guard holds)`,
+    t(`${label}: refused NO_CLAIM BY NAME, with a detail naming the door (the canned translation is C-33.34's row, in src/basis-versions/checks.mjs)`,
       [r?.ok, r?.reason, typeof r?.detail === "string" && r.detail.length > 40], [false, "NO_CLAIM", true]);
   }
   const free = await conclude({ target: INQ, project: B, conclusion: "The transfer was improper.", falsifier: "x" });

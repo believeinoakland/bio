@@ -45,7 +45,7 @@
  *
  * WHY THIS IS ITS OWN MODULE. It is PURE — no storage, no clock, no viewer — so
  * a suite can hold the decision to the store's own behaviour directly, exactly
- * as affordances.mjs lets the affordances suite hold deriveActs. store.mjs
+ * as affordances.mjs lets the affordances suite hold deriveActs. The plane's store (`src/plane/store.mjs`)
  * cannot be imported outside workerd (it imports cloudflare:workers), and a
  * rule that can only be exercised through a Durable Object is a rule that gets
  * exercised less.
@@ -129,6 +129,11 @@ export const QUEUE_OBLIGATION_KINDS = {
                               + "— LIVE: queue-producers R20",
   "local-fact-due":              "a holiday calendar or office hours one of the group's deadlines reads is unconfirmed "
                               + "or due for confirmation (op=factconfirm) — LIVE: queue-producers R21",
+  /* DEC-102 item 3, K1019 (R1; publication R17): a case edition being prepared reaches an observation the member authored
+     and they have chosen no credit level for it. Theirs alone to answer, by choosing one (R12's door, op=attribute), and
+     never muted. Its producer is `queue-producers`' (its R23). */
+  "attribution-unchosen":        "a case edition being prepared reaches an observation you authored and you have chosen "
+                              + "no credit level for it; choose one (op=attribute) — LIVE: queue-producers R23",
 };
 
 export const QUEUE_FINDING_KINDS = {
@@ -289,11 +294,11 @@ export function classOfKind(kind) {
  * cannot do: the finding stays on every other feed and in op=proposals, and it
  * leaves the team's list only by op=proposedispose. OBLIGATION alone is refused. */
 export const MUTE_REFUSAL_DETAIL = {
-  OBLIGATION: "an OBLIGATION is something a named person must do for the record to proceed, and it leaves "
-            + "every list only when it is RESOLVED (op=taskresolve, or the act its item names as "
-            + "`disposition.instead`) — record state, not a preference. "
-            + "Muting it would remove it from the only surface that routes it while `tasks` carries no "
-            + "per-member mute, so the record would go on believing the question reached a person.",
+  OBLIGATION: "a to-do is something a named person must do for the record to proceed, and it leaves "
+            + "every list only when it is DONE (op=taskresolve, or the act its item names as "
+            + "`disposition.instead`): record state, not a preference. "
+            + "Quieting it would remove it from the only list that routes it while `tasks` keeps no "
+            + "per-member quiet, so the record would go on believing the question reached a person.",
 };
 
 /* The classes a PERSONAL mute may reach, in either form (D-125). A CONDITION and

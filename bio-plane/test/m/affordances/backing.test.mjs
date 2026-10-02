@@ -1,6 +1,7 @@
-/* affordances: R19's backing for `narrow` and `triage`, driven at basis-versions' and intent's own interfaces over their
-   fixtures (a reading whose leg cites a part of a document; open proposals), which the plane fixture does not build. Everything else R19 drives is in
-   `plane.test.mjs`. */
+/* affordances: R19's backing (and R2's for the rungs a published act or a terminal state backs) for the acts the plane
+   fixture does not reach, each driven at its owning module's own interface over that module's fixture: `narrow`,
+   `triage`, layer 9's, action-plans', actions R52's, R30's, and (T22) every op DEC-88 bands `reasoned` or `terminal` and
+   T22's four new reasoned acts. Everything else R19 drives is in `plane.test.mjs`. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, block, version, merge, V } from "../basis-versions/fixture.mjs";
@@ -240,4 +241,320 @@ test("R19 R30: factconfirm, graded `reasoned`, is refused without how the member
   assert.equal(w.status(lf.P.tz).status, "disputed", "the latest act, a dispute, governs on read");
   assert.equal(w.act(lf.P.tz, "confirm", { how: "checked the posted notice again" }).ok, true);
   assert.equal(w.status(lf.P.tz).status, "confirmed", "and a later confirmation supersedes it");
+});
+
+/* ============================================================ DEC-88 (K1038) and T22's four (K1019, K1023)
+   R19's backing for every op DEC-88 banded `reasoned` and for T22's four new reasoned acts, each driven at its owning
+   module's own interface over that module's fixture: called well-formed but without its authored reason (absent,
+   empty, blank), it is refused with a code in JUSTIFICATION_REFUSALS and nothing is written to the record's tables; with
+   the reason, it is accepted. Four acts' own words are their reason (`testify`, `transcribe`, `lead`, `goaldeclare`),
+   refused absent (R19). K1025's four, whose grounds serve, follow in the tests after this block. */
+import * as provFix from "../provenance/fixture.mjs";
+import * as contentFix from "../content/fixture.mjs";
+import * as obsFix from "../observation-log/fixture.mjs";
+import * as entFix from "../entities/fixture.mjs";
+import * as progFix from "../progressions/fixture.mjs";
+import * as biasFix from "../bias/world.mjs";
+import * as strengthFix from "../strength/fixture.mjs";
+import * as reevalFix from "../reevaluation/fixture.mjs";
+import * as intentFix from "../intent/fixture.mjs";
+import * as pubFix from "../publication/fixture.mjs";
+import * as caFix from "../case-authoring/fixture.mjs";
+import * as stdFix from "../standards/fixture.mjs";
+import * as filFix from "../filings/fixture.mjs";
+import * as escFix from "../escalation/fixture.mjs";
+import * as capFix from "../capture/fixture.mjs";
+import * as monFix from "../monitoring/fixture.mjs";
+
+const WHYLESS = [undefined, "", "   "];
+const sqlOf = (w) => w.st?.sql ?? w.s?.sql ?? w.sql ?? w.storage?.sql;
+const dump = (sql) => JSON.stringify([...sql.exec("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")]
+  .map(({ name }) => [name, [...sql.exec(`SELECT * FROM "${name}"`)]]));
+
+/* Each case: `scene()` builds the module's world and answers `{ w, act(why) }`, `act` calling the method with `why` in
+   the field that carries the act's reason (or its own words). */
+const intentMeasured = async () => {
+  const w = intentFix.seeded();
+  w.entity("ENT-1"); w.entity("ENT-2"); w.relate("ENT-2", "ENT-1", "member_of"); w.define();
+  await w.thread("ENT-1", { need: "A", award: "B" }); await w.thread("ENT-2", { award: "C" });
+  return w;
+};
+const capHeld = () => {
+  const f = capFix.fresh();
+  const s = f.s;
+  s.sql.exec(`INSERT INTO members (member_id, cover, role, status, created, updated) VALUES ('m1', 'c', 'member', 'active', '2026-01-01', '2026-01-01')`);
+  s.sql.exec(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, prior_state, created, last_updated, bundle_sha, row_version, project)
+              VALUES ('INFO-1', 'information', 'g', 'title INFO-1', 'collected', NULL, '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z', 'x', 1, NULL)`);
+  s.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path) VALUES (?, 'INFO-1', 'x')`, capFix.H("1"));
+  return f;
+};
+const MON_ADDR = "https://records.example.org/agenda", MON_P = "PROJ-2026-0400-p";
+const monOwned = () => {
+  const w = monFix.world();
+  w.inProject(MON_P, { owner: "carol" });
+  const a = w.monitored("INFO-2026-0400-a", MON_ADDR, "agenda v1", { freq: "weekly", lines: [`project: ${MON_P}`] });
+  w.prov.recordReceipt({ address: MON_ADDR, addressNorm: MON_ADDR, captureSha: a.cap, retrieved: "2026-09-01T00:00:00Z",
+    via: "direct", retrievalLocator: MON_ADDR, context: { authorityKind: "sweep", authority: "x", actorClass: "plane", actor: null, observe: false } });
+  return w;
+};
+
+const REASONED_CASES = {
+  testify: () => { const w = provFix.world();
+    return { w, act: (why) => w.prov.testify({ words: why, observedAt: "2026-09-20", author: provFix.V("ruth") }) }; },
+  transcribe: () => { const w = contentFix.world(); const a = w.cap("a"); w.doc("INFO-2026-0001-a", [a]); w.read(a.sha, { pageCount: 3 });
+    return { w, act: (why) => w.content.transcribe({ bundleId: "INFO-2026-0001-a", extent: { kind: "pdf-page", page: 1 }, text: why,
+      transcriber: contentFix.V("ty"), viewer: contentFix.V("ty") }) }; },
+  transcriptionattest: () => { const w = contentFix.world(); const a = w.cap("a"); w.doc("INFO-2026-0001-a", [a]); w.read(a.sha, { pageCount: 3 });
+    const t = w.content.transcribe({ bundleId: "INFO-2026-0001-a", extent: { kind: "pdf-page", page: 1 }, text: "In the year 1921",
+      transcriber: contentFix.V("ty"), viewer: contentFix.V("ty") });
+    assert.equal(t.ok, true, JSON.stringify(t).slice(0, 300));
+    return { w, act: (why) => w.content.transcriptionAttest({ contentId: t.content_id, note: why, attestor: contentFix.V("zo"), viewer: contentFix.V("zo") }) }; },
+  attesttext: () => { const w = contentFix.world(); const a = w.cap("a"); w.doc("INFO-2026-0001-a", [a]);
+    w.read(a.sha, { pageCount: 3, chain: [{ step: "layer", tier: 1 }, { step: "ocr", engine: "t", version: "1", cap: "C", measured_by: "m" }] });
+    return { w, act: (why) => w.content.attestText({ captureSha: a.sha, note: why, viewer: contentFix.V("bo"), member: contentFix.V("cy"), extent: { kind: "page", page: 1 } }) }; },
+  lead: () => { const w = obsFix.world();
+    return { w, act: (why) => w.obs.lead({ words: why, author: "alice" }) }; },
+  leadlook: () => { const w = obsFix.world(); w.project("PROJ-A"); w.participant("PROJ-A", "alice");
+    const L = w.obs.lead({ words: "the words", author: "alice" }).lead_id;
+    return { w, act: (why) => w.obs.leadLook({ lead: L, state: "LOOKED_ABSENT", detail: why, looker: "alice", viewer: obsFix.V("alice") }) }; },
+  leadshare: () => { const w = obsFix.world(); w.project("PROJ-A"); w.participant("PROJ-A", "alice");
+    const L = w.obs.lead({ words: "the words", author: "alice" }).lead_id;
+    return { w, act: (why) => w.obs.leadShare({ lead: L, project: "PROJ-A", reason: why, sharer: "alice", viewer: obsFix.V("alice") }) }; },
+  entitycreate: () => { const w = entFix.world();
+    return { w, act: (why) => w.e.createEntity({ kind: "body", label: "Port Board", note: why, declaredBy: "member:ann" }) }; },
+  resolvetestify: () => { const w = entFix.world();
+    const ent = w.e.createEntity({ note: "a subject the test registers", kind: "person", label: "Pat" }).entity_id;
+    w.read("INFO-1", entFix.sha("r12"), [{ kind: "x", key: "1", label: "unrelated" }]);
+    return { w, act: (why) => w.e.testify({ captureSha: entFix.sha("r12"), ref: "x:1", entityId: ent, basis: why, resolvedBy: "member:ann" }) }; },
+  progressiondefine: () => { const w = progFix.world();
+    const S = (o = {}) => ({ key: "a", cardinality: "1", required: "always", ...o });
+    return { w, act: (why) => w.p.defineProgression({ progressionKey: "k", label: "L", stages: [S(), S({ key: "b", after: "a" })],
+      declaredBy: "member:alice", citation: "Ord. 1", basis: why }) }; },
+  biasadopt: async () => { const w = biasFix.world(); await w.group("mo", "owner", "joiner");
+    w.set("BIAS-2026-0001-a", [biasFix.S("s1")], "adopted", {});
+    return { w, act: (why) => w.bias.biasAdopt({ bundleId: "BIAS-2026-0001-a", reason: why, author: "admin", identity: "member:admin",
+      viewer: "admin", at: biasFix.T0 }) }; },
+  strengthbar: () => { const w = strengthFix.world(); w.member(strengthFix.ADMIN, "admin");
+    return { w, act: (why) => w.s.strengthBarSet({ reason: why, capture: "B", author: strengthFix.ADMIN }) }; },
+  versionadopt: () => { const w = reevalFix.world(); const { U } = reevalFix;
+    const OLD = "INFO-2026-0001-old", NEW = "INFO-2026-0002-new";
+    const a = w.cap("a", "old"), b = w.cap("b", "new");
+    w.doc(OLD, [a]); w.doc(NEW, [b]);
+    w.read(a.sha, [U(0, "alpha"), U(1, "the budget was cut")]); w.read(b.sha, [U(0, "alpha"), U(1, "something else entirely")]);
+    w.at(a.sha, "ex.org/doc", "2026-09-01T00:00:00Z"); w.at(b.sha, "ex.org/doc", "2026-09-20T00:00:00Z");
+    const cid = w.passage(OLD, a.sha);
+    w.inquiry("INQ-2026-0001-q", { legs: [{ target: OLD, content_id: cid }, { target: NEW }] });
+    const [n] = w.r.raiseNotices({}).raised;
+    return { w, act: (why) => w.r.adoptVersion({ notice: n.notice, why, author: "alice", viewer: "class:admin" }) }; },
+  goaldeclare: () => { const w = intentFix.seeded();
+    return { w, act: (why) => w.i.declareGoal({ statement: why, bounds: "the 2026 procurement cycle", author: intentFix.V("bob") }) }; },
+  aspirationdeclare: () => { const w = intentFix.seeded();
+    return { w, act: (why) => w.i.declareAspiration({ scope: "member", owner: "bob", statement: why, author: intentFix.V("bob") }) }; },
+  aspirationdeadend: () => { const w = intentFix.seeded();
+    const a = w.i.declareAspiration({ scope: "project", owner: w.P, statement: "Name every signatory", author: intentFix.V("bob") }).aspiration;
+    return { w, act: (why) => w.i.recordDeadEnd({ aspiration: a, note: why, author: intentFix.V("bob") }) }; },
+  objectivecondition: async () => { const w = await intentMeasured();
+    return { w, act: (why) => w.i.setCondition({ project: w.P, condition: intentFix.COND, reason: why, author: intentFix.V("bob"), viewer: intentFix.V("bob") }) }; },
+  workobjective: async () => { const w = await intentMeasured();
+    assert.equal(w.i.setCondition({ reason: "Measured by the record.", project: w.P, condition: { ...intentFix.COND, relation: "member_of" },
+      author: intentFix.V("bob"), viewer: intentFix.V("bob") }).ok, true);
+    return { w, act: (why) => w.i.workObjective({ reason: why, project: w.P, author: intentFix.V("bob"), viewer: intentFix.V("bob"),
+      run: { run: "R-1", principalPlane: "member:bob/tok", principalClaude: "acct", skillVersion: "bio-pack@3",
+             bounds: [{ bound: "fetches", allowed: 10 }], contextType: "inquiry", contextId: "INQ-X" } }) }; },
+  attribute: () => { const w = pubFix.planeWorld(); w.member("olive"); w.member("ann"); w.member("bo");
+    const proj = w.project("Parks", "olive"); const obs = w.observe("ann");
+    w.inquiry("INQ-2026-0001", { legs: [{ target: obs }] });
+    w.prepare("CASE-2026-0001", 1, { project: proj, roles: [{ target: "INQ-2026-0001", version_sha: w.head("INQ-2026-0001") }], attributions: [{ observation: obs }] });
+    return { w, act: (why) => w.op("attribute", { by: "ann" }, { caseId: "CASE-2026-0001", edition: 1, observation: obs, level: "group", reason: why }) }; },
+  statementack: () => { const w = caFix.world();
+    for (const m of ["alice", "bo"]) w.member(m);
+    w.doc("INFO-2026-0001-a"); w.finding("INQ-2026-0001-q", [{ target: "INFO-2026-0001-a" }]);
+    const P = w.project("Team", "alice", ["INQ-2026-0001-q"]); w.join(P, "bo");
+    const pub = w.publish(P, "alice", ["INQ-2026-0001-q"]);
+    return { w, act: (why) => w.ca.acknowledgeStatement({ viewer: caFix.V("bo"), caseId: pub.caseId, edition: 1, reason: why }) }; },
+  standarddeclare: () => { const w = stdFix.seeded(); const p = w.passage().contentId;
+    return { w, act: (why) => w.s.standardDeclare({ cite: stdFix.BYLAW, kind: "ordinance", issuer: "Port Ellery Selectboard", reason: why,
+      text: [p], author: stdFix.V("bob"), viewer: stdFix.V("bob") }) }; },
+  standardadopt: () => { const w = stdFix.seeded(); const text = w.passage().contentId;
+    const p = w.s.standardPropose({ cite: stdFix.BYLAW, kind: "ordinance", issuer: "Port Ellery Selectboard", text: [text],
+      why: "It governs the permits named in the act.", proposer: stdFix.V("carol") }).proposal;
+    return { w, act: (why) => w.s.standardAdopt({ proposal: p.id, reason: why, author: stdFix.V("bob"), viewer: stdFix.V("bob") }) }; },
+  counselpacket: () => { const w = filFix.world(); const A = w.action({ kind: "commitment_claim" });
+    return { w, act: (why) => w.f.counselPacket({ reason: why, action: A, counsel: { name: "A. Counsel", organisation: "Test Chambers" },
+      author: filFix.V("olive"), viewer: filFix.V("olive") }) }; },
+  escalationopen: () => { const w = escFix.seeded();
+    return { w, act: (why) => w.esc.escalationOpen({ determination: w.D, reason: why, author: escFix.V("bob"), viewer: escFix.V("bob") }) }; },
+  escalationattach: () => { const w = escFix.seeded(); escFix.toStage(w, 2); const a = w.action({ project: w.P, restsOn: [w.D] });
+    return { w, act: (why) => w.esc.escalationAttach({ id: w.E, action: a, reason: why, author: escFix.V("bob"), viewer: escFix.V("bob") }) }; },
+  inboxresolve: async () => { const f = capFix.fresh({ evidence: capFix.bucket(), env: { INSTANCE_NAME: "inst" } });
+    const k = await f.c.knock({ content: "a tip", sourceAddress: "1.1.1.1" });
+    return { w: f, act: (why) => f.c.inboxResolve({ knockId: k.knockId, status: "discarded", by: "member:m1", reason: why }) }; },
+  /* T22's four */
+  declinetoescalate: () => { const w = escFix.seeded();
+    return { w, act: (why) => w.esc.declineToEscalate({ determination: w.D, reason: why, author: escFix.V("bob"), viewer: escFix.V("bob") }) }; },
+  heldsetaside: () => { const f = capHeld();
+    return { w: f, act: (why) => f.c.setAside({ ids: ["INFO-1"], reason: why, author: "member:m1", viewer: "member:m1" }) }; },
+  heldrestore: () => { const f = capHeld();
+    assert.equal(f.c.setAside({ ids: ["INFO-1"], reason: "not ours to hold", author: "member:m1", viewer: "member:m1" }).ok, true);
+    return { w: f, act: (why) => f.c.restoreHeld({ ids: ["INFO-1"], reason: why, author: "member:m1", viewer: "member:m1" }) }; },
+  addressfrequencyset: () => { const w = monOwned();
+    return { w, act: (why) => w.m.addressFrequencySet({ address: MON_ADDR, frequency: "daily", reason: why === undefined ? undefined : "custom",
+      reasonText: why, author: "carol", viewer: monFix.V("carol") }) }; },
+};
+/* What a reasoned act is given when it is given its reason: its owner's own word for it. `addressfrequencyset` takes a
+   canned reason or `custom` with the member's words; `custom` with none is refused as an absent reason. */
+const GIVEN = "the member's own account of why";
+/* The code each owner answers, as RUNGS' comments name it (read from each module's checks: catalogue.test.mjs's R19). */
+const CODE = { testify: "TESTIMONY_NO_WORDS", transcribe: "TRANSCRIBE_NO_TEXT", transcriptionattest: "ATTEST_NO_NOTE",
+  attesttext: "ATTEST_NO_NOTE", lead: "LEAD_NO_WORDS", leadlook: "LEAD_LOOK_NO_DETAIL", leadshare: "LEAD_SHARE_NO_REASON",
+  entitycreate: "ENTITY_NO_NOTE", resolvetestify: "NO_BASIS", progressiondefine: "NO_BASIS", biasadopt: "BIAS_ADOPTION_NO_REASON",
+  strengthbar: "BAR_NO_REASON", versionadopt: "VERSION_ADOPT_NO_REASON", goaldeclare: "PURSUIT_UNSTATED",
+  aspirationdeclare: "PURSUIT_UNSTATED", aspirationdeadend: "NO_NOTE", objectivecondition: "INTENT_NO_REASON",
+  workobjective: "INTENT_NO_REASON", attribute: "ATTRIBUTION_NO_REASON", statementack: "STATEMENT_ACK_NO_REASON",
+  standarddeclare: "STANDARD_NO_REASON", standardadopt: "STANDARD_NO_REASON", counselpacket: "PACKET_NO_REASON",
+  escalationopen: "ESCALATION_NO_REASON", escalationattach: "ESCALATION_NO_REASON", inboxresolve: "RESOLVE_NO_REASON",
+  declinetoescalate: "ESCALATION_NO_REASON", heldsetaside: "SET_ASIDE_NO_REASON", heldrestore: "SET_ASIDE_NO_REASON",
+  addressfrequencyset: "FREQUENCY_NO_REASON" };
+
+test("R19 R2: every op DEC-88 bands `reasoned` and T22's four, called well-formed without its authored reason (or "
+   + "words), is refused with a code in JUSTIFICATION_REFUSALS and writes nothing; given one, it is accepted", async () => {
+  const want = [...Object.keys(REASONED_CASES)].sort();
+  const DEC88_RULED = ["testify", "lead", "leadlook", "leadshare", "transcribe", "transcriptionattest", "attesttext",
+    "resolvetestify", "entitycreate", "versionadopt", "progressiondefine", "goaldeclare", "aspirationdeclare",
+    "aspirationdeadend", "objectivecondition", "biasadopt", "strengthbar", "standarddeclare", "standardadopt",
+    "escalationopen", "escalationattach", "counselpacket", "attribute", "statementack", "workobjective", "inboxresolve",
+    "declinetoescalate", "heldsetaside", "heldrestore", "addressfrequencyset"];
+  assert.deepEqual(want, [...DEC88_RULED].sort(), "every reasoned op that asks a reason has its case here");
+  for (const op of want) assert.equal(RUNGS[op], "reasoned", op);
+  const bad = [];
+  for (const op of want) {
+    for (const why of WHYLESS) {
+      const { w, act } = await REASONED_CASES[op]();
+      const sql = sqlOf(w);
+      assert.ok(sql, `${op}: the fixture's record`);
+      const before = dump(sql);
+      const r = await act(why);
+      const code = r?.reason ?? r?.code;
+      if (!(r && r.ok !== true && JUSTIFICATION_REFUSALS.includes(code) && code === CODE[op])) bad.push(`${op} ${JSON.stringify(why)}: ${JSON.stringify(r).slice(0, 200)}`);
+      else if (dump(sql) !== before) bad.push(`${op} ${JSON.stringify(why)}: refused, but wrote`);
+    }
+    const { act } = await REASONED_CASES[op]();
+    const ok = await act(GIVEN);
+    if (!(ok && (ok.ok === true || ok.started === true))) bad.push(`${op} with its reason: ${JSON.stringify(ok).slice(0, 300)}`);
+  }
+  assert.deepEqual(bad, []);
+});
+
+/* K1025's four (R19): an act R2 bands `reasoned` whose recorded grounds serve as its reason is backed by those grounds
+   and is not refused for a reason it does not take. Each is driven at its owner's interface: refused, with nothing
+   written, where the grounds are absent; accepted with its grounds and no further reason. */
+import * as conFix from "../consequences/fixture.mjs";
+import * as actFix from "../actions/fixture.mjs";
+
+test("R19: resolve is backed by its recorded grounds — each resolution it writes records its `basis` (the matched "
+   + "string) and its `method`, on every tier — and takes no reason", () => {
+  assert.equal(RUNGS.resolve, "reasoned");
+  const w = entFix.world();
+  w.e.createEntity({ note: "a subject the test registers", kind: "office", label: "Harbour Office" });
+  w.read("INFO-1", entFix.sha("r9"), [{ kind: "doc", key: "9", label: "harbour  OFFICE" }]);
+  const r = w.e.resolve({ captureSha: entFix.sha("r9"), resolvedBy: entFix.MACHINE });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  assert.ok(r.resolved.length > 0, "the instrument resolves something");
+  for (const x of r.resolved) assert.ok(typeof x.basis === "string" && x.basis.length > 0 && typeof x.method === "string" && x.method.length > 10, JSON.stringify(x));
+  const stored = w.rows(`SELECT basis, method FROM resolutions`);
+  assert.ok(stored.length > 0 && stored.every((x) => typeof x.method === "string" && x.method.length > 10 && typeof x.basis === "string"));
+});
+
+test("R19: actioncorrespond and filingsent are backed by their grounds — refused NEITHER_CAPTURE_NOR_TESTIMONY, nothing "
+   + "written, with neither the bytes nor the member's account — and accepted on an account, with no further reason", async () => {
+  for (const op of ["actioncorrespond", "filingsent"]) assert.equal(RUNGS[op], "reasoned", op);
+  const A = "ACTN-2026-0001-a", M = actFix.V("alice");
+  const corr = () => { const w = actFix.world(); w.doc("INFO-2026-0001-d"); w.action(A);
+    return { w, c: (x) => w.a.actionCorrespond({ target: A, direction: "sent", at: "2026-09-02", account: "we asked", viewer: M, author: M, ...x }) }; };
+  for (const account of [undefined, "", "   "]) {
+    const { w, c } = corr(); const before = dump(sqlOf(w));
+    assert.equal(c({ account }).reason, "NEITHER_CAPTURE_NOR_TESTIMONY", JSON.stringify(account));
+    assert.equal(dump(sqlOf(w)), before, "nothing written");
+  }
+  const ok = corr().c({});
+  assert.deepEqual([ok.ok, ok.held_as], [true, "testimony"], JSON.stringify(ok).slice(0, 300));
+  const sent = async () => {
+    const x = filFix.world(); const act = x.action({});
+    const d = x.f.filingPrepare({ action: act, text: filFix.WORDS, preparer: filFix.MACHINE, viewer: filFix.MACHINE });
+    assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));
+    const ap = await x.f.filingApprove({ filing: d.id, author: filFix.V("bo"), viewer: filFix.V("bo"), text: d.text.replace("[UNFILLED: law]", filFix.LAW) });
+    assert.equal(ap.ok, true, JSON.stringify(ap).slice(0, 300));
+    return { x, send: (o = {}) => x.f.filingRecordSent({ filing: d.id, at: "2026-09-29", medium: "in person", account: "handed to the clerk",
+      author: filFix.V("bo"), viewer: filFix.V("bo"), ...o }) };
+  };
+  for (const account of [undefined, null, ""]) {
+    const { x, send } = await sent(); const before = dump(sqlOf(x));
+    assert.equal((await send({ account })).reason, "NEITHER_CAPTURE_NOR_TESTIMONY", JSON.stringify(account));
+    assert.equal(dump(sqlOf(x)), before, "nothing written");
+  }
+  const s = await (await sent()).send();
+  assert.equal(s.ok, true, JSON.stringify(s).slice(0, 300));
+});
+
+test("R19: consequencerecord is backed by its arms — the assessed arm's absent rationale refused NO_RATIONALE (in the "
+   + "family), nothing written; the computed arm accepted on its operands and the undetermined arm on its stated why, "
+   + "neither asked a further reason", () => {
+  assert.equal(RUNGS.consequencerecord, "reasoned");
+  const S = "STD-2026-0001-law";
+  const scene = () => { const w = conFix.world(); const D = w.determination("CONF-2026-0001-act", w.P, { [S]: "noncompliant" });
+    const base = { determination: D, standard: S, affected: { kind: "service", description: "library hours" },
+      period: { from: "2026-01-01", to: "2026-03-31" }, author: conFix.V("alice") };
+    return { w, base }; };
+  for (const rationale of [undefined, "", "   "]) {
+    const { w, base } = scene(); const before = dump(sqlOf(w));
+    const r = w.c.consequenceRecord({ ...base, measure: { unit: "time", range: { low: 10, high: 20 } }, basis: { rationale, rests_on: [] } });
+    assert.equal(r.reason, "NO_RATIONALE", JSON.stringify(r).slice(0, 200));
+    assert.ok(JUSTIFICATION_REFUSALS.includes(r.reason));
+    assert.equal(dump(sqlOf(w)), before, "nothing written");
+  }
+  const a = scene();
+  const assessed = a.w.c.consequenceRecord({ ...a.base, measure: { unit: "time", range: { low: 10, high: 20 } },
+    basis: { rationale: "the schedule shows fewer hours", rests_on: [] } });
+  assert.deepEqual([assessed.ok, assessed.part?.state], [true, "assessed"], JSON.stringify(assessed).slice(0, 300));
+  const c = scene();
+  const x = c.w.figure("INFO-2026-0003-c", "Rate 0.1"), y = c.w.figure("INFO-2026-0004-d", "Rate 0.2");
+  const computed = c.w.c.consequenceRecord({ ...c.base, measure: { unit: "money", currency: "USD" },
+    basis: { op: "sum", operands: [{ content: x, figure: "0.1" }, { content: y, figure: "0.2" }] } });
+  assert.deepEqual([computed.ok, computed.part?.state], [true, "computed"], JSON.stringify(computed).slice(0, 300));
+  assert.equal(computed.part.computation.operands.length, 2, "its grounds are recorded");
+  const u = scene();
+  const undetermined = u.w.c.consequenceRecord({ ...u.base, measure: { unit: "count" }, basis: { why: "not_in_record" } });
+  assert.deepEqual([undetermined.ok, undetermined.part?.state, undetermined.part?.undetermined?.code], [true, "undetermined", "not_in_record"]);
+  assert.ok(undetermined.part.undetermined.why.length > 10, "its why is stated");
+});
+
+/* DEC-88's two `terminal` acts: each cannot be walked back — an ended escalation takes no further act and is never
+   reopened (escalation R14), and a filing is approved at most once (filings R6, ALREADY_APPROVED). */
+test("R2 R19: escalationend and filingapprove, graded `terminal` (DEC-88), cannot be walked back — a second approval is "
+   + "refused ALREADY_APPROVED, and no act moves an ended escalation", async () => {
+  assert.deepEqual([RUNGS.escalationend, RUNGS.filingapprove], ["terminal", "terminal"]);
+  const x = filFix.world(); const act = x.action({});
+  const d = x.f.filingPrepare({ action: act, text: filFix.WORDS, preparer: filFix.MACHINE, viewer: filFix.MACHINE });
+  const text = d.text.replace("[UNFILLED: law]", filFix.LAW);
+  assert.equal((await x.f.filingApprove({ filing: d.id, text, author: filFix.V("bo"), viewer: filFix.V("bo") })).ok, true);
+  const again = await x.f.filingApprove({ filing: d.id, text: text + " Amended.", author: filFix.V("bo"), viewer: filFix.V("bo") });
+  assert.equal(again.reason, "ALREADY_APPROVED", JSON.stringify(again).slice(0, 300));
+  /* an escalation's end, reached through escalation's own fixture, and every act after it refused */
+  /* an escalation ended on R14's conditions (compliance restored for both standards, consequences addressed) over
+     escalation's own fixture, then every act on it refused */
+  const w = escFix.seeded();
+  w.clock.now = "2026-09-20T00:00:00Z";
+  escFix.opened(w);
+  w.determine({ project: w.P, act: w.determinations.get(w.D).act.id, at: "2026-09-21T00:00:00Z",
+    outcomes: [{ standard: "STD-2026-0001-a", outcome: "compliant" }, { standard: "STD-2026-0002-b", outcome: "compliant" }] });
+  w.addressedBy.set(w.D, { state: "addressed", parts: [{ id: "CONS-2026-0001-p" }] });
+  w.clock.now = "2026-09-22T00:00:00Z";
+  const who = { author: escFix.V("bob"), viewer: escFix.V("bob") };
+  const end = w.esc.escalationEnd({ id: w.E, ...who });
+  assert.deepEqual([end.ok, end.state], [true, "ended"], JSON.stringify(end).slice(0, 300));
+  assert.equal(w.esc.escalationEnd({ id: w.E, ...who }).reason, "ALREADY_ENDED");
+  for (const r of [w.esc.escalationResume({ id: w.E, ...who }), w.esc.escalationSuspend({ id: w.E, reason: "again", ...who }),
+                   w.esc.escalationAdvance({ id: w.E, to: 2, reason: "again", ...who })])
+    assert.notEqual(r.ok, true, JSON.stringify(r).slice(0, 200));
+  assert.equal(w.esc.escalationRead({ id: w.E, viewer: escFix.V("bob") }).state, "ended", "never reopened");
 });

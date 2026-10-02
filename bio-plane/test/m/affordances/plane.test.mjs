@@ -606,7 +606,15 @@ test("R19: together the two drives reach every op RUNGS grades `reasoned`", () =
     /* K918: at actions' interface over its fixture, backing.test.mjs */
     "actionhold",
     /* R30: at filing-templates' and local-facts' interfaces over their fixtures, backing.test.mjs */
-    "templateretire", "factconfirm"];
+    "templateretire", "factconfirm",
+    /* DEC-88 (K1038) and T22's four (K1019, K1023): at each owner's interface over its fixture, backing.test.mjs —
+       the 26 that ask a reason or take their own words, K1025's four by their grounds, and the four new acts */
+    "testify", "transcribe", "transcriptionattest", "attesttext", "lead", "leadlook", "leadshare", "entitycreate",
+    "resolvetestify", "progressiondefine", "biasadopt", "strengthbar", "versionadopt", "goaldeclare", "aspirationdeclare",
+    "aspirationdeadend", "objectivecondition", "workobjective", "attribute", "statementack", "standarddeclare",
+    "standardadopt", "counselpacket", "escalationopen", "escalationattach", "inboxresolve",
+    "resolve", "actioncorrespond", "filingsent", "consequencerecord",
+    "declinetoescalate", "heldsetaside", "heldrestore", "addressfrequencyset"];
   assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "reasoned" && !driven.includes(op)), []);
 });
 
