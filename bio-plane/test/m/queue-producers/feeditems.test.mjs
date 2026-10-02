@@ -239,3 +239,99 @@ test("R13: no place is named in this module's outward text", () => {
   for (const place of ["Oakland", "California", "Alameda", "CPRA", "Brown Act", "Sunshine", "San Francisco", "Berkeley"])
     assert.ok(!text.includes(place), place);
 });
+
+/* Every kind this module produces, for R24 and R25's checks: `busy`'s world with the contradictions (R4–R7) added. */
+function everyKind() {
+  const side = (inquiry) => ({ kind: "claim", inquiry });
+  const w = busy({
+    contradiction: {
+      candidatesFor: ({ on }) => ({ ok: true, truncated: false, cursor: null, candidates: on.project !== "PRJ-A" ? [] : [
+        { candidate: "CC-D", weight: "duty", state: "open", a: side("INQ-S"), b: side("INQ-A"), between_projects: [{ project: "PRJ-A", opted_in: false }] },
+        { candidate: "CC-L", weight: "lead", state: "open", a: side("INQ-S"), b: side("INQ-A"), between_projects: [] },
+        { candidate: "CC-P", weight: "plurality", state: "open", a: side("INQ-S"), b: side("INQ-A"), between_projects: [] }] }),
+      conflictNotices: ({ project }) => ({ ok: true, truncated: false, cursor: null, notices: project !== "PRJ-A" ? [] : [
+        { candidate: "CN-D", weight: "duty", state: "open", project: "PRJ-A", side: side("INQ-S"), says: "a record you cannot see conflicts" },
+        { candidate: "CN-P", weight: "plurality", state: "open", project: "PRJ-A", side: side("INQ-S"), says: "a conclusion you cannot see differs" }] }) },
+    reevaluation: {
+      notices: () => ({ ok: true, limit: 1000, truncated: false, notices: [
+        { notice: "RN-1", holder: "INQ-S", target: "INF-1", grade: "affected", raised_at: iso(NOW), state: "open" }] }),
+      correctedDependents: () => ({ ok: true, truncated: false, cursor: null, entries: [
+        { dependent: "INQ-S", candidate: "CC-D", reason: "named wrong", since: iso(NOW) }] }) },
+    publication: { exportLog: () => ({ ok: true, limit: 200, truncated: false,
+                     exports: [{ seq: 1, at: iso(NOW), scope: "working-corpus", bundles: 1, files: 1, note: null }] }),
+                   caseTensions: () => ({ ok: true, cursor: null, cases: [{ case: "CASE-1", edition: 1, project: "PRJ-A",
+                     tensions: [{ candidate: "CC-D", member: "INF-1", state: "open", depth: 1 }] }] }),
+                   caseDocumentFacts: (c, e) => ({ ok: true, doc: { case_id: c, edition: e, authored_at: iso(NOW), sig_armored: null },
+                     attribution: { current: [{ observation: "OBS-1", level: null }] } }) },
+  });
+  w.bundle("OBS-1", "observation");
+  w.run(`INSERT INTO register (capture_sha, bundle_id, path, encoding, registered, bytes, authored, author) VALUES ('so','OBS-1','s','utf8',?,1,1,'alice')`, iso(NOW));
+  w.run(`INSERT INTO case_documents (case_id, edition, authored_at, sig_armored) VALUES ('CASE-1', 1, ?, NULL)`, iso(NOW));
+  w.run(`UPDATE project_participants SET owner=1 WHERE project_id='PRJ-A' AND member_id='alice'`);
+  return w;
+}
+/* Every string a member reads on an item: its summary and detail, the words of its options, and every sentence under it
+   (its basis, its age, its grain, its recipients' statement, its excluded homes), never its id, class or kind. */
+function memberWords(item) {
+  const out = [];
+  const walk = (v, key) => {
+    if (typeof v === "string") { if (!["id", "class", "kind", "source", "reason"].includes(key)) out.push([key, v]); return; }
+    if (Array.isArray(v)) { for (const x of v) walk(x, key); return; }
+    if (v && typeof v === "object") for (const [k, x] of Object.entries(v)) walk(x, k);
+  };
+  for (const [k, v] of Object.entries(item)) if (!["id", "class", "kind", "case"].includes(k)) walk(v, k);
+  for (const a of (item.case && item.case.excluded) || []) walk(a.detail, "detail");
+  return out;
+}
+
+test("R24 (DEC-107; H15, H19): no member-facing sentence of any item kind says 'obligation' or 'condition'; the codes, kinds and ids are unchanged", () => {
+  const r = everyKind().read("alice");
+  const kinds = new Set(r.items.map((i) => i.kind));
+  for (const k of ["contradiction-duty", "contradiction-lead", "contradiction-plurality", "contradiction-duty-unseen",
+                   "contradiction-plurality-unseen", "side-corrected", "tension-after-publication", "bias-debt", "governor-holding-host",
+                   "render-deferred", "plan-checkpoint-due", "objective-gap", "template-review-requested", "local-fact-due",
+                   "attribution-unchosen"])
+    assert.ok(kinds.has(k), `the world produces ${k}`);
+  assert.ok(kinds.size >= 32, `every kind this module produces (${[...kinds].sort().join(", ")})`);
+  for (const it of r.items) {
+    for (const [key, s] of memberWords(it))
+      assert.doesNotMatch(s, /\b(obligation|condition)s?\b/i, `${it.id} ${key}: "${s}"`);
+    /* the codes unchanged: the classes, and ids keyed by them */
+    assert.ok(["OBLIGATION", "FINDING", "CONDITION"].includes(it.class), it.id);
+    assert.ok(it.id.startsWith(`${it.class}::`), it.id);
+  }
+  const m = byId(r);
+  assert.equal(m["CONDITION::governor-holding-host::h.example"].class, "CONDITION");
+  assert.equal(m["OBLIGATION::contradiction::CC-D"].class, "OBLIGATION");
+  assert.equal(m["OBLIGATION::contradiction-unseen::CN-D"].kind, "contradiction-duty-unseen");
+  /* the re-keyed words: a signal is our own machinery's fact, said as a signal */
+  assert.match(m["CONDITION::governor-holding-host::h.example"].basis.detail, /^a signal is a fact about OUR OWN machinery/);
+  assert.match(m["CONDITION::render-deferred::CR-R"].basis.detail, /^a signal is a fact about OUR OWN machinery/);
+  assert.match(m["FINDING::contradiction::CC-L"].detail, /asks nothing of you: dismiss it or take it up/);
+  assert.match(m["OBLIGATION::plan-checkpoint-due::PLN-1::1::p"].detail, /records whether what it set was met/);
+});
+
+test("R25 (DEC-110 (1)): `due` is carried by action-clock-overdue, action-reminder and plan-checkpoint-due, and by no other item", () => {
+  const r = everyKind().read("alice");
+  const dated = new Set(["action-clock-overdue", "action-reminder", "plan-checkpoint-due"]);
+  for (const it of r.items) {
+    if (dated.has(it.kind)) assert.match(String(it.due), /^\d{4}-\d{2}-\d{2}$/, it.id);
+    else assert.equal("due" in it, false, `${it.id} carries no due`);
+  }
+  const m = byId(r);
+  assert.equal(m["CONDITION::action-clock-overdue::ACT-1::0"].due, "2026-08-20");
+  assert.equal(m["OBLIGATION::action-reminder::ACT-1::0::2026-08-15"].due, "2026-08-20");
+  assert.equal(m["OBLIGATION::plan-checkpoint-due::PLN-1::1::p"].due, "2026-08-30");
+});
+
+test("R8 (R22, R23; K1019): feedItems reads the unattended capture's grade note and the credit-level to-do into its one answer", () => {
+  const w = everyKind();
+  w.run(`INSERT INTO register (capture_sha, bundle_id, path, encoding, registered, bytes) VALUES ('z','INF-1','s','binary',?,1)`, iso(NOW));
+  const m = byId(w.read("alice"));
+  const unattended = m["CONDITION::capture-completed-unattended::CR-C"];
+  assert.deepEqual(unattended.basis.grade_notes.map((n) => n.capture_sha), ["z"], "R22: the request's capture, held and seen");
+  assert.ok(unattended.detail.includes(unattended.basis.grade_notes[0].note));
+  const credit = m["OBLIGATION::attribution-unchosen::CASE-1@1::OBS-1"];
+  assert.deepEqual([credit.class, credit.kind, credit.recipients], ["OBLIGATION", "attribution-unchosen", ["alice"]], "R23");
+  assert.ok(!("disposition" in credit) && !("catalogue_id" in credit), "the mint's and queue's, as every item");
+});
