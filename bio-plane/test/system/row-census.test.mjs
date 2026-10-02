@@ -64,7 +64,7 @@
    declared. Negative control re-run on the stamp commit: its arms in the suite pass.
    RE-PINNED 2026-10-02 (PROMOTION #26, T25, K1218): over 1.55.0, the stamp's own lines (`fixtures/row-census-1.55.0.jsonl`,
    1073 lines) reproduced by this reader on the stamp commit (named in `build/jobs/T25/promotion.md`: 1073 rows,
-   @DIGEST8@…); the 1.54.0 snapshot (no stamp reads it) deleted; T24's layers 3–11 rows (C-18.16–C-18.18, `where`
+   735376fd…); the 1.54.0 snapshot (no stamp reads it) deleted; T24's layers 3–11 rows (C-18.16–C-18.18, `where`
    re-pointed to link-sweep, none declared here, accepted red 1) stamped in 1.55.0. A row a T25 job in layers 3–11 changes
    turns this suite red, accepted by name until T26's layer-2 stamp (`build/plan/current.md` red 6), so none is
    declared. Negative control re-run on the stamp commit: its arms in the suite pass. */
@@ -86,7 +86,7 @@ const FIXTURE = (v) => fileURLToPath(new URL(`./fixtures/row-census-${v}.jsonl`,
    code (its line is the tree's). */
 const AWAITING_STAMP = [
   /* RE-ANCHORED 2026-10-02 (PROMOTION #26, T25; K1218): over 1.55.0, the stamp's own lines (`fixtures/row-census-1.55.0.jsonl`,
-     1073 lines, @DIGEST8@…). T24's layers 3–11 rows (C-18.16–C-18.18) were never declared (accepted red 1) and are
+     1073 lines, 735376fd…). T24's layers 3–11 rows (C-18.16–C-18.18) were never declared (accepted red 1) and are
      stamped in 1.55.0. None is open (see the header). */
 ];
 /* COMPOSITIONS AWAITING STAMP: a change to which checks a gate runs moves no row, so the census cannot see it; each is

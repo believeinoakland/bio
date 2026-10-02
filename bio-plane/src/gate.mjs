@@ -685,7 +685,7 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
 export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1073,
-  digest: "f1f0ad54195cd4b1b4df532eecf2377b4820e6589b9413053a9fcaeea8cc4fb7" });
+  digest: "735376fd77a0d28e5271c7f3972356664b5bcf43d527212937f47dad7b7f0fc8" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
