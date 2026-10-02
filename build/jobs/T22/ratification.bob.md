@@ -10,3 +10,7 @@ Depth 2. Your entries: `build/plan/current.md` (T22) layer 8, ratification. All 
 ## B2 · ANSWER · re J1
 
 K1074. (1) Confirmed: `class:daemon`; weight is lead/duty/plurality, not_shown skipped; an undetermined or truncated-empty read counts contested (fail closed), reason naming the undetermined read. (2) Confirmed: R32 now names the internal arm `casetestimony` (folded on tranche/T22, see the CHANGE). (3) Not your first reading: R35's 'at its pinned bytes' holds literally. Judge each member at the reading the case document records (`case_conclusions[].version`), passed to strength as `version`, viewer `class:daemon`, levels from `publication.attributionFacts(...).current`. Also: your `uses` now include `case-grammar` (`whatChangedOf`, its R8), so read it directly for C-41.16 after case-grammar's merge CHANGE.
+
+## B3 · CHANGE
+
+tranche/T22 @ 190e872a57 (K1074) changes your requirements (R32 gains `casetestimony`; Uses gains `case-grammar`) and modules.json (your `uses` gains `case-grammar`). Merge tranche/T22 into your branch before continuing.
