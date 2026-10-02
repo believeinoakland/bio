@@ -60051,7 +60051,7 @@ CREATE INDEX IF NOT EXISTS inquiry_basis_bundle ON inquiry_basis(bundle_id);
 -- MEASURED 2026-08-07 (test/meaning-index-probe.mjs, node:sqlite, the statements DRIVEN
 -- out of compile() and the OTHER indexes DRIVEN out of schema.mjs AND store.mjs rather
 -- than typed -- the first version of that probe hand-wrote them, missed bundles_fts_id
--- because it is created in store.mjs's migration, and reported a 97% saving from an
+-- because it was created in store.mjs's migration, and reported a 97% saving from an
 -- index the product has had for months):
 --   leg:hunch  0.241 ms -> 0.145 ms at 20,000 bundles  (-39.8%)
 --              0.969 ms -> 0.440 ms at 100,000 bundles (-54.6%)
@@ -60062,7 +60062,7 @@ CREATE INDEX IF NOT EXISTS inquiry_basis_bundle ON inquiry_basis(bundle_id);
 -- is a write cost on every leg of every promote for a read saving inside the noise.
 -- role has two values, so the seek reads half the table and the scan reads all of it --
 -- an index is worth least exactly where the value is commonest. If a member's question
--- ever makes cuts_against legs the hot path, the probe is here to re-run.
+-- ever makes cuts_against legs the hot path, re-measure (that probe has since been deleted).
 CREATE INDEX IF NOT EXISTS inquiry_basis_grade_source ON inquiry_basis(grade_source, bundle_id);
 -- REC-90 -- THE content:cited PREDICATE'S OWN INDEX, AND THIS ONE IS NOT A TUNING
 -- CHOICE. content:cited and content:uncited ask whether ANY leg rests on a content
@@ -60284,7 +60284,7 @@ var INQUIRY_CONTRADICTION_CHECKS = {
     where: "src/inquiry/index.mjs check > is-candidate-taken-up",
     translation: "That contradiction has already been taken up as another question, which is named. Work on it there, so that one conflict has one place where it is resolved. Nothing was written."
   },
-  /* N369 (proposed in INQUIRY #5 J1; awaiting T17's stamp): the arm's own failure, which C-2.11's words are not true of. */
+  /* N369 (proposed in INQUIRY #5 J1; stamped 1.47.0, T17): the arm's own failure, which C-2.11's words are not true of. */
   CONTRADICTION_ARM_FAILED: {
     check: "C-2.18",
     where: "src/inquiry/contradiction.mjs contradictionFindings > is-contradiction-arm-judged",
@@ -63836,8 +63836,8 @@ var VERSION_ACT_CHECKS = {
      not perform, refusing an act that requires no reason whatsoever.
      THE DISTINCTION IS NOT NEW HERE AND THAT IS THE POINT. This plane already
      splits absent from malformed everywhere else it asks for authored prose —
-     `NO_REASON` against `BAD_REASON`, twelve sites against eight in
-     `store.mjs` (#moveAction, #divide, #ground and their siblings). PL-2 did not
+     `NO_REASON` against `BAD_REASON`, twelve sites against eight in the
+     old `store.mjs` (#moveAction, #divide, #ground and their siblings). PL-2 did not
      invent a worse rule; it collapsed a distinction the rest of the plane keeps.
      The DEC-49 layer is exactly where that collapse becomes visible to a member,
      because a surface may RENDER a refusal and may never compute one (DEC-8), so
@@ -65247,9 +65247,9 @@ var BasisVersions = class _BasisVersions {
   }
   /** R41 (N300): the inquiries a project draws on, by R13's own test, in id order after `after`, each with whether its
    *  basis holds a leg (inquiry R16's `basisFor`, limit 1) and the project's stance by R22. Viewer-free: its caller
-   *  (publication R45) fences the project. The candidates are the document's live `cites` targets that the record holds
-   *  as inquiries, read in one bounded statement, one past the page, so `cursor` (the last answered) is set only when
-   *  more follow. `limit` absent, zero or not a number reads as 500, a negative one as 1 (connections R42's reading).
+   *  (`project-stage` R2, was publication R45) fences the project. The candidates are the document's live `cites`
+   *  targets that the record holds as inquiries, read in one bounded statement, one past the page, so `cursor` (the
+   *  last answered) is set only when more follow. `limit` absent, zero or not a number reads as 500, a negative one as 1 (connections R42's reading).
    *  Writes nothing; never throws: an empty or non-project id, or a project with no document, answers `items: []`. */
   projectQuestions({ project = null, after = null, limit = null } = {}) {
     const out = { items: [], cursor: null };
@@ -70279,7 +70279,7 @@ var Contradiction = class _Contradiction {
     return r;
   }
   /* ---- the run gate (R21, K31) ---- */
-  /** R21 (K182): the slot `ai-runs` fills (its R37), `legacy-store` until then. `gate(run, viewer, caller)` answers
+  /** R21 (K182): the slot `ai-runs` fills (its R37), as `legacy-store` did until then. `gate(run, viewer, caller)` answers
    *  `{found, running, refusal}`: `found` false for a blank, absent or invisible run alike (§7.9); `running` whether
    *  it is still running; `refusal` null, or ai-runs R5's `AI_RUN_NOT_PRINCIPAL` (C-22.12) for a caller who is not
    *  the run's principal, which R13 relays. One gate: a second registration is refused. */
@@ -97571,6 +97571,19 @@ var CAPTURE_REQUEST_CHECKS = Object.freeze({
     check: "C-28.18",
     where: "src/capture-requests/index.mjs captureRequestRetry > is-capture-request-retry",
     translation: "This request cannot be asked again. Only a request the source itself turned away, under a question you can see, goes back into the queue; a request that is still waiting, was captured, has expired, or was refused for any other reason does not. Nothing was changed."
+  },
+  /* R45 (T23; Intake Doctrine §4, the AI's "relevant nearby" arm; K1036, K1099) — A RUN'S REQUEST NAMING A SWEEP IS
+     FILED UNDER THAT SWEEP ONLY WHEN THE SWEEP'S SCOPE ADMITS IT. A sweep names a query members ratified up front, and
+     a request filed under it inherits that ratification, so the fence is the sweep's own: ratified, not held, and every
+     locator of the request (the address, and any redirect the fetch meets) inside its scope. The scope check is
+     `monitoring`'s, registered at start; with none registered nothing can say the sweep admits the request, so it is
+     refused. Terminal: the request is not fetched under a sweep that does not admit it, and nothing is filed. Minted at
+     one region (`sweepOutOfScope`), which the drain's conduct and its fire both answer through. New at T23,
+     `awaiting stamp` until T24's L2. */
+  CAPTURE_SWEEP_OUT_OF_SCOPE: {
+    check: "C-28.19",
+    where: "src/capture-requests/index.mjs sweepOutOfScope > is-capture-sweep-scope",
+    translation: "This request asked to be filed under a sweep, and that sweep does not take it: the sweep is not ratified, is held, or does not reach this address. Nothing was fetched or filed under it. A request filed under a sweep answers to what members ratified for that sweep, so it is never stretched to fit."
   }
 });
 for (const row2 of Object.values(CAPTURE_REQUEST_CHECKS)) Object.freeze(row2);
@@ -97598,6 +97611,10 @@ __export(skilldoctrine_exports, {
   DEPLOYMENT_SEQUENCE: () => DEPLOYMENT_SEQUENCE,
   DESCRIPTION_STANDARD: () => DESCRIPTION_STANDARD,
   DESIGN_SOURCE: () => DESIGN_SOURCE,
+  EDITION_STATEMENT_ACT: () => EDITION_STATEMENT_ACT,
+  EDITION_STATEMENT_ACTS: () => EDITION_STATEMENT_ACTS,
+  EDITION_STATEMENT_CLAUSES: () => EDITION_STATEMENT_CLAUSES,
+  EDITION_STATEMENT_SECTION: () => EDITION_STATEMENT_SECTION,
   FACTS_SOURCE: () => FACTS_SOURCE,
   FILING_RULES: () => FILING_RULES,
   FILING_TEMPLATE_ACT: () => FILING_TEMPLATE_ACT,
@@ -97615,6 +97632,7 @@ __export(skilldoctrine_exports, {
   PLANNING_ACTS: () => PLANNING_ACTS,
   PROHIBITIONS: () => PROHIBITIONS,
   PROHIBITION_SET_IS_STANDING: () => PROHIBITION_SET_IS_STANDING,
+  PUBLICATION_SOURCE: () => PUBLICATION_SOURCE,
   SEQUENCING_ALSO_NAMED_IN: () => SEQUENCING_ALSO_NAMED_IN,
   SEQUENCING_SOURCE: () => SEQUENCING_SOURCE,
   SKILL_CHECKS: () => SKILL_CHECKS,
@@ -97624,6 +97642,7 @@ __export(skilldoctrine_exports, {
   absenceByLevel: () => absenceByLevel,
   actionPlanningLayer: () => actionPlanningLayer,
   controlFlowAuthority: () => controlFlowAuthority,
+  editionStatementLayer: () => editionStatementLayer,
   filingDraftingLayer: () => filingDraftingLayer,
   judgementLayers: () => judgementLayers,
   reportsAs: () => reportsAs
@@ -102043,15 +102062,21 @@ var PLANNING_ACTS = Object.freeze({
   ]),
   leaves_to_a_member: Object.freeze([
     Object.freeze({ id: "optionadopt", defined_by: "action-plans R11" }),
-    Object.freeze({ id: "standardadopt", defined_by: "standards R9" }),
+    Object.freeze({ id: "standardadopt", defined_by: "standards R10" }),
     Object.freeze({ id: "determine", defined_by: "conformance R12" }),
     Object.freeze({ id: "filingapprove", defined_by: "filings R6" }),
     Object.freeze({ id: "filingsent", defined_by: "filings R7" })
   ])
 });
 var PLANNING_ACT = PLANNING_ACTS.proposes[0].id;
+var catalogueById = (catalog) => new Map((Array.isArray(catalog) ? catalog : []).filter((a) => a && typeof a.id === "string").map((a) => [a.id, a]));
+var actReader = (byId, layer, proposal) => (a) => {
+  if (!byId.has(a.id))
+    throw new Error(`the ${layer} layer names the act ${a.id} (${a.defined_by}) as the plane publishes it and invents none: op=affordances publishes ${proposal} but not this one`);
+  return { id: a.id, defined_by: a.defined_by, act: byId.get(a.id) };
+};
 function actionPlanningLayer(catalog) {
-  const byId = new Map((Array.isArray(catalog) ? catalog : []).filter((a) => a && typeof a.id === "string").map((a) => [a.id, a]));
+  const byId = catalogueById(catalog);
   if (!byId.has(PLANNING_ACT)) return {
     load_when: "never, in this edition",
     sourcing: "absent",
@@ -102059,11 +102084,7 @@ function actionPlanningLayer(catalog) {
     /* THE ABSENCE, STATED IN THE PACK ITSELF, as the recipes layer states its own. */
     absent_because: `the plane's published catalogue holds no ${PLANNING_ACT} act, the one act a run in the plan mode proposes plan options through, so this layer carries no doctrine for work no run can do; a plan-mode run is refused before any turn.`
   };
-  const read2 = (a) => {
-    if (!byId.has(a.id))
-      throw new Error(`the action planning layer names the act ${a.id} (${a.defined_by}) as the plane publishes it and invents none: op=affordances publishes the planning act but not this one`);
-    return { id: a.id, defined_by: a.defined_by, act: byId.get(a.id) };
-  };
+  const read2 = actReader(byId, "action planning", "the planning act");
   return {
     load_when: "the run proposes plan options, standards, comparisons, candidate theories or communication drafts for an action or a plan, in the plan mode",
     sourcing: "authored",
@@ -102114,7 +102135,7 @@ var FILING_TEMPLATE_ACTS = Object.freeze({
 });
 var FILING_TEMPLATE_ACT = FILING_TEMPLATE_ACTS.proposes[0].id;
 function filingDraftingLayer(catalog) {
-  const byId = new Map((Array.isArray(catalog) ? catalog : []).filter((a) => a && typeof a.id === "string").map((a) => [a.id, a]));
+  const byId = catalogueById(catalog);
   if (!byId.has(FILING_TEMPLATE_ACT)) return {
     load_when: "never, in this edition",
     sourcing: "absent",
@@ -102122,11 +102143,7 @@ function filingDraftingLayer(catalog) {
     /* THE ABSENCE, STATED IN THE PACK ITSELF, as the recipes layer states its own. */
     absent_because: `the plane's published catalogue holds no ${FILING_TEMPLATE_ACT} act, the one act a run proposes a filing template's wording through, so this layer carries no doctrine for work no run can do.`
   };
-  const read2 = (a) => {
-    if (!byId.has(a.id))
-      throw new Error(`the filing drafting layer names the act ${a.id} (${a.defined_by}) as the plane publishes it and invents none: op=affordances publishes the template proposal act but not this one`);
-    return { id: a.id, defined_by: a.defined_by, act: byId.get(a.id) };
-  };
+  const read2 = actReader(byId, "filing drafting", "the template proposal act");
   return {
     load_when: "the run proposes a filing template's wording, or critiques one in a comment",
     sourcing: "authored",
@@ -102139,6 +102156,47 @@ function filingDraftingLayer(catalog) {
         leaves_to_a_member: FILING_TEMPLATE_ACTS.leaves_to_a_member.map(read2)
       },
       note: "this layer is INSTRUCTION. Every act it names is refused or labelled by the module that performs it: proposed wording is stored apart and labelled as machine work, and becomes a template's text only by a member's act, which refuses a machine. A run ignoring every word here gets past nothing."
+    }
+  };
+}
+var PUBLICATION_SOURCE = "docs/architecture/BIO_Publication_v0_1.md";
+var EDITION_STATEMENT_SECTION = "\xA75A";
+var EDITION_STATEMENT_CLAUSES = [
+  "The draft is not a diff: it is a detailed, high-level description of what changed and, as far as the system can determine it, why (the motivation for the revision).",
+  "The signed statement is the group's, adopted by a member, and the record keeps that it began as a machine draft."
+];
+var EDITION_STATEMENT_ACTS = Object.freeze({
+  proposes: Object.freeze([
+    Object.freeze({ id: "whatchangedpropose", defined_by: "case-authoring R39" })
+  ]),
+  leaves_to_a_member: Object.freeze([
+    Object.freeze({ id: "publish", defined_by: "case-authoring R38" }),
+    Object.freeze({ id: "caseratify", defined_by: "ratification R2" })
+  ])
+});
+var EDITION_STATEMENT_ACT = EDITION_STATEMENT_ACTS.proposes[0].id;
+function editionStatementLayer(catalog) {
+  const byId = catalogueById(catalog);
+  if (!byId.has(EDITION_STATEMENT_ACT)) return {
+    load_when: "never, in this edition",
+    sourcing: "absent",
+    body: {},
+    /* THE ABSENCE, STATED IN THE PACK ITSELF, as the recipes layer states its own. */
+    absent_because: `the plane's published catalogue holds no ${EDITION_STATEMENT_ACT} act, the one act a run drafts a new edition's statement of what changed through, so this layer carries no doctrine for work no run can do.`
+  };
+  const read2 = actReader(byId, "edition statement", "the edition statement's proposal act");
+  return {
+    load_when: "the run drafts a new edition's statement of what changed in it, and why",
+    sourcing: "authored",
+    body: {
+      clauses: EDITION_STATEMENT_CLAUSES,
+      source: PUBLICATION_SOURCE,
+      section: EDITION_STATEMENT_SECTION,
+      acts: {
+        proposes: EDITION_STATEMENT_ACTS.proposes.map(read2),
+        leaves_to_a_member: EDITION_STATEMENT_ACTS.leaves_to_a_member.map(read2)
+      },
+      note: "this layer is INSTRUCTION. Every act it names is refused or labelled by the module that performs it: a drafted statement is stored apart and labelled as machine work, and becomes the group's statement only by a member's signing act, which refuses a machine. A run ignoring every word here gets past nothing."
     }
   };
 }
@@ -104167,7 +104225,14 @@ CREATE TABLE IF NOT EXISTS capture_requests (
   -- it did: login, paywall, user-agent or other. NULL when nothing the source
   -- said decided the row (conduct, pacing, a render this instance could not do),
   -- so a reason is never invented for a refusal that was ours.
-  source_reason     TEXT
+  source_reason     TEXT,
+  -- R45 (T23; Intake Doctrine \xA74): THE SWEEP THIS REQUEST ASKS TO BE FILED
+  -- UNDER, as its full name "<bundle>#<id>", or NULL for an ordinary request.
+  -- NULL is the honest value on every row written before it: no door read a
+  -- sweep then, so none was asked. The drain files a request naming one under
+  -- that sweep only when monitoring's scope check admits it, and refuses it
+  -- C-28.19 otherwise; it is never quietly filed as an ordinary request.
+  sweep             TEXT
 );
 CREATE INDEX IF NOT EXISTS capture_requests_state ON capture_requests(state, requested_at);
 CREATE INDEX IF NOT EXISTS capture_requests_target ON capture_requests(target);
@@ -104185,7 +104250,8 @@ var CAPTURE_REQUESTS_ADDITIVE = Object.freeze([
   ["lead_inquiry", "TEXT"],
   ["run_woken_at", "TEXT"],
   ["render", "INTEGER NOT NULL DEFAULT 0"],
-  ["source_reason", "TEXT"]
+  ["source_reason", "TEXT"],
+  ["sweep", "TEXT"]
 ]);
 function migrateCaptureRequests(sql) {
   const have = [...sql.exec(`PRAGMA table_info(capture_requests)`)].map((r) => r.name);
@@ -104275,6 +104341,8 @@ var CaptureRequests = class _CaptureRequests {
   #draining = false;
   #filed = [];
   // R44: {module, fn, seq}
+  #sweepScope = null;
+  // R45: {module, fn}, monitoring's scope check
   /** `deps`: `record`, `observations`, `governor`, `capture`, `credentials` (each module's instance on this storage),
    *  `runs` (ai-runs' run sight, R28 of ai-runs: `runFor(run, viewer)` answering the run's `status`,
    *  `principal_plane` and `principal_claude`, or null), `env`, `now()` (milliseconds; a test may inject its clock),
@@ -104415,6 +104483,8 @@ var CaptureRequests = class _CaptureRequests {
     const purpose = text3(args.purpose).trim();
     const uaMode = text3(args.ua_mode ?? args.uaMode ?? "civicos").trim();
     const callerPlane = text3(caller).trim();
+    const sweepRaw = args.sweep ?? null;
+    const sweep = typeof sweepRaw === "string" ? sweepRaw.trim() || null : sweepRaw === null ? null : shown(sweepRaw);
     const standing = this.#one(
       `SELECT * FROM capture_requests WHERE run=? AND address=? AND render=? AND state IN ('requested','draining','captured')`,
       run,
@@ -104433,6 +104503,7 @@ var CaptureRequests = class _CaptureRequests {
         ua_mode: standing.ua_mode,
         lead_inquiry: standing.lead_inquiry ?? null,
         render: standing.render === 1,
+        sweep: standing.sweep ?? null,
         state: standing.state,
         requested: false,
         already: true,
@@ -104448,8 +104519,8 @@ var CaptureRequests = class _CaptureRequests {
     }
     this.#sql.exec(
       `INSERT INTO capture_requests (request, run, target, address, host, purpose, ua_mode,
-         principal_plane, principal_claude, state, attempts, requested_at, updated, expires, lead_inquiry, render)
-       VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?,?,?)`,
+         principal_plane, principal_claude, state, attempts, requested_at, updated, expires, lead_inquiry, render, sweep)
+       VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?,?,?,?)`,
       request,
       run,
       target,
@@ -104463,7 +104534,8 @@ var CaptureRequests = class _CaptureRequests {
       now,
       expires,
       lead || null,
-      render
+      render,
+      sweep
     );
     const written = this.#one(`SELECT * FROM capture_requests WHERE request=?`, request);
     for (const l of this.#filed) {
@@ -104485,6 +104557,7 @@ var CaptureRequests = class _CaptureRequests {
       ua_mode: written.ua_mode,
       lead_inquiry: written.lead_inquiry ?? null,
       render: written.render === 1,
+      sweep: written.sweep ?? null,
       state: written.state,
       requested: true,
       already: false,
@@ -104517,6 +104590,21 @@ var CaptureRequests = class _CaptureRequests {
     if (refused2) return refused2;
     this.#filed.push({ module, fn, seq: this.#filed.length });
     this.#filed.sort((a, b) => this.#rank(a.module) - this.#rank(b.module) || a.seq - b.seq);
+    return { ok: true, module };
+  }
+  /** R45 (K1099; K31's pattern, this module being earlier than `monitoring`, P4): the one scope check, registered once
+   *  at start by `monitoring`. A second registration, whoever makes it, is refused `LISTENER_DECLARED` naming the
+   *  holder, and a malformed one `LISTENER_MALFORMED`, both through membership's `listenerRefusal` (its R81).
+   *
+   *  The check is `fn({sweep, locators, run, target})`, answered at once or as a promise: `{ok: true, scope}` when the
+   *  sweep is ratified and not held and every locator is in its scope, `scope` being its in-scope prefixes (the
+   *  sweep's `sources`, monitoring R53), which ride the fetch so `acquisition` judges each redirect against them (its
+   *  R31); anything else, a throw included, refuses the request (`reason`, one of `unknown`, `unratified`, `held` or
+   *  `out-of-scope`, and `detail` are carried into the refusal when given). */
+  registerSweepScope(module, fn) {
+    const refused2 = listenerRefusal(this.#sweepScope, module, fn);
+    if (refused2) return refused2;
+    this.#sweepScope = { module, fn };
     return { ok: true, module };
   }
   /* ==================================================================== *
@@ -104710,7 +104798,7 @@ var CaptureRequests = class _CaptureRequests {
         };
       };
       for (const q7 of queued) {
-        const verdict = this.#conduct(q7, nowMs, hostsThisTick);
+        const verdict = await this.#conduct(q7, nowMs, hostsThisTick);
         if (!verdict.ok) {
           const row2 = CAPTURE_REQUEST_CHECKS[verdict.code];
           settle(q7, {
@@ -104760,6 +104848,13 @@ var CaptureRequests = class _CaptureRequests {
             attribution: verdict.attribution,
             already_held: r.existed === true,
             ...promoted ? { promoted } : {}
+          });
+        } else if (r.sweepRefused) {
+          settle(q7, {
+            ...sweepOutOfScope(`${q7.sweep} does not reach every locator of this request: ${r.detail}`),
+            governed: false,
+            condition: null,
+            countAttempt: false
           });
         } else if (r.renderCode) {
           const renderRow2 = RENDER_CAPTURE_CHECKS[r.renderCode];
@@ -104861,8 +104956,9 @@ var CaptureRequests = class _CaptureRequests {
     for (let i = 0; i < read2.length; i++) if (!taken.has(i)) order.push(read2[i]);
     return order;
   }
-  /** R14: DEC-47's CONDUCT, and this is the ONE place it is applied. */
-  #conduct(q7, nowMs, hostsThisTick) {
+  /** R14: DEC-47's CONDUCT, and this is the ONE place it is applied; R45's sweep scope is judged here too, among the
+   *  rules about what the request says and before rate. */
+  async #conduct(q7, nowMs, hostsThisTick) {
     const attribution = captureRequestAttribution(q7);
     if (!attribution.ok)
       return {
@@ -104906,6 +105002,8 @@ var CaptureRequests = class _CaptureRequests {
           detail: `the agent this fetch would carry names no contact anybody could reach. D-94's ladder MEASURED that removing the contact component flips admission 200 to 403 uniformly, so this is the component that decides whether the fetch happens at all \u2014 and being blocked honestly is a fact we can record.`
         };
     }
+    const sweep = q7.sweep == null ? null : await this.#sweepAdmits(q7);
+    if (sweep && !sweep.ok) return sweep;
     if (this.#hostHeld(q7.host, nowMs))
       return {
         ok: false,
@@ -104924,7 +105022,30 @@ var CaptureRequests = class _CaptureRequests {
         code: "CAPTURE_CONDUCT_TICK_SPENT",
         detail: `this tick has already fetched from ${q7.host} once. A person opens a few tabs and then reads; a loop opens forty, so the drain spreads requests across ticks rather than emptying the queue at one host's expense.`
       };
-    return { ok: true, ua, attribution };
+    return { ok: true, ua, attribution, ...sweep ? { sweep: q7.sweep, scope: sweep.scope } : {} };
+  }
+  /** R45: whether the sweep the row names admits it, as `monitoring`'s registered scope check answers: `{ok: true,
+   *  scope}`, or R45's refusal. A name not of the shape `"<bundle>#<id>"` names no sweep and is refused without asking;
+   *  with no check registered nothing can say the sweep admits the request, so it is refused; a check that throws, or
+   *  answers anything but `ok: true` with a non-empty list of prefixes, refuses it. Never throws. */
+  async #sweepAdmits(q7) {
+    const name2 = String(q7.sweep);
+    if (!SWEEP_NAME.test(name2))
+      return sweepOutOfScope(`'${name2.slice(0, 80)}' is not a sweep's name ("<bundle>#<id>"), so no sweep admits this request`);
+    const check = this.#sweepScope;
+    if (!check)
+      return sweepOutOfScope(`no scope check is registered on this instance, so nothing can say that ${name2} is ratified, not held and reaches ${q7.address}`);
+    let a = null;
+    try {
+      a = await check.fn({ sweep: name2, locators: [q7.address], run: q7.run, target: q7.target });
+    } catch {
+      a = null;
+    }
+    const scope = a && a.ok === true && Array.isArray(a.scope) ? a.scope.filter((p) => typeof p === "string" && p !== "") : [];
+    if (a && a.ok === true && scope.length && scope.length === a.scope.length) return { ok: true, scope };
+    const why = a && SWEEP_REFUSALS[a.reason] ? SWEEP_REFUSALS[a.reason] : "does not admit this request";
+    const said2 = a && typeof a.detail === "string" && a.detail.trim() ? ` (${a.detail.trim().slice(0, 200)})` : "";
+    return sweepOutOfScope(`${name2} ${why}${said2}; ${q7.address} was not fetched under it`);
   }
   #hostHeld(host, nowMs) {
     try {
@@ -104983,7 +105104,12 @@ var CaptureRequests = class _CaptureRequests {
           render: q7.render === 1,
           ...credential ? { credential } : {},
           ...held ? { heldSha: held.capture_sha } : {},
-          origin: { matched_sweep: q7.target, deeming_actor: deemingActor(verdict.attribution) }
+          /* R45: a request its sweep admitted is filed under that sweep, the run its deeming actor,
+             and carries the sweep's scope, so every redirect is judged against it (acquisition R31). */
+          ...verdict.sweep ? {
+            origin: { kind: "sweep", matched_sweep: verdict.sweep, deeming_actor: deemingActor(verdict.attribution) },
+            scope: verdict.scope
+          } : { origin: { matched_sweep: q7.target, deeming_actor: deemingActor(verdict.attribution) } }
         }
       });
       const out = res && res.body;
@@ -104998,6 +105124,14 @@ var CaptureRequests = class _CaptureRequests {
       if (out && out.ok && out.unchanged === true && out.capture && out.capture.sha256)
         return { ok: true, sha: out.capture.sha256, grade: null, existed: true, document: null };
       const reason = out && (out.reason || out.error) || `http ${res && res.status}`;
+      if (verdict.sweep && (reason === "SWEEP_REDIRECT_OUT_OF_SCOPE" || reason === "SWEEP_SCOPE_MISSING"))
+        return {
+          ok: false,
+          reason,
+          sweepRefused: true,
+          status: null,
+          detail: String(out && out.detail || reason).slice(0, 300)
+        };
       const renderCode = q7.render === 1 && typeof reason === "string" && Object.prototype.hasOwnProperty.call(RENDER_CAPTURE_CHECKS, reason) ? reason : null;
       return {
         ok: false,
@@ -105067,7 +105201,7 @@ var CaptureRequests = class _CaptureRequests {
           "",
           "## Summary",
           "",
-          `The document served at ${q7.address}, captured by the daemon at an investigative session's request under ${q7.target}. Its bytes are \`${doc.file}\`, exactly as served; nothing here summarises them.`,
+          `The document served at ${q7.address}, captured by the daemon at an investigative session's request under ${q7.target}${q7.sweep ? `, filed under the sweep ${q7.sweep}` : ""}. Its bytes are \`${doc.file}\`, exactly as served; nothing here summarises them.`,
           "",
           "## Provenance Notes",
           "",
@@ -105148,6 +105282,7 @@ var CaptureRequests = class _CaptureRequests {
       run_woken_at: r.run_woken_at ?? null,
       render: r.render === 1,
       source_reason: r.source_reason ?? null,
+      sweep: r.sweep ?? null,
       /* R25, D-523: what became of a render this instance could not do, in the drain's and op=queue's words. */
       render_deferral: r.render === 1 && (r.state === "expired" || r.state === "requested" && r.code) ? (({ code, check, translation }) => ({
         state: r.state === "expired" ? "expired" : "deferred",
@@ -105416,6 +105551,24 @@ var CaptureRequests = class _CaptureRequests {
     };
   }
 };
+var SWEEP_NAME = /^[^\s#]{1,200}#[a-z0-9][a-z0-9-]{0,39}$/;
+var SWEEP_REFUSALS = Object.freeze({
+  unknown: "is not a sweep this instance holds",
+  unratified: "is not ratified",
+  held: "is held",
+  "out-of-scope": "does not reach this address"
+});
+function sweepOutOfScope(detail) {
+  const row2 = CAPTURE_REQUEST_CHECKS.CAPTURE_SWEEP_OUT_OF_SCOPE;
+  return {
+    ok: false,
+    terminal: true,
+    code: "CAPTURE_SWEEP_OUT_OF_SCOPE",
+    check: row2.check,
+    translation: row2.translation,
+    detail: `${detail}. A request filed under a sweep answers to what members ratified for it; nothing was filed under this one`
+  };
+}
 function deemingActor(attribution) {
   const a = attribution && attribution.ok ? attribution : null;
   return a ? `run ${a.at_the_request_of.run} under ${a.principals.plane}, paid by ${a.principals.claude}` : null;
@@ -126029,6 +126182,10 @@ var SOURCING = {
   /* skilldoctrine.mjs, BIO_Action_v0_1.md §4 rules 1, 7, 11, 13 (R30) */
   filing_drafting_unpublished: "absent",
   /* while op=affordances publishes no template proposal act (R30) */
+  edition_statement: "authored",
+  /* skilldoctrine.mjs, BIO_Publication_v0_1.md §5A (R31) */
+  edition_statement_unpublished: "absent",
+  /* while op=affordances publishes no edition statement proposal act (R31) */
   recipes: "absent",
   /* absent until the plane publishes recipes — see the header */
   recipes_published: "driven",
@@ -126182,6 +126339,10 @@ function disclosedLayers({ vocabularies, catalog, captureActs, recipes = null } 
        may use and must leave to a member, read from the published catalogue; a stated absence while the plane
        publishes no template proposal act. */
     filing_drafting: filingDraftingLayer(catalog),
+    /* R31 (DEC-101 (1), K1019). The doctrine a run drafting a new edition's statement of what changed works
+       under, and the acts it may use and must leave to a member, read from the published catalogue; a stated
+       absence while the plane publishes no edition statement proposal act. */
+    edition_statement: editionStatementLayer(catalog),
     recipes: Array.isArray(recipes) ? {
       load_when: "the run guides a member through a path to a result, or must say which steps reach it",
       sourcing: SOURCING.recipes_published,
