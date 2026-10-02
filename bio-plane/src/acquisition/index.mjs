@@ -29,7 +29,7 @@ import { RENDER_DEFAULTS, RENDERED_METHOD, completenessReading, keepRenderBodies
 import { governedFetch as hostGovernedFetch, retryAfterMs } from "../host-governor/index.mjs";
 import { attest as provenanceAttest, ARCHIVE_CAPTURE_GRADE } from "../provenance/index.mjs";
 
-/* capture R24, R29: the one user agent and this module's rows, for every module that sends or judges them. */
+/* R24, R29: the one user agent and this module's rows, for every module that sends or judges them. */
 export { CIVICOS_CONTACT_URL, civicosUserAgent, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS,
          INSTALLATION_CHECKS, SWEEP_SCOPE_CHECKS, ACQUISITION_CHECKS } from "./checks.mjs";
 
@@ -200,7 +200,7 @@ function scopedFetch(target, { headers, credential, env, purpose, follow = true 
 /* R10: the most this surface will take from one source, in parts or not. */
 const CAPTURE_MAX = 256 * 1024 * 1024;
 
-/** R31: whether `address` is in a sweep's scope, as monitoring R53 defines it: its normalised form equals a prefix, or
+/** R31: whether `address` is in a sweep's scope, as link-sweep R1 defines it: its normalised form equals a prefix, or
  *  continues one at a `/`. */
 function inSweepScope(address, scope) {
   if (typeof address !== "string" || !Array.isArray(scope)) return false;
@@ -240,19 +240,50 @@ const cancelBody = (res) => { try { res?.body?.cancel?.()?.catch?.(() => {}); } 
 const hostOf = (u) => { try { return new URL(u).host; } catch { return String(u); } };
 
 /* The bytes of a response hashed as they arrive and kept nowhere (the lookup decides, it does not file):
-   `{sha, bytes}`, or `{oversize}` past `max`. */
+   `{sha, bytes}`, `{oversize}` past `max`, or `{failed}` when the stream breaks (an answer, never a throw). */
 async function hashBody(res, max = CAPTURE_MAX) {
   const h = createSha256();
   let bytes = 0;
   const reader = res && res.body && res.body.getReader ? res.body.getReader() : null;
-  if (reader) for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    bytes += value.length;
-    if (bytes > max) { try { await reader.cancel(); } catch { /* gone */ } return { oversize: true, bytes }; }
-    h.update(value);
-  }
+  try {
+    if (reader) for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      bytes += value.length;
+      if (bytes > max) { try { await reader.cancel(); } catch { /* gone */ } return { oversize: true, bytes }; }
+      h.update(value);
+    }
+  } catch (e) { return { failed: String(e && e.message || e), bytes }; }
   return { sha: h.hex(), bytes };
+}
+/* A memento whose body broke off while it was read: the archive could not be read, not a memento of anything. */
+const archiveBroke = (detail) => ({ ok: false, status: 502, payload: { ok: false, reason: "ARCHIVE_UNREACHABLE",
+  detail: `the memento's body broke off while it was read (${detail})` } });
+
+/* SHA-256 of no bytes: the digest an empty memento's row is made over (`mementoRow` reads its `bytes: 0` as the
+   empty-body digest, R29's own refusal). */
+const EMPTY_SHA256 = createSha256().hex();
+
+/** R32: whether the first bytes of a memento's body have arrived, read WITHOUT consuming them, so the capture streams,
+ *  hashes and stores the very bytes the choice is made over. `{empty: true}` when the body ends with no byte (it is
+ *  released); otherwise `{res}`, a response that yields the bytes read ahead and then the rest; `{failed}` when the
+ *  stream breaks. A body that is not a stream is handed on as it came, for the capture to name. */
+async function peekBody(res) {
+  const reader = res && res.body && res.body.getReader ? res.body.getReader() : null;
+  if (!reader) return { res };
+  const ahead = [];
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) return { empty: true };
+      if (value && value.length) { ahead.push(value); return { res: replayed(res, ahead, reader) }; }
+    }
+  } catch (e) { return { failed: String(e && e.message || e) }; }
+}
+function replayed(res, ahead, reader) {
+  const read = async () => (ahead.length ? { done: false, value: ahead.shift() } : reader.read());
+  const cancel = async (why) => { ahead.length = 0; try { await reader.cancel(why); } catch { /* the source may already be gone */ } };
+  return { status: res.status, ok: res.ok, url: res.url, headers: res.headers, body: { getReader: () => ({ read, cancel }), cancel } };
 }
 
 /** R3, R32: find a memento of `address` the way RFC 7089 offers one, every request through the host governor. The
@@ -260,10 +291,13 @@ async function hashBody(res, max = CAPTURE_MAX) {
  *  so the newest memento is the answer to the question asked); when it gives no usable memento, the TimeMap is read
  *  and its candidates are fetched newest first. Each memento is fetched in its raw form (the descriptor's `raw`, else
  *  as given), redirects being answers, never followed silently. A memento that is not a 200 is hashed and kept as a
- *  row `selectCapture` refuses by its own words; the first 200 is answered UNREAD, with its answer and the rows
+ *  row `selectCapture` refuses by its own words. A 200 is handed to the caller's `take({res, answer, locator})`,
+ *  which reads as much of its body as the choice needs: `{row}` when `selectCapture` refuses the memento over the
+ *  bytes received (an empty body, N510), and the lookup goes on to the next candidate as for any refused row; `{fail}`
+ *  to end the lookup with that answer; anything else is the memento taken, answered with its answer and the rows
  *  refused before it, so the caller hashes (and, capturing, stores) the very bytes the choice is made over
  *  (`chooseMemento`). Every refusal is an answer `{ok: false, status, payload}`. */
-async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fetchPurpose = "archive-lookup" } = {}) {
+async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fetchPurpose = "archive-lookup", take } = {}) {
   const ends = mementoEndpoints(ARCHIVE, address);
   if (!ends) return { ok: false, status: 400, payload: { ok: false, reason: "BAD_ADDRESS", detail: "the archive has no endpoint for this address" } };
   const considered = [], rows = [], tried = new Set();
@@ -299,10 +333,18 @@ async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fe
                           refused: ans.ok ? `the archive was still redirecting after ${MEMENTO_HOPS} hops` : ans.detail });
         return { next: true };
       }
-      if (ans.status === 200) return { ok: true, res, answer: ans, locator: url, rows, considered };
+      if (ans.status === 200) {
+        const t = await take({ res, answer: ans, locator: url });
+        if (t.fail) return { fail: t.fail };
+        if (!t.row) return { ...t, ok: true, answer: ans, locator: url, rows, considered };
+        /* N510: refused over the bytes received; an older candidate may still stand in for the document. */
+        rows.push(t.row);
+        return { next: true };
+      }
       /* A memento of a redirect or an error: a true fact about that fetch, not a copy of the document (capture-sources
          R29), refused by selectCapture's own words over a row of the bytes received. */
       const h = await hashBody(res);
+      if (h.failed) return { fail: archiveBroke(h.failed) };
       rows.push(mementoRow(ans, h.oversize ? { sha256: null } : { sha256: h.sha, bytes: h.bytes }) || { timestamp: ans.timestamp });
       return { next: true };
     }
@@ -360,13 +402,18 @@ export async function archiveLookup(cap, { address } = {}) {
     return { status: 400, body: { ok: false, reason: "BAD_ADDRESS", detail: "the document address must be https on a public host" } };
   const el = await archiveEligibility(cap, address);
   if (!el.ok) return { status: el.status, body: el.payload };
-  const m = await mementoLookup(cap, address);
+  /* Each 200 memento is hashed whole; one selectCapture refuses over its bytes (N510: an empty one) is passed over. */
+  const m = await mementoLookup(cap, address, { take: async ({ res, answer, locator }) => {
+    const h = await hashBody(res);
+    if (h.failed) return { fail: archiveBroke(h.failed) };
+    if (h.oversize)
+      return { fail: { ok: false, status: 413, payload: { ok: false, reason: "TOO_LARGE", bytes: h.bytes, maxBytes: CAPTURE_MAX,
+        retrieval_locator: locator, detail: "the memento exceeds what this surface will capture even in parts" } } };
+    const row = mementoRow(answer, { sha256: h.sha, bytes: h.bytes });
+    return selectCapture([row]).ok ? { sha: h.sha, bytes: h.bytes } : { row };
+  } });
   if (!m.ok) return { status: m.status, body: m.payload };
-  const h = await hashBody(m.res);
-  if (h.oversize)
-    return { status: 413, body: { ok: false, reason: "TOO_LARGE", bytes: h.bytes, maxBytes: CAPTURE_MAX, retrieval_locator: m.locator,
-      detail: "the memento exceeds what this surface will capture even in parts" } };
-  const c = chooseMemento(m, h.sha, h.bytes, address);
+  const c = chooseMemento(m, m.sha, m.bytes, address);
   if (!c.ok) return { status: c.status, body: c.payload };
   return { status: 200, body: {
     ok: true, address, eligible_because: el.reach.basis, chosen: c.chosen,
@@ -499,7 +546,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     const o = captureRequest.origin;
     if (o && typeof o === "object" && o.matched_sweep != null && o.matched_sweep !== "")
       crOrigin = { kind: "sweep", matched_sweep: o.matched_sweep, deeming_actor: o.deeming_actor ?? null };
-    /* R31 (K1126): a SWEEP origin is one the in-process caller declares `kind: "sweep"` (monitoring R57's shape), and
+    /* R31 (K1126): a SWEEP origin is one the in-process caller declares `kind: "sweep"` (link-sweep R5's shape), and
        it carries its scope on this arm, never a body; the drain's R38 origin (no `kind`) is not one. Refused before
        anything is fetched. */
     if (crOrigin && o.kind === "sweep") {
@@ -509,7 +556,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
         const row = SWEEP_SCOPE_CHECKS.SWEEP_SCOPE_MISSING;
         return answer(400, { ok: false, reason: "SWEEP_SCOPE_MISSING", code: "SWEEP_SCOPE_MISSING", check: row.check,
           translation: row.translation, op, matched_sweep: crOrigin.matched_sweep,
-          detail: "a sweep-origin acquire names the in-scope prefixes it may reach (monitoring R53's `sources`); "
+          detail: "a sweep-origin acquire names the in-scope prefixes it may reach (link-sweep R1's `sources`); "
                 + "this one named none, so nothing was fetched" });
       }
       /* END DEC-49 REGION is-sweep-scope */
@@ -640,7 +687,14 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
      bytes this call files are the bytes the choice is made over (`chooseMemento`, below). */
   let archiveMemento = null;
   if (archiveAsked) {
-    const m = await mementoLookup(cap, archiveAsked, { fetchPurpose: "acquire" });
+    /* N510: the body's first bytes are read ahead, unconsumed; a memento with none is refused by selectCapture's own
+       words over its row and the lookup goes on to the next candidate, so nothing of it reaches the store. */
+    const m = await mementoLookup(cap, archiveAsked, { fetchPurpose: "acquire", take: async ({ res, answer }) => {
+      const p = await peekBody(res);
+      if (p.failed) return { fail: archiveBroke(p.failed) };
+      /* its row's digest is the empty-body digest, which selectCapture refuses by R29's own reason */
+      return p.empty ? { row: mementoRow(answer, { sha256: EMPTY_SHA256, bytes: 0 }) } : { res: p.res };
+    } });
     if (!m.ok) return answer(m.status, m.payload);
     archiveMemento = m; locator = m.locator; archiveAddress = m.answer.original;
   }
@@ -794,7 +848,18 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   const reader = res.body && res.body.getReader ? res.body.getReader() : null;
   if (!reader) return answer(502, { ok: false, reason: "NO_BODY", locator });
   for (;;) {
-    const { done, value } = await reader.read();
+    /* R10: a body that breaks off mid-stream is a fetch that did not complete, answered by name, never a throw; the
+       parts already stored are content-addressed and named by no document, as TOO_LARGE's are. */
+    let chunk;
+    try { chunk = await reader.read(); }
+    catch (e) {
+      if (archiveMemento) return answer(502, archiveBroke(String(e && e.message || e)).payload);
+      await noteOutcome("fetch_failed", null);
+      return answer(502, { ok: false, reason: "FETCH_FAILED", locator,
+        detail: crCredential ? "the body broke off while it was read; its error is not carried because a supplied credential rode it"
+                             : `the body broke off while it was read (${String(e && e.message || e)})` });
+    }
+    const { done, value } = chunk;
     if (done) break;
     total += value.length;
     if (total > MAX) { oversize = true; break; }
@@ -833,7 +898,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   }
   await flush();
   let sha = whole.hex();
-  /* R32: the memento is chosen over the bytes just received (an empty one refused by selectCapture's own reason). */
+  /* R32: the memento is chosen over the bytes just received (an empty one was passed over before any byte was stored, N510). */
   if (archiveMemento) {
     const c = chooseMemento(archiveMemento, sha, total, archiveAsked);
     if (!c.ok) return answer(c.status, c.payload);
@@ -1052,7 +1117,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     /* Derived artifacts are named on the SAME register document, never as documents of their own (C-18.3). */
     ...(subs ? { renditions: subs.renditions } : {}),
     /* R21: on the capture-request arm the origin is the drain's row's, never the body's. */
-    /* R31 (K1126): only monitoring and capture-requests set a sweep origin; a body's `matchedSweep` is ignored. */
+    /* R31 (K1126): only link-sweep and capture-requests' sweep arm set a sweep origin; a body's `matchedSweep` is ignored. */
     origin: captureRequest ? (crOrigin || { kind: "named_request" }) : { kind: "named_request" },
     attestation_attempts: attestations,
   };

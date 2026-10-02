@@ -1,5 +1,5 @@
-/* acquisition R31 (monitoring R53, R57, R58; K1036, K1126): a sweep-origin acquire, declared in process as
-   `{kind: "sweep", matched_sweep, deeming_actor}` (monitoring R57's shape) on the capture-request arm, carries `scope`;
+/* acquisition R31 (link-sweep R1, R5, R6; K1036, K1126): a sweep-origin acquire, declared in process as
+   `{kind: "sweep", matched_sweep, deeming_actor}` (link-sweep R5's shape) on the capture-request arm, carries `scope`;
    a redirect out of scope is not followed and answers SWEEP_REDIRECT_OUT_OF_SCOPE with its target, nothing fetched at
    it and nothing filed; no scope is SWEEP_SCOPE_MISSING with nothing fetched. capture-requests R38's drain origin (no
    `kind`) is not a sweep origin, and a body's `matchedSweep` sets none. Each refusal carries its row (R29's form) and

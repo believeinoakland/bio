@@ -6,9 +6,9 @@
  * C-48.7 (the Drive arm, R4), C-83.1–C-83.8 (the render arm, R5), C-28.13 (the capture-request arm, R1), and the user
  * agent with its contact address (R24); and C-68.1 (no evidence storage, K794, K850), below. C-128 (R31, the sweep's
  * scope) is this module's own, new at T23. Each row's code, number, translation and reasons are unchanged; its `where` names
- * this module's site (R29), `awaiting stamp` for promotion's next job. These are the only copies: T19's layer 1 deleted
- * the catalogue's (legacy-checks, K717, K769). C-48.8 and C-48.9 are `monitoring`'s;
- * the rest of C-28 is `capture-requests`'. The comments carried from the catalogue keep each row's reasoning beside it. */
+ * this module's site (R29), the change stamped by 1.49.0 (T18's rows), C-68.1's by 1.50.0 and 1.51.0, and C-128's arrival by
+ * 1.54.0. These are the only copies: T19's layer 1 deleted the catalogue's (legacy-checks, K717, K769). C-48.8 and
+ * C-48.9 are `monitoring`'s; the rest of C-28 is `capture-requests`'. The comments carried from the catalogue keep each row's reasoning beside it. */
 
 const at = (region) => `src/acquisition/index.mjs acquire > ${region}`;
 
@@ -209,8 +209,7 @@ export const DRIVE_CAPTURE_CHECKS = Object.freeze({
    control-plane door, on a copy installed with no evidence storage bound. Its number and translation are the catalogue's,
    unchanged (the catalogue is deleted, K855). It is minted at ONE region, inside the raiser this module exports,
    `evidenceStorageAbsent`, which `acquire` and the door both call (K850); its `where` names that region (T20 layer 3,
-   `awaiting stamp` for T21, current.md rule 4). Its sentence is addressed to WHOEVER INSTALLED THE COPY, the only person
-   who can act on it. */
+   stamped by 1.51.0). Its sentence is addressed to WHOEVER INSTALLED THE COPY, the only person who can act on it. */
 export const INSTALLATION_CHECKS = Object.freeze({
   EVIDENCE_STORAGE_NOT_CONFIGURED: Object.freeze({
     check: 'C-68.1',
@@ -222,10 +221,10 @@ export const INSTALLATION_CHECKS = Object.freeze({
   }),
 });
 
-/* R31 (monitoring R53, R57, R58; K1036, K1126) — A SWEEP FETCHES ONLY WITHIN ITS RATIFIED SCOPE. A sweep names a query,
+/* R31 (link-sweep R1, R5, R6; K1036, K1126) — A SWEEP FETCHES ONLY WITHIN ITS RATIFIED SCOPE. A sweep names a query,
    not a document, so the one fence on what it may reach is the scope members ratified up front; a source's redirect is
    the one way a sweep could be led out of it, and so a redirect is followed only to an address in scope (Intake
-   Doctrine §4, "Constraints as security controls"). Both rows are new at T23 (`awaiting stamp` until T24's L2). */
+   Doctrine §4, "Constraints as security controls"). Both rows arrived at T23, stamped by 1.54.0. */
 export const SWEEP_SCOPE_CHECKS = Object.freeze({
   /* A sweep-origin acquire that names no scope: refused before anything is fetched, never run unfenced. */
   SWEEP_SCOPE_MISSING: Object.freeze({
