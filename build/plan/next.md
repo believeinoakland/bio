@@ -22,6 +22,8 @@
 - N490 · 2026-10-02 · the action redesign (DEC-115, U24): `build/plan/action-design/start-and-send.html` and `surfaces.html`'s tier 2 and tier 3 panels bind content, step order and wording; the HANDOFF's approval line extended to them (BOB's, in `build/`). **Hard reason:** on PR #7, not `main`.
 - N491 · 2026-10-02 · **publication**, **reevaluation**, **queue-producers**, a docket home (DEC-116 with DEC-100, U25; answers N470): withdrawal of a ratified edition (signed docket entry, published reason, stamp, never lifted, re-evaluation notices: reevaluation R16's missing trigger); the docket and its three shelves, the manager's core To-dos, the outside-response path, the private-name receipt, standing grants, the manager's signing step, the per-case feed. **Hard reason:** on PR #7, not `main`; its home is BOB's to place once it lands (publication's size, K1024).
 
+- N492 · 2026-10-02 · **acquisition** (K1032): call capture-sources R37's Memento services in the archive fallback (TimeGate with `Accept-Datetime`, or TimeMap, then the raw memento, `mementoRow`, `selectCapture`, `mementoHop`), so an archive other than Wayback's CDX can serve a lookup. **Hard reason:** R37's services are built in T22's L3; acquisition's job (L3) does not run in T22 and its requirement must first state the call (P5).
+
 ## Left out of T22, carried here (62 rows, one hard reason each) (check)
 
 | row | item | hard reason | note |
