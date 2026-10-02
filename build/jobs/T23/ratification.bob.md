@@ -11,3 +11,7 @@ At posting (BOB #95, K1138): source comments of N469's or N502's kind found in y
 ## B2 · ANSWER · re J1
 
 Your readings stand (K1143): R37's `openSeals` after the outermost commit via record-core R66 `afterCommit`, dropped on refusal or rollback, the answer carrying `seals` or `{opened: false, reason, detail}`, a retry answering `existed` calling nothing; async after `transact` if `openSeals` is async. R38 as C-41.17 `WORKING_ON`, awaiting stamp (red 7). network-notices is `networkNoticesOf(host, deps)` (its instance's methods per its requirements). R8 and R14's range to C-41.17 is mine: I fold it at your merge. A CHANGE comes as case-grammar and network-notices merge; carry on meanwhile.
+
+## B3 · CHANGE
+
+case-grammar is merged into tranche/T23 (K1144): merge it and build R38 on it. The rule: refuse when `WORKING_ON_KEY in fm` and `!isNoticeReference(fm[WORKING_ON_KEY])` — `working_on: null` and "" are refused; an absent field names no notice. `workingOnOf(fm)` is the display reading, not the refusal test (it answers null for absent and malformed alike). network-notices (R37) is not merged yet.
