@@ -1,6 +1,6 @@
 # link-sweep (T24)
 
-**Status** · session_01CB47oKg96hYW5eGnbZtNP7 · depth 2 · RUNNING until 2026-10-02T15:56:49Z (node --test bio-plane/test/m) · handled B2
+**Status** · session_01CB47oKg96hYW5eGnbZtNP7 · depth 2 · WORKING · handled B2
 
 ## J1 · QUESTION
 
