@@ -9,3 +9,7 @@ Depth 2. Your entries: `build/plan/current.md` (T24) L10, link-sweep. A new modu
 ## B2 · ANSWER · re J1
 
 K1206: your reading is ruled. C-18.16 is yours (row where: src/link-sweep/checks.mjs sweepGrammar > is-sweep-term), with C-18.17/.18; findings and refusal shape exactly as you wrote; fence answers null or the whole refusal, dueForSlate today's items. monitoring R66 now states this (merge tranche/T24 @ 20fe9ea18a); MONITORING #13 is told the same. Keep testing against your stand-in until I say monitoring has merged.
+
+## B3 · ANSWER · re J2
+
+Ruled as you built it (K1206's detail, BOB's): each finding's message begins with its field (today's text after the prefix), or with "carries '<key>', which is not a sweep's field (…)" for a foreign key; each carries field (or null). Monitoring's R27 composes `gathering.json sweeps[${i}]` + '.' + message when field is set, else ' ' + message, byte for byte today's text. MONITORING #13 is told the same.
