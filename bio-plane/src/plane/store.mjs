@@ -18,6 +18,8 @@ import { actionPlansOf, actionPlansOps } from "../action-plans/index.mjs";
 import { promotionOf, promotionOps } from "../promotion/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { provenanceOps } from "../provenance/ops.mjs";
+import { attestationOf } from "../attestation/index.mjs";
+import { provenanceRoutesOf, provenanceRouteOps } from "../provenance-routes/index.mjs";
 import { membershipOf, membershipOps, viewerPredicate, MODULE_ORDER } from "../membership/index.mjs";
 import { credentialsOf, credentialsOps } from "../credentials/index.mjs";
 import { observationLogOf, observationLogOps, OBSERVATION_LOG_MODULE } from "../observation-log/index.mjs";
@@ -96,8 +98,16 @@ export class Store extends DurableObject {
     /* provenance declares its tables and joins every promotion first, so its register write runs before the
        projections that read it. observation-log registers its look on each receipt (its R5, provenance R47), and
        listens to extraction's reading notice once extraction exists (below). */
-    observationLogOf(ctx, { extraction: null,
-      provenance: provenanceOf(ctx, { signingKey: env.RECEIPT_SIGNING_KEY ?? null, instanceName: env.INSTANCE_NAME || "unnamed" }) });
+    const provenance = provenanceOf(ctx);
+    const instanceName = env.INSTANCE_NAME || "unnamed";
+    /* attestation (N512), next in the modules' order, built here with the instance's receipt-signing key (its R4, K59)
+       before any module reaches it, so the one instance every user is handed holds the key: acquisition's receipt
+       through capture (`cap.attestation`), case-authoring's and filings' `attestationsOf`, network-notices' signing. */
+    const attestation = attestationOf(ctx, { provenance, signingKey: env.RECEIPT_SIGNING_KEY ?? null, instanceName });
+    /* provenance-routes (N512), after attestation: at creation it declares its table to purge and registers its audit
+       finding `route` and its figure `routeMarks` (its R6, R10, R12); a reconstructed hop names this instance (its R1). */
+    provenanceRoutesOf(ctx, { instanceName });
+    observationLogOf(ctx, { extraction: null, provenance });
     /* extraction: its projection joins every promotion. content: created on extraction's instance here, so its stale
        mark (REC-82, its R22) is registered before observation-log's rows (its R6–R8), in the modules' total order
        (extraction R24). */
@@ -118,7 +128,7 @@ export class Store extends DurableObject {
     /* network-notices (DEC-111, K1100), at its place after project-stage: at creation it creates and declares its tables,
        registers its notice ids' mint seed and its three public reads (public-read R18), all before the first request;
        the scheduler reaches it for `working-on-seal` and `working-on-attest` (scheduler R5), with this environment. */
-    networkNoticesOf(ctx, { env });
+    networkNoticesOf(ctx, { env, attestation });
     actionsOf(ctx, { env });
     retrieval.registerLegGrades("inquiry", inquiryLegGrades(ctx));   /* R10 (K861): inquiry's leg grades (its R52, retrieval R55) */
     observationLogOf(ctx).attachMeaning({ connections: connectionsOf(ctx, { env }) });
@@ -135,7 +145,7 @@ export class Store extends DurableObject {
     runProductionsOf(ctx, { aiRuns: aiRunsOf(ctx, env) });
     reviewOf(ctx);
     intentOf(ctx);   /* intent: its check (R1, R2, R26) joins every promotion; its audit check keeps C-2.9 (R22) */
-    caseAuthoringOf(ctx);
+    caseAuthoringOf(ctx, { attestation });   /* its `attestationsOf` (its R35; attestation R7) */
     /* layer 9, in the modules' order, each registering at start what its factory registers (checks, projections,
        purge, filings' evidence block). standards creates its own tables at construction. R11 (K921): local-facts heads
        the layer, creating its table and declaring it to purge (record-core K23). */
@@ -146,12 +156,12 @@ export class Store extends DurableObject {
     /* R11 (K921): filing-templates, after action-clocks and before filings: it creates its tables, declares them to purge
        (record-core K23), registers its opaque ids' seed and takes the library `filings` R26 kept (its migration). */
     const filingTemplates = filingTemplatesOf(ctx);
-    filingsOf(ctx, { actions: actionsOf(ctx), conformance, standards: standardsOf(ctx), consequences });
+    filingsOf(ctx, { actions: actionsOf(ctx), conformance, standards: standardsOf(ctx), consequences, attestation });
     escalationOf(ctx);   /* on this host, it reaches conformance, consequences, actions and filings through their factories */
     /* action-plans (K711): built before any route can run, so ai-runs holds its plan-mode open check (its R30) when the
        first `airunopen` arrives; built lazily, that open is refused AI_RUN_MODE_UNCHECKED. */
     actionPlansOf(ctx);
-    const capture = captureOf(ctx, { env });
+    const capture = captureOf(ctx, { env, attestation });   /* the acquisition act signs its receipt through `cap.attestation` */
     /* capture-requests: its table, its `sweep` resolver and its drain; the run sight it reads is ai-runs' (its R28),
        and it registers its wait source with ai-runs (ai-runs R41). Built before link-sweep and handed to it, so
        link-sweep's sweep scope check (its R12) is registered at construction and a sweep-named request drained before
@@ -205,6 +215,8 @@ export class Store extends DurableObject {
     membershipOf(this.ctx).migrate();
     credentialsOf(this.ctx).migrate();   /* after membership's: its listener and claim fact registered */
     provenanceOf(this.ctx).migrate();
+    attestationOf(this.ctx).migrate();   /* `receipt_keys`, `signed_receipts` (N512; attestation R10) */
+    provenanceRoutesOf(this.ctx).migrate();   /* `provenance_route_marks` (N512; provenance-routes R12) */
     contentOf(this.ctx).migrate();
     connectionsOf(this.ctx).migrate();
     basisVersionsOf(this.ctx).migrate();
@@ -305,6 +317,9 @@ export class Store extends DurableObject {
       ...recordCoreOps(recordOf(ctx), url, body, { sight: viewerPredicate }),
       /* `recordcapturedlocator` reports observation-log's receipt listener. */
       ...provenanceOps(provenanceOf(ctx), url, body, { observer: OBSERVATION_LOG_MODULE }),
+      /* `provenancechain`, `provenanceroute`, `provenanceroutes`: provenance-routes' (its R9; N512), at the place
+         provenance's map held them. */
+      ...provenanceRouteOps(provenanceRoutesOf(ctx), url, body),
       ...contentOps(contentOf(ctx), url, body),
       ...captureRequestsOps(captureRequestsOf(ctx), url, body),
       ...governorRoutes(governorOf(ctx), url, body),

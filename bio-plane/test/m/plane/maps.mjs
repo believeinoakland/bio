@@ -13,6 +13,7 @@ import { actionPlansOf, actionPlansOps } from "../../../src/action-plans/index.m
 import { promotionOf, promotionOps } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { provenanceOps } from "../../../src/provenance/ops.mjs";
+import { provenanceRoutesOf, provenanceRouteOps } from "../../../src/provenance-routes/index.mjs";
 import { membershipOf, membershipOps, viewerPredicate } from "../../../src/membership/index.mjs";
 import { credentialsOf, credentialsOps } from "../../../src/credentials/index.mjs";
 import { observationLogOf, observationLogOps, OBSERVATION_LOG_MODULE } from "../../../src/observation-log/index.mjs";
@@ -79,6 +80,7 @@ export const MODULE_MAPS = [
   ["promotion", (c, u, b) => promotionOps(promotionOf(c), u, b)],
   ["record-core", (c, u, b) => recordCoreOps(recordOf(c), u, b, { sight: viewerPredicate })],
   ["provenance", (c, u, b) => provenanceOps(provenanceOf(c), u, b, { observer: OBSERVATION_LOG_MODULE })],
+  ["provenance-routes", (c, u, b) => provenanceRouteOps(provenanceRoutesOf(c), u, b)],
   ["content", (c, u, b) => contentOps(contentOf(c), u, b)],
   ["capture-requests", (c, u, b) => captureRequestsOps(captureRequestsOf(c), u, b)],
   ["host-governor", (c, u, b) => governorRoutes(governorOf(c), u, b)],
