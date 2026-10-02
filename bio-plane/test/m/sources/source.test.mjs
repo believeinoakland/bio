@@ -51,7 +51,7 @@ test("R1 a source exists for each pulled knock: one per pseudonym, one per knock
   assert.equal(both.sourceId, a.sourceId, "the earliest knock's source (the pseudonym's)");
   assert.deepEqual(both.sources.map((x) => x.source.receipt.knock_id), [k1.knock_id, k2.knock_id]);
   /* one keyed read of capture's per read (its R72), never a walk of the inbox; one knock per 10-minute window, so
-     capture's instance limit (its R31: 10 in any 10 minutes) admits every one */
+     capture's rate windows (its R31) admit every one, whatever their bounds */
   for (let i = 0; i < 50; i++) { w.tick(KNOCK_WINDOW); await w.pull(await w.knock()); }
   const reads = w.spy.reads;
   assert.equal(w.s.sourceOf({ captureSha: c2.row.sha256, viewer: V("bob") }).ok, true);

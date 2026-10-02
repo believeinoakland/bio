@@ -846,6 +846,27 @@ export function withRegisterChecks(image, gate) {
 }
 
 /* ======================================================================= *
+ * R34, R56: THE INSTANCE KEY'S STATEMENTS. A receipt (R34) is `bio-receipt/1`; a later module's statement (R56) is
+ * any other kind, so no statement signed for a later module can be read as a receipt.
+ * ======================================================================= */
+
+/** The kind of R34's receipt statement, and the form of every statement kind (R56). */
+export const RECEIPT_KIND = "bio-receipt/1";
+export const STATEMENT_KIND = /^[a-z][a-z0-9-]*\/[0-9]+$/;
+
+/** R56 — exactly `${kind}\nsha256: ${sha}\n`. Throws when `kind` is the receipt's or not of `STATEMENT_KIND`'s form. */
+export function instanceStatement(kind, sha) {
+  if (typeof kind !== "string" || !STATEMENT_KIND.test(kind) || kind === RECEIPT_KIND)
+    throw new Error(`instanceStatement: kind ${JSON.stringify(kind)} is ${kind === RECEIPT_KIND ? "the receipt's own"
+      : "not of the form <name>/<version>"}; a statement for a later module is never a receipt`);
+  return `${kind}\nsha256: ${sha}\n`;
+}
+
+const noKey = () => actRefusal("RECEIPT_NO_KEY",
+  "this instance holds no receipt-signing key, so nothing is signed. The operator binds one as a secret; nothing is "
+  + "claimed signed until then");
+
+/* ======================================================================= *
  * THE MODULE
  * ======================================================================= */
 
@@ -1549,7 +1570,7 @@ class Provenance {
 
   /** The exact statement a receipt signs, UTF-8. */
   static receiptStatement({ instance, retrieved, retrievalLocator, captureSha }) {
-    return `bio-receipt/1\ninstance: ${instance}\nfetched: ${retrieved}\nlocator: ${retrievalLocator}\nsha256: ${captureSha}\n`;
+    return `${RECEIPT_KIND}\ninstance: ${instance}\nfetched: ${retrieved}\nlocator: ${retrievalLocator}\nsha256: ${captureSha}\n`;
   }
 
   async #key() {
@@ -1560,6 +1581,18 @@ class Provenance {
     return { priv, pub: b64(pub), keyId: hexOf(pub) };
   }
 
+  /* The instance key's one signing site (R34, R56): signs `statement`, UTF-8, and records the key in `receipt_keys`
+     the first time it signs anything; null when no key is bound. */
+  async #signWith(statement) {
+    const key = await this.#key();
+    if (!key) return null;
+    const signature = b64(await crypto.subtle.sign({ name: "Ed25519" }, key.priv, te.encode(statement)));
+    const at = this.#now();
+    this.#sql.exec(`INSERT OR IGNORE INTO receipt_keys (key_id, public_key, first_used) VALUES (?, ?, ?)`,
+                   key.keyId, key.pub, at);
+    return { signature, key_id: key.keyId, public_key: key.pub, at };
+  }
+
   /** Signs and keeps the receipt for an archive-sourced capture. Answers `{ok, statement, signature, key_id,
    *  public_key}`, or `RECEIPT_NO_KEY` when no key is bound (stated, never a silent skip), or `RECEIPT_MALFORMED`. */
   async signReceipt({ captureSha, retrievalLocator, retrieved } = {}) {
@@ -1568,23 +1601,36 @@ class Provenance {
         || typeof retrieved !== "string" || !retrieved)
       return actRefusal("RECEIPT_MALFORMED",
         "a receipt names the capture's sha256, the retrieval locator and the instant it was fetched");
-    const key = await this.#key();
-    if (!key)
-      return actRefusal("RECEIPT_NO_KEY",
-        "this instance holds no receipt-signing key, so the receipt is not signed. The operator binds "
-        + "one as a secret; nothing is claimed signed until then");
     const statement = Provenance.receiptStatement({ instance: this.#instanceName, retrieved, retrievalLocator, captureSha: s });
-    const signature = b64(await crypto.subtle.sign({ name: "Ed25519" }, key.priv, te.encode(statement)));
-    const at = this.#now();
-    this.#record.transact(() => {
-      this.#sql.exec(`INSERT OR IGNORE INTO receipt_keys (key_id, public_key, first_used) VALUES (?, ?, ?)`,
-                     key.keyId, key.pub, at);
-      this.#sql.exec(`INSERT OR REPLACE INTO signed_receipts
-                        (capture_sha, retrieval_locator, retrieved, statement, signature, key_id, signed_at)
-                      VALUES (?, ?, ?, ?, ?, ?, ?)`, s, retrievalLocator, retrieved, statement, signature, key.keyId, at);
-      return { ok: true };
-    });
-    return { ok: true, statement, signature, key_id: key.keyId, public_key: key.pub };
+    const signed = await this.#signWith(statement);
+    if (!signed) return noKey();
+    this.#sql.exec(`INSERT OR REPLACE INTO signed_receipts
+                      (capture_sha, retrieval_locator, retrieved, statement, signature, key_id, signed_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)`, s, retrievalLocator, retrieved, statement, signed.signature,
+                   signed.key_id, signed.at);
+    return { ok: true, statement, signature: signed.signature, key_id: signed.key_id, public_key: signed.public_key };
+  }
+
+  /** R56 · DEC-111: the statement the instance key signs for a later module (`instanceStatement`, below). */
+  instanceStatement(kind, sha) { return instanceStatement(kind, sha); }
+
+  /** R56 — signs a statement `instanceStatement` makes with the instance key of R34, recording the key in
+   *  `receipt_keys`: `{ok, signature, key_id, public_key}`, or `RECEIPT_NO_KEY` when no key is bound. Any other text
+   *  throws, as `instanceStatement` does, before the key is asked: this door never signs a receipt (R34's statement). */
+  async instanceSign(statement) {
+    const m = typeof statement === "string" ? /^([^\n]*)\nsha256: ([^\n]*)\n$/.exec(statement) : null;
+    if (!m || instanceStatement(m[1], m[2]) !== statement)
+      throw new Error("instanceSign: the statement is not one instanceStatement makes");
+    const signed = await this.#signWith(statement);
+    if (!signed) return noKey();
+    return { ok: true, signature: signed.signature, key_id: signed.key_id, public_key: signed.public_key };
+  }
+
+  /** R56 — every key that has signed anything, `[{key_id, public_key, first_used}]` in the order first used; the
+   *  private part is never stored, so never answered. */
+  instanceKeys() {
+    return this.#rows(`SELECT key_id, public_key, first_used FROM receipt_keys ORDER BY first_used, key_id`)
+      .map((r) => ({ key_id: r.key_id, public_key: r.public_key, first_used: r.first_used }));
   }
 
   /** The receipts signed for a capture, each verified against the public key it was signed with (kept, R34). */
