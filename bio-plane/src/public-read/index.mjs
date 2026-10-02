@@ -26,7 +26,7 @@
 
 import { publicationOf } from "../publication/index.mjs";
 import { caseTensionsOf, caseDocumentBlocks, whatChangedOf, lensOf, LENS_HEAD,
-         LENS_CLOSING_SENTENCES } from "../case-grammar/index.mjs";
+         LENS_CLOSING_SENTENCES, workingOnOf } from "../case-grammar/index.mjs";
 import { parseFrontmatter } from "../record-grammar/index.mjs";
 import { rowOf } from "./checks.mjs";
 import { delivererOf } from "../deliverer.mjs";
@@ -37,8 +37,8 @@ import { PUBLIC_READ_NAME, PUBLIC_READ_PARAM, PUBLIC_READ_OWN_OPS, PUBLIC_READ_R
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : "");
 
-/* R3 (DEC-101, DEC-103): a signed document's front matter and body, parsed once (record-grammar); null for no text or
-   no front matter, so every reader below answers its own null. */
+/* R3 (DEC-101, DEC-103), R19: a signed document's front matter and body, parsed once (record-grammar); null for no text
+   or no front matter, so every reader below answers its own null. */
 const signedParts = (doc) => {
   if (!doc || typeof doc.text !== "string") return null;
   try { const p = parseFrontmatter(doc.text); return p.data ? { fm: p.data, body: p.body } : null; }
@@ -714,7 +714,8 @@ export class PublicRead {
     const cRow = theCase
       ? this.#one(`SELECT manifest FROM published_cases WHERE case_id=? AND edition=?`, theCase, ed) : null;
     const manifest = cRow && cRow.manifest ? JSON.parse(cRow.manifest) : null;
-    const said = this.#editionStatements(state, theCase, ed, editions);
+    const signed = signedParts(state.document);
+    const said = this.#editionStatements(signed, theCase, ed, editions);
     return { ok: true, caseId: theCase, edition: ed,
              /* R3 (DEC-101; Publication §5A): what changed in this edition, at the top, and the successor's statement
                 beside the pointer to it; both read from signed documents, never live. */
@@ -730,7 +731,11 @@ export class PublicRead {
                 requirement nobody asserted. Both null for a case published
                 before DEC-72, and null here is the design's absent-bar posture,
                 not a bar of zero: `bar_detail` below says so in words. */
-             project: state.project ?? null, bar: state.bar ?? null,
+             project: state.project ?? null,
+             /* R19 (DEC-111; `case-grammar` R10): the notice this edition names as its project reference, read from its
+                signed document with `case-grammar`'s one reading, never live; null when it names none or is not `/5`. */
+             project_reference: signed ? workingOnOf(signed.fm) : null,
+             bar: state.bar ?? null,
              bar_detail: state.bar
                ? "the standard of evidence this case was held to, read from its publishing project at the "
                + "moment of publication and frozen here (DEC-72). It is the CASE's property: no bar attaches "
@@ -845,8 +850,7 @@ export class PublicRead {
      and its parts: the acknowledgement, each statement with its justification, printed citations and withheld count
      in the document's order, and the closing sentences the document prints. A withheld citation is a count; nothing
      names it. Without the blocks, `lens` is null and `lens_fingerprint` is the frozen manifest's `statements_sha`. */
-  #editionStatements(state, theCase, ed, editions) {
-    const doc = signedParts(state.document);
+  #editionStatements(doc, theCase, ed, editions) {
     const wc = doc && Number(ed) > 1 ? whatChangedOf(doc.fm, doc.body) : null;
     const what_changed = wc ? { statement: wc.statement, began_as: wc.began_as, draft: wc.draft,
                                 adopted_as_drafted: wc.adopted_as_drafted } : null;
