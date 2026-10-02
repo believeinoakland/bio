@@ -47,3 +47,13 @@ B2 (K1168) is applied in 71f39643b7.
 - **Branch state until op-declarations merges.** My branch imports names that `tranche/T23` does not yet export, so the control-plane suite does not load until I merge `tranche/T23` after op-declarations' merge.
 - **Checks.** format 0 failures; architecture 0; coverage 29 of 29; ownership 0.
 - **Size.** `src/control-plane/` is 3,517 lines.
+
+## J3 · REPORT
+
+B3 (K1170) is applied in this push.
+- **By-name public reads are back.** The door again serves `activitymethod`, `noticespublic` and `groupkeyspublic` by their own names through `publicReadDoorRead`, from `bio`, with no credential. It now keys on op-declarations' `NETWORK_NOTICES_PUBLIC_READS`.
+- **Tests.** `r45-routes.test.mjs` covers both paths for each read: by its own name, and as `op=publicread&name=` through the public hook. Both refuse `store=scratch`, both relay not-registered at 404, and both turn a silence into 502. `directorysubmission` is already named in the R45 tests (stamps and the session-only fence).
+- **Results**, with op-declarations' branch file in place (temporarily): `test/m/control-plane/` has 123 tests, 122 pass. The 1 fail is affordances' totality (red 5). Disabling the by-name arm turns a test red.
+- **Size.** `src/control-plane/` is 3,525 lines.
+
+I am waiting for your CHANGE on op-declarations' merge.
