@@ -23,12 +23,12 @@ You are the UX design session for CivicOS, working with Bob (the product owner) 
 ## 3. Recording a ruling: the checklist
 
 1. `git fetch origin main mail/UX-DESIGN tranche/T<n>` (the current tranche). Read `mail/BOB.md` past your Read cursor if it exists. Grep the new K-rulings in `build/rulings.md` on `main` and the tranche branch for anything that settles or changes the question. If the development process already ruled, cite it; never record a second, conflicting ruling.
-2. Append a DEC entry to `docs/development/DECISIONS.md` (copy DEC-110's shape: `raised:` with "the UX design session with Bob on his primary account (session_<yours>; the development process runs on his secondary account)", `for`, `question`, `why it is Bob's`, `provisional`, `alternative`, `recommendation`, `reversal cost`, `response` with his words, `decided`, `reasoning recorded in`, `owed`). **Next free number: DEC-117** (`main` has to DEC-111, merged with PR #6 at `994fd3f9ff`; the branch adds DEC-112 to DEC-116). Check both before using it.
+2. Append a DEC entry to `docs/development/DECISIONS.md` (copy DEC-110's shape: `raised:` with "the UX design session with Bob on his primary account (session_<yours>; the development process runs on his secondary account)", `for`, `question`, `why it is Bob's`, `provisional`, `alternative`, `recommendation`, `reversal cost`, `response` with his words, `decided`, `reasoning recorded in`, `owed`). **Next free number: DEC-119** (`main` has to DEC-116; this branch adds DEC-117 and DEC-118). Check both before using it.
 3. Fold the ruling into the canon document it changes (`docs/architecture/*.md` or `docs/development/*.md`): a "RULED <date> by Bob (DEC-n)" passage, the document's Contents list and Status/"as of" line updated by hand (`tools/corpuscheck.mjs` was deleted on `main` in T19; there is no automatic check).
 4. In `ux-experience.json`, give the question a `ruled` entry (the design as it now stands, plain words) and set `brief.stillOpen` to `false` (or `"partly"`, updating `alreadyDecidedPart`).
 5. Build: `python3 docs/development/ux-substrate/build_ux2.py` from the repository root. Check it: `node <civicos-process clone>/checks/run.mjs /home/user/bio` (the format check must show 0 failures).
 6. Commit (message `DEC-n: question N ruled (...)`) and push the branch. Update PR #6's description if its list of DECs changed.
-7. Append a NOTICE to the outbox: copy the latest entry's shape (`## U<n> · NOTICE · <date> · <session> · primary`, one paragraph stating the ruling, then `Folded: <doc §>. On PR #6's branch. Owed (its owed: line): ...`). **Last entry is U25.** Push it without touching any other branch, by plumbing:
+7. Append a NOTICE to the outbox: copy the latest entry's shape (`## U<n> · NOTICE · <date> · <session> · primary`, one paragraph stating the ruling, then `Folded: <doc §>. On PR #6's branch. Owed (its owed: line): ...`). **Last entry is U27.** Push it without touching any other branch, by plumbing:
    ```
    git fetch origin mail/UX-DESIGN
    git show origin/mail/UX-DESIGN:mail/UX-DESIGN.md > /tmp/ux.md   # append your entry to this copy
@@ -45,7 +45,7 @@ You are the UX design session for CivicOS, working with Bob (the product owner) 
 
 - `main` @ `615672a1a0` (T20 closing). T21 was in its last layer (layer 11) on `tranche/T21`; T22 is drafted. The page's inventory was refreshed to `main` @ `c1a27e41a5`.
 - **Ruled:** every question, 1–36, 17 absorbed into 36 (the DECs from this stream are DEC-96 to DEC-116; K633, K899 (1), K899 (7), K903 (4) and K943 were ruled through the development process and are cited on the page).
-- **Still open:** none as of 2026-10-01. New questions arrive from Bob, or from BOB as DEFER entries; K1019 also owes us BOB's two drafted lines on why groups declare bias (DEC-103), to confirm on the channel.
+- **Still open:** none. **The design phase (Bob, 2026-10-02, order as proposed):** (1) principles and standards, one page of every ruled principle with gaps marked; (2) brand architecture (DEC-118: the group leads) and voice; (3) journeys (reconcile 5 vs 20 audiences; the 11 journeys); (4) visual language (one system replacing the three conflicting looks: `civicos-ui/tokens.css`, the plan-page sketch, the measures map); (5) layouts and key screens, the assistant panel (DEC-90) among the first. Owed to us from BOB: the network-notice screens and wording (K1031 (5)).
 - The briefs follow the schema in §6. When you rewrite one, edit `ux-experience.json` directly; do not regenerate the file wholesale (that would undo `ruled` entries and `stillOpen` flags).
 
 ## 5. Question 29: how the exploration went (RULED 2026-10-01, DEC-111)
