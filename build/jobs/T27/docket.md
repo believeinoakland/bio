@@ -97,3 +97,7 @@ The shapes of the provided services, for public-read and network-notices (code o
 ## J3 · COMPLETE
 
 N520 applied: the new module docket (R1–R22) at bio-plane/src/docket/, tests at bio-plane/test/m/docket/ (37 pass, 0 fail; R1–R22 each named). Add both paths to docket's modules.json entry at the merge: with them, format, architecture, coverage (22/22) and ownership all report 0 failures; without them, ownership flags only 'outside docket's paths'. Correction to B2: C-128 is acquisition's (stamped by 1.54.0), so the rows are C-129.1–.26, awaiting stamp (accepted red 2). Arguments added by J1's readings, for the fold: takesBack, answers, candidate, grant, captures. Provided-service shapes as in J2. One flaw found and fixed: a prepare could place a lookalike record entry. Details in the record.
+
+## J4 · COMPLETE
+
+CHANGE B3 (K1276) applied after merging tranche/T27: lastEntryOf({case}) is synchronous and viewer-free, reads no capture bytes, writes nothing, and answers the latest public entry's date (as docketPublic's last_entry) or null. Tested under R14. 37 pass, 0 fail. format 0 failures; with the paths added, architecture, coverage (22/22) and ownership 0 failures. J3 otherwise stands: C-129 rows awaiting stamp; add docket's paths at the merge.
