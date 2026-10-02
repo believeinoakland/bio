@@ -43,3 +43,18 @@ Two things for other modules, neither a change of theirs I made.
 The requirements' `*(not yet met: T22)*` marks on R1, R8 and R9 are BOB's to strike at the merge.
 
 Size (session_01HZ5CHsHwbUhmPLbDLKrwjg): test runs 9, module lines 693
+
+## J4 · COMPLETE
+
+**B3 applied** (K1079), after merging `tranche/T22` @ 76c7ad94cd (now ab278ff151 merged in).
+- **The fix, located not escaped:** R3's `SECTIONS.acknowledgements` skips every line inside R8's `## What Changed in This Edition, and Why` section (up to the next `## `), as it already skipped the `what_changed:` front-matter run. Both its `  statement_sha: ` line and its `**Who else read this statement.**` line are looked for only outside them. I chose locating over escaping so a member's words are kept as written. A document without R8's section locates exactly as before. No requirement wording changes.
+- **Test** (`edition.test.mjs`, "R3 R8 a 'What changed' statement whose words begin a line as the acknowledgement run does…"): a statement beginning `**Who else read this statement.**` (and holding a `  statement_sha:` line) is not taken for the run. Splicing the acknowledgement runs leaves the statement and its sha as signed. **Negative controls:** with the acknowledgement's own line removed, the locator answers null rather than taking the statement's line; the same words outside R8's section are the run, as before. Against the old locator the test fails (1 fail), and on the fix it passes.
+
+**Tests and checks:**
+- `bio-plane/test/m/case-grammar/`: 28 pass, 0 fail.
+- Users: publication 96/0, public-read 77/0, project-stage 23/0, ratification 192/0, case-authoring 90/0, review 33/0. control-plane 100 pass, 2 fail (`doorbell.test.mjs`:310, `catalogue-end.test.mjs`:15, accepted, K1037).
+- Whole `bio-plane/test/m`: tests 4924, pass 4895, fail 11, all accepted by name: actions `t18`:299; control-plane's two; membership `module-order`:12, `t9-notice-sight-bounds`:185 and promotion `registry`:58 (accepted red 4); queue-producers `proposals`:78, :124, :153, :167; scheduler `plane`:85. case-authoring's `members`:129 has cleared.
+- Checks: `format` 0 failures (86 modules); `architecture case-grammar` 0 failures (11 files, 25 imports); `coverage case-grammar` 9 of 9, 0 failures; `ownership case-grammar tranche/T22` 3 files, 0 failures.
+- The plane bundle is stale again from `index.mjs` (as J2). Nothing regenerated.
+
+Size (session_01HZ5CHsHwbUhmPLbDLKrwjg): test runs 14, module lines 707
