@@ -161,7 +161,8 @@ export function world({ profiles = ["test-port-ellery"], retrieval = true, confo
       captures.set(id, s);
       return s;
     },
-    decorate: (id, nowMs = clock.ms) => reg.decorations[0].fn({ bundle_id: id, object_type: "action" }, { nowMs }),
+    decorate: (id, nowMs = clock.ms, viewer = null) =>
+      reg.decorations[0].fn({ bundle_id: id, object_type: "action" }, { nowMs, viewer }),
   };
   return w;
 }

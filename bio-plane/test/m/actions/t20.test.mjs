@@ -58,7 +58,8 @@ test("R52 actionHold: refusals in R52's order, each with its row (C-117.20-.22) 
   assert.equal(holdRows(w, A), 0, "no refusal writes a statement");
   /* negative control: a member's statement on the legal mark lands, at 500 characters too */
   assert.equal(H({ reason: "x".repeat(500), ord: "0" }).ok, true);
-  assert.equal(H({ hold: "released", reason: "settled" }).ok, true);
+  assert.equal(H({ hold: "released", reason: "settled" }).reason, "HOLD_RELEASE_IS_ITS_OWN_ACT", "R56 is that act");
+  assert.equal(w.a.actionHoldRelease({ target: A, ord: 0, reason: "settled", viewer: M, author: M }).ok, true);
   assert.equal(holdRows(w, A), 2);
 });
 
@@ -71,25 +72,25 @@ test("R52 R25 in_place then released: both statements kept, the latest stands; t
   const text = w.text(A);
   const one = w.a.actionHold({ target: A, ord: 0, hold: "in_place", reason: "preserving the emails", viewer: M, author: M });
   assert.deepEqual(one, { ok: true, target: A, ord: 0, hold: "in_place", reason: "preserving the emails", by: M,
-                          at: "2026-09-28T12:00:00Z" });
+                          at: "2026-09-28T12:00:00Z", projects: [] });
   w.clock.ms += 60000;
-  const two = w.a.actionHold({ target: A, ord: 0, hold: "released", reason: "the claim was withdrawn", viewer: M, author: V("bob") });
+  const two = w.a.actionHoldRelease({ target: A, ord: 0, reason: "the claim was withdrawn", viewer: M, author: V("bob") });
   assert.deepEqual([two.ok, two.hold, two.by, two.at], [true, "released", V("bob"), "2026-09-28T12:01:00Z"]);
   assert.equal(w.text(A), text, "the action's document is never rewritten");
   const p = w.a.actionRead({ id: A, viewer: M }).pressure[0];
   assert.deepEqual(p.holds, [
-    { seq: 1, hold: "in_place", reason: "preserving the emails", by: M, at: "2026-09-28T12:00:00Z" },
-    { seq: 2, hold: "released", reason: "the claim was withdrawn", by: V("bob"), at: "2026-09-28T12:01:00Z" }]);
+    { seq: 1, hold: "in_place", reason: "preserving the emails", by: M, at: "2026-09-28T12:00:00Z", projects: [] },
+    { seq: 2, hold: "released", reason: "the claim was withdrawn", by: V("bob"), at: "2026-09-28T12:01:00Z", restarted: [] }]);
   assert.equal(p.hold, "released", "the latest statement is the hold");
   /* stated again: appended, the earlier ones untouched */
   w.a.actionHold({ target: A, ord: 0, hold: "in_place", reason: "a new demand arrived", viewer: M, author: M });
-  const again = w.decorate(A).action.pressure[0];
+  const again = w.decorate(A, undefined, M).action.pressure[0];
   assert.deepEqual([again.holds.length, again.hold, again.holds[0], again.holds[1]], [3, "in_place", p.holds[0], p.holds[1]]);
   /* the op, with the stamps the control plane makes; and the statements purge with the action */
-  const url = new URL(`https://x/?target=${A}&ord=0&hold=released&reason=done&viewer=${M}&author=${M}`);
-  assert.deepEqual([actions.actionsOps(w.a, url, null).actionhold().ok, holdRows(w, A)], [true, 4]);
+  const url = new URL(`https://x/?target=${A}&ord=0&reason=done&viewer=${M}&author=${M}`);
+  assert.deepEqual([actions.actionsOps(w.a, url, null).actionholdrelease().ok, holdRows(w, A)], [true, 4]);
   const viaBody = actions.actionsOps(w.a, new URL(`https://x/?viewer=${M}&author=${MACHINE}`),
-    { target: A, ord: 0, hold: "released", reason: "x" }).actionhold();
+    { target: A, ord: 0, hold: "in_place", reason: "x" }).actionhold();
   assert.equal(viaBody.reason, "MACHINE_CANNOT_SET_HOLD", "the author is the stamp, never the body's");
   w.record.purge({ bundleId: A });
   assert.equal(holdRows(w, A), 0);
@@ -113,7 +114,7 @@ test("R54 holdsDue lists a legal mark until a hold is stated; never another kind
     { action: B, ord: 1, note: "legal 1", marked_by: M, marked_at: "2026-09-28T12:00:00Z", project: null }]);
   assert.deepEqual([r.ok, r.truncated, r.cursor, r.limit], [true, false, null, 500]);
   /* a stated hold, in place or released, takes the mark off the list */
-  w.a.actionHold({ target: A, ord: 2, hold: "released", reason: "never needed", viewer: M, author: M });
+  w.a.actionHoldRelease({ target: A, ord: 2, reason: "never needed", viewer: M, author: M });
   assert.deepEqual(due().items.map((x) => [x.action, x.ord]), [[A, 0], [B, 1]]);
   /* the action's state is not asked: an abandoned action's legal mark is still due */
   assert.equal(w.a.actionMove({ target: B, to: "abandoned", reason: "dropped", viewer: M, author: M }).ok, true);
