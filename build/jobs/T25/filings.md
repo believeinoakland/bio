@@ -37,3 +37,7 @@
 - `ownership filings tranche/T25`: 4 files changed; 0 failures.
 
 Size (session_01W16gVN2HRjfWXSGsuuntKT): test runs 11, module lines 2035
+
+## J1 · REPORT
+
+Stale: the plane bundle (bio-plane/dist/bio-plane.bundled.mjs) from bio-plane/src/filings/index.mjs; I regenerated nothing. Requirement marks for you: filings R9 and its Uses line for attestation still read '(not yet met: T25)'; both are met now.
