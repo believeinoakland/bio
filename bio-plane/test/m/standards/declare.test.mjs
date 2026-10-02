@@ -1,21 +1,21 @@
 /* standards: declaring a standard (R1–R4, R6). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { seeded, world, V, MACHINE, BYLAW, UNKNOWN_CITE, TEST_PROFILE, profile, src } from "./fixture.mjs";
+import { seeded, world, V, MACHINE, BYLAW, UNKNOWN_CITE, TEST_PROFILE, REASON, profile, src } from "./fixture.mjs";
 import { STANDARDS_CHECKS, STANDARD_KINDS } from "../../../src/standards/index.mjs";
 
 const codeOf = (r) => (r && r.ok === false ? r.reason : "ok");
 
-test("R1 refusals in order, each with a negative control: MACHINE_CANNOT_DECLARE_STANDARD (R1's MACHINE_CANNOT_DECLARE), STANDARD_NO_CITE, STANDARD_KIND_UNKNOWN, STANDARD_NO_ISSUER, STANDARD_NO_TEXT, STANDARD_TEXT_UNRESOLVED, STANDARD_PERIOD_INVALID, STANDARD_SUPERSEDES_UNKNOWN; each carries its row, and nothing is written", () => {
+test("R1 refusals in order, each with a negative control: MACHINE_CANNOT_DECLARE_STANDARD (R1's MACHINE_CANNOT_DECLARE), STANDARD_NO_CITE, STANDARD_KIND_UNKNOWN, STANDARD_NO_ISSUER, STANDARD_NO_REASON, STANDARD_NO_TEXT, STANDARD_TEXT_UNRESOLVED, STANDARD_PERIOD_INVALID, STANDARD_SUPERSEDES_UNKNOWN; each carries its row, and nothing is written", () => {
   const w = seeded();
   const p = w.passage().contentId;
-  const good = { cite: BYLAW, kind: "ordinance", issuer: "Port Ellery Selectboard", text: [p],
+  const good = { cite: BYLAW, kind: "ordinance", issuer: "Port Ellery Selectboard", reason: REASON, text: [p],
                  period: { from: "2020-01-01", to: null }, author: V("bob"), viewer: V("bob") };
   /* every condition broken at once: the first in R1's order answers, then each fixed in turn reveals the next */
-  const bad = { cite: "", kind: "opinion", issuer: " ", text: [], period: { from: "2020-13-01" }, supersedes: "STD-1999-0001-x",
+  const bad = { cite: "", kind: "opinion", issuer: " ", reason: "  ", text: [], period: { from: "2020-13-01" }, supersedes: "STD-1999-0001-x",
                 author: MACHINE, viewer: V("bob") };
   const order = [["author", "MACHINE_CANNOT_DECLARE_STANDARD"], ["cite", "STANDARD_NO_CITE"], ["kind", "STANDARD_KIND_UNKNOWN"],
-                 ["issuer", "STANDARD_NO_ISSUER"], ["text", "STANDARD_NO_TEXT"], ["text2", "STANDARD_TEXT_UNRESOLVED"],
+                 ["issuer", "STANDARD_NO_ISSUER"], ["reason", "STANDARD_NO_REASON"], ["text", "STANDARD_NO_TEXT"], ["text2", "STANDARD_TEXT_UNRESOLVED"],
                  ["period", "STANDARD_PERIOD_INVALID"], ["supersedes", "STANDARD_SUPERSEDES_UNKNOWN"]];
   const before = w.snapshot();
   const call = { ...bad };

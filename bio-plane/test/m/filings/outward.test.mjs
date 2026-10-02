@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { world, V, MACHINE, STRANGER, PROFILE, DOC, EVID, sha, WORDS, LAW } from "./fixture.mjs";
+import { world, V, MACHINE, STRANGER, PROFILE, DOC, EVID, sha, WORDS, LAW, WHY } from "./fixture.mjs";
 import { Filings, INBAND_RULE, inbandBlock } from "../../../src/filings/index.mjs";
 import { inbandQuartet } from "../../../src/inband.mjs";
 import { validate } from "../../../../jurisdictions/index.mjs";
@@ -72,7 +72,7 @@ test("R22 an approved filing's bytes carry the in-band quartet: its hash over th
 test("R22 every counsel-packet export carries the in-band quartet over the packet's rendering; each export is stamped with its own date and author", async () => {
   const x = world();
   const T3 = x.action({ kind: "commitment_claim" });
-  const p = x.f.counselPacket({ action: T3, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
+  const p = x.f.counselPacket({ reason: WHY, action: T3, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
   const read = x.f.counselPacketRead({ id: p.id, viewer: V("olive") });
   const e = await x.f.counselPacketExport({ id: p.id, author: V("olive"), viewer: V("olive") });
   const face = Filings.render(read);
@@ -152,7 +152,7 @@ test("R25 every draft and packet shows each exhibit's capture grade (provenance'
   assert.deepEqual(JSON.parse(x.row(`SELECT exhibits FROM filing_drafts WHERE filing_id=?`, d.id).exhibits), d.exhibits, "stored with the draft");
   /* the Tier 3 kind's venue states a standard: the packet shows it beside the grades */
   const T3 = x.action({ kind: "commitment_claim" });
-  const p = x.f.counselPacket({ action: T3, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
+  const p = x.f.counselPacket({ reason: WHY, action: T3, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
   const sec = p.sections.exhibits;
   assert.equal(sec.venue_standard.state, "stated");
   assert.equal(sec.venue_standard.standard, x.profile().action_kinds.find((k) => k.kind === "commitment_claim").evidence.standard);

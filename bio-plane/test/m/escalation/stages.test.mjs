@@ -11,7 +11,7 @@ import { ESCALATION_CHECKS } from "../../../src/escalation/index.mjs";
 const read = (w, nowMs) => w.esc.escalationRead({ id: w.E, viewer: V("bob"), ...(nowMs ? { nowMs } : {}) });
 const edge = (r, to) => r.triggers.find((t) => t.to === to);
 const adv = (w, to, extra = {}) => w.esc.escalationAdvance({ id: w.E, to, reason: `to ${to}`, author: V("bob"), viewer: V("bob"), ...extra });
-const attach = (w, action, extra = {}) => w.esc.escalationAttach({ id: w.E, action, author: V("bob"), viewer: V("bob"), ...extra });
+const attach = (w, action, extra = {}) => w.esc.escalationAttach({ reason: "This act serves the stage.", id: w.E, action, author: V("bob"), viewer: V("bob"), ...extra });
 const evaluate = (w, extra) => w.esc.escalationEvaluate({ id: w.E, author: V("bob"), viewer: V("bob"), reason: "Read it.", ...extra });
 
 test("R5 stage 2's act is a breach action attached at stage 2; its trigger to 3 is a sent entry in that action's ledger, first met at the entry's date; a sent entry on an action not attached here does not meet it", () => {
@@ -202,17 +202,17 @@ test("R9 escalationAttach refuses in order MACHINE_CANNOT_ATTACH, NO_SUCH_ESCALA
   assert.equal(attach(w, good).reason, "ALREADY_ATTACHED");
   /* another escalation of another determination cannot take it either */
   const D2 = w.determine({ project: w.P, outcomes: [{ standard: "STD-2026-0001-a", outcome: "noncompliant" }] });
-  const o2 = w.esc.escalationOpen({ determination: D2, author: V("bob"), viewer: V("bob") });
+  const o2 = w.esc.escalationOpen({ reason: "Worth pursuing.", determination: D2, author: V("bob"), viewer: V("bob") });
   const both = w.action({ project: w.P, restsOn: [w.D, D2] });
   w.esc.escalationAdvance({ id: o2.id, to: 2, reason: "Go.", author: V("bob"), viewer: V("bob") });
   assert.equal(attach(w, both).ok, true);
-  assert.equal(w.esc.escalationAttach({ id: o2.id, action: both, author: V("bob"), viewer: V("bob") }).reason, "ALREADY_ATTACHED");
+  assert.equal(w.esc.escalationAttach({ reason: "This act serves the stage.", id: o2.id, action: both, author: V("bob"), viewer: V("bob") }).reason, "ALREADY_ATTACHED");
   /* stages 3, 4 and 6 take none */
   for (const stage of [3, 4, 6]) {
     const x = seeded();
     toStage(x, stage);
     const a = x.action({ project: x.P, restsOn: [x.D] });
-    assert.equal(x.esc.escalationAttach({ id: x.E, action: a, author: V("bob"), viewer: V("bob") }).reason, "STAGE_TAKES_NO_ACTION", `stage ${stage}`);
+    assert.equal(x.esc.escalationAttach({ reason: "This act serves the stage.", id: x.E, action: a, author: V("bob"), viewer: V("bob") }).reason, "STAGE_TAKES_NO_ACTION", `stage ${stage}`);
   }
   /* the read lists each attached action once, at its stage */
   assert.deepEqual(read(w).actions.map((a) => [a.action, a.stage]), [[good, 2], [both, 2]]);
@@ -259,7 +259,7 @@ test("R23 escalationAttach refuses an action carrying a premise_override (action
     const x = seeded();
     toStage(x, stage);
     const a = x.action({ project: x.P, restsOn: [x.D], override: "Overridden." });
-    assert.equal(x.esc.escalationAttach({ id: x.E, action: a, author: V("bob"), viewer: V("bob"), purpose: "testimony",
+    assert.equal(x.esc.escalationAttach({ reason: "This act serves the stage.", id: x.E, action: a, author: V("bob"), viewer: V("bob"), purpose: "testimony",
       standards: ["STD-2026-0001-a"] }).reason, "ACTION_PREMISE_OVERRIDDEN", `stage ${stage}`);
   }
 });
@@ -404,7 +404,7 @@ test("R13 escalationAdvance refuses MACHINE_CANNOT_ADVANCE, NO_SUCH_ESCALATION, 
   }
   /* the trigger unmet: the actor names no office */
   const D2 = w.determine({ project: w.P, actor: { role: "", body: "" }, outcomes: [{ standard: "STD-2026-0001-a", outcome: "noncompliant" }] });
-  const o2 = w.esc.escalationOpen({ determination: D2, author: V("bob"), viewer: V("bob") });
+  const o2 = w.esc.escalationOpen({ reason: "Worth pursuing.", determination: D2, author: V("bob"), viewer: V("bob") });
   const tn = w.esc.escalationAdvance({ id: o2.id, to: 2, reason: "Go.", author: V("bob"), viewer: V("bob") });
   assert.equal(tn.reason, "TRIGGER_NOT_MET");
   assert.match(tn.missing, /names no office/);

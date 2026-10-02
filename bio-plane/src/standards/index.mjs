@@ -8,10 +8,12 @@
  * A new module (K102, K171): nothing moves (its map, §1). A standard is a record document of type `standard` (R15),
  * `STD-<year>-NNNN-<kind>`, promoted through `promotion` outside any project (K171 (12)); `record-grammar` knows the
  * type (one state, `recorded`, no edges: N129). It is never edited: a correction is a new standard that supersedes
- * it, at most once (R4, R6). Its registered check refuses every other write of a standard (R11). The reads
- * answer from this module's own tables (`./schema.mjs`), written once per act and never updated (R14). A proposal (the
- * Legal/Policy Lookup skill's work, or a member's suggestion) is stored apart and labelled by `record-grammar`'s
- * `proposalLabel(proposer, "standard")` (R9); a member's adoption records a standard naming it (R10).
+ * it, at most once (R4, R6). It is recorded with the declarer's reason, the member's own words on why the group
+ * holds its government to it (R1, R10; DEC-88), never the proposer's `why`. Its registered check refuses every other
+ * write of a standard (R11). The reads answer from this module's own tables (`./schema.mjs`), written once per act
+ * and never updated (R14). A proposal (the Legal/Policy Lookup skill's work, or a member's suggestion) is stored apart
+ * and labelled by `record-grammar`'s `proposalLabel(proposer, "standard")` (R9); a member's adoption records a
+ * standard naming it (R10).
  *
  * No place is named here (R13): where a citation comes from is read from the active profiles' combined view
  * (`jurisdictions.combine` over record-core's `jurisdiction_profiles`), and a fact they do not supply is undetermined.
@@ -44,11 +46,12 @@ export const STANDARD_KINDS = SOURCE_KINDS;
 /** R7: the three answers of `inForce`. */
 export const IN_FORCE_STATES = Object.freeze(["in_force", "not_in_force", "undetermined"]);
 /** R1: a citation's bound; R9: a proposal's `why`; R8: a page; R2: the passages one standard's text names; the bound on
- *  a proposal's named act. */
-export const CITE_MAX = 200, WHY_MAX = 240, PAGE_MAX = 200, TEXTS_MAX = 50, ACT_MAX = 200;
+ *  a proposal's named act; R1: the declarer's reason, in characters (DEC-88). */
+export const CITE_MAX = 200, WHY_MAX = 240, PAGE_MAX = 200, TEXTS_MAX = 50, ACT_MAX = 200, REASON_MAX = 2000;
 /** R12: the fields each act takes. Anything else is refused by name, never ignored: a field silently dropped is a view
  *  the caller believes was recorded. */
-const DECLARE_KEYS = Object.freeze(["cite", "kind", "issuer", "text", "period", "supersedes", "author", "viewer"]);
+const DECLARE_KEYS = Object.freeze(["cite", "kind", "issuer", "reason", "text", "period", "supersedes", "author",
+                                    "viewer"]);
 const PROPOSE_KEYS = Object.freeze(["cite", "kind", "issuer", "text", "why", "act", "proposer", "viewer"]);
 const ADOPT_KEYS = Object.freeze([...DECLARE_KEYS, "proposal"]);
 
@@ -62,6 +65,15 @@ const q = (s) => `"${String(s).replace(/["\\\r\n]/g, " ")}"`;
 const bare = (s) => (TOKEN.test(String(s)) ? String(s) : q(s));
 /* A member's words kept whole in a body section: a line that would open a heading is set in by one space. */
 const bodyText = (s) => String(s).trim().replace(/^#/gm, " #");
+
+/* R1 (DEC-88): what is wrong with a declarer's reason, or null when it is one: a string with something other than white
+   space in it, at most `REASON_MAX` characters. */
+const reasonFault = (reason) =>
+  reason === undefined || reason === null ? "carries no reason"
+  : typeof reason !== "string" ? `carries a reason that is not text (${Array.isArray(reason) ? "a list" : typeof reason})`
+  : !reason.trim() ? "carries a reason with nothing in it"
+  : [...reason].length > REASON_MAX ? `carries a reason of ${[...reason].length} characters, over the ${REASON_MAX} kept`
+  : null;
 
 /** R1, R7: a calendar date, `YYYY-MM-DD`, that exists. */
 export function isDate(v) {
@@ -210,6 +222,13 @@ export class Standards {
     if (!issuer)
       return refusal("STANDARD_NO_ISSUER", "a standard names the body that made it. Nothing was written.");
     /* END DEC-49 REGION is-standard-issuer */
+    const fault = reasonFault(a.reason);
+    /* DEC-49 REGION is-standard-reason */
+    if (fault)
+      return refusal("STANDARD_NO_REASON", `this declaration ${fault}. The reason is the declarer's own words on why the `
+                     + "group holds its government to this standard, kept with it and read back with it. Nothing was "
+                     + "written.", { max_chars: REASON_MAX });
+    /* END DEC-49 REGION is-standard-reason */
     const texts = textIds(a.text);
     /* DEC-49 REGION is-standard-text */
     if (!texts || !texts.length || texts.length > TEXTS_MAX)
@@ -240,7 +259,7 @@ export class Standards {
                        + "written.", { supersedes, superseded_by: later });
       /* END DEC-49 REGION is-supersession-once */
     }
-    return { ok: true, fields: { cite, kind: a.kind, issuer, texts, period, supersedes } };
+    return { ok: true, fields: { cite, kind: a.kind, issuer, reason: a.reason, texts, period, supersedes } };
   }
 
   /* R2: the first named content id `content.contentRow` does not hold (or, for a viewer, whose document the viewer
@@ -271,9 +290,9 @@ export class Standards {
       } finally { this.#writing = null; }
       if (!r || !r.ok) return r;
       this.sql.exec(`INSERT INTO standards (standard_id, cite, kind, issuer, period_from, period_to, supersedes,
-                       source_json, proposal_id, declared_by, declared_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+                       source_json, proposal_id, declared_by, declared_at, reason) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
                     id, f.cite, f.kind, f.issuer, f.period.from, f.period.to, f.supersedes, JSON.stringify(source),
-                    proposalId, author, at);
+                    proposalId, author, at, f.reason);
       f.texts.forEach((c, i) => this.sql.exec(`INSERT INTO standard_texts (standard_id, ord, content_id) VALUES (?,?,?)`,
                                               id, i, c));
       if (proposalId)
@@ -296,11 +315,13 @@ export class Standards {
     return r ? r.standard_id : null;
   }
 
-  /* R1's fields, R3's source, the declarer and time (R4), both ends of a supersession (R6), the proposal (R10). */
+  /* R1's fields, R3's source, the declarer, time and reason (R4), both ends of a supersession (R6), the proposal (R10).
+     A standard recorded before the reason was asked for answers `reason: null`. */
   #answer(row) {
     const texts = this.#rows(`SELECT content_id FROM standard_texts WHERE standard_id=? ORDER BY ord`, row.standard_id)
       .map((t) => t.content_id);
-    return { id: row.standard_id, cite: row.cite, kind: row.kind, issuer: row.issuer, text: texts,
+    return { id: row.standard_id, cite: row.cite, kind: row.kind, issuer: row.issuer, reason: row.reason ?? null,
+             text: texts,
              period: { from: row.period_from ?? null, to: row.period_to ?? null }, source: safeJson(row.source_json),
              declared_by: row.declared_by, declared_at: row.declared_at, supersedes: row.supersedes ?? null,
              superseded_by: this.#successorOf(row.standard_id), proposal: row.proposal_id ?? null };
@@ -426,7 +447,9 @@ export class Standards {
   }
 
   /** R10: a member adopts a proposal: R1 by that member, naming it. A field the member does not state is the
-   *  proposal's, and the answer says which were; the standard records the proposal, and the proposal its adoption. */
+   *  proposal's, and the answer says which were; the standard records the proposal, and the proposal its adoption. The
+   *  reason is never taken from the proposal: the adopting member's own is R1's, and the proposal's `why` is the
+   *  proposer's (DEC-88), answered beside it as theirs. */
   standardAdopt(args = {}) {
     const a = isObj(args) ? args : {};
     const byMachine = machineRefusal(a.author);
@@ -449,7 +472,7 @@ export class Standards {
     if (d.ok === false) return d;
     const r = this.#write(d.fields, str(a.author), a.viewer ?? null, p.proposal_id);
     if (!r || !r.ok) return r;
-    return { ...r, adopted: { proposal: p.proposal_id, from_proposal: fromProposal,
+    return { ...r, adopted: { proposal: p.proposal_id, from_proposal: fromProposal, why: p.why, why_by: p.proposed_by,
                               says: fromProposal.length ? `${fromProposal.join(", ")} taken from the proposal as it was made`
                                                         : "every field stated by the adopting member" } };
   }
@@ -477,9 +500,9 @@ const CORE_TAIL = Object.freeze(["produced_by:", "  mode: human", "  capability_
   "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null",
   "visuals: []"]);
 
-/** R15: a new standard's document, `recorded`. The citation and issuer, which may hold any character, are kept whole in
- *  body sections; the front matter holds what the grammar holds bare. */
-function standardDoc({ id, cite, kind, issuer, texts, period, supersedes, source, proposal, author, at }) {
+/** R15: a new standard's document, `recorded`. The citation, issuer and the declarer's reason, which may hold any
+ *  character, are kept whole in body sections; the front matter holds what the grammar holds bare. */
+function standardDoc({ id, cite, kind, issuer, reason, texts, period, supersedes, source, proposal, author, at }) {
   const src = source && source.state === "matched"
     ? `Matched: ${source.source} (${source.kind}, ${source.issuer}, level ${source.level}), from the profile `
       + `${source.profile} (basis ${source.basis}).`
@@ -489,7 +512,7 @@ function standardDoc({ id, cite, kind, issuer, texts, period, supersedes, source
     `period_from: ${period.from === null ? "null" : q(period.from)}`, `period_to: ${period.to === null ? "null" : q(period.to)}`,
     `supersedes: ${supersedes ?? "null"}`, `adopted_from: ${proposal ?? "null"}`, `texts: [${texts.join(", ")}]`,
     `author: ${bare(author)}`, ...CORE_TAIL, "---", "", "## Citation", "", bodyText(cite), "", "## Issuer", "",
-    bodyText(issuer), "", "## Source", "", bodyText(src), "", "## Session Log", "",
+    bodyText(issuer), "", "## Reason", "", bodyText(reason), "", "## Source", "", bodyText(src), "", "## Session Log", "",
     `### Session ${at} | Recorded | ${author}`,
     `Changes: standard recorded${supersedes ? `, superseding ${supersedes}` : ""}${proposal ? `, adopting ${proposal}` : ""}.`,
     ""].join("\n");
@@ -601,8 +624,8 @@ function refuseDateInvalid(date) {
 }
 
 /** The ops whose handlers are this module's (K3): the control plane routes, authenticates and stamps them (`author` and
- *  `proposer` in the body; `viewer` in the URL, read after the body so a body cannot set it). Legacy-index routes them
- *  (REPORT to BOB, layer 11). */
+ *  `proposer` in the body; `viewer` in the URL, read after the body so a body cannot set it). `plane` spreads them into
+ *  its route table (`src/plane/store.mjs`). The body is passed whole, so a declaration's `reason` reaches R1. */
 export function standardsOps(s, url, body) {
   const qp = (k) => url.searchParams.get(k);
   const b = body || {};

@@ -2,7 +2,7 @@
    content, inquiry and publication on publication's own test world, and the layer-9 modules standards, conformance,
    consequences and actions, each through its own factory on the same host. A real SQLite database stands in for a
    Durable Object's storage. What only a later module or the legacy store fills (the provider of promotion's fact
-   `producingGroup`, publication's world registering it as legacy-store does; retrieval's registrations) is a stand-in
+   `producingGroup`, publication's world registering it as instance-setup does; retrieval's registrations) is a stand-in
    the test controls: filings reads the group through the real promotion's `fact` (R3, N331). Every test drives `filings` at its interface, and changes the record
    only through the acts of the modules that own it. */
 import { createHash } from "node:crypto";
@@ -29,6 +29,8 @@ export const PROFILE = "test-port-ellery";
  *  bylaw complaint states no law, so `law` is left `[UNFILLED: law]` for the approving member to write in. */
 export const WORDS = "To the {{counterparty_role}}: {{act}} does not conform to {{standards}}, under {{law}}.";
 export const LAW = "P.E.B.L. § 12";
+/** R8 (DEC-88): the author's words on why a packet is assembled, which every packet a test assembles sends. */
+export const WHY = "Counsel is asked whether the works order can be set aside.";
 
 const q = (v) => JSON.stringify(String(v));
 /** An action's bundle.md from `o` (`kind`, `risk_tier`, `state`, `resolution`, `counterparty`, `clock`, `legs`, `law`,
@@ -127,7 +129,9 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
   const evidenceCid = w.content.mint({ bundleId: EVID, captureSha: sha(`the text of ${EVID}`), extent: { kind: "document" },
                                        mintedBy: V("bo") }).content_id;
   const declare = (over) => {
-    const r = standards.standardDeclare({ text: [evidenceCid], author: V("olive"), viewer: V("olive"), ...over });
+    /* standards R1 (DEC-88, STANDARD_NO_REASON): the declarer's words on why the group holds its government to it */
+    const r = standards.standardDeclare({ text: [evidenceCid], reason: "The group holds the Selectboard to it.", author: V("olive"),
+                                          viewer: V("olive"), ...over });
     if (!r.ok) throw new Error(`fixture standard refused: ${JSON.stringify(r).slice(0, 300)}`);
     return r.id;
   };

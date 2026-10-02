@@ -2,7 +2,7 @@
    Driven at the module's interface, over the real modules. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, MACHINE, STRANGER, PROFILE, attributed, templatesOver } from "./fixture.mjs";
+import { world, V, MACHINE, STRANGER, PROFILE, attributed, templatesOver, WHY } from "./fixture.mjs";
 import { FILING_BLANKS, unfilledMarker, Filings } from "../../../src/filings/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { validate } from "../../../../jurisdictions/index.mjs";
@@ -215,7 +215,7 @@ test("R3 the producing group is read through promotion's fact producingGroup (N3
   assert.doesNotMatch(npg.unfilled.why, /is recorded|FACT_/);
   assert.doesNotMatch(JSON.stringify(np), /FACT_UNAVAILABLE/);
   assert.ok(np.text.includes(unfilledMarker("group")));
-  /* a reader handed in (legacy-store's, until layer 10) still works: a value, or the fact's own answer */
+  /* a reader handed in (as the retired legacy store's was) still works: a value, or the fact's own answer */
   const handed = (fn) => group(new Filings({ storage: x.st, record: x.record, host: x.host, producingGroup: fn, filingTemplates,
     publication: x.p, provenance: x.prov, content: x.content, profiles: () => [other], now: () => x.clock.now })
     .filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") }));
@@ -269,7 +269,7 @@ test("R17 a Tier 3 governing tier never yields a template, a pre-filled filing o
   const A = x.action({ risk_tier: 3 });
   assert.equal(prep(x, A).reason, "TIER3_COUNSEL_PACKET", "even when the kind has a template");
   assert.equal(x.count("filing_drafts"), 0);
-  const p = x.f.counselPacket({ action: A, counsel: { name: "A. Counsel", organisation: "Test Chambers" }, author: V("olive"), viewer: V("olive") });
+  const p = x.f.counselPacket({ reason: WHY, action: A, counsel: { name: "A. Counsel", organisation: "Test Chambers" }, author: V("olive"), viewer: V("olive") });
   assert.equal(p.fileable, false);
   const template = x.profile().action_kinds.find((k) => k.kind === "bylaw_complaint").template;
   assert.equal(JSON.stringify(p).includes(template.text.slice(0, 18)), false, "no file template's text in the packet");
@@ -289,7 +289,7 @@ test("R17 the brief arm: a brief template yields only a packet's briefing sectio
   assert.equal(prep(x, x.action({ kind: "commitment_claim", risk_tier: 1 }), { template: BRIEF }).reason, "TIER3_COUNSEL_PACKET");
   assert.equal(x.count("filing_drafts"), 0);
   /* in a packet, the brief's text enters only the briefing section */
-  const p = x.f.counselPacket({ action: T3, counsel: { name: "A. Counsel", organisation: "Test Chambers" }, template: BRIEF,
+  const p = x.f.counselPacket({ reason: WHY, action: T3, counsel: { name: "A. Counsel", organisation: "Test Chambers" }, template: BRIEF,
                                 author: V("olive"), viewer: V("olive") });
   assert.equal(p.ok, true, JSON.stringify(p).slice(0, 300));
   assert.equal(p.fileable, false);

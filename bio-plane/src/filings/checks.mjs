@@ -8,7 +8,8 @@
  * conformance's, so a theory naming none is `THEORY_NO_STANDARDS`. T21 (K921, K922, K924): `KIND_NO_TEMPLATE` (C-115.6)
  * and `NOT_TIER3` (C-115.17) are retired, their numbers never reused; the library's rows C-115.31–.33, .35–.38 moved to
  * `filing-templates` (its R23), whose refusals R28, R31 and R32 pass through as its own (`NO_SUCH_TEMPLATE`,
- * `TEMPLATE_RETIRED`, `TEMPLATE_NOT_OFFERED`, `TEMPLATE_BLANK_UNKNOWN` and `templateDraft`'s). */
+ * `TEMPLATE_RETIRED`, `TEMPLATE_NOT_OFFERED`, `TEMPLATE_BLANK_UNKNOWN` and `templateDraft`'s). T22 (DEC-88, K1025): R8's
+ * `PACKET_NO_REASON` (C-115.44). */
 
 const at = (fn, region) => `src/filings/index.mjs ${fn} > ${region}`;
 
@@ -155,6 +156,12 @@ export const FILINGS_CHECKS = Object.freeze({
   TEMPLATE_AND_TEXT: {
     check: "C-115.43", where: at("filingPrepare", "is-filing-prepare"),
     translation: "Name a template or write the words, not both.",
+  },
+  /* T22 (DEC-88, K1025): R8's reason, a new row, awaiting stamp. */
+  PACKET_NO_REASON: {
+    check: "C-115.44", where: at("counselPacket", "is-counsel-packet"),
+    translation: "Assembling a counsel packet records why, in your own words, and no reason was given, or it is longer "
+      + "than 2,000 characters. Write one. Nothing was written.",
   },
 });
 
