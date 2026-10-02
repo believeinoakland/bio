@@ -48,6 +48,7 @@ import { reviewOf, reviewOps } from "../review/index.mjs";
 import { caseAuthoringOf, caseAuthoringOps } from "../case-authoring/index.mjs";
 import { ratificationOf, ratificationOps } from "../ratification/index.mjs";
 import { publicationOf, publicationOps } from "../publication/index.mjs";
+import { docketOf, docketOps } from "../docket/index.mjs";
 import { publicReadOf, publicReadOps } from "../public-read/index.mjs";
 import { projectStageOf, projectStageOps } from "../project-stage/index.mjs";
 import { networkNoticesOf, networkNoticesOps } from "../network-notices/index.mjs";
@@ -125,10 +126,17 @@ export class Store extends DurableObject {
     /* publication (K365): built here, after reevaluation, so its case reads are registered with reevaluation (its R41,
        R43; reevaluation R26) before anything runs. Built lazily, a sweep an alarm reached before any op found none. */
     publicationOf(ctx);
+    /* R15 (N520; DEC-116): docket, directly after publication in the modules' order, built here with this environment
+       (its factory reads its deps on the first call only). At creation it creates and declares its tables to purge
+       (whole store only, its R16) and starts, filling reevaluation's docket registration (its R13, reevaluation R30)
+       before the first request. public-read and network-notices are handed this instance, the docket they read
+       (public-read R20, R21; network-notices R21). */
+    const docket = docketOf(ctx, { env });
+    publicReadOf(ctx, { docket });
     /* network-notices (DEC-111, K1100), at its place after project-stage: at creation it creates and declares its tables,
        registers its notice ids' mint seed and its three public reads (public-read R18), all before the first request;
        the scheduler reaches it for `working-on-seal` and `working-on-attest` (scheduler R5), with this environment. */
-    networkNoticesOf(ctx, { env, attestation });
+    networkNoticesOf(ctx, { env, attestation, docket });
     actionsOf(ctx, { env });
     retrieval.registerLegGrades("inquiry", inquiryLegGrades(ctx));   /* R10 (K861): inquiry's leg grades (its R52, retrieval R55) */
     observationLogOf(ctx).attachMeaning({ connections: connectionsOf(ctx, { env }) });
@@ -181,8 +189,8 @@ export class Store extends DurableObject {
     ctx.blockConcurrencyWhile(async () => this.#migrate());
     ctx.blockConcurrencyWhile(async () => schedulerOf(ctx, env).start());
     /* queue, then tasks, each creating its own tables (queue R36, tasks R8). R11: queue is handed the two modules
-       `queue-producers` R20 and R21 read (`Queue.PRODUCER_DEPS`). */
-    queueOf(ctx, { env, filingTemplates, localFacts }).migrate();
+       `queue-producers` R20 and R21 read, and R15 the docket its R30's items read (`Queue.PRODUCER_DEPS`). */
+    queueOf(ctx, { env, filingTemplates, localFacts, docket }).migrate();
     tasksOf(ctx, { env }).migrate();
     /* R1: instance-setup started once per object (its `start` is idempotent on one storage). */
     ctx.blockConcurrencyWhile(async () => instanceSetupOf(ctx, env).start());
@@ -233,6 +241,7 @@ export class Store extends DurableObject {
     progressionsOf(this.ctx).migrate();
     biasOf(this.ctx).migrate();
     intentOf(this.ctx).migrate();
+    docketOf(this.ctx).migrate();   /* R15: its tables, in the modules' order (directly after publication) */
     networkNoticesOf(this.ctx).migrate();   /* its tables, in the modules' order (after project-stage) */
     /* R11 (K921): layer 9's two new modules, in the modules' order: local-facts' table, then filing-templates' tables
        and its take of the library `filings` R26 kept (a template already taken is passed over). */
@@ -309,6 +318,8 @@ export class Store extends DurableObject {
       /* N483 (K1122): `export` and `exportlog` are corpus-export's (its R6), on the one instance publication created. */
       ...corpusExportOps(corpusExportOf(ctx), (k) => url.searchParams.get(k)),
       ...publicationOps(publicationOf(ctx), url, body),
+      /* R15 (N520): docket's member ops; its public reads `docketpublic` and `docketfeed` are public-read's (its R21). */
+      ...docketOps(docketOf(ctx), url, body),
       ...publicReadOps(publicReadOf(ctx), url),
       ...projectStageOps(projectStageOf(ctx), url),
       ...networkNoticesOps(networkNoticesOf(ctx), url, body),   /* noticeprepare, noticepost, notices, directorysubmission */
