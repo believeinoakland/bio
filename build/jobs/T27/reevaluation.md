@@ -26,7 +26,7 @@
 - `bio-plane/test/m/reevaluation/`: tests 101, pass 101, fail 0. New: `docket.test.mjs` (10 tests: R30, R16, R8, R9, R19, R20, R21), and one in `attribution.test.mjs`.
 - Users of R8/R16/R30: publication 98/0, ratification 199/0, case-authoring 100/0, conformance 54/0, monitoring 99/0, scheduler 66/0, affordances 148/0, queue-producers 70/0, control-plane 128/0, plane 55/0, `test/system/migrate-released.test.mjs` 1/0 (no skip). `docket` has no tests yet.
 
-**Checks:** format: 92 modules, 91 requirements files; 0 failures · architecture: 15 product files, 61 relative imports; 0 failures · coverage: 30 of 30 live requirement ids named by a test; 0 failures · ownership: OWNERSHIP_LINE.
+**Checks:** format: 92 modules, 91 requirements files; 0 failures · architecture: 15 product files, 61 relative imports; 0 failures · coverage: 30 of 30 live requirement ids named by a test; 0 failures · ownership: 4 files changed by reevaluation between tranche/T27 and HEAD; 0 failures.
 
 Size (session_01KA6UG6rXYyJAWoe5sPuf8x): test runs 9, module lines 2505
 
