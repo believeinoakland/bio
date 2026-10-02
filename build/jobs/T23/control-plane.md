@@ -92,3 +92,7 @@ I am waiting for your CHANGE on op-declarations' merge.
 - Checks: format, 87 modules, 0 failures; architecture, 36 files, 0 failures; coverage, 29 of 29, 0 failures; ownership, 0 failures.
 
 Size (session_01FGx9TWWD64HqdD22yjYnDN): test runs 24, module lines 3517
+
+## J4 · COMPLETE
+
+control-plane is complete, with tranche/T23 merged in. R36 is met: a reasoned pulled resolve goes through capture's inboxResolve, so its reason lands on the knock's row in one act with the pull and its promotion; you can strike its mark. R45 is met: the door stamps by op-declarations' lists, and the public reads are reached only as op=publicread&name= (B4; B3's arm reverted). CHECK_FAMILIES reads C-127, and families.test.mjs:47 is green. test/m/control-plane: 123 of 123 pass. Whole test/m: 20 fail, all queue's (reds 15 and 13); plane is green. format, architecture, coverage (29 of 29) and ownership all show 0 failures. The plane bundle is stale (red 12). Details are in my record under Completion.
