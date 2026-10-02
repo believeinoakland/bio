@@ -25,3 +25,7 @@ Size (session_01KLQFu3Y8HVYcxxLYqhE1jL): test runs 9, module lines 1703
 ## J1 · REPORT
 
 Generated artifacts made stale by this job's change under bio-plane/src/run-rules/ (comments only in checks.mjs and rules.mjs): bio-plane/dist/bio-plane.bundled.mjs (the plane's bundle) and agent-worker/dist/agent-worker.bundled.mjs (agent-worker's requirements.test.mjs R45 is red on it: 271 passed, 2 failed, both R45; 273/0 without the change). Neither regenerated (manifest, Generated artifacts).
+
+## J2 · COMPLETE
+
+run-rules T22 L6 done. N471 (checks.mjs:369-371), N480 (rules.mjs:646, :837 now name control-plane/index.mjs) and the re-scan's N469 kind (deleted store.mjs, battery.mjs, check-refusal-codes.mjs, kickoffs/WORKER.md, #schedConsumers, skillpack.mjs named as live) re-worded; comments only, no row or where changed. run-rules tests 16/0; bio-plane/test/m 4782 pass, 45 fail, the same 45 with and without the change, all accepted by name; agent-worker red only on R45 (stale bundle, see the REPORT). format, architecture, coverage (15/15), ownership: 0 failures. Record: build/jobs/T22/run-rules.md on job/T22/run-rules.
