@@ -24,6 +24,6 @@
 - `format`: 88 modules, 87 requirements files; 2 failures, both accepted red 4 (`link-sweep`'s `paths` and `tests` directories absent).
 - `architecture` strength: 14 product files, 48 relative imports; 0 failures.
 - `coverage` strength: 30 of 30 live requirement ids named by a test; 0 failures.
-- `ownership` strength `tranche/T24`: see below, run after the commit.
+- `ownership` strength `tranche/T24`: 4 files changed; 0 failures.
 
 Size (session_01JLVcCP57HYy8VAoyoUW9LD): test runs 2, module lines 3
