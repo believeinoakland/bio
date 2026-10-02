@@ -170,3 +170,20 @@ test("R18 R29 R20: no read writes; a level move's one row is the only new row, h
   assert.deepEqual([none.count, none.out_of_view], [0, undefined], "withheld whole; the untargeted listing states nothing");
   assert.deepEqual(hidden.findings, [{ id: D, absent: true }]);
 });
+
+test("R29 R28 R20: a targeted read whose only dependents of a moved observation are out of the viewer's sight withholds them and states out_of_view, and only that", () => {
+  const { w } = observed();
+  w.member("owen"); w.member("ann");
+  w.r.levelMoved(MOVE);
+  const Q = w.project("Elsewhere", "ann");
+  for (const id of [D, W]) w.st.sql.exec(`UPDATE bundles SET project=? WHERE bundle_id=?`, Q, id);
+  const r = w.r.reevaluations({ target: OBS, viewer: V("owen") });
+  assert.deepEqual([r.count, r.out_of_view], [0, true]);
+  assert.ok(!JSON.stringify(r).includes(D) && !JSON.stringify(r).includes(W));
+  /* a listing about no one subject states none */
+  const l = w.r.reevaluations({ viewer: V("owen") });
+  assert.deepEqual([l.count, l.out_of_view], [0, undefined]);
+  /* negative control: the one who sees them is given both, and nothing is said withheld */
+  const a = w.r.reevaluations({ target: OBS, viewer: V("ann") });
+  assert.deepEqual([a.obligations.map((o) => o.bundle_id), a.out_of_view], [[D, W], undefined]);
+});

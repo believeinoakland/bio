@@ -4,7 +4,8 @@
  * sides a member's resolution of a contradiction named wrong (R27, `contradiction.tensionsOn`), the pushed notice tells
  * a member when a newer version of a document affects a passage they reference and the member chooses (R14, R15), and
  * later modules are told when a finding's basis changed (R8, R9): a source's rung (R28, heard from `sources`) or an
- * observation's credit level (R29, told by `ratification` through `levelMoved`) moving included.
+ * observation's credit level (R29, told by `ratification` through `levelMoved`) moving included, and a case edition
+ * withdrawn or contested on its docket (R30, read through the registration `docket` fills, told through `docketActed`).
  *
  * Extracted from the legacy modules (T7, layer 7; K3, K102): `store.mjs` (`#reevalRaisedBy`, now `raise`; the REC-17
  * obligation, `reevaluations`, with `#reevalLegsEarned` and `#reevalMoved`; D-256's `changedFromAudit`; D-394's
@@ -93,12 +94,15 @@ export const REEVAL_NOTICE_DELAY_MS = 1000;
 export const NOTE_MAX = 500;
 /** R15 (DEC-88): the longest why an adoption takes (C-110.29). */
 export const ADOPT_WHY_MAX = 2000;
+/** R30, R8: the two kinds a docket act tells, each also the source of the cause it raises. */
+export const DOCKET_KINDS = Object.freeze(["withdrawal", "contested"]);
 /** R2, R16: the sources a cause may carry. R2's five are facts about the target's own row; `corrected` is R27's, a fact
  *  about a side the leg rests on; `source` is R28's, a rung move of the source behind a capture the leg rests on;
- *  `attribution` is R29's, a move of the credit level of the observation the leg rests on; §5.4's four cascade events
- *  (the catalogue's `REEVAL_SOURCES`) are derived the same way; `weakened` is R17's. */
+ *  `attribution` is R29's, a move of the credit level of the observation the leg rests on; `withdrawal` and `contested`
+ *  are R30's, a case edition withdrawn or contested on its docket; §5.4's four cascade events (the catalogue's
+ *  `REEVAL_SOURCES`) are derived the same way; `weakened` is R17's. */
 export const CAUSE_SOURCES = Object.freeze(["supersession", "edition", "deferred", "reopened", "dismissed", "corrected",
-  "source", "attribution", ...REEVAL_SOURCES, "weakened"]);
+  "source", "attribution", ...DOCKET_KINDS, ...REEVAL_SOURCES, "weakened"]);
 /** R21, R27: what an answer says when a tensions read could not be made. */
 const CORRECTIONS_UNREAD = "the contradiction module's tensions read could not be made, so whether a side this rests on "
   + "was named wrong was not read and no corrected cause could be derived; that is not the same as none";
@@ -110,6 +114,16 @@ const WORK_PRODUCTS_UNREAD = "the cases a project owns, or their ratified editio
   + "cause may be missing; that is not the same as none";
 /** R16 (N457): the cases one page of R26's `cases` is asked for, while the work products a project owns are read. */
 export const WORK_PRODUCT_CASES_PAGE = 200;
+/** R30: the entries one page of the docket registration's `withdrawals` or `contested` is asked for. */
+export const DOCKET_PAGE = 200;
+/** R30: the (dependent, entry) pairs one `docketDependents` read lists (default and most). */
+export const DOCKET_LIMIT_DEFAULT = 200;
+export const DOCKET_LIMIT_MAX = 200;
+/** R16, R21, R30: what an answer says when no module registered the docket, or a read of it could not be made. */
+const DOCKET_ABSENT = "no module has registered the docket, so no withdrawn or contested case edition was read and no "
+  + "withdrawal, contested or withdrawal wp_retraction cause could be derived; that is not the same as none";
+const DOCKET_UNREAD = "the docket's withdrawals or contesting entries could not all be read, so a withdrawal, contested or "
+  + "wp_retraction cause may be missing; that is not the same as none";
 /** R27: the (dependent, candidate) entries one `correctedDependents` read lists (default and most). */
 export const CORRECTED_LIMIT_DEFAULT = 200;
 export const CORRECTED_LIMIT_MAX = 200;
@@ -167,6 +181,7 @@ export class Reevaluation {
   #deps;
   #listeners = [];     // R8: {module, fn}, in registration order
   #caseParts = null;   // R26: {module, parts, cases}, publication's, one registration
+  #docketReg = null;   // R30: {module, withdrawals, contested}, docket's, one registration
 
   constructor({ storage, record, membership, promotion, host = null, inquiry = null, content = null,
                 connections = null, provenance = null, strength = null, basisVersions = null, contradiction = null,
@@ -279,8 +294,8 @@ export class Reevaluation {
 
   /** R2, R16: one target's own row, answered as "has anything moved under a leg naming it?". `null` when nothing has,
    *  which is the common case and what keeps the untargeted sweep cheap. `reg` is the published registry (null unread);
-   *  `wp` the answer's work-product reader (`#workProducts`). */
-  #moved(targetId, visible, reg, wp = this.#workProducts()) {
+   *  `wp` the answer's work-product reader (`#workProducts`), `dk` its docket reader (`#docket`). */
+  #moved(targetId, visible, reg, wp = this.#workProducts(), dk = this.#docket()) {
     const row = this.#targetRow(targetId);
     /* §5.4's gated deletion: a leg naming what the record no longer holds. When it went is not recorded here. */
     if (!row)
@@ -338,8 +353,9 @@ export class Reevaluation {
                       : `the source of ${targetId} has changed since it was captured (source_status: modified); both `
                         + `versions are kept, and a claim resting on it rests on the earlier one.` });
     /* N457: a project's work product is its case editions (DEC-72), read through R26's registration and promotion's
-       fact; no document field is read for it (`workproduct_state` is retired, K899 (3)). */
-    if (type === "project") causes.push(...wp.of(targetId));
+       fact; no document field is read for it (`workproduct_state` is retired, K899 (3)). A case edition withdrawn on its
+       docket raises it too, read through R30's registration (DEC-116 item 7). */
+    if (type === "project") causes.push(...wp.of(targetId), ...this.#withdrawnProject(targetId, dk));
     const ann = this.#addressedAnnotation(targetId);
     if (ann)
       causes.push({ source: "annotation", since: ann.at,
@@ -363,7 +379,7 @@ export class Reevaluation {
    *  one (a correction is a new edition, publication R24), one cause per case, `since` the latest edition's
    *  ratification. The cases and their owning project come through R26's registration (`cases`, `parts`' `project`),
    *  their editions through promotion's fact `publishedCaseRegistry`, never a later module's service (P4). A withdrawn
-   *  edition has no record form, so nothing raises the cause for one. Answers `{of(project), flags()}`: `of` the causes
+   *  edition is R30's half of the cause (`#withdrawnProject`), read through the docket's registration. Answers `{of(project), flags()}`: `of` the causes
    *  on one project, the cases paged through on its first call; `flags` what the answer states when the read could not
    *  be made (R21): `case_parts_absent` with none registered, `work_products_read: false` when a read failed. */
   #workProducts() {
@@ -426,6 +442,149 @@ export class Reevaluation {
       ...(state.absent ? { case_parts_absent: true, case_parts_why: CASE_PARTS_ABSENT } : {}),
       ...(state.read ? {} : { work_products_read: false, work_products_why: WORK_PRODUCTS_UNREAD }) };
     return { of, flags };
+  }
+
+  /** R30: the docket as one answer reads it, through the registration `docket` fills (its R13): every withdrawal and
+   *  every contesting record entry, each paged through once, on first use. A withdrawal is `{case, project, editions,
+   *  findings: [{bundle_id, sha, edition}], at, seq, entry}` (`findings` each member finding of each withdrawn edition at
+   *  its pin; `at` the signing instant); a contesting entry `{case, edition, findings: [{bundle_id, sha}], at, entry}`
+   *  (`at` the filing instant). An entry naming no `entry` is named `<case>#<seq>`. Answers `{get(), flags()}`: `get`
+   *  the read (`byProject`, `pinned` and `contested` keyed by project and finding, `entries` by `<kind>\0<entry>`);
+   *  `flags` what the answer states when nothing is registered (`docket_absent`) or a page could not be read
+   *  (`docket_read: false`), R21. */
+  #docket() {
+    let read = null;
+    const get = () => {
+      if (read) return read;
+      const reg = this.#docketReg;
+      read = { absent: !reg, ok: true, byProject: new Map(), pinned: new Map(), contested: new Map(), entries: new Map() };
+      if (!reg) return read;
+      const pageAll = (fn, key) => {
+        const items = [], seen = new Set();
+        let after = "";
+        for (;;) {
+          let page = null;
+          try { page = fn({ after, limit: DOCKET_PAGE }); } catch { page = null; }
+          if (!page || !Array.isArray(page[key])) { read.ok = false; break; }
+          items.push(...page[key].filter((x) => x && typeof x === "object"));
+          const next = typeof page.cursor === "string" ? page.cursor : null;
+          if (!page[key].length || next === null || seen.has(next)) break;
+          seen.add(next);
+          after = next;
+        }
+        return items;
+      };
+      const push = (map, k, v) => { if (!map.has(k)) map.set(k, []); map.get(k).push(v); };
+      const int = (v) => (Number.isInteger(Number(v)) && v !== null && v !== "" ? Number(v) : null);
+      const named = (x, c) => str(x.entry) ?? (x.seq != null ? `${c}#${x.seq}` : null);
+      const pins = (x) => (Array.isArray(x.findings) ? x.findings : []).map((f) => ({
+        bundle_id: f ? str(f.bundle_id) : null, sha: f ? str(f.sha) : null, edition: f ? int(f.edition) : null }))
+        .filter((f) => f.bundle_id && f.sha);
+      for (const x of pageAll(reg.withdrawals, "withdrawals")) {
+        const c = str(x.case), entry = named(x, c), at = str(x.at);
+        if (!c || !entry) { read.ok = false; continue; }
+        const editions = [...new Set((Array.isArray(x.editions) ? x.editions : [x.editions]).map(int).filter((e) => e !== null))]
+          .sort((a, b) => a - b);
+        const w = { kind: "withdrawal", case: c, project: str(x.project), editions, at, seq: x.seq ?? null, entry,
+                    findings: pins(x) };
+        read.entries.set(`withdrawal\u0000${entry}`, w);
+        if (w.project) push(read.byProject, w.project, w);
+        for (const f of w.findings) push(read.pinned, f.bundle_id, { w, f });
+      }
+      for (const x of pageAll(reg.contested, "contested")) {
+        const c = str(x.case), entry = named(x, c), at = str(x.at);
+        if (!c || !entry) { read.ok = false; continue; }
+        const e = { kind: "contested", case: c, edition: int(x.edition), at, entry, findings: pins(x) };
+        read.entries.set(`contested\u0000${entry}`, e);
+        for (const id of new Set(e.findings.map((f) => f.bundle_id))) push(read.contested, id, e);
+      }
+      return read;
+    };
+    const flags = () => {
+      const d = get();
+      return { ...(d.absent ? { docket_absent: true, docket_why: DOCKET_ABSENT } : {}),
+               ...(d.ok ? {} : { docket_read: false, docket_read_why: DOCKET_UNREAD }) };
+    };
+    return { get, flags };
+  }
+
+  /** R16 (N520; DEC-116 item 7): the `wp_retraction` causes a project carries for each withdrawal of an edition of a case
+   *  it owns, the owning project as the docket names it, `since` the signing instant, `detail` naming the case, the
+   *  edition or editions withdrawn and the entry. None while nothing is registered (the answer says so). */
+  #withdrawnProject(project, dk) {
+    return (dk.get().byProject.get(project) || []).map((w) => ({
+      source: "wp_retraction", since: w.at, case: w.case, withdrawn_editions: w.editions, entry: w.entry,
+      detail: `case ${w.case}, a work product of ${project}, was withdrawn on its docket: `
+        + `${w.editions.length === 1 ? `edition ${w.editions[0]}` : `editions ${w.editions.join(", ")}`} `
+        + `(entry ${w.entry}, signed at ${w.at}). The edition keeps answering as it was signed, and its authors no longer `
+        + `stand behind it; what a claim took from the work product is worth a second look.` }));
+  }
+
+  /** R30 (a): the `withdrawal` causes on `legs` (`inquiry_basis` rows), for a viewer's visible dependents. A live leg
+   *  (R7) carries one per withdrawal pinning its target, a member finding of the withdrawn edition, at the sha the leg
+   *  rests on: the edition of the finding the leg names (`target_edition`), published with that `bundle_sha`
+   *  (`publishedRegistry`), or, naming none, the finding's live head at that sha. `only` keeps one entry's. Answers
+   *  `{byPair}` keyed `<dependent>\0<target>`, each list in (ord, entry) order. Reads only; regrades nothing (R19). */
+  #withdrawn(legs, visible, dk, only = null) {
+    const byPair = new Map();
+    const pinned = dk.get().pinned;
+    if (!pinned.size) return { byPair };
+    const rows = legs.filter((l) => l && l.bundle_id && pinned.has(l.target_id) && visible(l.bundle_id) !== null);
+    if (!rows.length) return { byPair };
+    const targets = [...new Set(rows.map((l) => l.target_id))];
+    const reg = this.#registry(targets) || {};
+    const heads = new Map();
+    const headOf = (id) => {
+      if (!heads.has(id)) { let h = null; try { h = this.record.head(id); } catch { h = null; } heads.set(id, h ? h.bundleSha ?? null : null); }
+      return heads.get(id);
+    };
+    const fms = new Map();
+    const citedOf = (l) => {
+      if (!fms.has(l.bundle_id)) fms.set(l.bundle_id, this.#basisFrontmatter(this.#frontmatterOf(l.bundle_id)));
+      const leg = fms.get(l.bundle_id)[l.ord];
+      return leg && leg.target === l.target_id && leg.target_edition != null ? Number(leg.target_edition) : null;
+    };
+    const hits = [];
+    for (const l of rows) {
+      const cited = citedOf(l);
+      const at = cited === null ? headOf(l.target_id)
+        : reg[l.target_id]?.editions?.[String(cited)]?.bundle_sha ?? null;
+      if (!at) continue;
+      for (const { w, f } of pinned.get(l.target_id))
+        if (f.sha === at && (!only || w.entry === only)) hits.push({ l, w, f, cited });
+    }
+    if (!hits.length) return { byPair };
+    const live = this.#liveOn(hits.map((h) => h.l.target_id));
+    for (const { l, w, f, cited } of hits) {
+      const x = live.get(l.target_id).get(`${l.bundle_id}\u0000${l.ord}`);
+      if (!x) continue;
+      const pk = `${l.bundle_id}\u0000${l.target_id}`;
+      if (!byPair.has(pk)) byPair.set(pk, []);
+      if (byPair.get(pk).some((c) => c.ord === l.ord && c.entry === w.entry)) continue;
+      byPair.get(pk).push({
+        source: "withdrawal", since: w.at, ord: l.ord, role: x.role ?? null, state: x.state ?? null, case: w.case,
+        edition: f.edition, withdrawn_editions: w.editions, entry: w.entry, finding: l.target_id, sha: f.sha,
+        cited_edition: cited,
+        detail: `this leg rests on ${l.target_id} at ${f.sha.slice(0, 12)}, a member finding of case ${w.case}`
+          + `${f.edition != null ? ` edition ${f.edition}` : ""}, which was withdrawn on its docket (entry ${w.entry}, `
+          + `signed at ${w.at}). The finding keeps answering as it was signed and the leg's grade is unchanged; whether `
+          + `this finding still stands is the members' to decide.` });
+    }
+    for (const list of byPair.values())
+      list.sort((a, b) => (a.ord - b.ord) || (a.entry < b.entry ? -1 : a.entry > b.entry ? 1 : 0));
+    return { byPair };
+  }
+
+  /** R30 (b): the `contested` causes a member finding carries, one per contesting record entry naming an edition it is
+   *  a member of, `since` the filing instant, in entry order. Its own target, as R17's `weakened` is. Reads only. */
+  #contestedOn(finding, dk, only = null) {
+    return (dk.get().contested.get(finding) || []).filter((e) => !only || e.entry === only)
+      .map((e) => ({
+        source: "contested", since: e.at, case: e.case, edition: e.edition, entry: e.entry,
+        detail: `${finding} is a member finding of case ${e.case}${e.edition != null ? ` edition ${e.edition}` : ""}, `
+          + `and a response filed on its docket contests that edition (entry ${e.entry}, filed at ${e.at}). Nothing `
+          + `was moved and no entry is evidence; whether this finding still stands is the members' to decide.` }))
+      .sort((a, b) => (a.entry < b.entry ? -1 : a.entry > b.entry ? 1 : 0));
   }
 
   /* R16: the recorded re-evaluations of the (dependent, target) pairs one answer lists, keyed (dependent, target,
@@ -805,6 +964,7 @@ export class Reevaluation {
     const visible = this.#redactor(viewer);
     const reg = this.#registry([...targets, ...dependents]);
     const wp = this.#workProducts();
+    const dk = this.#docket();
     const obligations = [], closedOnly = [];
     /* Each obligation found is held with its causes, and the recorded re-evaluations of exactly those pairs are read
        once after the walk (R16), so that read is bounded by the answer. */
@@ -815,20 +975,25 @@ export class Reevaluation {
     /* R27, R28, R29: the corrected, source and attribution causes, over the legs resting on these targets, read once for the answer. */
     const onTargets = this.#rows(`SELECT bundle_id, ord, target_id, content_id FROM inquiry_basis
                    WHERE target_id IN (SELECT value FROM json_each(?)) ORDER BY bundle_id, ord`, JSON.stringify(targets));
-    const corr = this.#corrected(onTargets, viewer, visible);
-    const srcm = this.#sourceMoves(onTargets, visible);
-    const lvlm = this.#levelMoves(onTargets, visible);
-    const correctedOn = new Set([...corr.byPair.keys(), ...srcm.byPair.keys(), ...lvlm.byPair.keys()]
+    /* R27–R30 are read for every dependent: the walk below withholds one the viewer may not see, and so knows that it did
+       (R20's `out_of_view` on one target), where a dependent filtered out here would leave its target unwalked. */
+    const all = (id) => id ?? null;
+    const corr = this.#corrected(onTargets, viewer, all);
+    const srcm = this.#sourceMoves(onTargets, all);
+    const lvlm = this.#levelMoves(onTargets, all);
+    /* R30 (a): the withdrawal causes, over the same legs. */
+    const wdr = this.#withdrawn(onTargets, all, dk);
+    const correctedOn = new Set([...corr.byPair.keys(), ...srcm.byPair.keys(), ...lvlm.byPair.keys(), ...wdr.byPair.keys()]
       .map((k) => k.slice(k.indexOf("\u0000") + 1)));
     for (const t of targets) {
-      const moved = this.#moved(t, visible, reg, wp);
+      const moved = this.#moved(t, visible, reg, wp, dk);
       if (!moved && !correctedOn.has(t)) continue;
       /* R20: in the listing, an obligation whose target the viewer may not see is withheld whole, as strength R6
          withholds an unseen leg's member. A target the record no longer holds is no one's to see: its deletion cause
          is a fact about the leg naming it, and stands (§5.4). */
       if (!t0 && !(moved && moved.held === false) && visible(t) === null) continue;
       if (moved && moved.withheld) withheld = true;
-      /* A target whose only causes are R27's, R28's or R29's is read for its own state and type here, as `#moved` reads one. */
+      /* A target whose only causes are R27's, R28's, R29's or R30's is read for its own state and type here, as `#moved` reads one. */
       const own = moved ? { state: moved.state, object_type: moved.object_type }
         : this.#one(`SELECT current_state AS state, object_type FROM bundles WHERE bundle_id=?`, t)
           || { state: null, object_type: null };
@@ -881,7 +1046,7 @@ export class Reevaluation {
           }
         }
         causes.push(...(corr.byPair.get(`${bundleId}\u0000${t}`) || []), ...(srcm.byPair.get(`${bundleId}\u0000${t}`) || []),
-                    ...(lvlm.byPair.get(`${bundleId}\u0000${t}`) || []));
+                    ...(lvlm.byPair.get(`${bundleId}\u0000${t}`) || []), ...(wdr.byPair.get(`${bundleId}\u0000${t}`) || []));
         if (!causes.length) continue;
         place({
           bundle_id: bundleId, title: dep?.title ?? null,
@@ -899,16 +1064,21 @@ export class Reevaluation {
         }, causes);
       }
     }
-    /* R17: each visible dependent at a published edition whose derivation weakened; its own target. */
-    for (const d of dependents) {
+    /* R17: each visible dependent at a published edition whose derivation weakened; R30 (b): each visible member finding
+       of a contested edition. Both are the finding's own target, one obligation for both. */
+    const contestedIds = t0 ? (dk.get().contested.has(t0) ? [t0] : []) : [...dk.get().contested.keys()];
+    for (const d of [...new Set([...dependents, ...contestedIds])].sort()) {
       if (visible(d) === null) continue;
+      const own = [];
       const w = this.#weakened(d, reg);
-      if (!w) continue;
+      if (w) own.push(w);
+      own.push(...this.#contestedOn(d, dk));
+      if (!own.length) continue;
       const dep = this.#one(`SELECT title, object_type, current_state FROM bundles WHERE bundle_id=?`, d);
       if (!dep) continue;
       place({ bundle_id: d, title: dep.title ?? null, object_type: dep.object_type ?? null,
               current_state: dep.current_state ?? null, target: d, target_state: dep.current_state ?? null,
-              legs: [], stored: this.#storedTriple(this.#frontmatterOf(d)), strength: this.#strengthOf(d) }, [w]);
+              legs: [], stored: this.#storedTriple(this.#frontmatterOf(d)), strength: this.#strengthOf(d) }, own);
     }
     const records = this.#records(found.map(({ o }) => [o.bundle_id, o.target]));
     for (const { o, causes } of found) {
@@ -929,7 +1099,7 @@ export class Reevaluation {
              ...(reg === null ? { editions_why: "no module provides the published registry, so no edition was read "
                                   + "and no edition cause could be derived; that is not the same as none" } : {}),
              corrections_read: corr.read,
-             ...(corr.read ? {} : { corrections_why: CORRECTIONS_UNREAD }), ...wp.flags() };
+             ...(corr.read ? {} : { corrections_why: CORRECTIONS_UNREAD }), ...wp.flags(), ...dk.flags() };
   }
 
   /** R5 (REC-118 / D-410): an obligation's leg letters, resolved against what the record can earn, so the two halves of
@@ -984,6 +1154,19 @@ export class Reevaluation {
     const refused = listenerRefusal(this.#caseParts, module, ok ? fns.parts : null);
     if (refused) return refused;
     this.#caseParts = { module, parts: fns.parts, cases: fns.cases };
+    return { ok: true, module };
+  }
+
+  /** R30 (DEC-116 items 3, 7): the one registration of a case's docket (`docket` R13): `withdrawals({after, limit})`
+   *  answers `{withdrawals, cursor}` and `contested({after, limit})` answers `{contested, cursor}`, in the shapes
+   *  `#docket` reads. Both refusals are membership's (its R81), as R26's: a registration missing either function is
+   *  malformed; a second, by any module, is declared. */
+  registerDocket(module, fns) {
+    const ok = !!fns && typeof fns === "object" && typeof fns.withdrawals === "function"
+      && typeof fns.contested === "function";
+    const refused = listenerRefusal(this.#docketReg, module, ok ? fns.withdrawals : null);
+    if (refused) return refused;
+    this.#docketReg = { module, withdrawals: fns.withdrawals, contested: fns.contested };
     return { ok: true, module };
   }
 
@@ -1046,10 +1229,11 @@ export class Reevaluation {
     const seen = fl.filter((id) => this.#visible(id, viewer));
     const reg = this.#registry(seen);
     const wp = this.#workProducts();
-    const corr = this.#standingCorrected(seen, viewer, visible, { withSource: true });
+    const dk = this.#docket();
+    const corr = this.#standingCorrected(seen, viewer, visible, { withSource: true, dk });
     const outF = fl.map((id) => {
       if (!seen.includes(id)) return { id, absent: true };
-      const moved = this.#moved(id, visible, reg, wp);
+      const moved = this.#moved(id, visible, reg, wp, dk);
       const causes = moved ? [...moved.causes] : [];
       if (moved && moved.edition)
         causes.push({ source: "edition", since: moved.edition.since, latest_edition: moved.edition.latest,
@@ -1076,23 +1260,32 @@ export class Reevaluation {
              findings_truncated: F.length > fl.length, contents_truncated: C.length > cl.length,
              limit: CHANGES_OF_MAX, wrote: false,
              ...(reg === null ? { editions_read: false } : { editions_read: true }),
-             corrections_read: corr.read, ...(corr.read ? {} : { corrections_why: CORRECTIONS_UNREAD }), ...wp.flags() };
+             corrections_read: corr.read, ...(corr.read ? {} : { corrections_why: CORRECTIONS_UNREAD }), ...wp.flags(),
+             ...dk.flags() };
   }
 
-  /* R9, R27 (and R28, R29 `withSource`): the corrected (and source and attribution) causes the named dependents carry on
-     their own legs, each with its `target`, less those a recorded re-evaluation closed (R16). `byDependent` keyed by
-     dependent, in (target, ord, candidate) order, each target's source causes after its corrected ones and its
-     attribution causes after those. */
-  #standingCorrected(dependents, viewer, visible, { withSource = false } = {}) {
+  /* R9, R27 (and R28, R29, R30 `withSource`): the corrected (and source, attribution, withdrawal and contested) causes the
+     named dependents carry on their own legs, each with its `target`, less those a recorded re-evaluation closed (R16).
+     `byDependent` keyed by dependent, in (target, ord, candidate) order, each target's source causes after its corrected
+     ones, its attribution causes after those and its withdrawal causes last; a contested cause names the finding itself
+     as its target. */
+  #standingCorrected(dependents, viewer, visible, { withSource = false, dk = null } = {}) {
     const byDependent = new Map();
     if (!dependents.length) return { byDependent, read: true };
     const legs = this.#rows(`SELECT bundle_id, ord, target_id, content_id FROM inquiry_basis
                    WHERE bundle_id IN (SELECT value FROM json_each(?)) ORDER BY bundle_id, target_id, ord`,
                  JSON.stringify(dependents));
     const corr = this.#corrected(legs, viewer, visible);
-    if (withSource)
-      for (const moves of [this.#sourceMoves(legs, visible), this.#levelMoves(legs, visible)])
+    if (withSource) {
+      const moved = [this.#sourceMoves(legs, visible), this.#levelMoves(legs, visible),
+                     ...(dk ? [this.#withdrawn(legs, visible, dk)] : [])];
+      for (const moves of moved)
         for (const [k, list] of moves.byPair) corr.byPair.set(k, [...(corr.byPair.get(k) || []), ...list]);
+      for (const d of dk ? dependents : []) {
+        const own = this.#contestedOn(d, dk);
+        if (own.length) corr.byPair.set(`${d}\u0000${d}`, [...(corr.byPair.get(`${d}\u0000${d}`) || []), ...own]);
+      }
+    }
     const pairs = [...corr.byPair.keys()].sort().map((k) => k.split("\u0000"));
     const records = this.#records(pairs);
     for (const [d, t] of pairs) {
@@ -1153,6 +1346,93 @@ export class Reevaluation {
              wrote: false, corrections_read: read, ...(read ? {} : { corrections_why: CORRECTIONS_UNREAD }),
              says: "each finding listed rests on a side a member's resolution named wrong; that side still resolves and "
                  + "says it was corrected, nothing resting on it was moved, and a recorded re-evaluation closes the cause" };
+  }
+
+  /* ---------------------------------------------------------------- R30: a case edition withdrawn or contested */
+
+  /** R30: each (dependent, entry) a standing `withdrawal` or `contested` cause names, in dependent then entry order after
+   *  `after` (`<dependent>#<entry>`, split at the first `#`, which no bundle id holds), at most `limit` (1–200, default
+   *  200), with `truncated` and `cursor` (the last entry's key when more follow). A cause a recorded re-evaluation closed
+   *  is not listed (R16). A dependent the viewer may not see is withheld and not counted (R20). Writes nothing. */
+  docketDependents({ after = null, limit = null, viewer = null } = {}) {
+    const cap = clamp(limit, DOCKET_LIMIT_DEFAULT, DOCKET_LIMIT_MAX);
+    const aft = String(after ?? "");
+    const cut = aft.indexOf("#");
+    const [aDep, aEntry] = cut >= 0 ? [aft.slice(0, cut), aft.slice(cut + 1)] : [aft, ""];
+    const visible = this.#redactor(viewer);
+    const dk = this.#docket();
+    const d = dk.get();
+    const pinned = [...d.pinned.keys()];
+    const legs = pinned.length
+      ? this.#rows(`SELECT bundle_id, ord, target_id FROM inquiry_basis WHERE target_id IN (SELECT value FROM json_each(?))
+                     ORDER BY bundle_id, ord`, JSON.stringify(pinned)) : [];
+    const byPair = new Map(this.#withdrawn(legs, visible, dk).byPair);
+    for (const f of d.contested.keys())
+      if (visible(f) !== null && this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id=?`, f))
+        byPair.set(`${f}\u0000${f}`, [...(byPair.get(`${f}\u0000${f}`) || []), ...this.#contestedOn(f, dk)]);
+    const pairs = [...byPair.keys()].map((k) => k.split("\u0000"));
+    const records = this.#records(pairs);
+    const byKey = new Map();
+    for (const [dep, t] of pairs) {
+      for (const c of this.#split(dep, t, byPair.get(`${dep}\u0000${t}`), records).open) {
+        const k = `${dep}\u0000${c.entry}`;
+        if (!byKey.has(k)) byKey.set(k, { dependent: dep, entry: c.entry, kind: c.source, case: c.case, since: c.since,
+          ...(c.source === "withdrawal" ? { withdrawn_editions: c.withdrawn_editions } : { edition: c.edition }),
+          legs: [], detail: c.detail });
+        if (c.source === "withdrawal") byKey.get(k).legs.push({ target: t, ord: c.ord, edition: c.edition, sha: c.sha });
+      }
+    }
+    const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+    const entries = [...byKey.values()]
+      .filter((e) => e.dependent > aDep || (e.dependent === aDep && e.entry > aEntry))
+      .sort((a, b) => cmp(a.dependent, b.dependent) || cmp(a.entry, b.entry));
+    for (const e of entries) e.legs.sort((a, b) => cmp(a.target, b.target) || (a.ord - b.ord));
+    const listed = entries.slice(0, cap);
+    const truncated = entries.length > cap;
+    return { ok: true, entries: listed, count: listed.length, limit: cap, truncated,
+             cursor: truncated ? `${listed[listed.length - 1].dependent}#${listed[listed.length - 1].entry}` : null,
+             wrote: false, ...dk.flags(),
+             says: "each finding listed rests on a member finding of a case edition withdrawn on its docket, or is a member "
+                 + "finding of an edition a filed response contests; nothing was moved or regraded, no docket entry is "
+                 + "evidence, and a recorded re-evaluation closes the cause" };
+  }
+
+  /** R30, R8: told by `docket` after its withdrawal or contesting act commits (its R13). Tells R8's listeners once, as
+   *  `kind: "withdrawal"` or `kind: "contested"`, `subject` the entry, with the dependents R30's arm answers for that
+   *  entry now, as the plane reads them (no viewer: a listener is the plane's own, R28's precedent): for a withdrawal the
+   *  live legs resting on its pinned findings, each `{bundle_id, ord, role, state, target}`; for a contesting entry its
+   *  member findings, each `{bundle_id}`. Writes nothing and never throws; a kind it does not know tells nothing. */
+  docketActed({ kind = null, case: caseId = null, entry = null } = {}) {
+    try {
+      const e = str(entry), c = str(caseId);
+      if (!DOCKET_KINDS.includes(kind) || !e)
+        return { ok: true, told: false, why: "only a withdrawal or a contesting entry, named, is told" };
+      const dk = this.#docket();
+      const rec = dk.get().entries.get(`${kind}\u0000${e}`);
+      const found = !!rec && (!c || rec.case === c);
+      let dependents = [];
+      if (found && kind === "withdrawal") {
+        const pinned = [...new Set(rec.findings.map((f) => f.bundle_id))];
+        const legs = pinned.length
+          ? this.#rows(`SELECT bundle_id, ord, target_id FROM inquiry_basis WHERE target_id IN (SELECT value FROM json_each(?))
+                         ORDER BY bundle_id, ord`, JSON.stringify(pinned)) : [];
+        /* the pair's key holds the dependent */
+        dependents = [...this.#withdrawn(legs, (id) => id ?? null, dk, e).byPair.entries()]
+          .flatMap(([k, list]) => list.map((x) => ({ bundle_id: k.split("\u0000")[0], ord: x.ord, role: x.role,
+                                                     state: x.state, target: x.finding })));
+      } else if (found)
+        dependents = [...new Set(rec.findings.map((f) => f.bundle_id))].sort().map((bundle_id) => ({ bundle_id }));
+      const since = found && rec.at ? rec.at : this.#when();
+      const out = { ok: true, told: true, kind, case: c ?? rec?.case ?? null, entry: e, dependents: dependents.length,
+                    ...(found ? {} : { entry_read: false }), ...dk.flags() };
+      this.#tellAfterCommit({ kind, subject: e, source: kind, since, case: out.case,
+        ...(kind === "withdrawal" ? { withdrawn_editions: found ? rec.editions : [] } : { edition: found ? rec.edition : null }),
+        detail: `${kind === "withdrawal" ? "a case edition was withdrawn" : "a filed response contests a case edition"} `
+          + `on the docket of case ${out.case ?? "(unnamed)"} (entry ${e}); `
+          + `${dependents.length ? "what rests on it is named" : "nothing here rests on it"}`,
+        dependents }, out);
+      return out;
+    } catch { return { ok: true, told: false, why: "the docket could not be read" }; }
   }
 
   /* ---------------------------------------------------------------- R10, R11: the cross-version notice (D-394) */
