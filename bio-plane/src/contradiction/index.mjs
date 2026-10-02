@@ -4,7 +4,7 @@
    pairing, REC-147's candidate door, their dispatch), the old catalogue (C-60, C-93, now `checks.mjs`) and
    `schema.mjs` (`contradiction_candidates`, now `schema.mjs` here). The judgement's words stay in
    `../contradiction.mjs` and are re-exported here. Whether a run is visible, running and the caller's is asked of a
-   run gate `ai-runs` registers (R21, K31), `legacy-store` registering until then.
+   run gate `ai-runs` registers (R21, K31); `legacy-store` registered it until then.
 
    WHAT THIS IS AND, MORE IMPORTANTLY, WHAT IT IS NOT. Section 2 splits the detector in two and the split is the whole
    audit story: PAIRING — which two assertions are worth comparing — is deterministic, in the plane, and auditable;
@@ -312,7 +312,7 @@ export class Contradiction {
 
   /* ---- the run gate (R21, K31) ---- */
 
-  /** R21 (K182): the slot `ai-runs` fills (its R37), `legacy-store` until then. `gate(run, viewer, caller)` answers
+  /** R21 (K182): the slot `ai-runs` fills (its R37), as `legacy-store` did until then. `gate(run, viewer, caller)` answers
    *  `{found, running, refusal}`: `found` false for a blank, absent or invisible run alike (§7.9); `running` whether
    *  it is still running; `refusal` null, or ai-runs R5's `AI_RUN_NOT_PRINCIPAL` (C-22.12) for a caller who is not
    *  the run's principal, which R13 relays. One gate: a second registration is refused. */
@@ -2569,8 +2569,8 @@ export class Contradiction {
 
 }
 
-/* The Durable Object routes this module answers, as entries of the legacy store's op map (its dispatcher spreads
-   them in, K3). `url` carries the control plane's stamps (`viewer`, `author`, `proposedBy`, `principal`), never the
+/* The Durable Object routes this module answers, as entries of the plane's one route map (`plane/store.mjs` spreads
+   them in, K3; the legacy store's op map did until the plane took it). `url` carries the control plane's stamps (`viewer`, `author`, `proposedBy`, `principal`), never the
    caller's; `body` the parsed body, from which each op reads only its own named fields (a stamp in the body is never
    read). `key` and `limit` are the caller's, and both are answered rather than trusted (R5, R6). The control plane
    routes the thirteen N345 ops at layer 11 (control-plane's entry). */
