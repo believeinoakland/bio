@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #103 · session_01BaZjVu3eHvWLLU4C5CdGA7 · depth 1
 
-**Jobs** · signatures: SIGNATURES #6 session_01N3t7Hfj37rLM9MSN2KgSNZ; membership: MEMBERSHIP #20 session_013WoUArmhh78ngbjAEuCSMa; reevaluation: REEVALUATION #14 session_01KA6UG6rXYyJAWoe5sPuf8x; docket: DOCKET #1 session_01PJ5cMH43RbHxx4SXkb3E7X
+**Jobs** · signatures: SIGNATURES #6 session_01N3t7Hfj37rLM9MSN2KgSNZ; membership: MEMBERSHIP #20 session_013WoUArmhh78ngbjAEuCSMa; reevaluation: REEVALUATION #14 session_01KA6UG6rXYyJAWoe5sPuf8x; docket: DOCKET #1 session_01PJ5cMH43RbHxx4SXkb3E7X; publication: PUBLICATION #15 session_01PBj2Sb1NuqAgKWDSQUEqiZ
 
 **Opened** 2026-10-02 ~22:30 UTC by BOB #103 from `main` @ 09fddd6535 (T26 closed, K1249; Bob's permission edits, K1261), from T26's `next.md` (K1262). **Bob's weekly meter** · 72% after T26's close (K1250); asked again at the opening.
 
