@@ -1,4 +1,4 @@
-/* queue-producers — the feed's producers (requirements: `build/requirements/queue-producers.md`, R1–R27).
+/* queue-producers — the feed's producers (requirements: `build/requirements/queue-producers.md`, R1–R28).
  * Split out of `queue` by N363 (Bob's K507; seams ruled K531, `build/plan/draft-N363-queue-split.md` §1, §3.2): each
  * producer derives, on read and writing nothing, the items one provider's facts earn for a viewer, naming each item's
  * subjects and home subjects, for `queue` to home, offer, mint and publish.
@@ -15,7 +15,7 @@
  * `deps` (each defaults to its module's instance on the same `ctx`, reached lazily when first asked):
  *   record, membership, credentials, governor, provenance, capture, captureRequests, basisVersions, progressions, aiRuns, bias,
  *   publication, corpusExport, reevaluation, intent, monitoring, contradiction, actionClocks, escalation, actionPlans,
- *   actions, filingTemplates, localFacts, networkNotices   the providers.
+ *   actions, filingTemplates, localFacts, networkNotices, linkSweep   the providers.
  *
  * R7 (queue's homes walk) and R12 (queue's options) stay in queue, one walk and one derivation: `feedItems` takes them
  * as `homesOf(subjectIds)` and `optionsOf(subjectIds)`, closed over the read's viewer and identity by queue, and holds
@@ -43,6 +43,7 @@ import { corpusExportOf, EXPORT_LOG_LIMIT_DEFAULT } from "../corpus-export/index
 import { reevaluationOf } from "../reevaluation/index.mjs";
 import { intentOf } from "../intent/index.mjs";
 import { monitoringOf } from "../monitoring/index.mjs";
+import { linkSweepOf, SWEEP_CONDITION_KINDS } from "../link-sweep/index.mjs";
 import { actionClocksOf } from "../action-clocks/index.mjs";
 import { escalationOf } from "../escalation/index.mjs";
 import { actionPlansOf } from "../action-plans/index.mjs";
@@ -97,6 +98,8 @@ export class QueueProducers {
   /* N483 (K1122): the export log is corpus-export's (its R2), read from the host's one instance. */
   get #corpusExport() { return this.#dep("corpusExport", () => corpusExportOf(this.#host)); }
   get #networkNotices() { return this.#dep("networkNotices", () => networkNoticesOf(this.#host)); }
+  /* N506: a sweep's signals are link-sweep's (its R11), split from monitoring. */
+  get #linkSweep() { return this.#dep("linkSweep", () => linkSweepOf(this.#host)); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
@@ -2852,16 +2855,15 @@ export class QueueProducers {
   }
 
   /* ======================================================================
-   * K1036 (8) · R26 — A SWEEP THAT NEEDS A MEMBER'S LOOK (monitoring R60, R63).
+   * K1036 (8) · R26 — A SWEEP THAT NEEDS A MEMBER'S LOOK (link-sweep R8, R11; monitoring R60, R63 before N506).
    * DEC-111, K1031 · R27 — A WORKING-ON NOTICE THAT NEEDS ITS OWNERS' (network-notices R12, R13, R22).
    * Each reads the one fact its owning module offers, derived on read and writing nothing, so an item leaves on the
    * first read after the fact stops holding. The items' words are the UX design stream's to set (NOTIFICATIONS.md, the
    * item contract; `ux-experience.json` UC-035): the sentences here say the fact plainly and claim nothing beyond it.
    * ====================================================================== */
 
-  /** R26: the five kinds `monitoring.sweepConditions` answers (its R63). */
-  static SWEEP_CONDITION_KINDS = Object.freeze(["sweep-held-backlog", "sweep-yield-anomaly", "sweep-seed-unreachable",
-    "sweep-redirect-out-of-scope", "sweep-silent"]);
+  /** R26: the five kinds `link-sweep.sweepConditions` answers (its R11), as link-sweep exports them. */
+  static SWEEP_CONDITION_KINDS = SWEEP_CONDITION_KINDS;
   /** R27: how many owned projects one read asks `network-notices` about; the window `notice-lapse-near` opens in before
    *  a lapse, and how long `notice-project-closed` stands after the closing. */
   static QUEUE_NOTICE_PROJECTS = 50;
@@ -2900,7 +2902,7 @@ export class QueueProducers {
     }
   }
 
-  /** `sweep-*` (R26; monitoring R63, K1036 (8)): one CONDITION per condition `monitoring.sweepConditions` answers the
+  /** `sweep-*` (R26; link-sweep R11, K1036 (8), N506): one CONDITION per condition `link-sweep.sweepConditions` answers the
    *  viewer, keyed `CONDITION::<kind>::<bundle>#<id>`, to the members of the sweep's project (joined or leaving,
    *  membership R74) who may see its bundle and to nobody else: a caller with no member is none of them, and a sweep in
    *  no project has no members. Its subject the sweep's bundle, homed under the project at depth 0 and the bundle's own
@@ -2908,7 +2910,7 @@ export class QueueProducers {
    *  the sentence. It leaves when the condition leaves (the read no longer answers it). */
   #conditionsSweep(me, viewer, now) {
     if (!me) return [];
-    const r = this.#monitoring.sweepConditions({ viewer, now });
+    const r = this.#linkSweep.sweepConditions({ viewer, now });
     const list = r && r.ok !== false && Array.isArray(r.conditions) ? r.conditions : [];
     const visible = this.#bundleRedactor(viewer);
     const joined = new Map();
@@ -2939,9 +2941,9 @@ export class QueueProducers {
         subject: { kind: "bundle", id: bundle, sweep: c.sweep, sweep_id: sweepId, project },
         summary: words.summary,
         detail: words.detail,
-        basis: { source: "monitoring.sweepConditions", sweep: c.sweep, bundle, sweep_id: sweepId, project, kind: c.kind,
+        basis: { source: "link-sweep.sweepConditions", sweep: c.sweep, bundle, sweep_id: sweepId, project, kind: c.kind,
                  since: c.since ?? null, condition: d, recipients_rule: "project_members_who_see_the_bundle",
-                 detail: "a sweep's signal is monitoring's (its R60, R63): derived on read from the sweep's own runs and "
+                 detail: "a sweep's signal is link-sweep's (its R8, R11): derived on read from the sweep's own runs and "
                        + "backlog, read here and never restated. It goes to the members of the sweep's project who may "
                        + "see its record, and it leaves on the first read after it stops holding." },
         age: Number.isFinite(sinceMs)

@@ -42,11 +42,11 @@ Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queu
 **The words members see** (DEC-107, DEC-110, DEC-114; H15, H19)
 - **R24** Every member-facing sentence this module answers (an item's `summary` and `detail`, and the words of its options) calls an OBLIGATION item a "to do" and a CONDITION item a "signal", never an "obligation" or a "condition"; "obligation" names only a public body's duty (DEC-107). The internal codes, kinds and item ids are unchanged (`OBLIGATION`, `CONDITION`, `OBLIGATION::…`). (K1038)
 - **R25** An item whose subject is due on a date carries it as `due` (`YYYY-MM-DD`), for `queue` R49's sort: the clock entry's date (R15, R18), the checkpoint's (R16). No other item carries one. (DEC-110 (1); H19; K1038)
-- **R28** Every member-facing sentence this module answers (an item's `summary` and `detail`, and the words of its options) calls what an action plan addresses a "matter" ("matters"), never a "subject". The item key `subject` (what an item is about, `queue`'s term) and every code and kind are unchanged. (DEC-114; as R24 for "to do" and "signal") *(not yet met: T24)*
+- **R28** Every member-facing sentence this module answers (an item's `summary` and `detail`, and the words of its options) calls what an action plan addresses a "matter" ("matters"), never a "subject". The item key `subject` (what an item is about, `queue`'s term) and every code and kind are unchanged. (DEC-114; as R24 for "to do" and "signal")
   - Measured: no item says "subject" for a plan's matters today (R16's checkpoint item names none). R28 holds that line as items are added.
 
 **Sweeps and working-on notices** (K1036 (8); DEC-111, K1031)
-- **R26** *(not yet met: T24)* (link-sweep R11, monitoring R63 before N506's split; K1036 (8)) CONDITIONs, one for each condition that `link-sweep.sweepConditions` answers the viewer:
+- **R26** (link-sweep R11, monitoring R63 before N506's split; K1036 (8)) CONDITIONs, one for each condition that `link-sweep.sweepConditions` answers the viewer:
   - the kinds are `sweep-held-backlog`, `sweep-yield-anomaly`, `sweep-seed-unreachable`, `sweep-redirect-out-of-scope` and `sweep-silent`;
   - each is keyed `CONDITION::<kind>::<bundle>#<id>`;
   - each goes to the members of the sweep's project who may see its bundle;
@@ -111,7 +111,7 @@ Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queu
 - `escalation`: `escalationsDue` (its R16; R17).
 - `action-plans`: `checkpointsDue` (its R17; R16).
 - `credentials`: `signerList` (its R8), `signerSet` (its R7) (R14).
-- `link-sweep`: `sweepConditions` (its R11; `monitoring` R63 before N506's split; R26). *(not yet met: T24)*
+- `link-sweep`: `sweepConditions` (its R11; `monitoring` R63 before N506's split; R26).
 - `network-notices`: `noticesOf` (its R22: a missed `monthly` attestation, the lapse date, the notice's status; R27).
 
 ### Invariants

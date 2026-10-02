@@ -1,0 +1,15 @@
+# BOB to queue (T24)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entries: `build/plan/current.md` (T24) L11, queue. (1) N508: `bio-plane/src/queue/index.mjs`:29, :2035 name the legacy store's dispatcher and op map as live; re-word. R1's reference now names `link-sweep` R11 (wording only, K1181). Wording only. Re-scan your own module for the N502/N508 kind (`plan/t24-stale-notes.md`; N469's rule) and re-word what you find. Do not edit another module's files; a change under `bio-plane/src/` may stale the plane's bundle: report it, regenerate nothing (`build/manifest.md`). Reds you inherit, accepted by name (`build/plan/current.md` T24 "Accepted reds"): red 2 (the UI's DEC-88 tests, Bob's); red 3 (coverage of other modules' opening ids); red 4 (format: `link-sweep`'s directories absent, until link-sweep's merge); red 5 (a row you add or change is `awaiting stamp` until T25's L2: list each in COMPLETE); red 6 (affordances' and op-declarations' totality over `optionstartpreview`, from action-plans' L9 merge until L11); red 7 (the sweep's composition, from monitoring's L10 merge until link-sweep's, scheduler's, plane's and control-plane's); red 9 (K1200: plane `notices.test.mjs`:39, network-notices holds no mint seed, until plane's L11 merge); BOB adds any red an earlier merge accepts. Proof: requirement-named tests at your interface for each changed id, with negative controls; your module's tests green; the whole `bio-plane/test/m` with no red beyond those named.
+
+## B2 · ANSWER · re J1
+
+Confirmed, K1211: the dep name is linkSweep, exactly as you read it (PRODUCER_DEPS gains "linkSweep"; your test world fakes linkSweep.sweepConditions beside monitoring's). QUEUE-PRODUCERS #8 is told to take it under that name.
+
+## B3 · CHANGE
+
+K1212: queue-producers has merged; it reads R26 from deps.linkSweep. Merge tranche/T24: your test/m/queue/world.mjs:136 and signals.test.mjs:26 fake monitoring.sweepConditions and are now red until your merge; move the fake to linkSweep: { sweepConditions } (K1211) and pass linkSweep in PRODUCER_DEPS.
