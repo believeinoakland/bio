@@ -1,6 +1,6 @@
 # provenance (T25)
 
-**Status** · session_015S38x6eWCQ3i11cv9DGEP2 · depth 2 · RUNNING until 2026-10-02T18:30:16Z (node --test test/m/ (whole suite, per-test timeout 60s)) · handled B6
+**Status** · session_015S38x6eWCQ3i11cv9DGEP2 · depth 2 · COMPLETE · handled B6
 
 ## Completion
 
