@@ -1,5 +1,6 @@
 /* provenance: the instance key of R34 signing statements for later modules (R56; DEC-111, for network-notices R13,
-   R21): `instanceStatement`, `instanceSign`, `instanceKeys`, each at the module's interface. */
+   R21): `instanceStatement`, `instanceSign`, `instanceKeys`; and whether a key is bound, asked without signing (R57;
+   N504, for network-notices R1): `instanceKeyBound`. Each at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { generateKeyPairSync, createPublicKey, verify } from "node:crypto";
@@ -85,4 +86,74 @@ test("R56: instanceKeys answers every key that has signed anything, each with it
     assert.equal(text.includes(Buffer.from(k, "base64").subarray(-32).toString("base64").slice(0, 40)), false);
   }
   for (const key of keys) assert.deepEqual(Object.keys(key).sort(), ["first_used", "key_id", "public_key"]);
+});
+
+/* Keys that are bound as a secret but cannot be read as an Ed25519 PKCS#8 key: not base64, base64 of nothing like a
+   key, a key of another algorithm, and an Ed25519 key cut short. */
+const unreadable = () => {
+  const ed = Buffer.from(pkcs8(), "base64");
+  return ["not base64 at all!", Buffer.from("hello, key").toString("base64"),
+          generateKeyPairSync("ec", { namedCurve: "P-256" }).privateKey.export({ type: "pkcs8", format: "der" }).toString("base64"),
+          ed.subarray(0, ed.length - 4).toString("base64")];
+};
+
+test("R57: instanceKeyBound answers true when a key is bound, and instanceSign then signs", async () => {
+  const w = world({ signingKey: pkcs8(), now: "2026-10-02T07:00:00.000Z" });
+  const before = w.snapshot();
+  const bound = w.prov.instanceKeyBound();
+  assert.equal(typeof bound?.then, "function", "asynchronous, as reading the key is");
+  assert.equal(await bound, true);
+  assert.equal(await w.prov.instanceKeyBound(), true, "and again, the same");
+  /* It signs nothing and writes nothing: every table as it was, receipt_keys empty. */
+  assert.deepEqual(w.snapshot(), before);
+  assert.equal(w.count("receipt_keys"), 0);
+  assert.deepEqual(w.prov.instanceKeys(), []);
+  /* "so instanceSign would sign": it does. */
+  const r = await w.prov.instanceSign(instanceStatement("civicos-working-on-attestation/1", sha("bound")));
+  assert.equal(r.ok, true);
+});
+
+test("R57: instanceKeyBound leaves every key's first_used unchanged, asked before and after the key's first statement", async () => {
+  const w = world({ signingKey: pkcs8(), now: "2026-10-02T07:00:00.000Z" });
+  /* Asked first, at an earlier instant: the key's first use is still its first real statement, not this question. */
+  assert.equal(await w.prov.instanceKeyBound(), true);
+  w.clock.now = "2026-10-05T09:00:00.000Z";
+  const r = await w.prov.instanceSign(instanceStatement("civicos-working-on-attestation/1", sha("first")));
+  const keys = [{ key_id: r.key_id, public_key: r.public_key, first_used: "2026-10-05T09:00:00.000Z" }];
+  assert.deepEqual(w.prov.instanceKeys(), keys);
+  /* Asked after, later still: nothing moves. */
+  w.clock.now = "2026-11-01T00:00:00.000Z";
+  const before = w.snapshot();
+  assert.equal(await w.prov.instanceKeyBound(), true);
+  assert.deepEqual(w.snapshot(), before);
+  assert.deepEqual(w.prov.instanceKeys(), keys);
+});
+
+test("R57: instanceKeyBound answers false when no key is bound, and instanceSign then answers RECEIPT_NO_KEY", async () => {
+  for (const signingKey of [null, "", "   "]) {
+    const w = world({ signingKey });
+    const before = w.snapshot();
+    assert.equal(await w.prov.instanceKeyBound(), false, JSON.stringify(signingKey));
+    assert.deepEqual(w.snapshot(), before);
+    const r = await w.prov.instanceSign(instanceStatement("civicos-working-on-attestation/1", sha("unbound")));
+    assert.deepEqual([r.ok, r.reason], [false, "RECEIPT_NO_KEY"]);
+  }
+});
+
+test("R57: a key that cannot be read answers false, never throws, writes nothing; instanceSign and signReceipt answer RECEIPT_NO_KEY", async () => {
+  for (const signingKey of unreadable()) {
+    const w = world({ signingKey });
+    const before = w.snapshot();
+    let bound;
+    await assert.doesNotReject(async () => { bound = await w.prov.instanceKeyBound(); }, signingKey.slice(0, 20));
+    assert.equal(bound, false, signingKey.slice(0, 20));
+    assert.deepEqual(w.snapshot(), before);
+    /* Consistent with what instanceSign would do: an unreadable key is no key, refused by name, nothing recorded. */
+    const s = await w.prov.instanceSign(instanceStatement("civicos-working-on-attestation/1", sha("unreadable")));
+    assert.deepEqual([s.ok, s.reason, s.check], [false, "RECEIPT_NO_KEY", "C-103.7"]);
+    const rc = await w.prov.signReceipt({ captureSha: sha("archived"), retrievalLocator: "https://web.archive.org/x",
+                                          retrieved: "2026-10-02T06:00:00Z" });
+    assert.deepEqual([rc.ok, rc.reason], [false, "RECEIPT_NO_KEY"]);
+    assert.deepEqual(w.snapshot(), before);
+  }
 });

@@ -27,7 +27,8 @@
  *                 promotion's steps run in too, unless a test passes its own.
  *   instanceName  the instance's name for a reconstructed hop (R19), default `unnamed`.
  *   signingKey    the instance's receipt-signing key (R34, K59): an Ed25519 private key, PKCS#8, base64; held as a
- *                 secret by the operator and replaceable. Absent, `signReceipt` answers that no key is bound. */
+ *                 secret by the operator and replaceable. Absent or unreadable, no key is bound (R57): `signReceipt`
+ *                 and `instanceSign` answer `RECEIPT_NO_KEY`, and `instanceKeyBound` false. */
 
 import { parseFrontmatter, isMachineIdentity, isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, BASIS_GRADES,
          TESTIMONY_GRADE } from "../record-grammar/index.mjs";
@@ -360,7 +361,8 @@ export function routeFinding(objectType, mark) {
 
 /* ==================================================================== *
  * REC-63 / DEC-56 — THE MARKER, ON THE SWEEP (R54; record-core R68). Moved from the legacy store's `auditPass`
- * (T19 layer 3), which now answers this module's registered finding under `route`.
+ * (T19 layer 3; that store is retired): record-core's audit (its R68) answers this module's registered finding under
+ * `route`.
  *
  * DEC-56's acceptance is that a document sits at `verified` while the audit REPORTS it, and that the disagreement
  * is LEGIBLE rather than reading as a bug. Three decisions make that true and each is here rather than in a doc:
@@ -863,8 +865,8 @@ export function instanceStatement(kind, sha) {
 }
 
 const noKey = () => actRefusal("RECEIPT_NO_KEY",
-  "this instance holds no receipt-signing key, so nothing is signed. The operator binds one as a secret; nothing is "
-  + "claimed signed until then");
+  "this instance holds no receipt-signing key it can read, so nothing is signed. The operator binds one as a secret; "
+  + "nothing is claimed signed until then");
 
 /* ======================================================================= *
  * THE MODULE
@@ -1573,12 +1575,18 @@ class Provenance {
     return `${RECEIPT_KIND}\ninstance: ${instance}\nfetched: ${retrieved}\nlocator: ${retrievalLocator}\nsha256: ${captureSha}\n`;
   }
 
+  /* The bound key, or null when none is bound or the one bound cannot be read (not base64, not an Ed25519 PKCS#8
+     key): an unreadable key is no key (R57), so every door that asks answers `RECEIPT_NO_KEY` rather than throwing. */
   async #key() {
     if (!this.#signingKey) return null;
-    const priv = await crypto.subtle.importKey("pkcs8", unb64(this.#signingKey), { name: "Ed25519" }, true, ["sign"]);
-    const jwk = await crypto.subtle.exportKey("jwk", priv);
-    const pub = Uint8Array.from(atob(jwk.x.replace(/-/g, "+").replace(/_/g, "/") + "==".slice(0, (4 - jwk.x.length % 4) % 4)), (c) => c.charCodeAt(0));
-    return { priv, pub: b64(pub), keyId: hexOf(pub) };
+    try {
+      const priv = await crypto.subtle.importKey("pkcs8", unb64(this.#signingKey), { name: "Ed25519" }, true, ["sign"]);
+      const jwk = await crypto.subtle.exportKey("jwk", priv);
+      const pub = Uint8Array.from(atob(jwk.x.replace(/-/g, "+").replace(/_/g, "/") + "==".slice(0, (4 - jwk.x.length % 4) % 4)), (c) => c.charCodeAt(0));
+      return { priv, pub: b64(pub), keyId: hexOf(pub) };
+    } catch {
+      return null;
+    }
   }
 
   /* The instance key's one signing site (R34, R56): signs `statement`, UTF-8, and records the key in `receipt_keys`
@@ -1624,6 +1632,14 @@ class Provenance {
     const signed = await this.#signWith(statement);
     if (!signed) return noKey();
     return { ok: true, signature: signed.signature, key_id: signed.key_id, public_key: signed.public_key };
+  }
+
+  /** R57 · N504 — whether an instance key is bound, so that `instanceSign` would sign: `true` or `false`, a key that
+   *  cannot be read answering `false`. It signs nothing and writes nothing (`receipt_keys` and every `first_used` stay
+   *  as they were), so a later module can ask before its first real statement. Asynchronous, as reading the key is;
+   *  never rejects. */
+  async instanceKeyBound() {
+    try { return !!(await this.#key()); } catch { return false; }
   }
 
   /** R56 — every key that has signed anything, `[{key_id, public_key, first_used}]` in the order first used; the
@@ -1962,7 +1978,7 @@ class Provenance {
   }
 
   /** R23's read for one bundle: the latest mark read through `routeFinding`, for the reads that publish `route`
-   *  beside a bundle (`op=list`, `op=audit`; the legacy store's `#withRoute`). `objectType` is the bundle's. */
+   *  beside a bundle (`op=list`, `op=audit`; once the retired legacy store's `#withRoute`). `objectType` is the bundle's. */
   routeOf(bundleId, objectType) {
     return routeFinding(objectType, this.#latestRouteMark(bundleId));
   }
@@ -1996,8 +2012,8 @@ class Provenance {
     return { tally, marked, markedTotal, markedShown: marked.length, means: OBSERVATION_MEANS, note: ROUTE_TALLY_NOTE };
   }
 
-  /** R55 — this module's figures for `op=stats` and purge's proof (record-core R63), as the legacy store's `#counts`
-   *  takes them: `register` and `routeMarks`, each keyed on `bundle_id`. `hid` (`{sql, args}`, the bundles the caller
+  /** R55 — this module's figures for `op=stats` and purge's proof (record-core R63), as the retired legacy store's
+   *  `#counts` took them: `register` and `routeMarks`, each keyed on `bundle_id`. `hid` (`{sql, args}`, the bundles the caller
    *  may not see, or null for a whole count) drops the rows naming a hidden bundle; a row whose column is null names
    *  none and is counted (`NULL NOT IN (…)` is NULL, so the column is read through COALESCE). Writes nothing. */
   counts(hid = null) {

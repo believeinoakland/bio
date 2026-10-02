@@ -3,7 +3,8 @@
  * the control plane routes to them and hands in its envelope helpers (`json`, `doAnswer`, `storeSilent`,
  * `storeRefusal`, `storageAbsent`), the evidence store's key for a digest (`captureKey`) and its stamps; each answers
  * the Response the arm answered before the move, byte for byte. And the store's nine route arms as one ops map
- * (`provenanceOps`, R53), written at T19 from the legacy store's explicit arms for its spread (K671). */
+ * (`provenanceOps`, R53), written at T19 from the legacy store's explicit arms (K671), now spread by the plane store
+ * (`src/plane/store.mjs`); the legacy store is retired. */
 
 import { attest, attestStatus, registerAuditReport } from "./index.mjs";
 
