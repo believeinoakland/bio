@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #94 · session_013FmNhyCTaUg2oLffkzwS3R · depth 1
 
-**Jobs** · record-grammar: RECORD-GRAMMAR #5 session_01PA1sW8VidctbEdHbBtynvg; signatures: SIGNATURES #5 session_01DPXkTEEtaiwXbkr5PTZn6f; subresources: SUBRESOURCES #4 session_01KN7hP9aoKoxenKuTv1wa7b; bundler: BUNDLER #6 session_01NUc9jtCVoKc7BZNT8zXv6u; record-core: RECORD-CORE #14 session_01SBgoW9ZuHi7sweUzgkmrmk; membership: MEMBERSHIP #17 session_01UieGEn5zodaDfjfxn2t4E5; promotion: PROMOTION #24 session_01HB6f4fF8NP2uzL8Dazjrop; provenance: PROVENANCE #12 session_01WHtvgo4BtJdCWMLR7cpZLQ; acquisition: ACQUISITION #5 session_01SPMymkWQC6QTzG6vcgjWn3; capture: CAPTURE #15 session_01HagLZhkXbK2oz2jacVWoU7
+**Jobs** · record-grammar: RECORD-GRAMMAR #5 session_01PA1sW8VidctbEdHbBtynvg; signatures: SIGNATURES #5 session_01DPXkTEEtaiwXbkr5PTZn6f; subresources: SUBRESOURCES #4 session_01KN7hP9aoKoxenKuTv1wa7b; bundler: BUNDLER #6 session_01NUc9jtCVoKc7BZNT8zXv6u; record-core: RECORD-CORE #14 session_01SBgoW9ZuHi7sweUzgkmrmk; membership: MEMBERSHIP #17 session_01UieGEn5zodaDfjfxn2t4E5; promotion: PROMOTION #24 session_01HB6f4fF8NP2uzL8Dazjrop; provenance: PROVENANCE #12 session_01WHtvgo4BtJdCWMLR7cpZLQ; acquisition: ACQUISITION #5 session_01SPMymkWQC6QTzG6vcgjWn3; capture: CAPTURE #15 session_01HagLZhkXbK2oz2jacVWoU7; sources: SOURCES #10 session_01U2EDRt7UjAm5Dgn5EKqRuZ
 
 ## Legacy census (§5.2 (2), K1007 (a))
 
