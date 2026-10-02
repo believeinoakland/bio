@@ -29,3 +29,7 @@ Size (session_01HWFND67AwBJQuXM4beadEA): test runs 14, module lines 3164
 ## J1 · REPORT
 
 Found in other modules (record, 'Found in other modules'): (1) my change stales the plane bundle bio-plane/dist/bio-plane.bundled.mjs (gate.mjs and promotion/ are inputs); regenerated nothing. (2) build/requirements/promotion.md R50 still says legacy-tests' census suite holds the pin; the suite is promotion's since K1006 (wording yours). (3) bio-plane/src/ratification/ops.mjs:309 names Store#gateFacts (now ratification's gateFacts), an N480 kind, seen not changed.
+
+## J2 · COMPLETE
+
+Stamp 1.52.0 and census re-pinned on the merged tree (d0343fd9c7; stamp commit 57160de53a): ROW_CENSUS 1022 rows de396d62...; every diffed row named by a T21 record, none unnamed (no QUESTION). New fixture bio-plane/test/fixtures/row-census-1.52.0.jsonl added; bio-plane/test/fixtures/row-census-1.51.0.jsonl deleted (please swap them in my tests). Negative control run: in-suite arms pass; real-tree arm on a scratch worktree 7 pass 1 fail naming C-59.99 CONTROL_ROW, as declared. D3, N471 and the re-scan's N480 kinds re-worded. Proof: test/m/promotion 101/101; row-census 8/0; d526 31/0; whole test/m 4795 pass 0 fail. Checks: architecture 0, coverage 56/56; format and ownership each 1 failure, only the fixture swap above. Record: build/jobs/T22/promotion.md on job/T22/promotion.
