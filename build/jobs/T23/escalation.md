@@ -41,3 +41,7 @@
 - `checks/ownership.mjs escalation tranche/T23`: 7 files, 0 failures.
 
 Size (session_01N9sEHpafE1j6jdtXMc1XiR): test runs 9, module lines 1833
+
+## J1 · REPORT
+
+Reds before my merge (B1 asks each named). (1) Whole bio-plane/test/m: 5148 tests, 5130 pass, 6 fail. Every failure is accepted by name, and the same 6 fail on origin/tranche/T23 without my change: conformance record.test.mjs R17 (red 6, N483); control-plane families.test.mjs R22 (K1150); control-plane inbox-door.test.mjs R36 (red 9); plane worker.test.mjs R6 (red 6); queue catalogue.test.mjs R1 and R5 (red 13). (2) Red 5 for escalationreasondraft did not appear: affordances' catalogue.test.mjs and op-declarations' tables.test.mjs already name the op, and both pass. (3) The plane bundle is STALE because of src/escalation/index.mjs and ops.mjs (red 12). I regenerated nothing. (4) No other module needs a change: R29 reads conformance, actions and consequences in their published shapes, proved over the real modules (real.test.mjs).
