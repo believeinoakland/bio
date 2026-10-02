@@ -38,7 +38,8 @@ function published(level) {
     excluded: [{ target: DOC, description: "the minutes", reason: "out of scope" }],
     citations: [{ target: obs, version: "pinned", capture }] });
   const acts = {
-    attribute: w.op("attribute", { by: M }, { caseId: CASE, edition: 1, observation: obs, level }),
+    attribute: w.op("attribute", { by: M }, { caseId: CASE, edition: 1, observation: obs, level,
+                                                    reason: "This level is how I want my words shown." }),
     case: w.signCase(CASE, 1, { project: proj,
       roster: roles.map((r) => ({ bundle_id: r.target, version_sha: r.version_sha, role: "load_bearing" })) }),
     finding: w.signFinding(F, { edges: [{ to: obs, kind: "cites" }] }),
@@ -141,7 +142,8 @@ test("R17 R25 the unsigned preparation, which names the member nowhere either, i
   w.inquiry(F, { legs: [{ target: obs }] });
   const roles = [{ target: F, version_sha: w.head(F) }];
   w.prepare(CASE, 1, { project: proj, roles, attributions: [{ observation: obs }] });
-  assert.equal(w.op("attribute", { by: M }, { caseId: CASE, edition: 1, observation: obs, level: "cover" }).ok, true);
+  assert.equal(w.op("attribute", { by: M }, { caseId: CASE, edition: 1, observation: obs, level: "cover",
+                                                reason: "This level is how I want my words shown." }).ok, true);
   /* prepared and chosen, not signed: the published projection holds nothing of it, and an outsider reads no document */
   const rowsBefore = publishedRows(w);
   assert.deepEqual(Object.values(rowsBefore).map((l) => l.length), PUBLISHED_TABLES.map(() => 0).concat([0]));
