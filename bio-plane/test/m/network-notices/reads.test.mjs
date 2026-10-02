@@ -172,10 +172,24 @@ test("R25 no answer of this module names a member: revisions, attestations, keys
                    await prepare(w, { notice: p.notice, wording: "x", collaborate: true }),
                    w.nn.directorySubmission({ case: "CASE-2026-0001-budget", viewer: A }),
                    ...w.rows(`SELECT json FROM nn_openings`).map((o) => JSON.parse(o.json))];
-  const text = JSON.stringify(answers);
-  for (const m of ["alice", "bob", "carol", "dave"])
-    for (const s of [m, `h_${m}`, `Cover ${m}`, `member:${m}`]) assert.ok(!text.includes(s), `${s} named`);
+  assert.deepEqual(namedMembers(answers), []);
+  /* negative controls: a real leak, in any of the forms a member is known by, is caught wherever it sits; a member's
+     letters inside encoded material (a key, a salt, a signature) are not a name */
+  const leaks = [{ by: "member:bob" }, ["Prepared by Cover carol."], { handle: "h_dave" }, { note: "alice" },
+                 { nested: { revision: JSON.stringify({ wording: "with dave" }) } }];
+  leaks.forEach((l) => assert.notDeepEqual(namedMembers([...answers, l]), [], JSON.stringify(l)));
+  assert.deepEqual(namedMembers([{ key: "ssh-ed25519 AAAAbobQ+alice/carol=", salt: "0bob1dave", sig: "xh_bobx" }]), []);
 });
+
+/* R25: the members a set of answers names: every maximal run of identifier and encoding characters, over the answers'
+   JSON (keys, values and JSON nested in strings alike), that is a member's id or handle. Their display name ("Cover <id>")
+   and their viewer stamp ("member:<id>") contain the id as such a run, so both are caught; a member's letters inside a
+   longer run (base64, hex, an id) are not a name. */
+function namedMembers(answers, members = ["alice", "bob", "carol", "dave"]) {
+  const names = new Set(members.flatMap((m) => [m, `h_${m}`]));
+  const runs = JSON.stringify(answers).replace(/\\./g, " ").match(/[A-Za-z0-9_+\/=-]+/g) || [];
+  return [...new Set(runs.filter((r) => names.has(r)))].sort();
+}
 
 test("R26 published rows are never altered; a bundle purge leaves a published notice standing; only the whole-store purge clears", async () => {
   const w = seeded();
