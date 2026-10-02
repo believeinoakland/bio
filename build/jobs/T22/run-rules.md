@@ -21,3 +21,7 @@
 - `format`: 85 modules, 84 requirements files; 0 failures. `architecture run-rules`: 10 product files, 15 relative imports; 0 failures. `coverage run-rules`: 15 of 15 live requirement ids named by a test; 0 failures. `ownership run-rules tranche/T22`: 3 files changed; 0 failures.
 
 Size (session_01KLQFu3Y8HVYcxxLYqhE1jL): test runs 9, module lines 1703
+
+## J1 · REPORT
+
+Generated artifacts made stale by this job's change under bio-plane/src/run-rules/ (comments only in checks.mjs and rules.mjs): bio-plane/dist/bio-plane.bundled.mjs (the plane's bundle) and agent-worker/dist/agent-worker.bundled.mjs (agent-worker's requirements.test.mjs R45 is red on it: 271 passed, 2 failed, both R45; 273/0 without the change). Neither regenerated (manifest, Generated artifacts).
