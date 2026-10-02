@@ -7,7 +7,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, V, MACHINE, SECRET, OTHER_SECRET } from "../sources/fixture.mjs";
-import { fresh, bucket, governor, provenance, sha, newKey, sshsign, signer, H } from "../capture/fixture.mjs";
+import { fresh, bucket, governor, network, granted, sha, newKey, sshsign, signer, H } from "../capture/fixture.mjs";
 import { captureAccountStatement } from "../../../src/capture/index.mjs";
 /* The namespace capture signs an account in (capture R69; K539 read it as the signer page's, `bio-ratify`), written out
    because `signatures` is not in affordances' uses: a change there fails the accepting arm below, loudly. */
@@ -95,7 +95,8 @@ test("R20 R1: sourceconsent answers a machine credential with no MACHINE_* code 
 });
 
 /* R2 (N364): `attested` names an authority the group does not hold alone. captureaccount is refused unless the capturing
-   member's registered key verifies the account; reattest asks the timestamp authority (through provenance's attest). */
+   member's registered key verifies the account; reattest asks the timestamp authority (through attestation's attest,
+   capture R68 since N512). */
 test("R2: captureaccount, graded `attested`, is refused unless a registered signing key of the capturing member "
    + "verifies the account, and accepted when one does", async () => {
   assert.equal(RUNGS.captureaccount, "attested");
@@ -114,18 +115,24 @@ test("R2: captureaccount, graded `attested`, is refused unless a registered sign
   assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
 });
 
+/* The authorities answer through a scripted network, as capture's own R68 tests do (attestation is never stood in for):
+   a request whose body carries the digest's raw bytes is granted a token bound to it, any other is refused. The
+   endpoints are `signatures`' (not in affordances' uses), so they are recognised by what is asked, not by address. */
 test("R2: reattest, graded `attested`, asks the timestamp authority for a fresh token over the digest through "
-   + "provenance's attest, and appends what it proves", async () => {
+   + "attestation's attest, and appends what it proves", async () => {
   assert.equal(RUNGS.reattest, "attested");
   const b = bucket();
   const f = fresh({ evidence: b, gov: governor(), env: { INSTANCE_NAME: "i" } });
   const bytes = new TextEncoder().encode("the captured page");
   const d = sha(bytes);
   b.held.set(`bio/captures/${d}`, bytes);
-  f.c.provenance = provenance(f.s, { attestAnswer: { ok: true, attempts: [{ service: "https://tsa.test/",
-    attempted: "2026-09-30T11:00:00Z", ok: true, kind: "rfc3161", token_sha256: H("7"), token_bytes: 900 }] } });
-  const r = await f.c.reattest({ captureSha: d, by: "m1" });
+  const over = (init) => !!init.body && Buffer.from(init.body).includes(Buffer.from(d, "hex"));
+  const net = network((url, init) => (over(init) ? new Response(granted(d)) : new Response("", { status: 500 })));
+  let r;
+  try { r = await f.c.reattest({ captureSha: d, by: "m1" }); } finally { net.restore(); }
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
-  assert.deepEqual(f.c.provenance.attests.map((a) => a.sha256), [d], "the authority is asked over this digest");
+  assert.ok(net.seen.length >= 1 && net.seen.every((x) => over(x.init)), "the authority is asked, each time over this digest");
   assert.deepEqual(r.late_attestations.map((o) => [o.kind, o.ok, o.late]), [["timestamp", true, true]]);
+  assert.equal(r.late_attestations[0].proves, `proves the bytes existed by ${r.late_attestations[0].at}, not at capture`);
+  assert.deepEqual([r.attested, r.attestation.over, r.attestation.kind], [true, d, "rfc3161"]);
 });
