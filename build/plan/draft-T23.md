@@ -54,7 +54,7 @@ T22's rules hold (merge early; one file, one editor; marks struck at the merge; 
 **L3**
 - **provenance** · N496: `mk6-bundle-names-no-author.test.mjs`:203 sends `reason` with `op=attribute` (K1058). N484: test `register.bytes`'s read contract. N497 (`fixture.mjs`:100–102). *R56 `instanceStatement`, `instanceSign`, `instanceKeys`* (network-notices).
 - **acquisition** · N492: the archive fallback calls R37's Memento services (TimeGate/TimeMap, `mementoRow`, `selectCapture`, `mementoHop`) (K1032). R31: a sweep-origin acquire carries `scope`; out-of-scope redirect refused (monitoring-r29).
-- **capture** · R82 `heldCount({sweep})` (monitoring-r29).
+- **capture** · R82 `heldCount({sweep})` (monitoring-r29). N499: the `pulled` resolve passes `at`, `within` to its pull (K1105); clears control-plane's accepted red.
 - **sources** · N494: `secret.test.mjs`'s two R11 rate tests re-worded to what they assert, no capture constants pinned (K1040).
 
 **L4**
@@ -78,7 +78,7 @@ T22's rules hold (merge early; one file, one editor; marks struck at the merge; 
 
 **L8** (merge order: corpus-export, publication, case-grammar, public-read, network-notices, ratification, case-authoring)
 - corpus-export · N484: Uses re-worded (fold 3); a job only if its tests must name the contracts, so not counted.
-- **publication** · N483: retire the `export`/`exportlog` delegates and constant re-exports (K1024), carried with accepted red 6 (by BOB #93, K1099).
+- **publication** · N483: retire the `export`/`exportlog` delegates and constant re-exports (K1024), carried with accepted red 6 (by BOB #93, K1099). N500: R56's test (K1105).
 - *case-grammar* · R10 `working_on` (a document version change is BOB's at the opening).
 - *public-read* · R18, registered credential-free public reads.
 - *network-notices* (new, DEC-111, K1019, K1031) · R1–R29 of `draft-network-notices.md`, created at `bio-plane/src/network-notices/`; its paths added to its `modules.json` entry by its job (K1043's form).
