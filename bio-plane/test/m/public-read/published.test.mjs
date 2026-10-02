@@ -287,8 +287,15 @@ test("R16 it owns no table and writes nothing: every read leaves the database by
   const seen = [];
   const spy = new Proxy(w2.p, { get(t, k) { const v = t[k]; if (typeof v !== "function") return v;
     return (...a) => { seen.push(String(k)); return v.apply(t, a); }; } });
-  const r = new PublicRead({ storage: w2.st, publication: spy });
+  const askedDocket = [];
+  const docketSpy = new Proxy(w2.docket, { get(t, k) { const v = t[k]; if (typeof v !== "function") return v;
+    return (...a) => { askedDocket.push(String(k)); return v.apply(t, a); }; } });
+  const r = new PublicRead({ storage: w2.st, publication: spy, docket: docketSpy });
   r.publishedCase({ id: "CASE-2026-0001" }); r.publishedList(); r.publishedEditions(F); r.publishedManifest();
+  r.docketPublic("CASE-2026-0001"); r.docketFeed("CASE-2026-0001");
   assert.deepEqual([...new Set(seen)].sort().filter((m) => !["caseDocMemberFrozen", "caseEditionState", "soleCase"].includes(m)), [],
                    "it reaches publication only through R53–R55");
+  /* N520: and `docket` only through the services named in Uses (its R12, R14, R15) */
+  assert.deepEqual([...new Set(askedDocket)].sort(), ["docketFeed", "docketPublic", "withdrawalOf"],
+                   "it reaches docket only through withdrawalOf, docketPublic and docketFeed");
 });

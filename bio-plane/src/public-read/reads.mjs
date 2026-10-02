@@ -1,4 +1,4 @@
-/* public-read — the registered public reads' shared terms (requirements: `build/requirements/public-read.md` R18, R10),
+/* public-read — the registered public reads' shared terms (requirements: `build/requirements/public-read.md` R18, R10, R21),
  * read by both halves: the store side's registry (`./index.mjs`) and the door's relay (`./door.mjs`).
  *
  * A later module registers once at start a set of named, credential-free reads (K31's pattern, as R8's evidence block
@@ -14,7 +14,8 @@ export const PUBLIC_READ_PARAM = /^[A-Za-z][A-Za-z0-9_]{0,63}$/;
 
 /* The ops this module answers itself, store side and door side; no registered read may take one of their names. */
 export const PUBLIC_READ_OWN_OPS = Object.freeze(["verify", "publishedmanifest", "publishedcase", "publishedbytes",
-                                                  "publishedlist", "publishededitions", "publicread"]);
+                                                  "publishedlist", "publishededitions", "publicread", "docketpublic",
+                                                  "docketfeed"]);
 
 /* R10's terms: what no registered read may declare and the door never forwards. The credentials and the door's routing
    keys (`token`, `op`, `store`, `secret`, `secretSha`, `bySecret`), every stamp the door sets from a caller (`control-plane`
@@ -25,3 +26,6 @@ export const PUBLIC_READ_RESERVED_PARAMS = Object.freeze(["name", "token", "op",
 
 /* The refusal an unregistered name answers, at the store and through the door. */
 export const PUBLIC_READ_NOT_REGISTERED = "PUBLIC_READ_NOT_REGISTERED";
+
+/* R21: the media type the docket's feed is served under (`op=docketfeed`). */
+export const DOCKET_FEED_MEDIA_TYPE = "application/atom+xml";

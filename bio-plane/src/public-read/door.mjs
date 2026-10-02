@@ -1,10 +1,10 @@
 /* public-read — the door's half of the public read path (requirements: `build/requirements/public-read.md` R1, R4, R5,
- * R9, R10, R18). Moved from `src/index.mjs` (the legacy-index map's §4.4 move, K649 (7); §12.2): the `verify` and
+ * R9, R10, R18, R21). Moved from `src/index.mjs` (the legacy-index map's §4.4 move, K649 (7); §12.2): the `verify` and
  * `publishedmanifest` arms, the REC-22 note, and the `publishedcase`/`publishedbytes` dispatch line, which hands both
  * to the Worker's `publishedRoutes` (`../publication/worker.mjs`, this module's by `paths`, K697, K702).
  * `bindPublishedPlane`'s hook hand-over stays the door's.
  *
- * `publicReadDoorOp(op, url, env, stub, helpers)` answers one of its five ops, or null for any other, so the door
+ * `publicReadDoorOp(op, url, env, stub, helpers)` answers one of its seven ops, or null for any other, so the door
  * asks it and goes on. `helpers` are the door's own (`control-plane`'s, later in the order, handed in as
  * `capturePublicOp` is): `json`, `requiredArgument`, `storeSilent`, `storeRefusal`, `doAnswer`; and, optionally,
  * `publicReads`, the names of the registered reads the door routes as ops of their own (R18).
@@ -13,13 +13,41 @@
  * `publicReads` (op-declarations declares it `classes: null`; `control-plane` R45 routes it), both through
  * `publicReadDoorRead`. Either way it is served as the four ops above are, under R10's terms: from the published store
  * the door hands in (`stub`, pinned to `bio`), with no credential. No header is forwarded, and of the query only the
- * parameters that carry neither a credential nor a stamp; the store side then hands the read only those it declared. */
+ * parameters that carry neither a credential nor a stamp; the store side then hands the read only those it declared.
+ *
+ * R21: THE DOCKET AND ITS FEED, `op=docketpublic&case=<case>` and `op=docketfeed&case=<case>`, through
+ * `publicReadDoorDocket`, under the same terms: the published store the door hands in, no credential, and of the query
+ * only `case`. */
 
 import { publishedRoutes } from "../publication/worker.mjs";
-import { PUBLIC_READ_NAME, PUBLIC_READ_RESERVED_PARAMS, PUBLIC_READ_NOT_REGISTERED } from "./reads.mjs";
+import { PUBLIC_READ_NAME, PUBLIC_READ_RESERVED_PARAMS, PUBLIC_READ_NOT_REGISTERED, DOCKET_FEED_MEDIA_TYPE } from "./reads.mjs";
 
 export const PUBLIC_READ_DOOR_OPS = Object.freeze(["verify", "publishedmanifest", "publishedcase", "publishedbytes",
-                                                   "publicread"]);
+                                                   "publicread", "docketpublic", "docketfeed"]);
+
+/** R21 (DEC-116 item 8; DEC-100 item 2): a case's docket (`docketpublic`, JSON at 200) or its Atom feed (`docketfeed`,
+ *  the feed's own bytes at 200 under `application/atom+xml`), relayed from the published store under R10's terms: only
+ *  `case` is forwarded, and no header. No `case` is the required-argument refusal (400). A case the docket answers null
+ *  for is the store's `NOT_PUBLISHED`, relayed at 404 exactly as `op=publishedcase` relays it for an absent case, so
+ *  the two answers are the same bytes. R9: the store's own refusal through `storeRefusal`; a reply that is no answer is
+ *  `storeSilent`'s. */
+export async function publicReadDoorDocket(op, url, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer }) {
+  const c = (url.searchParams.get("case") || "").trim();
+  if (!c)
+    return json({ ok: false, ...requiredArgument(op, "case", "<a published case's id>"),
+      error: `${op} requires case=<a published case's id>` }, 400);
+  const out = await doAnswer(stub.fetch(new Request(`http://do/${op}?${new URLSearchParams({ case: c })}`)));
+  if (out.refused) return storeRefusal(out);
+  if (!out.answered) return storeSilent(op, out.correlation);
+  const r = out.result;
+  /* An answer with nothing in it is a silence wearing an answer's envelope (as at `publishedcase`), never a claim. */
+  if (!r || typeof r !== "object" || typeof r.ok !== "boolean") return storeSilent(op);
+  if (!r.ok) return json({ ok: false, ...r }, 404);
+  if (op === "docketpublic") return json(r, 200);
+  if (typeof r.feed !== "string") return storeSilent(op);
+  return new Response(r.feed, { status: 200, headers: {
+    "content-type": DOCKET_FEED_MEDIA_TYPE, "access-control-allow-origin": "*" } });
+}
 
 /** R18: one registered read, relayed from the published store under R10's terms. A name that is not a read's spelling
  *  is the required-argument refusal (400); an unregistered name is the store's `PUBLIC_READ_NOT_REGISTERED`, relayed at
@@ -108,6 +136,8 @@ export async function publicReadDoorOp(op, url, env, stub, helpers) {
     return json({ ok: true, result: out.result }, 200);
   }
   if (op === "publishedcase" || op === "publishedbytes") return publishedRoutes({ op, url, env, stub });
+  /* R21: the docket and its feed, by case. */
+  if (op === "docketpublic" || op === "docketfeed") return publicReadDoorDocket(op, url, env, stub, helpers);
   /* R18: a registered read, by `name`, or by its own op where the door names it. */
   if (op === "publicread") return publicReadDoorRead(url.searchParams.get("name") || "", url, env, stub, helpers);
   if (publicReads && typeof op === "string" && !PUBLIC_READ_DOOR_OPS.includes(op)

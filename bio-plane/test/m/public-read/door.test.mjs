@@ -101,7 +101,8 @@ test("R3 R5 the door hands publishedcase and publishedbytes to the Worker's rout
   assert.deepEqual([cb.caseId, cb.findings[0].body.state], ["CASE-2026-0001", "published"]);
   const b = await door("publishedbytes", { sha256: pin }, env, stubOf(w));
   assert.deepEqual([b.status, await b.text()], [200, text]);
-  assert.deepEqual(PUBLIC_READ_DOOR_OPS, ["verify", "publishedmanifest", "publishedcase", "publishedbytes", "publicread"]);
+  assert.deepEqual(PUBLIC_READ_DOOR_OPS, ["verify", "publishedmanifest", "publishedcase", "publishedbytes", "publicread",
+                                          "docketpublic", "docketfeed"]);
   for (const op of ["caseflags", "casedocument", "instancegroup", "publishedlist", ""])
     assert.equal(await door(op, {}, env, stubOf(w)), null, op);
 });
