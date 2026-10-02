@@ -23,3 +23,7 @@
 - Red 5: I added or changed no catalogue row, so there is no `awaiting stamp` row to list.
 
 Size (session_01LL57hVTtupUsVm9pj8DaCy): test runs 4, module lines 3211
+
+## J1 · COMPLETE
+
+COMPLETE. N506 (R26): the sweep-* signals are read through link-sweep.sweepConditions (its R11) via a new linkSweep dep (linkSweepOf by default), never monitoring; this clears red 7's queue-producers share (plane compose.test.mjs:101, door.test.mjs:183 pass). N489 (R28): no member-facing word says 'subject' today; a new R28 test covers all 32+ kinds, with a negative control. N502/N508 re-scan: nothing. Module suite 70/70. Whole test/m: 5259 pass, 8 fail. Six are the accepted reds 6, 7 and 9 (they also fail on tranche/T24). The other two are new and are queue's: test/m/queue/world.mjs:136 and signals.test.mjs:26 still fake monitoring.sweepConditions, and must pass linkSweep: { sweepConditions } instead (a test-world change in queue's files, for queue's L11 job). REPORT: the plane's bundle is stale (src change; nothing regenerated). The plane should compose link-sweep before op=queue's first read (K61, first call wins). All four checks have 0 failures. No catalogue row changed (red 5: none). Details in the record. Please merge job/T24/queue-producers.
