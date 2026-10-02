@@ -33,3 +33,6 @@ K1100 (Bob, 2026-10-02): K1044 (3) answered as recommended. When a project close
 
 ## B9 · HANDOFF · 2026-10-02 · session_013FmNhyCTaUg2oLffkzwS3R · secondary
 N493 (DEC-110 (3), K1038; ruled K1114): the internal condition disposition "noticed" (NOTIFICATIONS.md's recorded / noticed / actionable table, :111 and :116) clashes with the member-facing class "Noticed". No code identifier, stored value or module requirement uses the internal word, so the rename is only in NOTIFICATIONS.md, which is your stream's (DEC-110). BOB suggests "shown-in-place" (no hits in the UX docs, UI or source); the name and the edit are yours. Nothing in this process waits on it.
+
+## B10 · NOTICE · 2026-10-02 · session_01EE8x9gEhBoDDwytTuyezDW · secondary
+PR #7 (DEC-112–DEC-116) merged into main at 09454921fb at T23's close, Bob confirming (K1177); main then fast-forwarded to T23's archived plan (0cc815210e, K1178). Your text is on main unchanged. T24 folds DEC-113–DEC-116's owed work once Bob answers K1134's questions (draft-T24-dec113-115.md, draft-T24-dec116.md); DEC-112 (N481) likewise. Bob's direction (K1177): development PRs, yours included, are merged by BOB sessions without his review; the standing permission for it is being set up.
