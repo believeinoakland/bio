@@ -13,8 +13,8 @@ Builds and verifies the signed and timestamped statements the plane and the inst
 **Signatures (`sshsig.mjs`)**
 
 `NS_RELEASE`, `NS_RATIFY`, `NS_FLEET`, `NS_NOTICE` → strings (`"bio-release"`, `"bio-ratify"`, `"bio-release-fleet"`, `"bio-working-on"`).
-- **R1** *(not yet met: T23)* Four distinct compiled constants: `NS_RELEASE`, `NS_RATIFY`, `NS_FLEET` and `NS_NOTICE`. No two are equal, so a signature that verifies in one namespace never verifies in another. (Amended at T23's opening from "Three": DEC-111, K1019, K1031.)
-- **R37** *(not yet met: T23)* `NS_NOTICE` is `"bio-working-on"`, a compiled constant distinct from every other namespace (R1's rule). The offline signer page and the browser signer sign in it (DEC-111, K1019, K1031).
+- **R1** Four distinct compiled constants: `NS_RELEASE`, `NS_RATIFY`, `NS_FLEET` and `NS_NOTICE`. No two are equal, so a signature that verifies in one namespace never verifies in another. (Amended at T23's opening from "Three": DEC-111, K1019, K1031.)
+- **R37** `NS_NOTICE` is `"bio-working-on"`, a compiled constant distinct from every other namespace (R1's rule). The offline signer page and the browser signer sign in it (DEC-111, K1019, K1031).
 
 `verifySshsig(armored, message, expectNamespace, allowedKeys) → Promise<{ok:true, keyB64, namespace} | {ok:false, reason, ...}>`
 - **R2** `ok:true` only when: `armored` dearmors to a version-1 SSHSIG blob whose key and signature are both `ssh-ed25519` (32-byte key, 64-byte signature); its `namespace` equals `expectNamespace`; its signing key's wire base64 (`keyB64`) is in `allowedKeys`, after normalising each entry (a bare base64 field, a full `"ssh-ed25519 AAAA… comment"` line, or a principal-prefixed allowed_signers line all name the same key); and the signature verifies over `SSHSIG | namespace | reserved | hashAlg | H(message)`, hashed with the blob's own declared `hashAlg` (`sha256` or `sha512`), against the exact bytes of `message`.
@@ -29,7 +29,7 @@ Builds and verifies the signed and timestamped statements the plane and the inst
 - **R7** Its leading token (`bio-ratify-case`) differs from `ratifyStatement`'s (`bio-ratify`), so no bundle ratification and no case ratification can ever be the same signed bytes.
 
 `noticeStatement(noticeId, revision, sha) → Uint8Array`
-- **R38** *(not yet met: T23)* Returns exactly `` `bio-working-on ${noticeId} ${revision} ${sha}\n` ``. It throws when `noticeId` is not an opaque id (record-core R6's shape: `^[A-Z]+-\d{4}-\d{4}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$`, any prefix, the tail optional; K1115), `revision` is not a whole number of at least 1, or `sha` is not 64 lowercase hex characters (DEC-111, K1019, K1031).
+- **R38** Returns exactly `` `bio-working-on ${noticeId} ${revision} ${sha}\n` ``. It throws when `noticeId` is not an opaque id (record-core R6's shape: `^[A-Z]+-\d{4}-\d{4}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$`, any prefix, the tail optional; K1115), `revision` is not a whole number of at least 1, or `sha` is not 64 lowercase hex characters (DEC-111, K1019, K1031).
 
 `fleetStatement({version, plane, members}) → string`
 - **R8** Renders `` `bio-release-fleet/2\nversion ${version}\nplane ${plane.sha256} ${plane.bytes} ${plane.asset}\n` ``, then one line per entry of `members`, then a trailing `\n`.

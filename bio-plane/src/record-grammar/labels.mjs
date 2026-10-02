@@ -65,8 +65,10 @@ export function lawProposalState(proposedBy) {
 /* K171 (2) (T8, N129): THE SAME LABEL FOR EVERY PROPOSAL THE ACTION LAYER STORES APART. A standard proposed by
  * the Legal/Policy Lookup skill or a member (standards R9), a comparison against standards (conformance R12), a
  * filing's draft (filings R5), a candidate theory and remedy (filings R14), an action plan's proposed option
- * (action-plans R11), a prepared communication (filings R23; both N-A1, T18) and wording proposed for a filing template
- * (filing-templates R6; K921, T21) are each machine work or a member's
+ * (action-plans R11), a prepared communication (filings R23; both N-A1, T18), wording proposed for a filing template
+ * (filing-templates R6; K921, T21), a draft of a new edition's statement of what changed (case-authoring R39;
+ * DEC-101) and an escalation's pre-assembled opening reason (escalation R29; DEC-89; both K1019, T23) are each
+ * machine work or a member's
  * suggestion, never the thing itself, and each is labelled by `lawProposalState`'s three states. ONE CLOSED
  * TABLE, keyed by what was proposed: `governing_laws` is REC-195's table above, the same object, so its words
  * cannot drift from it; each other subject says, in each state, what the proposal is not. A subject the table does
@@ -137,6 +139,31 @@ export const PROPOSAL_STATES = Object.freeze({
     unstated: 'the record does not say who proposed this wording for a filing template, and it is not a template\'s '
       + 'text until a member adopts it into a draft',
   }),
+  /* DEC-101 (1) (K1019; T23, R43): a draft of a new edition's statement of what changed in it, and why
+     (`BIO_Publication_v0_1.md` §5A; case-authoring R39), is not the group's statement until a member adopts or rewrites
+     it, and the record keeps that it began as a machine draft. */
+  edition_statement: Object.freeze({
+    machine_proposed: 'a machine credential drafted this statement of what changed in this edition, and why. That is '
+      + 'machine work, labelled as machine work: it is a draft, which can help members say what changed and can never '
+      + 'sign a statement. It is not the group\'s statement until a member adopts or rewrites it',
+    member_proposed: 'a member proposed this statement of what changed in this edition, and why. It is a proposal and '
+      + 'not the group\'s statement until a member adopts or rewrites it, and the record holds who proposed it',
+    unstated: 'the record does not say who proposed this statement of what changed in this edition, and why, and it is '
+      + 'not the group\'s statement until a member adopts or rewrites it',
+  }),
+  /* DEC-89 with Bob's addition (K1019; T23, R44): an escalation's opening reason assembled from the determination's
+     record (escalation R29) is not a member's reason until a member sends it, as offered or edited; the reason then
+     recorded is the member's own. */
+  escalation_reason: Object.freeze({
+    machine_proposed: 'a machine credential assembled this reason for opening an escalation from the determination\'s '
+      + 'record. That is machine work, labelled as machine work: it is a draft, which can set out what the record holds '
+      + 'and can never open an escalation. It is not a member\'s reason until a member sends it, as offered or edited',
+    member_proposed: 'a member assembled this reason for opening an escalation from the determination\'s record. It is '
+      + 'a proposal and not a member\'s reason until a member sends it, as offered or edited, and the record holds who '
+      + 'proposed it',
+    unstated: 'the record does not say who assembled this reason for opening an escalation from the determination\'s '
+      + 'record, and it is not a member\'s reason until a member sends it, as offered or edited',
+  }),
 });
 
 /** The whole label block a reader is shown beside a proposal: who, which state,
@@ -195,9 +222,11 @@ export function proposalLabel(proposedBy, subject) {
 
 /** The minter a row carries when the RECORD ITSELF minted it, at the moment a
  *  member's own citation first named the passage (`op=promote`'s projection).
- *  ONE literal in ONE place: `mintContent`'s default, the classifier below and
- *  every assertion read the same string, so the stamp and the reading of it
- *  cannot drift — REC-46's finding taken before it has a chance to repeat. */
+ *  ONE literal in ONE place: content's `mint` default, the stamps inquiry and
+ *  basis-versions pass at the write, query's `minted_by` filter, the classifier
+ *  below and every assertion read the same string (content's `mintContent`,
+ *  which defaulted to it, was removed uncalled in T22), so the stamp and the
+ *  reading of it cannot drift — REC-46's finding taken before it repeats. */
 export const CONTENT_MINTED_BY_PLANE = 'plane';
 
 /** The four states of a content row's `minted_by`, each carrying the sentence a

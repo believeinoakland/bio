@@ -37,7 +37,8 @@ T22's rules hold (merge early; one file, one editor; marks struck at the merge; 
 6. N483's publication share is carried (P19; K902's precedent; by BOB #93, K1099): conformance `record.test.mjs`:165 from publication's L8 merge until conformance's L9 merge, and plane and queue-producers until L11.
 7. Rows a T23 job in L3–L11 changes or adds (N486's catalogue rows; acquisition's `SWEEP_*`) are `awaiting stamp` until T24's L2 (P8: promotion's one job is L2).
 8. provenance's miniflare `mk6-bundle-names-no-author.test.mjs`:203, red since publication's T22 L8 merge, until provenance's L3 merge (N496, K1076).
-9. control-plane `inbox-door.test.mjs`'s test that a reasoned `pulled` resolve records the reason on the knock's row (115/116), until capture's L3 merge (N499, K1105, K1111); control-plane R36's mark is struck then.
+9. control-plane `inbox-door.test.mjs`'s test that a reasoned `pulled` resolve records the reason on the knock's row (115/116), until capture's L3 merge (N499, K1105, K1111) if that clears it; the door calls capture's `pullKnock`, not `inboxResolve` (control-plane `pull.mjs`:110–123), so if it stays red, until control-plane's L11 merge (K1117). control-plane R36's mark is struck when it clears.
+11. `fleetbundles.test.mjs` (the plane bundle carries `MODULE_ORDER`), from membership's L2 merge until L2's close regenerates the bundle (K1117; T22 red 2's precedent).
 10. coverage, re-taken at T22's close (K1111): escalation R29 (L9), record-grammar R43 R44 (L1), publication R56 (L8, N500), skills R31 (L6); each new N486 id until its module's merge. Replaces item 3's list.
 
 ## Roster by layer (39 jobs, 11 layers: 4, 3, 4, 2, 3, 5, 1, 6, 2, 2, 7; all unconditional, K1100)
@@ -100,7 +101,7 @@ T22's rules hold (merge early; one file, one editor; marks struck at the merge; 
 **L11** (merge order: affordances and op-declarations early, control-plane after; tasks; queue-producers before queue; plane last)
 - **affordances** · N485's three ops' NON_ACTS or grade (R7, R27); `sweeps` (R7, read); *the notice ops*.
 - **op-declarations** · N485: specs for `escalationreasondraft`, `whatchangedpropose`, `whatchangeddrafts` (`op-declarations.md`:41); `sweeps` (member session, read; `draft-monitoring-r29.md`:159). *`noticeprepare`, `noticepost`, `notices`.*
-- **control-plane** · routes the same ops (fold 5) and `sweeps` (?: if it routes monitoring's ops); *the notice ops and public reads R20, R21, R10*. (?: CONTROL-PLANE's T22 question on capture's `pulled` arm without `within`, K1051, may add a capture entry.)
+- **control-plane** · R36 (K1117): if capture's N499 leaves `inbox-door.test.mjs`'s reason-on-row test red, the door resolves a `pulled` knock through capture's `inboxResolve` (which records the reason on the row inside the pull's one act) instead of `pullKnock`. Routes the same ops (fold 5) and `sweeps` (?: if it routes monitoring's ops); *the notice ops and public reads R20, R21, R10*. (?: CONTROL-PLANE's T22 question on capture's `pulled` arm without `within`, K1051, may add a capture entry.)
 - **tasks** · N497.
 - **queue-producers** · N483: `EXPORT_LOG_LIMIT_DEFAULT`, `exportLog` from corpus-export. R26 sweep CONDITIONs. *R27 notice CONDITIONs.*
 - **queue** · Fold 8: R1/R5 over the `sweep-*` kinds; *the `notice-*` kinds*.
