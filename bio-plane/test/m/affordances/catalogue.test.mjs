@@ -73,8 +73,30 @@ test("R1: PER_ITEM_ACTS holds the four set acts, weight per-item, set key items,
 
 /* R2 as folded (K211, K221): K221 adds `triage` and `reevaluationrecord` to the reasoned rung; K264 layer 9's seven
    (restored in T9 with N216), K309; N310 `determine` (conformance's N233). */
-test("R2: the rung ladder, low to high, and RUNGS' assignment", () => {
+/* DEC-88's three bands (K1038, J1), word for word as R2 lists them, and K1019's and K1023's four T22 acts. */
+const DEC88 = {
+  reversible: ["suggest", "extractpropose", "contradictionpropose", "themepropose", "standardpropose", "comparisonpropose",
+    "theorypropose", "actionriskpropose", "actionlawspropose", "filingprepare", "contentmint", "casedraft", "reviewcomment",
+    "taskforward", "taskresolve", "thread", "connectionchoose", "themedeclare", "themeplace", "entityalias", "goallink",
+    "versionkeep", "airunopen", "airunclose", "projectfork"],
+  reasoned: ["testify", "lead", "leadlook", "leadshare", "transcribe", "transcriptionattest", "attesttext", "resolve",
+    "resolvetestify", "entitycreate", "versionadopt", "progressiondefine", "goaldeclare", "aspirationdeclare",
+    "aspirationdeadend", "objectivecondition", "biasadopt", "strengthbar", "standarddeclare", "standardadopt",
+    "consequencerecord", "actioncorrespond", "filingsent", "escalationopen", "escalationattach", "counselpacket",
+    "attribute", "statementack", "workobjective", "inboxresolve"],
+  terminal: ["escalationend", "filingapprove"],
+};
+const T22_REASONED = ["declinetoescalate", "heldsetaside", "heldrestore", "addressfrequencyset"];
+const bandsOf = (rungs) => {
+  const got = {};
+  for (const [op, r] of Object.entries(rungs)) (got[r] ??= []).push(op);
+  for (const k of Object.keys(got)) got[k].sort();
+  return got;
+};
+test("R2: the rung ladder, low to high, and RUNGS' assignment — DEC-88's three bands word for word among them — with "
+   + "its negative controls: an op moved to the wrong band, or one of the 57 left out of RUNGS, is seen", () => {
   assert.deepEqual(RUNG_LADDER, ["reversible", "reasoned", "terminal", "attested", "irreversible"]);
+  assert.deepEqual([DEC88.reversible.length, DEC88.reasoned.length, DEC88.terminal.length], [25, 30, 2]);
   const want = {
     irreversible: ["publish"],
     attested: ["attest", "caseratify", "ratify", "reattest", "captureaccount" /* N364 */],
@@ -96,13 +118,19 @@ test("R2: the rung ladder, low to high, and RUNGS' assignment", () => {
       /* K918: actions R52's hold statement */
       "actionhold",
       /* R30: a template's retirement and a member's act on a local fact */
-      "templateretire", "factconfirm"],
+      "templateretire", "factconfirm", ...DEC88.reasoned, ...T22_REASONED],
   };
+  want.reversible.push(...DEC88.reversible);
+  want.terminal.push(...DEC88.terminal);
   for (const k of Object.keys(want)) want[k].sort();
-  const got = {};
-  for (const [op, r] of Object.entries(RUNGS)) (got[r] ??= []).push(op);
-  for (const k of Object.keys(got)) got[k].sort();
-  assert.deepEqual(got, want);
+  assert.deepEqual(bandsOf(RUNGS), want);
+  /* negative controls: the same comparison sees a misbanded op and an op left unranked */
+  assert.notDeepEqual(bandsOf({ ...RUNGS, testify: "reversible" }), want);
+  const { suggest, ...withoutOne } = RUNGS;
+  assert.equal(suggest, "reversible");
+  assert.notDeepEqual(bandsOf(withoutOne), want);
+  for (const op of [...DEC88.reversible, ...DEC88.reasoned, ...DEC88.terminal, ...T22_REASONED])
+    assert.ok(!Object.hasOwn(RUNG_ABSENT, op), `${op} left RUNG_ABSENT`);
 });
 
 test("R2: the correction path states that correction moves forward and nothing is erased (DEC-19)", () => {
@@ -138,7 +166,7 @@ test("R4: VOCABULARIES carries exactly the named vocabularies", () => {
     "basis_roles", "entity_kinds", "relation_kinds", "stage_requiredness", "action_basis_kinds",
     "correspondence_directions", "correspondence_stages", "correspondence_outcomes", "resolutions", "risk_tiers",
     "version_states", "version_edges", "version_reason_required", "rung_ladder", "rung_correction_path",
-    "rung_absence_grounds", "sufficiency_claim_states", "content_mint_states",
+    "rung_absence_grounds", "rung_consequences" /* R31 */, "sufficiency_claim_states", "content_mint_states",
     /* N345 */ "contradiction_coordinates", "plurality_differences", "resolution_kinds", "norm_canons",
     "dismissal_reasons",
     /* R30 */ "template_states", "template_uses", "template_review_outcomes", "local_fact_acts",
@@ -157,6 +185,7 @@ test("R4: each fixed value is the very object its enforcing module refuses again
     ["version_states", basisVersions.VERSION_MACHINE.legal], ["version_edges", basisVersions.VERSION_MACHINE.edges],
     ["version_reason_required", basisVersions.VERSION_REASON_REQUIRED], ["rung_ladder", RUNG_LADDER],
     ["rung_correction_path", IRREVERSIBLE_CORRECTION_PATH], ["rung_absence_grounds", RUNG_ABSENCE_GROUNDS],
+    ["rung_consequences", A.CONSEQUENCE_STATEMENTS] /* R31: this module's own */,
     ["sufficiency_claim_states", basisVersions.SUFFICIENCY_CLAIM_STATES], ["content_mint_states", content.CONTENT_MINT_STATES],
     /* N345: inquiry R46's frozen vocabularies and contradiction R31's dismissal reasons */
     ["contradiction_coordinates", inquiry.CONTRADICTION_COORDINATES], ["plurality_differences", inquiry.PLURALITY_DIFFERENCES],
@@ -318,10 +347,11 @@ test("R7: NON_ACTS gives every op it names a reason, names no act, and a reason 
     ids(CAPTURE_ACTS));
 });
 
-test("R19: `terminal` is given only while STATES.information.edges.retired is empty, and `irreversible` only to publish", () => {
+test("R19: `terminal` is given only while STATES.information.edges.retired is empty — to retire and DEC-88's two — and "
+   + "`irreversible` only to publish", () => {
   const terminal = Object.keys(RUNGS).filter((op) => RUNGS[op] === "terminal");
   assert.deepEqual(STATES.information.edges.retired, []);
-  assert.deepEqual(terminal, ["retire"]);
+  assert.deepEqual(terminal.sort(), ["escalationend", "filingapprove", "retire"]);
   assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "irreversible"), ["publish"]);
 });
 
@@ -394,12 +424,21 @@ test("R25: no place any jurisdiction profile names appears in this module's outw
 /* R27 as ruled (K211): of the 42 ops graded `undetermined` before T7, three moved to `reasoned` and four to
    `reversible`; the other 34 stay, with intent's seven graded on the same rule (K211 Q4). Whether each `reasoned`
    op really refuses without an account is R19's drive (plane.test.mjs, backing.test.mjs). */
-test("R27: no op is graded `undetermined` that the ruling moved, and exactly the ruled ops remain `undetermined`", () => {
+const R27_LEFT = ["inboxpull", "contradictionrecommend", "contradictionoptin", "contradictionrespond", "communicationprepare",
+  "templatesave", "actioncreate", "actionpressure", "planopen", "optionadd", "optionpropose", "optionadopt",
+  "checkpointrecord", "optionstart", "templatedraft", "templaterevise", "templatepropose", "templatesubmit",
+  "templatereview", "templatecomment", "templateapprove"];
+const undeterminedOf = (absent) => Object.keys(absent).filter((op) => absent[op].ground === "undetermined").sort();
+test("R27: no op is graded `undetermined` that the rulings moved (K211, DEC-88), and exactly the 21 R27 names remain "
+   + "`undetermined`; one of DEC-88's 57 left there is seen", () => {
   const moved = { biasdebtresolve: "reasoned", actionrisktier: "reasoned", narrow: "reasoned", versionaccept: "reversible",
     versioncurrent: "reversible", actionlaws: "reversible", projectvisibilityset: "reversible" };
   for (const [op, r] of Object.entries(moved)) { assert.equal(RUNGS[op], r, op); assert.ok(!Object.hasOwn(RUNG_ABSENT, op), op); }
-  const undetermined = Object.keys(RUNG_ABSENT).filter((op) => RUNG_ABSENT[op].ground === "undetermined").sort();
-  assert.deepEqual(undetermined, ["inboxresolve", "taskforward", "taskresolve", "actioncorrespond", "actionlawspropose",
+  const undetermined = undeterminedOf(RUNG_ABSENT);
+  assert.deepEqual(undetermined, [...R27_LEFT].sort());
+  assert.equal(undetermined.length, 21, "R27's count: DEC-88 moved 57 of the 78 into RUNGS");
+  /* the 78 held before DEC-88: the 21 and the 57 together, each of the 57 now ranked in RUNGS */
+  const before78 = ["inboxresolve", "taskforward", "taskresolve", "actioncorrespond", "actionlawspropose",
     "projectfork", "biasadopt", "strengthbar", "entitycreate", "entityalias", "resolve", "attesttext", "thread",
     "airunopen", "airunclose", "suggest", "contentmint", "extractpropose", "connectionchoose", "transcribe",
     "transcriptionattest", "testify", "lead", "leadshare", "attribute", "casedraft", "reviewcomment", "statementack",
@@ -420,8 +459,14 @@ test("R27: no op is graded `undetermined` that the ruling moved, and exactly the
     "planopen", "optionadd", "optionpropose", "optionadopt", "checkpointrecord", "optionstart",
     /* R30: K921's seven */
     "templatedraft", "templaterevise", "templatepropose", "templatesubmit", "templatereview", "templatecomment",
-    "templateapprove"].sort());
-  assert.equal(undetermined.length, 78, "R27's count: K921's seven (R30) added to the 71 held before them");
+    "templateapprove"].sort();
+  assert.equal(before78.length, 78);
+  const moved57 = before78.filter((op) => !R27_LEFT.includes(op));
+  assert.deepEqual(moved57.sort(), [...DEC88.reversible, ...DEC88.reasoned, ...DEC88.terminal].sort());
+  for (const op of moved57) assert.ok(Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
+  /* negative control: one of the 57 left in RUNG_ABSENT reads a different count */
+  const left = { ...RUNG_ABSENT, suggest: { ground: "undetermined", is: "x" } };
+  assert.notDeepEqual(undeterminedOf(left), [...R27_LEFT].sort());
 });
 
 test("R27: no new rung is added — the ladder keeps its five", () => {
@@ -444,6 +489,11 @@ import { actionsOps } from "../../../src/actions/index.mjs";
 import { actionPlansOps } from "../../../src/action-plans/index.mjs";
 import { actionClocksOps } from "../../../src/action-clocks/index.mjs";
 const LAYER9_RUNGS = {
+  /* DEC-88 (K1038): layer 9's thirteen that were `undetermined` */
+  standarddeclare: "reasoned", standardpropose: "reversible", standardadopt: "reasoned", comparisonpropose: "reversible",
+  consequencerecord: "reasoned", filingprepare: "reversible", filingapprove: "terminal", filingsent: "reasoned",
+  counselpacket: "reasoned", theorypropose: "reversible", escalationopen: "reasoned", escalationattach: "reasoned",
+  escalationend: "terminal",
   consequencerevise: "reasoned", addressedrecord: "reasoned", escalationevaluate: "reasoned",
   escalationadvance: "reasoned", escalationdecline: "reasoned", escalationsuspend: "reasoned",
   escalationresume: "reversible",
@@ -455,11 +505,6 @@ const LAYER9_RUNGS = {
 };
 const LAYER9_ABSENT = {
   counselpacketexport: "substrate",
-  standarddeclare: "undetermined", standardpropose: "undetermined", standardadopt: "undetermined",
-  comparisonpropose: "undetermined", consequencerecord: "undetermined",
-  filingprepare: "undetermined", filingapprove: "undetermined", filingsent: "undetermined",
-  counselpacket: "undetermined", theorypropose: "undetermined", escalationopen: "undetermined",
-  escalationattach: "undetermined", escalationend: "undetermined",
   communicationprepare: "undetermined", templatesave: "undetermined",   // K705: filings R23, R26
   actioncreate: "undetermined", actionpressure: "undetermined",         // K709: actions R47, R48
   /* K727: action-plans' six, and action-clocks' two reminders (a member's own request, `queuesnooze`'s ground) */
@@ -502,7 +547,7 @@ test("R3 R7 R12: layer 9's 41 mutating ops each carry a NON_ACTS reason and thei
     || [...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => a.id === op);
   assert.deepEqual(LAYER9_READS.filter(named), []);
   assert.ok(Object.hasOwn(NON_ACTS, "actionriskpropose"));
-  assert.equal(RUNG_ABSENT.actionriskpropose?.ground, "undetermined");
+  assert.equal(RUNGS.actionriskpropose, "reversible", "DEC-88");
   assert.ok(!named("monitoring"));
   /* the control plane's rows for these ops, as legacy-index's K263 routes them: gated and mutating for the 22, reads
      ungated; nothing is unaccounted */
@@ -655,7 +700,8 @@ test("R7: NON_ACTS.ratify says its pre-flight is op=publishpreflight (case-autho
   assert.doesNotMatch(NON_ACTS.ratify, /deferred/i);
   assert.match(NON_ACTS.inboxresolve, /`pulled` arm is the pull/);
   assert.match(NON_ACTS.inboxresolve, /op=inboxpull/);
-  assert.match(RUNG_ABSENT.inboxresolve.is, /inboxpull/);
+  assert.match(NON_ACTS.inboxresolve, /reason on every arm/);
+  assert.equal(RUNGS.inboxresolve, "reasoned", "DEC-88; capture R32");
 });
 
 test("R3: the signer pair and knockerconsent are graded `credential`, as signeradd and knock; inboxpull `undetermined` "
@@ -764,4 +810,116 @@ test("R30 R19: TEMPLATE_REASON_REFUSED and FACT_HOW_REFUSED are in the justifica
   /* the template and fact refusals that ask for an object, a choice or a form, never an account, stay out */
   for (const c of ["NO_SUCH_TEMPLATE", "TEMPLATE_TEXT_REFUSED", "NOT_A_DRAFT", "NO_SUCH_FACT", "FACT_ACT_REFUSED",
     "FACT_VALUE_REFUSED", "MACHINE_CANNOT_CONFIRM", "REVIEW_REFUSED"]) assert.ok(!JUSTIFICATION_REFUSALS.includes(c), c);
+});
+
+/* R31 (DEC-88 (4); K1038): the six judgement calls' consequence statements, published beside the ladder as
+   `VOCABULARIES.rung_consequences`, the very object `CONSEQUENCE_STATEMENTS`; the rung names unchanged (R27); no key
+   added to the decorated act (R11), so op=affordances and a queue item's options keep their shape. */
+test("R31 R4 R11: CONSEQUENCE_STATEMENTS holds exactly the six with their friction — the full dialog for attribute, "
+   + "leadshare, entitycreate, strengthbar and filingapprove, in-place for workobjective — each with its statement, "
+   + "published as VOCABULARIES.rung_consequences by reference, the rungs unchanged and the decorated act's keys too", () => {
+  const C = A.CONSEQUENCE_STATEMENTS;
+  assert.deepEqual(Object.fromEntries(Object.entries(C).map(([op, c]) => [op, c.friction])), {
+    attribute: "dialog", leadshare: "dialog", entitycreate: "dialog", strengthbar: "dialog", filingapprove: "dialog",
+    workobjective: "in-place" });
+  for (const [op, c] of Object.entries(C)) {
+    assert.deepEqual(Object.keys(c).sort(), ["friction", "statement"], op);
+    assert.ok(typeof c.statement === "string" && c.statement.length > 80, op);
+  }
+  assert.equal(VOCABULARIES.rung_consequences, C, "the same object, never a copy");
+  assert.equal(A.vocabulariesFor(["x"]).rung_consequences, C);
+  assert.equal(A.affordancesAnswer({ kinds: null, gate: null }).vocabularies.rung_consequences, C);
+  /* the rungs are the ladder's own: five reasoned, filingapprove terminal (its statement is its terminal effect) */
+  assert.deepEqual(Object.keys(C).map((op) => [op, RUNGS[op]]), [["attribute", "reasoned"], ["leadshare", "reasoned"],
+    ["entitycreate", "reasoned"], ["strengthbar", "reasoned"], ["filingapprove", "terminal"], ["workobjective", "reasoned"]]);
+  assert.match(C.workobjective.statement, /budget and scope/);
+  assert.match(C.filingapprove.statement, /approved once/);
+  assert.match(C.leadshare.statement, /cannot be un-read/);
+  /* R11: the decorated shape is unchanged — no consequence key on any act */
+  const KEYS = ["id", "label", "weight", "needs", "mode", "rung", "rung_absence", "prompt"];
+  for (const a of [...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS]) assert.deepEqual(Object.keys(A.decorate(a, null)), KEYS, a.id);
+  for (const op of Object.keys(C)) assert.deepEqual(Object.keys(A.decorate({ id: op, label: "x" }, null)), KEYS, op);
+  /* and no place is named in them (R25: outward text) */
+  assert.ok(outward().some(([w]) => w.startsWith("VOCABULARIES.rung_consequences.")));
+});
+
+/* K1019, K1023, K1037 (T22; plan layer 11): the ops escalation, capture and monitoring added, keyed to their op maps.
+   The four writes are `reasoned` (R2) with a NON_ACTS reason; capture's three reads carry a NON_ACTS reason (each has
+   a present `NEEDS` row in op-declarations, as capture's other reads); escalation's status read has no `NEEDS` row
+   (`escalationsdue`'s shape), so no registry names it; `doorbellrefused` is store-internal and named nowhere; T23's
+   three (escalationreasondraft, whatchangedpropose, whatchangeddrafts) are not here yet. */
+import { escalationOps } from "../../../src/escalation/index.mjs";
+import { monitoringOps } from "../../../src/monitoring/index.mjs";
+test("R2 R3 R7 R12: T22's new ops — declinetoescalate, heldsetaside, heldrestore and addressfrequencyset `reasoned`, "
+   + "capture's three reads named `read:`, escalationstatus and doorbellrefused named nowhere — and with the control "
+   + "plane's rows for them nothing is unaccounted", () => {
+  const url = new URL("http://x/");
+  const esc = Object.keys(escalationOps({}, url, {})), cap = Object.keys(captureOps({}, url, {}, {})),
+        mon = Object.keys(monitoringOps({}, url, {}));
+  for (const op of ["declinetoescalate", "escalationstatus"]) assert.ok(esc.includes(op), op);
+  for (const op of ["heldsetaside", "heldrestore", "heldcaptures", "gradenote", "doorbelltally", "doorbellrefused"])
+    assert.ok(cap.includes(op), op);
+  assert.ok(mon.includes("addressfrequencyset"));
+  const named = (op) => Object.hasOwn(NON_ACTS, op) || Object.hasOwn(RUNGS, op) || Object.hasOwn(RUNG_ABSENT, op)
+    || [...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => a.id === op);
+  const WRITES = ["declinetoescalate", "heldsetaside", "heldrestore", "addressfrequencyset"];
+  const READS = ["heldcaptures", "gradenote", "doorbelltally"];
+  for (const op of WRITES) {
+    assert.equal(RUNGS[op], "reasoned", op);
+    assert.ok(typeof NON_ACTS[op] === "string" && NON_ACTS[op].length > 40 && !NON_ACTS[op].startsWith("capture-directed:"), op);
+  }
+  for (const op of READS) {
+    assert.ok(NON_ACTS[op]?.startsWith("read: "), op);
+    assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
+  }
+  for (const op of ["escalationstatus", "doorbellrefused", "escalationreasondraft", "whatchangedpropose", "whatchangeddrafts"])
+    assert.equal(named(op), false, op);
+  const table = [...WRITES.map((op) => ({ op, mutating: true, gated: true })),
+    ...READS.map((op) => ({ op, mutating: false, gated: true })), { op: "escalationstatus", mutating: false, gated: false }];
+  const r = A.unaccounted(table);
+  assert.deepEqual([r.unpublished, r.unranked], [[], []]);
+  assert.deepEqual(r.stale.filter((op) => table.some((t) => t.op === op)), []);
+  /* carried gated, escalationstatus would read unpublished; carried by no row, each named op reads stale */
+  assert.deepEqual(A.unaccounted([{ op: "escalationstatus", mutating: false, gated: true }]).unpublished, ["escalationstatus"]);
+  assert.deepEqual([...WRITES, ...READS].filter((op) => !A.unaccounted([]).stale.includes(op)), []);
+});
+
+/* R19 (DEC-88, K1025): the justification family gains each newly reasoned op's code, read from the owner's own checks
+   table where it keeps one, and the four words-as-reason codes. */
+import * as provenanceChecks from "../../../src/provenance/checks.mjs";
+import * as contentChecks from "../../../src/content/checks.mjs";
+import * as obsChecks from "../../../src/observation-log/checks.mjs";
+import * as entitiesChecks from "../../../src/entities/checks.mjs";
+import * as captureChecks from "../../../src/capture/checks.mjs";
+import * as monitoringChecks from "../../../src/monitoring/checks.mjs";
+import * as biasChecks from "../../../src/bias/checks.mjs";
+import * as publicationChecks from "../../../src/publication/checks.mjs";
+import * as strengthChecks from "../../../src/strength/checks.mjs";
+import * as intentChecks from "../../../src/intent/checks.mjs";
+import * as standardsChecks from "../../../src/standards/checks.mjs";
+import * as filingsChecks from "../../../src/filings/checks.mjs";
+import * as caseAuthoringChecks from "../../../src/case-authoring/checks.mjs";
+import * as reevaluationChecks from "../../../src/reevaluation/checks.mjs";
+import * as consequencesChecks from "../../../src/consequences/checks.mjs";
+/* NO_BASIS is a shared act row, held by record-grammar (C-33.40), which progressions and entities answer with. */
+import { SHARED_ACT_CHECKS } from "../../../src/record-grammar/index.mjs";
+test("R19: the justification family holds DEC-88's and T22's codes, each a row its owner's checks table keeps", () => {
+  const OWNERS = {
+    TESTIMONY_NO_WORDS: provenanceChecks, TRANSCRIBE_NO_TEXT: contentChecks, ATTEST_NO_NOTE: contentChecks,
+    LEAD_NO_WORDS: obsChecks, LEAD_LOOK_NO_DETAIL: obsChecks, LEAD_SHARE_NO_REASON: obsChecks,
+    ENTITY_NO_NOTE: entitiesChecks, NO_BASIS: { SHARED_ACT_CHECKS }, RESOLVE_NO_REASON: captureChecks,
+    SET_ASIDE_NO_REASON: captureChecks, FREQUENCY_NO_REASON: monitoringChecks, BIAS_ADOPTION_NO_REASON: biasChecks,
+    ATTRIBUTION_NO_REASON: publicationChecks, BAR_NO_REASON: strengthChecks, PURSUIT_UNSTATED: intentChecks,
+    NO_NOTE: intentChecks, INTENT_NO_REASON: intentChecks, STANDARD_NO_REASON: standardsChecks,
+    PACKET_NO_REASON: filingsChecks, STATEMENT_ACK_NO_REASON: caseAuthoringChecks,
+    VERSION_ADOPT_NO_REASON: reevaluationChecks, NO_RATIONALE: consequencesChecks,
+  };
+  const rowIn = (mod, code) => Object.values(mod).some((t) => t && typeof t === "object" && Object.hasOwn(t, code));
+  for (const [code, mod] of Object.entries(OWNERS)) {
+    assert.ok(JUSTIFICATION_REFUSALS.includes(code), code);
+    assert.ok(rowIn(mod, code), `${code} is a row of its owner's checks`);
+  }
+  /* what demands an object, a choice or a position, never an account, stays out */
+  for (const c of ["KNOCK_EMPTY", "NO_IDS", "BAD_FREQUENCY", "NOT_A_SOURCE_OWNER", "ALREADY_OPEN", "NEITHER_CAPTURE_NOR_TESTIMONY",
+    "MACHINE_CANNOT_SET_ASIDE", "LEAD_TOO_LONG", "STANDARD_NO_TEXT", "NO_COUNSEL"]) assert.ok(!JUSTIFICATION_REFUSALS.includes(c), c);
 });
