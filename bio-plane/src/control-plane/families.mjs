@@ -46,6 +46,8 @@ import * as INTENT from "../intent/checks.mjs";
 import * as REEVALUATION from "../reevaluation/checks.mjs";
 import * as PUBLICATION from "../publication/checks.mjs";
 import * as PUBLIC_READ from "../public-read/checks.mjs";
+/* K1150 (R43): network-notices' C-127, in its place in the module order (after public-read and project-stage). */
+import * as NETWORK_NOTICES from "../network-notices/checks.mjs";
 import * as RATIFICATION from "../ratification/checks.mjs";
 import * as CASE_AUTHORING from "../case-authoring/checks.mjs";
 import * as REVIEW from "../review/checks.mjs";
@@ -107,6 +109,7 @@ export const CHECK_FAMILY_FILES = Object.freeze([
   ["src/reevaluation/checks.mjs", REEVALUATION],
   ["src/publication/checks.mjs", PUBLICATION],
   ["src/public-read/checks.mjs", PUBLIC_READ],
+  ["src/network-notices/checks.mjs", NETWORK_NOTICES],
   ["src/ratification/checks.mjs", RATIFICATION],
   ["src/case-authoring/checks.mjs", CASE_AUTHORING],
   ["src/review/checks.mjs", REVIEW],
