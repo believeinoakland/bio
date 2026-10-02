@@ -7,8 +7,10 @@ import { fresh, bundle, hold, member, withEntry, i2, noText, folio, unreadImage,
 import { REEXTRACT_CHECKS } from "../../../src/extraction/index.mjs";
 import { pdfStructureOp, extractionOp, EXTRACTION_OPS } from "../../../src/extraction/ops.mjs";
 import { evidenceAbsent } from "../../../src/capture/ops.mjs";
-import { OCR_INVOCATIONS_PER_REQUEST } from "../../../src/extraction/pipeline.mjs";
 import { unregisterFormat, registerFormat, getFormat } from "../../../src/formats.mjs";
+
+/* reading-pipeline R4: at most 24 calls of the OCR member per request, as its requirement states the bound. */
+const OCR_CALLS_PER_REQUEST = 24;
 
 const pdf = (text, pages) => ({ format: "pdf", structure: async (b) => (new TextDecoder().decode(b).startsWith("%PDF")
   ? { ok: true, text: structuredClone(text), pages: pages ?? (text.pages || []).length, notes: [] }
@@ -164,7 +166,7 @@ test("R33: with no page filled the answer's reextraction is performed false, wri
   assert.equal(writes(w), before);
 });
 
-test("R34 R24 R6: with pages filled, the reading by R12's rule with the stored type, at kept, page count and extent carried, provenance and reextracted; written by R19 with no bundle version; the answer reports the listeners and the index", async () => {
+test("R34 R24 (reading-pipeline R5, R11): with pages filled, the reading by reading-pipeline R11's rule with the stored type, at kept, page count and extent carried, provenance and reextracted; written by R19 with no bundle version; the answer reports the listeners and the index", async () => {
   const cal = calibration({ live: [{ calibration_id: "CAL-3", engine: "tess", version: "5.3" }] });
   const { w, d } = await held(i2([{ page: 0, text: "Text" }, { page: 1, text: "", undetermined: [noText(1)] }]), { cal });
   w.x.onReading("content", () => ({ staled: 4 }));
@@ -190,14 +192,14 @@ test("R34 R24 R6: with pages filled, the reading by R12's rule with the stored t
   assert.equal(x.compared.state, "undetermined");
 });
 
-test("R35 R8: a re-read asks only for the pages the stored reading still leaves unread, so repeated re-reads reach a long scan's tail, and a folio page is never appended twice", async () => {
+test("R35 (reading-pipeline R7): a re-read asks only for the pages the stored reading still leaves unread, so repeated re-reads reach a long scan's tail, and a folio page is never appended twice", async () => {
   const pages = Array.from({ length: 30 }, (_, i) => ({ page: i, text: i === 0 ? "7" : "", undetermined: [i === 0 ? folio(0) : noText(i)] }));
   const { w, d } = await held(i2(pages));
   const ocr = () => member((body, n) => (n === 1 ? { ...ocrAnswer([body.pages[0]]), deferred: body.pages.slice(1) } : ocrAnswer(body.pages)));
   const first = ocr();
   const r1 = await withEntry(pdf(i2(pages)), () => w.x.pdfStructure({ ocr: "1", sha: d, viewer: "class:admin", env: { OCR_WORKER: first } }));
-  assert.equal(first.calls.length, OCR_INVOCATIONS_PER_REQUEST);
-  assert.equal(r1.body.reextraction.pages.length, OCR_INVOCATIONS_PER_REQUEST);
+  assert.equal(first.calls.length, OCR_CALLS_PER_REQUEST);
+  assert.equal(r1.body.reextraction.pages.length, OCR_CALLS_PER_REQUEST);
   const second = ocr();
   const r2 = await withEntry(pdf(i2(pages)), () => w.x.pdfStructure({ ocr: "1", sha: d, viewer: "class:admin", env: { OCR_WORKER: second } }));
   const asked2 = second.calls.flatMap((c) => c.body.pages);
@@ -212,7 +214,7 @@ test("R35 R8: a re-read asks only for the pages the stored reading still leaves 
   assert.equal(r3.body.reextraction.candidate, false);
 });
 
-test("R9: a page tier 2 wins keeps a still-true image_unread marker; a page OCR fills discharges it", async () => {
+test("R33 R34 (reading-pipeline R8): through a re-read, a page tier 2 wins keeps a still-true image_unread marker; a page OCR fills discharges it", async () => {
   const bad = { page: 0, reason: "no_tounicode", count: 1 };
   const t1 = i2([{ page: 0, text: "", undetermined: [bad, bad, bad, unreadImage(0)] }, { page: 1, text: "", undetermined: [noText(1), unreadImage(1)] }]);
   const { w, d } = await held(t1);
@@ -258,7 +260,7 @@ test("R52: an agenda item's membership in a file is derived from containment und
   assert.equal(r.body.membershipWhy, "no_active_profile_states_item_and_file_link_shapes");
 });
 
-test("R34 R60 (N100, N139): a re-read carries the structure's page boxes, else the stored reading's, else none; and its own text counts by the acquire path's rule", async () => {
+test("R34 (reading-pipeline R12, R17; N100, N139): a re-read carries the structure's page boxes, else the stored reading's, else none; and its own text counts by the acquire path's rule", async () => {
   const pb = { boxes: [{ media_box: [0, 0, 612, 792], w: 612, h: 792, rotate: 0 }], of_page: [0, 0] };
   const t = i2([{ page: 0, text: "Text" }, { page: 1, text: "", undetermined: [noText(1)] }]);
   const withBoxes = (boxes) => ({ format: "pdf", structure: async () => ({ ok: true, text: structuredClone(t), pages: 2, notes: [],

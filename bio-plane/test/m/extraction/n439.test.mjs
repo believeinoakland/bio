@@ -8,8 +8,7 @@ import assert from "node:assert/strict";
 import { fresh, bundle, hold, psp, palt, pptx, docx, wp, wr, box, bucket } from "./fixture.mjs";
 import { n439MigratedReading, n439Marked, pptxRenumberingMoves, n26Marked, N439_READER_MARK, N439_MIGRATION }
   from "../../../src/extraction/index.mjs";
-import { textUnitsFor, layerChainFor } from "../../../src/extraction/pipeline.mjs";
-import { readingProvenance } from "../../../src/readingprov.mjs";
+import { textUnitsFor, layerChainFor, readingProvenance } from "../../../src/reading-pipeline/index.mjs";
 import { pptxRenumbering, pptxEntry } from "../../../src/pptx.mjs";
 import { glyphCount } from "../../../src/textchain.mjs";
 

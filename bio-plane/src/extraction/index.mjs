@@ -1,9 +1,10 @@
 /* extraction (layer 4): readings made from captured bytes, and what the record keeps of them. The store half
-   (R19–R30, R36–R40, R61–R62) and the Durable Object side of the pipeline (R1–R18 through `read`, R31–R35 through
-   `pdfStructure`), reached through `extractionOf(ctx)` (K61). Moved from `store.mjs` (the reading writer, the
-   re-read, the history, the text-source and text-index writers, the reads, the term helpers, the drift reads) and
-   `index.mjs` (`op=pdfstructure`, the acquire wire's reading block), with the rows this job applied named at their
-   sites. The tables are this module's own (`schema.mjs`), declared to record-core's purge here (R49). T19 layer 4:
+   (R19–R30, R36–R40, R61–R62) and the Durable Object's wiring of the reading (R1, R18 through `read`, handing
+   `reading-pipeline` the store and the view; R31–R35 through `pdfStructure`), reached through `extractionOf(ctx)`
+   (K61). Moved from `store.mjs` (the reading writer, the re-read, the history, the text-source and text-index writers,
+   the reads, the term helpers, the drift reads) and `index.mjs` (`op=pdfstructure`, the acquire wire's reading block),
+   with the rows this job applied named at their sites. The tier ladder and the reading's provenance moved on to
+   `reading-pipeline` (N513, T25). The tables are this module's own (`schema.mjs`), declared to record-core's purge here (R49). T19 layer 4:
    the testimony path's index as a projection in `provenance`'s slot (R65), the figures through record-core's
    `registerCounts` and `textIndexOk` (R67), and N26's migration of stored `.docx` readings (R66). T20 layer 4: N439's
    migration of stored `.pptx` readings (R68), run by the same machine as N26's. */
@@ -21,14 +22,14 @@ import { checkChain, calibrationsOf, isTranscribed, terminalStep, derivationCap,
          STEP_KINDS, canonicalExtent, describeExtent } from "../textchain.mjs";
 import { sha256HexSync } from "../record-grammar/sha256.mjs";
 import { contentMintState } from "../record-grammar/labels.mjs";
-import { compareProvenance, readingProvenance, PROVENANCE_SCHEME } from "../readingprov.mjs";
 import { EXTRACTION_SCHEMA } from "./schema.mjs";
 import { REEXTRACT_CHECKS, reextractRow, EXTRACTION_CHECKS, noSha, NO_SHA_DETAIL } from "./checks.mjs";
 import { evidenceAbsent } from "../capture/ops.mjs";
 import { driftObligations } from "./drift.mjs";
 import { membershipBeside } from "./filemembership.mjs";
 import { read as readDocument, tier2Escalate, tier3Extend, tier3SeedFrom, needsTier3, textUnitsFor, layerChainFor,
-         readingFromWire, decodeView, textCountsOf, pageBoxesFrom, bytesOf, CAPTURE_TEXT_UNIT_CAP } from "./pipeline.mjs";
+         readingFromWire, decodeView, textCountsOf, pageBoxesFrom, bytesOf, CAPTURE_TEXT_UNIT_CAP,
+         compareProvenance, readingProvenance, PROVENANCE_SCHEME } from "../reading-pipeline/index.mjs";
 
 export { REEXTRACT_CHECKS, reextractRow, EXTRACTION_CHECKS, noSha, NO_SHA_DETAIL, CAPTURE_TEXT_UNIT_CAP };
 
@@ -130,12 +131,12 @@ export function renumberingMoves(map) {
 }
 
 /** R66: a reading made before N26, migrated. `map` is `docxRenumbering` over the stored `word/document.xml`, `text`
- *  the docx entry's N26 text over the same bytes (R1, R3). Every reference the reading holds is moved: a `doc-para`
+ *  the docx entry's N26 text over the same bytes (R1, reading-pipeline R2). Every reference the reading holds is moved: a `doc-para`
  *  `para` (and its `ref` `¶<n+1>`) to `paragraphs[old].new`, one in a branch not read to `paragraphs[old].outer` as
  *  a whole paragraph with no run, or unplaced (null) when `outer` is null; a `run` by `runs[i]` the same way; a
  *  `doc-table` `table` (and its `ref` `table <n+1>`) to `tables[old].new`, unplaced when null; a `#para=` anchor's
  *  target with its paragraph. The paragraph count and the table list follow the N26 walk (the tables N26 reads, in its
- *  order), and the text counts are the N26 text's (R60): the duplicated branch is lost and nothing is gained. The
+ *  order), and the text counts are the N26 text's (reading-pipeline R17): the duplicated branch is lost and nothing is gained. The
  *  docx layer step gains `reader: "N26"` and the reading `migrated.n26`, saying what moved. It re-grades nothing (R44)
  *  and resolves nothing (R46). Pure; the reading handed in is not changed. */
 export function n26MigratedReading(reading, map, text, { at = null } = {}) {
@@ -247,10 +248,10 @@ export function pptxRenumberingMoves(map) {
 }
 
 /** R68: a reading made before N439, migrated. `map` is `pptxRenumbering` over the stored parts, `text` the pptx
- *  entry's N439 text over the same bytes (R1, R3). Every `slide-shape` reference carrying a `shape` is moved to its
+ *  entry's N439 text over the same bytes (R1, reading-pipeline R2). Every `slide-shape` reference carrying a `shape` is moved to its
  *  slide's `shapes[old].new`, unplaced (null) when that is null; one with no `shape` (the slide grain), on a slide
  *  the map does not list or past its shapes stays as it is. Slide numbers do not move. Each slide's shape count in
- *  the container extent follows the N439 walk, and the text counts are the N439 text's (R60): the duplicated branch is
+ *  the container extent follows the N439 walk, and the text counts are the N439 text's (reading-pipeline R17): the duplicated branch is
  *  lost and nothing is gained. The pptx layer step gains `reader: "N439"` and the reading `migrated.n439`, saying
  *  what moved. It re-grades nothing (R44) and resolves nothing (R46). Pure; the reading handed in is not changed. */
 export function n439MigratedReading(reading, map, text, { at = null } = {}) {
@@ -539,9 +540,9 @@ export class Extraction {
     return { ok: true, module };
   }
 
-  /* ---- reading (R1–R18) ---- */
+  /* ---- reading (R1, R18) ---- */
 
-  /** R1–R18: reads a stored capture (`pipeline.read`) with this object's evidence store, bindings and the
+  /** R1, R18: reads a stored capture (`reading-pipeline.read`, its R24) with this object's evidence store, bindings and the
    *  instance's jurisdiction view (R18), and records the digest of the reading it composed (R21). */
   async read(document, { storeName = "bio", env = null } = {}) {
     const e = env || this.env || {};
@@ -699,7 +700,7 @@ export class Extraction {
 
   /* D-536 (R23): every distinct reading kept in arrival order, keyed by the digest of its JSON, before the row is
      replaced; one equal to the latest kept is not kept again; a capture whose one reading predates the history has
-     it kept first; each kept reading stores `compareProvenance` against the one before (R26). */
+     it kept first; each kept reading stores `compareProvenance` against the one before (reading-pipeline R19). */
   #keepReading(bundleId, sha, reading) {
     const json = JSON.stringify(reading);
     const digest = sha256HexSync(json);
@@ -968,7 +969,7 @@ export class Extraction {
              pageCount: Number.isInteger(pc) && pc > 0 ? pc : null,
              ...(reading && Object.prototype.hasOwnProperty.call(reading, "container_extent")
                ? { containerExtent: reading.container_extent } : {}),
-             /* N100: the boxes as R13 stored them: absent never stored, null stored null. */
+             /* N100: the boxes as reading-pipeline R12 states them, as stored: absent never stored, null stored null. */
              ...(reading && Object.prototype.hasOwnProperty.call(reading, "page_boxes")
                ? { pageBoxes: reading.page_boxes } : {}),
              textContainer: reading && typeof reading.text_container === "string" ? reading.text_container : null,
@@ -1019,7 +1020,7 @@ export class Extraction {
   /** R67: the figures `registerCounts` asks for, in this order. */
   static COUNT_KEYS = Object.freeze(["textUnits"]);
 
-  /** R67 (D-464's subtraction, as `store.mjs`' `#counts` took it): `textUnits`, the `capture_text` rows, leaving out
+  /** R67 (D-464's subtraction, as the retired `store.mjs`' `#counts` took it): `textUnits`, the `capture_text` rows, leaving out
    *  the rows whose bundle is in `hid` (`{sql, args}`, the bundles the caller may not see; null counts whole). A row
    *  whose `bundle_id` is null names no bundle and is counted (`COALESCE`: `NULL NOT IN (…)` is NULL). Writes nothing. */
   counts(hid = null) {
@@ -1123,12 +1124,12 @@ export class Extraction {
 
   /** R66: once per stored reading, a `.docx` reading made before N26 whose `word/document.xml` holds an
    *  `mc:AlternateContent` branch N26 no longer reads is migrated; every other reading is left as it is. Each is
-   *  re-read from its stored bytes (R1, R3) and its references moved by `docxRenumbering` (`n26MigratedReading`). */
+   *  re-read from its stored bytes (R1, reading-pipeline R2) and its references moved by `docxRenumbering` (`n26MigratedReading`). */
   migrateDocxReadings({ limit = N26_BATCH } = {}) { return this.#migrate(MIGRATIONS[N26_MIGRATION], limit); }
 
   /** R68: once per stored reading, a `.pptx` reading made before N439 whose slides hold an `mc:AlternateContent`
    *  branch N439 no longer reads is migrated; every other reading is left as it is. Each is re-read from its stored
-   *  bytes (R1, R3) and its `slide-shape` references moved by `pptxRenumbering` (`n439MigratedReading`). */
+   *  bytes (R1, reading-pipeline R2) and its `slide-shape` references moved by `pptxRenumbering` (`n439MigratedReading`). */
   migratePptxReadings({ limit = N439_BATCH } = {}) { return this.#migrate(MIGRATIONS[N439_MIGRATION], limit); }
 
   /* R66, R68: one migration's batch. Up to `limit` candidates per call, in digest order after the cursor, so a restart
@@ -1297,7 +1298,7 @@ export class Extraction {
     if (!structure.ok) return { status: 422, body: structure };
 
     /*__REC98_TIER2_WIRE_STRUCTURE_START__*/
-    /* R4, R31: tier 2 by the one escalation both paths run; the member's notes carried, deduped; `tier` the merge's
+    /* R31 (reading-pipeline R3): tier 2 by the one escalation both paths run; the member's notes carried, deduped; `tier` the merge's
        own verdict; `tier2_no_improvement` / `tier2_unavailable` when the member could not help. */
     let structureTier = 1, readT2PerPage = null, readT2Note = null;
     const t2 = await tier2Escalate(e, { sha, storeName, text: structure.text });
@@ -1336,8 +1337,8 @@ export class Extraction {
              + "engine was not called and nothing about this capture was changed",
         };
       } else {
-        /* R34: the reading by R12's rule with the stored reading's type, `at` the capture instant, page count and
-           container extent carried, R25's provenance, and `reextracted`; written by R19; no bundle version. */
+        /* R34: the reading by reading-pipeline R11's rule with the stored reading's type, `at` the capture instant, page count and
+           container extent carried, reading-pipeline R18's provenance, and `reextracted`; written by R19; no bundle version. */
         let chain = t3.chainSet ? t3.chain : null;
         if (!chain) chain = layerChainFor(t3.i2text, { tier: t3.wiredTier, container: "pdf" });
         const vw = this.view();
@@ -1356,7 +1357,7 @@ export class Extraction {
         if (Object.prototype.hasOwnProperty.call(stored, "container_extent")) reading.container_extent = stored.container_extent;
         reading.provenance = await readingProvenance({ text: t3.i2text, chain, tier: t3.wiredTier,
                                                        container: "pdf", planeVersion: e.VERSION || null });
-        /* N139 (R60): the re-read's own counts, by the acquire path's rule. */
+        /* N139 (reading-pipeline R17): the re-read's own counts, by the acquire path's rule. */
         { const n = textCountsOf(t3.i2text); if (n) Object.assign(reading, n); }
         structureChain = chain;
         reading.reextracted = {

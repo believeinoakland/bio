@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { fresh, bundle } from "./fixture.mjs";
 import { listenerRefusal, MODULE_ORDER } from "../../../src/membership/index.mjs";
 import { CAPTURE_TEXT_UNIT_CAP } from "../../../src/extraction/index.mjs";
-import { readingProvenance } from "../../../src/readingprov.mjs";
+import { readingProvenance } from "../../../src/reading-pipeline/index.mjs";
 
 const S1 = "1".repeat(64), S2 = "2".repeat(64);
 const WORDS = "I asked the clerk for the minutes and was told they were not kept.";

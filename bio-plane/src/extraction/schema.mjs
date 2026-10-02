@@ -320,7 +320,7 @@ CREATE INDEX IF NOT EXISTS capture_text_bundle ON capture_text(bundle_id);
 -- deleted but by a purge. A reading equal byte for byte to the latest kept one is not kept twice --
 -- an ordinary revision of a bundle re-submits the same provenance document and that is not a re-read.
 -- reading is the whole reading as JSON, as the readings row held it. provenance is its
--- reading-provenance object (readingprov.mjs) or NULL, and NULL is UNDETERMINED -- a reading written
+-- reading-provenance object (reading-pipeline's readingProvenance) or NULL, and NULL is UNDETERMINED -- a reading written
 -- before D-536, or by a caller that carried none -- never inferred from text_tier or from the chain.
 -- compared is the attribution against the row before it (compareProvenance), NULL for the first row
 -- of a capture. text_sha256 is projected out of provenance so the comparison is a column, NULL when
@@ -341,7 +341,7 @@ CREATE TABLE IF NOT EXISTS reading_history (
 
 
 -- =========================================================================
--- D-724 / BOB #36 2026-09-25 11:20Z, option (b) (extraction R16, R22) -- THE UNITS
+-- D-724 / BOB #36 2026-09-25 11:20Z, option (b) (reading-pipeline R15, extraction R22) -- THE UNITS
 -- A PARTIAL CAPTURE DID NOT INDEX, NAMED. Both budget loops (the reading's wire
 -- budget and the index writer) go ON past a unit over the bound and keep a later
 -- unit that fits, so a partial capture holds every unit that fit, in reading

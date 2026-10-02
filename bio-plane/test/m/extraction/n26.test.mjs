@@ -7,8 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bundle, hold, wp, wr, wtbl, box, docx, bucket } from "./fixture.mjs";
 import { n26MigratedReading, n26Marked, renumberingMoves, N26_READER_MARK } from "../../../src/extraction/index.mjs";
-import { textUnitsFor, layerChainFor } from "../../../src/extraction/pipeline.mjs";
-import { readingProvenance } from "../../../src/readingprov.mjs";
+import { textUnitsFor, layerChainFor, readingProvenance } from "../../../src/reading-pipeline/index.mjs";
 import { docxRenumbering } from "../../../src/docx.mjs";
 import { glyphCount } from "../../../src/textchain.mjs";
 
