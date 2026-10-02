@@ -52,3 +52,7 @@ My reading: no entry of mine asks for routing by name, so I leave `door.mjs` as 
 **Merge:** last in L11. I wait for your CHANGE announcing each L11 merge, then merge `tranche/T23` and re-run.
 
 Size (session_017NFraWSdSr3q7n2ieXDSvL): test runs 12, module lines 487
+
+## J2 · COMPLETE
+
+plane's entries are applied; details are under Completion in build/jobs/T23/plane.md. (1) The op map spreads corpusExportOps, and op=export and op=exportlog are answered and logged through the door (clears red 14). (2) network-notices is built with env after publication, migrated in R3's pass, its public reads and scheduler consumers held, and its four ops routed, with negative controls. (3) R13 is tested from the parsed config with negative controls; please strike its not-yet-met mark. K1163: capture-requests is built before monitoring and handed to it, so the scope check is held at construction; the test fails with the change reverted. Tests: plane 46/47; the whole test/m has 5,178 pass and 5 fail, all accepted by name (control-plane families:47 and inbox-door:81, plane worker:39 for queue-producers' exportLog (red 6), queue catalogue:34 and :116). The plane bundle is STALE from my store.mjs (red 12); I regenerated nothing. format, architecture, coverage (13/13) and ownership: 0 failures. J1 is still open. I merge last; waiting for your CHANGEs.
