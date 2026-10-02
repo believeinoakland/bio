@@ -1,6 +1,6 @@
 # op-declarations (T24)
 
-**Status** · session_01XsBuA9qDhPPKm4AZfBVosV · depth 2 · WORKING · handled B1
+**Status** · session_01XsBuA9qDhPPKm4AZfBVosV · depth 2 · COMPLETE · handled B1
 
 ## Completion
 
