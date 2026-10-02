@@ -536,8 +536,8 @@ var STATES = {
   /* The INQUIRY machine (REC-10, extended by REC-13). `published` and
        `divided` still wait for REC-14/16, and they arrive TOGETHER WITH their
        entry requirements, so no state is ever legal before its gate exists —
-       which is why `concluded` lands here in the same turn as
-       checkInquiryExtension's concluded arm below and op=conclude in the store.
+       which is why `concluded` landed here in the same turn as
+       checkInquiryExtension's concluded arm (inquiry-grammar's today) and op=conclude.
        `surfaced` is a LEGAL ALIAS of `open` (DATA-MODEL §2.7's recommendation):
        rewriting it would invent an authored fact and set current_state
        disagreeing with the document's own state_history (C-4.2), so it stays
@@ -648,7 +648,7 @@ var STATES = {
        ACT and `disposition_reason` is untouched.
   
        ENTERED FROM `open` (and its `surfaced` alias) AND FROM `concluded`, and
-       NOT FROM `published` — the store refuses that one BY NAME
+       NOT FROM `published` — inquiry's divide refuses that one BY NAME
        (PUBLISHED_CANNOT_DIVIDE) rather than as a generic illegal move, because
        the two are different statements: an EDITION says the case continues, a
        DIVISION says the parent was malformed, and a signed edition cannot be
