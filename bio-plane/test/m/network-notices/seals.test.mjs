@@ -36,7 +36,7 @@ test("R14 after a week ends, each project not closed is sealed over its member a
     assert.ok(!Object.keys(l).some((k) => /author/.test(k)) && !JSON.stringify(l).includes("alice") && !JSON.stringify(l).includes("carol"));
   }
   assert.equal(w.nn.sealDue(), null, "sealed once");
-  assert.equal(w.nn.sealWake(), monday(NOW) + WEEK);
+  assert.equal(w.nn.sealWake(), null, "nothing left to seal");
   assert.equal((await w.nn.sealTick()).sealed.length, 0);
 });
 
@@ -253,4 +253,74 @@ test("R17 R16 an edition committed but not yet published whole is opened by no c
   w.st.sql.exec(`INSERT INTO case_documents (case_id, edition, doc_sha, text, authored_at) VALUES ('CASE-2026-0003-draft', 1, 'd', 'doc', 't')`);
   assert.equal((await w.nn.openSeals({ case: "CASE-2026-0003-draft", edition: 1 })).kept, false, "an unsigned document is not committed");
   assert.equal(w.rows(`SELECT 1 FROM nn_open_requests WHERE case_id IN ('CASE-2026-0002-none','CASE-2026-0003-draft')`).length, 0);
+});
+
+test("R14 sealWake is null when no project that is not closed has a member act not yet sealed, so an idle instance holds no timer; otherwise the instant the next seal falls due", async () => {
+  const w = seeded();
+  const idle = () => { assert.equal(w.nn.sealWake(), null); assert.equal(w.nn.sealDue(), null); };
+  idle();                                                     /* a fresh instance with projects and no act */
+  w.act(w.P, LAST + DAY, { author: MACHINE });                /* an AI run's write is no member act */
+  w.act(w.P, LAST + DAY, { author: V("alice"), writer: "mechanical" });
+  idle();
+  w.act(w.P, LAST - 3 * WEEK);                                /* before the first sealable week: never sealed */
+  idle();
+  w.R = w.project("closed-one", "alice", { at: LAST - 4 * WEEK });
+  w.close(w.R, { at: LAST - 4 * WEEK + DAY });
+  w.act(w.R, LAST + DAY);                                     /* a closed project's act is never sealed */
+  idle();
+  /* a member act in the week under way: due at that week's end, not now */
+  w.act(w.Q, monday(NOW) + 3600000, { author: V("dave") });
+  assert.equal(w.nn.sealWake(), monday(NOW) + WEEK);
+  assert.equal(w.nn.sealDue(), null);
+  /* a member act in a complete week not yet sealed: due now */
+  w.act(w.P, LAST + 2 * DAY);
+  assert.equal(w.nn.sealWake(), NOW);
+  assert.equal(w.nn.sealDue(), NOW);
+  await w.nn.sealTick();
+  assert.equal(w.nn.sealWake(), monday(NOW) + WEEK, "the week under way still holds Q's act");
+  w.clock.now = NOW + WEEK;
+  assert.equal(w.nn.sealDue(), w.clock.now);
+  await w.nn.sealTick();
+  assert.equal(w.rows(`SELECT 1 FROM nn_week_seals WHERE project=?`, w.Q).length, 1);
+  idle();
+  /* weeks with no act after the last sealed one keep it idle; a new act wakes it */
+  w.clock.now = NOW + 6 * WEEK;
+  idle();
+  w.act(w.P, monday(w.clock.now) - WEEK + DAY);
+  assert.equal(w.nn.sealDue(), w.clock.now);
+  await w.nn.sealTick();
+  assert.equal(w.rows(`SELECT 1 FROM nn_week_seals WHERE project=? AND week=?`, w.P, weekLabel(monday(w.clock.now) - WEEK)).length, 1);
+  idle();
+});
+
+test("R17 attestWake is null when no notice is open and no opening is kept, so an idle instance holds no timer; otherwise the next UTC day", async () => {
+  const w = seeded();
+  const nextDay = () => Math.floor(w.clock.now / DAY) * DAY + DAY;
+  assert.equal(w.nn.attestWake(), null, "no notice, no opening");
+  assert.equal(w.nn.attestDue(), null);
+  const one = await post(w);
+  assert.equal(w.nn.attestWake(), nextDay(), "an open notice: the day's closing check and the month's first day");
+  await post(w, { notice: one.notice, final: "stopped" });
+  assert.equal(w.nn.attestWake(), null, "stopped: nothing to attest");
+  /* an opening kept (an edition committed, not yet whole) wakes it with no notice open */
+  w.st.sql.exec(`INSERT INTO cases (case_id, project_id, opened) VALUES ('CASE-2026-0001-budget', ?, 't')`, w.P);
+  w.st.sql.exec(`INSERT INTO case_documents (case_id, edition, doc_sha, text, authored_at, sig_armored, ratified_at)
+                 VALUES ('CASE-2026-0001-budget', 1, 'd', 'doc', 't', 'sig', 't')`);
+  w.st.sql.exec(`INSERT INTO published_cases (case_id, edition, opened, ratified_at) VALUES ('CASE-2026-0001-budget', 1, 't', NULL)`);
+  assert.equal((await w.nn.openSeals({ case: "CASE-2026-0001-budget", edition: 1 })).kept, true);
+  assert.equal(w.nn.attestWake(), nextDay());
+  /* published whole and settled: idle again */
+  w.st.sql.exec(`UPDATE published_cases SET ratified_at='t2' WHERE case_id='CASE-2026-0001-budget'`);
+  w.clock.now = NOW + WEEK;
+  await w.nn.sealTick();
+  await w.nn.attestTick();
+  assert.equal(w.rows(`SELECT 1 FROM nn_open_requests WHERE settled_at IS NULL`).length, 0);
+  assert.equal(w.nn.attestWake(), null);
+  /* a closed notice and a lapsed one hold no timer either */
+  const c = seeded();
+  await post(c);
+  c.close(c.P);
+  c.clock.now += DAY;
+  await c.nn.attestTick();
+  assert.equal(c.nn.attestWake(), null, "closed");
 });

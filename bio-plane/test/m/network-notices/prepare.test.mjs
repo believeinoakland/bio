@@ -204,3 +204,51 @@ test("R27 every stored revision's since lies between the project's creation and 
     assert.ok(j.since >= "2026-01-05" && j.since <= j.posted, JSON.stringify(j));
   }
 });
+
+/* N509: a discoverable project `by` sees only at existence is membership's C-70.1, never NO_SUCH_PROJECT. */
+const discoverable = (w, pid, owner) => {
+  const r = w.membership.projectVisibilitySet({ projectId: pid, setting: "discoverable", by: owner, viewer: V(owner) });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 200));
+};
+test("R1 a discoverable project `by` sees only at existence is membership.existenceAct's refusal (C-70.1), never noSuchProject; nothing written", async () => {
+  const w = seeded();
+  discoverable(w, w.Q, "dave");
+  assert.equal(w.membership.sight(w.Q, A), "existence");
+  const before = w.snapshot();
+  const r = await prepare(w, { project: w.Q });
+  assert.deepEqual(r, w.membership.existenceAct(w.Q, A), "membership's answer, relayed as it came");
+  assert.equal(r.reason, "PROJECT_SEEN_NOT_A_PARTICIPANT");
+  assert.equal(r.check, "C-70.1");
+  assert.equal(r.project, w.Q);
+  assert.deepEqual(w.snapshot(), before);
+  /* in R1's order: before the owner and field refusals alice's call would also meet */
+  assert.equal((await prepare(w, { project: w.Q, wording: "" })).reason, "PROJECT_SEEN_NOT_A_PARTICIPANT");
+  /* negative controls: hidden again, the same caller is answered as absent; a participant owner is answered */
+  w.membership.projectVisibilitySet({ projectId: w.Q, setting: "hidden", by: "dave", viewer: V("dave") });
+  assert.equal((await prepare(w, { project: w.Q })).reason, "NO_SUCH_PROJECT");
+  discoverable(w, w.Q, "dave");
+  w.join(w.Q, "alice", "joined", true);
+  assert.equal((await prepare(w, { project: w.Q })).ok, true);
+});
+
+test("R1 the instance-key refusal asks provenance.instanceKeyBound and signs nothing: no key's first_used is set by preparing", async () => {
+  const w = seeded();
+  const signs = [];
+  const sign = w.provenance.instanceSign.bind(w.provenance);
+  w.provenance.instanceSign = async (s) => { signs.push(s); return sign(s); };
+  assert.equal((await prepare(w)).ok, true);
+  rowOk(await prepare(w, {}, "carol"), "NOTICE_NOT_THE_OWNER");
+  assert.equal((await prepare(w, { project: w.Q }, "dave")).ok, true);
+  assert.deepEqual(signs, [], "nothing signed");
+  assert.deepEqual(w.provenance.instanceKeys(), [], "receipt_keys untouched: no first_used");
+  /* the answer is instanceKeyBound's, even when signing would work */
+  const bound = w.provenance.instanceKeyBound.bind(w.provenance);
+  w.provenance.instanceKeyBound = async () => false;
+  rowOk(await prepare(w), "NOTICE_NO_INSTANCE_KEY");
+  /* negative control: bound again, accepted; the key's first use is the post's attestation */
+  w.provenance.instanceKeyBound = bound;
+  await post(w);
+  assert.equal(signs.length, 1, "the posted attestation, the first real statement");
+  assert.equal(w.provenance.instanceKeys().length, 1);
+  assert.equal(w.provenance.instanceKeys()[0].first_used.slice(0, 10), day(NOW));
+});

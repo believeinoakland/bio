@@ -82,12 +82,37 @@ test("R21 groupKeysPublic: the slug, the owners' keys with status and first-list
   w.st.sql.exec(`INSERT INTO published_bundles (bundle_id, edition, bundle_sha, ratified_at, attestor_key, gate_version, sig_armored)
                  VALUES ('INFO-2026-0001-x', 1, 'x', 't', ?, 'g', 's')`, `ssh-ed25519 ${keyFor("carol").b64} c`);
   assert.ok(new Set(w.nn.groupKeysPublic().owners.map((o) => o.key)).has(`ssh-ed25519 ${keyFor("carol").b64}`));
-  /* a revoked key stays listed, with the date this copy saw it revoked */
-  w.st.sql.exec(`UPDATE signers SET status='revoked' WHERE member_id='alice'`);
-  w.clock.now += DAY;
+  /* a revoked key stays listed (its own date: the next test) */
+  w.st.sql.exec(`UPDATE signers SET status='revoked', status_at='2026-09-20T10:00:00Z' WHERE member_id='alice'`);
+  assert.equal(w.nn.groupKeysPublic().owners.find((o) => o.key.includes(keyFor("alice").b64)).status, "revoked");
+});
+
+test("R21 a revoked key's date is its own status_at (credentials R8, R21), never the date this copy saw it; null when status_at was never recorded", async () => {
+  const w = seeded();
+  await post(w);
+  const ownerOf = (who) => w.nn.groupKeysPublic().owners.find((o) => o.key === `ssh-ed25519 ${keyFor(who).b64}`);
+  const statusAt = (who) => w.credentials.signerList().signers.find((s) => s.key_b64 === keyFor(who).b64).status_at;
+  /* revoked by credentials' own act (R10): its status_at is that act's instant, and R21 answers its date */
+  assert.equal(w.credentials.signerRevokeOwn({ keyB64: keyFor("alice").b64, by: "alice" }).ok, true);
+  const at = statusAt("alice");
+  assert.match(at, /^\d{4}-\d\d-\d\dT/);
+  assert.deepEqual([ownerOf("alice").status, ownerOf("alice").revoked_on], ["revoked", at.slice(0, 10)]);
+  /* a key revoked on a stated past instant keeps that date, however much later this copy reads it, ticks included */
+  w.st.sql.exec(`UPDATE signers SET status='revoked', status_by='admin', status_at='2026-09-03T23:30:00Z' WHERE member_id='bob'`);
+  w.clock.now += 40 * DAY;
   await w.nn.attestTick();
-  const a = w.nn.groupKeysPublic().owners.find((o) => o.key.includes(keyFor("alice").b64));
-  assert.deepEqual([a.status, a.revoked_on], ["revoked", "2026-10-02"]);
+  await w.nn.sealTick();
+  assert.deepEqual([ownerOf("bob").status, ownerOf("bob").revoked_on], ["revoked", "2026-09-03"]);
+  /* a revocation recorded before status_at was kept (the column null): "not recorded", never a date this copy saw */
+  w.st.sql.exec(`UPDATE signers SET status='revoked', status_at=NULL WHERE member_id='dave'`);
+  await w.nn.attestTick();
+  w.clock.now += DAY;
+  assert.equal(statusAt("dave"), null);
+  assert.deepEqual([ownerOf("dave").status, ownerOf("dave").revoked_on], ["revoked", null]);
+  /* control: a key that attests carries no revocation date at all */
+  w.member("erin");
+  w.join(w.P, "erin", "joined", true);
+  assert.deepEqual([ownerOf("erin").status, "revoked_on" in ownerOf("erin")], ["attests", false]);
 });
 
 test("R22 noticesOf answers a viewer who can see the project its notices, dates, misses and sealed weeks, never the salts", async () => {
@@ -212,7 +237,28 @@ test("R10 R20 R21 the ops map reads the control plane's stamps from the query, n
   assert.deepEqual(Object.keys(c), ["working-on-seal", "working-on-attest"]);
   w.act(w.P, LAST + DAY);
   assert.equal(c["working-on-seal"].due(NOW), NOW);
+  assert.equal(c["working-on-seal"].wake(NOW), NOW);
   assert.equal((await c["working-on-seal"].tick(NOW)).workingonseal.sealed.length, 1);
+  assert.equal(c["working-on-seal"].wake(NOW), null, "nothing left to seal");
+  w.act(w.P, NOW);
   assert.equal(c["working-on-seal"].wake(NOW), monday(NOW) + WEEK);
   assert.ok("workingonattest" in await c["working-on-attest"].tick(NOW));
+  assert.equal(c["working-on-attest"].wake(NOW), monday(NOW) + 4 * DAY, "an open notice: the next UTC day");
+});
+
+test("R22 noticesOf answers a discoverable project the viewer sees only at existence with membership.existenceAct's refusal (C-70.1), never noSuchProject", async () => {
+  const w = seeded();
+  await post(w);
+  assert.equal(w.membership.projectVisibilitySet({ projectId: w.P, setting: "discoverable", by: "alice", viewer: A }).ok, true);
+  const r = w.nn.noticesOf({ project: w.P, viewer: V("dave") });
+  assert.deepEqual(r, w.membership.existenceAct(w.P, V("dave")));
+  assert.deepEqual([r.reason, r.check, r.project], ["PROJECT_SEEN_NOT_A_PARTICIPANT", "C-70.1", w.P]);
+  assert.ok(!JSON.stringify(r).includes("NOTE-"), "nothing of the notices");
+  /* negative controls: hidden, the same viewer is answered as absent; a participant reads it whole */
+  assert.equal(w.membership.projectVisibilitySet({ projectId: w.P, setting: "hidden", by: "alice", viewer: A }).ok, true);
+  assert.equal(w.nn.noticesOf({ project: w.P, viewer: V("dave") }).reason, "NO_SUCH_PROJECT");
+  assert.equal(w.nn.noticesOf({ project: w.P, viewer: V("carol") }).ok, true);
+  /* through the op, the control plane's viewer stamp */
+  const url = new URL(`http://x/?${new URLSearchParams({ project: w.P, viewer: V("dave"), by: V("dave") })}`);
+  assert.equal((await nn.networkNoticesOps(w.nn, url, {}).notices()).reason, "NO_SUCH_PROJECT");
 });

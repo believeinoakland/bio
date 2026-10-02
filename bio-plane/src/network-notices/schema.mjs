@@ -1,4 +1,4 @@
-/* network-notices' tables (requirements: `build/requirements/network-notices.md` R3, R5, R12–R17, R21, R26).
+/* network-notices' tables (requirements: `build/requirements/network-notices.md` R3, R5, R12–R17, R26).
  *
  * APPEND-ONLY (R26): a published revision, attestation or opening is never altered or deleted. Each table is declared
  * to record-core's purge with no bundle key, so only the whole-store purge clears it and a bundle purge leaves a
@@ -103,22 +103,17 @@ CREATE TABLE IF NOT EXISTS nn_open_requests (
   settled_at   TEXT,
   PRIMARY KEY (case_id, edition)
 );
--- R21: WHEN THIS COPY FIRST SAW A SIGNER KEY REVOKED (credentials keeps no revocation date).
-CREATE TABLE IF NOT EXISTS nn_key_revocations (
-  key_b64      TEXT PRIMARY KEY,
-  seen_on      TEXT NOT NULL
-);
 `;
 
 /** The tables, every one cleared by the whole-store purge only (R26). */
 export const NETWORK_NOTICES_TABLES = Object.freeze(["nn_notices", "nn_revisions", "nn_attestations", "nn_misses",
-  "nn_week_seals", "nn_week_leaves", "nn_week_roots", "nn_openings", "nn_open_requests", "nn_key_revocations"]);
+  "nn_week_seals", "nn_week_leaves", "nn_week_roots", "nn_openings", "nn_open_requests"]);
 
-/** The opaque ids its tables hold, for record-core's mint ledger (its R40, R70). */
-export const NETWORK_NOTICES_MINT_SEED = Object.freeze([Object.freeze(["NOTE", "nn_notices", "notice_id"])]);
-
-/** Creates the tables; idempotent. */
+/** Creates the tables; idempotent. T23's `nn_key_revocations` (the date this copy first saw a key revoked) is dropped:
+ *  R21 now gives a revoked key's own `status_at` (credentials R21, N505), so nothing reads it, and it held no
+ *  published row (R26). */
 export function migrateNetworkNotices(sql) {
   const bare = NETWORK_NOTICES_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const s of bare.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+  sql.exec(`DROP TABLE IF EXISTS nn_key_revocations`);
 }
