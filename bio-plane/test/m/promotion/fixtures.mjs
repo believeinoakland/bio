@@ -164,7 +164,9 @@ export function makeMembership() {
   return m;
 }
 
-/** A fresh promotion over fresh doubles, with the facts legacy-store registers today. */
+/** A fresh promotion over fresh doubles, with the three facts the plane's modules register (instance-setup's
+ *  `producingGroup`, connections' `citedBy`, publication's `caseMember`; `legacy-store` held them until T19, and the
+ *  registrant's name here is only a label). */
 export function makePromotion({ group = "test-group", citedBy = {}, caseMember = new Set(), facts = true,
                                 now = () => "2026-09-26T12:00:00.000Z" } = {}) {
   const record = makeRecord(), membership = makeMembership();

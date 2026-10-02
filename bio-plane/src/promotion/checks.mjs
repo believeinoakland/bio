@@ -183,7 +183,7 @@ export const PROMOTED_TYPE_CHECKS = {
  * HIDDEN, and a `visibility=discoverable` it sends is refused by name."*). Its own family, minted, rather than
  * C-70.5 and on, because REC-150 (the request to join) is extending C-70 in parallel. An unknown value on a
  * creation answers C-70.3, the same row the owner's act answers, through one helper. Both codes are minted in
- * `Store#promote`, before anything is written; a fork reaches them through `promote`. */
+ * `#promote` (the store's `promote` when this note was written), before anything is written; a fork reaches them through `promote`. */
 export const PROJECT_CREATION_VISIBILITY_CHECKS = {
   PROJECT_VISIBILITY_NO_OWNER: {
     check: 'C-97.1',
@@ -221,11 +221,11 @@ export const PROMOTION_ROW_CHECKS = {
   /* T4 (legacy-checks, N36), 2026-09-27: promotion R1's other half. A REVISION of a bundle the record does not
      hold, and (R20) of one the caller may not see, which answers exactly as one that does not exist. Numbered in
      this family beside CAS_STALE, R1's third answer; R1's first, EXISTS, is C-96.4. It is minted by ONE literal in
-     promotion, the module-level `ABSENT` helper both of `#promote`'s answers return; that helper is not a declared
-     function the guard can open, so the `where` names the region promotion is to mark around the R1 answers.
+     promotion, at the one region of `#promote` that answers R1's ABSENT (`is-promote-absent`), which the `where` names.
      Two sites outside promotion mint the same code with the same meaning (a bundle by that id that the caller can
-     see does not exist): `src/store.mjs gateFacts` (op=ratify) and `src/index.mjs` op=monitor. The translation is
-     written to be true at all three, and says nothing was changed rather than written, because the monitor reads. */
+     see does not exist): ratification's `gateFacts` (op=ratify) and monitoring's op=monitor, both in `src/store.mjs`
+     and `src/index.mjs` when this row was written. The translation is written to be true at all three, and says
+     nothing was changed rather than written, because the monitor reads. */
   ABSENT: {
     check: 'C-33.49',
     where: 'src/promotion/index.mjs #promote > is-promote-absent',
@@ -238,8 +238,9 @@ export const PROMOTION_ROW_CHECKS = {
      REPLACE keyed (bundle_id, snap_key), so a second promotion naming a key the bundle already holds silently
      REPLACED the first promotion's rows. It now refuses that key before anything is written; a byte-identical
      re-send of the promotion that key already names answers ok and writes nothing (§2.4's own convergent rule:
-     "the second detects the existing file and skips"). C-67 is minted (`node tools/mintid.mjs C`) rather than
-     C-33.n, because two parallel promote items took C-33 numbers the same day. */
+     "the second detects the existing file and skips"). C-67 was minted (with `node tools/mintid.mjs C`, the old
+     process's tool, retired with `tools/` in T7) rather than C-33.n, because two parallel promote items took C-33 numbers
+     the same day. */
   SNAP_KEY_TAKEN: {
     check: 'C-67.1',
     where: 'src/promotion/index.mjs #promote > is-promote-snapkey',

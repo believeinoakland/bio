@@ -1,4 +1,5 @@
-/* row-census — promotion R50's census suite (N319, K382, K408, K431; LEGACY-TESTS #11, T13).
+/* row-census — promotion R50's census suite (N319, K382, K408, K431; LEGACY-TESTS #11, T13), promotion's own since T22's
+   opening (K1006: legacy-tests retired, its files re-owned; PROMOTION #23 is the first promotion job to hold it).
 
    Promotion pins `ROW_CENSUS` = {version, rows, digest} beside `CATALOG_VERSION`: the census of every refusal row, in
    any module's table, as its last stamp read them (R34, R50). Promotion cannot read a later module's table (P4), so
@@ -42,7 +43,13 @@
    (`fixtures/row-census-1.51.0.jsonl`, 984 lines) reproduced by this reader on the stamp commit a289ef6478 (984 rows,
    b7c43a32…); the 1.50.0 snapshot (no stamp reads it) deleted; 1.50.0's declarations retired, T21's layers 3+ declared
    (see AWAITING_STAMP), intent's registration among the compositions. A record may name its rows as a list under one
-   line naming them `awaiting stamp` (FILINGS #9's record): the verification reads the line's paragraph. */
+   line naming them `awaiting stamp` (FILINGS #9's record): the verification reads the line's paragraph.
+   RE-PINNED 2026-10-01 (PROMOTION #23, T22, K1006): over 1.52.0, the stamp's own lines (`fixtures/row-census-1.52.0.jsonl`,
+   1022 lines) reproduced by this reader on the stamp commit (named in `build/jobs/T22/promotion.md`: 1022 rows,
+   de396d62…); the 1.51.0 snapshot (no stamp reads it) deleted; 1.51.0's declarations (T21's layers 3–11) and intent's
+   composition stamped in 1.52.0 and retired. A row a T22 job in layers 3–11 changes turns this suite red, accepted by
+   name until T23's layer-2 stamp (`build/plan/current.md` rule 3; promotion's one job is layer 2, P8), so none is
+   declared. Negative control re-run on the stamp commit: its arms in the suite pass. */
 import "../stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
@@ -60,89 +67,9 @@ const FIXTURE = (v) => fileURLToPath(new URL(`./fixtures/row-census-${v}.jsonl`,
    carries the line as the stamp read it (so the stamp's census can be rebuilt); `arrived` names the row by check and
    code (its line is the tree's). */
 const AWAITING_STAMP = [
-  /* RE-ANCHORED 2026-10-01 (LEGACY-TESTS #19, T21; PROMOTION #22, K941): over 1.51.0, the stamp's own lines
-     (`fixtures/row-census-1.51.0.jsonl`, 984 lines) reproduced by this reader on the stamp commit a289ef6478 (984 rows,
-     b7c43a32…). T20's declarations (C-68.1's `where`, C-117.20–.22) are stamped in 1.51.0 and retired. T21's rows
-     changed at layers 3+, after the layer-2 stamp, for T22's stamp, found by diffing the tree's census against the 1.51.0
-     fixture and each named `awaiting stamp` by its job's record: provenance's C-53.13 (re-worded, N458); filing-templates'
-     C-115 moves (C-115.32–.33, .35, .37–.38 re-sited; C-115.31 and C-115.36 re-keyed, so each departs under its old code
-     and arrives under its new one) and its new C-125.1–.32; filings' C-115 rows (C-115.41–.43 new, C-115.12, .19, .34,
-     .39, .40 re-worded or re-sited, C-115.6 and C-115.17 retired); local-facts' new C-126.1–.5. Membership's rows that
-     left its table (MEMBERSHIP #15) are held, unchanged, in credentials', so the census does not move with them. Nothing
-     else moved. A record that lists its rows under one line naming them `awaiting stamp` (filings') is read as naming
-     each (see the verification below); `named` is the record's own text for a range (C-125.1–C-125.32, C-126.1–.5). */
-  { after: "1.51.0", kind: "changed", by: "PROVENANCE #10 (N458, C-53.13 re-worded)", record: "build/jobs/T21/provenance.md",
-    line: ["C-53.13","CAPTURE_HELD_BY_ANOTHER_BUNDLE","src/provenance/index.mjs #testimonyFence > is-register-home","The record already holds this document, under another bundle. A document has one home in the record — the first bundle that registered it — and registering it again here would move it away from there. Nothing was written. Cite the bundle that holds it, or, if you found it at a new address, that sighting is already recorded as a corroboration of the one it holds."] },
-  { after: "1.51.0", kind: "departed", by: "FILINGS #9 (K921, R28)", record: "build/jobs/T21/filings.md",
-    line: ["C-115.6","KIND_NO_TEMPLATE","src/filings/index.mjs filingPrepare > is-filing-prepare","The jurisdiction profile holds no template for this kind of action (or its profiles disagree on one), so there is nothing to pre-fill."] },
-  { after: "1.51.0", kind: "changed", by: "FILINGS #9 (K921, R28)", record: "build/jobs/T21/filings.md",
-    line: ["C-115.12","TEXT_UNWRITABLE","src/filings/index.mjs filingApprove > is-filing-approve","The text is empty, too long, or not readable as text, so it cannot be recorded as approved."] },
-  { after: "1.51.0", kind: "departed", by: "FILINGS #9 (K921, R28)", record: "build/jobs/T21/filings.md",
-    line: ["C-115.17","NOT_TIER3","src/filings/index.mjs counselPacket > is-counsel-packet","A counsel packet is assembled only for an action whose governing tier is 3. A Tier 1 or 2 action is prepared as a filing."] },
-  { after: "1.51.0", kind: "changed", by: "FILINGS #9 (K921, R28)", record: "build/jobs/T21/filings.md",
-    line: ["C-115.19","NO_DETERMINATION","src/filings/index.mjs counselPacket > is-counsel-packet","The action rests on no live determination you can read, so there are no facts to assemble for counsel."] },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, C-115 row moved to its table)", record: "build/jobs/T21/filing-templates.md", check: "C-115.31", code: "MACHINE_CANNOT_DRAFT_TEMPLATE" },
-  { after: "1.51.0", kind: "departed", by: "FILING-TEMPLATES #1 (K921, C-115 row moved to its table)", record: "build/jobs/T21/filing-templates.md",
-    line: ["C-115.31","MACHINE_CANNOT_SAVE_TEMPLATE","src/filings/index.mjs templateSave > is-template-save","Only a named member can add a template to the group's library. A machine may draft words; it never makes them the group's boilerplate."] },
-  { after: "1.51.0", kind: "changed", by: "FILING-TEMPLATES #1 (K921, C-115 row moved to its table)", record: "build/jobs/T21/filing-templates.md",
-    line: ["C-115.32","TEMPLATE_NAME_REFUSED","src/filings/index.mjs templateSave > is-template-save","Name the template in one line of at most 200 characters."] },
-  { after: "1.51.0", kind: "changed", by: "FILING-TEMPLATES #1 (K921, C-115 row moved to its table)", record: "build/jobs/T21/filing-templates.md",
-    line: ["C-115.33","TEMPLATE_KIND_REFUSED","src/filings/index.mjs templateSave > is-template-save","A template's kind is written as a kind is: lower-case letters, digits and underscores. Leave it out for a template of no kind."] },
-  { after: "1.51.0", kind: "changed", by: "FILINGS #9 (K921, R28)", record: "build/jobs/T21/filings.md",
-    line: ["C-115.34","TEMPLATE_FROM_UNAPPROVED","src/filings/index.mjs templateSave > is-template-save","A template is kept from a draft a member has approved. Approve the draft first."] },
-  { after: "1.51.0", kind: "changed", by: "FILING-TEMPLATES #1 (K921, C-115 row moved to its table)", record: "build/jobs/T21/filing-templates.md",
-    line: ["C-115.35","TEMPLATE_TEXT_REFUSED","src/filings/index.mjs templateSave > is-template-save","The template's words are empty, too long, or not readable as text."] },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, C-115 row moved to its table)", record: "build/jobs/T21/filing-templates.md", check: "C-115.36", code: "TEMPLATE_TIER3_FILE" },
-  { after: "1.51.0", kind: "departed", by: "FILING-TEMPLATES #1 (K921, C-115 row moved to its table)", record: "build/jobs/T21/filing-templates.md",
-    line: ["C-115.36","TEMPLATE_KIND_TIER3","src/filings/index.mjs templateSave > is-template-save","This kind's tier is 3: it requires competent counsel, and no template is kept for it."] },
-  { after: "1.51.0", kind: "changed", by: "FILING-TEMPLATES #1 (K921, C-115 row moved to its table)", record: "build/jobs/T21/filing-templates.md",
-    line: ["C-115.37","TEMPLATE_NAME_TAKEN","src/filings/index.mjs templateSave > is-template-save","The group's library already holds a template by this name. Choose another name."] },
-  { after: "1.51.0", kind: "changed", by: "FILING-TEMPLATES #1 (K921, C-115 row moved to its table)", record: "build/jobs/T21/filing-templates.md",
-    line: ["C-115.38","NO_SUCH_TEMPLATE","src/filings/index.mjs filingPrepare > is-filing-prepare","There is no template by that id in the group's library that you can read here. One you may not see answers exactly as one that does not exist."] },
-  { after: "1.51.0", kind: "changed", by: "FILINGS #9 (K921, R28)", record: "build/jobs/T21/filings.md",
-    line: ["C-115.39","TEMPLATE_KIND_MISMATCH","src/filings/index.mjs filingPrepare > is-filing-prepare","The template named was kept for another kind of action. Name one kept for this kind, or for none."] },
-  { after: "1.51.0", kind: "changed", by: "FILINGS #9 (K921, R28)", record: "build/jobs/T21/filings.md",
-    line: ["C-115.40","TEMPLATE_NOT_NAMED","src/filings/index.mjs filingPrepare > is-filing-prepare","The jurisdiction profile holds no template for this kind, but the group's library does: name the one to fill."] },
-  { after: "1.51.0", kind: "arrived", by: "FILINGS #9 (K921, R28)", record: "build/jobs/T21/filings.md", check: "C-115.41", code: "TEMPLATE_USE_BRIEF" },
-  { after: "1.51.0", kind: "arrived", by: "FILINGS #9 (K921, R28)", record: "build/jobs/T21/filings.md", check: "C-115.42", code: "TEMPLATE_USE_FILE" },
-  { after: "1.51.0", kind: "arrived", by: "FILINGS #9 (K921, R28)", record: "build/jobs/T21/filings.md", check: "C-115.43", code: "TEMPLATE_AND_TEXT" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.1", code: "TEMPLATE_KIND_UNKNOWN" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.2", code: "TEMPLATE_USE_REFUSED" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.3", code: "TEMPLATE_PROFILE_UNKNOWN" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.4", code: "TEMPLATE_BLANK_UNKNOWN" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.5", code: "TEMPLATE_SCOPE_REFUSED" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.6", code: "TEMPLATE_DRAFT_OPEN" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.7", code: "TEMPLATE_RETIRED" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.8", code: "TEMPLATE_FROM_REFUSED" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.9", code: "NOT_A_DRAFT" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.10", code: "TEMPLATE_NO_PROPOSER" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.11", code: "TEMPLATE_WHY_REFUSED" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.12", code: "REVIEWER_UNKNOWN" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.13", code: "NO_REVIEWERS" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.14", code: "GRANT_RECIPIENT_REFUSED" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.15", code: "GRANT_NO_SECRET" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.16", code: "NO_SUCH_GRANT" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.17", code: "NO_TEMPLATE_GRANT" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.18", code: "MACHINE_CANNOT_REVIEW_TEMPLATE" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.19", code: "NOT_IN_REVIEW" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.20", code: "REVIEW_REFUSED" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.21", code: "REVIEW_STALE" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.22", code: "MACHINE_CANNOT_APPROVE_TEMPLATE" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.23", code: "TEMPLATE_NOT_APPROVED" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.24", code: "NOT_AN_APPROVER" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.25", code: "APPROVER_IS_AUTHOR" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.26", code: "REVIEWS_INSUFFICIENT" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.27", code: "TEMPLATE_REASON_REFUSED" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.28", code: "TEMPLATE_ALREADY_ENDED" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.29", code: "TEMPLATE_NOTES_REFUSED" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.30", code: "COMMENT_REFUSED" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.31", code: "TEMPLATE_NOT_OFFERED" },
-  { after: "1.51.0", kind: "arrived", by: "FILING-TEMPLATES #1 (K921, new C-125 rows)", record: "build/jobs/T21/filing-templates.md", named: "C-125.1–C-125.32", check: "C-125.32", code: "TEMPLATES_STATE_REFUSED" },
-  { after: "1.51.0", kind: "arrived", by: "LOCAL-FACTS #1 (K921, new C-126 rows)", record: "build/jobs/T21/local-facts.md", named: "C-126.1–.5", check: "C-126.1", code: "MACHINE_CANNOT_CONFIRM" },
-  { after: "1.51.0", kind: "arrived", by: "LOCAL-FACTS #1 (K921, new C-126 rows)", record: "build/jobs/T21/local-facts.md", named: "C-126.1–.5", check: "C-126.2", code: "NO_SUCH_FACT" },
-  { after: "1.51.0", kind: "arrived", by: "LOCAL-FACTS #1 (K921, new C-126 rows)", record: "build/jobs/T21/local-facts.md", named: "C-126.1–.5", check: "C-126.3", code: "FACT_ACT_REFUSED" },
-  { after: "1.51.0", kind: "arrived", by: "LOCAL-FACTS #1 (K921, new C-126 rows)", record: "build/jobs/T21/local-facts.md", named: "C-126.1–.5", check: "C-126.4", code: "FACT_HOW_REFUSED" },
-  { after: "1.51.0", kind: "arrived", by: "LOCAL-FACTS #1 (K921, new C-126 rows)", record: "build/jobs/T21/local-facts.md", named: "C-126.1–.5", check: "C-126.5", code: "FACT_VALUE_REFUSED" },
+  /* RE-ANCHORED 2026-10-01 (PROMOTION #23, T22; K1006): over 1.52.0, the stamp's own lines (`fixtures/row-census-1.52.0.jsonl`,
+     1022 lines, de396d62…). T21's declarations (provenance's C-53.13; filing-templates' C-115 moves and C-125.1–.32;
+     filings' C-115 rows; local-facts' C-126.1–.5) are stamped in 1.52.0 and retired. None is open (see the header). */
 ];
 /* COMPOSITIONS AWAITING STAMP: a change to which checks a gate runs moves no row, so the census cannot see it; each is
    declared here by name, verified against its record like a row, and listed (R50, K408, K464). Queue's registered step
@@ -152,8 +79,8 @@ const AWAITING_STAMP = [
    retired; no T17 job names a composition change. LEGACY-TESTS #19 (T21, 2026-10-01): intent's registration changed its
    ids after the 1.51.0 stamp (INTENT #9, no row), declared for T22. */
 const COMPOSITIONS_AWAITING = [
-  { after: "1.51.0", what: "intent's registration (its ids changed, no row)", by: "INTENT #9 (P8)",
-    record: "build/jobs/T21/intent.md", needle: "ids of my registration" },
+  /* PROMOTION #23 (T22, 2026-10-01): intent's registration (1.51.0's declaration, INTENT #9) is stamped in 1.52.0 and
+     retired; none is open. */
 ];
 /* The plane's suite shape: every arm printed PASS or FAIL with its reason, the tally last, the exit its verdict. */
 let pass = 0, fail = 0;

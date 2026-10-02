@@ -188,20 +188,20 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    the record's own history holds the same move at or before the state-edge fence (R32); C-18.8 verifies through
    `signatures.verifySshsig` (R31), which also admits a sha256-hashed SSHSIG. MINOR, rule 17 moving the stamp for
    changed checks. The catalogue's own census (`checkBundle` alone) lost these four ids; every suite that counts it
-   pins the old figures and is legacy-tests' to re-read. */
+   pins the old figures and was legacy-tests' to re-read. */
 /* 1.33.0 (PROMOTION #2, T4 layer 2, 2026-09-27; K118, entry T4-2b): SIX ARRIVALS, NO DEPARTURES, ONE CHANGED. LEGACY-CHECKS
    #1 (T4 layer 1, N44 and N36) added C-29.11 AI_CREDENTIAL_PRINCIPAL_NOT_THE_MINTER, C-29.12 AI_CREDENTIAL_ORG_NOT_ADMIN,
    C-96.10 RESIGN_AT_TWO, C-96.11 NO_HOLDERS, C-96.12 PAIRING_NOT_YOURS and C-33.49 ABSENT, and C-33.48 now carries the
    code its site mints, LAST_COMMITTED_OWNER (formerly LAST_OWNER_CANNOT_LEAVE, which nothing mints since REC-224), with
    its translation rewritten for both of membership's sites. MINOR, rule 17 moving the stamp for arrivals and a changed
    check. Census 566 -> 572, sha256 86ddf728…, behaviour source 1513f4a8…: the d470 suite's own print on this tree, whose
-   re-pin is legacy-tests' (T4-5). */
+   re-pin was legacy-tests' (T4-5). */
 /* 1.34.0 (PROMOTION #3, T5 layer 2, 2026-09-27; entry N86): NO ARRIVALS, FOUR DEPARTURES FROM THE CATALOGUE, NONE CHANGED
    BY THIS STEP. PROVENANCE #1 (T4 layer 3) moved C-18.1, C-18.3, C-18.4 and C-18.9 out of `bio-checks.mjs` into
    `provenance` after 1.33.0 was minted, so two catalogues answered to 1.33.0. A ratification is still judged by them:
    the plane runs them over the same image after this gate (`provenance.withRegisterChecks`, K72 (4)). MINOR, rule 17 moving the stamp for
    removed checks. Census 572 -> 568, sha256 4f93c5f6…, behaviour source 4fa025ac…: the d470 suite's own print on this
-   tree, whose re-pin (A3, A9) is legacy-tests' (T5-12). */
+   tree, whose re-pin (A3, A9) was legacy-tests' (T5-12). */
 /* 1.35.0 (PROMOTION #4, T5 layer 5, 2026-09-27; K150): NO ARRIVALS, FORTY-NINE DEPARTURES FROM THE CATALOGUE, NONE
    CHANGED BY THIS STEP. After 1.34.0 was minted, layer 4 and layer 5 jobs moved these rows out of `bio-checks.mjs` into
    their own modules (the file's diff 3ec9dbc533..508920f1c1, pure removals): CALIBRATION #1 C-42.1–C-42.7 (K136);
@@ -212,14 +212,14 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    this gate with bias's `withBiasChecks` as with provenance's `withRegisterChecks` (legacy-index, T5-11, K146), so a
    ratification is judged by C-26.1–C-26.7 again once that lands. MINOR, rule 17 moving the stamp for removed
    checks, 1.34.0's precedent. Census 568 -> 519, sha256 e4d92a7e…, behaviour source 18a61872…: the d470 suite's own
-   print on this tree, whose re-pin (A3) is legacy-tests' (T5-12). */
+   print on this tree, whose re-pin (A3) was legacy-tests' (T5-12). */
 /* 1.36.0 (PROMOTION #5, T6 layer 2, 2026-09-27; LEGACY-CHECKS #2's REPORT 7, K163): THIRTY-ONE ARRIVALS, NO DEPARTURES,
    NONE CHANGED. LEGACY-CHECKS #2 (T6 layer 1) added C-22.17 AI_LOG_NEVER_LOOKED_STORED, C-28.17 CAPTURE_FETCH_FAILED,
    C-28.18 CAPTURE_REQUEST_NOT_RETRYABLE, C-81.11–C-81.14 (the theme withdrawal, carried word for word from connections),
    the new families REGISTRATION_CHECKS C-102.1–C-102.5, PROVENANCE_ACT_CHECKS C-103.1–C-103.7 and
    EXTRACT_PROPOSE_CHECKS C-104.1–C-104.12. It moved 71 `where`s, which name where a refusal is minted and change no
    check's condition, code or translation. MINOR, rule 17 moving the stamp for arrivals. Census 519 -> 550, sha256
-   d35d735c…, behaviour source 66baec44…: the d470 suite's own print on this tree, whose re-pin (A3, A9) is
+   d35d735c…, behaviour source 66baec44…: the d470 suite's own print on this tree, whose re-pin (A3, A9) was
    legacy-tests' (T6-14). */
 /* 1.37.0 (PROMOTION #6, T8 layer 2, 2026-09-28; N147): TWO ARRIVALS, FIFTY-NINE CHECKS NET DEPARTED, AND CHECKS CHANGED.
    After 1.36.0 was minted, T7's layer-6 and layer-7 jobs moved rows out of `bio-checks.mjs` into their own modules
@@ -228,7 +228,7 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    K231) added C-102.6 FACT_MALFORMED and C-102.7 STEP_MODULE_UNNAMED, admitted six record types (`STD`, `CONF`, `CONS`,
    `ESC`, `ASP`, `GOAL`: C-2.5 and the state tables now pass documents they refused) and moved 91 `where`s. MINOR, rule 17
    moving the stamp for arrivals, departures and changed checks. Census 550 -> 491, sha256 42a9d0a3…, behaviour source
-   17c6fd16…: the d470 suite's own print on this tree, whose re-pin (A3, A9) is legacy-tests' (N147's other share). Layer
+   17c6fd16…: the d470 suite's own print on this tree, whose re-pin (A3, A9) was legacy-tests' (N147's other share). Layer
    9's moves (actions' C-32 and C-94 rows, ratification's C-41) take the next number when they land. */
 /* 1.38.0 (PROMOTION #7, T8 after layer 9, 2026-09-28; N147, K233, K253): NO ARRIVALS, NINETY-SIX DEPARTURES, THREE CHANGED.
    After 1.37.0 was minted, T8's layer-8 and layer-9 jobs moved rows out of `bio-checks.mjs` into their own modules (the
@@ -244,14 +244,14 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    still counts them. Outside the catalogue, and so outside this census, layer 9 added its modules' own families:
    standards C-112, conformance C-113, consequences C-114, filings C-115, escalation C-116 and actions C-117. MINOR,
    rule 17 moving the stamp for departures and changed checks. Census 491 -> 395, sha256 c22e2574…, behaviour source
-   4108bfa4…: the d470 suite's own print on this tree, whose re-pin (A1's floors, A3, A5, A9) is legacy-tests'. */
+   4108bfa4…: the d470 suite's own print on this tree, whose re-pin (A1's floors, A3, A5, A9) was legacy-tests'. */
 /* 1.39.0 (PROMOTION #9, T9 layer 2, 2026-09-28; N240, K284): THREE ARRIVALS, ONE DEPARTURE, NONE CHANGED. After 1.38.0
    was minted, monitoring moved C-18.5's emission site out of `bio-checks.mjs` (N240: the census printed 394 under
    1.38.0, so R34 did not hold at T8's close), and T9's layer 1 (LEGACY-CHECKS #4, N206, N214) added C-102.8 STEP_DECLARED,
    C-102.9 CASE_CATALOGUE_FAILED and C-102.10 CASE_MEMBER_REFUSED and moved the `where`s of C-32.6 and C-33.14 (N212) and
    C-48.8 and C-48.9 (N226), which name where a refusal is minted and change no check's condition, code or translation.
    MINOR, rule 17 moving the stamp for arrivals and a departure. Census 395 -> 397, sha256 e1c688c5…, behaviour source
-   9927c1ad…: the d470 suite's own print on this tree, whose re-pin (A3, A5, A9) is legacy-tests'. */
+   9927c1ad…: the d470 suite's own print on this tree, whose re-pin (A3, A5, A9) was legacy-tests'. */
 /* 1.40.0 (PROMOTION #10, T9 after layer 4, 2026-09-28; K233's pattern, K288): TWO ARRIVALS, NO DEPARTURES, TWO CHANGED,
    all in a module's own row table (R34, R47: rows are counted wherever they live). After 1.39.0 was minted (85493f73b5),
    capture-sources' job (CAPTURE-SOURCES #3, N189, K288) added C-105.10 CAPTURE_CREDENTIAL_SUPPLY_FAILED and C-105.11
@@ -263,7 +263,7 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    refuse through membership's `listenerRefusal` (codes with no row yet, N202), content reads a rect's space through
    text-chain's `rectSpace` with C-45.13 refusing the same spaces, and `bio-checks.mjs` did not change. MINOR, rule 17
    moving the stamp for arrivals and changed checks. The d470 census, of the catalogue file only, is unmoved: 397,
-   sha256 e1c688c5…, behaviour source 9927c1ad… (its own print on this tree), so its 1.40.0 row, legacy-tests', names
+   sha256 e1c688c5…, behaviour source 9927c1ad… (its own print on this tree), so its 1.40.0 row, legacy-tests' then, named
    `changed: ["C-105.8", "C-105.9"]` to stand apart from 1.39.0's (A4). */
 /* 1.41.0 (PROMOTION #11, T11 layer 2, 2026-09-28; N281, K343, K233's pattern): THREE ARRIVALS, THREE DEPARTURES, TWO
    CHANGED, counted wherever the rows live (R34, R47). After 1.40.0 was minted (97cb7a30d2), T10's jobs moved these, and
@@ -281,7 +281,7 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    whole answer (N275), the same answer as before. MINOR, rule 17 moving the stamp for arrivals, departures and changed
    checks. The d470 census, of the catalogue file only, is unmoved (every arrival and departure is in a module's own
    table): 397, sha256 e1c688c5…, behaviour source 9927c1ad… (its own print on this tree after K350's restore), so its
-   1.41.0 row, legacy-tests', names `changed: ["C-22.1", "C-22.17"]` to stand apart from 1.40.0's (A4); A3 and A5 are
+   1.41.0 row, legacy-tests' then, named `changed: ["C-22.1", "C-22.17"]` to stand apart from 1.40.0's (A4); A3 and A5 were
    that re-pin's. */
 /* 1.42.0 (PROMOTION #12, T12 layer 2, 2026-09-29; N302, K369, K381): EIGHT ARRIVALS, FOUR DEPARTURES, ONE CHANGED,
    counted wherever the rows live (R34, R47). After 1.41.0 was minted (7702929d29), T11's layer 6–9 jobs and T12's layer
@@ -299,7 +299,7 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    from `LAW_LEVELS`), C-113.17, C-114.3, C-114.10, C-114.12 and C-114.17. MINOR, rule 17 moving the stamp for
    arrivals, departures and a changed check. T12's later row changes (N306, K380) are the next number's (N318). The
    d470 census, of the catalogue file only, moved with C-22.7's copy: 397 -> 396, sha256 de54b8bd…, behaviour source
-   8ada0f4c… (its own print on this tree); its 1.42.0 row, and A3, A5 and A9, are legacy-tests' re-pin. */
+   8ada0f4c… (its own print on this tree); its 1.42.0 row, and A3, A5 and A9, were legacy-tests' re-pin. */
 /* 1.43.0 (PROMOTION #14, T13 layer 2, 2026-09-29; N318, N319, K425, K431): EVERY ROW CHANGE SINCE 1.42.0, counted
    wherever the rows live (R34, R47), read by diffing every row table between f955769afc (1.42.0's stamp) and
    `tranche/T13` after record-core and membership merged (build/plan/t13-stamp-list.md, checked row by row).
@@ -340,7 +340,7 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    MINOR, rule 17 moving the stamp for arrivals, departures and a changed composition. ROW_CENSUS (R50) is re-pinned to
    this tree as R50 now words it (N350: lines sort by check, then code, then by the line itself; every fleet member's
    `scripts/` and `civicos-ui/deploy-ui.mjs` left out): 827 rows. The d470 census, of the catalogue file only, moved
-   with legacy-checks' removal (359 -> 358); its 1.44.0 row is legacy-tests' re-pin. */
+   with legacy-checks' removal (359 -> 358); its 1.44.0 row was legacy-tests' re-pin. */
 /* 1.45.0 (PROMOTION #16, T15 layer 2, 2026-09-30; N318, K425, K482): EVERY ROW CHANGE SINCE 1.44.0, counted wherever
    the rows live (R34, R47), read by diffing R50's census lines of `tranche/T15` after its layer 1 merged against
    1.44.0's own (`test/fixtures/row-census-1.44.0.jsonl`): two arrivals, four departures, nothing else. Each is one a
@@ -357,7 +357,7 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    MINOR, rule 17 moving the stamp for arrivals, departures and a changed composition. ROW_CENSUS (R50) is re-pinned to
    this tree: 825 rows. T15's layer-2 entries name no row (membership's `hiddenBundles`, N352). Rows T15's layers
    3+ change are T16's stamp (`awaiting stamp`). The d470 census, of the catalogue file only, moved with legacy-checks'
-   removals (358 -> 356, sha256 968acdfb…, behaviour source b7d4112b…, its own print on this tree); its 1.45.0 row is
+   removals (358 -> 356, sha256 968acdfb…, behaviour source b7d4112b…, its own print on this tree); its 1.45.0 row was
    legacy-tests' re-pin. */
 /* 1.46.0 (PROMOTION #17, T16 layer 2, 2026-09-30; N318, K425, K483): EVERY ROW CHANGE SINCE 1.45.0, counted wherever
    the rows live (R34, R47), read by diffing R50's census lines of `tranche/T16` after membership merged (d5efecdc39)
@@ -375,7 +375,7 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    own `checkCaseDocument`. T16's layer 1 (legacy-checks, N361) moved no row.
    MINOR, rule 17 moving the stamp for arrivals and a changed composition. ROW_CENSUS (R50) is re-pinned to this tree:
    877 rows. Rows T16's layers 3+ change are T17's stamp (`awaiting stamp`). The d470 census, of the catalogue file
-   only, is unmoved (356, sha256 968acdfb…; `bio-checks.mjs` did not change), so its 1.46.0 row, legacy-tests', names
+   only, is unmoved (356, sha256 968acdfb…; `bio-checks.mjs` did not change), so its 1.46.0 row, legacy-tests' then, named
    what changed to stand apart from 1.45.0's (A4). */
 /* 1.47.0 (PROMOTION #18, T17 layer 2, 2026-09-30; N318, K425, K575, K577): EVERY ROW CHANGE SINCE 1.46.0, counted
    wherever the rows live (R34, R47), read by diffing R50's census lines of `tranche/T17` after membership and record-core
@@ -399,7 +399,7 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    Record-core's N376 moved no row (K577). MINOR, rule 17 moving the stamp for arrivals, departures, changed checks and
    a changed composition. ROW_CENSUS (R50) is re-pinned to this tree: 879 rows. Rows T17's layers 3+ change are T18's
    stamp (`awaiting stamp`). The d470 census, of the catalogue file only, moved with N372 (356 -> 340, sha256
-   c56ccc26…, behaviour source 15465533…, its own print on this tree); its 1.47.0 row is legacy-tests' re-pin. */
+   c56ccc26…, behaviour source 15465533…, its own print on this tree); its 1.47.0 row was legacy-tests' re-pin. */
 /* 1.48.0 (PROMOTION #19, T18 layer 2, 2026-09-30; N318, K425, K636, K644, K650): EVERY ROW CHANGE SINCE 1.47.0, counted
    wherever the rows live (R34, R47), read by diffing R50's census lines of `tranche/T18` after record-core and membership
    merged against 1.47.0's own (`test/fixtures/row-census-1.47.0.jsonl`): eight arrivals, one row now held twice, three
@@ -428,7 +428,7 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    `CASE_MEMBER_ROLES`.
    MINOR, rule 17 moving the stamp for arrivals, changed checks and a changed composition. ROW_CENSUS (R50) is re-pinned
    to this tree: 887 rows. Rows T18's layers 3+ change are T19's stamp (`awaiting stamp`). The d470 census, of the
-   catalogue file only, moved with the removals (text-chain's, record-core's, this job's) and is legacy-tests' re-pin. */
+   catalogue file only, moved with the removals (text-chain's, record-core's, this job's) and was legacy-tests' re-pin. */
 /* 1.49.0 (PROMOTION #20, T19 layer 2, 2026-10-01; rule 7, K425, K785, K791): EVERY ROW CHANGE SINCE 1.48.0, counted
    wherever the rows live (R34, R47), read by diffing R50's census lines of `tranche/T19` after record-core, credentials
    and membership's deletion merged against 1.48.0's own (reproduced at d75700d9c9: 887 rows, bfda481e…): ninety-seven
@@ -511,7 +511,28 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    MINOR, rule 17 moving the stamp for arrivals, a changed row, departures of duplicates and a changed composition.
    ROW_CENSUS (R50) is re-pinned to this tree, module tables only: 984 rows. Rows T21's layers 3–11 change are T22's
    stamp (`awaiting stamp`). */
-export const CATALOG_VERSION = "1.51.0";
+/* 1.52.0 (PROMOTION #23, T22 layer 2, 2026-10-01; K952, K979, K989, K991, K992, K1006): EVERY ROW CHANGE SINCE 1.51.0,
+   counted wherever the rows live (R34, R47), read by diffing R50's census lines of `tranche/T22` after membership merged
+   against 1.51.0's own (`test/fixtures/row-census-1.51.0.jsonl`: 984 rows, b7c43a32…): forty new rows, two re-keyed,
+   two retired (forty-two lines arrived, four departed) and eleven changed. Each is one a job record names (T21's layers 3–11 `awaiting stamp`; T22's layers 1–2 changed no row).
+   ARRIVED: C-115.41 TEMPLATE_USE_BRIEF, C-115.42 TEMPLATE_USE_FILE, C-115.43 TEMPLATE_AND_TEXT (filings, K992); C-125.1–
+   C-125.32 in `FILING_TEMPLATE_CHECKS` (filing-templates, K991); C-126.1–C-126.5 (local-facts, K989).
+   RE-KEYED, each moved into filing-templates' table and re-worded (the old code departed, the new arrived): C-115.31
+   MACHINE_CANNOT_DRAFT_TEMPLATE (was MACHINE_CANNOT_SAVE_TEMPLATE), C-115.36 TEMPLATE_TIER3_FILE (was
+   TEMPLATE_KIND_TIER3) (filing-templates, K991).
+   DEPARTED, their ids retired and never reused: C-115.6 KIND_NO_TEMPLATE, C-115.17 NOT_TIER3 (filings, K992).
+   CHANGED: MOVED into filing-templates' table, `where` re-pointed, code unmoved: C-115.32, C-115.35, C-115.37, C-115.38,
+   and C-115.33 TEMPLATE_KIND_REFUSED re-worded too (a kind is now required) (K991); filings' own: C-115.12
+   TEXT_UNWRITABLE (`where` and translation), C-115.39 TEMPLATE_KIND_MISMATCH (`where` and translation), C-115.40
+   TEMPLATE_NOT_NAMED (`where` and translation), C-115.34 TEMPLATE_FROM_UNAPPROVED (translation), C-115.19
+   NO_DETERMINATION (`where` only) (K992); provenance's C-53.13 CAPTURE_HELD_BY_ANOTHER_BUNDLE (translation, N458, K952).
+   CHANGED IN WHAT THE GATES RUN, no row moving: intent's registered grammar claims the ids `["C-2.9"]` (a composition,
+   K979). Membership's T22 job (N478, N480) changed no row; the `legacy-tests` it dropped from `MODULE_ORDER` registered
+   no step, so the order the gates run in is unmoved.
+   MINOR, rule 17 moving the stamp for arrivals, departures, re-keyed and changed rows and a changed composition.
+   ROW_CENSUS (R50) is re-pinned to this tree, module tables only: 1022 rows. The census suite is this module's since
+   T22's opening (K1006). Rows T22's layers 3–11 change are T23's stamp (`awaiting stamp`). */
+export const CATALOG_VERSION = "1.52.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -600,10 +621,11 @@ export const CATALOG_VERSION = "1.51.0";
    the next number at the union and re-reads the print on the merged tree. */
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 /* R50 (N319, K431): the census of every refusal row as this stamp read it, pinned here and held against the tree by
-   legacy-tests' census suite, `bio-plane/test/system/row-census.test.mjs` (this module cannot read a later module's
-   table, P4). The stamp that moves CATALOG_VERSION re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 984,
-  digest: "b7c43a32428e85c549fc98c3d1f74408f7a958cb47b9a4f9bc2b7f751cfd1d53" });
+   this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
+   a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
+   re-pins it. */
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1022,
+  digest: "de396d62fe1e159f5b7ee5e8c360e119226674fe097e3d4e51a79ff68be11bd1" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
@@ -690,7 +712,7 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
     sha512: async (b) => new Uint8Array(await crypto.subtle.digest("SHA-512", b)),
     resolveTarget: (id) => knownIds.has(id),
     releaseRegistry: releaseRegistry || null,
-    /* REC-14: the published projection, supplied by the store (gateFacts) for
+    /* REC-14: the published projection, supplied by ratification's gateFacts for
        the bundle being gated and for every target its basis names. C-21.1 and
        C-21.2 are the two checks in the catalog that cannot be answered from
        the bundle alone: what the PREVIOUS EDITION of this case asserted, and
@@ -704,7 +726,7 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
        being gated and arrives in its own registry. Passing null blinds C-21.1
        exactly as passing null above blinds C-21.2. */
     publishedCaseRegistry: publishedCaseRegistry || null,
-    /* REC-18: what each basis target EARNS, supplied by the store (gateFacts)
+    /* REC-18: what each basis target EARNS, supplied by ratification's gateFacts
        for the bundle being gated. The third fact the catalog cannot answer from
        the bundle alone -- an EARNED grade is computed from `resolutions` and the
        capture record, so a leg claiming one can only be confirmed where those

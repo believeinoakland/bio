@@ -1,5 +1,5 @@
 /* The catalogue's checks that moved to promotion (K64): C-4.2, C-17.2, C-18.8 and C-20.1, run over one bundle image
- * by the gate after `checkBundle` (R27, R30–R32) and by the store's audit beside it, so neither loses a check. */
+ * by the gate after `checkBundle` (R27, R30–R32) and by record-core's audit beside it (its R59), so neither loses a check. */
 
 import { parseFrontmatter } from "../record-grammar/index.mjs";
 import { checkStateHistory, checkMechanicalConformance, checkDivergence } from "./history.mjs";
