@@ -13,9 +13,9 @@ Builds and verifies the signed and timestamped statements the plane and the inst
 **Signatures (`sshsig.mjs`)**
 
 `NS_RELEASE`, `NS_RATIFY`, `NS_FLEET`, `NS_NOTICE`, `NS_DOCKET` → strings (`"bio-release"`, `"bio-ratify"`, `"bio-release-fleet"`, `"bio-working-on"`, `"bio-docket"`).
-- **R1** Five distinct compiled constants: `NS_RELEASE`, `NS_RATIFY`, `NS_FLEET`, `NS_NOTICE` and `NS_DOCKET`. No two are equal, so a signature that verifies in one namespace never verifies in another. (Amended at T23's opening from "Three": DEC-111, K1019, K1031; from "Four" by N520: DEC-116.) *(not yet met: T27)*
+- **R1** Five distinct compiled constants: `NS_RELEASE`, `NS_RATIFY`, `NS_FLEET`, `NS_NOTICE` and `NS_DOCKET`. No two are equal, so a signature that verifies in one namespace never verifies in another. (Amended at T23's opening from "Three": DEC-111, K1019, K1031; from "Four" by N520: DEC-116.)
 - **R37** `NS_NOTICE` is `"bio-working-on"`, a compiled constant distinct from every other namespace (R1's rule). The offline signer page and the browser signer sign in it (DEC-111, K1019, K1031).
-- **R39** `NS_DOCKET` is `"bio-docket"`, a compiled constant distinct from every other namespace (R1's rule). The offline signer page and the browser signer sign in it. (DEC-116 item 6; N520) *(not yet met: T27)*
+- **R39** `NS_DOCKET` is `"bio-docket"`, a compiled constant distinct from every other namespace (R1's rule). The offline signer page and the browser signer sign in it. (DEC-116 item 6; N520)
 
 `verifySshsig(armored, message, expectNamespace, allowedKeys) → Promise<{ok:true, keyB64, namespace} | {ok:false, reason, ...}>`
 - **R2** `ok:true` only when: `armored` dearmors to a version-1 SSHSIG blob whose key and signature are both `ssh-ed25519` (32-byte key, 64-byte signature); its `namespace` equals `expectNamespace`; its signing key's wire base64 (`keyB64`) is in `allowedKeys`, after normalising each entry (a bare base64 field, a full `"ssh-ed25519 AAAA… comment"` line, or a principal-prefixed allowed_signers line all name the same key); and the signature verifies over `SSHSIG | namespace | reserved | hashAlg | H(message)`, hashed with the blob's own declared `hashAlg` (`sha256` or `sha512`), against the exact bytes of `message`.
@@ -33,7 +33,7 @@ Builds and verifies the signed and timestamped statements the plane and the inst
 - **R38** Returns exactly `` `bio-working-on ${noticeId} ${revision} ${sha}\n` ``. It throws when `noticeId` is not an opaque id (record-core R6's shape: `^[A-Z]+-\d{4}-\d{4}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$`, any prefix, the tail optional; K1115), `revision` is not a whole number of at least 1, or `sha` is not 64 lowercase hex characters (DEC-111, K1019, K1031).
 
 `docketStatement(caseId, seq, sha) → Uint8Array`
-- **R40** Returns exactly `` `bio-docket ${caseId} ${seq} ${sha}\n` ``. It throws when `caseId` is not an opaque id (record-core R6's shape, as R38's), `seq` is not a whole number of at least 1, or `sha` is not 64 lowercase hex characters. Its leading token differs from every other statement's, so no docket entry and no other signed statement can be the same signed bytes. (DEC-116 item 6; N520) *(not yet met: T27)*
+- **R40** Returns exactly `` `bio-docket ${caseId} ${seq} ${sha}\n` ``. It throws when `caseId` is not an opaque id (record-core R6's shape, as R38's), `seq` is not a whole number of at least 1, or `sha` is not 64 lowercase hex characters. Its leading token differs from every other statement's, so no docket entry and no other signed statement can be the same signed bytes. (DEC-116 item 6; N520)
 
 `fleetStatement({version, plane, members}) → string`
 - **R8** Renders `` `bio-release-fleet/2\nversion ${version}\nplane ${plane.sha256} ${plane.bytes} ${plane.asset}\n` ``, then one line per entry of `members`, then a trailing `\n`.
