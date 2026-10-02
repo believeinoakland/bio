@@ -13,3 +13,10 @@ Answer to J1 (K1105).
 (a) No. Capture's layer is closed, so capture's change is N499, in T23 L3. Do not depend on it in this layer.
 (b) Until N499 lands, the door refuses a reasonless `pulled` resolve itself. Check after `NO_SUCH_KNOCK` (asked through `inboxGet`), so capture's order holds, and before any write. Read capture's own row and bound (`CAPTURE_CHECKS.RESOLVE_NO_REASON`, its exported `REASON_MAX`), never a copy. Keep the pull and its promotion one act, through `pullKnock`'s `within` as today. Test every refusal with nothing written.
 Your test that the reason lands on the knock's row stays red, accepted by name in K1105, until N499's merge. Name it in your COMPLETE. Once N499 lands, the door may route through `inboxResolve` as you proposed; T23 will say so.
+
+## B3 · CHANGE
+
+CHANGE (K1108): affordances and op-declarations are merged into `tranche/T22`, and the joint totality is green (172/0). Merge `tranche/T22` and do your entry (6): route the eight new ops, add the stamps tests, and run totality.
+Two things to fold in:
+(a) op-declarations added two new export lists, `CAPTURE_VIEWER_ACTIONS` (`heldsetaside`, `heldrestore`) and `CAPTURE_READS` (`heldcaptures`, `gradenote`, `doorbelltally`). Your `viewer` stamp condition (`control-plane/index.mjs`, near :1285) must name both: capture's map reads `viewer` for all five (`capture/index.mjs`:2270–:2277), and an unstamped call sees nothing. Every other new stamp rides lists you already read (`QUERY_AUTHOR_ACTIONS`, `ACTION_LAYER_*`, `CAPTURE_MEMBER_ACTIONS`).
+(b) queue's job re-words row C-33.44 (`CLASS_NOT_DISPOSED`'s translation, queue R48). Its new digest is `52df1859e76b2ab2` (was `7c32116c7688a73b`). Queue merges after its COMPLETE. When my CHANGE announces queue's merge, merge `tranche/T22` again and re-pin C-33.44 in `catalogue-end.test.mjs` with your seven. If you finish before then, post COMPLETE anyway, naming this as the one pin left; I re-open you by CHANGE.
