@@ -1,5 +1,5 @@
 /* network-notices over the modules it uses, the real ones (record-core, membership, credentials, promotion, provenance,
-   publication, project-stage, signatures) on a real SQLite database (node:sqlite) standing in for a Durable Object's
+   attestation, publication, project-stage, signatures) on a real SQLite database (node:sqlite) standing in for a Durable Object's
    storage, answering as workerd's does (a cursor). Members, project participations and signer keys are rows of their
    modules' own tables, written as those modules' acts would leave them; a project and its records are real bundles
    committed through record-core at stated instants, so the member acts (R8) are real history entries. project-stage's
@@ -15,6 +15,7 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
+import { attestationOf } from "../../../src/attestation/index.mjs";
 import { publicationOf } from "../../../src/publication/index.mjs";
 import { projectStageOf } from "../../../src/project-stage/index.mjs";
 import { publicReadOf } from "../../../src/public-read/index.mjs";
@@ -106,8 +107,10 @@ export function world({ key = true, slug = SLUG, before = null } = {}) {
   const promotion = promotionOf(host, { record, membership });
   if (slug) promotion.registerFact("producingGroup", "instance-setup", () => slug);
   const instanceKey = key ? generateKeyPairSync("ed25519").privateKey.export({ type: "pkcs8", format: "der" }).toString("base64") : null;
-  const provenance = provenanceOf(host, { record, membership, promotion, signingKey: instanceKey, now: () => iso(clock.now) });
+  const provenance = provenanceOf(host, { record, membership, promotion, now: () => iso(clock.now) });
   provenance.migrate();
+  /* the instance key (attestation R4–R6), handed to network-notices as its composition hands it in */
+  const attestation = attestationOf(host, { record, provenance, signingKey: instanceKey, now: () => iso(clock.now) });
   const publication = publicationOf(host, { record, membership, promotion });
   const projectStage = projectStageOf(host, { record, membership,
     basisVersions: { projectQuestions: () => ({ items: [], cursor: null }), conclusionOf: () => null },
@@ -118,7 +121,7 @@ export function world({ key = true, slug = SLUG, before = null } = {}) {
   const governor = { admit: async (q) => { governed.push(q.host); return { admitted: true, wait_ms: 0 }; }, report: async () => ({ recorded: true }) };
   let n = 0;
   const w = {
-    st, host, record, membership, credentials, promotion, provenance, publication, projectStage, publicRead, clock, tsa: authorities, governed,
+    st, host, record, membership, credentials, promotion, provenance, attestation, publication, projectStage, publicRead, clock, tsa: authorities, governed,
     rows: (q, ...a) => [...st.sql.exec(q, ...a)],
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,
     snapshot() {
@@ -192,7 +195,7 @@ export function world({ key = true, slug = SLUG, before = null } = {}) {
     },
   };
   if (typeof before === "function") before(w);
-  w.nn = networkNoticesOf(host, { record, membership, credentials, promotion, provenance, publication, projectStage,
+  w.nn = networkNoticesOf(host, { record, membership, credentials, promotion, attestation, publication, projectStage,
                                   publicRead, governor, fetch: authorities.fetch, now: () => clock.now });
   return w;
 }

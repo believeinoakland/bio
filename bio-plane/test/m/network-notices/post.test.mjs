@@ -190,12 +190,12 @@ test("R4 the post records its notice id through record-core.recordOpaqueId in it
   assert.deepEqual(w2.rows(`SELECT 1 FROM minted_ids WHERE id=?`, JSON.parse(p2.revision).notice), []);
 });
 
-test("R4 R1 the post asks the instance key again through provenance.instanceKeyBound, and answers C-70.1 to a caller now at existence", async () => {
+test("R4 R1 the post asks the instance key again through attestation.instanceKeyBound, and answers C-70.1 to a caller now at existence", async () => {
   const w = seeded();
   const p = await prepare(w);
-  const bound = w.provenance.instanceKeyBound.bind(w.provenance);
-  w.provenance.instanceKeyBound = async () => false;
-  await refusedThenAccepted(w, () => postOf(w, p), () => { w.provenance.instanceKeyBound = bound; return postOf(w, p); },
+  const bound = w.attestation.instanceKeyBound.bind(w.attestation);
+  w.attestation.instanceKeyBound = async () => false;
+  await refusedThenAccepted(w, () => postOf(w, p), () => { w.attestation.instanceKeyBound = bound; return postOf(w, p); },
                             "NOTICE_NO_INSTANCE_KEY");
   /* alice prepares on Q as its owner; Q set discoverable and alice's part in it ended before she posts */
   const w2 = seeded();

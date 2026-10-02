@@ -3,7 +3,7 @@
  *
  * A project's owner tells the network that the group is working on something. The notice is prepared from a real
  * project and signed in the browser by the owner (`NS_NOTICE`), as a case is: prepare, sign, post (R1–R6). The copy
- * then states, signed with its own instance key (provenance R56), what the owner cannot honestly assert alone: the
+ * then states, signed with its own instance key (attestation R5), what the owner cannot honestly assert alone: the
  * activity level, re-signed monthly, the cases the project has published, the seals opened, and the closing or lapse
  * (R7–R13). Every week it seals each project's member acts under one independent timestamp (R14–R16) and opens the
  * seals touching a case when the case is published (R17, R18). It serves the group's public signing keys, without
@@ -19,7 +19,8 @@
  *                 `positionalMember` (R76).
  *   credentials   `attestingKeys` (R11), `signerList` (R8, with `status_at`, its R21).
  *   promotion     the fact `producingGroup` (its R40).
- *   provenance    `instanceSign`, `instanceKeys` (R56), `instanceKeyBound` (R57).
+ *   attestation   `instanceSign`, `instanceKeys` (its R5), `instanceKeyBound` (its R6): the instance key of its R4,
+ *                 handed in by the composition (`instanceStatement`, its R5, is imported by name).
  *   projectStage  `projectStage` (its R1, R2), for `closed`.
  *   publication   `caseCitedParts` (R41); its tables `cases`, `published_cases`, `published_case_members`,
  *                 `published_bundles`, `case_documents` under its R40.
@@ -36,7 +37,7 @@ import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, noSuchProject } from "../membership/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
-import { provenanceOf, instanceStatement } from "../provenance/index.mjs";
+import { attestationOf, instanceStatement } from "../attestation/index.mjs";
 import { projectStageOf } from "../project-stage/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
 import { publicReadOf } from "../public-read/index.mjs";
@@ -135,7 +136,7 @@ export class NetworkNotices {
   /* The modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
   get credentials() { return this.#deps.credentials ||= credentialsOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   get promotion() { return this.#deps.promotion ||= promotionOf(this.#deps.host, { record: this.record, membership: this.membership }); }
-  get provenance() { return this.#deps.provenance ||= provenanceOf(this.#deps.host, { record: this.record, membership: this.membership }); }
+  get attestation() { return this.#deps.attestation ||= attestationOf(this.#deps.host, { record: this.record }); }
   get stage() { return this.#deps.projectStage ||= projectStageOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   get publication() { return this.#deps.publication ||= publicationOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   get governor() {
@@ -178,10 +179,10 @@ export class NetworkNotices {
     const ms = r && r.c ? Date.parse(r.c) : NaN;
     return Number.isFinite(ms) ? dateOf(ms) : null;
   }
-  /* R1: whether the instance key is bound, asked of provenance R57, which signs nothing, so no key's `first_used` is
+  /* R1: whether the instance key is bound, asked of attestation R6, which signs nothing, so no key's `first_used` is
      set before its first real statement. */
   async #keyBound() {
-    try { return (await this.provenance.instanceKeyBound()) === true; } catch { return false; }
+    try { return (await this.attestation.instanceKeyBound()) === true; } catch { return false; }
   }
   #anyPublishedEdition() {
     return !!this.#call(() => this.#one(`SELECT 1 AS x FROM published_cases WHERE ratified_at IS NOT NULL LIMIT 1`));
@@ -459,10 +460,10 @@ export class NetworkNotices {
     return { json, digest: sha256HexSync(canonicalJson(json)) };
   }
 
-  /* R13: signed with the instance key over provenance's statement; null when no key is bound. */
+  /* R13: signed with the instance key over attestation's statement (its R5); null when no key is bound. */
   async #sign(digest) {
     try {
-      const r = await this.provenance.instanceSign(instanceStatement(ATTESTATION_FORMAT, digest));
+      const r = await this.attestation.instanceSign(instanceStatement(ATTESTATION_FORMAT, digest));
       return r && r.ok ? { signature: r.signature, key_id: r.key_id } : null;
     } catch { return null; }
   }
@@ -825,7 +826,7 @@ export class NetworkNotices {
                     first_listed: str(s.added) ? String(s.added).slice(0, 10) : null });
     }
     const used = new Set(this.#rows(`SELECT DISTINCT key_id FROM nn_attestations`).map((r) => r.key_id));
-    const copy = (this.#call(() => this.provenance.instanceKeys(), []) || []).filter((k) => used.has(k.key_id))
+    const copy = (this.#call(() => this.attestation.instanceKeys(), []) || []).filter((k) => used.has(k.key_id))
       .map((k) => ({ key_id: k.key_id, public_key: k.public_key, first_used: k.first_used, label: COPY_KEY_LABEL }));
     return { ok: true, group: this.#slug(), owners, copy };
   }

@@ -4,6 +4,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, post, prepare, keyFor, V, MACHINE, NOW, DAY, WEEK, monday } from "./fixture.mjs";
 import * as nn from "../../../src/network-notices/index.mjs";
+import { Attestation } from "../../../src/attestation/index.mjs";
+import { generateKeyPairSync } from "node:crypto";
 
 const A = V("alice");
 const LAST = monday(NOW) - WEEK;
@@ -113,6 +115,43 @@ test("R21 a revoked key's date is its own status_at (credentials R8, R21), never
   w.member("erin");
   w.join(w.P, "erin", "joined", true);
   assert.deepEqual([ownerOf("erin").status, "revoked_on" in ownerOf("erin")], ["attests", false]);
+});
+
+test("R21 copy: every instance key that signed an attestation (attestation.instanceKeys, its R5), first used, labelled; a replaced key stays listed, a receipt-only key is not", async () => {
+  const w = seeded();
+  const fresh = () => generateKeyPairSync("ed25519").privateKey.export({ type: "pkcs8", format: "der" }).toString("base64");
+  const other = (signingKey) => new Attestation({ storage: w.st, record: w.record, provenance: w.provenance, signingKey,
+                                                  now: () => new Date(w.clock.now).toISOString().replace(/\.\d{3}Z$/, "Z") });
+  const copy = () => w.nn.groupKeysPublic().copy;
+  const want = (ids) => w.attestation.instanceKeys().filter((k) => ids.includes(k.key_id))
+    .map((k) => ({ key_id: k.key_id, public_key: k.public_key, first_used: k.first_used, label: nn.COPY_KEY_LABEL }));
+  /* a key that has signed only a receipt (attestation R4) is the instance's, but has signed no attestation: not listed */
+  const receiptOnly = other(fresh());
+  assert.equal((await receiptOnly.signReceipt({ captureSha: "a".repeat(64), retrievalLocator: "https://example.org/x", retrieved: "2026-09-30T00:00:00Z" })).ok, true);
+  assert.equal(w.attestation.instanceKeys().length, 1);
+  assert.deepEqual(copy(), [], "no attestation yet: no copy key");
+  const one = await post(w);
+  const first = w.rows(`SELECT DISTINCT key_id FROM nn_attestations`).map((r) => r.key_id);
+  assert.equal(first.length, 1);
+  assert.deepEqual(copy(), want(first));
+  assert.equal(copy()[0].first_used, "2026-10-01T12:00:00Z", "the date it was first used");
+  /* the operator replaces the instance key: the next attestation is signed with the new one, and the old stays listed */
+  const replaced = other(fresh());
+  w.attestation.instanceSign = replaced.instanceSign.bind(replaced);
+  w.clock.now += 2 * DAY;
+  await post(w, { notice: one.notice, wording: "Changed after the key was replaced" });
+  const both = w.rows(`SELECT DISTINCT key_id FROM nn_attestations`).map((r) => r.key_id);
+  assert.equal(both.length, 2);
+  assert.deepEqual(copy(), want(both));
+  assert.deepEqual(copy().map((k) => k.first_used), ["2026-10-01T12:00:00Z", "2026-10-03T12:00:00Z"]);
+  assert.equal(w.attestation.instanceKeys().length, 3, "the receipt-only key is held by attestation, and still not listed");
+  /* each listed key verifies the attestations it signed */
+  const { createPublicKey, verify } = await import("node:crypto");
+  for (const a of w.rows(`SELECT digest, signature, key_id FROM nn_attestations`)) {
+    const k = copy().find((c) => c.key_id === a.key_id);
+    const pub = createPublicKey({ key: { kty: "OKP", crv: "Ed25519", x: Buffer.from(k.public_key, "base64").toString("base64url") }, format: "jwk" });
+    assert.equal(verify(null, Buffer.from(w.attestation.instanceStatement(nn.ATTESTATION_FORMAT, a.digest)), pub, Buffer.from(a.signature, "base64")), true);
+  }
 });
 
 test("R22 noticesOf answers a viewer who can see the project its notices, dates, misses and sealed weeks, never the salts", async () => {
