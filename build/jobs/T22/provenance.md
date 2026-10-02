@@ -27,3 +27,7 @@ PROVENANCE #11, T22 layer 3. Entries from BOB's B1 START (`build/plan/current.md
 - `checks/format.mjs`: 85 modules, 84 requirements files, 0 failures. `checks/architecture.mjs bio provenance`: 23 files, 0 failures. `checks/coverage.mjs bio provenance`: 55 of 55 live ids named, 0 failures. `checks/ownership.mjs bio provenance tranche/T22`: 7 files, 0 failures.
 
 Size (session_01HXBQRNxoQMo9TDAz7Fou7D): test runs 3, module lines 3938
+
+## J1 · REPORT
+
+Generated artifact made stale by this job: the plane's bundle, bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (comments changed in src/provenance/checks.mjs, index.mjs, schema.mjs). Not regenerated (mechanics §14). Also requirement wording in build/requirements/provenance.md (BOB's file), no meaning changed, seen in the re-scan: R52 says the testimony slot runs 'at the place legacy-store's step runs it today' and 'While legacy-store's step exists'; since T19 it is control-plane's promotion step (its R42, src/control-plane/step.mjs, registered by plane R10). The Suggestions' 'Testify's later work' (Until T19's layers 4-5, legacy-store's promotion step ...), the last sentences of R53 and R55 (legacy-store's own job ...) and the Status line's 'Code today: inside the legacy modules' are history.
