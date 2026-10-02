@@ -6,7 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, listWorld, sweepDef, NOW_MS, WEEK, site, SEED, U, page, filedBundles } from "./fixture.mjs";
-import { linkSweepOf, linkSweepOps, LINK_SWEEP_CHECKS, SWEEP_CHECKS, LINK_SWEEP_MODULE, SWEEP_CONSUMER, sweepGrammar,
+import { linkSweepOf, linkSweepOps, SWEEP_CHECKS, LINK_SWEEP_MODULE, SWEEP_CONSUMER, sweepGrammar,
          sweepRefusal } from "../../../src/link-sweep/index.mjs";
 
 const LIST = "INFO-2026-0990-list";
@@ -91,17 +91,16 @@ test("R4 R7 (monitoring R65): the run reaches monitoring only through sweepHost:
 });
 
 test("R3 C-18.16–C-18.18: this module's own table holds the three sweep rows, each with its code, number, a canned translation and a where naming this module's site; a refusal answers with its row", () => {
-  assert.equal(LINK_SWEEP_CHECKS, SWEEP_CHECKS);
-  assert.deepEqual(Object.fromEntries(Object.entries(LINK_SWEEP_CHECKS).map(([k, r]) => [k, [r.check, r.where]])), {
+  assert.deepEqual(Object.fromEntries(Object.entries(SWEEP_CHECKS).map(([k, r]) => [k, [r.check, r.where]])), {
     SWEEP_TERM_REFUSED: ["C-18.16", "src/link-sweep/checks.mjs sweepGrammar > is-sweep-term"],
     SWEEP_NOT_A_MEMBER: ["C-18.17", "src/link-sweep/sweep.mjs sweepFence > is-sweep-member"],
     SWEEP_RATIFY_NOT_AN_OWNER: ["C-18.18", "src/link-sweep/sweep.mjs sweepFence > is-sweep-owner"],
   });
-  for (const r of Object.values(LINK_SWEEP_CHECKS)) {
+  for (const r of Object.values(SWEEP_CHECKS)) {
     assert.ok(typeof r.translation === "string" && r.translation.length > 40, "a canned sentence (DEC-49)");
     assert.ok(Object.isFrozen(r));
   }
-  assert.ok(Object.isFrozen(LINK_SWEEP_CHECKS));
+  assert.ok(Object.isFrozen(SWEEP_CHECKS));
   const r = sweepRefusal("SWEEP_NOT_A_MEMBER", "why", { sweeps: ["x"] });
   assert.deepEqual(r, { ok: false, reason: "SWEEP_NOT_A_MEMBER", code: "SWEEP_NOT_A_MEMBER", check: "C-18.17",
                         translation: SWEEP_CHECKS.SWEEP_NOT_A_MEMBER.translation, detail: "why", sweeps: ["x"] });

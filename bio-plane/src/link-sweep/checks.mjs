@@ -35,9 +35,6 @@ export const SWEEP_CHECKS = Object.freeze({
   }),
 });
 
-/** Every row this module holds, keyed by code, for a reader that looks one up by the code an answer carries. */
-export const LINK_SWEEP_CHECKS = SWEEP_CHECKS;
-
 /** A refusal answer naming one of this module's rows (DEC-49): its code, row and member's sentence, and the detail. */
 export function sweepRefusal(code, detail, extra) {
   const row = SWEEP_CHECKS[code];
