@@ -173,7 +173,7 @@ test("R10 the title is the question's first non-empty line, folded, cut at a wor
   assert.equal(inquiryQuestionOf("---\nid: x\n---\n\n## Other\n\nno\n"), "");
 });
 
-test("R38 the rows the module mints stay in the catalogue with their ids: C-54.1, C-33.13, C-33.22, C-33.23, C-32.7, C-32.8", () => {
+test("R38 the rows the module mints are inquiry-grammar's, read with their ids: C-54.1, C-33.13, C-33.22, C-33.23, C-32.7, C-32.8", () => {
   assert.deepEqual(Object.fromEntries(Object.entries(INQUIRY_ROWS).map(([k, r]) => [k, r.check])), {
     LEAD_NOT_EVIDENCE: "C-54.1", NOT_INQUIRIES: "C-33.13", SELF_BASIS: "C-33.22", BASIS_CYCLE: "C-33.23",
     MACHINE_CANNOT_DIVIDE: "C-32.7", MACHINE_CANNOT_GROUND: "C-32.8" });

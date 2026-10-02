@@ -157,7 +157,7 @@ test("R11 R17 the entry grammar judged with the grammars registered with record-
   /* with nothing registered, inquiry-grammar's own arms (C-2.8, C-6.1, C-15.1) */
   assert.deepEqual(await w.k.checkEntry(good), await checkInquiryEntry(good));
   assert.ok((await w.k.checkEntry(bad)).some((x) => x.check === "C-2.8" && /surfaced_by/.test(x.message)));
-  /* a grammar claiming C-2.8 runs in the catalogue's arm's place, over the same document */
+  /* a grammar claiming C-2.8 runs in inquiry-grammar's arm's place, over the same document */
   const seen = [];
   assert.equal(w.record.registerGrammar("inquiry-arm-under-test", { ids: ["C-2.8"], arm: (ctx, found) => {
     seen.push(ctx.folderName); found.push({ check: "C-2.8", severity: "error", message: "judged by the registered grammar" });
