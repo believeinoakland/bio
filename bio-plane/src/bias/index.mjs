@@ -2,7 +2,8 @@
  * REC-207; K82 (3)). Moved from the legacy store at the module's extraction (T5-7); the set's checks and the C-26
  * family are `./checks.mjs`', the tables `./schema.mjs`'.
  *
- *   biasAdopt     the AUTHORED, ATTRIBUTED act that puts a set in force, and the PIN taken at that instant (R11, R12).
+ *   biasAdopt     the AUTHORED, ATTRIBUTED, REASONED act that puts a set in force, and the PIN taken at that instant
+ *                 (R11, R12; DEC-88).
  *   biasManifest  the EFFECTIVE SET in force for a scope, its hash, and what it does NOT enforce (R13–R18, R24, R25).
  *   biasInhale    reading an outside policy: it SPLITS bars from bias, PUBLISHES the residue, and PROPOSES, never
  *                 installs (R19–R21). It holds no write path at all: no SQL, no transaction, no promotion.
@@ -68,6 +69,8 @@ export const BIAS_DEBT_DELAY_MS = 1000;
 export const BIAS_DEBT_BATCH = 50;
 export const BIAS_DEBT_OWNERS_MAX = 50;
 export const BIAS_DEBT_REASON_MAX = 4000;
+/* R11 (DEC-88): the adopter's reason, at most this many characters once trimmed. */
+export const BIAS_ADOPTION_REASON_MAX = 2000;
 export const BIAS_DEBT_SETTLEMENTS_MAX = 50;
 /* R43's bound: 200 by default, the queue's page; at most 1,000. */
 export const BIAS_DEBT_UNCLEARED_DEFAULT = 200;
@@ -290,8 +293,8 @@ class Bias {
    *  member-authored promotion, and the manifest requires BOTH this row AND its pinned revision at `adopted` before
    *  it reports a lens in force. A project's lens is its owners' act (REC-134, DEC-72 clause 5); the instance's is
    *  its administrators' (K102: "Admins define instance bias"). */
-  biasAdopt({ bundleId = null, scope = "instance", scopeId = "", author = null, at = null, identity = null,
-              viewer = null } = {}) {
+  biasAdopt({ bundleId = null, scope = "instance", scopeId = "", reason = null, author = null, at = null,
+              identity = null, viewer = null } = {}) {
     const who = typeof author === "string" ? author.trim() : "";
     if (!who || who.startsWith(MACHINE_AUTHOR_PREFIX))
       return this.#refuse("BIAS_ADOPTION_NOT_AUTHORED",
@@ -325,6 +328,16 @@ class Bias {
       if (!member || !this.#membership.isAdministrator(member))
         return notAnAdmin(member, INSTANCE_ADOPTION_ACT, { remedy: INSTANCE_ADOPTION_REMEDY, scope: "instance" });
     }
+    /* DEC-88 (R11, C-26.21): the adopter's reason, asked last and before anything is read or written, on a
+       re-adoption too. Kept trimmed; its bound is on what is kept. */
+    const why = typeof reason === "string" ? reason.trim() : "";
+    if (!why)
+      return this.#refuse("BIAS_ADOPTION_NO_REASON",
+        "op=biasadopt carries the adopter's reason for adopting this lens: pass reason=<why>. Nothing was adopted.");
+    if (why.length > BIAS_ADOPTION_REASON_MAX)
+      return this.#refuse("BIAS_ADOPTION_NO_REASON",
+        `the reason is ${why.length} characters and an adoption keeps at most ${BIAS_ADOPTION_REASON_MAX}. `
+        + "Nothing was adopted.", { limit: BIAS_ADOPTION_REASON_MAX, length: why.length });
 
     /* DEC-54 (d)'s pin, read from the DOCUMENT rather than the request, so a caller cannot claim a provenance the
        bundle does not carry. Absent is NULL, the honest value for a natively authored set. */
@@ -333,14 +346,14 @@ class Bias {
     const now = at ? String(at) : stampInstant("second");
     this.#sql.exec(
       `INSERT OR REPLACE INTO bias_adoptions
-         (scope_type, scope_id, bundle_id, bundle_sha, author, at, source_url, retrieved, source_sha256)
-       VALUES (?,?,?,?,?,?,?,?,?)`,
+         (scope_type, scope_id, bundle_id, bundle_sha, author, at, source_url, retrieved, source_sha256, reason)
+       VALUES (?,?,?,?,?,?,?,?,?,?)`,
       st, sid, String(bundleId), h.bundleSha, who, now, str(fm.policy_source), str(fm.policy_retrieved),
-      str(fm.policy_sha256) ? str(fm.policy_sha256).toLowerCase() : null);
+      str(fm.policy_sha256) ? str(fm.policy_sha256).toLowerCase() : null, why);
     this.#notify();
 
     return { ok: true, adopted: true, bundleId: String(bundleId),
-             scope: st, scope_id: sid, author: who, at: now,
+             scope: st, scope_id: sid, author: who, at: now, reason: why,
              pinned: { bundle_sha: h.bundleSha,
                        source_url: str(fm.policy_source), retrieved: str(fm.policy_retrieved),
                        source_sha256: str(fm.policy_sha256) ? str(fm.policy_sha256).toLowerCase() : null },
@@ -1103,7 +1116,8 @@ export function biasOf(ctx, deps = {}) {
 
 /* The ops this module answers, as entries of the plane's op map (`src/plane/store.mjs` spreads them in). `url` is the
    request URL, whose query carries the control plane's stamps (`author`, `identity`, `viewer`), each read after the
-   body so a caller's own copy never wins; `body` the parsed body. The policy arrives in the BODY: a policy in a query
+   body so a caller's own copy never wins; `body` the parsed body. The adopter's `reason` (R11) is the caller's own
+   words, not a stamp: read from the body, else the query. The policy arrives in the BODY: a policy in a query
    string would be cut by the first proxy with an opinion about URL length, and a cut policy silently produces a
    smaller residue. `actor` rides in the body, stamped there by the control plane. */
 export function biasOps(b, url, body) {
@@ -1112,7 +1126,8 @@ export function biasOps(b, url, body) {
     biasmanifest: () => b.biasManifest({ scope: q("scope"), scopeId: q("scopeId"), limit: q("limit"),
                                          offset: q("offset"), viewer: q("viewer") }),
     biasadopt: async () => {
-      const r = b.biasAdopt({ bundleId: q("bundleId"), scope: q("scope"), scopeId: q("scopeId"), author: q("author"),
+      const r = b.biasAdopt({ bundleId: q("bundleId"), scope: q("scope"), scopeId: q("scopeId"),
+                              reason: body && body.reason != null ? body.reason : q("reason"), author: q("author"),
                               identity: q("identity"), viewer: q("viewer") });
       await b.noticesDelivered();
       return r;

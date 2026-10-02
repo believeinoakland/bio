@@ -23,6 +23,9 @@ export const T1 = "2026-07-02T00:00:00Z";
 export const RESIDUE = "BIO checks that each statement below names a registered subject and carries a justification. "
   + "It does NOT check whether a second source was independent of the first.";
 
+/** An adopter's reason (bias R11, DEC-88), which every adoption that is not proving its refusal sends. */
+export const WHY = "We adopt this lens because the office is a party to matters this group examines.";
+
 /** A statement, well formed unless overridden. */
 export const S = (id, over = {}) => ({ id, kind: "scrutiny", subject: "ENT-2026-0007",
   text: `Statement ${id}: claims from this office need a second, independent record before they bear load.`,
@@ -79,10 +82,13 @@ export function world(opts = {}) {
   } };
   run(sql, RECORD_SCHEMA);
   /* `biasSchema`: absent or true, this module's schema text as it stands; "legacy", as a store created before
-     `bias_debts.settled_kind` held it (R45); "none", none of this module's tables (a store `migrate()` finds bare). */
+     `bias_debts.settled_kind` and `bias_adoptions.reason` held them (R45); "none", none of this module's tables (a
+     store `migrate()` finds bare). */
   if (opts.biasSchema === "legacy") {
-    const older = BIAS_SCHEMA.replace(/,\n\s*settled_kind\s+TEXT[^\n]*\n/, "\n");
-    if (older === BIAS_SCHEMA) throw new Error("world: the schema text no longer declares settled_kind where expected");
+    const noKind = BIAS_SCHEMA.replace(/,\n\s*settled_kind\s+TEXT[^\n]*\n/, "\n");
+    const older = noKind.replace(/\n\s*reason\s+TEXT,[^\n]*/, "");
+    if (noKind === BIAS_SCHEMA || older === noKind)
+      throw new Error("world: the schema text no longer declares settled_kind and reason where expected");
     run(sql, older);
   } else if (opts.biasSchema !== "none") run(sql, BIAS_SCHEMA);
   db.exec(`CREATE TABLE ai_runs (run TEXT PRIMARY KEY)`);   // another module's table, for "nothing else was written"

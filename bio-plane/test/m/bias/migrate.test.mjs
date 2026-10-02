@@ -1,7 +1,7 @@
 /* bias R45: migrate(), this module's tables and columns at every boot, at the module's interface. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, S } from "./world.mjs";
+import { world, S, WHY } from "./world.mjs";
 import { viewerPredicate } from "../../../src/membership/index.mjs";
 import { BIAS_TABLES, BIAS_ADDITIVE_COLUMNS } from "../../../src/bias/index.mjs";
 
@@ -11,14 +11,21 @@ const shape = (w) => JSON.stringify([
   ...BIAS_TABLES.map((t) => [w.rows(`PRAGMA table_info(${t})`), w.rows(`SELECT * FROM ${t} ORDER BY rowid`)])]);
 const columns = (w, t) => w.rows(`PRAGMA table_info(${t})`).map((c) => c.name);
 
-test("R45: a bias_debts built without settled_kind, holding a settled debt, gains the column (TEXT, nullable) and never fills it: biasDebt answers kind_state undetermined", async () => {
+test("R45: a bias_debts built without settled_kind, holding a settled debt, and a bias_adoptions built without reason (R12, DEC-88), holding an adoption, gain the columns (TEXT, nullable) and never fill them: biasDebt answers kind_state undetermined", async () => {
   const w = world({ biasSchema: "legacy" });
   await w.group();
   assert.equal(columns(w, "bias_debts").includes("settled_kind"), false, "the older store");
   w.sql.exec(`INSERT INTO bias_debts (run, context_type, context_id, moved_basis, lens_then, lens_now, recipients, raised, observed, cleared_at)
               VALUES ('RUN-OLD', 'inquiry', 'INQ-2026-0001-q', 'at_open', 'aa', 'bb', '[]', '2026-01-01T00:00:00Z', '2026-01-02T00:00:00Z', '2026-01-02T00:00:00Z')`);
   const held = w.row(`SELECT * FROM bias_debts`);
-  assert.deepEqual(w.bias.migrate(), { ok: true, added: [["bias_debts", "settled_kind"]] });
+  w.sql.exec(`INSERT INTO bias_adoptions (scope_type, scope_id, bundle_id, bundle_sha, author, at)
+              VALUES ('instance', '', 'BIAS-2026-0001-old', 'aa', 'admin', '2026-01-01T00:00:00Z')`);
+  const adopted = w.row(`SELECT * FROM bias_adoptions`);
+  assert.deepEqual(w.bias.migrate(), { ok: true, added: [["bias_debts", "settled_kind"], ["bias_adoptions", "reason"]] });
+  const why = w.rows(`PRAGMA table_info(bias_adoptions)`).find((c) => c.name === "reason");
+  assert.deepEqual([why.type, why.notnull, why.dflt_value, why.pk], ["TEXT", 0, null, 0]);
+  assert.deepEqual(w.row(`SELECT * FROM bias_adoptions`), { ...adopted, reason: null },
+    "an adoption made before its reason was required keeps none: never filled");
   const col = w.rows(`PRAGMA table_info(bias_debts)`).find((c) => c.name === "settled_kind");
   assert.deepEqual([col.type, col.notnull, col.dflt_value, col.pk], ["TEXT", 0, null, 0]);
   assert.deepEqual(w.row(`SELECT * FROM bias_debts`), { ...held, settled_kind: null }, "the debt already held: nothing filled, nothing else changed");
@@ -56,6 +63,7 @@ test("R45: a fresh store gains all five tables with their indexes, from this mod
   assert.deepEqual(BIAS_TABLES, ["bias_statements", "bias_adoptions", "bias_debts", "bias_debt_sweeps", "bias_debt_settlements"]);
   for (const t of BIAS_TABLES) assert.ok(columns(bare, t).length > 0, t);
   assert.ok(columns(bare, "bias_debts").includes("settled_kind"));
+  assert.ok(columns(bare, "bias_adoptions").includes("reason"));
   for (const [t, c] of BIAS_ADDITIVE_COLUMNS) assert.ok(columns(bare, t).includes(c), `${t}.${c}`);
   /* the same tables and indexes, statement for statement, as the schema pass makes */
   assert.equal(shape(bare), shape(world()));
@@ -64,6 +72,6 @@ test("R45: a fresh store gains all five tables with their indexes, from this mod
   /* and the module works over them */
   await bare.group();
   bare.set("BIAS-2026-0001-a", [S("s1")], "adopted");
-  assert.equal(bare.bias.biasAdopt({ bundleId: "BIAS-2026-0001-a", author: "admin", identity: "member:admin", viewer: "admin" }).ok, true);
+  assert.equal(bare.bias.biasAdopt({ reason: WHY, bundleId: "BIAS-2026-0001-a", author: "admin", identity: "member:admin", viewer: "admin" }).ok, true);
   assert.equal(bare.bias.biasManifest({ viewer: "admin" }).in_force, true);
 });
