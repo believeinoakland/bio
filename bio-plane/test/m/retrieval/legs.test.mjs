@@ -7,7 +7,7 @@
  * at meaning grain, hidden as absent, and the syntax sentence naming `leg:hunch`. Its compile, grammar, vocabulary,
  * compound-width and source-text sections are query-language's, inquiry's and entities'. From the second: its block 7,
  * `rows=leg` answering an earned C beside an authored B through a registered resolver (the test's own, standing in for
- * strength's, as `meaning.test.mjs` does), and the leg read's `cached` notes. The rows in `inquiry_basis` and
+ * inquiry's, its R52, as `meaning.test.mjs` does), and the leg read's `cached` notes. The rows in `inquiry_basis` and
  * `resolutions` are written as inquiry and entities write them. */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -191,7 +191,7 @@ test("R12, R55: rows=leg through a registered resolver — a leg authored B on t
   writeLeg(w, "INQ-CLEAN", 0, { target: "INFO-TYPED", grade: "B", axis: "capture", source: "capture" });
   const WHY = "the capture was re-read by OCR capped at C, so the record can support no more than C for this leg";
   const calls = [];
-  assert.equal(w.retrieval.registerLegGrades("strength", (legs) => {
+  assert.equal(w.retrieval.registerLegGrades("inquiry", (legs) => {
     calls.push(legs);
     return legs.map((l) => (l.target_id === "INFO-OCR" ? { grade: "C", why: WHY } : null));
   }).ok, true);

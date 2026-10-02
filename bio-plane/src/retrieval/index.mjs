@@ -219,9 +219,9 @@ export class Retrieval {
     return { ok: true, module };
   }
 
-  /** R12, R55: the leg-grade resolver `strength` registers: `fn(legs)` answers, for each capture-axis leg with a letter and
-   *  a target that is not an inquiry, `{grade, why}` — the letter the record can earn for that target, and why the
-   *  authored one does not stand (null when it does). It is called once per page. */
+  /** R12, R55: the leg-grade resolver, inquiry's (its R52), registered under inquiry's name: `fn(legs)` answers, for
+   *  each capture-axis leg with a letter and a target that is not an inquiry, `{grade, why}` — the letter the record can
+   *  earn for that target, and why the authored one does not stand (null when it does). It is called once per page. */
   registerLegGrades(module, fn) {
     if (typeof module !== "string" || !module || typeof fn !== "function")
       return { ok: false, reason: "RESOLVER_MALFORMED", detail: "a registration names its module and its function" };
@@ -621,8 +621,8 @@ export class Retrieval {
 
   /** REC-114 / D-383 (R12) — A LEG LISTING'S CAPTURE LETTER, RESOLVED AGAINST WHAT THE RECORD CAN EARN FOR THAT LEG'S
    *  TARGET, WITH THE AUTHORED LETTER BESIDE IT. DEC-4 bounds the capture axis by transcription fidelity, and this is a
-   *  reader of that one rule, swept to the ruling already made: this method decides NOTHING about grades — `strength`'s
-   *  registered resolver does (its earned registry and its three-case policy), called ONCE for the whole page. The
+   *  reader of that one rule, swept to the ruling already made: this method decides NOTHING about grades — inquiry's
+   *  registered resolver does (its R52, over its earned registry, inquiry R13), called ONCE for the whole page. The
    *  three conditions: capture axis only (a connection leg's earned answer is a value the write already pins); a leg
    *  actually carrying a letter (null stays null); and a target that is NOT an inquiry (a capture grade on an INQ- leg
    *  ranges over no document). With no resolver registered every leg passes unchanged (R55). BOTH DERIVED FIELDS ARE
