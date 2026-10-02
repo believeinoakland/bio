@@ -46,7 +46,7 @@ Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queu
   - Measured: no item says "subject" for a plan's matters today (R16's checkpoint item names none). R28 holds that line as items are added.
 
 **Sweeps and working-on notices** (K1036 (8); DEC-111, K1031)
-- **R26** (monitoring R63; K1036 (8)) CONDITIONs, one for each condition that `monitoring.sweepConditions` answers the viewer:
+- **R26** *(not yet met: T24)* (link-sweep R11, monitoring R63 before N506's split; K1036 (8)) CONDITIONs, one for each condition that `link-sweep.sweepConditions` answers the viewer:
   - the kinds are `sweep-held-backlog`, `sweep-yield-anomaly`, `sweep-seed-unreachable`, `sweep-redirect-out-of-scope` and `sweep-silent`;
   - each is keyed `CONDITION::<kind>::<bundle>#<id>`;
   - each goes to the members of the sweep's project who may see its bundle;
@@ -111,7 +111,7 @@ Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queu
 - `escalation`: `escalationsDue` (its R16; R17).
 - `action-plans`: `checkpointsDue` (its R17; R16).
 - `credentials`: `signerList` (its R8), `signerSet` (its R7) (R14).
-- `monitoring`: `sweepConditions` (its R63; R26).
+- `link-sweep`: `sweepConditions` (its R11; `monitoring` R63 before N506's split; R26). *(not yet met: T24)*
 - `network-notices`: `noticesOf` (its R22: a missed `monthly` attestation, the lapse date, the notice's status; R27).
 
 ### Invariants

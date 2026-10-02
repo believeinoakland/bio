@@ -13,7 +13,7 @@
 | 7 | Understanding | Content Framework §12, and 8 | What the investigation below has established: the group's intent, with progress computed against the record, and which findings still stand when their basis changes. | intent, reevaluation |
 | 8 | Publication | 13 | What the group stands behind leaves one way. | case-grammar, corpus-export, publication, public-read, project-stage, network-notices, ratification, case-authoring, review |
 | 9 | Action | 16 (`BIO_Action_v0_1.md`); Functional Architecture "Layer 3: Action"; Design Requirements §7–§8 | An action rests on the record, and one asserting a breach rests on a published finding and a standard held in the record; the group plans and decides every act, the AI proposes and prepares and never files or sends; compliance is recorded as carefully as noncompliance; every deadline names its basis. | local-facts, standards, conformance, consequences, action-grammar, actions, action-clocks, filing-templates, filings, escalation, action-plans |
-| 10 | Operations | 10, 14 | The instance keeps itself current unattended, and watches the actions' clocks and the government's response. | monitoring, scheduler |
+| 10 | Operations | 10, 14 | The instance keeps itself current unattended, and watches the actions' clocks and the government's response. | monitoring, link-sweep, scheduler |
 | 11 | Interface and distribution | 12, 15 | The ops, the member surfaces and the installer. Nothing below depends on them. | affordances, tasks, queue-producers, queue, instance-setup, op-declarations, admission, control-plane, plane, legacy-ui, installer |
 
 ## No jurisdiction in the product (Bob's concern, 2026-09-25; ruled by BOB #37)
@@ -220,3 +220,13 @@ When the catalogue, `store.mjs`, `schema.mjs` and `src/index.mjs` are emptied (T
 | plane | The composition root: the Durable Object class, construction order, the migration pass, the alarm, the route map spreading every module's ops map through `control-plane`'s `dispatch`, and the Worker's entry; the deployment config (`wrangler.jsonc`, `package.json`, `package-lock.json`, `.gitignore`, `.dev.vars.example`). | `store.mjs` (constructor, `#migrate`'s frame and order, `alarm`, `onAlarm`, `#ownNamespace`, `#nowMs`, the route frame); `src/index.mjs` (`export default`, `export { Store }`, `bindPublishedPlane`'s hand-over); `control-plane/dispatch.mjs`' `Store` (R35); `legacy-index`'s config paths |
 
 Uses: `plane` uses every module today's composition root reaches (`store.mjs`' constructor, `src/index.mjs`, `dispatch.mjs`), less the legacy ones; no module uses it. `legacy-index` keeps `src/index.mjs`, `tools/` (70 files) and `bio-plane/scripts/walkfloor.mjs`, `walkfigure.mjs` (K749) until its layer-11 job empties them.
+
+## Layer 10: link-sweep (N506, K617, K1153, K1159; T24's opening)
+
+`monitoring`'s link sweep (its R53–R64, folded at T23's opening) is split into a module of its own, directly after `monitoring` and before `scheduler`, with no requirement changing meaning: `link-sweep` R1–R12 are `monitoring` R53–R64 in order, which `monitoring` retires as moved. `monitoring` provides the seam as stated services (its R65, R66): the host services the sweep runs under, and a registration by which `link-sweep` hands it, at composition, C-18.5's sweep arms, the R3 fence and its due sweeps for the slate, so `monitoring` never imports a later module. Its code moves from `bio-plane/src/monitoring/` (`sweep.mjs`, `sweep-match.mjs` and the sweep's share of `checks.mjs`, `schema.mjs` and `index.mjs`) to `bio-plane/src/link-sweep/` in its T24 job.
+
+| module | what it does | source |
+| --- | --- | --- |
+| link-sweep | The ratified link sweep, split from monitoring (N506, K1159). | `monitoring/sweep.mjs`, `sweep-match.mjs`, the sweep's share of `checks.mjs`, `schema.mjs`, `index.mjs`; `monitoring` R53–R64 |
+
+Uses: `link-sweep` uses record-grammar, subresources, format-registry, record-core, membership, promotion, capture, observation-log, capture-requests, project-stage and monitoring; `scheduler`, `queue-producers` and `plane` gain it.

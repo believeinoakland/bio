@@ -44,7 +44,7 @@ Terms. An **op** is a name the instance answers. An **op spec** is `{classes, ma
 - **R10** `OPS` holds a spec for each op T23 adds, each in `SESSION_OPS.member` and `SESSION_OPS.admin` unless it is public, with `NEEDS` `contribute` for every mutating op a member's session reaches, and the stamps the act lists name:
   - `escalationreasondraft` (`escalation` R29, R25) as `escalationstatus`: a read, classes `admin`, `member`, `probe`, `viewer` stamped;
   - `whatchangedpropose` (`case-authoring` R39): mutating, any credential (an `ai` credential by its scope), as `templatepropose`, `proposedBy` and `viewer` stamped; `whatchangeddrafts` (`case-authoring` R39): a read, classes `admin`, `member`, `probe`, `viewer` stamped;
-  - `sweeps` (`monitoring` R61): a read for a member session, classes `admin`, `member`, `probe`, `viewer` stamped;
+  - `sweeps` (`link-sweep` R9; declared for `link-sweep`'s map) *(not yet met: T24)*: a read for a member session, classes `admin`, `member`, `probe`, `viewer` stamped;
   - `noticeprepare` (`network-notices` R1, R2; it writes nothing), `notices` (its R22) and `directorysubmission` (its R23; as `notices`, no `NEEDS` row; K1166 (1)): reads, and `noticepost` (its R4, R5): mutating; each for a member session only, classes `admin`, `member` and `machineClasses: []` (no machine, AI credential or operator token posts a notice, `network-notices` R1, R24), `by` (or `viewer`) stamped;
   - the public reads `network-notices` registers through `public-read` R18 (its R10 `activityMethod`, R20 `noticesPublic`, R21 `groupKeysPublic`): `classes: null`, not mutating, nothing stamped.
 

@@ -17,7 +17,7 @@ Terms. An **entry** is `{actor_class, actor, authority_kind, authority, level, s
 **The vocabulary** (published with a sentence per member)
 - **R1** Levels `internet`, `document`, `content`, `meaning`. States `LOOKED_ABSENT`, `LOOKED_INDETERMINATE`, `partial`, `PRESENT`, with `NEVER_LOOKED` named as the state of a subject with no row. Actor classes `plane`, `machine`, `member`. Authority kinds `run`, `sweep`, `link`, `ratify`, `acquire`, `extract`, `derive`, `lead`, `objective`. Subject kinds `address`, `capture`, `extent`, `entity`, `description`, `reference`, `unstated`. The content-axis states (`indexed_full`, `indexed_partial`, `indexed_none`, `not_extracted`, and `undetermined` apart from them), the missing-row causes and the coverage of a row, each with its sentence.
 - **R33** (K1099; `queue` R5; `queue-producers` R26, R27) The condition vocabulary (`CONDITION_KINDS`, which C-22.4 checks, R2) holds, beside its twelve kinds, these eight, each with its one sentence:
-  - the five sweep kinds of `monitoring` R63: `sweep-held-backlog`, `sweep-yield-anomaly`, `sweep-seed-unreachable`, `sweep-redirect-out-of-scope`, `sweep-silent`;
+  - the five sweep kinds of `link-sweep` R11: `sweep-held-backlog`, `sweep-yield-anomaly`, `sweep-seed-unreachable`, `sweep-redirect-out-of-scope`, `sweep-silent`;
   - the three notice kinds of `network-notices` (its R12, R13): `notice-attestation-missed`, `notice-lapse-near`, `notice-project-closed`.
 
   An entry naming any of them is accepted by C-22.4, and one naming a kind outside the vocabulary is still refused.

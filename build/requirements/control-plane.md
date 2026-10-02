@@ -54,7 +54,7 @@ Terms. An **op spec** is `{classes, machineClasses?, mutating}`, with the op's s
 - **R45** (N485: K1025, K1051; K1094; DEC-111, K1100) The door routes, through each owner's own map (R26), with the stamps `op-declarations` R10 declares and none taken from the caller (R29):
   - `escalationreasondraft` (`escalation` R25's arm, R29);
   - `whatchangedpropose` and `whatchangeddrafts` (`case-authoring` R39);
-  - `sweeps` (`monitoring` R61);
+  - `sweeps` (`link-sweep` R9), through `link-sweep`'s map; *(not yet met: T24)*
   - `noticeprepare`, `noticepost`, `notices` and `directorysubmission` (`network-notices` R1–R6, R11, R22, R23), each refused to any caller not arriving by a member's session;
   - `network-notices`' public reads (its R10, R20, R21), credential-free on the public path, as `public-read` R18 registers them: by their own names and as `op=publicread&name=` (K1172).
 
