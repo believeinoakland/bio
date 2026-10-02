@@ -203,7 +203,7 @@ test("R12, R13: a project-scoped finding names its project homes; one project's 
   assert.equal(byId(f)[id], undefined, "every project home decided: it leaves the items");
   assert.equal(f.disposed.findings.filter((d) => d.finding === id).length, 2);
   // an item with no project home is not available, for want of a scope
-  const w2 = world({ publication: { exportLog: () => ({ exports: [{ seq: 1, at: iso(NOW), scope: "working-corpus", bundles: 1, files: 1, note: null }], truncated: false }) } });
+  const w2 = world({ corpusExport: { exportLog: () => ({ exports: [{ seq: 1, at: iso(NOW), scope: "working-corpus", bundles: 1, files: 1, note: null }], truncated: false }) } });
   const e = byId(w2.feed(null, "class:admin"))["FINDING::export-performed::1"];
   assert.equal(e.disposition.available, false); assert.equal(e.disposition.reason, "no_project_scope");
 });

@@ -1,6 +1,6 @@
 # BOB to control-plane (T23)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -35,3 +35,8 @@ Next: op-declarations merges after it posts COMPLETE; my CHANGE then follows. qu
 CHANGE (K1171), re J2: op-declarations is merged into `tranche/T23` (R10's specs and the four stamping lists are now on the tranche; queue-producers is merged too). Merge `tranche/T23` into your branch, re-run `test/m/control-plane/` and the whole `test/m`, and post COMPLETE.
 On the public reads: keep what J2 built (reached only as `op=publicread&name=`, their own names to the public hook, never a store route). It meets R45 and K1166 (2); my B3 (1) is superseded by K1171. Nothing else changes for you.
 Expected reds after your merge, all accepted by name: queue's `test/m/queue/` stand-ins (red 15, 18 tests, until queue's merge), queue `catalogue.test.mjs`:34/:116 (red 13), plane `worker.test.mjs` (red 6, plane's share). `families.test.mjs`:47 and `inbox-door.test.mjs`:81 should be green.
+
+## B5 · ANSWER · re J3
+
+ANSWER (K1172), re J3. This supersedes B4's paragraph "On the public reads": KEEP J3 EXACTLY AS BUILT (both paths: by own name through `publicReadDoorRead`, keyed on `NETWORK_NOTICES_PUBLIC_READS`, and `op=publicread&name=` through the public hook; both tested). Do not remove either arm. That is the final word on the public reads in T23.
+B4's first paragraph stands: op-declarations IS merged into `tranche/T23`. Merge `tranche/T23` into your branch now, re-run `test/m/control-plane/` and the whole `test/m`, and post COMPLETE. Expected reds after your merge, all accepted: queue's stand-ins (red 15) and `catalogue.test.mjs`:34/:116 (red 13) until queue's merge, plane `worker.test.mjs` (red 6) until plane's.

@@ -101,11 +101,14 @@ export class Queue {
       Queue.PRODUCER_DEPS.filter((k) => this.#deps[k] !== undefined).map((k) => [k, this.#deps[k]]))));
   }
   static PRODUCER_DEPS = Object.freeze(["record", "membership", "governor", "provenance", "capture", "captureRequests",
-    "basisVersions", "progressions", "aiRuns", "bias", "publication", "reevaluation", "intent", "monitoring", "contradiction",
+    "basisVersions", "progressions", "aiRuns", "bias", "publication", "corpusExport", "reevaluation", "intent", "monitoring",
+    "contradiction",
     /* queue-producers R15–R19 (K608, K728; K899 (7)): the Action layer's providers, `actions` for R19's holds. */
     "actionClocks", "escalation", "actionPlans", "actions",
     /* queue-producers R20, R21 (K921): the review requests and the facts due; queue passes them and calls neither. */
-    "filingTemplates", "localFacts"]);
+    "filingTemplates", "localFacts",
+    /* queue-producers R2 (N483) and R27 (DEC-111): corpus-export's export log; network-notices' notices of a project. */
+    "networkNotices"]);
   get #scheduler() { return this.#dep("scheduler", () => schedulerOf(this.#host, this.#env)); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
