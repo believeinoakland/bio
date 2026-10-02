@@ -29,8 +29,9 @@ import { ARMED_SIGNERS } from "./signers.mjs";
 /* One verifier, shared with the plane. The installer and the instance
    agree on what a valid signature is because they run the same code. */
 import { verifySshsig, NS_RELEASE, NS_FLEET, fleetStatement } from "../../bio-plane/src/sshsig.mjs";
-/* R30 (N234): the slug grammar and the member binding names are instance-setup's, imported, never copied. */
-import { GROUP_SLUG_RE, FLEET_BINDINGS } from "../../bio-plane/src/setup-fleet.mjs";
+/* R30 (N234): the slug grammar and the member binding names are instance-setup's, imported, never copied. R34 (DEC-109):
+   so is the block on who controls the copy, which the claim page shows in the same words (instance-setup R47). */
+import { GROUP_SLUG_RE, FLEET_BINDINGS, hostingControlBlock } from "../../bio-plane/src/setup-fleet.mjs";
 
 export const CFG = {
   CLIENT_ID: "1c2fdba3fc71cf88d26fcd7b90df95de",
@@ -1193,9 +1194,8 @@ your control. ${NO_KEY}`;
 <p><b>Save the member and probe credentials in a password manager now.</b> This page is the
 only time they are shown. The one-time password is spent in the next step, where you choose
 a real password.</p>
-<p class="small">If you lose the password you choose next, you are not locked out: replacing
-the ADMIN_TOKEN value in your worker's Cloudflare settings starts the claim step over. Your
-Cloudflare sign-in is the way back in.</p>
+${/* R34 (DEC-109, K1038): before the hand-over to where the founder chooses a password, who really controls the copy, in
+   instance-setup's words; nothing asks for or records an acknowledgement of it. */ hostingControlBlock("notice")}
 <div class="actions"><button id="handover" data-url="${esc(base)}/">Go to my copy and finish setup</button></div>`;
 }
 

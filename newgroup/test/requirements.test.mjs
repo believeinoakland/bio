@@ -11,7 +11,8 @@ import { join } from "node:path";
 import { createHash } from "node:crypto";
 import worker, * as installer from "../src/index.mjs";
 import { CFG, planeLimits } from "../src/index.mjs";
-import { GROUP_SLUG_RE, FLEET_BINDINGS } from "../../bio-plane/src/setup-fleet.mjs";
+import { GROUP_SLUG_RE, FLEET_BINDINGS, HOSTING_CONTROL, hostingControlBlock } from "../../bio-plane/src/setup-fleet.mjs";
+import { setupPage } from "../../bio-plane/src/setup.mjs";
 import { EXAMPLE_SLUG, PUBLISHER, PROFILE_CHOICES, PROFILES_NONE } from "../src/ui.mjs";
 import { RELEASE_VERSION, RELEASE_SOURCE } from "../src/release.mjs";
 import { resolveVersion, checkSignedAsset, embedRelease } from "../scripts/embed-release.mjs";
@@ -445,6 +446,41 @@ test("R16 the final panel shows the address, the one-time password and the membe
   assert.match(w.page.done, /<button id="handover" data-url="https:\/\/panel\.grp\.workers\.dev\/">/);
   assert.ok(w.raw.includes(`location.href=h.dataset.url+"#boot="+encodeURIComponent(document.getElementById("out-boot").textContent)`));
 });
+
+test("R34 the wizard's last screen shows, before the hand-over to the copy where the founder chooses a password, instance-setup R47's block in DEC-109's words (the same export), and asks for and records no acknowledgement", async () => {
+  const escd = (x) => String(x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  /* DEC-109's five points, each held in the one export both pages read. */
+  const S = HOSTING_CONTROL.sentences;
+  for (const [i, says] of [[0, /hosting account .* controls the copy.*replace the one-time password, claim the copy again, read everything in it and lock everyone else out.*no vote of the group's administrators can stop them/s],
+      [1, /group account.*not anyone's personal login/], [2, /at least one other trusted person/],
+      [3, /someone other than the group's administrators hold it/], [4, /same account is the way back in if the password you choose is lost/]])
+    assert.match(S[i], says, `point ${i + 1}`);
+  const block = hostingControlBlock("notice");
+  armWith(SIGNER.line);
+  /* Every ending of the install that hands over: running, lagging, asleep. */
+  const ends = [seen(await run({ slug: "last-ok", rel: await release({ version: NEXT }) })),
+    seen(await run({ slug: "last-lag", rel: await release({ version: NEXT }), copy: { storeVersion: "0.1.0" } })),
+    seen(await run({ slug: "last-asleep", copy: { selftest: () => jres({ ok: false }) } }))];
+  restoreSigners();
+  for (const w of ends) {
+    const done = w.page.done;
+    const at = done.indexOf(block), hand = done.indexOf('<button id="handover"');
+    assert.ok(at > 0 && hand > at, "the block, whole, before the hand-over");
+    assert.equal(done.split(block).length - 1, 1, "shown once");
+    for (const s of [HOSTING_CONTROL.heading, ...S]) assert.ok(done.slice(0, hand).includes(escd(s)), s);
+    /* The reassurance-only paragraph it replaces is gone. */
+    assert.ok(!done.includes("you are not locked out"), "the old paragraph is gone");
+    /* No acknowledgement: no control but the copy buttons and the hand-over, nothing gating it, nothing sent. */
+    assert.deepEqual([...done.matchAll(/<(input|select|textarea)\b/g)].length, 0, "no input of any kind");
+    assert.deepEqual([...done.matchAll(/<button\b[^>]*>/g)].map((m) => m[0]).filter((b) => !/class="copy"/.test(b)),
+      [`<button id="handover" data-url="${done.match(/data-url="([^"]*)"/)[1]}">`], "the hand-over is the only other control, never disabled");
+  }
+  assert.ok(!w0(ends).raw.includes("acknowledg"), "nothing on the page asks for an acknowledgement");
+  /* The very words instance-setup's claim page shows (R47): the same block from the same export. */
+  const claim = setupPage({ answered: true, result: { ok: true, group: null } });
+  assert.ok(claim.includes(block), "the claim page shows the same block");
+});
+const w0 = (ends) => ({ raw: ends.map((w) => w.raw).join("\n") });
 
 /* ------------------------------------------------------------------------------------------------ the update */
 
