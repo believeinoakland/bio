@@ -26,3 +26,9 @@
 - `node checks/ownership.mjs … action-grammar tranche/T24`: 3 files changed by action-grammar; 0 failures.
 
 Size (session_01KswGokoCpfjTh9SsAcvrPk): test runs 6, module lines 3
+
+## J1 · COMPLETE
+
+N502 applied, wording only (record: `build/jobs/T24/action-grammar.md`, "Completion"). `checks.mjs`:11 C-73.6's `where` → "stamped by 1.50.0"; :12 C-117.20–.22 → "stamped by 1.51.0"; `grammar.test.mjs`:195 → "stamped by 1.51.0". Re-scan of the module: nothing else of N502's or N508's kind. Rows added or changed: none (no red 5 row). Deferred: nothing.
+Report: this comment change stales the plane bundle manifest's input hash for `src/action-grammar/checks.mjs` (`fleetbundles.test.mjs` §8 staleness arm FAILs; the fresh build is byte-identical). Not regenerated: yours at the layer close.
+Proof: action-grammar tests 24/24 pass. Whole `bio-plane/test/m`: 5231 pass, 2 fail, both accepted: red 9 (`plane/notices.test.mjs`:39) and red 8 (`scheduler/consumers.test.mjs`:173, the R5 test at :161). Checks: format 2 failures (red 4, link-sweep); architecture, coverage (11/11), ownership (3 files) 0 failures.
