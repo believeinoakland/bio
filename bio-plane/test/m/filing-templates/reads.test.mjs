@@ -158,8 +158,9 @@ test("R20 reviewsRequested lists every (version, member) pair asked, in review, 
   const want = [[a.version, "carol"], [a.version, "frank"], [b.version, "frank"]].sort((x, y) => (x[0] + "#" + x[1] < y[0] + "#" + y[1] ? -1 : 1));
   assert.deepEqual(r.items.map((i) => [i.version, i.member]), want);
   const i = r.items.find((x) => x.member === "carol");
-  assert.deepEqual([i.template, i.name, i.kind, i.member_name, i.asked_by, i.asked_at],
-                   [a.template, "A", "records_request", "h_carol", { id: "alice", name: "h_alice" }, "2026-10-01T12:00:00Z"]);
+  assert.deepEqual([i.template, i.name, i.kind, i.project, i.member_name, i.asked_by, i.asked_at],
+                   [a.template, "A", "records_request", w.P, "h_carol", { id: "alice", name: "h_alice" }, "2026-10-01T12:00:00Z"]);
+  assert.deepEqual(r.items.map((x) => x.project), [w.P, w.P, w.P], "every item names its template's project");
   assert.deepEqual([r.truncated, r.cursor, r.limit], [false, null, 500]);
   /* paging through cursor */
   const p1 = w.ft.reviewsRequested({ limit: 2, viewer: MACHINE });
@@ -172,6 +173,45 @@ test("R20 reviewsRequested lists every (version, member) pair asked, in review, 
   /* approval and withdrawal end the requests */
   w.ft.templateRetire({ template: b.template, version: b.version, reason: "r", by: A, viewer: A });
   assert.deepEqual(w.ft.reviewsRequested({ viewer: MACHINE }).items.map((x) => x.version), [a.version, a.version]);
+});
+
+test("R20 each item names the template's project, its scope's (R1): a project template its project, a group template null; a template widened (R10) after the request answers null, never its old project; a template the viewer may not see is left out and names no project", () => {
+  const w = seeded();
+  const E = V("erin");
+  const page = (viewer = MACHINE) => w.ft.reviewsRequested({ viewer });
+  const of = (r, version) => r.items.filter((x) => x.version === version);
+  /* a project template in review: its project */
+  const p = draft(w, { name: "Scoped" });
+  w.ft.templateSubmit({ version: p.version, reviewers: ["frank"], author: A, viewer: A });
+  /* a group template (widened before its new version was asked): null */
+  const g = approved(w, { name: "Wide" });
+  assert.equal(w.ft.templateApprove({ version: g.version, widen: true, by: E, viewer: E }).ok, true);
+  const g2 = w.ft.templateDraft({ template: g.template, text: "Wide two {{group}}", author: A, viewer: A });
+  w.ft.templateSubmit({ version: g2.version, reviewers: ["frank", "bob"], author: A, viewer: A });
+  /* a template asked while scoped to the project, widened afterwards */
+  const x = approved(w, { name: "Later wide" });
+  const x2 = w.ft.templateDraft({ template: x.template, text: "Later two {{group}}", author: A, viewer: A });
+  w.ft.templateSubmit({ version: x2.version, reviewers: ["frank"], author: A, viewer: A });
+  assert.deepEqual(of(page(), x2.version).map((i) => i.project), [w.P], "before the widening: its project");
+  const before = w.snapshot();
+  const r0 = page();
+  assert.deepEqual(w.snapshot(), before, "writes nothing");
+  assert.deepEqual(of(r0, p.version).map((i) => [i.member, i.project]), [["frank", w.P]]);
+  assert.deepEqual(of(r0, g2.version).map((i) => [i.member, i.project]), [["bob", null], ["frank", null]]);
+  assert.equal(w.ft.templateApprove({ version: x.version, widen: true, by: E, viewer: E }).ok, true);
+  const r = page();
+  assert.deepEqual(of(r, x2.version).map((i) => [i.member, i.project]), [["frank", null]], "widened after the request: null, not its old project");
+  assert.deepEqual(of(r, p.version).map((i) => i.project), [w.P], "the project template still answers its project");
+  /* the order, page bound, cursor and truncated are unchanged by the field */
+  assert.deepEqual(r.items.map((i) => `${i.version}#${i.member}`), [...r.items.map((i) => `${i.version}#${i.member}`)].sort());
+  assert.deepEqual([r.items.length, r.limit, r.truncated, r.cursor], [4, 500, false, null]);
+  const p1 = w.ft.reviewsRequested({ limit: 1, viewer: MACHINE });
+  assert.deepEqual([p1.items.length, p1.truncated, p1.cursor], [1, true, `${r.items[0].version}#${r.items[0].member}`]);
+  /* dave may not see the project: its template's item is left out, and nothing he is answered names the project */
+  const d = page(D);
+  assert.deepEqual(d.items.map((i) => [i.version, i.project]).sort(), [[g2.version, null], [g2.version, null], [x2.version, null]].sort());
+  assert.equal(of(d, p.version).length, 0);
+  assert.equal(JSON.stringify(d).includes(w.P), false, "no item for a hidden template, and no project named");
 });
 
 test("R24 a project's template is seen by whoever may see the project; group and profile templates by every member; one hidden is absent from every read and act, and no count names it", () => {
