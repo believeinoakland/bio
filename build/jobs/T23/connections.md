@@ -23,3 +23,7 @@
 - `node checks/ownership.mjs … connections tranche/T23`: 1 file changed; 0 failures
 
 Size (session_01XC6LHKxY5EmbSqZAdGkAzP): test runs 3, module lines 2681
+
+## J1 · COMPLETE
+
+Done on job/T23/connections (code 372c86058b). N497: fixture.mjs:84-85 now register producingGroup and caseMember as instance-setup and publication; no assertion changed. Re-scan of src/connections/ and test/m/connections/: no other legacy-store registrant; every remaining legacy-*, tools/ mention is a past-tense provenance note. connections 107/107; corpus-export 9/9 green. test/m 5038 tests, 1 fail: control-plane inbox-door.test.mjs:81, accepted red 9; no other red. format, architecture, coverage (61/61), ownership (1 file): 0 failures. Nothing regenerated; no other module touched. Record: build/jobs/T23/connections.md.
