@@ -129,7 +129,9 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
   const evidenceCid = w.content.mint({ bundleId: EVID, captureSha: sha(`the text of ${EVID}`), extent: { kind: "document" },
                                        mintedBy: V("bo") }).content_id;
   const declare = (over) => {
-    const r = standards.standardDeclare({ text: [evidenceCid], author: V("olive"), viewer: V("olive"), ...over });
+    /* standards R1 (DEC-88, STANDARD_NO_REASON): the declarer's words on why the group holds its government to it */
+    const r = standards.standardDeclare({ text: [evidenceCid], reason: "The group holds the Selectboard to it.", author: V("olive"),
+                                          viewer: V("olive"), ...over });
     if (!r.ok) throw new Error(`fixture standard refused: ${JSON.stringify(r).slice(0, 300)}`);
     return r.id;
   };

@@ -9,9 +9,9 @@
  * R31). A communication to anyone is drafted without a template and goes the same way (R23). Approved bytes and
  * exports carry the in-band quartet (R22); whatever is prepared from an action resting on a premise override says so
  * first (R24); exhibits show their grades beside the venue's standard (R25); deadlines state the calendar's
- * confirmation (R30). Candidate theories are proposals, stored apart and labelled (R14). The evidence package's
- * available-actions block is registered with `public-read` (R15) and answered on its own for `escalation` (R21). The AI
- * prepares; a member approves, files and records it.
+ * confirmation (R30), read by `action-clocks.factReader` (its R12; N474). Candidate theories are proposals, stored
+ * apart and labelled (R14). The evidence package's available-actions block is registered with `public-read` (R15)
+ * and answered on its own for `escalation` (R21). The AI prepares; a member approves, files and records it.
  *
  * A NEW MODULE (T8, layer 9): nothing moved into it and it writes no legacy file. Its tables are `./schema.mjs`; a
  * deadline's date is `./dates.mjs`, counted by `action-clocks`' rule. Its R26 library moved to `filing-templates` (T21,
@@ -64,7 +64,7 @@ import { standardsOf } from "../standards/index.mjs";
 import { conformanceOf } from "../conformance/index.mjs";
 import { consequencesModule } from "../consequences/index.mjs";
 import { actionsOf, noSuchAction } from "../actions/index.mjs";
-import { actionClocksOf } from "../action-clocks/index.mjs";
+import { actionClocksOf, factReader } from "../action-clocks/index.mjs";
 import { localFactsOf } from "../local-facts/index.mjs";
 import { filingTemplatesOf, FILING_BLANKS, FILING_TEXT_MAX, blanksOf, withRow as templatesRow }
   from "../filing-templates/index.mjs";
@@ -76,11 +76,11 @@ import { BASIS_GRADES } from "../record-grammar/grades.mjs";
 import { sha256HexSync } from "../record-grammar/sha256.mjs";
 import { FILINGS_TABLES, migrateFilings } from "./schema.mjs";
 import { rowOf } from "./checks.mjs";
-import { deadlineDate, factReader, realDate, COUNTED_FROM } from "./dates.mjs";
+import { deadlineDate, realDate, COUNTED_FROM } from "./dates.mjs";
 
 export { FILINGS_SCHEMA, FILINGS_TABLES } from "./schema.mjs";
 export { FILINGS_CHECKS } from "./checks.mjs";
-export { deadlineDate, factReader, COUNTED_FROM } from "./dates.mjs";
+export { deadlineDate, COUNTED_FROM } from "./dates.mjs";
 
 /* R3, R28 (K922 (1)): the blanks, the longest text and `blanksOf` are `filing-templates`' (its R19), read there; this
    module holds no copy. */
@@ -982,7 +982,8 @@ export class Filings {
           : { event: r.starts, state: "undetermined", why: `the action's correspondence holds no ${r.starts === "received" ? "received" : "sent"} entry` };
       } else start = { event: r.starts ?? null, state: "undetermined",
                        why: r.starts === "known" ? "the record holds no date on which the group knew of the act" : "the rule names no start event this record holds" };
-      /* R30: counted as action-clocks R10 counts, on the entries for the action's office, each read through local-facts */
+      /* R30: counted as action-clocks R10 counts, on the entries for the action's office, each read through local-facts
+         by action-clocks' own reader (its R12), this module holding no copy (N474) */
       const date = deadlineDate({ start: start.date ?? null, days: r.days, count: r.count, view: v.view,
                                   counterparty: a.counterparty, kind: a.kind, factOf: factReader(this.localFacts, viewer) });
       return { rule: r.rule, days: r.days ?? null, count: r.count ?? null, starts: r.starts ?? null,
