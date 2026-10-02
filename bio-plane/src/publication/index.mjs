@@ -92,6 +92,8 @@ export const EXPORT_LOG_LIMIT_DEFAULT = 200;
 export const EXPORT_LOG_LIMIT_MAX = 1000;
 /** R18: the longest note an export's log row keeps. */
 export const EXPORT_NOTE_MAX = 280;
+/** R17 (DEC-88, K1030): the longest reason an attribution choice keeps, in code points; a longer one is refused. */
+export const ATTRIBUTION_REASON_MAX = 2000;
 /** R37: the ratified editions one `publishedEditionsOf` read answers. */
 export const EDITIONS_OF_MAX = 500;
 /** R41: the cited parts one `caseCitedParts` read answers. */
@@ -1731,7 +1733,8 @@ export class Publication {
    *  by ratification — so an inherited level is one a published edition already carried. None is none:
    *  nothing is ever prefilled. */
   attributionInForce(caseId, edition, observation) {
-    return this.#one(`SELECT level, edition, chosen_by, chosen_at FROM observation_attributions
+    /* R17: the choice is read back with its reason (DEC-88), null on a choice recorded before it. */
+    return this.#one(`SELECT level, edition, chosen_by, chosen_at, reason FROM observation_attributions
                        WHERE case_id=? AND bundle_id=? AND edition<=? ORDER BY edition DESC LIMIT 1`,
                      caseId, observation, edition) || null;
   }
@@ -1835,8 +1838,10 @@ export class Publication {
    *  reason: a case id is minted only by publication, so a draft of a new case has no identity to key a
    *  level to — and re-authors that document's attribution runs, so the level is in the bytes its owner
    *  signs. No `publish` capability is needed: it is a decision about the member's own words, not about
-   *  the case. `by` is the control plane's stamp and nothing else. */
-  attributeObservation({ caseId = null, edition = null, observation = null, level = null, by = null } = {}) {
+   *  the case. `by` is the control plane's stamp and nothing else. DEC-88: `reason`, the author's words on why
+   *  this level, is recorded with the choice (C-92.13). */
+  attributeObservation({ caseId = null, edition = null, observation = null, level = null, reason = null,
+                         by = null } = {}) {
     const refusal = (code, detail, extra) => {
       const row = ATTRIBUTION_ACT_CHECKS[code];
       return { ok: false, reason: code, code, check: row.check, translation: row.translation,
@@ -1853,6 +1858,19 @@ export class Publication {
       return refusal("ATTRIBUTION_NO_LEVEL",
         `no level was chosen. There is no default (MEMBER-KNOWLEDGE-DESIGN.md §4): choose one of `
         + `${ATTRIBUTION_LEVELS.join(", ")}`, { allowed: ATTRIBUTION_LEVELS });
+    /* DEC-88 (C-92.13): the author's words on why this level, stored as written. Blank is empty after trim; the
+       bound counts code points (K1030, K1050's reading). Asked before the level is judged, so nothing is written. */
+    const why = typeof reason === "string" ? reason : null;
+    const chars = why == null ? 0 : [...why].length;
+    if (why == null || !why.trim() || chars > ATTRIBUTION_REASON_MAX)
+      return refusal("ATTRIBUTION_NO_REASON",
+        why == null
+          ? (reason === undefined || reason === null
+              ? "give the reason you choose this level, in your own words (reason=…)"
+              : `the reason must be your words, as text; a ${typeof reason} was sent`)
+          : !why.trim() ? "the reason is blank. Say in your own words why you choose this level"
+          : `the reason is ${chars} characters, over the ${ATTRIBUTION_REASON_MAX} a choice's reason is kept to. `
+            + "Refused rather than cut", { limit: ATTRIBUTION_REASON_MAX });
     if (!ATTRIBUTION_LEVELS.includes(lv))
       return refusal("ATTRIBUTION_LEVEL_UNKNOWN",
         `'${lv.slice(0, 40)}' is not a level; choose one of ${ATTRIBUTION_LEVELS.join(", ")}`,
@@ -1901,16 +1919,21 @@ export class Publication {
     /* c22-batch29 union (CONDUCT #22): D-543's one helper, not a hand-spelled whole-second stamp — MK-7 was cut before
        D-543 and d543-instant-precision named this site. Same value: stampInstant("second") of the current instant. */
     const when = stampInstant("second");
+    /* The same level again at the same edition writes nothing, so the first reason stands (K1058); another level is a
+       new choice, recorded with its own reason. */
     const same = !!(prior && Number(prior.edition) === ed && prior.level === lv);
     if (!same)
-      this.sql.exec(`INSERT INTO observation_attributions (case_id, edition, bundle_id, level, chosen_by, chosen_at)
-                     VALUES (?,?,?,?,?,?) ON CONFLICT(case_id, edition, bundle_id) DO UPDATE SET
-                       level=excluded.level, chosen_by=excluded.chosen_by, chosen_at=excluded.chosen_at`,
-                    cid, ed, obs, lv, who, when);
+      this.sql.exec(`INSERT INTO observation_attributions (case_id, edition, bundle_id, level, chosen_by, chosen_at, reason)
+                     VALUES (?,?,?,?,?,?,?) ON CONFLICT(case_id, edition, bundle_id) DO UPDATE SET
+                       level=excluded.level, chosen_by=excluded.chosen_by, chosen_at=excluded.chosen_at,
+                       reason=excluded.reason`,
+                    cid, ed, obs, lv, who, when, why);
+    const held = this.attributionInForce(cid, ed, obs);
     const reauthored = this.#reauthorAttributions(doc);
     const fm = parseFrontmatter(doc.text).data || {};
     const stmt = this.attributionStatements(cid, ed, String(fm.case_project ?? "").trim(), [obs])[0];
     return { ok: true, existed: same, observation: obs, caseId: cid, edition: ed, level: lv, shown: stmt.shown,
+             reason: held ? held.reason ?? null : null,
              previous: prior ? { level: prior.level, edition: Number(prior.edition) } : null,
              case_document: reauthored,
              stated: `edition ${ed} of ${cid} now states ${obs} at level '${lv}'. The case document was re-authored; `
@@ -2745,7 +2768,8 @@ export function publicationOps(p, url, body) {
                                    outstandingOnly: q("outstanding") === "1" }),
     /* MK-7: WHO CHOSE comes from the query string, where the control plane stamped it (R17). */
     attribute: () => p.attributeObservation({ caseId: b.caseId ?? null, edition: b.edition ?? null,
-                                              observation: b.observation ?? null, level: b.level ?? null, by: q("by") }),
+                                              observation: b.observation ?? null, level: b.level ?? null,
+                                              reason: b.reason ?? null, by: q("by") }),
     /* REC-44: internal only, and no caller's op (R15). */
     recordcasemanifest: () => p.recordCaseManifest(b),
     publishedtargets: () => p.publishedTargets(q("ids")),

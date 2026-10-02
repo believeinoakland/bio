@@ -553,6 +553,8 @@ CREATE INDEX IF NOT EXISTS case_revision_flags_bundle ON case_revision_flags(bun
 -- anonymity is a structural absence (section 4).
 -- bundle_id is the OBSERVATION, so the rows ride the purge TABLES list in both arms (D-113): an
 -- attribution outliving its observation would attach to whatever bundle was next allocated its id.
+-- reason is DEC-88's: the author's words on why this level, as written. NULL on a choice recorded
+-- before DEC-88, never back-filled (K1050's form).
 CREATE TABLE IF NOT EXISTS observation_attributions (
   case_id    TEXT NOT NULL,
   edition    INTEGER NOT NULL,
@@ -560,6 +562,7 @@ CREATE TABLE IF NOT EXISTS observation_attributions (
   level      TEXT NOT NULL CHECK (level IN ('group','project','cover','name')),
   chosen_by  TEXT NOT NULL,     -- the observation's author, stamped from the signed-in session
   chosen_at  TEXT NOT NULL,
+  reason     TEXT,              -- DEC-88: why this level, in the author's words. NULL = chosen before DEC-88
   PRIMARY KEY (case_id, edition, bundle_id)
 );
 CREATE INDEX IF NOT EXISTS observation_attributions_bundle ON observation_attributions(bundle_id);
@@ -613,6 +616,9 @@ const ADDITIVE_COLUMNS = [
   /* REC-217 (BIO_Publication_v0_1.md §3 rule 13): THE DRAFT A PUBLISHER NAMED as a case edition's draft. NULL is the
      measured truth for every older row: no act could name a draft before this column existed. */
   ["case_documents", "draft_id", "TEXT"],
+  /* DEC-88 (R17, K1058): the author's reason for an attribution level. NULL on every choice recorded before it: no act
+     asked for one, and none may come out of a migration. */
+  ["observation_attributions", "reason", "TEXT"],
 ];
 
 /* D-734 (BOB #36, D-731 (b)): the path a ratified case document's hash is registered under in `published_shas`. */

@@ -56,13 +56,14 @@ test("R31 published bytes are exempt from purge; the derived and working tables 
   assert.equal(publicationOwns("statement_acknowledgements"), false, "case-authoring's");
 });
 
-test("R33 this module's table holds exactly C-92.1–.9 and C-122.1, each with its code, sentence and its raiser's site here; C-44.2, C-68.5 and C-98 left it for public-read's (its R17)", () => {
-  /* every table this file exports, not a sample: two, and every row in them is one of the eleven */
+test("R33 this module's table holds exactly C-92.1–.9, C-92.13 and C-122.1, each with its code, sentence and its raiser's site here; C-44.2, C-68.5 and C-98 left it for public-read's (its R17)", () => {
+  /* every table this file exports, not a sample: two, and every row in them is one of the twelve */
   const tables = Object.entries(CHECKS).filter(([, v]) => v && typeof v === "object" && !Array.isArray(v)
     && Object.values(v).some((r) => r && typeof r.check === "string"));
   assert.deepEqual(tables.map(([k]) => k).sort(), ["ATTRIBUTION_ACT_CHECKS", "CASE_SOURCES_CHECKS"]);
   const ids = Object.values(MINE).map((r) => r.check).sort((a, b) => a.localeCompare(b, "en", { numeric: true }));
-  assert.deepEqual(ids, ["C-92.1", "C-92.2", "C-92.3", "C-92.4", "C-92.5", "C-92.6", "C-92.7", "C-92.8", "C-92.9", "C-122.1"]);
+  assert.deepEqual(ids, ["C-92.1", "C-92.2", "C-92.3", "C-92.4", "C-92.5", "C-92.6", "C-92.7", "C-92.8", "C-92.9", "C-92.13",
+                         "C-122.1"]);
   for (const [code, row] of Object.entries(MINE)) {
     assert.ok(typeof row.translation === "string" && row.translation.length > 40, `${code} has its sentence`);
     assert.match(row.where, /^src\/publication\/index\.mjs \w+ > is-[a-z-]+$/, `${code}'s site is this module's`);
@@ -90,7 +91,7 @@ test("R34 no place is named in this module's behaviour or outward text", () => {
     w.op("caseflags", {}), w.op("export", {}), w.op("exportlog", {}), w.op("excludedby", { id: F, viewer: V("olive") }),
     w.op("casedocument", { case: "CASE-2026-0001", edition: 1 }), w.op("casedocument", { case: "CASE-2026-0002", edition: 1 }),
     w.p.reviewProvider().deadAnswer(), w.p.publishedEditionsOf({ finding: F }), w.p.caseTensions({}),
-    w.p.caseFlags({}).doctrine, w.op("attribute", {}, {})]);
+    w.p.caseFlags({}).doctrine, w.op("attribute", {}, {}), w.op("attribute", { by: "olive" }, { level: "group" })]);
   for (const place of ["Oakland", "California", "Alameda", "Berkeley", "San Francisco", "Sacramento", "Brown Act", "CPRA",
                        "United States", "County", "City of"])
     assert.equal(outward.includes(place), false, `names ${place}`);
