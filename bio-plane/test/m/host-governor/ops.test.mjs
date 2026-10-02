@@ -10,7 +10,7 @@ import { governorOp, governorOpResponse, governorRoutes, GOVERNOR_OPS } from "..
 import { world } from "./fixture.mjs";
 
 const url = (q) => new URL(`http://x/api/?${q}`);
-/* A stand-in Durable Object stub over a real governor, answering as the legacy store's dispatcher does. */
+/* A stand-in Durable Object stub over a real governor, answering as the plane store does (its route map, `{ok, result}`). */
 const storeOver = (g, calls = []) => ({ async fetch(u, init) {
   const where = new URL(u);
   const body = init && init.body ? JSON.parse(init.body) : null;
