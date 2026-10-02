@@ -4,7 +4,7 @@
 
 ## Entries
 
-- N518 · 2026-10-02 · **DEC-113's server side** (K1251, K1134 Q4 decided by BOB): fold `plan/draft-T24-dec113-115.md` into the owning modules' requirements: the hold's project list, its release (`actionholdrelease`, rung `terminal`, K1134 (3)), the "is this project held?" answer, and the operator's wipe refused during a hold. The device side waits for a device-storage module, named when it is built (dependency not yet built); transcript retention is Bob's then (DEC-61). **Hard reason it is not yet a tranche entry:** K1134 Q5 (whether a hold also refuses a single-item purge) decides one of the refusals, and is Bob's (P17).
+- N518 · 2026-10-02 · **DEC-113's server side** (K1251, K1134 Q4 decided by BOB): fold `plan/draft-T24-dec113-115.md` into the owning modules' requirements: the hold's project list, its release (`actionholdrelease`, rung `terminal`, K1134 (3)), the "is this project held?" answer, and the operator's wipe refused during a hold. The device side waits for a device-storage module, named when it is built (dependency not yet built); transcript retention is Bob's then (DEC-61). Q5 ruled by Bob (K1252): the hold also refuses every purge of held material, a single item included; an ordered removal goes through the hold's release. **Ready for T27.**
 
 ## Watched for size (P6, K617; measured by BOB #102 at T26's L3, code over each module's most specific paths, tests excluded)
 
