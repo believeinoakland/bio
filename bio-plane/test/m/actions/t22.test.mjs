@@ -27,8 +27,9 @@ function ground() {
     assert.equal(w.a.actionPressure({ target: id, ord, pressure: { kind, note: `${kind} ${ord}` }, viewer: M, author: M }).ok, true);
   return { w, capture: captureOf(w.host) };
 }
-const hold = (w, target, ord, h, author = M) =>
-  assert.equal(w.a.actionHold({ target, ord, hold: h, reason: `stated ${h}`, viewer: author, author }).ok, true);
+const hold = (w, target, ord, h, author = M) => assert.equal((h === "released"
+  ? w.a.actionHoldRelease({ target, ord, reason: `stated ${h}`, viewer: author, author })
+  : w.a.actionHold({ target, ord, hold: h, reason: `stated ${h}`, viewer: author, author })).ok, true);
 /* Everything the reader could write: the hold table, the marks, every action's bytes, and the record's manifest. */
 const state = (w) => JSON.stringify([
   ...["action_holds", "action_pressure", "manifest", "bundles"].map((t) => w.rows(`SELECT * FROM ${t} ORDER BY rowid`)),
