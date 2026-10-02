@@ -103069,11 +103069,13 @@ __export(checks_exports45, {
   CADENCE_ENUM: () => CADENCE_ENUM,
   CRITICALITY_ENUM: () => CRITICALITY_ENUM,
   DRIVE_TICK_CHECKS: () => DRIVE_TICK_CHECKS,
+  FREQUENCY_CHECKS: () => FREQUENCY_CHECKS,
   GATHERING_CHECKS: () => GATHERING_CHECKS,
   GATH_ID_RE: () => GATH_ID_RE,
   GATH_STATUS_ENUM: () => GATH_STATUS_ENUM,
   MONITORING_CHECKS: () => MONITORING_CHECKS,
-  checkGatheringGrammar: () => checkGatheringGrammar
+  checkGatheringGrammar: () => checkGatheringGrammar,
+  frequencyRefusal: () => frequencyRefusal
 });
 function f14(check, severity, message2) {
   return { check, severity, message: message2 };
@@ -103108,7 +103110,38 @@ var GATHERING_CHECKS = Object.freeze({
     translation: "This was not saved: the list of things to gather that it carries is not written the way the record writes them, and a gathering request is shown to members as data, so it must stay within its grammar. The findings beside this say which requests and what is wrong with each. Nothing was changed."
   })
 });
-var MONITORING_CHECKS = Object.freeze({ ...DRIVE_TICK_CHECKS, ...GATHERING_CHECKS });
+var FREQUENCY_CHECKS = Object.freeze({
+  MACHINE_CANNOT_SET_FREQUENCY: Object.freeze({
+    check: "C-18.11",
+    where: at22("addressFrequencySet", "is-frequency-member"),
+    translation: "How often an address is checked is set by a named member, with the member's reason. An assistant or a machine may suggest it; it may not set it. Nothing was changed."
+  }),
+  NO_SUCH_ADDRESS: Object.freeze({
+    check: "C-18.12",
+    where: at22("addressFrequencySet", "is-frequency-address"),
+    translation: "No monitored document you can see is checked at that address, so there is no check whose frequency could be set there. Nothing was changed."
+  }),
+  BAD_FREQUENCY: Object.freeze({
+    check: "C-18.13",
+    where: at22("addressFrequencySet", "is-frequency-word"),
+    translation: "That is not a frequency this record knows. Choose one of the listed frequencies, or none to return the address to the frequency its documents set. Nothing was changed."
+  }),
+  NOT_A_SOURCE_OWNER: Object.freeze({
+    check: "C-18.14",
+    where: at22("addressFrequencySet", "is-frequency-owner"),
+    translation: "The frequency of an address is set by an owner of a project that holds a monitored document there, and you own none of them. Ask an owner of one of those projects. Nothing was changed."
+  }),
+  FREQUENCY_NO_REASON: Object.freeze({
+    check: "C-18.15",
+    where: at22("addressFrequencySet", "is-frequency-reason"),
+    translation: "A frequency is set with a reason: one of the listed reasons, or your own words of up to 2,000 characters. Nothing was changed."
+  })
+});
+var MONITORING_CHECKS = Object.freeze({ ...DRIVE_TICK_CHECKS, ...GATHERING_CHECKS, ...FREQUENCY_CHECKS });
+function frequencyRefusal(code, detail, extra) {
+  const row2 = FREQUENCY_CHECKS[code];
+  return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
+}
 var GATH_ID_RE = /^GATH-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
 var CRITICALITY_ENUM = ["crucial", "supporting"];
 var CADENCE_ENUM = ["hourly", "daily", "weekly", "monthly", "none"];
@@ -119070,17 +119103,68 @@ CREATE TABLE IF NOT EXISTS monitor_address_type (
   confidence    TEXT,
   contract      TEXT,            -- substance, membership or unmonitorable, NULL when undetermined
   basis         TEXT,            -- why no type was read, when none was
-  read_at       TEXT NOT NULL
+  read_at       TEXT NOT NULL,
+  unchanged_run INTEGER NOT NULL DEFAULT 0,  -- R18: checks in a row that found the substance unchanged
+  run_since     TEXT             -- R18: the first check of that run, NULL when the run is 0
 );
-CREATE INDEX IF NOT EXISTS monitor_address_type_raw ON monitor_address_type(address);`;
+CREATE INDEX IF NOT EXISTS monitor_address_type_raw ON monitor_address_type(address);
+
+-- R52 (K1019): AN ADDRESS'S OWN FREQUENCY, set by a member owning a project that holds a
+-- monitored document there, with a canned or custom reason. APPEND-ONLY: a setting is never
+-- edited, a later one replaces it (the highest seq at the address governs, R17), and every
+-- one stays readable as the address's history. frequency NULL returns the address to R14's
+-- rule. Keyed on the NORMALISED address, as monitor_address_type and captured_locators are.
+-- Declared to purge only by a whole-store purge: an address outlives any one version.
+CREATE TABLE IF NOT EXISTS monitor_address_frequency (
+  address_norm  TEXT    NOT NULL,
+  seq           INTEGER NOT NULL,  -- 1, 2, ... per address, in the order set
+  address       TEXT    NOT NULL,  -- the address as the member named it
+  frequency     TEXT,              -- a MONITOR_FREQ word, or NULL (R14's rule)
+  reason        TEXT    NOT NULL,  -- a canned key, or 'custom'
+  reason_text   TEXT,              -- the member's words, for 'custom' only
+  author        TEXT    NOT NULL,
+  at            TEXT    NOT NULL,
+  PRIMARY KEY (address_norm, seq)
+);
+
+-- R28 (K1096): THE RECORD OF EVERY ATTEMPT AT A NAMED REQUEST of a bundle's
+-- data/gathering.json, one row per attempt, never edited. A request is due by R14's interval
+-- from its last attempt (a governed attempt is our pacing and is not one); outcome is
+-- captured (new bytes, landed as an Information bundle at collected: landed), held (bytes
+-- the record already holds: nothing new lands), failed (no locator filed: tried says each
+-- locator's answer) or governed. Declared to purge by the bundle that carries the request.
+CREATE TABLE IF NOT EXISTS monitor_gathering_run (
+  bundle_id    TEXT    NOT NULL,   -- the bundle whose data/gathering.json carries the request
+  request_id   TEXT    NOT NULL,   -- the request's GATH id
+  seq          INTEGER NOT NULL,   -- 1, 2, ... per request
+  at           TEXT    NOT NULL,
+  outcome      TEXT    NOT NULL,   -- captured, held, failed or governed
+  locator      TEXT,               -- the locator that filed, when one did
+  tried        TEXT    NOT NULL,   -- JSON: [{locator, outcome, status, reason}] in the order tried
+  capture_sha  TEXT,
+  grade        TEXT,
+  landed       TEXT,               -- the Information bundle the new bytes landed as, when promoted
+  detail       TEXT,               -- why nothing landed, when bytes were filed and nothing was promoted
+  PRIMARY KEY (bundle_id, request_id, seq)
+);`;
+var ADDED_COLUMNS3 = Object.freeze([
+  ["monitor_address_type", "unchanged_run", "INTEGER NOT NULL DEFAULT 0"],
+  ["monitor_address_type", "run_since", "TEXT"]
+]);
 var MONITORING_TABLES = Object.freeze([
   { name: "monitor_fired", keys: ["subject"] },
   { name: "monitor_tick_epoch", keys: [] },
-  { name: "monitor_address_type", keys: [] }
+  { name: "monitor_address_type", keys: [] },
+  { name: "monitor_address_frequency", keys: [] },
+  { name: "monitor_gathering_run", keys: ["bundle_id"] }
 ]);
 function migrateMonitoring(sql) {
   const bare2 = MONITORING_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const s of bare2.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+  for (const [table2, column, type] of ADDED_COLUMNS3) {
+    const has3 = [...sql.exec(`PRAGMA table_info(${table2})`)].some((c) => c.name === column);
+    if (!has3) sql.exec(`ALTER TABLE ${table2} ADD COLUMN ${column} ${type}`);
+  }
 }
 
 // src/monitoring/index.mjs
@@ -119102,6 +119186,27 @@ var MONITOR_CADENCE_MS = Object.freeze({
   // not monitored on a clock
 });
 var CONTRACT_FREQUENCY = Object.freeze({ membership: "daily", substance: "weekly", unmonitorable: null });
+var ADDRESS_FREQUENCY_REASONS = Object.freeze({
+  source_changes_rarely: "The source changes rarely.",
+  source_changes_often: "The source changes often.",
+  legal_deadline_approaching: "A legal deadline that depends on this source is approaching.",
+  source_unreliable: "The source is unreliable, so it is checked more often."
+});
+var CUSTOM_REASON = "custom";
+var FREQUENCY_REASON_MAX = 2e3;
+var GATHERING_BUNDLE_SLUG = "gathered";
+var GATHERING_PURPOSE = "gathering";
+var GATHERING_AUTHOR = `${MACHINE_AUTHOR_PREFIX}daemon`;
+var GATHERING_LANDS_AT = "collected";
+var VOLATILITY_RUN = 10;
+var VOLATILITY_LADDER = Object.freeze(["daily", "weekly", "monthly"]);
+function lengthenedFrequency(contractDefault, unchangedChecks) {
+  const from = VOLATILITY_LADDER.indexOf(contractDefault);
+  const run = Number.isInteger(unchangedChecks) && unchangedChecks > 0 ? unchangedChecks : 0;
+  if (from < 0) return { frequency: contractDefault, step: 0 };
+  const to = Math.min(VOLATILITY_LADDER.length - 1, from + Math.floor(run / VOLATILITY_RUN));
+  return { frequency: VOLATILITY_LADDER[to], step: to - from };
+}
 var MONITOR_CADENCE_BATCH = 50;
 var MONITOR_CADENCE_DELAY_MS = 1e3;
 function monitorIntervalMs(frequency) {
@@ -119282,6 +119387,18 @@ function withSessionEntry(text5, checked, line) {
   const nxt = text5.indexOf("\n## ", at25 + 1);
   const cut3 = nxt === -1 ? text5.length : nxt + 1;
   return text5.slice(0, cut3) + entry + "\n" + text5.slice(cut3);
+}
+function settingView(x) {
+  const custom = x.reason === CUSTOM_REASON;
+  return {
+    address: x.address_norm,
+    seq: Number(x.seq),
+    frequency: x.frequency ?? null,
+    reason: x.reason,
+    ...custom ? { text: x.reason_text ?? null } : { sentence: ADDRESS_FREQUENCY_REASONS[x.reason] ?? null },
+    author: x.author,
+    at: x.at
+  };
 }
 var clampLimit3 = (v, dflt, max) => {
   const n = Math.floor(Number(v));
@@ -119570,7 +119687,7 @@ var Monitoring = class {
     const checked = stampInstant("second", this.now());
     const view = this.#view();
     let status = null, note = null, seen = null, compared = null, comparedBasis = null, frame = null;
-    let httpStatus = null, fetchedBytes = null, fetchedCtx = null, unreachable = null;
+    let httpStatus = null, fetchedBytes = null, fetchedCtx = null, unreachable = null, outcomeRecorded = false;
     const monitorLook = (o) => this.recordLook({
       bundleId,
       address: addressNorm,
@@ -119607,12 +119724,18 @@ var Monitoring = class {
       }
       const res = g.res;
       httpStatus = res.status;
-      await this.#recordOutcome(addressNorm, res.ok ? "success" : "source_refused", res.status, checked);
+      const outcome = async (o) => {
+        outcomeRecorded = true;
+        await this.#recordOutcome(addressNorm, o, res.status, checked);
+      };
+      if (!res.ok) await outcome("source_refused");
+      else if (!(driveTick && driveTick.harvestable)) await outcome("success");
       const answered = driveTick && driveTick.harvestable ? `the OpenDocument export address ${driveTick.exportAddress} answered ${res.status}` : `the source answered ${res.status}`;
       if (driveTick && driveTick.harvestable && res.ok) {
         const declaredType = (res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
         const servedAsPage = declaredType === "text/html" || declaredType === "application/xhtml+xml";
         if (servedAsPage) {
+          await outcome("source_refused");
           try {
             await res.body?.cancel?.();
           } catch {
@@ -119621,6 +119744,7 @@ var Monitoring = class {
             outcome: "unreachable",
             reason: `the Drive export address answered \`${declaredType}\`, which is the application shell`
           });
+          this.#recordRun(addressNorm, false, checked);
           return answer({
             ok: false,
             reason: "DRIVE_TICK_EXPORT_IS_THE_SHELL",
@@ -119656,10 +119780,12 @@ var Monitoring = class {
           const sniffed = detectFormat(bytes2.subarray(0, Math.min(bytes2.length, 1024)), null);
           const servedType = (res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
           if (sniffed.format === "html") {
+            await outcome("source_refused");
             const observation2 = monitorLook({
               outcome: "unreachable",
               reason: `the Drive export address served HTML under \`${servedType || "no content type"}\``
             });
+            this.#recordRun(addressNorm, false, checked);
             return answer({
               ok: false,
               reason: "DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL",
@@ -119684,6 +119810,7 @@ var Monitoring = class {
             }, 502);
           }
         }
+        if (!outcomeRecorded) await outcome("success");
         seen = await sha256Hex11(bytes2);
         fetchedBytes = bytes2;
         {
@@ -119769,7 +119896,7 @@ var Monitoring = class {
     } catch (e) {
       note = "the source could not be reached: " + String(e && e.message || e).slice(0, 90);
       unreachable = note;
-      if (httpStatus === null) await this.#recordOutcome(addressNorm, "fetch_failed", null, checked);
+      if (!outcomeRecorded) await this.#recordOutcome(addressNorm, "fetch_failed", httpStatus, checked);
     }
     const graded = await this.#assess({
       baseline,
@@ -119823,6 +119950,7 @@ var Monitoring = class {
     };
     const lookAfterPromote = !!(monCap && monCap.held);
     let observation = lookAfterPromote ? null : monitorLook(monCap ? { ...lookArgs, uncaptured: monCap.why } : lookArgs);
+    this.#recordRun(addressNorm, lookArgs.outcome === "unchanged" && status === "unchanged" && !renderTick, checked);
     const settledQuiet = !!graded.assessment && ["identical", "unchanged", "restyled", "routine"].includes(graded.assessment.verdict);
     const flags = status === "removed" || status === "modified" && !settledQuiet;
     const out = [];
@@ -120105,6 +120233,18 @@ var Monitoring = class {
       at25
     );
   }
+  /* R18 (K1051): the address's run of checks that found the substance unchanged, kept on its R13 row. An unchanged
+     check adds one (a row exists: the look that read the document wrote it); any other check returns the run to 0. */
+  #recordRun(addressNorm, unchanged, at25) {
+    if (unchanged)
+      this.sql.exec(`UPDATE monitor_address_type SET unchanged_run = unchanged_run + 1, run_since = COALESCE(run_since, ?)
+                      WHERE address_norm = ?`, at25, String(addressNorm));
+    else
+      this.sql.exec(
+        `UPDATE monitor_address_type SET unchanged_run = 0, run_since = NULL WHERE address_norm = ?`,
+        String(addressNorm)
+      );
+  }
   /* ================================================================== *
    * The cadence (R14–R16) and the idempotence key (R21)
    * ================================================================== */
@@ -120126,9 +120266,11 @@ var Monitoring = class {
    *
    *  WHICH FREQUENCY GOVERNS — BOB #31's 22:03Z ruling (quoted on REC-191's row, cited
    *  until folded): *"the ADDRESS's own setting governs; where none is set, the CURRENT version's;
-   *  never the shortest; a disagreement is STATED."* No address-level setting EXISTS in
-   *  this record (no column, no op writes one; R17), so the first clause has nothing to read and
-   *  that is stated here rather than approximated. The current version's AUTHORED
+   *  never the shortest; a disagreement is STATED."* The address's own setting is R52's act (R17,
+   *  K1019): its latest setting, when it names a frequency, governs over every version's and the
+   *  row states it (`frequency_source: "address"`, `address_frequency`); a latest setting of
+   *  null returns the address to the rule below; every setting is on the row as
+   *  `frequency_settings`. Where none governs, the current version's AUTHORED
    *  `monitoring.frequency` governs; where it authored none, the CONTRACT of the content
    *  type the last tick read at the address (`monitor_address_type`, CONTRACT_FREQUENCY) —
    *  the tick's own rule (`cadenceFor`), so the plan and the tick agree. Other
@@ -120150,8 +120292,18 @@ var Monitoring = class {
    *  So is a bundle captured at SEVERAL addresses none of which is its `source.locator`:
    *  choosing one would be the plane inventing which document it watches.
    *
-   *  BOUNDED: three linear reads (the monitored bundles, the chain rows at their
-   *  addresses, the type readings), grouped in memory — no read per row. */
+   *  R18 (K1051): a CONTRACT default is lengthened by the address's run of checks that found
+   *  the substance unchanged (`monitor_address_type.unchanged_run`): one step up daily, weekly,
+   *  monthly per ten, never past monthly, stated on the row as `volatility`. An authored or an
+   *  address's own frequency is never lengthened, and nothing is ever shortened.
+   *
+   *  Each row also carries, for the act and the reads only (never on the plan's rows),
+   *  `setting_address` (the normalised address a setting at it governs: the row's address, or a
+   *  bundle scheduled as itself for holding no captured address, its own `source.locator`; R52)
+   *  and `monitored_versions` (the versions that ask, at that address).
+   *
+   *  BOUNDED: four linear reads (the monitored bundles, the chain rows at their
+   *  addresses, the type readings, the address settings), grouped in memory — no read per row. */
   subjects() {
     const bundles = this.#rows(
       `SELECT b.bundle_id AS bundle_id, bp.monitor_frequency AS monitor_frequency,
@@ -120179,6 +120331,11 @@ var Monitoring = class {
     for (const t of this.#rows(`SELECT * FROM monitor_address_type`)) {
       types2.set(t.address_norm, t);
       typesRaw.set(t.address, t);
+    }
+    const settings = /* @__PURE__ */ new Map();
+    for (const x of this.#rows(`SELECT * FROM monitor_address_frequency ORDER BY address_norm, seq`)) {
+      if (!settings.has(x.address_norm)) settings.set(x.address_norm, []);
+      settings.get(x.address_norm).push(settingView(x));
     }
     const byId = new Map(bundles.map((b) => [b.bundle_id, b]));
     const addrsOf = /* @__PURE__ */ new Map();
@@ -120236,24 +120393,56 @@ var Monitoring = class {
         ...c.why ? { why: c.why } : {}
       };
     };
+    const settled = (c, at25, type) => {
+      const history = at25 ? settings.get(at25) || null : null;
+      const hist = history ? { frequency_settings: history } : {};
+      const current = history ? history[history.length - 1] : null;
+      if (current && current.frequency !== null)
+        return {
+          monitor_frequency: current.frequency,
+          frequency_source: "address",
+          ...c.authored != null ? { authored: c.authored } : {},
+          address_frequency: current,
+          ...current.frequency === "none" ? { why: "the address's own frequency, set by a member, is none: it is not checked on a clock" } : {},
+          ...hist
+        };
+      if (c.frequency_source === "contract" && type && VOLATILITY_LADDER.includes(c.monitor_frequency)) {
+        const run = Number.isInteger(Number(type.unchanged_run)) ? Number(type.unchanged_run) : 0;
+        const l = lengthenedFrequency(c.monitor_frequency, run);
+        return {
+          ...c,
+          monitor_frequency: l.frequency,
+          volatility: {
+            unchanged_checks: run,
+            since: type.run_since ?? null,
+            step: l.step,
+            contract_default: c.monitor_frequency,
+            frequency: l.frequency,
+            basis: `${run} check${run === 1 ? "" : "s"} in a row found the substance unchanged; every ${VOLATILITY_RUN} move the contract's ${c.monitor_frequency} one step toward monthly, and any change or failed look returns it`
+          },
+          ...hist
+        };
+      }
+      return { ...c, ...hist };
+    };
     const rows2 = [];
     for (const { b, basis } of lone) {
+      const type = b.source_locator ? typesRaw.get(b.source_locator) : null;
+      const at25 = !basis && b.source_locator ? normalizeAddress(b.source_locator) : null;
       const c = (b.monitor_frequency == null || b.monitor_frequency === "") && !b.source_locator ? {
         monitor_frequency: null,
         frequency_source: "undetermined",
         why: "no frequency authored, and no source.locator to read a content type from"
-      } : cadence(
-        b.monitor_frequency,
-        b.source_locator ? typesRaw.get(b.source_locator) : null,
-        last([b])
-      );
+      } : cadence(b.monitor_frequency, type, last([b]));
       rows2.push({
         bundle_id: b.bundle_id,
         monitor_last_checked: b.monitor_last_checked,
         address: null,
         versions: [b.bundle_id],
         ...basis ? { address_basis: basis } : {},
-        ...c
+        ...settled(c, at25, type),
+        setting_address: at25,
+        monitored_versions: [b.bundle_id]
       });
     }
     const groups = /* @__PURE__ */ new Map(), currentAt = /* @__PURE__ */ new Map();
@@ -120278,7 +120467,9 @@ var Monitoring = class {
         address: addr,
         versions: [...new Set(versions.map((v) => v.bundle_id))],
         ...newer.length ? { newer_unmonitored: newer } : {},
-        ...cadence(current.monitor_frequency, types2.get(addr), last(members)),
+        ...settled(cadence(current.monitor_frequency, types2.get(addr), last(members)), addr, types2.get(addr)),
+        setting_address: addr,
+        monitored_versions: members.map((m) => m.bundle_id),
         ...disagrees ? { disagreement: {
           governs,
           governed_by: current.bundle_id,
@@ -120304,7 +120495,12 @@ var Monitoring = class {
       ...r.contract ? { contract: r.contract, content_type: r.content_type } : {},
       ...r.address_basis ? { address_basis: r.address_basis } : {},
       ...r.newer_unmonitored ? { newer_unmonitored: r.newer_unmonitored } : {},
-      ...r.disagreement ? { disagreement: r.disagreement } : {}
+      ...r.disagreement ? { disagreement: r.disagreement } : {},
+      /* R17: the address's own frequency in force and who set it, why and when; R52: every setting at the address;
+         R18: a contract default's run of unchanged checks and the step it earned. */
+      ...r.address_frequency ? { address_frequency: r.address_frequency } : {},
+      ...r.volatility ? { volatility: r.volatility } : {},
+      ...r.frequency_settings ? { frequency_settings: r.frequency_settings } : {}
     });
     for (const r of subjects.rows) {
       const iv = monitorIntervalMs(r.monitor_frequency);
@@ -120460,6 +120656,77 @@ var Monitoring = class {
     return typeof this.membership.isAdministrator === "function" && this.membership.isAdministrator(by) === true;
   }
   /* ================================================================== *
+   * An address's own frequency (R17, R52)
+   * ================================================================== */
+  /** R52 (K1019): the subject rows R15 schedules at the normalised address `norm` (rows `subjects` gives a
+   *  `setting_address`), or null when none is there; with the viewer, null too when the viewer sees none of the
+   *  versions they check (R32's rule: an address is seen when the version it checks is). */
+  #subjectsAt(norm, viewer) {
+    const rows2 = this.subjects().rows.filter((r) => r.setting_address === norm);
+    const seen = rows2.filter((r) => this.membership.inSight(r.bundle_id, viewer));
+    return seen.length ? rows2 : null;
+  }
+  /** R52: an owner (membership R54) of a project holding a monitored document at the address: a document's project
+   *  is its `project`, or the document itself when it is a project. */
+  #ownsSourceAt(rows2, member) {
+    const ids = [...new Set(rows2.flatMap((r) => r.monitored_versions || []))];
+    if (!ids.length || !member) return false;
+    const docs = this.#rows(`SELECT bundle_id, object_type, project FROM bundles WHERE bundle_id IN (${ids.map(() => "?").join(", ")})`, ...ids);
+    const projects = new Set(docs.map((d) => d.object_type === "project" ? d.bundle_id : d.project).filter((p) => typeof p === "string" && p));
+    for (const p of projects) {
+      let owns = false;
+      try {
+        owns = this.membership.isProjectOwner(p, member) === true;
+      } catch {
+        owns = false;
+      }
+      if (owns) return true;
+    }
+    return false;
+  }
+  /** R52 (K1019; monitoring R17 as Bob agreed it, with his canned or custom reason): a member sets an address's own
+   *  frequency, which governs over its versions' (R17). Refused, in this order, each writing nothing: an empty or
+   *  machine author; an address no subject of R15 the viewer sees is at (absent and invisible alike); a frequency
+   *  that is not one of `MONITOR_FREQ`'s words or null; an author owning no project that holds a monitored document
+   *  there; a reason that is not a canned key or `custom`, or `custom` without words of 1 to 2,000 characters. A
+   *  setting is never edited: a later one replaces it (null returns the address to R14's rule) and every one stays
+   *  readable. Answers `{ok, address, setting, history}`. */
+  addressFrequencySet({ address = null, frequency, reason = null, reasonText = null, author = null, viewer = null } = {}) {
+    const who2 = typeof author === "string" ? author.trim() : "";
+    if (!who2 || isMachineIdentity(who2))
+      return frequencyRefusal("MACHINE_CANNOT_SET_FREQUENCY", "an address's own frequency is set by a named member, with the member's reason; a machine may suggest it and never sets it. Nothing was written.");
+    const asked = typeof address === "string" && address.trim() ? address.trim() : null;
+    const norm = asked ? normalizeAddress(asked) : null;
+    const rows2 = norm ? this.#subjectsAt(norm, viewer) : null;
+    if (!rows2)
+      return frequencyRefusal(
+        "NO_SUCH_ADDRESS",
+        "no monitored document this viewer may see is checked at that address; one hidden from the viewer is answered exactly as one that does not exist. Nothing was written.",
+        { address: asked }
+      );
+    if (!(frequency === null || typeof frequency === "string" && MONITOR_FREQ.includes(frequency)))
+      return frequencyRefusal("BAD_FREQUENCY", `the frequency must be one of ${MONITOR_FREQ.join(", ")}, or null to return the address to the frequency its documents set. Nothing was written.`);
+    const member = who2.startsWith("member:") ? who2.slice("member:".length) : who2;
+    if (!this.#ownsSourceAt(rows2, member))
+      return frequencyRefusal("NOT_A_SOURCE_OWNER", `${member} owns no project that holds a monitored document at this address, and only such an owner sets its frequency. Nothing was written.`);
+    const custom = reason === CUSTOM_REASON;
+    const words = typeof reasonText === "string" ? reasonText.trim() : "";
+    if (!(custom || typeof reason === "string" && Object.prototype.hasOwnProperty.call(ADDRESS_FREQUENCY_REASONS, reason)) || custom && (!words || words.length > FREQUENCY_REASON_MAX))
+      return frequencyRefusal("FREQUENCY_NO_REASON", `the reason must be one of ${Object.keys(ADDRESS_FREQUENCY_REASONS).join(", ")}, or ${CUSTOM_REASON} with the member's own words of 1 to ${FREQUENCY_REASON_MAX} characters. Nothing was written.`);
+    const at25 = stampInstant("second", this.now());
+    const seq = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM monitor_address_frequency WHERE address_norm = ?`, norm).n;
+    this.sql.exec(`INSERT INTO monitor_address_frequency (address_norm, seq, address, frequency, reason, reason_text, author, at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, norm, seq, asked, frequency, reason, custom ? words : null, member, at25);
+    const history = this.#rows(`SELECT * FROM monitor_address_frequency WHERE address_norm = ? ORDER BY seq`, norm).map(settingView);
+    return {
+      ok: true,
+      address: norm,
+      setting: history[history.length - 1],
+      history,
+      says: frequency === null ? "recorded: the address returns to the frequency its documents set; every earlier setting stays readable" : "recorded: this frequency governs the address over its documents' own until a later setting replaces it; every earlier setting stays readable"
+    };
+  }
+  /* ================================================================== *
    * For `scheduler` (R19–R24, R45)
    * ================================================================== */
   /** R45 (N222): monitoring runs on every instance where a document asks, so it is configured everywhere: no binding
@@ -120584,17 +120851,20 @@ var Monitoring = class {
       this.#tickRunning.delete("archive-monitor");
     }
   }
-  /** R19: due while the plan has a due subject; never while paused (R30). */
+  /** R19: due while the plan has a due subject or a named request is due (R28); never while paused (R30). */
   cadenceDue(now) {
-    return !this.paused().paused && this.plan(now).due.length > 0 ? now : null;
+    if (this.paused().paused) return null;
+    return this.plan(now).due.length > 0 || this.gathering(now).due.length > 0 ? now : null;
   }
-  /** R19: now + 1 s while one is due, else `next`, else null. While paused, the next look at the pause is one archive
-   *  interval on, so a resumed daemon is back within it and a paused one never spins the alarm. */
+  /** R19: now + 1 s while one is due, else the earlier of the plan's and the requests' `next`, else null. While paused,
+   *  the next look at the pause is one archive interval on, so a resumed daemon is back within it and a paused one never
+   *  spins the alarm. */
   cadenceWake(now) {
-    if (this.paused().paused) return this.plan(now).monitored ? now + this.#archiveTickMs() : null;
+    const g = this.gathering(now);
+    if (this.paused().paused) return this.plan(now).monitored || g.open ? now + this.#archiveTickMs() : null;
     const p = this.plan(now);
-    if (p.due.length) return now + MONITOR_CADENCE_DELAY_MS;
-    return p.next;
+    if (p.due.length || g.due.length) return now + MONITOR_CADENCE_DELAY_MS;
+    return p.next === null ? g.next : g.next === null ? p.next : Math.min(p.next, g.next);
   }
   /** R19: the cadence tick, at most 50 due subjects by R1–R10, called in process (R23). `rank` is the scheduler's (its
    *  R10, N224): given it, the tick reads at most ten times its batch of due subjects in R16's order and checks its
@@ -120603,7 +120873,18 @@ var Monitoring = class {
     const pause = this.paused();
     const at25 = stampInstant("second", Number.isFinite(now) ? now : this.now());
     if (pause.paused)
-      return { configured: true, paused: pause, at: at25, candidates: 0, ticked: [], skipped: [], failed: [], unscheduled: [] };
+      return {
+        configured: true,
+        paused: pause,
+        at: at25,
+        candidates: 0,
+        ticked: [],
+        skipped: [],
+        failed: [],
+        unscheduled: [],
+        /* R28: nothing is gathered while paused; what is due is stated */
+        gathered: { due: this.gathering(now).due.length, captured: [], failed: [], skipped: [] }
+      };
     if (this.#tickRunning.has("monitor-cadence"))
       return { configured: true, busy: true, paused: pause, candidates: 0, ticked: [], skipped: [], failed: [], unscheduled: [] };
     this.#tickRunning.add("monitor-cadence");
@@ -120633,7 +120914,39 @@ var Monitoring = class {
         const { bundle: _b, frequency: _f, due_at: _d, why: _w, interval_ms: _i, ...of } = d;
         (r.ok ? ticked : failed2).push(r.ok ? { bundle: d.bundle, frequency: d.frequency, status: r.status, reeval_raised: r.reeval, ...of } : { bundle: d.bundle, frequency: d.frequency, reason: r.reason, ...of });
       }
-      if (!failed2.length && !skipped.length) this.#closeTickEpoch("monitor-cadence", epoch);
+      const g = this.gathering(nowMs);
+      const gathered = {
+        due: g.due.length,
+        captured: [],
+        failed: [],
+        skipped: g.disabled.map((q7) => ({ bundle: q7.bundle, request: q7.id, reason: q7.reason }))
+      };
+      let claimSkipped = 0;
+      const spentBy = /* @__PURE__ */ new Map();
+      let budget = MONITOR_CADENCE_BATCH - batch.length;
+      for (const q7 of g.due) {
+        if (budget <= 0) break;
+        const left2 = q7.tick_budget === void 0 ? budget : Math.min(budget, q7.tick_budget - (spentBy.get(q7.bundle) || 0));
+        if (left2 <= 0) {
+          gathered.skipped.push({
+            bundle: q7.bundle,
+            request: q7.id,
+            reason: `its bundle's daemon tick_budget (${q7.tick_budget}) is spent in this tick`
+          });
+          continue;
+        }
+        const subject = `${q7.bundle}#${q7.id}`;
+        if (!this.#claimFire("monitor-cadence", subject, epoch)) {
+          claimSkipped++;
+          gathered.skipped.push({ bundle: q7.bundle, request: q7.id, reason: "claimed by a tick that did not finish" });
+          continue;
+        }
+        const r = await this.#gather(q7, left2, nowMs);
+        budget -= r.spent;
+        spentBy.set(q7.bundle, (spentBy.get(q7.bundle) || 0) + r.spent);
+        if (r.entry) (r.entry.outcome === "captured" || r.entry.outcome === "held" ? gathered.captured : gathered.failed).push(r.entry);
+      }
+      if (!failed2.length && !skipped.length && !claimSkipped) this.#closeTickEpoch("monitor-cadence", epoch);
       return {
         configured: true,
         paused: pause,
@@ -120646,10 +120959,298 @@ var Monitoring = class {
         ticked,
         skipped,
         failed: failed2,
-        unscheduled: plan.unscheduled
+        unscheduled: plan.unscheduled,
+        gathered
       };
     } finally {
       this.#tickRunning.delete("monitor-cadence");
+    }
+  }
+  /* ================================================================== *
+   * Standing intent: the named requests (R28, K1096)
+   * ================================================================== */
+  /** R28: the open named requests of every `data/gathering.json` the record holds (read as the daemon, which D-15
+   *  leaves unfiltered: the daemon fetches what store state authorizes, R36), each with when it is due by R14's interval
+   *  from its last attempt: never attempted, due now; no cadence, once; `none`, never (stated in `unscheduled`).
+   *  `due` is never-attempted first, then longest-overdue, then by bundle and id; `next` the earliest instant a request
+   *  not yet due falls due; `open` how many open requests were read. The bundle's own `daemon` block governs its
+   *  requests (K1102): `enabled: false` runs none of them (each in `disabled`, never due); `tick_budget`, a
+   *  non-negative integer, is carried on each request as `tick_budget`, the locators the tick may try for that bundle.
+   *  Writes nothing. */
+  gathering(now = null) {
+    const nowMs = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : this.now();
+    const files = this.#rows(`SELECT f.bundle_id AS bundle_id, f.content AS content FROM files f
+                               WHERE f.path = 'data/gathering.json' ORDER BY f.bundle_id`);
+    const last = /* @__PURE__ */ new Map();
+    for (const r of this.#rows(`SELECT bundle_id, request_id, MAX(at) AS at FROM monitor_gathering_run
+                                 WHERE outcome <> 'governed' GROUP BY bundle_id, request_id`))
+      last.set(`${r.bundle_id}#${r.request_id}`, r.at);
+    const due = [], unscheduled = [], disabled = [];
+    let next = null, open = 0;
+    for (const f17 of files) {
+      let g = null;
+      try {
+        g = typeof f17.content === "string" ? JSON.parse(f17.content) : null;
+      } catch {
+        g = null;
+      }
+      if (!g || typeof g !== "object") continue;
+      const daemon = g.daemon && typeof g.daemon === "object" && !Array.isArray(g.daemon) ? g.daemon : null;
+      const off = !!daemon && daemon.enabled === false;
+      const tickBudget = daemon && Number.isInteger(daemon.tick_budget) && daemon.tick_budget >= 0 ? daemon.tick_budget : null;
+      for (const r of Array.isArray(g.requests) ? g.requests : []) {
+        if (!r || typeof r !== "object" || r.status !== "open" || typeof r.id !== "string" || !r.id) continue;
+        const locators = (Array.isArray(r.locators) ? r.locators : []).filter((l) => typeof l === "string" && isPublicHttpsLocator(l));
+        if (!locators.length) continue;
+        open++;
+        const at25 = last.get(`${f17.bundle_id}#${r.id}`) ?? null;
+        const q7 = {
+          bundle: f17.bundle_id,
+          id: r.id,
+          locators,
+          cadence: r.cadence ?? null,
+          last_attempt: at25,
+          target: r.target && typeof r.target.text === "string" ? r.target.text : null,
+          ...tickBudget !== null ? { tick_budget: tickBudget } : {}
+        };
+        if (off) {
+          disabled.push({ ...q7, reason: "its bundle's daemon block says enabled: false, so the daemon runs none of its requests" });
+          continue;
+        }
+        if (r.cadence === "none") {
+          unscheduled.push({ ...q7, reason: "its cadence is none: the daemon does not run it" });
+          continue;
+        }
+        if (at25 === null) {
+          due.push({ ...q7, due_at: 0 });
+          continue;
+        }
+        const iv = r.cadence == null ? null : monitorIntervalMs(r.cadence);
+        if (iv === null) {
+          if (r.cadence != null) unscheduled.push({ ...q7, reason: `the cadence '${String(r.cadence)}' gives no interval` });
+          continue;
+        }
+        const dueAt = Date.parse(at25) + iv;
+        if (dueAt <= nowMs) due.push({ ...q7, due_at: dueAt });
+        else if (next === null || dueAt < next) next = dueAt;
+      }
+    }
+    due.sort((a, b) => a.due_at - b.due_at || (a.bundle < b.bundle ? -1 : a.bundle > b.bundle ? 1 : 0) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+    return { due, next, unscheduled, disabled, open };
+  }
+  /** R28: one attempt at a due request: its locators in order through `acquire`'s capture-request arm as the daemon,
+   *  stopping at the first that files, each spending one of `budget`; one look per locator tried, the request its
+   *  authority. New bytes land as an Information bundle at `collected` (§2, §4); bytes the record already holds land
+   *  nothing. A governed refusal is our pacing: the request is left due, and its mirrors are not tried in its place.
+   *  The attempt is recorded. Answers `{spent, entry}`. */
+  async #gather(q7, budget, nowMs) {
+    const at25 = stampInstant("second", nowMs);
+    const tried = [];
+    let spent = 0, filed = null, governed = false;
+    for (const locator of q7.locators) {
+      if (spent >= budget) break;
+      spent++;
+      let out = null, status = null;
+      try {
+        const r = await this.capture.acquire({}, { cls: "daemon", member: false, captureRequest: {
+          locator,
+          purpose: GATHERING_PURPOSE,
+          agent: null,
+          render: false
+        } });
+        out = r && r.body;
+        status = r && Number.isFinite(Number(r.status)) ? Number(r.status) : null;
+      } catch (e) {
+        out = { ok: false, reason: String(e && e.message || e).slice(0, 160) };
+      }
+      const doc = out && out.ok && out.document;
+      if (doc && doc.capture && /^[0-9a-f]{64}$/.test(String(doc.capture.sha256 || ""))) {
+        filed = { locator, doc, existed: out.existed === true };
+        tried.push({ locator, outcome: filed.existed ? "held" : "captured", status: null, reason: null });
+        this.#gatheringLook(q7, locator, {
+          state: "PRESENT",
+          resultKind: "capture",
+          resultRef: doc.capture.sha256,
+          detail: filed.existed ? `gathered for ${q7.id}; the bytes served are a capture the record already holds` : `gathered for ${q7.id}; captured`
+        }, at25);
+        break;
+      }
+      const reason = out && (out.reason || out.error) || `status ${status}`;
+      const srcStatus = out && Number.isFinite(Number(out.status)) ? Number(out.status) : null;
+      if (out && out.reason === "HOST_COOLING_OFF") {
+        governed = true;
+        tried.push({ locator, outcome: "governed", status: null, reason });
+        this.#gatheringLook(q7, locator, monitorObservationFor({ outcome: "governed", reason: out.detail || reason }), at25);
+        break;
+      }
+      tried.push({ locator, outcome: "failed", status: srcStatus, reason });
+      this.#gatheringLook(q7, locator, monitorObservationFor(srcStatus === 404 || srcStatus === 410 ? { outcome: "removed", httpStatus: srcStatus } : { outcome: "unreachable", reason: srcStatus != null ? `the source answered ${srcStatus}` : reason }), at25);
+    }
+    let landed = null;
+    if (filed && !filed.existed) landed = this.#land(q7, filed, at25);
+    const outcome = filed ? filed.existed ? "held" : "captured" : governed ? "governed" : "failed";
+    const cap = filed ? filed.doc.capture : null;
+    try {
+      const seq = this.#one(
+        `SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM monitor_gathering_run WHERE bundle_id = ? AND request_id = ?`,
+        q7.bundle,
+        q7.id
+      ).n;
+      this.sql.exec(
+        `INSERT INTO monitor_gathering_run (bundle_id, request_id, seq, at, outcome, locator, tried, capture_sha, grade,
+                     landed, detail) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        q7.bundle,
+        q7.id,
+        seq,
+        at25,
+        outcome,
+        filed ? filed.locator : null,
+        JSON.stringify(tried),
+        cap ? cap.sha256 : null,
+        cap && cap.grade != null ? String(cap.grade) : null,
+        landed && landed.ok ? landed.bundle_id : null,
+        landed && !landed.ok ? landed.detail ?? null : null
+      );
+    } catch {
+    }
+    if (spent === 0) return { spent, entry: null };
+    return { spent, entry: {
+      bundle: q7.bundle,
+      request: q7.id,
+      outcome,
+      tried,
+      ...filed ? { locator: filed.locator, sha: cap.sha256, grade: cap.grade ?? null, existed: filed.existed } : {},
+      ...landed ? { landed } : {}
+    } };
+  }
+  /** R28: one look of the request's attempt at a locator, through observation-log's one append: authority the request
+   *  (`sweep`, OBSERVATION-LOG-DESIGN.md §4.1), level document, subject the locator's normalised address. */
+  #gatheringLook(q7, locator, row2, at25) {
+    if (!row2) return;
+    try {
+      this.observationLog.observe({
+        actorClass: "plane",
+        actor: null,
+        authorityKind: "sweep",
+        authority: q7.id,
+        level: "document",
+        subjectKind: "address",
+        subject: normalizeAddress(locator),
+        state: row2.state,
+        governed: row2.governed === true,
+        condition: row2.condition || null,
+        resultKind: row2.resultKind || null,
+        resultRef: row2.resultRef || null,
+        detail: row2.detail
+      }, at25);
+    } catch {
+    }
+  }
+  /** R28 (K1096; Intake Doctrine §2, §4): new bytes a request filed land as a plane-composed Information bundle,
+   *  promoted through `promotion.promote` at `collected` (never verified, a member's act), its origin the named request,
+   *  the request's id and its bundle named as the authorisation, in the request's bundle's project. Answers `{ok,
+   *  bundle_id}` or the promotion's refusal relayed. */
+  #land(q7, filed, at25) {
+    try {
+      const doc = filed.doc, cap = doc.capture;
+      if (typeof doc.file !== "string" || !Number.isSafeInteger(cap.bytes))
+        return { ok: false, detail: "capture's answer named no primary file and size to land" };
+      const enc5 = (t) => {
+        const b = new TextEncoder().encode(t);
+        return { text: t, bytes: b.length, sha256: createSha256().update(b).hex() };
+      };
+      const home = this.#one(`SELECT project FROM bundles WHERE bundle_id = ?`, q7.bundle);
+      const project = home && typeof home.project === "string" && home.project ? home.project : null;
+      return this.record.transact(() => {
+        const id = `${this.record.allocId("INFO", at25.slice(0, 4)).id}-${GATHERING_BUNDLE_SLUG}`;
+        const title = `Gathered for ${q7.id}: ${q7.target || filed.locator}`.replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
+        const retrieved = typeof doc.retrieved === "string" && doc.retrieved ? doc.retrieved : at25;
+        const md = [
+          "---",
+          `id: ${id}`,
+          "object_type: information",
+          "schema: information@2",
+          `title: ${JSON.stringify(title)}`,
+          `current_state: ${GATHERING_LANDS_AT}`,
+          "prior_state: null",
+          `created: "${at25}"`,
+          `last_updated: "${at25}"`,
+          "produced_by:",
+          "  mode: agent",
+          "  capability_tier: session",
+          ...project ? [`project: ${project}`] : [],
+          "references: []",
+          "state_history: []",
+          "annotations_open: 0",
+          "reeval_pending:",
+          "  flag: false",
+          "  since: null",
+          "  source: null",
+          "visuals: []",
+          "criticality: supporting",
+          "source_status: unchanged",
+          "source:",
+          `  locator: ${JSON.stringify(filed.locator)}`,
+          `  retrieved: ${retrieved}`,
+          "monitoring:",
+          "  enabled: false",
+          "  frequency: none",
+          "---",
+          "",
+          "## Summary",
+          "",
+          `The document served at ${filed.locator}, gathered by the daemon for the named request ${q7.id} of ${q7.bundle}. Its bytes are \`${doc.file}\`, exactly as served; nothing here summarises them.`,
+          "",
+          "## Provenance Notes",
+          "",
+          `Gathered for the named request ${q7.id}, carried by ${q7.bundle}'s data/gathering.json, which authorised the fetch; locator ${q7.locators.indexOf(filed.locator) + 1} of ${q7.locators.length} in the request's order. Collected ${at25}. Filed at ${GATHERING_LANDS_AT} and never higher: verifying it is a named member's decision.`,
+          "",
+          "## Session Log",
+          "",
+          `### Session ${at25} | Collected | ${GATHERING_AUTHOR}`,
+          `Trigger: named request ${q7.id} (${q7.bundle})`,
+          "Changes: created from the daemon's capture for the named request.",
+          "",
+          "## Review Notes",
+          ""
+        ].join("\n");
+        const blob = (f17) => f17 && typeof f17.file === "string" && /^[0-9a-f]{64}$/.test(String(f17.sha256 || "")) && Number.isSafeInteger(f17.bytes) ? { path: f17.file, blobSha: f17.sha256, sha256: f17.sha256, bytes: f17.bytes } : null;
+        const blobs = [
+          blob({ file: doc.file, sha256: cap.sha256, bytes: cap.bytes }),
+          blob(doc.shell),
+          ...Array.isArray(doc.parts) ? doc.parts.map(blob) : []
+        ].filter(Boolean);
+        const seen = /* @__PURE__ */ new Set();
+        const files = [
+          { path: "bundle.md", ...enc5(md) },
+          { path: "data/provenance.json", ...enc5(JSON.stringify({ documents: [doc] }, null, 2)) },
+          ...blobs.filter((f17) => seen.has(f17.path) ? false : seen.add(f17.path))
+        ];
+        const p = this.promotion.promote({
+          bundleId: id,
+          base: null,
+          snapKey: `${at25.replace(/[-:]/g, "")}_${[...crypto.getRandomValues(new Uint8Array(4))].map((x) => x.toString(16).padStart(2, "0")).join("")}`,
+          author: GATHERING_AUTHOR,
+          files,
+          meta: {
+            object_type: "information",
+            title,
+            current_state: GATHERING_LANDS_AT,
+            prior_state: null,
+            created: at25,
+            last_updated: at25,
+            criticality: "supporting"
+          },
+          register: [{ sha256: cap.sha256, path: doc.file, encoding: "binary", bytes: cap.bytes }]
+        });
+        return p && p.ok ? { ok: true, bundle_id: id, state: GATHERING_LANDS_AT } : {
+          ok: false,
+          reason: p && (p.reason || p.code) || null,
+          detail: String(p && p.detail || "the promotion was refused").slice(0, 300)
+        };
+      });
+    } catch {
+      return { ok: false, reason: null, detail: "the landing did not complete and this plane did not record why" };
     }
   }
   /* Fire through the SAME service a caller's op=monitor reaches, in process (R23, N222), for CAP-3's reason: the
@@ -121395,7 +121996,9 @@ function monitoringOps(m, url, body) {
     monitoring: () => m.monitoring({ viewer: q7("viewer"), now: q7("now"), limit: q7("limit") }),
     /* R30: the administrator's pause, `by` the control plane's stamp; and the due slate through the viewer's sight. */
     monitorpause: () => m.pause({ paused: typeof b.paused === "boolean" ? b.paused : null, by: q7("actor") || null }),
-    monitorslate: () => m.slate({ viewer: q7("viewer"), now: q7("now"), limit: q7("limit") })
+    monitorslate: () => m.slate({ viewer: q7("viewer"), now: q7("now"), limit: q7("limit") }),
+    /* R52: the body's fields, then the control plane's `author` and `viewer` stamps, so a body never supplies them. */
+    addressfrequencyset: () => m.addressFrequencySet({ ...b, author: q7("author"), viewer: q7("viewer") })
   };
 }
 async function monitorOp(req, store, {
@@ -136189,11 +136792,11 @@ var REVIEW_TABLES = Object.freeze([
   { name: "review_grants", keys: [] },
   { name: "case_drafts", keys: [] }
 ]);
-var ADDED_COLUMNS3 = [["case_drafts", "statement_by", "TEXT"]];
+var ADDED_COLUMNS4 = [["case_drafts", "statement_by", "TEXT"]];
 function migrateReview(sql) {
   const bare2 = REVIEW_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const s of bare2.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
-  for (const [table2, column, decl] of ADDED_COLUMNS3) {
+  for (const [table2, column, decl] of ADDED_COLUMNS4) {
     const have = [...sql.exec(`PRAGMA table_info(${table2})`)].map((r) => r.name);
     if (have.length && !have.includes(column)) sql.exec(`ALTER TABLE ${table2} ADD COLUMN ${column} ${decl}`);
   }
