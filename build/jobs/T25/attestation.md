@@ -31,3 +31,12 @@ REPORT (built against `tranche/T25`; nothing of another module edited). The modu
 - `node checks/format.mjs`: 4 failures, all provenance-routes' and reading-pipeline's absent directories (red 4), none attestation's. `architecture.mjs … attestation`: 9 product files, 27 relative imports; 0 failures. `coverage.mjs … attestation`: 10 of 10; 0 failures. `ownership.mjs … attestation tranche/T25`: 10 files; 0 failures.
 
 Size (session_01CCB76CKHZSXMLTrZc9xP3J): test runs 9, module lines 558
+
+## J2 · COMPLETE
+
+COMPLETE (B3). attestation built and run after provenance's merge (K1229; tranche/T25 merged into job/T25/attestation); the record's "Completion" section has the whole account.
+- Tests: `test/m/attestation/` 19 pass, 0 fail (R1–R10). Whole `test/m`: 5277 tests, 5182 pass, 84 fail, every one a named red from provenance's merge, none importing this module: red 7 (network-notices 54, case-authoring 13, filings 3, scheduler consumers.test.mjs:198 via network-notices' fixture; retrieval 10 and promotion write-path.test.mjs:218 via the route split); red 8 (control-plane families.test.mjs:47, catalogue-end.test.mjs:15).
+- One change after B3: R10's write test no longer drives provenance's route services (now provenance-routes', not a use of mine); it drives provenance's own write services only.
+- Checks: format (4 failures, all red 4, none attestation's), architecture (9 files, 27 imports), coverage (10/10), ownership (10 files): 0 failures each for attestation.
+- Row awaiting stamp (red 6): C-89.1 CAPTURE_HELD_IN_PARTS, `where` re-pointed to `src/attestation/index.mjs attest > is-attest-parts`; the census reads it held once, "changed with no record".
+- No bundle staled. Deferred: none.
