@@ -22626,12 +22626,12 @@ function withProducingGroup(text5, slug) {
 }
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.55.0";
+var CATALOG_VERSION = "1.56.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var ROW_CENSUS = Object.freeze({
   version: CATALOG_VERSION,
   rows: 1073,
-  digest: "735376fd77a0d28e5271c7f3972356664b5bcf43d527212937f47dad7b7f0fc8"
+  digest: "3371a04bcec276dbc1a1ecc62623d326b70a25a7ca151ed7c1fffd8652be094a"
 });
 var hex2 = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te3 = new TextEncoder();

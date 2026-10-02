@@ -19,7 +19,7 @@ No other module is marked `legacy`; no extraction is open.
 T25's rules hold (merge early; one file, one editor; marks struck at the merge; no layer closes red except by name; owners export, the plane composes; the UX stream's DECs cited, never minted; a job re-scans its own module for the N502/N508 kind and re-words what it finds).
 
 **Accepted reds, by name, at the opening:**
-1. `bio-plane/test/system/row-census.test.mjs`: C-34.* and C-89.* `awaiting stamp` (T25's red 6), until promotion's L2 merge (S3).
+1. *(cleared, K1247)* `bio-plane/test/system/row-census.test.mjs`: C-34.* and C-89.* `awaiting stamp` (T25's red 6), until promotion's L2 merge (S3).
 2. The UI's DEC-88 tests (N487, K1030): stay red, Bob's.
 3. `test/m/attestation/invariants.test.mjs` R9 fails intermittently (T25's red 11; its place probe matches `ca` inside a fresh base64 signature), until attestation's L3 merge (N517). A job's proof run may re-run it once.
 
