@@ -84,7 +84,7 @@ Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queu
 - `capture-requests`: `completed`, `leads`, `rendersHeld` (its R26), `captureRequestAttribution` (its R10) (R2, R3).
 - `intent`: `gaps` (its R6; R2).
 - `reevaluation`: `notices` (its R14; R2), `correctedDependents` (its R27; R5).
-- `publication`: the export log (R2), `caseTensions` (its R50; R6); `caseDocumentFacts` (its R2, with R17's attribution facts; R23; K1019).
+- `publication`: the export log (R2; `corpus-export` R2 since K1043, reached through publication's `exportlog` delegate until N483), `caseTensions` (its R50; R6); `caseDocumentFacts` (its R2, with R17's attribution facts; R23; K1019).
 - `monitoring`: `archiveEligible` (its R47), `flagged` (its R48), `monitoring()` (its R32: the due and unscheduled rows), `escalationsSeen()` (its R35) (R2, R3).
 - `action-clocks`: `overdueClocks` (its R3; R15), `remindersDue` (its R5; R18), `calendarFactsRead` (its R11; R21).
 - `filing-templates`: `reviewsRequested` (its R20; R20).
