@@ -22,8 +22,9 @@ function f(check, severity, message, repairs, code) {
 }
 
 /* REC-122 / D-161 act (3) / IC-232 — THE MEMBER'S CHOICE OF THE ON-POINT PAIR, C-74
- * (minted with `node tools/mintid.mjs C`; C-68 was minted first and found TAKEN on an
- * in-flight landing branch, so it was abandoned — gaps cost nothing).
+ * (minted with the old process's `node tools/mintid.mjs C` (that tool was retired in T19); C-68
+ * was minted first and found TAKEN on an in-flight landing branch, so it was abandoned — gaps
+ * cost nothing).
  *
  * ITS OWN FAMILY AND NOT A SUB-NUMBER OF C-49, because C-49 is a READ's answer about
  * what a portion may earn and this is an ACT's refusal: the three ways a member's
@@ -176,7 +177,7 @@ export const CONNECTION_PAIR_CHECKS = {
 /* =====================================================================
  * D-162 / IC-241 — THE THEME (`BIO_Content_Framework_v0_10.md` §8.4, Bob's
  * ruling of 2026-09-21 and its four fences): a connection through an IDEA.
- * C-81, minted with `node tools/mintid.mjs C`.
+ * C-81, minted with the old process's `node tools/mintid.mjs C` (that tool was retired in T19).
  *
  * ITS OWN FAMILY because its subject is its own: the ways a member's declared
  * LENS could come to claim more than it is. Bob: *"these fuzzy ideas could
