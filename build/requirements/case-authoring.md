@@ -151,6 +151,7 @@ Row C-82.8 (R19, R29; DEC-88, K1025), with its translation; `awaiting stamp`:
 #### The project reference (DEC-111; K1019, K1031)
 
 - **R41** (DEC-111; `case-grammar` R10) `publishCase` writes `working_on` as `network-notices.noticeReferenceOf(project)` answers it (its R19), and omits it when that answer is null. *(not yet met: T23)*
+- **R42** (DEC-111; K1031 (3); K1119) `publishPreflight`'s "What becomes permanent" step states, when the project has a notice (R41), that publishing opens its sealed weeks (`ratification` R37); the words are the UX design stream's, and until it gives them, one plain sentence saying so. *(not yet met: T23)*
 
 ### Satisfies
 

@@ -10,6 +10,7 @@
 - N489 · 2026-10-02 · **action-plans**, **queue-producers**, the glossary (DEC-114, U23): members see "Matters"/"matter" for what an action plan addresses; the internal term stays "subject". **Hard reason:** on PR #7, not `main`.
 - N490 · 2026-10-02 · the action redesign (DEC-115, U24): `build/plan/action-design/start-and-send.html` and `surfaces.html`'s tier 2 and tier 3 panels bind content, step order and wording; the HANDOFF's approval line extended to them (BOB's, in `build/`). **Hard reason:** on PR #7, not `main`.
 - N491 · 2026-10-02 · **publication**, **reevaluation**, **queue-producers**, a docket home (DEC-116 with DEC-100, U25; answers N470): withdrawal of a ratified edition (signed docket entry, published reason, stamp, never lifted, re-evaluation notices: reevaluation R16's missing trigger); the docket and its three shelves, the manager's core To-dos, the outside-response path, the private-name receipt, standing grants, the manager's signing step, the per-case feed. **Hard reason:** on PR #7, not `main`; its home is BOB's to place once it lands (publication's size, K1024).
+- N501 · 2026-10-02 · **publication** (K1119): retire the constant re-exports `queue-producers/index.mjs`:41 imported from publication, once queue-producers re-points to corpus-export (T23 L11). **Hard reason:** publication's one T23 job (L8) precedes queue-producers' (L11) (P8, P10).
 
 ## Left out of T23, carried here (one hard reason each)
 

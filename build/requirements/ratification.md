@@ -37,7 +37,8 @@ Terms are `publication`'s. A **ceremony** is `op=caseratify` (the case document)
 
 #### Opening the sealed weeks (DEC-111; K1031 (3))
 
-- **R37** (DEC-111; K1031 (3)) Once a case edition's commit (R3) is accepted, the case ceremony calls `network-notices.openSeals({case, edition})` (its R17) outside the commit's transaction. A failure there never changes the ceremony's answer. It is stated, and retried by the `working-on-attest` consumer. The ceremony's "What becomes permanent" step states that the sealed weeks are opened (K1031 (3); the words are the UX design stream's). *(not yet met: T23)*
+- **R37** (DEC-111; K1031 (3)) Once a case edition's commit (R3) is accepted, the case ceremony calls `network-notices.openSeals({case, edition})` (its R17) outside the commit's transaction. A failure there never changes the ceremony's answer. It is stated, and retried by the `working-on-attest` consumer. (That the sealed weeks are opened is stated by `case-authoring` R42, whose preflight is that step; K1119.) *(not yet met: T23)*
+- **R38** (DEC-111; `case-grammar` R10; K1119) `checkCaseDocument` refuses a case document whose `working_on` is present and not a notice reference by `case-grammar` R10's rule, under a new row of the case-document catalogue (C-41), before any write. *(not yet met: T23)*
 
 #### Testimony credited anonymously (DEC-102; K1019)
 
