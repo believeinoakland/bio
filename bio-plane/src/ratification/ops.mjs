@@ -110,6 +110,14 @@ export async function caseRatifyOp(req, stub, ctx) {
                            attributionUnchosenRefusal(facts.doc.case_id, facts.doc.edition, attr),
                            attributionStaleRefusal(facts.doc.case_id, facts.doc.edition, attr)])
       if (refusal) return json({ ...refusal, store: storeName, tokenClass: cls }, 409);
+    /* R35 (DEC-102): C-58.5, after C-92.11 and before the signature is weighed, asked of the store half, where strength's
+       corroboration read is (`casetestimony`); the refusal is the pre-flight's own. A silence refuses: nothing is written. */
+    const anonOut = await doAnswer(stub.fetch("http://do/casetestimony", { method: "POST",
+      body: JSON.stringify({ caseId: facts.doc.case_id, edition: Number(facts.doc.edition) }) }));
+    if (anonOut.refused) return storeRefused(anonOut, relay);
+    if (!anonOut.answered) return storeSilent("caseratify/testimony", anonOut.correlation);
+    if (anonOut.result && anonOut.result.refusal)
+      return json({ ...anonOut.result.refusal, store: storeName, tokenClass: cls }, 409);
 
     if (facts.doc.doc_sha !== body.expectedSha)
       return json({ ok: false, reason: "CASE_RATIFY_STALE",

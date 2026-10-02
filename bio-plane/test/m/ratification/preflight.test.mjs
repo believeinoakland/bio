@@ -14,9 +14,11 @@ const Q1 = "INQ-2026-0001-first", CASE = "CASE-2026-0001", OBS = "INFO-2026-0009
 const OWN = { version: "first", claim: "the council approved it", falsifier: "f", falsifier_override: null,
               by: "member:alice", at: "2026-09-27T10:00:00Z" };
 const ORDER = ["MACHINE_CANNOT_RATIFY_CASE", "OPERATOR_TOKEN_CANNOT_RATIFY_CASE", "TESTIMONY_CASE_UNPUBLISHABLE",
-               "ATTRIBUTION_UNCHOSEN", "ATTRIBUTION_STATEMENT_STALE", "NO_ATTESTING_KEY", "CASE_SIGNER_NOT_AN_OWNER",
+               "ATTRIBUTION_UNCHOSEN", "ATTRIBUTION_STATEMENT_STALE", "ANONYMOUS_TESTIMONY_UNCORROBORATED", "NO_ATTESTING_KEY", "CASE_SIGNER_NOT_AN_OWNER",
                "CASE_CONCLUSION_MOVED", "GATE_REFUSED"];
 const CLEAR = { reached: [], legacy: [], stated: [], current: [] };
+const OBS2 = "INFO-2026-0010-observation";
+const TIP = { ord: 0, target_id: OBS2, level: "group", state: "uncorroborated", corroborated_by: [] };
 
 /* alice owns P and holds an administrator-registered key; bo joined P and holds none; eve is in no project. The case
    document is stored unsigned, and the act's facts are publication's for it, the attribution facts being whatever
@@ -220,13 +222,54 @@ test("R18: the case gate's findings, as the act's GATE_REFUSED, with the previou
 
 test("R18: every refusal that holds is listed, each asked on its own, in R18's order", async () => {
   const s = await setup({ mutate: (d) => ({ ...d, case_scope: "" }) });
-  s.w.publication.attributionFacts = () => ({ reached: [OBS], legacy: [OBS], stated: [],
-                                              current: [{ observation: OBS, level: null, why: "none" }] });
+  s.w.publication.attributionFacts = () => ({ reached: [OBS, OBS2], legacy: [OBS], stated: [],
+    current: [{ observation: OBS, level: null, why: "none" }, { observation: OBS2, level: "group", shown: "g", why: null }] });
+  s.w.corroboration.set(Q1, [TIP]);
   s.w.bv.conc.set(s.w.key(s.P, Q1), { ...OWN, version: "second" });
   const pf = s.preflight({ signer: "eve", viewer: "class:ai" });
   assert.deepEqual([pf.ok, pf.ready], [true, false]);
   assert.deepEqual(reasons(pf), ORDER);
   assert.ok(pf.refusals.every((x) => x.ok === false));
+});
+
+test("R35, R2, R18: a member resting on group- or project-level testimony strength answers uncorroborated is refused ANONYMOUS_TESTIMONY_UNCORROBORATED (C-58.5) after C-92.11, by the act and the pre-flight byte for byte, naming member and observation and never the author; corroborated, or at cover or name, it passes", async () => {
+  for (const level of ["group", "project"]) {
+    const s = await setup();
+    const stated = [{ observation: OBS2, level, shown: "g" }];
+    let attr = { reached: [OBS2], legacy: [], stated, current: [{ ...stated[0], why: null }] };
+    s.w.publication.attributionFacts = () => attr;
+    s.w.corroboration.set(Q1, [{ ...TIP, level }]);
+    const pf = s.preflight();
+    assert.deepEqual(reasons(pf), ["ANONYMOUS_TESTIMONY_UNCORROBORATED"], level);
+    const got = entry(pf, "ANONYMOUS_TESTIMONY_UNCORROBORATED");
+    assert.deepEqual([got.code, got.check], ["ANONYMOUS_TESTIMONY_UNCORROBORATED", "C-58.5"]);
+    assert.deepEqual(got.uncorroborated, [{ member: Q1, observation: OBS2 }]);
+    assert.match(got.detail, new RegExp(`${Q1} on ${OBS2}`));
+    assert.match(got.detail, /independent leg.*cover or name.*drop the finding/s, "the ways forward");
+    assert.ok(!/alice|author_id|"author"/.test(JSON.stringify(got)), "never the observation's author");
+    const asked = s.w.corroborationAsked.at(-1);
+    assert.deepEqual([asked.inquiry, asked.levels, asked.viewer], [Q1, { [OBS2]: level }, "class:daemon"]);
+    const r = await s.act();
+    assert.deepEqual([r.status, r.body.reason], [409, "ANONYMOUS_TESTIMONY_UNCORROBORATED"]);
+    assert.deepEqual(got, envelopeless(r.body), "the act's refusal, less its envelope");
+    /* after C-92.11: with the statement stale as well, the act answers C-92.11 and the pre-flight lists both in order */
+    attr = { ...attr, stated: [] };
+    assert.deepEqual(reasons(s.preflight()), ["ATTRIBUTION_STATEMENT_STALE", "ANONYMOUS_TESTIMONY_UNCORROBORATED"]);
+    assert.equal((await s.act()).body.reason, "ATTRIBUTION_STATEMENT_STALE");
+    attr = { ...attr, stated };
+    /* negative controls: an independent corroborating leg lets it pass */
+    s.w.corroboration.set(Q1, [{ ...TIP, level, state: "corroborated", corroborated_by: [1] }]);
+    assert.deepEqual(s.preflight().refusals, []);
+    assert.equal((await s.act()).status, 200);
+  }
+  for (const level of ["cover", "name"]) {
+    const s = await setup();
+    const stated = [{ observation: OBS2, level, shown: "x" }];
+    s.w.publication.attributionFacts = () => ({ reached: [OBS2], legacy: [], stated, current: [{ ...stated[0], why: null }] });
+    s.w.corroboration.set(Q1, [TIP]);
+    assert.deepEqual(s.preflight().refusals, [], level);
+    assert.equal(s.w.corroborationAsked.length, 0, `a leg at ${level} is not asked`);
+  }
 });
 
 test("R18: it writes nothing and never throws", async () => {

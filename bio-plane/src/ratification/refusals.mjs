@@ -91,6 +91,23 @@ export function attributionStaleRefusal(caseId, edition, attr) {
   /* END DEC-49 REGION is-attribution-stale */
 }
 
+/* DEC-102 items 1 and 2 / C-58.5 (R35). Testimony credited only to the group or the project is an anonymous tip, and
+   supports a finding only beside an independent corroborating leg (strength R29, R30). `offenders` is each
+   `{member, observation}` strength answers uncorroborated, as the act's store half and the pre-flight both compute it
+   (`./index.mjs`); it names no author. None answers null. */
+export function anonymousTestimonyRefusal(caseId, edition, offenders) {
+  if (!Array.isArray(offenders) || !offenders.length) return null;
+  /* DEC-49 REGION is-anonymous-testimony */
+  return { ok: false, reason: "ANONYMOUS_TESTIMONY_UNCORROBORATED", ...rowOf("ANONYMOUS_TESTIMONY_UNCORROBORATED"),
+    caseId, edition, uncorroborated: offenders.slice(0, 50),
+    detail: `case ${caseId} edition ${edition} rests on testimony credited only to the group or the project with no `
+          + `independent leg corroborating it: ${offenders.slice(0, 5).map((x) => `${x.member} on ${x.observation}`)
+            .join(", ")}. Such testimony counts as an anonymous tip (DEC-102). Corroborate the claim with an `
+          + `independent leg, ask the observation's author to choose cover or name (op=attribute), or drop the finding `
+          + `resting on it from the edition (op=publish). Nothing was signed.` };
+  /* END DEC-49 REGION is-anonymous-testimony */
+}
+
 /* REC-167 / C-65.1. A case document is signed only while its project
    still stands on the conclusion it records (INVESTIGATIVE-SESSION.md §7.1 items 4 and 9). `moved` is each roster
    member whose project conclusion is not the one the document records, as `ratifyCaseDocument` and the pre-flight

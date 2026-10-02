@@ -162,7 +162,7 @@ export const CLASS_REASONS = Object.freeze({
 
 /* R22 (K1025): the viewer the contested arm reads as. The plane's own, which sees every bundle (membership R43), so a
    side no member may see still bars the batch; nothing of any side is answered. */
-const PLANE_VIEWER = "class:daemon";
+export const PLANE_VIEWER = "class:daemon";
 const CONTESTED_STATES = ["open", "explained_not_shown", "taken_up"];
 
 /** R22, R34: THE ONE EXAMINATION of one document, which the release counts every member by and `capture` reads as its

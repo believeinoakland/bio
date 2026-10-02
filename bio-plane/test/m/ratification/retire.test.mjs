@@ -282,13 +282,13 @@ test("R30, R33: a member whose bundle.md is gone at its turn is NO_DOCUMENT, one
 
 /* ---- R32: the op ---- */
 
-test("R32: the ops map answers retire beside the other six, reading the handle, the reason and the control plane's stamps from the query, never from the body", async () => {
+test("R32: the ops map answers retire beside the other seven, reading the handle, the reason and the control plane's stamps from the query, never from the body", async () => {
   const w = setup();
   await w.verified("INFO-2026-0760");
   const h = await w.select(["INFO-2026-0760"]);
   const url = (q) => new URL(`http://do/retire?${new URLSearchParams(q)}`);
   assert.deepEqual(Object.keys(ratificationOps(w.r, url({}), null)).sort(),
-    ["casegate", "caseratify", "gatefacts", "publish", "ratifygate", "release", "retire"]);
+    ["casegate", "caseratify", "casetestimony", "gatefacts", "publish", "ratifygate", "release", "retire"]);
   const body = { handle: h, reason: WHY, viewer: WHO, owner: OWNER, author: WHO };
   const fromBody = ratificationOps(w.r, url({}), body).retire();
   assert.deepEqual([fromBody.ok, fromBody.reason], [false, "NO_REASON"], "the body is not read");

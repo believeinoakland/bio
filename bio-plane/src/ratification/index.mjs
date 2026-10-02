@@ -58,12 +58,13 @@ import { parseFrontmatter, normalizeType, isMachineIdentity, MACHINE_CLASS_PREFI
 import { checkCaseDocument, caseMemberFindings, caseMemberImageFindings, completenessFields,
          RATIFY_SCOPE_CHECKS, rowOf } from "./checks.mjs";
 import { operatorCaseRefusal, machineCaseRefusal, testimonyCaseRefusal, attributionUnchosenRefusal,
-         attributionStaleRefusal, conclusionMovedRefusal, noAttestingKeyRefusal } from "./refusals.mjs";
-import { release, examineMember } from "./release.mjs";
+         attributionStaleRefusal, conclusionMovedRefusal, noAttestingKeyRefusal,
+         anonymousTestimonyRefusal } from "./refusals.mjs";
+import { release, examineMember, PLANE_VIEWER } from "./release.mjs";
 import { retire } from "./retire.mjs";
 
 export * from "./checks.mjs";
-export { RELEASE_ACK_MAX } from "./release.mjs";
+export { RELEASE_ACK_MAX, CLASS_REASONS } from "./release.mjs";
 export { EDGE_REASON_MAX } from "./retire.mjs";
 
 /* The viewer stamp membership mints for an organisation-scoped agent credential (`aiCredentialMint`'s principal). */
@@ -585,7 +586,8 @@ export class Ratification {
       const attr = this.publication.attributionFacts({ text: src, case_id: caseId, edition });
       for (const r of [testimonyCaseRefusal(caseId, edition, attr.legacy),
                        attributionUnchosenRefusal(caseId, edition, attr),
-                       attributionStaleRefusal(caseId, edition, attr)])
+                       attributionStaleRefusal(caseId, edition, attr),
+                       anonymousTestimonyRefusal(caseId, edition, this.#uncorroborated(fm, attr))])
         if (r) refusals.push(r);
 
       const signerMember = signer === null || signer === undefined || isMachineIdentity(signer) ? null
@@ -617,6 +619,33 @@ export class Ratification {
                detail: "part of what signing would be refused for could not be read, so whether this document can be "
                      + "signed is undetermined; nothing is claimed either way, and nothing was written. Ask again." };
     }
+  }
+
+  /* R35 (DEC-102 items 1, 2): each roster member's testimony legs on an observation whose level in force for this
+     edition (publication's attribution facts) is `group` or `project` that strength answers uncorroborated (its R30),
+     as `{member, observation}`. Read as the plane: the pre-flight runs before a signer exists and must answer as the
+     act does, and a leg withheld from a viewer would only be withheld from corroborating. No such level asks nothing. */
+  #uncorroborated(fm, attr) {
+    const levels = Object.fromEntries((attr && Array.isArray(attr.current) ? attr.current : [])
+      .filter((x) => x.level).map((x) => [x.observation, x.level]));
+    if (!Object.values(levels).some((l) => l === "group" || l === "project")) return [];
+    const out = [];
+    for (const m of (Array.isArray(fm.case_findings) ? fm.case_findings : []).map((x) => String(x ?? "").trim())) {
+      const a = this.strength.testimonyCorroboration({ inquiry: m, levels, viewer: PLANE_VIEWER });
+      for (const l of a && a.ok && Array.isArray(a.legs) ? a.legs : [])
+        if (l.state === "uncorroborated") out.push({ member: m, observation: l.target_id });
+    }
+    return out;
+  }
+
+  /** R35 in R2: the act's store half, asked by the Worker after C-92.11 (`./ops.mjs`): C-58.5 over the stored case
+   *  document, the pre-flight's own refusal, or null. */
+  caseTestimony({ caseId = null, edition = null } = {}) {
+    const doc = this.#caseDocumentRow(String(caseId ?? ""), edition);
+    if (!doc) return { ok: true, refusal: null };
+    const attr = this.publication.attributionFacts({ text: doc.text, case_id: caseId, edition: Number(edition) });
+    return { ok: true, refusal: anonymousTestimonyRefusal(caseId, Number(edition),
+                                                          this.#uncorroborated(parseFrontmatter(doc.text).data || {}, attr)) };
   }
 
   /* Each roster member's `basis` at the bytes its `case_roles` row pins (record-core R60), for the case gate's C-2.8
@@ -1122,6 +1151,7 @@ export function ratificationOps(r, url, body) {
                                  docSha: b.docSha ?? q("docSha"), viewer: q("viewer") ?? null,
                                  secretSha: q("secretSha") ?? null }),
     caseratify: () => r.ratifyCaseDocument(b),
+    casetestimony: () => r.caseTestimony(b),
     publish: () => r.publish(b),
     release: () => r.release({ handle: q("handle"), acknowledgment: q("acknowledgment"), mitigation: q("mitigation"),
                                viewer: q("viewer"), owner: q("owner"), author: q("author") }),
