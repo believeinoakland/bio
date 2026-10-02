@@ -52684,7 +52684,19 @@ var CONDITION_KINDS = Object.freeze({
      a render held under a C-83 reason is SHOWN with that reason, and at its request's `expires` it is
      recorded UNDETERMINED and released. A CONDITION and not a FINDING: our own renderer, allowance or
      pacing is what holds it, a fact about our machinery and never about the page. */
-  "render-deferred": "a render this instance could not do is held under its C-83 reason until its request expires, and is then recorded undetermined (D-491, D-523) \u2014 LIVE: queue-producers #conditionsRenderDeferred"
+  "render-deferred": "a render this instance could not do is held under its C-83 reason until its request expires, and is then recorded undetermined (D-491, D-523) \u2014 LIVE: queue-producers #conditionsRenderDeferred",
+  /* R33 (T23, K1099): the five sweep kinds `monitoring` R63 derives on read, each sentence taken from its statement
+     there and the rule it cites (R57, R58, R60), and the three notice kinds of `network-notices` R12, R13, which
+     `queue-producers` R27 raises for a project's owners. Conditions about our own sweeps and notices, never findings
+     about a source. */
+  "sweep-held-backlog": "a monitoring sweep is held: its backlog of captures still awaiting review is at or over its ceiling, so it does not run (monitoring R60, R63)",
+  "sweep-yield-anomaly": "a monitoring sweep's last run noted an anomaly: it filed far more than, or nothing against, the median of its recent runs (monitoring R60, R63)",
+  "sweep-seed-unreachable": "a seed of a monitoring sweep failed on the sweep's last run (monitoring R57, R63)",
+  "sweep-redirect-out-of-scope": "a monitoring sweep's last run met a redirect to an address outside the sweep's scope (monitoring R57, R58, R63)",
+  "sweep-silent": "a monitoring sweep is silent: its last four runs each filed nothing, and it is not held (monitoring R60, R63)",
+  "notice-attestation-missed": "a monthly attestation of a project's working-on notice was missed for want of an instance key (network-notices R13; queue-producers R27)",
+  "notice-lapse-near": "a project's working-on notice will lapse within 7 days (network-notices R12; queue-producers R27)",
+  "notice-project-closed": "the project closed while its working-on notice was open (queue-producers R27)"
 });
 function refusal7(key, detail, extra = null) {
   const row2 = OBSERVATION_CHECKS[key];
@@ -56795,9 +56807,9 @@ var Retrieval = class _Retrieval {
     this.#actionFacts = { module, fn };
     return { ok: true, module };
   }
-  /** R12, R55: the leg-grade resolver `strength` registers: `fn(legs)` answers, for each capture-axis leg with a letter and
-   *  a target that is not an inquiry, `{grade, why}` — the letter the record can earn for that target, and why the
-   *  authored one does not stand (null when it does). It is called once per page. */
+  /** R12, R55: the leg-grade resolver, inquiry's (its R52), registered under inquiry's name: `fn(legs)` answers, for
+   *  each capture-axis leg with a letter and a target that is not an inquiry, `{grade, why}` — the letter the record can
+   *  earn for that target, and why the authored one does not stand (null when it does). It is called once per page. */
   registerLegGrades(module, fn) {
     if (typeof module !== "string" || !module || typeof fn !== "function")
       return { ok: false, reason: "RESOLVER_MALFORMED", detail: "a registration names its module and its function" };
@@ -57242,8 +57254,8 @@ var Retrieval = class _Retrieval {
   }
   /** REC-114 / D-383 (R12) — A LEG LISTING'S CAPTURE LETTER, RESOLVED AGAINST WHAT THE RECORD CAN EARN FOR THAT LEG'S
    *  TARGET, WITH THE AUTHORED LETTER BESIDE IT. DEC-4 bounds the capture axis by transcription fidelity, and this is a
-   *  reader of that one rule, swept to the ruling already made: this method decides NOTHING about grades — `strength`'s
-   *  registered resolver does (its earned registry and its three-case policy), called ONCE for the whole page. The
+   *  reader of that one rule, swept to the ruling already made: this method decides NOTHING about grades — inquiry's
+   *  registered resolver does (its R52, over its earned registry, inquiry R13), called ONCE for the whole page. The
    *  three conditions: capture axis only (a connection leg's earned answer is a value the write already pins); a leg
    *  actually carrying a letter (null stays null); and a target that is NOT an inquiry (a capture grade on an INQ- leg
    *  ranges over no document). With no resolver registered every leg passes unchanged (R55). BOTH DERIVED FIELDS ARE

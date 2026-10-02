@@ -1341,7 +1341,19 @@ var CONDITION_KINDS = Object.freeze({
      a render held under a C-83 reason is SHOWN with that reason, and at its request's `expires` it is
      recorded UNDETERMINED and released. A CONDITION and not a FINDING: our own renderer, allowance or
      pacing is what holds it, a fact about our machinery and never about the page. */
-  "render-deferred": "a render this instance could not do is held under its C-83 reason until its request expires, and is then recorded undetermined (D-491, D-523) \u2014 LIVE: queue-producers #conditionsRenderDeferred"
+  "render-deferred": "a render this instance could not do is held under its C-83 reason until its request expires, and is then recorded undetermined (D-491, D-523) \u2014 LIVE: queue-producers #conditionsRenderDeferred",
+  /* R33 (T23, K1099): the five sweep kinds `monitoring` R63 derives on read, each sentence taken from its statement
+     there and the rule it cites (R57, R58, R60), and the three notice kinds of `network-notices` R12, R13, which
+     `queue-producers` R27 raises for a project's owners. Conditions about our own sweeps and notices, never findings
+     about a source. */
+  "sweep-held-backlog": "a monitoring sweep is held: its backlog of captures still awaiting review is at or over its ceiling, so it does not run (monitoring R60, R63)",
+  "sweep-yield-anomaly": "a monitoring sweep's last run noted an anomaly: it filed far more than, or nothing against, the median of its recent runs (monitoring R60, R63)",
+  "sweep-seed-unreachable": "a seed of a monitoring sweep failed on the sweep's last run (monitoring R57, R63)",
+  "sweep-redirect-out-of-scope": "a monitoring sweep's last run met a redirect to an address outside the sweep's scope (monitoring R57, R58, R63)",
+  "sweep-silent": "a monitoring sweep is silent: its last four runs each filed nothing, and it is not held (monitoring R60, R63)",
+  "notice-attestation-missed": "a monthly attestation of a project's working-on notice was missed for want of an instance key (network-notices R13; queue-producers R27)",
+  "notice-lapse-near": "a project's working-on notice will lapse within 7 days (network-notices R12; queue-producers R27)",
+  "notice-project-closed": "the project closed while its working-on notice was open (queue-producers R27)"
 });
 
 // ../bio-plane/src/run-rules/rules.mjs
