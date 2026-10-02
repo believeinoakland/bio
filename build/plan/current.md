@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #102 · session_019EG7uFMTRzUH2vnxRBoDoW · depth 1
 
-**Jobs** · promotion: PROMOTION #27 session_01ASMwQcRsk5CCBu3QMVhdiG; provenance: PROVENANCE #15 session_01SdzWp71ywfCMib8J3KaSnR
+**Jobs** · promotion: PROMOTION #27 session_01ASMwQcRsk5CCBu3QMVhdiG; provenance: PROVENANCE #15 session_01SdzWp71ywfCMib8J3KaSnR; attestation: ATTESTATION #2 session_0176zF6WAnondSUb8eCPL194
 
 **Opened** 2026-10-02 ~21:05 UTC by BOB #102 from `main` @ 652b3f2f10 (T25 closed, K1245), from T25's `next.md` (K1246). **Bob's weekly meter** · asked at the opening; 61% at T23's close, unanswered at T24's and T25's.
 
