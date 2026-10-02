@@ -1,6 +1,6 @@
 # reading-pipeline (T25)
 
-**Status** · session_012Yr3gwtfrXrBoUUrtJgU8a · depth 2 · WORKING · handled B4
+**Status** · session_012Yr3gwtfrXrBoUUrtJgU8a · depth 2 · COMPLETE · handled B4
 
 ## Completion (T25 L4)
 
