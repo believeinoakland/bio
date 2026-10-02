@@ -77767,9 +77767,9 @@ CREATE INDEX IF NOT EXISTS published_case_members_bundle ON published_case_membe
 -- reason -- their rows already exist and honestly lack the fact.
 --
 -- WHO WRITES IT: CASE-2, which is where publishCase() first takes a publishing
--- project and an owner-only fence. CASE-1 builds the object and writes no row,
--- so op=export answers project_id NULL for every case in the store today and
--- says so. That is a stated state of the record, not a gap in the answer.
+-- project and an owner-only fence. CASE-1 built the object and wrote no row,
+-- so until CASE-2 the export answered project_id NULL for every case in the store
+-- and said so. That was a stated state of the record, not a gap in the answer.
 --
 -- THERE IS DELIBERATELY NO opened_by. The act's author belongs to the ACT, and
 -- the act that mints this identity is the publication of an edition, which
@@ -81377,7 +81377,7 @@ function projectStageOf(host, deps) {
 function projectStageOps(s, url) {
   const q7 = (k) => url.searchParams.get(k);
   return {
-    /* R1 (N300): the viewer the control plane stamps; the route is legacy-index's (N321). */
+    /* R1 (N300): the viewer the control plane stamps; the route is control-plane's (N321). */
     projectstage: () => s.projectStage({ project: q7("project"), viewer: q7("viewer") })
   };
 }
@@ -81470,8 +81470,8 @@ var PUBLISHED_READ_CHECKS = {
   },
   /* R18 (K1149): a name no module registered a public read under, at `op=publicread` or a read's own op. A STRANGER's
      refusal, so it has its row; the registration's own refusals (`PROVIDER_DECLARED`, `PROVIDER_MALFORMED`) are a
-     starting module's errors and have none. A new row minted in T23, `awaiting stamp` until T24's L2 moves
-     `CATALOG_VERSION` (`publication` R33). */
+     starting module's errors and have none. A new row minted in T23, stamped by 1.54.0 (T24's L2 moved
+     `CATALOG_VERSION`, `publication` R33). */
   PUBLIC_READ_NOT_REGISTERED: {
     check: "C-98.10",
     where: "src/public-read/index.mjs publicRead > is-public-read-not-registered",
@@ -82685,11 +82685,6 @@ CREATE TABLE IF NOT EXISTS nn_open_requests (
   settled_at   TEXT,
   PRIMARY KEY (case_id, edition)
 );
--- R21: WHEN THIS COPY FIRST SAW A SIGNER KEY REVOKED (credentials keeps no revocation date).
-CREATE TABLE IF NOT EXISTS nn_key_revocations (
-  key_b64      TEXT PRIMARY KEY,
-  seen_on      TEXT NOT NULL
-);
 `;
 var NETWORK_NOTICES_TABLES = Object.freeze([
   "nn_notices",
@@ -82700,13 +82695,12 @@ var NETWORK_NOTICES_TABLES = Object.freeze([
   "nn_week_leaves",
   "nn_week_roots",
   "nn_openings",
-  "nn_open_requests",
-  "nn_key_revocations"
+  "nn_open_requests"
 ]);
-var NETWORK_NOTICES_MINT_SEED = Object.freeze([Object.freeze(["NOTE", "nn_notices", "notice_id"])]);
 function migrateNetworkNotices(sql) {
   const bare2 = NETWORK_NOTICES_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const s of bare2.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+  sql.exec(`DROP TABLE IF EXISTS nn_key_revocations`);
 }
 
 // src/network-notices/seals.mjs
@@ -82879,7 +82873,6 @@ var OUTWARD_ACT_WARNING = Object.freeze({
 });
 var CAUTION_TWO_OPEN = "two_open_without_published_work";
 var COPY_KEY_LABEL = "this copy's key";
-var PROBE_KIND = "civicos-working-on-probe/1";
 var str9 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
 var WELL_FORMED = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
 var oneLine2 = (v, max) => typeof v === "string" && !!v.trim() && v.length <= max && !/[\n\r]/.test(v) && !WELL_FORMED.test(v);
@@ -83024,12 +83017,11 @@ var NetworkNotices = class {
     const ms2 = r && r.c ? Date.parse(r.c) : NaN;
     return Number.isFinite(ms2) ? dateOf(ms2) : null;
   }
-  /* R1: whether the instance key is bound: provenance R56 answers it only by signing, so a probe statement is signed
-     and discarded (it never reaches this module's tables). */
+  /* R1: whether the instance key is bound, asked of provenance R57, which signs nothing, so no key's `first_used` is
+     set before its first real statement. */
   async #keyBound() {
     try {
-      const r = await this.provenance.instanceSign(instanceStatement(PROBE_KIND, sha256HexSync("")));
-      return !!(r && r.ok);
+      return await this.provenance.instanceKeyBound() === true;
     } catch {
       return false;
     }
@@ -83064,13 +83056,22 @@ var NetworkNotices = class {
     return this.#rows(`SELECT notice_id FROM nn_notices`).filter((n) => n.notice_id !== except && this.#status(n.notice_id) === "open").length;
   }
   /* ================================================================ R1: the refusals, in order */
+  /* R1, R22: a project absent or invisible to `viewer` is membership's `noSuchProject`; a discoverable one `viewer`
+     sees only at existence is membership's C-70.1 (`existenceAct`, its R77; REC-149 (a)), asked first, as membership
+     asks it before its own absent answer; null when `viewer` sees the project whole. */
+  #sightRefusal(pid, viewer) {
+    if (!this.#isProject(pid)) return noSuchProject(pid);
+    const existence = this.#call(() => this.membership.existenceAct(pid, viewer));
+    if (existence && existence.ok === false) return existence;
+    return this.#call(() => this.membership.sight(pid, viewer)) === "full" ? null : noSuchProject(pid);
+  }
   /* R1's caller refusals (the project, the caller, the owner, closed, the slug, the key), in R1's order. `ctx` answers
      the project, the member and the slug. */
   async #callerRefusal({ project, by, viewer, final, notice }, op) {
     const pid = str9(project);
     if (!pid) return { refusal: required(op, "project", "a project id") };
-    const sees = this.#isProject(pid) && this.#call(() => this.membership.sight(pid, str9(viewer) || str9(by))) === "full";
-    if (!sees) return { refusal: noSuchProject(pid) };
+    const sight = this.#sightRefusal(pid, str9(viewer) || str9(by));
+    if (sight) return { refusal: sight };
     const member = this.#member(by);
     if (!str9(by) || isMachineIdentity(by) || !member)
       return { refusal: refuse3("MACHINE_CANNOT_POST_NOTICE", str9(by) ? "a notice is prepared and posted by a member signed in as themselves, and this caller is not one" : "no member is named as the one acting: this call carries nobody") };
@@ -83241,7 +83242,16 @@ var NetworkNotices = class {
       const latest = this.#latestRevision(held.nid);
       if ((latest ? latest.revision : 0) !== held.n - 1 || held.firstRevision && this.#notice(held.nid))
         return refuse3("NOTICE_STALE", "the notice moved since this was prepared: prepare again");
-      if (held.firstRevision) this.sql.exec(`INSERT INTO nn_notices (notice_id, project, opened_at) VALUES (?,?,?)`, held.nid, held.pid, at26);
+      if (held.firstRevision) {
+        const rec = this.#call(() => this.record.recordOpaqueId(held.nid), null);
+        if (!rec || rec.ok !== true)
+          return refuse3(
+            "NOTICE_STALE",
+            "the notice id this was prepared with is already spent: prepare again",
+            { opaque_id: rec ? rec.reason ?? null : null }
+          );
+        this.sql.exec(`INSERT INTO nn_notices (notice_id, project, opened_at) VALUES (?,?,?)`, held.nid, held.pid, at26);
+      }
       this.sql.exec(
         `INSERT INTO nn_revisions (notice_id, revision, digest, json, status, signature, signer_key, published_at)
                      VALUES (?,?,?,?,?,?,?,?)`,
@@ -83257,7 +83267,13 @@ var NetworkNotices = class {
       this.#insertAttestation(held.nid, "posted", held.digest, att, signed, at26);
       return { ok: true };
     });
-    if (!out || out.ok !== true) return out;
+    if (!out || out.ok !== true) {
+      if (out && "opaque_id" in out) {
+        this.#held.delete(`${member}\0${held.digest}`);
+        if (this.#reserved.get(held.pid)?.id === held.nid) this.#reserved.delete(held.pid);
+      }
+      return out;
+    }
     this.#held.delete(`${member}\0${held.digest}`);
     return {
       ok: true,
@@ -83372,7 +83388,6 @@ var NetworkNotices = class {
   /* R12, R13: the monthly attestations (each month's first day UTC, while open), the closings and the lapses. */
   async attestTick(now = this.#nowMs()) {
     const nowMs = Number(now);
-    this.#observeKeys(nowMs);
     const out = { monthly: [], missed: [], closed: [], lapsed: [], openings: [] };
     const month = monthOf(nowMs), monthStart = monthStartOf(nowMs);
     const checkClosed = this.#closedCheckDay !== dateOf(nowMs);
@@ -83435,44 +83450,75 @@ var NetworkNotices = class {
       return null;
     }
   }
-  /** Its next wake: the next UTC day while a notice is open or an opening waits, else the next month's first day. */
+  /** R17 (N507): its next wake, the next UTC day (the day's closing check, a month's first day, a retried opening)
+   *  while a notice is open or an opening is kept; null when neither, so an idle instance holds no timer (scheduler
+   *  R15). A notice posted later, or an opening kept, is what wakes it again. */
   attestWake(now = this.#nowMs()) {
     try {
       const nowMs = Number(now);
-      const busy = this.#rows(`SELECT notice_id FROM nn_notices`).some((n) => this.#status(n.notice_id) === "open") || !!this.#one(`SELECT 1 AS x FROM nn_open_requests WHERE settled_at IS NULL`);
-      return busy ? Math.floor(nowMs / DAY_MS) * DAY_MS + DAY_MS : nextMonthStart(nowMs);
+      const busy = !!this.#one(`SELECT 1 AS x FROM nn_open_requests WHERE settled_at IS NULL`) || this.#rows(`SELECT notice_id FROM nn_notices`).some((n) => this.#status(n.notice_id) === "open");
+      return busy ? Math.floor(nowMs / DAY_MS) * DAY_MS + DAY_MS : null;
     } catch {
       return null;
     }
   }
   /* ================================================================ the seals (R14–R16) */
-  /* The weeks still to seal at `nowMs`: from the week after the last sealed one to the last complete week; on the first
-     run, the last complete week alone (weeks before this module shipped cannot be proven). At most eight per tick. */
+  /* The first week not yet sealed at `nowMs`: the week after the last sealed one; on the first run, the last complete
+     week (weeks before this module shipped cannot be proven). */
+  #sealFrom(nowMs) {
+    const done = this.#rows(`SELECT week FROM nn_week_roots`).map((r) => weekStartFromLabel(r.week)).filter((x) => x !== null);
+    return done.length ? Math.max(...done) + WEEK_MS : weekStartOf(nowMs) - WEEK_MS;
+  }
+  /* The weeks still to seal at `nowMs`: from `#sealFrom` to the last complete week, at most eight per tick. */
   #weeksToSeal(nowMs) {
     const lastComplete = weekStartOf(nowMs) - WEEK_MS;
-    const done = this.#rows(`SELECT week FROM nn_week_roots`).map((r) => weekStartFromLabel(r.week)).filter((x) => x !== null);
-    const from = done.length ? Math.max(...done) + WEEK_MS : lastComplete;
     const out = [];
-    for (let s = from; s <= lastComplete && out.length < 8; s += WEEK_MS) out.push(s);
+    for (let s = this.#sealFrom(nowMs); s <= lastComplete && out.length < 8; s += WEEK_MS) out.push(s);
     return out;
   }
-  /** R14: due now when a complete week is unsealed; else null. */
+  /* R14 (N507): when the next seal falls due. The earliest member act (R8) not yet sealed, on a project that is not
+     `closed`: in a complete week, it is due now; in the week under way, at that week's end; with none, null. Acts are
+     read in order of their instant, so the first that qualifies decides. */
+  #sealNext(nowMs) {
+    const from = this.#sealFrom(nowMs), current = weekStartOf(nowMs);
+    const projects = /* @__PURE__ */ new Map();
+    const live = (pid) => {
+      if (!projects.has(pid)) projects.set(pid, !!pid && this.#isProject(pid) && !this.#closed(pid));
+      return projects.get(pid);
+    };
+    for (const r of this.sql.exec(`SELECT m.created, m.author, m.writer, b.bundle_id, b.object_type, b.project
+                                     FROM manifest m JOIN bundles b ON b.bundle_id = m.bundle_id
+                                    WHERE m.created >= ? AND (b.object_type = 'project' OR b.project IS NOT NULL)
+                                    ORDER BY m.created, m.rowid`, this.#stamp(Math.max(0, from - 1e3)))) {
+      const t = Date.parse(r.created);
+      if (!Number.isFinite(t) || t < from || !str9(r.author) || isMachineIdentity(r.author) || r.writer === "mechanical") continue;
+      if (!live(r.object_type === "project" ? r.bundle_id : r.project)) continue;
+      return t < current ? nowMs : weekStartOf(t) + WEEK_MS;
+    }
+    return null;
+  }
+  /** R14: due now when a complete week holds a member act not yet sealed; else null. */
   sealDue(now = this.#nowMs()) {
     try {
-      return this.#weeksToSeal(Number(now)).length ? Number(now) : null;
+      const n = Number(now);
+      return this.#sealNext(n) === n ? n : null;
     } catch {
       return null;
     }
   }
-  /** R14: the next wake, the start of the next week. */
+  /** R14 (N507): the instant the next seal falls due, or null when the instance has nothing to seal, so an idle
+   *  instance holds no timer (scheduler R15). */
   sealWake(now = this.#nowMs()) {
-    return weekStartOf(Number(now)) + WEEK_MS;
+    try {
+      return this.#sealNext(Number(now));
+    } catch {
+      return null;
+    }
   }
   /** R14, R15: seals each complete week's member acts for every project not closed, and timestamps the week's root
    *  once. Answers `{ok, sealed: [{week, projects, timestamped}]}`. */
   async sealTick(now = this.#nowMs()) {
     const nowMs = Number(now);
-    this.#observeKeys(nowMs);
     const sealed = [];
     for (const start of this.#weeksToSeal(nowMs)) {
       const week = weekLabel(start);
@@ -83767,15 +83813,6 @@ var NetworkNotices = class {
       next: truncated3 ? btoa(JSON.stringify([last.notice_id, last.published_at, last.tie, last.n])) : null
     };
   }
-  /* R21: a signer key this copy first saw revoked, with the date it saw it (credentials keeps none). */
-  #observeKeys(nowMs) {
-    try {
-      for (const s of this.credentials.signerList().signers || [])
-        if (s.status === "revoked")
-          this.sql.exec(`INSERT OR IGNORE INTO nn_key_revocations (key_b64, seen_on) VALUES (?,?)`, s.key_b64, dateOf(nowMs));
-    } catch {
-    }
-  }
   /** R21: the group slug, its owners' keys and the copy's keys, never a name, handle or member id. */
   groupKeysPublic() {
     const signed = /* @__PURE__ */ new Set([
@@ -83786,11 +83823,11 @@ var NetworkNotices = class {
     for (const s of this.#call(() => this.credentials.signerList().signers, []) || []) {
       const owns = this.#call(() => this.membership.ownsAnyProject(s.member_id), false);
       if (!owns && !signed.has(s.key_b64)) continue;
-      const seen = this.#one(`SELECT seen_on FROM nn_key_revocations WHERE key_b64=?`, s.key_b64);
+      const at26 = str9(s.status_at);
       owners.push({
         key: `ssh-ed25519 ${s.key_b64}`,
         status: s.attests ? "attests" : "revoked",
-        ...s.attests ? {} : { revoked_on: seen ? seen.seen_on : null },
+        ...s.attests ? {} : { revoked_on: at26 && Number.isFinite(Date.parse(at26)) ? dateOf(Date.parse(at26)) : null },
         first_listed: str9(s.added) ? String(s.added).slice(0, 10) : null
       });
     }
@@ -83804,7 +83841,8 @@ var NetworkNotices = class {
   noticesOf({ project = null, viewer = null } = {}) {
     const pid = str9(project);
     if (!pid) return required("notices", "project", "a project id");
-    if (!this.#isProject(pid) || this.#call(() => this.membership.sight(pid, viewer)) !== "full") return noSuchProject(pid);
+    const sight = this.#sightRefusal(pid, viewer);
+    if (sight) return sight;
     const nowMs = this.#nowMs();
     const notices = this.#noticesOfProject(pid).map((n) => {
       const status = this.#status(n.notice_id);
@@ -83901,7 +83939,6 @@ function networkNoticesOf(host, deps) {
     instances21.set(host, n);
     n.migrate();
     record.declarePurge("network-notices", NETWORK_NOTICES_TABLES.map((name2) => ({ name: name2, keys: [] })));
-    record.registerMintSeed("network-notices", NETWORK_NOTICES_MINT_SEED.map((x) => [...x]));
     const publicRead = d.publicRead || publicReadOf(host);
     n.publicReadsRegistration = publicRead.registerPublicReads("network-notices", networkNoticesPublicReads(n));
   }
