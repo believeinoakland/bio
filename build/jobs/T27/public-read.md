@@ -1,6 +1,6 @@
 # public-read (T27)
 
-**Status** · session_01RxP8D4FZ4YPUucNfhaQQx2 · depth 2 · WORKING · handled B5
+**Status** · session_01RxP8D4FZ4YPUucNfhaQQx2 · depth 2 · COMPLETE · handled B5
 
 **Completion** (PUBLIC-READ #8, 2026-10-02; `docket` merged into `tranche/T27` by K1278 and merged into this branch)
 
