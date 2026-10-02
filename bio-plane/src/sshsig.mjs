@@ -371,3 +371,28 @@ export const noticeStatement = (noticeId, revision, sha) => {
     throw new Error("noticeStatement: the digest is not 64 lowercase hex characters");
   return te.encode(`${NS_NOTICE} ${noticeId} ${revision} ${sha}\n`);
 };
+
+/* ------------------------------------------------------------- the docket */
+
+/* DEC-116 item 6 (N520): A PUBLIC DOCKET ENTRY IS SIGNED IN ITS OWN NAMESPACE.
+   The case's manager signs each entry with the same registered key that
+   ratifies records and signs notices, so the separation is again in the
+   namespace as well as in the message: an entry is a public, final statement
+   beside a published case (a withdrawal among them), and a signature gathered
+   for it must never verify as a ratification or a notice, nor the reverse. */
+export const NS_DOCKET = "bio-docket";
+
+/* R40: the bytes a manager signs for one docket entry: the case it stands
+   beside, the entry's number in that case's docket, and the SHA-256 of the
+   entry as it will be published. It refuses what it cannot state exactly, as
+   noticeStatement does, so no signature is asked for over fields that could be
+   read two ways. */
+export const docketStatement = (caseId, seq, sha) => {
+  if (typeof caseId !== "string" || !OPAQUE_ID_RE.test(caseId))
+    throw new Error("docketStatement: the case id is not an opaque id");
+  if (!Number.isSafeInteger(seq) || seq < 1)
+    throw new Error("docketStatement: the entry number is not a whole number of at least 1");
+  if (typeof sha !== "string" || !SHA256_HEX_RE.test(sha))
+    throw new Error("docketStatement: the digest is not 64 lowercase hex characters");
+  return te.encode(`${NS_DOCKET} ${caseId} ${seq} ${sha}\n`);
+};
