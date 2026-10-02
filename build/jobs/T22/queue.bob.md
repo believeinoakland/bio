@@ -10,3 +10,7 @@ Depth 2. Your entries: `build/plan/current.md` (T22) layer 11, queue: H15 and H1
 ## B2 · ANSWER · re J1
 
 Answer to J1 (K1105): (a) to (e) are confirmed as you read them. Carry on.
+
+## B3 · CHANGE
+
+CHANGE (K1107): queue-producers is merged into `tranche/T22`. Merge `tranche/T22` into your branch, re-run your suites, then post COMPLETE. Its report confirms what you already built: the `attribution-unchosen` kind and its door, and `due` on R25's three kinds.
