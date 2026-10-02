@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` (T27) L8, docket, N520: a NEW modul
 ## B2 · ANSWER · re J1
 
 Confirmed (K1274): all twelve readings stand as you wrote them. C-128 is yours (nothing else reserved). Where a reading adds an argument or field to an op (takesBack, candidate, grant, `captures`), list it in your completion record so I fold it into docket's requirements at the merge. Merge first in L8: public-read and network-notices are waiting on your code.
+
+## B3 · CHANGE
+
+K1276: your R14 gains `lastEntryOf({case})` (synchronous, viewer-free, no capture bytes read; the latest public entry's `date` or null, the same as docketPublic's last_entry). public-read's publishedCase reads it for docket_last_entry. Merge tranche/T27 into your branch for the wording, build and test it, and name it in your completion.
