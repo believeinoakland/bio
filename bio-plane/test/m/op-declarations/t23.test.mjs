@@ -4,6 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as O from "../../../src/op-declarations/index.mjs";
+import { linkSweepOps } from "../../../src/link-sweep/index.mjs";
 
 const { OPS, SESSION_OPS, NEEDS, UNATTENDED_BY_DECISION, ACT_GATE, PLAN_RUN_SCOPE } = O;
 const LISTS = Object.entries(O).filter(([, v]) => Array.isArray(v));
@@ -23,7 +24,7 @@ const R10 = {
                            lists: ["WHAT_CHANGED_PROPOSAL_ACTIONS"] },
   whatchangeddrafts:     { spec: { classes: MEMBER_PROBE, mutating: false }, needs: null, lists: ["WHAT_CHANGED_READS"] },
   sweeps:                { spec: { classes: MEMBER_PROBE, mutating: false }, needs: null,
-                           lists: ["ACTION_LAYER_READS", "MONITORING_READS"] },
+                           lists: ["ACTION_LAYER_READS", "LINK_SWEEP_READS"] },
   noticeprepare:         { spec: SESSION_ONLY, like: "knocksof", needs: null,
                            lists: ["NETWORK_NOTICES_BY", "NETWORK_NOTICES_READS"] },
   noticepost:            { spec: { ...SESSION_ONLY, mutating: true }, like: "inboxpull", needs: "contribute",
@@ -111,7 +112,7 @@ test("R10, R3: each session-reached op T23 adds is in SESSION_OPS.member and SES
   assert.equal(Object.hasOwn(NEEDS, "escalationstatus"), false);
 });
 
-test("R10, R4: the act lists name each of T23's ops, so its stamps are named — viewer for escalationreasondraft (escalation's reads), whatchangeddrafts, sweeps (with monitoring's act, the action layer's reads), notices and directorysubmission; proposedBy and viewer for whatchangedpropose; by and viewer for noticeprepare and noticepost; nothing for the public reads", () => {
+test("R10, R4: the act lists name each of T23's ops, so its stamps are named — viewer for escalationreasondraft (escalation's reads), whatchangeddrafts, sweeps (link-sweep's read, among the action layer's reads), notices and directorysubmission; proposedBy and viewer for whatchangedpropose; by and viewer for noticeprepare and noticepost; nothing for the public reads", () => {
   for (const [op, want] of Object.entries(ALL)) {
     assert.deepEqual(listsHolding(op), [...want.lists].sort(), op);
     assert.deepEqual(stampsOf(op), R10_STAMPS[op], op);
@@ -122,7 +123,8 @@ test("R10, R4: the act lists name each of T23's ops, so its stamps are named —
   assert.ok(!O.QUERY_AUTHOR_ACTIONS.includes("whatchangedpropose") && !O.ACTION_LAYER_ACTIONS.includes("whatchangedpropose"));
   assert.deepEqual([...O.WHAT_CHANGED_PROPOSAL_ACTIONS], ["whatchangedpropose"]);
   assert.deepEqual([...O.WHAT_CHANGED_READS], ["whatchangeddrafts"]);
-  assert.deepEqual([...O.MONITORING_READS], ["sweeps"]);
+  assert.deepEqual([...O.LINK_SWEEP_READS], ["sweeps"]);
+  assert.equal(O.MONITORING_READS, undefined);
   assert.deepEqual([...O.NETWORK_NOTICES_ACTIONS], ["noticepost"]);
   assert.deepEqual([...O.NETWORK_NOTICES_READS], ["noticeprepare", "notices", "directorysubmission"]);
   assert.deepEqual([...O.NETWORK_NOTICES_BY], ["noticeprepare", "noticepost"]);
@@ -137,8 +139,8 @@ test("R10, R4: the act lists name each of T23's ops, so its stamps are named —
   assert.deepEqual([...new Set(listsHolding("noticepost").filter((l) => l !== "NETWORK_NOTICES_BY").flatMap((l) => STAMPS[l]))], ["viewer"]);
 });
 
-test("R10, R6: every op T23's modules serve has a spec the door answers by name — escalation's escalationreasondraft, case-authoring's two, monitoring's sweeps, network-notices' four ops and three registered public reads, public-read's own publicread — and no spec without an op", () => {
-  /* The names each owner serves (escalation R25, case-authoring R39, monitoring R61, network-notices' ops map and its
+test("R10, R6: every op T23's modules serve has a spec the door answers by name — escalation's escalationreasondraft, case-authoring's two, link-sweep's sweeps, network-notices' four ops and three registered public reads, public-read's own publicread — and no spec without an op", () => {
+  /* The names each owner serves (escalation R25, case-authoring R39, link-sweep R9, network-notices' ops map and its
      public reads as its COMPLETE lists them, K1150; public-read's door op). */
   const SERVED = ["escalationreasondraft", "whatchangedpropose", "whatchangeddrafts", "sweeps", "noticeprepare", "noticepost",
                   "notices", "directorysubmission", "activitymethod", "noticespublic", "groupkeyspublic", "publicread"];
@@ -149,4 +151,17 @@ test("R10, R6: every op T23's modules serve has a spec the door answers by name 
   }
   /* The superseded public-read names network-notices' early record used (`noticemethod`, `groupkeys`) are no op. */
   for (const op of ["noticemethod", "groupkeys"]) assert.ok(!Object.hasOwn(OPS, op), op);
+});
+
+test("R10, R6 (N506, K1207): sweeps is declared for link-sweep's map — every op link-sweep's ops map serves has a spec, and the one it serves is sweeps, R10's read; link-sweep's read list names exactly that map (negative control: an op added to the map without a spec is seen)", () => {
+  const served = Object.keys(linkSweepOps({}, new URL("https://instance.invalid/")));
+  assert.deepEqual(served, ["sweeps"]);
+  for (const op of served) {
+    assert.ok(Object.hasOwn(OPS, op), `${op} has no spec`);
+    assert.deepEqual(plain(OPS[op]), R10[op].spec, op);
+  }
+  assert.deepEqual([...O.LINK_SWEEP_READS].sort(), served.filter((op) => !OPS[op].mutating).sort());
+  /* Negative control: a map that serves an op with no spec is seen. */
+  const unspecified = [...served, "sweepretry"].filter((op) => !Object.hasOwn(OPS, op));
+  assert.deepEqual(unspecified, ["sweepretry"]);
 });

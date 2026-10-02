@@ -1,8 +1,8 @@
-/* op-declarations: WHAT EACH OP IS (R1–R10). Every op's spec, the act lists that drive the stamps and the fences, the
+/* op-declarations: WHAT EACH OP IS (R1–R11). Every op's spec, the act lists that drive the stamps and the fences, the
    session sets, the capability table, the recorded decisions that a verb is not a person's, and the act gate read
    from those tables. It declares; it judges no caller and routes nothing (`admission` and `control-plane` read it).
    Copied from `control-plane/ops.mjs` at the control-plane split (T18, K617, K624 (1), (2)), which control-plane's own
-   job deletes; that file came from legacy-index at control-plane's extraction (T12, K3, K93). The handlers stay with
+   job has since deleted; that file came from legacy-index at control-plane's extraction (T12, K3, K93). The handlers stay with
    their modules and only the declarations live here.
    R5: every table and list is FROZEN data, read as it is exported — the specs and their class lists, the arrays, the
    two session sets (each a `FrozenSet`, whose `add`, `delete` and `clear` refuse) and the two maps. Nothing here is
@@ -680,6 +680,10 @@ const OPS = frozenTable({
   scenarioset:         { classes: ["admin", "member", "probe"],      mutating: true  },
   checkpointrecord:    { classes: ["admin", "member", "probe"],      mutating: true  },
   optionstart:         { classes: ["admin", "member", "probe"],      mutating: true  },
+  /* T24 (N490, DEC-115, K1134; action-plans R37; R11): what `optionstart` would do with the same arguments, answered
+     at that instant and writing nothing, so a read; `optionstart`'s classes, and its stamps (`author` from the query, so
+     the preview is asked as the very caller the start would be, and `viewer`) through `ACTION_PLANS_PREVIEWS` below. */
+  optionstartpreview:  { classes: ["admin", "member", "probe"],      mutating: false },
   planclose:           { classes: ["admin", "member", "probe"],      mutating: true  },
   plan:                { classes: ["admin", "member", "probe"],      mutating: false },
   plans:               { classes: ["admin", "member", "probe"],      mutating: false },
@@ -712,8 +716,8 @@ const OPS = frozenTable({
   /* T22 (K1019; monitoring R17, R52; R9): an address's own frequency, a source owner's reasoned act — a machine reaches
      it and monitoring refuses it by name (MACHINE_CANNOT_SET_FREQUENCY) — `author` and `viewer` query-stamped. */
   addressfrequencyset: { classes: ["admin", "member", "probe"],     mutating: true  },
-  /* T23 (the link sweep, K1094; monitoring R61; R10): the sweeps a member may see, a read for a member session,
-     viewer-stamped; monitoring answers a bearer's call as it answers its other reads. */
+  /* T23 (the link sweep, K1094; R10), served since T24 by `link-sweep` (its R9; N506): the sweeps a member may see, a
+     read for a member session, viewer-stamped; link-sweep answers a bearer's call as monitoring answers its reads. */
   sweeps:             { classes: ["admin", "member", "probe"],      mutating: false },
   /* T23 (DEC-111, K1031, K1100; network-notices R1, R2, R4, R5, R22, R23, R24; R10): a project's notice is prepared
      (writing nothing) and posted by an owner signed in as themselves, and read by a member who sees the project — each a
@@ -994,8 +998,9 @@ const IDENTITY_ACTIONS = frozenList(["groupnameset", "groupdomainset"]);
          enrolled administrator's `kind` is `member` however her roster row reads;
      (2) THE STAMP — a disjunct of the `by` stamp, so the SERVER names who acted, and the store's relays
          read `by` from the query over anything in the body;
-     (3) THE ROSTER — each store method refuses a member-named `by` that is not an ACTIVE administrator,
-         NOT_AN_ADMIN, before it looks anything up (`Store#custodialBar`).
+     (3) THE ROSTER — each owning module's method (membership's for `memberadd` and `memberset`, credentials'
+         `#custodialBar` for `signeradd` and `signerset`) refuses a member-named `by` that is not an ACTIVE
+         administrator, NOT_AN_ADMIN, before it looks anything up.
    Reach without the roster would hand an ordinary member the roster; the roster without the stamp would
    let a caller name somebody who passes it.
    **NOT `GOVERNANCE_ACTIONS`, and that is the one call this array exists to make.** That array also
@@ -1249,6 +1254,11 @@ const ACTION_PLANS_ACTIONS = frozenList(["planopen", "plansubjectadd", "plansubj
                               "optionadopt", "optiondispose", "scenarioset", "checkpointrecord", "optionstart",
                               "planclose"]);
 const ACTION_PLANS_READS = frozenList(["plan", "plans", "planproposals"]);
+/* T24 (N490, DEC-115; action-plans R37; R11): the start preview, a read that answers what `optionstart` would do. It
+   reads `author` from the QUERY after the body, as `optionstart` does, and must be asked as the very caller the start
+   would be (the same positional identity, so the same fences answer), so it joins `QUERY_AUTHOR_ACTIONS` below and,
+   through it, the action layer's viewer stamp. Its own array because it writes nothing: it is no act. */
+const ACTION_PLANS_PREVIEWS = frozenList(["optionstartpreview"]);
 /* action-plans R11, R31: a proposal is any credential's, and it names its PROPOSER, which action-plans reads from the
    query (`proposer`, not `author`) both as the proposal's label and as the caller its planning run's principal is
    compared with; viewer-stamped beside it. Its own array because its stamp is not the acts' `author`. */
@@ -1265,9 +1275,10 @@ const CONTRADICTION_READS = frozenList(["contradictioncandidates", "contradictio
    positional) and `viewer` from the query, so it joins `QUERY_AUTHOR_ACTIONS` below, and with it the action layer's
    viewer stamp. Its own array, one per module, for the reason every array here is one. */
 const MONITORING_ACTIONS = frozenList(["addressfrequencyset"]);
-/* T23 (K1094; monitoring R61; R10): the sweeps read, viewer-stamped; it joins `ACTION_LAYER_READS` below as monitoring's
-   act joins the action layer's acts, so the same stamp reaches it. */
-const MONITORING_READS = frozenList(["sweeps"]);
+/* T23 (K1094; R10), link-sweep's since T24 (its R9; N506): the sweeps read, viewer-stamped (link-sweep's ops map reads
+   `viewer` from the query); it joins `ACTION_LAYER_READS` below as monitoring's act joins the action layer's acts, so the
+   same stamp reaches it. Its own array, its owner's, for the reason every array here is one. */
+const LINK_SWEEP_READS = frozenList(["sweeps"]);
 /* T23 (N485: K1025, K1035; case-authoring R39; R10): a draft of what changed names its PROPOSER (the label,
    `proposalLabel`), `TEMPLATE_PROPOSAL_ACTIONS`' kind of stamp, under the name case-authoring reads it as, `proposedBy`
    (its ops map takes it from the query's `author`); `viewer` beside it. The drafts' read is viewer-stamped. Their own
@@ -1283,10 +1294,10 @@ const NETWORK_NOTICES_READS = frozenList(["noticeprepare", "notices", "directory
 const NETWORK_NOTICES_BY = frozenList(["noticeprepare", "noticepost"]);
 const NETWORK_NOTICES_PUBLIC_READS = frozenList(["activitymethod", "noticespublic", "groupkeyspublic"]);
 /* The modules whose acts read `author` from the query: the four of T8, T18's three, T21's filing-templates and T22's
-   monitoring act. */
+   monitoring act; and T24's start preview, the one read among them, stamped as the start it previews (R11). */
 const QUERY_AUTHOR_ACTIONS = frozenList([...CONFORMANCE_ACTIONS, ...CONSEQUENCES_ACTIONS, ...FILINGS_ACTIONS, ...ESCALATION_ACTIONS,
                               ...ACTIONS_ACTIONS, ...ACTION_CLOCKS_ACTIONS, ...ACTION_PLANS_ACTIONS, ...FILING_TEMPLATES_ACTIONS,
-                              ...MONITORING_ACTIONS]);
+                              ...MONITORING_ACTIONS, ...ACTION_PLANS_PREVIEWS]);
 /* The action layer's acts and reads, each viewer-stamped (fail closed); T22's monitoring act rides in through
    `QUERY_AUTHOR_ACTIONS`, viewer-stamped as they are. T21 adds the template proposal and the fact
    confirmation, whose stamps are their own (`proposer`, `by`), and the two modules' reads. The grant's doors are not
@@ -1295,7 +1306,7 @@ const ACTION_LAYER_ACTIONS = frozenList([...STANDARDS_ACTIONS, ...QUERY_AUTHOR_A
                               ...TEMPLATE_PROPOSAL_ACTIONS, ...LOCAL_FACTS_ACTIONS]);
 const ACTION_LAYER_READS = frozenList([...STANDARDS_READS, ...CONFORMANCE_READS, ...CONSEQUENCES_READS, ...FILINGS_READS,
                             ...ESCALATION_READS, ...ACTIONS_READS, ...ACTION_PLANS_READS, ...FILING_TEMPLATES_READS,
-                            ...LOCAL_FACTS_READS, ...MONITORING_READS]);
+                            ...LOCAL_FACTS_READS, ...LINK_SWEEP_READS]);
 /* K660 (agent-worker R51, R53; K683): WHAT A PLAN-MODE RUN'S AGENT CREDENTIAL IS SCOPED TO. An agent credential is
    admitted by its task scope alone (R2): it reaches a non-mutating op a member reaches, and a mutating one only when its
    declared writes name it (`admission`). So a planning run's credential reads its plan, the project's earlier plans and,
@@ -1509,11 +1520,13 @@ const SESSION_OPS = Object.freeze({
                       `CAPTURE_MEMBER_ACTIONS` above) and its three reads, monitoring's frequency act. */
                    "escalationstatus", ...CAPTURE_READS, ...MONITORING_ACTIONS,
                    /* T23 (op-declarations R10): every op T23 adds that a session reaches, in BOTH sets — escalation's
-                      pre-assembled reason, case-authoring's draft of what changed and its read, monitoring's sweeps and
+                      pre-assembled reason, case-authoring's draft of what changed and its read, link-sweep's sweeps and
                       network-notices' act and reads (a bearer refused them by `machineClasses: []`). The public reads
                       are in neither: every caller reaches them. */
-                   "escalationreasondraft", ...WHAT_CHANGED_PROPOSAL_ACTIONS, ...WHAT_CHANGED_READS, ...MONITORING_READS,
+                   "escalationreasondraft", ...WHAT_CHANGED_PROPOSAL_ACTIONS, ...WHAT_CHANGED_READS, ...LINK_SWEEP_READS,
                    ...NETWORK_NOTICES_ACTIONS, ...NETWORK_NOTICES_READS,
+                   /* T24 (op-declarations R11): action-plans' start preview, in BOTH sets, as the start it previews. */
+                   ...ACTION_PLANS_PREVIEWS,
                    /* N314 (T12, monitoring R30): the daemon's pause, every member session's to ask; monitoring refuses a
                       non-administrator by name. */
                    "monitorpause",
@@ -1578,8 +1591,9 @@ const SESSION_OPS = Object.freeze({
                    ...FILING_TEMPLATES_ACTIONS, ...FILING_TEMPLATES_READS, ...TEMPLATE_PROPOSAL_ACTIONS,
                    ...TEMPLATE_DOOR_ACTIONS, ...TEMPLATE_DOOR_READS, ...LOCAL_FACTS_ACTIONS, ...LOCAL_FACTS_READS,
                    "escalationstatus", ...CAPTURE_READS, ...MONITORING_ACTIONS,
-                   "escalationreasondraft", ...WHAT_CHANGED_PROPOSAL_ACTIONS, ...WHAT_CHANGED_READS, ...MONITORING_READS,
+                   "escalationreasondraft", ...WHAT_CHANGED_PROPOSAL_ACTIONS, ...WHAT_CHANGED_READS, ...LINK_SWEEP_READS,
                    ...NETWORK_NOTICES_ACTIONS, ...NETWORK_NOTICES_READS,
+                   ...ACTION_PLANS_PREVIEWS,
                    ...IDENTITY_ACTIONS,
                    ...GOVERNANCE_ACTIONS,
                    ...CUSTODIAL_ACTIONS,
@@ -2395,6 +2409,11 @@ const NEEDS = Object.freeze({
   activitymethod:        null,
   noticespublic:         null,
   groupkeyspublic:       null,
+  /* T24 (op-declarations R11): NO CAPABILITY for the start preview, `publishpreflight`'s posture: it tells a member what
+     starting would do and writes nothing, and `contribute` gates the start itself. PRESENT, null, because affordances
+     names it in NON_ACTS (its R7) and its totality reads a NON_ACTS key this table does not carry as stale (its R12),
+     K516's precedent. */
+  optionstartpreview:    null,
 });
 
 /* REC-19's act decoration, shared by op=affordances and op=queue (REC-20) so a queue item's options[] and an
@@ -2468,4 +2487,4 @@ const UNATTENDED_BY_DECISION = Object.freeze({
            + "one' — a deploy's maintenance pass, addressed to the operator's credential.",
 });
 
-export { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, CAPTURE_VIEWER_ACTIONS, CAPTURE_READS, SOURCE_ACTIONS, SOURCE_READS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, FILING_TEMPLATES_ACTIONS, FILING_TEMPLATES_READS, TEMPLATE_PROPOSAL_ACTIONS, TEMPLATE_DOOR_ACTIONS, TEMPLATE_DOOR_READS, GRANT_SECRET_ACTIONS, LOCAL_FACTS_ACTIONS, LOCAL_FACTS_READS, ESCALATION_ACTIONS, ESCALATION_READS, MONITORING_ACTIONS, MONITORING_READS, WHAT_CHANGED_PROPOSAL_ACTIONS, WHAT_CHANGED_READS, NETWORK_NOTICES_ACTIONS, NETWORK_NOTICES_READS, NETWORK_NOTICES_BY, NETWORK_NOTICES_PUBLIC_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, ACTIONS_ACTIONS, ACTIONS_READS, ACTION_CLOCKS_ACTIONS, ACTION_PLANS_ACTIONS, ACTION_PLANS_READS, PLAN_PROPOSAL_ACTIONS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, PLAN_RUN_SCOPE, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION };
+export { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, CAPTURE_VIEWER_ACTIONS, CAPTURE_READS, SOURCE_ACTIONS, SOURCE_READS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, FILING_TEMPLATES_ACTIONS, FILING_TEMPLATES_READS, TEMPLATE_PROPOSAL_ACTIONS, TEMPLATE_DOOR_ACTIONS, TEMPLATE_DOOR_READS, GRANT_SECRET_ACTIONS, LOCAL_FACTS_ACTIONS, LOCAL_FACTS_READS, ESCALATION_ACTIONS, ESCALATION_READS, MONITORING_ACTIONS, LINK_SWEEP_READS, WHAT_CHANGED_PROPOSAL_ACTIONS, WHAT_CHANGED_READS, NETWORK_NOTICES_ACTIONS, NETWORK_NOTICES_READS, NETWORK_NOTICES_BY, NETWORK_NOTICES_PUBLIC_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, ACTIONS_ACTIONS, ACTIONS_READS, ACTION_CLOCKS_ACTIONS, ACTION_PLANS_ACTIONS, ACTION_PLANS_READS, ACTION_PLANS_PREVIEWS, PLAN_PROPOSAL_ACTIONS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, PLAN_RUN_SCOPE, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION };
