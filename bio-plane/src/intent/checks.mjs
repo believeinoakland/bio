@@ -12,14 +12,14 @@
  * outside A–D is `CONDITION_BAD_GRADE` (strength's `BAD_GRADE` is its own). For the same reason (N433, K730, R30; one
  * code, one row, DEC-49) C-111.4, C-111.6 and C-111.13 answer `INTENT_NO_SUCH_PROGRESSION`, `INTENT_BAD_STAGE` and
  * `INTENT_NO_REASON`, their numbers and translations unchanged: `NO_SUCH_PROGRESSION`, `BAD_STAGE` and `NO_REASON` are
- * progressions' (C-100.11, C-100.14, C-100.18). The three codes changed in T19 layer 7 and are awaiting stamp. Refusals minted
- * by the modules intent uses (membership's `PROJECT_ACT_NOT_A_PARTICIPANT` and C-70.1, progressions' dispose rows,
- * ai-runs' open rows) are relayed with their own rows and are not restated here. `NO_SUCH_PROJECT` is membership's one
- * row (C-70.5, answered through its `noSuchProject`, R78); intent's C-111.2 is retired (N208, K275) and its number is
- * not reused. `NO_SUCH_ENTITY` is entities' one row (C-91.4, answered through its `noSuchEntity`, R36); intent's
- * C-111.5 is retired (N285) and its number is not reused. `NOT_AN_ADMIN` is membership's one row (C-96.1, answered
- * through its `notAnAdmin`, R84): R9's group aspiration answers it with its remedy, and intent's C-111.16
- * (`GROUP_ASPIRATION_NOT_ADMIN`) is retired (N327, DEC-83) and its number is not reused. */
+ * progressions' (C-100.11, C-100.14, C-100.18). The three codes changed in T19 layer 7 and were stamped by 1.50.0.
+ * Refusals minted by the modules intent uses (membership's `PROJECT_ACT_NOT_A_PARTICIPANT` and C-70.1, progressions'
+ * dispose rows, ai-runs' open rows) are relayed with their own rows and are not restated here. `NO_SUCH_PROJECT` is
+ * membership's one row (C-70.5, answered through its `noSuchProject`, R78); intent's C-111.2 is retired (N208, K275)
+ * and its number is not reused. `NO_SUCH_ENTITY` is entities' one row (C-91.4, answered through its `noSuchEntity`,
+ * R36); intent's C-111.5 is retired (N285) and its number is not reused. `NOT_AN_ADMIN` is membership's one row
+ * (C-96.1, answered through its `notAnAdmin`, R84): R9's group aspiration answers it with its remedy, and intent's
+ * C-111.16 (`GROUP_ASPIRATION_NOT_ADMIN`) is retired (N327, DEC-83) and its number is not reused. */
 
 const at = (fn, region) => `src/intent/index.mjs ${fn} > ${region}`;
 /* A code several acts answer is minted once, by its own function at the foot of `index.mjs` (DEC-49's one code, one
