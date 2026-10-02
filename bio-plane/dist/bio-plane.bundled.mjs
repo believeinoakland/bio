@@ -89294,8 +89294,9 @@ var FilingTemplates = class _FilingTemplates {
   }
   /* ================================================================ R20: reviewsRequested */
   /** R20 (`queue-producers` R20): every (version, member) pair where the member was asked to review, the version is in
-   *  review, and the member has given no review of its present sha; at most 500 per page in (version id, member)
-   *  order after `after` (a previous page's `cursor`, or a version id, read as after all its members). Writes nothing. */
+   *  review, and the member has given no review of its present sha, each with the template's `project` (its scope's;
+   *  null for a group template; N476); at most 500 per page in (version id, member) order after `after` (a previous
+   *  page's `cursor`, or a version id, read as after all its members). Writes nothing. */
   reviewsRequested({ after = null, limit = null, viewer = null } = {}) {
     const max = clamp3(limit, REVIEWS_REQUESTED_MAX, REVIEWS_REQUESTED_MAX);
     const from = str9(after);
@@ -89322,11 +89323,13 @@ var FilingTemplates = class _FilingTemplates {
         truncated3 = true;
         break;
       }
+      const project = t.scope && typeof t.scope === "object" ? t.scope.project ?? null : null;
       items.push({
         template: t.id,
         version: r.vid,
         name: t.name,
         kind: t.kind,
+        project,
         member: r.member,
         member_name: r.member_name,
         asked_by: { id: r.asked_by, name: r.asked_name },
@@ -102113,7 +102116,7 @@ var STANDARDS_CHECKS = Object.freeze({
   STANDARD_FIELD_UNKNOWN: {
     check: "C-112.17",
     where: at16("refuseFieldUnknown", "is-standard-field"),
-    translation: "This act takes only the fields it names, and the ones listed are not among them. The record holds a standard's citation, kind, issuer, text and period, and never a view of its merit. Nothing was written."
+    translation: "This act takes only the fields it names, and the ones listed are not among them. The record holds a standard's citation, kind, issuer, text, period and reason, and never a view of its merit. Nothing was written."
   },
   STANDARD_WRITTEN_ELSEWHERE: {
     check: "C-112.18",
@@ -102124,6 +102127,11 @@ var STANDARDS_CHECKS = Object.freeze({
     check: "C-112.19",
     where: at16("standardPropose", "is-proposal-act"),
     translation: "The government act a proposal names is given by its id, in at most 200 characters, and this one is not. Nothing was written."
+  },
+  STANDARD_NO_REASON: {
+    check: "C-112.20",
+    where: at16("#declareRefusal", "is-standard-reason"),
+    translation: "A standard is recorded with your reason: in your own words, why the group holds its government to it, in at most 2,000 characters. None was given, or it is not words, or it is too long. Nothing was written."
   }
 });
 function refusal15(code, detail, extra) {
@@ -102506,6 +102514,12 @@ var FILINGS_CHECKS = Object.freeze({
     check: "C-115.43",
     where: at19("filingPrepare", "is-filing-prepare"),
     translation: "Name a template or write the words, not both."
+  },
+  /* T22 (DEC-88, K1025): R8's reason, a new row, awaiting stamp. */
+  PACKET_NO_REASON: {
+    check: "C-115.44",
+    where: at19("counselPacket", "is-counsel-packet"),
+    translation: "Assembling a counsel packet records why, in your own words, and no reason was given, or it is longer than 2,000 characters. Write one. Nothing was written."
   }
 });
 function rowOf9(code) {
@@ -102532,17 +102546,17 @@ var ESCALATION_CHECKS = Object.freeze({
   },
   NOT_NONCOMPLIANT: {
     check: "C-116.5",
-    where: at20("escalationOpen", "is-determination-noncompliant"),
+    where: at20("#pursuable", "is-determination-noncompliant"),
     translation: "That determination finds no standard breached, so there is nothing to escalate. Nothing was written."
   },
   ESCALATION_NOT_A_PARTICIPANT: {
     check: "C-116.6",
-    where: at20("escalationOpen", "is-open-joined"),
+    where: at20("#pursuable", "is-open-joined"),
     translation: "An escalation is opened by a member who has joined the project that made the determination. Join the project first. Nothing was written."
   },
   ALREADY_OPEN: {
     check: "C-116.7",
-    where: at20("escalationOpen", "is-one-escalation"),
+    where: at20("#pursuable", "is-one-escalation"),
     translation: "This determination already has an escalation that has not ended; there is one at a time. Work in that one. Nothing was written."
   },
   NO_SUCH_ESCALATION: {
@@ -102724,6 +102738,11 @@ var ESCALATION_CHECKS = Object.freeze({
     check: "C-116.43",
     where: at20("#append", "is-escalation-spliceable"),
     translation: "The escalation's record cannot be extended in place. Nothing was written."
+  },
+  MACHINE_CANNOT_DECLINE_TO_ESCALATE: {
+    check: "C-116.46",
+    where: at20("declineToEscalate", "is-decline-member"),
+    translation: "Recording that the group is not pursuing a breach is a member's act, in the member's own words. An assistant may point out a breach; it may not decline it. Nothing was written."
   },
   PROVIDER_UNAVAILABLE: {
     check: "C-116.44",
@@ -106868,7 +106887,8 @@ function intentOf(host, deps) {
 // src/standards/schema.mjs
 var STANDARDS_SCHEMA = `
 -- R1, R3, R4, R6, R10: one row per standard, as declared. source_json is R3's answer at the declaration; supersedes is
--- unique, so a standard is superseded by at most one (R6); proposal_id names the proposal it was adopted from (R10).
+-- unique, so a standard is superseded by at most one (R6); proposal_id names the proposal it was adopted from (R10);
+-- reason is the declarer's words (R1, DEC-88), NULL on a standard recorded before they were asked for.
 CREATE TABLE IF NOT EXISTS standards (
   standard_id   TEXT PRIMARY KEY,
   cite          TEXT NOT NULL,
@@ -106880,7 +106900,8 @@ CREATE TABLE IF NOT EXISTS standards (
   source_json   TEXT NOT NULL,
   proposal_id   TEXT,
   declared_by   TEXT NOT NULL,
-  declared_at   TEXT NOT NULL
+  declared_at   TEXT NOT NULL,
+  reason        TEXT
 );
 CREATE INDEX IF NOT EXISTS standards_kind ON standards(kind, standard_id);
 -- R2: the standard's own words, as one or more content ids, in the order declared.
@@ -106919,6 +106940,8 @@ var STANDARDS_TABLES = Object.freeze([
 function migrateStandards(sql) {
   const bare2 = STANDARDS_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const s of bare2.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+  const cols = [...sql.exec(`PRAGMA table_info(standards)`)].map((c) => c.name);
+  if (!cols.includes("reason")) sql.exec(`ALTER TABLE standards ADD COLUMN reason TEXT`);
 }
 
 // src/standards/index.mjs
@@ -106930,7 +106953,18 @@ var WHY_MAX = 240;
 var PAGE_MAX2 = 200;
 var TEXTS_MAX = 50;
 var ACT_MAX = 200;
-var DECLARE_KEYS = Object.freeze(["cite", "kind", "issuer", "text", "period", "supersedes", "author", "viewer"]);
+var REASON_MAX3 = 2e3;
+var DECLARE_KEYS = Object.freeze([
+  "cite",
+  "kind",
+  "issuer",
+  "reason",
+  "text",
+  "period",
+  "supersedes",
+  "author",
+  "viewer"
+]);
 var PROPOSE_KEYS = Object.freeze(["cite", "kind", "issuer", "text", "why", "act", "proposer", "viewer"]);
 var ADOPT_KEYS = Object.freeze([...DECLARE_KEYS, "proposal"]);
 var str12 = (v) => typeof v === "string" ? v.trim() : "";
@@ -106947,6 +106981,7 @@ var TOKEN2 = /^[A-Za-z0-9][A-Za-z0-9._:\/-]{0,199}$/;
 var q2 = (s) => `"${String(s).replace(/["\\\r\n]/g, " ")}"`;
 var bare = (s) => TOKEN2.test(String(s)) ? String(s) : q2(s);
 var bodyText2 = (s) => String(s).trim().replace(/^#/gm, " #");
+var reasonFault = (reason) => reason === void 0 || reason === null ? "carries no reason" : typeof reason !== "string" ? `carries a reason that is not text (${Array.isArray(reason) ? "a list" : typeof reason})` : !reason.trim() ? "carries a reason with nothing in it" : [...reason].length > REASON_MAX3 ? `carries a reason of ${[...reason].length} characters, over the ${REASON_MAX3} kept` : null;
 function isDate2(v) {
   if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
   const d = /* @__PURE__ */ new Date(`${v}T00:00:00Z`);
@@ -107107,6 +107142,9 @@ var Standards = class {
     const issuer = str12(a.issuer);
     if (!issuer)
       return refusal15("STANDARD_NO_ISSUER", "a standard names the body that made it. Nothing was written.");
+    const fault = reasonFault(a.reason);
+    if (fault)
+      return refusal15("STANDARD_NO_REASON", `this declaration ${fault}. The reason is the declarer's own words on why the group holds its government to this standard, kept with it and read back with it. Nothing was written.`, { max_chars: REASON_MAX3 });
     const texts = textIds(a.text);
     if (!texts || !texts.length || texts.length > TEXTS_MAX)
       return refusal15(
@@ -107127,7 +107165,7 @@ var Standards = class {
       if (later)
         return refusal15("STANDARD_ALREADY_SUPERSEDED", `${supersedes} is already superseded by ${later}. Nothing was written.`, { supersedes, superseded_by: later });
     }
-    return { ok: true, fields: { cite, kind: a.kind, issuer, texts, period, supersedes } };
+    return { ok: true, fields: { cite, kind: a.kind, issuer, reason: a.reason, texts, period, supersedes } };
   }
   /* R2: the first named content id `content.contentRow` does not hold (or, for a viewer, whose document the viewer
      may not see: one answer), or null. */
@@ -107165,7 +107203,7 @@ var Standards = class {
       if (!r || !r.ok) return r;
       this.sql.exec(
         `INSERT INTO standards (standard_id, cite, kind, issuer, period_from, period_to, supersedes,
-                       source_json, proposal_id, declared_by, declared_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+                       source_json, proposal_id, declared_by, declared_at, reason) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
         id,
         f17.cite,
         f17.kind,
@@ -107176,7 +107214,8 @@ var Standards = class {
         JSON.stringify(source),
         proposalId,
         author,
-        at25
+        at25,
+        f17.reason
       );
       f17.texts.forEach((c, i) => this.sql.exec(
         `INSERT INTO standard_texts (standard_id, ord, content_id) VALUES (?,?,?)`,
@@ -107205,7 +107244,8 @@ var Standards = class {
     const r = this.#one(`SELECT standard_id FROM standards WHERE supersedes=?`, id);
     return r ? r.standard_id : null;
   }
-  /* R1's fields, R3's source, the declarer and time (R4), both ends of a supersession (R6), the proposal (R10). */
+  /* R1's fields, R3's source, the declarer, time and reason (R4), both ends of a supersession (R6), the proposal (R10).
+     A standard recorded before the reason was asked for answers `reason: null`. */
   #answer(row2) {
     const texts = this.#rows(`SELECT content_id FROM standard_texts WHERE standard_id=? ORDER BY ord`, row2.standard_id).map((t) => t.content_id);
     return {
@@ -107213,6 +107253,7 @@ var Standards = class {
       cite: row2.cite,
       kind: row2.kind,
       issuer: row2.issuer,
+      reason: row2.reason ?? null,
       text: texts,
       period: { from: row2.period_from ?? null, to: row2.period_to ?? null },
       source: safeJson18(row2.source_json),
@@ -107379,7 +107420,9 @@ var Standards = class {
     };
   }
   /** R10: a member adopts a proposal: R1 by that member, naming it. A field the member does not state is the
-   *  proposal's, and the answer says which were; the standard records the proposal, and the proposal its adoption. */
+   *  proposal's, and the answer says which were; the standard records the proposal, and the proposal its adoption. The
+   *  reason is never taken from the proposal: the adopting member's own is R1's, and the proposal's `why` is the
+   *  proposer's (DEC-88), answered beside it as theirs. */
   standardAdopt(args = {}) {
     const a = isObj13(args) ? args : {};
     const byMachine = machineRefusal2(a.author);
@@ -107413,6 +107456,8 @@ var Standards = class {
     return { ...r, adopted: {
       proposal: p.proposal_id,
       from_proposal: fromProposal,
+      why: p.why,
+      why_by: p.proposed_by,
       says: fromProposal.length ? `${fromProposal.join(", ")} taken from the proposal as it was made` : "every field stated by the adopting member"
     } };
   }
@@ -107442,7 +107487,7 @@ var CORE_TAIL2 = Object.freeze([
   "  source: null",
   "visuals: []"
 ]);
-function standardDoc({ id, cite, kind, issuer, texts, period, supersedes, source, proposal, author, at: at25 }) {
+function standardDoc({ id, cite, kind, issuer, reason, texts, period, supersedes, source, proposal, author, at: at25 }) {
   const src = source && source.state === "matched" ? `Matched: ${source.source} (${source.kind}, ${source.issuer}, level ${source.level}), from the profile ${source.profile} (basis ${source.basis}).` : `Undetermined: ${source ? source.why : "not read"}.`;
   return [
     "---",
@@ -107471,6 +107516,10 @@ function standardDoc({ id, cite, kind, issuer, texts, period, supersedes, source
     "## Issuer",
     "",
     bodyText2(issuer),
+    "",
+    "## Reason",
+    "",
+    bodyText2(reason),
     "",
     "## Source",
     "",
@@ -107769,7 +107818,7 @@ function migrateConformance(sql) {
 var OUTCOMES = Object.freeze(["compliant", "noncompliant", "unclear"]);
 var READINGS = Object.freeze(["aligns", "diverges", "open"]);
 var SIGNIFICANCE_KEYS = Object.freeze(["significance", "severity", "priority", "urgency", "rank", "score"]);
-var REASON_MAX3 = 500;
+var REASON_MAX4 = 500;
 var DETERMINATIONS_PAGE_MAX = 200;
 var LIMITS = Object.freeze({ findings: 50, standards: 50, rows: 200, questions: 20, evidence: 50 });
 var TEXT_MAX = 4e3;
@@ -108288,9 +108337,9 @@ var Conformance = class _Conformance {
       return refusal16("SUPERSEDES_ANOTHER_ACT", `${id} is a determination of ${prev.act_id}, and this names ${act.id}. Nothing was written.`, { supersedes: id, act: act.id, predecessor_act: prev.act_id });
     const why = typeof reason === "string" ? reason.trim() : reason == null ? "" : null;
     if (why === "")
-      return refusal16("CONFORMANCE_NO_REASON", "superseding a determination says why it is superseded; this names no reason. Nothing was written.", { supersedes: id, max: REASON_MAX3 });
-    if (why === null || why.length > REASON_MAX3)
-      return refusal16("CONFORMANCE_BAD_REASON", `superseding a determination says why, as text of at most ${REASON_MAX3} characters. Nothing was written.`, { supersedes: id, max: REASON_MAX3 });
+      return refusal16("CONFORMANCE_NO_REASON", "superseding a determination says why it is superseded; this names no reason. Nothing was written.", { supersedes: id, max: REASON_MAX4 });
+    if (why === null || why.length > REASON_MAX4)
+      return refusal16("CONFORMANCE_BAD_REASON", `superseding a determination says why, as text of at most ${REASON_MAX4} characters. Nothing was written.`, { supersedes: id, max: REASON_MAX4 });
     const by = this.#one(`SELECT superseded_by FROM determination_supersessions WHERE superseded=?`, id);
     if (by) return determinationSuperseded(id, by.superseded_by, { supersedes: id });
     return { ok: true, prev, reason: why };
@@ -109357,7 +109406,7 @@ CREATE INDEX IF NOT EXISTS action_basis_bundle ON action_basis(bundle_id);
 -- A no_response entry is testimony by construction \u2014 there are no bytes to
 -- hash when nothing arrived \u2014 and takes the account/author arm.
 --
--- author is SERVER-STAMPED at index.mjs from the authenticated session, like
+-- author is SERVER-STAMPED by the control plane from the authenticated session, like
 -- every other authorship in this plane: who put a testimonial account on the
 -- record is part of the record, and a caller naming it would be a caller
 -- signing as somebody else. recorded_at is when the entry was written; at is
@@ -111922,6 +111971,18 @@ Changes: responds_to edge added to ${actionId}.
     const tail = items[items.length - 1];
     return { ok: true, items, limit: max, truncated: truncated3, cursor: truncated3 && tail ? `${tail.action}#${tail.ord}` : null };
   }
+  /** R55 (DEC-108; capture R32): whether any litigation hold is in place in the group: whether any entry of any action
+   *  the instance holds has `in_place` as its latest statement (R52), whatever the viewer. Synchronous; writes nothing
+   *  and never throws: a read that fails answers `true`, so capture clears nothing it cannot rule a hold out for. */
+  holdInPlace() {
+    try {
+      const r = this.#one(`SELECT 1 AS held FROM action_holds h WHERE h.hold='in_place'
+        AND h.seq = (SELECT MAX(s.seq) FROM action_holds s WHERE s.bundle_id = h.bundle_id AND s.ord = h.ord) LIMIT 1`);
+      return r !== null;
+    } catch {
+      return true;
+    }
+  }
   /* R54: the action's project, as `action-clocks` answers it: the project of the first determination among its
      `rests_on` legs the viewer may read (conformance's `determinationRead`), null when it rests on none. */
   #projectOf(fm, viewer) {
@@ -112190,6 +112251,12 @@ function actionsOf(host, deps) {
       retrieval.registerActionFacts("actions", (md, nowMs) => actionFacts(md, nowMs));
       retrieval.registerProjectionDecoration("actions", (row2, { nowMs } = {}) => normalizeType(row2 && row2.object_type) === "action" ? { action: a.derived(row2, nowMs) } : {});
     }
+    const capture = d.capture === null ? null : d.capture || captureOf(host, d.env ? { env: d.env } : {});
+    if (capture) {
+      const r = capture.registerReader("litigation-hold", "actions", () => a.holdInPlace());
+      if (r && r.ok === false && r.module !== "actions")
+        throw new Error(`actions: capture refused the litigation-hold reader: ${r.reason}${r.module ? ` (held by ${r.module})` : ""}`);
+    }
   }
   return a;
 }
@@ -112428,7 +112495,7 @@ var ActionClocks = class {
     return this.#deps.conformance || null;
   }
   /* R10: local-facts' `factStatus`, reached on the same host unless a test passes its own; null where it cannot be
-     created, and every holiday year then reads as unreadable. */
+     created, and a business count then states its calendar `not_read` (R12). */
   get localFacts() {
     if (this.#deps.localFacts === void 0 || this.#deps.localFacts === null) {
       try {
@@ -112719,28 +112786,11 @@ var ActionClocks = class {
       says: "this clock entry is proposed and is not on the action's clock: a member states a clock entry by a revision of the action."
     };
   }
-  /* R10: one holiday entry's confirmation on this instance, read through local-facts' `factStatus` (its R2) at the
-     entry's path (its R6), as `computeDeadline` takes it. A read that fails, or that local-facts cannot answer, is
-     `absent`, so the count is undetermined rather than counted on a calendar whose state is unknown. */
+  /* R10, R12: the count's reader of the holiday entries' confirmations is `factReader` over this host's local-facts, the
+     one reader (R12): null where local-facts cannot be created or has no `factStatus`, and the count then states its
+     calendar `not_read`. */
   #factOf(viewer) {
-    return (h) => {
-      const lf = this.localFacts;
-      let path = null;
-      try {
-        path = factPath(holidayFact(h));
-      } catch {
-        path = null;
-      }
-      if (!lf || typeof lf.factStatus !== "function" || typeof path !== "string")
-        return { path, status: "absent", why: "local facts cannot be read on this instance" };
-      let r = null;
-      try {
-        r = lf.factStatus({ path, viewer });
-      } catch {
-        r = null;
-      }
-      return factAnswer(path, r);
-    };
+    return factReader(this.localFacts, viewer);
   }
   /** R11 (for `queue-producers` R21, through `local-facts` R4): the `local-facts` paths a live deadline reads, once each,
    *  with the actions that read them. For every visible action not `resolved` or `abandoned` whose kind has a profile
@@ -113059,15 +113109,19 @@ function officeHours(view, offices) {
   return out;
 }
 function factAnswer(path, r) {
-  if (!r || typeof r !== "object" || r.ok === false)
-    return { path, status: "absent", why: r && (r.reason || r.code) || "local facts did not answer" };
+  if (!r || typeof r !== "object" || r.ok === false) {
+    const why = r && typeof r === "object" ? textOf2(r.reason || r.code) : null;
+    return { path, status: "absent", why: why ? `local facts refused the read: ${why}` : "local facts did not answer" };
+  }
+  if (typeof r.status !== "string" || !LOCAL_FACT_STATUSES.includes(r.status))
+    return { path, status: "absent", why: `local facts answered no status it gives (${textOf2(r.status)?.slice(0, 40) ?? "none"})` };
   const g = r.governs && typeof r.governs === "object" ? r.governs : {};
   const last = r.latest && typeof r.latest === "object" ? r.latest : {};
   const lapsed = r.lapsed && typeof r.lapsed === "object" ? r.lapsed : {};
   const day = (v) => typeof v === "string" ? v.slice(0, 10) : null;
   return {
     path,
-    status: typeof r.status === "string" ? r.status : "absent",
+    status: r.status,
     why: r.why ?? null,
     value: g.value ?? null,
     corrected: g.origin === "corrected",
@@ -113075,6 +113129,41 @@ function factAnswer(path, r) {
     by: last.by ?? null,
     at: day(last.at),
     last_at: day(lapsed.at)
+  };
+}
+function factReader(localFacts, viewer) {
+  let read2 = null;
+  try {
+    read2 = localFacts && (typeof localFacts === "object" || typeof localFacts === "function") ? localFacts.factStatus : null;
+  } catch {
+    read2 = null;
+  }
+  if (typeof read2 !== "function") return null;
+  return (h) => {
+    let path = null;
+    try {
+      path = factPath(holidayFact(h));
+    } catch {
+      path = null;
+    }
+    if (typeof path !== "string") return { path: null, status: "absent", why: "the holiday entry names no local fact" };
+    let r;
+    try {
+      r = read2.call(localFacts, { path, viewer });
+    } catch (e) {
+      let m = null;
+      try {
+        m = e && typeof e.message === "string" ? e.message.slice(0, 200) : null;
+      } catch {
+        m = null;
+      }
+      return { path, status: "absent", why: `local facts' read failed${m ? `: ${m}` : ""}` };
+    }
+    try {
+      return factAnswer(path, r);
+    } catch {
+      return { path, status: "absent", why: "local facts answered in a shape the count cannot read" };
+    }
   };
 }
 var daysOf = (v) => Array.isArray(v) ? v : null;
@@ -113377,7 +113466,7 @@ var UNDETERMINED_WHY = Object.freeze({
 });
 var NO_UNIT = "no measure is stated, so the computation has no unit";
 var RATIONALE_MAX = 2e3;
-var REASON_MAX4 = 500;
+var REASON_MAX5 = 500;
 var PERSON_KINDS = /* @__PURE__ */ new Set([
   "person",
   "persons",
@@ -113436,8 +113525,8 @@ function alreadySuperseded(id, next) {
 }
 function reasonRefusal(reason) {
   if (!str14(reason)) return refuse6("NO_REASON", `the record says why.${NOTHING}`);
-  if (reason.trim().length > REASON_MAX4)
-    return refuse6("BAD_REASON", `a reason is at most ${REASON_MAX4} characters.${NOTHING}`);
+  if (reason.trim().length > REASON_MAX5)
+    return refuse6("BAD_REASON", `a reason is at most ${REASON_MAX5} characters.${NOTHING}`);
   return null;
 }
 function basisUnreadable(why, extra = {}) {
@@ -115410,8 +115499,10 @@ var FILINGS_COLUMNS = Object.freeze([
   // R24
   ["counsel_packet_exports", "inband", "TEXT"],
   // R22
-  ["counsel_packets", "template", "TEXT"]
+  ["counsel_packets", "template", "TEXT"],
   // R31: the brief template a version's briefing was filled from, as R29 records it
+  ["counsel_packets", "reason", "TEXT"]
+  // R8 (DEC-88): the author's words on why this version was assembled, as written
 ]);
 var FILINGS_TABLES = Object.freeze([
   { name: "filing_drafts", keys: ["action_id"] },
@@ -115440,46 +115531,6 @@ function realDate(v) {
   if (!m) return null;
   const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
   return d.toISOString().slice(0, 10) === m[0] ? m[0] : null;
-}
-function factReader(localFacts, viewer) {
-  if (!localFacts || typeof localFacts.factStatus !== "function") return null;
-  return (h) => {
-    let path = null;
-    try {
-      path = factPath({
-        profile: h.profile ?? null,
-        fact: "holidays",
-        year: Number(h.year),
-        ...Array.isArray(h.offices) ? { offices: h.offices } : {}
-      });
-    } catch {
-      path = null;
-    }
-    if (typeof path !== "string") return { path, status: "absent", why: "the holiday entry names no local fact" };
-    let r = null;
-    try {
-      r = localFacts.factStatus({ path, viewer });
-    } catch {
-      r = null;
-    }
-    if (!r || typeof r !== "object" || r.ok === false)
-      return { path, status: "absent", why: r && (r.reason || r.code) || "local facts did not answer" };
-    const g = r.governs && typeof r.governs === "object" ? r.governs : {};
-    const last = r.latest && typeof r.latest === "object" ? r.latest : {};
-    const lapsed = r.lapsed && typeof r.lapsed === "object" ? r.lapsed : {};
-    const day = (v) => typeof v === "string" ? v.slice(0, 10) : null;
-    return {
-      path,
-      status: typeof r.status === "string" ? r.status : "absent",
-      why: r.why ?? null,
-      value: g.value ?? null,
-      corrected: g.origin === "corrected",
-      says: g.says ?? null,
-      by: last.by ?? null,
-      at: day(last.at),
-      last_at: day(lapsed.at)
-    };
-  };
 }
 function deadlineDate({
   start = null,
@@ -115528,6 +115579,7 @@ var BLANK_RE2 = /\{\{\s*([a-z][a-z0-9_]*)\s*\}\}/g;
 var THEORY_WHY_MAX = 1e3;
 var THEORY_TEXT_MAX = 2e3;
 var COUNSEL_FIELD_MAX = 200;
+var PACKET_REASON_MAX = 2e3;
 var FILINGS_FOR_MAX = 200;
 var counselMarking = (counsel) => counsel && counsel.name ? `Prepared for review by ${counsel.name}, ${counsel.organisation}. Not legal advice. Not for filing.` : "Prepared for the group's own review. Not legal advice. Not for filing.";
 var OVERRIDE_HEAD = "Rests on an unestablished premise:";
@@ -116824,14 +116876,24 @@ ${body}` : body;
     return { name: c.name.trim(), organisation: c.organisation.trim(), ...c.contact != null ? { contact: c.contact.trim() } : {} };
   }
   /** R8–R10, R12, R31: a counsel packet, for the counsel a member names or (below Tier 3) for the group's own review,
-   *  with a `briefing` section filled from a `brief` template when one is named; assembling again makes a new version. */
-  counselPacket({ action = null, counsel = null, template = null, author = null, viewer = null } = {}) {
+   *  with a `briefing` section filled from a `brief` template when one is named; assembling again makes a new version.
+   *  `reason` is the author's words on why it is assembled, recorded with the version (DEC-88). */
+  counselPacket({ action = null, counsel = null, template = null, reason = void 0, author = null, viewer = null } = {}) {
     const who2 = str16(author);
     if (!who2 || isMachineIdentity(who2))
       return {
         ok: false,
         reason: "MACHINE_CANNOT_NAME_COUNSEL",
         detail: who2 ? `'${who2.slice(0, 60)}' is a machine identity: the group names its counsel` : "no member is named as the one naming counsel"
+      };
+    const why = typeof reason === "string" ? reason : null;
+    const chars = why == null ? 0 : [...why].length;
+    if (why == null || !why.trim() || chars > PACKET_REASON_MAX)
+      return {
+        ok: false,
+        reason: "PACKET_NO_REASON",
+        max: PACKET_REASON_MAX,
+        detail: why == null ? reason === void 0 || reason === null ? "say in your own words why this packet is assembled (reason)" : `the reason must be your words, as text; a ${typeof reason} was sent` : !why.trim() ? "the reason is blank: say in your own words why this packet is assembled" : `the reason is ${chars} characters, over the ${PACKET_REASON_MAX} a packet's reason is kept to; refused rather than cut`
       };
     const a = this.#action(action, viewer);
     if (!a) return this.#noAction(action);
@@ -116884,7 +116946,7 @@ ${body}` : body;
       const version = held ? Number(held.v) + 1 : 1;
       this.sql.exec(
         `INSERT INTO counsel_packets (packet_id, version, action_id, counsel, author, at, sections, basis, disclosure,
-                       template) VALUES (?,?,?,?,?,?,?,?,?,?)`,
+                       template, reason) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
         id,
         version,
         a.id,
@@ -116894,7 +116956,8 @@ ${body}` : body;
         json3(sections),
         json3(basis),
         disclosure,
-        json3(tpl)
+        json3(tpl),
+        why
       );
       return {
         ok: true,
@@ -116907,6 +116970,7 @@ ${body}` : body;
         disclosure,
         fileable: false,
         template: tpl,
+        reason: why,
         basis_changed: null
       };
     });
@@ -117003,6 +117067,7 @@ ${filled.text}` : filled.text,
       disclosure: r.disclosure ?? null,
       fileable: false,
       template: this.#templateShown(parse3(r.template), viewer),
+      reason: r.reason ?? null,
       basis_changed: causes.length ? { causes } : null,
       versions: rows2.map((x) => Number(x.version))
     };
@@ -117164,6 +117229,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
           counsel: parse3(r.counsel),
           assembled_by: r.author,
           at: r.at,
+          reason: r.reason ?? null,
           template: this.#templateShown(parse3(r.template), viewer),
           basis_changed: causes.length ? { causes } : null,
           exports: this.#rows(`SELECT author, at, counsel, sha FROM counsel_packet_exports WHERE packet_id=? AND version=?
@@ -117448,6 +117514,7 @@ function filingsOps(f17, url, body) {
       action: b.action ?? q7("action"),
       counsel: b.counsel ?? null,
       template: b.template ?? q7("template"),
+      reason: b.reason,
       author: q7("author"),
       viewer: q7("viewer")
     }),
@@ -117644,6 +117711,7 @@ CREATE TABLE IF NOT EXISTS escalations (
   state_since      TEXT NOT NULL,
   opened_by        TEXT NOT NULL,
   opened_at        TEXT NOT NULL,
+  opened_reason    TEXT,
   log_len          INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS escalations_determination ON escalations(determination_id, state);
@@ -117681,6 +117749,7 @@ CREATE TABLE IF NOT EXISTS escalation_attachments (
   stage           INTEGER NOT NULL,
   purpose         TEXT,
   standards_json  TEXT,
+  reason          TEXT,
   author          TEXT NOT NULL,
   at              TEXT NOT NULL
 );
@@ -117696,17 +117765,35 @@ CREATE TABLE IF NOT EXISTS escalation_declines (
   at             TEXT NOT NULL,
   PRIMARY KEY (escalation_id, seq)
 );
+-- R27: a member's decline to escalate a determination, with a reason. Appended only; never updated. seq is its place
+-- among the determination's declines; escalations_before the number of the determination's escalations opened before
+-- it, which places it exactly among the openings (R28).
+CREATE TABLE IF NOT EXISTS escalation_declines_to_open (
+  determination_id   TEXT NOT NULL,
+  seq                INTEGER NOT NULL,
+  project_id         TEXT NOT NULL,
+  escalations_before INTEGER NOT NULL,
+  reason             TEXT NOT NULL,
+  author             TEXT NOT NULL,
+  at                 TEXT NOT NULL,
+  PRIMARY KEY (determination_id, seq)
+);
 `;
 var ESCALATION_TABLES = Object.freeze([
   { name: "escalations", keys: ["escalation_id"] },
   { name: "escalation_moves", keys: ["escalation_id"] },
   { name: "escalation_evaluations", keys: ["escalation_id"] },
   { name: "escalation_attachments", keys: ["escalation_id", "action_id"] },
-  { name: "escalation_declines", keys: ["escalation_id"] }
+  { name: "escalation_declines", keys: ["escalation_id"] },
+  { name: "escalation_declines_to_open", keys: ["determination_id"] }
 ]);
+var ADDITIVE_COLUMNS3 = Object.freeze([["escalations", "opened_reason", "TEXT"], ["escalation_attachments", "reason", "TEXT"]]);
 function migrateEscalation(sql) {
   const bare2 = ESCALATION_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const s of bare2.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+  for (const [table2, column, type] of ADDITIVE_COLUMNS3)
+    if (![...sql.exec(`PRAGMA table_info(${table2})`)].some((c) => c.name === column))
+      sql.exec(`ALTER TABLE ${table2} ADD COLUMN ${column} ${type}`);
 }
 
 // src/escalation/ops.mjs
@@ -117731,7 +117818,9 @@ function escalationOps(escalation, url, body) {
       nowMs: numberParam(url, "now"),
       limit: numberParam(url, "limit"),
       viewer: q7("viewer")
-    })
+    }),
+    declinetoescalate: act("declineToEscalate"),
+    escalationstatus: () => escalation.escalationStatus({ determination: q7("determination"), viewer: q7("viewer") })
   };
 }
 
@@ -117755,7 +117844,7 @@ var ACCOUNTABILITY_PURPOSES = Object.freeze([
   "testimony",
   "enforcing_legislation"
 ]);
-var REASON_MAX5 = 2e3;
+var REASON_MAX6 = 2e3;
 var DUE_MAX = 500;
 var JUDGMENT_KEYS = Object.freeze(["significance", "severity", "priority", "urgency", "score", "rank"]);
 var PROPOSAL_SAYS4 = "proposed by the escalation protocol's derivation over the record at the time of reading; it is not an act. A member advances it or declines it, with a reason.";
@@ -117763,6 +117852,7 @@ var DAY_MS = 864e5;
 var ACT = Symbol("escalation act");
 var COMPLETED_READINGS = /* @__PURE__ */ new Set(["denied", "partial", "none"]);
 var evaluationId = (escalation, n) => `${escalation}/evaluation#${n}`;
+var declineId = (determination, n) => `${determination}/decline-to-escalate#${n}`;
 var OLD_EVALUATION_ID = /^(.+)\/evaluation\/(\d+)$/;
 var str17 = (v) => typeof v === "string" ? v.trim() : "";
 var isObj17 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
@@ -117867,7 +117957,8 @@ var Escalation = class {
       stageSince: r.stage_since,
       stateSince: r.state_since,
       openedBy: r.opened_by,
-      openedAt: r.opened_at
+      openedAt: r.opened_at,
+      openedReason: r.opened_reason ?? null
     };
   }
   #attachments(id) {
@@ -117876,6 +117967,7 @@ var Escalation = class {
       stage: a.stage,
       purpose: a.purpose ?? null,
       standards: unjson(a.standards_json, null),
+      reason: a.reason ?? null,
       author: a.author,
       at: a.at,
       seq: a.seq
@@ -118094,7 +118186,7 @@ var Escalation = class {
     return this.#attachments(e.id).flatMap((a) => {
       const visible = seen.get(a.action);
       if (!visible) return [];
-      const item = { action: a.action, stage: a.stage, attached_by: a.author, at: a.at };
+      const item = { action: a.action, stage: a.stage, reason: a.reason, attached_by: a.author, at: a.at };
       if (a.stage === 7) {
         item.purpose = a.purpose;
         item.standards = a.standards;
@@ -118185,6 +118277,7 @@ var Escalation = class {
       stage_since: e.stageSince,
       opened_by: e.openedBy,
       opened_at: e.openedAt,
+      opened_reason: e.openedReason,
       as_of: iso2(at25),
       history: this.#history(e.id),
       standards: e.standards,
@@ -118275,7 +118368,8 @@ var Escalation = class {
     const stateAt = log.filter((x) => ["open", "suspend", "resume", "end"].includes(x.kind)).at(-1) || open;
     this.#rows(
       `INSERT OR REPLACE INTO escalations (escalation_id, project_id, determination_id, act_id, standards_json,
-                state, stage, stage_since, state_since, opened_by, opened_at, log_len) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+                state, stage, stage_since, state_since, opened_by, opened_at, opened_reason, log_len)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       id,
       String(fm.project ?? open.project ?? ""),
       String(fm.determination ?? open.determination ?? ""),
@@ -118287,6 +118381,7 @@ var Escalation = class {
       stateAt.at ?? "",
       open.author ?? "",
       open.at ?? "",
+      typeof open.reason === "string" ? open.reason : null,
       log.length
     );
     for (const x of log.filter((y) => y.seq > from)) {
@@ -118320,13 +118415,14 @@ var Escalation = class {
       else if (x.kind === "attach")
         this.#rows(
           `INSERT OR REPLACE INTO escalation_attachments (action_id, escalation_id, seq, stage, purpose,
-                    standards_json, author, at) VALUES (?,?,?,?,?,?,?,?)`,
+                    standards_json, reason, author, at) VALUES (?,?,?,?,?,?,?,?,?)`,
           x.action,
           id,
           x.seq,
           x.stage,
           x.purpose ?? null,
           json4(x.standards),
+          typeof x.reason === "string" ? x.reason : null,
           x.author,
           x.at
         );
@@ -118339,13 +118435,17 @@ var Escalation = class {
   /* ===================================================================== *
    * THE ACTS
    * ===================================================================== */
-  /** R1: open an escalation of a live noncompliant determination, at stage 1. */
-  escalationOpen(args = {}) {
-    const { determination, author, viewer } = args;
-    if (isMachine(author))
-      return refusal17("MACHINE_CANNOT_OPEN", "an escalation is opened by a named member; a machine prepares and never acts. Nothing was written.");
+  /** R1, R27: what an opening and a decline to escalate both ask, in R1's order after the machine's refusal (each
+   *  act mints its own): R19's judged input, the author's reason (R24), the determination absent or unseen
+   *  (conformance R19), superseded (conformance R20), not noncompliant, the author not joined in its project, and an
+   *  escalation of it open or suspended. Answers `{ok: true, d, pursued, project, reason}` or the refusal; writes
+   *  nothing. */
+  #pursuable(args, act) {
+    const { determination, reason, author, viewer } = args;
     const judged = refuseJudgment(args);
     if (judged) return judged;
+    const bad = refuseReason(reason);
+    if (bad) return bad;
     const d = typeof determination === "string" && determination ? this.conformance.determinationRead({ id: determination, viewer }) : null;
     if (!d || d.ok === false) return noSuchDetermination(typeof determination === "string" && determination ? determination : null);
     if (!liveOf(d)) {
@@ -118357,18 +118457,28 @@ var Escalation = class {
     if (!pursued.length)
       return refusal17("NOT_NONCOMPLIANT", "no standard's outcome in that determination is noncompliant, so there is no breach to pursue. Nothing was written.");
     const project = projectOf2(d);
-    const fence4 = this.membership.projectAuthority(project, author, "joined", "escalationOpen");
+    const fence4 = this.membership.projectAuthority(project, author, "joined", act);
     if (fence4)
-      return refusal17("ESCALATION_NOT_A_PARTICIPANT", "an escalation is opened by a member who has joined the determination's project. Nothing was written.", { project, membership: fence4.reason });
+      return refusal17("ESCALATION_NOT_A_PARTICIPANT", "an escalation is opened, or declined, by a member who has joined the determination's project. Nothing was written.", { project, membership: fence4.reason });
     const held = this.#one(`SELECT escalation_id FROM escalations WHERE determination_id=? AND state IN ('open','suspended')
                             ORDER BY escalation_id LIMIT 1`, determination);
     if (held)
-      return refusal17("ALREADY_OPEN", `the escalation ${held.escalation_id} of this determination is not ended; there is one open or suspended escalation per determination. Nothing was written.`, { escalation: held.escalation_id });
+      return refusal17("ALREADY_OPEN", `the escalation ${held.escalation_id} of this determination is not ended; there is one open or suspended escalation per determination, and no decline to escalate is recorded while it stands. Nothing was written.`, { escalation: held.escalation_id });
+    return { ok: true, d, pursued, project, reason: str17(reason) };
+  }
+  /** R1: open an escalation of a live noncompliant determination, at stage 1, with the author's reason. */
+  escalationOpen(args = {}) {
+    const { determination, author, viewer } = args;
+    if (isMachine(author))
+      return refusal17("MACHINE_CANNOT_OPEN", "an escalation is opened by a named member; a machine prepares and never acts. Nothing was written.");
+    const g = this.#pursuable(args, "escalationOpen");
+    if (!g.ok) return g;
+    const { d, pursued, project, reason } = g;
     const at25 = this.now();
     const actId = actIdOf(d);
     const r = this.record.transact(() => {
       const id = escalationId(this.record.allocId("ESC", at25.slice(0, 4)).id);
-      const entry = { kind: "open", to: 1, determination, project, standards: pursued, author, at: at25 };
+      const entry = { kind: "open", to: 1, determination, project, standards: pursued, reason, author, at: at25 };
       const text5 = escalationDoc({ id, project, determination, act: actId, standards: pursued, author, at: at25, entry });
       const fm = parseFm2(text5) || {};
       const p = this.promotion.promote({
@@ -118398,6 +118508,7 @@ var Escalation = class {
       standards: pursued,
       determination,
       project,
+      reason,
       opened_by: author,
       at: at25,
       proposed: read2.proposed
@@ -118405,11 +118516,13 @@ var Escalation = class {
   }
   /** R9, R12: attach a breach action to the current stage (2, 5 or 7). */
   escalationAttach(args = {}) {
-    const { id, action, purpose, standards, author, viewer } = args;
+    const { id, action, purpose, standards, reason, author, viewer } = args;
     if (isMachine(author))
       return refusal17("MACHINE_CANNOT_ATTACH", "an action is attached to an escalation by a named member. Nothing was written.");
     const judged = refuseJudgment(args);
     if (judged) return judged;
+    const bad = refuseReason(reason);
+    if (bad) return bad;
     const e = this.#row(id, viewer);
     if (!e) return refuseNoSuchEscalation();
     if (e.state === "ended") return refuseEnded();
@@ -118434,7 +118547,7 @@ var Escalation = class {
         "that action is already attached to an escalation, at one stage. Nothing was written.",
         held.escalation_id === e.id ? { escalation: e.id, stage: held.stage } : {}
       );
-    const entry = { kind: "attach", action, stage: e.stage, author, at: this.now() };
+    const entry = { kind: "attach", action, stage: e.stage, reason: str17(reason), author, at: this.now() };
     if (e.stage === 7) {
       if (!ACCOUNTABILITY_PURPOSES.includes(purpose))
         return refusal17(
@@ -118465,6 +118578,7 @@ var Escalation = class {
       action,
       stage: e.stage,
       ...e.stage === 7 ? { purpose, standards: entry.standards } : {},
+      reason: entry.reason,
       author,
       at: entry.at
     };
@@ -118713,12 +118827,22 @@ var Escalation = class {
   /** R22: every escalation of a determination the viewer may see, oldest first, each with its id, state and stage.
    *  Writes nothing. */
   escalationsFor({ determination, viewer } = {}) {
+    const asked = this.#seenDetermination(determination, viewer);
+    if (!asked.ok) return asked;
+    return { ok: true, determination: asked.id, items: this.#escalationsOf(asked.id, viewer) };
+  }
+  /* R22, R28: the determination named, when this viewer may read it, `{ok: true, id}`; else conformance R19's one
+     answer for absent and unseen, the id as asked. */
+  #seenDetermination(determination, viewer) {
     const asked = typeof determination === "string" && determination ? determination : null;
     const d = asked ? this.conformance.determinationRead({ id: asked, viewer }) : null;
-    if (!d || d.ok === false) return noSuchDetermination(asked);
+    return !d || d.ok === false ? noSuchDetermination(asked) : { ok: true, id: asked };
+  }
+  /* R22, R28: the determination's escalations this viewer may see, oldest first, each with its opening reason. */
+  #escalationsOf(determination, viewer) {
     const items = [];
     for (const r of this.#rows(`SELECT escalation_id FROM escalations WHERE determination_id=?
-                                ORDER BY opened_at, escalation_id`, asked)) {
+                                ORDER BY opened_at, escalation_id`, determination)) {
       const e = this.#row(r.escalation_id, viewer);
       if (e) items.push({
         id: e.id,
@@ -118726,10 +118850,77 @@ var Escalation = class {
         stage: e.stage,
         stage_name: STAGES[e.stage],
         opened_by: e.openedBy,
-        opened_at: e.openedAt
+        opened_at: e.openedAt,
+        reason: e.openedReason
       });
     }
-    return { ok: true, determination: asked, items };
+    return items;
+  }
+  /* R27, R28: the determination's declines to escalate, oldest first, as recorded. */
+  #declinesToOpen(determination) {
+    return this.#rows(`SELECT * FROM escalation_declines_to_open WHERE determination_id=? ORDER BY seq`, determination).map((x) => ({
+      id: declineId(determination, x.seq),
+      seq: x.seq,
+      before: x.escalations_before,
+      reason: x.reason,
+      author: x.author,
+      at: x.at
+    }));
+  }
+  /** R27 (DEC-89 (2)): a member records, in their own words, why the group is not pursuing a live noncompliant
+   *  determination now. Refused as R1 refuses an opening, in R1's order, the machine's refusal its own; so none is
+   *  recorded while an escalation of the determination is open or suspended. Appended, never edited: a later decline,
+   *  or a later opening, supersedes it, and every decline stays readable (R28). */
+  declineToEscalate(args = {}) {
+    const { determination, author } = args;
+    if (isMachine(author))
+      return refusal17("MACHINE_CANNOT_DECLINE_TO_ESCALATE", "a decline to escalate is recorded by a named member, in their own words; a machine prepares and never acts. Nothing was written.");
+    const g = this.#pursuable(args, "declineToEscalate");
+    if (!g.ok) return g;
+    const at25 = this.now();
+    const seq = this.record.transact(() => {
+      const n = this.#one(
+        `SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM escalation_declines_to_open WHERE determination_id=?`,
+        determination
+      ).n;
+      const before = this.#one(`SELECT COUNT(*) AS n FROM escalations WHERE determination_id=?`, determination).n;
+      this.#rows(`INSERT INTO escalation_declines_to_open (determination_id, seq, project_id, escalations_before, reason,
+                  author, at) VALUES (?,?,?,?,?,?,?)`, determination, n, String(g.project ?? ""), before, g.reason, author, at25);
+      return n;
+    });
+    return {
+      ok: true,
+      id: declineId(determination, seq),
+      determination,
+      reason: g.reason,
+      author,
+      at: at25,
+      says: "recorded as the group's decline to escalate now; a later decline or an escalation opened later supersedes it, and it stays readable"
+    };
+  }
+  /** R28 (DEC-89): whether the determination was escalated, declined or neither, by the latest of its openings and
+   *  declines to escalate, with every escalation (as R22) and every decline, each naming what superseded it, oldest
+   *  first. Writes nothing. */
+  escalationStatus({ determination, viewer } = {}) {
+    const asked = this.#seenDetermination(determination, viewer);
+    if (!asked.ok) return asked;
+    const escalations = this.#escalationsOf(asked.id, viewer);
+    const declines = this.#declinesToOpen(asked.id);
+    const timeline = [];
+    let i = 0;
+    for (const x of declines) {
+      while (i < x.before && i < escalations.length) timeline.push({ kind: "escalated", id: escalations[i++].id });
+      timeline.push({ kind: "declined", id: x.id });
+    }
+    while (i < escalations.length) timeline.push({ kind: "escalated", id: escalations[i++].id });
+    const next = new Map(timeline.map((t, k) => [t.id, timeline[k + 1]?.id ?? null]));
+    return {
+      ok: true,
+      determination: asked.id,
+      status: timeline.at(-1)?.kind ?? "neither",
+      escalations,
+      declines: declines.map(({ seq: _, before: __, ...x }) => ({ ...x, superseded_by: next.get(x.id) }))
+    };
   }
 };
 function refuseNoSuchEscalation() {
@@ -118743,8 +118934,8 @@ function refuseNoSuchResponse(why) {
 }
 function refuseReason(reason) {
   const r = str17(reason);
-  if (!r || r.length > REASON_MAX5)
-    return refusal17("ESCALATION_NO_REASON", `a reason of 1 to ${REASON_MAX5} characters is required. Nothing was written.`);
+  if (!r || r.length > REASON_MAX6)
+    return refusal17("ESCALATION_NO_REASON", `a reason of 1 to ${REASON_MAX6} characters is required. Nothing was written.`);
   return null;
 }
 function refuseJudgment(args) {
@@ -118773,7 +118964,9 @@ for (const name2 of [
   "escalationSuspend",
   "escalationResume",
   "escalationsDue",
-  "escalationsFor"
+  "escalationsFor",
+  "declineToEscalate",
+  "escalationStatus"
 ]) {
   const f17 = Escalation.prototype[name2];
   Object.defineProperty(Escalation.prototype, name2, { configurable: true, writable: true, value: function(...a) {
@@ -127706,7 +127899,7 @@ var REFUSED_KEYS = Object.freeze(["budget", "cost", "assignee", "hours", "signif
 var TIERS2 = Object.freeze([1, 2, 3, "undetermined"]);
 var JUDGEMENTS = Object.freeze(["met", "not_met"]);
 var TITLE_MAX = 200;
-var REASON_MAX6 = 500;
+var REASON_MAX7 = 500;
 var SUMMARY_MAX = 200;
 var DETAIL_MAX = 5e3;
 var WHY_MAX2 = 500;
@@ -129692,8 +129885,8 @@ function refusePlanClosed(plan) {
 }
 function refuseReason2(reason, needed) {
   const given = reason !== void 0 && reason !== null && reason !== "";
-  if (needed && !given || given && !isLine(reason, REASON_MAX6))
-    return refusal18("PLAN_NO_REASON", `a reason of 1 to ${REASON_MAX6} characters, with no quotation mark, backslash or line break, is required here. Nothing was written.`, { max: REASON_MAX6 });
+  if (needed && !given || given && !isLine(reason, REASON_MAX7))
+    return refusal18("PLAN_NO_REASON", `a reason of 1 to ${REASON_MAX7} characters, with no quotation mark, backslash or line break, is required here. Nothing was written.`, { max: REASON_MAX7 });
   return null;
 }
 function refuseKeys(args) {
@@ -137624,13 +137817,13 @@ var Store = class extends DurableObject {
   /* R3: record-core's `RECORD_SCHEMA` first, then each owner's `migrate()` in this order. */
   #migrate() {
     recordOf(this.ctx).migrate();
-    const ADDITIVE_COLUMNS3 = [
+    const ADDITIVE_COLUMNS4 = [
       /* REC-18 / DATA-MODEL D1(b): the registry ENTITY a question is about, one nullable projection column derived from
          bundle.md's `subject_entity`, written in the same transaction as inquiry_basis (D-21). Not indexed (REC-17). */
       ["bundles", "inquiry_subject_entity", "TEXT"]
     ];
     const addColumns = () => {
-      for (const [table2, column, decl] of ADDITIVE_COLUMNS3) {
+      for (const [table2, column, decl] of ADDITIVE_COLUMNS4) {
         const have = [...this.sql.exec(`PRAGMA table_info(${table2})`)].map((r) => r.name);
         if (have.length && !have.includes(column)) this.sql.exec(`ALTER TABLE ${table2} ADD COLUMN ${column} ${decl}`);
       }
