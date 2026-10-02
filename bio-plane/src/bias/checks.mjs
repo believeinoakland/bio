@@ -319,8 +319,9 @@ export function withBiasChecks(image, gate) {
  * is answered rather than assumed.
  *
  * SEVEN OF THESE JUDGE A DOCUMENT and fire in `checkBiasExtension` above;
- * three fire in the plane, at the two write paths a document cannot reach —
- * the adoption and the inhale. The split follows AI_RUN_CHECKS' precedent
+ * the rest fire in the plane, at the acts a document cannot reach — the
+ * inhale, the adoption, the promotion's envelope and the debt's resolve — and
+ * each row's `where` names its site. The split follows AI_RUN_CHECKS' precedent
  * exactly: the catalogue is where a C-number is MINTED, and where the refusal
  * FIRES is a separate question.
  *
@@ -534,5 +535,15 @@ export const BIAS_CHECKS = {
   /* C-26.20 (BIAS_ADOPTION_NOT_AN_ADMINISTRATOR) is RETIRED and its number is not reused (N327, DEC-83): an
      instance-scope adoption by a non-administrator is membership's one condition, answered `NOT_AN_ADMIN` through
      `membership.notAnAdmin` (its R84, C-96.1), this row's next step riding as its `remedy` (R11). */
+  /* DEC-88 (K1025): adopting a lens is an act that changes how the group reads evidence, and the record keeps the
+     adopter's own words on why. Asked last, after authorship, the set's state and the scope's authority, so a caller
+     who may not adopt learns that first; and on a re-adoption too, which replaces the reason with the row (R11). */
+  BIAS_ADOPTION_NO_REASON: {
+    check: 'C-26.21',
+    where: 'src/bias/index.mjs biasAdopt, reached from op=biasadopt',
+    translation: 'Nothing was adopted, because no reason was given. Adopting a lens changes how this group reads '
+      + 'evidence, so the record keeps, beside your name, why you are adopting it. Say why in a sentence or a '
+      + 'short paragraph (at most 2,000 characters) and adopt it again.',
+  },
   BIAS_ILLEGAL_TRANSITION: PROMOTION_ROW_CHECKS.BIAS_ILLEGAL_TRANSITION,
 };

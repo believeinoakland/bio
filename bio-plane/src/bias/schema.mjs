@@ -7,8 +7,10 @@ export const BIAS_TABLES = Object.freeze(["bias_statements", "bias_adoptions", "
 
 /* R45 (N343): the columns a store created before them lacks, `[table, column, declaration]`, added by `migrate()`
    before the schema text runs. Never filled for a row already held: a debt settled before `settled_kind` was kept
-   reads its kind as undetermined (R36). */
-export const BIAS_ADDITIVE_COLUMNS = Object.freeze([Object.freeze(["bias_debts", "settled_kind", "TEXT"])]);
+   reads its kind as undetermined (R36), and an adoption made before its reason was required (R12, DEC-88) keeps
+   none, NULL, rather than a reason nobody gave. */
+export const BIAS_ADDITIVE_COLUMNS = Object.freeze([Object.freeze(["bias_debts", "settled_kind", "TEXT"]),
+                                                   Object.freeze(["bias_adoptions", "reason", "TEXT"])]);
 
 export const BIAS_SCHEMA = `-- PL-12 / D-84: THE BIAS SET'S STATEMENTS, a PROJECTION of the bundle's own
 -- statements[] frontmatter and never a second authority. Exactly the sense
@@ -71,6 +73,10 @@ CREATE INDEX IF NOT EXISTS bias_statements_id ON bias_statements(bundle_id, stat
 -- because there is one instance; a project row carries the project's bundle id,
 -- which is why the per-bundle purge arm clears by scope_id as well as by
 -- bundle_id (the project_participants precedent).
+--
+-- 'reason' is DEC-88's: the adopter's own words on why this lens is adopted,
+-- required at the act (C-26.21) and replaced with the row on a re-adoption.
+-- NULL only on an adoption made before it was required (migrated forward, R45).
 CREATE TABLE IF NOT EXISTS bias_adoptions (
   scope_type    TEXT NOT NULL,   -- 'instance' | 'project'
   scope_id      TEXT NOT NULL,   -- empty for instance, the project bundle id otherwise
@@ -81,6 +87,7 @@ CREATE TABLE IF NOT EXISTS bias_adoptions (
   source_url    TEXT,            -- DEC-54 (d), for an inhaled policy
   retrieved     TEXT,
   source_sha256 TEXT,
+  reason        TEXT,            -- DEC-88: the adopter's reason, required at the act (C-26.21)
   PRIMARY KEY (scope_type, scope_id, bundle_id)
 );
 CREATE INDEX IF NOT EXISTS bias_adoptions_scope ON bias_adoptions(scope_type, scope_id);

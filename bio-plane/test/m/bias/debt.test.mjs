@@ -1,11 +1,11 @@
 /* bias R33–R41: the bias debt over registered work products, at the module's interface. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, FM, S, source } from "./world.mjs";
+import { world, FM, S, source, WHY } from "./world.mjs";
 import { viewerPredicate } from "../../../src/membership/index.mjs";
 
 const A = "BIAS-2026-0001-a", P = "PROJ-2026-0001-p", NOW = Date.parse("2026-07-10T00:00:00Z");
-const ADMIN = { author: "admin", identity: "member:admin", viewer: "admin" };
+const ADMIN = { reason: WHY, author: "admin", identity: "member:admin", viewer: "admin" };
 
 /* A world with an instance lens in force, a project owned by ruth, and the lens's current hash. */
 async function debtWorld(env = {}) {
@@ -15,7 +15,7 @@ async function debtWorld(env = {}) {
   w.membership.projectInvite({ projectId: P, handle: "alice", by: "ruth" });
   w.membership.projectJoin({ projectId: P, by: "alice" });
   w.set(A, [S("s1")], "adopted");
-  w.bias.biasAdopt({ bundleId: A, ...ADMIN });
+  w.bias.biasAdopt({ reason: WHY, bundleId: A, ...ADMIN });
   w.lens = () => w.bias.biasManifest({ scope: "project", scopeId: P, viewer: "admin" }).statements_sha;
   w.move = (text) => w.promote(A, FM(A, { statements: [S("s1", { text })], current_state: "adopted", prior_state: "proposed" }));
   return w;
@@ -91,7 +91,7 @@ test("R33: a debt settled by a member's act or a re-run stays settled while its 
   await d.group();
   d.bias.registerWorkProducts("x", source(Object.fromEntries(Array.from({ length: 51 }, (_, i) => [`K-${String(i).padStart(3, "0")}`, run(null, { lens: null })]))));
   d.set(A, [S("s1")], "adopted");
-  d.bias.biasAdopt({ bundleId: A, ...ADMIN });
+  d.bias.biasAdopt({ reason: WHY, bundleId: A, ...ADMIN });
   const s5 = await d.bias.biasDebtSweep(NOW);
   assert.deepEqual([s5.read, s5.batch, s5.complete], [50, 50, false]);
 });
@@ -235,7 +235,7 @@ test("R40: a question's findings made under a project lens are work products too
   const w = await debtWorld();
   const B = "BIAS-2026-0002-proj";
   w.set(B, [S("p1")], "adopted");
-  w.bias.biasAdopt({ bundleId: B, scope: "project", scopeId: P, author: "ruth", identity: "member:ruth", viewer: "member:ruth" });
+  w.bias.biasAdopt({ reason: WHY, bundleId: B, scope: "project", scopeId: P, author: "ruth", identity: "member:ruth", viewer: "member:ruth" });
   const then = w.lens();
   w.bias.registerWorkProducts("ai-run", source({ "RUN-1": run(then) }));
   assert.equal(w.bias.registerWorkProducts("finding", source({ "FIND-1": run(then, { principal: "ruth" }) })).ok, true);
@@ -326,7 +326,7 @@ test("R42: counts answers the bias statements and adoptions held; hid leaves out
   const w = await debtWorld();
   const B = "BIAS-2026-0002-proj";
   w.set(B, [S("p1"), S("p2")], "adopted");
-  w.bias.biasAdopt({ bundleId: B, scope: "project", scopeId: P, author: "ruth", identity: "member:ruth", viewer: "member:ruth" });
+  w.bias.biasAdopt({ reason: WHY, bundleId: B, scope: "project", scopeId: P, author: "ruth", identity: "member:ruth", viewer: "member:ruth" });
   const before = w.dump();
   assert.deepEqual(w.bias.counts(), { biasStatements: 3, biasAdoptions: 2 });
   const hid = (...ids) => ({ sql: `(${ids.map(() => "?").join(",")})`, args: ids });

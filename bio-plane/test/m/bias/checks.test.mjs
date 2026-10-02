@@ -83,10 +83,17 @@ test("R7: C-26.7 an adopted set whose What This Does Not Enforce section is abse
   for (const state of ["draft", "proposed"]) assert.ok(!errs(clean({ current_state: state }), null).includes("C-26.7"), state);
 });
 
-test("R29: every C-26 row, C-26.1–C-26.19, is here with its check, where and translation; C-26.12 is promotion's own row, joined by reference; C-26.20 is retired and its number not reused (N327)", () => {
+test("R29: every C-26 row, C-26.1–C-26.19 and C-26.21, is here with its check, where and translation; C-26.12 is promotion's own row, joined by reference; C-26.20 is retired and its number not reused (N327); C-26.21 is BIAS_ADOPTION_NO_REASON, fired at biasAdopt (DEC-88)", () => {
   const rows = Object.entries(BIAS_CHECKS);
   const ids = rows.map(([, r]) => r.check).sort((a, b) => Number(a.split(".")[1]) - Number(b.split(".")[1]));
-  assert.deepEqual(ids, Array.from({ length: 19 }, (_, i) => `C-26.${i + 1}`));
+  assert.deepEqual(ids, [...Array.from({ length: 19 }, (_, i) => `C-26.${i + 1}`), "C-26.21"]);
+  assert.equal(ids.includes("C-26.20"), false, "C-26.20's number is not reused");
+  assert.deepEqual([BIAS_CHECKS.BIAS_ADOPTION_NO_REASON.check, BIAS_CHECKS.BIAS_ADOPTION_NO_REASON.where],
+    ["C-26.21", "src/bias/index.mjs biasAdopt, reached from op=biasadopt"]);
+  /* the row is the one biasAdopt answers (its behaviour: adopt-manifest.test.mjs, R11's C-26.21 test) */
+  const w = world();
+  const r = w.bias.biasAdopt({ bundleId: "BIAS-2026-0001-x", author: "admin" });
+  assert.ok(r.ok === false && ["BIAS_ADOPTION_NOT_PROPOSED", "BIAS_ADOPTION_NO_REASON"].includes(r.reason));
   assert.equal("BIAS_ADOPTION_NOT_AN_ADMINISTRATOR" in BIAS_CHECKS, false, "C-26.20's code is gone with its row");
   for (const [code, r] of rows) {
     assert.ok(typeof r.where === "string" && r.where.length > 10, code);
