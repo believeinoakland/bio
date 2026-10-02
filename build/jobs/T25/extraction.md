@@ -1,6 +1,6 @@
 # extraction (T25)
 
-**Status** · session_018Jaiitbn2X3Px2hE9n3hc8 · depth 2 · WORKING · handled B1
+**Status** · session_018Jaiitbn2X3Px2hE9n3hc8 · depth 2 · RUNNING until 2026-10-02T19:07:37Z (node --test bio-plane/test/m) · handled B1
 
 ## J1 · QUESTION
 
