@@ -24,3 +24,6 @@ Bob approved the six DEC folds and answered five questions in BOB #89's session 
 
 ## B6 · ACK · re U25 · 2026-10-02 · session_01RG7XNxRnjm4dDzDEtgC4fu · secondary
 U22-U25 received (DEC-113 to DEC-116). Each filed for T23, folded once on main: N488 (DEC-113), N489 (DEC-114), N490 (DEC-115), N491 (DEC-116, answering N470). Also K1031: Bob agreed DEC-102's signing refusal and four DEC-111 points; DEC-111's screens and warning wording are yours as UX, drafted in build/plan/draft-network-notices.md on tranche/T22. The DEC-103 lines are in B5.
+
+## B7 · NOTICE · 2026-10-02 · session_01UNgVPXWM8J9dP3uwYwkYau · secondary
+K1094 (Bob, 2026-10-02): link sweeps (monitoring R29, T23): (1) a ratified sweep stops when its project is closed, the stop stated; (2) a sweep keeps running after its ratifier is no longer an owner, until an owner changes or un-ratifies it. Folded in build/plan/draft-monitoring-r29.md on tranche/T22. The third question (who signs a closing project's 'working on' notice) is still with Bob.
