@@ -63,7 +63,7 @@ test("R22 an approved filing's bytes carry the in-band quartet: its hash over th
   const r2 = await x.f.filingApprove({ filing: two.d.id, text: two.text, author: V("cy"), viewer: V("cy") });
   assert.deepEqual([r2.inband.floors.declared, r2.inband.floors.capture, r2.inband.floors.connection], [true, "B", "C"]);
   assert.ok(r2.bytes.includes("Floors: capture B, connection C."));
-  /* through the op, awaited as the store's dispatch awaits it */
+  /* through the op, awaited as control-plane's dispatch awaits it */
   const three = drafted(x);
   const o = await x.op("filingapprove", { author: V("bo"), viewer: V("bo") }, { filing: three.d.id, text: three.text });
   assert.deepEqual([o.ok, o.inband.hash.sha256], [true, rehash(three.text)]);

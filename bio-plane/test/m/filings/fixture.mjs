@@ -1,7 +1,7 @@
 /* filings over the modules it uses, every one the real one (K253): record-core, membership, promotion, provenance,
    content, inquiry and publication on publication's own test world, and the layer-9 modules standards, conformance,
    consequences and actions, each through its own factory on the same host. A real SQLite database stands in for a
-   Durable Object's storage. What only a later module or the legacy store fills (the provider of promotion's fact
+   Durable Object's storage. What only a later module or instance setup fills (the provider of promotion's fact
    `producingGroup`, publication's world registering it as instance-setup does; retrieval's registrations) is a stand-in
    the test controls: filings reads the group through the real promotion's `fact` (R3, N331). Every test drives `filings` at its interface, and changes the record
    only through the acts of the modules that own it. */
