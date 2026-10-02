@@ -207,9 +207,8 @@ export function controlPlaneRoutes(ctx, url, body) {
      route builds it. */
   const sourceRoutes = Object.fromEntries(Object.keys(sourcesOps(null, url, body))
     .map((op) => [op, () => sourcesOps(sourcesOf(ctx), url, body)[op]()]));
-  /* N13: queue's, tasks' and affordances' own maps (the `membershipOps` pattern), dispatched here and no longer by
-     legacy-store, made
-     the same way: an instance is reached only when one of its routes runs. */
+  /* N13: queue's, tasks' and affordances' own maps (the `membershipOps` pattern), dispatched here (once legacy-store's,
+     deleted at T20), made the same way: an instance is reached only when one of its routes runs. */
   const lazily = (ops, of) => Object.fromEntries(Object.keys(ops(null, url, body)).map((op) => [op, () => ops(of(ctx), url, body)[op]()]));
   return {
     ...lazily(queueOps, queueOf),
