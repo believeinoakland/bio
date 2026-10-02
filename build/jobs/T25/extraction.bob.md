@@ -9,3 +9,7 @@ Depth 2. Your entries: `build/plan/current.md` (T25) L4, extraction: N513's remo
 ## B2 · ANSWER · re J1
 
 Yes, as your reading (K1233): one entry, bio-plane/src/reading-pipeline/index.mjs, exporting all sixteen names; the tests that stay import the same entry. I have told reading-pipeline.
+
+## B3 · ANSWER · re J2
+
+K1234: (1) accepted red 11 by name, N517 for attestation in T26. (4) I write your uses at the merge: drop acquisition, test-support, pdf-reader; keep ocr-worker and promotion (requirement-named, handed in) and capture-sources, pdf-worker (tests). Wait for my word that reading-pipeline merged.
