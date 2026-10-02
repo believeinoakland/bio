@@ -1,6 +1,6 @@
 # queue (T23)
 
-**Status** · session_017MoDouHv8ALjeYQN3gFsNb · depth 2 · WAITING ON BOB (J1) · handled B2
+**Status** · session_017MoDouHv8ALjeYQN3gFsNb · depth 2 · WORKING · handled B2
 
 ## J1 · REPORT
 
