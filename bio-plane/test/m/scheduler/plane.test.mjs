@@ -203,7 +203,7 @@ test("R12: a run waiting on a request that reaches expired is woken on the alarm
   assert.equal(typeof row.run_woken_at, "string");
 });
 
-test("R9: in the plane, a promotion that ratifies a sweep on an idle instance leaves the alarm armed at the sweep's wake (monitoring R56, promotion R45); the same sweep unratified arms nothing for it", async () => {
+test("R9: in the plane, a promotion that ratifies a sweep on an idle instance leaves the alarm armed at the sweep's wake (link-sweep R4, promotion R45); the same sweep unratified arms nothing for it", async () => {
   const obj = await store();
   const C = "2026-09-01T00:00:00Z";
   /* an ordinary member once the group has its two administrators (the earlier tests' admins); alone, an administrator */

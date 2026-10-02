@@ -45,9 +45,11 @@ export function owners(set = {}) {
       deadlineRecheckWake: (now) => rec("monitoring.deadlineRecheckWake", [now], v("deadline-recheck", "wake", now)),
       deadlineRecheck: async (now) => rec("monitoring.deadlineRecheck", [now], v("deadline-recheck", "tick", now,
         { ok: true, at: null, marked: [], failed: [], truncated: false, escalations: null })),   /* R34, R35 */
-      sweepDue: (now) => rec("monitoring.sweepDue", [now], v("gathering-sweep", "due", now)),   /* R56 */
-      sweepWake: (now) => rec("monitoring.sweepWake", [now], v("gathering-sweep", "wake", now)),
-      sweepTick: async (now, rank) => rec("monitoring.sweepTick", [now, rank], v("gathering-sweep", "tick", now, { ran: [] })),
+    },
+    linkSweep: {   /* link-sweep R4 */
+      sweepDue: (now) => rec("linkSweep.sweepDue", [now], v("gathering-sweep", "due", now)),
+      sweepWake: (now) => rec("linkSweep.sweepWake", [now], v("gathering-sweep", "wake", now)),
+      sweepTick: async (now, rank) => rec("linkSweep.sweepTick", [now, rank], v("gathering-sweep", "tick", now, { ran: [] })),
     },
     connections: { wake: (now) => rec("connections.wake", [now], v("connection-derive", "wake", now)),
                    sweep: () => rec("connections.sweep", [], v("connection-derive", "tick", null, { entities: 0, remaining: 0, swept: [] })) },

@@ -39,7 +39,7 @@ test("R5: each consumer calls exactly its owner's services: due, wake and tick",
                    "intent.ageDue", "intent.ageWake", "intent.ageSurfaced",                       /* intent R17, R27 */
                    "reevaluation.noticeSweepDue", "reevaluation.noticeSweepWake", "reevaluation.noticeSweep",  /* R25 */
                    "monitoring.deadlineRecheckDue", "monitoring.deadlineRecheckWake", "monitoring.deadlineRecheck",  /* R34, R50 */
-                   "monitoring.sweepDue", "monitoring.sweepWake", "monitoring.sweepTick",                         /* monitoring R56 */
+                   "linkSweep.sweepDue", "linkSweep.sweepWake", "linkSweep.sweepTick",                            /* link-sweep R4 */
                    "networkNotices.sealDue", "networkNotices.sealWake", "networkNotices.sealTick",                /* R14, R15 */
                    "networkNotices.attestDue", "networkNotices.attestWake", "networkNotices.attestTick"])         /* R12, R17 */
     assert.ok(called.has(m), m);

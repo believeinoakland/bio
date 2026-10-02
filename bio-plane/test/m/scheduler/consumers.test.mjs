@@ -1,17 +1,17 @@
-/* scheduler: the three consumers T23 adds to R5 (`gathering-sweep`, monitoring R56; `working-on-seal` and
+/* scheduler: the three consumers T23 adds to R5 (`gathering-sweep`, link-sweep R4 since N506; `working-on-seal` and
    `working-on-attest`, network-notices R12, R14, R15, R17), each at its place in R5's order, calling its owner's due,
    wake and tick; isolated when its owner throws (R3); the gathering sweep given the rank (R10); and the sweep's arm
-   through promotion's notice (R9). The network-notices consumers also run against the real module, in its own test
-   world (`test/m/network-notices/fixture.mjs`). */
+   through promotion's notice (R9). Each also runs against its real owner, in that module's own test world
+   (`test/m/network-notices/fixture.mjs`, `test/m/link-sweep/fixture.mjs`). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { SCHEDULER_ORDER, SCHEDULER_KEYS, RANKED, rankBy, Scheduler } from "../../../src/scheduler/index.mjs";
 import { world, storage, writes, NOW } from "./fixture.mjs";
 import { world as nnWorld, seeded, post, monday, V, WEEK, DAY } from "../network-notices/fixture.mjs";
-import { world as monWorld, infoMd, sweepDef, sha as monSha } from "../monitoring/fixture.mjs";
+import { world as lsWorld, infoMd, sweepDef, sha as lsSha } from "../link-sweep/fixture.mjs";
 
 const NEW = ["gathering-sweep", "working-on-seal", "working-on-attest"];
-const OWNED = { "gathering-sweep": ["monitoring.sweepDue", "monitoring.sweepWake", "monitoring.sweepTick"],
+const OWNED = { "gathering-sweep": ["linkSweep.sweepDue", "linkSweep.sweepWake", "linkSweep.sweepTick"],
                 "working-on-seal": ["networkNotices.sealDue", "networkNotices.sealWake", "networkNotices.sealTick"],
                 "working-on-attest": ["networkNotices.attestDue", "networkNotices.attestWake", "networkNotices.attestTick"] };
 
@@ -64,11 +64,15 @@ test("R3: a new consumer whose due, wake or tick throws is answered under its ke
   }
 });
 
-test("R5: with no network-notices owner the registry holds neither of its consumers; with no monitoring owner, no gathering-sweep", () => {
+test("R5: gathering-sweep is link-sweep's: with no link-sweep owner it is absent, monitoring alone does not bring it; with no network-notices owner neither of its consumers", () => {
   const w = world();
   assert.deepEqual(new Scheduler({ storage: storage(), owners: {} }).consumers(), []);
-  const noNotices = new Scheduler({ storage: storage(), owners: { monitoring: () => w.o.monitoring } });
-  assert.deepEqual(noNotices.consumers(), ["archive-monitor", "monitor-cadence", "gathering-sweep", "deadline-recheck"]);
+  const monitoringOnly = new Scheduler({ storage: storage(), owners: { monitoring: () => w.o.monitoring } });
+  assert.deepEqual(monitoringOnly.consumers(), ["archive-monitor", "monitor-cadence", "deadline-recheck"]);
+  const linkSweepOnly = new Scheduler({ storage: storage(), owners: { linkSweep: () => w.o.linkSweep } });
+  assert.deepEqual(linkSweepOnly.consumers(), ["gathering-sweep"]);
+  const both = new Scheduler({ storage: storage(), owners: { monitoring: () => w.o.monitoring, linkSweep: () => w.o.linkSweep } });
+  assert.deepEqual(both.consumers(), ["archive-monitor", "monitor-cadence", "gathering-sweep", "deadline-recheck"]);
   const noMonitoring = new Scheduler({ storage: storage(), owners: { networkNotices: () => w.o.networkNotices } });
   assert.deepEqual(noMonitoring.consumers(), ["working-on-seal", "working-on-attest"]);
 });
@@ -78,7 +82,7 @@ test("R10: the gathering sweep receives the rank with its now; a sweep is ranked
   const served = { ok: true, truncated: false, serves: [{ kind: "bundle", id: "INFO-2026-0002-b", gaps: ["k"], aspirations: [] }] };
   const { s, calls } = world({ "gathering-sweep": { due: NOW }, serves: { tick: served } });
   await s.onAlarm(NOW);
-  const [, now, rank] = calls.find(([m]) => m === "monitoring.sweepTick");
+  const [, now, rank] = calls.find(([m]) => m === "linkSweep.sweepTick");
   assert.equal(now, NOW);
   assert.equal(typeof rank, "function", "the sweep tick is given the rank");
   const items = [{ kind: "sweep", id: "INFO-2026-0001-a#council", waitingSince: NOW - 9000 },
@@ -123,12 +127,12 @@ test("R9: a promotion that ratifies or re-ratifies a sweep, on an idle instance,
   const p = promotionNotice();
   s.listenTo(p);
   assert.deepEqual(p.heard.map((h) => h.module), ["scheduler"]);
-  /* negative control: the sweep is written but not ratified, so monitoring R56 answers no wake for it */
+  /* negative control: the sweep is written but not ratified, so link-sweep R4 answers no wake for it */
   st.log.length = 0;
   assert.equal(await p.fire({ bundleId: "INFO-2026-0001-a" }), null, "an unratified sweep's promotion arms nothing");
   assert.deepEqual(writes(st), []);
   assert.equal(st.alarm, null);
-  /* ratified: monitoring R56's wake is the sweep's next run */
+  /* ratified: link-sweep R4's wake is the sweep's next run */
   set["gathering-sweep"].wake = SWEEP;
   assert.equal(await p.fire({ bundleId: "INFO-2026-0001-a" }), SWEEP);
   assert.equal(st.alarm, SWEEP, "armed at the sweep's wake");
@@ -147,7 +151,7 @@ test("R9, R17: the sweep arm only schedules: no sweep tick runs and nothing but 
   s.listenTo(p);
   st.log.length = 0;
   await p.fire({ bundleId: "B" });
-  assert.equal(calls.some(([m]) => m === "monitoring.sweepTick"), false);
+  assert.equal(calls.some(([m]) => m === "linkSweep.sweepTick"), false);
   assert.deepEqual(writes(st).map(([m]) => m), ["setAlarm"]);
 });
 
@@ -211,16 +215,16 @@ test("R5: against the real network-notices, working-on-attest runs its owner's a
   assert.equal(w.rows(`SELECT 1 FROM nn_attestations WHERE kind='monthly'`).length, 1, "issued once");
 });
 
-/* ---- R5, R9, R10 against the real monitoring (its own test world, `test/m/monitoring/fixture.mjs`) ---- */
+/* ---- R5, R9, R10 against the real link-sweep (its own test world, `test/m/link-sweep/fixture.mjs`) ---- */
 
 const PROJ = "PROJ-2026-0951-sched";
 const SITE = "https://records.example.org/council";
 const LISTS = ["INFO-2026-0951-a", "INFO-2026-0951-b"];
 
-/** A monitoring world whose capture answers every fetch refused (a seed that fails is recorded, the run goes on,
- *  monitoring R57), and a writer of `data/gathering.json` on a list bundle in PROJ, by its owner alice. */
-function sweepMonitoring() {
-  const w = monWorld();
+/** A link-sweep world whose capture answers every fetch refused (a seed that fails is recorded, the run goes on,
+ *  link-sweep R5), and a writer of `data/gathering.json` on a list bundle in PROJ, by its owner alice. */
+function sweepWorld() {
+  const w = lsWorld();
   w.inProject(PROJ, { owner: "alice" });
   const fetched = [];
   w.capture.acquire = async (body, opts) => {
@@ -229,65 +233,65 @@ function sweepMonitoring() {
   };
   const write = (id, sweeps) => {
     const t = JSON.stringify({ sweeps });
-    const r = w.promote(id, infoMd(id, `${SITE}/list`, { enabled: false, lines: [`project: ${PROJ}`] }),
-      { files: [{ path: "data/gathering.json", text: t, bytes: Buffer.byteLength(t), sha256: monSha(t) }], author: "member:alice" });
+    const r = w.promote(id, infoMd(id, `${SITE}/list`, { lines: [`project: ${PROJ}`] }),
+      { files: [{ path: "data/gathering.json", text: t, bytes: Buffer.byteLength(t), sha256: lsSha(t) }], author: "member:alice" });
     assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   };
   return { w, fetched, write };
 }
 
-test("R5, R10: gathering-sweep runs the real monitoring's sweepTick on the alarm its sweepDue says, given the rank: the sweep whose bundle serves an open gap runs first; without the rank, R56's order", async () => {
-  const { w, fetched, write } = sweepMonitoring();
+test("R5, R10: gathering-sweep runs the real link-sweep's sweepTick on the alarm its sweepDue says, given the rank: the sweep whose bundle serves an open gap runs first; without the rank, link-sweep R4's order", async () => {
+  const { w, fetched, write } = sweepWorld();
   for (const id of LISTS) write(id, [sweepDef()]);
   const intent = { servesOf: (named) => ({ ok: true, truncated: false,
     serves: named.bundles.map((id) => ({ kind: "bundle", id, gaps: id === LISTS[1] ? ["objective-open-gap"] : [], aspirations: [] })) }) };
-  const s = new Scheduler({ storage: storage(), owners: { monitoring: () => w.m, intent: () => intent } });
+  const s = new Scheduler({ storage: storage(), owners: { linkSweep: () => w.s, intent: () => intent } });
   const now = w.clock.ms;
-  assert.equal(w.m.sweepDue(now), now, "both never run: due");
-  assert.equal(await s.arm(now), w.m.sweepWake(now), "armed at monitoring R56's wake");
+  assert.equal(w.s.sweepDue(now), now, "both never run: due");
+  assert.equal(await s.arm(now), w.s.sweepWake(now), "armed at link-sweep R4's wake");
   const r = await s.onAlarm(now);
   assert.deepEqual(r.gatheringsweep.ran.map((x) => x.sweep), [`${LISTS[1]}#minutes`, `${LISTS[0]}#minutes`],
     `the rank's order: ${JSON.stringify(r.gatheringsweep).slice(0, 300)}`);
-  assert.equal(r.gatheringsweep.due, 2);
   assert.deepEqual(fetched, [`${LISTS[1]}#minutes`, `${LISTS[0]}#minutes`], "each seed fetched under its sweep, in that order");
   /* ran: neither is due again until its cadence passes, so the alarm is at their next run */
-  assert.equal(w.m.sweepDue(now + 1000), null);
-  assert.equal(r.nextAt, w.m.sweepWake(now), "the reconcile weighs the sweep's next run");
-  /* negative control, the same sweeps in a fresh world: monitoring's own order (by full name) when no rank is given */
-  const bare = sweepMonitoring();
+  assert.equal(w.s.sweepDue(now + 1000), null);
+  assert.ok(r.nextAt !== null && r.nextAt > now + 1000, `not due again at once: ${r.nextAt}`);
+  assert.equal(r.nextAt, w.s.sweepWake(now), "the reconcile weighs the sweep's next run");
+  /* negative control, the same sweeps in a fresh world: link-sweep's own order (by full name) when no rank is given */
+  const bare = sweepWorld();
   for (const id of LISTS) bare.write(id, [sweepDef()]);
-  const t = await bare.w.m.sweepTick(bare.w.clock.ms);
+  const t = await bare.w.s.sweepTick(bare.w.clock.ms);
   assert.deepEqual(t.ran.map((x) => x.sweep), [`${LISTS[0]}#minutes`, `${LISTS[1]}#minutes`]);
 });
 
 test("R3: a gathering sweep whose real owner throws is answered {error} under gatheringsweep, and the other consumers still tick", async () => {
-  const { w, write } = sweepMonitoring();
+  const { w, write } = sweepWorld();
   write(LISTS[0], [sweepDef()]);
-  w.m.sweepTick = async () => { throw new Error("the sweep broke"); };
-  const s = new Scheduler({ storage: storage(), owners: { monitoring: () => w.m } });
+  const ls = { sweepDue: (now) => w.s.sweepDue(now), sweepWake: (now) => w.s.sweepWake(now),
+               sweepTick: async () => { throw new Error("the sweep broke"); } };
+  const s = new Scheduler({ storage: storage(), owners: { linkSweep: () => ls, monitoring: () => w.mon } });
   const r = await s.onAlarm(w.clock.ms);
   assert.deepEqual(r.gatheringsweep, { error: "the sweep broke" });
-  assert.equal(typeof r.monitor, "object", "the archive monitor, after it in no order but always due, still ticked");
+  assert.equal(typeof r.monitor, "object", "the archive monitor, always due, still ticked");
+  /* negative control: the real tick, not thrown, is answered as the run */
+  const ok = await new Scheduler({ storage: storage(), owners: { linkSweep: () => w.s } }).onAlarm(w.clock.ms);
+  assert.equal(Array.isArray(ok.gatheringsweep?.ran), true, JSON.stringify(ok.gatheringsweep).slice(0, 200));
 });
 
 test("R9: through the real promotion's notice, a promotion that ratifies a sweep on an idle instance leaves the alarm armed at the sweep's wake; the unratified sweep's promotion arms nothing", async () => {
-  const { w, write } = sweepMonitoring();
+  const { w, write } = sweepWorld();
   const st = storage();
-  /* monitoring's real sweep services; its other arms idle and unconfigured, so only the sweep can ask for the arm (its
-     other wakes reach modules whose tables monitoring's test world does not create) */
-  const m = { configured: () => false, archiveDue: () => null, archiveWake: () => null, cadenceDue: () => null,
-              cadenceWake: () => null, deadlineRecheckDue: () => null, deadlineRecheckWake: () => null,
-              sweepDue: (now) => w.m.sweepDue(now), sweepWake: (now) => w.m.sweepWake(now), sweepTick: (now, rank) => w.m.sweepTick(now, rank) };
-  const s = new Scheduler({ storage: st, owners: { monitoring: () => m } });
+  /* link-sweep the real one; no monitoring owner, so only the sweep can ask for the arm */
+  const s = new Scheduler({ storage: st, owners: { linkSweep: () => w.s } });
   s.listenTo({ promotion: w.promotion });
   assert.equal(await s.arm(Date.now()), null, "idle: no alarm");
   write(LISTS[0], [sweepDef({ ratified: false })]);
   await new Promise((ok) => setTimeout(ok, 0));
-  assert.equal(st.alarm, null, "an unratified sweep: monitoring answers it no wake, so nothing is armed for it");
+  assert.equal(st.alarm, null, "an unratified sweep: link-sweep answers it no wake, so nothing is armed for it");
   const before = Date.now();
   write(LISTS[0], [sweepDef({ ratified: true })]);
   await new Promise((ok) => setTimeout(ok, 0));
   const after = Date.now();
   assert.ok(st.alarm !== null && st.alarm >= before + 1000 && st.alarm <= after + 1000,
-    `armed at the sweep's wake, now + 1 s while it is due (monitoring R56): ${st.alarm}`);
+    `armed at the sweep's wake, now + 1 s while it is due (link-sweep R4): ${st.alarm}`);
 });

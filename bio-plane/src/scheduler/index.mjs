@@ -30,6 +30,7 @@ import { reevaluationOf } from "../reevaluation/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { captureOf } from "../capture/index.mjs";
 import { monitoringOf } from "../monitoring/index.mjs";
+import { linkSweepOf } from "../link-sweep/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
 import { networkNoticesOf } from "../network-notices/index.mjs";
 
@@ -72,7 +73,7 @@ const DAY_MS = 86_400_000;
 const message = (e) => String((e && e.message) || e).slice(0, 500);
 
 /** R10: the rank. `items` are `{kind, id, waitingSince?, cadenceMs?}` (`kind` one of `address`, `bundle`, `request`,
- *  as intent's `servesOf` names subjects, or `sweep`, `"<bundle>#<id>"` (monitoring R56), which serves what its
+ *  as intent's `servesOf` names subjects, or `sweep`, `"<bundle>#<id>"` (link-sweep R4), which serves what its
  *  bundle serves, so intent is asked of that bundle; `waitingSince` the instant the item began to wait, in ms). Answers the items
  *  reordered, each with `rank: {overdue, gaps, aspirations, waited_ms}`: work that has waited longer than one whole
  *  cadence of its own first, then work serving an objective's open gap, then work serving an aspiration in force,
@@ -109,7 +110,7 @@ export class Scheduler {
 
   /** `storage` is the Durable Object's storage (its alarm, and the probe seam's one value); `owners` answers each
    *  consumer's owner (`retrieval`, `monitoring`, `connections`, `progressions`, `aiRuns`, `captureRequests`,
-   *  `calibration`, `bias`, `intent`, `reevaluation`, `networkNotices`), each a function returning the owner, so an owner is reached
+   *  `calibration`, `bias`, `intent`, `reevaluation`, `networkNotices`, `linkSweep`), each a function returning the owner, so an owner is reached
    *  only when the registry is built. */
   constructor({ storage, env = null, owners = {} } = {}) {
     this.#storage = storage;
@@ -142,9 +143,6 @@ export class Scheduler {
         const idle = this.#deadlineIdleAt;
         return idle !== null && w <= idle ? Math.floor(idle / DAY_MS) * DAY_MS + DAY_MS : w;
       };
-      c["gathering-sweep"] = {   /* monitoring R56: the ratified sweeps (R29), batch-bounded, given the rank (R10) */
-        due: (now) => instant(o("monitoring").sweepDue(now), now), wake: (now) => o("monitoring").sweepWake(now),
-        tick: async (now, rank) => ({ gatheringsweep: await o("monitoring").sweepTick(now, rank) }) };
       c["deadline-recheck"] = {
         due: (now) => { const d = held(instant(o("monitoring").deadlineRecheckDue(now), now)); return d !== null && d <= now ? d : null; },
         wake: (now) => held(o("monitoring").deadlineRecheckWake(now)),
@@ -155,6 +153,9 @@ export class Scheduler {
           return { deadlinerecheck: r };
         } };
     }
+    if (this.#owners.linkSweep) c["gathering-sweep"] = {   /* link-sweep R4: the ratified sweeps, batch-bounded, given the rank (R10) */
+      due: (now) => instant(o("linkSweep").sweepDue(now), now), wake: (now) => o("linkSweep").sweepWake(now),
+      tick: async (now, rank) => ({ gatheringsweep: await o("linkSweep").sweepTick(now, rank) }) };
     if (this.#owners.retrieval) c["selection-sweep"] = {   /* retrieval R22, its wake R51 */
       due: (now) => now, wake: (now) => o("retrieval").sweepWake(now),
       tick: () => ({ swept: o("retrieval").sweepSelections() }) };
@@ -366,8 +367,11 @@ export class Scheduler {
     const configured = () => monitoring((m) => m.configured());
     /* monitoring R50: an action holding a `pending` clock entry wants the deadline re-check's wake. */
     const clockPending = () => monitoring((m) => m.deadlineRecheckWake(Date.now()) != null);
-    /* monitoring R56: a ratified sweep due or waiting to run wants the gathering sweep's wake. */
-    const sweepPending = () => monitoring((m) => typeof m.sweepWake === "function" && m.sweepWake(Date.now()) != null);
+    /* link-sweep R4: a ratified sweep due or waiting to run wants the gathering sweep's wake. */
+    const sweepPending = () => {
+      if (!this.#owners.linkSweep) return false;
+      try { const l = this.#owner("linkSweep"); return !!(l && l.sweepWake(Date.now()) != null); } catch { return false; }
+    };
     const out = {};
     if (retrieval) out.retrieval = retrieval.onSelectionCreated("scheduler", arm);                 /* retrieval R52 */
     if (bias) out.bias = bias.onLensChange("scheduler", () => (bias.biasDebtDue(Date.now()) === null ? null : arm()));   /* bias R23 */
@@ -412,7 +416,7 @@ export function schedulerOf(ctx, env = null, deps = {}) {
       retrieval: () => retrievalOf(ctx), monitoring: () => monitoringOf(ctx), connections: () => connectionsOf(ctx), progressions: () => progressionsOf(ctx, { env: e }),
       aiRuns: () => aiRunsOf(ctx, e), captureRequests: () => captureRequestsOf(ctx), calibration: () => calibrationOf(ctx),
       bias: () => biasOf(ctx), intent: () => intentOf(ctx), reevaluation: () => reevaluationOf(ctx),
-      networkNotices: () => networkNoticesOf(ctx, { env: e }),
+      networkNotices: () => networkNoticesOf(ctx, { env: e }), linkSweep: () => linkSweepOf(ctx),
     };
     s = new Scheduler({ storage: deps.storage || ctx.storage, env: e, owners });
     instances.set(ctx, s);
