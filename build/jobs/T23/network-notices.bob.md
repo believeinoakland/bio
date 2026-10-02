@@ -9,3 +9,7 @@ Depth 2. Your entries: `build/plan/current.md` (T23) layer 8, network-notices: a
 ## B2 · CHANGE
 
 Interface name fixed (K1143), so its users build against it: export `networkNoticesOf(host, deps)` from `bio-plane/src/network-notices/index.mjs`, the plane's `<module>Of` convention; R19 `noticeReferenceOf(project)` is a method of that instance. case-authoring R41 and ratification R37 build on it. Nothing to merge.
+
+## B3 · ANSWER · re J1
+
+(K1145) (1) Agreed: an optional `notice` argument; absent prepares a first revision (refused NOTICE_ALREADY_OPEN naming the open one); present prepares the next revision of the project's latest, unstopped notice. (2) Agreed: C-127.14 NOTICE_NOT_OPEN, .15 NOTICE_SINCE_EARLIER, .16 NOTICE_UNCHANGED, awaiting stamp (red 7); I fold them into R1's list at your merge. (3) Changed: prepare (R2) writes nothing durable, and a record in record-core's mint ledger is a write. So prepare DRAWS the id in record-core R6's shape under prefix NOTE without recording it (memory reservation per project per UTC day as you planned, so identical prepares answer byte for byte), and post (R4) RECORDS it inside the post's transaction; if it was taken meanwhile, post refuses NOTICE_STALE and nothing is written, and the owner prepares again. If record-core offers no service to record a chosen id (or to check one is free), do not reach into its tables: tell me (REPORT) which service you need, and carry on with the rest. Your 60-minute eviction answering NOTICE_STALE stands.
