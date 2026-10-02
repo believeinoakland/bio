@@ -21,9 +21,10 @@
  *     evidence; a shared predicate costs the truth);
  *   - `needs` and `mode` are composed at the control plane from NEEDS and
  *     SESSION_OPS, the tables that actually gate the call;
- *   - `weight` is the set-application weight each store action hard-codes
- *     (store.mjs selectionResolve doctrine): declared here and CROSS-CHECKED by
- *     the suite against the weight the acting op itself reports.
+ *   - `weight` is the set-application weight each acting module hard-codes
+ *     (the legacy store's selectionResolve doctrine, now record-core's
+ *     selection and `perItem`): declared here and CROSS-CHECKED by the suite
+ *     against the weight the acting op itself reports.
  *
  * `rung` IS THE INTERACTION-CONSTRUCTS WEIGHT LADDER, AND FW-14 HAS ASSIGNED IT.
  * The ladder is `RUNG_LADDER` below — reversible / reasoned / terminal /
@@ -531,6 +532,21 @@ export const JUSTIFICATION_REFUSALS = [
   /* R30 (K921, T21): retiring a template, or withdrawing a version, says why (filing-templates R11), and a member's act
      on a local fact says how they checked it (local-facts R1); each refused absent as well as malformed. */
   "TEMPLATE_REASON_REFUSED", "FACT_HOW_REFUSED",
+  /* DEC-88 (K1025, K1038): the 30 acts it banded `reasoned`, each owner's refusal of the absent reason in its own word
+     for it. Four acts' own authored words are their reason (R19): an observation (C-53.3), a typing (C-52.6), a lead
+     (C-54.3) and a goal's statement and bounds — and an aspiration's statement — (`PURSUIT_UNSTATED`), each refused
+     empty. `NO_BASIS` JOINS AS THE STATED BASIS of a recogniser testimony (entities R12) and of a progression's first
+     declaration (progressions R2), the member saying why; where `op=inquiryground` answers it for a question resting on
+     nothing it demands an object, and that act's backing is driven on its restructure's reason, never on that code. */
+  "TESTIMONY_NO_WORDS", "TRANSCRIBE_NO_TEXT", "LEAD_NO_WORDS", "PURSUIT_UNSTATED",
+  "LEAD_LOOK_NO_DETAIL", "LEAD_SHARE_NO_REASON", "ATTEST_NO_NOTE", "ENTITY_NO_NOTE", "NO_BASIS",
+  "VERSION_ADOPT_NO_REASON", "NO_NOTE", "BIAS_ADOPTION_NO_REASON", "BAR_NO_REASON", "STANDARD_NO_REASON",
+  "PACKET_NO_REASON", "ATTRIBUTION_NO_REASON", "STATEMENT_ACK_NO_REASON", "RESOLVE_NO_REASON",
+  /* K1025: `consequencerecord`'s assessed arm refuses its absent rationale as any reason is (consequences R3). */
+  "NO_RATIONALE",
+  /* K1019, K1023 (T22): a held capture set aside or restored without its reason (capture R79, R81), and an address's
+     frequency set without a canned or custom reason (monitoring R52, C-18.15). */
+  "SET_ASIDE_NO_REASON", "FREQUENCY_NO_REASON",
 ];
 
 /* THE GROUNDS ON WHICH A MUTATING OP HAS NO RUNG. Written ONCE here and pointed
@@ -571,6 +587,37 @@ export const RUNG_ABSENCE_GROUNDS = {
     + "ladder as it stands has no rung for an act that is CORRECTED FORWARD but is not signed.",
 };
 
+/* R31 (DEC-88 (4); K1038): THE SIX JUDGEMENT CALLS' CONSEQUENCE STATEMENTS. DEC-88 names six acts whose weight is not
+ * the rung's — a name made permanent, a disclosure that cannot be un-read, a person named in the registry, a gate on the
+ * whole group, an approval that stands, an assistant set to work — and rules that each carries high friction with its
+ * rung name unchanged (R27: a heavy consequence is not a new rung). Five open the full dialog stating the effect;
+ * `workobjective` is the lightest, its reason field opening in place with the run's budget and scope beside it.
+ * Published as `VOCABULARIES.rung_consequences`, the same object, beside the ladder: no key is added to the decorated act
+ * (R11), so a surface reads an act's statement by its id. Each statement says only what the owning module enforces;
+ * their look is the redesign's. */
+export const CONSEQUENCE_STATEMENTS = Object.freeze({
+  attribute: Object.freeze({ friction: "dialog",
+    statement: "The level you choose is what this case edition publishes about who said your observation. Once the "
+      + "edition is signed and published, it says so permanently: a later edition may choose differently, but this one "
+      + "never stops saying it. Your reason is kept with the choice." }),
+  leadshare: Object.freeze({ friction: "dialog",
+    statement: "Sharing puts what you were told in front of every joined participant of that project. A disclosure "
+      + "cannot be un-read: the share stays in the record with your reason, and what they have read stays read." }),
+  entitycreate: Object.freeze({ friction: "dialog",
+    statement: "This names a person or a body in the group's registry, in your name and with your note. Documents "
+      + "that mention them can then be resolved to the entry, and the entry is corrected by aliases and relations, "
+      + "never erased." }),
+  strengthbar: Object.freeze({ friction: "dialog",
+    statement: "This sets the strength the whole group's work is held to by default: every new project starts from "
+      + "it. It stands as the group's bar, in your name and with your reason, until it is set again." }),
+  filingapprove: Object.freeze({ friction: "dialog",
+    statement: "Approving makes this text yours, recorded with your name, the time and its digest. A filing is "
+      + "approved once, and the approval is not walked back: what is sent is the text you approved." }),
+  workobjective: Object.freeze({ friction: "in-place",
+    statement: "An assistant will work this project's objective within the run's budget and scope, shown beside "
+      + "this field. Your reason is recorded on the run's opening; the run proposes and never concludes." }),
+});
+
 /* The object vocabularies, published the way op=searchfields publishes the
  * query language, so a surface never keeps a copy. Each is the object its
  * enforcing module refuses against (R4). */
@@ -605,7 +652,7 @@ export const VOCABULARIES = {
      the same reason every set above is: a surface that had to keep its own copy
      would be the surface deciding what a `movement` or an `unless_exception` is
      called, and the write path would refuse a token the surface had just
-     offered. Each is the array store.mjs's own refusal validates against —
+     offered. Each is the array its owning module's refusal validates against —
      imported, never transcribed, so a kind added to the registry appears on
      every surface on its next load and cannot be added to one without the
      other. */
@@ -688,6 +735,8 @@ export const VOCABULARIES = {
   rung_ladder: RUNG_LADDER,
   rung_correction_path: IRREVERSIBLE_CORRECTION_PATH,
   rung_absence_grounds: RUNG_ABSENCE_GROUNDS,
+  /* R31 (DEC-88 (4)): the six judgement calls' friction and consequence statement, by act id — this module's own. */
+  rung_consequences: CONSEQUENCE_STATEMENTS,
   /* PL-17 / DEC-65 — THE THIRD `asserted_by` STATE, PUBLISHED WITH ITS WORDS.
      Published for a reason this file can MEASURE rather than assert: today
      `civicos-ui/app.html`'s grounding receipt renders `Asserted by
@@ -914,6 +963,87 @@ export const RUNGS = {
   /* K727 (T18), on R27's rule (`actionlaws`' precedent): a scenario is replaced whole by a further scenarioset, the
      earlier version kept in history, and no reason is asked (action-plans R14). */
   scenarioset:           "reversible", // a further scenarioset replaces it
+
+  /* ---- DEC-88 (K1038, J1): THE 57 THAT WERE `undetermined`, BANDED BY BOB. The ladder's gap RUNG_ABSENT's
+     `undetermined` ground names (an act corrected forward but not signed) is closed by ruling, not by a new rung (R27):
+     each of these 57 is one of three bands, and RUNG_ABSENT keeps only the 21 the ruling left (R27). What DEC-88 banded
+     `reasoned` asks the member's authored reason, refused by the owning module in its own word for it (R19, each code
+     in JUSTIFICATION_REFUSALS); four take their own words as the reason (`testify`, `transcribe`, `lead`,
+     `goaldeclare`), and four their recorded grounds (K1025: `resolve`, `actioncorrespond`, `filingsent`,
+     `consequencerecord`), as R19 words them. Six are judgement calls that carry a consequence statement beside the
+     rung (R31, CONSEQUENCE_STATEMENTS below). */
+  /* reversible (DEC-88): a proposal, a draft, a member's own placement or link, or a run's opening and closing, each
+     superseded by a further act of its kind or set down by the member's own act. */
+  suggest:               "reversible", // DEC-88 · a run's proposed reading; the six version acts settle it
+  extractpropose:        "reversible", // DEC-88 · a run's proposed reading of held text; never a finding until cited
+  contradictionpropose:  "reversible", // DEC-88 · a run's proposed relation; a member's judgement settles it
+  themepropose:          "reversible", // DEC-88 · a hunch in a theme; a member confirms or rejects it (themewithdraw)
+  standardpropose:       "reversible", // DEC-88 · a proposed standard; never a standard until adopted
+  comparisonpropose:     "reversible", // DEC-88 · a proposed comparison; never a determination
+  theorypropose:         "reversible", // DEC-88 · a candidate theory; never the group's position
+  actionriskpropose:     "reversible", // DEC-88 · a proposed risk tier, restated by the same proposer
+  actionlawspropose:     "reversible", // DEC-88 · proposed governing laws, restated by the same proposer
+  filingprepare:         "reversible", // DEC-88 · a filing draft; never sent until approved
+  contentmint:           "reversible", // DEC-88 · a citable address, marked stale and re-marked, never deleted
+  casedraft:             "reversible", // DEC-88 · a review copy, edited in place and never published
+  reviewcomment:         "reversible", // DEC-88 · a comment on a draft, answered by another
+  taskforward:           "reversible", // DEC-88 · a task moved to another member, who may forward it again
+  taskresolve:           "reversible", // DEC-88 · how a task ended
+  thread:                "reversible", // DEC-88 · documents threaded into a progression instance
+  connectionchoose:      "reversible", // DEC-88 · a choice of mention, superseded by a re-choice
+  themedeclare:          "reversible", // DEC-88 · a member's theme, a lens and never evidence
+  themeplace:            "reversible", // DEC-88 · a placement in a theme; themewithdraw takes it back
+  entityalias:           "reversible", // DEC-88 · an alias; aliaswithdraw takes it back
+  goallink:              "reversible", // DEC-88 · a claim that an objective serves a goal
+  versionkeep:           "reversible", // DEC-88 · a reference kept on the earlier capture; versionadopt moves it on
+  airunopen:             "reversible", // DEC-88 · opens a run; airunclose ends it
+  airunclose:            "reversible", // DEC-88 · ends a run
+  projectfork:           "reversible", // DEC-88 · a new project; the source is unchanged
+  /* reasoned (DEC-88), each with the code its owning module refuses the absent reason with (R19). */
+  testify:               "reasoned",   // TESTIMONY_NO_WORDS (provenance R28, C-53.3) · the observation's own words are its reason
+  transcribe:            "reasoned",   // TRANSCRIBE_NO_TEXT (content R23, C-52.6) · the typed text is the member's claim
+  lead:                  "reasoned",   // LEAD_NO_WORDS (observation-log R14, C-54.3) · the lead's own words are its reason
+  goaldeclare:           "reasoned",   // PURSUIT_UNSTATED (intent R8) · the goal's statement and bounds are its reason
+  leadlook:              "reasoned",   // LEAD_LOOK_NO_DETAIL (observation-log R17, C-54.11) · where they looked and what they found
+  leadshare:             "reasoned",   // LEAD_SHARE_NO_REASON (observation-log R16, C-54.12) · why this project is told (R31)
+  transcriptionattest:   "reasoned",   // ATTEST_NO_NOTE (content R25, C-52.10) · what the attestor compared
+  attesttext:            "reasoned",   // ATTEST_NO_NOTE (content R43, C-52.10) · what the attestor compared
+  resolve:               "reasoned",   // K1025 · its grounds: each resolution records its `basis` and `method` (entities R9–R11)
+  resolvetestify:        "reasoned",   // NO_BASIS (entities R12) · the testifier's stated basis
+  entitycreate:          "reasoned",   // ENTITY_NO_NOTE (entities R1, C-91.8) · who or what this is and why (R31)
+  versionadopt:          "reasoned",   // VERSION_ADOPT_NO_REASON (reevaluation R15) · why the newer version is adopted
+  progressiondefine:     "reasoned",   // NO_BASIS (progressions R2) · a first declaration's basis statement
+  aspirationdeclare:     "reasoned",   // PURSUIT_UNSTATED (intent R9) · the aspiration's statement
+  aspirationdeadend:     "reasoned",   // NO_NOTE (intent R11, C-111.27) · what was tried and why it went nowhere
+  objectivecondition:    "reasoned",   // INTENT_NO_REASON (intent R2, R30) · why progress is measured this way
+  biasadopt:             "reasoned",   // BIAS_ADOPTION_NO_REASON (bias R11, C-26.21) · why this lens is adopted
+  strengthbar:           "reasoned",   // BAR_NO_REASON (strength R15, C-107.3) · why the group sets this bar (R31)
+  standarddeclare:       "reasoned",   // STANDARD_NO_REASON (standards R1) · why the group holds its government to it
+  standardadopt:         "reasoned",   // STANDARD_NO_REASON (standards R10, through R1)
+  consequencerecord:     "reasoned",   // K1025 · its grounds: operands, a rationale (NO_RATIONALE) or why (consequences R2–R4)
+  actioncorrespond:      "reasoned",   // K1025 · its grounds: the bytes or the member's account (actions R15–R16)
+  filingsent:            "reasoned",   // K1025 · its grounds: actioncorrespond's (filings R7)
+  escalationopen:        "reasoned",   // ESCALATION_NO_REASON (escalation R1, R24)
+  escalationattach:      "reasoned",   // ESCALATION_NO_REASON (escalation R9, R24)
+  counselpacket:         "reasoned",   // PACKET_NO_REASON (filings R8)
+  attribute:             "reasoned",   // ATTRIBUTION_NO_REASON (publication R17, C-92.13) · why this level (R31)
+  statementack:          "reasoned",   // STATEMENT_ACK_NO_REASON (case-authoring R19)
+  workobjective:         "reasoned",   // INTENT_NO_REASON (intent R18, R30) · why the run is opened (R31)
+  /* `inboxresolve`: DEC-88 banded it reversible while it only set a status; reasoned since DEC-78's pull is built
+     (capture R65) and capture R32 requires the member's reason on every arm. */
+  inboxresolve:          "reasoned",   // RESOLVE_NO_REASON (capture R32)
+  /* terminal (DEC-88): the act cannot be walked back — an ended escalation is never reopened, and a filing is
+     approved at most once. */
+  escalationend:         "terminal",   // escalation R14 · never reopened
+  filingapprove:         "terminal",   // filings R6 · ALREADY_APPROVED: approved at most once (R31)
+
+  /* ---- T22's new reasoned acts (K1019, K1023; R2): each asks the member's reason, refused in its owner's word for it,
+     and is corrected forward — a later opening supersedes a decline, a set-aside is restored by a reasoned act and
+     restored ones may be set aside again, and a later frequency replaces the earlier. */
+  declinetoescalate:     "reasoned",   // ESCALATION_NO_REASON (escalation R27, R24; DEC-89)
+  heldsetaside:          "reasoned",   // SET_ASIDE_NO_REASON (capture R79; DEC-97 (2))
+  heldrestore:           "reasoned",   // SET_ASIDE_NO_REASON (capture R81, as R79)
+  addressfrequencyset:   "reasoned",   // FREQUENCY_NO_REASON (monitoring R52, C-18.15): a canned or custom reason
 };
 
 
@@ -1025,90 +1155,15 @@ export const RUNG_ABSENT = {
   /* ---- observational. */
   monitor:              { ground: "observational", is: "one tick: what the source serves NOW against what was captured" },
 
-  /* ---- undetermined: REAL RECORD ACTS WITH NO RUNG. This is the list FW-14
-     exists to surface, and it is the list a later item should work from.
-     THE SHAPE THEY SHARE, and it is worth stating because it is a gap in the
-     LADDER rather than in this table: most of them are acts a member performs
-     ONCE, which the record keeps attributed and dated, and which are corrected
-     by a further act moving FORWARD rather than by anything moving back — and
-     they are not signed, so `attested` does not describe them either. DEC-19
-     named that property ("cannot be undone SILENTLY") and attached it to the
-     rung that requires a key. These acts have the property without the key.
-     Assigning them `attested` would claim a signature that does not exist;
-     assigning them `reversible` would promise a way back that does not exist;
-     so they are stated undetermined and the ladder's gap is named rather than
-     papered over. Raised as a provisional at the close of this item. */
-  inboxresolve:         { ground: "undetermined", is: "a disposition of a knock, keyed by knock id; its `pulled` arm is the pull (inboxpull), which files the knock as a capture (capture R32, R65)" },
+  /* ---- undetermined: REAL RECORD ACTS WITH NO RUNG, STATED. FW-14 surfaced this list and named the ladder's gap it
+     shares: an act a member performs once, kept attributed and dated, corrected by a further act moving FORWARD, and
+     not signed — so neither `attested` (no key) nor `reversible` (no act takes it back) describes it. DEC-88 (K1038)
+     closed the gap by ruling for 57 of the 78 that stood here, banding each `reversible`, `reasoned` or `terminal`
+     (RUNGS); these 21 are what it left `undetermined` (R27), each on R27's rule: no authored reason is asked and no
+     published act takes it back. */
   /* N364 (capture R65), on R27's rule: pulling a knock files its bytes as a capture with a receipt, in the puller's
      name; no reason is asked and no published act takes it back (a pulled knock stays pulled, and the capture stands). */
   inboxpull:            { ground: "undetermined", is: "a member pulls a knock into the record: its bytes held under their own digest, a doorbell receipt written and the knock marked pulled, in one act; never un-pulled (capture R65)" },
-  taskforward:          { ground: "undetermined", is: "moves a task to another member; assignee-fenced by the store" },
-  taskresolve:          { ground: "undetermined", is: "records how a task ended" },
-  actioncorrespond:     { ground: "undetermined", is: "records what came back from outside the system — REC-23's counterparty, named or honestly undetermined" },
-  actionlawspropose:    { ground: "undetermined", is: "a machine's or a member's PROPOSAL of the laws governing an action's request (D-149/REC-195), stored apart from the member's list and labelled machine work; restated by a further proposal from the same proposer, never cleared, and it never sets the list" },
-  projectfork:          { ground: "undetermined", is: "creates a NEW project; the source object is unchanged, and nothing folds a fork back" },
-  biasadopt:            { ground: "undetermined", is: "the authored, attributed adoption putting a declared-bias set in force for a scope (DEC-54 c/d)" },
-  strengthbar:          { ground: "undetermined", is: "the GROUP's declared default required strength (DEC-17)" },
-  entitycreate:         { ground: "undetermined", is: "a registry write introducing a SUBJECT (safeguard 4)" },
-  entityalias:          { ground: "undetermined", is: "a registry write adding an alias to an entity" },
-  resolve:              { ground: "undetermined", is: "a recogniser write: this reference means this entity, at this grade" },
-  resolvetestify:       { ground: "undetermined", is: "recogniser TESTIMONY about a resolution" },
-  /* CPDF-10, AND IT IS A CORRECTION OF THIS ITEM'S OWN FIRST ANSWER, recorded
-     rather than quietly fixed because the mistake is instructive.
-     `attesttext` was first declared `attested`, reasoning from DEC-4's doctrine
-     that member attestation is the only route to the top of the transcription
-     axis. THE SUITE REFUSED IT — "`attested` is carried by exactly the two acts
-     Constructs:275 sources" — and the suite was right: this ladder's `attested`
-     is not "the word attest appears in the op name", it is the property stated
-     at the rung itself, that the act requires AN AUTHORITY THE GROUP DOES NOT
-     HOLD ALONE (a registered signer's key, a timestamp authority's token).
-     op=attesttext requires neither. It is a signed-in member saying they looked
-     at the image. Declaring it `attested` would have claimed a signature that
-     does not exist — and a rung tighter than its rule is not a safer rung, it
-     is an undeclared change to what the rung MEANS, wearing the costume of
-     caution.
-     So it lands in exactly the bucket this block describes: performed once,
-     kept attributed and dated, corrected by a further act moving FORWARD, and
-     NOT signed. `resolvetestify` directly above is the same shape one axis over
-     — recogniser testimony about a resolution — which is why the gap this
-     records is the LADDER's and not this table's. */
-  attesttext:           { ground: "undetermined", is: "a member's TESTIMONY that a capture's transcribed text matches the page image, over a stated extent; superseded by further testimony, never withdrawn, and never signed" },
-  progressiondefine:    { ground: "undetermined", is: "a member's claim about how an institution ought to behave (framework §8.1)" },
-  thread:               { ground: "undetermined", is: "threads real documents into a progression instance" },
-  airunopen:            { ground: "undetermined", is: "opens an AI run against the record" },
-  airunclose:           { ground: "undetermined", is: "closes an AI run" },
-  suggest:              { ground: "undetermined", is: "a machine PROPOSES a reading; §6 rule 4 makes it a proposal and never a settlement" },
-  /* SK-7, and it lands beside `suggest` directly above for the reason that one
-     does rather than beside `attesttext`: marking a passage citable PROPOSES an
-     address and settles nothing. The row is an offer — *this part of this
-     document is worth pointing at* — and it enters no case until a member's own
-     leg names it (framework Part II §14.4, Bob's 5.7). It is corrected FORWARD
-     by marking a different extent, never withdrawn: the row is first-class and
-     an edge may already depend on it, so `stale` marks and nothing deletes.
-     NOT `substrate`: a member (or an assistant on a member's objective) CHOOSES
-     to mark a passage, which is precisely what `substrate`'s ground says these
-     acts are not. NOT `observational`: nothing here records what was observed;
-     it records what somebody thought worth citing. So the honest ground is the
-     ladder's own gap — an act on the record, corrected forward, never signed. */
-  contentmint:          { ground: "undetermined", is: "marks a PART of a document as citable — an address the record can hold, proposed by a member or by a machine credential and part of a finding only when a member cites it (§14.4)" },
-  /* SK-8 — `op=extractpropose`, and the ground is `contentmint`'s directly
-     above for its reason, which is the honest one rather than the convenient
-     one: no document assigns this act a rung, and the two that might are wrong
-     about it in opposite directions. NOT `substrate` — the whole of §7.3 (4) is
-     that a run works on a SUBJECT and an OBJECTIVE a member authored and then
-     CHOOSES what to propose, which is precisely what `substrate` says these
-     acts do not do. NOT `observational` — nothing here records what was
-     observed; the observation of where a run LOOKED is the run's log, and this
-     act records what the machine thought worth citing, which is a different
-     claim about the record. So the ground is the ladder's own gap, stated: an
-     act on the record, corrected forward (a proposal is never deleted — IC-83),
-     never signed by the thing that made it (C-35.10). */
-  extractpropose:       { ground: "undetermined", is: "an EXTRACT run PROPOSES a reading — what the text this record already holds NAMES, carrying an ai(function, version) step, bounded by the run's `mints` allowance and part of a finding only when a member cites it (§7.3)" },
-  /* REC-147 — `op=contradictionpropose`, on `extractpropose`'s ground directly above and for its reason: a run CHOOSES
-     what to propose over pairs the plane formed, so not `substrate`; it records what a machine judged about two
-     things, not what was observed, so not `observational`. The ladder's own gap, stated: an act on the record,
-     corrected forward (a candidate is never updated), labelled machine work and never signed. */
-  contradictionpropose: { ground: "undetermined", is: "a run PROPOSES how two referents the pairing formed relate — one of §5's five labels and its reason, labelled machine work, state proposed, and never a finding until a member judges it (CONTRADICTION-IDENTIFY-DESIGN.md §8)" },
   /* N345 (K481), on R27's rule. `contradictionrecommend` is `contradictionpropose`'s ground for its reason: a run
      proposes, and it is machine work. The opt-in and the response (DEC-85) ask no authored reason (their words are
      optional, a response's text is what is relayed, not an account of a decision), and no published act takes either
@@ -1116,109 +1171,25 @@ export const RUNG_ABSENT = {
   contradictionrecommend: { ground: "undetermined", is: "a run RECOMMENDS in which respects the sides of a shown contradiction may differ — never which side is wrong or a kind — labelled machine work and standing only while the candidate is open (contradiction R37)" },
   contradictionoptin:   { ground: "undetermined", is: "a project, through one of its joined participants, asks to resolve a conflict with a record its members cannot see; never withdrawn, and when every project holding a side has asked, the projects are named to each other (contradiction R51, R52)" },
   contradictionrespond: { ground: "undetermined", is: "a member of an opted-in project responds to a conflict's notice, disclosing only what they choose; relayed as written to the other opted-in projects once they are named to each other (contradiction R53, R54)" },
-  /* REC-122 / IC-232 — CHOOSING A CONNECTION'S ON-POINT MENTION, ground `undetermined`: none of its refusals (C-74) is in
-     `JUSTIFICATION_REFUSALS`, and widening that class would be this item re-grading the ladder
-     to suit itself. NOT `reversible`: nothing takes a choice back; a re-choice SUPERSEDES it and
-     the old row is retained, which is corrected forward. Never signed, and never the machine's. */
-  connectionchoose:     { ground: "undetermined", is: "a member records WHICH mention of a subject, on one end of one connection, is the one on point; the machine's strongest-graded pair is kept beside it, and a re-choice supersedes and retains the old (Bob's 5.4 second pass)" },
-  /* REC-87 / IC-128 — TRANSCRIBE and the attestation of a typing. Ground
-     `undetermined` on `attesttext`'s measurement: neither act's
-     refusals are in `JUSTIFICATION_REFUSALS` (an empty typing, C-52.6, is not a
-     missing justification), and widening that class to admit them would be this
-     item re-grading the ladder to suit itself. NOT `reversible`: nothing takes a
-     typing back — a member types again, which is a DIFFERENT content row, and an
-     attestation is superseded by the same attestor's later one, never withdrawn. */
-  transcribe:           { ground: "undetermined", is: "a member types what a selected portion of a document says, in their own name; the typing is a content row whose chain is typed(member), its fidelity undetermined and stated until a DIFFERENT member attests it (Bob's 5.2)" },
-  transcriptionattest:  { ground: "undetermined", is: "a member's TESTIMONY that ANOTHER member's typing of a portion matches the page; raises what a leg citing that typing may claim, and is refused to the typist themself (C-52.9)" },
-  /* MK-1 / IC-133 — TESTIFY. Ground `undetermined` on `transcribe`'s measurement:
-     none of its refusals is a missing justification (an empty observation, C-53.3,
-     is not one). NOT `reversible`: nothing takes an observation back — a member
-     records a new one, never a rewrite (MEMBER-KNOWLEDGE-DESIGN.md section 2). */
-  testify:              { ground: "undetermined", is: "a member records a firsthand observation in their own words; it becomes an authored document standing on that member's trust, the author stamped from the session and the words kept exactly as written (D-184)" },
-  /* MK-4 / IC-136 — THE LEAD. Ground `undetermined` on `transcribe`'s measurement:
-     neither act's refusals are in `JUSTIFICATION_REFUSALS`. NOT `reversible`:
-     nothing takes a lead or a look back — a member writes another lead, and a
-     later look is a new row, never a rewrite of the earlier one. */
-  lead:                 { ground: "undetermined", is: "a member writes a LEAD in their own words — what they were told or suspect, and where it might be found; an authored row that is NEVER evidence and can never be a basis leg (C-54.1)" },
-  leadshare:            { ground: "undetermined", is: "a lead's AUTHOR shares it to one project they have joined, an authored dated act; the project's joined participants can then read it and record looks against it (BOB #14, 2026-09-18)" },
-  /* MK-7 / IC-319 — THE ATTRIBUTION ACT. Ground `undetermined` on `testify`'s measurement: none of its refusals
-     (C-92.1–.9) are in `JUSTIFICATION_REFUSALS`. NOT `reversible` as a rung: a later act replaces the level for an
-     unsigned edition, and a signed edition's statement answers forever — nothing takes a published level back. */
-  attribute:            { ground: "undetermined", is: "an observation's AUTHOR chooses what one case edition publishes of who said it — group, project, cover or name — never prefilled, and re-authors that edition's unsigned case document (MEMBER-KNOWLEDGE-DESIGN.md §4.2)" },
-  /* REC-126 / DEC-31 — THE REVIEW COPY. The GRANT and its withdrawal are
-     `credential`: their whole subject is WHO MAY READ one draft, and they write
-     nothing the record asserts. The DRAFT and the COMMENT are `undetermined` on
-     `transcribe`'s measurement: none of their refusals is a missing justification,
-     and they are NOT `reversible` — a draft is edited in place and a comment is
-     answered by another, but no act takes either back. Neither is ever published:
-     publication stays the one irreversible act (§6A.1). */
-  casedraft:            { ground: "undetermined", is: "an editor of the project (an owner or a joined participant holding contribute, §6A.2) holds the arguments of a case publication under a draft id BEFORE any gate runs; mutable, never published, the review copy's production (BIO_Publication §6A.4)" },
+  /* REC-126 / DEC-31 — THE REVIEW COPY. The GRANT and its withdrawal are `credential`: their whole subject is WHO MAY
+     READ one draft, and they write nothing the record asserts. The draft and the comment are DEC-88's `reversible`
+     (RUNGS). */
   reviewgrant:          { ground: "credential", is: "the owner grants one named recipient READ-AND-COMMENT on one draft at one case edition, by a per-grant read secret" },
   reviewrevoke:         { ground: "credential", is: "the owner withdraws a review grant; the secret then answers as one never issued" },
-  reviewcomment:        { ground: "undetermined", is: "a recipient (through a live grant) or a member with standing comments on a draft; attributed, and a recipient's comment is recorded as a recipient's" },
-  /* D-150 (BIO_Publication §3 rule 11), classified at integration by c19-unionfix (2026-09-24): D-150 landed this
-     mutating op and gated only its own suites, so the ladder's FORWARD arm first met it on the union. Ground
-     `undetermined` on `reviewcomment`'s measurement beside it: its refusals are positional (not a participant, the
-     author's own, a signed edition, IC-246's bound), never a missing justification, and no act takes an
-     acknowledgement back — an edited statement is a different sentence with none. It gates nothing (rule 11). */
-  statementack:         { ground: "undetermined", is: "a joined participant other than the statement's author, or a review-copy recipient through their grant, acknowledges a case's exclusion statement as its second reader; attributed and dated, it re-authors the unsigned case documents of that exact statement to list it, and is never required to publish" },
-  leadlook:             { ground: "undetermined", is: "a member records that they followed a lead and what the look found, as an observation under the lead's authority; a look that finds nothing is recorded as LOOKED_ABSENT, a finding with the lead behind it" },
-  /* D-162 / IC-241 — THE THEME. Ground `undetermined` on `lead`'s measurement: none of the three
-     acts' refusals is a missing justification (a theme with no test, C-81.3, is a missing CRITERION,
-     refused before anything is written). NOT `reversible`: nothing takes a theme or a placement back
-     — a changed idea is a new theme, because every placement was judged against the old test. */
-  themedeclare:         { ground: "undetermined", is: "a member declares a THEME in their own name — an idea and the TEST a document or a passage passes or fails; a lens for gathering material, visibly theirs, and never the basis of a claim (C-81.1)" },
-  themeplace:           { ground: "undetermined", is: "a member places a document or a passage in a theme, or confirms a proposal standing there, on their judgement that it passes the test: membership, graded D" },
-  themepropose:         { ground: "undetermined", is: "a member or a machine PROPOSES a placement in a theme: a hunch, graded C, which is never membership until a member confirms it" },
-  /* INTENT #1 J4.3 (T7), on R27's rule: each is a member's act on the record, corrected forward by a further act of
-     its kind, that requires no authored reason and that no published act takes back. `triage` is graded
-     `reasoned` since K219 (RUNGS). */
-  objectivecondition:   { ground: "undetermined", is: "sets, replaces or removes a project's satisfaction condition as a new revision of its document; the earlier revision stays in history (intent R2)" },
-  goaldeclare:          { ground: "undetermined", is: "a member declares a goal, bounded, optionally under an aspiration (intent R8)" },
-  goallink:             { ground: "undetermined", is: "the author's dated claim that a project's objective serves a goal (intent R8)" },
-  aspirationdeclare:    { ground: "undetermined", is: "a member declares an aspiration of the group, a project or a member (intent R9)" },
-  aspirationdeadend:    { ground: "undetermined", is: "a dead end appended to an aspiration's pursuit record, dated and authored, never removed (intent R11)" },
-  workobjective:        { ground: "undetermined", is: "a member sets an assistant to work a project's objective: a run through ai-runs with the project as its context (intent R18)" },
-  /* K219 (T7): reevaluation's two version acts (R15), on R27's rule — a member's act on a reference they hold, corrected
-     forward by a further choice, asking no reason (KEEP's why is optional), and no published act takes either back. */
-  versionadopt:         { ground: "undetermined", is: "a member adopts the newer capture a version notice names: a new version of the reference, the old staying readable (reevaluation R15)" },
-  versionkeep:          { ground: "undetermined", is: "a member records that a reference stays on the earlier capture, with who, when and an optional why (reevaluation R15)" },
   /* K219 (T7): `capturerequestdrain`'s and `capturerequest`'s ground — the machinery a decided act rides on. */
   reevaluationraise:    { ground: "substrate", is: "reevaluation's bounded sweep raising the version notices; the unattended path, stamping nothing (reevaluation R14)" },
   capturerequestretry:  { ground: "substrate", is: "re-queues a capture request the source refused, once a member supplied what it asked; the capture is the act (capture-requests R42)" },
-  /* Layer 9's acts (K208 (2); held through T8 by K264 and restored in T9 with N216, now the durable object dispatches
-     them), keyed to layer 9's op maps (legacy-index's names for escalation's services), on R27's rule:
-     each is a member's act on the record, or a proposal stored apart that settles nothing, corrected forward, that asks
-     no authored reason, or asks one only as a proposal's why (`actionlawspropose` and `contradictionpropose`'s
-     precedent), and that no published act takes back. `determine` left this block for RUNGS (N310): since N233 its
-     supersession refuses an absent reason (CONFORMANCE_NO_REASON since K834). actions R28's proposal beside them, on
-     `actionlawspropose`'s ground. */
-  standarddeclare:      { ground: "undetermined", is: "a member records a standard the record holds — citation, kind, issuer, its own words as captured and its period; never edited, corrected by a later standard that supersedes it (standards R1, R6)" },
-  standardpropose:      { ground: "undetermined", is: "a member or a machine PROPOSES a standard with its why, stored apart and labelled; never a standard until a member adopts it (standards R9)" },
-  standardadopt:        { ground: "undetermined", is: "a member adopts a proposal as a standard, the standard naming the proposal and the proposal its adoption, at most once (standards R10)" },
-  comparisonpropose:    { ground: "undetermined", is: "a machine or a member PROPOSES a comparison of an act against standards, rows and questions and never an outcome, labelled, optionally started from a contradiction the proposer can see; never a determination (conformance R12, R21)" },
-  consequencerecord:    { ground: "undetermined", is: "a member records what a breach did and to whom — a part computed from the record's figures, assessed with a rationale, or undetermined with why; never edited, revised by a successor (consequences R1–R6)" },
-  filingprepare:        { ground: "undetermined", is: "a machine or a member prepares a filing draft from the record, every filled blank naming its source and every unfilled one marked; never sent until a member approves it (filings R1–R5)" },
-  filingapprove:        { ground: "undetermined", is: "a member approves a filing draft's text, or their edit of it, at most once; the approved text is theirs (filings R6)" },
-  filingsent:           { ground: "undetermined", is: "a member records that an approved filing was sent, as one `sent` correspondence entry on the action linked both ways, `actioncorrespond`'s ground (filings R7)" },
-  counselpacket:        { ground: "undetermined", is: "a member names counsel and assembles a counsel packet from the record for a Tier 3 action, marked for counsel's review and never fileable; assembling again makes a new version (filings R8–R12)" },
-  theorypropose:        { ground: "undetermined", is: "a member or a machine PROPOSES a candidate legal theory and remedy against named standards with its why, stored apart and labelled; never the group's position (filings R14)" },
-  escalationopen:       { ground: "undetermined", is: "a member opens an escalation of a live noncompliant determination at stage 1; one open or suspended escalation per determination (escalation R1)" },
-  escalationattach:     { ground: "undetermined", is: "a member attaches a breach action to an escalation's current stage, 2, 5 or 7, a stage-7 act stating its accountability purpose; never detached (escalation R9, R12)" },
-  escalationend:        { ground: "undetermined", is: "a member ends an escalation, only when compliance is restored for every standard pursued and the consequences are addressed; never reopened (escalation R14)" },
-  actionriskpropose:    { ground: "undetermined", is: "a machine's or a member's PROPOSAL of an action's risk tier with its basis, stored apart and labelled; restated by the same proposer, and it never sets the tier (actions R28)" },
   /* K705, K709 (T18 layer 11), on R27's rule: filings' two new writes and actions' two. None asks an authored reason
      (a pressure mark's note describes what was received, and `PRESSURE_REFUSED` is a malformed mark, not a missing
      account), and no published act takes any of them back. `actioncreate` is a member's chosen act, not `promote`'s
-     substrate, though it rides the same write: `entitycreate`'s ground. */
-  communicationprepare: { ground: "undetermined", is: "a machine or a member prepares a draft message, briefing or statement for an action, stored apart and labelled as its preparer's; never sent until a member approves it, `filingprepare`'s ground (filings R23)" },
+     substrate, though it rides the same write. DEC-88 left all four `undetermined` (R27). */
+  communicationprepare: { ground: "undetermined", is: "a machine or a member prepares a draft message, briefing or statement for an action, stored apart and labelled as its preparer's; never sent until a member approves it (filings R23)" },
   templatesave:         { ground: "undetermined", is: "a member starts a template draft (or a draft of a new version of a named template) from an approved filing draft, handed to the template library's draft act; no machine writes one (filings R32)" },
   actioncreate:         { ground: "undetermined", is: "a member creates an action, the same write as promoting an action document (actions R47)" },
   actionpressure:       { ground: "undetermined", is: "a member marks a received correspondence entry as pressure directed at the group, appended to a table of its own and never rewritten; an entry is marked once (actions R48)" },
   /* K727 (T18), on R27's rule: action-plans' acts that ask no authored reason and that no published act takes back —
-     opening a plan, adding, proposing and adopting an option (`goaldeclare`'s, `standardpropose`'s and `standardadopt`'s
-     grounds), a checkpoint's judgement (its note optional, never re-judged) and starting an option as an action
-     (`actioncreate`'s). */
+     opening a plan, adding, proposing and adopting an option, a checkpoint's judgement (its note optional, never
+     re-judged) and starting an option as an action (`actioncreate`'s ground). DEC-88 left all six `undetermined`. */
   planopen:             { ground: "undetermined", is: "a member opens a plan for a project over named subjects, a suspected inquiry or a determined outcome (action-plans R1)" },
   optionadd:            { ground: "undetermined", is: "a member adds an option to a plan — what could be done, its category, the subjects it serves (action-plans R9); revised forward with a reason, never deleted" },
   optionpropose:        { ground: "undetermined", is: "a machine or a member PROPOSES an option with its why, stored apart and labelled; never an option until a member adopts it (action-plans R11)" },
@@ -1341,10 +1312,10 @@ export const CAPTURE_ACTS = [
      actually looked at — and a leg citing outside that part does not inherit
      it. A label that hid the scope would invite exactly the over-reading the
      extent exists to prevent.
-     RUNG: NONE, on the ground `undetermined` (RUNG_ABSENT below), and the
-     reasoning — including why `attested` was tried first and REFUSED — is at
-     that entry rather than restated here. Not guessed at this site; no rung is
-     guessed anywhere in this file. */
+     RUNG `reasoned` (DEC-88, K1038): the attestor's note on what they compared is
+     required (content R43, ATTEST_NO_NOTE). It was `undetermined` until then, and
+     `attested` was tried first and REFUSED (CPDF-10): it requires no authority the
+     group does not hold alone. No rung is guessed anywhere in this file. */
   { id: "attesttext", label: "Attest that this text matches the page image" },
 ];
 
@@ -1444,7 +1415,7 @@ export const ACTS = [
      its `surfaced` alias, and nothing else. Weight `single`, the first act
      published that is NOT selection-backed: one conclusion answers one
      question, so there is no set to apply and no set-application weight to
-     report (store.mjs conclude() carries the reasoning; the suite cross-checks
+     report (basis-versions' conclude carries the reasoning; the suite cross-checks
      the word against what the op itself returns). RUNG `reasoned` (FW-14) —
      AND THE SENTENCE THIS REPLACES WAS RIGHT WHEN IT WAS WRITTEN, so it is
      corrected rather than deleted. It read: "NO RUNG: no document assigns one …
@@ -1833,8 +1804,8 @@ export const ACTS = [
      precedent). A resolved action can still have a late reply recorded against
      it — the exchange happened, and the ledger is the record of it — and a
      planned one can record a first approach.
-     Weight `single`: the ledger is append-only, one entry at a time. NO RUNG,
-     for actionmove's reason. */
+     Weight `single`: the ledger is append-only, one entry at a time. RUNG
+     `reasoned` (DEC-88), backed by its grounds (K1025, R19): the bytes or the member's account (actions R15–R16). */
   { id: "actioncorrespond", label: "Record correspondence", weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" },
   /* D-149. Stating which laws govern the request, on an action in ANY state, for actioncorrespond's reason:
@@ -1862,7 +1833,7 @@ export const ACTS = [
    * NO_SUCH_VERSION and a pre-flight offering a control the refusal it fronts
    * would decline is DEC-8's headline failure — the same reason `inquirydivide`
    * counts basis legs and `retire` counts live cites. The fact is
-   * `basis_version_states`, which store.mjs reads from the document; the RULE
+   * `basis_version_states`, which `affordanceFacts` (./affordances/facts.mjs) reads from the document; the RULE
    * over it is here, where every other act's rule lives, and `edgesFor` below is
    * the machine's OWN table so this file holds no state list of its own. Grep
    * it: no version-state word appears in any of the six entries.
@@ -2165,7 +2136,7 @@ export const NON_ACTS = {
      capture, and an applies() writable over those facts would publish the act
      for an information bundle holding no reading — a pre-flight disagreeing
      with the refusal it fronts, which is DEC-8's headline failure. */
-  attesttext: "capture-directed: a member attesting that a capture's transcribed text matches the page image, over a stated extent (metadata published in capture_acts)",
+  attesttext: "capture-directed: a member attesting that a capture's transcribed text matches the page image, over a stated extent, with the attestor's note saying what they compared, now required (content R43, C-52.10; DEC-88: `reasoned`) (metadata published in capture_acts)",
   /* SK-7 / framework Part II 14.4 (Bob's 5.7). NOT an object-directed act, and
      NOT capture-directed either — the reason deliberately does not begin
      "capture-directed:", because that prefix is what enrols an op in the
@@ -2232,7 +2203,7 @@ export const NON_ACTS = {
      DELEGATED), which is where the portion is in hand. The attestation's subject
      is ONE TYPING, keyed by content id, which is further still from an object. */
   transcribe: "content-directed: a member types what a selected portion of a document says, keyed by (document, extent); mints a content row carrying the typing and writes no edge",
-  transcriptionattest: "content-directed: a second member attests another member's typing, keyed by content id; the typist's own attestation is refused",
+  transcriptionattest: "content-directed: a second member attests another member's typing, keyed by content id, with the attestor's note saying what they compared, now required (content R25, C-52.10; DEC-88: `reasoned`); the typist's own attestation is refused",
   transcription: "read: one member's typing by content id — the text, who typed it, who attested it, and what a leg citing it may claim",
   /* MK-1 / IC-133. TESTIFY is NOT an object-directed act: it acts on no existing
      bundle — it CREATES one, from the member's own words — so there is no object
@@ -2243,8 +2214,8 @@ export const NON_ACTS = {
      member's words about something the record may not hold at all, which is the
      whole point of a lead, so no object's facts could say when to offer it. */
   lead: "member-directed: a member writes a lead in their own words, keyed by nothing the record holds; writes a `leads` row and no edge, and is never evidence",
-  leadlook: "lead-directed: a member records following a lead, keyed by lead id; writes one observation_log row under authority_kind lead",
-  leadshare: "lead-directed: the lead's author shares it to one project they have joined, keyed by (lead id, project); writes a `lead_shares` row and no edge",
+  leadlook: "lead-directed: a member records following a lead, keyed by lead id; with the looker's words on where they looked and what they found, now required (observation-log R17, C-54.11; DEC-88: `reasoned`); writes one observation_log row under authority_kind lead",
+  leadshare: "lead-directed: the lead's author shares it to one project they have joined, keyed by (lead id, project), with the sharer's reason for telling that project, now required (observation-log R16, C-54.12; DEC-88: `reasoned`); writes a `lead_shares` row and no edge",
   /* MK-7 / IC-319. The ATTRIBUTION ACT is not offered against an object's facts: its subject is a member's choice
      about their OWN words in ONE case edition, and whether an edition reaches an observation is the case's, not the
      observation's. The surface that offers it is Program B's (MEMBER-KNOWLEDGE-DESIGN.md §8). */
@@ -2288,7 +2259,7 @@ export const NON_ACTS = {
   contradictionpropose: "run-directed: a run's judgement over a pair the plane formed, keyed by (key, both referents at their versions); the run is the subject and no bundle state offers it",
   /* Keyed by entity / capture / progression — the framework surface, not a
      bundle-state act. */
-  entitycreate: "registry write, keyed by entity",
+  entitycreate: "registry write, keyed by entity: registers a subject with the declarer's note on who or what it is and why it belongs in the registry, now required (entities R1, C-91.8; DEC-88: `reasoned`)",
   entityalias: "registry write, keyed by entity",
   relationdeclare: "registry write, keyed by entity pair",
   /* N115 (T7): the registry corrected without erasure (entities R8): each is keyed by what it withdraws. */
@@ -2308,7 +2279,7 @@ export const NON_ACTS = {
   discharge: "exception document, keyed by (progression, entity, stage)",
   proposedispose: "ages a DERIVED proposal, keyed by (progression, stage) — not a bundle",
   /* Inbox and publication. */
-  inboxresolve: "inbox disposition, keyed by knock id: sets a knock aside or back to new, and its `pulled` arm is the pull, a filing act that answers as op=inboxpull does (capture R32, R65)",
+  inboxresolve: "inbox disposition, keyed by knock id, with the member's reason on every arm (capture R32, RESOLVE_NO_REASON): sets a knock aside or back to new, and its `pulled` arm is the pull, a filing act that answers as op=inboxpull does (capture R32, R65)",
   /* N364 (capture R65–R69, R72; DEC-78, DEC-81 item 3). A knock is not a bundle (capture R32) and a capture is keyed by
      its sha, so none of these has an object in a state beside which to offer it. `inboxpull` is `inboxresolve`'s
      subject, filed; the late co-attestation and the capturing member's account are capture-directed in subject but
@@ -2322,6 +2293,15 @@ export const NON_ACTS = {
   lateattestations: "read: one capture's late attestations in order, keyed by capture sha; writes nothing",
   captureaccount: "self-attested-capture-directed: the capturing member appends a signed account of when and how they captured it, keyed by capture sha; refused to anyone else; reached where the case marks the capture self-attested",
   captureaccounts: "read: one capture's signed accounts from its capturing member, keyed by capture sha; writes nothing",
+  /* K1023, K1037 (T22; capture R76, R77, R79–R81): the held documents — collected and not yet kept or set aside — are
+     keyed by their ids in a list, never a bundle state `affordanceFacts` describes, so each is reached from the held
+     list. `doorbellrefused` is store-internal (the Worker's count of a knock refused before the store) and no public op,
+     so it is named nowhere here. */
+  heldsetaside: "held-directed: a member sets one or more held documents aside with one reason, keyed by their ids, reached from the held list; the set is refused whole or recorded whole, and nothing is deleted",
+  heldrestore: "held-directed: a member restores documents set aside, with one reason, keyed by their ids, reached from the held list; the set-aside stays in the record",
+  heldcaptures: "read: the collected documents not set aside, awaiting a member's decision, as the viewer may see them; writes nothing",
+  gradenote: "read: one capture's grade note, the words op=acquire's answer carries, keyed by capture sha, null for a capture the viewer may not see; writes nothing",
+  doorbelltally: "read: the doorbell's count-only tally of knocks it turned away, by day, for a member session only; holds no address, time or content, and writes nothing",
   /* N364 (sources R1–R9; DEC-78 item 5). A SOURCE is a person behind a knock, keyed by its own id, never a bundle, so no
      object's facts could say when to offer these. The one source act a member is prompted at, the consent, is an ACTS
      row (`sourceconsent`) so its prompt rides it; the rest are named here. `knockerconsent`, the source's own consent by
@@ -2619,7 +2599,7 @@ export const NON_ACTS = {
   /* INTENT #1 J4.3 (T7): intent's seventeen ops. Their subjects are a project's OBJECTIVE, a GOAL, an ASPIRATION or a
      PROPOSAL — none a bundle in a state that `affordanceFacts` describes — so no applies() over it could say when to
      offer them. The surfaces that offer them are the objective, goal and aspiration views and the triage list. */
-  objectivecondition: "objective-directed: sets, replaces or removes a project's satisfaction condition, keyed by project; a new revision of the project's document",
+  objectivecondition: "objective-directed: sets, replaces or removes a project's satisfaction condition, keyed by project, with the author's reason for measuring progress this way, now required (intent R2, R30; DEC-88: `reasoned`); a new revision of the project's document",
   objectiveprogress: "read: a project's progress against its objective, computed against the record, keyed by project",
   objectivegaps: "read: what a project's objective still lacks, keyed by project; the gaps queue renders",
   goaldeclare: "goal-directed: a member declares a goal, keyed by the new goal; acts on no existing bundle's state",
@@ -2639,18 +2619,18 @@ export const NON_ACTS = {
      NOTICE and a (dependent, cause) pair — none a bundle in a state that `affordanceFacts` describes; each travels with
      the queue item or the notice that offers it. */
   capturerequestretry: "request-directed: retries a capture request the source refused, keyed by request id; travels with the request in op=capturerequests",
-  versionadopt: "notice-directed: adopts the newer capture a version notice names, keyed by notice; travels with the notice (reevaluation R14)",
+  versionadopt: "notice-directed: adopts the newer capture a version notice names, keyed by notice, with the member's reason for adopting it, now required (reevaluation R15; DEC-88: `reasoned`); travels with the notice (reevaluation R14)",
   versionkeep: "notice-directed: keeps a reference on the earlier capture, keyed by notice; travels with the notice (reevaluation R14)",
   reevaluationrecord: "cause-directed: a member records a re-evaluation of a dependent against one standing cause, keyed by (dependent, cause), with its note",
-  workobjective: "run-directed: opens an assistant's run on a project's objective, keyed by (run, project); the run is the subject and no bundle state offers it",
+  workobjective: "run-directed: opens an assistant's run on a project's objective, keyed by (run, project), with the member's reason for opening it, now required and shown beside the run's budget and scope (intent R18, R30; DEC-88: `reasoned`); the run is the subject and no bundle state offers it",
   /* Layer 9's acts (K208 (2), K264; restored with N216), keyed to their op maps (escalation's names are
      legacy-index's, its J1). Their subjects are a standard, a determination, a consequence part, a filing or packet, an escalation and a proposal:
      STD-, CONF-, CONS- and ESC- bundles carry one recorded state (or an escalation's own stages) that `affordanceFacts`
      does not describe, and the rest are rows, so no applies() over the facts could say when to offer them. Their reads
      carry no `NEEDS` row and are not named here (R12). */
-  standarddeclare: "standard-directed: a member records a standard (citation, kind, issuer, captured text, period), optionally superseding an earlier one; writes an STD- bundle",
+  standarddeclare: "standard-directed: a member records a standard (citation, kind, issuer, captured text, period), optionally superseding an earlier one, with the declarer's reason for holding the government to it, now required (standards R1; DEC-88: `reasoned`); writes an STD- bundle",
   standardpropose: "standard-directed: a member or a machine proposes a standard with its why, keyed by proposal id; writes a `standard_proposals` row, never a standard",
-  standardadopt: "proposal-directed: a member adopts a standard proposal, keyed by proposal id; writes an STD- bundle naming it",
+  standardadopt: "proposal-directed: a member adopts a standard proposal, keyed by proposal id, with the adopter's own reason, now required (standards R10, through R1; DEC-88: `reasoned`) — the proposal's why is the proposer's; writes an STD- bundle naming it",
   determine: "act-directed: a member determines a government act against named standards on published findings, keyed by (project, act); writes a CONF- bundle",
   comparisonpropose: "project-directed: a machine or a member proposes a comparison, rows and questions and never an outcome, keyed by project and optionally naming the contradiction it starts from; writes a `comparison_proposals` row",
   consequencerecord: "determination-directed: a member records one consequence part against one standard's noncompliant outcome, keyed by (determination, standard); writes a CONS- bundle",
@@ -2670,6 +2650,9 @@ export const NON_ACTS = {
   escalationend: "escalation-directed: a member ends an escalation, keyed by escalation id; appends to its log, never reopened",
   escalationsuspend: "escalation-directed: a member suspends an escalation with a reason, keyed by escalation id; appends to its log",
   escalationresume: "escalation-directed: a member resumes a suspended escalation at its stage, keyed by escalation id; appends to its log",
+  /* J3 (T22; escalation R27, DEC-89): the reasoned decline, keyed by the determination it declines. Its read
+     `escalationstatus` (R28) carries no `NEEDS` row, `escalationsdue`'s shape, so it is not named here (R12). */
+  declinetoescalate: "determination-directed: a member declines, with a reason, to escalate a live noncompliant determination, keyed by determination id; prose only, corrected forward, and a later opening supersedes it",
   actionriskpropose: "action-directed: a machine or a member proposes an action's risk tier with its basis, keyed by (action, proposer); writes an `action_risk_proposals` row, never the tier",
   /* K705, K709 (T18 layer 11): filings' and actions' new writes. A draft communication is a row keyed by an action, and
      a pressure mark is keyed by one correspondence entry; creating an action acts on no existing bundle (`testify`'s
@@ -2720,6 +2703,9 @@ export const NON_ACTS = {
   factconfirm: "fact-directed: keyed by a profile fact's path, reached from the calendar and offices; moves no bundle",
   factstatus: "read: one local fact's status, the profile's value and the value that governs here, or every fact of the active profiles; writes nothing",
   factsdue: "read: the local facts unconfirmed, lapsed, due or disputed, or those of the paths named; writes nothing",
+  /* K1019 (T22; monitoring R17, R52): an address's own checking frequency, keyed by the address, reached from the
+     monitored documents' view; no bundle state `affordanceFacts` describes. */
+  addressfrequencyset: "address-directed: a source owner sets how often an address is checked, with a canned or custom reason, keyed by address; a later setting replaces it",
 };
 
 /* D-126 — THE FOURTH WEIGHT, `per-item`, AND THE THREE ACTS THAT TAKE A SET.
@@ -2728,7 +2714,7 @@ export const NON_ACTS = {
  * WITH A REASON."* `refuse` stops the whole set on drift and hands over nothing; `report` proceeds and says
  * what moved; `single` has no set. `per-item` is none of them: every item is tried on its own, the ones
  * the act accepts are applied, and each one it refuses is kept, carrying that act's own refusal as its
- * reason. The mechanism is `store.mjs #perItem`, and these three ops reach it when the body carries
+ * reason. The mechanism is record-core's `perItem` (its R49), and these three ops reach it when the body carries
  * `items` (a caller who sends no `items` gets the single act, unchanged). D-291 added a FOURTH, `op=resolve`,
  * whose items are captured documents rather than queue items (BIO_Interaction_Constructs §S).
  *
@@ -2742,7 +2728,7 @@ export const NON_ACTS = {
 export { PER_ITEM_MAX } from "./record-core/index.mjs";
 export const PER_ITEM_ACTS = [
   /* REC-205: `item_keys` is the act's three IDENTITY SHAPES and is now ENFORCED as well as published —
-     `store.mjs #perItem` reads this very array and refuses to let a shared value of ONE shape reach an
+     record-core's `perItem` is handed this very array by the acting module (tasks', queue's) and refuses to let a shared value of ONE shape reach an
      item that named another, which is what lets a project-scoped finding and a progression finding be
      handled in the same call. `definitionVersion` JOINS `shared_keys` (REC-211/IC-273): the act has
      taken it as a shared field since REC-211 — a set over one progression names the version once — and
