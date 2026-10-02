@@ -1,6 +1,6 @@
 # Plan: tranche T22
 
-**Status** · OPEN · BOB #91 · session_017UWC3Uu7jSNsvdcZu7CgmB · depth 1
+**Status** · OPEN · BOB #92 · session_01UNgVPXWM8J9dP3uwYwkYau · depth 1
 
 **Jobs** · text-chain: TEXT-CHAIN #6 session_017vtxc1g46pax3uvWUKZx2s; bundler: BUNDLER #5 session_014EDtgA8oD3Eyhq1jai3Z7j; membership: MEMBERSHIP #16 session_01LdQT1TKUB5SDgdFi5gE5ik; promotion: PROMOTION #23 session_01HWFND67AwBJQuXM4beadEA; provenance: PROVENANCE #11 session_01HXBQRNxoQMo9TDAz7Fou7D; capture-sources: CAPTURE-SOURCES #9 session_01JxNV4GvVR6ZVqJhsquLGcC; capture: CAPTURE #14 session_01WP7uNR1V8GPqjyrKhjKhiS; sources: SOURCES #7 session_017YEhAN64o2U9JwvDJtoKmG; content: CONTENT #9 session_01GDJYyoNJjSDAFBJbwSiC7V; extraction: EXTRACTION #12 session_01MCwzkLcBBrXZmSHZiL39Zj; entities: ENTITIES #7 session_01Pubw4dXFVoBiqgMP4yH6nq; connections: CONNECTIONS #10 session_01HCjKfcHcWfbAqzWJB7ada4; observation-log: OBSERVATION-LOG #8 session_01V6n4Sam5rH4aTsVsmXRRHM; progressions: PROGRESSIONS #8 session_019cGtav9K1yD7gcZz8bmw36; bias: BIAS #8 session_0134WygRosVZ3EZMS1Jdi1xK; run-rules: RUN-RULES #4 session_01KLQFu3Y8HVYcxxLYqhE1jL; strength: STRENGTH #8 session_01N3ZMZGDNGoYFfvWbCxSRaf; inquiry: INQUIRY #11 session_014pJTLU4oyGLEE68RoT4y8A; ai-runs: AI-RUNS #9 session_01Gz6XqWbqdRpBRjXrgD74xU
 
