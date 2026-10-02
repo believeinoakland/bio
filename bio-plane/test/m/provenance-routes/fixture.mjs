@@ -1,8 +1,10 @@
-/* provenance over the modules it uses, each the real one (record-core, membership, credentials, promotion), on a real SQLite
-   database (node:sqlite) standing in for a Durable Object's storage at its shape: `sql.exec`, answering a cursor as
-   workerd does, and `transactionSync`, which rolls
-   back what `fn` wrote when it throws and nests as savepoints. Every test drives provenance at its interface; the
-   promotions it registers into are driven through promotion's own `promote`. */
+/* provenance-routes over the modules it uses, each the real one (record-core, membership, credentials, promotion), on
+   a real SQLite database (node:sqlite) standing in for a Durable Object's storage at its shape: `sql.exec`, answering
+   a cursor as workerd does, and `transactionSync`, which rolls back what `fn` wrote when it throws and nests as
+   savepoints. Every test drives the module at its interface; the bundles it reads are written through promotion's
+   own `promote`. The world composes `provenance` only when asked (`withProvenance`): this module uses provenance's
+   exports (`DOORBELL_ORIGIN`, `PROVENANCE_ACT_CHECKS`), never its instance, and the composition test builds both in
+   the composition root's order. The share of `provenance`'s fixture these tests need, taken as N512 moved them. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -10,6 +12,7 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
+import { provenanceRoutesOf } from "../../../src/provenance-routes/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 
@@ -56,33 +59,12 @@ export function storage() {
   };
 }
 
-/** An evidence store stand-in keyed by digest: `head` answers `{size, checksums?}`, `get` the bytes. */
-export function evidence(objects = {}, { checksum = true } = {}) {
-  const held = new Map(Object.entries(objects).map(([k, v]) => [k, typeof v === "string" ? Buffer.from(v, "utf8") : v]));
-  const calls = [];
-  return {
-    held, calls,
-    async head(k) {
-      calls.push(["head", k]);
-      if (!held.has(k)) return null;
-      const b = held.get(k);
-      return { size: b.length, ...(checksum ? { checksums: { sha256: createHash("sha256").update(b).digest() } } : {}) };
-    },
-    async get(k) {
-      calls.push(["get", k]);
-      if (!held.has(k)) return null;
-      const b = held.get(k);
-      return { arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.length) };
-    },
-    async put(k, bytes) { calls.push(["put", k]); held.set(k, Buffer.from(bytes)); return { key: k }; },
-  };
-}
-
-/** A record: the five modules on one storage, the producing group registered as promotion's fact (instance-setup's,
- *  K69; each fact under the module that provides it, N497), and a clock the test controls. Credentials is built after
- *  membership, as the composition root builds it (K789): the founder's claim and a member's password are its (its R1,
- *  R16, R17; membership R94, R95). */
-export function world({ group = "test-group", now = "2026-09-27T03:00:00.000Z", order = null } = {}) {
+/** A record: the modules on one storage, the producing group registered as promotion's fact (instance-setup's, K69),
+ *  and a clock the test controls. Credentials is built after membership, as the composition root builds it (K789).
+ *  With `withProvenance`, provenance is built before this module, as the composition root builds them (layer 3's
+ *  order: provenance, attestation, provenance-routes). */
+export function world({ group = "test-group", now = "2026-09-27T03:00:00.000Z", instanceName = "test-instance",
+                        withProvenance = false } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -99,14 +81,19 @@ export function world({ group = "test-group", now = "2026-09-27T03:00:00.000Z", 
   promotion.registerFact("producingGroup", "instance-setup", () => facts.group);
   promotion.registerFact("citedBy", "connections", () => []);
   promotion.registerFact("caseMember", "publication", () => false);
-  const prov = provenanceOf(host, { record, membership, promotion, now: () => clock.now, ...(order ? { order } : {}) });
-  prov.migrate();
+  let prov = null;
+  if (withProvenance) {
+    prov = provenanceOf(host, { record, membership, promotion, now: () => clock.now, instanceName });
+    prov.migrate();
+  }
+  const routes = provenanceRoutesOf(host, { record, membership, promotion, now: () => clock.now, instanceName });
+  routes.migrate();
   const w = {
-    st, host, record, membership, credentials, promotion, prov, clock, facts,
+    st, host, record, membership, credentials, promotion, prov, routes, clock, facts,
     row: (q, ...a) => [...st.sql.exec(q, ...a)][0] ?? null,
     rows: (q, ...a) => [...st.sql.exec(q, ...a)],
     count: (t) => [...st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)][0].n,
-    /** Every row of every table, for "nothing was written" (promotion R2). */
+    /** Every row of every table, for "nothing was written". */
     snapshot() {
       const out = {};
       for (const { name } of st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`))
@@ -114,21 +101,31 @@ export function world({ group = "test-group", now = "2026-09-27T03:00:00.000Z", 
       return out;
     },
     /** Promote an information bundle with a register document for each capture. */
-    promoteInfo(id, { captures = [], base = null, state = "collected", history = null, extraDocs = [], snapKey = null,
-                      docs = null, pkg = {}, criticality = "supporting", title = `Document ${id}` } = {}) {
+    promoteInfo(id, { captures = [], base = null, state = "collected", docs = null, pkg = {}, criticality = "supporting",
+                      title = `Document ${id}` } = {}) {
       const files = [];
       const documents = docs ?? captures.map((c) => provDoc(c));
       for (const c of captures) files.push({ path: c.path, text: c.text });
-      const md = infoMd(id, { state, history, criticality, title });
-      files.unshift({ path: "bundle.md", text: md });
-      files.push({ path: "data/provenance.json", text: JSON.stringify({ documents: [...documents, ...extraDocs] }, null, 2) });
+      files.unshift({ path: "bundle.md", text: infoMd(id, { state, criticality, title }) });
+      files.push({ path: "data/provenance.json", text: JSON.stringify({ documents }, null, 2) });
       return promotion.promote({
-        bundleId: id, base, snapKey: snapKey ?? `k${Math.random().toString(16).slice(2)}`, author: "member:alice",
+        bundleId: id, base, snapKey: `k${Math.random().toString(16).slice(2)}`, author: "member:alice",
         files, meta: { object_type: "information" },
         register: captures.map((c) => ({ sha256: sha(c.text), path: c.path, encoding: "utf8", bytes: Buffer.byteLength(c.text) })),
         ...pkg,
       });
     },
+    /** A bundle that is not information, held through record-core's one write path. */
+    inquiry(id) {
+      const md = `---\nid: ${id}\n---\n`;
+      return record.transact(() => record.commit({ bundleId: id, type: "inquiry", title: "Q", project: null,
+        snapKey: id, kind: "promotion", base: "", author: V("ruth"), writer: null, operation: null,
+        files: [{ path: "bundle.md", text: md, sha256: sha(md), bytes: Buffer.byteLength(md) }],
+        state: "open", priorState: null, group: "test-group", created: T, lastUpdated: T, criticality: null, at: T }));
+    },
+    /** Fence a bundle inside a project no member participates in (record-core R34's `project`, which membership R43
+     *  fences by): a `member:` viewer no longer sees it, the founder's viewer still does. */
+    fence: (id, projectId = "PROJ-2026-0001-fenced") => st.sql.exec(`UPDATE bundles SET project = ? WHERE bundle_id = ?`, projectId, id),
     head: (id) => record.head(id),
     /** A capture, held as a file of an information bundle. */
     cap: (name, text = `bytes of ${name}`) => ({ path: `snapshots/${name}.txt`, text, sha: sha(text) }),
@@ -136,15 +133,17 @@ export function world({ group = "test-group", now = "2026-09-27T03:00:00.000Z", 
   return w;
 }
 
-export function infoMd(id, { state = "collected", history = null, criticality = "supporting", title = `Document ${id}` } = {}) {
+const T = "2026-09-27T00:00:00Z";
+
+export function infoMd(id, { state = "collected", criticality = "supporting", title = `Document ${id}` } = {}) {
   return ["---", `id: ${id}`, "object_type: information", "schema: information@1", `title: ${JSON.stringify(title)}`,
           `current_state: ${state}`, "prior_state: null", `created: "2026-09-27T00:00:00Z"`,
-          `last_updated: "2026-09-27T00:00:00Z"`, "references: []",
-          history ? `state_history:\n${history}` : "state_history: []", `criticality: ${criticality}`,
+          `last_updated: "2026-09-27T00:00:00Z"`, "references: []", "state_history: []", `criticality: ${criticality}`,
           "---", "", "## Summary", "", "A document.", ""].join("\n");
 }
 
-/** A C-18.1-conformant register document for one capture. */
+/** A C-18.1-conformant register document for one capture, its route recorded (a fetched address, an instant, a
+ *  method). */
 export function provDoc(c, extra = {}) {
   return {
     file: c.path, locator: `https://example.org/${c.path}`, retrieved: "2026-09-27T00:00:00Z",

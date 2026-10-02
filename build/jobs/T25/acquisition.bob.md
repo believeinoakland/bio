@@ -9,3 +9,7 @@ Depth 2. Your entries: `build/plan/current.md` (T25) L3, acquisition: N512's use
 ## B2 · CHANGE
 
 K1224: capture R58/R73 now carry attestation's instance as `cap.attestation` (merge tranche/T25 for the text). Read the receipt signer as cap.attestation.signReceipt, as your START says; test against capture's merged branch once capture merges (after attestation).
+
+## B3 · CHANGE
+
+Attestation and provenance-routes have merged into tranche/T25 (K1230; provenance K1229). Merge tranche/T25 and finish against the real attestation module. Merge order: capture, then acquisition (acquisition's receipt signer reaches it through capture's cap.attestation, K1224); acquisition may test against capture's merged branch once I say capture merged.
