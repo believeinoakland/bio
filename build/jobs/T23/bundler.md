@@ -52,3 +52,7 @@ B3 done. Cause: fleetbundles.control.mjs arms 5 and 8 ran a real npm run build (
 **Proof.** `node --test bio-plane/test/fleetbundles.control.mjs` prints that line, pass 1, fail 0. The full set in one `node --test`: tests 50, pass 49, fail 1, skipped 0. The one red is `fleetbundles.test.mjs` (94 pass, 4 fail, all four `bio-plane:` staleness assertions, accepted red 12). `git status` after it shows only my edit to the control file. A hand run of arm 10b (`node test/fleetbundles.control.mjs 10b` in `bio-plane/`) still runs: the arm fires as declared ("no (j) assertion fired: true"), its restore is verified by content and sha256, the pen is removed, and the tree is unchanged. Checks: format, architecture, coverage (`23 of 23`) and ownership each report 0 failures (lines above in B3's, unchanged in form).
 
 Size (session_01NUc9jtCVoKc7BZNT8zXv6u): test runs 20, module lines 77
+
+## J5 · COMPLETE
+
+B4 done. fleetbundles.control.mjs stays in my tests and exits 0 at once under node --test (NODE_TEST_CONTEXT), before its pen or any file, printing that it is a hand-run negative control: node test/fleetbundles.control.mjs [arm]. tranche/T23 merged first. Proof: the full set in one node --test is 49/50, the one red fleetbundles' four bio-plane staleness assertions (accepted red 12); git status clean but for my edit. A hand run of arm 10b still works (fired as declared, restore verified, tree unchanged). Four checks 0 failures. Record: build/jobs/T23/bundler.md.
