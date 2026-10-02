@@ -5,7 +5,9 @@
    instance-setup started, and an in-memory evidence bucket. The door is this module's `dispatch` over a route map of capture's own routes and
    `controlPlaneRoutes`, so no suite here constructs plane's class (P4). `record({step: true})` also registers this
    module's promotion step (R42) at the rank the composition root gives it, with `probes` (`{module: {check, project}}`)
-   registered beside it, and routes provenance's ops (`op=testify`). */
+   registered beside it, and routes provenance's ops (`op=testify`) with provenance-routes' beside them (`op=provenancechain`,
+   `provenanceroute`, `provenanceroutes`; N512). attestation and provenance-routes are built directly after provenance,
+   as the composition root builds them (provenance, attestation, provenance-routes). */
 import { DatabaseSync } from "node:sqlite";
 import "./harness.mjs";
 import { dispatch, controlPlaneRoutes } from "../../../src/control-plane/dispatch.mjs";
@@ -15,6 +17,8 @@ import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { provenanceOps } from "../../../src/provenance/ops.mjs";
+import { attestationOf } from "../../../src/attestation/index.mjs";
+import { provenanceRoutesOf, provenanceRouteOps } from "../../../src/provenance-routes/index.mjs";
 import { OBSERVATION_LOG_MODULE } from "../../../src/observation-log/index.mjs";
 import { promotionStep } from "../../../src/control-plane/step.mjs";
 import { calibrationOf } from "../../../src/calibration/index.mjs";
@@ -82,6 +86,9 @@ export async function record({ step = false, probes = {} } = {}) {
   const record = recordOf(ctx, { evidence: bucket, evidencePrefix: () => "bio/captures/" });
   const promotion = step ? promotionOf(ctx, { order: STEP_ORDER }) : promotionOf(ctx);
   observationLogOf(ctx, { extraction: null, provenance: provenanceOf(ctx, { signingKey: null, instanceName: "test" }) });
+  /* N512: provenance's split, each built after provenance in the module order */
+  attestationOf(ctx, { record, provenance: provenanceOf(ctx), signingKey: null });
+  provenanceRoutesOf(ctx, { record, promotion, instanceName: "test" });
   observationLogOf(ctx).listenTo(contentOf(ctx, { extraction: extractionOf(ctx, { env, promotion, calibration: calibrationOf(ctx) }) }).extraction);
   observationLogOf(ctx).attachMeaning({ entities: entitiesOf(ctx) });
   const retrieval = retrievalOf(ctx, { now: () => Date.now() });
@@ -103,7 +110,7 @@ export async function record({ step = false, probes = {} } = {}) {
   /* the migration pass, in the composition root's order, for every owner this module uses (host-governor's tables are
      made by capture's own governor) */
   record.migrate();
-  for (const m of [calibrationOf(ctx), membershipOf(ctx), credentialsOf(ctx), provenanceOf(ctx), contentOf(ctx), connectionsOf(ctx),
+  for (const m of [calibrationOf(ctx), membershipOf(ctx), credentialsOf(ctx), provenanceOf(ctx), provenanceRoutesOf(ctx), contentOf(ctx), connectionsOf(ctx),
                    basisVersionsOf(ctx), inquiryOf(ctx), captureOf(ctx), extractionOf(ctx), observationLogOf(ctx), runProductionsOf(ctx),
                    captureRequestsOf(ctx), aiRunsOf(ctx, env), entitiesOf(ctx), contradictionOf(ctx), progressionsOf(ctx), biasOf(ctx),
                    intentOf(ctx), retrievalOf(ctx)]) m.migrate();
@@ -111,6 +118,7 @@ export async function record({ step = false, probes = {} } = {}) {
   await instanceSetupOf(ctx, env).start();
   const store = { routes: (url, body) => ({ ...captureOps(captureOf(ctx), url, body, env),
                                             ...(step ? provenanceOps(provenanceOf(ctx), url, body, { observer: OBSERVATION_LOG_MODULE }) : {}),
+                                            ...(step ? provenanceRouteOps(provenanceRoutesOf(ctx), url, body) : {}),
                                             ...controlPlaneRoutes(ctx, url, body) }),
                   membership: () => membershipOf(ctx) };
   const go = async (path, method = "GET", body) => {

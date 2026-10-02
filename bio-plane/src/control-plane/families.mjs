@@ -17,6 +17,11 @@ import * as MEMBERSHIP from "../membership/checks.mjs";
 import * as CREDENTIALS from "../credentials/checks.mjs";
 import * as PROMOTION from "../promotion/checks.mjs";
 import * as PROVENANCE from "../provenance/checks.mjs";
+/* N512 (K1193; T25): provenance's split. attestation's C-89 and provenance-routes' C-34, each read from its new
+   module's own file in its place in the module order (provenance, attestation, provenance-routes); provenance's file
+   no longer holds either family. */
+import * as ATTESTATION from "../attestation/checks.mjs";
+import * as PROVENANCE_ROUTES from "../provenance-routes/checks.mjs";
 import * as CAPTURE_SOURCES from "../capture-sources/credentials.mjs";
 import * as ACQUISITION from "../acquisition/checks.mjs";
 import * as CAPTURE from "../capture/checks.mjs";
@@ -83,6 +88,8 @@ export const CHECK_FAMILY_FILES = Object.freeze([
   ["src/credentials/checks.mjs", CREDENTIALS],
   ["src/promotion/checks.mjs", PROMOTION],
   ["src/provenance/checks.mjs", PROVENANCE],
+  ["src/attestation/checks.mjs", ATTESTATION],
+  ["src/provenance-routes/checks.mjs", PROVENANCE_ROUTES],
   ["src/capture-sources/credentials.mjs", CAPTURE_SOURCES],
   ["src/acquisition/checks.mjs", ACQUISITION],
   ["src/capture/checks.mjs", CAPTURE],

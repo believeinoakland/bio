@@ -183,3 +183,26 @@ test("R22, R43 (K1207; N506): the list reads link-sweep's C-18.16–C-18.18 (`SW
   const missing = await unreached(M.CHECK_FAMILY_FILES.filter(([p]) => p !== path));
   assert.ok(missing.includes(`bio-plane/${path} SWEEP_CHECKS`), missing.join(", "));
 });
+
+test("R22, R43 (N512; K1193): the list reads attestation's C-89 (`ATTEST_CHECKS`) and provenance-routes' C-34 (`ROUTE_MARK_CHECKS`) from their own modules' files, in the module order (provenance, attestation, provenance-routes, before capture-sources), every one of their rows decorates with its own check and words, and provenance's file holds neither family (negative control: the list without either file misses its family)", async () => {
+  const paths = M.CHECK_FAMILY_FILES.map(([p]) => p);
+  const at = (p) => paths.indexOf(p);
+  assert.ok(at("src/provenance/checks.mjs") < at("src/attestation/checks.mjs")
+            && at("src/attestation/checks.mjs") < at("src/provenance-routes/checks.mjs")
+            && at("src/provenance-routes/checks.mjs") < at("src/capture-sources/credentials.mjs"), paths.join(", "));
+  const PROV = await import("../../../src/provenance/checks.mjs");
+  for (const [path, fam, prefix] of [["src/attestation/checks.mjs", "ATTEST_CHECKS", "C-89."],
+                                     ["src/provenance-routes/checks.mjs", "ROUTE_MARK_CHECKS", "C-34."]]) {
+    const table = (await import(`../../../${path}`))[fam];
+    assert.ok(table && Object.keys(table).length, `${path} ${fam}`);
+    for (const [code, row] of Object.entries(table)) {
+      assert.ok(row.check.startsWith(prefix), `${fam}.${code} ${row.check}`);
+      assert.deepEqual(M.dec49Row(code), { check: row.check, translation: row.translation }, `${fam}.${code}`);
+      assert.equal(Object.entries(PROV).some(([k, v]) => isFamily(k, v) && Object.hasOwn(v, code)), false, `${code} left provenance's file`);
+    }
+    const missing = await unreached(M.CHECK_FAMILY_FILES.filter(([p]) => p !== path));
+    assert.ok(missing.includes(`bio-plane/${path} ${fam}`), missing.join(", "));
+  }
+  for (const code of ["CAPTURE_HELD_IN_PARTS", "ROUTE_MARK_NO_AUTHOR", "ROUTE_MARK_NO_BUNDLE", "ROUTE_MARK_NO_SUCH_BUNDLE", "ROUTE_MARK_NOT_A_DOCUMENT"])
+    assert.ok(M.dec49Row(code), code);
+});
