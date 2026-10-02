@@ -1,6 +1,6 @@
 # control-plane (T23)
 
-**Status** · session_01FGx9TWWD64HqdD22yjYnDN · depth 2 · WAITING ON BOB (J1) · handled B2
+**Status** · session_01FGx9TWWD64HqdD22yjYnDN · depth 2 · WAITING ON BOB (J2) · handled B2
 
 ## J1 · REPORT
 
