@@ -33,3 +33,14 @@ Generated artifact made stale: `bio-plane/dist/bio-plane.bundled.mjs`. This job 
 - `node checks/format.mjs`: 86 modules, 85 requirements files; 0 failures. `architecture.mjs … actions`: 13 product files, 50 relative imports; 0 failures. `coverage.mjs … actions`: 43 of 43 live requirement ids named by a test; 0 failures (actions R55's accepted red cleared). `ownership.mjs … actions tranche/T22`: 5 files changed; 0 failures.
 
 Size (session_017xH4dbRvV6QifghDnUGAVp): test runs 27, module lines 2652
+
+## J4 · COMPLETE
+
+B3 (N497, K1087) applied: merged `tranche/T22` @ 9e3c197c15 (`4f4be007cf`); `test/m/actions/fixture.mjs`:100 registers `producingGroup` under `instance-setup`, not the retired `legacy-store` (`ac2c284da5`). Test-only; no behaviour changed. Everything in J3 stands.
+
+**Tests and checks re-run** (head `ac2c284da5`)
+- `test/m/actions/`: tests 66, pass 66, fail 0.
+- Whole `bio-plane/test/m`: tests 4930, pass 4832, fail 80, cancelled 0: exactly J3's 80 (B2's 70 in action-clocks, action-plans and affordances `backing.test.mjs`:140, :165; the accepted carries control-plane `catalogue-end`:15, `doorbell`:310, membership `module-order`:12, `t9-notice-sight-bounds`:185, promotion `registry`:58, queue-producers `proposals` :78 :124 :153 :167, scheduler `plane`:85). No other red.
+- format 0 failures; architecture 0 failures; coverage 43 of 43, 0 failures; ownership 5 files, 0 failures.
+
+Size (session_017xH4dbRvV6QifghDnUGAVp): test runs 29, module lines 2652
