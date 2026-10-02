@@ -5,7 +5,7 @@
  * version, with its default state set and the hunch roster), C-71 (independence over a partition) and C-32.9
  * (`MACHINE_CANNOT_DECLARE`, from `MACHINE_FENCE_CHECKS`). R15's new refusal, `STRENGTH_BAR_NOT_ADMIN`, is this
  * module's own family, C-107, allocated at the extraction (K107 (3), K181), and so is R15's `BAD_GRADE` (N208, K275),
- * and R15's `BAR_NO_REASON` (DEC-88; K1025, C-107.3, `awaiting stamp`). */
+ * and R15's `BAR_NO_REASON` (DEC-88; K1025, C-107.3, stamped by 1.53.0). */
 
 import { VERSION_STATES } from "../basis-versions/index.mjs";
 
