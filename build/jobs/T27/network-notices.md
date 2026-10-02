@@ -1,6 +1,6 @@
 # network-notices (T27)
 
-**Status** · session_01MRJKiiGZ1Mddztgdog1A5d · depth 2 · WORKING · handled B1
+**Status** · session_01MRJKiiGZ1Mddztgdog1A5d · depth 2 · WAITING ON BOB (J1) · handled B1
 
 ## J1 · REPORT
 
