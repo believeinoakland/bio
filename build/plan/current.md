@@ -2,6 +2,8 @@
 
 **Status** · OPENING · BOB #98 · session_014dcsnHp9L1mo6H4mzBvdrR · depth 1
 
+**Jobs** · record-grammar: RECORD-GRAMMAR #6 session_01MJZEvGTGHSBLGCua1Zuqbw
+
 **Opened** 2026-10-02 ~12:31 UTC by BOB #98 from `main` @ f193c1ac3b (T23 closed, K1178), from `draft-T24.md` and T23's `next.md` (K1180). **Bob's weekly meter** · asked at the opening; 61% at T23's close.
 
 ## Legacy census (§5.2 (2))
