@@ -1,8 +1,8 @@
 /* action-plans' refusal rows (requirements: `build/requirements/action-plans.md`). DEC-49: every refusal this module
  * mints carries its code, its row and the member's translation, so a surface shows the same sentence wherever the act
  * is reached. The family is C-124, minted with the module (K174: a new module holds its new family); each code is
- * minted at one site (K231), named by its row's `where`, and every row is `awaiting stamp` for T19's promotion stamp
- * (rule (4) of T18's plan). Refusals minted by the modules this one uses are relayed with their own rows:
+ * minted at one site (K231), named by its row's `where`; every row was taken by promotion's stamp 1.49.0 (PROMOTION #20,
+ * T19 layer 2; K711). Refusals minted by the modules this one uses are relayed with their own rows:
  * `NO_SUCH_PROJECT` (membership R78), `PROJECT_SEEN_NOT_A_PARTICIPANT` (membership R44), the project-authority
  * refusals (membership R55), `NO_SUCH_DETERMINATION` (conformance R19), `NO_SUCH_STANDARD` (standards R17),
  * `CONTACT_NOT_A_MEMBER` (actions R45) and `REMINDER_REFUSED` (action-clocks R4), each answered through its module's

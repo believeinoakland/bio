@@ -121,7 +121,7 @@ export function checkPhases(phases, { chosen, subjects }) {
       starts = { branch_of: s.branch_of, when: s.when };
     else if (isObj(s) && s.when_subject !== undefined && (s.reaches === "resolved" || s.reaches === "stage")) {
       const subj = normSubject(s.when_subject);
-      if (!subj) return bad("when_subject is a subject of the plan");
+      if (!subj) return bad("when_subject names a matter of the plan");
       if (s.reaches === "stage" && !(Number.isInteger(s.stage) && s.stage >= 1 && s.stage <= STAGE_MAX))
         return bad(`a track reaching a stage names the stage, 1 to ${STAGE_MAX}`);
       if (s.reaches === "resolved" && s.stage !== undefined && s.stage !== null) return bad("a track reaching resolved names no stage");
@@ -160,7 +160,7 @@ export function checkPhases(phases, { chosen, subjects }) {
     if (target !== null && !ids.has(target))
       return { fault: "branch", index: i, phase: target, detail: `phase ${target} is not a phase of this scenario` };
     if (s.when_subject && !subjects.has(subjectKey(s.when_subject)))
-      return { fault: "branch", index: i, subject: s.when_subject, detail: "that subject is not one the plan is about" };
+      return { fault: "branch", index: i, subject: s.when_subject, detail: "that matter is not one the plan is about" };
     if (s.branch_of && !out.find((x) => x.id === s.branch_of).checkpoint)
       return { fault: "branch", index: i, phase: s.branch_of, detail: `phase ${s.branch_of} has no checkpoint to branch on` };
     for (const v of Object.values(p.branches || {}))
