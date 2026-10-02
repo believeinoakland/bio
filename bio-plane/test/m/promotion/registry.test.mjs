@@ -292,6 +292,78 @@ test("R45: a listener runs outside the transaction and writes no row of the prom
   assert.deepEqual(seen, [inq, inq]);
 });
 
+/* R45's last sentence (T23, monitoring R29, K1094): scheduler arms for a promotion that leaves a bundle monitored OR
+   holds a ratified sweep. The notice is the same for both: promotion tells every listener of every accepted promotion,
+   after its commit, and the listener reads the committed bundle to decide. So a promotion holding a ratified sweep is
+   told exactly as one leaving a bundle monitored is, at the moment the record holds the sweep; refused and `wrote:
+   false` ones are not told, whatever they hold. */
+test("R45: a listener is told of an accepted promotion holding a ratified sweep, as of one leaving a bundle monitored — once, after its commit, with the record then holding the sweep; never of a refused or unwritten one", async () => {
+  const { makeRecord, makeMembership } = await import("./fixtures.mjs");
+  const { promotionOf } = await import("../../../src/promotion/index.mjs");
+  const record = makeRecord();
+  const p = promotionOf({}, { record, membership: makeMembership(), order: ["scheduler"] });
+  p.registerFact("producingGroup", "legacy-store", () => "g");
+  /* The listener as scheduler's arm would read it: the committed gathering file, monitored requests and ratified sweeps. */
+  const told = [];
+  assert.equal(p.onCommitted("scheduler", (n) => {
+    const g = JSON.parse(record.readFile(n.bundleId, "data/gathering.json")?.text ?? "{}");
+    told.push({ n, headSha: record.head(n.bundleId)?.bundleSha ?? null,
+                monitored: (g.requests || []).some((r) => r && r.cadence && r.cadence !== "none"),
+                ratifiedSweeps: (g.sweeps || []).filter((s) => s && s.ratified === true).map((s) => s.id) });
+  }).ok, true);
+  const gathering = (g) => ({ path: "data/gathering.json", text: JSON.stringify(g) });
+  const SWEEP = { id: "agendas", title: "Council agendas", ratified: true, sources: ["https://records.example.org"],
+                  seeds: ["https://records.example.org/agendas"], match: { terms: ["budget"], formats: ["pdf"] },
+                  cadence: "weekly", budget: { per_run: 10, backlog: 50 } };
+  const MON = "INFO-2026-0101", SWP = "INFO-2026-0102";
+  const withFiles = (pkg, ...extra) => ({ ...pkg, files: [...pkg.files, ...extra] });
+
+  /* One leaving a bundle monitored, and one holding a ratified sweep (no monitored request): each told once. */
+  const m = p.promote(withFiles(create(MON, infoDoc(MON, { group: "g" })),
+    gathering({ requests: [{ id: "GATH-1", cadence: "daily", locators: ["https://records.example.org/x"] }] })));
+  const s = p.promote(withFiles(create(SWP, infoDoc(SWP, { group: "g" })), gathering({ sweeps: [SWEEP] })));
+  assert.deepEqual([m.ok, s.ok], [true, true], JSON.stringify([m, s]));
+  assert.deepEqual(told, [], "never inside the promotion's own call");
+  await tick();
+  assert.deepEqual(told, [
+    { n: { bundleId: MON, bundleSha: m.bundleSha, type: "information", replay: false }, headSha: m.bundleSha, monitored: true, ratifiedSweeps: [] },
+    { n: { bundleId: SWP, bundleSha: s.bundleSha, type: "information", replay: false }, headSha: s.bundleSha, monitored: false, ratifiedSweeps: ["agendas"] },
+  ]);
+
+  /* A revision that ratifies a sweep (an unratified one before) is told, the record then holding it ratified. */
+  const U = "INFO-2026-0103";
+  const u = p.promote(withFiles(create(U, infoDoc(U, { group: "g" })), gathering({ sweeps: [{ ...SWEEP, ratified: false }] })));
+  await tick();
+  assert.deepEqual(told.at(-1).ratifiedSweeps, [], "an unratified sweep: told, and the listener finds none ratified");
+  const r = p.promote(withFiles(revise(U, u.bundleSha, infoDoc(U, { group: "g" })), gathering({ sweeps: [SWEEP] })));
+  assert.equal(r.ok, true, JSON.stringify(r));
+  await tick();
+  assert.deepEqual(told.at(-1), { n: { bundleId: U, bundleSha: r.bundleSha, type: "information", replay: false },
+                                  headSha: r.bundleSha, monitored: false, ratifiedSweeps: ["agendas"] });
+  /* A replay holding a ratified sweep is told too, `replay: true`. */
+  const R = "INFO-2026-0104";
+  const rp = p.promote({ ...withFiles(create(R, infoDoc(R, { group: "g" })), gathering({ sweeps: [SWEEP] })), replay: true });
+  assert.equal(rp.ok, true, JSON.stringify(rp));
+  await tick();
+  assert.deepEqual([told.at(-1).n, told.at(-1).ratifiedSweeps], [{ bundleId: R, bundleSha: rp.bundleSha, type: "information", replay: true }, ["agendas"]]);
+
+  /* Never for a refused promotion holding a ratified sweep, nor for one answered wrote: false. */
+  const before = told.length;
+  const stale = p.promote(withFiles(revise(SWP, "0".repeat(64), infoDoc(SWP, { group: "g", title: "Again" }), { snapKey: "k3" }),
+                                    gathering({ sweeps: [SWEEP] })));
+  assert.equal(stale.reason, "CAS_STALE");
+  const again = p.promote(withFiles(revise(U, u.bundleSha, infoDoc(U, { group: "g" })), gathering({ sweeps: [SWEEP] })));
+  assert.deepEqual([again.ok, again.wrote], [true, false]);
+  const fresh = "INFO-2026-0105";
+  const rolled = record.transact(() => {
+    assert.equal(p.promote(withFiles(create(fresh, infoDoc(fresh, { group: "g" })), gathering({ sweeps: [SWEEP] }))).ok, true);
+    return { ok: false, reason: "CALLER_CHANGED_ITS_MIND" };
+  });
+  assert.equal(rolled.reason, "CALLER_CHANGED_ITS_MIND");
+  await tick();
+  assert.equal(told.length, before, JSON.stringify(told.slice(before)));
+});
+
 test("R47: registerCaseCatalogue — a later module registers the case-document catalogue once; any second registration is STEP_DECLARED; a fn that is not a function (or no module) is LISTENER_MALFORMED; R33 then runs it, with no change of shape or GATE_VERSION", async () => {
   const { GATE_VERSION } = await import("../../../src/promotion/index.mjs");
   const { p } = makePromotion();

@@ -532,7 +532,30 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    MINOR, rule 17 moving the stamp for arrivals, departures, re-keyed and changed rows and a changed composition.
    ROW_CENSUS (R50) is re-pinned to this tree, module tables only: 1022 rows. The census suite is this module's since
    T22's opening (K1006). Rows T22's layers 3–11 change are T23's stamp (`awaiting stamp`). */
-export const CATALOG_VERSION = "1.52.0";
+/* 1.53.0 (PROMOTION #24, T23 layer 2, 2026-10-02; K1094, K1123, K1124): EVERY ROW CHANGE SINCE 1.52.0, counted wherever
+   the rows live (R34, R47), read by diffing R50's census lines of `tranche/T23` after membership and record-core merged
+   against 1.52.0's own (`test/fixtures/row-census-1.52.0.jsonl`: 1022 rows, de396d62…): twenty-five arrivals, ten
+   changed, no departure. Each is one a job record names (T22's layers 3–11 `awaiting stamp`; T23's layers 1–2 changed
+   no row).
+   ARRIVED: C-18.11 MACHINE_CANNOT_SET_FREQUENCY, C-18.12 NO_SUCH_ADDRESS, C-18.13 BAD_FREQUENCY, C-18.14
+   NOT_A_SOURCE_OWNER, C-18.15 FREQUENCY_NO_REASON in `FREQUENCY_CHECKS` (monitoring R52, K1019); C-26.21
+   BIAS_ADOPTION_NO_REASON (bias); C-33.51 QUEUE_SORT_UNKNOWN (queue); C-41.16 WHAT_CHANGED in `CASE_DOCUMENT_FAMILY`,
+   C-58.4 CONTESTED_IN_BATCH, C-58.5 ANONYMOUS_TESTIMONY_UNCORROBORATED (ratification); C-52.10 ATTEST_NO_NOTE (content);
+   C-54.11 LEAD_LOOK_NO_DETAIL, C-54.12 LEAD_SHARE_NO_REASON (observation-log); C-82.8 STATEMENT_ACK_NO_REASON
+   (case-authoring); C-91.8 ENTITY_NO_NOTE (entities); C-92.13 ATTRIBUTION_NO_REASON (publication); C-107.3 BAR_NO_REASON
+   (strength); C-110.29 VERSION_ADOPT_NO_REASON (reevaluation); C-112.20 STANDARD_NO_REASON (standards); C-115.44
+   PACKET_NO_REASON (filings); C-116.46 MACHINE_CANNOT_DECLINE_TO_ESCALATE (escalation); C-118.7 RESOLVE_NO_REASON,
+   C-118.8 MACHINE_CANNOT_SET_ASIDE, C-118.9 SET_ASIDE_NO_REASON (capture).
+   CHANGED, code unmoved: the translations of C-33.44 CLASS_NOT_DISPOSED (queue: "signal" and "to-do" for the classes),
+   C-112.17 STANDARD_FIELD_UNKNOWN (standards: the fields it holds gain "reason"), C-118.3 KNOCKER_SECRET_WEAK and C-85.1–
+   C-85.5 (capture: each now says the group can see how often its doorbell turns people away; C-85.1 and C-85.2 open
+   "Your material was not received"); the `where`s of C-116.5, C-116.6 and C-116.7, now `#pursuable` (escalation).
+   CHANGED IN WHAT THE GATES RUN, no row moving: none beyond the rows above. The case gate's registered catalogue
+   (ratification's) runs C-41.16's arm, counted as that row's arrival; no registered step, grammar or listener changed
+   its ids since 1.52.0. Membership's T23 job (`MODULE_ORDER`) and record-core's (tests only) changed no row.
+   MINOR, rule 17 moving the stamp for arrivals and changed rows. ROW_CENSUS (R50) is re-pinned to this tree, module
+   tables only: 1046 rows. Rows T23's layers 3–11 change are T24's stamp (`awaiting stamp`). */
+export const CATALOG_VERSION = "1.53.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -624,8 +647,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1022,
-  digest: "de396d62fe1e159f5b7ee5e8c360e119226674fe097e3d4e51a79ff68be11bd1" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1046,
+  digest: "28dc9ebb47bf812a1268e50f885ade3ad245fd76b00a04089ce88a88edb3e7e4" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
