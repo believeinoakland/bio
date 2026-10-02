@@ -1,6 +1,6 @@
 # affordances (T22)
 
-**Status** · session_01EPYqGW7CQ8qqjXeH7nrTFT · depth 2 · RUNNING until 2026-10-02T05:22:10Z (bio-plane test/m (whole)) · handled B1
+**Status** · session_01EPYqGW7CQ8qqjXeH7nrTFT · depth 2 · RUNNING until 2026-10-02T05:22:55Z (bio-plane test/m (whole), restarted) · handled B1
 
 ## J1 · REPORT
 
