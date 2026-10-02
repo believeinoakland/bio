@@ -67,6 +67,7 @@ import { contradictionOf } from "../contradiction/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { captureOf } from "../capture/index.mjs";
 import { sourcesOf } from "../sources/index.mjs";
+import { networkNoticesOf } from "../network-notices/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, OBJECT_TYPES, BASIS_GRADES,
          EARNED_CAPTURE_CEILING, isPublicHttpsLocator, proposalLabel } from "../record-grammar/index.mjs";
 import { SECTIONS } from "../case-grammar/index.mjs";
@@ -165,7 +166,7 @@ export class CaseAuthoring {
   get provenance() { return this.#deps.provenance ||= provenanceOf(this.#deps.host); }
   get capture() { return this.#deps.capture ||= captureOf(this.#deps.host); }
   get sources() { return this.#deps.sources ||= sourcesOf(this.#deps.host); }
-  get networkNotices() { return this.#deps.networkNotices; }
+  get networkNotices() { return this.#deps.networkNotices ||= networkNoticesOf(this.#deps.host); }
 
   migrate() { migrateCaseAuthoring(this.sql); }
 

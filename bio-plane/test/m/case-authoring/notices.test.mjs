@@ -1,5 +1,6 @@
 /* case-authoring (T23; DEC-111, K1031, K1119): the project reference a case carries (R41), and what the pre-flight's
-   first step says of it (R42). network-notices' `noticeReferenceOf` (its R19) is the fixture's stand-in (`w.notices`). */
+   first step says of it (R42). network-notices is the real module; `w.notices` sets what its `noticeReferenceOf` (its
+   R19) answers for a project where a test needs an answer the real module would need a signed notice for. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, AUTHORED } from "./fixture.mjs";
@@ -39,6 +40,29 @@ test("R41: publishCase writes working_on as noticeReferenceOf(project) answers i
     /* the answer's document is the stored one */
     assert.equal(r.caseDocument.bytes, new TextEncoder().encode(text).length);
   }
+});
+
+test("R41: over the real network-notices, reached on the same host with no dependency given: no notice writes no working_on; an open notice, then the same notice once stopped (the most recent), is written as noticeReferenceOf answers", () => {
+  const w = world({ deps: { networkNotices: undefined } });
+  w.member("alice"); w.doc(DOC); w.finding(Q, [{ target: DOC }]);
+  const P = w.project("Team", "alice", [Q]);
+  assert.equal(w.ca.networkNotices, w.networkNotices, "the one instance on this host");
+  const none = w.publish(P, "alice", [Q], { newCase: true });
+  assert.equal(none.ok, true, JSON.stringify(none).slice(0, 300));
+  assert.equal(head(docText(w, none)).includes("working_on"), false);
+  /* a notice row as network-notices R5 stores it (its own table, written here as the fixture writes other tables) */
+  w.st.sql.exec(`INSERT INTO nn_notices (notice_id, project, opened_at) VALUES (?, ?, ?)`, NOTICE, P, "2026-09-27T00:00:00Z");
+  assert.equal(w.networkNotices.noticeReferenceOf(P), NOTICE);
+  w.finding("INQ-2026-0002-q", [{ target: DOC }]);
+  const open = w.publish(P, "alice", ["INQ-2026-0002-q"], { newCase: true });
+  assert.equal(open.ok, true, JSON.stringify(open).slice(0, 300));
+  assert.deepEqual(head(docText(w, open)).split("\n").filter((l) => l.startsWith("working_on:")), workingOnLines(NOTICE));
+  assert.equal(workingOnOf(parseFrontmatter(docText(w, open)).data), NOTICE);
+  /* the pre-flight's step one, over the same answer (R42) */
+  w.finding("INQ-2026-0003-q", [{ target: DOC }]);
+  const pre = w.ca.publishPreflight({ ...AUTHORED, project: P, targets: ["INQ-2026-0003-q"], roles: { "INQ-2026-0003-q": "load_bearing" },
+                                      newCase: true, viewer: V("alice"), author: "alice" });
+  assert.deepEqual([pre.steps[0].working_on, pre.steps[0].says.includes(NOTICE_SEALS_SENTENCE)], [NOTICE, true]);
 });
 
 test("R41: no working_on when noticeReferenceOf answers null (or undefined); any other answer is written as handed, through workingOnLines, never corrected or dropped, for ratification R38 to refuse; the document is otherwise byte-identical", () => {
