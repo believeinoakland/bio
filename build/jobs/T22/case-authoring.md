@@ -1,6 +1,6 @@
 # case-authoring (T22)
 
-**Status** · session_01Fk9nWc37r67618mxFQbToH · depth 2 · RUNNING until 2026-10-02T03:10:53Z (node --test bio-plane/test/m (merged branch, then tranche @ B3)) · handled B3
+**Status** · session_01Fk9nWc37r67618mxFQbToH · depth 2 · COMPLETE · handled B3
 
 ## J1 · REPORT
 
