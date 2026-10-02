@@ -24,6 +24,8 @@
 
 - N492 · 2026-10-02 · **acquisition** (K1032): call capture-sources R37's Memento services in the archive fallback (TimeGate with `Accept-Datetime`, or TimeMap, then the raw memento, `mementoRow`, `selectCapture`, `mementoHop`), so an archive other than Wayback's CDX can serve a lookup. **Hard reason:** R37's services are built in T22's L3; acquisition's job (L3) does not run in T22 and its requirement must first state the call (P5).
 
+- N493 · 2026-10-02 · **queue**, **queue-producers** and their users (DEC-110 (3)'s last sentence, K1038): the internal disposition "noticed" clashes with the member-facing class "Noticed"; rename the internal term (BOB's, a wording of no member-facing meaning). **Hard reason:** it touches every module that reads the disposition, more than T22's L11 jobs; placed when T23 is planned.
+
 ## Left out of T22, carried here (62 rows, one hard reason each) (check)
 
 | row | item | hard reason | note |

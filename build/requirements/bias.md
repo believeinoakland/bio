@@ -86,7 +86,7 @@ Terms. A **statement** is `{id, kind, subject, text, justification, citations?, 
 - `membership`: sight of a project and of each bias bundle; the existence refusal and project authority (R11); `listenerRefusal` (R81) and `MODULE_ORDER` (R83) (N202); `notAnAdmin` (R84; R11, N327).
 - `promotion`: `registerStep` for R8–R10. *(not declared in `modules.json`)*
 - `entities`: the registry R25 asks.
-- Work products reach it only by registration from later modules (R33): `ai-runs` (its R30), and `inquiry` (R40, K102; its R53, K1036).
+- Work products reach it only by registration from later modules (R33): `ai-runs` (its R30), and `inquiry` (R40, K102; its R53, K1038).
 
 ### Invariants
 
