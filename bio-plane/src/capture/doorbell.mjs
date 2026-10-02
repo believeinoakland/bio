@@ -9,11 +9,12 @@ import { CAPTURE_CHECKS, KNOCK_CHECKS } from "./checks.mjs";
 
 /* R31, R49, R50. The limits the instance runs, and D-496's published sentences BUILT FROM THEM, so the words and
    the numbers cannot drift apart (BOB #32: a published limit is a BOUND). "Estimated by a sliding window" because
-   the two-bucket estimate IS approximate. */
+   the two-bucket estimate IS approximate. The two rate limits are Bob's (DEC-108 (3), K1019): 5 from one source and
+   10 to the whole doorbell in any 10 minutes. */
 export const KNOCK = {
   windowMs: 10 * 60 * 1000,
-  perIp: 12,                   // knocks per source per window
-  global: 300,                 // knocks per instance per window; bounds hostile writes to the evidence store
+  perIp: 5,                    // knocks per source per window (DEC-108 (3))
+  global: 10,                  // knocks per instance per window (DEC-108 (3)); bounds hostile writes to the evidence store
   maxBytes: 8 * 1024 * 1024,   // with an evidence store: enough for a captured PDF
   maxInline: 64 * 1024,        // without one: inline into the store, small only
 };
@@ -87,11 +88,14 @@ export function knockerSecretWeak() {
  *  refusals are tried in R53's order and the first that applies answers. */
 export async function knockOp(req, env, store, { json, requiredArgument, storeSilent, storeRefusal, doAnswer }) {
   if (req.method !== "POST") return json({ ok: false, error: "knock is a POST" }, 405);
+  /* R80: a knock refused here, before the store is asked to keep anything, is counted in the doorbell's tally and
+     nowhere else; the count is the store's, and its failure never changes the refusal's answer. */
+  const refuse = async (answer, status) => { await tallyRefusal(store, doAnswer); return json(answer, status); };
   const raw = await req.arrayBuffer();
-  if (raw.byteLength > KNOCK.maxBytes + 4096) return json(knockEnvelopeTooLarge(), 413);
+  if (raw.byteLength > KNOCK.maxBytes + 4096) return refuse(knockEnvelopeTooLarge(), 413);
   let body; try { body = JSON.parse(new TextDecoder().decode(raw)); } catch { body = null; }
   if (!body || (typeof body.contentB64 !== "string" && typeof body.contentText !== "string"))
-    return json({ ok: false, ...requiredArgument("knock", "contentB64 or contentText",
+    return refuse({ ok: false, ...requiredArgument("knock", "contentB64 or contentText",
       "a JSON body with contentB64=<base64> or contentText=<text>",
       "knock requires contentB64 or contentText, plus optional note and contact") }, 400);
   let bytes;
@@ -99,13 +103,14 @@ export async function knockOp(req, env, store, { json, requiredArgument, storeSi
     bytes = typeof body.contentB64 === "string"
       ? Uint8Array.from(atob(body.contentB64), (c) => c.charCodeAt(0))
       : new TextEncoder().encode(body.contentText);
-  } catch { return json({ ok: false, ...requiredArgument("knock", "contentB64", "<base64>", "contentB64 is not valid base64") }, 400); }
-  if (bytes.length === 0) return json(knockEmpty(), 400);
+  } catch { return refuse({ ok: false, ...requiredArgument("knock", "contentB64", "<base64>", "contentB64 is not valid base64") }, 400); }
+  if (bytes.length === 0) return refuse(knockEmpty(), 400);
   const evidence = typeof env.CAPTURES?.put === "function";
   const cap = evidence ? KNOCK.maxBytes : KNOCK.maxInline;
-  if (bytes.length > cap) return json(knockPayloadTooLarge(cap, evidence), 413);
-  /* R53, R66: a weak knocker secret after oversize content and before the rate: nothing is received or counted. */
-  if (isWeakKnockerSecret(body.knockerSecret)) return json(knockerSecretWeak(), 400);
+  if (bytes.length > cap) return refuse(knockPayloadTooLarge(cap, evidence), 413);
+  /* R53, R66: a weak knocker secret after oversize content and before the rate: nothing is received, and nothing
+     counted but R80's tally. */
+  if (isWeakKnockerSecret(body.knockerSecret)) return refuse(knockerSecretWeak(), 400);
   const source = req.headers.get("cf-connecting-ip") || "unknown";
   const out = await doAnswer(store.fetch(new Request(`http://do/knock?source=${encodeURIComponent(source)}`, {
     method: "POST", headers: { "content-type": "application/json" },
@@ -132,6 +137,15 @@ export async function knockOp(req, env, store, { json, requiredArgument, storeSi
                 received: "Your material is in the group's inbox awaiting member review.",
                 pseudonym: typeof rec.pseudonym === "string" ? rec.pseudonym : null,
                 ...(typeof rec.secret === "string" ? { secret: rec.secret } : {}) }, 200);
+}
+
+/* R80: count one refusal the handler made in the store's tally (`doorbellrefused`). Whatever the store answers, or
+   if it does not, the refusal is answered as it was: a count that cannot be written changes nothing. */
+async function tallyRefusal(store, doAnswer) {
+  try {
+    await doAnswer(store.fetch(new Request("http://do/doorbellrefused", {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ now: Date.now() }) })));
+  } catch { /* the tally is status, never a gate */ }
 }
 
 /** The legacy-index map's §4.4 plain move (K649 (7)): the dispatch of this module's one public op, `knock` (the door
