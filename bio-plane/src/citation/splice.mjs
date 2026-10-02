@@ -3,9 +3,9 @@
  * extend in place: that grammar has no escapes and no serializer, so a wrong guess would corrupt a document silently
  * and the write would then promote the corruption.
  *
- * `spliceEdgeStatus`, `legExtentLines` and `spliceBasis` moved here from `store.mjs` (only citing called them);
- * `spliceReferences`, `setScalar` and the Session Log splice are copies (K57), the store keeping its own for its other
- * writers. */
+ * `spliceEdgeStatus`, `legExtentLines` and `spliceBasis` moved here from the retired legacy store's `store.mjs` (only
+ * citing called them); `spliceReferences`, `setScalar` and the Session Log splice were copied from it (K57), each
+ * module holding its own. */
 
 /** R4: rewrite the `status` and `note` of specific `cites` entries in place, touching nothing else. Walks the
  *  references block entry by entry, tracking which target the current entry belongs to, and edits only the two lines
@@ -62,7 +62,7 @@ export function spliceEdgeStatus(text, changes) {
   return applied === changes.size ? out.join("\n") : null;
 }
 
-/** R2: append entries to the `references` block, touching nothing else (a copy of the store's, K57). Three shapes are
+/** R2: append entries to the `references` block, touching nothing else (copied from the retired legacy store, K57). Three shapes are
  *  reachable: an inline empty `references: []`, a populated block, and no references key at all; any other inline
  *  scalar is refused (null). An entry is `{rel, target, status, note, extent_capture?}`; `extent_capture` is the capture
  *  a case's edge was pinned to (REC-219 / D-579(a)). */
@@ -163,7 +163,7 @@ export function spliceBasis(text, legs) {
   return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
 }
 
-/** Set a top-level frontmatter scalar that is already there (a copy of the store's, K57); the text unchanged when the
+/** Set a top-level frontmatter scalar that is already there (copied from the retired legacy store, K57); the text unchanged when the
  *  key is absent. Used for `last_updated`, which every citing document carries. */
 export function setScalar(text, key, value) {
   const lines = text.split("\n");
@@ -175,7 +175,7 @@ export function setScalar(text, key, value) {
 }
 
 /** R3, R4: append one Session Log entry at the end of the `## Session Log` section (opening the section when the
- *  document has none), as both acts wrote it inline in the store (a copy, K57). */
+ *  document has none), as both acts wrote it inline in the retired legacy store (a copy, K57). */
 export function appendSessionLog(text, entry) {
   const at = text.indexOf("## Session Log");
   if (at < 0) return text + "\n## Session Log\n\n" + entry;
