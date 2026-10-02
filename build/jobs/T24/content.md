@@ -28,3 +28,7 @@
 - `checks/ownership.mjs bio content tranche/T24`: 5 files changed; 0 failures.
 
 Size (session_016WvxZ5ZiEqVj1hSGUB3iYd): test runs 2, module lines 3526
+
+## J1 · REPORT
+
+Two things outside my module (wording job, no requirement change made): (1) build/requirements/content.md R38 still says C-52.10 (ATTEST_NO_NOTE) is 'awaiting stamp'; 1.53.0 took it (gate.mjs, PROMOTION #24). The requirement text is yours. (2) My comment-only edits under bio-plane/src/content/ stale the plane's bundle bio-plane/dist/bio-plane.bundled.mjs (not_product); nothing regenerated.
