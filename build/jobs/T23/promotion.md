@@ -1,6 +1,6 @@
 # promotion (T23)
 
-**Status** · session_01HB6f4fF8NP2uzL8Dazjrop · depth 2 · WORKING · handled B1
+**Status** · session_01HB6f4fF8NP2uzL8Dazjrop · depth 2 · RUNNING until 2026-10-02T07:00:29Z (node --test bio-plane/test/m) · handled B1
 
 ## J1 · REPORT
 
