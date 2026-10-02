@@ -30,8 +30,7 @@ import { caseTensionsOf, caseDocumentBlocks, whatChangedOf, lensOf, LENS_HEAD,
 import { parseFrontmatter } from "../record-grammar/index.mjs";
 import { rowOf } from "./checks.mjs";
 import { delivererOf } from "../deliverer.mjs";
-import { PUBLIC_READ_NAME, PUBLIC_READ_PARAM, PUBLIC_READ_OWN_OPS, PUBLIC_READ_RESERVED_PARAMS,
-         PUBLIC_READ_NOT_REGISTERED } from "./reads.mjs";
+import { PUBLIC_READ_NAME, PUBLIC_READ_PARAM, PUBLIC_READ_OWN_OPS, PUBLIC_READ_RESERVED_PARAMS } from "./reads.mjs";
 
 /* CPDF-10: a column `publication` WROTE as JSON, read back; null rather than a throw on a malformed value. */
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
@@ -163,16 +162,20 @@ export class PublicRead {
   /** R18 (R10's terms): one registered read, served. `query` is the caller's parameters; the read is handed only those
    *  it declared, frozen, and nothing else: no credential and no stamp can be among them. It answers
    *  `{ok: true, read, module, result}` with the read's answer as `result`; a read that refuses (`ok: false`) is
-   *  relayed as its own refusal, naming the read. An unregistered name answers `PUBLIC_READ_NOT_REGISTERED`, saying so.
+   *  relayed as its own refusal, naming the read. An unregistered name answers `PUBLIC_READ_NOT_REGISTERED` (C-98.10, its row), saying so.
    *  A read that answers a promise is answered as one; one that throws is not caught here, so the store's own internal
    *  error answers it and nothing is dressed as an absence. */
   publicRead(name, query = {}) {
     const n = String(name ?? "");
     const r = this.#publicReads.get(n);
-    if (!r)
-      return { ok: false, reason: PUBLIC_READ_NOT_REGISTERED, name: n,
+    if (!r) {
+      /* DEC-49 REGION is-public-read-not-registered
+       * C-98.10 (K1149): the code a STRING LITERAL at its site, its row from this module's table (R17). */
+      return { ok: false, reason: "PUBLIC_READ_NOT_REGISTERED", ...rowOf("PUBLIC_READ_NOT_REGISTERED"), name: n,
                detail: `no public read named ${JSON.stringify(n)} is registered on this copy of the record, so there `
                      + "is nothing to serve under that name" };
+      /* END DEC-49 REGION is-public-read-not-registered */
+    }
     const args = {};
     for (const p of r.params) {
       const v = query && Object.hasOwn(query, p) ? query[p] : undefined;
