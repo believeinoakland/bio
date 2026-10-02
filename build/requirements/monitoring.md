@@ -179,9 +179,13 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 - **R35** When a clock is marked overdue or a response is recorded against an action, monitoring asks `escalation` whether a stage's trigger is met, so the next stage is proposed; monitoring never advances a stage.
 - **R50** `deadlineRecheckWake(now)` answers the start of the UTC day after the earliest date among `pending` clock entries of visible-to-this-module actions (`action-clocks.pendingClocks`, read as this module's machine viewer), or null when none is pending; `deadlineRecheckDue(now)` answers that instant when it is at or before `now`, else null. So `scheduler`'s `deadline-recheck` consumer (its R5) runs R34 on the first alarm of the day an entry passes, and an instance with no pending entry holds no wake for it (scheduler R15). (N429, K719) An entry of an action whose last R34 mark failed (`deadlineRecheck`'s `failed`) is left out of that earliest date until the start of the UTC day after the failure, so a mark that keeps failing is asked again once a day (the bound `scheduler`'s `deadline-recheck` consumer keeps today by holding a past wake, K719) and never holds the wake in the past for the entries that can be marked.
 
+- **R64** (K1099, K1122; `capture-requests` R45) At its construction the module registers with `capture-requests` the sweep scope check that module's R45 calls (K31's pattern): given a sweep `<bundle>#<id>` and a request's locators, it answers whether the sweep is ratified and not held (R53 onward) and whether every locator is within the sweep's scope, by the same matcher a sweep's run uses. A request filed under a sweep this way counts toward that sweep's `per_run` on its next run. *(not yet met: T23)*
+
 ## Private
 
 ### Uses
+
+- `capture-requests`: the scope-check registration its R45 reads (R64; K1122).
 
 - `record-grammar`: `isPublicHttpsLocator`, `ISO_TS_RE`, `parseFrontmatter`, `createSha256`, `MACHINE_CLASS_PREFIX` (`MONITOR_FREQ`, `MECHANICAL_FIELD_SETS` and the C-48.8/.9 rows are this module's own since T18, K717).
 - `record-core`: `recordOf(ctx)`, the image read, `stampInstant` (R47), `declarePurge` (R41).
