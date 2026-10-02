@@ -1,6 +1,6 @@
 # network-notices (T23)
 
-**Status** · session_01XftQvd4G9DgVwWXFazJx1b · depth 2 · RUNNING until 2026-10-02T09:14:08Z (node --test bio-plane/test/m (the whole battery)) · handled B3
+**Status** · session_01XftQvd4G9DgVwWXFazJx1b · depth 2 · WAITING ON BOB (J2) · handled B3
 
 ## J1 · QUESTION
 
