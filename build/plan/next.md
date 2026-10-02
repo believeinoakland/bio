@@ -28,6 +28,8 @@
 
 - N494 · 2026-10-02 · **sources** (SOURCES #7's record, deferred; K1040): `test/m/sources/secret.test.mjs`'s two R11 rate tests still say "12 in the window, the thirteenth refused", from before capture's per-source bound became 5 (K1023); they pass but no longer state the edge they reach. Re-word them to what they assert (an attempt refused by capture's rate, never by `SECRET_NOT_RECOGNISED`), without pinning capture's constants. **Hard reason:** sources' one T22 job is merged (P8); a wording of tests only.
 
+- N495 · 2026-10-02 · **record-grammar** (CONTENT #9's J1 (4), K1046): `bio-plane/src/record-grammar/labels.mjs`:198 names content's `mintContent` default; `mintContent` (no caller) was removed in T22 L4. Re-word the comment to what the default is now, or past tense (N469's kind). **Hard reason:** record-grammar's T22 layer (L1) is closed (P8, P10); a comment only.
+
 ## Left out of T22, carried here (62 rows, one hard reason each) (check)
 
 | row | item | hard reason | note |
