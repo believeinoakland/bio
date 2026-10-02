@@ -28,3 +28,7 @@
 - `checks/ownership.mjs … ratification tranche/T24`: 4 files changed; 0 failures.
 
 Size (session_01FzkbVm8E9gu1PeRiKPLsQE): test runs 2, module lines 3973
+
+## J1 · COMPLETE
+
+N502 (test) applied: checks.test.mjs:313 now names 1.53.0. Re-scan by N469's rule re-worded two more test notes naming the retired legacy store / legacy-index as live (fixture.mjs:237, relays.test.mjs:7). Wording only; nothing under bio-plane/src changed, so no bundle staled. Red 5: no row added or changed. Module tests 199/199; whole test/m 5236, 0 fail (11 todo). Checks: format 2 failures, both red 4; architecture, coverage (38/38), ownership 0 failures. Record: build/jobs/T24/ratification.md.
