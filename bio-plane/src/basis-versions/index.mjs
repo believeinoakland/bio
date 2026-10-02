@@ -547,9 +547,9 @@ export class BasisVersions {
 
   /** R41 (N300): the inquiries a project draws on, by R13's own test, in id order after `after`, each with whether its
    *  basis holds a leg (inquiry R16's `basisFor`, limit 1) and the project's stance by R22. Viewer-free: its caller
-   *  (publication R45) fences the project. The candidates are the document's live `cites` targets that the record holds
-   *  as inquiries, read in one bounded statement, one past the page, so `cursor` (the last answered) is set only when
-   *  more follow. `limit` absent, zero or not a number reads as 500, a negative one as 1 (connections R42's reading).
+   *  (`project-stage` R2, was publication R45) fences the project. The candidates are the document's live `cites`
+   *  targets that the record holds as inquiries, read in one bounded statement, one past the page, so `cursor` (the
+   *  last answered) is set only when more follow. `limit` absent, zero or not a number reads as 500, a negative one as 1 (connections R42's reading).
    *  Writes nothing; never throws: an empty or non-project id, or a project with no document, answers `items: []`. */
   projectQuestions({ project = null, after = null, limit = null } = {}) {
     const out = { items: [], cursor: null };
@@ -1670,9 +1670,9 @@ export function basisVersionsOwns(t) {
   return BASIS_VERSIONS_TABLES.includes(name);
 }
 
-/* The Durable Object routes this module answers, as entries of the legacy store's op map (its dispatcher spreads them
-   in; K3). `url` carries the control plane's stamps — `viewer`, `author`, `identity` — and `body` the parsed body; no
-   stamp is read from the body. */
+/* The Durable Object routes this module answers, as entries of the plane's op map (`plane`'s store,
+   `src/plane/store.mjs`, spreads them in; K3). `url` carries the control plane's stamps — `viewer`, `author`,
+   `identity` — and `body` the parsed body; no stamp is read from the body. */
 export function basisVersionsOps(bv, url, body) {
   const q = (key) => url.searchParams.get(key);
   const b = body && typeof body === "object" ? body : null;
