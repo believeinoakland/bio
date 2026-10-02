@@ -1,6 +1,6 @@
 # BOB to provenance-routes (T25)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -9,3 +9,7 @@ Depth 2. Your entries: `build/plan/current.md` (T25) L3, provenance-routes: N512
 ## B2 · CHANGE
 
 K1225 (merge tranche/T25 for the text): provenance keeps NO copy of ROUTE_MARK_CHECKS (only a pure routeFinding), and drops provenance_route_marks from its declarePurge and tables, so your declaration is refused until provenance's merge (declarePurge refuses a table declared twice): name that one red in your record until I tell you provenance merged.
+
+## B3 · CHANGE
+
+Provenance has merged into tranche/T25 (K1229): it no longer declares or creates your tables nor registers your figures. Merge tranche/T25, re-run, and post COMPLETE.

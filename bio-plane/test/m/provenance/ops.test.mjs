@@ -1,12 +1,13 @@
-/* provenance: the two ops' Worker arms (`ops.mjs`), moved out of legacy-index at T18: op=registeraudit (R8, R9) and
-   op=attest (R31–R33), driven with a stand-in store, evidence bucket and envelope helpers, as the control plane hands
-   them in; and the ops map the composition root spreads (R53), driven over the real modules with the query the
-   control plane stamps. */
+/* provenance: the Worker arm of op=registeraudit (R8, R9; `ops.mjs`, moved out of legacy-index at T18), driven with a
+   stand-in store, evidence bucket and envelope helpers, as the control plane hands them in; and the ops map the
+   composition root spreads (R53), driven over the real modules with the query the control plane stamps. op=attest's
+   arm and the three route arms are `attestation`'s and `provenance-routes`' since N512. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, evidence, V } from "./fixture.mjs";
-import { registerAuditOp, attestOp, provenanceOps } from "../../../src/provenance/ops.mjs";
-import { ATTEST_CHECKS } from "../../../src/provenance/checks.mjs";
+import * as OPS from "../../../src/provenance/ops.mjs";
+
+const { registerAuditOp, provenanceOps } = OPS;
 
 /* The control plane's helpers, each recording what it was asked. */
 function helpers(calls = []) {
@@ -50,57 +51,19 @@ test("R8, R9: op=registeraudit probes each unresolved row in the working bucket 
   assert.deepEqual(calls, [["refused", "X"], ["silent", "registeraudit", "c1"], ["silent", "registeraudit", null]]);
 });
 
-test("R31, R32: op=attest is a POST over the working bucket, asks the store's register and receipts on a miss, and keeps attest's status", async () => {
-  const s = sha("capture");
-  const post = (body) => ({ method: "POST", json: async () => body });
-  /* Not a POST; no bucket bound. */
-  assert.deepEqual(await attestOp({ method: "GET" }, {}, storeAnswering(() => null), helpers()),
-                   { body: { ok: false, error: "attest is a POST" }, status: 405 });
-  const calls = [];
-  assert.deepEqual(await attestOp(post({ sha256: s }), {}, storeAnswering(() => null), helpers(calls)), { absent: "attest" });
-  assert.deepEqual(calls, [["absent", "attest", "this instance has no evidence storage configured"]]);
-  /* A malformed digest: attest's own refusal and status, with the store and class beside it. */
-  const bucket = evidence({});
-  const bad = await attestOp(post({ sha256: "nope" }), { CAPTURES: bucket }, storeAnswering(() => null), helpers());
-  assert.deepEqual([bad.status, bad.body.reason, bad.body.store, bad.body.tokenClass], [400, "BAD_SHA", "bio", "admin"]);
-  /* A body that does not parse is an empty request, refused the same way. */
-  const unparsed = await attestOp({ method: "POST", json: async () => { throw new Error("not json"); } }, { CAPTURES: bucket },
-                                  storeAnswering(() => null), helpers());
-  assert.equal(unparsed.body.reason, "BAD_SHA");
-  /* A miss asks the store whether its register or a receipt names the hash: the register alone refuses by C-89.1. */
-  const seen = [];
-  const parts = await attestOp(post({ sha256: s }), { CAPTURES: bucket },
-    storeAnswering(() => ({ answered: true, result: { acquired: false, registered: true } }), seen), helpers());
-  assert.deepEqual(seen, [`http://x/registerholds?sha256=${s}`]);
-  assert.deepEqual([parts.status, parts.body.reason, parts.body.check, parts.body.translation],
-                   [409, "CAPTURE_HELD_IN_PARTS", "C-89.1", ATTEST_CHECKS.CAPTURE_HELD_IN_PARTS.translation]);
-  assert.deepEqual(bucket.calls.filter(([k]) => k === "head").map(([, key]) => key), [`bio/captures/${s}`]);
-  /* A store that does not answer is a record that could not be asked. */
-  const silent = await attestOp(post({ sha256: s }), { CAPTURES: bucket }, storeAnswering(() => ({ answered: false })), helpers());
-  assert.deepEqual([silent.status, silent.body.reason], [404, "NO_SUCH_CAPTURE"]);
-  assert.match(silent.body.detail, /could not be asked/);
-  /* Held whole: the authorities are asked through the network, and a token is stored under the store's key (R32). */
-  const real = globalThis.fetch;
-  const asked = [];
-  globalThis.fetch = async (url) => { asked.push(url); return { ok: false, status: 503 }; };
-  try {
-    const whole = evidence({ [`bio/captures/${s}`]: "capture" });
-    const r = await attestOp(post({ sha256: s }), { CAPTURES: whole }, storeAnswering(() => null), helpers());
-    assert.deepEqual([r.status, r.body.reason, r.body.attempts.length > 0], [502, "NO_ATTESTATION", true]);
-    assert.equal(asked.length, r.body.attempts.length, "every authority asked is an attempt");
-  } finally { globalThis.fetch = real; }
-});
-
 /* ===================================================================== R53: provenanceOps */
 
 const ops = (w, query = "", body = null, opts) => provenanceOps(w.prov, new URL(`http://do/?${query}`), body, opts);
 const qs = (o) => new URLSearchParams(o).toString();
 
-test("R53: nine route arms, each a function of no arguments, keyed by op name", () => {
+test("R53: six route arms, each a function of no arguments, keyed by op name; the route arms and op=attest are not this module's", () => {
   const w = world();
   const map = ops(w);
-  assert.deepEqual(Object.keys(map).sort(), ["homecensus", "provenancechain", "provenanceroute", "provenanceroutes",
-    "recordcapturedlocator", "registeraudit", "registerholds", "testify", "versionchain"]);
+  assert.deepEqual(Object.keys(map).sort(), ["homecensus", "recordcapturedlocator", "registeraudit", "registerholds",
+    "testify", "versionchain"]);
+  /* N512: `provenancechain`, `provenanceroute` and `provenanceroutes` are provenance-routes' map, and op=attest's
+     Worker arm attestation's; this module's ops export the map, op=registeraudit's arm and the attestOp copy (N516). */
+  assert.deepEqual(Object.keys(OPS).sort(), ["attestOp", "provenanceOps", "registerAuditOp"]);
   for (const [k, f] of Object.entries(map)) assert.deepEqual([typeof f, f.length], ["function", 0], k);
   /* Building the map runs nothing. */
   const before = w.snapshot();
@@ -151,33 +114,6 @@ test("R53: versionchain, homecensus, registerholds and registeraudit read the qu
   assert.deepEqual(ops(w, qs({ sha256: a.sha })).registeraudit(), w.prov.registerRows());
 });
 
-test("R53: provenancechain, provenanceroute and provenanceroutes take the bundle, viewer and author from the query; apply only when it is 1", () => {
-  const w = world();
-  const c = w.cap("c");
-  w.promoteInfo("INFO-2026-0001-c", { captures: [c] });
-  const stamped = { bundleId: "INFO-2026-0001-c", viewer: V("ruth"), author: V("ruth") };
-  for (const apply of [null, "true", "yes", "0", ""]) {
-    const r = ops(w, qs({ ...stamped, ...(apply === null ? {} : { apply }) })).provenancechain();
-    assert.deepEqual([r.ok, r.applied, r.changed], [true, false, 1], `apply=${apply}`);
-  }
-  const reg0 = w.record.readFile("INFO-2026-0001-c", "data/provenance.json").sha256;
-  const applied = ops(w, qs({ ...stamped, apply: "1" })).provenancechain();
-  assert.deepEqual([applied.ok, applied.applied], [true, true], JSON.stringify(applied));
-  assert.notEqual(w.record.readFile("INFO-2026-0001-c", "data/provenance.json").sha256, reg0, "the chain was written");
-  assert.equal(ops(w, qs({ bundleId: "INFO-2026-0001-c", viewer: V("ruth") })).provenancechain().reason, "NO_AUTHOR",
-               "the author is the query's stamp");
-  /* The route act and the roster. */
-  const m = ops(w, qs(stamped)).provenanceroute();
-  assert.deepEqual([m.ok, m.route.finding, m.route.by], [true, "PRESENT", V("ruth")]);
-  assert.equal(ops(w, qs({ bundleId: "INFO-2026-0001-c", viewer: V("ruth") })).provenanceroute().reason, "ROUTE_MARK_NO_AUTHOR");
-  assert.equal(ops(w, qs({ bundleId: "INFO-2026-0001-c", author: V("ruth"), viewer: "stranger" })).provenanceroute().reason,
-               "ROUTE_MARK_NO_SUCH_BUNDLE");
-  const roster = ops(w, qs({ viewer: V("x"), limit: "5", after: "" })).provenanceroutes();
-  assert.deepEqual(roster, w.prov.provenanceRoutesMarked({ after: "", limit: "5", viewer: V("x") }));
-  assert.deepEqual([roster.cause, roster.limit], ["none_standing", 5]);
-  assert.equal(ops(w).provenanceroutes().cause, "no_documents_visible", "no viewer stamped sees nothing");
-});
-
 test("R53: recordcapturedlocator takes the listeners' context out of the body and reports what the observer's listener did", () => {
   const w = world({ order: [] });
   const heard = [];
@@ -212,4 +148,21 @@ test("R53: recordcapturedlocator takes the listeners' context out of the body an
   assert.deepEqual(ops(w, "", { captureSha: sha("x") }, { observer: "observation-log" }).recordcapturedlocator(), { recorded: false });
   assert.deepEqual(ops(w, "", null, { observer: "observation-log" }).recordcapturedlocator(), { recorded: false });
   assert.equal(w.count("captured_locators"), n);
+});
+
+test("N516: the attestOp copy for the plane's door is a POST over the working bucket, keeping attest's status, and writes no table", async () => {
+  const w = world();
+  const before = w.snapshot();
+  const post = (body) => ({ method: "POST", json: async () => body });
+  assert.deepEqual(await OPS.attestOp({ method: "GET" }, {}, storeAnswering(() => null), helpers()),
+                   { body: { ok: false, error: "attest is a POST" }, status: 405 });
+  assert.deepEqual(await OPS.attestOp(post({ sha256: sha("c") }), {}, storeAnswering(() => null), helpers()), { absent: "attest" });
+  const bucket = evidence({});
+  const bad = await OPS.attestOp(post({ sha256: "nope" }), { CAPTURES: bucket }, storeAnswering(() => null), helpers());
+  assert.deepEqual([bad.status, bad.body.reason, bad.body.store, bad.body.tokenClass], [400, "BAD_SHA", "bio", "admin"]);
+  const seen = [];
+  const parts = await OPS.attestOp(post({ sha256: sha("c") }), { CAPTURES: bucket },
+    storeAnswering(() => ({ answered: true, result: { acquired: false, registered: true } }), seen), helpers());
+  assert.deepEqual([parts.status, parts.body.check, seen], [409, "C-89.1", [`http://x/registerholds?sha256=${sha("c")}`]]);
+  assert.deepEqual(w.snapshot(), before);
 });

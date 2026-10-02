@@ -9,3 +9,7 @@ Depth 2. Your entries: `build/plan/current.md` (T25) L3, attestation: N512, **a 
 ## B2 · ANSWER · re J1
 
 K1225. (1) attestationOf(host, deps) accepted. (2) Forwarded to provenance: it drops signed_receipts and receipt_keys from its declarePurge, PROVENANCE_TABLES and schema; your R10 red is named until provenance's merge; I will tell you when it merges. (3) Provenance re-points C-103.6/.7's where. (4) Provenance keeps NO copy of ATTEST_CHECKS (families.mjs and catalogue.test.mjs import its checks.mjs as a namespace, so nothing fails to load), so C-89.1 will be held once after provenance's merge; requirements re-worded on tranche/T25 (merge it).
+
+## B3 · CHANGE
+
+Provenance has merged into tranche/T25 (K1229): it no longer declares or creates your tables nor registers your figures. Merge tranche/T25, re-run, and post COMPLETE.

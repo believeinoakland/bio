@@ -56,8 +56,8 @@ test("R15: no service but the plane's own receipt writes a receipt", async () =>
   /* Every other service, asked with everything a caller could hand it. */
   w.prov.registerHolds({ sha: a.sha }); w.prov.homeOf(a.sha); w.prov.receipts({ addressNorm: "e.org/a" });
   w.prov.versionChain({ addressNorm: "e.org/a", viewer: V("x") }); w.prov.captureGrade(a.sha); w.prov.capturesOf("INFO-2026-0001-a");
-  w.prov.provenanceRouteAssess({ bundleId: "INFO-2026-0001-a", author: V("x"), viewer: V("x") });
-  w.prov.provenanceChainRebuild({ bundleId: "INFO-2026-0001-a", author: V("x"), viewer: V("x"), apply: true });
+  w.prov.declareOrigin({ bundleId: "INFO-2026-0001-a", system: "s", by: V("x"), viewer: V("x") });
+  w.prov.registeredFor("INFO-2026-0001-a"); w.prov.homeCensus({});
   w.prov.testify({ words: "w", observedAt: "2026-09-20", author: V("x") });
   await w.prov.registerAudit(null);
   w.promoteInfo("INFO-2026-0002-b", { captures: [w.cap("b")], pkg: { receipts: [{ addressNorm: "e.org/b" }] } });
