@@ -36331,197 +36331,6 @@ function calibrationOps(c, url, body) {
   };
 }
 
-// src/readingprov.mjs
-var PROVENANCE_SCHEME = "reading-provenance/1";
-var TIER_MEMBERS = Object.freeze({ 1: "plane", 2: "pdf-worker", 3: "ocr-worker" });
-async function sha256Hex9(s) {
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
-  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-function stepPages(s) {
-  const e = s && s.extent;
-  if (e && e.kind === "pages" && Array.isArray(e.pages)) return new Set(e.pages.filter(Number.isInteger));
-  return "all";
-}
-var covers = (pages, p) => pages === "all" || pages.has(p);
-function partOf(s) {
-  const e = s && s.extent;
-  if (e && Number.isInteger(e.part)) return `#${e.part}`;
-  return e && Array.isArray(e.pages) ? e.pages.join(",") : "all";
-}
-function chainTiersOf(chain2, page) {
-  if (!Array.isArray(chain2)) return [];
-  const byPart = /* @__PURE__ */ new Map();
-  for (let i = 0; i < chain2.length; i++) {
-    const s = chain2[i];
-    if (!s || typeof s !== "object") continue;
-    const pages = stepPages(s);
-    if (!covers(pages, page)) continue;
-    const key = partOf(s);
-    const had = byPart.get(key) || { layer: null, pixels: null };
-    if (s.step === "pixels") {
-      const next = chain2[i + 1];
-      had.pixels = { tier: 3, engine: next && next.step === "ocr" && typeof next.engine === "string" ? `${next.engine}${next.version ? ` ${next.version}` : ""}` : null };
-    } else if (s.step === "layer") {
-      had.layer = { tier: Number.isInteger(s.tier) ? s.tier : null, engine: null };
-    }
-    byPart.set(key, had);
-  }
-  return [...byPart.values()].map((h) => h.pixels || h.layer).filter(Boolean);
-}
-function chainTierOf(chain2, page) {
-  const all = chainTiersOf(chain2, page);
-  return all.length ? all[all.length - 1] : null;
-}
-async function readingProvenance({
-  text: text5 = null,
-  chain: chain2 = null,
-  tier = null,
-  container: container2 = null,
-  planeVersion = null,
-  member: offLadder = null
-} = {}) {
-  const out = {
-    scheme: PROVENANCE_SCHEME,
-    text_tier: Number.isInteger(tier) ? tier : null,
-    container: typeof container2 === "string" ? container2 : null,
-    text_sha256: null,
-    text_chars: 0,
-    text_from: null,
-    producers: [],
-    pages: null,
-    pages_why: null
-  };
-  if (text5 == null) {
-    out.why = "no text surface answered for this document, so no text was classified and there is nothing to digest";
-    out.pages_why = out.why;
-    return out;
-  }
-  const flat = flattenText(text5);
-  out.text_from = flat.source;
-  out.text_chars = flat.text.length;
-  out.text_sha256 = flat.text.length ? await sha256Hex9(flat.text) : null;
-  const byKey = /* @__PURE__ */ new Map();
-  const credit = (t, engine, page, fallback = null) => {
-    const member = t == null ? fallback : TIER_MEMBERS[t] ?? null;
-    const key = `${t}|${member}|${engine || ""}`;
-    if (!byKey.has(key))
-      byKey.set(key, {
-        tier: t,
-        member,
-        ...member === "plane" && planeVersion ? { version: String(planeVersion) } : {},
-        ...engine ? { engine } : {},
-        pages: page == null ? null : []
-      });
-    if (page != null) byKey.get(key).pages.push(page);
-  };
-  const pages = text5 && typeof text5 === "object" && Array.isArray(text5.pages) ? text5.pages : null;
-  if (pages && pages.some((p) => p && Number.isInteger(p.page))) {
-    out.pages = [];
-    for (const p of pages) {
-      if (!p || !Number.isInteger(p.page)) continue;
-      const fromChain = chainTierOf(chain2, p.page);
-      const t = fromChain && fromChain.tier != null ? fromChain.tier : Number.isInteger(p.tier) ? p.tier : out.text_tier;
-      const pt = typeof p.text === "string" ? p.text : "";
-      const several = chainTiersOf(chain2, p.page).filter((c) => c.tier != null);
-      const entry = {
-        page: p.page,
-        tier: t,
-        member: t == null ? null : TIER_MEMBERS[t] ?? null,
-        chars: pt.length,
-        text_sha256: pt.length ? await sha256Hex9(pt) : null
-      };
-      if (several.length > 1)
-        entry.producers = several.map((c) => ({ tier: c.tier, member: TIER_MEMBERS[c.tier] ?? null }));
-      out.pages.push(entry);
-      if (pt.length) {
-        if (several.length > 1) for (const c of several) credit(c.tier, c.engine, p.page);
-        else credit(t, fromChain && fromChain.engine, p.page);
-      }
-    }
-  } else {
-    out.pages_why = "this text carries no per-page grain (its producer itemised no pages), so a re-read that differs is attributed to the document, not to a page";
-    const c = chainTierOf(chain2, -1);
-    if (flat.text.length) credit(
-      c && c.tier != null ? c.tier : out.text_tier,
-      c && c.engine,
-      null,
-      typeof offLadder === "string" && offLadder ? offLadder : null
-    );
-  }
-  out.producers = [...byKey.values()];
-  return out;
-}
-function describePages(list2) {
-  const ps = [...new Set(list2.filter(Number.isInteger))].sort((a, b) => a - b).map((p) => p + 1);
-  if (!ps.length) return "no page";
-  const runs = [];
-  for (const p of ps) {
-    const r = runs[runs.length - 1];
-    if (r && p === r[1] + 1) r[1] = p;
-    else runs.push([p, p]);
-  }
-  return `${ps.length === 1 ? "page" : "pages"} ${runs.map(([a, b]) => a === b ? `${a}` : `${a}-${b}`).join(", ")}`;
-}
-var who = (t, m) => t == null ? "an undetermined tier" : `tier ${t} on ${m || "an unnamed member"}`;
-var whoOf = (p) => Array.isArray(p.producers) && p.producers.length > 1 ? p.producers.map((q7) => who(q7.tier, q7.member)).join(" and ") : who(p.tier, p.member);
-var isProv = (p) => !!(p && typeof p === "object" && p.scheme === PROVENANCE_SCHEME);
-function compareProvenance(prior, next) {
-  if (!isProv(prior) || !isProv(next)) {
-    const which = !isProv(prior) && !isProv(next) ? "neither reading carries" : !isProv(prior) ? "the earlier reading carries" : "this reading carries";
-    return {
-      state: "undetermined",
-      says: `${which} no reading provenance (it was written before D-536, or by a caller that did not carry it), so whether the text changed, and which tier's, is UNDETERMINED \u2014 it is not inferred from the document-level tier or from the chain`
-    };
-  }
-  if (prior.text_sha256 == null && next.text_sha256 == null)
-    return { state: "no_text", says: "neither reading classified any text, so there is nothing to compare" };
-  if (prior.text_sha256 === next.text_sha256)
-    return { state: "agrees", says: "the re-read classified the same text as the reading before it (SHA-256 equal)" };
-  if (!Array.isArray(prior.pages) || !Array.isArray(next.pages)) {
-    const pp = (prior.producers || []).map((p) => who(p.tier, p.member)).join(" and ") || who(prior.text_tier, null);
-    const np = (next.producers || []).map((p) => who(p.tier, p.member)).join(" and ") || who(next.text_tier, null);
-    return {
-      state: "differs",
-      changed: [],
-      says: `the re-read classified different text (earlier: ${pp}; now: ${np}); the text carries no per-page grain, so which part of the document changed is not said`
-    };
-  }
-  const before = new Map(prior.pages.map((p) => [p.page, p]));
-  const after = new Map(next.pages.map((p) => [p.page, p]));
-  const all = [.../* @__PURE__ */ new Set([...before.keys(), ...after.keys()])].sort((a, b) => a - b);
-  const groups = /* @__PURE__ */ new Map();
-  for (const pg of all) {
-    const a = before.get(pg) || null, b = after.get(pg) || null;
-    if (a && b && a.text_sha256 === b.text_sha256) continue;
-    const key = `${a ? whoOf(a) : "-"}|${b ? whoOf(b) : "-"}`;
-    const side = (x) => ({
-      tier: x.tier,
-      member: x.member,
-      ...Array.isArray(x.producers) && x.producers.length > 1 ? { producers: x.producers } : {}
-    });
-    if (!groups.has(key))
-      groups.set(key, { before: a ? side(a) : null, now: b ? side(b) : null, pages: [] });
-    groups.get(key).pages.push(pg);
-  }
-  const changed = [...groups.values()];
-  if (!changed.length)
-    return {
-      state: "differs",
-      changed,
-      says: "the re-read classified different text but no page's text differs, so the difference is in how the pages were joined into the text the reader was handed"
-    };
-  const says = changed.map((g) => {
-    const pgs = describePages(g.pages);
-    if (!g.before) return `${whoOf(g.now)} returned ${pgs}, which the earlier reading did not have`;
-    if (!g.now) return `the earlier reading had ${pgs} (${whoOf(g.before)}), which this reading does not`;
-    if (whoOf(g.before) === whoOf(g.now))
-      return `${whoOf(g.now)} returned different text for ${pgs}`;
-    return `${pgs} ${g.pages.length === 1 ? "was" : "were"} read by ${whoOf(g.before)} before and by ${whoOf(g.now)} now, and the text differs`;
-  }).join("; ");
-  return { state: "differs", changed, says };
-}
-
 // src/extraction/schema.mjs
 var EXTRACTION_SCHEMA = `
 -- 2026-09-14, REC-81: every citation into the content framework in this file names a
@@ -36840,7 +36649,7 @@ CREATE INDEX IF NOT EXISTS capture_text_bundle ON capture_text(bundle_id);
 -- deleted but by a purge. A reading equal byte for byte to the latest kept one is not kept twice --
 -- an ordinary revision of a bundle re-submits the same provenance document and that is not a re-read.
 -- reading is the whole reading as JSON, as the readings row held it. provenance is its
--- reading-provenance object (readingprov.mjs) or NULL, and NULL is UNDETERMINED -- a reading written
+-- reading-provenance object (reading-pipeline's readingProvenance) or NULL, and NULL is UNDETERMINED -- a reading written
 -- before D-536, or by a caller that carried none -- never inferred from text_tier or from the chain.
 -- compared is the attribution against the row before it (compareProvenance), NULL for the first row
 -- of a capture. text_sha256 is projected out of provenance so the comparison is a column, NULL when
@@ -36861,7 +36670,7 @@ CREATE TABLE IF NOT EXISTS reading_history (
 
 
 -- =========================================================================
--- D-724 / BOB #36 2026-09-25 11:20Z, option (b) (extraction R16, R22) -- THE UNITS
+-- D-724 / BOB #36 2026-09-25 11:20Z, option (b) (reading-pipeline R15, extraction R22) -- THE UNITS
 -- A PARTIAL CAPTURE DID NOT INDEX, NAMED. Both budget loops (the reading's wire
 -- budget and the index writer) go ON past a unit over the bound and keep a later
 -- unit that fits, so a partial capture holds every unit that fit, in reading
@@ -37444,7 +37253,198 @@ function membershipBeside(structure, view) {
   return { membership: d.membership, membershipWhy: d.membership ? null : d.why };
 }
 
-// src/extraction/pipeline.mjs
+// src/reading-pipeline/readingprov.mjs
+var PROVENANCE_SCHEME = "reading-provenance/1";
+var TIER_MEMBERS = Object.freeze({ 1: "plane", 2: "pdf-worker", 3: "ocr-worker" });
+async function sha256Hex9(s) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+function stepPages(s) {
+  const e = s && s.extent;
+  if (e && e.kind === "pages" && Array.isArray(e.pages)) return new Set(e.pages.filter(Number.isInteger));
+  return "all";
+}
+var covers = (pages, p) => pages === "all" || pages.has(p);
+function partOf(s) {
+  const e = s && s.extent;
+  if (e && Number.isInteger(e.part)) return `#${e.part}`;
+  return e && Array.isArray(e.pages) ? e.pages.join(",") : "all";
+}
+function chainTiersOf(chain2, page) {
+  if (!Array.isArray(chain2)) return [];
+  const byPart = /* @__PURE__ */ new Map();
+  for (let i = 0; i < chain2.length; i++) {
+    const s = chain2[i];
+    if (!s || typeof s !== "object") continue;
+    const pages = stepPages(s);
+    if (!covers(pages, page)) continue;
+    const key = partOf(s);
+    const had = byPart.get(key) || { layer: null, pixels: null };
+    if (s.step === "pixels") {
+      const next = chain2[i + 1];
+      had.pixels = { tier: 3, engine: next && next.step === "ocr" && typeof next.engine === "string" ? `${next.engine}${next.version ? ` ${next.version}` : ""}` : null };
+    } else if (s.step === "layer") {
+      had.layer = { tier: Number.isInteger(s.tier) ? s.tier : null, engine: null };
+    }
+    byPart.set(key, had);
+  }
+  return [...byPart.values()].map((h) => h.pixels || h.layer).filter(Boolean);
+}
+function chainTierOf(chain2, page) {
+  const all = chainTiersOf(chain2, page);
+  return all.length ? all[all.length - 1] : null;
+}
+async function readingProvenance({
+  text: text5 = null,
+  chain: chain2 = null,
+  tier = null,
+  container: container2 = null,
+  planeVersion = null,
+  member: offLadder = null
+} = {}) {
+  const out = {
+    scheme: PROVENANCE_SCHEME,
+    text_tier: Number.isInteger(tier) ? tier : null,
+    container: typeof container2 === "string" ? container2 : null,
+    text_sha256: null,
+    text_chars: 0,
+    text_from: null,
+    producers: [],
+    pages: null,
+    pages_why: null
+  };
+  if (text5 == null) {
+    out.why = "no text surface answered for this document, so no text was classified and there is nothing to digest";
+    out.pages_why = out.why;
+    return out;
+  }
+  const flat = flattenText(text5);
+  out.text_from = flat.source;
+  out.text_chars = flat.text.length;
+  out.text_sha256 = flat.text.length ? await sha256Hex9(flat.text) : null;
+  const byKey = /* @__PURE__ */ new Map();
+  const credit = (t, engine, page, fallback = null) => {
+    const member = t == null ? fallback : TIER_MEMBERS[t] ?? null;
+    const key = `${t}|${member}|${engine || ""}`;
+    if (!byKey.has(key))
+      byKey.set(key, {
+        tier: t,
+        member,
+        ...member === "plane" && planeVersion ? { version: String(planeVersion) } : {},
+        ...engine ? { engine } : {},
+        pages: page == null ? null : []
+      });
+    if (page != null) byKey.get(key).pages.push(page);
+  };
+  const pages = text5 && typeof text5 === "object" && Array.isArray(text5.pages) ? text5.pages : null;
+  if (pages && pages.some((p) => p && Number.isInteger(p.page))) {
+    out.pages = [];
+    for (const p of pages) {
+      if (!p || !Number.isInteger(p.page)) continue;
+      const fromChain = chainTierOf(chain2, p.page);
+      const t = fromChain && fromChain.tier != null ? fromChain.tier : Number.isInteger(p.tier) ? p.tier : out.text_tier;
+      const pt = typeof p.text === "string" ? p.text : "";
+      const several = chainTiersOf(chain2, p.page).filter((c) => c.tier != null);
+      const entry = {
+        page: p.page,
+        tier: t,
+        member: t == null ? null : TIER_MEMBERS[t] ?? null,
+        chars: pt.length,
+        text_sha256: pt.length ? await sha256Hex9(pt) : null
+      };
+      if (several.length > 1)
+        entry.producers = several.map((c) => ({ tier: c.tier, member: TIER_MEMBERS[c.tier] ?? null }));
+      out.pages.push(entry);
+      if (pt.length) {
+        if (several.length > 1) for (const c of several) credit(c.tier, c.engine, p.page);
+        else credit(t, fromChain && fromChain.engine, p.page);
+      }
+    }
+  } else {
+    out.pages_why = "this text carries no per-page grain (its producer itemised no pages), so a re-read that differs is attributed to the document, not to a page";
+    const c = chainTierOf(chain2, -1);
+    if (flat.text.length) credit(
+      c && c.tier != null ? c.tier : out.text_tier,
+      c && c.engine,
+      null,
+      typeof offLadder === "string" && offLadder ? offLadder : null
+    );
+  }
+  out.producers = [...byKey.values()];
+  return out;
+}
+function describePages(list2) {
+  const ps = [...new Set(list2.filter(Number.isInteger))].sort((a, b) => a - b).map((p) => p + 1);
+  if (!ps.length) return "no page";
+  const runs = [];
+  for (const p of ps) {
+    const r = runs[runs.length - 1];
+    if (r && p === r[1] + 1) r[1] = p;
+    else runs.push([p, p]);
+  }
+  return `${ps.length === 1 ? "page" : "pages"} ${runs.map(([a, b]) => a === b ? `${a}` : `${a}-${b}`).join(", ")}`;
+}
+var who = (t, m) => t == null ? "an undetermined tier" : `tier ${t} on ${m || "an unnamed member"}`;
+var whoOf = (p) => Array.isArray(p.producers) && p.producers.length > 1 ? p.producers.map((q7) => who(q7.tier, q7.member)).join(" and ") : who(p.tier, p.member);
+var isProv = (p) => !!(p && typeof p === "object" && p.scheme === PROVENANCE_SCHEME);
+function compareProvenance(prior, next) {
+  if (!isProv(prior) || !isProv(next)) {
+    const which = !isProv(prior) && !isProv(next) ? "neither reading carries" : !isProv(prior) ? "the earlier reading carries" : "this reading carries";
+    return {
+      state: "undetermined",
+      says: `${which} no reading provenance (it was written before D-536, or by a caller that did not carry it), so whether the text changed, and which tier's, is UNDETERMINED \u2014 it is not inferred from the document-level tier or from the chain`
+    };
+  }
+  if (prior.text_sha256 == null && next.text_sha256 == null)
+    return { state: "no_text", says: "neither reading classified any text, so there is nothing to compare" };
+  if (prior.text_sha256 === next.text_sha256)
+    return { state: "agrees", says: "the re-read classified the same text as the reading before it (SHA-256 equal)" };
+  if (!Array.isArray(prior.pages) || !Array.isArray(next.pages)) {
+    const pp = (prior.producers || []).map((p) => who(p.tier, p.member)).join(" and ") || who(prior.text_tier, null);
+    const np = (next.producers || []).map((p) => who(p.tier, p.member)).join(" and ") || who(next.text_tier, null);
+    return {
+      state: "differs",
+      changed: [],
+      says: `the re-read classified different text (earlier: ${pp}; now: ${np}); the text carries no per-page grain, so which part of the document changed is not said`
+    };
+  }
+  const before = new Map(prior.pages.map((p) => [p.page, p]));
+  const after = new Map(next.pages.map((p) => [p.page, p]));
+  const all = [.../* @__PURE__ */ new Set([...before.keys(), ...after.keys()])].sort((a, b) => a - b);
+  const groups = /* @__PURE__ */ new Map();
+  for (const pg of all) {
+    const a = before.get(pg) || null, b = after.get(pg) || null;
+    if (a && b && a.text_sha256 === b.text_sha256) continue;
+    const key = `${a ? whoOf(a) : "-"}|${b ? whoOf(b) : "-"}`;
+    const side = (x) => ({
+      tier: x.tier,
+      member: x.member,
+      ...Array.isArray(x.producers) && x.producers.length > 1 ? { producers: x.producers } : {}
+    });
+    if (!groups.has(key))
+      groups.set(key, { before: a ? side(a) : null, now: b ? side(b) : null, pages: [] });
+    groups.get(key).pages.push(pg);
+  }
+  const changed = [...groups.values()];
+  if (!changed.length)
+    return {
+      state: "differs",
+      changed,
+      says: "the re-read classified different text but no page's text differs, so the difference is in how the pages were joined into the text the reader was handed"
+    };
+  const says = changed.map((g) => {
+    const pgs = describePages(g.pages);
+    if (!g.before) return `${whoOf(g.now)} returned ${pgs}, which the earlier reading did not have`;
+    if (!g.now) return `the earlier reading had ${pgs} (${whoOf(g.before)}), which this reading does not`;
+    if (whoOf(g.before) === whoOf(g.now))
+      return `${whoOf(g.now)} returned different text for ${pgs}`;
+    return `${pgs} ${g.pages.length === 1 ? "was" : "were"} read by ${whoOf(g.before)} before and by ${whoOf(g.now)} now, and the text differs`;
+  }).join("; ");
+  return { state: "differs", changed, says };
+}
+
+// src/reading-pipeline/index.mjs
 var ACQUIRE_TEXT_UNITS_BUDGET = 512 * 1024;
 var ACQUIRE_TEXT_UNIT_ENVELOPE = 128;
 var CAPTURE_TEXT_UNIT_CAP = 128 * 1024;
@@ -38908,8 +38908,8 @@ var Extraction = class _Extraction {
     list2.sort((a, b) => a.rank - b.rank || a.seq - b.seq);
     return { ok: true, module };
   }
-  /* ---- reading (R1–R18) ---- */
-  /** R1–R18: reads a stored capture (`pipeline.read`) with this object's evidence store, bindings and the
+  /* ---- reading (R1, R18) ---- */
+  /** R1, R18: reads a stored capture (`reading-pipeline.read`, its R24) with this object's evidence store, bindings and the
    *  instance's jurisdiction view (R18), and records the digest of the reading it composed (R21). */
   async read(document, { storeName = "bio", env = null } = {}) {
     const e = env || this.env || {};
@@ -39116,7 +39116,7 @@ var Extraction = class _Extraction {
   }
   /* D-536 (R23): every distinct reading kept in arrival order, keyed by the digest of its JSON, before the row is
      replaced; one equal to the latest kept is not kept again; a capture whose one reading predates the history has
-     it kept first; each kept reading stores `compareProvenance` against the one before (R26). */
+     it kept first; each kept reading stores `compareProvenance` against the one before (reading-pipeline R19). */
   #keepReading(bundleId, sha, reading) {
     const json6 = JSON.stringify(reading);
     const digest2 = sha256HexSync(json6);
@@ -39544,7 +39544,7 @@ var Extraction = class _Extraction {
       chain: chain2,
       pageCount: Number.isInteger(pc) && pc > 0 ? pc : null,
       ...reading && Object.prototype.hasOwnProperty.call(reading, "container_extent") ? { containerExtent: reading.container_extent } : {},
-      /* N100: the boxes as R13 stored them: absent never stored, null stored null. */
+      /* N100: the boxes as reading-pipeline R12 states them, as stored: absent never stored, null stored null. */
       ...reading && Object.prototype.hasOwnProperty.call(reading, "page_boxes") ? { pageBoxes: reading.page_boxes } : {},
       textContainer: reading && typeof reading.text_container === "string" ? reading.text_container : null,
       captureFormat: typeof row2.capture_format === "string" ? row2.capture_format : null
@@ -39620,7 +39620,7 @@ var Extraction = class _Extraction {
   /* ---- the figures (R67) ---- */
   /** R67: the figures `registerCounts` asks for, in this order. */
   static COUNT_KEYS = Object.freeze(["textUnits"]);
-  /** R67 (D-464's subtraction, as `store.mjs`' `#counts` took it): `textUnits`, the `capture_text` rows, leaving out
+  /** R67 (D-464's subtraction, as the retired `store.mjs`' `#counts` took it): `textUnits`, the `capture_text` rows, leaving out
    *  the rows whose bundle is in `hid` (`{sql, args}`, the bundles the caller may not see; null counts whole). A row
    *  whose `bundle_id` is null names no bundle and is counted (`COALESCE`: `NULL NOT IN (…)` is NULL). Writes nothing. */
   counts(hid = null) {
@@ -39739,13 +39739,13 @@ var Extraction = class _Extraction {
   }
   /** R66: once per stored reading, a `.docx` reading made before N26 whose `word/document.xml` holds an
    *  `mc:AlternateContent` branch N26 no longer reads is migrated; every other reading is left as it is. Each is
-   *  re-read from its stored bytes (R1, R3) and its references moved by `docxRenumbering` (`n26MigratedReading`). */
+   *  re-read from its stored bytes (R1, reading-pipeline R2) and its references moved by `docxRenumbering` (`n26MigratedReading`). */
   migrateDocxReadings({ limit = N26_BATCH } = {}) {
     return this.#migrate(MIGRATIONS[N26_MIGRATION], limit);
   }
   /** R68: once per stored reading, a `.pptx` reading made before N439 whose slides hold an `mc:AlternateContent`
    *  branch N439 no longer reads is migrated; every other reading is left as it is. Each is re-read from its stored
-   *  bytes (R1, R3) and its `slide-shape` references moved by `pptxRenumbering` (`n439MigratedReading`). */
+   *  bytes (R1, reading-pipeline R2) and its `slide-shape` references moved by `pptxRenumbering` (`n439MigratedReading`). */
   migratePptxReadings({ limit = N439_BATCH } = {}) {
     return this.#migrate(MIGRATIONS[N439_MIGRATION], limit);
   }
