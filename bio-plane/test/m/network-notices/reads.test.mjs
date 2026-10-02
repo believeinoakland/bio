@@ -4,7 +4,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, post, prepare, keyFor, V, MACHINE, NOW, DAY, WEEK, monday } from "./fixture.mjs";
 import * as nn from "../../../src/network-notices/index.mjs";
-import * as jurisdictions from "../../../../jurisdictions/index.mjs";
 
 const A = V("alice");
 const LAST = monday(NOW) - WEEK;
@@ -179,12 +178,8 @@ test("R26 published rows are never altered; a bundle purge leaves a published no
 
 test("R29 no place is named in this module's outward text or answers", async () => {
   const { w } = await busy();
-  const places = new Set();
-  for (const p of jurisdictions.list()) {
-    const prof = jurisdictions.get(p.id);
-    for (const s of [p.name, ...(Array.isArray(p.covers) ? p.covers : []), prof && prof.name]) if (typeof s === "string" && s.trim()) places.add(s.trim());
-  }
-  for (const s of ["Oakland", "Alameda", "California"]) places.add(s);
+  /* the places the instance's profiles and the test profile name (`jurisdictions` is not this module's to import) */
+  const places = ["Oakland", "Alameda", "California", "Port Ellery", "Ellery", "Harbour"];
   const outward = JSON.stringify([nn.NETWORK_NOTICE_CHECKS, nn.ACTIVITY_METHOD, nn.OUTWARD_ACT_WARNING, nn.OTHERS_WELCOME, nn.SEAL_METHOD,
                                   w.nn.noticesPublic({ limit: 1000 }), w.nn.groupKeysPublic(), w.nn.noticesOf({ project: w.P, viewer: A })]);
   for (const p of places) assert.ok(!outward.toLowerCase().includes(p.toLowerCase()), `names ${p}`);

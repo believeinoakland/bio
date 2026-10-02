@@ -139,6 +139,7 @@ test("R2 the answer is the revision that would be published, with its digest, st
   assert.equal(r.expires, new Date(NOW + 3600000).toISOString().replace(/\.\d{3}Z$/, "Z"));
   assert.deepEqual(w.snapshot(), before, "this module's tables unchanged");
   assert.equal(w.count("manifest"), manifest, "no record written");
+  assert.equal(w.rows(`SELECT 1 FROM minted_ids WHERE id=?`, JSON.parse(r.revision).notice).length, 0, "the notice id is drawn, not recorded (K1145)");
   /* the same inputs on the same day answer byte for byte */
   assert.equal(JSON.stringify(await prepare(w, { body: "transfers", matter: "the fund" })), JSON.stringify(r));
   w.clock.now += 60000;

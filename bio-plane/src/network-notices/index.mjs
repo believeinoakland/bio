@@ -288,7 +288,15 @@ export class NetworkNotices {
     const day = dateOf(todayMs);
     const r = this.#reserved.get(pid);
     if (r && r.day === day && !this.#notice(r.id)) return r.id;
-    const id = this.record.mintOpaqueId(NOTICE_ID_PREFIX, day.slice(0, 4), "", (x) => !!this.#notice(x));
+    /* K1145: drawn in record-core R6's shape and NOT recorded: the draw runs in a transaction rolled back at once,
+       which takes the id back out of record-core's ledger (its R7), so prepare writes nothing durable. The post
+       records the notice in its own transaction; an id taken meanwhile answers NOTICE_STALE. Record-core offers no
+       service to record a chosen id, so the ledger learns it from this module's mint seed at the next boot (R40, R70). */
+    let id = null;
+    this.record.transact(() => {
+      id = this.record.mintOpaqueId(NOTICE_ID_PREFIX, day.slice(0, 4), "", (x) => !!this.#notice(x));
+      return { ok: false, reason: "DRAW_ONLY" };
+    });
     if (id) this.#reserved.set(pid, { day, id });
     return id;
   }
