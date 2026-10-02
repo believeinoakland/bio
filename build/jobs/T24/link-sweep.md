@@ -1,6 +1,6 @@
 # link-sweep (T24)
 
-**Status** · session_01CB47oKg96hYW5eGnbZtNP7 · depth 2 · WORKING · handled B5
+**Status** · session_01CB47oKg96hYW5eGnbZtNP7 · depth 2 · COMPLETE · handled B5
 
 ## J1 · QUESTION
 
