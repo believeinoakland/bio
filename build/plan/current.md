@@ -1,6 +1,6 @@
 # Plan: tranche T23
 
-**Status** · Draft by BOB #92's worker, 2026-10-02; to be re-checked at T22's close. Written on `tranche/T22` @ 404390625d (K1067: T22 L7 running) from the work that remains (P19, PROCESS-MECHANICS §5.2): `next.md` N480–N496 and its 62 carried rows, `current.md`'s left-out table and accepted reds, rulings K950–K1067, every `not yet met` mark in `requirements/`, and the drafts `draft-monitoring-r29.md` and `draft-network-notices.md`. Anything T22 leaves unmet at its close (a `*(not yet met: T22)*` mark still standing, a re-opened job) joins its module below at the re-check. An entry I am unsure of is marked. Re-checked against K1070–K1098 and `next.md` N497–N498, decisions by BOB #93, K1099.
+**Status** · OPENING (BOB #94, 2026-10-02): `tranche/T23` from `main` @ 5d473bb436. Drafted by BOB #92's worker and re-checked by BOB #93 (K1099); re-checked at the opening by BOB #94 against K1099–K1112 and `next.md` N497–N500 (K1113).
 
 ## Legacy census (§5.2 (2), K1007 (a))
 
@@ -35,6 +35,8 @@ T22's rules hold (merge early; one file, one editor; marks struck at the merge; 
 6. N483's publication share is carried (P19; K902's precedent; by BOB #93, K1099): conformance `record.test.mjs`:165 from publication's L8 merge until conformance's L9 merge, and plane and queue-producers until L11.
 7. Rows a T23 job in L3–L11 changes or adds (N486's catalogue rows; acquisition's `SWEEP_*`) are `awaiting stamp` until T24's L2 (P8: promotion's one job is L2).
 8. provenance's miniflare `mk6-bundle-names-no-author.test.mjs`:203, red since publication's T22 L8 merge, until provenance's L3 merge (N496, K1076).
+9. control-plane `inbox-door.test.mjs`'s test that a reasoned `pulled` resolve records the reason on the knock's row (115/116), until capture's L3 merge (N499, K1105, K1111); control-plane R36's mark is struck then.
+10. coverage, re-taken at T22's close (K1111): escalation R29 (L9), record-grammar R43 R44 (L1), publication R56 (L8, N500), skills R31 (L6); each new N486 id until its module's merge. Replaces item 3's list.
 
 ## Roster by layer (39 jobs, 11 layers: 4, 3, 4, 2, 3, 5, 1, 6, 2, 2, 7; all unconditional, K1100)
 
