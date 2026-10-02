@@ -888,8 +888,8 @@
     },
     {
       "path": "src/intent/checks.mjs",
-      "bytes": 10029,
-      "sha256": "4b2e84fcb01a8ba810b8947ada74899c0cb159b8ddc030f7e9f67c5e4e25a2c5"
+      "bytes": 10033,
+      "sha256": "a31beae323a28427c50a7ff47287fff5f625d17741a8e1ae098f2ff355a2bf1b"
     },
     {
       "path": "src/intent/doc.mjs",
