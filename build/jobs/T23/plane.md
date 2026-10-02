@@ -56,3 +56,19 @@ Size (session_017NFraWSdSr3q7n2ieXDSvL): test runs 12, module lines 487
 ## J2 · COMPLETE
 
 plane's entries are applied; details are under Completion in build/jobs/T23/plane.md. (1) The op map spreads corpusExportOps, and op=export and op=exportlog are answered and logged through the door (clears red 14). (2) network-notices is built with env after publication, migrated in R3's pass, its public reads and scheduler consumers held, and its four ops routed, with negative controls. (3) R13 is tested from the parsed config with negative controls; please strike its not-yet-met mark. K1163: capture-requests is built before monitoring and handed to it, so the scope check is held at construction; the test fails with the change reverted. Tests: plane 46/47; the whole test/m has 5,178 pass and 5 fail, all accepted by name (control-plane families:47 and inbox-door:81, plane worker:39 for queue-producers' exportLog (red 6), queue catalogue:34 and :116). The plane bundle is STALE from my store.mjs (red 12); I regenerated nothing. format, architecture, coverage (13/13) and ownership: 0 failures. J1 is still open. I merge last; waiting for your CHANGEs.
+
+## Re-run after B3 (K1174: every other L11 job merged)
+
+**Merged** `tranche/T23` into `job/T23/plane`; no conflict. Nothing I read changed: `build/requirements/plane.md`, `src/plane/`, `test/m/plane/` and the network-notices, corpus-export, monitoring and capture-requests sources are as they were. No code change was needed.
+
+**Tests and checks** (in `bio-plane/` unless said):
+- `node --test test/m/plane/`: tests 47, pass 47, fail 0. Red 6's plane share (`worker.test.mjs`:39) is cleared: queue-producers now reads corpus-export's `exportLog`.
+- `node --test test/system/migrate-released.test.mjs`: tests 1, pass 1, fail 0, no skip.
+- `node --test "test/m/**/*.test.mjs"`: tests 5218, pass 5207, fail 0, todo 11, skipped 0.
+- `node --test test/system/fleetbundles.test.mjs` (repo root): tests 1, fail 1, no skip. The only finding is `bio-plane: STALE BUNDLE`, from the L11 merges. The stale inputs are `src/affordances.mjs`, `src/control-plane/{dispatch,families,index,pull}.mjs`, `src/op-declarations/index.mjs`, `src/plane/store.mjs` (mine), `src/queue-producers/index.mjs`, `src/queue/index.mjs`, `src/queuestate.mjs` and `src/tasks/index.mjs`. This is red 12, for your close; I regenerated nothing.
+- `node checks/format.mjs`: 87 modules, 86 requirements files; 0 failures.
+- `node checks/architecture.mjs … plane`: 21 product files, 195 relative imports; 0 failures.
+- `node checks/coverage.mjs … plane`: 13 of 13 live ids named; 0 failures.
+- `node checks/ownership.mjs … plane tranche/T23`: 5 files; 0 failures.
+
+Size (session_017NFraWSdSr3q7n2ieXDSvL): test runs 18, module lines 487
