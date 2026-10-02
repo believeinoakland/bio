@@ -6,6 +6,8 @@
 
 - N518 · 2026-10-02 · **DEC-113's server side** (K1251, K1134 Q4 decided by BOB): fold `plan/draft-T24-dec113-115.md` into the owning modules' requirements: the hold's project list, its release (`actionholdrelease`, rung `terminal`, K1134 (3)), the "is this project held?" answer, and the operator's wipe refused during a hold. The device side waits for a device-storage module, named when it is built (dependency not yet built); transcript retention is Bob's then (DEC-61). Q5 ruled by Bob (K1252): the hold also refuses every purge of held material, a single item included; an ordered removal goes through the hold's release. **Ready for T27.**
 
+- N519 · 2026-10-02 · **DEC-112 (5) as K1254 amends it** (Bob): fold into the case's requirements (case-authoring's `publishCase`, case-grammar's `materials:` block, publication): no load-bearing member may rest on material whose only attestation is an off-the-record (anonymous) source; publishing such a case is refused, naming the member; off-the-record material never travels in the published case (it stays in the project as a lead); `draft-T24-dec112.md` R45's "the project's and the group's" attestations are dropped (K1134 Q6 withdrawn). **Hard reason:** two follow-ups are Bob's (K1254 (a), (b)), and the DEC-112 fold also waits on K1134 Q1–Q3 (P17).
+
 ## Watched for size (P6, K617; measured by BOB #102 at T26's L3, code over each module's most specific paths, tests excluded)
 
 ratification 3,979 and inquiry 3,888: at the ~4,000 mark; a seam is drafted (P18) before either's next job if that job would add code. publication 3,638 (T24's 4,354 counted a file another module owns, as K1024 found before), content 3,533, agent-worker 3,810, docprofile 3,170: under it.
