@@ -1,6 +1,6 @@
 # BOB to action-clocks (T22)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
