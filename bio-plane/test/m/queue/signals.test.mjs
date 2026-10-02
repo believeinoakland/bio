@@ -1,8 +1,8 @@
 /* queue-producers' R26 and R27 signals in the feed (T23, K1099): the five `sweep-*` and three `notice-*` CONDITIONs,
    produced by the real `queue-producers` over link-sweep's and network-notices' reads (link-sweep R11, network-notices
    R22; fakes in their published shapes), pass the mint as CONDITIONs (R1, R5, R11), take the CONDITION disposition
-   (R12), and are quieted only personally (R14, R19, R30). The sweep conditions are offered under `monitoring` too,
-   whose read queue-producers asked until its re-point to link-sweep (N506), so the test holds on either side of it. */
+   (R12), and are quieted only personally (R14, R19, R30). queue hands queue-producers the `linkSweep` it was given
+   (R8, N506, K1211), and only through it do the sweep conditions reach the feed. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, iso, NOW } from "./world.mjs";
@@ -22,13 +22,13 @@ const notice = (id, status, extra = {}) => ({ notice: id, status, opened_at: "20
   next_monthly: status === "open" ? "2026-10-01" : null, lapse_date: null, missed_monthlies: [], ...extra });
 
 /* PRJ-1 holds a sweep with all five conditions and three notices, one per notice kind. alice and bob are owners of it;
-   carl is a member of no project. */
-function setup() {
+   carl is a member of no project. `under` names the provider the sweep conditions are offered by (link-sweep's, as
+   queue-producers R26 reads them; another, for the negative control). */
+function setup(under = "linkSweep") {
   const sweepConditions = () => ({ ok: true, conditions: SWEEP_KINDS.map((kind) =>
     ({ sweep: "PRJ-1#agendas", kind, since: iso(NOW - 3600000), detail: DETAIL[kind] })) });
   const w = world({
-    linkSweep: { sweepConditions },
-    monitoring: { sweepConditions },
+    [under]: { sweepConditions },
     networkNotices: { noticesOf: ({ project }) => (project !== "PRJ-1" ? { ok: true, notices: [] } : { ok: true, notices: [
       notice("WO-1", "open", { missed_monthlies: [{ month: "2026-08", at: "2026-08-01T00:00:00Z" }] }),
       notice("WO-2", "open", { lapse_date: "2026-09-05" }),
@@ -109,10 +109,15 @@ test("R14, R19, R30: a member mutes a sweep or notice kind on its project, or on
   assert.equal(w.q.queueMute({ member: "alice", viewer: "member:alice", case: "PRJ-1", kinds: ["sweep-unknown"] }).reason, "UNKNOWN_KIND");
 });
 
-test("R8 (N506): linkSweep is among the providers queue hands queue-producers, and queue itself calls none of its reads", () => {
+test("R8 (N506, K1211): queue hands queue-producers the linkSweep it was given, so the sweep signals come through it alone, and queue itself calls none of its reads", () => {
   assert.ok(Queue.PRODUCER_DEPS.includes("linkSweep"));
-  assert.ok(Queue.PRODUCER_DEPS.includes("monitoring"), "monitoring stays: its other reads feed queue-producers R2, R3");
   assert.ok(Object.isFrozen(Queue.PRODUCER_DEPS));
+  const sweeps = (f) => f.items.filter((i) => /^sweep-/.test(i.kind)).map((i) => i.id).sort();
+  assert.deepEqual(sweeps(setup().feed("alice")), [...SWEEP_IDS].sort(), "the fake link-sweep reached queue-producers R26");
+  // negative control: the same conditions offered by monitoring, which no longer serves them, raise no sweep signal
+  const old = setup("monitoring").feed("alice");
+  assert.notEqual(old.ok, false);
+  assert.deepEqual(sweeps(old), []);
   // with the producers stubbed, a link-sweep whose every read throws is never reached: queue reads it for nobody
   const facts = { objective_gap: { bound: 0, truncated: false }, contradiction: { bound: 0, truncated: false }, dispositions: [] };
   const w = world({ linkSweep: { sweepConditions: () => { throw new Error("queue called linkSweep.sweepConditions"); } },
@@ -120,6 +125,4 @@ test("R8 (N506): linkSweep is among the providers queue hands queue-producers, a
   w.member("alice");
   assert.throws(() => w.fakes.linkSweep.sweepConditions(), /queue called/, "the throwing fake is the one queue holds");
   assert.equal(w.feed("alice").ok, true);
-  // negative control: a provider name outside the list is not one queue hands on
-  assert.ok(!Queue.PRODUCER_DEPS.includes("linksweep") && !Queue.PRODUCER_DEPS.includes("sweeps"));
 });
