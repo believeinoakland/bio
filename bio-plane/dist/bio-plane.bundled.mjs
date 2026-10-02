@@ -78229,6 +78229,12 @@ function bytesOf2(given) {
     return null;
   };
 }
+function corpusExportOps(ce, q7) {
+  return {
+    export: () => ce.exportManifest({ note: q7("note") }),
+    exportlog: () => ce.exportLog({ limit: q7("limit") })
+  };
+}
 var instances17 = /* @__PURE__ */ new WeakMap();
 function corpusExportOf(host, deps) {
   let c = instances17.get(host);
@@ -82325,6 +82331,11 @@ function publicReadOps(r, url) {
 }
 
 // src/network-notices/checks.mjs
+var checks_exports26 = {};
+__export(checks_exports26, {
+  NETWORK_NOTICE_CHECKS: () => NETWORK_NOTICE_CHECKS,
+  rowOf: () => rowOf5
+});
 var at10 = (fn, region) => `src/network-notices/index.mjs ${fn} > ${region}`;
 var NETWORK_NOTICE_CHECKS = Object.freeze({
   MACHINE_CANNOT_POST_NOTICE: {
@@ -83732,6 +83743,34 @@ function networkNoticesOf(host, deps) {
   }
   return n;
 }
+function networkNoticesOps(m, url, body) {
+  const q7 = (k) => url.searchParams.get(k);
+  const b = body && typeof body === "object" ? body : {};
+  const pick2 = (k) => b[k] !== void 0 && b[k] !== null ? b[k] : url.searchParams.has(k) ? q7(k) : null;
+  const stamps = { by: q7("by") ?? q7("author"), viewer: q7("viewer") };
+  return {
+    noticeprepare: () => m.prepareNotice({
+      project: pick2("project"),
+      notice: pick2("notice"),
+      wording: pick2("wording"),
+      body: pick2("body"),
+      matter: pick2("matter"),
+      since: pick2("since"),
+      collaborate: pick2("collaborate"),
+      handoff: pick2("handoff"),
+      final: pick2("final"),
+      ...stamps
+    }),
+    noticepost: () => m.postNotice({
+      digest: pick2("digest"),
+      signature: pick2("signature"),
+      acknowledged: b.acknowledged === true || q7("acknowledged") === "true" ? true : b.acknowledged ?? q7("acknowledged"),
+      ...stamps
+    }),
+    notices: () => m.noticesOf({ project: q7("project"), viewer: stamps.viewer }),
+    directorysubmission: () => m.directorySubmission({ case: q7("case"), edition: q7("edition"), viewer: stamps.viewer })
+  };
+}
 function networkNoticesPublicReads(m) {
   return {
     activitymethod: { read: () => m.activityMethod(), params: [] },
@@ -83744,8 +83783,8 @@ function networkNoticesPublicReads(m) {
 }
 
 // src/ratification/checks.mjs
-var checks_exports26 = {};
-__export(checks_exports26, {
+var checks_exports27 = {};
+__export(checks_exports27, {
   CASE_CITATION_VERSIONS: () => CASE_CITATION_VERSIONS,
   CASE_CONCLUSION_CHECKS: () => CASE_CONCLUSION_CHECKS,
   CASE_DOCUMENT_FAMILY: () => CASE_DOCUMENT_FAMILY,
@@ -86266,8 +86305,8 @@ function ratificationOps(r, url, body) {
 }
 
 // src/bias/checks.mjs
-var checks_exports27 = {};
-__export(checks_exports27, {
+var checks_exports28 = {};
+__export(checks_exports28, {
   BIAS_BAR_PHRASING: () => BIAS_BAR_PHRASING,
   BIAS_CHECKS: () => BIAS_CHECKS,
   BIAS_STATEMENT_KINDS: () => BIAS_STATEMENT_KINDS,
@@ -88054,8 +88093,8 @@ function biasOps(b, url, body) {
 }
 
 // src/case-authoring/checks.mjs
-var checks_exports28 = {};
-__export(checks_exports28, {
+var checks_exports29 = {};
+__export(checks_exports29, {
   CASE_DERIVATION_CHECKS: () => CASE_DERIVATION_CHECKS,
   CASE_DISCLOSURE_CHECKS: () => CASE_DISCLOSURE_CHECKS,
   PUBLISH_ACT_CHECKS: () => PUBLISH_ACT_CHECKS,
@@ -91248,8 +91287,8 @@ function blanksOf(text5) {
 }
 
 // src/filing-templates/checks.mjs
-var checks_exports29 = {};
-__export(checks_exports29, {
+var checks_exports30 = {};
+__export(checks_exports30, {
   FILING_TEMPLATE_CHECKS: () => FILING_TEMPLATE_CHECKS,
   rowOf: () => rowOf7
 });
@@ -93209,8 +93248,8 @@ function filingTemplatesOps(m, url, body) {
 }
 
 // src/local-facts/checks.mjs
-var checks_exports30 = {};
-__export(checks_exports30, {
+var checks_exports31 = {};
+__export(checks_exports31, {
   LOCAL_FACTS_CHECKS: () => LOCAL_FACTS_CHECKS,
   refusal: () => refusal10
 });
@@ -93748,8 +93787,8 @@ function localFactsOf(host, deps) {
 }
 
 // src/citation/checks.mjs
-var checks_exports31 = {};
-__export(checks_exports31, {
+var checks_exports32 = {};
+__export(checks_exports32, {
   CITE_CHECKS: () => CITE_CHECKS,
   CITE_EXTENT_CHECKS: () => CITE_EXTENT_CHECKS
 });
@@ -95247,6 +95286,11 @@ var RUNGS2 = {
   // capture R68 · a timestamp authority's token (provenance.attest)
   captureaccount: "attested",
   // capture R69 · SIG_* unless the capturing member's attesting key verifies it
+  /* R32 (DEC-111, K1100): a working-on notice is published only by an owner's own signature over its revision
+     (network-notices R4, R24), `caseratify`'s reason — a key the group does not hold by having decided something. A
+     change or a stop is a new revision (its R6, R11), and nothing published is altered (its R26). */
+  noticepost: "attested",
+  // network-notices R4, R24 · an owner's own signature publishes the revision
   /* ---- terminal: the target state has no outgoing edge. See the ladder note.
      `op=retire` ALSO raises NO_REASON, so it is `reasoned` at minimum; it is
      declared at the higher rung because the state it writes cannot be left. */
@@ -95684,7 +95728,7 @@ var RUNG_ABSENT = {
      not signed — so neither `attested` (no key) nor `reversible` (no act takes it back) describes it. DEC-88 (K1038)
      closed the gap by ruling for 57 of the 78 that stood here, banding each `reversible`, `reasoned` or `terminal`
      (RUNGS); these 21 are what it left `undetermined` (R27), each on R27's rule: no authored reason is asked and no
-     published act takes it back. */
+     published act takes it back. R32 adds T23's `whatchangedpropose` on the same rule, at the foot of this table. */
   /* N364 (capture R65), on R27's rule: pulling a knock files its bytes as a capture with a receipt, in the puller's
      name; no reason is asked and no published act takes it back (a pulled knock stays pulled, and the capture stands). */
   inboxpull: { ground: "undetermined", is: "a member pulls a knock into the record: its bytes held under their own digest, a doorbell receipt written and the knock marked pulled, in one act; never un-pulled (capture R65)" },
@@ -95738,7 +95782,10 @@ var RUNG_ABSENT = {
   templatesubmit: { ground: "undetermined", is: "a member moves a draft to review, fixing its text, and names the members asked to review it (filing-templates R7)" },
   templatereview: { ground: "undetermined", is: "a member, or a professional through a live grant, records one review of a version's present text: no concerns, concerns, or changes requested; a later review of the same text stands in its place, the earlier kept (filing-templates R9)" },
   templatecomment: { ground: "undetermined", is: "a member, a grant's recipient or a labelled run comments on a version, or a member adds a note; attributed, never edited (filing-templates R12, R13)" },
-  templateapprove: { ground: "undetermined", is: "an approver who is not the version's sole author approves a reviewed version, the earlier approved version marked updated and still offered; or an administrator widens an approved template to the group (filing-templates R10)" }
+  templateapprove: { ground: "undetermined", is: "an approver who is not the version's sole author approves a reviewed version, the earlier approved version marked updated and still offered; or an administrator widens an approved template to the group (filing-templates R10)" },
+  /* R32 (N485: K1025, K1035), on R27's rule, as `templatepropose`: a draft of a new edition's statement, machine or
+     member, append-only; it asks no authored reason and no published act takes it back. */
+  whatchangedpropose: { ground: "undetermined", is: "a machine or a member PROPOSES a draft of a published case's next edition statement, labelled machine work when a machine proposed it and kept append-only; never a statement until a member adopts or rewrites it (case-authoring R39)" }
 };
 var CAPTURE_ACTS = [
   /* op=attest. The verb is "co-attest" because the group is not the only
@@ -97274,6 +97321,9 @@ var OPS = frozenTable({
      `escalationsdue`'s, viewer-stamped. */
   declinetoescalate: { classes: ["admin", "member", "probe"], mutating: true },
   escalationstatus: { classes: ["admin", "member", "probe"], mutating: false },
+  /* T23 (N485: K1025; escalation R29, R25; R10): the opening reason pre-assembled from a determination, labelled machine
+     work and writing nothing; `escalationstatus`' read, viewer-stamped. */
+  escalationreasondraft: { classes: ["admin", "member", "probe"], mutating: false },
   /* T18 (N-A12, K608; K705): filings' drafted communication (R23). Any credential prepares a communication, labelled
      (`proposalLabel`). T21 (K922 (1)): `templatesave` is filings R32's, a member starting a template draft from an
      approved filing through `filing-templates.templateDraft` (a machine refused by that module, its R3); its spec and
@@ -97294,6 +97344,11 @@ var OPS = frozenTable({
   /* filing-templates R6: any credential proposes wording (an agent credential by its scope), labelled; `proposer` and
      `viewer` stamped, `optionpropose`'s posture. */
   templatepropose: { classes: ["admin", "member", "probe"], mutating: true },
+  /* T23 (N485: K1025, K1035; case-authoring R39; R10): a draft of a new edition's statement of what changed is any
+     credential's (an agent credential by its scope), labelled by its proposer (`proposalLabel`), `templatepropose`'s
+     posture; `proposedBy` and `viewer` stamped. The case's drafts are a read, viewer-stamped. */
+  whatchangedpropose: { classes: ["admin", "member", "probe"], mutating: true },
+  whatchangeddrafts: { classes: ["admin", "member", "probe"], mutating: false },
   /* filing-templates R8, R9, R12–R14: the review grant's doors, `reviewcopy`'s and `reviewcomment`'s posture — public at
      the class gate because each gates itself: a member by session (`author`), a recipient by the grant's secret
      (`secretSha`), every other caller the one dead answer (NO_TEMPLATE_GRANT). */
@@ -97371,6 +97426,18 @@ var OPS = frozenTable({
   /* T22 (K1019; monitoring R17, R52; R9): an address's own frequency, a source owner's reasoned act — a machine reaches
      it and monitoring refuses it by name (MACHINE_CANNOT_SET_FREQUENCY) — `author` and `viewer` query-stamped. */
   addressfrequencyset: { classes: ["admin", "member", "probe"], mutating: true },
+  /* T23 (the link sweep, K1094; monitoring R61; R10): the sweeps a member may see, a read for a member session,
+     viewer-stamped; monitoring answers a bearer's call as it answers its other reads. */
+  sweeps: { classes: ["admin", "member", "probe"], mutating: false },
+  /* T23 (DEC-111, K1031, K1100; network-notices R1, R2, R4, R5, R22, R23, R24; R10): a project's notice is prepared
+     (writing nothing) and posted by an owner signed in as themselves, and read by a member who sees the project — each a
+     member session's only, `knocksof`'s fence: `machineClasses: []` refuses every bearer, and so every agent credential
+     and operator token. `by` and `viewer` stamped on the two the owner performs, `viewer` on the reads (network-notices
+     reads both from the query). `directorysubmission` (its R23) is `notices`' read, by R6. */
+  noticeprepare: { classes: ["admin", "member"], machineClasses: [], mutating: false },
+  noticepost: { classes: ["admin", "member"], machineClasses: [], mutating: true },
+  notices: { classes: ["admin", "member"], machineClasses: [], mutating: false },
+  directorysubmission: { classes: ["admin", "member"], machineClasses: [], mutating: false },
   /* REC-94: a capture's content-axis state; frontier's classes and gate. */
   contentaxis: { classes: ["admin", "member", "probe"], mutating: false },
   /* REC-69: the context-keyed run read; the viewer stamp decides what a caller sees. */
@@ -97417,7 +97484,14 @@ var OPS = frozenTable({
   knock: { classes: null, mutating: true },
   /* N364 (sources R11): a knocker consents, or withdraws, by their knocker secret, with no account; the connecting
      address and the instant are stamped as the knock's are, and the attempt is counted in the knock's windows. */
-  knockerconsent: { classes: null, mutating: true }
+  knockerconsent: { classes: null, mutating: true },
+  /* T23 (public-read R18; network-notices R10, R20, R21; R10): the credential-free reads network-notices registers with
+     public-read, served by name or through the door's own `publicread` (`publishedmanifest`'s posture, R6): each
+     answers only what is already public, so nothing is stamped and no session set holds it. */
+  publicread: { classes: null, mutating: false },
+  activitymethod: { classes: null, mutating: false },
+  noticespublic: { classes: null, mutating: false },
+  groupkeyspublic: { classes: null, mutating: false }
 });
 var RETRIEVAL_READS = frozenList([
   "search",
@@ -97602,7 +97676,7 @@ var ESCALATION_ACTIONS = frozenList([
   "escalationresume",
   "declinetoescalate"
 ]);
-var ESCALATION_READS = frozenList(["escalation", "escalationsdue", "escalationstatus"]);
+var ESCALATION_READS = frozenList(["escalation", "escalationsdue", "escalationstatus", "escalationreasondraft"]);
 var ACTIONS_ACTIONS = frozenList(["actioncreate", "actionpressure", "actionhold"]);
 var ACTIONS_READS = frozenList(["action", "actions"]);
 var ACTION_CLOCKS_ACTIONS = frozenList(["reminderset", "reminderanswer"]);
@@ -97637,6 +97711,13 @@ var CONTRADICTION_READS = frozenList([
   "contradictionresponses"
 ]);
 var MONITORING_ACTIONS = frozenList(["addressfrequencyset"]);
+var MONITORING_READS = frozenList(["sweeps"]);
+var WHAT_CHANGED_PROPOSAL_ACTIONS = frozenList(["whatchangedpropose"]);
+var WHAT_CHANGED_READS = frozenList(["whatchangeddrafts"]);
+var NETWORK_NOTICES_ACTIONS = frozenList(["noticepost"]);
+var NETWORK_NOTICES_READS = frozenList(["noticeprepare", "notices", "directorysubmission"]);
+var NETWORK_NOTICES_BY = frozenList(["noticeprepare", "noticepost"]);
+var NETWORK_NOTICES_PUBLIC_READS = frozenList(["activitymethod", "noticespublic", "groupkeyspublic"]);
 var QUERY_AUTHOR_ACTIONS = frozenList([
   ...CONFORMANCE_ACTIONS,
   ...CONSEQUENCES_ACTIONS,
@@ -97664,7 +97745,8 @@ var ACTION_LAYER_READS = frozenList([
   ...ACTIONS_READS,
   ...ACTION_PLANS_READS,
   ...FILING_TEMPLATES_READS,
-  ...LOCAL_FACTS_READS
+  ...LOCAL_FACTS_READS,
+  ...MONITORING_READS
 ]);
 var PLAN_RUN_SCOPE = Object.freeze({
   reads: frozenList([
@@ -97898,6 +97980,16 @@ var SESSION_OPS = Object.freeze({
     "escalationstatus",
     ...CAPTURE_READS,
     ...MONITORING_ACTIONS,
+    /* T23 (op-declarations R10): every op T23 adds that a session reaches, in BOTH sets — escalation's
+       pre-assembled reason, case-authoring's draft of what changed and its read, monitoring's sweeps and
+       network-notices' act and reads (a bearer refused them by `machineClasses: []`). The public reads
+       are in neither: every caller reaches them. */
+    "escalationreasondraft",
+    ...WHAT_CHANGED_PROPOSAL_ACTIONS,
+    ...WHAT_CHANGED_READS,
+    ...MONITORING_READS,
+    ...NETWORK_NOTICES_ACTIONS,
+    ...NETWORK_NOTICES_READS,
     /* N314 (T12, monitoring R30): the daemon's pause, every member session's to ask; monitoring refuses a
        non-administrator by name. */
     "monitorpause",
@@ -98015,6 +98107,12 @@ var SESSION_OPS = Object.freeze({
     "escalationstatus",
     ...CAPTURE_READS,
     ...MONITORING_ACTIONS,
+    "escalationreasondraft",
+    ...WHAT_CHANGED_PROPOSAL_ACTIONS,
+    ...WHAT_CHANGED_READS,
+    ...MONITORING_READS,
+    ...NETWORK_NOTICES_ACTIONS,
+    ...NETWORK_NOTICES_READS,
     ...IDENTITY_ACTIONS,
     ...GOVERNANCE_ACTIONS,
     ...CUSTODIAL_ACTIONS,
@@ -98795,7 +98893,26 @@ var NEEDS = Object.freeze({
      (its R7, R12). `escalationstatus` takes `escalationsdue`'s shape: no row. */
   heldcaptures: null,
   gradenote: null,
-  doorbelltally: null
+  doorbelltally: null,
+  /* T23 (op-declarations R10): a draft of what changed is a row in case-authoring's table in its proposer's name,
+     `templatepropose`'s capability and reason (proposing is contributing, never publishing); a posted notice publishes an
+     owner's signed revision in the project's name, a write of the record, `contribute` — NO fifth capability token
+     (CAPABILITIES.md §4): who may post (an owner signed in as themselves) is network-notices', asked of the stamped `by`. */
+  whatchangedpropose: "contribute",
+  noticepost: "contribute",
+  /* NO CAPABILITY for T23's reads, on `contradictionpairs`' reasoning (asking the record is reading it; preparing a
+     notice writes nothing), nor for the three public reads, which answer every caller. PRESENT, null, because
+     affordances names each in NON_ACTS (its R32) and its totality reads a NON_ACTS key this table does not carry as
+     stale (its R12), K516's precedent — which is why `escalationreasondraft` has a row where `escalationstatus` has none.
+     `directorysubmission` and `publicread`, named in no NON_ACTS, take `escalationstatus`' shape: no row. */
+  escalationreasondraft: null,
+  whatchangeddrafts: null,
+  sweeps: null,
+  noticeprepare: null,
+  notices: null,
+  activitymethod: null,
+  noticespublic: null,
+  groupkeyspublic: null
 });
 var ACT_GATE = Object.freeze({
   needs: (id) => (Object.hasOwn(NEEDS, id) ? NEEDS[id] : null) ?? null,
@@ -98818,8 +98935,8 @@ var UNATTENDED_BY_DECISION = Object.freeze({
 });
 
 // src/admission/checks.mjs
-var checks_exports32 = {};
-__export(checks_exports32, {
+var checks_exports33 = {};
+__export(checks_exports33, {
   ADMISSION_CHECKS: () => ADMISSION_CHECKS,
   AI_SCOPE_CHECKS: () => AI_SCOPE_CHECKS,
   GROUP_IDENTITY_FENCE_CHECKS: () => GROUP_IDENTITY_FENCE_CHECKS,
@@ -99891,8 +100008,8 @@ var CaptureCredentials = class _CaptureCredentials {
 };
 
 // src/run-rules/checks.mjs
-var checks_exports33 = {};
-__export(checks_exports33, {
+var checks_exports34 = {};
+__export(checks_exports34, {
   AI_RUNS_CHECKS: () => AI_RUNS_CHECKS,
   AI_RUNS_CONTEXT_CHECKS: () => AI_RUNS_CONTEXT_CHECKS,
   AI_RUN_ACT_SHAPE_CHECKS: () => AI_RUN_ACT_SHAPE_CHECKS,
@@ -100317,8 +100434,8 @@ var AI_RUNS_CHECKS = Object.freeze({
 });
 
 // src/run-productions/checks.mjs
-var checks_exports34 = {};
-__export(checks_exports34, {
+var checks_exports35 = {};
+__export(checks_exports35, {
   EXTRACT_PROPOSE_CHECKS: () => EXTRACT_PROPOSE_CHECKS,
   EXTRACT_PROPOSE_CHECK_KEYS: () => EXTRACT_PROPOSE_CHECK_KEYS,
   ROWLESS_CODES: () => ROWLESS_CODES,
@@ -100547,8 +100664,8 @@ var SUGGEST_CHECKS = pick(SUGGEST_ROWS, SUGGEST_CHECK_KEYS);
 var EXTRACT_PROPOSE_CHECKS = pick(EXTRACT_PROPOSE_ROWS, EXTRACT_PROPOSE_CHECK_KEYS);
 
 // src/capture-requests/checks.mjs
-var checks_exports35 = {};
-__export(checks_exports35, {
+var checks_exports36 = {};
+__export(checks_exports36, {
   CAPTURE_PURPOSES: () => CAPTURE_PURPOSES,
   CAPTURE_REQUEST_CHECKS: () => CAPTURE_REQUEST_CHECKS,
   CAPTURE_SOURCE_CHECKS: () => CAPTURE_SOURCE_CHECKS,
@@ -105511,8 +105628,8 @@ function judgementLayers() {
 var JUDGEMENT_VERSION = `${JUDGEMENT_ID}@${JUDGEMENT_EDITION}`;
 
 // src/intent/checks.mjs
-var checks_exports36 = {};
-__export(checks_exports36, {
+var checks_exports37 = {};
+__export(checks_exports37, {
   INTENT_CHECKS: () => INTENT_CHECKS,
   refusal: () => refusal14
 });
@@ -105655,8 +105772,8 @@ function refusal14(code, detail, extra) {
 }
 
 // src/review/checks.mjs
-var checks_exports37 = {};
-__export(checks_exports37, {
+var checks_exports38 = {};
+__export(checks_exports38, {
   REVIEW_COPY_CHECKS: () => REVIEW_COPY_CHECKS
 });
 var at16 = (fn, region) => `src/review/index.mjs ${fn} > ${region}`;
@@ -105729,8 +105846,8 @@ var REVIEW_COPY_CHECKS = Object.freeze({
 });
 
 // src/standards/checks.mjs
-var checks_exports38 = {};
-__export(checks_exports38, {
+var checks_exports39 = {};
+__export(checks_exports39, {
   STANDARDS_CHECKS: () => STANDARDS_CHECKS,
   refusal: () => refusal15
 });
@@ -105843,8 +105960,8 @@ function refusal15(code, detail, extra) {
 }
 
 // src/conformance/checks.mjs
-var checks_exports39 = {};
-__export(checks_exports39, {
+var checks_exports40 = {};
+__export(checks_exports40, {
   CONFORMANCE_CHECKS: () => CONFORMANCE_CHECKS,
   refusal: () => refusal16
 });
@@ -105982,8 +106099,8 @@ function refusal16(code, detail, extra = {}) {
 }
 
 // src/consequences/checks.mjs
-var checks_exports40 = {};
-__export(checks_exports40, {
+var checks_exports41 = {};
+__export(checks_exports41, {
   CONSEQUENCES_CHECKS: () => CONSEQUENCES_CHECKS
 });
 var at19 = (fn) => `src/consequences/index.mjs ${fn}`;
@@ -106011,8 +106128,8 @@ var CONSEQUENCES_CHECKS = Object.freeze({
 });
 
 // src/action-clocks/checks.mjs
-var checks_exports41 = {};
-__export(checks_exports41, {
+var checks_exports42 = {};
+__export(checks_exports42, {
   ACTION_CLOCK_CHECKS: () => ACTION_CLOCK_CHECKS
 });
 var ACTION_CLOCK_CHECKS = {
@@ -106043,8 +106160,8 @@ var ACTION_CLOCK_CHECKS = {
 };
 
 // src/filings/checks.mjs
-var checks_exports42 = {};
-__export(checks_exports42, {
+var checks_exports43 = {};
+__export(checks_exports43, {
   FILINGS_CHECKS: () => FILINGS_CHECKS,
   rowOf: () => rowOf10
 });
@@ -106230,8 +106347,8 @@ function rowOf10(code) {
 }
 
 // src/escalation/checks.mjs
-var checks_exports43 = {};
-__export(checks_exports43, {
+var checks_exports44 = {};
+__export(checks_exports44, {
   ESCALATION_CHECKS: () => ESCALATION_CHECKS,
   refusal: () => refusal17
 });
@@ -106459,8 +106576,8 @@ function refusal17(code, detail, extra) {
 }
 
 // src/action-plans/checks.mjs
-var checks_exports44 = {};
-__export(checks_exports44, {
+var checks_exports45 = {};
+__export(checks_exports45, {
   ACTION_PLAN_CHECKS: () => ACTION_PLAN_CHECKS,
   refusal: () => refusal18
 });
@@ -106767,8 +106884,8 @@ function refusal18(code, detail, extra) {
 }
 
 // src/monitoring/checks.mjs
-var checks_exports45 = {};
-__export(checks_exports45, {
+var checks_exports46 = {};
+__export(checks_exports46, {
   CADENCE_ENUM: () => CADENCE_ENUM,
   CRITICALITY_ENUM: () => CRITICALITY_ENUM,
   DRIVE_TICK_CHECKS: () => DRIVE_TICK_CHECKS,
@@ -107320,8 +107437,8 @@ function sweepErrors(s, ids) {
 }
 
 // src/tasks/checks.mjs
-var checks_exports46 = {};
-__export(checks_exports46, {
+var checks_exports47 = {};
+__export(checks_exports47, {
   QUEUE_INBOX_CHECKS: () => QUEUE_INBOX_CHECKS,
   QUEUE_MACHINE_CHECKS: () => QUEUE_MACHINE_CHECKS,
   TASK_ACTOR_CHECKS: () => TASK_ACTOR_CHECKS,
@@ -107468,8 +107585,8 @@ function checkInboxGrammar(ctx, findings) {
 }
 
 // src/queue/checks.mjs
-var checks_exports47 = {};
-__export(checks_exports47, {
+var checks_exports48 = {};
+__export(checks_exports48, {
   QUEUE_ACT_CHECKS: () => QUEUE_ACT_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
   queueRefusal: () => queueRefusal
@@ -129611,41 +129728,42 @@ var CHECK_FAMILY_FILES = Object.freeze([
   ["src/connections/checks.mjs", checks_exports8],
   ["src/connections/themes.mjs", themes_exports],
   ["src/progressions/checks.mjs", checks_exports17],
-  ["src/bias/checks.mjs", checks_exports27],
+  ["src/bias/checks.mjs", checks_exports28],
   ["src/observation-log/checks.mjs", checks_exports9],
   ["src/retrieval/checks.mjs", checks_exports16],
   ["src/inquiry-grammar/checks.mjs", checks_exports10],
   ["src/inquiry/index.mjs", inquiry_exports],
-  ["src/citation/checks.mjs", checks_exports31],
+  ["src/citation/checks.mjs", checks_exports32],
   ["src/basis-versions/checks.mjs", checks_exports18],
   ["src/strength/checks.mjs", checks_exports20],
   ["src/contradiction/checks.mjs", checks_exports21],
-  ["src/run-rules/checks.mjs", checks_exports33],
-  ["src/run-productions/checks.mjs", checks_exports34],
-  ["src/capture-requests/checks.mjs", checks_exports35],
+  ["src/run-rules/checks.mjs", checks_exports34],
+  ["src/run-productions/checks.mjs", checks_exports35],
+  ["src/capture-requests/checks.mjs", checks_exports36],
   ["src/skilldoctrine.mjs", skilldoctrine_exports],
-  ["src/intent/checks.mjs", checks_exports36],
+  ["src/intent/checks.mjs", checks_exports37],
   ["src/reevaluation/checks.mjs", checks_exports23],
   ["src/publication/checks.mjs", checks_exports24],
   ["src/public-read/checks.mjs", checks_exports25],
-  ["src/ratification/checks.mjs", checks_exports26],
-  ["src/case-authoring/checks.mjs", checks_exports28],
-  ["src/review/checks.mjs", checks_exports37],
-  ["src/local-facts/checks.mjs", checks_exports30],
-  ["src/standards/checks.mjs", checks_exports38],
-  ["src/conformance/checks.mjs", checks_exports39],
-  ["src/consequences/checks.mjs", checks_exports40],
+  ["src/network-notices/checks.mjs", checks_exports26],
+  ["src/ratification/checks.mjs", checks_exports27],
+  ["src/case-authoring/checks.mjs", checks_exports29],
+  ["src/review/checks.mjs", checks_exports38],
+  ["src/local-facts/checks.mjs", checks_exports31],
+  ["src/standards/checks.mjs", checks_exports39],
+  ["src/conformance/checks.mjs", checks_exports40],
+  ["src/consequences/checks.mjs", checks_exports41],
   ["src/action-grammar/checks.mjs", checks_exports19],
-  ["src/action-clocks/checks.mjs", checks_exports41],
-  ["src/filing-templates/checks.mjs", checks_exports29],
-  ["src/filings/checks.mjs", checks_exports42],
-  ["src/escalation/checks.mjs", checks_exports43],
-  ["src/action-plans/checks.mjs", checks_exports44],
-  ["src/monitoring/checks.mjs", checks_exports45],
-  ["src/tasks/checks.mjs", checks_exports46],
-  ["src/queue/checks.mjs", checks_exports47],
+  ["src/action-clocks/checks.mjs", checks_exports42],
+  ["src/filing-templates/checks.mjs", checks_exports30],
+  ["src/filings/checks.mjs", checks_exports43],
+  ["src/escalation/checks.mjs", checks_exports44],
+  ["src/action-plans/checks.mjs", checks_exports45],
+  ["src/monitoring/checks.mjs", checks_exports46],
+  ["src/tasks/checks.mjs", checks_exports47],
+  ["src/queue/checks.mjs", checks_exports48],
   ["src/setup.mjs", setup_exports],
-  ["src/admission/checks.mjs", checks_exports32],
+  ["src/admission/checks.mjs", checks_exports33],
   ["src/control-plane/checks.mjs", checks_exports6]
 ].map((e) => Object.freeze(e)));
 var translated = (row2) => !!row2 && typeof row2 === "object" && typeof row2.translation === "string" && row2.translation !== "";
@@ -129936,1105 +130054,6 @@ function packVersion(pack) {
 
 // src/signpage.mjs
 var SIGN_HTML = '<!doctype html>\n<meta charset="utf-8">\n<title>CivicOS signing keys</title>\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<!--\n  Signing keys that never leave the person holding them.\n\n  This page is one file with no network access of any kind: no scripts\n  loaded, no fonts fetched, no data sent anywhere. Open it from a local\n  copy. Everything it does happens in the browser tab.\n\n  It produces SSHSIG signatures, the same format `ssh-keygen -Y sign`\n  emits, so anything signed here can be verified by anyone with stock\n  OpenSSH and no CivicOS code:\n\n      ssh-keygen -Y verify -f allowed_signers -I <you> \\\n                 -n bio-release -s file.sig < file\n\n  Two keys, because they do different jobs. The release key signs the\n  software that installs into other people\'s accounts and is used a few\n  times a year. The ratification key attests documents and is used\n  constantly. Keeping routine use away from the supply-chain key is the\n  reason they are separate.\n\n  The ratification key also signs a project\'s "working on" notice, in its\n  own namespace (bio-working-on), so a signature on a notice can never be\n  taken as consent to publish a record, or the reverse.\n-->\n<style>\n  :root {\n    --ink: #16171a; --dim: #5c6069; --line: #d9dce1; --bg: #fbfbfc;\n    --accent: #1c4f8b; --accent-dark: #163f70; --warn: #8a4b00;\n    --good: #15603a; --bad: #93231d; --soft: #f1f3f6;\n  }\n  * { box-sizing: border-box; }\n  body { margin: 0; background: var(--bg); color: var(--ink);\n         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }\n  main { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }\n  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }\n  .sub { color: var(--dim); margin: 0 0 28px; }\n  section { background: #fff; border: 1px solid var(--line); border-radius: 10px;\n            padding: 20px; margin: 0 0 18px; }\n  h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase;\n       letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }\n  p { margin: 0 0 12px; }\n  label { display: block; font-weight: 600; margin: 0 0 5px; font-size: 13px; }\n  input, textarea { width: 100%; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;\n                    padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px;\n                    background: #fff; color: var(--ink); }\n  textarea { resize: vertical; }\n  button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 6px;\n           border: 1px solid var(--accent); background: var(--accent); color: #fff;\n           cursor: pointer; }\n  button:hover { background: var(--accent-dark); }\n  button.ghost { background: #fff; color: var(--accent); }\n  button.ghost:hover { background: var(--soft); }\n  button:disabled { opacity: .45; cursor: default; background: var(--accent); }\n  button.big { font-size: 17px; padding: 14px 26px; width: 100%; }\n  .stack > * + * { margin-top: 14px; }\n  .keybox { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); }\n  .keybox .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }\n  .keybox label { margin: 0; }\n  .keybox textarea { background: #fff; }\n  .copy { padding: 4px 12px; font-size: 12px; }\n  .note { color: var(--dim); font-size: 13px; margin: 0; }\n  .warn { color: var(--warn); }\n  .good { color: var(--good); }\n  .bad { color: var(--bad); }\n  .tabs { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }\n  .tabs button { background: #fff; color: var(--dim); border-color: var(--line); }\n  .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }\n  .hide { display: none; }\n  code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 13px;\n         word-break: break-all; }\n  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: var(--soft); }\n  .row { display: flex; gap: 10px; flex-wrap: wrap; }\n  .row button { flex: 1 1 auto; }\n  details { margin-top: 6px; }\n  summary { cursor: pointer; font-size: 13px; color: var(--dim); font-weight: 600; }\n</style>\n\n<main>\n  <h1>CivicOS signing keys</h1>\n  <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>\n\n  <div class="tabs">\n    <button id="tab-keys" aria-pressed="true">Keys</button>\n    <button id="tab-release" aria-pressed="false">Sign a release</button>\n    <button id="tab-ratify" aria-pressed="false">Sign a ratification</button>\n    <button id="tab-notice" aria-pressed="false">Sign a notice</button>\n  </div>\n\n  <!-- -------------------------------------------------------------- keys -->\n  <div id="pane-keys">\n    <section>\n      <h2>Make your keys</h2>\n      <p>One press makes both keys. Copy the two public keys into the session, and keep\n         the private keys wherever you keep things.</p>\n      <button id="gen" class="big">Generate my keys</button>\n      <div id="gen-out" class="stack" style="margin-top:18px"></div>\n    </section>\n\n    <section>\n      <h2>Load a key you already have</h2>\n      <p class="note">Paste a private key from a previous run. The key says which job it is for,\n         so there is nothing to choose.</p>\n      <div class="stack">\n        <textarea id="load-blob" rows="3" placeholder="BIOKEY-RAW1....." spellcheck="false"></textarea>\n        <div class="row">\n          <button id="load">Load this key</button>\n          <button id="forget" class="ghost">Forget everything</button>\n        </div>\n      </div>\n      <details>\n        <summary>This key is protected with a passphrase</summary>\n        <div class="stack" style="margin-top:10px">\n          <input id="load-pass" type="password" autocomplete="current-password" placeholder="passphrase">\n        </div>\n      </details>\n      <div id="load-out" style="margin-top:12px"></div>\n    </section>\n  </div>\n\n  <!-- ----------------------------------------------------------- release -->\n  <div id="pane-release" class="hide">\n    <section>\n      <h2>Sign a release</h2>\n      <p>Choose the release asset (<code>bio-plane.bundled.mjs</code>). The signature covers the\n         exact bytes of that file, so a rebuilt asset needs a new signature.</p>\n      <div class="stack">\n        <div id="rel-key" class="status">No release key loaded.</div>\n        <input id="rel-file" type="file">\n        <button id="rel-sign" disabled>Sign these bytes</button>\n      </div>\n      <div class="stack" id="rel-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ ratify -->\n  <div id="pane-ratify" class="hide">\n    <section>\n      <h2>Sign a ratification</h2>\n      <p>Copy the record id and its current hash from the instance page. The signature covers\n         both, so it authorizes publishing that exact revision and no other.</p>\n      <div class="stack">\n        <div id="rat-key" class="status">No ratification key loaded.</div>\n        <div><label for="rat-id">Record id</label>\n          <input id="rat-id" placeholder="INFO-2026-5460-sewer-fund-transfers" spellcheck="false"></div>\n        <div><label for="rat-sha">Record hash</label>\n          <input id="rat-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="rat-sign" disabled>Sign this ratification</button>\n      </div>\n      <div class="stack" id="rat-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ notice -->\n  <div id="pane-notice" class="hide">\n    <section>\n      <h2>Sign a notice</h2>\n      <p>Copy the notice id, its revision number and its hash from the instance page. The signature\n         covers all three, so it puts your name to that exact revision of the notice and no other.\n         It is signed with your ratification key.</p>\n      <div class="stack">\n        <div id="not-key" class="status">No ratification key loaded.</div>\n        <div><label for="not-id">Notice id</label>\n          <input id="not-id" placeholder="NOTE-2026-4817" spellcheck="false"></div>\n        <div><label for="not-rev">Revision</label>\n          <input id="not-rev" placeholder="1" inputmode="numeric" spellcheck="false"></div>\n        <div><label for="not-sha">Notice hash</label>\n          <input id="not-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="not-sign" disabled>Sign this notice</button>\n      </div>\n      <div class="stack" id="not-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n</main>\n\n<script>\n/* ------------------------------------------------------------- helpers */\nconst $ = (id) => document.getElementById(id);\nconst enc = new TextEncoder();\nconst u8 = (...a) => { let n = 0; for (const p of a) n += p.length;\n  const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };\nconst b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };\nconst unb64 = (s) => Uint8Array.from(atob(s.replace(/\\s+/g, "")), (c) => c.charCodeAt(0));\nconst hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");\n\n/* SSH wire encoding: a string is its length as a big-endian uint32, then bytes. */\nconst u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);\nconst sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };\n\n/* An ssh-ed25519 public key on the wire, and its authorized_keys line. */\nconst wirePubkey = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));\nconst pubLine = (raw32, comment) => `ssh-ed25519 ${b64(wirePubkey(raw32))} ${comment}`;\n\n/* What ssh-keygen actually signs: SSHSIG | namespace | reserved | hash alg | H(message).\n   The outer armor wraps a blob that repeats the public key and namespace so a\n   verifier can identify the signer without being told. */\nasync function sshsig(privKey, raw32, namespace, message) {\n  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", message));\n  const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));\n  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", privKey, signed));\n  const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePubkey(raw32)),\n                  sshStr(namespace), sshStr(""), sshStr("sha512"),\n                  sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));\n  const body = b64(blob).replace(/(.{70})/g, "$1\\n");\n  return `-----BEGIN SSH SIGNATURE-----\\n${body}\\n-----END SSH SIGNATURE-----\\n`;\n}\n\n/* WebCrypto has no seed-to-public-key call, so the public half is read out of a\n   JWK export of the same seed. Ed25519 takes PKCS#8, which for a raw seed is the\n   fixed 16-byte prefix every Ed25519 PKCS#8 key shares, followed by the seed. */\nconst PKCS8_HEAD = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);\nasync function keysFromSeed(seed32) {\n  const pkcs8 = u8(PKCS8_HEAD, seed32);\n  const priv = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);\n  const jwk = await crypto.subtle.exportKey("jwk",\n    await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));\n  const raw32 = unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/"));\n  return { priv, raw32 };\n}\n\n/* The two jobs, and the only two labels this page uses. A private key carries\n   its own label, so loading one never asks which job it belongs to. */\nconst JOBS = {\n  "bio-release": { slot: "release", title: "Release key", what: "signs the software installer" },\n  "bio-ratify":  { slot: "ratify",  title: "Ratification key", what: "attests documents for publishing" },\n};\n\n/* Private key formats. Raw is the default: a development key is disposable and a\n   passphrase on it is ceremony without a threat. The wrapped form exists for\n   production keys and is recognised automatically on load. */\nconst rawKeyString = (label, seed) => `BIOKEY-RAW1.${label}.${b64(seed)}`;\n\nconst KDF_ITER = 600000;\nasync function wrapKey(seed32, pass, label) {\n  const salt = crypto.getRandomValues(new Uint8Array(16));\n  const iv = crypto.getRandomValues(new Uint8Array(12));\n  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" },\n    base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);\n  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, seed32));\n  return ["BIOKEY1", label, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");\n}\n\nasync function parseKeyString(blob, pass) {\n  const s = (blob || "").trim();\n  if (s.startsWith("BIOKEY-RAW1.")) {\n    const [, label, seed] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    return { label, seed: unb64(seed) };\n  }\n  if (s.startsWith("BIOKEY1.")) {\n    const [, label, salt, iv, ct, iter] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    if (!pass) throw new Error("that key is protected with a passphrase; open the passphrase box below");\n    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n    const key = await crypto.subtle.deriveKey(\n      { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },\n      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);\n    try {\n      const seed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));\n      return { label, seed };\n    } catch { throw new Error("wrong passphrase, or the key was altered"); }\n  }\n  throw new Error("that does not look like a CivicOS private key");\n}\n\n/* ---------------------------------------------------------------- state */\nconst KEYS = { release: null, ratify: null };   /* { priv, raw32, label } */\n\nfunction armed() {\n  for (const [slot, elId, what] of [["release", "rel-key", "release"], ["ratify", "rat-key", "ratification"],\n                                    ["ratify", "not-key", "ratification"]]) {\n    const k = KEYS[slot];\n    $(elId).innerHTML = k\n      ? `<span class="good">Signing as</span> <code>${pubLine(k.raw32, k.label)}</code>`\n      : `No ${what} key loaded. Make one on the Keys tab.`;\n  }\n  $("rel-sign").disabled = !KEYS.release;\n  $("rat-sign").disabled = !KEYS.ratify;\n  $("not-sign").disabled = !KEYS.ratify;\n}\n\nasync function useSeed(label, seed) {\n  const { priv, raw32 } = await keysFromSeed(seed);\n  KEYS[JOBS[label].slot] = { priv, raw32, label };\n  armed();\n  return { priv, raw32 };\n}\n\n/* ---------------------------------------------------- copyable text block */\nlet boxSeq = 0;\nfunction copyBox(labelText, value, hint) {\n  const id = "box" + (++boxSeq);\n  const rows = value.split("\\n").length > 3 ? 7 : 2;\n  return `<div class="keybox">\n    <div class="top"><label for="${id}">${labelText}</label>\n      <button class="copy ghost" data-copy="${id}">Copy</button></div>\n    <textarea id="${id}" rows="${rows}" readonly spellcheck="false">${value.replace(/</g, "&lt;")}</textarea>\n    ${hint ? `<p class="note" style="margin-top:6px">${hint}</p>` : ""}\n  </div>`;\n}\n\n/* Clipboard, with a fallback because a page opened from disk cannot always\n   reach the async clipboard API. */\nasync function copyText(text) {\n  try { await navigator.clipboard.writeText(text); return true; } catch {}\n  try {\n    const ta = document.createElement("textarea");\n    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";\n    document.body.appendChild(ta); ta.select();\n    const ok = document.execCommand("copy");\n    document.body.removeChild(ta);\n    return ok;\n  } catch { return false; }\n}\ndocument.addEventListener("click", async (e) => {\n  const btn = e.target.closest ? e.target.closest("[data-copy]") : null;\n  if (!btn) return;\n  const src = $(btn.getAttribute("data-copy"));\n  const ok = await copyText(src ? src.value : "");\n  const was = btn.textContent;\n  btn.textContent = ok ? "Copied" : "Press Ctrl+C";\n  setTimeout(() => { btn.textContent = was; }, 1400);\n});\n\n/* ------------------------------------------------------------------ tabs */\nconst PANES = [["tab-keys", "pane-keys"], ["tab-release", "pane-release"], ["tab-ratify", "pane-ratify"],\n               ["tab-notice", "pane-notice"]];\nfor (const [btn, pane] of PANES) {\n  $(btn).onclick = () => {\n    for (const [b, p] of PANES) {\n      $(b).setAttribute("aria-pressed", String(b === btn));\n      $(p).classList.toggle("hide", p !== pane);\n    }\n  };\n}\n\n/* -------------------------------------------------------------- generate */\nfunction keyReport(made) {\n  return Object.entries(made)\n    .map(([l, m]) => `# ${JOBS[l].title} (${JOBS[l].what})\\npublic:  ${m.pub}\\nprivate: ${m.priv}`)\n    .join("\\n\\n") + "\\n";\n}\n\nasync function generateAll() {\n  const made = {};\n  for (const label of Object.keys(JOBS)) {\n    const seed = crypto.getRandomValues(new Uint8Array(32));\n    const { raw32 } = await useSeed(label, seed);\n    made[label] = { pub: pubLine(raw32, label), priv: rawKeyString(label, seed) };\n  }\n  return made;\n}\n\n$("gen").onclick = async () => {\n  const made = await generateAll();\n  const bothPub = Object.values(made).map((m) => m.pub).join("\\n");\n  const all = keyReport(made);\n\n  $("gen-out").innerHTML =\n    copyBox("Both public keys: paste these into the session", bothPub,\n            "Public keys are public by design. This is the only thing that needs to leave this page.")\n    + `<div class="row">\n         <button id="copy-all">Copy everything, keys and all</button>\n         <button id="dl" class="ghost">Download as a file</button>\n       </div>`\n    + Object.entries(made).map(([l, m]) =>\n        copyBox(`${JOBS[l].title}: private, keep this`, m.priv,\n                `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")\n    + `<p class="note">These are development keys with no passphrase. When CivicOS goes to real groups,\n         generate fresh keys and protect them. Nothing here carries over.</p>`;\n\n  $("copy-all").onclick = async (e) => {\n    const ok = await copyText(all);\n    e.target.textContent = ok ? "Copied" : "Use the boxes below instead";\n    setTimeout(() => { e.target.textContent = "Copy everything, keys and all"; }, 1400);\n  };\n  $("dl").onclick = () => {\n    const url = URL.createObjectURL(new Blob([all], { type: "text/plain" }));\n    const a = document.createElement("a");\n    a.href = url; a.download = "bio-signing-keys.txt";\n    document.body.appendChild(a); a.click(); document.body.removeChild(a);\n    URL.revokeObjectURL(url);\n  };\n};\n\n/* ------------------------------------------------------------------ load */\n$("load").onclick = async () => {\n  try {\n    const { label, seed } = await parseKeyString($("load-blob").value, $("load-pass").value);\n    const { raw32 } = await useSeed(label, seed);\n    $("load-pass").value = "";\n    $("load-out").innerHTML =\n      `<p class="good">${JOBS[label].title} loaded.</p><p class="note"><code>${pubLine(raw32, label)}</code></p>`;\n  } catch (e) {\n    $("load-out").innerHTML = `<p class="bad">${String(e.message || e)}</p>`;\n  }\n};\n$("forget").onclick = () => {\n  KEYS.release = null; KEYS.ratify = null; armed();\n  for (const id of ["load-blob", "load-pass"]) $(id).value = "";\n  for (const id of ["gen-out", "rel-out", "rat-out", "not-out"]) $(id).innerHTML = "";\n  $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;\n};\n\n/* -------------------------------------------------------- sign a release */\n$("rel-sign").onclick = async () => {\n  const f = $("rel-file").files[0];\n  if (!f) return ($("rel-out").innerHTML = `<p class="warn">Choose the release asset first.</p>`);\n  const k = KEYS.release;\n  const bytes = new Uint8Array(await f.arrayBuffer());\n  const sha = hex(await crypto.subtle.digest("SHA-256", bytes));\n  const sig = await sshsig(k.priv, k.raw32, "bio-release", bytes);\n  const manifest = JSON.stringify({ sha256: sha, sig, signer: pubLine(k.raw32, k.label) }, null, 1);\n  $("rel-out").innerHTML = copyBox(\n    `Signature for ${f.name}: paste this into the session`, manifest,\n    `Covers ${bytes.length} bytes hashing to <code>${sha}</code>.`);\n};\n\n/* ----------------------------------------------------- sign a ratification */\n$("rat-sign").onclick = async () => {\n  const id = $("rat-id").value.trim(), sha = $("rat-sha").value.trim().toLowerCase();\n  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the record id.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The record hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-ratify", enc.encode(`bio-ratify ${id} ${sha}\\n`));\n  $("rat-out").innerHTML = copyBox(\n    "Signature: paste this into the ratify box on the instance page", sig,\n    `Authorizes publishing <code>${id}</code> at exactly that hash. If the record changes before\n     you submit it, the instance refuses this signature and you sign the new hash.`);\n};\n\n/* --------------------------------------------------------- sign a notice */\n/* The same bytes as the plane\'s noticeStatement: `bio-working-on <id> <revision>\n   <hash>` and a newline, in the namespace bio-working-on. The fields are checked\n   exactly as the plane checks them, so the page never signs a statement the\n   instance would build differently. */\nconst NOTICE_ID_RE = /^[A-Z]+-\\d{4}-\\d{4}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$/;\n$("not-sign").onclick = async () => {\n  const id = $("not-id").value.trim(), rev = $("not-rev").value.trim();\n  const sha = $("not-sha").value.trim().toLowerCase();\n  if (!NOTICE_ID_RE.test(id)) return ($("not-out").innerHTML = `<p class="warn">Paste the notice id, as the instance page shows it.</p>`);\n  if (!/^[1-9][0-9]*$/.test(rev) || !Number.isSafeInteger(Number(rev)))\n    return ($("not-out").innerHTML = `<p class="warn">The revision is a whole number, 1 or more.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("not-out").innerHTML = `<p class="warn">The notice hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-working-on", enc.encode(`bio-working-on ${id} ${rev} ${sha}\\n`));\n  $("not-out").innerHTML = copyBox(\n    "Signature: paste this into the notice box on the instance page", sig,\n    `Signs revision ${rev} of <code>${id}</code> at exactly that hash. If the notice changes before\n     you post it, the instance refuses this signature and you sign the new hash.`);\n};\n\narmed();\n</script>\n';
-
-// src/control-plane/index.mjs
-var PUBLISHED_STORE = "bio";
-async function fingerprint(v) {
-  if (!v) return null;
-  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v));
-  return [...new Uint8Array(b)].slice(0, 8).map((x) => x.toString(16).padStart(2, "0")).join("");
-}
-async function sha256Hex12(v) {
-  const b = await crypto.subtle.digest("SHA-256", typeof v === "string" ? new TextEncoder().encode(v) : v);
-  return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
-}
-async function reviewAnswer(out, op) {
-  if (out.refused) return storeRefusal(out);
-  if (!out.answered) return storeSilent(op, out.correlation);
-  const r = out.result;
-  if (!r?.ok) return json5({ ok: false, ...r }, r?.reason === "NO_REVIEW_COPY" ? 404 : 400);
-  if (op === "reviewcopy") {
-    const { required_strength: bar, ...copy } = r;
-    const served = { ok: true, ...copy };
-    const { quartet } = await inbandQuartet({
-      subject: served,
-      over: "this answer exactly as served, without its `inband` key: parse it, delete `inband`, and hash JSON.stringify(rest, null, 1) as UTF-8",
-      /* REC-200 / BOB #32, 2026-09-23 23:08Z: THE DATE IS THE COPY'S LAST CHANGE, not the draft's last
-         EDIT — a comment moves these bytes, so it moves the hash, and it must move the date with it. The
-         store computes it over the rows it SERVES and says in `last_change.stated` what it cannot see.
-         THE AUTHOR DOES NOT MOVE: the ruling is about the date, and a recipient who comments on a copy
-         has not authored it; `last_change.by` is who made that change, beside it. */
-      date: r.last_change?.at ?? null,
-      author: r.updated_by ?? null,
-      bar: bar ?? null
-    });
-    return json5({ ...served, inband: quartet }, 200);
-  }
-  return json5({ ok: true, ...r }, 200);
-}
-var TEMPLATE_GRANT_DOORS = Object.freeze([...TEMPLATE_DOOR_ACTIONS, ...TEMPLATE_DOOR_READS]);
-var deadTemplateGrant = () => json5({ ok: false, ...noTemplateGrant() }, 404);
-async function templateGrantDoor({ req, url, env, op, spec, presentedAi, stub }) {
-  const inner = new URL(`http://do/${op}`);
-  for (const [k, v] of url.searchParams) inner.searchParams.set(k, v);
-  for (const k of ["token", "op", "store", "secret", "secretSha", "bySecret", ...QUERY_STAMPS]) inner.searchParams.delete(k);
-  if (url.searchParams.has("secret")) {
-    inner.searchParams.set("bySecret", "1");
-    inner.searchParams.set("secretSha", await sha256Hex12(url.searchParams.get("secret") || ""));
-  } else {
-    const admitted = await admit({
-      url,
-      env,
-      op,
-      spec: { ...spec, classes: ["admin", "member"], machineClasses: [] },
-      method: req.method,
-      presented: presentedAi,
-      doAnswer
-    });
-    if (admitted.silent) return storeSilent(admitted.silent.op, admitted.silent.correlation);
-    if (admitted.refusal || !admitted.caller.viaSession) return deadTemplateGrant();
-    inner.searchParams.set("viewer", admitted.caller.viewer);
-    inner.searchParams.set("author", admitted.caller.identity);
-  }
-  let body;
-  if (req.method === "POST") {
-    let b = {};
-    try {
-      b = JSON.parse(await req.text() || "{}");
-    } catch {
-      b = {};
-    }
-    if (!b || typeof b !== "object" || Array.isArray(b)) b = {};
-    for (const k of [...BODY_STAMPS, ...QUERY_STAMPS, "secretSha", "bySecret"]) delete b[k];
-    body = JSON.stringify(b);
-  }
-  const out = await doAnswer(stub.fetch(new Request(inner, body === void 0 ? { method: "GET" } : { method: "POST", body })));
-  if (out.refused) return storeRefusal(out);
-  if (!out.answered) return storeSilent(op, out.correlation);
-  const r = out.result;
-  if (r?.reason === "NO_TEMPLATE_GRANT") return deadTemplateGrant();
-  if (!r?.ok) return json5({ ok: false, ...r }, r?.reason === "NO_SUCH_TEMPLATE" ? 404 : 400);
-  return json5({ ok: true, ...r }, 200);
-}
-async function caseReader(url, env, storeName, presentedAi) {
-  const r = await readerOf(url, env, storeName, presentedAi, doAnswer);
-  return r.silent ? { silent: r.silent.op, correlation: r.silent.correlation } : r;
-}
-var json5 = (o, status = 200) => new Response(JSON.stringify(dec49Attach(o), null, 1), {
-  status,
-  headers: { "content-type": "application/json", "access-control-allow-origin": "*" }
-});
-function dec49Decorate(r) {
-  if (!r || typeof r !== "object" || Array.isArray(r)) return;
-  if (r.ok !== false) return;
-  const code = typeof r.reason === "string" ? r.reason : typeof r.code === "string" ? r.code : null;
-  if (!code) return;
-  const row2 = dec49Row(code);
-  if (!row2) return;
-  if (r.code === void 0) r.code = code;
-  if (r.check === void 0) r.check = row2.check;
-  if (r.translation === void 0) r.translation = row2.translation;
-}
-function dec49Attach(o) {
-  if (!o || typeof o !== "object" || Array.isArray(o)) return o;
-  dec49Decorate(o);
-  if (o.result && typeof o.result === "object") dec49Decorate(o.result);
-  return o;
-}
-var STORE_SILENT_REASON = "STORE_DID_NOT_ANSWER";
-var STORE_SILENT_DETAIL = "this instance could not consult its own record, so nothing here is a statement about the record. It is NOT a claim that what you asked for is absent, unpublished, unknown or refused \u2014 those are answers, and this is the absence of one. The question stands unanswered; ask again.";
-async function doAnswer(res) {
-  let r = null, out = null;
-  try {
-    r = await res;
-    out = await r.json();
-  } catch {
-    out = null;
-  }
-  if (!out || typeof out !== "object" || Array.isArray(out)) return { answered: false, result: void 0 };
-  const reply = { status: typeof r.status === "number" ? r.status : 200, body: out };
-  if (out.ok === true) return { answered: true, result: out.result, reply };
-  if (out.ok === false && reply.status < 500) return { answered: false, refused: true, result: void 0, reply };
-  const correlation = out.reason === "STORE_INTERNAL_ERROR" && typeof out.correlation === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(out.correlation) ? out.correlation : void 0;
-  return correlation ? { answered: false, result: void 0, correlation } : { answered: false, result: void 0 };
-}
-function storeRefusal(out, extra = {}) {
-  return json5({ ...out.reply.body, ...extra }, out.reply.status);
-}
-function storeSilent(op, correlation = void 0) {
-  return json5({
-    ok: false,
-    reason: "STORE_DID_NOT_ANSWER",
-    ...dispatchRow("STORE_DID_NOT_ANSWER"),
-    op,
-    detail: STORE_SILENT_DETAIL,
-    correlation
-  }, 502);
-}
-async function relayAnswer(res, op) {
-  const out = await doAnswer(res);
-  if (out.refused) return storeRefusal(out);
-  if (!out.answered) return storeSilent(op, out.correlation);
-  return json5({ ok: true, result: out.result }, out.reply.status);
-}
-function planeInternalError(e, req) {
-  const correlation = crypto.randomUUID();
-  let op = "";
-  try {
-    const u = new URL(req.url);
-    op = u.searchParams.get("op") || u.pathname;
-  } catch {
-  }
-  const answer = planeInternalAnswer(correlation);
-  try {
-    console.error(JSON.stringify({
-      event: answer.reason,
-      correlation,
-      op: String(op).slice(0, 200),
-      stack: String(e && e.stack || e)
-    }));
-  } catch {
-  }
-  return json5(answer, 500);
-}
-function planeInternalAnswer(correlation) {
-  return {
-    ok: false,
-    error: "internal error",
-    reason: "PLANE_INTERNAL_ERROR",
-    ...dispatchRow("PLANE_INTERNAL_ERROR"),
-    correlation
-  };
-}
-var replayRow = (code) => {
-  const row2 = REPLAY_CHECKS[code];
-  if (!row2 || typeof row2.translation !== "string" || !row2.translation)
-    throw new Error(`replayRow: ${code} has no REPLAY_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
-  return { code, check: row2.check, translation: row2.translation };
-};
-var requiredArgumentRow = (code) => {
-  const row2 = REQUIRED_ARGUMENT_CHECKS[code];
-  if (!row2 || typeof row2.translation !== "string" || !row2.translation)
-    throw new Error(`requiredArgumentRow: ${code} has no REQUIRED_ARGUMENT_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
-  return { code, check: row2.check, translation: row2.translation };
-};
-function requiredArgument(op, argument, shape, error) {
-  return {
-    ok: false,
-    reason: "REQUIRED_ARGUMENT_MISSING",
-    ...requiredArgumentRow("REQUIRED_ARGUMENT_MISSING"),
-    error,
-    op,
-    argument,
-    shape,
-    detail: `op=${op} needs '${argument}' in the shape ${shape}, and this request carried none the operation could use. Nothing was changed.`
-  };
-}
-var installationRow = (code) => {
-  const row2 = BOOTSTRAP_CHECKS[code];
-  if (!row2 || typeof row2.translation !== "string" || !row2.translation)
-    throw new Error(`installationRow: ${code} has no BOOTSTRAP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
-  return { code, check: row2.check, translation: row2.translation };
-};
-var dispatchRow = (code) => {
-  const row2 = DISPATCH_CHECKS[code];
-  if (!row2 || typeof row2.translation !== "string" || !row2.translation)
-    throw new Error(`dispatchRow: ${code} has no DISPATCH_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
-  return { code, check: row2.check, translation: row2.translation };
-};
-var captureKey = (storeName, sha) => `${storeName}/captures/${sha}`;
-function storageAbsent(op, error) {
-  const { status, body } = evidenceStorageAbsent(op, error);
-  return json5(body, status);
-}
-async function groupRead(op, url, env, presentedAi) {
-  const held = url.searchParams.get("token");
-  const heldCls = held ? await classify(held, env) : null;
-  const heldScope = heldCls ? scopeFor(heldCls, url) : null;
-  const store = heldScope && !heldScope.error ? heldScope.name : url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
-  const reader = await caseReader(url, env, store, presentedAi.cred);
-  if (reader.silent) return storeSilent(reader.silent, reader.correlation);
-  const io = { json: json5, storeSilent, storeRefusal, doAnswer };
-  return op === "instancegroup" ? instanceGroupOp(env, store, reader, io) : groupIdentityOp(env, store, reader, io);
-}
-var DRIVE_PROVENANCE_PATH = "migration/drive-provenance.json";
-async function migrationReplayOf(env, storeName, b) {
-  const cap = typeof b.provenanceCapture === "string" ? b.provenanceCapture.trim() : "";
-  if (!/^[0-9a-f]{64}$/.test(cap)) return null;
-  const registered3 = Array.isArray(b.register) && b.register.some((r) => r && r.sha256 === cap && r.path === DRIVE_PROVENANCE_PATH);
-  if (!registered3) return null;
-  const bm = Array.isArray(b.files) ? b.files.find((f17) => f17 && f17.path === "bundle.md" && typeof f17.text === "string") : null;
-  if (!bm) return null;
-  const mdSha = createSha256().update(new TextEncoder().encode(bm.text)).hex();
-  if (bm.sha256 !== mdSha) return null;
-  let held;
-  try {
-    held = await env.CAPTURES.get(captureKey(storeName, cap));
-  } catch {
-    return null;
-  }
-  if (!held) return null;
-  const bytes2 = new Uint8Array(await held.arrayBuffer());
-  if (createSha256().update(bytes2).hex() !== cap) return null;
-  let prov;
-  try {
-    prov = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes2));
-  } catch {
-    return null;
-  }
-  const records = Array.isArray(prov?.promotions) ? prov.promotions : [];
-  const match = records.find((p) => p && p.record && typeof p.record === "object" && p.record.target === b.bundleId && Array.isArray(p.record.files) && p.record.files.some((f17) => f17 && f17.name === "bundle.md" && f17.sha256 === mdSha));
-  if (!match) return null;
-  return { capture: cap, promotion: typeof match.key === "string" ? match.key : null, bundleMdSha: mdSha };
-}
-function promotedTypeOf(b) {
-  const md = Array.isArray(b.files) ? b.files.find((f17) => f17 && f17.path === "bundle.md") : null;
-  const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
-  const said2 = fm && typeof fm === "object" ? fm.object_type : void 0;
-  if (typeof said2 === "string" && said2.trim() !== "") return normalizeType(said2);
-  return b.meta && typeof b.meta === "object" ? normalizeType(b.meta.object_type) : void 0;
-}
-async function replayVerdict(env, storeName, text5, viaSession, cls) {
-  let b;
-  try {
-    b = JSON.parse(text5);
-  } catch {
-    return null;
-  }
-  if (!b || typeof b !== "object" || Array.isArray(b)) return null;
-  const admin = !viaSession && cls === "admin";
-  const asserted = admin && !!b.replay;
-  const creatingInquiry = b.base === null && !!b.meta && promotedTypeOf(b) === "inquiry";
-  const proven = admin && (asserted || creatingInquiry) ? await migrationReplayOf(env, storeName, b) : null;
-  return {
-    asserted,
-    proven,
-    bundleId: typeof b.bundleId === "string" ? b.bundleId.slice(0, 200) : null,
-    provenanceCapture: typeof b.provenanceCapture === "string" ? b.provenanceCapture.slice(0, 64) : null
-  };
-}
-async function knockerConsent(req, store) {
-  if (req.method !== "POST") return json5({ ok: false, error: "knockerconsent is a POST" }, 405);
-  let b = null;
-  try {
-    b = JSON.parse(await req.text() || "{}");
-  } catch {
-    b = null;
-  }
-  if (!b || typeof b !== "object" || Array.isArray(b)) b = {};
-  const source = req.headers.get("cf-connecting-ip") || "unknown";
-  const out = await doAnswer(store.fetch(new Request(
-    `http://do/knockerconsent?source=${encodeURIComponent(source)}&now=${Date.now()}`,
-    {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        knockerSecret: b.knockerSecret,
-        entry: b.entry,
-        audience: b.audience,
-        ...b.withdraw !== void 0 ? { withdraw: b.withdraw } : {}
-      })
-    }
-  )));
-  if (out.refused) return storeRefusal(out);
-  if (!out.answered) return storeSilent("knockerconsent", out.correlation);
-  const rec = out.result && typeof out.result === "object" ? out.result : {};
-  if (rec.ok !== true)
-    return json5({ ok: false, ...rec }, rec.reason === "RATE_IP" || rec.reason === "RATE_GLOBAL" ? 429 : 403);
-  return json5({ ...rec, ok: true }, 200);
-}
-async function publishAffordances(res, url) {
-  if (url.searchParams.get("target")) return res;
-  let body;
-  try {
-    body = await res.clone().json();
-  } catch {
-    return res;
-  }
-  if (!body || body.ok !== true || !body.result || typeof body.result !== "object" || Array.isArray(body.result)) return res;
-  const published = { ...body.result, fences: machineFences(CHECK_FAMILIES) };
-  let pack = null, absent = null;
-  try {
-    pack = renderPack(published);
-  } catch (e) {
-    absent = String(e && e.message || "the pack could not be rendered").slice(0, 500);
-  }
-  return json5({ ...body, result: { ...published, pack, ...pack ? {} : { pack_absent: absent } } }, res.status);
-}
-var PLANE_LIMITS = Object.freeze({ subrequests: 1e4 });
-var PLANE_LIMITS_STATEMENT = "bio-plane-limits/1 subrequests=10000";
-var QUERY_STAMPS = Object.freeze(["viewer", "identity", "author", "by", "actor", "who", "origin", "administer", "aiCred"]);
-var BODY_STAMPS = Object.freeze([
-  "actorIdentity",
-  "actorViewer",
-  "actorMemberId",
-  "ownerMemberId",
-  "assistantPrincipal",
-  "migrationReplay"
-]);
-var STATED_STATUS_OPS = Object.freeze(["inbox", "inboxpull", "inboxresolve", "heldsetaside", "heldrestore"]);
-function makeFetch(hooks = {}) {
-  const planeDoor = async function planeDoor2(req, env) {
-    try {
-      return await fetch2(req, env);
-    } catch (e) {
-      return planeInternalError(e, req);
-    }
-  };
-  planeDoor.limits = PLANE_LIMITS;
-  planeDoor.limitsStatement = PLANE_LIMITS_STATEMENT;
-  return planeDoor;
-  async function fetch2(req, env) {
-    const url = new URL(req.url);
-    if (req.method === "OPTIONS")
-      return new Response(null, { status: 204, headers: { "access-control-allow-origin": "*", "access-control-allow-methods": "GET, POST, OPTIONS", "access-control-allow-headers": "content-type" } });
-    if (req.method === "GET" && (url.pathname === "/version" || url.pathname === "/version/"))
-      return new Response(
-        (env.VERSION || "0.0.0") + "\n",
-        { headers: {
-          "content-type": "text/plain; charset=utf-8",
-          "access-control-allow-origin": "*"
-        } }
-      );
-    if (req.method === "GET" && (url.pathname === "/sign" || url.pathname === "/sign/"))
-      return new Response(SIGN_HTML, { headers: { "content-type": "text/html; charset=utf-8" } });
-    if (req.method === "GET" && !url.pathname.startsWith("/api") && (url.pathname === "/" || url.pathname === "") && !url.searchParams.get("op")) {
-      const pageNamespace = namespaceGate(url);
-      if (pageNamespace) return json5(pageNamespace.body, pageNamespace.status);
-      const pageStore = url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
-      return new Response(
-        setupPage(await hooks.publicInstanceGroup(env, pageStore, "groupidentitypublic")),
-        { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } }
-      );
-    }
-    const path = url.pathname.replace(/^\/api\/?/, "/");
-    let op = url.searchParams.get("op") || path.slice(1) || "selftest";
-    let spec = Object.hasOwn(OPS, op) ? OPS[op] : void 0;
-    let resolving = false;
-    if (op === "inboxresolve" && req.method === "POST") {
-      let b = null;
-      try {
-        b = JSON.parse(await req.clone().text());
-      } catch {
-        b = null;
-      }
-      if (b && typeof b === "object" && !Array.isArray(b) && b.status === "pulled") {
-        op = "inboxpull";
-        spec = OPS.inboxpull;
-        resolving = true;
-      }
-    }
-    if (!spec) return json5({
-      ok: false,
-      error: "unknown op",
-      reason: "UNKNOWN_OP",
-      ...dispatchRow("UNKNOWN_OP"),
-      op
-    }, 400);
-    const refused2 = (r) => json5(r.body, r.status);
-    const unknownNamespace = namespaceGate(url);
-    if (unknownNamespace) return refused2(unknownNamespace);
-    const presentedAi = await aiCredentialPresented(url, env, doAnswer);
-    if (presentedAi.silent) return storeSilent(presentedAi.silent.op, presentedAi.silent.correlation);
-    const confinedNamespace = confinedNamespaceGate(url, presentedAi.cred);
-    if (confinedNamespace) return refused2(confinedNamespace);
-    const pinnedNamespace = pinnedNamespaceGate(url, op, spec);
-    if (pinnedNamespace) return refused2(pinnedNamespace);
-    if (spec.classes === null) {
-      const fp = await fingerprint(env.ADMIN_TOKEN);
-      const stub2 = env.STORE.get(env.STORE.idFromName("bio"));
-      const invStub = url.searchParams.get("store") === SCRATCH ? env.STORE.get(env.STORE.idFromName(SCRATCH)) : stub2;
-      if (op === "claim") {
-        const body2 = await req.json().catch(() => ({}));
-        if (!env.ADMIN_TOKEN) return json5({
-          ok: false,
-          reason: "BOOTSTRAP_CREDENTIAL_UNSET",
-          ...installationRow("BOOTSTRAP_CREDENTIAL_UNSET"),
-          error: "instance has no bootstrap credential set"
-        }, 409);
-        if (!await liveToken(env.ADMIN_TOKEN))
-          return json5({
-            ok: false,
-            reason: "BOOTSTRAP_CREDENTIAL_PUBLISHED",
-            ...installationRow("BOOTSTRAP_CREDENTIAL_PUBLISHED"),
-            error: "bootstrap credential is a published repository value and can never arm a claim; set a fresh ADMIN_TOKEN in the Cloudflare dashboard"
-          }, 409);
-        if (body2.bootstrapToken !== env.ADMIN_TOKEN)
-          return json5({
-            ok: false,
-            reason: "BOOTSTRAP_CREDENTIAL_MISMATCH",
-            ...installationRow("BOOTSTRAP_CREDENTIAL_MISMATCH"),
-            error: "bootstrap credential does not match"
-          }, 403);
-        return relayAnswer(stub2.fetch(new Request(`http://do/claim?fp=${fp}`, {
-          method: "POST",
-          body: JSON.stringify({ role: "admin", password: body2.password })
-        })), "claim");
-      }
-      if (op === "reviewcopy" || op === "reviewcomment" || op === "statementack") {
-        const bySecret = url.searchParams.has("secret");
-        const q7 = new URLSearchParams();
-        const draftParam = (url.searchParams.get("draft") || "").trim();
-        if (draftParam) q7.set("draft", draftParam);
-        if (op === "statementack" && !bySecret) {
-          for (const k of ["case", "edition"])
-            if (url.searchParams.get(k)) q7.set(k, (url.searchParams.get(k) || "").trim());
-        }
-        if (op === "reviewcopy" && url.searchParams.get("limit")) q7.set("limit", url.searchParams.get("limit"));
-        if (bySecret) {
-          q7.set("bySecret", "1");
-          q7.set("secretSha", await sha256Hex12(url.searchParams.get("secret") || ""));
-        } else {
-          const reader = await caseReader(url, env, "bio", presentedAi.cred);
-          if (reader.silent) return storeSilent(reader.silent, reader.correlation);
-          q7.set("viewer", reader.viewer);
-        }
-        if (op === "statementack") {
-          let reason = url.searchParams.get("reason");
-          if (reason === null && req.method === "POST") {
-            let b = null;
-            try {
-              b = JSON.parse(await req.text() || "null");
-            } catch {
-              b = null;
-            }
-            if (b && typeof b === "object" && !Array.isArray(b) && typeof b.reason === "string") reason = b.reason;
-          }
-          if (reason !== null) q7.set("reason", reason);
-        }
-        let commentBody = null;
-        if (op === "reviewcomment") {
-          let b = {};
-          try {
-            b = req.method === "POST" ? JSON.parse(await req.text() || "{}") : {};
-          } catch {
-            b = {};
-          }
-          commentBody = JSON.stringify({ text: typeof b?.text === "string" ? b.text : "" });
-        }
-        const out2 = await doAnswer(stub2.fetch(
-          `http://do/${op}?${q7}`,
-          commentBody === null ? void 0 : { method: "POST", body: commentBody }
-        ));
-        return reviewAnswer(out2, op);
-      }
-      if (op === "login") {
-        const body2 = await req.json().catch(() => ({}));
-        return relayAnswer(stub2.fetch(new Request("http://do/login", {
-          method: "POST",
-          body: JSON.stringify({ role: body2.role || "admin", password: body2.password })
-        })), "login");
-      }
-      if (op === "invitelook" || op === "enroll") {
-        const body2 = await req.json().catch(() => ({}));
-        return relayAnswer(invStub.fetch(new Request(`http://do/${op}`, {
-          method: "POST",
-          body: JSON.stringify(body2)
-        })), op);
-      }
-      if (TEMPLATE_GRANT_DOORS.includes(op)) return templateGrantDoor({ req, url, env, op, spec, presentedAi, stub: stub2 });
-      if (op === "instancegroup" || op === "groupidentity") return groupRead(op, url, env, presentedAi);
-      if (op === "knockerconsent") return knockerConsent(req, stub2);
-      return hooks.publicOp({ req, url, env, op, stub: stub2, invStub, fp, presentedAi });
-    }
-    const admitted = await admit({ url, env, op, spec, method: req.method, presented: presentedAi, doAnswer });
-    if (admitted.silent) return storeSilent(admitted.silent.op, admitted.silent.correlation);
-    if (admitted.refusal) return refused2(admitted.refusal);
-    const caller = admitted.caller;
-    const { cls, viaSession, aiCred, storeName } = caller;
-    const { member: sessMember, viewer: sessViewer, identity: sessIdentity, rights: sessRights, caps: sessCaps } = caller;
-    if (op === "whoami") {
-      return json5({ ok: true, result: {
-        tokenClass: cls,
-        session: viaSession,
-        member: viaSession ? sessMember : null,
-        handle: viaSession ? sessRights.handle ?? null : null,
-        administer: viaSession ? !!sessRights.administer : cls === "admin",
-        /* R18: the root of trust administers */
-        rootOfTrust: viaSession ? !!sessRights.rootOfTrust : false,
-        capabilities: viaSession ? [...sessCaps].sort() : null,
-        vocabulary: Membership.CAPABILITIES,
-        /* D-463: WHETHER THIS CREDENTIAL CAN EVER REACH THE RECORD, answered as a value rather than left for a
-           caller to infer from the `store` beside it. The two are different facts and an instrument needs both:
-           `store` is where THIS call landed, `confinedTo` is where every call it will ever make lands. `null` is
-           "not confined", which is the honest answer for a session (a member is not a confined credential) and
-           for the four binding classes (an operator sets them in the hosting dashboard, and there is no row to
-           carry the property — the probe class's confinement is its CLASS's, read out of `scopeFor`, and is
-           reported as `store` on every one of its answers). */
-        confinedTo: cls === "ai" && aiCred ? aiCred.confinedTo ?? null : null,
-        detail: viaSession ? "capabilities are set by an administrator and gate what this account may DO, not what it may see" : "a machine credential has no member behind it and therefore holds no capabilities; it is bounded by the operation table and by namespace confinement instead"
-      }, store: storeName, tokenClass: cls }, 200);
-    }
-    const stub = env.STORE.get(env.STORE.idFromName(storeName));
-    const DO_PATH = {
-      inbox: "inboxlist",
-      memberlist: "memberlist",
-      signerlist: "signerlist",
-      publish: "publishcase",
-      inboxpull: "inboxpullfile"
-    };
-    const inner = new URL("http://x/" + (DO_PATH[op] || op));
-    for (const [k, v] of url.searchParams) if (k !== "token" && k !== "op") inner.searchParams.set(k, v);
-    inner.searchParams.delete("identity");
-    for (const k of QUERY_STAMPS) inner.searchParams.delete(k);
-    for (const k of ["secretSha", "bySecret"]) inner.searchParams.delete(k);
-    if (op === "lease") inner.searchParams.set("actor", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
-    if (op === "monitorpause") inner.searchParams.set("actor", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
-    const IDENTITY_READS = ["leadlook", "leadread", "leadshare", "leadlist", "frontier"];
-    const REC30_VIEWER_READS = [
-      "dangling",
-      "tasks",
-      "reading",
-      "readingref",
-      "readingname",
-      "textprovenance",
-      "textattest",
-      /* CPDF-13: the drift obligation's rows NAME the bundle each
-         affected capture is filed in, so it takes the same stamp
-         for REC-30's reason exactly — otherwise "which of your
-         documents rest on a superseded measurement" would disclose
-         that a document sits in a project the caller was never
-         invited to. `calibrations` is NOT here: it answers about
-         ENGINES and names no bundle at all. */
-      "calibrationdrift",
-      "resolutions",
-      "concerns",
-      "connections",
-      "instance",
-      "exceptions",
-      "thread",
-      "discharge",
-      "audit",
-      "searchindexcheck",
-      "projectownerarith",
-      /* REC-14's read, swept at the merge: its bar report NAMES the
-         projects that declared the bar, which is §7.9's reverse-edge
-         walk arriving by a new door. The VALUE stays whole for every
-         reader (DEC-17) — only the names are withheld. */
-      "strengthbarof",
-      /* REC-149: the setting's read and the directory decide by the caller's SIGHT
-         (Membership v2 §7.14), so both take the stamp; each fails closed without it. */
-      "projectvisibility",
-      "projectdirectory",
-      /* REC-196: the roster read names a project by its own id, so the store needs the
-         caller's SIGHT to answer C-70.1 at EXISTENCE (BOB #32's ruling (a)). Its own
-         answer still reads the `by` stamp below; the viewer is read only by that check. */
-      "projectparticipants",
-      /* REC-150: the requests read decides by the caller's SIGHT of the project it
-         names (C-70.1 at EXISTENCE, the absent answer at NONE), so it takes the stamp. */
-      "projectrequests",
-      /* N321 (publication R44): the stage read names a project by its own id and answers by
-         the caller's SIGHT (the absent answer at NONE, the id and name at EXISTENCE), so it
-         takes the stamp and fails closed without it. */
-      "projectstage",
-      /* N388 (capture R69, K580): the accounts of a capture answer by the caller's SIGHT of
-         the bundle that files it, so an unseen capture reads as one with no account; capture
-         fails closed without the stamp. `lateattestations` names no bundle and takes none. */
-      "captureaccounts"
-    ];
-    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "contentcrop" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "versionnotice" || op === "basisversions" || op === "versionstrength" || op === "partitionindependence" || op === "biasmanifest" || op === "biasdebt" || op === "biasdebtresolve" || op === "biasadopt" || op === "casedraft" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "capturerequestretry" || INTENT_ACTIONS.includes(op) || INTENT_READS.includes(op) || op === "reevaluationnotices" || op === "reevaluationchanges" || REEVALUATION_ACTIONS.includes(op) || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "contradictionpropose" || op === "narrow" || op === "narrowcandidates" || op === "connectionchoose" || op === "connectionassert" || op === "connectionsasserted" || op === "filemembershipstore" || op === "filemembership" || op === "filemembershipjudge" || op === "contradictionpairs" || op === "actionquotes" || op === "casedrafts" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "attesttext" || op === "leadlook" || op === "leadread" || op === "leadshare" || op === "leadlist" || op === "themeplace" || op === "themepropose" || op === "themeread" || op === "themewithdraw" || op === "idmatch" || op === "actionlawspropose" || op === "stats" || op === "selectionlist" || op === "driveshells" || PROJECT_ACTIONS.includes(op) || op === "memberpairings" || ACTION_LAYER_ACTIONS.includes(op) || ACTION_LAYER_READS.includes(op) || op === "actionriskpropose" || op === "monitoring" || op === "monitorslate" || CONTRADICTION_ACTIONS.includes(op) || CONTRADICTION_READS.includes(op) || op === "contradictionrecommend" || op === "entity" || op === "entitybyalias" || op === "publishtensions" || op === "publishpreflight" || SOURCE_READS.includes(op) || op === "inboxpull" || CAPTURE_VIEWER_ACTIONS.includes(op) || CAPTURE_READS.includes(op) || REC30_VIEWER_READS.includes(op)) {
-      inner.searchParams.set(
-        "viewer",
-        viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
-      );
-      if (IDENTITY_READS.includes(op)) inner.searchParams.set(
-        "identity",
-        viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
-      );
-    }
-    if (op === "versionchain")
-      inner.searchParams.set("address", normalizeAddress(url.searchParams.get("address") || ""));
-    if (op === "biasadopt")
-      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
-    if (op === "stats") inner.searchParams.set("capacity", cls === "admin" ? "1" : "0");
-    if (op === "memberlist")
-      inner.searchParams.set(
-        "administer",
-        (viaSession ? !!sessRights.administer : cls === "admin") ? "1" : "0"
-      );
-    if (op === "memberpairings")
-      inner.searchParams.set(
-        "administer",
-        (viaSession ? !!sessRights.administer : cls === "admin") ? "1" : "0"
-      );
-    if (op === "themedeclare" || op === "themeplace" || op === "themepropose" || op === "themeread" || op === "themewithdraw")
-      inner.searchParams.set(
-        "administer",
-        (viaSession ? !!sessRights.administer : cls === "admin") ? "1" : "0"
-      );
-    if (QUEUE_ACTIONS.includes(op))
-      inner.searchParams.set("member", viaSession ? sessMember : "");
-    if (op === "attesttext")
-      inner.searchParams.set("attestor", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
-    if (op === "transcribe")
-      inner.searchParams.set("transcriber", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
-    if (op === "transcriptionattest")
-      inner.searchParams.set("attestor", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
-    if (op === "testify")
-      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
-    if (op === "lead")
-      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
-    if (op === "leadlook")
-      inner.searchParams.set("looker", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
-    if (op === "leadshare")
-      inner.searchParams.set("sharer", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
-    if (op === "attribute")
-      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
-    if (op === "themedeclare")
-      inner.searchParams.set("declarer", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
-    if (op === "themeplace")
-      inner.searchParams.set("placer", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
-    if (op === "themewithdraw")
-      inner.searchParams.set("actor", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
-    if (op === "themepropose")
-      inner.searchParams.set(
-        "proposer",
-        viaSession ? sessMember : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
-      );
-    if (op === "actionlawspropose")
-      inner.searchParams.set(
-        "proposer",
-        viaSession ? sessMember : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
-      );
-    if (op === "actionriskpropose")
-      inner.searchParams.set(
-        "proposer",
-        viaSession ? sessMember : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
-      );
-    if (PLAN_PROPOSAL_ACTIONS.includes(op)) {
-      inner.searchParams.set(
-        "proposer",
-        viaSession ? sessMember : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
-      );
-      inner.searchParams.set(
-        "principal",
-        viaSession ? sessIdentity : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
-      );
-    }
-    if (TEMPLATE_PROPOSAL_ACTIONS.includes(op)) {
-      const proposer = viaSession ? sessMember : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
-      inner.searchParams.set("proposer", proposer);
-      inner.searchParams.set("author", proposer);
-    }
-    if (QUERY_AUTHOR_ACTIONS.includes(op))
-      inner.searchParams.set(
-        "author",
-        viaSession ? sessIdentity : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
-      );
-    if (CONTRADICTION_ACTIONS.includes(op))
-      inner.searchParams.set(
-        "author",
-        viaSession ? sessIdentity : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
-      );
-    if (op === "contentmint")
-      inner.searchParams.set(
-        "mintedBy",
-        viaSession ? sessMember : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
-      );
-    if (op === "extractpropose" || op === "contradictionpropose" || op === "contradictionrecommend")
-      inner.searchParams.set(
-        "proposedBy",
-        viaSession ? sessMember : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
-      );
-    if (op === "select" || op === "selection" || op === "selectionlist" || op === "selectionrelease" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op))
-      inner.searchParams.set("owner", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
-    if (EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || DECLARATION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "connectionchoose" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "provenancechain" || op === "provenanceroute" || op === "narrow")
-      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
-    if (op === "connectionassert" || op === "filemembershipjudge")
-      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
-    if (op === "publishpreflight" && cls === "ai")
-      inner.searchParams.set("aiCred", JSON.stringify({ tokenId: aiCred.tokenId, principal: aiCred.principal }));
-    if (op === "publishtensions" || op === "publishpreflight")
-      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
-    if (REEVALUATION_ACTIONS.includes(op))
-      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
-    if (POSITIONAL_ACTS.includes(op))
-      inner.searchParams.set(
-        "identity",
-        viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
-      );
-    if (op === "calibrate")
-      inner.searchParams.set(
-        "identity",
-        viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
-      );
-    const fenced = bearerFence(op, caller);
-    if (fenced) return refused2(fenced);
-    const replay = op === "promote" && req.method === "POST" ? await replayVerdict(env, storeName, await req.clone().text(), viaSession, cls) : null;
-    if (replay?.asserted && !replay.proven)
-      return json5({
-        ok: false,
-        reason: "REPLAY_UNVERIFIED",
-        ...replayRow("REPLAY_UNVERIFIED"),
-        op,
-        bundleId: replay.bundleId,
-        provenanceCapture: replay.provenanceCapture,
-        detail: `this promotion says it is a replay of the record's own past, and a replay is honoured only when the plane can check it: it must name a drive-provenance capture (\`provenanceCapture\`) that this promotion registers at ${DRIVE_PROVENANCE_PATH}, whose bytes the record holds, and whose preserved promotion records name this record and list this revision's bundle.md SHA-256. One of those did not hold. Nothing was written.`
-      }, 403);
-    if (op === "purge") {
-      const confirm = url.searchParams.get("confirm");
-      if (confirm !== storeName)
-        return json5({
-          ok: false,
-          ...requiredArgument(
-            "purge",
-            "confirm",
-            "<store name>",
-            "purge requires confirm=<store>"
-          ),
-          expected: storeName,
-          got: confirm,
-          tokenClass: cls,
-          store: storeName
-        }, 400);
-    }
-    const armed = hooks.gatedOp ? await hooks.gatedOp({
-      req,
-      url,
-      env,
-      op,
-      cls,
-      viaSession,
-      sessMember,
-      sessViewer,
-      sessIdentity,
-      sessRights,
-      sessCaps,
-      aiCred,
-      storeName,
-      stub
-    }) : void 0;
-    if (armed) return op === "affordances" ? publishAffordances(armed, url) : armed;
-    if (PROJECT_ACTIONS.includes(op) || GOVERNANCE_ACTIONS.includes(op) || op === "projectparticipants" || op === "projectownerarith" || CUSTODIAL_ACTIONS.includes(op))
-      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
-    if (op === "projectrequests")
-      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
-    if (op === "profilesset")
-      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
-    if (ROSTER_SELF_ACTIONS.includes(op))
-      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
-    if (OWN_KEY_ACTIONS.includes(op) || CAPTURE_MEMBER_ACTIONS.includes(op) || SOURCE_ACTIONS.includes(op))
-      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
-    if (op === "inboxpull") {
-      inner.searchParams.set("identity", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
-      inner.searchParams.delete("resolve");
-      if (resolving) inner.searchParams.set("resolve", "pulled");
-    }
-    if (IDENTITY_ACTIONS.includes(op)) {
-      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
-      inner.searchParams.set("origin", url.origin);
-    }
-    if (RUN_VERB_ACTIONS.includes(op) || RUN_PRODUCTION_ACTIONS.includes(op))
-      inner.searchParams.set(
-        "principal",
-        viaSession ? sessIdentity : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
-      );
-    if (op === "capturerequestretry")
-      inner.searchParams.set(
-        "principal",
-        viaSession ? sessIdentity : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
-      );
-    if (RUN_VERB_ACTIONS.includes(op)) {
-      inner.searchParams.delete("actor");
-      inner.searchParams.set("actor", viaSession ? sessMember : "");
-    }
-    let passBody = req.method === "POST" ? await req.text() : void 0;
-    if (passBody) {
-      try {
-        const b0 = JSON.parse(passBody);
-        if (b0 && typeof b0 === "object" && !Array.isArray(b0) && BODY_STAMPS.some((k) => k in b0)) {
-          for (const k of BODY_STAMPS) delete b0[k];
-          passBody = JSON.stringify(b0);
-        }
-      } catch {
-      }
-    }
-    if (op === "promote" && passBody) {
-      try {
-        const b = JSON.parse(passBody);
-        const promotedType = promotedTypeOf(b);
-        delete b.ownerMemberId;
-        delete b.actorMemberId;
-        delete b.author;
-        if (viaSession) {
-          b.author = sessMember;
-          b.actorMemberId = sessMember;
-        } else b.author = `${MACHINE_AUTHOR_PREFIX}${cls}`;
-        delete b.actorIdentity;
-        b.actorIdentity = viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
-        delete b.actorViewer;
-        b.actorViewer = viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
-        if (viaSession || cls !== "admin") delete b.replay;
-        delete b.migrationReplay;
-        delete b.replay;
-        const creatingInquiry = b.base === null && !!b.meta && promotedType === "inquiry";
-        const proven = replay?.proven ?? null;
-        if (proven) b.replay = true;
-        const replayed = creatingInquiry ? proven : null;
-        if (replayed) b.migrationReplay = replayed;
-        delete b.memberUserAgent;
-        if (viaSession && b.base === null) {
-          const agent = (req.headers.get("User-Agent") || "").trim().slice(0, 512).trimEnd();
-          if (agent) b.memberUserAgent = agent;
-        }
-        delete b.assistantPrincipal;
-        if (!viaSession)
-          b.assistantPrincipal = cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
-        if (replayed) delete b.assistantPrincipal;
-        if (b.base === null && b.meta && promotedType === "project" && viaSession) {
-          const creation = projectCreationGate(sessCaps);
-          if (creation) return refused2(creation);
-          b.ownerMemberId = sessMember;
-        }
-        if (b.base === null && b.meta && !replayed && promotedType === "inquiry" && Array.isArray(b.files)) {
-          const bm = b.files.find((f17) => f17 && f17.path === "bundle.md" && typeof f17.text === "string");
-          if (bm) {
-            const want = viaSession ? "human" : "agent";
-            const lines = bm.text.split("\n");
-            const end2 = lines.indexOf("---", 1);
-            let changed = false;
-            for (let i = 1; i < (end2 === -1 ? lines.length : end2); i++) {
-              if (lines[i].startsWith("surfaced_by:")) {
-                lines[i] = "surfaced_by: " + want;
-                changed = true;
-                break;
-              }
-            }
-            const sentSha = createSha256().update(new TextEncoder().encode(bm.text)).hex();
-            const sentOk = bm.sha256 === void 0 || bm.sha256 === null || typeof bm.sha256 === "string" && bm.sha256.toLowerCase() === sentSha;
-            if (changed && sentOk) {
-              bm.text = lines.join("\n");
-              const bytes2 = new TextEncoder().encode(bm.text);
-              bm.bytes = bytes2.length;
-              bm.sha256 = createSha256().update(bytes2).hex();
-            }
-          }
-        }
-        passBody = JSON.stringify(b);
-      } catch {
-      }
-    }
-    if ((op === "expertisedeclare" || op === "expertiseconfirm") && passBody) {
-      try {
-        const b = JSON.parse(passBody);
-        if (op === "expertisedeclare") b.memberId = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
-        else b.by = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
-        passBody = JSON.stringify(b);
-      } catch {
-      }
-    }
-    if ((op === "entitycreate" || op === "entityalias" || op === "relationdeclare") && passBody) {
-      try {
-        const b = JSON.parse(passBody);
-        b.declaredBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
-        passBody = JSON.stringify(b);
-      } catch {
-      }
-    }
-    if ((op === "aliaswithdraw" || op === "relationwithdraw") && passBody) {
-      try {
-        const b = JSON.parse(passBody);
-        b.withdrawnBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
-        passBody = JSON.stringify(b);
-      } catch {
-      }
-    }
-    if (op === "resolutiondefect" && req.method === "POST") {
-      try {
-        const b = passBody ? JSON.parse(passBody) : {};
-        if (b && typeof b === "object" && !Array.isArray(b)) {
-          b.by = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
-          passBody = JSON.stringify(b);
-        }
-      } catch {
-      }
-    }
-    if ((op === "resolve" || op === "resolvetestify") && passBody) {
-      try {
-        const b = JSON.parse(passBody);
-        b.resolvedBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
-        passBody = JSON.stringify(b);
-      } catch {
-      }
-    }
-    if (op === "progressiondefine" && passBody) {
-      try {
-        const b = JSON.parse(passBody);
-        b.declaredBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
-        passBody = JSON.stringify(b);
-      } catch {
-      }
-    }
-    if (op === "connect" && passBody) {
-      try {
-        const b = JSON.parse(passBody);
-        b.assertedBy = "system";
-        passBody = JSON.stringify(b);
-      } catch {
-      }
-    }
-    if (op === "thread" && passBody) {
-      try {
-        const b = JSON.parse(passBody);
-        b.threadedBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
-        passBody = JSON.stringify(b);
-      } catch {
-      }
-    }
-    if (op === "discharge" && passBody) {
-      try {
-        const b = JSON.parse(passBody);
-        b.declaredBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
-        passBody = JSON.stringify(b);
-      } catch {
-      }
-    }
-    if (op === "proposedispose" && passBody) {
-      try {
-        const b = JSON.parse(passBody);
-        b.decidedBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
-        passBody = JSON.stringify(b);
-      } catch {
-      }
-    }
-    if (INTENT_ACTIONS.includes(op) && req.method === "POST") {
-      try {
-        const b = passBody ? JSON.parse(passBody) : {};
-        if (b && typeof b === "object" && !Array.isArray(b)) {
-          b.author = viaSession ? sessIdentity : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
-          if (op === "triage") {
-            delete b.assistantPrincipal;
-            if (!viaSession)
-              b.assistantPrincipal = cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
-          }
-          passBody = JSON.stringify(b);
-        }
-      } catch {
-      }
-    }
-    if (STANDARDS_ACTIONS.includes(op) && req.method === "POST") {
-      try {
-        const b = passBody ? JSON.parse(passBody) : {};
-        if (b && typeof b === "object" && !Array.isArray(b)) {
-          const who2 = viaSession ? sessIdentity : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
-          delete b.author;
-          delete b.proposer;
-          if (op === "standardpropose") b.proposer = who2;
-          else b.author = who2;
-          passBody = JSON.stringify(b);
-        }
-      } catch {
-      }
-    }
-    if (LOCAL_FACTS_ACTIONS.includes(op) && req.method === "POST") {
-      try {
-        const b = passBody ? JSON.parse(passBody) : {};
-        if (b && typeof b === "object" && !Array.isArray(b)) {
-          for (const k of QUERY_STAMPS) delete b[k];
-          b.by = viaSession ? sessIdentity : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
-          passBody = JSON.stringify(b);
-        }
-      } catch {
-      }
-    }
-    if (op === "inboxresolve" && passBody) {
-      try {
-        const b = JSON.parse(passBody);
-        b.by = viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`;
-        passBody = JSON.stringify(b);
-      } catch {
-      }
-    }
-    if ((op === "taskforward" || op === "taskresolve" || op === "taskdrain" || op === "biasdebtresolve") && passBody) {
-      try {
-        const b = JSON.parse(passBody);
-        b.actor = viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`;
-        passBody = JSON.stringify(b);
-      } catch {
-      }
-    }
-    if (op === "aicredentialrevoke")
-      inner.searchParams.set("who", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
-    if (op === "instancegroupseed")
-      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
-    if (op === "casedraft" || op === "reviewgrant" || op === "reviewrevoke") {
-      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
-      inner.searchParams.delete("secretSha");
-    }
-    if (op === "aicredentialmint") {
-      let asked = {};
-      try {
-        asked = passBody ? JSON.parse(passBody) : {};
-      } catch {
-        asked = {};
-      }
-      const mint = await aiCredentialMint(asked, cls);
-      if (mint.refusal) return refused2(mint.refusal);
-      const secret = mint.secret;
-      inner.searchParams.set("who", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
-      inner.searchParams.set("secretSha", mint.secretSha);
-      const minted = await doAnswer(stub.fetch(new Request(
-        inner,
-        { method: req.method, body: JSON.stringify({ ...asked, writes: mint.writes, confinedTo: mint.confinedTo }) }
-      )));
-      if (minted.refused) return storeRefusal(minted, { op, store: storeName, tokenClass: cls });
-      if (!minted.answered) return storeSilent("aicredentialmint", minted.correlation);
-      if (!minted.result || minted.result.ok !== true)
-        return json5({ ok: false, ...minted.result || {}, op, store: storeName, tokenClass: cls }, 403);
-      return json5({ ok: true, result: {
-        ...minted.result,
-        /* THE ONE TIME THIS VALUE EXISTS ANYWHERE A CALLER CAN READ IT. It is
-           not recoverable afterwards from this instance by any route, because
-           nothing here kept it — losing it means minting another and revoking
-           this one, which leaves both acts on the record where they belong. */
-        token: secret,
-        tokenIsShownOnce: "This is the only time this instance will show this value. It is not stored and cannot be recovered \u2014 the record holds the credential's NAME and who created it, never the value. If it is lost, withdraw this credential and create another."
-      }, store: storeName, tokenClass: cls }, 200);
-    }
-    if (op === "reviewgrant") {
-      const { secret, secretSha } = await reviewGrantSecret();
-      inner.searchParams.set("secretSha", secretSha);
-      const issued = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
-      if (issued.refused) return storeRefusal(issued, { op, store: storeName, tokenClass: cls });
-      if (!issued.answered) return storeSilent("reviewgrant", issued.correlation);
-      if (!issued.result || issued.result.ok !== true)
-        return json5({ ok: false, ...issued.result || {}, op, store: storeName, tokenClass: cls }, 403);
-      return json5({ ok: true, result: {
-        ...issued.result,
-        secret,
-        secretIsShownOnce: "This is the only time this instance will show this value. It is stored only as a fingerprint and cannot be recovered. Give it to the recipient: it lets them READ this one draft and COMMENT on it, and nothing else. If it is lost, withdraw this grant and issue another.",
-        read: "op=reviewcopy&secret=<the value above>"
-      }, store: storeName, tokenClass: cls }, 200);
-    }
-    if (op === "templatereviewgrant") {
-      const { secret, secretSha } = await reviewGrantSecret();
-      inner.searchParams.set("secretSha", secretSha);
-      const issued = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
-      if (issued.refused) return storeRefusal(issued, { op, store: storeName, tokenClass: cls });
-      if (!issued.answered) return storeSilent("templatereviewgrant", issued.correlation);
-      if (!issued.result || issued.result.ok !== true)
-        return json5({ ok: false, ...issued.result || {}, op, store: storeName, tokenClass: cls }, 403);
-      return json5({ ok: true, result: {
-        ...issued.result,
-        secret,
-        secretIsShownOnce: "This is the only time this instance will show this value. It is stored only as a fingerprint and cannot be recovered. Give it to the reviewer: it lets them READ this one template version, COMMENT on it and REVIEW it while it is a draft or in review, and nothing else. If it is lost, withdraw this grant and open another.",
-        read: "op=templateread&secret=<the value above>"
-      }, store: storeName, tokenClass: cls }, 200);
-    }
-    if (op === "casedrafts")
-      return reviewAnswer(await doAnswer(stub.fetch(new Request(inner, { method: "GET" }))), op);
-    const out = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
-    if (out.refused) return storeRefusal(out, { store: storeName, tokenClass: cls });
-    if (!out.answered) return storeSilent(op, out.correlation);
-    const { body, status } = out.reply;
-    if ((op === "inboxget" || op === "inboxresolve") && body.result?.ok === false && body.result.reason === "NO_SUCH_KNOCK")
-      return json5({ ...body, store: storeName, tokenClass: cls }, 404);
-    const hinted = body.result?.status;
-    if (STATED_STATUS_OPS.includes(op) && body.result?.ok === false && Number.isInteger(hinted) && hinted >= 400 && hinted < 600)
-      return json5({ ...body, store: storeName, tokenClass: cls }, hinted);
-    return json5({ ...body, store: storeName, tokenClass: cls }, status);
-  }
-}
 
 // src/container.mjs
 var CONTAINER_MAX_BYTES = 64 * 1024 * 1024;
@@ -131775,6 +130794,1114 @@ async function publicReadDoorOp(op, url, env, stub, helpers) {
   return null;
 }
 
+// src/control-plane/index.mjs
+var PUBLISHED_STORE = "bio";
+async function fingerprint(v) {
+  if (!v) return null;
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v));
+  return [...new Uint8Array(b)].slice(0, 8).map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+async function sha256Hex12(v) {
+  const b = await crypto.subtle.digest("SHA-256", typeof v === "string" ? new TextEncoder().encode(v) : v);
+  return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+async function reviewAnswer(out, op) {
+  if (out.refused) return storeRefusal(out);
+  if (!out.answered) return storeSilent(op, out.correlation);
+  const r = out.result;
+  if (!r?.ok) return json5({ ok: false, ...r }, r?.reason === "NO_REVIEW_COPY" ? 404 : 400);
+  if (op === "reviewcopy") {
+    const { required_strength: bar, ...copy } = r;
+    const served = { ok: true, ...copy };
+    const { quartet } = await inbandQuartet({
+      subject: served,
+      over: "this answer exactly as served, without its `inband` key: parse it, delete `inband`, and hash JSON.stringify(rest, null, 1) as UTF-8",
+      /* REC-200 / BOB #32, 2026-09-23 23:08Z: THE DATE IS THE COPY'S LAST CHANGE, not the draft's last
+         EDIT — a comment moves these bytes, so it moves the hash, and it must move the date with it. The
+         store computes it over the rows it SERVES and says in `last_change.stated` what it cannot see.
+         THE AUTHOR DOES NOT MOVE: the ruling is about the date, and a recipient who comments on a copy
+         has not authored it; `last_change.by` is who made that change, beside it. */
+      date: r.last_change?.at ?? null,
+      author: r.updated_by ?? null,
+      bar: bar ?? null
+    });
+    return json5({ ...served, inband: quartet }, 200);
+  }
+  return json5({ ok: true, ...r }, 200);
+}
+var TEMPLATE_GRANT_DOORS = Object.freeze([...TEMPLATE_DOOR_ACTIONS, ...TEMPLATE_DOOR_READS]);
+var deadTemplateGrant = () => json5({ ok: false, ...noTemplateGrant() }, 404);
+async function templateGrantDoor({ req, url, env, op, spec, presentedAi, stub }) {
+  const inner = new URL(`http://do/${op}`);
+  for (const [k, v] of url.searchParams) inner.searchParams.set(k, v);
+  for (const k of ["token", "op", "store", "secret", "secretSha", "bySecret", ...QUERY_STAMPS]) inner.searchParams.delete(k);
+  if (url.searchParams.has("secret")) {
+    inner.searchParams.set("bySecret", "1");
+    inner.searchParams.set("secretSha", await sha256Hex12(url.searchParams.get("secret") || ""));
+  } else {
+    const admitted = await admit({
+      url,
+      env,
+      op,
+      spec: { ...spec, classes: ["admin", "member"], machineClasses: [] },
+      method: req.method,
+      presented: presentedAi,
+      doAnswer
+    });
+    if (admitted.silent) return storeSilent(admitted.silent.op, admitted.silent.correlation);
+    if (admitted.refusal || !admitted.caller.viaSession) return deadTemplateGrant();
+    inner.searchParams.set("viewer", admitted.caller.viewer);
+    inner.searchParams.set("author", admitted.caller.identity);
+  }
+  let body;
+  if (req.method === "POST") {
+    let b = {};
+    try {
+      b = JSON.parse(await req.text() || "{}");
+    } catch {
+      b = {};
+    }
+    if (!b || typeof b !== "object" || Array.isArray(b)) b = {};
+    for (const k of [...BODY_STAMPS, ...QUERY_STAMPS, "secretSha", "bySecret"]) delete b[k];
+    body = JSON.stringify(b);
+  }
+  const out = await doAnswer(stub.fetch(new Request(inner, body === void 0 ? { method: "GET" } : { method: "POST", body })));
+  if (out.refused) return storeRefusal(out);
+  if (!out.answered) return storeSilent(op, out.correlation);
+  const r = out.result;
+  if (r?.reason === "NO_TEMPLATE_GRANT") return deadTemplateGrant();
+  if (!r?.ok) return json5({ ok: false, ...r }, r?.reason === "NO_SUCH_TEMPLATE" ? 404 : 400);
+  return json5({ ok: true, ...r }, 200);
+}
+async function caseReader(url, env, storeName, presentedAi) {
+  const r = await readerOf(url, env, storeName, presentedAi, doAnswer);
+  return r.silent ? { silent: r.silent.op, correlation: r.silent.correlation } : r;
+}
+var json5 = (o, status = 200) => new Response(JSON.stringify(dec49Attach(o), null, 1), {
+  status,
+  headers: { "content-type": "application/json", "access-control-allow-origin": "*" }
+});
+function dec49Decorate(r) {
+  if (!r || typeof r !== "object" || Array.isArray(r)) return;
+  if (r.ok !== false) return;
+  const code = typeof r.reason === "string" ? r.reason : typeof r.code === "string" ? r.code : null;
+  if (!code) return;
+  const row2 = dec49Row(code);
+  if (!row2) return;
+  if (r.code === void 0) r.code = code;
+  if (r.check === void 0) r.check = row2.check;
+  if (r.translation === void 0) r.translation = row2.translation;
+}
+function dec49Attach(o) {
+  if (!o || typeof o !== "object" || Array.isArray(o)) return o;
+  dec49Decorate(o);
+  if (o.result && typeof o.result === "object") dec49Decorate(o.result);
+  return o;
+}
+var STORE_SILENT_REASON = "STORE_DID_NOT_ANSWER";
+var STORE_SILENT_DETAIL = "this instance could not consult its own record, so nothing here is a statement about the record. It is NOT a claim that what you asked for is absent, unpublished, unknown or refused \u2014 those are answers, and this is the absence of one. The question stands unanswered; ask again.";
+async function doAnswer(res) {
+  let r = null, out = null;
+  try {
+    r = await res;
+    out = await r.json();
+  } catch {
+    out = null;
+  }
+  if (!out || typeof out !== "object" || Array.isArray(out)) return { answered: false, result: void 0 };
+  const reply = { status: typeof r.status === "number" ? r.status : 200, body: out };
+  if (out.ok === true) return { answered: true, result: out.result, reply };
+  if (out.ok === false && reply.status < 500) return { answered: false, refused: true, result: void 0, reply };
+  const correlation = out.reason === "STORE_INTERNAL_ERROR" && typeof out.correlation === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(out.correlation) ? out.correlation : void 0;
+  return correlation ? { answered: false, result: void 0, correlation } : { answered: false, result: void 0 };
+}
+function storeRefusal(out, extra = {}) {
+  return json5({ ...out.reply.body, ...extra }, out.reply.status);
+}
+function storeSilent(op, correlation = void 0) {
+  return json5({
+    ok: false,
+    reason: "STORE_DID_NOT_ANSWER",
+    ...dispatchRow("STORE_DID_NOT_ANSWER"),
+    op,
+    detail: STORE_SILENT_DETAIL,
+    correlation
+  }, 502);
+}
+async function relayAnswer(res, op) {
+  const out = await doAnswer(res);
+  if (out.refused) return storeRefusal(out);
+  if (!out.answered) return storeSilent(op, out.correlation);
+  return json5({ ok: true, result: out.result }, out.reply.status);
+}
+function planeInternalError(e, req) {
+  const correlation = crypto.randomUUID();
+  let op = "";
+  try {
+    const u = new URL(req.url);
+    op = u.searchParams.get("op") || u.pathname;
+  } catch {
+  }
+  const answer = planeInternalAnswer(correlation);
+  try {
+    console.error(JSON.stringify({
+      event: answer.reason,
+      correlation,
+      op: String(op).slice(0, 200),
+      stack: String(e && e.stack || e)
+    }));
+  } catch {
+  }
+  return json5(answer, 500);
+}
+function planeInternalAnswer(correlation) {
+  return {
+    ok: false,
+    error: "internal error",
+    reason: "PLANE_INTERNAL_ERROR",
+    ...dispatchRow("PLANE_INTERNAL_ERROR"),
+    correlation
+  };
+}
+var replayRow = (code) => {
+  const row2 = REPLAY_CHECKS[code];
+  if (!row2 || typeof row2.translation !== "string" || !row2.translation)
+    throw new Error(`replayRow: ${code} has no REPLAY_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row2.check, translation: row2.translation };
+};
+var requiredArgumentRow = (code) => {
+  const row2 = REQUIRED_ARGUMENT_CHECKS[code];
+  if (!row2 || typeof row2.translation !== "string" || !row2.translation)
+    throw new Error(`requiredArgumentRow: ${code} has no REQUIRED_ARGUMENT_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row2.check, translation: row2.translation };
+};
+function requiredArgument(op, argument, shape, error) {
+  return {
+    ok: false,
+    reason: "REQUIRED_ARGUMENT_MISSING",
+    ...requiredArgumentRow("REQUIRED_ARGUMENT_MISSING"),
+    error,
+    op,
+    argument,
+    shape,
+    detail: `op=${op} needs '${argument}' in the shape ${shape}, and this request carried none the operation could use. Nothing was changed.`
+  };
+}
+var installationRow = (code) => {
+  const row2 = BOOTSTRAP_CHECKS[code];
+  if (!row2 || typeof row2.translation !== "string" || !row2.translation)
+    throw new Error(`installationRow: ${code} has no BOOTSTRAP_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row2.check, translation: row2.translation };
+};
+var dispatchRow = (code) => {
+  const row2 = DISPATCH_CHECKS[code];
+  if (!row2 || typeof row2.translation !== "string" || !row2.translation)
+    throw new Error(`dispatchRow: ${code} has no DISPATCH_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row2.check, translation: row2.translation };
+};
+var captureKey = (storeName, sha) => `${storeName}/captures/${sha}`;
+function storageAbsent(op, error) {
+  const { status, body } = evidenceStorageAbsent(op, error);
+  return json5(body, status);
+}
+async function groupRead(op, url, env, presentedAi) {
+  const held = url.searchParams.get("token");
+  const heldCls = held ? await classify(held, env) : null;
+  const heldScope = heldCls ? scopeFor(heldCls, url) : null;
+  const store = heldScope && !heldScope.error ? heldScope.name : url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
+  const reader = await caseReader(url, env, store, presentedAi.cred);
+  if (reader.silent) return storeSilent(reader.silent, reader.correlation);
+  const io = { json: json5, storeSilent, storeRefusal, doAnswer };
+  return op === "instancegroup" ? instanceGroupOp(env, store, reader, io) : groupIdentityOp(env, store, reader, io);
+}
+var DRIVE_PROVENANCE_PATH = "migration/drive-provenance.json";
+async function migrationReplayOf(env, storeName, b) {
+  const cap = typeof b.provenanceCapture === "string" ? b.provenanceCapture.trim() : "";
+  if (!/^[0-9a-f]{64}$/.test(cap)) return null;
+  const registered3 = Array.isArray(b.register) && b.register.some((r) => r && r.sha256 === cap && r.path === DRIVE_PROVENANCE_PATH);
+  if (!registered3) return null;
+  const bm = Array.isArray(b.files) ? b.files.find((f17) => f17 && f17.path === "bundle.md" && typeof f17.text === "string") : null;
+  if (!bm) return null;
+  const mdSha = createSha256().update(new TextEncoder().encode(bm.text)).hex();
+  if (bm.sha256 !== mdSha) return null;
+  let held;
+  try {
+    held = await env.CAPTURES.get(captureKey(storeName, cap));
+  } catch {
+    return null;
+  }
+  if (!held) return null;
+  const bytes2 = new Uint8Array(await held.arrayBuffer());
+  if (createSha256().update(bytes2).hex() !== cap) return null;
+  let prov;
+  try {
+    prov = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes2));
+  } catch {
+    return null;
+  }
+  const records = Array.isArray(prov?.promotions) ? prov.promotions : [];
+  const match = records.find((p) => p && p.record && typeof p.record === "object" && p.record.target === b.bundleId && Array.isArray(p.record.files) && p.record.files.some((f17) => f17 && f17.name === "bundle.md" && f17.sha256 === mdSha));
+  if (!match) return null;
+  return { capture: cap, promotion: typeof match.key === "string" ? match.key : null, bundleMdSha: mdSha };
+}
+function promotedTypeOf(b) {
+  const md = Array.isArray(b.files) ? b.files.find((f17) => f17 && f17.path === "bundle.md") : null;
+  const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
+  const said2 = fm && typeof fm === "object" ? fm.object_type : void 0;
+  if (typeof said2 === "string" && said2.trim() !== "") return normalizeType(said2);
+  return b.meta && typeof b.meta === "object" ? normalizeType(b.meta.object_type) : void 0;
+}
+async function replayVerdict(env, storeName, text5, viaSession, cls) {
+  let b;
+  try {
+    b = JSON.parse(text5);
+  } catch {
+    return null;
+  }
+  if (!b || typeof b !== "object" || Array.isArray(b)) return null;
+  const admin = !viaSession && cls === "admin";
+  const asserted = admin && !!b.replay;
+  const creatingInquiry = b.base === null && !!b.meta && promotedTypeOf(b) === "inquiry";
+  const proven = admin && (asserted || creatingInquiry) ? await migrationReplayOf(env, storeName, b) : null;
+  return {
+    asserted,
+    proven,
+    bundleId: typeof b.bundleId === "string" ? b.bundleId.slice(0, 200) : null,
+    provenanceCapture: typeof b.provenanceCapture === "string" ? b.provenanceCapture.slice(0, 64) : null
+  };
+}
+async function knockerConsent(req, store) {
+  if (req.method !== "POST") return json5({ ok: false, error: "knockerconsent is a POST" }, 405);
+  let b = null;
+  try {
+    b = JSON.parse(await req.text() || "{}");
+  } catch {
+    b = null;
+  }
+  if (!b || typeof b !== "object" || Array.isArray(b)) b = {};
+  const source = req.headers.get("cf-connecting-ip") || "unknown";
+  const out = await doAnswer(store.fetch(new Request(
+    `http://do/knockerconsent?source=${encodeURIComponent(source)}&now=${Date.now()}`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        knockerSecret: b.knockerSecret,
+        entry: b.entry,
+        audience: b.audience,
+        ...b.withdraw !== void 0 ? { withdraw: b.withdraw } : {}
+      })
+    }
+  )));
+  if (out.refused) return storeRefusal(out);
+  if (!out.answered) return storeSilent("knockerconsent", out.correlation);
+  const rec = out.result && typeof out.result === "object" ? out.result : {};
+  if (rec.ok !== true)
+    return json5({ ok: false, ...rec }, rec.reason === "RATE_IP" || rec.reason === "RATE_GLOBAL" ? 429 : 403);
+  return json5({ ...rec, ok: true }, 200);
+}
+async function publishAffordances(res, url) {
+  if (url.searchParams.get("target")) return res;
+  let body;
+  try {
+    body = await res.clone().json();
+  } catch {
+    return res;
+  }
+  if (!body || body.ok !== true || !body.result || typeof body.result !== "object" || Array.isArray(body.result)) return res;
+  const published = { ...body.result, fences: machineFences(CHECK_FAMILIES) };
+  let pack = null, absent = null;
+  try {
+    pack = renderPack(published);
+  } catch (e) {
+    absent = String(e && e.message || "the pack could not be rendered").slice(0, 500);
+  }
+  return json5({ ...body, result: { ...published, pack, ...pack ? {} : { pack_absent: absent } } }, res.status);
+}
+var PLANE_LIMITS = Object.freeze({ subrequests: 1e4 });
+var PLANE_LIMITS_STATEMENT = "bio-plane-limits/1 subrequests=10000";
+var QUERY_STAMPS = Object.freeze(["viewer", "identity", "author", "by", "actor", "who", "origin", "administer", "aiCred"]);
+var BODY_STAMPS = Object.freeze([
+  "actorIdentity",
+  "actorViewer",
+  "actorMemberId",
+  "ownerMemberId",
+  "assistantPrincipal",
+  "migrationReplay"
+]);
+var STATED_STATUS_OPS = Object.freeze(["inbox", "inboxpull", "inboxresolve", "heldsetaside", "heldrestore"]);
+function makeFetch(hooks = {}) {
+  const planeDoor = async function planeDoor2(req, env) {
+    try {
+      return await fetch2(req, env);
+    } catch (e) {
+      return planeInternalError(e, req);
+    }
+  };
+  planeDoor.limits = PLANE_LIMITS;
+  planeDoor.limitsStatement = PLANE_LIMITS_STATEMENT;
+  return planeDoor;
+  async function fetch2(req, env) {
+    const url = new URL(req.url);
+    if (req.method === "OPTIONS")
+      return new Response(null, { status: 204, headers: { "access-control-allow-origin": "*", "access-control-allow-methods": "GET, POST, OPTIONS", "access-control-allow-headers": "content-type" } });
+    if (req.method === "GET" && (url.pathname === "/version" || url.pathname === "/version/"))
+      return new Response(
+        (env.VERSION || "0.0.0") + "\n",
+        { headers: {
+          "content-type": "text/plain; charset=utf-8",
+          "access-control-allow-origin": "*"
+        } }
+      );
+    if (req.method === "GET" && (url.pathname === "/sign" || url.pathname === "/sign/"))
+      return new Response(SIGN_HTML, { headers: { "content-type": "text/html; charset=utf-8" } });
+    if (req.method === "GET" && !url.pathname.startsWith("/api") && (url.pathname === "/" || url.pathname === "") && !url.searchParams.get("op")) {
+      const pageNamespace = namespaceGate(url);
+      if (pageNamespace) return json5(pageNamespace.body, pageNamespace.status);
+      const pageStore = url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
+      return new Response(
+        setupPage(await hooks.publicInstanceGroup(env, pageStore, "groupidentitypublic")),
+        { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } }
+      );
+    }
+    const path = url.pathname.replace(/^\/api\/?/, "/");
+    let op = url.searchParams.get("op") || path.slice(1) || "selftest";
+    let spec = Object.hasOwn(OPS, op) ? OPS[op] : void 0;
+    let resolving = false;
+    if (op === "inboxresolve" && req.method === "POST") {
+      let b = null;
+      try {
+        b = JSON.parse(await req.clone().text());
+      } catch {
+        b = null;
+      }
+      if (b && typeof b === "object" && !Array.isArray(b) && b.status === "pulled") {
+        op = "inboxpull";
+        spec = OPS.inboxpull;
+        resolving = true;
+      }
+    }
+    if (!spec) return json5({
+      ok: false,
+      error: "unknown op",
+      reason: "UNKNOWN_OP",
+      ...dispatchRow("UNKNOWN_OP"),
+      op
+    }, 400);
+    const refused2 = (r) => json5(r.body, r.status);
+    const unknownNamespace = namespaceGate(url);
+    if (unknownNamespace) return refused2(unknownNamespace);
+    const presentedAi = await aiCredentialPresented(url, env, doAnswer);
+    if (presentedAi.silent) return storeSilent(presentedAi.silent.op, presentedAi.silent.correlation);
+    const confinedNamespace = confinedNamespaceGate(url, presentedAi.cred);
+    if (confinedNamespace) return refused2(confinedNamespace);
+    const pinnedNamespace = pinnedNamespaceGate(url, op, spec);
+    if (pinnedNamespace) return refused2(pinnedNamespace);
+    if (spec.classes === null) {
+      const fp = await fingerprint(env.ADMIN_TOKEN);
+      const stub2 = env.STORE.get(env.STORE.idFromName("bio"));
+      const invStub = url.searchParams.get("store") === SCRATCH ? env.STORE.get(env.STORE.idFromName(SCRATCH)) : stub2;
+      if (op === "claim") {
+        const body2 = await req.json().catch(() => ({}));
+        if (!env.ADMIN_TOKEN) return json5({
+          ok: false,
+          reason: "BOOTSTRAP_CREDENTIAL_UNSET",
+          ...installationRow("BOOTSTRAP_CREDENTIAL_UNSET"),
+          error: "instance has no bootstrap credential set"
+        }, 409);
+        if (!await liveToken(env.ADMIN_TOKEN))
+          return json5({
+            ok: false,
+            reason: "BOOTSTRAP_CREDENTIAL_PUBLISHED",
+            ...installationRow("BOOTSTRAP_CREDENTIAL_PUBLISHED"),
+            error: "bootstrap credential is a published repository value and can never arm a claim; set a fresh ADMIN_TOKEN in the Cloudflare dashboard"
+          }, 409);
+        if (body2.bootstrapToken !== env.ADMIN_TOKEN)
+          return json5({
+            ok: false,
+            reason: "BOOTSTRAP_CREDENTIAL_MISMATCH",
+            ...installationRow("BOOTSTRAP_CREDENTIAL_MISMATCH"),
+            error: "bootstrap credential does not match"
+          }, 403);
+        return relayAnswer(stub2.fetch(new Request(`http://do/claim?fp=${fp}`, {
+          method: "POST",
+          body: JSON.stringify({ role: "admin", password: body2.password })
+        })), "claim");
+      }
+      if (op === "reviewcopy" || op === "reviewcomment" || op === "statementack") {
+        const bySecret = url.searchParams.has("secret");
+        const q7 = new URLSearchParams();
+        const draftParam = (url.searchParams.get("draft") || "").trim();
+        if (draftParam) q7.set("draft", draftParam);
+        if (op === "statementack" && !bySecret) {
+          for (const k of ["case", "edition"])
+            if (url.searchParams.get(k)) q7.set(k, (url.searchParams.get(k) || "").trim());
+        }
+        if (op === "reviewcopy" && url.searchParams.get("limit")) q7.set("limit", url.searchParams.get("limit"));
+        if (bySecret) {
+          q7.set("bySecret", "1");
+          q7.set("secretSha", await sha256Hex12(url.searchParams.get("secret") || ""));
+        } else {
+          const reader = await caseReader(url, env, "bio", presentedAi.cred);
+          if (reader.silent) return storeSilent(reader.silent, reader.correlation);
+          q7.set("viewer", reader.viewer);
+        }
+        if (op === "statementack") {
+          let reason = url.searchParams.get("reason");
+          if (reason === null && req.method === "POST") {
+            let b = null;
+            try {
+              b = JSON.parse(await req.text() || "null");
+            } catch {
+              b = null;
+            }
+            if (b && typeof b === "object" && !Array.isArray(b) && typeof b.reason === "string") reason = b.reason;
+          }
+          if (reason !== null) q7.set("reason", reason);
+        }
+        let commentBody = null;
+        if (op === "reviewcomment") {
+          let b = {};
+          try {
+            b = req.method === "POST" ? JSON.parse(await req.text() || "{}") : {};
+          } catch {
+            b = {};
+          }
+          commentBody = JSON.stringify({ text: typeof b?.text === "string" ? b.text : "" });
+        }
+        const out2 = await doAnswer(stub2.fetch(
+          `http://do/${op}?${q7}`,
+          commentBody === null ? void 0 : { method: "POST", body: commentBody }
+        ));
+        return reviewAnswer(out2, op);
+      }
+      if (op === "login") {
+        const body2 = await req.json().catch(() => ({}));
+        return relayAnswer(stub2.fetch(new Request("http://do/login", {
+          method: "POST",
+          body: JSON.stringify({ role: body2.role || "admin", password: body2.password })
+        })), "login");
+      }
+      if (op === "invitelook" || op === "enroll") {
+        const body2 = await req.json().catch(() => ({}));
+        return relayAnswer(invStub.fetch(new Request(`http://do/${op}`, {
+          method: "POST",
+          body: JSON.stringify(body2)
+        })), op);
+      }
+      if (TEMPLATE_GRANT_DOORS.includes(op)) return templateGrantDoor({ req, url, env, op, spec, presentedAi, stub: stub2 });
+      if (op === "instancegroup" || op === "groupidentity") return groupRead(op, url, env, presentedAi);
+      if (op === "knockerconsent") return knockerConsent(req, stub2);
+      if (NETWORK_NOTICES_PUBLIC_READS.includes(op))
+        return publicReadDoorRead(op, url, env, stub2, { json: json5, requiredArgument, storeSilent, storeRefusal, doAnswer });
+      return hooks.publicOp({ req, url, env, op, stub: stub2, invStub, fp, presentedAi });
+    }
+    const admitted = await admit({ url, env, op, spec, method: req.method, presented: presentedAi, doAnswer });
+    if (admitted.silent) return storeSilent(admitted.silent.op, admitted.silent.correlation);
+    if (admitted.refusal) return refused2(admitted.refusal);
+    const caller = admitted.caller;
+    const { cls, viaSession, aiCred, storeName } = caller;
+    const { member: sessMember, viewer: sessViewer, identity: sessIdentity, rights: sessRights, caps: sessCaps } = caller;
+    if (op === "whoami") {
+      return json5({ ok: true, result: {
+        tokenClass: cls,
+        session: viaSession,
+        member: viaSession ? sessMember : null,
+        handle: viaSession ? sessRights.handle ?? null : null,
+        administer: viaSession ? !!sessRights.administer : cls === "admin",
+        /* R18: the root of trust administers */
+        rootOfTrust: viaSession ? !!sessRights.rootOfTrust : false,
+        capabilities: viaSession ? [...sessCaps].sort() : null,
+        vocabulary: Membership.CAPABILITIES,
+        /* D-463: WHETHER THIS CREDENTIAL CAN EVER REACH THE RECORD, answered as a value rather than left for a
+           caller to infer from the `store` beside it. The two are different facts and an instrument needs both:
+           `store` is where THIS call landed, `confinedTo` is where every call it will ever make lands. `null` is
+           "not confined", which is the honest answer for a session (a member is not a confined credential) and
+           for the four binding classes (an operator sets them in the hosting dashboard, and there is no row to
+           carry the property — the probe class's confinement is its CLASS's, read out of `scopeFor`, and is
+           reported as `store` on every one of its answers). */
+        confinedTo: cls === "ai" && aiCred ? aiCred.confinedTo ?? null : null,
+        detail: viaSession ? "capabilities are set by an administrator and gate what this account may DO, not what it may see" : "a machine credential has no member behind it and therefore holds no capabilities; it is bounded by the operation table and by namespace confinement instead"
+      }, store: storeName, tokenClass: cls }, 200);
+    }
+    const stub = env.STORE.get(env.STORE.idFromName(storeName));
+    const DO_PATH = {
+      inbox: "inboxlist",
+      memberlist: "memberlist",
+      signerlist: "signerlist",
+      publish: "publishcase",
+      inboxpull: "inboxpullfile"
+    };
+    const inner = new URL("http://x/" + (DO_PATH[op] || op));
+    for (const [k, v] of url.searchParams) if (k !== "token" && k !== "op") inner.searchParams.set(k, v);
+    inner.searchParams.delete("identity");
+    for (const k of QUERY_STAMPS) inner.searchParams.delete(k);
+    for (const k of ["secretSha", "bySecret"]) inner.searchParams.delete(k);
+    if (op === "lease") inner.searchParams.set("actor", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+    if (op === "monitorpause") inner.searchParams.set("actor", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    const IDENTITY_READS = ["leadlook", "leadread", "leadshare", "leadlist", "frontier"];
+    const REC30_VIEWER_READS = [
+      "dangling",
+      "tasks",
+      "reading",
+      "readingref",
+      "readingname",
+      "textprovenance",
+      "textattest",
+      /* CPDF-13: the drift obligation's rows NAME the bundle each
+         affected capture is filed in, so it takes the same stamp
+         for REC-30's reason exactly — otherwise "which of your
+         documents rest on a superseded measurement" would disclose
+         that a document sits in a project the caller was never
+         invited to. `calibrations` is NOT here: it answers about
+         ENGINES and names no bundle at all. */
+      "calibrationdrift",
+      "resolutions",
+      "concerns",
+      "connections",
+      "instance",
+      "exceptions",
+      "thread",
+      "discharge",
+      "audit",
+      "searchindexcheck",
+      "projectownerarith",
+      /* REC-14's read, swept at the merge: its bar report NAMES the
+         projects that declared the bar, which is §7.9's reverse-edge
+         walk arriving by a new door. The VALUE stays whole for every
+         reader (DEC-17) — only the names are withheld. */
+      "strengthbarof",
+      /* REC-149: the setting's read and the directory decide by the caller's SIGHT
+         (Membership v2 §7.14), so both take the stamp; each fails closed without it. */
+      "projectvisibility",
+      "projectdirectory",
+      /* REC-196: the roster read names a project by its own id, so the store needs the
+         caller's SIGHT to answer C-70.1 at EXISTENCE (BOB #32's ruling (a)). Its own
+         answer still reads the `by` stamp below; the viewer is read only by that check. */
+      "projectparticipants",
+      /* REC-150: the requests read decides by the caller's SIGHT of the project it
+         names (C-70.1 at EXISTENCE, the absent answer at NONE), so it takes the stamp. */
+      "projectrequests",
+      /* N321 (publication R44): the stage read names a project by its own id and answers by
+         the caller's SIGHT (the absent answer at NONE, the id and name at EXISTENCE), so it
+         takes the stamp and fails closed without it. */
+      "projectstage",
+      /* N388 (capture R69, K580): the accounts of a capture answer by the caller's SIGHT of
+         the bundle that files it, so an unseen capture reads as one with no account; capture
+         fails closed without the stamp. `lateattestations` names no bundle and takes none. */
+      "captureaccounts"
+    ];
+    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "contentcrop" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "versionnotice" || op === "basisversions" || op === "versionstrength" || op === "partitionindependence" || op === "biasmanifest" || op === "biasdebt" || op === "biasdebtresolve" || op === "biasadopt" || op === "casedraft" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "capturerequestretry" || INTENT_ACTIONS.includes(op) || INTENT_READS.includes(op) || op === "reevaluationnotices" || op === "reevaluationchanges" || REEVALUATION_ACTIONS.includes(op) || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "contradictionpropose" || op === "narrow" || op === "narrowcandidates" || op === "connectionchoose" || op === "connectionassert" || op === "connectionsasserted" || op === "filemembershipstore" || op === "filemembership" || op === "filemembershipjudge" || op === "contradictionpairs" || op === "actionquotes" || op === "casedrafts" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "attesttext" || op === "leadlook" || op === "leadread" || op === "leadshare" || op === "leadlist" || op === "themeplace" || op === "themepropose" || op === "themeread" || op === "themewithdraw" || op === "idmatch" || op === "actionlawspropose" || op === "stats" || op === "selectionlist" || op === "driveshells" || PROJECT_ACTIONS.includes(op) || op === "memberpairings" || ACTION_LAYER_ACTIONS.includes(op) || ACTION_LAYER_READS.includes(op) || op === "actionriskpropose" || op === "monitoring" || op === "monitorslate" || CONTRADICTION_ACTIONS.includes(op) || CONTRADICTION_READS.includes(op) || op === "contradictionrecommend" || op === "entity" || op === "entitybyalias" || op === "publishtensions" || op === "publishpreflight" || SOURCE_READS.includes(op) || op === "inboxpull" || CAPTURE_VIEWER_ACTIONS.includes(op) || CAPTURE_READS.includes(op) || WHAT_CHANGED_PROPOSAL_ACTIONS.includes(op) || WHAT_CHANGED_READS.includes(op) || NETWORK_NOTICES_ACTIONS.includes(op) || NETWORK_NOTICES_READS.includes(op) || REC30_VIEWER_READS.includes(op)) {
+      inner.searchParams.set(
+        "viewer",
+        viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
+      );
+      if (IDENTITY_READS.includes(op)) inner.searchParams.set(
+        "identity",
+        viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
+      );
+    }
+    if (op === "versionchain")
+      inner.searchParams.set("address", normalizeAddress(url.searchParams.get("address") || ""));
+    if (op === "biasadopt")
+      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+    if (op === "stats") inner.searchParams.set("capacity", cls === "admin" ? "1" : "0");
+    if (op === "memberlist")
+      inner.searchParams.set(
+        "administer",
+        (viaSession ? !!sessRights.administer : cls === "admin") ? "1" : "0"
+      );
+    if (op === "memberpairings")
+      inner.searchParams.set(
+        "administer",
+        (viaSession ? !!sessRights.administer : cls === "admin") ? "1" : "0"
+      );
+    if (op === "themedeclare" || op === "themeplace" || op === "themepropose" || op === "themeread" || op === "themewithdraw")
+      inner.searchParams.set(
+        "administer",
+        (viaSession ? !!sessRights.administer : cls === "admin") ? "1" : "0"
+      );
+    if (QUEUE_ACTIONS.includes(op))
+      inner.searchParams.set("member", viaSession ? sessMember : "");
+    if (op === "attesttext")
+      inner.searchParams.set("attestor", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "transcribe")
+      inner.searchParams.set("transcriber", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "transcriptionattest")
+      inner.searchParams.set("attestor", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "testify")
+      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "lead")
+      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "leadlook")
+      inner.searchParams.set("looker", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "leadshare")
+      inner.searchParams.set("sharer", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "attribute")
+      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "themedeclare")
+      inner.searchParams.set("declarer", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "themeplace")
+      inner.searchParams.set("placer", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "themewithdraw")
+      inner.searchParams.set("actor", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "themepropose")
+      inner.searchParams.set(
+        "proposer",
+        viaSession ? sessMember : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
+      );
+    if (op === "actionlawspropose")
+      inner.searchParams.set(
+        "proposer",
+        viaSession ? sessMember : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
+      );
+    if (op === "actionriskpropose")
+      inner.searchParams.set(
+        "proposer",
+        viaSession ? sessMember : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
+      );
+    if (PLAN_PROPOSAL_ACTIONS.includes(op)) {
+      inner.searchParams.set(
+        "proposer",
+        viaSession ? sessMember : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
+      );
+      inner.searchParams.set(
+        "principal",
+        viaSession ? sessIdentity : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
+      );
+    }
+    if (TEMPLATE_PROPOSAL_ACTIONS.includes(op)) {
+      const proposer = viaSession ? sessMember : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
+      inner.searchParams.set("proposer", proposer);
+      inner.searchParams.set("author", proposer);
+    }
+    if (QUERY_AUTHOR_ACTIONS.includes(op))
+      inner.searchParams.set(
+        "author",
+        viaSession ? sessIdentity : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
+      );
+    if (CONTRADICTION_ACTIONS.includes(op))
+      inner.searchParams.set(
+        "author",
+        viaSession ? sessIdentity : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
+      );
+    if (op === "contentmint")
+      inner.searchParams.set(
+        "mintedBy",
+        viaSession ? sessMember : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
+      );
+    if (op === "extractpropose" || op === "contradictionpropose" || op === "contradictionrecommend")
+      inner.searchParams.set(
+        "proposedBy",
+        viaSession ? sessMember : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
+      );
+    if (op === "select" || op === "selection" || op === "selectionlist" || op === "selectionrelease" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op))
+      inner.searchParams.set("owner", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || DECLARATION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "connectionchoose" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "provenancechain" || op === "provenanceroute" || op === "narrow")
+      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+    if (op === "connectionassert" || op === "filemembershipjudge")
+      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+    if (op === "publishpreflight" && cls === "ai")
+      inner.searchParams.set("aiCred", JSON.stringify({ tokenId: aiCred.tokenId, principal: aiCred.principal }));
+    if (op === "publishtensions" || op === "publishpreflight")
+      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+    if (REEVALUATION_ACTIONS.includes(op))
+      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+    if (POSITIONAL_ACTS.includes(op))
+      inner.searchParams.set(
+        "identity",
+        viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
+      );
+    if (op === "calibrate")
+      inner.searchParams.set(
+        "identity",
+        viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
+      );
+    const fenced = bearerFence(op, caller);
+    if (fenced) return refused2(fenced);
+    const replay = op === "promote" && req.method === "POST" ? await replayVerdict(env, storeName, await req.clone().text(), viaSession, cls) : null;
+    if (replay?.asserted && !replay.proven)
+      return json5({
+        ok: false,
+        reason: "REPLAY_UNVERIFIED",
+        ...replayRow("REPLAY_UNVERIFIED"),
+        op,
+        bundleId: replay.bundleId,
+        provenanceCapture: replay.provenanceCapture,
+        detail: `this promotion says it is a replay of the record's own past, and a replay is honoured only when the plane can check it: it must name a drive-provenance capture (\`provenanceCapture\`) that this promotion registers at ${DRIVE_PROVENANCE_PATH}, whose bytes the record holds, and whose preserved promotion records name this record and list this revision's bundle.md SHA-256. One of those did not hold. Nothing was written.`
+      }, 403);
+    if (op === "purge") {
+      const confirm = url.searchParams.get("confirm");
+      if (confirm !== storeName)
+        return json5({
+          ok: false,
+          ...requiredArgument(
+            "purge",
+            "confirm",
+            "<store name>",
+            "purge requires confirm=<store>"
+          ),
+          expected: storeName,
+          got: confirm,
+          tokenClass: cls,
+          store: storeName
+        }, 400);
+    }
+    const armed = hooks.gatedOp ? await hooks.gatedOp({
+      req,
+      url,
+      env,
+      op,
+      cls,
+      viaSession,
+      sessMember,
+      sessViewer,
+      sessIdentity,
+      sessRights,
+      sessCaps,
+      aiCred,
+      storeName,
+      stub
+    }) : void 0;
+    if (armed) return op === "affordances" ? publishAffordances(armed, url) : armed;
+    if (PROJECT_ACTIONS.includes(op) || GOVERNANCE_ACTIONS.includes(op) || op === "projectparticipants" || op === "projectownerarith" || CUSTODIAL_ACTIONS.includes(op))
+      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "projectrequests")
+      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "profilesset")
+      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (ROSTER_SELF_ACTIONS.includes(op))
+      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (OWN_KEY_ACTIONS.includes(op) || CAPTURE_MEMBER_ACTIONS.includes(op) || SOURCE_ACTIONS.includes(op))
+      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "inboxpull") {
+      inner.searchParams.set("identity", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
+      inner.searchParams.delete("resolve");
+      if (resolving) inner.searchParams.set("resolve", "pulled");
+    }
+    if (IDENTITY_ACTIONS.includes(op)) {
+      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+      inner.searchParams.set("origin", url.origin);
+    }
+    if (RUN_VERB_ACTIONS.includes(op) || RUN_PRODUCTION_ACTIONS.includes(op))
+      inner.searchParams.set(
+        "principal",
+        viaSession ? sessIdentity : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
+      );
+    if (op === "capturerequestretry")
+      inner.searchParams.set(
+        "principal",
+        viaSession ? sessIdentity : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
+      );
+    if (WHAT_CHANGED_PROPOSAL_ACTIONS.includes(op)) {
+      const proposer = viaSession ? sessMember : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
+      inner.searchParams.set("proposedBy", proposer);
+      inner.searchParams.set("author", proposer);
+    }
+    if (NETWORK_NOTICES_BY.includes(op))
+      inner.searchParams.set("by", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (RUN_VERB_ACTIONS.includes(op)) {
+      inner.searchParams.delete("actor");
+      inner.searchParams.set("actor", viaSession ? sessMember : "");
+    }
+    let passBody = req.method === "POST" ? await req.text() : void 0;
+    if (passBody) {
+      try {
+        const b0 = JSON.parse(passBody);
+        if (b0 && typeof b0 === "object" && !Array.isArray(b0) && BODY_STAMPS.some((k) => k in b0)) {
+          for (const k of BODY_STAMPS) delete b0[k];
+          passBody = JSON.stringify(b0);
+        }
+      } catch {
+      }
+    }
+    if (op === "promote" && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        const promotedType = promotedTypeOf(b);
+        delete b.ownerMemberId;
+        delete b.actorMemberId;
+        delete b.author;
+        if (viaSession) {
+          b.author = sessMember;
+          b.actorMemberId = sessMember;
+        } else b.author = `${MACHINE_AUTHOR_PREFIX}${cls}`;
+        delete b.actorIdentity;
+        b.actorIdentity = viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
+        delete b.actorViewer;
+        b.actorViewer = viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
+        if (viaSession || cls !== "admin") delete b.replay;
+        delete b.migrationReplay;
+        delete b.replay;
+        const creatingInquiry = b.base === null && !!b.meta && promotedType === "inquiry";
+        const proven = replay?.proven ?? null;
+        if (proven) b.replay = true;
+        const replayed = creatingInquiry ? proven : null;
+        if (replayed) b.migrationReplay = replayed;
+        delete b.memberUserAgent;
+        if (viaSession && b.base === null) {
+          const agent = (req.headers.get("User-Agent") || "").trim().slice(0, 512).trimEnd();
+          if (agent) b.memberUserAgent = agent;
+        }
+        delete b.assistantPrincipal;
+        if (!viaSession)
+          b.assistantPrincipal = cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
+        if (replayed) delete b.assistantPrincipal;
+        if (b.base === null && b.meta && promotedType === "project" && viaSession) {
+          const creation = projectCreationGate(sessCaps);
+          if (creation) return refused2(creation);
+          b.ownerMemberId = sessMember;
+        }
+        if (b.base === null && b.meta && !replayed && promotedType === "inquiry" && Array.isArray(b.files)) {
+          const bm = b.files.find((f17) => f17 && f17.path === "bundle.md" && typeof f17.text === "string");
+          if (bm) {
+            const want = viaSession ? "human" : "agent";
+            const lines = bm.text.split("\n");
+            const end2 = lines.indexOf("---", 1);
+            let changed = false;
+            for (let i = 1; i < (end2 === -1 ? lines.length : end2); i++) {
+              if (lines[i].startsWith("surfaced_by:")) {
+                lines[i] = "surfaced_by: " + want;
+                changed = true;
+                break;
+              }
+            }
+            const sentSha = createSha256().update(new TextEncoder().encode(bm.text)).hex();
+            const sentOk = bm.sha256 === void 0 || bm.sha256 === null || typeof bm.sha256 === "string" && bm.sha256.toLowerCase() === sentSha;
+            if (changed && sentOk) {
+              bm.text = lines.join("\n");
+              const bytes2 = new TextEncoder().encode(bm.text);
+              bm.bytes = bytes2.length;
+              bm.sha256 = createSha256().update(bytes2).hex();
+            }
+          }
+        }
+        passBody = JSON.stringify(b);
+      } catch {
+      }
+    }
+    if ((op === "expertisedeclare" || op === "expertiseconfirm") && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        if (op === "expertisedeclare") b.memberId = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
+        else b.by = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
+        passBody = JSON.stringify(b);
+      } catch {
+      }
+    }
+    if ((op === "entitycreate" || op === "entityalias" || op === "relationdeclare") && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        b.declaredBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
+        passBody = JSON.stringify(b);
+      } catch {
+      }
+    }
+    if ((op === "aliaswithdraw" || op === "relationwithdraw") && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        b.withdrawnBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
+        passBody = JSON.stringify(b);
+      } catch {
+      }
+    }
+    if (op === "resolutiondefect" && req.method === "POST") {
+      try {
+        const b = passBody ? JSON.parse(passBody) : {};
+        if (b && typeof b === "object" && !Array.isArray(b)) {
+          b.by = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
+          passBody = JSON.stringify(b);
+        }
+      } catch {
+      }
+    }
+    if ((op === "resolve" || op === "resolvetestify") && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        b.resolvedBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
+        passBody = JSON.stringify(b);
+      } catch {
+      }
+    }
+    if (op === "progressiondefine" && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        b.declaredBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
+        passBody = JSON.stringify(b);
+      } catch {
+      }
+    }
+    if (op === "connect" && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        b.assertedBy = "system";
+        passBody = JSON.stringify(b);
+      } catch {
+      }
+    }
+    if (op === "thread" && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        b.threadedBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
+        passBody = JSON.stringify(b);
+      } catch {
+      }
+    }
+    if (op === "discharge" && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        b.declaredBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
+        passBody = JSON.stringify(b);
+      } catch {
+      }
+    }
+    if (op === "proposedispose" && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        b.decidedBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
+        passBody = JSON.stringify(b);
+      } catch {
+      }
+    }
+    if (INTENT_ACTIONS.includes(op) && req.method === "POST") {
+      try {
+        const b = passBody ? JSON.parse(passBody) : {};
+        if (b && typeof b === "object" && !Array.isArray(b)) {
+          b.author = viaSession ? sessIdentity : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
+          if (op === "triage") {
+            delete b.assistantPrincipal;
+            if (!viaSession)
+              b.assistantPrincipal = cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
+          }
+          passBody = JSON.stringify(b);
+        }
+      } catch {
+      }
+    }
+    if (STANDARDS_ACTIONS.includes(op) && req.method === "POST") {
+      try {
+        const b = passBody ? JSON.parse(passBody) : {};
+        if (b && typeof b === "object" && !Array.isArray(b)) {
+          const who2 = viaSession ? sessIdentity : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
+          delete b.author;
+          delete b.proposer;
+          if (op === "standardpropose") b.proposer = who2;
+          else b.author = who2;
+          passBody = JSON.stringify(b);
+        }
+      } catch {
+      }
+    }
+    if (LOCAL_FACTS_ACTIONS.includes(op) && req.method === "POST") {
+      try {
+        const b = passBody ? JSON.parse(passBody) : {};
+        if (b && typeof b === "object" && !Array.isArray(b)) {
+          for (const k of QUERY_STAMPS) delete b[k];
+          b.by = viaSession ? sessIdentity : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
+          passBody = JSON.stringify(b);
+        }
+      } catch {
+      }
+    }
+    if (op === "inboxresolve" && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        b.by = viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`;
+        passBody = JSON.stringify(b);
+      } catch {
+      }
+    }
+    if ((op === "taskforward" || op === "taskresolve" || op === "taskdrain" || op === "biasdebtresolve") && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        b.actor = viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`;
+        passBody = JSON.stringify(b);
+      } catch {
+      }
+    }
+    if (op === "aicredentialrevoke")
+      inner.searchParams.set("who", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+    if (op === "instancegroupseed")
+      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+    if (op === "casedraft" || op === "reviewgrant" || op === "reviewrevoke") {
+      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+      inner.searchParams.delete("secretSha");
+    }
+    if (op === "aicredentialmint") {
+      let asked = {};
+      try {
+        asked = passBody ? JSON.parse(passBody) : {};
+      } catch {
+        asked = {};
+      }
+      const mint = await aiCredentialMint(asked, cls);
+      if (mint.refusal) return refused2(mint.refusal);
+      const secret = mint.secret;
+      inner.searchParams.set("who", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+      inner.searchParams.set("secretSha", mint.secretSha);
+      const minted = await doAnswer(stub.fetch(new Request(
+        inner,
+        { method: req.method, body: JSON.stringify({ ...asked, writes: mint.writes, confinedTo: mint.confinedTo }) }
+      )));
+      if (minted.refused) return storeRefusal(minted, { op, store: storeName, tokenClass: cls });
+      if (!minted.answered) return storeSilent("aicredentialmint", minted.correlation);
+      if (!minted.result || minted.result.ok !== true)
+        return json5({ ok: false, ...minted.result || {}, op, store: storeName, tokenClass: cls }, 403);
+      return json5({ ok: true, result: {
+        ...minted.result,
+        /* THE ONE TIME THIS VALUE EXISTS ANYWHERE A CALLER CAN READ IT. It is
+           not recoverable afterwards from this instance by any route, because
+           nothing here kept it — losing it means minting another and revoking
+           this one, which leaves both acts on the record where they belong. */
+        token: secret,
+        tokenIsShownOnce: "This is the only time this instance will show this value. It is not stored and cannot be recovered \u2014 the record holds the credential's NAME and who created it, never the value. If it is lost, withdraw this credential and create another."
+      }, store: storeName, tokenClass: cls }, 200);
+    }
+    if (op === "reviewgrant") {
+      const { secret, secretSha } = await reviewGrantSecret();
+      inner.searchParams.set("secretSha", secretSha);
+      const issued = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
+      if (issued.refused) return storeRefusal(issued, { op, store: storeName, tokenClass: cls });
+      if (!issued.answered) return storeSilent("reviewgrant", issued.correlation);
+      if (!issued.result || issued.result.ok !== true)
+        return json5({ ok: false, ...issued.result || {}, op, store: storeName, tokenClass: cls }, 403);
+      return json5({ ok: true, result: {
+        ...issued.result,
+        secret,
+        secretIsShownOnce: "This is the only time this instance will show this value. It is stored only as a fingerprint and cannot be recovered. Give it to the recipient: it lets them READ this one draft and COMMENT on it, and nothing else. If it is lost, withdraw this grant and issue another.",
+        read: "op=reviewcopy&secret=<the value above>"
+      }, store: storeName, tokenClass: cls }, 200);
+    }
+    if (op === "templatereviewgrant") {
+      const { secret, secretSha } = await reviewGrantSecret();
+      inner.searchParams.set("secretSha", secretSha);
+      const issued = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
+      if (issued.refused) return storeRefusal(issued, { op, store: storeName, tokenClass: cls });
+      if (!issued.answered) return storeSilent("templatereviewgrant", issued.correlation);
+      if (!issued.result || issued.result.ok !== true)
+        return json5({ ok: false, ...issued.result || {}, op, store: storeName, tokenClass: cls }, 403);
+      return json5({ ok: true, result: {
+        ...issued.result,
+        secret,
+        secretIsShownOnce: "This is the only time this instance will show this value. It is stored only as a fingerprint and cannot be recovered. Give it to the reviewer: it lets them READ this one template version, COMMENT on it and REVIEW it while it is a draft or in review, and nothing else. If it is lost, withdraw this grant and open another.",
+        read: "op=templateread&secret=<the value above>"
+      }, store: storeName, tokenClass: cls }, 200);
+    }
+    if (op === "casedrafts")
+      return reviewAnswer(await doAnswer(stub.fetch(new Request(inner, { method: "GET" }))), op);
+    const out = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
+    if (out.refused) return storeRefusal(out, { store: storeName, tokenClass: cls });
+    if (!out.answered) return storeSilent(op, out.correlation);
+    const { body, status } = out.reply;
+    if ((op === "inboxget" || op === "inboxresolve") && body.result?.ok === false && body.result.reason === "NO_SUCH_KNOCK")
+      return json5({ ...body, store: storeName, tokenClass: cls }, 404);
+    const hinted = body.result?.status;
+    if (STATED_STATUS_OPS.includes(op) && body.result?.ok === false && Number.isInteger(hinted) && hinted >= 400 && hinted < 600)
+      return json5({ ...body, store: storeName, tokenClass: cls }, hinted);
+    return json5({ ...body, store: storeName, tokenClass: cls }, status);
+  }
+}
+
 // src/publication/door.mjs
 var PUBLICATION_DOOR_OPS = Object.freeze(["caseflags", "casedocument"]);
 async function publicationDoorOp(op, url, stub, {
@@ -131958,10 +132085,10 @@ var Tasks = class _Tasks {
       args: gate.args
     };
   }
-  /* D-109. The task queue drains on the SAME Durable Object alarm the selection
-     sweep uses: armed on enqueue, re-armed by the alarm while the queue is
-     non-empty, self-terminating when it drains — the mechanism #armSweep proved
-     for selections. DELAY is short so a burst of captures coalesces into one
+  /* D-109. The task queue drains on the scheduler's one Durable Object alarm, as
+     the selection sweep does: armed on enqueue, re-armed by the alarm while the
+     queue is non-empty, self-terminating when it drains — the mechanism the
+     selection sweep's `#armSweep` proved before the scheduler took the alarm. DELAY is short so a burst of captures coalesces into one
      drain rather than one alarm apiece. BACKSTOP is longer and used when a tick
      drained nothing: every remaining event is then a capture not yet filed in a
      bundle (taskDrain keeps those, it does not drop them), and retrying that at
@@ -135257,6 +135384,13 @@ var QueueProducers = class _QueueProducers {
   get #localFacts() {
     return this.#dep("localFacts", () => localFactsOf(this.#host));
   }
+  /* N483 (K1122): the export log is corpus-export's (its R2), read from the host's one instance. */
+  get #corpusExport() {
+    return this.#dep("corpusExport", () => corpusExportOf(this.#host));
+  }
+  get #networkNotices() {
+    return this.#dep("networkNotices", () => networkNoticesOf(this.#host));
+  }
   #rows(q7, ...a) {
     return [...this.sql.exec(q7, ...a)];
   }
@@ -135389,6 +135523,8 @@ var QueueProducers = class _QueueProducers {
       items.push(...this.#obligationsTemplateReview(me, viewer, at26));
       items.push(...this.#obligationsLocalFactDue(me, viewer, at26));
       items.push(...this.#obligationsAttributionUnchosen(me, viewer, at26));
+      items.push(...this.#conditionsSweep(me, viewer, at26));
+      items.push(...this.#conditionsNotice(me, viewer, at26));
       return {
         items,
         facts: {
@@ -136570,7 +136706,7 @@ var QueueProducers = class _QueueProducers {
     const admin = me ? this.#isAdminMember(me) : viewer === `${MACHINE_CLASS_PREFIX}admin`;
     if (!admin) return [];
     const cap = EXPORT_LOG_LIMIT_DEFAULT;
-    const log = this.#publication.exportLog({ limit: cap });
+    const log = this.#corpusExport.exportLog({ limit: cap });
     const page = log && Array.isArray(log.exports) ? log.exports : [];
     if (page.length === 0) return [];
     const truncated3 = log.truncated === true;
@@ -138089,6 +138225,226 @@ var QueueProducers = class _QueueProducers {
     }
     return out;
   }
+  /* ======================================================================
+   * K1036 (8) · R26 — A SWEEP THAT NEEDS A MEMBER'S LOOK (monitoring R60, R63).
+   * DEC-111, K1031 · R27 — A WORKING-ON NOTICE THAT NEEDS ITS OWNERS' (network-notices R12, R13, R22).
+   * Each reads the one fact its owning module offers, derived on read and writing nothing, so an item leaves on the
+   * first read after the fact stops holding. The items' words are the UX design stream's to set (NOTIFICATIONS.md, the
+   * item contract; `ux-experience.json` UC-035): the sentences here say the fact plainly and claim nothing beyond it.
+   * ====================================================================== */
+  /** R26: the five kinds `monitoring.sweepConditions` answers (its R63). */
+  static SWEEP_CONDITION_KINDS = Object.freeze([
+    "sweep-held-backlog",
+    "sweep-yield-anomaly",
+    "sweep-seed-unreachable",
+    "sweep-redirect-out-of-scope",
+    "sweep-silent"
+  ]);
+  /** R27: how many owned projects one read asks `network-notices` about; the window `notice-lapse-near` opens in before
+   *  a lapse, and how long `notice-project-closed` stands after the closing. */
+  static QUEUE_NOTICE_PROJECTS = 50;
+  static NOTICE_LAPSE_NEAR_DAYS = 7;
+  static NOTICE_CLOSED_DAYS = 30;
+  /** R27: the act that answers a notice (network-notices R6, R11): a new revision, or a stop with an optional handoff. */
+  static NOTICE_REVISE = Object.freeze({ id: "noticeprepare", label: "Revise this notice, or stop it", weight: "single" });
+  static NOTICE_STOP = Object.freeze({ id: "noticeprepare", label: "Stop this notice, with a handoff if you want one", weight: "single" });
+  /** R26's sentences, one per kind, each saying what the condition's `detail` gives and nothing more. */
+  static #sweepWords(kind, d, title) {
+    const n = (v) => Number.isFinite(Number(v)) ? Number(v) : "an undetermined number of";
+    const list2 = (xs, f17) => Array.isArray(xs) && xs.length ? xs.map(f17).join("; ") : "none named";
+    switch (kind) {
+      case "sweep-held-backlog":
+        return {
+          summary: `the sweep ${title} is held: its captures awaiting review have reached its limit`,
+          detail: `${n(d.backlog)} of its captures are still awaiting review, at or over its backlog limit of ${n(d.limit)}. It runs again when members review or set aside enough of them.`
+        };
+      case "sweep-yield-anomaly":
+        return {
+          summary: `the sweep ${title} filed an unusual number of documents on its last run`,
+          detail: `its last run filed ${n(d.filed)} against a median of ${n(d.median)} over its recent runs. Nothing else changed: the run's note says only that the number was unusual.`
+        };
+      case "sweep-seed-unreachable":
+        return {
+          summary: `a listing page the sweep ${title} reads failed on its last run`,
+          detail: `on its last run these could not be fetched: ${list2(d.seeds, (x) => String(x && x.seed))}. The sweep's other pages were read; each one's reachability is on the basis.`
+        };
+      case "sweep-redirect-out-of-scope":
+        return {
+          summary: `the sweep ${title} met a redirect outside its sources on its last run`,
+          detail: `on its last run these addresses redirected outside the sweep's sources, and nothing at the target was fetched: ${list2(d.redirects, (x) => x && typeof x === "object" ? `${x.address ?? "an address"} to ${x.target ?? "an undetermined target"}` : String(x))}.`
+        };
+      default:
+        return {
+          summary: `the sweep ${title} has filed nothing on its last ${n(d.runs)} runs`,
+          detail: `its last ${n(d.runs)} runs each filed nothing, and it is not held. Its seeds or its match may no longer find what it was set up to find.`
+        };
+    }
+  }
+  /** `sweep-*` (R26; monitoring R63, K1036 (8)): one CONDITION per condition `monitoring.sweepConditions` answers the
+   *  viewer, keyed `CONDITION::<kind>::<bundle>#<id>`, to the members of the sweep's project (joined or leaving,
+   *  membership R74) who may see its bundle and to nobody else: a caller with no member is none of them, and a sweep in
+   *  no project has no members. Its subject the sweep's bundle, homed under the project at depth 0 and the bundle's own
+   *  walk; its `age` from the condition's `since`; its `detail` the condition's, carried whole on the basis and said in
+   *  the sentence. It leaves when the condition leaves (the read no longer answers it). */
+  #conditionsSweep(me, viewer, now) {
+    if (!me) return [];
+    const r = this.#monitoring.sweepConditions({ viewer, now });
+    const list2 = r && r.ok !== false && Array.isArray(r.conditions) ? r.conditions : [];
+    const visible = this.#bundleRedactor(viewer);
+    const joined = /* @__PURE__ */ new Map();
+    const out = [];
+    for (const c of list2) {
+      if (!c || typeof c.sweep !== "string" || !_QueueProducers.SWEEP_CONDITION_KINDS.includes(c.kind)) continue;
+      const hash = c.sweep.indexOf("#");
+      if (hash <= 0 || hash === c.sweep.length - 1) continue;
+      const bundle = c.sweep.slice(0, hash), sweepId = c.sweep.slice(hash + 1);
+      if (visible(bundle) === null) continue;
+      const info = this.#record.bundleInfo(bundle);
+      const project = info ? info.type === "project" ? info.id : info.project : null;
+      if (!project) continue;
+      if (!joined.has(project)) {
+        const p = this.#membership.participation(project, me);
+        joined.set(project, !!(p && (p.state === "joined" || p.state === "leaving")));
+      }
+      if (!joined.get(project)) continue;
+      const d = c.detail && typeof c.detail === "object" ? c.detail : {};
+      const title = info && info.title ? `"${info.title}" (${sweepId})` : c.sweep;
+      const words = _QueueProducers.#sweepWords(c.kind, d, title);
+      const sinceMs = Date.parse(c.since ?? "");
+      out.push({
+        id: `CONDITION::${c.kind}::${c.sweep}`,
+        class: "CONDITION",
+        kind: c.kind,
+        case: this.#homesAt([project], viewer, [bundle]),
+        subject: { kind: "bundle", id: bundle, sweep: c.sweep, sweep_id: sweepId, project },
+        summary: words.summary,
+        detail: words.detail,
+        basis: {
+          source: "monitoring.sweepConditions",
+          sweep: c.sweep,
+          bundle,
+          sweep_id: sweepId,
+          project,
+          kind: c.kind,
+          since: c.since ?? null,
+          condition: d,
+          recipients_rule: "project_members_who_see_the_bundle",
+          detail: "a sweep's signal is monitoring's (its R60, R63): derived on read from the sweep's own runs and backlog, read here and never restated. It goes to the members of the sweep's project who may see its record, and it leaves on the first read after it stops holding."
+        },
+        age: Number.isFinite(sinceMs) ? { state: "determined", since: c.since, ms: Math.max(0, now - sinceMs) } : {
+          state: "undetermined",
+          reason: "no_condition_instant",
+          detail: "the sweep's signal carries no instant this producer can read"
+        },
+        assignee: null,
+        assignee_role: null,
+        options: this.#optionsOf([bundle])
+      });
+    }
+    return out;
+  }
+  /** `notice-attestation-missed`, `notice-lapse-near` and `notice-project-closed` (R27; network-notices R12, R13, R22;
+   *  DEC-111, K1031, K1100): for each project the member owns (membership R65), at most 50 in id order, the project's
+   *  notices as `network-notices.noticesOf` answers the viewer, and per notice:
+   *  - an open notice whose latest `monthly` missed for want of an instance key has had no `monthly` issued since;
+   *  - an open notice whose lapse date (a lapse running) is at most 7 days away;
+   *  - a notice whose project closed while it was open (status `closed`; an owner's stop makes it `stopped`), for 30
+   *    days from the closing.
+   *  Each keyed `CONDITION::<kind>::<notice>`, to the project's owners and to nobody else: a caller with no member, or
+   *  a member who owns none, is told nothing. Each leaves on the first read after its fact stops holding. */
+  #conditionsNotice(me, viewer, now) {
+    if (!me) return [];
+    const scope = this.#ownedProjects(me, viewer, _QueueProducers.QUEUE_NOTICE_PROJECTS);
+    const DAY2 = _QueueProducers.DAY_MS;
+    const out = [];
+    for (const project of scope.projects) {
+      const r = this.#networkNotices.noticesOf({ project, viewer });
+      if (!r || r.ok !== true || !Array.isArray(r.notices)) continue;
+      const owners = this.#membership.projectOwners(project) || [];
+      const title = (this.#record.bundleInfo(project) || {}).title || project;
+      const item = (kind, n, { since, summary, detail, facts, options }) => {
+        const sinceMs = Date.parse(since ?? "");
+        out.push({
+          id: `CONDITION::${kind}::${n.notice}`,
+          class: "CONDITION",
+          kind,
+          case: this.#homesAt([project], viewer),
+          subject: { kind: "notice", id: n.notice, project, status: n.status },
+          summary,
+          detail,
+          basis: {
+            source: "network-notices.noticesOf",
+            notice: n.notice,
+            project,
+            status: n.status,
+            ...facts,
+            recipients_rule: "project_owners",
+            bound: { projects_bound: scope.bound, projects_truncated: scope.truncated === true },
+            detail: "a working-on notice's state is network-notices' (its R12, R13, R22), read here and never restated. It is told to the project's owners and to nobody else, and it leaves on the first read after it stops holding."
+          },
+          age: Number.isFinite(sinceMs) ? { state: "determined", since, ms: Math.max(0, now - sinceMs) } : {
+            state: "undetermined",
+            reason: "no_notice_instant",
+            detail: "the notice carries no instant this producer can read for when this began"
+          },
+          assignee: null,
+          assignee_role: null,
+          recipients: [...owners],
+          options
+        });
+      };
+      for (const n of r.notices) {
+        if (!n || typeof n.notice !== "string" || !n.notice) continue;
+        const atts = Array.isArray(n.attestations) ? n.attestations : [];
+        const instant = (a) => Date.parse(a && (a.published_at || (a.as_of ? `${a.as_of}T00:00:00Z` : "")) || "");
+        if (n.status === "open") {
+          const misses = Array.isArray(n.missed_monthlies) ? n.missed_monthlies.filter((m) => m && m.month) : [];
+          const miss = misses.at(-1);
+          if (miss) {
+            const missMs = Date.parse(miss.at ?? "");
+            const since = atts.some((a) => a.kind === "monthly" && (Number.isFinite(missMs) ? instant(a) > missMs : String(a.as_of || "").slice(0, 7) > miss.month));
+            if (!since)
+              item("notice-attestation-missed", n, {
+                since: miss.at ?? null,
+                summary: `the monthly attestation of ${title}'s working-on notice for ${miss.month} was not issued`,
+                detail: "no instance key was bound when it fell due, so this copy could not sign the notice's activity level. The notice shows its last attested level with that level's date until an attestation is issued; an administrator binds the key.",
+                facts: { month: miss.month, missed_at: miss.at ?? null, missed: misses.length },
+                options: this.#optionsOf([project])
+              });
+          }
+          const lapseMs = typeof n.lapse_date === "string" ? Date.parse(`${n.lapse_date.slice(0, 10)}T00:00:00Z`) : NaN;
+          if (Number.isFinite(lapseMs) && lapseMs - now <= _QueueProducers.NOTICE_LAPSE_NEAR_DAYS * DAY2) {
+            const opened = lapseMs - _QueueProducers.NOTICE_LAPSE_NEAR_DAYS * DAY2;
+            item("notice-lapse-near", n, {
+              since: new Date(opened).toISOString().replace(/\.\d{3}Z$/, "Z"),
+              summary: `${title}'s working-on notice will lapse on ${n.lapse_date.slice(0, 10)}`,
+              detail: "the notice has been Dormant at its last monthly attestation, and a second Dormant month with no revision lapses it. A revision or a stop answers this; so does the lapse itself.",
+              facts: {
+                lapse_date: n.lapse_date.slice(0, 10),
+                window_days: _QueueProducers.NOTICE_LAPSE_NEAR_DAYS,
+                level: n.level ?? null
+              },
+              options: [_QueueProducers.NOTICE_REVISE]
+            });
+          }
+        } else if (n.status === "closed") {
+          const closed = atts.find((a) => a && a.kind === "closed");
+          const closedMs = instant(closed);
+          if (!Number.isFinite(closedMs) || now - closedMs < _QueueProducers.NOTICE_CLOSED_DAYS * DAY2) {
+            const since = closed ? closed.published_at || (closed.as_of ? `${closed.as_of}T00:00:00Z` : null) : null;
+            item("notice-project-closed", n, {
+              since,
+              summary: `${title} closed while its working-on notice was open`,
+              detail: "this copy signed the closing into the notice's public record. An owner may still stop the notice with a handoff naming another group or an open lead. This stands for 30 days from the closing, or until an owner stops the notice.",
+              facts: { closed_at: since, window_days: _QueueProducers.NOTICE_CLOSED_DAYS },
+              options: [_QueueProducers.NOTICE_STOP]
+            });
+          }
+        }
+      }
+    }
+    return out;
+  }
   static DAY_MS = 864e5;
 };
 var OF9 = /* @__PURE__ */ new WeakMap();
@@ -138459,6 +138815,7 @@ var Queue = class _Queue {
     "aiRuns",
     "bias",
     "publication",
+    "corpusExport",
     "reevaluation",
     "intent",
     "monitoring",
@@ -138470,7 +138827,9 @@ var Queue = class _Queue {
     "actions",
     /* queue-producers R20, R21 (K921): the review requests and the facts due; queue passes them and calls neither. */
     "filingTemplates",
-    "localFacts"
+    "localFacts",
+    /* queue-producers R2 (N483) and R27 (DEC-111): corpus-export's export log; network-notices' notices of a project. */
+    "networkNotices"
   ]);
   get #scheduler() {
     return this.#dep("scheduler", () => schedulerOf(this.#host, this.#env));
@@ -142210,30 +142569,12 @@ function promoteOrFault(deps, doc, who2) {
   }
 }
 var bundleOf = (p) => ({ bundleId: p.bundleId, bundleSha: p.bundleSha ?? null });
-var reasonGiven2 = (r) => typeof r === "string" && r.trim() !== "" && [...r].length <= REASON_MAX;
-function resolveNoReason(knockId) {
-  const row2 = CAPTURE_CHECKS.RESOLVE_NO_REASON;
-  return {
-    ok: false,
-    reason: "RESOLVE_NO_REASON",
-    code: "RESOLVE_NO_REASON",
-    check: row2.check,
-    translation: row2.translation,
-    knockId,
-    status: 400,
-    maxChars: REASON_MAX
-  };
-}
 async function pullAndFile(deps, { knockId, by, identity, viewer, resolve = false, reason, now = Date.now } = {}) {
   const { capture, provenance } = deps;
-  if (resolve) {
-    const asked = capture.inboxGet(knockId);
-    if (!asked || asked.ok !== true) return asked;
-    if (!reasonGiven2(reason)) return resolveNoReason(knockId);
-  }
   const at26 = stampInstant("second", +now());
   const who2 = { knockId, by, identity, viewer, at: at26 };
-  const pulled = await capture.pullKnock({ knockId, by, at: at26, within: (doc) => promoteOrFault(deps, doc, who2) });
+  const within = (doc) => promoteOrFault(deps, doc, who2);
+  const pulled = await (resolve ? capture.inboxResolve({ knockId, status: "pulled", by, reason, at: at26, within }) : capture.pullKnock({ knockId, by, at: at26, within }));
   if (!pulled || pulled.ok !== true) return pulled;
   const { within: filed, ...answer } = pulled;
   if (!pulled.existed) return { ...answer, bundle: bundleOf(filed) };
@@ -142307,7 +142648,9 @@ var PROJECT_NAMING_READS = Object.freeze({
   publishtensions: ["project"],
   /* N364: case-authoring's pre-flight names the publishing project, as its ceremony read does, and its first refusal is
      op=publish's own existence answer (its R34 runs op=publish). */
-  publishpreflight: ["project"]
+  publishpreflight: ["project"],
+  /* R45 (network-notices R22): a project's notices name the project by its own id and answer by the caller's sight. */
+  notices: ["project"]
 });
 var PROJECT_NAMING_READS_NOT = Object.freeze({
   content: "`id` is a content row's fixed key, hash(capture, extent, chain) \u2014 never a bundle id",
@@ -142366,7 +142709,10 @@ var PROJECT_NAMING_READS_NOT = Object.freeze({
   templateread: "`template` is a TEMPLATE id (`TPL-`) and `version` one of its versions, never a bundle id",
   templatecomments: "`template` is a TEMPLATE id (`TPL-`) and `version` one of its versions, never a bundle id",
   factstatus: "`path` is a local FACT's path in a profile, never a bundle id",
-  factsdue: "`paths` are local FACTs' paths in a profile, never a bundle id"
+  factsdue: "`paths` are local FACTs' paths in a profile, never a bundle id",
+  /* R45's reads naming a published case (case-authoring R39, network-notices R23), never a bundle id. */
+  whatchangeddrafts: "`case` is a CASE id, answered by the case's own fence",
+  directorysubmission: "`case` is a CASE id and `edition` one of its editions, never a bundle id"
 });
 function existenceRead(membershipOf2, op, url, body) {
   const params = Object.hasOwn(PROJECT_NAMING_READS, op) ? PROJECT_NAMING_READS[op] : null;
@@ -142550,6 +142896,7 @@ var Store = class extends DurableObject {
     aiRunsOf(ctx, env);
     reevaluationOf(ctx, { env });
     publicationOf(ctx);
+    networkNoticesOf(ctx, { env });
     actionsOf(ctx, { env });
     retrieval.registerLegGrades("inquiry", inquiryLegGrades(ctx));
     observationLogOf(ctx).attachMeaning({ connections: connectionsOf(ctx, { env }) });
@@ -142569,16 +142916,16 @@ var Store = class extends DurableObject {
     filingsOf(ctx, { actions: actionsOf(ctx), conformance, standards: standardsOf(ctx), consequences });
     escalationOf(ctx);
     actionPlansOf(ctx);
-    monitoringOf(ctx, { env });
-    promotion.registerStep(STEP, promotionStep(ctx));
     const capture = captureOf(ctx, { env });
-    captureRequestsOf(ctx, {
+    const captureRequests = captureRequestsOf(ctx, {
       env,
       storeName: () => this.#ownNamespace() || "bio",
       now: () => this.#nowMs(null),
       runs: aiRunsOf(ctx, env),
       aiRuns: aiRunsOf(ctx, env)
     });
+    monitoringOf(ctx, { env, captureRequests });
+    promotion.registerStep(STEP, promotionStep(ctx));
     observationLogOf(ctx).listenToCapture(capture);
     schedulerOf(ctx, env);
     ctx.blockConcurrencyWhile(async () => this.#migrate());
@@ -142622,6 +142969,7 @@ var Store = class extends DurableObject {
     progressionsOf(this.ctx).migrate();
     biasOf(this.ctx).migrate();
     intentOf(this.ctx).migrate();
+    networkNoticesOf(this.ctx).migrate();
     localFactsOf(this.ctx).migrate();
     filingTemplatesOf(this.ctx).migrate();
     filingTemplatesOf(this.ctx).migrateFromFilings();
@@ -142691,9 +143039,13 @@ var Store = class extends DurableObject {
       ...reevaluationOps(reevaluationOf(ctx), url, body),
       ...caseAuthoringOps(caseAuthoringOf(ctx), url, body),
       ...ratificationOps(ratificationOf(ctx), url, body),
+      /* N483 (K1122): `export` and `exportlog` are corpus-export's (its R6), on the one instance publication created. */
+      ...corpusExportOps(corpusExportOf(ctx), (k) => url.searchParams.get(k)),
       ...publicationOps(publicationOf(ctx), url, body),
       ...publicReadOps(publicReadOf(ctx), url),
       ...projectStageOps(projectStageOf(ctx), url),
+      ...networkNoticesOps(networkNoticesOf(ctx), url, body),
+      /* noticeprepare, noticepost, notices, directorysubmission */
       ...promotionOps(promotionOf(ctx), url, body),
       /* record-core's audit gated by membership's sight (record-core R73). */
       ...recordCoreOps(recordOf(ctx), url, body, { sight: viewerPredicate }),
