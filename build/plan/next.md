@@ -26,6 +26,8 @@
 
 - N493 · 2026-10-02 · **queue**, **queue-producers** and their users (DEC-110 (3)'s last sentence, K1038): the internal disposition "noticed" clashes with the member-facing class "Noticed"; rename the internal term (BOB's, a wording of no member-facing meaning). **Hard reason:** it touches every module that reads the disposition, more than T22's L11 jobs; placed when T23 is planned.
 
+- N494 · 2026-10-02 · **sources** (SOURCES #7's record, deferred; K1040): `test/m/sources/secret.test.mjs`'s two R11 rate tests still say "12 in the window, the thirteenth refused", from before capture's per-source bound became 5 (K1023); they pass but no longer state the edge they reach. Re-word them to what they assert (an attempt refused by capture's rate, never by `SECRET_NOT_RECOGNISED`), without pinning capture's constants. **Hard reason:** sources' one T22 job is merged (P8); a wording of tests only.
+
 ## Left out of T22, carried here (62 rows, one hard reason each) (check)
 
 | row | item | hard reason | note |
