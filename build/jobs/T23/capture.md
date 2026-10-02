@@ -32,3 +32,11 @@ Three things outside capture, after R82 and N499: (1) Accepted red 9 is still re
 ## J2 · COMPLETE
 
 capture T23 complete. R82 heldCount({sweep}) is met with three requirement-named tests; N499 has a test naming R32. Both were checked by negative control (all four failed with the source change stashed). capture tests and the two legacy suites: 118/118. Users: only red 9 is red (see REPORT J-prior). format, architecture, coverage (55/55) and ownership checks: 0 failures. Module lines 3,446. The record's Completion section has the details.
+
+## Completion after B2 · CHANGE (K1129)
+
+- Merged `tranche/T23` (R82's new wording). `heldCount` now answers `null` (not known) when the store cannot be read, never 0, so the hold fails closed. An unknown sweep, or one that is not a non-empty string, still answers 0. A register document held only as a blob is not counted, as R82 now says.
+- Test (`held.test.mjs`, "R82 (K1129)"): a dropped table answers null; a store whose `sql.exec` throws on read answers null, even for a sweep with nothing held; the same store, readable again, answers 3 (negative control).
+- capture tests and the two legacy suites: tests 118, pass 118, fail 0. `test/m/monitoring/`: tests 86, pass 85, fail 0 (1 todo). format: 0 failures; architecture: 0 failures; coverage: 55 of 55, 0 failures; ownership: 0 failures. Module lines 3,448.
+
+Size (session_01HagLZhkXbK2oz2jacVWoU7): test runs 9, module lines 3448
