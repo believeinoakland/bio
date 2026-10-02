@@ -135,7 +135,7 @@ test("R18 R22 R12: a decision keyed on (progression, stage) names no project, ag
    one proposal; the placed stage is none; the feed reads the same twice and writes nothing. */
 test("R11 R18 R24: an unplaced usually 0..1 predecessor under a placed always stage is one finding and one proposal; the feed reads alike twice and writes nothing", async () => {
   const w = seeded();
-  w.p.defineProgression({ progressionKey: "procurement", label: "Procurement", declaredBy: "member:alice", stages: [
+  w.p.defineProgression({ progressionKey: "procurement", label: "Procurement", declaredBy: "member:alice", basis: "b", stages: [
     { key: "solicitation", label: "RFP / RFQ / IFB", cardinality: "0..1", required: "usually" },
     { key: "award", label: "council resolution", after: "solicitation", cardinality: "1", required: "always" } ] });
   const r = await w.p.threadInstance({ progressionKey: "procurement", entityId: "ENT-1", placements: [{ stage: "award", captureSha: "sa" }],

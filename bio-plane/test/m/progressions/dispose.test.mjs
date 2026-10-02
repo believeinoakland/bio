@@ -110,7 +110,7 @@ test("R22 R26: one decision per (progression, stage), replaced on re-decision, t
 test("R22: with items, each item is decided on its own; the decider forced onto every item; a shared version overridable per item", () => {
   const w = seeded();
   w.define();
-  w.p.defineProgression({ progressionKey: "meet", label: "Meeting", declaredBy: "member:alice",
+  w.p.defineProgression({ progressionKey: "meet", label: "Meeting", declaredBy: "member:alice", basis: "b",
     stages: [{ key: "meeting", cardinality: "1", required: "always" }, { key: "minutes", after: "meeting", cardinality: "1", required: "always" }] });
   w.p.defineProgression({ progressionKey: "meet", label: "Meeting", declaredBy: "member:alice", basis: "b", citation: "c",
     stages: [{ key: "meeting", cardinality: "1", required: "always" }, { key: "minutes", after: "meeting", cardinality: "1", required: "usually" }] });
