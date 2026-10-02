@@ -73,3 +73,7 @@ Plane T24 complete (B1). It is pushed on `job/T24/plane`, and the details are in
 - The plane bundle is still stale from `src/plane/store.mjs`. I regenerated nothing.
 
 Size (session_01WQbNSKUXRaMjDns2CiDwYU): test runs 13, module lines 494
+
+## J2 · COMPLETE
+
+Plane T24 complete after B2 and B3. I merged tranche/T24 and needed no code change. Link-sweep is composed before the scheduler and before any request, so op=queue reaches the same instance (K1212). test/m/plane: 50/50 pass. Whole test/m: 5276 pass, 2 fail, both queue/signals.test.mjs (:44 and :89). They are queue's own test handing queue-producers a monitoring fake for sweepConditions, they fail the same way with the tranche's store.mjs, and they are for queue's L11 merge. migrate-released passes. All four checks report 0 failures. The plane bundle is still stale from src/plane/store.mjs; I regenerated nothing. Pushed on job/T24/plane; record updated.
