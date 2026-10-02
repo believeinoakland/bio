@@ -192,8 +192,8 @@ export const read = async (res) => ({ status: res.status, body: await res.json()
 /**
  * The page's script (the last `<script>` of `html`, the page as served) run over a small document stand-in: every
  * `$(selector)` is one element, kept; `fetch` is the page's own, handed in (a scripted answer, or the real plane's).
- * Answers `ui` (the script's named functions), `el(selector)`, the `sandbox`, `replaced()` (history rewrites) and `picks`
- * (the profile checkboxes the page drew).
+ * Answers `ui` (the script's named functions), `el(selector)`, the `sandbox`, `replaced()` (history rewrites), `picks`
+ * (the profile checkboxes the page drew) and `ibtns()` (the inbox's buttons as it last drew them).
  */
 export function pageOver({ html, hash = "", session = null, fetch }) {
   const script = html.slice(html.lastIndexOf("<script>") + 8, html.lastIndexOf("</script>"));
@@ -210,6 +210,7 @@ export function pageOver({ html, hash = "", session = null, fetch }) {
   el("#n-type").options = ["information", "inquiry", "project", "action"].map((value) => ({ value, hidden: false }));
   el("#n-type").value = "information";
   const picks = new Map();
+  let ibtns = [];
   const document = {
     querySelector(s) {
       if (s === "input[name=n-risk]:checked") return [...els.values()].find((e) => /^#n-risk-/.test(e.sel) && e.checked) || null;
@@ -221,6 +222,10 @@ export function pageOver({ html, hash = "", session = null, fetch }) {
           if (!picks.has(m[1])) picks.set(m[1], { ...mk(`pick:${m[1]}`), value: m[1] });
           return picks.get(m[1]);
         });
+      /* the inbox's buttons as the page last drew them, fresh at each draw (R48) */
+      if (s === "#inbox-body .ibtn")
+        return (ibtns = [...el("#inbox-body").innerHTML.matchAll(/class="ibtn" data-i="(\d+)" data-id="([^"]*)" data-to="([^"]*)"/g)]
+          .map((m) => ({ ...mk(`ibtn:${m[1]}:${m[3]}`), dataset: { i: m[1], id: m[2], to: m[3] } })));
       /* a list of selectors: each bare id in it is its element */
       return s.split(",").map((x) => x.trim()).filter((x) => /^#[\w-]+$/.test(x)).map((x) => el(x));
     },
@@ -240,6 +245,6 @@ export function pageOver({ html, hash = "", session = null, fetch }) {
   const ui = new Function(...Object.keys(sandbox), script + `
 ;return { mdFor, historyOrder, FIRST_STATE, HEADINGS, RISK_TIERS, riskTierState, SETTABLE_TIERS, deriveInquiryTitle,
           profilesWarning, openProfiles, panel, chosenRiskTier, openBundle, signerAddBody, describeKey, acquireWhy,
-          PREFIX, SCHEMA_OF, splitFm, mdRender, ratifyWhy, openBrowse };`)(...Object.values(sandbox));
-  return { ui, el, sandbox, replaced: () => replaced, picks };
+          PREFIX, SCHEMA_OF, splitFm, mdRender, ratifyWhy, openBrowse, openInbox };`)(...Object.values(sandbox));
+  return { ui, el, sandbox, replaced: () => replaced, picks, ibtns: () => ibtns };
 }

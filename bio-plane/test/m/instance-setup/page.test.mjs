@@ -6,6 +6,7 @@ import { setupPage, groupLine, SETUP_HTML } from "../../../src/setup.mjs";
 import { STATES, HEADINGS, deriveInquiryTitle } from "../../../src/record-grammar/index.mjs";
 import { RISK_TIERS, riskTierState } from "../../../src/action-grammar/index.mjs";
 import { COUNTERPARTY_LEVELS } from "../../../../jurisdictions/index.mjs";
+import { HOSTING_CONTROL, hostingControlBlock } from "../../../src/setup-fleet.mjs";
 import { pageOver } from "./fixture.mjs";
 
 const tick = () => new Promise((r) => setTimeout(r, 0));
@@ -251,4 +252,105 @@ test("R15 the page half: the active profiles by name to a member; to an administ
   await settle();
   assert.match(unread.el("#pf-active").innerHTML, /could not read/);
   assert.equal(unread.el("#pf-choose").hidden, true);
+});
+
+/* R47's conditions over one page's bytes, as a list of what fails (empty when it holds), so the negative controls below
+   run the same reading over a page that breaks it. The words are pinned here, in this test, not read from the block. */
+const OLD_CARD = /If you ever lose the\s+password you choose here/;
+const DEC_109 = [
+  /Whoever can sign in to the hosting account this copy runs in \(its Cloudflare account\) controls the copy\./,
+  /can replace the one-time password, claim the copy again, read everything in it and lock everyone else out,\s+and no vote of the group's administrators can stop them\./,
+  /Use a group account for it, not anyone's personal login\./,
+  /Add at least one other trusted person to that account\./,
+  /Where possible, let someone other than the group's administrators hold it\./,
+  /The same account is the way back in if the password you choose is lost/,
+];
+function r47Fails(html) {
+  const fails = [];
+  const claim = (html.match(/<section id="s-claim">[^]*?<\/section>/) || [""])[0];
+  const block = (claim.match(/<div class="notice" id="hosting-control">[^]*?<\/div>/) || [""])[0];
+  if (!block) fails.push("no block in the claim section");
+  for (const re of DEC_109) if (!re.test(block)) fails.push(`the block lacks ${re}`);
+  if (block && !(claim.indexOf(block) < claim.indexOf('id="pw1"'))) fails.push("the block is not before the password field");
+  if (OLD_CARD.test(html)) fails.push("the reassurance-only card is still there");
+  if (/<(?:input|button|select|textarea)\b/.test(block)) fails.push("the block carries a control");
+  if (/acknowledg/i.test(claim.replace(/<!--[^]*?-->/g, ""))) fails.push("the claim section asks for an acknowledgement");
+  return fails;
+}
+
+test("R47 the claim section shows DEC-109's block before the password is chosen, in place of the reassurance-only card, and asks and records no acknowledgement", async () => {
+  assert.deepEqual(r47Fails(SETUP_HTML), []);
+  assert.deepEqual(r47Fails(setupPage({ answered: true, result: { ok: true, group: "river-town" } })), []);
+  /* the words are held once, in the leaf the installer imports, and the page carries them as that leaf renders them */
+  assert.ok(SETUP_HTML.includes(hostingControlBlock("notice")));
+  for (const sentence of HOSTING_CONTROL.sentences) assert.equal(SETUP_HTML.split(sentence).length - 1, 1, sentence);
+  assert.match(hostingControlBlock('x"<'), /^<div class="x&quot;&lt;" id="hosting-control">/);
+  /* negative controls: the old card restored, and the block placed after pw1, each fail the reading */
+  const card = '<div class="card"><p class="small" style="margin:0"><b>If you ever lose the\n  password you choose here,</b> you are not locked out.</p></div>';
+  const withCard = SETUP_HTML.replace(hostingControlBlock("notice"), card);
+  assert.ok(r47Fails(withCard).includes("no block in the claim section"));
+  assert.ok(r47Fails(withCard).includes("the reassurance-only card is still there"));
+  const after = SETUP_HTML.replace(hostingControlBlock("notice"), "")
+    .replace('<label for="pw2">', hostingControlBlock("notice") + '<label for="pw2">');
+  assert.deepEqual(r47Fails(after), ["the block is not before the password field"]);
+  const acked = SETUP_HTML.replace('id="hosting-control"><p>', 'id="hosting-control"><p><input type="checkbox" id="ack">');
+  assert.ok(r47Fails(acked).includes("the block carries a control"));
+  /* driven: the claim sends the token and the password and nothing else, and no other op is called for the block */
+  const p = load({ answer: (op) => (op === "bootstrap" ? { claimed: false, bootstrapConfigured: true } : op === "claim" ? { result: { ok: true } } : { result: { ok: true } }) });
+  await settle();
+  p.el("#boot").value = "token"; p.el("#pw1").value = "twelve-chars-a"; p.el("#pw2").value = "twelve-chars-a";
+  await p.el("#do-claim").fire(); await settle();
+  assert.deepEqual(p.calls.find((c) => c.op === "claim").body, { bootstrapToken: "token", password: "twelve-chars-a" });
+  assert.deepEqual([...new Set(p.calls.map((c) => c.op))].filter((op) => !["bootstrap", "claim", "login", "whoami", "profiles"].includes(op)), []);
+});
+
+test("R48 the inbox's resolve asks the member's reason and sends it with the knock and the status; a blank reason posts nothing; a refusal is shown in the plane's words and the knock is left as it was", async () => {
+  const KNOCKS = [{ knock_id: "KNOCK-2026-10-02-0a1b2c3d", status: "new", received: "2026-10-02T04:00:00Z", sha256: "ab", bytes: 3 }];
+  const sent = [];
+  let refuse = null;
+  const p = signedIn({ capabilities: ["contribute"], administer: false }, {
+    inbox: () => ({ result: { inbox: KNOCKS } }),
+    inboxresolve: (b) => { sent.push(b); return refuse || { result: { ok: true, knockId: b.knockId, status: b.status } }; } });
+  await settle();
+  await p.ui.openInbox(); await settle();
+  assert.match(p.el("#inbox-body").innerHTML, /<label for="ir-0">Your reason[^<]*<\/label><input id="ir-0" class="ireason">/);
+  for (const to of ["pulled", "discarded"]) {
+    const btn = () => p.ibtns().find((b) => b.dataset.to === to);
+    assert.equal(btn().dataset.id, KNOCKS[0].knock_id);
+    /* blank: nothing is posted, and the page says why */
+    for (const blank of ["", "   \n"]) {
+      p.el("#ir-0").value = blank;
+      await btn().fire(); await settle();
+      assert.equal(sent.length, 0, `${to} ${JSON.stringify(blank)}`);
+      assert.match(p.el("#ierr-0").textContent, /Write your reason first/);
+    }
+    /* a refusal (the store's, inside the envelope, and the door's own) is shown in its own words; the inbox is not redrawn */
+    for (const r of [{ ok: true, result: { ok: false, reason: "RESOLVE_NO_REASON", translation: "A member resolving a knock says why." } },
+                     { ok: false, reason: "RESOLVE_NO_REASON", translation: "A member resolving a knock says why." }]) {
+      refuse = r;
+      p.el("#ir-0").value = "Spam, plainly.";
+      const draws = p.calls.filter((c) => c.op === "inbox").length;
+      await btn().fire(); await settle();
+      assert.deepEqual(sent.pop(), { knockId: KNOCKS[0].knock_id, status: to, reason: "Spam, plainly." });
+      assert.equal(p.el("#ierr-0").textContent, "A member resolving a knock says why.");
+      assert.equal(p.calls.filter((c) => c.op === "inbox").length, draws, "the knock is left as it was");
+    }
+    refuse = { ok: true, result: { ok: false, reason: "NO_SUCH_KNOCK", detail: "no knock answers to that id." } };
+    await btn().fire(); await settle(); sent.pop();
+    assert.equal(p.el("#ierr-0").textContent, "no knock answers to that id.");
+    /* admitted: posted with its reason, and the inbox read again */
+    refuse = null;
+    p.el("#ir-0").value = "Brought into the record.";
+    const draws = p.calls.filter((c) => c.op === "inbox").length;
+    await btn().fire(); await settle();
+    assert.deepEqual(sent.pop(), { knockId: KNOCKS[0].knock_id, status: to, reason: "Brought into the record." });
+    assert.equal(p.el("#ierr-0").textContent, "");
+    assert.equal(p.calls.filter((c) => c.op === "inbox").length, draws + 1);
+  }
+  for (const c of p.calls.filter((x) => x.op === "inboxresolve")) assert.equal(c.method, "POST");
+  /* a member who may not contribute is offered neither the field nor the buttons */
+  const viewer = signedIn({ capabilities: ["read"], administer: false }, { inbox: () => ({ result: { inbox: KNOCKS } }) });
+  await settle();
+  await viewer.ui.openInbox(); await settle();
+  assert.doesNotMatch(viewer.el("#inbox-body").innerHTML, /ireason|ibtn/);
 });

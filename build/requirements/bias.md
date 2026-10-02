@@ -62,7 +62,7 @@ Terms. A **statement** is `{id, kind, subject, text, justification, citations?, 
 - **R37** Every settlement is appended, never rewritten; a debt is disclosed and blocks nothing (R28).
 - **R38** Told of a work product's close that re-made another (`rerun_of`), the debt of the one re-made is discharged only when the lens the new one ran under equals the lens now in force; otherwise the answer is `no_open_debt`, `lens_undetermined` or `other_lens` and nothing is settled. The answer is returned to the caller (ai-runs carries it as `bias_debt`).
 - **R39** A sweep is idempotent by the work product's key: a second sweep over unchanged lenses raises, restates and settles nothing.
-- **R40** A question's findings made under a project lens are work products too (registered by `inquiry`, its R53), and carry a debt by R33–R38 when that lens changes, disclosed and never blocking. *(not yet met: K102)*
+- **R40** A question's findings made under a project lens are work products too (registered by `inquiry`, its R53), and carry a debt by R33–R38 when that lens changes, disclosed and never blocking.
 - **R41** `biasDebtDue(now)` and `biasDebtWake(now)` (for `scheduler`'s `bias-debt`, beside R33's sweep as its tick): the sweep is **pending** when a work product is registered and `lensFingerprint()` differs from the last complete sweep's, or, with no sweep yet complete, when any adoption is held. While pending, `biasDebtDue` answers `now` and `biasDebtWake` answers `now` + the sweep delay (1,000 ms, or the instance binding `BIAS_DEBT_DELAY_MS` when it reads as a number ≥ 0); otherwise both answer null. Both are synchronous, write nothing and never throw.
 
 **counts(hid?), uncleared({gate, limit}), settled({gate, since, limit})** (N171, K209; N326; for `queue`)
