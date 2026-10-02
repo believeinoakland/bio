@@ -234,7 +234,7 @@ export function world() {
       if (owner) st.sql.exec(`INSERT INTO cases (case_id, project_id, opened) VALUES (?, ?, ?)`, caseId, owner, NOW);
       return res.doc_sha;
     },
-    /** The store half's ops, as the legacy store's dispatch reaches them. */
+    /** The store half's ops, as the plane's op map (`plane/store.mjs`) reaches them through `ratificationOps` (R32). */
     op(name, query = {}, body = null) {
       const url = new URL(`http://do/${name}`);
       for (const [k, v] of Object.entries(query)) if (v !== null && v !== undefined) url.searchParams.set(k, String(v));

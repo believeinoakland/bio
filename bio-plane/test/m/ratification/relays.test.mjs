@@ -4,8 +4,8 @@
    refusal with its status, code and sentence, and only a reply that is no answer as the silence, carrying the store's
    correlation id when it gave one. The sub-reads inside the longer act relay a refusal by the same rule (K444). The
    control plane's helpers are stand-ins that behave as its R23, R25 and R30 state them (`doAnswer`, `storeSilent`,
-   `storeRefusal`); each relay is driven with `storeRefusal` handed in and without it (legacy-index's callers hand
-   `{json, doAnswer, storeSilent, …}` until layer 11), and the answers must be the same. */
+   `storeRefusal`); each relay is driven with `storeRefusal` handed in (as the plane's door, `plane/door.mjs`, hands it)
+   and without it (a caller handing only `{json, doAnswer, storeSilent, …}`), and the answers must be the same. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, plane, newKey, signCase, signBundle, cleanCase, cleanInfoMd, fmText, CASE_BODY, V, SILENT } from "./fixture.mjs";
