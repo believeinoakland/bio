@@ -42,7 +42,8 @@
  *                        `hasCaseStanding`, `reviewProvider` (its R4, R17, R21, R23).
  *   ratification         `caseConclusionFor`, `editionsRecordingConclusion` (its R1).
  *   contradiction        `unresolvedRecordOn` (its R29; R31, R32: N345).
- *   provenance           `captureGrade`, `attestationsOf` (its R24–R27, R49, R51; R35: N364).
+ *   provenance           `captureGrade` (its R24–R27, R51; R35: N364).
+ *   attestation          `attestationsOf` (its R7; R35: N364, re-pointed from provenance by N512).
  *   capture              `lateAttestationsOf`, `captureAccountsOf` (its R68, R69; R35, R36: N364).
  *   sources              `sourceOf` to find a capture's source, then `publishableAt` (its R1, R8; R37: N364).
  *   networkNotices       `noticeReferenceOf` (its R19; R41, R42: DEC-111).
@@ -65,6 +66,7 @@ import { publicationOf, sourceStatement, unnamedSourceStatement } from "../publi
 import { ratificationOf, SUBJECT_POSITIONS, completenessFields } from "../ratification/index.mjs";
 import { contradictionOf } from "../contradiction/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
+import { attestationOf } from "../attestation/index.mjs";
 import { captureOf } from "../capture/index.mjs";
 import { sourcesOf } from "../sources/index.mjs";
 import { networkNoticesOf } from "../network-notices/index.mjs";
@@ -142,14 +144,14 @@ export class CaseAuthoring {
 
   constructor({ storage, record, membership, host = null, inquiry = null, basisVersions = null, strength = null,
                 bias = null, observations = null, reevaluation = null, publication = null, ratification = null,
-                contradiction = null, provenance = null, capture = null, sources = null, networkNotices = null,
-                now = null } = {}) {
+                contradiction = null, provenance = null, attestation = null, capture = null, sources = null,
+                networkNotices = null, now = null } = {}) {
     this.sql = storage.sql;
     this.storage = storage;
     this.record = record;
     this.membership = membership;
     this.#deps = { host, inquiry, basisVersions, strength, bias, observations, reevaluation, publication, ratification,
-                   contradiction, provenance, capture, sources, networkNotices };
+                   contradiction, provenance, attestation, capture, sources, networkNotices };
     this.now = typeof now === "function" ? now : (precision) => stampInstant(precision);
   }
 
@@ -164,6 +166,7 @@ export class CaseAuthoring {
   get ratification() { return this.#deps.ratification ||= ratificationOf(this.#deps.host); }
   get contradiction() { return this.#deps.contradiction ||= contradictionOf(this.#deps.host); }
   get provenance() { return this.#deps.provenance ||= provenanceOf(this.#deps.host); }
+  get attestation() { return this.#deps.attestation ||= attestationOf(this.#deps.host); }
   get capture() { return this.#deps.capture ||= captureOf(this.#deps.host); }
   get sources() { return this.#deps.sources ||= sourcesOf(this.#deps.host); }
   get networkNotices() { return this.#deps.networkNotices ||= networkNoticesOf(this.#deps.host); }
@@ -1134,7 +1137,7 @@ export class CaseAuthoring {
   }
 
   /** R35, R36: one capture's grade (`provenance.captureGrade`) and co-attestation, read at the act. It is co-attested
-   *  only when it holds both a timestamp and a co-archive: first as recorded at capture (`provenance.attestationsOf`),
+   *  only when it holds both a timestamp and a co-archive: first as recorded at capture (`attestation.attestationsOf`),
    *  else a late one that succeeded (`capture.lateAttestationsOf`; a late co-archive whose replay holds other bytes
    *  corroborates nothing and is not counted), a late one stated as late. The capturing member's signed accounts
    *  (`capture.captureAccountsOf`) travel with it, their exact text and signature (publication R20 writes them as
@@ -1142,7 +1145,7 @@ export class CaseAuthoring {
   #captureFacts(sha) {
     const safe = (fn) => { try { return fn(); } catch { return null; } };
     const g = safe(() => this.provenance.captureGrade(sha)) || {};
-    const att = safe(() => this.provenance.attestationsOf(sha));
+    const att = safe(() => this.attestation.attestationsOf(sha));
     const late = safe(() => this.capture.lateAttestationsOf(sha));
     const acc = safe(() => this.capture.captureAccountsOf(sha));
     const held = att && att.ok !== false && Array.isArray(att.attestations) ? att.attestations : [];

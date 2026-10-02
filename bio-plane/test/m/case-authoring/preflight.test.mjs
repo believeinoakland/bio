@@ -13,7 +13,7 @@ import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", DOC3 = "INFO-2026-0003-c";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
-/* A co-attestation as capture R20 and provenance R32–R33 record it at capture. */
+/* A co-attestation as capture R20 and attestation R2–R3 record it at capture. */
 const CO_ATTESTED = { attestations: [{ kind: "rfc3161", service: "tsa.example", file: "snapshots/timestamp-abc.tsr",
                                        sha256: "d".repeat(64) }],
                       co_archive: { service: "archive.example", locator: "https://archive.example/web/x" } };
@@ -112,6 +112,28 @@ test("R35: each capture a member rests on is stated with its grade (provenance.c
   assert.equal(n.ok, true);
   assert.deepEqual(caseDocumentBlocks(docOf(w3, n).text).captures.map((c) => [c.grade, c.grade_basis, c.co_attested]),
     [[null, "CAPTURE_ROUTE_UNRECORDED", false]]);
+});
+
+test("R35: the co-attestation recorded at capture is read through attestation.attestationsOf (its R7), from the instance the composition hands in, never provenance: what it answers is what the case states", () => {
+  const { w, a, b } = setup();
+  const held = w.attestation.attestationsOf(a);
+  assert.deepEqual(held.attestations.map((x) => x.kind), ["rfc3161", "co_archive"], "the real module reads DOC's record");
+  assert.equal(typeof w.prov.attestationsOf, "undefined", "provenance no longer answers it (N512)");
+  /* a stand-in handed in answers none for every capture: DOC is no longer co-attested, so both are named */
+  const asked = [];
+  const none = { attestationsOf: (s) => { asked.push(s); return { ok: true, sha256: s, registered: true, attestations: [], note: "" }; } };
+  const n = setup({ deps: { attestation: none } });
+  const r = n.w.publish(n.P, "alice", [Q]);
+  refused(r, "CO_ATTESTATION_UNACKNOWLEDGED");
+  assert.deepEqual(r.unacknowledged.map((u) => u.capture).sort(), [n.a, n.b].sort());
+  assert.deepEqual([...new Set(asked)].sort(), [n.a, n.b].sort(), "each capture asked of the instance handed in");
+  /* negative control: one answering DOC's attestations for DOC2 too, and DOC2 needs no acknowledgement */
+  const both = { attestationsOf: (s) => ({ ...w.attestation.attestationsOf(a), sha256: s }) };
+  const y = setup({ deps: { attestation: both } });
+  const ok = y.w.publish(y.P, "alice", [Q]);
+  assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
+  assert.deepEqual(caseDocumentBlocks(docOf(y.w, ok).text).captures.map((c) => c.co_attested), [true, true]);
+  void b;
 });
 
 test("R35: the grade that needs co-attestation or an acknowledgement is EARNED_CAPTURE_CEILING, provenance R24's one definition (capture R18): the refusal names it, and a load-bearing capture below it (an archive replay's ARCHIVE_CAPTURE_GRADE) that is not co-attested needs none", () => {
