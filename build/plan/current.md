@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #98 · session_014dcsnHp9L1mo6H4mzBvdrR · depth 1
 
-**Jobs** · record-grammar: RECORD-GRAMMAR #6 session_01MJZEvGTGHSBLGCua1Zuqbw
+**Jobs** · record-grammar: RECORD-GRAMMAR #6 session_01MJZEvGTGHSBLGCua1Zuqbw; record-core: RECORD-CORE #15 session_01GDBx64mMFCCwSytRPN41WV; credentials: CREDENTIALS #2 session_012kvJP8Do5Px8VoiLziW6ao; promotion: PROMOTION #25 session_01SwJ6zqWV8DAK53y4TjpSJf; membership: MEMBERSHIP #18 session_01TsMiP8QXjZwgw1wxMGupxs
 
 **Opened** 2026-10-02 ~12:31 UTC by BOB #98 from `main` @ f193c1ac3b (T23 closed, K1178), from `draft-T24.md` and T23's `next.md` (K1180). **Bob's weekly meter** · asked at the opening; 61% at T23's close.
 
@@ -36,10 +36,10 @@ T23's rules hold (merge early; one file, one editor; marks struck at the merge; 
 6. Totality of affordances and op-declarations over `optionstartpreview`, from action-plans' L9 merge until their L11 merges.
 7. The sweep's composition (plane's `sweeps` route, scheduler's `gathering-sweep`), from monitoring's L10 merge until link-sweep's and scheduler's (L10) and plane's and control-plane's (L11).
 
-## Roster (by layer; 41 jobs)
+## Roster (by layer; 42 jobs)
 
 **L1** · record-grammar: N502.
-**L2** (merge order: record-core, credentials, then promotion) · record-core: N503 (R75). · credentials: N505 (R21, R8), N508. · promotion: S1, the stamp 1.53.0 → 1.54.0 over T23's L3–L11 rows (each record's `awaiting stamp`, `t24-stale-notes.md` "S1's"), `ROW_CENSUS` re-pinned, its fixture; `gate.mjs`:557 re-worded.
+**L2** (merge order: record-core, credentials, membership, then promotion) · record-core: N503 (R75). · credentials: N505 (R21, R8), N508. · membership: R83, `MODULE_ORDER` equal to `modules.json` after the opening's N506 fold (added in L2, K1185). · promotion: S1, the stamp 1.53.0 → 1.54.0 over T23's L3–L11 rows (each record's `awaiting stamp`, `t24-stale-notes.md` "S1's"), `ROW_CENSUS` re-pinned, its fixture; `gate.mjs`:557 re-worded.
 **L3** · host-governor: N508. · provenance: N504 (R57). · acquisition: N510, N502, S1's note. · capture: N508.
 **L4** · extraction: N508. · content: N502.
 **L5** · entities: N502.
@@ -69,7 +69,7 @@ T23's rules hold (merge early; one file, one editor; marks struck at the merge; 
 - N508 · 2026-10-02 · **credentials**, **host-governor**, **extraction**, **citation**, **actions** (K1167; TASKS #6's record): their op-map notes still say the ops are "entries of the legacy store's op map (its dispatcher spreads them in)" (`credentials/index.mjs`:669, `host-governor/index.mjs`:266, `extraction/index.mjs`:1474, `citation/index.mjs`:736, `actions/index.mjs`:2368); the legacy store is retired and control-plane's routes spread them: re-word (N469's rule), re-scanning each module for the same kind. **Hard reason:** those modules have no T23 job, their layers closed (P8, P10); wording only.
 - N509 · 2026-10-02 · **network-notices** (K1170; CONTROL-PLANE #14 J1): `#callerRefusal` (`index.mjs`:218) answers `NO_SUCH_PROJECT` to a caller whose sight of a discoverable project is `existence`; REC-149's ruling (a) (`BIO_Membership_Architecture_v2.md`:1235) answers an act on such a project positionally, C-70.1. Answer C-70.1 there for `noticeprepare` and `noticepost` (and `notices`, a read naming the project's own id), state it in R1/R22, test it. **Hard reason:** network-notices' one T23 job (L8) is closed (P8, P10).
 - N510 · 2026-10-02 · **acquisition** (K1178; ACQUISITION #5's deferral, `jobs/T23/acquisition.md`:25): an empty 200 memento met during a capture ends the archive arm with `NO_USABLE_CAPTURE` instead of trying an older candidate; emptiness is known only after the body is streamed, so trying another needs `acquire`'s single fetch restructured. Measured empties so far were redirects (skipped before any body is read). **Hard reason:** acquisition's one T23 job is closed (P8); the restructure is the job's own.
-- P1 · 2026-10-02 · **the process** (K1177; Bob's direction): research every approval a session has asked of Bob (§16), why the session reached that state, and what process change stops each cause recurring; bring the recommendation to Bob (a process change, P3, P16). Findings brought to Bob by BOB #97 ("Why Sessions Ask Bob"); the process revision is owed by BOB, alongside T24 (§5.9), certified by a dry run before use (P3).
+- P1 · 2026-10-02 · **the process** (K1177; Bob's direction): research every approval a session has asked of Bob (§16), why the session reached that state, and what process change stops each cause recurring; bring the recommendation to Bob (a process change, P3, P16). Findings brought to Bob by BOB #97 ("Why Sessions Ask Bob"). **Done** (K1183): the revision is on the process repository's `main` (c84579d).
 
 ## Left out of T24 (one hard reason each; carried to `next.md`)
 

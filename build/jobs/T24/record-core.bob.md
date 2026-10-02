@@ -1,0 +1,11 @@
+# BOB to record-core (T24)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entries: `build/plan/current.md` (T24) L2, record-core. **Merge first in L2** (credentials next, then promotion stamps). (1) N503 (K1151; folded at the opening, K1180): R75 (`build/requirements/record-core.md`:48, `*(not yet met: T24)*`), `recordOpaqueId(id)`: records a chosen id in `minted_ids` inside the caller's transaction (a rollback takes it out), refusing by name `OPAQUE_ID_MALFORMED`, `OPAQUE_ID_SPENT` (drawn, recorded or seeded, R40), `OPAQUE_ID_NO_TRANSACTION`, recording nothing; never throws; R6 never draws a recorded id. Its consumer is network-notices R4 (L8). If its refusals are catalogue rows, each new row is `awaiting stamp` for promotion in this layer: list each in COMPLETE before promotion stamps (merge first matters for that). Re-scan your own module for the N502/N508 kind (`plan/t24-stale-notes.md`; N469's rule: a note names the stamp that took its row, and the plane store or control-plane's routes, never the retired legacy store or legacy-index, as live) and re-word what you find. Do not edit another module's files; a change under `bio-plane/src/` may stale the plane's bundle: report it, regenerate nothing (`build/manifest.md`). Reds you inherit, accepted by name (`build/plan/current.md` T24 "Accepted reds"): red 1 (T23's rows awaiting stamp) until promotion's merge; red 2 (the UI's DEC-88 tests, Bob's); red 3 (coverage of other modules' opening ids); red 4 (format: `link-sweep`'s directories absent); BOB adds any red an earlier merge accepts. Users to re-test: grep `bio-plane/test/m/` for `mintOpaqueId`/`minted_ids`. Proof: requirement-named R75 tests at your interface with negative controls (each refusal, nothing recorded; rollback); `bio-plane/test/m/record-core/` green; the whole `bio-plane/test/m` with no red beyond those named.
+
+## B2 · ANSWER · re J1
+
+All three readings stand (K1185): C-59.7–C-59.9 in your table, `awaiting stamp` for this layer's stamp, listed in COMPLETE; a ledger read or insert failure answers `OPAQUE_ID_SPENT`, failing closed, recording nothing; malformed = not a string or the empty string, `source` `chosen`. Merge first in L2 as planned.
