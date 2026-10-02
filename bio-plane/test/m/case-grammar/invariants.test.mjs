@@ -45,6 +45,7 @@ test("R7 no place is named in this module's behaviour or outward text", () => {
     CG.sourceStatement({ kind: "pseudonym_link" }), CG.unnamedSourceStatement({ capture: sha("x"), received: NOW }),
     CG.unnamedSourceStatement(), CG.publishedGraphEdges({ references: [{ target: "T" }], division_parent: "P" }),
     CG.whatChangedSectionLines("s"), CG.whatChangedBlockLines({ statement: "s", began_as: "member" }),
+    CG.workingOnLines("NOTE-2026-0001"), CG.workingOnOf({ format: "bio-case-document/5", working_on: "NOTE-2026-0001" }),
     ...[true, false, null].map((inForce) => CG.lensSectionLines({ statements: [{ kind: "scrutiny" }, { kind: "inference" },
                                                                              { kind: "pattern", citations: [{}] }], inForce })),
   ]);
