@@ -1,0 +1,7 @@
+# BOB to affordances (T25)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entries: `build/plan/current.md` (T25) L11, affordances: N512's test side. **Merge first in L11** (affordances, control-plane, then plane). `test/m/affordances/catalogue.test.mjs`:958 reads C-34's rows from `bio-plane/src/provenance-routes/` and C-89's from `bio-plane/src/attestation/` (no longer provenance's `checks.mjs`); `backing.test.mjs`'s world migrates both new modules (they own `provenance_route_marks`, `receipt_keys`, `signed_receipts`). `modules.json` gives you both edges. Also `test/m/affordances/sources.test.mjs`:117 ("R2: reattest … through provenance's attest"): since N512 capture R68 asks attestation's `attest`, so drive the re-attest through a scripted network as capture's R68 tests do (`authorities` in `knocker.test.mjs`, `granted` in capture's fixture), or assert on the late outcome alone (K1231; red 7 until your merge). Clears red 8 for you. Re-scan your own module for the N502/N508 kind (`plan/t24-stale-notes.md`; N469's rule) and re-word what you find. Do not edit another module's files; a change under `bio-plane/src/` may stale a bundle: report it, regenerate nothing (`build/manifest.md`). Reds you inherit, accepted by name (`build/plan/current.md` T25 "Accepted reds"): 2, 3, 4, 6 (a row you add or change: list each in COMPLETE), 7, 8, 9, 10; BOB adds any red an earlier merge accepts. Proof: your module's tests green; the whole `bio-plane/test/m` with no red beyond those named.
