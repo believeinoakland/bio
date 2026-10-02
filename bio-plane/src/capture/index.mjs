@@ -2258,9 +2258,10 @@ export function captureOwns(t) {
   return CAPTURE_PURGED_TABLES.includes(name) || CAPTURE_EXEMPT_TABLES.includes(name);
 }
 
-/* The Durable Object routes this module answers, as entries of the legacy store's op map (its dispatcher spreads
-   them in). `url` carries the control plane's stamps; `body` the parsed body. N90: every read a route answers is
-   bounded here, whatever the caller omits (`limit` defaults to READ_LIMIT's), and pages by `after`. */
+/* The Durable Object routes this module answers, as entries of the plane's one route map (plane R5: `routes` spreads
+   them in, and control-plane's `dispatch` answers every store request over it). `url` carries the control plane's
+   stamps; `body` the parsed body. N90: every read a route answers is bounded here, whatever the caller omits (`limit`
+   defaults to READ_LIMIT's), and pages by `after`. */
 export function captureOps(c, url, body, env) {
   const q = (k) => url.searchParams.get(k);
   const viewerOf = () => (url.searchParams.has("viewer") ? q("viewer") : undefined);

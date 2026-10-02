@@ -16,7 +16,8 @@ const doAnswer = async (res) => { let out = null; try { out = await (await res).
   return out && out.ok === true ? { answered: true, result: out.result } : { answered: false, result: undefined }; };
 const helpers = { json, requiredArgument, storeSilent, doAnswer };
 
-/* A Durable Object stub answering as the store's dispatcher does: `{ok: true, result}`. `calls` counts every call. */
+/* A Durable Object stub answering as control-plane's `dispatch` does over the plane's route map: `{ok: true, result}`.
+   `calls` counts every call. */
 function stubOf(c, env) {
   const calls = [];
   return { calls, async fetch(req) {

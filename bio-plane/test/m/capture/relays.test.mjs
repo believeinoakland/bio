@@ -2,8 +2,9 @@
    `acquireOp`, `knockOp`) answer the store's own refusal with its status, code and sentence, and only a reply that is no
    answer as the silence, carrying the store's correlation id when it gave one. The control plane's helpers are
    stand-ins that behave as its R23, R25 and R30 state them (`doAnswer`, `storeSilent`, `storeRefusal`); each relay is
-   exercised with `storeRefusal` handed in and without it (legacy-index's callers hand `{json, storeSilent, doAnswer}`
-   until layer 11), and the answers must be the same. */
+   exercised with `storeRefusal` handed in and without it (the plane's door hands it; a caller handing only
+   `{json, storeSilent, doAnswer}`, as the retired legacy-index's did, is still answered alike), and the answers must
+   be the same. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { linksOp, archiveLookupOp, acquireOp, relayUnanswered } from "../../../src/capture/ops.mjs";
