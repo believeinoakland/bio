@@ -329,8 +329,8 @@ export class QueueProducers {
    *
    *  THE FACT IS THE GOVERNOR'S OWN, read at the same predicate the governor
    *  itself admits on: `cooloff_until > now` is the exact test `governorAdmit`
-   *  applies before refusing with `cooling_off`, and the one index.mjs applies
-   *  before stopping a page's remaining subresources. This derivation does not
+   *  applies before refusing with `cooling_off`, and the one the capture path
+   *  applies before stopping a page's remaining subresources. This derivation does not
    *  restate the rule, it asks it.
    *
    *  WHY IT EARNS AN ITEM AT ALL (NOTIFICATIONS.md rule 4 — a CONDITION is
@@ -367,7 +367,7 @@ export class QueueProducers {
                  last_refusal_at: Number.isFinite(refusedAt) ? refusedAt : null,
                  appetite_per_min: r.appetite_per_min ?? null,
                  granted: r.granted, refused_total: r.refused_total,
-                 detail: "a condition is a fact about OUR OWN machinery (D-103/D-95): this instance's "
+                 detail: "a signal is a fact about OUR OWN machinery (D-103/D-95): this instance's "
                        + "governor is holding the host, which is distinguishable from the source being "
                        + "unreachable and must not be read as evidence about the publisher. It clears "
                        + "for every member when the hold expires; there is no act that ends it." },
@@ -531,7 +531,7 @@ export class QueueProducers {
                  writer: latest.writer ?? null, operation: latest.operation ?? null,
                  started_by: started.author, started_snap_key: started.snap_key,
                  started_created: started.created,
-                 detail: "the machine writer is NAMED, never anonymous: index.mjs deletes any "
+                 detail: "the machine writer is NAMED, never anonymous: the control plane deletes any "
                        + "caller-supplied author and stamps token:<class> for a machine credential "
                        + "(REC-2, closing D-61), so this is the record's own trace of an unattended "
                        + "write and not an inference. It clears for every member when a person "
@@ -989,7 +989,7 @@ export class QueueProducers {
    *  about an act it has not taken.
    *
    *  FILED UNDER THE QUESTION'S ANCESTORS, WHICH IS EVERY PROJECT DRAWING ON
-   *  IT. `#queueAncestorEdges` walks `refs kind='cites'` upward, so the homes of
+   *  IT. queue R7's walk climbs `refs kind='cites'` upward, so the homes of
    *  an item about a shared question ARE the projects sharing it — both sides
    *  of the divergence, by the same walk every other producer uses. That is the
    *  point: an item only the diverging team could see would tell the one team
@@ -1459,6 +1459,7 @@ export class QueueProducers {
     const admin = me ? this.#isAdminMember(me) : viewer === `${MACHINE_CLASS_PREFIX}admin`;
     if (!admin) return [];
     const cap = EXPORT_LOG_LIMIT_DEFAULT;
+    /* The export log is `corpus-export`'s (its R1, R2; K1043), reached through publication's delegate until N483. */
     const log = this.#publication.exportLog({ limit: cap });
     const page = log && Array.isArray(log.exports) ? log.exports : [];
     if (page.length === 0) return [];
@@ -1635,7 +1636,7 @@ export class QueueProducers {
           basis: { source: "intent.gaps", key: gap.key, project, progression: b.progression ?? null,
                    entity: b.entity ?? null, grade: gap.grade ?? null, instances: gap.instances ?? [],
                    gap: b, surfaced_by: gap.surfaced_by ?? "machine",
-                   detail: "a gap is DERIVED (intent R6): the objective's satisfaction condition read against the "
+                   detail: "a gap is DERIVED (intent R6): the objective's satisfaction test read against the "
                          + "record, recomputed at every read. It leaves this project's list by a recorded decision." },
           age: { state: "undetermined", reason: "derived_on_read",
                  detail: "a gap is recomputed at read time and has no creation instant" },
@@ -1864,7 +1865,7 @@ export class QueueProducers {
                  code: r.code, check: row.check, translation: row.translation,
                  attempts: r.attempts, expires: r.expires, updated: r.updated,
                  plane_detail: r.detail ?? null,
-                 detail: "a condition is a fact about OUR OWN machinery (D-491, BOB #32 item 3): this instance's "
+                 detail: "a signal is a fact about OUR OWN machinery (D-491, BOB #32 item 3): this instance's "
                        + "renderer, render allowance or host pacing is what holds the render, which says "
                        + "nothing about the page. The served frame is never filed as the content, so while it "
                        + "waits and after it expires there is NO capture of what a visitor saw." },
@@ -2025,7 +2026,7 @@ export class QueueProducers {
           : kind === "contradiction-plurality"
             ? "two projects concluded one question on claims whose text differs. Naming the respect in which they "
               + "differ clears it; neither project is made to adopt the other's answer."
-            : "a machine judged these two may conflict. Its uncertainty creates no obligation: dismiss it or take it up.",
+            : "a machine judged these two may conflict. Its uncertainty asks nothing of you: dismiss it or take it up.",
         basis: { source: "contradiction.candidatesFor", candidate: c.candidate, key: c.key ?? null, why: c.why ?? null,
                  weight: c.weight, state: c.state, a: c.a ?? null, b: c.b ?? null, machine: c.machine ?? null,
                  resolution: c.resolution ?? null, inquiry: c.inquiry ?? null, reach: c.reach ?? null,
@@ -2335,6 +2336,14 @@ export class QueueProducers {
     return { rule: "administrators", members: this.#activeAdmins() };
   }
 
+  /** R25 (DEC-110 (1)): the day an item's subject is due, `YYYY-MM-DD`, for queue R49's sort: the clock entry's date
+   *  (R15, R18) or the checkpoint's day (R16), read as the provider states it; null when it states none this producer
+   *  can read as a day. Only those three kinds carry `due`. */
+  static #dueDay(v) {
+    const d = typeof v === "string" ? v.trim().slice(0, 10) : "";
+    return /^\d{4}-\d{2}-\d{2}$/.test(d) && Number.isFinite(Date.parse(`${d}T00:00:00Z`)) ? d : null;
+  }
+
   /** A provider's paged read followed by its cursor, at most QUEUE_ACTION_PAGES pages; `truncated` when it was cut. */
   #actionPages(read) {
     const items = [];
@@ -2377,6 +2386,7 @@ export class QueueProducers {
         class: "CONDITION",
         kind: "action-clock-overdue",
         case: this.#actionHomes(e.action, e.project, viewer),
+        due: QueueProducers.#dueDay(e.date),
         subject: { kind: "action", id: e.action, entry: e.ord, date: e.date ?? null, basis: e.basis ?? null,
                    text: e.text ?? null, project: e.project ?? null },
         summary: `a date on ${e.action} has passed: ${e.text || "a clock entry"}${e.date ? `, due ${e.date}` : ""}`,
@@ -2426,11 +2436,12 @@ export class QueueProducers {
         class: "OBLIGATION",
         kind: "plan-checkpoint-due",
         case: this.#homesAt([c.project], viewer),
+        due: QueueProducers.#dueDay(due),
         subject: { kind: "plan", id: c.plan, project: c.project, scenario: c.scenario ?? null, phase: c.phase ?? null,
                    version: c.version ?? null },
         summary: `a checkpoint of plan ${c.plan} has come due: scenario ${c.scenario}, phase ${c.phase}`,
         detail: "the day this plan's scenario set for judging a phase has come, and no member has judged it. A member "
-              + "records whether its condition was met; nothing here judges it, and a checkpoint passed unjudged says "
+              + "records whether what it set was met; nothing here judges it, and a checkpoint passed unjudged says "
               + "nothing about the government.",
         basis: { source: "action-plans.checkpointsDue", plan: c.plan, project: c.project, scenario: c.scenario ?? null,
                  phase: c.phase ?? null, version: c.version ?? null, set_by: c.set_by ?? null, due,
@@ -2513,6 +2524,7 @@ export class QueueProducers {
         class: "OBLIGATION",
         kind: "action-reminder",
         case: this.#actionHomes(x.action, x.project, viewer),
+        due: QueueProducers.#dueDay(x.date),
         subject: { kind: "action", id: x.action, entry: x.ord, date: x.date ?? null, basis: x.basis ?? null,
                    text: x.text ?? null, on: x.on ?? null, project: x.project ?? null },
         summary: `the reminder you asked for: ${x.text || "a clock entry"} on ${x.action}${x.date ? `, due ${x.date}` : ""}`,
@@ -2601,30 +2613,34 @@ export class QueueProducers {
   /** `template-review-requested` (R20; K921; filing-templates R7, R20): one OBLIGATION per (version, member)
    *  `filing-templates.reviewsRequested` answers the viewer, to that member and to nobody else, naming the version's
    *  name and kind and the member who asked, aged from the instant asked. It leaves when the member reviews the
-   *  version's present text or the version leaves `in_review` (the read no longer answers it). A template is not a
-   *  record of the case, so the item is homed under no case (as export-performed's). */
+   *  version's present text or the version leaves `in_review` (the read no longer answers it). Homed under the
+   *  template's project, the `project` the read answers (filing-templates R20; N476), at depth 0 and above it through
+   *  queue's walk (R7), as `#homesAt` homes any item about a case; a `group` template's item (project null) has no
+   *  project to be homed under and is ungrouped. */
   #obligationsTemplateReview(me, viewer, now) {
     if (!me) return [];
     const page = this.#actionPages((after) => this.#filingTemplates.reviewsRequested({ after, viewer }));
+    const visible = this.#bundleRedactor(viewer);
     const out = [];
     for (const x of page.items) {
       if (!x || typeof x.version !== "string" || !x.version || typeof x.member !== "string" || x.member !== me) continue;
       const askedMs = Date.parse(x.asked_at ?? "");
       const asker = x.asked_by && typeof x.asked_by === "object" ? { id: x.asked_by.id ?? null, name: x.asked_by.name ?? null } : null;
       const askerName = asker && (asker.name || asker.id) ? asker.name || asker.id : "a member";
+      const project = typeof x.project === "string" && x.project ? visible(x.project) : null;   // R11
       out.push({
         id: `OBLIGATION::template-review-requested::${x.version}::${x.member}`,
         class: "OBLIGATION",
         kind: "template-review-requested",
-        case: this.#homesOf([]),
+        case: project ? this.#homesAt([project], viewer) : this.#homesOf([]),
         subject: { kind: "template_version", id: x.version, template: x.template ?? null, name: x.name ?? null,
-                   template_kind: x.kind ?? null, asked_by: asker },
+                   template_kind: x.kind ?? null, asked_by: asker, project },
         summary: `${askerName} asked you to review the template ${x.name ? `"${x.name}"` : x.version} (${x.version})`,
         detail: "a draft of this filing template was sent for review and you are one of the members asked. Review its "
               + "present text; this is told once, and it leaves when you have reviewed that text or the version leaves "
               + "review.",
         basis: { source: "filing-templates.reviewsRequested", template: x.template ?? null, version: x.version,
-                 name: x.name ?? null, template_kind: x.kind ?? null, member: x.member, asked_by: asker,
+                 name: x.name ?? null, template_kind: x.kind ?? null, project, member: x.member, asked_by: asker,
                  asked_at: x.asked_at ?? null, recipients_rule: "asked_member",
                  bound: { pages_bound: QueueProducers.QUEUE_ACTION_PAGES, truncated: page.truncated },
                  detail: "a review asked for is filing-templates' fact (its R7, R20): a member named a reviewer of a "
