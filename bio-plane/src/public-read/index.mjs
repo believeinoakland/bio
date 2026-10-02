@@ -8,7 +8,7 @@
  * below are `publication/index.mjs`' `registerEvidenceBlock`, `#evidencePackage`, `publishedManifest`,
  * `#frozenPairsByCase`, `verifySha`, `publishedList`, `publishedEditions`, `publishedCase`, `#deliveredBy`,
  * `#looseEditionState`, `#resolveOneCase` and `#casesOfSha`, with their comments; `publication`'s job, after this one
- * merges, deletes its copies and spreads `publicReadOps` in the legacy store's op map. The legacy code's comments
+ * merged, deleted its copies, and `publicReadOps` is spread in `plane`'s store op map (`../plane/store.mjs`). The legacy code's comments
  * moved with it and keep their old ids (REC-, CASE-, D-); a `publication` R id in them is named as such. The Worker
  * half (`../publication/worker.mjs`, `../container.mjs`, `../inband.mjs`: R5–R7, R9) is this module's by `paths` and
  * stays at those paths (K697, K702); the door's routes reach it through `./door.mjs`. Its refusal rows are its own,
@@ -123,7 +123,7 @@ export class PublicRead {
              (`ON CONFLICT … DO NOTHING`), so on b5ce975a this row told a stranger one of two false
              things: a BARE NULL where the documents already disagreed at that ratification (the
              committer's `strengthUndetermined`, which reached op=ratify's answer and nothing
-             else), or — measured by rec170-manifest-pair.test.mjs, and worse — THE FIRST CASE'S
+             else), or — measured by rec170-manifest-pair.test.mjs (since retired), and worse — THE FIRST CASE'S
              PAIR where a later case froze another, one case's reading served as THE pair (IC-74:
              a finding in several cases answers every case, never one). Rule 12 (b) makes the pair
              a fact about ONE case's reading of the finding at that sha, so where two readings
@@ -658,7 +658,7 @@ export class PublicRead {
                 CORRECTED AGAIN 2026-08-08 (M0-12), AND THE SECOND CORRECTION IS
                 WHY THAT ITEM EXISTS. Both sentences above named the op as
                 `publishcase`. THERE IS NO SUCH OP. `publishcase` is the STORE'S
-                DO PATH; `DO_PATH` in index.mjs aliases `op=publish` onto it, so
+                DO PATH; `DO_PATH` (then in the plane's index.mjs, now `control-plane`'s) aliases `op=publish` onto it, so
                 the op whose name matches the method is routed AWAY from it and
                 a caller sending the path name as `op=` gets `unknown op`. The
                 routing chain, in full: **`op=publish` -> DO path `publishcase`
@@ -931,7 +931,7 @@ export function publicReadOf(host, deps) {
   return r;
 }
 
-/** The module's ops (K3), as entries of the legacy store's op map, every one unstamped: each reads the published
+/** The module's ops (K3), as entries of `plane`'s store op map (`../plane/store.mjs`), every one unstamped: each reads the published
  *  projection only (R10), so it answers without a credential. */
 export function publicReadOps(r, url) {
   const q = (k) => url.searchParams.get(k);

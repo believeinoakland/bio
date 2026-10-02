@@ -4,7 +4,7 @@
  * from `index.mjs` with their comments; it is this module's by `paths` and stays at this path (K697, K702). The store
  * side is `../public-read/index.mjs`.
  *
- * THE PLANE'S HELPERS ARE BOUND, NOT IMPORTED: the control plane (`legacy-index`, later in the order) owns `json()`
+ * THE PLANE'S HELPERS ARE BOUND, NOT IMPORTED: the control plane (`control-plane`, later in the order) owns `json()`
  * (its DEC-49 decoration), the Durable Object envelope reader (`doAnswer`), the silence refusal (`storeSilent`), the
  * required-argument refusal and the published store's namespace. It binds them once at load (`bindPublishedPlane`),
  * so this file reads every answer the way the rest of the plane does and restates none of it.
