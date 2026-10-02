@@ -36,6 +36,7 @@
  * DELIBERATELY NOT A `.test.mjs`: it EDITS REAL SOURCES and RENAMES a real
  * `node_modules`, and a file a `node --test` run discovers must never be one that
  * rewrites the tree underneath the suites running beside it (PL-3/PL-4/PL-11).
+ * Named to `node --test` explicitly, it refuses and touches nothing (T23, K1120).
  *
  * THE THREE RULES THIS PROJECT PAID FOR, obeyed here:
  *
@@ -52,6 +53,9 @@
  *      EXIT STATUS is read from `spawnSync().status`, which is the process's own
  *      and never a pipeline's.
  *
+ * NOTHING HERE WRITES A COMMITTED ARTIFACT (T23, K1118): arms 5 and 8 rebuild in memory; every other arm edits a
+ * source and restores it by content and sha256.
+ *
  * EACH ARM IS ARMED ALONE, with every other defence held open, and each names
  * what MUST fail AND what MUST NOT.
  *
@@ -67,6 +71,15 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { discoverMembers, planeMember, buildMember, manifestFrom } from "../scripts/fleet-bundle.mjs";
+
+/* REFUSES UNDER THE TEST RUNNER (T23, K1120): `node --test` runs its files in parallel, so this driver's armed source
+   edits would land under the suites beside it. Run by the runner (which sets NODE_TEST_CONTEXT in each file's
+   process), it exits at once, before the pen is made or any file is touched. */
+if (process.env.NODE_TEST_CONTEXT) {
+  console.log("fleetbundles.control.mjs: a hand-run negative control, not a test; run it alone: node test/fleetbundles.control.mjs [arm]");
+  process.exit(0);
+}
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
@@ -79,6 +92,23 @@ const sha = (b) => createHash("sha256").update(b).digest("hex");
 const FLOOR = 200;                                   /* a "restore" of a truncated file is not a restore */
 
 mkdirSync(PEN, { recursive: true });
+
+/* REWRITTEN 2026-10-02 (BUNDLER #6, T23; K1118, bundler R10): arms 5 and 8 ran a real `npm run build`, which WROTE the
+   committed `dist/` artifacts and manifests, so a run of bundler's test set left `bio-plane/dist/` modified wherever
+   the tree's bundle was stale. They now rebuild IN MEMORY (`buildMember` with `write: false`, then `manifestFrom`, the
+   very pair `writeMember` writes) and compare against the committed bytes: the same over-strictness claim, and nothing
+   on disk moves. */
+async function rebuildMatches(member) {
+  let built;
+  try { built = await buildMember(member, { write: false }); }
+  catch (e) { return `NOT REBUILT (${String(e.message).split("\n")[0]})`; }
+  const read = (rel) => { try { return readFileSync(join(member.abs, rel)); } catch { return null; } };
+  const art = read(member.bundle.outfile), man = read(member.bundle.manifest);
+  const manNow = Buffer.from(JSON.stringify(manifestFrom(member, built), null, 2) + "\n");
+  const differs = [art && built.bytes.equals(art) ? null : member.bundle.outfile,
+                   man && manNow.equals(man) ? null : member.bundle.manifest].filter(Boolean);
+  return differs.length ? `DIFFERS from the committed ${differs.join(" and ")}` : "byte-identical to the committed artifact and manifest";
+}
 
 /* Run the gate and read its OWN exit status. Output to a FILE (rule 3). */
 function runSuite() {
@@ -284,17 +314,15 @@ const ARMS = {
   },
 
   5: {
-    label: "(5) OVER-STRICTNESS — correct work must PASS: rebuild BOTH members from unchanged sources and the "
-      + "tree must be unchanged. ((b) and (c), the gate's doc-facing set and coverage's floor, retired with "
-      + "`tools/` and `scripts/coverage.mjs`, T20.)",
-    run: () => {
-      console.log("  (a) rebuilding both members from unchanged sources");
+    label: "(5) OVER-STRICTNESS — correct work must PASS: rebuild BOTH members from unchanged sources, IN MEMORY, and "
+      + "the rebuild must equal the committed artifact and manifest byte for byte. ((b) and (c), the gate's doc-facing "
+      + "set and coverage's floor, retired with `tools/` and `scripts/coverage.mjs`, T20.)",
+    run: async () => {
+      console.log("  (a) rebuilding both members from unchanged sources, writing nothing");
       for (const dir of ["agent-worker", "pdf-worker"]) {
-        const b = spawnSync("npm", ["run", "build"], { cwd: join(REPO, dir), encoding: "utf8" });
-        console.log(`      ${dir}: build exit ${b.status}`);
+        const m = discoverMembers(REPO).find((x) => x.dir === dir);
+        console.log(`      ${dir}: ${await rebuildMatches(m)}`);
       }
-      const dirty = spawnSync("git", ["status", "--porcelain"], { cwd: REPO, encoding: "utf8" }).stdout.trim();
-      console.log(`      tree after a legitimate rebuild: ${dirty === "" ? "UNCHANGED" : "DIRTY:\n" + dirty}`);
       const r = report("5a", runSuite(), {
         mustFail: "nothing",
         mustNot: "any assertion — a legitimately rebuilt, byte-identical bundle must still pass",
@@ -363,15 +391,13 @@ ARMS["7"] = {
 };
 
 ARMS["8"] = {
-  label: "(8) OVER-STRICTNESS, PLANE HALF — a legitimate `npm run build` of the UNCHANGED plane must leave "
-    + "the tree byte-identical and the suite green. RUN AFTER THE COMMIT, like arm 5: the tree-unchanged "
-    + "half is only a statement about a clean tree.",
-  run: () => {
-    console.log("  (a) rebuilding the plane from unchanged sources");
-    const b = spawnSync("npm", ["run", "build"], { cwd: PLANE, encoding: "utf8" });
-    console.log(`      bio-plane: build exit ${b.status}`);
-    const dirty = spawnSync("git", ["status", "--porcelain"], { cwd: REPO, encoding: "utf8" }).stdout.trim();
-    console.log(`      tree after a legitimate rebuild: ${dirty === "" ? "UNCHANGED" : "DIRTY:\n" + dirty}`);
+  label: "(8) OVER-STRICTNESS, PLANE HALF — a legitimate rebuild of the UNCHANGED plane, in memory, must equal "
+    + "the committed artifact and manifest byte for byte, and the suite stay green. RUN AFTER THE COMMIT, like "
+    + "arm 5: the byte-equal half is only a statement about a clean tree. (The render of `src/signpage.mjs`, "
+    + "`npm run build`'s pre-step, is arm 7's and the suite's, compared in memory.)",
+  run: async () => {
+    console.log("  (a) rebuilding the plane from unchanged sources, writing nothing");
+    console.log(`      bio-plane: ${await rebuildMatches(planeMember(REPO))}`);
     return report("8", runSuite(), {
       mustFail: "nothing",
       mustNot: "any assertion — a legitimately rebuilt, byte-identical plane bundle must still pass",
@@ -525,7 +551,7 @@ for (const n of names) {
   const arm = ARMS[n];
   if (!arm) { console.error(`no such arm: ${n}`); process.exit(2); }
   console.log(`\n================ ARM ${n} ================\n  ${arm.label}`);
-  arm.run();
+  await arm.run();
 }
 rmSync(PEN, { recursive: true, force: true });
 console.log("\nall requested arms done; the pen is removed and every restore was verified above.");
