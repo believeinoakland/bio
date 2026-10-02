@@ -1,4 +1,4 @@
-/* monitoring — its checks (requirements: `build/requirements/monitoring.md`, R27, R42; K6, K49).
+/* monitoring — its checks (requirements: `build/requirements/monitoring.md`, R27, R42, R66; K6, K49).
  *
  * Moved from `legacy-checks` (the legacy check catalogue) in T8 with their comments: C-18.5, `checkGatheringGrammar` and
  * its four vocabularies. The grammar it reads (`isPublicHttpsLocator`, `ISO_TS_RE`) is `record-grammar`'s (T19). `legacy-checks` (since deleted) could not import this module, so its `checkBundle` stopped running C-18.5: this
@@ -9,14 +9,18 @@
  * comments, code, number, translation and reasons unchanged, their `where` naming this module's site; they are no longer
  * read in place, and the catalogue's copy is T19's layer 1's to delete (K529). The rest of C-48 is `acquisition`'s (its
  * R29). New with them (N242's share, DEC-49): C-18.10, the row of C-18.5's refusal at the write, `GATHERING_REFUSED`,
- * which until now reached the wire with no translation (queue's C-19.2 `INBOX_REFUSED` is its twin). All three rows are
- * `awaiting stamp` (T19's promotion job). T22 (R52, K1019): C-18.11–C-18.15, the refusals of an address's frequency
- * setting (`FREQUENCY_CHECKS`), `awaiting stamp` (T23's promotion job). */
+ * which until now reached the wire with no translation (queue's C-19.2 `INBOX_REFUSED` is its twin). All three rows
+ * were taken by the stamp 1.49.0 (T19's promotion job). T22 (R52, K1019): C-18.11–C-18.15, the refusals of an address's
+ * frequency setting (`FREQUENCY_CHECKS`), taken by 1.53.0 (T23's promotion job).
+ *
+ * T24 (N506, K1159): the link sweep's arms of C-18.5 (`sweepErrors`, its fields, cadences and bounds, the term matcher)
+ * left with the sweep for `link-sweep`, a later module, which hands them back at composition through R66's registration
+ * (`checkGatheringGrammar`'s `sweepArm`); with nothing registered, C-18.5 reads no `sweeps[]` entry. C-18.17 and C-18.18
+ * (the fence's refusals) left with the fence. C-18.16 `SWEEP_TERM_REFUSED` stays: R66 keeps that refusal one of this
+ * module's `gatheringCheck`, which mints it. */
 
 import { isPublicHttpsLocator } from "../record-grammar/locator.mjs";
 import { ISO_TS_RE } from "../record-grammar/ids.mjs";
-import { listFormats } from "../formats.mjs";
-import { compileTerm, inScope } from "./sweep-match.mjs";
 
 /* The catalogue's finding shape (legacy-checks' private `f`), for the check that moved here. */
 function f(check, severity, message, extra) {
@@ -27,7 +31,7 @@ function asText(v) {
   return new TextDecoder().decode(v);
 }
 
-const at = (fn, region, file = "index") => `src/monitoring/${file}.mjs ${fn} > ${region}`;
+const at = (fn, region) => `src/monitoring/index.mjs ${fn} > ${region}`;
 
 /* D-472 — THE SHELL, ON A TICK, AND WHY IT IS ITS OWN CODE RATHER THAN C-48.5
    FIRING FROM A SECOND PLACE. A capture that meets the shell has captured
@@ -80,8 +84,8 @@ export const GATHERING_CHECKS = Object.freeze({
 });
 
 /* C-18.11–C-18.15 — the refusals of R52's act, `addressFrequencySet` (monitoring R17 as Bob agreed it, K1019), each
-   with nothing written, asked in this order. The translations are the sentences a member reads. All five are
-   `awaiting stamp` (T23's promotion job; accepted red 3). */
+   with nothing written, asked in this order. The translations are the sentences a member reads. All five were taken by
+   the stamp 1.53.0 (T23's promotion job). */
 export const FREQUENCY_CHECKS = Object.freeze({
   MACHINE_CANNOT_SET_FREQUENCY: Object.freeze({
     check: 'C-18.11',
@@ -115,9 +119,10 @@ export const FREQUENCY_CHECKS = Object.freeze({
   }),
 });
 
-/* C-18.16–C-18.18 — the link sweep's refusals at the write (R54, R55; K1036 (7)), each with nothing written. All three
-   are `awaiting stamp` (T24's L2; accepted red 7). */
-export const SWEEP_CHECKS = Object.freeze({
+/* C-18.16 — a sweep term refused at the write (link-sweep R2 through R66; K1036 (7)), with nothing written: the one
+   refusal R27 answers before `GATHERING_REFUSED` when a registered sweep grammar marks a finding with this code. Taken by
+   the stamp 1.54.0 (T24's L2). C-18.17 and C-18.18, the fence's refusals, left with the fence for `link-sweep` (N506). */
+export const SWEEP_TERM_CHECKS = Object.freeze({
   SWEEP_TERM_REFUSED: Object.freeze({
     check: 'C-18.16',
     where: at('gatheringCheck', 'is-sweep-term'),
@@ -125,23 +130,10 @@ export const SWEEP_CHECKS = Object.freeze({
       + 'be plain words or a simple pattern between slashes, without references back to an earlier part, look-aheads '
       + 'or look-behinds. The findings beside this name the term and what in it was refused. Nothing was changed.',
   }),
-  SWEEP_NOT_A_MEMBER: Object.freeze({
-    check: 'C-18.17',
-    where: at('sweepFence', 'is-sweep-member', 'sweep'),
-    translation: 'This was not saved: a sweep is added, removed or changed only by a named member. An assistant or a '
-      + 'machine may stop a sweep by unratifying it, and nothing more. Nothing was changed.',
-  }),
-  SWEEP_RATIFY_NOT_AN_OWNER: Object.freeze({
-    check: 'C-18.18',
-    where: at('sweepFence', 'is-sweep-owner', 'sweep'),
-    translation: 'This was not saved: a sweep is ratified, and a ratified sweep is changed, only by an owner of the '
-      + 'project its list belongs to. Ask an owner of that project; anyone may still stop the sweep by unratifying it. '
-      + 'Nothing was changed.',
-  }),
 });
 
 /** R42: every row this module holds, keyed by code, for a reader that looks one up by the code an answer carries. */
-export const MONITORING_CHECKS = Object.freeze({ ...DRIVE_TICK_CHECKS, ...GATHERING_CHECKS, ...FREQUENCY_CHECKS, ...SWEEP_CHECKS });
+export const MONITORING_CHECKS = Object.freeze({ ...DRIVE_TICK_CHECKS, ...GATHERING_CHECKS, ...FREQUENCY_CHECKS, ...SWEEP_TERM_CHECKS });
 
 /** A refusal answer naming one of this module's rows (DEC-49): its code, row and member's sentence, and the detail. */
 export function frequencyRefusal(code, detail, extra) {
@@ -163,8 +155,10 @@ export const GATH_STATUS_ENUM = ['open', 'captured', 'retired'];
    entry that cannot steer a session can still waste a member's attention, and a
    request refused at the WRITE never lands at all. Exporting the existing
    function is how the plane refuses at write without reimplementing the grammar,
-   which would be a second grammar pretending to be the same one. */
-export function checkGatheringGrammar(ctx, findings) {
+   which would be a second grammar pretending to be the same one.
+   R66: `sweepArm`, when given, is the share a later module registered (`{module, grammar}`), which reads each
+   `sweeps[]` entry that is an object. */
+export function checkGatheringGrammar(ctx, findings, sweepArm = null) {
   const raw = ctx.files.get('data/gathering.json');
   if (!raw) return;
   let g;
@@ -212,88 +206,29 @@ export function checkGatheringGrammar(ctx, findings) {
     if (!GATH_STATUS_ENUM.includes(r.status)) findings.push(f('C-18.5', 'error', `gathering.json requests[${i}].status must be one of: ${GATH_STATUS_ENUM.join(', ')}`));
     if (r.planted !== undefined && !ISO_TS_RE.test(r.planted)) findings.push(f('C-18.5', 'error', `gathering.json requests[${i}].planted must be an ISO 8601 UTC instant`));
   }
+  /* R66 (N506): the sweep arms are the ones a later module registers; with none registered no `sweeps[]` entry is read.
+     A non-object entry is this module's finding; an object entry is the registered grammar's, one finding per field,
+     each `{field, message, code?}` placed here at its index. A grammar that throws, or answers no list, fails closed: the
+     entry draws a C-18.5 error saying so, so the file is refused, never admitted. */
+  if (!sweepArm || typeof sweepArm.grammar !== 'function') return;
   const sweeps = Array.isArray(g.sweeps) ? g.sweeps : [];
   const ids = new Set();
   for (let i = 0; i < sweeps.length; i++) {
     const s = sweeps[i];
     if (typeof s !== 'object' || s === null || Array.isArray(s)) { findings.push(f('C-18.5', 'error', `gathering.json sweeps[${i}] is not an object`)); continue; }
-    for (const err of sweepErrors(s, ids)) findings.push(f('C-18.5', 'error', `gathering.json sweeps[${i}]${err.field ? `.${err.field}` : ''} ${err.message}`,
-      err.code ? { code: err.code } : undefined));
-  }
-}
-
-/** R53: a sweep's fields, as C-18.5 reads them. */
-export const SWEEP_FIELDS = Object.freeze(['id', 'title', 'ratified', 'sources', 'seeds', 'match', 'cadence', 'budget']);
-export const SWEEP_ID_RE = /^[a-z0-9][a-z0-9-]{0,39}$/;
-export const SWEEP_CADENCES = Object.freeze(['daily', 'weekly', 'monthly']);
-/** R53's bounds: sources, seeds, terms, paths and formats, each [least, most]; per_run and backlog. */
-export const SWEEP_BOUNDS = Object.freeze({ sources: [1, 20], seeds: [1, 10], terms: [0, 20], paths: [0, 20], formats: [0, 10],
-                                            per_run: [1, 100], backlog: [1, 1000], title: 200 });
-
-/* R53, R54: each way one sweep breaks its grammar, one finding per field (`ids` collects the file's ids, for uniqueness).
-   A term refused by R54's matcher carries `SWEEP_TERM_REFUSED`, naming the term and the construct. */
-function sweepErrors(s, ids) {
-  const out = [];
-  const bad = (field, message, code) => out.push({ field, message, ...(code ? { code } : {}) });
-  for (const k of Object.keys(s)) if (!SWEEP_FIELDS.includes(k)) bad(null, `carries '${String(k).slice(0, 40)}', which is not a sweep's field (${SWEEP_FIELDS.join(', ')})`);
-  for (const k of SWEEP_FIELDS) if (!(k in s)) bad(k, 'is missing');
-  if ('id' in s) {
-    if (typeof s.id !== 'string' || !SWEEP_ID_RE.test(s.id)) bad('id', 'must be 1 to 40 lowercase letters, digits or hyphens, starting with a letter or digit');
-    else if (ids.has(s.id)) bad('id', `'${s.id}' is not unique within the file`);
-    else ids.add(s.id);
-  }
-  if ('title' in s && (typeof s.title !== 'string' || !s.title.trim() || s.title.length > SWEEP_BOUNDS.title || /[\r\n]/.test(s.title)))
-    bad('title', `must be a nonempty single line of at most ${SWEEP_BOUNDS.title} characters`);
-  if ('ratified' in s && typeof s.ratified !== 'boolean') bad('ratified', 'must be boolean');
-  const list = (v, [lo, hi]) => Array.isArray(v) && v.length >= lo && v.length <= hi;
-  let sources = null;
-  if ('sources' in s) {
-    if (!list(s.sources, SWEEP_BOUNDS.sources)) bad('sources', `must be an array of ${SWEEP_BOUNDS.sources.join(' to ')} prefixes`);
-    else {
-      const wrong = s.sources.findIndex((p) => !isPublicHttpsLocator(p) || /[?#]/.test(p));
-      if (wrong >= 0) bad('sources', `[${wrong}] is not a public https prefix without a query or fragment`);
-      else sources = s.sources;
+    let errs;
+    try { errs = sweepArm.grammar(s, ids); } catch (e) { errs = e instanceof Error ? e : new Error(String(e)); }
+    if (!Array.isArray(errs)) {
+      const why = errs instanceof Error ? `failed (${String(errs.message).slice(0, 120)})` : 'answered no list of findings';
+      findings.push(f('C-18.5', 'error', `gathering.json sweeps[${i}] could not be checked: the sweep grammar ${String(sweepArm.module)} `
+        + `registered ${why}, so the entry is refused, never admitted`));
+      continue;
+    }
+    for (const err of errs) {
+      const e = err && typeof err === 'object' ? err : { message: String(err) };
+      const field = typeof e.field === 'string' && e.field ? `.${e.field}` : '';
+      findings.push(f('C-18.5', 'error', `gathering.json sweeps[${i}]${field} ${String(e.message ?? 'is refused')}`,
+        typeof e.code === 'string' && e.code ? { code: e.code } : undefined));
     }
   }
-  const scoped = (field, v) => {
-    const wrong = v.findIndex((u) => !isPublicHttpsLocator(u) || (sources && !inScope(u, sources)));
-    if (wrong >= 0) bad(field, `[${wrong}] is not a public https locator within the sweep's sources`);
-  };
-  if ('seeds' in s) {
-    if (!list(s.seeds, SWEEP_BOUNDS.seeds)) bad('seeds', `must be an array of ${SWEEP_BOUNDS.seeds.join(' to ')} locators`);
-    else scoped('seeds', s.seeds);
-  }
-  if ('match' in s) {
-    const m = s.match;
-    if (typeof m !== 'object' || m === null || Array.isArray(m)) bad('match', 'must be an object');
-    else {
-      for (const k of Object.keys(m)) if (!['terms', 'paths', 'formats'].includes(k)) bad('match', `carries '${String(k).slice(0, 40)}', which is not terms, paths or formats`);
-      if (m.terms !== undefined) {
-        if (!list(m.terms, SWEEP_BOUNDS.terms)) bad('match.terms', `must be an array of at most ${SWEEP_BOUNDS.terms[1]} terms`);
-        else m.terms.forEach((t, j) => {
-          const c = compileTerm(t);
-          if (!c.ok) bad(`match.terms[${j}]`, `SWEEP_TERM_REFUSED: the term ${JSON.stringify(String(t).slice(0, 80))} is refused for ${c.construct} (${c.detail})`,
-            'SWEEP_TERM_REFUSED');
-        });
-      }
-      if (m.paths !== undefined) {
-        if (!list(m.paths, SWEEP_BOUNDS.paths)) bad('match.paths', `must be an array of at most ${SWEEP_BOUNDS.paths[1]} prefixes`);
-        else scoped('match.paths', m.paths);
-      }
-      if (m.formats !== undefined) {
-        const known = listFormats();
-        if (!list(m.formats, SWEEP_BOUNDS.formats)) bad('match.formats', `must be an array of at most ${SWEEP_BOUNDS.formats[1]} format names`);
-        else { const wrong = m.formats.findIndex((x) => !known.includes(x)); if (wrong >= 0) bad('match.formats', `[${wrong}] is not a format this instance reads (${known.join(', ')})`); }
-      }
-    }
-  }
-  if ('cadence' in s && !SWEEP_CADENCES.includes(s.cadence)) bad('cadence', `must be one of: ${SWEEP_CADENCES.join(', ')}`);
-  if ('budget' in s) {
-    const b = s.budget;
-    const n = (v, [lo, hi]) => Number.isInteger(v) && v >= lo && v <= hi;
-    if (typeof b !== 'object' || b === null || Array.isArray(b) || Object.keys(b).some((k) => k !== 'per_run' && k !== 'backlog')
-        || !n(b.per_run, SWEEP_BOUNDS.per_run) || !n(b.backlog, SWEEP_BOUNDS.backlog))
-      bad('budget', `must be {per_run, backlog}: per_run an integer ${SWEEP_BOUNDS.per_run.join(' to ')}, backlog an integer ${SWEEP_BOUNDS.backlog.join(' to ')}`);
-  }
-  return out;
 }

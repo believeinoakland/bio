@@ -2,18 +2,17 @@
    (registered with record-core); every arm with its negative control. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, sha, infoMd, sweepDef } from "./fixture.mjs";
+import { world, sha, infoMd } from "./fixture.mjs";
 import { checkGatheringGrammar, GATHERING_CHECKS } from "../../../src/monitoring/index.mjs";
 
 const REQ = { id: "GATH-2026-0001-minutes", target: { text: "the council minutes", description: "every meeting's minutes" },
               locators: ["https://records.example.org/minutes"], authority: "Town Clerk", criticality: "crucial",
               cadence: "weekly", status: "open", planted: "2026-09-01T00:00:00Z" };
-const OK = { daemon: { enabled: true, tick_budget: 5, sweep_budget: 0 }, requests: [REQ],
-             sweeps: [sweepDef({ ratified: false })] };
+const OK = { daemon: { enabled: true, tick_budget: 5, sweep_budget: 0 }, requests: [REQ] };
 const findingsOf = (g) => { const f = []; checkGatheringGrammar({ files: new Map([["data/gathering.json", typeof g === "string" ? g : JSON.stringify(g)]]) }, f); return f; };
 const gj = (g) => { const t = typeof g === "string" ? g : JSON.stringify(g); return { path: "data/gathering.json", text: t, bytes: Buffer.byteLength(t), sha256: sha(t) }; };
 
-test("R42 C-18.5: every arm of checkGatheringGrammar finds its violation, and a well-formed queue finds none (the sweep arms: sweep-grammar.test.mjs, R53)", () => {
+test("R42 C-18.5: every arm of checkGatheringGrammar finds its violation, and a well-formed queue finds none (the sweep arm, R66's registered one: seam.test.mjs)", () => {
   assert.deepEqual(findingsOf(OK), []);
   assert.deepEqual(findingsOf("{not json"), [], "unparsable JSON is C-14.3's to report");
   assert.deepEqual((() => { const f = []; checkGatheringGrammar({ files: new Map() }, f); return f; })(), [], "no file, not asked");
@@ -37,7 +36,6 @@ test("R42 C-18.5: every arm of checkGatheringGrammar finds its violation, and a 
     [{ requests: [{ ...REQ, cadence: "fortnightly" }] }, /cadence must be one of: hourly, daily, weekly, monthly, none/],
     [{ requests: [{ ...REQ, status: "done" }] }, /status must be one of: open, captured, retired/],
     [{ requests: [{ ...REQ, planted: "yesterday" }] }, /planted must be an ISO 8601 UTC instant/],
-    [{ sweeps: [7] }, /sweeps\[0\] is not an object/],
   ];
   for (const [g, re] of arms) {
     const f = findingsOf(g);
