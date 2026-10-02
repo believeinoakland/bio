@@ -50,7 +50,7 @@
  *
  * Condition (1) is a claim by a producer about its own output; condition (2) is
  * a fact about the text in hand. That is deliberately the SAME two-condition
- * shape `mergeTier3Text` already uses one tier up (D-252, `index.mjs`), and the
+ * shape `mergeTier3Text` already uses one tier up (D-252, `src/extraction/pipeline.mjs`), and the
  * same one-directional discipline `OCR_PRODUCER_MARKERS` uses (D-251): a
  * detector whose miss is the status quo ante. Character count never promotes a
  * page; it only ever refuses to demote one. Measured: 0 pages degraded, the
@@ -80,7 +80,7 @@ const argv = new Set(process.argv.slice(2));
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 
 /* THE FIXTURE FLOOR. A totality assertion over an empty corpus passes for free —
-   three times in this repository (CLAUDE.md). This probe prints its corpus and
+   three times in this repository (the old process's rules, now archived). This probe prints its corpus and
    refuses to report anything over less than the fixture it was written for. */
 const FIXTURE_FLOOR = 4;
 
@@ -278,7 +278,7 @@ for (const m of measured) {
 const fig = report(measured, `── THE COMMITTED FIXTURE ──`);
 
 /* THE BASELINE ROW. A harness whose every arm reads the same thing cannot tell
-   six-arms-broken from six-arms-working (CLAUDE.md). This is the row that
+   six-arms-broken from six-arms-working (the old process's rules, now archived). This is the row that
    distinguishes them: the rule run against a decode that IS Tier 1 must award
    nothing, whatever the rest of the report says. */
 {
