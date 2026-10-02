@@ -29,3 +29,7 @@
 - ownership: 4 files changed by op-declarations between tranche/T27 and HEAD; 0 failures
 
 Size (session_01FsRcQFZFMkEu8cvL4g6tgh): test runs 6, module lines 2553
+
+## J1 · QUESTION
+
+R13 says docketdecline and docketpost are stamped `by`, and that each docket member op is `viewer` (or `author`, `by`) stamped. My reading, built: `viewer` is stamped on all seven member ops, docketpost and docketdecline included (docket's own map passes viewer to each; fail closed), with `by` on docketprepare/docketpost/docketdecline and `author` on docketfile/docketpressure. If you mean `by` only for those two, say so and I move them to a list of their own. Not blocking: I have completed on this reading.
