@@ -25,6 +25,7 @@ T26's rules hold (merge early; one file, one editor; marks struck at the merge; 
 2. `bio-plane/test/system/row-census.test.mjs`: the catalogue rows T27's jobs add (C-117.23–.25, C-69.5, and `docket`'s, `public-read`'s and `signatures`' new rows) read `awaiting stamp` until T28's promotion stamp (S4, `next.md`), promotion's L2 job having run before they exist (P8, P10), as T25's red 6.
 3. The UI's DEC-88 tests (N487, K1030): stay red, Bob's.
 4. `bio-plane/test/m/control-plane/` R22: `CHECK_FAMILIES` does not reach `docket`'s `DOCKET_CHECKS` (found by PUBLIC-READ #8 at L8), until control-plane's L11 merge (K1280).
+5. `bio-plane/test/m/affordances/backing.test.mjs` R19's `actionhold` case drives a release through `actionhold`, now refused `HOLD_RELEASE_IS_ITS_OWN_ACT` (actions R52 amended), red from actions' L9 merge until affordances' L11 merge re-points it (K1283).
 
 ## Roster (by layer; 17 jobs)
 
