@@ -28,8 +28,8 @@
     },
     {
       "path": "../bio-plane/src/run-rules/checks.mjs",
-      "bytes": 40059,
-      "sha256": "1c148c33e3758c36664a9ab81f0b8db1843b4b190658461c0f5b475d14e7a03e"
+      "bytes": 40054,
+      "sha256": "f6dff495e29481403b9bfce3f48834a570a89bd46e7037761636e32ec086fd1c"
     },
     {
       "path": "../bio-plane/src/run-rules/deployment.mjs",
@@ -43,8 +43,8 @@
     },
     {
       "path": "../bio-plane/src/run-rules/rules.mjs",
-      "bytes": 62736,
-      "sha256": "c4b201745f1f80673eb73ab061c770c8e546345ee8c50286f53b93aaa2c33eb4"
+      "bytes": 62748,
+      "sha256": "6971403580839b949e9b76baa5c5c3d6c15f007e980ff4476e737d6fa31977c0"
     },
     {
       "path": "../bio-plane/src/run-rules/skill-version.mjs",

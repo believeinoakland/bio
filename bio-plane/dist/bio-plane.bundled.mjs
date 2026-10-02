@@ -101017,7 +101017,7 @@ var CAPTURE_REQUEST_CHECKS = Object.freeze({
      `monitoring`'s, registered at start; with none registered nothing can say the sweep admits the request, so it is
      refused. Terminal: the request is not fetched under a sweep that does not admit it, and nothing is filed. Minted at
      one region (`sweepOutOfScope`), which the drain's conduct and its fire both answer through. New at T23,
-     `awaiting stamp` until T24's L2. */
+     taken by 1.54.0 (promotion's T24 job). */
   CAPTURE_SWEEP_OUT_OF_SCOPE: {
     check: "C-28.19",
     where: "src/capture-requests/index.mjs sweepOutOfScope > is-capture-sweep-scope",
