@@ -181,11 +181,11 @@ test("R15 (N182 (4)): when the new version cannot be written, adopt is refused, 
   try {
     w.basisVersions.appendVersion = () => ({ ok: false, reason: "VERSION_REFUSED_HERE", detail: "basis-versions said no" });
     const before = w.snapshot();
-    const r = w.r.adoptVersion({ notice: n.notice, author: "alice", viewer: ADMIN });
+    const r = w.r.adoptVersion({ notice: n.notice, why: "the newer text is the one in force", author: "alice", viewer: ADMIN });
     assert.deepEqual([r.ok, r.reason, r.notice], [false, "VERSION_REFUSED_HERE", n.notice], "basis-versions' refusal, as it came");
     assert.deepEqual(w.snapshot(), before);
     w.basisVersions.appendVersion = () => null;
-    const none = w.r.adoptVersion({ notice: n.notice, author: "alice", viewer: ADMIN });
+    const none = w.r.adoptVersion({ notice: n.notice, why: "the newer text is the one in force", author: "alice", viewer: ADMIN });
     assert.deepEqual([none.ok, none.code, none.check, none.translation, none.notice], [false, "VERSION_ADOPT_UNWRITABLE",
       "C-110.9", REEVALUATION_ACT_CHECKS.VERSION_ADOPT_UNWRITABLE.translation, n.notice]);
     assert.deepEqual(w.snapshot(), before);

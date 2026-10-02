@@ -1,7 +1,7 @@
 /* reevaluation over the modules it uses, each the real one (record-core, membership, promotion, provenance, content,
    entities, connections, inquiry, basis-versions, strength, contradiction, sources), on a real SQLite database (node:sqlite)
-   standing in for a Durable Object's storage. What a later module registers (legacy-store's facts `caseMember` and
-   `publishedRegistry`), the readings content reads through extraction (its R30 `readingOf`, R36 `unitsOf`), retrieval's
+   standing in for a Durable Object's storage. What a later module registers (publication's facts `caseMember` and
+   `publishedRegistry`, its R7), the readings content reads through extraction (its R30 `readingOf`, R36 `unitsOf`), retrieval's
    selections, ai-runs' run gate (contradiction R21) and capture's pulled knocks (`pulledKnocksOf`, its R72, the one read
    `sources` makes of it) are stand-ins the test controls. Every test drives
    `reevaluation` at its interface. */
@@ -53,7 +53,8 @@ export const LAYER = [{ step: "layer", tier: 1, container: "pdf", cap: null, mea
 export const U = (page, text, truncated = false) =>
   ({ extent: canonicalExtent({ kind: "pdf-page", page }), ref: `page ${page + 1}`, text, truncated });
 
-/* The columns inquiry writes on record-core's `bundles` (its R40), which the store's additive list creates today. */
+/* The columns inquiry writes on record-core's `bundles` (its R40), which the plane's store (`src/plane/store.mjs`) adds
+   today. */
 const BUNDLE_COLUMNS = ["inquiry_basis_count INTEGER", "inquiry_subject_entity TEXT", "inquiry_superseded_by TEXT"];
 
 /* The columns of extraction's four tables that inquiry, content, entities, connections and basis-versions join. */
@@ -96,9 +97,9 @@ export function world({ caseMembers = new Set(), group = "test-group", earnedOve
   membership.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => clock.now });
   const published = { value: {} };
-  promotion.registerFact("producingGroup", "legacy-store", () => group);
-  promotion.registerFact("caseMember", "legacy-store", (id) => caseMembers.has(id));
-  promotion.registerFact("publishedRegistry", "legacy-store", (id, targets) => {
+  promotion.registerFact("producingGroup", "instance-setup", () => group);
+  promotion.registerFact("caseMember", "publication", (id) => caseMembers.has(id));
+  promotion.registerFact("publishedRegistry", "publication", (id, targets) => {
     const out = {};
     for (const t of [id, ...(targets || [])]) if (t && published.value[t]) out[t] = published.value[t];
     return out;

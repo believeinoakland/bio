@@ -4,7 +4,7 @@
  * Moved here from the check catalogue with their ids and translations unchanged (K6, R23): C-10.1 (`reeval_pending`'s
  * shape, `checkReevalPending`, which ran inside the catalogue's core frontmatter check) and C-80.1, C-80.2 (the notice's
  * subject). C-80.3 is `content`'s (its `passageNotice`), in content's own `VERSION_NOTICE_CHECKS` since T18. The
- * member acts R15 and R16 add are this module's own family, C-110. */
+ * member acts R15 and R16 add are this module's own family, C-110 (C-110.29, R15's required why on an adoption, DEC-88). */
 
 import { ISO_TS_RE } from "../record-grammar/ids.mjs";
 
@@ -167,6 +167,15 @@ export const REEVALUATION_ACT_CHECKS = Object.freeze({
     where: at("adoptVersion", "is-version-adoptable"),
     translation: "The reference could not be moved: the question's document no longer holds the leg this notice was "
       + "about, or the newer version could not be written into it. Nothing was written, and the notice stays open.",
+  },
+  /* DEC-88 (K1025): adopting is the act that moves what a finding rests on, so it carries the member's own words on
+     why. C-110.10–.28 were intent's before K238 and are not reused. */
+  VERSION_ADOPT_NO_REASON: {
+    check: "C-110.29",
+    where: at("#choiceSubject", "is-version-choice"),
+    translation: "Moving a reference to a newer version of a document needs your reason: say, in your own words and "
+      + "in at most 2,000 characters, why the finding should rest on the newer version. Nothing was written, and "
+      + "the notice stays open.",
   },
 });
 
