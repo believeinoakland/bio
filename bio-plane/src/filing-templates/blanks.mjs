@@ -1,9 +1,9 @@
 /* filing-templates — the closed set of blanks every template and filing uses (requirements:
  * `build/requirements/filing-templates.md`, R19; K922 (1)).
  *
- * `FILING_BLANKS` and `FILING_TEXT_MAX` are copied unchanged from `filings` (`bio-plane/src/filings/index.mjs`:75, :97,
- * its R3 and R6), with their comments; `filings`' own job, after this one, deletes its copies and reads them here
- * (K624 (1)). `blanksOf` is new. */
+ * `FILING_BLANKS` and `FILING_TEXT_MAX` were copied unchanged from `filings` (`bio-plane/src/filings/index.mjs`:75, :97,
+ * its R3 and R6, at T21), with their comments; `filings`' T21 job deleted its copies and reads them here (K624 (1)).
+ * `blanksOf` is new. */
 
 /** R19 (was filings' R3): the blanks a filing fills, a closed set; a template's `{{name}}` outside it is left unfilled
  *  and says so. Each blank's name and the sentence saying what fills it. */
