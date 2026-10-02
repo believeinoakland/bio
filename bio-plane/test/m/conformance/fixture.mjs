@@ -181,7 +181,7 @@ export function world({ group = "test-group" } = {}) {
         if (!tables || tables.includes(name)) out[name] = JSON.stringify(st.sql.exec(`SELECT * FROM "${name}"`).toArray());
       return out;
     },
-    /** An op, as the store's op map runs it: `query` the control plane's search params, `body` its JSON. */
+    /** An op, as the plane's op map runs it: `query` the control plane's search params, `body` its JSON. */
     op(name, query = {}, body = null) {
       const url = new URL(`http://do/${name}`);
       for (const [key, v] of Object.entries(query)) if (v != null) url.searchParams.set(key, String(v));

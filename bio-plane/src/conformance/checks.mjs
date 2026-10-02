@@ -14,7 +14,7 @@
  * `CONFORMANCE_BAD_REASON` (C-113.17) (N233, K264); R23 (N433, K766): this module's own codes, each row's number and
  * translation unchanged, so neither shares a name with progressions' `NO_REASON` (C-100.18) or `BAD_REASON` (C-100.21)
  * (DEC-49). N345 adds C-113.24–C-113.27 (R12's contradiction link, R22's cause and recommendation) and C-113.28 (R21's
- * side, named by the member), each `awaiting stamp` for T16. */
+ * side, named by the member), stamped in `CATALOG_VERSION` 1.46.0 (T16). */
 
 const at = (fn, region) => `src/conformance/index.mjs ${fn} > ${region}`;
 

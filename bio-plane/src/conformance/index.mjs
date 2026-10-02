@@ -1194,8 +1194,9 @@ export function conformanceOwns(t) {
   return CONFORMANCE_TABLES.some((x) => x.name === name);
 }
 
-/** The module's ops (K3), as entries of the store's op map. `author`, `viewer` are the control plane's stamps, read from
- *  the query after the body, so a caller's own copy never wins. */
+/** The module's ops (K3), as entries of the plane's op map (`plane`'s store, `src/plane/store.mjs`, spreads them).
+ *  `author`, `viewer` are the control plane's stamps, read from the query after the body, so a caller's own copy never
+ *  wins. */
 export function conformanceOps(c, url, body) {
   const qp = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" ? body : {};
