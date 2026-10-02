@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #101 · session_012tU2hcJzJxi3Xab6BF5gej · depth 1
 
-**Jobs** · membership: MEMBERSHIP #19 session_01VygP3okwnSo5Wu6aPRkQw3; promotion: PROMOTION #26 session_0132mjJUXBPPWVGDGbsFCnND; provenance: PROVENANCE #14 session_015S38x6eWCQ3i11cv9DGEP2; attestation: ATTESTATION #1 session_01CCB76CKHZSXMLTrZc9xP3J; provenance-routes: PROVENANCE-ROUTES #1 session_01JmVkWBZc9hpTWverdFG37a; acquisition: ACQUISITION #7 session_01VQnDAX596bDF5ZMb1jr9kL; capture: CAPTURE #17 session_01DBaNZTnhW4WpM4Cc51PGKx
+**Jobs** · membership: MEMBERSHIP #19 session_01VygP3okwnSo5Wu6aPRkQw3; promotion: PROMOTION #26 session_0132mjJUXBPPWVGDGbsFCnND; provenance: PROVENANCE #14 session_015S38x6eWCQ3i11cv9DGEP2; attestation: ATTESTATION #1 session_01CCB76CKHZSXMLTrZc9xP3J; provenance-routes: PROVENANCE-ROUTES #1 session_01JmVkWBZc9hpTWverdFG37a; acquisition: ACQUISITION #7 session_01VQnDAX596bDF5ZMb1jr9kL; capture: CAPTURE #17 session_01DBaNZTnhW4WpM4Cc51PGKx; reading-pipeline: READING-PIPELINE #1 session_012Yr3gwtfrXrBoUUrtJgU8a; extraction: EXTRACTION #12 session_018Jaiitbn2X3Px2hE9n3hc8
 
 **Opened** 2026-10-02 ~17:00 UTC by BOB #101 from `main` @ dfb82f85cc (T24 closed, K1216), from `draft-T25.md` with BOB #100's review, `draft-T25-req/REVIEW.md`, and T24's `next.md` (K1218). **Bob's weekly meter** · asked at the opening; 61% at T23's close, unanswered at T24's.
 
@@ -37,6 +37,7 @@ T24's rules hold (merge early; one file, one editor; marks struck at the merge; 
 8. `CHECK_FAMILIES` (control-plane `families.mjs`) and affordances' `catalogue.test.mjs`:958 lack C-34's and C-89's new files, from the L3 merges until control-plane's and affordances' L11 merges.
 9. The plane's composition of attestation and provenance-routes (`attestOp`, the receipt signing key, `provenanceRouteOps` and the route arms leaving `provenanceOps`), from the L3 merges until plane's L11 merge.
 10. Extraction's tests and callers reaching the moved pipeline, from reading-pipeline's L4 merge until extraction's L4 merge.
+11. `test/m/attestation/invariants.test.mjs` R9 fails intermittently (its place probe matches `ca` inside a fresh base64 signature): a test flaw, not a behaviour; N517 in `next.md` (K1234). A job's proof run may re-run it once.
 
 ## Decisions at the opening (BOB's, P17; K1218)
 

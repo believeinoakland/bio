@@ -91,7 +91,7 @@ export async function acquireReadingOp(answer, store, { json = jsonAnswer, store
   const out = r.result;
   const body = withReading(answer, { reading: out.reading, textUnits: out.text_units || null,
                                      textUnitsOverBound: out.text_units_over_bound || 0 });
-  /* D-724 (R16): the units left out, named, beside the count. */
+  /* D-724 (reading-pipeline R15): the units left out, named, beside the count. */
   if (out.text_units_skipped) body.document.text_units_skipped = out.text_units_skipped;
   return { body };
 }

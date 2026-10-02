@@ -1,4 +1,4 @@
-/* N48 (K135, K138, REC-206; extraction R52, proposed): AN AGENDA ITEM'S MEMBERSHIP IN A FILE, DERIVED FROM CONTAINMENT.
+/* N48 (K135, K138, REC-206; extraction R52): AN AGENDA ITEM'S MEMBERSHIP IN A FILE, DERIVED FROM CONTAINMENT.
  *
  * BOB #32's ruling of 2026-09-23 23:30Z (`BIO_Content_Framework_v0_10.md` §16, "Positional text"): membership is
  * DERIVED from containment, labelled machine work and graded inferred, never presented as the publisher's link.

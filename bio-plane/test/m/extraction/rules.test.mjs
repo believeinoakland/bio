@@ -1,56 +1,15 @@
-/* extraction: the pure rules (R25, R26 in `readingprov.mjs`; R41–R43 in `extractrun.mjs`; R38 in `drift.mjs`) and the
-   drift reads (R39, R40) at the module's interface, with the invariants they carry (R44, R48, R50). Each test names the
-   requirement ids it checks in its title. */
+/* extraction: the pure rules (R41–R43 in `extractrun.mjs`; R38 in `drift.mjs`) and the drift reads (R39, R40) at the
+   module's interface, with the invariants they carry (R44, R48, R50). `readingprov.mjs`' rules are `reading-pipeline`'s
+   since N513 (its R18, R19), and their cases moved with them. Each test names the requirement ids it checks in its title. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import { fresh, bundle, calibration } from "./fixture.mjs";
-import { readingProvenance, compareProvenance, describePages, PROVENANCE_SCHEME } from "../../../src/readingprov.mjs";
 import { driftObligations } from "../../../src/extraction/drift.mjs";
 import { EXTRACT_RUN_MODE, EXTRACT_FUNCTIONS, checkExtractFunction, checkExtractVersion, proposedReadingGrade, checkProposedRef,
          proposalChain, mintRatio } from "../../../src/extractrun.mjs";
-import { mergedChain, layerChain } from "../../../src/textchain.mjs";
-import { flattenText } from "../../../../docprofile/registry.mjs";
+import { layerChain } from "../../../src/textchain.mjs";
 
-const hex = (s) => createHash("sha256").update(s).digest("hex");
 const cal = (id, cap, at = "2026-09-01") => ({ calibration_id: id, engine: "tess", version: "5", at, cap, probe_id: "p", probe_inputs: ["x"], scores: [1], measured_by: "m" });
-
-test("R25: readingProvenance digests docprofile's flattened text, credits pages by the chain first, the page's stamp, then the document's tier, names the member per tier, and lists empty pages undigested", async () => {
-  const chain = mergedChain([{ pages: [0], chain: layerChain({ tier: 1, container: "pdf", cap: null, measured_by: "u" }) },
-                             { pages: [1], chain: [{ step: "pixels", cap: "C", measured_by: "m", calibration: null },
-                                                   { step: "ocr", engine: "tess", version: "5", cap: "C", measured_by: "m", calibration: null }] }]);
-  const text = { document: "zero\none", pages: [{ page: 0, text: "zero" }, { page: 1, text: "one" }, { page: 2, text: "", tier: 2 }] };
-  const p = await readingProvenance({ text, chain, tier: 3, container: "pdf", planeVersion: "9" });
-  assert.equal(p.scheme, PROVENANCE_SCHEME);
-  assert.equal(p.text_sha256, hex(flattenText(text).text));
-  assert.deepEqual(p.pages.map((x) => [x.page, x.tier, x.member, x.text_sha256 ? "d" : null]),
-                   [[0, 1, "plane", "d"], [1, 3, "ocr-worker", "d"], [2, 2, "pdf-worker", null]]);
-  assert.ok(p.producers.some((x) => x.member === "ocr-worker" && x.engine === "tess 5"));
-  assert.ok(p.producers.some((x) => x.member === "plane" && x.version === "9"));
-  const none = await readingProvenance({ text: null });
-  assert.equal(none.text_sha256, null);
-  assert.ok(none.why);
-  const flat = await readingProvenance({ text: "a bare string", tier: null, member: "plane" });
-  assert.equal(flat.producers[0].member, "plane");
-  assert.match(flat.pages_why, /no per-page grain/);
-  const empty = await readingProvenance({ text: "" });
-  assert.equal(empty.text_sha256, null);
-});
-
-test("R26: compareProvenance answers agrees, differs with the pages grouped by tier and member and its sentence, undetermined when either side carries none, no_text when neither digested; describePages numbers from 1 and folds runs", async () => {
-  const mk = (pages) => readingProvenance({ text: { document: pages.map((p) => p.text).join("\n"), pages }, tier: 3, container: "pdf" });
-  const a = await mk([{ page: 0, text: "a", tier: 3 }, { page: 1, text: "b", tier: 3 }]);
-  const b = await mk([{ page: 0, text: "a", tier: 3 }, { page: 1, text: "B", tier: 3 }]);
-  assert.equal(compareProvenance(a, a).state, "agrees");
-  const d = compareProvenance(a, b);
-  assert.equal(d.state, "differs");
-  assert.deepEqual(d.changed[0].pages, [1]);
-  assert.equal(d.says, "tier 3 on ocr-worker returned different text for page 2");
-  assert.equal(compareProvenance(null, b).state, "undetermined");
-  assert.equal(compareProvenance(await readingProvenance({ text: null }), await readingProvenance({ text: null })).state, "no_text");
-  assert.equal(describePages([0, 1, 2, 4]), "pages 1-3, 5");
-  assert.equal(describePages([3]), "page 4");
-});
 
 test("R38 R44: driftObligations names exactly the transcriptions bound to a calibration a worse one superseded, with both caps, the reeval flag and regraded false, sorted; nothing bound to a better, unsuperseded or absent calibration", () => {
   const worse = { superseded: cal("CAL-1", "B"), current: cal("CAL-2", "C", "2026-09-20"), verdict: "worse" };
