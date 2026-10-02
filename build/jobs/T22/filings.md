@@ -48,3 +48,7 @@ Progress, so you can plan the merge: (2) DEC-88 R8 is built and pushed (all 59 t
   - `ownership.mjs bio filings tranche/T22`: 15 files, 0 failures.
 
 Size (session_01MTKkxfBJ85qtJEdiP4hgLa): test runs 16, module lines 2017
+
+## J2 · COMPLETE
+
+Filings is done for T22 on `job/T22/filings` (completion record in my record above): **R8** (DEC-88: `PACKET_NO_REASON`, C-115.44, **awaiting stamp**; the reason is recorded with the version and read back) and **R30** (N474: `action-clocks.factReader` imported, its copy deleted; R30's tests are unchanged and green, and the negative control fails as it should), with the fixture's standards sending their reason. `test/m/filings/` 59/59; the four checks report 0 failures. The whole `test/m` holds no red but those accepted by name: conformance's fixture and its callers (escalation `real`, affordances `backing`), action-plans (B2), and the reds carried from earlier layers. The plane's bundle is stale (J1). Ready to merge.
