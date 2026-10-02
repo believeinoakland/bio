@@ -27,3 +27,7 @@
 - `node checks/ownership.mjs . case-authoring tranche/T25`: 4 files changed; 0 failures.
 
 Size (session_01TvrujhMcaGJbTFhyyPqdMd): test runs 13, module lines 3421
+
+## J1 · COMPLETE
+
+COMPLETE on job/T25/case-authoring. R35's attestationsOf now comes from the attestation instance the composition hands in (attestation R7), never provenance; the fixture builds the real attestation; a new R35 test proves the source with a negative control. Red 7 cleared for case-authoring: test/m/case-authoring 100/100 against the real attestation module. Re-scan (N502/N508 kind): nothing stale. Rows added or changed: none. Proof run test/m: 5331 tests, 62 fail, all named reds (network-notices 54 + scheduler 1, filings 3: red 7; control-plane 2: red 8) except two that fail identically on unchanged tranche/T25: affordances sources.test.mjs R2 reattest (stand-in provenance's attest, capture now attests through attestation; red 7's kind, L11) and promotion write-path.test.mjs R53 (/list answers undefined). REPORT: bio-plane/dist/bio-plane.bundled.mjs is stale from this change (fleetbundles' four bio-plane arms); regenerated nothing. Checks: format, architecture, coverage (42/42), ownership: 0 failures. Details in the record.
