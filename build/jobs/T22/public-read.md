@@ -49,3 +49,7 @@ Mutation check: each of three seeded faults turned the new tests red (answering 
 **Another module / generated artifact.** My changes stale the plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`: `public-read/index.mjs`, `inband.mjs`, `publication/worker.mjs`). I regenerated nothing. Nothing else found in another module.
 
 Size (session_0196XwqKVE1wqYGGKbEVYBw6): test runs 22, module lines 2242
+
+## J3 · COMPLETE
+
+B3 processed: tranche/T22 @ 987f173e25 merged at 758ad780ef, no conflict, no code change needed. Re-run: test/m/public-read 77/0; users ratification 181/0, filings 58/0, plane 33/0, control-plane 100/2 (the accepted doorbell.test.mjs:310 and catalogue-end.test.mjs:15); publication 96/0. Whole bio-plane/test/m 4872 pass, 12 fail, the same 12 locations as J2 (all accepted by name), none new. Checks: format 0 failures, architecture 0, coverage 17 of 17 0, ownership 5 files 0. Everything else as J2 (R3 met; plane bundle stale, not regenerated). Size (session_0196XwqKVE1wqYGGKbEVYBw6): test runs 29, module lines 2242
