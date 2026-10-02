@@ -13,3 +13,7 @@ N497 (K1087), test-only: if your test fixtures register promotion's facts under 
 ## B3 · CHANGE
 
 K1088 (tranche/T22 @ fcd4a42998): your `uses` gains `provenance`, so your fixture may import provenance for the migrate (K1086). Merge tranche/T22 in.
+
+## B4 · CHANGE
+
+actions, action-clocks, standards and escalation are merged into tranche/T22 @ dde04dba31 (K1089). Merge tranche/T22 into your branch, finish what waited on them (conformance: standards' reason; filings: N474 with action-clocks' `factReader` and standards' reason; action-plans: your fixture's provenance migrate against actions' merged R55), re-run, and post COMPLETE.
