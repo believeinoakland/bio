@@ -25,3 +25,7 @@
 - `checks/format.mjs`: 1 failure, `modules.json` promotion `tests` names the deleted 1.51.0 fixture (BOB drops it). `checks/architecture.mjs`: 0 failures. `checks/coverage.mjs`: 56 of 56, 0 failures. `checks/ownership.mjs … tranche/T22`: 1 failure, the new 1.52.0 fixture outside `tests` (BOB adds it).
 
 Size (session_01HWFND67AwBJQuXM4beadEA): test runs 14, module lines 3164
+
+## J1 · REPORT
+
+Found in other modules (record, 'Found in other modules'): (1) my change stales the plane bundle bio-plane/dist/bio-plane.bundled.mjs (gate.mjs and promotion/ are inputs); regenerated nothing. (2) build/requirements/promotion.md R50 still says legacy-tests' census suite holds the pin; the suite is promotion's since K1006 (wording yours). (3) bio-plane/src/ratification/ops.mjs:309 names Store#gateFacts (now ratification's gateFacts), an N480 kind, seen not changed.
