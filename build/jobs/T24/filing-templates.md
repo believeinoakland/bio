@@ -26,3 +26,7 @@
 - `checks/ownership.mjs … filing-templates tranche/T24`: 4 files changed; 0 failures.
 
 Size (session_018PerAe8XJSY1fNj1PqaQho): test runs 6, module lines 1719
+
+## J1 · COMPLETE
+
+N502 applied, wording only: checks.mjs:9 now names 1.52.0 (PROMOTION #23, T22 L2; K991) as the stamp that took every row; the re-scan re-worded schema.mjs:10 and index.mjs:29, which called filings' filing_templates its live R26 library (retired; written by nothing since T21, K986). No row added or changed (red 5: none). Module 47/47; bio-plane/test/m 5231 pass, 2 fail = accepted reds 8 and 9; architecture, coverage (25/25), ownership 0 failures; format 2 = red 4. REPORT inside: the plane's bundle dist/bio-plane.bundled.mjs is stale in these three files (comments only); regenerated nothing. Also R20's requirements text still says 'not yet met: T22' though the code and tests meet it (N476). Details in my record's Completion.
