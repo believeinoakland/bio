@@ -78,7 +78,7 @@ Terms. A **capture**, its **home** and the **register** are `provenance`'s (its 
 ### Uses
 
 - `record-grammar`: `isMachineIdentity` (R3, R4).
-- `record-core`: `readImage` and `bundleInfo` (R2, R4); `transact`; the `bundles` read contract (its R37; R5's census); `getSetting` (the instance name, R1's hop by this instance); `declarePurge` (`provenance_route_marks`); `registerAuditFinding` (its R68) for R6; `registerCounts` (its R63) for R10.
+- `record-core`: `readImage` and `bundleInfo` (R2, R4); `transact`; the `bundles` read contract (its R37; R5's census); `declarePurge` (`provenance_route_marks`); `registerAuditFinding` (its R68) for R6; `registerCounts` (its R63) for R10. The instance name for R1's hop by this instance is handed in by the composition root (`deps.instanceName`), as `provenance` took it (K1227).
 - `membership`: `viewerPredicate` and `sight` (R2, R4, R5).
 - `promotion`: `promote` (R2).
 - `provenance`: the doorbell's origin kind as it exports it (`DOORBELL_ORIGIN`, its R51; R1); the C-103 row `NO_BUNDLE` (C-103.3) through `PROVENANCE_ACT_CHECKS` (its R58, the seam), for R2.
