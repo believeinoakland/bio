@@ -1,6 +1,6 @@
 # Plan T24
 
-**Status** · OPENING · BOB #98 · session_014dcsnHp9L1mo6H4mzBvdrR · depth 1
+**Status** · OPEN · BOB #98 · session_014dcsnHp9L1mo6H4mzBvdrR · depth 1
 
 **Jobs** · record-grammar: RECORD-GRAMMAR #6 session_01MJZEvGTGHSBLGCua1Zuqbw
 
