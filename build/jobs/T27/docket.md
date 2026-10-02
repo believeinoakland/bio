@@ -1,6 +1,6 @@
 # docket (T27)
 
-**Status** · session_01PJ5cMH43RbHxx4SXkb3E7X · depth 2 · WORKING · handled B2
+**Status** · session_01PJ5cMH43RbHxx4SXkb3E7X · depth 2 · COMPLETE · handled B2
 
 ## Completion
 
