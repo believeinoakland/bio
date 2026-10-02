@@ -26,8 +26,9 @@
  *   jurisdictions   `get` (default the module itself): R1's profiles and tiers, R15's templates.
  *   now             the instance clock, milliseconds (default `env.BIO_NOW_MS`, else the wall clock).
  *
- * READ CONTRACTS: record-core's `bundles`, through membership's sight; `filings`' `filing_templates` (its R26 table),
- * read once by the migration only, never written. No place, law, venue or wording is named here (R18). */
+ * READ CONTRACTS: record-core's `bundles`, through membership's sight; `filings`' `filing_templates` (its retired R26
+ * library's table, written by nothing since T21; K986), read by the migration only, never written. No place, law,
+ * venue or wording is named here (R18). */
 
 import { recordOf, stampInstant, mintExhausted } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
