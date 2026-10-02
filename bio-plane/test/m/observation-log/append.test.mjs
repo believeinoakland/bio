@@ -1,8 +1,9 @@
-/* observation-log: the one append site and the log's invariants (R2, R3, R4, R22, R23, R24). */
+/* observation-log: the one append site and the log's invariants (R2, R3, R4, R22, R23, R24, R33). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, entry } from "./fixture.mjs";
-import { OBSERVATION_AUTHORITY_KINDS, OBSERVATION_STATES, CONDITION_KINDS, OBSERVATION_REFERENT_FAULTS } from "../../../src/observation-log/index.mjs";
+import { OBSERVATION_AUTHORITY_KINDS, OBSERVATION_STATES, CONDITION_KINDS, OBSERVATION_REFERENT_FAULTS, checkCondition }
+  from "../../../src/observation-log/index.mjs";
 
 const refused = (r) => (r ? [r.code, r.check] : null);
 
@@ -55,6 +56,38 @@ test("R2 C-22.10's observation referent: an earlier PRESENT row of the same auth
   // every fault refuses under the one code
   const r = w.obs.observe(run({ state: "PRESENT", result_kind: "observation", result_ref: "2" }));
   assert.deepEqual(refused(r), ["OBS_PRESENT_NO_REFERENT", "C-22.10"]);
+});
+
+test("R33 the condition vocabulary holds its twelve kinds and the five sweep and three notice kinds, each with its sentence; an entry naming any of them is accepted by C-22.4 and written, and one naming a kind outside it is refused C-22.4 and writes nothing", () => {
+  const TWELVE = ["monitoring-recheck-due", "archive-fallback-eligible", "capture-session-ttl-expiring", "source-unreachable-governed",
+                  "capture-completed-unattended", "partial-capture-outstanding", "text-undetermined", "client-rendered-shell",
+                  "invitation-spent-or-expired", "governor-holding-host", "runtime-ceiling-reached", "render-deferred"];
+  const SWEEP = ["sweep-held-backlog", "sweep-yield-anomaly", "sweep-seed-unreachable", "sweep-redirect-out-of-scope", "sweep-silent"];
+  const NOTICE = ["notice-attestation-missed", "notice-lapse-near", "notice-project-closed"];
+  assert.deepEqual(Object.keys(CONDITION_KINDS).sort(), [...TWELVE, ...SWEEP, ...NOTICE].sort(), "exactly the twelve and the eight");
+  assert.ok(Object.isFrozen(CONDITION_KINDS));
+  for (const [k, s] of Object.entries(CONDITION_KINDS))
+    assert.ok(typeof s === "string" && s.trim().length > 20, `${k} has its sentence`);
+  // each sweep kind's sentence names the monitoring rule it is taken from; each notice kind's, queue-producers R27
+  for (const k of SWEEP) assert.match(CONDITION_KINDS[k], /\(monitoring R[0-9, R]*R63\)$/, k);
+  for (const k of NOTICE) assert.match(CONDITION_KINDS[k], /queue-producers R27\)$/, k);
+  // every new kind is accepted at the one append site, on a look and on a governed look, and checkCondition agrees
+  const w = world();
+  for (const c of [...SWEEP, ...NOTICE]) {
+    assert.equal(checkCondition(c), null, c);
+    assert.equal(w.obs.observe(entry({ authority_kind: "sweep", authority: "INFO-2026-0001#s1", state: "LOOKED_INDETERMINATE", condition: c })), null, c);
+    assert.equal(w.obs.observe(entry({ state: "LOOKED_INDETERMINATE", governed: true, condition: c })), null, `${c} governed`);
+    assert.equal(w.log().at(-1).condition, c, `${c} is stored as written`);
+  }
+  assert.equal(w.count("observation_log"), 2 * (SWEEP.length + NOTICE.length));
+  // a kind outside the vocabulary is still refused C-22.4, and writes nothing: near-misses of the new kinds included
+  const n = w.count("observation_log");
+  for (const c of ["sweep-held", "sweep-unknown", "notice-lapsed", "notice-project-closed ", "SWEEP-SILENT", "monitoring-sweep-silent", "toString", "__proto__"]) {
+    const r = w.obs.observe(entry({ state: "LOOKED_INDETERMINATE", condition: c }));
+    assert.deepEqual([r && r.code, r && r.check], ["AI_RUN_CONDITION_UNKNOWN", "C-22.4"], JSON.stringify(c));
+    assert.equal(checkCondition(c).check, "C-22.4", JSON.stringify(c));
+  }
+  assert.equal(w.count("observation_log"), n, "a refused condition writes nothing");
 });
 
 test("R3 NEVER_LOOKED is refused at the append as AI_LOG_NEVER_LOOKED_STORED (C-22.17, never C-22.1) and never stored, but for a run's terminal rollup (K148); every state a look can store is accepted", () => {

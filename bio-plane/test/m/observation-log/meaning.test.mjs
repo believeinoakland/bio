@@ -158,7 +158,7 @@ test("R8 registered with connections itself, under this module's name: a derivat
   assert.equal(again.connections.ok, false);
   assert.equal(again.derivationProvider.reason, "PROVIDER_DECLARED");
   assert.match(again.derivationProvider.detail, /^observation-log already provides/);
-  assert.equal(k.registerDerivationProvider("legacy-store", () => null).reason, "PROVIDER_DECLARED");
+  assert.equal(k.registerDerivationProvider("retrieval", () => null).reason, "PROVIDER_DECLARED");
   assert.equal(k.derivationStatement("ENT-1").state, "partial");
   k.derive({ entityId: "ENT-2" });
   assert.equal(w.log().filter((r) => r.subject === "ENT-2").length, 1, "the notice runs this module's writer once");
