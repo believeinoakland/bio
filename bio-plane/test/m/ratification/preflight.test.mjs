@@ -168,12 +168,12 @@ test("R18, R19: NO_ATTESTING_KEY when the signer holds no attesting key, its rem
 test("R18: CASE_SIGNER_NOT_AN_OWNER is the commit's own, for a signer who is not the project's owner and for a document naming no project", async () => {
   const s = await setup();
   const got = entry(s.preflight({ signer: "bo" }), "CASE_SIGNER_NOT_AN_OWNER");
-  assert.deepEqual(got, s.commit("bo"));
+  assert.deepEqual(got, (await s.commit("bo")));
   assert.equal(entry(s.preflight({ signer: "bo", viewer: V("eve") }), "CASE_SIGNER_NOT_AN_OWNER").reason,
     "CASE_SIGNER_NOT_AN_OWNER", "the deliverer is not asked: eve has no role and is not named");
   assert.equal(reasons(s.preflight({ signer: "bo", viewer: V("eve") })).includes("PROJECT_ACT_NOT_A_PARTICIPANT"), false);
   const loose = await setup({ mutate: (d) => ({ ...d, case_project: "null" }) });
-  assert.deepEqual(entry(loose.preflight(), "CASE_SIGNER_NOT_AN_OWNER"), loose.commit("alice"));
+  assert.deepEqual(entry(loose.preflight(), "CASE_SIGNER_NOT_AN_OWNER"), (await loose.commit("alice")));
 });
 
 test("R18: C-65.1 is the commit's own, compared against the bytes given and read for the signer", async () => {
@@ -181,9 +181,9 @@ test("R18: C-65.1 is the commit's own, compared against the bytes given and read
   s.w.bv.conc.set(s.w.key(s.P, Q1), { ...OWN, version: "second", at: "2026-09-28T00:00:00Z" });
   const got = entry(s.preflight(), "CASE_CONCLUSION_MOVED");
   assert.equal(got.check, "C-65.1");
-  assert.deepEqual(got, s.commit());
+  assert.deepEqual(got, (await s.commit()));
   const unrecorded = await setup({ conclusions: false });
-  assert.deepEqual(entry(unrecorded.preflight(), "CASE_CONCLUSION_MOVED"), unrecorded.commit(),
+  assert.deepEqual(entry(unrecorded.preflight(), "CASE_CONCLUSION_MOVED"), (await unrecorded.commit()),
     "a document recording no conclusion for a project that concluded");
   const seen = [];
   const conc = s.w.bv.conc;

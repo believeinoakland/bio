@@ -182,13 +182,18 @@ export function world() {
   const reevaluation = { levelMoved: (a) => (levelMoves.push(a), { ok: true, moved: true }) };
   const strength = { testimonyCorroboration: (a) => (corroborationAsked.push(a),
     { ok: true, inquiry: a.inquiry, levels: a.levels, legs: corroboration.get(a.inquiry) ?? [], wrote: false }) };
+  /* network-notices R17's `openSeals` (R37), a stand-in: each call kept in `sealCalls`, answered by `w.openSeals`, which
+     a test replaces (a throw, a rejection, a refusal); R37's test also boots the real module */
+  const sealCalls = [];
+  const networkNotices = { openSeals: (a) => (sealCalls.push(a), w.openSeals(a)) };
   const capture = { registerReader: (slot, module, fn) => (readers.push({ slot, module, fn }), { ok: true, slot, module }) };
   const r = ratificationOf(host, { storage: st, record, membership, credentials, promotion, provenance, inquiry,
-                                   basisVersions, publication, capture, strength, reevaluation });
+                                   basisVersions, publication, capture, strength, reevaluation, networkNotices });
   let n = 0;
   const w = {
     st, host, record, membership, credentials, promotion, r, bv, key, registers, holds, evidence, pub, publication, calls,
-    readers, corroboration, corroborationAsked, levelMoves,
+    readers, corroboration, corroborationAsked, levelMoves, sealCalls,
+    openSeals: async (a) => ({ ok: true, case: a.case, edition: a.edition, project: null, opened: [], attestation: null }),
     ops: {},   /* stand-ins for other modules' Durable Object ops, by name (the Worker half's tests) */
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
