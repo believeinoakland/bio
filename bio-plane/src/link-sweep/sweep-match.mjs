@@ -1,5 +1,5 @@
-/* monitoring — a sweep's terms (requirements: `build/requirements/monitoring.md`, R54; K1036). Pure: no record, no
- * clock, no network.
+/* link-sweep — a sweep's terms (requirements: `build/requirements/link-sweep.md`, R1, R2; K1036). Pure: no record, no
+ * clock, no network. Moved from `monitoring` (its R53, R54) with N506 (K1159), unchanged but for the ids.
  *
  * A term is a literal, or a regular expression written between slashes; both match without regard to case. A regular
  * expression is never handed to JavaScript's backtracking `RegExp`: banning backreferences and lookaround does not make
@@ -11,8 +11,8 @@
 
 import { normalizeAddress } from "../subresources.mjs";
 
-/** R53: whether `address` is in scope of `sources`: its normalised form (`subresources.normalizeAddress`) equals a
- *  prefix's, or continues one at a `/`. The one rule C-18.5, a run, a redirect and R64's check read. */
+/** R1: whether `address` is in scope of `sources`: its normalised form (`subresources.normalizeAddress`) equals a
+ *  prefix's, or continues one at a `/`. The one rule C-18.5, a run, a redirect and R12's check read. */
 export function inScope(address, sources) {
   if (typeof address !== "string" || !Array.isArray(sources)) return false;
   let a;
@@ -25,10 +25,10 @@ export function inScope(address, sources) {
   });
 }
 
-/** R54: the longest term, and the most characters of a link's text or decoded address a term reads. */
+/** R2: the longest term, and the most characters of a link's text or decoded address a term reads. */
 export const TERM_MAX = 200;
 export const MATCH_TEXT_MAX = 2048;
-/** R54: the most states a compiled term may hold (a counted repetition is expanded), and the largest count. */
+/** R2: the most states a compiled term may hold (a counted repetition is expanded), and the largest count. */
 export const TERM_PROGRAM_MAX = 4000;
 export const TERM_REPEAT_MAX = 100;
 
@@ -233,7 +233,7 @@ function run({ prog, start }, chars) {
   }
 }
 
-/** R54: compile one term. A literal is a case-insensitive substring; a term written `/…/` is a regular expression.
+/** R2: compile one term. A literal is a case-insensitive substring; a term written `/…/` is a regular expression.
  *  Answers `{ok: true, kind, test(text)}`, `test` reading at most MATCH_TEXT_MAX characters, or `{ok: false,
  *  construct, detail}` naming what was refused. Never throws. */
 export function compileTerm(term) {
@@ -253,12 +253,12 @@ export function compileTerm(term) {
   }
 }
 
-/** R54: at most MATCH_TEXT_MAX characters of `text` (code points), the rest unread. */
+/** R2: at most MATCH_TEXT_MAX characters of `text` (code points), the rest unread. */
 export function cut(text) {
   const s = typeof text === "string" ? text : "";
   if (s.length <= MATCH_TEXT_MAX) return s;
   return Array.from(s).slice(0, MATCH_TEXT_MAX).join("");
 }
 
-/** R54: whether `text` is longer than a term reads (the run counts the links it cut). */
+/** R2: whether `text` is longer than a term reads (the run counts the links it cut). */
 export const isCut = (text) => typeof text === "string" && text.length > MATCH_TEXT_MAX && Array.from(text).length > MATCH_TEXT_MAX;

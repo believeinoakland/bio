@@ -1,31 +1,41 @@
-/* monitoring — the link sweep (requirements: `build/requirements/monitoring.md`, R29, R31, R36, R53–R64; K1019, K1036,
- * K1044, K1094, K1122, K1129; Intake Doctrine §4, §6, §9).
+/* link-sweep — the link sweep (requirements: `build/requirements/link-sweep.md`, R1–R12; K1019, K1036, K1044, K1094,
+ * K1122, K1129; Intake Doctrine §4, §6, §9). Moved from `monitoring/sweep.mjs` with N506 (K1159), no meaning changed.
  *
  * A ratified sweep is named standing intent: on its cadence the daemon reads its seed pages, follows one hop to the
  * links on them that its match admits, all within its scope and its budget, and files each document it brings in as
- * its own Information bundle at `collected`, never higher. Who may write a sweep is fenced at the write (R55); what
- * reaches members is derived on read (R61, R63). Everything here is reached through the one `Monitoring` instance,
- * which hands in the idempotence key, the rank and the landing it shares with the named requests (R21, R22, R28). */
+ * its own Information bundle at `collected`, never higher. Who may write a sweep is fenced at the write (R3); what
+ * reaches members is derived on read (R9, R11). The daemon it runs under is `monitoring`'s, reached only through its
+ * `sweepHost()` (monitoring R65): the pause (its R30), the idempotence key (its R21), the re-entrance guard (its R22),
+ * the rank (its R19's rule) and the landing it shares with the named requests (its R28), so a sweep and a tick share
+ * one of each. */
 
 import { stampInstant } from "../record-core/index.mjs";
 import { isMachineIdentity, createSha256 } from "../record-grammar/index.mjs";
 import { normalizeAddress } from "../subresources.mjs";
 import { listFormats, detectFormat } from "../formats.mjs";
-import { SWEEP_CHECKS, SWEEP_CADENCES } from "./checks.mjs";
+import { SWEEP_CADENCES, sweepRefusal } from "./checks.mjs";
 import { compileTerm, inScope, isCut } from "./sweep-match.mjs";
+import { sweepGrammar } from "./checks.mjs";
+import { migrateLinkSweep } from "./schema.mjs";
 
-/** R56: the most sweeps one tick runs; R61: the runs a read shows; R60's figures. */
+/** The name this module registers under (monitoring R66; capture-requests R45). */
+export const LINK_SWEEP_MODULE = "link-sweep";
+
+/** R4: the most sweeps one tick runs; R9: the runs a read shows; R8's figures. */
 export const SWEEP_TICK_BATCH = 5;
 export const SWEEP_RUNS_SHOWN = 20;
 export const ANOMALY_MIN_RUNS = 4, ANOMALY_WINDOW = 8, ANOMALY_FACTOR = 3, ANOMALY_FLOOR = 5, ANOMALY_DRY_MEDIAN = 2;
 export const SILENT_RUNS = 4;
-/** R57: the deeming actor a sweep's fetches name, and the purpose they state. */
+/** R5: the deeming actor a sweep's fetches name, and the purpose they state. */
 export const SWEEP_ACTOR = "bio-monitor";
 export const SWEEP_PURPOSE = "sweep";
-/** R63: the five kinds of what reaches members. */
+/** R11: the five kinds of what reaches members. */
 export const SWEEP_CONDITION_KINDS = Object.freeze(["sweep-held-backlog", "sweep-yield-anomaly", "sweep-seed-unreachable",
                                                     "sweep-redirect-out-of-scope", "sweep-silent"]);
+/** R1, R4: each cadence's interval (monitoring R14's). */
 const INTERVAL = Object.freeze({ daily: 86400000, weekly: 604800000, monthly: 2592000000 });
+/** R4: the consumer the sweep's claims and re-entrance are kept under (monitoring R21, R22), and its epoch's life. */
+export const SWEEP_CONSUMER = "gathering-sweep";
 const GJ = "data/gathering.json";
 
 const parse = (t) => { try { const g = typeof t === "string" ? JSON.parse(t) : null; return g && typeof g === "object" && !Array.isArray(g) ? g : null; } catch { return null; } };
@@ -45,7 +55,7 @@ const decode = (t) => String(t).replace(/&(#x[0-9a-f]{1,6}|#\d{1,7}|[a-z]{2,6});
 const strip = (t) => decode(String(t).replace(/<[^>]*>/g, " ")).replace(/\s+/g, " ").trim();
 const decodedAddress = (u) => { try { return decodeURI(u); } catch { return u; } };
 
-/** R58: the links in one seed capture, read from its own bytes: HTML anchors with their text, feed items with their
+/** R6: the links in one seed capture, read from its own bytes: HTML anchors with their text, feed items with their
  *  titles, sitemap entries (address only), each resolved against `base`, in document order. One pass with `indexOf`,
  *  each closing tag found at most once, so the read is linear in the page. */
 export function linksOf(text, base) {
@@ -97,25 +107,64 @@ export function linksOf(text, base) {
   return out;
 }
 
-export class Sweeps {
-  #m; #k;
-  /** `m` is the Monitoring instance (its record, membership, capture, observation log, promotion, clock, pause and
-   *  dependencies); `k` its private helpers: `open`, `close`, `claim` (R21), `ranked` (R56's rank), `running` (R22),
-   *  `land` (R28's landing, R59). */
-  constructor(m, k) { this.#m = m; this.#k = k; }
-  #rows(q, ...a) { return [...this.#m.sql.exec(q, ...a)]; }
+export class LinkSweep {
+  #d; #host = null; #scopeRegistered = false;
+  /** `d` holds what the sweep uses, each reached through its factory on the same host unless given (`index.mjs`):
+   *  `storage`, `record`, `membership`, `promotion`, `capture`, `observationLog`, `projectStage`, `monitoring`,
+   *  `captureRequests`, and `now`, the instance clock in milliseconds. */
+  constructor(d) {
+    this.#d = d;
+    this.sql = d.storage.sql;
+    this.record = d.record;
+    this.membership = d.membership;
+    this.promotion = d.promotion;
+    this.now = typeof d.now === "function" ? d.now : () => Date.now();
+  }
+  get capture() { return this.#d.capture(); }
+  get observationLog() { return this.#d.observationLog(); }
+  get projectStage() { return this.#d.projectStage(); }
+  get monitoring() { return this.#d.monitoring(); }
+  /** monitoring R65: the services the sweep runs under, asked once. */
+  get host() { return this.#host ||= this.monitoring.sweepHost(); }
+  #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
 
+  migrate() { migrateLinkSweep(this.sql); }
+
+  /** R12 (K1099, K1122; capture-requests R45): register, once, with capture-requests the scope check its drain asks,
+   *  under this module's name. A registration that is refused or throws is asked again on the next sweep service,
+   *  never held as done; one already held by this module (`LISTENER_DECLARED` naming it) is done. */
+  registerSweepScope() {
+    if (this.#scopeRegistered) return true;
+    try {
+      const cr = this.#d.captureRequests();
+      const r = cr && typeof cr.registerSweepScope === "function"
+        ? cr.registerSweepScope(LINK_SWEEP_MODULE, (a) => this.scopeCheck(a || {})) : null;
+      this.#scopeRegistered = !!(r && (r.ok === true || (r.reason === "LISTENER_DECLARED" && r.module === LINK_SWEEP_MODULE)));
+    } catch { this.#scopeRegistered = false; }
+    return this.#scopeRegistered;
+  }
+
+  /** R1–R3, R9 (monitoring R66): this module's share of C-18.5, the fence and the slate, handed to monitoring once at
+   *  composition. Answers monitoring's answer: `{ok: true}`, or its refusal (a second registration). */
+  registerWithMonitoring() {
+    return this.monitoring.registerSweep(LINK_SWEEP_MODULE, {
+      grammar: (entry, ids) => sweepGrammar(entry, ids),
+      fence: (c, nextText) => this.sweepFence(c, nextText),
+      dueForSlate: (nowMs, sees) => this.dueForSlate(nowMs, sees) });
+  }
+
   /* ================================================================== *
-   * The fence (R55) and the ratifier
+   * The fence (R3) and the ratifier
    * ================================================================== */
 
-  /** R55: a non-replay promotion carrying `data/gathering.json`, fenced against the file it replaces. A non-member who
+  /** R3: a non-replay promotion carrying `data/gathering.json`, fenced against the file it replaces. A non-member who
    *  adds, removes or changes a sweep (other than setting `ratified` to `false`) is refused `SWEEP_NOT_A_MEMBER`; a
    *  non-owner of the bundle's project who sets `ratified` to `true` or changes a sweep ratified before or after is
-   *  refused `SWEEP_RATIFY_NOT_AN_OWNER`. Null when admitted. */
+   *  refused `SWEEP_RATIFY_NOT_AN_OWNER`. Null when admitted. Asked by monitoring R27 after the grammar admits the file
+   *  (monitoring R66). */
   sweepFence(c, nextText) {
-    const prev = parse((() => { const f = this.#m.record.readFile(c.bundleId, GJ); return f && f.text; })());
+    const prev = parse((() => { const f = this.record.readFile(c.bundleId, GJ); return f && f.text; })());
     const before = new Map(sweepsOf(prev).map((s) => [s.id, s])), after = new Map(sweepsOf(parse(nextText)).map((s) => [s.id, s]));
     const touched = [];
     for (const id of new Set([...before.keys(), ...after.keys()])) {
@@ -127,23 +176,21 @@ export class Sweeps {
     }
     if (!touched.length) return null;
     const author = typeof c.author === "string" ? c.author.trim() : "";
-    const refuse = (code, detail, extra) => { const row = SWEEP_CHECKS[code];
-      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...extra }; };
     /* DEC-49 REGION is-sweep-member */
     if (!author || isMachineIdentity(author))
-      return refuse("SWEEP_NOT_A_MEMBER", `${author || "an unnamed writer"} is not a member, and only a member adds, removes `
+      return sweepRefusal("SWEEP_NOT_A_MEMBER", `${author || "an unnamed writer"} is not a member, and only a member adds, removes `
         + "or changes a sweep; any writer may unratify one. Nothing was written.", { sweeps: touched.map((t) => t.id) });
     /* END DEC-49 REGION is-sweep-member */
     const ratifying = touched.filter((t) => t.ratified);
     if (!ratifying.length) return null;
-    const info = this.#m.record.bundleInfo(c.bundleId);
+    const info = this.record.bundleInfo(c.bundleId);
     const project = info ? info.project : (c.docFm && typeof c.docFm.project === "string" ? c.docFm.project : null);
     const member = author.startsWith("member:") ? author.slice(7) : author;
     let owns = false;
-    try { owns = !!project && this.#m.membership.isProjectOwner(project, member) === true; } catch { owns = false; }
+    try { owns = !!project && this.membership.isProjectOwner(project, member) === true; } catch { owns = false; }
     /* DEC-49 REGION is-sweep-owner */
     if (!owns)
-      return refuse("SWEEP_RATIFY_NOT_AN_OWNER", project
+      return sweepRefusal("SWEEP_RATIFY_NOT_AN_OWNER", project
         ? `${member} is not an owner of ${project}, and only an owner ratifies a sweep or changes a ratified one. Nothing was written.`
         : "this list belongs to no project, so it has no owner who could ratify a sweep. Nothing was written.",
         { sweeps: ratifying.map((t) => t.id), project });
@@ -151,10 +198,10 @@ export class Sweeps {
     return null;
   }
 
-  /** R55: who ratified sweep `id` of `bundle` and when: the promotion that last set `ratified` to `true` or changed the
+  /** R3: who ratified sweep `id` of `bundle` and when: the promotion that last set `ratified` to `true` or changed the
    *  sweep while ratified, read from the bundle's history (record-core R15–R17's image). Null when it is not ratified. */
   ratifier(bundle, id) {
-    const img = this.#m.record.readImage(bundle);
+    const img = this.record.readImage(bundle);
     if (!img) return null;
     let man = null;
     try { man = JSON.parse(img["_history/manifest.json"] || "null"); } catch { man = null; }
@@ -181,10 +228,10 @@ export class Sweeps {
   }
 
   /* ================================================================== *
-   * What is held and due (R56, R60)
+   * What is held and due (R4, R8)
    * ================================================================== */
 
-  /** Every sweep in every `data/gathering.json` the record holds (read as the daemon, R36), or only those the viewer's
+  /** Every sweep in every `data/gathering.json` the record holds (read as the daemon, monitoring R36), or only those the viewer's
    *  gate admits; each `{name, bundle, sweep, daemon}`. */
   #all(gate = null) {
     const files = gate
@@ -204,21 +251,22 @@ export class Sweeps {
     return this.#rows(`SELECT * FROM sweep_runs WHERE sweep = ? ORDER BY seq DESC LIMIT ?`, name, limit).map((r) => {
       let d = {};
       try { d = JSON.parse(r.detail || "{}"); } catch { d = {}; }
-      return { ...d, seq: Number(r.seq), at: r.at, filed: Number(r.filed), fetched: Number(r.fetched),
-               anomaly: r.anomaly ? JSON.parse(r.anomaly) : null };
+      let anomaly = null;
+      try { anomaly = r.anomaly ? JSON.parse(r.anomaly) : null; } catch { anomaly = null; }
+      return { ...d, seq: Number(r.seq), at: r.at, filed: Number(r.filed), fetched: Number(r.fetched), anomaly };
     });
   }
 
-  /** R60: the backlog (capture R82) and whether it holds the sweep; null backlog (unreadable) holds it (K1129). */
+  /** R8: the backlog (capture R82) and whether it holds the sweep; null backlog (unreadable) holds it (K1129). */
   #held(x) {
     let n = null;
-    try { n = this.#m.capture.heldCount({ sweep: x.name }); } catch { n = null; }
+    try { n = this.capture.heldCount({ sweep: x.name }); } catch { n = null; }
     const limit = x.sweep.budget && Number.isInteger(x.sweep.budget.backlog) ? x.sweep.budget.backlog : null;
     const held = n === null || n === undefined || !Number.isFinite(Number(n)) || (limit !== null && Number(n) >= limit);
     return { backlog: n === undefined ? null : n, limit, held };
   }
 
-  /** R56: one sweep's standing: `due`, `next`, and when not due the reason. */
+  /** R4: one sweep's standing: `due`, `next`, and when not due the reason. */
   #standing(x, nowMs, paused) {
     const s = x.sweep;
     const last = this.#one(`SELECT at FROM sweep_runs WHERE sweep = ? ORDER BY seq DESC LIMIT 1`, x.name);
@@ -237,16 +285,16 @@ export class Sweeps {
   }
 
   #closed(bundle) {
-    const info = this.#m.record.bundleInfo(bundle);
+    const info = this.record.bundleInfo(bundle);
     if (!info || !info.project) return false;
-    try { const st = this.#m.projectStage.projectStage({ project: info.project, viewer: "class:daemon" }); return !!st && st.stage === "closed"; }
+    try { const st = this.projectStage.projectStage({ project: info.project, viewer: "class:daemon" }); return !!st && st.stage === "closed"; }
     catch { return false; }
   }
 
-  /** R56: the plan: due sweeps longest-overdue first then by full name, the earliest `next`, and whether some sweep is
-   *  held or waiting on the pause (each re-read one archive interval on). */
+  /** R4: the plan: due sweeps longest-overdue first then by full name, the earliest `next`, and whether some sweep is
+   *  held or waiting on the pause (each re-read one archive interval on, monitoring R20's `recheckMs`). */
   plan(nowMs) {
-    const paused = this.#m.paused().paused;
+    const paused = this.host.paused().paused;
     const due = [];
     let next = null, recheck = false;
     for (const x of this.#all()) {
@@ -260,39 +308,43 @@ export class Sweeps {
     return { due, next, recheck };
   }
 
-  sweepDue(now) { this.#k.register(); return this.plan(now).due.length ? now : null; }
+  /** R4: for `scheduler`'s `gathering-sweep` consumer: `now` while a sweep is due, else null. */
+  sweepDue(now) { this.registerSweepScope(); return this.plan(now).due.length ? now : null; }
+  /** R4: now + 1 s while one is due, else the earliest next run (a held or paused sweep looked at again one archive
+   *  interval on), else null. */
   sweepWake(now) {
-    this.#k.register();
+    this.registerSweepScope();
     const p = this.plan(now);
     if (p.due.length) return now + 1000;
-    const re = p.recheck ? now + this.#k.recheckMs() : null;
+    const re = p.recheck ? now + this.host.recheckMs() : null;
     return p.next === null ? re : re === null ? p.next : Math.min(p.next, re);
   }
 
   /* ================================================================== *
-   * The run (R56–R60, R62)
+   * The run (R4–R8, R10)
    * ================================================================== */
 
-  /** R56: the tick: at most SWEEP_TICK_BATCH due sweeps (ten times that read when the scheduler ranks), each claimed
-   *  under the consumer's epoch (R21), not re-entrant (R22). `daemon.sweep_budget` caps the fetches a bundle's sweeps
-   *  make in this tick together. */
+  /** R4: the tick: at most SWEEP_TICK_BATCH due sweeps (ten times that read when the scheduler ranks), each claimed
+   *  under the consumer's epoch (monitoring R21), not re-entrant (monitoring R22). `daemon.sweep_budget` caps the
+   *  fetches a bundle's sweeps make in this tick together. */
   async sweepTick(now, rank = null) {
-    this.#k.register();
-    const nowMs = Number.isFinite(now) ? now : this.#m.now();
+    this.registerSweepScope();
+    const h = this.host;
+    const nowMs = Number.isFinite(now) ? now : this.now();
     const at = stampInstant("second", nowMs);
-    const pause = this.#m.paused();
+    const pause = h.paused();
     if (pause.paused) return { paused: pause, at, ran: [], skipped: [], failed: [] };
-    if (this.#k.running.has("gathering-sweep")) return { busy: true, paused: pause, at, ran: [], skipped: [], failed: [] };
-    this.#k.running.add("gathering-sweep");
+    if (h.running.has(SWEEP_CONSUMER)) return { busy: true, paused: pause, at, ran: [], skipped: [], failed: [] };
+    h.running.add(SWEEP_CONSUMER);
     try {
       const plan = this.plan(nowMs);
       const read = typeof rank === "function" ? plan.due.slice(0, SWEEP_TICK_BATCH * 10) : plan.due;
-      const batch = this.#k.ranked(read, (x) => ({ kind: "sweep", id: x.name, waitingSince: x.due_at > 0 ? x.due_at : null }),
-                                   rank, nowMs).slice(0, SWEEP_TICK_BATCH);
-      const epoch = this.#k.open("gathering-sweep", nowMs, INTERVAL.daily);
+      const batch = h.ranked(read, (x) => ({ kind: "sweep", id: x.name, waitingSince: x.due_at > 0 ? x.due_at : null }),
+                             rank, nowMs).slice(0, SWEEP_TICK_BATCH);
+      const epoch = h.openEpoch(SWEEP_CONSUMER, nowMs, INTERVAL.daily);
       const ran = [], skipped = [], failed = [], spentBy = new Map();
       for (const x of batch) {
-        if (!this.#k.claim("gathering-sweep", x.name, epoch)) { skipped.push({ sweep: x.name, reason: "claimed by a tick that did not finish" }); continue; }
+        if (!h.claim(SWEEP_CONSUMER, x.name, epoch)) { skipped.push({ sweep: x.name, reason: "claimed by a tick that did not finish" }); continue; }
         const cap = Number.isInteger(x.daemon.sweep_budget) && x.daemon.sweep_budget >= 0 ? x.daemon.sweep_budget - (spentBy.get(x.bundle) || 0) : null;
         try {
           const r = await this.#run(x, nowMs, cap);
@@ -301,12 +353,12 @@ export class Sweeps {
                      ...(r.note ? { note: r.note } : {}) });
         } catch (e) { failed.push({ sweep: x.name, reason: String(e && e.message || e).slice(0, 160) }); }
       }
-      if (!failed.length && !skipped.length) this.#k.close("gathering-sweep", epoch);
+      if (!failed.length && !skipped.length) h.closeEpoch(SWEEP_CONSUMER, epoch);
       return { paused: pause, at, epoch, due: plan.due.length, ran, skipped, failed };
-    } finally { this.#k.running.delete("gathering-sweep"); }
+    } finally { h.running.delete(SWEEP_CONSUMER); }
   }
 
-  /** R64: requests capture-requests filed under this sweep since its last run, read from the captures' `matched_sweep`
+  /** R12: requests capture-requests filed under this sweep since its last run, read from the captures' `matched_sweep`
    *  (the register documents' origin), not this module's own fetches. */
   #requestsSince(name, since) {
     try {
@@ -323,13 +375,13 @@ export class Sweeps {
     const opts = { cls: "daemon", member: false, captureRequest: { locator, purpose: SWEEP_PURPOSE, agent: null, render: false,
       origin: { kind: "sweep", matched_sweep: x.name, deeming_actor: SWEEP_ACTOR }, scope: [...x.sweep.sources],
       ...(heldSha ? { heldSha } : {}) } };
-    try { const r = await this.#m.capture.acquire({}, opts); return (r && r.body) || { ok: false, reason: "NO_ANSWER" }; }
+    try { const r = await this.capture.acquire({}, opts); return (r && r.body) || { ok: false, reason: "NO_ANSWER" }; }
     catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 160) }; }
   }
 
   #look(x, address, row, at) {
     try {
-      this.#m.observationLog.observe({ actorClass: "plane", actor: null, authorityKind: "sweep", authority: x.name, level: "document",
+      this.observationLog.observe({ actorClass: "plane", actor: null, authorityKind: "sweep", authority: x.name, level: "document",
         subjectKind: "address", subject: normalizeAddress(address), state: row.state, governed: row.governed === true,
         condition: row.governed ? "source-unreachable-governed" : null, resultKind: row.ref ? "capture" : null,
         resultRef: row.ref || null, detail: String(row.detail).slice(0, 300) }, at);
@@ -337,12 +389,12 @@ export class Sweeps {
   }
 
   async #bytes(sha) {
-    const store = typeof this.#m.record.evidenceStore === "function" ? this.#m.record.evidenceStore() : null;
+    const store = typeof this.record.evidenceStore === "function" ? this.record.evidenceStore() : null;
     if (!store || !/^[0-9a-f]{64}$/.test(String(sha))) return null;
     try { const o = await store.get(sha); return o ? new Uint8Array(await o.arrayBuffer()) : null; } catch { return null; }
   }
 
-  /** One run of one sweep (R57–R60, R62), recorded as one `sweep_runs` row. `cap` is what is left of the bundle's
+  /** One run of one sweep (R5–R8, R10), recorded as one `sweep_runs` row. `cap` is what is left of the bundle's
    *  `daemon.sweep_budget` in this tick (null: no cap). */
   async #run(x, nowMs, cap) {
     const s = x.sweep, at = stampInstant("second", nowMs);
@@ -360,7 +412,7 @@ export class Sweeps {
     const paths = s.match && Array.isArray(s.match.paths) && s.match.paths.length ? s.match.paths : null;
     const formats = s.match && Array.isArray(s.match.formats) && s.match.formats.length ? s.match.formats : null;
     const lists = [];
-    /* R57: the seeds */
+    /* R5: the seeds */
     for (const seed of s.seeds) {
       if (left <= 0) { d.seeds.push({ seed, outcome: "budget_spent" }); continue; }
       const held = lastSeeds.get(seed) || null;
@@ -383,12 +435,12 @@ export class Sweeps {
       if (reason === "out_of_scope_redirect") { d.seeds.push({ seed, outcome: reason, target: a.target ?? null }); d.redirected.push({ address: seed, target: a.target ?? null }); }
       else {
         let reach = null;
-        try { reach = this.#m.capture.sourceReachability({ addressNorm: normalizeAddress(seed), now: at }); } catch { reach = null; }
+        try { reach = this.capture.sourceReachability({ addressNorm: normalizeAddress(seed), now: at }); } catch { reach = null; }
         d.seeds.push({ seed, outcome: "failed", reason, reachability: reach });
       }
       this.#look(x, seed, { state: "LOOKED_INDETERMINATE", detail: `seed ${reason}${a.target ? ` to ${a.target}` : ""}` }, at);
     }
-    /* R58: the candidates, one hop, in seed order and then link order */
+    /* R6: the candidates, one hop, in seed order and then link order */
     const seen = new Set();
     for (const l of lists) for (const link of l.links) {
       let norm;
@@ -415,7 +467,7 @@ export class Sweeps {
       const doc = a.ok ? a.document : null, sha = doc?.capture?.sha256;
       if (!doc || !sha) { d.failed.push({ address: link.address, reason: a.reason || a.code || "failed" });
         this.#look(x, link.address, { state: "LOOKED_INDETERMINATE", detail: `failed; ${a.reason || a.code || "no answer"}` }, at); continue; }
-      /* R59: the format, from the bytes */
+      /* R7: the format, from the bytes */
       const bytes = formats ? await this.#bytes(sha) : null;
       const format = formats ? (bytes ? detectFormat(bytes, doc.capture.content_type ?? null).format : null) : null;
       if (formats && !formats.includes(format)) {
@@ -425,18 +477,18 @@ export class Sweeps {
       }
       this.#look(x, link.address, { state: "PRESENT", ref: sha, detail: `fetched for the sweep ${x.name}` }, at);
       if (a.existed === true) { d.skipped.already_held++; continue; }
-      const landed = this.#k.land({ id: x.name, bundle: x.bundle, locators: [link.address], target: link.text || null }, { locator: link.address, doc }, at, {
+      const landed = this.host.land({ id: x.name, bundle: x.bundle, locators: [link.address], target: link.text || null }, { locator: link.address, doc }, at, {
         title: `Swept by ${x.name}: ${link.text || link.address}`,
         notes: `Brought in by the ratified sweep ${x.name}, one hop from the seed ${l.seed}, whose capture ${l.sha} listed it. `
              + `Collected ${at}. Filed at collected and never higher: verifying it is a named member's decision.`,
         trigger: `ratified sweep ${x.name}`, summary: `The document served at ${link.address}, brought in by the sweep ${x.name}.` });
       if (landed && landed.ok) {
-        this.#m.sql.exec(`INSERT OR IGNORE INTO sweep_filed (sweep, address_norm, bundle_id, filed, at) VALUES (?, ?, ?, ?, ?)`,
+        this.sql.exec(`INSERT OR IGNORE INTO sweep_filed (sweep, address_norm, bundle_id, filed, at) VALUES (?, ?, ?, ?, ?)`,
                          x.name, norm, x.bundle, landed.bundle_id, at);
         d.documents.push({ address: link.address, bundle: landed.bundle_id });
       } else d.failed.push({ address: link.address, reason: landed?.reason || "NOT_FILED", detail: landed?.detail ?? null });
     }
-    /* R60: the anomaly, against the last ANOMALY_WINDOW runs */
+    /* R8: the anomaly, against the last ANOMALY_WINDOW runs */
     const filed = d.documents.length;
     const med = median(prior.map((r) => r.filed));
     let anomaly = null;
@@ -445,18 +497,19 @@ export class Sweeps {
       else if (filed === 0 && med >= ANOMALY_DRY_MEDIAN) anomaly = { kind: "dry", filed, median: med };
     }
     const seq = (this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM sweep_runs WHERE sweep = ?`, x.name) || { n: 1 }).n;
-    this.#m.sql.exec(`INSERT INTO sweep_runs (sweep, seq, bundle_id, at, filed, fetched, detail, anomaly) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    this.sql.exec(`INSERT INTO sweep_runs (sweep, seq, bundle_id, at, filed, fetched, detail, anomaly) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                      x.name, seq, x.bundle, at, filed, fetched, JSON.stringify(d), anomaly ? JSON.stringify(anomaly) : null);
     return { seq, fetched, filed, anomaly, note };
   }
 
-  /** R57: a seed's new capture filed in the sweep's own bundle as a monitor snapshot with its register row, in the way
-   *  R9 files a tick's bytes (a mechanical `sweep` promotion that changes no field). A refusal is kept as `why`. */
+  /** R5: a seed's new capture filed in the sweep's own bundle as a monitor snapshot with its register row, in the way
+   *  monitoring R9 files a tick's bytes (a mechanical `sweep` promotion that changes no field). A refusal is kept as
+   *  `why`. */
   async #fileSeed(x, doc, at) {
     const sha = doc.capture.sha256, bytes = doc.capture.bytes;
     const leaf = (String(doc.locator || "").split("?")[0].split("/").pop() || "seed").replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 80) || "seed";
     const file = `snapshots/monitor-${sha.slice(0, 12)}-${leaf}`;
-    const img = this.#m.record.readImage(x.bundle);
+    const img = this.record.readImage(x.bundle);
     if (!img || typeof img["bundle.md"] !== "string" || !Number.isSafeInteger(bytes)) return { file: null, why: "the sweep's bundle or the capture's size could not be read" };
     const hex = (t) => createSha256().update(new TextEncoder().encode(t)).hex();
     const files = [];
@@ -467,8 +520,8 @@ export class Sweeps {
       else { files.push({ path, blobSha: v.blobSha, sha256: v.sha256, bytes: v.bytes }); if (v.sha256 === sha) has = true; }
     }
     if (has) return { file: null, why: "the sweep's bundle already holds these bytes" };
-    const fm = this.#m.record.head(x.bundle);
-    const p = await this.#m.promotion.promote({ bundleId: x.bundle, base: hex(img["bundle.md"]), author: SWEEP_ACTOR,
+    const fm = this.record.head(x.bundle);
+    const p = await this.promotion.promote({ bundleId: x.bundle, base: hex(img["bundle.md"]), author: SWEEP_ACTOR,
       snapKey: `${at.replace(/[-:]/g, "")}_${[...crypto.getRandomValues(new Uint8Array(4))].map((b) => b.toString(16).padStart(2, "0")).join("")}`,
       writer: "mechanical", operation: "sweep", meta: { object_type: fm?.type, title: fm?.title, current_state: fm?.currentState },
       files: [...files, { path: file, blobSha: sha, sha256: sha, bytes }],
@@ -477,15 +530,16 @@ export class Sweeps {
   }
 
   /* ================================================================== *
-   * Reads (R61, R63, R30) and the scope check (R64)
+   * Reads (R9, R11, monitoring R30's slate) and the scope check (R12)
    * ================================================================== */
 
-  /** R61: every sweep in a `gathering.json` the viewer may see. */
+  /** R9: every sweep in a `gathering.json` the viewer may see (`op=sweeps`), through monitoring's gate (its R65). */
   sweeps({ viewer = null, now = null } = {}) {
-    this.#k.register();
-    const nowMs = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : this.#m.now();
-    const paused = this.#m.paused().paused;
-    const items = this.#all(this.#k.gate(viewer)).map((x) => {
+    this.registerSweepScope();
+    const nowMs = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : this.now();
+    const pause = this.host.paused();
+    const items = this.#all(this.host.gate(viewer)).map((x) => {
+      const paused = pause.paused;
       const st = this.#standing(x, nowMs, paused);
       const runs = this.#runs(x.name);
       const r = x.sweep.ratified === true ? this.ratifier(x.bundle, x.sweep.id) : null;
@@ -494,12 +548,12 @@ export class Sweeps {
                next: st.next !== null ? stampInstant("second", st.next) : null, held: st.held ? "backlog" : null,
                backlog: st.backlog, backlog_limit: st.limit, silent: this.#silent(runs, st.held), runs };
     });
-    return { ok: true, as_of: stampInstant("second", nowMs), paused: this.#m.paused(), sweeps: items, formats: listFormats() };
+    return { ok: true, as_of: stampInstant("second", nowMs), paused: pause, sweeps: items, formats: listFormats() };
   }
 
   #silent(runs, held) { return !held && runs.length >= SILENT_RUNS && runs.slice(0, SILENT_RUNS).every((r) => r.filed === 0); }
 
-  /** R63: each sweep's conditions that need a member's look, derived on read and writing nothing. */
+  /** R11: each sweep's conditions that need a member's look, derived on read and writing nothing. */
   sweepConditions({ viewer = null, now = null } = {}) {
     const out = [];
     for (const x of this.sweeps({ viewer, now }).sweeps) {
@@ -516,13 +570,15 @@ export class Sweeps {
     return { ok: true, conditions: out };
   }
 
-  /** R30: the due sweeps, for the slate, each with its definition as quoted data. */
+  /** R9 (monitoring R30, R66): the due sweeps the viewer `sees`, for the slate, each with its definition as quoted
+   *  data; monitoring sets them inside its fixed framing. */
   dueForSlate(nowMs, sees) {
     return this.plan(nowMs).due.filter((x) => sees(x.bundle))
       .map((x) => ({ kind: "ratified-sweep", bundle: x.bundle, id: x.sweep.id, definition: x.sweep }));
   }
 
-  /** R64: capture-requests R45's scope check: the sweep ratified and not held, and every locator in its scope. */
+  /** R12: capture-requests R45's scope check: the sweep ratified and not held, and every locator in its scope, by the
+   *  matcher a run uses (R1's `inScope`). */
   scopeCheck({ sweep = null, locators = [] } = {}) {
     const x = this.#all().find((y) => y.name === sweep);
     if (!x) return { ok: false, reason: "unknown", detail: `no sweep is named ${String(sweep).slice(0, 80)}` };

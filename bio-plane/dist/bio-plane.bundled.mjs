@@ -106536,7 +106536,7 @@ var FILINGS_CHECKS = Object.freeze({
     where: at20("filingPrepare", "is-filing-prepare"),
     translation: "Name a template or write the words, not both."
   },
-  /* T22 (DEC-88, K1025): R8's reason, a new row, awaiting stamp. */
+  /* T22 (DEC-88, K1025): R8's reason, a new row, taken by 1.53.0. */
   PACKET_NO_REASON: {
     check: "C-115.44",
     where: at20("counselPacket", "is-counsel-packet"),
@@ -114401,7 +114401,7 @@ var Actions = class _Actions {
       ...gate.args
     );
   }
-  /* K57's small helpers, copied from the legacy store (which keeps its own for its other writers). */
+  /* K57's small helpers, copied from the retired legacy store at the extraction; this module keeps its own copy. */
   static #appendStateHistory(text5, e) {
     const lines = text5.split("\n");
     if (lines[0] !== "---") return null;
@@ -133282,7 +133282,7 @@ function checkPhases(phases, { chosen, subjects }) {
       starts = { branch_of: s.branch_of, when: s.when };
     else if (isObj18(s) && s.when_subject !== void 0 && (s.reaches === "resolved" || s.reaches === "stage")) {
       const subj = normSubject(s.when_subject);
-      if (!subj) return bad("when_subject is a subject of the plan");
+      if (!subj) return bad("when_subject names a matter of the plan");
       if (s.reaches === "stage" && !(Number.isInteger(s.stage) && s.stage >= 1 && s.stage <= STAGE_MAX))
         return bad(`a track reaching a stage names the stage, 1 to ${STAGE_MAX}`);
       if (s.reaches === "resolved" && s.stage !== void 0 && s.stage !== null) return bad("a track reaching resolved names no stage");
@@ -133320,7 +133320,7 @@ function checkPhases(phases, { chosen, subjects }) {
     if (target !== null && !ids.has(target))
       return { fault: "branch", index: i, phase: target, detail: `phase ${target} is not a phase of this scenario` };
     if (s.when_subject && !subjects.has(subjectKey(s.when_subject)))
-      return { fault: "branch", index: i, subject: s.when_subject, detail: "that subject is not one the plan is about" };
+      return { fault: "branch", index: i, subject: s.when_subject, detail: "that matter is not one the plan is about" };
     if (s.branch_of && !out.find((x) => x.id === s.branch_of).checkpoint)
       return { fault: "branch", index: i, phase: s.branch_of, detail: `phase ${s.branch_of} has no checkpoint to branch on` };
     for (const v of Object.values(p.branches || {}))
@@ -133417,6 +133417,8 @@ var CLOSED_INQUIRY_STATES = Object.freeze(["concluded", "dismissed", "divided", 
 var DISCLOSURE = (run2, skill) => `Suggested by the assistant (machine work) in run ${run2}, under skill version ${skill ?? "undetermined"}. It is not the group's decision; it becomes an option only when a member adopts it.`;
 var PROPOSAL_SAYS5 = "this is a proposal, not an option: it is stored apart from the plan's options and becomes one only when a member adopts it, in their own words for any reason the plan asks.";
 var CHECK_SAYS = "a check informs; it never refuses or changes anything.";
+var PREVIEW = Symbol("action-plans start preview");
+var PREVIEW_SAYS = "a preview of starting this option: what the action would be, the matters it would rest on and the reminders it would set. Nothing was written: no action, no id, no reminder.";
 var DAY_MS6 = 864e5;
 var ACT2 = Symbol("action-plans act");
 var WITHHELD = Symbol("action-plans withheld");
@@ -134110,7 +134112,7 @@ var ActionPlans = class {
       entry = { kind: "subject_remove", key, subject: held.find((x) => x.key === key).subject };
     }
     Object.assign(entry, { reason: reason.trim(), author, at: this.now() });
-    const w = this.#append(p, entry, { blurb: kind === "add" ? "Subject added" : "Subject removed" });
+    const w = this.#append(p, entry, { blurb: kind === "add" ? "Matter added" : "Matter removed" });
     if (!w.ok) return w;
     const served = kind === "remove" ? this.#options(p.id).filter((x) => (x.fields.subjects || []).some((y) => subjectKey(y) === entry.key)).map((x) => x.id) : [];
     return {
@@ -134599,24 +134601,27 @@ var ActionPlans = class {
     return [...out];
   }
   /** R18, R29: start a chosen option: compose its action, promote it, set the reminders asked with the choice, and link
-   *  them, in one act; a refusal of either leaves neither. */
-  optionStart(args = {}) {
+   *  them, in one act; a refusal of either leaves neither. `mode` is this module's own: R37's preview runs this same
+   *  path in a transaction it rolls back. */
+  optionStart(args = {}, mode = null) {
     const { plan, option, kind, contact, breach, premise_override: override, author, viewer } = args;
+    const preview = mode === PREVIEW;
+    const done = (r2) => preview ? this.#previewOf(args, r2) : r2;
     if (isMachine2(author))
-      return refusal18("MACHINE_CANNOT_START", "an option is started by a named member; a machine never creates an action from a plan. Nothing was written.");
+      return done(refusal18("MACHINE_CANNOT_START", "an option is started by a named member; a machine never creates an action from a plan. Nothing was written."));
     const o = this.#openPlan(plan, author, viewer, "optionStart");
-    if (o.r) return o.r;
+    if (o.r) return done(o.r);
     const p = o.p;
     const opt = this.#option(p.id, option);
-    if (!opt) return refuseNoSuchOption(option);
+    if (!opt) return done(refuseNoSuchOption(option));
     if (opt.disposition !== "chosen")
-      return refusal18(
+      return done(refusal18(
         "OPTION_NOT_CHOSEN",
         `${opt.id} is ${opt.disposition}, not chosen. Nothing was written.`,
         { disposition: opt.disposition }
-      );
+      ));
     if (opt.action)
-      return refusal18("OPTION_STARTED", `${opt.id} was started as ${opt.action}. Nothing was written.`, { action: opt.action });
+      return done(refusal18("OPTION_STARTED", `${opt.id} was started as ${opt.action}. Nothing was written.`, { action: opt.action }));
     const member = contactId(contact);
     if (contact !== void 0 && contact !== null) {
       let facts = null;
@@ -134627,7 +134632,7 @@ var ActionPlans = class {
           facts = null;
         }
       }
-      if (!facts) return contactNotAMember();
+      if (!facts) return done(contactNotAMember());
     }
     const reason = override === void 0 || override === null ? null : isObj18(override) ? override.reason : override;
     const at26 = this.now();
@@ -134653,10 +134658,64 @@ var ActionPlans = class {
       }
       const w = this.#append(p, { kind: "start", option: opt.id, action: a.id, author, at: at26 }, { blurb: "Option started" });
       if (!w.ok) return w;
+      if (preview) return { ok: false, [PREVIEW]: true };
       return { ok: true, action: a.id, reminders: set };
     });
+    if (preview) return done(r && r[PREVIEW] ? null : r);
     if (!ok(r)) return r;
     return { ok: true, plan: p.id, option: opt.id, action: r.action, reminders: r.reminders, author, at: at26 };
+  }
+  /** R37: what `optionStart` (R18) would do with the same arguments, at this instant, writing nothing: R18's own path,
+   *  run in a transaction that is rolled back, so no id is allocated, no reminder set and nothing promoted. */
+  optionStartPreview(args = {}) {
+    return this.optionStart(args, PREVIEW);
+  }
+  /* R37: the preview's answer. `refused` is R18's refusal, or null when the start would land. A plan or option the
+     viewer may not see is answered exactly as R18 answers it; otherwise the action R18 would compose, the reminders
+     R29 would set, and `would_start` or the refusal. A matter the viewer may not see is withheld whole (R35). */
+  #previewOf(args, refused2) {
+    const { plan, option, kind, contact, breach, premise_override: override, author, viewer } = args;
+    const p = this.#plan(plan, viewer);
+    const opt = p ? this.#option(p.id, option) : null;
+    if (!p || !opt) return refused2;
+    const see = this.#sight(viewer);
+    const fields = see.fields(opt.fields);
+    const reason = override === void 0 || override === null ? null : isObj18(override) ? override.reason ?? null : override;
+    const legs = [];
+    for (const s of fields.subjects || []) {
+      const target = s.kind === "inquiry" ? s.inquiry : s.determination;
+      let leg = legs.find((l) => l.target === target);
+      if (!leg) legs.push(leg = { target, kind: "rests_on", subjects: [] });
+      leg.subjects.push({ subject: s, ...this.#support(s, p.project, viewer) });
+    }
+    const reminders = (opt.reminders || []).map((rem) => ({
+      entry: (opt.fields.dates || []).findIndex((d) => d.date === rem.date),
+      date: rem.date,
+      on: rem.on,
+      set_by: opt.chosenBy || author
+    }));
+    return {
+      ok: true,
+      plan: p.id,
+      option: opt.id,
+      preview: true,
+      action: {
+        kind: typeof kind === "string" ? kind : null,
+        addressee: fields.addressee ?? null,
+        clock: (fields.dates || []).map((d) => ({ date: d.date, basis: d.basis, status: "pending" })),
+        legs,
+        plan: p.id,
+        option: opt.id,
+        contact: contact === void 0 || contact === null ? null : contactId(contact) || null,
+        breach: breach === true,
+        premise_override: reason === null ? null : { reason }
+      },
+      reminders,
+      would_start: refused2 === null,
+      ...refused2 === null ? {} : { refusal: refused2 },
+      says: PREVIEW_SAYS,
+      ...see.withheld ? { out_of_view: true } : {}
+    };
   }
   /** R20: a member closes a plan, with a reason. */
   planClose(args = {}) {
@@ -135222,6 +135281,7 @@ for (const name2 of [
   "scenarioSet",
   "checkpointRecord",
   "optionStart",
+  "optionStartPreview",
   "planClose",
   "checkpointsDue",
   "planProposals",
@@ -135334,6 +135394,7 @@ function actionPlansOps(m, url, body) {
       judged: pick2("judged")
     })),
     optionstart: () => m.optionStart(stamped({ plan: pick2("plan"), option: pick2("option"), kind: pick2("kind") })),
+    optionstartpreview: () => m.optionStartPreview(stamped({ plan: pick2("plan"), option: pick2("option"), kind: pick2("kind") })),
     planclose: () => m.planClose(stamped({ id: pick2("id") ?? pick2("plan"), reason: pick2("reason") })),
     planproposals: () => m.planProposals({ plan: pick2("plan"), run: pick2("run"), after: pick2("after"), viewer: qp("viewer") })
   };

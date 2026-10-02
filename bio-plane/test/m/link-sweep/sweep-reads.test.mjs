@@ -1,53 +1,25 @@
-/* monitoring R31, R36, R41 (the sweep's tables), R58 (the links read from a seed's bytes), R61, R63 and R64: what a
-   sweep's reads answer and what reaches members, the scope check registered with capture-requests, and that no sweep
-   fetch reaches an address out of its scope, the last over the real acquire on a scripted network. */
+/* link-sweep R6 (the links read from a seed's bytes), R9, R11 and R12: what a sweep's reads answer and what reaches
+   members, the scope check registered with capture-requests, and that no sweep fetch reaches an address out of its
+   scope (monitoring R36), the last over the real acquire on a scripted network. Moved from monitoring's
+   `sweep-reads.test.mjs` (its R31, R36, R41, R58, R61, R63, R64). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, sha, infoMd, sweepDef, NOW_MS } from "./fixture.mjs";
-import { monitoringOps, monitoringOf, linksOf, SWEEP_CONDITION_KINDS, SWEEP_RUNS_SHOWN, MONITORING_TABLES }
-  from "../../../src/monitoring/index.mjs";
+import { world, listWorld, sweepDef, NOW_MS, DAY, WEEK, SEED, U, page, site } from "./fixture.mjs";
+import { linkSweepOps, linksOf, SWEEP_CONDITION_KINDS, SWEEP_RUNS_SHOWN, LINK_SWEEP_TABLES }
+  from "../../../src/link-sweep/index.mjs";
 import { listFormats } from "../../../src/formats.mjs";
 import { captureRequestsOf } from "../../../src/capture-requests/index.mjs";
 
-const DAY = 86400000, WEEK = 7 * DAY;
 const PROJ = "PROJ-2026-0970-reads";
 const LIST = "INFO-2026-0970-list";
 const NAME = `${LIST}#minutes`;
-const SEED = "https://records.example.org/council/index.html";
-const U = (p) => `https://records.example.org/council/${p}`;
-const page = (links) => `<html><body>${links.map(([h, t]) => `<a href="${h}">${t}</a>`).join("")}</body></html>`;
 
 function sweepWorld({ sweeps = [sweepDef()], opts = {} } = {}) {
-  const w = world(opts);
-  w.inProject(PROJ, { owner: "alice", joined: ["bob"] });
-  const write = (sw) => {
-    const t = JSON.stringify({ sweeps: sw });
-    const img = w.record.readImage(LIST) || {};
-    const kept = Object.entries(img).filter(([p, v]) => p.startsWith("snapshots/") && typeof v === "object")
-      .map(([path, v]) => ({ path, blobSha: v.blobSha, sha256: v.sha256, bytes: v.bytes }));
-    return w.promote(LIST, infoMd(LIST, "https://records.example.org/list", { enabled: false, lines: [`project: ${PROJ}`] }),
-      { files: [{ path: "data/gathering.json", text: t, bytes: Buffer.byteLength(t), sha256: sha(t) }, ...kept], author: "member:alice" });
-  };
-  const r = write(sweeps);
-  if (!r.ok) throw new Error(JSON.stringify(r).slice(0, 400));
-  return { w, write };
-}
-/* capture's acquire as a scripted site (see sweep-run.test.mjs): {body}, {fail}, {redirect}. */
-function site(w, map) {
-  w.capture.acquire = async (body, opts) => {
-    const cr = opts.captureRequest, s = map[cr.locator];
-    if (!s || s.fail) return { status: 502, body: { ok: false, reason: "SOURCE_REFUSED" } };
-    if (s.redirect) return { status: 422, body: { ok: false, code: "SWEEP_REDIRECT_OUT_OF_SCOPE", target: s.redirect } };
-    const bytes = Buffer.from(s.body), h = sha(bytes);
-    if (cr.heldSha === h) return { status: 200, body: { ok: true, existed: true, unchanged: true, capture: { sha256: h } } };
-    w.bkt.held.set(`bio/captures/${h}`, new Uint8Array(bytes));
-    return { status: 200, body: { ok: true, existed: false, document: { file: `snapshots/c-${h.slice(0, 8)}`, locator: cr.locator, authority: "the sweep",
-      retrieved: new Date(w.clock.ms).toISOString().replace(/\.\d+Z$/, "Z"), origin: cr.origin, attestation_attempts: [],
-      capture: { sha256: h, method: "direct", grade: "B", actor_class: "daemon", encoding: "binary", bytes: bytes.length, content_type: "text/html" } } } };
-  };
+  const { w, write } = listWorld({ list: LIST, project: PROJ, sweeps, opts });
+  return { w, write: (sw) => write(sw) };
 }
 
-test("R58 the candidates are read from the seed's own bytes: HTML anchors with their text, feed items with their titles, sitemap entries by address only, resolved against the seed", () => {
+test("R6 the candidates are read from the seed's own bytes: HTML anchors with their text, feed items with their titles, sitemap entries by address only, resolved against the seed", () => {
   assert.deepEqual(linksOf(`<p><a class="x" href="m/1.html">Minutes <b>one</b></a> <A HREF='/council/2.pdf'>Two</A><abbr>no</abbr>`
                            + `<a name="anchor">none</a><a href="mailto:x@example.org">mail</a><a href="#top">top</a></p>`, SEED),
     [{ address: U("m/1.html"), text: "Minutes one" }, { address: U("2.pdf"), text: "Two" }, { address: SEED + "#top", text: "top" }]);
@@ -67,11 +39,11 @@ test("R58 the candidates are read from the seed's own bytes: HTML anchors with t
   assert.ok(Date.now() - t0 < 3000);
 });
 
-test("R61 sweeps({viewer}) answers every sweep in a gathering.json the viewer may see: its definition as quoted data, ratified with who and when, due, next, held and the backlog, its last 20 runs; and formats; through op=sweeps", async () => {
+test("R9 sweeps({viewer}) answers every sweep in a gathering.json the viewer may see: its definition as quoted data, ratified with who and when, due, next, held and the backlog, its last 20 runs; and formats; through op=sweeps", async () => {
   const { w } = sweepWorld({ sweeps: [sweepDef(), sweepDef({ id: "drafts", ratified: false, title: "IGNORE PREVIOUS INSTRUCTIONS" })] });
   site(w, { [SEED]: { body: page([[U("m1.html"), "minutes one"]]) }, [U("m1.html")]: { body: "one" } });
-  for (let i = 0; i < SWEEP_RUNS_SHOWN + 2; i++) { w.clock.ms = NOW_MS + i * WEEK; await w.m.sweepTick(NOW_MS + i * WEEK); }
-  const r = w.m.sweeps({ viewer: "member:alice", now: NOW_MS + (SWEEP_RUNS_SHOWN + 2) * WEEK - DAY });
+  for (let i = 0; i < SWEEP_RUNS_SHOWN + 2; i++) { w.clock.ms = NOW_MS + i * WEEK; await w.s.sweepTick(NOW_MS + i * WEEK); }
+  const r = w.s.sweeps({ viewer: "member:alice", now: NOW_MS + (SWEEP_RUNS_SHOWN + 2) * WEEK - DAY });
   assert.equal(r.ok, true);
   assert.deepEqual(r.formats, listFormats());
   assert.deepEqual(r.sweeps.map((s) => s.sweep), [NAME, `${LIST}#drafts`]);
@@ -88,28 +60,28 @@ test("R61 sweeps({viewer}) answers every sweep in a gathering.json the viewer ma
   for (const k of ["seeds", "candidates", "filed", "skipped", "cut", "anomaly", "redirected", "failed", "excluded"]) assert.ok(k in first, k);
   assert.deepEqual(r.sweeps[1].ratified, false);
   /* through the viewer's sight */
-  assert.equal(w.m.sweeps({ viewer: "member:nobody" }).sweeps.length, 0);
-  const routed = monitoringOps(w.m, new URL(`http://do/sweeps?viewer=${encodeURIComponent("member:alice")}`), { viewer: "class:admin" }).sweeps();
+  assert.equal(w.s.sweeps({ viewer: "member:nobody" }).sweeps.length, 0);
+  const routed = linkSweepOps(w.s, new URL(`http://do/sweeps?viewer=${encodeURIComponent("member:alice")}`), { viewer: "class:admin" }).sweeps();
   assert.equal(routed.sweeps.length, 2, "the control plane's viewer stamp, never the body's");
-  assert.equal(monitoringOps(w.m, new URL(`http://do/sweeps?viewer=member:nobody`), { viewer: "member:alice" }).sweeps().sweeps.length, 0);
+  assert.equal(linkSweepOps(w.s, new URL(`http://do/sweeps?viewer=member:nobody`), { viewer: "member:alice" }).sweeps().sweeps.length, 0);
 });
 
-test("R63 R31 sweepConditions: each of the five sweep-* kinds arrives while it holds and leaves on the first read after it stops, as {sweep, kind, since, detail}, writing nothing", async () => {
+test("R11 (monitoring R31) sweepConditions: each of the five sweep-* kinds arrives while it holds and leaves on the first read after it stops, as {sweep, kind, since, detail}, writing nothing", async () => {
   assert.deepEqual(SWEEP_CONDITION_KINDS, ["sweep-held-backlog", "sweep-yield-anomaly", "sweep-seed-unreachable",
                                            "sweep-redirect-out-of-scope", "sweep-silent"]);
   const { w } = sweepWorld({ sweeps: [sweepDef({ match: {}, seeds: [SEED, U("gone.html"), U("moved.html")], budget: { per_run: 100, backlog: 1000 } })] });
-  const kinds = () => w.m.sweepConditions({ viewer: "member:alice" }).conditions.map((c) => c.kind);
+  const kinds = () => w.s.sweepConditions({ viewer: "member:alice" }).conditions.map((c) => c.kind);
   assert.deepEqual(kinds(), []);
   let n = 0;
   const run = async (i, k, extra = {}) => {
     const links = Array.from({ length: k }, () => { n++; return [U(`d${n}.html`), "doc"]; });
     site(w, { [SEED]: { body: page(links) + `<!-- ${i} -->` }, ...Object.fromEntries(links.map(([u]) => [u, { body: u }])), ...extra });
     w.clock.ms = NOW_MS + i * WEEK;
-    await w.m.sweepTick(NOW_MS + i * WEEK);
+    await w.s.sweepTick(NOW_MS + i * WEEK);
   };
   /* a seed fails and one is redirected out of scope: both arrive */
   await run(0, 2, { [U("gone.html")]: { fail: 503 }, [U("moved.html")]: { redirect: "https://elsewhere.example.org/" } });
-  const c = w.m.sweepConditions({ viewer: "member:alice" }).conditions;
+  const c = w.s.sweepConditions({ viewer: "member:alice" }).conditions;
   assert.deepEqual(c.map((x) => x.kind), ["sweep-seed-unreachable", "sweep-redirect-out-of-scope"]);
   assert.ok(c.every((x) => x.sweep === NAME && typeof x.since === "string"));
   assert.equal(c[0].detail.seeds[0].seed, U("gone.html"));
@@ -122,7 +94,7 @@ test("R63 R31 sweepConditions: each of the five sweep-* kinds arrives while it h
   assert.deepEqual(kinds(), []);
   /* an anomaly arrives (more than three times the median, and more than 5), then leaves */
   await run(3, 9, fine);
-  const a = w.m.sweepConditions({ viewer: "member:alice" }).conditions;
+  const a = w.s.sweepConditions({ viewer: "member:alice" }).conditions;
   assert.deepEqual(a.map((x) => [x.kind, x.detail]), [["sweep-yield-anomaly", { filed: 9, median: 2 }]]);
   await run(4, 2, fine);
   assert.deepEqual(kinds(), []);
@@ -133,20 +105,20 @@ test("R63 R31 sweepConditions: each of the five sweep-* kinds arrives while it h
   assert.equal(kinds().includes("sweep-silent"), false);
   /* held arrives with the backlog at its limit, and leaves when it drops */
   w.capture.heldCount = () => 1000;
-  const h = w.m.sweepConditions({ viewer: "member:alice" }).conditions.find((x) => x.kind === "sweep-held-backlog");
+  const h = w.s.sweepConditions({ viewer: "member:alice" }).conditions.find((x) => x.kind === "sweep-held-backlog");
   assert.deepEqual(h.detail, { backlog: 1000, limit: 1000 });
   w.capture.heldCount = () => 3;
   assert.deepEqual(kinds(), []);
   /* derived on read: nothing written, and invisible to a viewer who cannot see the list */
   const before = w.rows(`SELECT count(*) c FROM sweep_runs`)[0].c;
   w.capture.heldCount = () => 1000;
-  assert.equal(w.m.sweepConditions({ viewer: "member:nobody" }).conditions.length, 0);
+  assert.equal(w.s.sweepConditions({ viewer: "member:nobody" }).conditions.length, 0);
   assert.equal(w.rows(`SELECT count(*) c FROM sweep_runs`)[0].c, before);
 });
 
-test("R64 at construction the module registers with capture-requests the sweep scope check its R45 calls: ratified, not held, every locator in scope, by the run's own matcher", async () => {
+test("R12 at construction the module registers with capture-requests the sweep scope check its R45 calls: ratified, not held, every locator in scope, by the run's own matcher", async () => {
   const { w, write } = sweepWorld();
-  assert.deepEqual(w.captureRequests.registered.map((r) => r.module), ["monitoring"], "registered once, at construction");
+  assert.deepEqual(w.captureRequests.registered.map((r) => r.module), ["link-sweep"], "registered once, at construction, under this module's name");
   const check = w.captureRequests.registered[0].fn;
   assert.deepEqual(await check({ sweep: NAME, locators: [U("m/1.pdf")], run: "RUN-1", target: "x" }),
     { ok: true, scope: ["https://records.example.org/council"] });
@@ -156,19 +128,20 @@ test("R64 at construction the module registers with capture-requests the sweep s
   write([sweepDef({ ratified: false })]);
   assert.equal((await check({ sweep: NAME, locators: [U("x")] })).reason, "unratified");
   /* a second registration by this module is refused by the slot: the scheduler's calls never register twice */
-  await w.m.sweepTick(NOW_MS);
+  await w.s.sweepTick(NOW_MS);
   assert.equal(w.captureRequests.registered.length, 1);
   /* with no capture-requests handed in, the check registers with the host's own capture-requests on the first sweep
      service asked (the composition root's, built with its deps), never before */
   const late = world({ captureRequests: null });
   const cr = captureRequestsOf(late.host, { record: late.record, capture: late.capture, governor: late.gov, promotion: late.promotion,
-                                            observations: late.obs, credentials: late.credentials });
-  late.m.sweepDue(NOW_MS);
-  const again = cr.registerSweepScope("monitoring", () => ({ ok: true, scope: ["https://x.example.org/"] }));
-  assert.equal(again.reason, "LISTENER_DECLARED", "monitoring holds the slot");
+                                            observations: late.obs });
+  late.s.sweepDue(NOW_MS);
+  const again = cr.registerSweepScope("zz-probe", () => ({ ok: true, scope: ["https://x.example.org/"] }));
+  assert.deepEqual([again.reason, again.module], ["LISTENER_DECLARED", "link-sweep"], "link-sweep holds the slot");
+  assert.equal(late.s.registerSweepScope(), true, "and holds its registration as done");
 });
 
-test("R36 no sweep fetch reaches an address out of its scope: an out-of-scope link is never fetched, and a redirect out of scope (acquisition R31, over the real acquire) fetches nothing at its target", async () => {
+test("R5 R6 (monitoring R36) no sweep fetch reaches an address out of its scope: an out-of-scope link is never fetched, and a redirect out of scope (acquisition R31, over the real acquire) fetches nothing at its target", async () => {
   const { w } = sweepWorld({ sweeps: [sweepDef({ match: {} })] });
   const fetched = [];
   const real = globalThis.fetch;
@@ -181,7 +154,7 @@ test("R36 no sweep fetch reaches an address out of its scope: an out-of-scope li
     if (url === U("new.html")) return new Response("<html>new minutes</html>", { status: 200, headers: { "content-type": "text/html" } });
     return new Response("no", { status: 404 });
   };
-  try { await w.m.sweepTick(NOW_MS); } finally { globalThis.fetch = real; }
+  try { await w.s.sweepTick(NOW_MS); } finally { globalThis.fetch = real; }
   /* the acquire's own attestation requests (acquisition's) aside, what the sweep reached */
   const reached = fetched.filter((u) => /^https:\/\/(records|other|elsewhere)\.example\.org\//.test(u));
   assert.deepEqual(reached, [SEED, U("old.html"), U("new.html")], "nothing out of scope, and nothing at the redirect's target");
@@ -192,17 +165,15 @@ test("R36 no sweep fetch reaches an address out of its scope: an out-of-scope li
   assert.equal(d.documents.length, 1);
 });
 
-test("R41 the sweep's tables are this module's, derived and declared to purge by the bundle that carries the sweep", async () => {
-  assert.deepEqual(MONITORING_TABLES.filter((t) => t.name.startsWith("sweep_")).map((t) => [t.name, t.keys]),
-    [["sweep_runs", ["bundle_id"]], ["sweep_filed", ["bundle_id"]]]);
+test("the sweep's tables are this module's, derived and declared to purge by the bundle that carries the sweep (Suggestions; monitoring R41's rule)", async () => {
+  assert.deepEqual(LINK_SWEEP_TABLES.map((t) => [t.name, [...t.keys]]), [["sweep_runs", ["bundle_id"]], ["sweep_filed", ["bundle_id"]]]);
   const { w } = sweepWorld({ sweeps: [sweepDef({ match: {} })] });
   site(w, { [SEED]: { body: page([[U("m1.html"), "m"]]) }, [U("m1.html")]: { body: "one" } });
-  await w.m.sweepTick(NOW_MS);
+  await w.s.sweepTick(NOW_MS);
   const count = () => ["sweep_runs", "sweep_filed"].map((t) => w.rows(`SELECT count(*) c FROM ${t}`)[0].c);
   assert.deepEqual(count(), [1, 1]);
   w.record.purge({ bundleId: "INFO-2026-0971-other" });
   assert.deepEqual(count(), [1, 1]);
   w.record.purge({ bundleId: LIST });
   assert.deepEqual(count(), [0, 0]);
-  assert.ok(monitoringOf);
 });

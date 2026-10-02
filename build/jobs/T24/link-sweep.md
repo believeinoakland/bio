@@ -1,0 +1,55 @@
+# link-sweep (T24)
+
+**Status** · session_01CB47oKg96hYW5eGnbZtNP7 · depth 2 · COMPLETE · handled B5
+
+## J1 · QUESTION
+
+Q1 (R66's grammar and C-18.16; decides one field monitoring's job reads). `SWEEP_TERM_REFUSED` (C-18.16) is this module's row, and monitoring R66 says R27's one refusal is `SWEEP_TERM_REFUSED` before `GATHERING_REFUSED`; monitoring cannot import this module (P4), so it cannot read the row's check and translation itself.
+
+My reading, which I am building: the code is minted where the term is refused, in this module's `grammar` (DEC-49 region `is-sweep-term` in `src/link-sweep/checks.mjs`, the row's `where` `src/link-sweep/checks.mjs sweepGrammar > is-sweep-term`). Each finding `grammar(entry, ids)` answers is `{check: "C-18.5", severity: "error", message}` (C-18.5's finding shape, as `checkGatheringGrammar` gives today), and a refused term's finding also carries `code: "SWEEP_TERM_REFUSED"` and `refusal: {code: "SWEEP_TERM_REFUSED", check: "C-18.16", translation}`. Monitoring's R27, when any finding carries `code: "SWEEP_TERM_REFUSED"`, answers `{ok: false, reason: "SWEEP_TERM_REFUSED", code, check, translation}` from that finding's `refusal`, `detail` the term findings' messages joined with "; ", and `findings` all errors as `{check, detail}` (today's answer, byte for byte). `fence(c, nextText)` answers null or the whole refusal (`SWEEP_NOT_A_MEMBER` / `SWEEP_RATIFY_NOT_AN_OWNER` with check, translation, detail, sweeps, project), which monitoring returns as is. `dueForSlate(nowMs, sees)` answers today's items `{kind: "ratified-sweep", bundle, id, definition}`.
+
+If monitoring's job builds another shape, tell me which and I conform. Until monitoring's merge I test against a stand-in keeping R65/R66 as stated plus this reading.
+
+## J2 · QUESTION
+
+Q2 (adds to J1, which K1206 ruled; one detail monitoring R27 composes). `grammar(entry, ids)` is handed the entry, not its index, so a finding's `message` cannot carry the `gathering.json sweeps[<i>]` prefix C-18.5's findings carry today.
+
+My reading, built (pushed on job/T24/link-sweep): each finding's `message` begins with the field it is about, exactly today's text after the prefix (`cadence is missing`, `match.terms[0] SWEEP_TERM_REFUSED: the term "…" is refused for …`), or with `carries '<key>', which is not a sweep's field (…)` for a key that is not a sweep's; each finding also carries `field` (the field, or null for that key). R27 writes `gathering.json sweeps[${i}]` then `.` + message when `field` is set, else a space + message, which reproduces today's finding text byte for byte, so `detail` and `findings` are unchanged. My stand-in composes it so.
+
+## J3 · REPORT
+
+REPORT (findings in other modules; nothing of theirs edited). The module is built and pushed (job/T24/link-sweep @ HEAD): `bio-plane/src/link-sweep/` (index, sweep, sweep-match, checks, schema) and `bio-plane/test/m/link-sweep/` (29 tests, all green against monitoring's stand-in; format, architecture, coverage 12/12 and ownership checks pass). I wait for monitoring's merge to run against the real seam.
+
+1. A red beyond those named, from my merge until control-plane's: `test/m/control-plane/families.test.mjs`:47 (control-plane R22, CHECK_FAMILIES total) finds `bio-plane/src/link-sweep/checks.mjs SWEEP_CHECKS` (and its re-export from `index.mjs`) reached by no family file. `control-plane/families.mjs` needs `src/link-sweep/checks.mjs` in `CHECK_FAMILY_FILES`, but `modules.json` gives control-plane no `link-sweep` edge (nor op-declarations, whose L11 entry declares `sweeps` through link-sweep): the edges are yours to add before those L11 jobs. Monitoring's `checks.mjs` stops exporting the sweep rows at its merge, so the list's monitoring entry is unaffected.
+2. The row census (`test/system/row-census.test.mjs`) reads C-18.16–C-18.18 held twice on my branch alone (monitoring's copy still there); after monitoring's removal merges, they read as changed `where`, `awaiting stamp` (red 5), which my COMPLETE will list.
+3. Stale wording in capture-requests (N502/N508's kind, wording only): `capture-requests/index.mjs`:387–394 says the R45 scope check is "registered once at start by `monitoring`" and calls the sweep's sources "monitoring R53"; since N506 it is link-sweep (its R12, R1). Its test `test/m/capture-requests/sweep.test.mjs` registers under the name "monitoring", which still passes (any one module holds the slot).
+4. Callers still reaching the sweep through monitoring, for the L10/L11 jobs named in the plan (red 7): scheduler `index.mjs`:145–147 (`gathering-sweep` on `o("monitoring").sweepDue/Wake/Tick`), queue-producers `index.mjs`:2862–2942 (`this.#monitoring.sweepConditions`), plane `test/m/plane/notices.test.mjs`:152 (`monitoringOf(x.ctx).registerSweepScope()`, which monitoring's removal retires). link-sweep exports `linkSweepOf(host, deps)` (its instance's `sweepDue`, `sweepWake`, `sweepTick(now, rank)`, `sweeps`, `sweepConditions`) and `linkSweepOps(s, url)` (`sweeps`); it registers with capture-requests under "link-sweep".
+5. The plane's bundle is not staled: plane does not yet import link-sweep (`fleetbundles.test.mjs`: 1 pass).
+
+## Completion (LINK-SWEEP #1)
+
+**Entries applied.** L10 link-sweep, N506: the new module `bio-plane/src/link-sweep/` from monitoring's `sweep.mjs` and `sweep-match.mjs` (kept by those names), the sweep's share of `checks.mjs` (`checks.mjs`: C-18.5's sweep arm `sweepGrammar`, the vocabularies, the rows C-18.16–C-18.18 and `sweepRefusal`), of `schema.mjs` (`schema.mjs`: `sweep_runs`, `sweep_filed`, declared to purge by the sweep's bundle) and of `index.mjs` (`index.mjs`: `linkSweepOf(host, deps)`, `linkSweepOps(s, url)` with `sweeps`). R1–R12 are monitoring R53–R64, no meaning changed. The module reaches monitoring only through R65 `sweepHost()` (pause, epochs and claims under the consumer `gathering-sweep`, the running guard, the rank, the landing, the gate, `recheckMs`) and registers once at construction through R66 `registerSweep("link-sweep", {grammar, fence, dueForSlate})`, the shape K1206 and B3 ruled (findings `{check, severity, field, message}`, the message beginning with its field; a refused term's `code` and `refusal`); it registers its R12 scope check with capture-requests under "link-sweep" (at construction when handed, else on the first sweep service). Exports for the later jobs: `sweepDue`, `sweepWake`, `sweepTick(now, rank)` (scheduler), `sweepConditions` (queue-producers), `sweeps` and `linkSweepOps` (control-plane, op-declarations), `linkSweepOf` (plane). The tests `sweep-grammar`, `sweep-reads`, `sweep-run` moved with R53–R64 renamed R1–R12, and `seam.test.mjs` added (R66's registration and fence order, `dueForSlate`, R65's host services, the rows, the op map), all run against the real monitoring after its merge (K1208). Stale-note rescan (N502/N508's kind): none left; the moved rows' note re-worded to their stamp (1.54.0, as monitoring's) and their new `awaiting stamp`.
+
+**Improvements made in the move.** A `sweep_runs.anomaly` that does not parse no longer throws out of every read (`#runs`); the needless second export of the rows was not kept.
+
+**Rows awaiting stamp (red 5, until T25's L2).** C-18.16 SWEEP_TERM_REFUSED, C-18.17 SWEEP_NOT_A_MEMBER and C-18.18 SWEEP_RATIFY_NOT_AN_OWNER are `awaiting stamp`: moved from monitoring's `SWEEP_CHECKS` to `src/link-sweep/checks.mjs` `SWEEP_CHECKS`, each `where` re-pointed (`src/link-sweep/checks.mjs sweepGrammar > is-sweep-term`, `src/link-sweep/sweep.mjs sweepFence > is-sweep-member`, `src/link-sweep/sweep.mjs sweepFence > is-sweep-owner`), code, number and translation unchanged.
+
+**Deferred.** None.
+
+**Found in other modules** (J3; BOB acted, K1207): control-plane's `CHECK_FAMILIES` misses `src/link-sweep/checks.mjs` (`families.test.mjs`:47, red 7 until control-plane's merge); capture-requests' R45 comment names monitoring (N515, T25); the callers still on monitoring's sweep services (scheduler, queue-producers, plane), red 7. The plane's bundle is not staled (plane does not import link-sweep yet; `fleetbundles.test.mjs` 1 pass, before monitoring's merge).
+
+**Tests and checks** (on `job/T24/link-sweep` with `tranche/T24` @ 9ab66154b9 merged):
+- `node --test bio-plane/test/m/link-sweep/`: 29 pass, 0 fail.
+- `node --test "bio-plane/test/m/**/*.test.mjs"`: 5275 tests, 5251 pass, 13 fail, all named reds: red 6 (`affordances/catalogue.test.mjs`:524); red 7, the sweep's composition (`affordances/catalogue.test.mjs`:903 and `control-plane/r45-routes.test.mjs`:68, the `sweeps` op no longer monitoring's; `control-plane/families.test.mjs`:47 (K1207); `plane/compose.test.mjs`:101, `plane/door.test.mjs`:183 and `plane/notices.test.mjs`:140, `sweepConditions`/`registerSweepScope` no longer monitoring's; `scheduler/consumers.test.mjs`:226, :250, :260 and `scheduler/plane.test.mjs`:206, `gathering-sweep` still on monitoring); red 8 (`scheduler/consumers.test.mjs`:161); red 9 (`plane/notices.test.mjs`:33's assertion at :39). None imports this module.
+- `node --test bio-plane/test/system/row-census.test.mjs`: 1 fail, "changed with no record" for C-18.16–C-18.18 and nothing else: red 5 (the suite declares no T24 layer 3–11 row until T25's L2, its header).
+- `node checks/format.mjs`: 88 modules, 87 requirements files; 0 failures. `node checks/architecture.mjs … link-sweep`: 10 product files, 47 relative imports; 0 failures. `node checks/coverage.mjs … link-sweep`: 12 of 12 live requirement ids named by a test; 0 failures. `node checks/ownership.mjs … link-sweep tranche/T24`: 11 files; 0 failures.
+
+Size (session_01CB47oKg96hYW5eGnbZtNP7): test runs 16, module lines 1108
+
+## J4 · COMPLETE
+
+COMPLETE (B5). link-sweep built, run against the real monitoring after K1208's merge (tranche/T24 @ 9ab66154b9 merged into job/T24/link-sweep); the record's "Completion" section has the whole account.
+- Tests: `test/m/link-sweep/` 29 pass, 0 fail (the moved tests, R1–R12, plus `seam.test.mjs`). Whole `test/m`: 5275 tests, 5251 pass, 13 fail, every one a named red (6; 7, the sweep's composition, incl. families.test.mjs:47 per K1207; 8; 9); none imports this module.
+- Checks: format, architecture (10 files, 47 imports), coverage (12/12), ownership (11 files): 0 failures each.
+- Rows `awaiting stamp` (red 5): C-18.16 SWEEP_TERM_REFUSED, C-18.17 SWEEP_NOT_A_MEMBER, C-18.18 SWEEP_RATIFY_NOT_AN_OWNER, each `where` re-pointed to src/link-sweep (row-census.test.mjs reads them "changed with no record", nothing else).
+- The monitoring stand-in is retired; the seam is exactly K1206/B3's. Deferred: none.

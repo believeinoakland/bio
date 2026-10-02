@@ -16,6 +16,11 @@
  * REACHED as `monitoringOf(host, deps)` (K61): one instance per host, created on the first call. At creation it creates
  * its tables and declares them to record-core's purge (R41), registers the gathering grammar with promotion (R27) and
  * with record-core's audit (R42), and registers its proposal source with intent (R33, N170).
+ *
+ * THE SWEEP'S SEAM (R65, R66; N506, K1159): the link sweep is `link-sweep`'s, a later module this one never imports. It
+ * runs its sweeps under `sweepHost()`, the services this module's own ticks use (one pause, one idempotence key, one
+ * landing), and at composition hands back, once, through `registerSweep`, its share of C-18.5 (the sweep arm R27's check
+ * and R42's audit read), its fence (asked last at the write) and its due sweeps for R30's slate.
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership, promotion   layer 2: `readImage`, `getSetting`, `evidenceStore`, `declarePurge`,
  *                                   `registerAuditCheck`, `allocId` and `transact` (R28's landing); `inSight`,
@@ -30,10 +35,6 @@
  *                                   `pendingClocks`, its R1; `actions` R31 before K617's split), R35
  *                                   (`escalationsDue`).
  *   publication                     R33's published-finding half (`restingCapturesOf`, its R42; N230).
- *   projectStage, captureRequests   the link sweep: R56's closed test (`projectStage`, its R1, R2), and R64's scope
- *                                   check, registered with `registerSweepScope` (its R45) at creation when given, else
- *                                   on the first sweep service asked (so the composition root's own capture-requests,
- *                                   built with its deps, is the one reached).
  *   env      the instance bindings (`MONITOR_TICK_MS`). No binding or credential is a condition of monitoring (R45):
  *            both ticks call `monitor` and capture's `acquire` in process, from the scheduler's alarm (R23, N222).
  *   now      the instance clock in milliseconds (default: the wall clock).
@@ -59,8 +60,6 @@ import { actionClocksOf } from "../action-clocks/index.mjs";
 import { escalationOf } from "../escalation/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
 import { PROJECTION_TABLE } from "../retrieval/index.mjs";
-import { projectStageOf } from "../project-stage/index.mjs";
-import { captureRequestsOf } from "../capture-requests/index.mjs";
 import { readDriveAddress, driveBaselineRow, classifyDriveBaseline } from "../drive.mjs";
 import { RENDERED_METHOD, RENDER_TICK_UNDETERMINED } from "../render.mjs";
 import { detectFormat } from "../formats.mjs";
@@ -69,14 +68,10 @@ import { identify, doctypeFor, assess, CONTRACT } from "../../../docprofile/regi
 import { combine } from "../../../jurisdictions/index.mjs";
 import { parseFrontmatter, isPublicHttpsLocator, createSha256, MACHINE_CLASS_PREFIX, MACHINE_AUTHOR_PREFIX,
          isMachineIdentity } from "../record-grammar/index.mjs";
-import { checkGatheringGrammar, DRIVE_TICK_CHECKS, GATHERING_CHECKS, SWEEP_CHECKS, frequencyRefusal } from "./checks.mjs";
+import { checkGatheringGrammar, DRIVE_TICK_CHECKS, GATHERING_CHECKS, frequencyRefusal } from "./checks.mjs";
 import { MONITORING_TABLES, migrateMonitoring } from "./schema.mjs";
-import { Sweeps } from "./sweep.mjs";
 
 export * from "./checks.mjs";
-export { compileTerm, inScope, TERM_MAX, MATCH_TEXT_MAX, TERM_PROGRAM_MAX, TERM_REPEAT_MAX } from "./sweep-match.mjs";
-export { linksOf, SWEEP_TICK_BATCH, SWEEP_RUNS_SHOWN, SWEEP_CONDITION_KINDS, SWEEP_ACTOR, SWEEP_PURPOSE, ANOMALY_MIN_RUNS,
-         ANOMALY_WINDOW, SILENT_RUNS } from "./sweep.mjs";
 export { MONITORING_SCHEMA, MONITORING_TABLES, monitoringOwns } from "./schema.mjs";
 
 /* ===========================================================   *  CAP-3: the ARCHIVE-MONITOR consumer (R20).
@@ -411,21 +406,14 @@ export class Monitoring {
 
   constructor({ storage, record, membership, promotion, host = null, env = null, now = null, fetch = null,
                 governor = null, provenance = null, capture = null, observationLog = null, intent = null,
-                actionClocks = null, escalation = null, publication = null, projectStage = null, captureRequests = null } = {}) {
+                actionClocks = null, escalation = null, publication = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
     this.env = env && typeof env === "object" ? env : {};
     this.now = typeof now === "function" ? now : () => Date.now();
-    this.#deps = { host, fetch, governor, provenance, capture, observationLog, intent, actionClocks, escalation, publication,
-                   projectStage, captureRequests };
-    /* R53–R64: the link sweep, handed this instance's idempotence key, rank, re-entrance guard and landing. */
-    this.sweep = new Sweeps(this, {
-      open: (c, now, ms) => this.#openTickEpoch(c, now, ms), close: (c, e) => this.#closeTickEpoch(c, e),
-      claim: (c, s, e) => this.#claimFire(c, s, e), ranked: (l, i, r, n) => this.#ranked(l, i, r, n),
-      running: this.#tickRunning, land: (q, f, at, say) => this.#land(q, f, at, say), gate: (v) => viewerPredicate(v),
-      recheckMs: () => this.#archiveTickMs(), register: () => this.registerSweepScope() });
+    this.#deps = { host, fetch, governor, provenance, capture, observationLog, intent, actionClocks, escalation, publication };
   }
 
   get governor() { return this.#deps.governor ||= governorOf(this.#deps.host, { env: this.env }); }
@@ -436,7 +424,6 @@ export class Monitoring {
   get actionClocks() { return this.#deps.actionClocks ||= actionClocksOf(this.#deps.host); }
   get escalation() { return this.#deps.escalation ||= escalationOf(this.#deps.host); }
   get publication() { return this.#deps.publication === undefined ? null : (this.#deps.publication ||= publicationOf(this.#deps.host)); }
-  get projectStage() { return this.#deps.projectStage ||= projectStageOf(this.#deps.host); }
   #fetch(u, init) { return (this.#deps.fetch || globalThis.fetch)(u, init); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -1711,12 +1698,13 @@ export class Monitoring {
 
   /** R19, R20 (N224): `list` in the rank's order. Each entry is offered as `item(entry)` (`{kind, id, waitingSince,
    *  cadenceMs?}`) carrying its place under a symbol the rank's copies keep; an entry the rank drops or cannot place
-   *  follows in the order read. Without a rank, or when it throws or answers no list, the order read stands. */
+   *  follows in the order read. Without a rank, or when it (or `item`) throws or answers no list, the order read stands.
+   *  It never throws (R65's `ranked` is this one). */
   #ranked(list, item, rank, now) {
-    if (typeof rank !== "function" || list.length < 2) return list;
+    if (typeof rank !== "function" || !Array.isArray(list) || list.length < 2) return list;
     const PLACE = Symbol("place");
-    const items = list.map((e, i) => ({ ...item(e), [PLACE]: i }));
-    let answer;
+    let items, answer;
+    try { items = list.map((e, i) => ({ ...item(e), [PLACE]: i })); } catch { return list; }
     try { answer = rank(items, now); } catch { return list; }
     if (!Array.isArray(answer)) return list;
     const order = [], taken = new Set();
@@ -2024,13 +2012,14 @@ export class Monitoring {
 
   /** R28 (K1096; Intake Doctrine §2, §4): new bytes a request filed land as a plane-composed Information bundle,
    *  promoted through `promotion.promote` at `collected` (never verified, a member's act), its origin the named request,
-   *  the request's id and its bundle named as the authorisation, in the request's bundle's project. Answers `{ok,
-   *  bundle_id}` or the promotion's refusal relayed. */
+   *  the request's id and its bundle named as the authorisation, in the request's bundle's project. `say`, when given
+   *  (R65's `land`, for the link sweep), supplies the bundle's `title`, `summary`, `notes` and `trigger`. Answers `{ok:
+   *  true, bundle_id, state}`, or `{ok: false, reason, detail}` with the promotion's refusal relayed; never throws. */
   #land(q, filed, at, say = null) {
     try {
       const doc = filed.doc, cap = doc.capture;
       if (typeof doc.file !== "string" || !Number.isSafeInteger(cap.bytes))
-        return { ok: false, detail: "capture's answer named no primary file and size to land" };
+        return { ok: false, reason: null, detail: "capture's answer named no primary file and size to land" };
       const enc = (t) => { const b = new TextEncoder().encode(t); return { text: t, bytes: b.length, sha256: createSha256().update(b).hex() }; };
       const home = this.#one(`SELECT project FROM bundles WHERE bundle_id = ?`, q.bundle);
       const project = home && typeof home.project === "string" && home.project ? home.project : null;
@@ -2219,23 +2208,41 @@ export class Monitoring {
     const gj = pkg.replay ? null : files.find((f) => f.path === "data/gathering.json");
     if (!gj || typeof gj.text !== "string") return null;
     const gf = [];
-    checkGatheringGrammar({ files: new Map([["data/gathering.json", gj.text]]) }, gf);
+    checkGatheringGrammar({ files: new Map([["data/gathering.json", gj.text]]) }, gf, this.#sweepShare);
     const errs = gf.filter((x) => x.severity === "error");
-    /* DEC-49 REGION is-sweep-term */
+    /* R66 (K1206): a refused sweep term is the one refusal before GATHERING_REFUSED, answered with the row its finding
+       carries (`refusal`, the registering module's, which mints the code; DEC-49). A term finding whose row is not whole
+       cannot be answered as that code, so the file is refused GATHERING_REFUSED below, never admitted. */
     const term = errs.filter((x) => x.code === "SWEEP_TERM_REFUSED");
-    if (term.length)
-      return { ok: false, reason: "SWEEP_TERM_REFUSED", code: "SWEEP_TERM_REFUSED", check: SWEEP_CHECKS.SWEEP_TERM_REFUSED.check,
-               translation: SWEEP_CHECKS.SWEEP_TERM_REFUSED.translation, detail: term.map((x) => x.message).join("; "),
-               findings: errs.map((x) => ({ check: x.check, detail: x.message })) };
-    /* END DEC-49 REGION is-sweep-term */
+    const row = term.map((x) => x.refusal).find((r) => r && typeof r === "object" && r.code === "SWEEP_TERM_REFUSED"
+      && typeof r.check === "string" && r.check && typeof r.translation === "string" && r.translation);
+    if (row)
+      return { ok: false, reason: row.code, code: row.code, check: row.check, translation: row.translation,
+               detail: term.map((x) => x.message).join("; "), findings: errs.map((x) => ({ check: x.check, detail: x.message })) };
     /* DEC-49 REGION is-gathering-refused */
     if (errs.length)
       return { ok: false, reason: "GATHERING_REFUSED", code: "GATHERING_REFUSED",
                check: GATHERING_CHECKS.GATHERING_REFUSED.check, translation: GATHERING_CHECKS.GATHERING_REFUSED.translation,
                findings: errs.map((x) => ({ check: x.check, detail: x.message })) };
     /* END DEC-49 REGION is-gathering-refused */
-    /* R55: who may write a sweep, against the file this one replaces. */
-    return this.sweep.sweepFence(c, gj.text);
+    /* R66: the registered fence (who may write a sweep, link-sweep R3), asked last, once the grammar admits the file; its
+       refusal is the promotion's. A fence that throws, or answers neither null nor a refusal, fails closed: the file is
+       refused as by a finding of C-18.5. */
+    const share = this.#sweepShare;
+    if (!share) return null;
+    let fenced, why = null;
+    try { fenced = share.fence(c, gj.text); }
+    catch (e) { why = `failed (${String(e && e.message || e).slice(0, 120)})`; }
+    if (why === null) {
+      if (fenced === null || fenced === undefined) return null;
+      if (typeof fenced === "object" && fenced.ok === false) return fenced;
+      why = "answered neither null nor a refusal";
+    }
+    const finding = { check: "C-18.5", detail: `gathering.json could not be fenced: the sweep fence ${share.module} registered `
+                                               + `${why}, so the file is refused, never admitted` };
+    return { ok: false, reason: "GATHERING_REFUSED", code: "GATHERING_REFUSED",
+             check: GATHERING_CHECKS.GATHERING_REFUSED.check, translation: GATHERING_CHECKS.GATHERING_REFUSED.translation,
+             findings: [finding] };
   }
 
   /** R42: C-18.5 in the audit over one bundle image (record-core R59), as `checkBundle` ran it. */
@@ -2243,35 +2250,80 @@ export class Monitoring {
     const files = image && image.files instanceof Map ? image.files : null;
     if (!files) return [];
     const findings = [];
-    checkGatheringGrammar({ files }, findings);
+    checkGatheringGrammar({ files }, findings, this.#sweepShare);
     return findings;
   }
 
   /* ================================================================== *
-   * The link sweep (R29, R53–R64): `sweep.mjs`
+   * The sweep's seam (R65, R66; N506, K1159): the link sweep is `link-sweep`'s
    * ================================================================== */
 
-  /** R56: for `scheduler`'s `gathering-sweep` consumer. */
-  sweepDue(now) { return this.sweep.sweepDue(now); }
-  sweepWake(now) { return this.sweep.sweepWake(now); }
-  sweepTick(now, rank = null) { return this.sweep.sweepTick(now, rank); }
-  /** R61, R63: the reads. */
-  sweeps(args) { return this.sweep.sweeps(args); }
-  sweepConditions(args) { return this.sweep.sweepConditions(args); }
-
-  /** R64 (K1122): register, once, with capture-requests (its R45) the scope check its drain asks. A registration that
-   *  is refused or throws is asked again on the next sweep service, never held as done. */
-  registerSweepScope() {
-    if (this.#scopeRegistered) return true;
-    try {
-      const cr = this.#deps.captureRequests || captureRequestsOf(this.#deps.host);
-      const r = cr && typeof cr.registerSweepScope === "function"
-        ? cr.registerSweepScope("monitoring", (a) => this.sweep.scopeCheck(a || {})) : null;
-      this.#scopeRegistered = !!(r && (r.ok === true || r.reason === "LISTENER_DECLARED"));
-    } catch { this.#scopeRegistered = false; }
-    return this.#scopeRegistered;
+  /** R65: the services `link-sweep` runs its sweeps under, each the one this module's own ticks use, so a sweep and a
+   *  tick share one pause, one idempotence key and one landing. The same frozen object on every call; it writes nothing
+   *  and never throws.
+   *    paused()                              R30's held pause, `{paused: true, by, at}` or `{paused: false}`.
+   *    openEpoch(consumer, now, staleAfterMs) R21's open epoch for `consumer`: the one held while `now` is less than
+   *                                          `staleAfterMs` from it, else a fresh one (`now` truncated to the
+   *                                          millisecond), held, dropping every claim of `consumer` under another.
+   *    claim(consumer, subject, epoch)       true, recording the claim, when not yet claimed under `epoch`; else false.
+   *    closeEpoch(consumer, epoch)           removes that epoch and its claims (only when nothing failed or was skipped).
+   *    running                               R22's guard: the Set of consumers whose tick runs on this instance.
+   *    ranked(list, item, rank, now)         `list` in the rank's order by R19's rule; never throws.
+   *    land(request, filed, at, say?)        R28's landing: `request` `{id, bundle, locators, target}`, `filed` `{locator,
+   *                                          doc}` (capture's `document`); `say` `{title, summary, notes, trigger}`.
+   *    gate(viewer)                          membership's viewer predicate, the sight R32's reads use.
+   *    recheckMs()                           the archive tick's interval (R20). */
+  sweepHost() {
+    return this.#host ||= Object.freeze({
+      paused: () => this.paused(),
+      openEpoch: (consumer, now, staleAfterMs) => this.#openTickEpoch(consumer, now, staleAfterMs),
+      claim: (consumer, subject, epoch) => this.#claimFire(consumer, subject, epoch),
+      closeEpoch: (consumer, epoch) => { this.#closeTickEpoch(consumer, epoch); },
+      running: this.#tickRunning,
+      ranked: (list, item, rank, now) => this.#ranked(list, item, rank, now),
+      land: (request, filed, at, say = null) => this.#land(request, filed, at, say),
+      gate: (viewer) => viewerPredicate(viewer),
+      recheckMs: () => this.#archiveTickMs(),
+    });
   }
-  #scopeRegistered = false;
+  #host = null;
+
+  /** R66: takes, once, at composition, a later module's share of the gathering grammar and of the slate: `grammar(entry,
+   *  ids)` answers the C-18.5 findings of one `sweeps[]` entry that is an object, `[{check: "C-18.5", severity, field,
+   *  message}]`, the message beginning with its field (`field` null for none); a refused term's also carries `code:
+   *  "SWEEP_TERM_REFUSED"` and `refusal: {code, check, translation}`, which R27 answers as given (`ids` collects the
+   *  file's ids, for uniqueness); `fence(c, nextText)` is asked last at the write (`c` the promotion step's argument, `nextText` the file
+   *  promoted) and answers null to admit or a refusal (`ok: false`) the promotion answers; `dueForSlate(now, sees)`
+   *  answers the due sweeps R30's slate lists, `[{kind: "ratified-sweep", bundle, id, definition}]` (`sees(bundleId)`
+   *  the viewer's sight). Answers `{ok: true, module}`; a second registration, or one that is not three functions, is
+   *  refused `{ok: false, reason}` in words, keeping the first. */
+  registerSweep(module, share) {
+    if (this.#sweepShare)
+      return { ok: false, reason: `a sweep share is already registered, by ${this.#sweepShare.module}; the first registration stands` };
+    const name = typeof module === "string" ? module.trim() : "";
+    const { grammar, fence, dueForSlate } = share && typeof share === "object" ? share : {};
+    if (!name || typeof grammar !== "function" || typeof fence !== "function" || typeof dueForSlate !== "function")
+      return { ok: false, reason: "a sweep share is a module's name and three functions, grammar, fence and dueForSlate; nothing was registered" };
+    /* each kept bound to the share it came on, so a share's methods read their own object */
+    this.#sweepShare = Object.freeze({ module: name, grammar: grammar.bind(share), fence: fence.bind(share),
+                                       dueForSlate: dueForSlate.bind(share) });
+    return { ok: true, module: name };
+  }
+  #sweepShare = null;
+
+  /** R30, R66: the registered share's due sweeps for the slate, or none, stated: nothing registered lists none; a
+   *  `dueForSlate` that throws, or answers no list, lists none and says so (`sweeps_unread`). */
+  #dueSweeps(at, sees) {
+    const share = this.#sweepShare;
+    if (!share) return { items: [] };
+    try {
+      const items = share.dueForSlate(at, sees);
+      if (Array.isArray(items)) return { items: items.filter((x) => x && typeof x === "object" && !Array.isArray(x)) };
+      return { items: [], unread: `the due sweeps ${share.module} registered could not be read: it answered no list` };
+    } catch (e) {
+      return { items: [], unread: `the due sweeps ${share.module} registered could not be read: ${String(e && e.message || e).slice(0, 120)}` };
+    }
+  }
 
   /* ================================================================== *
    * What reaches members (R31, R32)
@@ -2303,10 +2355,10 @@ export class Monitoring {
   }
 
   /** R30: the due slate, the manual path (Intake Doctrine §4): every monitored address now due (R16), every open named
-   *  request and every ratified sweep in a `data/gathering.json` the viewer may see, exported as a prompt a member runs
-   *  by hand. The store's fields are QUOTED DATA (each item one JSON line between fixed markers) inside fixed
-   *  instruction framing, so no field can be read as an instruction. Every open request is listed, and every sweep
-   *  R56 finds due with its definition (R61). At most MONITORING_READ_MAX items (`truncated`). */
+   *  request in a `data/gathering.json` the viewer may see, and every due sweep R66's registration answers, exported as a
+   *  prompt a member runs by hand. The store's fields are QUOTED DATA (each item one JSON line between fixed markers)
+   *  inside fixed instruction framing, so no field can be read as an instruction. A registered `dueForSlate` that cannot
+   *  be read lists no sweep, and the answer says so (`sweeps_unread`). At most MONITORING_READ_MAX items (`truncated`). */
   slate({ viewer = null, now = null, limit = null } = {}) {
     const at = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : this.now();
     const cap = clampLimit(limit, MONITORING_READ_MAX, MONITORING_READ_MAX);
@@ -2334,8 +2386,9 @@ export class Monitoring {
                        locators: Array.isArray(r.locators) ? r.locators : [], authority: r.authority ?? null,
                        criticality: r.criticality ?? null, cadence: r.cadence ?? null });
     }
-    /* R61: each due sweep (R56), its definition quoted data like every other field. */
-    items.push(...this.sweep.dueForSlate(at, sees));
+    /* R66: each due sweep the registered share answers (link-sweep R9), its definition quoted data like every other field. */
+    const due = this.#dueSweeps(at, sees);
+    items.push(...due.items);
     const shown = items.slice(0, cap);
     const prompt = [SLATE_FRAMING_OPEN, SLATE_DATA_BEGIN, ...shown.map((x) => JSON.stringify(x)), SLATE_DATA_END,
                     SLATE_FRAMING_CLOSE].join("\n");
@@ -2343,7 +2396,7 @@ export class Monitoring {
              counts: { addresses: shown.filter((x) => x.kind === "monitored-address").length,
                        requests: shown.filter((x) => x.kind === "named-request").length,
                        sweeps: shown.filter((x) => x.kind === "ratified-sweep").length },
-             limit: cap, truncated: unread || items.length > cap, prompt };
+             limit: cap, truncated: unread || items.length > cap, ...(due.unread ? { sweeps_unread: due.unread } : {}), prompt };
   }
 
   /** R47 (N330, K406; for `queue`): what the next unranked archive tick (R20) would find eligible, asking the same
@@ -2707,8 +2760,6 @@ export function monitoringOf(host, deps) {
     promotion.registerStep("monitoring", { check: (c) => m.gatheringCheck(c) });
     record.registerAuditCheck("monitoring", (image) => m.audit(image));
     promotion.onCommitted("monitoring", (n) => m.actionCommitted(n));
-    /* R64: the sweep scope check capture-requests R45 calls, at creation when it was handed in. */
-    if (d.captureRequests) m.registerSweepScope();
     const intent = d.intent === null ? null : m.intent;
     if (intent && typeof intent.registerSource === "function")
       intent.registerSource("monitoring", ({ project, viewer } = {}) => m.proposals({ project, viewer }));
@@ -2732,8 +2783,6 @@ export function monitoringOps(m, url, body) {
     monitorslate: () => m.slate({ viewer: q("viewer"), now: q("now"), limit: q("limit") }),
     /* R52: the body's fields, then the control plane's `author` and `viewer` stamps, so a body never supplies them. */
     addressfrequencyset: () => m.addressFrequencySet({ ...b, author: q("author"), viewer: q("viewer") }),
-    /* R61: the sweeps the viewer may see, read through the control plane's viewer stamp. */
-    sweeps: () => m.sweeps({ viewer: q("viewer"), now: q("now") }),
   };
 }
 
