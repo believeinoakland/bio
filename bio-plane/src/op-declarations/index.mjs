@@ -1,4 +1,4 @@
-/* op-declarations: WHAT EACH OP IS (R1–R11). Every op's spec, the act lists that drive the stamps and the fences, the
+/* op-declarations: WHAT EACH OP IS (R1–R13). Every op's spec, the act lists that drive the stamps and the fences, the
    session sets, the capability table, the recorded decisions that a verb is not a person's, and the act gate read
    from those tables. It declares; it judges no caller and routes nothing (`admission` and `control-plane` read it).
    Copied from `control-plane/ops.mjs` at the control-plane split (T18, K617, K624 (1), (2)), which control-plane's own
@@ -658,6 +658,12 @@ const OPS = frozenTable({
   /* T20 (K899 (7), K902; actions R52): a litigation hold stated on a `legal` pressure mark, `actionpressure`'s posture
      (the module refuses a machine by name, MACHINE_CANNOT_SET_HOLD). */
   actionhold:          { classes: ["admin", "member", "probe"],      mutating: true  },
+  /* T27 (N518, DEC-113, K1134 (3); actions R56–R58; R12): the hold's release, `actionhold`'s posture (the module refuses
+     a machine by name, MACHINE_CANNOT_SET_HOLD), its author query-stamped; what a release would restart, and whether
+     projects are held, reads, viewer-stamped. */
+  actionholdrelease:   { classes: ["admin", "member", "probe"],      mutating: true  },
+  actionholdpreview:   { classes: ["admin", "member", "probe"],      mutating: false },
+  projectholds:        { classes: ["admin", "member", "probe"],      mutating: false },
   action:              { classes: ["admin", "member", "probe"],      mutating: false },
   actions:             { classes: ["admin", "member", "probe"],      mutating: false },
   /* T18 (K704; action-clocks R4, R6, DEC-94): a member's own reminder on a dated clock entry, set and answered; a
@@ -728,6 +734,18 @@ const OPS = frozenTable({
   noticepost:         { classes: ["admin", "member"], machineClasses: [], mutating: true  },
   notices:            { classes: ["admin", "member"], machineClasses: [], mutating: false },
   directorysubmission:{ classes: ["admin", "member"], machineClasses: [], mutating: false },
+  /* T27 (N520; DEC-116, DEC-100; docket R1–R8, R12, R18; R13): a case's docket — filing to the record and marking a
+     threat (`author` stamped), the manager's preparation, signed post and decline (`by` stamped), and the reads — each a
+     member session's only, `knocksof`'s fence: `machineClasses: []` refuses every bearer, and so every agent credential
+     and operator token (docket refuses a machine stamp by name too, MACHINE_CANNOT_FILE_DOCKET, _PLACE_DOCKET). `viewer`
+     stamped on each. */
+  docketfile:         { classes: ["admin", "member"], machineClasses: [], mutating: true  },
+  docketpressure:     { classes: ["admin", "member"], machineClasses: [], mutating: true  },
+  docketdecline:      { classes: ["admin", "member"], machineClasses: [], mutating: true  },
+  docketpost:         { classes: ["admin", "member"], machineClasses: [], mutating: true  },
+  docket:             { classes: ["admin", "member"], machineClasses: [], mutating: false },
+  docketprepare:      { classes: ["admin", "member"], machineClasses: [], mutating: false },
+  docketinvitation:   { classes: ["admin", "member"], machineClasses: [], mutating: false },
   /* REC-94: a capture's content-axis state; frontier's classes and gate. */
   contentaxis:        { classes: ["admin", "member", "probe"],      mutating: false },
   /* REC-69: the context-keyed run read; the viewer stamp decides what a caller sees. */
@@ -782,6 +800,11 @@ const OPS = frozenTable({
   activitymethod:  { classes: null,                              mutating: false },
   noticespublic:   { classes: null,                              mutating: false },
   groupkeyspublic: { classes: null,                              mutating: false },
+  /* T27 (public-read R21; docket R14, R15; R13): the docket's public shelves and its feed, credential-free and served
+     through public-read's map as `publishedcase` is: each answers only what is already public, so nothing is stamped
+     and no session set holds it. */
+  docketpublic:    { classes: null,                              mutating: false },
+  docketfeed:      { classes: null,                              mutating: false },
 });
 
 /* What a signed-in browser session may do, the write arc's evolution of the
@@ -1246,9 +1269,11 @@ const ESCALATION_READS = frozenList(["escalation", "escalationsdue", "escalation
    one. Each act reads `author` from the QUERY after the body and asks membership of it (a joined member's act, or the
    member whose reminder it is), so each joins `QUERY_AUTHOR_ACTIONS` and takes that stamp's positional identity; every
    read is stamped with the viewer. `actions`' two acts are `ACTIONS_ACTIONS`, apart from REC-24's `ACTION_ACTIONS`,
-   whose stamp is a different expression. T20 (K902; actions R52): `actionhold` joins them, its author query-stamped. */
-const ACTIONS_ACTIONS = frozenList(["actioncreate", "actionpressure", "actionhold"]);
-const ACTIONS_READS = frozenList(["action", "actions"]);
+   whose stamp is a different expression. T20 (K902; actions R52): `actionhold` joins them, its author query-stamped.
+   T27 (N518; actions R56–R58; R12): `actionholdrelease` joins them beside `actionhold`, and the release's preview and the
+   held-project read join the reads, viewer-stamped. */
+const ACTIONS_ACTIONS = frozenList(["actioncreate", "actionpressure", "actionhold", "actionholdrelease"]);
+const ACTIONS_READS = frozenList(["action", "actions", "actionholdpreview", "projectholds"]);
 const ACTION_CLOCKS_ACTIONS = frozenList(["reminderset", "reminderanswer"]);
 const ACTION_PLANS_ACTIONS = frozenList(["planopen", "plansubjectadd", "plansubjectremove", "optionadd", "optionrevise",
                               "optionadopt", "optiondispose", "scenarioset", "checkpointrecord", "optionstart",
@@ -1293,6 +1318,17 @@ const NETWORK_NOTICES_ACTIONS = frozenList(["noticepost"]);
 const NETWORK_NOTICES_READS = frozenList(["noticeprepare", "notices", "directorysubmission"]);
 const NETWORK_NOTICES_BY = frozenList(["noticeprepare", "noticepost"]);
 const NETWORK_NOTICES_PUBLIC_READS = frozenList(["activitymethod", "noticespublic", "groupkeyspublic"]);
+/* T27 (N520; DEC-116, DEC-100; docket R1–R8, R12, R14, R15; R13): the docket's four acts and three reads, each
+   viewer-stamped (docket asks the case's project's sight of it; its map reads `viewer` from the query); `DOCKET_AUTHOR`
+   names the two any joined member performs, filing and marking a threat, `author` stamped; `DOCKET_BY` the three only the
+   manager performs in their own name, preparing, posting and declining, `by` stamped (docket's map reads each from the
+   query, `by` else `author`). The public shelves and the feed (public-read R21) stamp nothing. One array per stamp, the
+   network notices' shape. */
+const DOCKET_ACTIONS = frozenList(["docketfile", "docketpressure", "docketdecline", "docketpost"]);
+const DOCKET_READS = frozenList(["docket", "docketprepare", "docketinvitation"]);
+const DOCKET_AUTHOR = frozenList(["docketfile", "docketpressure"]);
+const DOCKET_BY = frozenList(["docketprepare", "docketpost", "docketdecline"]);
+const DOCKET_PUBLIC_READS = frozenList(["docketpublic", "docketfeed"]);
 /* The modules whose acts read `author` from the query: the four of T8, T18's three, T21's filing-templates and T22's
    monitoring act; and T24's start preview, the one read among them, stamped as the start it previews (R11). */
 const QUERY_AUTHOR_ACTIONS = frozenList([...CONFORMANCE_ACTIONS, ...CONSEQUENCES_ACTIONS, ...FILINGS_ACTIONS, ...ESCALATION_ACTIONS,
@@ -1527,6 +1563,10 @@ const SESSION_OPS = Object.freeze({
                    ...NETWORK_NOTICES_ACTIONS, ...NETWORK_NOTICES_READS,
                    /* T24 (op-declarations R11): action-plans' start preview, in BOTH sets, as the start it previews. */
                    ...ACTION_PLANS_PREVIEWS,
+                   /* T27 (op-declarations R12, R13): the hold's release and its two reads arrive through
+                      `ACTIONS_ACTIONS` above and the reads here; the docket's acts and reads, in BOTH sets (a bearer
+                      refused them by `machineClasses: []`). Its public reads are in neither: every caller reaches them. */
+                   "actionholdpreview", "projectholds", ...DOCKET_ACTIONS, ...DOCKET_READS,
                    /* N314 (T12, monitoring R30): the daemon's pause, every member session's to ask; monitoring refuses a
                       non-administrator by name. */
                    "monitorpause",
@@ -1594,6 +1634,7 @@ const SESSION_OPS = Object.freeze({
                    "escalationreasondraft", ...WHAT_CHANGED_PROPOSAL_ACTIONS, ...WHAT_CHANGED_READS, ...LINK_SWEEP_READS,
                    ...NETWORK_NOTICES_ACTIONS, ...NETWORK_NOTICES_READS,
                    ...ACTION_PLANS_PREVIEWS,
+                   "actionholdpreview", "projectholds", ...DOCKET_ACTIONS, ...DOCKET_READS,
                    ...IDENTITY_ACTIONS,
                    ...GOVERNANCE_ACTIONS,
                    ...CUSTODIAL_ACTIONS,
@@ -2414,6 +2455,28 @@ const NEEDS = Object.freeze({
      names it in NON_ACTS (its R7) and its totality reads a NON_ACTS key this table does not carry as stale (its R12),
      K516's precedent. */
   optionstartpreview:    null,
+  /* T27 (op-declarations R12; actions R56): releasing a hold appends a statement to the action's record in a member's
+     name, `actionhold`'s capability and reason. NO CAPABILITY for the release's preview and the held-project read, the
+     start preview's posture (each writes nothing; `contribute` gates the release itself): PRESENT, null, because
+     affordances names both (its R33) in NON_ACTS and its totality reads a NON_ACTS key this table does not carry as stale
+     (its R12), K516's precedent. */
+  actionholdrelease:     "contribute",
+  actionholdpreview:     null,
+  projectholds:          null,
+  /* T27 (op-declarations R13; docket R1, R2, R5, R7): filing to the record, marking a threat, posting a signed entry and
+     declining a submission each write the docket in a member's name — `contribute`, NO fifth capability token
+     (CAPABILITIES.md §4): who may post or decline (the case's manager) is docket's, asked of the stamped `by`. NO
+     CAPABILITY for its reads (preparing writes nothing) nor its public reads, on `contradictionpairs`' reasoning: PRESENT,
+     null, because affordances names each in NON_ACTS (its R34), K516's precedent. */
+  docketfile:            "contribute",
+  docketpressure:        "contribute",
+  docketdecline:         "contribute",
+  docketpost:            "contribute",
+  docket:                null,
+  docketprepare:         null,
+  docketinvitation:      null,
+  docketpublic:          null,
+  docketfeed:            null,
 });
 
 /* REC-19's act decoration, shared by op=affordances and op=queue (REC-20) so a queue item's options[] and an
@@ -2487,4 +2550,4 @@ const UNATTENDED_BY_DECISION = Object.freeze({
            + "one' — a deploy's maintenance pass, addressed to the operator's credential.",
 });
 
-export { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, CAPTURE_VIEWER_ACTIONS, CAPTURE_READS, SOURCE_ACTIONS, SOURCE_READS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, FILING_TEMPLATES_ACTIONS, FILING_TEMPLATES_READS, TEMPLATE_PROPOSAL_ACTIONS, TEMPLATE_DOOR_ACTIONS, TEMPLATE_DOOR_READS, GRANT_SECRET_ACTIONS, LOCAL_FACTS_ACTIONS, LOCAL_FACTS_READS, ESCALATION_ACTIONS, ESCALATION_READS, MONITORING_ACTIONS, LINK_SWEEP_READS, WHAT_CHANGED_PROPOSAL_ACTIONS, WHAT_CHANGED_READS, NETWORK_NOTICES_ACTIONS, NETWORK_NOTICES_READS, NETWORK_NOTICES_BY, NETWORK_NOTICES_PUBLIC_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, ACTIONS_ACTIONS, ACTIONS_READS, ACTION_CLOCKS_ACTIONS, ACTION_PLANS_ACTIONS, ACTION_PLANS_READS, ACTION_PLANS_PREVIEWS, PLAN_PROPOSAL_ACTIONS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, PLAN_RUN_SCOPE, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION };
+export { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, CAPTURE_VIEWER_ACTIONS, CAPTURE_READS, SOURCE_ACTIONS, SOURCE_READS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, FILING_TEMPLATES_ACTIONS, FILING_TEMPLATES_READS, TEMPLATE_PROPOSAL_ACTIONS, TEMPLATE_DOOR_ACTIONS, TEMPLATE_DOOR_READS, GRANT_SECRET_ACTIONS, LOCAL_FACTS_ACTIONS, LOCAL_FACTS_READS, ESCALATION_ACTIONS, ESCALATION_READS, MONITORING_ACTIONS, LINK_SWEEP_READS, WHAT_CHANGED_PROPOSAL_ACTIONS, WHAT_CHANGED_READS, NETWORK_NOTICES_ACTIONS, NETWORK_NOTICES_READS, NETWORK_NOTICES_BY, NETWORK_NOTICES_PUBLIC_READS, DOCKET_ACTIONS, DOCKET_READS, DOCKET_AUTHOR, DOCKET_BY, DOCKET_PUBLIC_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, ACTIONS_ACTIONS, ACTIONS_READS, ACTION_CLOCKS_ACTIONS, ACTION_PLANS_ACTIONS, ACTION_PLANS_READS, ACTION_PLANS_PREVIEWS, PLAN_PROPOSAL_ACTIONS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, PLAN_RUN_SCOPE, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION };
