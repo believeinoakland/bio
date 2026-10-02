@@ -9,3 +9,7 @@ Depth 2. Your entries: `build/plan/current.md` (T24) L11, plane. **Merge last in
 ## B2 · CHANGE
 
 K1212: queue-producers, op-declarations, admission have merged; merge tranche/T24 before your final run. From QUEUE-PRODUCERS #8: queue-producers' default linkSweep dep is linkSweepOf(host) (per storage, first call wins, K61), so compose link-sweep before op=queue's first read as well as before the scheduler's (K1210). op=queue through the plane now works (compose.test.mjs:101, door.test.mjs:183 green on tranche/T24).
+
+## B3 · CHANGE
+
+K1213: affordances and control-plane have merged (red 6 cleared; control-plane routes sweeps through link-sweep's reads, which needs your composition of link-sweep's map). Only queue remains besides you; merge tranche/T24 before your final run. You merge last.
