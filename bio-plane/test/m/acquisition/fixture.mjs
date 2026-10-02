@@ -9,6 +9,7 @@ import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { RECORD_SCHEMA, recordOf } from "../../../src/record-core/index.mjs";
 import { acquire, archiveLookup } from "../../../src/acquisition/index.mjs";
+import { acceptDatetime } from "../../../src/capture-sources/memento.mjs";
 
 export const sha = (b) => createHash("sha256").update(typeof b === "string" ? Buffer.from(b) : Buffer.from(b)).digest("hex");
 export const H = (hex) => hex.padEnd(64, "0").slice(0, 64);
@@ -208,10 +209,32 @@ export const HTML = (body = "<p>hello</p>") => `<!doctype html><html><head><titl
 export const page = (body, headers = {}, status = 200) => new Response(body, { status, headers: { "content-type": "text/html; charset=utf-8", ...headers } });
 export const text = (body, headers = {}) => new Response(body, { headers: { "content-type": "text/plain", ...headers } });
 
-/* The archive arm's CDX answer and a row of it (capture-sources R27, R29). */
-export const CDX = (rows) => new Response(JSON.stringify([["urlkey", "timestamp", "original", "mimetype", "statuscode", "digest", "length"], ...rows]),
-                                          { headers: { "content-type": "application/json" } });
-export const cdxRow = (ts, original = "https://gone.example/doc", status = "200") => ["gone.example)/doc", ts, original, "text/plain", status, "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567", "123"];
+/* A scripted Memento archive (RFC 7089) at the Wayback Machine's addresses (capture-sources R37's WAYBACK_MEMENTO):
+   `mementos` are `{ts, original?, status?, body?, ct?, datetime?, link?}`. The TimeGate redirects to the newest memento
+   (404 with none), the TimeMap lists every one with its datetime, and each memento's raw form (`id_`) answers its
+   status, body, `Memento-Datetime` and `Link rel=original`. `over` replaces any route by URL (or a URL prefix). */
+export const WB = "https://web.archive.org/web/";
+export const http1123 = (ts) => acceptDatetime(ts);
+export function wayback(mementos, { address = "https://gone.example/doc", over = {} } = {}) {
+  const ms = [...mementos].sort((a, b) => (a.ts < b.ts ? 1 : -1));
+  const orig = (m) => m.original || address;
+  return (u) => {
+    for (const [k, v] of Object.entries(over)) if (u === k || (k.endsWith("*") && u.startsWith(k.slice(0, -1)))) return typeof v === "function" ? v(u) : v;
+    if (u === `${WB}${address}`) return ms.length
+      ? new Response("", { status: 302, headers: { location: `${WB}${ms[0].ts}/${orig(ms[0])}`, vary: "accept-datetime",
+                                                   link: `<${address}>; rel="original", <${WB}timemap/link/${address}>; rel="timemap"` } })
+      : new Response("none", { status: 404 });
+    if (u === `${WB}timemap/link/${address}`)
+      return new Response([`<${address}>; rel="original"`, `<${WB}${address}>; rel="timegate"`,
+        ...ms.map((m) => `<${WB}${m.ts}/${orig(m)}>; rel="memento"; datetime="${m.datetime ?? http1123(m.ts)}"`)].join(",\n"),
+        { headers: { "content-type": "application/link-format" } });
+    for (const m of ms) if (u === `${WB}${m.ts}id_/${orig(m)}`)
+      return new Response(m.body ?? "archived bytes", { status: m.status || 200, headers: {
+        "content-type": m.ct || "text/plain", "memento-datetime": m.datetime ?? http1123(m.ts),
+        ...(m.link === null ? {} : { link: m.link ?? `<${orig(m)}>; rel="original", <${WB}timemap/link/${orig(m)}>; rel="timemap"` }) } });
+    return null;
+  };
+}
 /* Three consecutive failures at an address: capture R8's threshold here, so the archive fallback is eligible. */
 export async function eligible(w, addr = "https://gone.example/doc") {
   for (let i = 0; i < 3; i++) await w.store.recordSourceOutcome({ addressNorm: addr, outcome: "source_refused", status: 404 });

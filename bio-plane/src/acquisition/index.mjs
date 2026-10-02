@@ -20,7 +20,9 @@ import { odfEvidentiaryDigest, ODF_FORMATS } from "../odf.mjs";
 import { identify, doctypeFor, profileRecord, digests, CONFIDENCE } from "../../../docprofile/registry.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { readDriveAddress, driveHop, callerSuppliedHopFacts } from "../drive.mjs";
-import { parseCdx, selectCapture, replayLocator, cdxQuery, archiveHop } from "../cdx.mjs";
+import { selectCapture } from "../cdx.mjs";
+import { WAYBACK_MEMENTO, mementoEndpoints, acceptDatetime, parseTimeMap, timeMapCandidates, readMementoAnswer, mementoRow,
+         mementoHop } from "../capture-sources/memento.mjs";
 import { RENDER_DEFAULTS, RENDERED_METHOD, completenessReading, keepRenderBodies, renderAllowanceMs, renderConcurrencyCap,
          renderReserveMs, renderBlock, renderedAuthority, rendererFor, renderLocaleFor } from "../render.mjs";
 import { governedFetch as hostGovernedFetch, retryAfterMs } from "../host-governor/index.mjs";
@@ -146,10 +148,12 @@ const renderLocale = (view) => renderLocaleFor(view);
 /* R9, R28: every outbound fetch through the host governor (host-governor R15–R17), under the agent this module
    composes. The governor is reached in process (K72 (2)). `headers` are R22's conditional request headers;
    `credential` is R23's (capture-sources R56's entry), sent by `scopedFetch` to its own host only. */
-export async function governedFetch(cap, target, purpose, delegated = null, { headers = null, credential = null } = {}) {
+export async function governedFetch(cap, target, purpose, delegated = null, { headers = null, credential = null, manual = false } = {}) {
   const g = cap.governor;
+  const doFetch = headers || credential ? scopedFetch(target, { headers, credential, env: cap.env, purpose }) : (u, i) => fetch(u, i);
+  /* `manual`: the redirect is the answer, not followed (R32 reads a TimeGate's redirect and a memento's own status). */
   return hostGovernedFetch(target, { userAgent: userAgent(cap.env, purpose, delegated),
-    fetch: headers || credential ? scopedFetch(target, { headers, credential, env: cap.env, purpose }) : (u, i) => fetch(u, i),
+    fetch: manual ? (u, i) => doFetch(u, { ...i, redirect: "manual" }) : doFetch,
     governor: g ? { admit: (q) => g.governorAdmit(q), report: (q) => g.governorReport(q) } : null });
 }
 
@@ -191,10 +195,11 @@ function scopedFetch(target, { headers, credential, env, purpose }) {
   };
 }
 
-/** R3's decision, in ONE place so the lookup and the capture cannot disagree about when the fallback may fire or
- *  which capture it picks. The hop is built HERE from the CDX record this call fetched, never accepted from a caller
- *  (D-112): a hop a caller can hand us is a hop a caller can invent. */
-async function archiveSelect(cap, address) {
+/* R10: the most this surface will take from one source, in parts or not. */
+const CAPTURE_MAX = 256 * 1024 * 1024;
+
+/** R3's fence, in ONE place so the lookup and the capture cannot disagree about when the fallback may fire. */
+async function archiveEligibility(cap, address) {
   const reach = cap.sourceReachability({ addressNorm: normalizeAddress(address) });
   if (!reach.fallback_eligible)
     return { ok: false, status: 409, payload: { ok: false, reason: "NOT_ELIGIBLE",
@@ -204,43 +209,158 @@ async function archiveSelect(cap, address) {
      never presented as measured (K72 (12)). */
   try { await cap.governor?.governorConfig({ host: "web.archive.org", appetite_per_min: 24 }); }
   catch { /* the default appetite already governs */ }
-  let res;
-  try {
-    const g = await governedFetch(cap, cdxQuery(address), "archive-lookup");
-    if (g.refusedByGovernor)
-      return { ok: false, status: 429, payload: { ok: false, reason: "HOST_COOLING_OFF",
-        detail: `the governor is holding requests to web.archive.org (${g.reason})`, retry_in_ms: g.retry_in_ms || 0 } };
-    res = g.res;
-  } catch (e) {
-    return { ok: false, status: 502, payload: { ok: false, reason: "ARCHIVE_UNREACHABLE", detail: String(e && e.message || e) } };
-  }
-  if (!res.ok)
-    return { ok: false, status: 502, payload: { ok: false, reason: "ARCHIVE_REFUSED", status: res.status,
-      detail: res.status === 429 ? "the Internet Archive is rate-limiting us; the governor will hold this host"
-                                 : "the CDX endpoint did not answer with a record" } };
-  const parsed = parseCdx(await res.text());
-  if (!parsed.ok) return { ok: false, status: 502, payload: { ok: false, ...parsed } };
-  const sel = selectCapture(parsed.rows);
-  if (!sel.ok)
-    return { ok: false, status: 404, payload: { ok: false, reason: sel.reason, detail: sel.detail, considered: sel.considered, address } };
-  const replay = replayLocator(sel.chosen);
-  return { ok: true, reach, chosen: sel.chosen, rejected: sel.rejected, usable_count: sel.usable_count, replay,
-           hop: archiveHop(sel.chosen, replay) };
+  return { ok: true, reach };
 }
 
-/** R3: `archiveLookup({address})` decides and reports what the archive arm would do, without capturing. */
+/* R32 (N492, K1032): the archive is a Memento descriptor (capture-sources R37), so any compliant archive can serve the
+   lookup; the Internet Archive is the one this instance asks. */
+const ARCHIVE = WAYBACK_MEMENTO;
+/* How many of a TimeMap's mementos are fetched, newest first, before the lookup gives up, and how many redirects one
+   memento fetch follows (a raw memento at an inexact instant redirects to the exact one). Each fetch is one request
+   at the archive's 24 a minute. Chosen, not measured. */
+const MEMENTO_TRIES = 4;
+const MEMENTO_HOPS = 5;
+
+/* A body not read is released, never awaited: a cancellation the source does not acknowledge must not hold the act. */
+const cancelBody = (res) => { try { res?.body?.cancel?.()?.catch?.(() => {}); } catch { /* the source may already be gone */ } };
+const hostOf = (u) => { try { return new URL(u).host; } catch { return String(u); } };
+
+/* The bytes of a response hashed as they arrive and kept nowhere (the lookup decides, it does not file):
+   `{sha, bytes}`, or `{oversize}` past `max`. */
+async function hashBody(res, max = CAPTURE_MAX) {
+  const h = createSha256();
+  let bytes = 0;
+  const reader = res && res.body && res.body.getReader ? res.body.getReader() : null;
+  if (reader) for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    bytes += value.length;
+    if (bytes > max) { try { await reader.cancel(); } catch { /* gone */ } return { oversize: true, bytes }; }
+    h.update(value);
+  }
+  return { sha: h.hex(), bytes };
+}
+
+/** R3, R32: find a memento of `address` the way RFC 7089 offers one, every request through the host governor. The
+ *  TimeGate is asked first, with `Accept-Datetime` now (the fallback fires because the document cannot be reached NOW,
+ *  so the newest memento is the answer to the question asked); when it gives no usable memento, the TimeMap is read
+ *  and its candidates are fetched newest first. Each memento is fetched in its raw form (the descriptor's `raw`, else
+ *  as given), redirects being answers, never followed silently. A memento that is not a 200 is hashed and kept as a
+ *  row `selectCapture` refuses by its own words; the first 200 is answered UNREAD, with its answer and the rows
+ *  refused before it, so the caller hashes (and, capturing, stores) the very bytes the choice is made over
+ *  (`chooseMemento`). Every refusal is an answer `{ok: false, status, payload}`. */
+async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fetchPurpose = "archive-lookup" } = {}) {
+  const ends = mementoEndpoints(ARCHIVE, address);
+  if (!ends) return { ok: false, status: 400, payload: { ok: false, reason: "BAD_ADDRESS", detail: "the archive has no endpoint for this address" } };
+  const considered = [], rows = [], tried = new Set();
+  const call = async (url, purpose, headers = null) => {
+    let g;
+    try { g = await governedFetch(cap, url, purpose, null, { headers, manual: true }); }
+    catch (e) { return { fail: { ok: false, status: 502, payload: { ok: false, reason: "ARCHIVE_UNREACHABLE", detail: String(e && e.message || e) } } }; }
+    if (g.refusedByGovernor)
+      return { fail: { ok: false, status: 429, payload: { ok: false, reason: "HOST_COOLING_OFF",
+        detail: `the governor is holding requests to ${hostOf(url)} (${g.reason})`, retry_in_ms: g.retry_in_ms || 0 } } };
+    return { res: g.res };
+  };
+  const archiveRefused = (res, what) => ({ ok: false, status: 502, payload: { ok: false, reason: "ARCHIVE_REFUSED", status: res.status,
+    detail: res.status === 429 ? "the archive is rate-limiting us; the governor will hold this host"
+                               : `the archive's ${what} answered ${res.status}`, considered } });
+  /* One memento, raw, its redirects followed by hand within the archive's public addresses. */
+  const tryMemento = async (uri) => {
+    let url = typeof ARCHIVE.raw === "function" ? ARCHIVE.raw(uri) : uri;
+    if (tried.has(url)) return { next: true };
+    tried.add(url);
+    for (let hop = 0; ; hop++) {
+      if (!isPublicHttpsLocator(url)) { considered.push({ uri: url, refused: "not a public https address", reason: "BAD_LOCATOR" }); return { next: true }; }
+      const c = await call(url, fetchPurpose);
+      if (c.fail) return c;
+      const res = c.res;
+      const ans = readMementoAnswer({ url, status: res.status, headers: res.headers });
+      /* The archive itself refusing (no Memento-Datetime), as against a memento OF a refusal, which is a row. */
+      if (!ans.ok && (res.status === 429 || res.status >= 500)) { cancelBody(res); return { fail: archiveRefused(res, "memento") }; }
+      if (ans.ok && ans.kind === "redirect" && hop < MEMENTO_HOPS) { cancelBody(res); url = ans.location; continue; }
+      if (!ans.ok || ans.kind !== "memento") {
+        cancelBody(res);
+        considered.push({ uri: url, reason: ans.ok ? "MEMENTO_NOT_NEGOTIATED" : ans.reason,
+                          refused: ans.ok ? `the archive was still redirecting after ${MEMENTO_HOPS} hops` : ans.detail });
+        return { next: true };
+      }
+      if (ans.status === 200) return { ok: true, res, answer: ans, locator: url, rows, considered };
+      /* A memento of a redirect or an error: a true fact about that fetch, not a copy of the document (capture-sources
+         R29), refused by selectCapture's own words over a row of the bytes received. */
+      const h = await hashBody(res);
+      rows.push(mementoRow(ans, h.oversize ? { sha256: null } : { sha256: h.sha, bytes: h.bytes }) || { timestamp: ans.timestamp });
+      return { next: true };
+    }
+  };
+  /* The TimeGate. */
+  const tg = await call(ends.timegate, indexPurpose, { "accept-datetime": acceptDatetime(Date.now()) });
+  if (tg.fail) return tg.fail;
+  if (tg.res.status === 429 || tg.res.status >= 500) { cancelBody(tg.res); return archiveRefused(tg.res, "TimeGate"); }
+  const ga = readMementoAnswer({ url: ends.timegate, status: tg.res.status, headers: tg.res.headers });
+  cancelBody(tg.res);
+  if (ga.ok) {
+    const m = await tryMemento(ga.kind === "redirect" ? ga.location : ga.memento_uri);
+    if (!m.next) return m.fail || m;
+  } else if (tg.res.status === 404) considered.push({ uri: ends.timegate, refused: "the TimeGate holds no memento of this address (404)" });
+  else considered.push({ uri: ends.timegate, reason: ga.reason, refused: ga.detail });
+  /* The TimeMap. */
+  const tm = await call(ends.timemap, indexPurpose);
+  if (tm.fail) return tm.fail;
+  /* A 404, or an empty TimeMap, is the archive saying it holds no memento of the address: nothing to try. */
+  if (!tm.res.ok && tm.res.status !== 404) { cancelBody(tm.res); return archiveRefused(tm.res, "TimeMap"); }
+  const mapText = tm.res.status === 404 ? (cancelBody(tm.res), "") : await tm.res.text();
+  const map = mapText.trim() ? parseTimeMap(mapText) : { ok: true, mementos: [], refused: [] };
+  if (!map.ok) return { ok: false, status: 502, payload: { ok: false, reason: map.reason, detail: map.detail, considered, address } };
+  const cands = timeMapCandidates(map);
+  considered.push(...cands.considered);
+  for (const cand of cands.ok ? cands.candidates.slice(0, MEMENTO_TRIES) : []) {
+    const m = await tryMemento(cand.uri);
+    if (!m.next) return m.fail || m;
+  }
+  return nothingUsable(selectCapture(rows), considered, address);
+}
+
+/* No memento may stand in for the document. The first Memento refusal met is answered by name when no memento was
+   even read as one; otherwise selectCapture's own refusal, with every memento it considered and why. */
+function nothingUsable(sel, considered, address) {
+  const named = sel.considered.length ? null : considered.find((c) => c.reason);
+  return { ok: false, status: named ? 502 : 404, payload: { ok: false, reason: named ? named.reason : sel.reason,
+    detail: named ? named.refused : sel.detail, considered: [...sel.considered, ...considered], address } };
+}
+
+/** R32: the choice over the bytes received. The memento's row is `mementoRow` over this call's digest of them, the
+ *  choice `selectCapture`'s (R29–R31 as written, an empty body refused by its own reason), the hop `mementoHop`'s,
+ *  every fact from what the archive answered and the bytes received, never from a caller (D-112). */
+function chooseMemento(m, sha, bytes, address) {
+  const sel = selectCapture([mementoRow(m.answer, { sha256: sha, bytes }), ...m.rows]);
+  if (!sel.ok) return nothingUsable(sel, m.considered, address);
+  return { ok: true, chosen: sel.chosen, rejected: [...sel.rejected, ...m.considered], usable_count: sel.usable_count,
+           hop: mementoHop(sel.chosen, m.locator, { archive: ARCHIVE, answer: m.answer }) };
+}
+
+/** R3, R32: `archiveLookup({address})` decides and reports what the archive arm would do, without capturing: the
+ *  chosen memento's bytes are fetched and hashed, and kept nowhere. */
 export async function archiveLookup(cap, { address } = {}) {
   if (typeof address !== "string" || !isPublicHttpsLocator(address))
     return { status: 400, body: { ok: false, reason: "BAD_ADDRESS", detail: "the document address must be https on a public host" } };
-  const sel = await archiveSelect(cap, address);
-  if (!sel.ok) return { status: sel.status, body: sel.payload };
+  const el = await archiveEligibility(cap, address);
+  if (!el.ok) return { status: el.status, body: el.payload };
+  const m = await mementoLookup(cap, address);
+  if (!m.ok) return { status: m.status, body: m.payload };
+  const h = await hashBody(m.res);
+  if (h.oversize)
+    return { status: 413, body: { ok: false, reason: "TOO_LARGE", bytes: h.bytes, maxBytes: CAPTURE_MAX, retrieval_locator: m.locator,
+      detail: "the memento exceeds what this surface will capture even in parts" } };
+  const c = chooseMemento(m, h.sha, h.bytes, address);
+  if (!c.ok) return { status: c.status, body: c.payload };
   return { status: 200, body: {
-    ok: true, address, eligible_because: sel.reach.basis, chosen: sel.chosen,
-    /* Every row the index offered and why it was not used: "nothing suitable" alone is unauditable. */
-    rejected: sel.rejected, usable_count: sel.usable_count, retrieval_locator: sel.replay, provenance_hop: sel.hop,
+    ok: true, address, eligible_because: el.reach.basis, chosen: c.chosen,
+    /* Every memento considered and why it was not used: "nothing suitable" alone is unauditable. */
+    rejected: c.rejected, usable_count: c.usable_count, retrieval_locator: m.locator, provenance_hop: c.hop,
     capture_with: { op: "acquire", via: "archive.org", address },
     note: "this op decides and reports; op=acquire with via=archive.org decides AGAIN and captures, "
-        + "because the hop that reaches the record must be built by the same call that fetched the CDX record" } };
+        + "because the hop that reaches the record must be built by the same call that fetched the memento" } };
 }
 
 /* R28: an outbound request that is not a plain GET of a document (the timestamp authorities' POSTs, the co-archive)
@@ -334,10 +454,10 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
             + "(via: \"archive.org\") and through the capture-request drain (via: \"capture-request\"). "
             + "Direct acquisition is a member's or an operator's act, and the "
             + "unattended credential is scoped to the verbs the unattended paths need." });
-  /* R3, D-112: the archive arm names the DOCUMENT and lets the plane find the replay, inside the same call that files
-     the bytes, so the eligibility fence cannot be walked around and the hop is built from the CDX record this call
-     fetched. A monitoring path: admin, probe and daemon only. */
-  let archiveHopRecorded = null, archiveAddress = null;
+  /* R3, R32, D-112: the archive arm names the DOCUMENT and lets the plane find the memento, inside the same call that
+     files the bytes, so the eligibility fence cannot be walked around and the hop is built from what the archive
+     answered this call. A monitoring path: admin, probe and daemon only. */
+  let archiveHopRecorded = null, archiveAddress = null, archiveAsked = null;
   if (body.via === "archive.org") {
     if (cls !== "admin" && cls !== "probe" && cls !== "daemon")
       return answer(403, { ok: false, reason: "NOT_PERMITTED", op, via: "archive.org",
@@ -347,11 +467,11 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     if (typeof addr !== "string" || !isPublicHttpsLocator(addr))
       return answer(400, { ok: false, reason: "BAD_ADDRESS",
         detail: "an archive-sourced capture names the document address, not a replay locator" });
-    const sel = await archiveSelect(cap, addr);
-    if (!sel.ok) return answer(sel.status, sel.payload);
-    archiveHopRecorded = sel.hop;
-    archiveAddress = sel.chosen.original;
-    body.locator = sel.replay;
+    const el = await archiveEligibility(cap, addr);
+    if (!el.ok) return answer(el.status, el.payload);
+    archiveAsked = addr;
+    /* R2: the retrieval locator is the memento this call finds, never a caller's. */
+    delete body.locator;
   }
   /* K58: EVERYTHING THAT DECIDES WHAT LEAVES THIS INSTANCE COMES FROM THE ROW the drain's conduct check judged: the
      address, the purpose, the agent, and whether to render. */
@@ -416,8 +536,8 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     else sessionSkip = { reason: "NO_SUCH_SESSION", detail: ld && ld.note };
   }
 
-  const locator = session ? session.locator : body.locator;
-  if (typeof locator !== "string" || !isPublicHttpsLocator(locator))
+  let locator = session ? session.locator : body.locator;
+  if (!(archiveAsked && !session) && (typeof locator !== "string" || !isPublicHttpsLocator(locator)))
     return answer(400, { ok: false, reason: "BAD_LOCATOR",
       detail: "a locator must be https on a public host: no bare IP address, no localhost, no credentials in the address" });
   if (session) return continueCapture(cap, { body, session, cls, storeName, ev });
@@ -486,6 +606,15 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   }
   /* END DEC-49 REGION is-render-admit */
 
+  /* R3, R32: the memento, found through the archive's TimeGate or TimeMap; its raw bytes are answered unread, so the
+     bytes this call files are the bytes the choice is made over (`chooseMemento`, below). */
+  let archiveMemento = null;
+  if (archiveAsked) {
+    const m = await mementoLookup(cap, archiveAsked, { fetchPurpose: "acquire" });
+    if (!m.ok) return answer(m.status, m.payload);
+    archiveMemento = m; locator = m.locator; archiveAddress = m.answer.original;
+  }
+
   /* capture R8, D-104 / D-96: every way this fetch can end is recorded against the DOCUMENT address (the CDX original, the
      Drive link, else the locator), and a governed refusal is never a failure of the source. */
   const via = body.via === "archive.org" ? "archive.org" : "direct";
@@ -501,8 +630,8 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   const validators = crHeldSha && !renderAsked ? cap.validatorsOf({ addressNorm: addrNorm, captureSha: crHeldSha }) : null;
   const conditional = validators ? { ...(validators.etag ? { "if-none-match": validators.etag } : {}),
                                      ...(validators.lastModified ? { "if-modified-since": validators.lastModified } : {}) } : null;
-  let res;
-  try {
+  let res = archiveMemento ? archiveMemento.res : null;
+  if (!res) try {
     const g = await governedFetch(cap, locator, crPurpose || "acquire", crAgent, { headers: conditional, credential: crCredential });
     if (g.refusedByGovernor) {
       await noteOutcome("governed", null);
@@ -564,12 +693,13 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     await noteOutcome("source_refused", res.status);
     return answer(502, { ok: false, reason: "SOURCE_REFUSED", status: res.status, locator });
   }
-  await noteOutcome("success", res.status);
+  /* R32: on the archive arm the success is the memento's, recorded once it is chosen (below), never for one refused. */
+  if (!archiveMemento) await noteOutcome("success", res.status);
 
   /* R10. Streamed in parts of 8 MiB, so peak residency is one part. The incremental hasher is RECORD-GRAMMAR'S, the
      one C-18.6 verifies parts with, so a disagreement between two implementations cannot look like tampering. */
   const PART = 8 * 1024 * 1024;
-  const MAX = 256 * 1024 * 1024;
+  const MAX = CAPTURE_MAX;
   const whole = createSha256();
   const parts = [];
   /* D-469: whether the store held each part BEFORE this call wrote it (asked after the put, it finds this call's
@@ -642,8 +772,15 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
                          detail: "the document exceeds what this surface will capture even in parts" });
   }
   await flush();
-  if (total === 0) return answer(502, { ok: false, reason: "EMPTY", locator });
   let sha = whole.hex();
+  /* R32: the memento is chosen over the bytes just received (an empty one refused by selectCapture's own reason). */
+  if (archiveMemento) {
+    const c = chooseMemento(archiveMemento, sha, total, archiveAsked);
+    if (!c.ok) return answer(c.status, c.payload);
+    archiveHopRecorded = c.hop;
+    await noteOutcome("success", res.status);
+  }
+  if (total === 0) return answer(502, { ok: false, reason: "EMPTY", locator });
 
   /* R11. One part: whether that object was held before this call wrote it. Several: the whole is never stored under
      its own hash, so the REGISTER is asked (provenance R5) and a miss is stated, never scored false (D-476). */

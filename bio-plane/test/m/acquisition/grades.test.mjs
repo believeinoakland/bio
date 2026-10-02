@@ -6,7 +6,7 @@
    table and the tokens are other modules' and are not here. Each test names the requirement ids it checks. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, run, sha, eligible } from "./fixture.mjs";
+import { world, run, sha, eligible, wayback } from "./fixture.mjs";
 import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
 import { ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
 import { ODT_CONTENT_TYPE, ODS_CONTENT_TYPE, ODP_CONTENT_TYPE } from "../../../src/odf.mjs";
@@ -58,12 +58,9 @@ const DRIVE = [
   { fmt: "odp", kind: "presentation", link: `https://docs.google.com/presentation/d/${ID.slides}/edit`, exp: `https://docs.google.com/presentation/d/${ID.slides}/export?format=odp` },
 ];
 
-/* The archive arm over a scripted Wayback: the CDX names `original`, and every replay answers `bytes`. */
-const archive = (original, bytes, ct) => (u) => u.startsWith("https://web.archive.org/cdx/")
-  ? new Response(JSON.stringify([["urlkey", "timestamp", "original", "mimetype", "statuscode", "digest", "length"],
-                                 ["x)/doc", "20240115120000", original, ct, "200", "MFCJ5MFCJ5MFCJ5MFCJ5MFCJ5MFCJ5MF", String(bytes.length)]]),
-                 { headers: { "content-type": "application/json" } })
-  : u.startsWith("https://web.archive.org/web/") && u.includes("id_/") ? bin(bytes, ct) : null;
+/* The archive arm over a scripted Memento archive (fixture `wayback`): one memento of `original`, whose raw form
+   answers `bytes`. */
+const archive = (original, bytes, ct) => wayback([{ ts: "20240115120000", body: bytes, ct }], { address: original });
 
 test("R18 R4: a Drive capture of a document, spreadsheet or presentation grades the direct ceiling, and its chain carries Google's hop confirmed from the bytes", async () => {
   const w = world();

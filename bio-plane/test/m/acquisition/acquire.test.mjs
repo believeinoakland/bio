@@ -4,7 +4,7 @@
    Each test names the requirement ids it checks in its title. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, run, lookup, network, sha, HTML, page, text, CDX, cdxRow, eligible, rendererEnv } from "./fixture.mjs";
+import { world, run, lookup, network, sha, HTML, page, text, wayback, WB, eligible, rendererEnv } from "./fixture.mjs";
 import { RENDER_DEFAULTS, renderLocaleFor } from "../../../src/render.mjs";
 import { EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../../../src/record-grammar/index.mjs";
 import { ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
@@ -75,53 +75,56 @@ test("R2 R27: the fetched address must be a public locator, and no caller-suppli
   assert.equal(drive.body.reason, "DRIVE_HOP_FACT_SUPPLIED");
 });
 
-test("R3: the archive arm needs an eligible address, queries the CDX through the governor at 24 a minute, and files the chosen replay under the CDX original with the archive's hop", async () => {
+test("R3 R32: the archive arm needs an eligible address, finds a memento through the TimeGate and TimeMap via the governor at 24 a minute, and files the chosen memento's raw bytes under its original with the archive's hop", async () => {
   const w = world();
   const addr = "https://gone.example/doc";
-  const replay = `https://web.archive.org/web/20250101000000id_/${addr}`;
+  const replay = `${WB}20250101000000id_/${addr}`;
   const bad = await run(w, {}, { via: "archive.org", locator: addr }, { cls: "admin" });
   assert.deepEqual([bad.status, bad.body.reason], [400, "BAD_ADDRESS"]);
   const ne = await run(w, {}, { via: "archive.org", address: addr }, { cls: "admin" });
   assert.deepEqual([ne.status, ne.body.reason, ne.body.reachability.fallback_eligible, ne.net.seen.length], [409, "NOT_ELIGIBLE", false, 0]);
   await eligible(w);
-  const routes = (u) => u.startsWith("https://web.archive.org/cdx/") ? CDX([cdxRow("20250101000000"), cdxRow("20250601000000", addr, "301")])
-    : u === replay ? text("archived bytes") : null;
+  /* the newest memento is of a redirect: refused by selectCapture's words, the TimeMap's next one is filed */
+  const routes = wayback([{ ts: "20250101000000" }, { ts: "20250601000000", status: 301, body: "moved" }]);
   const r = await run(w, routes, { via: "archive.org", address: addr }, { cls: "admin", member: false });
   assert.equal(r.status, 200);
   assert.deepEqual(w.gov.configured, [{ host: "web.archive.org", appetite_per_min: 24 }]);
-  assert.ok(w.gov.calls.some((c) => c[0] === "admit" && c[1] === "web.archive.org"), "the CDX query through the governor");
-  assert.ok(r.net.seen[0].url.startsWith("https://web.archive.org/cdx/"));
-  assert.equal(w.prov.receipts[0].address, addr, "document address is the CDX original");
+  assert.equal(w.gov.calls.filter((c) => c[0] === "admit" && c[1] === "web.archive.org").length, r.net.seen.length, "every request through the governor");
+  assert.deepEqual(r.net.seen.map((x) => x.url), [`${WB}${addr}`, `${WB}20250601000000id_/${addr}`, `${WB}timemap/link/${addr}`, replay]);
+  assert.match(r.net.seen[0].init.headers["accept-datetime"], /^[A-Z][a-z]{2}, \d\d [A-Z][a-z]{2} \d{4} \d\d:\d\d:\d\d GMT$/, "the TimeGate is asked with Accept-Datetime");
+  assert.ok(r.net.seen.every((x) => x.init.redirect === "manual"), "a redirect is an answer, never followed silently");
+  assert.equal(w.prov.receipts[0].address, addr, "document address is the memento's rel=original");
   assert.equal(w.prov.receipts[0].via, "archive.org");
   assert.equal(w.prov.receipts[0].retrievalLocator, replay);
   const chain = r.body.document.provenance_chain;
   assert.equal(chain.length, 2); assert.equal(chain[1].via, "archive.org"); assert.equal(chain[1].who, "Internet Archive Wayback Machine");
   assert.equal(chain[1].document_address, addr);
+  assert.match(chain[1].evidence, new RegExp(`SHA-256 ${sha("archived bytes")}, computed by this instance`));
   assert.equal(r.body.document.capture.authority, "Internet Archive");
   assert.deepEqual(w.prov.signed.map((x) => [x.captureSha, x.retrievalLocator]), [[sha("archived bytes"), replay]], "provenance R34: the receipt is signed");
   assert.deepEqual(r.body.receipt_signature, { ok: true, signed: true });
   /* the named failures */
   await eligible(w);
-  const thrown = await run(w, (u) => (u.includes("/cdx/") ? new Error("dns") : null), { via: "archive.org", address: addr }, { cls: "admin" });
+  const thrown = await run(w, () => new Error("dns"), { via: "archive.org", address: addr }, { cls: "admin" });
   assert.deepEqual([thrown.status, thrown.body.reason], [502, "ARCHIVE_UNREACHABLE"]);
-  const refused = await run(w, (u) => (u.includes("/cdx/") ? new Response("no", { status: 503 }) : null), { via: "archive.org", address: addr }, { cls: "admin" });
+  const refused = await run(w, () => new Response("no", { status: 503 }), { via: "archive.org", address: addr }, { cls: "admin" });
   assert.deepEqual([refused.status, refused.body.reason, refused.body.status], [502, "ARCHIVE_REFUSED", 503]);
-  const none = await run(w, (u) => (u.includes("/cdx/") ? CDX([cdxRow("20250101000000", addr, "404")]) : null), { via: "archive.org", address: addr }, { cls: "admin" });
-  assert.deepEqual([none.status, none.body.reason, none.body.considered.length], [404, "NO_USABLE_CAPTURE", 1], "every row considered is named");
+  const none = await run(w, wayback([{ ts: "20250101000000", status: 404, body: "gone" }]), { via: "archive.org", address: addr }, { cls: "admin" });
+  assert.deepEqual([none.status, none.body.reason, none.body.considered.length], [404, "NO_USABLE_CAPTURE", 1], "every memento considered is named");
   const cool = world({ gov: { refuse: ["web.archive.org"] } }); await eligible(cool);
   const c2 = await run(cool, routes, { via: "archive.org", address: addr }, { cls: "admin" });
   assert.deepEqual([c2.status, c2.body.reason, c2.net.seen.length], [429, "HOST_COOLING_OFF", 0]);
-  /* archiveLookup decides and reports the same, without capturing */
-  const before = w.prov.receipts.length;
-  const look = await lookup(w, routes, { address: addr });
+  /* archiveLookup decides and reports the same, without capturing: the memento's bytes are hashed and kept nowhere */
+  const lw = world(); await eligible(lw);
+  const look = await lookup(lw, routes, { address: addr });
   assert.equal(look.status, 200);
   assert.equal(look.body.retrieval_locator, replay);
   assert.equal(look.body.provenance_hop.via, "archive.org");
   assert.equal(look.body.chosen.original, addr);
-  assert.ok(Array.isArray(look.body.rejected) && look.body.rejected.length === 1, "the refused row is named");
-  assert.equal(w.prov.receipts.length, before, "nothing captured");
-  assert.ok(!look.net.seen.some((x) => x.url === replay), "the replay is not fetched by the lookup");
-  assert.equal((await lookup(w, routes, { address: "https://fresh.example/" })).body.reason, "NOT_ELIGIBLE");
+  assert.equal(look.body.chosen.digest, sha("archived bytes"), "the row is over the bytes received");
+  assert.ok(Array.isArray(look.body.rejected) && look.body.rejected.length === 1, "the refused memento is named");
+  assert.deepEqual([lw.prov.receipts.length, lw.b.calls.filter((c) => c[0] === "put").length], [0, 0], "nothing captured or stored");
+assert.equal((await lookup(w, routes, { address: "https://fresh.example/" })).body.reason, "NOT_ELIGIBLE");
   assert.equal((await lookup(w, routes, { address: "ftp://x" })).body.reason, "BAD_ADDRESS");
 });
 
@@ -182,9 +185,9 @@ test("R5 R6 R7 R29: the render arm refuses before any fetch, admits against the 
   }
   await eligible(w, "https://r.example/page");
   for (const b of [{ via: "archive.org", address: "https://r.example/page" }, { locator: "https://docs.google.com/document/d/1AbCdEfGhIjKlMnOp/edit" }, { locator: "https://r.example/page", continue: "cs_x" }]) {
-    const r = await run(w, (u) => (u.includes("/cdx/") ? CDX([cdxRow("20250101000000", "https://r.example/page")]) : null), { ...b, render: true }, { cls: "admin" });
+    const r = await run(w, wayback([{ ts: "20250101000000" }], { address: "https://r.example/page" }), { ...b, render: true }, { cls: "admin" });
     assert.deepEqual([r.status, r.body.reason, r.body.check, r.body.translation], [400, "RENDER_ARM_CONFLICT", ...row("RENDER_ARM_CONFLICT")], JSON.stringify(b));
-    assert.ok(!r.net.seen.some((x) => !x.url.includes("/cdx/")), "nothing but the archive's index is asked");
+    assert.equal(r.net.seen.length, 0, "nothing is asked, the archive included");
   }
   const none = await run(w, {}, { locator: "https://r.example/page", render: true });
   assert.deepEqual([none.status, none.body.reason, none.body.check, none.body.translation, none.net.seen.length], [501, "RENDER_NO_RENDERER", ...row("RENDER_NO_RENDERER"), 0]);
@@ -499,8 +502,7 @@ test("R18: the grade is the ceiling for a direct fetch and the archive letter fo
   assert.equal(d.body.document.capture.grade, EARNED_CAPTURE_CEILING);
   await eligible(w);
   const addr = "https://gone.example/doc";
-  const a = await run(w, (u) => u.includes("/cdx/") ? CDX([cdxRow("20250101000000")]) : u.includes("/web/") ? text("a") : null,
-                      { via: "archive.org", address: addr }, { cls: "admin" });
+  const a = await run(w, wayback([{ ts: "20250101000000", body: "a" }]), { via: "archive.org", address: addr }, { cls: "admin" });
   assert.equal(a.body.document.capture.grade, ARCHIVE_CAPTURE_GRADE, "provenance's one definition");
   assert.notEqual(ARCHIVE_CAPTURE_GRADE, EARNED_CAPTURE_CEILING);
 });
@@ -609,8 +611,7 @@ test("R20: every capture requests a timestamp and, wherever the source permits, 
                    [["tsa.test", true, true, "2026-09-27T00:00:00Z"], ["archive.test (anonymous)", true, false, "2026-09-27T00:00:00Z"]],
                    "each attempt in the register's shape (C-18.1): {service, attempted, ok}, the instant kept");
   await eligible(w);
-  await run(w, (u) => u.includes("/cdx/") ? CDX([cdxRow("20250101000000")]) : u.includes("/web/") ? text("a") : null,
-            { via: "archive.org", address: "https://gone.example/doc" }, { cls: "admin" });
+  await run(w, wayback([{ ts: "20250101000000", body: "a" }]), { via: "archive.org", address: "https://gone.example/doc" }, { cls: "admin" });
   assert.deepEqual([w.prov.attests.at(-1).archive, w.prov.attests.at(-1).locator], [false, "https://gone.example/doc"], "the archive arm's locator is itself an archive replay");
   const failing = world();
   failing.prov.attest = async () => { throw new Error("tsa down"); };
