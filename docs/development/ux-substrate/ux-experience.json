@@ -10813,7 +10813,8 @@
     "rulings": [
      "DEC-79",
      "K362",
-     "K364"
+     "K364",
+     "K904"
     ],
     "decided": "All four stages are shown: 'forming', 'investigating' and 'matured' are computed from the record, and 'closed' is the owner's reasoned act. Only readiness rungs a case can earn are shown, and each unearned one is stated. The display is coloured bars that build up, one per stage reached, disclosing more on hover (with a focus or tap equivalent) and opening on click to what each stage needs next and when each was reached; each bar is named, and 'closed' shows its reason and never reads as a finished stack.",
     "status": "ruled",
@@ -16068,7 +16069,7 @@
    "recommendation": "Use the three layers with semantics-table click-overs, printing all layers plus a one-page glossary; the one-line verdict must state each axis and never a single score.",
    "whoDecides": "Design, within Bob's stated principles and DEC-44; Bob only if a single summary line per finding is thought to risk composing the pair.",
    "brief": {
-    "stillOpen": "partly",
+    "stillOpen": false,
     "settledSince": "Much was settled on 29 September: the measures map gives every scale its plain question and words; each document's grade and co-attestation is disclosed; 'Undetermined' and its four neighbours have fixed treatments; contradictions are disclosed one level deep. No ruling since touches the public reader. Open: a one-line statement per finding for readers, and whether print carries every layer.",
     "title": "How a published case explains its strength to the public, on screen and in print",
     "inOneBreath": "Should each finding on a published case open with one plain line about the standard it met before the detailed grades, and should the printed edition carry every layer of explanation however long it gets?",
@@ -16249,6 +16250,17 @@
      "build/rulings.md K628–K859 checked: none touch the public reader's display"
     ],
     "size": "quick"
+   },
+   "ruled": {
+    "date": "2026-10-01",
+    "by": "Bob",
+    "rulings": [
+     "DEC-82",
+     "DEC-112"
+    ],
+    "status": "ruled",
+    "title": "The forms of a published case: the public page, the complete edition and the case file",
+    "decided": "The test of a published case is that anybody can review it, and even recreate it, without CivicOS. It comes in three forms. The public page: each finding opens with one line naming its role and the project's bar ('Relied on · meets this project's bar (capture B, connection C)'), never a bare 'meets', then its two grades, then the detail; the strength section opens 'a case has two strengths, never one'. The complete edition (what was called print): a self-contained file anyone can open with nothing to install, with no length limit, ordered so a reader can stop early, carrying every layer, the grading method and 'How to check this case yourself'; every page carries the identifying notice, and printing is incidental. The case file: the complete structured record in a published, versioned format rich enough that the results can be recreated, holding the complete edition, every document and observation a conclusion rests on (whole, with its extracted text), the findings' chains, attestations, signatures, and the method version inside the signed case; split into parts, never trimmed; an open specification and a standalone open checker let anyone recreate it. Everything a conclusion rests on must be presentable: publishing is refused while a relied-on finding rests on material that cannot travel whole; the warning says the case republishes these documents and that judging whether they may be is the group's. An off-the-record source's material travels whole with its attestations (member, project, group); only the identity is withheld, labelled 'Withheld' with its reason. Another group's copy imports a case file into a new, read-only project, and the system confirms each finding by recreating it: Recreated, Recreated in part (naming what is missing) or Did not recreate (naming what differs), shown also against the importing group's own bar. Recreating is not endorsing; the group may accept an edition only for recreated findings, and an accepted finding may support its own work, marked as another group's. The screens are Design's."
    }
   },
   {
@@ -16258,7 +16270,7 @@
     "UC-129"
    ],
    "brief": {
-    "stillOpen": "partly",
+    "stillOpen": false,
     "settledSince": "Your answer of 1 October settled the act: 'hold in place' or 'hold released', with a reason, recorded by a member, clears the reminder. It is built. What the hold stops, how far it reaches, what members see and whether it blocks the wipe remain open.",
     "title": "The litigation hold: what placing it stops, how far it reaches, and what it blocks",
     "inOneBreath": "Now that a member can record 'hold in place' on a reply marked as a legal threat, should that record actually stop the scheduled deletion of assistant transcripts on members' devices, for which projects, with what shown to members, and should it block the operator's wipe of the group's record?",
@@ -16470,6 +16482,19 @@
      "Checked build/plan/next.md and draft-T21.md: the device transcript store is not planned."
     ],
     "size": "session"
+   },
+   "ruled": {
+    "date": "2026-10-01",
+    "by": "Bob",
+    "rulings": [
+     "K899 (7)",
+     "K901",
+     "DEC-113",
+     "K1019"
+    ],
+    "status": "ruled",
+    "title": "The litigation hold: what it stops, how far it reaches, and what it blocks",
+    "decided": "A hold is a member's recorded statement on a reply marked as a legal threat, 'hold in place' or 'hold released', always with a reason; the latest stands, and it is the reminder's only way out. Once devices store assistant transcripts, 'hold in place' stops both scheduled deletions (at the time limit and at publication), on every member's device, for the threatened action's project (filled in automatically) and any other projects the member names; more can be added by a further statement. A device checks for a hold before deleting and deletes nothing if it cannot check. Any member who can see the action may place a hold; releasing is heavier: its form says what will be deleted and that this cannot be undone, and the administrators and whoever placed the hold are told once. Members who can see a held project see a strip: 'Litigation hold in place since 2 Oct 2026, recorded by Paula Reyes. Assistant transcripts for this project stay on your device: they are not deleted after the usual time or at publication. Please do not clear them yourself.' Members who cannot see the project see nothing. While any hold is in place, the operator's wipe of the real record is refused, and the doorbell archive's one-week clearing pauses. Counsel's review of these defaults is advised."
    }
   },
   {
@@ -16803,7 +16828,7 @@
     "UC-126"
    ],
    "brief": {
-    "stillOpen": true,
+    "stillOpen": false,
     "settledSince": "",
     "title": "What a plan is about: 'Subjects' or 'Matters'",
     "inOneBreath": "On the action plan page, should the list of things the plan is about be headed 'Subjects' or 'Matters', given that 'Subject' already names a person, office, place, law or thing elsewhere in CivicOS?",
@@ -16974,6 +16999,16 @@
      "Checked K628-K859: none settles or changes this question."
     ],
     "size": "quick"
+   },
+   "ruled": {
+    "date": "2026-10-01",
+    "by": "Bob",
+    "rulings": [
+     "DEC-114"
+    ],
+    "status": "ruled",
+    "title": "What a plan is about: 'Matters'",
+    "decided": "Members see 'Matters' (one 'matter') for the things an action plan addresses, everywhere they appear: the plan page's heading and add button, the options' tags, the preview when an action starts, queue items and the glossary. The approved plan-page sketch changes in that one word. 'Subject' keeps its one member-facing meaning: a person in a public role, office, place, law or thing on the Subjects screen. The requirements' internal term stays 'subject'."
    }
   },
   {
@@ -16984,7 +17019,7 @@
     "UC-111"
    ],
    "brief": {
-    "stillOpen": true,
+    "stillOpen": false,
     "settledSince": "",
     "title": "The other three Action sketches: fix them as the reference, or leave them to Design",
     "inOneBreath": "Besides the plan page you approved, should the Action design's other three screen sketches (starting and sending an action, the matter page, and the sheet of standards, filings and queue items) bind the interface redesign as the plan page does, or stay examples the designer may rework?",
@@ -17180,9 +17215,21 @@
      "build/requirements/actions.md R8; filings.md R22-R25; action-plans.md R23",
      "build/plan/archive/T19.md (the plan-page surface kept as Bob's UX)",
      "Correction to the earlier brief: surfaces.html shows standards, a tier 2 filing draft and a tier 3 counsel packet as well as queue items; PATH.md is a draft, not part of the approved record.",
-     "Checked K628-K859: none settles or changes this question."
+     "Checked K628-K859: none settles or changes this question.",
+     "build/rulings.md K921, K924 (Bob through the development process, cited in BOB's outbox B1): a filing template is the basis of a group's own filing (tiers 1, 2) or of a briefing to counsel (every tier, counsel needed only at Tier 3); every approved version is offered with its metadata, the latest by default, an earlier one 'updated' and still offered; a filing may be written without a template. Built in T21. The start-and-send sketch's template step should follow them."
     ],
     "size": "short"
+   },
+   "ruled": {
+    "date": "2026-10-01",
+    "by": "Bob",
+    "rulings": [
+     "K608 (4)",
+     "DEC-115"
+    ],
+    "status": "ruled",
+    "title": "Which Action sketches bind the redesign",
+    "decided": "Besides the plan page, the starting-and-sending sketch binds the redesign's content, step order and wording: the refusal shown before anything runs, the reason asked in place, and approving kept separate from recording the sending. In the third sheet, the tier 2 filing draft and the tier 3 counsel packet panels bind likewise. The matter page, the standards list and the queue items stay examples the designer may rework within the requirements and the later rulings (the queue's three kinds, the hold strip, 'Matters'). Look and layout stay Design's throughout, and where a bound sketch predates a later ruling ('Matters'; the filing-template rules), the ruling wins."
    }
   },
   {
@@ -17190,7 +17237,7 @@
    "basis": "open",
    "relatedUseCases": [],
    "brief": {
-    "stillOpen": "partly",
+    "stillOpen": false,
     "settledSince": "Your rulings of 1 October settled who has standing (the named subject, and others a group grants it to), that the docket holds no confidential entries, that redaction is only ever the submitter's own and a redacted submission may be declined, and that off-the-record contacts need not be disclosed. The rest stays open and is what this brief asks.",
     "title": "After publication: a case's docket, outside responses, and withdrawing a case",
     "inOneBreath": "Now that you have ruled who has standing and that nothing on the docket is sealed or redacted, how should the rest of a published case's docket work: its shelves and required core, how outside responses are found, kept and placed, how entries are signed and travel, and how a case is withdrawn?",
@@ -17507,7 +17554,8 @@
      "DEC-95 item 3; DEC-77; DEC-24; DEC-94 item 3; K597 (5); DEC-72 (2), (5); DEC-84 (13); DEC-85; DEC-96 items 1 and 4",
      "State Rules §5.4; reevaluation R16; K899 (3); K901; N457; civicos-ui/app.html banner and design notes H1, H2, H7",
      "Analogies only: CPUC Rules of Practice and Procedure (party status, Rule 1.4; information-only service list; public comments outside the formal record; Docket Office rejection for form); Pub. Util. Code §1708; COPE retraction guidelines",
-     "main @ 615672a1a0 (rulings to K926) checked; none settles the remaining parts"
+     "main @ 615672a1a0 (rulings to K926) checked; none settles the remaining parts",
+     "build/rulings.md K943; next.md N470; BOB's outbox B2 (DEFER, 2026-10-01): no withdrawal act for a ratified edition until this question is answered; the answer goes back as a NOTICE naming the DEC."
     ],
     "size": "session"
    },
@@ -17515,12 +17563,12 @@
     "date": "2026-10-01",
     "by": "Bob",
     "rulings": [
-     "DEC-100"
+     "DEC-100",
+     "DEC-116"
     ],
-    "status": "partly ruled",
-    "title": "After publication: a case's docket, and withdrawing a case",
-    "decided": "(1) The subject named in a case has party-like standing: its responses that reach the group are listed on the public docket. (2) A group may also grant standing to others besides the named subject, as the CPUC grants party status; anyone without standing may still submit, and whether their submission goes on the public docket is the group's call. (3) No confidential filings: an entry is public whole, or it is not on the public docket, though the group may still keep it in its record. (4) Redaction is the submitter's alone: whoever submits may send a redacted version of their own material, but the group never redacts what others submit. The group may decline to post any submission that contains redactions, even one from the named subject, which in practice discourages redaction. (5) The group is not required to disclose its off-the-record contacts with the subject after publication.",
-    "stillOpen": "the docket itself, its required core, outside responses, how entries are signed and travel, and withdrawal"
+    "status": "ruled",
+    "title": "After publication: a case's docket, outside responses, and withdrawing a case",
+    "decided": "Each case has a docket: dated entries, each naming the edition it concerns, growing while the signed editions never change. The named subject has party-like standing, and a group may grant the same standing to others by a signed entry with a reason (permanent for what they already submitted). There are no confidential entries; only the submitter redacts, and the group may decline redacted submissions. Three shelves: what the group stands behind as accurately listed; 'Reactions elsewhere' ('Listed by the group. Not evidence. Not endorsed.'); and 'In our record only', never published. Checks are on form, never merit, and an entry never makes anything evidence. Required on the first shelf, each a To-do for the project's manager: every response the subject sends; the subject's public statements the group has captured, a press release included; a newer edition with its 'What changed' statement; a withdrawal; anything that would have had to be disclosed at signing. Outside responses are found by a pasted link, a standing watch or a labelled suggestion; captured and co-archived; linked to an edition; and a member chooses, with a reason, record only, public or both. A public reaction shows date, source, links to the original and the archived copy, and a short summary in the group's words, never the whole article. A reply naming a private person is listed as received, without its text, and the subject is asked to resend it without the name. Any member files to the record; only the manager signs an entry into public view; an entry is taken back by a later one, never deleted. Withdrawal is the manager's signed, final entry naming an edition or all, with a published reason: the edition stays readable under a stamp, re-evaluation notices go to everything resting on it, it is never lifted, and nothing is erased. The docket travels by pull: the public page, a feed per case, citing groups' copies and the directory; a copy that cannot reach it says 'Could not read the publisher's docket'."
    }
   }
  ],

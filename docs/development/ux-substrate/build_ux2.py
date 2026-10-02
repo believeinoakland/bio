@@ -423,7 +423,7 @@ ul.bl {{ margin:2px 0; padding-left:18px }} ul.bl li {{ margin:2px 0 }}
 <div><b>Part 2 · Design inputs</b>For the UX work: audiences, use cases, the experience step by step, screens and their rules, how heavy each act is, and the words. Each line is marked <span class="pill fixed">Fixed</span> by the canon or <span class="pill open">Open</span> for design.</div>
 <div><b>Part 3 · Reference</b>Every construct with its lifecycle and acts, who may act, what is decided but not yet built. Turn on “Show sources” to see the requirement behind each line.</div>
 </div>
-<div class="stats"><span class="pill askb">{len(need)} decisions still yours</span><span class="pill built">{len(oq_full)} questions settled</span><span class="pill gaps">{len(oq_part)} settled in part</span><span class="pill spec">{len(oq_def)} deferred</span><span class="pill built">{cnt["built"]} constructs built</span><span class="pill gaps">{cnt["built, gaps"]} built, with gaps</span><span class="pill spec">{cnt["specified, not built"] + cnt["decided, not built"]} not yet built</span></div>
+<div class="stats"><span class="pill askb">{len(need)} decision{"" if len(need) == 1 else "s"} still yours</span><span class="pill built">{len(oq_full)} question{"" if len(oq_full) == 1 else "s"} settled</span><span class="pill gaps">{len(oq_part)} settled in part</span><span class="pill spec">{len(oq_def)} deferred</span><span class="pill built">{cnt["built"]} constructs built</span><span class="pill gaps">{cnt["built, gaps"]} built, with gaps</span><span class="pill spec">{cnt["specified, not built"] + cnt["decided, not built"]} not yet built</span></div>
 </header>
 <nav class="bar" aria-label="Sections"><a href="#overview">Overview</a><a href="#needed">Needed from you</a><a href="#settled">Settled</a><a href="#audiences">Audiences</a><a href="#usecases">Use cases</a><a href="#experience">Experience</a><a href="#screens">Screens</a><a href="#weights">Act weights</a><a href="#words">Words</a><a href="#constructs">Constructs</a><a href="#roles">Who may act</a><a href="#flux">Not yet built</a><a href="#disagree">Canon and requirements</a>
 <label for="srcToggle"><input type="checkbox" id="srcToggle"> Show sources</label></nav>
@@ -439,9 +439,9 @@ ul.bl {{ margin:2px 0; padding-left:18px }} ul.bl li {{ margin:2px 0 }}
 
 <h2 id="needed">What is still needed from you</h2>
 {"".join("<p>" + t + "</p>" for t in x["meta"].get("neededIntro", []))}
-<div class="tw"><table class="need"><thead><tr><th>#</th><th>The decision</th><th>Size of the ask</th></tr></thead><tbody>{need_rows}</tbody></table></div>
+{('<div class="tw"><table class="need"><thead><tr><th>#</th><th>The decision</th><th>Size of the ask</th></tr></thead><tbody>' + need_rows + '</tbody></table></div>') if need else '<p class="rec"><b>Nothing is waiting on you.</b> Every question on this page is settled; see <a href="#settled">what is settled</a>. A new question appears here, with its brief, when one arises.</p>'}
 <ol class="oq">{need_cards}</ol>
-{('<p class="note">Folded into another question: ' + "; ".join(f'{a} ({e((oqs[a-1].get("brief") or {}).get("title") or oqs[a-1].get("question"))}) into <a href="#oq{t}">{t}</a>' for a, t in sorted(absorbed.items())) + '.</p>') if absorbed else ""}
+{('<p class="note">Folded into another question: ' + "; ".join(f'{a} ({e((oqs[a-1].get("brief") or {}).get("title") or oqs[a-1].get("question"))}) into <a href="#{_anchor(t)}">{t}</a>' for a, t in sorted(absorbed.items())) + '.</p>') if absorbed else ""}
 {('<h3 style="margin-top:22px">Left to the design</h3><p>These are open, but they are detail within rules already set, so the designer settles them without you. Say so if you want any of them brought to you.</p><ul class="bl">' + design_items + '</ul>') if design_items else ""}
 
 <h2 id="settled">What is settled</h2>
