@@ -90,7 +90,8 @@ export function world({ profiles = ["test-port-ellery"] } = {}) {
   membership.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => new Date(clock.ms).toISOString() });
   new Retrieval({ storage: st, record, membership, promotion, extraction: {}, observation: {} }).migrate();
-  promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
+  /* the group fact, registered as its owner instance-setup does (its R1; promotion R40). */
+  promotion.registerFact("producingGroup", "instance-setup", () => "test-group");
   const reg = { facts: [] };
   const retrievalStub = {
     registerActionFacts: (m, fn) => { reg.facts.push({ m, fn }); return { ok: true }; },
