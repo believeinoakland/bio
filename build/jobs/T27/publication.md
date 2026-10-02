@@ -12,3 +12,7 @@
 - **Checks:** format: 92 modules, 91 requirements files; 0 failures · architecture: 23 product files, 78 relative imports; 0 failures · coverage: 39 of 39 live requirement ids named by a test; 0 failures · ownership: 1 file changed by publication between tranche/T27 and HEAD; 0 failures.
 
 Size (session_01PBj2Sb1NuqAgKWDSQUEqiZ): test runs 1, module lines 1
+
+## J1 · COMPLETE
+
+N520 applied: R40's one test (casedoc.test.mjs) now names docket's reads (R1, R4, R9, R12, R14); its queries already cover every table docket reads; no code changed. No catalogue rows added. N502/N508 re-scan: nothing stale. Tests 98 pass, 0 fail, 1 todo (R30). format, architecture, coverage (39/39), ownership: 0 failures. R40's not-yet-met mark is yours to strike at the merge. Record: build/jobs/T27/publication.md.
