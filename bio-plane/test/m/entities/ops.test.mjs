@@ -13,8 +13,8 @@ const OPS = ["readingname", "readingnameplan", "entitycreate", "entityalias", "r
 /* A world with a registry, a reading, resolutions, a relation and a defect report, the same every time it is built. */
 function seeded() {
   const w = world({ profiles: ["test-port-ellery"] });
-  const a = w.e.createEntity({ kind: "office", label: "Harbour Office", aliases: ["ho:1"], declaredBy: MACHINE }).entity_id;
-  const b = w.e.createEntity({ kind: "body", label: "Port Board" }).entity_id;
+  const a = w.e.createEntity({ note: "a subject the test registers", kind: "office", label: "Harbour Office", aliases: ["ho:1"], declaredBy: MACHINE }).entity_id;
+  const b = w.e.createEntity({ note: "a subject the test registers", kind: "body", label: "Port Board" }).entity_id;
   const rel = w.e.declareRelation({ relation: "member_of", fromEntity: a, toEntity: b, justification: "j", citation: "c" }).relation_id;
   w.read("INFO-1", sha("ops"), [{ kind: "ho", key: "1", label: "x" }, { kind: "q", key: "2", label: "Harbour Office" },
                                  { kind: "q", key: "3", label: "Port Board" }]);
@@ -40,8 +40,10 @@ test("R40 every arm answers what its named service answers, reading its paramete
                     (e, s) => e.namingDocuments({ entityId: s.a, limit: "5", viewer: MACHINE })],
     ["readingnameplan", () => [{ terms: " harbour , office ," }, null], (e) => e.namingPlan(["harbour", "office"])],
     ["readingnameplan", () => [{}, null], (e) => e.namingPlan([])],
-    ["entitycreate", () => [{}, { kind: "fund", label: "Harbour Fund", aliases: ["hf"], declaredBy: "member:ann" }],
-                     (e) => e.createEntity({ kind: "fund", label: "Harbour Fund", aliases: ["hf"], declaredBy: "member:ann" })],
+    ["entitycreate", () => [{}, { kind: "fund", label: "Harbour Fund", note: "the harbour's capital fund", aliases: ["hf"], declaredBy: "member:ann" }],
+                     (e) => e.createEntity({ kind: "fund", label: "Harbour Fund", note: "the harbour's capital fund", aliases: ["hf"], declaredBy: "member:ann" })],
+    ["entitycreate", () => [{}, { kind: "fund", label: "Harbour Fund", declaredBy: "member:ann" }],
+                     (e) => e.createEntity({ kind: "fund", label: "Harbour Fund", declaredBy: "member:ann" })],
     ["entitycreate", () => [{}, null], (e) => e.createEntity({})],
     ["entityalias", (s) => [{}, { entityId: s.b, alias: "the board", declaredBy: MACHINE }],
                     (e, s) => e.addAlias({ entityId: s.b, alias: "the board", declaredBy: MACHINE })],

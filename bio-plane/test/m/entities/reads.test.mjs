@@ -5,7 +5,7 @@ import { world, sha, MACHINE } from "./fixture.mjs";
 
 function many(n) {
   const w = world();
-  const ent = w.e.createEntity({ kind: "office", label: "Alpha" }).entity_id;
+  const ent = w.e.createEntity({ note: "a subject the test registers", kind: "office", label: "Alpha" }).entity_id;
   const refs = Array.from({ length: n }, (_, i) => ({ kind: "r", key: String(i).padStart(4, "0"), label: "Alpha" }));
   w.read("INFO-1", sha("many"), refs);
   w.e.resolve({ captureSha: sha("many") });
@@ -30,8 +30,8 @@ test("R14 resolutionsFor refuses NO_SHA; the capture's resolutions by reference 
   assert.equal(e.resolutionsFor({ captureSha: sha("many"), limit: "junk", viewer: MACHINE }).limit, 500);
   /* a second entity on one reference orders by entity within the reference */
   const w = world();
-  const b = w.e.createEntity({ kind: "office", label: "Same" }).entity_id;
-  const a = w.e.createEntity({ kind: "body", label: "Same" }).entity_id;
+  const b = w.e.createEntity({ note: "a subject the test registers", kind: "office", label: "Same" }).entity_id;
+  const a = w.e.createEntity({ note: "a subject the test registers", kind: "body", label: "Same" }).entity_id;
   w.read("INFO-1", sha("two"), [{ kind: "z", key: "1", label: "Same" }]);
   w.e.resolve({ captureSha: sha("two") });
   assert.deepEqual(w.e.resolutionsFor({ captureSha: sha("two"), viewer: MACHINE }).resolutions.map((r) => r.entity_id), [b, a].sort());
@@ -40,7 +40,7 @@ test("R14 resolutionsFor refuses NO_SHA; the capture's resolutions by reference 
 test("R15 concerns refuses NO_ENTITY; one entry per capture carrying its strongest resolution, found and the entity, count, resolution_count, limit and truncated; an unregistered id answers found:false with what names it", () => {
   const { e, read, rows } = world();
   assert.equal(e.concerns({}).reason, "NO_ENTITY");
-  const ent = e.createEntity({ kind: "office", label: "Alpha", aliases: ["a:1"] }).entity_id;
+  const ent = e.createEntity({ note: "a subject the test registers", kind: "office", label: "Alpha", aliases: ["a:1"] }).entity_id;
   read("INFO-1", sha("c1"), [{ kind: "a", key: "1", label: "x" }, { kind: "b", key: "2", label: "Alpha" }]);
   read("INFO-2", sha("c2"), [{ kind: "c", key: "3", label: "Alpha" }]);
   e.resolve({ captureSha: sha("c1") }); e.resolve({ captureSha: sha("c2") });
@@ -57,7 +57,7 @@ test("R15 concerns refuses NO_ENTITY; one entry per capture carrying its stronge
 
 test("R16 strongestByCapture answers R15's collapse unbounded: capture → {capture_sha, bundle_id, grade}", () => {
   const { e, read } = world();
-  const ent = e.createEntity({ kind: "office", label: "Alpha", aliases: ["a:1"] }).entity_id;
+  const ent = e.createEntity({ note: "a subject the test registers", kind: "office", label: "Alpha", aliases: ["a:1"] }).entity_id;
   read("INFO-1", sha("s1"), [{ kind: "a", key: "1", label: "x" }, { kind: "b", key: "2", label: "Alpha" }]);
   const refs = Array.from({ length: 12 }, (_, i) => ({ kind: "q", key: String(i), label: "Alpha" }));
   read("INFO-2", sha("s2"), refs);
@@ -75,7 +75,7 @@ test("R16 strongestByCapture answers R15's collapse unbounded: capture → {capt
 test("R32 sight: R14 and R15 keep a hidden document's row and digest and withhold bundle_id, resolved_by and a testimony's testifier; an absent viewer sees nothing; a participant sees it whole", () => {
   const w = world();
   const { e } = w;
-  const ent = e.createEntity({ kind: "person", label: "Pat" }).entity_id;
+  const ent = e.createEntity({ note: "a subject the test registers", kind: "person", label: "Pat" }).entity_id;
   w.project("PROJ-2026-0001-x", "insider");
   w.read("PROJ-2026-0001-x", sha("h"), [{ kind: "p", key: "1", label: "Pat" }, { kind: "p", key: "2", label: "other" }]);
   e.resolve({ captureSha: sha("h"), resolvedBy: "member:insider" });

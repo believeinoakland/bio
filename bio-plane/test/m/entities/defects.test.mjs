@@ -8,8 +8,8 @@ import { noSha } from "../../../src/extraction/index.mjs";
 /* One C resolution of `ref` ("doc:1" in capture "d1") to Alpha, and a second entity with none. */
 function resolved() {
   const w = world();
-  const ent = w.e.createEntity({ kind: "office", label: "Alpha" }).entity_id;
-  const other = w.e.createEntity({ kind: "office", label: "Beta" }).entity_id;
+  const ent = w.e.createEntity({ note: "a subject the test registers", kind: "office", label: "Alpha" }).entity_id;
+  const other = w.e.createEntity({ note: "a subject the test registers", kind: "office", label: "Beta" }).entity_id;
   w.read("INFO-1", sha("d1"), [{ kind: "doc", key: "1", label: "Alpha" }]);
   w.e.resolve({ captureSha: sha("d1"), resolvedBy: MACHINE });
   const count = () => w.rows(`SELECT COUNT(*) AS n FROM resolution_defects`)[0].n;
@@ -89,7 +89,7 @@ test("R38 a report is appended (reason trimmed, at most 2,000; source {module, i
 test("R38 readEntity, resolutionsFor and concerns answer each resolution's reports beside it (defects [{reason, source, by, at}], defect_count), oldest first; R32 withholds by from a viewer who may not see the document", () => {
   const w = world();
   const { e } = w;
-  const ent = e.createEntity({ kind: "person", label: "Pat" }).entity_id;
+  const ent = e.createEntity({ note: "a subject the test registers", kind: "person", label: "Pat" }).entity_id;
   w.project("PROJ-2026-0001-x", "insider");
   w.read("PROJ-2026-0001-x", sha("h"), [{ kind: "p", key: "1", label: "Pat" }, { kind: "p", key: "2", label: "Pat" }]);
   e.resolve({ captureSha: sha("h"), resolvedBy: "member:insider" });
@@ -118,7 +118,7 @@ test("R38 readEntity, resolutionsFor and concerns answer each resolution's repor
   }
   /* concerns carries the reports of the resolution it collapses to */
   const w2 = world();
-  const a = w2.e.createEntity({ kind: "office", label: "Alpha", aliases: ["a:1"] }).entity_id;
+  const a = w2.e.createEntity({ note: "a subject the test registers", kind: "office", label: "Alpha", aliases: ["a:1"] }).entity_id;
   w2.read("INFO-1", sha("c"), [{ kind: "a", key: "1", label: "x" }, { kind: "b", key: "2", label: "Alpha" }]);
   w2.e.resolve({ captureSha: sha("c") });
   w2.e.reportResolutionDefect({ captureSha: sha("c"), ref: "b:2", entityId: a, reason: "on the C", by: "member:ann" });
@@ -141,8 +141,8 @@ test("R38 R39 one resolution's reports are answered at most 500, oldest first, w
 test("R39 readEntity's aliases are at most 500 and its relations at most 1,000, each in its stated order, truncated per collection by reading one past; exactly the bound is not truncated", () => {
   const { e } = world();
   const names = (n) => Array.from({ length: n }, (_, i) => `name ${String(i).padStart(4, "0")}`);
-  const full = e.createEntity({ kind: "office", label: "Zed", aliases: names(ENTITY_COLLECTION_LIMIT - 1) }).entity_id;
-  const over = e.createEntity({ kind: "office", label: "Zed Two", aliases: names(ENTITY_COLLECTION_LIMIT) }).entity_id;
+  const full = e.createEntity({ note: "a subject the test registers", kind: "office", label: "Zed", aliases: names(ENTITY_COLLECTION_LIMIT - 1) }).entity_id;
+  const over = e.createEntity({ note: "a subject the test registers", kind: "office", label: "Zed Two", aliases: names(ENTITY_COLLECTION_LIMIT) }).entity_id;
   const f = e.readEntity({ entityId: full }).entity, o = e.readEntity({ entityId: over }).entity;
   assert.deepEqual([f.aliases.length, f.aliases_truncated], [500, false]);
   assert.deepEqual([o.aliases.length, o.aliases_truncated, o.limit, o.relations_limit], [500, true, 500, 1000]);
@@ -151,10 +151,10 @@ test("R39 readEntity's aliases are at most 500 and its relations at most 1,000, 
   assert.deepEqual(o.aliases.slice(1).map((a) => a.alias), names(499), "then by alias");
   assert.equal(e.entitiesByAlias({ alias: "Zed Two" }).entities[0].aliases_truncated, true, "the same view through R6");
   /* relations: oldest first, at most 1,000 */
-  const hub = e.createEntity({ kind: "body", label: "Hub" }).entity_id;
+  const hub = e.createEntity({ note: "a subject the test registers", kind: "body", label: "Hub" }).entity_id;
   const ids = [];
   for (let i = 0; i <= ENTITY_RELATIONS_LIMIT; i++) {
-    const x = e.createEntity({ kind: "body", label: `Spoke ${i}` }).entity_id;
+    const x = e.createEntity({ note: "a subject the test registers", kind: "body", label: `Spoke ${i}` }).entity_id;
     ids.push(e.declareRelation({ relation: "member_of", fromEntity: i % 2 ? x : hub, toEntity: i % 2 ? hub : x,
                                  justification: "j", citation: "c" }).relation_id);
     if (i === ENTITY_COLLECTION_LIMIT || i === ENTITY_RELATIONS_LIMIT - 1) {
@@ -172,7 +172,7 @@ test("R39 readEntity's aliases are at most 500 and its relations at most 1,000, 
 test("R39 R8 alias withdrawal's resolutions_resting is at most 500, by capture then reference, truncated by reading one past, counting only the entity's machine resolutions through that name", () => {
   const w = world();
   const { e } = w;
-  const ent = e.createEntity({ kind: "office", label: "City Clerk", aliases: ["Clerk"] }).entity_id;
+  const ent = e.createEntity({ note: "a subject the test registers", kind: "office", label: "City Clerk", aliases: ["Clerk"] }).entity_id;
   const refs = (n, label) => Array.from({ length: n }, (_, i) => ({ kind: "d", key: String(i).padStart(4, "0"), label }));
   w.read("INFO-1", sha("big"), refs(ENTITY_COLLECTION_LIMIT + 1, "  CLERK "));
   w.read("INFO-2", sha("other"), [{ kind: "x", key: "1", label: "City Clerk" }, { kind: "x", key: "2", label: "unrelated" }]);
@@ -184,7 +184,7 @@ test("R39 R8 alias withdrawal's resolutions_resting is at most 500, by capture t
   assert.ok(r.resolutions_resting.every((x) => x.capture_sha === sha("big") && x.grade === "C"), "neither testimony nor another name");
   /* exactly the rows, not truncated */
   const w2 = world();
-  const e2 = w2.e.createEntity({ kind: "office", label: "Board", aliases: ["The Board"] }).entity_id;
+  const e2 = w2.e.createEntity({ note: "a subject the test registers", kind: "office", label: "Board", aliases: ["The Board"] }).entity_id;
   w2.read("INFO-1", sha("b"), refs(3, "the board"));
   w2.e.resolve({ captureSha: sha("b") });
   const r2 = w2.e.withdrawAlias({ entityId: e2, alias: "The Board", reason: "r" });
@@ -193,7 +193,7 @@ test("R39 R8 alias withdrawal's resolutions_resting is at most 500, by capture t
 
 test("R39 a store written before the folded basis gains it at migrate, filled for its machine resolutions, so withdrawal reads what rests on a name", () => {
   const w = world();
-  const ent = w.e.createEntity({ kind: "office", label: "Port", aliases: ["Harbour"] }).entity_id;
+  const ent = w.e.createEntity({ note: "a subject the test registers", kind: "office", label: "Port", aliases: ["Harbour"] }).entity_id;
   w.read("INFO-1", sha("old"), [{ kind: "p", key: "1", label: "harbour" }, { kind: "p", key: "2", label: "Port" }]);
   w.e.resolve({ captureSha: sha("old") });
   w.st.sql.exec(`DROP INDEX resolutions_entity_basis`);
