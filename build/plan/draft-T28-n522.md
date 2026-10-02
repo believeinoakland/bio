@@ -237,7 +237,7 @@ Terms.
 
 New, under `#### Another group's work this case rests on (DEC-96 item 4; N522)`:
 
-- **R50** A member's chain (R46's term) stops at a leg on an imported finding reference. R44 and R46–R48 do not follow past it: that material is the source group's, in its own case file. (DEC-112 (6)) *(subject to question 2)* *(not yet met: T28)*
+- **R50** A member's chain (R46's term) stops at a leg on an imported finding reference. R44, R45 and R48 do not follow past it: that material is the source group's, in its own case file. (DEC-112 (6); re-pointed after the dec112 draft's re-cut, K1275) *(subject to question 2)* *(not yet met: T28)*
 - **R51** **The statement.** For each leg any member's chain reaches on a ref, `publishCase` reads `case-import.acceptanceOf` and `importedCase` at the leg's `target_edition` and writes the `accepted_work:` row (`case-grammar` R16).
   - With no acceptance in force, the act is refused `ACCEPTED_WORK_NOT_IN_FORCE` (C-120.10) before anything is written. The refusal names the member, the leg and the source case and edition.
   - The row states who accepted which edition, when and why (`reason`), the recreation result and the gaps stated *(gaps and result: subject to question 3)*.
