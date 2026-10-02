@@ -90,6 +90,11 @@ test("R10: the gathering sweep receives the rank with its now; a sweep is ranked
   assert.deepEqual(r[0].rank, { overdue: false, gaps: true, aspirations: false, waited_ms: 10 });
   assert.deepEqual(calls.filter(([m]) => m === "intent.servesOf").map((c) => c[1]),
     [{ addresses: [], bundles: ["INFO-2026-0001-a", "INFO-2026-0002-b"], requests: [] }], "intent asked once, of each bundle once");
+  /* wait equal: the sweep whose bundle serves an open gap ranks above one that serves nothing, whichever is offered first */
+  const equal = [{ kind: "sweep", id: "INFO-2026-0001-a#council", waitingSince: NOW - 500 },
+                 { kind: "sweep", id: "INFO-2026-0002-b#minutes", waitingSince: NOW - 500 }];
+  for (const order of [equal, [...equal].reverse()])
+    assert.deepEqual(rank(order).map((x) => x.id), ["INFO-2026-0002-b#minutes", "INFO-2026-0001-a#council"], "wait equal: the gap decides");
   /* a sweep named without its bundle is ranked by its wait alone */
   assert.deepEqual(rankBy(() => served, [{ kind: "sweep", id: "nameless", waitingSince: NOW - 1 },
     { kind: "sweep", id: "INFO-2026-0002-b#x", waitingSince: NOW }], NOW).map((x) => x.id), ["INFO-2026-0002-b#x", "nameless"]);
