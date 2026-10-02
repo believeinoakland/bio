@@ -25,14 +25,14 @@ Terms.
 - The **project reference** is the notice id, carried by the notice and by every later case of the project (R19).
 
 **prepareNotice({project, wording, body?, matter?, since, collaborate, handoff?, final?, viewer, by}) → `{ok, revision, statement, digest, warning, caution, expires}`** (`op=noticeprepare`; member session; writes nothing)
-- **R1** Refusals, in order. Each writes nothing and carries a catalogue row (DEC-49):
+- **R1** *(not yet met: T25)* Refusals, in order. Each writes nothing and carries a catalogue row (DEC-49):
   - no `project` is the required-argument refusal;
   - a project that is absent, or invisible to `by`, is `membership`'s `noSuchProject`, the same answer either way. A discoverable project `by` sees only at `existence` (`membership.sight`, its R44) is instead `membership.existenceAct`'s refusal (its R77, C-70.1), never `noSuchProject`;
   - a machine or AI credential, or an operator token, is `MACHINE_CANNOT_POST_NOTICE`;
   - `by` not an owner of the project (`membership.isProjectOwner`, its R54) is `NOTICE_NOT_THE_OWNER`;
   - a project at stage `closed` (`project-stage` R2) is `NOTICE_PROJECT_CLOSED`, unless `final` is `stopped` on an open notice (R11);
   - no group slug recorded (`promotion`'s fact `producingGroup`) is `NOTICE_NO_GROUP_SLUG`, because there are no anonymous notices;
-  - no instance key bound (`provenance.instanceKeyBound`, its R57) is `NOTICE_NO_INSTANCE_KEY`, because a notice is never published without its signed level. The check signs nothing, so it never sets a key's `first_used`;
+  - no instance key bound (`attestation.instanceKeyBound`, its R6; `provenance` R57 before N512's split) is `NOTICE_NO_INSTANCE_KEY`, because a notice is never published without its signed level. The check signs nothing, so it never sets a key's `first_used`;
   - `wording` that is empty, more than one line or over 280 characters is `NOTICE_WORDING_MALFORMED`. So is `body` or `matter` of more than one line or over 120 characters, and `handoff` of more than one line or over 280 characters;
   - `since` that is not a date is `NOTICE_SINCE_MALFORMED`;
   - `since` earlier than the project's creation (the UTC date of the first entry in its history) is `NOTICE_SINCE_BEFORE_PROJECT`, naming that date;
@@ -98,7 +98,7 @@ Terms.
   - `lapsed`, issued when a notice has been `Dormant` at two consecutive `monthly` attestations with no revision between them. The lapse also goes into the group's record.
 
   A stopped, closed or lapsed notice takes no further `monthly` attestation. It stays served and is never deleted.
-- **R13** An attestation is signed with the copy's instance key (`provenance` R56) over the statement `provenance.instanceStatement("civicos-working-on-attestation/1", sha256(attestation))`. When no key is bound at the moment a `monthly` attestation falls due, the attestation is not issued. The miss is stated in R22 and becomes a condition for the project's owners (`queue-producers` R27). The notice then shows its last attested level with that level's date.
+- **R13** An attestation is signed with the copy's instance key (`attestation` R5; `provenance` R56 before N512's split) over the statement `attestation.instanceStatement("civicos-working-on-attestation/1", sha256(attestation))`. When no key is bound at the moment a `monthly` attestation falls due, the attestation is not issued. The miss is stated in R22 and becomes a condition for the project's owners (`queue-producers` R27). The notice then shows its last attested level with that level's date.
 
 **Seals: proof of activity** (§5B "Proof of activity")
 - **R14** After each week ends, this module seals that week's member acts (R8) for every project that is not `closed`, whether or not the project has a notice:
@@ -126,9 +126,9 @@ Terms.
   - It answers at most `limit` items (200 by default, 1,000 at most), with `truncated` and `next`.
   - Nothing is ever removed from it.
   - A revision that is only prepared (R2) never appears in it.
-- **R21** `groupKeysPublic()` answers the group slug and two lists:
+- **R21** *(not yet met: T25)* `groupKeysPublic()` answers the group slug and two lists:
   - `owners`: every key `credentials.signerList` (its R8) shows registered to a member who owns a project now, or who signed a published edition or a revision. Each comes with `status` (`attests`, or `revoked` with the date its status changed, `credentials.signerList`'s `status_at` (its R8, R21), never the date this copy first saw it; null when `status_at` is null, a revocation recorded before the date was kept) and the date it was first listed, never the member's name, handle or id;
-  - `copy`: every instance key that has signed an attestation (`provenance.instanceKeys`, R56), with the date it was first used. Each is labelled as this copy's key.
+  - `copy`: every instance key that has signed an attestation (`attestation.instanceKeys`, its R5), with the date it was first used. Each is labelled as this copy's key.
 
   A revoked or replaced key stays listed, so older signatures can still be checked.
 
@@ -151,7 +151,7 @@ Terms.
 - `credentials`: `attestingKeys` (its R11) and `signerList` (its R8, with `status_at`, its R21, for R21).
 - `promotion`: the `producingGroup` fact (its R40, registered by `instance-setup` R1).
 - `host-governor`: `governedFetch`, for the timestamp authorities.
-- `provenance`: the new `instanceStatement`, `instanceSign` and `instanceKeys` (its R56), which use the instance key of its R34, and `instanceKeyBound` (its R57, for R1).
+- `attestation`: `instanceStatement`, `instanceSign` and `instanceKeys` (its R5), which use the instance key of its R4, and `instanceKeyBound` (its R6, for R1); `provenance` R56, R34 and R57 before N512's split. *(not yet met: T25)*
 - `capture`: the doorbell's public path (its R32).
 - `publication`: `cases` and `published_cases` under its R40; `publishedEditionsOf` (its R37) and `caseCitedParts` (its R41).
 - `public-read`: the new public-read registration (its R18).
