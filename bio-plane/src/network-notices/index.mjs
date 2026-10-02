@@ -25,6 +25,7 @@
  *   publication   `caseCitedParts` (R41); its tables `cases`, `published_cases`, `published_case_members`,
  *                 `published_bundles`, `case_documents` under its R40.
  *   publicRead    `registerPublicReads` (its R18): this module's three credential-free reads, registered at start.
+ *   docket        `docketSigners` (its R5): the keys that signed a public docket entry, for R21 (N520).
  *   governor      `{admit, report}` for `governedFetch` (host-governor R15), the timestamp authorities' pacing.
  *   fetch         the outbound fetch, used for the timestamp authorities alone (R30).
  *   now           the clock, milliseconds (default `env.BIO_NOW_MS`, else the wall clock).
@@ -41,6 +42,7 @@ import { attestationOf, instanceStatement } from "../attestation/index.mjs";
 import { projectStageOf } from "../project-stage/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
 import { publicReadOf } from "../public-read/index.mjs";
+import { docketOf } from "../docket/index.mjs";
 import { governorOf, governedFetch } from "../host-governor/index.mjs";
 import { verifySshsig, NS_NOTICE, noticeStatement } from "../sshsig.mjs";
 import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS, TSA_CONTENT_TYPE, TSA_ACCEPT } from "../tsa.mjs";
@@ -139,6 +141,7 @@ export class NetworkNotices {
   get attestation() { return this.#deps.attestation ||= attestationOf(this.#deps.host, { record: this.record }); }
   get stage() { return this.#deps.projectStage ||= projectStageOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   get publication() { return this.#deps.publication ||= publicationOf(this.#deps.host, { record: this.record, membership: this.membership }); }
+  get docket() { return this.#deps.docket ||= docketOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   get governor() {
     if (this.#deps.governor === undefined) {
       const g = governorOf(this.#deps.host, { env: this.env });
@@ -808,11 +811,14 @@ export class NetworkNotices {
              next: truncated ? btoa(JSON.stringify([last.notice_id, last.published_at, last.tie, last.n])) : null };
   }
 
-  /** R21: the group slug, its owners' keys and the copy's keys, never a name, handle or member id. */
+  /** R21: the group slug, its owners' keys and the copy's keys, never a name, handle or member id. A key is listed
+   *  while its member owns a project, or once it has signed a revision, a published edition or a public docket entry
+   *  (docket R5, N520). */
   groupKeysPublic() {
     const signed = new Set([
       ...this.#rows(`SELECT DISTINCT signer_key AS k FROM nn_revisions`).map((r) => r.k),
       ...this.#call(() => this.#rows(`SELECT DISTINCT attestor_key AS k FROM published_bundles`).map((r) => keyB64Of(r.k)), []),
+      ...this.#call(() => this.docket.docketSigners().map((s) => keyB64Of(s.keyB64)), []),
     ]);
     const owners = [];
     for (const s of this.#call(() => this.credentials.signerList().signers, []) || []) {
