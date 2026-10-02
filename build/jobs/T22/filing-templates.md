@@ -45,3 +45,7 @@
   - `ownership filing-templates tranche/T22`: 5 files, 0 failures.
 
 Size (session_01R4DSxDGK9N7KSXBYEsNfhH): test runs 9, module lines 1717
+
+## J1 · REPORT
+
+A change under bio-plane/src/filing-templates/ (R20's reviewsRequested) stales the plane's bundle bio-plane/dist/bio-plane.bundled.mjs. I regenerated nothing (build/manifest.md, Generated artifacts).
