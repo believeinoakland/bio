@@ -1,7 +1,7 @@
 /* record-core — the record's storage (layer 2): id allocation, leases, the append-only history and
    manifest of every promotion, the instance's settings, the evidence store, and purge. It holds no
    member, capability or fence (membership's) and decides nothing about what may be committed
-   (promotion's). Requirements: build/requirements/record-core.md (R1–R74).
+   (promotion's). Requirements: build/requirements/record-core.md (R1–R75).
 
    REACHED THROUGH `recordOf(ctx)`: one instance per Durable Object storage, so every module in the
    object shares one transaction depth, one purge declaration list and one evidence binding. The
@@ -10,7 +10,7 @@
    caller and the registered seeds name (R40, R70). Extracted from `legacy-store` (store.mjs, schema.mjs) in T3; the
    reasoning the legacy comments carried is kept beside the code it explains. T19: the audit's seams (R68, R69), the
    mint seeds (R70), the schema run first (R71) and the ops map (R72, R73). T20: this module's own figures exported for
-   `plane` to register (R74). */
+   `plane` to register (R74). T24: a chosen opaque id recorded in the ledger (R75). */
 import { checkBundle, createSha256, EXTENSION_ARMS, LEGACY_TYPE_ALIASES } from "../record-grammar/index.mjs";
 import { RECORD_SCHEMA } from "./schema.mjs";
 import { RECORD_CORE_CHECKS, PER_ITEM_CHECKS } from "./checks.mjs";
@@ -441,6 +441,33 @@ export class RecordCore {
       return id;
     }
     return null;
+  }
+
+  /** R75 (N503, K1151): A CHOSEN OPAQUE ID, RECORDED AS A DRAWN ONE IS. A caller whose id is not drawn here (a notice id
+   *  another instance chose, network-notices R4) records it in the same ledger, in the caller's own transaction and
+   *  never one of its own, so the act that rolls back takes the id back with it (R7's rule) and, once it commits,
+   *  `mintOpaqueId` never draws it and no purge forgets it (R6, R8). Refused, recording nothing: an id that is not a
+   *  non-empty string (`OPAQUE_ID_MALFORMED`); one the ledger already holds, drawn, recorded or seeded (`OPAQUE_ID_SPENT`,
+   *  naming it); a call outside any `transact` (`OPAQUE_ID_NO_TRANSACTION`), where nothing could take the record back.
+   *  FAIL CLOSED: a ledger that cannot be read, or an INSERT the ledger's primary key refuses, is answered as spent, so a
+   *  caller never uses an id the ledger has not taken. Never throws. */
+  recordOpaqueId(id) {
+    /* DEC-49 REGION is-opaque-id-refused */
+    if (typeof id !== "string" || id === "")
+      return rowRefusal("OPAQUE_ID_MALFORMED", "an opaque id to record is a non-empty string; nothing was recorded.");
+    if (!this.#held.length)
+      return rowRefusal("OPAQUE_ID_NO_TRANSACTION", `${id} was not recorded: an opaque id is recorded inside the transaction of `
+        + "the act that uses it, so a rollback takes it back, and no transaction is open. Nothing was recorded.", { id });
+    const spent = () => rowRefusal("OPAQUE_ID_SPENT", `${id} is already in the opaque-id ledger, or the ledger could not `
+      + "confirm it free; an id is recorded once and never handed out again. Nothing was recorded.", { id });
+    try {
+      if (this.#one(`SELECT 1 AS x FROM minted_ids WHERE id=?`, id)) return spent();
+      this.#sql.exec(`INSERT INTO minted_ids (id,recorded_at,source) VALUES (?,?,'chosen')`, id, new Date().toISOString());
+    } catch {
+      return spent();
+    }
+    /* END DEC-49 REGION is-opaque-id-refused */
+    return { ok: true, id };
   }
 
   /** D-432: WHERE THE LEDGER LEARNS THE IDS NO MINT RECORDED, at every boot, idempotently.

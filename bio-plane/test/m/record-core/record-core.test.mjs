@@ -649,7 +649,8 @@ test("R39: recordOf answers one instance per storage, the same to every caller, 
                    "purge", "getSetting", "setSetting", "transact", "commit", "bundleInfo", "listBundles", "listByType",
                    "evidenceStore", "seedMintLedger", "head", "manifestEntry", "livePaths", "manifestByAuthor", "isFirstBoot",
                    "digestCensus", "snapKeyCensus", "registerAuditCheck", "textAtSha", "releaseLease", "registerCounts", "counts",
-                   "afterCommit", "registerGrammar", "grammars", "registerStatsSource", "stats", "proofCounts", "ownCounts"])
+                   "afterCommit", "registerGrammar", "grammars", "registerStatsSource", "stats", "proofCounts", "ownCounts",
+                   "recordOpaqueId"])
     assert.equal(typeof a[m], "function", m);
 });
 
@@ -1853,7 +1854,7 @@ test("R64: purge's proof is the private form of the same figures: whole, the log
     assert.deepEqual(src.asked.at(-1), { viewer: undefined, proof: true }, "asked whole: no viewer");
     assert.equal(rc.proofCounts.length, 0, "it takes no argument: no caller's sight or class reaches it");
   }
-  // no route answers it: the store's op map reaches `stats`, never `proofCounts` (read at the interface the plane builds)
+  // no route answers it: this module's route map (`recordCoreOps`, R72) reaches `stats`, never `proofCounts`
   const rc = recordOf({ storage: sized(1) });
   assert.deepEqual(rc.proofCounts(), { dbBytes: 1 }, "no source: only what this module holds");
 });
@@ -2561,4 +2562,148 @@ test("R37 (N484): negative control: a read column that held anything but what R3
   assert.notDeepEqual(exportRead(s), want, "entries recorded out of write order are caught");
   s.db.exec("ROLLBACK TO reorder"); s.db.exec("RELEASE reorder");
   assert.deepEqual(exportRead(s), want);
+});
+
+/* ---- T24 layer 2: R75 `recordOpaqueId`, its rows C-59.7–C-59.9 (N503, K1151) ---- */
+
+const ledger = (s) => rows(s, `SELECT id, source FROM minted_ids ORDER BY rowid`).map((r) => [r.id, r.source]);
+const OPAQUE_ROWS = { OPAQUE_ID_MALFORMED: "C-59.7", OPAQUE_ID_SPENT: "C-59.8", OPAQUE_ID_NO_TRANSACTION: "C-59.9" };
+/* A refusal of R75 as its row words it: the code, the row's check and translation, a detail, and the id when it names one. */
+function opaqueRefusal(r, code, id) {
+  assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, code, code, OPAQUE_ROWS[code], RECORD_CORE_CHECKS[code].translation], code);
+  assert.equal(typeof r.detail, "string");
+  if (id !== undefined) { assert.equal(r.id, id, `${code} names the id`); assert.ok(r.detail.includes(id)); }
+  else assert.ok(!("id" in r), `${code} names no id`);
+}
+
+test("R75: OPAQUE_ID_MALFORMED (C-59.7), OPAQUE_ID_SPENT (C-59.8) and OPAQUE_ID_NO_TRANSACTION (C-59.9) are this module's rows, each where naming recordOpaqueId's region", () => {
+  for (const [code, check] of Object.entries(OPAQUE_ROWS)) {
+    const row = RECORD_CORE_CHECKS[code];
+    assert.deepEqual([row.check, row.where], [check, "src/record-core/index.mjs recordOpaqueId > is-opaque-id-refused"], code);
+    assert.ok(typeof row.translation === "string" && row.translation.length > 40 && !/C-59|OPAQUE_ID/.test(row.translation), `${code}: a member's sentence`);
+    assert.ok(Object.isFrozen(row));
+  }
+  for (const code of ["OPAQUE_ID_MALFORMED", "OPAQUE_ID_NO_TRANSACTION"]) assert.ok(RECORD_CORE_CHECKS[code].translation.endsWith(BUILD_FAULT), `${code} is a build fault`);
+  assert.ok(!RECORD_CORE_CHECKS.OPAQUE_ID_SPENT.translation.includes(BUILD_FAULT), "a spent id is not a build fault: a retry gives a new one");
+  const checks = Object.values(RECORD_CORE_CHECKS).map((r) => r.check);
+  assert.equal(new Set(checks).size, checks.length, "no number is held twice");
+});
+
+test("R75 R6 R8: recordOpaqueId records a chosen id inside the caller's transaction; once committed, mintOpaqueId never draws it and neither purge forgets it", () => {
+  const { s, rc } = fresh();
+  const chosen = ["NOTE-2026-0042", "NOTE-2026-0043-a-slug", "urn:notice:7f3a", " "];
+  const got = rc.transact(() => {
+    const answers = chosen.map((id) => rc.recordOpaqueId(id));
+    assert.deepEqual(ledger(s).map(([id]) => id), chosen, "recorded before it answers, inside the open transaction");
+    return { ok: true, answers };
+  });
+  assert.deepEqual(got.answers, chosen.map((id) => ({ ok: true, id })));
+  assert.deepEqual(ledger(s), chosen.map((id) => [id, "chosen"]), "in the opaque-id ledger, as chosen");
+  /* R6: a draw that lands on a recorded id draws again, without asking the caller's taken() for it */
+  const asked = [];
+  assert.equal(draws([42, 44], () => rc.mintOpaqueId("NOTE", "2026", "", (id) => { asked.push(id); return false; })), "NOTE-2026-0044");
+  assert.deepEqual(asked, ["NOTE-2026-0044"]);
+  assert.equal(draws([43, 45], () => rc.mintOpaqueId("NOTE", "2026", "-a-slug", () => false)), "NOTE-2026-0045-a-slug");
+  /* R8: either form of purge, and the id stays spent, for any caller */
+  put(rc, "INFO-2026-0001-a", "K1");
+  rc.purge({ bundleId: "INFO-2026-0001-a" });
+  rc.purge({});
+  assert.equal(draws([42, 46], () => rc.mintOpaqueId("NOTE", "2026", "", () => false)), "NOTE-2026-0046");
+  assert.ok(chosen.every((id) => ledger(s).some(([x]) => x === id)), "the ledger kept every recorded id through both purges");
+  /* a second recording of it, after the purge, is refused */
+  rc.transact(() => { opaqueRefusal(rc.recordOpaqueId("NOTE-2026-0042"), "OPAQUE_ID_SPENT", "NOTE-2026-0042"); return { ok: true }; });
+  /* the same act may record and mint in one transaction, each seeing the other */
+  rc.transact(() => {
+    assert.deepEqual(rc.recordOpaqueId("NOTE-2026-0050"), { ok: true, id: "NOTE-2026-0050" });
+    assert.equal(draws([50, 51], () => rc.mintOpaqueId("NOTE", "2026", "", () => false)), "NOTE-2026-0051");
+    opaqueRefusal(rc.recordOpaqueId("NOTE-2026-0051"), "OPAQUE_ID_SPENT", "NOTE-2026-0051");
+    return { ok: true };
+  });
+});
+
+test("R75 R7 R32: a rollback takes a recorded id back: a throw, a refusal, and a savepoint refused under a committing outer call", () => {
+  const { s, rc } = fresh();
+  const before = dump(s);
+  assert.throws(() => rc.transact(() => { assert.equal(rc.recordOpaqueId("NOTE-2026-0001").ok, true); throw new Error("rolled"); }), /rolled/);
+  assert.deepEqual(dump(s), before, "a throw took it back");
+  assert.deepEqual(rc.transact(() => { rc.recordOpaqueId("NOTE-2026-0001"); return { ok: false, reason: "LATER_STEP" }; }), { ok: false, reason: "LATER_STEP" });
+  assert.deepEqual(dump(s), before, "a refusal took it back");
+  rc.transact(() => {
+    rc.recordOpaqueId("NOTE-2026-0002");
+    rc.transact(() => { assert.equal(rc.recordOpaqueId("NOTE-2026-0003").ok, true); return { ok: false }; });
+    try { rc.transact(() => { rc.recordOpaqueId("NOTE-2026-0004"); throw new Error("inner"); }); } catch { /* the outer decides the rest */ }
+    rc.transact(() => rc.recordOpaqueId("NOTE-2026-0005"));
+    return { ok: true };
+  });
+  assert.deepEqual(ledger(s).map(([id]) => id), ["NOTE-2026-0002", "NOTE-2026-0005"], "only the committed ones stand");
+  /* a rolled-back id is free again: to record, and to draw */
+  assert.equal(draws([1], () => rc.mintOpaqueId("NOTE", "2026", "", () => false)), "NOTE-2026-0001");
+  rc.transact(() => { assert.deepEqual(rc.recordOpaqueId("NOTE-2026-0003"), { ok: true, id: "NOTE-2026-0003" }); return { ok: true }; });
+  assert.equal(draws([3, 4], () => rc.mintOpaqueId("NOTE", "2026", "", () => false)), "NOTE-2026-0004");
+  /* the one instance per storage (R39): a transaction opened through one handle is the one recorded in through another */
+  const other = recordOf({ storage: s });
+  assert.throws(() => rc.transact(() => { assert.equal(other.recordOpaqueId("NOTE-2026-0099").ok, true); throw new Error("x"); }));
+  assert.ok(!ledger(s).some(([id]) => id === "NOTE-2026-0099"));
+});
+
+test("R75: each refusal records nothing: OPAQUE_ID_MALFORMED, OPAQUE_ID_SPENT for a drawn, recorded or seeded id, OPAQUE_ID_NO_TRANSACTION outside any transact", () => {
+  const { s, rc } = fresh();
+  s.db.exec(`CREATE TABLE notices (id TEXT)`);
+  s.sql.exec(`INSERT INTO notices VALUES ('NOTE-2026-0700')`);
+  s.sql.exec(`INSERT INTO seq (scope,next) VALUES ('CASE-2025', 3)`);
+  rc.seedMintLedger([["NOTE", "notices", "id"]]);                        /* seeded: a live row, and the counter's range */
+  const drawn = draws([7], () => rc.mintOpaqueId("CASE", "2026", "", () => false));
+  rc.transact(() => rc.recordOpaqueId("NOTE-2026-0800"));
+  const held = ledger(s);
+  assert.deepEqual(held.map(([, src]) => src).sort(), ["chosen", "counter", "counter", "live", "mint"]);
+  const before = dump(s);
+  /* refused inside a transaction that then COMMITS: the refusal itself wrote nothing */
+  rc.transact(() => {
+    for (const bad of [undefined, null, "", 7, 0, true, {}, ["NOTE-2026-0001"], new String("NOTE-2026-0001"), Symbol("x")])
+      opaqueRefusal(rc.recordOpaqueId(bad), "OPAQUE_ID_MALFORMED");
+    opaqueRefusal(rc.recordOpaqueId(), "OPAQUE_ID_MALFORMED");
+    for (const id of [drawn, "NOTE-2026-0800", "NOTE-2026-0700", "CASE-2025-0001", "CASE-2025-0002"])
+      opaqueRefusal(rc.recordOpaqueId(id), "OPAQUE_ID_SPENT", id);
+    return { ok: true };
+  });
+  assert.deepEqual(dump(s), before, "every refusal recorded nothing, though its transaction committed");
+  assert.deepEqual(rc.transact(() => rc.recordOpaqueId("NOTE-2026-0700")).code, "OPAQUE_ID_SPENT", "answered from a transact, it rolls the caller back");
+  /* the control: the same ids not yet spent are recorded, so the refusals above were the ledger's, not the call's */
+  rc.transact(() => { for (const id of ["NOTE-2026-0701", "CASE-2025-0003"]) assert.equal(rc.recordOpaqueId(id).ok, true, id); return { ok: true }; });
+  /* outside any transaction, whatever the id: refused, nothing recorded */
+  const outside = dump(s);
+  for (const id of ["NOTE-2026-0900", "NOTE-2026-0800"]) opaqueRefusal(rc.recordOpaqueId(id), "OPAQUE_ID_NO_TRANSACTION", id);
+  opaqueRefusal(rc.recordOpaqueId(""), "OPAQUE_ID_MALFORMED");
+  /* a held afterCommit call runs after its transaction committed: outside it, so refused too (R66) */
+  let late;
+  rc.transact(() => { rc.afterCommit(() => { late = rc.recordOpaqueId("NOTE-2026-0901"); }); return { ok: true }; });
+  opaqueRefusal(late, "OPAQUE_ID_NO_TRANSACTION", "NOTE-2026-0901");
+  assert.deepEqual(dump(s), outside, "nothing recorded outside a transaction");
+  assert.equal(draws([900], () => rc.mintOpaqueId("NOTE", "2026", "", () => false)), "NOTE-2026-0900", "a refused id is still free to draw");
+});
+
+test("R75: recordOpaqueId never throws; a ledger it cannot read or write answers OPAQUE_ID_SPENT and records nothing (fail closed)", () => {
+  /* a store with no ledger table */
+  const bare = recordOf({ storage: storage({ schema: false }) });
+  let r;
+  assert.doesNotThrow(() => { r = bare.transact(() => bare.recordOpaqueId("NOTE-2026-0001")); });
+  opaqueRefusal(r, "OPAQUE_ID_SPENT", "NOTE-2026-0001");
+  /* a store whose every read fails */
+  const broken = recordOf({ storage: { sql: { exec() { throw new Error("no"); } }, transactionSync: (f) => f() } });
+  assert.doesNotThrow(() => { r = broken.transact(() => broken.recordOpaqueId("NOTE-2026-0002")); });
+  opaqueRefusal(r, "OPAQUE_ID_SPENT", "NOTE-2026-0002");
+  /* a read that lost the row: the ledger's primary key refuses the INSERT, and the answer is spent, never a throw */
+  const { s, rc } = fresh();
+  rc.transact(() => rc.recordOpaqueId("NOTE-2026-0003"));
+  const exec = s.sql.exec;
+  s.sql.exec = (q, ...a) => (/^SELECT 1 AS x FROM minted_ids/.test(q) ? [].values() : exec(q, ...a));
+  const before = dump(s);
+  assert.doesNotThrow(() => { r = rc.transact(() => rc.recordOpaqueId("NOTE-2026-0003")); });
+  s.sql.exec = exec;
+  opaqueRefusal(r, "OPAQUE_ID_SPENT", "NOTE-2026-0003");
+  assert.deepEqual(dump(s), before);
+  /* hostile input */
+  const hostile = new Proxy({}, { get() { throw new Error("get"); } });
+  assert.doesNotThrow(() => { r = rc.transact(() => rc.recordOpaqueId(hostile)); });
+  opaqueRefusal(r, "OPAQUE_ID_MALFORMED");
 });
