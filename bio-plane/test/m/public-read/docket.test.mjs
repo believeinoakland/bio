@@ -84,7 +84,7 @@ test("R20 a withdrawn edition answers `withdrawn` at the top, its stamp linked t
   docket.place(CASE, { seq: 1, date: D1, kind: "withdrawal", shelf: "listed", edition: 1, reason: "The memo was forged.",
                        digest: DIGEST(1) });
   const STAMP1 = { seq: 1, date: D1, reason: "The memo was forged.",
-                   entry: { seq: 1, digest: DIGEST(1), docket: `op=docketpublic&case=${CASE}` } };
+                   entry: { seq: 1, id: `${CASE}#1`, digest: DIGEST(1), docket: `op=docketpublic&case=${CASE}` } };
   const c1 = w.read("publishedcase", { id: CASE, edition: 1 });
   assert.deepEqual(c1.withdrawn, STAMP1, "the stamp: the docket's seq, date and reason, and the link to the entry");
   assert.deepEqual(Object.keys(c1).slice(0, 4), ["ok", "caseId", "edition", "withdrawn"], "at the top of the answer");
@@ -105,7 +105,7 @@ test("R20 a withdrawn edition answers `withdrawn` at the top, its stamp linked t
                        reason: "We no longer stand behind the case.", digest: DIGEST(2) });
   const all = w.read("publishedcase", { id: CASE });
   assert.deepEqual(all.withdrawn, { seq: 2, date: D2, reason: "We no longer stand behind the case.",
-                                    entry: { seq: 2, digest: DIGEST(2), docket: `op=docketpublic&case=${CASE}` } });
+                                    entry: { seq: 2, id: `${CASE}#2`, digest: DIGEST(2), docket: `op=docketpublic&case=${CASE}` } });
   assert.deepEqual(all.edition_index.map((e) => [e.edition, e.withdrawn && e.withdrawn.seq]), [[1, 1], [2, 2]]);
   /* it is read, never composed: what `withdrawalOf` answers is what is stamped, for each edition asked */
   assert.ok(docket.calls.some(([m, c, ed]) => m === "withdrawalOf" && c === CASE && ed === 1));
@@ -130,8 +130,8 @@ test("R21 R10 op=docketpublic serves the case's docket with no credential, at th
   const { w, docket, env } = twoEditions();
   docket.place(CASE, { seq: 1, date: D1, kind: "response", shelf: "listed", edition: 1 });
   docket.place(CASE, { seq: 2, date: D2, kind: "withdrawal", shelf: "listed", edition: 1, reason: "r", digest: DIGEST(2) });
-  const expected = { ...docket.docketPublic({ case: CASE }), ok: true, case: CASE };
-  const s = w.read("docketpublic", { case: CASE, ...CREDENTIALED });
+  const expected = { ...(await docket.docketPublic({ case: CASE })), ok: true, case: CASE };
+  const s = await w.read("docketpublic", { case: CASE, ...CREDENTIALED });
   assert.deepEqual(s, expected, "the docket's own answer, served as it answers it");
   assert.equal(s.last_entry, D2);
   const r = await door(w, env, "docketpublic", { case: CASE, ...CREDENTIALED });
@@ -158,8 +158,8 @@ test("R21 op=docketfeed serves the case's Atom feed, its own bytes, as applicati
   const { w, docket, env } = twoEditions();
   docket.place(CASE, { seq: 1, date: D1, kind: "response", shelf: "listed", edition: 1 });
   docket.place(CASE, { seq: 2, date: D2, kind: "outcome", shelf: "listed", edition: 2 });
-  const feed = docket.docketFeed({ case: CASE });
-  assert.deepEqual(w.read("docketfeed", { case: CASE }), { ok: true, case: CASE, media_type: "application/atom+xml", feed });
+  const feed = await docket.docketFeed({ case: CASE });
+  assert.deepEqual(await w.read("docketfeed", { case: CASE }), { ok: true, case: CASE, media_type: "application/atom+xml", feed });
   const r = await door(w, env, "docketfeed", { case: CASE, ...CREDENTIALED });
   assert.equal(r.status, 200);
   assert.equal(r.headers.get("content-type"), "application/atom+xml");
@@ -171,7 +171,7 @@ test("R21 op=docketfeed serves the case's Atom feed, its own bytes, as applicati
   docket.place(CASE, { seq: 3, date: D3, kind: "reaction", shelf: "reactions", edition: 2 });
   const later = await (await door(w, env, "docketfeed", { case: CASE })).text();
   assert.notEqual(later, feed);
-  assert.equal(later, docket.docketFeed({ case: CASE }));
+  assert.equal(later, await docket.docketFeed({ case: CASE }));
   /* negative control: the docket read is JSON, never the feed's media type */
   assert.match((await door(w, env, "docketpublic", { case: CASE })).headers.get("content-type"), /application\/json/);
 });
@@ -185,14 +185,14 @@ test("R21 R17 a case the docket answers null for is NOT_PUBLISHED (C-98.8), the 
                    ["NOT_PUBLISHED", "NOT_PUBLISHED", "C-98.8", rowOf("NOT_PUBLISHED").translation]);
   for (const op of ["docketpublic", "docketfeed"]) {
     for (const c of ["CASE-2099-0404", "CASE-2026-0002"]) {
-      const s = w.read(op, { case: c });
+      const s = await w.read(op, { case: c });
       assert.deepEqual(s, w.pr.publishedCase({ id: "CASE-2099-0404" }), `${op} ${c}: publishedCase's own answer`);
       const r = await door(w, env, op, { case: c });
       assert.deepEqual([r.status, await r.text()], [404, absentBody], `${op} ${c}: the same bytes through the door`);
     }
     /* a case the record holds but the docket answers null for (no ratified edition, its R14) is the same answer */
     docket.held.delete(CASE);
-    assert.deepEqual([(await door(w, env, op, { case: CASE })).status, w.read(op, { case: CASE }).reason], [404, "NOT_PUBLISHED"]);
+    assert.deepEqual([(await door(w, env, op, { case: CASE })).status, (await w.read(op, { case: CASE })).reason], [404, "NOT_PUBLISHED"]);
     docket.hold(CASE);
     /* negative control: the case the docket holds answers */
     assert.equal((await door(w, env, op, { case: CASE })).status, 200, op);
@@ -204,7 +204,7 @@ test("R21 R17 a case the docket answers null for is NOT_PUBLISHED (C-98.8), the 
       assert.deepEqual((({ reason, op: o, argument }) => [reason, o, argument])(await b.json()), ["REQUIRED_ARGUMENT_MISSING", op, "case"]);
       assert.equal(asked.length, 0);
     }
-    assert.equal(w.read(op, {}).reason, "NOT_PUBLISHED", `${op}: the store op with no case answers nothing published`);
+    assert.equal((await w.read(op, {})).reason, "NOT_PUBLISHED", `${op}: the store op with no case answers nothing published`);
   }
 });
 
@@ -234,8 +234,8 @@ test("R16 R10 the docket reads write nothing, and reach the docket only through 
   docket.place(CASE, { seq: 1, date: D1, kind: "withdrawal", shelf: "listed", edition: 1, reason: "r", digest: DIGEST(1) });
   const before = JSON.stringify(w.snapshot());
   const held = JSON.stringify([...docket.held]);
-  w.read("docketpublic", { case: CASE });
-  w.read("docketfeed", { case: CASE });
+  await w.read("docketpublic", { case: CASE });
+  await w.read("docketfeed", { case: CASE });
   w.read("publishedcase", { id: CASE, edition: 1 });
   await door(w, env, "docketpublic", { case: CASE });
   await door(w, env, "docketfeed", { case: CASE });

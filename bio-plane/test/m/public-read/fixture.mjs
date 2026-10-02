@@ -26,15 +26,20 @@ export function docketOn({ cases = [] } = {}) {
       calls.push(["withdrawalOf", c, edition]);
       const w = (held.get(c) || []).find((e) => e.kind === "withdrawal"
         && (e.edition === edition || (e.edition === "all" && (e.covers || []).includes(edition))));
-      return w ? { seq: w.seq, date: w.date, reason: w.reason, digest: w.digest } : null;
+      return w ? { seq: w.seq, entry: `${c}#${w.seq}`, date: w.date, reason: w.reason, digest: w.digest } : null;
     },
-    docketPublic({ case: c }) {
+    /* async, as `docket` answers it (B3): `{ok, case, group, entries, captures, last_entry, feed}` */
+    async docketPublic({ case: c }) {
       calls.push(["docketPublic", c]);
       if (!held.has(c)) return null;
-      const entries = held.get(c).map((e) => ({ json: { ...e }, signature: "-----BEGIN SSH SIGNATURE-----", published_at: e.date }));
-      return { entries, last_entry: entries.length ? entries[entries.length - 1].json.date : null };
+      const entries = held.get(c).map((e) => ({ seq: e.seq, entry: `${c}#${e.seq}`, digest: e.digest ?? null,
+        json: JSON.stringify(e), fields: { ...e }, signature: "-----BEGIN SSH SIGNATURE-----", published_at: e.date,
+        taken_back: null }));
+      return { ok: true, case: c, group: "parks-group", entries, captures: {},
+               last_entry: entries.length ? entries[entries.length - 1].fields.date : null,
+               feed: `op=docketfeed&case=${encodeURIComponent(c)}` };
     },
-    docketFeed({ case: c }) {
+    async docketFeed({ case: c }) {
       calls.push(["docketFeed", c]);
       if (!held.has(c)) return null;
       const es = [...held.get(c)].reverse();

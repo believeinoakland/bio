@@ -199,22 +199,23 @@ export class PublicRead {
   /* ---------------------------------------------------------------- R21: the docket beside a case, served */
 
   /** R21 (DEC-116 item 8; DEC-100 item 2): a case's docket, `docket.docketPublic` (its R14), served with no credential
-   *  (R10): `{ok: true, case, ...its answer}`. A case the docket answers null for (absent, or with no ratified edition)
-   *  is `publishedCase`'s own `NOT_PUBLISHED` answer for an absent case, taken from `publishedCase` itself, so the two
-   *  are the same bytes by construction and C-98.8 keeps its one site. */
-  docketPublic(caseId) {
+   *  (R10): `{...its answer, ok: true, case}`, a promise as the docket's read is. A case the docket answers null for
+   *  (absent, or with no ratified edition) is `publishedCase`'s own `NOT_PUBLISHED` answer for an absent case, taken
+   *  from `publishedCase` itself, so the two are the same bytes by construction and C-98.8 keeps its one site. */
+  async docketPublic(caseId) {
     const c = str(caseId);
-    const d = c ? this.docket.docketPublic({ case: c }) : null;
+    const d = c ? await this.docket.docketPublic({ case: c }) : null;
     if (d == null) return this.#absentCase();
     return { ...d, ok: true, case: c };
   }
 
   /** R21 (DEC-116 item 8): a case's Atom feed, `docket.docketFeed` (its R15), one fixed address per case
    *  (`op=docketfeed&case=<case>`): `{ok: true, case, media_type, feed}`, the door serving `feed` as the response's
-   *  bytes under `media_type`. Null from the docket is `NOT_PUBLISHED`, as `docketPublic`. */
-  docketFeed(caseId) {
+   *  bytes under `media_type`; a promise, as the docket's read is. Null from the docket is `NOT_PUBLISHED`, as
+   *  `docketPublic`. */
+  async docketFeed(caseId) {
     const c = str(caseId);
-    const feed = c ? this.docket.docketFeed({ case: c }) : null;
+    const feed = c ? await this.docket.docketFeed({ case: c }) : null;
     if (feed == null) return this.#absentCase();
     return { ok: true, case: c, media_type: DOCKET_FEED_MEDIA_TYPE, feed: String(feed) };
   }
@@ -225,14 +226,14 @@ export class PublicRead {
 
   /* R20 (DEC-116 item 7): the stamp of the docket withdrawal naming one edition of a case, or null when none names it
      (and for anything that is not a case). Read from `docket.withdrawalOf` (its R12), never composed: its `seq`, `date`
-     and `reason` as the docket answers them, and `entry`, the link to the withdrawal entry: its `seq`, its digest and
-     the fixed address the docket is served at (R21). */
+     and `reason` as the docket answers them, and `entry`, the link to the withdrawal entry: its `seq`, the docket's id
+     for it (`<case>#<seq>`), its digest and the fixed address the docket is served at (R21). */
   #withdrawnStamp(theCase, edition) {
     if (!theCase || edition == null) return null;
     const w = this.docket.withdrawalOf({ case: theCase, edition: Number(edition) });
     if (!w) return null;
     return { seq: w.seq, date: w.date, reason: w.reason,
-             entry: { seq: w.seq, digest: w.digest ?? null, docket: docketAddress(theCase) } };
+             entry: { seq: w.seq, id: w.entry ?? null, digest: w.digest ?? null, docket: docketAddress(theCase) } };
   }
 
   /** 8.2: published-record reconstruction, requiring NOTHING.

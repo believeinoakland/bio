@@ -262,7 +262,7 @@ test("R15 no place is named in this module's behaviour or outward text", () => {
     assert.equal(outward.includes(place), false, `names ${place}`);
 });
 
-test("R16 it owns no table and writes nothing: every read leaves the database byte-identical, and it is one instance per host", () => {
+test("R16 it owns no table and writes nothing: every read leaves the database byte-identical, and it is one instance per host", async () => {
   const { w, pin } = published();
   const before = JSON.stringify(w.snapshot());
   const tables = w.rows(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`).map((r) => r.name);
@@ -292,7 +292,7 @@ test("R16 it owns no table and writes nothing: every read leaves the database by
     return (...a) => { askedDocket.push(String(k)); return v.apply(t, a); }; } });
   const r = new PublicRead({ storage: w2.st, publication: spy, docket: docketSpy });
   r.publishedCase({ id: "CASE-2026-0001" }); r.publishedList(); r.publishedEditions(F); r.publishedManifest();
-  r.docketPublic("CASE-2026-0001"); r.docketFeed("CASE-2026-0001");
+  await r.docketPublic("CASE-2026-0001"); await r.docketFeed("CASE-2026-0001");
   assert.deepEqual([...new Set(seen)].sort().filter((m) => !["caseDocMemberFrozen", "caseEditionState", "soleCase"].includes(m)), [],
                    "it reaches publication only through R53–R55");
   /* N520: and `docket` only through the services named in Uses (its R12, R14, R15) */
