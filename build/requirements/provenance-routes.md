@@ -78,7 +78,7 @@ Terms. A **capture**, its **home** and the **register** are `provenance`'s (its 
 ### Uses
 
 - `record-grammar`: `isMachineIdentity` (R3, R4).
-- `record-core`: `readImage` and `bundleInfo` (R2, R4); `transact`; the `bundles` read contract (its R37; R5's census); `getSetting` (the instance name, R1's hop by this instance); `declarePurge` (`provenance_route_marks`); `registerAuditFinding` (its R68) for R6; `registerCounts` (its R63) for R10.
+- `record-core`: `readImage` and `bundleInfo` (R2, R4); `transact`; the `bundles` read contract (its R37; R5's census); `declarePurge` (`provenance_route_marks`); `registerAuditFinding` (its R68) for R6; `registerCounts` (its R63) for R10. The instance name for R1's hop by this instance is handed in by the composition root (`deps.instanceName`), as `provenance` took it (K1227).
 - `membership`: `viewerPredicate` and `sight` (R2, R4, R5).
 - `promotion`: `promote` (R2).
 - `provenance`: the doorbell's origin kind as it exports it (`DOORBELL_ORIGIN`, its R51; R1); the C-103 row `NO_BUNDLE` (C-103.3) through `PROVENANCE_ACT_CHECKS` (its R58, the seam), for R2.
@@ -109,7 +109,7 @@ Terms. A **capture**, its **home** and the **register** are `provenance`'s (its 
 - **Table.** `CREATE TABLE IF NOT EXISTS` under the same name keeps a deployed instance's rows with no data migration. `declarePurge` for `provenance_route_marks` moves to this module's declaration.
 - **Private helpers.** `isObj` and `secondOf` are one-liners: copy them, or take them from `record-grammar` where it exports an equivalent.
 - **R7.** Only R2 writes hops, so R36 moves whole. Confirm at the job whether `provenance`'s C-18.9 arm (its R46) needs R36's words too (splits draft).
-- **Option B (BOB #100's review 1, as K1220 reads it).** Until each importer re-points, `provenance` keeps pure copies of `routeFinding` (retrieval, L5) and `ROUTE_MARK_CHECKS` (control-plane, L11), deleted in `provenance`'s T26 job (N516). The three route arms and every write to `provenance_route_marks` are this module's from its L3 merge (R9, R12); `provenance` keeps no stateful method, so the table has one writer (P7).
+- **Option B (BOB #100's review 1, as K1220 reads it).** Until each importer re-points, `provenance` keeps a pure copy of `routeFinding` (retrieval, L5), and no copy of `ROUTE_MARK_CHECKS` (K1225), deleted in `provenance`'s T26 job (N516). The three route arms and every write to `provenance_route_marks` are this module's from its L3 merge (R9, R12); `provenance` keeps no stateful method, so the table has one writer (P7).
 - Tests: `chain-route.test.mjs`, `convert-chain-marker.test.mjs` (check its R41 and R46 arms at the job), the R54, `routeMarks` and R48 route-marks cases of `audit-figures.test.mjs`, and `ops.test.mjs`:154 move to `test/m/provenance-routes/`, with the share of `fixture.mjs` they need. Their R-id citations are re-pointed by the map above, and their assertions do not change.
 
 ## Open for Bob
