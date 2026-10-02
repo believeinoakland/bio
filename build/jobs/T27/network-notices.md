@@ -29,3 +29,7 @@ Started and read (requirements, docket's public part, L8 contract, my code and t
 - ownership: 0 failures
 
 Size (session_01MRJKiiGZ1Mddztgdog1A5d): test runs 7, module lines 1382
+
+## J2 · COMPLETE
+
+N520 applied on job/T27/network-notices (tranche/T27 merged after docket, B3): R21 owners now include docket.docketSigners() keys; new R21 test over the real docket, red without the change. network-notices 63/63; users ratification, case-authoring, scheduler, queue-producers all green. format, architecture, coverage (30/30), ownership: 0 failures. No catalogue rows, nothing deferred, nothing found elsewhere. Details in the record's Completion section.
