@@ -13,9 +13,9 @@
  *  (R4). Each consumer's work, cadence, batch and delay are its owning module's (R7): this module holds the grace
  *  and nothing else, keeps no table (R18), raises no queue item (R19) and names no place (R20).
  *
- *  The consumers' owners are reached through their factories (K61); a later module (the task drain's and the queue
- *  re-notify's owner `queue`, the group-domain re-check's `instance-setup`, `legacy-store` meanwhile) registers its
- *  consumer through `register` (R8). The producers' notices of the earlier modules are registered here, at
+ *  The consumers' owners are reached through their factories (K61); a later module (the task drain's owner `tasks`,
+ *  the queue re-notify's `queue`, the group-domain re-check's `instance-setup`) registers its consumer through
+ *  `register` (R8). The producers' notices of the earlier modules are registered here, at
  *  construction (R9, the registration rule K206).
  * ========================================================================= */
 import { retrievalOf } from "../retrieval/index.mjs";
