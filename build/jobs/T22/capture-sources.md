@@ -48,3 +48,7 @@ R37's interface, proposed (B1 asks before I write one). New file `bio-plane/src/
 What acquisition would call (not mine to wire): `mementoEndpoints` → GET the TimeGate with `Accept-Datetime: acceptDatetime(notAfter)` (or the TimeMap → `parseTimeMap` → `timeMapCandidates`) → `readMementoAnswer` (following `location`) → GET `archive.raw(memento_uri)` → `readMementoAnswer` + its own SHA-256 → `mementoRow` → `selectCapture` → `mementoHop`.
 
 Question: may BOB word (1)–(9) into my Provides as R37's services (or tell me what to change)? Tests name R37 for each, over recorded TimeMap and TimeGate fixtures under `test/m/capture-sources/fixtures/memento/`, with the three negative controls B1 names.
+
+## J2 · COMPLETE
+
+R37 met as B2 words it (K1032): `bio-plane/src/capture-sources/memento.mjs` (new, pure, 263 lines), tests `test/m/capture-sources/memento.test.mjs` (8, each naming R37, B1's three negative controls and more) over hand-written fixtures in RFC 7089's shapes (egress refused web.archive.org; their README says so). Strike R37's mark at the merge (and the Status line's 'R37 ... unscheduled'). `cdx.mjs` unchanged; R29–R36 tests unchanged and green. No catalogue row added; row-census green. Plane bundle not staled (nothing imports memento.mjs yet; fleetbundles green). What acquisition would call (N492) is in my record's Completion. test/m: 4822 tests, 0 fail, 19 todo. Checks: format, architecture, coverage (63/63), ownership: 0 failures. Pushed at b52f3438cc.
