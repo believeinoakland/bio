@@ -6,7 +6,7 @@
    Copied from `control-plane/index.mjs` at the control-plane split (T18, K617, K624 (1), (2)): `classify`, `scopeFor`,
    the namespace gates, the agent credential's resolution, confinement and task scope, `resolveSession`, `sessionOpGate`,
    the admission region of `makeFetch` (as `admit`), the bearer fences (as `bearerFence`) and the mint's declarations.
-   Control-plane's own job, after this module merges, deletes its copy and calls these from its door.
+   Control-plane's own T18 job, after this module merged, deleted its copy; its door calls these (control-plane R28).
 
    THE SHAPE OF AN ANSWER. A gate answers `null` to admit, or a REFUSAL: `{ status, body }`, `body` the whole refusal
    (`ok: false`, the code as `reason` and `code`, its row's `check` and `translation`, and the gate's own fields), which

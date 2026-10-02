@@ -1,6 +1,5 @@
 /* admission: who is asking, for the door's stamps and the public reads — the viewer an admitted caller carries (N407)
-   and the reader of a public op that answers working material only to some (the convert `group-public`; its R is
-   proposed to BOB, J2). */
+   and the reader of a public op that answers working material only to some (the convert `group-public`; R16, K723). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { A, world, gate, urlOf, doAnswer, aik, hex64 } from "./harness.mjs";
