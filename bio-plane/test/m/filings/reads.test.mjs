@@ -3,7 +3,7 @@
    and an invisible action answers as absent (R19). Driven at the module's interface, over the real modules. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, MACHINE, STRANGER, F, CASE, PROFILE } from "./fixture.mjs";
+import { world, V, MACHINE, STRANGER, F, CASE, PROFILE, WHY } from "./fixture.mjs";
 import { COUNSEL_SENTENCE, TIER_WORDS, filingsOf } from "../../../src/filings/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 
@@ -19,10 +19,10 @@ async function busy() {
   const text = d2.text.replace("[UNFILLED: bylaw]", "P.E.B.L. § 12");
   (await x.f.filingApprove({ filing: d2.id, text, author: V("bo"), viewer: V("bo") }));
   x.f.filingRecordSent({ filing: d2.id, at: "2026-09-29", account: "handed in", author: V("bo"), viewer: V("bo") });
-  const p1 = x.f.counselPacket({ action: T3, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
+  const p1 = x.f.counselPacket({ reason: WHY, action: T3, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
   (await x.f.counselPacketExport({ id: p1.id, version: 1, author: V("olive"), viewer: V("olive") }));
   x.clock.now = "2026-09-28T03:00:00Z";
-  const p2 = x.f.counselPacket({ action: T3, counsel: { name: "B. Counsel", organisation: "Other Chambers" }, author: V("olive"), viewer: V("olive") });
+  const p2 = x.f.counselPacket({ reason: WHY, action: T3, counsel: { name: "B. Counsel", organisation: "Other Chambers" }, author: V("olive"), viewer: V("olive") });
   x.f.theoryPropose({ action: T3, theory: "A breach.", standards: [x.S1], why: "named", proposer: V("bo"), viewer: V("bo") });
   return { x, A, T3, d1, d2, p1, p2, text };
 }
@@ -141,7 +141,7 @@ test("R18 every filled value, packet item and chronology event names the record 
      deadline starting at the act is undetermined, with why */
   const Dp = x.determine({ act: { ...x.act, at: undefined, period: { from: "2026-03-01", to: "2026-03-05" } } });
   const P = x.action({ kind: "commitment_claim", legs: [{ target: Dp, kind: "rests_on" }] });
-  const pp = x.f.counselPacket({ action: P, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
+  const pp = x.f.counselPacket({ reason: WHY, action: P, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
   assert.equal(pp.sections.chronology.items.find((e) => e.source === Dp).date, "2026-03-01");
 });
 
@@ -151,7 +151,7 @@ test("R19 drafts, approvals, sendings, packets, exports and proposals are append
   const snap = x.snapshot(tables);
   /* further acts add rows and change none */
   x.f.filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") });
-  x.f.counselPacket({ action: T3, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
+  x.f.counselPacket({ reason: WHY, action: T3, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
   (await x.f.filingApprove({ filing: d2.id, text: "again", author: V("cy"), viewer: V("cy") }));
   const after = x.snapshot(tables);
   for (const t of tables) {

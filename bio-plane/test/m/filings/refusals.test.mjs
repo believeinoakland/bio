@@ -3,7 +3,7 @@
    refused, never passed (K248). Driven at the module's interface, over the real modules. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, MACHINE, STRANGER, WORDS } from "./fixture.mjs";
+import { world, V, MACHINE, STRANGER, WORDS, WHY } from "./fixture.mjs";
 import { FILINGS_CHECKS, Filings } from "../../../src/filings/index.mjs";
 import { noSuchAction } from "../../../src/actions/index.mjs";
 import { FILING_TEMPLATE_CHECKS } from "../../../src/filing-templates/index.mjs";
@@ -45,11 +45,12 @@ test("R1 R6 R7 R8 R11 R13 R14 R21 R23 R28 R31 R32 each refusal of this module ca
   x.actions.actionRiskTier({ target: A, tier: 2, reason: "raised on review", author: V("olive"), viewer: V("olive") });
   expect((await f.filingApprove({ filing: d2.id, text: "t", author: V("bo"), viewer: V("bo") })), "FILING_STALE");
   const counsel = { name: "A. Counsel", organisation: "Test Chambers" };
-  expect(f.counselPacket({ action: T3, counsel, author: MACHINE }), "MACHINE_CANNOT_NAME_COUNSEL");
-  expect(f.counselPacket({ action: T3, counsel: {}, author: V("bo"), viewer: V("bo") }), "NO_COUNSEL");
-  expect(f.counselPacket({ action: x.action({ kind: "commitment_claim", legs: [] }), counsel, author: V("bo"), viewer: V("bo") }),
+  expect(f.counselPacket({ reason: WHY, action: T3, counsel, author: MACHINE }), "MACHINE_CANNOT_NAME_COUNSEL");
+  expect(f.counselPacket({ action: T3, counsel, author: V("bo"), viewer: V("bo") }), "PACKET_NO_REASON");
+  expect(f.counselPacket({ reason: WHY, action: T3, counsel: {}, author: V("bo"), viewer: V("bo") }), "NO_COUNSEL");
+  expect(f.counselPacket({ reason: WHY, action: x.action({ kind: "commitment_claim", legs: [] }), counsel, author: V("bo"), viewer: V("bo") }),
          "NO_DETERMINATION");
-  const p = f.counselPacket({ action: T3, counsel, author: V("bo"), viewer: V("bo") });
+  const p = f.counselPacket({ reason: WHY, action: T3, counsel, author: V("bo"), viewer: V("bo") });
   expect(f.counselPacketRead({ id: "NONE", viewer: V("bo") }), "NO_SUCH_PACKET");
   expect((await f.counselPacketExport({ id: p.id, author: MACHINE })), "MACHINE_CANNOT_EXPORT");
   const tp = (o) => f.theoryPropose({ action: T3, theory: "t", standards: [x.S1], why: "w", proposer: V("bo"), viewer: V("bo"), ...o });
@@ -85,7 +86,7 @@ test("R1 R6 R7 R8 R11 R13 R14 R21 R23 R28 R31 R32 each refusal of this module ca
   expect(named(A, { id: "TPL-test-commitment-brief" }), "TEMPLATE_USE_BRIEF");
   expect(named(O, { id: "TPL-test-bylaw-complaint" }), "TEMPLATE_KIND_MISMATCH");
   expect(f.filingPrepare({ action: A, text: "", preparer: V("bo"), viewer: V("bo") }), "TEXT_UNWRITABLE");
-  expect(f.counselPacket({ action: T3, counsel, template: { id: "TPL-test-bylaw-complaint" }, author: V("bo"), viewer: V("bo") }),
+  expect(f.counselPacket({ reason: WHY, action: T3, counsel, template: { id: "TPL-test-bylaw-complaint" }, author: V("bo"), viewer: V("bo") }),
          "TEMPLATE_USE_FILE");
   expect(f.templateSave({ filing: d2.id, name: "kept", author: V("bo"), viewer: V("bo") }), "TEMPLATE_FROM_UNAPPROVED");
   /* filing-templates' refusals pass through as its own, its rows */
@@ -118,7 +119,7 @@ test("R1 R3 R8 R15 R21 with a layer-9 provider absent, filings refuses or states
   const d = noConformance.filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") });
   assert.match(d.unfilled.find((u) => u.name === "act").why, /no module answers determinations/);
   const T3 = x.action({ kind: "commitment_claim" });
-  const p = noConformance.counselPacket({ action: T3, counsel: { name: "A", organisation: "B" }, author: V("bo"), viewer: V("bo") });
+  const p = noConformance.counselPacket({ reason: WHY, action: T3, counsel: { name: "A", organisation: "B" }, author: V("bo"), viewer: V("bo") });
   assert.equal(p.reason, "NO_DETERMINATION");
   assert.match(p.detail, /no module answers determinations/);
   /* no filing-templates module: a template is not readable, refused with that module's code; the member's words serve */
@@ -142,7 +143,7 @@ test("R1 R8 R13 R14 every missing action is answered through actions' noSuchActi
   const counsel = { name: "A. Counsel", organisation: "Test Chambers" };
   const asks = {
     R1: (id, viewer) => x.f.filingPrepare({ action: id, preparer: V("bo"), viewer }),
-    R8: (id, viewer) => x.f.counselPacket({ action: id, counsel, author: V("bo"), viewer }),
+    R8: (id, viewer) => x.f.counselPacket({ reason: WHY, action: id, counsel, author: V("bo"), viewer }),
     R13: (id, viewer) => x.f.filingsFor({ action: id, viewer }),
     R14: (id, viewer) => x.f.theoryPropose({ action: id, theory: "t", standards: [x.S1], why: "w", proposer: V("bo"), viewer }),
   };
