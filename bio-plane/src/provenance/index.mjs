@@ -4,14 +4,14 @@
  * and a member's firsthand observation, the one capture whose bytes are a person's own words. A hop attests bytes,
  * address and time, never the credibility of the content. Each document's chain of hops and the route marker are
  * `provenance-routes`', and trusted timestamps over capture hashes and the instance's key are `attestation`'s (N512,
- * T25); the three names a later module still imports from here are copies until it re-points (N516, below).
+ * T25); the pure copies held here for their importers through T25 were deleted in T26 (N516).
  *
  * Extracted from the legacy modules (T4-2; K49, K59, K72): `store.mjs` (the register write and the testimony fence
  * that ran inside `promote`, `testify`, the register audit, census and holds, the receipts and the version chain),
  * `index.mjs` (`partsHeld` and the `registeraudit` handler), `schema.mjs` (its tables, now `./schema.mjs`) and
  * `bio-checks.mjs` (the C-18 register arms, now `./register-checks.mjs`; since T18 the refusal families C-24, C-53
  * and C-103 too, now `./checks.mjs`). The `registeraudit` Worker arm is `./ops.mjs`' since T18.
- * The legacy code's comments moved with it; where one names `Store.x`, the thing it names is now this module's `x`.
+ * The legacy code's comments moved with it, each re-pointed to this module's own names where it named the store's.
  *
  * REACHED as `provenanceOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
  * call with `deps` and returned to every later caller. At creation it declares its tables to record-core's purge,
@@ -26,10 +26,8 @@
  *   order         the modules' total order (ids) R47's listeners run in: membership's `MODULE_ORDER`, the one list
  *                 promotion's steps run in too, unless a test passes its own. */
 
-import { parseFrontmatter, isMachineIdentity, isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, BASIS_GRADES,
+import { parseFrontmatter, isMachineIdentity, createSha256, EARNED_CAPTURE_CEILING, BASIS_GRADES,
          TESTIMONY_GRADE } from "../record-grammar/index.mjs";
-import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS, TSA_CONTENT_TYPE, TSA_ACCEPT, ARCHIVE_SAVE_BASE,
-         ARCHIVE_SERVICE, archiveLocatorFrom } from "../tsa.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
@@ -93,202 +91,6 @@ export const ARCHIVE_CAPTURE_GRADE = BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CA
  *  for the writer. */
 export const DOORBELL_VIA = "doorbell";
 
-/* ======================================================================= *
- * N516 (option B, K1218 as K1220 corrects it; K1226): COPIES of the three names a later module imports by name from
- * this module, `routeFinding`, `instanceStatement` and `attest`, kept until each importer re-points in T25 and deleted
- * by this module's T26 job. The route marker and its
- * table moved to `provenance-routes` (its R1-R13), and co-attestation and the instance key to `attestation` (its
- * R1-R10), with N512. No copy reads or writes a table, and this module answers none as its own requirement.
- * ======================================================================= */
-
-/* N516 · `routeFinding` for `retrieval` (layer 5), word for word as `provenance-routes` R5 answers it: what one
-   bundle's standing route mark means, or that no assessment was ever recorded, or that a route is not a fact about this
-   record. The three meanings are D-129's words (observation-log's `OBSERVATION_STATES`). */
-const FINDING_MEANS = Object.freeze({
-  NEVER_LOOKED:         "nobody looked at this level for this subject",
-  LOOKED_INDETERMINATE: "we looked and could not tell",
-  PRESENT:              "we looked and it is there",
-});
-const ROUTE_MARK_NOTE =
-  "this document stays where the group put it: a verification was an attested act by people, and "
-  + "this record corrects FORWARD rather than un-saying one (DEC-19). What is recorded here is that "
-  + "its ROUTE cannot be shown from the evidence held — a statement about our evidence, not about the "
-  + "bytes. The state and this finding disagree deliberately, and neither is a defect in the other.";
-export function routeFinding(objectType, mark) {
-  if (objectType !== "information")
-    return { applies: false, assessed: false, marked: false, finding: null, means: null,
-             note: "a route is a fact about a captured document, and this record is not one" };
-  if (!mark)
-    return { applies: true, assessed: false, marked: false,
-             finding: "NEVER_LOOKED", means: FINDING_MEANS.NEVER_LOOKED,
-             note: "no assessment of this document's route has ever been recorded. This is NOT a finding "
-                 + "that the route cannot be shown; it is the absence of the question having been asked." };
-  const marked = mark.finding === "LOOKED_INDETERMINATE";
-  return {
-    applies: true, assessed: true, marked,
-    finding: mark.finding, means: FINDING_MEANS[mark.finding] ?? null,
-    at: mark.at, by: mark.by, stateAt: mark.state_at, seq: mark.seq,
-    register: mark.register_state, undetermined: mark.undetermined, documents: mark.documents_n,
-    note: marked ? ROUTE_MARK_NOTE
-                 : "this document's route was assessed and every document in its register can be shown",
-  };
-}
-
-/* N516 · `instanceStatement` for `network-notices` (layer 8), as `attestation` R5 states it: exactly
-   `${kind}\nsha256: ${sha}\n`; it throws when `kind` is the receipt's own (`bio-receipt/1`) or not of the form
-   `<name>/<version>`, so no statement made for a later module can be read as a receipt. It signs nothing. */
-const RECEIPT_KIND = "bio-receipt/1";
-const STATEMENT_KIND = /^[a-z][a-z0-9-]*\/[0-9]+$/;
-export function instanceStatement(kind, sha) {
-  if (typeof kind !== "string" || !STATEMENT_KIND.test(kind) || kind === RECEIPT_KIND)
-    throw new Error(`instanceStatement: kind ${JSON.stringify(kind)} is ${kind === RECEIPT_KIND ? "the receipt's own"
-      : "not of the form <name>/<version>"}; a statement for a later module is never a receipt`);
-  return `${kind}\nsha256: ${sha}\n`;
-}
-
-/* N516 · `attest` for `acquisition` and `capture` (layer 3, after `attestation`), as `attestation` R1–R3 state it
-   (K1226, BOB's answer to PROVENANCE #14 J1): a stateless copy, held because both import it by name and nearly every
-   module's tests load them. It reads and writes no table: the evidence store, the network and the record's
-   `registerHolds` reach it only as the caller's callbacks (`head`, `put`, `fetch`, `holds`), so the one-writer rule
-   holds. Its one refusal row, C-89.1, is `attestation`'s (`ATTEST_CHECKS`); the copy keeps that row's check and words
-   privately, so this module exports no second C-89 family. */
-const CAPTURE_HELD_IN_PARTS_ROW = Object.freeze({
-  check: "C-89.1",
-  translation: "The record lists this document, but keeps it in parts rather than as one file, and this "
-    + "instance has no record of fetching it itself. A timestamp is only requested for bytes this "
-    + "instance can vouch for, so none was requested. Nothing is missing: do not capture the document "
-    + "again. If the instance fetches it from its address, it can then be co-attested.",
-});
-export async function attest(body, { head, put, fetch: fetchFn, holds, now = () => new Date().toISOString() } = {}) {
-  const sha = typeof body?.sha256 === "string" ? body.sha256.toLowerCase() : "";
-  if (!/^[0-9a-f]{64}$/.test(sha))
-    return { ok: false, reason: "BAD_SHA", detail: "attest takes the sha256 of a capture already in the store" };
-  /* D-530: A MISS ON THE WHOLE-HASH KEY IS NOT ABSENCE. A document over one part
-     is stored ONLY as its parts, each under its own hash, and never under the
-     whole's (D-469, D-476), so this head misses for every such capture - and the
-     setup surface attests the whole hash straight after acquiring it. The
-     refusal it gave, "nothing in this store has that hash; capture the document
-     before attesting it", was false for bytes the record holds and sent a member
-     to capture them again. So a miss asks the store the whole-document question
-     (Intake Doctrine section 8, D-476's `registerholds`), and three answers are
-     kept apart:
-       - the plane's own ACQUISITION RECEIPT names the hash: the plane hashed
-         these bytes as they arrived and keeps them in parts, and no caller can
-         write that row. The hash is attested, and the answer says how it is held.
-       - only the REGISTER names it: a row `op=promote` wrote from what its caller
-         named, without reading R2 (D-45). A timestamp is not rested on that
-         alone, and the bytes are not called absent either: CAPTURE_HELD_IN_PARTS.
-       - neither, or the store did not answer: NO_SUCH_CAPTURE, saying what was
-         asked rather than that nothing anywhere holds the bytes. */
-  let held = null;
-  if (!(await head(sha))) {
-    let holdsAnswer = null;
-    try { holdsAnswer = typeof holds === "function" ? await holds(sha) : null; } catch { holdsAnswer = null; }
-    if (holdsAnswer && holdsAnswer.acquired === true) {
-      held = { form: "parts", on: "acquisition_receipt",
-               detail: "no object is stored under this hash, because the document was captured in parts "
-                     + "and only its parts are stored, each under its own hash. This plane hashed the "
-                     + "whole document as it arrived and recorded that receipt, which is what this "
-                     + "attestation rests on." };
-    } else {
-      /* DEC-49 REGION is-attest-parts */
-      if (holdsAnswer && holdsAnswer.registered === true)
-        return { ok: false, reason: "CAPTURE_HELD_IN_PARTS", code: "CAPTURE_HELD_IN_PARTS",
-          check: CAPTURE_HELD_IN_PARTS_ROW.check, translation: CAPTURE_HELD_IN_PARTS_ROW.translation,
-          sha256: sha,
-          detail: "the record's register names these bytes, but no object is stored under this hash and "
-                + "this plane holds no receipt of having acquired them, which is the shape of a document "
-                + "kept only in parts. A register row is written from what the promoting caller named, so "
-                + "a timestamp is not rested on it alone. Nothing here says the bytes are missing." };
-      /* END DEC-49 REGION is-attest-parts */
-      return { ok: false, reason: "NO_SUCH_CAPTURE",
-               detail: holdsAnswer
-                 ? "no object is stored under that hash, the register holds no row for it under a "
-                   + "record that exists, and this plane holds no receipt of having acquired it"
-                 : "no object is stored under that hash, and the store could not be asked whether "
-                   + "its register or an acquisition receipt names it, so this is not a finding that "
-                   + "the record lacks the bytes" };
-    }
-  }
-
-  const stamp = () => secondOf(now());
-  const attempts = [];
-  let token = null, tokenSha = null, service = null;
-  for (const endpoint of TSA_ENDPOINTS) {
-    const attempted = stamp();
-    try {
-      const { der } = timestampRequest(sha);
-      const res = await fetchFn(endpoint, {
-        method: "POST", body: der,
-        headers: { "content-type": TSA_CONTENT_TYPE, accept: TSA_ACCEPT },
-      });
-      if (!res.ok) {
-        attempts.push({ service: endpoint, attempted, ok: false, note: `http ${res.status}` });
-        continue;
-      }
-      const parsed = parseTimestampResponse(new Uint8Array(await res.arrayBuffer()), sha);
-      if (!parsed.ok) {
-        attempts.push({ service: endpoint, attempted, ok: false, note: parsed.reason });
-        continue;
-      }
-      tokenSha = hexBytes(await crypto.subtle.digest("SHA-256", parsed.token));
-      await put(tokenSha, parsed.token);
-      token = parsed.token; service = endpoint;
-      attempts.push({ service: endpoint, attempted, ok: true, kind: "rfc3161",
-                      token_sha256: tokenSha, token_bytes: parsed.token.length });
-      break;
-    } catch (e) {
-      attempts.push({ service: endpoint, attempted, ok: false, note: String(e && e.message || e).slice(0, 120) });
-    }
-  }
-
-  /* The opt-in second path. Off unless the caller asks, because asking a
-     public archive to fetch a URL publishes the fact of interest, and that
-     is a tactical judgement rather than a default. */
-  let archive = null;
-  if (body.archive === true) {
-    const attempted = stamp();
-    const locator = typeof body.locator === "string" ? body.locator : "";
-    if (!isPublicHttpsLocator(locator)) {
-      attempts.push({ service: ARCHIVE_SERVICE, attempted, ok: false,
-                      note: "no public https locator to archive" });
-    } else {
-      try {
-        const res = await fetchFn(ARCHIVE_SAVE_BASE + locator, { redirect: "follow" });
-        const archived = archiveLocatorFrom(res, locator);
-        if (res.ok && archived) {
-          archive = { service: ARCHIVE_SERVICE, locator: archived };
-          attempts.push({ service: ARCHIVE_SERVICE, attempted, ok: true,
-                          kind: "co-archive", archived_locator: archived });
-        } else {
-          attempts.push({ service: ARCHIVE_SERVICE, attempted, ok: false,
-                          note: res.ok ? "archived but returned no locator" : `http ${res.status}` });
-        }
-      } catch (e) {
-        attempts.push({ service: ARCHIVE_SERVICE, attempted, ok: false,
-                        note: String(e && e.message || e).slice(0, 120) });
-      }
-    }
-  }
-
-  return {
-    ok: !!token,
-    attempts,
-    ...(archive ? { archive } : {}),
-    ...(token ? {
-      attestation: {
-        file: `snapshots/timestamp-${tokenSha.slice(0, 12)}.tsr`,
-        kind: "rfc3161", service, sha256: tokenSha, bytes: token.length,
-        over: sha,
-      },
-      note: "A trusted timestamp over the capture hash. Anyone can check it with openssl ts -verify against the authority's certificate; this plane obtains and stores it, and does not claim to have verified the signature.",
-      ...(held ? { held } : {}),
-    } : {
-      reason: "NO_ATTESTATION",
-      note: "Every attempt was recorded. A register showing a failed attempt and one showing no attempt are different claims, so the failures above belong in the document rather than being dropped.",
-    }),
-  };
-}
 /* PL-10 / D-220. The chain's bound, in the pair every capped read in this
    file publishes: the default a caller gets by saying nothing, and the
    ceiling a caller cannot ask past. 200 because a weekly capture of one
@@ -312,7 +114,7 @@ export const VERSION_CHAIN_LIMIT_MAX = 1000;
  * trust held by that member.*
  *
  * WHAT IT IS, BUILT OUT OF WHAT EXISTED. An INFO bundle, written through
- * `promote` — the one write path — with the member's words — below the canonical header (`Store.testimonyBytes`) — as a file under
+ * `promote` — the one write path — with the member's words — below the canonical header (`testimonyBytes`) — as a file under
  * `snapshots/`, a `data/provenance.json` document declaring origin `member`,
  * actor class `member` and `authored: true`, and a register row over the
  * words' bytes. In the SAME transaction: one passage-index unit over the whole
@@ -371,7 +173,7 @@ export const TESTIMONY_MAX_BYTES = 128 * 1024;   /* CAPTURE_TEXT_UNIT_CAP, 131,0
  *  and what a published case shows of them is the attribution level's to
  *  govern (§4), and bytes are what verification publishes. The author is in
  *  the REGISTER alone (`register.author`, written only under TESTIMONY_PATH);
- *  every other file of the bundle names them by `Store.observerRef` (§4.1). */
+ *  every other file of the bundle names them by `observerRef` (§4.1). */
 export const TESTIMONY_FORMAT = "bio-testimony/1";
 export function testimonyBytes({ id, observedAt, words }) {
   return `${TESTIMONY_FORMAT}\nid: ${id}\nobserved_at: ${observedAt}\n\n${words}`;
@@ -829,15 +631,14 @@ class Provenance {
     try { reg = JSON.parse(f.text); } catch {
       return { state: "unreadable", why: "the record's data/provenance.json does not parse" };
     }
-    const bare = (v) => typeof v === "string" ? v.trim().replace(/^sha256:/, "").toLowerCase() : null;
     const doc = (Array.isArray(reg?.documents) ? reg.documents : [])
-      .find((d) => d && bare(d.capture?.sha256) === bareSha(sha) && d.parts !== undefined);
+      .find((d) => d && bareSha(d.capture?.sha256) === bareSha(sha) && d.parts !== undefined);
     if (!doc) return { state: "none" };
     const ok = Array.isArray(doc.parts) && doc.parts.length && doc.parts.every((p) =>
-      p && /^[0-9a-f]{64}$/.test(bare(p.sha256) || "") && Number.isInteger(p.bytes) && p.bytes >= 0);
+      p && /^[0-9a-f]{64}$/.test(bareSha(p.sha256) || "") && Number.isInteger(p.bytes) && p.bytes >= 0);
     if (!ok) return { state: "unreadable", why: "the register document names parts for this capture without a digest and size for each" };
     return { state: "named", parts: doc.parts.map((p) => ({ file: typeof p.file === "string" ? p.file : null,
-                                                            sha256: bare(p.sha256), bytes: p.bytes })) };
+                                                            sha256: bareSha(p.sha256), bytes: p.bytes })) };
   }
   /* REC-190: THE CENSUS OF DISPLACED HOMES (`BIO_Intake_Doctrine_v1_1.md` §8, ONE CAPTURE, ONE HOME — the ORIGINAL's;
      D-179's residue). Before D-179's fence `op=promote` UPSERTed `register.bundle_id` on the `capture_sha` key, so a
@@ -932,13 +733,12 @@ class Provenance {
    *  `captured_locators_sha` index, and like `registered` it names no bundle.
    */
   /*  D-556 (BOB #34, 2026-09-25 00:00Z) - AND, when the caller names the BUNDLE whose row it is gating, the
-   *  PARTS that bundle's record names for the hash (`#partsNamedFor`, D-533's reader, not a second one). The
+   *  PARTS that bundle's record names for the hash (`partsNamed`, D-533's reader, not a second one). The
    *  ratify gate asks it on a whole-hash miss: a row held in parts is admitted when every part the record names
    *  is present and verifies, and publication copies exactly those parts. The bundle's own register document is
    *  read, so it names nothing the ratifier has not already been handed in the image. */
   registerHolds({ sha = null, bundle = null } = {}) {
-    const s = typeof sha === "string" && sha.trim()
-      ? sha.trim().replace(/^sha256:/, "").toLowerCase() : null;
+    const s = bareSha(sha) || null;
     if (!s) return { ok: true, sha: null, asked: false, registered: null, acquired: null };
     const b = typeof bundle === "string" && bundle.trim() ? bundle.trim() : null;
     return { ok: true, sha: s, asked: true, ...(b ? { parts: this.partsNamed(b, s) } : {}), registered: !!this.#one(
@@ -1237,7 +1037,7 @@ class Provenance {
    *  "these are the first bytes we held", not a degenerate failure, and
    *  `test/m/provenance/convert-versionchain.test.mjs` pins it as its own arm.
    *
-   *  GATED at `register.bundle_id` through `#bundleGate`, the same predicate
+   *  GATED at `register.bundle_id` through `bundleGate`, the same predicate
    *  every other read in this file compiles, and `total` is counted through the
    *  SAME join and the SAME predicate as the rows — so a viewer cannot learn
    *  from a total that something was withheld. Nothing publishes how many rows
@@ -1267,7 +1067,7 @@ class Provenance {
     /* THE JOIN, WRITTEN ONCE. Every answer below — the page, the total, the
        anchor, the predecessor — reads this same CTE, so they cannot disagree
        about what a version is or about which ones this viewer may see. It is
-       `#conditionBundlesForHost`'s join generalised off a host prefix onto the
+       the legacy store's `#conditionBundlesForHost` join, generalised off a host prefix onto the
        address the index is actually keyed on. */
     const CHAIN = `WITH chain AS (
         SELECT cl.capture_sha                   AS capture_sha,
@@ -1463,9 +1263,9 @@ class Provenance {
        revision re-registering its own bytes is unchanged. ONE bounded read, the shas as one bound
        JSON array (D-36); `capture_sha` is the key, so `shas.length` rows is the whole population.
        THE HOLDER IS NAMED ONLY TO A CALLER WHO MAY SEE IT (D-15), asked of the VISIBILITY stamp the
-       control plane sets beside `actorIdentity` (`#inSight`, fail-closed on a stamped identity with
+       control plane sets beside `actorIdentity` (membership's `inSight`, fail-closed on a stamped identity with
        no viewer). An unstamped write is not a caller (the store's own writes, fixtures driven at the
-       store) and is told the holder, on `#rosterInSight`'s precedent. */
+       store) and is told the holder, on the legacy store's `#rosterInSight` precedent. */
     const shas = [...new Set(regs.map((c) => c.sha256))];
     const homes = shas.length ? this.#rows(
       `SELECT r.capture_sha, r.bundle_id FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
