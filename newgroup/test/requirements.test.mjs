@@ -186,7 +186,10 @@ test("R6 `plan` is found by upload: a probe with limits.cpu_ms refused 100328 is
   /* The release is chosen first (R20 with R4: before anything is created); it is read from the public repository, not the account. */
   const before = paid.calls.slice(0, paid.calls.indexOf(probe)).filter((c) => !c.u.startsWith(CFG.RELEASE_LATEST))
     .map((c) => `${c.method} ${c.u.replace(CFG.API, "")}`);
-  assert.deepEqual(before, [`POST ${CFG.TOKEN}`, "GET /accounts", "GET /accounts/A1/workers/scripts/plan-paid/settings"],
+  assert.deepEqual(before, [`POST ${CFG.TOKEN}`, "GET /accounts", "GET /accounts/A1/workers/scripts/plan-paid/settings",
+    /* R32's look for another copy: the two buckets and the members, by name, never a plan field. */
+    "GET /accounts/A1/r2/buckets/bio-captures", "GET /accounts/A1/r2/buckets/bio-published",
+    ...MEMBERS.map((m) => `GET /accounts/A1/workers/scripts/${m}/settings`)],
     "no plan field is read before the probe");
   assert.equal(paid.page.label("plan"), "Workers Paid confirmed");
   const free = seen(await run({ slug: "plan-free", plan: "free" }));
@@ -202,7 +205,8 @@ test("R6 `plan` is found by upload: a probe with limits.cpu_ms refused 100328 is
 test("R7 `r2`: both evidence buckets exist afterwards (\"already exists\" counts), or the install is refused saying a payment method is needed", async () => {
   const w = seen(await run({ slug: "r2-fresh" }));
   assert.deepEqual([...w.buckets].sort(), ["bio-captures", "bio-published"]);
-  const again = seen(await run({ slug: "r2-again", r2: "exists" }));
+  /* Under R32 an install meets a bucket already there only by a race: one created between R32's look and this step. */
+  const again = seen(await run({ slug: "r2-again", r2: "late" }));
   assert.equal(again.page.status("r2"), "ok");
   assert.deepEqual([...again.buckets].sort(), ["bio-captures", "bio-published"]);
   assert.ok(again.page.steps.includes("install"));
@@ -264,8 +268,8 @@ test("R10 `install`: the plane uploaded with STORE (SQLite v1), VERSION, INSTANC
   const cfg = readFileSync(new URL("../../bio-plane/wrangler.jsonc", import.meta.url), "utf8");
   const compatDate = cfg.match(/"compatibility_date":\s*"([^"]+)"/)[1];
   const compatFlags = JSON.parse(cfg.match(/"compatibility_flags":\s*(\[[^\]]*\])/)[1]);
-  const pre = { "pdf-worker": [{ type: "plain_text", name: "VERSION", text: "0.1.0" }] };
-  const w = seen(await run({ slug: "inst-shape", pre, ai: "aik-" + "3".repeat(20) }));
+  /* Under R32 an install's account holds no member (one that does is refused, below), so the members present are none. */
+  const w = seen(await run({ slug: "inst-shape", ai: "aik-" + "3".repeat(20) }));
   const m = w.planePuts[0].meta;
   assert.deepEqual(m.migrations, { new_tag: "v1", new_sqlite_classes: ["Store"] });
   assert.deepEqual([m.main_module, m.compatibility_date, m.compatibility_flags], ["index.mjs", compatDate, compatFlags]);
@@ -277,10 +281,11 @@ test("R10 `install`: the plane uploaded with STORE (SQLite v1), VERSION, INSTANC
   assert.deepEqual([by.CAPTURES.bucket_name, by.PUBLISHED.bucket_name], ["bio-captures", "bio-published"]);
   assert.deepEqual(by.SELF, { type: "service", name: "SELF", service: "inst-shape" });
   assert.deepEqual(by.BROWSER, { type: "browser", name: "BROWSER" });
-  assert.deepEqual(by.PDF_WORKER, { type: "service", name: "PDF_WORKER", service: "pdf-worker" }, "a member already present is bound");
-  assert.equal(by.AGENT_WORKER, undefined, "a member not present is not");
+  for (const name of BINDINGS) assert.equal(by[name], undefined, `${name}: no member present, none bound`);
   assert.equal(by.INSTANCE_AI_TOKEN.type, "secret_text");
-  assert.equal(Object.keys(by).length, 13, "nothing else: " + Object.keys(by).join(","));
+  assert.equal(Object.keys(by).length, 12, "nothing else: " + Object.keys(by).join(","));
+  const held = seen(await run({ slug: "inst-held", pre: { "pdf-worker": [{ type: "plain_text", name: "VERSION", text: "0.1.0" }] } }));
+  assert.equal(held.planePuts.length, 0, "an account already holding a member is refused (R32), never bound into an install");
   const shy = seen(await run({ slug: "inst-shy", refuseSelf: true }));
   assert.equal(shy.planePuts.length, 1, "the retry landed");
   assert.equal(bindingOf(shy.planePuts[0], "SELF"), null);
@@ -347,10 +352,12 @@ test("R12 `bind`: the plane bound first to the members already present, then the
   assert.deepEqual(puts.slice(1, -1).sort(), MEMBERS.slice().sort(), "act 2 between");
   assert.equal(fresh.planePuts[1].meta.migrations, undefined, "the re-upload takes the update's shape");
   assert.match(fresh.page.label("bind"), /Your copy is connected to/);
+  /* Members already present: under R32 only an update meets them (R17 runs `bind` as here), so the first act is shown there. */
   const old = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
-  const had = seen(await run({ slug: "bind-had", rel, pre: Object.fromEntries(MEMBERS.map((m) => [m, old])) }));
+  const had = seen(await run({ slug: "bind-had", mode: "update", rel,
+    pre: { "bind-had": planeBase("bind-had"), ...Object.fromEntries(MEMBERS.map((m) => [m, old])) } }));
   assert.equal(had.planePuts.length, 1, "nothing added, no re-upload");
-  assert.deepEqual(targets(had.planePuts[0].bindings), RIGHT);
+  assert.deepEqual(targets(had.planePuts[0].bindings), RIGHT, "act 1 binds every member already present");
   const bad = seen(await run({ slug: "bind-refused", rel, refuseRePut: true }));
   assert.equal(bad.page.status("bind"), "no");
   assert.match(bad.page.label("bind"), /installed, but connecting your copy to them was refused/);
@@ -850,5 +857,101 @@ test("R31 no place is named in the installer's behaviour: no page it serves or s
   }
 });
 
-test.todo("R32 until installs are isolated, an install into an account already holding a copy (either bucket, or a fleet worker) is refused before anything is created, saying one copy per account is supported for now (not yet met: K102)");
-test.todo("R33 the install and the update read back the uploaded script's content and compare its hash with the release, naming a mismatch and claiming no success (not yet met: K102)");
+test("R32 until installs are isolated, an install into an account already holding a copy (either evidence bucket, or a fleet worker) is refused before anything is created, saying one copy per account is supported for now; an empty account installs; an update is not refused by it", async () => {
+  armWith(SIGNER.line);
+  const rel = await release({ version: NEXT, members: [...MEMBERS, "extra-worker"] });
+  const old = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
+  /* Nothing written: no call but a read reached the account, and the account is exactly as it was. */
+  const untouched = (w, pre, preBuckets, why) => {
+    assert.deepEqual(w.calls.filter((c) => c.method !== "GET" && c.u.startsWith(CFG.API)).map((c) => `${c.method} ${c.u}`), [], why);
+    assert.deepEqual([...w.acct.keys()].sort(), Object.keys(pre).sort(), why);
+    for (const [k, v] of Object.entries(pre)) assert.deepEqual(w.acct.get(k), v, why);
+    assert.deepEqual([...w.buckets].sort(), preBuckets.slice().sort(), why);
+    assert.ok(!w.page.done, why);
+  };
+  const cases = [
+    ["bucket bio-captures", {}, ["bio-captures"], /the evidence bucket bio-captures/],
+    ["bucket bio-published", {}, ["bio-published"], /the evidence bucket bio-published/],
+    ["both buckets", {}, ["bio-captures", "bio-published"], /the evidence bucket bio-captures, the evidence bucket bio-published/],
+    ...MEMBERS.map((m) => [`worker ${m}`, { [m]: old }, [], new RegExp(`the capability worker ${m}`)]),
+    /* A member the chosen release names beyond those the plane binds is looked for too, before the plan probe. */
+    ["worker extra-worker", { "extra-worker": old }, [], /the capability worker extra-worker/],
+  ];
+  for (const [why, pre, preBuckets, names] of cases) {
+    const w = seen(await run({ slug: "one-copy", rel, pre, preBuckets }));
+    assert.equal(w.page.status("fresh"), "no", why);
+    assert.match(w.page.failed.p, /One copy per account is supported for now/, why);
+    assert.match(w.page.failed.p, names, why);
+    assert.match(w.page.failed.p, /Nothing was created or changed/, why);
+    assert.ok(!w.calls.some((c) => c.u.includes("bio-plan-probe")), `${why}: refused before the plan probe`);
+    untouched(w, pre, preBuckets, why);
+  }
+  /* A lookup that cannot say is refused too: an absence not established is not established. */
+  for (const name of ["bio-published", "ocr-worker", "extra-worker"]) {
+    const w = seen(await run({ slug: "one-unread", rel, lookupFail: [name] }));
+    assert.equal(w.page.status("fresh"), "no", name);
+    assert.match(w.page.failed.h, /Could not check your account/, name);
+    untouched(w, {}, [], name);
+  }
+  /* The negative control: an empty account installs exactly as before, members and all. */
+  const empty = seen(await run({ slug: "one-empty", rel }));
+  assert.equal(empty.page.status("fresh"), "ok");
+  assert.deepEqual([...empty.buckets].sort(), ["bio-captures", "bio-published"]);
+  for (const m of [...MEMBERS, "extra-worker"]) assert.ok(empty.acct.has(m), m);
+  assert.equal(empty.page.status("install"), "ok");
+  assert.ok(empty.page.done.includes('id="out-boot"'));
+  assert.ok(!empty.page.words.includes("One copy per account"));
+  /* An update is not an install: a copy with its buckets and its members is updated, not refused. */
+  const up = seen(await run({ slug: "one-upd", mode: "update", rel, preBuckets: ["bio-captures", "bio-published"],
+    pre: { "one-upd": planeBase("one-upd"), ...Object.fromEntries(MEMBERS.map((m) => [m, old])) } }));
+  assert.ok(!up.page.words.includes("One copy per account"));
+  assert.equal(up.page.status("up"), "ok");
+  assert.ok(up.page.done && up.planePuts.length >= 1, "the update ran to its end");
+  restoreSigners();
+});
+
+test("R33 the install and the update read back the uploaded plane's content and compare its hash with the release's; a mismatch, or a script that cannot be read back, is named on the page and no success is claimed; a matching read-back succeeds", async () => {
+  armWith(SIGNER.line);
+  const rel = await release({ version: NEXT });
+  const want = await sha(rel.src);
+  const MISMATCH = new RegExp(`is not the ${NEXT.replace(/\./g, "\\.")} release&#39;s own bytes \\(read back, it hashes to [0-9a-f]{16}…; the release hashes to ${want.slice(0, 16)}…\\)`);
+  /* Install: matching, as the module itself or as a multipart body, after every plane upload (the install PUT and its
+     step-3 re-PUT); and a first read that differs, then matches, is a match. */
+  for (const readBack of ["raw", "multipart", "differ-once"]) {
+    const w = seen(await run({ slug: "rb-ok", rel, readBack }));
+    assert.equal(w.planePuts.length, 2, readBack);
+    assert.ok(w.reads.filter((n) => n === "rb-ok").length >= 2, `${readBack}: read back after each plane upload`);
+    assert.equal(w.page.status("verify"), "ok", readBack);
+    assert.match(w.page.done, /Your copy is running\./, readBack);
+  }
+  const reads = [];
+  for (const [readBack, named] of [["differ", MISMATCH], ["fail", /could not be read back, so it is not confirmed to be the [0-9.]+ release&#39;s own bytes/]]) {
+    const w = seen(await run({ slug: "rb-bad", rel, readBack }));
+    reads.push(w.reads.length);
+    assert.match(w.page.done, named, readBack);
+    assert.ok(!w.page.done.includes("Your copy is running."), `${readBack}: no success claimed`);
+    assert.equal(w.page.status("verify"), "no", readBack);
+    assert.ok(w.page.done.includes('id="out-boot"'), `${readBack}: the credentials are still handed over`);
+    /* With the address silent too, the mismatch is still named. */
+    const quiet = seen(await run({ slug: "rb-quiet", rel, readBack, copy: { selftest: () => jres({ ok: false }) } }));
+    assert.match(quiet.page.done, named, `${readBack}, address silent`);
+    assert.match(quiet.page.done, /has not woken up yet/);
+  }
+  /* Update: the same, on its plane upload. */
+  const base = (slug) => ({ [slug]: planeBase(slug) });
+  const good = seen(await run({ slug: "rb-upd", mode: "update", rel, pre: base("rb-upd") }));
+  assert.ok(good.reads.includes("rb-upd"));
+  assert.match(good.page.done, /<b>Updated from 0\.1\.0 to/);
+  for (const [readBack, named] of [["differ", MISMATCH], ["multipart", null]]) {
+    const w = seen(await run({ slug: "rb-upd", mode: "update", rel, readBack, pre: base("rb-upd") }));
+    if (!named) { assert.match(w.page.done, /<b>Updated from 0\.1\.0 to/, readBack); continue; }
+    assert.match(w.page.done, named, readBack);
+    assert.ok(!/<b>Updated (from|to)/.test(w.page.done), "no success claimed");
+    assert.equal(w.page.status("verify"), "no");
+  }
+  /* An update whose copy has no address to ask still names the mismatch. */
+  const noAddr = seen(await run({ slug: "rb-noaddr", mode: "update", rel, readBack: "differ", subdomain: null, pre: base("rb-noaddr") }));
+  assert.match(noAddr.page.done, MISMATCH);
+  assert.ok(!/<b>Updated (from|to)/.test(noAddr.page.done));
+  restoreSigners();
+});

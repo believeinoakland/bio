@@ -68,8 +68,9 @@
  * unreported, the install lag) — each reporting the update DONE over the lag it should name; (W2) `reportsBuilds`
  * answers false -> 155 passed, 9 failed: the PIN on the plane this tree builds, the "every part" sentence, and the
  * same seven lag arms. ALL AS DECLARED, `newgroup/src/index.mjs` restored byte-identically after each (sha256
- * e8773248…, verified by sha256 AND byte compare). The plane half's controls are in
- * `bio-plane/test/d116-serving-builds.test.mjs`.
+ * e8773248…, verified by sha256 AND byte compare). The plane half's controls were in
+ * `bio-plane/test/d116-serving-builds.test.mjs` (retired in T17, K572); its reports are now tested by instance-setup
+ * (`bio-plane/test/m/instance-setup/reports.test.mjs`).
  *
  * NEGATIVE CONTROL (DIST-6, 2026-09-23), DECLARED BEFORE ARMING, each arm ALONE, baseline 184/184: (A1) today's main
  * (`newgroup/src/index.mjs` at 4355bfda) -> 169 passed, 15 failed: every DIST-6 binding, SERVING, done and naming arm,
@@ -158,14 +159,26 @@ const cfok = (result) => jres({ success: true, result });
 const cferr = (message, status = 400, code = 0) =>
   jres({ success: false, errors: [{ message, code }] }, status);
 
-/* A scripted upstream: rules matched in order, calls recorded. */
+/* A scripted upstream: rules matched in order, calls recorded. After an arm's own rules, the account answers the reads
+   no arm here scripts as an account holding no other copy would (installer R32: no evidence bucket, no fleet worker but
+   those the arm itself scripts) and hands each script back exactly as it was last uploaded (R33's read-back). An arm's
+   own rule always wins. */
+const FALLBACK = (calls) => [
+  { m: (u, mth) => /\/r2\/buckets\/[^/]+$/.test(u) && mth === "GET", f: () => cferr("The specified bucket does not exist.", 404, 10006) },
+  { m: (u, mth) => /\/workers\/scripts\/[^/]+\/settings$/.test(u) && mth === "GET", f: () => cferr("not found", 404) },
+  { m: (u, mth) => /\/workers\/scripts\/[^/]+$/.test(u) && mth === "GET", f: async (u) => {
+    const put = calls.filter((c) => c.method === "PUT" && c.u === u).at(-1);
+    return put ? new Response(await put.init.body.get("index.mjs").text()) : cferr("not found", 404);
+  } },
+];
 function script(rules) {
   const calls = [];
+  const all = [...rules, ...FALLBACK(calls)];
   globalThis.fetch = async (input, init = {}) => {
     const u = typeof input === "string" ? input : input.url;
     const method = (init.method || "GET").toUpperCase();
     calls.push({ u, method, init });
-    for (const r of rules) if (r.m(u, method)) return r.f(u, init);
+    for (const r of all) if (r.m(u, method)) return r.f(u, init);
     throw new Error(`unscripted fetch: ${method} ${u}`);
   };
   return calls;
@@ -1155,8 +1168,8 @@ t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES 
 /* ---- D-116: EACH PART'S OWN BUILD, READ BACK, AND THE ONE THAT LAGS NAMED ----------------------------------------
    Added 2026-09-23 (D-116 worker). A release whose plane carries D-116 answers `op=bootstrap&members=1` with three
    readings, each from where it runs: `version` (the routing isolate), `storeVersion` (the Durable Object's own env) and
-   `memberVersions` (each member's own /version THROUGH the plane's binding; bio-plane/test/d116-serving-builds.test.mjs
-   drives the plane half with a real DO on another build). This half drives the INSTALLER's reading of that answer.
+   `memberVersions` (each member's own /version THROUGH the plane's binding; instance-setup's
+   `bio-plane/test/m/instance-setup/reports.test.mjs` drives the plane half). This half drives the INSTALLER's reading of that answer.
    HOW A LIAR WOULD PASS HERE: an installer that read only `version` (today's main) — every arm below that names a
    lagging store or member serves a CORRECT `version`, so only a reader of the other two fields can name the lag.
    NEGATIVE CONTROL: see the D-116 entry at the head of this file's controls. */

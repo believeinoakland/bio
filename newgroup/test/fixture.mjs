@@ -157,13 +157,20 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
   accounts = [{ id: "A1", name: "Group Account" }], tokenFail = false, accountsFail = false, settingsFail = false,
   plan = "paid", probeDelete = "ok", r2 = "ok", pre = {}, subdomain = "grp", taken = [], subdomainPut = "ok",
   enableFail = false, refuseSelf = false, refuseAllPlane = false, refuseRePut = false, refuseUpdate = false,
-  rel, copy = {} } = {}) {
+  lookupFail = [], readBack = "raw", preBuckets = [], rel, copy = {} } = {}) {
   const signersBefore = [...ARMED_SIGNERS];
   if (rel === undefined) { rel = await release({ version: DEFAULT_VERSION, fleet: false }); armWith(SIGNER.line); }
   const realTimeout = globalThis.setTimeout;
   globalThis.setTimeout = (fn) => realTimeout(fn, 0);
   const acct = new Map(Object.entries(pre));
-  const buckets = new Set(r2 === "exists" ? ["bio-captures"] : []);
+  /* `r2: "exists"` an account already holding a bucket; `"late"` one whose bucket appears between the install's look (R32,
+     which reads it absent) and its creation (R7, which meets "already exists"): a race, the only way an install meets one. */
+  const buckets = new Set([...(r2 === "exists" || r2 === "late" ? ["bio-captures"] : []), ...preBuckets]);
+  /* What each script was last uploaded with, as the account would hand it back (R33's read-back). `readBack`: "raw" (the
+     module itself), "multipart" (the module as the `index.mjs` part), "differ" (other bytes, every time), "differ-once"
+     (other bytes on the first read only), "fail" (the read refused). */
+  const sources = new Map();
+  const reads = [];
   const refused = [], planePuts = [], enabled = new Set();
   let prefix = subdomain;
   const verOf = (b) => (b || []).find((x) => x.name === "VERSION")?.text || null;
@@ -196,6 +203,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
     const kept = (acct.get(name) || []).filter((b) => (meta.keep_bindings || []).includes(b.type)
       && !explicit.some((x) => x.name === b.name));
     acct.set(name, [...explicit, ...kept]);
+    sources.set(name, await init.body.get("index.mjs").text());
     if (name === slug) planePuts.push({ meta, bindings: acct.get(slug), source: await init.body.get("index.mjs").text(), form: init.body });
     return cfok({ id: name });
   };
@@ -221,10 +229,28 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       acct.delete("bio-plan-probe"); return cfok({});
     } },
     { m: (u, mth) => /\/workers\/scripts\/[^/]+\/settings$/.test(u) && mth === "GET", f: (u) => {
-      if (settingsFail) return cferr("upstream trouble", 500);
+      if (settingsFail || lookupFail.includes(u.split("/workers/scripts/")[1].split("/")[0])) return cferr("upstream trouble", 500);
       return acct.has(u.split("/workers/scripts/")[1].split("/")[0]) ? cfok({}) : cferr("not found", 404);
     } },
     { m: (u, mth) => /\/workers\/scripts\/[^/]+$/.test(u) && mth === "PUT", f: putScript },
+    { m: (u, mth) => /\/workers\/scripts\/[^/]+$/.test(u) && mth === "GET", f: (u) => {
+      const name = u.split("/workers/scripts/")[1];
+      reads.push(name);
+      if (!sources.has(name)) return cferr("not found", 404);
+      if (readBack === "fail") return cferr("upstream trouble", 500);
+      const body = readBack === "differ" || (readBack === "differ-once" && reads.filter((n) => n === name).length === 1)
+        ? sources.get(name) + "\n/* altered */" : sources.get(name);
+      if (readBack !== "multipart") return new Response(body, { headers: { "content-type": "application/javascript+module" } });
+      const B = "fakeboundary7";
+      return new Response(`--${B}\r\ncontent-disposition: form-data; name="metadata"\r\n\r\n{}\r\n`
+        + `--${B}\r\ncontent-disposition: form-data; name="index.mjs"; filename="index.mjs"\r\ncontent-type: application/javascript+module\r\n\r\n${body}\r\n--${B}--\r\n`,
+        { headers: { "content-type": `multipart/form-data; boundary=${B}` } });
+    } },
+    { m: (u, mth) => /\/r2\/buckets\/[^/]+$/.test(u) && mth === "GET", f: (u) => {
+      const name = u.split("/r2/buckets/")[1];
+      if (lookupFail.includes(name)) return cferr("upstream trouble", 500);
+      return buckets.has(name) && r2 !== "late" ? cfok({ name }) : cferr("The specified bucket does not exist.", 404, 10006);
+    } },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: async (u, init) => {
       const { name } = JSON.parse(init.body);
       if (r2 === "refused") return cferr("Please enable R2 by adding a payment method", 403);
@@ -267,7 +293,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
   let out;
   try { out = await callback(`code=GOODCODE&state=${st}`, ck); }
   finally { globalThis.setTimeout = realTimeout; globalThis.fetch = realFetch; armWith(...signersBefore); }
-  return { ...out, calls, acct, buckets, refused, planePuts, enabled, prefix: () => prefix, membersOf };
+  return { ...out, calls, acct, buckets, refused, planePuts, enabled, prefix: () => prefix, membersOf, reads };
 }
 
 /* The binding a plane PUT carried, by name. */
