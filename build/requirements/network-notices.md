@@ -110,6 +110,7 @@ Terms.
   - For each sealed week of the case's project, it publishes the leaves for acts on bundles that the edition publishes (`publication.caseCitedParts`, its R41, and the edition's members). Each leaf comes with its salt, its Merkle path to the project seal and on to the week root, and the timestamp token.
   - Nothing else of any week is revealed.
   - An opening is idempotent per (case, edition, week).
+  - An edition whose case document is committed (`publication` R40) but which is not yet published whole (its R53) is opened by no call: the call answers `NO_PUBLISHED_EDITION` and keeps the request, and the scheduled `working-on-attest` tick opens it once the edition is published whole, so nothing about an unpublished member is revealed (R16). A call for an edition with no committed case document keeps nothing *(not yet met: T23: K1154)*.
   - A `published` attestation (R12) follows.
 - **R18** `verifyOpening(opening)` is pure. It answers whether the leaves hash to the sealed root and whether the token is bound to that root (`signatures.parseTimestampResponse`). A stranger, or this module's own tests, can check an opening without this instance.
 
