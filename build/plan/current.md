@@ -4,7 +4,7 @@
 
 **Jobs** · 
 
-**Opened** 2026-10-02 ~23:10 UTC by BOB #103 from `main` @ 09fddd6535 (T26 closed, K1249; Bob's permission edits, K1261), from T26's `next.md` (K1262). **Bob's weekly meter** · 72% after T26's close (K1250); asked again at the opening.
+**Opened** 2026-10-02 ~22:30 UTC by BOB #103 from `main` @ 09fddd6535 (T26 closed, K1249; Bob's permission edits, K1261), from T26's `next.md` (K1262). **Bob's weekly meter** · 72% after T26's close (K1250); asked again at the opening.
 
 ## Legacy census (§5.2 (2))
 
