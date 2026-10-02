@@ -4,6 +4,8 @@ import assert from "node:assert/strict";
 import { seeded, V, SECRET, OTHER_SECRET, T0 } from "./fixture.mjs";
 import { SOURCES_CHECKS, SECRET_NOT_RECOGNISED_ANSWER, CONSENT_STATEMENT, WITHDRAWAL_STATEMENT } from "../../../src/sources/index.mjs";
 
+const KNOCK_WINDOW = 10 * 60 * 1000;
+
 test("R11 a source proves who they are by presenting their knocker secret and consents to, or withdraws from, one entry for one audience, as R7 records a consent", async () => {
   const w = seeded();
   const { sourceId } = await w.pulled({ secret: SECRET });
@@ -51,11 +53,12 @@ test("R11 SECRET_NOT_RECOGNISED is answered identically for every failure: a wro
     [{ audience: "member" }, "lower than the public consent that stands"],
     [{ withdraw: "yes" }, "a malformed withdraw flag"],
   ]) {
+    w.tick(KNOCK_WINDOW);   // one attempt per window: capture's instance limit (its R31) never answers in its place
     const r = await w.s.consentBySecret({ ...good, ...bad, sourceAddress: `s-${answers.length}` });
     assert.equal(r.reason, "SECRET_NOT_RECOGNISED", why);
     answers.push(JSON.stringify(r));
   }
-  for (const args of [undefined, null, {}, "text"]) answers.push(JSON.stringify(await w.s.consentBySecret(args)));
+  for (const args of [undefined, null, {}, "text"]) { w.tick(KNOCK_WINDOW); answers.push(JSON.stringify(await w.s.consentBySecret(args))); }
   assert.equal(new Set(answers).size, 1, "byte for byte the same answer");
   const r = JSON.parse(answers[0]);
   assert.equal(r.check, SOURCES_CHECKS.SECRET_NOT_RECOGNISED.check);
