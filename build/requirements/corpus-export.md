@@ -26,7 +26,7 @@ A group that cannot leave can be held. This module exports the working corpus ve
 ### Uses
 
 - `record-grammar`: `createSha256`, for R3's re-derivation.
-- `record-core`: `recordOf(ctx)` and `declarePurge` (R4); the `bundles`, `files`, `history` and `manifest` read contracts (R1). *(not yet provided: T8's record-core entry)*
+- `record-core`: `recordOf(ctx)` and `declarePurge` (R4); the `bundles`, `files`, `history` and `manifest` read contracts (R1). (record-core R37; `register.bytes`, provenance R48)
 - `provenance`: the `register` read contract (R1).
 - `connections`: the `refs` read (R1).
 
