@@ -1,6 +1,6 @@
 /* corpus-export — the verified export (R1) and its append-only log (R2), Membership v2 §8. Moved from
-   `test/m/publication/export.test.mjs` (R18 → R1, R19 → R2) with every assertion; this module has no op, so its
-   methods are driven directly. Driven at the module's interface. */
+   `test/m/publication/export.test.mjs` (R18 → R1, R19 → R2) with every assertion; its methods are driven directly (its
+   route arms, R6, are `ops.test.mjs`'s). Driven at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, NOW } from "./fixture.mjs";
