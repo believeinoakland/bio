@@ -1,6 +1,6 @@
 # capture (T22)
 
-**Status** · session_01WP7uNR1V8GPqjyrKhjKhiS · depth 2 · WORKING · handled B2
+**Status** · session_01WP7uNR1V8GPqjyrKhjKhiS · depth 2 · RUNNING until 2026-10-02T00:51:26Z (node --test bio-plane/test/m (job branch and tranche base)) · handled B2
 
 ## J1 · QUESTION
 
