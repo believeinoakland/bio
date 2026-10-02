@@ -99,7 +99,7 @@ Terms.
   - `posted`, issued with each revision (R5);
   - `monthly`, issued on the first day (UTC) of each month while the notice is open;
   - `published`, issued when a case edition of the project is published (R17);
-  - `closed`, issued when the project reaches stage `closed` while the notice is open (see "Open for Bob" 1);
+  - `closed`, issued when the project reaches stage `closed` while the notice is open (signed by the copy's key at once; an owner may still add a stop with a handoff note; Bob, K1100);
   - `lapsed`, issued when a notice has been `Dormant` at two consecutive `monthly` attestations with no revision between them. The lapse also goes into the group's record.
 
   A stopped, closed or lapsed notice takes no further `monthly` attestation. It stays served and is never deleted.
@@ -245,8 +245,8 @@ Terms.
 }
 ```
 
-- **Position:** directly after `project-stage` (index 57 on `tranche/T22`) and before `ratification`, so it becomes index 58 and every later entry moves down one. Layer 8 becomes `case-grammar, publication, public-read, project-stage, network-notices, ratification, case-authoring, review`.
-- **Every use is earlier**, by index on `tranche/T22`: record-grammar 0, signatures 4, record-core 20, membership 21, credentials 22, promotion 23, host-governor 24, provenance 25, capture 28, publication 55, public-read 56, project-stage 57.
+- **Position:** directly after `project-stage` (index 58 on `tranche/T22`) and before `ratification`, so it becomes index 59 and every later entry moves down one. Layer 8 becomes `case-grammar, corpus-export, publication, public-read, project-stage, network-notices, ratification, case-authoring, review`.
+- **Every use is earlier**, by index on `tranche/T22`: record-grammar 0, signatures 4, record-core 20, membership 21, credentials 22, promotion 23, host-governor 24, provenance 25, capture 28, publication 56, public-read 57, project-stage 58.
 - **Why after `project-stage`:** closing and the closed test need `projectStage` (R1, R12). K1019's "after public-read" still holds.
 - **Why before `ratification` and `case-authoring`:** they call `openSeals` and `noticeReferenceOf` (P4).
 - **Edges added to later modules:** `network-notices` joins the `uses` of `ratification`, `case-authoring`, `scheduler`, `queue-producers`, `control-plane` and `plane`.
@@ -254,7 +254,7 @@ Terms.
 
 ## Open for Bob (meaning; one line, with a recommendation)
 
-1. **Who signs a notice's closing.** A notice must say when its project closes (§5B "Ending"), and no owner may be present to sign. **Recommended:** the copy's key signs a `closed` attestation at once, and an owner may still add a stop with a handoff note. This extends K1031 (2): the copy signs the facts it computes, and the owner signs what the group says.
+1. **Who signs a notice's closing.** *Decided by Bob, 2026-10-02, as recommended (K1100).* A notice must say when its project closes (§5B "Ending"), and no owner may be present to sign. **Ruling:** the copy's key signs a `closed` attestation at once, and an owner may still add a stop with a handoff note. This extends K1031 (2): the copy signs the facts it computes, and the owner signs what the group says.
 
 Decided by BOB (P17; for the rulings, reported to Bob):
 - the module's id, position and `uses`;
