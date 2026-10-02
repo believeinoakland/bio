@@ -50,6 +50,9 @@ Terms. An **op** is a name the instance answers. An **op spec** is `{classes, ma
 
   R6 holds over them.
 
+**The spec of T24's op** (N490, DEC-115, K1134)
+- **R11** `OPS` holds a spec for each op T24 adds, in `SESSION_OPS.member` and `SESSION_OPS.admin`: `optionstartpreview` (`action-plans` R37; it writes nothing), a read, classes `admin`, `member`, `probe`, `author` and `viewer` stamped; R6 holds over it. *(not yet met: T24)*
+
 ## Private
 
 ### Uses

@@ -23,6 +23,7 @@
 - **`BIO_Action_v0_1.md` is canon (whole):** place it at `docs/architecture/`, list it in `requirements/README.md` (narrowing Case Making's canon part as its §6 says), add System Design §3 row 16, and apply its §6 canon edits.
 - **The requirement drafts** (`drafts/action-plans.md`, `drafts/deltas.md`) are "correct and complete enough" (Bob); staged under K591.
 - **UX:** the plan-page view (`views/plan-page.html`) is approved; `UX-ANSWERS.md` is approved: OQ-8, OQ-9, OQ-25 answered, and OQ-14 answered by the earlier rulings DEC-10, DEC-69 and DEC-70, which the drafts now cite instead of restating.
+- **UX (Bob, 2026-10-01, DEC-115):** `start-and-send.html` binds the redesign's content, step order and wording, as the plan page does: the refusal shown before anything runs, the reason asked in place, approving kept separate from recording the sending. In `surfaces.html`, the Tier 2 filing draft and the counsel packet (Tier 3) panels bind likewise. `matter-page.html`, and the standards list and the queue items of `surfaces.html`, are examples the designer may rework within the requirements. Look and layout stay Design's. Where a bound sketch predates a later ruling, the ruling wins: "Matter" for the start sketch's "Subject 1" and "subject 3" (DEC-114); every approved template version offered, the latest by default, and a filing written without one (K921, K924; the Tier 2 panel's "from the profile's template").
 
 ## 2026-09-30 · Bob's words on reminders and nagging (recorded at K615's request)
 
