@@ -57,3 +57,38 @@ B3 (K1170) is applied in this push.
 - **Size.** `src/control-plane/` is 3,525 lines.
 
 I am waiting for your CHANGE on op-declarations' merge.
+
+## Completion
+
+**Entries applied** (B1, `build/plan/current.md` T23 L11; B2 K1168, B3 K1170, B4 K1171).
+- **R36 met (N499, K1117).** Capture's own merge did not clear red 9, because the door still called `pullKnock`. A reasoned `pulled` resolve now goes through capture's `inboxResolve` with `at` and `within` (`pull.mjs`). The reason is recorded on the knock's row inside the pull, one act with its promotion. Capture's refusals come first and in its order. A direct `op=inboxpull` stays `pullKnock`'s and takes no reason. `inbox-door.test.mjs`:81 is green, with its neighbours.
+- **R45 met.**
+  - The door stamps T23's ops by op-declarations' lists, after deleting every stamp the caller sent:
+    - `viewer` on `WHAT_CHANGED_PROPOSAL_ACTIONS`, `WHAT_CHANGED_READS`, `NETWORK_NOTICES_ACTIONS` and `NETWORK_NOTICES_READS`. `escalationreasondraft` and `sweeps` already take it through `ACTION_LAYER_READS`.
+    - The proposer's label on `whatchangedpropose`, as `author` (case-authoring reads it as `proposedBy`) and as `proposedBy`.
+    - The positional `by` on `NETWORK_NOTICES_BY`.
+  - Each op reaches its owner's store route of its name through the general forward.
+  - The notice ops admit only a member's session.
+  - network-notices' public reads are reached credential-free as `op=publicread&name=<name>` through the public hook. Their own names go to the public hook, never to a store route (B4, K1166 (2)). B3's by-name arm (8c878c6778) was reverted on B4.
+- **R22.** `CHECK_FAMILIES` reads network-notices' `NETWORK_NOTICE_CHECKS` (C-127), in module order. `families.test.mjs`:47 is green.
+- **R27 (my improvement).** `notices` names its project, so a caller who sees the project only at existence is answered C-70.1, as REC-196 rules. `whatchangeddrafts` and `directorysubmission` are classified as naming a case.
+
+**Deferred.** None.
+
+**Found in other modules.**
+- network-notices' `noticeprepare` answers NO_SUCH_PROJECT at existence. BOB routed it to N509.
+- The plane bundle is stale from my change under `src/control-plane/` (red 12). I regenerated nothing.
+
+**Tests** (in `bio-plane/`):
+- New `r45-routes.test.mjs`, 6 tests named R45 or R27, each with negative controls. Each stamping list removed turns a test red.
+- `families.test.mjs` gains the C-127 test.
+- `inbox-door.test.mjs`:81 re-titled, with a negative control.
+- `declarations.test.mjs` is unchanged against the tranche.
+
+**Runs and checks**, after merging `tranche/T23` (op-declarations and queue-producers merged):
+- `node --test test/m/control-plane/`: 123 tests, 123 pass, 0 fail.
+- Whole `test/m`: 5204 tests, 5173 pass, 20 fail, 11 todo. All 20 are queue's and accepted: the `test/m/queue/` stand-ins (red 15) and `catalogue.test.mjs` R1 and R5 (red 13). Plane `worker.test.mjs` is green.
+- The users you named are green: `plane/`, `capture/`, `sources/` and `instance-setup/page.test.mjs`, 187 tests, 0 fail.
+- Checks: format, 87 modules, 0 failures; architecture, 36 files, 0 failures; coverage, 29 of 29, 0 failures; ownership, 0 failures.
+
+Size (session_01FGx9TWWD64HqdD22yjYnDN): test runs 24, module lines 3517
