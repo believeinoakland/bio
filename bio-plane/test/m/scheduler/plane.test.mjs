@@ -202,3 +202,58 @@ test("R12: a run waiting on a request that reaches expired is woken on the alarm
   assert.equal(row.state, "expired");
   assert.equal(typeof row.run_woken_at, "string");
 });
+
+test("R9: in the plane, a promotion that ratifies a sweep on an idle instance leaves the alarm armed at the sweep's wake (monitoring R56, promotion R45); the same sweep unratified arms nothing for it", async () => {
+  const obj = await store();
+  const C = "2026-09-01T00:00:00Z";
+  /* an ordinary member once the group has its two administrators (the earlier tests' admins); alone, an administrator */
+  const memberAdd = (role) => POST("op=memberadd&token=adm-sch",
+    { memberId: "swen", cover: "cover for swen", role, capabilities: ["contribute", "publish", "create_projects"] });
+  let add = await memberAdd("member");
+  if (add.reason === "ADMINS_FIRST") add = await memberAdd("admin");
+  const en = await POST("op=enroll", { invite: add.invite, handle: "swen", password: "swen-passphrase-1" });
+  assert.equal(en.ok, true, JSON.stringify({ add, en }).slice(0, 300));
+  const SWEN = (await POST("op=login", { role: "member:swen", password: "swen-passphrase-1" })).token;
+  const pmd = ["---", "object_type: project", 'title: "Sweep project"', "current_state: forming", `created: "${C}"`,
+    `last_updated: "${C}"`, 'objective: "Establish what the council publishes."', "references: []", "required_strength:",
+    "  capture: B", "  connection: C", "---", "", "## Summary", "", "A project.", "", "## Session Log", ""].join("\n");
+  const proj = await POST("op=promote&token=adm-sch", { base: null, snapKey: "sched-sweep-proj",
+    files: [{ path: "bundle.md", text: pmd, bytes: pmd.length, sha256: sha(pmd) }], register: [],
+    meta: { object_type: "project", group: "a-group", current_state: "forming", created: C, last_updated: C } });
+  assert.equal(proj.ok, true, JSON.stringify(proj).slice(0, 300));
+  const own = await (await obj.fetch("http://x/projectclaimowner", { method: "POST",
+    body: JSON.stringify({ projectId: proj.bundleId, memberId: "swen" }) })).json();
+  assert.equal((own.result ?? own).ok, true, JSON.stringify(own));
+  const LIST = "INFO-2026-0952-sched-sweep";
+  const md = ["---", `id: ${LIST}`, "object_type: information", "schema: information@2", `title: "Council listing"`,
+    "current_state: collected", "prior_state: null", `created: ${C}`, `last_updated: ${C}`, "produced_by:", "  mode: assisted",
+    "  capability_tier: session", "references: []", "state_history: []", "annotations_open: 0",
+    "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []", "criticality: supporting",
+    "source_status: unchanged", "source:", "  locator: https://records.example.org/council/list", "  authority: Town Clerk",
+    `  retrieved: ${C}`, "monitoring:", "  enabled: false", "  last_checked: null", `project: ${proj.bundleId}`, "---", "",
+    "## Summary", "", "A listing.", "", "## Provenance Notes", "", "## Session Log", "", "### Session 1", "", "Captured.", "",
+    "## Review Notes", ""].join("\n");
+  const sweep = (ratified) => ({ id: "minutes", title: "Council minutes", ratified, sources: ["https://records.example.org/council"],
+    seeds: ["https://records.example.org/council/index.html"], match: { terms: ["minutes"] }, cadence: "weekly",
+    budget: { per_run: 10, backlog: 20 } });
+  let base = null, n = 0;
+  const write = async (ratified) => {
+    const g = JSON.stringify({ sweeps: [sweep(ratified)] });
+    const r = await POST(`op=promote&token=${SWEN}`, { bundleId: LIST, base, snapKey: `sched-sweep-${++n}`, register: [],
+      files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
+              { path: "data/gathering.json", text: g, bytes: g.length, sha256: sha(g) }],
+      meta: { object_type: "information", group: "a-group", current_state: "collected", created: C, last_updated: C } });
+    assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+    base = r.bundleSha;
+  };
+  /* idle, as far as the sweep goes: whatever earlier tests left wants no wake sooner than a minute from now */
+  await obj.onAlarm(Date.now());
+  const before = await obj.schedAlarmAt();
+  assert.ok(before === null || before > Date.now() + 60_000, `nothing due within a minute: ${before}`);
+  await write(false);
+  assert.equal(await obj.schedAlarmAt(), before, "an unratified sweep's promotion arms nothing for it");
+  const t0 = Date.now();
+  await write(true);
+  const at = await obj.schedAlarmAt();
+  assert.ok(at !== null && at >= t0 + 1000 && at <= Date.now() + 1000, `armed at the sweep's wake, now + 1 s while due: ${at} (t0 ${t0})`);
+});

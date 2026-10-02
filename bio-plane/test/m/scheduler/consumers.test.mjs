@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { SCHEDULER_ORDER, SCHEDULER_KEYS, RANKED, rankBy, Scheduler } from "../../../src/scheduler/index.mjs";
 import { world, storage, writes, NOW } from "./fixture.mjs";
 import { world as nnWorld, seeded, post, monday, V, WEEK, DAY } from "../network-notices/fixture.mjs";
+import { world as monWorld, infoMd, sweepDef, sha as monSha } from "../monitoring/fixture.mjs";
 
 const NEW = ["gathering-sweep", "working-on-seal", "working-on-attest"];
 const OWNED = { "gathering-sweep": ["monitoring.sweepDue", "monitoring.sweepWake", "monitoring.sweepTick"],
@@ -195,4 +196,85 @@ test("R5: against the real network-notices, working-on-attest runs its owner's a
   assert.equal(w.rows(`SELECT 1 FROM nn_attestations WHERE kind='monthly'`).length, 1);
   await s.onAlarm(month + 1000);
   assert.equal(w.rows(`SELECT 1 FROM nn_attestations WHERE kind='monthly'`).length, 1, "issued once");
+});
+
+/* ---- R5, R9, R10 against the real monitoring (its own test world, `test/m/monitoring/fixture.mjs`) ---- */
+
+const PROJ = "PROJ-2026-0951-sched";
+const SITE = "https://records.example.org/council";
+const LISTS = ["INFO-2026-0951-a", "INFO-2026-0951-b"];
+
+/** A monitoring world whose capture answers every fetch refused (a seed that fails is recorded, the run goes on,
+ *  monitoring R57), and a writer of `data/gathering.json` on a list bundle in PROJ, by its owner alice. */
+function sweepMonitoring() {
+  const w = monWorld();
+  w.inProject(PROJ, { owner: "alice" });
+  const fetched = [];
+  w.capture.acquire = async (body, opts) => {
+    fetched.push(opts.captureRequest.origin.matched_sweep);
+    return { status: 502, body: { ok: false, reason: "SOURCE_REFUSED", status: 503 } };
+  };
+  const write = (id, sweeps) => {
+    const t = JSON.stringify({ sweeps });
+    const r = w.promote(id, infoMd(id, `${SITE}/list`, { enabled: false, lines: [`project: ${PROJ}`] }),
+      { files: [{ path: "data/gathering.json", text: t, bytes: Buffer.byteLength(t), sha256: monSha(t) }], author: "member:alice" });
+    assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  };
+  return { w, fetched, write };
+}
+
+test("R5, R10: gathering-sweep runs the real monitoring's sweepTick on the alarm its sweepDue says, given the rank: the sweep whose bundle serves an open gap runs first; without the rank, R56's order", async () => {
+  const { w, fetched, write } = sweepMonitoring();
+  for (const id of LISTS) write(id, [sweepDef()]);
+  const intent = { servesOf: (named) => ({ ok: true, truncated: false,
+    serves: named.bundles.map((id) => ({ kind: "bundle", id, gaps: id === LISTS[1] ? ["objective-open-gap"] : [], aspirations: [] })) }) };
+  const s = new Scheduler({ storage: storage(), owners: { monitoring: () => w.m, intent: () => intent } });
+  const now = w.clock.ms;
+  assert.equal(w.m.sweepDue(now), now, "both never run: due");
+  assert.equal(await s.arm(now), w.m.sweepWake(now), "armed at monitoring R56's wake");
+  const r = await s.onAlarm(now);
+  assert.deepEqual(r.gatheringsweep.ran.map((x) => x.sweep), [`${LISTS[1]}#minutes`, `${LISTS[0]}#minutes`],
+    `the rank's order: ${JSON.stringify(r.gatheringsweep).slice(0, 300)}`);
+  assert.equal(r.gatheringsweep.due, 2);
+  assert.deepEqual(fetched, [`${LISTS[1]}#minutes`, `${LISTS[0]}#minutes`], "each seed fetched under its sweep, in that order");
+  /* ran: neither is due again until its cadence passes, so the alarm is at their next run */
+  assert.equal(w.m.sweepDue(now + 1000), null);
+  assert.equal(r.nextAt, w.m.sweepWake(now), "the reconcile weighs the sweep's next run");
+  /* negative control, the same sweeps in a fresh world: monitoring's own order (by full name) when no rank is given */
+  const bare = sweepMonitoring();
+  for (const id of LISTS) bare.write(id, [sweepDef()]);
+  const t = await bare.w.m.sweepTick(bare.w.clock.ms);
+  assert.deepEqual(t.ran.map((x) => x.sweep), [`${LISTS[0]}#minutes`, `${LISTS[1]}#minutes`]);
+});
+
+test("R3: a gathering sweep whose real owner throws is answered {error} under gatheringsweep, and the other consumers still tick", async () => {
+  const { w, write } = sweepMonitoring();
+  write(LISTS[0], [sweepDef()]);
+  w.m.sweepTick = async () => { throw new Error("the sweep broke"); };
+  const s = new Scheduler({ storage: storage(), owners: { monitoring: () => w.m } });
+  const r = await s.onAlarm(w.clock.ms);
+  assert.deepEqual(r.gatheringsweep, { error: "the sweep broke" });
+  assert.equal(typeof r.monitor, "object", "the archive monitor, after it in no order but always due, still ticked");
+});
+
+test("R9: through the real promotion's notice, a promotion that ratifies a sweep on an idle instance leaves the alarm armed at the sweep's wake; the unratified sweep's promotion arms nothing", async () => {
+  const { w, write } = sweepMonitoring();
+  const st = storage();
+  /* monitoring's real sweep services; its other arms idle and unconfigured, so only the sweep can ask for the arm (its
+     other wakes reach modules whose tables monitoring's test world does not create) */
+  const m = { configured: () => false, archiveDue: () => null, archiveWake: () => null, cadenceDue: () => null,
+              cadenceWake: () => null, deadlineRecheckDue: () => null, deadlineRecheckWake: () => null,
+              sweepDue: (now) => w.m.sweepDue(now), sweepWake: (now) => w.m.sweepWake(now), sweepTick: (now, rank) => w.m.sweepTick(now, rank) };
+  const s = new Scheduler({ storage: st, owners: { monitoring: () => m } });
+  s.listenTo({ promotion: w.promotion });
+  assert.equal(await s.arm(Date.now()), null, "idle: no alarm");
+  write(LISTS[0], [sweepDef({ ratified: false })]);
+  await new Promise((ok) => setTimeout(ok, 0));
+  assert.equal(st.alarm, null, "an unratified sweep: monitoring answers it no wake, so nothing is armed for it");
+  const before = Date.now();
+  write(LISTS[0], [sweepDef({ ratified: true })]);
+  await new Promise((ok) => setTimeout(ok, 0));
+  const after = Date.now();
+  assert.ok(st.alarm !== null && st.alarm >= before + 1000 && st.alarm <= after + 1000,
+    `armed at the sweep's wake, now + 1 s while it is due (monitoring R56): ${st.alarm}`);
 });
