@@ -826,10 +826,10 @@ export const RUNGS = {
   caseratify:         "attested",
   /* N364 (DEC-81 item 3): the two late acts on a capture whose co-attestation failed, each `attested` for `attest`'s own
      reason — an authority the group does not hold alone. `reattest` asks a timestamp authority for a fresh token over
-     the digest (capture R68, through provenance's `attest`; it proves the bytes existed by now, not at capture), and
+     the digest (capture R68, through attestation's `attest`, N512; it proves the bytes existed by now, not at capture), and
      `captureaccount` is refused unless a registered signer's key of the capturing member verifies the account
      (capture R69: `SIG_<reason>` otherwise). Neither is undone: each appends. */
-  reattest:           "attested",   // capture R68 · a timestamp authority's token (provenance.attest)
+  reattest:           "attested",   // capture R68 · a timestamp authority's token (attestation.attest)
   captureaccount:     "attested",   // capture R69 · SIG_* unless the capturing member's attesting key verifies it
   /* R32 (DEC-111, K1100): a working-on notice is published only by an owner's own signature over its revision
      (network-notices R4, R24), `caseratify`'s reason — a key the group does not hold by having decided something. A

@@ -973,6 +973,49 @@ test("R32 R2 R3 R7 R12: T23's ops — whatchangedpropose `undetermined` as templ
   assert.deepEqual([left.unpublished, left.unranked], [["noticeunnamed"], ["noticeunnamed"]]);
 });
 
+/* N512 (T25): the provenance split. `provenancechain`, `provenanceroute` and the read `provenanceroutes` left
+   provenance's op map (its R53) for provenance-routes' (its R9), and `op=attest` is answered by attestation's door arm
+   (`attestOp`, attestation R1–R3) with the code it reaches. No grade or reason moves with them (provenance-routes' and
+   attestation's requirements change no meaning): the two route writes keep `substrate` and their `document-directed:`
+   reasons, `attest` keeps `attested`, its capture-directed reason and its CAPTURE_ACTS row with the fence, and the
+   read carries no `NEEDS` row (op-declarations, not in this module's uses, so the rows are written out here as its
+   table carries them), so it is named nowhere (R12). */
+import { provenanceRouteOps } from "../../../src/provenance-routes/index.mjs";
+import { attestOp } from "../../../src/attestation/index.mjs";
+test("R1 R2 R3 R5 R7 R12 (N512): provenance-routes' three ops, keyed to its op map, and attestation's `attest` keep "
+   + "their grades and reasons — the two route writes `substrate` with `document-directed:` reasons, the read named "
+   + "nowhere, `attest` `attested` and capture-directed with the fence — and with the control plane's rows nothing is "
+   + "unaccounted; a misgraded or unnamed op is seen", () => {
+  const routeOps = Object.keys(provenanceRouteOps({}, new URL("http://x/"), {})).sort();
+  assert.deepEqual(routeOps, ["provenancechain", "provenanceroute", "provenanceroutes"]);
+  assert.equal(typeof attestOp, "function");
+  const WRITES = ["provenancechain", "provenanceroute"];
+  for (const op of WRITES) {
+    assert.equal(RUNG_ABSENT[op]?.ground, "substrate", op);
+    assert.ok(!Object.hasOwn(RUNGS, op), op);
+    assert.ok(NON_ACTS[op]?.startsWith("document-directed: ") && NON_ACTS[op].length > 60, op);
+    assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => a.id === op), op);
+  }
+  for (const t of [NON_ACTS, RUNGS, RUNG_ABSENT]) assert.ok(!Object.hasOwn(t, "provenanceroutes"));
+  assert.equal(RUNGS.attest, "attested");
+  assert.ok(!Object.hasOwn(RUNG_ABSENT, "attest"));
+  assert.ok(NON_ACTS.attest.startsWith("capture-directed:"));
+  assert.deepEqual(CAPTURE_ACTS.find((a) => a.id === "attest"), { id: "attest", label: "Co-attest this capture", prompt: A.ATTEST_FENCE });
+  assert.ok(!ACTS.some((a) => a.id === "attest"));
+  /* the control plane's rows: the two writes and `attest` mutating and gated, the read neither */
+  const table = [...WRITES, "attest"].map((op) => ({ op, mutating: true, gated: true }))
+    .concat([{ op: "provenanceroutes", mutating: false, gated: false }]);
+  const r = A.unaccounted(table);
+  assert.deepEqual([r.unpublished, r.unranked], [[], []]);
+  assert.deepEqual(r.stale.filter((op) => [...routeOps, "attest"].includes(op)), []);
+  /* negative controls: carried gated, the read reads unpublished; carried by no row, each write reads stale; an op
+     the catalogue leaves out reads unpublished and unranked */
+  assert.deepEqual(A.unaccounted([{ op: "provenanceroutes", mutating: false, gated: true }]).unpublished, ["provenanceroutes"]);
+  assert.deepEqual([...WRITES, "attest"].filter((op) => !A.unaccounted([]).stale.includes(op)), []);
+  const left = A.unaccounted([...table, { op: "provenanceunnamed", mutating: true, gated: true }]);
+  assert.deepEqual([left.unpublished, left.unranked], [["provenanceunnamed"], ["provenanceunnamed"]]);
+});
+
 /* R19 (DEC-88, K1025): the justification family gains each newly reasoned op's code, read from the owner's own checks
    table where it keeps one, and the four words-as-reason codes. */
 import * as provenanceChecks from "../../../src/provenance/checks.mjs";
