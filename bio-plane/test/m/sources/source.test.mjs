@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { seeded, V, MACHINE, SECRET, OTHER_SECRET, sha } from "./fixture.mjs";
 import { SOURCES_CHECKS } from "../../../src/sources/index.mjs";
 
+const KNOCK_WINDOW = 10 * 60 * 1000;
 const codeOf = (r) => (r && r.ok === false ? r.reason : "ok");
 
 test("R1 a source exists for each pulled knock: one per pseudonym, one per knock sent without a secret; sourceOf answers the capture's own source verbatim and the source's current history beside it", async () => {
@@ -49,8 +50,9 @@ test("R1 a source exists for each pulled knock: one per pseudonym, one per knock
   assert.equal(both.source.receipt.knock_id, k1.knock_id);
   assert.equal(both.sourceId, a.sourceId, "the earliest knock's source (the pseudonym's)");
   assert.deepEqual(both.sources.map((x) => x.source.receipt.knock_id), [k1.knock_id, k2.knock_id]);
-  /* one keyed read of capture's per read (its R72), never a walk of the inbox */
-  for (let i = 0; i < 50; i++) await w.pull(await w.knock());
+  /* one keyed read of capture's per read (its R72), never a walk of the inbox; one knock per 10-minute window, so
+     capture's instance limit (its R31: 10 in any 10 minutes) admits every one */
+  for (let i = 0; i < 50; i++) { w.tick(KNOCK_WINDOW); await w.pull(await w.knock()); }
   const reads = w.spy.reads;
   assert.equal(w.s.sourceOf({ captureSha: c2.row.sha256, viewer: V("bob") }).ok, true);
   assert.equal(w.spy.reads, reads + 1);
@@ -60,7 +62,7 @@ test("R1 refusals: NO_SUCH_SOURCE for a capture that is not a pulled knock, a kn
   const w = seeded();
   const fresh = await w.knock({ secret: SECRET });
   const discarded = await w.knock();
-  assert.equal(w.cap.inboxResolve({ knockId: discarded.knock_id, status: "discarded", by: "bob" }).ok, true);
+  assert.equal(w.cap.inboxResolve({ knockId: discarded.knock_id, status: "discarded", by: "bob", reason: "not material for the group" }).ok, true);
   const row = await w.knock({ secret: OTHER_SECRET });
   await w.pull(row);
   const before = w.snapshot();
