@@ -48,3 +48,7 @@ Plane bundle staleness: accepted red 12 (B2); regenerated nothing.
 **Checks, re-run:** format 0 failures; architecture 0 failures; coverage 57 of 57, 0 failures; ownership 7 files, 0 failures.
 
 Size (session_01B9EsuEN7XGFwL42svpWMSi): test runs 6, module lines 3253
+
+## J2 · COMPLETE · re B2
+
+B2 applied. Re-scan found four more old-process references in comments, re-worded as retired: contradiction.mjs:22 (kickoffs/SKILL.md), checks.mjs:47 and index.mjs:15 (old CLAUDE.md, now cited at docs/archive/CLAUDE-2026-09-26-old-process.md), gate-recorded.mjs:17 (SCHEDULER lane, past tense). Prompt bytes untouched (R2 green). contradiction + affordances: 247 pass, 0 fail, 7 todo; whole test/m: 5024 pass, 3 fail (accepted reds only: inbox-door:81, queue catalogue R1 :34, R5 :116). Checks all 0 failures (coverage 57/57, ownership 7 files). Bundle not regenerated (red 12). Record on job/T23/contradiction.
