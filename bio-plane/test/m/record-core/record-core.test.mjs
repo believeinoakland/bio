@@ -2692,15 +2692,15 @@ test("R75: recordOpaqueId never throws; a ledger it cannot read or write answers
   const broken = recordOf({ storage: { sql: { exec() { throw new Error("no"); } }, transactionSync: (f) => f() } });
   assert.doesNotThrow(() => { r = broken.transact(() => broken.recordOpaqueId("NOTE-2026-0002")); });
   opaqueRefusal(r, "OPAQUE_ID_SPENT", "NOTE-2026-0002");
-  /* a read that lost the row: the ledger's primary key refuses the INSERT, and the answer is spent, never a throw */
+  /* a ledger that reads but cannot be written: spent, never a throw, nothing recorded */
   const { s, rc } = fresh();
   rc.transact(() => rc.recordOpaqueId("NOTE-2026-0003"));
   const exec = s.sql.exec;
-  s.sql.exec = (q, ...a) => (/^SELECT 1 AS x FROM minted_ids/.test(q) ? [].values() : exec(q, ...a));
+  s.sql.exec = (q, ...a) => (/^INSERT/.test(q) ? (() => { throw new Error("SQLITE_FULL"); })() : exec(q, ...a));
   const before = dump(s);
-  assert.doesNotThrow(() => { r = rc.transact(() => rc.recordOpaqueId("NOTE-2026-0003")); });
+  assert.doesNotThrow(() => { r = rc.transact(() => rc.recordOpaqueId("NOTE-2026-0004")); });
   s.sql.exec = exec;
-  opaqueRefusal(r, "OPAQUE_ID_SPENT", "NOTE-2026-0003");
+  opaqueRefusal(r, "OPAQUE_ID_SPENT", "NOTE-2026-0004");
   assert.deepEqual(dump(s), before);
   /* hostile input */
   const hostile = new Proxy({}, { get() { throw new Error("get"); } });

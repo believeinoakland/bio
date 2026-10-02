@@ -449,8 +449,8 @@ export class RecordCore {
    *  `mintOpaqueId` never draws it and no purge forgets it (R6, R8). Refused, recording nothing: an id that is not a
    *  non-empty string (`OPAQUE_ID_MALFORMED`); one the ledger already holds, drawn, recorded or seeded (`OPAQUE_ID_SPENT`,
    *  naming it); a call outside any `transact` (`OPAQUE_ID_NO_TRANSACTION`), where nothing could take the record back.
-   *  FAIL CLOSED: a ledger that cannot be read, or an INSERT the ledger's primary key refuses, is answered as spent, so a
-   *  caller never uses an id the ledger has not taken. Never throws. */
+   *  FAIL CLOSED: an INSERT the ledger refuses, by its primary key or because it cannot be written, is answered as spent,
+   *  so a caller never uses an id the ledger has not taken. Never throws. */
   recordOpaqueId(id) {
     /* DEC-49 REGION is-opaque-id-refused */
     if (typeof id !== "string" || id === "")
@@ -460,12 +460,10 @@ export class RecordCore {
         + "the act that uses it, so a rollback takes it back, and no transaction is open. Nothing was recorded.", { id });
     const spent = () => rowRefusal("OPAQUE_ID_SPENT", `${id} is already in the opaque-id ledger, or the ledger could not `
       + "confirm it free; an id is recorded once and never handed out again. Nothing was recorded.", { id });
-    try {
-      if (this.#one(`SELECT 1 AS x FROM minted_ids WHERE id=?`, id)) return spent();
-      this.#sql.exec(`INSERT INTO minted_ids (id,recorded_at,source) VALUES (?,?,'chosen')`, id, new Date().toISOString());
-    } catch {
-      return spent();
-    }
+    /* One plain INSERT into the ledger's primary key decides it: a spent id is refused by the key itself, so no read
+       can be lost between asking and recording. */
+    try { this.#sql.exec(`INSERT INTO minted_ids (id,recorded_at,source) VALUES (?,?,'chosen')`, id, new Date().toISOString()); }
+    catch { return spent(); }
     /* END DEC-49 REGION is-opaque-id-refused */
     return { ok: true, id };
   }
