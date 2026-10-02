@@ -30,3 +30,7 @@ No requirement carries a `not yet met: T23` mark; none added. No provided servic
 - `ownership contradiction tranche/T23`: 4 files changed; 0 failures
 
 Size (session_01B9EsuEN7XGFwL42svpWMSi): test runs 3, module lines 3247
+
+## J1 · COMPLETE
+
+N497 applied (B1 items 1–3), plus one more of the kind found on re-scan: index.mjs:2572 named the route map 'the legacy store's op map'; it now names the plane's route map (plane/store.mjs:274), comment only. Provenance notes kept. Tests: test/m/contradiction 101 pass, 0 fail, 7 todo (K488, unchanged); test/m/affordances 146/146 green; whole test/m 5024 pass, 3 fail, exactly the accepted reds (control-plane inbox-door.test.mjs:81; queue catalogue.test.mjs R1 :34, R5 :116). Checks: format, architecture, coverage (57/57), ownership (4 files) all 0 failures. REPORT items in the record: (a) build/requirements/contradiction.md R21 still says 'legacy-store registering until then' (yours, same N469 kind); (b) bio-plane/dist/bio-plane.bundled.mjs is stale from my comment changes; regenerated nothing. Record: build/jobs/T23/contradiction.md on job/T23/contradiction @ 078c5342e3.
