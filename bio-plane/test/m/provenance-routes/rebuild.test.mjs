@@ -50,6 +50,7 @@ test("R2: the rebuild reports, refuses whole when any document is undetermined, 
   assert.deepEqual([h1.type, h1.groupId, h1.currentState, h1.priorState, h1.title],
                    [head0.type, head0.groupId, head0.currentState, head0.priorState, head0.title]);
   assert.equal(h1.rowVersion, head0.rowVersion + 1, "promoted once");
+  assert.equal(applied.sha, h1.bundleSha, "the answer names the promoted bundle's digest");
   assert.deepEqual({ ...w2.row(`SELECT criticality, created, last_updated FROM bundles WHERE bundle_id=?`, "INFO-2026-0002-y") }, { ...crit0 });
   const entry = w2.rows(`SELECT author FROM manifest WHERE bundle_id=? ORDER BY rowid DESC LIMIT 1`, "INFO-2026-0002-y")[0];
   assert.equal(entry.author, V("ruth"), "the promotion is the member's");

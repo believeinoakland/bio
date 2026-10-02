@@ -552,7 +552,9 @@ class ProvenanceRoutes {
               criticality: seen.criticality ?? null },
     });
     if (!promoted.ok) return { ...promoted, bundleId, documents: report };
-    return { ok: true, bundleId, applied: true, changed, documents: report, sha: promoted.sha ?? null };
+    /* `sha` is the promoted bundle's digest (promotion R1's `bundleSha`). Until N512 it read `promoted.sha`, a key
+       `promote` never answers, so it was always null (PROVENANCE-ROUTES #1). */
+    return { ok: true, bundleId, applied: true, changed, documents: report, sha: promoted.bundleSha ?? null };
   }
   /** The current finding for one bundle, or null when no assessment ever ran.
    *  Append-only: the highest `seq` is the current one and the ones before it
