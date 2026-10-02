@@ -67,7 +67,8 @@ test("R3 a /5 edition 2 with both blocks answers `what_changed` at the top and `
   const c = read(w, 2);
   assert.equal(c.ok, true);
   assert.deepEqual(c.what_changed, { statement: STMT(2), began_as: "member", draft: null, adopted_as_drafted: null });
-  assert.deepEqual(Object.keys(c).slice(0, 4), ["ok", "caseId", "edition", "what_changed"], "at the top of the answer");
+  assert.deepEqual(Object.keys(c).slice(0, 6), ["ok", "caseId", "edition", "withdrawn", "docket_last_entry", "what_changed"],
+                   "at the top of the answer, beside R20's withdrawal stamp and the docket's last date");
   assert.equal(c.lens.bias_acknowledgement, ACK, "the acknowledgement first");
   assert.deepEqual(c.lens.statements.map((s) => [s.id, s.kind, s.subject, s.text, s.justification, s.citations, s.withheld]), [
     ["s1", "scrutiny", "the city's press office", "We check its releases twice.",

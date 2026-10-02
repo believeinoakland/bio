@@ -1,9 +1,10 @@
 /* public-read — the published record served to anybody without a credential (requirements:
  * `build/requirements/public-read.md`; BIO_Publication_v0_1.md §1, §2, §3 rules 9–12 and 16). The public reads by hash,
  * by finding and by case, and the whole projection (R1–R4), and the evidence-package block beside a published case
- * (R8), and the named credential-free reads a later module registers (R18). It writes nothing (R16): every table it
- * reads is `publication`'s, read under `publication` R40, and it reaches `publication` only through the services named
- * below.
+ * (R8), and the named credential-free reads a later module registers (R18); beside a case, `docket`'s withdrawal stamp
+ * and last entry (R20), and the docket and its feed served (R21). It writes nothing (R16): every table it reads is
+ * `publication`'s, read under `publication` R40, and it reaches `publication` and `docket` only through the services
+ * named below.
  *
  * Split from `publication` by copy (K617, K651; seam read `build/extraction/publication-split.md` §3.2): the methods
  * below are `publication/index.mjs`' `registerEvidenceBlock`, `#evidencePackage`, `publishedManifest`,
@@ -19,18 +20,24 @@
  * to every later caller. `deps`:
  *   publication    `caseEditionState` (its R53), `soleCase` (its R54), `caseDocMemberFrozen` (its R55), and its
  *                  storage, whose tables it reads under its R40 (default: `publicationOf(host)`).
+ *   docket         `withdrawalOf` (its R12), `lastEntryOf`, `docketPublic` (its R14) and `docketFeed` (its R15), for
+ *                  R20 and R21:
+ *                  the docket's public answers, which this module serves and never composes (N520; default:
+ *                  `docketOf(host)`).
  *   storage        the Durable Object's storage (default: the host's).
  *
  * READ CONTRACT it reads in its own SQL, and never writes: `publication` R40's `published_bundles`, `published_cases`,
  * `published_case_members`, `cases`, `published_edges` and `published_shas`. */
 
 import { publicationOf } from "../publication/index.mjs";
+import { docketOf } from "../docket/index.mjs";
 import { caseTensionsOf, caseDocumentBlocks, whatChangedOf, lensOf, LENS_HEAD,
          LENS_CLOSING_SENTENCES, workingOnOf } from "../case-grammar/index.mjs";
 import { parseFrontmatter } from "../record-grammar/index.mjs";
 import { rowOf } from "./checks.mjs";
 import { delivererOf } from "../deliverer.mjs";
-import { PUBLIC_READ_NAME, PUBLIC_READ_PARAM, PUBLIC_READ_OWN_OPS, PUBLIC_READ_RESERVED_PARAMS } from "./reads.mjs";
+import { PUBLIC_READ_NAME, PUBLIC_READ_PARAM, PUBLIC_READ_OWN_OPS, PUBLIC_READ_RESERVED_PARAMS,
+         DOCKET_FEED_MEDIA_TYPE } from "./reads.mjs";
 
 /* CPDF-10: a column `publication` WROTE as JSON, read back; null rather than a throw on a malformed value. */
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
@@ -59,15 +66,18 @@ export const LENS_NONE_IN_FORCE_SENTENCE = "this edition carries only the lens's
   + "states that no manifest was in force, so there is no fingerprint to give";
 export const LENS_FINGERPRINT_UNDETERMINED_SENTENCE = "this edition carries only the lens's fingerprint, and its bias "
   + "manifest states none that can be read, so the fingerprint is undetermined, not absent";
+/* R21: the fixed address a case's docket is served at (its feed's is `op=docketfeed&case=`). */
+export const docketAddress = (caseId) => `op=docketpublic&case=${encodeURIComponent(caseId)}`;
 export const LENS_NO_DOCUMENT_SENTENCE = "no signed case document is held for this edition, so it states no lens here";
 
 export class PublicRead {
   #evidenceBlock = null; // R8: {module, name, fn}, filled once
   #publicReads = new Map(); // R18: name -> {module, params, read}, each name registered once
 
-  constructor({ storage, publication } = {}) {
+  constructor({ storage, publication, docket } = {}) {
     this.sql = storage.sql;
     this.publication = publication;
+    this.docket = docket;
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -188,6 +198,46 @@ export class PublicRead {
     return out && typeof out.then === "function" ? out.then(shape) : shape(out);
   }
 
+
+  /* ---------------------------------------------------------------- R21: the docket beside a case, served */
+
+  /** R21 (DEC-116 item 8; DEC-100 item 2): a case's docket, `docket.docketPublic` (its R14), served with no credential
+   *  (R10): `{...its answer, ok: true, case}`, a promise as the docket's read is. A case the docket answers null for
+   *  (absent, or with no ratified edition) is `publishedCase`'s own `NOT_PUBLISHED` answer for an absent case, taken
+   *  from `publishedCase` itself, so the two are the same bytes by construction and C-98.8 keeps its one site. */
+  async docketPublic(caseId) {
+    const c = str(caseId);
+    const d = c ? await this.docket.docketPublic({ case: c }) : null;
+    if (d == null) return this.#absentCase();
+    return { ...d, ok: true, case: c };
+  }
+
+  /** R21 (DEC-116 item 8): a case's Atom feed, `docket.docketFeed` (its R15), one fixed address per case
+   *  (`op=docketfeed&case=<case>`): `{ok: true, case, media_type, feed}`, the door serving `feed` as the response's
+   *  bytes under `media_type`; a promise, as the docket's read is. Null from the docket is `NOT_PUBLISHED`, as
+   *  `docketPublic`. */
+  async docketFeed(caseId) {
+    const c = str(caseId);
+    const feed = c ? await this.docket.docketFeed({ case: c }) : null;
+    if (feed == null) return this.#absentCase();
+    return { ok: true, case: c, media_type: DOCKET_FEED_MEDIA_TYPE, feed: String(feed) };
+  }
+
+  /* R21: `publishedCase`'s answer for an absent case. Asked with no route, it resolves nothing, whatever the record
+     holds, and so answers its `NOT_PUBLISHED` (C-98.8) from its one governed site. */
+  #absentCase() { return this.publishedCase({}); }
+
+  /* R20 (DEC-116 item 7): the stamp of the docket withdrawal naming one edition of a case, or null when none names it
+     (and for anything that is not a case). Read from `docket.withdrawalOf` (its R12), never composed: its `seq`, `date`
+     and `reason` as the docket answers them, and `entry`, the link to the withdrawal entry: its `seq`, the docket's id
+     for it (`<case>#<seq>`), its digest and the fixed address the docket is served at (R21). */
+  #withdrawnStamp(theCase, edition) {
+    if (!theCase || edition == null) return null;
+    const w = this.docket.withdrawalOf({ case: theCase, edition: Number(edition) });
+    if (!w) return null;
+    return { seq: w.seq, date: w.date, reason: w.reason,
+             entry: { seq: w.seq, id: w.entry ?? null, digest: w.digest ?? null, docket: docketAddress(theCase) } };
+  }
 
   /** 8.2: published-record reconstruction, requiring NOTHING.
    *
@@ -719,7 +769,16 @@ export class PublicRead {
     const manifest = cRow && cRow.manifest ? JSON.parse(cRow.manifest) : null;
     const signed = signedParts(state.document);
     const said = this.#editionStatements(signed, theCase, ed, editions);
+    /* R20 (DEC-116 items 7, 8): each edition a docket withdrawal names carries its stamp; the edition is answered whole
+       as before. The docket's last date is `docket` R14's `last_entry`, read synchronously and without any capture's
+       bytes through its `lastEntryOf` (K1276), null when the case has no public entry. */
+    const withdrawn = theCase ? new Map(editions.map((e) => [Number(e.edition), this.#withdrawnStamp(theCase, e.edition)]))
+                              : new Map();
     return { ok: true, caseId: theCase, edition: ed,
+             /* R20: the withdrawal stamp at the top of the answer, linked to its entry; null when no withdrawal names
+                this edition. */
+             withdrawn: withdrawn.get(Number(ed)) ?? null,
+             docket_last_entry: theCase ? (this.docket.lastEntryOf({ case: theCase }) ?? null) : null,
              /* R3 (DEC-101; Publication §5A): what changed in this edition, at the top, and the successor's statement
                 beside the pointer to it; both read from signed documents, never live. */
              what_changed: said.what_changed, successor: said.successor,
@@ -830,7 +889,11 @@ export class PublicRead {
              files: (manifest && Array.isArray(manifest.parts) ? manifest.parts : []).map(
                (p) => ({ path: p.path, sha256: p.sha256, kind: p.kind, bytes: p.bytes ?? null,
                          finding: p.finding ?? null })),
-             editions: editions.map((e) => e.edition), edition_index: editions,
+             editions: editions.map((e) => e.edition),
+             /* R20: each case edition's row carries its own stamp, or null, so a reader of any edition sees which
+                stand withdrawn; a loose bundle's rows are not a case's editions and are unchanged. */
+             edition_index: theCase ? editions.map((e) => ({ ...e, withdrawn: withdrawn.get(Number(e.edition)) ?? null }))
+                                    : editions,
              latest_edition: editions.length ? editions[editions.length - 1].edition : ed,
              case_detail: "a published case is a CONTAINER over one or more FINDINGS (DEC-44). Each finding "
                         + "carries its OWN conclusion, falsifier, basis and its own frozen PAIR of strengths; "
@@ -1092,7 +1155,8 @@ export function publicReadOf(host, deps) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const publication = d.publication || publicationOf(host);
-    r = new PublicRead({ storage, publication });
+    const docket = d.docket || docketOf(host);
+    r = new PublicRead({ storage, publication, docket });
     instances.set(host, r);
   }
   return r;
@@ -1113,5 +1177,8 @@ export function publicReadOps(r, url) {
     publishedlist: () => r.publishedList(),
     /* R18: a registered read by its name, handed only the parameters it declared (R10). */
     publicread: () => r.publicRead(q("name"), Object.fromEntries(url.searchParams)),
+    /* R21: the docket and its feed, by case, under R10's terms. */
+    docketpublic: () => r.docketPublic(q("case")),
+    docketfeed: () => r.docketFeed(q("case")),
   };
 }
