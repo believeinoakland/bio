@@ -1,3 +1,9 @@
 # promotion (T23)
 
 **Status** · session_01HB6f4fF8NP2uzL8Dazjrop · depth 2 · WORKING · handled B1
+
+## J1 · REPORT
+
+Ready to stamp; waiting on your word that membership has merged (START: merge last in L2).
+(1) The rows. On `job/T23/promotion` (tranche/T23 @ d5dd491571 + K1122), `row-census.test.mjs` names exactly your 35 rows, 1,046 against 1,022: 25 arrived, 10 changed (translations of C-33.44, C-112.17, C-118.3, C-85.1–.5; `where` only of C-116.5–.7, now `#pursuable`), none departed. Every one is named `awaiting stamp` by a T22 record by the suite's own paragraph reading: monitoring (C-18.11–.15), bias (C-26.21), queue (C-33.44, C-33.51), ratification (C-41.16, C-58.4, C-58.5), content (C-52.10), observation-log (C-54.11, C-54.12), case-authoring (C-82.8), capture (C-85.1–.5, C-118.3, C-118.7–.9), entities (C-91.8), publication (C-92.13), strength (C-107.3), reevaluation (C-110.29), standards (C-112.17, C-112.20), filings (C-115.44), escalation (C-116.5–.7, C-116.46). No QUESTION. No composition change since the 1.52.0 stamp (no T22 record names one; no registration's ids moved in `git diff 57160de53a`). The case gate's catalogue gains C-41.16's arm, which the census counts as that row's arrival.
+(3) R45's sweep arm asks nothing new of my code: `onCommitted` tells every listener of every accepted promotion after its commit, and the listener reads the bundle to decide. New test `registry.test.mjs` "R45: a listener is told of an accepted promotion holding a ratified sweep, as of one leaving a bundle monitored …" (pushed, 1da1… on my branch): told once after commit with the record then holding the ratified sweep; a revision that ratifies one; a replay; never a CAS_STALE, a `wrote:false` repeat or one rolled back with its caller. `test/m/promotion/` + d526: 103 tests, 102 pass, 1 fail = red 2 (`registry.test.mjs`:58, MODULE_ORDER).
