@@ -6,7 +6,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE } from "./fixture.mjs";
 import { retrievalOf, retrievalRoutes, RETRIEVAL_COUNT_KEYS } from "../../../src/retrieval/index.mjs";
-import { routeFinding } from "../../../src/provenance/index.mjs";
+import { routeFinding } from "../../../src/provenance-routes/index.mjs";
 import { hiddenBundles, viewerPredicate } from "../../../src/membership/index.mjs";
 
 const ROW_KEYS = ["bundle_id", "bundle_sha", "current_state", "last_updated", "object_type", "route", "title"];
@@ -14,7 +14,8 @@ const INDEX_KEYS = ["current_state", "id", "last_updated", "object_type", "sha25
 const VIEWERS = [MACHINE, "admin", V("ann"), V("vera"), "member:nobody", "garbage", "", null, undefined];
 
 /* A record with information bundles (one marked twice, one once, one never), an inquiry, and a project only `ann` may
-   see. */
+   see. The marks are rows of provenance-routes' `provenance_route_marks` (its R8), written in its columns as its R4
+   appends them; the table is the one the fixture's provenance-routes migrated. */
 function roster() {
   const w = world();
   for (const id of ["INFO-2026-0001-a", "INFO-2026-0002-b", "INFO-2026-0003-c"])
@@ -60,7 +61,7 @@ test("R63: listBundles answers exactly the bundles membership's viewerPredicate 
   }
 });
 
-test("R63: route is provenance's routeFinding(object_type, mark) over the bundle's standing route mark (its highest seq), null mark when none; the mark's own columns are never on the row", () => {
+test("R63: route is provenance-routes' routeFinding(object_type, mark) over the bundle's standing route mark (its highest seq, provenance-routes R8), null mark when none; the mark's own columns are never on the row", () => {
   const { w, r } = roster();
   const standing = (id) => {
     const m = w.row(`SELECT seq, at, by, finding, state_at, register_state, undetermined, documents_n
@@ -80,6 +81,42 @@ test("R63: route is provenance's routeFinding(object_type, mark) over the bundle
   assert.equal(by["INQ-2026-0001-q"].applies, false, "not information: a route does not apply");
   /* The paged arm carries the same rows. */
   assert.deepEqual(r.listBundles({ viewer: MACHINE, limit: 100 }).bundles, rows);
+});
+
+test("R63: against the real provenance-routes module, a mark its provenanceRouteAssess appends is the route listBundles answers; negative controls: the superseded mark, another bundle's mark and an unknown finding are not answered as the standing one", () => {
+  const { w, r } = roster();
+  const routeOf = (id, viewer = MACHINE) => r.listBundles({ viewer }).find((b) => b.bundle_id === id).route;
+  /* Before: no mark, the question never asked. */
+  assert.equal(routeOf("INFO-2026-0003-c").finding, "NEVER_LOOKED");
+  /* provenance-routes' own act (its R4): no register is a route that cannot be shown, recorded as a standing mark. */
+  const a = w.routes.provenanceRouteAssess({ bundleId: "INFO-2026-0003-c", author: "member:ann", viewer: MACHINE });
+  assert.equal(a.ok, true, JSON.stringify(a));
+  assert.equal(a.appended, true);
+  const m = w.row(`SELECT seq, at, by, finding, state_at, register_state, undetermined, documents_n
+                     FROM provenance_route_marks WHERE bundle_id=? ORDER BY seq DESC LIMIT 1`, "INFO-2026-0003-c");
+  const want = routeFinding("information", m);
+  for (const viewer of [MACHINE, V("ann"), V("vera")]) assert.deepEqual(routeOf("INFO-2026-0003-c", viewer), want, viewer);
+  assert.equal(want.finding, "LOOKED_INDETERMINATE");
+  assert.equal(want.register, "absent");
+  assert.deepEqual(r.listBundles({ viewer: MACHINE, limit: 50 }).bundles.find((b) => b.bundle_id === "INFO-2026-0003-c").route, want);
+  /* Negative control 1: the superseded mark (seq 1) is not the standing one, and the route differs from it. */
+  const first = w.row(`SELECT seq, at, by, finding, state_at, register_state, undetermined, documents_n
+                         FROM provenance_route_marks WHERE bundle_id='INFO-2026-0001-a' AND seq=1`);
+  assert.notDeepEqual(routeOf("INFO-2026-0001-a"), routeFinding("information", first));
+  /* Negative control 2: the route is not a constant of the finding: a different mark gives a different route. */
+  assert.notDeepEqual(routeOf("INFO-2026-0001-a"), routeOf("INFO-2026-0003-c"));
+  /* Negative control 3: a finding provenance-routes' vocabulary does not hold is answered as its `routeFinding` answers
+     it (`means` null), never mapped onto a known finding. */
+  w.st.sql.exec(`INSERT INTO provenance_route_marks (bundle_id, seq, at, by, finding, state_at, register_state, undetermined,
+                   documents_n, documents) VALUES (?,?,?,?,?,?,?,?,?,?)`,
+    "INFO-2026-0002-b", 9, "2026-09-27T09:00:00Z", "member:ann", "NOT_A_FINDING", "collected", "readable", 0, 1, "[]");
+  const odd = routeOf("INFO-2026-0002-b");
+  assert.equal(odd.finding, "NOT_A_FINDING");
+  assert.equal(odd.means, null);
+  assert.equal(odd.seq, 9);
+  /* A hidden bundle's mark rides on no answer. */
+  const proj = r.listBundles({ viewer: V("ann") }).find((b) => b.object_type === "project");
+  assert.ok(proj && !r.listBundles({ viewer: V("vera") }).some((b) => b.bundle_id === proj.bundle_id));
 });
 
 test("R63: type is matched in its canonical form (a legacy alias finds its canonical rows), state exactly, after keeps the ids after it, and the filters combine with the gate", () => {

@@ -1,6 +1,6 @@
 /* retrieval's test fixture: the module over the modules it uses, each the real one where it is extracted (record-core,
-   membership, promotion, provenance), on a real SQLite database (node:sqlite, FTS5 included) standing in for a Durable
-   Object's storage; observation-log (its R9–R13, R18, R19) is the real one too, through `observationOf`. One provider is
+   membership, promotion, provenance, provenance-routes), on a real SQLite database (node:sqlite, FTS5 included)
+   standing in for a Durable Object's storage; observation-log (its R9–R13, R18, R19) is the real one too, through `observationOf`. One provider is
    the test's own: extraction's drift obligations (its R38, `driftFor`). The tables other modules own that the compiler
    and the frontier read (capture's `links`, extraction's `readings`/`capture_text`, content's `content`, entities'
    `entities`/`resolutions`, observation-log's `observation_log`/`leads`/`lead_shares`) are created from their owners'
@@ -13,6 +13,7 @@ import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
+import { provenanceRoutesOf } from "../../../src/provenance-routes/index.mjs";
 import { EXTRACTION_SCHEMA } from "../../../src/extraction/schema.mjs";
 import { CAPTURE_SCHEMA } from "../../../src/capture/schema.mjs";
 import { CONTENT_SCHEMA } from "../../../src/content/index.mjs";
@@ -124,7 +125,8 @@ export function provDoc(c) {
            origin: { kind: "named_request" } };
 }
 
-/** A world: the storage, the real record-core, membership, promotion and provenance, the test's extraction and
+/** A world: the storage, the real record-core, membership, promotion, provenance and provenance-routes (which owns
+ *  `provenance_route_marks`, its R8, R12), the test's extraction and
  *  observation providers, and `retrieval` over them. `members` are enrolled active; `admins` too, as administrators. */
 export function world({ members = ["ann", "vera"], admins = [], now = Date.parse("2026-09-27T03:00:00Z") } = {}) {
   const st = storage();
@@ -143,6 +145,9 @@ export function world({ members = ["ann", "vera"], admins = [], now = Date.parse
   promotion.registerFact("caseMember", "publication", () => false);
   const prov = provenanceOf(host, { record, membership, promotion, now: iso });
   prov.migrate();
+  /* Built after provenance, as the composition root builds layer 3 (provenance, attestation, provenance-routes). */
+  const routes = provenanceRoutesOf(host, { record, membership, promotion, now: iso });
+  routes.migrate();
   run(st.db, EXTRACTION_SCHEMA);
   /* extraction's text index over `capture_text`, as its migrate() creates it (external content, kept by triggers). */
   st.db.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS capture_text_fts USING fts5(text, content='capture_text',
@@ -167,7 +172,7 @@ export function world({ members = ["ann", "vera"], admins = [], now = Date.parse
     st.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
                  VALUES (?,?,?,?, 'active', ?, ?, ?)`,
       m, `cover ${m}`, m, admins.includes(m) ? "admin" : "member", JSON.stringify(["contribute", "create_projects"]), T0, T0);
-  const w = { st, host, record, membership, promotion, prov, clock, runs: {}, drift: [],
+  const w = { st, host, record, membership, promotion, prov, routes, clock, runs: {}, drift: [],
               extraction: { driftFor: () => w.drift } };
   const log = OL.observationLogOf(host, { record, membership, provenance: null, extraction: null });
   /* The run authority's resolver ai-runs registers (observation-log R13): the runs each viewer may read. */
