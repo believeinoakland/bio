@@ -138,7 +138,8 @@ test("R22 R46: a session holds resume state for its ttl; unknown or expired answ
   assert.equal(c.loadCaptureSession({ session: "cs3" }).found, true, "default ttl is an hour");
   assert.deepEqual(c.dropCaptureSession({ session: "cs3" }), { session: "cs3", dropped: true });
   assert.equal(c.loadCaptureSession({ session: "cs3" }).found, false);
-  assert.deepEqual(captureOf({ storage: { sql: { exec() { throw new Error("x"); } } } }, { record: null }).liveCaptureSessions(0), []);
+  /* a storage that cannot be read: attestation's instance is handed in, since its own boot would read that storage */
+  assert.deepEqual(captureOf({ storage: { sql: { exec() { throw new Error("x"); } } } }, { record: null, attestation: {} }).liveCaptureSessions(0), []);
 });
 
 test("R23: the ceiling is learned by being refused; an unrefused run records nothing about it; a move keeps the old value; probe due at 25", () => {

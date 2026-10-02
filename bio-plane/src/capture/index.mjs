@@ -173,10 +173,11 @@ export function captureOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let c = instances.get(storage);
   if (!c) {
-    c = new Capture(storage, { ...opts, record: opts.record ?? recordOf(ctx),
+    const record = opts.record ?? recordOf(ctx), provenance = opts.provenance ?? provenanceOf(ctx);
+    c = new Capture(storage, { ...opts, record, provenance,
                                governor: opts.governor ?? governorOf(ctx, { env: opts.env ?? null }),
-                               provenance: opts.provenance ?? provenanceOf(ctx),
-                               attestation: opts.attestation ?? attestationOf(ctx) });
+                               /* attestation's own instance for this host, over the record and provenance capture holds */
+                               attestation: opts.attestation ?? attestationOf(ctx, { record, provenance }) });
     instances.set(storage, c);
     supplied.set(c, new Set(["env", "governor", "record", "provenance", "attestation"].filter((k) => opts[k] != null)));
     registerGrammar(c.core);
