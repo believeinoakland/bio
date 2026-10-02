@@ -1,6 +1,6 @@
 # control-plane (T22)
 
-**Status** · session_016ux7EiaYD1rDwE1Vhdqh9y · depth 2 · WORKING · handled B2
+**Status** · session_016ux7EiaYD1rDwE1Vhdqh9y · depth 2 · RUNNING until 2026-10-02T05:19:08Z (node --test bio-plane/test/m/) · handled B2
 
 ## J1 · QUESTION
 
