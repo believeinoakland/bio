@@ -123,12 +123,16 @@ test("R36 the module's tables carry bundle_id and are declared to record-core's 
   assert.equal(w.promote("INQ-2026-0001-q", w.text("INQ-2026-0001-q").replace("---\n\n## Question",
     `contradiction:\n  candidate: ${"c".repeat(64)}\n---\n\n## Question`)).ok, true);
   assert.deepEqual(INQUIRY_TABLES, ["inquiry_basis", "inquiry_exclusions", "inquiry_migration_replays", "inquiry_member_agents",
-                                    "inquiry_contradiction_links", "inquiry_bundle_facts"]);
+                                    "inquiry_contradiction_links", "inquiry_bundle_facts", "inquiry_findings"]);
   for (const t of INQUIRY_TABLES) {
     assert.ok(w.rows(`PRAGMA table_info(${t})`).some((c) => c.name === "bundle_id"), t);
     assert.ok(inquiryOwns(t) && inquiryOwns({ name: t }));
   }
+  /* R53's finding row, keyed by its question and by the project its lens was read for */
+  w.st.sql.exec(`INSERT INTO inquiry_findings (bundle_id, project_id, lens_state, at) VALUES (?,?,?,?)`,
+    "INQ-2026-0001-q", "PROJ-2026-0001-p", "none", "2026-09-28T01:00:00Z");
   const r = w.record.purge({ bundleId: "INQ-2026-0001-q" });
+  assert.equal(w.count("inquiry_findings"), 0, "R53's finding is purged with its question");
   assert.equal(w.count("inquiry_basis"), 0);
   assert.equal(w.count("inquiry_member_agents"), 0);
   assert.equal(w.count("inquiry_contradiction_links"), 0, "R48's projection is purged with its inquiry");
