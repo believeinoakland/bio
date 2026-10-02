@@ -44,6 +44,9 @@ test("R7 no place is named in this module's behaviour or outward text", () => {
     CG.caseTensionsOf(doc("bio-case-document/5")), CG.sourceStatement({ kind: "name", recorded: false }),
     CG.sourceStatement({ kind: "pseudonym_link" }), CG.unnamedSourceStatement({ capture: sha("x"), received: NOW }),
     CG.unnamedSourceStatement(), CG.publishedGraphEdges({ references: [{ target: "T" }], division_parent: "P" }),
+    CG.whatChangedSectionLines("s"), CG.whatChangedBlockLines({ statement: "s", began_as: "member" }),
+    ...[true, false, null].map((inForce) => CG.lensSectionLines({ statements: [{ kind: "scrutiny" }, { kind: "inference" },
+                                                                             { kind: "pattern", citations: [{}] }], inForce })),
   ]);
   for (const place of ["Oakland", "California", "Alameda", "Berkeley", "San Francisco", "Sacramento", "Brown Act", "CPRA",
                        "United States", "County", "City of"])

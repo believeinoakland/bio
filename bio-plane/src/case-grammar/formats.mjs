@@ -1,7 +1,7 @@
 /* case-grammar — the case document's formats and their predicates (requirements: `build/requirements/case-grammar.md`
- * R1, which was `publication` R20). Copied from `publication/checks.mjs` (K651, K624 (1)); `publication` re-exports
- * this module once its own job deletes its copy. The catalogue keeps its own `/4` copy for its own
- * `checkCaseDocument`, which it cannot import from here (it is first in the order); that copy is legacy-checks'. */
+ * R1, which was `publication` R20). Copied from `publication/checks.mjs` (K651, K624 (1)), whose job then deleted its
+ * copy and re-exports this module. `/5` also states R8's "What changed" block and R9's lens blocks (`./edition.mjs`;
+ * DEC-101, DEC-103, K1019), with no `/6`: no `/5` document was stored when they were added. */
 
 /* N345 (DEC-76 item 4, DEC-84 items 11–13, DEC-85): THE FORMAT MOVES TO /5, FOR THE REASON /3 AND /4 DID. A /5 document
    is one whose author was obliged to state the contradictions its findings rest on, one level deep, in its tension
