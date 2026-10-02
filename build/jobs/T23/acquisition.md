@@ -53,3 +53,7 @@ R31 (sweep scope), two readings needed before I build it; I am building R32 mean
 ## J2 · QUESTION
 
 R31's two refusals take catalogue rows (DEC-49; current.md red 7 names acquisition's SWEEP_* rows awaiting stamp), and check families are yours to assign (C-127 went to network-notices, K1119). Best reading, which I am building on: a new family C-128 in acquisition/checks.mjs (SWEEP_SCOPE_CHECKS), C-128.1 SWEEP_SCOPE_MISSING (where: acquire > is-sweep-scope) and C-128.2 SWEEP_REDIRECT_OUT_OF_SCOPE (where: acquire > is-sweep-redirect), each awaiting stamp. Alternative: C-83.9 and C-83.10 in acquire's existing render family (I would not: C-83 is the render arm's). Name the number and I renumber if it differs.
+
+## J3 · REPORT
+
+Users re-tested after merging tranche/T23 @ capture's merge (test/m/acquisition, capture, capture-requests, instance-setup, control-plane, monitoring): 537 tests, 535 pass, 1 fail: control-plane inbox-door.test.mjs:81 (accepted red 9). It is still red after capture's merge, so per K1117 it is now control-plane's L11. No other red. Stale: the plane bundle (bio-plane/dist/bio-plane.bundled.mjs) from bio-plane/src/acquisition/; I regenerated nothing. Requirement wording for you: (a) R29's enumeration of the table does not name R31's C-128.1–C-128.2; (b) Uses still lists parseCdx, replayLocator, cdxQuery and archiveHop, which the archive arm no longer calls (only selectCapture, plus EMPTY_BODY_DIGEST through mementoRow).
