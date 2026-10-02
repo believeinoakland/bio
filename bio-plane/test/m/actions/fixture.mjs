@@ -97,7 +97,7 @@ export function world({ profiles = ["test-port-ellery"], retrieval = true, confo
   /* retrieval's projection table, made by retrieval's own migrate (K354), which the record's promotion writes. Its
      registrations below are the test's, so this instance joins no promotion. */
   new Retrieval({ storage: st, record, membership, promotion, extraction: {}, observation: {} }).migrate();
-  promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
+  promotion.registerFact("producingGroup", "instance-setup", () => "test-group");
   const prov = provenanceOf(host, { record, membership, promotion, now: () => new Date(clock.ms).toISOString() });
   prov.migrate();
   const captures = new Map();

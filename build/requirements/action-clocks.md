@@ -33,7 +33,7 @@ Terms. An **action**, its document and its **clock entry** (`{text, description,
 - **R11** `calendarFactsRead({viewer})` lists, once each, the `local-facts` paths (its R6) a live deadline reads: for every visible action not `resolved` or `abandoned` whose kind has a profile deadline counted in business days (`jurisdictions` R26), the holiday years of its profile from the UTC year of the instance clock to the year of its latest pending clock entry (at least the next year), for the offices it is addressed to or filed at, and those offices' `hours`; each path with the actions that read it, each as `{action, project, created_by}`, its project and creator as R3 states them (K1000). Writes nothing; at most 500 actions read, `truncated` stated.
 
 **factReader(localFacts, viewer)** (K998, N474; for `filings` R30)
-- **R12** `factReader(localFacts, viewer)` answers a `factOf` in `computeDeadline`'s shape: given a holiday entry, it reads that entry's `local-facts` path (`factPath`, its R6) through `localFacts.factStatus` (its R2) for `viewer`, and answers as R10's count reads it (the status and why, the value that governs here, whether it is a correction and its `says`, the latest act's member and day, a lapsed confirmation's day). An entry naming no local fact, a read that throws or is refused, or one `local-facts` cannot answer is `absent` with why. It answers null when `localFacts` has no `factStatus`, and the count then states its calendar `not_read`. It is the reader R10's own count uses; it writes nothing and never throws. (K998; D6; K1038) *(not yet met: T22)*
+- **R12** `factReader(localFacts, viewer)` answers a `factOf` in `computeDeadline`'s shape: given a holiday entry, it reads that entry's `local-facts` path (`factPath`, its R6) through `localFacts.factStatus` (its R2) for `viewer`, and answers as R10's count reads it (the status and why, the value that governs here, whether it is a correction and its `says`, the latest act's member and day, a lapsed confirmation's day). An entry naming no local fact, a read that throws or is refused, or one `local-facts` cannot answer is `absent` with why. It answers null when `localFacts` has no `factStatus`, and the count then states its calendar `not_read`. It is the reader R10's own count uses; it writes nothing and never throws. (K998; D6; K1038)
 
 ## Private
 
@@ -47,7 +47,7 @@ Terms. An **action**, its document and its **clock entry** (`{text, description,
 - `retrieval`: the projection's `action_clock_next` column (its R61), which R1's page seeks, as `actions` R31 did.
 - `record-grammar`: `parseFrontmatter`, `normalizeType`, `isMachineIdentity`.
 - `action-grammar`: `lawProposalLabel` (its R2), the label of R2's proposals, no longer through the catalogue.
-- `local-facts`: `factStatus` (its R2), `factPath` (its R6) (R10, R11).
+- `local-facts`: `factStatus` (its R2), `factPath` (its R6) (R10, R11), `LOCAL_FACT_STATUSES` (its R7) (R12).
 
 ### Invariants
 

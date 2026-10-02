@@ -9,13 +9,13 @@ test("R1 refusals in order: MACHINE_CANNOT_OPEN, NO_SUCH_DETERMINATION (absent a
   w.member("dave");
   w.join(w.P, "dave", "invited");
   const before = w.snapshot();
-  const open = (a) => w.esc.escalationOpen({ determination: w.D, author: V("bob"), viewer: V("bob"), ...a });
+  const open = (a) => w.esc.escalationOpen({ reason: "Worth pursuing.", determination: w.D, author: V("bob"), viewer: V("bob"), ...a });
   /* machine or empty author, asked first (even of an absent determination) */
   for (const author of ["", "  ", MACHINE, "token:run-1", "ai", undefined])
     assert.equal(open({ author, determination: "CONF-none" }).reason, "MACHINE_CANNOT_OPEN", String(author));
   /* absent and invisible: one answer, conformance R19's, the id as asked (null when none) */
   const absent = open({ determination: "CONF-2026-0404-none" });
-  const unseen = w.esc.escalationOpen({ determination: w.D, author: V("carol"), viewer: V("carol") });
+  const unseen = w.esc.escalationOpen({ reason: "Worth pursuing.", determination: w.D, author: V("carol"), viewer: V("carol") });
   assert.deepEqual([absent.ok, absent.reason, absent.code, absent.determination],
                    [false, "NO_SUCH_DETERMINATION", "NO_SUCH_DETERMINATION", "CONF-2026-0404-none"]);
   assert.equal(typeof absent.detail, "string");
@@ -28,21 +28,21 @@ test("R1 refusals in order: MACHINE_CANNOT_OPEN, NO_SUCH_DETERMINATION (absent a
   /* superseded, before noncompliance and participation: conformance R20's answer, naming its successor only when
      this viewer can read it */
   const S = w.determine({ project: w.P, outcomes: [{ standard: "STD-2026-0001-a", outcome: "compliant" }], supersededBy: "CONF-x" });
-  const sup = w.esc.escalationOpen({ determination: S, author: V("dave"), viewer: V("dave") });
+  const sup = w.esc.escalationOpen({ reason: "Worth pursuing.", determination: S, author: V("dave"), viewer: V("dave") });
   assert.deepEqual([sup.ok, sup.reason, sup.code, sup.determination, sup.superseded_by],
                    [false, "DETERMINATION_SUPERSEDED", "DETERMINATION_SUPERSEDED", S, null]);
   assert.equal(typeof sup.detail, "string");
   assert.ok(!("DETERMINATION_SUPERSEDED" in ESCALATION_CHECKS), "the code is conformance's, not minted here");
   const later = w.determine({ project: w.P, outcomes: [{ standard: "STD-2026-0001-a", outcome: "compliant" }] });
   w.supersede(S, later);
-  const named = w.esc.escalationOpen({ determination: S, author: V("dave"), viewer: V("dave") });
+  const named = w.esc.escalationOpen({ reason: "Worth pursuing.", determination: S, author: V("dave"), viewer: V("dave") });
   assert.deepEqual({ ...named, superseded_by: null }, sup, "the same answer, the successor aside");
   assert.equal(named.superseded_by, later);
   /* no standard noncompliant (compliant and unclear only), before participation */
   const C = w.determine({ project: w.P, outcomes: [{ standard: "STD-2026-0001-a", outcome: "compliant" }, { standard: "STD-2026-0002-b", outcome: "unclear" }] });
-  assert.equal(w.esc.escalationOpen({ determination: C, author: V("dave"), viewer: V("dave") }).reason, "NOT_NONCOMPLIANT");
+  assert.equal(w.esc.escalationOpen({ reason: "Worth pursuing.", determination: C, author: V("dave"), viewer: V("dave") }).reason, "NOT_NONCOMPLIANT");
   /* an invited (not joined) participant sees the determination and may not open */
-  const np = w.esc.escalationOpen({ determination: w.D, author: V("dave"), viewer: V("dave") });
+  const np = w.esc.escalationOpen({ reason: "Worth pursuing.", determination: w.D, author: V("dave"), viewer: V("dave") });
   assert.deepEqual([np.reason, np.code, np.check], ["ESCALATION_NOT_A_PARTICIPANT", "ESCALATION_NOT_A_PARTICIPANT", "C-116.6"]);
   assert.equal(np.project, w.P);
   assert.deepEqual(w.snapshot(), before, "no refusal writes anything");
@@ -60,15 +60,15 @@ test("R1 refusals in order: MACHINE_CANNOT_OPEN, NO_SUCH_DETERMINATION (absent a
                    ["open", 1, V("bob"), w.clock.now, ["STD-2026-0001-a", "STD-2026-0002-b"]]);
   assert.deepEqual(read.history.map((h) => [h.kind, h.author, h.at]), [["open", V("bob"), w.clock.now]]);
   /* one open or suspended escalation per determination, named */
-  const again = w.esc.escalationOpen({ determination: w.D, author: V("alice"), viewer: V("alice") });
+  const again = w.esc.escalationOpen({ reason: "Worth pursuing.", determination: w.D, author: V("alice"), viewer: V("alice") });
   assert.equal(again.reason, "ALREADY_OPEN");
   assert.equal(again.escalation, r.id);
   assert.equal(w.esc.escalationSuspend({ id: r.id, reason: "Waiting.", author: V("bob"), viewer: V("bob") }).ok, true);
-  assert.equal(w.esc.escalationOpen({ determination: w.D, author: V("alice"), viewer: V("alice") }).reason, "ALREADY_OPEN",
+  assert.equal(w.esc.escalationOpen({ reason: "Worth pursuing.", determination: w.D, author: V("alice"), viewer: V("alice") }).reason, "ALREADY_OPEN",
                "a suspended escalation is still the determination's one");
   /* the owner may open one too (any joined member): a second determination */
   const D2 = w.determine({ project: w.P, outcomes: [{ standard: "STD-2026-0009-z", outcome: "noncompliant" }] });
-  assert.equal(w.esc.escalationOpen({ determination: D2, author: V("alice"), viewer: V("alice") }).ok, true);
+  assert.equal(w.esc.escalationOpen({ reason: "Worth pursuing.", determination: D2, author: V("alice"), viewer: V("alice") }).ok, true);
 });
 
 test("R2 the read derives each edge's trigger at nowMs (the caller's, else the instance clock), naming the ids that meet it or what is missing; proposed carries the instant first met (a record date, never the read time) and its age; nothing is stored, so a later read proposes more; NO_SUCH_ESCALATION for absent and invisible alike", () => {
@@ -76,7 +76,7 @@ test("R2 the read derives each edge's trigger at nowMs (the caller's, else the i
   opened(w);
   w.esc.escalationAdvance({ id: w.E, to: 2, reason: "Notify.", author: V("bob"), viewer: V("bob") });
   const n = w.action({ project: w.P, restsOn: [w.D] });
-  w.esc.escalationAttach({ id: w.E, action: n, author: V("bob"), viewer: V("bob") });
+  w.esc.escalationAttach({ reason: "This act serves the stage.", id: w.E, action: n, author: V("bob"), viewer: V("bob") });
   w.correspond(n, "sent", "2026-09-02");
   w.esc.escalationAdvance({ id: w.E, to: 3, reason: "Sent.", author: V("bob"), viewer: V("bob") });
   /* stage 3: nothing has come back yet */
@@ -152,7 +152,7 @@ test("R3 exit answers R14's two conditions apart, each met, not_met or undetermi
   /* a determination with no act id: compliance undetermined, with why */
   const D3 = w.determine({ project: w.P, outcomes: [{ standard: "STD-2026-0005-e", outcome: "noncompliant" }] });
   w.determinations.get(D3).act.id = null;
-  const r = w.esc.escalationOpen({ determination: D3, author: V("bob"), viewer: V("bob") });
+  const r = w.esc.escalationOpen({ reason: "Worth pursuing.", determination: D3, author: V("bob"), viewer: V("bob") });
   const e3 = w.esc.escalationRead({ id: r.id, viewer: V("bob") }).exit;
   assert.equal(e3.compliance.state, "undetermined");
   assert.match(e3.compliance.why, /no act id/);
@@ -173,7 +173,7 @@ test("R4 stage 1 is entered by opening; its trigger to 2 is a live determination
   /* an act whose actor names no office: no addressee */
   for (const actor of [{ role: "", body: "A body" }, { role: "A role", body: " " }, {}]) {
     const D = w.determine({ project: w.P, actor, outcomes: [{ standard: "STD-2026-0001-a", outcome: "noncompliant" }] });
-    const o = w.esc.escalationOpen({ determination: D, author: V("bob"), viewer: V("bob") });
+    const o = w.esc.escalationOpen({ reason: "Worth pursuing.", determination: D, author: V("bob"), viewer: V("bob") });
     assert.equal(o.ok, true);
     assert.deepEqual(o.proposed, []);
     const t = w.esc.escalationRead({ id: o.id, viewer: V("bob") }).triggers[0];
@@ -182,8 +182,8 @@ test("R4 stage 1 is entered by opening; its trigger to 2 is a live determination
   }
   /* the acts of stage 1 are the published findings and the determination: nothing is attached at stage 1 */
   const D5 = w.determine({ project: w.P, actor: OFFICE.board, outcomes: [{ standard: "STD-2026-0001-a", outcome: "noncompliant" }] });
-  const o5 = w.esc.escalationOpen({ determination: D5, author: V("bob"), viewer: V("bob") });
+  const o5 = w.esc.escalationOpen({ reason: "Worth pursuing.", determination: D5, author: V("bob"), viewer: V("bob") });
   const a = w.action({ project: w.P, restsOn: [D5] });
-  assert.equal(w.esc.escalationAttach({ id: o5.id, action: a, author: V("bob"), viewer: V("bob") }).reason, "STAGE_TAKES_NO_ACTION");
+  assert.equal(w.esc.escalationAttach({ reason: "This act serves the stage.", id: o5.id, action: a, author: V("bob"), viewer: V("bob") }).reason, "STAGE_TAKES_NO_ACTION");
   void DAY;
 });

@@ -17,8 +17,9 @@
  *   conformance          `determinationRead` (its R9): the project of the determination an action rests on (R3, R5;
  *                        K702). A host on which it cannot be created answers every project null.
  *   localFacts           `factStatus` (local-facts R2): each holiday year a business count reads, its status and the
- *                        value that governs here (R10). A host on which it cannot be created reads every year as
- *                        unreadable, and a business count is then undetermined.
+ *                        value that governs here (R10), read through `factReader` (R12). A host on which it cannot be
+ *                        created, or whose local-facts has no `factStatus`, reads none, and a business count states
+ *                        its calendar `not_read`.
  *   now                  the instance clock, milliseconds (default: `env.BIO_NOW_MS`, else the wall clock).
  *   env                  the instance bindings.
  *
@@ -35,7 +36,7 @@ import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
 import { normalizeType } from "../record-grammar/types.mjs";
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { lawProposalLabel } from "../action-grammar/index.mjs";
-import { localFactsOf, factPath } from "../local-facts/index.mjs";
+import { localFactsOf, factPath, LOCAL_FACT_STATUSES } from "../local-facts/index.mjs";
 import { ACTION_CLOCK_CHECKS } from "./checks.mjs";
 import { ACTION_CLOCKS_TABLES, migrateActionClocks } from "./schema.mjs";
 
@@ -120,7 +121,7 @@ export class ActionClocks {
   }
 
   /* R10: local-facts' `factStatus`, reached on the same host unless a test passes its own; null where it cannot be
-     created, and every holiday year then reads as unreadable. */
+     created, and a business count then states its calendar `not_read` (R12). */
   get localFacts() {
     if (this.#deps.localFacts === undefined || this.#deps.localFacts === null) {
       try { this.#deps.localFacts = localFactsOf(this.#deps.host); } catch { this.#deps.localFacts = false; }
@@ -328,21 +329,10 @@ export class ActionClocks {
                  + "revision of the action." };
   }
 
-  /* R10: one holiday entry's confirmation on this instance, read through local-facts' `factStatus` (its R2) at the
-     entry's path (its R6), as `computeDeadline` takes it. A read that fails, or that local-facts cannot answer, is
-     `absent`, so the count is undetermined rather than counted on a calendar whose state is unknown. */
-  #factOf(viewer) {
-    return (h) => {
-      const lf = this.localFacts;
-      let path = null;
-      try { path = factPath(holidayFact(h)); } catch { path = null; }
-      if (!lf || typeof lf.factStatus !== "function" || typeof path !== "string")
-        return { path, status: "absent", why: "local facts cannot be read on this instance" };
-      let r = null;
-      try { r = lf.factStatus({ path, viewer }); } catch { r = null; }
-      return factAnswer(path, r);
-    };
-  }
+  /* R10, R12: the count's reader of the holiday entries' confirmations is `factReader` over this host's local-facts, the
+     one reader (R12): null where local-facts cannot be created or has no `factStatus`, and the count then states its
+     calendar `not_read`. */
+  #factOf(viewer) { return factReader(this.localFacts, viewer); }
 
   /** R11 (for `queue-producers` R21, through `local-facts` R4): the `local-facts` paths a live deadline reads, once each,
    *  with the actions that read them. For every visible action not `resolved` or `abandoned` whose kind has a profile
@@ -629,17 +619,49 @@ function officeHours(view, offices) {
 /* R10: local-facts' answer for one path (its R2), as the count reads it: its status; the value that governs here
    (`governs.value`: the latest correction's, else the profile's), which the count counts on whatever the status; for a
    correction its member and date (the correcting act is the latest while the status is `corrected`) and its `says`; for
-   a lapsed confirmation the date it was made; for a dispute who disputed it and when. */
+   a lapsed confirmation the date it was made; for a dispute who disputed it and when. A refusal, or a status local-facts
+   does not give (its R7's `LOCAL_FACT_STATUSES`), is `absent` with why. */
 function factAnswer(path, r) {
-  if (!r || typeof r !== "object" || r.ok === false)
-    return { path, status: "absent", why: (r && (r.reason || r.code)) || "local facts did not answer" };
+  if (!r || typeof r !== "object" || r.ok === false) {
+    const why = r && typeof r === "object" ? textOf(r.reason || r.code) : null;
+    return { path, status: "absent", why: why ? `local facts refused the read: ${why}` : "local facts did not answer" };
+  }
+  if (typeof r.status !== "string" || !LOCAL_FACT_STATUSES.includes(r.status))
+    return { path, status: "absent", why: `local facts answered no status it gives (${textOf(r.status)?.slice(0, 40) ?? "none"})` };
   const g = r.governs && typeof r.governs === "object" ? r.governs : {};
   const last = r.latest && typeof r.latest === "object" ? r.latest : {};
   const lapsed = r.lapsed && typeof r.lapsed === "object" ? r.lapsed : {};
   const day = (v) => (typeof v === "string" ? v.slice(0, 10) : null);
-  return { path, status: typeof r.status === "string" ? r.status : "absent", why: r.why ?? null,
+  return { path, status: r.status, why: r.why ?? null,
            value: g.value ?? null, corrected: g.origin === "corrected", says: g.says ?? null,
            by: last.by ?? null, at: day(last.at), last_at: day(lapsed.at) };
+}
+
+/** R12 (K998, N474; for `filings` R30): the `factOf` `computeDeadline` takes, over local-facts' `factStatus` (its R2)
+ *  for `viewer`, and the one reader R10's own count uses (`ActionClocks#factOf`). Given a holiday entry, it reads the
+ *  entry's path (`factPath`, local-facts R6) and answers as R10's count reads it (`factAnswer`). An entry naming no
+ *  local fact, a read that throws or is refused, or an answer local-facts cannot give is `absent` with why. Null when
+ *  `localFacts` has no `factStatus`: the count then states its calendar `not_read`. Writes nothing; neither it nor the
+ *  reader it answers ever throws. */
+export function factReader(localFacts, viewer) {
+  let read = null;
+  try { read = localFacts && (typeof localFacts === "object" || typeof localFacts === "function") ? localFacts.factStatus : null; }
+  catch { read = null; }
+  if (typeof read !== "function") return null;
+  return (h) => {
+    let path = null;
+    try { path = factPath(holidayFact(h)); } catch { path = null; }
+    if (typeof path !== "string") return { path: null, status: "absent", why: "the holiday entry names no local fact" };
+    let r;
+    try { r = read.call(localFacts, { path, viewer }); }
+    catch (e) {
+      let m = null;
+      try { m = e && typeof e.message === "string" ? e.message.slice(0, 200) : null; } catch { m = null; }
+      return { path, status: "absent", why: `local facts' read failed${m ? `: ${m}` : ""}` };
+    }
+    try { return factAnswer(path, r); }
+    catch { return { path, status: "absent", why: "local facts answered in a shape the count cannot read" }; }
+  };
 }
 const daysOf = (v) => (Array.isArray(v) ? v : null);
 

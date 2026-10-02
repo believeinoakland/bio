@@ -91,9 +91,10 @@ export function world({ passages = true, group = "test-group", superseded = null
   const membership = membershipOf(host, { record });
   membership.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => clock.now });
-  promotion.registerFact("producingGroup", "legacy-store", () => group);
-  promotion.registerFact("caseMember", "legacy-store", () => false);
-  promotion.registerFact("publishedRegistry", "legacy-store", () => ({}));
+  /* The facts promotion asks for, provided here as their modules provide them (instance-setup, publication). */
+  promotion.registerFact("producingGroup", "instance-setup", () => group);
+  promotion.registerFact("caseMember", "publication", () => false);
+  promotion.registerFact("publishedRegistry", "publication", () => ({}));
   const prov = provenanceOf(host, { record, membership, promotion, now: () => clock.now });
   prov.migrate();
   for (const t of EXTRACTION_JOINED) st.db.exec(t);

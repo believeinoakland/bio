@@ -13,7 +13,7 @@
  *
  * A NEW MODULE (T21, layer 9; K921). Copied from `filings` (K624 (1)): `FILING_BLANKS` and `FILING_TEXT_MAX`
  * (`./blanks.mjs`), `templateSave`'s checks (name, kind, text, tier, name taken) into R1 and R2's judges, `templatesFor`'s
- * read into R14's, and the library's rows (`./checks.mjs`); `filings`' own job deletes its copies. Its migration takes
+ * read into R14's, and the library's rows (`./checks.mjs`); `filings`' T21 job deleted its copies. Its migration takes
  * every template `filings` R26 saved as a draft of origin `group` (K927): offered only once reviewed and approved.
  *
  * REACHED as `filingTemplatesOf(host, deps)` (K61): one instance per host, created on the first call. At creation it
@@ -1141,8 +1141,9 @@ export class FilingTemplates {
   /* ================================================================ R20: reviewsRequested */
 
   /** R20 (`queue-producers` R20): every (version, member) pair where the member was asked to review, the version is in
-   *  review, and the member has given no review of its present sha; at most 500 per page in (version id, member)
-   *  order after `after` (a previous page's `cursor`, or a version id, read as after all its members). Writes nothing. */
+   *  review, and the member has given no review of its present sha, each with the template's `project` (its scope's;
+   *  null for a group template; N476); at most 500 per page in (version id, member) order after `after` (a previous
+   *  page's `cursor`, or a version id, read as after all its members). Writes nothing. */
   reviewsRequested({ after = null, limit = null, viewer = null } = {}) {
     const max = clamp(limit, REVIEWS_REQUESTED_MAX, REVIEWS_REQUESTED_MAX);
     const from = str(after);
@@ -1167,7 +1168,9 @@ export class FilingTemplates {
       const t = seen.get(r.template_id);
       if (!t) continue;
       if (items.length === max) { truncated = true; break; }
-      items.push({ template: t.id, version: r.vid, name: t.name, kind: t.kind, member: r.member, member_name: r.member_name,
+      /* the template's `scope`'s project (R1), as `#template` answers it: null once widened, never the `project` field */
+      const project = t.scope && typeof t.scope === "object" ? t.scope.project ?? null : null;
+      items.push({ template: t.id, version: r.vid, name: t.name, kind: t.kind, project, member: r.member, member_name: r.member_name,
                    asked_by: { id: r.asked_by, name: r.asked_name }, asked_at: r.at });
     }
     const tail = items[items.length - 1];
