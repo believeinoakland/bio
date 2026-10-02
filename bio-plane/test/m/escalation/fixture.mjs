@@ -2,8 +2,8 @@
    jurisdictions' `combine` over its test profile), on a real SQLite database (node:sqlite) standing in for a Durable
    Object's storage; and stand-ins, in the shape of their Provides, for the four layer-9 modules built beside it,
    which the test controls and records: conformance (`determinationRead` R9, `determinationsFor` R11), consequences
-   (`addressed` R9), actions (`actionRead` with its ledger, `actionFacts` R12's clock rule) and filings (`filingsFor`
-   R13, `availableActions` R21). An action is a real `ACTN-` bundle whose document carries `breach`, `action_basis`,
+   (`addressed` R9, `consequencesOf` R7), actions (`actionRead` with its ledger, `actionsFor` R30, `actionFacts` R12's
+   clock rule) and filings (`filingsFor` R13, `availableActions` R21). An action is a real `ACTN-` bundle whose document carries `breach`, `action_basis`,
    `counterparty` and, when asked, `premise_override` (actions' Terms and R8), committed through record-core; its
    ledger is the stand-in's. Every test drives `escalation` at its interface. */
 import { DatabaseSync } from "node:sqlite";
@@ -83,11 +83,11 @@ export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [] } 
   const membership = membershipOf(host, { record });
   membership.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => clock.now });
-  promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
+  promotion.registerFact("producingGroup", "instance-setup", () => "test-group");
   record.setSetting("jurisdiction_profiles", profiles, "test");
 
-  const calls = { determinationRead: [], determinationsFor: [], addressed: [], actionRead: [], actionFacts: [],
-                  filingsFor: [], availableActions: [] };
+  const calls = { determinationRead: [], determinationsFor: [], addressed: [], consequencesOf: [], actionRead: [],
+                  actionsFor: [], actionFacts: [], filingsFor: [], availableActions: [] };
   /* conformance's stand-in: determinations as its R9 answers them, sight by the determination's project. */
   const determinations = new Map();
   const sees = (project, viewer) => viewer === null || viewer === undefined || membership.inSight(project, viewer);
@@ -113,17 +113,30 @@ export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [] } 
   };
   /* consequences' stand-in: `addressed` per determination, `undetermined` "no consequence recorded" by default (K172). */
   const addressedBy = new Map();
+  /* and `consequencesOf` (R7): the live parts recorded per determination, in R7's part shape; NO_SUCH_DETERMINATION for
+     one absent or unseen, as conformance answers it. */
+  const parts = new Map();
   const consequences = {
     addressed({ determination, viewer }) {
       calls.addressed.push({ determination, viewer });
       return addressedBy.get(determination) || { state: "undetermined", parts: [], says: "no consequence recorded" };
     },
+    consequencesOf({ determination, viewer }) {
+      calls.consequencesOf.push({ determination, viewer });
+      const d = determinations.get(determination);
+      if (!d || !sees(d.project, viewer)) return { ok: false, reason: "NO_SUCH_DETERMINATION" };
+      const ps = structuredClone(parts.get(determination) || []);
+      return { ok: true, determination, standard: null, parts: ps, totals: [],
+               undetermined: ps.filter((p) => p.state === "undetermined").map((p) => p.id),
+               unproven: ps.filter((p) => p.causation.state === "unproven").map((p) => p.id),
+               says: ps.length ? "each part is what it is" : "no consequence recorded" };
+    },
   };
   /* actions' stand-in: the ledger of each action, and R12's clock rule over the document's clock. */
   const ledgers = new Map();
   const actions = {
-    actionRead({ id, viewer }) {
-      calls.actionRead.push({ id, viewer });
+    actionRead({ id, viewer, now }) {
+      calls.actionRead.push({ id, viewer, ...(now !== undefined ? { now } : {}) });
       const h = typeof id === "string" ? record.head(id) : null;
       if (!h || (viewer !== null && viewer !== undefined && !membership.inSight(id, viewer))) return { ok: false, reason: "NO_SUCH_BUNDLE" };
       if (h.type !== "action") return { ok: false, reason: "NOT_AN_ACTION" };
@@ -131,9 +144,26 @@ export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [] } 
       if (hidden) return { ok: false, reason: "NO_SUCH_BUNDLE" };
       const fm = parseFrontmatter(record.readFile(id, "bundle.md").text).data || {};
       const legs = (Array.isArray(fm.action_basis) ? fm.action_basis : []).map((l) => ({ target: l.target, kind: l.kind }));
-      return { ok: true, id, kind: fm.action_kind ?? null, correspondence: structuredClone(ledgers.get(id) || []), legs,
+      return { ok: true, id, current_state: fm.current_state ?? null, kind: fm.action_kind ?? null,
+               correspondence: structuredClone(ledgers.get(id) || []), legs,
                premise_override: fm.premise_override ?? null,
                breach: fm.breach === true, counterparty: fm.counterparty ?? null, clock: Array.isArray(fm.clock) ? fm.clock : [] };
+    },
+    /* R30: the visible actions with a rests_on leg naming `determination`, in id order, a page at a time. */
+    actionsFor({ determination, after = null, limit = 200, viewer }) {
+      calls.actionsFor.push({ determination, after, viewer });
+      const all = [...ledgers.keys()].sort().filter((id) => !after || id > after).filter((id) => {
+        const r = actions.actionRead({ id, viewer });
+        calls.actionRead.pop();
+        return r.ok && (!determination || r.legs.some((l) => l.kind === "rests_on" && l.target === determination));
+      });
+      const cap = Math.min(limit, actions.pageSize ?? 200);
+      const items = all.slice(0, cap).map((id) => {
+        const fm = parseFrontmatter(record.readFile(id, "bundle.md").text).data || {};
+        return { id, state: fm.current_state ?? null, kind: fm.action_kind ?? null,
+                 counterparty: fm.counterparty?.role ?? null, counterparty_state: fm.counterparty?.state ?? null };
+      });
+      return { ok: true, items, limit: cap, truncated: all.length > cap, cursor: items.at(-1)?.id ?? null };
     },
     actionFacts(text, nowMs) {
       calls.actionFacts.push({ nowMs });
@@ -164,6 +194,7 @@ export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [] } 
   const w = {
     st, host, record, membership, promotion, esc, clock, calls, determinations, addressedBy, ledgers, actionHidden,
     stand: { conformance, consequences, actions, filings },
+    parts,
     rows: (q, ...a) => [...st.sql.exec(q, ...a)],
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,
     text: (id) => record.readFile(id, "bundle.md")?.text ?? null,
@@ -191,8 +222,14 @@ export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [] } 
     /** A determination as conformance records it: per-standard outcomes, an act with an actor office. */
     determine({ project, outcomes, actor = OFFICE.clerk, act = null, at = clock.now, supersededBy = null } = {}) {
       const id = `CONF-2026-${String(++nd).padStart(4, "0")}-determination`;
+      /* R9's `standards`: each outcome with its in-force answer, rows and disagreement, as an outcome states them, else
+         one diverging row over content `c1` */
+      const standards = outcomes.map((o) => ({ standard: o.standard, outcome: o.outcome, in_force: o.in_force ?? "in_force",
+        in_force_why: o.in_force_why ?? null, disagreement: o.disagreement ?? null,
+        rows: o.rows ?? [{ requires: `what ${o.standard} requires`, did: "what the act did", reading: "diverges", content: ["c1"] }] }));
       determinations.set(id, { id, project, act: { id: act ?? `ACT-2026-${String(nd).padStart(4, "0")}`, description: "the act",
-        actor, at: "2026-09-01", evidence: ["c1"] }, outcomes, at, author: V("alice"), superseded_by: supersededBy });
+        actor, at: "2026-09-01", evidence: ["c1"] }, outcomes: outcomes.map((o) => ({ standard: o.standard, outcome: o.outcome })),
+        standards, at, author: V("alice"), superseded_by: supersededBy });
       return id;
     },
     supersede(id, by = "CONF-2026-9999-determination") { determinations.get(id).superseded_by = by; },

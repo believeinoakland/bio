@@ -154,3 +154,33 @@ test("R23 over the real actions (K600 (a)): a member's breach action stating a p
   const plain = make("ACTN-2026-0002-notice", ["action_basis:", `  - target: ${d.id}`, "    kind: rests_on"]);
   assert.equal(x.esc.escalationAttach({ reason: "This act serves the stage.", id: E, action: plain, author: V("pat"), viewer: V("pat") }).ok, true);
 });
+
+test("R29 over the real conformance, actions and consequences (their published shapes): the draft states the noncompliant standard with the basis the determination holds, the act, the breach action resting on it with its clock and its date passed at nowMs, and no consequence recorded; writes nothing", () => {
+  const x = real();
+  const d = x.w.c.determine(x.input());
+  assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));
+  const N = "ACTN-2026-0001-notice";
+  const md = ["---", `id: ${N}`, "object_type: action", `title: ${N}`, "current_state: planned",
+    'created: "2026-09-28T01:00:00Z"', 'last_updated: "2026-09-28T01:00:00Z"', "action_kind: other",
+    "counterparty:", "  state: named", "  role: Director of Parks", "  body: Parks Department", "breach: true",
+    "clock:", '  - text: "reply due"', '    description: "the office answers the notice"', '    date: "2026-10-10"', '    basis: "the notice rule"', "    status: pending",
+    "action_basis:", `  - target: ${d.id}`, "    kind: rests_on", "---", "", "A notice.", ""].join("\n");
+  const made = x.w.promotion.promote({ bundleId: N, base: null, snapKey: "20260928T010000Z_000000d1", author: V("pat"),
+    viewer: V("pat"), files: [{ path: "bundle.md", text: md }], meta: { object_type: "action" } });
+  assert.equal(made.ok, true, JSON.stringify(made).slice(0, 400));
+  const held = x.w.c.determinationRead({ id: d.id, viewer: V("pat") });
+  const row = held.standards[0].rows[0];
+  const before = x.w.record.head(N).bundleSha;
+  const r = x.esc.escalationReasonDraft({ determination: d.id, nowMs: Date.parse("2026-10-11T00:00:00Z"), viewer: V("pat") });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
+  assert.deepEqual(r.parts.map((p) => p.id), [d.id, held.act.id, x.std, N, N, N, d.id]);
+  assert.equal(r.parts[2].text, `Standard ${x.std} is breached: it requires "${row.requires}"; the act did "${row.did}" `
+    + `(reading: ${row.reading}; content ${row.content.join(", ")}). It was in force at the act's date.`);
+  assert.equal(r.parts[3].text, `Action ${N} (other) rests on the determination, addressed to Director of Parks, Parks Department; its state is planned.`);
+  assert.equal(r.parts[5].text, `The date 2026-10-10 on action ${N} passed without a response: the entry is still pending on 2026-10-11.`);
+  assert.equal(r.parts[6].text, "No consequence of the breach is recorded on the determination.");
+  assert.deepEqual([r.label.state, r.label.machine_work], ["machine_proposed", true]);
+  assert.equal(x.w.record.head(N).bundleSha, before);
+  /* quinn, outside the project, is answered conformance's one answer */
+  assert.equal(x.esc.escalationReasonDraft({ determination: d.id, viewer: V("quinn") }).reason, "NO_SUCH_DETERMINATION");
+});
