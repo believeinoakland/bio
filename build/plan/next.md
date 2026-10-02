@@ -4,9 +4,44 @@
 
 ## Entries
 
-- S2 · 2026-10-02 · **promotion**: stamp the rows T24's L3–L11 jobs add or change (each COMPLETE lists them), `ROW_CENSUS` re-pinned. **Hard reason:** promotion's one T24 job is L2 (P8, P10).
+- S2 · 2026-10-02 · **promotion**: stamp the rows T24's L3–L11 jobs add or change (each COMPLETE lists them; at T24's close these are C-18.16–.18, their `where` re-pointed to link-sweep, K1209, K1216), `ROW_CENSUS` re-pinned. **Hard reason:** promotion's one T24 job is L2 (P8, P10).
 - N511 · 2026-10-02 · **record-core** (K1186; RECORD-CORE #15's record): R72 and R73 describe today's behaviour as "`store.mjs`' explicit arms" and "as `store.mjs`' `auditPass` gates it"; re-word to the module's own route map and gate (N469's rule), no change of meaning. **Hard reason:** record-core's one T24 job (L2) is merged (P8); BOB's wording, folded at T25's opening.
 - N512 · 2026-10-02 · **provenance** (K1189; PROVENANCE #13's record): its paths hold 4,001 lines at T24's L3 merge, at `layers.md` ruling 1's ~4,000 mark (P6, K617): split before its next job, with no change of meaning, along K1193's seams (`plan/draft-T25-splits.md`): new modules `provenance-routes` (the chain and route marker) and `attestation` (timestamping, the instance key), both directly after provenance in layer 3; `modules.json`, `layers.md`, membership's `MODULE_ORDER` (R83, in L2) and every reader re-pointed. **Hard reason:** provenance's one T24 job is merged (P8); the split and its seams are prepared under P18 and run as T25's first provenance entry.
 - N513 · 2026-10-02 · **extraction** (K1192; EXTRACTION #11's Size line, measured over `paths`): its paths hold 4,001 lines at T24's L4 merge, at `layers.md` ruling 1's ~4,000 mark (P6, K617): split before its next job, with no change of meaning, along K1193's seam (`plan/draft-T25-splits.md`): new module `reading-pipeline` (`pipeline.mjs`, `readingprov.mjs`) directly before extraction in layer 4; `modules.json`, `layers.md`, membership's `MODULE_ORDER` (R83, in L2) re-pointed. **Hard reason:** extraction's one T24 job is merged (P8); the split and its seams are prepared under P18 and run as T25's first extraction entry.
 - N514 · 2026-10-02 · **inquiry-grammar** R7, **run-rules** R11, **strength** R15 (K1195; `scratchpad` audit of stamp notes): each still says its rows are `awaiting stamp`; re-word to the stamp that took them (inquiry-grammar 1.50.0, run-rules 1.49.0, strength C-107.3 1.53.0), no change of meaning (N469's rule). BOB's wording, applied at each module's T24 L6 merge; struck here when done. All three done (K1196, K1197): **struck**. **Hard reason:** each module's job is running (P10: BOB does not change requirements a running job reads mid-job for wording alone).
 - N515 · 2026-10-02 · **capture-requests** (K1207; LINK-SWEEP #1 J3): `index.mjs`:387–394 says R45's scope check is "registered once at start by `monitoring`" and names the sweep's sources "monitoring R53"; since N506 they are link-sweep's (R12, R1); `test/m/capture-requests/sweep.test.mjs` registers under "monitoring": re-word and re-name to link-sweep, no change of meaning (N469's rule). **Hard reason:** capture-requests' one T24 job (L6) is merged (P8).
+
+## Carried from T24's left-out table (re-checked at T24's close, K1216: every hard reason holds; `draft-T25.md`)
+
+| row | item | hard reason | note |
+|---|---|---|---|
+| B1 | DIST-14 (office-readers) | deployment | CSV bound measured on a deployed plane |
+| B2 | N75 (image-codecs) | deployment | 61.3 MB bound |
+| B3 | N34 (pdf-worker) | deployment | JPX bound; JBIG2 fixture encoder; 4,277 lines (P6) |
+| B11, C9 | N461 release share; N471's release copies | deployment | the next signed release, Bob's act |
+| B16 | N473 (`filing_templates` table) | deployment | migration run at every instance |
+| C1 | office-readers R28/R29 retired | deployment | migrations at every instance |
+| C2 | `MODES.plan` deployed | deployment | K660 (5) |
+| C3 | newgroup installer deployed, N336 | deployment | a signed release |
+| C4, A11–A17 | contradiction R24, R27, R32, R33/R36 K5 arms, R34, R41, R57 | measurement | a measured recommender run (K488) |
+| C8 | first profile's facts without a source | measurement | K925, K934, K941 |
+| B4, B5 | N144, N232 | Bob's (UX) | K899 (2) |
+| A54 | skills R10 | Bob's | N144 |
+| B13 | N470 | Bob's | K943; DEC-116 answers it, off `main` (N491) |
+| B6–B10, B12, B18, B20, C6, C7, D2, I2 | legacy-ui shares, UI fixtures, the module | Bob's (UX) | K633, K1006 |
+| N487 | legacy-ui DEC-88 reasons | Bob's (UX) | K633, K1030 |
+| J7 | DEC-81's Grade A | Bob's | K1019: "nothing new" |
+| H13 | DEC-105 audience guidance | Bob's | waits for its trigger |
+| C5 | `PLN-` affordances, plan page, joint action | Bob's | K608 (4), K600 (c) |
+| H5 | DEC-100 | Bob's | awaits Bob; DEC-116 (N491) off `main` |
+| H3, H4, H9b, H11, H14, H16c, H18, H20, J6, J11 | DEC screens of the new interface | Bob's (UX) | K633, K899 (2) |
+| N481 | DEC-112 published case in three forms | Bob's | on `main` (PR #7); K1134 Q2, Q3, Q6 unanswered |
+| N488 | DEC-113 litigation hold of transcripts | Bob's | on `main` (PR #7); K1134 Q4, Q5 unanswered |
+| N491 | DEC-116 withdrawal, docket | Bob's | on `main` (PR #7); K1134 Q1 unanswered (its home) |
+| H1, H6b, J4 | DEC-96, DEC-101 (3), DEC-92 | dependency not yet built | nothing brings another group's edition into this copy |
+| A8 | bias R26 | dependency not yet built | K102's trigger |
+| A21 | inquiry R31 | dependency not yet built | no opinion element (MK-5) |
+| A22, A23 | installer R13, R24 | dependency not yet built | the new member surfaces |
+| A37 | progressions R32 | dependency not yet built | no amounts or funds as values |
+| A41 | publication R30 | dependency not yet built | nothing publishes a rendering (D-246) |
+| N493 (part) | member-facing translations of "noticed" (contradiction `checks.mjs`:136, :236; queue `checks.mjs`:63) | Bob's: UX (the design stream's DECs decide member-facing wording) | by BOB #93, K1099 |
