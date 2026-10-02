@@ -39,14 +39,14 @@ test("R21 (content-reads): a page attestation covers the page row and not the do
   assert.deepEqual([ceil(s[DOC_ROW]), ceil(s[PAGE_ROW])], [["C", "derivation", []], ["C", "derivation", []]],
     "no attestation: both bounded by the chain's measured letter");
 
-  assert.equal(w.content.attestText({ captureSha: a.sha, viewer: V("ho"), member: V("ho"), extent: { kind: "page", page: 1 } }).ok, true);
+  assert.equal(w.content.attestText({ note: "compared with the page", captureSha: a.sha, viewer: V("ho"), member: V("ho"), extent: { kind: "page", page: 1 } }).ok, true);
   s = w.content.standings([DOC_ROW, PAGE_ROW, OTHER_PAGE]);
   assert.deepEqual(ceil(s[PAGE_ROW]), [EARNED_CAPTURE_CEILING, "attestation", [V("ho")]], "the page row is raised by the page attestation");
   assert.deepEqual(ceil(s[DOC_ROW]), ["C", "derivation", []], "a page attestation does not cover the whole document");
   assert.deepEqual(ceil(s[OTHER_PAGE]), ["C", "derivation", []], "nor another page");
 
   /* the other direction: a coverage rule that covered nothing would also leave the document row at C */
-  assert.equal(w.content.attestText({ captureSha: a.sha, viewer: V("ro"), member: V("ro"), extent: { kind: "document" } }).ok, true);
+  assert.equal(w.content.attestText({ note: "compared with the page", captureSha: a.sha, viewer: V("ro"), member: V("ro"), extent: { kind: "document" } }).ok, true);
   s = w.content.standings([DOC_ROW, PAGE_ROW, OTHER_PAGE]);
   assert.deepEqual(s[DOC_ROW].transcription.ceiling, EARNED_CAPTURE_CEILING);
   assert.equal(s[DOC_ROW].transcription.determinant, "attestation", "a document attestation raises the document row");
@@ -90,8 +90,8 @@ test("R22, R43, R44 (content-reads): after a re-read the row is stale and still 
   const { w, a, mint } = paged();
   const DOC_ROW = mint({ kind: "document" });
   const PAGE_ROW = mint({ kind: "pdf-page", page: 1 });
-  w.content.attestText({ captureSha: a.sha, viewer: V("ho"), member: V("ho"), extent: { kind: "page", page: 1 }, at: "2026-09-14T00:00:00Z" });
-  w.content.attestText({ captureSha: a.sha, viewer: V("ro"), member: V("ro"), extent: { kind: "document" }, at: "2026-09-14T01:00:00Z" });
+  w.content.attestText({ note: "compared with the page", captureSha: a.sha, viewer: V("ho"), member: V("ho"), extent: { kind: "page", page: 1 }, at: "2026-09-14T00:00:00Z" });
+  w.content.attestText({ note: "compared with the page", captureSha: a.sha, viewer: V("ro"), member: V("ro"), extent: { kind: "document" }, at: "2026-09-14T01:00:00Z" });
   const before = w.rows(`SELECT * FROM text_attestations ORDER BY attestor`);
 
   /* the document is re-read: extraction holds the new chain and fires the reading-replaced notice */
@@ -122,7 +122,7 @@ test("R22, R43, R44 (content-reads): after a re-read the row is stale and still 
     [false, 2, 0, "derivation"]);
   assert.deepEqual(f.attestations.all.map((x) => x.stale), [true, true]);
   /* and a fresh attestation on the new chain is not stale and does raise it */
-  w.content.attestText({ captureSha: a.sha, viewer: V("cy"), member: V("cy"), extent: { kind: "page", page: 1 } });
+  w.content.attestText({ note: "compared with the page", captureSha: a.sha, viewer: V("cy"), member: V("cy"), extent: { kind: "page", page: 1 } });
   assert.equal(w.content.attestationsFor(a.sha, { page: 1 }, V("bo")).ceiling.determinant, "attestation");
   assert.deepEqual(w.content.contentRead({ id: fresh, viewer: V("bo") }).attestations.covering.map((x) => x.attestor), [V("cy")]);
 });
@@ -132,7 +132,7 @@ test("R22, R43, R44 (content-reads): after a re-read the row is stale and still 
 test("R21 (transcribe): the routing case — a whole-document attestation of a CHAINLESS capture never raises a member's typing, nor is listed on it; a second member's attestation of the typing does", () => {
   const w = world();
   const n = w.cap("n"); w.doc(DOC, [n]); w.read(n.sha, { chain: null, pageCount: 1 });
-  const atN = w.content.attestText({ captureSha: n.sha, viewer: V("sam"), member: V("sam"), extent: { kind: "document" } });
+  const atN = w.content.attestText({ note: "compared with the page", captureSha: n.sha, viewer: V("sam"), member: V("sam"), extent: { kind: "document" } });
   assert.deepEqual([atN.ok, atN.chain_at_attestation], [true, null], "a null chain on the capture: the null is not staleness");
   const tx = w.content.transcribe({ bundleId: DOC, extent: { kind: "pdf-page", page: 0 }, text: TYPED, transcriber: V("ruth"), viewer: V("ruth") });
   assert.equal(tx.ok, true, "a capture with no chain can be typed");
@@ -143,7 +143,7 @@ test("R21 (transcribe): the routing case — a whole-document attestation of a C
   /* the capture's attestation does stand for the capture's own text */
   assert.equal(w.content.attestationsFor(n.sha, { page: 0 }, V("sam")).attestations.length, 1);
   /* negative control: an attestation OF the typing, by another member, raises it */
-  assert.equal(w.content.transcriptionAttest({ contentId: tx.content_id, attestor: V("sam"), viewer: V("sam") }).ok, true);
+  assert.equal(w.content.transcriptionAttest({ note: "compared with the page", contentId: tx.content_id, attestor: V("sam"), viewer: V("sam") }).ok, true);
   assert.deepEqual(ceil(w.content.standings([tx.content_id])[tx.content_id]), [EARNED_CAPTURE_CEILING, "attestation", [V("sam")]]);
   assert.deepEqual(w.content.contentRead({ id: tx.content_id, viewer: V("ruth") }).attestations.covering.map((x) => x.attestor), [V("sam")]);
 });
@@ -171,7 +171,7 @@ test("R21, R22, R25 (transcribe): a region typing's attestation is scoped to tha
   assert.deepEqual([c2.chain, c2.derivation_cap], [[{ step: "typed", member: V("ruth"), text_sha256: sha(TYPED) }], null], "the chain unchanged");
   /* negative control: a typing of a whole page scopes to the page, not a region */
   const pageTx = w.content.transcribe({ bundleId: DOC, extent: { kind: "pdf-page", page: 2 }, text: TYPED, transcriber: V("ruth"), viewer: V("ruth") });
-  assert.deepEqual(w.content.transcriptionAttest({ contentId: pageTx.content_id, attestor: V("sam"), viewer: V("sam") }).extent, { kind: "page", page: 2 });
+  assert.deepEqual(w.content.transcriptionAttest({ note: "compared with the page", contentId: pageTx.content_id, attestor: V("sam"), viewer: V("sam") }).extent, { kind: "page", page: 2 });
 
   /* a re-read by a newer engine */
   w.read(a.sha, { chain: OCR_NEW, pageCount: 3 });
@@ -184,12 +184,12 @@ test("R21, R22, R25 (transcribe): a region typing's attestation is scoped to tha
 test("R44 (transcribe): attestationsFor lists only the capture's text attestations, never a typing's", () => {
   const w = world();
   const a = w.cap("a"); w.doc(DOC, [a]); w.read(a.sha, { chain: OCR, pageCount: 3 });
-  w.content.attestText({ captureSha: a.sha, viewer: V("ruth"), member: V("ruth"), extent: { kind: "page", page: 1 } });
+  w.content.attestText({ note: "compared with the page", captureSha: a.sha, viewer: V("ruth"), member: V("ruth"), extent: { kind: "page", page: 1 } });
   const snap = JSON.stringify(w.content.attestationsFor(a.sha, { page: 1 }, V("ruth")));
   const tx = w.content.transcribe({ bundleId: DOC, extent: REGION, text: TYPED, transcriber: V("ruth"), viewer: V("ruth") });
   const other = w.content.transcribe({ bundleId: DOC, extent: { kind: "document" }, text: TYPED, transcriber: V("sam"), viewer: V("sam") });
-  w.content.transcriptionAttest({ contentId: tx.content_id, attestor: V("sam"), viewer: V("sam") });
-  w.content.transcriptionAttest({ contentId: other.content_id, attestor: V("ruth"), viewer: V("ruth") });
+  w.content.transcriptionAttest({ note: "compared with the page", contentId: tx.content_id, attestor: V("sam"), viewer: V("sam") });
+  w.content.transcriptionAttest({ note: "compared with the page", contentId: other.content_id, attestor: V("ruth"), viewer: V("ruth") });
   const r = w.content.attestationsFor(a.sha, { page: 1 }, V("ruth"));
   assert.deepEqual([r.count, r.attestations.map((x) => x.attestor)], [1, [V("ruth")]], "no typing's attestation leaked into it");
   assert.equal(JSON.stringify(r), snap, "the answer is unmoved by any typing");
@@ -235,7 +235,7 @@ test("R43 (textchain): attestText takes the attestor from the member stamp, neve
   const w = world();
   const a = w.cap("a"); w.doc(DOC, [a]); w.read(a.sha, { chain: OCR, pageCount: 3 });
   const region = { kind: "region", source: { kind: "pdf-page", ref: "p0", page: 0, rect: [72, 600, 540, 720], attestor: "member:someone-else" } };
-  const ok = w.content.attestText({ captureSha: a.sha, viewer: V("bob"), member: V("bob"), attestor: "member:someone-else",
+  const ok = w.content.attestText({ note: "compared with the page", captureSha: a.sha, viewer: V("bob"), member: V("bob"), attestor: "member:someone-else",
                                     by: "member:someone-else", extent: region, at: "2026-09-14T00:00:00Z" });
   assert.equal(ok.ok, true);
   assert.equal(ok.attestor, V("bob"), "attributed to the stamp, never the name in the body");
@@ -253,14 +253,14 @@ test("R43 (textchain): attestText takes the attestor from the member stamp, neve
 
   /* a machine stamp is refused even when the body names a real member */
   for (const member of ["class:member", "class:admin"]) {
-    const m = w.content.attestText({ captureSha: a.sha, viewer: V("bob"), member, attestor: V("bob"), extent: { kind: "document" } });
+    const m = w.content.attestText({ note: "compared with the page", captureSha: a.sha, viewer: V("bob"), member, attestor: V("bob"), extent: { kind: "document" } });
     assert.equal(m.code, "TEXT_ATTEST_MACHINE", member);
   }
   /* an absent stamp is not filled from the body */
-  const none = w.content.attestText({ captureSha: a.sha, viewer: V("bob"), attestor: V("bob"), extent: { kind: "document" } });
+  const none = w.content.attestText({ note: "compared with the page", captureSha: a.sha, viewer: V("bob"), attestor: V("bob"), extent: { kind: "document" } });
   assert.equal(none.code, "TEXT_ATTEST_MACHINE");
   assert.equal(w.count("text_attestations"), 1, "no refusal writes");
   /* the why names each extent kind it covers */
-  assert.match(w.content.attestText({ captureSha: a.sha, viewer: V("cy"), member: V("cy"), extent: { kind: "page", page: 2 } }).why, /over page 2\./);
-  assert.match(w.content.attestText({ captureSha: a.sha, viewer: V("di"), member: V("di"), extent: { kind: "document" } }).why, /over the whole document\./);
+  assert.match(w.content.attestText({ note: "compared with the page", captureSha: a.sha, viewer: V("cy"), member: V("cy"), extent: { kind: "page", page: 2 } }).why, /over page 2\./);
+  assert.match(w.content.attestText({ note: "compared with the page", captureSha: a.sha, viewer: V("di"), member: V("di"), extent: { kind: "document" } }).why, /over the whole document\./);
 });

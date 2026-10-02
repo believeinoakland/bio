@@ -6,14 +6,16 @@
  * `legHasAuthoredExtent`), the relation (`extentRelation`), the checker (`checkContentExtent`) with its private
  * container predicates, and the part statement (`imagePartUndetermined`). The code below is the catalogue's text
  * line for line (its quoting kept, so the copy can be compared with its source); only the imports, this header, the
- * `refusal` helper's one table, the comments that described the catalogue's own file, and the comments that named a
- * check or suite T20 deleted as live (N469, re-pointed to the module test that proves the claim) changed. Every
- * answer, finding and refusal is the catalogue's.
+ * `refusal` helper's one table, the comments that described the catalogue's own file, the comments that named a
+ * check or suite T20 deleted as live (N469, re-pointed to the module test that proves the claim), and the comments
+ * that named the catalogue or the legacy store (both deleted in T19) as live (T22) changed. Every answer, finding and
+ * refusal is the catalogue's.
  *
  * THE ALGEBRA IS NOT COPIED: `CONTENT_EXTENT_KINDS`' eight, `CONTENT_EXTENT_A1_RE`, `rangeCorners`, `a1ToRowCol`,
  * `canonicalExtent`, `describeExtent` and `contentCitedAs` are read from `text-chain` (its R92–R98), byte-identical to
- * the catalogue's. The catalogue keeps its own copy of all of this for its own callers (the leg grammar of C-2.8 and
- * C-25.10) until `inquiry-grammar` deletes it (layer 6, rule 1).
+ * the catalogue's. The catalogue kept its own copy of all of this for its own callers (the leg grammar of C-2.8 and
+ * C-25.10) until it was deleted (T19, control-plane R43); that leg grammar is now `inquiry-grammar`'s and reads this
+ * core.
  *
  * `./extent.mjs` is the one public face (R1–R10); what the grammar has gained since (envelope, a rect's space, the
  * MediaBox bound) is written there, over this, never here. */
@@ -43,7 +45,7 @@ function refusal(key, detail, extra = null) {
 
 /** Read a basis leg's extent out of the RESTRICTED frontmatter grammar.
  *
- *  THE GRAMMAR CANNOT CARRY A NESTED OBJECT (parseFrontmatter above: an array
+ *  THE GRAMMAR CANNOT CARRY A NESTED OBJECT (`record-grammar`'s parseFrontmatter: an array
  *  element's properties are SCALARS at four spaces), so the extent arrives as
  *  flat scalars on the leg — `extent_kind`, `extent_page`, `extent_rect` as an
  *  inline array, `extent_ref` — exactly as REC-14's `completeness` /
@@ -173,17 +175,19 @@ export const CONTENT_ID_RE = /^[0-9a-f]{64}$/;
 /** THE CONTEXT A PURE DOCUMENT CHECK CAN HONESTLY SUPPLY, and it is a value
  *  rather than an absent argument so the difference is visible at the call site.
  *
- *  `checkContentExtent` asks two questions only the STORE can answer — how many
+ *  `checkContentExtent` asks two questions only the RECORD can answer — how many
  *  pages this capture has, and whether any transcription chain covers it. A
- *  catalogue run over one `bundle.md` knows neither, and an empty `{}` would let
- *  it answer them WRONGLY: `ctx.chain` absent reads as "no chain recorded" and
- *  would refuse every portion citation in the catalogue while the store admitted
+ *  leg grammar run over one `bundle.md` (the catalogue's until T19,
+ *  `inquiry-grammar`'s since) knows neither, and an empty `{}` would let it
+ *  answer them WRONGLY: `ctx.chain` absent reads as "no chain recorded" and
+ *  would refuse every portion citation in the grammar while the record admitted
  *  it. That is not a stricter gate, it is two gates holding two answers — the
  *  drift this file's one-function discipline exists to prevent.
  *
  *  So the document-only caller says `known: false` and the two record arms are
- *  SKIPPED rather than guessed. The store keeps passing `{ chain, pageCount }`
- *  and its behaviour is byte-for-byte what REC-82 landed. */
+ *  SKIPPED rather than guessed. The record's caller passes a capture's context
+ *  (`./index.mjs`' `contentContextFor`, the legacy store's `{ chain, pageCount }`
+ *  until T19) and its behaviour is byte-for-byte what REC-82 landed. */
 export const CONTENT_EXTENT_DOCUMENT_ONLY = Object.freeze({ known: false, chain: null, pageCount: null });
 
 /* =====================================================================
@@ -252,8 +256,8 @@ export function extentRelation(outer, inner) {
 }
 
 /** THE CHECKER, the catalogue's copied unchanged (R48); `./extent.mjs`' face runs
- *  it for every kind this core knows, and the catalogue keeps its own copy for
- *  its leg grammar until inquiry-grammar deletes it.
+ *  it for every kind this core knows, and `inquiry-grammar`'s leg grammar runs it
+ *  directly (the catalogue kept its own copy until it was deleted, T19).
  *
  *  `ctx` is what only the RECORD can answer about a capture and is never
  *  invented here: `{ chain, pageCount }` (`contentContextFor`). `chain` null means
@@ -340,7 +344,8 @@ export function checkContentExtent(extent, ctx = {}) {
      … all three of these arms are LIVE AND UNFED"; they recorded the gap, and
      the gap closing is the news** — COFF-9's precedent for correcting a stale
      self-description in place rather than deleting it, and the same correction
-     `#containerExtentForCapture` and `#pageSetForCapture` carry in the store.
+     the legacy store's `#containerExtentForCapture` and `#pageSetForCapture`
+     carried (now `./index.mjs`' `#containerExtentFor` and `#pageSetFor`).
      Nothing in THIS file moved for it: the feed arrived and these predicates
      began firing, which is exactly what D-354 predicted.
 
@@ -374,7 +379,7 @@ export function checkContentExtent(extent, ctx = {}) {
      table size — an honest statement, not a gap, and the cell arm is SKIPPED on
      it rather than guessed. A capture acquired before this landing holds no
      inner figure at all and is skipped the same way; no backfill was taken. In
-     both cases the store's `#containerExtentForCapture` NAMES the missing level
+     both cases `./index.mjs`' `#containerExtentFor` NAMES the missing level
      in the answer it returns rather than leaving a bare null, and skipping is
      deliberate: refusing a citation for a bound nobody measured would push a
      member toward citing the WHOLE DOCUMENT, which claims MORE and not less.
@@ -514,7 +519,7 @@ export function checkContentExtent(extent, ctx = {}) {
        list" was read as "no bound" and ANY 64-hex part minted on every web
        page, PDF and text capture, naming bytes the document does not hold.
        Refused only on the store's DETERMINATE `office: false`; an undetermined
-       kind (`null`) and the catalogue's document-only pass (`known: false`) are
+       kind (`null`) and the leg grammar's document-only pass (`known: false`) are
        skipped, never guessed — the arm's rule above, and the admission is
        STATED by the store through `imagePartUndetermined` below. */
     const notContainer = hasPart && ctx.known !== false ? partOutsideAnyContainer(ctx.container) : null;
@@ -545,11 +550,12 @@ export function checkContentExtent(extent, ctx = {}) {
      `test/m/content/converts-extent.test.mjs` (R12, R27, R28: a whole-document
      citation of an unread capture) is exactly this case. */
   /* REC-84: AND IT IS SKIPPED, NEVER GUESSED, FOR A CALLER THAT CANNOT SEE THE
-     RECORD. `CONTENT_EXTENT_DOCUMENT_ONLY` is that caller (the catalogue, over
-     one `bundle.md`); the store passes a real `{ chain, pageCount }` and this
+     RECORD. `CONTENT_EXTENT_DOCUMENT_ONLY` is that caller (the leg grammar,
+     over one `bundle.md`: the catalogue's until T19, `inquiry-grammar`'s since);
+     the record passes a capture's real context (`contentContextFor`) and this
      arm is exactly what REC-82 landed. The same gate sits on the page-set arm
      above, and both are the C-25.10 / C-25.16 split: a shape one document
-     answers, and a fact only the store holds. */
+     answers, and a fact only the record holds. */
   /* FW-19 / IC-125: AND A `bytes` ROW IS EXEMPT, for the `document` exemption's
      own reason one construct along — an image cited as itself is a referent
      that exists the moment the bytes do, and its fidelity is the capture's
@@ -746,8 +752,8 @@ function partOutsideAnyContainer(container) {
 /** D-440 — WHAT AN ADMITTED `{part}` COULD NOT BE CHECKED AGAINST, stated, or
  *  null when it was checked in full. The row's rule: an office capture with no
  *  persisted image list keeps its UNDETERMINED admission, STATED — and so does a
- *  capture whose kind the record does not hold. `mintContent` carries this onto
- *  its answer, because a row admitted without its bound and returned bare reads
+ *  capture whose kind the record does not hold. `./index.mjs`' `mint` carries
+ *  this onto its answer (through `mintUndetermined`), because a row admitted without its bound and returned bare reads
  *  exactly like one that was verified. Pure; reads the same `ctx` the checker
  *  judged, so the statement cannot describe a different context. */
 export function imagePartUndetermined(extent, ctx = {}) {
