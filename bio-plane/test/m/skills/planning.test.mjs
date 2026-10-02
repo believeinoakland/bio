@@ -58,7 +58,7 @@ test("R28 acts: each proposal act and each act left to a member is the published
   assert.deepEqual(acts.proposes.map((a) => a.defined_by),
     ["action-plans R11", "standards R9", "conformance R12", "filings R14", "filings R23"]);
   assert.deepEqual(acts.leaves_to_a_member.map((a) => a.defined_by),
-    ["action-plans R11", "standards R9", "conformance R12", "filings R6", "filings R7"]);
+    ["action-plans R11", "standards R10", "conformance R12", "filings R6", "filings R7"]);
   /* The entries move with the catalogue, never with this module: a relabelled act arrives relabelled. */
   const relabelled = catalog.map((a) => (a.id === "determine" ? { ...a, label: "Determine, relabelled" } : a));
   const got = actionPlanningLayer(relabelled).body.acts.leaves_to_a_member.find((a) => a.id === "determine");
