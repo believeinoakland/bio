@@ -3,7 +3,8 @@
  *
  * Moved here from the check catalogue with their ids and translations unchanged (K6, R33): C-92.1–.9 (the attribution
  * act; C-92.10–.12 are ratification's, in its `RATIFY_ATTRIBUTION_CHECKS`), under a name of its own because the rest
- * of the family is held elsewhere. C-122.1 (R51, N364) is new here, a family of its own: a case's sources.
+ * of the family is held elsewhere. C-92.13 (R17, DEC-88, K1025) is new here: the act's reason. C-122.1 (R51, N364) is
+ * new here, a family of its own: a case's sources.
  *
  * C-44.2, C-68.5 and C-98.1–.9, raised by `public-read`'s code since K651, are `public-read`'s (its R17), moved there
  * with their numbers, wheres and translations unchanged and deleted here (T19), so no row id is held twice.
@@ -21,7 +22,8 @@ export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3,
  * observation is published only beside a statement of WHO SAID IT, at the level its author chose for that case
  * edition, and that choice is the author's alone, never prefilled.
  *
- *   is-attribute-act      who is choosing (a signed-in member, stamped), and that a level was chosen at all
+ *   is-attribute-act      who is choosing (a signed-in member, stamped), that a level was chosen at all, and why,
+ *                         in the author's own words (C-92.13, DEC-88)
  *   is-attribute-author   that the chooser is the observation's author, and an active member (§4.2, §4.5)
  *   is-attribute-edition  that the edition is a prepared, unsigned one that reaches the observation, and that
  *                         `name` has a handle to publish (§4.6)
@@ -84,6 +86,14 @@ export const ATTRIBUTION_ACT_CHECKS = {
     where: 'src/publication/index.mjs attributeObservation > is-attribute-edition',
     translation: 'Choosing your name publishes the handle you appear under in this record, and you have none. '
       + 'Choose another level, or set a handle first.',
+  },
+  /* DEC-88 (K1025, K1030): the author's words on why this level, recorded with the choice. Asked after C-92.2 and
+     before C-92.3, so nothing is written. */
+  ATTRIBUTION_NO_REASON: {
+    check: 'C-92.13',
+    where: 'src/publication/index.mjs attributeObservation > is-attribute-act',
+    translation: 'Choosing how a published case shows who said your observation records why, in your own words, '
+      + 'and no reason was given, or it is longer than 2,000 characters. Write one. Nothing was written.',
   },
 };
 

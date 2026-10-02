@@ -43,9 +43,9 @@ export const BLOCK_UNREADABLE_SENTENCE = "this case document declares a format t
 /** R51 (sources R4): how an entry recorded without its value is stated. */
 export const NOT_RECORDED_STATED = "known to the group, not recorded";
 
-/* A value on one front-matter line (R2): line breaks folded, quotes and backslashes made apostrophes, trimmed (the
-   store's `#fmSafe`); so the text written is the text read back, and a spelling compares equal to itself. One spelling
-   for the blocks and the attribution run (`./index.mjs` re-exports it). */
+/* A value on one front-matter line (R2): line breaks folded, quotes and backslashes made apostrophes, trimmed (as the
+   deleted store's `#fmSafe` was); so the text written is the text read back, and a spelling compares equal to itself.
+   One spelling for the blocks, the attribution run and R8's and R9's blocks (`./index.mjs` re-exports it). */
 export const fmSafe = (s) => String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'").trim();
 const oneLine = fmSafe;
 const quoted = (s) => `"${oneLine(s)}"`;
