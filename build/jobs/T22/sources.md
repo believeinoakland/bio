@@ -22,3 +22,7 @@ SOURCES #7, T22 layer 3. Entries from BOB's B1 START (`build/plan/current.md` L3
 - `checks/format.mjs`: 85 modules, 84 requirements files, 0 failures. `checks/architecture.mjs bio sources`: 11 product files, 0 failures. `checks/coverage.mjs bio sources`: 15 of 15 live ids named, 0 failures. `checks/ownership.mjs bio sources tranche/T22`: 4 files, 0 failures.
 
 Size (session_017YEhAN64o2U9JwvDJtoKmG): test runs 8, module lines 837
+
+## J1 · COMPLETE
+
+Four tests repaired for capture's T22 folds, tests only (module 837 lines, unchanged; nothing staled). Resolve reason sent on the two fixture discards (contract.test R15, source.test R1 refusals); R1's 50-knock loop and R11's 16 identical-refusal attempts advance the clock one 10-minute window each, so capture's 10-per-window limit never answers in their place (secret.test's 'an unknown entry' arm reaches SECRET_NOT_RECOGNISED). Negative controls: each fix reverted alone turns its test red. Re-scan: no stale notes. Proof: test/m/sources 24/0; whole bio-plane/test/m 4818 pass, 2 fail (the named inherited reds: catalogue-end.test:15, doorbell.test:310), 19 todo. Four checks 0 failures (coverage 15/15; ownership 4 files). Deferred: R11 rate tests' '13th attempt' wording predates the 5-per-source bound (see record). Record: build/jobs/T22/sources.md.
