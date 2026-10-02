@@ -2,7 +2,7 @@
  * `provenance/ops.mjs` with N512 (K1193; T25), where it had moved out of `legacy-index`' `src/index.mjs` at T18: the
  * control plane routes to it and hands in its envelope helpers (`json`, `doAnswer`, `storageAbsent`), the evidence
  * store's key for a digest (`captureKey`) and its stamps; it answers the Response the arm answered before the move,
- * byte for byte. The plane composes it (its L11 job; accepted red 9). */
+ * byte for byte. The plane composes it (`plane/door.mjs`, since its T25 L11 job). */
 
 import { attest, attestStatus } from "./index.mjs";
 
