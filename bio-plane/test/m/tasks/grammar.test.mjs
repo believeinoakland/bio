@@ -27,7 +27,7 @@ function promoting() {
   const w = inbox([], { a3: DOC2 });
   const p = promotionOf(w.host);                 // the one promotion instance tasks registered its check with
   w.record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "member:admin");
-  p.registerFact("producingGroup", "legacy-store", () => "test-group");
+  p.registerFact("producingGroup", "instance-setup", () => "test-group");   // instance-setup registers it live
   let n = 0;
   w.promote = (id, inboxText, { replay = false } = {}) => p.promote({ bundleId: id, base: null, replay,
     snapKey: `20260920T000000Z_t${String(++n).padStart(4, "0")}`, author: "member:alice",

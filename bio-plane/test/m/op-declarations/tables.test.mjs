@@ -36,9 +36,10 @@ test("R2: OPS maps every op to a well-formed spec {classes, machineClasses?, mut
   }
   /* The public surface is exactly the ops that gate themselves. */
   assert.deepEqual(ops.filter((op) => OPS[op].classes === null).sort(),
-    ["bootstrap", "casedocument", "caseflags", "claim", "enroll", "groupidentity", "instancegroup", "invitelook", "knock",
-     "knockerconsent", "login", "publishedbytes", "publishedcase", "publishedmanifest", "reviewcomment", "reviewcopy",
-     "statementack", "templatecomment", "templatecomments", "templateread", "templatereview", "verify"]);
+    ["activitymethod", "bootstrap", "casedocument", "caseflags", "claim", "enroll", "groupidentity", "groupkeyspublic",
+     "instancegroup", "invitelook", "knock", "knockerconsent", "login", "noticespublic", "publicread", "publishedbytes",
+     "publishedcase", "publishedmanifest", "reviewcomment", "reviewcopy", "statementack", "templatecomment",
+     "templatecomments", "templateread", "templatereview", "verify"]);
   /* Inherited names are no op. */
   for (const k of ["toString", "constructor", "__proto__", "hasOwnProperty"]) assert.ok(!Object.hasOwn(OPS, k), k);
 });
@@ -69,8 +70,9 @@ test("R3: SESSION_OPS is {member, admin}, two sets of op names each with a spec;
   for (const [op, need] of Object.entries(NEEDS)) {
     assert.ok(Object.hasOwn(OPS, op), `${op} has no spec`);
     assert.ok(need === null || CAPABILITIES.includes(need), `${op}: ${need}`);
-    const reached = inSession(op) || (!OPS[op].mutating && Array.isArray(OPS[op].classes)
-      && (OPS[op].classes.includes("member") || OPS[op].classes.includes("admin")));
+    /* A session reaches an op in its set, a read its classes admit, and a public read (every caller, R10's). */
+    const reached = inSession(op) || (!OPS[op].mutating && (OPS[op].classes === null
+      || OPS[op].classes.includes("member") || OPS[op].classes.includes("admin")));
     assert.ok(reached, `${op} is in NEEDS and no session reaches it`);
   }
   for (const op of new Set([...SESSION_OPS.member, ...SESSION_OPS.admin]))
@@ -132,8 +134,8 @@ test("R4: every act list is a list of distinct op names, each with a spec; the c
   eqSet(O.ACTION_LAYER_ACTIONS, [...O.STANDARDS_ACTIONS, ...O.QUERY_AUTHOR_ACTIONS, ...O.PLAN_PROPOSAL_ACTIONS,
     ...O.TEMPLATE_PROPOSAL_ACTIONS, ...O.LOCAL_FACTS_ACTIONS], "ACTION_LAYER_ACTIONS");
   eqSet(O.ACTION_LAYER_READS, [...O.STANDARDS_READS, ...O.CONFORMANCE_READS, ...O.CONSEQUENCES_READS, ...O.FILINGS_READS,
-    ...O.ESCALATION_READS, ...O.ACTIONS_READS, ...O.ACTION_PLANS_READS, ...O.FILING_TEMPLATES_READS, ...O.LOCAL_FACTS_READS],
-    "ACTION_LAYER_READS");
+    ...O.ESCALATION_READS, ...O.ACTIONS_READS, ...O.ACTION_PLANS_READS, ...O.FILING_TEMPLATES_READS, ...O.LOCAL_FACTS_READS,
+    ...O.MONITORING_READS], "ACTION_LAYER_READS");
   /* A list named for acts holds mutating ops, one named for reads non-mutating ones. */
   for (const [name, list] of LISTS) {
     if (/_READS$/.test(name)) for (const op of list) assert.equal(OPS[op].mutating, false, `${name}: ${op}`);
@@ -422,8 +424,8 @@ const tablesNaming = (op, t = { OPS, NEEDS, UNATTENDED_BY_DECISION, member: SESS
   ...LISTS.filter(([, list]) => list.includes(op)).map(([name]) => name),
   ...(PLAN_RUN_SCOPE.reads.includes(op) || PLAN_RUN_SCOPE.writes.includes(op) ? ["PLAN_RUN_SCOPE"] : [])];
 
-test("R6, R9: the store-internal routes monitorlook and doorbellrefused have no spec and are in no table, and nothing is declared for T23's escalationreasondraft (negative control: a table that adds one is seen)", () => {
-  for (const op of [...STORE_INTERNAL, "escalationreasondraft"]) assert.deepEqual(tablesNaming(op), [], op);
+test("R6, R9: the store-internal routes monitorlook and doorbellrefused have no spec and are in no table (negative control: a table that adds one is seen)", () => {
+  for (const op of STORE_INTERNAL) assert.deepEqual(tablesNaming(op), [], op);
   /* Negative control: doorbellrefused added to OPS (as a careless hand would, beside doorbelltally) is found. */
   const added = { ...OPS, doorbellrefused: { classes: ["admin", "member"], machineClasses: [], mutating: true } };
   assert.deepEqual(tablesNaming("doorbellrefused", { OPS: added, NEEDS, UNATTENDED_BY_DECISION,

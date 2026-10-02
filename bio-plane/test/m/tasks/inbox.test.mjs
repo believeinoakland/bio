@@ -364,7 +364,7 @@ test("R8: tasks is declared to the whole-store purge only: a bundle's purge leav
   assert.equal(w.record.declarePurge("other", ["tasks"]).reason, "TABLE_DECLARED");
 });
 
-test("R8: while another module holds the table (N363's coexistence), this module registers nothing a second time", () => {
+test("R8: while another module holds the table (as queue did in N363's coexistence), this module registers nothing a second time", () => {
   const h = host();
   h.record.declarePurge("queue", [{ name: "tasks", keys: [] }]);
   h.record.registerCounts("queue", ["tasks"], () => ({ tasks: 0 }));
