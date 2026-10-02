@@ -24660,43 +24660,6 @@ var FINDING_MEANS = Object.freeze({
   LOOKED_INDETERMINATE: "we looked and could not tell",
   PRESENT: "we looked and it is there"
 });
-var ROUTE_MARK_NOTE = "this document stays where the group put it: a verification was an attested act by people, and this record corrects FORWARD rather than un-saying one (DEC-19). What is recorded here is that its ROUTE cannot be shown from the evidence held \u2014 a statement about our evidence, not about the bytes. The state and this finding disagree deliberately, and neither is a defect in the other.";
-function routeFinding(objectType, mark) {
-  if (objectType !== "information")
-    return {
-      applies: false,
-      assessed: false,
-      marked: false,
-      finding: null,
-      means: null,
-      note: "a route is a fact about a captured document, and this record is not one"
-    };
-  if (!mark)
-    return {
-      applies: true,
-      assessed: false,
-      marked: false,
-      finding: "NEVER_LOOKED",
-      means: FINDING_MEANS.NEVER_LOOKED,
-      note: "no assessment of this document's route has ever been recorded. This is NOT a finding that the route cannot be shown; it is the absence of the question having been asked."
-    };
-  const marked = mark.finding === "LOOKED_INDETERMINATE";
-  return {
-    applies: true,
-    assessed: true,
-    marked,
-    finding: mark.finding,
-    means: FINDING_MEANS[mark.finding] ?? null,
-    at: mark.at,
-    by: mark.by,
-    stateAt: mark.state_at,
-    seq: mark.seq,
-    register: mark.register_state,
-    undetermined: mark.undetermined,
-    documents: mark.documents_n,
-    note: marked ? ROUTE_MARK_NOTE : "this document's route was assessed and every document in its register can be shown"
-  };
-}
 var RECEIPT_KIND = "bio-receipt/1";
 var STATEMENT_KIND = /^[a-z][a-z0-9-]*\/[0-9]+$/;
 function instanceStatement(kind, sha) {
@@ -55387,6 +55350,63 @@ WHERE ${gate.sql}`,
   };
 }
 
+// src/provenance-routes/index.mjs
+var te6 = new TextEncoder();
+var OBSERVATION_MEANS = Object.freeze({
+  NEVER_LOOKED: "nobody looked at this level for this subject",
+  LOOKED_ABSENT: "we looked and it is positively not there",
+  LOOKED_INDETERMINATE: "we looked and could not tell",
+  PRESENT: "we looked and it is there",
+  partial: "we looked and got part of it (SWH's crawl status; CPDF-5's measured 88% case)"
+});
+var FINDING_MEANS2 = Object.freeze({
+  NEVER_LOOKED: OBSERVATION_MEANS.NEVER_LOOKED,
+  LOOKED_INDETERMINATE: OBSERVATION_MEANS.LOOKED_INDETERMINATE,
+  PRESENT: OBSERVATION_MEANS.PRESENT
+});
+var ROUTE_MARK_NOTE = "this document stays where the group put it: a verification was an attested act by people, and this record corrects FORWARD rather than un-saying one (DEC-19). What is recorded here is that its ROUTE cannot be shown from the evidence held \u2014 a statement about our evidence, not about the bytes. The state and this finding disagree deliberately, and neither is a defect in the other.";
+function routeFinding(objectType, mark) {
+  if (objectType !== "information")
+    return {
+      applies: false,
+      assessed: false,
+      marked: false,
+      finding: null,
+      means: null,
+      note: "a route is a fact about a captured document, and this record is not one"
+    };
+  if (!mark)
+    return {
+      applies: true,
+      assessed: false,
+      marked: false,
+      finding: "NEVER_LOOKED",
+      means: FINDING_MEANS2.NEVER_LOOKED,
+      note: "no assessment of this document's route has ever been recorded. This is NOT a finding that the route cannot be shown; it is the absence of the question having been asked."
+    };
+  const marked = mark.finding === "LOOKED_INDETERMINATE";
+  return {
+    applies: true,
+    assessed: true,
+    marked,
+    finding: mark.finding,
+    means: FINDING_MEANS2[mark.finding] ?? null,
+    at: mark.at,
+    by: mark.by,
+    stateAt: mark.state_at,
+    seq: mark.seq,
+    register: mark.register_state,
+    undetermined: mark.undetermined,
+    documents: mark.documents_n,
+    note: marked ? ROUTE_MARK_NOTE : "this document's route was assessed and every document in its register can be shown"
+  };
+}
+var rowRefusal4 = (family) => (code, detail, extra) => {
+  const row2 = family[code];
+  return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
+};
+var actRefusal3 = rowRefusal4(PROVENANCE_ACT_CHECKS);
+
 // src/retrieval/checks.mjs
 var checks_exports16 = {};
 __export(checks_exports16, {
@@ -57135,12 +57155,12 @@ var Retrieval = class _Retrieval {
   /* ---- the bundle roster and the gated whole-bundle reads (R63–R65) ----
    *
    * `record-core` (layer 2) holds these reads ungated, for the in-process readers (the audit, a whole-image walk); it
-   * cannot gate them by membership's sight or provenance's marks. These are the member-facing doors, each through the
-   * one gate (membership R43, R80): an absent or unrecognised viewer sees nothing (fail closed), and a bundle the viewer
-   * may not see answers exactly as an absent one. */
-  /** REC-63: the standing route mark's joined `route_*` columns folded into ONE published field, `route`, provenance's
-   *  `routeFinding` over it (its R23), and removed from the row, so a reader meets the composed finding rather than
-   *  loose columns it would have to interpret. */
+   * cannot gate them by membership's sight or provenance-routes' marks. These are the member-facing doors, each through
+   * the one gate (membership R43, R80): an absent or unrecognised viewer sees nothing (fail closed), and a bundle the
+   * viewer may not see answers exactly as an absent one. */
+  /** REC-63: the standing route mark's joined `route_*` columns folded into ONE published field, `route`,
+   *  provenance-routes' `routeFinding` over it (its R5), and removed from the row, so a reader meets the composed
+   *  finding rather than loose columns it would have to interpret. */
   static #withRoute(r) {
     const mark = r.route_finding === null || r.route_finding === void 0 ? null : {
       seq: r.route_seq,
@@ -57157,8 +57177,8 @@ var Retrieval = class _Retrieval {
     return out;
   }
   /** R63 (`op=list`): the bundles the viewer's gate passes, in id order, each with its standing route mark's finding.
-   *  ONE LEFT JOIN against the highest `seq` (provenance R48), never a read per row: the arm with no limit is unbounded
-   *  by contract. REC-60 / D-225 kept that arm: a bound applied must be published, and this arm applies none, so a bare
+   *  ONE LEFT JOIN against the highest `seq` (provenance-routes R8's read contract), never a read per row: the arm
+   *  with no limit is unbounded by contract. REC-60 / D-225 kept that arm: a bound applied must be published, and this arm applies none, so a bare
    *  array that is COMPLETE tells no lie; its named consumers (the browser, the audit, the migration verifier) need it
    *  whole, and `roster.test.mjs` (R63) holds it complete. Paging is opt-in: a positive `limit` answers the envelope
    *  `{bundles, limit, cursor, total}`, `limit` the bound applied after the 5,000 ceiling (REC-57) and `total` what the
@@ -77598,7 +77618,7 @@ var EXPORT_LOG_LIMIT_MAX = 1e3;
 var EXPORT_NOTE_MAX = 280;
 var CREATION_BASE = sha256HexSync("");
 var HEX646 = /^[0-9a-f]{64}$/;
-var te6 = new TextEncoder();
+var te7 = new TextEncoder();
 var CorpusExport = class {
   constructor({ storage, record, now = null } = {}) {
     this.sql = storage.sql;
@@ -77893,7 +77913,7 @@ function bytesOf2(given) {
     const v = index.has(key) ? get2(index.get(key)) : void 0;
     if (v instanceof Uint8Array) return v;
     if (v instanceof ArrayBuffer) return new Uint8Array(v);
-    if (typeof v === "string") return te6.encode(v);
+    if (typeof v === "string") return te7.encode(v);
     return null;
   };
 }
@@ -82392,7 +82412,7 @@ var clamp3 = (v, dflt, max) => {
   return v != null && v !== "" && Number.isFinite(n) ? Math.min(Math.max(n, 1), max) : dflt;
 };
 var yes = (v) => v === true || v === "true" || v === "1" || v === 1;
-var te7 = new TextEncoder();
+var te8 = new TextEncoder();
 var td = new TextDecoder();
 var b643 = (bytes2) => {
   let s = "";
@@ -88665,7 +88685,7 @@ function refusal9(family, key, extra = {}) {
   return { ok: false, reason: key, code: key, check: row2.check, translation: row2.translation, ...extra };
 }
 var derivationRefusal = (key, extra) => refusal9(CASE_DERIVATION_CHECKS, key, extra);
-var actRefusal3 = (key, extra) => refusal9(PUBLISH_ACT_CHECKS, key, extra);
+var actRefusal4 = (key, extra) => refusal9(PUBLISH_ACT_CHECKS, key, extra);
 var disclosureRefusal = (key, extra) => refusal9(CASE_DISCLOSURE_CHECKS, key, extra);
 var CaseAuthoring = class _CaseAuthoring {
   #deps;
@@ -88814,7 +88834,7 @@ var CaseAuthoring = class _CaseAuthoring {
     const seen = run2.seen || {};
     const who2 = str11(author);
     if (!who2 || isMachineIdentity(who2))
-      return actRefusal3("MACHINE_CANNOT_PUBLISH", {
+      return actRefusal4("MACHINE_CANNOT_PUBLISH", {
         detail: "publishing puts the group's name on a case. A machine credential may prepare one and may never author the completeness assertion or the position on putting it to its subject, both of which are declared bias. Sign in as a member."
       });
     const auth = this.#authority(project, viewer, who2);
@@ -88847,7 +88867,7 @@ var CaseAuthoring = class _CaseAuthoring {
     const scp = str11(scope);
     const back = str11(biasAcknowledgement);
     if (!stmt)
-      return actRefusal3("NO_STATEMENT", {
+      return actRefusal4("NO_STATEMENT", {
         detail: "a published case states what it does NOT cover. A case silent about its own limits is claiming to cover everything, which is the overclaim this record exists to refuse."
       });
     if (!SUBJECT_POSITIONS.includes(pos))
