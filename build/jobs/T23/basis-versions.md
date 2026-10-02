@@ -29,3 +29,7 @@
 - `node checks/ownership.mjs … basis-versions tranche/T23`: 8 files changed; 0 failures
 
 Size (session_01PQnpH2DD633o3ucuWJ5BzY): test runs 5, module lines 6873
+
+## J1 · COMPLETE
+
+Done on job/T23/basis-versions (record 586c48f9ca). N497: fixture.mjs:60-61 now register producingGroup and caseMember as instance-setup and publication; no assertion changed. Re-scan, every file read whole: no other legacy-store registrant; notes naming retired files as live re-worded (index.mjs op-map note -> plane's store; R41 caller -> project-stage R2; checks.mjs catalogue/STATES/store.mjs notes; grammar.mjs cycle-walk note; three test headers legacy-checks -> record-grammar); checks.mjs:866 provenance kept. basis-versions 118/118; affordances 146/146 green. test/m 5039 tests, 3 fail, all accepted by name: control-plane inbox-door R36 (red 9), queue catalogue R1, R5. format, architecture, coverage (44/44), ownership (8 files): 0 failures. Nothing regenerated; no other module touched. Record: build/jobs/T23/basis-versions.md.
