@@ -1,3 +1,3 @@
 # promotion (T25)
 
-**Status** · session_0132mjJUXBPPWVGDGbsFCnND · depth 2 · WORKING · handled B0
+**Status** · session_0132mjJUXBPPWVGDGbsFCnND · depth 2 · WORKING · handled B1
