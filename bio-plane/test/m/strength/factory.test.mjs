@@ -24,7 +24,8 @@ function bareHost() {
   const host = { storage: st };
   for (const t of statements(RECORD_SCHEMA)) st.db.exec(t);
   for (const t of statements(PROVENANCE_SCHEMA)) st.db.exec(t);
-  /* inquiry's columns on `bundles` (its R40), which the store's additive list creates today. */
+  /* the columns `bundles` held for inquiry before T18–T19 moved them to its `inquiry_bundle_facts` (its R36, R40): an
+     older store's, which nothing here reads. */
   for (const c of ["inquiry_basis_count INTEGER", "inquiry_subject_entity TEXT", "inquiry_superseded_by TEXT"])
     st.db.exec(`ALTER TABLE bundles ADD COLUMN ${c}`);
   const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });

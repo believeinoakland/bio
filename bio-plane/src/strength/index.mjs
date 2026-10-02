@@ -26,7 +26,7 @@
  * (`strength_cache` by bundle, `group_strength_bar` exempt, R23), registers its projection with promotion (the cache,
  * R13, promotion R39) and the pair with `inquiry`'s grouping act (`onGrounded("strength", …)`, R17, N152). The cache's
  * columns are registered with retrieval as the `capture` and `connection` fields (R23, retrieval R62; N137) by the first
- * call that hands `retrieval` in, whenever it comes (the store's, at boot), as basis-versions takes it; a host with no
+ * call that hands `retrieval` in, whenever it comes (the plane store's, at boot), as basis-versions takes it; a host with no
  * retrieval (a test's) is not given one, which would join retrieval's projection to every promotion there.
  * `deps`:
  *   record       `recordOf(host)` unless given: `readFile` (a project's bundle.md, R14), `declarePurge`.
