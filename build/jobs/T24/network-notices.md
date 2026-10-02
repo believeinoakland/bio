@@ -56,3 +56,20 @@ My change turns three things red that were green on `tranche/T24`. None is mine 
 1. **plane**: `test/m/plane/notices.test.mjs`:39 asserts that network-notices' mint seed is held under its name (`registerMintSeed("network-notices", []).ok === false`). N503 removes the seed: the notice id is recorded by the post, through record-core R75. Plane's test should assert instead that no seed is registered under that name.
 2. **scheduler**: `test/m/scheduler/consumers.test.mjs`:161 expects, after the only act is sealed, an alarm at or before the next week's start, and a seal tick at the next week's end. Under N507, `sealWake` is null once nothing is left to seal (scheduler R15), so the alarm is deleted and nothing runs. The test needs a member act in the week under way (then the wake is that week's end), or should assert the null wake.
 3. **The plane's bundle**: `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`) is stale, from `src/network-notices/checks.mjs`, `index.mjs` and `schema.mjs` (`fleetbundles.test.mjs`: 94 pass, 4 fail, all of them this). I regenerated nothing.
+
+## J2 · COMPLETE
+
+All of B1 is applied on `job/T24/network-notices` (record: "Completion"):
+- N503 (R4): the id is recorded through `recordOpaqueId` in the post's transaction; a spent id answers `NOTICE_STALE` and is never offered again; no mint seed.
+- N504 (R1): `instanceKeyBound`, with no probe signature.
+- N505 (R21): `status_at`'s date, or null; `nn_key_revocations` dropped.
+- N507 (R14, R17): null wakes when idle.
+- N509 (R1, R22): C-70.1 at existence for `noticeprepare`, `noticepost` and `notices`.
+- S1's note re-worded to 1.54.0. No other stale notes were found.
+
+Tests:
+- Module: 61 of 61 pass.
+- Users: queue-producers 67/67 and control-plane 123/123. Scheduler and plane have 1 red each, as in J1.
+- Whole `test/m`: 5231 pass, 2 fail (J1's two).
+
+Checks: format shows red 4 only; architecture, coverage (30 of 30) and ownership have 0 failures. No catalogue row was added or changed, so there are no red 5 rows. The plane's bundle is stale (J1 (3)).
