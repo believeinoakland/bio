@@ -1,5 +1,7 @@
 # monitoring R29: what a sweep's query is, and how it runs (DRAFT for T23)
 
+**Bob's answers (K1036)** · Q1: the link sweep (A), with two changes: `match.terms` may be regular expressions, and the member picks `match.formats` from the list of formats the copy supports. Q2: an owner of the project ratifies; any member drafts. Q3: members are told of every condition that needs a look, not only the two items drafted (BOB's reading: also a listing page that cannot be reached on a run, one that redirects out of scope, and a sweep that has filed nothing for its last four runs). Q4: a ratified sweep is named standing intent. BOB's detail: a term as a regular expression is bounded (at most 200 characters, compiled without backreferences or lookaround, so its matching time stays linear), and a term that is not one is refused at the gate.
+
 **Status** · DRAFT by a read-only worker for BOB #90, 2026-10-01, on `tranche/T22`, for BOB's review and then Bob's approval as requirements (P5). Owed by:
 - K1019 (`build/rulings.md`:1021: "R29: BOB drafts the sweep design during T22 for T23");
 - `build/plan/t22-check.md`:134 (question 6) and :120 (A31);
