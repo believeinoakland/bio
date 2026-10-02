@@ -38,6 +38,8 @@ T22's rules hold (merge early; one file, one editor; marks struck at the merge; 
 7. Rows a T23 job in L3–L11 changes or adds (N486's catalogue rows; acquisition's `SWEEP_*`) are `awaiting stamp` until T24's L2 (P8: promotion's one job is L2).
 8. provenance's miniflare `mk6-bundle-names-no-author.test.mjs`:203, red since publication's T22 L8 merge, until provenance's L3 merge (N496, K1076).
 9. control-plane `inbox-door.test.mjs`'s test that a reasoned `pulled` resolve records the reason on the knock's row (115/116), until capture's L3 merge (N499, K1105, K1111) if that clears it; the door calls capture's `pullKnock`, not `inboxResolve` (control-plane `pull.mjs`:110–123), so if it stays red, until control-plane's L11 merge (K1117). control-plane R36's mark is struck when it clears.
+13. queue's `catalogue.test.mjs` R1 (:34) and R5 (:116), from observation-log's L5 merge (the eight new CONDITION kinds) until queue's L11 merge (K1119; K902's precedent).
+12. `fleetbundles.test.mjs` names the plane bundle STALE between a layer's merges and its close's regeneration (K1118).
 11. `fleetbundles.test.mjs` (the plane bundle carries `MODULE_ORDER`), from membership's L2 merge until L2's close regenerates the bundle (K1117; T22 red 2's precedent).
 10. coverage, re-taken at T22's close (K1111): escalation R29 (L9), record-grammar R43 R44 (L1), publication R56 (L8, N500), skills R31 (L6); each new N486 id until its module's merge. Replaces item 3's list.
 
