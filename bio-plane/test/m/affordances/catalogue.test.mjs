@@ -482,7 +482,9 @@ test("R27: no new rung is added — the ladder keeps its five", () => {
    no NEEDS row, K153, so a row would read `stale`). actions' `actionriskpropose` keeps its row; monitoring's
    `monitoring`, a read, is named nowhere. K705, K709 (T18): filings' `communicationprepare` and `templatesave` and
    actions' `actioncreate` and `actionpressure` join the writes, `action` and `actions` the reads. K992 (T21): `templates`
-   left filings' op map for filing-templates' (its R14), whose ops R30 grades in the test after this one. */
+   left filings' op map for filing-templates' (its R14), whose ops R30 grades in the test after this one. N490 (T24):
+   action-plans' `optionstartpreview` (its R37) is a read the control plane gates as the act it previews, stamped `author`
+   and `viewer`, so it is the one layer-9 read with a `NEEDS` row and takes a `NON_ACTS` reason by R7's rule. */
 import { standardsOps } from "../../../src/standards/index.mjs";
 import { conformanceOps } from "../../../src/conformance/index.mjs";
 import { consequencesOps } from "../../../src/consequences/index.mjs";
@@ -519,11 +521,13 @@ const LAYER9_READS = ["standard", "standards", "standardinforce", "determination
   "consequence", "consequencesof", "addressed", "counselpacketread", "filingsfor", "availableactions", "escalation",
   "escalationsdue", "action", "actions" /* K709: actions R47 */,
   "plan", "plans", "planproposals" /* K727: action-plans R6, R7, R34 */];
+const LAYER9_GATED_READS = ["optionstartpreview" /* N490: action-plans R37 */];
 /* actions' op map holds acts and reads catalogued long before layer 9; only the ops K709 adds join this set. */
 const ACTIONS_NEW = ["actioncreate", "actionpressure", "actionhold" /* K902 */, "action", "actions"];
 test("R3 R7 R12: layer 9's 41 mutating ops each carry a NON_ACTS reason and their ruled rung or stated absence, its "
-   + "20 reads none, and the op maps hold exactly those 61 ops (K264; conformance's comparisonfacts, N345; K705, K709, K727, "
-   + "K902; K992: `templates` is filing-templates')", () => {
+   + "20 ungated reads none, its one gated read (optionstartpreview, N490) a `read:` reason and no rung, and the op maps "
+   + "hold exactly those 62 ops (K264; conformance's comparisonfacts, N345; K705, K709, K727, K902; K992: `templates` is "
+   + "filing-templates')", () => {
   const url = new URL("http://x/");
   const keys = (f) => Object.keys(f({}, url, {}));
   const ESCALATION = ["escalationopen", "escalationattach", "escalationevaluate", "escalationadvance", "escalationdecline",
@@ -535,7 +539,7 @@ test("R3 R7 R12: layer 9's 41 mutating ops each carry a NON_ACTS reason and thei
   const mutating = [...Object.keys(LAYER9_RUNGS), ...Object.keys(LAYER9_ABSENT)];
   assert.equal(mutating.length, 41);
   assert.equal(LAYER9_READS.length, 20);
-  assert.deepEqual([...ops].sort(), [...mutating, ...LAYER9_READS].sort());
+  assert.deepEqual([...ops].sort(), [...mutating, ...LAYER9_READS, ...LAYER9_GATED_READS].sort());
   for (const op of mutating) {
     assert.ok(typeof NON_ACTS[op] === "string" && NON_ACTS[op].length > 10 && !NON_ACTS[op].startsWith("capture-directed:"), op);
     assert.ok(!ACTS.some((a) => a.id === op), op);
@@ -548,17 +552,34 @@ test("R3 R7 R12: layer 9's 41 mutating ops each carry a NON_ACTS reason and thei
   const named = (op) => Object.hasOwn(NON_ACTS, op) || Object.hasOwn(RUNGS, op) || Object.hasOwn(RUNG_ABSENT, op)
     || [...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => a.id === op);
   assert.deepEqual(LAYER9_READS.filter(named), []);
+  /* N490 (R7): the gated read carries a `read:` reason in the form of the others, and no rung (R3 grades the ops that
+     write), and is no act */
+  for (const op of LAYER9_GATED_READS) {
+    assert.ok(typeof NON_ACTS[op] === "string" && NON_ACTS[op].startsWith("read: ") && NON_ACTS[op].length > 40, op);
+    assert.match(NON_ACTS[op], /writes nothing$/, op);
+    assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
+    assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => a.id === op), op);
+  }
   assert.ok(Object.hasOwn(NON_ACTS, "actionriskpropose"));
   assert.equal(RUNGS.actionriskpropose, "reversible", "DEC-88");
   assert.ok(!named("monitoring"));
-  /* the control plane's rows for these ops, as legacy-index's K263 routes them: gated and mutating for the 22, reads
-     ungated; nothing is unaccounted */
+  /* the control plane's rows for these ops, as op-declarations declares them (K263's routing, now its): gated and
+     mutating for the writes, the reads ungated but the preview; nothing is unaccounted */
   const table = [...mutating.map((op) => ({ op, mutating: true, gated: true })),
     ...LAYER9_READS.map((op) => ({ op, mutating: false, gated: false })),
+    ...LAYER9_GATED_READS.map((op) => ({ op, mutating: false, gated: true })),
     { op: "actionriskpropose", mutating: true, gated: true }, { op: "monitoring", mutating: false, gated: false }];
   const r = A.unaccounted(table);
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
-  assert.deepEqual(r.stale.filter((op) => mutating.includes(op) || LAYER9_READS.includes(op)), []);
+  assert.deepEqual(r.stale.filter((op) => mutating.includes(op) || LAYER9_READS.includes(op)
+    || LAYER9_GATED_READS.includes(op)), []);
+  /* negative controls (N490): carried by no row or carried ungated, the gated read reads stale; an ungated read of
+     action-plans carried gated, as the preview is, reads unpublished, so a gated read left unnamed is seen */
+  for (const op of LAYER9_GATED_READS) {
+    assert.ok(A.unaccounted([]).stale.includes(op), op);
+    assert.ok(A.unaccounted([{ op, mutating: false, gated: false }]).stale.includes(op), op);
+  }
+  assert.deepEqual(A.unaccounted([{ op: "planproposals", mutating: false, gated: true }]).unpublished, ["planproposals"]);
 });
 
 /* N321 (T13, K424): `op=projectstage` (publication R44) is a read stamping `viewer`, carried as every project read is:
@@ -886,7 +907,8 @@ test("R2 R3 R7 R12: T22's new ops — declinetoescalate, heldsetaside, heldresto
 });
 
 /* R32 (N485: K1025, K1035; K1094; DEC-111, K1100; T23): the ops T23 adds, by R7 and R27, and R12's totality with them.
-   case-authoring's, escalation's and monitoring's are read from their op maps; network-notices is not in this module's
+   case-authoring's and escalation's are read from their op maps; `sweeps` left monitoring's for link-sweep's at T24's L10
+   (N506, link-sweep R1–R12), and link-sweep is not in this module's uses, so it is named as R32 names it; network-notices is not in this module's
    uses, so its four ops (its op map: `noticeprepare`, `noticepost`, `notices`, `directorysubmission`) and its three
    public reads (registered through public-read R18) are named as its record states them (build/jobs/T23/network-notices.md;
    K1150). R32 names no grade or reason for `directorysubmission`, so it is not asserted here either way. */
@@ -905,11 +927,9 @@ test("R32 R2 R3 R7 R12: T23's ops — whatchangedpropose `undetermined` as templ
    + "no credential` — and with the control plane's rows for them nothing is unaccounted; a misgraded op, an ungated "
    + "read and an op left out are each seen", () => {
   const url = new URL("http://x/");
-  const ca = Object.keys(caseAuthoringOps({}, url, {})), esc = Object.keys(escalationOps({}, url, {})),
-        mon = Object.keys(monitoringOps({}, url, {}));
+  const ca = Object.keys(caseAuthoringOps({}, url, {})), esc = Object.keys(escalationOps({}, url, {}));
   for (const op of ["whatchangedpropose", "whatchangeddrafts"]) assert.ok(ca.includes(op), op);
   assert.ok(esc.includes("escalationreasondraft"));
-  assert.ok(mon.includes("sweeps"));
   /* each write's grade, on R27's rule and beside the op R32 names as its precedent */
   const grades = Object.fromEntries(Object.keys(R32_GRADES).map((op) => [op, gradeOf(op)]));
   assert.deepEqual(grades, R32_GRADES);

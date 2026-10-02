@@ -541,7 +541,7 @@ async function migrationReplayOf(env, storeName, b) {
 }
 
 /* D-526 (`BIO_Case_Making_v0_1.md` §2; D-510, C-86.1): WHAT A PROMOTION IS, derived ONCE from the bytes the caller sent —
-   the document's own `object_type` through the catalogue's `normalizeType`, the envelope's only where the document
+   the document's own `object_type` through record-grammar's `normalizeType`, the envelope's only where the document
    states none — exactly as `promote` derives it in the store. The gates that ask it (the migration-replay admission,
    `create_projects`, D-78's `surfaced_by` restamp) asked the ENVELOPE, and an envelope is legal with no type at all:
    measured on 8bdf20e6, a member without `create_projects` created a project by leaving the type out. A contradicting
@@ -973,7 +973,7 @@ export function makeFetch(hooks = {}) {
        body itself — and op=backlinks is born stamped. The store fails closed
        on an absent viewer, so removing an op from this list yields an empty
        answer rather than an unfiltered one. (op=affordances takes the same
-       stamp in its own handler above; op=search and the edge/state actions
+       stamp in its own handler, reached through plane's hooks; op=search and the edge/state actions
        were stamped from the first commit.) */
     /* REC-30: the sweep of what REC-25 left. REC-25 stamped the reads ADDRESSED
        to a bundle; these are the reads addressed to something else that NAME a
@@ -984,7 +984,7 @@ export function makeFetch(hooks = {}) {
        sweeps whose findings name bundles. Every one fails closed in the store on
        an absent stamp, so removing an op from this list withholds an answer and
        never widens one. `op=queue` and `op=affordances` take the same stamp in
-       their own handlers above. */
+       their own handlers, reached through plane's hooks. */
     /* REC-36: `readingname` joins them, and its posture is the STRONGER of the
        two the gate's header describes. The other reading reads keep the row and
        withhold the bundle back-reference; a CANDIDATE list withholds the ROW,
@@ -999,7 +999,7 @@ export function makeFetch(hooks = {}) {
        is NOT here: it is a WRITE and takes its own member route. */
     /* REC-132 / D-422: the ops whose store method reads the POSITIONAL `identity` stamp
        (`#positionalMember`). `affordances` and `queue` build their own inner requests
-       above and stamp it there. A new reader of `identity` joins this list. */
+       in their owners' handlers, reached through plane's hooks (`gatedOp`), and stamp it there. A new reader of `identity` joins this list. */
     /* D-681 (T5-11): `leadlist` joins, `leadread`'s reach asked of the same positional stamp. */
     const IDENTITY_READS = ["leadlook", "leadread", "leadshare", "leadlist", "frontier"];
     const REC30_VIEWER_READS = ["dangling", "tasks", "reading", "readingref", "readingname",
@@ -1299,8 +1299,8 @@ export function makeFetch(hooks = {}) {
         || op === "driveshells"
         /* REC-138 / D-426: the ROSTER acts name a project, so one the caller cannot see must
            answer exactly as one that does not exist — asked of SIGHT before any positional test
-           (`Store#inSight`). `by` (below) stays the positional half; this is the visibility half.
-           ONE DIFFERENCE from the rest of this list, stated at `Store#rosterInSight`: the store
+           (membership's `inSight`). `by` (below) stays the positional half; this is the visibility half.
+           ONE DIFFERENCE from the rest of this list, stated at membership's `rosterInSight`: the store
            treats a viewer that was never SENT as a direct internal call and does not ask, on
            `#projectAuthority`'s absent-identity precedent — so this stamp is load-bearing, and the
            `roster-stamp-dropped` control arm measures what removing it discloses. */
@@ -1340,7 +1340,7 @@ export function makeFetch(hooks = {}) {
         || CAPTURE_VIEWER_ACTIONS.includes(op) || CAPTURE_READS.includes(op)
         /* R45 (K1168; op-declarations R10): case-authoring's draft of what changed and its read (R39) and network-notices'
            act and reads (R1, R4, R22, R23) each answer by the caller's sight, and fail closed without the stamp
-           (escalation's `escalationreasondraft` and monitoring's `sweeps` take it as `ACTION_LAYER_READS`). */
+           (escalation's `escalationreasondraft` and link-sweep's `sweeps`, its R9 (N506), take it as `ACTION_LAYER_READS`). */
         || WHAT_CHANGED_PROPOSAL_ACTIONS.includes(op) || WHAT_CHANGED_READS.includes(op)
         || NETWORK_NOTICES_ACTIONS.includes(op) || NETWORK_NOTICES_READS.includes(op)
         || REC30_VIEWER_READS.includes(op)) {
@@ -1385,7 +1385,7 @@ export function makeFetch(hooks = {}) {
        honoured. It drives ONE thing: whether op=memberlist's rows carry `cover`
        beside `handle`. Section 3 gives members and the public the handle roster
        and gives only administrators the PAIRING, so the rule is a projection in
-       the store (Store.memberList) rather than a class ACL here — the op is
+       the store (membership's member list) rather than a class ACL here — the op is
        legitimately reachable by a member, and what a member must not receive is
        a FIELD, not the answer.
 
@@ -1892,7 +1892,7 @@ export function makeFetch(hooks = {}) {
        same check in this landing, so the stamp is READ on all three rather than
        being recorded and trusted. */
     /* REC-156 adds `memberadd` — D-136's sentence in the one op that ruling did
-       not name. `Store#memberAdd` WRITES the proposer's `admin_votes` ('add') row
+       not name. membership's `memberAdd` WRITES the proposer's `admin_votes` ('add') row
        when an addition needs §4.7's consensus, and the voter it wrote was whoever
        the caller put in `by`, so a proposal could carry one endorsement in another
        administrator's name. Now the SERVER names the proposer, and the store's
@@ -2164,14 +2164,14 @@ export function makeFetch(hooks = {}) {
            can invent, which is the reasoning `migrationReplay` below already answers one field over.
            THE CONDITION IS THE ADMIN CLASS WITH NO SESSION, AND BOTH HALVES ARE LOAD-BEARING. Admin is the only class
            the migration tool used (`migrate.mjs`, narrowed to admin at REC-173 and retired in K739), so an honest
-           replay is untouched. `!viaSession` is there because the session block above sets `cls = kind` from
+           replay is untouched. `!viaSession` is there because admission's session resolution sets `cls = kind` from
            `sess.role === "admin"`, and the FOUNDER'S OWN SESSION — the one whose stored role is the literal `admin`
-           (`Store.ROOT_ADMIN`, `rootOfTrust: true`), minted by `op=claim` and `op=login` — therefore arrives as
+           (membership's `ROOT_ADMIN`, `rootOfTrust: true`), minted by `op=claim` and `op=login` — therefore arrives as
            `cls === "admin"` exactly as the deploy token does. A person signed in at a browser is not the root of
-           trust, which is the distinction `op=export` draws in this file in the same words. MEASURED, because the
+           trust, which is the distinction admission's export refusal draws in the same words. MEASURED, because the
            first draft of this comment said an ADMIN-ROLE MEMBER's session arrives that way too and that is FALSE:
            a member login stores `member:<id>`, so her class is `member` and `m.role === "admin"` decides only her
-           capabilities (`Store#sessionRights`). The old `risk-tier.test.mjs` §8's REACH arm asked `op=whoami` for all
+           capabilities (membership's `sessionRights`). The old `risk-tier.test.mjs` §8's REACH arm asked `op=whoami` for all
            four callers rather than asserting any of it, and its control caught the error; R16's tests
            (`test/m/control-plane/gates.test.mjs`) hold the class test now. Everything else
            — a member session, a member, probe or `ai` token, and any class added later — has the flag removed BEFORE
@@ -2252,7 +2252,7 @@ export function makeFetch(hooks = {}) {
            what becomes the bundle_sha, so overwriting a caller's `agent` claim
            on a session write cannot smuggle a false attribution past the gate. */
         if (b.base === null && b.meta && !replayed   /* REC-173 (b): a verified migration replay keeps its Drive-era bytes */
-            /* Through the catalog's normalizeType (REC-10), so the canonical
+            /* Through record-grammar's normalizeType (REC-10), so the canonical
                `inquiry` spelling and both legacy spellings all get the D-78
                restamp — hand-listed spellings here is how the last rename
                made a check silently stop firing. */

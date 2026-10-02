@@ -52,7 +52,7 @@ export const DISPATCH_CHECKS = {
   },
   /* D-629 (R25, C-69.4) — THE STORE'S DOOR THREW. Its outermost catch answered `String(e.stack)` for any throw on any op
      (file paths, line numbers and constraint text, public ops included). It came with the store's door (N333, K412);
-     C-69.3 being PLANE_INTERNAL_ERROR's since T12, it takes the next free number (awaiting stamp, N318). Same posture:
+     C-69.3 being PLANE_INTERNAL_ERROR's since T12, it takes the next free number (stamped by 1.44.0, N318). Same posture:
      the stack is logged under a CORRELATION id, the caller receives the code, this sentence and the id. */
   STORE_INTERNAL_ERROR: {
     check: 'C-69.4',
@@ -118,7 +118,7 @@ export const REPLAY_CHECKS = {
 /* ===========================================================================
    D-270 — THE ARGUMENT COMPLAINT (C-61), the other half of the row. Moved from the check catalogue at T18 (K636,
    K621: R39's gate and its raiser `requiredArgument` with it; the row and its words unchanged, its `where` now this
-   module's; awaiting stamp, T19).
+   module's; stamped by 1.49.0).
 
    THREE OPS REFUSED A MISSING OR MALFORMED ARGUMENT WITH A BARE `error` STRING
    AND NO CODE OF ANY KIND: `op=capture` and `op=pdfstructure` (*"requires

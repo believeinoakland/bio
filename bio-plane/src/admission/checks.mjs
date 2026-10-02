@@ -4,9 +4,9 @@
  * Copied from `control-plane/checks.mjs` at the control-plane split (T18, K617, K624 (1)), each row keeping its check id
  * and its words, and each `where` naming its site in `src/admission/index.mjs`: the admission gate C-38 whole, the
  * namespaces C-78 whole, the agent credential's gate and declaration C-29.6–.10, the operator fence C-32.17 and the
- * group identity fence C-64.4. Control-plane's copies go in its own job, after this module merges (K624 (1)); until
- * then each code has two rows, one tranche only (awaiting stamp, T19). The reasons each row carries are kept in the
- * control plane's copy until it is deleted, and stated here in short. */
+ * group identity fence C-64.4. Control-plane's copies were deleted by its own T18 job, after this module merged
+ * (K624 (1)), so each code has this one row; the stamp 1.49.0 (T19 layer 2) took them, each `where` re-pointed here
+ * (N502, N469's rule). The reasons each row carries are stated beside it. */
 
 /* C-38 · THE ADMISSION GATE (REC-79): every refusal a caller meets before their op runs. ADDITIVE ON THE WIRE: each
    refusal keeps its `error` sentence byte-identical beside the code (IC-REC-79). `MACHINE_CREDENTIAL_REQUIRED` is named
