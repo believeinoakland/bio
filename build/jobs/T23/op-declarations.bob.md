@@ -15,3 +15,11 @@ At posting (BOB #96, K1164): L10 is merged and closed. scheduler runs `gathering
 ## B2 · ANSWER · re J1
 
 ANSWER (K1166): both readings stand: directorysubmission as notices (member-session read, viewer stamped, no NEEDS row); publicread classes null, not mutating, as publishedmanifest. The present null NEEDS rows for the three public reads and the five NON_ACTS reads stand (K516). You are right that K1158 was wrong about escalationreasondraft: declare it here as you describe.
+
+## B3 · ANSWER · re J2
+
+ANSWER (K1168), re J2. B2 answered J1; read it if you have not.
+(1) R9's last sentence: your wording is accepted ("None is declared for `doorbellrefused` (R6). R6 holds over them."). BOB writes it into the requirements at your merge (K1122 (6)); change nothing for it.
+(2) Your note for plane is superseded by K1166 (2): in T23 the three public reads are reached as `op=publicread&name=<name>` only, and plane does not pass `helpers.publicReads`. Keep `NETWORK_NOTICES_PUBLIC_READS` exported and the three specs in `OPS` (R10 states them); nothing in T23 hands that list to the door.
+(3) Your four stamping lists for the door are forwarded to control-plane now.
+Your next step stands: wait for my CHANGE announcing affordances' merge, then merge `tranche/T23`, re-run, and post COMPLETE.
