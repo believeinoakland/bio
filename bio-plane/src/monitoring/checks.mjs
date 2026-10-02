@@ -10,7 +10,8 @@
  * read in place, and the catalogue's copy is T19's layer 1's to delete (K529). The rest of C-48 is `acquisition`'s (its
  * R29). New with them (N242's share, DEC-49): C-18.10, the row of C-18.5's refusal at the write, `GATHERING_REFUSED`,
  * which until now reached the wire with no translation (queue's C-19.2 `INBOX_REFUSED` is its twin). All three rows are
- * `awaiting stamp` (T19's promotion job). */
+ * `awaiting stamp` (T19's promotion job). T22 (R52, K1019): C-18.11–C-18.15, the refusals of an address's frequency
+ * setting (`FREQUENCY_CHECKS`), `awaiting stamp` (T23's promotion job). */
 
 import { isPublicHttpsLocator } from "../record-grammar/locator.mjs";
 import { ISO_TS_RE } from "../record-grammar/ids.mjs";
@@ -76,8 +77,50 @@ export const GATHERING_CHECKS = Object.freeze({
   }),
 });
 
+/* C-18.11–C-18.15 — the refusals of R52's act, `addressFrequencySet` (monitoring R17 as Bob agreed it, K1019), each
+   with nothing written, asked in this order. The translations are the sentences a member reads. All five are
+   `awaiting stamp` (T23's promotion job; accepted red 3). */
+export const FREQUENCY_CHECKS = Object.freeze({
+  MACHINE_CANNOT_SET_FREQUENCY: Object.freeze({
+    check: 'C-18.11',
+    where: at('addressFrequencySet', 'is-frequency-member'),
+    translation: 'How often an address is checked is set by a named member, with the member\'s reason. An assistant '
+      + 'or a machine may suggest it; it may not set it. Nothing was changed.',
+  }),
+  NO_SUCH_ADDRESS: Object.freeze({
+    check: 'C-18.12',
+    where: at('addressFrequencySet', 'is-frequency-address'),
+    translation: 'No monitored document you can see is checked at that address, so there is no check whose frequency '
+      + 'could be set there. Nothing was changed.',
+  }),
+  BAD_FREQUENCY: Object.freeze({
+    check: 'C-18.13',
+    where: at('addressFrequencySet', 'is-frequency-word'),
+    translation: 'That is not a frequency this record knows. Choose one of the listed frequencies, or none to return '
+      + 'the address to the frequency its documents set. Nothing was changed.',
+  }),
+  NOT_A_SOURCE_OWNER: Object.freeze({
+    check: 'C-18.14',
+    where: at('addressFrequencySet', 'is-frequency-owner'),
+    translation: 'The frequency of an address is set by an owner of a project that holds a monitored document there, '
+      + 'and you own none of them. Ask an owner of one of those projects. Nothing was changed.',
+  }),
+  FREQUENCY_NO_REASON: Object.freeze({
+    check: 'C-18.15',
+    where: at('addressFrequencySet', 'is-frequency-reason'),
+    translation: 'A frequency is set with a reason: one of the listed reasons, or your own words of up to 2,000 '
+      + 'characters. Nothing was changed.',
+  }),
+});
+
 /** R42: every row this module holds, keyed by code, for a reader that looks one up by the code an answer carries. */
-export const MONITORING_CHECKS = Object.freeze({ ...DRIVE_TICK_CHECKS, ...GATHERING_CHECKS });
+export const MONITORING_CHECKS = Object.freeze({ ...DRIVE_TICK_CHECKS, ...GATHERING_CHECKS, ...FREQUENCY_CHECKS });
+
+/** A refusal answer naming one of this module's rows (DEC-49): its code, row and member's sentence, and the detail. */
+export function frequencyRefusal(code, detail, extra) {
+  const row = FREQUENCY_CHECKS[code];
+  return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
+}
 
 export const GATH_ID_RE = /^GATH-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
 export const CRITICALITY_ENUM = ['crucial', 'supporting'];

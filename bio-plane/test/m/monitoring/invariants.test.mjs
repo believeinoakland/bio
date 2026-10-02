@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, serve, sha, DAEMON, NOW_MS, infoMd } from "./fixture.mjs";
-import { monitoringOps, MONITORING_TABLES, MONITORING_CHECKS, DRIVE_TICK_CHECKS, GATHERING_CHECKS } from "../../../src/monitoring/index.mjs";
+import { monitoringOps, MONITORING_TABLES, MONITORING_CHECKS, DRIVE_TICK_CHECKS, GATHERING_CHECKS, FREQUENCY_CHECKS } from "../../../src/monitoring/index.mjs";
 import { MECHANICAL_FIELD_SETS } from "../../../src/promotion/index.mjs";
 import { ACQUISITION_CHECKS } from "../../../src/acquisition/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
@@ -99,41 +99,50 @@ test("R40 bias never shapes what is monitored: no service takes a lens, and a le
   assert.equal(JSON.stringify(routed), a);
 });
 
-test("R41 the three tables are this module's, derived and declared to purge: monitor_fired by subject; monitor_address_type and monitor_tick_epoch only by a whole-store purge", async () => {
+test("R41 the tables are this module's and declared to purge: monitor_fired by subject; monitor_address_type, monitor_tick_epoch and R52's monitor_address_frequency only by a whole-store purge", async () => {
   const w = world();
   assert.deepEqual(MONITORING_TABLES.map((t) => [t.name, t.keys]),
-    [["monitor_fired", ["subject"]], ["monitor_tick_epoch", []], ["monitor_address_type", []]]);
+    [["monitor_fired", ["subject"]], ["monitor_tick_epoch", []], ["monitor_address_type", []], ["monitor_address_frequency", []]]);
   const id = "INFO-2026-0850-purge";
-  w.monitored(id, LOC, "purge-v1", { freq: "hourly" });
+  w.monitored(id, LOC, "purge-v1", { freq: "hourly", lines: ["project: PROJ-2026-0850-p"] });
+  w.inProject("PROJ-2026-0850-p");
   w.net.routes[LOC] = serve("purge-v1");
   await tick(w, id);                /* reads the address's type */
+  assert.equal(w.m.addressFrequencySet({ address: LOC, frequency: "daily", reason: "source_changes_rarely", author: "carol",
+                                         viewer: "member:carol" }).ok, true);   /* an address's own frequency (R52) */
   const real = w.m.monitor;
   w.m.monitor = async () => { throw new Error("down"); };
-  await w.m.cadenceTick(NOW_MS + 2 * 3600000);   /* fails: its claim and epoch stay */
+  await w.m.cadenceTick(NOW_MS + 2 * 86400000);   /* fails: its claim and epoch stay */
   w.m.monitor = real;
   const count = (t) => w.rows(`SELECT count(*) c FROM ${t}`)[0].c;
-  assert.deepEqual([count("monitor_fired"), count("monitor_tick_epoch"), count("monitor_address_type")], [1, 1, 1]);
+  const all = () => ["monitor_fired", "monitor_tick_epoch", "monitor_address_type", "monitor_address_frequency"].map(count);
+  assert.deepEqual(all(), [1, 1, 1, 1]);
   w.record.purge({ bundleId: id });
-  assert.deepEqual([count("monitor_fired"), count("monitor_tick_epoch"), count("monitor_address_type")], [0, 1, 1],
-    "the bundle's claims go; the epoch and the address's reading outlive it");
+  assert.deepEqual(all(), [0, 1, 1, 1], "the bundle's claims go; the epoch, the address's reading and its settings outlive it");
   w.record.purge({});
-  assert.deepEqual([count("monitor_fired"), count("monitor_tick_epoch"), count("monitor_address_type")], [0, 0, 0]);
+  assert.deepEqual(all(), [0, 0, 0, 0]);
 });
 
-test("R42 this module's own table holds C-48.8 and C-48.9, each with its code, number, translation and a where naming this module's site; the rest of C-48 is acquisition's; C-18.10 is the gathering refusal's row", () => {
+test("R42 this module's own table holds C-48.8 and C-48.9, each with its code, number, translation and a where naming this module's site; the rest of C-48 is acquisition's; C-18.10 is the gathering refusal's row; C-18.11 to C-18.15 are R52's", () => {
   assert.deepEqual(Object.keys(MONITORING_CHECKS).sort(),
-    ["DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL", "DRIVE_TICK_EXPORT_IS_THE_SHELL", "GATHERING_REFUSED"]);
+    ["BAD_FREQUENCY", "DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL", "DRIVE_TICK_EXPORT_IS_THE_SHELL", "FREQUENCY_NO_REASON",
+     "GATHERING_REFUSED", "MACHINE_CANNOT_SET_FREQUENCY", "NOT_A_SOURCE_OWNER", "NO_SUCH_ADDRESS"]);
   assert.deepEqual(Object.fromEntries(Object.entries(MONITORING_CHECKS).map(([k, r]) => [k, [r.check, r.where]])), {
     DRIVE_TICK_EXPORT_IS_THE_SHELL: ["C-48.8", "src/monitoring/index.mjs monitor > is-drive-tick-export"],
     DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL: ["C-48.9", "src/monitoring/index.mjs monitor > is-drive-tick-bytes"],
     GATHERING_REFUSED: ["C-18.10", "src/monitoring/index.mjs gatheringCheck > is-gathering-refused"],
+    MACHINE_CANNOT_SET_FREQUENCY: ["C-18.11", "src/monitoring/index.mjs addressFrequencySet > is-frequency-member"],
+    NO_SUCH_ADDRESS: ["C-18.12", "src/monitoring/index.mjs addressFrequencySet > is-frequency-address"],
+    BAD_FREQUENCY: ["C-18.13", "src/monitoring/index.mjs addressFrequencySet > is-frequency-word"],
+    NOT_A_SOURCE_OWNER: ["C-18.14", "src/monitoring/index.mjs addressFrequencySet > is-frequency-owner"],
+    FREQUENCY_NO_REASON: ["C-18.15", "src/monitoring/index.mjs addressFrequencySet > is-frequency-reason"],
   });
   for (const r of Object.values(MONITORING_CHECKS)) {
     assert.equal(typeof r.translation, "string");
     assert.ok(r.translation.length > 40, "a canned sentence (DEC-49)");
     assert.ok(Object.isFrozen(r));
   }
-  assert.deepEqual(MONITORING_CHECKS, { ...DRIVE_TICK_CHECKS, ...GATHERING_CHECKS });
+  assert.deepEqual(MONITORING_CHECKS, { ...DRIVE_TICK_CHECKS, ...GATHERING_CHECKS, ...FREQUENCY_CHECKS });
   /* no code is held twice: none of this module's rows is acquisition's, and no C-48 row of acquisition's is this module's */
   for (const code of Object.keys(MONITORING_CHECKS)) assert.equal(code in ACQUISITION_CHECKS, false, code);
   assert.deepEqual(Object.values(ACQUISITION_CHECKS).map((r) => r.check).filter((c) => c === "C-48.8" || c === "C-48.9"), []);
