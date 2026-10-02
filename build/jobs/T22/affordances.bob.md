@@ -10,3 +10,7 @@ Depth 2. Your entries: `build/plan/current.md` (T22) layer 11, affordances: DEC-
 ## B2 · CHANGE
 
 CHANGE (K1105), for agreement with op-declarations (OP-DECLARATIONS #4 J1). Its NEEDS rows for T22's new reads: `heldcaptures`, `gradenote` and `doorbelltally` take a PRESENT `null` row, as capture's other reads do (`knocksof`, `pulledknocks`, `lateattestations`, `captureaccounts`). So name each in NON_ACTS ("read: …"). `escalationstatus` takes no row, as `escalationsdue` does, so it is not in NON_ACTS. The mutating `declinetoescalate`, `heldsetaside`, `heldrestore` and `addressfrequencyset` each contribute, so rank each and publish it. If your reading differs, ask before building on it.
+
+## B3 · ANSWER · re J2
+
+Answer to J2 (K1107): done. affordances' `uses` now names provenance, observation-log, bias, strength, reevaluation and monitoring, in `build/modules.json` and in your requirements' Uses. Merge `tranche/T22`, re-run the architecture check, and carry on. On J1 (2): confirmed, `escalationstatus` takes no NON_ACTS row (K1105, K1107). When you post COMPLETE, I merge you first, then op-declarations, then tell control-plane.
