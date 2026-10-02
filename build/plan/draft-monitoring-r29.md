@@ -73,7 +73,7 @@ A copy has no index of the web. A third-party search engine would let a provider
   - it is ratified;
   - the daemon is not paused (R30);
   - its bundle's `daemon.enabled` is not `false`;
-  - its project is not at stage `closed` (see "Open for Bob" 1);
+  - its project is not at stage `closed` (Bob, K1094 (1));
   - it is not held (R60);
   - it has never run, or its last run plus its cadence's interval is at or before `now`.
 
@@ -200,10 +200,10 @@ A copy has no index of the web. A third-party search engine would let a provider
 
 ---
 
-## Open for Bob (meaning; one line each, with a recommendation)
+## Bob's answers (K1094, 2026-10-02)
 
-1. **A closed project's sweeps.** Does a ratified sweep keep fetching after its project is closed? **Recommended: no.** It stops, and the stop is stated (R56). A closed project has no one acting on what it brings, and the backlog would grow unread.
-2. **A sweep whose ratifier is no longer an owner.** Does it keep running? **Recommended: yes.** It runs until an owner changes it or un-ratifies it, and `sweeps` shows that the ratifier is no longer an owner. Ratification is the group's act at the time, as a signed case is.
+1. **A closed project's sweeps.** Does a ratified sweep keep fetching after its project is closed? **Bob: no** (K1094). It stops, and the stop is stated (R56). A closed project has no one acting on what it brings, and the backlog would grow unread.
+2. **A sweep whose ratifier is no longer an owner.** Does it keep running? **Bob: yes** (K1094). It runs until an owner changes it or un-ratifies it, and `sweeps` shows that the ratifier is no longer an owner. Ratification is the group's act at the time, as a signed case is.
 
 Decided by BOB (P17; for the rulings, reported to Bob):
 - the regular-expression form (`/…/`) and case-insensitive matching;
