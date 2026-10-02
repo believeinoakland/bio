@@ -1,6 +1,6 @@
 # Plan: tranche T23
 
-**Status** · OPENING (BOB #94, 2026-10-02): `tranche/T23` from `main` @ 5d473bb436. Drafted by BOB #92's worker and re-checked by BOB #93 (K1099); re-checked at the opening by BOB #94 against K1099–K1112 and `next.md` N497–N500 (K1113).
+**Status** · OPENING · BOB #94 · session_013FmNhyCTaUg2oLffkzwS3R · depth 1
 
 ## Legacy census (§5.2 (2), K1007 (a))
 
