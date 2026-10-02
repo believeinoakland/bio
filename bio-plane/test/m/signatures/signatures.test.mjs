@@ -24,7 +24,7 @@ import { renderSignpage, SIGNPAGE_SRC, SIGNPAGE_OUT } from "../../../scripts/emb
 
 const {
   NS_RELEASE, NS_RATIFY, NS_FLEET, NS_NOTICE, verifySshsig, ratifyStatement, caseRatifyStatement, fleetStatement,
-  noticeStatement,
+  noticeStatement, NS_DOCKET, docketStatement,
 } = sshsig;
 const {
   timestampRequest, parseTimestampResponse, TSA_ENDPOINTS, TSA_CONTENT_TYPE, TSA_ACCEPT,
@@ -143,18 +143,19 @@ const parseAndLog = (...a) => {
 
 /* ======================================================================= R1 */
 
-const NAMESPACES = ["NS_RELEASE", "NS_RATIFY", "NS_FLEET", "NS_NOTICE"];
+const NAMESPACES = ["NS_RELEASE", "NS_RATIFY", "NS_FLEET", "NS_NOTICE", "NS_DOCKET"];
 
-test("R1 the four namespaces are the compiled strings, pairwise distinct, and a signature in one never verifies in another", async () => {
+test("R1 the five namespaces are the compiled strings, pairwise distinct, and a signature in one never verifies in another", async () => {
   assert.equal(NS_RELEASE, "bio-release");
   assert.equal(NS_RATIFY, "bio-ratify");
   assert.equal(NS_FLEET, "bio-release-fleet");
   assert.equal(NS_NOTICE, "bio-working-on");
-  /* Exactly four: every NS_ export of the module is one of them. */
+  assert.equal(NS_DOCKET, "bio-docket");
+  /* Exactly five: every NS_ export of the module is one of them. */
   assert.deepEqual(Object.keys(sshsig).filter((k) => k.startsWith("NS_")).sort(), [...NAMESPACES].sort());
   const all = NAMESPACES.map((k) => sshsig[k]);
   assert.ok(all.every((v) => typeof v === "string" && v.length > 0));
-  assert.equal(new Set(all).size, 4);
+  assert.equal(new Set(all).size, 5);
   /* Compiled: a caller cannot rebind one. */
   for (const k of NAMESPACES) assert.throws(() => { sshsig[k] = "x"; });
   const msg = enc("one message\n");
@@ -405,12 +406,94 @@ test("R37 NS_NOTICE is bio-working-on, distinct from every other namespace, and 
   const stmt = noticeStatement("NOTE-2026-4817", 3, NOTICE_SHA);
   const sig = await sign(KEY, NS_NOTICE, stmt);
   assert.deepEqual(await verifyAndLog(sig, stmt, NS_NOTICE, [KEY.line]), { ok: true, keyB64: KEY.keyB64, namespace: NS_NOTICE });
-  for (const ns of [NS_RELEASE, NS_RATIFY, NS_FLEET]) {
+  for (const ns of [NS_RELEASE, NS_RATIFY, NS_FLEET, NS_DOCKET]) {
     assert.deepEqual(await verifyAndLog(sig, stmt, ns, [KEY.line]), { ok: false, reason: "NAMESPACE", expected: ns, got: NS_NOTICE });
   }
   /* The same statement signed as a ratification is not a notice signature. */
   const asRatify = await sign(KEY, NS_RATIFY, stmt);
   assert.equal((await verifyAndLog(asRatify, stmt, NS_NOTICE, [KEY.line])).reason, "NAMESPACE");
+});
+
+/* ================================================================= R39–R40 */
+
+const DOCKET_SHA = "fedcba9876543210".repeat(4);
+
+test("R40 docketStatement is exactly the ASCII line, the same bytes every time", () => {
+  for (const [id, seq] of [["CASE-2026-3091", 1], ["CASE-2026-0000", 2], ["C-2027-9999", 12345],
+    ["CASE-2026-0001-a-slug-tail", 1], ["CASE-2026-3091-x", Number.MAX_SAFE_INTEGER]]) {
+    const out = docketStatement(id, seq, DOCKET_SHA);
+    assert.ok(out instanceof Uint8Array);
+    assert.deepEqual([...out], [...Buffer.from(`bio-docket ${id} ${seq} ${DOCKET_SHA}\n`, "ascii")]);
+    assert.deepEqual(docketStatement(id, seq, DOCKET_SHA), out);
+  }
+  /* Each field is in the bytes: change one and the statement changes. */
+  const base = td.decode(docketStatement("CASE-2026-3091", 1, DOCKET_SHA));
+  assert.notEqual(td.decode(docketStatement("CASE-2026-3092", 1, DOCKET_SHA)), base);
+  assert.notEqual(td.decode(docketStatement("CASE-2026-3091", 2, DOCKET_SHA)), base);
+  assert.notEqual(td.decode(docketStatement("CASE-2026-3091", 1, "f".repeat(64))), base);
+});
+
+test("R40 docketStatement throws on a case id that is not an opaque id, an entry number below 1 or not whole, or a sha not 64 lowercase hex", () => {
+  const ok = ["CASE-2026-3091", 1, DOCKET_SHA];
+  const badIds = [undefined, null, 0, 20263091, {}, [], "", "CASE", "CASE-2026", "CASE-2026-309", "CASE-2026-30910",
+    "CASE-26-3091", "case-2026-3091", "Case-2026-3091", "CASE-2026-3091 ", " CASE-2026-3091", "CASE-2026-3091\n",
+    "CASE 2026-3091", "CASE-2026-3091-", "CASE-2026-3091-Slug", "CASE-2026-3091--x", "CASE-2026-3091-a b",
+    "CASE-2026-3091-a_b", "-2026-3091", "CASE1-2026-3091", "CASE-2026-3091\u0000", "ＣＡＳＥ-2026-3091",
+    "CASE-٢٠٢٦-3091", "CASE-2026-3091 1"];
+  const badSeqs = [undefined, null, 0, -1, 1.5, 0.999, NaN, Infinity, -Infinity, "1", "01", [1], {}, true,
+    Number.MAX_SAFE_INTEGER + 1, 1n];
+  const badShas = [undefined, null, 0, "", "0".repeat(63), "0".repeat(65), DOCKET_SHA.toUpperCase(),
+    "A" + DOCKET_SHA.slice(1), "g" + DOCKET_SHA.slice(1), ` ${DOCKET_SHA}`, `${DOCKET_SHA}\n`, ["0".repeat(64)],
+    Buffer.from(DOCKET_SHA, "hex")];
+  const refuses = (args, why) => assert.throws(() => docketStatement(...args),
+    (e) => e instanceof Error && e.message.startsWith("docketStatement: "), why);
+  for (const id of badIds) refuses([id, ok[1], ok[2]], `id ${JSON.stringify(String(id))}`);
+  for (const seq of badSeqs) refuses([ok[0], seq, ok[2]], `entry number ${String(seq)}`);
+  for (const sha of badShas) refuses([ok[0], ok[1], sha], `sha ${String(sha)}`);
+  assert.doesNotThrow(() => docketStatement(...ok));
+});
+
+test("R40 a docket statement's leading token differs from every other statement's, so it is never the same signed bytes", async () => {
+  const id = "CASE-2026-3091";
+  const docket = td.decode(docketStatement(id, 1, DOCKET_SHA));
+  assert.ok(docket.startsWith("bio-docket "));
+  const lead = (s) => s.split(/[ \n]/)[0];
+  const others = [td.decode(ratifyStatement(id, DOCKET_SHA)), td.decode(caseRatifyStatement(id, 1, DOCKET_SHA)),
+    td.decode(noticeStatement(id, 1, DOCKET_SHA)), fleetStatement({ version: "1", plane: PLANE, members: [] })];
+  for (const other of others) {
+    assert.notEqual(other, docket);
+    assert.notEqual(lead(other), lead(docket));
+  }
+  /* The same fields signed as a ratification, a case ratification or a notice never verify as a docket entry. */
+  const stmt = docketStatement(id, 1, DOCKET_SHA);
+  for (const [ns, m] of [[NS_RATIFY, ratifyStatement(id, DOCKET_SHA)], [NS_RATIFY, caseRatifyStatement(id, 1, DOCKET_SHA)],
+    [NS_NOTICE, noticeStatement(id, 1, DOCKET_SHA)]]) {
+    const sig = await sign(KEY, ns, m);
+    assert.equal((await verifyAndLog(sig, stmt, NS_DOCKET, [KEY.line])).reason, "NAMESPACE");
+    assert.equal((await verifyAndLog(sig, stmt, ns, [KEY.line])).reason, "BAD_SIGNATURE");
+  }
+  /* And a docket signature is no other statement's: its bytes differ even signed in the docket namespace. */
+  const dsig = await sign(KEY, NS_DOCKET, stmt);
+  for (const m of [ratifyStatement(id, DOCKET_SHA), caseRatifyStatement(id, 1, DOCKET_SHA), noticeStatement(id, 1, DOCKET_SHA)]) {
+    assert.equal((await verifyAndLog(dsig, m, NS_DOCKET, [KEY.line])).reason, "BAD_SIGNATURE");
+  }
+});
+
+test("R39 NS_DOCKET is bio-docket, distinct from every other namespace, and a docket signature verifies only in it", async () => {
+  assert.equal(NS_DOCKET, "bio-docket");
+  for (const k of NAMESPACES.filter((n) => n !== "NS_DOCKET")) assert.notEqual(sshsig[k], NS_DOCKET);
+  assert.throws(() => { sshsig.NS_DOCKET = "bio-ratify"; });
+  assert.equal(sshsig.NS_DOCKET, "bio-docket");
+  const stmt = docketStatement("CASE-2026-3091", 4, DOCKET_SHA);
+  const sig = await sign(KEY, NS_DOCKET, stmt);
+  assert.deepEqual(await verifyAndLog(sig, stmt, NS_DOCKET, [KEY.line]), { ok: true, keyB64: KEY.keyB64, namespace: NS_DOCKET });
+  for (const ns of [NS_RELEASE, NS_RATIFY, NS_FLEET, NS_NOTICE]) {
+    assert.deepEqual(await verifyAndLog(sig, stmt, ns, [KEY.line]), { ok: false, reason: "NAMESPACE", expected: ns, got: NS_DOCKET });
+  }
+  /* The same statement signed in another namespace is not a docket signature. */
+  for (const ns of [NS_RATIFY, NS_NOTICE]) {
+    assert.equal((await verifyAndLog(await sign(KEY, ns, stmt), stmt, NS_DOCKET, [KEY.line])).reason, "NAMESPACE");
+  }
 });
 
 /* ================================================================== R8–R14 */
@@ -894,6 +977,75 @@ test("R37 the served page's notice signatures are accepted by stock ssh-keygen -
   assert.equal(keygenVerifies(pub, NS_NOTICE, fromButton, stmt), true);
 });
 
+/* The signature the page's docket button wrote, or null with the page's words. */
+async function pageSignsDocket(page, id, seq, sha) {
+  page.el("dock-case").value = id;
+  page.el("dock-seq").value = seq;
+  page.el("dock-sha").value = sha;
+  await page.el("dock-sign").onclick();
+  const out = page.el("dock-out").innerHTML;
+  const m = out.match(/-----BEGIN SSH SIGNATURE-----[\s\S]*?-----END SSH SIGNATURE-----\n?/);
+  return { sig: m ? m[0] : null, out };
+}
+
+test("R39 the served page signs a docket entry in NS_DOCKET over exactly docketStatement's bytes, with the ratification key", async () => {
+  const page = loadPage(SIGN_HTML);
+  assert.equal(page.el("dock-sign").disabled, true, "not armed before a key is loaded");
+  const made = await page.generateAll();
+  const ratPub = made["bio-ratify"].pub, relPub = made["bio-release"].pub;
+  assert.equal(page.el("dock-sign").disabled, false, "armed by the ratification key");
+  assert.match(page.el("dock-key").innerHTML, new RegExp(`Signing as.*${ratPub.split(" ")[1].replace(/[+/]/g, "\\$&")}`));
+  for (const [id, seq] of [["CASE-2026-3091", 1], ["CASE-2026-0042-a-tail", 17]]) {
+    const stmt = docketStatement(id, seq, DOCKET_SHA);
+    /* Whitespace around a pasted field, and a hash pasted in capitals, sign the same statement. */
+    for (const [i, n, h] of [[id, String(seq), DOCKET_SHA], [` ${id}\n`, ` ${seq} `, DOCKET_SHA.toUpperCase()]]) {
+      const { sig } = await pageSignsDocket(page, i, n, h);
+      assert.ok(sig, "a signature was written");
+      assert.deepEqual(await verifyAndLog(sig, stmt, NS_DOCKET, [ratPub]),
+        { ok: true, keyB64: ratPub.split(" ")[1], namespace: NS_DOCKET });
+      for (const ns of [NS_RATIFY, NS_NOTICE]) assert.equal((await verifyAndLog(sig, stmt, ns, [ratPub])).reason, "NAMESPACE");
+      assert.equal((await verifyAndLog(sig, stmt, NS_DOCKET, [relPub])).reason, "UNKNOWN_KEY");
+      assert.equal((await verifyAndLog(sig, docketStatement(id, seq + 1, DOCKET_SHA), NS_DOCKET, [ratPub])).reason,
+        "BAD_SIGNATURE");
+    }
+  }
+  /* The page refuses, and signs nothing, wherever docketStatement would throw on the same fields. */
+  const cases = [["", "1", DOCKET_SHA], ["case-2026-3091", "1", DOCKET_SHA], ["CASE-2026-309", "1", DOCKET_SHA],
+    ["CASE 2026-3091", "1", DOCKET_SHA], ["CASE-2026-3091-A", "1", DOCKET_SHA],
+    ["CASE-2026-3091", "", DOCKET_SHA], ["CASE-2026-3091", "0", DOCKET_SHA], ["CASE-2026-3091", "-1", DOCKET_SHA],
+    ["CASE-2026-3091", "01", DOCKET_SHA], ["CASE-2026-3091", "1.5", DOCKET_SHA], ["CASE-2026-3091", "1e3", DOCKET_SHA],
+    ["CASE-2026-3091", "x", DOCKET_SHA], ["CASE-2026-3091", String(Number.MAX_SAFE_INTEGER + 2), DOCKET_SHA],
+    ["CASE-2026-3091", "1", ""], ["CASE-2026-3091", "1", "0".repeat(63)], ["CASE-2026-3091", "1", "g".repeat(64)]];
+  for (const [id, seq, sha] of cases) {
+    const { sig, out } = await pageSignsDocket(page, id, seq, sha);
+    assert.equal(sig, null, JSON.stringify([id, seq, sha]));
+    assert.match(out, /class="warn"/);
+    assert.throws(() => docketStatement(id.trim(), /^[1-9]\d*$/.test(seq) ? Number(seq) : seq, sha.trim().toLowerCase()));
+  }
+  /* With no ratification key the button is not armed, and its answer is cleared. */
+  page.el("forget").onclick();
+  assert.equal(page.el("dock-sign").disabled, true);
+  assert.equal(page.el("dock-out").innerHTML, "");
+});
+
+test("R39 the served page's docket signatures are accepted by stock ssh-keygen -Y verify in bio-docket only", { skip: NO_SSH_KEYGEN }, async () => {
+  const page = loadPage(SIGN_HTML);
+  const seed = new Uint8Array(32).map((_, i) => (i * 71 + 3) % 256);
+  const { priv, raw32 } = await page.keysFromSeed(seed);
+  const pub = page.pubLine(raw32, "docket-test");
+  const stmt = docketStatement("CASE-2026-3091", 2, DOCKET_SHA);
+  const sig = await page.sshsig(priv, raw32, NS_DOCKET, stmt);
+  assert.equal(keygenVerifies(pub, NS_DOCKET, sig, stmt), true);
+  assert.equal(keygenVerifies(pub, NS_RATIFY, sig, stmt), false);
+  assert.equal(keygenVerifies(pub, NS_NOTICE, sig, stmt), false);
+  assert.equal(keygenVerifies(pub, NS_DOCKET, sig, docketStatement("CASE-2026-3091", 3, DOCKET_SHA)), false);
+  /* And the page's own button, loaded with that key. */
+  page.el("load-blob").value = `BIOKEY-RAW1.bio-ratify.${Buffer.from(seed).toString("base64")}`;
+  await page.el("load").onclick();
+  const fromButton = (await pageSignsDocket(page, "CASE-2026-3091", "2", DOCKET_SHA)).sig;
+  assert.equal(keygenVerifies(pub, NS_DOCKET, fromButton, stmt), true);
+});
+
 test("R32 the page's visible text names CivicOS, never BIO, and its wire formats are unchanged", async () => {
   /* Everything a person can read: the text between tags, attribute values, and
      the strings the script writes into the page. BIO survives only as the
@@ -947,6 +1099,12 @@ test("R32 the page calls what a member ratifies a record, never a bundle (K899 (
     said.push((await pageSignsNotice(page, id, rev, sha)).out);
   }
   assert.match(said.at(-1), /If the notice changes before/);
+  /* And for each answer the docket button gives. */
+  for (const [id, seq, sha] of [["", "1", DOCKET_SHA], ["CASE-2026-3091", "0", DOCKET_SHA],
+    ["CASE-2026-3091", "1", "x"], ["CASE-2026-3091", "1", DOCKET_SHA]]) {
+    said.push((await pageSignsDocket(page, id, seq, sha)).out);
+  }
+  assert.match(said.at(-1), /If the entry changes before/);
   for (const s of said) { assert.doesNotMatch(s, /bundle/i); assert.doesNotMatch(s, /\bBIO\b/); }
   /* The rest of what the script writes: generate, load, forget, and the key status lines. */
   await page.el("gen").onclick();
@@ -956,7 +1114,7 @@ test("R32 the page calls what a member ratifies a record, never a bundle (K899 (
   const loadErr = page.el("load-out").innerHTML;
   page.el("forget").onclick();
   for (const s of [generated, loadErr, page.el("load-out").innerHTML,
-    page.el("rel-key").innerHTML, page.el("rat-key").innerHTML, page.el("not-key").innerHTML]) {
+    page.el("rel-key").innerHTML, page.el("rat-key").innerHTML, page.el("not-key").innerHTML, page.el("dock-key").innerHTML]) {
     assert.ok(s.length > 0);
     assert.doesNotMatch(s, /bundle/i);
   }
@@ -993,6 +1151,8 @@ test("R26 pure and offline: no service fetches or reads a clock, and the endpoin
     s.ratifyStatement("a", "b"); s.caseRatifyStatement("a", 1, "b");
     s.noticeStatement("NOTE-2026-0001", 1, "0".repeat(64));
     try { s.noticeStatement("bad", 0, "x"); } catch {}
+    s.docketStatement("CASE-2026-0001", 1, "0".repeat(64));
+    try { s.docketStatement("bad", 0, "x"); } catch {}
     s.fleetStatement({ version: "v", plane: { sha256: "p", bytes: 1, asset: "a" },
       members: [{ member: "m", sha256: "s", bytes: 1, asset: "a", compat: { date: "d", flags: [] }, services: [], parts: [] }] });
     const req = t.timestampRequest("${DIGEST}", new Uint8Array(8).fill(3));
@@ -1028,6 +1188,7 @@ test("R27 no place is named in any string the module exports", () => {
   }
   strings.push(td.decode(ratifyStatement("a", "b")), td.decode(caseRatifyStatement("a", 1, "b")),
     td.decode(noticeStatement("NOTE-2026-0001", 1, "0".repeat(64))),
+    td.decode(docketStatement("CASE-2026-0001", 1, "0".repeat(64))),
     fleetStatement({ version: "v", plane: PLANE, members: [] }));
   assert.ok(strings.includes(SIGN_HTML));
   for (const s of strings) assert.doesNotMatch(s, PLACE);
@@ -1037,7 +1198,7 @@ test("R27 no place is named in any string the module exports", () => {
 
 test("R28 a signature never verifies for another namespace or message; every tampered signature is BAD_SIGNATURE", async () => {
   const messages = [enc("m1\n"), ratifyStatement("B", "0".repeat(64)), caseRatifyStatement("B", 1, "0".repeat(64)),
-    noticeStatement("NOTE-2026-0001", 1, "0".repeat(64)),
+    noticeStatement("NOTE-2026-0001", 1, "0".repeat(64)), docketStatement("CASE-2026-0001", 1, "0".repeat(64)),
     enc(fleetStatement({ version: "v", plane: PLANE, members: [member("m")] }))];
   for (const [i, m] of messages.entries()) {
     const sig = await sign(KEY, NS_RATIFY, m);
@@ -1046,7 +1207,7 @@ test("R28 a signature never verifies for another namespace or message; every tam
       assert.equal(r.ok, i === j);
       if (i !== j) assert.equal(r.reason, "BAD_SIGNATURE");
     }
-    for (const ns of [NS_RELEASE, NS_FLEET, NS_NOTICE, "", "bio-ratify ", "BIO-RATIFY"]) {
+    for (const ns of [NS_RELEASE, NS_FLEET, NS_NOTICE, NS_DOCKET, "", "bio-ratify ", "BIO-RATIFY"]) {
       assert.equal((await verifyAndLog(sig, m, ns, [KEY.line])).reason, "NAMESPACE");
     }
     /* Every single-bit change to the message is refused. */

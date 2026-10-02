@@ -24,7 +24,9 @@
 
   The ratification key also signs a project's "working on" notice, in its
   own namespace (bio-working-on), so a signature on a notice can never be
-  taken as consent to publish a record, or the reverse.
+  taken as consent to publish a record, or the reverse. It signs a case's
+  public docket entries in their own namespace too (bio-docket), so an
+  entry's signature can never stand for a ratification or a notice.
 -->
 <style>
   :root {
@@ -88,6 +90,7 @@
     <button id="tab-release" aria-pressed="false">Sign a release</button>
     <button id="tab-ratify" aria-pressed="false">Sign a ratification</button>
     <button id="tab-notice" aria-pressed="false">Sign a notice</button>
+    <button id="tab-docket" aria-pressed="false">Sign a docket entry</button>
   </div>
 
   <!-- -------------------------------------------------------------- keys -->
@@ -172,6 +175,27 @@
         <button id="not-sign" disabled>Sign this notice</button>
       </div>
       <div class="stack" id="not-out" style="margin-top:16px"></div>
+    </section>
+  </div>
+
+  <!-- ------------------------------------------------------------ docket -->
+  <div id="pane-docket" class="hide">
+    <section>
+      <h2>Sign a docket entry</h2>
+      <p>Copy the case id, the entry number and the entry hash from the instance page. The signature
+         covers all three, so it puts your name to that exact entry on that case's public docket and
+         no other. It is signed with your ratification key.</p>
+      <div class="stack">
+        <div id="dock-key" class="status">No ratification key loaded.</div>
+        <div><label for="dock-case">Case id</label>
+          <input id="dock-case" placeholder="CASE-2026-3091" spellcheck="false"></div>
+        <div><label for="dock-seq">Entry number</label>
+          <input id="dock-seq" placeholder="1" inputmode="numeric" spellcheck="false"></div>
+        <div><label for="dock-sha">Entry hash</label>
+          <input id="dock-sha" placeholder="64 hex characters" spellcheck="false"></div>
+        <button id="dock-sign" disabled>Sign this docket entry</button>
+      </div>
+      <div class="stack" id="dock-out" style="margin-top:16px"></div>
     </section>
   </div>
 </main>
@@ -272,7 +296,7 @@ const KEYS = { release: null, ratify: null };   /* { priv, raw32, label } */
 
 function armed() {
   for (const [slot, elId, what] of [["release", "rel-key", "release"], ["ratify", "rat-key", "ratification"],
-                                    ["ratify", "not-key", "ratification"]]) {
+                                    ["ratify", "not-key", "ratification"], ["ratify", "dock-key", "ratification"]]) {
     const k = KEYS[slot];
     $(elId).innerHTML = k
       ? `<span class="good">Signing as</span> <code>${pubLine(k.raw32, k.label)}</code>`
@@ -281,6 +305,7 @@ function armed() {
   $("rel-sign").disabled = !KEYS.release;
   $("rat-sign").disabled = !KEYS.ratify;
   $("not-sign").disabled = !KEYS.ratify;
+  $("dock-sign").disabled = !KEYS.ratify;
 }
 
 async function useSeed(label, seed) {
@@ -328,7 +353,7 @@ document.addEventListener("click", async (e) => {
 
 /* ------------------------------------------------------------------ tabs */
 const PANES = [["tab-keys", "pane-keys"], ["tab-release", "pane-release"], ["tab-ratify", "pane-ratify"],
-               ["tab-notice", "pane-notice"]];
+               ["tab-notice", "pane-notice"], ["tab-docket", "pane-docket"]];
 for (const [btn, pane] of PANES) {
   $(btn).onclick = () => {
     for (const [b, p] of PANES) {
@@ -402,7 +427,7 @@ $("load").onclick = async () => {
 $("forget").onclick = () => {
   KEYS.release = null; KEYS.ratify = null; armed();
   for (const id of ["load-blob", "load-pass"]) $(id).value = "";
-  for (const id of ["gen-out", "rel-out", "rat-out", "not-out"]) $(id).innerHTML = "";
+  for (const id of ["gen-out", "rel-out", "rat-out", "not-out", "dock-out"]) $(id).innerHTML = "";
   $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;
 };
 
@@ -437,12 +462,12 @@ $("rat-sign").onclick = async () => {
 /* The same bytes as the plane's noticeStatement: `bio-working-on <id> <revision>
    <hash>` and a newline, in the namespace bio-working-on. The fields are checked
    exactly as the plane checks them, so the page never signs a statement the
-   instance would build differently. */
-const NOTICE_ID_RE = /^[A-Z]+-\d{4}-\d{4}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$/;
+   instance would build differently. An opaque id, as the plane's minter draws it. */
+const OPAQUE_ID_RE = /^[A-Z]+-\d{4}-\d{4}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$/;
 $("not-sign").onclick = async () => {
   const id = $("not-id").value.trim(), rev = $("not-rev").value.trim();
   const sha = $("not-sha").value.trim().toLowerCase();
-  if (!NOTICE_ID_RE.test(id)) return ($("not-out").innerHTML = `<p class="warn">Paste the notice id, as the instance page shows it.</p>`);
+  if (!OPAQUE_ID_RE.test(id)) return ($("not-out").innerHTML = `<p class="warn">Paste the notice id, as the instance page shows it.</p>`);
   if (!/^[1-9][0-9]*$/.test(rev) || !Number.isSafeInteger(Number(rev)))
     return ($("not-out").innerHTML = `<p class="warn">The revision is a whole number, 1 or more.</p>`);
   if (!/^[0-9a-f]{64}$/.test(sha)) return ($("not-out").innerHTML = `<p class="warn">The notice hash is 64 hex characters.</p>`);
@@ -452,6 +477,25 @@ $("not-sign").onclick = async () => {
     "Signature: paste this into the notice box on the instance page", sig,
     `Signs revision ${rev} of <code>${id}</code> at exactly that hash. If the notice changes before
      you post it, the instance refuses this signature and you sign the new hash.`);
+};
+
+/* --------------------------------------------------- sign a docket entry */
+/* The same bytes as the plane's docketStatement: `bio-docket <case id> <entry
+   number> <hash>` and a newline, in the namespace bio-docket, the fields checked
+   exactly as the plane checks them. */
+$("dock-sign").onclick = async () => {
+  const id = $("dock-case").value.trim(), seq = $("dock-seq").value.trim();
+  const sha = $("dock-sha").value.trim().toLowerCase();
+  if (!OPAQUE_ID_RE.test(id)) return ($("dock-out").innerHTML = `<p class="warn">Paste the case id, as the instance page shows it.</p>`);
+  if (!/^[1-9][0-9]*$/.test(seq) || !Number.isSafeInteger(Number(seq)))
+    return ($("dock-out").innerHTML = `<p class="warn">The entry number is a whole number, 1 or more.</p>`);
+  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("dock-out").innerHTML = `<p class="warn">The entry hash is 64 hex characters.</p>`);
+  const k = KEYS.ratify;
+  const sig = await sshsig(k.priv, k.raw32, "bio-docket", enc.encode(`bio-docket ${id} ${seq} ${sha}\n`));
+  $("dock-out").innerHTML = copyBox(
+    "Signature: paste this into the docket box on the instance page", sig,
+    `Signs entry ${seq} on the docket of <code>${id}</code> at exactly that hash. If the entry changes before
+     you post it, the instance refuses this signature and you prepare and sign it again.`);
 };
 
 armed();
