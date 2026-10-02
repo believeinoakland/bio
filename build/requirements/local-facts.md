@@ -40,7 +40,7 @@ Terms. A **fact** is one of: a `holidays` entry's year (keyed by its year and it
 ### Invariants
 
 - **R5** Append-only: every act is kept with its member, date and `how`; nothing is overwritten and nothing deleted (declared to purge, K23). A machine never confirms, corrects or disputes; an assistant's re-check of a source reaches a member as a run's output, labelled machine work, and enters here only by the member's own act, whose `how` may name it.
-- **R8** Each refusal carries its row in this module's own table (`checks.mjs`), each `{check, where, translation}`, a new family, **C-126** (K933); every row is `awaiting stamp` (T22's promotion job). No place is named in this module's behaviour or outward text; its tests use the test profile (`build/layers.md`, rule 3).
+- **R8** Each refusal carries its row in this module's own table (`checks.mjs`), each `{check, where, translation}`, a new family, **C-126** (K933); every row is stamped by 1.52.0 (T22's promotion job). No place is named in this module's behaviour or outward text; its tests use the test profile (`build/layers.md`, rule 3).
 
 ### Satisfies
 

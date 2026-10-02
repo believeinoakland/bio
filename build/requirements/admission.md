@@ -61,7 +61,7 @@ Terms. An **op spec**, a **class**, the **session sets** and a **capability** ar
 
 - **Paths.** `bio-plane/src/admission/` (e.g. `index.mjs` with the gates, `checks.mjs` with the five row families); tests in `bio-plane/test/m/admission/`. `control-plane`'s files are left untouched by this job; `control-plane`'s job, after it merges, deletes its copy, calls these gates from `makeFetch` in `control-plane` R28's order, and re-exports what `legacy-index` and old tests import.
 - **Answers.** The gates return the refusal (or `null` to admit); the door wraps it in its envelope, so this module needs neither `json` nor `control-plane`'s store reader. R6's store lookups take the store reader (`doAnswer`) as a parameter, as `affordances.decorate` takes the gate, so this module uses nothing later in the order; the 502 answer stays the door's sentence (`control-plane` R23).
-- **The DEC-49 regions** (`is-admission`, `is-session-op-gate`) move with their code, and each row's `where` is re-pointed by this job (`awaiting stamp` for T19's promotion job).
+- **The DEC-49 regions** (`is-admission`, `is-session-op-gate`) move with their code, and each row's `where` is re-pointed by this job (stamped by 1.49.0).
 - **Tests.** One arm per refusal code with a negative control each, moved from `test/m/control-plane/` where they name R3–R14 and R19, renamed to this file's ids; R4 at the gate (`scopeFor`) and, for the landing, through the door in `control-plane`'s own tests.
 
 ## Open for Bob
