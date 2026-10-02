@@ -11,7 +11,7 @@
  * `progressions`' `NO_REASON` (C-100.18) and no code is held with two rows (DEC-49). R1's and R27's shared conditions
  * (no breach, not joined, already open) are minted once, in `#pursuable`, which both acts ask (DEC-89). A machine's
  * decline to escalate (R27) has its own code and row, C-116.46, since `MACHINE_CANNOT_DECLINE` is C-116.26's, R13's
- * edge decline (this job's reading, put to BOB as J1). */
+ * edge decline (K1084). */
 
 const at = (fn, region) => `src/escalation/index.mjs ${fn} > ${region}`;
 
