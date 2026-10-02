@@ -33,3 +33,7 @@ Size (session_01E6cJNG8QgJmfxSy1h3JDEj): test runs 7, module lines 3535
 ## J1 · QUESTION
 
 B1 says record.mjs 'composes attestation's attestOp'. My reading: attestOp is a Worker arm (req, env, store, helpers) and record.mjs is the record store's door (dispatch), which holds no Worker arms; attestation has no store route map. So the fixture builds attestationOf after provenance (tables made, purge declared) and routes no attestOp; plane/door.mjs' op=attest is plane's (red 9). Applied on this reading; nothing waits on the answer.
+
+## J2 · REPORT
+
+Two reds outside this module, both failing identically on origin/tranche/T25 without my change: (1) test/m/affordances/sources.test.mjs:117 'R2: reattest': the fixture stubs capture's provenance.attest, but reattest now reaches cap.attestation (K1224); TypeError at :129. (2) test/m/promotion/write-path.test.mjs:218 'R53 (N426)': /list answers no bundles (TypeError at :234), retrieval's op=list joining provenance_route_marks, which that fixture does not build. Both look like red 7 (the split's users and their fixtures); not named today. Also: families.mjs and dispatch.mjs (comment) changed, so bio-plane/dist/bio-plane.bundled.mjs may be stale; regenerated nothing.
