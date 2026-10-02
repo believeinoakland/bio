@@ -398,7 +398,7 @@ test("R13: one receipt per filed capture under the document address (the resolve
   assert.equal(norm(f.body.document), norm(plain.body.document), "over-strictness: the capture unchanged");
 });
 
-test("R14 R16: transport, the chain, the capture block, the origin and the file", async () => {
+test("R14 R16 R31: transport, the chain, the capture block, the origin and the file", async () => {
   const w = world();
   const r = await run(w, { "https://a.example/dir/report.txt": text("body text", { "content-type": "text/plain; charset=utf-8", "x-a": "1", "etag": "e" }) },
                       { locator: "https://a.example/dir/report.txt", matchedSweep: "SWEEP-1" }, { cls: "member", member: true, sessMember: "m1" });
@@ -416,7 +416,7 @@ test("R14 R16: transport, the chain, the capture block, the origin and the file"
   assert.deepEqual([d.capture.method, d.capture.actor_class, d.capture.actor, d.capture.encoding, d.capture.bytes, d.capture.content_type],
                    ["bio-plane acquire, https fetch, hashed at receipt", "member", "m1", "binary", 9, "text/plain"]);
   assert.equal(d.capture.sha256, sha("body text"));
-  assert.deepEqual(d.origin, { kind: "sweep", matched_sweep: "SWEEP-1", deeming_actor: "m1" });
+  assert.deepEqual(d.origin, { kind: "named_request" }, "R31 (K1126): a body's matchedSweep is ignored");
   assert.deepEqual(d.attestation_attempts.length > 0, true);
   assert.equal(d.file, "snapshots/report.txt"); assert.equal(d.locator, "https://a.example/dir/report.txt");
   assert.match(d.retrieved, /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/);
@@ -427,7 +427,7 @@ test("R14 R16: transport, the chain, the capture block, the origin and the file"
   assert.deepEqual(probe.body.document.origin, { kind: "named_request" });
   const admin = await run(w, { "https://a.example/z": text("z") }, { locator: "https://a.example/z", matchedSweep: "S-2" }, { cls: "admin", member: false, sessMember: null });
   assert.equal(admin.body.document.capture.actor_class, "daemon");
-  assert.deepEqual(admin.body.document.origin, { kind: "sweep", matched_sweep: "S-2", deeming_actor: "admin" }, "the deeming actor is the class without a member");
+  assert.deepEqual(admin.body.document.origin, { kind: "named_request" }, "R31 (K1126): ignored whatever the class");
   /* a redirect is recorded */
   const redirected = () => { const x = text("moved"); Object.defineProperty(x, "url", { value: "https://a.example/final" }); return x; };
   const rd = await run(w, { "https://a.example/old": redirected }, { locator: "https://a.example/old" });
@@ -677,7 +677,7 @@ test("R29 R30: each refusal carries its row, and nothing in the answers names a 
 const arm = (w, routes, captureRequest, body = {}) => run(w, routes, body, { cls: "daemon", member: false, sessMember: null,
   captureRequest: { locator: "https://a.example/doc", purpose: "investigate", agent: null, render: false, ...captureRequest } });
 
-test("R21: the capture-request arm files the drain's own origin as a sweep, never a body's; without one it is a named request", async () => {
+test("R21 R31: the capture-request arm files the drain's own origin as a sweep, never a body's; without one it is a named request", async () => {
   const w = world();
   const routes = { "https://a.example/doc": () => text("<p>d</p>") };
   const actor = { run: "RUN-1", plane: "member:m1", claude: "acct-1" };
@@ -691,7 +691,7 @@ test("R21: the capture-request arm files the drain's own origin as a sweep, neve
   const empty = await arm(w, routes, { origin: { deeming_actor: actor } });
   assert.deepEqual(empty.body.document.origin, { kind: "named_request" }, "an origin naming no sweep is not a sweep");
   const member = await run(w, routes, { locator: "https://a.example/doc", matchedSweep: "SWEEP-1" });
-  assert.deepEqual(member.body.document.origin, { kind: "sweep", matched_sweep: "SWEEP-1", deeming_actor: "m1" }, "other arms unchanged");
+  assert.deepEqual(member.body.document.origin, { kind: "named_request" }, "R31 (K1126): the body's matchedSweep is ignored on every arm");
   /* the arm renders exactly when the row says so */
   const env = rendererEnv(renderAnswer);
   const rw = world({ env });

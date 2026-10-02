@@ -13,7 +13,8 @@
  * Every refusal is an answer `{status, body}`, never a throw. The comments carried from the legacy handler keep the
  * reasoning beside the code it explains. */
 import { isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../record-grammar/index.mjs";
-import { civicosUserAgent, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS } from "./checks.mjs";
+import { civicosUserAgent, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS,
+         SWEEP_SCOPE_CHECKS } from "./checks.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "../subresources.mjs";
 import { detectFormat } from "../formats.mjs";
 import { odfEvidentiaryDigest, ODF_FORMATS } from "../odf.mjs";
@@ -30,7 +31,7 @@ import { attest as provenanceAttest, ARCHIVE_CAPTURE_GRADE } from "../provenance
 
 /* capture R24, R29: the one user agent and this module's rows, for every module that sends or judges them. */
 export { CIVICOS_CONTACT_URL, civicosUserAgent, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS,
-         INSTALLATION_CHECKS, ACQUISITION_CHECKS } from "./checks.mjs";
+         INSTALLATION_CHECKS, SWEEP_SCOPE_CHECKS, ACQUISITION_CHECKS } from "./checks.mjs";
 
 
 const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -150,8 +151,9 @@ const renderLocale = (view) => renderLocaleFor(view);
    `credential` is R23's (capture-sources R56's entry), sent by `scopedFetch` to its own host only. */
 export async function governedFetch(cap, target, purpose, delegated = null, { headers = null, credential = null, manual = false } = {}) {
   const g = cap.governor;
-  const doFetch = headers || credential ? scopedFetch(target, { headers, credential, env: cap.env, purpose }) : (u, i) => fetch(u, i);
-  /* `manual`: the redirect is the answer, not followed (R32 reads a TimeGate's redirect and a memento's own status). */
+  const doFetch = headers || credential ? scopedFetch(target, { headers, credential, env: cap.env, purpose, follow: !manual }) : (u, i) => fetch(u, i);
+  /* `manual`: the redirect is the answer, not followed (R32 reads a TimeGate's redirect and a memento's own status; R31
+     judges each hop of a sweep against its scope). */
   return hostGovernedFetch(target, { userAgent: userAgent(cap.env, purpose, delegated),
     fetch: manual ? (u, i) => doFetch(u, { ...i, redirect: "manual" }) : doFetch,
     governor: g ? { admit: (q) => g.governorAdmit(q), report: (q) => g.governorReport(q) } : null });
@@ -173,7 +175,7 @@ function withCredential(headers, credential, env, purpose) {
    without it (capture-sources R56's caller obligation): the runtime's own following would carry the header on. A
    redirect this call follows by hand is held to R28's fence: a hop to an address that is not a public locator (or one
    that does not parse) is not followed, and the redirect itself is the answer, so the source is refused by name. */
-function scopedFetch(target, { headers, credential, env, purpose }) {
+function scopedFetch(target, { headers, credential, env, purpose, follow = true }) {
   let home = null;
   try { home = new URL(target).hostname.toLowerCase(); } catch { home = null; }
   return async (u, init = {}) => {
@@ -185,7 +187,7 @@ function scopedFetch(target, { headers, credential, env, purpose }) {
       try { host = new URL(url).hostname.toLowerCase(); } catch { host = null; }
       const res = await fetch(url, { ...init, redirect: "manual", headers: host && host === home ? withCredential(plain, credential, env, purpose) : plain });
       const loc = res.status >= 300 && res.status < 400 && res.status !== 304 ? res.headers.get("location") : null;
-      if (!loc || hop >= REDIRECT_MAX) return res;
+      if (!loc || hop >= REDIRECT_MAX || !follow) return res;
       let next = null;
       try { next = new URL(loc, url).href; } catch { next = null; }
       if (!next || !isPublicHttpsLocator(next)) return res;
@@ -197,6 +199,18 @@ function scopedFetch(target, { headers, credential, env, purpose }) {
 
 /* R10: the most this surface will take from one source, in parts or not. */
 const CAPTURE_MAX = 256 * 1024 * 1024;
+
+/** R31: whether `address` is in a sweep's scope, as monitoring R53 defines it: its normalised form equals a prefix, or
+ *  continues one at a `/`. */
+function inSweepScope(address, scope) {
+  if (typeof address !== "string" || !Array.isArray(scope)) return false;
+  const a = normalizeAddress(address);
+  return scope.some((p) => {
+    if (typeof p !== "string" || !p) return false;
+    const n = normalizeAddress(p);
+    return a === n || (a.startsWith(n) && (n.endsWith("/") || a[n.length] === "/"));
+  });
+}
 
 /** R3's fence, in ONE place so the lookup and the capture cannot disagree about when the fallback may fire. */
 async function archiveEligibility(cap, address) {
@@ -475,7 +489,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   }
   /* K58: EVERYTHING THAT DECIDES WHAT LEAVES THIS INSTANCE COMES FROM THE ROW the drain's conduct check judged: the
      address, the purpose, the agent, and whether to render. */
-  let crPurpose = null, crAgent = null, crOrigin = null, crHeldSha = null, crCredential = null;
+  let crPurpose = null, crAgent = null, crOrigin = null, crHeldSha = null, crCredential = null, sweepScope = null;
   if (captureRequest) {
     body.locator = captureRequest.locator;
     crPurpose = captureRequest.purpose || null;
@@ -485,6 +499,22 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     const o = captureRequest.origin;
     if (o && typeof o === "object" && o.matched_sweep != null && o.matched_sweep !== "")
       crOrigin = { kind: "sweep", matched_sweep: o.matched_sweep, deeming_actor: o.deeming_actor ?? null };
+    /* R31 (K1126): a SWEEP origin is one the in-process caller declares `kind: "sweep"` (monitoring R57's shape), and
+       it carries its scope on this arm, never a body; the drain's R38 origin (no `kind`) is not one. Refused before
+       anything is fetched. */
+    if (crOrigin && o.kind === "sweep") {
+      const sc = captureRequest.scope;
+      /* DEC-49 REGION is-sweep-scope */
+      if (!Array.isArray(sc) || !sc.length || !sc.every((p) => typeof p === "string" && p !== "")) {
+        const row = SWEEP_SCOPE_CHECKS.SWEEP_SCOPE_MISSING;
+        return answer(400, { ok: false, reason: "SWEEP_SCOPE_MISSING", code: "SWEEP_SCOPE_MISSING", check: row.check,
+          translation: row.translation, op, matched_sweep: crOrigin.matched_sweep,
+          detail: "a sweep-origin acquire names the in-scope prefixes it may reach (monitoring R53's `sources`); "
+                + "this one named none, so nothing was fetched" });
+      }
+      /* END DEC-49 REGION is-sweep-scope */
+      sweepScope = sc;
+    }
     /* R22 (capture-requests R39): the capture the record holds of this address; anything but 64 hex is ignored. */
     if (typeof captureRequest.heldSha === "string" && /^[0-9a-f]{64}$/.test(captureRequest.heldSha)) crHeldSha = captureRequest.heldSha;
     /* R23 (capture-requests R41): the one credential admitted for this request's scope (capture-sources R56). */
@@ -630,16 +660,44 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   const validators = crHeldSha && !renderAsked ? cap.validatorsOf({ addressNorm: addrNorm, captureSha: crHeldSha }) : null;
   const conditional = validators ? { ...(validators.etag ? { "if-none-match": validators.etag } : {}),
                                      ...(validators.lastModified ? { "if-modified-since": validators.lastModified } : {}) } : null;
-  let res = archiveMemento ? archiveMemento.res : null;
+  let res = archiveMemento ? archiveMemento.res : null, resolvedUrl = null;
   if (!res) try {
-    const g = await governedFetch(cap, locator, crPurpose || "acquire", crAgent, { headers: conditional, credential: crCredential });
-    if (g.refusedByGovernor) {
-      await noteOutcome("governed", null);
-      return answer(429, { ok: false, reason: "HOST_COOLING_OFF",
-        detail: `the per-host governor is holding requests to this host (${g.reason}); retry in about ${Math.ceil((g.retry_in_ms || 0) / 1000)}s`,
-        retry_in_ms: g.retry_in_ms || 0, locator });
+    /* R31: a sweep's redirects are followed BY HAND, one governed fetch per hop, each target judged against the scope
+       before anything is fetched at it; the credential (R23) still goes to its own host only. */
+    let url = locator;
+    const home = hostOf(locator);
+    for (let hop = 0; ; hop++) {
+      const g = await governedFetch(cap, url, crPurpose || "acquire", crAgent, { headers: conditional,
+        credential: sweepScope && hostOf(url) !== home ? null : crCredential, manual: !!sweepScope });
+      if (g.refusedByGovernor) {
+        await noteOutcome("governed", null);
+        return answer(429, { ok: false, reason: "HOST_COOLING_OFF",
+          detail: `the per-host governor is holding requests to this host (${g.reason}); retry in about ${Math.ceil((g.retry_in_ms || 0) / 1000)}s`,
+          retry_in_ms: g.retry_in_ms || 0, locator });
+      }
+      res = g.res;
+      if (!sweepScope) break;
+      const loc = res.status >= 300 && res.status < 400 && res.status !== 304 ? res.headers.get("location") : null;
+      if (!loc || hop >= REDIRECT_MAX) break;
+      let next = null;
+      try { next = new URL(loc, url).href; } catch { next = null; }
+      /* DEC-49 REGION is-sweep-redirect */
+      if (!next || !inSweepScope(next, sweepScope)) {
+        cancelBody(res);
+        const row = SWEEP_SCOPE_CHECKS.SWEEP_REDIRECT_OUT_OF_SCOPE;
+        return answer(422, { ok: false, reason: "SWEEP_REDIRECT_OUT_OF_SCOPE", code: "SWEEP_REDIRECT_OUT_OF_SCOPE", check: row.check,
+          translation: row.translation, op, target: next || loc, locator, redirected_from: url, status: res.status,
+          matched_sweep: crOrigin.matched_sweep,
+          detail: `${url} redirected (${res.status}) to ${next || loc}, which is outside the sweep's scope; the redirect `
+                + "was not followed, nothing at its target was fetched, and nothing was filed" });
+      }
+      /* END DEC-49 REGION is-sweep-redirect */
+      /* In scope but not a public locator: R28's fence; the redirect itself is the answer (SOURCE_REFUSED). */
+      if (!isPublicHttpsLocator(next)) break;
+      cancelBody(res);
+      url = next;
+      resolvedUrl = next;
     }
-    res = g.res;
   } catch (e) {
     await noteOutcome("fetch_failed", null);
     /* R23: a thrown fetch's message can carry what rode the request, so none is carried when a credential did. */
@@ -647,6 +705,8 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
       detail: crCredential ? "the fetch did not complete; its error is not carried because a supplied credential rode it"
                            : String(e && e.message || e) });
   }
+  /* The address the bytes came from: the last hop this call followed, else the runtime's post-redirect URL. */
+  resolvedUrl = resolvedUrl || res.url || null;
   /* R22: the source says the held capture is still what it serves. It ASSERTS the bytes and does not serve them, so
      nothing is filed and no receipt is written; the attempt is a success of the source (capture R8). */
   if (conditional && res.status === 304) {
@@ -817,11 +877,11 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
 
   let ct = (res.headers.get("content-type") || "").split(";")[0].trim();
   /* R14. Every header the source sent, in order, duplicates kept: a header nobody thought to name is exactly the
-     one a later question needs. `res.url` is the post-redirect URL; the runtime does not expose the hop chain or the
+     one a later question needs. `resolvedUrl` is the post-redirect URL; the runtime does not expose the hop chain or the
      peer address, and the record says so rather than leaving a field a reader would misread. */
   const responseHeaders = [];
   for (const [k, v] of res.headers) responseHeaders.push([k, v]);
-  const transport = { requested: locator, resolved: res.url || locator, redirected: !!(res.url && res.url !== locator),
+  const transport = { requested: locator, resolved: resolvedUrl || locator, redirected: !!(resolvedUrl && resolvedUrl !== locator),
     status: res.status, http_headers: responseHeaders, peer_address: null,
     peer_address_unavailable: "the Workers runtime does not expose the peer address of an outbound fetch" };
   const name = (body.file || locator.split("/").pop() || "capture").replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100) || "capture";
@@ -830,7 +890,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
      bundle's primary; the shell survives as `shell` and `render.of`. */
   let renderRecorded = null, shellRecorded = null, renderedAuth = null;
   if (renderAsked) {
-    const pageUrl = res.url || locator;
+    const pageUrl = resolvedUrl || locator;
     let answerR = null, rbytes = null, rb = null;
     /* DEC-49 REGION is-render-result */
     if (multipart || detectFormat(null, ct || null).format !== "html") {
@@ -877,8 +937,8 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
      CDX original, the Drive link as given, or for a direct fetch the address it resolved to), `via`, and the
      retrieval locator. A failed receipt write does not fail the capture. */
   try {
-    await cap.provenance?.recordReceipt?.({ address: addressIsDerived ? documentAddress : (res.url || locator),
-      addressNorm: addressIsDerived ? addrNorm : normalizeAddress(res.url || locator), captureSha: sha, retrieved,
+    await cap.provenance?.recordReceipt?.({ address: addressIsDerived ? documentAddress : (resolvedUrl || locator),
+      addressNorm: addressIsDerived ? addrNorm : normalizeAddress(resolvedUrl || locator), captureSha: sha, retrieved,
       via, retrievalLocator: locator });
   } catch { /* an unfiled receipt is not a failed capture */ }
   /* R16, capture R69: the member this capture's document names as its actor is recorded as one who captured these bytes. */
@@ -912,7 +972,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   /* R19: supporting files, on request. */
   let subs = null, subsSkipped = sessionSkip, sessionId = null;
   if (body.subresources === true && !subsSkipped) {
-    const w = await walkSubresources(cap, { ev, sha, total, multipart, ct, name, locator, base: res.url || locator,
+    const w = await walkSubresources(cap, { ev, sha, total, multipart, ct, name, locator, base: resolvedUrl || locator,
                                              retrieved, resume: null, sessionId: null });
     subs = w.subs; subsSkipped = w.skipped; sessionId = w.sessionId;
   }
@@ -934,7 +994,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
         if (o) { const d = detectFormat(new Uint8Array(await o.arrayBuffer()), null); if (d && d.format !== "undetermined") detected = d; }
       } catch { detected = null; }
     }
-    driveHopRecorded = driveHop(driveCapture, { retrieved, resolved: res.url || null, detected });
+    driveHopRecorded = driveHop(driveCapture, { retrieved, resolved: resolvedUrl, detected });
   }
 
   /* R20: co-attestation at every capture (K60). */
@@ -992,9 +1052,8 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     /* Derived artifacts are named on the SAME register document, never as documents of their own (C-18.3). */
     ...(subs ? { renditions: subs.renditions } : {}),
     /* R21: on the capture-request arm the origin is the drain's row's, never the body's. */
-    origin: captureRequest ? (crOrigin || { kind: "named_request" })
-      : { kind: body.matchedSweep ? "sweep" : "named_request",
-          ...(body.matchedSweep ? { matched_sweep: body.matchedSweep, deeming_actor: sessMember || cls } : {}) },
+    /* R31 (K1126): only monitoring and capture-requests set a sweep origin; a body's `matchedSweep` is ignored. */
+    origin: captureRequest ? (crOrigin || { kind: "named_request" }) : { kind: "named_request" },
     attestation_attempts: attestations,
   };
   return answer(200, {
