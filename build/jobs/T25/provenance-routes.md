@@ -39,3 +39,27 @@ Found elsewhere (each against its owner):
 Rows awaiting stamp (T26 L2): C-34.1, C-34.2, C-34.3, C-34.4, each `where` re-pointed to `src/provenance-routes/index.mjs provenanceRouteAssess > is-route-mark`.
 
 **B2 CHANGE (K1225), handled.** `tranche/T25` merged (requirement text only: provenance keeps no copy of `ROUTE_MARK_CHECKS`, and drops `provenance_route_marks` from its tables and its purge declaration). No change to this module's code or tests: none relied on a copy. **Red until provenance's merge, by name:** `test/m/provenance-routes/composition.test.mjs` "R6, R10, R12: composed with provenance…", because today's provenance still declares `provenance_route_marks` (so this module's `declarePurge` is refused, `TABLE_DECLARED`) and still registers `route` and `routeMarks`. Module tests otherwise 36/37 green after the merge. With no copy kept, the row census will hold C-34.1–.4 once (this module's, `where` re-pointed, awaiting stamp) rather than twice.
+
+## Completion
+
+**B3 CHANGE (K1229), handled.** `tranche/T25` merged after provenance's merge (e4a4e5d5e7): provenance no longer declares or creates `provenance_route_marks` nor registers `route` or `routeMarks`, and the composition red named under B2 is green.
+
+**Entries applied.** N512 (the provenance-routes side): R1–R13, C-34, `provenance_route_marks`, `provenanceRouteOps`, `op=stats`' order pinned (`composition.test.mjs`: `routeMarks` directly after `register`). Deferred: none.
+
+**Rows, each `awaiting stamp` (T25, for T26's L2, S3):**
+- C-34.1 ROUTE_MARK_NO_AUTHOR, `where` changed to `src/provenance-routes/index.mjs provenanceRouteAssess > is-route-mark`
+- C-34.2 ROUTE_MARK_NO_BUNDLE, the same
+- C-34.3 ROUTE_MARK_NO_SUCH_BUNDLE, the same
+- C-34.4 ROUTE_MARK_NOT_A_DOCUMENT, the same
+
+**Found in other modules** (J1, each its owner's; all among the accepted reds): plane must build `provenanceRoutesOf(ctx, { instanceName: env.INSTANCE_NAME || "unnamed" })` after provenance, migrate it and spread `provenanceRouteOps` (red 9; until then every test world that reads `provenance_route_marks` through the plane or retrieval fails "no such table": promotion `write-path.test.mjs`:218, retrieval `roster.test.mjs`, `projection.test.mjs`:250); retrieval's L5 job re-points `routeFinding` and has its fixture migrate this module; control-plane's `CHECK_FAMILIES` gains `src/provenance-routes/checks.mjs` (red 8); C-103.3's `where` names provenance's site only, though `provenanceChainRebuild` here answers it too (provenance R58; census: changed with no record, provenance's); requirements wording: Uses names record-core `getSetting` for R1's instance name, which the code takes as `deps.instanceName` from the composition root.
+
+**Tests and checks** (on e4a4e5d5e7 plus this record):
+- `node --test bio-plane/test/m/provenance-routes/`: 37 tests, 37 pass, 0 fail.
+- `node --test bio-plane/test/m/provenance/`: 89 pass, 0 fail.
+- whole `bio-plane/test/m`: 5295 tests, 5200 pass, 84 fail, every failure in another module and among the accepted reds: case-authoring `preflight` (13), filings `outward`/`packet` (3), network-notices (57), scheduler `consumers`:198 (red 7: users of moved names, attestation not yet merged); control-plane `families`, `catalogue-end` (red 8, C-89's file); promotion `write-path`:218, retrieval `roster` (8), `projection`:250 (red 9 and retrieval's L5: no world composes this module's table yet). None imports this module.
+- `test/system/row-census.test.mjs`: FAIL as accepted (red 6): C-34.1–.4 changed (this module's, above), C-103.3/.6/.7 changed and C-89.1 departed (provenance's and attestation's).
+- `test/system/fleetbundles.test.mjs`: 0 fail (no bundle staled; run before B2).
+- `node checks/format.mjs`: 4 failures, attestation's and reading-pipeline's directories only (red 4). `architecture.mjs … provenance-routes`: 0 failures. `coverage.mjs … provenance-routes`: 13 of 13 live ids named, 0 failures. `ownership.mjs … provenance-routes tranche/T25`: 15 files, 0 failures.
+
+Size (session_01JmVkWBZc9hpTWverdFG37a): test runs 22, module lines 1216
