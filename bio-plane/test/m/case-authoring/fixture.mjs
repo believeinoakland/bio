@@ -1,5 +1,5 @@
 /* case-authoring over the modules it uses, each the real one (record-core, membership, credentials, promotion,
-   provenance, extraction's tables, content, entities, connections, inquiry, basis-versions, strength, bias, observation-log,
+   provenance, attestation, extraction's tables, content, entities, connections, inquiry, basis-versions, strength, bias, observation-log,
    reevaluation, publication, ratification, contradiction, network-notices), on a real SQLite database (node:sqlite) standing in for a Durable Object's
    storage. What a later module fills is a stand-in the test controls: the run gate `ai-runs` registers with
    contradiction (its R13; `runs` below), the review provider (publication R23, which
@@ -12,6 +12,7 @@ import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
+import { attestationOf } from "../../../src/attestation/index.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { inquiryOf, legCapped } from "../../../src/inquiry/index.mjs";
@@ -138,6 +139,8 @@ export function world({ group = "test-group", provider = true, now = null, recor
      use it itself: the fixture reaches the one instance through inquiry's (below). */
   const prov = provenanceOf(host, { record, membership, now: () => clock.now });
   prov.migrate();
+  /* attestation (layer 3, after provenance), the real one: the attestations a capture holds (its R7), R35's read. */
+  const attestation = attestationOf(host, { record, provenance: prov });
   /* capture (layer 3), its late attestations and signed accounts (its R68, R69) and its inbox (R72's read), and sources
      (layer 3) over it, each the real one; nothing here fetches. Created before any module that reaches sources on this storage, so its
      one instance keeps the test's clock. */
@@ -200,7 +203,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
   const w = {
     st, host, record, membership, credentials, promotion, prov, content, entities, connections, inquiry, basisVersions, strength,
     bias, observations, reevaluation, publication, ratification, contradiction, runs, clock, readings, grants: new Map(),
-    capture, sources,
+    capture, sources, attestation,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
@@ -222,7 +225,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
                                                                                   : w.networkNotices.noticeReferenceOf(project)) };
   w.ca = caseAuthoringOf(host, { record: recordWrap ? recordWrap(record) : record, membership, inquiry, basisVersions,
     strength, bias, observations, reevaluation, publication, ratification: ratWrap ? ratWrap(ratification) : ratification,
-    contradiction, provenance: prov, capture, networkNotices,
+    contradiction, provenance: prov, attestation, capture, networkNotices,
     sources, now: now || ((p) => (p === "millisecond" ? clock.ms : clock.now)), ...deps });
   let n = 0;
   Object.assign(w, {
