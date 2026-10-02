@@ -22,3 +22,7 @@
 - `checks/ownership.mjs … membership tranche/T25`: 1 file changed by membership; 0 failures.
 
 Size (session_01VygP3okwnSo5Wu6aPRkQw3): test runs 5, module lines 3345
+
+## J1 · COMPLETE
+
+R83 applied: MODULE_ORDER equals modules.json after fold 3 (attestation, provenance-routes after provenance; reading-pipeline before extraction); red 5 cleared. Stale-note re-scan: one pointer re-worded (activeAdmins' comment: queue R23 -> tasks R1); nothing else of the N502/N508 kind. Module 140/140; promotion+provenance 223/223; whole test/m 5279 pass, 0 fail, 11 todo. Checks: format 6 failures (all red 4), architecture/coverage (79/79)/ownership 0. REPORT: bio-plane/src changed, so the plane bundle is stale until your layer-close regeneration; nothing regenerated. Record: build/jobs/T25/membership.md.
