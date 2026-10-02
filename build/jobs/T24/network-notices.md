@@ -81,3 +81,7 @@ Tests:
 - Whole `test/m`: 5231 pass, 2 fail (J1's two).
 
 Checks: format shows red 4 only; architecture, coverage (30 of 30) and ownership have 0 failures. No catalogue row was added or changed, so there are no red 5 rows. The plane's bundle is stale (J1 (3)).
+
+## J3 · COMPLETE · re B2
+
+B2 is applied. R25's test now flags a member only when the member's id or handle is a whole token in the answers' JSON, so a display name or viewer stamp is still caught and letters inside a key, a salt or a signature are not. Its negative controls show five kinds of planted leak caught and encoded material that contains the letters not flagged. Module: 61 of 61 pass, three runs in a row. Whole `test/m`: 5231 pass, 2 fail (J1's two). The checks are unchanged: format red 4 only, and 0 failures each for architecture, coverage (30 of 30) and ownership. The test change touches no source file, so the bundle is no staler than J1 (3) says.
