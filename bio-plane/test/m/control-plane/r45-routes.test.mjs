@@ -1,5 +1,6 @@
 /* control-plane R45: the ops T23 adds (N485: K1025, K1051; K1094; DEC-111, K1100; op-declarations R10) — escalation's
-   `escalationreasondraft`, case-authoring's `whatchangedpropose` and `whatchangeddrafts`, monitoring's `sweeps`,
+   `escalationreasondraft`, case-authoring's `whatchangedpropose` and `whatchangeddrafts`, link-sweep's `sweeps` (its R9,
+   moved from monitoring with N506; T24),
    network-notices' `noticeprepare`, `noticepost`, `notices` and `directorysubmission` — each routed through the door's general path to its
    owner's store route of the same name (R26), with the stamps its owner reads set by the server and none taken from the
    caller (R29), by op-declarations' lists (K1168); the notice ops a member's session's alone; and network-notices'
@@ -12,6 +13,7 @@ import { O, world, call, opCalls, aik, cred, hex64, member, refused, FORGED, QUE
 const { escalationOps } = await import("../../../src/escalation/ops.mjs");
 const { caseAuthoringOps } = await import("../../../src/case-authoring/index.mjs");
 const { monitoringOps } = await import("../../../src/monitoring/index.mjs");
+const { linkSweepOps } = await import("../../../src/link-sweep/index.mjs");
 const { networkNoticesOps, networkNoticesPublicReads } = await import("../../../src/network-notices/index.mjs");
 const { publicReadDoorOp } = await import("../../../src/public-read/door.mjs");
 
@@ -23,7 +25,7 @@ const OWNER = {
   escalationreasondraft: Object.keys(escalationOps(null, U, null)),
   whatchangedpropose: Object.keys(caseAuthoringOps(null, U, null)),
   whatchangeddrafts: Object.keys(caseAuthoringOps(null, U, null)),
-  sweeps: Object.keys(monitoringOps(null, U, null)),
+  sweeps: Object.keys(linkSweepOps(null, U, null)),
   noticeprepare: Object.keys(networkNoticesOps(null, U, null)),
   noticepost: Object.keys(networkNoticesOps(null, U, null)),
   notices: Object.keys(networkNoticesOps(null, U, null)),
@@ -53,7 +55,7 @@ const R45 = {
   escalationreasondraft: viewer,                                                     /* escalation R29 */
   whatchangedpropose:    (c) => ({ viewer: c.viewer, proposedBy: c.proposer, author: c.proposer }),   /* case-authoring R39 */
   whatchangeddrafts:     viewer,                                                     /* case-authoring R39 */
-  sweeps:                viewer,                                                     /* monitoring R61 */
+  sweeps:                viewer,                                                     /* link-sweep R9 */
   noticeprepare:         (c) => ({ by: c.identity, viewer: c.viewer }),              /* network-notices R1, R2 */
   noticepost:            (c) => ({ by: c.identity, viewer: c.viewer }),              /* network-notices R4, R5 */
   notices:               viewer,                                                     /* network-notices R22 */
@@ -70,6 +72,8 @@ test("R45, R2, R26: each of T23's ops is declared, a route of its owner's own ma
     assert.ok(Object.hasOwn(OPS, op), `${op} is declared`);
     assert.ok(routes.includes(op), `${op} is a route of its owner's map`);
   }
+  /* N506 (T24): `sweeps` is link-sweep's route, and no longer monitoring's */
+  assert.equal(Object.keys(monitoringOps(null, U, null)).includes("sweeps"), false, "sweeps left monitoring's map");
   for (const op of NOTICE) assert.deepEqual([OPS[op].classes, OPS[op].machineClasses], [["admin", "member"], []], op);
   const { w, list } = callers();
   let reached = 0;
