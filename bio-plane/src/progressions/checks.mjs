@@ -19,7 +19,7 @@
  * its REC-64 rule (R27; K163, K329), with no row (`GENERIC_CODES`, `generic`). N285 renamed this module's own
  * `NO_LABEL` and `NOT_FOUND` to `PROGRESSION_NO_LABEL` (C-100.2) and `PROGRESSION_VERSION_NOT_HELD` (C-100.8), each
  * keeping its translation; `NOT_A_DISPOSITION` (C-100.20) is one condition several modules answer, so its one site is
- * `notADisposition` below (R35), which `inquiry` and `legacy-store` call too. */
+ * `notADisposition` below (R35), which `inquiry` and `queue` call too (`legacy-store`'s call went to `queue`). */
 
 import { SHARED_ACT_CHECKS } from "../record-grammar/index.mjs";
 import { DISPOSITIONS } from "../promotion/index.mjs";

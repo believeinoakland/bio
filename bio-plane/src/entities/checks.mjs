@@ -85,4 +85,13 @@ export const ENTITY_CHECKS = Object.freeze({
     translation: "The record holds no resolution of that reference to that subject, so there is nothing to report as "
       + "wrong. Read the capture's resolutions and name one of them. Nothing was written.",
   }),
+  /* R1 (DEC-88, K1025): a subject registered with no note, the declarer's own words on who or what it is and why it
+     belongs in the registry (absent, not a string, or blank). Asked after `ENTITY_NO_LABEL`, before anything is
+     written. The next of C-91; awaiting the catalogue's stamp (T23). */
+  ENTITY_NO_NOTE: Object.freeze({
+    check: 'C-91.8',
+    where: 'src/entities/index.mjs createEntity > is-entity-noted',
+    translation: 'A subject is registered with a note in your own words saying who or what it is and why it belongs '
+      + 'in the registry, and this one has none. Nothing was written.',
+  }),
 });

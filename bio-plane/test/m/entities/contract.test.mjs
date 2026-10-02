@@ -14,9 +14,9 @@ test("R35 the read contract: entities(entity_id key, at the instant R1 answers) 
   const res = cols("resolutions").map((c) => c.name);
   for (const c of ["capture_sha", "bundle_id", "ref", "entity_id", "grade", "established"]) assert.ok(res.includes(c), c);
   /* `at` is the instant the entity was created, the time R1 answers */
-  const made = e.createEntity({ kind: "office", label: "Alpha", aliases: ["a:1", "22"] });
+  const made = e.createEntity({ note: "a subject the test registers", kind: "office", label: "Alpha", aliases: ["a:1", "22"] });
   assert.equal(rows(`SELECT at FROM entities WHERE entity_id=?`, made.entity_id)[0].at, made.at);
-  e.createEntity({ kind: "office", label: "Beta" });
+  e.createEntity({ note: "a subject the test registers", kind: "office", label: "Beta" });
   /* every grade the record can hold, written by every path that writes one: A, B, C by the recogniser, D by
      testimony, and a raise in place (R10) */
   read("INFO-1", sha("k1"), [{ kind: "a", key: "1", label: "x" }, { kind: "b", key: "22", label: "y" },
@@ -69,7 +69,7 @@ test("R36 noSuchEntity answers the one refusal: reason and code NO_SUCH_ENTITY, 
 
 test("R36 every act of this module answering the condition answers through noSuchEntity: R2, R3 (with end), R12 and R17", () => {
   const { e, read } = world();
-  const a = e.createEntity({ kind: "office", label: "A" }).entity_id;
+  const a = e.createEntity({ note: "a subject the test registers", kind: "office", label: "A" }).entity_id;
   read("INFO-1", sha("n36"), [{ kind: "x", key: "1", label: "A" }]);
   const gone = "ENT-2026-0404";
   assert.deepEqual(e.addAlias({ entityId: gone, alias: "x" }), noSuchEntity(gone));
@@ -129,13 +129,13 @@ test("R37 every act of this module answering a request that names no entity id a
     assert.deepEqual(answers[0], noEntity(answers[0].detail), name);
   }
   /* negative control: a named id is past this refusal */
-  const a = e.createEntity({ kind: "office", label: "A" }).entity_id;
+  const a = e.createEntity({ note: "a subject the test registers", kind: "office", label: "A" }).entity_id;
   for (const [name, act] of Object.entries(acts)) assert.notEqual(act(a).reason, "NO_ENTITY", name);
 });
 
 test("R11 R12 R14 a request naming no capture digest answers through extraction's noSha (its R63), each act's own detail, minting no NO_SHA here", () => {
   const { e, read } = world();
-  const ent = e.createEntity({ kind: "office", label: "A" }).entity_id;
+  const ent = e.createEntity({ note: "a subject the test registers", kind: "office", label: "A" }).entity_id;
   read("INFO-1", sha("ns"), [{ kind: "x", key: "1", label: "A" }]);
   const acts = {
     resolve: (s) => e.resolve({ captureSha: s }),

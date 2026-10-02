@@ -23,7 +23,7 @@ async function filled() {
   w.resolve("ENT-2", "sb", "INFO-B", "A");
   w.define();
   w.define("proc", { contract: { within: "3 weeks" } }, { basis: "b", citation: "c" });
-  w.p.defineProgression({ progressionKey: "meet", label: "Meeting", declaredBy: "member:alice",
+  w.p.defineProgression({ progressionKey: "meet", label: "Meeting", declaredBy: "member:alice", basis: "b",
     stages: [{ key: "meeting", cardinality: "1", required: "always" }, { key: "minutes", after: "meeting", cardinality: "1", required: "usually" }] });
   await w.p.threadInstance({ progressionKey: "proc", entityId: "ENT-1", threadedBy: "member:alice", viewer: MEMBER,
     placements: [{ stage: "need", captureSha: "sa" }, { stage: "need", captureSha: "sp" }, { stage: "contract", captureSha: "sc" }] });

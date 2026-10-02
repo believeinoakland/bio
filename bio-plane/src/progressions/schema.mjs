@@ -60,8 +60,10 @@ CREATE INDEX IF NOT EXISTS progression_stages_key ON progression_stages(progress
 -- prior version stands and reads back through op=progression with version=N. A definition
 -- declared before D-128 has no rows here -- the store reads it as version 1 with its basis NOT
 -- RECORDED, and its first revision writes that version here first, verbatim from the tables above.
--- basis_statement and basis_citation are NULL when the declaring member stated none, which only a
--- FIRST version may do; a revision is refused without both.
+-- basis_statement is NULL only in a version written before versions were kept, or a first version
+-- declared before a first declaration had to state its basis (DEC-88, T22): a first declaration is
+-- refused without a statement, its citation optional (NULL when none); a revision is refused without
+-- both.
 CREATE TABLE IF NOT EXISTS progression_def_versions (
   progression_key TEXT NOT NULL,
   version         INTEGER NOT NULL,
@@ -140,7 +142,7 @@ CREATE INDEX IF NOT EXISTS progression_instances_capture ON progression_instance
 -- bare assertion (an equality a caller can hand us is one a caller can invent): the document
 -- must ACTUALLY resolve to the threading entity (FW-7) -- refused NOT_CONCERNED otherwise, the
 -- same gate op=thread uses -- and must name a REAL stage of the definition (BAD_STAGE
--- otherwise). Whether the discharge APPLIES is derived ON READ in #assembleInstance: only a
+-- otherwise). Whether the discharge APPLIES is derived ON READ in #assemble (./index.mjs): only a
 -- REQUIRED stage that is actually MISSING is discharged (rendered a distinct "discharged"
 -- state carrying this reason/citation, never a gap and never silently absent); an exception
 -- naming a stage that is not missing discharges nothing (the stage is present, so there is no

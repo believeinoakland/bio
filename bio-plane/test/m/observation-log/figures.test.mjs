@@ -32,9 +32,9 @@ function build() {
   assert.equal(w.obs.observe(entry({ authority_kind: "run", authority: "RUN-1", subject_kind: "unstated", state: "NEVER_LOOKED" }), null, 1), null);
   const a = w.obs.lead({ words: "alice was told", author: "alice" }).lead_id;
   const i = w.obs.lead({ words: "inner was told", author: "inner" }).lead_id;
-  assert.equal(w.obs.leadShare({ lead: i, project: "PROJ-H", sharer: "inner", viewer: V("inner") }).ok, true);
-  assert.equal(w.obs.leadLook({ lead: a, state: "LOOKED_ABSENT", looker: "alice", viewer: V("alice") }).ok, true);
-  assert.equal(w.obs.leadLook({ lead: i, state: "PRESENT", resultKind: "capture", resultRef: hidden, looker: "inner",
+  assert.equal(w.obs.leadShare({ reason: "the project is following this up", lead: i, project: "PROJ-H", sharer: "inner", viewer: V("inner") }).ok, true);
+  assert.equal(w.obs.leadLook({ detail: "searched the clerk's archive", lead: a, state: "LOOKED_ABSENT", looker: "alice", viewer: V("alice") }).ok, true);
+  assert.equal(w.obs.leadLook({ detail: "searched the clerk's archive", lead: i, state: "PRESENT", resultKind: "capture", resultRef: hidden, looker: "inner",
                                 viewer: V("inner") }).ok, true);
   return w;
 }

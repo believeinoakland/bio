@@ -3,7 +3,8 @@
  * `#observationReferent`, the writers `#observeExtraction`, `#observeIndexed`, `#observeReaderRun`,
  * `#observeResolutionAttempt`, `#observeConnectionDerivation` and the receipt's look, the missing-row rule, the
  * latest-per-subject view, verification, the row-whole fence, and the lead with its four ops) and from the check
- * catalogue (C-54.2–C-54.10). The vocabulary and the pure judgements every writer uses are `vocabulary.mjs`'s.
+ * catalogue (C-54.2–C-54.10; C-54.11 and C-54.12 minted here for DEC-88). The vocabulary and the pure judgements
+ * every writer uses are `vocabulary.mjs`'s.
  *
  * `observationLogOf(ctx)` answers the one instance per Durable Object storage (K61). It reaches `record-core` and
  * `membership` through their factories, declares its tables to purge (R23, K23), and registers its writers with
@@ -66,6 +67,8 @@ export const LEAD_READ_LIMIT_MAX = 2000;
 /* op=leadlist's bound and words (D-681, R20): `op=leadread`'s pair; the population is the leads one member may read. */
 export const LEAD_LIST_LIMIT_DEFAULT = 200;
 export const LEAD_LIST_LIMIT_MAX = 2000;
+/* A share's reason (DEC-88, R16): at most this many characters, counted as Unicode code points, refused over it. */
+export const LEAD_SHARE_REASON_MAX = 2000;
 export const LEAD_LIST_EMPTY =
   "there is no lead here you may read. A lead is readable by its author and by the joined participants "
   + "of a project its author shared it to; whether any other lead exists is not said to anyone outside it";
@@ -801,8 +804,9 @@ export class ObservationLog {
                  + `nothing is itself a finding with this lead behind it` };
   }
 
-  /** R16 — op=leadshare: THE AUTHOR SHARES ONE LEAD TO ONE PROJECT, authored, dated, never rewritten. */
-  leadShare({ lead = null, project = null, sharer = null, viewer = null, identity = null } = {}) {
+  /** R16 — op=leadshare: THE AUTHOR SHARES ONE LEAD TO ONE PROJECT, authored, dated, never rewritten, and with the
+   *  sharer's reason (DEC-88), kept as written. */
+  leadShare({ lead = null, project = null, reason, sharer = null, viewer = null, identity = null } = {}) {
     const refusal = ObservationLog.leadRefusal;
     const who = typeof sharer === "string" ? sharer.trim() : "";
     const pid = typeof project === "string" ? project.trim() : "";
@@ -825,15 +829,31 @@ export class ObservationLog {
         pid ? `you are not a joined participant of a project addressed by ${pid.slice(0, 60)}`
             : `pass project=<PROJ-…>: the project to share this lead to`,
         { lead: L.lead_id, project: pid || null });
+    /* DEC-88 (C-54.12): the sharer's words on why this lead is disclosed to that project. Asked of every share, a
+       repeat included: the act is the same act, and its words are refused or accepted the same way. */
+    const why = typeof reason === "string" ? reason : null;
+    const chars = why == null ? 0 : [...why].length;
+    if (why == null || !why.trim() || chars > LEAD_SHARE_REASON_MAX)
+      return refusal("LEAD_SHARE_NO_REASON",
+        why == null
+          ? (reason === undefined || reason === null
+              ? `pass reason=<your words>: why this lead is disclosed to ${pid.slice(0, 60)}`
+              : `the reason must be your words, as text; a ${typeof reason} was sent`)
+          : !why.trim() ? `the reason is blank. Say why this lead is disclosed to ${pid.slice(0, 60)}`
+          : `the reason is ${chars} characters, over the ${LEAD_SHARE_REASON_MAX} a share's reason is kept to. `
+            + `Refused rather than cut`,
+        { lead: L.lead_id, project: pid, limit: LEAD_SHARE_REASON_MAX });
     /* END DEC-49 REGION is-lead-share */
-    /* Recorded once (R16): a repeat, in the same second or later, answers `already` with the first sharer and
-       instant. The legacy store compared the instants, which read a same-second repeat as a new share. */
-    const prior = this.#one(`SELECT sharer, at FROM lead_shares WHERE lead_id = ? AND bundle_id = ?`, L.lead_id, pid);
+    /* Recorded once (R16): a repeat, in the same second or later, answers `already` with the first sharer, instant
+       and reason, and writes nothing. The legacy store compared the instants, which read a same-second repeat as a
+       new share. A share recorded before DEC-88 keeps its NULL reason: nothing rewrites it. */
+    const prior = this.#one(`SELECT sharer, at, reason FROM lead_shares WHERE lead_id = ? AND bundle_id = ?`, L.lead_id, pid);
     if (!prior)
-      this.sql.exec(`INSERT INTO lead_shares (lead_id, bundle_id, sharer, at) VALUES (?, ?, ?, ?)`,
-                    L.lead_id, pid, who, stampInstant("second", this.now()));
-    const r = prior || this.#one(`SELECT sharer, at FROM lead_shares WHERE lead_id = ? AND bundle_id = ?`, L.lead_id, pid);
-    return { ok: true, lead_id: L.lead_id, project: pid, shared_by: r.sharer, at: r.at,
+      this.sql.exec(`INSERT INTO lead_shares (lead_id, bundle_id, sharer, at, reason) VALUES (?, ?, ?, ?, ?)`,
+                    L.lead_id, pid, who, stampInstant("second", this.now()), why);
+    const r = prior
+      || this.#one(`SELECT sharer, at, reason FROM lead_shares WHERE lead_id = ? AND bundle_id = ?`, L.lead_id, pid);
+    return { ok: true, lead_id: L.lead_id, project: pid, shared_by: r.sharer, at: r.at, reason: r.reason ?? null,
              already: !!prior, evidence: false,
              says: `${L.lead_id} is shared to ${pid}: its joined participants can now read it and record `
                  + `looks against it. It is still never evidence` };
@@ -856,7 +876,7 @@ export class ObservationLog {
     const st = typeof state === "string" ? state.trim() : "";
     const rk = typeof resultKind === "string" && resultKind.trim() ? resultKind.trim() : null;
     const rr = typeof resultRef === "string" && resultRef.trim() ? resultRef.trim() : null;
-    const note = typeof detail === "string" && detail.trim() ? detail : null;
+    const note = typeof detail === "string" && detail.trim() ? detail : null;   // C-54.11 refuses a null one
     /* DEC-49 REGION is-lead-look */
     if (!who || isMachineIdentity(who))
       return refusal("LEAD_LOOK_NOT_A_MEMBER",
@@ -888,9 +908,18 @@ export class ObservationLog {
       return refusal("LEAD_LOOK_REFERENT",
         `no ${rk} ${rr.slice(0, 64)} is held in this record where you can read it. Capture what the `
         + `look found first, then record the look against it`, { lead: L.lead_id });
+    /* DEC-88 (C-54.11): the looker's words on where they looked and what they found. A look with none is refused,
+       never kept with a null detail. */
+    if (note == null)
+      return refusal("LEAD_LOOK_NO_DETAIL",
+        detail === undefined || detail === null
+          ? `pass detail=<your words>: where you looked and what you found`
+          : typeof detail !== "string" ? `the detail must be your words, as text; a ${typeof detail} was sent`
+          : `the detail is blank. Say where you looked and what you found`,
+        { lead: L.lead_id });
     /* END DEC-49 REGION is-lead-look */
     /* C-54.4 (`is-lead-act`): the same rule — refused, never cut — applied to the look's own words. */
-    if (note && new TextEncoder().encode(note).length > CAPTURE_TEXT_UNIT_CAP)
+    if (new TextEncoder().encode(note).length > CAPTURE_TEXT_UNIT_CAP)
       return refusal("LEAD_TOO_LONG",
         `the look's detail is over the ${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to`,
         { lead: L.lead_id, limit: CAPTURE_TEXT_UNIT_CAP });
@@ -938,7 +967,7 @@ export class ObservationLog {
        projects they have joined. Bounded by the read's own `limit`, the cut published. */
     const me = this.membership.positionalMember(viewer, identity);
     const sharesRaw = this.#rows(
-      `SELECT s.bundle_id AS project, s.sharer AS shared_by, s.at FROM lead_shares s
+      `SELECT s.bundle_id AS project, s.sharer AS shared_by, s.at, s.reason FROM lead_shares s
         WHERE s.lead_id = ? AND (? = 1 OR EXISTS (SELECT 1 FROM project_participants pp
           WHERE pp.project_id = s.bundle_id AND pp.member_id = ? AND pp.state IN ('joined', 'leaving')))
         ORDER BY s.at, s.bundle_id LIMIT ?`, L.lead_id, me === L.author ? 1 : 0, me ?? "", cap + 1);
@@ -1041,6 +1070,7 @@ export function observationLogOps(o, url, body) {
       looker: q("looker"), viewer: q("viewer"), identity: q("identity") }),
     leadshare: () => o.leadShare({
       lead: (body && body.lead) || q("lead"), project: (body && body.project) || q("project"),
+      reason: body && body.reason !== undefined && body.reason !== null ? body.reason : q("reason"),
       sharer: q("sharer"), viewer: q("viewer"), identity: q("identity") }),
     leadread: () => o.leadRead({ id: q("id"), limit: q("limit"), viewer: q("viewer"), identity: q("identity") }),
     leadlist: () => o.leadList({ limit: q("limit"), viewer: q("viewer"), identity: q("identity") }),

@@ -4,18 +4,18 @@ import assert from "node:assert/strict";
 import { world, sha, MACHINE } from "./fixture.mjs";
 import { ENTITY_KINDS, RELATION_KINDS, ENTITY_CHECKS } from "../../../src/entities/index.mjs";
 
-test("R1 createEntity refuses NO_KIND, UNKNOWN_KIND naming the closed list, then ENTITY_NO_LABEL with its own row (C-91.6); otherwise ENT-<year>-NNNN with the canonical and each distinct folded alias once, in one transaction", () => {
+test("R1 createEntity refuses NO_KIND, UNKNOWN_KIND naming the closed list, then ENTITY_NO_LABEL with its own row (C-91.6) (ENTITY_NO_NOTE's arm follows); otherwise ENT-<year>-NNNN with the canonical and each distinct folded alias once, in one transaction", () => {
   const { e, rows } = world();
   assert.equal(e.createEntity({ label: "x" }).reason, "NO_KIND");
-  assert.equal(e.createEntity({ kind: "  ", label: "x" }).reason, "NO_KIND");
-  const u = e.createEntity({ kind: "theme", label: "x" });
+  assert.equal(e.createEntity({ note: "a subject the test registers", kind: "  ", label: "x" }).reason, "NO_KIND");
+  const u = e.createEntity({ note: "a subject the test registers", kind: "theme", label: "x" });
   assert.equal(u.reason, "UNKNOWN_KIND");
   for (const k of ENTITY_KINDS) assert.ok(u.detail.includes(k));
   const row = ENTITY_CHECKS.ENTITY_NO_LABEL;
   assert.deepEqual([row.check, row.where], ["C-91.6", "src/entities/index.mjs createEntity > is-entity-labelled"]);
   assert.equal(row.translation, "A subject is registered under a name a person can read, such as 'City Clerk', and this one has none. Nothing was written.");
   for (const label of [undefined, null, "", "   ", " \t\n "]) {
-    const nl = e.createEntity({ kind: "office", label });
+    const nl = e.createEntity({ note: "a subject the test registers", kind: "office", label });
     assert.deepEqual([nl.ok, nl.reason, nl.code, nl.check, nl.translation], [false, "ENTITY_NO_LABEL", "ENTITY_NO_LABEL", row.check, row.translation], String(label));
     assert.equal(typeof nl.detail, "string");
   }
@@ -30,19 +30,69 @@ test("R1 createEntity refuses NO_KIND, UNKNOWN_KIND naming the closed list, then
   assert.equal(r.alias_count, 3, "the label, 'clerk', 'the clerk': duplicates of a fold and empty folds are dropped");
   assert.deepEqual(Object.keys(r).sort(), ["alias_count", "at", "entity_id", "kind", "label", "ok"]);
   assert.equal(rows(`SELECT note FROM entities`)[0].note.length, 2000);
-  const long = e.createEntity({ kind: "office", label: "L".repeat(300) });
+  const long = e.createEntity({ note: "a subject the test registers", kind: "office", label: "L".repeat(300) });
   assert.equal(long.label.length, 200);
-  const r2 = e.createEntity({ kind: "office", label: "Second" });
+  const r2 = e.createEntity({ note: "a subject the test registers", kind: "office", label: "Second" });
   assert.equal(Number(r2.entity_id.slice(-4)), Number(long.entity_id.slice(-4)) + 1);
   const canon = rows(`SELECT alias, canonical FROM entity_aliases WHERE entity_id=? ORDER BY canonical DESC`, r.entity_id);
   assert.equal(canon[0].alias, "City Clerk");
   assert.equal(canon[0].canonical, 1);
 });
 
+test("R1 (DEC-88) createEntity refuses ENTITY_NO_NOTE with its own row (C-91.8) when the declarer's note is absent, not a string, blank or only whitespace, asked after ENTITY_NO_LABEL and before anything is written: no id allocated, no entity, no alias", () => {
+  const { e, rows } = world();
+  const counts = () => rows(`SELECT (SELECT COUNT(*) FROM entities) AS ents, (SELECT COUNT(*) FROM entity_aliases) AS als`)[0];
+  const first = e.createEntity({ kind: "office", label: "Harbour Office", note: "the office that keeps the harbour's register", aliases: ["ho"] });
+  assert.equal(first.ok, true);
+  const before = counts();
+  assert.deepEqual([before.ents, before.als], [1, 2]);
+  const row = ENTITY_CHECKS.ENTITY_NO_NOTE;
+  for (const note of [undefined, null, "", "   ", " \t\n ", 7, 0, true, {}, ["a note"]]) {
+    const r = e.createEntity({ kind: "office", label: "Port Board", note, aliases: ["pb", "the board"], declaredBy: "member:ann" });
+    assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, "ENTITY_NO_NOTE", "ENTITY_NO_NOTE", "C-91.8", row.translation], JSON.stringify(note));
+    assert.equal(typeof r.detail, "string");
+    assert.ok(r.detail.length > 0);
+    assert.equal("entity_id" in r, false, "no id is answered");
+  }
+  const omitted = e.createEntity({ kind: "office", label: "Port Board" });
+  assert.equal(omitted.reason, "ENTITY_NO_NOTE", "a note left out of the request");
+  assert.deepEqual(counts(), before, "nothing was written: the entity count and the alias count are unchanged");
+  /* the order: the kind, then the label, then the note */
+  assert.equal(e.createEntity({ label: "x" }).reason, "NO_KIND");
+  assert.equal(e.createEntity({ kind: "theme", label: "x" }).reason, "UNKNOWN_KIND");
+  assert.equal(e.createEntity({ kind: "office", label: " " }).reason, "ENTITY_NO_LABEL", "the label is asked before the note");
+  assert.equal(e.createEntity({ kind: "office", label: " ", note: "a note" }).reason, "ENTITY_NO_LABEL");
+  /* negative control: a noted entity is created, takes the next id (no refusal allocated one), and its note reads back */
+  const noted = e.createEntity({ kind: "body", label: "Port Board", note: "  the board that sets the harbour's dues  ", declaredBy: "member:ann" });
+  assert.equal(noted.ok, true);
+  assert.equal(Number(noted.entity_id.slice(-4)), Number(first.entity_id.slice(-4)) + 1, "the next allocated id is unchanged by the refusals");
+  assert.deepEqual(counts(), { ents: before.ents + 1, als: before.als + 1 });
+  assert.equal(e.readEntity({ entityId: noted.entity_id }).entity.note, "  the board that sets the harbour's dues  ", "the note as the declarer gave it");
+  assert.equal(e.entitiesByAlias({ alias: "Port Board" }).entities[0].note, "  the board that sets the harbour's dues  ");
+  /* a longer note is kept, cut to 2,000 characters, never refused */
+  const long = e.createEntity({ kind: "fund", label: "Dues Fund", note: "d".repeat(2600) });
+  assert.equal(long.ok, true);
+  assert.equal(e.readEntity({ entityId: long.entity_id }).entity.note, "d".repeat(2000));
+  const exact = e.createEntity({ kind: "fund", label: "Exact Fund", note: "x".repeat(2000) });
+  assert.equal(e.readEntity({ entityId: exact.entity_id }).entity.note.length, 2000);
+});
+
+test("R1 C-91.8 ENTITY_NO_NOTE is this module's own row, with R1's translation word for word, naming no place (R31); its number is its own", () => {
+  const row = ENTITY_CHECKS.ENTITY_NO_NOTE;
+  assert.deepEqual([row.check, row.where], ["C-91.8", "src/entities/index.mjs createEntity > is-entity-noted"]);
+  assert.equal(row.translation, "A subject is registered with a note in your own words saying who or what it is and why it belongs "
+    + "in the registry, and this one has none. Nothing was written.");
+  assert.ok(Object.isFrozen(row));
+  assert.ok(!/oakland|alameda|legistar/i.test(row.translation), "R31");
+  const checks = Object.values(ENTITY_CHECKS).map((r) => r.check);
+  assert.equal(new Set(checks).size, checks.length, "no other row shares C-91.8");
+  assert.notEqual(row.translation, ENTITY_CHECKS.ENTITY_NO_LABEL.translation);
+});
+
 test("R2 addAlias refuses NO_ENTITY, NO_ALIAS, NO_SUCH_ENTITY, then ALREADY_ALIASED naming the held alias; one fold may be held by different entities", () => {
   const { e } = world();
-  const a = e.createEntity({ kind: "office", label: "City Clerk" }).entity_id;
-  const b = e.createEntity({ kind: "person", label: "Pat Doe" }).entity_id;
+  const a = e.createEntity({ note: "a subject the test registers", kind: "office", label: "City Clerk" }).entity_id;
+  const b = e.createEntity({ note: "a subject the test registers", kind: "person", label: "Pat Doe" }).entity_id;
   assert.equal(e.addAlias({ alias: "x" }).reason, "NO_ENTITY");
   const nr = ENTITY_CHECKS.NO_ALIAS;
   assert.deepEqual([nr.check, nr.where], ["C-33.25", "src/entities/index.mjs addAlias > is-alias-named"], "this module's own row (copied, T18)");
@@ -65,8 +115,8 @@ test("R2 addAlias refuses NO_ENTITY, NO_ALIAS, NO_SUCH_ENTITY, then ALREADY_ALIA
 
 test("R3 declareRelation refuses in order UNKNOWN_RELATION, NO_ENDS, SELF_RELATION, NO_JUSTIFICATION, the act-shape NO_CITATION, NO_SUCH_ENTITY naming the end; REL-<year>-NNNN with no grade", () => {
   const { e } = world();
-  const a = e.createEntity({ kind: "office", label: "A" }).entity_id;
-  const b = e.createEntity({ kind: "body", label: "B" }).entity_id;
+  const a = e.createEntity({ note: "a subject the test registers", kind: "office", label: "A" }).entity_id;
+  const b = e.createEntity({ note: "a subject the test registers", kind: "body", label: "B" }).entity_id;
   const u = e.declareRelation({ relation: "A", fromEntity: a, toEntity: b, justification: "j", citation: "c" });
   assert.equal(u.reason, "UNKNOWN_RELATION");
   assert.match(u.detail, /grade is NOT a relation/i);
@@ -94,11 +144,11 @@ test("R3 declareRelation refuses in order UNKNOWN_RELATION, NO_ENDS, SELF_RELATI
 
 test("R4 R28 declared_by and resolved_by are recorded exactly as the control plane stamps them, a machine as class:<cls>", () => {
   const { e, read } = world();
-  const m = e.createEntity({ kind: "office", label: "Machine Made", declaredBy: MACHINE });
+  const m = e.createEntity({ note: "a subject the test registers", kind: "office", label: "Machine Made", declaredBy: MACHINE });
   const ent = e.readEntity({ entityId: m.entity_id }).entity;
   assert.equal(ent.declared_by, MACHINE);
   assert.equal(ent.aliases[0].declared_by, MACHINE);
-  const p = e.createEntity({ kind: "office", label: "Person Made", declaredBy: "member:ann" });
+  const p = e.createEntity({ note: "a subject the test registers", kind: "office", label: "Person Made", declaredBy: "member:ann" });
   assert.equal(e.addAlias({ entityId: p.entity_id, alias: "pm", declaredBy: "member:bo" }).ok, true);
   const al = e.readEntity({ entityId: p.entity_id }).entity.aliases.find((x) => x.alias === "pm");
   assert.equal(al.declared_by, "member:bo");
@@ -115,9 +165,9 @@ test("R5 readEntity: NO_ENTITY for an empty id, found:false for an absent one; a
   const { e } = world();
   assert.equal(e.readEntity({}).reason, "NO_ENTITY");
   assert.deepEqual(e.readEntity({ entityId: "ENT-2026-0404" }), { ok: true, found: false, entity_id: "ENT-2026-0404", entity: null });
-  const a = e.createEntity({ kind: "office", label: "Zed", aliases: ["alpha"], declaredBy: "member:ann" }).entity_id;
-  const b = e.createEntity({ kind: "body", label: "B" }).entity_id;
-  const c = e.createEntity({ kind: "body", label: "C" }).entity_id;
+  const a = e.createEntity({ note: "a subject the test registers", kind: "office", label: "Zed", aliases: ["alpha"], declaredBy: "member:ann" }).entity_id;
+  const b = e.createEntity({ note: "a subject the test registers", kind: "body", label: "B" }).entity_id;
+  const c = e.createEntity({ note: "a subject the test registers", kind: "body", label: "C" }).entity_id;
   const r1 = e.declareRelation({ relation: "member_of", fromEntity: a, toEntity: b, justification: "j", citation: "c" }).relation_id;
   const r2 = e.declareRelation({ relation: "overlaps", fromEntity: c, toEntity: a, justification: "j", citation: "c" }).relation_id;
   const got = e.readEntity({ entityId: a });
@@ -133,8 +183,8 @@ test("R5 readEntity: NO_ENTITY for an empty id, found:false for an absent one; a
 
 test("R6 entitiesByAlias answers every entity holding the fold, in id order, ambiguity kept; an empty fold answers count 0; readRelation NO_RELATION and found:false", () => {
   const { e } = world();
-  const b = e.createEntity({ kind: "office", label: "Board" }).entity_id;
-  const a = e.createEntity({ kind: "body", label: "Other", aliases: ["BOARD"] }).entity_id;
+  const b = e.createEntity({ note: "a subject the test registers", kind: "office", label: "Board" }).entity_id;
+  const a = e.createEntity({ note: "a subject the test registers", kind: "body", label: "Other", aliases: ["BOARD"] }).entity_id;
   const hit = e.entitiesByAlias({ alias: "  board " });
   assert.equal(hit.count, 2);
   assert.deepEqual(hit.entities.map((x) => x.entity_id), [b, a].sort());
@@ -146,7 +196,7 @@ test("R6 entitiesByAlias answers every entity holding the fold, in id order, amb
 
 test("R7 has answers whether the registry holds the id; kinds and relationKinds answer the closed lists", () => {
   const { e } = world();
-  const a = e.createEntity({ kind: "fund", label: "F" }).entity_id;
+  const a = e.createEntity({ note: "a subject the test registers", kind: "fund", label: "F" }).entity_id;
   assert.equal(e.has(a), true);
   assert.equal(e.has("ENT-2026-0404"), false);
   assert.equal(e.has(""), false);
@@ -159,8 +209,8 @@ test("R7 has answers whether the registry holds the id; kinds and relationKinds 
 
 test("R8 an alias or a relation is withdrawn, never erased: NO_REASON, NO_SUCH_ALIAS, NO_SUCH_RELATION, a repeat already:true; hidden from new matches and R6, still read as withdrawn; resolutions through it kept and marked", () => {
   const { e, read, rows } = world();
-  const a = e.createEntity({ kind: "office", label: "City Clerk", aliases: ["Clerk"] }).entity_id;
-  const b = e.createEntity({ kind: "body", label: "B" }).entity_id;
+  const a = e.createEntity({ note: "a subject the test registers", kind: "office", label: "City Clerk", aliases: ["Clerk"] }).entity_id;
+  const b = e.createEntity({ note: "a subject the test registers", kind: "body", label: "B" }).entity_id;
   read("INFO-1", sha("w1"), [{ kind: "doc", key: "1", label: "Clerk" }]);
   assert.equal(e.resolve({ captureSha: sha("w1") }).resolved[0].grade, "C");
   assert.equal(e.withdrawAlias({ entityId: a, alias: "Clerk" }).reason, "NO_REASON");
@@ -206,8 +256,8 @@ test("R8 an alias or a relation is withdrawn, never erased: NO_REASON, NO_SUCH_A
 
 test("R26 a declared relation carries no grade and is never traversed to resolve a reference or to answer concerns", () => {
   const { e, read } = world();
-  const a = e.createEntity({ kind: "office", label: "Alpha Office" }).entity_id;
-  const p = e.createEntity({ kind: "body", label: "Proxy Body" }).entity_id;
+  const a = e.createEntity({ note: "a subject the test registers", kind: "office", label: "Alpha Office" }).entity_id;
+  const p = e.createEntity({ note: "a subject the test registers", kind: "body", label: "Proxy Body" }).entity_id;
   e.declareRelation({ relation: "proxy_for", fromEntity: p, toEntity: a, justification: "j", citation: "c" });
   read("INFO-1", sha("r26"), [{ kind: "x", key: "1", label: "Proxy Body" }]);
   const r = e.resolve({ captureSha: sha("r26") });
@@ -218,8 +268,8 @@ test("R26 a declared relation carries no grade and is never traversed to resolve
 
 test("R30 purge: the registry is cleared by the whole-store purge only; resolutions and resolution_defects are keyed to their bundle", () => {
   const { e, read, record, rows } = world();
-  const a = e.createEntity({ kind: "office", label: "Alpha" }).entity_id;
-  const b = e.createEntity({ kind: "office", label: "Beta" }).entity_id;
+  const a = e.createEntity({ note: "a subject the test registers", kind: "office", label: "Alpha" }).entity_id;
+  const b = e.createEntity({ note: "a subject the test registers", kind: "office", label: "Beta" }).entity_id;
   e.declareRelation({ relation: "overlaps", fromEntity: a, toEntity: b, justification: "j", citation: "c" });
   read("INFO-1", sha("p1"), [{ kind: "x", key: "1", label: "Alpha" }]);
   read("INFO-2", sha("p2"), [{ kind: "x", key: "2", label: "Alpha" }]);

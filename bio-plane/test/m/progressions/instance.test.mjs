@@ -133,7 +133,7 @@ test("R10: stages in order with documents and grade; the chain; the weakest link
 
 test("R11: a missing always/usually/unless_exception stage is a finding carrying the grade; sometimes/never is not; an exception discharges", async () => {
   const w = seeded();
-  w.p.defineProgression({ progressionKey: "proc", label: "P", declaredBy: "member:alice", stages: [
+  w.p.defineProgression({ progressionKey: "proc", label: "P", declaredBy: "member:alice", basis: "b", stages: [
     { key: "a", cardinality: "1", required: "always" }, { key: "b", cardinality: "1", required: "usually" },
     { key: "c", cardinality: "1", required: "unless_exception" }, { key: "d", cardinality: "1", required: "sometimes" },
     { key: "e", cardinality: "1", required: "never" }, { key: "f", cardinality: "1", required: "always" },
