@@ -192,7 +192,7 @@ test("R8 by hand: governingLawsOf's undetermined sentence names no law, even for
 });
 
 /* R9 (K899 (7), DEC-61): the three rows `actions`' actionHold mints (its R52), as drafted (`build/plan/draft-T20-answers.md`
-   C.3); new in T20 layer 9, awaiting stamp. */
+   C.3); new in T20 layer 9, stamped by 1.51.0. */
 const HOLD_ROWS = {
   MACHINE_CANNOT_SET_HOLD: {
     check: "C-117.20",
