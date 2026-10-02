@@ -15,6 +15,8 @@
 - N485 · 2026-10-01 · **record-grammar** (L1), then **escalation**, **case-authoring**, **skills** (K1025): record-grammar R43, R44 (the `edition_statement` and `escalation_reason` proposal subjects; `proposalLabel` throws on an unknown subject), then escalation R29 (the pre-assembled opening reason, Bob's DEC-89 addition), case-authoring R39 and R38's `draft` arm, skills R31. **Hard reason:** the order (P4, P10): they arose with K1019 after layer 1 closed, and each needs record-grammar's new subject.
 - N486 · 2026-10-01 · **network-notices** (new, L8; DEC-111, K1019) and **monitoring** R29 (the sweep): drafts `plan/draft-network-notices.md`, `plan/draft-monitoring-r29.md`, to Bob with their questions, each with a recommendation, then built in T23. **Hard reason:** Bob's (requirements and architecture, P17) and K1019 places the build in T23.
 
+- N487 · 2026-10-02 · **legacy-ui** (K1030; `plan/t22-dec88-callers.md`): the UI sends DEC-88 acts without their new reason: `civicos-ui/app.html` `entityDraft` (~:17128), `progDefineDraft` (~:17767), `statementack` (:25792, :25802), and its tests `progression-revision.test.mjs`:208, `queue-recipients.test.mjs`:160, `statement-ack.test.mjs`:277, :342, `check-mock-envelope.mjs`:206. **Hard reason:** Bob's: UX (K633; manifest "Parallel work"). Those UI tests are red from each provider's merge, accepted by name (K1030).
+
 ## Left out of T22, carried here (62 rows, one hard reason each) (check)
 
 | row | item | hard reason | note |

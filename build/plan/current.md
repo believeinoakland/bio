@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #90 · session_01RG7XNxRnjm4dDzDEtgC4fu · depth 1
 
-**Jobs** · text-chain: TEXT-CHAIN #6 session_017vtxc1g46pax3uvWUKZx2s; bundler: BUNDLER #5 session_014EDtgA8oD3Eyhq1jai3Z7j; membership: MEMBERSHIP #16 session_01LdQT1TKUB5SDgdFi5gE5ik; promotion: PROMOTION #23 session_01HWFND67AwBJQuXM4beadEA
+**Jobs** · text-chain: TEXT-CHAIN #6 session_017vtxc1g46pax3uvWUKZx2s; bundler: BUNDLER #5 session_014EDtgA8oD3Eyhq1jai3Z7j; membership: MEMBERSHIP #16 session_01LdQT1TKUB5SDgdFi5gE5ik; promotion: PROMOTION #23 session_01HWFND67AwBJQuXM4beadEA; provenance: PROVENANCE #11 session_01HXBQRNxoQMo9TDAz7Fou7D; capture-sources: CAPTURE-SOURCES #9 session_01JxNV4GvVR6ZVqJhsquLGcC; capture: CAPTURE #14 session_01WP7uNR1V8GPqjyrKhjKhiS
 
 **The second pass (check), 2026-10-01** (K1009 (3); `plan/t22-check.md`, every finding with its evidence). It read the DECs on `main` and the design session's U1–U20, which the first pass had not: DEC-88 and DEC-89 (U6, K1014) and the owed work of DEC-81, -82, -86, -87, -90, -92 and -95 were missing (rows J1–J11); four DEC rows the first pass left out as "Bob's" are BOB's folds of rulings Bob has made and are carried, conditional on Bob approving the drafted fold before their layer, as each DEC's own owed line asks (H2, H6, H9, H16, with J3, J5); publication's split (K617, BOB's) is carried in L8 with R32 (A42, J10); the mark audit was run: 25 of the 27 marks are proved and struck at the opening, two join jobs (A9 inquiry L6, A29 monitoring L10). 35 jobs. Every change below is marked (check).
 
@@ -80,8 +80,8 @@ T21's rules hold: merge early; one file, one editor; a job names each `not yet m
 - **L5** connections (N471) · observation-log (N471; DEC-88 R16, R17) · **entities** (DEC-88 R1) · **progressions** (DEC-88 R2) · **bias** (DEC-88 R11) (K1025)
 - **L6** run-rules (N471) · strength (A57, H10, H12) · inquiry (N480; **A9**) · ai-runs (N480) · **skills** (*H6 (2)*) (check)
 - **L7** **reevaluation** (DEC-102 R18, R29; DEC-88 R15) · **intent** (DEC-88 R2, R18; R9, R11 worded as met) (K1025)
-- **L8** **the split's new module** (J10, A42 if homed there) · **publication** (J10; A42 if homed there; *H6 (1), H9* shares) · **case-grammar** (*H6 (1), H9*) · public-read (N480; *H9*) · **ratification** (*H2, H6 (1)*) · case-authoring (N472; *H6, H9*) (check)
-- **L9** action-clocks (N474, D6) · filings (N474) · filing-templates (N476) · **escalation** (J2; *J3*) (check) · **standards** (DEC-88 R1) · **actions** (the litigation-hold reader for capture R32, K1023) · filings also DEC-88 R8 · escalation also DEC-88 R9 (K1025)
+- **L8** **the split's new module** (J10, A42 if homed there) · **publication** (J10; A42 if homed there; *H6 (1), H9* shares) · **case-grammar** (*H6 (1), H9*) · public-read (N480; *H9*) · **ratification** (*H2, H6 (1)*) · case-authoring (N472; *H6, H9*) (check) · **review** (its DEC-88 callers: `src/review/index.mjs`:620's `statementack` link, `test/m/review/copy.test.mjs`:188; K1030)
+- **L9** action-clocks (N474, D6) · filings (N474) · filing-templates (N476) · **escalation** (J2; *J3*) (check) · **standards** (DEC-88 R1) · **actions** (the litigation-hold reader for capture R32, K1023) · filings also DEC-88 R8 · escalation also DEC-88 R9 (K1025) · **conformance** (its DEC-88 caller `test/m/conformance/fixture.mjs`:320; K1030)
 - **L10** monitoring (A28, A30, A32, A35; **A29**) · scheduler (N479)
 - **L11** **affordances** (J1; *J3*) · **op-declarations** (*J3*) · **control-plane** (*J3*) · queue-producers (N476, H15, H19; **J8**; *J5*) · queue (H15, H19) · instance-setup (H17) · installer (A24, A25, H17) (check)
 
