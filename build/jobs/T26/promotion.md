@@ -25,3 +25,7 @@ Stamp commit `7ab2708ca3` on `job/T26/promotion` (from `tranche/T26` at its open
 - `checks/format.mjs`: 1 failure, the `tests` entry for the 1.55.0 fixture (BOB's swap). `architecture.mjs`: 25 files, 87 imports, 0 failures. `coverage.mjs`: 56 of 56, 0 failures. `ownership.mjs … tranche/T26`: 8 files, 1 failure, the 1.56.0 fixture outside my `tests` until the swap.
 
 Size (session_01ASMwQcRsk5CCBu3QMVhdiG): test runs 8, module lines 3246
+
+## J1 · COMPLETE
+
+S3 done on job/T26/promotion (stamp 7ab2708ca3): CATALOG_VERSION 1.55.0 -> 1.56.0, eight rows CHANGED (where only): C-34.1-.4, C-89.1, and C-103.3/.6/.7 (provenance's record names these three, beyond START's list; no QUESTION). No composition change. ROW_CENSUS 1073 rows 3371a04b. Fixtures: added bio-plane/test/fixtures/row-census-1.56.0.jsonl, deleted bio-plane/test/fixtures/row-census-1.55.0.jsonl; please swap my tests entry (format and ownership each fail only on that). Negative control run: in-suite arms pass; on a real tree a C-59.99 row gives 7/1 naming it. Re-scan re-worded gate.mjs runGate's live 'legacy registration' note and three pointers. row-census 8/0 (red 1 cleared); test/m/promotion 102/102; d526 31/0; whole test/m 5341, 0 fail. The plane bundle is stale through src/gate.mjs; I regenerated nothing. Record: build/jobs/T26/promotion.md.
