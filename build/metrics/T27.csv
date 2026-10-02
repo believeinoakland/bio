@@ -2,3 +2,7 @@ session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_l
 session_01N3t7Hfj37rLM9MSN2KgSNZ,job,signatures,5221013,154338,76,21067,,4,1308
 session_013WoUArmhh78ngbjAEuCSMa,job,membership,4155093,155975,62,8941,,4,3345
 session_01KA6UG6rXYyJAWoe5sPuf8x,job,reevaluation,9743182,209495,107,48063,,9,2505
+session_01PJ5cMH43RbHxx4SXkb3E7X,job,docket,5831026,20865,30,8626,,14,1287
+session_01PBj2Sb1NuqAgKWDSQUEqiZ,job,publication,2025697,69368,44,5683,,1,1
+session_01RxP8D4FZ4YPUucNfhaQQx2,job,public-read,20191923,281664,687,61586,,16,2509
+session_01MRJKiiGZ1Mddztgdog1A5d,job,network-notices,7057580,149982,101,15033,,7,1382

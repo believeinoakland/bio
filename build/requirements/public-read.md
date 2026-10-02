@@ -36,8 +36,8 @@ Terms are `publication`'s (a case, an edition, the case document, a pin, the pub
 
 #### The docket beside a case (DEC-116, DEC-100; N520)
 
-- **R20** `publishedCase` (R3) also answers, for each edition a docket withdrawal names (`docket.withdrawalOf`, its R12), `withdrawn: {seq, date, reason, entry}`, the stamp linked to the withdrawal entry, at the top of the answer; the edition is answered whole as before. It also answers `docket_last_entry`, `docket` R14's `last_entry` (null when the case has no public entry). (DEC-116 items 7, 8) *(not yet met: T27)*
-- **R21** Serves, with no credential and under R10's terms, `op=docketpublic&case=<case>` (`docket.docketPublic`, its R14) and `op=docketfeed&case=<case>` (`docket.docketFeed`, its R15), the feed with media type `application/atom+xml`, so each case's feed has one fixed address. A case the docket answers null for is `NOT_PUBLISHED` (C-98.8), the same bytes as `publishedCase`'s for an absent case. (DEC-116 item 8; DEC-100 item 2) *(not yet met: T27)*
+- **R20** `publishedCase` (R3) also answers, for each edition a docket withdrawal names (`docket.withdrawalOf`, its R12), `withdrawn: {seq, date, reason, entry}`, the stamp linked to the withdrawal entry, at the top of the answer; the edition is answered whole as before. It also answers `docket_last_entry`, `docket` R14's `last_entry` (null when the case has no public entry). (DEC-116 items 7, 8)
+- **R21** Serves, with no credential and under R10's terms, `op=docketpublic&case=<case>` (`docket.docketPublic`, its R14) and `op=docketfeed&case=<case>` (`docket.docketFeed`, its R15), the feed with media type `application/atom+xml`, so each case's feed has one fixed address. A case the docket answers null for is `NOT_PUBLISHED` (C-98.8), the same bytes as `publishedCase`'s for an absent case. (DEC-116 item 8; DEC-100 item 2)
 
 ## Private
 
@@ -48,7 +48,7 @@ Terms are `publication`'s (a case, an edition, the case document, a pin, the pub
 - `ooxml`: `crc32` (R6).
 - `case-grammar`: the format predicates (R1 there), for R3 and the Worker; `caseTensionsOf` and `caseDocumentBlocks` (R3's `tensions`, `captures:` and `sources:` blocks), read from `case-grammar` itself, not through `publication`'s re-export; `whatChangedOf` and `lensOf` (its R8, R9; R3's `what_changed` and `lens`; K1019).
 - `publication`: `caseEditionState` (its R53), `soleCase` (its R54), `caseDocMemberFrozen` (its R55), `recordCaseManifest` (its R15), `delivererOf` (its R14), and its tables under its R40. The rows this module's refusals carry are its own (R17).
-- `docket` (N520): `withdrawalOf` (its R12), `docketPublic` (its R14) and `docketFeed` (its R15), for R20 and R21.
+- `docket` (N520): `withdrawalOf` (its R12), `lastEntryOf`, `docketPublic` (its R14) and `docketFeed` (its R15), for R20 and R21 (K1276).
 
 ### Invariants
 

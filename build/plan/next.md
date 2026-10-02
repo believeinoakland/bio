@@ -18,6 +18,8 @@
 
 - N524 · 2026-10-02 · **case-grammar R9** (DEC-117, U27): the first lens sentence becomes, verbatim, "Everyone who investigates looks through a lens: what they care about and expect to find. An undeclared lens is the most dangerous kind."; strike "to be confirmed by the design session". **For T28** (case-grammar has a T28 job).
 
+- N525 · 2026-10-02 · **docket**: its public addresses (R14's `feed`, the entry links) begin with `?` while public-read's do not (PUBLIC-READ #8's record); make them one form. **Why next:** docket's T27 job had closed when found (P8).
+
 ## Carried from T27
 
 | row | item | hard reason | note |

@@ -24,6 +24,7 @@ T26's rules hold (merge early; one file, one editor; marks struck at the merge; 
 1. Coverage: every id marked `*(not yet met: T27)*` with no test yet (actions R57–R60, affordances R33, control-plane R46, docket R1–R22, op-declarations R13, queue-producers R29–R31, queue R50, signatures R39, R40), until its module's merge.
 2. `bio-plane/test/system/row-census.test.mjs`: the catalogue rows T27's jobs add (C-117.23–.25, C-69.5, and `docket`'s, `public-read`'s and `signatures`' new rows) read `awaiting stamp` until T28's promotion stamp (S4, `next.md`), promotion's L2 job having run before they exist (P8, P10), as T25's red 6.
 3. The UI's DEC-88 tests (N487, K1030): stay red, Bob's.
+4. `bio-plane/test/m/control-plane/` R22: `CHECK_FAMILIES` does not reach `docket`'s `DOCKET_CHECKS` (found by PUBLIC-READ #8 at L8), until control-plane's L11 merge (K1280).
 
 ## Roster (by layer; 17 jobs)
 
