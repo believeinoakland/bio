@@ -4,8 +4,8 @@
  * MOVED from `filings` (its R26's rows, `filings/checks.mjs`:140–:174) with their numbers, each `where` re-pointed here:
  * C-115.31 re-keyed `MACHINE_CANNOT_DRAFT_TEMPLATE` (was `MACHINE_CANNOT_SAVE_TEMPLATE`) and C-115.36 re-keyed
  * `TEMPLATE_TIER3_FILE` (was `TEMPLATE_KIND_TIER3`), each translation re-worded for its new code; C-115.32, .33, .35,
- * .37 and .38 (`NO_SUCH_TEMPLATE`, which `filings` passes through as this module's) moved. They are held twice until
- * `filings`' own job deletes its copies (K624 (1)). C-115.34, .39 and .40 stay `filings`'. Every other code is a new
+ * .37 and .38 (`NO_SUCH_TEMPLATE`, which `filings` passes through as this module's) moved; `filings`' T21 job deleted
+ * its copies (K624 (1)). C-115.34, .39 and .40 stay `filings`'. Every other code is a new
  * row of this module's family, C-125 (K933). Every row here is `awaiting stamp` (T22's promotion job). */
 
 const at = (fn, region) => `src/filing-templates/index.mjs ${fn} > ${region}`;
