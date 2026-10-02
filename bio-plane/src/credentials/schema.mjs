@@ -50,7 +50,12 @@ CREATE TABLE IF NOT EXISTS signers (
   -- registered by R6, the only door there was, so a NULL origin reads 'admin'; NULL registered_by reads
   -- 'not recorded'. Neither is back-filled. attests never reads origin (R19).
   origin    TEXT,
-  registered_by TEXT
+  registered_by TEXT,
+  -- R21 (N505): the instant the key's status last changed: set at first registration (R6, R9) and at each act that
+  -- changes it (R6's re-activation, R7, R10, R16), never by one that leaves it as it was. A row written before this
+  -- column existed has NULL, read as not recorded: it may have changed status after it was registered, so 'added'
+  -- would state a false instant for it. Never back-filled.
+  status_at TEXT
 );
 CREATE INDEX IF NOT EXISTS signers_member ON signers(member_id);
 
@@ -108,6 +113,7 @@ export const CREDENTIALS_ADDITIVE_COLUMNS = [
   ["signers", "status_by", "TEXT"],
   ["signers", "origin", "TEXT"],
   ["signers", "registered_by", "TEXT"],
+  ["signers", "status_at", "TEXT"],
   ["ai_credentials", "confined_to", "TEXT"],
 ];
 
