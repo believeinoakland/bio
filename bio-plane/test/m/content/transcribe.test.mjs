@@ -163,7 +163,7 @@ test("R25: transcriptionAttest: C-52.10 (ATTEST_NO_NOTE) after C-52.9: a note ab
   assert.equal(w.count("transcription_attestations"), 2);
 });
 
-test("R38: C-52.1–C-52.10 are this module's own rows (C-52.1–.9 moved from the catalogue, T18; C-52.10 new, DEC-88, awaiting stamp), each refused by its row; C-80.3 is this module's one row", () => {
+test("R38: C-52.1–C-52.10 are this module's own rows (C-52.1–.9 moved from the catalogue, T18; C-52.10 new in T22, DEC-88, stamped by 1.53.0), each refused by its row; C-80.3 is this module's one row", () => {
   const keys = ["TRANSCRIBE_NOT_A_MEMBER", "TRANSCRIBE_NO_DOCUMENT", "TRANSCRIBE_NO_BYTES", "TRANSCRIBE_NO_PORTION",
                 "TRANSCRIBE_PORTION_UNREADABLE", "TRANSCRIBE_NO_TEXT", "TRANSCRIBE_TEXT_TOO_LONG", "TRANSCRIPTION_NOT_FOUND",
                 "TRANSCRIPTION_SELF_ATTEST", "ATTEST_NO_NOTE"];
