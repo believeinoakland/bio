@@ -38,8 +38,8 @@
  *      the log's whole value is the failure path". C-22.6 is the fence.
  *   3. THE TRANSCRIPT — the model's reasoning. DEC-61 (Bob, 2026-08-06):
  *      DEVICE-LOCAL, TTL'd, deleted as part of publication, NEVER in the record
- *      store. Nothing in this file, in `store.mjs`, or in any table this item
- *      adds holds one. The observation log is NOT a transcript and is not
+ *      store. Nothing in this file, in `ai-runs` (once `store.mjs`'s), or in any
+ *      table this item adds holds one. The observation log is NOT a transcript and is not
  *      governed by DEC-61: it is a structured account of where the search went,
  *      it carries no reasoning, and it is the thing that lets someone else
  *      CHECK the run — which is exactly why it is instance-side and durable
@@ -67,7 +67,8 @@
  *
  *   (b) A THIRD PARTY ON THE CLOCK. A killed run never calls anything. Its
  *       LEASE lapses, and the scheduler consumer `ai-run-reap` — ONE appended
- *       entry in `#schedConsumers`, per SCHEDULER.md, no second alarm and no
+ *       entry in the scheduler's consumers (`scheduler/index.mjs`; once
+ *       `#schedConsumers`), per SCHEDULER.md, no second alarm and no
  *       cron — terminates it through the same (a). The run's death is therefore
  *       observed by something that is not the run. That is the whole guarantee:
  *       the log is not written because the run remembered, it is written
@@ -161,8 +162,8 @@ export {
    already has the word and lacks the writer — `runtime-ceiling-reached` in
    `queuestate.mjs` with no producer — and names IS-9(d) as the item that builds
    it. IS-6 publishes the RECORD that names the bound; the queue-feed
-   notification stays IS-9's, and nothing in this file or in store.mjs emits a
-   queue item. */
+   notification stays IS-9's, and nothing in this file or in `ai-runs` (once
+   store.mjs) emits a queue item. */
 export const RUN_BOUNDS = {
   fetches:     "fetches requested of the capture path",
   subsessions: "evidence sub-sessions spawned",
@@ -281,7 +282,7 @@ export const RUN_ENDINGS = {
      - `stopped`  — the only real candidate, and it FAILS on measurement. Its
                     sole producer anywhere in the plane is `stoppedByBound`, and
                     every sentence the record renders beside it says a bound was
-                    reached (`store.mjs`: *"the run stopped because the '<b>'
+                    reached (then `store.mjs`, now `ai-runs`: *"the run stopped because the '<b>'
                     bound was reached"*; `aiRunRead` prints `RUN_BOUNDS[b]` next
                     to it; `harness.mjs` NOT_OUR_BOUNDS.lease: *"a run that
                     stopped heartbeating DIED rather than finished"*). Filing a
@@ -642,7 +643,7 @@ export const PROJECT_GATE_GROUNDS = {
      NOT APPLIED, and the reason is that it CANNOT be: participation is a
      relationship between a PERSON and a project, and a token class is not a
      person. This keeps the gate's population identical to the capability
-     FLOOR's, which `index.mjs` already applies only `if (viaSession)` — a fence
+     FLOOR's, which the control plane (`control-plane/index.mjs`) applies only `if (viaSession)` — a fence
      wider than the floor beneath it would be an undeclared interface change
      wearing the costume of caution, and it would refuse the daemon outright.
      DEC-63 names the lever for this half explicitly and it is a different one:
@@ -772,8 +773,8 @@ export function projectGate({ actor = null, contextType = null, contextId = null
      (The guard that read the literal here, `civicos-ui/check-refusal-codes.mjs`,
      was deleted in T20; a code arriving through a spread was invisible to it, and
      one shipped `translation: undefined` to a member exactly that way.) THIS IS THE ONE
-     PLACE THE CODE IS WRITTEN: the three store call sites RELAY what comes
-     back, precisely as `aiRunOpen` already relays C-22.7 from `skillpack.mjs`.
+     PLACE THE CODE IS WRITTEN: the three `ai-runs` call sites RELAY what comes
+     back, precisely as its open relays C-22.7 from `./skill-version.mjs`.
      The answer carries `ok: false` and no `permitted`, so a caller's
      `if (!gate.permitted)` reads it correctly — and there is no second field
      that could disagree with the code about whether this was a refusal. */
@@ -833,7 +834,7 @@ export function checkRunContextKind({ contextType = null, contextId = null, foun
  *  2026-09-19): *tick and close are the run's PRINCIPAL's acts — the member (or that member's minted machine
  *  credential) the plane stamped as `ai_runs.principal_plane` at open.*
  *
- *  The control plane stamps a principal in ONE composite form (`index.mjs`, the `principal` stamp):
+ *  The control plane stamps a principal in ONE composite form (`control-plane/index.mjs`, the `principal` stamp):
  *  `member:<id>` for a session, `<credential principal>/<tokenId>` for an `ai` credential, and
  *  `class:<cls>` for a token class. A member-kind credential's principal is `member:<id>`, so everything
  *  before the `/` is the MEMBER the credential acts for — and a member and the credentials minted for her
