@@ -9,7 +9,7 @@
  * module's rows of the catalogue's `MACHINE_FENCE_CHECKS` and `ACT_SHAPE_CHECKS`), C-50 (`NARROW_CHECKS`); the
  * version machine and its vocabularies; section 9's kinds and the boilerplate roster; and the third `asserted_by`
  * state. Each `where` names the site in this module that answers it; the C-25 and C-27.15 rows the grammar raises now
- * name `./grammar.mjs` (awaiting promotion's stamp). The catalogue kept its copies until their last importer
+ * name `./grammar.mjs` (stamped at 1.50.0, T20 layer 2). The catalogue kept its copies until their last importer
  * re-pointed (rule 1) and was deleted with `legacy-checks`; this module reads only its own. */
 
 import { isMachineIdentity } from "../record-grammar/index.mjs";

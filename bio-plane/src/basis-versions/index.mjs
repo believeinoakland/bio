@@ -37,7 +37,7 @@ import { promotionOf, EDGE_REASON_MAX } from "../promotion/index.mjs";
 import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog } from "../promotion/text.mjs";
 import { inquiryOf, legCapped, actNoBasis } from "../inquiry/index.mjs";
 /* The extent grammar is content's face (N99): its `extentRelation` holds D-670's space rule and the `envelope` kind,
-   which the catalogue's copy does not. */
+   which the retired check catalogue's copy (legacy-checks) did not. */
 import { contentOf, mintLabel, contentMintState, CONTENT_MINTED_BY_PLANE, legContentId, legExtent, canonicalExtent,
          describeExtent, extentRelation, CONTENT_EXTENT_CHECKS } from "../content/index.mjs";
 import { basisVersionFindings, versionsIn, compositionDiff, sameComposition, registerBasisVersionGrammar } from "./grammar.mjs";
@@ -973,8 +973,9 @@ export class BasisVersions {
       return { ok: false, reason: "NO_DOCUMENT", target,
                detail: "this inquiry has no readable bundle.md, so its state cannot be moved" };
     const fm = parseFrontmatter(text).data || {};
-    /* THE MAP RULE: the machine is the catalogue's, over the DECLARED spelling. A project may conclude a question whose
-       own state already reads `concluded` (one relationship's conclusion must not bar another's). */
+    /* THE MAP RULE: the machine is record-grammar's (`STATES`, once the catalogue's), over the DECLARED spelling. A
+       project may conclude a question whose own state already reads `concluded` (one relationship's conclusion must
+       not bar another's). */
     const spec = vocabFor(STATES, fm.object_type ?? b.object_type);
     const legalFrom = (spec?.edges?.[b.current_state]) || [];
     if (!legalFrom.includes("concluded") && !(pid && b.current_state === "concluded"))
