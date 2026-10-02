@@ -1,6 +1,7 @@
 /* feedItems (R8) at its interface: what it answers, what it takes from queue, what it never carries; the bias debts
    (R1); the lead's take-up (R9); and the invariants over every producer (R10–R13), the Action layer's (R15–R19), the
-   signing key's (R14) and the filing templates' and local facts' (R20, R21) among them. */
+   signing key's (R14) and the filing templates' and local facts' (R20, R21) among them; and the words members see (R24,
+   R25, R28). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
@@ -309,6 +310,27 @@ test("R24 (DEC-107; H15, H19): no member-facing sentence of any item kind says '
   assert.match(m["CONDITION::render-deferred::CR-R"].basis.detail, /^a signal is a fact about OUR OWN machinery/);
   assert.match(m["FINDING::contradiction::CC-L"].detail, /asks nothing of you: dismiss it or take it up/);
   assert.match(m["OBLIGATION::plan-checkpoint-due::PLN-1::1::p"].detail, /records whether what it set was met/);
+});
+
+test("R28 (DEC-114): no member-facing sentence of any item kind calls what an action plan addresses a 'subject'; the item key `subject`, the codes and kinds are unchanged", () => {
+  const SAYS_SUBJECT = /\bsubjects?\b/i;
+  /* negative control: the check catches the word it forbids, in any form a sentence could carry it */
+  for (const bad of ["the plan's subject", "Subjects of this plan", "a SUBJECT"]) assert.match(bad, SAYS_SUBJECT);
+  assert.doesNotMatch("the plan's matters", SAYS_SUBJECT);
+  const r = everyKind().read("alice");
+  const m = byId(r);
+  assert.ok(m["OBLIGATION::plan-checkpoint-due::PLN-1::1::p"], "the world produces the action plan's item");
+  assert.ok(new Set(r.items.map((i) => i.kind)).size >= 32, "every kind this module produces");
+  for (const it of r.items) {
+    /* R28's words: the summary, the detail and the words of the options; and every other sentence under the item */
+    const words = [["summary", it.summary], ["detail", it.detail],
+                   ...(it.options || []).map((o) => ["option", o && o.label]), ...memberWords(it)];
+    for (const [key, s] of words) if (typeof s === "string") assert.doesNotMatch(s, SAYS_SUBJECT, `${it.id} ${key}: "${s}"`);
+    /* the key `subject` (queue's term for what an item is about) is unchanged, as are the class codes */
+    assert.ok(it.subject && typeof it.subject === "object" && typeof it.subject.kind === "string", `${it.id} keeps subject`);
+    assert.ok(it.id.startsWith(`${it.class}::`), it.id);
+  }
+  assert.equal(m["OBLIGATION::plan-checkpoint-due::PLN-1::1::p"].subject.kind, "plan");
 });
 
 test("R25 (DEC-110 (1)): `due` is carried by action-clock-overdue, action-reminder and plan-checkpoint-due, and by no other item", () => {

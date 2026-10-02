@@ -194,9 +194,10 @@ import { REOPENABLE_FROM } from "./promotion/index.mjs";
  * store that enforces it and published by the op a surface reads, so a set
  * cannot be changed in one place and stay stale in the other.
  *
- * WHY THIS DIRECTION AND NOT THE OTHER. The obvious move is to export them from
- * `store.mjs`, where the refusals are written. That is impossible and not merely
- * unpleasant: `store.mjs` ALREADY imports this module (DISPOSITIONS,
+ * WHY THIS DIRECTION AND NOT THE OTHER (history: the legacy `store.mjs` is retired,
+ * and the R6 note below says where each array went). The obvious move was to export them from
+ * `store.mjs`, where the refusals were written. That was impossible and not merely
+ * unpleasant: `store.mjs` then imported this module (DISPOSITIONS,
  * REOPENABLE_FROM, deriveActs), so publishing from there would close an import
  * cycle — and this file's `VOCABULARIES` is a top-level object literal, so any
  * module that reached `store.mjs` first would evaluate it while the store's
@@ -923,7 +924,7 @@ export const RUNGS = {
   /* The version pair whose target state is in VERSION_REASON_REQUIRED. The
      OTHER FOUR version acts route through the SAME `#moveVersionState` and the
      SAME `VERSION_NO_REASON` refusal, and the branch DOES NOT FIRE for them —
-     `versionNeedsReason(to)` gates it, and `Store.VERSION_ACT_TO` maps accept →
+     `versionNeedsReason(to)` gates it, and `basis-versions`' `VERSION_ACT_TO` maps accept →
      accepted, revert → suggested, current → null, hide → null, none of which is
      in the array. A classifier that graded these six by finding the code in the
      shared helper would have promoted four ops to a rung the store does not
@@ -2630,8 +2631,8 @@ export const NON_ACTS = {
   versionkeep: "notice-directed: keeps a reference on the earlier capture, keyed by notice; travels with the notice (reevaluation R14)",
   reevaluationrecord: "cause-directed: a member records a re-evaluation of a dependent against one standing cause, keyed by (dependent, cause), with its note",
   workobjective: "run-directed: opens an assistant's run on a project's objective, keyed by (run, project), with the member's reason for opening it, now required and shown beside the run's budget and scope (intent R18, R30; DEC-88: `reasoned`); the run is the subject and no bundle state offers it",
-  /* Layer 9's acts (K208 (2), K264; restored with N216), keyed to their op maps (escalation's names are
-     legacy-index's, its J1). Their subjects are a standard, a determination, a consequence part, a filing or packet, an escalation and a proposal:
+  /* Layer 9's acts (K208 (2), K264; restored with N216), keyed to their op maps (escalation's are its own
+     `escalationOps`, its R25). Their subjects are a standard, a determination, a consequence part, a filing or packet, an escalation and a proposal:
      STD-, CONF-, CONS- and ESC- bundles carry one recorded state (or an escalation's own stages) that `affordanceFacts`
      does not describe, and the rest are rows, so no applies() over the facts could say when to offer them. Their reads
      carry no `NEEDS` row and are not named here (R12). */
@@ -2674,7 +2675,8 @@ export const NON_ACTS = {
   actionhold: "entry-directed: keyed by (action, entry ordinal); appends a hold statement and never rewrites the entry or its mark",
   /* K727 (T18): action-plans' twelve acts. A plan is a `PLN-` record object whose options, scenarios and checkpoints are
      rows of its own, none a bundle state `affordanceFacts` describes; they are reached in the plan's view. Its reads
-     (`plan`, `plans`, `planproposals`) carry no `NEEDS` row and are not named here (R12). */
+     (`plan`, `plans`, `planproposals`) carry no `NEEDS` row and are not named here (R12); `optionstartpreview` (T24,
+     N490) is the one that does, and is named at the foot of the twelve. */
   planopen: "project-directed: a member opens a plan for one project over named subjects, keyed by project; writes a PLN- record object",
   plansubjectadd: "plan-directed: a member adds a subject to a plan with a reason, keyed by (plan, subject); kept in the plan's history",
   plansubjectremove: "plan-directed: a member removes a subject from a plan with a reason, keyed by (plan, subject); options serving it keep it, marked",
@@ -2687,6 +2689,10 @@ export const NON_ACTS = {
   checkpointrecord: "scenario-directed: a member judges a phase's checkpoint met or not met, keyed by (plan, scenario, phase); judged once",
   optionstart: "option-directed: a member starts a chosen option as an action, keyed by (plan, option); composes and promotes the action",
   planclose: "plan-directed: a member closes a plan with a reason, keyed by plan id; the plan stays readable",
+  /* N490 (T24; action-plans R37, DEC-115): the start preview, gated as the act it previews is and stamped `author` and
+     `viewer`, so it carries a `NEEDS` row and is named here by R7's rule. It is a read: it answers what `optionstart`
+     would do and writes nothing. */
+  optionstartpreview: "read: what starting a chosen option would do at this instant, keyed by (plan, option) — the action it would compose, the reminders it would set, and whether it would start or the refusal it would answer; allocates no id, sets no reminder and writes nothing",
   /* K727 (T18): action-clocks' reminders carry a `NEEDS` row with no capability (the control plane's `null`, as
      `queuesnooze`'s), so each is named: `queuesnooze`'s reason, the subject a member's own attention. */
   reminderset: "personal state, keyed (member, action, clock entry): a member's own request to be reminded of a dated entry, kept in action-clocks' table, never in the action's document",
