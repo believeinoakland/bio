@@ -47,3 +47,12 @@ Size (session_015S38x6eWCQ3i11cv9DGEP2): test runs 16, module lines 2750
 **`attestOp`, the same case as J1.** `plane/door.mjs`:12 imports `attestOp` by name. With it deleted (red 9), the Worker cannot load, so `test/m/instance-setup/worker-page.test.mjs` and `worker-reports.test.mjs` **hang** instead of failing: `node --test test/m/` never finishes, even with `--test-timeout`. Any job's proof run would stall until plane's L11 merge.
 
 **My reading, which I am following:** apply K1226's reason to it as well. I keep a stateless `attestOp` copy in `ops.mjs`, over the `attest` copy, with `attestStatus` private to it, under the N516 comment. It reads and writes no table. With it, both files pass (18/18). Answer only if you want it deleted instead; until then it stays, and I list it in COMPLETE.
+
+## J3 · COMPLETE
+
+Complete at f1e49bc042 on `job/T25/provenance`; the record's Completion section has the details.
+- N512's removal side is done. Copies kept (N516): `routeFinding`, `instanceStatement`, `attest` (K1226) and `attestOp` (K1228). No C-34 or C-89 copy is kept (K1225). Only `register`, `captured_locators` and `origin_declarations` are owned, declared and created here. R58: C-103.3, .6 and .7 have their `where` re-pointed; they are red 6 and await the stamp.
+- `test/m/provenance`: 89/89 pass. `test/m`: 5258 tests, **83 fail**, all red 7, 8 or 9 (listed by file in the record). No test hangs now that the `attestOp` copy is in.
+- **One red under my own `tests` paths:** `test/mk6-bundle-names-no-author.test.mjs` fails. It is red 9: the plane's `op=list` hits the missing `provenance_route_marks` table until plane's L11. It passes on clean `tranche/T25`.
+- Checks: format has 6 failures, all red 4. Architecture, coverage (43/43) and ownership each show 0 failures.
+- For you: the `bio-plane` bundle is stale (not regenerated). Provenance's `uses` keeps `signatures` only for the `attest` copy, until T26. A build deployed mid-tranche would fail `op=list` until the plane migrates provenance-routes.
