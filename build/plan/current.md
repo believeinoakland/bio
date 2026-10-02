@@ -37,6 +37,7 @@ T24's rules hold (merge early; one file, one editor; marks struck at the merge; 
 8. `CHECK_FAMILIES` (control-plane `families.mjs`) and affordances' `catalogue.test.mjs`:958 lack C-34's and C-89's new files, from the L3 merges until control-plane's and affordances' L11 merges.
 9. The plane's composition of attestation and provenance-routes (`attestOp`, the receipt signing key, `provenanceRouteOps` and the route arms leaving `provenanceOps`), from the L3 merges until plane's L11 merge.
 10. Extraction's tests and callers reaching the moved pipeline, from reading-pipeline's L4 merge until extraction's L4 merge.
+11. `test/m/attestation/invariants.test.mjs` R9 fails intermittently (its place probe matches `ca` inside a fresh base64 signature): a test flaw, not a behaviour; N517 in `next.md` (K1234). A job's proof run may re-run it once.
 
 ## Decisions at the opening (BOB's, P17; K1218)
 
