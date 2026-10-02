@@ -32,3 +32,72 @@ Users' suites, interim (START (8) list plus capture, strength, contradiction, pr
 Bundle: `src/ratification/` changed, so `bio-plane/dist/bio-plane.bundled.mjs` is stale. I regenerated nothing.
 
 Waiting on: your CHANGE announcing case-grammar's merge (START (3)).
+
+## J3 · COMPLETE
+
+Branch `job/T22/ratification`, pushed. `tranche/T22` merged in at B4 (case-grammar's merge, K1075).
+
+**Entries applied** (`build/plan/current.md` T22 L8, ratification). Each mark below is met; the module's tests name each.
+- **R22** (START (1); DEC-97 (3)): the contested arm. One examination (`release.mjs` `examineMember`) counts each member under the first class it fails: absent or not `information`, not `collected`, `crucial`, contested, then the entry requirements.
+  - Contested: a `contradiction.candidatesFor({on: {bundle}, state, viewer: "class:daemon"})` candidate is in state `open`, `explained_not_shown` or `taken_up`.
+  - The read is the plane's (K1074), so a side no member may see still bars the batch, and no side is answered.
+  - It fails closed: a read that fails, throws, answers `undetermined` or `ok: false`, or is truncated with none found, counts the document contested.
+  - The batch is refused whole with `CONTESTED_IN_BATCH` (C-58.4), offenders as sorted ids. It comes after `CRUCIAL_IN_BATCH` and before `ENTRY_REQUIREMENTS`.
+  - `release` reaches `contradiction` lazily, so a refusal before the examination never constructs it.
+- **R34** (START (2)): the same function is registered once, at start, in `ratificationOf` as capture's `batch-examination` reader (`d.capture`, else `captureOf(host)`).
+  - It answers `{eligible: true}`, or `{eligible: false, class, reason}`.
+  - `class` is R22's refusal code (`CONTESTED_IN_BATCH`, `CRUCIAL_IN_BATCH`, …) and `reason` is the refusal's own `detail` (`CLASS_REASONS`, exported). So the list and the release give one class.
+- **R8** (START (3); DEC-101 (2)): C-41.16 (`CASE_DOCUMENT_FAMILY.WHAT_CHANGED`) finds an edition above 1 whose statement, read through case-grammar's `whatChangedOf`, is absent or blank.
+  - Its message is R8's translation, word for word.
+  - It is asked only when the caller supplies the body, as C-3.1 is. `caseGate` and the pre-flight both supply it, so `op=caseratify` (R2's `GATE_REFUSED`) and R18 refuse it alike.
+  - **Note for you:** `whatChangedOf` answers null for any format but `/5`, so an unsigned `/4` (or older) edition 2 is refused C-41.16 too. That is the literal reading of R8; re-publishing authors a `/5` document. Say if older formats should be exempt.
+- **R35** (START (4); DEC-102): `ANONYMOUS_TESTIMONY_UNCORROBORATED` (C-58.5) is built by one builder (`refusals.mjs` `anonymousTestimonyRefusal`) and placed after C-92.11 in R18's pre-flight and in the act.
+  - The act reaches it through the store-half arm `casetestimony` (R32, K1074), which the Worker relays as it relays C-92.11 (409, with `store` and `tokenClass`).
+  - Levels come from `publication.attributionFacts(...).current`. Only `group` and `project` are asked; with none, strength is not asked.
+  - Strength's `testimonyCorroboration` is asked per roster member at the reading the document records (`case_conclusions[].version`; the live basis only where it records none, K1074), with viewer `class:daemon`.
+  - The refusal names `{member, observation}`, never an author, and gives the three ways forward.
+- **R36** (START (5); DEC-102): inside `ratifyCaseDocument`'s transaction, after `dischargeCaseFlags`, `reevaluation.levelMoved({observation, from, to, case, edition, at})` is called once per observation.
+  - It is called for an observation whose level in this edition's signed `observation_attributions` differs from the level in the previous ratified edition's.
+  - A first edition, an observation the previous edition did not reach, an unchanged level, a retry (`existed`) and a refused or failed commit tell nothing.
+- **R14** (START (6)): C-58.4 and C-58.5 are new rows of `RATIFY_SCOPE_CHECKS` with R14's translations word for word. C-41.16 is a catalogue arm. **All three are awaiting stamp.** No other row changed.
+- **START (7)** (PROMOTION #23's J1 (3)): the live-sounding legacy names are re-worded:
+  - `ops.mjs` `Store#gateFacts` becomes this module's `gateFacts` (R7).
+  - `checks.mjs` `Store#publish` becomes this module's `publish` (R5).
+  - `checks.mjs` "publishCase()… at store.mjs" becomes case-authoring's `publishCase`.
+  - The `index.mjs` comparison header now names case-authoring's `publishCase` and affordances' `#editionWarrantedForJoinedProjectOf`.
+  - Provenance notes ("extracted from", "measured before") stay.
+
+**Deferred:** none.
+
+**Found in other modules:** none beyond what you already carry.
+- Contradiction's tables exist only after its `migrate()`, so a fixture world without them reads every document contested, by design. My own fixtures migrate them.
+- No other module's suite went red from that.
+
+**Users' suites and the whole `test/m`** (START (8)). My branch and `tranche/T22` @ d78da34634 ran on the same machine:
+- My branch: 4,908 tests, 4,877 pass, 12 fail.
+- Tranche: 4,886 tests, 4,852 pass, 15 fail.
+- **No new red.** C-41.16 turned none of the named callers' tests red: public-read, promotion, admission, affordances, review, reevaluation, filings, conformance, plane, control-plane, `caseceremony.mjs` and `conclude-project.test.mjs` all pass, apart from the reds already accepted.
+- My 12 failing tests, each already accepted by name:
+  - actions `t18.test.mjs`:299
+  - case-authoring `members.test.mjs`:98 (K1065)
+  - control-plane `catalogue-end.test.mjs`:15 and `doorbell.test.mjs`:310
+  - membership `module-order.test.mjs`:12 and `t9-notice-sight-bounds.test.mjs`:185 (accepted red 4)
+  - promotion `registry.test.mjs`:58 (accepted red 4's `MODULE_ORDER`)
+  - queue-producers `proposals.test.mjs` :78, :124, :153, :167
+  - scheduler `plane.test.mjs`:85
+- The tranche's 3 extra failures are environment-only (extraction `convert-tiers`, `staffdirectory`, test-support R2:249).
+- `test/system/row-census.test.mjs` is red on both (accepted red 3). Mine adds C-41.16, C-58.4 and C-58.5 to its rows awaiting stamp.
+- capture's held list now answers real eligibility where both modules boot (`test/m/capture/` 0 new red).
+
+**Tests and checks:**
+- `bio-plane/test/m/ratification/`: 192 tests, 192 pass, 0 fail.
+- `node checks/format.mjs`: 86 modules, 0 failures.
+- `architecture.mjs bio ratification`: 0 failures.
+- `coverage.mjs bio ratification`: 36 of 36 live requirement ids named by a test, 0 failures. R34, R35, R36 and R8's C-41.16 arm are each named in real tests.
+- `ownership.mjs bio ratification tranche/T22`: 15 files, 0 failures.
+
+**Generated artifact:** `bio-plane/dist/bio-plane.bundled.mjs` is stale (`src/ratification/` and the new imports). I regenerated nothing.
+
+**Size:** ratification is **3,936 lines** (from 3,770; under 4,000).
+
+Size (session_01CMHTBkj1pAWW9cB4KrLMHK): test runs 24, module lines 3936
