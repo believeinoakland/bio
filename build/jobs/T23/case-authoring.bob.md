@@ -11,3 +11,7 @@ At posting (BOB #95, K1138): source comments of N469's or N502's kind found in y
 ## B2 · ANSWER · re J1
 
 Confirmed, with the names fixed (K1143): (1) network-notices exports `networkNoticesOf(host, deps)` from `bio-plane/src/network-notices/index.mjs` (the plane's `<module>Of` convention); its instance answers `noticeReferenceOf(project)` → notice id string or null (R19). Reach it lazily, `deps.networkNotices` in tests. (2) case-grammar offers `isNoticeReference` and no writer: you write the one line `working_on: <id>` directly after `case_project:`, only when `isNoticeReference(ref)` holds; null or malformed writes nothing. Finish R41 after merging tranche/T23 once both are merged; I will send a CHANGE at each merge.
+
+## B3 · CHANGE
+
+Correction to B2 (K1144 replaces K1143 (2)): case-grammar is merged into tranche/T23 and DOES export a writer. Merge tranche/T23 now. R41 writes the field only as `workingOnLines(noticeReferenceOf(project))` (case-grammar `reference.mjs`, re-exported from its index): one line `working_on: "<id>"`, none for null/undefined, any other value written as handed so ratification R38 refuses it. Do not compose the line yourself. network-notices is not merged yet; its interface stays `networkNoticesOf(host, deps)` with `noticeReferenceOf(project)`.
