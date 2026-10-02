@@ -18,11 +18,13 @@
  * with record-core's audit (R42), and registers its proposal source with intent (R33, N170).
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership, promotion   layer 2: `readImage`, `getSetting`, `evidenceStore`, `declarePurge`,
- *                                   `registerAuditCheck`; `inSight`, `viewerPredicate`, `isAdministrator`,
- *                                   `notAnAdmin` (R30); `promote`, `registerStep`.
+ *                                   `registerAuditCheck`, `allocId` and `transact` (R28's landing); `inSight`,
+ *                                   `viewerPredicate`, `isAdministrator`, `notAnAdmin` (R30), `isProjectOwner` (R52);
+ *                                   `promote` (R8, R28, R34), `registerStep`.
  *   governor, provenance, capture   layer 3: `governorAdmit`/`governorReport` (through `governedFetch`); the receipt
  *                                   writer `recordReceipt`; `reachabilityThresholds`, `sourceReachability`,
- *                                   `recordSourceOutcome`.
+ *                                   `recordSourceOutcome`, and `acquire` (its archive arm, R20; its capture-request
+ *                                   arm, R28).
  *   observationLog                  its one append, `observe`.
  *   intent, actionClocks, escalation  R33 (`watchSet`, `registerSource`), R34/R44/R50 (`action-clocks`'
  *                                   `pendingClocks`, its R1; `actions` R31 before K617's split), R35
@@ -33,7 +35,8 @@
  *   now      the instance clock in milliseconds (default: the wall clock).
  *   fetch    the network (default: the global `fetch`, read at each call).
  *
- * READ CONTRACTS it joins in its own SQL: record-core's `bundles` and `files` (R37); retrieval's projection columns
+ * READ CONTRACTS it joins in its own SQL: record-core's `bundles` (with `project`, R52) and `files` (R37, R28's
+ * `data/gathering.json`); retrieval's projection columns
  * `monitor_enabled`, `monitor_frequency`, `monitor_last_checked`, `source_locator` (K75 (3)), in its own table
  * `bundle_projection` joined on `bundle_id` (retrieval R61, N283; an unprojected bundle has no row); provenance's `register`
  * and `captured_locators` (R48); capture's `source_reachability` (its R59, N166); observation-log's `observation_log`
@@ -58,7 +61,8 @@ import { detectFormat } from "../formats.mjs";
 import { normalizeAddress } from "../subresources.mjs";
 import { identify, doctypeFor, assess, CONTRACT } from "../../../docprofile/registry.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
-import { parseFrontmatter, isPublicHttpsLocator, createSha256, MACHINE_CLASS_PREFIX, isMachineIdentity } from "../record-grammar/index.mjs";
+import { parseFrontmatter, isPublicHttpsLocator, createSha256, MACHINE_CLASS_PREFIX, MACHINE_AUTHOR_PREFIX,
+         isMachineIdentity } from "../record-grammar/index.mjs";
 import { checkGatheringGrammar, DRIVE_TICK_CHECKS, GATHERING_CHECKS, frequencyRefusal } from "./checks.mjs";
 import { MONITORING_TABLES, migrateMonitoring } from "./schema.mjs";
 
@@ -158,6 +162,17 @@ export const ADDRESS_FREQUENCY_REASONS = Object.freeze({
 export const CUSTOM_REASON = "custom";
 /** R52: the most characters a custom reason holds. */
 export const FREQUENCY_REASON_MAX = 2000;
+
+/** R28 (K1096): the slug of the Information bundle a named request's new bytes land as (`INFO-<year>-<n>-gathered`),
+ *  the purpose its fetch states, and the machine-shaped author of that landing (a plane-composed bundle, as
+ *  capture-requests' R38 composes one). */
+export const GATHERING_BUNDLE_SLUG = "gathered";
+export const GATHERING_PURPOSE = "gathering";
+export const GATHERING_AUTHOR = `${MACHINE_AUTHOR_PREFIX}daemon`;
+/** R28: the one state a named request's bytes land at. Information's states are collected, verified and retired, and
+ *  verified is a member's act (Intake Doctrine §4), so a mechanical writer's capture earns collected, whatever its
+ *  grade. */
+export const GATHERING_LANDS_AT = "collected";
 
 /** R18 (K1051): checks in a row finding the substance unchanged that move a contract default one step up its ladder,
  *  and the ladder (R14's intervals from daily on), never past its top. */
@@ -1763,15 +1778,20 @@ export class Monitoring {
     } finally { this.#tickRunning.delete("archive-monitor"); }
   }
 
-  /** R19: due while the plan has a due subject; never while paused (R30). */
-  cadenceDue(now) { return !this.paused().paused && this.plan(now).due.length > 0 ? now : null; }
-  /** R19: now + 1 s while one is due, else `next`, else null. While paused, the next look at the pause is one archive
-   *  interval on, so a resumed daemon is back within it and a paused one never spins the alarm. */
+  /** R19: due while the plan has a due subject or a named request is due (R28); never while paused (R30). */
+  cadenceDue(now) {
+    if (this.paused().paused) return null;
+    return this.plan(now).due.length > 0 || this.gathering(now).due.length > 0 ? now : null;
+  }
+  /** R19: now + 1 s while one is due, else the earlier of the plan's and the requests' `next`, else null. While paused,
+   *  the next look at the pause is one archive interval on, so a resumed daemon is back within it and a paused one never
+   *  spins the alarm. */
   cadenceWake(now) {
-    if (this.paused().paused) return this.plan(now).monitored ? now + this.#archiveTickMs() : null;
+    const g = this.gathering(now);
+    if (this.paused().paused) return this.plan(now).monitored || g.open ? now + this.#archiveTickMs() : null;
     const p = this.plan(now);
-    if (p.due.length) return now + MONITOR_CADENCE_DELAY_MS;
-    return p.next;
+    if (p.due.length || g.due.length) return now + MONITOR_CADENCE_DELAY_MS;
+    return p.next === null ? g.next : g.next === null ? p.next : Math.min(p.next, g.next);
   }
 
   /** R19: the cadence tick, at most 50 due subjects by R1–R10, called in process (R23). `rank` is the scheduler's (its
@@ -1782,7 +1802,9 @@ export class Monitoring {
     const at = stampInstant("second", Number.isFinite(now) ? now : this.now());
     /* R30, R45: a paused tick fetches nothing and says so. */
     if (pause.paused)
-      return { configured: true, paused: pause, at, candidates: 0, ticked: [], skipped: [], failed: [], unscheduled: [] };
+      return { configured: true, paused: pause, at, candidates: 0, ticked: [], skipped: [], failed: [], unscheduled: [],
+               /* R28: nothing is gathered while paused; what is due is stated */
+               gathered: { due: this.gathering(now).due.length, captured: [], failed: [], skipped: [] } };
     /* NOT RE-ENTRANT (R22), for the reason recorded at #tickRunning: an alarm armed by
        anything the tick does would otherwise run a second copy of this tick underneath
        the first while it awaits a fetch. */
@@ -1813,6 +1835,19 @@ export class Monitoring {
         ? { bundle: d.bundle, frequency: d.frequency, status: r.status, reeval_raised: r.reeval, ...of }
         : { bundle: d.bundle, frequency: d.frequency, reason: r.reason, ...of });
     }
+    /* R28 (K1096): the due named requests, after the batch's addresses, within the same budget of 50 fetches; each
+       locator a request tries spends one. A request claimed by an unfinished tick is skipped as an address is. */
+    const g = this.gathering(nowMs);
+    const gathered = { due: g.due.length, captured: [], failed: [], skipped: [] };
+    let budget = MONITOR_CADENCE_BATCH - batch.length;
+    for (const q of g.due) {
+      if (budget <= 0) break;
+      const subject = `${q.bundle}#${q.id}`;
+      if (!this.#claimFire("monitor-cadence", subject, epoch)) { gathered.skipped.push({ bundle: q.bundle, request: q.id }); continue; }
+      const r = await this.#gather(q, budget, nowMs);
+      budget -= r.spent;
+      if (r.entry) (r.entry.outcome === "captured" || r.entry.outcome === "held" ? gathered.captured : gathered.failed).push(r.entry);
+    }
     /* D-518: the same correction as the archive tick's, made for the same reason and
        in the same class — a cadence tick that fired nothing and only skipped
        bundles an unfinished tick had claimed has finished nothing, and closing on
@@ -1820,10 +1855,192 @@ export class Monitoring {
        monitor-tick promotion record and a second monitoring.last_checked for one
        check. The epoch is released by the spent-epoch rule at the shortest
        cadence instead. */
-    if (!failed.length && !skipped.length) this.#closeTickEpoch("monitor-cadence", epoch);
+    if (!failed.length && !skipped.length && !gathered.skipped.length) this.#closeTickEpoch("monitor-cadence", epoch);
     return { configured: true, paused: pause, at, epoch, monitored: plan.monitored, addresses: plan.addresses,
-             candidates: plan.due.length, next: plan.next, ticked, skipped, failed, unscheduled: plan.unscheduled };
+             candidates: plan.due.length, next: plan.next, ticked, skipped, failed, unscheduled: plan.unscheduled, gathered };
     } finally { this.#tickRunning.delete("monitor-cadence"); }
+  }
+
+  /* ================================================================== *
+   * Standing intent: the named requests (R28, K1096)
+   * ================================================================== */
+
+  /** R28: the open named requests of every `data/gathering.json` the record holds (read as the daemon, which D-15
+   *  leaves unfiltered: the daemon fetches what store state authorizes, R36), each with when it is due by R14's interval
+   *  from its last attempt: never attempted, due now; no cadence, once; `none`, never (stated in `unscheduled`).
+   *  `due` is never-attempted first, then longest-overdue, then by bundle and id; `next` the earliest instant a request
+   *  not yet due falls due; `open` how many open requests were read. Writes nothing. */
+  gathering(now = null) {
+    const nowMs = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : this.now();
+    const files = this.#rows(`SELECT f.bundle_id AS bundle_id, f.content AS content FROM files f
+                               WHERE f.path = 'data/gathering.json' ORDER BY f.bundle_id`);
+    const last = new Map();
+    for (const r of this.#rows(`SELECT bundle_id, request_id, MAX(at) AS at FROM monitor_gathering_run
+                                 WHERE outcome <> 'governed' GROUP BY bundle_id, request_id`))
+      last.set(`${r.bundle_id}#${r.request_id}`, r.at);
+    const due = [], unscheduled = [];
+    let next = null, open = 0;
+    for (const f of files) {
+      let g = null;
+      try { g = typeof f.content === "string" ? JSON.parse(f.content) : null; } catch { g = null; }
+      if (!g || typeof g !== "object") continue;
+      for (const r of Array.isArray(g.requests) ? g.requests : []) {
+        if (!r || typeof r !== "object" || r.status !== "open" || typeof r.id !== "string" || !r.id) continue;
+        const locators = (Array.isArray(r.locators) ? r.locators : []).filter((l) => typeof l === "string" && isPublicHttpsLocator(l));
+        if (!locators.length) continue;
+        open++;
+        const at = last.get(`${f.bundle_id}#${r.id}`) ?? null;
+        const q = { bundle: f.bundle_id, id: r.id, locators, cadence: r.cadence ?? null, last_attempt: at,
+                    target: r.target && typeof r.target.text === "string" ? r.target.text : null };
+        if (r.cadence === "none") { unscheduled.push({ ...q, reason: "its cadence is none: the daemon does not run it" }); continue; }
+        if (at === null) { due.push({ ...q, due_at: 0 }); continue; }
+        const iv = r.cadence == null ? null : monitorIntervalMs(r.cadence);
+        if (iv === null) {
+          if (r.cadence != null) unscheduled.push({ ...q, reason: `the cadence '${String(r.cadence)}' gives no interval` });
+          continue;   /* no cadence: run once, and it has run */
+        }
+        const dueAt = Date.parse(at) + iv;
+        if (dueAt <= nowMs) due.push({ ...q, due_at: dueAt });
+        else if (next === null || dueAt < next) next = dueAt;
+      }
+    }
+    due.sort((a, b) => a.due_at - b.due_at || (a.bundle < b.bundle ? -1 : a.bundle > b.bundle ? 1 : 0)
+                       || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+    return { due, next, unscheduled, open };
+  }
+
+  /** R28: one attempt at a due request: its locators in order through `acquire`'s capture-request arm as the daemon,
+   *  stopping at the first that files, each spending one of `budget`; one look per locator tried, the request its
+   *  authority. New bytes land as an Information bundle at `collected` (§2, §4); bytes the record already holds land
+   *  nothing. A governed refusal is our pacing: the request is left due, and its mirrors are not tried in its place.
+   *  The attempt is recorded. Answers `{spent, entry}`. */
+  async #gather(q, budget, nowMs) {
+    const at = stampInstant("second", nowMs);
+    const tried = [];
+    let spent = 0, filed = null, governed = false;
+    for (const locator of q.locators) {
+      if (spent >= budget) break;
+      spent++;
+      let out = null, status = null;
+      try {
+        const r = await this.capture.acquire({}, { cls: "daemon", member: false, captureRequest: {
+          locator, purpose: GATHERING_PURPOSE, agent: null, render: false } });
+        out = r && r.body;
+        status = r && Number.isFinite(Number(r.status)) ? Number(r.status) : null;
+      } catch (e) { out = { ok: false, reason: String(e && e.message || e).slice(0, 160) }; }
+      const doc = out && out.ok && out.document;
+      if (doc && doc.capture && /^[0-9a-f]{64}$/.test(String(doc.capture.sha256 || ""))) {
+        filed = { locator, doc, existed: out.existed === true };
+        tried.push({ locator, outcome: filed.existed ? "held" : "captured", status: null, reason: null });
+        this.#gatheringLook(q, locator, { state: "PRESENT", resultKind: "capture", resultRef: doc.capture.sha256,
+          detail: filed.existed ? `gathered for ${q.id}; the bytes served are a capture the record already holds`
+                                : `gathered for ${q.id}; captured` }, at);
+        break;
+      }
+      const reason = (out && (out.reason || out.error)) || `status ${status}`;
+      const srcStatus = out && Number.isFinite(Number(out.status)) ? Number(out.status) : null;
+      if (out && out.reason === "HOST_COOLING_OFF") {
+        governed = true;
+        tried.push({ locator, outcome: "governed", status: null, reason });
+        this.#gatheringLook(q, locator, monitorObservationFor({ outcome: "governed", reason: out.detail || reason }), at);
+        break;
+      }
+      tried.push({ locator, outcome: "failed", status: srcStatus, reason });
+      this.#gatheringLook(q, locator, monitorObservationFor(srcStatus === 404 || srcStatus === 410
+        ? { outcome: "removed", httpStatus: srcStatus }
+        : { outcome: "unreachable", reason: srcStatus != null ? `the source answered ${srcStatus}` : reason }), at);
+    }
+    let landed = null;
+    if (filed && !filed.existed) landed = this.#land(q, filed, at);
+    const outcome = filed ? (filed.existed ? "held" : "captured") : governed ? "governed" : "failed";
+    const cap = filed ? filed.doc.capture : null;
+    try {
+      const seq = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM monitor_gathering_run WHERE bundle_id = ? AND request_id = ?`,
+                            q.bundle, q.id).n;
+      this.sql.exec(`INSERT INTO monitor_gathering_run (bundle_id, request_id, seq, at, outcome, locator, tried, capture_sha, grade,
+                     landed, detail) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, q.bundle, q.id, seq, at, outcome,
+                    filed ? filed.locator : null, JSON.stringify(tried), cap ? cap.sha256 : null, cap && cap.grade != null ? String(cap.grade) : null,
+                    landed && landed.ok ? landed.bundle_id : null, landed && !landed.ok ? landed.detail ?? null : null);
+    } catch { /* an unrecorded attempt is asked again: the request stays due */ }
+    if (spent === 0) return { spent, entry: null };
+    return { spent, entry: { bundle: q.bundle, request: q.id, outcome, tried,
+      ...(filed ? { locator: filed.locator, sha: cap.sha256, grade: cap.grade ?? null, existed: filed.existed } : {}),
+      ...(landed ? { landed } : {}) } };
+  }
+
+  /** R28: one look of the request's attempt at a locator, through observation-log's one append: authority the request
+   *  (`sweep`, OBSERVATION-LOG-DESIGN.md §4.1), level document, subject the locator's normalised address. */
+  #gatheringLook(q, locator, row, at) {
+    if (!row) return;
+    try {
+      this.observationLog.observe({ actorClass: "plane", actor: null, authorityKind: "sweep", authority: q.id,
+        level: "document", subjectKind: "address", subject: normalizeAddress(locator), state: row.state,
+        governed: row.governed === true, condition: row.condition || null, resultKind: row.resultKind || null,
+        resultRef: row.resultRef || null, detail: row.detail }, at);
+    } catch { /* a look that could not be written does not undo the attempt */ }
+  }
+
+  /** R28 (K1096; Intake Doctrine §2, §4): new bytes a request filed land as a plane-composed Information bundle,
+   *  promoted through `promotion.promote` at `collected` (never verified, a member's act), its origin the named request,
+   *  the request's id and its bundle named as the authorisation, in the request's bundle's project. Answers `{ok,
+   *  bundle_id}` or the promotion's refusal relayed. */
+  #land(q, filed, at) {
+    try {
+      const doc = filed.doc, cap = doc.capture;
+      if (typeof doc.file !== "string" || !Number.isSafeInteger(cap.bytes))
+        return { ok: false, detail: "capture's answer named no primary file and size to land" };
+      const enc = (t) => { const b = new TextEncoder().encode(t); return { text: t, bytes: b.length, sha256: createSha256().update(b).hex() }; };
+      const home = this.#one(`SELECT project FROM bundles WHERE bundle_id = ?`, q.bundle);
+      const project = home && typeof home.project === "string" && home.project ? home.project : null;
+      return this.record.transact(() => {
+        const id = `${this.record.allocId("INFO", at.slice(0, 4)).id}-${GATHERING_BUNDLE_SLUG}`;
+        const title = `Gathered for ${q.id}: ${q.target || filed.locator}`.replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
+        const retrieved = typeof doc.retrieved === "string" && doc.retrieved ? doc.retrieved : at;
+        const md = ["---", `id: ${id}`, "object_type: information", "schema: information@2",
+          `title: ${JSON.stringify(title)}`, `current_state: ${GATHERING_LANDS_AT}`, "prior_state: null",
+          `created: "${at}"`, `last_updated: "${at}"`,
+          "produced_by:", "  mode: agent", "  capability_tier: session",
+          ...(project ? [`project: ${project}`] : []),
+          "references: []", "state_history: []", "annotations_open: 0",
+          "reeval_pending:", "  flag: false", "  since: null", "  source: null",
+          "visuals: []", "criticality: supporting", "source_status: unchanged",
+          "source:", `  locator: ${JSON.stringify(filed.locator)}`, `  retrieved: ${retrieved}`,
+          "monitoring:", "  enabled: false", "  frequency: none",
+          "---", "", "## Summary", "",
+          `The document served at ${filed.locator}, gathered by the daemon for the named request ${q.id} of ${q.bundle}. `
+          + `Its bytes are \`${doc.file}\`, exactly as served; nothing here summarises them.`, "",
+          "## Provenance Notes", "",
+          `Gathered for the named request ${q.id}, carried by ${q.bundle}'s data/gathering.json, which authorised the `
+          + `fetch; locator ${q.locators.indexOf(filed.locator) + 1} of ${q.locators.length} in the request's order. `
+          + `Collected ${at}. Filed at ${GATHERING_LANDS_AT} and never higher: verifying it is a named member's decision.`, "",
+          "## Session Log", "",
+          `### Session ${at} | Collected | ${GATHERING_AUTHOR}`,
+          `Trigger: named request ${q.id} (${q.bundle})`,
+          "Changes: created from the daemon's capture for the named request.", "",
+          "## Review Notes", ""].join("\n");
+        const blob = (f) => (f && typeof f.file === "string" && /^[0-9a-f]{64}$/.test(String(f.sha256 || ""))
+          && Number.isSafeInteger(f.bytes) ? { path: f.file, blobSha: f.sha256, sha256: f.sha256, bytes: f.bytes } : null);
+        const blobs = [blob({ file: doc.file, sha256: cap.sha256, bytes: cap.bytes }), blob(doc.shell),
+                       ...(Array.isArray(doc.parts) ? doc.parts.map(blob) : [])].filter(Boolean);
+        const seen = new Set();
+        const files = [{ path: "bundle.md", ...enc(md) },
+                       { path: "data/provenance.json", ...enc(JSON.stringify({ documents: [doc] }, null, 2)) },
+                       ...blobs.filter((f) => (seen.has(f.path) ? false : seen.add(f.path)))];
+        const p = this.promotion.promote({
+          bundleId: id, base: null, snapKey: `${at.replace(/[-:]/g, "")}_${[...crypto.getRandomValues(new Uint8Array(4))]
+            .map((x) => x.toString(16).padStart(2, "0")).join("")}`, author: GATHERING_AUTHOR, files,
+          meta: { object_type: "information", title, current_state: GATHERING_LANDS_AT, prior_state: null,
+                  created: at, last_updated: at, criticality: "supporting" },
+          register: [{ sha256: cap.sha256, path: doc.file, encoding: "binary", bytes: cap.bytes }],
+        });
+        /* The promotion's own refusal, relayed by its code, never minted here. */
+        return p && p.ok ? { ok: true, bundle_id: id, state: GATHERING_LANDS_AT }
+                         : { ok: false, reason: (p && (p.reason || p.code)) || null,
+                             detail: String((p && p.detail) || "the promotion was refused").slice(0, 300) };
+      });
+    } catch {
+      return { ok: false, reason: null, detail: "the landing did not complete and this plane did not record why" };
+    }
   }
 
   /* Fire through the SAME service a caller's op=monitor reaches, in process (R23, N222), for CAP-3's reason: the
@@ -2423,7 +2640,7 @@ export function monitoringOf(host, deps) {
   return m;
 }
 
-/** The module's routes in the Durable Object (K3), as entries of the legacy store's op map. `viewer`, `actorClass`
+/** The module's routes in the Durable Object (K3), as entries of the plane's store op map (`plane/store.mjs`). `viewer`, `actorClass`
  *  and `actor` are the control plane's stamps, read from the query, so a caller's own copy never wins. */
 export function monitoringOps(m, url, body) {
   const q = (k) => url.searchParams.get(k);
@@ -2442,7 +2659,7 @@ export function monitoringOps(m, url, body) {
   };
 }
 
-/** R1–R10 from the Worker (`legacy-index` routes `op=monitor` here, K72 (11)): the method check, the required
+/** R1–R10 from the Worker (the plane's door, `plane/door.mjs`, routes `op=monitor` here, K72 (11)): the method check, the required
  *  argument and the envelope are the control plane's (`json`, `requiredArgument`, `storeSilent`, `storeRefusal`, passed in
  *  with what it decided of the caller: `viaSession` and `sessViewer` for a member's session, `cls` for a credential);
  *  the tick runs in the Durable Object's `monitor` service. A store silence is named, never read as `ABSENT` or as
