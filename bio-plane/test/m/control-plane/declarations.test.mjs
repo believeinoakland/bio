@@ -27,7 +27,9 @@ test("R2 (op-declarations R6): no spec is without a handler or a store route —
       const body = op === "claim" ? { bootstrapToken: env.ADMIN_TOKEN, password: "pw" } : {};
       const r = await call(env, { op, token, params, hooks, method: "POST", body });
       const routes = opCalls(env).map((c) => c.route);
-      if (routes.includes(RENAMED[op] ?? op) || log.some((l) => l.kind === "public" && l.op === op) || (op === "whoami" && r.json.ok)) {
+      /* R45: a registered public read asked by its own name is answered by the store's `publicread` under that name */
+      const publicRead = opCalls(env).some((c) => c.route === "publicread" && c.params.name === op);
+      if (routes.includes(RENAMED[op] ?? op) || publicRead || log.some((l) => l.kind === "public" && l.op === op) || (op === "whoami" && r.json.ok)) {
         reached = true; break;
       }
     }
