@@ -1824,7 +1824,7 @@ test("R64 R65: stats answers the source's figures with the same keys for every c
     const s = sized(4096);
     const rc = recordOf({ storage: s });
     const src = statsSource({ hostile });
-    assert.deepEqual(rc.registerStatsSource("legacy-store", src.figures), { ok: true, module: "legacy-store" });
+    assert.deepEqual(rc.registerStatsSource("plane", src.figures), { ok: true, module: "plane" });
     const keysOf = (o) => Object.keys(o).sort();
     const member = rc.stats({ viewer: "member:iris" }), admin = rc.stats({ viewer: "admin", capacity: true });
     assert.deepEqual(member, { bundles: 8, files: 18, textIndexOk: true, tasks: 3, observationsNonLead: 5 }, `hostile=${hostile}`);
@@ -1848,7 +1848,7 @@ test("R64: purge's proof is the private form of the same figures: whole, the log
   for (const hostile of [false, true]) {
     const rc = recordOf({ storage: sized(8192) });
     const src = statsSource({ hostile });
-    rc.registerStatsSource("legacy-store", src.figures);
+    rc.registerStatsSource("plane", src.figures);
     assert.deepEqual(rc.proofCounts(), { bundles: 10, files: 20, textIndexOk: true, tasks: 3, observations: 9, leads: 2, themes: 1, themePlacements: 4, dbBytes: 8192 });
     assert.deepEqual(src.asked.at(-1), { viewer: undefined, proof: true }, "asked whole: no viewer");
     assert.equal(rc.proofCounts.length, 0, "it takes no argument: no caller's sight or class reaches it");
@@ -1899,16 +1899,16 @@ test("R65: a second source is STATS_SOURCE_DECLARED (C-102.17), naming the holde
     assert.deepEqual(rc.stats({}), {}, "nothing registered");
   }
   const first = statsSource();
-  assert.equal(rc.registerStatsSource("legacy-store", first.figures).ok, true);
+  assert.equal(rc.registerStatsSource("plane", first.figures).ok, true);
   const r = rc.registerStatsSource("control-plane", () => ({ bundles: 999 }));
   assert.deepEqual({ ...r, detail: null }, { ok: false, reason: "STATS_SOURCE_DECLARED", code: "STATS_SOURCE_DECLARED", check: "C-102.17",
-    translation: RECORD_CORE_CHECKS.STATS_SOURCE_DECLARED.translation, module: "control-plane", heldBy: "legacy-store", detail: null });
-  assert.ok(r.detail.includes("legacy-store"));
-  assert.equal(rc.registerStatsSource("legacy-store", () => ({})).reason, "STATS_SOURCE_DECLARED", "its own second registration too");
+    translation: RECORD_CORE_CHECKS.STATS_SOURCE_DECLARED.translation, module: "control-plane", heldBy: "plane", detail: null });
+  assert.ok(r.detail.includes("plane") && !r.detail.includes("control-plane"), "the detail names the holder, not the refused module");
+  assert.equal(rc.registerStatsSource("plane", () => ({})).reason, "STATS_SOURCE_DECLARED", "its own second registration too");
   assert.equal(rc.stats({}).bundles, 10, "the first still stands");
   // the source is the instance's (R39): one per storage, reached through every handle
   const { s, rc: a } = fresh();
-  a.registerStatsSource("legacy-store", first.figures);
+  a.registerStatsSource("plane", first.figures);
   assert.equal(recordOf({ storage: s }).stats({}).bundles, 10);
   assert.deepEqual(recordOf({ storage: storage() }).stats({}), {});
 });
@@ -1916,8 +1916,8 @@ test("R65: a second source is STATS_SOURCE_DECLARED (C-102.17), naming the holde
 /* ---- R28's caller half (the `mint-ledger` convert, K619 (2)): the ids a store held before the ledger existed ---- */
 
 /* A store written before the ledger (REC-151's minter, no ledger write, no seed; the pre-REC-151 op=allocid that served
-   CASE off the counter): live rows of each gated kind in the tables legacy-store's seed names (`#MINT_LEDGER_LIVE`),
-   and a CASE-<year> counter. */
+   CASE off the counter): live rows of each gated kind in the tables the boot's seed reads (plane's `MINT_LEDGER_LIVE`,
+   and ratification's and publication's R70 seeds), and a CASE-<year> counter. */
 const MINT_LEDGER_LIVE = [["PROJ", "bundles", "bundle_id"], ["CASE", "cases", "case_id"], ["CASE", "published_cases", "case_id"],
                           ["CASE", "case_documents", "case_id"], ["CASE", "published_case_members", "case_id"]];
 function preLedgerStore() {
@@ -1930,8 +1930,9 @@ function preLedgerStore() {
   s.sql.exec(`INSERT INTO published_case_members VALUES ('CASE-2026-4004')`);
   for (let k = 0; k < 3; k++) rc.allocId("CASE", "2026");        // CASE-2026-0001..0003, off the counter
   assert.equal(rows(s, `SELECT COUNT(*) AS n FROM minted_ids`)[0].n, 0, "the ledger knows none of them yet");
-  // the legacy store declares the case tables to purge, as its constructor does
-  rc.declarePurge("legacy-store", ["cases", "published_cases", "case_documents", "published_case_members"].map((name) => ({ name, keys: [] })));
+  // publication, which holds the case tables, declares them to purge; here all four are cleared whole, so a purge takes
+  // every live row the legacy ids stood in
+  rc.declarePurge("publication", ["cases", "published_cases", "case_documents", "published_case_members"].map((name) => ({ name, keys: [] })));
   return { s, rc };
 }
 
@@ -1974,7 +1975,7 @@ test("R28 R40 R23 (mint-ledger): CASE-<year> ids the counter issued before CASE 
   rc.seedMintLedger([]);
   assert.equal(draws([1], () => rc.mintOpaqueId("PROJ", "2026", "", () => false)), "PROJ-2026-0001");
   // the ledger itself is named by no figure: neither op=stats' form nor purge's proof carries a key for it
-  rc.registerStatsSource("legacy-store", statsSource().figures);
+  rc.registerStatsSource("plane", statsSource().figures);
   for (const o of [rc.stats({ capacity: true }), rc.proofCounts(), rc.counts(null), pgKeys(rc.purge({}))])
     assert.deepEqual(Object.keys(o).filter((k) => /mint|ledger/i.test(k)), []);
 });
@@ -2418,4 +2419,146 @@ test("R74 R64 R72: in purge's proof, through a stats source spreading R63's figu
   const all = recordCoreOps(rc, opsUrl("purge", {}), null).purge();
   assert.deepEqual(pick(all.after), { bundles: 0, files: 0, history: 0 });
   assert.deepEqual(pick(all.removed), pick(r.after));
+});
+
+/* ---- T23 layer 2: R37's reads `corpus-export` makes (N484, K1024, K1114) ---- */
+
+/* corpus-export's working-corpus export (its R1; `corpus-export/index.mjs` exportManifest), each read as it states it:
+   `bundles` first, then for each bundle its live `files`, its `manifest` entries ranked by `created` then `rowid`, and
+   its `history` snapshots. `connections`' `refs`, which the export also reads, is not this module's (R31). */
+const EXPORT_READS = Object.freeze({
+  bundles: `SELECT bundle_id, object_type, title, current_state, bundle_sha, row_version, created, last_updated
+              FROM bundles ORDER BY bundle_id`,
+  files: `SELECT path, sha256, bytes, blob_sha, (content IS NOT NULL) AS inline FROM files WHERE bundle_id=? ORDER BY path`,
+  manifest: `SELECT snap_key, kind, base, author, created, writer, operation FROM manifest WHERE bundle_id=? ORDER BY created, rowid`,
+  history: `SELECT snap_key, path, sha256, created FROM history WHERE bundle_id=? ORDER BY snap_key, path`,
+});
+const exportRead = (s) => rows(s, EXPORT_READS.bundles).map((b) => ({ ...b,
+  files: rows(s, EXPORT_READS.files, b.bundle_id).map((r) => ({ ...r })),
+  promotions: rows(s, EXPORT_READS.manifest, b.bundle_id).map((r) => ({ ...r })),
+  snapshots: rows(s, EXPORT_READS.history, b.bundle_id).map((r) => ({ ...r })) }));
+
+/* What R37 says each read column holds, derived from the calls given to `commit` and its answers alone, never from the
+   tables: the bundle's row as its commits set it (R33, R41, R44), the last commit's live files, one manifest entry per
+   commit (R42), and each replaced file under the snap key and time of the commit that replaced it. */
+function exportExpected(calls) {
+  const by = new Map();
+  for (const { c, answer } of calls) {
+    const prev = by.get(c.bundleId);
+    const given = (k, dflt) => (c[k] !== undefined ? c[k] : prev ? prev.row[k] : dflt);
+    const row = { type: c.type, title: c.title ?? null, state: given("state", ""), created: prev ? prev.row.created : (c.created ?? c.at),
+                  lastUpdated: given("lastUpdated", c.at), bundleSha: answer.bundleSha, rowVersion: answer.rowVersion };
+    const live = c.files.map((f) => ({ path: f.path, sha256: f.sha256, bytes: f.bytes ?? Buffer.byteLength(f.text),
+                                       blob_sha: f.blobSha ?? null, inline: typeof f.text === "string" ? 1 : 0 }));
+    const snapshots = [...(prev ? prev.snapshots : []),
+                       ...(prev ? prev.live.map((f) => ({ snap_key: c.snapKey, path: f.path, sha256: f.sha256, created: c.at })) : [])];
+    const promotions = [...(prev ? prev.promotions : []), { snap_key: c.snapKey, kind: c.kind ?? "promotion", base: c.base ?? null,
+                        author: c.author ?? null, created: c.at, writer: c.writer ?? null, operation: c.operation ?? null }];
+    by.set(c.bundleId, { row, live, snapshots, promotions });
+  }
+  const byCreated = (a, b) => (a.created < b.created ? -1 : a.created > b.created ? 1 : 0);   /* stable: a tie keeps write order */
+  const byKeyPath = (a, b) => (a.snap_key + "\0" + a.path < b.snap_key + "\0" + b.path ? -1 : 1);
+  return [...by.keys()].sort().map((id) => {
+    const { row, live, snapshots, promotions } = by.get(id);
+    return { bundle_id: id, object_type: row.type, title: row.title, current_state: row.state, bundle_sha: row.bundleSha,
+             row_version: row.rowVersion, created: row.created, last_updated: row.lastUpdated,
+             files: [...live].sort((a, b) => (a.path < b.path ? -1 : 1)),
+             promotions: [...promotions].sort(byCreated), snapshots: [...snapshots].sort(byKeyPath) };
+  });
+}
+
+function exportFixture() {
+  const { s, rc } = fresh();
+  const calls = [];
+  const c = (call) => { calls.push({ c: call, answer: rc.commit(call) }); };
+  const a = "INFO-2026-0001-a", b = "INQ-2026-0002-b", blob = "e".repeat(64);
+  /* a: three commits, its title changed and then given none, a blob, and two entries tied on `created` whose snap keys
+     sort against write order (M3 is written after Z2), so only `rowid` ranks them */
+  c({ bundleId: a, type: "information", title: "First title", snapKey: "A1", kind: "promotion", base: EMPTY_STRING_SHA, author: "alice",
+      files: [file("bundle.md", "a one é\r\n"), file("notes/n.md", "n"), { path: "c.pdf", blobSha: blob, bytes: 4096, sha256: blob }],
+      state: "collected", group: "g", created: "2026-03-01T00:00:00Z", lastUpdated: "2026-03-01T00:00:00Z", at: "2026-03-01T00:00:00Z" });
+  c({ bundleId: a, type: "information", title: "Second title", snapKey: "Z2", kind: "promotion-replay", base: sha("a one é\r\n"),
+      author: "token:capture", writer: "monitor", operation: "recheck",
+      files: [file("bundle.md", "a two"), { path: "c.pdf", blobSha: blob, bytes: 4096, sha256: blob }],
+      state: "verified", lastUpdated: "2026-03-02T00:00:00Z", at: "2026-03-02T00:00:00Z" });
+  c({ bundleId: a, type: "information", snapKey: "M3", base: sha("a two"), author: "bob", files: [file("bundle.md", "a three")],
+      at: "2026-03-02T00:00:00Z" });
+  /* b: one commit naming no state, no title and no times: the defaults R37's columns then hold */
+  c({ bundleId: b, type: "inquiry", snapKey: "K1", author: "carol", files: [file("bundle.md", "b one")], at: "2026-03-05T00:00:00Z" });
+  return { s, rc, calls, a, b };
+}
+
+test("R37 (N484): the columns corpus-export reads hold what R37 states, bundles' title and bundle_sha first, then every other column of its read, written through commit and read in its own SQL", () => {
+  const { s, rc, calls, a, b } = exportFixture();
+  /* bundles' title and bundle_sha first: the title the last commit gave (NULL when it gave none), and R41's bundleSha,
+     the digest of the bundle's bundle.md as the last commit answered it */
+  const bundles = rows(s, EXPORT_READS.bundles).map((r) => ({ ...r }));
+  assert.deepEqual(bundles.map((r) => [r.bundle_id, r.title, r.bundle_sha]), [[a, null, sha("a three")], [b, null, sha("b one")]]);
+  assert.deepEqual(bundles.map((r) => r.title), [rc.bundleInfo(a).title, rc.bundleInfo(b).title], "R34's title");
+  assert.deepEqual(bundles.map((r) => r.bundle_sha), [rc.head(a).bundleSha, rc.head(b).bundleSha], "R41's bundleSha");
+  assert.deepEqual(calls.filter((x) => x.c.bundleId === a).map((x) => x.answer.bundleSha), [sha("a one é\r\n"), sha("a two"), sha("a three")],
+                   "bundle_sha moves with each commit's bundle.md");
+  /* the whole read, every column, against what the commits were given and answered */
+  const got = exportRead(s);
+  assert.deepEqual(got, exportExpected(calls));
+  /* the points the derivation turns on, stated outright */
+  const [ga, gb] = got;
+  assert.deepEqual([ga.object_type, ga.current_state, ga.row_version, ga.created, ga.last_updated],
+                   ["information", "verified", 3, "2026-03-01T00:00:00Z", "2026-03-02T00:00:00Z"], "state and last_updated kept when a commit gives none");
+  assert.deepEqual([gb.current_state, gb.created, gb.last_updated, gb.row_version], ["", "2026-03-05T00:00:00Z", "2026-03-05T00:00:00Z", 1],
+                   "a creation naming no state or times: the empty state, and the commit's time");
+  assert.deepEqual(ga.files, [{ path: "bundle.md", sha256: sha("a three"), bytes: Buffer.byteLength("a three"), blob_sha: null, inline: 1 }],
+                   "files: the last commit's live files only");
+  assert.deepEqual(rows(s, EXPORT_READS.files, "INFO-2099-0000-z"), [], "a bundle not held has no files");
+  assert.deepEqual(ga.promotions.map((p) => p.snap_key), ["A1", "Z2", "M3"], "the tie under created is ranked by rowid, in write order, never by the key");
+  assert.deepEqual(ga.snapshots.map((h) => [h.snap_key, h.path, h.created]), [["M3", "bundle.md", "2026-03-02T00:00:00Z"],
+    ["M3", "c.pdf", "2026-03-02T00:00:00Z"], ["Z2", "bundle.md", "2026-03-02T00:00:00Z"], ["Z2", "c.pdf", "2026-03-02T00:00:00Z"],
+    ["Z2", "notes/n.md", "2026-03-02T00:00:00Z"]], "history: each replaced file under the replacing commit's key and time");
+  assert.deepEqual(ga.snapshots.find((h) => h.snap_key === "Z2" && h.path === "c.pdf").sha256, "e".repeat(64), "a blob's snapshot keeps its digest");
+  assert.deepEqual(rows(s, `SELECT path, sha256, bytes, blob_sha, (content IS NOT NULL) AS inline FROM files WHERE bundle_id=? ORDER BY path`, a)
+    .map((r) => ({ ...r })), ga.files, "the read is the export's text");
+  /* the types the reads rely on */
+  const cols = (t) => Object.fromEntries(rows(s, `PRAGMA table_info(${t})`).map((r) => [r.name, r]));
+  assert.deepEqual([cols("bundles").title.type, cols("bundles").title.notnull, cols("bundles").bundle_sha.type, cols("bundles").bundle_sha.notnull],
+                   ["TEXT", 0, "TEXT", 1]);
+});
+
+test("R37 (N484): negative control: a read column that held anything but what R37 states is caught, column by column, so the read above is checked whole", () => {
+  const { s, calls, a, b } = exportFixture();
+  const want = exportExpected(calls);
+  assert.deepEqual(exportRead(s), want, "the control starts from a compliant store");
+  /* one wrong value at a time, in every column the export reads and in the manifest's write order, each undone after */
+  const wrong = [
+    ["bundles", "title", "'Some title'", `bundle_id='${a}'`], ["bundles", "bundle_sha", `'${sha("a two")}'`, `bundle_id='${a}'`],
+    ["bundles", "bundle_id", `'INFO-2026-0001-z'`, `bundle_id='${a}'`], ["bundles", "object_type", "'inquiry'", `bundle_id='${a}'`],
+    ["bundles", "current_state", "'collected'", `bundle_id='${a}'`], ["bundles", "row_version", "2", `bundle_id='${a}'`],
+    ["bundles", "created", "'2026-03-02T00:00:00Z'", `bundle_id='${a}'`], ["bundles", "last_updated", "'2026-03-09T00:00:00Z'", `bundle_id='${b}'`],
+    ["files", "path", "'bundle2.md'", `bundle_id='${b}'`], ["files", "sha256", `'${sha("x")}'`, `bundle_id='${b}'`],
+    ["files", "bytes", "99", `bundle_id='${b}'`], ["files", "blob_sha", `'${"f".repeat(64)}'`, `bundle_id='${b}'`],
+    ["files", "content", "NULL", `bundle_id='${b}'`],
+    ["manifest", "snap_key", "'Q9'", `bundle_id='${b}'`], ["manifest", "kind", "'promotion-replay'", `bundle_id='${b}'`],
+    ["manifest", "base", `'${EMPTY_STRING_SHA}'`, `bundle_id='${b}'`], ["manifest", "author", "'mallory'", `bundle_id='${b}'`],
+    ["manifest", "created", "'2026-03-06T00:00:00Z'", `bundle_id='${b}'`], ["manifest", "writer", "'monitor'", `bundle_id='${b}'`],
+    ["manifest", "operation", "'recheck'", `bundle_id='${b}'`],
+    ["history", "snap_key", "'Y2'", `bundle_id='${a}' AND snap_key='Z2' AND path='notes/n.md'`],
+    ["history", "path", "'notes/m.md'", `bundle_id='${a}' AND snap_key='Z2' AND path='notes/n.md'`],
+    ["history", "sha256", `'${sha("x")}'`, `bundle_id='${a}' AND snap_key='Z2' AND path='notes/n.md'`],
+    ["history", "created", "'2026-03-09T00:00:00Z'", `bundle_id='${a}' AND snap_key='Z2' AND path='notes/n.md'`],
+  ];
+  for (const [table, column, value, where] of wrong) {
+    s.db.exec("SAVEPOINT wrong");
+    s.db.exec(`UPDATE ${table} SET ${column}=${value} WHERE ${where}`);
+    assert.notDeepEqual(exportRead(s), want, `${table}.${column} holding ${value} is caught`);
+    s.db.exec("ROLLBACK TO wrong"); s.db.exec("RELEASE wrong");
+    assert.deepEqual(exportRead(s), want, `${table}.${column} restored`);
+  }
+  /* the manifest's rank: M3 recorded before Z2, their created tied, is caught (rowid is the tie-break, R16) */
+  s.db.exec("SAVEPOINT reorder");
+  const entries = rows(s, `SELECT * FROM manifest WHERE bundle_id=? ORDER BY rowid`, a).map((r) => ({ ...r }));
+  s.sql.exec(`DELETE FROM manifest WHERE bundle_id=?`, a);
+  for (const e of [entries[0], entries[2], entries[1]])
+    s.sql.exec(`INSERT INTO manifest (${Object.keys(e).join(",")}) VALUES (${Object.keys(e).map(() => "?").join(",")})`, ...Object.values(e));
+  assert.notDeepEqual(exportRead(s), want, "entries recorded out of write order are caught");
+  s.db.exec("ROLLBACK TO reorder"); s.db.exec("RELEASE reorder");
+  assert.deepEqual(exportRead(s), want);
 });
