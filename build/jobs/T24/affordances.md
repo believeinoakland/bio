@@ -23,3 +23,7 @@
 - Red 5: no catalogue row added or changed, so none `awaiting stamp`.
 
 Size (session_016oZC5sJyfvVMQZwh1cyyE1): test runs 4, module lines 68
+
+## J1 · COMPLETE
+
+COMPLETE. N490 applied: NON_ACTS.optionstartpreview, a 'read: …' reason (R7's rule; no requirement changed), tested in catalogue.test.mjs's layer-9 test with negative controls; red 6's affordances share cleared. N502/N508 re-scan: five stale notes re-worded (list in the record). R32's test no longer asserts sweeps in monitoringOps (moved to link-sweep by N506; link-sweep is not in my uses). Affordances suite 147/147. Whole test/m: 5257 pass, 7 fail: the six reds 7 and 9 SCHEDULER #26 recorded, plus control-plane totality.test.mjs:13, stale ['optionstartpreview'] until op-declarations gives it a NEEDS row (red 6, op-declarations' share). All four checks 0 failures. No catalogue row changed (red 5: none). Report: the plane's bundle is stale (affordances.mjs is an input); nothing regenerated. Please merge job/T24/affordances.
