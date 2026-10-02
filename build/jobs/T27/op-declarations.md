@@ -33,3 +33,7 @@ Size (session_01FsRcQFZFMkEu8cvL4g6tgh): test runs 6, module lines 2553
 ## J1 · QUESTION
 
 R13 says docketdecline and docketpost are stamped `by`, and that each docket member op is `viewer` (or `author`, `by`) stamped. My reading, built: `viewer` is stamped on all seven member ops, docketpost and docketdecline included (docket's own map passes viewer to each; fail closed), with `by` on docketprepare/docketpost/docketdecline and `author` on docketfile/docketpressure. If you mean `by` only for those two, say so and I move them to a list of their own. Not blocking: I have completed on this reading.
+
+## J2 · COMPLETE
+
+N518 R12 and N520 R13 applied on job/T27/op-declarations: actionholdrelease (ACTIONS_ACTIONS, contribute), actionholdpreview and projectholds (ACTIONS_READS, null rows); the docket's 7 member ops (admin/member, machineClasses [], both session sets; contribute for the 4 mutating, null for the 3 reads) and docketpublic/docketfeed (classes null, null rows); new lists DOCKET_ACTIONS, DOCKET_READS, DOCKET_AUTHOR, DOCKET_BY, DOCKET_PUBLIC_READS for control-plane R48. op-declarations 43/43; admission, plane green. control-plane R2/R41 is red with exactly my 12 new ops until affordances' R33/R34 land (affordances merges first, so it clears at my merge); affordances' R12 totality may be red on its branch until mine merges. Accepted reds 4 and 5 unchanged. No uses edge to docket. No catalogue rows. format, architecture, coverage (13/13), ownership: 0 failures. Details in the record's Completion section.
