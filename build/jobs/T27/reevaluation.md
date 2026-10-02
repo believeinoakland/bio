@@ -45,3 +45,7 @@ Other readings in this build:
 - `docketActed`'s dependents: for a withdrawal, the live legs on that entry's pinned findings (`{bundle_id, ord, role, state, target}`, the plane's view, R28's precedent); for a contesting entry, its member findings. R16's project half is not told there, because it is R16's cause and not R30's arm. An unknown kind tells nothing and answers `{ok: true, told: false}`.
 
 If docket R13 should carry `findings` on a withdrawal, that is a requirement change for docket, not for me. Please confirm or correct the shape.
+
+## J2 · COMPLETE
+
+N520 applied: R30 (registerDocket; withdrawal and contested causes, derived on read, in the shapes B2 confirmed; docketDependents; docketActed telling R8's listeners after the act), R16's withdrawal half (wp_retraction on the owning project) and R8's two kinds; docket_absent stated while nothing is registered. Improvement: R27–R29 now state out_of_view on a targeted read whose only dependents are out of view (R20). No catalogue rows added. reevaluation 101/0; every user module green; the four checks report 0 failures (coverage 30/30). Plane bundle stale (not regenerated). Details in the record.
