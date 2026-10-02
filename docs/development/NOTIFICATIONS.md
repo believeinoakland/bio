@@ -108,12 +108,15 @@ dispositions are the useful axis:
 | disposition | what it means | example |
 | --- | --- | --- |
 | **recorded** | part of the record; no surface at all | a monitor tick that found nothing changed |
-| **noticed** | worth seeing, not worth acting on | the governor is pacing a capture |
+| **shown in place** | worth seeing, not worth acting on | the governor is pacing a capture |
 | **actionable** | a member's action can change it | a capture stopped at the ceiling with work outstanding |
 
 That replaces the cruder rule below ("a CONDITION earns a queue item only when a
 member's action can change it") with a three-way one: *recorded* never surfaces,
-*noticed* surfaces as status where the thing lives, *actionable* earns a queue item.
+*shown in place* surfaces as status where the thing lives, *actionable* earns a queue item.
+*(The middle disposition was called "noticed" until 2026-10-02; renamed by the UX design session, at BOB's handoff N493
+(K1114), so that it no longer clashes with the member-facing queue kind "Noticed" (DEC-110). Nothing in code or the
+requirements used the old word; the meaning is unchanged.)*
 The middle disposition is the one a naive implementation loses, and losing it means
 either drowning the member or hiding what is happening.
 
