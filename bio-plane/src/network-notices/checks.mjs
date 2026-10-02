@@ -1,7 +1,7 @@
 /* network-notices' refusal rows (requirements: `build/requirements/network-notices.md` R1, R4, R6, R11; DEC-49).
- * A new family, C-127 (BOB's ruling at review, K1119). Every row is new and `awaiting stamp` (T24's layer-2 promotion
- * job). The words a member reads before posting (the warning, the caution, the ceremony) are the UX design stream's
- * (K1031); these rows only say why an act was refused and that nothing was published. */
+ * A new family, C-127 (BOB's ruling at review, K1119), arrived at T23 and stamped by 1.54.0 (promotion's T24 job).
+ * The words a member reads before posting (the warning, the caution, the ceremony) are the UX design stream's (K1031);
+ * these rows only say why an act was refused and that nothing was published. */
 
 const at = (fn, region) => `src/network-notices/index.mjs ${fn} > ${region}`;
 

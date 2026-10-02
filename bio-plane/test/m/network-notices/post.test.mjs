@@ -157,3 +157,57 @@ test("R11 a final revision stops the notice, with its handoff; a stopped notice 
   assert.equal((await post(w, { wording: "A new effort" })).revision, 1);
   assert.equal(w.nn.noticesOf({ project: w.P, viewer: A }).notices[0].status, "stopped");
 });
+
+test("R4 the post records its notice id through record-core.recordOpaqueId in its own transaction; a first revision whose id is spent is NOTICE_STALE, and nothing is written", async () => {
+  const w = seeded();
+  const ledger = (id) => w.rows(`SELECT source FROM minted_ids WHERE id=?`, id).map((r) => r.source);
+  /* recorded from the post's instant, as a chosen id (record-core R75), never only from a boot seed */
+  const one = await post(w);
+  assert.deepEqual(ledger(one.notice), ["chosen"]);
+  assert.equal(w.record.transact(() => w.record.recordOpaqueId(one.notice)).reason, "OPAQUE_ID_SPENT");
+  /* a change is a revision of a recorded notice: nothing more recorded */
+  await post(w, { notice: one.notice, wording: "changed" });
+  assert.deepEqual(ledger(one.notice), ["chosen"]);
+  /* spent between prepare and post (another act recorded it): NOTICE_STALE, nothing written, the ledger as it was */
+  const p = await prepare(w, { project: w.Q }, "dave");
+  const nid = JSON.parse(p.revision).notice;
+  assert.equal(w.record.transact(() => w.record.recordOpaqueId(nid)).ok, true);
+  const before = w.snapshot(), minted = w.count("minted_ids");
+  const r = await w.nn.postNotice({ digest: p.digest, signature: sign(p, "dave"), acknowledged: true, by: V("dave"), viewer: V("dave") });
+  rowOk(r, "NOTICE_STALE");
+  assert.deepEqual(w.snapshot(), before);
+  assert.equal(w.count("minted_ids"), minted);
+  /* negative control: prepared again, a fresh id is drawn and the post publishes it */
+  const again = await prepare(w, { project: w.Q }, "dave");
+  assert.notEqual(JSON.parse(again.revision).notice, nid, "the spent id is never offered again");
+  const ok = await w.nn.postNotice({ digest: again.digest, signature: sign(again, "dave"), acknowledged: true, by: V("dave"), viewer: V("dave") });
+  assert.equal(ok.ok, true);
+  assert.deepEqual(ledger(ok.notice), ["chosen"]);
+  /* a post that is refused after the id is recorded takes it back with it: none is recorded by a failed post */
+  const w2 = seeded();
+  const p2 = await prepare(w2);
+  rowOk(await w2.nn.postNotice({ digest: p2.digest, signature: "not a signature", acknowledged: true, by: A, viewer: A }), "NOTICE_SIGNATURE_REFUSED");
+  assert.deepEqual(w2.rows(`SELECT 1 FROM minted_ids WHERE id=?`, JSON.parse(p2.revision).notice), []);
+});
+
+test("R4 R1 the post asks the instance key again through provenance.instanceKeyBound, and answers C-70.1 to a caller now at existence", async () => {
+  const w = seeded();
+  const p = await prepare(w);
+  const bound = w.provenance.instanceKeyBound.bind(w.provenance);
+  w.provenance.instanceKeyBound = async () => false;
+  await refusedThenAccepted(w, () => postOf(w, p), () => { w.provenance.instanceKeyBound = bound; return postOf(w, p); },
+                            "NOTICE_NO_INSTANCE_KEY");
+  /* alice prepares on Q as its owner; Q set discoverable and alice's part in it ended before she posts */
+  const w2 = seeded();
+  w2.join(w2.Q, "alice", "joined", true);
+  const q = await prepare(w2, { project: w2.Q });
+  assert.equal(w2.membership.projectVisibilitySet({ projectId: w2.Q, setting: "discoverable", by: "dave", viewer: V("dave") }).ok, true);
+  w2.st.sql.exec(`DELETE FROM project_participants WHERE project_id=? AND member_id='alice'`, w2.Q);
+  const before = w2.snapshot();
+  const r = await postOf(w2, q);
+  assert.deepEqual([r.reason, r.check], ["PROJECT_SEEN_NOT_A_PARTICIPANT", "C-70.1"]);
+  assert.deepEqual(w2.snapshot(), before);
+  /* negative control: her part restored, the same prepared answer posts */
+  w2.join(w2.Q, "alice", "joined", true);
+  assert.equal((await postOf(w2, q)).ok, true);
+});

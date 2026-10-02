@@ -10,14 +10,16 @@
  * names (R21). It sends nothing anywhere but the timestamp requests (R30), and no answer names a member (R25).
  *
  * A NEW MODULE (T23, layer 8). REACHED as `networkNoticesOf(host, deps)` (K61): one instance per host. At creation it
- * creates its tables, declares them to record-core's purge (whole store only, R26) and registers its ids' mint seed.
+ * creates its tables and declares them to record-core's purge (whole store only, R26). A notice id is recorded in
+ * record-core's opaque-id ledger by the post that publishes it (R4), so no boot-time mint seed is registered.
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
- *   record        `transact`, `mintOpaqueId`, `manifestEntry`, `declarePurge`, `registerMintSeed`; the `bundles` and
- *                 `manifest` read contract (its R37) for the member acts (R8) and a project's creation.
- *   membership    `sight` (R44), `isProjectOwner` (R54), `ownsAnyProject` (R67), `positionalMember` (R76).
- *   credentials   `attestingKeys` (R11), `signerList` (R8).
+ *   record        `transact`, `mintOpaqueId`, `recordOpaqueId` (R75), `manifestEntry`, `declarePurge`; the `bundles`
+ *                 and `manifest` read contract (its R37) for the member acts (R8) and a project's creation.
+ *   membership    `sight` (R44), `existenceAct` (R77), `isProjectOwner` (R54), `ownsAnyProject` (R67),
+ *                 `positionalMember` (R76).
+ *   credentials   `attestingKeys` (R11), `signerList` (R8, with `status_at`, its R21).
  *   promotion     the fact `producingGroup` (its R40).
- *   provenance    `instanceSign`, `instanceKeys` (R56).
+ *   provenance    `instanceSign`, `instanceKeys` (R56), `instanceKeyBound` (R57).
  *   projectStage  `projectStage` (its R1, R2), for `closed`.
  *   publication   `caseCitedParts` (R41); its tables `cases`, `published_cases`, `published_case_members`,
  *                 `published_bundles`, `case_documents` under its R40.
@@ -46,7 +48,7 @@ import { canonicalJson } from "../record-grammar/json.mjs";
 import { sha256HexSync, createSha256 } from "../record-grammar/sha256.mjs";
 import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
 import { NETWORK_NOTICE_CHECKS, rowOf } from "./checks.mjs";
-import { NETWORK_NOTICES_TABLES, NETWORK_NOTICES_MINT_SEED, migrateNetworkNotices } from "./schema.mjs";
+import { NETWORK_NOTICES_TABLES, migrateNetworkNotices } from "./schema.mjs";
 import {
   DAY_MS, WEEK_MS, weekStartOf, weekLabel, weekStartFromLabel, dateOf, parseDate, ACTIVITY_WINDOW, ACTIVITY_METHOD,
   ACTIVITY_METHOD_VERSION, levelOf, SEAL_SLOTS, WEEK_SLOTS, SEAL_METHOD, leafHash, weekLeafHash, slotsFor, randomHex,
@@ -88,8 +90,6 @@ export const OUTWARD_ACT_WARNING = Object.freeze({
 export const CAUTION_TWO_OPEN = "two_open_without_published_work";
 /** R21: how the copy's own keys are labelled. */
 export const COPY_KEY_LABEL = "this copy's key";
-/** The statement kind a key probe signs (R1's instance-key refusal; provenance offers no other way to ask). */
-const PROBE_KIND = "civicos-working-on-probe/1";
 
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
 const WELL_FORMED = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
@@ -178,13 +178,10 @@ export class NetworkNotices {
     const ms = r && r.c ? Date.parse(r.c) : NaN;
     return Number.isFinite(ms) ? dateOf(ms) : null;
   }
-  /* R1: whether the instance key is bound: provenance R56 answers it only by signing, so a probe statement is signed
-     and discarded (it never reaches this module's tables). */
+  /* R1: whether the instance key is bound, asked of provenance R57, which signs nothing, so no key's `first_used` is
+     set before its first real statement. */
   async #keyBound() {
-    try {
-      const r = await this.provenance.instanceSign(instanceStatement(PROBE_KIND, sha256HexSync("")));
-      return !!(r && r.ok);
-    } catch { return false; }
+    try { return (await this.provenance.instanceKeyBound()) === true; } catch { return false; }
   }
   #anyPublishedEdition() {
     return !!this.#call(() => this.#one(`SELECT 1 AS x FROM published_cases WHERE ratified_at IS NOT NULL LIMIT 1`));
@@ -210,13 +207,23 @@ export class NetworkNotices {
 
   /* ================================================================ R1: the refusals, in order */
 
+  /* R1, R22: a project absent or invisible to `viewer` is membership's `noSuchProject`; a discoverable one `viewer`
+     sees only at existence is membership's C-70.1 (`existenceAct`, its R77; REC-149 (a)), asked first, as membership
+     asks it before its own absent answer; null when `viewer` sees the project whole. */
+  #sightRefusal(pid, viewer) {
+    if (!this.#isProject(pid)) return noSuchProject(pid);
+    const existence = this.#call(() => this.membership.existenceAct(pid, viewer));
+    if (existence && existence.ok === false) return existence;
+    return this.#call(() => this.membership.sight(pid, viewer)) === "full" ? null : noSuchProject(pid);
+  }
+
   /* R1's caller refusals (the project, the caller, the owner, closed, the slug, the key), in R1's order. `ctx` answers
      the project, the member and the slug. */
   async #callerRefusal({ project, by, viewer, final, notice }, op) {
     const pid = str(project);
     if (!pid) return { refusal: required(op, "project", "a project id") };
-    const sees = this.#isProject(pid) && this.#call(() => this.membership.sight(pid, str(viewer) || str(by))) === "full";
-    if (!sees) return { refusal: noSuchProject(pid) };
+    const sight = this.#sightRefusal(pid, str(viewer) || str(by));
+    if (sight) return { refusal: sight };
     /* DEC-49 REGION is-notice-caller */
     const member = this.#member(by);
     if (!str(by) || isMachineIdentity(by) || !member)
@@ -292,8 +299,7 @@ export class NetworkNotices {
     if (r && r.day === day && !this.#notice(r.id)) return r.id;
     /* K1145: drawn in record-core R6's shape and NOT recorded: the draw runs in a transaction rolled back at once,
        which takes the id back out of record-core's ledger (its R7), so prepare writes nothing durable. The post
-       records the notice in its own transaction; an id taken meanwhile answers NOTICE_STALE. Record-core offers no
-       service to record a chosen id, so the ledger learns it from this module's mint seed at the next boot (R40, R70). */
+       records it through record-core R75 in its own transaction (R4); an id spent meanwhile answers NOTICE_STALE. */
     let id = null;
     this.record.transact(() => {
       id = this.record.mintOpaqueId(NOTICE_ID_PREFIX, day.slice(0, 4), "", (x) => !!this.#notice(x));
@@ -376,14 +382,29 @@ export class NetworkNotices {
       const latest = this.#latestRevision(held.nid);
       if ((latest ? latest.revision : 0) !== held.n - 1 || (held.firstRevision && this.#notice(held.nid)))
         return refuse("NOTICE_STALE", "the notice moved since this was prepared: prepare again");
-      if (held.firstRevision) this.sql.exec(`INSERT INTO nn_notices (notice_id, project, opened_at) VALUES (?,?,?)`, held.nid, held.pid, at);
+      if (held.firstRevision) {
+        /* R4 (N503): the notice id enters record-core's ledger here, inside this transaction (its R75), so it is held
+           from this instant; one spent meanwhile (drawn, recorded or seeded) is refused and nothing is written. */
+        const rec = this.#call(() => this.record.recordOpaqueId(held.nid), null);
+        if (!rec || rec.ok !== true)
+          return refuse("NOTICE_STALE", "the notice id this was prepared with is already spent: prepare again",
+                        { opaque_id: rec ? rec.reason ?? null : null });
+        this.sql.exec(`INSERT INTO nn_notices (notice_id, project, opened_at) VALUES (?,?,?)`, held.nid, held.pid, at);
+      }
       this.sql.exec(`INSERT INTO nn_revisions (notice_id, revision, digest, json, status, signature, signer_key, published_at)
                      VALUES (?,?,?,?,?,?,?,?)`, held.nid, held.n, held.digest, held.text, held.revision.status,
                     String(signature), v.keyB64, at);
       this.#insertAttestation(held.nid, "posted", held.digest, att, signed, at);
       return { ok: true };
     });
-    if (!out || out.ok !== true) return out;
+    if (!out || out.ok !== true) {
+      /* R4: a spent notice id is never offered again: the next prepare draws a fresh one (record-core R6 skips it). */
+      if (out && "opaque_id" in out) {
+        this.#held.delete(`${member}\u0000${held.digest}`);
+        if (this.#reserved.get(held.pid)?.id === held.nid) this.#reserved.delete(held.pid);
+      }
+      return out;
+    }
     this.#held.delete(`${member}\u0000${held.digest}`);
     return { ok: true, notice: held.nid, revision: held.n, published_at: at,
              attestation: { kind: "posted", as_of: att.json.as_of, digest: att.digest, json: att.json } };
@@ -469,7 +490,6 @@ export class NetworkNotices {
   /* R12, R13: the monthly attestations (each month's first day UTC, while open), the closings and the lapses. */
   async attestTick(now = this.#nowMs()) {
     const nowMs = Number(now);
-    this.#observeKeys(nowMs);
     const out = { monthly: [], missed: [], closed: [], lapsed: [], openings: [] };
     const month = monthOf(nowMs), monthStart = monthStartOf(nowMs);
     const checkClosed = this.#closedCheckDay !== dateOf(nowMs);
@@ -526,38 +546,66 @@ export class NetworkNotices {
       return null;
     } catch { return null; }
   }
-  /** Its next wake: the next UTC day while a notice is open or an opening waits, else the next month's first day. */
+  /** R17 (N507): its next wake, the next UTC day (the day's closing check, a month's first day, a retried opening)
+   *  while a notice is open or an opening is kept; null when neither, so an idle instance holds no timer (scheduler
+   *  R15). A notice posted later, or an opening kept, is what wakes it again. */
   attestWake(now = this.#nowMs()) {
     try {
       const nowMs = Number(now);
-      const busy = this.#rows(`SELECT notice_id FROM nn_notices`).some((n) => this.#status(n.notice_id) === "open")
-        || !!this.#one(`SELECT 1 AS x FROM nn_open_requests WHERE settled_at IS NULL`);
-      return busy ? Math.floor(nowMs / DAY_MS) * DAY_MS + DAY_MS : nextMonthStart(nowMs);
+      const busy = !!this.#one(`SELECT 1 AS x FROM nn_open_requests WHERE settled_at IS NULL`)
+        || this.#rows(`SELECT notice_id FROM nn_notices`).some((n) => this.#status(n.notice_id) === "open");
+      return busy ? Math.floor(nowMs / DAY_MS) * DAY_MS + DAY_MS : null;
     } catch { return null; }
   }
 
   /* ================================================================ the seals (R14–R16) */
 
-  /* The weeks still to seal at `nowMs`: from the week after the last sealed one to the last complete week; on the first
-     run, the last complete week alone (weeks before this module shipped cannot be proven). At most eight per tick. */
+  /* The first week not yet sealed at `nowMs`: the week after the last sealed one; on the first run, the last complete
+     week (weeks before this module shipped cannot be proven). */
+  #sealFrom(nowMs) {
+    const done = this.#rows(`SELECT week FROM nn_week_roots`).map((r) => weekStartFromLabel(r.week)).filter((x) => x !== null);
+    return done.length ? Math.max(...done) + WEEK_MS : weekStartOf(nowMs) - WEEK_MS;
+  }
+  /* The weeks still to seal at `nowMs`: from `#sealFrom` to the last complete week, at most eight per tick. */
   #weeksToSeal(nowMs) {
     const lastComplete = weekStartOf(nowMs) - WEEK_MS;
-    const done = this.#rows(`SELECT week FROM nn_week_roots`).map((r) => weekStartFromLabel(r.week)).filter((x) => x !== null);
-    const from = done.length ? Math.max(...done) + WEEK_MS : lastComplete;
     const out = [];
-    for (let s = from; s <= lastComplete && out.length < 8; s += WEEK_MS) out.push(s);
+    for (let s = this.#sealFrom(nowMs); s <= lastComplete && out.length < 8; s += WEEK_MS) out.push(s);
     return out;
   }
-  /** R14: due now when a complete week is unsealed; else null. */
-  sealDue(now = this.#nowMs()) { try { return this.#weeksToSeal(Number(now)).length ? Number(now) : null; } catch { return null; } }
-  /** R14: the next wake, the start of the next week. */
-  sealWake(now = this.#nowMs()) { return weekStartOf(Number(now)) + WEEK_MS; }
+  /* R14 (N507): when the next seal falls due. The earliest member act (R8) not yet sealed, on a project that is not
+     `closed`: in a complete week, it is due now; in the week under way, at that week's end; with none, null. Acts are
+     read in order of their instant, so the first that qualifies decides. */
+  #sealNext(nowMs) {
+    const from = this.#sealFrom(nowMs), current = weekStartOf(nowMs);
+    const projects = new Map();
+    const live = (pid) => {
+      if (!projects.has(pid)) projects.set(pid, !!pid && this.#isProject(pid) && !this.#closed(pid));
+      return projects.get(pid);
+    };
+    for (const r of this.sql.exec(`SELECT m.created, m.author, m.writer, b.bundle_id, b.object_type, b.project
+                                     FROM manifest m JOIN bundles b ON b.bundle_id = m.bundle_id
+                                    WHERE m.created >= ? AND (b.object_type = 'project' OR b.project IS NOT NULL)
+                                    ORDER BY m.created, m.rowid`, this.#stamp(Math.max(0, from - 1000)))) {
+      const t = Date.parse(r.created);
+      if (!Number.isFinite(t) || t < from || !str(r.author) || isMachineIdentity(r.author) || r.writer === "mechanical") continue;
+      if (!live(r.object_type === "project" ? r.bundle_id : r.project)) continue;
+      return t < current ? nowMs : weekStartOf(t) + WEEK_MS;
+    }
+    return null;
+  }
+  /** R14: due now when a complete week holds a member act not yet sealed; else null. */
+  sealDue(now = this.#nowMs()) {
+    try { const n = Number(now); return this.#sealNext(n) === n ? n : null; } catch { return null; }
+  }
+  /** R14 (N507): the instant the next seal falls due, or null when the instance has nothing to seal, so an idle
+   *  instance holds no timer (scheduler R15). */
+  sealWake(now = this.#nowMs()) { try { return this.#sealNext(Number(now)); } catch { return null; } }
 
   /** R14, R15: seals each complete week's member acts for every project not closed, and timestamps the week's root
    *  once. Answers `{ok, sealed: [{week, projects, timestamped}]}`. */
   async sealTick(now = this.#nowMs()) {
     const nowMs = Number(now);
-    this.#observeKeys(nowMs);
     const sealed = [];
     for (const start of this.#weeksToSeal(nowMs)) {
       const week = weekLabel(start);
@@ -759,15 +807,6 @@ export class NetworkNotices {
              next: truncated ? btoa(JSON.stringify([last.notice_id, last.published_at, last.tie, last.n])) : null };
   }
 
-  /* R21: a signer key this copy first saw revoked, with the date it saw it (credentials keeps none). */
-  #observeKeys(nowMs) {
-    try {
-      for (const s of this.credentials.signerList().signers || [])
-        if (s.status === "revoked")
-          this.sql.exec(`INSERT OR IGNORE INTO nn_key_revocations (key_b64, seen_on) VALUES (?,?)`, s.key_b64, dateOf(nowMs));
-    } catch { /* a read that fails leaves the dates as they were */ }
-  }
-
   /** R21: the group slug, its owners' keys and the copy's keys, never a name, handle or member id. */
   groupKeysPublic() {
     const signed = new Set([
@@ -778,9 +817,11 @@ export class NetworkNotices {
     for (const s of this.#call(() => this.credentials.signerList().signers, []) || []) {
       const owns = this.#call(() => this.membership.ownsAnyProject(s.member_id), false);
       if (!owns && !signed.has(s.key_b64)) continue;
-      const seen = this.#one(`SELECT seen_on FROM nn_key_revocations WHERE key_b64=?`, s.key_b64);
+      /* R21 (N505): a revoked key's date is its own `status_at` (credentials R8, R21); null when that was never
+         recorded, never a date this copy saw it. */
+      const at = str(s.status_at);
       owners.push({ key: `ssh-ed25519 ${s.key_b64}`, status: s.attests ? "attests" : "revoked",
-                    ...(s.attests ? {} : { revoked_on: seen ? seen.seen_on : null }),
+                    ...(s.attests ? {} : { revoked_on: at && Number.isFinite(Date.parse(at)) ? dateOf(Date.parse(at)) : null }),
                     first_listed: str(s.added) ? String(s.added).slice(0, 10) : null });
     }
     const used = new Set(this.#rows(`SELECT DISTINCT key_id FROM nn_attestations`).map((r) => r.key_id));
@@ -796,7 +837,8 @@ export class NetworkNotices {
   noticesOf({ project = null, viewer = null } = {}) {
     const pid = str(project);
     if (!pid) return required("notices", "project", "a project id");
-    if (!this.#isProject(pid) || this.#call(() => this.membership.sight(pid, viewer)) !== "full") return noSuchProject(pid);
+    const sight = this.#sightRefusal(pid, viewer);
+    if (sight) return sight;
     const nowMs = this.#nowMs();
     const notices = this.#noticesOfProject(pid).map((n) => {
       const status = this.#status(n.notice_id);
@@ -859,8 +901,8 @@ for (const m of ["prepareNotice", "postNotice"]) {
 
 const instances = new WeakMap();
 
-/** K61: the one instance per host; at creation it creates and declares its tables (whole store only, R26) and
- *  registers its notice ids' mint seed (record-core R70). */
+/** K61: the one instance per host; at creation it creates and declares its tables (whole store only, R26). Its notice
+ *  ids enter record-core's ledger when posted (R4, record-core R75), so it registers no mint seed. */
 export function networkNoticesOf(host, deps) {
   let n = instances.get(host);
   if (!n) {
@@ -872,7 +914,6 @@ export function networkNoticesOf(host, deps) {
     instances.set(host, n);
     n.migrate();
     record.declarePurge("network-notices", NETWORK_NOTICES_TABLES.map((name) => ({ name, keys: [] })));
-    record.registerMintSeed("network-notices", NETWORK_NOTICES_MINT_SEED.map((x) => [...x]));
     /* public-read R18 (K1150): the reads served at the group's public address; the answer is kept, so a refused
        registration is seen. */
     const publicRead = d.publicRead || publicReadOf(host);
