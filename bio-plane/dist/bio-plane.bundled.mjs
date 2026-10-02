@@ -477,8 +477,8 @@ var deriveInquiryTitle = (question) => {
   if (flat === "") return null;
   if (flat.length <= 120) return flat;
   const cut4 = flat.slice(0, 120);
-  const at26 = cut4.lastIndexOf(" ");
-  return (at26 > 0 ? cut4.slice(0, at26) : cut4) + "\u2026";
+  const at27 = cut4.lastIndexOf(" ");
+  return (at27 > 0 ? cut4.slice(0, at27) : cut4) + "\u2026";
 };
 var inquiryQuestionOf = (markdown) => {
   const m = /\n## Question[^\S\n]*\n([\s\S]*?)(?=\n## |$)/.exec("\n" + String(markdown == null ? "" : markdown));
@@ -1457,22 +1457,22 @@ function grammarsOf(list2) {
   if (!Array.isArray(list2)) throw new TypeError("checkBundle: opts.grammars is a list of {module, ids, arm}");
   const byArm = /* @__PURE__ */ new Map(), rest = [], claimed = /* @__PURE__ */ new Map();
   list2.forEach((g, i) => {
-    const at26 = `checkBundle: opts.grammars[${i}]`;
-    if (!g || typeof g !== "object") throw new TypeError(`${at26} is not a {module, ids, arm} entry`);
-    if (typeof g.module !== "string" || g.module.trim() === "") throw new TypeError(`${at26} names no module`);
+    const at27 = `checkBundle: opts.grammars[${i}]`;
+    if (!g || typeof g !== "object") throw new TypeError(`${at27} is not a {module, ids, arm} entry`);
+    if (typeof g.module !== "string" || g.module.trim() === "") throw new TypeError(`${at27} names no module`);
     if (!Array.isArray(g.ids) || g.ids.length === 0 || !g.ids.every((id) => typeof id === "string" && GRAMMAR_ID_RE.test(id)))
-      throw new TypeError(`${at26} (${g.module}): ids is a non-empty list of C-ids`);
-    if (typeof g.arm !== "function") throw new TypeError(`${at26} (${g.module}): arm is not a function`);
+      throw new TypeError(`${at27} (${g.module}): ids is a non-empty list of C-ids`);
+    if (typeof g.arm !== "function") throw new TypeError(`${at27} (${g.module}): arm is not a function`);
     for (const id of g.ids) {
-      if (claimed.has(id)) throw new RangeError(`${at26} (${g.module}): ${id} is already claimed by ${claimed.get(id)}`);
+      if (claimed.has(id)) throw new RangeError(`${at27} (${g.module}): ${id} is already claimed by ${claimed.get(id)}`);
       claimed.set(id, g.module);
     }
     const touched = EXTENSION_ARMS.filter((a) => a.ids.some((id) => g.ids.includes(id)));
     if (touched.length > 1)
-      throw new RangeError(`${at26} (${g.module}): claims ids of ${touched.map((a) => a.name).join(" and ")}; one grammar replaces one arm`);
+      throw new RangeError(`${at27} (${g.module}): claims ids of ${touched.map((a) => a.name).join(" and ")}; one grammar replaces one arm`);
     const [arm] = touched;
     if (arm && !arm.ids.every((id) => g.ids.includes(id)))
-      throw new RangeError(`${at26} (${g.module}): claims part of ${arm.name}, whose ids are ${arm.ids.join(", ")}; an arm is claimed whole`);
+      throw new RangeError(`${at27} (${g.module}): claims part of ${arm.name}, whose ids are ${arm.ids.join(", ")}; an arm is claimed whole`);
     if (arm) byArm.set(arm.name, g);
     else rest.push(g);
   });
@@ -2163,9 +2163,9 @@ function renderCompanion(html, { resolve, classifyLink, primarySha, when }) {
   });
   const head = BANNER(primarySha, when) + `<meta http-equiv="Content-Security-Policy" content="${CSP}">
 `;
-  const at26 = src.search(/<head\b[^>]*>/i);
-  if (at26 !== -1) {
-    const end2 = src.indexOf(">", at26) + 1;
+  const at27 = src.search(/<head\b[^>]*>/i);
+  if (at27 !== -1) {
+    const end2 = src.indexOf(">", at27) + 1;
     return src.slice(0, end2) + "\n" + head + src.slice(end2);
   }
   return head + src;
@@ -2259,13 +2259,13 @@ function partFetchSpread(records) {
     if (!r || !r.ok) continue;
     parts++;
     const clock = r.fetched_this_capture === false ? "record" : "capture";
-    const at26 = r[SPREAD_CLOCKS[clock].instant];
-    const ms2 = typeof at26 === "string" ? Date.parse(at26) : NaN;
+    const at27 = r[SPREAD_CLOCKS[clock].instant];
+    const ms2 = typeof at27 === "string" ? Date.parse(at27) : NaN;
     if (!Number.isFinite(ms2)) {
       undetermined++;
       continue;
     }
-    acc[clock].push([ms2, at26]);
+    acc[clock].push([ms2, at27]);
   }
   const clocks = {};
   for (const k of Object.keys(acc)) {
@@ -2435,7 +2435,7 @@ async function captureSubresources({
     discovered++;
     const cls = classifyRef(item.ref, item.against, isPublic);
     if (item.depth === 1 && !refToUrl.has(item.ref)) refToUrl.set(item.ref, cls.ok ? cls.url : null);
-    const at26 = stamp2();
+    const at27 = stamp2();
     const org = cls.ok ? originOf(cls.url, baseHost) : { origin: "unknown", host: null };
     const stem = {
       url: cls.ok ? cls.url : item.ref,
@@ -2448,7 +2448,7 @@ async function captureSubresources({
       ...org,
       ...item.family ? { family: item.family, family_size: item.family_size } : {},
       ...item.evidentiary_prior ? { evidentiary_prior: item.evidentiary_prior } : {},
-      considered_at: at26
+      considered_at: at27
     };
     if (!cls.ok) {
       settle(item, {
@@ -2574,7 +2574,7 @@ async function captureSubresources({
       if (known) rec_noreuse(stem, dec2);
     }
     attempted++;
-    const fetchedAt = at26;
+    const fetchedAt = at27;
     let r, limited = false;
     try {
       r = await fetchOne(cls.url);
@@ -5219,10 +5219,10 @@ async function inflateRaw(u8, limit) {
       chunks.push(value);
     }
     const bytes2 = new Uint8Array(total);
-    let at26 = 0;
+    let at27 = 0;
     for (const c of chunks) {
-      bytes2.set(c, at26);
-      at26 += c.length;
+      bytes2.set(c, at27);
+      at27 += c.length;
     }
     return { bytes: bytes2 };
   } catch {
@@ -6084,8 +6084,8 @@ async function docxStructure(parts) {
     const name2 = normalizePartName(entry.name);
     if (!name2.startsWith(EMBEDDINGS_DIR) || name2 === EMBEDDINGS_DIR) continue;
     const rid = embeddingRids.get(name2) ?? null;
-    const at26 = rid != null && walk ? walk.ridUsage.get(rid) ?? null : null;
-    const source = at26 ? docParaRef(at26.para, at26.run) : null;
+    const at27 = rid != null && walk ? walk.ridUsage.get(rid) ?? null : null;
+    const source = at27 ? docParaRef(at27.para, at27.run) : null;
     const read2 = await readPart(parts.bytes, parts.container, name2);
     if (!read2.ok) {
       links.push(undeterminedRecord2(source, "embedded_part_unreadable", { part: name2, detail: read2.why }));
@@ -6123,7 +6123,7 @@ async function docxStructure(parts) {
     if (!parsed.ok) evUndetermined.push({ part: COMMENTS_PART, why: parsed.why });
     else {
       for (const c of parsed.comments) {
-        const at26 = walk && c.id != null ? walk.commentRefs.get(c.id) ?? null : null;
+        const at27 = walk && c.id != null ? walk.commentRefs.get(c.id) ?? null : null;
         items.push({
           kind: "comment",
           id: c.id,
@@ -6131,7 +6131,7 @@ async function docxStructure(parts) {
           date: c.date,
           initials: c.initials,
           text: c.text,
-          source: at26 ? docParaRef(at26.para, at26.run) : null
+          source: at27 ? docParaRef(at27.para, at27.run) : null
         });
       }
     }
@@ -7006,11 +7006,11 @@ function walkSlide(xml) {
   const open = [];
   let cur = null;
   let inText = false;
-  const noteRid = (attrs, at26 = shape >= 0 ? shape : null) => {
+  const noteRid = (attrs, at27 = shape >= 0 ? shape : null) => {
     for (const key of ["id", "embed", "link"]) {
       const v = attrs[key];
       if (typeof v === "string" && /^rId/.test(v) && !ridUsage.has(v))
-        ridUsage.set(v, at26);
+        ridUsage.set(v, at27);
     }
   };
   const skipped = mceSkipper();
@@ -8225,17 +8225,17 @@ function odtStructure(parts) {
     const markFor = /* @__PURE__ */ new Map();
     for (const mk of walk.marks) if (!markFor.has(mk.id)) markFor.set(mk.id, mk.para);
     for (const c of parseTrackedChanges(parts.contentXml)) {
-      const at26 = c.id != null ? markFor.get(c.id) : void 0;
+      const at27 = c.id != null ? markFor.get(c.id) : void 0;
       const item = {
         kind: "tracked-change",
         change: c.change,
         author: c.author,
         date: c.date,
-        source: at26 == null ? null : docParaRef(at26)
+        source: at27 == null ? null : docParaRef(at27)
       };
       if (c.change === "deletion") item.superseded = c.superseded;
       else item.text = c.id != null && inserted.has(c.id) ? inserted.get(c.id) : null;
-      if (at26 === void 0) item.why = "change_region_unmarked_in_body";
+      if (at27 === void 0) item.why = "change_region_unmarked_in_body";
       items.push(item);
     }
     for (const a of walk.annotations) {
@@ -11413,27 +11413,27 @@ function validateInto(p, errors) {
     else {
       const spans = /* @__PURE__ */ new Map();
       h.weekly.forEach((s, i) => {
-        const at26 = `${path}.weekly[${i}]`;
+        const at27 = `${path}.weekly[${i}]`;
         if (!isObj(s)) {
-          err(at26, "HOURS_INVALID", "a span is {day, open, close}");
+          err(at27, "HOURS_INVALID", "a span is {day, open, close}");
           return;
         }
-        fields(at26, s, ["day", "open", "close"]);
+        fields(at27, s, ["day", "open", "close"]);
         const day = WEEKDAYS.includes(s.day) ? s.day : null;
-        if (!day) err(`${at26}.day`, "HOURS_INVALID", `day is one of ${WEEKDAYS.join(", ")}`);
+        if (!day) err(`${at27}.day`, "HOURS_INVALID", `day is one of ${WEEKDAYS.join(", ")}`);
         const [o, c] = [minutes(s.open), minutes(s.close)];
-        if (o === null) err(`${at26}.open`, "HOURS_INVALID", "open is HH:MM, 24-hour");
-        if (c === null) err(`${at26}.close`, "HOURS_INVALID", "close is HH:MM, 24-hour");
+        if (o === null) err(`${at27}.open`, "HOURS_INVALID", "open is HH:MM, 24-hour");
+        if (c === null) err(`${at27}.close`, "HOURS_INVALID", "close is HH:MM, 24-hour");
         if (o === null || c === null) return;
         if (o >= c) {
-          err(at26, "HOURS_INVALID", "open is before close");
+          err(at27, "HOURS_INVALID", "open is before close");
           return;
         }
         if (!day) return;
         const prior = spans.get(day) || [];
         const clash = prior.find((p3) => o < p3.c && p3.o < c);
-        if (clash) err(at26, "HOURS_INVALID", `${day} ${s.open}\u2013${s.close} overlaps ${clash.at}`);
-        spans.set(day, [...prior, { o, c, at: at26 }]);
+        if (clash) err(at27, "HOURS_INVALID", `${day} ${s.open}\u2013${s.close} overlaps ${clash.at}`);
+        spans.set(day, [...prior, { o, c, at: at27 }]);
       });
     }
     statusBasis(path, h);
@@ -11464,57 +11464,57 @@ function validateInto(p, errors) {
   const origins = /* @__PURE__ */ new Set();
   const noPathHosts = /* @__PURE__ */ new Map();
   if (own2(p, "systems")) list2("systems", p.systems).forEach((s, i) => {
-    const at26 = `systems[${i}]`;
-    if (!entry(at26, s)) return;
-    fields(at26, s, ["origin", "name", "hosts", "path", "links", "republishes", "provenance_stated", "basis"]);
-    str21(`${at26}.origin`, s.origin, "origin");
+    const at27 = `systems[${i}]`;
+    if (!entry(at27, s)) return;
+    fields(at27, s, ["origin", "name", "hosts", "path", "links", "republishes", "provenance_stated", "basis"]);
+    str21(`${at27}.origin`, s.origin, "origin");
     if (isStr(s.origin)) origins.add(s.origin);
-    str21(`${at26}.name`, s.name, "name");
+    str21(`${at27}.name`, s.name, "name");
     if (!Array.isArray(s.hosts) || !s.hosts.length || !s.hosts.every((h) => isStr(h) && h === h.toLowerCase()))
-      err(`${at26}.hosts`, "VALUE_INVALID", "hosts is a non-empty list of lower-case host names");
-    if (own2(s, "path")) pattern(`${at26}.path`, s.path);
+      err(`${at27}.hosts`, "VALUE_INVALID", "hosts is a non-empty list of lower-case host names");
+    if (own2(s, "path")) pattern(`${at27}.path`, s.path);
     else if (Array.isArray(s.hosts)) {
-      for (const h of s.hosts) if (typeof h === "string") noPathHosts.set(h, at26);
+      for (const h of s.hosts) if (typeof h === "string") noPathHosts.set(h, at27);
     }
     if (own2(s, "links")) {
       if (!isObj(s.links) || !own2(s.links, "item") || !own2(s.links, "file"))
-        err(`${at26}.links`, "VALUE_INVALID", "links is {item, file}, two patterns");
+        err(`${at27}.links`, "VALUE_INVALID", "links is {item, file}, two patterns");
       else {
-        fields(`${at26}.links`, s.links, ["item", "file"]);
-        pattern(`${at26}.links.item`, s.links.item);
-        pattern(`${at26}.links.file`, s.links.file);
+        fields(`${at27}.links`, s.links, ["item", "file"]);
+        pattern(`${at27}.links.item`, s.links.item);
+        pattern(`${at27}.links.file`, s.links.file);
       }
     }
-    if (own2(s, "republishes") && typeof s.republishes !== "boolean") err(`${at26}.republishes`, "VALUE_INVALID", "true or false");
-    if (own2(s, "provenance_stated") && typeof s.provenance_stated !== "boolean") err(`${at26}.provenance_stated`, "VALUE_INVALID", "true or false");
-    basis(at26, s);
+    if (own2(s, "republishes") && typeof s.republishes !== "boolean") err(`${at27}.republishes`, "VALUE_INVALID", "true or false");
+    if (own2(s, "provenance_stated") && typeof s.provenance_stated !== "boolean") err(`${at27}.provenance_stated`, "VALUE_INVALID", "true or false");
+    basis(at27, s);
   });
   if (own2(p, "mixed_hosts")) list2("mixed_hosts", p.mixed_hosts).forEach((m, i) => {
-    const at26 = `mixed_hosts[${i}]`;
-    if (!entry(at26, m)) return;
-    fields(at26, m, ["host", "why", "basis"]);
-    if (!isStr(m.host) || m.host !== m.host.toLowerCase()) err(`${at26}.host`, "VALUE_INVALID", "a lower-case host name");
-    str21(`${at26}.why`, m.why, "why");
+    const at27 = `mixed_hosts[${i}]`;
+    if (!entry(at27, m)) return;
+    fields(at27, m, ["host", "why", "basis"]);
+    if (!isStr(m.host) || m.host !== m.host.toLowerCase()) err(`${at27}.host`, "VALUE_INVALID", "a lower-case host name");
+    str21(`${at27}.why`, m.why, "why");
     if (typeof m.host === "string" && noPathHosts.has(m.host))
-      err(`${at26}.host`, "HOST_CONFLICT", `${m.host} is mixed and also in ${noPathHosts.get(m.host)}, which has no path`);
-    basis(at26, m);
+      err(`${at27}.host`, "HOST_CONFLICT", `${m.host} is mixed and also in ${noPathHosts.get(m.host)}, which has no path`);
+    basis(at27, m);
   });
   const spaceForms = {};
   if (own2(p, "spaces")) {
     if (!isObj(p.spaces)) err("spaces", "VALUE_INVALID", "spaces is an object keyed by space");
     else for (const [name2, s] of Object.entries(p.spaces)) {
-      const at26 = `spaces.${name2}`;
+      const at27 = `spaces.${name2}`;
       if (!SPACES.includes(name2)) {
-        err(at26, "UNKNOWN_SPACE", `'${name2}' is not one of ${SPACES.join(", ")}`);
+        err(at27, "UNKNOWN_SPACE", `'${name2}' is not one of ${SPACES.join(", ")}`);
         continue;
       }
-      if (!entry(at26, s)) continue;
-      fields(at26, s, name2 === "enactment" ? ["label", "forms", "kinds"] : ["label", "forms"]);
-      str21(`${at26}.label`, s.label, "label");
+      if (!entry(at27, s)) continue;
+      fields(at27, s, name2 === "enactment" ? ["label", "forms", "kinds"] : ["label", "forms"]);
+      str21(`${at27}.label`, s.label, "label");
       const names = /* @__PURE__ */ new Set();
       spaceForms[name2] = /* @__PURE__ */ new Map();
-      list2(`${at26}.forms`, s.forms).forEach((f17, i) => {
-        const fa = `${at26}.forms[${i}]`;
+      list2(`${at27}.forms`, s.forms).forEach((f17, i) => {
+        const fa = `${at27}.forms[${i}]`;
         if (!entry(fa, f17)) return;
         fields(fa, f17, ["form", "pattern", "normal", "clean", "basis"]);
         str21(`${fa}.form`, f17.form, "form");
@@ -11546,8 +11546,8 @@ function validateInto(p, errors) {
         basis(fa, f17);
         if (isStr(f17.form) && re && normalOk) spaceForms[name2].set(f17.form, f17);
       });
-      if (name2 === "enactment" && own2(s, "kinds")) list2(`${at26}.kinds`, s.kinds).forEach((k, i) => {
-        const ka = `${at26}.kinds[${i}]`;
+      if (name2 === "enactment" && own2(s, "kinds")) list2(`${at27}.kinds`, s.kinds).forEach((k, i) => {
+        const ka = `${at27}.kinds[${i}]`;
         if (!entry(ka, k)) return;
         fields(ka, k, ["kind", "prefix", "floor", "basis"]);
         str21(`${ka}.kind`, k.kind, "kind");
@@ -11567,41 +11567,41 @@ function validateInto(p, errors) {
     }
   }
   if (own2(p, "crosswalks")) list2("crosswalks", p.crosswalks).forEach((x, i) => {
-    const at26 = `crosswalks[${i}]`;
-    if (!entry(at26, x)) return;
-    fields(at26, x, ["space", "forms", "pairs", "source", "basis"]);
-    if (!SPACES.includes(x.space)) err(`${at26}.space`, "UNKNOWN_SPACE", `'${String(x.space)}' is not a space`);
-    if (!own2(x, "source") || x.source === "" || x.source == null) err(`${at26}.source`, "CROSSWALK_UNSOURCED", "a crosswalk names the content hash of its capture");
-    else if (typeof x.source !== "string" || !HEX64.test(x.source)) err(`${at26}.source`, "VALUE_INVALID", "source is 64 hexadecimal characters");
+    const at27 = `crosswalks[${i}]`;
+    if (!entry(at27, x)) return;
+    fields(at27, x, ["space", "forms", "pairs", "source", "basis"]);
+    if (!SPACES.includes(x.space)) err(`${at27}.space`, "UNKNOWN_SPACE", `'${String(x.space)}' is not a space`);
+    if (!own2(x, "source") || x.source === "" || x.source == null) err(`${at27}.source`, "CROSSWALK_UNSOURCED", "a crosswalk names the content hash of its capture");
+    else if (typeof x.source !== "string" || !HEX64.test(x.source)) err(`${at27}.source`, "VALUE_INVALID", "source is 64 hexadecimal characters");
     const known = spaceForms[x.space] || /* @__PURE__ */ new Map();
     const forms = Array.isArray(x.forms) && x.forms.length === 2 ? x.forms : null;
-    if (!forms) err(`${at26}.forms`, "VALUE_INVALID", "forms is [a, b]");
+    if (!forms) err(`${at27}.forms`, "VALUE_INVALID", "forms is [a, b]");
     else forms.forEach((f17, j) => {
-      if (!known.has(f17)) err(`${at26}.forms[${j}]`, "CROSSWALK_FORM_UNKNOWN", `the space has no form '${String(f17)}'`);
+      if (!known.has(f17)) err(`${at27}.forms[${j}]`, "CROSSWALK_FORM_UNKNOWN", `the space has no form '${String(f17)}'`);
     });
-    list2(`${at26}.pairs`, x.pairs).forEach((pair, j) => {
+    list2(`${at27}.pairs`, x.pairs).forEach((pair, j) => {
       if (!Array.isArray(pair) || pair.length !== 2 || !pair.every((v) => typeof v === "string")) {
-        err(`${at26}.pairs[${j}]`, "VALUE_INVALID", "a pair is [value in form a, value in form b]");
+        err(`${at27}.pairs[${j}]`, "VALUE_INVALID", "a pair is [value in form a, value in form b]");
         return;
       }
       if (!forms) return;
       pair.forEach((v, n) => {
         const f17 = known.get(forms[n]);
-        if (f17 && applyForm(f17, v) == null) err(`${at26}.pairs[${j}][${n}]`, "CROSSWALK_VALUE_INVALID", `'${v}' is not a value in form '${forms[n]}'`);
+        if (f17 && applyForm(f17, v) == null) err(`${at27}.pairs[${j}][${n}]`, "CROSSWALK_VALUE_INVALID", `'${v}' is not a value in form '${forms[n]}'`);
       });
     });
-    basis(at26, x);
+    basis(at27, x);
   });
   if (own2(p, "vocabulary")) {
     if (!isObj(p.vocabulary)) err("vocabulary", "VALUE_INVALID", "vocabulary is an object keyed by vocabulary key");
     else for (const [key, entries] of Object.entries(p.vocabulary)) {
-      const at26 = `vocabulary.${key}`;
+      const at27 = `vocabulary.${key}`;
       if (!VOCABULARY.includes(key)) {
-        err(at26, "UNKNOWN_VOCABULARY", `'${key}' is not one of ${VOCABULARY.join(", ")}`);
+        err(at27, "UNKNOWN_VOCABULARY", `'${key}' is not one of ${VOCABULARY.join(", ")}`);
         continue;
       }
-      list2(at26, entries).forEach((e, i) => {
-        const ea = `${at26}[${i}]`;
+      list2(at27, entries).forEach((e, i) => {
+        const ea = `${at27}[${i}]`;
         if (!entry(ea, e)) return;
         if (key === "codes") {
           fields(ea, e, ["key", "label", "pattern", "basis"]);
@@ -11632,22 +11632,22 @@ function validateInto(p, errors) {
     }
   }
   if (own2(p, "search_terms")) list2("search_terms", p.search_terms).forEach((t, i) => {
-    const at26 = `search_terms[${i}]`;
-    if (!entry(at26, t)) return;
-    fields(at26, t, ["term", "basis"]);
-    str21(`${at26}.term`, t.term, "term");
-    basis(at26, t);
+    const at27 = `search_terms[${i}]`;
+    if (!entry(at27, t)) return;
+    fields(at27, t, ["term", "basis"]);
+    str21(`${at27}.term`, t.term, "term");
+    basis(at27, t);
   });
   const lawNames = /* @__PURE__ */ new Set();
   if (own2(p, "records_laws")) list2("records_laws", p.records_laws).forEach((l, i) => {
-    const at26 = `records_laws[${i}]`;
-    if (!entry(at26, l)) return;
-    fields(at26, l, ["level", "name", "citation", "basis"]);
-    if (!LAW_LEVELS.includes(l.level)) err(`${at26}.level`, "LEVEL_UNKNOWN", `level is one of ${LAW_LEVELS.join(", ")}`);
-    str21(`${at26}.name`, l.name, "name");
-    str21(`${at26}.citation`, l.citation, "citation");
+    const at27 = `records_laws[${i}]`;
+    if (!entry(at27, l)) return;
+    fields(at27, l, ["level", "name", "citation", "basis"]);
+    if (!LAW_LEVELS.includes(l.level)) err(`${at27}.level`, "LEVEL_UNKNOWN", `level is one of ${LAW_LEVELS.join(", ")}`);
+    str21(`${at27}.name`, l.name, "name");
+    str21(`${at27}.citation`, l.citation, "citation");
     if (isStr(l.name)) lawNames.add(l.name);
-    basis(at26, l);
+    basis(at27, l);
   });
   if (own2(p, "locale")) {
     const l = p.locale;
@@ -11669,66 +11669,66 @@ function validateInto(p, errors) {
   }
   const codeKeys = new Set(own2(p, "vocabulary") && isObj(p.vocabulary) && Array.isArray(p.vocabulary.codes) ? p.vocabulary.codes.filter(isObj).map((c) => c.key) : []);
   if (own2(p, "standard_sources")) list2("standard_sources", p.standard_sources).forEach((s, i) => {
-    const at26 = `standard_sources[${i}]`;
-    if (!entry(at26, s)) return;
-    fields(at26, s, ["source", "kind", "issuer", "level", "cite", "code", "basis"]);
-    str21(`${at26}.source`, s.source, "source");
-    str21(`${at26}.issuer`, s.issuer, "issuer");
+    const at27 = `standard_sources[${i}]`;
+    if (!entry(at27, s)) return;
+    fields(at27, s, ["source", "kind", "issuer", "level", "cite", "code", "basis"]);
+    str21(`${at27}.source`, s.source, "source");
+    str21(`${at27}.issuer`, s.issuer, "issuer");
     if (isStr(s.source)) lawNames.add(s.source);
-    if (!SOURCE_KINDS.includes(s.kind)) err(`${at26}.kind`, "SOURCE_KIND_UNKNOWN", `kind is one of ${SOURCE_KINDS.join(", ")}`);
-    if (!LAW_LEVELS.includes(s.level)) err(`${at26}.level`, "LEVEL_UNKNOWN", `every standard source has a level, one of ${LAW_LEVELS.join(", ")}`);
-    pattern(`${at26}.cite`, s.cite);
-    if (own2(s, "code") && !codeKeys.has(s.code)) err(`${at26}.code`, "CODE_UNKNOWN", `no vocabulary.codes entry has key '${String(s.code)}'`);
-    basis(at26, s);
+    if (!SOURCE_KINDS.includes(s.kind)) err(`${at27}.kind`, "SOURCE_KIND_UNKNOWN", `kind is one of ${SOURCE_KINDS.join(", ")}`);
+    if (!LAW_LEVELS.includes(s.level)) err(`${at27}.level`, "LEVEL_UNKNOWN", `every standard source has a level, one of ${LAW_LEVELS.join(", ")}`);
+    pattern(`${at27}.cite`, s.cite);
+    if (own2(s, "code") && !codeKeys.has(s.code)) err(`${at27}.code`, "CODE_UNKNOWN", `no vocabulary.codes entry has key '${String(s.code)}'`);
+    basis(at27, s);
   });
   const roles = /* @__PURE__ */ new Set();
   if (own2(p, "counterparties")) list2("counterparties", p.counterparties).forEach((c, i) => {
-    const at26 = `counterparties[${i}]`;
-    if (!entry(at26, c)) return;
-    fields(at26, c, ["role", "body", "level", "elected", "oversight", "hours", "basis"]);
-    str21(`${at26}.role`, c.role, "role");
-    str21(`${at26}.body`, c.body, "body");
+    const at27 = `counterparties[${i}]`;
+    if (!entry(at27, c)) return;
+    fields(at27, c, ["role", "body", "level", "elected", "oversight", "hours", "basis"]);
+    str21(`${at27}.role`, c.role, "role");
+    str21(`${at27}.body`, c.body, "body");
     if (isStr(c.role)) roles.add(c.role);
-    if (own2(c, "hours")) hours(`${at26}.hours`, c.hours);
-    if (!COUNTERPARTY_LEVELS.includes(c.level)) err(`${at26}.level`, "LEVEL_UNKNOWN", `level is one of ${COUNTERPARTY_LEVELS.join(", ")}`);
-    if (typeof c.elected !== "boolean") err(`${at26}.elected`, "VALUE_INVALID", "elected is true or false");
-    if (own2(c, "oversight") && typeof c.oversight !== "boolean") err(`${at26}.oversight`, "VALUE_INVALID", "oversight is true or false");
-    basis(at26, c);
+    if (own2(c, "hours")) hours(`${at27}.hours`, c.hours);
+    if (!COUNTERPARTY_LEVELS.includes(c.level)) err(`${at27}.level`, "LEVEL_UNKNOWN", `level is one of ${COUNTERPARTY_LEVELS.join(", ")}`);
+    if (typeof c.elected !== "boolean") err(`${at27}.elected`, "VALUE_INVALID", "elected is true or false");
+    if (own2(c, "oversight") && typeof c.oversight !== "boolean") err(`${at27}.oversight`, "VALUE_INVALID", "oversight is true or false");
+    basis(at27, c);
   });
   const kinds = /* @__PURE__ */ new Set();
   const tier3 = /* @__PURE__ */ new Set();
   const venueKinds = /* @__PURE__ */ new Set();
   const templateIds = /* @__PURE__ */ new Set();
   if (own2(p, "action_kinds")) list2("action_kinds", p.action_kinds).forEach((k, i) => {
-    const at26 = `action_kinds[${i}]`;
-    if (!entry(at26, k)) return;
-    fields(at26, k, ["kind", "label", "tier", "laws", "venue", "template", "advisory", "evidence", "basis"]);
-    if (typeof k.kind !== "string" || !KIND_RE.test(k.kind)) err(`${at26}.kind`, "KIND_INVALID", "kind matches ^[a-z][a-z0-9_]*$");
-    else if (kinds.has(k.kind)) err(`${at26}.kind`, "DUPLICATE_KIND", `'${k.kind}' is given twice`);
+    const at27 = `action_kinds[${i}]`;
+    if (!entry(at27, k)) return;
+    fields(at27, k, ["kind", "label", "tier", "laws", "venue", "template", "advisory", "evidence", "basis"]);
+    if (typeof k.kind !== "string" || !KIND_RE.test(k.kind)) err(`${at27}.kind`, "KIND_INVALID", "kind matches ^[a-z][a-z0-9_]*$");
+    else if (kinds.has(k.kind)) err(`${at27}.kind`, "DUPLICATE_KIND", `'${k.kind}' is given twice`);
     else {
       kinds.add(k.kind);
       if (k.tier === 3) tier3.add(k.kind);
     }
-    str21(`${at26}.label`, k.label, "label");
-    if (own2(k, "tier") && !TIERS.includes(k.tier)) err(`${at26}.tier`, "TIER_INVALID", "tier is 1, 2 or 3");
-    if (own2(k, "laws")) list2(`${at26}.laws`, k.laws).forEach((l, j) => {
-      if (!lawNames.has(l)) err(`${at26}.laws[${j}]`, "LAW_UNKNOWN", `no records_laws or standard_sources entry is named '${String(l)}'`);
+    str21(`${at27}.label`, k.label, "label");
+    if (own2(k, "tier") && !TIERS.includes(k.tier)) err(`${at27}.tier`, "TIER_INVALID", "tier is 1, 2 or 3");
+    if (own2(k, "laws")) list2(`${at27}.laws`, k.laws).forEach((l, j) => {
+      if (!lawNames.has(l)) err(`${at27}.laws[${j}]`, "LAW_UNKNOWN", `no records_laws or standard_sources entry is named '${String(l)}'`);
     });
     if (own2(k, "venue")) {
       const v = k.venue;
-      if (!isObj(v)) err(`${at26}.venue`, "VALUE_INVALID", "a venue is {name, how, basis}");
+      if (!isObj(v)) err(`${at27}.venue`, "VALUE_INVALID", "a venue is {name, how, basis}");
       else {
-        fields(`${at26}.venue`, v, ["name", "how", "hours", "basis"]);
-        str21(`${at26}.venue.name`, v.name, "name");
-        if (!VENUE_HOW.includes(v.how)) err(`${at26}.venue.how`, "VALUE_INVALID", `how is one of ${VENUE_HOW.join(", ")}`);
-        if (own2(v, "hours")) hours(`${at26}.venue.hours`, v.hours);
-        basis(`${at26}.venue`, v);
+        fields(`${at27}.venue`, v, ["name", "how", "hours", "basis"]);
+        str21(`${at27}.venue.name`, v.name, "name");
+        if (!VENUE_HOW.includes(v.how)) err(`${at27}.venue.how`, "VALUE_INVALID", `how is one of ${VENUE_HOW.join(", ")}`);
+        if (own2(v, "hours")) hours(`${at27}.venue.hours`, v.hours);
+        basis(`${at27}.venue`, v);
         if (typeof k.kind === "string") venueKinds.add(k.kind);
       }
     }
     if (own2(k, "template")) {
       const t = k.template;
-      const ta = `${at26}.template`;
+      const ta = `${at27}.template`;
       if (!isObj(t)) err(ta, "TEMPLATE_UNATTRIBUTED", `a template is {${TEMPLATE_FIELDS.join(", ")}}, never bare text`);
       else {
         fields(ta, t, TEMPLATE_FIELDS);
@@ -11779,12 +11779,12 @@ function validateInto(p, errors) {
       }
     }
     if (own2(k, "advisory")) {
-      if (!isStr(k.advisory)) err(`${at26}.advisory`, "VALUE_INVALID", "an advisory note is text");
-      if (k.tier !== 2) err(`${at26}.advisory`, "ADVISORY_NOT_TIER2", "an advisory note is given only on a Tier 2 kind");
+      if (!isStr(k.advisory)) err(`${at27}.advisory`, "VALUE_INVALID", "an advisory note is text");
+      if (k.tier !== 2) err(`${at27}.advisory`, "ADVISORY_NOT_TIER2", "an advisory note is given only on a Tier 2 kind");
     }
     if (own2(k, "evidence")) {
       const ev = k.evidence;
-      const ea = `${at26}.evidence`;
+      const ea = `${at27}.evidence`;
       if (!isObj(ev)) err(ea, "VALUE_INVALID", "evidence is {standard, accepts, contestable?, basis}");
       else {
         fields(ea, ev, ["standard", "accepts", "contestable", "basis"]);
@@ -11810,43 +11810,43 @@ function validateInto(p, errors) {
         basis(ea, ev);
       }
     }
-    basis(at26, k);
+    basis(at27, k);
   });
   if (own2(p, "deadlines")) list2("deadlines", p.deadlines).forEach((d, i) => {
-    const at26 = `deadlines[${i}]`;
-    if (!entry(at26, d)) return;
-    fields(at26, d, ["rule", "applies_to", "days", "count", "starts", "extension", "citation", "basis"]);
-    str21(`${at26}.rule`, d.rule, "rule");
+    const at27 = `deadlines[${i}]`;
+    if (!entry(at27, d)) return;
+    fields(at27, d, ["rule", "applies_to", "days", "count", "starts", "extension", "citation", "basis"]);
+    str21(`${at27}.rule`, d.rule, "rule");
     if (d.applies_to !== "claim" && !kinds.has(d.applies_to))
-      err(`${at26}.applies_to`, "DEADLINE_KIND_UNKNOWN", `'${String(d.applies_to)}' is neither claim nor a kind of this profile`);
-    if (!isPosInt(d.days)) err(`${at26}.days`, "VALUE_INVALID", "days is a positive integer");
-    if (!COUNTS.includes(d.count)) err(`${at26}.count`, "COUNT_UNKNOWN", "count is calendar or business");
-    if (!STARTS.includes(d.starts)) err(`${at26}.starts`, "VALUE_INVALID", `starts is one of ${STARTS.join(", ")}`);
+      err(`${at27}.applies_to`, "DEADLINE_KIND_UNKNOWN", `'${String(d.applies_to)}' is neither claim nor a kind of this profile`);
+    if (!isPosInt(d.days)) err(`${at27}.days`, "VALUE_INVALID", "days is a positive integer");
+    if (!COUNTS.includes(d.count)) err(`${at27}.count`, "COUNT_UNKNOWN", "count is calendar or business");
+    if (!STARTS.includes(d.starts)) err(`${at27}.starts`, "VALUE_INVALID", `starts is one of ${STARTS.join(", ")}`);
     if (own2(d, "extension")) {
       const x = d.extension;
-      if (!isObj(x)) err(`${at26}.extension`, "VALUE_INVALID", "an extension is {days, count, when}");
+      if (!isObj(x)) err(`${at27}.extension`, "VALUE_INVALID", "an extension is {days, count, when}");
       else {
-        fields(`${at26}.extension`, x, ["days", "count", "when"]);
-        if (!isPosInt(x.days)) err(`${at26}.extension.days`, "VALUE_INVALID", "days is a positive integer");
-        if (!COUNTS.includes(x.count)) err(`${at26}.extension.count`, "COUNT_UNKNOWN", "count is calendar or business");
-        str21(`${at26}.extension.when`, x.when, "when");
+        fields(`${at27}.extension`, x, ["days", "count", "when"]);
+        if (!isPosInt(x.days)) err(`${at27}.extension.days`, "VALUE_INVALID", "days is a positive integer");
+        if (!COUNTS.includes(x.count)) err(`${at27}.extension.count`, "COUNT_UNKNOWN", "count is calendar or business");
+        str21(`${at27}.extension.when`, x.when, "when");
       }
     }
-    str21(`${at26}.citation`, d.citation, "citation");
-    basis(at26, d);
+    str21(`${at27}.citation`, d.citation, "citation");
+    basis(at27, d);
   });
   if (own2(p, "legal_organisations")) list2("legal_organisations", p.legal_organisations).forEach((o, i) => {
-    const at26 = `legal_organisations[${i}]`;
-    if (!entry(at26, o)) return;
-    fields(at26, o, ["name", "evaluates", "contacts", "basis"]);
-    str21(`${at26}.name`, o.name, "name");
-    if (!Array.isArray(o.evaluates) || !o.evaluates.length) err(`${at26}.evaluates`, "VALUE_INVALID", "evaluates is a non-empty list of Tier 3 kinds");
+    const at27 = `legal_organisations[${i}]`;
+    if (!entry(at27, o)) return;
+    fields(at27, o, ["name", "evaluates", "contacts", "basis"]);
+    str21(`${at27}.name`, o.name, "name");
+    if (!Array.isArray(o.evaluates) || !o.evaluates.length) err(`${at27}.evaluates`, "VALUE_INVALID", "evaluates is a non-empty list of Tier 3 kinds");
     else o.evaluates.forEach((k, j) => {
-      if (!tier3.has(k)) err(`${at26}.evaluates[${j}]`, "ORG_KIND_UNKNOWN", `'${String(k)}' is not a Tier 3 kind of this profile`);
+      if (!tier3.has(k)) err(`${at27}.evaluates[${j}]`, "ORG_KIND_UNKNOWN", `'${String(k)}' is not a Tier 3 kind of this profile`);
     });
-    if (!Array.isArray(o.contacts) || !o.contacts.length) err(`${at26}.contacts`, "CONTACT_INVALID", "contacts is a non-empty list of {how, value}");
+    if (!Array.isArray(o.contacts) || !o.contacts.length) err(`${at27}.contacts`, "CONTACT_INVALID", "contacts is a non-empty list of {how, value}");
     else o.contacts.forEach((c, j) => {
-      const ca = `${at26}.contacts[${j}]`;
+      const ca = `${at27}.contacts[${j}]`;
       if (!isObj(c)) {
         err(ca, "CONTACT_INVALID", "a contact is {how, value}");
         return;
@@ -11855,23 +11855,23 @@ function validateInto(p, errors) {
       if (!CONTACT_HOW.includes(c.how)) err(`${ca}.how`, "CONTACT_INVALID", `how is one of ${CONTACT_HOW.join(", ")}`);
       if (!isStr(c.value)) err(`${ca}.value`, "CONTACT_INVALID", "the value is a non-empty string");
     });
-    basis(at26, o);
+    basis(at27, o);
   });
   if (own2(p, "holidays")) {
     const years = /* @__PURE__ */ new Set();
     list2("holidays", p.holidays).forEach((h, i) => {
-      const at26 = `holidays[${i}]`;
-      if (!entry(at26, h)) return;
-      fields(at26, h, ["year", "offices", "days", "status", "basis"]);
+      const at27 = `holidays[${i}]`;
+      if (!entry(at27, h)) return;
+      fields(at27, h, ["year", "offices", "days", "status", "basis"]);
       let key = "";
       if (own2(h, "offices")) {
         if (!Array.isArray(h.offices) || !h.offices.length) {
-          err(`${at26}.offices`, "HOLIDAY_INVALID", "offices is a non-empty list of roles or {venue: <kind>}");
+          err(`${at27}.offices`, "HOLIDAY_INVALID", "offices is a non-empty list of roles or {venue: <kind>}");
           key = `${i}`;
         } else {
           const seenOffices = /* @__PURE__ */ new Set();
           h.offices.forEach((o, j) => {
-            const oa = `${at26}.offices[${j}]`;
+            const oa = `${at27}.offices[${j}]`;
             const k = officeKey(o);
             if (typeof o === "string") {
               if (!roles.has(o)) err(oa, "HOLIDAY_INVALID", `no counterparty of this profile has role '${o}'`);
@@ -11887,16 +11887,16 @@ function validateInto(p, errors) {
           key = officesKey(h.offices);
         }
       }
-      if (!isYear(h.year)) err(`${at26}.year`, "HOLIDAY_INVALID", "year is a four-digit year");
+      if (!isYear(h.year)) err(`${at27}.year`, "HOLIDAY_INVALID", "year is a four-digit year");
       else if (years.has(`${h.year}\0${key}`)) err(
-        `${at26}.year`,
+        `${at27}.year`,
         "HOLIDAY_INVALID",
         `${h.year} is listed twice for ${key ? "the same offices" : "all offices"}`
       );
       else years.add(`${h.year}\0${key}`);
       const dates = /* @__PURE__ */ new Set();
-      list2(`${at26}.days`, h.days).forEach((d, j) => {
-        const da = `${at26}.days[${j}]`;
+      list2(`${at27}.days`, h.days).forEach((d, j) => {
+        const da = `${at27}.days[${j}]`;
         if (!entry(da, d)) return;
         fields(da, d, ["date", "name"]);
         if (!isDate(d.date)) err(`${da}.date`, "HOLIDAY_INVALID", "a date is a real YYYY-MM-DD");
@@ -11905,7 +11905,7 @@ function validateInto(p, errors) {
         else dates.add(d.date);
         str21(`${da}.name`, d.name, "name");
       });
-      statusBasis(at26, h);
+      statusBasis(at27, h);
     });
   }
 }
@@ -11945,9 +11945,9 @@ var tag = (e, profile) => ({ ...clone(e), profile, bases: [{ profile, basis: e.b
 function union(into, entries, profile) {
   for (const e of entries || []) {
     const k = canon(e);
-    const at26 = into.find((x) => x.__k === k);
-    if (at26) {
-      if (!at26.bases.some((b) => b.profile === profile && b.basis === e.basis)) at26.bases.push({ profile, basis: e.basis });
+    const at27 = into.find((x) => x.__k === k);
+    if (at27) {
+      if (!at27.bases.some((b) => b.profile === profile && b.basis === e.basis)) at27.bases.push({ profile, basis: e.basis });
     } else into.push(Object.assign(tag(e, profile), { __k: k }));
   }
 }
@@ -12005,7 +12005,7 @@ function combineInner(listIn) {
 }
 function merge(profiles) {
   const conflicts = [];
-  const conflict = (at26, values, says) => conflicts.push({ at: at26, values, says });
+  const conflict = (at27, values, says) => conflicts.push({ at: at27, values, says });
   const view = {
     id: profiles.map((p) => p.id).join("+"),
     name: profiles.map((p) => p.name).join("; "),
@@ -12489,13 +12489,13 @@ var CONNECTION = { REFERENTIAL: "referential", TEMPORAL: "temporal" };
 function referential(from, to, relation, why) {
   return { connection: CONNECTION.REFERENTIAL, from, to, relation, why };
 }
-function temporal(from, to, relation, { at: at26, expected_by, why } = {}) {
+function temporal(from, to, relation, { at: at27, expected_by, why } = {}) {
   return {
     connection: CONNECTION.TEMPORAL,
     from,
     to,
     relation,
-    at: at26 || null,
+    at: at27 || null,
     expected_by: expected_by || null,
     why
   };
@@ -13424,13 +13424,13 @@ function memoHeader(flat) {
       for (let c = b + 1; c < hits.length && hits[c].i - hits[a].i <= 250; c++)
         if (!seen.has(hits[c].k)) seen.set(hits[c].k, hits[c].i);
       const all = hits.map((h) => h.i);
-      const at26 = {};
+      const at27 = {};
       for (const [k, i] of seen) {
         const next = all.find((x) => x > i);
         const rest = flat.slice(i, next != null ? Math.min(next, i + 200) : i + 160).replace(/^\s*\w+\s*:\s*/, "");
-        at26[k.toLowerCase()] = rest.trim() || null;
+        at27[k.toLowerCase()] = rest.trim() || null;
       }
-      return { fields: at26, labels: seen.size, span: hits[b].i - hits[a].i, at: hits[a].i };
+      return { fields: at27, labels: seen.size, span: hits[b].i - hits[a].i, at: hits[a].i };
     }
   }
   return null;
@@ -14190,7 +14190,7 @@ async function assess(before, after, ctx) {
     });
   };
   const textBefore = pipelineText(before);
-  const read2 = (t, at26) => dt.type.parse({ ...ctx, text: t, handler: id.handler, at: at26 });
+  const read2 = (t, at27) => dt.type.parse({ ...ctx, text: t, handler: id.handler, at: at27 });
   let a, b, m;
   try {
     a = read2(textBefore, ctx.before_at);
@@ -14768,11 +14768,11 @@ function readHttpDate(s) {
   const timestamp = `${yyyy}${p2(MONTHS2.indexOf(mon) + 1)}${dd}${hh}${mi}${ss}`;
   return { timestamp, archived_at: cdxTimestampToIso(timestamp) };
 }
-function acceptDatetime(at26) {
+function acceptDatetime(at27) {
   let ms2 = NaN;
-  if (typeof at26 === "number") ms2 = at26;
-  else if (typeof at26 === "string" && /^\d{14}$/.test(at26)) ms2 = Date.parse(cdxTimestampToIso(at26));
-  else if (typeof at26 === "string" && /^\d{4}-\d{2}-\d{2}T/.test(at26)) ms2 = Date.parse(at26);
+  if (typeof at27 === "number") ms2 = at27;
+  else if (typeof at27 === "string" && /^\d{14}$/.test(at27)) ms2 = Date.parse(cdxTimestampToIso(at27));
+  else if (typeof at27 === "string" && /^\d{4}-\d{2}-\d{2}T/.test(at27)) ms2 = Date.parse(at27);
   if (!Number.isFinite(ms2)) return null;
   const d = new Date(ms2);
   if (Number.isNaN(d.getTime())) return null;
@@ -15573,7 +15573,7 @@ function originKey(u) {
     return null;
   }
 }
-function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at: at26, digests: digests2 = null }) {
+function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at: at27, digests: digests2 = null }) {
   if (!answer || typeof answer !== "object" || answer.ok !== true)
     return { ok: false, problem: `the renderer did not answer ok (${answer && answer.error ? String(answer.error).slice(0, 200) : "no answer"})` };
   if (typeof answer.html !== "string" || answer.html.length === 0)
@@ -15589,9 +15589,9 @@ function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at: a
   const pageHost = hostOf3(answer.navigated_to) || hostOf3(pageUrl);
   let requests = null, data = null, subresources = null;
   if (Array.isArray(answer.requests)) {
-    const at27 = new Map(answer.requests.map((r, i) => [r, i]));
+    const at28 = new Map(answer.requests.map((r, i) => [r, i]));
     const digestOf2 = (r) => {
-      const i = at27.get(r);
+      const i = at28.get(r);
       const d = Array.isArray(digests2) ? digests2[i] : null;
       if (d && (HEX643.test(String(d.sha256)) || d.sha256 === "undetermined")) return d;
       return {
@@ -15704,12 +15704,12 @@ function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at: a
     scripts_executed: scriptsExecuted,
     third_party_executed: thirdParty,
     asked: { viewport: asked.viewport, dpr: asked.dpr, locale: asked.locale, timezone: asked.timezone },
-    at: at26 || null,
+    at: at27 || null,
     undetermined
   };
   return { ok: true, render };
 }
-function renderedAuthority({ asserted, render, at: at26 }) {
+function renderedAuthority({ asserted, render, at: at27 }) {
   const reasons = [];
   if (!asserted) reasons.push("the served shell's own authority is undetermined: no assertion was supplied");
   if (!Array.isArray(render.data)) reasons.push("which origins supplied data is undetermined: the renderer did not record the page's requests");
@@ -15729,11 +15729,11 @@ function renderedAuthority({ asserted, render, at: at26 }) {
     return {
       authority_state: "determined",
       authority: asserted,
-      authority_basis: `asserted by the capturing caller at intake for the served shell, and the render drew data only from the page's own host with no script from another origin executed; ${at26}`
+      authority_basis: `asserted by the capturing caller at intake for the served shell, and the render drew data only from the page's own host with no script from another origin executed; ${at27}`
     };
   return {
     authority_state: "undetermined",
-    authority_basis: `rendered capture, ${at26}: ${reasons.join("; ")}. A person resolves this by an assertion carrying its basis (CLIENT-RENDERED.md, DESIGNED 2026-09-21 item 3).`,
+    authority_basis: `rendered capture, ${at27}: ${reasons.join("; ")}. A person resolves this by an assertion carrying its basis (CLIENT-RENDERED.md, DESIGNED 2026-09-21 item 3).`,
     authority_other_origins: Array.isArray(render.data) || Array.isArray(render.third_party_executed) ? [.../* @__PURE__ */ new Set([
       ...Array.isArray(render.data) ? render.data.filter((d) => d.origin !== "same_host").map((d) => originKey(d.address)).filter(Boolean) : [],
       ...Array.isArray(render.third_party_executed) ? render.third_party_executed : []
@@ -16403,13 +16403,13 @@ var RecordCore = class _RecordCore {
    *  head, never a GLOB built from the prefix: workerd refuses a pattern over 50 bytes (K313), and a
    *  prefix is the caller's, of any length and any characters. */
   seedMintLedger(sources = []) {
-    const at26 = (/* @__PURE__ */ new Date()).toISOString();
+    const at27 = (/* @__PURE__ */ new Date()).toISOString();
     for (const [prefix, table2, column] of [...sources, ...this.#mintSeeds.flatMap((r) => r.sources)]) {
       if (!IDENT.test(String(table2)) || !IDENT.test(String(column))) continue;
       const head = `${prefix}-`;
       this.#sql.exec(`INSERT OR IGNORE INTO minted_ids (id,recorded_at,source)
                       SELECT DISTINCT ${column}, ?, 'live' FROM ${table2}
-                       WHERE typeof(${column}) = 'text' AND substr(${column}, 1, length(?)) = ?`, at26, head, head);
+                       WHERE typeof(${column}) = 'text' AND substr(${column}, 1, length(?)) = ?`, at27, head, head);
     }
     const scopes = _RecordCore.UNTAILED_GATED_PREFIXES.map((p) => `${p}-[0-9][0-9][0-9][0-9]`);
     const inScope2 = (col) => scopes.map(() => `${col} GLOB ?`).join(" OR ");
@@ -16420,7 +16420,7 @@ var RecordCore = class _RecordCore {
                     SELECT s.scope || '-' || printf('%04d', n.i), ?, 'counter'
                       FROM seq s JOIN n ON n.i < s.next WHERE ${inScope2("s.scope")}`,
       ...scopes,
-      at26,
+      at27,
       ...scopes
     );
   }
@@ -16854,10 +16854,10 @@ var RecordCore = class _RecordCore {
     created,
     lastUpdated,
     criticality,
-    at: at26
+    at: at27
   }) {
     return this.transact(() => {
-      const now = at26 ?? (/* @__PURE__ */ new Date()).toISOString();
+      const now = at27 ?? (/* @__PURE__ */ new Date()).toISOString();
       const cur = this.#one(`SELECT row_version FROM bundles WHERE bundle_id=?`, bundleId);
       if (cur)
         for (const r of this.#rows(`SELECT path, content, blob_sha, sha256 FROM files WHERE bundle_id=?`, bundleId))
@@ -17728,11 +17728,11 @@ var HostGovernor = class {
     const host = hostOf(q7);
     if (!host) return { admitted: false, reason: "no host named" };
     const now = this.now();
-    const at26 = new Date(now).toISOString();
+    const at27 = new Date(now).toISOString();
     const r = this.#rowOrNew(host, now);
     const appetite = this.#appetite(r);
     if (r.cooloff_until > now) {
-      this.sql.exec(`UPDATE host_governor SET refused_total = refused_total + 1, updated_at = ? WHERE host = ?`, at26, host);
+      this.sql.exec(`UPDATE host_governor SET refused_total = refused_total + 1, updated_at = ? WHERE host = ?`, at27, host);
       return {
         admitted: false,
         reason: "cooling_off",
@@ -17748,7 +17748,7 @@ var HostGovernor = class {
         `UPDATE host_governor SET tokens = ?, refilled_at = ?, refused_total = refused_total + 1, updated_at = ? WHERE host = ?`,
         tokens2,
         now,
-        at26,
+        at27,
         host
       );
       return { admitted: false, reason: "appetite", retry_in_ms: retryIn };
@@ -17762,7 +17762,7 @@ var HostGovernor = class {
       tokens2 - 1,
       now,
       now + wait,
-      at26,
+      at27,
       host
     );
     return { admitted: true, wait_ms: wait, appetite_per_min: appetite };
@@ -17773,10 +17773,10 @@ var HostGovernor = class {
     if (!host) return { recorded: false };
     const s = Number(q7.status) || 0;
     const now = this.now();
-    const at26 = new Date(now).toISOString();
+    const at27 = new Date(now).toISOString();
     if (s >= 200 && s < 400) {
       this.#rowOrNew(host, now);
-      this.sql.exec(`UPDATE host_governor SET refusals = 0, updated_at = ? WHERE host = ?`, at26, host);
+      this.sql.exec(`UPDATE host_governor SET refusals = 0, updated_at = ? WHERE host = ?`, at27, host);
       return { recorded: true, refusals: 0 };
     }
     if (s === 429 || s === 403 || s === 503) {
@@ -17792,7 +17792,7 @@ var HostGovernor = class {
         now,
         s,
         cooloff,
-        at26,
+        at27,
         host
       );
       return { recorded: true, refusals, cooloff_until: cooloff, cooloff_ms: cooloff - now };
@@ -17832,8 +17832,8 @@ var HostGovernor = class {
   isHeld(host, now = this.now()) {
     if (typeof host !== "string" || host === "") return false;
     const r = this.#row(host);
-    const at26 = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : this.now();
-    return !!r && Number(r.cooloff_until) > at26;
+    const at27 = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : this.now();
+    return !!r && Number(r.cooloff_until) > at27;
   }
 };
 var OF = /* @__PURE__ */ new WeakMap();
@@ -18019,10 +18019,10 @@ function timestampRequest(sha256Hex13, nonceBytes) {
     nonce
   };
 }
-function readTlv(bytes2, at26) {
-  if (at26 + 2 > bytes2.length) return null;
-  const tag2 = bytes2[at26];
-  let i = at26 + 1, length = bytes2[i++];
+function readTlv(bytes2, at27) {
+  if (at27 + 2 > bytes2.length) return null;
+  const tag2 = bytes2[at27];
+  let i = at27 + 1, length = bytes2[i++];
   if (length & 128) {
     const count = length & 127;
     if (count === 0 || i + count > bytes2.length) return null;
@@ -18923,10 +18923,10 @@ var Membership = class _Membership {
     this.#revokedListeners.sort((a, b) => rank6(a.module) - rank6(b.module) || a.seq - b.seq);
     return { ok: true, module };
   }
-  #announceRevoked(memberId, by, at26) {
+  #announceRevoked(memberId, by, at27) {
     for (const l of this.#revokedListeners) {
       try {
-        const r = l.fn({ memberId, by: by ?? null, at: at26 });
+        const r = l.fn({ memberId, by: by ?? null, at: at27 });
         if (r && typeof r.then === "function") r.then(null, () => {
         });
       } catch {
@@ -19013,7 +19013,7 @@ var Membership = class _Membership {
       const bad = this.visibilitySettingRefusal(visibility, projectId);
       if (bad) return bad;
     }
-    const at26 = (/* @__PURE__ */ new Date()).toISOString();
+    const at27 = (/* @__PURE__ */ new Date()).toISOString();
     let owner = null;
     if (ownerId) {
       const claimed = this.projectClaimOwner({ projectId, memberId: ownerId });
@@ -19027,7 +19027,7 @@ var Membership = class _Membership {
         String(visibility),
         by ?? ownerId ?? "not recorded",
         "chosen at creation",
-        at26
+        at27
       );
     this.reindexProjectSight(projectId);
     return { ok: true, projectId, owner, setting: this.visibilityOf(projectId) };
@@ -19080,10 +19080,10 @@ var Membership = class _Membership {
         "NO_HOLDERS",
         "name who holds hosting access: the record keeps the group's answer as it was given, and an empty answer records nobody. Nothing was written."
       );
-    const at26 = (/* @__PURE__ */ new Date()).toISOString();
+    const at27 = (/* @__PURE__ */ new Date()).toISOString();
     const n = note === null || note === void 0 || String(note).trim() === "" ? null : String(note).slice(0, 280);
-    this.sql.exec(`INSERT INTO hosting_access (holders, note, recorded_by, at) VALUES (?,?,?,?)`, h, n, by, at26);
-    return { ok: true, holders: h, note: n, recorded_by: by, at: at26 };
+    this.sql.exec(`INSERT INTO hosting_access (holders, note, recorded_by, at) VALUES (?,?,?,?)`, h, n, by, at27);
+    return { ok: true, holders: h, note: n, recorded_by: by, at: at27 };
   }
   /* N70: BOUNDED, AND THE BOUND IS PUBLISHED (R48's shape): the history grows with every answer the group records, so
      `limit` is the cap applied (the caller may lower it, never raise it), `truncated` is measured by reading one row
@@ -19599,24 +19599,24 @@ var Membership = class _Membership {
       if (unknown) return unknown;
     }
     const why = reason === null || reason === void 0 || String(reason).trim() === "" ? null : String(reason).slice(0, 280);
-    const at26 = (/* @__PURE__ */ new Date()).toISOString();
+    const at27 = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(
       `INSERT INTO project_visibility (project_id, setting, set_by, reason, at) VALUES (?,?,?,?,?)`,
       projectId,
       want,
       by,
       why,
-      at26
+      at27
     );
     this.reindexProjectSight(projectId);
-    const lapsed = want === "hidden" ? this.#lapseJoinRequests(projectId, by, at26) : 0;
+    const lapsed = want === "hidden" ? this.#lapseJoinRequests(projectId, by, at27) : 0;
     return {
       ok: true,
       projectId,
       setting: want,
       set_by: by,
       reason: why,
-      at: at26,
+      at: at27,
       ...want === "hidden" ? { requests_lapsed: lapsed } : {}
     };
   }
@@ -19804,7 +19804,7 @@ var Membership = class _Membership {
   /* THE ONE STATEMENT THAT CLOSES A REQUEST. Every terminal state is written here, and only an OPEN row moves:
      the `WHERE state='open'` is what makes the closing fields write-once, so an answered request cannot be
      answered twice and a withdrawn one cannot then be granted. Returns the number of rows closed. */
-  #closeJoinRequests(projectId, memberId, state, by, comment, at26) {
+  #closeJoinRequests(projectId, memberId, state, by, comment, at27) {
     const before = this.#one(
       `SELECT COUNT(*) AS n FROM project_join_requests
                                WHERE project_id=? AND (? IS NULL OR member_id=?) AND state='open'`,
@@ -19818,15 +19818,15 @@ var Membership = class _Membership {
       state,
       by,
       comment,
-      at26,
+      at27,
       projectId,
       memberId,
       memberId
     );
     return before;
   }
-  #lapseJoinRequests(projectId, by, at26) {
-    return this.#closeJoinRequests(projectId, null, "lapsed", by, null, at26);
+  #lapseJoinRequests(projectId, by, at27) {
+    return this.#closeJoinRequests(projectId, null, "lapsed", by, null, at27);
   }
   static #requestComment(comment) {
     return comment === null || comment === void 0 || String(comment).trim() === "" ? null : String(comment).slice(0, 280);
@@ -19872,7 +19872,7 @@ var Membership = class _Membership {
         { asked: open.asked_at }
       );
     const c = _Membership.#requestComment(comment);
-    const at26 = (/* @__PURE__ */ new Date()).toISOString();
+    const at27 = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(
       `INSERT INTO project_join_requests (project_id, member_id, project_name, comment, asked_at, state)
        VALUES (?,?,?,?,?,'open')`,
@@ -19880,7 +19880,7 @@ var Membership = class _Membership {
       me.member_id,
       shown2,
       c,
-      at26
+      at27
     );
     return {
       ok: true,
@@ -19888,7 +19888,7 @@ var Membership = class _Membership {
       name: shown2,
       state: "open",
       comment: c,
-      asked: at26,
+      asked: at27,
       detail: "your request is open. The project's owners answer it; until they do it stays open."
     };
   }
@@ -19907,9 +19907,9 @@ var Membership = class _Membership {
         projectId,
         "you have no open request to join a project by that id, so there is nothing to withdraw. This answer is the same whatever that id names. Nothing was written."
       );
-    const at26 = (/* @__PURE__ */ new Date()).toISOString();
-    this.#closeJoinRequests(projectId, me.member_id, "withdrawn", me.member_id, null, at26);
-    return { ok: true, projectId, state: "withdrawn", closed: at26 };
+    const at27 = (/* @__PURE__ */ new Date()).toISOString();
+    this.#closeJoinRequests(projectId, me.member_id, "withdrawn", me.member_id, null, at27);
+    return { ok: true, projectId, state: "withdrawn", closed: at27 };
   }
   /** REC-150 — AN OWNER ANSWERS (§7.14 "Who answers"). Sight before position, as every roster act: a member at
    *  EXISTENCE gets C-70.1, a caller who cannot see the project the absent answer, and only then is ownership
@@ -19969,7 +19969,7 @@ var Membership = class _Membership {
         { handle: target.handle }
       );
     const c = _Membership.#requestComment(comment);
-    const at26 = (/* @__PURE__ */ new Date()).toISOString();
+    const at27 = (/* @__PURE__ */ new Date()).toISOString();
     if (want === "grant") {
       this.sql.exec(
         `INSERT INTO project_participants (project_id,member_id,state,owner,invited_by,created,updated)
@@ -19977,18 +19977,18 @@ var Membership = class _Membership {
         projectId,
         target.member_id,
         by,
-        at26,
-        at26
+        at27,
+        at27
       );
     }
-    this.#closeJoinRequests(projectId, target.member_id, want === "grant" ? "granted" : "declined", by, c, at26);
+    this.#closeJoinRequests(projectId, target.member_id, want === "grant" ? "granted" : "declined", by, c, at27);
     return {
       ok: true,
       projectId,
       handle: target.handle,
       state: want === "grant" ? "granted" : "declined",
       comment: c,
-      closed: at26,
+      closed: at27,
       ...want === "grant" ? {
         participation: "invited",
         detail: "granted as an invitation: the member is INVITED, and joins by the checkbox (\xA77.4)."
@@ -20283,7 +20283,7 @@ var Membership = class _Membership {
       detail: "an owner is not removed from a project by this action. Ownership changes by the section 7.10 process, and removal from the project follows once they are no longer an owner."
     };
     const why = comment === null || comment === void 0 ? null : String(comment).slice(0, 280);
-    const at26 = (/* @__PURE__ */ new Date()).toISOString();
+    const at27 = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(`DELETE FROM project_participants WHERE project_id=? AND member_id=?`, projectId, target.member_id);
     this.sql.exec(
       `INSERT INTO project_removals (project_id, member_id, removed_by, comment, at) VALUES (?,?,?,?,?)`,
@@ -20291,9 +20291,9 @@ var Membership = class _Membership {
       target.member_id,
       by,
       why,
-      at26
+      at27
     );
-    return { ok: true, projectId, handle, removed: true, comment: why, by, at: at26 };
+    return { ok: true, projectId, handle, removed: true, comment: why, by, at: at27 };
   }
   /** 7.10 addition. The sole owner may add a second unilaterally; every addition
    *  past that needs the consensus of ALL existing owners.
@@ -20852,9 +20852,9 @@ var Membership = class _Membership {
     );
   }
   /* R42: a carried ownership decision, kept with its deciders and reasons. */
-  #recordOwnerDecision(projectId, kind, target, deciders, reasons, at26) {
+  #recordOwnerDecision(projectId, kind, target, deciders, reasons, at27) {
     this.sql.exec(`INSERT INTO project_owner_decisions (project_id, kind, target, deciders, reasons, at)
-                   VALUES (?,?,?,?,?,?)`, projectId, kind, target, JSON.stringify(deciders), JSON.stringify(reasons), at26);
+                   VALUES (?,?,?,?,?,?)`, projectId, kind, target, JSON.stringify(deciders), JSON.stringify(reasons), at27);
   }
   /** The table, computed rather than transcribed, so the code and the document
    *  cannot drift. Exposed as an op because a UI must be able to tell a group
@@ -22242,7 +22242,7 @@ function signerTimestamp(v) {
   const m = SIGNER_TS_RE.exec(String(v || "").replace(/^"|"$/g, ""));
   return m ? `${m[1]}-${m[2]}-${m[3]}T${m[4] || "00"}:${m[5] || "00"}:${m[6] || "00"}Z` : null;
 }
-function signerKeysAt(text5, principal, at26) {
+function signerKeysAt(text5, principal, at27) {
   const out = [];
   for (const raw of String(text5 || "").split(/\r?\n/)) {
     const line = raw.trim();
@@ -22261,8 +22261,8 @@ function signerKeysAt(text5, principal, at26) {
     if (k + 1 >= toks.length || !principals.includes(principal)) continue;
     const after = options["valid-after"] ? signerTimestamp(options["valid-after"]) : null;
     const before = options["valid-before"] ? signerTimestamp(options["valid-before"]) : null;
-    if (after && at26 < after) continue;
-    if (before && at26 >= before) continue;
+    if (after && at27 < after) continue;
+    if (before && at27 >= before) continue;
     out.push(`${toks[k]} ${toks[k + 1]}`);
   }
   return out;
@@ -22274,8 +22274,8 @@ var REASON = {
   BAD_SIGNATURE: "bad_signature",
   CRYPTO_UNAVAILABLE: "crypto_unavailable"
 };
-async function verifyFor({ armored, message: message2, signersText, namespace, principal, at: at26 }) {
-  const keys = signerKeysAt(signersText, principal, at26);
+async function verifyFor({ armored, message: message2, signersText, namespace, principal, at: at27 }) {
+  const keys = signerKeysAt(signersText, principal, at27);
   if (!keys.length) return { ok: false, reason: "no_valid_key_for_principal" };
   const v = await verifySshsig(armored, message2, namespace, keys);
   return v.ok ? { ok: true } : { ok: false, reason: REASON[v.reason] || String(v.reason).toLowerCase() };
@@ -22532,17 +22532,17 @@ function appendStateHistory(text5, e) {
     `    blurb: "${e.blurb}"`,
     `    author: ${e.author}`
   ];
-  let at26 = -1;
+  let at27 = -1;
   for (let i = 1; i < end2; i++) if (/^state_history:/.test(lines[i])) {
-    at26 = i;
+    at27 = i;
     break;
   }
-  if (at26 === -1) return [...lines.slice(0, end2), "state_history:", ...block, ...lines.slice(end2)].join("\n");
-  const rest = lines[at26].slice("state_history:".length).trim();
-  if (rest === "[]") return [...lines.slice(0, at26), "state_history:", ...block, ...lines.slice(at26 + 1)].join("\n");
+  if (at27 === -1) return [...lines.slice(0, end2), "state_history:", ...block, ...lines.slice(end2)].join("\n");
+  const rest = lines[at27].slice("state_history:".length).trim();
+  if (rest === "[]") return [...lines.slice(0, at27), "state_history:", ...block, ...lines.slice(at27 + 1)].join("\n");
   if (rest !== "") return null;
-  let last = at26;
-  for (let i = at26 + 1; i < end2; i++) {
+  let last = at27;
+  for (let i = at27 + 1; i < end2; i++) {
     if (/^\s/.test(lines[i]) && lines[i].trim() !== "") last = i;
     else break;
   }
@@ -22560,9 +22560,9 @@ function setScalar(text5, key, value) {
   return text5;
 }
 function appendSessionLog(text5, entry) {
-  const at26 = text5.indexOf("## Session Log");
-  if (at26 < 0) return text5 + "\n## Session Log\n\n" + entry;
-  const nxt = text5.indexOf("\n## ", at26 + 1);
+  const at27 = text5.indexOf("## Session Log");
+  if (at27 < 0) return text5 + "\n## Session Log\n\n" + entry;
+  const nxt = text5.indexOf("\n## ", at27 + 1);
   const cutAt = nxt === -1 ? text5.length : nxt + 1;
   return text5.slice(0, cutAt) + entry + "\n" + text5.slice(cutAt);
 }
@@ -24830,7 +24830,7 @@ function bundleGate(col, viewer) {
 var ARCHIVE_VIA = "archive.org";
 var ARCHIVE_CAPTURE_GRADE = BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) + 1] ?? null;
 var DOORBELL_VIA = "doorbell";
-function chainFromEvidence(doc, { instanceName = "unnamed", at: at26 = null } = {}) {
+function chainFromEvidence(doc, { instanceName = "unnamed", at: at27 = null } = {}) {
   if (!doc || typeof doc !== "object")
     return { ok: false, missing: ["the document entry is not an object"] };
   const str21 = (v) => typeof v === "string" && v.trim() !== "" ? v.trim() : null;
@@ -24847,7 +24847,7 @@ function chainFromEvidence(doc, { instanceName = "unnamed", at: at26 = null } = 
   const tsrFile = tsr ? str21(tsr.token_file) : null;
   const tsrNote = tsrAuth && tsrFile ? `; RFC3161 token ${tsrFile} from ${tsrAuth} binds these bytes to their capture instant, not to the address` : "";
   const stamp2 = (from) => ({
-    at: at26 || secondOf((/* @__PURE__ */ new Date()).toISOString()),
+    at: at27 || secondOf((/* @__PURE__ */ new Date()).toISOString()),
     by: "op=provenancechain (REC-54)",
     basis: "derived from fields the capture record already held; no fact is asserted that the register did not carry",
     from
@@ -25362,7 +25362,7 @@ var Provenance = class _Provenance {
   #project(c) {
     const { pkg, bundleId, register: register2 } = c;
     const testimony = pkg && pkg[TESTIMONY_PATH] ? pkg[TESTIMONY_PATH] : null;
-    const at26 = this.#now();
+    const at27 = this.#now();
     for (const r of Array.isArray(register2) ? register2 : []) {
       if (!r || typeof r.sha256 !== "string") continue;
       const own3 = !!(testimony && testimony.captureSha === r.sha256);
@@ -25380,7 +25380,7 @@ var Provenance = class _Provenance {
         r.path,
         r.encoding ?? "utf8",
         r.bytes,
-        at26,
+        at27,
         own3 ? 1 : 0,
         own3 ? testimony.author : null,
         own3 ? testimony.observedAt : null
@@ -25991,7 +25991,7 @@ var Provenance = class _Provenance {
     const sys = String(system ?? "").replace(/[\p{Cc}]+/gu, " ").replace(/\s+/g, " ").trim();
     if (!sys || sys.length > 200)
       return actRefusal("ORIGIN_NO_SYSTEM", "name the system the document came from, in at most 200 characters");
-    const at26 = secondOf(this.#now());
+    const at27 = secondOf(this.#now());
     const seq = (this.#one(`SELECT COALESCE(MAX(seq), 0) AS m FROM origin_declarations WHERE bundle_id = ?`, bundleId).m || 0) + 1;
     this.#sql.exec(
       `INSERT INTO origin_declarations (bundle_id, seq, system, by, at) VALUES (?, ?, ?, ?, ?)`,
@@ -25999,9 +25999,9 @@ var Provenance = class _Provenance {
       seq,
       sys,
       who2,
-      at26
+      at27
     );
-    return { ok: true, bundleId, system: sys, by: who2, at: at26, seq };
+    return { ok: true, bundleId, system: sys, by: who2, at: at27, seq };
   }
   /** R30 — the standing declaration (the latest), or null. A reader of a document's origin asks this before any
    *  system derived from its host. */
@@ -26046,14 +26046,14 @@ sha256: ${captureSha}
     const key = await this.#key();
     if (!key) return null;
     const signature = b64(await crypto.subtle.sign({ name: "Ed25519" }, key.priv, te4.encode(statement)));
-    const at26 = this.#now();
+    const at27 = this.#now();
     this.#sql.exec(
       `INSERT OR IGNORE INTO receipt_keys (key_id, public_key, first_used) VALUES (?, ?, ?)`,
       key.keyId,
       key.pub,
-      at26
+      at27
     );
-    return { signature, key_id: key.keyId, public_key: key.pub, at: at26 };
+    return { signature, key_id: key.keyId, public_key: key.pub, at: at27 };
   }
   /** Signs and keeps the receipt for an archive-sourced capture. Answers `{ok, statement, signature, key_id,
    *  public_key}`, or `RECEIPT_NO_KEY` when no key is bound (stated, never a silent skip), or `RECEIPT_MALFORMED`. */
@@ -26200,7 +26200,7 @@ sha256: ${captureSha}
    *  SAME join and the SAME predicate as the rows — so a viewer cannot learn
    *  from a total that something was withheld. Nothing publishes how many rows
    *  the gate removed, because that count is the leak (REC-36). */
-  versionChain({ addressNorm = null, at: at26 = null, limit = null, offset = 0, viewer = null } = {}) {
+  versionChain({ addressNorm = null, at: at27 = null, limit = null, offset = 0, viewer = null } = {}) {
     const refuse8 = (key, detail) => {
       const row2 = VERSION_CHAIN_CHECKS[key];
       return { ok: false, reason: key, check: row2.check, translation: row2.translation, detail };
@@ -26211,11 +26211,11 @@ sha256: ${captureSha}
         "VERSION_CHAIN_NO_ADDRESS",
         "op=versionchain answers for ONE document address: pass address=<url>. The plane normalises it with the same normaliser the capture wrote it with, so the address you captured is the address that answers."
       );
-    const anchor = at26 == null ? "" : String(at26).trim().toLowerCase();
+    const anchor = at27 == null ? "" : String(at27).trim().toLowerCase();
     if (anchor && !/^[0-9a-f]{64}$/.test(anchor))
       return refuse8(
         "VERSION_CHAIN_BAD_ANCHOR",
-        `at=${JSON.stringify(String(at26).slice(0, 80))} is not a sha256. A version is anchored by the capture identity of its bytes, which is 64 hex characters.`
+        `at=${JSON.stringify(String(at27).slice(0, 80))} is not a sha256. A version is anchored by the capture identity of its bytes, which is 64 hex characters.`
       );
     const cap = Math.max(1, Math.min(
       VERSION_CHAIN_LIMIT_MAX,
@@ -26364,7 +26364,7 @@ sha256: ${captureSha}
     const docs = reg && Array.isArray(reg.documents) ? reg.documents : null;
     if (!docs)
       return { ok: false, reason: "NO_DOCUMENTS", detail: 'data/provenance.json must be {"documents": [...]}' };
-    const at26 = secondOf(this.#now());
+    const at27 = secondOf(this.#now());
     const instanceName = this.#instanceName;
     const report = [], refused2 = [];
     let changed = 0;
@@ -26374,7 +26374,7 @@ sha256: ${captureSha}
         report.push({ index: i, file: d.file ?? null, outcome: "already_recorded", hops: existing.length });
         return d;
       }
-      const built = chainFromEvidence(d, { instanceName, at: at26 });
+      const built = chainFromEvidence(d, { instanceName, at: at27 });
       if (!built.ok) {
         report.push({ index: i, file: (d && d.file) ?? null, outcome: "undetermined", missing: built.missing });
         refused2.push(i);
@@ -26430,7 +26430,7 @@ sha256: ${captureSha}
     const promoted = this.#promotion.promote({
       bundleId,
       base: seen.bundle_sha,
-      snapKey: `${at26.replace(/[-:]/g, "")}_${rand2(4)}`,
+      snapKey: `${at27.replace(/[-:]/g, "")}_${rand2(4)}`,
       author: who2,
       files: [{
         path: "data/provenance.json",
@@ -26601,7 +26601,7 @@ sha256: ${captureSha}
       documents.push({ index: i, file: (d && d.file) ?? null, outcome: "undetermined", missing: built.missing });
     }
     const finding3 = registerState !== "readable" || undetermined > 0 ? "LOOKED_INDETERMINATE" : "PRESENT";
-    const at26 = secondOf(this.#now());
+    const at27 = secondOf(this.#now());
     const docsJson = JSON.stringify(documents);
     const prev = this.#latestRouteMark(bundleId);
     const same = prev && prev.finding === finding3 && prev.register_state === registerState && prev.undetermined === undetermined && prev.documents_n === docs.length && prev.documents === docsJson;
@@ -26616,7 +26616,7 @@ sha256: ${captureSha}
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         bundleId,
         seq,
-        at26,
+        at27,
         who2,
         finding3,
         seen.current_state,
@@ -28033,11 +28033,11 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
     while (heldBytes >= PART || all && heldBytes > 0) {
       const n = Math.min(PART, heldBytes);
       const buf = new Uint8Array(n);
-      let at26 = 0;
-      while (at26 < n) {
-        const c = held[0], take = Math.min(c.length, n - at26);
-        buf.set(c.subarray(0, take), at26);
-        at26 += take;
+      let at27 = 0;
+      while (at27 < n) {
+        const c = held[0], take = Math.min(c.length, n - at27);
+        buf.set(c.subarray(0, take), at27);
+        at27 += take;
         if (take === c.length) held.shift();
         else held[0] = c.subarray(take);
       }
@@ -30282,12 +30282,12 @@ function coversSheetCell(e, container2) {
   const sheet = sheets.find((x) => x && typeof x.name === "string" && x.name === want);
   if (!sheet)
     return `this capture's workbook holds ${sheets.length} sheet(s) (${sheets.map((x) => x && typeof x.name === "string" ? x.name : "?").slice(0, 12).join(", ")}${sheets.length > 12 ? ", \u2026" : ""}) and the extent names a sheet called '${want.slice(0, 40)}'`;
-  const at26 = a1ToRowCol(e.cell);
-  if (!at26) return null;
-  if (Number.isInteger(sheet.rows) && sheet.rows > 0 && at26.row > sheet.rows)
-    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.rows} row(s) (1-${sheet.rows}) and the extent names row ${at26.row}`;
-  if (Number.isInteger(sheet.cols) && sheet.cols > 0 && at26.col > sheet.cols)
-    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.cols} column(s) and the extent names column ${at26.col}`;
+  const at27 = a1ToRowCol(e.cell);
+  if (!at27) return null;
+  if (Number.isInteger(sheet.rows) && sheet.rows > 0 && at27.row > sheet.rows)
+    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.rows} row(s) (1-${sheet.rows}) and the extent names row ${at27.row}`;
+  if (Number.isInteger(sheet.cols) && sheet.cols > 0 && at27.col > sheet.cols)
+    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.cols} column(s) and the extent names column ${at27.col}`;
   return null;
 }
 function coversDocPara(e, container2) {
@@ -30331,12 +30331,12 @@ function coversDocTable(e, container2) {
     return `this capture's document holds ${tables.length} table(s)${tables.length ? ` (0-${tables.length - 1})` : ""} and the extent names table ${e.table}`;
   if (typeof e.cell !== "string" || !e.cell.trim()) return null;
   const t = tables[e.table] || {};
-  const at26 = a1ToRowCol(e.cell);
-  if (!at26) return null;
-  if (Number.isInteger(t.rows) && t.rows > 0 && at26.row > t.rows)
-    return `table ${e.table} of this capture holds ${t.rows} row(s) (1-${t.rows}) and the extent names row ${at26.row}`;
-  if (Number.isInteger(t.cols) && t.cols > 0 && at26.col > t.cols)
-    return `table ${e.table} of this capture holds ${t.cols} column(s) and the extent names column ${at26.col}`;
+  const at27 = a1ToRowCol(e.cell);
+  if (!at27) return null;
+  if (Number.isInteger(t.rows) && t.rows > 0 && at27.row > t.rows)
+    return `table ${e.table} of this capture holds ${t.rows} row(s) (1-${t.rows}) and the extent names row ${at27.row}`;
+  if (Number.isInteger(t.cols) && t.cols > 0 && at27.col > t.cols)
+    return `table ${e.table} of this capture holds ${t.cols} column(s) and the extent names column ${at27.col}`;
   return null;
 }
 function coversImage(e, container2) {
@@ -31997,9 +31997,9 @@ function buildHuffman(counts, symbols) {
   return { maxcode, valptr, mincode, symbols: Uint8Array.from(symbols), fast, FAST };
 }
 var Bits = class {
-  constructor(d, at26) {
+  constructor(d, at27) {
     this.d = d;
-    this.p = at26;
+    this.p = at27;
     this.acc = 0;
     this.n = 0;
     this.marker = null;
@@ -32980,18 +32980,18 @@ function parseTableSegment(data) {
   return table(lines);
 }
 var TPGD_CONTEXT = [39717, 1941, 229, 405];
-function decodeGenericArith(mq, ctx, w, h, template, tpgdon, at26, skip = null) {
+function decodeGenericArith(mq, ctx, w, h, template, tpgdon, at27, skip = null) {
   const bm = bitmap(w, h);
   const D = bm.d;
   const nat = template === 0 ? 4 : 1;
   for (let i = 0; i < nat; i++) {
-    const ax = at26[2 * i], ay = at26[2 * i + 1];
+    const ax = at27[2 * i], ay = at27[2 * i + 1];
     if (ay > 0 || ay === 0 && ax >= 0) throw corrupt(`adaptive template pixel (${ax},${ay}) is not yet decoded`);
   }
   const px = (x, y) => x < 0 || x >= w || y < 0 ? 0 : D[y * w + x];
   let ltp = 0;
   const sltp = TPGD_CONTEXT[template];
-  const [a1x, a1y, a2x, a2y, a3x, a3y, a4x, a4y] = at26;
+  const [a1x, a1y, a2x, a2y, a3x, a3y, a4x, a4y] = at27;
   for (let y = 0; y < h; y++) {
     if (tpgdon) {
       ltp ^= mq.decode(ctx, sltp);
@@ -33370,17 +33370,17 @@ function decodeMmr(d, p, end2, w, h) {
   if (br.left >= 24 && br.peek(24) === 4097) br.skip(24);
   return { bm, end: Math.min(end2, Math.ceil(br.pos / 8)) };
 }
-function decodeRefinement(mq, ctx, w, h, template, ref, dx, dy, tpgron, at26) {
+function decodeRefinement(mq, ctx, w, h, template, ref, dx, dy, tpgron, at27) {
   const bm = bitmap(w, h);
   const D = bm.d, R4 = ref.d, rw = ref.w, rh = ref.h;
   if (template === 0) {
-    if (at26[1] > 0 || at26[1] === 0 && at26[0] >= 0) throw corrupt("refinement adaptive pixel is not yet decoded");
+    if (at27[1] > 0 || at27[1] === 0 && at27[0] >= 0) throw corrupt("refinement adaptive pixel is not yet decoded");
   }
   const g = (x, y) => x < 0 || x >= w || y < 0 || y >= h ? 0 : D[y * w + x];
   const r = (x, y) => x < 0 || x >= rw || y < 0 || y >= rh ? 0 : R4[y * rw + x];
   const ctxOf = template === 0 ? (x, y) => {
     const i = x - dx, j = y - dy;
-    return g(x - 1, y) | g(x + 1, y - 1) << 1 | g(x, y - 1) << 2 | g(x + at26[0], y + at26[1]) << 3 | r(i + 1, j + 1) << 4 | r(i, j + 1) << 5 | r(i - 1, j + 1) << 6 | r(i + 1, j) << 7 | r(i, j) << 8 | r(i - 1, j) << 9 | r(i + 1, j - 1) << 10 | r(i, j - 1) << 11 | r(i + at26[2], j + at26[3]) << 12;
+    return g(x - 1, y) | g(x + 1, y - 1) << 1 | g(x, y - 1) << 2 | g(x + at27[0], y + at27[1]) << 3 | r(i + 1, j + 1) << 4 | r(i, j + 1) << 5 | r(i - 1, j + 1) << 6 | r(i + 1, j) << 7 | r(i, j) << 8 | r(i - 1, j) << 9 | r(i + 1, j - 1) << 10 | r(i, j - 1) << 11 | r(i + at27[2], j + at27[3]) << 12;
   } : (x, y) => {
     const i = x - dx, j = y - dy;
     return g(x - 1, y) | g(x + 1, y - 1) << 1 | g(x, y - 1) << 2 | g(x - 1, y - 1) << 3 | r(i + 1, j + 1) << 4 | r(i, j + 1) << 5 | r(i + 1, j) << 6 | r(i, j) << 7 | r(i - 1, j) << 8 | r(i, j - 1) << 9;
@@ -33507,9 +33507,9 @@ function regionInfo(r) {
   return { w, h, x, y, op: flags & 7 };
 }
 function readAt(r, n) {
-  const at26 = [];
-  for (let i = 0; i < n; i++) at26.push(r.i8("an adaptive-template x"), r.i8("an adaptive-template y"));
-  return at26;
+  const at27 = [];
+  for (let i = 0; i < n; i++) at27.push(r.i8("an adaptive-template x"), r.i8("an adaptive-template y"));
+  return at27;
 }
 function readSegments(d, into, limit = d.length) {
   const r = new Reader(d, 0, limit);
@@ -33692,18 +33692,18 @@ function decodeGenericSegment(seg, r, info, used) {
     const { bm: bm2 } = decodeMmr(seg.data, r.p, seg.data.length, info.w, info.h);
     return bm2;
   }
-  const at26 = readAt(r, template === 0 ? 4 : 1);
+  const at27 = readAt(r, template === 0 ? 4 : 1);
   used.add(`generic region, arithmetic, template ${template}${tpgdon ? ", TPGDON" : ""}`);
   let end2 = seg.data.length;
   const mq = new MqDecoder(seg.data, r.p, end2);
-  const bm = decodeGenericArith(mq, mqContexts(1 << 16), info.w, info.h, template, tpgdon, at26);
+  const bm = decodeGenericArith(mq, mqContexts(1 << 16), info.w, info.h, template, tpgdon, at27);
   if (mq.overrun) throw truncated(`the generic region's arithmetic data ran out (${mq.overrun} bytes short)`);
   return bm;
 }
 function decodeRefinementSegment(seg, r, info, results, page, used) {
   const flags = r.u8("refinement region flags");
   const template = flags & 1, tpgron = flags >> 1 & 1;
-  const at26 = template === 0 ? readAt(r, 2) : [0, 0, 0, 0];
+  const at27 = template === 0 ? readAt(r, 2) : [0, 0, 0, 0];
   let ref;
   const inter = seg.refs.map((n) => results.get(n)).find((s) => s && s.kind === "region");
   if (inter) {
@@ -33714,7 +33714,7 @@ function decodeRefinementSegment(seg, r, info, results, page, used) {
   }
   used.add(`generic refinement region, template ${template}${tpgron ? ", TPGRON" : ""}`);
   const mq = new MqDecoder(seg.data, r.p, seg.data.length);
-  const bm = decodeRefinement(mq, mqContexts(1 << 13), info.w, info.h, template, ref, 0, 0, tpgron, at26);
+  const bm = decodeRefinement(mq, mqContexts(1 << 13), info.w, info.h, template, ref, 0, 0, tpgron, at27);
   if (mq.overrun) throw truncated(`the refinement region's arithmetic data ran out (${mq.overrun} bytes short)`);
   return bm;
 }
@@ -33726,7 +33726,7 @@ function decodeSymbolDict(seg, r, results, tables, used) {
   const template = flags >> 10 & 3, rTemplate = flags >> 12 & 1;
   if (ctxUsed) throw unsupported("reused bitmap coding contexts");
   if (huff && refagg) throw unsupported("Huffman-coded refinement");
-  const at26 = huff ? [] : readAt(r, template === 0 ? 4 : 1);
+  const at27 = huff ? [] : readAt(r, template === 0 ? 4 : 1);
   const rAt = refagg && rTemplate === 0 ? readAt(r, 2) : [0, 0, 0, 0];
   const numEx = r.u32("SDNUMEXSYMS"), numNew = r.u32("SDNUMNEWSYMS");
   const inSyms = referredSymbols(seg, results);
@@ -33792,7 +33792,7 @@ function decodeSymbolDict(seg, r, results, tables, used) {
         continue;
       }
       if (!refagg) {
-        newSyms.push(decodeGenericArith(mq, gb, symWidth, hcHeight, template, 0, at26));
+        newSyms.push(decodeGenericArith(mq, gb, symWidth, hcHeight, template, 0, at27));
         continue;
       }
       const nInst = intOrThrow(iaDecode(mq, ia.AI), "REFAGGNINST");
@@ -33941,9 +33941,9 @@ function decodePatternDict(seg, r, used) {
   let coll;
   if (mmr) coll = decodeMmr(seg.data, r.p, seg.data.length, w, ph).bm;
   else {
-    const at26 = template === 0 ? [-pw, 0, -3, -1, 2, -2, -2, -2] : [-pw, 0];
+    const at27 = template === 0 ? [-pw, 0, -3, -1, 2, -2, -2, -2] : [-pw, 0];
     const mq = new MqDecoder(seg.data, r.p, seg.data.length);
-    coll = decodeGenericArith(mq, mqContexts(1 << 16), w, ph, template, 0, at26);
+    coll = decodeGenericArith(mq, mqContexts(1 << 16), w, ph, template, 0, at27);
     if (mq.overrun) throw truncated("the pattern dictionary's arithmetic data ran out");
   }
   const pats = [];
@@ -33978,7 +33978,7 @@ function decodeHalftoneSegment(seg, r, info, results, used) {
   let bpp = 0;
   while (2 ** bpp < pats.length) bpp++;
   const planes = new Array(bpp);
-  const at26 = [template <= 1 ? 3 : 2, -1, -3, -1, 2, -2, -2, -2];
+  const at27 = [template <= 1 ? 3 : 2, -1, -3, -1, 2, -2, -2, -2];
   const d = seg.data;
   let mq = null, gb = null, p = r.p;
   if (!mmr) {
@@ -33990,7 +33990,7 @@ function decodeHalftoneSegment(seg, r, info, results, used) {
       const o = decodeMmr(d, p, d.length, gw, gh);
       planes[j] = o.bm;
       p = o.end;
-    } else planes[j] = decodeGenericArith(mq, gb, gw, gh, template, 0, at26, skip);
+    } else planes[j] = decodeGenericArith(mq, gb, gw, gh, template, 0, at27, skip);
     if (j < bpp - 1) for (let i = 0; i < planes[j].d.length; i++) planes[j].d[i] ^= planes[j + 1].d[i];
   }
   if (mq && mq.overrun) throw truncated("the halftone region's arithmetic data ran out");
@@ -34433,9 +34433,9 @@ function decodeCodeBlock(w, h, orient, numbps, lazyFrom, cblksty, segs, out, scr
   const vsc = cblksty & 8, lazy = cblksty & 1, reset = cblksty & 2, segsym = cblksty & 32;
   let bpno = numbps;
   let passtype = 2;
-  const at26 = (x, y) => (y + 1) * fw + x + 1;
+  const at27 = (x, y) => (y + 1) * fw + x + 1;
   const setSig = (x, y, neg) => {
-    const i = at26(x, y);
+    const i = at27(x, y);
     flags[i] |= SIG | (neg ? NEG : 0);
     flags[i - fw] |= S | (neg ? SGN_S : 0);
     flags[i + fw] |= N | (neg ? SGN_N : 0);
@@ -34456,7 +34456,7 @@ function decodeCodeBlock(w, h, orient, numbps, lazyFrom, cblksty, segs, out, scr
       const one3 = 1 << bpno, half = one3 >> 1, oneplushalf = one3 | half;
       if (passtype === 0) {
         for (let y0 = 0; y0 < h; y0 += 4) for (let x = 0; x < w; x++) for (let y = y0; y < y0 + 4 && y < h; y++) {
-          const i = at26(x, y), f17 = nbr(flags[i], y);
+          const i = at27(x, y), f17 = nbr(flags[i], y);
           if (f17 & SIG || !(f17 & NBR)) continue;
           const bit = raw ? rd.bit() : mq.decode(ctx, zc[f17 & NBR]);
           if (bit) {
@@ -34473,7 +34473,7 @@ function decodeCodeBlock(w, h, orient, numbps, lazyFrom, cblksty, segs, out, scr
         }
       } else if (passtype === 1) {
         for (let y0 = 0; y0 < h; y0 += 4) for (let x = 0; x < w; x++) for (let y = y0; y < y0 + 4 && y < h; y++) {
-          const i = at26(x, y), f17 = flags[i];
+          const i = at27(x, y), f17 = flags[i];
           if ((f17 & (SIG | VISIT)) !== SIG) continue;
           const bit = raw ? rd.bit() : mq.decode(ctx, f17 & REFINED ? CTX_MAG + 2 : nbr(f17, y) & NBR ? CTX_MAG + 1 : CTX_MAG);
           const v = out[y * w + x];
@@ -34486,14 +34486,14 @@ function decodeCodeBlock(w, h, orient, numbps, lazyFrom, cblksty, segs, out, scr
           if (y0 + 4 <= h) {
             let quiet = true;
             for (let k = 0; k < 4 && quiet; k++) {
-              const f17 = nbr(flags[at26(x, y0 + k)], y0 + k);
+              const f17 = nbr(flags[at27(x, y0 + k)], y0 + k);
               if (f17 & (SIG | VISIT | NBR)) quiet = false;
             }
             if (quiet) {
               if (!mq.decode(ctx, CTX_AGG)) continue;
               const k = mq.decode(ctx, CTX_UNI) << 1 | mq.decode(ctx, CTX_UNI);
               y = y0 + k;
-              const f17 = nbr(flags[at26(x, y)], y);
+              const f17 = nbr(flags[at27(x, y)], y);
               const sk = scIndex(f17);
               const neg = mq.decode(ctx, CTX_SC + SC[sk]) ^ SPB[sk];
               out[y * w + x] = neg ? -oneplushalf : oneplushalf;
@@ -34502,7 +34502,7 @@ function decodeCodeBlock(w, h, orient, numbps, lazyFrom, cblksty, segs, out, scr
             }
           }
           for (; y < y0 + 4 && y < h; y++) {
-            const i = at26(x, y), f17 = nbr(flags[i], y);
+            const i = at27(x, y), f17 = nbr(flags[i], y);
             if (f17 & (SIG | VISIT)) continue;
             if (mq.decode(ctx, zc[f17 & NBR])) {
               const sk = scIndex(f17);
@@ -34512,7 +34512,7 @@ function decodeCodeBlock(w, h, orient, numbps, lazyFrom, cblksty, segs, out, scr
             }
           }
         }
-        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) flags[at26(x, y)] &= ~VISIT;
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) flags[at27(x, y)] &= ~VISIT;
         if (segsym) for (let k = 0; k < 4; k++) mq.decode(ctx, CTX_UNI);
       }
       if (reset && !raw) resetCtx();
@@ -34534,9 +34534,9 @@ function idwt53(x, n, cas) {
     if (cas) x[0] = Math.trunc(x[0] / 2);
     return;
   }
-  const at26 = (i) => x[i < 0 ? -i : i >= n ? 2 * (n - 1) - i : i];
-  for (let i = cas ? 1 : 0; i < n; i += 2) x[i] -= Math.floor((at26(i - 1) + at26(i + 1) + 2) / 4);
-  for (let i = cas ? 0 : 1; i < n; i += 2) x[i] += Math.floor((at26(i - 1) + at26(i + 1)) / 2);
+  const at27 = (i) => x[i < 0 ? -i : i >= n ? 2 * (n - 1) - i : i];
+  for (let i = cas ? 1 : 0; i < n; i += 2) x[i] -= Math.floor((at27(i - 1) + at27(i + 1) + 2) / 4);
+  for (let i = cas ? 0 : 1; i < n; i += 2) x[i] += Math.floor((at27(i - 1) + at27(i + 1)) / 2);
 }
 function idwt97(x, n, cas) {
   const sn = cas ? n >> 1 : n + 1 >> 1, dn = n - sn;
@@ -36143,17 +36143,17 @@ function nextProbeDue({ lastAt = null, signals = [], cadenceMs = CALIBRATION_CAD
     why: `nothing has ever probed this engine, so a probe is due immediately rather than a cadence from a measurement that does not exist`
   };
   const cadenceAt = lastAt + cadenceMs;
-  let at26 = cadenceAt, from = "cadence";
+  let at27 = cadenceAt, from = "cadence";
   for (const s of Array.isArray(signals) ? signals : []) {
     const by = s && Number.isFinite(s.probe_by) ? s.probe_by : null;
     if (by == null) continue;
-    if (by < at26) {
-      at26 = by;
+    if (by < at27) {
+      at27 = by;
       from = "signal";
     }
   }
   return {
-    at: Math.min(at26, cadenceAt),
+    at: Math.min(at27, cadenceAt),
     from,
     cadence_at: cadenceAt,
     why: from === "signal" ? `an announcement shortened the interval to the next probe. A watch may only ever ACCELERATE a probe: it never stands in for one and it never itself changes a grade, because absence of an announcement is not evidence of no change and a vendor's documentation is a claim, not a measurement` : `the declared cadence, ${cadenceSentence(cadenceMs)}`
@@ -36462,11 +36462,11 @@ var Calibration = class {
   calibrationRecord(pkg = {}, { principal = null } = {}) {
     const p = pkg && typeof pkg === "object" && !Array.isArray(pkg) ? pkg : {};
     const now = this.#now();
-    const at26 = nonEmpty(p.at) ? p.at : new Date(now).toISOString();
+    const at27 = nonEmpty(p.at) ? p.at : new Date(now).toISOString();
     const cal = {
       engine: p.engine,
       version: p.version,
-      at: at26,
+      at: at27,
       cap: p.cap === void 0 ? null : p.cap,
       probe_id: p.probe_id,
       probe_inputs: p.probe_inputs,
@@ -36712,8 +36712,8 @@ var Calibration = class {
     const grace = Number.isFinite(graceMs) && graceMs > 0 ? graceMs : 0;
     let earliest = null;
     for (const s of subjects) {
-      const at26 = this.#nextProbe(s, now).at;
-      const want = at26 <= now ? now + grace : at26;
+      const at27 = this.#nextProbe(s, now).at;
+      const want = at27 <= now ? now + grace : at27;
       if (earliest == null || want < earliest) earliest = want;
     }
     return earliest;
@@ -37764,8 +37764,8 @@ async function captureOp(op, req, url, env, store, h) {
     });
   if (op === "archivelookup") return archiveLookupOp(req, url, store(), { json: json6, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2 });
   if (op === "acquire") {
-    const at26 = store();
-    const acquired = await acquireOp(req, env, at26, {
+    const at27 = store();
+    const acquired = await acquireOp(req, env, at27, {
       json: json6,
       storeSilent: storeSilent2,
       storeRefusal: storeRefusal2,
@@ -37777,7 +37777,7 @@ async function captureOp(op, req, url, env, store, h) {
       storeName: h.storeName
     });
     if (acquired.response) return acquired.response;
-    const read2 = await h.readAcquired(acquired.answer, at26);
+    const read2 = await h.readAcquired(acquired.answer, at27);
     if (read2.response) return read2.response;
     return json6(Object.assign(read2.body, { note: ACQUIRE_GRADE_NOTE }), 200);
   }
@@ -37891,22 +37891,22 @@ function deriveMembership(structure, view) {
   const order = (a, b) => a.source.page - b.source.page || top(b.source.rect) - top(a.source.rect) || left(a.source.rect) - left(b.source.rect);
   items.sort(order);
   files.sort(order);
-  const at26 = (l) => [l.source.page, top(l.source.rect)];
+  const at27 = (l) => [l.source.page, top(l.source.rect)];
   const before = (p, q7) => p[0] < q7[0] || p[0] === q7[0] && p[1] > q7[1];
   const groups = items.map((it, i) => ({
     ...MEMBERSHIP_LABEL,
     item: end(it),
     region: {
-      from: { page: at26(it)[0], top: at26(it)[1] },
-      to: i + 1 < items.length ? { page: at26(items[i + 1])[0], top: at26(items[i + 1])[1] } : null
+      from: { page: at27(it)[0], top: at27(it)[1] },
+      to: i + 1 < items.length ? { page: at27(items[i + 1])[0], top: at27(items[i + 1])[1] } : null
     },
     files: []
   }));
   for (const f17 of files) {
-    const p = at26(f17);
+    const p = at27(f17);
     let g = -1;
     for (let i = 0; i < items.length; i++) {
-      if (before(p, at26(items[i]))) break;
+      if (before(p, at27(items[i]))) break;
       g = i;
     }
     if (g < 0) unplaced.push({ kind: "file", ...end(f17), why: "above_the_first_item" });
@@ -38706,14 +38706,14 @@ async function bytesOf(evidence, doc) {
   if (total > MULTIPART_READ_MAX)
     return { bytes: null, why: `the capture is ${total} bytes in ${doc.parts.length} parts, over the ${MULTIPART_READ_MAX} B a format entry is handed here, so it was not read` };
   const out = new Uint8Array(total);
-  let at26 = 0;
+  let at27 = 0;
   for (const p of doc.parts) {
     const b = p && typeof p.sha256 === "string" ? await whole(p.sha256) : null;
     if (!b) return { bytes: null, why: `part ${doc.parts.indexOf(p) + 1} of ${doc.parts.length} is not held in the evidence store` };
-    out.set(b.subarray(0, Math.max(0, total - at26)), at26);
-    at26 += b.length;
+    out.set(b.subarray(0, Math.max(0, total - at27)), at27);
+    at27 += b.length;
   }
-  return { bytes: at26 === total ? out : null, why: at26 === total ? null : "the parts held do not add up to the capture's size" };
+  return { bytes: at27 === total ? out : null, why: at27 === total ? null : "the parts held do not add up to the capture's size" };
 }
 async function readInner(doc, { evidence, env, storeName, view, planeVersion, liveCalibration }) {
   const retrieved = doc && typeof doc.retrieved === "string" ? doc.retrieved : null;
@@ -38977,7 +38977,7 @@ function renumberingMoves(map) {
   const same = (a, b) => !!a && !!b && a.para === b.para && a.run === b.run;
   return (map.paragraphs || []).some((p) => p && p.new !== p.old) || (map.runs || []).some((r) => r && !same(r.old, r.new)) || (map.tables || []).some((t) => t && t.new !== t.old);
 }
-function n26MigratedReading(reading, map, text5, { at: at26 = null } = {}) {
+function n26MigratedReading(reading, map, text5, { at: at27 = null } = {}) {
   const moved = { paragraphs: 0, runs: 0, tables: 0, unplaced: 0 };
   const runAt = new Map((map.runs || []).map((r) => [`${r.old.para}:${r.old.run}`, r]));
   const paraRef = (para, v) => ({
@@ -39074,7 +39074,7 @@ function n26MigratedReading(reading, map, text5, { at: at26 = null } = {}) {
   next.migrated = {
     ...reading.migrated && typeof reading.migrated === "object" ? reading.migrated : {},
     n26: {
-      at: at26,
+      at: at27,
       moved,
       why: "this reading was made before N26, when every branch of an mc:AlternateContent was read, so its paragraphs, runs and tables were numbered with the duplicated branch counted; it was read again from the stored bytes and every reference it holds was moved to N26's numbering"
     }
@@ -39093,7 +39093,7 @@ function pptxRenumberingMoves(map) {
   if (!map || !Array.isArray(map.slides)) return false;
   return map.slides.some((s) => s && Array.isArray(s.shapes) && s.shapes.some((x) => x && x.new !== x.old));
 }
-function n439MigratedReading(reading, map, text5, { at: at26 = null } = {}) {
+function n439MigratedReading(reading, map, text5, { at: at27 = null } = {}) {
   const moved = { shapes: 0, unplaced: 0 };
   const bySlide = new Map((map.slides || []).filter((s) => s && Number.isInteger(s.slide)).map((s) => [s.slide, s.shapes || []]));
   const walk = (v) => {
@@ -39130,7 +39130,7 @@ function n439MigratedReading(reading, map, text5, { at: at26 = null } = {}) {
   next.migrated = {
     ...reading.migrated && typeof reading.migrated === "object" ? reading.migrated : {},
     n439: {
-      at: at26,
+      at: at27,
       moved,
       why: "this reading was made before N439, when every branch of an mc:AlternateContent on a slide was read, so its slide text was doubled and its shapes were numbered with the duplicated branch counted; it was read again from the stored bytes and every shape reference it holds was moved to N439's numbering"
     }
@@ -40803,13 +40803,13 @@ function contentCitedAs2(extent) {
 function canonicalExtent2(extent) {
   const e = isObj5(extent) ? extent : {};
   if (e.kind === "envelope") {
-    const at26 = isObj5(e.at) && ENVELOPE_ANCHOR_KINDS.includes(e.at.kind) ? JSON.parse(canonicalExtent(e.at)) : null;
+    const at27 = isObj5(e.at) && ENVELOPE_ANCHOR_KINDS.includes(e.at.kind) ? JSON.parse(canonicalExtent(e.at)) : null;
     return canonicalJson({
       kind: "envelope",
       cited_as: contentCitedAs2(e),
       item: typeof e.item === "string" ? e.item.trim() : null,
       part: typeof e.part === "string" && e.part.trim() ? e.part.trim() : null,
-      at: at26,
+      at: at27,
       name: typeof e.name === "string" && e.name.trim() ? e.name.trim() : null,
       n: Number.isInteger(e.n) ? e.n : null
     });
@@ -40822,8 +40822,8 @@ function describeExtent2(extent) {
   if (e.kind === "envelope") {
     const what = ENVELOPE_ITEM_KINDS[typeof e.item === "string" ? e.item.trim() : ""] || "an item";
     const name2 = typeof e.name === "string" && e.name.trim() ? ` '${e.name.trim()}'` : "";
-    const at26 = isObj5(e.at) && ENVELOPE_ANCHOR_KINDS.includes(e.at.kind) ? ` at ${describeExtent({ ...e.at, ref: void 0 })}` : "";
-    return `envelope: ${what}${name2}${at26}`;
+    const at27 = isObj5(e.at) && ENVELOPE_ANCHOR_KINDS.includes(e.at.kind) ? ` at ${describeExtent({ ...e.at, ref: void 0 })}` : "";
+    return `envelope: ${what}${name2}${at27}`;
   }
   return describeExtent(e);
 }
@@ -40969,8 +40969,8 @@ function containerBoundUndetermined(extent, ctx = {}) {
       return null;
     }
     case "envelope": {
-      const at26 = isObj5(e.at) && ENVELOPE_ANCHOR_KINDS.includes(e.at.kind) ? containerBoundUndetermined(e.at, ctx) : null;
-      return at26 || {
+      const at27 = isObj5(e.at) && ENVELOPE_ANCHOR_KINDS.includes(e.at.kind) ? containerBoundUndetermined(e.at, ctx) : null;
+      return at27 || {
         level: "envelope_items",
         why: "this record persists no list of a capture's envelope items to bound one against (they arrive as text units), so whether this item exists rests on the index that found it: UNDETERMINED, admitted and stated"
       };
@@ -41410,13 +41410,13 @@ function heldTextAt(extent, held) {
       return { text: null, reason: "cited_text_partial", why: `the citation is to the whole document, and the record does not hold the cited version's text whole (its index reads ${said(held.state)}), so there is no whole text` };
     return { text: held.units.map((u2) => u2.text).join("\n"), extent: canonicalExtent2(extent) };
   }
-  const at26 = canonicalExtent2(extent);
-  const u = held.units.find((x) => x.extent === at26);
+  const at27 = canonicalExtent2(extent);
+  const u = held.units.find((x) => x.extent === at27);
   if (!u)
     return { text: null, reason: "cited_text_not_held", why: `the record holds no text at exactly ${describeExtent2(extent)} of the cited version (only whole indexed units \u2014 a PDF page, a paragraph, a slide \u2014 carry text)` };
   if (u.truncated)
     return { text: null, reason: "cited_text_truncated", why: "the cited passage's text is held only to the per-unit cap, so the whole passage is not held" };
-  return { text: u.text, extent: at26 };
+  return { text: u.text, extent: at27 };
 }
 function gradeAcross(row2, extent, older, newer) {
   const G = VERSION_NOTICE_GRADES;
@@ -41902,7 +41902,7 @@ var Content = class {
    * the row, so a re-promotion finds exactly what it found last time, and two members citing one passage land on ONE
    * row, whose `minted_by` and `at` record who FIRST cited it and when.
    * ===================================================================== */
-  mint({ bundleId, captureSha, extent, mintedBy = CONTENT_MINTED_BY_PLANE, at: at26 = null, context = null, ctx = null }) {
+  mint({ bundleId, captureSha, extent, mintedBy = CONTENT_MINTED_BY_PLANE, at: at27 = null, context = null, ctx = null }) {
     const c = context || ctx || this.contentContextFor(captureSha);
     const bad = checkContentExtent2(extent, c);
     if (bad) return bad;
@@ -41928,7 +41928,7 @@ var Content = class {
         citedAs === "bytes" ? null : derivationCap(chain2, target),
         c.pageCount ?? null,
         mintedBy,
-        at26 || this.now(),
+        at27 || this.now(),
         citedAs,
         /* R14 (D-686, D-710): how THIS unit was read, asked of the same target as the cap. */
         citedAs === "bytes" ? null : unitChainKind(chain2, target)
@@ -41941,7 +41941,7 @@ var Content = class {
    *  grants nothing about the text (attesting stays C-35.10's). `mintedBy` is the control plane's stamp and an absent
    *  one is refused rather than defaulted. The viewer gate runs BEFORE the object type, so the two refusals cannot be
    *  told apart by a caller guessing ids. The answer comes back through `contentRow`, labelled by the one helper. */
-  contentMint({ bundleId, extent, mintedBy, viewer = null, at: at26 = null }) {
+  contentMint({ bundleId, extent, mintedBy, viewer = null, at: at27 = null }) {
     if (typeof mintedBy !== "string" || !mintedBy.trim())
       return {
         ok: false,
@@ -41979,7 +41979,7 @@ var Content = class {
       captureSha: sha,
       extent: isObj6(extent) ? extent : { kind: "document" },
       mintedBy: mintedBy.trim(),
-      at: at26
+      at: at27
     }));
     if (!out.ok) return out;
     return {
@@ -42481,7 +42481,7 @@ var Content = class {
     const row2 = TRANSCRIBE_CHECKS[code];
     return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
   }
-  transcribe({ bundleId = null, extent = null, text: text5 = null, transcriber = null, viewer = null, at: at26 = null } = {}) {
+  transcribe({ bundleId = null, extent = null, text: text5 = null, transcriber = null, viewer = null, at: at27 = null } = {}) {
     const refusal21 = (code, detail, extra) => this.#transcribeRefusal(code, detail, extra);
     const who2 = typeof transcriber === "string" ? transcriber.trim() : "";
     const target = typeof bundleId === "string" ? bundleId.trim() : "";
@@ -42540,7 +42540,7 @@ var Content = class {
       );
     const chainBad = checkChain(chain2);
     if (chainBad) return chainBad;
-    const when = typeof at26 === "string" && at26.trim() ? at26.trim() : this.now();
+    const when = typeof at27 === "string" && at27.trim() ? at27.trim() : this.now();
     const out = this.record.transact(() => {
       const m = this.mint({ bundleId: target, captureSha: sha, extent, mintedBy: who2, at: when, context: ctx });
       if (!m.ok) return m;
@@ -42600,13 +42600,13 @@ var Content = class {
    *  typed portion and never taken from the caller; the typist is refused BY NAME (C-52.9); then the attestor's note,
    *  their words on what they compared (C-52.10; DEC-88), before anything is written. One attestation per (row,
    *  attestor), a repeat replacing it and kept with its note; the typing itself is unchanged. */
-  transcriptionAttest({ contentId = null, attestor = null, viewer = null, at: at26 = null, note = null } = {}) {
+  transcriptionAttest({ contentId = null, attestor = null, viewer = null, at: at27 = null, note = null } = {}) {
     const src = this.#transcriptionOf(contentId, viewer);
     if (!src.ok) return src;
     const { t } = src;
     const row2 = this.#one(`SELECT extent_kind, extent FROM content WHERE content_id=?`, t.content_id);
     const scope = row2 ? transcriptionAttestExtent(row2.extent_kind, safeJson6(row2.extent)) : null;
-    const att = { member: attestor, at: typeof at26 === "string" && at26.trim() ? at26.trim() : this.now(), extent: scope };
+    const att = { member: attestor, at: typeof at27 === "string" && at27.trim() ? at27.trim() : this.now(), extent: scope };
     const bad = checkAttestation(att);
     if (bad) return bad;
     const who2 = String(attestor).trim();
@@ -42774,27 +42774,27 @@ var Content = class {
     const chains = [];
     const newerBySha = /* @__PURE__ */ new Map();
     for (const addr of addresses) {
-      const at26 = this.provenance.versionChain({ addressNorm: addr, at: row2.capture_sha, limit: 1, viewer });
-      if (!at26.ok) {
+      const at27 = this.provenance.versionChain({ addressNorm: addr, at: row2.capture_sha, limit: 1, viewer });
+      if (!at27.ok) {
         chains.push({
           address_norm: addr,
           read: false,
-          reason: at26.reason,
+          reason: at27.reason,
           why: "this capture is not a version the chain at this address holds for you"
         });
         continue;
       }
-      const after = at26.total - 1 - at26.at_index;
+      const after = at27.total - 1 - at27.at_index;
       let newest = null;
       if (after > 0) {
-        const last = this.provenance.versionChain({ addressNorm: addr, limit: 1, offset: at26.total - 1, viewer });
+        const last = this.provenance.versionChain({ addressNorm: addr, limit: 1, offset: at27.total - 1, viewer });
         newest = last.ok && last.versions[0] ? last.versions[0] : null;
       }
       chains.push({
         address_norm: addr,
         read: true,
-        versions: at26.total,
-        position: at26.at_index,
+        versions: at27.total,
+        position: at27.at_index,
         newer_count: after,
         newest: newest && {
           capture_sha: newest.capture_sha,
@@ -43533,14 +43533,14 @@ var Credentials = class _Credentials {
     const password = typeof this.membership.registerPasswordSetter === "function" ? this.membership.registerPasswordSetter(({ role, password: password2 } = {}) => this.setPassword({ role, password: password2 })) : null;
     return { revoked, claimed, password };
   }
-  #memberRevoked({ memberId, by = null, at: at26 = null } = {}) {
+  #memberRevoked({ memberId, by = null, at: at27 = null } = {}) {
     if (typeof memberId !== "string" || memberId === "") return;
     this.sql.exec(`DELETE FROM sessions WHERE role=?`, `member:${memberId}`);
     this.sql.exec(
       `UPDATE signers SET status='revoked', status_by=?,
          status_at=CASE WHEN status<>'revoked' THEN ? ELSE status_at END WHERE member_id=?`,
       by ?? null,
-      _Credentials.#instant(at26),
+      _Credentials.#instant(at27),
       memberId
     );
   }
@@ -43766,8 +43766,8 @@ var Credentials = class _Credentials {
   }
   /* R21: the instant an act changes a key's status, in `added`'s spelling (ISO 8601 with milliseconds): the act's own
      time when its caller states one (membership's revocation notice, R16), else now. */
-  static #instant(at26 = null) {
-    return typeof at26 === "string" && at26 !== "" ? at26 : (/* @__PURE__ */ new Date()).toISOString();
+  static #instant(at27 = null) {
+    return typeof at27 === "string" && at27 !== "" ? at27 : (/* @__PURE__ */ new Date()).toISOString();
   }
   /* R8, R11, R19 (D-158) — ONE PREDICATE, AND IT IS WHAT KEEPS THE ROSTER AND THE GATE FROM DISAGREEING. A key attests
    * exactly when the key is `active` and its member is `active`; `origin` is never read (R19). `signerList` projects it
@@ -44039,7 +44039,7 @@ var Credentials = class _Credentials {
     writes = [],
     note = null,
     confinedTo = null,
-    at: at26 = null
+    at: at27 = null
   } = {}) {
     const refusal21 = (code, detail, extra) => {
       const row2 = AI_CREDENTIAL_CHECKS[code];
@@ -44053,7 +44053,7 @@ var Credentials = class _Credentials {
         ...extra || {}
       };
     };
-    const now = at26 || stampSecond2();
+    const now = at27 || stampSecond2();
     const id = String(tokenId ?? "").trim();
     const kind = String(principalKind ?? "").trim().toLowerCase();
     if (!who2 || isMachineIdentity(who2))
@@ -44111,7 +44111,7 @@ var Credentials = class _Credentials {
   }
   /* R15: also a member act, and the reason is `revoked_by` rather than the risk (C-29.4). Revoking twice answers
      `already: true`, and the row is kept with its `revokedAt`. */
-  aiCredentialRevoke({ who: who2 = null, tokenId = null, at: at26 = null } = {}) {
+  aiCredentialRevoke({ who: who2 = null, tokenId = null, at: at27 = null } = {}) {
     const refusal21 = (code, detail, extra) => {
       const row3 = AI_CREDENTIAL_CHECKS[code];
       return {
@@ -44124,7 +44124,7 @@ var Credentials = class _Credentials {
         ...extra || {}
       };
     };
-    const now = at26 || stampSecond2();
+    const now = at27 || stampSecond2();
     const id = String(tokenId ?? "").trim();
     if (!who2 || isMachineIdentity(who2))
       return refusal21(
@@ -44844,7 +44844,7 @@ var memberIdOf = (who2) => typeof who2 === "string" ? who2.replace(/^member:/, "
 var CAPTURE_ACCOUNT_TOKEN = "bio-capture-account";
 var captureAccountStatement = (captureSha, text5) => te5.encode(`${CAPTURE_ACCOUNT_TOKEN} ${String(captureSha)}
 ${String(text5)}`);
-var lateSentence = (at26) => `proves the bytes existed by ${at26}, not at capture`;
+var lateSentence = (at27) => `proves the bytes existed by ${at27}, not at capture`;
 var rawReplayOf = (archived) => {
   const m = /^(https:\/\/web\.archive\.org\/web\/)(\d{14})(?:[a-z_]*)\/(.+)$/.exec(String(archived || ""));
   return m ? `${m[1]}${m[2]}id_/${m[3]}` : null;
@@ -45210,8 +45210,8 @@ var Capture = class _Capture {
    *  refusal's answer, and it decides nothing. */
   #tallyRefusal(nowMs, limitReached = false) {
     try {
-      const at26 = Number.isFinite(Number(nowMs)) ? Number(nowMs) : Date.now();
-      const day = new Date(at26).toISOString().slice(0, 10);
+      const at27 = Number.isFinite(Number(nowMs)) ? Number(nowMs) : Date.now();
+      const day = new Date(at27).toISOString().slice(0, 10);
       const oldest = new Date(Date.parse(`${day}T00:00:00Z`) - (TALLY_DAYS - 1) * 864e5).toISOString().slice(0, 10);
       const reached = limitReached === true ? 1 : 0;
       this.#tx(() => {
@@ -45250,8 +45250,8 @@ var Capture = class _Capture {
         status: 403,
         detail: "the doorbell's tally is read by a signed-in member; nothing was read"
       };
-    const at26 = now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now();
-    const today = new Date(at26).toISOString().slice(0, 10);
+    const at27 = now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now();
+    const today = new Date(at27).toISOString().slice(0, 10);
     const oldest = new Date(Date.parse(`${today}T00:00:00Z`) - (TALLY_DAYS - 1) * 864e5).toISOString().slice(0, 10);
     const days = this.#rows(`SELECT day, refused, limit_reached FROM doorbell_tally WHERE day >= ? AND refused > 0 ORDER BY day DESC`, oldest).map((r) => ({ day: r.day, refused: Number(r.refused), limit_reached: Number(r.limit_reached) }));
     const last = this.#one(`SELECT day FROM doorbell_limit_last WHERE id = 1`);
@@ -45475,7 +45475,7 @@ var Capture = class _Capture {
    *  (K1105): the `pulled` arm takes `at` and `within` as `pullKnock` does, so the control plane's reasoned resolve is
    *  one act with its promotion (control-plane R36) and the reason lands on the row inside it; the other arms ignore
    *  them. */
-  inboxResolve({ knockId, status, by, reason, at: at26 = null, within = null } = {}) {
+  inboxResolve({ knockId, status, by, reason, at: at27 = null, within = null } = {}) {
     if (!["pulled", "discarded", "new"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
     if (typeof knockId !== "string" || !knockId || !this.#one(`SELECT knock_id FROM inbox WHERE knock_id=?`, knockId))
       return this.#noSuchKnock(knockId);
@@ -45492,7 +45492,7 @@ var Capture = class _Capture {
         maxChars: REASON_MAX
       };
     }
-    if (status === "pulled") return this.#pull({ knockId, by, at: at26, within }, reason);
+    if (status === "pulled") return this.#pull({ knockId, by, at: at27, within }, reason);
     this.#tx(() => this.#sql.exec(
       `UPDATE inbox SET status=?, resolved=?, resolved_by=?, resolve_reason=? WHERE knock_id=?`,
       status,
@@ -45518,12 +45518,12 @@ var Capture = class _Capture {
    *  an answer that is not synchronous (a promise would outlive the transaction), rolls it back as `PULL_WITHIN_FAILED`.
    *  Any other answer is carried as `within`. A knock already pulled does not call it: its pull is not being made. The
    *  bytes put under their own digest before the transaction stay, content-addressed and already held as the knock's. */
-  pullKnock({ knockId, by, at: at26 = null, within = null } = {}) {
-    return this.#pull({ knockId, by, at: at26, within }, null);
+  pullKnock({ knockId, by, at: at27 = null, within = null } = {}) {
+    return this.#pull({ knockId, by, at: at27, within }, null);
   }
   /* R65, and R32's `pulled` arm: the pull, with the resolve's admitted reason recorded on the row beside it (null for a
      pull asked directly, which takes no reason). */
-  async #pull({ knockId, by, at: at26 = null, within = null } = {}, reason) {
+  async #pull({ knockId, by, at: at27 = null, within = null } = {}, reason) {
     if (typeof by !== "string" || !by.trim())
       return {
         ok: false,
@@ -45612,7 +45612,7 @@ var Capture = class _Capture {
         detail: "the knock's bytes could not be held under their own digest, so nothing was written"
       };
     }
-    const when = typeof at26 === "string" && ISO_INSTANT.test(at26) ? at26 : stampSecond3();
+    const when = typeof at27 === "string" && ISO_INSTANT.test(at27) ? at27 : stampSecond3();
     const address = `knock:${knockId}`;
     const profile = await profileOf({
       ev,
@@ -45701,19 +45701,19 @@ var Capture = class _Capture {
   /* R65, R16: the provenance document of a pulled knock. Received, not fetched (provenance R51): no fetched letter, no
      transport; the knocker is its source, unnamed, and the note travels as the knocker's words, never as evidence of
      their truth. The contact is never in it (R70). */
-  #pulledDocument(row2, { by, at: at26, profile }) {
+  #pulledDocument(row2, { by, at: at27, profile }) {
     const locator = `knock:${row2.knock_id}`;
     const name2 = String(row2.knock_id).replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100);
     return {
       file: `snapshots/${name2}`,
       locator,
-      retrieved: at26,
+      retrieved: at27,
       profile,
       authority_state: "undetermined",
-      authority_basis: `material handed to the group through its doorbell by an unnamed knocker; no authority is asserted; recorded ${at26} for resolution through the task list`,
+      authority_basis: `material handed to the group through its doorbell by an unnamed knocker; no authority is asserted; recorded ${at27} for resolution through the task list`,
       provenance_chain: [{
         who: `instance ${this.env.INSTANCE_NAME || "unnamed"} (CivicOS/${this.env.VERSION || "0.0.0"})`,
-        asserts: `these bytes were received at this instance's doorbell as knock ${row2.knock_id} at ${row2.received}, and brought into the record by ${by} at ${at26}; they were received, not fetched from any address`,
+        asserts: `these bytes were received at this instance's doorbell as knock ${row2.knock_id} at ${row2.received}, and brought into the record by ${by} at ${at27}; they were received, not fetched from any address`,
         evidence: "the knock's receipt: its digest, taken as the bytes arrived, and its instant",
         bound: false,
         via: DOORBELL_VIA
@@ -45783,13 +45783,13 @@ var Capture = class _Capture {
    * ==================================================================== */
   /** R16, R69: record `actor` as one who captured `captureSha` (a member session's acquire, a knock's pull). Kept once
    *  per pair, at the first instant. */
-  recordCaptureActor({ captureSha, actor, at: at26 = null } = {}) {
+  recordCaptureActor({ captureSha, actor, at: at27 = null } = {}) {
     if (typeof captureSha !== "string" || !HEX644.test(captureSha) || typeof actor !== "string" || !actor) return { recorded: false };
     this.#tx(() => this.#sql.exec(
       `INSERT OR IGNORE INTO capture_actors (capture_sha, actor, at) VALUES (?, ?, ?)`,
       captureSha,
       actor,
-      at26 && ISO_INSTANT.test(at26) ? at26 : stampSecond3()
+      at27 && ISO_INSTANT.test(at27) ? at27 : stampSecond3()
     ));
     return { recorded: true };
   }
@@ -45798,7 +45798,7 @@ var Capture = class _Capture {
    *  recorded no actor for), `ACCOUNT_NO_TEXT` (C-118.6), and `SIG_<reason>` unless `signature` verifies
    *  (`signatures.verifySshsig`, `NS_RATIFY`) over `captureAccountStatement(captureSha, text)` against one of `by`'s
    *  attesting keys (`credentials.attestingKeys`, its R11). Append-only. */
-  async recordCaptureAccount({ captureSha, text: text5, signature, by, at: at26 = null } = {}) {
+  async recordCaptureAccount({ captureSha, text: text5, signature, by, at: at27 = null } = {}) {
     const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
     const who2 = memberIdOf(by);
     const actors = HEX644.test(sha) ? this.#rows(`SELECT actor FROM capture_actors WHERE capture_sha = ?`, sha).map((r) => memberIdOf(r.actor)) : [];
@@ -45844,7 +45844,7 @@ var Capture = class _Capture {
         detail: "the signature does not verify over this account's statement against a key of yours that attests, so nothing was written"
       };
     }
-    const when = at26 && ISO_INSTANT.test(at26) ? at26 : stampSecond3();
+    const when = at27 && ISO_INSTANT.test(at27) ? at27 : stampSecond3();
     const seq = this.#tx(() => {
       const n = Number(this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM capture_accounts WHERE capture_sha = ?`, sha).n) + 1;
       this.#sql.exec(
@@ -45929,15 +45929,15 @@ var Capture = class _Capture {
     const now = stampSecond3();
     const outcomes = [];
     for (const a of attempts.length ? attempts : [{ service: "attest", ok: false, note: String(out && (out.note || out.reason) || "no attempt was reported") }]) {
-      const at26 = typeof a.attempted === "string" && ISO_INSTANT.test(a.attempted) ? a.attempted : now;
+      const at27 = typeof a.attempted === "string" && ISO_INSTANT.test(a.attempted) ? a.attempted : now;
       const coArchive = a.service === ARCHIVE_SERVICE || a.kind === "co-archive";
       const o = {
         kind: coArchive ? "co_archive" : "timestamp",
         service: String(a.service || "attest"),
         ok: a.ok === true,
-        at: at26,
+        at: at27,
         late: true,
-        proves: lateSentence(at26),
+        proves: lateSentence(at27),
         ...a.kind === "rfc3161" ? { token_sha256: a.token_sha256 ?? null, token_bytes: a.token_bytes ?? null } : {},
         ...a.archived_locator ? { archived_locator: a.archived_locator } : {},
         ...a.note ? { note: String(a.note).slice(0, 200) } : {}
@@ -46113,7 +46113,7 @@ var Capture = class _Capture {
       cap + 1
     );
     const page = found.slice(0, cap), truncated3 = found.length > cap, last = page[page.length - 1];
-    const at26 = now != null && Number.isFinite(Date.parse(now)) ? Date.parse(now) : Date.now();
+    const at27 = now != null && Number.isFinite(Date.parse(now)) ? Date.parse(now) : Date.now();
     const rows2 = [];
     for (const r of page) {
       const since = Date.parse(r.since);
@@ -46123,7 +46123,7 @@ var Capture = class _Capture {
         project: r.project || null,
         source: r.src_address ? { address: r.src_address, via: r.src_via, retrieved: r.src_retrieved } : null,
         collected_since: r.since,
-        age_days: Number.isFinite(since) ? Math.max(0, Math.floor((at26 - since) / 864e5)) : null,
+        age_days: Number.isFinite(since) ? Math.max(0, Math.floor((at27 - since) / 864e5)) : null,
         ...await this.#eligibility(r.bundle_id)
       });
     }
@@ -46211,7 +46211,7 @@ var Capture = class _Capture {
   }
   /* R79, R81: append one act per document, in one transaction. */
   #appendHeld(ids, act, reason, author) {
-    const at26 = stampSecond3();
+    const at27 = stampSecond3();
     this.#tx(() => {
       for (const id of new Set(ids)) {
         const n = Number(this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM held_acts WHERE bundle_id = ?`, id).n) + 1;
@@ -46222,11 +46222,11 @@ var Capture = class _Capture {
           act,
           reason,
           author,
-          at26
+          at27
         );
       }
     });
-    return at26;
+    return at27;
   }
   /** R79 (DEC-97 (2)): set several held documents aside with one reason. Refused whole, never narrowed: C-118.8,
    *  C-118.9, the id count, then any id absent or unseen (one answer), not `information`, not at `collected`, or
@@ -46241,8 +46241,8 @@ var Capture = class _Capture {
     };
     const no2 = named("NO_SUCH_DOCUMENT", (r) => !r, "no document you may see answers to these ids; nothing was written") || named("NOT_INFORMATION", (r) => r.object_type !== "information", "only Information documents are held; nothing was written") || named("NOT_COLLECTED", (r) => r.current_state !== "collected", "only documents at collected are held; nothing was written") || named("ALREADY_SET_ASIDE", (r) => !r.standing, "these documents are already set aside; nothing was written");
     if (no2) return no2;
-    const at26 = this.#appendHeld([...standing.keys()], "set_aside", reason, author);
-    return { ok: true, act: "set_aside", ids: [...standing.keys()], reason, author, at: at26 };
+    const at27 = this.#appendHeld([...standing.keys()], "set_aside", reason, author);
+    return { ok: true, act: "set_aside", ids: [...standing.keys()], reason, author, at: at27 };
   }
   /** R81 (DEC-97 (2)): undo a set-aside by a reasoned act, for several documents with one reason. Refused whole: R79's
    *  first three, then any id absent or unseen (one answer), or not set aside now, named. The restore is appended
@@ -46267,8 +46267,8 @@ var Capture = class _Capture {
       status: 409,
       detail: "these documents are not set aside; nothing was written"
     };
-    const at26 = this.#appendHeld([...standing.keys()], "restore", reason, author);
-    return { ok: true, act: "restore", ids: [...standing.keys()], reason, author, at: at26 };
+    const at27 = this.#appendHeld([...standing.keys()], "restore", reason, author);
+    return { ok: true, act: "restore", ids: [...standing.keys()], reason, author, at: at27 };
   }
   /** R82 (K1036; Intake Doctrine §4, the backlog ceiling): how many Information documents at `collected`, not set aside
    *  (R79, R81) and not released, have a register document whose `origin` names `matched_sweep` equal to `sweep`. The
@@ -46307,9 +46307,9 @@ var Capture = class _Capture {
    *  renderer that honours what it was asked (its elapsed time is its own claim), and the allowance is an ACCOUNT;
    *  the concurrency cap (D-520) is the throttle, decided first and taking nothing from the day. Slots EXPIRE at
    *  admission plus reservation, so a render that never reports cannot hold one for ever. */
-  renderAdmit({ allowanceMs, reserveMs = 0, cap = null, at: at26 = null } = {}) {
+  renderAdmit({ allowanceMs, reserveMs = 0, cap = null, at: at27 = null } = {}) {
     return this.#tx(() => {
-      const now = at26 || stampSecond3();
+      const now = at27 || stampSecond3();
       const day = now.slice(0, 10);
       const allowance = Number.isFinite(Number(allowanceMs)) ? Math.max(0, Math.floor(Number(allowanceMs))) : 0;
       const reserve = Number.isFinite(Number(reserveMs)) ? Math.max(0, Math.ceil(Number(reserveMs))) : 0;
@@ -46374,10 +46374,10 @@ var Capture = class _Capture {
   /** R40. Frees the slot on every path; adds the REPORTED browser time and releases at most the reservation still
    *  held (never below zero). AN UNREPORTED RENDER STAYS CHARGED: it may have burned any time up to its
    *  reservation, so the reservation is kept for the day, which under-uses the allowance and cannot overrun. */
-  renderSpend({ ms: ms2, releaseMs = 0, slot = null, at: at26 = null } = {}) {
+  renderSpend({ ms: ms2, releaseMs = 0, slot = null, at: at27 = null } = {}) {
     return this.#tx(() => {
       if (typeof slot === "string" && slot) this.#sql.exec(`DELETE FROM render_slots WHERE slot = ?`, slot);
-      const now = at26 || stampSecond3();
+      const now = at27 || stampSecond3();
       const day = now.slice(0, 10);
       const n = typeof ms2 === "number" && Number.isFinite(ms2) && ms2 >= 0 ? Math.ceil(ms2) : null;
       const rel = Number.isFinite(Number(releaseMs)) ? Math.max(0, Math.ceil(Number(releaseMs))) : 0;
@@ -46495,7 +46495,7 @@ var Capture = class _Capture {
    *  the viewer may not see is filtered out BEFORE the bracket. N90: through the op, at most `limit` links in
    *  (citation, ref) order, paged by `after`, the tally and verdicts being of the links listed; an in-process caller
    *  that passes no `limit` (connections' projection, which must see every link) is answered whole, `limit: null`. */
-  resolveLinks({ sourceCapture, at: at26 = null, viewer = void 0, limit = null, after = null } = {}) {
+  resolveLinks({ sourceCapture, at: at27 = null, viewer = void 0, limit = null, after = null } = {}) {
     const src = this.#captureGate("l.source_capture", viewer);
     const cap = limit == null ? null : limitOf(limit);
     const bound = cap ?? Infinity;
@@ -46514,7 +46514,7 @@ var Capture = class _Capture {
     const rows2 = found.slice(0, bound);
     const next = truncated3 ? cursorOf([rows2[rows2.length - 1].citation_norm, rows2[rows2.length - 1].link_ref]) : null;
     if (!rows2.length) return { sourceCapture, resolved: 0, links: [], limit: cap, truncated: truncated3, next };
-    const T = stampSecond3(Date.parse(rows2[0].captured_at) || Date.parse(at26 || "") || Date.now());
+    const T = stampSecond3(Date.parse(rows2[0].captured_at) || Date.parse(at27 || "") || Date.now());
     const out = [];
     const tally = { linked: 0, offsite: 0, intra: 0, anchor: 0, refused: 0 };
     const verdicts = { contemporaneous: 0, superseded: 0, undetermined: 0 };
@@ -46634,11 +46634,11 @@ var Capture = class _Capture {
     targetBundle = null,
     targetCapture = null,
     detail = null,
-    at: at26 = null,
+    at: at27 = null,
     limit = null
   } = {}) {
     return this.#tx(() => {
-      const now = at26 || stampSecond3();
+      const now = at27 || stampSecond3();
       this.#sql.exec(
         `INSERT INTO link_verdicts (source_capture, address_norm, verdict, basis, target_bundle, target_capture, at, detail)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING`,
@@ -46692,7 +46692,7 @@ var Capture = class _Capture {
   /** One capture's contribution: for each host and page it is on record at, the set of contained chrome addresses
    *  it carried, fingerprinted. A capture that carried NO chrome contributes nothing: a page with no <nav> says
    *  nothing about the site's navigation. Then every touched host's classification is judged again (R28). */
-  #chromeDeriveCapture(sourceCapture, at26) {
+  #chromeDeriveCapture(sourceCapture, at27) {
     const pages = this.#chromePagesOf(sourceCapture);
     const touched = /* @__PURE__ */ new Map(), hosts = new Set(pages.map((p) => p.host));
     for (const old of this.#rows(`SELECT host, fingerprint FROM site_chrome_refs WHERE source_capture = ?`, sourceCapture)) {
@@ -46747,7 +46747,7 @@ var Capture = class _Capture {
         fingerprint2
       );
     }
-    for (const h of hosts) this.#judgeChrome(h, at26);
+    for (const h of hosts) this.#judgeChrome(h, at27);
     return { observed, chrome_links: links.length };
   }
   /* A deterministic digest of the sorted address set (FNV-1a over UTF-16, 64 bits as two halves): the fingerprint
@@ -46765,7 +46765,7 @@ var Capture = class _Capture {
   /** R28. A contained address is the site's chrome only when it recurred on TWO OR MORE distinct pages of the host;
    *  contained on one page it reads `undetermined`, never lost. Recorded with its basis and the date judged, and
    *  judged again whenever the host is observed: always reclassifiable, never a deletion of the link. */
-  #judgeChrome(host, at26) {
+  #judgeChrome(host, at27) {
     const pagesOf = /* @__PURE__ */ new Map();
     for (const r of this.#rows(`SELECT page, fingerprint FROM site_chrome_refs WHERE host = ?`, host)) {
       const rec = this.#one(`SELECT links FROM site_chrome WHERE host = ? AND fingerprint = ?`, host, r.fingerprint);
@@ -46784,7 +46784,7 @@ var Capture = class _Capture {
         n >= 2 ? "chrome" : "undetermined",
         n,
         n >= 2 ? `contained in a chrome region and recurred on ${n} distinct pages of ${host}` : `contained in a chrome region on one page of ${host} only: whether it is the site's navigation or that page's own is undetermined until another page of the host carries it`,
-        at26 || stampSecond3()
+        at27 || stampSecond3()
       );
     }
   }
@@ -46823,8 +46823,8 @@ var Capture = class _Capture {
         cap + 1
       );
       const page = found.slice(0, cap);
-      const at26 = stampSecond3();
-      for (const r of page) this.#chromeDeriveCapture(r.capture_sha, at26);
+      const at27 = stampSecond3();
+      for (const r of page) this.#chromeDeriveCapture(r.capture_sha, at27);
       const truncated3 = found.length > cap;
       return {
         host: h,
@@ -46926,9 +46926,9 @@ var Capture = class _Capture {
    * ==================================================================== */
   /** SCRATCH, not record. Expired rows are pruned on the way past, so an abandoned session costs one row until its
    *  hour is up. The primary is never stored here: it is in the store under its own digest. */
-  saveCaptureSession({ session, locator, primarySha, primaryFile, base, state, ttlMs = 36e5, at: at26 = null } = {}) {
+  saveCaptureSession({ session, locator, primarySha, primaryFile, base, state, ttlMs = 36e5, at: at27 = null } = {}) {
     return this.#tx(() => {
-      const now = at26 ? new Date(at26) : /* @__PURE__ */ new Date();
+      const now = at27 ? new Date(at27) : /* @__PURE__ */ new Date();
       const iso5 = (d) => stampSecond3(d.getTime());
       this.#sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, iso5(now));
       if (!session || !state) return { session: null, saved: false };
@@ -46961,9 +46961,9 @@ var Capture = class _Capture {
       return { session, saved: true, ticks: 1, bytes: body.length };
     });
   }
-  loadCaptureSession({ session, at: at26 = null } = {}) {
+  loadCaptureSession({ session, at: at27 = null } = {}) {
     return this.#tx(() => {
-      const now = at26 ? new Date(at26) : /* @__PURE__ */ new Date();
+      const now = at27 ? new Date(at27) : /* @__PURE__ */ new Date();
       this.#sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, stampSecond3(now.getTime()));
       const r = this.#one(`SELECT * FROM capture_sessions WHERE session = ?`, session);
       if (!r) return {
@@ -46999,8 +46999,8 @@ var Capture = class _Capture {
   /** R46: every live session, for `queue`'s partial-capture condition. Writes nothing, never throws. */
   liveCaptureSessions(now) {
     try {
-      const at26 = typeof now === "string" ? now : stampSecond3(Number.isFinite(Number(now)) ? Number(now) : Date.now());
-      return this.#rows(`SELECT * FROM capture_sessions WHERE expires > ? ORDER BY session`, at26).map((r) => {
+      const at27 = typeof now === "string" ? now : stampSecond3(Number.isFinite(Number(now)) ? Number(now) : Date.now());
+      return this.#rows(`SELECT * FROM capture_sessions WHERE expires > ? ORDER BY session`, at27).map((r) => {
         let state = null;
         try {
           state = JSON.parse(r.state);
@@ -47083,10 +47083,10 @@ var Capture = class _Capture {
    *  (CAP-14), and a reused part's source is the reusing capture's own record. N90: every change is counted and
    *  every posthoc verdict appended, but the answer lists at most `limit` changes, each naming at most `limit`
    *  reusers, and says when either was cut. */
-  recordSiteAssets({ host, primarySha, observations = [], at: at26 = null, limit = null } = {}) {
+  recordSiteAssets({ host, primarySha, observations = [], at: at27 = null, limit = null } = {}) {
     return this.#tx(() => {
       if (!host || !primarySha) return { host: null, recorded: 0 };
-      const now = at26 || stampSecond3();
+      const now = at27 || stampSecond3();
       const cap = limitOf(limit);
       let truncated3 = false;
       let added = 0, changedCount = 0;
@@ -47209,9 +47209,9 @@ var Capture = class _Capture {
    *  PRESENT unchanged, changed → PRESENT changed, unreachable → LOOKED_INDETERMINATE, not_attempted → NO ROW,
    *  because a look not taken is NEVER_LOOKED, the absence of a row) is handed to the `observation` listener;
    *  refusals are collected and reported, never thrown. */
-  recordReuseVerdicts({ bundleId = null, verdicts = [], at: at26 = null } = {}) {
+  recordReuseVerdicts({ bundleId = null, verdicts = [], at: at27 = null } = {}) {
     return this.#tx(() => {
-      const now = at26 || stampSecond3();
+      const now = at27 || stampSecond3();
       let recorded = 0;
       const refusals = [];
       for (const v of verdicts) {
@@ -47315,9 +47315,9 @@ var Capture = class _Capture {
   }
   /** R23. A run never refused is NOT evidence about where the ceiling is: it only advances the counter. A ceiling
    *  that MOVED keeps the old value and the date ("51 until Tuesday, now 1000" is the fact worth acting on). */
-  recordCaptureLimit({ runtime = "subrequests", observed = null, at: at26 = null } = {}) {
+  recordCaptureLimit({ runtime = "subrequests", observed = null, at: at27 = null } = {}) {
     return this.#tx(() => {
-      const now = at26 || stampSecond3();
+      const now = at27 || stampSecond3();
       const cur = this.#one(`SELECT * FROM capture_limits WHERE runtime = ?`, runtime);
       if (observed == null) {
         if (cur) this.#sql.exec(`UPDATE capture_limits SET since_probe = since_probe + 1 WHERE runtime = ?`, runtime);
@@ -47358,13 +47358,13 @@ var Capture = class _Capture {
    * ==================================================================== */
   /** R15. Bounds what it accepts, records no decision, idempotent on (kind, capture_sha); every enqueue (a dedupe
    *  included, since the consumer still owes it a drain) calls the `task` listeners (R44), which arm the drain. */
-  async taskEnqueue({ kind = "authority-undetermined", captureSha = null, subject = "", locator = null, at: at26 = null } = {}) {
+  async taskEnqueue({ kind = "authority-undetermined", captureSha = null, subject = "", locator = null, at: at27 = null } = {}) {
     if (!TASK_KINDS.includes(kind)) return { ok: false, reason: "BAD_KIND", detail: `kind must be one of: ${TASK_KINDS.join(", ")}` };
     if (typeof captureSha !== "string" || !HEX644.test(captureSha))
       return { ok: false, reason: "BAD_CAPTURE_SHA", detail: "a capture sha256 identifies the event; a record does not exist yet at capture time" };
     const text5 = boundedSubject(subject) || "a capture whose authority could not be determined";
     const loc = typeof locator === "string" && locator.length <= 2e3 ? locator : null;
-    const now = at26 && ISO_INSTANT.test(at26) ? at26 : stampSecond3();
+    const now = at27 && ISO_INSTANT.test(at27) ? at27 : stampSecond3();
     const existing = this.#tx(() => {
       const held = this.#one(`SELECT capture_sha FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha);
       if (!held)
@@ -47409,13 +47409,13 @@ var Capture = class _Capture {
     }
   }
   /** R45 */
-  taskEventAttempt({ kind, captureSha, at: at26 } = {}) {
+  taskEventAttempt({ kind, captureSha, at: at27 } = {}) {
     try {
       return this.#tx(() => {
         if (!this.#one(`SELECT 1 AS x FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha)) return { found: false };
         this.#sql.exec(
           `UPDATE task_queue SET attempts = attempts + 1, last_try = ? WHERE kind=? AND capture_sha=?`,
-          at26 ?? stampSecond3(),
+          at27 ?? stampSecond3(),
           kind,
           captureSha
         );
@@ -47443,7 +47443,7 @@ var Capture = class _Capture {
   /** R61: what the source sent about the bytes of the capture this fetch filed (`ETag`, `Last-Modified`), under the
    *  document address. Written by the acquisition act on every filed direct capture; a later write for the same pair
    *  replaces it. Never throws. */
-  recordValidators({ addressNorm, captureSha, etag = null, lastModified = null, at: at26 = null } = {}) {
+  recordValidators({ addressNorm, captureSha, etag = null, lastModified = null, at: at27 = null } = {}) {
     try {
       if (typeof addressNorm !== "string" || !addressNorm || typeof captureSha !== "string" || !HEX644.test(captureSha))
         return { recorded: false };
@@ -47455,7 +47455,7 @@ var Capture = class _Capture {
         captureSha,
         etag || null,
         lastModified || null,
-        at26 && ISO_INSTANT.test(at26) ? at26 : stampSecond3()
+        at27 && ISO_INSTANT.test(at27) ? at27 : stampSecond3()
       ));
       return { recorded: true };
     } catch {
@@ -47514,11 +47514,11 @@ var Capture = class _Capture {
   /** R8. One attempt at one document address. A governed refusal is counted in its own column and never as a
    *  failure: the silence is ours. Every recorded outcome is then handed to the `source-outcome` listeners (R44),
    *  which is how monitoring's alarm is armed on a counted failure. */
-  async recordSourceOutcome({ addressNorm = null, outcome = null, status = null, at: at26 = null } = {}) {
+  async recordSourceOutcome({ addressNorm = null, outcome = null, status = null, at: at27 = null } = {}) {
     if (typeof addressNorm !== "string" || addressNorm === "") return { ok: false, reason: "NO_ADDRESS" };
     if (!SOURCE_OUTCOMES.includes(outcome))
       return { ok: false, reason: "BAD_OUTCOME", detail: `outcome must be one of: ${SOURCE_OUTCOMES.join(", ")}` };
-    const now = at26 && ISO_INSTANT.test(at26) ? at26 : stampSecond3();
+    const now = at27 && ISO_INSTANT.test(at27) ? at27 : stampSecond3();
     const st = Number.isInteger(status) ? status : null;
     this.#tx(() => {
       this.#sql.exec(`INSERT INTO source_reachability (address_norm, updated_at) VALUES (?, ?) ON CONFLICT(address_norm) DO NOTHING`, addressNorm, now);
@@ -47566,10 +47566,10 @@ var Capture = class _Capture {
         thresholds: TH,
         basis: "no attempt on this address has ever been recorded"
       };
-    const at26 = now && ISO_INSTANT.test(now) ? now : stampSecond3();
+    const at27 = now && ISO_INSTANT.test(now) ? now : stampSecond3();
     const byCount = row2.consecutive_failures >= TH.failures;
     const since = row2.first_failure_since ? Date.parse(row2.first_failure_since) : null;
-    const staleDays = since === null ? 0 : (Date.parse(at26) - since) / 864e5;
+    const staleDays = since === null ? 0 : (Date.parse(at27) - since) / 864e5;
     const byAge = row2.consecutive_failures >= TH.minForAge && staleDays >= TH.days;
     return {
       address_norm: row2.address_norm,
@@ -47822,8 +47822,8 @@ function systemName(view, origin) {
 function floorConflicts(conflicts, kind) {
   return conflicts.filter((c) => {
     if (!isObj7(c)) return false;
-    const at26 = typeof c.at === "string" ? c.at : JSON.stringify(c.at ?? "");
-    return /floor/i.test(at26) && new RegExp(`(^|[^a-z0-9_])${kind.replace(/[^a-z0-9_]/gi, "\\$&")}([^a-z0-9_]|$)`, "i").test(at26);
+    const at27 = typeof c.at === "string" ? c.at : JSON.stringify(c.at ?? "");
+    return /floor/i.test(at27) && new RegExp(`(^|[^a-z0-9_])${kind.replace(/[^a-z0-9_]/gi, "\\$&")}([^a-z0-9_]|$)`, "i").test(at27);
   });
 }
 function conflictSays(cs) {
@@ -48506,10 +48506,10 @@ var Entities = class _Entities {
       };
     }
     const extra = Array.isArray(aliases) ? aliases : [];
-    const at26 = this.#now();
+    const at27 = this.#now();
     const by = declaredBy == null ? null : String(declaredBy);
     return this.#record.transact(() => {
-      const { id } = this.#record.allocId("ENT", at26.slice(0, 4));
+      const { id } = this.#record.allocId("ENT", at27.slice(0, 4));
       this.#sql.exec(
         `INSERT INTO entities (entity_id,kind,label,note,declared_by,at) VALUES (?,?,?,?,?,?)`,
         id,
@@ -48517,7 +48517,7 @@ var Entities = class _Entities {
         lab,
         note.slice(0, 2e3),
         by,
-        at26
+        at27
       );
       const seen = /* @__PURE__ */ new Set();
       const put2 = (name2, canonical2) => {
@@ -48525,12 +48525,12 @@ var Entities = class _Entities {
         if (!norm || seen.has(norm)) return;
         seen.add(norm);
         this.#sql.exec(`INSERT OR IGNORE INTO entity_aliases (entity_id,alias,alias_norm,canonical,declared_by,at)
-                        VALUES (?,?,?,?,?,?)`, id, cleanLabel(name2), norm, canonical2 ? 1 : 0, by, at26);
+                        VALUES (?,?,?,?,?,?)`, id, cleanLabel(name2), norm, canonical2 ? 1 : 0, by, at27);
       };
       put2(lab, true);
       for (const a of extra) put2(a, false);
       const count = this.#one(`SELECT count(*) AS c FROM entity_aliases WHERE entity_id=?`, id).c;
-      return { ok: true, entity_id: id, kind: k, label: lab, alias_count: Number(count), at: at26 };
+      return { ok: true, entity_id: id, kind: k, label: lab, alias_count: Number(count), at: at27 };
     });
   }
   /** R2: an alias attached after the fact, exactly as it can be given at creation. The same fold may be held by
@@ -48563,7 +48563,7 @@ var Entities = class _Entities {
         detail: "this entity held that name and it was withdrawn; a withdrawn name stays on the record as withdrawn"
       } : {}
     };
-    const at26 = this.#now();
+    const at27 = this.#now();
     this.#sql.exec(
       `INSERT INTO entity_aliases (entity_id,alias,alias_norm,canonical,declared_by,at) VALUES (?,?,?,?,?,?)`,
       entityId,
@@ -48571,9 +48571,9 @@ var Entities = class _Entities {
       norm,
       0,
       declaredBy == null ? null : String(declaredBy),
-      at26
+      at27
     );
-    return { ok: true, entity_id: entityId, alias: cleanLabel(alias), at: at26 };
+    return { ok: true, entity_id: entityId, alias: cleanLabel(alias), at: at27 };
   }
   /** R3: a CONSTITUTIVE relation between two registered entries, justified AND cited (safeguard 4). No grade
    *  argument and no grade stored (D-83, R26). */
@@ -48599,12 +48599,12 @@ var Entities = class _Entities {
     if (!cite) return actShapeRefusal("NO_CITATION", "a declared relation carries a citation, like a pattern statement (safeguard 4)");
     if (!this.has(fromEntity)) return noSuchEntity(fromEntity, { end: "from" });
     if (!this.has(toEntity)) return noSuchEntity(toEntity, { end: "to" });
-    const at26 = this.#now();
+    const at27 = this.#now();
     const by = declaredBy == null ? null : String(declaredBy);
     return this.#record.transact(() => {
-      const { id } = this.#record.allocId("REL", at26.slice(0, 4));
+      const { id } = this.#record.allocId("REL", at27.slice(0, 4));
       this.#sql.exec(`INSERT INTO entity_relations (relation_id,from_entity,to_entity,relation,justification,citation,declared_by,at)
-                      VALUES (?,?,?,?,?,?,?,?)`, id, fromEntity, toEntity, rel, just.slice(0, 4e3), cite.slice(0, 2e3), by, at26);
+                      VALUES (?,?,?,?,?,?,?,?)`, id, fromEntity, toEntity, rel, just.slice(0, 4e3), cite.slice(0, 2e3), by, at27);
       return {
         ok: true,
         relation_id: id,
@@ -48614,7 +48614,7 @@ var Entities = class _Entities {
         justification: just.slice(0, 4e3),
         citation: cite.slice(0, 2e3),
         declared_by: by,
-        at: at26
+        at: at27
       };
     });
   }
@@ -48689,16 +48689,16 @@ var Entities = class _Entities {
         alias: a.alias,
         withdrawn: { by: a.withdrawn_by, at: a.withdrawn_at, reason: a.withdrawn_reason }
       };
-    const at26 = this.#now();
+    const at27 = this.#now();
     const by = withdrawnBy == null ? null : String(withdrawnBy);
     this.#sql.exec(`UPDATE entity_aliases SET withdrawn_by=?, withdrawn_at=?, withdrawn_reason=?
-                     WHERE entity_id=? AND alias_norm=?`, by, at26, why, entityId, norm);
+                     WHERE entity_id=? AND alias_norm=?`, by, at27, why, entityId, norm);
     const resting = this.#restingOn(entityId, norm);
     return {
       ok: true,
       entity_id: entityId,
       alias: a.alias,
-      withdrawn: { by, at: at26, reason: why },
+      withdrawn: { by, at: at27, reason: why },
       resolutions_resting: resting.rows,
       resolutions_resting_truncated: resting.truncated,
       limit: ENTITY_COLLECTION_LIMIT,
@@ -48718,12 +48718,12 @@ var Entities = class _Entities {
     const r = this.#one(`SELECT * FROM entity_relations WHERE relation_id=?`, relationId);
     if (!r) return { ok: false, reason: "NO_SUCH_RELATION", relation_id: relationId };
     if (r.withdrawn_at) return { ok: true, already: true, relation: this.#relationView(r) };
-    const at26 = this.#now();
+    const at27 = this.#now();
     const by = withdrawnBy == null ? null : String(withdrawnBy);
     this.#sql.exec(
       `UPDATE entity_relations SET withdrawn_by=?, withdrawn_at=?, withdrawn_reason=? WHERE relation_id=?`,
       by,
-      at26,
+      at27,
       why,
       relationId
     );
@@ -48864,7 +48864,7 @@ var Entities = class _Entities {
      (`raised_from`); an equal or weaker one is kept; a grade never falls. R13: each insert or raise runs the
      `onResolved` listeners. */
   #upsert({ captureSha, bundleId, ref, entityId, grade, method, basis, resolvedBy }) {
-    const at26 = this.#now();
+    const at27 = this.#now();
     const est = isEstablished(grade) ? 1 : 0;
     const b = basis == null ? null : String(basis).slice(0, 400);
     const bn = grade === "D" || b == null ? null : normAlias(b) || null;
@@ -48884,7 +48884,7 @@ var Entities = class _Entities {
       };
     if (!existing)
       this.#sql.exec(`INSERT INTO resolutions (capture_sha,bundle_id,ref,entity_id,grade,method,basis,basis_norm,established,raised_from,resolved_by,at)
-                      VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`, captureSha, bundleId, ref, entityId, grade, method, b, bn, est, null, by, at26);
+                      VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`, captureSha, bundleId, ref, entityId, grade, method, b, bn, est, null, by, at27);
     else
       this.#sql.exec(
         `UPDATE resolutions SET grade=?, method=?, basis=?, basis_norm=?, established=?, raised_from=?, resolved_by=?, at=?
@@ -48896,7 +48896,7 @@ var Entities = class _Entities {
         est,
         existing.grade,
         by,
-        at26,
+        at27,
         captureSha,
         ref,
         entityId
@@ -48916,7 +48916,7 @@ var Entities = class _Entities {
       raised,
       ...raised ? { raised_from: existing.grade } : {},
       resolved_by: by,
-      at: at26
+      at: at27
     };
   }
   /** R11: the recogniser over a captured document's references (all of them, or `ref`), in one transaction; with
@@ -49099,7 +49099,7 @@ var Entities = class _Entities {
       const answer = { ok: true, capture_sha: captureSha, ref, entity_id: entityId };
       if (prior)
         return { ...answer, already: true, defect: _Entities.#defectView({ ...prior, bundle_id: null }, (id) => id), defect_count: count() };
-      const at26 = this.#now();
+      const at27 = this.#now();
       this.#sql.exec(
         `INSERT INTO resolution_defects (capture_sha,bundle_id,ref,entity_id,reason,source_module,source_id,reported_by,at)
                       VALUES (?,?,?,?,?,?,?,?,?)`,
@@ -49111,11 +49111,11 @@ var Entities = class _Entities {
         src ? src.module : null,
         src ? src.id : null,
         reporter,
-        at26
+        at27
       );
       return {
         ...answer,
-        defect: { reason: why, source: src, by: reporter, at: at26 },
+        defect: { reason: why, source: src, by: reporter, at: at27 },
         defect_count: count(),
         detail: "the report is kept beside the resolution; the grade, the resolution and every connection are unchanged"
       };
@@ -50119,22 +50119,22 @@ var Themes = class _Themes {
         `${bytes(idea)} B of name and ${bytes(criterion)} B of test, over the ${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather than cut`,
         { limit: CAPTURE_TEXT_UNIT_CAP }
       );
-    const at26 = stampInstant("second");
-    const themeId = `THEME-${at26.slice(0, 4)}-${at26.slice(5, 7)}${at26.slice(8, 10)}-${randHex(6)}`;
+    const at27 = stampInstant("second");
+    const themeId = `THEME-${at27.slice(0, 4)}-${at27.slice(5, 7)}${at27.slice(8, 10)}-${randHex(6)}`;
     this.sql.exec(
       `INSERT INTO themes (theme_id, declared_by, name, test, at) VALUES (?, ?, ?, ?, ?)`,
       themeId,
       who2,
       idea,
       criterion,
-      at26
+      at27
     );
     return {
       ok: true,
       theme_id: themeId,
       name: idea,
       test: criterion,
-      at: at26,
+      at: at27,
       ...this.person("declared_by", who2, administer),
       evidence: false,
       says: `${this.#name(who2, administer)}'s theme is declared, with its test. It is a lens for finding and gathering material, visibly theirs, and never the basis of a claim: no leg can rest on it or on membership in it`
@@ -50154,7 +50154,7 @@ var Themes = class _Themes {
     const T = src.row;
     const tgt = this.#targetFor(target, note, viewer);
     if (!tgt.ok) return tgt;
-    const at26 = stampInstant("second");
+    const at27 = stampInstant("second");
     const before = this.#one(`SELECT state FROM theme_placements WHERE theme_id = ? AND target = ?`, T.theme_id, tgt.target);
     if (!before)
       this.sql.exec(
@@ -50165,7 +50165,7 @@ var Themes = class _Themes {
         tgt.kind,
         tgt.bundleId,
         who2,
-        at26,
+        at27,
         tgt.note
       );
     else if (before.state === "hunch")
@@ -50173,7 +50173,7 @@ var Themes = class _Themes {
         `UPDATE theme_placements SET state = 'member', grade = 'D', placed_by = ?, placed_at = ?, placement_note = ?
           WHERE theme_id = ? AND target = ? AND state = 'hunch'`,
         who2,
-        at26,
+        at27,
         tgt.note,
         T.theme_id,
         tgt.target
@@ -50203,7 +50203,7 @@ var Themes = class _Themes {
     const T = src.row;
     const tgt = this.#targetFor(target, note, viewer);
     if (!tgt.ok) return tgt;
-    const at26 = stampInstant("second");
+    const at27 = stampInstant("second");
     const before = this.#one(`SELECT state FROM theme_placements WHERE theme_id = ? AND target = ?`, T.theme_id, tgt.target);
     if (!before)
       this.sql.exec(
@@ -50214,7 +50214,7 @@ var Themes = class _Themes {
         tgt.kind,
         tgt.bundleId,
         who2,
-        at26,
+        at27,
         tgt.note
       );
     const row2 = this.#one(`SELECT * FROM theme_placements WHERE theme_id = ? AND target = ?`, T.theme_id, tgt.target);
@@ -50264,7 +50264,7 @@ var Themes = class _Themes {
         { target: tgt.target }
       );
     const state = row2.state === "member" ? "withdrawn" : "rejected";
-    const at26 = stampInstant("second");
+    const at27 = stampInstant("second");
     this.k.record.transact(() => {
       this.sql.exec(
         `INSERT INTO theme_placement_acts (theme_id, target, target_kind, bundle_id, state, grade, proposed_by, proposed_at,
@@ -50283,7 +50283,7 @@ var Themes = class _Themes {
         row2.placed_at,
         row2.placement_note,
         who2,
-        at26,
+        at27,
         why
       );
       this.sql.exec(`DELETE FROM theme_placements WHERE theme_id = ? AND target = ?`, row2.theme_id, row2.target);
@@ -50556,11 +50556,11 @@ var Connections = class _Connections {
     const refused2 = listenerRefusal(this.#listeners, module, fn);
     if (refused2) return refused2;
     this.#listeners.push({ module, fn, seq: this.#listeners.length });
-    const at26 = (m) => {
+    const at27 = (m) => {
       const i = MODULE_ORDER.indexOf(m);
       return i === -1 ? Infinity : i;
     };
-    this.#listeners.sort((x, y) => at26(x.module) - at26(y.module) || x.seq - y.seq);
+    this.#listeners.sort((x, y) => at27(x.module) - at27(y.module) || x.seq - y.seq);
     return { ok: true, module };
   }
   /** R5: the provider of an entity's derivation statement (`observation-log`, which reads its own log), once; it is
@@ -50644,7 +50644,7 @@ var Connections = class _Connections {
       );
       if (rr) e.pos = readingSourceFromColumns(rr.pos_kind, rr.pos, rr.pos_ref);
     }
-    const at26 = this.now();
+    const at27 = this.now();
     const label = ent ? ent.label : entityId;
     const written = [];
     this.#transact(() => {
@@ -50671,7 +50671,7 @@ var Connections = class _Connections {
             established: isEstablished(grade) ? 1 : 0,
             asserted_by: author,
             basis: basis.slice(0, 400),
-            at: at26,
+            at: at27,
             a_ref: A.ref,
             a_pos_kind: A.pos ? A.pos.kind : null,
             a_pos: A.pos ? readingSourceJson(A.pos) : null,
@@ -51259,7 +51259,7 @@ var Connections = class _Connections {
     const cur = this.#currentPairChoices(aSha, bSha, entityId)[side];
     const occurrence = pick2 ? pick2.occurrence : null;
     const position = pick2 ? readingSourceFromColumns(pick2.pos_kind, pick2.pos, pick2.pos_ref) : null;
-    const at26 = this.now();
+    const at27 = this.now();
     const answer = (wrote, prior) => ({
       ok: true,
       wrote,
@@ -51276,7 +51276,7 @@ var Connections = class _Connections {
         grade: mention.grade,
         position,
         chosen_by: wrote ? who2 : cur.chosen_by,
-        at: wrote ? at26 : cur.at
+        at: wrote ? at27 : cur.at
       },
       superseded: prior,
       machine_pair_ref: side === "a" ? conn.a_ref : conn.b_ref,
@@ -51288,7 +51288,7 @@ var Connections = class _Connections {
         this.sql.exec(
           `UPDATE connection_pair_choices SET superseded_at=?
                         WHERE a_capture_sha=? AND b_capture_sha=? AND entity_id=? AND side=? AND superseded_at IS NULL`,
-          at26,
+          at27,
           aSha,
           bSha,
           entityId,
@@ -51307,7 +51307,7 @@ var Connections = class _Connections {
         conn.a_bundle_id,
         conn.b_bundle_id,
         who2,
-        at26
+        at27
       );
       return { ok: true };
     });
@@ -51461,8 +51461,8 @@ var Connections = class _Connections {
    *  connection, apart from derived ones (R32). A self-edge is dropped; a target no bundle claims is counted
    *  `skipped_unregistered`. `bundle` naming a bundle the viewer cannot see, or none, is refused as not held (R27);
    *  a PROJECT source needs the actor to have joined it (REC-134, D-722 (2)). */
-  projectLinks({ sourceCapture, sourceBundle = null, at: at26 = null, viewer = null, identity = null } = {}) {
-    const seen = this.capture.resolveLinks({ sourceCapture, at: at26, viewer: viewer ?? null });
+  projectLinks({ sourceCapture, sourceBundle = null, at: at27 = null, viewer = null, identity = null } = {}) {
+    const seen = this.capture.resolveLinks({ sourceCapture, at: at27, viewer: viewer ?? null });
     if (!seen.links || !seen.links.length) return { projected: 0, edges: [] };
     let bundle = sourceBundle;
     if (bundle) {
@@ -51603,7 +51603,7 @@ Changes: links_to edges added to ${add.map((e) => e.to).join(", ")}, each the so
   /* R32: the source's own link between two held documents, grade A, asserted by the source, kept apart from derived
      rows; `timing` says whether the link's contemporaneity was established (a verdict other than contemporaneous is
      undetermined, labelled so). */
-  #upsertSourceConnection(bundle, e, sourceCapture, at26) {
+  #upsertSourceConnection(bundle, e, sourceCapture, at27) {
     const timing = e.verdict === "contemporaneous" ? "contemporaneous" : "undetermined";
     const basis = `the source document linked to ${e.to} by the address ${cut2(e.address, 300)}, resolved to a capture the record holds; ` + (timing === "contemporaneous" ? "the target's bytes were seen unchanged on both sides of the source's retrieval" : "which version of the target the source pointed at is undetermined");
     this.sql.exec(
@@ -51618,7 +51618,7 @@ Changes: links_to edges added to ${add.map((e) => e.to).join(", ")}, each the so
       basis,
       timing,
       e.address ?? null,
-      at26
+      at27
     );
   }
   /** R29: after a promotion commits, every held capture whose resolved link points at a capture the promoted bundle
@@ -51694,7 +51694,7 @@ Changes: links_to edges added to ${add.map((e) => e.to).join(", ")}, each the so
       connection: this.#assertedView(held, this.redactor(viewer)),
       says: "you have already asserted this connection; nothing was written"
     };
-    const at26 = this.now();
+    const at27 = this.now();
     this.sql.exec(
       `INSERT INTO asserted_connections (kind, a_bundle_id, b_bundle_id, origin, grade, established, asserted_by, author, basis, at)
        VALUES ('member', ?, ?, ?, 'D', 0, 'member', ?, ?, ?)`,
@@ -51703,7 +51703,7 @@ Changes: links_to edges added to ${add.map((e) => e.to).join(", ")}, each the so
       who2,
       who2,
       words,
-      at26
+      at27
     );
     const row2 = this.#one(
       `SELECT * FROM asserted_connections WHERE kind='member' AND a_bundle_id=? AND b_bundle_id=? AND origin=?`,
@@ -51793,7 +51793,7 @@ Changes: links_to edges added to ${add.map((e) => e.to).join(", ")}, each the so
     return { norm, bundle: r ? r.bundle_id : null };
   }
   /* R49: store one pair when both documents are held, else keep it pending. Answers 'stored' | 'pending'. */
-  #storePair(agendaCapture, agendaBundle, pair, at26) {
+  #storePair(agendaCapture, agendaBundle, pair, at27) {
     const item = this.#heldAt(pair.item_address), file = this.#heldAt(pair.file_address);
     if (!item.norm || !file.norm) return "unaddressable";
     if (item.bundle && file.bundle && item.bundle !== file.bundle) {
@@ -51810,7 +51810,7 @@ Changes: links_to edges added to ${add.map((e) => e.to).join(", ")}, each the so
         basis,
         pair.item_address,
         pair.file_address,
-        at26
+        at27
       );
       this.sql.exec(
         `DELETE FROM file_membership_pending WHERE agenda_capture=? AND item_norm=? AND file_norm=?`,
@@ -51831,7 +51831,7 @@ Changes: links_to edges added to ${add.map((e) => e.to).join(", ")}, each the so
       item.norm,
       file.norm,
       JSON.stringify(pair),
-      at26
+      at27
     );
     return "pending";
   }
@@ -51862,7 +51862,7 @@ Changes: links_to edges added to ${add.map((e) => e.to).join(", ")}, each the so
     };
     const bad = checkMembershipLabel(m);
     if (bad) return { ok: true, capture_sha: sha, stored: 0, pending: 0, membership: null, why: `label_check_failed: ${bad}` };
-    const at26 = this.now();
+    const at27 = this.now();
     let stored = 0, pending = 0;
     this.#transact(() => {
       for (const g of m.items || [])
@@ -51873,7 +51873,7 @@ Changes: links_to edges added to ${add.map((e) => e.to).join(", ")}, each the so
             item_anchor: g.item.anchor ?? null,
             file_anchor: f17.anchor ?? null,
             system: m.system ?? null
-          }, at26);
+          }, at27);
           if (out === "stored") stored++;
           else if (out === "pending") pending++;
         }
@@ -51899,16 +51899,16 @@ Changes: links_to edges added to ${add.map((e) => e.to).join(", ")}, each the so
       JSON.stringify(norms),
       JSON.stringify(norms)
     );
-    const at26 = this.now();
+    const at27 = this.now();
     let n = 0;
     for (const p of pend) {
       const pair = safeJson7(p.pair) || { item_address: p.item_address, file_address: p.file_address };
-      if (this.#storePair(p.agenda_capture, p.agenda_bundle, pair, at26) === "stored") n++;
+      if (this.#storePair(p.agenda_capture, p.agenda_bundle, pair, at27) === "stored") n++;
     }
     const home = this.#one(`SELECT bundle_id FROM register WHERE capture_sha=?`, captureSha);
     if (home) this.sql.exec(
       `UPDATE asserted_connections SET at=? WHERE kind='containment' AND (a_bundle_id=? OR b_bundle_id=?)`,
-      at26,
+      at27,
       home.bundle_id,
       home.bundle_id
     );
@@ -51982,14 +51982,14 @@ Changes: links_to edges added to ${add.map((e) => e.to).join(", ")}, each the so
         id: id ?? null,
         detail: "this record holds no stored item-to-file membership by that id that you can see"
       };
-    const at26 = this.now();
+    const at27 = this.now();
     this.sql.exec(
       `INSERT INTO asserted_connection_judgements (connection_id, verdict, judged_by, at, reason, a_bundle_id, b_bundle_id)
                    VALUES (?, ?, ?, ?, ?, ?, ?)`,
       row2.connection_id,
       word,
       who2,
-      at26,
+      at27,
       cut2(why, ASSERT_BASIS_MAX),
       row2.a_bundle_id,
       row2.b_bundle_id
@@ -52804,11 +52804,11 @@ function derivationDocumentsFrom(detail) {
 function derivationStatement(row2 = null, missingCause2 = null) {
   if (row2 && typeof row2.state === "string") {
     const documents = derivationDocumentsFrom(row2.detail);
-    const at26 = row2.at == null ? null : String(row2.at);
+    const at27 = row2.at == null ? null : String(row2.at);
     const over = documents == null ? "an unrecorded number of documents" : `${documents} document(s)`;
     const cut4 = row2.state === "partial";
-    const says = cut4 ? `the latest derivation (${at26}) was CUT by its bound after ${over}: the connections here are true but are part of the set through this subject, not all of it` : row2.state === "PRESENT" ? `the latest derivation (${at26}) read ${over} and was not cut` : row2.state === "LOOKED_ABSENT" ? `the latest derivation (${at26}) ran over ${over}, was not cut, and formed no connection` : `the latest derivation (${at26}) recorded state ${row2.state}`;
-    return { state: row2.state, cut: cut4, at: at26, documents, derived: "derived", says };
+    const says = cut4 ? `the latest derivation (${at27}) was CUT by its bound after ${over}: the connections here are true but are part of the set through this subject, not all of it` : row2.state === "PRESENT" ? `the latest derivation (${at27}) read ${over} and was not cut` : row2.state === "LOOKED_ABSENT" ? `the latest derivation (${at27}) ran over ${over}, was not cut, and formed no connection` : `the latest derivation (${at27}) recorded state ${row2.state}`;
+    return { state: row2.state, cut: cut4, at: at27, documents, derived: "derived", says };
   }
   const cause = typeof missingCause2 === "string" ? missingCause2 : "purged";
   if (cause === "never_looked")
@@ -53040,7 +53040,7 @@ var ObservationLog = class _ObservationLog {
    *  EVERY REFUSAL IS READ OUT OF THE MAP AND NONE IS TYPED HERE. `checkObservation` is pure and holds the whole
    *  judgement; this method's only job is to put a judged row in. The entry is handed to it in the SHAPE THE TABLE
    *  STORES, so what was judged and what is written are the same object. */
-  observe(entry, at26 = null, terminal = 0) {
+  observe(entry, at27 = null, terminal = 0) {
     const e = entry && typeof entry === "object" ? entry : {};
     const pick2 = (snake, camel, dflt = null) => e[snake] !== void 0 ? e[snake] : e[camel] !== void 0 ? e[camel] : dflt;
     const row2 = {
@@ -53063,7 +53063,7 @@ var ObservationLog = class _ObservationLog {
     };
     const bad = checkObservation(row2, CONDITION_KINDS, this.#observationReferent(row2));
     if (bad) return bad;
-    const when = at26 || stampInstant("second", this.now());
+    const when = at27 || stampInstant("second", this.now());
     this.sql.exec(
       `INSERT INTO observation_log
          (at, actor_class, actor, authority_kind, authority, level, subject_kind, subject,
@@ -53771,16 +53771,16 @@ var ObservationLog = class _ObservationLog {
         `${bytes2(typed)} B of words${where ? ` and ${bytes2(where)} B of locator` : ""}, over the ${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather than cut`,
         { limit: CAPTURE_TEXT_UNIT_CAP }
       );
-    const at26 = stampInstant("second", this.now());
+    const at27 = stampInstant("second", this.now());
     const tail = [...crypto.getRandomValues(new Uint8Array(6))].map((b) => b.toString(16).padStart(2, "0")).join("");
-    const leadId = `LEAD-${at26.slice(0, 4)}-${at26.slice(5, 7)}${at26.slice(8, 10)}-${tail}`;
+    const leadId = `LEAD-${at27.slice(0, 4)}-${at27.slice(5, 7)}${at27.slice(8, 10)}-${tail}`;
     this.sql.exec(
       `INSERT INTO leads (lead_id, author, words, locator, at) VALUES (?, ?, ?, ?, ?)`,
       leadId,
       who2,
       typed,
       where,
-      at26
+      at27
     );
     return {
       ok: true,
@@ -53788,7 +53788,7 @@ var ObservationLog = class _ObservationLog {
       author: who2,
       words: typed,
       locator: where,
-      at: at26,
+      at: at27,
       evidence: false,
       looks: 0,
       state: "NEVER_LOOKED",
@@ -54980,9 +54980,9 @@ function tokenize(input) {
       continue;
     }
     if (!first.quoted && first.text.includes(":")) {
-      const at26 = first.text.indexOf(":");
-      const field = first.text.slice(0, at26);
-      let rest = first.text.slice(at26 + 1);
+      const at27 = first.text.indexOf(":");
+      const field = first.text.slice(0, at27);
+      let rest = first.text.slice(at27 + 1);
       if (rest === "NEAR" && src[i] === "(" && NEAR_FIELDS.has(field.toLowerCase())) {
         out.push({ k: "near", field, near: readNear() });
         continue;
@@ -55187,9 +55187,9 @@ function selector(tok3, ctx) {
   }
   if (name2 === "text") return textAtom(null, tok3.value, tok3.quoted, ctx);
   if (name2 === "fm") {
-    const at26 = tok3.value.indexOf("=");
-    const path = at26 < 0 ? tok3.value : tok3.value.slice(0, at26);
-    const val4 = at26 < 0 ? null : tok3.value.slice(at26 + 1);
+    const at27 = tok3.value.indexOf("=");
+    const path = at27 < 0 ? tok3.value : tok3.value.slice(0, at27);
+    const val4 = at27 < 0 ? null : tok3.value.slice(at27 + 1);
     if (!/^[A-Za-z0-9_.[\]]{1,120}$/.test(path)) {
       ctx.warnings.push(`fm: path ${JSON.stringify(path)} is not a frontmatter path`);
       return null;
@@ -56073,7 +56073,7 @@ function meaningLevels(level, documents, withRows, total, { arm = null, matched 
   })() : null;
   const over = axis && axis.truncated ? ` (the tally covers the first ${axis.bound} capture(s) in scope and says so rather than presenting a sample as a census)` : "";
   const coverage = cov ? `of the ${axis.captures_counted} capture(s) counted in scope, ${cov.searchable} can be searched at passage grain (${cov.full} fully indexed, ${cov.part} partly); ${cov.none} hold nothing indexable; ${cov.never} never extracted \u2014 nobody has read them; ${cov.unreadUndet} have no extraction this record can account for \u2014 read before the log carried the content level, or purged \u2014 so it cannot say that nobody read them; and ${cov.indexUndet} were read but their index state is undetermined${over}` : null;
-  const at26 = (lvl) => level === lvl;
+  const at27 = (lvl) => level === lvl;
   const out = {
     level,
     scope: {
@@ -56093,7 +56093,7 @@ function meaningLevels(level, documents, withRows, total, { arm = null, matched 
         documents,
         why: documents === 0 ? "no document is in scope at all \u2014 the other arms of this query selected none that this viewer may see, so every level below is empty for want of a document rather than for want of content" : `${documents} document(s) in scope, counted through the same gate as the rows`
       },
-      content: at26("content") ? axis ? {
+      content: at27("content") ? axis ? {
         state: "COUNTED",
         documents_with_rows: withRows,
         rows_matched: total,
@@ -56111,7 +56111,7 @@ function meaningLevels(level, documents, withRows, total, { arm = null, matched 
            cited". */
         why: "this arm answers at the meaning level. What has been extracted from the documents in scope is the content level, and TWO reads answer it: `content:` with `rows=content` for the extents somebody has cited or marked citable, and `passage:` with `rows=passage` for what the documents actually SAY. A corpus nobody has cited holds no content rows and may hold every passage you are looking for"
       },
-      meaning: at26("meaning") ? {
+      meaning: at27("meaning") ? {
         state: "COUNTED",
         documents_with_rows: withRows,
         rows_matched: total,
@@ -59074,7 +59074,7 @@ var Progressions = class _Progressions {
       );
     }
     const version = cur ? cur.version + 1 : 1;
-    const at26 = this.now();
+    const at27 = this.now();
     const by = declaredBy == null ? null : String(declaredBy).slice(0, 200);
     this.record.transact(() => {
       if (cur && !cur.version_recorded) this.#writeVersion(key, cur.version, cur, cur.stages, null, null);
@@ -59086,7 +59086,7 @@ var Progressions = class _Progressions {
         lbl,
         nt,
         by,
-        at26
+        at27
       );
       this.sql.exec(`DELETE FROM progression_stages WHERE progression_key=?`, key);
       for (const s of norm)
@@ -59102,7 +59102,7 @@ var Progressions = class _Progressions {
           s.within_interval,
           s.required
         );
-      this.#writeVersion(key, version, { label: lbl, note: nt, declared_by: by, at: at26 }, norm, stmt, cite);
+      this.#writeVersion(key, version, { label: lbl, note: nt, declared_by: by, at: at27 }, norm, stmt, cite);
     });
     return {
       ok: true,
@@ -59111,7 +59111,7 @@ var Progressions = class _Progressions {
       stage_count: norm.length,
       stages: norm,
       declared_by: by,
-      at: at26,
+      at: at27,
       version,
       unchanged: false,
       basis: basisView(stmt, cite),
@@ -59485,7 +59485,7 @@ var Progressions = class _Progressions {
       if (unconcerned) return unconcerned;
       norm.push({ stage_key: sk, capture_sha: cs, bundle_id: res.bundle_id, grade: res.grade });
     }
-    const at26 = this.now();
+    const at27 = this.now();
     const by = threadedBy == null ? null : String(threadedBy).slice(0, 200);
     this.record.transact(() => {
       const last = this.#one(`SELECT MAX(version) AS v FROM progression_threads WHERE progression_key=? AND entity_id=?`, key, eid);
@@ -59497,7 +59497,7 @@ var Progressions = class _Progressions {
           version = 2;
         }
       }
-      this.#writeThread(key, eid, version, by, at26, norm);
+      this.#writeThread(key, eid, version, by, at27, norm);
       this.sql.exec(`DELETE FROM progression_instances WHERE progression_key=? AND entity_id=?`, key, eid);
       for (const p of norm)
         this.sql.exec(
@@ -59510,14 +59510,14 @@ var Progressions = class _Progressions {
           p.bundle_id,
           p.grade,
           by,
-          at26
+          at27
         );
     });
-    const answer = { ...this.#answer(key, eid, viewer), threaded: norm.length, threaded_by: by, at: at26 };
+    const answer = { ...this.#answer(key, eid, viewer), threaded: norm.length, threaded_by: by, at: at27 };
     if (this.threadListeners.length) {
       let nextDeadline = null;
       try {
-        nextDeadline = this.overdueScan(Date.parse(at26)).next_deadline;
+        nextDeadline = this.overdueScan(Date.parse(at27)).next_deadline;
       } catch {
         nextDeadline = null;
       }
@@ -59530,14 +59530,14 @@ var Progressions = class _Progressions {
     }
     return answer;
   }
-  #writeThread(key, eid, version, by, at26, placements) {
+  #writeThread(key, eid, version, by, at27, placements) {
     this.sql.exec(
       `INSERT INTO progression_threads (progression_key,entity_id,version,threaded_by,at) VALUES (?,?,?,?,?)`,
       key,
       eid,
       version,
       by ?? null,
-      at26 ?? null
+      at27 ?? null
     );
     for (const p of placements)
       this.sql.exec(
@@ -59603,7 +59603,7 @@ var Progressions = class _Progressions {
       { stage_key: sk, capture_sha: cs, entity_id: eid }
     );
     if (unconcerned) return unconcerned;
-    const at26 = this.now();
+    const at27 = this.now();
     const by = declaredBy == null ? null : String(declaredBy).slice(0, 200);
     const r = rsn.slice(0, REASON_MAX2), c = cite.slice(0, CITATION_MAX);
     let version = 1;
@@ -59631,7 +59631,7 @@ var Progressions = class _Progressions {
           version = 2;
         }
       }
-      this.#writeException(key, eid, sk, cs, version, { bundle_id: res.bundle_id, reason: r, citation: c, declared_by: by, at: at26 });
+      this.#writeException(key, eid, sk, cs, version, { bundle_id: res.bundle_id, reason: r, citation: c, declared_by: by, at: at27 });
       this.sql.exec(
         `INSERT INTO progression_exceptions (progression_key,entity_id,stage_key,capture_sha,bundle_id,reason,citation,declared_by,at)
          VALUES (?,?,?,?,?,?,?,?,?)
@@ -59646,7 +59646,7 @@ var Progressions = class _Progressions {
         r,
         c,
         by,
-        at26
+        at27
       );
     });
     return {
@@ -59656,7 +59656,7 @@ var Progressions = class _Progressions {
       reason: r,
       citation: c,
       declared_by: by,
-      at: at26,
+      at: at27,
       exception_version: version
     };
   }
@@ -59735,9 +59735,9 @@ var Progressions = class _Progressions {
   #captureDateMs(captureSha) {
     if (typeof captureSha !== "string" || !captureSha) return null;
     const r = this.extraction.readingOf(captureSha);
-    const at26 = r && r.reading && typeof r.reading.at === "string" ? r.reading.at : null;
-    if (at26) {
-      const t = Date.parse(at26);
+    const at27 = r && r.reading && typeof r.reading.at === "string" ? r.reading.at : null;
+    if (at27) {
+      const t = Date.parse(at27);
       if (Number.isFinite(t)) return t;
     }
     const home = this.provenance.homeOf(captureSha);
@@ -59836,7 +59836,7 @@ var Progressions = class _Progressions {
       const d = recorded.get(pk + "::" + sk);
       return !!(d && d.applies);
     };
-    const instances42 = [];
+    const instances43 = [];
     const groups = /* @__PURE__ */ new Map();
     for (const p of this.#pairs()) {
       const inst = this.#assemble(p.progression_key, p.entity_id);
@@ -59848,7 +59848,7 @@ var Progressions = class _Progressions {
       const findings = [...missing, ...overdueF, ...others];
       if (!findings.length) continue;
       const entityLabel = inst.entity ? inst.entity.label : null;
-      instances42.push({
+      instances43.push({
         progression_key: inst.progression_key,
         progression_label: inst.label,
         definition_version: inst.definition_version,
@@ -59926,10 +59926,10 @@ var Progressions = class _Progressions {
     })).sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
     return {
       ok: true,
-      instances: instances42,
+      instances: instances43,
       proposals,
       dispositions,
-      instance_count: instances42.length,
+      instance_count: instances43.length,
       proposal_count: proposals.length,
       disposition_count: dispositions.length
     };
@@ -59952,7 +59952,7 @@ var Progressions = class _Progressions {
       established: f17.grade_determined === true && isEstablished(f17.grade),
       needs_confirmation: f17.grade === "C"
     });
-    const instances42 = [];
+    const instances43 = [];
     for (const r of rows2) {
       const ck = r.progression_key + "\0" + r.entity_id;
       let a = assembled.get(ck);
@@ -59971,7 +59971,7 @@ var Progressions = class _Progressions {
       const missing = inst.findings.filter((f17) => f17.kind === "missing_predecessor");
       const others = inst.findings.filter((f17) => f17.kind !== "missing_predecessor");
       const findings = [...missing, ...a.overdue, ...others].map(project).map((f17) => ({ ...f17, disposition: a.decided.get(f17.stage_key) ?? null }));
-      instances42.push({
+      instances43.push({
         progression_key: inst.progression_key,
         progression_label: inst.label,
         definition_version: inst.definition_version,
@@ -59984,7 +59984,7 @@ var Progressions = class _Progressions {
         open_finding_count: findings.filter((f17) => !(f17.disposition && f17.disposition.applies)).length
       });
     }
-    return { ok: true, capture_sha: captureSha, count: instances42.length, instances: instances42 };
+    return { ok: true, capture_sha: captureSha, count: instances43.length, instances: instances43 };
   }
   /* ===================================================================== *
    * DECISIONS (R20–R22; REC-7, REC-184, REC-211).
@@ -60049,7 +60049,7 @@ var Progressions = class _Progressions {
         `this decision names version ${seen} of '${pk}' and version ${currentVersion} is standing. Read the proposal again (op=proposals) and decide against the version in force; the earlier version still reads back in full (op=progression&version=${seen}). Nothing was recorded \u2014 no disposition was written and no proposal moved.`,
         { progression_key: pk, stage_key: sk, definition_version: seen, current_definition_version: currentVersion }
       );
-    const at26 = this.now();
+    const at27 = this.now();
     this.sql.exec(
       `INSERT INTO proposal_dispositions (progression_key,stage_key,state,reason,decided_by,at,definition_version)
        VALUES (?,?,?,?,?,?,?)
@@ -60061,7 +60061,7 @@ var Progressions = class _Progressions {
       st,
       why.slice(0, DISPOSITION_REASON_MAX),
       by.slice(0, 200),
-      at26,
+      at27,
       currentVersion
     );
     return {
@@ -60073,7 +60073,7 @@ var Progressions = class _Progressions {
       state: st,
       reason: why,
       decided_by: by,
-      at: at26,
+      at: at27,
       bundle: null,
       definition_version: currentVersion
     };
@@ -60515,17 +60515,17 @@ function appendStateHistory2(text5, e) {
     `    blurb: "${e.blurb}"`,
     `    author: ${e.author}`
   ];
-  let at26 = -1;
+  let at27 = -1;
   for (let i = 1; i < end2; i++) if (/^state_history:/.test(lines[i])) {
-    at26 = i;
+    at27 = i;
     break;
   }
-  if (at26 === -1) return [...lines.slice(0, end2), "state_history:", ...block, ...lines.slice(end2)].join("\n");
-  const rest = lines[at26].slice("state_history:".length).trim();
-  if (rest === "[]") return [...lines.slice(0, at26), "state_history:", ...block, ...lines.slice(at26 + 1)].join("\n");
+  if (at27 === -1) return [...lines.slice(0, end2), "state_history:", ...block, ...lines.slice(end2)].join("\n");
+  const rest = lines[at27].slice("state_history:".length).trim();
+  if (rest === "[]") return [...lines.slice(0, at27), "state_history:", ...block, ...lines.slice(at27 + 1)].join("\n");
   if (rest !== "") return null;
-  let last = at26;
-  for (let i = at26 + 1; i < end2; i++) {
+  let last = at27;
+  for (let i = at27 + 1; i < end2; i++) {
     if (/^\s/.test(lines[i]) && lines[i].trim() !== "") last = i;
     else break;
   }
@@ -60536,18 +60536,18 @@ function removeBlock(text5, key) {
   if (lines[0] !== "---") return text5;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return text5;
-  let at26 = -1;
+  let at27 = -1;
   for (let i = 1; i < end2; i++) if (lines[i].startsWith(key + ":")) {
-    at26 = i;
+    at27 = i;
     break;
   }
-  if (at26 === -1) return text5;
-  let last = at26;
-  for (let i = at26 + 1; i < end2; i++) {
+  if (at27 === -1) return text5;
+  let last = at27;
+  for (let i = at27 + 1; i < end2; i++) {
     if (/^\s/.test(lines[i]) && lines[i].trim() !== "") last = i;
     else break;
   }
-  return [...lines.slice(0, at26), ...lines.slice(last + 1)].join("\n");
+  return [...lines.slice(0, at27), ...lines.slice(last + 1)].join("\n");
 }
 function setOrAddBlock(text5, key, block) {
   const t = removeBlock(text5, key);
@@ -60558,23 +60558,23 @@ function setOrAddBlock(text5, key, block) {
   return [...lines.slice(0, end2), `${key}:`, ...block, ...lines.slice(end2)].join("\n");
 }
 function setSection(text5, heading, lines) {
-  const at26 = text5.indexOf(`
+  const at27 = text5.indexOf(`
 ${heading}
 `);
   const body = `${heading}
 
 ${lines.join("\n")}
 `;
-  if (at26 === -1) return text5.replace(/\s*$/, "\n") + "\n" + body;
-  const start = at26 + 1;
+  if (at27 === -1) return text5.replace(/\s*$/, "\n") + "\n" + body;
+  const start = at27 + 1;
   const nxt = text5.indexOf("\n## ", start + 1);
   const end2 = nxt === -1 ? text5.length : nxt + 1;
   return text5.slice(0, start) + body + "\n" + text5.slice(end2);
 }
 function appendSessionLog2(text5, entry) {
-  const at26 = text5.indexOf("## Session Log");
-  if (at26 < 0) return text5 + "\n## Session Log\n\n" + entry;
-  const nxt = text5.indexOf("\n## ", at26 + 1);
+  const at27 = text5.indexOf("## Session Log");
+  if (at27 < 0) return text5 + "\n## Session Log\n\n" + entry;
+  const nxt = text5.indexOf("\n## ", at27 + 1);
   const cut4 = nxt === -1 ? text5.length : nxt + 1;
   return text5.slice(0, cut4) + entry + "\n" + text5.slice(cut4);
 }
@@ -60583,15 +60583,15 @@ function spliceBasisGround(text5, byOrd) {
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
-  let at26 = -1;
+  let at27 = -1;
   for (let i = 1; i < end2; i++) if (/^basis:/.test(lines[i])) {
-    at26 = i;
+    at27 = i;
     break;
   }
-  if (at26 === -1) return null;
+  if (at27 === -1) return null;
   const starts = [];
-  let blockEnd = at26;
-  for (let i = at26 + 1; i < end2; i++) {
+  let blockEnd = at27;
+  for (let i = at27 + 1; i < end2; i++) {
     if (lines[i].trim() === "") continue;
     if (/^ {2}- /.test(lines[i])) {
       starts.push(i);
@@ -60620,14 +60620,14 @@ function blockEntries(text5, key) {
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
-  let at26 = -1;
+  let at27 = -1;
   for (let i = 1; i < end2; i++) if (lines[i].startsWith(key + ":")) {
-    at26 = i;
+    at27 = i;
     break;
   }
-  if (at26 === -1 || lines[at26].slice(key.length + 1).trim() !== "") return null;
+  if (at27 === -1 || lines[at27].slice(key.length + 1).trim() !== "") return null;
   const out = [];
-  for (let i = at26 + 1; i < end2; i++) {
+  for (let i = at27 + 1; i < end2; i++) {
     if (lines[i].trim() === "") continue;
     if (/^ {2}- /.test(lines[i])) {
       out.push([lines[i]]);
@@ -62454,10 +62454,10 @@ Into: ${ids.join(", ")}
 Reason: ${why}
 Apportioned: ${legs.length} leg(s), ${rows2.length} placement(s), ${legs.filter((l) => l.role === "cuts_against").length} cutting against.
 `;
-    const at26 = text5.indexOf("## Session Log");
-    if (at26 < 0) text5 += "\n## Session Log\n\n" + entry;
+    const at27 = text5.indexOf("## Session Log");
+    if (at27 < 0) text5 += "\n## Session Log\n\n" + entry;
     else {
-      const nxt = text5.indexOf("\n## ", at26 + 1);
+      const nxt = text5.indexOf("\n## ", at27 + 1);
       const cutAt = nxt === -1 ? text5.length : nxt + 1;
       text5 = text5.slice(0, cutAt) + entry + "\n" + text5.slice(cutAt);
     }
@@ -63611,15 +63611,15 @@ function setVersionField(text5, rowName, key, value) {
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
-  let at26 = -1;
+  let at27 = -1;
   for (let i2 = 1; i2 < end2; i2++) if (/^basis_versions:\s*$/.test(lines[i2])) {
-    at26 = i2;
+    at27 = i2;
     break;
   }
-  if (at26 === -1) return null;
+  if (at27 === -1) return null;
   const unquote = (s) => String(s).trim().replace(/^"(.*)"$/, "$1").trim();
   const lit = typeof value === "boolean" ? String(value) : quoted(value);
-  let i = at26 + 1, rowStart = -1, rowEnd = -1;
+  let i = at27 + 1, rowStart = -1, rowEnd = -1;
   while (i < end2 && /^\s{2,}(- )?\S/.test(lines[i])) {
     if (/^\s{2}- /.test(lines[i])) {
       if (rowStart !== -1 && rowEnd === -1) rowEnd = i;
@@ -63650,13 +63650,13 @@ function setCurrentVersionRow(text5, inquiryId, vname, who2, when) {
     `    at: ${quoted(when)}`,
     `    by: ${quoted(who2)}`
   ];
-  const at26 = blockAt(lines, end2, "current_versions");
-  if (at26 === -1) return [...lines.slice(0, end2), "current_versions:", ...block, ...lines.slice(end2)].join("\n");
-  const rest = lines[at26].slice("current_versions:".length).trim();
-  if (rest === "[]") return [...lines.slice(0, at26), "current_versions:", ...block, ...lines.slice(at26 + 1)].join("\n");
+  const at27 = blockAt(lines, end2, "current_versions");
+  if (at27 === -1) return [...lines.slice(0, end2), "current_versions:", ...block, ...lines.slice(end2)].join("\n");
+  const rest = lines[at27].slice("current_versions:".length).trim();
+  if (rest === "[]") return [...lines.slice(0, at27), "current_versions:", ...block, ...lines.slice(at27 + 1)].join("\n");
   if (rest !== "") return null;
   const unquote = (s) => String(s).trim().replace(/^"(.*)"$/, "$1").trim();
-  let i = at26 + 1, rowStart = -1, rowEnd = -1;
+  let i = at27 + 1, rowStart = -1, rowEnd = -1;
   while (i < end2 && /^\s{2,}(- )?\S/.test(lines[i])) {
     if (/^\s{2}- /.test(lines[i])) {
       if (rowStart !== -1 && rowEnd === -1) rowEnd = i;
@@ -63675,12 +63675,12 @@ function appendFmRows(text5, key, rowLines) {
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
-  const at26 = blockAt(lines, end2, key);
-  if (at26 === -1) return [...lines.slice(0, end2), `${key}:`, ...rowLines, ...lines.slice(end2)].join("\n");
-  const rest = lines[at26].slice(key.length + 1).trim();
-  if (rest === "[]") return [...lines.slice(0, at26), `${key}:`, ...rowLines, ...lines.slice(at26 + 1)].join("\n");
+  const at27 = blockAt(lines, end2, key);
+  if (at27 === -1) return [...lines.slice(0, end2), `${key}:`, ...rowLines, ...lines.slice(end2)].join("\n");
+  const rest = lines[at27].slice(key.length + 1).trim();
+  if (rest === "[]") return [...lines.slice(0, at27), `${key}:`, ...rowLines, ...lines.slice(at27 + 1)].join("\n");
   if (rest !== "") return null;
-  let i = at26 + 1;
+  let i = at27 + 1;
   while (i < end2 && /^\s{2,}(- )?\S/.test(lines[i])) i++;
   return [...lines.slice(0, i), ...rowLines, ...lines.slice(i)].join("\n");
 }
@@ -63709,12 +63709,12 @@ function appendConclusionEntry(text5, inquiryId, f17) {
     `    at: ${q7(f17.when)}`,
     `    by: ${q7(f17.who)}`
   ];
-  const at26 = blockAt(lines, end2, "conclusions");
-  if (at26 === -1) return [...lines.slice(0, end2), "conclusions:", ...block, ...lines.slice(end2)].join("\n");
-  const rest = lines[at26].slice("conclusions:".length).trim();
-  if (rest === "[]") return [...lines.slice(0, at26), "conclusions:", ...block, ...lines.slice(at26 + 1)].join("\n");
+  const at27 = blockAt(lines, end2, "conclusions");
+  if (at27 === -1) return [...lines.slice(0, end2), "conclusions:", ...block, ...lines.slice(end2)].join("\n");
+  const rest = lines[at27].slice("conclusions:".length).trim();
+  if (rest === "[]") return [...lines.slice(0, at27), "conclusions:", ...block, ...lines.slice(at27 + 1)].join("\n");
   if (rest !== "") return null;
-  let i = at26 + 1;
+  let i = at27 + 1;
   while (i < end2 && /^\s{2,}(- )?\S/.test(lines[i])) i++;
   return [...lines.slice(0, i), ...block, ...lines.slice(i)].join("\n");
 }
@@ -64686,7 +64686,7 @@ function versionAsWritten({
   derived_from,
   run: run2,
   author,
-  at: at26,
+  at: at27,
   level,
   observed_at,
   grounds,
@@ -64705,14 +64705,14 @@ function versionAsWritten({
       derived_from: opt(derived_from),
       run: fs(run2),
       author: blank2(author) ? null : fs(author),
-      at: fs(at26),
+      at: fs(at27),
       level: opt(level),
       observed_at: opt(observed_at)
     },
     grounds: (grounds || []).filter((g) => g && !blank2(g.ground)).map((g) => ({
       ground: fs(g.ground),
       asserted_by: isMachineIdentity(author) ? SUFFICIENCY_UNCLAIMED : fs(author ?? ""),
-      at: fs(at26),
+      at: fs(at27),
       statement: opt(g?.statement)
     })),
     legs: (legs || []).map((l) => ({
@@ -65051,7 +65051,7 @@ var BasisVersions = class _BasisVersions {
     const vLegRowsAll = isInquiry && docFm && Array.isArray(docFm.basis_version_legs) ? docFm.basis_version_legs : [];
     if (!isInquiry || !docFm) return null;
     const vPlan = vLegRowsAll.length ? this.content.citationPlan(vLegRowsAll) : /* @__PURE__ */ new Map();
-    const at26 = meta && meta.last_updated || null;
+    const at27 = meta && meta.last_updated || null;
     for (const v of versionsIn(docFm)) {
       this.sql.exec(
         `INSERT INTO inquiry_basis_versions
@@ -65095,7 +65095,7 @@ var BasisVersions = class _BasisVersions {
               captureSha: vp.captureSha,
               extent: vp.extent,
               mintedBy: CONTENT_MINTED_BY_PLANE,
-              at: at26,
+              at: at27,
               ctx: vp.ctx
             });
             if (m.ok) vContentId = m.content_id;
@@ -65287,9 +65287,9 @@ var BasisVersions = class _BasisVersions {
     const history = [];
     for (const r of rows2) {
       if (!r || typeof r !== "object" || String(r.inquiry ?? "").trim() !== want) continue;
-      const by = s(r.by), at26 = s(r.at);
+      const by = s(r.by), at27 = s(r.at);
       const act = r.act === void 0 ? "concluded" : s(r.act);
-      const base = { project: pid, inquiry: want, relationship: "project", at: at26, by };
+      const base = { project: pid, inquiry: want, relationship: "project", at: at27, by };
       if (act === "concluded") {
         const commentary = s(r.commentary);
         history.push({
@@ -65301,7 +65301,7 @@ var BasisVersions = class _BasisVersions {
           claim_state: s(r.claim) ? "adopted" : "undetermined",
           falsifier: s(r.falsifier) ?? "",
           falsifier_override: s(r.falsifier_override_by) ? { by: s(r.falsifier_override_by), at: s(r.falsifier_override_at) } : null,
-          commentary: commentary ? { text: commentary, by, at: at26, evidence: false } : null
+          commentary: commentary ? { text: commentary, by, at: at27, evidence: false } : null
         });
       } else if (act === "withdrawn") {
         history.push({
@@ -66293,7 +66293,7 @@ Claim: ${f17.claim}
    *  numbers inline, text quoted. Whether the composition differs in substance from every held version is the
    *  caller's check. Refusals: `NO_SUCH_BUNDLE`, `NOT_AN_INQUIRY`, `NO_DOCUMENT`, `UNSPLICEABLE_BASIS`; promote's own
    *  come back unchanged. */
-  appendVersion({ target, version, grounds = [], legs = [], author, run: run2, kind, at: at26, log } = {}) {
+  appendVersion({ target, version, grounds = [], legs = [], author, run: run2, kind, at: at27, log } = {}) {
     const tgt = String(target ?? "").trim();
     const b = this.#held(tgt);
     if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target: tgt || null };
@@ -66305,7 +66305,7 @@ Claim: ${f17.claim}
     const v = version && typeof version === "object" ? { ...version } : {};
     if (kind !== void 0 && v.kind === void 0) v.kind = kind;
     if (run2 !== void 0 && v.run === void 0) v.run = run2;
-    const when = at26 || this.now();
+    const when = at27 || this.now();
     const name2 = String(v.name ?? "");
     const vLines = [];
     for (const [k, val4] of Object.entries(v)) {
@@ -67338,17 +67338,17 @@ function riskTierHistoryOf(fm) {
     const tier = riskTierState(e.tier);
     const prior = riskTierState(e.prior);
     const by = typeof e.by === "string" && e.by.trim() ? e.by.trim() : null;
-    const at26 = typeof e.at === "string" && e.at.trim() ? e.at.trim() : null;
+    const at27 = typeof e.at === "string" && e.at.trim() ? e.at.trim() : null;
     const reason = typeof e.reason === "string" && e.reason.trim() ? e.reason.trim() : null;
     return {
       ord: i,
-      readable: tier !== null && tier !== "undetermined" && prior !== null && !!by && !!at26 && !!reason,
+      readable: tier !== null && tier !== "undetermined" && prior !== null && !!by && !!at27 && !!reason,
       tier,
       tier_words: RISK_TIERS[tier] ?? null,
       prior,
       prior_words: RISK_TIERS[prior] ?? null,
       by,
-      at: at26,
+      at: at27,
       reason
     };
   });
@@ -67430,9 +67430,9 @@ function governingLawsOf(fm) {
 function governingLawsFindings(fm, findings) {
   const has3 = Object.prototype.hasOwnProperty.call(fm, "governing_laws");
   const by = typeof fm.governing_laws_by === "string" ? fm.governing_laws_by.trim() : "";
-  const at26 = typeof fm.governing_laws_at === "string" ? fm.governing_laws_at.trim() : "";
+  const at27 = typeof fm.governing_laws_at === "string" ? fm.governing_laws_at.trim() : "";
   if (!has3 || fm.governing_laws === null || Array.isArray(fm.governing_laws) && !fm.governing_laws.length) {
-    if (by || at26)
+    if (by || at27)
       findings.push(f11(
         "C-2.10",
         "error",
@@ -67466,8 +67466,8 @@ function governingLawsFindings(fm, findings) {
       by ? `governing_laws_by '${by.slice(0, 40)}' is a machine identity: the laws governing a request are a member's authored statement (D-149)` : "governing_laws carries no governing_laws_by: a list of governing laws is a member's authored statement and names who made it (D-149)",
       ["set the list with op=actionlaws, signed in as a member"]
     ));
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(at26))
-    findings.push(f11("C-2.10", "error", `governing_laws_at '${at26}' is not a timestamp: the act that set the list is dated`));
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(at27))
+    findings.push(f11("C-2.10", "error", `governing_laws_at '${at27}' is not a timestamp: the act that set the list is dated`));
 }
 var LAW_PROPOSAL_WHY_MAX = 240;
 var COUNTERPARTY_STATES = ["named", "audience", "undetermined"];
@@ -67610,10 +67610,10 @@ function requestLifecycleOf(fm, today) {
   });
   const chain2 = entries.map((e, i) => {
     if (!e || typeof e !== "object" || Array.isArray(e)) return { ord: i, unreadable: true };
-    const at26 = str21(e.at).slice(0, 10);
+    const at27 = str21(e.at).slice(0, 10);
     const follows = ordOf(e.follows, i);
     const prevAt = follows !== null && entries[follows] ? str21(entries[follows].at).slice(0, 10) : "";
-    const elapsed = follows !== null && dayNumber(at26) !== null && dayNumber(prevAt) !== null ? dayNumber(at26) - dayNumber(prevAt) : null;
+    const elapsed = follows !== null && dayNumber(at27) !== null && dayNumber(prevAt) !== null ? dayNumber(at27) - dayNumber(prevAt) : null;
     const next = followers[i];
     const dueBy = str21(e.due_by), dueCite = str21(e.due_cite);
     let due;
@@ -67634,7 +67634,7 @@ function requestLifecycleOf(fm, today) {
     return {
       ord: i,
       direction: e.direction ?? null,
-      at: at26,
+      at: at27,
       stage: str21(e.stage) || null,
       stage_stated: !!str21(e.stage),
       follows,
@@ -67643,7 +67643,7 @@ function requestLifecycleOf(fm, today) {
       ...str21(e.exemptions) ? { exemptions: str21(e.exemptions) } : {},
       ...isQuoteEntry(e) ? { quote: { amount: str21(e.quote_amount), currency: str21(e.quote_currency) } } : {},
       followed_by: next,
-      ...!next.length && todayN !== null && dayNumber(at26) !== null ? { days_since: todayN - dayNumber(at26) } : {},
+      ...!next.length && todayN !== null && dayNumber(at27) !== null ? { days_since: todayN - dayNumber(at27) } : {},
       due
     };
   });
@@ -67659,7 +67659,7 @@ function consequenceState(fm) {
   if (!c || typeof c !== "object" || Array.isArray(c)) return null;
   const claim = c.claim === "impact" ? "impact" : "outcome";
   const description = typeof c.description === "string" ? c.description.trim() : "";
-  const at26 = typeof c.at === "string" ? c.at.trim() : "";
+  const at27 = typeof c.at === "string" ? c.at.trim() : "";
   if (claim === "outcome") {
     return {
       claim,
@@ -67668,7 +67668,7 @@ function consequenceState(fm) {
       grade: null,
       evidence: [],
       description,
-      at: at26,
+      at: at27,
       detail: "OUTCOME: a dated first-party fact about the body, carried at full strength. It makes no causal claim, so there is nothing here to establish (DEC-14)."
     };
   }
@@ -67682,7 +67682,7 @@ function consequenceState(fm) {
       grade: null,
       evidence: [],
       description,
-      at: at26,
+      at: at27,
       detail: "UNPROVEN: this action claims IMPACT and rests on no evidence outside our own action, so the causal link is asserted from sequence alone. That is not a low score and not a failure \u2014 it is what we have not established. Cite something outside us (a statement naming the report, a staff memo, a hearing record) and it becomes a claim like any other (DEC-14)."
     };
   }
@@ -67693,7 +67693,7 @@ function consequenceState(fm) {
     grade: null,
     evidence,
     description,
-    at: at26,
+    at: at27,
     detail: `IMPACT rests on evidence that is not our own action: ${evidence.join(", ")}.`
   };
 }
@@ -68201,16 +68201,16 @@ function groundResult(ground, members, exhausted) {
 function axisResult(axis, members, exhausted, depthBound = DEPTH_BOUND) {
   const keys = [];
   const bucket = /* @__PURE__ */ new Map();
-  const at26 = (k) => {
+  const at27 = (k) => {
     if (!bucket.has(k)) {
       keys.push(k);
       bucket.set(k, { members: [], exhausted: [] });
     }
     return bucket.get(k);
   };
-  for (const m of members) at26(m.ground ?? null).members.push(m);
-  for (const e of exhausted) at26(e.ground ?? null).exhausted.push(e);
-  if (!keys.length) at26(null);
+  for (const m of members) at27(m.ground ?? null).members.push(m);
+  for (const e of exhausted) at27(e.ground ?? null).exhausted.push(e);
+  if (!keys.length) at27(null);
   const grounds = keys.map((k) => groundResult(k, bucket.get(k).members, bucket.get(k).exhausted));
   const structured = keys.some((k) => k !== null);
   const implicit = grounds.find((g) => g.ground === null) ?? null;
@@ -69519,7 +69519,7 @@ var Strength = class _Strength {
         typeof reason !== "string" ? "give the reason the group sets this bar, as text in your own words (reason=\u2026). Nothing was declared." : !why ? "the reason given is blank; say in your own words why the group sets this bar. Nothing was declared." : `the reason given is ${why.length} characters, and a reason is at most ${BAR_REASON_MAX}. Nothing was declared.`,
         { limit: BAR_REASON_MAX }
       );
-    const at26 = this.now();
+    const at27 = this.now();
     this.sql.exec(
       `INSERT INTO group_strength_bar (group_id,capture,connection,author,at,reason) VALUES (?,?,?,?,?,?)
        ON CONFLICT(group_id) DO UPDATE SET capture=excluded.capture, connection=excluded.connection,
@@ -69528,7 +69528,7 @@ var Strength = class _Strength {
       capture,
       connection,
       who2,
-      at26,
+      at27,
       why
     );
     return {
@@ -69537,7 +69537,7 @@ var Strength = class _Strength {
       capture,
       connection,
       author: who2,
-      at: at26,
+      at: at27,
       reason: why,
       note: `this is the DEFAULT a project starts from; a project may declare its own in its bundle.md, which is an authored, dated, on-the-record act visible in every case it governs. It gates nothing. ${BAR_HONEST_NOTE}`
     };
@@ -70166,18 +70166,18 @@ function removeBlock2(text5, key) {
   if (lines[0] !== "---") return text5;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return text5;
-  let at26 = -1;
+  let at27 = -1;
   for (let i = 1; i < end2; i++) if (lines[i] === `${key}:` || lines[i].startsWith(`${key}: `)) {
-    at26 = i;
+    at27 = i;
     break;
   }
-  if (at26 === -1) return text5;
-  let last = at26;
-  for (let i = at26 + 1; i < end2; i++) {
+  if (at27 === -1) return text5;
+  let last = at27;
+  for (let i = at27 + 1; i < end2; i++) {
     if (/^\s/.test(lines[i]) && lines[i].trim() !== "") last = i;
     else break;
   }
-  return [...lines.slice(0, at26), ...lines.slice(last + 1)].join("\n");
+  return [...lines.slice(0, at27), ...lines.slice(last + 1)].join("\n");
 }
 function setFrontmatterLines(text5, key, lines) {
   const t = removeBlock2(text5, key);
@@ -70188,9 +70188,9 @@ function setFrontmatterLines(text5, key, lines) {
   return [...all.slice(0, end2), ...lines, ...all.slice(end2)].join("\n");
 }
 function appendSessionLog3(text5, entry) {
-  const at26 = text5.indexOf("## Session Log");
-  if (at26 < 0) return text5.replace(/\s*$/, "\n") + "\n## Session Log\n\n" + entry + "\n";
-  const nxt = text5.indexOf("\n## ", at26 + 1);
+  const at27 = text5.indexOf("## Session Log");
+  if (at27 < 0) return text5.replace(/\s*$/, "\n") + "\n## Session Log\n\n" + entry + "\n";
+  const nxt = text5.indexOf("\n## ", at27 + 1);
   const cut4 = nxt === -1 ? text5.length : nxt + 1;
   const head = text5.slice(0, cut4);
   return head + (head.endsWith("\n") ? "" : "\n") + entry + "\n" + text5.slice(cut4);
@@ -71148,7 +71148,7 @@ var Contradiction = class _Contradiction {
    *  THE LABEL IS A PROPOSAL (DEC-24): every row is `origin = 'machine'`, `state = 'proposed'`, and nothing here
    *  grades, edits or closes either side (R19). §7's over-strictness gate is a property of the JUDGEMENT (M-162
    *  measured the prompt `../contradiction.mjs` pins, R2, R57). */
-  propose({ run: run2, proposals, proposedBy, viewer = null, caller = null, at: at26 = null } = {}) {
+  propose({ run: run2, proposals, proposedBy, viewer = null, caller = null, at: at27 = null } = {}) {
     const refusal21 = (code, detail, extra) => {
       const row2 = CONTRADICTION_CANDIDATE_CHECKS[code];
       return {
@@ -71194,7 +71194,7 @@ var Contradiction = class _Contradiction {
       formed.set(`${q7.key}:${[handle(a), handle(b)].sort().join(" <> ")}`, { key: q7.key, a, b, pair: q7 });
     }
     const cutKeys = (read2.keys ?? []).filter((k) => k.truncated).map((k) => k.key);
-    const stamp2 = at26 || this.#now();
+    const stamp2 = at27 || this.#now();
     const rows2 = [];
     for (let i = 0; i < list2.length; i++) {
       const p = item(i);
@@ -71728,8 +71728,8 @@ var Contradiction = class _Contradiction {
         items = [...dated, ...none];
       }
       if (typeof after === "string" && after) {
-        const at26 = items.findIndex((x) => x.row.candidate === after);
-        items = at26 === -1 ? [] : items.slice(at26 + 1);
+        const at27 = items.findIndex((x) => x.row.candidate === after);
+        items = at27 === -1 ? [] : items.slice(at27 + 1);
       }
       const page = items.slice(0, cap);
       const truncated3 = items.length > cap || scanCut;
@@ -72233,8 +72233,8 @@ var Contradiction = class _Contradiction {
   /** The one append site of `contradiction_acts` (R30, R42). Answers the row as written. */
   #appendAct(row2, view, fields) {
     const seq = (this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM contradiction_acts`)?.n ?? 0) + 1;
-    const at26 = fields.at || this.#now();
-    const id = sha256HexSync(canonicalJson({ v: 1, candidate: row2.candidate, seq, at: at26, author: fields.author }));
+    const at27 = fields.at || this.#now();
+    const id = sha256HexSync(canonicalJson({ v: 1, candidate: row2.candidate, seq, at: at27, author: fields.author }));
     const j = (v) => v === void 0 || v === null ? null : JSON.stringify(v);
     this.#sql.exec(
       `INSERT INTO contradiction_acts (act_id, candidate, act, choice, author, at, seq, reason, words, coordinates,
@@ -72245,7 +72245,7 @@ var Contradiction = class _Contradiction {
       fields.act,
       fields.choice ?? null,
       fields.author,
-      at26,
+      at27,
       seq,
       fields.reason ?? null,
       fields.words ?? null,
@@ -72265,7 +72265,7 @@ var Contradiction = class _Contradiction {
     return this.#acts(row2.candidate).find((a) => a.act_id === id);
   }
   /** op=contradictiondismiss — R31: a lead is dismissed, with one of three reasons. */
-  dismiss({ candidate = null, reason = null, words = null, viewer = null, author = null, at: at26 = null } = {}) {
+  dismiss({ candidate = null, reason = null, words = null, viewer = null, author = null, at: at27 = null } = {}) {
     const g = this.#actRefusals({ candidate, author, viewer, texts: { reason, words } });
     if (g.refusal) return g.refusal;
     const { row: row2, view } = g;
@@ -72288,7 +72288,7 @@ var Contradiction = class _Contradiction {
       author: author.trim(),
       reason,
       words: typeof words === "string" && words.trim() ? words.trim() : null,
-      at: at26
+      at: at27
     }));
     return {
       ok: true,
@@ -72338,7 +72338,7 @@ var Contradiction = class _Contradiction {
     accepted = null,
     viewer = null,
     author = null,
-    at: at26 = null
+    at: at27 = null
   } = {}) {
     const q7 = qualifiers && typeof qualifiers === "object" && !Array.isArray(qualifiers) ? qualifiers : {};
     const g = this.#actRefusals({
@@ -72392,7 +72392,7 @@ var Contradiction = class _Contradiction {
           qualifiers: Object.keys(quals).length ? quals : null,
           acceptance: acc2.basis,
           standing: acc2.standing,
-          at: at26
+          at: at27
         });
         const defects = row2.key === "K4" && coords.includes("subject") ? this.#reportDefects(row2, words, who2) : null;
         if (defects && defects.refusal) return defects.refusal;
@@ -72426,7 +72426,7 @@ var Contradiction = class _Contradiction {
         wrong_reason: reason.trim(),
         acceptance: acc2.basis,
         standing: acc2.standing,
-        at: at26
+        at: at27
       }));
       return {
         ok: true,
@@ -72448,7 +72448,7 @@ var Contradiction = class _Contradiction {
       explanation: typeof explanation === "string" && explanation.trim() ? explanation.trim() : null,
       acceptance: acc.basis,
       standing: acc.standing,
-      at: at26
+      at: at27
     }));
     return {
       ok: true,
@@ -72487,7 +72487,7 @@ var Contradiction = class _Contradiction {
   }
   /** The frontmatter of a new contradiction inquiry (R35): open, surfaced by a member, titled from the question,
    *  linked to the candidate, both sides as legs (the framed side supporting), with no grade. */
-  #takeUpDocument(id, row2, question, frame, who2, at26) {
+  #takeUpDocument(id, row2, question, frame, who2, at27) {
     const i = this.#i();
     const title = typeof i.deriveInquiryTitle === "function" ? i.deriveInquiryTitle(question) : null;
     const leg = (side, name2) => {
@@ -72516,8 +72516,8 @@ var Contradiction = class _Contradiction {
       `title: "${fmSafe3(title ?? question)}"`,
       "current_state: open",
       "prior_state: null",
-      `created: "${at26}"`,
-      `last_updated: "${at26}"`,
+      `created: "${at27}"`,
+      `last_updated: "${at27}"`,
       "surfaced_by: human",
       "contradiction:",
       `  candidate: "${row2.candidate}"`,
@@ -72535,14 +72535,14 @@ var Contradiction = class _Contradiction {
       "",
       "## Session Log",
       "",
-      `- ${at26} \xB7 ${who2} \xB7 taken up from contradiction ${row2.candidate}, framed around side ${frame}`,
+      `- ${at27} \xB7 ${who2} \xB7 taken up from contradiction ${row2.candidate}, framed around side ${frame}`,
       ""
     ].join("\n");
     return { text: text5, title: title ?? question };
   }
   /** op=contradictiontakeup — R35: take a candidate up as a contradiction inquiry, in one act through
    *  `promotion.promote`. */
-  takeUp({ candidate = null, question = null, frame = null, viewer = null, author = null, at: at26 = null } = {}) {
+  takeUp({ candidate = null, question = null, frame = null, viewer = null, author = null, at: at27 = null } = {}) {
     const g = this.#actRefusals({ candidate, author, viewer, texts: { question } });
     if (g.refusal) return g.refusal;
     const { row: row2, view } = g;
@@ -72566,7 +72566,7 @@ var Contradiction = class _Contradiction {
     if (frame !== "a" && frame !== "b")
       return _Contradiction.#refuse("TAKE_UP_NO_FRAME", "choose the side the question is asked around: a or b");
     const who2 = author.trim();
-    const when = at26 || this.#now();
+    const when = at27 || this.#now();
     const p = this.#p();
     return this.#record.transact(() => {
       const id = `${this.#record.allocId("INQ", String(when).slice(0, 4)).id}-contradiction`;
@@ -72648,7 +72648,7 @@ var Contradiction = class _Contradiction {
     accepted = null,
     viewer = null,
     author = null,
-    at: at26 = null
+    at: at27 = null
   } = {}) {
     const machine3 = this.#machineRefusal(author);
     if (machine3) return machine3;
@@ -72666,7 +72666,7 @@ var Contradiction = class _Contradiction {
     const acc = this.#acceptance(row2, view, accepted, coords);
     if (acc.refusal) return acc.refusal;
     const who2 = author.trim();
-    const when = at26 || this.#now();
+    const when = at27 || this.#now();
     return this.#record.transact(() => {
       const head = this.#record.head(id);
       const files = this.#liveFiles(id);
@@ -72728,7 +72728,7 @@ var Contradiction = class _Contradiction {
     });
   }
   /** op=contradictionrecommend — R37: the machine's one act. */
-  recommend({ run: run2 = null, candidate = null, coordinates = null, proposedBy = null, viewer = null, caller = null, at: at26 = null } = {}) {
+  recommend({ run: run2 = null, candidate = null, coordinates = null, proposedBy = null, viewer = null, caller = null, at: at27 = null } = {}) {
     const gate = this.#runRefusals({ run: run2, proposedBy, viewer, caller });
     if (gate) return gate;
     const runId = _Contradiction.#runId(run2);
@@ -72758,7 +72758,7 @@ var Contradiction = class _Contradiction {
         "that contradiction is not open to recommendation",
         { run: runId }
       );
-    const when = at26 || this.#now();
+    const when = at27 || this.#now();
     const written = this.#record.transact(() => list2.map((x) => {
       const id = sha256HexSync(canonicalJson({ v: 1, run: runId, candidate: row2.candidate, coordinate: x.coordinate }));
       if (this.#one(`SELECT 1 AS x FROM contradiction_recommendations WHERE recommendation=?`, id)) return { id, new: false };
@@ -73084,14 +73084,14 @@ var Contradiction = class _Contradiction {
   }
   /** op=contradictionoptin — R51, R52: a project asks to resolve the conflict; the opt-in that leaves every party opted
    *  in records the reveal in the same act. */
-  optIn({ candidate = null, project = null, words = null, viewer = null, author = null, at: at26 = null } = {}) {
+  optIn({ candidate = null, project = null, words = null, viewer = null, author = null, at: at27 = null } = {}) {
     const g = this.#partyRefusals({ candidate, project, viewer, author });
     if (g.refusal) return g.refusal;
     const over = this.#overCap({ words });
     if (over) return over;
     const { row: row2 } = g;
     const who2 = author.trim();
-    const when = at26 || this.#now();
+    const when = at27 || this.#now();
     return this.#record.transact(() => {
       const held = this.#optins(row2.candidate);
       const first = held.optins.find((r) => r.project_id === g.project);
@@ -73192,7 +73192,7 @@ var Contradiction = class _Contradiction {
     return { cover, email: typeof disclose.email === "string" ? disclose.email.trim() : null };
   }
   /** op=contradictionrespond — R53: a member responds to the notice, sharing only what they choose. */
-  respond({ candidate = null, project = null, text: text5 = null, disclose = void 0, viewer = null, author = null, at: at26 = null } = {}) {
+  respond({ candidate = null, project = null, text: text5 = null, disclose = void 0, viewer = null, author = null, at: at27 = null } = {}) {
     const g = this.#partyRefusals({ candidate, project, viewer, author });
     if (g.refusal) return g.refusal;
     const { row: row2 } = g;
@@ -73206,7 +73206,7 @@ var Contradiction = class _Contradiction {
     if (bad) return bad;
     const d = this.#disclosed(disclose, g.member);
     const who2 = author.trim();
-    const when = at26 || this.#now();
+    const when = at27 || this.#now();
     return this.#record.transact(() => {
       const seq = (this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM contradiction_responses`)?.n ?? 0) + 1;
       const id = sha256HexSync(canonicalJson({ v: 1, candidate: row2.candidate, project: g.project, seq, at: when }));
@@ -73582,7 +73582,7 @@ var EVIDENCE_MAX = 2e3;
 var CONSENT_STATEMENT = "This consent is permanent for anything published under it: what is published under it stays published, even if the consent is later withdrawn.";
 var WITHDRAWAL_STATEMENT = "This withdrawal binds only later publications: what was published under the consent stays published.";
 var NOT_RECORDED = "known to the group, not recorded";
-var claimSentence = (claimedBy, at26) => `named by ${claimedBy} on ${String(at26).slice(0, 10)}; not confirmed by the group`;
+var claimSentence = (claimedBy, at27) => `named by ${claimedBy} on ${String(at27).slice(0, 10)}; not confirmed by the group`;
 var HEX645 = /^[0-9a-f]{64}$/;
 var DATE = /^\d{4}-\d{2}-\d{2}$/;
 var str4 = (v) => typeof v === "string" ? v.trim() : "";
@@ -73769,9 +73769,9 @@ var Sources = class _Sources {
     };
   }
   /* ---- reading a history (R2–R5) ---- */
-  #entries(sourceId, at26 = null) {
+  #entries(sourceId, at27 = null) {
     const all = this.#rows(`SELECT * FROM source_entries WHERE source_id = ? ORDER BY seq`, sourceId);
-    return at26 == null ? all : all.filter((e) => instantOrder(e.at, at26) <= 0);
+    return at27 == null ? all : all.filter((e) => instantOrder(e.at, at27) <= 0);
   }
   /** R2: a later entry of the same kind and attribute (for a link, the same other source) supersedes an earlier one. A
    *  hostile claim is a claim on its own track (R3): only a later hostile claim supersedes it, and it supersedes only
@@ -74014,7 +74014,7 @@ var Sources = class _Sources {
   #append(sourceId, w, by) {
     const before = this.#rung(sourceId).rung;
     const linkedBefore = w.linkTo ? this.#rung(w.linkTo).rung : null;
-    const at26 = this.#instant();
+    const at27 = this.#instant();
     const entryId = `SRCE-${hex4(8)}`;
     this.#record.transact(() => {
       this.#bindKnocks(this.#source(sourceId));
@@ -74033,12 +74033,12 @@ var Sources = class _Sources {
         w.knownTo,
         JSON.stringify(w.evidence),
         w.claimedBy,
-        w.how === "hostile" ? w.claimedAt || at26 : null,
+        w.how === "hostile" ? w.claimedAt || at27 : null,
         w.confirms,
         w.linkTo,
         w.basis,
         by,
-        at26
+        at27
       );
       for (const m of w.sight) this.#sql.exec(`INSERT INTO source_sight (entry_id, member_id) VALUES (?, ?)`, entryId, m);
       return { ok: true };
@@ -74057,9 +74057,9 @@ var Sources = class _Sources {
       knownTo: w.knownTo,
       recorded: w.recorded,
       by,
-      at: at26,
+      at: at27,
       ...w.linkTo ? { to: w.linkTo, basis: w.basis } : {},
-      ...w.how === "hostile" ? { confirmed: false, claim: claimSentence(w.claimedBy, w.claimedAt || at26) } : {},
+      ...w.how === "hostile" ? { confirmed: false, claim: claimSentence(w.claimedBy, w.claimedAt || at27) } : {},
       ...w.sight.length ? { sight: w.sight } : {},
       rung_before: before,
       rung_after: after,
@@ -74110,10 +74110,10 @@ var Sources = class _Sources {
   /* ---- R7, R8: consent and what may be published ---- */
   /** The audience rank consented for an entry at `at` (or now): a consent raises it to its audience, a withdrawal
    *  lowers it below its audience; -1 when none stands. */
-  #standing(entryId, at26 = null) {
+  #standing(entryId, at27 = null) {
     let level = -1;
     for (const c of this.#rows(`SELECT act, audience, at FROM source_consents WHERE entry_id = ? ORDER BY seq`, entryId)) {
-      if (at26 != null && instantOrder(c.at, at26) > 0) continue;
+      if (at27 != null && instantOrder(c.at, at27) > 0) continue;
       level = c.act === "consent" ? Math.max(level, rank4(c.audience)) : Math.min(level, rank4(c.audience) - 1);
     }
     return level;
@@ -74136,7 +74136,7 @@ var Sources = class _Sources {
   }
   #writeConsent(sourceId, plan, { evidence = null, via, by }) {
     const before = this.#rung(sourceId).rung;
-    const at26 = this.#instant();
+    const at27 = this.#instant();
     this.#record.transact(() => {
       this.#bindKnocks(this.#source(sourceId));
       this.#sql.exec(
@@ -74149,7 +74149,7 @@ var Sources = class _Sources {
         evidence ? JSON.stringify(evidence) : null,
         via,
         by,
-        at26
+        at27
       );
       return { ok: true };
     });
@@ -74161,7 +74161,7 @@ var Sources = class _Sources {
       entry: plan.entry,
       audience: plan.audience,
       act: plan.act,
-      at: at26,
+      at: at27,
       standing: level >= 0 ? AUDIENCES[level] : null,
       statement: plan.act === "consent" ? CONSENT_STATEMENT : WITHDRAWAL_STATEMENT,
       notified: notified.length
@@ -74213,13 +74213,13 @@ var Sources = class _Sources {
    *  it answers only what consent or the public record already opens to that audience, so it logs nothing (R5, K539).
    *  It writes nothing and never throws. */
   publishableAt(args = {}) {
-    const { source, audience, at: at26 = null } = isObj8(args) ? args : {};
+    const { source, audience, at: at27 = null } = isObj8(args) ? args : {};
     try {
       if (!this.#source(source)) return noSuchSource(source);
       if (!AUDIENCES.includes(audience)) return badDisclosure("audience", `an audience is one of ${AUDIENCES.join(", ")}`);
-      if (at26 != null && !(typeof at26 === "string" && !Number.isNaN(Date.parse(at26))))
+      if (at27 != null && !(typeof at27 === "string" && !Number.isNaN(Date.parse(at27))))
         return badDisclosure("at", "the instant asked about is an ISO 8601 instant");
-      const when = at26 ?? this.#instant();
+      const when = at27 ?? this.#instant();
       const entries = this.#entries(source, when);
       const sup = _Sources.#supersession(entries);
       const out = [];
@@ -74665,10 +74665,10 @@ function notLater(since, recorded) {
   const o = instantOrder(since, recorded);
   return Number.isNaN(o) ? String(since) <= String(recorded) : o <= 0;
 }
-function laterThan(at26, written) {
+function laterThan(at27, written) {
   if (written == null) return true;
-  const o = instantOrder(at26, written);
-  return Number.isNaN(o) ? String(at26) > String(written) : o > 0;
+  const o = instantOrder(at27, written);
+  return Number.isNaN(o) ? String(at27) > String(written) : o > 0;
 }
 function attributionDetail(m) {
   return `the credit level of the observation ${m.observation} moved from ${m.level_before} to ${m.level_after}${m.case_id ? ` in case ${m.case_id}` : ""}${m.edition != null ? ` at edition ${m.edition}` : ""}, at ${m.at}: how the member who gave it is identified has changed.`;
@@ -75309,14 +75309,14 @@ var Reevaluation = class {
     const id = str5(source);
     if (!id || typeof rung_after !== "string" || !rung_after || rung_before === rung_after) return { ok: true, moved: false };
     const before = typeof rung_before === "string" && rung_before ? rung_before : null;
-    const at26 = this.#when();
+    const at27 = this.#when();
     this.sql.exec(
       `INSERT INTO reevaluation_source_moves (source_id, entry_id, rung_before, rung_after, at) VALUES (?,?,?,?,?)`,
       id,
       str5(entry),
       before,
       rung_after,
-      at26
+      at27
     );
     let dependents = [];
     try {
@@ -75324,12 +75324,12 @@ var Reevaluation = class {
     } catch {
       dependents = [];
     }
-    const out = { ok: true, moved: true, at: at26, dependents: dependents.length };
+    const out = { ok: true, moved: true, at: at27, dependents: dependents.length };
     this.#tellAfterCommit({
       kind: "source",
       subject: id,
       source: "source",
-      since: at26,
+      since: at27,
       detail: `the source ${id} moved from ${before ?? "an unstated rung"} to ${rung_after}; ${dependents.length ? "what rests on its captures is named" : "nothing here rests on its captures"}`,
       rung_before: before,
       rung_after,
@@ -75392,10 +75392,10 @@ var Reevaluation = class {
    *  call (R18: no author, no text), then tells R8's listeners `kind: "attribution"` once, after the act commits. A call
    *  naming no observation, a level missing on either side or the same level twice writes nothing. `at` is the move's
    *  instant (the commit's); one that does not read as an instant is replaced by now. It regrades nothing. */
-  levelMoved({ observation = null, from = null, to = null, case: caseId = null, edition = null, at: at26 = null } = {}) {
+  levelMoved({ observation = null, from = null, to = null, case: caseId = null, edition = null, at: at27 = null } = {}) {
     const id = str5(observation), before = str5(from), after = str5(to);
     if (!id || !before || !after || before === after) return { ok: true, moved: false };
-    const when = typeof at26 === "string" && at26.trim() && Number.isFinite(Date.parse(at26.trim())) ? at26.trim() : this.#when();
+    const when = typeof at27 === "string" && at27.trim() && Number.isFinite(Date.parse(at27.trim())) ? at27.trim() : this.#when();
     const ed = Number.isInteger(edition) ? edition : typeof edition === "string" && /^\d+$/.test(edition.trim()) ? Number(edition.trim()) : null;
     const m = { observation: id, level_before: before, level_after: after, case_id: str5(caseId), edition: ed, at: when };
     this.sql.exec(`INSERT INTO reevaluation_level_moves (observation, level_before, level_after, case_id, edition, at)
@@ -75959,8 +75959,8 @@ var Reevaluation = class {
         viewer: MACHINE_ADMIN
       });
       if (!c || !c.ok) return undetermined("no_version_held");
-      const at26 = { address_norm: pair.address_norm, capture_sha: pair.capture_sha, at_index: c.at_index };
-      if (!c.predecessor) return undetermined("no_prior_version", at26);
+      const at27 = { address_norm: pair.address_norm, capture_sha: pair.capture_sha, at_index: c.at_index };
+      if (!c.predecessor) return undetermined("no_prior_version", at27);
       const predecessor = {
         bundle_id: c.predecessor.bundle_id,
         capture_sha: c.predecessor.capture_sha,
@@ -75969,7 +75969,7 @@ var Reevaluation = class {
       return {
         ...base,
         verdict: c.predecessor.bundle_id === ids[0] ? "right" : "wrong",
-        ...at26,
+        ...at27,
         sole_prior: c.at_index === 1,
         predecessor
       };
@@ -76741,7 +76741,7 @@ function reevaluationOf(host, deps) {
     r.migrate();
     record.declarePurge("reevaluation", REEVALUATION_TABLES);
     r.inquiry.onRaised("reevaluation", ({ target, cause, since, viewer }) => r.raise({ target, source: cause, since, viewer }));
-    promotion.onReopened("reevaluation", ({ target, at: at26, viewer }) => r.raise({ target, source: "reopened", since: at26, viewer }));
+    promotion.onReopened("reevaluation", ({ target, at: at27, viewer }) => r.raise({ target, source: "reopened", since: at27, viewer }));
     promotion.registerStep("reevaluation", { check: (c) => r.check(c) });
     record.registerAuditCheck("reevaluation", (image) => r.audit(image));
     r.provenance.onReceipt("reevaluation", () => r.receiptSeen());
@@ -77032,11 +77032,11 @@ function whatChangedSectionLines(statement) {
 }
 var sectionText2 = (body) => {
   const lines = String(body ?? "").split(/\r\n|\n/);
-  const at26 = lines.indexOf(WHAT_CHANGED_HEAD);
-  if (at26 < 0) return null;
-  let end2 = at26 + 1;
+  const at27 = lines.indexOf(WHAT_CHANGED_HEAD);
+  if (at27 < 0) return null;
+  let end2 = at27 + 1;
   while (end2 < lines.length && !lines[end2].startsWith("## ")) end2++;
-  return trimmedLines(lines.slice(at26 + 1, end2)).join("\n");
+  return trimmedLines(lines.slice(at27 + 1, end2)).join("\n");
 };
 function whatChangedOf(fm, body) {
   try {
@@ -78054,7 +78054,7 @@ function migratePublication(sql) {
   ))
     registerCaseDocumentSha(sql, d.case_id, d.edition, d.doc_sha, d.text, d.ratified_at);
 }
-function registerCaseDocumentSha(sql, caseId, edition, docSha, text5, at26) {
+function registerCaseDocumentSha(sql, caseId, edition, docSha, text5, at27) {
   sql.exec(
     `INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
      ON CONFLICT(sha256,bundle_id,path) DO NOTHING`,
@@ -78063,7 +78063,7 @@ function registerCaseDocumentSha(sql, caseId, edition, docSha, text5, at26) {
     caseDocumentPath(edition),
     "case_document",
     new TextEncoder().encode(String(text5 ?? "")).length,
-    at26
+    at27
   );
 }
 
@@ -78172,17 +78172,17 @@ var CorpusExport = class {
         refs: this.#rows(`SELECT target_id, kind FROM refs WHERE bundle_id=?`, b.bundle_id)
       };
     });
-    const at26 = this.#when();
+    const at27 = this.#when();
     this.sql.exec(
       `INSERT INTO export_log (at,scope,bundles,files,note) VALUES (?,'working-corpus',?,?,?)`,
-      at26,
+      at27,
       bundles.length,
       fileCount,
       note ? String(note).slice(0, EXPORT_NOTE_MAX) : null
     );
     return {
       ok: true,
-      at: at26,
+      at: at27,
       scope: "working-corpus",
       bundles: out,
       counts: { bundles: bundles.length, files: fileCount },
@@ -78617,7 +78617,7 @@ var Publication = class {
     edition = null,
     text: text5 = null,
     author = null,
-    at: at26 = null,
+    at: at27 = null,
     draft = null
   } = {}) {
     const id = str6(caseArg ?? caseId), ed = Number(edition);
@@ -78634,7 +78634,7 @@ var Publication = class {
       ed,
       docSha,
       text5,
-      str6(at26) || this.#when(),
+      str6(at27) || this.#when(),
       author ?? null,
       draft ?? null
     );
@@ -78678,9 +78678,9 @@ var Publication = class {
     if (str6(docSha) && doc.doc_sha !== str6(docSha))
       return { ok: true, ...held, reauthored: false, why: "this case document has moved since it was read, so nothing was spliced" };
     const all = doc.text.split("\n");
-    const at26 = locate(all);
-    if (!at26) return { ok: true, ...held, reauthored: false, why: `this case document carries no ${section} section to re-author` };
-    const text5 = [...all.slice(0, at26.f0), ...fmLines, ...all.slice(at26.f1, at26.b0), ...bodyLines, ...all.slice(at26.b1)].join("\n");
+    const at27 = locate(all);
+    if (!at27) return { ok: true, ...held, reauthored: false, why: `this case document carries no ${section} section to re-author` };
+    const text5 = [...all.slice(0, at27.f0), ...fmLines, ...all.slice(at27.f1, at27.b0), ...bodyLines, ...all.slice(at27.b1)].join("\n");
     if (text5 === doc.text) return { ok: true, ...held, reauthored: false };
     const newSha = shaOf(text5);
     this.sql.exec(`UPDATE case_documents SET doc_sha=?, text=? WHERE case_id=? AND edition=? AND doc_sha=?
@@ -78720,7 +78720,7 @@ var Publication = class {
     gateVersion = null,
     sigArmored = null,
     deliveredBy = null,
-    at: at26 = null
+    at: at27 = null
   } = {}) {
     if (!bundleId || !bundleSha || !attestorKey || !gateVersion || !sigArmored || !Array.isArray(shas))
       return { ok: false, reason: "MALFORMED" };
@@ -78755,7 +78755,7 @@ var Publication = class {
         highest,
         detail: `${bundleId} is published through edition ${highest} on its OWN version chain; a revision must increment it (DEC-12). Editions do not overwrite each other \u2014 edition ${highest} keeps its own signature, attestor, time and gate version, and a new one joins it. This is the FINDING's edition, not the edition of any case it is a member of: since CASE-5 the two are separate numbers.`
       };
-    const now = str6(at26) || this.#when();
+    const now = str6(at27) || this.#when();
     const byCase = this.pinnedCaseEditionsOf(bundleId, bundleSha);
     const rel = this.soleCase(byCase);
     const caseId = rel ? rel.case_id : null;
@@ -78932,7 +78932,7 @@ var Publication = class {
     attestorMember = null,
     gateVersion = null,
     deliveredBy = null,
-    at: at26 = null
+    at: at27 = null
   } = {}) {
     const id = str6(caseArg ?? caseId), ed = Number(edition);
     if (!id || !Number.isInteger(ed) || ed < 1 || !str6(sigArmored) || !str6(attestorKey) || !str6(gateVersion) || !Array.isArray(roster))
@@ -78977,7 +78977,7 @@ var Publication = class {
         signed: project ?? null,
         detail: `case ${id} is ${owner.project_id}'s production and this signed case document names ${project}. A case does not change hands between editions (DEC-72).`
       };
-    const when = str6(at26) || this.#when();
+    const when = str6(at27) || this.#when();
     const lapsed = this.#sourcesLapsed(doc.text, when);
     if (lapsed.length) {
       return {
@@ -79043,7 +79043,7 @@ var Publication = class {
      capture are the pulled knocks `sources` minted for it (its `source_knocks` read contract, R15), each asked what the
      public may be told at `at`; a source that cannot be read answers nothing, so its rows fail closed (R52). A document
      before /5, or one stating no `sources:` block, states no source and has nothing to re-read. */
-  #sourcesLapsed(text5, at26) {
+  #sourcesLapsed(text5, at27) {
     const { sources: rows2 } = caseDocumentBlocks(text5);
     if (!Array.isArray(rows2) || !rows2.length) return [];
     const src = this.sources;
@@ -79053,7 +79053,7 @@ var Publication = class {
       if (!knocks.length) return null;
       const entries = [];
       for (const s of [...new Set(knocks.map((k) => k.source_id))]) {
-        const r = src.publishableAt({ source: s, audience: "public", at: at26 });
+        const r = src.publishableAt({ source: s, audience: "public", at: at27 });
         if (!r || r.ok !== true || !Array.isArray(r.entries)) return null;
         entries.push(...r.entries);
       }
@@ -80332,9 +80332,9 @@ var Publication = class {
     }
     const complete = roster.length > 0 && awaiting.length === 0;
     if (complete && !c.ratified_at) {
-      const at26 = findings.reduce((mx, x) => instantOrder(x.ratified_at, mx) > 0 ? x.ratified_at : mx, findings[0].ratified_at);
-      this.sql.exec(`UPDATE published_cases SET ratified_at=? WHERE case_id=? AND edition=?`, at26, caseId, ed);
-      c.ratified_at = at26;
+      const at27 = findings.reduce((mx, x) => instantOrder(x.ratified_at, mx) > 0 ? x.ratified_at : mx, findings[0].ratified_at);
+      this.sql.exec(`UPDATE published_cases SET ratified_at=? WHERE case_id=? AND edition=?`, at27, caseId, ed);
+      c.ratified_at = at27;
     }
     return {
       caseId,
@@ -81265,7 +81265,7 @@ var ProjectStage = class {
   /* R4: the earliest recorded instant among the legs of the held questions read with a leg (inquiry R16's `basisFor`,
      each leg's `at`); null when none carries one or the legs cannot be read. */
   #earliestLeg(ids) {
-    const at26 = [];
+    const at27 = [];
     for (const id of ids) {
       let b = null;
       try {
@@ -81273,9 +81273,9 @@ var ProjectStage = class {
       } catch {
         b = null;
       }
-      if (b && b.ok && Array.isArray(b.legs)) for (const l of b.legs) at26.push(l && l.at);
+      if (b && b.ok && Array.isArray(b.legs)) for (const l of b.legs) at27.push(l && l.at);
     }
-    return earliestInstant(at26);
+    return earliestInstant(at27);
   }
   /* R4: the instant of the project's current conclusion of one held question (basis-versions R22 `conclusionOf`). */
   #conclusionInstant(pid, id, viewer) {
@@ -81543,11 +81543,11 @@ var signedParts = (doc) => {
 };
 var lensSection = (body) => {
   const lines = String(body ?? "").split(/\r\n|\n/);
-  const at26 = lines.indexOf(LENS_HEAD);
-  if (at26 < 0) return null;
-  let end2 = at26 + 1;
+  const at27 = lines.indexOf(LENS_HEAD);
+  if (at27 < 0) return null;
+  let end2 = at27 + 1;
   while (end2 < lines.length && !lines[end2].startsWith("## ")) end2++;
-  return lines.slice(at26, end2).join("\n").replace(/\s+$/, "");
+  return lines.slice(at27, end2).join("\n").replace(/\s+$/, "");
 };
 var LENS_FINGERPRINT_SENTENCE = "this edition carries only the lens's fingerprint, not its statements: the statements_sha of the bias manifest it froze, which anyone holding that manifest can check it against";
 var LENS_NONE_IN_FORCE_SENTENCE = "this edition carries only the lens's fingerprint, and its bias manifest states that no manifest was in force, so there is no fingerprint to give";
@@ -83227,7 +83227,7 @@ var NetworkNotices = class {
     const keys = (this.#call(() => this.credentials.attestingKeys(), []) || []).filter((k) => k.member_id === member).map((k) => k.key_b64);
     const v = await verifySshsig(String(signature ?? ""), noticeStatement(held.nid, held.n, held.digest), NS_NOTICE, keys);
     if (!v.ok) return refuse3("NOTICE_SIGNATURE_REFUSED", `the signature was refused: ${v.reason}`, { verifier: v.reason });
-    const at26 = this.#stamp(nowMs);
+    const at27 = this.#stamp(nowMs);
     const att = this.#attestation({
       nid: held.nid,
       pid: held.pid,
@@ -83250,7 +83250,7 @@ var NetworkNotices = class {
             "the notice id this was prepared with is already spent: prepare again",
             { opaque_id: rec ? rec.reason ?? null : null }
           );
-        this.sql.exec(`INSERT INTO nn_notices (notice_id, project, opened_at) VALUES (?,?,?)`, held.nid, held.pid, at26);
+        this.sql.exec(`INSERT INTO nn_notices (notice_id, project, opened_at) VALUES (?,?,?)`, held.nid, held.pid, at27);
       }
       this.sql.exec(
         `INSERT INTO nn_revisions (notice_id, revision, digest, json, status, signature, signer_key, published_at)
@@ -83262,9 +83262,9 @@ var NetworkNotices = class {
         held.revision.status,
         String(signature),
         v.keyB64,
-        at26
+        at27
       );
-      this.#insertAttestation(held.nid, "posted", held.digest, att, signed, at26);
+      this.#insertAttestation(held.nid, "posted", held.digest, att, signed, at27);
       return { ok: true };
     });
     if (!out || out.ok !== true) {
@@ -83279,7 +83279,7 @@ var NetworkNotices = class {
       ok: true,
       notice: held.nid,
       revision: held.n,
-      published_at: at26,
+      published_at: at27,
       attestation: { kind: "posted", as_of: att.json.as_of, digest: att.digest, json: att.json }
     };
   }
@@ -83353,7 +83353,7 @@ var NetworkNotices = class {
       return null;
     }
   }
-  #insertAttestation(nid, kind, ref, att, signed, at26) {
+  #insertAttestation(nid, kind, ref, att, signed, at27) {
     this.sql.exec(
       `INSERT INTO nn_attestations (notice_id, kind, ref, as_of, level, status, json, digest, signature, key_id, published_at)
                    VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
@@ -83367,7 +83367,7 @@ var NetworkNotices = class {
       att.digest,
       signed.signature,
       signed.key_id,
-      at26
+      at27
     );
   }
   /* Issues one attestation of `kind` (each once, by `ref`), signed; null when one is held already or no key is bound. */
@@ -83377,10 +83377,10 @@ var NetworkNotices = class {
     const att = this.#attestation({ nid, pid: n.project, kind, asOfMs: nowMs, status });
     const signed = await this.#sign(att.digest);
     if (!signed) return { missed: true };
-    const at26 = this.#stamp(nowMs);
+    const at27 = this.#stamp(nowMs);
     const r = this.record.transact(() => {
       if (this.#one(`SELECT 1 AS x FROM nn_attestations WHERE notice_id=? AND kind=? AND ref=?`, nid, kind, ref)) return { ok: true, existed: true };
-      this.#insertAttestation(nid, kind, ref, att, signed, at26);
+      this.#insertAttestation(nid, kind, ref, att, signed, at27);
       return { ok: true };
     });
     return r && r.existed ? null : { kind, notice: nid, as_of: att.json.as_of, level: att.json.activity.level };
@@ -83550,7 +83550,7 @@ var NetworkNotices = class {
         root = rootOf(treeOf(new Map(projects.map((p) => [p.position, weekLeafHash(p.seal)])), size, secret));
         ts = await this.#timestamp(root);
       }
-      const at26 = this.#stamp(nowMs);
+      const at27 = this.#stamp(nowMs);
       this.record.transact(() => {
         if (this.#one(`SELECT 1 AS x FROM nn_week_roots WHERE week=?`, week)) return { ok: true };
         for (const p of projects) {
@@ -83577,7 +83577,7 @@ var NetworkNotices = class {
           ts && ts.tokenSha ? ts.tokenSha : null,
           root && !(ts && ts.response) ? 1 : 0,
           ts ? JSON.stringify(ts.attempts) : null,
-          at26
+          at27
         );
         return { ok: true };
       });
@@ -83823,11 +83823,11 @@ var NetworkNotices = class {
     for (const s of this.#call(() => this.credentials.signerList().signers, []) || []) {
       const owns = this.#call(() => this.membership.ownsAnyProject(s.member_id), false);
       if (!owns && !signed.has(s.key_b64)) continue;
-      const at26 = str9(s.status_at);
+      const at27 = str9(s.status_at);
       owners.push({
         key: `ssh-ed25519 ${s.key_b64}`,
         status: s.attests ? "attests" : "revoked",
-        ...s.attests ? {} : { revoked_on: at26 && Number.isFinite(Date.parse(at26)) ? dateOf(Date.parse(at26)) : null },
+        ...s.attests ? {} : { revoked_on: at27 && Number.isFinite(Date.parse(at27)) ? dateOf(Date.parse(at27)) : null },
         first_listed: str9(s.added) ? String(s.added).slice(0, 10) : null
       });
     }
@@ -85145,10 +85145,10 @@ function moveMember({ sql, promotion }, { id, when, author, to, blurb, sessionEn
   text5 = setScalar4(text5, "current_state", to);
   text5 = setScalar4(text5, "last_updated", `"${when}"`);
   const entryLog = sessionEntry(cur.current_state);
-  const at26 = text5.indexOf("## Session Log");
-  if (at26 < 0) text5 += "\n## Session Log\n\n" + entryLog;
+  const at27 = text5.indexOf("## Session Log");
+  if (at27 < 0) text5 += "\n## Session Log\n\n" + entryLog;
   else {
-    const nxt = text5.indexOf("\n## ", at26 + 1);
+    const nxt = text5.indexOf("\n## ", at27 + 1);
     const cutAt = nxt === -1 ? text5.length : nxt + 1;
     text5 = text5.slice(0, cutAt) + entryLog + "\n" + text5.slice(cutAt);
   }
@@ -85195,17 +85195,17 @@ function appendStateHistory3(text5, e) {
     `    blurb: "${e.blurb}"`,
     `    author: ${e.author}`
   ];
-  let at26 = -1;
+  let at27 = -1;
   for (let i = 1; i < end2; i++) if (/^state_history:/.test(lines[i])) {
-    at26 = i;
+    at27 = i;
     break;
   }
-  if (at26 === -1) return [...lines.slice(0, end2), "state_history:", ...block, ...lines.slice(end2)].join("\n");
-  const rest = lines[at26].slice("state_history:".length).trim();
-  if (rest === "[]") return [...lines.slice(0, at26), "state_history:", ...block, ...lines.slice(at26 + 1)].join("\n");
+  if (at27 === -1) return [...lines.slice(0, end2), "state_history:", ...block, ...lines.slice(end2)].join("\n");
+  const rest = lines[at27].slice("state_history:".length).trim();
+  if (rest === "[]") return [...lines.slice(0, at27), "state_history:", ...block, ...lines.slice(at27 + 1)].join("\n");
   if (rest !== "") return null;
-  let last = at26;
-  for (let i = at26 + 1; i < end2; i++) {
+  let last = at27;
+  for (let i = at27 + 1; i < end2; i++) {
     if (/^\s/.test(lines[i]) && lines[i].trim() !== "") last = i;
     else break;
   }
@@ -86559,22 +86559,22 @@ function checkBiasExtension(ctx, findings) {
   const seen = /* @__PURE__ */ new Set();
   for (let i = 0; i < statements.length; i++) {
     const s = statements[i];
-    const at26 = `statements[${i}]`;
+    const at27 = `statements[${i}]`;
     if (!s || typeof s !== "object") {
-      findings.push(f13("C-26.1", "error", `${at26} is not a statement object`));
+      findings.push(f13("C-26.1", "error", `${at27} is not a statement object`));
       continue;
     }
     const id = typeof s.id === "string" ? s.id.trim() : "";
     const text5 = typeof s.text === "string" ? s.text.trim() : "";
     const kind = typeof s.kind === "string" ? s.kind.trim() : "";
-    if (!id) findings.push(f13("C-26.1", "error", `${at26} has no id, and an id is what an override names`));
-    else if (seen.has(id)) findings.push(f13("C-26.1", "error", `${at26} repeats the statement id '${id}'; ids are stable and unique within a record`));
+    if (!id) findings.push(f13("C-26.1", "error", `${at27} has no id, and an id is what an override names`));
+    else if (seen.has(id)) findings.push(f13("C-26.1", "error", `${at27} repeats the statement id '${id}'; ids are stable and unique within a record`));
     else seen.add(id);
     if (!BIAS_STATEMENT_KINDS.includes(kind)) {
       findings.push(f13(
         "C-26.1",
         "error",
-        `${at26} kind '${kind || "(absent)"}' is not one of: ${BIAS_STATEMENT_KINDS.join(", ")}`,
+        `${at27} kind '${kind || "(absent)"}' is not one of: ${BIAS_STATEMENT_KINDS.join(", ")}`,
         ["a standard of evidence is a BAR, not a bias kind \u2014 declare it as the project's required_strength (DEC-17, DEC-54 a)"]
       ));
     }
@@ -86583,19 +86583,19 @@ function checkBiasExtension(ctx, findings) {
       findings.push(f13(
         "C-26.2",
         "error",
-        `${at26} subject '${subject.slice(0, 40) || "(absent)"}' is not a subject registry key (ENT-YYYY-NNNN)`,
+        `${at27} subject '${subject.slice(0, 40) || "(absent)"}' is not a subject registry key (ENT-YYYY-NNNN)`,
         ["point subject at an entry in the subject registry (op=entitycreate / op=entitybyalias)"]
       ));
     }
     const nullifies = typeof s.nullifies === "string" ? s.nullifies.trim() : "";
     if (!text5 && !nullifies)
-      findings.push(f13("C-26.1", "error", `${at26} has no declarative text and nullifies nothing, so it says nothing at all`));
+      findings.push(f13("C-26.1", "error", `${at27} has no declarative text and nullifies nothing, so it says nothing at all`));
     const justification = typeof s.justification === "string" ? s.justification.trim() : "";
     if (!justification) {
       findings.push(f13(
         "C-26.3",
         "error",
-        `${at26} has no justification`,
+        `${at27} has no justification`,
         ["say why this lens is held; a bias the system honours is one its author justified"]
       ));
     }
@@ -86604,7 +86604,7 @@ function checkBiasExtension(ctx, findings) {
       findings.push(f13(
         "C-26.4",
         "error",
-        `${at26} is a pattern statement with no citation, and a pattern statement cannot leave draft without one`,
+        `${at27} is a pattern statement with no citation, and a pattern statement cannot leave draft without one`,
         /* CORRECTED TWICE ON FIRST RUN, found by `repair-reachability.test.mjs`
            (a legacy suite, since deleted), which was the instrument working. The first version
            said "or return the bundle to draft" — a MOVE DIRECTIVE naming no
@@ -86626,7 +86626,7 @@ function checkBiasExtension(ctx, findings) {
       findings.push(f13(
         "C-26.5",
         "error",
-        `${at26} pre-assigns a truth value wholesale to its subject, which is MALFORMED whoever declares it`,
+        `${at27} pre-assigns a truth value wholesale to its subject, which is MALFORMED whoever declares it`,
         [
           "raise scrutiny on the source instead \u2014 say what checking its claims need before they bear load",
           "or block a named inference instead of issuing a verdict"
@@ -86638,7 +86638,7 @@ function checkBiasExtension(ctx, findings) {
       findings.push(f13(
         "C-26.6",
         "error",
-        `${at26} states a BAR \u2014 how strong support must be before you assert \u2014 and a bar is not a lens`,
+        `${at27} states a BAR \u2014 how strong support must be before you assert \u2014 and a bar is not a lens`,
         [
           "declare it as the project's required_strength{capture, connection} (DEC-17)",
           "bias is DISCLOSED and refuses nothing; a bar GATES at pre-flight, and merging them breaks both"
@@ -87212,11 +87212,11 @@ var Bias = class _Bias {
   /* Each listener once, in the modules' total order (membership R83; a module not in it after, by name); one that
      throws or rejects changes nothing the act wrote and no other listener's notice. */
   #notify() {
-    const at26 = (m) => {
+    const at27 = (m) => {
       const i = MODULE_ORDER.indexOf(m);
       return i === -1 ? MODULE_ORDER.length : i;
     };
-    const ordered = [...this.#lensListeners].sort((x, y) => at26(x.module) - at26(y.module) || (x.module < y.module ? -1 : x.module > y.module ? 1 : 0));
+    const ordered = [...this.#lensListeners].sort((x, y) => at27(x.module) - at27(y.module) || (x.module < y.module ? -1 : x.module > y.module ? 1 : 0));
     const runs = ordered.map((l) => {
       try {
         return Promise.resolve(l.fn()).catch(() => null);
@@ -87251,7 +87251,7 @@ var Bias = class _Bias {
     scopeId = "",
     reason = null,
     author = null,
-    at: at26 = null,
+    at: at27 = null,
     identity = null,
     viewer = null
   } = {}) {
@@ -87303,7 +87303,7 @@ var Bias = class _Bias {
       );
     const md = this.#record.readFile(String(bundleId), "bundle.md");
     const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data || {} : {};
-    const now = at26 ? String(at26) : stampInstant("second");
+    const now = at27 ? String(at27) : stampInstant("second");
     this.#sql.exec(
       `INSERT OR REPLACE INTO bias_adoptions
          (scope_type, scope_id, bundle_id, bundle_sha, author, at, source_url, retrieved, source_sha256, reason)
@@ -87758,16 +87758,16 @@ var Bias = class _Bias {
      `n`. A cursor is `<kind>\t<key>`; one with no kind (written before kinds existed) is the first kind's. */
   #page(cursor, n) {
     const tab = cursor.indexOf("	");
-    let at26 = 0, after = "";
+    let at27 = 0, after = "";
     if (cursor) {
       const kind = tab === -1 ? this.#sources[0] && this.#sources[0].kind : cursor.slice(0, tab);
-      at26 = Math.max(0, this.#sources.findIndex((s) => s.kind === kind));
+      at27 = Math.max(0, this.#sources.findIndex((s) => s.kind === kind));
       after = tab === -1 ? cursor : cursor.slice(tab + 1);
     }
     const out = [];
-    for (let i = at26; i < this.#sources.length && out.length < n; i++) {
+    for (let i = at27; i < this.#sources.length && out.length < n; i++) {
       const { kind, source } = this.#sources[i];
-      for (const key of source.list(i === at26 ? after : "", n - out.length) || []) out.push({ kind, source, key: String(key) });
+      for (const key of source.list(i === at27 ? after : "", n - out.length) || []) out.push({ kind, source, key: String(key) });
     }
     return out;
   }
@@ -87781,7 +87781,7 @@ var Bias = class _Bias {
    *  compared in the rank's order. Without it, or when it fails, the order is the cursor's. The cursor, the batch
    *  size and what each comparison raises or settles do not depend on the order. */
   async biasDebtSweep(nowMs, rank6 = null) {
-    const at26 = stampInstant("second", Number(nowMs));
+    const at27 = stampInstant("second", Number(nowMs));
     const cap = this.#batch();
     const fp = this.lensFingerprint();
     const st = this.#one(`SELECT fingerprint, target, cursor FROM bias_debt_sweeps WHERE k = 'lens'`);
@@ -87823,13 +87823,13 @@ var Bias = class _Bias {
             then,
             now.sha,
             recipients,
-            at26,
-            at26
+            at27,
+            at27
           );
           out.raised.push(key);
         } else if (prior.cleared_at != null && SETTLED_BY_AN_ACT.has(prior.settled_kind) && prior.lens_now === now.sha && prior.lens_then === then) {
           if (prior.recipients !== recipients)
-            this.#sql.exec(`UPDATE bias_debts SET recipients = ?, observed = ? WHERE run = ?`, recipients, at26, key);
+            this.#sql.exec(`UPDATE bias_debts SET recipients = ?, observed = ? WHERE run = ?`, recipients, at27, key);
           out.held.push(key);
         } else if (prior.cleared_at != null || prior.lens_now !== now.sha || prior.lens_then !== then || prior.recipients !== recipients) {
           this.#sql.exec(
@@ -87841,15 +87841,15 @@ var Bias = class _Bias {
             then,
             now.sha,
             recipients,
-            at26,
-            at26,
+            at27,
+            at27,
             key
           );
           out.restated.push(key);
         } else out.unchanged++;
       } else if (moved === false) {
         if (prior && prior.cleared_at == null) {
-          this.#settle({ run: key, kind: "lens_returned", at: at26, lensThen: prior.lens_then, lensNow: prior.lens_now });
+          this.#settle({ run: key, kind: "lens_returned", at: at27, lensThen: prior.lens_then, lensNow: prior.lens_now });
           out.cleared.push(key);
         } else out.unchanged++;
       } else out.undetermined.push(key);
@@ -87862,7 +87862,7 @@ var Bias = class _Bias {
       out.complete ? fp : st ? st.fingerprint : null,
       fp,
       out.complete ? "" : last,
-      at26
+      at27
     );
     return out;
   }
@@ -87901,21 +87901,21 @@ var Bias = class _Bias {
   }
   /* R37: THE ONE WRITER OF A SETTLEMENT. Every act that settles a debt appends its row here and stamps the debt from
      the same values, so the append-only record and the debt's state cannot disagree about which act closed it. */
-  #settle({ run: run2, kind, at: at26, actor = null, reason = null, byRun = null, lensThen = null, lensNow = null }) {
+  #settle({ run: run2, kind, at: at27, actor = null, reason = null, byRun = null, lensThen = null, lensNow = null }) {
     this.#sql.exec(
       `INSERT INTO bias_debt_settlements (run, kind, at, actor, reason, by_run, lens_then, lens_now)
        VALUES (?,?,?,?,?,?,?,?)`,
       run2,
       kind,
-      at26,
+      at27,
       actor,
       reason,
       byRun,
       lensThen,
       lensNow
     );
-    this.#sql.exec(`UPDATE bias_debts SET cleared_at = ?, settled_kind = ?, observed = ? WHERE run = ?`, at26, kind, at26, run2);
-    return { run: run2, kind, at: at26, actor, reason, by_run: byRun, lens_then: lensThen, lens_now: lensNow };
+    this.#sql.exec(`UPDATE bias_debts SET cleared_at = ?, settled_kind = ?, observed = ? WHERE run = ?`, at27, kind, at27, run2);
+    return { run: run2, kind, at: at27, actor, reason, by_run: byRun, lens_then: lensThen, lens_now: lensNow };
   }
   #settlements(run2, limit) {
     const cap = Math.max(1, Math.min(Math.floor(Number(limit) || BIAS_DEBT_SETTLEMENTS_MAX), BIAS_DEBT_SETTLEMENTS_MAX));
@@ -87957,7 +87957,7 @@ var Bias = class _Bias {
   /** R35 — op=biasdebtresolve: A MEMBER'S RESOLVE, WITH A REQUIRED STATED REASON (BOB #32's third act). The four
    *  conditions about the ACT are asked before the record is read, so a caller who may not see the work learns
    *  nothing from the order of the answers; a debt this viewer may not see answers exactly as one never raised. */
-  biasDebtResolve({ run: run2 = null, reason = null, actor = null, viewer = null, at: at26 = null } = {}) {
+  biasDebtResolve({ run: run2 = null, reason = null, actor = null, viewer = null, at: at27 = null } = {}) {
     const refusal21 = (code, detail, extra = {}) => {
       const row3 = BIAS_CHECKS[code];
       return { ok: false, reason: code, code, check: row3.check, translation: row3.translation, detail, ...extra };
@@ -88005,7 +88005,7 @@ var Bias = class _Bias {
         "this obligation has already been settled, and a settlement is appended rather than replaced",
         { run: id, settled: _Bias.#settledView(row2) }
       );
-    const when = at26 && ISO_INSTANT2.test(at26) ? at26 : stampInstant("second");
+    const when = at27 && ISO_INSTANT2.test(at27) ? at27 : stampInstant("second");
     const settled = this.#settle({
       run: id,
       kind: "resolved",
@@ -88185,7 +88185,7 @@ var Bias = class _Bias {
   /** R38 — told of a work product's close. When it re-made another (`rerunOf`), the debt of the one re-made is
    *  discharged only when the lens the new one ran under equals the lens now in force; two absences are not
    *  agreement. Answers null when there is no link to follow, else the outcome, which the caller carries. */
-  async biasDebtRerun({ kind = null, key = null, at: at26 = null } = {}) {
+  async biasDebtRerun({ kind = null, key = null, at: at27 = null } = {}) {
     const src = this.#sources.find((s) => s.kind === kind) || (kind == null ? this.#sources[0] : null);
     if (!src || key == null) return null;
     const wp = await src.source.read(String(key));
@@ -88220,7 +88220,7 @@ var Bias = class _Bias {
         lens_in_force: inForce,
         stated: "this work was made under a lens other than the one now in force, so it discharges nothing (BOB #32: a re-run under any other lens discharges nothing)"
       };
-    const t = typeof at26 === "number" ? at26 : typeof at26 === "string" && at26.trim() ? Date.parse(at26) : NaN;
+    const t = typeof at27 === "number" ? at27 : typeof at27 === "string" && at27.trim() ? Date.parse(at27) : NaN;
     const when = Number.isFinite(t) ? stampInstant("second", Math.floor(t / 1e3) * 1e3) : stampInstant("second");
     const settled = this.#settle({
       run: target,
@@ -88485,8 +88485,8 @@ var SEARCHED_LEVEL_OUTCOMES = Object.freeze({
   undetermined: "no subject this case names at this level has an observation, and the pre-log or purge cause cannot be excluded -- so whether anybody looked is not knowable from this record, and that is stated rather than resolved in either direction",
   no_subjects: "this case names no subject this level could be computed over. This is NOT coverage: zero of zero is not 100%, and a level that reports it is saying the question was not askable here rather than that it was answered"
 });
-function searchedSection({ at: at26 = null, subjectSource = null, levels = null } = {}) {
-  if (typeof at26 !== "string" || at26.trim() === "")
+function searchedSection({ at: at27 = null, subjectSource = null, levels = null } = {}) {
+  if (typeof at27 !== "string" || at27.trim() === "")
     return { ok: false, why: "a searched section requires the time it was computed at" };
   if (!Object.prototype.hasOwnProperty.call(SEARCHED_SUBJECT_SOURCES, String(subjectSource)))
     return {
@@ -88554,7 +88554,7 @@ function searchedSection({ at: at26 = null, subjectSource = null, levels = null 
   return {
     ok: true,
     summary: {
-      computed_at: at26,
+      computed_at: at27,
       subject_source: String(subjectSource),
       subjects: totalSubjects,
       looked: totalLooked,
@@ -88805,7 +88805,7 @@ function caseDocumentText({
   justification,
   excluded,
   author,
-  at: at26,
+  at: at27,
   statementBy = null,
   statementByStated = "",
   searched,
@@ -88920,7 +88920,7 @@ function caseDocumentText({
        this is who wrote the sentence `statement` prints. It sits ABOVE `statement_sha` because the acknowledgement
        splice re-writes the run that STARTS there. */
     `  statement_by: ${statementBy ?? "null"}`,
-    `  at: "${at26}"`,
+    `  at: "${at27}"`,
     /* REC-217 / R9: the draft the publisher named, who named it and when, above `statement_sha` for the same reason. */
     ...acks.link ? [
       `  draft: ${acks.link.draft}`,
@@ -89125,7 +89125,7 @@ function caseDocumentText({
     "",
     "## Session Log",
     "",
-    `### Session ${at26} | Case published | ${author}`,
+    `### Session ${at27} | Case published | ${author}`,
     `Trigger: op=publish, case ${caseId} edition ${edition}`,
     `Published by: ${project} (this case is that project's production, DEC-72)`,
     `Findings in this case: ${roster.join(", ")}`,
@@ -89927,14 +89927,14 @@ var CaseAuthoring = class _CaseAuthoring {
     const by = proposedBy == null || !String(proposedBy).trim() ? null : String(proposedBy).trim();
     const label = proposalLabel(by, "edition_statement");
     return this.record.transact(() => {
-      const at26 = this.#when("millisecond");
-      const id = this.record.mintOpaqueId(WHAT_CHANGED_DRAFT_PREFIX, at26.slice(0, 4), "", (x) => !!this.#one(`SELECT 1 AS x FROM what_changed_drafts WHERE draft_id=?`, x));
+      const at27 = this.#when("millisecond");
+      const id = this.record.mintOpaqueId(WHAT_CHANGED_DRAFT_PREFIX, at27.slice(0, 4), "", (x) => !!this.#one(`SELECT 1 AS x FROM what_changed_drafts WHERE draft_id=?`, x));
       if (!id) return mintExhausted(WHAT_CHANGED_DRAFT_PREFIX);
       this.sql.exec(`INSERT INTO what_changed_drafts (draft_id, case_id, text, proposed_by, label, at)
-                     VALUES (?,?,?,?,?,?)`, id, seen.caseId, text5, by, JSON.stringify(label), at26);
+                     VALUES (?,?,?,?,?,?)`, id, seen.caseId, text5, by, JSON.stringify(label), at27);
       return {
         ok: true,
-        draft: { id, case: seen.caseId, text: text5, label, at: at26 },
+        draft: { id, case: seen.caseId, text: text5, label, at: at27 },
         next: `a member adopts it as written, or rewrites it, at op=publish (whatChanged: {text, draft: "${id}"}); until then it is a draft and never the group's statement`
       };
     });
@@ -90797,7 +90797,7 @@ var CaseAuthoring = class _CaseAuthoring {
    *  a referent nobody looked at: counted as `unidentified`, capping its level at `partial`. The DOCUMENT level cannot
    *  say `never_looked`: every document-level subject is the address of a capture we hold, so possession IS the look
    *  (`pre_log` always). Past `SEARCHED_SUBJECT_MAX` captures the overflow is folded into `unidentified`. */
-  #searchedForCase(members, at26) {
+  #searchedForCase(members, at27) {
     const roster = [...new Set((members || []).filter((m) => typeof m === "string" && m))];
     const chunked = (vals, fn) => {
       for (let i = 0; i < vals.length; i += SEARCHED_CHUNK) fn(vals.slice(i, i + SEARCHED_CHUNK));
@@ -90897,7 +90897,7 @@ var CaseAuthoring = class _CaseAuthoring {
         unidentified: legsUnresolved + contentUnresolved + capOver
       });
     }
-    return searchedSection({ at: at26, subjectSource: "case_basis", levels });
+    return searchedSection({ at: at27, subjectSource: "case_basis", levels });
   }
   /* REC-94: which of §5.1's causes explains a missing CONTENT-level row: observation-log's rule (its R11), asked with
      this level's pre-log evidence, a reading of the capture (extraction R58's `readings`). One indexed hit. */
@@ -92488,12 +92488,12 @@ var FilingTemplates = class _FilingTemplates {
     const bad = this.#textRefusal(body, notes);
     if (bad) return bad;
     if (fromBad) return this.#fromRefusal(fromBad);
-    const at26 = this.#when();
+    const at27 = this.#when();
     const name_ = this.#nameOf(member);
     return this.record.transact(() => {
       let tid = t ? t.id : null;
       if (!t) {
-        tid = this.#mint("TPL", at26.slice(0, 4));
+        tid = this.#mint("TPL", at27.slice(0, 4));
         if (!tid) return mintExhausted("TPL");
         this.sql.exec(
           `INSERT INTO tpl_templates (template_id, bundle_id, project, kind, use, profiles, name, origin, created_by,
@@ -92508,25 +92508,25 @@ var FilingTemplates = class _FilingTemplates {
           "group",
           member,
           name_,
-          at26
+          at27
         );
       }
       const bundle = t ? t.bundle_id : scopeProject;
       const prev = t ? Math.max(0, ...this.#numbers(tid)) : 0;
       const n = prev + 1;
       this.sql.exec(`INSERT INTO tpl_versions (template_id, version, bundle_id, author, author_name, derived_from, created_at)
-                     VALUES (?,?,?,?,?,?,?)`, tid, n, bundle, member, name_, source ? json(source.derived) : null, at26);
+                     VALUES (?,?,?,?,?,?,?)`, tid, n, bundle, member, name_, source ? json(source.derived) : null, at27);
       const sha = sha256HexSync(body);
       this.sql.exec(`INSERT INTO tpl_revisions (template_id, version, bundle_id, text, sha, author, author_name, adopted, at)
-                     VALUES (?,?,?,?,?,?,?,?,?)`, tid, n, bundle, body, sha, member, name_, source && source.proposal ? source.proposal : null, at26);
+                     VALUES (?,?,?,?,?,?,?,?,?)`, tid, n, bundle, body, sha, member, name_, source && source.proposal ? source.proposal : null, at27);
       if (prev) {
         const was = this.#one(`SELECT text, author, author_name FROM tpl_notes WHERE template_id=? AND version=? ORDER BY nid DESC LIMIT 1`, tid, prev);
         if (was) this.sql.exec(`INSERT INTO tpl_notes (template_id, version, bundle_id, text, author, author_name, carried, at)
-                                VALUES (?,?,?,?,?,?,1,?)`, tid, n, bundle, was.text, was.author, was.author_name, at26);
+                                VALUES (?,?,?,?,?,?,1,?)`, tid, n, bundle, was.text, was.author, was.author_name, at27);
       }
       if (typeof notes === "string")
         this.sql.exec(`INSERT INTO tpl_notes (template_id, version, bundle_id, text, author, author_name, carried, at)
-                       VALUES (?,?,?,?,?,?,0,?)`, tid, n, bundle, notes, member, name_, at26);
+                       VALUES (?,?,?,?,?,?,0,?)`, tid, n, bundle, notes, member, name_, at27);
       return {
         ok: true,
         template: tid,
@@ -92564,18 +92564,18 @@ var FilingTemplates = class _FilingTemplates {
       if (bad) return bad;
     }
     if (adopting && !p) return this.#fromRefusal(`no proposal '${String(adopt).slice(0, 80)}' is readable here`);
-    const at26 = this.#when();
+    const at27 = this.#when();
     const name_ = this.#nameOf(member);
     return this.record.transact(() => {
       let sha = this.#latestRevision(t.id, n).sha;
       if (!notesOnly) {
         sha = sha256HexSync(body);
         this.sql.exec(`INSERT INTO tpl_revisions (template_id, version, bundle_id, text, sha, author, author_name, adopted, at)
-                       VALUES (?,?,?,?,?,?,?,?,?)`, t.id, n, t.bundle_id, body, sha, member, name_, p ? p.proposal_id : null, at26);
+                       VALUES (?,?,?,?,?,?,?,?,?)`, t.id, n, t.bundle_id, body, sha, member, name_, p ? p.proposal_id : null, at27);
       }
       if (typeof notes === "string")
         this.sql.exec(`INSERT INTO tpl_notes (template_id, version, bundle_id, text, author, author_name, carried, at)
-                       VALUES (?,?,?,?,?,?,0,?)`, t.id, n, t.bundle_id, notes, member, name_, at26);
+                       VALUES (?,?,?,?,?,?,0,?)`, t.id, n, t.bundle_id, notes, member, name_, at27);
       return {
         ok: true,
         version: versionId(t.id, n),
@@ -92615,10 +92615,10 @@ var FilingTemplates = class _FilingTemplates {
     if (bad) return bad;
     if (!textUpTo(why, PROPOSAL_WHY_MAX))
       return refuse4("TEMPLATE_WHY_REFUSED", `say why in 1 to ${PROPOSAL_WHY_MAX} characters`, { max: PROPOSAL_WHY_MAX });
-    const at26 = this.#when();
+    const at27 = this.#when();
     const cut4 = (v) => str12(v) ? String(v).trim().slice(0, 200) : null;
     return this.record.transact(() => {
-      const id = this.#mint("TPP", at26.slice(0, 4));
+      const id = this.#mint("TPP", at27.slice(0, 4));
       if (!id) return mintExhausted("TPP");
       const sha = sha256HexSync(text5);
       const k = t ? t.kind : kind;
@@ -92636,7 +92636,7 @@ var FilingTemplates = class _FilingTemplates {
         cut4(run2),
         cut4(model),
         cut4(skill_pack),
-        at26
+        at27
       );
       return {
         ok: true,
@@ -92646,7 +92646,7 @@ var FilingTemplates = class _FilingTemplates {
           kind: k,
           sha,
           why: why.trim(),
-          at: at26,
+          at: at27,
           label: proposalLabel(who2, "template")
         },
         evidence: false,
@@ -92686,15 +92686,15 @@ var FilingTemplates = class _FilingTemplates {
     }
     if (!ids.length && !this.#liveGrants(t.id, n, events).length)
       return refuse4("NO_REVIEWERS", "name a member to review it, or open a review grant on the version first");
-    const at26 = this.#when();
+    const at27 = this.#when();
     const sha = this.#latestRevision(t.id, n).sha;
     const name_ = this.#nameOf(member);
     return this.record.transact(() => {
       this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
-                     VALUES (?,?,?,?,?,?,?,?)`, t.id, n, t.bundle_id, "submitted", member, name_, json({ sha, reviewers: ids }), at26);
+                     VALUES (?,?,?,?,?,?,?,?)`, t.id, n, t.bundle_id, "submitted", member, name_, json({ sha, reviewers: ids }), at27);
       for (const id of ids)
         this.sql.exec(`INSERT INTO tpl_reviewers (template_id, version, member, bundle_id, member_name, asked_by, asked_name, at)
-                       VALUES (?,?,?,?,?,?,?,?)`, t.id, n, id, t.bundle_id, this.#nameOf(id), member, name_, at26);
+                       VALUES (?,?,?,?,?,?,?,?)`, t.id, n, id, t.bundle_id, this.#nameOf(id), member, name_, at27);
       return {
         ok: true,
         version: versionId(t.id, n),
@@ -92728,9 +92728,9 @@ var FilingTemplates = class _FilingTemplates {
     const s = typeof secretSha === "string" ? secretSha.trim() : "";
     if (!SHA_RE.test(s) || this.#one(`SELECT 1 AS x FROM tpl_grants WHERE secret_sha=?`, s))
       return refuse4("GRANT_NO_SECRET", "no fresh secret digest was stamped for this grant: the control plane makes the secret");
-    const at26 = this.#when();
+    const at27 = this.#when();
     return this.record.transact(() => {
-      const id = this.#mint("TRG", at26.slice(0, 4));
+      const id = this.#mint("TRG", at27.slice(0, 4));
       if (!id) return mintExhausted("TRG");
       const name_ = this.#nameOf(member);
       this.sql.exec(
@@ -92745,7 +92745,7 @@ var FilingTemplates = class _FilingTemplates {
         s,
         member,
         name_,
-        at26
+        at27
       );
       return {
         ok: true,
@@ -92754,7 +92754,7 @@ var FilingTemplates = class _FilingTemplates {
         recipient: recipient.trim(),
         organisation: organisation.trim(),
         by: { id: member, name: name_ },
-        at: at26,
+        at: at27,
         says: "the reviewer reads, comments on and reviews this one version through the link while it is a draft or in review"
       };
     });
@@ -92772,7 +92772,7 @@ var FilingTemplates = class _FilingTemplates {
       return this.#scope(t, "a review grant is revoked by a joined participant of the template's project");
     const held = this.#one(`SELECT actor, actor_name, at FROM tpl_grant_revocations WHERE grant_id=?`, g.grant_id);
     if (held) return { ok: true, grant: g.grant_id, existed: true, revoked: { by: { id: held.actor, name: held.actor_name }, at: held.at } };
-    const at26 = this.#when();
+    const at27 = this.#when();
     const name_ = this.#nameOf(member);
     this.sql.exec(
       `INSERT INTO tpl_grant_revocations (grant_id, bundle_id, actor, actor_name, at) VALUES (?,?,?,?,?)`,
@@ -92780,9 +92780,9 @@ var FilingTemplates = class _FilingTemplates {
       g.bundle_id,
       member,
       name_,
-      at26
+      at27
     );
-    return { ok: true, grant: g.grant_id, existed: false, revoked: { by: { id: member, name: name_ }, at: at26 } };
+    return { ok: true, grant: g.grant_id, existed: false, revoked: { by: { id: member, name: name_ }, at: at27 } };
   }
   /* R8: the door: a live grant for `secretSha`, as {grant, t, n}, or null (the dead answer). */
   #door(secretSha) {
@@ -92845,7 +92845,7 @@ var FilingTemplates = class _FilingTemplates {
       return refuse4("REVIEW_REFUSED", `outcome is one of ${REVIEW_OUTCOMES2.join(", ")}; scope 1 to ${REVIEW_SCOPE_MAX} characters; comment at most ${REVIEW_COMMENT_MAX}; credential at most ${REVIEW_CREDENTIAL_MAX}`, { outcomes: REVIEW_OUTCOMES2 });
     if (sha !== null && sha !== void 0 && sha !== "" && sha !== present2)
       return refuse4("REVIEW_STALE", "the text reviewed is not the version's present text", { sha: present2 });
-    const at26 = this.#when();
+    const at27 = this.#when();
     const cred = reviewer.kind === "professional" && str12(credential) ? credential.trim() : null;
     this.sql.exec(
       `INSERT INTO tpl_reviews (template_id, version, bundle_id, sha, kind, reviewer, reviewer_name, organisation,
@@ -92863,14 +92863,14 @@ var FilingTemplates = class _FilingTemplates {
       outcome,
       scope.trim(),
       str12(comment) ? comment : null,
-      at26
+      at27
     );
     return { ok: true, version: versionId(t.id, n), review: {
       kind: reviewer.kind,
       outcome,
       scope: scope.trim(),
       sha: present2,
-      at: at26,
+      at: at27,
       reviewer: reviewer.kind === "professional" ? { grant: reviewer.id, name: reviewer.name, organisation: reviewer.organisation, credential: cred, credential_says: "as stated; never verified" } : { id: reviewer.id, name: reviewer.name, expertise: reviewer.expertise }
     } };
   }
@@ -92900,10 +92900,10 @@ var FilingTemplates = class _FilingTemplates {
       if (!member || this.#call(() => this.membership.isAdministrator(member)) !== true)
         return this.#notAnApprover(t, "an administrator makes a template group-wide");
       if (t.widened) return { ok: true, template: t.id, existed: true, widened: t.widened, scope: "group" };
-      const at27 = this.#when();
+      const at28 = this.#when();
       this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
-                     VALUES (?,NULL,?,?,?,?,?,?)`, t.id, t.bundle_id, "widened", member, name_, json({ from: { project: t.project } }), at27);
-      return { ok: true, template: t.id, existed: false, scope: "group", widened: { by: { id: member, name: name_ }, at: at27 } };
+                     VALUES (?,NULL,?,?,?,?,?,?)`, t.id, t.bundle_id, "widened", member, name_, json({ from: { project: t.project } }), at28);
+      return { ok: true, template: t.id, existed: false, scope: "group", widened: { by: { id: member, name: name_ }, at: at28 } };
     }
     if (state !== "in_review") return this.#notInReview(t, n, state);
     if (!member || this.#call(() => this.membership.isProjectOwner(t.project, member)) !== true)
@@ -92929,20 +92929,20 @@ var FilingTemplates = class _FilingTemplates {
         blocking.length ? "a review requesting changes stands" : tier === 1 ? "a Tier 1 kind needs one member's review with no concerns" : `${tier === "undetermined" ? "an undetermined tier" : `Tier ${tier}`} needs a professional's review with no concerns, or the approver's reason for going without one (1 to ${APPROVAL_REASON_MAX} characters)`,
         { version: versionId(t.id, n), tier, needs, reviews: _FilingTemplates.#summary(standing, sha) }
       );
-    const at26 = this.#when();
+    const at27 = this.#when();
     const prev = this.#latestApproved(t, events);
     return this.record.transact(() => {
       const detail = { tier, tier_words: RISK_TIERS[tier] ?? null, profiles: t.profiles, reason: why, sha };
       this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
-                     VALUES (?,?,?,?,?,?,?,?)`, t.id, n, t.bundle_id, "approved", member, name_, json(detail), at26);
+                     VALUES (?,?,?,?,?,?,?,?)`, t.id, n, t.bundle_id, "approved", member, name_, json(detail), at27);
       if (prev !== null && prev !== n)
         this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
-                       VALUES (?,?,?,?,?,?,?,?)`, t.id, prev, t.bundle_id, "updated", member, name_, json({ by: n }), at26);
+                       VALUES (?,?,?,?,?,?,?,?)`, t.id, prev, t.bundle_id, "updated", member, name_, json({ by: n }), at27);
       return {
         ok: true,
         version: versionId(t.id, n),
         state: "approved",
-        approved: { by: { id: member, name: name_ }, at: at26, ...detail },
+        approved: { by: { id: member, name: name_ }, at: at27, ...detail },
         updated: prev !== null && prev !== n ? versionId(t.id, prev) : null,
         says: "approved: offered for a filing as the template's default; an earlier approved version stays offered, as updated"
       };
@@ -92964,14 +92964,14 @@ var FilingTemplates = class _FilingTemplates {
       if (!approver) return this.#notAnApprover(t, t.origin === "profile" ? "a profile's template is read-only here" : t.widened ? "an administrator retires a group-wide template" : "an owner of the template's project retires it");
       if (!why) return refuse4("TEMPLATE_REASON_REFUSED", `give the reason in 1 to ${ENDING_REASON_MAX} characters`, { max: ENDING_REASON_MAX });
       if (t.retired) return refuse4("TEMPLATE_ALREADY_ENDED", "the template was already retired", { template: t.id, ended: { ending: "retired", ...t.retired } });
-      const at27 = this.#when();
+      const at28 = this.#when();
       const name_2 = this.#nameOf(member);
       this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
-                     VALUES (?,NULL,?,?,?,?,?,?)`, t.id, t.bundle_id, "retired", member, name_2, json({ reason: reason.trim() }), at27);
+                     VALUES (?,NULL,?,?,?,?,?,?)`, t.id, t.bundle_id, "retired", member, name_2, json({ reason: reason.trim() }), at28);
       return {
         ok: true,
         template: t.id,
-        retired: { by: { id: member, name: name_2 }, at: at27, reason: reason.trim() },
+        retired: { by: { id: member, name: name_2 }, at: at28, reason: reason.trim() },
         says: "retired: none of its versions is offered again; each stays readable with this reason"
       };
     }
@@ -92990,11 +92990,11 @@ var FilingTemplates = class _FilingTemplates {
         ended: { ending: "withdrawn", by: { id: e.actor, name: e.actor_name }, at: e.at, reason: (parse2(e.detail) || {}).reason ?? null }
       });
     }
-    const at26 = this.#when();
+    const at27 = this.#when();
     const name_ = this.#nameOf(member);
     this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
-                   VALUES (?,?,?,?,?,?,?,?)`, t.id, n, t.bundle_id, "withdrawn", member, name_, json({ reason: reason.trim() }), at26);
-    return { ok: true, version: versionId(t.id, n), state: "withdrawn", withdrawn: { by: { id: member, name: name_ }, at: at26, reason: reason.trim() } };
+                   VALUES (?,?,?,?,?,?,?,?)`, t.id, n, t.bundle_id, "withdrawn", member, name_, json({ reason: reason.trim() }), at27);
+    return { ok: true, version: versionId(t.id, n), state: "withdrawn", withdrawn: { by: { id: member, name: name_ }, at: at27, reason: reason.trim() } };
   }
   /* ================================================================ R12, R13: comments and notes */
   /** R13 (`op=templatecomment`): a comment on a version, attributed to the member, the grant or a labelled run; with
@@ -93027,10 +93027,10 @@ var FilingTemplates = class _FilingTemplates {
       if (this.#stateOf(this.#events(t.id), n) === "draft")
         return refuse4("COMMENT_REFUSED", "a draft's notes are edited by revising it (op=templaterevise, notes=)", { max: COMMENT_MAX });
     }
-    const at26 = this.#when();
+    const at27 = this.#when();
     this.sql.exec(`INSERT INTO tpl_comments (template_id, version, bundle_id, text, note, kind, author, author_name, organisation, at)
-                   VALUES (?,?,?,?,?,?,?,?,?,?)`, t.id, n, t.bundle_id, text5, isNote ? 1 : 0, by.kind, by.id, by.name, by.organisation ?? null, at26);
-    return { ok: true, comment: { template: t.id, version: versionId(t.id, n), text: text5, note: isNote, by: _FilingTemplates.#by(by), at: at26 } };
+                   VALUES (?,?,?,?,?,?,?,?,?,?)`, t.id, n, t.bundle_id, text5, isNote ? 1 : 0, by.kind, by.id, by.name, by.organisation ?? null, at27);
+    return { ok: true, comment: { template: t.id, version: versionId(t.id, n), text: text5, note: isNote, by: _FilingTemplates.#by(by), at: at27 } };
   }
   static #by(b) {
     return b.kind === "grant" ? { kind: "grant", grant: b.id, name: b.name, organisation: b.organisation } : b.kind === "run" ? { kind: "run", label: b.label ?? proposalLabel(b.id, "template") } : { kind: "member", id: b.id, name: b.name };
@@ -93221,9 +93221,9 @@ var FilingTemplates = class _FilingTemplates {
   reviewsRequested({ after = null, limit = null, viewer = null } = {}) {
     const max = clamp4(limit, REVIEWS_REQUESTED_MAX, REVIEWS_REQUESTED_MAX);
     const from = str12(after);
-    const at26 = from ? /^(.+)#([^#]*)$/.exec(from) : null;
+    const at27 = from ? /^(.+)#([^#]*)$/.exec(from) : null;
     const vid = `(r.template_id || '@' || r.version)`;
-    const seek = at26 ? { sql: `AND (${vid} > ? OR (${vid} = ? AND r.member > ?))`, args: [at26[1], at26[1], at26[2]] } : from ? { sql: `AND ${vid} > ?`, args: [from] } : { sql: "", args: [] };
+    const seek = at27 ? { sql: `AND (${vid} > ? OR (${vid} = ? AND r.member > ?))`, args: [at27[1], at27[1], at27[2]] } : from ? { sql: `AND ${vid} > ?`, args: [from] } : { sql: "", args: [] };
     const rows2 = this.#rows(`SELECT r.*, ${vid} AS vid FROM tpl_reviewers r
       WHERE EXISTS (SELECT 1 FROM tpl_events e WHERE e.template_id=r.template_id AND e.version=r.version AND e.event='submitted')
         AND NOT EXISTS (SELECT 1 FROM tpl_events e WHERE e.template_id=r.template_id AND e.version=r.version
@@ -93277,9 +93277,9 @@ var FilingTemplates = class _FilingTemplates {
       const bundle = project || str12(f17.action_id);
       const member = this.#member(f17.author) || str12(f17.author) || "unrecorded";
       const name_ = this.#nameOf(member);
-      const at26 = str12(f17.at) || this.#when();
+      const at27 = str12(f17.at) || this.#when();
       const ok2 = this.record.transact(() => {
-        const id = this.#mint("TPL", at26.slice(0, 4));
+        const id = this.#mint("TPL", at27.slice(0, 4));
         if (!id) return mintExhausted("TPL");
         this.sql.exec(
           `INSERT INTO tpl_templates (template_id, bundle_id, project, kind, use, profiles, name, origin, created_by,
@@ -93294,16 +93294,16 @@ var FilingTemplates = class _FilingTemplates {
           "group",
           member,
           name_,
-          at26,
+          at27,
           f17.template_id
         );
         const sha = sha256HexSync(String(f17.text));
         this.sql.exec(`INSERT INTO tpl_versions (template_id, version, bundle_id, author, author_name, derived_from, created_at)
-                       VALUES (?,1,?,?,?,?,?)`, id, bundle, member, name_, json({ filing: f17.from_filing, sha }), at26);
+                       VALUES (?,1,?,?,?,?,?)`, id, bundle, member, name_, json({ filing: f17.from_filing, sha }), at27);
         this.sql.exec(`INSERT INTO tpl_revisions (template_id, version, bundle_id, text, sha, author, author_name, adopted, at)
-                       VALUES (?,1,?,?,?,?,?,NULL,?)`, id, bundle, String(f17.text), sha, member, name_, at26);
+                       VALUES (?,1,?,?,?,?,?,NULL,?)`, id, bundle, String(f17.text), sha, member, name_, at27);
         this.sql.exec(`INSERT INTO tpl_notes (template_id, version, bundle_id, text, author, author_name, carried, at)
-                       VALUES (?,1,?,?,?,?,1,?)`, id, bundle, MIGRATED_NOTE, member, name_, at26);
+                       VALUES (?,1,?,?,?,?,1,?)`, id, bundle, MIGRATED_NOTE, member, name_, at27);
         return { ok: true };
       });
       if (ok2 && ok2.ok) migrated++;
@@ -93856,7 +93856,7 @@ var LocalFacts = class _LocalFacts {
       const s = r.inView ? this.#status(path, r.parts, r.held, r.inView, this.#today()) : null;
       value = s && s.governs ? s.governs.value : r.held.value;
     }
-    const at26 = stampInstant("second", Date.parse(this.now()));
+    const at27 = stampInstant("second", Date.parse(this.now()));
     const by = str13(b.by);
     return this.record.transact(() => {
       this.sql.exec(
@@ -93869,9 +93869,9 @@ var LocalFacts = class _LocalFacts {
         canonicalJson(value),
         source,
         by,
-        at26
+        at27
       );
-      return { ok: true, path, act, at: at26 };
+      return { ok: true, path, act, at: at27 };
     });
   }
   /* ===================================================================== *
@@ -94209,9 +94209,9 @@ function setScalar5(text5, key, value) {
   return text5;
 }
 function appendSessionLog4(text5, entry) {
-  const at26 = text5.indexOf("## Session Log");
-  if (at26 < 0) return text5 + "\n## Session Log\n\n" + entry;
-  const nxt = text5.indexOf("\n## ", at26 + 1);
+  const at27 = text5.indexOf("## Session Log");
+  if (at27 < 0) return text5 + "\n## Session Log\n\n" + entry;
+  const nxt = text5.indexOf("\n## ", at27 + 1);
   const cut4 = nxt === -1 ? text5.length : nxt + 1;
   return text5.slice(0, cut4) + entry + "\n" + text5.slice(cut4);
 }
@@ -99996,10 +99996,10 @@ var CaptureCredentials = class _CaptureCredentials {
   }
   /* R57's destruction: the ciphertext and its IV go; the secretless entry stays. */
   #destroy(id, by) {
-    const at26 = stamp(this.#now());
+    const at27 = stamp(this.#now());
     this.#sql.exec(`UPDATE ${CREDENTIALS_TABLE} SET ciphertext=NULL, iv=NULL, withdrawn_at=?, withdrawn_by=?
-                    WHERE credential_id=? AND withdrawn_at IS NULL`, at26, by, id);
-    return at26;
+                    WHERE credential_id=? AND withdrawn_at IS NULL`, at27, by, id);
+    return at27;
   }
   /* R63, N123: a revoked member's own credentials, withdrawn by the revocation, their ciphertext destroyed: the notice's
      listener (inside the revoking act), and a read meeting a supplier revoked before the registration. One UPDATE
@@ -100016,8 +100016,8 @@ var CaptureCredentials = class _CaptureCredentials {
     const out = [];
     for (const r of rows2) {
       if (r.scope === "member" && r.withdrawn_at == null && !this.#active(r.supplied_by)) {
-        const at26 = this.#destroy(r.credential_id, REVOCATION);
-        out.push({ ...r, ciphertext: null, iv: null, withdrawn_at: at26, withdrawn_by: REVOCATION });
+        const at27 = this.#destroy(r.credential_id, REVOCATION);
+        out.push({ ...r, ciphertext: null, iv: null, withdrawn_at: at27, withdrawn_by: REVOCATION });
       } else out.push(r);
     }
     return out;
@@ -100071,10 +100071,10 @@ var CaptureCredentials = class _CaptureCredentials {
       key,
       utf83(secret)
     ));
-    const at26 = stamp(this.#now());
+    const at27 = stamp(this.#now());
     this.#core.transact(() => {
       this.#sql.exec(`INSERT INTO ${CREDENTIALS_TABLE} (credential_id, kind, host, scope, project, supplied_by, supplied_at, iv, ciphertext)
-                      VALUES (?,?,?,?,?,?,?,?,?)`, id, kind, h, scope, proj, by, at26, b644(iv), b644(ct));
+                      VALUES (?,?,?,?,?,?,?,?,?)`, id, kind, h, scope, proj, by, at27, b644(iv), b644(ct));
     });
     return { ok: true, credential: _CaptureCredentials.#entry({
       credential_id: id,
@@ -100083,7 +100083,7 @@ var CaptureCredentials = class _CaptureCredentials {
       scope,
       project: proj,
       supplied_by: by,
-      supplied_at: at26
+      supplied_at: at27
     }) };
   }
   /* ================= R56: the one read for a fetch ================= */
@@ -100150,8 +100150,8 @@ var CaptureCredentials = class _CaptureCredentials {
       const denied = this.#r63Refusal(by, { row: row2 });
       if (denied) return denied;
       if (row2.withdrawn_at != null) return { ok: true, already: true, withdrawn: _CaptureCredentials.#entry(row2) };
-      const at26 = this.#core.transact(() => this.#destroy(row2.credential_id, by));
-      return { ok: true, already: false, withdrawn: _CaptureCredentials.#entry({ ...row2, withdrawn_at: at26, withdrawn_by: by }) };
+      const at27 = this.#core.transact(() => this.#destroy(row2.credential_id, by));
+      return { ok: true, already: false, withdrawn: _CaptureCredentials.#entry({ ...row2, withdrawn_at: at27, withdrawn_by: by }) };
     } catch {
       return refusal11(
         "CAPTURE_CREDENTIAL_WITHDRAW_FAILED",
@@ -101883,7 +101883,7 @@ var AiRuns = class _AiRuns {
    *  on `run` for exactly this reason UNTIL REC-100 (2026-09-18, IC-130): the
    *  rollup ruling gave the run's two rollup writers a referent, and a bare
    *  `run` PRESENT is now refused here like any other — see its catalogue row. */
-  #aiRunAppend(run2, entry, at26, terminal = 0, actor = null) {
+  #aiRunAppend(run2, entry, at27, terminal = 0, actor = null) {
     return this.#observations().observe({
       actorClass: "machine",
       /* WHO the machine was, PASSED IN BY THE CALLER RATHER THAN LOOKED UP
@@ -101924,7 +101924,7 @@ var AiRuns = class _AiRuns {
       /* C-22.6 travels through UNCHANGED: the bundle key is what the refusal
          reads, and it is passed rather than dropped here. */
       bundle: entry ? entry.bundle : null
-    }, at26, terminal);
+    }, at27, terminal);
   }
   /** What the run's SEARCH established overall, reduced from the log the run
    *  actually wrote rather than declared by the run about itself.
@@ -101996,7 +101996,7 @@ var AiRuns = class _AiRuns {
    *      ask: the budget rows and the clock are the only evidence there is, and
    *      `finishedBound` is the one function that reads them.
    */
-  #aiRunTerminate({ run: run2, offered = null, condition = null, at: at26, expired = false, derive = true }) {
+  #aiRunTerminate({ run: run2, offered = null, condition = null, at: at27, expired = false, derive = true }) {
     const row2 = this.#one(`SELECT * FROM ai_runs WHERE run = ?`, run2);
     if (!row2) return {
       run: run2,
@@ -102039,17 +102039,17 @@ var AiRuns = class _AiRuns {
         condition,
         bound,
         detail: stoppedByBound ? `the run stopped because the '${bound}' bound was reached (${RUN_BOUNDS[bound]})` : `the run ended: ${RUN_ENDINGS[bound]}`
-      }, at26, 1);
+      }, at27, 1);
       if (bad) return { run: run2, found: true, terminated: false, ...bad };
       const status = runStatusFor(bound);
       this.sql.exec(
         `UPDATE ai_runs SET status = ?, updated = ?, stopped_bound = ?, stopped_condition = ?, stopped_at = ?
          WHERE run = ?`,
         status,
-        at26,
+        at27,
         bound,
         condition,
-        at26,
+        at27,
         run2
       );
       return {
@@ -102060,7 +102060,7 @@ var AiRuns = class _AiRuns {
         bound,
         condition,
         state,
-        at: at26
+        at: at27
       };
     });
   }
@@ -102237,7 +102237,7 @@ var AiRuns = class _AiRuns {
     bounds = null,
     state = null,
     leaseMs = null,
-    at: at26 = null,
+    at: at27 = null,
     /* REC-207 (BOB #32, 2026-09-23 23:42Z): WHICH RUN THIS ONE RE-RUNS, the opener's own word
        and nothing derived. It is what makes discharge (2) addressable at all — without it there
        is no link in the record between a re-run and the debt it settles, and a plane inferring
@@ -102255,7 +102255,7 @@ var AiRuns = class _AiRuns {
        beside `actor` and read only by `#aiRunProjectGate`'s stated count. */
     viewer = null
   } = {}) {
-    const nowMs = at26 ? Date.parse(at26) : Date.now();
+    const nowMs = at27 ? Date.parse(at27) : Date.now();
     const now = _AiRuns.#aiIso(nowMs);
     const refusal21 = (code, more = {}) => {
       const row2 = ROW2(code);
@@ -102502,14 +102502,14 @@ var AiRuns = class _AiRuns {
     consume = null,
     log = null,
     leaseMs = null,
-    at: at26 = null,
+    at: at27 = null,
     actor = null,
     viewer = null,
     /* REC-152: the caller's PRINCIPAL, stamped server-side by `control-plane` in the form the open
        stamps `principal_plane` in — never a caller's word. */
     caller = null
   } = {}) {
-    const nowMs = at26 ? Date.parse(at26) : Date.now();
+    const nowMs = at27 ? Date.parse(at27) : Date.now();
     const now = _AiRuns.#aiIso(nowMs);
     const row2 = this.#one(`SELECT * FROM ai_runs WHERE run = ?`, run2);
     if (!row2) return {
@@ -102648,13 +102648,13 @@ var AiRuns = class _AiRuns {
     run: run2,
     bound = null,
     condition = null,
-    at: at26 = null,
+    at: at27 = null,
     actor = null,
     viewer = null,
     /* REC-152: the caller's PRINCIPAL, stamped server-side — see `aiRunTick`. */
     caller = null
   } = {}) {
-    const now = at26 ? _AiRuns.#aiIso(Date.parse(at26)) : _AiRuns.#aiIso(Date.now());
+    const now = at27 ? _AiRuns.#aiIso(Date.parse(at27)) : _AiRuns.#aiIso(Date.now());
     const row2 = this.#one(`SELECT context_type, context_id, principal_plane FROM ai_runs WHERE run = ?`, run2);
     if (row2) {
       if (!this.#aiRunInSight(run2, viewer)) return {
@@ -102711,8 +102711,8 @@ var AiRuns = class _AiRuns {
   reapWake(now) {
     const r = this.#one(`SELECT MIN(expires) e FROM ai_runs WHERE status = 'running'`);
     if (!r || !r.e) return null;
-    const at26 = Date.parse(r.e);
-    return Number.isFinite(at26) ? Math.max(at26, now) : null;
+    const at27 = Date.parse(r.e);
+    return Number.isFinite(at27) ? Math.max(at27, now) : null;
   }
   /** THE NEGATIVE CONTROL THE DESIGN NAMES, as a mechanism: a run KILLED
    *  mid-flight never calls anything, so this is what writes its log. It closes
@@ -103839,19 +103839,19 @@ var AiRuns = class _AiRuns {
   #surfacingProject(c) {
     if (!_AiRuns.#surfacing(c)) return null;
     const run2 = String(c.pkg.run).trim(), principal = c.pkg.assistantPrincipal.trim();
-    const at26 = (/* @__PURE__ */ new Date()).toISOString();
+    const at27 = (/* @__PURE__ */ new Date()).toISOString();
     this.#transact(() => {
       this.sql.exec(
         `INSERT INTO inquiry_run_surfacings (bundle_id, run, principal, at) VALUES (?,?,?,?)`,
         c.bundleId,
         run2,
         principal,
-        at26
+        at27
       );
       this.consumeBound(run2, "surfaces", 1);
     });
     const left2 = this.boundOf(run2, "surfaces");
-    return { surfaced_in: { run: run2, at: at26, bound: { bound: "surfaces", allowed: left2.allowed, consumed: left2.consumed } } };
+    return { surfaced_in: { run: run2, at: at27, bound: { bound: "surfaces", allowed: left2.allowed, consumed: left2.consumed } } };
   }
   /* ---- R36: HIDDEN RUNS — `hiddenRuns` (R42, module level) is what retrieval holds; observation-log's resolver is
      `runFor` (R28), the same sight. ------------------------------------------------------------------------------ */
@@ -104753,7 +104753,7 @@ Changes: reading '${name2}' proposed as ${kind}, in state suggested, carrying ru
    *  is written, the batch is written in one transaction, and the bound is consumed by what was ACTUALLY minted. A
    *  proposal that says WHERE it read the reference mints that passage through `content` (on the capture's own chain,
    *  so a member's later citation of the same passage finds this row); one with no position mints nothing. */
-  extractPropose({ run: run2, bundleId, fn, version, cap = null, refs, proposedBy, viewer = null, at: at26 = null, caller = null }) {
+  extractPropose({ run: run2, bundleId, fn, version, cap = null, refs, proposedBy, viewer = null, at: at27 = null, caller = null }) {
     const refuse8 = (code, detail, extra) => {
       const row2 = EXTRACT_PROPOSE_CHECKS[code];
       return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
@@ -104868,7 +104868,7 @@ Changes: reading '${name2}' proposed as ${kind}, in state suggested, carrying ru
         `this batch would mark ${willMint} passage(s) citable and this run has ${Number(bound.allowed) - Number(bound.consumed)} left of its 'mints' bound. It is refused whole rather than truncated: a batch trimmed to fit would drop proposals the caller believes it filed`,
         { run: runId, allowed: Number(bound.allowed), consumed: Number(bound.consumed), would_mint: willMint }
       );
-    const when = at26 || new Date(this.now()).toISOString();
+    const when = at27 || new Date(this.now()).toISOString();
     const by = proposedBy.trim();
     const fnVersion = String(version).trim();
     const out = [];
@@ -107095,307 +107095,9 @@ __export(checks_exports46, {
   GATH_ID_RE: () => GATH_ID_RE,
   GATH_STATUS_ENUM: () => GATH_STATUS_ENUM,
   MONITORING_CHECKS: () => MONITORING_CHECKS,
-  SWEEP_BOUNDS: () => SWEEP_BOUNDS,
-  SWEEP_CADENCES: () => SWEEP_CADENCES,
-  SWEEP_CHECKS: () => SWEEP_CHECKS,
-  SWEEP_FIELDS: () => SWEEP_FIELDS,
-  SWEEP_ID_RE: () => SWEEP_ID_RE,
   checkGatheringGrammar: () => checkGatheringGrammar,
   frequencyRefusal: () => frequencyRefusal
 });
-
-// src/monitoring/sweep-match.mjs
-function inScope(address, sources) {
-  if (typeof address !== "string" || !Array.isArray(sources)) return false;
-  let a;
-  try {
-    a = normalizeAddress(address);
-  } catch {
-    return false;
-  }
-  return sources.some((p) => {
-    if (typeof p !== "string" || !p) return false;
-    let n;
-    try {
-      n = normalizeAddress(p);
-    } catch {
-      return false;
-    }
-    return a === n || a.startsWith(n) && (n.endsWith("/") || a[n.length] === "/");
-  });
-}
-var TERM_MAX = 200;
-var MATCH_TEXT_MAX = 2048;
-var TERM_PROGRAM_MAX = 4e3;
-var TERM_REPEAT_MAX = 100;
-var fold2 = (c) => {
-  const l = c.toLowerCase();
-  return l.length === 1 ? l : c;
-};
-var unfold = (c) => {
-  const u = c.toUpperCase();
-  return u.length === 1 ? u : c;
-};
-var isWord = (c) => c !== void 0 && /^[A-Za-z0-9_]$/.test(c);
-var CLASS = { d: (c) => c >= "0" && c <= "9", w: isWord, s: (c) => /^\s$/u.test(c) };
-var Refused = class extends Error {
-  constructor(construct, detail) {
-    super(detail);
-    this.construct = construct;
-  }
-};
-function parse3(src) {
-  const cs = Array.from(src);
-  let i = 0;
-  const peek = () => cs[i], eat = () => cs[i++];
-  const escape = (inClass) => {
-    const c = eat();
-    if (c === void 0) throw new Refused("a trailing backslash", "the expression ends with a backslash");
-    if (/[1-9]/.test(c) || c === "k") throw new Refused("a backreference", `\\${c} refers back to a group, and a backreference cannot be matched in linear time`);
-    const low = c.toLowerCase();
-    if (CLASS[low]) {
-      const f17 = CLASS[low];
-      return c === low ? f17 : (x) => !f17(x);
-    }
-    if (!inClass && (c === "b" || c === "B")) return { assert: c };
-    const ctl = { n: "\n", r: "\r", t: "	", f: "\f", v: "\v", 0: "\0" }[c];
-    if (ctl !== void 0) return ctl;
-    if (c === "x" || c === "u") {
-      const n = c === "x" ? 2 : 4, h = cs.slice(i, i + n).join("");
-      if (!new RegExp(`^[0-9a-fA-F]{${n}}$`).test(h)) throw new Refused(`\\${c} without ${n} hex digits`, `\\${c} needs ${n} hex digits`);
-      i += n;
-      return String.fromCharCode(parseInt(h, 16));
-    }
-    if (/[A-Za-z]/.test(c)) throw new Refused(`the escape \\${c}`, `\\${c} is not an escape a term reads`);
-    return c;
-  };
-  const klass = () => {
-    const neg = peek() === "^" && !!eat();
-    const items = [];
-    let first = true;
-    for (; ; ) {
-      let c = eat();
-      if (c === void 0) throw new Refused("an unclosed class", "a [ has no closing ]");
-      if (c === "]" && !first) break;
-      first = false;
-      let lo = c === "\\" ? escape(true) : c;
-      if (typeof lo === "string" && peek() === "-" && cs[i + 1] !== void 0 && cs[i + 1] !== "]") {
-        eat();
-        c = eat();
-        const hi = c === "\\" ? escape(true) : c;
-        if (typeof hi !== "string" || hi < lo) throw new Refused("a reversed or open range", "a range in a class runs backwards or ends in a class");
-        items.push([lo, hi]);
-        continue;
-      }
-      items.push(lo);
-    }
-    const hit = (c) => items.some((x) => typeof x === "function" ? x(c) : Array.isArray(x) ? c >= x[0] && c <= x[1] : c === x);
-    return { t: "char", test: (c) => (hit(c) || hit(unfold(c)) || hit(fold2(c))) !== neg };
-  };
-  const atom = () => {
-    const c = eat();
-    if (c === "(") {
-      if (peek() === "?") {
-        eat();
-        const k = eat();
-        if (k === "=" || k === "!") throw new Refused("a lookahead", `(?${k} looks ahead, which a term may not`);
-        if (k === "<" && (peek() === "=" || peek() === "!")) throw new Refused("a lookbehind", `(?<${peek()} looks behind, which a term may not`);
-        if (k === "<") {
-          while (peek() !== void 0 && peek() !== ">") eat();
-          if (eat() !== ">") throw new Refused("an unclosed group name", "a named group's name has no closing >");
-        } else if (k !== ":") throw new Refused(`the group (?${k ?? ""}`, `(?${k ?? ""} is not a group a term reads`);
-      }
-      const x = alt();
-      if (eat() !== ")") throw new Refused("an unclosed group", "a ( has no closing )");
-      return x;
-    }
-    if (c === "[") return klass();
-    if (c === ".") return { t: "char", test: (x) => x !== "\n" && x !== "\r" };
-    if (c === "^" || c === "$") return { t: "assert", k: c };
-    if (c === "\\") {
-      const e = escape(false);
-      if (e && e.assert) return { t: "assert", k: e.assert };
-      return typeof e === "function" ? { t: "char", test: e } : lit(e);
-    }
-    if ("*+?{".includes(c)) throw new Refused("a quantifier with nothing to repeat", `${c} repeats nothing`);
-    if (c === ")") throw new Refused("an unopened group", "a ) closes no group");
-    return lit(c);
-  };
-  const lit = (ch) => {
-    const f17 = fold2(ch);
-    return { t: "char", test: (x) => fold2(x) === f17 };
-  };
-  const quant = (x) => {
-    let min, max;
-    const c = peek();
-    if (c === "*") {
-      min = 0;
-      max = Infinity;
-    } else if (c === "+") {
-      min = 1;
-      max = Infinity;
-    } else if (c === "?") {
-      min = 0;
-      max = 1;
-    } else if (c === "{") {
-      const m = /^\{(\d+)(,(\d*))?\}/.exec(cs.slice(i, i + 12).join(""));
-      if (!m) return x;
-      min = Number(m[1]);
-      max = m[2] ? m[3] === "" ? Infinity : Number(m[3]) : min;
-      if (min > TERM_REPEAT_MAX || max !== Infinity && max > TERM_REPEAT_MAX || max < min)
-        throw new Refused("a count past the bound", `a count is at most ${TERM_REPEAT_MAX} and never runs backwards`);
-      i += m[0].length - 1;
-    } else return x;
-    eat();
-    if (peek() === "?") eat();
-    if (x.t === "assert") throw new Refused("a repeated assertion", "an anchor or word boundary cannot be repeated");
-    return quant({ t: "rep", x, min, max });
-  };
-  const seq = () => {
-    const xs = [];
-    while (peek() !== void 0 && peek() !== "|" && peek() !== ")") xs.push(quant(atom()));
-    return { t: "seq", xs };
-  };
-  const alt = () => {
-    const xs = [seq()];
-    while (peek() === "|") {
-      eat();
-      xs.push(seq());
-    }
-    return xs.length === 1 ? xs[0] : { t: "alt", xs };
-  };
-  const tree = alt();
-  if (i < cs.length) throw new Refused("an unopened group", "a ) closes no group");
-  return tree;
-}
-function compile5(tree) {
-  const prog = [];
-  const add = (s) => {
-    if (prog.length >= TERM_PROGRAM_MAX) throw new Refused("an expression past the bound", `the term compiles to more than ${TERM_PROGRAM_MAX} states`);
-    prog.push(s);
-    return prog.length - 1;
-  };
-  const patch = (holes2, to) => {
-    for (const [s, k] of holes2) prog[s][k] = to;
-  };
-  const emit = (n) => {
-    if (n.t === "char") {
-      const s = add({ op: "char", test: n.test, next: -1 });
-      return [s, [[s, "next"]]];
-    }
-    if (n.t === "assert") {
-      const s = add({ op: "assert", k: n.k, next: -1 });
-      return [s, [[s, "next"]]];
-    }
-    if (n.t === "seq") {
-      if (!n.xs.length) {
-        const s = add({ op: "split", a: -1, b: -1 });
-        return [s, [[s, "a"], [s, "b"]]];
-      }
-      let [entry2, holes3] = emit(n.xs[0]);
-      for (const x of n.xs.slice(1)) {
-        const [e, h] = emit(x);
-        patch(holes3, e);
-        holes3 = h;
-      }
-      return [entry2, holes3];
-    }
-    if (n.t === "alt") {
-      let [entry2, holes3] = emit(n.xs[0]);
-      for (const x of n.xs.slice(1)) {
-        const [e, h] = emit(x);
-        entry2 = add({ op: "split", a: entry2, b: e });
-        holes3 = [...holes3, ...h];
-      }
-      return [entry2, holes3];
-    }
-    const parts = [];
-    for (let k = 0; k < n.min; k++) parts.push(emit(n.x));
-    if (n.max === Infinity) {
-      const [e, h] = emit(n.x);
-      const s = add({ op: "split", a: e, b: -1 });
-      patch(h, s);
-      parts.push([s, [[s, "b"]]]);
-    } else for (let k = n.min; k < n.max; k++) {
-      const [e, h] = emit(n.x);
-      const s = add({ op: "split", a: e, b: -1 });
-      parts.push([s, [...h, [s, "b"]]]);
-    }
-    if (!parts.length) {
-      const s = add({ op: "split", a: -1, b: -1 });
-      return [s, [[s, "a"], [s, "b"]]];
-    }
-    let [entry, holes2] = parts[0];
-    for (const [e, h] of parts.slice(1)) {
-      patch(holes2, e);
-      holes2 = h;
-    }
-    return [entry, holes2];
-  };
-  const [start, holes] = emit(tree);
-  patch(holes, add({ op: "match" }));
-  return { prog, start };
-}
-function run({ prog, start }, chars) {
-  const mark = new Int32Array(prog.length).fill(-1);
-  let gen = 0;
-  const closure = (list2, s, pos) => {
-    const stack = [s];
-    while (stack.length) {
-      const x = stack.pop();
-      if (x < 0 || mark[x] === gen) continue;
-      mark[x] = gen;
-      const st = prog[x];
-      if (st.op === "split") {
-        stack.push(st.b, st.a);
-        continue;
-      }
-      if (st.op === "assert") {
-        const before = chars[pos - 1], after = chars[pos];
-        const ok2 = st.k === "^" ? pos === 0 : st.k === "$" ? pos === chars.length : isWord(before) !== isWord(after) === (st.k === "b");
-        if (ok2) stack.push(st.next);
-        continue;
-      }
-      if (st.op === "match") return true;
-      list2.push(x);
-    }
-    return false;
-  };
-  let live = [];
-  for (let pos = 0; ; pos++) {
-    gen++;
-    const next = [];
-    for (const s of live) if (closure(next, prog[s].next, pos)) return true;
-    if (closure(next, start, pos)) return true;
-    if (pos >= chars.length) return false;
-    const c = chars[pos];
-    live = next.filter((s) => prog[s].test(c));
-  }
-}
-function compileTerm(term) {
-  if (typeof term !== "string" || !term.length || term.length > TERM_MAX || /[\r\n]/.test(term))
-    return { ok: false, construct: "not a term", detail: `a term is a single line of 1 to ${TERM_MAX} characters` };
-  const regex = term.length >= 2 && term.startsWith("/") && term.endsWith("/");
-  if (!regex) {
-    const needle = Array.from(term, fold2).join("");
-    return { ok: true, kind: "literal", test: (text5) => Array.from(cut3(text5), fold2).join("").includes(needle) };
-  }
-  try {
-    const m = compile5(parse3(term.slice(1, -1)));
-    return { ok: true, kind: "regex", test: (text5) => run(m, Array.from(cut3(text5))) };
-  } catch (e) {
-    if (e instanceof Refused) return { ok: false, construct: e.construct, detail: e.message };
-    return { ok: false, construct: "an expression that does not compile", detail: String(e && e.message || e).slice(0, 160) };
-  }
-}
-function cut3(text5) {
-  const s = typeof text5 === "string" ? text5 : "";
-  if (s.length <= MATCH_TEXT_MAX) return s;
-  return Array.from(s).slice(0, MATCH_TEXT_MAX).join("");
-}
-var isCut = (text5) => typeof text5 === "string" && text5.length > MATCH_TEXT_MAX && Array.from(text5).length > MATCH_TEXT_MAX;
-
-// src/monitoring/checks.mjs
 function f14(check, severity, message2, extra) {
   return { check, severity, message: message2, ...extra || {} };
 }
@@ -107403,7 +107105,7 @@ function asText8(v) {
   if (typeof v === "string") return v;
   return new TextDecoder().decode(v);
 }
-var at23 = (fn, region, file = "index") => `src/monitoring/${file}.mjs ${fn} > ${region}`;
+var at23 = (fn, region) => `src/monitoring/index.mjs ${fn} > ${region}`;
 var DRIVE_TICK_CHECKS = Object.freeze({
   DRIVE_TICK_EXPORT_IS_THE_SHELL: Object.freeze({
     check: "C-48.8",
@@ -107456,24 +107158,7 @@ var FREQUENCY_CHECKS = Object.freeze({
     translation: "A frequency is set with a reason: one of the listed reasons, or your own words of up to 2,000 characters. Nothing was changed."
   })
 });
-var SWEEP_CHECKS = Object.freeze({
-  SWEEP_TERM_REFUSED: Object.freeze({
-    check: "C-18.16",
-    where: at23("gatheringCheck", "is-sweep-term"),
-    translation: "This was not saved: a search term of a sweep is a pattern the record cannot match safely. A term may be plain words or a simple pattern between slashes, without references back to an earlier part, look-aheads or look-behinds. The findings beside this name the term and what in it was refused. Nothing was changed."
-  }),
-  SWEEP_NOT_A_MEMBER: Object.freeze({
-    check: "C-18.17",
-    where: at23("sweepFence", "is-sweep-member", "sweep"),
-    translation: "This was not saved: a sweep is added, removed or changed only by a named member. An assistant or a machine may stop a sweep by unratifying it, and nothing more. Nothing was changed."
-  }),
-  SWEEP_RATIFY_NOT_AN_OWNER: Object.freeze({
-    check: "C-18.18",
-    where: at23("sweepFence", "is-sweep-owner", "sweep"),
-    translation: "This was not saved: a sweep is ratified, and a ratified sweep is changed, only by an owner of the project its list belongs to. Ask an owner of that project; anyone may still stop the sweep by unratifying it. Nothing was changed."
-  })
-});
-var MONITORING_CHECKS = Object.freeze({ ...DRIVE_TICK_CHECKS, ...GATHERING_CHECKS, ...FREQUENCY_CHECKS, ...SWEEP_CHECKS });
+var MONITORING_CHECKS = Object.freeze({ ...DRIVE_TICK_CHECKS, ...GATHERING_CHECKS, ...FREQUENCY_CHECKS });
 function frequencyRefusal(code, detail, extra) {
   const row2 = FREQUENCY_CHECKS[code];
   return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
@@ -107482,7 +107167,7 @@ var GATH_ID_RE = /^GATH-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
 var CRITICALITY_ENUM = ["crucial", "supporting"];
 var CADENCE_ENUM = ["hourly", "daily", "weekly", "monthly", "none"];
 var GATH_STATUS_ENUM = ["open", "captured", "retired"];
-function checkGatheringGrammar(ctx, findings) {
+function checkGatheringGrammar(ctx, findings, sweepArm = null) {
   const raw = ctx.files.get("data/gathering.json");
   if (!raw) return;
   let g;
@@ -107537,6 +107222,7 @@ function checkGatheringGrammar(ctx, findings) {
     if (!GATH_STATUS_ENUM.includes(r.status)) findings.push(f14("C-18.5", "error", `gathering.json requests[${i}].status must be one of: ${GATH_STATUS_ENUM.join(", ")}`));
     if (r.planted !== void 0 && !ISO_TS_RE.test(r.planted)) findings.push(f14("C-18.5", "error", `gathering.json requests[${i}].planted must be an ISO 8601 UTC instant`));
   }
+  if (!sweepArm || typeof sweepArm.grammar !== "function") return;
   const sweeps = Array.isArray(g.sweeps) ? g.sweeps : [];
   const ids = /* @__PURE__ */ new Set();
   for (let i = 0; i < sweeps.length; i++) {
@@ -107545,96 +107231,31 @@ function checkGatheringGrammar(ctx, findings) {
       findings.push(f14("C-18.5", "error", `gathering.json sweeps[${i}] is not an object`));
       continue;
     }
-    for (const err of sweepErrors(s, ids)) findings.push(f14(
-      "C-18.5",
-      "error",
-      `gathering.json sweeps[${i}]${err.field ? `.${err.field}` : ""} ${err.message}`,
-      err.code ? { code: err.code } : void 0
-    ));
-  }
-}
-var SWEEP_FIELDS = Object.freeze(["id", "title", "ratified", "sources", "seeds", "match", "cadence", "budget"]);
-var SWEEP_ID_RE = /^[a-z0-9][a-z0-9-]{0,39}$/;
-var SWEEP_CADENCES = Object.freeze(["daily", "weekly", "monthly"]);
-var SWEEP_BOUNDS = Object.freeze({
-  sources: [1, 20],
-  seeds: [1, 10],
-  terms: [0, 20],
-  paths: [0, 20],
-  formats: [0, 10],
-  per_run: [1, 100],
-  backlog: [1, 1e3],
-  title: 200
-});
-function sweepErrors(s, ids) {
-  const out = [];
-  const bad = (field, message2, code) => out.push({ field, message: message2, ...code ? { code } : {} });
-  for (const k of Object.keys(s)) if (!SWEEP_FIELDS.includes(k)) bad(null, `carries '${String(k).slice(0, 40)}', which is not a sweep's field (${SWEEP_FIELDS.join(", ")})`);
-  for (const k of SWEEP_FIELDS) if (!(k in s)) bad(k, "is missing");
-  if ("id" in s) {
-    if (typeof s.id !== "string" || !SWEEP_ID_RE.test(s.id)) bad("id", "must be 1 to 40 lowercase letters, digits or hyphens, starting with a letter or digit");
-    else if (ids.has(s.id)) bad("id", `'${s.id}' is not unique within the file`);
-    else ids.add(s.id);
-  }
-  if ("title" in s && (typeof s.title !== "string" || !s.title.trim() || s.title.length > SWEEP_BOUNDS.title || /[\r\n]/.test(s.title)))
-    bad("title", `must be a nonempty single line of at most ${SWEEP_BOUNDS.title} characters`);
-  if ("ratified" in s && typeof s.ratified !== "boolean") bad("ratified", "must be boolean");
-  const list2 = (v, [lo, hi]) => Array.isArray(v) && v.length >= lo && v.length <= hi;
-  let sources = null;
-  if ("sources" in s) {
-    if (!list2(s.sources, SWEEP_BOUNDS.sources)) bad("sources", `must be an array of ${SWEEP_BOUNDS.sources.join(" to ")} prefixes`);
-    else {
-      const wrong = s.sources.findIndex((p) => !isPublicHttpsLocator(p) || /[?#]/.test(p));
-      if (wrong >= 0) bad("sources", `[${wrong}] is not a public https prefix without a query or fragment`);
-      else sources = s.sources;
+    let errs;
+    try {
+      errs = sweepArm.grammar(s, ids);
+    } catch (e) {
+      errs = e instanceof Error ? e : new Error(String(e));
     }
-  }
-  const scoped = (field, v) => {
-    const wrong = v.findIndex((u) => !isPublicHttpsLocator(u) || sources && !inScope(u, sources));
-    if (wrong >= 0) bad(field, `[${wrong}] is not a public https locator within the sweep's sources`);
-  };
-  if ("seeds" in s) {
-    if (!list2(s.seeds, SWEEP_BOUNDS.seeds)) bad("seeds", `must be an array of ${SWEEP_BOUNDS.seeds.join(" to ")} locators`);
-    else scoped("seeds", s.seeds);
-  }
-  if ("match" in s) {
-    const m = s.match;
-    if (typeof m !== "object" || m === null || Array.isArray(m)) bad("match", "must be an object");
-    else {
-      for (const k of Object.keys(m)) if (!["terms", "paths", "formats"].includes(k)) bad("match", `carries '${String(k).slice(0, 40)}', which is not terms, paths or formats`);
-      if (m.terms !== void 0) {
-        if (!list2(m.terms, SWEEP_BOUNDS.terms)) bad("match.terms", `must be an array of at most ${SWEEP_BOUNDS.terms[1]} terms`);
-        else m.terms.forEach((t, j) => {
-          const c = compileTerm(t);
-          if (!c.ok) bad(
-            `match.terms[${j}]`,
-            `SWEEP_TERM_REFUSED: the term ${JSON.stringify(String(t).slice(0, 80))} is refused for ${c.construct} (${c.detail})`,
-            "SWEEP_TERM_REFUSED"
-          );
-        });
-      }
-      if (m.paths !== void 0) {
-        if (!list2(m.paths, SWEEP_BOUNDS.paths)) bad("match.paths", `must be an array of at most ${SWEEP_BOUNDS.paths[1]} prefixes`);
-        else scoped("match.paths", m.paths);
-      }
-      if (m.formats !== void 0) {
-        const known = listFormats();
-        if (!list2(m.formats, SWEEP_BOUNDS.formats)) bad("match.formats", `must be an array of at most ${SWEEP_BOUNDS.formats[1]} format names`);
-        else {
-          const wrong = m.formats.findIndex((x) => !known.includes(x));
-          if (wrong >= 0) bad("match.formats", `[${wrong}] is not a format this instance reads (${known.join(", ")})`);
+    if (!Array.isArray(errs)) {
+      const why = errs instanceof Error ? `failed (${String(errs.message).slice(0, 120)})` : "answered no list of findings";
+      findings.push(f14("C-18.5", "error", `gathering.json sweeps[${i}] could not be checked: the sweep grammar ${String(sweepArm.module)} registered ${why}, so the entry is refused, never admitted`));
+      continue;
+    }
+    for (const err of errs) {
+      const e = err && typeof err === "object" ? err : { message: String(err) };
+      const at27 = typeof e.field === "string" && e.field ? "." : " ";
+      findings.push(f14(
+        "C-18.5",
+        typeof e.severity === "string" && e.severity ? e.severity : "error",
+        `gathering.json sweeps[${i}]${at27}${String(e.message ?? "is refused")}`,
+        {
+          ...typeof e.code === "string" && e.code ? { code: e.code } : {},
+          ...e.refusal && typeof e.refusal === "object" ? { refusal: e.refusal } : {}
         }
-      }
+      ));
     }
   }
-  if ("cadence" in s && !SWEEP_CADENCES.includes(s.cadence)) bad("cadence", `must be one of: ${SWEEP_CADENCES.join(", ")}`);
-  if ("budget" in s) {
-    const b = s.budget;
-    const n = (v, [lo, hi]) => Number.isInteger(v) && v >= lo && v <= hi;
-    if (typeof b !== "object" || b === null || Array.isArray(b) || Object.keys(b).some((k) => k !== "per_run" && k !== "backlog") || !n(b.per_run, SWEEP_BOUNDS.per_run) || !n(b.backlog, SWEEP_BOUNDS.backlog))
-      bad("budget", `must be {per_run, backlog}: per_run an integer ${SWEEP_BOUNDS.per_run.join(" to ")}, backlog an integer ${SWEEP_BOUNDS.backlog.join(" to ")}`);
-  }
-  return out;
 }
 
 // src/tasks/checks.mjs
@@ -108154,8 +107775,8 @@ var CaptureRequests = class _CaptureRequests {
     const n = typeof this.#deps.storeName === "function" ? this.#deps.storeName() : this.#deps.storeName;
     return typeof n === "string" && n ? n : "bio";
   }
-  #observe(entry, at26) {
-    return this.#deps.observations.observe(entry, at26, 0);
+  #observe(entry, at27) {
+    return this.#deps.observations.observe(entry, at27, 0);
   }
   #rank(m) {
     const o = Array.isArray(this.#deps.order) ? this.#deps.order : MODULE_ORDER;
@@ -108168,7 +107789,7 @@ var CaptureRequests = class _CaptureRequests {
    * Read this function looking for an outbound call and there is none, which is the module's whole claim expressed as
    * an absence: R9's test drives the door with a capture, a governor and credentials that fail the test when touched.
    * ==================================================================== */
-  captureRequest(a = {}, { viewer = null, caller = null, at: at26 = null } = {}) {
+  captureRequest(a = {}, { viewer = null, caller = null, at: at27 = null } = {}) {
     const args = a && typeof a === "object" ? a : {};
     const refusal21 = (code, detail, extra) => {
       const row2 = CAPTURE_REQUEST_CHECKS[code];
@@ -108289,7 +107910,7 @@ var CaptureRequests = class _CaptureRequests {
         already: true,
         principals: { plane: standing.principal_plane, claude: standing.principal_claude }
       };
-    const nowMs = instantMs(at26) ?? this.#nowMs();
+    const nowMs = instantMs(at27) ?? this.#nowMs();
     const now = stampInstant("second", nowMs);
     const expires = stampInstant("second", nowMs + CAPTURE_REQUEST_TTL_MS);
     let request = null;
@@ -108427,12 +108048,12 @@ var CaptureRequests = class _CaptureRequests {
    *  scheduler R10, `rank(items, now)` answering the items reordered). */
   async drain({ limit = null, actor = "consumer", now = null, rank: rank6 = null } = {}) {
     const nowMs = Number.isFinite(now) ? now : this.#nowMs();
-    const at26 = stampInstant("second", nowMs);
+    const at27 = stampInstant("second", nowMs);
     if (!this.configured())
       return {
         configured: false,
         actor,
-        at: at26,
+        at: at27,
         drained: 0,
         captured: [],
         refused: [],
@@ -108446,7 +108067,7 @@ var CaptureRequests = class _CaptureRequests {
         configured: true,
         busy: true,
         actor,
-        at: at26,
+        at: at27,
         drained: 0,
         captured: [],
         refused: [],
@@ -108457,11 +108078,11 @@ var CaptureRequests = class _CaptureRequests {
     this.#draining = true;
     try {
       const cap = Math.max(1, Math.min(Number(limit) || CAPTURE_REQUEST_TICK_BATCH, CAPTURE_REQUEST_TICK_BATCH));
-      this.#sql.exec(`UPDATE capture_requests SET state='requested', updated=? WHERE state='draining'`, at26);
+      this.#sql.exec(`UPDATE capture_requests SET state='requested', updated=? WHERE state='draining'`, at27);
       const expired = [];
       for (const q7 of this.#rows(
         `SELECT * FROM capture_requests WHERE state='requested' AND expires <= ? ORDER BY expires, request LIMIT ?`,
-        at26,
+        at27,
         cap
       )) {
         const renderRow2 = q7.render === 1;
@@ -108471,7 +108092,7 @@ var CaptureRequests = class _CaptureRequests {
         this.#sql.exec(
           `UPDATE capture_requests SET state='expired', detail=?, updated=? WHERE request=? AND state='requested'`,
           said2.slice(0, 600),
-          at26,
+          at27,
           q7.request
         );
         this.#observe({
@@ -108483,7 +108104,7 @@ var CaptureRequests = class _CaptureRequests {
           governed: renderRow2,
           condition: renderRow2 ? "render-deferred" : null,
           detail: `${reason.check || "no catalogued check"} ${q7.code || "(no code)"}: the request expired UNDETERMINED at ${q7.expires} and is released \u2014 ${why || "no detail was carried"}`
-        }, at26);
+        }, at27);
         expired.push({
           request: q7.request,
           address: q7.address,
@@ -108500,7 +108121,7 @@ var CaptureRequests = class _CaptureRequests {
       const ranking = typeof rank6 === "function";
       const read2 = this.#rows(
         `SELECT * FROM capture_requests WHERE state='requested' AND expires > ? ORDER BY requested_at, request LIMIT ?`,
-        at26,
+        at27,
         ranking ? cap * CAPTURE_REQUEST_RANK_READ : cap
       );
       const queued = ranking ? this.#ranked(read2, rank6, nowMs).slice(0, cap) : read2;
@@ -108526,7 +108147,7 @@ var CaptureRequests = class _CaptureRequests {
           String(detail || "").slice(0, 600),
           sourceReason,
           countAttempt ? 1 : 0,
-          at26,
+          at27,
           q7.request
         );
         this.#observe({
@@ -108538,7 +108159,7 @@ var CaptureRequests = class _CaptureRequests {
           governed: governed === true,
           condition: condition || null,
           detail: `${check || "no catalogued check"} ${code}: ${String(detail || "").slice(0, 400)}`
-        }, at26);
+        }, at27);
         (into || (terminal ? refused2 : held)).push({
           request: q7.request,
           address: q7.address,
@@ -108594,7 +108215,7 @@ var CaptureRequests = class _CaptureRequests {
         }
         this.#sql.exec(
           `UPDATE capture_requests SET state='draining', attempts=attempts+1, updated=? WHERE request=?`,
-          at26,
+          at27,
           q7.request
         );
         hostsThisTick.set(q7.host, (hostsThisTick.get(q7.host) || 0) + 1);
@@ -108604,8 +108225,8 @@ var CaptureRequests = class _CaptureRequests {
             `UPDATE capture_requests SET state='captured', code=NULL, detail=?, source_reason=NULL, capture_sha=?, captured_at=?, updated=? WHERE request=?`,
             verdict.attribution.statement,
             r.sha || null,
-            at26,
-            at26,
+            at27,
+            at27,
             q7.request
           );
           this.#observe({
@@ -108618,8 +108239,8 @@ var CaptureRequests = class _CaptureRequests {
             resultKind: "capture",
             resultRef: r.sha || null,
             detail: verdict.attribution.statement
-          }, at26);
-          const promoted = r.existed === true || !r.document ? null : this.#promoteCapture(q7, r.document, verdict.attribution, at26);
+          }, at27);
+          const promoted = r.existed === true || !r.document ? null : this.#promoteCapture(q7, r.document, verdict.attribution, at27);
           captured.push({
             request: q7.request,
             address: q7.address,
@@ -108691,7 +108312,7 @@ var CaptureRequests = class _CaptureRequests {
       return {
         configured: true,
         actor,
-        at: at26,
+        at: at27,
         drained: captured.length + refused2.length + held.length,
         captured,
         refused: refused2,
@@ -108932,7 +108553,7 @@ var CaptureRequests = class _CaptureRequests {
    *  register document as `capture` answered it, the primary (and a render's shell, a streamed capture's parts) as
    *  blobs, and one register row. No `group`: `promote` writes the instance's recorded one or refuses (C-64.1). Answers
    *  `{ok: true, bundle_id}`, or `{ok: false, reason?, detail}` (the promotion's own refusal relayed); never throws. */
-  #promoteCapture(q7, doc, attribution, at26) {
+  #promoteCapture(q7, doc, attribution, at27) {
     try {
       const promotion = this.#deps.promotion;
       if (!promotion || typeof promotion.promote !== "function")
@@ -108940,13 +108561,13 @@ var CaptureRequests = class _CaptureRequests {
       const cap = doc.capture || {};
       if (typeof doc.file !== "string" || !/^[0-9a-f]{64}$/.test(String(cap.sha256 || "")) || !Number.isSafeInteger(cap.bytes))
         return { ok: false, detail: "capture's answer named no primary file, digest and size to promote" };
-      const retrieved = typeof doc.retrieved === "string" && doc.retrieved ? doc.retrieved : at26;
+      const retrieved = typeof doc.retrieved === "string" && doc.retrieved ? doc.retrieved : at27;
       const enc5 = (t) => {
         const b = new TextEncoder().encode(t);
         return { text: t, bytes: b.length, sha256: createSha256().update(b).hex() };
       };
       return this.#deps.record.transact(() => {
-        const id = `${this.#deps.record.allocId("INFO", at26.slice(0, 4)).id}-${CAPTURE_REQUEST_BUNDLE_SLUG}`;
+        const id = `${this.#deps.record.allocId("INFO", at27.slice(0, 4)).id}-${CAPTURE_REQUEST_BUNDLE_SLUG}`;
         const title = `Requested capture of ${q7.address}`.replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
         const md = [
           "---",
@@ -108956,8 +108577,8 @@ var CaptureRequests = class _CaptureRequests {
           `title: ${JSON.stringify(title)}`,
           "current_state: collected",
           "prior_state: null",
-          `created: "${at26}"`,
-          `last_updated: "${at26}"`,
+          `created: "${at27}"`,
+          `last_updated: "${at27}"`,
           "produced_by:",
           "  mode: agent",
           "  capability_tier: session",
@@ -108985,11 +108606,11 @@ var CaptureRequests = class _CaptureRequests {
           "",
           "## Provenance Notes",
           "",
-          `${attribution.statement}. Requested ${q7.requested_at} as ${q7.request}; collected ${at26}. Filed at collected and never higher: releasing it is a named member's decision.`,
+          `${attribution.statement}. Requested ${q7.requested_at} as ${q7.request}; collected ${at27}. Filed at collected and never higher: releasing it is a named member's decision.`,
           "",
           "## Session Log",
           "",
-          `### Session ${at26} | Collected | ${attribution.actor}`,
+          `### Session ${at27} | Collected | ${attribution.actor}`,
           `Trigger: capture request ${q7.request} (run ${q7.run})`,
           "Changes: created from the daemon's capture of the requested address.",
           "",
@@ -109011,7 +108632,7 @@ var CaptureRequests = class _CaptureRequests {
         const p = promotion.promote({
           bundleId: id,
           base: null,
-          snapKey: `${at26.replace(/[-:]/g, "")}_${randomHex2(4)}`,
+          snapKey: `${at27.replace(/[-:]/g, "")}_${randomHex2(4)}`,
           author: attribution.actor,
           files,
           meta: {
@@ -109019,8 +108640,8 @@ var CaptureRequests = class _CaptureRequests {
             title,
             current_state: "collected",
             prior_state: null,
-            created: at26,
-            last_updated: at26,
+            created: at27,
+            last_updated: at27,
             criticality: "supporting"
           },
           register: [{ sha256: cap.sha256, path: doc.file, encoding: "binary", bytes: cap.bytes }]
@@ -109193,8 +108814,8 @@ var CaptureRequests = class _CaptureRequests {
     };
   }
   /** R29: stamps `run_woken_at` on each named completion not yet woken; answers how many were stamped. */
-  markWoken({ requests = [], at: at26 = null } = {}) {
-    const iso5 = at26 || stampInstant("second", this.#nowMs());
+  markWoken({ requests = [], at: at27 = null } = {}) {
+    const iso5 = at27 || stampInstant("second", this.#nowMs());
     let marked = 0;
     for (const id of Array.isArray(requests) ? requests : []) {
       const r = this.#one(`SELECT request FROM capture_requests WHERE request = ? AND run_woken_at IS NULL
@@ -109516,11 +109137,11 @@ function removeBlock3(text5, key) {
   const lines = text5.split("\n");
   const end2 = fence(lines);
   if (end2 === null) return text5;
-  const at26 = lines.findIndex((l, i) => i > 0 && i < end2 && l.startsWith(key + ":"));
-  if (at26 === -1) return text5;
-  let last = at26;
-  for (let i = at26 + 1; i < end2 && (/^\s/.test(lines[i]) || lines[i].trim() === ""); i++) last = i;
-  return [...lines.slice(0, at26), ...lines.slice(last + 1)].join("\n");
+  const at27 = lines.findIndex((l, i) => i > 0 && i < end2 && l.startsWith(key + ":"));
+  if (at27 === -1) return text5;
+  let last = at27;
+  for (let i = at27 + 1; i < end2 && (/^\s/.test(lines[i]) || lines[i].trim() === ""); i++) last = i;
+  return [...lines.slice(0, at27), ...lines.slice(last + 1)].join("\n");
 }
 function setBlock(text5, key, childLines) {
   const lines = removeBlock3(text5, key).split("\n");
@@ -109533,31 +109154,31 @@ function appendItem(text5, key, fields) {
   const end2 = fence(lines);
   if (end2 === null) return null;
   const item = Object.entries(fields).map(([k, v], i) => `${i ? "    " : "  - "}${k}: ${v}`);
-  const at26 = lines.findIndex((l, i) => i > 0 && i < end2 && l.startsWith(key + ":"));
-  if (at26 === -1) return [...lines.slice(0, end2), `${key}:`, ...item, ...lines.slice(end2)].join("\n");
-  const rest = lines[at26].slice(key.length + 1).trim();
-  if (rest === "[]") return [...lines.slice(0, at26), `${key}:`, ...item, ...lines.slice(at26 + 1)].join("\n");
+  const at27 = lines.findIndex((l, i) => i > 0 && i < end2 && l.startsWith(key + ":"));
+  if (at27 === -1) return [...lines.slice(0, end2), `${key}:`, ...item, ...lines.slice(end2)].join("\n");
+  const rest = lines[at27].slice(key.length + 1).trim();
+  if (rest === "[]") return [...lines.slice(0, at27), `${key}:`, ...item, ...lines.slice(at27 + 1)].join("\n");
   if (rest !== "") return null;
-  let last = at26;
-  for (let i = at26 + 1; i < end2 && /^\s/.test(lines[i]); i++) last = i;
+  let last = at27;
+  for (let i = at27 + 1; i < end2 && /^\s/.test(lines[i]); i++) last = i;
   return [...lines.slice(0, last + 1), ...item, ...lines.slice(last + 1)].join("\n");
 }
-function appendHistory(text5, { at: at26, from, to, blurb, author }) {
+function appendHistory(text5, { at: at27, from, to, blurb, author }) {
   return appendItem(
     text5,
     "state_history",
-    { timestamp: q(at26), from_state: from, to_state: to, blurb: q(blurb), author: TOKEN.test(author) ? author : q(author) }
+    { timestamp: q(at27), from_state: from, to_state: to, blurb: q(blurb), author: TOKEN.test(author) ? author : q(author) }
   );
 }
 function sectionSpan(text5, heading) {
   const marker = `
 ## ${heading}
 `;
-  const at26 = text5.indexOf(marker);
-  if (at26 === -1) return null;
-  const start = at26 + marker.length;
+  const at27 = text5.indexOf(marker);
+  if (at27 === -1) return null;
+  const start = at27 + marker.length;
   const nxt = text5.indexOf("\n## ", start - 1);
-  return { at: at26, start, end: nxt === -1 ? text5.length : nxt };
+  return { at: at27, start, end: nxt === -1 ? text5.length : nxt };
 }
 function readSection(text5, heading) {
   if (typeof text5 !== "string") return null;
@@ -109586,7 +109207,7 @@ ${entry.trim()}
 ${entry.trim()}
 ${text5.slice(s.end)}`;
 }
-var logEntry = (text5, at26, what, author, changes) => appendSection(text5, "Session Log", `### Session ${at26} | ${what} | ${author}
+var logEntry = (text5, at27, what, author, changes) => appendSection(text5, "Session Log", `### Session ${at27} | ${what} | ${author}
 Changes: ${changes}`);
 function deadEndsOf(text5) {
   const body = readSection(text5, "Dead Ends");
@@ -109613,7 +109234,7 @@ var CORE_TAIL = Object.freeze([
   "  source: null",
   "visuals: []"
 ]);
-function aspirationDoc({ id, scope, owner, statement, entities, progressions, author, at: at26 }) {
+function aspirationDoc({ id, scope, owner, statement, entities, progressions, author, at: at27 }) {
   return [
     "---",
     `id: ${id}`,
@@ -109622,8 +109243,8 @@ function aspirationDoc({ id, scope, owner, statement, entities, progressions, au
     `title: ${q(titleOf(statement))}`,
     "current_state: held",
     "prior_state: null",
-    `created: ${q(at26)}`,
-    `last_updated: ${q(at26)}`,
+    `created: ${q(at27)}`,
+    `last_updated: ${q(at27)}`,
     `scope: ${scope}`,
     `owner: ${owner ?? "null"}`,
     `entities: [${entities.join(", ")}]`,
@@ -109640,12 +109261,12 @@ function aspirationDoc({ id, scope, owner, statement, entities, progressions, au
     "",
     "## Session Log",
     "",
-    `### Session ${at26} | Declared | ${author}`,
+    `### Session ${at27} | Declared | ${author}`,
     `Changes: ${scope} aspiration declared.`,
     ""
   ].join("\n");
 }
-function goalDoc({ id, statement, bounds, aspiration, author, at: at26 }) {
+function goalDoc({ id, statement, bounds, aspiration, author, at: at27 }) {
   return [
     "---",
     `id: ${id}`,
@@ -109654,8 +109275,8 @@ function goalDoc({ id, statement, bounds, aspiration, author, at: at26 }) {
     `title: ${q(titleOf(statement))}`,
     "current_state: open",
     "prior_state: null",
-    `created: ${q(at26)}`,
-    `last_updated: ${q(at26)}`,
+    `created: ${q(at27)}`,
+    `last_updated: ${q(at27)}`,
     `aspiration: ${aspiration ?? "null"}`,
     `author: ${TOKEN.test(author) ? author : q(author)}`,
     "objectives: []",
@@ -109672,13 +109293,13 @@ function goalDoc({ id, statement, bounds, aspiration, author, at: at26 }) {
     "",
     "## Session Log",
     "",
-    `### Session ${at26} | Declared | ${author}`,
+    `### Session ${at27} | Declared | ${author}`,
     "Changes: goal declared.",
     ""
   ].join("\n");
 }
 var CONDITION_KEY = "objective_condition";
-function conditionLines(c, by, at26) {
+function conditionLines(c, by, at27) {
   const lines = [`  progression: ${c.progression}`, `  entity: ${c.entity}`, `  relation: ${c.relation ?? "null"}`];
   for (const [k, v] of Object.entries(c.filter || {})) lines.push(`  filter_${k}: ${v}`);
   lines.push(
@@ -109686,7 +109307,7 @@ function conditionLines(c, by, at26) {
     `  required_stages: [${c.required.stages.join(", ")}]`,
     `  share: ${c.satisfied.share}`,
     `  set_by: ${TOKEN.test(by) ? by : q(by)}`,
-    `  set_at: ${q(at26)}`
+    `  set_at: ${q(at27)}`
   );
   return lines;
 }
@@ -110019,13 +109640,13 @@ var Intent = class {
       const bad = this.#conditionRefusal(c);
       if (bad) return bad;
     }
-    const at26 = this.#when();
+    const at27 = this.#when();
     let text5 = removeBlock3(p.doc.text, CONDITION_KEY);
-    if (c) text5 = setBlock(text5, CONDITION_KEY, conditionLines(c, str14(author), at26));
-    text5 = setField(text5, "last_updated", q(at26));
+    if (c) text5 = setBlock(text5, CONDITION_KEY, conditionLines(c, str14(author), at27));
+    text5 = setField(text5, "last_updated", q(at27));
     text5 = logEntry(
       text5,
-      at26,
+      at27,
       c ? "Objective condition set" : "Objective condition removed",
       str14(author),
       `${c ? `the objective's satisfaction condition is ${JSON.stringify(c)}.` : "the objective states no condition."}
@@ -110033,7 +109654,7 @@ Reason: ${bodyText(why)}`
     );
     const r = this.#revise(p.doc, text5, str14(author), viewer);
     if (!r.ok) return r;
-    return { ok: true, project, condition: c, reason: why, set_by: str14(author), at: at26, bundleSha: r.bundleSha };
+    return { ok: true, project, condition: c, reason: why, set_by: str14(author), at: at27, bundleSha: r.bundleSha };
   }
   /* The matched instances of a condition (R4), each assembled by progressions and judged; derived, never stored. */
   #measure(cond, viewer) {
@@ -110389,16 +110010,16 @@ Reason: ${bodyText(why)}`
       if (a.head.currentState === "retired")
         return refusePursuitEnded("a goal is not opened under a retired aspiration. Nothing was written.", { aspiration });
     }
-    const at26 = this.#when();
-    const id = pursuitId(this.record.allocId("GOAL", at26.slice(0, 4)).id, GOAL);
+    const at27 = this.#when();
+    const id = pursuitId(this.record.allocId("GOAL", at27.slice(0, 4)).id, GOAL);
     const r = this.#create(
       id,
       GOAL,
-      goalDoc({ id, statement, bounds, aspiration: aspiration || null, author: str14(author), at: at26 }),
+      goalDoc({ id, statement, bounds, aspiration: aspiration || null, author: str14(author), at: at27 }),
       str14(author)
     );
     if (!r.ok) return r;
-    return { ok: true, goal: id, state: "open", aspiration: aspiration || null, author: str14(author), at: at26 };
+    return { ok: true, goal: id, state: "open", aspiration: aspiration || null, author: str14(author), at: at27 };
   }
   /** R8: record that a project's objective serves a goal, as the author's dated claim; the author has joined it. */
   linkObjective({ goal, project, author, viewer = null } = {}) {
@@ -110414,13 +110035,13 @@ Reason: ${bodyText(why)}`
     if (denied) return denied;
     if ((Array.isArray(g.fm.objectives) ? g.fm.objectives : []).some((o) => isObj12(o) && o.project === project))
       return { ok: true, goal, project, already: true };
-    const at26 = this.#when();
-    let text5 = appendItem(g.text, "objectives", { project, by: TOKEN.test(str14(author)) ? str14(author) : q(author), at: q(at26) });
-    text5 = setField(text5, "last_updated", q(at26));
-    text5 = logEntry(text5, at26, "Objective linked", str14(author), `${project}'s objective serves this goal.`);
+    const at27 = this.#when();
+    let text5 = appendItem(g.text, "objectives", { project, by: TOKEN.test(str14(author)) ? str14(author) : q(author), at: q(at27) });
+    text5 = setField(text5, "last_updated", q(at27));
+    text5 = logEntry(text5, at27, "Objective linked", str14(author), `${project}'s objective serves this goal.`);
     const r = this.#revise(g, text5, str14(author), viewer);
     if (!r.ok) return r;
-    return { ok: true, goal, project, by: str14(author), at: at26 };
+    return { ok: true, goal, project, by: str14(author), at: at27 };
   }
   /** R8: close a goal with its reason; it stays readable with its objectives and reason. */
   closeGoal({ goal, reason, author, viewer = null } = {}) {
@@ -110431,20 +110052,20 @@ Reason: ${bodyText(why)}`
     if (!str14(reason)) return refuseNoReason("a goal is closed with the reason it closed. Nothing was written.");
     if (g.head.currentState === "closed")
       return refusePursuitEnded("this goal is already closed. Nothing was written.", { goal });
-    const at26 = this.#when();
+    const at27 = this.#when();
     let text5 = appendHistory(g.text, {
-      at: at26,
+      at: at27,
       from: "open",
       to: "closed",
       blurb: "closed; the reason is in its document",
       author: str14(author)
     });
-    text5 = setField(setField(setField(text5, "prior_state", "open"), "current_state", "closed"), "last_updated", q(at26));
+    text5 = setField(setField(setField(text5, "prior_state", "open"), "current_state", "closed"), "last_updated", q(at27));
     text5 = setSection2(text5, "Why It Closed", bodyText(reason));
-    text5 = logEntry(text5, at26, "Closed", str14(author), "open to closed.");
+    text5 = logEntry(text5, at27, "Closed", str14(author), "open to closed.");
     const r = this.#revise(g, text5, str14(author), viewer);
     if (!r.ok) return r;
-    return { ok: true, goal, state: "closed", reason: str14(reason), author: str14(author), at: at26 };
+    return { ok: true, goal, state: "closed", reason: str14(reason), author: str14(author), at: at27 };
   }
   /** R8: a goal as the record holds it: its statement, bounds, aspiration, the objectives linked (each a project the
    *  viewer may see), its state and, once closed, its reason. No progress figure: its objectives carry theirs. */
@@ -110491,8 +110112,8 @@ Reason: ${bodyText(why)}`
       return !d || d.ok === false || !d.found;
     });
     if (badProg) return refuseNoSuchProgression("the aspiration names a flow the record has not declared. Nothing was written.", { progression: badProg });
-    const at26 = this.#when();
-    const id = pursuitId(this.record.allocId("ASP", at26.slice(0, 4)).id, ASPIRATION);
+    const at27 = this.#when();
+    const id = pursuitId(this.record.allocId("ASP", at27.slice(0, 4)).id, ASPIRATION);
     const r = this.#create(
       id,
       ASPIRATION,
@@ -110504,13 +110125,13 @@ Reason: ${bodyText(why)}`
         entities: ents,
         progressions: progs,
         author: str14(author),
-        at: at26
+        at: at27
       }),
       str14(author),
       { actorViewer: viewer ?? str14(author) }
     );
     if (!r.ok) return r;
-    return { ok: true, aspiration: id, scope, owner: own3, state: "held", author: str14(author), at: at26 };
+    return { ok: true, aspiration: id, scope, owner: own3, state: "held", author: str14(author), at: at27 };
   }
   /** R10: a project records its departure from a held group aspiration, with a reason. */
   departFrom({ project, aspiration, reason, author, viewer = null } = {}) {
@@ -110530,16 +110151,16 @@ Reason: ${bodyText(why)}`
     if (!str14(reason)) return refuseNoReason("a departure from the group's aspiration records why. Nothing was written.");
     const denied = this.membership.projectAuthority(project, author, "joined", "departFrom");
     if (denied) return denied;
-    const at26 = this.#when();
+    const at27 = this.#when();
     this.record.transact(() => this.sql.exec(
       `INSERT INTO intent_departures (project_id, aspiration_id, reason, author, at) VALUES (?,?,?,?,?)`,
       project,
       aspiration,
       str14(reason).slice(0, 4e3),
       str14(author),
-      at26
+      at27
     ));
-    return { ok: true, project, aspiration, reason: str14(reason), author: str14(author), at: at26, notable: true };
+    return { ok: true, project, aspiration, reason: str14(reason), author: str14(author), at: at27, notable: true };
   }
   /** R11: a dead end, appended to the aspiration's pursuit record, dated and authored, never removed. */
   recordDeadEnd({ aspiration, note, author, viewer = null } = {}) {
@@ -110554,18 +110175,18 @@ Reason: ${bodyText(why)}`
       return refusal14("NO_NOTE", "a dead end records what was tried and why it went nowhere. Nothing was written.");
     const denied = this.#aspirationAuthority(a.fm.scope, a.fm.owner ?? null, author, viewer ?? author);
     if (denied) return denied;
-    const at26 = this.#when();
+    const at27 = this.#when();
     let text5 = appendSection(
       a.text,
       "Dead Ends",
-      `### ${at26} | ${str14(author)}
+      `### ${at27} | ${str14(author)}
 ${bodyText(note)}`
     );
-    text5 = setField(text5, "last_updated", q(at26));
-    text5 = logEntry(text5, at26, "Dead end recorded", str14(author), "a dead end was appended to the pursuit record.");
+    text5 = setField(text5, "last_updated", q(at27));
+    text5 = logEntry(text5, at27, "Dead end recorded", str14(author), "a dead end was appended to the pursuit record.");
     const r = this.#revise(a, text5, str14(author), viewer);
     if (!r.ok) return r;
-    return { ok: true, aspiration, note: str14(note), author: str14(author), at: at26 };
+    return { ok: true, aspiration, note: str14(note), author: str14(author), at: at27 };
   }
   /** R11: retire an aspiration with what pursuing it taught; it and its pursuit record stay readable. */
   retireAspiration({ aspiration, taught, author, viewer = null } = {}) {
@@ -110582,20 +110203,20 @@ ${bodyText(note)}`
       return refuseNoLesson("retiring an aspiration records what pursuing it taught. Nothing was written.");
     const denied = this.#aspirationAuthority(a.fm.scope, a.fm.owner ?? null, author, viewer ?? author);
     if (denied) return denied;
-    const at26 = this.#when();
+    const at27 = this.#when();
     let text5 = appendHistory(a.text, {
-      at: at26,
+      at: at27,
       from: "held",
       to: "retired",
       blurb: "retired; what it taught is in its document",
       author: str14(author)
     });
-    text5 = setField(setField(setField(text5, "prior_state", "held"), "current_state", "retired"), "last_updated", q(at26));
+    text5 = setField(setField(setField(text5, "prior_state", "held"), "current_state", "retired"), "last_updated", q(at27));
     text5 = setSection2(text5, "Taught", bodyText(taught));
-    text5 = logEntry(text5, at26, "Retired", str14(author), "held to retired.");
+    text5 = logEntry(text5, at27, "Retired", str14(author), "held to retired.");
     const r = this.#revise(a, text5, str14(author), viewer);
     if (!r.ok) return r;
-    return { ok: true, aspiration, state: "retired", taught: str14(taught), author: str14(author), at: at26 };
+    return { ok: true, aspiration, state: "retired", taught: str14(taught), author: str14(author), at: at27 };
   }
   /* R12, R13, R28 (N209, K338, N323): the first `max` aspirations the viewer may see, in id order, held or retired and
      of any scope, walked a page at a time and read one past so a cut says so; answers the held ones among them. An
@@ -110980,7 +110601,7 @@ ${bodyText(note)}`
       const denied = this.membership.projectAuthority(proj.id, author, "joined", `triage:${act}`);
       if (denied) return denied;
     }
-    const at26 = this.#when();
+    const at27 = this.#when();
     let inquiry = null, extra = {};
     if (act === "adopt") {
       let text5 = appendItem(
@@ -110990,16 +110611,16 @@ ${bodyText(note)}`
           proposal: q(found.key),
           source: found.source,
           by: TOKEN.test(str14(author)) ? str14(author) : q(author),
-          at: q(at26)
+          at: q(at27)
         }
       );
       if (text5 === null) return refusal14("ADOPTIONS_UNSPLICEABLE", "the project's objective_adoptions block is not in a shape this grammar can extend. Nothing was written.");
-      text5 = setField(text5, "last_updated", q(at26));
-      text5 = logEntry(text5, at26, "Proposal adopted", str14(author), `the proposal ${found.key} is adopted into the objective.`);
+      text5 = setField(text5, "last_updated", q(at27));
+      text5 = logEntry(text5, at27, "Proposal adopted", str14(author), `the proposal ${found.key} is adopted into the objective.`);
       const r = this.#revise(proj, text5, str14(author), viewer);
       if (!r.ok) return r;
     } else if (act === "question") {
-      const opened = this.#openQuestion(found, author, viewer, run2, assistantPrincipal, at26);
+      const opened = this.#openQuestion(found, author, viewer, run2, assistantPrincipal, at27);
       if (!opened.ok) return opened;
       inquiry = opened.bundleId;
       extra = { inquiry, surfaced_by: isMachine3 ? "agent" : "human" };
@@ -111027,7 +110648,7 @@ ${bodyText(note)}`
       found.grade ?? null,
       JSON.stringify(found.basis ?? null),
       str14(author) || PLANE_ACTOR,
-      at26
+      at27
     ));
     return {
       ok: true,
@@ -111036,14 +110657,14 @@ ${bodyText(note)}`
       project: proj ? proj.id : null,
       reason: why || null,
       author: str14(author) || null,
-      at: at26,
+      at: at27,
       ...extra
     };
   }
   /* R16's `question`: a new inquiry at `surfaced`, through promotion (so inquiry's check and ai-runs' surfacing step,
      its R25, run inside it), the proposal as its basis. */
-  #openQuestion(found, author, viewer, run2, assistantPrincipal, at26) {
-    const id = `${this.record.allocId("INQ", at26.slice(0, 4)).id}-question`;
+  #openQuestion(found, author, viewer, run2, assistantPrincipal, at27) {
+    const id = `${this.record.allocId("INQ", at27.slice(0, 4)).id}-question`;
     const question = questionOf(found);
     const who2 = str14(author) || PLANE_ACTOR;
     const text5 = [
@@ -111054,8 +110675,8 @@ ${bodyText(note)}`
       `title: ${q(question.slice(0, 120))}`,
       "current_state: surfaced",
       "prior_state: null",
-      `created: ${q(at26)}`,
-      `last_updated: ${q(at26)}`,
+      `created: ${q(at27)}`,
+      `last_updated: ${q(at27)}`,
       "produced_by:",
       `  mode: ${machine(author) ? "agent" : "human"}`,
       "  capability_tier: session",
@@ -111086,7 +110707,7 @@ ${bodyText(note)}`
       "",
       "## Session Log",
       "",
-      `### Session ${at26} | Surfaced | ${who2}`,
+      `### Session ${at27} | Surfaced | ${who2}`,
       `Changes: opened from the proposal ${found.key}.`,
       "",
       "## Review Notes",
@@ -111095,10 +110716,10 @@ ${bodyText(note)}`
     return this.promotion.promote({
       bundleId: id,
       base: null,
-      snapKey: `${at26.replace(/[-:]/g, "")}_${rand8(4)}`,
+      snapKey: `${at27.replace(/[-:]/g, "")}_${rand8(4)}`,
       author: who2,
       files: [{ path: "bundle.md", text: text5 }],
-      meta: { object_type: "inquiry", current_state: "surfaced", created: at26, last_updated: at26 },
+      meta: { object_type: "inquiry", current_state: "surfaced", created: at27, last_updated: at27 },
       ...run2 ? { run: run2 } : {},
       ...str14(assistantPrincipal) ? { assistantPrincipal: str14(assistantPrincipal) } : {},
       actorViewer: viewer ?? null
@@ -111734,20 +111355,20 @@ var Standards = class {
      refusal anywhere leaves nothing (record-core R32). */
   #write(f17, author, viewer, proposalId) {
     return this.record.transact(() => {
-      const at26 = this.#when();
-      const id = `${this.record.allocId("STD", at26.slice(0, 4)).id}-${f17.kind}`;
+      const at27 = this.#when();
+      const id = `${this.record.allocId("STD", at27.slice(0, 4)).id}-${f17.kind}`;
       const source = this.sourceOf(f17.cite, f17);
-      const text5 = standardDoc({ id, ...f17, source, proposal: proposalId, author, at: at26 });
+      const text5 = standardDoc({ id, ...f17, source, proposal: proposalId, author, at: at27 });
       this.#writing = id;
       let r;
       try {
         r = this.promotion.promote({
           bundleId: id,
           base: null,
-          snapKey: `${at26.replace(/[-:]/g, "")}_${rand9(4)}`,
+          snapKey: `${at27.replace(/[-:]/g, "")}_${rand9(4)}`,
           author,
           files: [{ path: "bundle.md", text: text5 }],
-          meta: { object_type: STANDARD, title: titleOf2(f17.cite), current_state: "recorded", created: at26, last_updated: at26 },
+          meta: { object_type: STANDARD, title: titleOf2(f17.cite), current_state: "recorded", created: at27, last_updated: at27 },
           actorIdentity: author,
           actorViewer: viewer ?? author
         });
@@ -111768,7 +111389,7 @@ var Standards = class {
         JSON.stringify(source),
         proposalId,
         author,
-        at26,
+        at27,
         f17.reason
       );
       f17.texts.forEach((c, i) => this.sql.exec(
@@ -111783,7 +111404,7 @@ var Standards = class {
           proposalId,
           id,
           author,
-          at26
+          at27
         );
       return { ok: true, ...this.#answer(this.#row(id)), bundleSha: r.bundleSha };
     });
@@ -111853,8 +111474,8 @@ var Standards = class {
   }
   /** R8: the standards the filters admit, in id order, at most `PAGE_MAX` per page; with `at`, each with R7's answer
    *  and the ones not in force left out. Every filter is applied in SQL, so the page and its cut are exact. */
-  standardsIn({ at: at26 = null, kind = null, source = null, cite = null, after = null, limit = null, viewer = null } = {}) {
-    const date = at26 == null || at26 === "" ? null : at26;
+  standardsIn({ at: at27 = null, kind = null, source = null, cite = null, after = null, limit = null, viewer = null } = {}) {
+    const date = at27 == null || at27 === "" ? null : at27;
     if (date !== null && !isDate2(date)) return refuseDateInvalid(date);
     if (kind != null && kind !== "" && !STANDARD_KINDS.includes(kind)) return refuseKindUnknown(kind);
     const n = Number.isInteger(Number(limit)) && limit !== null && limit !== "" ? Math.min(PAGE_MAX2, Math.max(1, Number(limit))) : PAGE_MAX2;
@@ -111928,8 +111549,8 @@ var Standards = class {
     if (act !== null && (typeof act !== "string" || !act.trim() || act.length > ACT_MAX))
       return refusal15("STANDARD_ACT_INVALID", `the act a proposal names is an id of at most ${ACT_MAX} characters. Nothing was written.`, { max: ACT_MAX });
     return this.record.transact(() => {
-      const at26 = this.#when();
-      const id = this.record.allocId("STDP", at26.slice(0, 4)).id;
+      const at27 = this.#when();
+      const id = this.record.allocId("STDP", at27.slice(0, 4)).id;
       const kind = a.kind || null, issuer = str15(a.issuer) || null;
       this.sql.exec(
         `INSERT INTO standard_proposals (proposal_id, cite, kind, issuer, text_json, why, act, proposed_by,
@@ -111942,7 +111563,7 @@ var Standards = class {
         why,
         act === null ? null : act.trim(),
         who2,
-        at26
+        at27
       );
       return {
         ok: true,
@@ -112041,7 +111662,7 @@ var CORE_TAIL2 = Object.freeze([
   "  source: null",
   "visuals: []"
 ]);
-function standardDoc({ id, cite, kind, issuer, reason, texts, period, supersedes, source, proposal, author, at: at26 }) {
+function standardDoc({ id, cite, kind, issuer, reason, texts, period, supersedes, source, proposal, author, at: at27 }) {
   const src = source && source.state === "matched" ? `Matched: ${source.source} (${source.kind}, ${source.issuer}, level ${source.level}), from the profile ${source.profile} (basis ${source.basis}).` : `Undetermined: ${source ? source.why : "not read"}.`;
   return [
     "---",
@@ -112051,8 +111672,8 @@ function standardDoc({ id, cite, kind, issuer, reason, texts, period, supersedes
     `title: ${q2(titleOf2(cite))}`,
     "current_state: recorded",
     "prior_state: null",
-    `created: ${q2(at26)}`,
-    `last_updated: ${q2(at26)}`,
+    `created: ${q2(at27)}`,
+    `last_updated: ${q2(at27)}`,
     `kind: ${kind}`,
     `period_from: ${period.from === null ? "null" : q2(period.from)}`,
     `period_to: ${period.to === null ? "null" : q2(period.to)}`,
@@ -112081,7 +111702,7 @@ function standardDoc({ id, cite, kind, issuer, reason, texts, period, supersedes
     "",
     "## Session Log",
     "",
-    `### Session ${at26} | Recorded | ${author}`,
+    `### Session ${at27} | Recorded | ${author}`,
     `Changes: standard recorded${supersedes ? `, superseding ${supersedes}` : ""}${proposal ? `, adopting ${proposal}` : ""}.`,
     ""
   ].join("\n");
@@ -112646,10 +112267,10 @@ var Conformance = class _Conformance {
     const role = text4(actor.role), body = text4(actor.body);
     if (!role || !body)
       return incomplete("actor", "the act names the office that did it by its official role and body, never by a person.");
-    let at26 = null, from = null, to = null;
+    let at27 = null, from = null, to = null;
     if (a.at != null || !isObj14(a.period)) {
       if (!isDate3(a.at)) return incomplete("at", "the act states when it was done, as a date (YYYY-MM-DD), or a period.");
-      at26 = a.at;
+      at27 = a.at;
     } else {
       from = a.period.from;
       to = a.period.to;
@@ -112674,8 +112295,8 @@ var Conformance = class _Conformance {
         id: null,
         description,
         actor: { role, body },
-        at: at26,
-        period: at26 ? null : { from, to },
+        at: at27,
+        period: at27 ? null : { from, to },
         evidence: [...new Set(ev)]
       }
     };
@@ -112978,8 +112599,8 @@ var Conformance = class _Conformance {
   /* R6, R16, R17: one outer transaction: each new inquiry, then the determination's own promotion, then this module's
      rows. A refused promotion refuses the whole act, and nothing is written, no id spent (record-core R32). */
   #write({ project, act, pins, standards, rows: rows2, questions, sup, proposal, cause, author, viewer }) {
-    const at26 = this.#when();
-    const year = at26.slice(0, 4);
+    const at27 = this.#when();
+    const year = at27.slice(0, 4);
     let id = null;
     const out = this.record.transact(() => {
       id = `${this.record.allocId("CONF", year).id}-determination`;
@@ -112991,7 +112612,7 @@ var Conformance = class _Conformance {
           qs.push({ ...x, opened: false });
           continue;
         }
-        const opened = this.#openInquiry(x.question, id, project, author, viewer, at26);
+        const opened = this.#openInquiry(x.question, id, project, author, viewer, at27);
         if (!opened.ok) return { ...opened, question: x.question };
         qs.push({ question: x.question, inquiry: opened.bundleId, opened: true });
       }
@@ -113001,7 +112622,7 @@ var Conformance = class _Conformance {
         p = this.promotion.promote({
           bundleId: id,
           base: null,
-          snapKey: `${at26.replace(/[-:]/g, "")}_${rand10(4)}`,
+          snapKey: `${at27.replace(/[-:]/g, "")}_${rand10(4)}`,
           author,
           files: [{ path: "bundle.md", text: determinationDoc({
             id,
@@ -113015,9 +112636,9 @@ var Conformance = class _Conformance {
             proposal,
             cause,
             author,
-            at: at26
+            at: at27
           }) }],
-          meta: { object_type: "determination", current_state: "recorded", created: at26, last_updated: at26 },
+          meta: { object_type: "determination", current_state: "recorded", created: at27, last_updated: at27 },
           actorIdentity: author,
           actorViewer: viewer
         });
@@ -113044,7 +112665,7 @@ var Conformance = class _Conformance {
         sup.prev ? sup.prev.determination_id : null,
         sup.prev ? sup.reason : null,
         author,
-        at26
+        at27
       );
       standards.forEach((x, i) => this.sql.exec(
         `INSERT INTO determination_standards (determination_id, ord, standard_id, outcome, in_force, in_force_why)
@@ -113091,17 +112712,17 @@ var Conformance = class _Conformance {
       ));
       if (sup.prev)
         this.sql.exec(`INSERT INTO determination_supersessions (superseded, superseded_by, reason, author, at)
-                       VALUES (?,?,?,?,?)`, sup.prev.determination_id, id, sup.reason, author, at26);
+                       VALUES (?,?,?,?,?)`, sup.prev.determination_id, id, sup.reason, author, at27);
       if (proposal)
         this.sql.exec(
           `INSERT INTO comparison_proposal_uses (proposal_id, determination_id, at) VALUES (?,?,?)`,
           proposal,
           id,
-          at26
+          at27
         );
       if (cause)
         this.sql.exec(`INSERT INTO determination_causes (determination_id, statement, evidence, author, at)
-                       VALUES (?,?,?,?,?)`, id, cause.statement, JSON.stringify(cause.evidence), author, at26);
+                       VALUES (?,?,?,?,?)`, id, cause.statement, JSON.stringify(cause.evidence), author, at27);
       return { ok: true };
     });
     if (!out || !out.ok) return out;
@@ -113109,8 +112730,8 @@ var Conformance = class _Conformance {
   }
   /* R6: a new inquiry, `open`, titled from the question, through promotion (so inquiry's own check runs), recorded in
      `project` by this module's rows and named so in its Session Log. */
-  #openInquiry(question, determination, project, author, viewer, at26) {
-    const id = `${this.record.allocId("INQ", at26.slice(0, 4)).id}-question`;
+  #openInquiry(question, determination, project, author, viewer, at27) {
+    const id = `${this.record.allocId("INQ", at27.slice(0, 4)).id}-question`;
     const title = deriveInquiryTitle(question) ?? question.slice(0, 120);
     const md = [
       "---",
@@ -113120,8 +112741,8 @@ var Conformance = class _Conformance {
       `title: ${q3(title)}`,
       "current_state: open",
       "prior_state: null",
-      `created: ${q3(at26)}`,
-      `last_updated: ${q3(at26)}`,
+      `created: ${q3(at27)}`,
+      `last_updated: ${q3(at27)}`,
       "produced_by:",
       "  mode: human",
       "  capability_tier: session",
@@ -113149,7 +112770,7 @@ var Conformance = class _Conformance {
       "",
       "## Session Log",
       "",
-      `### Session ${at26} | Opened | ${oneLine4(author)}`,
+      `### Session ${at27} | Opened | ${oneLine4(author)}`,
       `Changes: opened by the determination ${determination} in the project ${project}, whose outcome is unclear on this question.`,
       "",
       "## Review Notes",
@@ -113158,10 +112779,10 @@ var Conformance = class _Conformance {
     return this.promotion.promote({
       bundleId: id,
       base: null,
-      snapKey: `${at26.replace(/[-:]/g, "")}_${rand10(4)}`,
+      snapKey: `${at27.replace(/[-:]/g, "")}_${rand10(4)}`,
       author,
       files: [{ path: "bundle.md", text: md }],
-      meta: { object_type: "inquiry", current_state: "open", created: at26, last_updated: at26 },
+      meta: { object_type: "inquiry", current_state: "open", created: at27, last_updated: at27 },
       actorIdentity: author,
       actorViewer: viewer
     });
@@ -113547,11 +113168,11 @@ var Conformance = class _Conformance {
       content: Array.isArray(x.content) ? x.content.map(str16).filter(Boolean).slice(0, LIMITS.evidence) : []
     }));
     const qs = (Array.isArray(questions) ? questions : []).map((x) => isObj14(x) ? x : { question: x }).map((x) => ({ question: text4(x.question), inquiry: str16(x.inquiry) })).filter((x) => x.question);
-    const at26 = this.#when();
+    const at27 = this.#when();
     const who2 = str16(proposer);
     let id = null;
     this.record.transact(() => {
-      id = this.record.allocId("CMP", at26.slice(0, 4)).id;
+      id = this.record.allocId("CMP", at27.slice(0, 4)).id;
       this.sql.exec(
         `INSERT INTO comparison_proposals (proposal_id, project_id, act, standards, rows, questions, proposer,
                        machine, at) VALUES (?,?,?,?,?,?,?,?,?)`,
@@ -113563,11 +113184,11 @@ var Conformance = class _Conformance {
         JSON.stringify(qs),
         who2,
         proposalLabel(who2, "comparison").machine_work ? 1 : 0,
-        at26
+        at27
       );
       if (from)
         this.sql.exec(`INSERT INTO comparison_proposal_contradictions (proposal_id, inquiry_id, candidate, at)
-                       VALUES (?,?,?,?)`, id, from.inquiry, from.candidate, at26);
+                       VALUES (?,?,?,?)`, id, from.inquiry, from.candidate, at27);
       return { ok: true };
     });
     return { ok: true, proposal: this.#proposalView(
@@ -113690,7 +113311,7 @@ var Conformance = class _Conformance {
     const ids = kind === "finding" ? this.#rows(`SELECT DISTINCT determination_id FROM determination_findings WHERE finding_id=?
                     ORDER BY determination_id LIMIT 1000`, subject) : this.#rows(`SELECT d.determination_id FROM determinations d, json_each(d.act_evidence) e WHERE e.value=?
                     ORDER BY d.determination_id LIMIT 1000`, subject);
-    const at26 = this.#when();
+    const at27 = this.#when();
     const source = str16(event2.source) ?? (kind === "passage" ? "newer_capture" : "changed");
     const since = str16(event2.since) ?? "";
     const detail = typeof event2.detail === "string" ? event2.detail.slice(0, 500) : null;
@@ -113705,7 +113326,7 @@ var Conformance = class _Conformance {
           source,
           since,
           detail,
-          at26
+          at27
         );
       return { ok: true };
     });
@@ -113779,7 +113400,7 @@ function determinationDoc({
   proposal,
   cause = null,
   author,
-  at: at26
+  at: at27
 }) {
   const when = act.at ? `on ${act.at}` : `from ${act.period.from} to ${act.period.to}`;
   const title = `Determination: ${oneLine4(act.description).slice(0, 100)}`;
@@ -113791,8 +113412,8 @@ function determinationDoc({
     `title: ${q3(title)}`,
     "current_state: recorded",
     "prior_state: null",
-    `created: ${q3(at26)}`,
-    `last_updated: ${q3(at26)}`,
+    `created: ${q3(at27)}`,
+    `last_updated: ${q3(at27)}`,
     `project: ${project}`,
     `act_id: ${act.id}`,
     `author: ${q3(author)}`,
@@ -113840,7 +113461,7 @@ function determinationDoc({
     ...sup && sup.prev ? ["## Supersedes", "", `${sup.prev.determination_id}: ${oneLine4(sup.reason)}`, ""] : [],
     "## Session Log",
     "",
-    `### Session ${at26} | Determined | ${oneLine4(author)}`,
+    `### Session ${at27} | Determined | ${oneLine4(author)}`,
     `Changes: determination recorded in ${project}.`,
     ""
   ];
@@ -114414,17 +114035,17 @@ var Actions = class _Actions {
       `    blurb: "${e.blurb}"`,
       `    author: ${e.author}`
     ];
-    let at26 = -1;
+    let at27 = -1;
     for (let i = 1; i < end2; i++) if (/^state_history:/.test(lines[i])) {
-      at26 = i;
+      at27 = i;
       break;
     }
-    if (at26 === -1) return [...lines.slice(0, end2), "state_history:", ...block, ...lines.slice(end2)].join("\n");
-    const rest = lines[at26].slice("state_history:".length).trim();
-    if (rest === "[]") return [...lines.slice(0, at26), "state_history:", ...block, ...lines.slice(at26 + 1)].join("\n");
+    if (at27 === -1) return [...lines.slice(0, end2), "state_history:", ...block, ...lines.slice(end2)].join("\n");
+    const rest = lines[at27].slice("state_history:".length).trim();
+    if (rest === "[]") return [...lines.slice(0, at27), "state_history:", ...block, ...lines.slice(at27 + 1)].join("\n");
     if (rest !== "") return null;
-    let last = at26;
-    for (let i = at26 + 1; i < end2; i++) {
+    let last = at27;
+    for (let i = at27 + 1; i < end2; i++) {
       if (/^\s/.test(lines[i]) && lines[i].trim() !== "") last = i;
       else break;
     }
@@ -114490,9 +114111,9 @@ var Actions = class _Actions {
   }
   /* One Session Log appender for this module's writers. */
   static #appendSessionLog(text5, entry) {
-    const at26 = text5.indexOf("## Session Log");
-    if (at26 < 0) return text5 + "\n## Session Log\n\n" + entry;
-    const nxt = text5.indexOf("\n## ", at26 + 1);
+    const at27 = text5.indexOf("## Session Log");
+    if (at27 < 0) return text5 + "\n## Session Log\n\n" + entry;
+    const nxt = text5.indexOf("\n## ", at27 + 1);
     const cut4 = nxt === -1 ? text5.length : nxt + 1;
     return text5.slice(0, cut4) + entry + "\n" + text5.slice(cut4);
   }
@@ -115180,7 +114801,7 @@ Reason: ${why}
   actionCorrespond({
     target,
     direction = "",
-    at: at26 = "",
+    at: at27 = "",
     medium = "",
     party = "",
     artifactSha = "",
@@ -115217,7 +114838,7 @@ Reason: ${why}
         direction,
         detail: `direction is one of ${CORRESPONDENCE_DIRECTIONS.join(", ")}. A reply that never came is recorded as no_response with the date it was due, not omitted (DEC-13).`
       };
-    const day = String(at26 ?? "").trim();
+    const day = String(at27 ?? "").trim();
     if (!/^\d{4}-\d{2}-\d{2}$/.test(day))
       return {
         ok: false,
@@ -115564,7 +115185,7 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
     if (notReceived) return { ...notReceived, target, ord: n };
     if (this.#one(`SELECT ord FROM action_pressure WHERE bundle_id=? AND ord=?`, target, n))
       return refuse5("PRESSURE_MARKED", "that entry is already marked as pressure, and a mark is never rewritten. Nothing was written.", { target, ord: n });
-    const at26 = stampInstant("second", this.#nowMs(null));
+    const at27 = stampInstant("second", this.#nowMs(null));
     this.sql.exec(
       `INSERT INTO action_pressure (bundle_id, ord, kind, note, marked_by, at) VALUES (?,?,?,?,?,?)`,
       target,
@@ -115572,9 +115193,9 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
       mark.kind,
       mark.note,
       who2,
-      at26
+      at27
     );
-    return { ok: true, target, ord: n, pressure: { kind: mark.kind, note: mark.note }, by: who2, at: at26, weight: "single" };
+    return { ok: true, target, ord: n, pressure: { kind: mark.kind, note: mark.note }, by: who2, at: at27, weight: "single" };
   }
   /** R52 (K899 (7), DEC-61; N-A19): a member states the litigation hold on a received entry marked pressure of kind
    *  `legal`: `in_place` or `released`, with a reason. Each statement is appended to this module's own table and never
@@ -115596,7 +115217,7 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
     const mark = Number.isInteger(n) ? this.#one(`SELECT kind FROM action_pressure WHERE bundle_id=? AND ord=?`, target, n) : null;
     if (!mark || mark.kind !== "legal")
       return refuse5("HOLD_NO_LEGAL_MARK", "a litigation hold is stated on a received entry marked as legal pressure; the entry named carries no such mark. Nothing was written.", { target, ord: ord ?? null });
-    const at26 = stampInstant("second", this.#nowMs(null));
+    const at27 = stampInstant("second", this.#nowMs(null));
     const seq = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM action_holds WHERE bundle_id=? AND ord=?`, target, n).n;
     this.sql.exec(
       `INSERT INTO action_holds (bundle_id, ord, seq, hold, reason, stated_by, at) VALUES (?,?,?,?,?,?,?)`,
@@ -115606,9 +115227,9 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
       h,
       why,
       who2,
-      at26
+      at27
     );
-    return { ok: true, target, ord: n, hold: h, reason: why, by: who2, at: at26 };
+    return { ok: true, target, ord: n, hold: h, reason: why, by: who2, at: at27 };
   }
   /** R47: `actionCreate` is the same write as a promotion of an action document (R1–R3, R5–R11, R45, R46 and action-grammar R3 and R6 at the act): the plane
    *  mints the action's id and writes it into the document; the refusals are the promotion's. Answers `{ok, id}`. */
@@ -116117,7 +115738,7 @@ Reason: ${why}
         object_type: b.object_type,
         detail: "governing laws belong to an action: they are the laws its request is made under."
       };
-    const at26 = stampInstant("second", this.#nowMs(null));
+    const at27 = stampInstant("second", this.#nowMs(null));
     this.sql.exec(`DELETE FROM action_law_proposals WHERE bundle_id=? AND proposed_by=?`, target, who2);
     entries.forEach((e, i) => this.sql.exec(
       `INSERT INTO action_law_proposals (bundle_id, proposed_by, ord, level, citation, proposed_at)
@@ -116127,7 +115748,7 @@ Reason: ${why}
       i,
       e.level,
       e.citation,
-      at26
+      at27
     ));
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     const fm = liveMd && liveMd.content !== null ? parseFrontmatter(liveMd.content).data || {} : null;
@@ -116136,7 +115757,7 @@ Reason: ${why}
       ok: true,
       target,
       weight: "single",
-      proposal: { ...lawProposalLabel(who2), at: at26, laws: entries },
+      proposal: { ...lawProposalLabel(who2), at: at27, laws: entries },
       governing_laws: listed,
       evidence: false,
       says: `${entries.length} citation${entries.length === 1 ? " is" : "s are"} proposed for this action. This is not the action's list of governing laws and did not change it: that list ${listed.state === "stated" ? `is ${listed.laws.length} law(s) stated by a member` : "is UNDETERMINED"}, and only a member's own act states it.`
@@ -116502,8 +116123,8 @@ Changes: responds_to edge added to ${actionId}.
     const max = clampLimit(limit, HOLDS_DUE_MAX, HOLDS_DUE_MAX);
     const gate = viewerPredicate(viewer);
     const from = after === null || after === void 0 || after === "" ? null : String(after);
-    const at26 = from ? /^(.+)#(\d+)$/.exec(from) : null;
-    const seek = at26 ? { sql: "AND (p.bundle_id > ? OR (p.bundle_id = ? AND p.ord > ?))", args: [at26[1], at26[1], Number(at26[2])] } : from ? { sql: "AND p.bundle_id > ?", args: [from] } : { sql: "", args: [] };
+    const at27 = from ? /^(.+)#(\d+)$/.exec(from) : null;
+    const seek = at27 ? { sql: "AND (p.bundle_id > ? OR (p.bundle_id = ? AND p.ord > ?))", args: [at27[1], at27[1], Number(at27[2])] } : from ? { sql: "AND p.bundle_id > ?", args: [from] } : { sql: "", args: [] };
     const rows2 = this.#rows(`SELECT p.bundle_id, p.ord, p.note, p.marked_by, p.at FROM action_pressure p
       JOIN bundles b ON b.bundle_id = p.bundle_id
       WHERE p.kind='legal' AND b.object_type='action' AND (${gate.sql}) ${seek.sql}
@@ -116688,7 +116309,7 @@ Changes: responds_to edge added to ${actionId}.
     if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
     if (normalizeType(b.object_type) !== "action")
       return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
-    const at26 = stampInstant("second", this.#nowMs(null));
+    const at27 = stampInstant("second", this.#nowMs(null));
     this.sql.exec(
       `INSERT INTO action_risk_proposals (bundle_id, proposed_by, tier, basis, proposed_at) VALUES (?,?,?,?,?)
       ON CONFLICT(bundle_id, proposed_by) DO UPDATE SET tier=excluded.tier, basis=excluded.basis, proposed_at=excluded.proposed_at`,
@@ -116696,7 +116317,7 @@ Changes: responds_to edge added to ${actionId}.
       who2,
       asked,
       why,
-      at26
+      at27
     );
     const held = riskTierState((this.#heldFm(target) || {}).risk_tier);
     return {
@@ -116704,7 +116325,7 @@ Changes: responds_to edge added to ${actionId}.
       target,
       weight: "single",
       evidence: false,
-      proposal: { ...proposalLabelFor(who2, "risk_tier"), tier: asked, tier_words: RISK_TIERS[asked], basis: why, at: at26 },
+      proposal: { ...proposalLabelFor(who2, "risk_tier"), tier: asked, tier_words: RISK_TIERS[asked], basis: why, at: at27 },
       risk_tier: held,
       risk_tier_words: RISK_TIERS[held] ?? null,
       says: `a tier of ${asked} is proposed for this action. This is not the action's risk tier and did not change it: the tier is ${held === "undetermined" ? "undetermined" : held}, and only a member's own act sets it.`
@@ -117167,8 +116788,8 @@ var ActionClocks = class {
      `seekId` in id order; `item(r, i, e)` answers the entry's item, or null when it does not qualify. */
   #entryPage({ after, max, actionsMax, candidates, item }) {
     const from = after === null || after === void 0 || after === "" ? null : String(after);
-    const at26 = from ? /^(.+)#(\d+)$/.exec(from) : null;
-    const seek = at26 ? { id: at26[1], pos: Number(at26[2]) } : from ? { id: from, pos: Infinity } : null;
+    const at27 = from ? /^(.+)#(\d+)$/.exec(from) : null;
+    const seek = at27 ? { id: at27[1], pos: Number(at27[2]) } : from ? { id: from, pos: Infinity } : null;
     const rows2 = candidates(seek ? seek.id : null, actionsMax + 1);
     const items = [];
     let truncated3 = rows2.length > actionsMax;
@@ -117309,7 +116930,7 @@ var ActionClocks = class {
       basis,
       status: "pending"
     };
-    const at26 = stampInstant("second", this.#nowMs(null));
+    const at27 = stampInstant("second", this.#nowMs(null));
     this.sql.exec(
       `INSERT INTO action_clock_proposals (bundle_id, proposed_by, rule, date, basis, entry_json, why, proposed_at)
       VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(bundle_id, proposed_by, rule) DO UPDATE SET date=excluded.date,
@@ -117321,7 +116942,7 @@ var ActionClocks = class {
       basis,
       JSON.stringify(entry),
       computed.why ?? null,
-      at26
+      at27
     );
     return {
       ok: true,
@@ -117332,7 +116953,7 @@ var ActionClocks = class {
         ...proposalLabelFor2(who2),
         rule,
         entry,
-        at: at26,
+        at: at27,
         ...computed.start ? { start: computed.start, counted_from: `the day after ${computed.start}` } : {},
         ...computed.calendar ? { calendar: computed.calendar } : {},
         ...computed.date ? {} : { undetermined: computed.why }
@@ -117455,7 +117076,7 @@ var ActionClocks = class {
         `on '${day.slice(0, 20)}' is not a date written YYYY-MM-DD. Nothing was changed.`,
         { target: a.id, entry: pos, on: day.slice(0, 20) }
       );
-    const at26 = stampInstant("second", this.#nowMs(null));
+    const at27 = stampInstant("second", this.#nowMs(null));
     return this.record.transact(() => {
       const old = was === null ? null : this.#held(a.id, pos, was, who2);
       if (was !== null && !old)
@@ -117468,7 +117089,7 @@ var ActionClocks = class {
         );
       if (day !== null && !old && this.#standing(a.id) >= REMINDERS_PER_ACTION_MAX)
         return reminderRefused("bound", `this action holds ${REMINDERS_PER_ACTION_MAX} reminders, the most it holds. Nothing was changed.`, { target: a.id, entry: pos, max: REMINDERS_PER_ACTION_MAX });
-      if (old) this.sql.exec(`UPDATE action_reminders SET removed_at=? WHERE rid=?`, at26, old.rid);
+      if (old) this.sql.exec(`UPDATE action_reminders SET removed_at=? WHERE rid=?`, at27, old.rid);
       if (day !== null)
         this.sql.exec(
           `INSERT INTO action_reminders (bundle_id, entry, day, set_by, set_at) VALUES (?,?,?,?,?)`,
@@ -117476,7 +117097,7 @@ var ActionClocks = class {
           pos,
           day,
           who2,
-          at26
+          at27
         );
       return { ok: true, target: a.id, entry: pos, on: day, from: was };
     });
@@ -117519,11 +117140,11 @@ var ActionClocks = class {
     const gate = viewerPredicate(viewer);
     const closed = CLOSED_ACTION_STATES.map(() => "?").join(",");
     const from = after === null || after === void 0 || after === "" ? null : String(after);
-    const at26 = from ? /^(.+)#(\d+)#(\d{4}-\d{2}-\d{2})#(.*)$/.exec(from) : null;
-    const seek = at26 ? {
+    const at27 = from ? /^(.+)#(\d+)#(\d{4}-\d{2}-\d{2})#(.*)$/.exec(from) : null;
+    const seek = at27 ? {
       sql: `AND (r.bundle_id > ? OR (r.bundle_id = ? AND (r.entry > ? OR (r.entry = ? AND (r.day > ?
                                OR (r.day = ? AND r.set_by > ?))))))`,
-      args: [at26[1], at26[1], Number(at26[2]), Number(at26[2]), at26[3], at26[3], at26[4]]
+      args: [at27[1], at27[1], Number(at27[2]), Number(at27[2]), at27[3], at27[3], at27[4]]
     } : from ? { sql: "AND r.bundle_id > ?", args: [from] } : { sql: "", args: [] };
     const docs = /* @__PURE__ */ new Map();
     const fmOf = (id) => {
@@ -117596,9 +117217,9 @@ var ActionClocks = class {
     const day = on === null || on === void 0 || on === "" ? null : String(on).trim();
     if (day !== null && (!isDay(day) || !(day > today)))
       return reminderRefused("on", `on '${day.slice(0, 20)}' is not a date written YYYY-MM-DD after today (${today}): a further reminder is for a later day. Nothing was answered.`, { target: a.id, entry: pos, today });
-    const at26 = stampInstant("second", this.#nowMs(null));
+    const at27 = stampInstant("second", this.#nowMs(null));
     return this.record.transact(() => {
-      for (const r of due) this.sql.exec(`UPDATE action_reminders SET answered_at=? WHERE rid=?`, at26, r.rid);
+      for (const r of due) this.sql.exec(`UPDATE action_reminders SET answered_at=? WHERE rid=?`, at27, r.rid);
       if (day !== null && !this.#held(a.id, pos, day, who2)) {
         if (this.#standing(a.id) >= REMINDERS_PER_ACTION_MAX)
           return reminderRefused("bound", `this action holds ${REMINDERS_PER_ACTION_MAX} reminders, the most it holds. Nothing was answered.`, { target: a.id, entry: pos, max: REMINDERS_PER_ACTION_MAX });
@@ -117608,7 +117229,7 @@ var ActionClocks = class {
           pos,
           day,
           who2,
-          at26
+          at27
         );
       }
       return { ok: true, target: a.id, entry: pos, answered: due.map((r) => r.day), next: day };
@@ -117855,11 +117476,11 @@ var SCALES = Object.freeze({
   tn: 12
 });
 var FIGURE = /^(-|\()?\s*([$€£¥])?\s*(-)?\s*(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?|\.\d+)\s*([a-z]+)?\s*(\))?$/i;
-var fold3 = (s) => String(s).replace(/[   \s]+/g, " ").replace(/[−–]/g, "-").trim();
+var fold2 = (s) => String(s).replace(/[   \s]+/g, " ").replace(/[−–]/g, "-").trim();
 function parseFigure(figure2) {
-  if (typeof figure2 !== "string" || !fold3(figure2)) return { ok: false, why: "no figure was stated as read" };
-  const m = FIGURE.exec(fold3(figure2));
-  if (!m) return { ok: false, why: `"${fold3(figure2).slice(0, 80)}" is not a figure this module reads (digits, with thousands separators, a decimal point, a currency sign or a scale word)` };
+  if (typeof figure2 !== "string" || !fold2(figure2)) return { ok: false, why: "no figure was stated as read" };
+  const m = FIGURE.exec(fold2(figure2));
+  if (!m) return { ok: false, why: `"${fold2(figure2).slice(0, 80)}" is not a figure this module reads (digits, with thousands separators, a decimal point, a currency sign or a scale word)` };
   const [, lead, , minus, digits, word, close] = m;
   if (lead === "(" !== (close === ")")) return { ok: false, why: "an opening parenthesis is not closed, or the reverse" };
   if (lead === "-" && minus) return { ok: false, why: "the figure carries two minus signs" };
@@ -117877,8 +117498,8 @@ function parseFigure(figure2) {
 }
 function passageHolds(text5, figure2) {
   if (typeof text5 !== "string" || typeof figure2 !== "string") return false;
-  const f17 = fold3(figure2);
-  return f17 !== "" && fold3(text5).includes(f17);
+  const f17 = fold2(figure2);
+  return f17 !== "" && fold2(text5).includes(f17);
 }
 var toDecimals = (x, d) => Number(x.toFixed(Math.min(20, d)));
 var toPrecision = (x) => Number(x.toPrecision(15));
@@ -118042,7 +117663,7 @@ var str17 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
 var isObj15 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var q4 = (v) => JSON.stringify(v ?? null);
 var json2 = (v) => v == null ? null : JSON.stringify(v);
-var parse4 = (s) => {
+var parse3 = (s) => {
   if (s == null) return null;
   try {
     return JSON.parse(s);
@@ -118357,13 +117978,13 @@ var Consequences = class {
     const bad = reasonRefusal(reason);
     if (bad) return bad;
     const pick2 = (k, stored) => k in args ? args[k] : stored;
-    const oldBasis = old.op ? { op: old.op, operands: this.#operands(old.bundle_id).map((o) => ({ content: o.content_id, figure: o.figure })) } : old.state === "assessed" ? { rationale: old.rationale, rests_on: parse4(old.rests_on) || [] } : { why: old.undetermined_code };
+    const oldBasis = old.op ? { op: old.op, operands: this.#operands(old.bundle_id).map((o) => ({ content: o.content_id, figure: o.figure })) } : old.state === "assessed" ? { rationale: old.rationale, rests_on: parse3(old.rests_on) || [] } : { why: old.undetermined_code };
     return this.#record({
       determination: old.determination,
       standard: old.standard,
-      affected: pick2("affected", parse4(old.affected)),
-      measure: pick2("measure", parse4(old.measure)),
-      period: pick2("period", parse4(old.period)),
+      affected: pick2("affected", parse3(old.affected)),
+      measure: pick2("measure", parse3(old.measure)),
+      period: pick2("period", parse3(old.period)),
       basis: pick2("basis", oldBasis),
       causation: pick2("causation", old.causation),
       author,
@@ -118405,9 +118026,9 @@ var Consequences = class {
     const b = this.#basis(basis, m.measure, who2, byMachine);
     if (!b.ok) return b;
     const cause = isZeroMeasure(b.measure) ? zeroCausation(causation) : this.#causationNow(causation, who2);
-    const at26 = this.#when();
+    const at27 = this.#when();
     return this.record.transact(() => {
-      const id = `${this.record.allocId("CONS", at26.slice(0, 4)).id}-${a.affected.kind}`;
+      const id = `${this.record.allocId("CONS", at27.slice(0, 4)).id}-${a.affected.kind}`;
       const part = {
         determination: d.id,
         standard,
@@ -118419,7 +118040,7 @@ var Consequences = class {
         causation: cause,
         author: str17(author) ?? "",
         machine: byMachine,
-        at: at26,
+        at: at27,
         supersedes: rev ? rev.supersedes : null,
         reason: rev ? rev.reason : null,
         ...b.doc
@@ -118427,10 +118048,10 @@ var Consequences = class {
       const done = this.promotion.promote({
         bundleId: id,
         base: null,
-        snapKey: `${at26.replace(/[-:]/g, "")}_${rand11(4)}`,
+        snapKey: `${at27.replace(/[-:]/g, "")}_${rand11(4)}`,
         author: str17(author) ?? INTERNAL2,
         files: [{ path: "bundle.md", text: partDoc(id, part) }],
-        meta: { object_type: "consequence", title: titleOf3(part), current_state: "recorded", created: at26, last_updated: at26 }
+        meta: { object_type: "consequence", title: titleOf3(part), current_state: "recorded", created: at27, last_updated: at27 }
       });
       if (done.ok === false) return done;
       this.sql.exec(
@@ -118459,7 +118080,7 @@ var Consequences = class {
         cause.why,
         byMachine ? 1 : 0,
         str17(author) ?? "",
-        at26,
+        at27,
         rev ? rev.supersedes : null,
         rev ? rev.reason : null
       );
@@ -118625,9 +118246,9 @@ var Consequences = class {
       determination: r.determination,
       standard: r.standard,
       project: r.project,
-      affected: parse4(r.affected),
-      measure: parse4(r.measure),
-      period: parse4(r.period),
+      affected: parse3(r.affected),
+      measure: parse3(r.measure),
+      period: parse3(r.period),
       state: r.state,
       author: r.author || null,
       at: r.at,
@@ -118660,7 +118281,7 @@ var Consequences = class {
       out.grade = { grade: r.grade, determined: r.grade !== null, why: gradeWhyFor(r, place) };
       out.label = r.machine ? { machine_work: true, says: `machine work: computed by ${r.author || "a machine"} from the operands shown` } : { machine_work: false, says: `computed from the operands shown; recorded by ${r.author}` };
     } else if (r.state === "assessed") {
-      const recorded = parse4(r.rests_on) || [];
+      const recorded = parse3(r.rests_on) || [];
       const rests = recorded.filter((x) => this.#resolvesEvidence(x, who2));
       if (rests.length < recorded.length) withheld = true;
       out.assessment = {
@@ -118702,7 +118323,7 @@ var Consequences = class {
     }
     const a = this.#addressedOf(r.bundle_id);
     if (a) {
-      const recorded = parse4(a.evidence) || [];
+      const recorded = parse3(a.evidence) || [];
       const evidence = recorded.filter((x) => this.#resolvesEvidence(x, who2));
       if (evidence.length < recorded.length) withheld = true;
       out.addressed = { state: a.state, evidence, reason: a.reason, by: a.author, at: a.at };
@@ -118728,9 +118349,9 @@ var Consequences = class {
         } catch {
           n = null;
         }
-        const at26 = place.get(o.ord);
+        const at27 = place.get(o.ord);
         if (n && n.affects === "affected")
-          causes.push({ cause: "newer_capture", operand: at26, why: `a newer capture of operand ${at26}'s document does not carry its passage; nothing is recomputed until a member revises this part` });
+          causes.push({ cause: "newer_capture", operand: at27, why: `a newer capture of operand ${at27}'s document does not carry its passage; nothing is recomputed until a member revises this part` });
       }
     }
     if (r.causation && causationSeen && r.causation_state !== "not_applicable") {
@@ -118832,10 +118453,10 @@ var Consequences = class {
       return refuse7("ADDRESSED_NO_EVIDENCE", "a consequence is recorded addressed with the evidence that it was: content or findings in the record. Partial redress does not end an escalation. Nothing was written.");
     const unseen = this.#evidenceRefusal(ev, who2, "evidence is");
     if (unseen) return unseen;
-    const at26 = this.#when();
+    const at27 = this.#when();
     this.record.transact(() => this.sql.exec(`INSERT INTO consequence_addressed (part_id, state, evidence, reason, author, at)
-      VALUES (?,?,?,?,?,?)`, r.bundle_id, state, JSON.stringify(ev.map(String)), reason.trim(), str17(author), at26));
-    return { ok: true, id: r.bundle_id, state, evidence: ev.map(String), reason: reason.trim(), by: str17(author), at: at26 };
+      VALUES (?,?,?,?,?,?)`, r.bundle_id, state, JSON.stringify(ev.map(String)), reason.trim(), str17(author), at27));
+    return { ok: true, id: r.bundle_id, state, evidence: ev.map(String), reason: reason.trim(), by: str17(author), at: at27 };
   }
   /** R9: per part, and overall: `addressed` only when every live part is addressed; any undetermined part or unproven
    *  causation makes it `undetermined` (what is not known cannot be addressed); otherwise any part not addressed, or
@@ -119286,7 +118907,7 @@ var MACHINE_READER = `${MACHINE_CLASS_PREFIX}admin`;
 var DRAFT_SAYS = "a draft prepared from the record: nobody has approved or sent it, and nothing is filed until a member approves it and files it by the venue's own means";
 var str18 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
 var json3 = (v) => JSON.stringify(v ?? null);
-var parse5 = (s) => {
+var parse4 = (s) => {
   try {
     return JSON.parse(s);
   } catch {
@@ -119974,7 +119595,7 @@ ${text5}` : text5;
   /* R6: what changed since the draft, by name; [] when nothing did. Read as the plane reads it, so a change the
      approving member cannot see is still named. */
   #staleness(draft) {
-    const was = parse5(draft.basis) || {};
+    const was = parse4(draft.basis) || {};
     const a = this.#action(draft.action_id, MACHINE_READER);
     if (!a) return ["the action is no longer held"];
     const changed = [];
@@ -119996,7 +119617,7 @@ ${text5}` : text5;
     const f17 = str18(id);
     const filing2 = f17 ? this.#one(`SELECT * FROM filing_drafts WHERE filing_id=?`, f17) : null;
     const d = filing2 ? { ...filing2, form: "filing" } : f17 ? ((c) => c ? { ...c, form: "communication" } : null)(this.#one(`SELECT * FROM communication_drafts WHERE filing_id=?`, f17)) : null;
-    return d && this.#action(d.action_id, viewer) && this.#sees(parse5(d.basis), viewer) ? d : null;
+    return d && this.#action(d.action_id, viewer) && this.#sees(parse4(d.basis), viewer) ? d : null;
   }
   /* R6: a draft is approved at most once; asked before the approval and again as it is written, since computing the
      in-band quartet yields (R22). */
@@ -120047,16 +119668,16 @@ ${text5}` : text5;
       };
     const unwritable = _Filings.#unwritable(body, { filing: d.filing_id });
     if (unwritable) return unwritable;
-    const at26 = this.#when();
+    const at27 = this.#when();
     const sha = sha256HexSync(body);
     const face = d.disclosure && !body.startsWith(d.disclosure) ? `${d.disclosure}
 
 ${body}` : body;
     const { bytes: bytes2, inband } = await this.#stamped(face, {
       what: `the approved ${d.form === "communication" ? "communication" : "filing"} ${d.filing_id}`,
-      date: at26,
+      date: at27,
       author: who2,
-      project: (parse5(d.basis) || {}).project ?? null
+      project: (parse4(d.basis) || {}).project ?? null
     });
     const again = this.#alreadyApproved(d.filing_id);
     if (again) return again;
@@ -120067,7 +119688,7 @@ ${body}` : body;
       body,
       sha,
       who2,
-      at26,
+      at27,
       json3(inband)
     );
     return {
@@ -120076,7 +119697,7 @@ ${body}` : body;
       action: d.action_id,
       form: d.form,
       approved_by: who2,
-      at: at26,
+      at: at27,
       sha,
       edited: body !== d.text,
       bytes: bytes2,
@@ -120090,7 +119711,7 @@ ${body}` : body;
    *  both ways. It moves no action state and writes no clock entry: `proposed` carries what a member may choose. */
   filingRecordSent({
     filing: filing2 = null,
-    at: at26 = null,
+    at: at27 = null,
     medium = null,
     artifactSha = null,
     account = null,
@@ -120125,7 +119746,7 @@ ${body}` : body;
       const c = this.actions.actionCorrespond({
         target: d.action_id,
         direction: "sent",
-        at: at26,
+        at: at27,
         ...medium != null ? { medium } : {},
         ...artifactSha != null ? { artifactSha } : {},
         ...account != null ? { account } : {},
@@ -120140,7 +119761,7 @@ ${body}` : body;
         d.filing_id,
         d.action_id,
         ord,
-        String(at26 ?? ""),
+        String(at27 ?? ""),
         medium,
         artifactSha,
         account,
@@ -120456,7 +120077,7 @@ ${body}` : body;
       candidate: true,
       theory: t.theory,
       remedy: t.remedy,
-      standards: parse5(t.standards) || [],
+      standards: parse4(t.standards) || [],
       why: t.why,
       label: proposalLabel(t.proposer, "theory"),
       at: t.at,
@@ -120609,15 +120230,15 @@ ${body}` : body;
       };
     const marking = counselMarking(c);
     const sections = this.#assemble(a, det, viewer, marking);
-    const at26 = this.#when();
-    if (used) sections.briefing = this.#briefing(used, a, det, hidden, viewer, at26, marking);
+    const at27 = this.#when();
+    if (used) sections.briefing = this.#briefing(used, a, det, hidden, viewer, at27, marking);
     const tpl = used ? _Filings.#templateOf(used) : null;
     const basis = this.#packetBasis(det, a);
     const disclosure = a.premise_override ? overrideDisclosure(a.premise_override) : null;
     return this.record.transact(() => {
       const held = this.#one(`SELECT packet_id, MAX(version) AS v FROM counsel_packets WHERE action_id=? GROUP BY packet_id
                                ORDER BY packet_id LIMIT 1`, a.id);
-      const id = held ? held.packet_id : this.record.allocId("CPK", at26.slice(0, 4)).id;
+      const id = held ? held.packet_id : this.record.allocId("CPK", at27.slice(0, 4)).id;
       const version = held ? Number(held.v) + 1 : 1;
       this.sql.exec(
         `INSERT INTO counsel_packets (packet_id, version, action_id, counsel, author, at, sections, basis, disclosure,
@@ -120627,7 +120248,7 @@ ${body}` : body;
         a.id,
         json3(c),
         who2,
-        at26,
+        at27,
         json3(sections),
         json3(basis),
         disclosure,
@@ -120639,7 +120260,7 @@ ${body}` : body;
         id,
         version,
         action: a.id,
-        head: this.#head(id, version, a.id, c, who2, at26, marking, disclosure),
+        head: this.#head(id, version, a.id, c, who2, at27, marking, disclosure),
         sections,
         marking,
         disclosure,
@@ -120653,10 +120274,10 @@ ${body}` : body;
   /* R31: the packet's seventh section: a `brief` template's text filled from the record as R3 fills a filing, each filled
      blank naming its source, carrying R10's marking and, as R29's draft does, the statement that the template was not
      written for the kind's jurisdiction. */
-  #briefing(used, a, det, hidden, viewer, at26, marking) {
+  #briefing(used, a, det, hidden, viewer, at27, marking) {
     const v = this.#view();
     const entry = v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((k) => k.kind === a.kind) || null : null;
-    const filled = this.#fill(used.text, this.#values(a, det, hidden, entry, viewer, at26));
+    const filled = this.#fill(used.text, this.#values(a, det, hidden, entry, viewer, at27));
     const notFor = _Filings.#notWrittenFor(used, entry);
     return {
       title: "Briefing",
@@ -120671,14 +120292,14 @@ ${filled.text}` : filled.text,
       says: "the group's briefing to counsel, filled from the record from a brief template; it is not a filing and cannot be filed as it stands"
     };
   }
-  #head(id, version, action, counsel, author, at26, marking, disclosure = null) {
+  #head(id, version, action, counsel, author, at27, marking, disclosure = null) {
     return {
       packet: id,
       version,
       action,
       counsel: counsel && counsel.name ? counsel : null,
       assembled_by: author,
-      at: at26,
+      at: at27,
       ...disclosure ? { disclosure } : {},
       marking,
       fileable: false,
@@ -120691,7 +120312,7 @@ ${filled.text}` : filled.text,
     const p = str18(id);
     const rows2 = p ? this.#rows(`SELECT * FROM counsel_packets WHERE packet_id=? ORDER BY version`, p) : [];
     if (!rows2.length || !this.#action(rows2[0].action_id, viewer)) return null;
-    const seen = rows2.filter((r) => this.#sees(parse5(r.basis), viewer));
+    const seen = rows2.filter((r) => this.#sees(parse4(r.basis), viewer));
     return seen.length ? seen : null;
   }
   /* R29, R31: the template a draft or packet version recorded, shown with the version's state, approver and reviews as
@@ -120728,20 +120349,20 @@ ${filled.text}` : filled.text,
     };
   }
   #version(r, rows2, viewer) {
-    const counsel = parse5(r.counsel);
+    const counsel = parse4(r.counsel);
     const marking = counselMarking(counsel);
-    const causes = this.#basisChanged(parse5(r.basis) || {}, viewer);
+    const causes = this.#basisChanged(parse4(r.basis) || {}, viewer);
     return {
       ok: true,
       id: r.packet_id,
       version: Number(r.version),
       action: r.action_id,
       head: this.#head(r.packet_id, Number(r.version), r.action_id, counsel, r.author, r.at, marking, r.disclosure ?? null),
-      sections: parse5(r.sections),
+      sections: parse4(r.sections),
       marking,
       disclosure: r.disclosure ?? null,
       fileable: false,
-      template: this.#templateShown(parse5(r.template), viewer),
+      template: this.#templateShown(parse4(r.template), viewer),
       reason: r.reason ?? null,
       basis_changed: causes.length ? { causes } : null,
       versions: rows2.map((x) => Number(x.version))
@@ -120754,7 +120375,7 @@ ${filled.text}` : filled.text,
     const r = rows2 ? version == null || version === "" ? rows2[rows2.length - 1] : rows2.find((x) => Number(x.version) === Number(version)) : null;
     if (!r) return this.#noPacket(id);
     const exports = this.#rows(`SELECT author, at, counsel, sha FROM counsel_packet_exports WHERE packet_id=? AND version=?
-                                 ORDER BY export_id`, r.packet_id, r.version).map((e) => ({ exported_by: e.author, at: e.at, counsel: parse5(e.counsel), sha: e.sha }));
+                                 ORDER BY export_id`, r.packet_id, r.version).map((e) => ({ exported_by: e.author, at: e.at, counsel: parse4(e.counsel), sha: e.sha }));
     return { ...this.#version(r, rows2, viewer), exports };
   }
   /** R10: the packet's bytes: one Markdown document, the marking on its head, every section and its manifest. */
@@ -120815,16 +120436,16 @@ ${inbandBlock(quartet)}`, inband: quartet };
       };
     const read2 = this.counselPacketRead({ id, version, viewer });
     if (!read2.ok) return read2;
-    const at26 = this.#when();
+    const at27 = this.#when();
     const row2 = this.#one(`SELECT basis FROM counsel_packets WHERE packet_id=? AND version=?`, read2.id, read2.version);
-    const project = (parse5(row2 && row2.basis) || {}).project ?? null;
+    const project = (parse4(row2 && row2.basis) || {}).project ?? null;
     const { bytes: bytes2, inband } = await this.#stamped(
       _Filings.render(read2),
-      { what: `counsel packet ${read2.id} version ${read2.version}`, date: at26, author: who2, project }
+      { what: `counsel packet ${read2.id} version ${read2.version}`, date: at27, author: who2, project }
     );
     const sha = sha256HexSync(bytes2);
     this.sql.exec(`INSERT INTO counsel_packet_exports (packet_id, version, action_id, author, at, counsel, sha, inband)
-                   VALUES (?,?,?,?,?,?,?,?)`, read2.id, read2.version, read2.action, who2, at26, json3(read2.head.counsel), sha, json3(inband));
+                   VALUES (?,?,?,?,?,?,?,?)`, read2.id, read2.version, read2.action, who2, at27, json3(read2.head.counsel), sha, json3(inband));
     return {
       ok: true,
       id: read2.id,
@@ -120836,7 +120457,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
       inband,
       counsel: read2.head.counsel,
       exported_by: who2,
-      at: at26,
+      at: at27,
       marking: read2.marking,
       disclosure: read2.disclosure,
       fileable: false
@@ -120850,7 +120471,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
     const out = [];
     for (let offset = 0; out.length < n; offset += FILINGS_FOR_MAX) {
       const page = this.#rows(`${q7} LIMIT ? OFFSET ?`, ...a, FILINGS_FOR_MAX, offset);
-      for (const r of page) if (out.length < n && this.#sees(parse5(r.basis), viewer)) out.push(r);
+      for (const r of page) if (out.length < n && this.#sees(parse4(r.basis), viewer)) out.push(r);
       if (page.length < FILINGS_FOR_MAX) break;
     }
     return out;
@@ -120889,7 +120510,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
       drafts: drafts.slice(0, FILINGS_FOR_MAX).map((d) => ({
         filing: d.filing_id,
         form: d.form,
-        ...d.form === "communication" ? { purpose: d.purpose } : { tier: d.tier, template: this.#templateShown(parse5(d.template), viewer) },
+        ...d.form === "communication" ? { purpose: d.purpose } : { tier: d.tier, template: this.#templateShown(parse4(d.template), viewer) },
         label: proposalLabel(d.preparer, d.form === "communication" ? "communication" : "filing_draft"),
         at: d.prepared_at,
         approval: d.approved_by ? { approved_by: d.approved_by, at: d.approved_at, sha: d.sha } : null,
@@ -120897,18 +120518,18 @@ ${inbandBlock(quartet)}`, inband: quartet };
       })),
       drafts_truncated: drafts.length > FILINGS_FOR_MAX,
       packets: versions.slice(0, FILINGS_FOR_MAX).map((r) => {
-        const causes = this.#basisChanged(parse5(r.basis) || {}, viewer);
+        const causes = this.#basisChanged(parse4(r.basis) || {}, viewer);
         return {
           packet: r.packet_id,
           version: Number(r.version),
-          counsel: parse5(r.counsel),
+          counsel: parse4(r.counsel),
           assembled_by: r.author,
           at: r.at,
           reason: r.reason ?? null,
-          template: this.#templateShown(parse5(r.template), viewer),
+          template: this.#templateShown(parse4(r.template), viewer),
           basis_changed: causes.length ? { causes } : null,
           exports: this.#rows(`SELECT author, at, counsel, sha FROM counsel_packet_exports WHERE packet_id=? AND version=?
-                                       ORDER BY export_id`, r.packet_id, r.version).map((e) => ({ exported_by: e.author, at: e.at, counsel: parse5(e.counsel), sha: e.sha }))
+                                       ORDER BY export_id`, r.packet_id, r.version).map((e) => ({ exported_by: e.author, at: e.at, counsel: parse4(e.counsel), sha: e.sha }))
         };
       }),
       packets_truncated: versions.length > FILINGS_FOR_MAX
@@ -120960,11 +120581,11 @@ ${inbandBlock(quartet)}`, inband: quartet };
     const w = typeof why === "string" ? why.trim() : "";
     if (!w || w.length > THEORY_WHY_MAX)
       return { ok: false, reason: "THEORY_WHY_REFUSED", max: THEORY_WHY_MAX, detail: `say why in at most ${THEORY_WHY_MAX} characters` };
-    const at26 = this.#when();
+    const at27 = this.#when();
     return this.record.transact(() => {
-      const { id } = this.record.allocId("THY", at26.slice(0, 4));
+      const { id } = this.record.allocId("THY", at27.slice(0, 4));
       this.sql.exec(`INSERT INTO theory_proposals (theory_id, action_id, packet_id, theory, remedy, standards, why, proposer, at)
-                     VALUES (?,?,?,?,?,?,?,?,?)`, id, a.id, packetId, t, rem, json3([...new Set(list2)]), w, who2, at26);
+                     VALUES (?,?,?,?,?,?,?,?,?)`, id, a.id, packetId, t, rem, json3([...new Set(list2)]), w, who2, at27);
       return {
         ok: true,
         proposal: {
@@ -120976,7 +120597,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
           standards: [...new Set(list2)],
           why: w,
           label: proposalLabel(who2, "theory"),
-          at: at26
+          at: at27
         },
         evidence: false,
         says: "a candidate theory and remedy, stored apart: it is not the group's position, and it enters the next counsel packet version as a candidate"
@@ -121025,7 +120646,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
       const actionKind = d.kind || (this.#action(d.action_id, viewer) || {}).kind || null;
       const entry = v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((k) => k.kind === (kind ?? actionKind)) : null;
       const givers2 = entry ? [entry.profile, ...Array.isArray(entry.bases) ? entry.bases.map((b) => b.profile) : []].filter(Boolean) : [];
-      defaults.project = project ?? (parse5(d.basis) || {}).project ?? null;
+      defaults.project = project ?? (parse4(d.basis) || {}).project ?? null;
       defaults.kind = kind ?? actionKind;
       defaults.use = use ?? "file";
       defaults.profiles = profiles ?? (givers2.length ? [...new Set(givers2)] : "general");
@@ -121240,7 +120861,7 @@ var CORE_TAIL3 = Object.freeze([
   "  source: null",
   "visuals: []"
 ]);
-function escalationDoc({ id, project, determination, act, standards, author, at: at26, entry }) {
+function escalationDoc({ id, project, determination, act, standards, author, at: at27, entry }) {
   return [
     "---",
     `id: ${id}`,
@@ -121249,8 +120870,8 @@ function escalationDoc({ id, project, determination, act, standards, author, at:
     `title: ${q5(`Escalation of ${determination}`)}`,
     "current_state: open",
     "prior_state: null",
-    `created: ${q5(at26)}`,
-    `last_updated: ${q5(at26)}`,
+    `created: ${q5(at27)}`,
+    `last_updated: ${q5(at27)}`,
     `project: ${tok(project)}`,
     `determination: ${tok(determination)}`,
     `act: ${act ? tok(act) : "null"}`,
@@ -121266,7 +120887,7 @@ function escalationDoc({ id, project, determination, act, standards, author, at:
     "",
     "## Session Log",
     "",
-    `### Session ${at26} | Escalation opened | ${author}`,
+    `### Session ${at27} | Escalation opened | ${author}`,
     "Changes: escalation opened at stage 1.",
     ""
   ].join("\n");
@@ -121278,9 +120899,9 @@ function logOf(text5) {
   const marker = `
 ## ${LOG}
 `;
-  const at26 = text5.indexOf(marker);
-  if (at26 === -1) return [];
-  const start = at26 + marker.length;
+  const at27 = text5.indexOf(marker);
+  if (at27 === -1) return [];
+  const start = at27 + marker.length;
   const nxt = text5.indexOf("\n## ", start - 1);
   const body = text5.slice(start, nxt === -1 ? text5.length : nxt).trim();
   if (!body) return [];
@@ -121300,9 +120921,9 @@ function logSection(text5) {
   const marker = `
 ## ${LOG}
 `;
-  const at26 = text5.indexOf(marker);
-  if (at26 === -1) return null;
-  const start = at26 + marker.length;
+  const at27 = text5.indexOf(marker);
+  if (at27 === -1) return null;
+  const start = at27 + marker.length;
   const nxt = text5.indexOf("\n## ", start - 1);
   return text5.slice(start, nxt === -1 ? text5.length : nxt).trim();
 }
@@ -121326,26 +120947,26 @@ function appendItem2(text5, key, fields) {
   const end2 = fence2(lines);
   if (end2 === null) return null;
   const item = Object.entries(fields).map(([k, v], i) => `${i ? "    " : "  - "}${k}: ${v}`);
-  const at26 = lines.findIndex((l, i) => i > 0 && i < end2 && l.startsWith(key + ":"));
-  if (at26 === -1) return [...lines.slice(0, end2), `${key}:`, ...item, ...lines.slice(end2)].join("\n");
-  const rest = lines[at26].slice(key.length + 1).trim();
-  if (rest === "[]") return [...lines.slice(0, at26), `${key}:`, ...item, ...lines.slice(at26 + 1)].join("\n");
+  const at27 = lines.findIndex((l, i) => i > 0 && i < end2 && l.startsWith(key + ":"));
+  if (at27 === -1) return [...lines.slice(0, end2), `${key}:`, ...item, ...lines.slice(end2)].join("\n");
+  const rest = lines[at27].slice(key.length + 1).trim();
+  if (rest === "[]") return [...lines.slice(0, at27), `${key}:`, ...item, ...lines.slice(at27 + 1)].join("\n");
   if (rest !== "") return null;
-  let last = at26;
-  for (let i = at26 + 1; i < end2 && /^\s/.test(lines[i]); i++) last = i;
+  let last = at27;
+  for (let i = at27 + 1; i < end2 && /^\s/.test(lines[i]); i++) last = i;
   return [...lines.slice(0, last + 1), ...item, ...lines.slice(last + 1)].join("\n");
 }
 function appendToSection(text5, heading, entry) {
   const marker = `
 ## ${heading}
 `;
-  const at26 = text5.indexOf(marker);
-  if (at26 === -1) return `${text5.replace(/\n*$/, "\n")}
+  const at27 = text5.indexOf(marker);
+  if (at27 === -1) return `${text5.replace(/\n*$/, "\n")}
 ## ${heading}
 
 ${entry.trim()}
 `;
-  const start = at26 + marker.length;
+  const start = at27 + marker.length;
   const nxt = text5.indexOf("\n## ", start - 1);
   const end2 = nxt === -1 ? text5.length : nxt;
   const head = text5.slice(0, end2).replace(/\n*$/, "\n");
@@ -121952,11 +121573,11 @@ var Escalation = class {
   escalationRead({ id, nowMs, viewer } = {}) {
     const e = this.#row(id, viewer);
     if (!e) return refuseNoSuchEscalation();
-    const at26 = Number.isFinite(nowMs) ? nowMs : instantMs2(this.now());
+    const at27 = Number.isFinite(nowMs) ? nowMs : instantMs2(this.now());
     const attached = this.#attachments(e.id);
     const seen = this.#sight(attached, viewer);
-    const { triggers, notes } = this.#triggers(e, at26, viewer, seen);
-    const proposed = this.#proposed(e, triggers, at26);
+    const { triggers, notes } = this.#triggers(e, at27, viewer, seen);
+    const proposed = this.#proposed(e, triggers, at27);
     let answer = {
       ok: true,
       id: e.id,
@@ -121970,7 +121591,7 @@ var Escalation = class {
       opened_by: e.openedBy,
       opened_at: e.openedAt,
       opened_reason: e.openedReason,
-      as_of: iso2(at26),
+      as_of: iso2(at27),
       history: this.#history(e.id),
       standards: e.standards,
       actions: this.#actionsOf(e, viewer, seen),
@@ -122171,12 +121792,12 @@ var Escalation = class {
     const g = this.#pursuable(args, "escalationOpen");
     if (!g.ok) return g;
     const { d, pursued, project, reason } = g;
-    const at26 = this.now();
+    const at27 = this.now();
     const actId = actIdOf(d);
     const r = this.record.transact(() => {
-      const id = escalationId(this.record.allocId("ESC", at26.slice(0, 4)).id);
-      const entry = { kind: "open", to: 1, determination, project, standards: pursued, reason, author, at: at26 };
-      const text5 = escalationDoc({ id, project, determination, act: actId, standards: pursued, author, at: at26, entry });
+      const id = escalationId(this.record.allocId("ESC", at27.slice(0, 4)).id);
+      const entry = { kind: "open", to: 1, determination, project, standards: pursued, reason, author, at: at27 };
+      const text5 = escalationDoc({ id, project, determination, act: actId, standards: pursued, author, at: at27, entry });
       const fm = parseFm2(text5) || {};
       const p = this.promotion.promote({
         bundleId: id,
@@ -122207,7 +121828,7 @@ var Escalation = class {
       project,
       reason,
       opened_by: author,
-      at: at26,
+      at: at27,
       proposed: read2.proposed
     };
   }
@@ -122496,14 +122117,14 @@ var Escalation = class {
   }
   /** R16: every open escalation with a proposed edge not advanced or declined since its trigger was met, oldest first. */
   escalationsDue({ nowMs, limit, viewer } = {}) {
-    const at26 = Number.isFinite(nowMs) ? nowMs : instantMs2(this.now());
+    const at27 = Number.isFinite(nowMs) ? nowMs : instantMs2(this.now());
     const cap = Number.isInteger(limit) && limit > 0 ? Math.min(limit, DUE_MAX) : DUE_MAX;
     const items = [];
     for (const r of this.#rows(`SELECT escalation_id FROM escalations WHERE state='open' ORDER BY escalation_id`)) {
       const e = this.#row(r.escalation_id, viewer);
       if (!e) continue;
-      const { triggers } = this.#triggers(e, at26, viewer);
-      for (const p of this.#proposed(e, triggers, at26))
+      const { triggers } = this.#triggers(e, at27, viewer);
+      for (const p of this.#proposed(e, triggers, at27))
         if (!p.declined_since_met)
           items.push({
             id: e.id,
@@ -122519,7 +122140,7 @@ var Escalation = class {
           });
     }
     items.sort((a, b) => instantOrder(a.instant, b.instant) || (a.id < b.id ? -1 : a.id > b.id ? 1 : a.to - b.to));
-    return { ok: true, as_of: iso2(at26), items: items.slice(0, cap), truncated: items.length > cap, limit: cap };
+    return { ok: true, as_of: iso2(at27), items: items.slice(0, cap), truncated: items.length > cap, limit: cap };
   }
   /** R22: every escalation of a determination the viewer may see, oldest first, each with its id, state and stage.
    *  Writes nothing. */
@@ -122574,7 +122195,7 @@ var Escalation = class {
       return refusal17("MACHINE_CANNOT_DECLINE_TO_ESCALATE", "a decline to escalate is recorded by a named member, in their own words; a machine prepares and never acts. Nothing was written.");
     const g = this.#pursuable(args, "declineToEscalate");
     if (!g.ok) return g;
-    const at26 = this.now();
+    const at27 = this.now();
     const seq = this.record.transact(() => {
       const n = this.#one(
         `SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM escalation_declines_to_open WHERE determination_id=?`,
@@ -122582,7 +122203,7 @@ var Escalation = class {
       ).n;
       const before = this.#one(`SELECT COUNT(*) AS n FROM escalations WHERE determination_id=?`, determination).n;
       this.#rows(`INSERT INTO escalation_declines_to_open (determination_id, seq, project_id, escalations_before, reason,
-                  author, at) VALUES (?,?,?,?,?,?,?)`, determination, n, String(g.project ?? ""), before, g.reason, author, at26);
+                  author, at) VALUES (?,?,?,?,?,?,?)`, determination, n, String(g.project ?? ""), before, g.reason, author, at27);
       return n;
     });
     return {
@@ -122591,7 +122212,7 @@ var Escalation = class {
       determination,
       reason: g.reason,
       author,
-      at: at26,
+      at: at27,
       says: "recorded as the group's decline to escalate now; a later decline or an escalation opened later supersedes it, and it stays readable"
     };
   }
@@ -122634,7 +122255,7 @@ var Escalation = class {
     const g = this.#pursuable({ determination, viewer }, "escalationReasonDraft");
     if (!g.ok) return g;
     const { d, pursued } = g;
-    const at26 = Number.isFinite(nowMs) ? nowMs : instantMs2(this.now());
+    const at27 = Number.isFinite(nowMs) ? nowMs : instantMs2(this.now());
     const parts = [];
     const say = (id, text6) => parts.push({ id, text: text6 });
     const D = determination;
@@ -122658,10 +122279,10 @@ var Escalation = class {
     const listed = this.#actionsResting(D, viewer);
     if (!listed) say(D, "The actions resting on the determination could not be read (undetermined).");
     else {
-      const today = new Date(at26).toISOString().slice(0, 10);
+      const today = new Date(at27).toISOString().slice(0, 10);
       let shown2 = 0;
       for (const id of listed) {
-        const a = this.actions.actionRead({ id, viewer, now: at26 });
+        const a = this.actions.actionRead({ id, viewer, now: at27 });
         if (!a || a.ok === false) continue;
         shown2++;
         const cp = isObj17(a.counterparty) && str19(a.counterparty.role) && str19(a.counterparty.body) ? `${str19(a.counterparty.role)}, ${str19(a.counterparty.body)}` : "an office the record does not name (undetermined)";
@@ -122689,7 +122310,7 @@ var Escalation = class {
     return {
       ok: true,
       determination: D,
-      as_of: iso2(at26),
+      as_of: iso2(at27),
       text: text5,
       label: proposalLabel(DRAFTED_BY, "escalation_reason"),
       parts,
@@ -122906,33 +122527,7 @@ CREATE TABLE IF NOT EXISTS monitor_gathering_run (
   detail       TEXT,               -- why nothing landed, when bytes were filed and nothing was promoted
   PRIMARY KEY (bundle_id, request_id, seq)
 );
-
--- R56\u2013R61 (K1036): ONE ROW PER RUN OF A RATIFIED SWEEP ("<bundle>#<id>"), never edited: what it fetched and filed,
--- and detail (JSON: each seed's outcome and capture, the candidates and matches, what was filed, the skips by reason,
--- the excluded, failed and redirected fetches, the links cut, the budget) and the anomaly R60 noted, when one was.
--- Derived; declared to purge by the bundle whose data/gathering.json carries the sweep.
-CREATE TABLE IF NOT EXISTS sweep_runs (
-  sweep      TEXT    NOT NULL,
-  seq        INTEGER NOT NULL,
-  bundle_id  TEXT    NOT NULL,
-  at         TEXT    NOT NULL,
-  filed      INTEGER NOT NULL,
-  fetched    INTEGER NOT NULL,
-  detail     TEXT    NOT NULL,
-  anomaly    TEXT,
-  PRIMARY KEY (sweep, seq)
-);
-
--- R58 (already_swept): every address a sweep filed a document from, and the bundle it was filed as. Derived; declared
--- to purge by the sweep's bundle.
-CREATE TABLE IF NOT EXISTS sweep_filed (
-  sweep         TEXT NOT NULL,
-  address_norm  TEXT NOT NULL,
-  bundle_id     TEXT NOT NULL,
-  filed         TEXT NOT NULL,
-  at            TEXT NOT NULL,
-  PRIMARY KEY (sweep, address_norm)
-);`;
+`;
 var ADDED_COLUMNS3 = Object.freeze([
   ["monitor_address_type", "unchanged_run", "INTEGER NOT NULL DEFAULT 0"],
   ["monitor_address_type", "run_since", "TEXT"]
@@ -122942,9 +122537,7 @@ var MONITORING_TABLES = Object.freeze([
   { name: "monitor_tick_epoch", keys: [] },
   { name: "monitor_address_type", keys: [] },
   { name: "monitor_address_frequency", keys: [] },
-  { name: "monitor_gathering_run", keys: ["bundle_id"] },
-  { name: "sweep_runs", keys: ["bundle_id"] },
-  { name: "sweep_filed", keys: ["bundle_id"] }
+  { name: "monitor_gathering_run", keys: ["bundle_id"] }
 ]);
 function migrateMonitoring(sql) {
   const bare2 = MONITORING_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -122954,714 +122547,6 @@ function migrateMonitoring(sql) {
     if (!has3) sql.exec(`ALTER TABLE ${table2} ADD COLUMN ${column} ${type}`);
   }
 }
-
-// src/monitoring/sweep.mjs
-var SWEEP_TICK_BATCH = 5;
-var SWEEP_RUNS_SHOWN = 20;
-var ANOMALY_MIN_RUNS = 4;
-var ANOMALY_WINDOW = 8;
-var ANOMALY_FACTOR = 3;
-var ANOMALY_FLOOR = 5;
-var ANOMALY_DRY_MEDIAN = 2;
-var SILENT_RUNS = 4;
-var SWEEP_ACTOR = "bio-monitor";
-var SWEEP_PURPOSE = "sweep";
-var SWEEP_CONDITION_KINDS = Object.freeze([
-  "sweep-held-backlog",
-  "sweep-yield-anomaly",
-  "sweep-seed-unreachable",
-  "sweep-redirect-out-of-scope",
-  "sweep-silent"
-]);
-var INTERVAL = Object.freeze({ daily: 864e5, weekly: 6048e5, monthly: 2592e6 });
-var GJ = "data/gathering.json";
-var parse6 = (t) => {
-  try {
-    const g = typeof t === "string" ? JSON.parse(t) : null;
-    return g && typeof g === "object" && !Array.isArray(g) ? g : null;
-  } catch {
-    return null;
-  }
-};
-var sweepsOf = (g) => g && Array.isArray(g.sweeps) ? g.sweeps.filter((s) => s && typeof s === "object" && typeof s.id === "string") : [];
-var canon3 = (v) => Array.isArray(v) ? `[${v.map(canon3).join(",")}]` : v && typeof v === "object" ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon3(v[k])}`).join(",")}}` : JSON.stringify(v ?? null);
-var median = (xs) => {
-  if (!xs.length) return null;
-  const s = [...xs].sort((a, b) => a - b), h = s.length >> 1;
-  return s.length % 2 ? s[h] : (s[h - 1] + s[h]) / 2;
-};
-var runnable = (s) => Array.isArray(s.sources) && s.sources.length && Array.isArray(s.seeds) && SWEEP_CADENCES.includes(s.cadence) && s.budget && Number.isInteger(s.budget.per_run) && Number.isInteger(s.budget.backlog);
-var ENTITY2 = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
-var decode = (t) => String(t).replace(/&(#x[0-9a-f]{1,6}|#\d{1,7}|[a-z]{2,6});/gi, (m, e) => {
-  if (e[0] !== "#") return ENTITY2[e.toLowerCase()] ?? m;
-  const n = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
-  try {
-    return String.fromCodePoint(n);
-  } catch {
-    return m;
-  }
-});
-var strip2 = (t) => decode(String(t).replace(/<[^>]*>/g, " ")).replace(/\s+/g, " ").trim();
-var decodedAddress = (u) => {
-  try {
-    return decodeURI(u);
-  } catch {
-    return u;
-  }
-};
-function linksOf(text5, base) {
-  const src = String(text5 || ""), low = src.toLowerCase(), out = [];
-  const abs = (h) => {
-    try {
-      const u = new URL(decode(h.trim()), base);
-      return u.protocol === "https:" || u.protocol === "http:" ? u.href : null;
-    } catch {
-      return null;
-    }
-  };
-  const between = (open, close2, from, limit) => {
-    const a = low.indexOf(open, from);
-    if (a < 0 || limit >= 0 && a > limit) return null;
-    const s = low.indexOf(">", a);
-    const b = s < 0 ? -1 : low.indexOf(close2, s);
-    return b < 0 ? null : { inner: src.slice(s + 1, b), tag: src.slice(a, s + 1), end: b + close2.length };
-  };
-  const attr2 = (tag2, name2) => {
-    const m = new RegExp(`\\s${name2}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, "i").exec(tag2);
-    return m ? m[1] ?? m[2] ?? m[3] : null;
-  };
-  if (/<(urlset|sitemapindex)\b/.test(low)) {
-    for (let p = 0, x; x = between("<loc", "</loc>", p, -1); p = x.end) {
-      const a = abs(strip2(x.inner));
-      if (a) out.push({ address: a, text: "" });
-    }
-    return out;
-  }
-  if (/<(rss|feed|rdf:rdf)\b/.test(low)) {
-    const item = low.includes("<item") ? ["<item", "</item>"] : ["<entry", "</entry>"];
-    for (let p = 0, x; x = between(item[0], item[1], p, -1); p = x.end) {
-      const body = x.inner, bl = body.toLowerCase();
-      const t = /<title\b[^>]*>([\s\S]*?)<\/title>/i.exec(body.slice(0, 65536));
-      let href = null;
-      const l = bl.indexOf("<link");
-      if (l >= 0) {
-        const e = bl.indexOf(">", l);
-        const tag2 = body.slice(l, e + 1);
-        href = attr2(tag2, "href");
-        if (!href) {
-          const c = bl.indexOf("</link>", e);
-          href = c > e ? strip2(body.slice(e + 1, c)) : null;
-        }
-      }
-      const a = href ? abs(href) : null;
-      if (a) out.push({ address: a, text: t ? strip2(t[1].replace(/^<!\[CDATA\[|\]\]>$/g, "")) : "" });
-    }
-    return out;
-  }
-  let close = -1;
-  for (let p = 0; ; ) {
-    const a = low.indexOf("<a", p);
-    if (a < 0) break;
-    const s = low.indexOf(">", a);
-    if (s < 0) break;
-    p = s + 1;
-    if (!/[\s>]/.test(low[a + 2] || "")) continue;
-    const href = attr2(src.slice(a, s + 1), "href");
-    const target = href ? abs(href) : null;
-    if (!target) continue;
-    if (close !== -2 && close < s) {
-      close = low.indexOf("</a", s);
-      if (close < 0) close = -2;
-    }
-    const next = low.indexOf("<a", s);
-    let end2 = Math.min(close >= 0 ? close : src.length, s + 1 + 16384);
-    if (next >= 0 && next < end2) end2 = next;
-    out.push({ address: target, text: strip2(src.slice(s + 1, end2)) });
-  }
-  return out;
-}
-var Sweeps = class {
-  #m;
-  #k;
-  /** `m` is the Monitoring instance (its record, membership, capture, observation log, promotion, clock, pause and
-   *  dependencies); `k` its private helpers: `open`, `close`, `claim` (R21), `ranked` (R56's rank), `running` (R22),
-   *  `land` (R28's landing, R59). */
-  constructor(m, k) {
-    this.#m = m;
-    this.#k = k;
-  }
-  #rows(q7, ...a) {
-    return [...this.#m.sql.exec(q7, ...a)];
-  }
-  #one(q7, ...a) {
-    const r = this.#rows(q7, ...a);
-    return r.length ? r[0] : null;
-  }
-  /* ================================================================== *
-   * The fence (R55) and the ratifier
-   * ================================================================== */
-  /** R55: a non-replay promotion carrying `data/gathering.json`, fenced against the file it replaces. A non-member who
-   *  adds, removes or changes a sweep (other than setting `ratified` to `false`) is refused `SWEEP_NOT_A_MEMBER`; a
-   *  non-owner of the bundle's project who sets `ratified` to `true` or changes a sweep ratified before or after is
-   *  refused `SWEEP_RATIFY_NOT_AN_OWNER`. Null when admitted. */
-  sweepFence(c, nextText) {
-    const prev = parse6((() => {
-      const f17 = this.#m.record.readFile(c.bundleId, GJ);
-      return f17 && f17.text;
-    })());
-    const before = new Map(sweepsOf(prev).map((s) => [s.id, s])), after = new Map(sweepsOf(parse6(nextText)).map((s) => [s.id, s]));
-    const touched = [];
-    for (const id of /* @__PURE__ */ new Set([...before.keys(), ...after.keys()])) {
-      const p = before.get(id), n = after.get(id);
-      if (p && n && canon3(p) === canon3(n)) continue;
-      if (p && n && p.ratified === true && n.ratified === false && canon3({ ...p, ratified: false }) === canon3(n)) continue;
-      touched.push({ id, ratified: p?.ratified === true || n?.ratified === true });
-    }
-    if (!touched.length) return null;
-    const author = typeof c.author === "string" ? c.author.trim() : "";
-    const refuse8 = (code, detail, extra) => {
-      const row2 = SWEEP_CHECKS[code];
-      return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra };
-    };
-    if (!author || isMachineIdentity(author))
-      return refuse8("SWEEP_NOT_A_MEMBER", `${author || "an unnamed writer"} is not a member, and only a member adds, removes or changes a sweep; any writer may unratify one. Nothing was written.`, { sweeps: touched.map((t) => t.id) });
-    const ratifying = touched.filter((t) => t.ratified);
-    if (!ratifying.length) return null;
-    const info = this.#m.record.bundleInfo(c.bundleId);
-    const project = info ? info.project : c.docFm && typeof c.docFm.project === "string" ? c.docFm.project : null;
-    const member = author.startsWith("member:") ? author.slice(7) : author;
-    let owns = false;
-    try {
-      owns = !!project && this.#m.membership.isProjectOwner(project, member) === true;
-    } catch {
-      owns = false;
-    }
-    if (!owns)
-      return refuse8(
-        "SWEEP_RATIFY_NOT_AN_OWNER",
-        project ? `${member} is not an owner of ${project}, and only an owner ratifies a sweep or changes a ratified one. Nothing was written.` : "this list belongs to no project, so it has no owner who could ratify a sweep. Nothing was written.",
-        { sweeps: ratifying.map((t) => t.id), project }
-      );
-    return null;
-  }
-  /** R55: who ratified sweep `id` of `bundle` and when: the promotion that last set `ratified` to `true` or changed the
-   *  sweep while ratified, read from the bundle's history (record-core R15–R17's image). Null when it is not ratified. */
-  ratifier(bundle, id) {
-    const img = this.#m.record.readImage(bundle);
-    if (!img) return null;
-    let man = null;
-    try {
-      man = JSON.parse(img["_history/manifest.json"] || "null");
-    } catch {
-      man = null;
-    }
-    const entries = (man && Array.isArray(man.entries) ? man.entries : []).slice().sort((a, b) => a.seq - b.seq);
-    const at26 = (t) => sweepsOf(parse6(t)).find((s) => s.id === id) || null;
-    const after = new Array(entries.length);
-    let cur = typeof img[GJ] === "string" ? img[GJ] : null;
-    for (let i = entries.length - 1; i >= 0; i--) {
-      after[i] = cur;
-      const e = entries[i];
-      if ((e.snapshotted || []).includes(GJ)) {
-        const v = img[`_history/data/gathering_${e.key}.json`];
-        cur = typeof v === "string" ? v : null;
-      } else if ((e.files || []).includes(GJ)) cur = null;
-    }
-    let found = null, prev = cur;
-    for (let i = 0; i < entries.length; i++) {
-      const p = at26(prev), n = at26(after[i]);
-      if (n && n.ratified === true && (!p || p.ratified !== true || canon3(p) !== canon3(n)))
-        found = { by: entries[i].author ?? null, at: entries[i].created ?? null };
-      if (!n || n.ratified !== true) found = null;
-      prev = after[i];
-    }
-    return found;
-  }
-  /* ================================================================== *
-   * What is held and due (R56, R60)
-   * ================================================================== */
-  /** Every sweep in every `data/gathering.json` the record holds (read as the daemon, R36), or only those the viewer's
-   *  gate admits; each `{name, bundle, sweep, daemon}`. */
-  #all(gate = null) {
-    const files = gate ? this.#rows(`SELECT f.bundle_id AS bundle_id, f.content AS content FROM files f JOIN bundles b ON b.bundle_id = f.bundle_id
-                     WHERE f.path = '${GJ}' AND (${gate.sql}) ORDER BY f.bundle_id`, ...gate.args) : this.#rows(`SELECT bundle_id, content FROM files WHERE path = '${GJ}' ORDER BY bundle_id`);
-    const out = [];
-    for (const f17 of files) {
-      const g = parse6(f17.content);
-      const daemon = g && g.daemon && typeof g.daemon === "object" && !Array.isArray(g.daemon) ? g.daemon : {};
-      for (const s of sweepsOf(g)) out.push({ name: `${f17.bundle_id}#${s.id}`, bundle: f17.bundle_id, sweep: s, daemon });
-    }
-    return out;
-  }
-  #runs(name2, limit = SWEEP_RUNS_SHOWN) {
-    return this.#rows(`SELECT * FROM sweep_runs WHERE sweep = ? ORDER BY seq DESC LIMIT ?`, name2, limit).map((r) => {
-      let d = {};
-      try {
-        d = JSON.parse(r.detail || "{}");
-      } catch {
-        d = {};
-      }
-      return {
-        ...d,
-        seq: Number(r.seq),
-        at: r.at,
-        filed: Number(r.filed),
-        fetched: Number(r.fetched),
-        anomaly: r.anomaly ? JSON.parse(r.anomaly) : null
-      };
-    });
-  }
-  /** R60: the backlog (capture R82) and whether it holds the sweep; null backlog (unreadable) holds it (K1129). */
-  #held(x) {
-    let n = null;
-    try {
-      n = this.#m.capture.heldCount({ sweep: x.name });
-    } catch {
-      n = null;
-    }
-    const limit = x.sweep.budget && Number.isInteger(x.sweep.budget.backlog) ? x.sweep.budget.backlog : null;
-    const held = n === null || n === void 0 || !Number.isFinite(Number(n)) || limit !== null && Number(n) >= limit;
-    return { backlog: n === void 0 ? null : n, limit, held };
-  }
-  /** R56: one sweep's standing: `due`, `next`, and when not due the reason. */
-  #standing(x, nowMs, paused) {
-    const s = x.sweep;
-    const last = this.#one(`SELECT at FROM sweep_runs WHERE sweep = ? ORDER BY seq DESC LIMIT 1`, x.name);
-    const lastMs = last ? Date.parse(last.at) : NaN;
-    const iv = INTERVAL[s.cadence] ?? null;
-    const dueAt = Number.isFinite(lastMs) && iv ? lastMs + iv : 0;
-    const h = this.#held(x);
-    const no2 = (why) => ({ due: false, why, due_at: dueAt, next: null, ...h });
-    if (s.ratified !== true) return no2("not ratified");
-    if (!runnable(s)) return no2("its definition is not one a run can read");
-    if (paused) return no2("the daemon is paused");
-    if (x.daemon.enabled === false) return no2("its bundle's daemon block says enabled: false");
-    if (this.#closed(x.bundle)) return no2("its project is closed");
-    if (h.held) return no2("held: backlog");
-    return dueAt <= nowMs ? { due: true, due_at: dueAt, next: null, ...h } : { due: false, due_at: dueAt, next: dueAt, ...h };
-  }
-  #closed(bundle) {
-    const info = this.#m.record.bundleInfo(bundle);
-    if (!info || !info.project) return false;
-    try {
-      const st = this.#m.projectStage.projectStage({ project: info.project, viewer: "class:daemon" });
-      return !!st && st.stage === "closed";
-    } catch {
-      return false;
-    }
-  }
-  /** R56: the plan: due sweeps longest-overdue first then by full name, the earliest `next`, and whether some sweep is
-   *  held or waiting on the pause (each re-read one archive interval on). */
-  plan(nowMs) {
-    const paused = this.#m.paused().paused;
-    const due = [];
-    let next = null, recheck = false;
-    for (const x of this.#all()) {
-      if (x.sweep.ratified !== true) continue;
-      const st = this.#standing(x, nowMs, paused);
-      if (st.due) due.push({ ...x, due_at: st.due_at });
-      else if (st.next !== null) next = next === null ? st.next : Math.min(next, st.next);
-      else if (st.why === "held: backlog" || st.why === "the daemon is paused") recheck = true;
-    }
-    due.sort((a, b) => a.due_at - b.due_at || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
-    return { due, next, recheck };
-  }
-  sweepDue(now) {
-    this.#k.register();
-    return this.plan(now).due.length ? now : null;
-  }
-  sweepWake(now) {
-    this.#k.register();
-    const p = this.plan(now);
-    if (p.due.length) return now + 1e3;
-    const re = p.recheck ? now + this.#k.recheckMs() : null;
-    return p.next === null ? re : re === null ? p.next : Math.min(p.next, re);
-  }
-  /* ================================================================== *
-   * The run (R56–R60, R62)
-   * ================================================================== */
-  /** R56: the tick: at most SWEEP_TICK_BATCH due sweeps (ten times that read when the scheduler ranks), each claimed
-   *  under the consumer's epoch (R21), not re-entrant (R22). `daemon.sweep_budget` caps the fetches a bundle's sweeps
-   *  make in this tick together. */
-  async sweepTick(now, rank6 = null) {
-    this.#k.register();
-    const nowMs = Number.isFinite(now) ? now : this.#m.now();
-    const at26 = stampInstant("second", nowMs);
-    const pause = this.#m.paused();
-    if (pause.paused) return { paused: pause, at: at26, ran: [], skipped: [], failed: [] };
-    if (this.#k.running.has("gathering-sweep")) return { busy: true, paused: pause, at: at26, ran: [], skipped: [], failed: [] };
-    this.#k.running.add("gathering-sweep");
-    try {
-      const plan = this.plan(nowMs);
-      const read2 = typeof rank6 === "function" ? plan.due.slice(0, SWEEP_TICK_BATCH * 10) : plan.due;
-      const batch = this.#k.ranked(
-        read2,
-        (x) => ({ kind: "sweep", id: x.name, waitingSince: x.due_at > 0 ? x.due_at : null }),
-        rank6,
-        nowMs
-      ).slice(0, SWEEP_TICK_BATCH);
-      const epoch = this.#k.open("gathering-sweep", nowMs, INTERVAL.daily);
-      const ran = [], skipped = [], failed2 = [], spentBy = /* @__PURE__ */ new Map();
-      for (const x of batch) {
-        if (!this.#k.claim("gathering-sweep", x.name, epoch)) {
-          skipped.push({ sweep: x.name, reason: "claimed by a tick that did not finish" });
-          continue;
-        }
-        const cap = Number.isInteger(x.daemon.sweep_budget) && x.daemon.sweep_budget >= 0 ? x.daemon.sweep_budget - (spentBy.get(x.bundle) || 0) : null;
-        try {
-          const r = await this.#run(x, nowMs, cap);
-          spentBy.set(x.bundle, (spentBy.get(x.bundle) || 0) + r.fetched);
-          ran.push({
-            sweep: x.name,
-            seq: r.seq,
-            fetched: r.fetched,
-            filed: r.filed,
-            ...r.anomaly ? { anomaly: r.anomaly } : {},
-            ...r.note ? { note: r.note } : {}
-          });
-        } catch (e) {
-          failed2.push({ sweep: x.name, reason: String(e && e.message || e).slice(0, 160) });
-        }
-      }
-      if (!failed2.length && !skipped.length) this.#k.close("gathering-sweep", epoch);
-      return { paused: pause, at: at26, epoch, due: plan.due.length, ran, skipped, failed: failed2 };
-    } finally {
-      this.#k.running.delete("gathering-sweep");
-    }
-  }
-  /** R64: requests capture-requests filed under this sweep since its last run, read from the captures' `matched_sweep`
-   *  (the register documents' origin), not this module's own fetches. */
-  #requestsSince(name2, since) {
-    try {
-      const r = this.#one(`SELECT count(*) AS n FROM files f, json_each(CASE WHEN json_valid(f.content) THEN f.content ELSE '{}' END, '$.documents') d
-                            WHERE f.path = 'data/provenance.json' AND d.type = 'object'
-                              AND json_extract(d.value, '$.origin.matched_sweep') = ?
-                              AND COALESCE(json_extract(d.value, '$.origin.deeming_actor'), '') <> ?
-                              AND (? IS NULL OR json_extract(d.value, '$.retrieved') > ?)`, name2, SWEEP_ACTOR, since, since);
-      return Number(r && r.n) || 0;
-    } catch {
-      return 0;
-    }
-  }
-  async #acquire(x, locator, heldSha = null) {
-    const opts = { cls: "daemon", member: false, captureRequest: {
-      locator,
-      purpose: SWEEP_PURPOSE,
-      agent: null,
-      render: false,
-      origin: { kind: "sweep", matched_sweep: x.name, deeming_actor: SWEEP_ACTOR },
-      scope: [...x.sweep.sources],
-      ...heldSha ? { heldSha } : {}
-    } };
-    try {
-      const r = await this.#m.capture.acquire({}, opts);
-      return r && r.body || { ok: false, reason: "NO_ANSWER" };
-    } catch (e) {
-      return { ok: false, reason: String(e && e.message || e).slice(0, 160) };
-    }
-  }
-  #look(x, address, row2, at26) {
-    try {
-      this.#m.observationLog.observe({
-        actorClass: "plane",
-        actor: null,
-        authorityKind: "sweep",
-        authority: x.name,
-        level: "document",
-        subjectKind: "address",
-        subject: normalizeAddress(address),
-        state: row2.state,
-        governed: row2.governed === true,
-        condition: row2.governed ? "source-unreachable-governed" : null,
-        resultKind: row2.ref ? "capture" : null,
-        resultRef: row2.ref || null,
-        detail: String(row2.detail).slice(0, 300)
-      }, at26);
-    } catch {
-    }
-  }
-  async #bytes(sha) {
-    const store = typeof this.#m.record.evidenceStore === "function" ? this.#m.record.evidenceStore() : null;
-    if (!store || !/^[0-9a-f]{64}$/.test(String(sha))) return null;
-    try {
-      const o = await store.get(sha);
-      return o ? new Uint8Array(await o.arrayBuffer()) : null;
-    } catch {
-      return null;
-    }
-  }
-  /** One run of one sweep (R57–R60, R62), recorded as one `sweep_runs` row. `cap` is what is left of the bundle's
-   *  `daemon.sweep_budget` in this tick (null: no cap). */
-  async #run(x, nowMs, cap) {
-    const s = x.sweep, at26 = stampInstant("second", nowMs);
-    const prior = this.#runs(x.name, ANOMALY_WINDOW);
-    const lastSeeds = /* @__PURE__ */ new Map();
-    for (const r of [...prior].reverse()) for (const sd of r.seeds || []) if (sd.sha) lastSeeds.set(sd.seed, sd.sha);
-    const requests = this.#requestsSince(x.name, prior.length ? prior[0].at : null);
-    let left2 = Math.max(0, s.budget.per_run - requests);
-    if (cap !== null) left2 = Math.min(left2, Math.max(0, cap));
-    const note = cap !== null && cap <= 0 ? "its bundle's daemon sweep_budget allows no fetch in this tick, so the run made none" : null;
-    const d = {
-      seeds: [],
-      candidates: 0,
-      matched: 0,
-      documents: [],
-      skipped: { already_swept: 0, already_held: 0, budget_spent: 0 },
-      excluded: [],
-      failed: [],
-      redirected: [],
-      cut: 0,
-      budget: { per_run: s.budget.per_run, requests },
-      ...note ? { note } : {}
-    };
-    let fetched = 0;
-    const terms = (s.match && Array.isArray(s.match.terms) ? s.match.terms : []).map(compileTerm).filter((t) => t.ok);
-    const paths = s.match && Array.isArray(s.match.paths) && s.match.paths.length ? s.match.paths : null;
-    const formats = s.match && Array.isArray(s.match.formats) && s.match.formats.length ? s.match.formats : null;
-    const lists = [];
-    for (const seed of s.seeds) {
-      if (left2 <= 0) {
-        d.seeds.push({ seed, outcome: "budget_spent" });
-        continue;
-      }
-      const held = lastSeeds.get(seed) || null;
-      const a = await this.#acquire(x, seed, held);
-      if (a.reason === "HOST_COOLING_OFF") {
-        d.seeds.push({ seed, outcome: "governed" });
-        this.#look(x, seed, { state: "LOOKED_INDETERMINATE", governed: true, detail: "governed; the per-host governor held the seed's fetch" }, at26);
-        continue;
-      }
-      left2--;
-      fetched++;
-      const sha = a.ok ? a.document?.capture?.sha256 || a.capture?.sha256 || null : null;
-      if (a.ok && sha) {
-        const unchanged = a.unchanged === true || sha === held;
-        const entry = { seed, outcome: unchanged ? "unchanged" : "captured", sha };
-        if (!unchanged) {
-          const f17 = await this.#fileSeed(x, a.document, at26);
-          entry.file = f17.file;
-          if (f17.why) entry.why = f17.why;
-        }
-        d.seeds.push(entry);
-        this.#look(x, seed, { state: "PRESENT", ref: sha, detail: `seed ${entry.outcome} for the sweep ${x.name}` }, at26);
-        const bytes2 = await this.#bytes(sha);
-        if (bytes2) lists.push({ seed, sha, links: linksOf(new TextDecoder("utf-8", { fatal: false }).decode(bytes2), a.document?.locator || seed) });
-        else entry.unread = "the seed's bytes could not be read back from the capture store";
-        continue;
-      }
-      const reason = a.code === "SWEEP_REDIRECT_OUT_OF_SCOPE" ? "out_of_scope_redirect" : a.reason || a.code || "failed";
-      if (reason === "out_of_scope_redirect") {
-        d.seeds.push({ seed, outcome: reason, target: a.target ?? null });
-        d.redirected.push({ address: seed, target: a.target ?? null });
-      } else {
-        let reach2 = null;
-        try {
-          reach2 = this.#m.capture.sourceReachability({ addressNorm: normalizeAddress(seed), now: at26 });
-        } catch {
-          reach2 = null;
-        }
-        d.seeds.push({ seed, outcome: "failed", reason, reachability: reach2 });
-      }
-      this.#look(x, seed, { state: "LOOKED_INDETERMINATE", detail: `seed ${reason}${a.target ? ` to ${a.target}` : ""}` }, at26);
-    }
-    const seen = /* @__PURE__ */ new Set();
-    for (const l of lists) for (const link of l.links) {
-      let norm;
-      try {
-        norm = normalizeAddress(link.address);
-      } catch {
-        continue;
-      }
-      if (seen.has(norm)) continue;
-      seen.add(norm);
-      d.candidates++;
-      if (!inScope(link.address, s.sources) || paths && !inScope(link.address, paths)) continue;
-      const addr = decodedAddress(link.address);
-      if (isCut(link.text) || isCut(addr)) d.cut++;
-      if (terms.length && !terms.some((t) => t.test(link.text) || t.test(addr))) continue;
-      d.matched++;
-      if (this.#one(`SELECT 1 AS x FROM sweep_filed WHERE sweep = ? AND address_norm = ?`, x.name, norm)) {
-        d.skipped.already_swept++;
-        continue;
-      }
-      if (this.#one(`SELECT 1 AS x FROM captured_locators cl JOIN register r ON r.capture_sha = cl.capture_sha WHERE cl.address_norm = ? LIMIT 1`, norm)) {
-        d.skipped.already_held++;
-        continue;
-      }
-      if (left2 <= 0) {
-        d.skipped.budget_spent++;
-        continue;
-      }
-      const a = await this.#acquire(x, link.address);
-      if (a.reason === "HOST_COOLING_OFF") {
-        this.#look(x, link.address, { state: "LOOKED_INDETERMINATE", governed: true, detail: "governed; the per-host governor held the fetch" }, at26);
-        continue;
-      }
-      left2--;
-      fetched++;
-      if (a.code === "SWEEP_REDIRECT_OUT_OF_SCOPE") {
-        d.redirected.push({ address: link.address, target: a.target ?? null });
-        this.#look(x, link.address, { state: "LOOKED_INDETERMINATE", detail: `out_of_scope_redirect to ${a.target}` }, at26);
-        continue;
-      }
-      const doc = a.ok ? a.document : null, sha = doc?.capture?.sha256;
-      if (!doc || !sha) {
-        d.failed.push({ address: link.address, reason: a.reason || a.code || "failed" });
-        this.#look(x, link.address, { state: "LOOKED_INDETERMINATE", detail: `failed; ${a.reason || a.code || "no answer"}` }, at26);
-        continue;
-      }
-      const bytes2 = formats ? await this.#bytes(sha) : null;
-      const format = formats ? bytes2 ? detectFormat(bytes2, doc.capture.content_type ?? null).format : null : null;
-      if (formats && !formats.includes(format)) {
-        d.excluded.push({ address: link.address, format: format ?? "undetermined" });
-        this.#look(x, link.address, { state: "LOOKED_INDETERMINATE", detail: `format_excluded; ${format ?? "undetermined"}` }, at26);
-        continue;
-      }
-      this.#look(x, link.address, { state: "PRESENT", ref: sha, detail: `fetched for the sweep ${x.name}` }, at26);
-      if (a.existed === true) {
-        d.skipped.already_held++;
-        continue;
-      }
-      const landed = this.#k.land({ id: x.name, bundle: x.bundle, locators: [link.address], target: link.text || null }, { locator: link.address, doc }, at26, {
-        title: `Swept by ${x.name}: ${link.text || link.address}`,
-        notes: `Brought in by the ratified sweep ${x.name}, one hop from the seed ${l.seed}, whose capture ${l.sha} listed it. Collected ${at26}. Filed at collected and never higher: verifying it is a named member's decision.`,
-        trigger: `ratified sweep ${x.name}`,
-        summary: `The document served at ${link.address}, brought in by the sweep ${x.name}.`
-      });
-      if (landed && landed.ok) {
-        this.#m.sql.exec(
-          `INSERT OR IGNORE INTO sweep_filed (sweep, address_norm, bundle_id, filed, at) VALUES (?, ?, ?, ?, ?)`,
-          x.name,
-          norm,
-          x.bundle,
-          landed.bundle_id,
-          at26
-        );
-        d.documents.push({ address: link.address, bundle: landed.bundle_id });
-      } else d.failed.push({ address: link.address, reason: landed?.reason || "NOT_FILED", detail: landed?.detail ?? null });
-    }
-    const filed = d.documents.length;
-    const med = median(prior.map((r) => r.filed));
-    let anomaly = null;
-    if (prior.length + 1 >= ANOMALY_MIN_RUNS) {
-      if (filed > ANOMALY_FACTOR * med && filed > ANOMALY_FLOOR) anomaly = { kind: "surge", filed, median: med };
-      else if (filed === 0 && med >= ANOMALY_DRY_MEDIAN) anomaly = { kind: "dry", filed, median: med };
-    }
-    const seq = (this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM sweep_runs WHERE sweep = ?`, x.name) || { n: 1 }).n;
-    this.#m.sql.exec(
-      `INSERT INTO sweep_runs (sweep, seq, bundle_id, at, filed, fetched, detail, anomaly) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      x.name,
-      seq,
-      x.bundle,
-      at26,
-      filed,
-      fetched,
-      JSON.stringify(d),
-      anomaly ? JSON.stringify(anomaly) : null
-    );
-    return { seq, fetched, filed, anomaly, note };
-  }
-  /** R57: a seed's new capture filed in the sweep's own bundle as a monitor snapshot with its register row, in the way
-   *  R9 files a tick's bytes (a mechanical `sweep` promotion that changes no field). A refusal is kept as `why`. */
-  async #fileSeed(x, doc, at26) {
-    const sha = doc.capture.sha256, bytes2 = doc.capture.bytes;
-    const leaf = (String(doc.locator || "").split("?")[0].split("/").pop() || "seed").replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 80) || "seed";
-    const file = `snapshots/monitor-${sha.slice(0, 12)}-${leaf}`;
-    const img = this.#m.record.readImage(x.bundle);
-    if (!img || typeof img["bundle.md"] !== "string" || !Number.isSafeInteger(bytes2)) return { file: null, why: "the sweep's bundle or the capture's size could not be read" };
-    const hex6 = (t) => createSha256().update(new TextEncoder().encode(t)).hex();
-    const files = [];
-    let has3 = false;
-    for (const [path, v] of Object.entries(img)) {
-      if (path.startsWith("_history/")) continue;
-      if (typeof v === "string") files.push({ path, text: v, bytes: new TextEncoder().encode(v).length, sha256: hex6(v) });
-      else {
-        files.push({ path, blobSha: v.blobSha, sha256: v.sha256, bytes: v.bytes });
-        if (v.sha256 === sha) has3 = true;
-      }
-    }
-    if (has3) return { file: null, why: "the sweep's bundle already holds these bytes" };
-    const fm = this.#m.record.head(x.bundle);
-    const p = await this.#m.promotion.promote({
-      bundleId: x.bundle,
-      base: hex6(img["bundle.md"]),
-      author: SWEEP_ACTOR,
-      snapKey: `${at26.replace(/[-:]/g, "")}_${[...crypto.getRandomValues(new Uint8Array(4))].map((b) => b.toString(16).padStart(2, "0")).join("")}`,
-      writer: "mechanical",
-      operation: "sweep",
-      meta: { object_type: fm?.type, title: fm?.title, current_state: fm?.currentState },
-      files: [...files, { path: file, blobSha: sha, sha256: sha, bytes: bytes2 }],
-      register: [{ sha256: sha, path: file, encoding: "binary", bytes: bytes2 }]
-    });
-    return p && p.ok ? { file } : { file: null, why: `the promotion filing it was refused (${p?.reason || p?.code || "no reason given"})` };
-  }
-  /* ================================================================== *
-   * Reads (R61, R63, R30) and the scope check (R64)
-   * ================================================================== */
-  /** R61: every sweep in a `gathering.json` the viewer may see. */
-  sweeps({ viewer = null, now = null } = {}) {
-    this.#k.register();
-    const nowMs = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : this.#m.now();
-    const paused = this.#m.paused().paused;
-    const items = this.#all(this.#k.gate(viewer)).map((x) => {
-      const st = this.#standing(x, nowMs, paused);
-      const runs = this.#runs(x.name);
-      const r = x.sweep.ratified === true ? this.ratifier(x.bundle, x.sweep.id) : null;
-      return {
-        sweep: x.name,
-        bundle: x.bundle,
-        id: x.sweep.id,
-        definition: JSON.stringify(x.sweep),
-        ratified: x.sweep.ratified === true,
-        ratified_by: r ? r.by : null,
-        ratified_at: r ? r.at : null,
-        due: st.due,
-        ...st.why ? { why: st.why } : {},
-        next: st.next !== null ? stampInstant("second", st.next) : null,
-        held: st.held ? "backlog" : null,
-        backlog: st.backlog,
-        backlog_limit: st.limit,
-        silent: this.#silent(runs, st.held),
-        runs
-      };
-    });
-    return { ok: true, as_of: stampInstant("second", nowMs), paused: this.#m.paused(), sweeps: items, formats: listFormats() };
-  }
-  #silent(runs, held) {
-    return !held && runs.length >= SILENT_RUNS && runs.slice(0, SILENT_RUNS).every((r) => r.filed === 0);
-  }
-  /** R63: each sweep's conditions that need a member's look, derived on read and writing nothing. */
-  sweepConditions({ viewer = null, now = null } = {}) {
-    const out = [];
-    for (const x of this.sweeps({ viewer, now }).sweeps) {
-      if (!x.ratified) continue;
-      const last = x.runs[0] || null;
-      const push = (kind, since, detail) => out.push({ sweep: x.sweep, kind, since, detail });
-      if (x.held) push("sweep-held-backlog", last ? last.at : null, { backlog: x.backlog, limit: x.backlog_limit });
-      if (last && last.anomaly) push("sweep-yield-anomaly", last.at, { filed: last.anomaly.filed, median: last.anomaly.median });
-      const failed2 = last ? (last.seeds || []).filter((s) => s.outcome === "failed") : [];
-      if (failed2.length) push("sweep-seed-unreachable", last.at, { seeds: failed2.map((s) => ({ seed: s.seed, reachability: s.reachability ?? null })) });
-      if (last && (last.redirected || []).length) push("sweep-redirect-out-of-scope", last.at, { redirects: last.redirected });
-      if (x.silent) push("sweep-silent", x.runs[SILENT_RUNS - 1].at, { runs: SILENT_RUNS });
-    }
-    return { ok: true, conditions: out };
-  }
-  /** R30: the due sweeps, for the slate, each with its definition as quoted data. */
-  dueForSlate(nowMs, sees) {
-    return this.plan(nowMs).due.filter((x) => sees(x.bundle)).map((x) => ({ kind: "ratified-sweep", bundle: x.bundle, id: x.sweep.id, definition: x.sweep }));
-  }
-  /** R64: capture-requests R45's scope check: the sweep ratified and not held, and every locator in its scope. */
-  scopeCheck({ sweep = null, locators = [] } = {}) {
-    const x = this.#all().find((y) => y.name === sweep);
-    if (!x) return { ok: false, reason: "unknown", detail: `no sweep is named ${String(sweep).slice(0, 80)}` };
-    if (x.sweep.ratified !== true || !runnable(x.sweep)) return { ok: false, reason: "unratified" };
-    if (this.#held(x).held) return { ok: false, reason: "held", detail: "the sweep's backlog is at or over its limit" };
-    const out = (Array.isArray(locators) ? locators : []).filter((l) => !inScope(l, x.sweep.sources));
-    if (!Array.isArray(locators) || !locators.length || out.length)
-      return { ok: false, reason: "out-of-scope", detail: out.length ? `${String(out[0]).slice(0, 120)} is outside the sweep's sources` : "no locator was named" };
-    return { ok: true, scope: [...x.sweep.sources] };
-  }
-};
 
 // src/monitoring/index.mjs
 var MONITOR_TICK_MS = 36e5;
@@ -123878,9 +122763,9 @@ function markOverdue(text5, ords) {
 }
 function withSessionEntry(text5, checked, line) {
   const entry = "### Session " + checked + "\n\n" + line + "\n";
-  const at26 = text5.indexOf("## Session Log");
-  if (at26 < 0) return text5 + "\n## Session Log\n\n" + entry;
-  const nxt = text5.indexOf("\n## ", at26 + 1);
+  const at27 = text5.indexOf("## Session Log");
+  if (at27 < 0) return text5 + "\n## Session Log\n\n" + entry;
+  const nxt = text5.indexOf("\n## ", at27 + 1);
   const cut4 = nxt === -1 ? text5.length : nxt + 1;
   return text5.slice(0, cut4) + entry + "\n" + text5.slice(cut4);
 }
@@ -123931,9 +122816,7 @@ var Monitoring = class {
     intent = null,
     actionClocks = null,
     escalation = null,
-    publication = null,
-    projectStage = null,
-    captureRequests = null
+    publication = null
   } = {}) {
     this.sql = storage.sql;
     this.record = record;
@@ -123941,31 +122824,7 @@ var Monitoring = class {
     this.promotion = promotion;
     this.env = env && typeof env === "object" ? env : {};
     this.now = typeof now === "function" ? now : () => Date.now();
-    this.#deps = {
-      host,
-      fetch: fetch2,
-      governor,
-      provenance,
-      capture,
-      observationLog,
-      intent,
-      actionClocks,
-      escalation,
-      publication,
-      projectStage,
-      captureRequests
-    };
-    this.sweep = new Sweeps(this, {
-      open: (c, now2, ms2) => this.#openTickEpoch(c, now2, ms2),
-      close: (c, e) => this.#closeTickEpoch(c, e),
-      claim: (c, s, e) => this.#claimFire(c, s, e),
-      ranked: (l, i, r, n) => this.#ranked(l, i, r, n),
-      running: this.#tickRunning,
-      land: (q7, f17, at26, say) => this.#land(q7, f17, at26, say),
-      gate: (v) => viewerPredicate(v),
-      recheckMs: () => this.#archiveTickMs(),
-      register: () => this.registerSweepScope()
-    });
+    this.#deps = { host, fetch: fetch2, governor, provenance, capture, observationLog, intent, actionClocks, escalation, publication };
   }
   get governor() {
     return this.#deps.governor ||= governorOf(this.#deps.host, { env: this.env });
@@ -123990,9 +122849,6 @@ var Monitoring = class {
   }
   get publication() {
     return this.#deps.publication === void 0 ? null : this.#deps.publication ||= publicationOf(this.#deps.host);
-  }
-  get projectStage() {
-    return this.#deps.projectStage ||= projectStageOf(this.#deps.host);
   }
   #fetch(u, init) {
     return (this.#deps.fetch || globalThis.fetch)(u, init);
@@ -124097,9 +122953,9 @@ var Monitoring = class {
   }
   /** R25: the tick's outcome at the document address, recorded with capture's reachability (its R8), so a monitored
    *  source that stops answering reaches the fallback. A failed record does not fail the tick. */
-  async #recordOutcome(addressNorm, outcome, status, at26) {
+  async #recordOutcome(addressNorm, outcome, status, at27) {
     try {
-      const r = await this.capture.recordSourceOutcome({ addressNorm, outcome, status, at: at26 });
+      const r = await this.capture.recordSourceOutcome({ addressNorm, outcome, status, at: at27 });
       return r ?? null;
     } catch {
       return null;
@@ -124738,7 +123594,7 @@ var Monitoring = class {
      meaning is kept as UNDETERMINED with its word in the basis, never stored as a
      contract the plan would then have to second-guess. */
   #recordAddressType(addressNorm, locator, content, basis) {
-    const at26 = stampInstant("second", this.now());
+    const at27 = stampInstant("second", this.now());
     const c = content && typeof content === "object" ? content : null;
     const known = c && typeof c.contract === "string" && Object.prototype.hasOwnProperty.call(CONTRACT_FREQUENCY, c.contract);
     const why = known ? null : c && c.contract != null ? `the tick read the contract '${String(c.contract).slice(0, 40)}', which this plane gives no frequency` : String(basis || "the tick could not determine the document's content type").slice(0, 240);
@@ -124755,15 +123611,15 @@ var Monitoring = class {
       known && c.confidence != null ? String(c.confidence) : null,
       known ? c.contract : null,
       why,
-      at26
+      at27
     );
   }
   /* R18 (K1051): the address's run of checks that found the substance unchanged, kept on its R13 row. An unchanged
      check adds one (a row exists: the look that read the document wrote it); any other check returns the run to 0. */
-  #recordRun(addressNorm, unchanged, at26) {
+  #recordRun(addressNorm, unchanged, at27) {
     if (unchanged)
       this.sql.exec(`UPDATE monitor_address_type SET unchanged_run = unchanged_run + 1, run_since = COALESCE(run_since, ?)
-                      WHERE address_norm = ?`, at26, String(addressNorm));
+                      WHERE address_norm = ?`, at27, String(addressNorm));
     else
       this.sql.exec(
         `UPDATE monitor_address_type SET unchanged_run = 0, run_since = NULL WHERE address_norm = ?`,
@@ -124918,8 +123774,8 @@ var Monitoring = class {
         ...c.why ? { why: c.why } : {}
       };
     };
-    const settled = (c, at26, type) => {
-      const history = at26 ? settings.get(at26) || null : null;
+    const settled = (c, at27, type) => {
+      const history = at27 ? settings.get(at27) || null : null;
       const hist = history ? { frequency_settings: history } : {};
       const current = history ? history[history.length - 1] : null;
       if (current && current.frequency !== null)
@@ -124953,7 +123809,7 @@ var Monitoring = class {
     const rows2 = [];
     for (const { b, basis } of lone) {
       const type = b.source_locator ? typesRaw.get(b.source_locator) : null;
-      const at26 = !basis && b.source_locator ? normalizeAddress(b.source_locator) : null;
+      const at27 = !basis && b.source_locator ? normalizeAddress(b.source_locator) : null;
       const c = (b.monitor_frequency == null || b.monitor_frequency === "") && !b.source_locator ? {
         monitor_frequency: null,
         frequency_source: "undetermined",
@@ -124965,8 +123821,8 @@ var Monitoring = class {
         address: null,
         versions: [b.bundle_id],
         ...basis ? { address_basis: basis } : {},
-        ...settled(c, at26, type),
-        setting_address: at26,
+        ...settled(c, at27, type),
+        setting_address: at27,
         monitored_versions: [b.bundle_id]
       });
     }
@@ -124978,10 +123834,10 @@ var Monitoring = class {
     }
     for (const [addr, versions] of groups) {
       if (!currentAt.has(addr)) continue;
-      const at26 = currentAt.get(addr);
+      const at27 = currentAt.get(addr);
       const members = [...new Set(versions.filter((v) => home.get(v.bundle_id) === addr).map((v) => v.bundle_id))].map((id) => byId.get(id));
-      const current = byId.get(versions[at26].bundle_id);
-      const newer = [...new Set(versions.slice(at26 + 1).map((v) => v.bundle_id))].filter((id) => home.get(id) !== addr);
+      const current = byId.get(versions[at27].bundle_id);
+      const newer = [...new Set(versions.slice(at27 + 1).map((v) => v.bundle_id))].filter((id) => home.get(id) !== addr);
       const authored = members.filter((m) => m.monitor_frequency != null && m.monitor_frequency !== "");
       const words = new Set(authored.map((m) => m.monitor_frequency));
       const governs = current.monitor_frequency != null && current.monitor_frequency !== "" ? current.monitor_frequency : null;
@@ -125045,18 +123901,18 @@ var Monitoring = class {
         continue;
       }
       const last = r.monitor_last_checked ? Date.parse(r.monitor_last_checked) : NaN;
-      const at26 = Number.isFinite(last) ? last + iv : 0;
-      if (at26 <= now) due.push({ bundle: r.bundle_id, frequency: r.monitor_frequency, due_at: at26, interval_ms: iv, ...about(r) });
+      const at27 = Number.isFinite(last) ? last + iv : 0;
+      if (at27 <= now) due.push({ bundle: r.bundle_id, frequency: r.monitor_frequency, due_at: at27, interval_ms: iv, ...about(r) });
       else {
         scheduled.push({
           bundle: r.bundle_id,
           frequency: r.monitor_frequency,
-          next_at: at26,
+          next_at: at27,
           interval_ms: iv,
           last_checked: r.monitor_last_checked,
           ...about(r)
         });
-        if (next === null || at26 < next) next = at26;
+        if (next === null || at27 < next) next = at27;
       }
     }
     due.sort((a, b) => a.due_at - b.due_at || (a.bundle < b.bundle ? -1 : a.bundle > b.bundle ? 1 : 0));
@@ -125169,8 +124025,8 @@ var Monitoring = class {
         error: "the pause needs paused: true or false",
         detail: "monitorpause needs 'paused' in the shape true or false, and this request carried none the operation could use. Nothing was changed."
       };
-    const at26 = stampInstant("second", this.now());
-    const r = this.record.setSetting(MONITOR_PAUSE_SETTING, { paused, by, at: at26 }, by);
+    const at27 = stampInstant("second", this.now());
+    const r = this.record.setSetting(MONITOR_PAUSE_SETTING, { paused, by, at: at27 }, by);
     if (!r || r.ok !== true) return { ok: false, reason: r?.reason ?? "SETTING_UNWRITTEN", detail: r?.detail ?? null };
     return { ok: true, ...this.paused() };
   }
@@ -125238,10 +124094,10 @@ var Monitoring = class {
     const words = typeof reasonText === "string" ? reasonText.trim() : "";
     if (!(custom || typeof reason === "string" && Object.prototype.hasOwnProperty.call(ADDRESS_FREQUENCY_REASONS, reason)) || custom && (!words || words.length > FREQUENCY_REASON_MAX))
       return frequencyRefusal("FREQUENCY_NO_REASON", `the reason must be one of ${Object.keys(ADDRESS_FREQUENCY_REASONS).join(", ")}, or ${CUSTOM_REASON} with the member's own words of 1 to ${FREQUENCY_REASON_MAX} characters. Nothing was written.`);
-    const at26 = stampInstant("second", this.now());
+    const at27 = stampInstant("second", this.now());
     const seq = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM monitor_address_frequency WHERE address_norm = ?`, norm).n;
     this.sql.exec(`INSERT INTO monitor_address_frequency (address_norm, seq, address, frequency, reason, reason_text, author, at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, norm, seq, asked, frequency, reason, custom ? words : null, member, at26);
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, norm, seq, asked, frequency, reason, custom ? words : null, member, at27);
     const history = this.#rows(`SELECT * FROM monitor_address_frequency WHERE address_norm = ? ORDER BY seq`, norm).map(settingView);
     return {
       ok: true,
@@ -125289,12 +124145,17 @@ var Monitoring = class {
   }
   /** R19, R20 (N224): `list` in the rank's order. Each entry is offered as `item(entry)` (`{kind, id, waitingSince,
    *  cadenceMs?}`) carrying its place under a symbol the rank's copies keep; an entry the rank drops or cannot place
-   *  follows in the order read. Without a rank, or when it throws or answers no list, the order read stands. */
+   *  follows in the order read. Without a rank, or when it (or `item`) throws or answers no list, the order read stands.
+   *  It never throws (R65's `ranked` is this one). */
   #ranked(list2, item, rank6, now) {
-    if (typeof rank6 !== "function" || list2.length < 2) return list2;
+    if (typeof rank6 !== "function" || !Array.isArray(list2) || list2.length < 2) return list2;
     const PLACE = Symbol("place");
-    const items = list2.map((e, i) => ({ ...item(e), [PLACE]: i }));
-    let answer;
+    let items, answer;
+    try {
+      items = list2.map((e, i) => ({ ...item(e), [PLACE]: i }));
+    } catch {
+      return list2;
+    }
     try {
       answer = rank6(items, now);
     } catch {
@@ -125396,12 +124257,12 @@ var Monitoring = class {
    *  batch in the rank's order. */
   async cadenceTick(now, rank6 = null) {
     const pause = this.paused();
-    const at26 = stampInstant("second", Number.isFinite(now) ? now : this.now());
+    const at27 = stampInstant("second", Number.isFinite(now) ? now : this.now());
     if (pause.paused)
       return {
         configured: true,
         paused: pause,
-        at: at26,
+        at: at27,
         candidates: 0,
         ticked: [],
         skipped: [],
@@ -125475,7 +124336,7 @@ var Monitoring = class {
       return {
         configured: true,
         paused: pause,
-        at: at26,
+        at: at27,
         epoch,
         monitored: plan.monitored,
         addresses: plan.addresses,
@@ -125528,13 +124389,13 @@ var Monitoring = class {
         const locators = (Array.isArray(r.locators) ? r.locators : []).filter((l) => typeof l === "string" && isPublicHttpsLocator(l));
         if (!locators.length) continue;
         open++;
-        const at26 = last.get(`${f17.bundle_id}#${r.id}`) ?? null;
+        const at27 = last.get(`${f17.bundle_id}#${r.id}`) ?? null;
         const q7 = {
           bundle: f17.bundle_id,
           id: r.id,
           locators,
           cadence: r.cadence ?? null,
-          last_attempt: at26,
+          last_attempt: at27,
           target: r.target && typeof r.target.text === "string" ? r.target.text : null,
           ...tickBudget !== null ? { tick_budget: tickBudget } : {}
         };
@@ -125546,7 +124407,7 @@ var Monitoring = class {
           unscheduled.push({ ...q7, reason: "its cadence is none: the daemon does not run it" });
           continue;
         }
-        if (at26 === null) {
+        if (at27 === null) {
           due.push({ ...q7, due_at: 0 });
           continue;
         }
@@ -125555,7 +124416,7 @@ var Monitoring = class {
           if (r.cadence != null) unscheduled.push({ ...q7, reason: `the cadence '${String(r.cadence)}' gives no interval` });
           continue;
         }
-        const dueAt = Date.parse(at26) + iv;
+        const dueAt = Date.parse(at27) + iv;
         if (dueAt <= nowMs) due.push({ ...q7, due_at: dueAt });
         else if (next === null || dueAt < next) next = dueAt;
       }
@@ -125569,7 +124430,7 @@ var Monitoring = class {
    *  nothing. A governed refusal is our pacing: the request is left due, and its mirrors are not tried in its place.
    *  The attempt is recorded. Answers `{spent, entry}`. */
   async #gather(q7, budget, nowMs) {
-    const at26 = stampInstant("second", nowMs);
+    const at27 = stampInstant("second", nowMs);
     const tried = [];
     let spent = 0, filed = null, governed = false;
     for (const locator of q7.locators) {
@@ -125597,7 +124458,7 @@ var Monitoring = class {
           resultKind: "capture",
           resultRef: doc.capture.sha256,
           detail: filed.existed ? `gathered for ${q7.id}; the bytes served are a capture the record already holds` : `gathered for ${q7.id}; captured`
-        }, at26);
+        }, at27);
         break;
       }
       const reason = out && (out.reason || out.error) || `status ${status}`;
@@ -125605,14 +124466,14 @@ var Monitoring = class {
       if (out && out.reason === "HOST_COOLING_OFF") {
         governed = true;
         tried.push({ locator, outcome: "governed", status: null, reason });
-        this.#gatheringLook(q7, locator, monitorObservationFor({ outcome: "governed", reason: out.detail || reason }), at26);
+        this.#gatheringLook(q7, locator, monitorObservationFor({ outcome: "governed", reason: out.detail || reason }), at27);
         break;
       }
       tried.push({ locator, outcome: "failed", status: srcStatus, reason });
-      this.#gatheringLook(q7, locator, monitorObservationFor(srcStatus === 404 || srcStatus === 410 ? { outcome: "removed", httpStatus: srcStatus } : { outcome: "unreachable", reason: srcStatus != null ? `the source answered ${srcStatus}` : reason }), at26);
+      this.#gatheringLook(q7, locator, monitorObservationFor(srcStatus === 404 || srcStatus === 410 ? { outcome: "removed", httpStatus: srcStatus } : { outcome: "unreachable", reason: srcStatus != null ? `the source answered ${srcStatus}` : reason }), at27);
     }
     let landed = null;
-    if (filed && !filed.existed) landed = this.#land(q7, filed, at26);
+    if (filed && !filed.existed) landed = this.#land(q7, filed, at27);
     const outcome = filed ? filed.existed ? "held" : "captured" : governed ? "governed" : "failed";
     const cap = filed ? filed.doc.capture : null;
     try {
@@ -125627,7 +124488,7 @@ var Monitoring = class {
         q7.bundle,
         q7.id,
         seq,
-        at26,
+        at27,
         outcome,
         filed ? filed.locator : null,
         JSON.stringify(tried),
@@ -125650,7 +124511,7 @@ var Monitoring = class {
   }
   /** R28: one look of the request's attempt at a locator, through observation-log's one append: authority the request
    *  (`sweep`, OBSERVATION-LOG-DESIGN.md §4.1), level document, subject the locator's normalised address. */
-  #gatheringLook(q7, locator, row2, at26) {
+  #gatheringLook(q7, locator, row2, at27) {
     if (!row2) return;
     try {
       this.observationLog.observe({
@@ -125667,19 +124528,20 @@ var Monitoring = class {
         resultKind: row2.resultKind || null,
         resultRef: row2.resultRef || null,
         detail: row2.detail
-      }, at26);
+      }, at27);
     } catch {
     }
   }
   /** R28 (K1096; Intake Doctrine §2, §4): new bytes a request filed land as a plane-composed Information bundle,
    *  promoted through `promotion.promote` at `collected` (never verified, a member's act), its origin the named request,
-   *  the request's id and its bundle named as the authorisation, in the request's bundle's project. Answers `{ok,
-   *  bundle_id}` or the promotion's refusal relayed. */
-  #land(q7, filed, at26, say = null) {
+   *  the request's id and its bundle named as the authorisation, in the request's bundle's project. `say`, when given
+   *  (R65's `land`, for the link sweep), supplies the bundle's `title`, `summary`, `notes` and `trigger`. Answers `{ok:
+   *  true, bundle_id, state}`, or `{ok: false, reason, detail}` with the promotion's refusal relayed; never throws. */
+  #land(q7, filed, at27, say = null) {
     try {
       const doc = filed.doc, cap = doc.capture;
       if (typeof doc.file !== "string" || !Number.isSafeInteger(cap.bytes))
-        return { ok: false, detail: "capture's answer named no primary file and size to land" };
+        return { ok: false, reason: null, detail: "capture's answer named no primary file and size to land" };
       const enc5 = (t) => {
         const b = new TextEncoder().encode(t);
         return { text: t, bytes: b.length, sha256: createSha256().update(b).hex() };
@@ -125687,9 +124549,9 @@ var Monitoring = class {
       const home = this.#one(`SELECT project FROM bundles WHERE bundle_id = ?`, q7.bundle);
       const project = home && typeof home.project === "string" && home.project ? home.project : null;
       return this.record.transact(() => {
-        const id = `${this.record.allocId("INFO", at26.slice(0, 4)).id}-${GATHERING_BUNDLE_SLUG}`;
+        const id = `${this.record.allocId("INFO", at27.slice(0, 4)).id}-${GATHERING_BUNDLE_SLUG}`;
         const title = (say ? say.title : `Gathered for ${q7.id}: ${q7.target || filed.locator}`).replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
-        const retrieved = typeof doc.retrieved === "string" && doc.retrieved ? doc.retrieved : at26;
+        const retrieved = typeof doc.retrieved === "string" && doc.retrieved ? doc.retrieved : at27;
         const md = [
           "---",
           `id: ${id}`,
@@ -125698,8 +124560,8 @@ var Monitoring = class {
           `title: ${JSON.stringify(title)}`,
           `current_state: ${GATHERING_LANDS_AT}`,
           "prior_state: null",
-          `created: "${at26}"`,
-          `last_updated: "${at26}"`,
+          `created: "${at27}"`,
+          `last_updated: "${at27}"`,
           "produced_by:",
           "  mode: agent",
           "  capability_tier: session",
@@ -125728,11 +124590,11 @@ var Monitoring = class {
           "",
           "## Provenance Notes",
           "",
-          say ? say.notes : `Gathered for the named request ${q7.id}, carried by ${q7.bundle}'s data/gathering.json, which authorised the fetch; locator ${q7.locators.indexOf(filed.locator) + 1} of ${q7.locators.length} in the request's order. Collected ${at26}. Filed at ${GATHERING_LANDS_AT} and never higher: verifying it is a named member's decision.`,
+          say ? say.notes : `Gathered for the named request ${q7.id}, carried by ${q7.bundle}'s data/gathering.json, which authorised the fetch; locator ${q7.locators.indexOf(filed.locator) + 1} of ${q7.locators.length} in the request's order. Collected ${at27}. Filed at ${GATHERING_LANDS_AT} and never higher: verifying it is a named member's decision.`,
           "",
           "## Session Log",
           "",
-          `### Session ${at26} | Collected | ${GATHERING_AUTHOR}`,
+          `### Session ${at27} | Collected | ${GATHERING_AUTHOR}`,
           `Trigger: ${say ? say.trigger : `named request ${q7.id} (${q7.bundle})`}`,
           "Changes: created from the daemon's capture for the named request.",
           "",
@@ -125754,7 +124616,7 @@ var Monitoring = class {
         const p = this.promotion.promote({
           bundleId: id,
           base: null,
-          snapKey: `${at26.replace(/[-:]/g, "")}_${[...crypto.getRandomValues(new Uint8Array(4))].map((x) => x.toString(16).padStart(2, "0")).join("")}`,
+          snapKey: `${at27.replace(/[-:]/g, "")}_${[...crypto.getRandomValues(new Uint8Array(4))].map((x) => x.toString(16).padStart(2, "0")).join("")}`,
           author: GATHERING_AUTHOR,
           files,
           meta: {
@@ -125762,8 +124624,8 @@ var Monitoring = class {
             title,
             current_state: GATHERING_LANDS_AT,
             prior_state: null,
-            created: at26,
-            last_updated: at26,
+            created: at27,
+            last_updated: at27,
             criticality: "supporting"
           },
           register: [{ sha256: cap.sha256, path: doc.file, encoding: "binary", bytes: cap.bytes }]
@@ -125951,16 +124813,17 @@ var Monitoring = class {
     const gj = pkg.replay ? null : files.find((f17) => f17.path === "data/gathering.json");
     if (!gj || typeof gj.text !== "string") return null;
     const gf = [];
-    checkGatheringGrammar({ files: /* @__PURE__ */ new Map([["data/gathering.json", gj.text]]) }, gf);
+    checkGatheringGrammar({ files: /* @__PURE__ */ new Map([["data/gathering.json", gj.text]]) }, gf, this.#sweepShare);
     const errs = gf.filter((x) => x.severity === "error");
     const term = errs.filter((x) => x.code === "SWEEP_TERM_REFUSED");
-    if (term.length)
+    const row2 = term.map((x) => x.refusal).find((r) => r && typeof r === "object" && r.code === "SWEEP_TERM_REFUSED" && typeof r.check === "string" && r.check && typeof r.translation === "string" && r.translation);
+    if (row2)
       return {
         ok: false,
-        reason: "SWEEP_TERM_REFUSED",
-        code: "SWEEP_TERM_REFUSED",
-        check: SWEEP_CHECKS.SWEEP_TERM_REFUSED.check,
-        translation: SWEEP_CHECKS.SWEEP_TERM_REFUSED.translation,
+        reason: row2.code,
+        code: row2.code,
+        check: row2.check,
+        translation: row2.translation,
         detail: term.map((x) => x.message).join("; "),
         findings: errs.map((x) => ({ check: x.check, detail: x.message }))
       };
@@ -125973,50 +124836,109 @@ var Monitoring = class {
         translation: GATHERING_CHECKS.GATHERING_REFUSED.translation,
         findings: errs.map((x) => ({ check: x.check, detail: x.message }))
       };
-    return this.sweep.sweepFence(c, gj.text);
+    const share = this.#sweepShare;
+    if (!share) return null;
+    let fenced, why = null;
+    try {
+      fenced = share.fence(c, gj.text);
+    } catch (e) {
+      why = `failed (${String(e && e.message || e).slice(0, 120)})`;
+    }
+    if (why === null) {
+      if (fenced === null || fenced === void 0) return null;
+      if (typeof fenced === "object" && fenced.ok === false) return fenced;
+      why = "answered neither null nor a refusal";
+    }
+    const finding3 = { check: "C-18.5", detail: `gathering.json could not be fenced: the sweep fence ${share.module} registered ${why}, so the file is refused, never admitted` };
+    return {
+      ok: false,
+      reason: "GATHERING_REFUSED",
+      code: "GATHERING_REFUSED",
+      check: GATHERING_CHECKS.GATHERING_REFUSED.check,
+      translation: GATHERING_CHECKS.GATHERING_REFUSED.translation,
+      findings: [finding3]
+    };
   }
   /** R42: C-18.5 in the audit over one bundle image (record-core R59), as `checkBundle` ran it. */
   audit(image) {
     const files = image && image.files instanceof Map ? image.files : null;
     if (!files) return [];
     const findings = [];
-    checkGatheringGrammar({ files }, findings);
+    checkGatheringGrammar({ files }, findings, this.#sweepShare);
     return findings;
   }
   /* ================================================================== *
-   * The link sweep (R29, R53–R64): `sweep.mjs`
+   * The sweep's seam (R65, R66; N506, K1159): the link sweep is `link-sweep`'s
    * ================================================================== */
-  /** R56: for `scheduler`'s `gathering-sweep` consumer. */
-  sweepDue(now) {
-    return this.sweep.sweepDue(now);
+  /** R65: the services `link-sweep` runs its sweeps under, each the one this module's own ticks use, so a sweep and a
+   *  tick share one pause, one idempotence key and one landing. The same frozen object on every call; it writes nothing
+   *  and never throws.
+   *    paused()                              R30's held pause, `{paused: true, by, at}` or `{paused: false}`.
+   *    openEpoch(consumer, now, staleAfterMs) R21's open epoch for `consumer`: the one held while `now` is less than
+   *                                          `staleAfterMs` from it, else a fresh one (`now` truncated to the
+   *                                          millisecond), held, dropping every claim of `consumer` under another.
+   *    claim(consumer, subject, epoch)       true, recording the claim, when not yet claimed under `epoch`; else false.
+   *    closeEpoch(consumer, epoch)           removes that epoch and its claims (only when nothing failed or was skipped).
+   *    running                               R22's guard: the Set of consumers whose tick runs on this instance.
+   *    ranked(list, item, rank, now)         `list` in the rank's order by R19's rule; never throws.
+   *    land(request, filed, at, say?)        R28's landing: `request` `{id, bundle, locators, target}`, `filed` `{locator,
+   *                                          doc}` (capture's `document`); `say` `{title, summary, notes, trigger}`.
+   *    gate(viewer)                          membership's viewer predicate, the sight R32's reads use.
+   *    recheckMs()                           the archive tick's interval (R20). */
+  sweepHost() {
+    return this.#host ||= Object.freeze({
+      paused: () => this.paused(),
+      openEpoch: (consumer, now, staleAfterMs) => this.#openTickEpoch(consumer, now, staleAfterMs),
+      claim: (consumer, subject, epoch) => this.#claimFire(consumer, subject, epoch),
+      closeEpoch: (consumer, epoch) => {
+        this.#closeTickEpoch(consumer, epoch);
+      },
+      running: this.#tickRunning,
+      ranked: (list2, item, rank6, now) => this.#ranked(list2, item, rank6, now),
+      land: (request, filed, at27, say = null) => this.#land(request, filed, at27, say),
+      gate: (viewer) => viewerPredicate(viewer),
+      recheckMs: () => this.#archiveTickMs()
+    });
   }
-  sweepWake(now) {
-    return this.sweep.sweepWake(now);
+  #host = null;
+  /** R66: takes, once, at composition, a later module's share of the gathering grammar and of the slate: `grammar(entry,
+   *  ids)` answers the C-18.5 findings of one `sweeps[]` entry that is an object, `[{check: "C-18.5", severity, field,
+   *  message}]`, the message beginning with its field (`field` null for none); a refused term's also carries `code:
+   *  "SWEEP_TERM_REFUSED"` and `refusal: {code, check, translation}`, which R27 answers as given (`ids` collects the
+   *  file's ids, for uniqueness); `fence(c, nextText)` is asked last at the write (`c` the promotion step's argument, `nextText` the file
+   *  promoted) and answers null to admit or a refusal (`ok: false`) the promotion answers; `dueForSlate(now, sees)`
+   *  answers the due sweeps R30's slate lists, `[{kind: "ratified-sweep", bundle, id, definition}]` (`sees(bundleId)`
+   *  the viewer's sight). Answers `{ok: true, module}`; a second registration, or one that is not three functions, is
+   *  refused `{ok: false, reason}` in words, keeping the first. */
+  registerSweep(module, share) {
+    if (this.#sweepShare)
+      return { ok: false, reason: `a sweep share is already registered, by ${this.#sweepShare.module}; the first registration stands` };
+    const name2 = typeof module === "string" ? module.trim() : "";
+    const { grammar, fence: fence4, dueForSlate } = share && typeof share === "object" ? share : {};
+    if (!name2 || typeof grammar !== "function" || typeof fence4 !== "function" || typeof dueForSlate !== "function")
+      return { ok: false, reason: "a sweep share is a module's name and three functions, grammar, fence and dueForSlate; nothing was registered" };
+    this.#sweepShare = Object.freeze({
+      module: name2,
+      grammar: grammar.bind(share),
+      fence: fence4.bind(share),
+      dueForSlate: dueForSlate.bind(share)
+    });
+    return { ok: true, module: name2 };
   }
-  sweepTick(now, rank6 = null) {
-    return this.sweep.sweepTick(now, rank6);
-  }
-  /** R61, R63: the reads. */
-  sweeps(args) {
-    return this.sweep.sweeps(args);
-  }
-  sweepConditions(args) {
-    return this.sweep.sweepConditions(args);
-  }
-  /** R64 (K1122): register, once, with capture-requests (its R45) the scope check its drain asks. A registration that
-   *  is refused or throws is asked again on the next sweep service, never held as done. */
-  registerSweepScope() {
-    if (this.#scopeRegistered) return true;
+  #sweepShare = null;
+  /** R30, R66: the registered share's due sweeps for the slate, or none, stated: nothing registered lists none; a
+   *  `dueForSlate` that throws, or answers no list, lists none and says so (`sweeps_unread`). */
+  #dueSweeps(at27, sees) {
+    const share = this.#sweepShare;
+    if (!share) return { items: [] };
     try {
-      const cr = this.#deps.captureRequests || captureRequestsOf(this.#deps.host);
-      const r = cr && typeof cr.registerSweepScope === "function" ? cr.registerSweepScope("monitoring", (a) => this.sweep.scopeCheck(a || {})) : null;
-      this.#scopeRegistered = !!(r && (r.ok === true || r.reason === "LISTENER_DECLARED"));
-    } catch {
-      this.#scopeRegistered = false;
+      const items = share.dueForSlate(at27, sees);
+      if (Array.isArray(items)) return { items: items.filter((x) => x && typeof x === "object" && !Array.isArray(x)) };
+      return { items: [], unread: `the due sweeps ${share.module} registered could not be read: it answered no list` };
+    } catch (e) {
+      return { items: [], unread: `the due sweeps ${share.module} registered could not be read: ${String(e && e.message || e).slice(0, 120)}` };
     }
-    return this.#scopeRegistered;
   }
-  #scopeRegistered = false;
   /* ================================================================== *
    * What reaches members (R31, R32)
    * ================================================================== */
@@ -126027,9 +124949,9 @@ var Monitoring = class {
    *  the viewer sees it, as `op=versionnotice` withholds a version: a withheld one is ABSENT, never a placeholder, and
    *  a list or a disagreement left with nothing the viewer sees is not stated at all (B4, K268). */
   monitoring({ viewer = null, now = null, limit = null } = {}) {
-    const at26 = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : this.now();
+    const at27 = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : this.now();
     const cap = clampLimit3(limit, MONITORING_READ_MAX, MONITORING_READ_MAX);
-    const s = this.schedule(at26);
+    const s = this.schedule(at27);
     const sight = /* @__PURE__ */ new Map();
     const sees = (id) => {
       if (!sight.has(id)) sight.set(id, this.membership.inSight(id, viewer));
@@ -126043,7 +124965,7 @@ var Monitoring = class {
     const items = all.slice(0, cap);
     return {
       ok: true,
-      as_of: stampInstant("second", at26),
+      as_of: stampInstant("second", at27),
       configured: this.configured(),
       paused: this.paused(),
       items,
@@ -126057,12 +124979,12 @@ var Monitoring = class {
     };
   }
   /** R30: the due slate, the manual path (Intake Doctrine §4): every monitored address now due (R16), every open named
-   *  request and every ratified sweep in a `data/gathering.json` the viewer may see, exported as a prompt a member runs
-   *  by hand. The store's fields are QUOTED DATA (each item one JSON line between fixed markers) inside fixed
-   *  instruction framing, so no field can be read as an instruction. Every open request is listed, and every sweep
-   *  R56 finds due with its definition (R61). At most MONITORING_READ_MAX items (`truncated`). */
+   *  request in a `data/gathering.json` the viewer may see, and every due sweep R66's registration answers, exported as a
+   *  prompt a member runs by hand. The store's fields are QUOTED DATA (each item one JSON line between fixed markers)
+   *  inside fixed instruction framing, so no field can be read as an instruction. A registered `dueForSlate` that cannot
+   *  be read lists no sweep, and the answer says so (`sweeps_unread`). At most MONITORING_READ_MAX items (`truncated`). */
   slate({ viewer = null, now = null, limit = null } = {}) {
-    const at26 = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : this.now();
+    const at27 = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : this.now();
     const cap = clampLimit3(limit, MONITORING_READ_MAX, MONITORING_READ_MAX);
     const sight = /* @__PURE__ */ new Map();
     const sees = (id) => {
@@ -126070,7 +124992,7 @@ var Monitoring = class {
       return sight.get(id);
     };
     const items = [];
-    for (const d of this.schedule(at26).due) {
+    for (const d of this.schedule(at27).due) {
       if (!sees(d.bundle)) continue;
       items.push({
         kind: "monitored-address",
@@ -126109,7 +125031,8 @@ var Monitoring = class {
             cadence: r.cadence ?? null
           });
     }
-    items.push(...this.sweep.dueForSlate(at26, sees));
+    const due = this.#dueSweeps(at27, sees);
+    items.push(...due.items);
     const shown2 = items.slice(0, cap);
     const prompt = [
       SLATE_FRAMING_OPEN,
@@ -126120,7 +125043,7 @@ var Monitoring = class {
     ].join("\n");
     return {
       ok: true,
-      as_of: stampInstant("second", at26),
+      as_of: stampInstant("second", at27),
       paused: this.paused(),
       items: shown2,
       counts: {
@@ -126130,6 +125053,7 @@ var Monitoring = class {
       },
       limit: cap,
       truncated: unread || items.length > cap,
+      ...due.unread ? { sweeps_unread: due.unread } : {},
       prompt
     };
   }
@@ -126362,7 +125286,7 @@ var Monitoring = class {
   async deadlineRecheck(now = null) {
     const nowMs = Number.isFinite(Number(now)) && now !== null ? Number(now) : this.now();
     const today = new Date(nowMs).toISOString().slice(0, 10);
-    const at26 = stampInstant("second", nowMs);
+    const at27 = stampInstant("second", nowMs);
     let items = [], truncated3 = false;
     try {
       const p = this.actionClocks.pendingClocks({ before: today, limit: DEADLINE_RECHECK_MAX, viewer: MONITOR_VIEWER });
@@ -126381,14 +125305,14 @@ var Monitoring = class {
     }
     const marked = [], failed2 = [];
     for (const [action, entries] of byAction) {
-      const r = await this.#markOverdue(action, entries, at26);
+      const r = await this.#markOverdue(action, entries, at27);
       (r.ok ? marked : failed2).push(r.ok ? { action, ords: r.ords, dates: r.dates, revision: r.revision } : { action, reason: r.reason, ...r.detail ? { detail: r.detail } : {} });
       if (r.ok) this.#markFailed.delete(action);
       else this.#markFailed.set(action, Math.floor(nowMs / DAY_MS3) * DAY_MS3 + DAY_MS3);
     }
     const escalations = marked.length ? this.escalationsDue(nowMs) : null;
-    if (escalations) this.#escalated = { at: at26, action: marked.map((x) => x.action).join(", "), answer: escalations };
-    return { ok: true, at: at26, marked, failed: failed2, truncated: truncated3, escalations };
+    if (escalations) this.#escalated = { at: at27, action: marked.map((x) => x.action).join(", "), answer: escalations };
+    return { ok: true, at: at27, marked, failed: failed2, truncated: truncated3, escalations };
   }
   /** R50: the start of the UTC day after the earliest date among the `pending` clock entries of the actions this module
    *  sees (action-clocks R1's `pendingClocks`, read as its machine viewer, every page by its cursor), or null when none is
@@ -126416,10 +125340,10 @@ var Monitoring = class {
           if (!it || typeof it.date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(it.date)) continue;
           const day = Date.parse(`${it.date}T00:00:00Z`);
           if (!Number.isFinite(day)) continue;
-          let at26 = day + DAY_MS3;
+          let at27 = day + DAY_MS3;
           const held = this.#markFailed.get(it.action);
-          if (held !== void 0 && nowMs < held && at26 < held) at26 = held;
-          if (wake === null || at26 < wake) wake = at26;
+          if (held !== void 0 && nowMs < held && at27 < held) at27 = held;
+          if (wake === null || at27 < wake) wake = at27;
         }
         if (!p.cursor) break;
         after = p.cursor;
@@ -126432,12 +125356,12 @@ var Monitoring = class {
   /** R50: the instant `deadlineRecheckWake` answers when it is at or before `now`, else null. */
   deadlineRecheckDue(now = null) {
     const nowMs = Number.isFinite(Number(now)) && now !== null ? Number(now) : this.now();
-    const at26 = this.deadlineRecheckWake(nowMs);
-    return at26 !== null && at26 <= nowMs ? at26 : null;
+    const at27 = this.deadlineRecheckWake(nowMs);
+    return at27 !== null && at27 <= nowMs ? at27 : null;
   }
   /* R50 (N429): each action whose last R34 mark failed, with the start of the UTC day after the failure. */
   #markFailed = /* @__PURE__ */ new Map();
-  async #markOverdue(action, entries, at26) {
+  async #markOverdue(action, entries, at27) {
     const img = this.record.readImage(action);
     const live = img && typeof img["bundle.md"] === "string" ? img["bundle.md"] : null;
     if (!live) return { ok: false, reason: "ABSENT" };
@@ -126452,9 +125376,9 @@ var Monitoring = class {
     if (!ords.length) return { ok: false, reason: "NOTHING_PENDING", detail: "no entry named is still pending in the document" };
     let text5 = markOverdue(live, ords);
     if (text5 === null) return { ok: false, reason: "UNSPLICEABLE_CLOCK", detail: "a pending entry's status line could not be found" };
-    text5 = text5.split("\n").map((l, i, a) => /^last_updated:/.test(l) && a.slice(0, i).filter((x) => x === "---").length === 1 ? "last_updated: " + at26 : l).join("\n");
+    text5 = text5.split("\n").map((l, i, a) => /^last_updated:/.test(l) && a.slice(0, i).filter((x) => x === "---").length === 1 ? "last_updated: " + at27 : l).join("\n");
     const dates = ords.map((o) => clock[o].date);
-    text5 = withSessionEntry(text5, at26, `Deadline recheck: ${ords.length === 1 ? "the clock entry" : "the clock entries"} dated ${dates.join(", ")} passed while pending and ${ords.length === 1 ? "is" : "are"} marked overdue (a mechanical mark; nothing else moved)`);
+    text5 = withSessionEntry(text5, at27, `Deadline recheck: ${ords.length === 1 ? "the clock entry" : "the clock entries"} dated ${dates.join(", ")} passed while pending and ${ords.length === 1 ? "is" : "are"} marked overdue (a mechanical mark; nothing else moved)`);
     const carried = [];
     for (const [path, v] of Object.entries(img)) {
       if (path === "bundle.md" || path.startsWith("_history/")) continue;
@@ -126462,7 +125386,7 @@ var Monitoring = class {
         carried.push({ path, text: v, bytes: new TextEncoder().encode(v).length, sha256: await sha256Hex11(v) });
       else carried.push({ path, blobSha: v.blobSha, sha256: v.sha256, bytes: v.bytes });
     }
-    const stamp2 = at26.replace(/[-:]/g, "") + "_" + [...crypto.getRandomValues(new Uint8Array(4))].map((x) => x.toString(16).padStart(2, "0")).join("");
+    const stamp2 = at27.replace(/[-:]/g, "") + "_" + [...crypto.getRandomValues(new Uint8Array(4))].map((x) => x.toString(16).padStart(2, "0")).join("");
     const r = await this.promotion.promote({
       bundleId: action,
       base: await sha256Hex11(live),
@@ -126477,7 +125401,7 @@ var Monitoring = class {
         current_state: fm.current_state,
         prior_state: fm.prior_state ?? null,
         created: fm.created,
-        last_updated: at26
+        last_updated: at27
       },
       files: [
         { path: "bundle.md", text: text5, bytes: new TextEncoder().encode(text5).length, sha256: await sha256Hex11(text5) },
@@ -126538,7 +125462,6 @@ function monitoringOf(host, deps) {
     promotion.registerStep("monitoring", { check: (c) => m.gatheringCheck(c) });
     record.registerAuditCheck("monitoring", (image) => m.audit(image));
     promotion.onCommitted("monitoring", (n) => m.actionCommitted(n));
-    if (d.captureRequests) m.registerSweepScope();
     const intent = d.intent === null ? null : m.intent;
     if (intent && typeof intent.registerSource === "function")
       intent.registerSource("monitoring", ({ project, viewer } = {}) => m.proposals({ project, viewer }));
@@ -126562,9 +125485,7 @@ function monitoringOps(m, url, body) {
     monitorpause: () => m.pause({ paused: typeof b.paused === "boolean" ? b.paused : null, by: q7("actor") || null }),
     monitorslate: () => m.slate({ viewer: q7("viewer"), now: q7("now"), limit: q7("limit") }),
     /* R52: the body's fields, then the control plane's `author` and `viewer` stamps, so a body never supplies them. */
-    addressfrequencyset: () => m.addressFrequencySet({ ...b, author: q7("author"), viewer: q7("viewer") }),
-    /* R61: the sweeps the viewer may see, read through the control plane's viewer stamp. */
-    sweeps: () => m.sweeps({ viewer: q7("viewer"), now: q7("now") })
+    addressfrequencyset: () => m.addressFrequencySet({ ...b, author: q7("author"), viewer: q7("viewer") })
   };
 }
 async function monitorOp(req, store, {
@@ -126608,6 +125529,1249 @@ async function monitorOp(req, store, {
   if (!r || typeof r.status !== "number" || !r.body || typeof r.body !== "object") return storeSilent2("monitor");
   if (r.body.ok === true) return json6({ ok: true, ...r.body, store: storeName, tokenClass: cls }, r.status);
   return json6({ ok: false, ...r.body, store: storeName, tokenClass: cls }, r.status);
+}
+
+// src/link-sweep/sweep-match.mjs
+function inScope(address, sources) {
+  if (typeof address !== "string" || !Array.isArray(sources)) return false;
+  let a;
+  try {
+    a = normalizeAddress(address);
+  } catch {
+    return false;
+  }
+  return sources.some((p) => {
+    if (typeof p !== "string" || !p) return false;
+    let n;
+    try {
+      n = normalizeAddress(p);
+    } catch {
+      return false;
+    }
+    return a === n || a.startsWith(n) && (n.endsWith("/") || a[n.length] === "/");
+  });
+}
+var TERM_MAX = 200;
+var MATCH_TEXT_MAX = 2048;
+var TERM_PROGRAM_MAX = 4e3;
+var TERM_REPEAT_MAX = 100;
+var fold3 = (c) => {
+  const l = c.toLowerCase();
+  return l.length === 1 ? l : c;
+};
+var unfold = (c) => {
+  const u = c.toUpperCase();
+  return u.length === 1 ? u : c;
+};
+var isWord = (c) => c !== void 0 && /^[A-Za-z0-9_]$/.test(c);
+var CLASS = { d: (c) => c >= "0" && c <= "9", w: isWord, s: (c) => /^\s$/u.test(c) };
+var Refused = class extends Error {
+  constructor(construct, detail) {
+    super(detail);
+    this.construct = construct;
+  }
+};
+function parse5(src) {
+  const cs = Array.from(src);
+  let i = 0;
+  const peek = () => cs[i], eat = () => cs[i++];
+  const escape = (inClass) => {
+    const c = eat();
+    if (c === void 0) throw new Refused("a trailing backslash", "the expression ends with a backslash");
+    if (/[1-9]/.test(c) || c === "k") throw new Refused("a backreference", `\\${c} refers back to a group, and a backreference cannot be matched in linear time`);
+    const low = c.toLowerCase();
+    if (CLASS[low]) {
+      const f17 = CLASS[low];
+      return c === low ? f17 : (x) => !f17(x);
+    }
+    if (!inClass && (c === "b" || c === "B")) return { assert: c };
+    const ctl = { n: "\n", r: "\r", t: "	", f: "\f", v: "\v", 0: "\0" }[c];
+    if (ctl !== void 0) return ctl;
+    if (c === "x" || c === "u") {
+      const n = c === "x" ? 2 : 4, h = cs.slice(i, i + n).join("");
+      if (!new RegExp(`^[0-9a-fA-F]{${n}}$`).test(h)) throw new Refused(`\\${c} without ${n} hex digits`, `\\${c} needs ${n} hex digits`);
+      i += n;
+      return String.fromCharCode(parseInt(h, 16));
+    }
+    if (/[A-Za-z]/.test(c)) throw new Refused(`the escape \\${c}`, `\\${c} is not an escape a term reads`);
+    return c;
+  };
+  const klass = () => {
+    const neg = peek() === "^" && !!eat();
+    const items = [];
+    let first = true;
+    for (; ; ) {
+      let c = eat();
+      if (c === void 0) throw new Refused("an unclosed class", "a [ has no closing ]");
+      if (c === "]" && !first) break;
+      first = false;
+      let lo = c === "\\" ? escape(true) : c;
+      if (typeof lo === "string" && peek() === "-" && cs[i + 1] !== void 0 && cs[i + 1] !== "]") {
+        eat();
+        c = eat();
+        const hi = c === "\\" ? escape(true) : c;
+        if (typeof hi !== "string" || hi < lo) throw new Refused("a reversed or open range", "a range in a class runs backwards or ends in a class");
+        items.push([lo, hi]);
+        continue;
+      }
+      items.push(lo);
+    }
+    const hit = (c) => items.some((x) => typeof x === "function" ? x(c) : Array.isArray(x) ? c >= x[0] && c <= x[1] : c === x);
+    return { t: "char", test: (c) => (hit(c) || hit(unfold(c)) || hit(fold3(c))) !== neg };
+  };
+  const atom = () => {
+    const c = eat();
+    if (c === "(") {
+      if (peek() === "?") {
+        eat();
+        const k = eat();
+        if (k === "=" || k === "!") throw new Refused("a lookahead", `(?${k} looks ahead, which a term may not`);
+        if (k === "<" && (peek() === "=" || peek() === "!")) throw new Refused("a lookbehind", `(?<${peek()} looks behind, which a term may not`);
+        if (k === "<") {
+          while (peek() !== void 0 && peek() !== ">") eat();
+          if (eat() !== ">") throw new Refused("an unclosed group name", "a named group's name has no closing >");
+        } else if (k !== ":") throw new Refused(`the group (?${k ?? ""}`, `(?${k ?? ""} is not a group a term reads`);
+      }
+      const x = alt();
+      if (eat() !== ")") throw new Refused("an unclosed group", "a ( has no closing )");
+      return x;
+    }
+    if (c === "[") return klass();
+    if (c === ".") return { t: "char", test: (x) => x !== "\n" && x !== "\r" };
+    if (c === "^" || c === "$") return { t: "assert", k: c };
+    if (c === "\\") {
+      const e = escape(false);
+      if (e && e.assert) return { t: "assert", k: e.assert };
+      return typeof e === "function" ? { t: "char", test: e } : lit(e);
+    }
+    if ("*+?{".includes(c)) throw new Refused("a quantifier with nothing to repeat", `${c} repeats nothing`);
+    if (c === ")") throw new Refused("an unopened group", "a ) closes no group");
+    return lit(c);
+  };
+  const lit = (ch) => {
+    const f17 = fold3(ch);
+    return { t: "char", test: (x) => fold3(x) === f17 };
+  };
+  const quant = (x) => {
+    let min, max;
+    const c = peek();
+    if (c === "*") {
+      min = 0;
+      max = Infinity;
+    } else if (c === "+") {
+      min = 1;
+      max = Infinity;
+    } else if (c === "?") {
+      min = 0;
+      max = 1;
+    } else if (c === "{") {
+      const m = /^\{(\d+)(,(\d*))?\}/.exec(cs.slice(i, i + 12).join(""));
+      if (!m) return x;
+      min = Number(m[1]);
+      max = m[2] ? m[3] === "" ? Infinity : Number(m[3]) : min;
+      if (min > TERM_REPEAT_MAX || max !== Infinity && max > TERM_REPEAT_MAX || max < min)
+        throw new Refused("a count past the bound", `a count is at most ${TERM_REPEAT_MAX} and never runs backwards`);
+      i += m[0].length - 1;
+    } else return x;
+    eat();
+    if (peek() === "?") eat();
+    if (x.t === "assert") throw new Refused("a repeated assertion", "an anchor or word boundary cannot be repeated");
+    return quant({ t: "rep", x, min, max });
+  };
+  const seq = () => {
+    const xs = [];
+    while (peek() !== void 0 && peek() !== "|" && peek() !== ")") xs.push(quant(atom()));
+    return { t: "seq", xs };
+  };
+  const alt = () => {
+    const xs = [seq()];
+    while (peek() === "|") {
+      eat();
+      xs.push(seq());
+    }
+    return xs.length === 1 ? xs[0] : { t: "alt", xs };
+  };
+  const tree = alt();
+  if (i < cs.length) throw new Refused("an unopened group", "a ) closes no group");
+  return tree;
+}
+function compile5(tree) {
+  const prog = [];
+  const add = (s) => {
+    if (prog.length >= TERM_PROGRAM_MAX) throw new Refused("an expression past the bound", `the term compiles to more than ${TERM_PROGRAM_MAX} states`);
+    prog.push(s);
+    return prog.length - 1;
+  };
+  const patch = (holes2, to) => {
+    for (const [s, k] of holes2) prog[s][k] = to;
+  };
+  const emit = (n) => {
+    if (n.t === "char") {
+      const s = add({ op: "char", test: n.test, next: -1 });
+      return [s, [[s, "next"]]];
+    }
+    if (n.t === "assert") {
+      const s = add({ op: "assert", k: n.k, next: -1 });
+      return [s, [[s, "next"]]];
+    }
+    if (n.t === "seq") {
+      if (!n.xs.length) {
+        const s = add({ op: "split", a: -1, b: -1 });
+        return [s, [[s, "a"], [s, "b"]]];
+      }
+      let [entry2, holes3] = emit(n.xs[0]);
+      for (const x of n.xs.slice(1)) {
+        const [e, h] = emit(x);
+        patch(holes3, e);
+        holes3 = h;
+      }
+      return [entry2, holes3];
+    }
+    if (n.t === "alt") {
+      let [entry2, holes3] = emit(n.xs[0]);
+      for (const x of n.xs.slice(1)) {
+        const [e, h] = emit(x);
+        entry2 = add({ op: "split", a: entry2, b: e });
+        holes3 = [...holes3, ...h];
+      }
+      return [entry2, holes3];
+    }
+    const parts = [];
+    for (let k = 0; k < n.min; k++) parts.push(emit(n.x));
+    if (n.max === Infinity) {
+      const [e, h] = emit(n.x);
+      const s = add({ op: "split", a: e, b: -1 });
+      patch(h, s);
+      parts.push([s, [[s, "b"]]]);
+    } else for (let k = n.min; k < n.max; k++) {
+      const [e, h] = emit(n.x);
+      const s = add({ op: "split", a: e, b: -1 });
+      parts.push([s, [...h, [s, "b"]]]);
+    }
+    if (!parts.length) {
+      const s = add({ op: "split", a: -1, b: -1 });
+      return [s, [[s, "a"], [s, "b"]]];
+    }
+    let [entry, holes2] = parts[0];
+    for (const [e, h] of parts.slice(1)) {
+      patch(holes2, e);
+      holes2 = h;
+    }
+    return [entry, holes2];
+  };
+  const [start, holes] = emit(tree);
+  patch(holes, add({ op: "match" }));
+  return { prog, start };
+}
+function run({ prog, start }, chars) {
+  const mark = new Int32Array(prog.length).fill(-1);
+  let gen = 0;
+  const closure = (list2, s, pos) => {
+    const stack = [s];
+    while (stack.length) {
+      const x = stack.pop();
+      if (x < 0 || mark[x] === gen) continue;
+      mark[x] = gen;
+      const st = prog[x];
+      if (st.op === "split") {
+        stack.push(st.b, st.a);
+        continue;
+      }
+      if (st.op === "assert") {
+        const before = chars[pos - 1], after = chars[pos];
+        const ok2 = st.k === "^" ? pos === 0 : st.k === "$" ? pos === chars.length : isWord(before) !== isWord(after) === (st.k === "b");
+        if (ok2) stack.push(st.next);
+        continue;
+      }
+      if (st.op === "match") return true;
+      list2.push(x);
+    }
+    return false;
+  };
+  let live = [];
+  for (let pos = 0; ; pos++) {
+    gen++;
+    const next = [];
+    for (const s of live) if (closure(next, prog[s].next, pos)) return true;
+    if (closure(next, start, pos)) return true;
+    if (pos >= chars.length) return false;
+    const c = chars[pos];
+    live = next.filter((s) => prog[s].test(c));
+  }
+}
+function compileTerm(term) {
+  if (typeof term !== "string" || !term.length || term.length > TERM_MAX || /[\r\n]/.test(term))
+    return { ok: false, construct: "not a term", detail: `a term is a single line of 1 to ${TERM_MAX} characters` };
+  const regex = term.length >= 2 && term.startsWith("/") && term.endsWith("/");
+  if (!regex) {
+    const needle = Array.from(term, fold3).join("");
+    return { ok: true, kind: "literal", test: (text5) => Array.from(cut3(text5), fold3).join("").includes(needle) };
+  }
+  try {
+    const m = compile5(parse5(term.slice(1, -1)));
+    return { ok: true, kind: "regex", test: (text5) => run(m, Array.from(cut3(text5))) };
+  } catch (e) {
+    if (e instanceof Refused) return { ok: false, construct: e.construct, detail: e.message };
+    return { ok: false, construct: "an expression that does not compile", detail: String(e && e.message || e).slice(0, 160) };
+  }
+}
+function cut3(text5) {
+  const s = typeof text5 === "string" ? text5 : "";
+  if (s.length <= MATCH_TEXT_MAX) return s;
+  return Array.from(s).slice(0, MATCH_TEXT_MAX).join("");
+}
+var isCut = (text5) => typeof text5 === "string" && text5.length > MATCH_TEXT_MAX && Array.from(text5).length > MATCH_TEXT_MAX;
+
+// src/link-sweep/checks.mjs
+var at26 = (fn, region, file) => `src/link-sweep/${file}.mjs ${fn} > ${region}`;
+var SWEEP_CHECKS = Object.freeze({
+  SWEEP_TERM_REFUSED: Object.freeze({
+    check: "C-18.16",
+    where: at26("sweepGrammar", "is-sweep-term", "checks"),
+    translation: "This was not saved: a search term of a sweep is a pattern the record cannot match safely. A term may be plain words or a simple pattern between slashes, without references back to an earlier part, look-aheads or look-behinds. The findings beside this name the term and what in it was refused. Nothing was changed."
+  }),
+  SWEEP_NOT_A_MEMBER: Object.freeze({
+    check: "C-18.17",
+    where: at26("sweepFence", "is-sweep-member", "sweep"),
+    translation: "This was not saved: a sweep is added, removed or changed only by a named member. An assistant or a machine may stop a sweep by unratifying it, and nothing more. Nothing was changed."
+  }),
+  SWEEP_RATIFY_NOT_AN_OWNER: Object.freeze({
+    check: "C-18.18",
+    where: at26("sweepFence", "is-sweep-owner", "sweep"),
+    translation: "This was not saved: a sweep is ratified, and a ratified sweep is changed, only by an owner of the project its list belongs to. Ask an owner of that project; anyone may still stop the sweep by unratifying it. Nothing was changed."
+  })
+});
+function sweepRefusal(code, detail, extra) {
+  const row2 = SWEEP_CHECKS[code];
+  return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
+}
+var SWEEP_FIELDS = Object.freeze(["id", "title", "ratified", "sources", "seeds", "match", "cadence", "budget"]);
+var SWEEP_ID_RE = /^[a-z0-9][a-z0-9-]{0,39}$/;
+var SWEEP_CADENCES = Object.freeze(["daily", "weekly", "monthly"]);
+var SWEEP_BOUNDS = Object.freeze({
+  sources: [1, 20],
+  seeds: [1, 10],
+  terms: [0, 20],
+  paths: [0, 20],
+  formats: [0, 10],
+  per_run: [1, 100],
+  backlog: [1, 1e3],
+  title: 200
+});
+function sweepGrammar(s, ids) {
+  const out = [];
+  const bad = (field, text5, extra) => out.push({
+    check: "C-18.5",
+    severity: "error",
+    field,
+    message: field ? `${field} ${text5}` : text5,
+    ...extra || {}
+  });
+  if (!s || typeof s !== "object" || Array.isArray(s)) return out;
+  const seen = ids instanceof Set ? ids : /* @__PURE__ */ new Set();
+  for (const k of Object.keys(s)) if (!SWEEP_FIELDS.includes(k)) bad(null, `carries '${String(k).slice(0, 40)}', which is not a sweep's field (${SWEEP_FIELDS.join(", ")})`);
+  for (const k of SWEEP_FIELDS) if (!(k in s)) bad(k, "is missing");
+  if ("id" in s) {
+    if (typeof s.id !== "string" || !SWEEP_ID_RE.test(s.id)) bad("id", "must be 1 to 40 lowercase letters, digits or hyphens, starting with a letter or digit");
+    else if (seen.has(s.id)) bad("id", `'${s.id}' is not unique within the file`);
+    else seen.add(s.id);
+  }
+  if ("title" in s && (typeof s.title !== "string" || !s.title.trim() || s.title.length > SWEEP_BOUNDS.title || /[\r\n]/.test(s.title)))
+    bad("title", `must be a nonempty single line of at most ${SWEEP_BOUNDS.title} characters`);
+  if ("ratified" in s && typeof s.ratified !== "boolean") bad("ratified", "must be boolean");
+  const list2 = (v, [lo, hi]) => Array.isArray(v) && v.length >= lo && v.length <= hi;
+  let sources = null;
+  if ("sources" in s) {
+    if (!list2(s.sources, SWEEP_BOUNDS.sources)) bad("sources", `must be an array of ${SWEEP_BOUNDS.sources.join(" to ")} prefixes`);
+    else {
+      const wrong = s.sources.findIndex((p) => !isPublicHttpsLocator(p) || /[?#]/.test(p));
+      if (wrong >= 0) bad("sources", `[${wrong}] is not a public https prefix without a query or fragment`);
+      else sources = s.sources;
+    }
+  }
+  const scoped = (field, v) => {
+    const wrong = v.findIndex((u) => !isPublicHttpsLocator(u) || sources && !inScope(u, sources));
+    if (wrong >= 0) bad(field, `[${wrong}] is not a public https locator within the sweep's sources`);
+  };
+  if ("seeds" in s) {
+    if (!list2(s.seeds, SWEEP_BOUNDS.seeds)) bad("seeds", `must be an array of ${SWEEP_BOUNDS.seeds.join(" to ")} locators`);
+    else scoped("seeds", s.seeds);
+  }
+  if ("match" in s) {
+    const m = s.match;
+    if (typeof m !== "object" || m === null || Array.isArray(m)) bad("match", "must be an object");
+    else {
+      for (const k of Object.keys(m)) if (!["terms", "paths", "formats"].includes(k)) bad("match", `carries '${String(k).slice(0, 40)}', which is not terms, paths or formats`);
+      if (m.terms !== void 0) {
+        if (!list2(m.terms, SWEEP_BOUNDS.terms)) bad("match.terms", `must be an array of at most ${SWEEP_BOUNDS.terms[1]} terms`);
+        else m.terms.forEach((t, j) => {
+          const c = compileTerm(t);
+          if (!c.ok) bad(
+            `match.terms[${j}]`,
+            `SWEEP_TERM_REFUSED: the term ${JSON.stringify(String(t).slice(0, 80))} is refused for ${c.construct} (${c.detail})`,
+            { code: "SWEEP_TERM_REFUSED", refusal: {
+              code: "SWEEP_TERM_REFUSED",
+              check: SWEEP_CHECKS.SWEEP_TERM_REFUSED.check,
+              translation: SWEEP_CHECKS.SWEEP_TERM_REFUSED.translation
+            } }
+          );
+        });
+      }
+      if (m.paths !== void 0) {
+        if (!list2(m.paths, SWEEP_BOUNDS.paths)) bad("match.paths", `must be an array of at most ${SWEEP_BOUNDS.paths[1]} prefixes`);
+        else scoped("match.paths", m.paths);
+      }
+      if (m.formats !== void 0) {
+        const known = listFormats();
+        if (!list2(m.formats, SWEEP_BOUNDS.formats)) bad("match.formats", `must be an array of at most ${SWEEP_BOUNDS.formats[1]} format names`);
+        else {
+          const wrong = m.formats.findIndex((x) => !known.includes(x));
+          if (wrong >= 0) bad("match.formats", `[${wrong}] is not a format this instance reads (${known.join(", ")})`);
+        }
+      }
+    }
+  }
+  if ("cadence" in s && !SWEEP_CADENCES.includes(s.cadence)) bad("cadence", `must be one of: ${SWEEP_CADENCES.join(", ")}`);
+  if ("budget" in s) {
+    const b = s.budget;
+    const n = (v, [lo, hi]) => Number.isInteger(v) && v >= lo && v <= hi;
+    if (typeof b !== "object" || b === null || Array.isArray(b) || Object.keys(b).some((k) => k !== "per_run" && k !== "backlog") || !n(b.per_run, SWEEP_BOUNDS.per_run) || !n(b.backlog, SWEEP_BOUNDS.backlog))
+      bad("budget", `must be {per_run, backlog}: per_run an integer ${SWEEP_BOUNDS.per_run.join(" to ")}, backlog an integer ${SWEEP_BOUNDS.backlog.join(" to ")}`);
+  }
+  return out;
+}
+
+// src/link-sweep/schema.mjs
+var LINK_SWEEP_SCHEMA = `
+-- R4\u2013R9 (K1036): ONE ROW PER RUN OF A RATIFIED SWEEP ("<bundle>#<id>"), never edited: what it fetched and filed,
+-- and detail (JSON: each seed's outcome and capture, the candidates and matches, what was filed, the skips by reason,
+-- the excluded, failed and redirected fetches, the links cut, the budget) and the anomaly R8 noted, when one was.
+-- Derived; declared to purge by the bundle whose data/gathering.json carries the sweep.
+CREATE TABLE IF NOT EXISTS sweep_runs (
+  sweep      TEXT    NOT NULL,
+  seq        INTEGER NOT NULL,
+  bundle_id  TEXT    NOT NULL,
+  at         TEXT    NOT NULL,
+  filed      INTEGER NOT NULL,
+  fetched    INTEGER NOT NULL,
+  detail     TEXT    NOT NULL,
+  anomaly    TEXT,
+  PRIMARY KEY (sweep, seq)
+);
+
+-- R6 (already_swept): every address a sweep filed a document from, and the bundle it was filed as. Derived; declared
+-- to purge by the sweep's bundle.
+CREATE TABLE IF NOT EXISTS sweep_filed (
+  sweep         TEXT NOT NULL,
+  address_norm  TEXT NOT NULL,
+  bundle_id     TEXT NOT NULL,
+  filed         TEXT NOT NULL,
+  at            TEXT NOT NULL,
+  PRIMARY KEY (sweep, address_norm)
+);`;
+var LINK_SWEEP_TABLES = Object.freeze([
+  Object.freeze({ name: "sweep_runs", keys: Object.freeze(["bundle_id"]) }),
+  Object.freeze({ name: "sweep_filed", keys: Object.freeze(["bundle_id"]) })
+]);
+function migrateLinkSweep(sql) {
+  const bare2 = LINK_SWEEP_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  for (const s of bare2.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+}
+
+// src/link-sweep/sweep.mjs
+var LINK_SWEEP_MODULE = "link-sweep";
+var SWEEP_TICK_BATCH = 5;
+var SWEEP_RUNS_SHOWN = 20;
+var ANOMALY_MIN_RUNS = 4;
+var ANOMALY_WINDOW = 8;
+var ANOMALY_FACTOR = 3;
+var ANOMALY_FLOOR = 5;
+var ANOMALY_DRY_MEDIAN = 2;
+var SILENT_RUNS = 4;
+var SWEEP_ACTOR = "bio-monitor";
+var SWEEP_PURPOSE = "sweep";
+var SWEEP_CONDITION_KINDS = Object.freeze([
+  "sweep-held-backlog",
+  "sweep-yield-anomaly",
+  "sweep-seed-unreachable",
+  "sweep-redirect-out-of-scope",
+  "sweep-silent"
+]);
+var INTERVAL = Object.freeze({ daily: 864e5, weekly: 6048e5, monthly: 2592e6 });
+var SWEEP_CONSUMER = "gathering-sweep";
+var GJ = "data/gathering.json";
+var parse6 = (t) => {
+  try {
+    const g = typeof t === "string" ? JSON.parse(t) : null;
+    return g && typeof g === "object" && !Array.isArray(g) ? g : null;
+  } catch {
+    return null;
+  }
+};
+var sweepsOf = (g) => g && Array.isArray(g.sweeps) ? g.sweeps.filter((s) => s && typeof s === "object" && typeof s.id === "string") : [];
+var canon3 = (v) => Array.isArray(v) ? `[${v.map(canon3).join(",")}]` : v && typeof v === "object" ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon3(v[k])}`).join(",")}}` : JSON.stringify(v ?? null);
+var median = (xs) => {
+  if (!xs.length) return null;
+  const s = [...xs].sort((a, b) => a - b), h = s.length >> 1;
+  return s.length % 2 ? s[h] : (s[h - 1] + s[h]) / 2;
+};
+var runnable = (s) => Array.isArray(s.sources) && s.sources.length && Array.isArray(s.seeds) && SWEEP_CADENCES.includes(s.cadence) && s.budget && Number.isInteger(s.budget.per_run) && Number.isInteger(s.budget.backlog);
+var ENTITY2 = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
+var decode = (t) => String(t).replace(/&(#x[0-9a-f]{1,6}|#\d{1,7}|[a-z]{2,6});/gi, (m, e) => {
+  if (e[0] !== "#") return ENTITY2[e.toLowerCase()] ?? m;
+  const n = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
+  try {
+    return String.fromCodePoint(n);
+  } catch {
+    return m;
+  }
+});
+var strip2 = (t) => decode(String(t).replace(/<[^>]*>/g, " ")).replace(/\s+/g, " ").trim();
+var decodedAddress = (u) => {
+  try {
+    return decodeURI(u);
+  } catch {
+    return u;
+  }
+};
+function linksOf(text5, base) {
+  const src = String(text5 || ""), low = src.toLowerCase(), out = [];
+  const abs = (h) => {
+    try {
+      const u = new URL(decode(h.trim()), base);
+      return u.protocol === "https:" || u.protocol === "http:" ? u.href : null;
+    } catch {
+      return null;
+    }
+  };
+  const between = (open, close2, from, limit) => {
+    const a = low.indexOf(open, from);
+    if (a < 0 || limit >= 0 && a > limit) return null;
+    const s = low.indexOf(">", a);
+    const b = s < 0 ? -1 : low.indexOf(close2, s);
+    return b < 0 ? null : { inner: src.slice(s + 1, b), tag: src.slice(a, s + 1), end: b + close2.length };
+  };
+  const attr2 = (tag2, name2) => {
+    const m = new RegExp(`\\s${name2}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, "i").exec(tag2);
+    return m ? m[1] ?? m[2] ?? m[3] : null;
+  };
+  if (/<(urlset|sitemapindex)\b/.test(low)) {
+    for (let p = 0, x; x = between("<loc", "</loc>", p, -1); p = x.end) {
+      const a = abs(strip2(x.inner));
+      if (a) out.push({ address: a, text: "" });
+    }
+    return out;
+  }
+  if (/<(rss|feed|rdf:rdf)\b/.test(low)) {
+    const item = low.includes("<item") ? ["<item", "</item>"] : ["<entry", "</entry>"];
+    for (let p = 0, x; x = between(item[0], item[1], p, -1); p = x.end) {
+      const body = x.inner, bl = body.toLowerCase();
+      const t = /<title\b[^>]*>([\s\S]*?)<\/title>/i.exec(body.slice(0, 65536));
+      let href = null;
+      const l = bl.indexOf("<link");
+      if (l >= 0) {
+        const e = bl.indexOf(">", l);
+        const tag2 = body.slice(l, e + 1);
+        href = attr2(tag2, "href");
+        if (!href) {
+          const c = bl.indexOf("</link>", e);
+          href = c > e ? strip2(body.slice(e + 1, c)) : null;
+        }
+      }
+      const a = href ? abs(href) : null;
+      if (a) out.push({ address: a, text: t ? strip2(t[1].replace(/^<!\[CDATA\[|\]\]>$/g, "")) : "" });
+    }
+    return out;
+  }
+  let close = -1;
+  for (let p = 0; ; ) {
+    const a = low.indexOf("<a", p);
+    if (a < 0) break;
+    const s = low.indexOf(">", a);
+    if (s < 0) break;
+    p = s + 1;
+    if (!/[\s>]/.test(low[a + 2] || "")) continue;
+    const href = attr2(src.slice(a, s + 1), "href");
+    const target = href ? abs(href) : null;
+    if (!target) continue;
+    if (close !== -2 && close < s) {
+      close = low.indexOf("</a", s);
+      if (close < 0) close = -2;
+    }
+    const next = low.indexOf("<a", s);
+    let end2 = Math.min(close >= 0 ? close : src.length, s + 1 + 16384);
+    if (next >= 0 && next < end2) end2 = next;
+    out.push({ address: target, text: strip2(src.slice(s + 1, end2)) });
+  }
+  return out;
+}
+var LinkSweep = class {
+  #d;
+  #host = null;
+  #scopeRegistered = false;
+  /** `d` holds what the sweep uses, each reached through its factory on the same host unless given (`index.mjs`):
+   *  `storage`, `record`, `membership`, `promotion`, `capture`, `observationLog`, `projectStage`, `monitoring`,
+   *  `captureRequests`, and `now`, the instance clock in milliseconds. */
+  constructor(d) {
+    this.#d = d;
+    this.sql = d.storage.sql;
+    this.record = d.record;
+    this.membership = d.membership;
+    this.promotion = d.promotion;
+    this.now = typeof d.now === "function" ? d.now : () => Date.now();
+  }
+  get capture() {
+    return this.#d.capture();
+  }
+  get observationLog() {
+    return this.#d.observationLog();
+  }
+  get projectStage() {
+    return this.#d.projectStage();
+  }
+  get monitoring() {
+    return this.#d.monitoring();
+  }
+  /** monitoring R65: the services the sweep runs under, asked once. */
+  get host() {
+    return this.#host ||= this.monitoring.sweepHost();
+  }
+  #rows(q7, ...a) {
+    return [...this.sql.exec(q7, ...a)];
+  }
+  #one(q7, ...a) {
+    const r = this.#rows(q7, ...a);
+    return r.length ? r[0] : null;
+  }
+  migrate() {
+    migrateLinkSweep(this.sql);
+  }
+  /** R12 (K1099, K1122; capture-requests R45): register, once, with capture-requests the scope check its drain asks,
+   *  under this module's name. A registration that is refused or throws is asked again on the next sweep service,
+   *  never held as done; one already held by this module (`LISTENER_DECLARED` naming it) is done. */
+  registerSweepScope() {
+    if (this.#scopeRegistered) return true;
+    try {
+      const cr = this.#d.captureRequests();
+      const r = cr && typeof cr.registerSweepScope === "function" ? cr.registerSweepScope(LINK_SWEEP_MODULE, (a) => this.scopeCheck(a || {})) : null;
+      this.#scopeRegistered = !!(r && (r.ok === true || r.reason === "LISTENER_DECLARED" && r.module === LINK_SWEEP_MODULE));
+    } catch {
+      this.#scopeRegistered = false;
+    }
+    return this.#scopeRegistered;
+  }
+  /** R1–R3, R9 (monitoring R66): this module's share of C-18.5, the fence and the slate, handed to monitoring once at
+   *  composition. Answers monitoring's answer: `{ok: true}`, or its refusal (a second registration). */
+  registerWithMonitoring() {
+    return this.monitoring.registerSweep(LINK_SWEEP_MODULE, {
+      grammar: (entry, ids) => sweepGrammar(entry, ids),
+      fence: (c, nextText) => this.sweepFence(c, nextText),
+      dueForSlate: (nowMs, sees) => this.dueForSlate(nowMs, sees)
+    });
+  }
+  /* ================================================================== *
+   * The fence (R3) and the ratifier
+   * ================================================================== */
+  /** R3: a non-replay promotion carrying `data/gathering.json`, fenced against the file it replaces. A non-member who
+   *  adds, removes or changes a sweep (other than setting `ratified` to `false`) is refused `SWEEP_NOT_A_MEMBER`; a
+   *  non-owner of the bundle's project who sets `ratified` to `true` or changes a sweep ratified before or after is
+   *  refused `SWEEP_RATIFY_NOT_AN_OWNER`. Null when admitted. Asked by monitoring R27 after the grammar admits the file
+   *  (monitoring R66). */
+  sweepFence(c, nextText) {
+    const prev = parse6((() => {
+      const f17 = this.record.readFile(c.bundleId, GJ);
+      return f17 && f17.text;
+    })());
+    const before = new Map(sweepsOf(prev).map((s) => [s.id, s])), after = new Map(sweepsOf(parse6(nextText)).map((s) => [s.id, s]));
+    const touched = [];
+    for (const id of /* @__PURE__ */ new Set([...before.keys(), ...after.keys()])) {
+      const p = before.get(id), n = after.get(id);
+      if (p && n && canon3(p) === canon3(n)) continue;
+      if (p && n && p.ratified === true && n.ratified === false && canon3({ ...p, ratified: false }) === canon3(n)) continue;
+      touched.push({ id, ratified: p?.ratified === true || n?.ratified === true });
+    }
+    if (!touched.length) return null;
+    const author = typeof c.author === "string" ? c.author.trim() : "";
+    if (!author || isMachineIdentity(author))
+      return sweepRefusal("SWEEP_NOT_A_MEMBER", `${author || "an unnamed writer"} is not a member, and only a member adds, removes or changes a sweep; any writer may unratify one. Nothing was written.`, { sweeps: touched.map((t) => t.id) });
+    const ratifying = touched.filter((t) => t.ratified);
+    if (!ratifying.length) return null;
+    const info = this.record.bundleInfo(c.bundleId);
+    const project = info ? info.project : c.docFm && typeof c.docFm.project === "string" ? c.docFm.project : null;
+    const member = author.startsWith("member:") ? author.slice(7) : author;
+    let owns = false;
+    try {
+      owns = !!project && this.membership.isProjectOwner(project, member) === true;
+    } catch {
+      owns = false;
+    }
+    if (!owns)
+      return sweepRefusal(
+        "SWEEP_RATIFY_NOT_AN_OWNER",
+        project ? `${member} is not an owner of ${project}, and only an owner ratifies a sweep or changes a ratified one. Nothing was written.` : "this list belongs to no project, so it has no owner who could ratify a sweep. Nothing was written.",
+        { sweeps: ratifying.map((t) => t.id), project }
+      );
+    return null;
+  }
+  /** R3: who ratified sweep `id` of `bundle` and when: the promotion that last set `ratified` to `true` or changed the
+   *  sweep while ratified, read from the bundle's history (record-core R15–R17's image). Null when it is not ratified. */
+  ratifier(bundle, id) {
+    const img = this.record.readImage(bundle);
+    if (!img) return null;
+    let man = null;
+    try {
+      man = JSON.parse(img["_history/manifest.json"] || "null");
+    } catch {
+      man = null;
+    }
+    const entries = (man && Array.isArray(man.entries) ? man.entries : []).slice().sort((a, b) => a.seq - b.seq);
+    const at27 = (t) => sweepsOf(parse6(t)).find((s) => s.id === id) || null;
+    const after = new Array(entries.length);
+    let cur = typeof img[GJ] === "string" ? img[GJ] : null;
+    for (let i = entries.length - 1; i >= 0; i--) {
+      after[i] = cur;
+      const e = entries[i];
+      if ((e.snapshotted || []).includes(GJ)) {
+        const v = img[`_history/data/gathering_${e.key}.json`];
+        cur = typeof v === "string" ? v : null;
+      } else if ((e.files || []).includes(GJ)) cur = null;
+    }
+    let found = null, prev = cur;
+    for (let i = 0; i < entries.length; i++) {
+      const p = at27(prev), n = at27(after[i]);
+      if (n && n.ratified === true && (!p || p.ratified !== true || canon3(p) !== canon3(n)))
+        found = { by: entries[i].author ?? null, at: entries[i].created ?? null };
+      if (!n || n.ratified !== true) found = null;
+      prev = after[i];
+    }
+    return found;
+  }
+  /* ================================================================== *
+   * What is held and due (R4, R8)
+   * ================================================================== */
+  /** Every sweep in every `data/gathering.json` the record holds (read as the daemon, monitoring R36), or only those the viewer's
+   *  gate admits; each `{name, bundle, sweep, daemon}`. */
+  #all(gate = null) {
+    const files = gate ? this.#rows(`SELECT f.bundle_id AS bundle_id, f.content AS content FROM files f JOIN bundles b ON b.bundle_id = f.bundle_id
+                     WHERE f.path = '${GJ}' AND (${gate.sql}) ORDER BY f.bundle_id`, ...gate.args) : this.#rows(`SELECT bundle_id, content FROM files WHERE path = '${GJ}' ORDER BY bundle_id`);
+    const out = [];
+    for (const f17 of files) {
+      const g = parse6(f17.content);
+      const daemon = g && g.daemon && typeof g.daemon === "object" && !Array.isArray(g.daemon) ? g.daemon : {};
+      for (const s of sweepsOf(g)) out.push({ name: `${f17.bundle_id}#${s.id}`, bundle: f17.bundle_id, sweep: s, daemon });
+    }
+    return out;
+  }
+  #runs(name2, limit = SWEEP_RUNS_SHOWN) {
+    return this.#rows(`SELECT * FROM sweep_runs WHERE sweep = ? ORDER BY seq DESC LIMIT ?`, name2, limit).map((r) => {
+      let d = {};
+      try {
+        d = JSON.parse(r.detail || "{}");
+      } catch {
+        d = {};
+      }
+      let anomaly = null;
+      try {
+        anomaly = r.anomaly ? JSON.parse(r.anomaly) : null;
+      } catch {
+        anomaly = null;
+      }
+      return { ...d, seq: Number(r.seq), at: r.at, filed: Number(r.filed), fetched: Number(r.fetched), anomaly };
+    });
+  }
+  /** R8: the backlog (capture R82) and whether it holds the sweep; null backlog (unreadable) holds it (K1129). */
+  #held(x) {
+    let n = null;
+    try {
+      n = this.capture.heldCount({ sweep: x.name });
+    } catch {
+      n = null;
+    }
+    const limit = x.sweep.budget && Number.isInteger(x.sweep.budget.backlog) ? x.sweep.budget.backlog : null;
+    const held = n === null || n === void 0 || !Number.isFinite(Number(n)) || limit !== null && Number(n) >= limit;
+    return { backlog: n === void 0 ? null : n, limit, held };
+  }
+  /** R4: one sweep's standing: `due`, `next`, and when not due the reason. */
+  #standing(x, nowMs, paused) {
+    const s = x.sweep;
+    const last = this.#one(`SELECT at FROM sweep_runs WHERE sweep = ? ORDER BY seq DESC LIMIT 1`, x.name);
+    const lastMs = last ? Date.parse(last.at) : NaN;
+    const iv = INTERVAL[s.cadence] ?? null;
+    const dueAt = Number.isFinite(lastMs) && iv ? lastMs + iv : 0;
+    const h = this.#held(x);
+    const no2 = (why) => ({ due: false, why, due_at: dueAt, next: null, ...h });
+    if (s.ratified !== true) return no2("not ratified");
+    if (!runnable(s)) return no2("its definition is not one a run can read");
+    if (paused) return no2("the daemon is paused");
+    if (x.daemon.enabled === false) return no2("its bundle's daemon block says enabled: false");
+    if (this.#closed(x.bundle)) return no2("its project is closed");
+    if (h.held) return no2("held: backlog");
+    return dueAt <= nowMs ? { due: true, due_at: dueAt, next: null, ...h } : { due: false, due_at: dueAt, next: dueAt, ...h };
+  }
+  #closed(bundle) {
+    const info = this.record.bundleInfo(bundle);
+    if (!info || !info.project) return false;
+    try {
+      const st = this.projectStage.projectStage({ project: info.project, viewer: "class:daemon" });
+      return !!st && st.stage === "closed";
+    } catch {
+      return false;
+    }
+  }
+  /** R4: the plan: due sweeps longest-overdue first then by full name, the earliest `next`, and whether some sweep is
+   *  held or waiting on the pause (each re-read one archive interval on, monitoring R20's `recheckMs`). */
+  plan(nowMs) {
+    const paused = this.host.paused().paused;
+    const due = [];
+    let next = null, recheck = false;
+    for (const x of this.#all()) {
+      if (x.sweep.ratified !== true) continue;
+      const st = this.#standing(x, nowMs, paused);
+      if (st.due) due.push({ ...x, due_at: st.due_at });
+      else if (st.next !== null) next = next === null ? st.next : Math.min(next, st.next);
+      else if (st.why === "held: backlog" || st.why === "the daemon is paused") recheck = true;
+    }
+    due.sort((a, b) => a.due_at - b.due_at || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+    return { due, next, recheck };
+  }
+  /** R4: for `scheduler`'s `gathering-sweep` consumer: `now` while a sweep is due, else null. */
+  sweepDue(now) {
+    this.registerSweepScope();
+    return this.plan(now).due.length ? now : null;
+  }
+  /** R4: now + 1 s while one is due, else the earliest next run (a held or paused sweep looked at again one archive
+   *  interval on), else null. */
+  sweepWake(now) {
+    this.registerSweepScope();
+    const p = this.plan(now);
+    if (p.due.length) return now + 1e3;
+    const re = p.recheck ? now + this.host.recheckMs() : null;
+    return p.next === null ? re : re === null ? p.next : Math.min(p.next, re);
+  }
+  /* ================================================================== *
+   * The run (R4–R8, R10)
+   * ================================================================== */
+  /** R4: the tick: at most SWEEP_TICK_BATCH due sweeps (ten times that read when the scheduler ranks), each claimed
+   *  under the consumer's epoch (monitoring R21), not re-entrant (monitoring R22). `daemon.sweep_budget` caps the
+   *  fetches a bundle's sweeps make in this tick together. */
+  async sweepTick(now, rank6 = null) {
+    this.registerSweepScope();
+    const h = this.host;
+    const nowMs = Number.isFinite(now) ? now : this.now();
+    const at27 = stampInstant("second", nowMs);
+    const pause = h.paused();
+    if (pause.paused) return { paused: pause, at: at27, ran: [], skipped: [], failed: [] };
+    if (h.running.has(SWEEP_CONSUMER)) return { busy: true, paused: pause, at: at27, ran: [], skipped: [], failed: [] };
+    h.running.add(SWEEP_CONSUMER);
+    try {
+      const plan = this.plan(nowMs);
+      const read2 = typeof rank6 === "function" ? plan.due.slice(0, SWEEP_TICK_BATCH * 10) : plan.due;
+      const batch = h.ranked(
+        read2,
+        (x) => ({ kind: "sweep", id: x.name, waitingSince: x.due_at > 0 ? x.due_at : null }),
+        rank6,
+        nowMs
+      ).slice(0, SWEEP_TICK_BATCH);
+      const epoch = h.openEpoch(SWEEP_CONSUMER, nowMs, INTERVAL.daily);
+      const ran = [], skipped = [], failed2 = [], spentBy = /* @__PURE__ */ new Map();
+      for (const x of batch) {
+        if (!h.claim(SWEEP_CONSUMER, x.name, epoch)) {
+          skipped.push({ sweep: x.name, reason: "claimed by a tick that did not finish" });
+          continue;
+        }
+        const cap = Number.isInteger(x.daemon.sweep_budget) && x.daemon.sweep_budget >= 0 ? x.daemon.sweep_budget - (spentBy.get(x.bundle) || 0) : null;
+        try {
+          const r = await this.#run(x, nowMs, cap);
+          spentBy.set(x.bundle, (spentBy.get(x.bundle) || 0) + r.fetched);
+          ran.push({
+            sweep: x.name,
+            seq: r.seq,
+            fetched: r.fetched,
+            filed: r.filed,
+            ...r.anomaly ? { anomaly: r.anomaly } : {},
+            ...r.note ? { note: r.note } : {}
+          });
+        } catch (e) {
+          failed2.push({ sweep: x.name, reason: String(e && e.message || e).slice(0, 160) });
+        }
+      }
+      if (!failed2.length && !skipped.length) h.closeEpoch(SWEEP_CONSUMER, epoch);
+      return { paused: pause, at: at27, epoch, due: plan.due.length, ran, skipped, failed: failed2 };
+    } finally {
+      h.running.delete(SWEEP_CONSUMER);
+    }
+  }
+  /** R12: requests capture-requests filed under this sweep since its last run, read from the captures' `matched_sweep`
+   *  (the register documents' origin), not this module's own fetches. */
+  #requestsSince(name2, since) {
+    try {
+      const r = this.#one(`SELECT count(*) AS n FROM files f, json_each(CASE WHEN json_valid(f.content) THEN f.content ELSE '{}' END, '$.documents') d
+                            WHERE f.path = 'data/provenance.json' AND d.type = 'object'
+                              AND json_extract(d.value, '$.origin.matched_sweep') = ?
+                              AND COALESCE(json_extract(d.value, '$.origin.deeming_actor'), '') <> ?
+                              AND (? IS NULL OR json_extract(d.value, '$.retrieved') > ?)`, name2, SWEEP_ACTOR, since, since);
+      return Number(r && r.n) || 0;
+    } catch {
+      return 0;
+    }
+  }
+  async #acquire(x, locator, heldSha = null) {
+    const opts = { cls: "daemon", member: false, captureRequest: {
+      locator,
+      purpose: SWEEP_PURPOSE,
+      agent: null,
+      render: false,
+      origin: { kind: "sweep", matched_sweep: x.name, deeming_actor: SWEEP_ACTOR },
+      scope: [...x.sweep.sources],
+      ...heldSha ? { heldSha } : {}
+    } };
+    try {
+      const r = await this.capture.acquire({}, opts);
+      return r && r.body || { ok: false, reason: "NO_ANSWER" };
+    } catch (e) {
+      return { ok: false, reason: String(e && e.message || e).slice(0, 160) };
+    }
+  }
+  #look(x, address, row2, at27) {
+    try {
+      this.observationLog.observe({
+        actorClass: "plane",
+        actor: null,
+        authorityKind: "sweep",
+        authority: x.name,
+        level: "document",
+        subjectKind: "address",
+        subject: normalizeAddress(address),
+        state: row2.state,
+        governed: row2.governed === true,
+        condition: row2.governed ? "source-unreachable-governed" : null,
+        resultKind: row2.ref ? "capture" : null,
+        resultRef: row2.ref || null,
+        detail: String(row2.detail).slice(0, 300)
+      }, at27);
+    } catch {
+    }
+  }
+  async #bytes(sha) {
+    const store = typeof this.record.evidenceStore === "function" ? this.record.evidenceStore() : null;
+    if (!store || !/^[0-9a-f]{64}$/.test(String(sha))) return null;
+    try {
+      const o = await store.get(sha);
+      return o ? new Uint8Array(await o.arrayBuffer()) : null;
+    } catch {
+      return null;
+    }
+  }
+  /** One run of one sweep (R5–R8, R10), recorded as one `sweep_runs` row. `cap` is what is left of the bundle's
+   *  `daemon.sweep_budget` in this tick (null: no cap). */
+  async #run(x, nowMs, cap) {
+    const s = x.sweep, at27 = stampInstant("second", nowMs);
+    const prior = this.#runs(x.name, ANOMALY_WINDOW);
+    const lastSeeds = /* @__PURE__ */ new Map();
+    for (const r of [...prior].reverse()) for (const sd of r.seeds || []) if (sd.sha) lastSeeds.set(sd.seed, sd.sha);
+    const requests = this.#requestsSince(x.name, prior.length ? prior[0].at : null);
+    let left2 = Math.max(0, s.budget.per_run - requests);
+    if (cap !== null) left2 = Math.min(left2, Math.max(0, cap));
+    const note = cap !== null && cap <= 0 ? "its bundle's daemon sweep_budget allows no fetch in this tick, so the run made none" : null;
+    const d = {
+      seeds: [],
+      candidates: 0,
+      matched: 0,
+      documents: [],
+      skipped: { already_swept: 0, already_held: 0, budget_spent: 0 },
+      excluded: [],
+      failed: [],
+      redirected: [],
+      cut: 0,
+      budget: { per_run: s.budget.per_run, requests },
+      ...note ? { note } : {}
+    };
+    let fetched = 0;
+    const terms = (s.match && Array.isArray(s.match.terms) ? s.match.terms : []).map(compileTerm).filter((t) => t.ok);
+    const paths = s.match && Array.isArray(s.match.paths) && s.match.paths.length ? s.match.paths : null;
+    const formats = s.match && Array.isArray(s.match.formats) && s.match.formats.length ? s.match.formats : null;
+    const lists = [];
+    for (const seed of s.seeds) {
+      if (left2 <= 0) {
+        d.seeds.push({ seed, outcome: "budget_spent" });
+        continue;
+      }
+      const held = lastSeeds.get(seed) || null;
+      const a = await this.#acquire(x, seed, held);
+      if (a.reason === "HOST_COOLING_OFF") {
+        d.seeds.push({ seed, outcome: "governed" });
+        this.#look(x, seed, { state: "LOOKED_INDETERMINATE", governed: true, detail: "governed; the per-host governor held the seed's fetch" }, at27);
+        continue;
+      }
+      left2--;
+      fetched++;
+      const sha = a.ok ? a.document?.capture?.sha256 || a.capture?.sha256 || null : null;
+      if (a.ok && sha) {
+        const unchanged = a.unchanged === true || sha === held;
+        const entry = { seed, outcome: unchanged ? "unchanged" : "captured", sha };
+        if (!unchanged) {
+          const f17 = await this.#fileSeed(x, a.document, at27);
+          entry.file = f17.file;
+          if (f17.why) entry.why = f17.why;
+        }
+        d.seeds.push(entry);
+        this.#look(x, seed, { state: "PRESENT", ref: sha, detail: `seed ${entry.outcome} for the sweep ${x.name}` }, at27);
+        const bytes2 = await this.#bytes(sha);
+        if (bytes2) lists.push({ seed, sha, links: linksOf(new TextDecoder("utf-8", { fatal: false }).decode(bytes2), a.document?.locator || seed) });
+        else entry.unread = "the seed's bytes could not be read back from the capture store";
+        continue;
+      }
+      const reason = a.code === "SWEEP_REDIRECT_OUT_OF_SCOPE" ? "out_of_scope_redirect" : a.reason || a.code || "failed";
+      if (reason === "out_of_scope_redirect") {
+        d.seeds.push({ seed, outcome: reason, target: a.target ?? null });
+        d.redirected.push({ address: seed, target: a.target ?? null });
+      } else {
+        let reach2 = null;
+        try {
+          reach2 = this.capture.sourceReachability({ addressNorm: normalizeAddress(seed), now: at27 });
+        } catch {
+          reach2 = null;
+        }
+        d.seeds.push({ seed, outcome: "failed", reason, reachability: reach2 });
+      }
+      this.#look(x, seed, { state: "LOOKED_INDETERMINATE", detail: `seed ${reason}${a.target ? ` to ${a.target}` : ""}` }, at27);
+    }
+    const seen = /* @__PURE__ */ new Set();
+    for (const l of lists) for (const link of l.links) {
+      let norm;
+      try {
+        norm = normalizeAddress(link.address);
+      } catch {
+        continue;
+      }
+      if (seen.has(norm)) continue;
+      seen.add(norm);
+      d.candidates++;
+      if (!inScope(link.address, s.sources) || paths && !inScope(link.address, paths)) continue;
+      const addr = decodedAddress(link.address);
+      if (isCut(link.text) || isCut(addr)) d.cut++;
+      if (terms.length && !terms.some((t) => t.test(link.text) || t.test(addr))) continue;
+      d.matched++;
+      if (this.#one(`SELECT 1 AS x FROM sweep_filed WHERE sweep = ? AND address_norm = ?`, x.name, norm)) {
+        d.skipped.already_swept++;
+        continue;
+      }
+      if (this.#one(`SELECT 1 AS x FROM captured_locators cl JOIN register r ON r.capture_sha = cl.capture_sha WHERE cl.address_norm = ? LIMIT 1`, norm)) {
+        d.skipped.already_held++;
+        continue;
+      }
+      if (left2 <= 0) {
+        d.skipped.budget_spent++;
+        continue;
+      }
+      const a = await this.#acquire(x, link.address);
+      if (a.reason === "HOST_COOLING_OFF") {
+        this.#look(x, link.address, { state: "LOOKED_INDETERMINATE", governed: true, detail: "governed; the per-host governor held the fetch" }, at27);
+        continue;
+      }
+      left2--;
+      fetched++;
+      if (a.code === "SWEEP_REDIRECT_OUT_OF_SCOPE") {
+        d.redirected.push({ address: link.address, target: a.target ?? null });
+        this.#look(x, link.address, { state: "LOOKED_INDETERMINATE", detail: `out_of_scope_redirect to ${a.target}` }, at27);
+        continue;
+      }
+      const doc = a.ok ? a.document : null, sha = doc?.capture?.sha256;
+      if (!doc || !sha) {
+        d.failed.push({ address: link.address, reason: a.reason || a.code || "failed" });
+        this.#look(x, link.address, { state: "LOOKED_INDETERMINATE", detail: `failed; ${a.reason || a.code || "no answer"}` }, at27);
+        continue;
+      }
+      const bytes2 = formats ? await this.#bytes(sha) : null;
+      const format = formats ? bytes2 ? detectFormat(bytes2, doc.capture.content_type ?? null).format : null : null;
+      if (formats && !formats.includes(format)) {
+        d.excluded.push({ address: link.address, format: format ?? "undetermined" });
+        this.#look(x, link.address, { state: "LOOKED_INDETERMINATE", detail: `format_excluded; ${format ?? "undetermined"}` }, at27);
+        continue;
+      }
+      this.#look(x, link.address, { state: "PRESENT", ref: sha, detail: `fetched for the sweep ${x.name}` }, at27);
+      if (a.existed === true) {
+        d.skipped.already_held++;
+        continue;
+      }
+      const landed = this.host.land({ id: x.name, bundle: x.bundle, locators: [link.address], target: link.text || null }, { locator: link.address, doc }, at27, {
+        title: `Swept by ${x.name}: ${link.text || link.address}`,
+        notes: `Brought in by the ratified sweep ${x.name}, one hop from the seed ${l.seed}, whose capture ${l.sha} listed it. Collected ${at27}. Filed at collected and never higher: verifying it is a named member's decision.`,
+        trigger: `ratified sweep ${x.name}`,
+        summary: `The document served at ${link.address}, brought in by the sweep ${x.name}.`
+      });
+      if (landed && landed.ok) {
+        this.sql.exec(
+          `INSERT OR IGNORE INTO sweep_filed (sweep, address_norm, bundle_id, filed, at) VALUES (?, ?, ?, ?, ?)`,
+          x.name,
+          norm,
+          x.bundle,
+          landed.bundle_id,
+          at27
+        );
+        d.documents.push({ address: link.address, bundle: landed.bundle_id });
+      } else d.failed.push({ address: link.address, reason: landed?.reason || "NOT_FILED", detail: landed?.detail ?? null });
+    }
+    const filed = d.documents.length;
+    const med = median(prior.map((r) => r.filed));
+    let anomaly = null;
+    if (prior.length + 1 >= ANOMALY_MIN_RUNS) {
+      if (filed > ANOMALY_FACTOR * med && filed > ANOMALY_FLOOR) anomaly = { kind: "surge", filed, median: med };
+      else if (filed === 0 && med >= ANOMALY_DRY_MEDIAN) anomaly = { kind: "dry", filed, median: med };
+    }
+    const seq = (this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM sweep_runs WHERE sweep = ?`, x.name) || { n: 1 }).n;
+    this.sql.exec(
+      `INSERT INTO sweep_runs (sweep, seq, bundle_id, at, filed, fetched, detail, anomaly) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      x.name,
+      seq,
+      x.bundle,
+      at27,
+      filed,
+      fetched,
+      JSON.stringify(d),
+      anomaly ? JSON.stringify(anomaly) : null
+    );
+    return { seq, fetched, filed, anomaly, note };
+  }
+  /** R5: a seed's new capture filed in the sweep's own bundle as a monitor snapshot with its register row, in the way
+   *  monitoring R9 files a tick's bytes (a mechanical `sweep` promotion that changes no field). A refusal is kept as
+   *  `why`. */
+  async #fileSeed(x, doc, at27) {
+    const sha = doc.capture.sha256, bytes2 = doc.capture.bytes;
+    const leaf = (String(doc.locator || "").split("?")[0].split("/").pop() || "seed").replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 80) || "seed";
+    const file = `snapshots/monitor-${sha.slice(0, 12)}-${leaf}`;
+    const img = this.record.readImage(x.bundle);
+    if (!img || typeof img["bundle.md"] !== "string" || !Number.isSafeInteger(bytes2)) return { file: null, why: "the sweep's bundle or the capture's size could not be read" };
+    const hex6 = (t) => createSha256().update(new TextEncoder().encode(t)).hex();
+    const files = [];
+    let has3 = false;
+    for (const [path, v] of Object.entries(img)) {
+      if (path.startsWith("_history/")) continue;
+      if (typeof v === "string") files.push({ path, text: v, bytes: new TextEncoder().encode(v).length, sha256: hex6(v) });
+      else {
+        files.push({ path, blobSha: v.blobSha, sha256: v.sha256, bytes: v.bytes });
+        if (v.sha256 === sha) has3 = true;
+      }
+    }
+    if (has3) return { file: null, why: "the sweep's bundle already holds these bytes" };
+    const fm = this.record.head(x.bundle);
+    const p = await this.promotion.promote({
+      bundleId: x.bundle,
+      base: hex6(img["bundle.md"]),
+      author: SWEEP_ACTOR,
+      snapKey: `${at27.replace(/[-:]/g, "")}_${[...crypto.getRandomValues(new Uint8Array(4))].map((b) => b.toString(16).padStart(2, "0")).join("")}`,
+      writer: "mechanical",
+      operation: "sweep",
+      meta: { object_type: fm?.type, title: fm?.title, current_state: fm?.currentState },
+      files: [...files, { path: file, blobSha: sha, sha256: sha, bytes: bytes2 }],
+      register: [{ sha256: sha, path: file, encoding: "binary", bytes: bytes2 }]
+    });
+    return p && p.ok ? { file } : { file: null, why: `the promotion filing it was refused (${p?.reason || p?.code || "no reason given"})` };
+  }
+  /* ================================================================== *
+   * Reads (R9, R11, monitoring R30's slate) and the scope check (R12)
+   * ================================================================== */
+  /** R9: every sweep in a `gathering.json` the viewer may see (`op=sweeps`), through monitoring's gate (its R65). */
+  sweeps({ viewer = null, now = null } = {}) {
+    this.registerSweepScope();
+    const nowMs = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : this.now();
+    const pause = this.host.paused();
+    const items = this.#all(this.host.gate(viewer)).map((x) => {
+      const paused = pause.paused;
+      const st = this.#standing(x, nowMs, paused);
+      const runs = this.#runs(x.name);
+      const r = x.sweep.ratified === true ? this.ratifier(x.bundle, x.sweep.id) : null;
+      return {
+        sweep: x.name,
+        bundle: x.bundle,
+        id: x.sweep.id,
+        definition: JSON.stringify(x.sweep),
+        ratified: x.sweep.ratified === true,
+        ratified_by: r ? r.by : null,
+        ratified_at: r ? r.at : null,
+        due: st.due,
+        ...st.why ? { why: st.why } : {},
+        next: st.next !== null ? stampInstant("second", st.next) : null,
+        held: st.held ? "backlog" : null,
+        backlog: st.backlog,
+        backlog_limit: st.limit,
+        silent: this.#silent(runs, st.held),
+        runs
+      };
+    });
+    return { ok: true, as_of: stampInstant("second", nowMs), paused: pause, sweeps: items, formats: listFormats() };
+  }
+  #silent(runs, held) {
+    return !held && runs.length >= SILENT_RUNS && runs.slice(0, SILENT_RUNS).every((r) => r.filed === 0);
+  }
+  /** R11: each sweep's conditions that need a member's look, derived on read and writing nothing. */
+  sweepConditions({ viewer = null, now = null } = {}) {
+    const out = [];
+    for (const x of this.sweeps({ viewer, now }).sweeps) {
+      if (!x.ratified) continue;
+      const last = x.runs[0] || null;
+      const push = (kind, since, detail) => out.push({ sweep: x.sweep, kind, since, detail });
+      if (x.held) push("sweep-held-backlog", last ? last.at : null, { backlog: x.backlog, limit: x.backlog_limit });
+      if (last && last.anomaly) push("sweep-yield-anomaly", last.at, { filed: last.anomaly.filed, median: last.anomaly.median });
+      const failed2 = last ? (last.seeds || []).filter((s) => s.outcome === "failed") : [];
+      if (failed2.length) push("sweep-seed-unreachable", last.at, { seeds: failed2.map((s) => ({ seed: s.seed, reachability: s.reachability ?? null })) });
+      if (last && (last.redirected || []).length) push("sweep-redirect-out-of-scope", last.at, { redirects: last.redirected });
+      if (x.silent) push("sweep-silent", x.runs[SILENT_RUNS - 1].at, { runs: SILENT_RUNS });
+    }
+    return { ok: true, conditions: out };
+  }
+  /** R9 (monitoring R30, R66): the due sweeps the viewer `sees`, for the slate, each with its definition as quoted
+   *  data; monitoring sets them inside its fixed framing. */
+  dueForSlate(nowMs, sees) {
+    return this.plan(nowMs).due.filter((x) => sees(x.bundle)).map((x) => ({ kind: "ratified-sweep", bundle: x.bundle, id: x.sweep.id, definition: x.sweep }));
+  }
+  /** R12: capture-requests R45's scope check: the sweep ratified and not held, and every locator in its scope, by the
+   *  matcher a run uses (R1's `inScope`). */
+  scopeCheck({ sweep = null, locators = [] } = {}) {
+    const x = this.#all().find((y) => y.name === sweep);
+    if (!x) return { ok: false, reason: "unknown", detail: `no sweep is named ${String(sweep).slice(0, 80)}` };
+    if (x.sweep.ratified !== true || !runnable(x.sweep)) return { ok: false, reason: "unratified" };
+    if (this.#held(x).held) return { ok: false, reason: "held", detail: "the sweep's backlog is at or over its limit" };
+    const out = (Array.isArray(locators) ? locators : []).filter((l) => !inScope(l, x.sweep.sources));
+    if (!Array.isArray(locators) || !locators.length || out.length)
+      return { ok: false, reason: "out-of-scope", detail: out.length ? `${String(out[0]).slice(0, 120)} is outside the sweep's sources` : "no locator was named" };
+    return { ok: true, scope: [...x.sweep.sources] };
+  }
+};
+
+// src/link-sweep/index.mjs
+var instances39 = /* @__PURE__ */ new WeakMap();
+function linkSweepOf(host, deps) {
+  const storage = host && host.storage ? host.storage : host;
+  let s = instances39.get(storage);
+  if (!s) {
+    const d = deps || {};
+    const record = d.record || recordOf(host);
+    const membership = d.membership || membershipOf(host, { record });
+    const promotion = d.promotion || promotionOf(host, { record, membership });
+    const lazy = (given, make) => {
+      let v = given || null;
+      return () => v ||= make();
+    };
+    s = new LinkSweep({
+      storage: d.storage || storage,
+      record,
+      membership,
+      promotion,
+      now: d.now || null,
+      capture: lazy(d.capture, () => captureOf(host)),
+      observationLog: lazy(d.observationLog, () => observationLogOf(host, { record, membership })),
+      projectStage: lazy(d.projectStage, () => projectStageOf(host, { record, membership })),
+      captureRequests: lazy(d.captureRequests, () => captureRequestsOf(host, { record })),
+      monitoring: lazy(d.monitoring, () => monitoringOf(host, { record, membership, promotion }))
+    });
+    instances39.set(storage, s);
+    s.migrate();
+    record.declarePurge(LINK_SWEEP_MODULE, LINK_SWEEP_TABLES.map((t) => ({ name: t.name, keys: [...t.keys] })));
+    s.registration = s.registerWithMonitoring();
+    if (d.captureRequests) s.registerSweepScope();
+  }
+  return s;
 }
 
 // src/scheduler/index.mjs
@@ -126711,7 +126875,7 @@ var Scheduler = class {
   #deadlineIdleAt = null;
   /** `storage` is the Durable Object's storage (its alarm, and the probe seam's one value); `owners` answers each
    *  consumer's owner (`retrieval`, `monitoring`, `connections`, `progressions`, `aiRuns`, `captureRequests`,
-   *  `calibration`, `bias`, `intent`, `reevaluation`, `networkNotices`), each a function returning the owner, so an owner is reached
+   *  `calibration`, `bias`, `intent`, `reevaluation`, `networkNotices`, `linkSweep`), each a function returning the owner, so an owner is reached
    *  only when the registry is built. */
   constructor({ storage, env = null, owners = {} } = {}) {
     this.#storage = storage;
@@ -126746,12 +126910,6 @@ var Scheduler = class {
         const idle = this.#deadlineIdleAt;
         return idle !== null && w <= idle ? Math.floor(idle / DAY_MS4) * DAY_MS4 + DAY_MS4 : w;
       };
-      c["gathering-sweep"] = {
-        /* monitoring R56: the ratified sweeps (R29), batch-bounded, given the rank (R10) */
-        due: (now) => instant(o("monitoring").sweepDue(now), now),
-        wake: (now) => o("monitoring").sweepWake(now),
-        tick: async (now, rank6) => ({ gatheringsweep: await o("monitoring").sweepTick(now, rank6) })
-      };
       c["deadline-recheck"] = {
         due: (now) => {
           const d = held(instant(o("monitoring").deadlineRecheckDue(now), now));
@@ -126766,6 +126924,12 @@ var Scheduler = class {
         }
       };
     }
+    if (this.#owners.linkSweep) c["gathering-sweep"] = {
+      /* link-sweep R4: the ratified sweeps, batch-bounded, given the rank (R10) */
+      due: (now) => instant(o("linkSweep").sweepDue(now), now),
+      wake: (now) => o("linkSweep").sweepWake(now),
+      tick: async (now, rank6) => ({ gatheringsweep: await o("linkSweep").sweepTick(now, rank6) })
+    };
     if (this.#owners.retrieval) c["selection-sweep"] = {
       /* retrieval R22, its wake R51 */
       due: (now) => now,
@@ -126922,7 +127086,7 @@ var Scheduler = class {
     const reg = this.registry(probe);
     const answers = {};
     const probes = [];
-    const rank6 = (items, at26 = now) => this.rank(items, at26);
+    const rank6 = (items, at27 = now) => this.rank(items, at27);
     for (const c of reg) {
       let d2;
       try {
@@ -126990,21 +127154,21 @@ var Scheduler = class {
       await this.#storage.setAlarm(want);
       return want;
     }
-    const at26 = await this.#storage.getAlarm();
-    if (at26 === null || at26 === void 0 || at26 > want) {
+    const at27 = await this.#storage.getAlarm();
+    if (at27 === null || at27 === void 0 || at27 > want) {
       await this.#storage.setAlarm(want);
       return want;
     }
-    return at26;
+    return at27;
   }
   /* ---- R4, R11 ---- */
   /** The producers' door: reconciles without firing, never pushing a set alarm later. Runs no tick and writes no
    *  work; answers the alarm as it stands. */
   async arm(now = Date.now()) {
     const probe = await this.#probeState(now, true);
-    const at26 = await this.#reconcile(now, this.registry(probe), false);
+    const at27 = await this.#reconcile(now, this.registry(probe), false);
     if (probe) await this.#storage.put(PROBE_KEY, probe);
-    return at26;
+    return at27;
   }
   /** At the instance's start: reconciles as `arm` does, so an alarm lost to a failed firing or a reset is re-derived
    *  from durable state. It starts no probe that was not already armed. */
@@ -127058,7 +127222,15 @@ var Scheduler = class {
     };
     const configured = () => monitoring((m) => m.configured());
     const clockPending = () => monitoring((m) => m.deadlineRecheckWake(Date.now()) != null);
-    const sweepPending = () => monitoring((m) => typeof m.sweepWake === "function" && m.sweepWake(Date.now()) != null);
+    const sweepPending = () => {
+      if (!this.#owners.linkSweep) return false;
+      try {
+        const l = this.#owner("linkSweep");
+        return !!(l && l.sweepWake(Date.now()) != null);
+      } catch {
+        return false;
+      }
+    };
     const out = {};
     if (retrieval) out.retrieval = retrieval.onSelectionCreated("scheduler", arm);
     if (bias) out.bias = bias.onLensChange("scheduler", () => bias.biasDebtDue(Date.now()) === null ? null : arm());
@@ -127089,9 +127261,9 @@ var Scheduler = class {
     return out;
   }
 };
-var instances39 = /* @__PURE__ */ new WeakMap();
+var instances40 = /* @__PURE__ */ new WeakMap();
 function schedulerOf(ctx, env = null, deps = {}) {
-  let s = instances39.get(ctx);
+  let s = instances40.get(ctx);
   if (!s) {
     const e = env || {};
     const owners = deps.owners || {
@@ -127105,10 +127277,11 @@ function schedulerOf(ctx, env = null, deps = {}) {
       bias: () => biasOf(ctx),
       intent: () => intentOf(ctx),
       reevaluation: () => reevaluationOf(ctx),
-      networkNotices: () => networkNoticesOf(ctx, { env: e })
+      networkNotices: () => networkNoticesOf(ctx, { env: e }),
+      linkSweep: () => linkSweepOf(ctx)
     };
     s = new Scheduler({ storage: deps.storage || ctx.storage, env: e, owners });
-    instances39.set(ctx, s);
+    instances40.set(ctx, s);
     if (!deps.owners)
       s.listenTo({
         retrieval: retrievalOf(ctx),
@@ -129032,10 +129205,10 @@ async function boundedText(res, max) {
   } catch {
   }
   const all = new Uint8Array(held);
-  let at26 = 0;
+  let at27 = 0;
   for (const p of parts) {
-    all.set(p, at26);
-    at26 += p.length;
+    all.set(p, at27);
+    at27 += p.length;
   }
   return new TextDecoder().decode(all);
 }
@@ -129199,14 +129372,14 @@ var InstanceSetup = class _InstanceSetup {
         `this store has recorded its producing group since ${held.recorded_at} (${held.source}), and it is recorded once. Nothing was changed.`,
         { group: held.slug, recorded_at: held.recorded_at, source: held.source }
       );
-    const at26 = this.#iso();
+    const at27 = this.#iso();
     const who2 = typeof author === "string" && author.trim() ? author.trim() : null;
     this.#sql.exec(`INSERT INTO instance_group (id, slug, recorded_at, source, recorded_by)
-                    VALUES (1, ?, ?, 'seed', ?) ON CONFLICT(id) DO NOTHING`, s, at26, who2);
+                    VALUES (1, ?, ?, 'seed', ?) ON CONFLICT(id) DO NOTHING`, s, at27, who2);
     return {
       ok: true,
       group: s,
-      recorded_at: at26,
+      recorded_at: at27,
       source: "seed",
       recorded_by: who2,
       note: "every document this store writes from now on names this group. Documents already written are NOT rewritten: whatever group their bytes name is what they were signed under."
@@ -129265,17 +129438,17 @@ var InstanceSetup = class _InstanceSetup {
         "GROUP_DISPLAY_NAME_MALFORMED",
         `${s ? `a name of ${chars} characters` : "the request names no display name, and it is set as"} one line of 1 to ${GROUP_DISPLAY_NAME_MAX} characters with no control characters. Nothing was set.`
       );
-    const at26 = this.#iso();
+    const at27 = this.#iso();
     this.#sql.exec(
       `INSERT INTO group_identity_history (field, value, set_at, set_by) VALUES ('display_name', ?, ?, ?)`,
       s,
-      at26,
+      at27,
       by
     );
     return {
       ok: true,
       display_name: s,
-      set_at: at26,
+      set_at: at27,
       set_by: by,
       history: this.#identityHistory("display_name"),
       note: "presentation only: no signed bytes carry it, and every public surface shows it beside the slug."
@@ -129294,9 +129467,9 @@ var InstanceSetup = class _InstanceSetup {
         `${d ? `'${d.slice(0, 80)}' is not` : "the request names no domain, and one is claimed as"} a bare host name (letters, digits, hyphens and dots, with no scheme, path, port or IP address). Nothing was recorded.`
       );
     const address = instanceAddress(origin);
-    const at26 = this.#iso();
+    const at27 = this.#iso();
     this.#sql.exec(`INSERT INTO group_identity_history (field, value, set_at, set_by, instance_address)
-                    VALUES ('domain', ?, ?, ?, ?)`, d, at26, by, address);
+                    VALUES ('domain', ?, ?, ?, ?)`, d, at27, by, address);
     const check = await this.#checkGroupDomain("set");
     try {
       await this.#scheduler().arm();
@@ -129305,7 +129478,7 @@ var InstanceSetup = class _InstanceSetup {
     return {
       ok: true,
       domain: d,
-      set_at: at26,
+      set_at: at27,
       set_by: by,
       instance_address: address,
       check,
@@ -129378,10 +129551,10 @@ var InstanceSetup = class _InstanceSetup {
         }
       }
     }
-    const at26 = this.#iso();
+    const at27 = this.#iso();
     this.#sql.exec(`INSERT INTO group_domain_checks (domain, verdict, checked_at, trigger, status, detail)
-                    VALUES (?, ?, ?, ?, ?, ?)`, domain, verdict, at26, trigger, status, detail);
-    return { domain, verdict, checked_at: at26, trigger, status, detail };
+                    VALUES (?, ?, ?, ?, ?, ?)`, domain, verdict, at27, trigger, status, detail);
+    return { domain, verdict, checked_at: at27, trigger, status, detail };
   }
   /** R9, the alarm consumer's two halves: the next re-check is due one interval after the current claim's latest
    *  verdict, and an instance claiming no domain holds no wake. */
@@ -129529,10 +129702,10 @@ var InstanceSetup = class _InstanceSetup {
    * ===================================================================== */
   /** R33: record what a run cost. The peak is kept beside the last because the peak is the run that will die first
    *  and a mean would hide it. `unit` is the metric's (R34), fixed by its first observation. Never throws. */
-  recordRuntimeObservation({ metric, ms: ms2, detail = null, at: at26 = null, unit = null } = {}) {
+  recordRuntimeObservation({ metric, ms: ms2, detail = null, at: at27 = null, unit = null } = {}) {
     try {
       if (typeof metric !== "string" || !metric || typeof ms2 !== "number" || !Number.isFinite(ms2)) return { recorded: false };
-      const now = at26 || stampInstant("second", this.#now());
+      const now = at27 || stampInstant("second", this.#now());
       const cur = this.#one(`SELECT * FROM runtime_observations WHERE metric = ?`, metric);
       if (!cur) {
         this.#sql.exec(
@@ -129586,16 +129759,16 @@ var InstanceSetup = class _InstanceSetup {
     };
   }
   /** R40: a probe run begins. Its steps are numbered and timed from this run's own start. */
-  recordCpuProbeStart({ run: run2, iterations = null, budgetMs = null, at: at26 = null } = {}) {
+  recordCpuProbeStart({ run: run2, iterations = null, budgetMs = null, at: at27 = null } = {}) {
     if (typeof run2 !== "string" || !run2) return { recorded: false };
     this.#sql.exec(`INSERT INTO cpu_probe_runs (run, started_at, iterations, budget_ms) VALUES (?, ?, ?, ?)
-                    ON CONFLICT(run) DO NOTHING`, run2, at26 || stampInstant("second", this.#now()), iterations, budgetMs);
+                    ON CONFLICT(run) DO NOTHING`, run2, at27 || stampInstant("second", this.#now()), iterations, budgetMs);
     return { run: run2, recorded: true };
   }
   /** R35: one completed step of one run (`run`, R40): its number, its elapsed time from its run's start, its
    *  iterations and the instant. Never throws for a well-formed call. */
-  recordCpuProbeStep({ run: run2 = LEGACY_PROBE_RUN, step, elapsedMs, iterations, at: at26 = null } = {}) {
-    const now = at26 || stampInstant("second", this.#now());
+  recordCpuProbeStep({ run: run2 = LEGACY_PROBE_RUN, step, elapsedMs, iterations, at: at27 = null } = {}) {
+    const now = at27 || stampInstant("second", this.#now());
     if (!this.#one(`SELECT run FROM cpu_probe_runs WHERE run = ?`, run2))
       this.#sql.exec(
         `INSERT INTO cpu_probe_runs (run, started_at, iterations, reason) VALUES (?, ?, ?, 'unrecorded')`,
@@ -129615,11 +129788,11 @@ var InstanceSetup = class _InstanceSetup {
     return { run: run2, step, elapsed_ms: elapsedMs };
   }
   /** R40: a probe run returned, with what it completed and why it stopped. A run with no end is one cut off. */
-  recordCpuProbeEnd({ run: run2, completed = null, elapsedMs = null, reason = null, at: at26 = null } = {}) {
+  recordCpuProbeEnd({ run: run2, completed = null, elapsedMs = null, reason = null, at: at27 = null } = {}) {
     if (typeof run2 !== "string" || !run2) return { recorded: false };
     this.#sql.exec(
       `UPDATE cpu_probe_runs SET ended_at = ?, completed = ?, elapsed_ms = ?, reason = ? WHERE run = ?`,
-      at26 || stampInstant("second", this.#now()),
+      at27 || stampInstant("second", this.#now()),
       completed,
       elapsedMs,
       reason,
@@ -132459,7 +132632,7 @@ var Tasks = class _Tasks {
    *  exists, and inventing a refers_to would be worse than being patient. */
   taskDrain({ limit = 50, actor = "consumer", now = null } = {}) {
     const cap = clampLimit4(limit, 50, 500);
-    const at26 = now && ISO_INSTANT3.test(now) ? now : stampInstant("second", this.#nowMs());
+    const at27 = now && ISO_INSTANT3.test(now) ? now : stampInstant("second", this.#nowMs());
     const queued = this.#capture.taskEvents({ limit: cap }).map((e) => ({ ...e, capture_sha: e.captureSha, attempts: Number(e.attempts) || 0 }));
     const out = { drained: 0, created: [], folded: [], waiting: [], refused: [] };
     const drop = (q7) => this.#capture.taskEventRemove({ kind: q7.kind, captureSha: q7.capture_sha });
@@ -132467,7 +132640,7 @@ var Tasks = class _Tasks {
       const home = this.#provenance.homeOf(q7.capture_sha);
       const reg = home ? { bundle_id: home.bundleId } : null;
       if (!reg) {
-        this.#capture.taskEventAttempt({ kind: q7.kind, captureSha: q7.capture_sha, at: at26 });
+        this.#capture.taskEventAttempt({ kind: q7.kind, captureSha: q7.capture_sha, at: at27 });
         out.waiting.push({
           captureSha: q7.capture_sha,
           attempts: q7.attempts + 1,
@@ -132482,7 +132655,7 @@ var Tasks = class _Tasks {
       );
       if (live) {
         const hist = this.#taskOf(live).history;
-        hist.push({ at: at26, event: "folded", actor });
+        hist.push({ at: at27, event: "folded", actor });
         this.sql.exec(`UPDATE tasks SET history=? WHERE id=?`, JSON.stringify(hist), live.id);
         drop(q7);
         out.folded.push({ id: live.id, refers_to: reg.bundle_id });
@@ -132490,7 +132663,7 @@ var Tasks = class _Tasks {
         continue;
       }
       const route = this.#routeTask(reg.bundle_id);
-      const year = at26.slice(0, 4);
+      const year = at27.slice(0, 4);
       const slug = taskSlug(q7.subject);
       this.seedLedger();
       const taskId = this.#record.mintOpaqueId(
@@ -132519,8 +132692,8 @@ var Tasks = class _Tasks {
         assignee: route.assignee,
         assignee_role: route.assignee_role,
         status: "open",
-        created: at26,
-        history: [{ at: at26, event: "created", actor }]
+        created: at27,
+        history: [{ at: at27, event: "created", actor }]
       };
       const bad = this.#refuseUngrammatical(task);
       if (bad) {
@@ -132765,9 +132938,9 @@ var Tasks = class _Tasks {
     const target = facts && facts.status === "active" ? { member_id: to } : null;
     if (!target) return { ok: false, reason: "NO_SUCH_MEMBER", detail: "a task is forwarded to an active member of this group" };
     if (target.member_id === row2.assignee) return { ok: false, reason: "ALREADY_THEIRS" };
-    const at26 = now && ISO_INSTANT3.test(now) ? now : stampInstant("second", this.#nowMs());
+    const at27 = now && ISO_INSTANT3.test(now) ? now : stampInstant("second", this.#nowMs());
     const task = this.#taskOf(row2);
-    task.history.push({ at: at26, event: "forwarded", actor });
+    task.history.push({ at: at27, event: "forwarded", actor });
     task.assignee = target.member_id;
     task.assignee_role = "member";
     task.status = "forwarded";
@@ -132781,7 +132954,7 @@ var Tasks = class _Tasks {
       JSON.stringify(task.history),
       id
     );
-    return { ok: true, id, assignee: task.assignee, assignee_role: task.assignee_role, from: row2.assignee, at: at26 };
+    return { ok: true, id, assignee: task.assignee, assignee_role: task.assignee_role, from: row2.assignee, at: at27 };
   }
   /** Resolve a task (R3). Also a member action, enforced (REC-28, D-151).
    *
@@ -132812,21 +132985,21 @@ var Tasks = class _Tasks {
     if (row2.status === "resolved") return { ok: true, id, already: true, resolved_at: row2.resolved_at };
     const fenced = this.#refuseNotYours(row2, actor, "resolve");
     if (fenced) return fenced;
-    const at26 = now && ISO_INSTANT3.test(now) ? now : stampInstant("second", this.#nowMs());
+    const at27 = now && ISO_INSTANT3.test(now) ? now : stampInstant("second", this.#nowMs());
     const task = this.#taskOf(row2);
-    task.history.push({ at: at26, event: "resolved", actor });
+    task.history.push({ at: at27, event: "resolved", actor });
     task.status = "resolved";
-    task.resolved_at = at26;
+    task.resolved_at = at27;
     const bad = this.#refuseUngrammatical(task);
     if (bad) return bad;
     this.sql.exec(
       `UPDATE tasks SET status=?, resolved_at=?, history=? WHERE id=?`,
       task.status,
-      at26,
+      at27,
       JSON.stringify(task.history),
       id
     );
-    return { ok: true, id, status: "resolved", resolved_at: at26 };
+    return { ok: true, id, status: "resolved", resolved_at: at27 };
   }
   static PER_ITEM_MAX = PER_ITEM_MAX;
   /* affordances.mjs: ONE number, published as set_acts[].max_items */
@@ -132929,7 +133102,7 @@ var CORE_TAIL4 = Object.freeze([
   "  source: null",
   "visuals: []"
 ]);
-function planDoc({ id, project, title, author, at: at26, entry }) {
+function planDoc({ id, project, title, author, at: at27, entry }) {
   return [
     "---",
     `id: ${id}`,
@@ -132938,8 +133111,8 @@ function planDoc({ id, project, title, author, at: at26, entry }) {
     `title: ${q6(title)}`,
     "current_state: open",
     "prior_state: null",
-    `created: ${q6(at26)}`,
-    `last_updated: ${q6(at26)}`,
+    `created: ${q6(at27)}`,
+    `last_updated: ${q6(at27)}`,
     `project: ${tok2(project)}`,
     `opened_by: ${tok2(author)}`,
     ...CORE_TAIL4,
@@ -132951,7 +133124,7 @@ function planDoc({ id, project, title, author, at: at26, entry }) {
     "",
     "## Session Log",
     "",
-    `### Session ${at26} | Plan opened | ${author}`,
+    `### Session ${at27} | Plan opened | ${author}`,
     "Changes: plan opened.",
     ""
   ].join("\n");
@@ -133360,7 +133533,7 @@ function phaseTimes(phases, { setAt, judged, track }) {
     if (memo.has(id)) return memo.get(id);
     memo.set(id, { started: false, at: null, earliest: null, due: null });
     const p = byId.get(id);
-    let at26 = null, earliest = null;
+    let at27 = null, earliest = null;
     const s = p.starts;
     const after = (t) => {
       const q7 = ofPhase(t);
@@ -133368,39 +133541,39 @@ function phaseTimes(phases, { setAt, judged, track }) {
       return { q: q7, days };
     };
     if (s === "plan_start") {
-      at26 = ms(setAt);
-      earliest = at26;
+      at27 = ms(setAt);
+      earliest = at27;
     } else if (s.after) {
       const { q: prior, days } = after(s.after);
       const j = judged.get(s.after);
       if (byId.get(s.after).checkpoint) {
-        if (j) at26 = ms(j.at);
-      } else if (prior.started) at26 = ms(prior.at);
-      earliest = at26 ?? (prior.earliest === null ? null : ms(prior.earliest) + days);
+        if (j) at27 = ms(j.at);
+      } else if (prior.started) at27 = ms(prior.at);
+      earliest = at27 ?? (prior.earliest === null ? null : ms(prior.earliest) + days);
     } else if (s.branch_of) {
       const { q: prior, days } = after(s.branch_of);
       const j = judged.get(s.branch_of);
-      if (j && j.judged === s.when) at26 = ms(j.at);
-      earliest = at26 ?? (j ? null : prior.earliest === null ? null : ms(prior.earliest) + days);
+      if (j && j.judged === s.when) at27 = ms(j.at);
+      earliest = at27 ?? (j ? null : prior.earliest === null ? null : ms(prior.earliest) + days);
     } else if (s.when_subject) {
       const t = track(s);
-      if (t) at26 = ms(t);
-      earliest = at26;
+      if (t) at27 = ms(t);
+      earliest = at27;
     }
     for (const o of phases) {
       if (!o.branches) continue;
       for (const [k, v] of Object.entries(o.branches)) {
         if (v !== id) continue;
         const j = judged.get(o.id);
-        if (j && j.judged === k && (at26 === null || ms(j.at) < at26)) at26 = ms(j.at);
+        if (j && j.judged === k && (at27 === null || ms(j.at) < at27)) at27 = ms(j.at);
       }
     }
-    const started = Number.isFinite(at26);
+    const started = Number.isFinite(at27);
     const r = {
       started,
-      at: started ? iso3(at26) : null,
-      earliest: started ? iso3(at26) : Number.isFinite(earliest) ? iso3(earliest) : null,
-      due: started && p.checkpoint ? iso3(at26 + p.checkpoint.after_days * DAY_MS5) : null
+      at: started ? iso3(at27) : null,
+      earliest: started ? iso3(at27) : Number.isFinite(earliest) ? iso3(earliest) : null,
+      due: started && p.checkpoint ? iso3(at27 + p.checkpoint.after_days * DAY_MS5) : null
     };
     memo.set(id, r);
     return r;
@@ -134045,11 +134218,11 @@ var ActionPlans = class {
     if (fence4) return fence4;
     const s = this.#subjects(project, subjects, viewer);
     if (!s.items) return s;
-    const at26 = this.now();
+    const at27 = this.now();
     const r = this.record.transact(() => {
-      const id = planId(this.record.allocId("PLN", at26.slice(0, 4)).id);
-      const entry = { kind: "open", project, title: title.trim(), subjects: s.items, author, at: at26 };
-      const text5 = planDoc({ id, project, title: title.trim(), author, at: at26, entry });
+      const id = planId(this.record.allocId("PLN", at27.slice(0, 4)).id);
+      const entry = { kind: "open", project, title: title.trim(), subjects: s.items, author, at: at27 };
+      const text5 = planDoc({ id, project, title: title.trim(), author, at: at27, entry });
       const fm = parseFm3(text5) || {};
       const p = this.promotion.promote({
         bundleId: id,
@@ -134076,7 +134249,7 @@ var ActionPlans = class {
       title: title.trim(),
       state: "open",
       opened_by: author,
-      at: at26,
+      at: at27,
       subjects: s.items.map((x) => ({ subject: x.subject, ...this.#support(x.subject, project, viewer) }))
     };
   }
@@ -134216,7 +134389,7 @@ var ActionPlans = class {
         skill = null;
       }
     }
-    const at26 = this.now();
+    const at27 = this.now();
     const r = this.record.transact(() => {
       if (machine3) {
         const again = this.#runGate(run2, p, principal, viewer);
@@ -134239,7 +134412,7 @@ var ActionPlans = class {
         skill,
         srcs ? JSON.stringify(srcs) : null,
         ord,
-        at26
+        at27
       );
       if (machine3) {
         const c = this.aiRuns.consumeBound(gate.run.run, "proposals", 1);
@@ -134497,17 +134670,17 @@ var ActionPlans = class {
     const subjects = new Map(this.#subjectsOf(p.id).map((s) => [s.key, s.subject]));
     const r = checkPhases(phases, { chosen, subjects });
     if (r.phases) return r;
-    const at26 = { index: r.index, ...r.phase ? { phase: r.phase } : {}, ...r.option ? { option: r.option } : {} };
+    const at27 = { index: r.index, ...r.phase ? { phase: r.phase } : {}, ...r.option ? { option: r.option } : {} };
     if (r.fault === "malformed")
-      return refusal18("PHASE_MALFORMED", `phase ${r.index ?? "list"} is not a phase this scenario can hold: ${r.detail}. Nothing was written.`, at26);
+      return refusal18("PHASE_MALFORMED", `phase ${r.index ?? "list"} is not a phase this scenario can hold: ${r.detail}. Nothing was written.`, at27);
     if (r.fault === "not_chosen")
-      return refusal18("PHASE_OPTION_NOT_CHOSEN", `phase ${r.index} holds an option the group has not chosen: ${r.detail}. Nothing was written.`, at26);
+      return refusal18("PHASE_OPTION_NOT_CHOSEN", `phase ${r.index} holds an option the group has not chosen: ${r.detail}. Nothing was written.`, at27);
     if (r.fault === "branch")
-      return refusal18("BRANCH_UNKNOWN", `phase ${r.index} names a phase or a matter this scenario does not hold: ${r.detail}. Nothing was written.`, at26);
+      return refusal18("BRANCH_UNKNOWN", `phase ${r.index} names a phase or a matter this scenario does not hold: ${r.detail}. Nothing was written.`, at27);
     return refusal18(
       "PHASE_CYCLE",
       `following when each phase starts leads back to where it began: ${r.detail}, and no phase can start after itself. Nothing was written.`,
-      at26
+      at27
     );
   }
   /* R14–R16: a scenario version's phases with when each starts and its checkpoint, read at `nowMs`. */
@@ -134540,8 +134713,8 @@ var ActionPlans = class {
         if (!o.action || !(o.fields.subjects || []).some((x) => subjectKey(x) === key)) continue;
         const a = this.actions.actionRead({ id: o.action, viewer });
         if (!ok(a) || a.current_state !== "resolved") continue;
-        const at26 = (a.state_history || []).filter((h) => h.state === "resolved").map((h) => h.at).at(-1) || null;
-        if (at26 && (!first || instantOrder(at26, first) < 0)) first = at26;
+        const at27 = (a.state_history || []).filter((h) => h.state === "resolved").map((h) => h.at).at(-1) || null;
+        if (at27 && (!first || instantOrder(at27, first) < 0)) first = at27;
       }
       return first;
     } catch (e) {
@@ -134635,7 +134808,7 @@ var ActionPlans = class {
       if (!facts) return done(contactNotAMember());
     }
     const reason = override === void 0 || override === null ? null : isObj18(override) ? override.reason : override;
-    const at26 = this.now();
+    const at27 = this.now();
     const doc = actionDocument({
       fields: opt.fields,
       kind,
@@ -134644,7 +134817,7 @@ var ActionPlans = class {
       contact: member,
       breach: breach === true,
       override: reason,
-      at: at26
+      at: at27
     });
     const r = this.record.transact(() => {
       const a = this.actions.actionCreate({ document: doc, author, viewer });
@@ -134656,14 +134829,14 @@ var ActionPlans = class {
         if (!ok(s)) return s;
         set.push({ entry, date: rem.date, on: rem.on, set_by: opt.chosenBy || author });
       }
-      const w = this.#append(p, { kind: "start", option: opt.id, action: a.id, author, at: at26 }, { blurb: "Option started" });
+      const w = this.#append(p, { kind: "start", option: opt.id, action: a.id, author, at: at27 }, { blurb: "Option started" });
       if (!w.ok) return w;
       if (preview) return { ok: false, [PREVIEW]: true };
       return { ok: true, action: a.id, reminders: set };
     });
     if (preview) return done(r && r[PREVIEW] ? null : r);
     if (!ok(r)) return r;
-    return { ok: true, plan: p.id, option: opt.id, action: r.action, reminders: r.reminders, author, at: at26 };
+    return { ok: true, plan: p.id, option: opt.id, action: r.action, reminders: r.reminders, author, at: at27 };
   }
   /** R37: what `optionStart` (R18) would do with the same arguments, at this instant, writing nothing: R18's own path,
    *  run in a transaction that is rolled back, so no id is allocated, no reminder set and nothing promoted. */
@@ -135155,7 +135328,7 @@ function subjectOfKey(k) {
   if (!m) return null;
   return k.startsWith("inquiry:") ? normSubject({ kind: "inquiry", inquiry: m[1] }) : normSubject({ kind: "outcome", determination: m[1], standard: m[2] });
 }
-function actionDocument({ fields, kind, plan, option, contact, breach, override, at: at26 }) {
+function actionDocument({ fields, kind, plan, option, contact, breach, override, at: at27 }) {
   const legs = [...new Set((fields.subjects || []).map((s) => s.kind === "inquiry" ? s.inquiry : s.determination))];
   const a = fields.addressee;
   const cp = a ? ["counterparty:", ...Object.entries(a).map(([k, v]) => `  ${k}: ${q6(v)}`)] : [];
@@ -135173,8 +135346,8 @@ function actionDocument({ fields, kind, plan, option, contact, breach, override,
     "object_type: action",
     `title: ${q6(fields.summary)}`,
     "current_state: planned",
-    `created: "${at26}"`,
-    `last_updated: "${at26}"`,
+    `created: "${at27}"`,
+    `last_updated: "${at27}"`,
     `action_kind: ${q6(typeof kind === "string" ? kind : "")}`,
     ...cp,
     ...clock,
@@ -135308,9 +135481,9 @@ for (const name2 of [
     }
   } });
 }
-var instances40 = /* @__PURE__ */ new WeakMap();
+var instances41 = /* @__PURE__ */ new WeakMap();
 function actionPlansOf(host, deps) {
-  let i = instances40.get(host);
+  let i = instances41.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -135335,7 +135508,7 @@ function actionPlansOf(host, deps) {
       filings: lazy("filings", () => filingsOf(host, base)),
       aiRuns: lazy("aiRuns", () => aiRunsOf(host))
     });
-    instances40.set(host, i);
+    instances41.set(host, i);
     i.migrate();
     record.declarePurge("action-plans", ACTION_PLANS_TABLES);
     promotion.registerStep("action-plans", { check: (c) => i.check(c), project: (c) => i.project(c) });
@@ -135465,8 +135638,8 @@ function cardinalityDetail(g) {
   return `${g.n} ${plural(g.n, "instance", "instances")} of this progression thread more than one document at '${stageName(g)}' (${g.document_count} in all), which is declared to hold ${held}: a finding, which decides nothing about which of them belongs (framework 8.2)`;
 }
 function proposalFindingItems(feed, { subjectsOf, homesOf, optionsOf, subjectsMax = 8 } = {}) {
-  const subjectsFor = (instances42, into = []) => {
-    for (const inst of instances42)
+  const subjectsFor = (instances43, into = []) => {
+    for (const inst of instances43)
       for (const b of subjectsOf(inst.progression_key, inst.entity_id) || [])
         if (!into.includes(b)) into.push(b);
     return into;
@@ -135740,13 +135913,13 @@ var QueueProducers = class _QueueProducers {
   feedItems({ member = null, viewer = null, now = null, identity = null, homesOf = null, optionsOf = null } = {}) {
     void identity;
     const me = typeof member === "string" && member.trim() ? member.trim() : null;
-    const at26 = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : Date.now();
+    const at27 = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : Date.now();
     this.#homesFn = typeof homesOf === "function" ? homesOf : null;
     this.#optionsFn = typeof optionsOf === "function" ? optionsOf : null;
     try {
       const items = [];
-      items.push(...this.#obligationsBiasDebt(viewer, me, at26));
-      const feed = this.#progressions.proposalsFeed(at26) || {};
+      items.push(...this.#obligationsBiasDebt(viewer, me, at27));
+      const feed = this.#progressions.proposalsFeed(at27) || {};
       const findingSeen = this.#bundleGate("pi.bundle_id", viewer);
       items.push(...proposalFindingItems(feed, {
         subjectsOf: (pk, eid) => this.#rows(
@@ -135760,33 +135933,33 @@ var QueueProducers = class _QueueProducers {
         optionsOf: (subjects) => this.#optionsOf(subjects),
         subjectsMax: _QueueProducers.QUEUE_OPTION_SUBJECTS_MAX
       }));
-      items.push(...this.#findingsOutOfInquiryLead(viewer, at26));
-      items.push(...this.#findingsStanceDiverged(viewer, at26));
-      const fromAnotherTeam = this.#findingsVersionFromAnotherTeam(viewer, at26);
+      items.push(...this.#findingsOutOfInquiryLead(viewer, at27));
+      items.push(...this.#findingsStanceDiverged(viewer, at27));
+      const fromAnotherTeam = this.#findingsVersionFromAnotherTeam(viewer, at27);
       items.push(...fromAnotherTeam);
-      items.push(...this.#findingsConcludedElsewhere(viewer, at26));
-      items.push(...this.#findingsExportPerformed(me, viewer, at26));
-      items.push(...this.#findingsNewerCapture(viewer, at26));
-      const gaps = this.#findingsObjectiveGap(me, viewer, at26);
+      items.push(...this.#findingsConcludedElsewhere(viewer, at27));
+      items.push(...this.#findingsExportPerformed(me, viewer, at27));
+      items.push(...this.#findingsNewerCapture(viewer, at27));
+      const gaps = this.#findingsObjectiveGap(me, viewer, at27);
       items.push(...gaps);
-      items.push(...this.#findingsSourceFlagged(viewer, at26));
-      items.push(...this.#queueConditions(viewer, at26));
+      items.push(...this.#findingsSourceFlagged(viewer, at27));
+      items.push(...this.#queueConditions(viewer, at27));
       const scope = this.#contradictionProjects(me, viewer);
-      items.push(...this.#contradictionItems(scope, viewer, at26));
-      items.push(...this.#findingsSideCorrected(viewer, at26));
-      items.push(...this.#findingsTensionAfterPublication(me, viewer, at26));
+      items.push(...this.#contradictionItems(scope, viewer, at27));
+      items.push(...this.#findingsSideCorrected(viewer, at27));
+      items.push(...this.#findingsTensionAfterPublication(me, viewer, at27));
       items.push(...this.#contradictionUnseenItems(me, scope, viewer));
-      items.push(...this.#obligationsSignerSelfRegistered(me, viewer, at26));
-      items.push(...this.#conditionsActionClockOverdue(me, viewer, at26));
-      items.push(...this.#obligationsPlanCheckpointDue(me, viewer, at26));
-      items.push(...this.#obligationsEscalationStageProposed(me, viewer, at26));
-      items.push(...this.#obligationsActionReminder(me, viewer, at26));
-      items.push(...this.#obligationsLitigationHold(me, viewer, at26));
-      items.push(...this.#obligationsTemplateReview(me, viewer, at26));
-      items.push(...this.#obligationsLocalFactDue(me, viewer, at26));
-      items.push(...this.#obligationsAttributionUnchosen(me, viewer, at26));
-      items.push(...this.#conditionsSweep(me, viewer, at26));
-      items.push(...this.#conditionsNotice(me, viewer, at26));
+      items.push(...this.#obligationsSignerSelfRegistered(me, viewer, at27));
+      items.push(...this.#conditionsActionClockOverdue(me, viewer, at27));
+      items.push(...this.#obligationsPlanCheckpointDue(me, viewer, at27));
+      items.push(...this.#obligationsEscalationStageProposed(me, viewer, at27));
+      items.push(...this.#obligationsActionReminder(me, viewer, at27));
+      items.push(...this.#obligationsLitigationHold(me, viewer, at27));
+      items.push(...this.#obligationsTemplateReview(me, viewer, at27));
+      items.push(...this.#obligationsLocalFactDue(me, viewer, at27));
+      items.push(...this.#obligationsAttributionUnchosen(me, viewer, at27));
+      items.push(...this.#conditionsSweep(me, viewer, at27));
+      items.push(...this.#conditionsNotice(me, viewer, at27));
       return {
         items,
         facts: {
@@ -140298,7 +140471,7 @@ var Queue = class _Queue {
     item = null,
     unmute = false,
     viewer = null,
-    at: at26 = null
+    at: at27 = null
   } = {}) {
     const me = typeof member === "string" ? member.trim() : "";
     if (!me) return {
@@ -140368,7 +140541,7 @@ var Queue = class _Queue {
           available: mutableKinds
         };
     }
-    const stamp2 = typeof at26 === "string" && at26 ? at26 : new Date(this.#nowMs(null)).toISOString();
+    const stamp2 = typeof at27 === "string" && at27 ? at27 : new Date(this.#nowMs(null)).toISOString();
     if (itemId) {
       const cls = subjects[0].cls;
       const had2 = !!this.#one(
@@ -140461,7 +140634,7 @@ var Queue = class _Queue {
     until = null,
     clear = false,
     viewer = null,
-    at: at26 = null
+    at: at27 = null
   } = {}) {
     const me = typeof member === "string" ? member.trim() : "";
     if (!me) return {
@@ -140471,7 +140644,7 @@ var Queue = class _Queue {
     };
     const c = this.#queueCaseFor(caseId, viewer);
     if (c.ok !== true) return c;
-    const stamp2 = typeof at26 === "string" && at26 ? at26 : new Date(this.#nowMs(null)).toISOString();
+    const stamp2 = typeof at27 === "string" && at27 ? at27 : new Date(this.#nowMs(null)).toISOString();
     let iso5 = null;
     if (!clear) {
       if (typeof until !== "string" || !until)
@@ -141435,11 +141608,11 @@ async function ratifyOp(req, stub, ctx) {
   }
   const partShaSet = /* @__PURE__ */ new Set();
   for (const [whole, parts] of partedRows) {
-    const at26 = (facts.registers || []).find((r) => r.capture_sha === whole)?.path || whole;
+    const at27 = (facts.registers || []).find((r) => r.capture_sha === whole)?.path || whole;
     parts.forEach((p, i) => {
       partShaSet.add(p.sha256);
       if (!shas.some((s) => s.sha256 === p.sha256))
-        shas.push({ sha256: p.sha256, path: p.file || `${at26}.part${i + 1}`, kind: "capture_part", bytes: p.bytes });
+        shas.push({ sha256: p.sha256, path: p.file || `${at27}.part${i + 1}`, kind: "capture_part", bytes: p.bytes });
     });
   }
   const ratifiedFm = typeof image["bundle.md"] === "string" ? parseFrontmatter(image["bundle.md"]).data || {} : {};
@@ -141630,11 +141803,11 @@ async function ratifyOp(req, stub, ctx) {
           basis: "a plain GET returned different bytes than were reused; ratified with the bytes captured on the day, the divergence recorded as the dated fact it is"
         });
     }
-    const at26 = (/* @__PURE__ */ new Date()).toISOString();
+    const at27 = (/* @__PURE__ */ new Date()).toISOString();
     const vOut = await doAnswer2(stub.fetch(new Request("http://do/recordreuseverdicts", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ bundleId: body.bundleId, at: at26, verdicts })
+      body: JSON.stringify({ bundleId: body.bundleId, at: at27, verdicts })
     })));
     const tally = (k) => verdicts.filter((v) => v.verdict === k).length;
     reuseReport = {
@@ -142045,9 +142218,9 @@ function listCap(limit) {
 }
 function lastChange({ draft, comments, grants, acknowledgements }) {
   const cand = [];
-  const add = (at26, by, byKind, kind) => {
-    if (typeof at26 === "string" && at26 && !Number.isNaN(Date.parse(at26)))
-      cand.push({ at: at26, by: by ?? null, by_kind: byKind, kind });
+  const add = (at27, by, byKind, kind) => {
+    if (typeof at27 === "string" && at27 && !Number.isNaN(Date.parse(at27)))
+      cand.push({ at: at27, by: by ?? null, by_kind: byKind, kind });
   };
   add(draft.updated_at, draft.updated_by, "member", "edit");
   for (const c of comments)
@@ -142073,7 +142246,7 @@ function lastChange({ draft, comments, grants, acknowledgements }) {
   const who2 = (c) => `${c.kind === "edit" ? "an edit of the draft" : `a ${c.kind}`} by ${c.by ?? "somebody this record does not name"}`;
   const act = !last ? "UNDETERMINED: these bytes carry no dated act at all" : `the newest dated act these bytes carry is ${who2(last)}`;
   const WHOLE = /T\d{2}:\d{2}:\d{2}Z$/;
-  const second3 = (at26) => Math.floor(Date.parse(at26) / 1e3);
+  const second3 = (at27) => Math.floor(Date.parse(at27) / 1e3);
   const tied = !last ? [] : cand.filter((c) => c !== last && second3(c.at) === second3(last.at) && (WHOLE.test(c.at) || WHOLE.test(last.at)));
   const tieStated = tied.map((c) => {
     const [a, b] = WHOLE.test(c.at) ? [c, last] : [last, c];
@@ -142679,16 +142852,16 @@ var Review = class {
     };
   }
 };
-var instances41 = /* @__PURE__ */ new WeakMap();
+var instances42 = /* @__PURE__ */ new WeakMap();
 function reviewOf(host, deps) {
-  let r = instances41.get(host);
+  let r = instances42.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     r = new Review({ ...d, host, storage, record, membership });
-    instances41.set(host, r);
+    instances42.set(host, r);
     r.migrate();
     record.declarePurge("review", REVIEW_TABLES);
     r.seedLedger();
@@ -142736,9 +142909,9 @@ var enc4 = (text5) => {
   const b = new TextEncoder().encode(text5);
   return { text: text5, bytes: b.length, sha256: createSha256().update(b).hex() };
 };
-function filing(record, doc, { knockId, by, identity, viewer, at: at26 }) {
+function filing(record, doc, { knockId, by, identity, viewer, at: at27 }) {
   const cap = doc.capture || {};
-  const id = `${record.allocId("INFO", at26.slice(0, 4)).id}-${PULL_BUNDLE_SLUG}`;
+  const id = `${record.allocId("INFO", at27.slice(0, 4)).id}-${PULL_BUNDLE_SLUG}`;
   const title = `Material handed in at the doorbell (${knockId})`.replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
   const md = [
     "---",
@@ -142748,8 +142921,8 @@ function filing(record, doc, { knockId, by, identity, viewer, at: at26 }) {
     `title: ${JSON.stringify(title)}`,
     "current_state: collected",
     "prior_state: null",
-    `created: "${at26}"`,
-    `last_updated: "${at26}"`,
+    `created: "${at27}"`,
+    `last_updated: "${at27}"`,
     "produced_by:",
     "  mode: assisted",
     "  capability_tier: session",
@@ -142766,7 +142939,7 @@ function filing(record, doc, { knockId, by, identity, viewer, at: at26 }) {
     `content_hash: sha256:${cap.sha256}`,
     "source:",
     `  locator: ${JSON.stringify(String(doc.locator || `knock:${knockId}`))}`,
-    `  retrieved: ${doc.retrieved || at26}`,
+    `  retrieved: ${doc.retrieved || at27}`,
     "monitoring:",
     "  enabled: false",
     "  frequency: none",
@@ -142782,7 +142955,7 @@ function filing(record, doc, { knockId, by, identity, viewer, at: at26 }) {
     "",
     "## Session Log",
     "",
-    `### Session ${at26} | Collected | ${by}`,
+    `### Session ${at27} | Collected | ${by}`,
     `Trigger: knock ${knockId} brought in`,
     "Changes: created from the pulled knock.",
     "",
@@ -142799,7 +142972,7 @@ function filing(record, doc, { knockId, by, identity, viewer, at: at26 }) {
   return {
     bundleId: id,
     base: null,
-    snapKey: `${at26.replace(/[-:]/g, "")}_${hexOf4(raw)}`,
+    snapKey: `${at27.replace(/[-:]/g, "")}_${hexOf4(raw)}`,
     /* The puller is the author, and the session's two identity stamps are op=promote's (R17). */
     author: by,
     actorMemberId: by,
@@ -142811,8 +142984,8 @@ function filing(record, doc, { knockId, by, identity, viewer, at: at26 }) {
       title,
       current_state: "collected",
       prior_state: null,
-      created: at26,
-      last_updated: at26,
+      created: at27,
+      last_updated: at27,
       criticality: "supporting"
     },
     register: [{ sha256: cap.sha256, path: doc.file, encoding: "binary", bytes: cap.bytes }]
@@ -142833,10 +143006,10 @@ function promoteOrFault(deps, doc, who2) {
 var bundleOf = (p) => ({ bundleId: p.bundleId, bundleSha: p.bundleSha ?? null });
 async function pullAndFile(deps, { knockId, by, identity, viewer, resolve = false, reason, now = Date.now } = {}) {
   const { capture, provenance } = deps;
-  const at26 = stampInstant("second", +now());
-  const who2 = { knockId, by, identity, viewer, at: at26 };
+  const at27 = stampInstant("second", +now());
+  const who2 = { knockId, by, identity, viewer, at: at27 };
   const within = (doc) => promoteOrFault(deps, doc, who2);
-  const pulled = await (resolve ? capture.inboxResolve({ knockId, status: "pulled", by, reason, at: at26, within }) : capture.pullKnock({ knockId, by, at: at26, within }));
+  const pulled = await (resolve ? capture.inboxResolve({ knockId, status: "pulled", by, reason, at: at27, within }) : capture.pullKnock({ knockId, by, at: at27, within }));
   if (!pulled || pulled.ok !== true) return pulled;
   const { within: filed, ...answer } = pulled;
   if (!pulled.existed) return { ...answer, bundle: bundleOf(filed) };
@@ -142845,7 +143018,7 @@ async function pullAndFile(deps, { knockId, by, identity, viewer, resolve = fals
   if (!pulled.document) return { ...answer, bundle: null };
   let again;
   try {
-    again = promoteIn(deps, pulled.document, { ...who2, at: pulled.pulled_at || at26 });
+    again = promoteIn(deps, pulled.document, { ...who2, at: pulled.pulled_at || at27 });
   } catch {
     again = { ok: false, reason: "PROMOTE_FAILED", status: 502, detail: "the promotion did not complete." };
   }
@@ -143132,8 +143305,8 @@ function figures(ctx, { proof, viewer }) {
 var STEP = "control-plane";
 var STEP_ORDER = Object.freeze((() => {
   const o = MODULE_ORDER.filter((m) => m !== STEP);
-  const at26 = o.indexOf("affordances");
-  return at26 === -1 ? [...o, STEP] : [...o.slice(0, at26), STEP, ...o.slice(at26)];
+  const at27 = o.indexOf("affordances");
+  return at27 === -1 ? [...o, STEP] : [...o.slice(0, at27), STEP, ...o.slice(at27)];
 })());
 var MINT_LEDGER_LIVE = Object.freeze([["PROJ", "bundles", "bundle_id"]]);
 var Store = class extends DurableObject {
