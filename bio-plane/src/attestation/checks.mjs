@@ -2,8 +2,8 @@
  * refusal this module answers carries its code, its catalogue row and the member's translation.
  *
  * Moved from `provenance/checks.mjs` with N512 (K1193; T25): C-89 `ATTEST_CHECKS`, with its header, id and row
- * unchanged. The row was stamped as provenance's (1.29.0); moving here re-points its `where` to this module's site, so
- * it is `awaiting stamp` until T26's L2 (S3; accepted red 6). The receipt's rows, C-103.6 `RECEIPT_MALFORMED` and
+ * unchanged. The row was stamped as provenance's (1.29.0); moving here re-pointed its `where` to this module's site,
+ * stamped at 1.56.0 by T26's L2 (S3; K1247). The receipt's rows, C-103.6 `RECEIPT_MALFORMED` and
  * C-103.7 `RECEIPT_NO_KEY`, stay in provenance's `PROVENANCE_ACT_CHECKS` (provenance R58) and are imported, so one
  * family is not split between two files. */
 

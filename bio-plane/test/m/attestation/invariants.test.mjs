@@ -5,8 +5,21 @@ import assert from "node:assert/strict";
 import { world, sha, evidence, pkcs8 } from "./fixture.mjs";
 import { attest, attestOp, instanceStatement, ATTEST_CHECKS, ATTESTATION_MODULE } from "../../../src/attestation/index.mjs";
 
+/* The text an answer carries, for R9's probe: every string in it, at any depth, except key material. A signature and a
+   public key are fresh base64 bytes, not text: one like `…+ca/…` would read as the place probe's `ca` about once in a
+   few runs (N517, K1234), so their values are left out by name. Keys are probed too, as text the answer carries. */
+const KEY_MATERIAL = new Set(["signature", "public_key"]);
+function textOf(x, out = []) {
+  if (typeof x === "string") out.push(x);
+  else if (Array.isArray(x)) for (const v of x) textOf(v, out);
+  else if (x && typeof x === "object")
+    for (const [k, v] of Object.entries(x)) { out.push(k); if (!KEY_MATERIAL.has(k)) textOf(v, out); }
+  return out;
+}
+
 test("R9: no place is named in the module's behaviour or outward text", async () => {
   const place = /oakland|alameda|california|\bca\b|berkeley/i;
+  const names = (x) => textOf(x).some((t) => place.test(t));
   const w = world({ signingKey: pkcs8() });
   const w0 = world();
   const a = w.cap("a");
@@ -26,9 +39,17 @@ test("R9: no place is named in the module's behaviour or outward text", async ()
              await w0.att.instanceSign(instanceStatement("a/1", sha("x"))));
   const json = (body, status) => ({ body, status });
   texts.push(await attestOp({ method: "GET" }, {}, null, { json }));
-  for (const x of texts) assert.equal(place.test(JSON.stringify(x)), false, JSON.stringify(x).slice(0, 200));
-  /* Negative control: the probe does see a place where one is named. */
-  assert.equal(place.test(JSON.stringify({ detail: "an Oakland document" })), true);
+  /* The signed answers do carry key material, so the probe below runs over answers that hold it. */
+  assert.ok(texts.some((x) => JSON.stringify(x).includes('"signature"')), "a signed answer is probed");
+  for (const x of texts) assert.equal(names(x), false, textOf(x).filter((t) => place.test(t)).join(" | ").slice(0, 200));
+  /* Negative controls: the probe sees a place named in a sentence, at any depth and in any field but key material,
+     and a signature that happens to hold `+ca/` is not read as one. */
+  assert.equal(names({ detail: "an Oakland document" }), true);
+  assert.equal(names({ attempts: [{ note: "asked the CA office" }] }), true);
+  assert.equal(names([{ ok: false, translation: "in Berkeley" }]), true);
+  assert.equal(names({ statement: "bio-receipt/1\ninstance: alameda\n" }), true);
+  assert.equal(names({ signature: "Qk9+ca/xYz==", public_key: "ab/CA+cd", detail: "a signed receipt" }), false);
+  assert.equal(names({ signature: "Qk9+ca/xYz==", detail: "fetched in California" }), true);
 });
 
 test("R10: attestation creates receipt_keys and signed_receipts and declares them to purge as its own", () => {
