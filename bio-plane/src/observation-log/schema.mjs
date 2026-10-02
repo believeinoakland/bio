@@ -121,11 +121,16 @@ CREATE INDEX IF NOT EXISTS leads_author ON leads(author, at);
 -- bundle_id IS THE PROJECT, named so it rides op=purge TABLES list and clears in
 -- BOTH arms (D-113) -- a share outliving its project would admit whoever holds that
 -- id next.
+-- reason (DEC-88, K1025, R16): the sharer's words on why this lead is disclosed
+-- to that project, as written. Every share since T22 carries one (C-54.12 refuses
+-- a share without); a share recorded before it reads NULL, and a store made
+-- before it gains the column at migration (migrateObservationLog).
 CREATE TABLE IF NOT EXISTS lead_shares (
   lead_id    TEXT NOT NULL,
   bundle_id  TEXT NOT NULL,     -- the PROJECT the lead is shared to
   sharer     TEXT NOT NULL,     -- the lead author, server-stamped (C-54.10)
   at         TEXT NOT NULL,
+  reason     TEXT,              -- the sharer's reason (C-54.12), NULL only on a share recorded before DEC-88
   PRIMARY KEY (lead_id, bundle_id)
 );
 CREATE INDEX IF NOT EXISTS lead_shares_bundle ON lead_shares(bundle_id);
@@ -144,8 +149,11 @@ export function observationLogOwns(t) {
   return name === "observation_log" || name === "leads" || name === "lead_shares";
 }
 
-/** The module's tables, created where absent. The statements are the schema text above, run one by one. */
+/** The module's tables, created where absent. The statements are the schema text above, run one by one; then a
+ *  `lead_shares` made before DEC-88 gains its `reason` column (R16), migrated forward and never rewritten. */
 export function migrateObservationLog(sql) {
   const bare = OBSERVATION_LOG_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const stmt of bare.split(";")) if (stmt.trim()) sql.exec(stmt);
+  const cols = [...sql.exec(`PRAGMA table_info(lead_shares)`)].map((c) => c.name);
+  if (!cols.includes("reason")) sql.exec(`ALTER TABLE lead_shares ADD COLUMN reason TEXT`);
 }

@@ -2,6 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as ol from "../../../src/observation-log/index.mjs";
+import { world } from "./fixture.mjs";
 
 const sentence = (s) => typeof s === "string" && s.trim().length > 10;
 
@@ -134,7 +135,7 @@ test("R12 contentAxisFor: the two axes never merged; no row is not_extracted onl
   assert.equal(ol.contentAxisFor({ observed: "PRESENT", unitIndex: false }).state, "undetermined");
 });
 
-test("R26 every C-22 row is this module's: AI_RUN_CHECKS held here whole (K586), numbers and codes as allocated, each `where` naming this module's site, each translation a sentence a member can read, each refusal the append answers carrying its row; C-54.2–C-54.10 are this module's rows", () => {
+test("R26 every C-22 row is this module's: AI_RUN_CHECKS held here whole (K586), numbers and codes as allocated, each `where` naming this module's site, each translation a sentence a member can read, each refusal the append answers carrying its row; C-54.2–C-54.12 are this module's rows, C-54.11 (LEAD_LOOK_NO_DETAIL) and C-54.12 (LEAD_SHARE_NO_REASON) DEC-88's, each answered at its site", () => {
   const want = { AI_LOG_STATE_UNKNOWN: "C-22.1", AI_LOG_GOVERNED_ABSENCE: "C-22.2", AI_LOG_SHELL_PRESENT: "C-22.3",
                  AI_RUN_CONDITION_UNKNOWN: "C-22.4", AI_LOG_NOT_A_BUNDLE: "C-22.6", OBS_AUTHORITY_UNNAMED: "C-22.9",
                  OBS_PRESENT_NO_REFERENT: "C-22.10", AI_LOG_NEVER_LOOKED_STORED: "C-22.17" };
@@ -166,13 +167,25 @@ test("R26 every C-22 row is this module's: AI_RUN_CHECKS held here whole (K586),
   assert.equal(ol.checkCondition("no-such").check, "C-22.4");
   const lead = { LEAD_NOT_A_MEMBER: "C-54.2", LEAD_NO_WORDS: "C-54.3", LEAD_TOO_LONG: "C-54.4", LEAD_NOT_FOUND: "C-54.5",
                  LEAD_LOOK_STATE: "C-54.6", LEAD_LOOK_REFERENT: "C-54.7", LEAD_LOOK_NOT_A_MEMBER: "C-54.8",
-                 LEAD_SHARE_NOT_A_PARTICIPANT: "C-54.9", LEAD_SHARE_NOT_AUTHOR: "C-54.10" };
+                 LEAD_SHARE_NOT_A_PARTICIPANT: "C-54.9", LEAD_SHARE_NOT_AUTHOR: "C-54.10",
+                 LEAD_LOOK_NO_DETAIL: "C-54.11", LEAD_SHARE_NO_REASON: "C-54.12" };
   assert.deepEqual(Object.fromEntries(Object.entries(ol.LEAD_CHECKS).map(([k, r]) => [k, r.check])), lead);
   for (const [k, r] of Object.entries(ol.LEAD_CHECKS)) {
     assert.ok(sentence(r.translation), k);
     assert.match(r.where, /^src\/observation-log\/index\.mjs /, `${k} names its site in this module`);
   }
   assert.ok(!("LEAD_NOT_EVIDENCE" in ol.LEAD_CHECKS), "C-54.1 is the leg grammars' row, not this module's");
+  assert.deepEqual(Object.keys(ol.LEAD_CHECKS).slice(-2), ["LEAD_LOOK_NO_DETAIL", "LEAD_SHARE_NO_REASON"], "after C-54.10");
+  assert.equal(ol.LEAD_CHECKS.LEAD_LOOK_NO_DETAIL.where, "src/observation-log/index.mjs leadLook > is-lead-look");
+  assert.equal(ol.LEAD_CHECKS.LEAD_SHARE_NO_REASON.where, "src/observation-log/index.mjs leadShare > is-lead-share");
+  // each new row is what its site answers, number and translation read from here
+  const w = world();
+  w.project("PROJ-A"); w.participant("PROJ-A", "alice");
+  const L = w.obs.lead({ words: "w", author: "alice" }).lead_id;
+  const look = w.obs.leadLook({ lead: L, state: "LOOKED_ABSENT", looker: "alice", viewer: "member:alice" });
+  const share = w.obs.leadShare({ lead: L, project: "PROJ-A", sharer: "alice", viewer: "member:alice" });
+  for (const [r, k] of [[look, "LEAD_LOOK_NO_DETAIL"], [share, "LEAD_SHARE_NO_REASON"]])
+    assert.deepEqual([r.ok, r.code, r.check, r.translation], [false, k, ol.LEAD_CHECKS[k].check, ol.LEAD_CHECKS[k].translation], k);
 });
 
 test("R27 one judgement, one place: every writer's outcome rule, the content-axis rule and the missing-row rule are exported pure functions that answer without storage", () => {

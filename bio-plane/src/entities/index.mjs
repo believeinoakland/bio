@@ -296,8 +296,9 @@ export class Entities {
    * ===================================================================== */
 
   /** R1: a registry entry, its canonical label seeded as an alias and every other distinct folded alias attached
-   *  in the SAME transaction, so an entity is never nameless-but-for-its-id even for an instant. R4: `declaredBy` is
-   *  the control plane's stamp. */
+   *  in the SAME transaction, so an entity is never nameless-but-for-its-id even for an instant. It carries the
+   *  declarer's note (DEC-88): who or what it is and why it is registered. R4: `declaredBy` is the control plane's
+   *  stamp. */
   createEntity({ kind, label, note = null, aliases = [], declaredBy = null } = {}) {
     const k = typeof kind === "string" ? kind.trim().toLowerCase() : "";
     if (!k) return { ok: false, reason: "NO_KIND", detail: "an entity needs a kind: one of " + ENTITY_KINDS.join(", ") };
@@ -314,13 +315,21 @@ export class Entities {
                detail: "an entity needs a canonical label, such as 'City Clerk'" };
     }
     /* END DEC-49 REGION is-entity-labelled */
+    /* DEC-49 REGION is-entity-noted — R1 (DEC-88, K1025): the declarer's note, its own row (C-91.8); asked before the
+       transaction, so a refusal allocates no id and writes no entity and no alias. */
+    if (typeof note !== "string" || !note.trim()) {
+      const row = ENTITY_CHECKS.ENTITY_NO_NOTE;
+      return { ok: false, reason: "ENTITY_NO_NOTE", code: "ENTITY_NO_NOTE", check: row.check, translation: row.translation,
+               detail: "an entity needs a note in the declarer's own words saying who or what it is and why it is registered" };
+    }
+    /* END DEC-49 REGION is-entity-noted */
     const extra = Array.isArray(aliases) ? aliases : [];
     const at = this.#now();
     const by = declaredBy == null ? null : String(declaredBy);
     return this.#record.transact(() => {
       const { id } = this.#record.allocId("ENT", at.slice(0, 4));
       this.#sql.exec(`INSERT INTO entities (entity_id,kind,label,note,declared_by,at) VALUES (?,?,?,?,?,?)`,
-                     id, k, lab, note == null ? null : String(note).slice(0, 2000), by, at);
+                     id, k, lab, note.slice(0, 2000), by, at);
       const seen = new Set();
       const put = (name, canonical) => {
         const norm = normAlias(name);
@@ -1075,8 +1084,8 @@ export class Entities {
   }
 }
 
-/* R40 (K3, K718): the Durable Object routes this module answers, as entries of the legacy store's op map (its
-   dispatcher spreads them in). `url` carries the control plane's stamps (`viewer`); `body` the parsed body, whose
+/* R40 (K3, K718): the Durable Object routes this module answers, as entries of the plane's op map (`plane`'s
+   `src/plane/store.mjs` spreads them in). `url` carries the control plane's stamps (`viewer`); `body` the parsed body, whose
    `declaredBy`, `resolvedBy`, `withdrawnBy` and `by` (R38) the control plane stamps (R4). The connection sweep is armed
    on R13's `onResolved` by `scheduler` (its R9, K714), not here. */
 export function entitiesOps(e, url, body) {
