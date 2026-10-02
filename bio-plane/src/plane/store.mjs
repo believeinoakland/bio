@@ -261,9 +261,12 @@ export class Store extends DurableObject {
   /* scheduler's alarm read (its R13), reached over the object's RPC by scheduler's plane test. */
   async schedAlarmAt() { return await schedulerOf(this.ctx, this.env).alarmAt(); }
 
-  /* R1, R5: every store request passes control-plane's one frame. */
+  /* R1, R5: every store request passes control-plane's one frame. R14 (DEC-113; control-plane R46): it is handed the
+     object's namespace, R2's own name (`bio` or `scratch`, else `bio`, so an object whose name is unknown is the real
+     record's and fails closed), and `actions`' `purgeHeld` (its R60) on this storage, each asked at the purge only. */
   async fetch(req) {
-    return dispatch(req, { routes: (url, body) => this.routes(url, body), membership: () => membershipOf(this.ctx) });
+    return dispatch(req, { routes: (url, body) => this.routes(url, body), membership: () => membershipOf(this.ctx),
+      namespace: () => this.#ownNamespace() || "bio", purgeHeld: (q) => actionsOf(this.ctx).purgeHeld(q) });
   }
 
   /* The injectable clock: an explicit instant, else `BIO_NOW_MS` (so a suite pins "now"), else the wall clock.
