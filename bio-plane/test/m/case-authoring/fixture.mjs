@@ -65,6 +65,9 @@ export const AUTHORED = Object.freeze({
   excluded: [],
 });
 
+/* R38: what changed in an edition above 1, as a member writes it (the fixture's `publish` sends it on every act). */
+export const WHAT_CHANGED = Object.freeze({ text: "The amendments were requested and are now excluded by name." });
+
 /* review's table (its R26 read contract) and the columns its draft act writes. */
 const CASE_DRAFTS = `CREATE TABLE IF NOT EXISTS case_drafts (draft_id TEXT PRIMARY KEY, project_id TEXT NOT NULL,
   case_id TEXT, params TEXT NOT NULL, created_by TEXT NOT NULL, created_at TEXT NOT NULL, updated_by TEXT NOT NULL,
@@ -258,10 +261,12 @@ export function world({ group = "test-group", provider = true, now = null, recor
       st.sql.exec(`INSERT OR REPLACE INTO project_participants (project_id, member_id, state, owner, invited_by, created, updated)
                    VALUES (?, ?, ?, ?, 'alice', 't', 't')`, project, member, state, owner);
     },
-    /** One act of op=publish by `owner` of `project` over `targets`, every member load-bearing unless `roles`. */
+    /** One act of op=publish by `owner` of `project` over `targets`, every member load-bearing unless `roles`. Every
+     *  act says what changed (R38: an edition above 1 needs it, a first edition carries none); `over` replaces it. */
     publish(project, owner, targets, over = {}) {
       const roles = over.roles !== undefined ? over.roles : Object.fromEntries(targets.map((t) => [t, "load_bearing"]));
-      return w.ca.publishCase({ ...AUTHORED, project, targets, roles, viewer: V(owner), author: owner, ...over });
+      return w.ca.publishCase({ ...AUTHORED, whatChanged: WHAT_CHANGED, project, targets, roles, viewer: V(owner),
+                                author: owner, ...over });
     },
     /** Sign a prepared case edition through publication's commit (its R22), as op=caseratify does after its gate. */
     ratify(answer, { project = null, at = "2026-09-28T02:00:00Z" } = {}) {

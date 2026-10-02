@@ -19,7 +19,9 @@ function setup(opts) {
   w.join(P, "bo"); w.join(P, "cy"); w.join(P, "ed", "invited");
   return { w, P };
 }
-const ack = (w, a) => w.ca.acknowledgeStatement(a);
+/* R19 (DEC-88): every acknowledgement carries the acknowledger's words; a test proving the refusal passes its own. */
+const WORDS = "I read what this case leaves out and agree it is stated.";
+const ack = (w, a) => w.ca.acknowledgeStatement({ reason: WORDS, ...a });
 const refuses = (r, code) => assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation],
   [false, code, code, STATEMENT_ACK_CHECKS[code].check, STATEMENT_ACK_CHECKS[code].translation]);
 const docText = (w, c, e) => w.row(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, c, e).text;
@@ -124,7 +126,7 @@ test("R20: matched by the identity it was given at, or by the draft named at pub
   const pub = w.publish(P, "alice", [Q], { draft: "DRAFT-2026-0001" });
   assert.equal(pub.ok, true, JSON.stringify(pub).slice(0, 300));
   assert.deepEqual(pub.completeness.acknowledgements, [{ kind: "participant", by: "bo", recipient: null,
-    at: w.clock.ms, draft: "DRAFT-2026-0001" }]);
+    at: w.clock.ms, reason: WORDS, draft: "DRAFT-2026-0001" }]);
   assert.deepEqual([pub.completeness.draft.acknowledgements_bound, pub.completeness.acknowledgements_unbindable_to_this_case],
     [1, 1]);
   const body = docText(w, pub.caseId, 1);
@@ -229,4 +231,69 @@ test("R20: an acknowledgement answers the edition the draft's identity states �
   w.draft("DRAFT-2026-0003", P, { statement: AUTHORED.statement }, { caseId: pub.caseId, statementBy: "alice" });
   const named = ack(w, { viewer: V("bo"), draft: "DRAFT-2026-0003" });
   assert.deepEqual([named.ok, named.acknowledgement.case_id, named.acknowledgement.edition], [true, pub.caseId, 2]);
+});
+
+test("R19, R29: STATEMENT_ACK_NO_REASON (C-82.8) — a reason absent, not a string, blank, only whitespace or over 2,000 characters (in code points) is refused after C-82.6, with nothing written; a reasoned acknowledgement is recorded and its reason read back in R20's list; a repeat keeps the first reason", () => {
+  const { w, P } = setup();
+  const pub = w.publish(P, "alice", [Q]);
+  w.draft("DRAFT-2026-0001", P, { statement: AUTHORED.statement }, { statementBy: "alice" });
+  w.grant(S1, { grant_id: "RVG-2026-0001", draft_id: "DRAFT-2026-0001", case_id: null, edition: 1, recipient: "the auditor" });
+  const doc = () => w.row(`SELECT doc_sha FROM case_documents WHERE case_id=? AND edition=1`, pub.caseId).doc_sha;
+  const sha0 = doc(), n0 = w.count("statement_acknowledgements"), before = w.snapshot();
+  /* 2,001 code points, each two UTF-16 units: over by code points; 2,000 of them is not */
+  const astral = "\u{1F4DC}";
+  const bad = [undefined, null, 7, ["a"], { t: "a" }, "", "   ", "\n\t ", "x".repeat(2001), astral.repeat(2001)];
+  for (const reason of bad)
+    for (const door of [{ viewer: V("bo"), caseId: pub.caseId, edition: 1 }, { viewer: V("bo"), draft: "DRAFT-2026-0001" },
+                        { bySecret: true, secretSha: S1 }]) {
+      const r = w.ca.acknowledgeStatement({ ...door, reason });
+      refuses(r, "STATEMENT_ACK_NO_REASON");
+    }
+  assert.deepEqual([w.count("statement_acknowledgements"), doc()], [n0, sha0], "nothing written, the doc_sha unchanged");
+  assert.deepEqual(w.snapshot(), before, "no table moved");
+  /* after C-82.6: the publisher's and the writer's own acknowledgement is refused as theirs, reason or none */
+  refuses(w.ca.acknowledgeStatement({ viewer: V("alice"), caseId: pub.caseId, edition: 1 }), "STATEMENT_ACK_BY_ITS_AUTHOR");
+  refuses(w.ca.acknowledgeStatement({ viewer: V("alice"), draft: "DRAFT-2026-0001", reason: 7 }), "STATEMENT_ACK_BY_ITS_AUTHOR");
+  /* and after every earlier refusal: C-82.2 is asked first */
+  refuses(w.ca.acknowledgeStatement({ viewer: V("bo") }), "STATEMENT_ACK_NO_SUBJECT");
+  /* negative controls: exactly 2,000 code points, astral or not, and a reason with spaces around it */
+  const long = w.ca.acknowledgeStatement({ viewer: V("cy"), caseId: pub.caseId, edition: 1, reason: astral.repeat(2000) });
+  assert.equal(long.ok, true, JSON.stringify(long).slice(0, 200));
+  const r = w.ca.acknowledgeStatement({ viewer: V("bo"), caseId: pub.caseId, edition: 1, reason: "  I read it.  " });
+  assert.deepEqual([r.ok, r.existed, r.acknowledgement.reason], [true, false, "  I read it.  "]);
+  const g = w.ca.acknowledgeStatement({ bySecret: true, secretSha: S1, reason: "Read as the auditor." });
+  assert.deepEqual([g.ok, g.acknowledgement.reason], [true, "Read as the auditor."]);
+  /* the list carries each reason */
+  const list = w.ca.statementAcknowledgements(P, pub.caseId, 1, AUTHORED.statement);
+  assert.deepEqual(list.rows.map((x) => [x.by, x.reason]), [["cy", astral.repeat(2000)], ["bo", "  I read it.  "]]);
+  /* a repeat answers existed and keeps the first reason */
+  const again = w.ca.acknowledgeStatement({ viewer: V("bo"), caseId: pub.caseId, edition: 1, reason: "Other words." });
+  assert.deepEqual([again.existed, again.acknowledgement.reason], [true, "  I read it.  "]);
+  assert.deepEqual(w.ca.statementAcknowledgements(P, pub.caseId, 1, AUTHORED.statement).rows.map((x) => x.reason),
+    [astral.repeat(2000), "  I read it.  "]);
+  /* the signed document's acknowledgement lines are unchanged: the reason is in the list, not in the bytes */
+  const text = w.row(`SELECT text FROM case_documents WHERE case_id=? AND edition=1`, pub.caseId).text;
+  assert.equal(text.includes("I read it."), false);
+  assert.deepEqual(Object.keys(w.fm(text).completeness_acknowledgements[0]).sort(), ["at", "by", "kind", "recipient"]);
+});
+
+test("R19: an acknowledgement recorded before DEC-88 has a null reason — the column is added to a table created without it, never filled, and the list reads it as null", async () => {
+  const { w, P } = setup();
+  const pub = w.publish(P, "alice", [Q]);
+  const { migrateCaseAuthoring } = await import("../../../src/case-authoring/schema.mjs");
+  /* the table as it stood before T22: no reason column */
+  w.st.db.exec(`DROP TABLE statement_acknowledgements`);
+  w.st.db.exec(`CREATE TABLE statement_acknowledgements (ack_id INTEGER PRIMARY KEY AUTOINCREMENT, project_id TEXT NOT NULL,
+    case_id TEXT, edition INTEGER NOT NULL, statement_sha TEXT NOT NULL, draft_id TEXT, acknowledger_kind TEXT NOT NULL,
+    acknowledger TEXT NOT NULL, recipient TEXT, at TEXT NOT NULL)`);
+  w.st.sql.exec(`INSERT INTO statement_acknowledgements (project_id, case_id, edition, statement_sha, acknowledger_kind,
+    acknowledger, at) VALUES (?,?,1,?,'participant','cy','2026-09-01T00:00:00Z')`, P, pub.caseId, statementSha(AUTHORED.statement));
+  migrateCaseAuthoring(w.st.sql);
+  migrateCaseAuthoring(w.st.sql);
+  assert.ok(w.rows(`PRAGMA table_info(statement_acknowledgements)`).some((c) => c.name === "reason"), "added, idempotently");
+  assert.deepEqual(w.ca.statementAcknowledgements(P, pub.caseId, 1, AUTHORED.statement).rows.map((x) => [x.by, x.reason]),
+    [["cy", null]]);
+  const r = w.ca.acknowledgeStatement({ viewer: V("bo"), caseId: pub.caseId, edition: 1, reason: WORDS });
+  assert.equal(r.ok, true);
+  assert.deepEqual(w.ca.statementAcknowledgements(P, pub.caseId, 1, AUTHORED.statement).rows.map((x) => x.reason), [null, WORDS]);
 });
