@@ -18,11 +18,11 @@ const REAL = JSON.parse(readFileSync(new URL("./legistar-1425405-refs.json", imp
 test("R17 (readingname.test.mjs) a name is never assembled from two strings of one reference: every term of an alias must be in ref, key or label alone", () => {
   const { e, read } = world();
   read("INFO-1", sha("mix"), [{ ref: "estuary:26-0999", kind: "estuary", key: "26-0999", label: "Fremont Shoreline Improvements" }]);
-  const split = e.createEntity({ kind: "institution", label: "Fremont Estuary" }).entity_id;
+  const split = e.createEntity({ note: "a subject the test registers", kind: "institution", label: "Fremont Estuary" }).entity_id;
   assert.equal(e.namingDocuments({ entityId: split, viewer: MACHINE }).count, 0, "one word in the label, one in the reference");
   /* the corpus holds both words: a name made by either string alone is offered */
-  const inLabel = e.createEntity({ kind: "institution", label: "Fremont Shoreline" }).entity_id;
-  const inRef = e.createEntity({ kind: "institution", label: "Estuary 26 0999" }).entity_id;
+  const inLabel = e.createEntity({ note: "a subject the test registers", kind: "institution", label: "Fremont Shoreline" }).entity_id;
+  const inRef = e.createEntity({ note: "a subject the test registers", kind: "institution", label: "Estuary 26 0999" }).entity_id;
   assert.deepEqual(e.namingDocuments({ entityId: inLabel, viewer: MACHINE }).documents.map((d) => [d.correspondence, d.matched_on]),
                    [["name_in_label", "label"]]);
   assert.deepEqual(e.namingDocuments({ entityId: inRef, viewer: MACHINE }).documents.map((d) => [d.correspondence, d.matched_on]),
@@ -37,22 +37,22 @@ test("R17 (readingname.test.mjs) each candidate names the alias that matched, wh
     { kind: "legislation", key: "26-0977", label: "Annual Report Of The Public Ethics Commission" },
     { kind: "legislation", key: "26-0912", label: "Coliseum Payment Allocation" },
   ]);
-  const opd = e.createEntity({ kind: "body", label: "Oakland Police Department", aliases: ["OPD"] }).entity_id;
+  const opd = e.createEntity({ note: "a subject the test registers", kind: "body", label: "Oakland Police Department", aliases: ["OPD"] }).entity_id;
   const [d] = e.namingDocuments({ entityId: opd, viewer: MACHINE }).documents;
   assert.deepEqual([d.matched_alias, d.canonical_name, d.matched_on, d.correspondence], ["OPD", false, "label", "name_in_label"]);
-  const col = e.createEntity({ kind: "contract", label: "Coliseum Payment Allocation" }).entity_id;
+  const col = e.createEntity({ note: "a subject the test registers", kind: "contract", label: "Coliseum Payment Allocation" }).entity_id;
   const [c] = e.namingDocuments({ entityId: col, viewer: MACHINE }).documents;
   assert.deepEqual([c.matched_alias, c.canonical_name, c.matched_on, c.correspondence], ["Coliseum Payment Allocation", true, "label", "name"]);
-  const lease = e.createEntity({ kind: "contract", label: "Broadway Parcel Lease", aliases: ["contract:26-0955"] }).entity_id;
+  const lease = e.createEntity({ note: "a subject the test registers", kind: "contract", label: "Broadway Parcel Lease", aliases: ["contract:26-0955"] }).entity_id;
   const [l] = e.namingDocuments({ entityId: lease, viewer: MACHINE }).documents;
   assert.deepEqual([l.matched_alias, l.canonical_name, l.matched_on, l.correspondence, l.label],
                    ["contract:26-0955", false, "ref", "reference", "Fifth Amendment To Lease Agreement"]);
-  const ethics = e.createEntity({ kind: "institution", label: "Public Ethics Commission", aliases: ["26-0977"] }).entity_id;
+  const ethics = e.createEntity({ note: "a subject the test registers", kind: "institution", label: "Public Ethics Commission", aliases: ["26-0977"] }).entity_id;
   const eth = e.namingDocuments({ entityId: ethics, viewer: MACHINE });
   assert.deepEqual([eth.count, eth.documents[0].matched_on, eth.documents[0].correspondence], [1, "key", "reference_key"],
                    "three correspondences on one reference make one candidate, at the strongest");
   /* the same full name with no abbreviation reaches nothing until the abbreviation is registered */
-  const bare = e.createEntity({ kind: "body", label: "Police Dept of Nowhere" }).entity_id;
+  const bare = e.createEntity({ note: "a subject the test registers", kind: "body", label: "Police Dept of Nowhere" }).entity_id;
   assert.equal(e.namingDocuments({ entityId: bare, viewer: MACHINE }).count, 0);
   e.addAlias({ entityId: bare, alias: "OPD" });
   assert.deepEqual(e.namingDocuments({ entityId: bare, viewer: MACHINE }).documents.map((x) => x.key), ["26-0857"]);
@@ -61,7 +61,7 @@ test("R17 (readingname.test.mjs) each candidate names the alias that matched, wh
 test("R17 (readingname.test.mjs) a subject nothing names answers ok with no candidates and says what the absence does not mean", () => {
   const { e, read } = world();
   read("INFO-1", sha("none"), [{ kind: "l", key: "1", label: "Coliseum Payment Allocation" }]);
-  const nobody = e.createEntity({ kind: "person", label: "Nobody At All" }).entity_id;
+  const nobody = e.createEntity({ note: "a subject the test registers", kind: "person", label: "Nobody At All" }).entity_id;
   const r = e.namingDocuments({ entityId: nobody, viewer: MACHINE });
   assert.deepEqual([r.ok, r.count, r.documents, r.truncated], [true, 0, [], false]);
   assert.match(r.detail, /says nothing about whether it exists/);
@@ -78,12 +78,12 @@ test("R17 R9 (readingname.test.mjs) grade_if_resolved equals what resolve mints,
   ]);
   read("INFO-2", sha("p2"), [{ kind: "legislation", key: "26-0912", label: "coliseum payment allocation" }]);
   const ids = [
-    e.createEntity({ kind: "contract", label: "Broadway Parcel Lease", aliases: ["contract:26-0955"] }),
-    e.createEntity({ kind: "institution", label: "Public Ethics Commission", aliases: ["26-0977"] }),
-    e.createEntity({ kind: "contract", label: "Coliseum Payment Allocation" }),
-    e.createEntity({ kind: "institution", label: "Alameda County" }),
+    e.createEntity({ note: "a subject the test registers", kind: "contract", label: "Broadway Parcel Lease", aliases: ["contract:26-0955"] }),
+    e.createEntity({ note: "a subject the test registers", kind: "institution", label: "Public Ethics Commission", aliases: ["26-0977"] }),
+    e.createEntity({ note: "a subject the test registers", kind: "contract", label: "Coliseum Payment Allocation" }),
+    e.createEntity({ note: "a subject the test registers", kind: "institution", label: "Alameda County" }),
     /* its name is D_REF's whole label (a C), but another subject's identifier matches that reference at A first */
-    e.createEntity({ kind: "contract", label: "Fifth Amendment To Lease Agreement" }),
+    e.createEntity({ note: "a subject the test registers", kind: "contract", label: "Fifth Amendment To Lease Agreement" }),
   ].map((x) => x.entity_id);
   const predicted = new Map();
   for (const id of ids)
@@ -107,11 +107,11 @@ test("R17 (readingname.test.mjs) reference-source partials on the real corpus: a
   const { e, read } = world();
   assert.deepEqual([REAL.length, [...new Set(REAL.map((r) => r.kind))]], [41, ["legislation"]], "the corpus is the real document's");
   read("INFO-1", sha("legistar-1425405"), REAL, { contentType: "meeting_agenda" });
-  const vacuous = e.createEntity({ kind: "body", label: "Rules and Legislation Committee", aliases: ["Legislation"] }).entity_id;
+  const vacuous = e.createEntity({ note: "a subject the test registers", kind: "body", label: "Rules and Legislation Committee", aliases: ["Legislation"] }).entity_id;
   const vac = e.namingDocuments({ entityId: vacuous, viewer: MACHINE });
   assert.equal(vac.count, 0);
   assert.deepEqual(vac.names_uninformative, [{ alias: "Legislation", source: "ref", reaches: REAL.length, corpus: REAL.length }]);
-  const good = e.createEntity({ kind: "contract", label: "File 26-0844", aliases: ["legislation 26-0844"] }).entity_id;
+  const good = e.createEntity({ note: "a subject the test registers", kind: "contract", label: "File 26-0844", aliases: ["legislation 26-0844"] }).entity_id;
   const g = e.namingDocuments({ entityId: good, viewer: MACHINE });
   assert.deepEqual(g.documents.map((d) => [d.ref, d.correspondence, d.matched_on, d.matched_alias, d.grade_if_resolved]),
                    [["legislation:26-0844", "name_in_reference", "ref", "legislation 26-0844", null]]);
@@ -126,7 +126,7 @@ test("R17 (readingname.test.mjs) across the partial tiers the more selective can
   read("INFO-2", sha("o2"), [{ ref: "committee:rules-b", kind: "committee", key: "rules-b", label: "Quarterly Budget Transfer" }]);
   read("INFO-3", sha("o3"), [{ ref: "committee:rules-c", kind: "committee", key: "rules-c", label: "Annual Audit Acceptance" }]);
   read("INFO-4", sha("o4"), [{ kind: "legislation", key: "1", label: "Other Business" }, { kind: "legislation", key: "2", label: "Adjournment" }]);
-  const ent = e.createEntity({ kind: "contract", label: "Zephyr Point", aliases: ["committee rules"] }).entity_id;
+  const ent = e.createEntity({ note: "a subject the test registers", kind: "contract", label: "Zephyr Point", aliases: ["committee rules"] }).entity_id;
   const r = e.namingDocuments({ entityId: ent, viewer: MACHINE });
   const rows = r.documents.map((d) => [d.ref, d.correspondence, d.matched_alias, d.selectivity.reaches, d.selectivity.corpus]);
   assert.deepEqual(rows[0], ["committee:rules-a", "name_in_label", "Zephyr Point", 1, 5], "the label partial reaches 1 of 5");
@@ -148,14 +148,14 @@ test("R18 (readingname.test.mjs) the gate withholds the row at the identifier ti
     { kind: "legislation", key: "26-0867", label: "Operational Agreement Between City Of Oakland And Alameda County For" },
     { kind: "legislation", key: "26-0912", label: "Coliseum Payment Allocation" },
   ]);
-  const lease = w.e.createEntity({ kind: "contract", label: "Broadway Parcel Lease", aliases: ["contract:26-0955"] }).entity_id;
+  const lease = w.e.createEntity({ note: "a subject the test registers", kind: "contract", label: "Broadway Parcel Lease", aliases: ["contract:26-0955"] }).entity_id;
   const inside = w.e.namingDocuments({ entityId: lease, viewer: "member:carol" });
   const outside = w.e.namingDocuments({ entityId: lease, viewer: "member:outsider" });
   assert.deepEqual(inside.documents.map((d) => d.correspondence), ["reference", "reference"]);
   assert.deepEqual([inside.count, outside.count], [2, 1]);
   assert.deepEqual(outside.documents.map((d) => [d.capture_sha, d.bundle_id]), [[sha("shared"), "INFO-1"]]);
   assert.ok(!JSON.stringify(outside).includes(sha("secret")) && !JSON.stringify(outside).includes("PROJ-2026-0001-s"));
-  const city = w.e.createEntity({ kind: "institution", label: "City of Oakland" }).entity_id;
+  const city = w.e.createEntity({ note: "a subject the test registers", kind: "institution", label: "City of Oakland" }).entity_id;
   const cIn = w.e.namingDocuments({ entityId: city, viewer: "member:carol" });
   const cOut = w.e.namingDocuments({ entityId: city, viewer: "member:outsider" });
   assert.deepEqual([cIn.count, cOut.count], [2, 1]);
@@ -179,9 +179,9 @@ test("R19 (readingname.test.mjs) the plan is of the joined statement R17 runs: t
 
 test("R35 R14 R15 (meaningquery.test.mjs) the read contract's rows are what resolutionsFor and concerns answer: a grade filter over resolutions and a subject's capture set over it agree with the module's reads", () => {
   const { e, read, rows } = world();
-  const cascade = e.createEntity({ kind: "contract", label: "Cascade Waterworks Contract", aliases: ["vendor:77"] }).entity_id;
-  const bureau = e.createEntity({ kind: "office", label: "Bureau of Sanitation" }).entity_id;
-  const idle = e.createEntity({ kind: "office", label: "Unnamed Office" }).entity_id;
+  const cascade = e.createEntity({ note: "a subject the test registers", kind: "contract", label: "Cascade Waterworks Contract", aliases: ["vendor:77"] }).entity_id;
+  const bureau = e.createEntity({ note: "a subject the test registers", kind: "office", label: "Bureau of Sanitation" }).entity_id;
+  const idle = e.createEntity({ note: "a subject the test registers", kind: "office", label: "Unnamed Office" }).entity_id;
   read("INFO-2026-0900", sha("pl8"), [{ ref: "vendor:77", kind: "vendor", key: "77", label: "Cascade Waterworks" },
                                        { ref: "office:sanitation", kind: "office", key: "sanitation", label: "Bureau of Sanitation" }]);
   read("INFO-2026-0901", sha("pl9"), [{ kind: "office", key: "s2", label: "bureau of sanitation" }]);
