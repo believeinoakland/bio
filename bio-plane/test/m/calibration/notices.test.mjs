@@ -56,12 +56,12 @@ for (const [id, slot] of Object.entries(SLOTS)) {
   });
 
   test(`${id}: every registered listener is told once, in the modules' total order, unknown modules last in registration order`, async () => {
-    const { c } = fresh({ order: ["calibration", "extraction", "scheduler", "legacy-store"] });
+    const { c } = fresh({ order: ["calibration", "extraction", "scheduler", "tasks"] });
     const seen = [];
-    for (const m of ["unlisted-b", "legacy-store", "scheduler", "unlisted-a", "extraction"])
+    for (const m of ["unlisted-b", "tasks", "scheduler", "unlisted-a", "extraction"])
       c[slot.on](m, async () => { await new Promise((r) => setTimeout(r, 2)); seen.push(m); });
     await slot.act(c, slot.good);
-    assert.deepEqual(seen, ["extraction", "scheduler", "legacy-store", "unlisted-b", "unlisted-a"],
+    assert.deepEqual(seen, ["extraction", "scheduler", "tasks", "unlisted-b", "unlisted-a"],
                      "each told once, the next only after the last has settled");
     await slot.act(c, slot.good);
     assert.equal(seen.length, 10, "once per act");
@@ -84,7 +84,7 @@ for (const [id, slot] of Object.entries(SLOTS)) {
     hostile.c[slot.on]("extraction", (n) => { told.push(structuredClone(n)); n.engine = "other"; if (n.next_probe) n.next_probe.at = -1; throw new Error("boom"); });
     hostile.c[slot.on]("content", async (n) => { told.push(structuredClone(n)); throw new Error("rejected"); });
     hostile.c[slot.on]("scheduler", (n) => { told.push(structuredClone(n)); return { ok: false, refuse: true }; });
-    hostile.c[slot.on]("legacy-store", (n) => { told.push(structuredClone(n)); return Promise.reject(new Error("late")); });
+    hostile.c[slot.on]("tasks", (n) => { told.push(structuredClone(n)); return Promise.reject(new Error("late")); });
     const got = await slot.act(hostile.c, slot.good);
     assert.deepEqual(got, want, "the answer is the one no listener would have changed");
     assert.deepEqual(dump(hostile.s), dump(plain.s), "the write is the same");
