@@ -27,3 +27,7 @@
 - `checks/ownership.mjs . public-read tranche/T24`: 5 files; 0 failures.
 
 Size (session_01RQeoV3bSk9w1uyvNraCojZ): test runs 20, module lines 2408
+
+## J1 · REPORT
+
+Two findings outside public-read. (1) Bundle: bio-plane/src/public-read/checks.mjs changed (comments only), so the plane's bundle may be stale by input hash; regenerated nothing. (2) network-notices: test/m/network-notices/reads.test.mjs:143 (R25) failed once in the whole test/m run ('bob named') and passed 17 runs of its file alone (5 on the tranche's tree without my change). It searches the JSON of every answer for the bare substring 'bob' (and alice, carol, dave), which random encoded material (salts, roots, keys) can contain by chance: intermittent, not a leak. It should match member names as whole values or tokens (network-notices R25).
