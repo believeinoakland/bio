@@ -1,6 +1,6 @@
 # network-notices — requirements
 
-**Status** · Requirements for T23, folded at the opening by BOB #94, K1113, DEC-111, K1019, K1031, K1100. Folded by a worker for BOB #98 at T24's opening, 2026-10-02, entries N503 (R4 records the notice id through `record-core.recordOpaqueId`), N504 (R1 asks `provenance.instanceKeyBound`, no probe signature), N505 (R21 gives a revoked key's own `status_at`), N507 (R14's `sealWake` and R17's `attestWake` answer null when idle) and N509 (R1 and R22 answer C-70.1 at `existence`); each not yet met (T24).
+**Status** · Requirements for T23, folded at the opening by BOB #94, K1113, DEC-111, K1019, K1031, K1100. Folded by a worker for BOB #98 at T24's opening, 2026-10-02, entries N503 (R4 records the notice id through `record-core.recordOpaqueId`), N504 (R1 asks `provenance.instanceKeyBound`, no probe signature), N505 (R21 gives a revoked key's own `status_at`), N507 (R14's `sealWake` and R17's `attestWake` answer null when idle) and N509 (R1 and R22 answer C-70.1 at `existence`); each not yet met (T24). Folded by a worker for BOB #103, 2026-10-02, entry N520 (DEC-116 item 6): R21's `owners` also keeps a key that signed a public docket entry; not yet met (T27).
 
 **Size (P6).** About 1,300–1,900 lines, well under 4,000.
 
@@ -127,10 +127,10 @@ Terms.
   - Nothing is ever removed from it.
   - A revision that is only prepared (R2) never appears in it.
 - **R21** `groupKeysPublic()` answers the group slug and two lists:
-  - `owners`: every key `credentials.signerList` (its R8) shows registered to a member who owns a project now, or who signed a published edition or a revision. Each comes with `status` (`attests`, or `revoked` with the date its status changed, `credentials.signerList`'s `status_at` (its R8, R21), never the date this copy first saw it; null when `status_at` is null, a revocation recorded before the date was kept) and the date it was first listed, never the member's name, handle or id;
+  - `owners`: every key `credentials.signerList` (its R8) shows registered to a member who owns a project now, or who signed a published edition, a revision or a public docket entry (`docket` R5; N520). Each comes with `status` (`attests`, or `revoked` with the date its status changed, `credentials.signerList`'s `status_at` (its R8, R21), never the date this copy first saw it; null when `status_at` is null, a revocation recorded before the date was kept) and the date it was first listed, never the member's name, handle or id;
   - `copy`: every instance key that has signed an attestation (`attestation.instanceKeys`, its R5), with the date it was first used. Each is labelled as this copy's key.
 
-  A revoked or replaced key stays listed, so older signatures can still be checked.
+  A revoked or replaced key stays listed, so older signatures can still be checked. *(not yet met: T27: docket signers, N520)*
 
 **Member reads**
 - **R22** `noticesOf({project, viewer})` (`op=notices`) answers a viewer who can see the project (`membership.sight`, its R44). A project absent or invisible to `viewer` is `noSuchProject`; a discoverable project `viewer` sees only at `existence` is `membership.existenceAct`'s refusal (its R77, C-70.1). Otherwise it answers:
@@ -156,6 +156,7 @@ Terms.
 - `publication`: `cases` and `published_cases` under its R40; `publishedEditionsOf` (its R37) and `caseCitedParts` (its R41).
 - `public-read`: the new public-read registration (its R18).
 - `project-stage`: `projectStage` (its R1, R2), for `closed` and its date.
+- `docket` (N520): `docketSigners` (its R5), the keys that signed a public docket entry, for R21.
 
 ### Invariants
 - **R24** Only an owner's own signature publishes a revision. No machine, AI run or administrator can post, re-word or back-date a revision for a project they do not own. An attestation states only facts the copy computes (R12).
