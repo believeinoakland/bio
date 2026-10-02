@@ -2,9 +2,10 @@
    table's purge exemption (R23), the ops (K3) and the no-place rule (R25), driven at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, MACHINE, ADMIN, MEMBER } from "./fixture.mjs";
+import { world, MACHINE, ADMIN, MEMBER, REASON } from "./fixture.mjs";
 import { strengthOps, STRENGTH_BAR_CHECKS, STRENGTH_AXES, barAxisWords } from "../../../src/strength/index.mjs";
 import { noSuchProject } from "../../../src/membership/index.mjs";
+import { migrateStrength } from "../../../src/strength/schema.mjs";
 
 const INQ = "INQ-2026-0001-a";
 const PROJ = "PROJ-2026-0042-abc";
@@ -182,19 +183,19 @@ test("R15, R24: a machine is refused C-32.9; a member who is not an active admin
   w.member(MEMBER);
   w.member("admin-gone", "admin", "revoked");
   for (const who of ["", "class:member", "token:daemon"]) {
-    const r = w.s.strengthBarSet({ capture: "B", author: who });
+    const r = w.s.strengthBarSet({ reason: REASON, capture: "B", author: who });
     assert.equal(r.reason, "MACHINE_CANNOT_DECLARE", who);
     assert.equal(r.check, "C-32.9");
     assert.equal(r.translation, STRENGTH_BAR_CHECKS.MACHINE_CANNOT_DECLARE.translation);
   }
   for (const who of [MEMBER, "admin-gone", "nobody"]) {
-    const r = w.s.strengthBarSet({ capture: "B", author: who });
+    const r = w.s.strengthBarSet({ reason: REASON, capture: "B", author: who });
     assert.equal(r.reason, "STRENGTH_BAR_NOT_ADMIN", who);
     assert.equal(r.check, "C-107.1");
     assert.ok(r.translation.length > 20);
   }
   assert.equal(w.rows(`SELECT COUNT(*) AS n FROM group_strength_bar`)[0].n, 0, "nothing was written");
-  assert.equal(w.s.strengthBarSet({ capture: "B", author: ADMIN }).ok, true);
+  assert.equal(w.s.strengthBarSet({ reason: REASON, capture: "B", author: ADMIN }).ok, true);
 });
 
 test("R15: the group named or the producing group; BAD_GRADE; NO_BAR; the answer says it seeds new projects and gates nothing", () => {
@@ -215,22 +216,111 @@ test("R15: the group named or the producing group; BAD_GRADE; NO_BAR; the answer
   }
   assert.equal(w.rows(`SELECT COUNT(*) AS n FROM group_strength_bar`)[0].n, 0, "a refused grade writes nothing");
   assert.equal(w.s.strengthBarSet({ author: ADMIN }).reason, "NO_BAR");
-  const r = w.s.strengthBarSet({ capture: "B", author: ADMIN });
+  const r = w.s.strengthBarSet({ reason: REASON, capture: "B", author: ADMIN });
   assert.equal(r.group, "grp-one");
   assert.equal(r.author, ADMIN);
   assert.equal(r.at, w.clock.now);
   assert.match(r.note, /DEFAULT a project starts from/);
   assert.match(r.note, /gates nothing/);
-  const named = w.s.strengthBarSet({ group: "grp-two", connection: "C", author: ADMIN });
+  const named = w.s.strengthBarSet({ reason: REASON, group: "grp-two", connection: "C", author: ADMIN });
   assert.equal(named.group, "grp-two");
   assert.deepEqual(w.rows(`SELECT group_id, capture, connection, author FROM group_strength_bar ORDER BY group_id`),
     [{ group_id: "grp-one", capture: "B", connection: null, author: ADMIN },
      { group_id: "grp-two", capture: null, connection: "C", author: ADMIN }]);
   const u = world({ group: null });
   u.member(ADMIN, "admin");
-  const und = u.s.strengthBarSet({ capture: "B", author: ADMIN });
+  const und = u.s.strengthBarSet({ reason: REASON, capture: "B", author: ADMIN });
   assert.equal(und.reason, "GROUP_UNDETERMINED");
   assert.ok(und.check);
+});
+
+/* R15 (DEC-105, H12): the bar's honest note, in the ruling's words, as a reader checks for it. */
+const HONEST_NOTE = "CivicOS has no guidance yet on what particular audiences expect. Readers see the bar you set in these words.";
+const noteHolds = (answer) => assert.ok(typeof answer.note === "string" && answer.note.includes(HONEST_NOTE),
+                                        "the answer's note carries DEC-105's words");
+
+test("R15 (DEC-105): the answer's note carries the bar's honest note in DEC-105's words, beside that it seeds new projects and gates nothing (negative control: an answer without it fails)", () => {
+  const w = projected();
+  w.member(ADMIN, "admin");
+  const r = w.s.strengthBarSet({ reason: REASON, capture: "B", author: ADMIN });
+  assert.equal(r.ok, true);
+  noteHolds(r);
+  assert.match(r.note, /DEFAULT a project starts from/);
+  assert.match(r.note, /It gates nothing\./);
+  for (const stripped of [{ ...r, note: r.note.replace(HONEST_NOTE, "") }, { ...r, note: undefined },
+                          { ...r, note: HONEST_NOTE.slice(0, 40) }])
+    assert.throws(() => noteHolds(stripped), assert.AssertionError);
+});
+
+test("R15, C-107.3 (DEC-88): a reason absent, not a string, blank or of 2,001 characters is refused BAR_NO_REASON, asked after NO_BAR, with nothing written and the earlier default and its reason unchanged", () => {
+  const w = projected();
+  w.member(ADMIN, "admin");
+  const first = w.s.strengthBarSet({ reason: "  The first reason.  ", capture: "C", author: ADMIN });
+  assert.equal(first.ok, true);
+  assert.equal(first.reason, "The first reason.", "recorded trimmed, as judged");
+  const held = () => w.rows(`SELECT group_id, capture, connection, author, at, reason FROM group_strength_bar`);
+  const before = held();
+  w.clock.now = "2026-09-29T00:00:00.000Z";
+  for (const reason of [undefined, null, 42, ["a reason"], { text: "a reason" }, "", "   \n\t ", "x".repeat(2001),
+                        ` ${"y".repeat(2001)} `]) {
+    const r = w.s.strengthBarSet({ reason, capture: "A", connection: "B", author: ADMIN });
+    assert.equal(r.ok, false, String(reason).slice(0, 20));
+    assert.equal(r.reason, "BAR_NO_REASON");
+    assert.equal(r.code, "BAR_NO_REASON");
+    assert.equal(r.check, "C-107.3");
+    assert.equal(r.translation, STRENGTH_BAR_CHECKS.BAR_NO_REASON.translation);
+    assert.equal(r.limit, 2000);
+    assert.deepEqual(held(), before, "nothing written: the earlier default and its reason stand");
+  }
+  assert.match(w.s.strengthBarSet({ capture: "A", author: ADMIN }).detail, /in your own words/);
+  assert.match(w.s.strengthBarSet({ reason: " ", capture: "A", author: ADMIN }).detail, /blank/);
+  assert.match(w.s.strengthBarSet({ reason: "z".repeat(2001), capture: "A", author: ADMIN }).detail, /2001 characters/);
+  /* Order: every earlier refusal is asked first. */
+  assert.equal(w.s.strengthBarSet({ author: ADMIN }).reason, "NO_BAR");
+  assert.equal(w.s.strengthBarSet({ capture: "E", author: ADMIN }).reason, "BAD_GRADE");
+  assert.equal(w.s.strengthBarSet({ capture: "A", author: MEMBER }).reason, "STRENGTH_BAR_NOT_ADMIN");
+  assert.equal(w.s.strengthBarSet({ capture: "A", author: MACHINE }).reason, "MACHINE_CANNOT_DECLARE");
+  /* At the bound it is accepted, and replaces the default with its own reason. */
+  const at = w.s.strengthBarSet({ reason: "r".repeat(2000), capture: "A", author: ADMIN });
+  assert.equal(at.ok, true);
+  assert.deepEqual(held(), [{ group_id: "grp-one", capture: "A", connection: null, author: ADMIN, at: w.clock.now,
+                              reason: "r".repeat(2000) }]);
+});
+
+test("R15, R16 (DEC-88): a reasoned bar is read back by strengthBarOf with the default; one set before DEC-88 reads its reason as null; the op passes the body's reason whole", () => {
+  const w = projected();
+  w.member(ADMIN, "admin");
+  w.s.strengthBarSet({ reason: REASON, capture: "B", connection: "C", author: ADMIN });
+  const read = w.s.strengthBarOf({ viewer: MACHINE });
+  assert.deepEqual(read.bar, { group_id: "grp-one", capture: "B", connection: "C", author: ADMIN, at: w.clock.now,
+                               reason: REASON });
+  assert.equal(read.seeds_new_projects, true);
+  /* The dispatch: the body whole, the stamped author. */
+  const op = (qs, body) => strengthOps(w.s, new URL(`http://x/?${qs}`), body).strengthbar();
+  assert.equal(op(`author=${ADMIN}`, { group: "grp-two", connection: "A" }).reason, "BAR_NO_REASON");
+  const viaOp = op(`author=${ADMIN}`, { group: "grp-two", connection: "A", reason: "Set through the op." });
+  assert.equal(viaOp.ok, true);
+  assert.equal(w.s.strengthBarOf({ group: "grp-two", viewer: MACHINE }).bar.reason, "Set through the op.");
+  /* A store whose table predates the reason gains the column, its rows' reason null. */
+  const old = world();
+  old.st.db.exec(`DROP TABLE group_strength_bar`);
+  old.st.db.exec(`CREATE TABLE group_strength_bar (group_id TEXT PRIMARY KEY, capture TEXT, connection TEXT,
+                  author TEXT NOT NULL, at TEXT NOT NULL)`);
+  old.st.db.exec(`INSERT INTO group_strength_bar VALUES ('grp-one', 'B', NULL, 'admin-ann', '2026-01-01T00:00:00.000Z')`);
+  migrateStrength(old.st.sql);
+  migrateStrength(old.st.sql);
+  assert.deepEqual(old.s.strengthBarOf({ viewer: MACHINE }).bar,
+    { group_id: "grp-one", capture: "B", connection: null, author: "admin-ann", at: "2026-01-01T00:00:00.000Z", reason: null });
+});
+
+test("C-107.3, R24: BAR_NO_REASON is this module's row, after C-107.2, its where naming the bar's act", () => {
+  const row = STRENGTH_BAR_CHECKS.BAR_NO_REASON;
+  assert.equal(row.check, "C-107.3");
+  assert.equal(row.where, "src/strength/index.mjs strengthBarSet > is-strength-bar-reason");
+  assert.match(row.translation, /2,000 characters/);
+  assert.match(row.translation, /Nothing was changed\.$/);
+  assert.deepEqual(Object.values(STRENGTH_BAR_CHECKS).map((r) => r.check), ["C-32.9", "C-107.1", "C-107.2", "C-107.3"]);
+  assert.ok(Object.isFrozen(STRENGTH_BAR_CHECKS));
 });
 
 test("R16: target= is refused by name; an unseen project is NO_SUCH_PROJECT; NOT_A_PROJECT; else R14; no project, the group default", () => {
@@ -254,7 +344,7 @@ test("R16: target= is refused by name; an unseen project is NO_SUCH_PROJECT; NOT
   assert.equal(none.bar, null);
   assert.equal(none.seeds_new_projects, true);
   assert.match(none.detail, /no group default is declared/);
-  w.s.strengthBarSet({ capture: "A", author: ADMIN });
+  w.s.strengthBarSet({ reason: REASON, capture: "A", author: ADMIN });
   const def = w.s.strengthBarOf({ viewer: MACHINE });
   assert.equal(def.group, "grp-one");
   assert.equal(def.bar.capture, "A");
@@ -265,7 +355,7 @@ test("R21: the bar is a declaration beside the strength, never a gate on the pai
   const w = projected();
   w.member(ADMIN, "admin");
   const before = w.s.strengthOf(INQ);
-  w.s.strengthBarSet({ capture: "A", connection: "A", author: ADMIN });
+  w.s.strengthBarSet({ reason: REASON, capture: "A", connection: "A", author: ADMIN });
   w.file(PROJ, "bundle.md", "---\nrequired_strength:\n  connection: A\n---\n");
   assert.deepEqual(w.s.strengthOf(INQ), before, "a bar above the pair changes nothing about the pair");
   assert.equal(w.s.inquiryStrength({ id: INQ, viewer: MACHINE }).ok, true);
@@ -274,7 +364,7 @@ test("R21: the bar is a declaration beside the strength, never a gate on the pai
 test("R23: group_strength_bar is keyed by group and survives a whole-store purge as an instance setting", () => {
   const w = projected();
   w.member(ADMIN, "admin");
-  w.s.strengthBarSet({ capture: "B", author: ADMIN });
+  w.s.strengthBarSet({ reason: REASON, capture: "B", author: ADMIN });
   const cols = w.rows(`PRAGMA table_info(group_strength_bar)`);
   assert.deepEqual(cols.filter((c) => c.pk).map((c) => c.name), ["group_id"]);
   assert.ok(!cols.some((c) => c.name === "bundle_id"));
@@ -291,7 +381,7 @@ test("R6, R16: the ops route to the services with the control plane's stamps (K3
   assert.deepEqual(op("inquirystrength", `id=${INQ}&viewer=member:carol`), w.s.inquiryStrength({ id: INQ, viewer: "member:carol" }));
   assert.equal(op("versionstrength", `id=${INQ}&viewer=${MACHINE}`).reason, "VERSION_STRENGTH_NO_VERSION");
   assert.equal(op("partitionindependence", `id=${INQ}&viewer=${MACHINE}`, { partition: [[0], [1]] }).ok, true);
-  assert.equal(op("strengthbar", `author=${MEMBER}`, { capture: "B", author: ADMIN }).reason, "STRENGTH_BAR_NOT_ADMIN",
+  assert.equal(op("strengthbar", `author=${MEMBER}`, { capture: "B", reason: REASON, author: ADMIN }).reason, "STRENGTH_BAR_NOT_ADMIN",
                "the stamped author wins over a body's");
   assert.equal(op("strengthbarof", `target=${INQ}`).reason, "BAR_IS_A_PROJECT_PROPERTY");
 });
@@ -301,7 +391,7 @@ test("R25: no place is named in this module's answers", () => {
   w.member(ADMIN, "admin");
   const out = JSON.stringify([
     w.s.strengthOf(INQ), w.s.inquiryStrength({ id: INQ, viewer: "member:carol" }), w.s.projectBar(PROJ),
-    w.s.strengthBarSet({ capture: "B", author: ADMIN }), w.s.strengthBarSet({ author: "class:member" }),
+    w.s.strengthBarSet({ reason: REASON, capture: "B", author: ADMIN }), w.s.strengthBarSet({ author: "class:member" }),
     w.s.strengthBarOf({ target: INQ }), w.s.versionStrength({ viewer: MACHINE }),
     w.s.partitionIndependence({ id: INQ, viewer: MACHINE, partition: "x" }),
     Object.values(STRENGTH_BAR_CHECKS),

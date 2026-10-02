@@ -87,7 +87,7 @@ test("R17 (N152): strength registers its pair with inquiry's grouping act itself
   assert.equal(s.registerGrounded().reason, "LISTENER_DECLARED", "a second registration is refused, never doubled");
 });
 
-test("R17: the registered answer is strengthOf's three axes, so the grouping act's before and after are R1–R5's", () => {
+test("R17, R5: the registered answer is strengthOf's three axes and its hunches left out, so the grouping act's before and after are R1–R5's", () => {
   const seen = [];
   const inquiry = {
     basisFor: () => ({ legs: [{ ord: 0, target_id: "INFO-2026-0001-a", target_type: "information", role: "supports",
@@ -103,8 +103,10 @@ test("R17: the registered answer is strengthOf's three axes, so the grouping act
   assert.equal(seen[0].module, "strength");
   const pair = seen[0].fn("INQ-2026-0001-a");
   const direct = s.strengthOf("INQ-2026-0001-a");
-  assert.deepEqual(Object.keys(pair).sort(), [...STRENGTH_AXES].sort());
+  assert.deepEqual(Object.keys(pair).sort(), [...STRENGTH_AXES, "hunches_left_out"].sort());
   for (const axis of STRENGTH_AXES) assert.deepEqual(pair[axis], direct[axis]);
+  assert.equal(pair.hunches_left_out, direct.hunches_left_out);
+  assert.equal(pair.hunches_left_out, 0);
   assert.equal(pair.connection.grade, "B");
 });
 

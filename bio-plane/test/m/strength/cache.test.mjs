@@ -5,7 +5,7 @@
    the field's column follows) and of its R6 arm (inquirystrength's exact key set). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, MACHINE } from "./fixture.mjs";
+import { world, MACHINE, REASON } from "./fixture.mjs";
 import { STRENGTH_CACHE_TABLE, STRENGTH_CACHE_FIELDS, STRENGTH_PURGED_TABLES, STRENGTH_EXEMPT_TABLES,
          STRENGTH_STATES } from "../../../src/strength/index.mjs";
 import { migrateStrength } from "../../../src/strength/schema.mjs";
@@ -114,7 +114,7 @@ test("R23: the cache is declared to purge by bundle, and the bar exempt: a bundl
   assert.deepEqual([...STRENGTH_PURGED_TABLES], [STRENGTH_CACHE_TABLE]);
   assert.deepEqual([...STRENGTH_EXEMPT_TABLES], ["group_strength_bar"]);
   w.member("admin-ann", "admin");
-  w.s.strengthBarSet({ capture: "B", author: "admin-ann" });
+  w.s.strengthBarSet({ reason: REASON, capture: "B", author: "admin-ann" });
   w.promote(INQ);
   w.promote(SUB);
   w.record.purge({ bundleId: INQ });
@@ -153,15 +153,16 @@ test("R23: a store holding the cache on bundles carries it over once, so no sear
   assert.equal(fresh.rows(`SELECT COUNT(*) AS n FROM ${STRENGTH_CACHE_TABLE}`)[0].n, 0);
 });
 
-test("R6 (rec108): inquirystrength's answer is exactly ok, target, depth_bound and the three axes, with out_of_view only when something was withheld", () => {
+test("R6 (rec108), R5: inquirystrength's answer is exactly ok, target, depth_bound, the three axes and the hunches left out, with out_of_view only when something was withheld", () => {
   const w = cached();
   const r = w.s.inquiryStrength({ id: INQ, viewer: MACHINE });
-  assert.deepEqual(Object.keys(r).sort(), ["capture", "connection", "depth_bound", "ok", "target", "testimony"]);
+  assert.deepEqual(Object.keys(r).sort(), ["capture", "connection", "depth_bound", "hunches_left_out", "ok", "target", "testimony"]);
   assert.equal(r.target, INQ);
   assert.equal(r.depth_bound, 6);
   w.project("PROJ-2026-0042-abc", ["alice"]);
   w.inquiry("INQ-2026-0006-a", [{ target: "PROJ-2026-0042-abc", grade: "B", axis: "connection", source: "resolution" }]);
   const withheld = w.s.inquiryStrength({ id: "INQ-2026-0006-a", viewer: "member:carol" });
-  assert.deepEqual(Object.keys(withheld).sort(), ["capture", "connection", "depth_bound", "ok", "out_of_view", "target", "testimony"]);
+  assert.deepEqual(Object.keys(withheld).sort(),
+    ["capture", "connection", "depth_bound", "hunches_left_out", "ok", "out_of_view", "target", "testimony"]);
   assert.equal(withheld.out_of_view, true);
 });

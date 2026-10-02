@@ -18,12 +18,16 @@ export const STRENGTH_SCHEMA = `
 -- SAYS SO -- an absent bar is not a bar of zero and must never render as one.
 -- Governance, not corpus: like members and signers it survives a whole-store
 -- purge; test/m/strength/cache.test.mjs (R23) proves that exemption.
+-- reason (DEC-88, R15): the administrator's words on why the group sets
+-- this bar, recorded with it; NULL only on a row written before DEC-88, added
+-- to an older store by migrateStrength.
 CREATE TABLE IF NOT EXISTS group_strength_bar (
   group_id   TEXT PRIMARY KEY,
   capture    TEXT,
   connection TEXT,
   author     TEXT NOT NULL,
-  at         TEXT NOT NULL
+  at         TEXT NOT NULL,
+  reason     TEXT
 );
 
 -- REC-12, R13: the derived pair CACHED per axis for search, one row per
@@ -63,12 +67,16 @@ export const STRENGTH_EXEMPT_TABLES = Object.freeze(["group_strength_bar"]);
 const LEGACY_CACHE_COLS = ["inquiry_capture_strength", "inquiry_capture_state", "inquiry_connection_strength",
                            "inquiry_connection_state"];
 
-/** Creates the tables; idempotent. On a store that still holds the cache on `bundles` and none in `strength_cache` (the
- *  first boot after the move), the values there are carried over, so no search answer changes by the move (retrieval
- *  R62). Once this table holds a row, nothing is carried again: a row this module later removed stays removed. */
+/** Creates the tables; idempotent. A `group_strength_bar` created before DEC-88 gains its `reason` column, its rows'
+ *  reason NULL (R15: written before a reason was asked). On a store that still holds the cache on `bundles` and none in
+ *  `strength_cache` (the first boot after the move), the values there are carried over, so no search answer changes by
+ *  the move (retrieval R62). Once this table holds a row, nothing is carried again: a row this module later removed
+ *  stays removed. */
 export function migrateStrength(sql) {
   const bare = STRENGTH_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const s of bare.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+  const barCols = new Set([...sql.exec(`PRAGMA table_info(group_strength_bar)`)].map((r) => r.name));
+  if (!barCols.has("reason")) sql.exec(`ALTER TABLE group_strength_bar ADD COLUMN reason TEXT`);
   const cols = new Set([...sql.exec(`PRAGMA table_info(bundles)`)].map((r) => r.name));
   if (!LEGACY_CACHE_COLS.every((c) => cols.has(c))) return;
   if ([...sql.exec(`SELECT 1 AS x FROM strength_cache LIMIT 1`)].length) return;
