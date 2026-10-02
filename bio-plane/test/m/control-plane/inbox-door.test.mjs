@@ -52,10 +52,10 @@ test("R36 (capture R32, C-118.7; DEC-88 (2), K1037): the `pulled` resolve at the
   const max = "é".repeat(REASON_MAX);
   const ok = await r.go(`inboxpullfile?${SESSION}&resolve=pulled`, "POST", { knockId: k.knockId, status: "pulled", reason: max });
   assert.equal(ok.json.result.ok, true, JSON.stringify(ok.json).slice(0, 300));
-  assert.equal(r.held(k.knockId, k.sha256).resolve_reason, max);
+  assert.equal(r.held(k.knockId, k.sha256).status, "pulled");
 });
 
-test("R36 (capture R32, R65; DEC-88 (2), K1037): a reasoned `pulled` resolve is the pull with its promotion — the knock pulled by the member, its receipt, one new information bundle at collected holding the capture, the puller its author — and the member's reason recorded on the knock's row; `op=inboxpull` asked directly takes no reason, whatever its body carries", async () => {
+test("R36 (capture R32, R65; DEC-88 (2), K1037): a reasoned `pulled` resolve is the pull with its promotion — the knock pulled by the member, its receipt, one new information bundle at collected holding the capture, the puller its author; `op=inboxpull` asked directly takes no reason, whatever its body carries", async () => {
   const r = await record();
   const k = await r.knock("the minutes they did not publish");
   const a = await r.go(`inboxpullfile?${SESSION}&resolve=pulled`, "POST",
@@ -63,9 +63,8 @@ test("R36 (capture R32, R65; DEC-88 (2), K1037): a reasoned `pulled` resolve is 
   const x = a.json.result;
   assert.deepEqual([x.ok, x.existed], [true, false], JSON.stringify(a.json).slice(0, 300));
   assert.match(x.bundle.bundleId, /^INFO-\d{4}-0001-doorbell-knock$/);
-  const held = r.held(k.knockId, k.sha256);
-  assert.deepEqual(held, { status: "pulled", capture_sha: k.sha256, pulled_by: "ann", resolve_reason: "this is the agenda packet we asked for",
-                           receipt: true, home: x.bundle.bundleId, bundles: 1 });
+  const { resolve_reason: _recorded, ...held } = r.held(k.knockId, k.sha256);   /* the row's reason: the test below */
+  assert.deepEqual(held, { status: "pulled", capture_sha: k.sha256, pulled_by: "ann", receipt: true, home: x.bundle.bundleId, bundles: 1 });
   const head = recordOf(r.ctx).head(x.bundle.bundleId);
   assert.deepEqual([head.type, head.currentState], ["information", "collected"]);
   assert.match(recordOf(r.ctx).readFile(x.bundle.bundleId, "bundle.md").text, / \| Collected \| ann$/m);
@@ -77,6 +76,14 @@ test("R36 (capture R32, R65; DEC-88 (2), K1037): a reasoned `pulled` resolve is 
   /* negative control: and the direct pull needs none — a reasonless direct pull is admitted */
   const f = await r.knock("a third");
   assert.equal((await r.go(`inboxpullfile?${SESSION}`, "POST", { knockId: f.knockId })).json.result.ok, true);
+});
+
+test("R36 (capture R32; DEC-88 (2); accepted red by name, K1105, until capture's N499 merge in T23 L3): an admitted `pulled` resolve's reason is recorded on the knock's row with the pull", async () => {
+  const r = await record();
+  const k = await r.knock("the reason's row");
+  const a = await r.go(`inboxpullfile?${SESSION}&resolve=pulled`, "POST", { knockId: k.knockId, status: "pulled", reason: "worth a look" });
+  assert.equal(a.json.result.ok, true);
+  assert.deepEqual([r.held(k.knockId, k.sha256).status, r.held(k.knockId, k.sha256).resolve_reason], ["pulled", "worth a look"]);
 });
 
 test("R36 (capture R65's `within`; DEC-88 (2)): the reasoned `pulled` resolve and its promotion are one act — a promotion that refuses, or throws, leaves neither written: the knock new, no reason on its row, no receipt, no bundle", async () => {
