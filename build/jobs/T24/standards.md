@@ -25,3 +25,7 @@
 - `checks/ownership.mjs … standards tranche/T24`: 1 file changed; 0 failures.
 
 Size (session_017ZU53EPj6iAyW7n2FBQQTi): test runs 2, module lines 849
+
+## J1 · COMPLETE
+
+N502 applied: src/standards/checks.mjs:6-7 now says C-112.20 and C-112.17's re-wording were stamped by 1.53.0. Re-scan by N469's rule found nothing else stale (index.mjs:628 names plane/store.mjs, live). REPORT: the plane's bundle (bio-plane/dist/bio-plane.bundle.json) lists src/standards/checks.mjs as an input, so this comment change stales its hash; not regenerated. Red 5: no row added or changed. Module tests 23/23; whole test/m 5244, 2 fail, both accepted (red 8 scheduler/consumers.test.mjs:161, red 9 plane/notices.test.mjs:39), 11 todo. Checks: format 2 failures, both red 4; architecture, coverage (17/17), ownership 0 failures. Record: build/jobs/T24/standards.md.
