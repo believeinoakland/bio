@@ -194,7 +194,7 @@ export async function dispatch(req, store) {
    affordances' maps; `sources`' own map (N379, K566: its acts, its reads and the no-account `knockerconsent`, which no
    other module dispatches); the two own-key acts, credentials' since layer 2 (K757, K784), which credentials keeps out of
    its map (`by` spread, then overridden, as `signeradd`); and R36's pull, a route of its own beside capture's `inboxpull`, which the Worker's
-   `op=inboxpull` addresses. */
+   `op=inboxpull` (and `op=inboxresolve` at `pulled`) addresses. */
 export function controlPlaneRoutes(ctx, url, body) {
   const q = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" && !Array.isArray(body) ? body : {};
@@ -217,6 +217,9 @@ export function controlPlaneRoutes(ctx, url, body) {
     inboxpullfile: () => pullAndFile({ capture: captureOf(ctx), promotion: promotionOf(ctx), record: recordOf(ctx),
                                        provenance: provenanceOf(ctx) },
                                      { knockId: (typeof b.knockId === "string" && b.knockId) || q("id"),
-                                       by: q("by"), identity: q("identity"), viewer: q("viewer") }),
+                                       by: q("by"), identity: q("identity"), viewer: q("viewer"),
+                                       /* R36 (capture R32; DEC-88 (2)): the `pulled` resolve, marked by the Worker's
+                                          own stamp, carries the body's reason; a direct pull carries none */
+                                       ...(q("resolve") === "pulled" ? { resolve: true, reason: b.reason } : {}) }),
   };
 }

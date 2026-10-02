@@ -1,6 +1,6 @@
 /* control-plane R41 (K585 (1), K674 (1); agent-worker R48, N157): the untargeted `op=affordances` answer carries the
    published fences and the rendered pack. Driven through `makeFetch(hooks)`, the handler answering affordances R17's
-   untargeted shape from affordances' own tables, as legacy-index's arm does. */
+   untargeted shape from affordances' own tables, as plane's door arm (`affordancesOp`) does. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { M, O, world, call } from "./harness.mjs";

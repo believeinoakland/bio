@@ -627,6 +627,8 @@ const PLANE_LIMITS_STATEMENT = "bio-plane-limits/1 subrequests=10000";
 const QUERY_STAMPS = Object.freeze(["viewer", "identity", "author", "by", "actor", "who", "origin", "administer", "aiCred"]);
 const BODY_STAMPS = Object.freeze(["actorIdentity", "actorViewer", "actorMemberId", "ownerMemberId", "assistantPrincipal",
                                    "migrationReplay"]);
+/* R36, R23 (K1037): the ops whose refusals state their own HTTP status in `result.status`, which the forward answers. */
+const STATED_STATUS_OPS = Object.freeze(["inbox", "inboxpull", "inboxresolve", "heldsetaside", "heldrestore"]);
 export function makeFetch(hooks = {}) {
   /* R25: the door's one outermost catch. */
   const planeDoor = async function planeDoor(req, env) {
@@ -699,10 +701,16 @@ export function makeFetch(hooks = {}) {
     /* R36 (N364; capture R32, R65): a knock resolved to `pulled` is R65's pull, so it is routed as `op=inboxpull` before
        any gate: every gate, stamp and answer it meets is the pull's, the promotion included, and no pull files a capture
        without its bundle. The body is read from a copy; the other statuses stay `inboxresolve`'s. */
+    /* DEC-88 (2), K1037: it is capture R32's resolve all the same, so it takes the resolve's reason, which `op=inboxpull`
+       asked directly does not (capture R65): `resolving` marks the re-route, and the forward below tells the store's pull
+       route so with a stamp of the door's own, never the caller's. */
+    let resolving = false;
     if (op === "inboxresolve" && req.method === "POST") {
       let b = null;
       try { b = JSON.parse(await req.clone().text()); } catch { b = null; }
-      if (b && typeof b === "object" && !Array.isArray(b) && b.status === "pulled") { op = "inboxpull"; spec = OPS.inboxpull; }
+      if (b && typeof b === "object" && !Array.isArray(b) && b.status === "pulled") {
+        op = "inboxpull"; spec = OPS.inboxpull; resolving = true;
+      }
     }
     /* DEC-49 REGION is-unknown-op
        D-278 (C-69.1). `error` stays "unknown op" BYTE-IDENTICAL and stays the
@@ -777,7 +785,8 @@ export function makeFetch(hooks = {}) {
          standing receives ONE answer — the store's `#noReviewCopy`, built from no
          argument — at ONE status, so revoked, never-issued, malformed, a draft
          that does not exist and a draft the caller cannot see are the same bytes.
-         The inner URL is built from nothing of the caller's but `draft`. */
+         The inner URL is built from nothing of the caller's but `draft` (and, for
+         `statementack`, its subject and the acknowledger's `reason`, below). */
       /* D-150: `statementack` takes these two doors, and a member may name an unsigned case
          document (`case` + `edition`) in place of a draft. */
       if (op === "reviewcopy" || op === "reviewcomment" || op === "statementack") {
@@ -796,6 +805,18 @@ export function makeFetch(hooks = {}) {
           const reader = await caseReader(url, env, "bio", presentedAi.cred);   /* admission's `readerOf` */
           if (reader.silent) return storeSilent(reader.silent, reader.correlation);
           q.set("viewer", reader.viewer);
+        }
+        /* DEC-88 (case-authoring R19, C-82.8): an acknowledgement carries the acknowledger's own words, on either door, in
+           the query as case-authoring's `statementack` arm reads them: the caller's `reason=`, else a POST body's string
+           `reason`, verbatim. Nothing else of the caller's crosses; an absent reason stays absent, refused there. */
+        if (op === "statementack") {
+          let reason = url.searchParams.get("reason");
+          if (reason === null && req.method === "POST") {
+            let b = null;
+            try { b = JSON.parse((await req.text()) || "null"); } catch { b = null; }
+            if (b && typeof b === "object" && !Array.isArray(b) && typeof b.reason === "string") reason = b.reason;
+          }
+          if (reason !== null) q.set("reason", reason);
         }
         let commentBody = null;
         if (op === "reviewcomment") {
@@ -1371,8 +1392,8 @@ export function makeFetch(hooks = {}) {
        differently, or not at all, would answer "no versions" for a document the
        record plainly holds, and `subresources.mjs` says exactly why that is the
        failure hardest to notice: *a normalisation MISS looks exactly like "not
-       captured"*. The store cannot do this itself — the normaliser lives in
-       subresources.mjs and store.mjs does not import it — so it happens here,
+       captured"*. The store's route takes the address as given (normalising it
+       there was legacy-store's gap, whose `store.mjs` is gone), so it happens here,
        at the same seam op=links has used since REC-52. The caller's raw
        `address` was copied in the loop above and is overwritten. */
     if (op === "versionchain")
@@ -1909,8 +1930,13 @@ export function makeFetch(hooks = {}) {
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* R36: the pull's promotion carries the session's POSITIONAL identity as op=promote's `actorIdentity` (POSITIONAL_ACTS'
        expression); only a session reaches the op (its row's `machineClasses: []`). */
-    if (op === "inboxpull")
+    if (op === "inboxpull") {
       inner.searchParams.set("identity", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
+      /* R36 (capture R32; DEC-88 (2)): whether this pull is the `pulled` resolve, and so takes its reason, is the door's
+         word: a caller's `resolve` is deleted, and it is set only for the re-routed resolve. */
+      inner.searchParams.delete("resolve");
+      if (resolving) inner.searchParams.set("resolve", "pulled");
+    }
     /* REC-164: the setter of the group's display name or domain is the SERVER's stamp — set after the caller's
        parameters were copied, so a caller's `by` is overwritten rather than honoured, and the store asks the roster
        for an active administrator (C-64.5). `origin` is stamped the same way: the address the administrator's
@@ -2625,8 +2651,8 @@ export function makeFetch(hooks = {}) {
     /* PL-11 / IS-5 / D-199 — THE MINT, AND IT IS NOT A PLAIN FORWARD FOR ONE
      * REASON: THE VALUE IS GENERATED HERE AND IS RETURNED EXACTLY ONCE.
      *
-     * The Durable Object receives the SHA and never the value, so no method in
-     * `store.mjs` can print a credential because none has ever held one — a
+     * The Durable Object receives the SHA and never the value, so no method
+     * behind the store's door can print a credential because none has ever held one — a
      * stronger statement than a rule about not logging it; R30's test
      * (`test/m/control-plane/envelope.test.mjs`) drives the mint and finds the
      * value in its one answer and nowhere else. What is stored is an
@@ -2671,7 +2697,7 @@ export function makeFetch(hooks = {}) {
     /* REC-126 / DEC-31 / IC-145 — THE GRANT'S READ SECRET, GENERATED HERE AND
      * SHOWN EXACTLY ONCE, on `aicredentialmint`'s pattern one block up and for its
      * reason: the Durable Object receives the SHA-256 and never the value, so no
-     * method in `store.mjs` can print it because none has ever held it. The value is
+     * method behind the store's door can print it because none has ever held it. The value is
      * a READ credential only (§6A.2): it is not a token, `classify` never admits it,
      * and the only ops that read it are `reviewcopy`, `reviewcomment` and the
      * unsigned half of `casedocument`. 32 random bytes, base64url, behind a version
@@ -2733,9 +2759,11 @@ export function makeFetch(hooks = {}) {
     /* K383 (capture's C-118.2): an inbox read or disposition naming no knock answers 404, as NO_SUCH_BUNDLE does. */
     if ((op === "inboxget" || op === "inboxresolve") && body.result?.ok === false && body.result.reason === "NO_SUCH_KNOCK")
       return json({ ...body, store: storeName, tokenClass: cls }, 404);
-    /* R36 (capture R65): the pull's refusals carry their status (400, 403, 404, 409, 502, 503), which its answer takes. */
+    /* R36 (capture R65): the pull's refusals carry their status (400, 403, 404, 409, 500, 502, 503), which its answer takes;
+       so do the resolve's `RESOLVE_NO_REASON` (capture R32, C-118.7) and the held acts' refusals (capture R79, R81: C-118.8,
+       C-118.9, the id count, the named ids). A refusal stating no status in that range answers the forward's own. */
     const hinted = body.result?.status;
-    if (op === "inboxpull" && body.result?.ok === false && Number.isInteger(hinted) && hinted >= 400 && hinted < 600)
+    if (STATED_STATUS_OPS.includes(op) && body.result?.ok === false && Number.isInteger(hinted) && hinted >= 400 && hinted < 600)
       return json({ ...body, store: storeName, tokenClass: cls }, hinted);
     return json({ ...body, store: storeName, tokenClass: cls }, status);
   }

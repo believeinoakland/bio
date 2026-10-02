@@ -89,17 +89,25 @@ const bundleOf = (p) => ({ bundleId: p.bundleId, bundleSha: p.bundleSha ?? null 
 
 /** R36: `op=inboxpull`. `deps` is `{capture, promotion, record, provenance}` of one record; `by`, `identity` and `viewer`
  *  are the control plane's stamps. Answers capture's pull answer with `bundle: {bundleId, bundleSha}` beside it, or the
- *  first refusal, with nothing written. */
-export async function pullAndFile(deps, { knockId, by, identity, viewer, now = Date.now } = {}) {
+ *  first refusal, with nothing written. `resolve` marks `op=inboxresolve` at `pulled` (capture R32, DEC-88 (2)): the
+ *  same pull reached as capture's resolve, which takes the member's `reason` and refuses one absent, not a string, blank
+ *  or over 2,000 characters `RESOLVE_NO_REASON` (C-118.7) before anything is written, and records an admitted one on the
+ *  knock's row with the pull, in the one transaction with the promotion. A direct pull takes no reason (capture R65). */
+export async function pullAndFile(deps, { knockId, by, identity, viewer, resolve = false, reason, now = Date.now } = {}) {
   const { capture, provenance } = deps;
   /* N386: the pull's instant, to the second, through record-core's one stamping helper (its R47). */
   const at = stampInstant("second", +now());
   const who = { knockId, by, identity, viewer, at };
   /* The pull and its promotion, one transaction (capture R65's `within`): a refusal of either writes nothing. */
-  const pulled = await capture.pullKnock({ knockId, by, at, within: (doc) => promoteOrFault(deps, doc, who) });
+  const within = (doc) => promoteOrFault(deps, doc, who);
+  const pulled = resolve
+    ? await capture.inboxResolve({ knockId, status: "pulled", by, reason, at, within })
+    : await capture.pullKnock({ knockId, by, at, within });
   if (!pulled || pulled.ok !== true) return pulled;
   const { within: filed, ...answer } = pulled;
-  if (!pulled.existed) return { ...answer, bundle: bundleOf(filed) };
+  /* A fresh pull answers its promotion as `within`; one whose answer carries none filed no bundle in its act, so it is
+     promoted as a pulled knock no bundle holds is, below. */
+  if (!pulled.existed && filed) return { ...answer, bundle: bundleOf(filed) };
   /* A knock already pulled: its bundle is the one holding its capture. */
   const home = provenance.homeOf(pulled.capture && pulled.capture.sha256);
   if (home) return { ...answer, bundle: { bundleId: home.bundleId, bundleSha: null, existed: true } };
