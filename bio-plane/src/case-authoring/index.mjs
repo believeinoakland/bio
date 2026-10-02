@@ -95,6 +95,8 @@ export const MEMBER_ROLES = Object.freeze(["load_bearing", "supporting"]);
 export const SEARCHED_SUBJECT_MAX = 500;
 /** R20: the most acknowledgements one list names; a list that reaches it says so (`truncated`). */
 export const STATEMENT_ACK_MAX = 500;
+/** R38 (DEC-101; K1019): the longest statement of what changed in an edition, in code points. */
+export const WHAT_CHANGED_MAX = 8000;
 /** R19 (DEC-88, K1030): the longest acknowledger's words, in code points. */
 export const STATEMENT_ACK_REASON_MAX = 2000;
 /** R16: the id chunk for the citations' grouped read, this module's own copy of `retrieval`'s (K57). */
@@ -187,7 +189,7 @@ export class CaseAuthoring {
                  statement = "", excluded = null, subjectPosition = "",
                  subjectJustification = "", biasAcknowledgement = "",
                  project = null, roles = null, draft = null, tensionsDisclosed = null, selfAttested = null,
-                 viewer = null, author = null } = {}, run = {}) {
+                 whatChanged = undefined, viewer = null, author = null } = {}, run = {}) {
     const seen = run.seen || {};
     const who = str(author);
     /* DEC-49 REGION is-machine-publish — R1 / C-32.6. The fence alone, before anything else is read. */
@@ -480,6 +482,10 @@ export class CaseAuthoring {
     /* R13 — DEC-12 as DEC-44 rehomes it: the CASE's edition is its highest published edition plus one; each member's
        own edition is its own (CASE-5: the next on its own published chain, unless R13's crossed arm below). */
     const edition = this.#highestEdition(theCase) + 1;
+    /* R38 (DEC-101 (1)(2)): an edition above 1 says what changed in it and why, judged once the edition is known and
+       before anything is written (`#whatChangedJudged`). A first edition carries none. */
+    const changed = edition > 1 ? this.#whatChangedJudged(whatChanged, theCase, edition) : null;
+    if (changed && changed.ok === false) return changed;
     const memberEditions = new Map();
     for (const id of members) {
       const mt = this.#one(`SELECT MAX(edition) AS m FROM published_bundles WHERE bundle_id=?`, id);
@@ -716,6 +722,33 @@ export class CaseAuthoring {
                  : `Then ratify EACH of these ${written.length} findings (op=ratify): every finding is signed `
                  + `on its own bytes because the finding is the unit of truth, and this case edition becomes `
                  + `servable as a container when the last of them lands.`) };
+  }
+
+  /** R38 (DEC-101 (1)(2); K1019, K1025): the "What changed" statement of an edition above 1, `{text, draft?}`. Absent, not
+   *  a string or blank is `NO_WHAT_CHANGED`; over `WHAT_CHANGED_MAX` characters (code points) `BAD_WHAT_CHANGED`; a
+   *  named `draft` must be a machine draft of this case (R39), and with no draft store yet (R39 is T23's) every named
+   *  draft is one that is not, `NO_SUCH_WHAT_CHANGED_DRAFT` (BOB's reading until R39 exists). Codes without catalogue
+   *  rows (R29 names none). Answers the refusal or `{ok: true, text, began_as: "member", draft: null}`. */
+  #whatChangedJudged(whatChanged, caseId, edition) {
+    const wc = whatChanged && typeof whatChanged === "object" && !Array.isArray(whatChanged) ? whatChanged : null;
+    const text = wc && typeof wc.text === "string" ? wc.text : null;
+    if (text === null || !text.trim())
+      return { ok: false, reason: "NO_WHAT_CHANGED", caseId, edition,
+               detail: `edition ${edition} of ${caseId} must say what changed in it since the edition before, and why `
+                     + `(whatChanged: {text}): a reader of a later edition is owed the difference in the group's own `
+                     + `words, not left to compare two documents (DEC-101). A first edition carries none. Nothing was `
+                     + `written.` };
+    const length = [...text].length;
+    if (length > WHAT_CHANGED_MAX)
+      return { ok: false, reason: "BAD_WHAT_CHANGED", caseId, edition, length, max: WHAT_CHANGED_MAX,
+               detail: `what changed in this edition is at most ${WHAT_CHANGED_MAX} characters, and this statement is `
+                     + `${length}. Say it shorter. Nothing was written.` };
+    const named = wc.draft == null ? "" : String(wc.draft).trim();
+    if (named)
+      return { ok: false, reason: "NO_SUCH_WHAT_CHANGED_DRAFT", caseId, edition, draft: named,
+               detail: `no machine draft of this edition's statement of what changed answers to ${named}. Write the `
+                     + `statement in your own words (whatChanged: {text}) and publish again. Nothing was written.` };
+    return { ok: true, text, began_as: "member", draft: null };
   }
 
   /** R2, asked by `op=publish` and by R32's read alike: the publishing project named, seen, a project, and owned by
