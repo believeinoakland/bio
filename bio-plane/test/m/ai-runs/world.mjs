@@ -164,7 +164,9 @@ export function world({ env = {}, inquiry = inquiryStub(), deployedModes = undef
         if (!r.ok) throw new Error(`bias ${id} ${st}: ${JSON.stringify(r)}`);
         prior = st;
       }
-      const a = bias.biasAdopt({ bundleId: id, scope, scopeId, author: "admin", identity: "member:admin", viewer: "admin" });
+      /* bias R11 (DEC-88): the adopter's words on why this lens is adopted. */
+      const a = bias.biasAdopt({ bundleId: id, scope, scopeId, author: "admin", identity: "member:admin", viewer: "admin",
+                                 reason: `The group reads evidence on ENT-2026-0007 through ${id}, adopted for the ${scope} scope.` });
       if (!a.ok) throw new Error(`adopt ${id}: ${JSON.stringify(a)}`);
       return a;
     },
