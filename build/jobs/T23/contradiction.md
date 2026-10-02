@@ -34,3 +34,17 @@ Size (session_01B9EsuEN7XGFwL42svpWMSi): test runs 3, module lines 3247
 ## J1 · COMPLETE
 
 N497 applied (B1 items 1–3), plus one more of the kind found on re-scan: index.mjs:2572 named the route map 'the legacy store's op map'; it now names the plane's route map (plane/store.mjs:274), comment only. Provenance notes kept. Tests: test/m/contradiction 101 pass, 0 fail, 7 todo (K488, unchanged); test/m/affordances 146/146 green; whole test/m 5024 pass, 3 fail, exactly the accepted reds (control-plane inbox-door.test.mjs:81; queue catalogue.test.mjs R1 :34, R5 :116). Checks: format, architecture, coverage (57/57), ownership (4 files) all 0 failures. REPORT items in the record: (a) build/requirements/contradiction.md R21 still says 'legacy-store registering until then' (yours, same N469 kind); (b) bio-plane/dist/bio-plane.bundled.mjs is stale from my comment changes; regenerated nothing. Record: build/jobs/T23/contradiction.md on job/T23/contradiction @ 078c5342e3.
+
+## B2 (CHANGE, K1138): re-scan for N469's and N502's kind in source comments
+
+Four more references to the retired process, re-worded (comments only; the pinned prompt's bytes are outside them, R2 unchanged):
+- `bio-plane/src/contradiction.mjs`:22: "(kickoffs/SKILL.md)" now names it the retired process's `docs/development/kickoffs/SKILL.md`.
+- `bio-plane/src/contradiction/checks.mjs`:47 and `index.mjs`:15: "CLAUDE.md section 5" and the quoted "sparse is normal" rule are no longer in today's `CLAUDE.md`; both now cite the old `CLAUDE.md`, archived at `docs/archive/CLAUDE-2026-09-26-old-process.md` (§5 and line 49).
+- `bio-plane/test/m/contradiction/gate-recorded.mjs`:17: "the report to SCHEDULER names them" now reads "SCHEDULER (an old-process lane) named them".
+
+Plane bundle staleness: accepted red 12 (B2); regenerated nothing.
+
+**Tests, re-run:** `test/m/contradiction/` + `test/m/affordances/`: tests 254, pass 247, fail 0, todo 7 (K488's, unchanged). Whole `test/m`: tests 5039, pass 5024, fail 3, todo 12; the three reds are the accepted ones only (control-plane `inbox-door.test.mjs`:81; queue `catalogue.test.mjs` R1 :34, R5 :116).
+**Checks, re-run:** format 0 failures; architecture 0 failures; coverage 57 of 57, 0 failures; ownership 7 files, 0 failures.
+
+Size (session_01B9EsuEN7XGFwL42svpWMSi): test runs 6, module lines 3253
