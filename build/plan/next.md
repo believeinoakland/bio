@@ -6,13 +6,17 @@
 
 - S4 · 2026-10-02 · **promotion**: stamp the catalogue rows T27's L8–L11 jobs add (C-117.23–.25, C-69.5, and `docket`'s, `public-read`'s and `signatures`' new rows, as their T27 records name them); `CATALOG_VERSION` MINOR; `ROW_CENSUS` re-pinned (R50). **Why next:** promotion is L2, before the rows exist (P8, P10). Clears T27's red 2.
 
-- N519 · 2026-10-02 · **DEC-112 (5) as K1254 amends it** (Bob): fold into the case's requirements (case-authoring's `publishCase`, case-grammar's `materials:` block, publication): no load-bearing member may rest on material whose only attestation is an off-the-record (anonymous) source; publishing such a case is refused, naming the member; off-the-record material never travels in the published case (it stays in the project as a lead); `draft-T24-dec112.md` R45's "the project's and the group's" attestations are dropped (K1134 Q6 withdrawn). **Ready for T28** (K1263: Bob ruled K1254 (a) and (b) as recommended; drafted in `plan/draft-T28-dec112.md`, reviewed K1268). Was: two follow-ups Bob's (K1254 (a), (b)), and the DEC-112 fold also waits on K1134 Q1–Q3 (P17).
+- N519 · 2026-10-02 · **DEC-112 (5) as ruled on 1 October** (re-cut by K1275: DEC-119 withdrew K1254 and K1263): off-the-record source material may support a case and travels whole in the published case and case file with the attesting member's, the project's and the group's attestations, only its identity withheld ("Withheld", with the reason), its grade reflecting an unnamed source; K1134 Q6 (which record holds the project's and the group's attestations) decided by BOB in the re-cut. **Ready for T28** once `plan/draft-T28-dec112.md` is re-cut (K1275) and PR #8 is on `main` (merged at T27's close).
 
 - N520 (DEC-112 share) · 2026-10-02 · **`case-checker` and `case-import`** (K1256): fold `plan/draft-T24-dec112.md` with K1134's readings and K1254 into requirements; add both modules to `modules.json` and `layers.md` (L8: case-checker directly after ratification, case-import directly after it). **Ready for T28** (K1263; drafted in `plan/draft-T28-dec112.md`, reviewed K1268). DEC-116's share is in T27.
 
 - N521 · 2026-10-02 · **DEC-113's device half** (N518's remainder): the device transcript store's check for a hold before either scheduled deletion, failing closed, reading `actions` R58; the time limit (DEC-61's TTL) is Bob's then. **Hard reason:** dependency not yet built (no device-storage module).
 
 - N522 · 2026-10-02 · **DEC-96 item 4 and item 1's withdrawal notice** (K1268, K1273): the published case states each acceptance and discloses open flags on relied-on work; withdrawing an acceptance sends re-evaluation notices. **Ready for T28**: `plan/draft-T28-n522.md` (the seam module `accepted-work`, L6, and changes in inquiry-grammar, inquiry, basis-versions, strength, reevaluation, case-import, case-grammar, case-checker, case-authoring, publication), applied after `draft-T28-dec112.md` (its indices shift by one).
+
+- N523 · 2026-10-02 · **ratification R35** (DEC-119 (3), K1275): the guard (no relied-on finding signed on anonymous testimony or evidence without an independent corroborating leg) also applies when an anonymous member (credited only at group or project level) is the one attesting an off-the-record source. **For T28** (PR #8 on `main` at T27's close).
+
+- N524 · 2026-10-02 · **case-grammar R9** (DEC-117, U27): the first lens sentence becomes, verbatim, "Everyone who investigates looks through a lens: what they care about and expect to find. An undeclared lens is the most dangerous kind."; strike "to be confirmed by the design session". **For T28** (case-grammar has a T28 job).
 
 ## Carried from T27
 
