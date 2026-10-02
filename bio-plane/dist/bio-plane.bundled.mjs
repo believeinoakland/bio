@@ -118902,6 +118902,7 @@ var Filings = class _Filings {
     publication = null,
     publicRead = null,
     provenance = null,
+    attestation = null,
     content = null,
     actions = null,
     conformance = null,
@@ -118918,7 +118919,7 @@ var Filings = class _Filings {
   } = {}) {
     this.sql = storage.sql;
     this.record = record;
-    this.#deps = { host, membership, publication, publicRead, provenance, content, actions, conformance, standards, consequences, promotion, strength, actionClocks, localFacts, filingTemplates };
+    this.#deps = { host, membership, publication, publicRead, provenance, attestation, content, actions, conformance, standards, consequences, promotion, strength, actionClocks, localFacts, filingTemplates };
     this.producingGroup = typeof producingGroup === "function" ? producingGroup : null;
     this.profiles = typeof profiles === "function" ? profiles : () => this.record.getSetting("jurisdiction_profiles");
     this.now = typeof now === "function" ? now : () => stampInstant("second");
@@ -118939,6 +118940,11 @@ var Filings = class _Filings {
   }
   get provenance() {
     return this.#deps.provenance ||= provenanceOf(this.#deps.host);
+  }
+  /* R9, R25: the attestations a capture holds (attestation R7); with no host and none given, absent, and every exhibit's
+     attestations are undetermined, said so. */
+  get attestation() {
+    return this.#deps.attestation ||= this.#deps.host ? attestationOf(this.#deps.host, { record: this.record, provenance: this.provenance }) : null;
   }
   get content() {
     return this.#deps.content ||= contentOf(this.#deps.host);
@@ -119828,8 +119834,7 @@ ${body}` : body;
       const reg = this.#one(`SELECT bundle_id, path, registered FROM register WHERE capture_sha=?`, sha);
       const loc = this.#one(`SELECT address, retrieval_locator, first_retrieved FROM captured_locators WHERE capture_sha=?
                               ORDER BY first_retrieved LIMIT 1`, sha);
-      const att = this.#call(() => this.provenance.attestationsOf(sha));
-      const attestations = att && att.ok ? { items: att.attestations, ...att.undetermined ? { undetermined: att.undetermined } : {}, note: att.note } : { items: [], undetermined: "the attestations could not be read" };
+      const attestations = this.#attestations(sha);
       const grade = this.#grade(sha);
       const co = _Filings.#coattested(attestations);
       return {
@@ -119845,6 +119850,15 @@ ${body}` : body;
         venue: _Filings.#venueReading(grade, co.coattested, standard)
       };
     });
+  }
+  /* R9: every attestation the record holds for one capture, as `attestation.attestationsOf` answers it (its R7), never
+     read from the bundle document here; undetermined, with why, when no module answers it or its read fails. */
+  #attestations(sha) {
+    const a = this.attestation;
+    if (!a || typeof a.attestationsOf !== "function")
+      return { items: [], undetermined: "no module answers a capture's attestations here, so they are undetermined" };
+    const att = this.#call(() => a.attestationsOf(sha));
+    return att && att.ok ? { items: att.attestations, ...att.undetermined ? { undetermined: att.undetermined } : {}, note: att.note } : { items: [], undetermined: "the attestations could not be read" };
   }
   /* R25: the capture axis for one capture, as provenance answers it (its R24–R27, R51), never computed here. */
   #grade(sha) {
@@ -120676,7 +120690,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
     const d = this.#det(determination, viewer);
     return { ok: true, determination: d.id, live: d.live, ...this.#block([d], this.#view()) };
   }
-  /** R15: the block `publication` carries beside a published case edition (its R36): the live determinations of the
+  /** R15: the block `public-read` carries beside a published case edition (its R8, was publication R36; K651): the live determinations of the
    *  case's own project resting on any of its findings, read by the plane. */
   evidenceBlock({ caseId = null, edition = null, findings = [] } = {}) {
     const owner = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, String(caseId ?? ""));
