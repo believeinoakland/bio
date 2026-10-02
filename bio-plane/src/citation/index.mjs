@@ -733,8 +733,8 @@ export function citationOf(host, deps) {
   return c;
 }
 
-/* The Durable Object routes this module answers, as entries of the legacy store's op map (its dispatcher spreads them
-   in; K3). `url` carries the control plane's stamps (`viewer`, `owner`, `author`, `identity`); weight is never read
+/* The Durable Object routes this module answers, as entries of the plane's one route map (plane R5: `routes` spreads
+   them in, and control-plane's `dispatch` answers every store request over it; K3). `url` carries the control plane's stamps (`viewer`, `owner`, `author`, `identity`); weight is never read
    from the caller (R7). */
 export function citationOps(c, url) {
   const q = (key) => url.searchParams.get(key);
