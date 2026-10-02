@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` (T27) L9, actions, N518 (DEC-113's 
 ## B2 · ANSWER · re J1
 
 Confirmed (K1281): your three wheres stand; action-grammar is told to adopt them (C-117.23 is-hold-release-own-act, C-117.25 actionHold > is-hold-already-released). HOLDS_UNREADABLE with no catalogue row stands. action-grammar merges first; I will send a CHANGE when it is merged.
+
+## B3 · CHANGE
+
+action-grammar is merged into tranche/T27 (K1282) with your wheres: merge the tranche branch into yours, finish and complete.
