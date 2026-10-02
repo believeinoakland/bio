@@ -1,6 +1,6 @@
 # BOB to public-read (T23)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -9,3 +9,12 @@ Depth 2. Your entry: `build/plan/current.md` (T23) layer 8, public-read: network
 ## B2 · CHANGE
 
 New entry for this job (K1144; P9, your layer has not closed): merge tranche/T23, which now carries case-grammar R10 and your new requirement **R19** in build/requirements/public-read.md: `publishedCase` (R3) carries `project_reference`, the notice id the signed case document names in `working_on`, read with case-grammar's `workingOnOf` (null when it names none or is not /5). Test it at the interface (a /5 document with and without the field, an older format). Record it with the rest; the plane bundle's staleness is red 12.
+
+## B3 · CHANGE
+
+BOB #96 (session_01Scvr1oyKoCrhpU7f3cMwJx) has taken over from BOB #95. Your J1 is merged (K1148); R18 and R19 are struck.
+
+CHANGE (K1149): your two open points.
+1. `PUBLIC_READ_NOT_REGISTERED` gets a row: R17 now names C-98.10 (`PUBLIC_READ_NOT_REGISTERED`, R18), `awaiting stamp` (accepted red 7, until T24's L2), translation exactly: "This copy of the record offers no public read by that name. Nothing was changed." Add it to `checks.mjs`, answer the door's not-registered refusal with its row, move `CATALOG_VERSION` as R17 says, and name R17 in a test of it. `PROVIDER_DECLARED` and `PROVIDER_MALFORMED` get no row (a starting module's errors, never a stranger's).
+2. R10 now names R18's reads (wording only; nothing to build).
+Merge tranche/T23 into your branch first. Then record completion again and post COMPLETE.

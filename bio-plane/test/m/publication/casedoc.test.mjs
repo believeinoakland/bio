@@ -256,3 +256,97 @@ test("R40 the seven tables and their named columns are the stated read contract,
                    `SELECT case_id, edition, text, sig_armored FROM case_documents`])
     assert.deepEqual(w.rows(q), [], q);
 });
+
+/* R56: the prepared, unsigned editions as queue-producers R23 lists them (`queue-producers/index.mjs`, its
+   `attribution-unchosen` read): plain SQL over `case_documents`, `sig_armored` null meaning authored and unsigned. */
+const PREPARED_EDITIONS = `SELECT cd.case_id, cd.edition, cd.authored_at FROM case_documents cd
+  WHERE cd.sig_armored IS NULL
+    AND NOT EXISTS (SELECT 1 FROM case_documents later WHERE later.case_id = cd.case_id AND later.edition > cd.edition)
+  ORDER BY cd.case_id, cd.edition`;
+const INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/;
+/* Every row's four contract columns read with plain SQL, each held against what this module's own read answers of that
+   edition (R1, through a viewer with standing): the case and edition it names, the instant it was authored, and the
+   signature that null means absent. Answers the rows that break the contract, by column; none is the contract kept. */
+function r56Broken(w) {
+  let rows;
+  try { rows = w.rows(`SELECT case_id, edition, authored_at, sig_armored FROM case_documents ORDER BY case_id, edition`); }
+  catch (e) { return [`unreadable: ${e.message}`]; }
+  const out = [];
+  for (const r of rows) {
+    const d = w.p.caseDocument(r.case_id, r.edition, "class:daemon");
+    const at = `${r.case_id}#${r.edition}`;
+    if (!d.ok) { out.push(`${at}: case_id/edition name no case document`); continue; }
+    if (typeof r.case_id !== "string" || !Number.isInteger(r.edition)) out.push(`${at}: case_id/edition types`);
+    if (typeof r.authored_at !== "string" || !INSTANT.test(r.authored_at) || r.authored_at !== d.authored_at)
+      out.push(`${at}: authored_at`);
+    if (r.sig_armored === null ? d.ratified !== false || d.sig_armored !== null
+                               : typeof r.sig_armored !== "string" || !r.sig_armored || r.sig_armored !== d.sig_armored)
+      out.push(`${at}: sig_armored`);
+  }
+  return out;
+}
+
+test("R56 case_documents' case_id, edition, authored_at and sig_armored hold what they state, read with plain SQL as queue-producers R23 reads them: sig_armored null while authored and unsigned, set once signed, never moved after", () => {
+  const { w, proj, roles } = prepared();
+  const row = (ed) => w.row(`SELECT case_id, edition, authored_at, sig_armored FROM case_documents WHERE case_id=? AND edition=?`,
+                            "CASE-2026-0001", ed);
+  /* authored, unsigned: listed, with the instant its preparation was stored */
+  assert.deepEqual(row(1), { case_id: "CASE-2026-0001", edition: 1, authored_at: NOW, sig_armored: null });
+  assert.deepEqual(w.rows(PREPARED_EDITIONS), [{ case_id: "CASE-2026-0001", edition: 1, authored_at: NOW }]);
+  assert.deepEqual(r56Broken(w), []);
+  /* re-authored while unsigned (R21): still unsigned, its authored_at the new preparation's */
+  const later = "2026-09-28T04:00:00Z";
+  w.p.storeCaseDocument({ case: "CASE-2026-0001", edition: 1, author: V("olive"), at: later,
+                          text: caseDoc("CASE-2026-0001", 1, { project: proj, roles, excludes: "Again." }) });
+  assert.deepEqual(w.rows(PREPARED_EDITIONS), [{ case_id: "CASE-2026-0001", edition: 1, authored_at: later }]);
+  assert.deepEqual(r56Broken(w), []);
+  /* signed (R22): sig_armored is the signature, and the edition is no longer a preparation */
+  assert.equal(w.signCase("CASE-2026-0001", 1, { project: proj, roster: roster(roles) }).ok, true);
+  assert.deepEqual(row(1), { case_id: "CASE-2026-0001", edition: 1, authored_at: later, sig_armored: SIG(1) });
+  assert.deepEqual(w.rows(PREPARED_EDITIONS), []);
+  assert.deepEqual(r56Broken(w), []);
+  /* set once: a later store, re-author or second signature leaves all four columns as they are */
+  const held = row(1);
+  w.p.storeCaseDocument({ case: "CASE-2026-0001", edition: 1, text: "---\nx: 1\n---\n", author: V("bo"), at: "2026-09-29T00:00:00Z" });
+  w.p.reauthorSection({ case: "CASE-2026-0001", edition: 1, section: "attribution", lines: { frontmatter: [], body: [] } });
+  assert.equal(w.signCase("CASE-2026-0001", 1, { project: proj, roster: roster(roles), sig: SIG(8) }).reason,
+               "CASE_EDITION_ALREADY_RATIFIED");
+  assert.deepEqual(row(1), held);
+  /* a later edition prepared, and another case: each case's latest unsigned edition is listed, in case order */
+  w.p.storeCaseDocument({ case: "CASE-2026-0001", edition: 2, author: V("olive"), at: "2026-09-30T00:00:00Z",
+                          text: caseDoc("CASE-2026-0001", 2, { project: proj, roles }) });
+  w.p.storeCaseDocument({ case: "CASE-2026-0000", edition: 1, author: V("olive"), at: "2026-09-30T01:00:00Z",
+                          text: caseDoc("CASE-2026-0000", 1, { project: proj, roles }) });
+  assert.deepEqual(w.rows(PREPARED_EDITIONS), [{ case_id: "CASE-2026-0000", edition: 1, authored_at: "2026-09-30T01:00:00Z" },
+                                               { case_id: "CASE-2026-0001", edition: 2, authored_at: "2026-09-30T00:00:00Z" }]);
+  assert.deepEqual(row(1), held, "edition 1 untouched by edition 2");
+  assert.deepEqual(r56Broken(w), []);
+  /* with no instant given, the act's own clock stamps authored_at, an instant */
+  w.clock.now = "2026-10-01T00:00:00Z";
+  w.p.storeCaseDocument({ case: "CASE-2026-0002", edition: 1, author: V("olive"), text: caseDoc("CASE-2026-0002", 1, { project: proj, roles }) });
+  assert.equal(w.row(`SELECT authored_at FROM case_documents WHERE case_id='CASE-2026-0002'`).authored_at, "2026-10-01T00:00:00Z");
+  assert.deepEqual(r56Broken(w), []);
+});
+
+test("R56 negative control: the contract check fails by name when a column's meaning or name moves", () => {
+  /* an unsigned row whose sig_armored is not null reads as signed to the SQL reader, and is caught */
+  const a = prepared().w;
+  a.st.sql.exec(`UPDATE case_documents SET sig_armored=''`);
+  assert.deepEqual(a.rows(PREPARED_EDITIONS), [], "the reader would miss the preparation");
+  assert.deepEqual(r56Broken(a), ["CASE-2026-0001#1: sig_armored"]);
+  /* a signed row whose sig_armored is cleared reads as a preparation */
+  const b = prepared();
+  b.w.signCase("CASE-2026-0001", 1, { project: b.proj, roster: roster(b.roles) });
+  b.w.st.sql.exec(`UPDATE case_documents SET sig_armored=NULL`);
+  assert.equal(b.w.rows(PREPARED_EDITIONS).length, 1, "the reader would list a signed edition");
+  assert.deepEqual(r56Broken(b.w), ["CASE-2026-0001#1: sig_armored"]);
+  /* authored_at not the instant of the preparation, or not an instant */
+  const c = prepared().w;
+  c.st.sql.exec(`UPDATE case_documents SET authored_at='yesterday'`);
+  assert.deepEqual(r56Broken(c), ["CASE-2026-0001#1: authored_at"]);
+  /* a column renamed: the reader's SQL no longer answers */
+  const d = prepared().w;
+  d.st.db.exec(`ALTER TABLE case_documents RENAME COLUMN sig_armored TO signature`);
+  assert.throws(() => d.rows(PREPARED_EDITIONS), /sig_armored/);
+  assert.match(r56Broken(d)[0], /^unreadable: /);
+});

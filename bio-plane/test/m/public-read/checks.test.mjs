@@ -10,6 +10,7 @@ import { createHash } from "node:crypto";
 import { world, stubOf, bucket, sha } from "./fixture.mjs";
 import * as CHECKS from "../../../src/public-read/checks.mjs";
 import { bindPublishedPlane, publishedRoutes } from "../../../src/publication/worker.mjs";
+import { publicReadDoorOp } from "../../../src/public-read/door.mjs";
 import { CONTAINER_MAX_BYTES } from "../../../src/container.mjs";
 
 const { rowOf } = CHECKS;
@@ -42,7 +43,9 @@ const MOVED = {
     DUPLICATE_PATH: ["C-98.6", "src/container.mjs serialiseContainer > is-duplicate-path", "971b174f1f8f2aa6"],
     CONTAINER_TOO_LARGE: ["C-98.7", "src/container.mjs serialiseContainer > is-container-too-large", "e299ef045e0a0d8b"],
     NOT_PUBLISHED: ["C-98.8", "src/public-read/index.mjs publishedCase > is-not-published", "bf79ad45a8e581b6"],
-    CASE_DOCUMENT_UNSERVABLE: ["C-98.9", "src/publication/worker.mjs publishedRoutes > is-case-document-unservable", "0a10cff464f2574e"] },
+    CASE_DOCUMENT_UNSERVABLE: ["C-98.9", "src/publication/worker.mjs publishedRoutes > is-case-document-unservable", "0a10cff464f2574e"],
+    /* C-98.10 (R18; K1149): a row minted here in T23, awaiting stamp; its translation as R17 states it, word for word. */
+    PUBLIC_READ_NOT_REGISTERED: ["C-98.10", "src/public-read/index.mjs publicRead > is-public-read-not-registered", "5bd5f9f10b3aa19b"] },
 };
 const digest = (s) => createHash("sha256").update(s).digest("hex").slice(0, 16);
 
@@ -74,7 +77,7 @@ function manifestAt(w, env, bytes) {
 }
 const enc = (o) => new TextEncoder().encode(typeof o === "string" ? o : JSON.stringify(o));
 
-test("R17 the module holds C-44.2, C-68.5 and C-98.1–C-98.9 in its own table, under their family names, each number, where and translation as moved; rowOf answers them and throws for any other code", () => {
+test("R17 the module holds C-44.2, C-68.5 and C-98.1–C-98.10 in its own table, under their family names, each number, where and translation as moved; rowOf answers them and throws for any other code", () => {
   const families = Object.keys(CHECKS).filter((k) => /_CHECKS$/.test(k)).sort();
   assert.deepEqual(families, Object.keys(MOVED).sort(), "exactly the three families");
   for (const [fam, rows] of Object.entries(MOVED)) {
@@ -142,6 +145,15 @@ test("R17 every refusal the module answers with one of these codes, at every sit
   seen(await (await call(w, {}, "publishedbytes", { sha256: pin })).json(), "publishedbytes NO_PUBLISHED_STORE");
   const ub = (await (await call(w, {}, "publishedcase", { id: "CASE-2026-0001", edition: 1 })).json()).findings[0].body;
   seen({ ok: false, ...ub }, "publishedcase body NO_PUBLISHED_STORE");
+  /* C-98.10: an unregistered public read, at the store op and through the door (R18) */
+  seen(w.read("publicread", { name: "nosuchread" }), "publicread PUBLIC_READ_NOT_REGISTERED");
+  const nr = await publicReadDoorOp("publicread", new URL("https://plane/?op=publicread&name=nosuchread"), env, stubOf(w),
+    { json, storeSilent: (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op }, 502), storeRefusal: () => null,
+      requiredArgument: () => ({}), doAnswer: async (res) => ({ answered: true, result: (await (await res).json()).result }) });
+  assert.equal(nr.status, 404);
+  seen(await nr.json(), "door publicread PUBLIC_READ_NOT_REGISTERED");
+  assert.equal(rowOf("PUBLIC_READ_NOT_REGISTERED").translation,
+               "This copy of the record offers no public read by that name. Nothing was changed.");
   /* every code of the table was met at a site */
   assert.deepEqual([...got.keys()].sort(), Object.values(MOVED).flatMap((r) => Object.keys(r)).sort());
 });

@@ -1,6 +1,6 @@
 # BOB to case-authoring (T23)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -15,3 +15,12 @@ Confirmed, with the names fixed (K1143): (1) network-notices exports `networkNot
 ## B3 · CHANGE
 
 Correction to B2 (K1144 replaces K1143 (2)): case-grammar is merged into tranche/T23 and DOES export a writer. Merge tranche/T23 now. R41 writes the field only as `workingOnLines(noticeReferenceOf(project))` (case-grammar `reference.mjs`, re-exported from its index): one line `working_on: "<id>"`, none for null/undefined, any other value written as handed so ratification R38 refuses it. Do not compose the line yourself. network-notices is not merged yet; its interface stays `networkNoticesOf(host, deps)` with `noticeReferenceOf(project)`.
+
+## B4 · ANSWER · re J2
+
+(K1147) Readings (a)–(c) stand: (a) any R39 draft of the case records began_as: machine_draft, the member-proposed label in its own field; (b) published = a ratified edition, sight = membership's gate over the project, one byte-identical NO_SUCH_CASE (R27); (c) bounded at 500 with truncated. (d) R28 will name what_changed_drafts: mine, folded at your merge. Read B3 now: case-grammar is merged into tranche/T23, so merge it and replace your local id-shape copy (the TODO) with case-grammar's isNoticeReference and write the field only through workingOnLines. network-notices is still to merge; keep the injected networkNotices until then.
+
+## B5 · CHANGE
+
+BOB #96 (session_01Scvr1oyKoCrhpU7f3cMwJx) has taken over from BOB #95.
+CHANGE (K1153): network-notices is merged into tranche/T23. Merge tranche/T23 into your branch now. Replace the injected `networkNotices` stand-in with the real module, `networkNoticesOf(host, deps)`, and write R41's field only as `workingOnLines(noticeReferenceOf(project))` (B3). R28's naming of `what_changed_drafts` is mine at your merge (K1147). Then record completion and post COMPLETE.

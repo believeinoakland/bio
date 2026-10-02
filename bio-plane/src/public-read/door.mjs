@@ -1,18 +1,49 @@
 /* public-read — the door's half of the public read path (requirements: `build/requirements/public-read.md` R1, R4, R5,
- * R9, R10). Moved from `src/index.mjs` (the legacy-index map's §4.4 move, K649 (7); §12.2): the `verify` and
+ * R9, R10, R18). Moved from `src/index.mjs` (the legacy-index map's §4.4 move, K649 (7); §12.2): the `verify` and
  * `publishedmanifest` arms, the REC-22 note, and the `publishedcase`/`publishedbytes` dispatch line, which hands both
  * to the Worker's `publishedRoutes` (`../publication/worker.mjs`, this module's by `paths`, K697, K702).
  * `bindPublishedPlane`'s hook hand-over stays the door's.
  *
- * `publicReadDoorOp(op, url, env, stub, helpers)` answers one of the four ops, or null for any other, so the door
+ * `publicReadDoorOp(op, url, env, stub, helpers)` answers one of its five ops, or null for any other, so the door
  * asks it and goes on. `helpers` are the door's own (`control-plane`'s, later in the order, handed in as
- * `capturePublicOp` is): `json`, `requiredArgument`, `storeSilent`, `storeRefusal`, `doAnswer`. */
+ * `capturePublicOp` is): `json`, `requiredArgument`, `storeSilent`, `storeRefusal`, `doAnswer`; and, optionally,
+ * `publicReads`, the names of the registered reads the door routes as ops of their own (R18).
+ *
+ * R18: A REGISTERED PUBLIC READ is reached as `op=publicread&name=<name>`, or as `op=<name>` when the door names it in
+ * `publicReads` (op-declarations declares it `classes: null`; `control-plane` R45 routes it), both through
+ * `publicReadDoorRead`. Either way it is served as the four ops above are, under R10's terms: from the published store
+ * the door hands in (`stub`, pinned to `bio`), with no credential. No header is forwarded, and of the query only the
+ * parameters that carry neither a credential nor a stamp; the store side then hands the read only those it declared. */
 
 import { publishedRoutes } from "../publication/worker.mjs";
+import { PUBLIC_READ_NAME, PUBLIC_READ_RESERVED_PARAMS, PUBLIC_READ_NOT_REGISTERED } from "./reads.mjs";
 
-export const PUBLIC_READ_DOOR_OPS = Object.freeze(["verify", "publishedmanifest", "publishedcase", "publishedbytes"]);
+export const PUBLIC_READ_DOOR_OPS = Object.freeze(["verify", "publishedmanifest", "publishedcase", "publishedbytes",
+                                                   "publicread"]);
 
-export async function publicReadDoorOp(op, url, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer }) {
+/** R18: one registered read, relayed from the published store under R10's terms. A name that is not a read's spelling
+ *  is the required-argument refusal (400); an unregistered name is the store's `PUBLIC_READ_NOT_REGISTERED`, relayed at
+ *  404; a read's own refusal at 400; the read's answer at 200, as `{ok: true, read, module, result}`. R9: the store's
+ *  own refusal is relayed through `storeRefusal`, and a reply that is no answer is `storeSilent`'s. */
+export async function publicReadDoorRead(name, url, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer }) {
+  if (typeof name !== "string" || !PUBLIC_READ_NAME.test(name))
+    return json({ ok: false, ...requiredArgument("publicread", "name", "<a registered read's name: lowercase letters and digits>"),
+      error: "publicread requires name=<a registered read's name: lowercase letters and digits>" }, 400);
+  const q = new URLSearchParams();
+  q.set("name", name);
+  for (const [k, v] of url.searchParams) if (!PUBLIC_READ_RESERVED_PARAMS.includes(k)) q.append(k, v);
+  const out = await doAnswer(stub.fetch(new Request(`http://do/publicread?${q}`)));
+  if (out.refused) return storeRefusal(out);
+  if (!out.answered) return storeSilent("publicread", out.correlation);
+  const r = out.result;
+  /* An answer with nothing in it is a silence wearing an answer's envelope (as at `publishedcase`), never a claim. */
+  if (!r || typeof r !== "object" || typeof r.ok !== "boolean") return storeSilent("publicread");
+  if (r.ok === false) return json(r, r.reason === PUBLIC_READ_NOT_REGISTERED ? 404 : 400);
+  return json(r, 200);
+}
+
+export async function publicReadDoorOp(op, url, env, stub, helpers) {
+  const { json, requiredArgument, storeSilent, storeRefusal, doAnswer, publicReads } = helpers;
   /* REC-22: THE PUBLIC READ PATH. Anyone, no token, no session, and — the
      part that matters — nothing withheld, because there is nothing here
      that was not deliberately published.
@@ -77,5 +108,10 @@ export async function publicReadDoorOp(op, url, env, stub, { json, requiredArgum
     return json({ ok: true, result: out.result }, 200);
   }
   if (op === "publishedcase" || op === "publishedbytes") return publishedRoutes({ op, url, env, stub });
+  /* R18: a registered read, by `name`, or by its own op where the door names it. */
+  if (op === "publicread") return publicReadDoorRead(url.searchParams.get("name") || "", url, env, stub, helpers);
+  if (publicReads && typeof op === "string" && !PUBLIC_READ_DOOR_OPS.includes(op)
+      && (Array.isArray(publicReads) ? publicReads.includes(op) : typeof publicReads.has === "function" && publicReads.has(op)))
+    return publicReadDoorRead(op, url, env, stub, helpers);
   return null;
 }
