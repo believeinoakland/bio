@@ -28,6 +28,15 @@ None.
 
 Size (session_01Vhi9tLSEX7yiZfPiG1CwhD): test runs 14, module lines 884
 
+
+## Re-opening (B2, B3, B4; K1086–K1088)
+
+- **B2 (K1086).** `test/m/action-clocks/fixture.mjs` migrates the real provenance (`provenanceOf(host, {record, membership, promotion, now}).migrate()`) before `actionsOf`, replacing its hand-made `register` table, so `actions` R55's start (capture's litigation-hold reader joining provenance's promotion step) finds provenance's tables. Proved on a scratch merge of `origin/job/T22/actions`: the old fixture 2 pass, 30 fail (`no such column: authored`); the new 32/0. Scratch branch deleted.
+- **B3 (K1087), B4 (K1088).** `tranche/T22` merged twice (Uses names local-facts R7; `uses` gains `provenance`, which the fixture's import needed: J3).
+- Tests: action-clocks 32/0. `format` 0 failures; `architecture` 9 product files, 41 relative imports, 0 failures; `coverage` 12 of 12, 0 failures; `ownership` 4 files, 0 failures.
+
+Size (session_01Vhi9tLSEX7yiZfPiG1CwhD, re-opening): test runs 4, module lines 884
+
 ## J1 · REPORT
 
 Found in other modules (record, 'Found in other modules'): (1) Stale generated artifact: bio-plane/dist/bio-plane.bundled.mjs (not_product), from my change under bio-plane/src/action-clocks/index.mjs; regenerate at the layer close. (2) Requirements wording: factAnswer now reads local-facts' LOCAL_FACT_STATUSES (local-facts R7, which names action-clocks) to judge 'an answer local-facts cannot give'; my Uses names only factStatus (R2) and factPath (R6). The edge exists; only the Uses wording lacks R7. (3) Other modules' fixtures still register the producingGroup stand-in under the retired 'legacy-store' (action-plans, monitoring, case-authoring, capture-requests, actions, content, retrieval, standards fixture.mjs; tasks grammar.test.mjs:30): test-only, harmless, each owner's to re-word. I re-worded mine to instance-setup.
