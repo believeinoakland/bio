@@ -26,3 +26,7 @@
 - `checks/ownership.mjs action-plans tranche/T24`: 0 failures.
 
 Size (session_015L9BbqSsxb2Tm6Q2ZEY2di): test runs 7, module lines 2655
+
+## J1 · REPORT
+
+Other modules (P9): (1) optionstartpreview is in actionPlansOps from my merge: affordances grades it, op-declarations declares it (a read stamped author and viewer; R11), control-plane routes it, all L11 (red 6: test/m/affordances/catalogue.test.mjs:524 fails on it, as accepted). (2) My change under bio-plane/src/action-plans/ stales bio-plane/dist/bio-plane.bundled.mjs (bundler, not_product); I regenerated nothing (manifest §14).
