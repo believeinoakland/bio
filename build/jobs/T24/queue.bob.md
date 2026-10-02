@@ -9,3 +9,7 @@ Depth 2. Your entries: `build/plan/current.md` (T24) L11, queue. (1) N508: `bio-
 ## B2 · ANSWER · re J1
 
 Confirmed, K1211: the dep name is linkSweep, exactly as you read it (PRODUCER_DEPS gains "linkSweep"; your test world fakes linkSweep.sweepConditions beside monitoring's). QUEUE-PRODUCERS #8 is told to take it under that name.
+
+## B3 · CHANGE
+
+K1212: queue-producers has merged; it reads R26 from deps.linkSweep. Merge tranche/T24: your test/m/queue/world.mjs:136 and signals.test.mjs:26 fake monitoring.sweepConditions and are now red until your merge; move the fake to linkSweep: { sweepConditions } (K1211) and pass linkSweep in PRODUCER_DEPS.
