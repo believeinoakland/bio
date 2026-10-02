@@ -426,37 +426,37 @@ test("R12: with no listener registered, obligations, obligations_raised and obli
 });
 
 test("R12: every listener runs after each record, in the modules' total order, and obligations are their concatenation", () => {
-  const { c, clock } = fresh({ order: ["calibration", "extraction", "content", "legacy-store"] });
+  const { c, clock } = fresh({ order: ["calibration", "extraction", "content", "scheduler"] });
   const seen = [];
-  assert.deepEqual(c.onCalibration("legacy-store", (e) => { seen.push(["legacy-store", e]); return [{ from: "legacy" }]; }),
-                   { ok: true, module: "legacy-store" });
+  assert.deepEqual(c.onCalibration("scheduler", (e) => { seen.push(["scheduler", e]); return [{ from: "scheduler" }]; }),
+                   { ok: true, module: "scheduler" });
   c.onCalibration("unlisted", (e) => { seen.push(["unlisted", e]); return null; });
   c.onCalibration("extraction", (e) => { seen.push(["extraction", e]); return e.drift.raises_obligation ? [{ id: 1 }, { id: 2 }] : []; });
   const a = rec(c, { cap: "A" });
-  assert.deepEqual(seen.map((x) => x[0]), ["extraction", "legacy-store", "unlisted"]);
+  assert.deepEqual(seen.map((x) => x[0]), ["extraction", "scheduler", "unlisted"]);
   assert.deepEqual(seen[0][1], { calibration_id: "CAL-1", engine: "pdfjs", version: "4.0", supersedes: null, drift: a.drift });
-  assert.deepEqual(a.obligations, [{ from: "legacy" }]); assert.equal(a.obligations_raised, 1);
+  assert.deepEqual(a.obligations, [{ from: "scheduler" }]); assert.equal(a.obligations_raised, 1);
   assert.equal(a.obligations_truncated, false);
   seen.length = 0; clock.t += DAY;
   const b = rec(c, { cap: "C", at: "2026-09-02" });
   assert.equal(seen[0][1].supersedes, "CAL-1"); assert.equal(seen[0][1].drift.verdict, "worse");
-  assert.deepEqual(b.obligations, [{ id: 1 }, { id: 2 }, { from: "legacy" }]);
+  assert.deepEqual(b.obligations, [{ id: 1 }, { id: 2 }, { from: "scheduler" }]);
   assert.equal(b.obligations_raised, 3);
   assert.equal(b.obligations_truncated, false);
 });
 
 test("R12: a listener that cut its list short answers {obligations, truncated}, and obligations_truncated says so", () => {
-  const { c, clock } = fresh({ order: ["extraction", "content", "legacy-store"] });
-  const answers = { extraction: null, content: null, "legacy-store": null };
+  const { c, clock } = fresh({ order: ["extraction", "content", "scheduler"] });
+  const answers = { extraction: null, content: null, scheduler: null };
   for (const m of Object.keys(answers)) c.onCalibration(m, () => answers[m]);
   const run = (a) => { Object.assign(answers, a); clock.t += DAY; return rec(c, { at: new Date(clock.t).toISOString() }); };
   let r = run({ extraction: { obligations: [{ id: 1 }, { id: 2 }], truncated: true }, content: [{ id: 3 }],
-                "legacy-store": { obligations: [{ id: 4 }], truncated: false } });
+                scheduler: { obligations: [{ id: 4 }], truncated: false } });
   assert.deepEqual(r.obligations, [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }], "concatenated in the modules' order");
   assert.equal(r.obligations_raised, 4); assert.equal(r.obligations_truncated, true);
-  r = run({ extraction: { obligations: [] }, content: [], "legacy-store": { obligations: [{ id: 9 }], truncated: true } });
+  r = run({ extraction: { obligations: [] }, content: [], scheduler: { obligations: [{ id: 9 }], truncated: true } });
   assert.deepEqual(r.obligations, [{ id: 9 }]); assert.equal(r.obligations_truncated, true, "any listener's cut is carried");
-  r = run({ extraction: { obligations: [{ id: 1 }], truncated: false }, content: null, "legacy-store": [] });
+  r = run({ extraction: { obligations: [{ id: 1 }], truncated: false }, content: null, scheduler: [] });
   assert.equal(r.obligations_truncated, false, "no listener cut its list");
   assert.equal(r.obligations_raised, 1);
 });
