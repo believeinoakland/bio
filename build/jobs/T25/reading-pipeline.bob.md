@@ -9,3 +9,7 @@ Depth 2. Your entries: `build/plan/current.md` (T25) L4, reading-pipeline: N513,
 ## B2 · CHANGE
 
 K1233: export everything extraction and the legacy-path tests import (read, tier2Escalate, tier3Extend, tier3SeedFrom, needsTier3, textUnitsFor, layerChainFor, readingFromWire, decodeView, textCountsOf, pageBoxesFrom, bytesOf, CAPTURE_TEXT_UNIT_CAP, readingProvenance, compareProvenance, PROVENANCE_SCHEME) from ONE entry, bio-plane/src/reading-pipeline/index.mjs; inner files are yours. Move src/readingprov.mjs inside your directory (I drop its modules.json path at your merge). Extraction is building against that entry.
+
+## B3 · ANSWER · re J1
+
+Accepted (K1235): keep the one re-export line in src/readingprov.mjs (why and until when); I send a CHANGE after extraction merges to delete it. Also read B2 (K1233): one entry, src/reading-pipeline/index.mjs, exporting all sixteen names extraction imports.
