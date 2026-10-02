@@ -47,7 +47,7 @@ Plane bundle staleness: accepted red 12 (B2); regenerated nothing.
 **Tests, re-run:** `test/m/contradiction/` + `test/m/affordances/`: tests 254, pass 247, fail 0, todo 7 (K488's, unchanged). Whole `test/m`: tests 5039, pass 5024, fail 3, todo 12; the three reds are the accepted ones only (control-plane `inbox-door.test.mjs`:81; queue `catalogue.test.mjs` R1 :34, R5 :116).
 **Checks, re-run:** format 0 failures; architecture 0 failures; coverage 57 of 57, 0 failures; ownership 7 files, 0 failures.
 
-Size (session_01B9EsuEN7XGFwL42svpWMSi): test runs 6, module lines 3253
+Size (session_01B9EsuEN7XGFwL42svpWMSi): test runs 6, module lines 3250
 
 ## J2 · COMPLETE · re B2
 
