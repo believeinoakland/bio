@@ -158,7 +158,7 @@ function nnScheduler(w) {
   return { st, s: new Scheduler({ storage: st, owners: { networkNotices: () => w.nn } }) };
 }
 
-test("R5: against the real network-notices, the alarm at a week's end runs its weekly seal, once, and wakes again at the next week's start", async () => {
+test("R5, R15: against the real network-notices, the alarm at a week's end runs its weekly seal, once; with nothing left to seal no alarm follows, and a member act in the week under way wakes it at that week's end", async () => {
   const w = nnWorld({ before: (x) => { x.member("alice"); } });
   const pid = w.project("seal", "alice");
   const lastWeek = monday(w.clock.now) - WEEK;
@@ -170,12 +170,25 @@ test("R5: against the real network-notices, the alarm at a week's end runs its w
   assert.equal(r.workingonseal?.ok, true, JSON.stringify(r.workingonseal));
   assert.deepEqual(r.workingonseal.sealed.map((x) => [x.week.length > 0, x.projects]), [[true, 1]], "the last complete week sealed");
   assert.equal(w.count("nn_week_seals"), 1);
-  assert.ok(st.alarm !== null && st.alarm <= nextWeek, "a wake at or before the next week's start");
+  /* the only act sealed: network-notices' sealWake is null (its R14, N507), so no alarm is held (R15) */
+  assert.equal(w.nn.sealWake(now), null, "nothing left to seal: the owner wants no wake");
+  assert.deepEqual([r.nextAt, r.rearmed, st.alarm], [null, false, null], "an idle instance holds no timer");
   const again = await s.onAlarm(now + 1000);
   assert.equal("workingonseal" in again, false, "the week sealed: not due again");
   assert.equal(w.count("nn_week_seals"), 1);
+  assert.equal(st.alarm, null);
+  /* a member act in the week under way: the seal wakes at that week's end, the next week's start */
+  w.act(pid, now + 2000, { author: V("alice") });
+  assert.equal(await s.arm(now + 3000), nextWeek, "armed at the week's end");
+  assert.equal(st.alarm, nextWeek);
+  const quiet = await s.onAlarm(now + 4000);
+  assert.equal("workingonseal" in quiet, false, "the week is not over: not due");
+  assert.equal(st.alarm, nextWeek, "still waiting for the week's end");
   const next = await s.onAlarm(nextWeek);
   assert.equal(next.workingonseal?.ok, true, "the next week's end runs it again");
+  assert.deepEqual(next.workingonseal.sealed.map((x) => x.projects), [1], "the week under way sealed");
+  assert.equal(w.count("nn_week_seals"), 2);
+  assert.deepEqual([next.nextAt, st.alarm], [null, null], "sealed: idle again");
 });
 
 test("R5: against the real network-notices, working-on-attest runs its owner's attestations when its owner says it is due: the day's closing check, then the next month's monthly attestation", async () => {
