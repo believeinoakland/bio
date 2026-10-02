@@ -8,6 +8,8 @@
 
 - N519 · 2026-10-02 · **DEC-112 (5) as K1254 amends it** (Bob): fold into the case's requirements (case-authoring's `publishCase`, case-grammar's `materials:` block, publication): no load-bearing member may rest on material whose only attestation is an off-the-record (anonymous) source; publishing such a case is refused, naming the member; off-the-record material never travels in the published case (it stays in the project as a lead); `draft-T24-dec112.md` R45's "the project's and the group's" attestations are dropped (K1134 Q6 withdrawn). **Hard reason:** two follow-ups are Bob's (K1254 (a), (b)), and the DEC-112 fold also waits on K1134 Q1–Q3 (P17).
 
+- N520 · 2026-10-02 · **DEC-112 and DEC-116's new modules** (K1256): fold `plan/draft-T24-dec112.md` and `draft-T24-dec116.md` into requirements, with K1134 (1)–(6)'s readings, K1254 (DEC-112 (5)) and the new modules in `modules.json` and `layers.md`: `docket` (L8, directly after publication: DEC-116's signed docket, shelves, To-dos, outside responses, standing, withdrawal), `case-checker` (L8, directly after ratification: the standalone open checker, built from the same check code), `case-import` (L8, directly after case-checker: import into a read-only project, recreation, acceptance per DEC-96). DEC-116's share can open in T27; DEC-112's waits on K1254 (a), (b) (Bob's).
+
 ## Watched for size (P6, K617; measured by BOB #102 at T26's L3, code over each module's most specific paths, tests excluded)
 
 ratification 3,979 and inquiry 3,888: at the ~4,000 mark; a seam is drafted (P18) before either's next job if that job would add code. publication 3,638 (T24's 4,354 counted a file another module owns, as K1024 found before), content 3,533, agent-worker 3,810, docprofile 3,170: under it.
