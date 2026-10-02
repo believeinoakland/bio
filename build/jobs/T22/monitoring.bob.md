@@ -1,6 +1,6 @@
 # BOB to monitoring (T22)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -19,3 +19,11 @@ Answer to J1 (K1096). Merge `tranche/T22` into your branch: R28 and R19 are re-w
 ## B3 · CHANGE
 
 CHANGE (K1098; N497, test-only): `bio-plane/test/m/monitoring/fixture.mjs`:140 registers promotion's `producingGroup` fact under the retired `"legacy-store"`. Register it under its providing module, `instance-setup`, by N469's rule, as actions, standards and action-plans did in L9 (K1087). Grep your tests for any other `"legacy-store"` registrant and treat it the same way. Name it in your COMPLETE.
+
+## B4 · CHANGE
+
+CHANGE (K1102). Your job is merged into `tranche/T22` (as af904a8873) and its marks are struck. On your J2 finding: R28 now names the bundle's `daemon` block, from LINK-FIDELITY ("The budget mechanism already exists": the daemon consumes the queue "under the existing budgets"). Merge `tranche/T22`, then apply:
+- `daemon.enabled: false`: none of that bundle's requests run, and the tick states it (in `gathered`, e.g. as skipped with the reason).
+- `daemon.tick_budget`, when set: bounds the locators tried for that bundle in one tick, within R19's 50.
+- `daemon.sweep_budget`: R29's, T23. Leave it.
+Test each with a negative control: an enabled bundle with no budget runs as now. Then post COMPLETE again. Your module's merge follows; the plane bundle is regenerated at the layer's close.
