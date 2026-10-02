@@ -253,7 +253,7 @@ export function seeded(opts = {}) {
 
 /** Open an escalation of `w.D` by bob; throws on refusal. */
 export function opened(w) {
-  const r = w.esc.escalationOpen({ determination: w.D, author: V("bob"), viewer: V("bob") });
+  const r = w.esc.escalationOpen({ reason: "Worth pursuing.", determination: w.D, author: V("bob"), viewer: V("bob") });
   if (!r.ok) throw new Error(`fixture open refused: ${JSON.stringify(r).slice(0, 400)}`);
   w.E = r.id;
   return r;
@@ -269,7 +269,7 @@ export function toStage(w, stage) {
   go(2);
   const n = w.action({ project: w.P, restsOn: [w.D] });
   w.N = n;
-  const at = w.esc.escalationAttach({ id: w.E, action: n, author: V("bob"), viewer: V("bob") });
+  const at = w.esc.escalationAttach({ reason: "This act serves the stage.", id: w.E, action: n, author: V("bob"), viewer: V("bob") });
   if (!at.ok) throw new Error(`fixture attach refused: ${JSON.stringify(at)}`);
   if (stage === 2) return n;
   w.correspond(n, "sent", "2026-09-02");
@@ -286,7 +286,7 @@ export function toStage(w, stage) {
     go(5);
     const a5 = w.action({ project: w.P, restsOn: [w.D] });
     w.A5 = a5;
-    const r = w.esc.escalationAttach({ id: w.E, action: a5, author: V("bob"), viewer: V("bob") });
+    const r = w.esc.escalationAttach({ reason: "This act serves the stage.", id: w.E, action: a5, author: V("bob"), viewer: V("bob") });
     if (!r.ok) throw new Error(`fixture attach 5 refused: ${JSON.stringify(r)}`);
     w.correspond(a5, "sent", "2026-09-15");
     go(6);

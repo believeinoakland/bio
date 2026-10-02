@@ -8,7 +8,10 @@
  * `determinationSuperseded`; N309, N312, K380), so C-116.3 and C-116.4 are retired and not reused. C-116.6 and C-116.30
  * carry their module's names, `ESCALATION_NOT_A_PARTICIPANT` and `EDGE_NOT_PROPOSED` (K380). C-116.24 is
  * `ESCALATION_NO_REASON` (R24; N433, K766), its row and translation unchanged, so the module never answers
- * `progressions`' `NO_REASON` (C-100.18) and no code is held with two rows (DEC-49). */
+ * `progressions`' `NO_REASON` (C-100.18) and no code is held with two rows (DEC-49). R1's and R27's shared conditions
+ * (no breach, not joined, already open) are minted once, in `#pursuable`, which both acts ask (DEC-89). A machine's
+ * decline to escalate (R27) has its own code and row, C-116.46, since `MACHINE_CANNOT_DECLINE` is C-116.26's, R13's
+ * edge decline (this job's reading, put to BOB as J1). */
 
 const at = (fn, region) => `src/escalation/index.mjs ${fn} > ${region}`;
 
@@ -25,16 +28,16 @@ export const ESCALATION_CHECKS = Object.freeze({
       + 'Send the act without it. Nothing was written.',
   },
   NOT_NONCOMPLIANT: {
-    check: 'C-116.5', where: at("escalationOpen", "is-determination-noncompliant"),
+    check: 'C-116.5', where: at("#pursuable", "is-determination-noncompliant"),
     translation: 'That determination finds no standard breached, so there is nothing to escalate. Nothing was written.',
   },
   ESCALATION_NOT_A_PARTICIPANT: {
-    check: 'C-116.6', where: at("escalationOpen", "is-open-joined"),
+    check: 'C-116.6', where: at("#pursuable", "is-open-joined"),
     translation: 'An escalation is opened by a member who has joined the project that made the determination. Join '
       + 'the project first. Nothing was written.',
   },
   ALREADY_OPEN: {
-    check: 'C-116.7', where: at("escalationOpen", "is-one-escalation"),
+    check: 'C-116.7', where: at("#pursuable", "is-one-escalation"),
     translation: 'This determination already has an escalation that has not ended; there is one at a time. Work in '
       + 'that one. Nothing was written.',
   },
@@ -210,6 +213,11 @@ export const ESCALATION_CHECKS = Object.freeze({
   UNSPLICEABLE_ESCALATION: {
     check: 'C-116.43', where: at("#append", "is-escalation-spliceable"),
     translation: 'The escalation\'s record cannot be extended in place. Nothing was written.',
+  },
+  MACHINE_CANNOT_DECLINE_TO_ESCALATE: {
+    check: 'C-116.46', where: at("declineToEscalate", "is-decline-member"),
+    translation: 'Recording that the group is not pursuing a breach is a member\'s act, in the member\'s own words. An '
+      + 'assistant may point out a breach; it may not decline it. Nothing was written.',
   },
   PROVIDER_UNAVAILABLE: {
     check: 'C-116.44', where: at("refuseProviderUnavailable", "is-provider-present"),
