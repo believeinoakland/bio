@@ -53,7 +53,7 @@ A group that cannot leave can be held. This module exports the working corpus ve
   - creates `export_log` (the same DDL, `CREATE TABLE IF NOT EXISTS`, so a store's existing rows stay);
   - declares it to `record-core`'s purge as exempt (R4).
 
-  `publication`'s `export` and `exportlog` delegates are retired (T23 L8, N483); until the plane's op map spreads `corpusExportOps` (T23 L11), those ops route nowhere through the plane (K1122).
+  `publication`'s `export` and `exportlog` delegates are retired (T23 L8, N483); the plane's op map spreads `corpusExportOps` since T23 L11 (K1122).
 - **For callers.** (was `publication`'s Suggestions, "For callers", its export half) The control plane admits only the root-of-trust credential to `op=export` (`ROOT_OF_TRUST_REQUIRED`) and in-app administrators to `op=exportlog`.
 - **R3's scope** (P17, a detail, for the START). The service is handed R1's manifest and the bytes it names, which the manifest itself does not carry. It answers verified, or each failure by name, and writes nothing. Writing a verified corpus into a receiving store is not stated here.
 - **Tests.**
