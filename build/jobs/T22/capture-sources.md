@@ -2,6 +2,35 @@
 
 **Status** · session_01JxNV4GvVR6ZVqJhsquLGcC · depth 2 · WORKING · handled B2
 
+## Completion
+
+**Entries applied** (B1, `build/plan/current.md` T22 layer 3; B2, K1032).
+- **(1) A10, R37** (Memento, RFC 7089), built to R37's nine services as B2 worded them: new `bio-plane/src/capture-sources/memento.mjs` (263 lines, pure: no fetch, no hash, no clock), `WAYBACK_MEMENTO`, `mementoEndpoints`, `acceptDatetime`, `parseLinkFormat`, `parseTimeMap`, `timeMapCandidates`, `readMementoAnswer`, `mementoRow`, `mementoHop`, plus `readHttpDate` (the RFC 1123 reader (3), (5) and (7) share; exported for its own test). A memento feeds `selectCapture` unchanged (R29–R31), so the 200 rule, the bound and the empty-body exclusion are the CDX path's own; the hop is R34's shape for any archive, its `document_address` the archive's `rel="original"`, never the address asked (R35). `cdx.mjs` is unchanged: its exports and answers are as R29–R36 state them, and its R29–R36 tests are unchanged and green.
+- **Tests:** the todo at `test/m/capture-sources/cdx.test.mjs`:162 replaced by a pointer; `test/m/capture-sources/memento.test.mjs`, eight tests each naming R37, over fixtures under `test/m/capture-sources/fixtures/memento/` (no network), with B1's three negative controls (a malformed link-format entry, `timemap-malformed.txt`; a memento outside the window, `timeMapCandidates` and `selectCapture` with `notAfter`; a TimeGate answer with no `Memento-Datetime`, `memento-no-datetime.json`) and others (no `rel=original`, an undated TimeMap entry, an empty memento, a 301 memento, a bad datetime, the asked address differing from the archive's original). **The fixtures were written by hand** in RFC 7089's answer shapes (one follows its §5.1.1 example) and the Wayback Machine's Memento endpoints' forms, not captured: this session's egress refused `web.archive.org` (connection reset, 2026-10-02); their README says so.
+- **Re-scan of my paths** (N469, N471, N480): no note names a T20-deleted file, `tools/` or the deleted plane `index.mjs` as live. `browserrender.mjs`:29 names `src/index.mjs` as the plane's entry then and `src/plane/index.mjs` today, and :21 the old `test/rendered-capture.test.mjs` as a measurement's provenance: both stay.
+
+**`not yet met` marks:** R37's mark (`build/requirements/capture-sources.md`, "*(not yet met: T22)*") is met by this job; BOB strikes it at the merge. The Status line's "R37 (Memento; stays here, unscheduled, K48)" is also stale now (BOB's text).
+
+**Catalogue rows:** none added or changed (R37's refusals are answer codes with no row, K1032); `row-census.test.mjs` green.
+
+**What acquisition would call** (N492, T23): `mementoEndpoints(archive, address)` → GET the TimeGate with `Accept-Datetime: acceptDatetime(notAfter)` (or GET the TimeMap → `parseTimeMap` → `timeMapCandidates`, newest first) → `readMementoAnswer` (following a `redirect`'s `location`) → GET `archive.raw ? archive.raw(memento_uri) : memento_uri` → `readMementoAnswer` with its own SHA-256 and byte count → `mementoRow` → `selectCapture` → `mementoHop(chosen, fetchedUri, {archive, answer})`.
+
+**Deferred:** none.
+
+**Other modules:** none. The plane bundle is not staled: `cdx.mjs` is unchanged and nothing imports `memento.mjs` yet; `fleetbundles.test.mjs` green on this branch. When acquisition imports it (N492), the bundle stales then.
+
+**Tests and checks** (on `job/T22/capture-sources` with `tranche/T22` merged at f3564d3fbc):
+- `node --test test/m/capture-sources/` (in `bio-plane/`): tests 82, pass 82, fail 0, todo 0
+- `node --test test/m/acquisition/`: tests 59, pass 59, fail 0
+- `node --test test/m/`: tests 4822, pass 4803, fail 0, cancelled 0, skipped 0, todo 19. No red (the opening's membership reds are cleared, K1026); test-support R2 passed here.
+- `node --test test/system/fleetbundles.test.mjs test/system/row-census.test.mjs`: pass 2, fail 0, skipped 0
+- `node checks/format.mjs`: 85 modules, 84 requirements files; 0 failures
+- `node checks/architecture.mjs … capture-sources`: 20 product files, 22 relative imports; 0 failures
+- `node checks/coverage.mjs … capture-sources`: 63 of 63 live requirement ids named by a test; 0 failures
+- `node checks/ownership.mjs … capture-sources tranche/T22`: 12 files changed; 0 failures
+
+Size (session_01JxNV4GvVR6ZVqJhsquLGcC): test runs 6, module lines 2518
+
 ## J1 · QUESTION
 
 R37's interface, proposed (B1 asks before I write one). New file `bio-plane/src/capture-sources/memento.mjs`, pure like `cdx.mjs` (no fetch, no hash, no clock); `cdx.mjs` untouched, so its exports and answers stay as R29–R36 state them and the plane bundle is not staled by it. Refusal reasons are answer codes like `CDX_UNPARSEABLE`, with no catalogue row (none of cdx.mjs' reasons has one), so no row is added and `row-census` stays green. My best reading, which I build on meanwhile:
