@@ -32,6 +32,7 @@ Terms are `publication`'s (a case, an edition, the case document, a pin, the pub
 - **R8** (was `publication` R36) A later module fills, once at start, one evidence-package block: given a published case edition, it answers a named block `publishedCase` (R3) carries beside the case, computed at the read; with none registered, the answer says the package carries no such block. The evidence package is the published case edition; `filings` fills the available-actions block (its R15), and nothing of legal strategy enters the case's own bytes.
 
 - **R18** (DEC-111; `network-notices` R10, R20, R21) A later module registers once at start a set of named, credential-free reads that are served on the public path (K31's pattern, as in R8). Each is served under R10's terms. A second registration of one name is refused. An unregistered name says that it is not registered. *(not yet met: T23)*
+- **R19** (DEC-111; `case-grammar` R10, K1144) `publishedCase` (R3) carries `project_reference`: the notice id the signed case document names in `working_on`, read with `case-grammar`'s `workingOnOf`, or null when the document names none or is not `/5`. *(not yet met: T23)*
 
 ## Private
 
