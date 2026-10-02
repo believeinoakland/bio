@@ -781,8 +781,9 @@ export function actionClocksOwns(t) {
   return ACTION_CLOCKS_TABLES.includes(name);
 }
 
-/** The module's ops (K3, K671), as entries of the legacy store's op map: `op=reminderset` (R4) and `op=reminderanswer`
- *  (R6). `viewer` and `author` are the control plane's stamps, read from the query, so a caller's own copy never wins. */
+/** The module's ops (K3, K671), entries of the route map `plane` composes (its R5) and control-plane's `dispatch` looks
+ *  up: `op=reminderset` (R4) and `op=reminderanswer` (R6). `viewer` and `author` are the control plane's stamps, read
+ *  from the query, so a caller's own copy never wins. */
 export function actionClocksOps(m, url, body) {
   const q = (k) => url.searchParams.get(k);
   const has = (k) => url.searchParams.has(k);
