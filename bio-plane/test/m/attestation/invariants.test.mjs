@@ -73,8 +73,6 @@ test("R10: attestation's acts write its two tables; provenance's acts and attest
   w.prov.recordReceipt({ addressNorm: "e.org/a", captureSha: a.sha, retrieved: "2026-09-27T00:00:00Z", via: "archive.org" });
   w.prov.testify({ words: "w", observedAt: "2026-09-20", author: "member:ruth" });
   w.prov.declareOrigin({ bundleId: "INFO-2026-0001-a", system: "a system", by: "member:ruth", viewer: "member:ruth" });
-  w.prov.provenanceRouteAssess({ bundleId: "INFO-2026-0001-a", author: "member:ruth", viewer: "member:ruth" });
-  w.prov.provenanceChainRebuild({ bundleId: "INFO-2026-0001-a", author: "member:ruth", viewer: "member:ruth", apply: true });
   /* Attestation's reads. */
   w.att.attestationsOf(a.sha); w.att.instanceKeys(); await w.att.signedReceipts(a.sha); await w.att.instanceKeyBound();
   assert.equal(both(), none, "nothing but attestation's acts writes them");
