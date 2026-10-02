@@ -28,3 +28,7 @@
 **For COMPLETE:** R3 met (its `not yet met: T22` mark is BOB's to strike); R1, R2, R4, R5 met by the copy and its tests.
 
 Size (session_01QcijNaUTcdqQN7DjR3CWtZ): test runs 17, module lines 348
+
+## J1 · REPORT
+
+For routing, before my merge. (1) publication's PUBLICATION_EXEMPT (schema.mjs:592) still names export_log: while it does, my declaration on the same host is refused TABLE_DECLARED (seam map §7.1); publication's L8 job, as planned. Nothing of mine is wired into a live path. (2) Requirements (BOB's): my Uses' '(not yet provided: T8's record-core entry)' mark on record-core looks stale: record-core R37 now states every column R1 reads (bundles' title, current_state, bundle_sha, row_version, created, last_updated; files, history, manifest), and provenance R48 states register.bytes (N213). (3) Accepted red 4 also shows as test/m/promotion/registry.test.mjs:58 (K936's R39/R45/R46: MODULE_ORDER lacks corpus-export), beside membership's module-order.test.mjs and t9-notice-sight-bounds.test.mjs. (4) Generated artifacts: none stale (fleetbundles passes; nothing imports this module). (5) No new red in test/m (4888 tests, 12 fail, all accepted by name).
