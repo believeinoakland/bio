@@ -1,0 +1,117 @@
+<title>Acting on a Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
+<style>
+/* One reading column; tables break out to a wider measure. Tokens from build/layers-view.html. */
+:root{
+  --bg:#F4F6F8; --panel:#FFFFFF; --ink:#18202B; --muted:#5B6676; --rule:#D8DEE6; --chip:#E9EEF3;
+  --accent:#1D6A86;
+  --ok:#2F6B3A; --ok-bg:#DCEEDD; --part:#8A5A12; --part-bg:#F5E6C8; --gap:#9A3B2E; --gap-bg:#F6E0DA;
+  --serif:"Source Serif 4",Georgia,serif; --sans:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  color-scheme:dark; --bg:#11161D; --panel:#18202A; --ink:#E4E9EF; --muted:#9AA6B5; --rule:#2B3542; --chip:#222C38;
+  --accent:#5FB3CF; --ok:#8FD19B; --ok-bg:#1C3822; --part:#E0B060; --part-bg:#43341A; --gap:#F09A86; --gap-bg:#472019;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark; --bg:#11161D; --panel:#18202A; --ink:#E4E9EF; --muted:#9AA6B5; --rule:#2B3542; --chip:#222C38;
+  --accent:#5FB3CF; --ok:#8FD19B; --ok-bg:#1C3822; --part:#E0B060; --part-bg:#43341A; --gap:#F09A86; --gap-bg:#472019;
+}
+body{background:var(--bg);color:var(--ink);font:15.5px/1.6 var(--sans)}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:16px;padding-block:32px 64px}
+.wrap > *:not(.tw){max-width:74ch}
+h1{font:600 clamp(28px,4vw,36px)/1.15 var(--serif);margin:0 0 12px;text-wrap:balance}
+h2{font:600 22px/1.25 var(--serif);margin:44px 0 12px;padding-top:18px;border-top:1px solid var(--rule);text-wrap:balance}
+p,ul,ol{margin:0 0 14px}
+li{margin:0 0 8px}
+li > ul{margin-top:8px}
+a{color:var(--accent)}
+code{font:0.88em var(--mono);background:var(--chip);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+.lede{color:var(--muted);font-size:14.5px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px}
+.eyebrow{display:block;font:500 11.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+.tw{overflow-x:auto;margin:6px 0 20px;border:1px solid var(--rule);border-radius:8px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:13.5px;line-height:1.5}
+th{font:500 11.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:1px solid var(--rule);background:color-mix(in srgb,var(--chip) 60%,var(--panel))}
+td{padding:10px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td:first-child{min-width:150px}
+.v{display:inline-block;font:500 12px/1.3 var(--mono);padding:3px 7px;border-radius:5px;margin-bottom:4px}
+.v.gap{color:var(--gap);background:var(--gap-bg)}
+.v.part{color:var(--part);background:var(--part-bg)}
+.v.ok{color:var(--ok);background:var(--ok-bg)}
+.v.wire{color:var(--part);background:var(--part-bg);outline:1px dashed var(--part)}
+.v.design{color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--panel))}
+table.wide{min-width:1180px}
+</style>
+<div class="wrap">
+<h1>The member's path through acting</h1>
+<p class="lede"><span class="eyebrow">Status</span> DRAFT by ACTION_DESIGN #1, 2026-09-30. Step 5 of the week's Action design work: what a member sees and does, from the first suspicion to a closed plan, on the surfaces the UX substrate already names (<code>docs/development/ux-substrate/</code>). It follows <code>drafts/action-plans.md</code> and <code>drafts/deltas.md</code>; the screens themselves are drawn by the UX work, which this feeds. Every act runs the ACT motion (Interaction Constructs: choose, see what it will refuse and why, author the reason, get a receipt). The worked case is the bond measure of <code>ACTION-PLAN.md</code>.</p>
+<h2>1. Where the plan lives</h2>
+<ul>
+<li><strong>Project home</strong> gains a <strong>Plans</strong> list beside cases and actions: each plan's title, its subjects with their support (established, short, hypothetical), how many options are chosen, and the next checkpoint.</li>
+<li><strong>The plan page</strong> (the substrate's S11) is one page per plan with four parts, top to bottom: <strong>Subjects</strong>, <strong>Options</strong>, <strong>Scenarios</strong>, <strong>Started</strong>. A strip under the title shows the checks (R19) in words; each check links to what it is about.</li>
+<li><strong>The queue</strong> carries three new items: a checkpoint due (an obligation of the group's own), a proposed escalation stage (an obligation), an action's deadline passed (a condition). They reach members as Bob's notification rulings provide (DEC-10, DEC-69, DEC-70 and DEC-94): the deadline reminders the member asked for when choosing the option, fired as asked, each offering another or none; an overdue deadline notifies once; a nearing deadline changes only how the item looks; nothing repeats unless the member asks.</li>
+</ul>
+<h2>2. The path, step by step</h2>
+<ol>
+<li><strong>Open a plan while the inquiry is young.</strong> On the inquiry page, the member chooses "Plan what to do". The act asks for a title and shows the inquiry as the first subject, marked hypothetical. Receipt: the plan page.</li>
+<li><strong>See what the plan rests on.</strong> Subjects show support in words and colour-free text ("hypothetical: not yet shown"), and a plan resting only on hypothetical subjects says so at the top, as hunch debt.</li>
+<li><strong>Get suggestions.</strong> The Assistant tag on the plan page offers "Suggest options". Suggestions arrive in a separate tray marked as the assistant's, each with why. The project's declared kind of work, if any, is named at the tray's head ("suggested for a reporting project"). Nothing enters the plan until a member adopts it.</li>
+<li><strong>Add an option of one's own.</strong> "Add option" opens a short form: summary, category, the subjects it serves, addressee, regulated dates with their basis, tier (legal options only). The member can instead describe it to the Assistant, which fills the form and shows it before anything is added.</li>
+<li><strong>Read and sort the options.</strong> Options show collapsed as their one-line summary, category and dates; expanding shows detail, addressee, subjects served, where it came from and its history. The list sorts by category, regulated start or end date, subject or disposition. Legal options show the profile's venues and legal organisations beside them, labelled as facts, never as recommendations.</li>
+<li><strong>Choose, and say when to be reminded.</strong> Checkboxes select options; choosing one that carries dates asks when the member wants to be reminded of each, from defaults shown and changeable right there (K613–K615, DEC-94); "Choose" and "Decline" act on the selection. Declining asks one short reason. Unticked options stay undecided, and the page never asks the member to decide them.</li>
+<li><strong>Lay out a scenario.</strong> "Scenarios" shows up to three side by side as phases in order. A phase lists its chosen options, its start ("at the start", "after Mitigation", "if not met"), and its checkpoint ("8 weeks in: the city shows earnest commitment"). A branch can wait on another subject's track ("when the certification's escalation reaches legal tools"). Checks flag a regulated date that falls before its phase can start.</li>
+<li><strong>Judge a checkpoint.</strong> When the day comes, the queue item "Checkpoint: the city shows earnest commitment" opens the phase. The member judges met or not met with a note. The scenario then shows the branch taken. A missed checkpoint is shown as the group's own, never as a finding about the city.</li>
+<li><strong>Start an option.</strong> "Start" on a chosen option creates the action. The ACT motion shows what the action will say (addressee, dates with bases, what it rests on) and what it will refuse. For example, asserting a breach while the subject is still hypothetical is refused by default and says so before anything runs; the member may proceed anyway by stating a reason, and the action and everything prepared from it then say "rests on an unestablished premise" (Bob, 2026-09-30). The member may name the group's contact. Receipt: the action page, which names the plan and option it came from.</li>
+<li><strong>Prepare what is sent.</strong> From the action page:<ul>
+<li>a legal option goes through the existing filing or counsel-packet surface;</li>
+<li>any other option goes through "Draft message". The Assistant drafts a message or briefing as a proposal, and the member edits it and approves it.</li>
+<li>The approved text carries the in-band stamp. The member sends it themselves and records the sending.</li>
+</ul>
+</li>
+<li><strong>Track.</strong> "Started" on the plan page shows each action's state and each subject's escalation stage. Replies arrive as recorded correspondence on the action. A passed deadline arrives as a queue condition, and a proposed stage as a queue obligation.</li>
+<li><strong>Close the action, then the plan.</strong> An action resolves as complied, denied, escalated, withdrawn or completed, with its own outcome in words ("the story ran on 14 October"). When the group is done, a member closes the plan with a reason. The plan stays readable; its subjects are free for another plan.</li>
+</ol>
+<h2>3. What each surface must show (additions to the substrate's rules)</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>surface</th>
+<th>must show</th>
+<th>must never show</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Plan page</td>
+<td>each subject's support and liveness; each option's category, subjects served, regulated dates with basis, disposition and origin (member or assistant); scenarios with checkpoints and branches; the checks in words</td>
+<td>a cost, budget, assignee, score or priority; a suggestion inside the options before a member adopts it</td>
+</tr>
+<tr>
+<td>Options list</td>
+<td>collapsed summary; expanded detail and history; sort by category, date, subject, disposition</td>
+<td>a default tier for a legal option (<code>undetermined</code> is written out)</td>
+</tr>
+<tr>
+<td>Assistant tray</td>
+<td>"suggested by the assistant", with why</td>
+<td>anything that reads as the group's decision</td>
+</tr>
+<tr>
+<td>Queue items</td>
+<td>whose obligation it is: the group's own (checkpoint) or the counterparty's (deadline)</td>
+<td>a missed checkpoint as a finding</td>
+</tr>
+<tr>
+<td>Action page</td>
+<td>the plan and option it came from; the group's contact; the addressee by role and organisation</td>
+<td>a private individual as addressee</td>
+</tr>
+</tbody>
+</table></div>
+<h2>4. Open for the UX work (not Bob's)</h2>
+<ul>
+<li>Whether scenarios compare best side by side or as tabs on narrow screens.</li>
+<li>How a branch that waits on another subject's track is drawn without implying a forecast.</li>
+</ul>
+</div>
