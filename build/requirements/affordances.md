@@ -79,7 +79,7 @@ Terms. An **act** is `{id, label, weight, types, applies(facts, type), prompt?}`
 - `sources` and `capture` (N364): their op maps, the ops R2 and R3 grade, and the backing of each rung (R19).
 - `standards`, `conformance`, `consequences`, `filings`, `escalation`: their op maps, the ops R27 grades, and the backing of each rung (K264).
 - `filing-templates`, `local-facts` (K921): their op maps, R30's vocabularies and the backing of each rung.
-- `provenance`, `observation-log`, `bias`, `strength`, `reevaluation`, `monitoring` (K1107): their op maps, the ops R2 grades, and the backing of each rung (R19).
+- `provenance`, `attestation`, `provenance-routes` (N512), `observation-log`, `bias`, `strength`, `reevaluation`, `monitoring` (K1107): their op maps, the ops R2 grades, and the backing of each rung (R19).
 - `review`, `legacy-store`: nothing, once the facts above are read from their modules.
 
 ### Invariants

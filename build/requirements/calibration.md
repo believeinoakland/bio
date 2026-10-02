@@ -63,7 +63,7 @@ Terms. A **calibration** is `{calibration_id, engine, version, at, cap, probe_id
 
 ### Suggestions
 
-- **Where it runs.** Everything but R1–R3 is store-side, `calibrationOf(ctx)` (K61). Extraction's Worker pipeline reaches R10 as `index.mjs` reaches the store today.
+- **Where it runs.** Everything but R1–R3 is store-side, `calibrationOf(ctx)` (K61). `reading-pipeline` (through the callback `extraction` hands it; N513) reaches R10 as `index.mjs` reaches the store today.
 - **`driftObligations` moves out.** It lives in `calibration.mjs` today and is extraction's R38; it calls R2's `drifted`, which stays here.
 - **The scheduler's grace** is read from `Store.SCHED_GRACE_MS` today; `scheduler` is later, so R9 should take the grace from its caller. `scheduler` calls R9 (its `calibration-reprobe` consumer, store.mjs 3818–3872) and so uses `calibration`, which `modules.json` does not yet list.
 - Tests: each C-42 refusal gets a negative control; R2 and R3 keep their table-driven arms; R12 gets an arm with no listener (null, not zero) and one whose listener throws (nothing recorded). Built work: D-668 on `land/worker/D-668`; judged at the job.

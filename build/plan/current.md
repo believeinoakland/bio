@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #101 · session_012tU2hcJzJxi3Xab6BF5gej · depth 1
 
-**Jobs** · 
+**Jobs** · membership: MEMBERSHIP #19 session_01VygP3okwnSo5Wu6aPRkQw3; promotion: PROMOTION #26 session_0132mjJUXBPPWVGDGbsFCnND
 
 **Opened** 2026-10-02 ~17:00 UTC by BOB #101 from `main` @ dfb82f85cc (T24 closed, K1216), from `draft-T25.md` with BOB #100's review, `draft-T25-req/REVIEW.md`, and T24's `next.md` (K1218). **Bob's weekly meter** · asked at the opening; 61% at T23's close, unanswered at T24's.
 
@@ -16,7 +16,7 @@ No other module is marked `legacy`; no extraction is open.
 
 ## Folds at the opening (BOB, on this branch, K1219, K1220)
 
-1. **N512** (provenance split): `requirements/attestation.md` and `requirements/provenance-routes.md` written from `draft-T25-req/`, with `REVIEW.md`'s decisions; provenance's moved ids retired (never reused), its route clauses (R37, R41, R48, R53, R55) kept in T25 under option B and pointing at provenance-routes R8–R12, which are `not yet met: T26`; users' requirements re-pointed, marked `not yet met: T25` where their code changes.
+1. **N512** (provenance split): `requirements/attestation.md` and `requirements/provenance-routes.md` written from `draft-T25-req/`, with `REVIEW.md`'s decisions; provenance's moved ids retired (never reused), its route clauses (R37, R41, R48, R53, R55) re-worded to point at provenance-routes R8–R12 (K1220: the route side moves whole); users' requirements re-pointed, marked `not yet met: T25` where their code changes.
 2. **N513** (extraction split): `requirements/reading-pipeline.md` (R1–R19 moved, R20–R22 copies, R24 `read`'s signature); extraction's moved ids retired; `observation-log.md` and `calibration.md` re-worded.
 3. **`modules.json`**: `attestation`, `provenance-routes` after provenance in layer 3; `reading-pipeline` before extraction in layer 4; edges per `draft-T25-req/modules-json.md`, affordances gaining both (REVIEW 5); Status AMENDED.
 4. **`layers.md`**: AMENDED; the L3 and L4 rows.
@@ -24,23 +24,23 @@ No other module is marked `legacy`; no extraction is open.
 
 ## Rules at the opening
 
-T24's rules hold (merge early; one file, one editor; marks struck at the merge; no layer closes red except by name; owners export, the plane composes; the UX stream's DECs cited, never minted; a job re-scans its own module for the N502/N508 kind and re-words what it finds). A split's new module owns its moved files from the opening; the source module's job only deletes what moved from its own paths (T24 L10's pattern). **Option B (K1218):** provenance's L3 job keeps each pure name a later layer imports (`routeFinding`, `instanceStatement`, the checks files, `provenanceOps`' route arms) until its importer re-points in this tranche; **one table, one writer**: a name that writes `receipt_keys` or `signed_receipts` (attestation's, its R10) is never kept in provenance, and its importer's red stands until its own merge (red 7); every write to `provenance_route_marks` stays in provenance in T25 (provenance-routes R8–R12, T26). A row a T25 job adds or changes after L2's stamp is `awaiting stamp` until T26's L2 (S3) and listed in its COMPLETE.
+T24's rules hold (merge early; one file, one editor; marks struck at the merge; no layer closes red except by name; owners export, the plane composes; the UX stream's DECs cited, never minted; a job re-scans its own module for the N502/N508 kind and re-words what it finds). A split's new module owns its moved files from the opening; the source module's job only deletes what moved from its own paths (T24 L10's pattern). **Option B (K1218, as K1220 corrects it):** both new modules take their side whole in T25: attestation owns `receipt_keys` and `signed_receipts` and every write to them, provenance-routes owns `provenance_route_marks`, every write to it and the three route arms. Provenance's L3 job keeps only **pure copies** of the names a later layer imports by name (`routeFinding`, `instanceStatement`, the checks constants a later module imports), never a stateful method or a table write (**one table, one writer**), until each importer re-points in this tranche; provenance deletes the copies in T26 (N516). A caller of a moved stateful method is red until its own merge (red 7). A row a T25 job adds or changes after L2's stamp is `awaiting stamp` until T26's L2 (S3) and listed in its COMPLETE.
 
 **Accepted reds, by name, at the opening:**
 1. `row-census.test.mjs`: C-18.16–.18 `awaiting stamp` (T24's red 5), until promotion's L2 merge (S2).
 2. The UI's DEC-88 tests (N487, K1030): stay red, Bob's.
-3. Coverage: each id folded at the opening (attestation, provenance-routes R1–R7 and R13, reading-pipeline, and the users' ids marked `not yet met: T25`), until its module's merge.
+3. Coverage: each id folded at the opening (attestation, provenance-routes, reading-pipeline, and the users' ids marked `not yet met: T25`), until its module's merge.
 4. Format: the three new modules' `paths` and `tests` directories do not exist until their merges.
 5. membership's R83 test and promotion's `registry.test.mjs`:58: `MODULE_ORDER` lacks the three new modules, from this fold until membership's L2 merge (K1185's precedent).
 6. Rows T25's L3–L11 jobs add or change (C-34.*, C-89.* `where` re-pointed): `awaiting stamp` until T26's L2 (S3).
 7. The provenance split's users, from provenance's L3 merge until each user's merge: case-authoring (L8) and filings (L9) through `attestationsOf`; network-notices (L8) through `instanceSign`, `instanceKeys`, `instanceKeyBound`; any user of a name moved rather than kept under the one-writer rule; their fixtures.
 8. `CHECK_FAMILIES` (control-plane `families.mjs`) and affordances' `catalogue.test.mjs`:958 lack C-34's and C-89's new files, from the L3 merges until control-plane's and affordances' L11 merges.
-9. The plane's composition of attestation and provenance-routes (`attestOp`, the receipt signing key, `provenanceRouteOps`), from the L3 merges until plane's L11 merge.
+9. The plane's composition of attestation and provenance-routes (`attestOp`, the receipt signing key, `provenanceRouteOps` and the route arms leaving `provenanceOps`), from the L3 merges until plane's L11 merge.
 10. Extraction's tests and callers reaching the moved pipeline, from reading-pipeline's L4 merge until extraction's L4 merge.
 
 ## Decisions at the opening (BOB's, P17; K1218)
 
-- Option B for the provenance split (BOB #100's review 1); provenance first in L3, the new modules after it (review 2).
+- Option B for the provenance split (BOB #100's review 1, corrected by K1220: the route writes move with provenance-routes, provenance keeps pure copies only); provenance first in L3, the new modules after it (review 2).
 - C-103.6/.7 stay in provenance's `PROVENANCE_ACT_CHECKS` (provenance R58, the seam); attestation imports them.
 - `CAPTURE_TEXT_UNIT_CAP` moves to reading-pipeline and extraction re-exports it, so its other users do not change in T25.
 - S2 stamps C-18.16–.18 as 1.55.0 (MINOR, as S1).
@@ -49,7 +49,7 @@ T24's rules hold (merge early; one file, one editor; marks struck at the merge; 
 ## Roster (by layer; 17 jobs)
 
 **L2** (merge order: membership, then promotion) · membership: R83, `MODULE_ORDER` equal to `modules.json` after fold 3. · promotion: S2.
-**L3** (merge order: provenance, then attestation and provenance-routes, then acquisition and capture) · provenance: N512's removal side under option B (deletes what moved, keeps the pure names later layers import, keeps the route writes). · attestation: N512, the new module from the moved code and tests, C-89, `receipt_keys`, `signed_receipts`, `attestOp`. · provenance-routes: N512, the new module (R1–R7, R13), C-34. · acquisition: `attest` and `signReceipt` through attestation. · capture: `attest` through attestation.
+**L3** (merge order: provenance, then attestation and provenance-routes, then acquisition and capture) · provenance: N512's removal side under option B (deletes what moved, keeps pure copies of the names later layers import). · attestation: N512, the new module from the moved code and tests, C-89, `receipt_keys`, `signed_receipts`, `attestOp`. · provenance-routes: N512, the new module (R1–R13), C-34, `provenance_route_marks`, `provenanceRouteOps`; `op=stats`' order pinned. · acquisition: `attest` and `signReceipt` through attestation. · capture: `attest` through attestation.
 **L4** (merge order: reading-pipeline, then extraction) · reading-pipeline: N513, the new module from `extraction/pipeline.mjs`, `readingprov.mjs` and the moved tests. · extraction: N513's removal side, its imports re-pointed, `CAPTURE_TEXT_UNIT_CAP` re-exported, `uses` measured.
 **L5** · retrieval: `routeFinding` and R63's join through provenance-routes.
 **L6** · capture-requests: N515.
@@ -71,7 +71,7 @@ Not a job: record-core (N511, a fold); N514 (struck, K1197); N501 (met, K1199).
 
 ## Left out of T25 (one hard reason each; carried to `next.md`)
 
-Every row of T24's table re-checked (K1216, `draft-T25.md`); none becomes an entry. Also: provenance's deletion of the names option B keeps, and the route writes (provenance-routes R8–R12), N516: one job per module (P8), provenance's one T25 job is L3. S3 (T25's L3–L11 rows): the order (P4).
+Every row of T24's table re-checked (K1216, `draft-T25.md`); none becomes an entry. Also: N516, provenance's deletion of the pure copies option B keeps: one job per module (P8), provenance's one T25 job is L3, before its importers. S3 (T25's L3–L11 rows): the order (P4).
 
 | row | item | hard reason | note |
 |---|---|---|---|
