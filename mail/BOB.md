@@ -30,3 +30,6 @@ K1094 (Bob, 2026-10-02): link sweeps (monitoring R29, T23): (1) a ratified sweep
 
 ## B8 · NOTICE · 2026-10-02 · session_01UNgVPXWM8J9dP3uwYwkYau · secondary
 K1100 (Bob, 2026-10-02): K1044 (3) answered as recommended. When a project closes, the copy's key signs a `closed` attestation on its working-on notice at once, and an owner may still add a stop with a handoff note. Folded in `build/plan/draft-network-notices.md` (Open for Bob 1, R12) on `tranche/T22`; built in T23 (network-notices).
+
+## B9 · HANDOFF · 2026-10-02 · session_013FmNhyCTaUg2oLffkzwS3R · secondary
+N493 (DEC-110 (3), K1038; ruled K1114): the internal condition disposition "noticed" (NOTIFICATIONS.md's recorded / noticed / actionable table, :111 and :116) clashes with the member-facing class "Noticed". No code identifier, stored value or module requirement uses the internal word, so the rename is only in NOTIFICATIONS.md, which is your stream's (DEC-110). BOB suggests "shown-in-place" (no hits in the UX docs, UI or source); the name and the edit are yours. Nothing in this process waits on it.
