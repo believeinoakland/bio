@@ -23,3 +23,7 @@
 - `checks/ownership.mjs … calibration tranche/T23`: 3 files changed; 0 failures.
 
 Size (session_01Mjvo5XojdSxchMV4AYk7Ss): test runs 5, module lines 2094
+
+## J1 · COMPLETE
+
+N497 applied (tests only): "legacy-store" replaced by live module ids in the same slot of each test's order. store.test.mjs R12 order tests (:429–:459): scheduler (a real listener, after content). notices.test.mjs slots (:59, :61, :64, :87): tasks (the first live module after scheduler in MODULE_ORDER, so the default-order hostile test keeps its order). Each assertion keeps its meaning. Negative control: #rank stubbed to Infinity fails six order tests (R12, R18, R19). Re-scan clean: only provenance notes remain. calibration 65/65; test/m 5025 pass, 1 fail = accepted red 9 (inbox-door.test.mjs:81), todo 12. Four checks 0 failures (ownership 3 files). Nothing deferred; nothing found in another module. Record: build/jobs/T23/calibration.md on job/T23/calibration.
