@@ -264,8 +264,8 @@ export class Ratification {
 
   /* ===== REC-157 / INVESTIGATIVE-SESSION.md §7.1 item 9 (BOB #19, 2026-09-21) —
    * WHICH CASE EDITIONS PINNING THESE BYTES ALREADY RECORD THE CONCLUSION THIS ACT
-   * WOULD RECORD? THE ONE COMPARISON `publishCase()`'s ALREADY_A_CASE_MEMBER AND THE
-   * `publish` AFFORDANCE (`#editionWarrantedForJoinedProjectOf`) BOTH ASK.
+   * WOULD RECORD? THE ONE COMPARISON `case-authoring`'s `publishCase` (ALREADY_A_CASE_MEMBER) AND THE
+   * `publish` AFFORDANCE (affordances' `#editionWarrantedForJoinedProjectOf`) BOTH ASK.
    *
    * WHY IT EXISTS. `ALREADY_A_CASE_MEMBER` used to compare the finding's BYTES alone
    * (publication's `caseRelation` pin), which answered "would a new edition say anything
@@ -278,7 +278,7 @@ export class Ratification {
    * the RELATIONSHIP, exactly as `NOT_CONCLUDED` does."*
    *
    * WHAT IS ASKED. `rel` is publication's `caseRelation(bundleId)` as the caller holds it; `conc`
-   * is `caseConclusionFor`'s CONCLUDED answer — in publishCase() the very object the
+   * is `caseConclusionFor`'s CONCLUDED answer — in `publishCase` the very object the
    * case document will record, carried on `prepared` and never re-read. The editions
    * are every RATIFIED edition whose roster pins this finding at its CURRENT sha
    * (`rel.pinned`, across every case: DEC-72 clause 6 lets a finding serve many) and
@@ -587,7 +587,7 @@ export class Ratification {
       for (const r of [testimonyCaseRefusal(caseId, edition, attr.legacy),
                        attributionUnchosenRefusal(caseId, edition, attr),
                        attributionStaleRefusal(caseId, edition, attr),
-                       anonymousTestimonyRefusal(caseId, edition, this.#uncorroborated(fm, attr))])
+                       anonymousTestimonyRefusal(caseId, edition, this.#uncorroborated(src, attr))])
         if (r) refusals.push(r);
 
       const signerMember = signer === null || signer === undefined || isMachineIdentity(signer) ? null
@@ -621,17 +621,21 @@ export class Ratification {
     }
   }
 
-  /* R35 (DEC-102 items 1, 2): each roster member's testimony legs on an observation whose level in force for this
-     edition (publication's attribution facts) is `group` or `project` that strength answers uncorroborated (its R30),
-     as `{member, observation}`. Read as the plane: the pre-flight runs before a signer exists and must answer as the
-     act does, and a leg withheld from a viewer would only be withheld from corroborating. No such level asks nothing. */
-  #uncorroborated(fm, attr) {
+  /* R35 (DEC-102 items 1, 2; K1074): each roster member's testimony legs on an observation whose level in force for
+     this edition (publication's attribution facts) is `group` or `project` that strength answers uncorroborated (its
+     R30), as `{member, observation}`, judged at its pinned bytes: the reading the document records for it
+     (`case_conclusions[].version`), its live basis only where it records none. Read as the plane: the pre-flight runs
+     before a signer exists and must answer as the act does. No such level asks nothing. */
+  #uncorroborated(text, attr) {
+    const fm = parseFrontmatter(String(text ?? "")).data || {};
     const levels = Object.fromEntries((attr && Array.isArray(attr.current) ? attr.current : [])
       .filter((x) => x.level).map((x) => [x.observation, x.level]));
     if (!Object.values(levels).some((l) => l === "group" || l === "project")) return [];
     const out = [];
     for (const m of (Array.isArray(fm.case_findings) ? fm.case_findings : []).map((x) => String(x ?? "").trim())) {
-      const a = this.strength.testimonyCorroboration({ inquiry: m, levels, viewer: PLANE_VIEWER });
+      const version = Ratification.#recordedRowIn(text, m)?.version;
+      const a = this.strength.testimonyCorroboration({ inquiry: m, levels, viewer: PLANE_VIEWER,
+        version: version === undefined || version === null || version === "null" ? null : String(version) });
       for (const l of a && a.ok && Array.isArray(a.legs) ? a.legs : [])
         if (l.state === "uncorroborated") out.push({ member: m, observation: l.target_id });
     }
@@ -645,7 +649,7 @@ export class Ratification {
     if (!doc) return { ok: true, refusal: null };
     const attr = this.publication.attributionFacts({ text: doc.text, case_id: caseId, edition: Number(edition) });
     return { ok: true, refusal: anonymousTestimonyRefusal(caseId, Number(edition),
-                                                          this.#uncorroborated(parseFrontmatter(doc.text).data || {}, attr)) };
+                                                          this.#uncorroborated(doc.text, attr)) };
   }
 
   /* Each roster member's `basis` at the bytes its `case_roles` row pins (record-core R60), for the case gate's C-2.8
@@ -901,6 +905,20 @@ export class Ratification {
       /* R3, publication R5: a ratified newer edition discharges the case's outstanding revision flags, stamped with
          who ratified it and when; never deleted (set-but-never-clear). */
       this.publication.dischargeCaseFlags(id, ed, attestorMember ?? null, now);
+      /* R36 (DEC-102 item 2): each observation this edition reaches whose level in force (stated in the signed bytes,
+         C-92.11) differs from its level at the case's previous ratified edition is told to reevaluation (its R29), in
+         this transaction, once. A first edition, or an observation the previous edition did not reach, tells nothing. */
+      const prior = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition<? AND ratified_at IS NOT NULL
+                                ORDER BY edition DESC LIMIT 1`, id, ed);
+      const levelsIn = (text) => {
+        const rows = (parseFrontmatter(text).data || {}).observation_attributions;
+        return new Map((Array.isArray(rows) ? rows : []).filter((x) => x && x.observation && x.level && x.level !== "null")
+          .map((x) => [String(x.observation), String(x.level)]));
+      };
+      const was = prior ? levelsIn(prior.text) : new Map();
+      for (const [observation, to] of prior ? levelsIn(doc.text) : [])
+        if (was.has(observation) && was.get(observation) !== to)
+          this.reevaluation.levelMoved({ observation, from: was.get(observation), to, case: id, edition: ed, at: now });
       const completedCase = committed.state && committed.state.complete && !committed.state.manifest_sha
         ? committed.state : null;
       return { ok: true, caseId: id, edition: ed, project, roster,

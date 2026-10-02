@@ -41,8 +41,8 @@ function f(check, severity, message, repairs, code) {
  * used to be, and nothing here reads a table.
  *
  * The `'null'` guard is not decoration: `#setOrAddScalar` writes the STRING
- * "null" for an absent value, and publishCase()'s own case-identity resolution
- * already excludes it by name at store.mjs. Two readers of one convention that
+ * "null" for an absent value, and `case-authoring`'s `publishCase` excludes it
+ * by name in its own case-identity resolution. Two readers of one convention that
  * disagreed about it would be the drift this file exists to prevent.
  *
  * IT IS THE PAIR AND NOT `case_id` ALONE, AND THAT WAS MEASURED RATHER THAN
@@ -1109,7 +1109,7 @@ export const RATIFY_SCOPE_CHECKS = {
    * (BIO_Publication_v0_1.md §3 rule 2, the second note, BOB #16). REC-140 measured three
    * publications outside a case and pinned them as measured: an information bundle in no case, a
    * concluded inquiry in no case, and a finding prepared into a case whose document was not yet
-   * ratified. Both codes are refused in `Store#publish`, in its transaction, before the edition
+   * ratified. Both codes are refused in this module's `publish` (R5), in its transaction, before the edition
    * refusals and the retry, and ONE region carries both, because the one condition — no ratified
    * case pins this sha and none of their pinned findings rests on this bundle — is split only by
    * what the bundle IS. */

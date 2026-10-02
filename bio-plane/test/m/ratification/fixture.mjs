@@ -177,15 +177,18 @@ export function world() {
   /* strength R30's corroboration read (R35), answered from `corroboration` (inquiry id -> its answered legs; none by
      default), each call kept in `corroborationAsked` */
   const corroboration = new Map(), corroborationAsked = [];
+  /* reevaluation R29's `levelMoved` (R36), each call kept in `levelMoves` */
+  const levelMoves = [];
+  const reevaluation = { levelMoved: (a) => (levelMoves.push(a), { ok: true, moved: true }) };
   const strength = { testimonyCorroboration: (a) => (corroborationAsked.push(a),
     { ok: true, inquiry: a.inquiry, levels: a.levels, legs: corroboration.get(a.inquiry) ?? [], wrote: false }) };
   const capture = { registerReader: (slot, module, fn) => (readers.push({ slot, module, fn }), { ok: true, slot, module }) };
   const r = ratificationOf(host, { storage: st, record, membership, credentials, promotion, provenance, inquiry,
-                                   basisVersions, publication, capture, strength });
+                                   basisVersions, publication, capture, strength, reevaluation });
   let n = 0;
   const w = {
     st, host, record, membership, credentials, promotion, r, bv, key, registers, holds, evidence, pub, publication, calls,
-    readers, corroboration, corroborationAsked,
+    readers, corroboration, corroborationAsked, levelMoves,
     ops: {},   /* stand-ins for other modules' Durable Object ops, by name (the Worker half's tests) */
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,

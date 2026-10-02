@@ -248,7 +248,8 @@ test("R35, R2, R18: a member resting on group- or project-level testimony streng
     assert.match(got.detail, /independent leg.*cover or name.*drop the finding/s, "the ways forward");
     assert.ok(!/alice|author_id|"author"/.test(JSON.stringify(got)), "never the observation's author");
     const asked = s.w.corroborationAsked.at(-1);
-    assert.deepEqual([asked.inquiry, asked.levels, asked.viewer], [Q1, { [OBS2]: level }, "class:daemon"]);
+    assert.deepEqual([asked.inquiry, asked.levels, asked.viewer, asked.version], [Q1, { [OBS2]: level }, "class:daemon", "first"],
+      "judged at its pinned bytes: the reading the document records for it (K1074)");
     const r = await s.act();
     assert.deepEqual([r.status, r.body.reason], [409, "ANONYMOUS_TESTIMONY_UNCORROBORATED"]);
     assert.deepEqual(got, envelopeless(r.body), "the act's refusal, less its envelope");
@@ -262,6 +263,13 @@ test("R35, R2, R18: a member resting on group- or project-level testimony streng
     assert.deepEqual(s.preflight().refusals, []);
     assert.equal((await s.act()).status, 200);
   }
+  /* a document recording no conclusion row for the member: its live basis, `version` null */
+  const nc = await setup({ conclusions: false });
+  nc.w.publication.attributionFacts = () => ({ reached: [OBS2], legacy: [], stated: [{ observation: OBS2, level: "group", shown: "g" }],
+                                               current: [{ observation: OBS2, level: "group", shown: "g", why: null }] });
+  nc.w.corroboration.set(Q1, [TIP]);
+  nc.preflight();
+  assert.equal(nc.w.corroborationAsked.at(-1).version, null);
   for (const level of ["cover", "name"]) {
     const s = await setup();
     const stated = [{ observation: OBS2, level, shown: "x" }];
