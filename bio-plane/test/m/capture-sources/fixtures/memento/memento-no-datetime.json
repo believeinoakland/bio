@@ -1,0 +1,8 @@
+{
+  "url": "https://web.archive.org/web/20260303120000id_/https://records.example.gov/minutes/2026-03.pdf",
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/pdf",
+    "Link": "<https://records.example.gov/minutes/2026-03.pdf>; rel=\"original\""
+  }
+}

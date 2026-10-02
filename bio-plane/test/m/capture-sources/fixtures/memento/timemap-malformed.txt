@@ -1,0 +1,2 @@
+<https://records.example.gov/minutes/2026-03.pdf>; rel="original",
+https://web.archive.org/web/20260303120000/https://records.example.gov/minutes/2026-03.pdf>; rel="memento"; datetime="Tue, 03 Mar 2026 12:00:00 GMT"
