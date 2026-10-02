@@ -38,7 +38,7 @@ A group that cannot leave can be held. This module exports the working corpus ve
   - byte-compares every registered capture;
   - trusts nothing the manifest asserts (Membership v2 §8, "What verified must mean").
 
-  The verifying import belongs to this module; the tranche that carries it is BOB's to choose (K102). *(not yet met: T22)*
+  The verifying import belongs to this module: `verifyCorpusExport({manifest, bytes})`, which writes nothing, never throws and has no op (K1058).
 - **R4** (was `publication` R31, its `export_log` clause) `export_log` is exempt from purge.
 - **R5** (was `publication` R34, copied) No place is named in this module's behaviour or outward text.
 
