@@ -34,7 +34,7 @@ T23's rules hold (merge early; one file, one editor; marks struck at the merge; 
 4. Format: `link-sweep`'s `paths` and `tests` directories do not exist until link-sweep's L10 merge.
 5. Rows T24's L3–L11 jobs add or change: `awaiting stamp` until T25's L2 (S2).
 6. Totality of affordances and op-declarations over `optionstartpreview`, from action-plans' L9 merge until their L11 merges.
-7. The sweep's composition (plane's `sweeps` route, scheduler's `gathering-sweep`), from monitoring's L10 merge until link-sweep's and scheduler's (L10) and plane's and control-plane's (L11).
+7. The sweep's composition (plane's `sweeps` route, scheduler's `gathering-sweep`; the row census reading C-18.16–C-18.18 absent until link-sweep's merge, K1206), from monitoring's L10 merge until link-sweep's and scheduler's (L10) and plane's and control-plane's (L11).
 8. `test/m/scheduler/consumers.test.mjs`:161: after the only act is sealed, network-notices' `sealWake` is null (N507, R14; scheduler R15), so no alarm follows; from network-notices' L8 merge until scheduler's L10 merge (K1200).
 9. `test/m/plane/notices.test.mjs`:39: network-notices holds no mint seed (N503, R4, record-core R75); from network-notices' L8 merge until plane's L11 merge (K1200).
 
