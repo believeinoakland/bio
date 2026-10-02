@@ -28,6 +28,7 @@ import { registerInquiryGrammar } from "../inquiry-grammar/index.mjs";
 import { governorOf, governorRoutes } from "../host-governor/index.mjs";
 import { captureOf, captureOps } from "../capture/index.mjs";
 import { monitoringOf, monitoringOps } from "../monitoring/index.mjs";
+import { linkSweepOf, linkSweepOps } from "../link-sweep/index.mjs";
 import { connectionsOf, connectionsOps } from "../connections/index.mjs";
 import { inquiryOf, inquiryOps, inquiryLegGrades, inquiryFindings } from "../inquiry/index.mjs";
 import { citationOf, citationOps } from "../citation/index.mjs";
@@ -152,12 +153,17 @@ export class Store extends DurableObject {
     actionPlansOf(ctx);
     const capture = captureOf(ctx, { env });
     /* capture-requests: its table, its `sweep` resolver and its drain; the run sight it reads is ai-runs' (its R28),
-       and it registers its wait source with ai-runs (ai-runs R41). Built before monitoring and handed to it, so
-       monitoring's sweep scope check (its R64) is registered at construction and a sweep-named request drained before
+       and it registers its wait source with ai-runs (ai-runs R41). Built before link-sweep and handed to it, so
+       link-sweep's sweep scope check (its R12) is registered at construction and a sweep-named request drained before
        the first sweep service is judged, never refused for want of a check (K1163). */
     const captureRequests = captureRequestsOf(ctx, { env, storeName: () => this.#ownNamespace() || "bio",
       now: () => this.#nowMs(null), runs: aiRunsOf(ctx, env), aiRuns: aiRunsOf(ctx, env) });
-    monitoringOf(ctx, { env, captureRequests });
+    const monitoring = monitoringOf(ctx, { env });
+    /* link-sweep (N506), after monitoring, whose seam it registers with at creation (`registerSweep`, monitoring R66:
+       C-18.5's sweep arm, the fence and the slate share), handed the composed capture-requests (its R12) and capture.
+       Built before the scheduler, whose `gathering-sweep` owner (`linkSweepOf(ctx)`, scheduler R5) then reaches this
+       instance, the one per storage (K1210). */
+    linkSweepOf(ctx, { monitoring, captureRequests, capture });
     promotion.registerStep(STEP, promotionStep(ctx));   /* R10 (K861): control-plane's step (its R42), the testimony slot and the sight index */
     observationLogOf(ctx).listenToCapture(capture);
     schedulerOf(ctx, env);
@@ -316,6 +322,7 @@ export class Store extends DurableObject {
       ...actionPlansOps(actionPlansOf(ctx), url, body),   /* `optionpropose` answers a promise, which the frame awaits */
       ...escalationOps(escalationOf(ctx), url, body),
       ...monitoringOps(monitoringOf(ctx), url, body),
+      ...linkSweepOps(linkSweepOf(ctx), url),   /* `sweeps` (link-sweep R9), at the place monitoring's map held it (N506) */
       ...reviewOps(reviewOf(ctx), url, body),
       ...instanceSetupOps(instanceSetupOf(ctx, env), url, body),
       ...controlPlaneRoutes(ctx, url, body),
