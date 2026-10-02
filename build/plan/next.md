@@ -4,7 +4,7 @@
 
 ## Entries
 
-- S4 · 2026-10-02 · **promotion**: stamp the catalogue rows T27's L8–L11 jobs add (C-117.23–.25, C-69.5, and `docket`'s, `public-read`'s and `signatures`' new rows, as their T27 records name them); `CATALOG_VERSION` MINOR; `ROW_CENSUS` re-pinned (R50). **Why next:** promotion is L2, before the rows exist (P8, P10). Clears T27's red 2.
+- S4 · 2026-10-02 · **promotion**: stamp the catalogue rows T27's L8–L11 jobs add (C-117.23–.25, C-69.5, C-129.1–.26 (`docket`), and, `public-read`'s and `signatures`' new rows, as their T27 records name them); `CATALOG_VERSION` MINOR; `ROW_CENSUS` re-pinned (R50). **Why next:** promotion is L2, before the rows exist (P8, P10). Clears T27's red 2.
 
 - N519 · 2026-10-02 · **DEC-112 (5) as ruled on 1 October** (re-cut by K1275: DEC-119 withdrew K1254 and K1263): off-the-record source material may support a case and travels whole in the published case and case file with the attesting member's, the project's and the group's attestations, only its identity withheld ("Withheld", with the reason), its grade reflecting an unnamed source; K1134 Q6 (which record holds the project's and the group's attestations) decided by BOB in the re-cut. **Ready for T28** (re-cut, K1277) once PR #8 is on `main` (merged at T27's close).
 
