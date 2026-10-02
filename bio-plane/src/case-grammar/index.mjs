@@ -14,6 +14,7 @@
 import { parseFrontmatter } from "../record-grammar/index.mjs";
 import { caseDocumentRequiresV4Disclosures } from "./formats.mjs";
 import { fmSafe } from "./blocks.mjs";
+import { WHAT_CHANGED_HEAD } from "./edition.mjs";
 
 export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2,
          CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED, caseDocumentStatesMemberBlocks,
@@ -91,16 +92,23 @@ export const SECTIONS = Object.freeze({
     return f0 < 0 || b0 < 0 || b1 >= lines.length ? null : { f0, f1, b0, b1 };
   }),
   /* D-150 / REC-212: the statement's acknowledgement list — from `  statement_sha: ` to `completeness_excluded:`,
-     and from `**Who else read this statement.**` to the blank line before `## What Was Searched`. R8's `what_changed:`
-     block has a `  statement_sha: ` line of its own, which is not this run's: lines inside that block are skipped, so a
-     document without it locates exactly as before. */
+     and from `**Who else read this statement.**` to the blank line before `## What Was Searched`. R8's runs are never
+     this one's: its `what_changed:` block has a `  statement_sha: ` line of its own, and its section holds a member's
+     words, which may begin a line `**Who else read this statement.**`; lines inside either are skipped, so a document
+     without them locates exactly as before. */
   acknowledgements: located((lines) => {
-    const w0 = lines.indexOf("what_changed:");
-    let w1 = w0 + 1;
-    while (w0 >= 0 && w1 < lines.length && lines[w1].startsWith("  ")) w1++;
-    const f0 = lines.findIndex((l, i) => l.startsWith("  statement_sha: ") && (w0 < 0 || i < w0 || i >= w1));
+    const runOf = (head, inside) => {
+      const a = lines.indexOf(head);
+      let b = a + 1;
+      while (a >= 0 && b < lines.length && inside(lines[b])) b++;
+      return [a, b];
+    };
+    const runs = [runOf("what_changed:", (l) => l.startsWith("  ")),
+                  runOf(WHAT_CHANGED_HEAD, (l) => !l.startsWith("## "))];
+    const ours = (i) => runs.every(([a, b]) => a < 0 || i < a || i >= b);
+    const f0 = lines.findIndex((l, i) => l.startsWith("  statement_sha: ") && ours(i));
     const f1 = lines.indexOf("completeness_excluded:");
-    const b0 = lines.findIndex((l) => l.startsWith("**Who else read this statement.**"));
+    const b0 = lines.findIndex((l, i) => l.startsWith("**Who else read this statement.**") && ours(i));
     const b1 = lines.indexOf("## What Was Searched");
     return f0 < 0 || f1 < f0 || b0 < 0 || b1 < b0 + 1 ? null : { f0, f1, b0, b1: b1 - 1 };
   }),

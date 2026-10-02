@@ -228,3 +228,24 @@ test("R1 a /5 document states every block at once, each read back by its own rea
                "R8's statement_sha is never taken for the acknowledgement list's");
   assert.equal(SECTIONS.attribution(lines) !== null, true);
 });
+
+test("R3 R8 a 'What changed' statement whose words begin a line as the acknowledgement run does is never taken for that run, so re-authoring the acknowledgements cannot splice over it", () => {
+  const WHO = "**Who else read this statement.**";
+  const statement = `${WHO} We asked two members to check it.\n  statement_sha: not the list's`;
+  const lines = ["---", `format: ${V5}`, ...whatChangedBlockLines({ statement, began_as: "member" }),
+    "completeness:", "  statement_sha: abc", "completeness_excluded:", "---", "", ...whatChangedSectionLines(statement),
+    "## Scope", "", "The question.", "", `${WHO} Nobody yet.`, "", "## What Was Searched", ""];
+  const ack = SECTIONS.acknowledgements(lines);
+  assert.deepEqual(ack, { f0: lines.indexOf("  statement_sha: abc"), f1: lines.indexOf("completeness_excluded:"),
+                          b0: lines.indexOf(`${WHO} Nobody yet.`), b1: lines.indexOf("## What Was Searched") - 1 });
+  /* splicing the acknowledgement runs leaves the statement, and its sha, as signed */
+  const spliced = [...lines.slice(0, ack.f0), "  statement_sha: def", ...lines.slice(ack.f1, ack.b0), `${WHO} Two read it.`,
+                   ...lines.slice(ack.b1)];
+  const { fm, body } = read(spliced.join("\n"));
+  assert.equal(whatChangedOf(fm, body).statement, whatChangedText(statement));
+  /* negative control: without the acknowledgement's own line, the statement's line is not taken in its place */
+  assert.equal(SECTIONS.acknowledgements(lines.filter((l) => l !== `${WHO} Nobody yet.`)), null);
+  /* and the same words outside R8's section are the run, as before */
+  const outside = lines.map((l) => (l === WHAT_CHANGED_HEAD ? "## Earlier Notes" : l));
+  assert.equal(SECTIONS.acknowledgements(outside).b0, outside.findIndex((l) => l.startsWith(WHO)));
+});
