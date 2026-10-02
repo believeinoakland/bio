@@ -71,7 +71,7 @@ export function world({ profiles = ["test-port-ellery"], omit = [] } = {}) {
   const membership = membershipOf(host, { record });
   membership.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => clock.now });
-  promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
+  promotion.registerFact("producingGroup", "instance-setup", () => "test-group");
   provenanceOf(host, { record, membership, promotion, now: () => clock.now }).migrate();
   if (profiles) record.setSetting("jurisdiction_profiles", profiles, "test");
   /* connections' `refs` projection, as far as actions' read joins it (its R25). */
