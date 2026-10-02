@@ -67,7 +67,7 @@ import { provenanceOf } from "../provenance/index.mjs";
 import { captureOf } from "../capture/index.mjs";
 import { sourcesOf } from "../sources/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, OBJECT_TYPES, BASIS_GRADES,
-         EARNED_CAPTURE_CEILING } from "../record-grammar/index.mjs";
+         EARNED_CAPTURE_CEILING, isPublicHttpsLocator } from "../record-grammar/index.mjs";
 import { SECTIONS } from "../case-grammar/index.mjs";
 import { PUBLISH_ACT_CHECKS, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS, CASE_DISCLOSURE_CHECKS } from "./checks.mjs";
 import { CASE_AUTHORING_TABLES, migrateCaseAuthoring } from "./schema.mjs";
@@ -106,6 +106,10 @@ export const SELECTION_ID_CHUNK = 64;
 export const DRAFTS_READ_MAX = 500;
 /** R17: the IN lists of the searched section's reads are chunked at 50, under D-36's 100-bound-parameter ceiling. */
 const SEARCHED_CHUNK = 50;
+/** R40: the manifest's page, bias R18's largest, so a lens is read in as few pages as the bound allows. */
+const LENS_PAGE = 2000;
+/** R40: publication R12's `publishedTargets` reads at most 200 ids a call. */
+const PUBLISHED_TARGETS_CHUNK = 200;
 
 const str = (v) => String(v ?? "").trim();
 /** R34: what the pre-flight throws to roll back its run of op=publish (record-core R32). */
@@ -1467,6 +1471,53 @@ export class CaseAuthoring {
       return h.n === 1 ? { target: t, version: "only_capture", capture: h.one }
                        : { target: t, version: "undetermined", capture: null };
     });
+  }
+
+  /** R40 — DEC-103: THE LENS THIS CASE WAS PRODUCED UNDER, READ WHOLE. Every statement in the effective set of the
+   *  manifest frozen at this act (bias R13–R18, every page, read as the plane like the stamp beside it), each with each
+   *  of its citations marked whether it may be printed: public material only, being a public web address
+   *  (record-grammar's public-locator test, its R19) or a bundle or hash this copy has published (publication's
+   *  registries: R12's `publishedTargets` for a bundle id; R40's `published_shas` and `published_bundles.bundle_sha` for
+   *  a hash). Every other citation is handed on as withheld, so case-grammar R9 counts it and never writes it. Answers
+   *  `{in_force, stated, statements: [{bundle, id, kind, subject, text, justification, citations: [{citation,
+   *  printed}]}]}`; with no manifest in force, or one undetermined, no statement. */
+  #lensStatements(project) {
+    const read = (offset) => this.bias.biasManifest({ scope: "project", scopeId: project, viewer: "admin",
+                                                      limit: LENS_PAGE, offset });
+    let page = read(0);
+    if (!page || page.in_force !== true)
+      return { in_force: page && page.in_force === null ? null : false,
+               stated: page && page.in_force === null ? String(page.stated ?? "") : "no manifest was in force",
+               statements: [] };
+    const all = [...(Array.isArray(page.statements) ? page.statements : [])];
+    while (page.truncated && Array.isArray(page.statements) && page.statements.length) {
+      page = read(all.length);
+      all.push(...(Array.isArray(page.statements) ? page.statements : []));
+    }
+    const cited = (s) => (Array.isArray(s.citations) ? s.citations : [])
+      .map((c) => (c == null ? "" : String(c).trim())).filter(Boolean);
+    const asked = [...new Set(all.flatMap(cited).filter((c) => !isPublicHttpsLocator(c)))];
+    const hashes = asked.filter((c) => /^[0-9a-f]{64}$/i.test(c)).map((c) => c.toLowerCase());
+    const published = new Set();
+    /* Each hash is bound twice, so half a chunk keeps the statement under D-36's ceiling. */
+    const half = Math.floor(SEARCHED_CHUNK / 2);
+    for (let i = 0; i < hashes.length; i += half) {
+      const part = hashes.slice(i, i + half), marks = part.map(() => "?").join(",");
+      for (const r of this.#rows(`SELECT sha256 AS h FROM published_shas WHERE sha256 IN (${marks})
+                                  UNION SELECT bundle_sha AS h FROM published_bundles WHERE bundle_sha IN (${marks})`,
+                                 ...part, ...part)) published.add(String(r.h).toLowerCase());
+    }
+    const ids = asked.filter((c) => !/^[0-9a-f]{64}$/i.test(c));
+    for (let i = 0; i < ids.length; i += PUBLISHED_TARGETS_CHUNK) {
+      const t = this.publication.publishedTargets(ids.slice(i, i + PUBLISHED_TARGETS_CHUNK));
+      for (const [id, e] of Object.entries((t && t.registry) || {}))
+        if (e && e.editions && Object.keys(e.editions).length) published.add(id);
+    }
+    const isPublic = (c) => isPublicHttpsLocator(c) || published.has(/^[0-9a-f]{64}$/i.test(c) ? c.toLowerCase() : c);
+    return { in_force: true, stated: null,
+             statements: all.map((s) => ({ bundle: s.bundle_id, id: s.statement_id, kind: s.kind, subject: s.subject,
+                                           text: s.text, justification: s.justification,
+                                           citations: cited(s).map((c) => ({ citation: c, printed: isPublic(c) })) })) };
   }
 
   /** R17 — THE CASE'S OWN SUBJECTS, GATHERED DOWNWARD (`OBSERVATION-LOG-DESIGN.md` §8 row 4). `searchedSection` decides

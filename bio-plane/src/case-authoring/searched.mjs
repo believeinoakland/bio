@@ -1,5 +1,5 @@
 /* REC-96 / D-196 / IC-112 — THE COMPLETENESS STATEMENT'S `searched` SECTION (R17). Moved from `airun.mjs` (K82 (5),
- * N138), where `ai-runs`' later job deletes its copy; nothing there calls it.
+ * N138), a legacy file since deleted; this is the one copy.
  *
  * `OBSERVATION-LOG-DESIGN.md` §6: *at case signing: which levels were searched for the case's subjects, under which
  * authorities, with which outcomes and where each stopped — computed from the log, published with the case.*
