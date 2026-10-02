@@ -1,6 +1,6 @@
 # membership (T27)
 
-**Status** · session_013WoUArmhh78ngbjAEuCSMa · depth 2 · COMPLETE · handled B0
+**Status** · session_013WoUArmhh78ngbjAEuCSMa · depth 2 · COMPLETE · handled B1
 
 ## Entries applied
 
