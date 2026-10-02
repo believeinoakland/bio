@@ -12,7 +12,8 @@
    pairs, and holds what a run PROPOSED about a formed pair. It judges nothing, grades nothing, edits or closes no
    side, and a candidate is shown to a member only by PRESENT's reads (R25–R29), at the weight R24 gives it (R19).
 
-   THE ONE THING THIS SURFACE CAN GET WRONG THAT NOTHING ELSE CAN. `CLAUDE.md`: *sparse is normal at every level, and
+   THE ONE THING THIS SURFACE CAN GET WRONG THAT NOTHING ELSE CAN. The old `CLAUDE.md` (archived at
+   `docs/archive/CLAUDE-2026-09-26-old-process.md`): *sparse is normal at every level, and
    absence at one level is not evidence of absence at the next. Saying WHICH is true is a first-class obligation.* An
    empty pair list here is SIX different facts — nobody has asked a question; the questions hold no readings; the
    readings state no claim; the claims share no subject; the sources cannot be told apart for want of a date nobody

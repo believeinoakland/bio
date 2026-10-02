@@ -14,7 +14,8 @@
  * over the 26 pairs the pairing formed, byte-equal to what each run read (sha256 of the prompt 79ea662a…). Each
  * run was a separate Claude Code subagent told to use no tool but, for R2 and R3, one Read of that input file, which
  * holds NO gold label. The model identifiers are not written into the repository by the session's rule; M-162 says
- * which family each run was and the report to SCHEDULER names them. The runs are keyed by the pair's TEXT, not its
+ * which family each run was and the report to SCHEDULER (an old-process lane) named them. The runs are keyed by the
+ * pair's TEXT, not its
  * position, so the order the pairing returns cannot move an answer onto another pair. */
 export const PROMPT_SHA256 = "79ea662afed716df7db276bac07c4c85db7b9adf12a573bfc36459c3e721a061";
 export const RUNS = [
