@@ -147,8 +147,8 @@ import { RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "./run-rules/index.mjs";
    defence (each sentence pinned to the document it is quoted from, and a
    source-scan proving it holds no control-flow authority). Two deliverables with
    two suites, and the pack composes them. */
-import { judgementLayers, actionPlanningLayer, filingDraftingLayer, SKILL_CHECKS, SKILL_CHECK_KEYS }
-  from "./skilldoctrine.mjs";
+import { judgementLayers, actionPlanningLayer, filingDraftingLayer, editionStatementLayer, SKILL_CHECKS,
+         SKILL_CHECK_KEYS } from "./skilldoctrine.mjs";
 export { SKILL_CHECKS, SKILL_CHECK_KEYS };
 /* N345. The recommender's prompt is contradiction's (its R41): measured on the blind fixture of dissolved pairs
    under its digest, and carried here unchanged as the words a run recommends under (R27). The digest is checked
@@ -240,6 +240,8 @@ export const SOURCING = {
   action_planning_unpublished: "absent", /* while op=affordances publishes no planning act (R29) */
   filing_drafting: "authored",  /* skilldoctrine.mjs, BIO_Action_v0_1.md §4 rules 1, 7, 11, 13 (R30) */
   filing_drafting_unpublished: "absent", /* while op=affordances publishes no template proposal act (R30) */
+  edition_statement: "authored", /* skilldoctrine.mjs, BIO_Publication_v0_1.md §5A (R31) */
+  edition_statement_unpublished: "absent", /* while op=affordances publishes no edition statement proposal act (R31) */
   recipes:        "absent",     /* absent until the plane publishes recipes — see the header */
   recipes_published: "driven",  /* op=affordances .recipes, validated against .surfaces and .catalog (R10) */
   /* SK-2's five layers. `authored` throughout, and the label is the honest one:
@@ -473,6 +475,10 @@ export function disclosedLayers({ vocabularies, catalog, captureActs, recipes = 
        may use and must leave to a member, read from the published catalogue; a stated absence while the plane
        publishes no template proposal act. */
     filing_drafting: filingDraftingLayer(catalog),
+    /* R31 (DEC-101 (1), K1019). The doctrine a run drafting a new edition's statement of what changed works
+       under, and the acts it may use and must leave to a member, read from the published catalogue; a stated
+       absence while the plane publishes no edition statement proposal act. */
+    edition_statement: editionStatementLayer(catalog),
     recipes: Array.isArray(recipes) ? {
       load_when: "the run guides a member through a path to a result, or must say which steps reach it",
       sourcing: SOURCING.recipes_published,

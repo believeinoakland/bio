@@ -851,7 +851,7 @@ export const PLANNING_ACTS = Object.freeze({
   ]),
   leaves_to_a_member: Object.freeze([
     Object.freeze({ id: "optionadopt",   defined_by: "action-plans R11" }),
-    Object.freeze({ id: "standardadopt", defined_by: "standards R9" }),
+    Object.freeze({ id: "standardadopt", defined_by: "standards R10" }),
     Object.freeze({ id: "determine",     defined_by: "conformance R12" }),
     Object.freeze({ id: "filingapprove", defined_by: "filings R6" }),
     Object.freeze({ id: "filingsent",    defined_by: "filings R7" }),
@@ -863,13 +863,29 @@ export const PLANNING_ACTS = Object.freeze({
  *  under. */
 export const PLANNING_ACT = PLANNING_ACTS.proposes[0].id;
 
+/* THE PUBLISHED CATALOGUE BY ACT ID, the one lookup every act-reading layer
+   (R28, R30, R31) selects through; a non-list, or an entry with no string id,
+   contributes nothing. */
+const catalogueById = (catalog) => new Map((Array.isArray(catalog) ? catalog : [])
+  .filter((a) => a && typeof a.id === "string").map((a) => [a.id, a]));
+
+/* THE ONE READ OF A NAMED ACT, shared by those layers: the catalogue's own entry,
+   unchanged, with the requirement that defines it; an act the layer names and the
+   catalogue does not publish throws naming it (R1), so a half layer is never
+   rendered as a whole one. `layer` and `proposal` only word the refusal. */
+const actReader = (byId, layer, proposal) => (a) => {
+  if (!byId.has(a.id))
+    throw new Error(`the ${layer} layer names the act ${a.id} (${a.defined_by}) as the plane `
+      + `publishes it and invents none: op=affordances publishes ${proposal} but not this one`);
+  return { id: a.id, defined_by: a.defined_by, act: byId.get(a.id) };
+};
+
 /** THE `action_planning` LAYER over the published catalogue (R28, R29). Absent
  *  in R9's form while the catalogue holds no `PLANNING_ACT`; with it, every
  *  other act named above must be published too, or the render throws naming it
  *  (R1): a half layer is never rendered as a whole one. */
 export function actionPlanningLayer(catalog) {
-  const byId = new Map((Array.isArray(catalog) ? catalog : [])
-    .filter((a) => a && typeof a.id === "string").map((a) => [a.id, a]));
+  const byId = catalogueById(catalog);
   if (!byId.has(PLANNING_ACT)) return {
     load_when: "never, in this edition",
     sourcing: "absent",
@@ -879,12 +895,7 @@ export function actionPlanningLayer(catalog) {
       + "plan mode proposes plan options through, so this layer carries no doctrine for work no run can do; a "
       + "plan-mode run is refused before any turn.",
   };
-  const read = (a) => {
-    if (!byId.has(a.id))
-      throw new Error(`the action planning layer names the act ${a.id} (${a.defined_by}) as the plane `
-        + "publishes it and invents none: op=affordances publishes the planning act but not this one");
-    return { id: a.id, defined_by: a.defined_by, act: byId.get(a.id) };
-  };
+  const read = actReader(byId, "action planning", "the planning act");
   return {
     load_when: "the run proposes plan options, standards, comparisons, candidate theories or communication "
       + "drafts for an action or a plan, in the plan mode",
@@ -966,8 +977,7 @@ export const FILING_TEMPLATE_ACT = FILING_TEMPLATE_ACTS.proposes[0].id;
  *  act named above must be published too, or the render throws naming it, as
  *  R28's does (R1): a half layer is never rendered as a whole one. */
 export function filingDraftingLayer(catalog) {
-  const byId = new Map((Array.isArray(catalog) ? catalog : [])
-    .filter((a) => a && typeof a.id === "string").map((a) => [a.id, a]));
+  const byId = catalogueById(catalog);
   if (!byId.has(FILING_TEMPLATE_ACT)) return {
     load_when: "never, in this edition",
     sourcing: "absent",
@@ -976,12 +986,7 @@ export function filingDraftingLayer(catalog) {
     absent_because: `the plane's published catalogue holds no ${FILING_TEMPLATE_ACT} act, the one act a run `
       + "proposes a filing template's wording through, so this layer carries no doctrine for work no run can do.",
   };
-  const read = (a) => {
-    if (!byId.has(a.id))
-      throw new Error(`the filing drafting layer names the act ${a.id} (${a.defined_by}) as the plane `
-        + "publishes it and invents none: op=affordances publishes the template proposal act but not this one");
-    return { id: a.id, defined_by: a.defined_by, act: byId.get(a.id) };
-  };
+  const read = actReader(byId, "filing drafting", "the template proposal act");
   return {
     load_when: "the run proposes a filing template's wording, or critiques one in a comment",
     sourcing: "authored",
@@ -996,6 +1001,85 @@ export function filingDraftingLayer(catalog) {
       note: "this layer is INSTRUCTION. Every act it names is refused or labelled by the module that performs "
         + "it: proposed wording is stored apart and labelled as machine work, and becomes a template's text only "
         + "by a member's act, which refuses a machine. A run ignoring every word here gets past nothing.",
+    },
+  };
+}
+
+/* =========================================================================
+ * THE EDITION STATEMENT LAYER (R31; DEC-101 (1), K1019)
+ *
+ * `BIO_Publication_v0_1.md` §5A, the doctrine a run works under when it drafts a
+ * new edition's statement of what changed in it, and why: the draft is not a
+ * diff, and the signed statement is the group's, adopted by a member, the record
+ * keeping that it began as a machine draft. Each clause is a sentence of §5A
+ * found by R21's normaliser; nothing here rewords it. The layer holds no gate:
+ * the draft is stored apart and labelled machine work (`case-authoring` R39), and
+ * becomes a statement only through a member's signing act, which refuses a
+ * machine (its R38; `ratification` R2).
+ * ========================================================================= */
+
+/** Where the edition statement's doctrine is quoted from: canon, whole. */
+export const PUBLICATION_SOURCE = "docs/architecture/BIO_Publication_v0_1.md";
+export const EDITION_STATEMENT_SECTION = "§5A";
+
+/** The clauses of §5A a run drafting an edition's statement works under (R31),
+ *  in §5A's order, each a sentence of it. */
+export const EDITION_STATEMENT_CLAUSES = [
+  "The draft is not a diff: it is a detailed, high-level description of what changed and, as far as the system "
+  + "can determine it, why (the motivation for the revision).",
+  "The signed statement is the group's, adopted by a member, and the record keeps that it began as a machine "
+  + "draft.",
+];
+
+/* THE ACTS THE LAYER NAMES, EACH BY THE REQUIREMENT THAT DEFINES IT (R31), named
+   once here as a SELECTOR over the published catalogue, as R28's are:
+   `case-authoring` and `ratification` are later in the order (P4). `proposes` is
+   the one act a run may use; `leaves_to_a_member` the acts that make a statement
+   the group's (§5A). */
+export const EDITION_STATEMENT_ACTS = Object.freeze({
+  proposes: Object.freeze([
+    Object.freeze({ id: "whatchangedpropose", defined_by: "case-authoring R39" }),
+  ]),
+  leaves_to_a_member: Object.freeze([
+    Object.freeze({ id: "publish",    defined_by: "case-authoring R38" }),
+    Object.freeze({ id: "caseratify", defined_by: "ratification R2" }),
+  ]),
+});
+
+/** The act a run drafts an edition's statement through: while the plane
+ *  publishes it not, the layer is a stated absence. */
+export const EDITION_STATEMENT_ACT = EDITION_STATEMENT_ACTS.proposes[0].id;
+
+/** THE `edition_statement` LAYER over the published catalogue (R31). Absent in
+ *  R9's form while the catalogue holds no `EDITION_STATEMENT_ACT`; with it, every
+ *  other act named above must be published too, or the render throws naming it,
+ *  as R28's does (R1). */
+export function editionStatementLayer(catalog) {
+  const byId = catalogueById(catalog);
+  if (!byId.has(EDITION_STATEMENT_ACT)) return {
+    load_when: "never, in this edition",
+    sourcing: "absent",
+    body: {},
+    /* THE ABSENCE, STATED IN THE PACK ITSELF, as the recipes layer states its own. */
+    absent_because: `the plane's published catalogue holds no ${EDITION_STATEMENT_ACT} act, the one act a run `
+      + "drafts a new edition's statement of what changed through, so this layer carries no doctrine for work no "
+      + "run can do.",
+  };
+  const read = actReader(byId, "edition statement", "the edition statement's proposal act");
+  return {
+    load_when: "the run drafts a new edition's statement of what changed in it, and why",
+    sourcing: "authored",
+    body: {
+      clauses: EDITION_STATEMENT_CLAUSES,
+      source: PUBLICATION_SOURCE,
+      section: EDITION_STATEMENT_SECTION,
+      acts: {
+        proposes: EDITION_STATEMENT_ACTS.proposes.map(read),
+        leaves_to_a_member: EDITION_STATEMENT_ACTS.leaves_to_a_member.map(read),
+      },
+      note: "this layer is INSTRUCTION. Every act it names is refused or labelled by the module that performs "
+        + "it: a drafted statement is stored apart and labelled as machine work, and becomes the group's statement "
+        + "only by a member's signing act, which refuses a machine. A run ignoring every word here gets past nothing.",
     },
   };
 }
