@@ -35,3 +35,7 @@
 - `node checks/ownership.mjs … extraction tranche/T22`: 9 files changed by extraction; 0 failures
 
 Size (session_01MCwzkLcBBrXZmSHZiL39Zj): test runs 6, module lines 3997
+
+## J1 · COMPLETE
+
+Done at job/T22/extraction. N478: deleted bio-plane/test/fixtures/fw20/ (ncpc-zoom-meeting-dates.pdf, nss-staff-directory-2022-06-14.pdf) and bio-plane/test/fixtures/d460/walk-tier3-manifest.json; git grep over every package found no reader (staffdirectory reads its own test/m/extraction/fixtures copies; d460 agenda-p1/p2 kept). Drop bio-plane/test/fixtures/fw20/ from my tests at the merge (format's one failure until then). Stale notes re-worded, comments and labels only: d606 :19, tier2-wire :10-14, tier-pagewise.probe :53/:83/:281, m/extraction/relays.test.mjs (legacy-index 'today' -> past; plane hands every helper, door.mjs), testimony-slot :3. No src change, no generated artifact stale, still 3,997 lines. Finding for BOB: R65's wording 'where legacy-store's step runs it today' is stale (legacy-store retired). Tests: m/extraction 171/171; d606 28/0, tier2-wire 46/0; pdf-worker-binding green; test/m 4839 tests, 2 fail = accepted control-plane doorbell:310 and catalogue-end:15, no new red. Checks: architecture 0, coverage 63/63, ownership 0, format 1 (the expected fw20 entry). Record: build/jobs/T22/extraction.md.
