@@ -25,3 +25,7 @@ Size (session_01WHtvgo4BtJdCWMLR7cpZLQ): test runs 9, module lines 3984
 ## J1 · QUESTION
 
 R56, two points its items leave open; I am building on this reading and carry on. (a) instanceSign(statement) given text that is not one instanceStatement makes (a receipt's bio-receipt/1 text, a malformed kind, a non-string) THROWS, as instanceStatement does, before the key is asked: R56 names no refusal for it and RECEIPT_MALFORMED's catalogue row speaks of a receipt, so I mint no code; this keeps the door from ever signing a receipt. (b) instanceKeys() answers a plain array [{key_id, public_key, first_used}] ordered by first_used then key_id (R11's shape for a list), not an {ok, keys} envelope. Say if either should differ. Lines after R56: 3,985 of 4,000.
+
+## J2 · COMPLETE
+
+provenance T23 complete (record: Completion). N496 (mk6 sends reason; red 8 clears, 10/0), N484 (R48 test as corpus-export reads register.bytes), R56 (instanceStatement/instanceSign/instanceKeys per K1126, tests with B1's negative controls), N497 (fixture providers; control-plane step). provenance 117/117; test/m 5025 tests, 1 fail = accepted red 9 (control-plane inbox-door:81) only; format/architecture/coverage (56/56)/ownership 0 failures. REPORT: the plane's bundle bio-plane/dist/bio-plane.bundled.mjs is stale (not regenerated); R48 and R56 'not yet met' marks are yours to lift. Lines 3,984 of 4,000.
