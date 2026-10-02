@@ -41,3 +41,7 @@ Size (session_01W16gVN2HRjfWXSGsuuntKT): test runs 11, module lines 2035
 ## J1 · REPORT
 
 Stale: the plane bundle (bio-plane/dist/bio-plane.bundled.mjs) from bio-plane/src/filings/index.mjs; I regenerated nothing. Requirement marks for you: filings R9 and its Uses line for attestation still read '(not yet met: T25)'; both are met now.
+
+## J2 · COMPLETE
+
+N512's user side applied: R9's exhibits read attestation.attestationsOf (its R7), handed in or via attestationOf on the host; none reachable reads undetermined, said so. Fixture builds the real attestation; new interface test 'R9 an exhibit's attestations are attestation.attestationsOf's answer…' (real module, stand-in, undetermined, throw, refusal, absent). Red 7 cleared for filings. Re-scan: N502/N508 notes already re-worded; two stale 'publication (its R36)' pointers re-worded to public-read R8 (K651). Rows changed: none (red 6: none from this job). filings 60/60. Whole test/m: 5333 tests, 5318 pass, 4 fail, 11 todo (base 7 fail); the 4 failed before this change too, none in filings: control-plane catalogue-end R43/R22 and families R22 (red 8); affordances sources.test.mjs:117 reattest via a stand-in provenance attest (red 7 or 9, my reading); promotion write-path.test.mjs:218 R53 via the plane's /list (red 9, my reading; please confirm). format, architecture, coverage 31/31, ownership: 0 failures. Record: build/jobs/T25/filings.md on job/T25/filings.
