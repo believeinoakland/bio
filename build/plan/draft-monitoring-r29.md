@@ -196,7 +196,7 @@ A copy has no index of the web. A third-party search engine would let a provider
 - **R45** A run's request may name a sweep (`sweep: "<bundle>#<id>"`). The drain then files the request with `matched_sweep` set to that sweep and `deeming_actor` set to the run (R38). It does so only when a scope check, registered once at start by `monitoring` (K31's pattern; this module is earlier, P4), answers that the sweep is ratified and not held, and that every locator of the request is in its scope. Otherwise the request is refused `CAPTURE_SWEEP_OUT_OF_SCOPE`. The request counts toward the sweep's `per_run` on the sweep's next run. *(not yet met: T23, or a later tranche by BOB's placement)*
 
 ## `modules.json`
-- `monitoring` `uses` adds `project-stage` (index 57, earlier than `monitoring` at 72). No other edge changes: `scheduler`, `queue-producers` and `capture-requests`' registration already follow the order.
+- `monitoring` `uses` adds `project-stage` (index 58, earlier than `monitoring` at 73). No other edge changes: `scheduler`, `queue-producers` and `capture-requests`' registration already follow the order.
 
 ---
 

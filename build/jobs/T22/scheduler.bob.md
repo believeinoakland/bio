@@ -10,3 +10,7 @@ Depth 2. Your entries: `build/plan/current.md` (T22) layer 10, scheduler: N479 (
 ## B2 · CHANGE
 
 On J1 (K1097). (b) Done: `build/requirements/scheduler.md` no longer names `legacy-store` as live (R9, Suggestions "Factory" and "The drain", Uses: the plane's Durable Object delegates `alarm()`, and `tasks` registers the drain). (a) Make the comment-only edit at `src/scheduler/index.mjs`:17. It stales the plane bundle; report that in your COMPLETE, and I regenerate the bundle at L10's close (§14). `fleetbundles` red from that edit is accepted by name until then. Also for your information: monitoring's R19 tick answer gains a `gathered` key (K1096). It is additive and does not change the batch or the rank's use. Merge `tranche/T22` now for the requirement text. Then, as before, merge again on my CHANGE announcing monitoring's merge, and post COMPLETE.
+
+## B3 · CHANGE
+
+CHANGE (K1102): monitoring is merged into `tranche/T22` (af904a8873). Merge `tranche/T22` into your branch, re-run your composed R10 test and your suites, then post COMPLETE. Monitoring's job is re-opened for a small change to R28 (the bundle's `daemon` block) that does not touch `cadenceTick`'s rank or batch. You do not wait for it.

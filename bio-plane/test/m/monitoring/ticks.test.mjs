@@ -44,8 +44,9 @@ test("R19 the cadence tick: due while a subject is due; wake now + 1 s, else nex
   assert.equal(w.m.cadenceDue(NOW_MS), NOW_MS);
   assert.equal(w.m.cadenceWake(NOW_MS), NOW_MS + MONITOR_CADENCE_DELAY_MS);
   const t = await w.m.cadenceTick(NOW_MS);
-  assert.deepEqual(Object.keys(t).sort(), ["addresses", "at", "candidates", "configured", "epoch", "failed", "monitored", "next",
-                                           "paused", "skipped", "ticked", "unscheduled"].sort());
+  assert.deepEqual(Object.keys(t).sort(), ["addresses", "at", "candidates", "configured", "epoch", "failed", "gathered", "monitored",
+                                           "next", "paused", "skipped", "ticked", "unscheduled"].sort());
+  assert.deepEqual(t.gathered, { due: 0, captured: [], failed: [], skipped: [] }, "R28's requests: none here");
   assert.deepEqual([t.configured, t.at, t.candidates, t.ticked.length, t.failed.length, t.paused], [true, iso(NOW_MS), 1, 1, 0, { paused: false }]);
   assert.deepEqual([t.ticked[0].bundle, t.ticked[0].frequency, t.ticked[0].status, t.ticked[0].reeval_raised],
                    [id, "daily", "unchanged", false]);
@@ -424,28 +425,57 @@ test("R30 the due slate: every monitored address due, open named request and rat
   assert.ok(V);
 });
 
-test("R25 each tick's outcome is recorded with capture's reachability: success, refused, a failed fetch; governed apart", async () => {
+test("R25 each tick's outcome is recorded with capture's reachability as its class: success; removed and any other refusal as source_refused with the status; a failed fetch as fetch_failed; governed apart, never counted", async () => {
   const w = world();
   const loc = "https://records.example.org/reach.txt";
   const id = "INFO-2026-0340-reach";
   w.monitored(id, loc, "reach-v1");
+  /* every outcome capture records, as capture hands it to a listener (its R8) */
+  const heard = [];
+  assert.equal(w.capture.on("source-outcome", "r25-test", (o) => { heard.push(o); }).ok, true);
   const reach = () => w.capture.sourceReachability({ addressNorm: loc });
-  w.net.routes[loc] = serve("x", "text/plain", 404);
-  await w.m.monitor({ bundleId: id, viewer: DAEMON });
-  w.net.routes[loc] = serve("x", "text/plain", 500);
-  await w.m.monitor({ bundleId: id, viewer: DAEMON });
-  w.net.routes[loc] = new Error("reset");
-  await w.m.monitor({ bundleId: id, viewer: DAEMON });
+  const tickAs = async (route) => {
+    w.net.routes[loc] = route;
+    const n = heard.length;
+    await w.m.monitor({ bundleId: id, viewer: DAEMON });
+    assert.equal(heard.length, n + 1, "one outcome per tick");
+    const o = heard.at(-1);
+    assert.equal(o.addressNorm, loc, "recorded against the document address");
+    return [o.outcome, o.status, o.counted, reach().last_outcome];
+  };
+  assert.deepEqual(await tickAs(serve("reach-v1")), ["success", 200, true, "success"]);
+  assert.deepEqual(await tickAs(serve("x", "text/plain", 404)), ["source_refused", 404, true, "source_refused"], "removed");
+  assert.deepEqual(await tickAs(serve("x", "text/plain", 410)), ["source_refused", 410, true, "source_refused"], "removed");
+  assert.deepEqual(await tickAs(serve("x", "text/plain", 500)), ["source_refused", 500, true, "source_refused"], "another refusal");
+  assert.deepEqual(await tickAs(new Error("reset")), ["fetch_failed", null, true, "fetch_failed"], "a failed fetch");
   const r = reach();
-  assert.equal(r.consecutive_failures, 3);
+  assert.deepEqual([r.consecutive_failures, r.failures_total, r.governed_refusals], [4, 4, 0]);
   assert.equal(r.fallback_eligible, true, "a monitored source that stops answering reaches the fallback");
+  /* governed: recorded apart, never counted as the source failing */
   w.gov.refuse.push("records.example.org");
+  const n = heard.length;
   await w.m.monitor({ bundleId: id, viewer: DAEMON });
-  assert.equal(reach().consecutive_failures, 3, "a governed refusal never counts as the source failing");
+  assert.deepEqual(heard.slice(n).map((o) => [o.outcome, o.status, o.counted]), [["governed", null, false]]);
+  const g = reach();
+  assert.deepEqual([g.consecutive_failures, g.failures_total, g.governed_refusals, g.last_outcome], [4, 4, 1, "governed"]);
   w.gov.refuse.length = 0;
-  w.net.routes[loc] = serve("reach-v1");
-  await w.m.monitor({ bundleId: id, viewer: DAEMON });
-  assert.equal(reach().consecutive_failures, 0, "a success resets the run");
+  /* a success resets the run */
+  assert.deepEqual(await tickAs(serve("reach-v1")), ["success", 200, true, "success"]);
+  assert.equal(reach().consecutive_failures, 0);
+  /* a Drive export that answers its shell (declared, or sniffed from the bytes) is source_refused, as acquire records the
+     same answer; its real export is a success; each recorded once */
+  const DOC = "https://docs.google.com/document/d/1AbCdEfGhIjKlMnOpQrStUvWxYz0123456789r25/edit";
+  const EXP = "https://docs.google.com/document/d/1AbCdEfGhIjKlMnOpQrStUvWxYz0123456789r25/export?format=odt";
+  w.monitored("INFO-2026-0341-drive", DOC, "odt r25", { row: { locator: EXP } });
+  w.net.routes[EXP] = serve("<html>sign in</html>", "text/html");
+  const d = heard.length;
+  assert.equal((await w.m.monitor({ bundleId: "INFO-2026-0341-drive", viewer: DAEMON })).body.reason, "DRIVE_TICK_EXPORT_IS_THE_SHELL");
+  w.net.routes[EXP] = serve("<!DOCTYPE html><html><head><title>x</title></head><body>app</body></html>", "application/vnd.oasis.opendocument.text");
+  assert.equal((await w.m.monitor({ bundleId: "INFO-2026-0341-drive", viewer: DAEMON })).body.reason, "DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL");
+  w.net.routes[EXP] = serve("odt r25", "application/vnd.oasis.opendocument.text");
+  assert.equal((await w.m.monitor({ bundleId: "INFO-2026-0341-drive", viewer: DAEMON })).body.ok, true);
+  assert.deepEqual(heard.slice(d).map((o) => [o.addressNorm, o.outcome, o.status]),
+    [[DOC, "source_refused", 200], [DOC, "source_refused", 200], [DOC, "success", 200]]);
 });
 
 test("R46 counts() answers the rows held in R41's three tables, whole-store; synchronous, writes nothing, never throws", async () => {

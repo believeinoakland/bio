@@ -137,7 +137,7 @@ export function world({ profiles = ["test-port-ellery"], env = null, evidence = 
   const credentials = credentialsOf(host, { record, membership });
   credentials.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => new Date(clock.ms).toISOString() });
-  promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
+  promotion.registerFact("producingGroup", "instance-setup", () => "test-group");
   const prov = provenanceOf(host, { record, membership, promotion, now: () => new Date(clock.ms).toISOString() });
   prov.migrate();
   const obs = observationLogOf(host, { record, membership, provenance: prov, extraction: null });
@@ -198,6 +198,15 @@ export function world({ profiles = ["test-port-ellery"], env = null, evidence = 
         author, meta: { object_type: "information", group: "test-group", title: `Monitored ${id}`, current_state: "collected",
                         created: NOW, last_updated: NOW },
         files: [...all, ...files], register });
+    },
+    /** The participants of the project `project`: `owner` its owner and `joined` participants who own nothing, as
+     *  membership's sight (its R43) and owner predicate (its R54) read them. A document is in the project when its
+     *  front matter says `project: <id>` (pass `lines`), which promotion projects onto its row. */
+    inProject(project, { owner = "carol", joined = [] } = {}) {
+      const part = (m, own) => st.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated)
+        VALUES (?, ?, 'joined', ?, ?, ?) ON CONFLICT(project_id, member_id) DO UPDATE SET owner=excluded.owner`, project, m, own, NOW, NOW);
+      if (owner) part(owner, 1);
+      for (const m of joined) part(m, 0);
     },
     /** A monitored document with a captured baseline: `baseline` bytes held, registered and named in the register. */
     monitored(id, locator, baselineBytes, { freq = null, row = {}, lines = [], enabled = true } = {}) {

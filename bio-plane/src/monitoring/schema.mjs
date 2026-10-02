@@ -1,7 +1,9 @@
-/* monitoring's tables (requirements: `build/requirements/monitoring.md`, R21, R13, R41; K4). Moved from `schema.mjs`
- * (legacy-store) with their comments. All three are DERIVED and declared to record-core's purge (K23, R41):
+/* monitoring's tables (requirements: `build/requirements/monitoring.md`, R21, R13, R41, R52; K4). The first three moved
+ * from `schema.mjs` (legacy-store) with their comments; they are DERIVED and declared to record-core's purge (K23, R41):
  * `monitor_fired` by `subject`; `monitor_tick_epoch` and `monitor_address_type` only by a whole-store purge, an
- * address outliving any one version. */
+ * address outliving any one version. `monitor_address_frequency` (R52, K1019) holds members' acts, append-only, and is
+ * declared to purge only by a whole-store purge for the same reason. `monitor_gathering_run` (R28, K1096), the record of
+ * every attempt at a named request, is declared to purge by the bundle that carries the request. */
 
 export const MONITORING_SCHEMA = `
 -- REC-26 / MACHINE-PROCESSES.md risk 2: the IDEMPOTENCE KEY for the two periodic
@@ -72,15 +74,64 @@ CREATE TABLE IF NOT EXISTS monitor_address_type (
   confidence    TEXT,
   contract      TEXT,            -- substance, membership or unmonitorable, NULL when undetermined
   basis         TEXT,            -- why no type was read, when none was
-  read_at       TEXT NOT NULL
+  read_at       TEXT NOT NULL,
+  unchanged_run INTEGER NOT NULL DEFAULT 0,  -- R18: checks in a row that found the substance unchanged
+  run_since     TEXT             -- R18: the first check of that run, NULL when the run is 0
 );
-CREATE INDEX IF NOT EXISTS monitor_address_type_raw ON monitor_address_type(address);`;
+CREATE INDEX IF NOT EXISTS monitor_address_type_raw ON monitor_address_type(address);
+
+-- R52 (K1019): AN ADDRESS'S OWN FREQUENCY, set by a member owning a project that holds a
+-- monitored document there, with a canned or custom reason. APPEND-ONLY: a setting is never
+-- edited, a later one replaces it (the highest seq at the address governs, R17), and every
+-- one stays readable as the address's history. frequency NULL returns the address to R14's
+-- rule. Keyed on the NORMALISED address, as monitor_address_type and captured_locators are.
+-- Declared to purge only by a whole-store purge: an address outlives any one version.
+CREATE TABLE IF NOT EXISTS monitor_address_frequency (
+  address_norm  TEXT    NOT NULL,
+  seq           INTEGER NOT NULL,  -- 1, 2, ... per address, in the order set
+  address       TEXT    NOT NULL,  -- the address as the member named it
+  frequency     TEXT,              -- a MONITOR_FREQ word, or NULL (R14's rule)
+  reason        TEXT    NOT NULL,  -- a canned key, or 'custom'
+  reason_text   TEXT,              -- the member's words, for 'custom' only
+  author        TEXT    NOT NULL,
+  at            TEXT    NOT NULL,
+  PRIMARY KEY (address_norm, seq)
+);
+
+-- R28 (K1096): THE RECORD OF EVERY ATTEMPT AT A NAMED REQUEST of a bundle's
+-- data/gathering.json, one row per attempt, never edited. A request is due by R14's interval
+-- from its last attempt (a governed attempt is our pacing and is not one); outcome is
+-- captured (new bytes, landed as an Information bundle at collected: landed), held (bytes
+-- the record already holds: nothing new lands), failed (no locator filed: tried says each
+-- locator's answer) or governed. Declared to purge by the bundle that carries the request.
+CREATE TABLE IF NOT EXISTS monitor_gathering_run (
+  bundle_id    TEXT    NOT NULL,   -- the bundle whose data/gathering.json carries the request
+  request_id   TEXT    NOT NULL,   -- the request's GATH id
+  seq          INTEGER NOT NULL,   -- 1, 2, ... per request
+  at           TEXT    NOT NULL,
+  outcome      TEXT    NOT NULL,   -- captured, held, failed or governed
+  locator      TEXT,               -- the locator that filed, when one did
+  tried        TEXT    NOT NULL,   -- JSON: [{locator, outcome, status, reason}] in the order tried
+  capture_sha  TEXT,
+  grade        TEXT,
+  landed       TEXT,               -- the Information bundle the new bytes landed as, when promoted
+  detail       TEXT,               -- why nothing landed, when bytes were filed and nothing was promoted
+  PRIMARY KEY (bundle_id, request_id, seq)
+);`;
+
+/* R18: the columns `monitor_address_type` gained after it was first created, added to a table that predates them. */
+const ADDED_COLUMNS = Object.freeze([
+  ["monitor_address_type", "unchanged_run", "INTEGER NOT NULL DEFAULT 0"],
+  ["monitor_address_type", "run_since", "TEXT"],
+]);
 
 /** R41: this module's tables, as record-core's purge declaration names them. */
 export const MONITORING_TABLES = Object.freeze([
   { name: "monitor_fired", keys: ["subject"] },
   { name: "monitor_tick_epoch", keys: [] },
   { name: "monitor_address_type", keys: [] },
+  { name: "monitor_address_frequency", keys: [] },
+  { name: "monitor_gathering_run", keys: ["bundle_id"] },
 ]);
 
 /** Which purge declaration names one of this module's tables (record-core R21). */
@@ -92,4 +143,8 @@ export function monitoringOwns(t) {
 export function migrateMonitoring(sql) {
   const bare = MONITORING_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const s of bare.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+  for (const [table, column, type] of ADDED_COLUMNS) {
+    const has = [...sql.exec(`PRAGMA table_info(${table})`)].some((c) => c.name === column);
+    if (!has) sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
+  }
 }
