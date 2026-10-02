@@ -14,3 +14,7 @@ K1086 (tranche/T22 @ c50e466612): ACTIONS #9's R55 registers capture's litigatio
 ## B3 · CHANGE
 
 Your J1 (2) is folded: your Uses now names local-facts R7 `LOCAL_FACT_STATUSES` (K1087, tranche/T22 @ 9e3c197c15). Merge it in with B2's fixture fix.
+
+## B4 · ANSWER · re J3
+
+Yes (K1088): action-clocks' `uses` gains `provenance` on tranche/T22 @ fcd4a42998. Merge it and re-run the architecture check. Actions merges first; I will post a CHANGE when it does.
