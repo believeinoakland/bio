@@ -481,6 +481,27 @@ test("R27: the appetite ceilings and their use as captureSubresources' defaults"
   assert.equal(out.manifest.platform.ceiling_used, null, "no platform number is declared");
 });
 
+test("R35: called without cap, a page naming more than 400 fetchable references gets exactly 400 fetches, the rest CAP_REACHED", async () => {
+  assert.equal(SUBRESOURCE_CAP, 400);
+  const N = 457;
+  const html = "<main>" + Array.from({ length: N }, (_, i) => `<img src="/n${i}.png">`).join("") + "</main>";
+  const { out, calls } = await run(html);
+  assert.equal(calls.length, 400);
+  assert.equal(new Set(calls).size, 400, "400 distinct references, each fetched once");
+  assert.equal(out.subresources.length, N);
+  const capped = out.subresources.filter((r) => r.reason === "CAP_REACHED");
+  assert.equal(capped.length, N - 400);
+  for (const r of capped) {
+    assert.deepEqual([r.ok, r.reason, r.cap], [false, "CAP_REACHED", 400], r.url);
+    assert.ok(!calls.includes(r.url), `${r.url} is not fetched`);
+  }
+  assert.equal(out.subresources.filter((r) => r.ok).length, 400);
+  assert.equal(out.attempted, 400);
+  assert.equal(out.manifest.truncated, true);
+  assert.equal(out.manifest.limits.cap, 400);
+  assert.equal(out.manifest.complete, false);
+});
+
 test("R28: no network and no store of its own; the same inputs and callback outputs give the same outputs", async () => {
   const realFetch = globalThis.fetch;
   globalThis.fetch = () => { throw new Error("the module reached the network itself"); };
