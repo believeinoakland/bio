@@ -50,7 +50,7 @@
  *
  * Condition (1) is a claim by a producer about its own output; condition (2) is
  * a fact about the text in hand. That is deliberately the SAME two-condition
- * shape `mergeTier3Text` already uses one tier up (D-252, `src/extraction/pipeline.mjs`), and the
+ * shape `mergeTier3Text` already uses one tier up (D-252, `src/reading-pipeline/index.mjs`), and the
  * same one-directional discipline `OCR_PRODUCER_MARKERS` uses (D-251): a
  * detector whose miss is the status quo ante. Character count never promotes a
  * page; it only ever refuses to demote one. Measured: 0 pages degraded, the
