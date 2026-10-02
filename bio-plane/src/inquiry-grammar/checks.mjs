@@ -2,9 +2,9 @@
  *
  * Each row is `{check, where, translation}`, its number and translation moved from the check catalogue
  * (`checks/bio-checks.mjs`, legacy-checks) unchanged. `LEAD_NOT_EVIDENCE` (C-54.1) is raised here, by
- * `leadLegFindings` (`./grammar.mjs`), and its `where` names that site (changed from the catalogue's: awaiting stamp).
- * The other five are minted by `inquiry`'s acts (its R20, R11, R23, R27), which read them from here; their `where`s
- * name those acts' sites, unchanged. This file imports nothing. */
+ * `leadLegFindings` (`./grammar.mjs`), and its `where` names that site (changed from the catalogue's; stamped by
+ * 1.50.0, T20's layer 2). The other five are minted by `inquiry`'s acts (its R20, R11, R23, R27), which read them
+ * from here; their `where`s name those acts' sites, unchanged. This file imports nothing. */
 
 /* =====================================================================
  * MK-4 / IC-135 / IC-136 — THE LEAD (D-194, `MEMBER-KNOWLEDGE-DESIGN.md` §5):

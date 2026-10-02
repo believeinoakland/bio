@@ -217,7 +217,7 @@ test("R5 the row: this module's LEAD_CHECKS is exactly {LEAD_NOT_EVIDENCE: C-54.
   for (const r of Object.values(OBSERVATION_LEAD_CHECKS)) assert.notEqual(r.check, "C-54.1");
 });
 
-test("R7 INQUIRY_GRAMMAR_CHECKS: the six rows, each {check, where, translation}, number and translation unchanged; the five inquiry mints keep their `where`; LEAD_NOT_EVIDENCE's names the site that raises it now (awaiting stamp); the table has one name", async () => {
+test("R7 INQUIRY_GRAMMAR_CHECKS: the six rows, each {check, where, translation}, number and translation unchanged; the five inquiry mints keep their `where`; LEAD_NOT_EVIDENCE's names the site that raises it now (stamped by 1.50.0); the table has one name", async () => {
   assert.ok(Object.isFrozen(INQUIRY_GRAMMAR_CHECKS));
   assert.deepEqual(Object.keys(INQUIRY_GRAMMAR_CHECKS),
                    ["LEAD_NOT_EVIDENCE", "NOT_INQUIRIES", "SELF_BASIS", "BASIS_CYCLE", "MACHINE_CANNOT_DIVIDE", "MACHINE_CANNOT_GROUND"]);
