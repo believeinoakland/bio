@@ -34,9 +34,10 @@ export const ACTOR_CLASSES = ['daemon', 'session', 'member'];
  *
  * WHY THE MINT COMPOSES FROM HERE TOO. The prefixes are the CONTROL PLANE's
  * own vocabulary, and a refusal that reads one literal while the stamp writes
- * another is precisely the drift D-164 exists to stop. index.mjs, store.mjs and
- * query.mjs all already import this module, so the stamp and the refusal are
- * now the same two strings and cannot disagree at all.
+ * another is precisely the drift D-164 exists to stop. When this was written the
+ * legacy index, store and query modules each imported it; today control-plane's
+ * routes stamp and every refusing module imports this one, so the stamp and the
+ * refusal are the same two strings and cannot disagree at all.
  *
  * TWO PREDICATES, AT TWO STRENGTHS, AND THE NARROWER ONE IS NOT AN OVERSIGHT.
  * `isMachineStamp` answers "did the control plane mint this identity", by

@@ -73,20 +73,21 @@ export const EARNED_GRADE_SOURCES = ['resolution', 'capture'];
  * a member reads and the rule the gate runs can drift apart silently. The
  * wording is published from `src/affordances.mjs` (DEC-8: a surface renders
  * what it received and never composes a prompt of its own), and that module
- * CANNOT import `store.mjs` — `store.mjs` already imports IT (DISPOSITIONS,
- * REOPENABLE_FROM, deriveActs), so the import would close a cycle and evaluate
- * a top-level object literal against bindings still in the temporal dead zone.
- * That is the same wall REC-35 hit and wrote up on VOCABULARIES.
+ * could not import `store.mjs` — the legacy store, since retired, imported IT
+ * (DISPOSITIONS, REOPENABLE_FROM, deriveActs), so the import would have closed a
+ * cycle and evaluated a top-level object literal against bindings still in the
+ * temporal dead zone. That is the same wall REC-35 hit and wrote up on VOCABULARIES.
  *
  * SO THE CONSTANT MOVES TO THE LOWEST LAYER BOTH SIDES ALREADY IMPORT, which is
  * this file — and this is not a demotion of the store's authority but a
- * promotion to where the REFUSAL is actually computed. `checkEarnedLeg` below
- * is the arm that refuses a leg claiming MORE than the ceiling, and the old
- * battery's earnedbasis.test.mjs arm (c) measured (deleted at T20) that it was the ONLY thing
- * standing between the record and a capture grade the record cannot support.
- * `Store.earnedBasisRegistry` now IMPORTS this value to build the registry that
- * arm reads. One value, three readers (the registry, the refusal, the published
- * fence), no copy — the DISPOSITIONS/REC-11 arrangement exactly.
+ * promotion to where the REFUSAL is actually computed. `checkEarnedLeg`
+ * (inquiry-grammar's today) is the arm that refuses a leg claiming MORE than the
+ * ceiling, and the old battery's earnedbasis.test.mjs arm (c) measured (deleted at
+ * T20) that it was the ONLY thing standing between the record and a capture grade
+ * the record cannot support. The earned registry that arm reads, the legacy
+ * store's `earnedBasisRegistry` then and inquiry's `earnedForDoc` today, IMPORTS
+ * this value to build it. One value, three readers (the registry, the refusal, the
+ * published fence), no copy — the DISPOSITIONS/REC-11 arrangement exactly.
  *
  * AND THE LETTER ABOVE IT IS DERIVED, NOT TYPED. "It never reaches Grade A" is
  * true because A is one rank stronger than the ceiling in the SAME array

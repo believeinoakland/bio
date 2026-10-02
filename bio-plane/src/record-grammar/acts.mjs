@@ -4,7 +4,7 @@
    translation unchanged; that family holds them by reference until its last owner takes its rows (rule 1). C-33.41's
    `where` was re-pointed on the move (N430, K720): `src/store.mjs actNoCitation`, which it named, was deleted by
    LEGACY-STORE #8, and the code is minted at entities' and progressions' sites, each through its module's one refusal
-   helper. The row change is `awaiting stamp` (promotion, layer 2). */
+   helper. The row change was stamped by 1.49.0 (PROMOTION #20, T19 layer 2). */
 
 export const SHARED_ACT_CHECKS = Object.freeze({
   /* ---------------------------------------------------------------------------
