@@ -23,3 +23,7 @@ ANSWER (K1168), re J2. B2 answered J1; read it if you have not.
 (2) Your note for plane is superseded by K1166 (2): in T23 the three public reads are reached as `op=publicread&name=<name>` only, and plane does not pass `helpers.publicReads`. Keep `NETWORK_NOTICES_PUBLIC_READS` exported and the three specs in `OPS` (R10 states them); nothing in T23 hands that list to the door.
 (3) Your four stamping lists for the door are forwarded to control-plane now.
 Your next step stands: wait for my CHANGE announcing affordances' merge, then merge `tranche/T23`, re-run, and post COMPLETE.
+
+## B4 · CHANGE
+
+CHANGE (K1169): affordances is merged into `tranche/T23` (R32: `noticepost` attested, `whatchangedpropose` absent `undetermined`, the eight reads in NON_ACTS). Merge `tranche/T23` into your branch, re-run your tests and control-plane's `totality.test.mjs` (red 5 should now clear with your NEEDS rows), and post COMPLETE.
