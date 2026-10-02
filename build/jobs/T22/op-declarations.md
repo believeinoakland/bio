@@ -1,6 +1,6 @@
 # op-declarations (T22)
 
-**Status** · session_01Vis1UcRpppUp59WfiJjKP4 · depth 2 · RUNNING until 2026-10-02T05:09:41Z (bio-plane test/m, mine and baseline) · handled B1
+**Status** · session_01Vis1UcRpppUp59WfiJjKP4 · depth 2 · RUNNING until 2026-10-02T05:09:41Z (bio-plane test/m, mine and baseline) · handled B2
 
 ## J1 · QUESTION
 
