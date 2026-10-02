@@ -1,10 +1,10 @@
 /* escalation's ops map (R25; `build/extraction/legacy-store.md` §4.2 (6), §4.4 (8); `build/plan/current.md` rule 5;
- * K760's pattern): the ten route arms `store.mjs` named (N216, K262), with R27's `declinetoescalate` and R28's
- * `escalationstatus` (DEC-89), as one object the composition root spreads into its route map (K671). R29's
- * `escalationreasondraft` arm is T23's, with R29 (K1025, N485): until then the map has no such key. Each arm is a function of no arguments that
- * answers what the named service answers. `author` and `viewer` are the control plane's stamps, read from the query
- * and set after the body's fields, so a body never supplies them; which credential reaches an op is
- * `op-declarations`' and `control-plane`'s, never this map's. */
+ * K760's pattern): the ten route arms the legacy store named (N216, K262), with R27's `declinetoescalate`, R28's
+ * `escalationstatus` (DEC-89) and R29's `escalationreasondraft` (K1025, N485), as one object the composition root
+ * spreads into its route map (K671). Each arm is a function of no arguments that answers what the named service
+ * answers. `author` and `viewer` are the control plane's stamps, read from the query and set after the body's fields,
+ * so a body never supplies them; which credential reaches an op is `op-declarations`' and `control-plane`'s, never
+ * this map's. */
 
 /** A query number: absent when the query does not state it or states it empty, else `Number` of what it states. */
 const numberParam = (url, k) => { const v = url.searchParams.get(k); return v === null || v === "" ? undefined : Number(v); };
@@ -27,5 +27,7 @@ export function escalationOps(escalation, url, body) {
                                                       viewer: q("viewer") }),
     declinetoescalate: act("declineToEscalate"),
     escalationstatus: () => escalation.escalationStatus({ determination: q("determination"), viewer: q("viewer") }),
+    escalationreasondraft: () => escalation.escalationReasonDraft({ determination: q("determination"),
+                                                                     nowMs: numberParam(url, "now"), viewer: q("viewer") }),
   };
 }

@@ -68,13 +68,13 @@ function recorder() {
   const calls = [];
   const names = ["escalationOpen", "escalationRead", "escalationAttach", "escalationEvaluate", "escalationAdvance",
                  "escalationDecline", "escalationEnd", "escalationSuspend", "escalationResume", "escalationsDue",
-                 "declineToEscalate", "escalationStatus"];
+                 "declineToEscalate", "escalationStatus", "escalationReasonDraft"];
   const esc = Object.fromEntries(names.map((n) => [n, (args) => { calls.push([n, args]); return { answered: n }; }]));
   return { esc, calls };
 }
 const URL_OF = (q) => new URL(`https://plane.test/op?${new URLSearchParams(q)}`);
 
-test("R25 escalationOps(escalation, url, body) holds exactly the twelve arms (no escalationreasondraft arm: that is T23's), each a function of no arguments answering what its service answers: the nine acts (declinetoescalate among them) with the body's fields and the query's author and viewer set after them; escalation (the read) with the query's id, now as nowMs and viewer; escalationsdue with now as nowMs, limit and viewer; escalationstatus with the query's determination and viewer; now and limit numbers when stated and absent when not or empty", () => {
+test("R25 escalationOps(escalation, url, body) holds exactly the thirteen arms, each a function of no arguments answering what its service answers: the nine acts (declinetoescalate among them) with the body's fields and the query's author and viewer set after them; escalation (the read) with the query's id, now as nowMs and viewer; escalationsdue with now as nowMs, limit and viewer; escalationstatus with the query's determination and viewer; escalationreasondraft (R29) with the query's determination, now as nowMs and viewer; now and limit numbers when stated and absent when not or empty", () => {
   const ACTS = { escalationopen: "escalationOpen", escalationattach: "escalationAttach", escalationevaluate: "escalationEvaluate",
     escalationadvance: "escalationAdvance", escalationdecline: "escalationDecline", escalationend: "escalationEnd",
     escalationsuspend: "escalationSuspend", escalationresume: "escalationResume", declinetoescalate: "declineToEscalate" };
@@ -85,8 +85,8 @@ test("R25 escalationOps(escalation, url, body) holds exactly the twelve arms (no
   const body = { id: "ESC-2026-0002-escalation", to: 5, reason: "Go.", author: "member:mallory", viewer: "member:mallory", extra: [1],
                  determination: "CONF-2026-0002-determination" };
   const ops = escalationOps(esc, url, body);
-  assert.deepEqual(Object.keys(ops).sort(), [...Object.keys(ACTS), "escalation", "escalationsdue", "escalationstatus"].sort());
-  assert.equal("escalationreasondraft" in ops, false, "the draft arm is T23's");
+  assert.deepEqual(Object.keys(ops).sort(),
+                   [...Object.keys(ACTS), "escalation", "escalationsdue", "escalationstatus", "escalationreasondraft"].sort());
   for (const [op, f] of Object.entries(ops)) assert.deepEqual([typeof f, f.length], ["function", 0], op);
   assert.equal(calls.length, 0, "building the map calls nothing");
   for (const [op, name] of Object.entries(ACTS)) {
@@ -105,15 +105,21 @@ test("R25 escalationOps(escalation, url, body) holds exactly the twelve arms (no
   assert.deepEqual(ops.escalationstatus(), { answered: "escalationStatus" });
   assert.deepEqual(calls, [["escalationStatus", { determination: "CONF-2026-0001-determination", viewer: "member:carol" }]],
                    "the status read takes its determination from the query, never the body");
+  calls.length = 0;
+  assert.deepEqual(ops.escalationreasondraft(), { answered: "escalationReasonDraft" });
+  assert.deepEqual(calls, [["escalationReasonDraft", { determination: "CONF-2026-0001-determination", nowMs: 1790000000000,
+                                                       viewer: "member:carol" }]],
+                   "the draft takes its determination and now from the query, never the body");
   /* absent or empty numbers are absent; no body, and no stamps in the query, are passed as they are */
   for (const q of [{}, { now: "", limit: "" }]) {
     const { esc: e2, calls: c2 } = recorder();
     const o = escalationOps(e2, URL_OF(q), undefined);
-    o.escalation(); o.escalationsdue(); o.escalationopen(); o.escalationstatus(); o.declinetoescalate();
+    o.escalation(); o.escalationsdue(); o.escalationopen(); o.escalationstatus(); o.declinetoescalate(); o.escalationreasondraft();
     assert.deepEqual(c2, [["escalationRead", { id: null, nowMs: undefined, viewer: null }],
       ["escalationsDue", { nowMs: undefined, limit: undefined, viewer: null }],
       ["escalationOpen", { author: null, viewer: null }], ["escalationStatus", { determination: null, viewer: null }],
-      ["declineToEscalate", { author: null, viewer: null }]], JSON.stringify(q));
+      ["declineToEscalate", { author: null, viewer: null }],
+      ["escalationReasonDraft", { determination: null, nowMs: undefined, viewer: null }]], JSON.stringify(q));
   }
   /* a stated non-number is Number's answer, as the store's arm reads it today */
   const { esc: e3, calls: c3 } = recorder();
@@ -133,6 +139,15 @@ test("R25 over the module itself: each arm answers exactly what the named servic
   assert.equal(w.esc.escalationStatus({ determination: w.D, viewer: V("bob") }).status, "declined");
   assert.equal(escalationOps(w.esc, q({ author: "class:ai" }), { determination: w.D, reason: "No." }).declinetoescalate().reason,
                "MACHINE_CANNOT_DECLINE_TO_ESCALATE");
+  /* R29: the draft through its arm is what the service answers, at the query's now and at the instance clock */
+  const at0 = String(Date.parse("2026-09-30T00:00:00Z"));
+  const draft = escalationOps(w.esc, q({ determination: w.D, now: at0 }), { determination: "CONF-other", nowMs: 1 }).escalationreasondraft();
+  assert.equal(draft.ok, true, JSON.stringify(draft).slice(0, 300));
+  assert.deepEqual(draft, w.esc.escalationReasonDraft({ determination: w.D, nowMs: Number(at0), viewer: V("bob") }));
+  assert.deepEqual(escalationOps(w.esc, q({ determination: w.D }), null).escalationreasondraft(),
+                   w.esc.escalationReasonDraft({ determination: w.D, viewer: V("bob") }));
+  assert.deepEqual(escalationOps(w.esc, q({ determination: "CONF-2026-0404-none" }), null).escalationreasondraft(),
+                   w.esc.escalationReasonDraft({ determination: "CONF-2026-0404-none", viewer: V("bob") }));
   const opened1 = escalationOps(w.esc, q({}), { determination: w.D, reason: "Worth pursuing." }).escalationopen();
   assert.equal(opened1.ok, true, JSON.stringify(opened1).slice(0, 300));
   const at = String(Date.parse("2026-09-30T00:00:00Z"));
