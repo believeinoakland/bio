@@ -163,7 +163,7 @@ test("R79 R37 (DEC-97 (2); C-118.8, C-118.9): setAside refuses in order a machin
   assert.deepEqual([machine.check, noReason.check], ["C-118.8", "C-118.9"]);
   const before = everything(rows);
   const go = (o) => c.setAside({ ids: ["INFO-1"], reason: "duplicate of INFO-2", author: "member:m1", viewer: "member:m1", ...o });
-  for (const author of ["", "  ", null, undefined, "class:ai", "token:member", "class:admin", "daemon", "ai"]) {
+  for (const author of ["", "  ", null, undefined, "class:ai", "token:member", "class:admin", "daemon", "ai", "admin", " Admin "]) {
     const r = go({ author, reason: "" });
     assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, "MACHINE_CANNOT_SET_ASIDE", "MACHINE_CANNOT_SET_ASIDE", "C-118.8", machine.translation], String(author));
   }
@@ -183,7 +183,8 @@ test("R79 R37 (DEC-97 (2); C-118.8, C-118.9): setAside refuses in order a machin
   assert.deepEqual([go({ ids: ["INFO-1", "CASE-1"] }).reason, go({ ids: ["INFO-1", "CASE-1"] }).ids], ["NOT_INFORMATION", ["CASE-1"]]);
   assert.deepEqual([go({ ids: ["INFO-5", "INFO-1"] }).reason, go({ ids: ["INFO-5"] }).ids], ["NOT_COLLECTED", ["INFO-5"]]);
   assert.deepEqual(everything(rows), before, "every refusal refused the set whole: nothing written");
-  assert.equal(go({ reason: "x".repeat(REASON_MAX) }).ok, true, "negative control: a member's reason of 2,000 characters is admitted");
+  assert.equal(go({ reason: "x".repeat(REASON_MAX), author: "member:admin" }).ok, true,
+               "negative control: a member (the founder signed in as a member) with a reason of 2,000 characters is admitted");
   const again = go({ ids: ["INFO-2", "INFO-1"] });
   assert.deepEqual([again.reason, again.ids], ["ALREADY_SET_ASIDE", ["INFO-1"]], "named");
   assert.equal(rows(`SELECT count(*) n FROM held_acts WHERE bundle_id = 'INFO-2'`)[0].n, 0, "INFO-2 not narrowed in");

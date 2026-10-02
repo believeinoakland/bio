@@ -1157,7 +1157,9 @@ export class Capture {
      over one to PER_ITEM_MAX ids. */
   #heldActRefusal(ids, reason, author) {
     /* DEC-49 REGION is-held-act-by-member */
-    if (typeof author !== "string" || !author.trim() || isMachineIdentity(author)) {
+    /* A machine: record-grammar's whole question, and the bare founder's viewer `admin`, which names no member
+       (membership R43; K1032). */
+    if (typeof author !== "string" || !author.trim() || isMachineIdentity(author) || author.trim().toLowerCase() === "admin") {
       const row = CAPTURE_CHECKS.MACHINE_CANNOT_SET_ASIDE;
       return { ok: false, reason: "MACHINE_CANNOT_SET_ASIDE", code: "MACHINE_CANNOT_SET_ASIDE", check: row.check,
                translation: row.translation, status: 403 };
