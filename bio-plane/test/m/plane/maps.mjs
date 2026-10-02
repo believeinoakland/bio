@@ -1,5 +1,5 @@
 /* R5's statement, for the tests: each module's own ops map, built on a host as its module offers it, in the order the
-   plane's route map spreads them (today's order: `store.mjs`' `routes`, then instance-setup's, then control-plane's). */
+   plane's route map spreads them (today's order: `src/plane/store.mjs`' `routes`, then instance-setup's, then control-plane's). */
 import { actionsOf, actionsOps } from "../../../src/actions/index.mjs";
 import { actionClocksOf, actionClocksOps } from "../../../src/action-clocks/index.mjs";
 import { localFactsOf, localFactsOps } from "../../../src/local-facts/index.mjs";

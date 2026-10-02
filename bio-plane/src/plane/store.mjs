@@ -29,7 +29,7 @@ import { governorOf, governorRoutes } from "../host-governor/index.mjs";
 import { captureOf, captureOps } from "../capture/index.mjs";
 import { monitoringOf, monitoringOps } from "../monitoring/index.mjs";
 import { connectionsOf, connectionsOps } from "../connections/index.mjs";
-import { inquiryOf, inquiryOps, inquiryLegGrades } from "../inquiry/index.mjs";
+import { inquiryOf, inquiryOps, inquiryLegGrades, inquiryFindings } from "../inquiry/index.mjs";
 import { citationOf, citationOps } from "../citation/index.mjs";
 import { extractionOf, extractionOps } from "../extraction/index.mjs";
 import { entitiesOf, entitiesOps } from "../entities/index.mjs";
@@ -118,6 +118,10 @@ export class Store extends DurableObject {
     ratificationOf(ctx);   /* ratification: its case catalogue and C-2.8's case-member arm, registered at start (R8, R9) */
     strengthOf(ctx, { retrieval });   /* strength: registers its pair (R17), its cache projection (R13) and, with retrieval, the cache's fields (R23) */
     biasOf(ctx, { env });
+    /* R12 (K1061; inquiry R53, bias R40): inquiry's findings registered with bias as kind `finding`, after bias is built
+       with its environment above (its factory reads its deps on the first call only), so a lens change raises a debt on
+       a finding concluded under it. */
+    biasOf(ctx).registerWorkProducts("finding", inquiryFindings(ctx, biasOf(ctx)));
     /* run-productions: created after content, connections, strength and citation, so it declares its tables to purge
        (R17) and registers its candidates with basis-versions (R14). ai-runs is handed over as its own module (its
        R28–R29). */
