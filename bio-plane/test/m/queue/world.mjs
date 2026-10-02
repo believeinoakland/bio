@@ -131,9 +131,9 @@ export function defaultFakes() {
     intent: { gaps: () => ({ ok: true, gaps: [] }) },
     monitoring: { monitoring: () => ({ ok: true, items: [], truncated: false }),
                   flagged: () => ({ ok: true, items: [], limit: 200, truncated: false }),
-                  archiveEligible: () => ({ ok: true, eligible: [], limit: 50, truncated: false, paused: { paused: false } }),
-                  /* monitoring R63 (queue-producers R26): no sweep condition until a test says otherwise. */
-                  sweepConditions: () => ({ ok: true, conditions: [] }) },
+                  archiveEligible: () => ({ ok: true, eligible: [], limit: 50, truncated: false, paused: { paused: false } }) },
+    /* link-sweep R11 (queue-producers R26, N506): no sweep condition until a test says otherwise. */
+    linkSweep: { sweepConditions: () => ({ ok: true, conditions: [] }) },
     contradiction: { candidatesFor: () => ({ ok: true, candidates: [], truncated: false, cursor: null }),
                      conflictNotices: () => ({ ok: true, notices: [], truncated: false, cursor: null }) },
     /* actions R54 (queue-producers R19): no legal pressure mark awaits a hold until a test says otherwise. */

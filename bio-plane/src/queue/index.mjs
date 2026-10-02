@@ -26,8 +26,10 @@
  *   env       the instance bindings: `BIO_NOW_MS` (the clock);
  *   now       a clock, `() => ms`, in place of `env`'s;
  *   start     false to skip the scheduler registration (a test that drives the consumer itself).
- * The ops are `queueOps`' entries, which the legacy store's dispatcher spreads in; `op=queue`'s door half (the store's
- * answer decorated for the caller, R17) is `door.mjs`' `queueOp`, which the control plane routes to (T19).
+ * The ops are `queueOps`' entries, which control-plane's `controlPlaneRoutes` spreads into the plane's one route map
+ * (plane R5; control-plane's `dispatch` answers every store request over it); `op=queue`'s door half (the store's
+ * answer decorated for the caller, R17) is `door.mjs`' `queueOp`, which the control plane's door reaches through the
+ * plane's hooks (plane R6; T19).
  *
  * N301 (K356), R48 (DEC-107): the classes keep their codes and meanings and are shown to members as **To do**,
  * **Noticed** and **Signal**: the answer publishes `class_labels`, and no member-facing sentence this module owns calls
@@ -108,7 +110,9 @@ export class Queue {
     /* queue-producers R20, R21 (K921): the review requests and the facts due; queue passes them and calls neither. */
     "filingTemplates", "localFacts",
     /* queue-producers R2 (N483) and R27 (DEC-111): corpus-export's export log; network-notices' notices of a project. */
-    "networkNotices"]);
+    "networkNotices",
+    /* queue-producers R26 (N506, K1181): link-sweep's sweep conditions (its R11), since the sweep left monitoring. */
+    "linkSweep"]);
   get #scheduler() { return this.#dep("scheduler", () => schedulerOf(this.#host, this.#env)); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -167,7 +171,8 @@ export class Queue {
    * different doctrine: muting is personal, resolving is a record act.)
    *
    * THE VIEWER POSTURE. This is a read that names bundle ids, so it takes the
-   * D-15 gate through query.mjs's ONE compilation point exactly as REC-25
+   * D-15 gate through membership's `viewerPredicate`, the ONE compilation
+   * point (membership R43), exactly as REC-25
    * stamped the other reads. An ancestor the caller may not see is NOT named,
    * and its absence is STATED rather than silently shortening the set — the
    * same honesty DEC-16 requires of an exhausted walk, for the same reason: a
@@ -2032,9 +2037,10 @@ export function queueOf(ctx, deps = {}) {
   return q;
 }
 
-/* The ops this module answers, as entries of the legacy store's op map (its dispatcher spreads them in; K3). `member`,
-   `viewer` and `identity` are the control plane's stamps, read from the URL AFTER the body spread so a body never
-   supplies one (R37); the decider and the actor ride in the body, stamped there by the control plane. */
+/* The ops this module answers, as entries of the plane's one route map (K3; control-plane's `controlPlaneRoutes` spreads
+   them in, plane R5, and control-plane's `dispatch` answers every store request over it). `member`, `viewer` and
+   `identity` are the control plane's stamps, read from the URL AFTER the body spread so a body never supplies one
+   (R37); the decider and the actor ride in the body, stamped there by the control plane. */
 export function queueOps(q, url, body) {
   const s = (k) => url.searchParams.get(k);
   return {
